@@ -8,7 +8,7 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
 import { SSEServerTransport } from "@modelcontextprotocol/sdk/server/sse.js";
 import { isInitializeRequest } from "@modelcontextprotocol/sdk/types.js";
-import { z } from "zod";
+import { z } from "zod/v3";
 
 export function createDummyHttpServer(
   name: string,
@@ -19,17 +19,50 @@ export function createDummyHttpServer(
     disableStreamableHttp?: boolean;
   }
 ): Express {
-  const server = new McpServer({ name, version: "1.0.0" });
+  const server = new McpServer(
+    { name, version: "1.0.0" },
+    { capabilities: { logging: {} } }
+  );
 
   // Store captured headers per session
   const sessionHeaders: Record<string, Record<string, string>> = {};
 
   // Add tools that can inspect request details
+  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+  // @ts-ignore - this may raise "Type instantiation is excessively deep and possibly infinite.ts(2589)"
   server.tool(
     "test_tool",
     "A test tool that echoes input and request metadata",
     { input: z.string() },
     async ({ input }, extra) => {
+      // Logging message
+      await server.server.notification(
+        {
+          method: "notifications/message",
+          params: {
+            level: "info",
+            logger: "test_tool",
+            data: `test_tool invoked with ${input}`,
+          },
+        },
+        { relatedRequestId: extra.requestId }
+      );
+
+      // Progress with token if present
+      const progressToken = extra._meta?.progressToken;
+      if (progressToken !== undefined) {
+        const steps = 3;
+        for (let i = 1; i <= steps; i++) {
+          await server.server.notification(
+            {
+              method: "notifications/progress",
+              params: { progress: i, total: steps, progressToken },
+            },
+            { relatedRequestId: extra.requestId }
+          );
+        }
+      }
+
       return {
         content: [
           {
@@ -45,6 +78,8 @@ export function createDummyHttpServer(
     }
   );
 
+  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+  // @ts-ignore - this may raise "Type instantiation is excessively deep and possibly infinite.ts(2589)"
   server.tool(
     "sleep_tool",
     "A test tool that sleeps for the given number of milliseconds before returning",

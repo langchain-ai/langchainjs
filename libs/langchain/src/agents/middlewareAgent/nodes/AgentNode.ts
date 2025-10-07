@@ -22,6 +22,7 @@ import {
   getPromptRunnable,
   validateLLMHasNoBoundTools,
   hasToolCalls,
+  isClientTool,
 } from "../../utils.js";
 import { mergeAbortSignals } from "../../nodes/utils.js";
 import {
@@ -30,6 +31,7 @@ import {
   InternalAgentState,
   Runtime,
   AgentMiddleware,
+  PrivateState,
 } from "../types.js";
 import type { ClientTool, ServerTool } from "../../types.js";
 import { withAgentName } from "../../withAgentName.js";
@@ -40,7 +42,6 @@ import {
   ToolStrategyError,
   hasSupportForJsonSchemaOutput,
 } from "../../responses.js";
-import { parseToolCalls } from "./utils.js";
 
 type ResponseHandlerResult<StructuredResponseFormat> =
   | {
@@ -71,6 +72,10 @@ export interface AgentNodeOptions<
     AgentMiddleware<any, any, any>,
     () => any
   ][];
+  retryModelRequestHookMiddleware?: [
+    AgentMiddleware<any, any, any>,
+    () => any
+  ][];
 }
 
 interface NativeResponseFormat {
@@ -93,9 +98,16 @@ export class AgentNode<
   ContextSchema extends AnyAnnotationRoot | InteropZodObject = AnyAnnotationRoot
 > extends RunnableCallable<
   InternalAgentState<StructuredResponseFormat> & PreHookAnnotation["State"],
-  { messages: BaseMessage[] } | { structuredResponse: StructuredResponseFormat }
+  | (
+      | { messages: BaseMessage[] }
+      | { structuredResponse: StructuredResponseFormat }
+    ) & { _privateState: PrivateState }
 > {
   #options: AgentNodeOptions<StructuredResponseFormat, ContextSchema>;
+
+  #runState: Pick<PrivateState, "runModelCallCount"> = {
+    runModelCallCount: 0,
+  };
 
   constructor(
     options: AgentNodeOptions<StructuredResponseFormat, ContextSchema>
@@ -189,7 +201,13 @@ export class AgentNode<
       return { messages: [] };
     }
 
+    const privateState = this.getState()._privateState;
     const response = await this.#invokeModel(state, config);
+    this.#runState.runModelCallCount++;
+    const _privateState = {
+      ...privateState,
+      threadLevelCallCount: privateState.threadLevelCallCount + 1,
+    };
 
     /**
      * if we were able to generate a structured response, return it
@@ -198,6 +216,7 @@ export class AgentNode<
       return {
         messages: [...state.messages, ...(response.messages || [])],
         structuredResponse: response.structuredResponse,
+        _privateState,
       };
     }
 
@@ -220,10 +239,11 @@ export class AgentNode<
             id: response.id,
           }),
         ],
+        _privateState,
       };
     }
 
-    return { messages: [response] };
+    return { messages: [response], _privateState };
   }
 
   /**
@@ -257,94 +277,174 @@ export class AgentNode<
     /**
      * Execute modifyModelRequest hooks from beforeModelNodes
      */
-    const preparedOptions = await this.#executePrepareModelRequestHooks(
+    let preparedOptions = await this.#executePrepareModelRequestHooks(
       model,
       state,
       config
     );
 
     /**
-     * If user provides a model in the preparedOptions, use it,
-     * otherwise use the model from the options
+     * Retry loop for model invocation with error handling
+     * Hard limit of 100 attempts to prevent infinite loops from buggy middleware
      */
-    const finalModel = preparedOptions?.model ?? model;
+    const maxAttempts = 100;
+    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+      try {
+        /**
+         * If user provides a model in the preparedOptions, use it,
+         * otherwise use the model from the options
+         */
+        const finalModel = preparedOptions?.model ?? model;
 
-    /**
-     * Check if the LLM already has bound tools and throw if it does.
-     */
-    validateLLMHasNoBoundTools(finalModel);
+        /**
+         * Check if the LLM already has bound tools and throw if it does.
+         */
+        validateLLMHasNoBoundTools(finalModel);
 
-    const structuredResponseFormat = this.#getResponseFormat(finalModel);
-    const modelWithTools = await this.#bindTools(
-      finalModel,
-      preparedOptions,
-      structuredResponseFormat
-    );
-    let modelInput = this.#getModelInputState(state);
+        const structuredResponseFormat = this.#getResponseFormat(finalModel);
+        const modelWithTools = await this.#bindTools(
+          finalModel,
+          preparedOptions,
+          structuredResponseFormat
+        );
+        let modelInput = this.#getModelInputState(state);
 
-    /**
-     * Use messages from preparedOptions if provided
-     */
-    if (preparedOptions?.messages) {
-      modelInput = { ...modelInput, messages: preparedOptions.messages };
-    }
+        /**
+         * Use messages from preparedOptions if provided
+         */
+        if (preparedOptions?.messages) {
+          modelInput = { ...modelInput, messages: preparedOptions.messages };
+        }
 
-    const signal = mergeAbortSignals(this.#options.signal, config.signal);
-    const invokeConfig = { ...config, signal };
-    const response = (await modelWithTools.invoke(
-      modelInput,
-      invokeConfig
-    )) as AIMessage;
+        const signal = mergeAbortSignals(this.#options.signal, config.signal);
+        const invokeConfig = { ...config, signal };
+        const response = (await modelWithTools.invoke(
+          modelInput,
+          invokeConfig
+        )) as AIMessage;
 
-    /**
-     * if the user requests a native schema output, try to parse the response
-     * and return the structured response if it is valid
-     */
-    if (structuredResponseFormat?.type === "native") {
-      const structuredResponse =
-        structuredResponseFormat.strategy.parse(response);
-      if (structuredResponse) {
-        return { structuredResponse, messages: [response] };
+        /**
+         * if the user requests a native schema output, try to parse the response
+         * and return the structured response if it is valid
+         */
+        if (structuredResponseFormat?.type === "native") {
+          const structuredResponse =
+            structuredResponseFormat.strategy.parse(response);
+          if (structuredResponse) {
+            return { structuredResponse, messages: [response] };
+          }
+
+          return response;
+        }
+
+        if (!structuredResponseFormat || !response.tool_calls) {
+          return response;
+        }
+
+        const toolCalls = response.tool_calls.filter(
+          (call) => call.name in structuredResponseFormat.tools
+        );
+
+        /**
+         * if there were not structured tool calls, we can return the response
+         */
+        if (toolCalls.length === 0) {
+          return response;
+        }
+
+        /**
+         * if there were multiple structured tool calls, we should throw an error as this
+         * scenario is not defined/supported.
+         */
+        if (toolCalls.length > 1) {
+          return this.#handleMultipleStructuredOutputs(
+            response,
+            toolCalls,
+            structuredResponseFormat
+          );
+        }
+
+        const toolStrategy = structuredResponseFormat.tools[toolCalls[0].name];
+        const toolMessageContent = toolStrategy?.options?.toolMessageContent;
+        return this.#handleSingleStructuredOutput(
+          response,
+          toolCalls[0],
+          structuredResponseFormat,
+          toolMessageContent ?? options.lastMessage
+        );
+      } catch (error) {
+        // Try retry_model_request on each middleware
+        const retryMiddleware =
+          this.#options.retryModelRequestHookMiddleware ?? [];
+        let shouldRetry = false;
+
+        for (const [middleware, getMiddlewareState] of retryMiddleware) {
+          if (middleware.retryModelRequest) {
+            /**
+             * Cast config to LangGraphRunnableConfig to access LangGraph-specific properties
+             */
+            const lgConfig = config as LangGraphRunnableConfig;
+
+            /**
+             * Merge context with default context of middleware
+             */
+            const context = middleware.contextSchema
+              ? interopParse(middleware.contextSchema, lgConfig?.context || {})
+              : lgConfig?.context;
+
+            /**
+             * Create runtime
+             */
+            const privateState = this.getState()._privateState;
+            const runtime: Runtime<unknown> = {
+              ...privateState,
+              context,
+              writer: lgConfig.writer,
+              interrupt: lgConfig.interrupt,
+              signal: lgConfig.signal,
+            };
+
+            const retryRequest = await middleware.retryModelRequest(
+              error as Error,
+              {
+                model: preparedOptions?.model ?? model,
+                systemPrompt: preparedOptions?.systemPrompt,
+                messages: preparedOptions?.messages ?? state.messages,
+                tools: this.#options.toolClasses,
+              },
+              {
+                ...getMiddlewareState(),
+                messages: state.messages,
+              },
+              /**
+               * ensure runtime is frozen to prevent modifications
+               */
+              Object.freeze({
+                ...runtime,
+                context,
+              }),
+              attempt
+            );
+
+            if (retryRequest) {
+              // Update preparedOptions with the modified request
+              preparedOptions = retryRequest;
+              shouldRetry = true;
+              // Break on first middleware that wants to retry
+              break;
+            }
+          }
+        }
+
+        // If no middleware wants to retry, re-raise the error
+        if (!shouldRetry) {
+          throw error;
+        }
       }
-
-      return response;
     }
 
-    if (!structuredResponseFormat || !response.tool_calls) {
-      return response;
-    }
-
-    const toolCalls = response.tool_calls.filter(
-      (call) => call.name in structuredResponseFormat.tools
-    );
-
-    /**
-     * if there were not structured tool calls, we can return the response
-     */
-    if (toolCalls.length === 0) {
-      return response;
-    }
-
-    /**
-     * if there were multiple structured tool calls, we should throw an error as this
-     * scenario is not defined/supported.
-     */
-    if (toolCalls.length > 1) {
-      return this.#handleMultipleStructuredOutputs(
-        response,
-        toolCalls,
-        structuredResponseFormat
-      );
-    }
-
-    const toolStrategy = structuredResponseFormat.tools[toolCalls[0].name];
-    const toolMessageContent = toolStrategy?.options?.toolMessageContent;
-    return this.#handleSingleStructuredOutput(
-      response,
-      toolCalls[0],
-      structuredResponseFormat,
-      toolMessageContent ?? options.lastMessage
-    );
+    // If we exit the loop, max attempts exceeded
+    throw new Error(`Maximum retry attempts (${maxAttempts}) exceeded`);
   }
 
   /**
@@ -570,7 +670,7 @@ export class AgentNode<
       model,
       systemPrompt,
       messages: state.messages,
-      tools: this.#options.toolClasses.map((tool) => tool.name as string),
+      tools: this.#options.toolClasses,
     };
 
     /**
@@ -588,14 +688,13 @@ export class AgentNode<
       /**
        * Create runtime
        */
-      const runtime: Runtime<unknown, unknown> = {
-        toolCalls: parseToolCalls(state.messages),
-        tools: this.#options.toolClasses,
+      const privateState = this.getState()._privateState;
+      const runtime: Runtime<unknown> = {
+        ...privateState,
         context,
         writer: config.writer,
         interrupt: config.interrupt,
         signal: config.signal,
-        terminate: (result) => ({ type: "terminate", result }),
       };
 
       const result = await middleware.modifyModelRequest!(
@@ -613,26 +712,47 @@ export class AgentNode<
         })
       );
 
-      /**
-       * raise meaningful error if unknown tools were selected
-       */
-      const unknownTools =
-        result?.tools?.filter(
-          (tool) => !this.#options.toolClasses.some((t) => t.name === tool)
-        ) ?? [];
-      if (unknownTools.length > 0) {
-        throw new Error(
-          `Unknown tools selected in middleware "${
-            middleware.name
-          }": ${unknownTools.join(
-            ", "
-          )}, available tools: ${this.#options.toolClasses
-            .map((t) => t.name)
-            .join(", ")}!`
-        );
-      }
-
       if (result) {
+        const modifiedTools = result.tools ?? [];
+
+        /**
+         * Verify that the user didn't add any new tools.
+         * We can't allow this as the ToolNode is already initiated with given tools.
+         */
+        const newTools = modifiedTools.filter(
+          (tool) =>
+            isClientTool(tool) &&
+            !this.#options.toolClasses.some((t) => t.name === tool.name)
+        );
+        if (newTools.length > 0) {
+          throw new Error(
+            `You have added a new tool in "modifyModelRequest" hook of middleware "${
+              middleware.name
+            }": ${newTools
+              .map((tool) => tool.name)
+              .join(", ")}. This is not supported.`
+          );
+        }
+
+        /**
+         * Verify that user has not added or modified a tool with the same name.
+         * We can't allow this as the ToolNode is already initiated with given tools.
+         */
+        const invalidTools = modifiedTools.filter(
+          (tool) =>
+            isClientTool(tool) &&
+            this.#options.toolClasses.every((t) => t !== tool)
+        );
+        if (invalidTools.length > 0) {
+          throw new Error(
+            `You have modified a tool in "modifyModelRequest" hook of middleware "${
+              middleware.name
+            }": ${invalidTools
+              .map((tool) => tool.name)
+              .join(", ")}. This is not supported.`
+          );
+        }
+
         currentOptions = { ...currentOptions, ...result };
       }
     }
@@ -653,14 +773,8 @@ export class AgentNode<
     );
 
     // Use tools from preparedOptions if provided, otherwise use default tools
-    const preparedTools = preparedOptions?.tools ?? [];
     const allTools = [
-      ...(preparedTools.length > 0
-        ? this.#options.toolClasses.filter(
-            (tool) =>
-              typeof tool.name === "string" && preparedTools.includes(tool.name)
-          )
-        : this.#options.toolClasses),
+      ...(preparedOptions?.tools ?? []),
       ...structuredTools.map((toolStrategy) => toolStrategy.tool),
     ];
 
@@ -730,12 +844,46 @@ export class AgentNode<
   }
 
   static get nodeOptions(): {
-    input: z.ZodObject<{ messages: z.ZodArray<z.ZodType<BaseMessage>> }>;
+    input: z.ZodObject<{
+      messages: z.ZodArray<z.ZodType<BaseMessage>>;
+      _privateState: z.ZodObject<{
+        threadLevelCallCount: z.ZodNumber;
+      }>;
+    }>;
   } {
     return {
       input: z.object({
         messages: z.array(z.custom<BaseMessage>()),
+        _privateState: z.object({
+          threadLevelCallCount: z.number(),
+        }),
       }),
+    };
+  }
+
+  getState(): {
+    messages: BaseMessage[];
+    _privateState: PrivateState;
+  } {
+    const origState =
+      super.getState() ??
+      ({
+        _privateState: {
+          threadLevelCallCount: 0,
+          runModelCallCount: 0,
+        },
+      } as {
+        messages?: BaseMessage[];
+        _privateState?: PrivateState;
+      });
+
+    return {
+      messages: [],
+      ...origState,
+      _privateState: {
+        ...(origState._privateState ?? {}),
+        ...this.#runState,
+      },
     };
   }
 }

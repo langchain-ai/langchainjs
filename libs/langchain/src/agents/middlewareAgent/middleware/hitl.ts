@@ -8,6 +8,7 @@ import {
 import { interrupt } from "@langchain/langgraph";
 
 import { createMiddleware } from "../middleware.js";
+import type { AgentBuiltInState, Runtime } from "../types.js";
 
 const ToolConfigSchema = z.object({
   /**
@@ -23,13 +24,51 @@ const ToolConfigSchema = z.object({
    */
   allowRespond: z.boolean().optional(),
   /**
-   * The description attached to the request for human input
+   * The description attached to the request for human input.
+   * Can be either:
+   * - A static string describing the approval request
+   * - A callable that dynamically generates the description based on agent state,
+   *   runtime, and tool call information
+   *
+   * @example
+   * Static string description
+   * ```typescript
+   * const config: ToolConfig = {
+   *   allowAccept: true,
+   *   description: "Please review this tool execution"
+   * };
+   * ```
+   *
+   * @example
+   * Dynamic callable description
+   * ```typescript
+   * const formatToolDescription: DescriptionFactory = (toolCall, state, runtime) => {
+   *   return `Tool: ${toolCall.name}\nArguments:\n${JSON.stringify(toolCall.args, null, 2)}`;
+   * };
+   *
+   * const config: ToolConfig = {
+   *   allowAccept: true,
+   *   description: formatToolDescription
+   * };
+   * ```
    */
-  description: z.string().optional(),
+  description: z.union([z.string(), z.function()]).optional(),
 });
 
 type ToolConfigSchema = z.input<typeof ToolConfigSchema>;
 type ToolCall = NonNullable<AIMessage["tool_calls"]>[number];
+
+/**
+ * Function type that dynamically generates a description based on agent state,
+ * runtime, and tool call information.
+ */
+export type DescriptionFactory<
+  State extends AgentBuiltInState = AgentBuiltInState
+> = (
+  toolCall: ToolCall,
+  state: State,
+  runtime: Runtime<unknown>
+) => string | Promise<string>;
 
 /**
  * Configuration that defines which reviewer response types are permitted during a human interrupt.
@@ -118,8 +157,12 @@ export type HumanInTheLoopMiddlewareHumanResponse =
 export interface ToolConfig extends HumanInTheLoopConfig {
   /**
    * Human-facing description shown in the approval request.
+   * Can be either:
+   * - A static string describing the approval request
+   * - A callable that dynamically generates the description based on agent state,
+   *   runtime, and tool call information
    */
-  description?: string;
+  description?: string | DescriptionFactory;
 }
 
 const contextSchema = z.object({
@@ -204,7 +247,7 @@ export type HumanInTheLoopMiddlewareConfig = InferInteropZodInput<
  * @param options.interruptOn[toolName].allowAccept - Whether the human can approve the current action without changes
  * @param options.interruptOn[toolName].allowEdit - Whether the human can reject the current action with feedback
  * @param options.interruptOn[toolName].allowRespond - Whether the human can approve the current action with edited content
- * @param options.interruptOn[toolName].description - Custom approval message for the tool
+ * @param options.interruptOn[toolName].description - Custom approval message for the tool. Can be either a static string or a callable that dynamically generates the description based on agent state, runtime, and tool call information
  * @param options.messagePrefix - Default prefix for approval messages (default: "Tool execution requires approval"). Only used for tools that do not define a custom `description` in their ToolConfig.
  *
  * @returns A middleware instance that can be passed to `createAgent`
@@ -312,6 +355,36 @@ export type HumanInTheLoopMiddlewareConfig = InferInteropZodInput<
  * });
  * ```
  *
+ * @example
+ * Using dynamic callable descriptions
+ * ```typescript
+ * import { type DescriptionFactory } from "langchain";
+ *
+ * // Define a dynamic description factory
+ * const formatToolDescription: DescriptionFactory = (toolCall, state, runtime) => {
+ *   return `Tool: ${toolCall.name}\nArguments:\n${JSON.stringify(toolCall.args, null, 2)}`;
+ * };
+ *
+ * const hitlMiddleware = humanInTheLoopMiddleware({
+ *   interruptOn: {
+ *     "write_file": {
+ *       allowAccept: true,
+ *       allowEdit: true,
+ *       // Use dynamic description that can access tool call, state, and runtime
+ *       description: formatToolDescription
+ *     },
+ *     // Or use an inline function
+ *     "send_email": {
+ *       allowAccept: true,
+ *       description: (toolCall, state, runtime) => {
+ *         const { to, subject } = toolCall.args;
+ *         return `Email to ${to}\nSubject: ${subject}\n\nRequires approval before sending`;
+ *       }
+ *     }
+ *   }
+ * });
+ * ```
+ *
  * @remarks
  * - Tool calls are processed in the order they appear in the AI message
  * - Auto-approved tools execute immediately without interruption
@@ -373,7 +446,7 @@ export function humanInTheLoopMiddleware(
             };
           }
         } else {
-          resolvedToolConfigs[toolName] = toolConfig;
+          resolvedToolConfigs[toolName] = toolConfig as ToolConfig;
         }
       }
 
@@ -395,20 +468,32 @@ export function humanInTheLoopMiddleware(
         return;
       }
 
-      const hitlRequests: HumanInTheLoopRequest[] = interruptToolCalls.map(
-        (toolCall) => {
+      const hitlRequests: HumanInTheLoopRequest[] = await Promise.all(
+        interruptToolCalls.map(async (toolCall) => {
           const toolConfig = resolvedToolConfigs[toolCall.name]!;
-          const description =
-            toolConfig.description ||
-            `${config.descriptionPrefix}\n\nTool: ${
-              toolCall.name
-            }\nArgs: ${JSON.stringify(toolCall.args, null, 2)}`;
+          const description = toolConfig.description
+            ? typeof toolConfig.description === "function"
+              ? /**
+                 * If description is a function, call it with the required parameters
+                 */
+                await toolConfig.description(toolCall, state, runtime)
+              : /**
+                 * Otherwise, use the static string
+                 */
+                toolConfig.description
+            : /**
+               * Fall back to the default description
+               */
+              `${config.descriptionPrefix}\n\nTool: ${
+                toolCall.name
+              }\nArgs: ${JSON.stringify(toolCall.args, null, 2)}`;
+
           return {
             actionRequest: { action: toolCall.name, args: toolCall.args },
             config: toolConfig,
             description,
           };
-        }
+        })
       );
 
       const responses = (await interrupt(

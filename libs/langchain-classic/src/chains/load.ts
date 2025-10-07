@@ -18,7 +18,7 @@ const loadChainFromFile: FileLoader<BaseChain> = async (
  * @example
  * Loading from LangchainHub:
  * ```ts
- * import { loadChain } from "langchain/chains/load";
+ * import { loadChain } from "@langchain/classic/chains/load";
  * const chain = await loadChain("lc://chains/hello-world/chain.json");
  * const res = await chain.call({ topic: "my favorite color" });
  * ```
@@ -26,7 +26,7 @@ const loadChainFromFile: FileLoader<BaseChain> = async (
  * @example
  * Loading from local filesystem:
  * ```ts
- * import { loadChain } from "langchain/chains/load";
+ * import { loadChain } from "@langchain/classic/chains/load";
  * const chain = await loadChain("/path/to/chain.json");
  * ```
  *

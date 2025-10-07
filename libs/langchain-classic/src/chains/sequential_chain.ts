@@ -262,7 +262,7 @@ export interface SimpleSequentialChainInput extends ChainInputs {
  *
  * @example
  * ```ts
- * import { SimpleSequentialChain, LLMChain } from "langchain/chains";
+ * import { SimpleSequentialChain, LLMChain } from "@langchain/classic/chains";
  * import { OpenAI } from "langchain/llms/openai";
  * import { PromptTemplate } from "langchain/prompts";
  *

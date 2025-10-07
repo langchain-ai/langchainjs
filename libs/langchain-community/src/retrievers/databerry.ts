@@ -36,7 +36,7 @@ interface Berry {
  * API. It extends the BaseRetriever class, which is an abstract base
  * class for a document retrieval system in LangChain.
  */
-/** @deprecated Use "langchain/retrievers/chaindesk" instead */
+/** @deprecated Use "@langchain/classic/retrievers/chaindesk" instead */
 export class DataberryRetriever extends BaseRetriever {
   static lc_name() {
     return "DataberryRetriever";

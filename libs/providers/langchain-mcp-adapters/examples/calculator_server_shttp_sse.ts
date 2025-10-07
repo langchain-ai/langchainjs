@@ -5,7 +5,7 @@ import { randomUUID } from "node:crypto";
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
 import { SSEServerTransport } from "@modelcontextprotocol/sdk/server/sse.js";
 import { isInitializeRequest } from "@modelcontextprotocol/sdk/types.js";
-import { z } from "zod/v3";
+import { z } from "zod";
 
 export async function main() {
   const server = new McpServer({
@@ -19,7 +19,7 @@ export async function main() {
     "add",
     "Adds two numbers together",
     calcSchema,
-    async ({ a, b }: { a: number; b: number }) => {
+    async ({ a, b }) => {
       return {
         content: [{ type: "text", text: `${a + b}` }],
       };
@@ -30,7 +30,7 @@ export async function main() {
     "subtract",
     "Subtracts two numbers",
     calcSchema,
-    async ({ a, b }: { a: number; b: number }) => {
+    async ({ a, b }) => {
       return { content: [{ type: "text", text: `${a - b}` }] };
     }
   );
@@ -39,19 +39,14 @@ export async function main() {
     "multiply",
     "Multiplies two numbers",
     calcSchema,
-    async ({ a, b }: { a: number; b: number }) => {
+    async ({ a, b }) => {
       return { content: [{ type: "text", text: `${a * b}` }] };
     }
   );
 
-  server.tool(
-    "divide",
-    "Divides two numbers",
-    calcSchema,
-    async ({ a, b }: { a: number; b: number }) => {
-      return { content: [{ type: "text", text: `${a / b}` }] };
-    }
-  );
+  server.tool("divide", "Divides two numbers", calcSchema, async ({ a, b }) => {
+    return { content: [{ type: "text", text: `${a / b}` }] };
+  });
 
   const app = express();
   app.use(express.json());

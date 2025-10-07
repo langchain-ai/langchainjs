@@ -6,6 +6,7 @@ on:
     paths:
       - "libs/langchain/**"
       - "libs/langchain-core/**"
+      - "libs/langchain-classic/**"
       - "libs/langchain-community/**"
       - "libs/providers/langchain-anthropic/**"
       - "libs/providers/langchain-openai/**"
