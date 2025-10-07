@@ -33,7 +33,6 @@
   "dependencies": {
     "@langchain/classic": "workspace:*",
     "@langchain/openai": ">=0.2.0 <0.7.0",
-    "@langchain/weaviate": "^0.2.0",
     "binary-extensions": "^2.2.0",
     "expr-eval": "^2.0.2",
     "flat": "^5.0.2",
@@ -44,10 +43,7 @@
   "devDependencies": {
     "@arcjet/redact": "^v1.0.0-alpha.23",
     "@aws-crypto/sha256-js": "^5.0.0",
-    "@aws-sdk/client-bedrock-agent-runtime": "^3.749.0",
-    "@aws-sdk/client-bedrock-runtime": "^3.840.0",
     "@aws-sdk/client-dynamodb": "^3.749.0",
-    "@aws-sdk/client-kendra": "^3.749.0",
     "@aws-sdk/client-lambda": "^3.749.0",
     "@aws-sdk/client-s3": "^3.749.0",
     "@aws-sdk/client-sagemaker-runtime": "^3.749.0",
@@ -60,7 +56,6 @@
     "@browserbasehq/sdk": "^1.1.5",
     "@browserbasehq/stagehand": "^1.0.0",
     "@clickhouse/client": "^0.2.5",
-    "@cloudflare/ai": "1.0.12",
     "@cloudflare/workers-types": "^4.20230922.0",
     "@datastax/astra-db-ts": "^1.5.0",
     "@elastic/elasticsearch": "^8.4.0",
@@ -69,7 +64,6 @@
     "@getzep/zep-cloud": "^1.0.6",
     "@getzep/zep-js": "^0.9.0",
     "@gomomento/sdk-core": "^1.51.1",
-    "@google-ai/generativelanguage": "^2.5.0",
     "@google-cloud/storage": "^7.15.2",
     "@gradientai/nodejs-sdk": "^1.2.0",
     "@huggingface/inference": "^4.0.5",
@@ -112,6 +106,7 @@
     "@types/d3-dsv": "^3.0.7",
     "@types/flat": "^5.0.2",
     "@types/html-to-text": "^9",
+    "@types/js-yaml": "^4.0.9",
     "@types/jsdom": "^21.1.1",
     "@types/jsonwebtoken": "^9",
     "@types/lodash": "^4",
@@ -213,10 +208,7 @@
   "peerDependencies": {
     "@arcjet/redact": "^v1.0.0-alpha.23",
     "@aws-crypto/sha256-js": "^5.0.0",
-    "@aws-sdk/client-bedrock-agent-runtime": "^3.749.0",
-    "@aws-sdk/client-bedrock-runtime": "^3.749.0",
     "@aws-sdk/client-dynamodb": "^3.749.0",
-    "@aws-sdk/client-kendra": "^3.749.0",
     "@aws-sdk/client-lambda": "^3.749.0",
     "@aws-sdk/client-s3": "^3.749.0",
     "@aws-sdk/client-sagemaker-runtime": "^3.749.0",
@@ -227,14 +219,12 @@
     "@browserbasehq/sdk": "*",
     "@browserbasehq/stagehand": "^1.0.0",
     "@clickhouse/client": "^0.2.5",
-    "@cloudflare/ai": "*",
     "@datastax/astra-db-ts": "^1.0.0",
     "@elastic/elasticsearch": "^8.4.0",
     "@getmetal/metal-sdk": "*",
     "@getzep/zep-cloud": "^1.0.6",
     "@getzep/zep-js": "^0.9.0",
     "@gomomento/sdk-core": "^1.51.1",
-    "@google-ai/generativelanguage": "*",
     "@google-cloud/storage": "^6.10.1 || ^7.7.0",
     "@gradientai/nodejs-sdk": "^1.2.0",
     "@huggingface/inference": "^4.0.5",
@@ -250,10 +240,8 @@
     "@neondatabase/serverless": "*",
     "@notionhq/client": "^2.2.10",
     "@opensearch-project/opensearch": "*",
-    "@pinecone-database/pinecone": "*",
     "@planetscale/database": "^1.8.0",
     "@premai/prem-sdk": "^0.3.25",
-    "@qdrant/js-client-rest": "^1.15.0",
     "@raycast/api": "^1.55.2",
     "@rockset/client": "^0.9.1",
     "@smithy/eventstream-codec": "^2.0.5",
@@ -271,7 +259,6 @@
     "@vercel/postgres": "*",
     "@writerai/writer-sdk": "^0.40.2",
     "@xata.io/client": "^0.28.0",
-    "@xenova/transformers": "*",
     "@zilliz/milvus2-sdk-node": ">=2.3.5",
     "apify-client": "^2.7.1",
     "assemblyai": "^4.6.0",
@@ -284,7 +271,6 @@
     "closevector-common": "0.1.3",
     "closevector-node": "0.1.6",
     "closevector-web": "0.1.6",
-    "cohere-ai": "*",
     "convex": "^1.3.1",
     "crypto-js": "^4.2.0",
     "d3-dsv": "^2.0.0",
@@ -310,7 +296,6 @@
     "mammoth": "^1.6.0",
     "mariadb": "^3.4.0",
     "mem0ai": "^2.1.8",
-    "mongodb": "^6.17.0",
     "mysql2": "^3.9.8",
     "neo4j-driver": "*",
     "node-llama-cpp": ">=3.0.0",
@@ -325,7 +310,6 @@
     "portkey-ai": "^0.1.11",
     "puppeteer": "*",
     "pyodide": ">=0.24.1 <0.27.0",
-    "redis": "*",
     "replicate": "*",
     "sonix-speech-recognition": "^2.1.1",
     "srt-parser-2": "^1.2.3",
@@ -333,7 +317,6 @@
     "typesense": "^1.5.3",
     "usearch": "^1.1.1",
     "voy-search": "0.6.2",
-    "weaviate-client": "^3.5.2",
     "word-extractor": "*",
     "ws": "^8.14.2",
     "youtubei.js": "*"
@@ -345,16 +328,7 @@
     "@aws-crypto/sha256-js": {
       "optional": true
     },
-    "@aws-sdk/client-bedrock-agent-runtime": {
-      "optional": true
-    },
-    "@aws-sdk/client-bedrock-runtime": {
-      "optional": true
-    },
     "@aws-sdk/client-dynamodb": {
-      "optional": true
-    },
-    "@aws-sdk/client-kendra": {
       "optional": true
     },
     "@aws-sdk/client-lambda": {
@@ -387,9 +361,6 @@
     "@clickhouse/client": {
       "optional": true
     },
-    "@cloudflare/ai": {
-      "optional": true
-    },
     "@datastax/astra-db-ts": {
       "optional": true
     },
@@ -406,9 +377,6 @@
       "optional": true
     },
     "@gomomento/sdk-core": {
-      "optional": true
-    },
-    "@google-ai/generativelanguage": {
       "optional": true
     },
     "@google-cloud/storage": {
@@ -1020,17 +988,6 @@
       },
       "input": "./src/tools/stackexchange.ts"
     },
-    "./tools/tavily_search": {
-      "import": {
-        "types": "./dist/tools/tavily_search.d.ts",
-        "default": "./dist/tools/tavily_search.js"
-      },
-      "require": {
-        "types": "./dist/tools/tavily_search.d.cts",
-        "default": "./dist/tools/tavily_search.cjs"
-      },
-      "input": "./src/tools/tavily_search.ts"
-    },
     "./tools/wikipedia_query_run": {
       "import": {
         "types": "./dist/tools/wikipedia_query_run.d.ts",
@@ -1118,17 +1075,6 @@
         "default": "./dist/embeddings/alibaba_tongyi.cjs"
       },
       "input": "./src/embeddings/alibaba_tongyi.ts"
-    },
-    "./embeddings/bedrock": {
-      "import": {
-        "types": "./dist/embeddings/bedrock.d.ts",
-        "default": "./dist/embeddings/bedrock.js"
-      },
-      "require": {
-        "types": "./dist/embeddings/bedrock.d.cts",
-        "default": "./dist/embeddings/bedrock.cjs"
-      },
-      "input": "./src/embeddings/bedrock.ts"
     },
     "./embeddings/bytedance_doubao": {
       "import": {
@@ -2383,17 +2329,6 @@
         "default": "./dist/structured_query/chroma.cjs"
       },
       "input": "./src/structured_query/chroma.ts"
-    },
-    "./structured_query/qdrant": {
-      "import": {
-        "types": "./dist/structured_query/qdrant.d.ts",
-        "default": "./dist/structured_query/qdrant.js"
-      },
-      "require": {
-        "types": "./dist/structured_query/qdrant.d.cts",
-        "default": "./dist/structured_query/qdrant.cjs"
-      },
-      "input": "./src/structured_query/qdrant.ts"
     },
     "./structured_query/supabase": {
       "import": {

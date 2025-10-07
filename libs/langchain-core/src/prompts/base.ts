@@ -11,7 +11,6 @@ import { BaseOutputParser } from "../output_parsers/index.js";
 import type { SerializedFields } from "../load/map_keys.js";
 import { Runnable } from "../runnables/base.js";
 import { BaseCallbackConfig } from "../callbacks/manager.js";
-import type { SerializedBasePromptTemplate } from "../prompts/serde.js";
 
 export type TypedPromptInputValues<RunInput> = InputValues<
   StringWithAutocomplete<Extract<keyof RunInput, string>>

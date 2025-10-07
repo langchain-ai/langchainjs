@@ -17,9 +17,7 @@
   },
   "homepage": "https://github.com/langchain-ai/langchainjs/tree/main/langchain/",
   "scripts": {
-    "build": "pnpm build:source && pnpm build:examples",
-    "build:source": "pnpm --filter @langchain/build compile @langchain/classic --tsconfigPath tsconfig.build.json",
-    "build:examples": "pnpm --filter @langchain/build compile @langchain/classic --tsconfigPath tsconfig.examples.json --noEmit",
+    "build": "pnpm --filter @langchain/build compile @langchain/classic",
     "lint:eslint": "eslint --cache",
     "lint:dpdm": "dpdm --skip-dynamic-imports circular --exit-code circular:1 --no-warning --no-tree src/*.ts src/**/*.ts",
     "lint": "pnpm lint:eslint && pnpm lint:dpdm",

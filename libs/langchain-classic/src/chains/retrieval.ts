@@ -38,10 +38,7 @@ export type CreateRetrievalChainParams<RunOutput> = {
 };
 
 function isBaseRetriever(x: unknown): x is BaseRetrieverInterface {
-  return (
-    !!x &&
-    typeof (x as BaseRetrieverInterface).getRelevantDocuments === "function"
-  );
+  return !!x && typeof (x as BaseRetrieverInterface).invoke === "function";
 }
 
 /**

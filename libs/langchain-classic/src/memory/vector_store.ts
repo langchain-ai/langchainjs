@@ -98,7 +98,7 @@ export class VectorStoreRetrieverMemory
    */
   async loadMemoryVariables(values: InputValues): Promise<MemoryVariables> {
     const query = getInputValue(values, this.inputKey);
-    const results = await this.vectorStoreRetriever.getRelevantDocuments(query);
+    const results = await this.vectorStoreRetriever.invoke(query);
     return {
       [this.memoryKey]: this.returnDocs
         ? results

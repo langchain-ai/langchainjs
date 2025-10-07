@@ -25,9 +25,7 @@ test("Hyde retriever", async () => {
     ].map((pageContent) => new Document({ pageContent }))
   );
 
-  const results = await retriever.getRelevantDocuments(
-    "What is my favourite food?"
-  );
+  const results = await retriever.invoke("What is my favourite food?");
 
   expect(results.length).toBe(1);
   // console.log(results);
@@ -53,9 +51,7 @@ test("Hyde retriever with default prompt template", async () => {
     ].map((pageContent) => new Document({ pageContent }))
   );
 
-  const results = await retriever.getRelevantDocuments(
-    "What is my favourite food?"
-  );
+  const results = await retriever.invoke("What is my favourite food?");
 
   expect(results.length).toBe(1);
   // console.log(results);
