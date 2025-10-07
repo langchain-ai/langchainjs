@@ -795,9 +795,6 @@ importers:
       '@langchain/cohere':
         specifier: workspace:*
         version: link:../providers/langchain-cohere
-      '@langchain/community':
-        specifier: workspace:*
-        version: link:../langchain-community
       '@langchain/core':
         specifier: workspace:*
         version: link:../langchain-core
