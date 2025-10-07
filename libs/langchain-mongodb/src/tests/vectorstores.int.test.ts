@@ -116,11 +116,9 @@ function getEmbeddings() {
 test("MongoDBStore sets client metadata", () => {
   const spy = jest.spyOn(client, "appendMetadata");
   // eslint-disable-next-line no-new
-  new PatchedVectorStore(
-    getEmbeddings(), {
-      collection,
-    }
-  );
+  new PatchedVectorStore(getEmbeddings(), {
+    collection,
+  });
   expect(spy).toHaveBeenCalledWith({ name: "langchainjs_vector" });
   jest.clearAllMocks();
 });

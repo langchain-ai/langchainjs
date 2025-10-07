@@ -66,7 +66,7 @@ export class MongoDBStore extends BaseStore<string, Uint8Array> {
       fields.yieldKeysScanBatchSize ?? this.yieldKeysScanBatchSize;
     this.namespace = fields.namespace;
     this.collection.db.client.appendMetadata({
-      name: 'langchainjs_storage'
+      name: "langchainjs_storage",
     });
   }
 
