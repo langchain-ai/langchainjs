@@ -645,4 +645,98 @@ describe("humanInTheLoopMiddleware", () => {
       'Unexpected human response: {"type":"accept"}. Response action \'accept\' is not allowed for tool \'write_file\'. Expected one of: "edit", based on the tool\'s configuration.'
     );
   });
+
+  it("should support dynamic description factory functions", async () => {
+    // Create a description factory that formats based on tool call details
+    const descriptionFactory = vi.fn((toolCall, _state, _runtime) => {
+      return `Dynamic description for tool: ${toolCall.name}\nFile: ${toolCall.args.filename}\nContent length: ${toolCall.args.content.length} characters`;
+    });
+
+    const hitlMiddleware = humanInTheLoopMiddleware({
+      interruptOn: {
+        write_file: {
+          allowAccept: true,
+          allowEdit: true,
+          description: descriptionFactory,
+        },
+      },
+    });
+
+    const model = new FakeToolCallingModel({
+      toolCalls: [
+        [
+          {
+            id: "call_1",
+            name: "write_file",
+            args: { filename: "dynamic.txt", content: "Hello Dynamic World" },
+          },
+        ],
+      ],
+    });
+
+    const checkpointer = new MemorySaver();
+    const agent = createAgent({
+      model,
+      checkpointer,
+      tools: [writeFileTool],
+      middleware: [hitlMiddleware] as const,
+    });
+
+    const config = {
+      configurable: {
+        thread_id: "test-dynamic",
+      },
+    };
+
+    // Initial invocation
+    await agent.invoke(
+      {
+        messages: [new HumanMessage("Write dynamic content")],
+      },
+      config
+    );
+
+    // Verify the description factory was called
+    expect(descriptionFactory).toHaveBeenCalledTimes(1);
+    expect(descriptionFactory).toHaveBeenCalledWith(
+      expect.objectContaining({
+        id: "call_1",
+        name: "write_file",
+        args: { filename: "dynamic.txt", content: "Hello Dynamic World" },
+      }),
+      expect.objectContaining({
+        messages: expect.any(Array),
+      }),
+      expect.objectContaining({
+        context: expect.anything(),
+      })
+    );
+
+    // Check the generated description in the interrupt
+    const state = await agent.graph.getState(config);
+    const task = state.tasks?.[0];
+    const requests = task.interrupts[0].value as HumanInTheLoopRequest[];
+
+    expect(requests[0].description).toBe(
+      "Dynamic description for tool: write_file\nFile: dynamic.txt\nContent length: 19 characters"
+    );
+
+    // Resume with approval
+    await agent.invoke(
+      new Command({
+        resume: [{ type: "accept" }],
+      }),
+      config
+    );
+
+    // Verify tool was called
+    expect(writeFileFn).toHaveBeenCalledTimes(1);
+    expect(writeFileFn).toHaveBeenCalledWith(
+      {
+        filename: "dynamic.txt",
+        content: "Hello Dynamic World",
+      },
+      expect.anything()
+    );
+  });
 });

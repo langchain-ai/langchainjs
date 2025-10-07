@@ -6,10 +6,8 @@ import {
   SystemMessage,
   ToolMessage,
 } from "@langchain/core/messages";
-import {
-  summarizationMiddleware,
-  countTokensApproximately,
-} from "../summarization.js";
+import { summarizationMiddleware } from "../summarization.js";
+import { countTokensApproximately } from "../utils.js";
 import { createAgent } from "../../index.js";
 import { FakeToolCallingChatModel } from "../../../tests/utils.js";
 

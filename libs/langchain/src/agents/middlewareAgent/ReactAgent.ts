@@ -10,9 +10,12 @@ import {
   Send,
   Command,
   CompiledStateGraph,
+  type GetStateOptions,
 } from "@langchain/langgraph";
+import type { CheckpointListOptions } from "@langchain/langgraph-checkpoint";
 import { ToolMessage, AIMessage } from "@langchain/core/messages";
 import { IterableReadableStream } from "@langchain/core/utils/stream";
+import type { RunnableConfig } from "@langchain/core/runnables";
 
 import { createAgentAnnotationConditional } from "./annotation.js";
 import { isClientTool } from "../utils.js";
@@ -40,6 +43,7 @@ import type {
   StreamConfiguration,
   JumpTo,
   UserInput,
+  PrivateState,
 } from "./types.js";
 
 import {
@@ -102,6 +106,8 @@ export class ReactAgent<
   #graph: AgentGraph<StructuredResponseFormat, ContextSchema, TMiddleware>;
 
   #toolBehaviorVersion: "v1" | "v2" = "v2";
+
+  #agentNode: AgentNode<any, AnyAnnotationRoot>;
 
   constructor(
     public options: CreateAgentParams<StructuredResponseFormat, ContextSchema>
@@ -169,6 +175,27 @@ export class ReactAgent<
        */
       () => any
     ][] = [];
+    const retryModelRequestHookMiddleware: [
+      AgentMiddleware,
+      /**
+       * ToDo: better type to get the state of middleware
+       */
+      () => any
+    ][] = [];
+
+    this.#agentNode = new AgentNode({
+      model: this.options.model,
+      systemPrompt: this.options.systemPrompt,
+      includeAgentName: this.options.includeAgentName,
+      name: this.options.name,
+      responseFormat: this.options.responseFormat,
+      middleware: this.options.middleware,
+      toolClasses,
+      shouldReturnDirect,
+      signal: this.options.signal,
+      modifyModelRequestHookMiddleware,
+      retryModelRequestHookMiddleware,
+    });
 
     const middlewareNames = new Set<string>();
     const middleware = this.options.middleware ?? [];
@@ -182,7 +209,9 @@ export class ReactAgent<
 
       middlewareNames.add(m.name);
       if (m.beforeModel) {
-        beforeModelNode = new BeforeModelNode(m);
+        beforeModelNode = new BeforeModelNode(m, {
+          getPrivateState: () => this.#agentNode.getState()._privateState,
+        });
         const name = `${m.name}.before_model`;
         beforeModelNodes.push({
           index: i,
@@ -196,7 +225,9 @@ export class ReactAgent<
         );
       }
       if (m.afterModel) {
-        afterModelNode = new AfterModelNode(m);
+        afterModelNode = new AfterModelNode(m, {
+          getPrivateState: () => this.#agentNode.getState()._privateState,
+        });
         const name = `${m.name}.after_model`;
         afterModelNodes.push({
           index: i,
@@ -219,6 +250,16 @@ export class ReactAgent<
           }),
         ]);
       }
+
+      if (m.retryModelRequest) {
+        retryModelRequestHookMiddleware.push([
+          m,
+          () => ({
+            ...beforeModelNode?.getState(),
+            ...afterModelNode?.getState(),
+          }),
+        ]);
+      }
     }
 
     /**
@@ -226,18 +267,7 @@ export class ReactAgent<
      */
     allNodeWorkflows.addNode(
       "model_request",
-      new AgentNode({
-        model: this.options.model,
-        systemPrompt: this.options.systemPrompt,
-        includeAgentName: this.options.includeAgentName,
-        name: this.options.name,
-        responseFormat: this.options.responseFormat,
-        middleware: this.options.middleware,
-        toolClasses,
-        shouldReturnDirect,
-        signal: this.options.signal,
-        modifyModelRequestHookMiddleware,
-      }),
+      this.#agentNode,
       AgentNode.nodeOptions
     );
 
@@ -711,6 +741,35 @@ export class ReactAgent<
   }
 
   /**
+   * Populate the private state of the agent node from the previous state.
+   */
+  async #populatePrivateState(config?: RunnableConfig) {
+    /**
+     * not needed if thread_id is not provided
+     */
+    if (!config?.configurable?.thread_id) {
+      return;
+    }
+    const prevState = (await this.#graph.getState(config as any)) as {
+      values: {
+        _privateState: PrivateState;
+      };
+    };
+
+    /**
+     * not need if state is empty
+     */
+    if (!prevState.values._privateState) {
+      return;
+    }
+
+    this.#agentNode.setState({
+      structuredResponse: undefined,
+      _privateState: prevState.values._privateState,
+    });
+  }
+
+  /**
    * Executes the agent with the given state and returns the final state after all processing.
    *
    * This method runs the agent's entire workflow synchronously, including:
@@ -762,6 +821,8 @@ export class ReactAgent<
   ) {
     type FullState = MergedAgentState<StructuredResponseFormat, TMiddleware>;
     const initializedState = await this.#initializeMiddlewareStates(state);
+    await this.#populatePrivateState(config);
+
     return this.#graph.invoke(
       initializedState,
       config as unknown as InferContextInput<ContextSchema> &
@@ -770,14 +831,15 @@ export class ReactAgent<
   }
 
   /**
-   * Executes the agent with streaming, returning an async iterable of events as they occur.
+   * Executes the agent with streaming, returning an async iterable of state updates as they occur.
    *
    * This method runs the agent's workflow similar to `invoke`, but instead of waiting for
-   * completion, it streams events in real-time. This allows you to:
+   * completion, it streams high-level state updates in real-time. This allows you to:
    * - Display intermediate results to users as they're generated
    * - Monitor the agent's progress through each step
-   * - Handle tool calls and results as they happen
-   * - Update UI with streaming responses from the LLM
+   * - React to state changes as nodes complete
+   *
+   * For more granular event-level streaming (like individual LLM tokens), use `streamEvents` instead.
    *
    * @param state - The initial state for the agent execution. Can be:
    *   - An object containing `messages` array and any middleware-specific state properties
@@ -791,8 +853,63 @@ export class ReactAgent<
    * @param config.streamMode - The streaming mode for the agent execution, see more in {@link https://docs.langchain.com/oss/javascript/langgraph/streaming#supported-stream-modes | Supported stream modes}.
    * @param config.recursionLimit - The recursion limit for the agent execution.
    *
-   * @returns A Promise that resolves to an IterableReadableStream of events.
-   *          Events include:
+   * @returns A Promise that resolves to an IterableReadableStream of state updates.
+   *          Each update contains the current state after a node completes.
+   *
+   * @example
+   * ```typescript
+   * const agent = new ReactAgent({
+   *   llm: myModel,
+   *   tools: [calculator, webSearch]
+   * });
+   *
+   * const stream = await agent.stream({
+   *   messages: [{ role: "human", content: "What's 2+2 and the weather in NYC?" }]
+   * });
+   *
+   * for await (const chunk of stream) {
+   *   console.log(chunk); // State update from each node
+   * }
+   * ```
+   */
+  async stream(
+    state: InvokeStateParameter<TMiddleware>,
+    config?: StreamConfiguration<
+      InferContextInput<ContextSchema> &
+        InferMiddlewareContextInputs<TMiddleware>
+    >
+  ): Promise<IterableReadableStream<any>> {
+    const initializedState = await this.#initializeMiddlewareStates(state);
+    return this.#graph.stream(initializedState, config as Record<string, any>);
+  }
+
+  /**
+   * Executes the agent with low-level event streaming, returning detailed events as they occur.
+   *
+   * This method provides fine-grained control over streaming, emitting events for every
+   * operation during execution. This is useful when you need to:
+   * - Stream individual LLM tokens as they're generated
+   * - Monitor detailed execution flow with timing information
+   * - Handle specific event types (model start/end, tool calls, etc.)
+   * - Debug or trace agent behavior at a granular level
+   *
+   * For simpler state-based streaming, use `stream` instead.
+   *
+   * @param state - The initial state for the agent execution. Can be:
+   *   - An object containing `messages` array and any middleware-specific state properties
+   *   - A Command object for more advanced control flow
+   *
+   * @param config - Optional runtime configuration including:
+   * @param config.context - The context for the agent execution.
+   * @param config.configurable - LangGraph configuration options like `thread_id`, `run_id`, etc.
+   * @param config.store - The store for the agent execution for persisting state, see more in {@link https://docs.langchain.com/oss/javascript/langgraph/memory#memory-storage | Memory storage}.
+   * @param config.signal - An optional {@link https://developer.mozilla.org/en-US/docs/Web/API/AbortSignal | `AbortSignal`} for the agent execution.
+   * @param config.recursionLimit - The recursion limit for the agent execution.
+   * @param config.streamMode - The streaming mode for the agent execution, see more in {@link https://docs.langchain.com/oss/javascript/langgraph/streaming#supported-stream-modes | Supported stream modes}.
+   *
+   * @param streamOptions - Additional streaming options (passed to LangGraph's streamEvents).
+   *
+   * @returns An IterableReadableStream of detailed events including:
    *          - `on_chat_model_start`: When the LLM begins processing
    *          - `on_chat_model_stream`: Streaming tokens from the LLM
    *          - `on_chat_model_end`: When the LLM completes
@@ -809,27 +926,37 @@ export class ReactAgent<
    *   tools: [calculator, webSearch]
    * });
    *
-   * const stream = await agent.stream({
+   * const stream = await agent.streamEvents({
    *   messages: [{ role: "human", content: "What's 2+2 and the weather in NYC?" }]
+   * }, {
+   *   version: "v2"
    * });
    *
    * for await (const event of stream) {
-   *   //
+   *   if (event.event === "on_chat_model_stream") {
+   *     process.stdout.write(event.data.chunk.content); // Stream tokens
+   *   }
    * }
    * ```
    */
-  async stream(
+  async streamEvents(
     state: InvokeStateParameter<TMiddleware>,
     config?: StreamConfiguration<
       InferContextInput<ContextSchema> &
         InferMiddlewareContextInputs<TMiddleware>
-    >
+    > & { version?: "v1" | "v2" },
+    streamOptions?: any
   ): Promise<IterableReadableStream<any>> {
     const initializedState = await this.#initializeMiddlewareStates(state);
-    return this.#graph.streamEvents(initializedState, {
-      ...config,
-      version: "v2",
-    } as any) as IterableReadableStream<any>;
+    await this.#populatePrivateState(config);
+    return this.#graph.streamEvents(
+      initializedState,
+      {
+        ...(config as any),
+        version: config?.version ?? "v2",
+      },
+      streamOptions
+    ) as IterableReadableStream<any>;
   }
 
   /**
@@ -875,5 +1002,43 @@ export class ReactAgent<
   }) {
     const representation = await this.#graph.getGraphAsync();
     return representation.drawMermaid(params);
+  }
+
+  /**
+   * The following are internal methods to enable support for LangGraph Platform.
+   * They are not part of the createAgent public API.
+   *
+   * Note: we intentionally return as `never` to avoid type errors due to type inference.
+   */
+
+  /**
+   * @internal
+   */
+  getGraphAsync(config?: RunnableConfig) {
+    return this.#graph.getGraphAsync(config) as never;
+  }
+  /**
+   * @internal
+   */
+  getState(config: RunnableConfig, options?: GetStateOptions) {
+    return this.#graph.getState(config, options) as never;
+  }
+  /**
+   * @internal
+   */
+  getStateHistory(config: RunnableConfig, options?: CheckpointListOptions) {
+    return this.#graph.getStateHistory(config, options) as never;
+  }
+  /**
+   * @internal
+   */
+  getSubgraphs(namespace?: string, recurse?: boolean) {
+    return this.#graph.getSubgraphs(namespace, recurse) as never;
+  }
+  /**
+   * @internal
+   */
+  getSubgraphAsync(namespace?: string, recurse?: boolean) {
+    return this.#graph.getSubgraphsAsync(namespace, recurse) as never;
   }
 }

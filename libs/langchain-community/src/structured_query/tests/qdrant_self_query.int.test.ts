@@ -1,8 +1,8 @@
 import { test } from "@jest/globals";
 import { Document } from "@langchain/core/documents";
 import { OpenAIEmbeddings, OpenAI } from "@langchain/openai";
-import { AttributeInfo } from "langchain/chains/query_constructor";
-import { SelfQueryRetriever } from "langchain/retrievers/self_query";
+import { AttributeInfo } from "@langchain/classic/chains/query_constructor";
+import { SelfQueryRetriever } from "@langchain/classic/retrievers/self_query";
 import { QdrantClient } from "@qdrant/js-client-rest";
 import { QdrantVectorStore } from "../../vectorstores/qdrant.js";
 import { QdrantTranslator } from "../qdrant.js";

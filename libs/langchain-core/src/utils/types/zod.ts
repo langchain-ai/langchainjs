@@ -164,6 +164,56 @@ export function isInteropZodSchema(input: unknown): input is InteropZodType {
   return false;
 }
 
+export type InteropZodLiteral = z3.ZodLiteral<unknown> | z4.$ZodLiteral;
+
+export function isZodLiteralV3(obj: unknown): obj is z3.ZodLiteral<unknown> {
+  // Zod v3 literal schemas have _def.typeName === "ZodLiteral"
+  if (
+    typeof obj === "object" &&
+    obj !== null &&
+    "_def" in obj &&
+    typeof obj._def === "object" &&
+    obj._def !== null &&
+    "typeName" in obj._def &&
+    obj._def.typeName === "ZodLiteral"
+  ) {
+    return true;
+  }
+  return false;
+}
+
+export function isZodLiteralV4(obj: unknown): obj is z4.$ZodLiteral {
+  if (!isZodSchemaV4(obj)) return false;
+  // Zod v4 literal schemas have _zod.def.type === "literal"
+  if (
+    typeof obj === "object" &&
+    obj !== null &&
+    "_zod" in obj &&
+    typeof obj._zod === "object" &&
+    obj._zod !== null &&
+    "def" in obj._zod &&
+    typeof obj._zod.def === "object" &&
+    obj._zod.def !== null &&
+    "type" in obj._zod.def &&
+    obj._zod.def.type === "literal"
+  ) {
+    return true;
+  }
+  return false;
+}
+
+/**
+ * Determines if the provided value is an InteropZodLiteral (Zod v3 or v4 literal schema).
+ *
+ * @param obj The value to check.
+ * @returns {boolean} True if the value is a Zod v3 or v4 literal schema, false otherwise.
+ */
+export function isInteropZodLiteral(obj: unknown): obj is InteropZodLiteral {
+  if (isZodLiteralV3(obj)) return true;
+  if (isZodLiteralV4(obj)) return true;
+  return false;
+}
+
 type InteropZodSafeParseResult<T> = z3.SafeParseReturnType<T, T>;
 
 /**

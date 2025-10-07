@@ -1,6 +1,6 @@
 import { parseOfficeAsync } from "officeparser";
 import { Document } from "@langchain/core/documents";
-import { BufferLoader } from "langchain/document_loaders/fs/buffer";
+import { BufferLoader } from "@langchain/classic/document_loaders/fs/buffer";
 
 /**
  * A class that extends the `BufferLoader` class. It represents a document

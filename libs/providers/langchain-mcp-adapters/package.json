@@ -37,44 +37,53 @@
     "tools"
   ],
   "dependencies": {
-    "@modelcontextprotocol/sdk": "^1.12.1",
-    "debug": "^4.4.0",
+    "@modelcontextprotocol/sdk": "^1.18.2",
+    "debug": "^4.4.3",
     "zod": "^3.25.76 || ^4"
   },
   "peerDependencies": {
-    "@langchain/core": "^0.3.66"
+    "@langchain/core": ">=1.0.0-alpha.5 <1.0.0 || >=1.0.0 <2.0.0",
+    "@langchain/langgraph": ">=1.0.0-alpha.5 <1.0.0 || >=1.0.0 <2.0.0"
+  },
+  "peerDependenciesMeta": {
+    "@langchain/core": {
+      "optional": false
+    },
+    "@langchain/langgraph": {
+      "optional": false
+    }
   },
   "optionalDependencies": {
-    "extended-eventsource": "^1.x"
+    "extended-eventsource": "^1.7.0"
   },
   "devDependencies": {
-    "@eslint/js": "^9.21.0",
+    "@eslint/js": "^9.36.0",
     "@langchain/core": "workspace:*",
     "@langchain/eslint": "workspace:*",
     "@langchain/langgraph": "next",
     "@langchain/openai": "workspace:*",
-    "@tsconfig/recommended": "^1.0.8",
+    "@tsconfig/recommended": "^1.0.10",
     "@types/debug": "^4.1.12",
-    "@types/express": "^5",
-    "@types/node": "^22.13.10",
-    "@vitest/coverage-v8": "^3.1.1",
-    "dotenv": "^16.4.7",
+    "@types/express": "^5.0.3",
+    "@types/node": "^22.18.8",
+    "@vitest/coverage-v8": "^3.2.4",
+    "dotenv": "^16.6.1",
     "dpdm": "^3.14.0",
-    "eslint": "^9.34.0",
-    "eventsource": "^3.0.6",
+    "eslint": "^9.36.0",
+    "eventsource": "^3.0.7",
     "express": "^5.1.0",
     "langchain": "workspace:*",
     "npm-run-all2": "^8.0.4",
-    "prettier": "^2.8.3",
-    "release-it": "^17.6.0",
-    "rollup": "^4.39.0",
+    "prettier": "^3.6.2",
+    "release-it": "^17.11.0",
+    "rollup": "^4.52.3",
     "ts-node": "^10.9.2",
     "typescript": "~5.8.3",
-    "typescript-eslint": "^8.29.0",
-    "vitest": "^3.1.1"
+    "typescript-eslint": "^8.45.0",
+    "vitest": "^3.2.4"
   },
   "engines": {
-    "node": ">=20"
+    "node": ">=20.10.0"
   },
   "directories": {
     "example": "examples"
