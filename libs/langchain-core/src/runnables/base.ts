@@ -160,6 +160,7 @@ export abstract class Runnable<
     // eslint-disable-next-line @typescript-eslint/no-use-before-define
     return new RunnableRetry({
       bound: this,
+      kwargs: {},
       config: {},
       maxAttemptNumber: fields?.stopAfterAttempt,
       ...fields,
@@ -178,6 +179,7 @@ export abstract class Runnable<
     return new RunnableBinding({
       bound: this,
       config,
+      kwargs: {},
     });
   }
 
@@ -1192,6 +1194,8 @@ export type RunnableBindingArgs<
   CallOptions extends RunnableConfig = RunnableConfig
 > = {
   bound: Runnable<RunInput, RunOutput, CallOptions>;
+  /** @deprecated Use {@link config} instead. */
+  kwargs?: Partial<CallOptions>;
   config: RunnableConfig;
   configFactories?: Array<
     (config: RunnableConfig) => RunnableConfig | Promise<RunnableConfig>
@@ -1256,6 +1260,8 @@ export class RunnableBinding<
 
   config: RunnableConfig;
 
+  kwargs?: Partial<CallOptions>;
+
   configFactories?: Array<
     (config: RunnableConfig) => RunnableConfig | Promise<RunnableConfig>
   >;
@@ -1263,6 +1269,7 @@ export class RunnableBinding<
   constructor(fields: RunnableBindingArgs<RunInput, RunOutput, CallOptions>) {
     super(fields);
     this.bound = fields.bound;
+    this.kwargs = fields.kwargs;
     this.config = fields.config;
     this.configFactories = fields.configFactories;
   }
@@ -1296,6 +1303,7 @@ export class RunnableBinding<
       ): RunnableBinding<RunInput, RunOutput, CallOptions>;
     })({
       bound: this.bound,
+      kwargs: this.kwargs,
       config: { ...this.config, ...config },
     });
   }
@@ -1307,6 +1315,7 @@ export class RunnableBinding<
     // eslint-disable-next-line @typescript-eslint/no-use-before-define
     return new RunnableRetry({
       bound: this.bound,
+      kwargs: this.kwargs,
       config: this.config,
       maxAttemptNumber: fields?.stopAfterAttempt,
       ...fields,
@@ -1317,7 +1326,10 @@ export class RunnableBinding<
     input: RunInput,
     options?: Partial<CallOptions>
   ): Promise<RunOutput> {
-    return this.bound.invoke(input, await ensureConfig(options));
+    return this.bound.invoke(
+      input,
+      await this._mergeConfig(options, this.kwargs)
+    );
   }
 
   async batch(
@@ -1346,10 +1358,10 @@ export class RunnableBinding<
     const mergedOptions = Array.isArray(options)
       ? await Promise.all(
           options.map(async (individualOption) =>
-            ensureConfig(individualOption)
+            this._mergeConfig(ensureConfig(individualOption), this.kwargs)
           )
         )
-      : await ensureConfig(options);
+      : await this._mergeConfig(ensureConfig(options), this.kwargs);
     return this.bound.batch(inputs, mergedOptions, batchOptions);
   }
 
@@ -1357,21 +1369,30 @@ export class RunnableBinding<
     input: RunInput,
     options?: Partial<CallOptions> | undefined
   ) {
-    yield* this.bound._streamIterator(input, await ensureConfig(options));
+    yield* this.bound._streamIterator(
+      input,
+      await this._mergeConfig(ensureConfig(options), this.kwargs)
+    );
   }
 
   async stream(
     input: RunInput,
     options?: Partial<CallOptions> | undefined
   ): Promise<IterableReadableStream<RunOutput>> {
-    return this.bound.stream(input, await ensureConfig(options));
+    return this.bound.stream(
+      input,
+      await this._mergeConfig(ensureConfig(options), this.kwargs)
+    );
   }
 
   async *transform(
     generator: AsyncGenerator<RunInput>,
     options?: Partial<CallOptions>
   ): AsyncGenerator<RunOutput> {
-    yield* this.bound.transform(generator, await ensureConfig(options));
+    yield* this.bound.transform(
+      generator,
+      await this._mergeConfig(ensureConfig(options), this.kwargs)
+    );
   }
 
   streamEvents(
@@ -1402,7 +1423,10 @@ export class RunnableBinding<
       yield* outerThis.bound.streamEvents(
         input,
         {
-          ...ensureConfig(options),
+          ...(await outerThis._mergeConfig(
+            ensureConfig(options),
+            outerThis.kwargs
+          )),
           version: options.version,
         },
         streamOptions
@@ -1441,6 +1465,7 @@ export class RunnableBinding<
   }): Runnable<RunInput, RunOutput, CallOptions> {
     return new RunnableBinding<RunInput, RunOutput, CallOptions>({
       bound: this.bound,
+      kwargs: this.kwargs,
       config: this.config,
       configFactories: [
         (config) => ({
