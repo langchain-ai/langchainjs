@@ -54,7 +54,6 @@
     "@langchain/baidu-qianfan": "workspace:*",
     "@langchain/cloudflare": "workspace:*",
     "@langchain/cohere": "workspace:*",
-    "@langchain/community": "workspace:*",
     "@langchain/core": "workspace:*",
     "@langchain/deepseek": "workspace:*",
     "@langchain/eslint": "workspace:*",
