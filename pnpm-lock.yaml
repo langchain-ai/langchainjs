@@ -44,7 +44,7 @@ importers:
         specifier: ^2.5.4
         version: 2.5.5
       typescript:
-        specifier: ^5.9.2
+        specifier: ^5.9.3
         version: 5.9.3
 
   examples:
@@ -1015,6 +1015,9 @@ importers:
 
   libs/langchain-community:
     dependencies:
+      '@langchain/classic':
+        specifier: workspace:*
+        version: link:../langchain-classic
       '@langchain/openai':
         specifier: '>=0.2.0 <0.7.0'
         version: 0.6.3(@langchain/core@libs+langchain-core)(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.5))
@@ -1036,9 +1039,6 @@ importers:
       js-yaml:
         specifier: ^4.1.0
         version: 4.1.0
-      langchain:
-        specifier: '>=0.2.3 <0.3.0 || >=0.3.4 <0.4.0'
-        version: 0.3.30(26e64a1780a3c60cf79d86ff89457db6)
       uuid:
         specifier: ^10.0.0
         version: 10.0.0
@@ -2899,17 +2899,17 @@ importers:
   libs/providers/langchain-mcp-adapters:
     dependencies:
       '@modelcontextprotocol/sdk':
-        specifier: ^1.12.1
+        specifier: ^1.18.2
         version: 1.19.1
       debug:
-        specifier: ^4.4.0
+        specifier: ^4.4.3
         version: 4.4.3(supports-color@8.1.1)
       zod:
         specifier: ^3.25.76 || ^4
         version: 3.25.76
     devDependencies:
       '@eslint/js':
-        specifier: ^9.21.0
+        specifier: ^9.36.0
         version: 9.36.0
       '@langchain/core':
         specifier: workspace:*
@@ -2924,31 +2924,31 @@ importers:
         specifier: workspace:*
         version: link:../langchain-openai
       '@tsconfig/recommended':
-        specifier: ^1.0.8
+        specifier: ^1.0.10
         version: 1.0.10
       '@types/debug':
         specifier: ^4.1.12
         version: 4.1.12
       '@types/express':
-        specifier: ^5
+        specifier: ^5.0.3
         version: 5.0.3
       '@types/node':
-        specifier: ^22.13.10
+        specifier: ^22.18.8
         version: 22.18.8
       '@vitest/coverage-v8':
-        specifier: ^3.1.1
+        specifier: ^3.2.4
         version: 3.2.4(vitest@3.2.4(@types/debug@4.1.12)(@types/node@22.18.8)(jiti@2.5.1)(jsdom@26.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.5))(terser@5.44.0)(tsx@4.20.3)(yaml@2.8.1))
       dotenv:
-        specifier: ^16.4.7
+        specifier: ^16.6.1
         version: 16.6.1
       dpdm:
         specifier: ^3.14.0
         version: 3.14.0
       eslint:
-        specifier: ^9.34.0
+        specifier: ^9.36.0
         version: 9.36.0(jiti@2.5.1)
       eventsource:
-        specifier: ^3.0.6
+        specifier: ^3.0.7
         version: 3.0.7
       express:
         specifier: ^5.1.0
@@ -2960,13 +2960,13 @@ importers:
         specifier: ^8.0.4
         version: 8.0.4
       prettier:
-        specifier: ^2.8.3
-        version: 2.8.8
+        specifier: ^3.6.2
+        version: 3.6.2
       release-it:
-        specifier: ^17.6.0
+        specifier: ^17.11.0
         version: 17.11.0(typescript@5.8.3)
       rollup:
-        specifier: ^4.39.0
+        specifier: ^4.52.3
         version: 4.52.4
       ts-node:
         specifier: ^10.9.2
@@ -2975,14 +2975,14 @@ importers:
         specifier: ~5.8.3
         version: 5.8.3
       typescript-eslint:
-        specifier: ^8.29.0
+        specifier: ^8.45.0
         version: 8.45.0(eslint@9.36.0(jiti@2.5.1))(typescript@5.8.3)
       vitest:
-        specifier: ^3.1.1
+        specifier: ^3.2.4
         version: 3.2.4(@types/debug@4.1.12)(@types/node@22.18.8)(jiti@2.5.1)(jsdom@26.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.5))(terser@5.44.0)(tsx@4.20.3)(yaml@2.8.1)
     optionalDependencies:
       extended-eventsource:
-        specifier: ^1.x
+        specifier: ^1.7.0
         version: 1.7.0
 
   libs/providers/langchain-mistralai:
@@ -20318,6 +20318,7 @@ snapshots:
     dependencies:
       '@langchain/core': link:libs/langchain-core
       js-tiktoken: 1.0.20
+    optional: true
 
   '@langchain/weaviate@0.2.1(@langchain/core@libs+langchain-core)(encoding@0.1.13)':
     dependencies:
@@ -28190,6 +28191,7 @@ snapshots:
       - '@opentelemetry/sdk-trace-base'
       - openai
       - ws
+    optional: true
 
   langsmith@0.3.64(@opentelemetry/api@1.9.0)(openai@5.11.0(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.5))(zod@3.25.76)):
     dependencies:
@@ -28203,6 +28205,7 @@ snapshots:
     optionalDependencies:
       '@opentelemetry/api': 1.9.0
       openai: 5.11.0(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.5))(zod@3.25.76)
+    optional: true
 
   langsmith@0.3.64(@opentelemetry/api@1.9.0)(openai@5.12.2(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.5))(zod@3.25.76)):
     dependencies:
