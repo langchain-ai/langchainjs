@@ -3,7 +3,7 @@ import { humanInTheLoopMiddleware } from "langchain";
 import { Command, MemorySaver } from "@langchain/langgraph";
 import { z } from "zod";
 
-const checkpointSaver = new MemorySaver();
+const checkpointer = new MemorySaver();
 
 // Define a safe tool (no approval needed)
 const calculateTool = tool(
@@ -64,7 +64,7 @@ const hitlMiddleware = humanInTheLoopMiddleware({
 // Create agent with HITL middleware
 const agent = createAgent({
   model: "openai:gpt-4o-mini",
-  checkpointSaver,
+  checkpointer,
   systemPrompt:
     "You are a helpful assistant. Use the tools provided to help the user.",
   tools: [calculateTool, writeFileTool],
