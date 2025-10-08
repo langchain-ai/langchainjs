@@ -14,7 +14,7 @@ const sumTool = tool(({ a, b }: { a: number; b: number }) => a + b, {
 });
 
 const agent = createAgent({
-  llm: new ChatOpenAI({ model: "gpt-4o-mini" }),
+  model: new ChatOpenAI({ model: "gpt-4o-mini" }),
   tools: [sumTool],
   responseFormat: z.object({
     result: z.number(),

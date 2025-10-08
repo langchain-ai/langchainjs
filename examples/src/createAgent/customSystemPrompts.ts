@@ -16,7 +16,7 @@
  */
 
 import fs from "node:fs/promises";
-import { createAgent, tool } from "langchain";
+import { createAgent, dynamicSystemPromptMiddleware, tool } from "langchain";
 import { ChatOpenAI } from "@langchain/openai";
 import { z } from "zod";
 
@@ -52,9 +52,9 @@ const checkAccount = tool(
  * This is the most common pattern - populate a template with context variables
  */
 const customerServiceAgent = createAgent({
-  llm: new ChatOpenAI({ model: "gpt-4" }),
+  model: new ChatOpenAI({ model: "gpt-4" }),
   tools: [checkAccount],
-  prompt: `You are a customer service representative for our software company.
+  systemPrompt: `You are a customer service representative for our software company.
 
 Customer Context:
 - User ID: ${userContext.userId}
@@ -75,18 +75,16 @@ Guidelines:
  * This pattern is useful when variables need to be determined at runtime
  */
 const contextAwareAgent = createAgent({
-  llm: new ChatOpenAI({ model: "gpt-4" }),
+  model: new ChatOpenAI({ model: "gpt-4" }),
   tools: [checkAccount],
-  prompt: async (state) => {
-    // Variables could come from state analysis, external APIs, or databases
-    const messageCount = state.messages.length;
-    const isFirstInteraction = messageCount <= 1;
-    const urgencyLevel = isFirstInteraction ? "standard" : "priority";
+  middleware: [
+    dynamicSystemPromptMiddleware(async (state) => {
+      // Variables could come from state analysis, external APIs, or databases
+      const messageCount = state.messages.length;
+      const isFirstInteraction = messageCount <= 1;
+      const urgencyLevel = isFirstInteraction ? "standard" : "priority";
 
-    return [
-      {
-        role: "system",
-        content: `You are a customer service representative.
+      return `You are a customer service representative.
 
 Customer: ${userContext.userId} (${userContext.accountTier} tier)
 Product: ${userContext.currentProduct}
@@ -97,11 +95,9 @@ ${
   isFirstInteraction
     ? "This is their first message. Greet them warmly."
     : "Continue the conversation with appropriate context."
-}`,
-      },
-      ...state.messages,
-    ];
-  },
+}`;
+    }),
+  ],
 });
 
 /**

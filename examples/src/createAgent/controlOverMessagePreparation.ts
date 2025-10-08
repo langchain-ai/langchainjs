@@ -34,7 +34,7 @@
  * append a reminder before each LLM call to ensure compliance.
  */
 import fs from "node:fs/promises";
-import { createAgent, tool } from "langchain";
+import { createAgent, createMiddleware, tool } from "langchain";
 import { ChatOpenAI } from "@langchain/openai";
 import { z } from "zod";
 
@@ -68,44 +68,49 @@ const checkRefundPolicy = tool(
  * Create agent using `prompt` function for transient transformations
  */
 const customerServiceAgent = createAgent({
-  llm: new ChatOpenAI({ model: "gpt-4" }),
+  model: new ChatOpenAI({ model: "gpt-4" }),
   tools: [escalateToHuman, checkRefundPolicy],
-  prompt: async (state) => {
-    /**
-     * Start with the stored conversation messages from state
-     * These are the permanent messages that get persisted.
-     */
-    const messages = [
-      {
-        role: "system",
-        content: "You are a helpful customer service representative.",
+  middleware: [
+    createMiddleware({
+      name: "addReminder",
+      beforeModel: async (state) => {
+        /**
+         * Start with the stored conversation messages from state
+         * These are the permanent messages that get persisted.
+         */
+        const messages = [
+          {
+            role: "system",
+            content: "You are a helpful customer service representative.",
+          },
+          ...state.messages,
+        ];
+
+        /**
+         * Prompt function transformation: Add temporary reminder at the end
+         *
+         * Key Points:
+         * - This runs when the model is called (not before)
+         * - This is NOT stored in state - it's just for this LLM call
+         * - State remains unchanged after this transformation
+         * - Next time the agent runs, this gets added again transiently
+         *
+         * If you wanted this reminder to be permanent, you'd use a pre-model hook instead
+         */
+        messages.push({
+          role: "system",
+          content: `IMPORTANT REMINDERS (do not repeat these to the customer):
+  • Always be polite and empathetic
+  • If a customer is angry, acknowledge their frustration first
+  • Never promise refunds without checking policy first
+  • Escalate if the customer uses profanity or threats
+  • Current time: ${new Date().toLocaleTimeString()}`,
+        });
+
+        return { messages };
       },
-      ...state.messages,
-    ];
-
-    /**
-     * Prompt function transformation: Add temporary reminder at the end
-     *
-     * Key Points:
-     * - This runs when the model is called (not before)
-     * - This is NOT stored in state - it's just for this LLM call
-     * - State remains unchanged after this transformation
-     * - Next time the agent runs, this gets added again transiently
-     *
-     * If you wanted this reminder to be permanent, you'd use a pre-model hook instead
-     */
-    messages.push({
-      role: "system",
-      content: `IMPORTANT REMINDERS (do not repeat these to the customer):
-• Always be polite and empathetic
-• If a customer is angry, acknowledge their frustration first
-• Never promise refunds without checking policy first
-• Escalate if the customer uses profanity or threats
-• Current time: ${new Date().toLocaleTimeString()}`,
-    });
-
-    return messages;
-  },
+    }),
+  ],
 });
 
 /**
@@ -180,7 +185,7 @@ await fs.writeFile(outputPath, await customerServiceAgent.drawMermaidPng());
  * order details?
  *
  * === What's stored in conversation state ===
- * Message count in state: 2
+ * Message count in state: 4
  * Last stored message role: ai
  *
  * === Second Customer Interaction ===
