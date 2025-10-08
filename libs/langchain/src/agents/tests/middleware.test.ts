@@ -5,10 +5,7 @@ import { LanguageModelLike } from "@langchain/core/language_models/base";
 import { z } from "zod/v3";
 
 import { createAgent, createMiddleware } from "../index.js";
-import {
-  FakeToolCallingChatModel,
-  FakeToolCallingModel,
-} from "../../tests/utils.js";
+import { FakeToolCallingChatModel, FakeToolCallingModel } from "./utils.js";
 
 function createMockModel(name = "ChatAnthropic", model = "anthropic") {
   // Mock Anthropic model

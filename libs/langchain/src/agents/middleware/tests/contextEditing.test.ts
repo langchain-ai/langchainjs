@@ -9,7 +9,7 @@ import {
   type TokenCounter,
 } from "../contextEditing.js";
 import { createAgent } from "../../index.js";
-import { FakeToolCallingChatModel } from "../../../tests/utils.js";
+import { FakeToolCallingChatModel } from "../../tests/utils.js";
 
 describe("contextEditingMiddleware", () => {
   /**

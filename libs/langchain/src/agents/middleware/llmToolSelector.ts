@@ -5,7 +5,7 @@ import { HumanMessage } from "@langchain/core/messages";
 import type { StructuredToolInterface } from "@langchain/core/tools";
 
 import { createMiddleware } from "../middleware.js";
-import { initChatModel } from "../../../chat_models/universal.js";
+import { initChatModel } from "../../chat_models/universal.js";
 import type { ModelRequest, Runtime } from "../types.js";
 
 const DEFAULT_SYSTEM_PROMPT =

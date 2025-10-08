@@ -17,7 +17,7 @@ import {
   ToolCallLimitExceededError,
 } from "../toolCallLimit.js";
 import { createAgent } from "../../index.js";
-import { FakeToolCallingChatModel } from "../../../tests/utils.js";
+import { FakeToolCallingChatModel } from "../../tests/utils.js";
 
 describe("toolCallLimitMiddleware", () => {
   // Helper to create test tools

@@ -9,7 +9,7 @@ import {
 import { summarizationMiddleware } from "../summarization.js";
 import { countTokensApproximately } from "../utils.js";
 import { createAgent } from "../../index.js";
-import { FakeToolCallingChatModel } from "../../../tests/utils.js";
+import { FakeToolCallingChatModel } from "../../tests/utils.js";
 
 describe("summarizationMiddleware", () => {
   // Mock summarization model

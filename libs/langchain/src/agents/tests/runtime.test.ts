@@ -2,7 +2,7 @@ import { describe, it, expect } from "vitest";
 import { HumanMessage } from "@langchain/core/messages";
 
 import { createMiddleware, createAgent } from "../index.js";
-import { FakeToolCallingModel } from "../../tests/utils.js";
+import { FakeToolCallingModel } from "./utils.js";
 
 describe("runtime", () => {
   it("should throw on the attempt to write to the runtime in beforeModel", async () => {

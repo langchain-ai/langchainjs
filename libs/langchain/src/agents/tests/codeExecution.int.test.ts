@@ -2,7 +2,7 @@ import { describe, it, expect } from "vitest";
 import { ChatAnthropic } from "@langchain/anthropic";
 import { HumanMessage, AIMessage } from "@langchain/core/messages";
 
-import { createAgent } from "../createAgent.js";
+import { createAgent } from "../index.js";
 
 describe("Code Execution Tool", () => {
   it("should use Anthropic code_execution tool to calculate statistics", async () => {
@@ -25,7 +25,7 @@ describe("Code Execution Tool", () => {
 
     // Create agent with the built-in tool
     const agent = createAgent({
-      llm: model,
+      model,
       tools: [codeExecutionTool],
     });
 
@@ -50,7 +50,7 @@ describe("Code Execution Tool", () => {
 
     // The response should contain content blocks
     const content = Array.isArray(aiResponse?.content)
-      ? aiResponse.content
+      ? aiResponse?.content ?? []
       : [];
     expect(content.length).toBeGreaterThan(0);
 

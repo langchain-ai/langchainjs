@@ -3,10 +3,7 @@ import { z } from "zod/v3";
 import { LangGraphRunnableConfig, Command } from "@langchain/langgraph";
 import { interopParse } from "@langchain/core/utils/types";
 
-import {
-  RunnableCallable,
-  RunnableCallableArgs,
-} from "../../RunnableCallable.js";
+import { RunnableCallable, RunnableCallableArgs } from "../RunnableCallable.js";
 import type {
   Runtime,
   AgentMiddleware,

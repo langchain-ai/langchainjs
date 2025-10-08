@@ -4,7 +4,7 @@ import { HumanMessage, BaseMessage } from "@langchain/core/messages";
 import { tool } from "@langchain/core/tools";
 
 import { createAgent, createMiddleware } from "../index.js";
-import type { ServerTool, ClientTool } from "../../types.js";
+import type { ServerTool, ClientTool } from "../types.js";
 
 describe("middleware types", () => {
   it("a middleware can define a state schema which is propagated to the result", async () => {

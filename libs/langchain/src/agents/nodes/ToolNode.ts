@@ -1,12 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable no-instanceof/no-instanceof */
-import {
-  BaseMessage,
-  ToolMessage,
-  AIMessage,
-  isBaseMessage,
-  isToolMessage,
-} from "@langchain/core/messages";
+import { BaseMessage, ToolMessage, AIMessage } from "@langchain/core/messages";
 import { RunnableConfig, RunnableToolLike } from "@langchain/core/runnables";
 import {
   DynamicTool,
@@ -65,7 +59,7 @@ export interface ToolNodeOptions {
 }
 
 const isBaseMessageArray = (input: unknown): input is BaseMessage[] =>
-  Array.isArray(input) && input.every(isBaseMessage);
+  Array.isArray(input) && input.every(BaseMessage.isInstance);
 
 const isMessagesState = (
   input: unknown
@@ -220,7 +214,7 @@ export class ToolNode<
        */
       if (typeof this.handleToolErrors === "function") {
         const result = this.handleToolErrors(e, call);
-        if (result && isToolMessage(result)) {
+        if (result && ToolMessage.isInstance(result)) {
           return result;
         }
       } else if (this.handleToolErrors) {

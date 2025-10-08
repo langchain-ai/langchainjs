@@ -4,7 +4,7 @@ import { HumanMessage } from "@langchain/core/messages";
 import { MemorySaver } from "@langchain/langgraph-checkpoint";
 
 import { createMiddleware, createAgent } from "../index.js";
-import { FakeToolCallingModel } from "../../tests/utils.js";
+import { FakeToolCallingModel } from "./utils.js";
 
 const checkpointer = new MemorySaver();
 const config = {

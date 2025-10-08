@@ -14,7 +14,7 @@ import type {
   ModelRequest,
   JumpToTarget,
 } from "./types.js";
-import type { ClientTool, ServerTool } from "../types.js";
+import type { ClientTool, ServerTool } from "./types.js";
 
 /**
  * Creates a middleware instance with automatic schema inference.

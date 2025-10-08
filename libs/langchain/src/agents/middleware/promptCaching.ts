@@ -2,7 +2,7 @@ import { z } from "zod/v3";
 import { ContentBlock } from "@langchain/core/messages";
 import { InferInteropZodInput } from "@langchain/core/utils/types";
 
-import { ConfigurableModel } from "../../../chat_models/universal.js";
+import { ConfigurableModel } from "../../chat_models/universal.js";
 import { createMiddleware } from "../middleware.js";
 
 const DEFAULT_ENABLE_CACHING = true;
@@ -260,6 +260,7 @@ export function anthropicPromptCachingMiddleware(
         };
       } else if (typeof lastMessage.content === "string") {
         const newMessage = new NewMessageConstructor({
+          ...lastMessage,
           content: [
             {
               type: "text",

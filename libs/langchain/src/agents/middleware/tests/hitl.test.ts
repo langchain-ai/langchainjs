@@ -16,8 +16,8 @@ import {
   _AnyIdHumanMessage,
   _AnyIdToolMessage,
   _AnyIdAIMessage,
-} from "../../../tests/utils.js";
-import type { Interrupt } from "../../../interrupt.js";
+} from "../../tests/utils.js";
+import type { Interrupt } from "../../types.js";
 
 const writeFileFn = vi.fn(
   async ({ filename, content }: { filename: string; content: string }) => {
