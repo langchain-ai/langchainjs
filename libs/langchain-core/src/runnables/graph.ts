@@ -6,7 +6,7 @@ import type {
   Edge,
 } from "./types.js";
 import { isRunnableInterface } from "./utils.js";
-import { drawMermaid, drawMermaidPng } from "./graph_mermaid.js";
+import { drawMermaid, drawMermaidImage } from "./graph_mermaid.js";
 import { toJsonSchema } from "../utils/json_schema.js";
 
 export { Node, Edge };
@@ -277,7 +277,7 @@ export class Graph {
     backgroundColor?: string;
   }): Promise<Blob> {
     const mermaidSyntax = this.drawMermaid(params);
-    return drawMermaidPng(mermaidSyntax, {
+    return drawMermaidImage(mermaidSyntax, {
       backgroundColor: params?.backgroundColor,
     });
   }

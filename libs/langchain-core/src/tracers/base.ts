@@ -13,7 +13,7 @@ import {
   NewTokenIndices,
 } from "../callbacks/base.js";
 import type { Document } from "../documents/document.js";
-import { getRuntimeEnvironmentSync } from "../utils/env.js";
+import { getRuntimeEnvironment } from "../utils/env.js";
 
 export type RunType = string;
 
@@ -66,7 +66,7 @@ function convertRunToRunTree(run?: Run, parentRun?: Run): RunTree | undefined {
       .filter((r): r is RunTree => r !== undefined),
     extra: {
       ...run.extra,
-      runtime: getRuntimeEnvironmentSync(),
+      runtime: getRuntimeEnvironment(),
     },
     tracingEnabled: false,
   });

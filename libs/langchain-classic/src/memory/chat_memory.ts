@@ -57,7 +57,7 @@ export abstract class BaseChatMemory extends BaseMemory {
     await this.chatHistory.addUserMessage(
       getInputValue(inputValues, this.inputKey)
     );
-    await this.chatHistory.addAIChatMessage(
+    await this.chatHistory.addAIMessage(
       getOutputValue(outputValues, this.outputKey)
     );
   }

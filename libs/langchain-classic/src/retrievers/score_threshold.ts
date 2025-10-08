@@ -31,7 +31,7 @@ export class ScoreThresholdRetriever<
     this.kIncrement = input.kIncrement ?? this.kIncrement;
   }
 
-  async getRelevantDocuments(query: string): Promise<Document[]> {
+  async invoke(query: string): Promise<Document[]> {
     let currentK = 0;
     let filteredResults: [Document, number][] = [];
     do {

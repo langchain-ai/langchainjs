@@ -98,7 +98,7 @@ export class RetrievalQAChain
       throw new Error(`Question key "${this.inputKey}" not found.`);
     }
     const question: string = values[this.inputKey];
-    const docs = await this.retriever.getRelevantDocuments(
+    const docs = await this.retriever.invoke(
       question,
       runManager?.getChild("retriever")
     );

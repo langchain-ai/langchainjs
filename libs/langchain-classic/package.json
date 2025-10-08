@@ -17,9 +17,7 @@
   },
   "homepage": "https://github.com/langchain-ai/langchainjs/tree/main/langchain/",
   "scripts": {
-    "build": "pnpm build:source && pnpm build:examples",
-    "build:source": "pnpm --filter @langchain/build compile @langchain/classic --tsconfigPath tsconfig.build.json",
-    "build:examples": "pnpm --filter @langchain/build compile @langchain/classic --tsconfigPath tsconfig.examples.json --noEmit",
+    "build": "pnpm --filter @langchain/build compile @langchain/classic",
     "lint:eslint": "eslint --cache",
     "lint:dpdm": "dpdm --skip-dynamic-imports circular --exit-code circular:1 --no-warning --no-tree src/*.ts src/**/*.ts",
     "lint": "pnpm lint:eslint && pnpm lint:dpdm",
@@ -55,7 +53,6 @@
     "@langchain/baidu-qianfan": "workspace:*",
     "@langchain/cloudflare": "workspace:*",
     "@langchain/cohere": "workspace:*",
-    "@langchain/community": "workspace:*",
     "@langchain/core": "workspace:*",
     "@langchain/deepseek": "workspace:*",
     "@langchain/eslint": "workspace:*",
@@ -1197,17 +1194,6 @@
         "default": "./dist/smith/index.cjs"
       },
       "input": "./src/smith/index.ts"
-    },
-    "./runnables/remote": {
-      "import": {
-        "types": "./dist/runnables/remote.d.ts",
-        "default": "./dist/runnables/remote.js"
-      },
-      "require": {
-        "types": "./dist/runnables/remote.d.cts",
-        "default": "./dist/runnables/remote.cjs"
-      },
-      "input": "./src/runnables/remote.ts"
     },
     "./indexes": {
       "import": {

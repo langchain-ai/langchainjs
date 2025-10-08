@@ -28,7 +28,7 @@ test("Should work with a question input", async () => {
   });
 
   const query = "What are mitochondria made of?";
-  const retrievedDocs = await retriever.getRelevantDocuments(query);
+  const retrievedDocs = await retriever.invoke(query);
   expect(retrievedDocs[0].pageContent).toContain("mitochondria");
 });
 
@@ -54,6 +54,6 @@ test("Should work with a keyword", async () => {
   });
 
   const query = "cars";
-  const retrievedDocs = await retriever.getRelevantDocuments(query);
+  const retrievedDocs = await retriever.invoke(query);
   expect(retrievedDocs[0].pageContent).toContain("Cars");
 });

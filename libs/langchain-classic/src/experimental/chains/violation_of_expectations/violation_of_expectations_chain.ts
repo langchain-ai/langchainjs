@@ -295,9 +295,7 @@ export class ViolationOfExpectationsChain
     // Only extract the first relevant doc from the retriever. We don't need more than one.
     const relevantInsightsDocuments = await Promise.all(
       insights.map(async (insight) => {
-        const relevantInsight = await this.retriever.getRelevantDocuments(
-          insight
-        );
+        const relevantInsight = await this.retriever.invoke(insight);
         return relevantInsight[0];
       })
     );

@@ -88,19 +88,19 @@ test("Memory Vector Store Self Query Retriever Test", async () => {
     structuredQueryTranslator: new FunctionalTranslator(),
   });
 
-  const query1 = await selfQueryRetriever.getRelevantDocuments(
+  const query1 = await selfQueryRetriever.invoke(
     "Which movies are less than 90 minutes?"
   );
   // console.log(query1);
   expect(query1.length).toEqual(0);
 
-  const query2 = await selfQueryRetriever.getRelevantDocuments(
+  const query2 = await selfQueryRetriever.invoke(
     "Which movies are rated higher than 8.5?"
   );
   // console.log(query2);
   expect(query2.length).toEqual(2);
 
-  const query3 = await selfQueryRetriever.getRelevantDocuments(
+  const query3 = await selfQueryRetriever.invoke(
     "Which movies are directed by Greta Gerwig?"
   );
   // console.log(query3);
@@ -223,25 +223,25 @@ test("Memory Vector Store Self Query Retriever Test With Default Filter Or Merge
     },
   });
 
-  const query1 = await selfQueryRetriever.getRelevantDocuments(
+  const query1 = await selfQueryRetriever.invoke(
     "Which movies are less than 90 minutes?"
   );
   // console.log(query1);
   expect(query1.length).toEqual(6);
 
-  const query2 = await selfQueryRetriever.getRelevantDocuments(
+  const query2 = await selfQueryRetriever.invoke(
     "Which movies are rated higher than 8.5?"
   );
   // console.log(query2);
   expect(query2.length).toEqual(7);
 
-  const query3 = await selfQueryRetriever.getRelevantDocuments(
+  const query3 = await selfQueryRetriever.invoke(
     "Which movies are directed by Greta Gerwig?"
   );
   // console.log(query3);
   expect(query3.length).toEqual(6);
 
-  const query4 = await selfQueryRetriever.getRelevantDocuments(
+  const query4 = await selfQueryRetriever.invoke(
     "Awawawa au au au wawawawa hello?"
   );
   // console.log(query4);
@@ -364,25 +364,25 @@ test("Memory Vector Store Self Query Retriever Test With Default Filter And Merg
     },
   });
 
-  const query1 = await selfQueryRetriever.getRelevantDocuments(
+  const query1 = await selfQueryRetriever.invoke(
     "Which movies are less than 90 minutes?"
   );
   // console.log(query1);
   expect(query1.length).toEqual(0);
 
-  const query2 = await selfQueryRetriever.getRelevantDocuments(
+  const query2 = await selfQueryRetriever.invoke(
     "Which movies are rated higher than 8.5?"
   );
   // console.log(query2);
   expect(query2.length).toEqual(2);
 
-  const query3 = await selfQueryRetriever.getRelevantDocuments(
+  const query3 = await selfQueryRetriever.invoke(
     "Which movies are directed by Greta Gerwig?"
   );
   // console.log(query3);
   expect(query3.length).toEqual(1);
 
-  const query4 = await selfQueryRetriever.getRelevantDocuments(
+  const query4 = await selfQueryRetriever.invoke(
     "Awawawa au au au wawawawa hello?"
   );
   // console.log(query4);

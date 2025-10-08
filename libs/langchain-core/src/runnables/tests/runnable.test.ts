@@ -3,7 +3,6 @@ import { Run } from "langsmith";
 import { v4 as uuidv4 } from "uuid";
 import { z } from "zod/v3";
 import { vi, test, expect, describe } from "vitest";
-import { createChatMessageChunkEncoderStream } from "../../language_models/chat_models.js";
 import {
   BaseMessage,
   HumanMessage,
@@ -21,7 +20,6 @@ import {
   FakeLLM,
   FakeChatModel,
   FakeStreamingLLM,
-  FakeSplitIntoListParser,
   FakeRunnable,
   FakeListChatModel,
   SingleRunExtractor,
@@ -62,20 +60,6 @@ test("Test stream with an immediate thrown error", async () => {
     await llm.stream("Hi there!");
   } catch (e: any) {
     expect(e.message).toEqual("testing");
-  }
-});
-
-test("Test chat model stream", async () => {
-  const llm = new FakeChatModel({});
-  const stream = await llm.stream("Hi there!");
-  const reader = stream
-    .pipeThrough(createChatMessageChunkEncoderStream())
-    .pipeThrough(new TextDecoderStream())
-    .getReader();
-  let done = false;
-  while (!done) {
-    const chunk = await reader.read();
-    done = chunk.done;
   }
 });
 
@@ -285,21 +269,6 @@ test("RunnableLambda that returns a streaming runnable should stream output from
     chunks.push(chunk);
   }
   expect(chunks).toEqual(["h", "e", "l", "l", "o"]);
-});
-
-test("RunnableEach", async () => {
-  const parser = new FakeSplitIntoListParser();
-  expect(await parser.invoke("first item, second item")).toEqual([
-    "first item",
-    "second item",
-  ]);
-  expect(await parser.map().invoke(["a, b", "c"])).toEqual([["a", "b"], ["c"]]);
-  expect(
-    await parser
-      .map()
-      .map()
-      .invoke([["a, b", "c"], ["c, e"]])
-  ).toEqual([[["a", "b"], ["c"]], [["c", "e"]]]);
 });
 
 test("Runnable withConfig", async () => {

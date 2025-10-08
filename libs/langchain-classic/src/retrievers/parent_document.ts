@@ -61,7 +61,7 @@ export type ParentDocumentRetrieverFields = MultiVectorRetrieverInput & {
  *
  * const parentDocuments = await getDocuments();
  * await retriever.addDocuments(parentDocuments);
- * const retrievedDocs = await retriever.getRelevantDocuments("justice breyer");
+ * const retrievedDocs = await retriever.invoke("justice breyer");
  * ```
  */
 export class ParentDocumentRetriever extends MultiVectorRetriever {
@@ -107,7 +107,7 @@ export class ParentDocumentRetriever extends MultiVectorRetriever {
   async _getRelevantDocuments(query: string): Promise<Document[]> {
     let subDocs: SubDocs = [];
     if (this.childDocumentRetriever) {
-      subDocs = await this.childDocumentRetriever.getRelevantDocuments(query);
+      subDocs = await this.childDocumentRetriever.invoke(query);
     } else {
       subDocs = await this.vectorstore.similaritySearch(query, this.childK);
     }

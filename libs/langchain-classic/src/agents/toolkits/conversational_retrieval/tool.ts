@@ -15,7 +15,7 @@ export function createRetrieverTool(
     { input }: { input: string },
     runManager?: CallbackManagerForToolRun
   ) => {
-    const docs = await retriever.getRelevantDocuments(
+    const docs = await retriever.invoke(
       input,
       runManager?.getChild("retriever")
     );

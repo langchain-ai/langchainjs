@@ -6,7 +6,7 @@ import {
   AgentExecutor,
   ZeroShotAgent,
   ZeroShotCreatePromptArgs,
-} from "langchain/agents";
+} from "@langchain/classic/agents";
 import {
   SfnConfig,
   StartExecutionAWSSfnTool,

@@ -70,7 +70,7 @@ test("MatryoshkaRetriever can retrieve", async () => {
 
   const query = "What is LangChain?";
   // console.log("Querying documents");
-  const results = await retriever.getRelevantDocuments(query);
+  const results = await retriever.invoke(query);
 
   const retrieverResultContents = new Set(
     results.map((doc) => doc.pageContent)
@@ -107,7 +107,7 @@ test("Can change number of docs returned (largeK)", async () => {
   await retriever.addDocuments(docsWithId);
 
   const query = "hello world";
-  const results = await retriever.getRelevantDocuments(query);
+  const results = await retriever.invoke(query);
   expect(results.length).toBe(10);
 });
 
@@ -136,7 +136,7 @@ test("AddDocunents adds large embeddings metadata field", async () => {
 
   await retriever.addDocuments([doc]);
 
-  const relevantDocs = await retriever.getRelevantDocuments("hello world");
+  const relevantDocs = await retriever.invoke("hello world");
   expect(relevantDocs[0].metadata.id).toBe(testId);
   expect(relevantDocs[0].metadata[retriever.largeEmbeddingKey]).toBeDefined();
   expect(

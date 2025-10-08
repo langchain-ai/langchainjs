@@ -109,7 +109,7 @@ export class AutoGPTPrompt
     const usedTokens =
       (await this.tokenCounter(basePrompt.content)) +
       (await this.tokenCounter(timePrompt.content));
-    const relevantDocs = await memory.getRelevantDocuments(
+    const relevantDocs = await memory.invoke(
       JSON.stringify(previousMessages.slice(-10))
     );
     const relevantMemory = relevantDocs.map(

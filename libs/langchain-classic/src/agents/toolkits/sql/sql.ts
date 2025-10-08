@@ -41,7 +41,7 @@ export class SqlToolkit extends BaseToolkit {
 
   dialect = "sqlite";
 
-  constructor(db: SqlDatabase, llm?: BaseLanguageModelInterface) {
+  constructor(db: SqlDatabase, llm: BaseLanguageModelInterface) {
     super();
     this.db = db;
     this.tools = [
