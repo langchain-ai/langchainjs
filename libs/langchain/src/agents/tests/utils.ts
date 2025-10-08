@@ -237,7 +237,7 @@ export class FakeToolCallingChatModel extends BaseChatModel {
     if (this.toolStyle === "google") {
       toolsToBind = [{ functionDeclarations: toolDicts }];
     }
-    return this.bind({
+    return this.withConfig({
       tools: [...toolsToBind, ...serverTools],
     } as BaseChatModelCallOptions);
   }
