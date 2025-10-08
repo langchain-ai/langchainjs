@@ -18,6 +18,7 @@ export interface VectorStoreTableArgs {
   schemaName?: string;
   contentColumn?: string;
   embeddingColumn?: string;
+  embeddingColumnType?: "vector" | "halfvec" | "bit" | "sparsevec";
   metadataColumns?: Column[];
   metadataJsonColumn?: string;
   idColumn?: string | Column;
@@ -223,6 +224,7 @@ export class PostgresEngine {
    * @param schemaName The schema name to store Postgres database table. Default: "public". Parameter is not escaped. Do not use with end user input.
    * @param contentColumn Name of the column to store document content. Default: "content".
    * @param embeddingColumn Name of the column to store vector embeddings. Default: "embedding".
+   * @param embeddingColumnType Type of the embedding column ("vector" | "halfvec" | "bit" | "sparsevec"). Default: "vector". More info on HNSW-supported types: https://github.com/pgvector/pgvector#hnsw
    * @param metadataColumns Optional - A list of Columns to create for custom metadata. Default: [].
    * @param metadataJsonColumn Optional - The column to store extra metadata in JSON format. Default: "langchain_metadata".
    * @param idColumn Optional - Column to store ids. Default: "langchain_id" column name with data type UUID.
@@ -236,6 +238,7 @@ export class PostgresEngine {
       schemaName = "public",
       contentColumn = "content",
       embeddingColumn = "embedding",
+      embeddingColumnType = "vector",
       metadataColumns = [],
       metadataJsonColumn = "langchain_metadata",
       idColumn = "langchain_id",
@@ -259,7 +262,7 @@ export class PostgresEngine {
     let query = `CREATE TABLE ${schemaName}.${tableName}(
       ${idColumnName} ${idDataType} PRIMARY KEY,
       ${contentColumn} TEXT NOT NULL,
-      ${embeddingColumn} vector(${vectorSize}) NOT NULL`;
+      ${embeddingColumn} ${embeddingColumnType}(${vectorSize}) NOT NULL`;
 
     for (const column of metadataColumns) {
       const nullable = !column.nullable ? "NOT NULL" : "";

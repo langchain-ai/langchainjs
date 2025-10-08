@@ -15,6 +15,7 @@
     "noUnusedParameters": true,
     "useDefineForClassFields": true,
     "strictPropertyInitialization": false,
+    "resolveJsonModule": true,
     "allowJs": true,
     "strict": true
   },

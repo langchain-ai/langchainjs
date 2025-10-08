@@ -235,12 +235,19 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@anthropic-ai/sdk@npm:^0.56.0":
-  version: 0.56.0
-  resolution: "@anthropic-ai/sdk@npm:0.56.0"
+"@anthropic-ai/sdk@npm:^0.65.0":
+  version: 0.65.0
+  resolution: "@anthropic-ai/sdk@npm:0.65.0"
+  dependencies:
+    json-schema-to-ts: ^3.1.1
+  peerDependencies:
+    zod: ^3.25.0 || ^4.0.0
+  peerDependenciesMeta:
+    zod:
+      optional: true
   bin:
     anthropic-ai-sdk: bin/cli
-  checksum: b34d152f287bdec3a3201ecb2b65d7b00c9d9739b3153681cd68fe3d6298655266441f68a4f381fd650b895cfa26724844ae2a637e558c32c81083efa2a43f7d
+  checksum: d8c31aab2b0573455abd86793995cd6a24e6a7d5b85c8c66e8896309c42b1029fb3616caad688d9e8e53bb43fc96979ba10b07bce7048a2971e46e83a73e38d8
   languageName: node
   linkType: hard
 
@@ -5030,6 +5037,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@babel/runtime@npm:^7.18.3":
+  version: 7.28.4
+  resolution: "@babel/runtime@npm:7.28.4"
+  checksum: 934b0a0460f7d06637d93fcd1a44ac49adc33518d17253b5a0b55ff4cb90a45d8fe78bf034b448911dbec7aff2a90b918697559f78d21c99ff8dbadae9565b55
+  languageName: node
+  linkType: hard
+
 "@babel/runtime@npm:^7.5.5":
   version: 7.28.3
   resolution: "@babel/runtime@npm:7.28.3"
@@ -8685,7 +8699,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@langchain/anthropic@workspace:libs/langchain-anthropic"
   dependencies:
-    "@anthropic-ai/sdk": ^0.56.0
+    "@anthropic-ai/sdk": ^0.65.0
     "@anthropic-ai/vertex-sdk": ^0.11.5
     "@jest/globals": ^29.5.0
     "@langchain/core": "workspace:*"
@@ -8868,7 +8882,7 @@ __metadata:
     "@baiducloud/qianfan": ^0.1.6
     "@jest/globals": ^29.5.0
     "@langchain/core": "workspace:*"
-    "@langchain/openai": ^0.6.10
+    "@langchain/openai": ^0.6.14
     "@langchain/scripts": ">=0.1.0 <0.2.0"
     "@swc/core": ^1.3.90
     "@swc/jest": ^0.2.29
@@ -9624,7 +9638,7 @@ __metadata:
   dependencies:
     "@jest/globals": ^29.5.0
     "@langchain/core": "workspace:*"
-    "@langchain/openai": ^0.6.10
+    "@langchain/openai": ^0.6.14
     "@langchain/scripts": ">=0.1.0 <0.2.0"
     "@langchain/standard-tests": "workspace:*"
     "@swc/core": ^1.3.90
@@ -10165,7 +10179,7 @@ __metadata:
     eslint-plugin-prettier: ^4.2.1
     jest: ^29.5.0
     jest-environment-node: ^29.6.4
-    mongodb: ^6.17.0
+    mongodb: ^6.20.0
     prettier: ^2.8.3
     release-it: ^18.1.2
     rollup: ^4.5.2
@@ -10277,7 +10291,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@langchain/openai@>=0.1.0 <0.7.0, @langchain/openai@>=0.2.0 <0.7.0, @langchain/openai@^0.6.10, @langchain/openai@workspace:*, @langchain/openai@workspace:^, @langchain/openai@workspace:libs/langchain-openai":
+"@langchain/openai@>=0.1.0 <0.7.0, @langchain/openai@>=0.2.0 <0.7.0, @langchain/openai@^0.6.14, @langchain/openai@workspace:*, @langchain/openai@workspace:^, @langchain/openai@workspace:libs/langchain-openai":
   version: 0.0.0-use.local
   resolution: "@langchain/openai@workspace:libs/langchain-openai"
   dependencies:
@@ -10435,7 +10449,7 @@ __metadata:
     "@types/lodash": ^4
     "@typescript-eslint/eslint-plugin": ^6.12.0
     "@typescript-eslint/parser": ^6.12.0
-    axios: ^1.6.7
+    axios: ^1.12.0
     commander: ^11.1.0
     dotenv: ^16.3.1
     dpdm: ^3.14.0
@@ -10993,6 +11007,15 @@ __metadata:
   dependencies:
     sparse-bitfield: ^3.0.3
   checksum: 6f13983e41c9fbd5273eeae9135e47e5b7a19125a63287bea69e33a618f8e034cfcf2258c77d0f5d6dcf386dfe2bb520bc01613afd1528c52f82c71172629242
+  languageName: node
+  linkType: hard
+
+"@mongodb-js/saslprep@npm:^1.3.0":
+  version: 1.3.0
+  resolution: "@mongodb-js/saslprep@npm:1.3.0"
+  dependencies:
+    sparse-bitfield: ^3.0.3
+  checksum: 0003ab0a943220df74f8ffcf076c4e4fc4105b20d6b1610d802231d2a6d3b74ad0fa9d26e3d828cb07daabe511ffb2760c347f7a4c0f985d8a7770f7d95190a3
   languageName: node
   linkType: hard
 
@@ -18656,7 +18679,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"axios@npm:^1.1.3, axios@npm:^1.3.2, axios@npm:^1.4.0, axios@npm:^1.6.2, axios@npm:^1.6.5, axios@npm:^1.6.7, axios@npm:^1.6.8, axios@npm:^1.8.2":
+"axios@npm:^1.1.3, axios@npm:^1.3.2, axios@npm:^1.4.0, axios@npm:^1.6.2, axios@npm:^1.6.5, axios@npm:^1.6.8, axios@npm:^1.8.2":
   version: 1.8.4
   resolution: "axios@npm:1.8.4"
   dependencies:
@@ -29826,6 +29849,16 @@ __metadata:
   languageName: node
   linkType: hard
 
+"json-schema-to-ts@npm:^3.1.1":
+  version: 3.1.1
+  resolution: "json-schema-to-ts@npm:3.1.1"
+  dependencies:
+    "@babel/runtime": ^7.18.3
+    ts-algebra: ^2.0.0
+  checksum: b616f1c2d7492502e11eec4f8e4539ee1e897543a679d929494afdc164d9557275cead8372747b73f239b1e68056ffbf551b03ae82d0047bba0dfe2bbd6b64f4
+  languageName: node
+  linkType: hard
+
 "json-schema-to-typescript@npm:^13.1.1":
   version: 13.1.2
   resolution: "json-schema-to-typescript@npm:13.1.2"
@@ -31998,6 +32031,16 @@ __metadata:
   languageName: node
   linkType: hard
 
+"mongodb-connection-string-url@npm:^3.0.2":
+  version: 3.0.2
+  resolution: "mongodb-connection-string-url@npm:3.0.2"
+  dependencies:
+    "@types/whatwg-url": ^11.0.2
+    whatwg-url: ^14.1.0 || ^13.0.0
+  checksum: 382319aa41d381ff4be9370024e3cf765ded14aa581bca7c7a171fcaae618b8d92912329b6b13898334c3b6f3cab12ae8785defad2745ca20226ceeb253ef1ae
+  languageName: node
+  linkType: hard
+
 "mongodb@npm:^6.17.0":
   version: 6.17.0
   resolution: "mongodb@npm:6.17.0"
@@ -32029,6 +32072,40 @@ __metadata:
     socks:
       optional: true
   checksum: bae38d4758e6681b07d35849de18ec8a063d5306fb3dd7d76214b1945440a33a729a1497f4b4da5b0c4f35e0a31c2e6dda632ea9d437e385315d011f93598213
+  languageName: node
+  linkType: hard
+
+"mongodb@npm:^6.20.0":
+  version: 6.20.0
+  resolution: "mongodb@npm:6.20.0"
+  dependencies:
+    "@mongodb-js/saslprep": ^1.3.0
+    bson: ^6.10.4
+    mongodb-connection-string-url: ^3.0.2
+  peerDependencies:
+    "@aws-sdk/credential-providers": ^3.188.0
+    "@mongodb-js/zstd": ^1.1.0 || ^2.0.0
+    gcp-metadata: ^5.2.0
+    kerberos: ^2.0.1
+    mongodb-client-encryption: ">=6.0.0 <7"
+    snappy: ^7.3.2
+    socks: ^2.7.1
+  peerDependenciesMeta:
+    "@aws-sdk/credential-providers":
+      optional: true
+    "@mongodb-js/zstd":
+      optional: true
+    gcp-metadata:
+      optional: true
+    kerberos:
+      optional: true
+    mongodb-client-encryption:
+      optional: true
+    snappy:
+      optional: true
+    socks:
+      optional: true
+  checksum: 7f427ca631cf57ce2a0b835fe8ad61791e21abb4e5ebf8af83115ad782d0266dd574e3e540a741a1f27dd201d7e035f34681dd6dd6aa495af6e4b61457b38bec
   languageName: node
   linkType: hard
 
@@ -39698,6 +39775,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"tr46@npm:^5.1.0":
+  version: 5.1.1
+  resolution: "tr46@npm:5.1.1"
+  dependencies:
+    punycode: ^2.3.1
+  checksum: da7a04bd3f77e641abdabe948bb84f24e6ee73e81c8c96c36fe79796c889ba97daf3dbacae778f8581ff60307a4136ee14c9540a5f85ebe44f99c6cc39a97690
+  languageName: node
+  linkType: hard
+
 "tr46@npm:~0.0.3":
   version: 0.0.3
   resolution: "tr46@npm:0.0.3"
@@ -39730,6 +39816,13 @@ __metadata:
   version: 1.0.5
   resolution: "trough@npm:1.0.5"
   checksum: d6c8564903ed00e5258bab92134b020724dbbe83148dc72e4bf6306c03ed8843efa1bcc773fa62410dd89161ecb067432dd5916501793508a9506cacbc408e25
+  languageName: node
+  linkType: hard
+
+"ts-algebra@npm:^2.0.0":
+  version: 2.0.0
+  resolution: "ts-algebra@npm:2.0.0"
+  checksum: 970b0e7db49cf8c1a8ff2a816eb047fac8add47511f5e4995e4998c56c6f7b226399284412de88f3e137ab55c857a4262c0d8f02f0765730e7d3a021de2ea7ef
   languageName: node
   linkType: hard
 
@@ -42006,6 +42099,16 @@ __metadata:
     tr46: ^5.0.0
     webidl-conversions: ^7.0.0
   checksum: 4b5887e50f786583bead70916413e67a381d2126899b9eb5c67ce664bba1e7ec07cdff791404581ce73c6190d83c359c9ca1d50711631217905db3877dec075c
+  languageName: node
+  linkType: hard
+
+"whatwg-url@npm:^14.1.0 || ^13.0.0":
+  version: 14.2.0
+  resolution: "whatwg-url@npm:14.2.0"
+  dependencies:
+    tr46: ^5.1.0
+    webidl-conversions: ^7.0.0
+  checksum: c4f1ae1d353b9e56ab3c154cd73bf2b621cea1a2499fd2a9b2a17d448c2ed5e73a8922a0f395939de565fc3661461140111ae2aea26d4006a1ad0cfbf021c034
   languageName: node
   linkType: hard
 

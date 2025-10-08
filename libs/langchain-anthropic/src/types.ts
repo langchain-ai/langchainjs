@@ -17,6 +17,8 @@ export type AnthropicMessageCreateParams =
 export type AnthropicStreamingMessageCreateParams =
   Anthropic.MessageCreateParamsStreaming;
 export type AnthropicThinkingConfigParam = Anthropic.ThinkingConfigParam;
+export type AnthropicContextManagementConfigParam =
+  Anthropic.Beta.BetaContextManagementConfig;
 export type AnthropicMessageStreamEvent = Anthropic.MessageStreamEvent;
 export type AnthropicRequestOptions = Anthropic.RequestOptions;
 export type AnthropicToolChoice =
@@ -45,9 +47,7 @@ export type AnthropicWebSearchToolResultBlockParam =
   Anthropic.Messages.WebSearchToolResultBlockParam;
 export type AnthropicWebSearchResultBlockParam =
   Anthropic.Messages.WebSearchResultBlockParam;
-// TODO(hntrl): beta blocks should be separated
-export type AnthropicSearchResultBlockParam =
-  Anthropic.Beta.BetaSearchResultBlockParam;
+export type AnthropicSearchResultBlockParam = Anthropic.SearchResultBlockParam;
 
 // Union of all possible content block types including server tool use
 export type ChatAnthropicContentBlock =

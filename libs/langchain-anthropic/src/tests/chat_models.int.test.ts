@@ -1463,30 +1463,60 @@ test("Can handle google function calling blocks in content", async () => {
   expect(res.content.length).toBeGreaterThan(1);
 });
 
-test("Can handle opus 4.1 without passing any args", async () => {
-  const model = new ChatAnthropic({
-    model: "claude-opus-4-1",
+describe("Opus 4.1", () => {
+  it("works without passing any args", async () => {
+    const model = new ChatAnthropic({
+      model: "claude-opus-4-1",
+    });
+
+    const response = await model.invoke(
+      "Please respond to this message simply with: Hello"
+    );
+
+    expect(response.content.length).toBeGreaterThan(0);
   });
 
-  const response = await model.invoke(
-    "Please respond to this message simply with: Hello"
-  );
+  it("works with streaming and thinking", async () => {
+    const model = new ChatAnthropic({
+      model: "claude-opus-4-1",
+      thinking: {
+        type: "enabled",
+        budget_tokens: 1024,
+      },
+    });
 
-  expect(response.content.length).toBeGreaterThan(0);
+    const response = await model.invoke(
+      "Please respond to this message simply with: Hello"
+    );
+
+    expect(response.content.length).toBeGreaterThan(0);
+  });
 });
 
-test("Can handle opus 4.1 with streaming and thinking", async () => {
-  const model = new ChatAnthropic({
-    model: "claude-opus-4-1",
-    thinking: {
-      type: "enabled",
-      budget_tokens: 1024,
-    },
+describe("Sonnet 4.5", () => {
+  it("works without passing any args", async () => {
+    const model = new ChatAnthropic({
+      model: "claude-sonnet-4-5-20250929",
+    });
+    const response = await model.invoke(
+      "Please respond to this message simply with: Hello"
+    );
+    expect(response.content.length).toBeGreaterThan(0);
   });
 
-  const response = await model.invoke(
-    "Please respond to this message simply with: Hello"
-  );
+  it("works with streaming and thinking", async () => {
+    const model = new ChatAnthropic({
+      model: "claude-sonnet-4-5-20250929",
+      thinking: {
+        type: "enabled",
+        budget_tokens: 1024,
+      },
+    });
 
-  expect(response.content.length).toBeGreaterThan(0);
+    const response = await model.invoke(
+      "Please respond to this message simply with: Hello"
+    );
+
+    expect(response.content.length).toBeGreaterThan(0);
+  });
 });

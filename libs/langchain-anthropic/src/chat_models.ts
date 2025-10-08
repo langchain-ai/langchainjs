@@ -38,6 +38,7 @@ import {
 } from "./utils/message_outputs.js";
 import {
   AnthropicBuiltInToolUnion,
+  AnthropicContextManagementConfigParam,
   AnthropicMessageCreateParams,
   AnthropicMessageStreamEvent,
   AnthropicRequestOptions,
@@ -83,7 +84,7 @@ function _documentsInParams(
         block != null &&
         block.type === "document" &&
         typeof block.citations === "object" &&
-        block.citations.enabled
+        block.citations?.enabled
       ) {
         return true;
       }
@@ -104,22 +105,25 @@ function isAnthropicTool(tool: any): tool is Anthropic.Messages.Tool {
 }
 
 function isBuiltinTool(tool: unknown): tool is AnthropicBuiltInToolUnion {
-  const builtinTools = [
-    "web_search",
-    "bash",
-    "code_execution",
-    "computer",
-    "str_replace_editor",
-    "str_replace_based_edit_tool",
+  const builtInToolPrefixes = [
+    "text_editor_",
+    "computer_",
+    "bash_",
+    "web_search_",
+    "web_fetch_",
+    "str_replace_editor_",
+    "str_replace_based_edit_tool_",
+    "code_execution_",
+    "memory_",
   ];
   return (
     typeof tool === "object" &&
     tool !== null &&
     "type" in tool &&
     "name" in tool &&
-    typeof tool.type === "string" &&
-    typeof tool.name === "string" &&
-    builtinTools.includes(tool.name)
+    builtInToolPrefixes.some(
+      (prefix) => typeof tool.type === "string" && tool.type.startsWith(prefix)
+    )
   );
 }
 
@@ -160,7 +164,7 @@ export interface AnthropicInput {
    * To not set this field, pass `null`. If `undefined` is passed,
    * the default (-1) will be used.
    *
-   * For Opus 4.1, this defaults to `null`.
+   * For Opus 4.1 and Sonnet 4.5, this defaults to `null`.
    */
   topP?: number | null;
 
@@ -222,6 +226,11 @@ export interface AnthropicInput {
    * Options for extended thinking.
    */
   thinking?: AnthropicThinkingConfigParam;
+
+  /**
+   * Configuration for context management. See https://docs.claude.com/en/docs/build-with-claude/context-editing
+   */
+  contextManagement?: AnthropicContextManagementConfigParam;
 }
 
 /**
@@ -681,6 +690,8 @@ export class ChatAnthropicMessages<
 
   thinking: AnthropicThinkingConfigParam = { type: "disabled" };
 
+  contextManagement?: AnthropicContextManagementConfigParam;
+
   // Used for non-streaming requests
   protected batchClient: Anthropic;
 
@@ -720,8 +731,8 @@ export class ChatAnthropicMessages<
 
     this.invocationKwargs = fields?.invocationKwargs ?? {};
 
-    if (this.model.includes("opus-4-1")) {
-      // Default to `undefined` for `topP` for Opus 4.1 models
+    // Default to `undefined` for `topP` for Opus 4.1 and Sonnet 4.5 models
+    if (this.model.includes("opus-4-1") || this.model.includes("sonnet-4-5")) {
       this.topP = fields?.topP === null ? undefined : fields?.topP;
     } else {
       this.topP = fields?.topP ?? this.topP;
@@ -838,7 +849,7 @@ export class ChatAnthropicMessages<
         throw new Error("topK is not supported when thinking is enabled");
       }
       if (
-        this.model.includes("opus-4-1")
+        this.model.includes("opus-4-1") || this.model.includes("sonnet-4-5")
           ? this.topP !== undefined
           : this.topP !== -1
       ) {
@@ -872,6 +883,7 @@ export class ChatAnthropicMessages<
       tools: this.formatStructuredToolToAnthropic(options?.tools),
       tool_choice,
       thinking: this.thinking,
+      context_management: this.contextManagement,
       ...this.invocationKwargs,
     };
   }
