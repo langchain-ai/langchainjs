@@ -13,14 +13,7 @@ import type {
   AgentMiddleware,
   InferMiddlewareStates,
 } from "./middleware/types.js";
-
-/**
- * Special type to indicate that no response format is provided.
- * When this type is used, the structuredResponse property should not be present in the result.
- */
-export type ResponseFormatUndefined = {
-  __responseFormatUndefined: true;
-};
+import type { ResponseFormatUndefined } from "./responses.js";
 
 /**
  * Create annotation conditionally - for ResponseFormatUndefined, don't include structuredResponse

@@ -52,8 +52,7 @@ import type {
   ToAnnotationRoot,
   AnyAnnotationRoot,
 } from "./middleware/types.js";
-
-import { type ResponseFormatUndefined } from "./annotation.js";
+import { type ResponseFormatUndefined } from "./responses.js";
 
 // Helper type to get the state definition with middleware states
 type MergedAgentState<

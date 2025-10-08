@@ -7,7 +7,7 @@ import type {
 } from "@langchain/langgraph";
 import type { BaseMessage } from "@langchain/core/messages";
 
-import type { ResponseFormatUndefined } from "./annotation.js";
+import type { ResponseFormatUndefined } from "./responses.js";
 
 /**
  * Type for the agent's built-in state properties.

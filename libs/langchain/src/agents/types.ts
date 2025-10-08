@@ -19,8 +19,8 @@ import type {
   TypedToolStrategy,
   ProviderStrategy,
   JsonSchemaFormat,
+  ResponseFormatUndefined,
 } from "./responses.js";
-import type { ResponseFormatUndefined } from "./annotation.js";
 import type { AgentMiddleware, AnyAnnotationRoot } from "./middleware/types.js";
 import type { ServerTool, ClientTool } from "./tools.js";
 import type { JumpToTarget } from "./constants.js";

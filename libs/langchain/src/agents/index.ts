@@ -4,7 +4,7 @@ import type {
   InteropZodType,
 } from "@langchain/core/utils/types";
 
-import type { ResponseFormatUndefined } from "./annotation.js";
+import type { ResponseFormatUndefined } from "./responses.js";
 import type { CreateAgentParams } from "./types.js";
 import type { AgentMiddleware, AnyAnnotationRoot } from "./middleware/types.js";
 import type { ExtractZodArrayTypes } from "./types.js";
@@ -375,6 +375,7 @@ export function createAgent<
 export * from "./types.js";
 export * from "./errors.js";
 export * from "./annotation.js";
+export * from "./constants.js";
 export { ToolNode } from "./nodes/ToolNode.js";
 export {
   toolStrategy,
@@ -382,6 +383,7 @@ export {
   ToolStrategy,
   ProviderStrategy,
   type ResponseFormat,
+  type ResponseFormatUndefined,
 } from "./responses.js";
 export { createMiddleware } from "./middleware.js";
 export { FakeToolCallingModel } from "./tests/utils.js";
