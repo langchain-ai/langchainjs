@@ -19,7 +19,7 @@ import type { AgentMiddleware } from "../middleware/types.js";
  * users cannot provide them when invoking the agent.
  */
 export async function initializeMiddlewareStates(
-  middlewareList: readonly AgentMiddleware<any, any, any>[],
+  middlewareList: readonly AgentMiddleware[],
   state: unknown
 ): Promise<Record<string, any>> {
   const middlewareStates: Record<string, any> = {};

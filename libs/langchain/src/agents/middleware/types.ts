@@ -115,7 +115,7 @@ type FilterPrivateProps<T> = {
  * Helper type to infer the state schema type from a middleware
  * This filters out private properties (those starting with underscore)
  */
-export type InferMiddlewareState<T extends AgentMiddleware<any, any, any>> =
+export type InferMiddlewareState<T extends AgentMiddleware> =
   T extends AgentMiddleware<infer S, any, any>
     ? S extends InteropZodObject
       ? FilterPrivateProps<InferInteropZodOutput<S>>
@@ -126,61 +126,56 @@ export type InferMiddlewareState<T extends AgentMiddleware<any, any, any>> =
  * Helper type to infer the input state schema type from a middleware (all properties optional)
  * This filters out private properties (those starting with underscore)
  */
-export type InferMiddlewareInputState<
-  T extends AgentMiddleware<any, any, any>
-> = T extends AgentMiddleware<infer S, any, any>
-  ? S extends InteropZodObject
-    ? FilterPrivateProps<InferInteropZodInput<S>>
-    : {}
-  : {};
-
-/**
- * Helper type to infer merged state from an array of middleware (just the middleware states)
- */
-export type InferMiddlewareStates<T = AgentMiddleware<any, any, any>[]> =
-  T extends readonly []
-    ? {}
-    : T extends readonly [infer First, ...infer Rest]
-    ? First extends AgentMiddleware<any, any, any>
-      ? Rest extends readonly AgentMiddleware<any, any, any>[]
-        ? InferMiddlewareState<First> & InferMiddlewareStates<Rest>
-        : InferMiddlewareState<First>
+export type InferMiddlewareInputState<T extends AgentMiddleware> =
+  T extends AgentMiddleware<infer S, any, any>
+    ? S extends InteropZodObject
+      ? FilterPrivateProps<InferInteropZodInput<S>>
       : {}
     : {};
 
 /**
- * Helper type to infer merged input state from an array of middleware (with optional defaults)
+ * Helper type to infer merged state from an array of middleware (just the middleware states)
  */
-export type InferMiddlewareInputStates<
-  T extends readonly AgentMiddleware<any, any, any>[]
-> = T extends readonly []
+export type InferMiddlewareStates<T = AgentMiddleware[]> = T extends readonly []
   ? {}
   : T extends readonly [infer First, ...infer Rest]
-  ? First extends AgentMiddleware<any, any, any>
-    ? Rest extends readonly AgentMiddleware<any, any, any>[]
-      ? InferMiddlewareInputState<First> & InferMiddlewareInputStates<Rest>
-      : InferMiddlewareInputState<First>
+  ? First extends AgentMiddleware
+    ? Rest extends readonly AgentMiddleware[]
+      ? InferMiddlewareState<First> & InferMiddlewareStates<Rest>
+      : InferMiddlewareState<First>
     : {}
   : {};
 
 /**
+ * Helper type to infer merged input state from an array of middleware (with optional defaults)
+ */
+export type InferMiddlewareInputStates<T extends readonly AgentMiddleware[]> =
+  T extends readonly []
+    ? {}
+    : T extends readonly [infer First, ...infer Rest]
+    ? First extends AgentMiddleware
+      ? Rest extends readonly AgentMiddleware[]
+        ? InferMiddlewareInputState<First> & InferMiddlewareInputStates<Rest>
+        : InferMiddlewareInputState<First>
+      : {}
+    : {};
+
+/**
  * Helper type to infer merged state from an array of middleware (includes built-in state)
  */
-export type InferMergedState<
-  T extends readonly AgentMiddleware<any, any, any>[]
-> = InferMiddlewareStates<T> & AgentBuiltInState;
+export type InferMergedState<T extends readonly AgentMiddleware[]> =
+  InferMiddlewareStates<T> & AgentBuiltInState;
 
 /**
  * Helper type to infer merged input state from an array of middleware (includes built-in state)
  */
-export type InferMergedInputState<
-  T extends readonly AgentMiddleware<any, any, any>[]
-> = InferMiddlewareInputStates<T> & AgentBuiltInState;
+export type InferMergedInputState<T extends readonly AgentMiddleware[]> =
+  InferMiddlewareInputStates<T> & AgentBuiltInState;
 
 /**
  * Helper type to infer the context schema type from a middleware
  */
-export type InferMiddlewareContext<T extends AgentMiddleware<any, any, any>> =
+export type InferMiddlewareContext<T extends AgentMiddleware> =
   T extends AgentMiddleware<any, infer C, any>
     ? C extends InteropZodObject
       ? InferInteropZodInput<C>
@@ -190,30 +185,28 @@ export type InferMiddlewareContext<T extends AgentMiddleware<any, any, any>> =
 /**
  * Helper type to infer the input context schema type from a middleware (with optional defaults)
  */
-export type InferMiddlewareContextInput<
-  T extends AgentMiddleware<any, any, any>
-> = T extends AgentMiddleware<any, infer C, any>
-  ? C extends InteropZodOptional<infer Inner>
-    ? InferInteropZodInput<Inner> | undefined
-    : C extends InteropZodObject
-    ? InferInteropZodInput<C>
-    : {}
-  : {};
+export type InferMiddlewareContextInput<T extends AgentMiddleware> =
+  T extends AgentMiddleware<any, infer C, any>
+    ? C extends InteropZodOptional<infer Inner>
+      ? InferInteropZodInput<Inner> | undefined
+      : C extends InteropZodObject
+      ? InferInteropZodInput<C>
+      : {}
+    : {};
 
 /**
  * Helper type to infer merged context from an array of middleware
  */
-export type InferMiddlewareContexts<
-  T extends readonly AgentMiddleware<any, any, any>[]
-> = T extends readonly []
-  ? {}
-  : T extends readonly [infer First, ...infer Rest]
-  ? First extends AgentMiddleware<any, any, any>
-    ? Rest extends readonly AgentMiddleware<any, any, any>[]
-      ? InferMiddlewareContext<First> & InferMiddlewareContexts<Rest>
-      : InferMiddlewareContext<First>
-    : {}
-  : {};
+export type InferMiddlewareContexts<T extends readonly AgentMiddleware[]> =
+  T extends readonly []
+    ? {}
+    : T extends readonly [infer First, ...infer Rest]
+    ? First extends AgentMiddleware
+      ? Rest extends readonly AgentMiddleware[]
+        ? InferMiddlewareContext<First> & InferMiddlewareContexts<Rest>
+        : InferMiddlewareContext<First>
+      : {}
+    : {};
 
 /**
  * Helper to merge two context types, preserving undefined unions
@@ -233,20 +226,19 @@ type MergeContextTypes<A, B> = [A] extends [undefined]
 /**
  * Helper type to infer merged input context from an array of middleware (with optional defaults)
  */
-export type InferMiddlewareContextInputs<
-  T extends readonly AgentMiddleware<any, any, any>[]
-> = T extends readonly []
-  ? {}
-  : T extends readonly [infer First, ...infer Rest]
-  ? First extends AgentMiddleware<any, any, any>
-    ? Rest extends readonly AgentMiddleware<any, any, any>[]
-      ? MergeContextTypes<
-          InferMiddlewareContextInput<First>,
-          InferMiddlewareContextInputs<Rest>
-        >
-      : InferMiddlewareContextInput<First>
-    : {}
-  : {};
+export type InferMiddlewareContextInputs<T extends readonly AgentMiddleware[]> =
+  T extends readonly []
+    ? {}
+    : T extends readonly [infer First, ...infer Rest]
+    ? First extends AgentMiddleware
+      ? Rest extends readonly AgentMiddleware[]
+        ? MergeContextTypes<
+            InferMiddlewareContextInput<First>,
+            InferMiddlewareContextInputs<Rest>
+          >
+        : InferMiddlewareContextInput<First>
+      : {}
+    : {};
 
 /**
  * Helper type to extract input type from context schema (with optional defaults)

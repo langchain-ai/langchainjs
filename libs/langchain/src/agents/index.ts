@@ -142,11 +142,7 @@ export function createAgent<
   ContextSchema extends
     | AnyAnnotationRoot
     | InteropZodObject = AnyAnnotationRoot,
-  TMiddleware extends readonly AgentMiddleware<
-    any,
-    any,
-    any
-  >[] = readonly AgentMiddleware<any, any, any>[]
+  TMiddleware extends readonly AgentMiddleware[] = readonly AgentMiddleware[]
 >(
   params: CreateAgentParams<T, ContextSchema, InteropZodType<T>> & {
     responseFormat: InteropZodType<T>;
@@ -160,11 +156,7 @@ export function createAgent<
   ContextSchema extends
     | AnyAnnotationRoot
     | InteropZodObject = AnyAnnotationRoot,
-  TMiddleware extends readonly AgentMiddleware<
-    any,
-    any,
-    any
-  >[] = readonly AgentMiddleware<any, any, any>[]
+  TMiddleware extends readonly AgentMiddleware[] = readonly AgentMiddleware[]
 >(
   params: CreateAgentParams<
     ExtractZodArrayTypes<T> extends Record<string, any>
@@ -189,11 +181,7 @@ export function createAgent<
   ContextSchema extends
     | AnyAnnotationRoot
     | InteropZodObject = AnyAnnotationRoot,
-  TMiddleware extends readonly AgentMiddleware<
-    any,
-    any,
-    any
-  >[] = readonly AgentMiddleware<any, any, any>[]
+  TMiddleware extends readonly AgentMiddleware[] = readonly AgentMiddleware[]
 >(
   params: CreateAgentParams<
     Record<string, unknown>,
@@ -210,11 +198,7 @@ export function createAgent<
   ContextSchema extends
     | AnyAnnotationRoot
     | InteropZodObject = AnyAnnotationRoot,
-  TMiddleware extends readonly AgentMiddleware<
-    any,
-    any,
-    any
-  >[] = readonly AgentMiddleware<any, any, any>[]
+  TMiddleware extends readonly AgentMiddleware[] = readonly AgentMiddleware[]
 >(
   params: CreateAgentParams<
     Record<string, unknown>,
@@ -231,11 +215,7 @@ export function createAgent<
   ContextSchema extends
     | AnyAnnotationRoot
     | InteropZodObject = AnyAnnotationRoot,
-  TMiddleware extends readonly AgentMiddleware<
-    any,
-    any,
-    any
-  >[] = readonly AgentMiddleware<any, any, any>[]
+  TMiddleware extends readonly AgentMiddleware[] = readonly AgentMiddleware[]
 >(
   params: CreateAgentParams<
     Record<string, unknown>,
@@ -253,11 +233,7 @@ export function createAgent<
   ContextSchema extends
     | AnyAnnotationRoot
     | InteropZodObject = AnyAnnotationRoot,
-  TMiddleware extends readonly AgentMiddleware<
-    any,
-    any,
-    any
-  >[] = readonly AgentMiddleware<any, any, any>[]
+  TMiddleware extends readonly AgentMiddleware[] = readonly AgentMiddleware[]
 >(
   params: CreateAgentParams<T, ContextSchema, TypedToolStrategy<T>> & {
     responseFormat: TypedToolStrategy<T>;
@@ -271,11 +247,7 @@ export function createAgent<
   ContextSchema extends
     | AnyAnnotationRoot
     | InteropZodObject = AnyAnnotationRoot,
-  TMiddleware extends readonly AgentMiddleware<
-    any,
-    any,
-    any
-  >[] = readonly AgentMiddleware<any, any, any>[]
+  TMiddleware extends readonly AgentMiddleware[] = readonly AgentMiddleware[]
 >(
   params: CreateAgentParams<T, ContextSchema, ToolStrategy<T>> & {
     responseFormat: ToolStrategy<T>;
@@ -289,11 +261,7 @@ export function createAgent<
   ContextSchema extends
     | AnyAnnotationRoot
     | InteropZodObject = AnyAnnotationRoot,
-  TMiddleware extends readonly AgentMiddleware<
-    any,
-    any,
-    any
-  >[] = readonly AgentMiddleware<any, any, any>[]
+  TMiddleware extends readonly AgentMiddleware[] = readonly AgentMiddleware[]
 >(
   params: CreateAgentParams<T, ContextSchema, ProviderStrategy<T>> & {
     responseFormat: ProviderStrategy<T>;
@@ -306,11 +274,7 @@ export function createAgent<
   ContextSchema extends
     | AnyAnnotationRoot
     | InteropZodObject = AnyAnnotationRoot,
-  TMiddleware extends readonly AgentMiddleware<
-    any,
-    any,
-    any
-  >[] = readonly AgentMiddleware<any, any, any>[]
+  TMiddleware extends readonly AgentMiddleware[] = readonly AgentMiddleware[]
 >(
   params: Omit<
     CreateAgentParams<ResponseFormatUndefined, ContextSchema, never>,
@@ -323,11 +287,7 @@ export function createAgent<
   ContextSchema extends
     | AnyAnnotationRoot
     | InteropZodObject = AnyAnnotationRoot,
-  TMiddleware extends readonly AgentMiddleware<
-    any,
-    any,
-    any
-  >[] = readonly AgentMiddleware<any, any, any>[]
+  TMiddleware extends readonly AgentMiddleware[] = readonly AgentMiddleware[]
 >(
   params: Omit<
     CreateAgentParams<ResponseFormatUndefined, ContextSchema, never>,
@@ -344,11 +304,7 @@ export function createAgent<
   ContextSchema extends
     | AnyAnnotationRoot
     | InteropZodObject = AnyAnnotationRoot,
-  TMiddleware extends readonly AgentMiddleware<
-    any,
-    any,
-    any
-  >[] = readonly AgentMiddleware<any, any, any>[]
+  TMiddleware extends readonly AgentMiddleware[] = readonly AgentMiddleware[]
 >(
   params: CreateAgentParams<
     StructuredResponseFormat,
@@ -364,7 +320,7 @@ export function createAgent<
 export function createAgent<
   StructuredResponseFormat extends Record<string, any>,
   ContextSchema extends AnyAnnotationRoot | InteropZodObject,
-  TMiddleware extends readonly AgentMiddleware<any, any, any>[] = []
+  TMiddleware extends readonly AgentMiddleware[] = []
 >(
   params: CreateAgentParams<StructuredResponseFormat, ContextSchema, any>
 ): ReactAgent<StructuredResponseFormat, ContextSchema, TMiddleware> {

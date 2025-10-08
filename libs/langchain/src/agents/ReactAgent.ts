@@ -22,8 +22,8 @@ import { isClientTool, validateLLMHasNoBoundTools } from "./utils.js";
 
 import { AgentNode } from "./nodes/AgentNode.js";
 import { ToolNode } from "./nodes/ToolNode.js";
-import { BeforeModelNode } from "./nodes/BeforeModalNode.js";
-import { AfterModelNode } from "./nodes/AfterModalNode.js";
+import { BeforeModelNode } from "./nodes/BeforeModelNode.js";
+import { AfterModelNode } from "./nodes/AfterModelNode.js";
 import {
   initializeMiddlewareStates,
   parseJumpToTarget,
@@ -59,7 +59,7 @@ type MergedAgentState<
   StructuredResponseFormat extends
     | Record<string, any>
     | ResponseFormatUndefined,
-  TMiddleware extends readonly AgentMiddleware<any, any, any>[]
+  TMiddleware extends readonly AgentMiddleware[]
 > = (StructuredResponseFormat extends ResponseFormatUndefined
   ? Omit<BuiltInState, "jumpTo">
   : Omit<BuiltInState, "jumpTo"> & {
@@ -67,9 +67,7 @@ type MergedAgentState<
     }) &
   InferMiddlewareStates<TMiddleware>;
 
-type InvokeStateParameter<
-  TMiddleware extends readonly AgentMiddleware<any, any, any>[]
-> =
+type InvokeStateParameter<TMiddleware extends readonly AgentMiddleware[]> =
   | (UserInput & InferMiddlewareInputStates<TMiddleware>)
   | Command<any, any, any>
   | null;
@@ -81,7 +79,7 @@ type AgentGraph<
   ContextSchema extends
     | AnyAnnotationRoot
     | InteropZodObject = AnyAnnotationRoot,
-  TMiddleware extends readonly AgentMiddleware<any, any, any>[] = []
+  TMiddleware extends readonly AgentMiddleware[] = []
 > = CompiledStateGraph<
   any,
   any,
@@ -99,11 +97,7 @@ export class ReactAgent<
   ContextSchema extends
     | AnyAnnotationRoot
     | InteropZodObject = AnyAnnotationRoot,
-  TMiddleware extends readonly AgentMiddleware<
-    any,
-    any,
-    any
-  >[] = readonly AgentMiddleware<any, any, any>[]
+  TMiddleware extends readonly AgentMiddleware[] = readonly AgentMiddleware[]
 > {
   #graph: AgentGraph<StructuredResponseFormat, ContextSchema, TMiddleware>;
 
