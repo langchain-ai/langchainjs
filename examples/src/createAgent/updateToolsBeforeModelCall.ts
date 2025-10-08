@@ -31,7 +31,7 @@
  */
 
 import fs from "node:fs/promises";
-import { createAgent, tool } from "langchain";
+import { createAgent, createMiddleware, tool } from "langchain";
 import { ChatOpenAI } from "@langchain/openai";
 import { z } from "zod";
 
@@ -135,25 +135,30 @@ function updateToolAvailabilityAndDescriptions() {
  * while still achieving the desired behavior.
  */
 const agent = createAgent({
-  llm: new ChatOpenAI({ model: "gpt-4o", temperature: 0 }),
+  model: new ChatOpenAI({ model: "gpt-4o", temperature: 0 }),
   tools: [listFilesTool, readFileTool],
-  preModelHook: (state) => {
-    updateToolAvailabilityAndDescriptions();
+  middleware: [
+    createMiddleware({
+      name: "updateToolAvailabilityAndDescriptions",
+      beforeModel: (state) => {
+        updateToolAvailabilityAndDescriptions();
 
-    /**
-     * Add a guidance system message describing current availability
-     */
-    const enabledNow = [...sessionState.enabled];
-    const guidance = `Tool availability this turn: ${enabledNow.join(
-      ", "
-    )}. Only call enabled tools. If read_file is disabled, list files first and ask the user to confirm.`;
+        /**
+         * Add a guidance system message describing current availability
+         */
+        const enabledNow = [...sessionState.enabled];
+        const guidance = `Tool availability this turn: ${enabledNow.join(
+          ", "
+        )}. Only call enabled tools. If read_file is disabled, list files first and ask the user to confirm.`;
 
-    return {
-      ...state,
-      messages: [{ role: "system", content: guidance }, ...state.messages],
-    };
-  },
-  prompt: `You are a file assistant. Use tools thoughtfully.
+        return {
+          ...state,
+          messages: [{ role: "system", content: guidance }, ...state.messages],
+        };
+      },
+    }),
+  ],
+  systemPrompt: `You are a file assistant. Use tools thoughtfully.
 - On the first turn, only list_files will be enabled.
 - On later turns, read_file may become enabled. If disabled, guide the user to list files or confirm.
 - Keep answers concise.`,

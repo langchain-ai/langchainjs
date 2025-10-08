@@ -3,50 +3,113 @@ import type {
   InteropZodObject,
   InteropZodType,
 } from "@langchain/core/utils/types";
-import type {
-  LangGraphRunnableConfig,
-  START,
-  StateGraph,
-} from "@langchain/langgraph";
+import type { START, END, StateGraph } from "@langchain/langgraph";
 
 import type { LanguageModelLike } from "@langchain/core/language_models/base";
+import type { BaseMessage } from "@langchain/core/messages";
 import type {
-  SystemMessage,
-  BaseMessageLike,
-  BaseMessage,
-} from "@langchain/core/messages";
-import type {
-  All,
   BaseCheckpointSaver,
   BaseStore,
 } from "@langchain/langgraph-checkpoint";
-import type {
-  DynamicTool,
-  StructuredToolInterface,
-} from "@langchain/core/tools";
-import type {
-  Runnable,
-  RunnableLike,
-  RunnableToolLike,
-} from "@langchain/core/runnables";
-import type { ToolNode } from "./nodes/ToolNode.js";
-import type {
-  PreHookAnnotation,
-  AnyAnnotationRoot,
-  ToAnnotationRoot,
-  ResponseFormatUndefined,
-} from "./annotation.js";
+import type { Messages } from "@langchain/langgraph/";
+
 import type {
   ResponseFormat,
   ToolStrategy,
   TypedToolStrategy,
   ProviderStrategy,
   JsonSchemaFormat,
+  ResponseFormatUndefined,
 } from "./responses.js";
+import type { AgentMiddleware, AnyAnnotationRoot } from "./middleware/types.js";
+import type { ServerTool, ClientTool } from "./tools.js";
+import type { JumpToTarget } from "./constants.js";
 
-export const META_EXTRAS_DESCRIPTION_PREFIX = "lg:";
+export type N = typeof START | "model_request" | "tools";
 
-export type N = typeof START | "agent" | "tools";
+/**
+ * Represents information about an interrupt.
+ */
+export interface Interrupt<TValue = unknown> {
+  /**
+   * The ID of the interrupt.
+   */
+  id: string;
+  /**
+   * The requests for human input.
+   */
+  value: TValue;
+}
+
+export interface BuiltInState {
+  messages: BaseMessage[];
+  __interrupt__?: Interrupt[];
+  /**
+   * Optional property to control routing after afterModel middleware execution.
+   * When set by middleware, the agent will jump to the specified node instead of
+   * following normal routing logic. The property is automatically cleared after use.
+   *
+   * - "model_request": Jump back to the model for another LLM call
+   * - "tools": Jump to tool execution (requires tools to be available)
+   */
+  jumpTo?: JumpToTarget;
+}
+
+/**
+ * Base input type for `.invoke` and `.stream` methods.
+ */
+export type UserInput = {
+  messages: Messages;
+};
+
+/**
+ * Information about a tool call that has been executed.
+ */
+export interface ToolCall {
+  /**
+   * The ID of the tool call.
+   */
+  id: string;
+  /**
+   * The name of the tool that was called.
+   */
+  name: string;
+  /**
+   * The arguments that were passed to the tool.
+   */
+  args: Record<string, any>;
+  /**
+   * The result of the tool call.
+   */
+  result?: unknown;
+  /**
+   * An optional error message if the tool call failed.
+   */
+  error?: string;
+}
+
+/**
+ * Information about a tool result from a tool execution.
+ */
+export interface ToolResult {
+  /**
+   * The ID of the tool call.
+   */
+  id: string;
+  /**
+   * The result of the tool call.
+   */
+  result: any;
+  /**
+   * An optional error message if the tool call failed.
+   */
+  error?: string;
+}
+
+/**
+ * jump targets (internal)
+ */
+export type JumpTo = "model_request" | "tools" | typeof END;
 
 /**
  * Information about a tool call that has been executed.
@@ -70,101 +133,8 @@ export interface ExecutedToolCall {
   result?: unknown;
 }
 
-/**
- * Type helper to extract the inferred type from a single Zod schema or array of schemas
- */
-export type ExtractZodType<T> = T extends InteropZodType<infer U>
-  ? U
-  : T extends readonly InteropZodType<any>[]
-  ? ExtractZodArrayTypes<T>
-  : never;
-
-/**
- * Type helper to extract union type from an array of Zod schemas
- */
-export type ExtractZodArrayTypes<T extends readonly InteropZodType<any>[]> =
-  T extends readonly [InteropZodType<infer A>, ...infer Rest]
-    ? Rest extends readonly InteropZodType<any>[]
-      ? A | ExtractZodArrayTypes<Rest>
-      : A
-    : never;
-
-/**
- * Type helper to extract the structured response type from responseFormat
- */
-export type InferResponseFormatType<T> = T extends InteropZodType<infer U>
-  ? U extends Record<string, any>
-    ? U
-    : Record<string, any>
-  : T extends readonly InteropZodType<any>[]
-  ? ExtractZodArrayTypes<T>
-  : T extends ToolStrategy[]
-  ? Record<string, any> // ToolStrategy arrays will be handled at runtime
-  : T extends ResponseFormat
-  ? Record<string, any> // Single ResponseFormat will be handled at runtime
-  : Record<string, any>;
-
-/** @internal */
-export type ReducedZodChannel<
-  T extends InteropZodType,
-  TReducerSchema extends InteropZodType
-> = T & {
-  lg_reducer_schema: TReducerSchema;
-};
-
-export type ServerTool = Record<string, unknown>;
-export type ClientTool =
-  | StructuredToolInterface
-  | DynamicTool
-  | RunnableToolLike;
-
-export type Prompt<
-  StateSchema extends AnyAnnotationRoot | InteropZodObject = AnyAnnotationRoot,
-  ContextSchema extends AnyAnnotationRoot | InteropZodObject = AnyAnnotationRoot
-> =
-  | SystemMessage
-  | string
-  | ((
-      state: ToAnnotationRoot<StateSchema>["State"] &
-        PreHookAnnotation["State"],
-      config: LangGraphRunnableConfig<ToAnnotationRoot<ContextSchema>["State"]>
-    ) => BaseMessageLike[] | Promise<BaseMessageLike[]>)
-  | Runnable;
-
-export type AgentState<
-  AnnotationRoot extends
-    | AnyAnnotationRoot
-    | InteropZodObject = AnyAnnotationRoot
-> = ToAnnotationRoot<AnnotationRoot>["State"] & PreHookAnnotation["State"];
-
-export interface AgentRuntime<ContextType = Record<string, unknown>> {
-  /**
-   * The context of the agent.
-   */
-  context?: ContextType;
-
-  /**
-   * The store passed to the agent.
-   */
-  store?: BaseStore;
-
-  /**
-   * The writer of the agent to write to the output stream.
-   */
-  writer?: (chunk: unknown) => void;
-
-  /**
-   * An optional abort signal that indicates that the overall operation should be aborted.
-   */
-  signal?: AbortSignal;
-}
-
 export type CreateAgentParams<
-  StateSchema extends AnyAnnotationRoot | InteropZodObject = AnyAnnotationRoot,
-  StructuredResponseType extends Record<string, unknown> = Record<
-    string,
-    unknown
-  >,
+  StructuredResponseType extends Record<string, any> = Record<string, any>,
   ContextSchema extends
     | AnyAnnotationRoot
     | InteropZodObject = AnyAnnotationRoot,
@@ -179,11 +149,9 @@ export type CreateAgentParams<
     | ProviderStrategy<StructuredResponseType>
     | ResponseFormatUndefined
 > = {
-  /** The chat model that can utilize OpenAI-style tool calling. */
-  llm?: LanguageModelLike | DynamicLLMFunction<StateSchema, ContextSchema>;
-
   /**
-   * Initializes a ChatModel based on the provided model name and provider.
+   * Defines a model to use for the agent. You can either pass in an instance of a LangChain chat model
+   * or a string. If a string is provided the agent initializes a ChatModel based on the provided model name and provider.
    * It supports various model providers and allows for runtime configuration of model parameters.
    *
    * @uses {@link initChatModel}
@@ -194,11 +162,40 @@ export type CreateAgentParams<
    *   // ...
    * });
    * ```
+   *
+   * @example
+   * ```ts
+   * import { ChatOpenAI } from "@langchain/openai";
+   * const agent = createAgent({
+   *   model: new ChatOpenAI({ model: "gpt-4o" }),
+   *   // ...
+   * });
+   * ```
    */
-  model?: string;
+  model: string | LanguageModelLike;
 
-  /** A list of tools or a ToolNode. */
-  tools: ToolNode | (ServerTool | ClientTool)[];
+  /**
+   * A list of tools or a ToolNode.
+   *
+   * @example
+   * ```ts
+   * import { tool } from "langchain";
+   *
+   * const weatherTool = tool(() => "Sunny!", {
+   *   name: "get_weather",
+   *   description: "Get the weather for a location",
+   *   schema: z.object({
+   *     location: z.string().describe("The location to get weather for"),
+   *   }),
+   * });
+   *
+   * const agent = createAgent({
+   *   tools: [weatherTool],
+   *   // ...
+   * });
+   * ```
+   */
+  tools?: (ServerTool | ClientTool)[];
 
   /**
    * An optional prompt for the LLM. This takes full graph state BEFORE the LLM is called and prepares the input to LLM.
@@ -214,60 +211,13 @@ export type CreateAgentParams<
    * Prior to `v0.2.46`, the prompt was set using `stateModifier` / `messagesModifier` parameters.
    * This is now deprecated and will be removed in a future release.
    *
-   * Cannot be used together with `prepareCall`.
+   * Cannot be used together with `modifyModelRequest`.
    */
-  prompt?: Prompt<StateSchema, ContextSchema>;
-
-  /**
-   * Additional state schema for the agent. It allows to define additional state keys that will be
-   * persisted between agent invocations.
-   *
-   * @example
-   * ```ts
-   * // State schema defines data that persists across agent invocations
-   * const stateSchema = z.object({
-   *   userPreferences: z.object({
-   *     theme: z.enum(["light", "dark"]),
-   *     language: z.string(),
-   *   }),
-   *   taskHistory: z.array(z.string()),
-   *   currentWorkflow: z.string().optional(),
-   * });
-   *
-   * // Context schema defines runtime parameters passed per invocation
-   * const contextSchema = z.object({ ... });
-   *
-   * const agent = createAgent({
-   *   llm: model,
-   *   tools: [updatePreferences, addTask],
-   *   stateSchema,    // Persisted: preferences, e.g. task history, workflow state
-   *   contextSchema,  // Per-invocation: user ID, session, API keys, etc.
-   *   prompt: (state, config) => {
-   *     // ...
-   *   },
-   * });
-   *
-   * // First invocation - state starts empty, context provided
-   * await agent.invoke({
-   *   messages: [new HumanMessage("Set my theme to dark")],
-   * }, {
-   *   context: { userId: "user123", sessionId: "sess456", apiKeys: {...} }
-   * });
-   *
-   * // Second invocation - state persists, new context
-   * await agent.invoke({
-   *   messages: [new HumanMessage("Add a task to review code")],
-   * }, {
-   *   context: { userId: "user123", sessionId: "sess789", apiKeys: {...} }
-   * });
-   * // State now contains: userPreferences.theme="dark", taskHistory=["review code"]
-   * ```
-   */
-  stateSchema?: StateSchema;
+  systemPrompt?: string;
 
   /**
    * An optional schema for the context. It allows to pass in a typed context object into the agent
-   * invocation and allows to access it in hooks such as `prompt`, `preModelHook`, `postModelHook`, etc.
+   * invocation and allows to access it in hooks such as `prompt` and middleware.
    * As opposed to the agent state, defined in `stateSchema`, the context is not persisted between
    * agent invocations.
    *
@@ -299,14 +249,15 @@ export type CreateAgentParams<
    * ```
    */
   contextSchema?: ContextSchema;
-  /** An optional checkpoint saver to persist the agent's state. */
-  checkpointSaver?: BaseCheckpointSaver | boolean;
-  /** An optional checkpoint saver to persist the agent's state. Alias of "checkpointSaver". */
+  /**
+   * An optional checkpoint saver to persist the agent's state.
+   * @see {@link https://docs.langchain.com/oss/javascript/langgraph/persistence | Checkpointing}
+   */
   checkpointer?: BaseCheckpointSaver | boolean;
-  /** An optional list of node names to interrupt before running. */
-  interruptBefore?: N[] | All;
-  /** An optional list of node names to interrupt after running. */
-  interruptAfter?: N[] | All;
+  /**
+   * An optional store to persist the agent's state.
+   * @see {@link https://docs.langchain.com/oss/javascript/langgraph/memory#memory-storage | Long-term memory}
+   */
   store?: BaseStore;
   /**
    * An optional schema for the final agent output.
@@ -364,6 +315,14 @@ export type CreateAgentParams<
   responseFormat?: ResponseFormatType;
 
   /**
+   * Middleware instances to run during agent execution.
+   * Each middleware can define its own state schema and hook into the agent lifecycle.
+   *
+   * @see {@link https://docs.langchain.com/oss/javascript/langchain/middleware | Middleware}
+   */
+  middleware?: readonly AgentMiddleware<any, any, any>[];
+
+  /**
    * An optional name for the agent.
    */
   name?: string;
@@ -381,26 +340,6 @@ export type CreateAgentParams<
    *       Example: `"How can I help you"` -> `"<name>agent_name</name><content>How can I help you?</content>"`
    */
   includeAgentName?: "inline" | undefined;
-
-  /**
-   * An optional node to add before the `agent` node (i.e., the node that calls the LLM).
-   * Useful for managing long message histories (e.g., message trimming, summarization, etc.).
-   */
-  preModelHook?: RunnableLike<
-    ToAnnotationRoot<StateSchema>["State"] & PreHookAnnotation["State"],
-    ToAnnotationRoot<StateSchema>["Update"] & PreHookAnnotation["Update"],
-    LangGraphRunnableConfig<ToAnnotationRoot<ContextSchema>["State"]>
-  >;
-
-  /**
-   * An optional node to add after the `agent` node (i.e., the node that calls the LLM).
-   * Useful for implementing human-in-the-loop, guardrails, validation, or other post-processing.
-   */
-  postModelHook?: RunnableLike<
-    ToAnnotationRoot<StateSchema>["State"] & PreHookAnnotation["State"],
-    ToAnnotationRoot<StateSchema>["Update"] & PreHookAnnotation["Update"],
-    LangGraphRunnableConfig<ToAnnotationRoot<ContextSchema>["State"]>
-  >;
 
   /**
    * An optional abort signal that indicates that the overall operation should be aborted.
@@ -421,21 +360,15 @@ export type CreateAgentParams<
   version?: "v1" | "v2";
 };
 
-export type InternalAgentState<
-  StructuredResponseType extends Record<string, unknown> | undefined = Record<
-    string,
-    unknown
-  >
-> = {
-  messages: BaseMessage[];
-  // TODO: This won't be set until we
-  // implement managed values in LangGraphJS
-  // Will be useful for inserting a message on
-  // graph recursion end
-  // is_last_step: boolean;
-} & (StructuredResponseType extends ResponseFormatUndefined
-  ? Record<string, never>
-  : { structuredResponse: StructuredResponseType });
+/**
+ * Type helper to extract union type from an array of Zod schemas
+ */
+export type ExtractZodArrayTypes<T extends readonly InteropZodType<any>[]> =
+  T extends readonly [InteropZodType<infer A>, ...infer Rest]
+    ? Rest extends readonly InteropZodType<any>[]
+      ? A | ExtractZodArrayTypes<Rest>
+      : A
+    : never;
 
 export type WithStateGraphNodes<
   K extends string,
@@ -451,14 +384,3 @@ export type WithStateGraphNodes<
 >
   ? StateGraph<SD, S, U, N | K, I, O, C>
   : never;
-
-/**
- * @deprecated likely to be removed in the next version of the agent
- */
-type DynamicLLMFunction<
-  StateSchema extends AnyAnnotationRoot | InteropZodObject = AnyAnnotationRoot,
-  ContextSchema extends AnyAnnotationRoot | InteropZodObject = AnyAnnotationRoot
-> = (
-  state: ToAnnotationRoot<StateSchema>["State"] & PreHookAnnotation["State"],
-  runtime: AgentRuntime<ToAnnotationRoot<ContextSchema>["State"]>
-) => Promise<LanguageModelLike> | LanguageModelLike;

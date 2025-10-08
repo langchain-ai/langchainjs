@@ -16,7 +16,7 @@
  */
 
 import fs from "node:fs/promises";
-import { createAgent, tool } from "langchain";
+import { createAgent, createMiddleware, tool } from "langchain";
 import { InMemoryStore } from "@langchain/langgraph";
 import { ChatOpenAI } from "@langchain/openai";
 import { z } from "zod";
@@ -387,33 +387,41 @@ const memoryStats = {
 };
 
 const agent = createAgent({
-  llm: new ChatOpenAI({ model: "gpt-4o-mini", temperature: 0.3 }),
+  model: new ChatOpenAI({ model: "gpt-4o-mini", temperature: 0.3 }),
   tools: [
     customerPreferencesTool,
     productRecommendationTool,
     marketInsightTool,
     meetingNotesTool,
   ],
-  postModelHook: (state) => {
-    // Track memory usage statistics
-    const lastMessage = state.messages[state.messages.length - 1];
-    const content = lastMessage.content as string;
+  middleware: [
+    createMiddleware({
+      name: "memoryStats",
+      afterModel: (state) => {
+        // Track memory usage statistics
+        const lastMessage = state.messages[state.messages.length - 1];
+        const content = lastMessage.content as string;
 
-    if (
-      content.includes("Stored preference") ||
-      content.includes("INSIGHT RECORDED") ||
-      content.includes("MEETING NOTES STORED")
-    ) {
-      memoryStats.documentsStored += 1;
-    }
+        if (
+          content.includes("Stored preference") ||
+          content.includes("INSIGHT RECORDED") ||
+          content.includes("MEETING NOTES STORED")
+        ) {
+          memoryStats.documentsStored += 1;
+        }
 
-    if (content.includes("Found") && content.includes("stored preferences")) {
-      memoryStats.retrievalCount += 1;
-    }
+        if (
+          content.includes("Found") &&
+          content.includes("stored preferences")
+        ) {
+          memoryStats.retrievalCount += 1;
+        }
 
-    return state;
-  },
-  prompt: `You are an intelligent business assistant with long-term memory capabilities. You can learn and remember information across conversations to provide increasingly personalized and effective assistance.
+        return state;
+      },
+    }),
+  ],
+  systemPrompt: `You are an intelligent business assistant with long-term memory capabilities. You can learn and remember information across conversations to provide increasingly personalized and effective assistance.
 
 Your capabilities:
 - Store customer preferences and requirements for personalized service

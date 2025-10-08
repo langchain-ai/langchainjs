@@ -8,7 +8,7 @@ export * as load__serializable from "../load/serializable.js";
 export * as storage__encoder_backed from "../storage/encoder_backed.js";
 export * as storage__in_memory from "../storage/in_memory.js";
 export * as storage__file_system from "../storage/file_system.js";
-export * as middleware from "../agents/middlewareAgent/middleware/index.js";
+export * as middleware from "../agents/middleware/index.js";
 import {
   PromptTemplate,
   AIMessagePromptTemplate,

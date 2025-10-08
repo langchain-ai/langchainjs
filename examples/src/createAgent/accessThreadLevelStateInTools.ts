@@ -22,22 +22,16 @@ import { createAgent, tool } from "langchain";
 import { ChatOpenAI } from "@langchain/openai";
 import { z } from "zod";
 
-const llm = new ChatOpenAI({ model: "gpt-4o", temperature: 0 });
+const model = new ChatOpenAI({ model: "gpt-4o", temperature: 0 });
 
 /**
  * Create a sub-agent used for analysis/summary over full thread state
  */
 const subAgent = createAgent({
-  llm: new ChatOpenAI({ model: "gpt-4o", temperature: 0 }),
+  model: new ChatOpenAI({ model: "gpt-4o", temperature: 0 }),
   tools: [],
-  prompt: async (state) => [
-    {
-      role: "system",
-      content:
-        "You are an analysis sub-agent. Given the full conversation and a TASK message, provide a concise, helpful result.",
-    },
-    ...state.messages,
-  ],
+  systemPrompt:
+    "You are an analysis sub-agent. Given the full conversation and a TASK message, provide a concise, helpful result.",
 });
 
 /**
@@ -83,9 +77,9 @@ const delegateToSubAgentTool = tool(
  * Create agent that uses tools with thread-level context awareness
  */
 const agent = createAgent({
-  llm,
+  model,
   tools: [delegateToSubAgentTool],
-  prompt: `You are a supervisor agent.
+  systemPrompt: `You are a supervisor agent.
 
 When the user asks for any analysis over the entire conversation (e.g., summary,
 key decisions, action items), call the tool 'delegate_to_subagent' and provide a

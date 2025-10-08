@@ -41,7 +41,7 @@ export * from "./agents/index.js";
 /**
  * `createAgent` pre-built middleware
  */
-export * from "./agents/middlewareAgent/middleware/index.js";
+export * from "./agents/middleware/index.js";
 
 /**
  * LangChain Stores

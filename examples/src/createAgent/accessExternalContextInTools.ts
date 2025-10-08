@@ -28,7 +28,6 @@ import {
   setContextVariable,
   getContextVariable,
 } from "langchain";
-import { ChatOpenAI } from "@langchain/openai";
 import { z } from "zod";
 
 /**
@@ -153,12 +152,9 @@ const getAccountInfoTool = tool(
  * Create e-commerce assistant agent
  */
 const ecommerceAgent = createAgent({
-  llm: new ChatOpenAI({
-    model: "gpt-4o",
-    temperature: 0,
-  }),
+  model: "openai:gpt-4o",
   tools: [getUserPurchasesTool, getAccountInfoTool],
-  prompt:
+  systemPrompt:
     "You are a helpful e-commerce assistant. You can help users check their purchase history and account information. Always use the available tools to provide accurate, personalized information.",
 });
 
@@ -175,7 +171,7 @@ async function handleUserRequest(userId: string, query: string) {
   console.log(`Query: ${query}`);
 
   const result = await ecommerceAgent.invoke({
-    messages: [{ role: "user", content: query }],
+    messages: query,
   });
 
   console.log("Response:", result.messages[result.messages.length - 1].content);

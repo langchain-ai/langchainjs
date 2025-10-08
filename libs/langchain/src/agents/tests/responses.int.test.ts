@@ -72,7 +72,7 @@ describe("responses Matrix Tests", () => {
       const fetchMock = vi.fn(fetch);
 
       // Create LLM instance
-      const llm = new ChatAnthropic({
+      const model = new ChatAnthropic({
         model: "claude-3-5-sonnet-20240620",
         temperature: 0, // Make it deterministic
         clientOptions: {
@@ -110,9 +110,9 @@ describe("responses Matrix Tests", () => {
 
       // Create agent with specified configuration
       const agent = createAgent({
-        llm,
+        model,
         tools: [getEmployeeRoleTool, getEmployeeDepartmentTool],
-        prompt: AGENT_PROMPT,
+        systemPrompt: AGENT_PROMPT,
         responseFormat: testCase.responseFormat,
       });
 
