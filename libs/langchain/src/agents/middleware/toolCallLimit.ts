@@ -7,7 +7,7 @@ import { z } from "zod/v3";
 import type { InferInteropZodInput } from "@langchain/core/utils/types";
 
 import { createMiddleware } from "../middleware.js";
-import type { AgentBuiltInState } from "../types.js";
+import type { AgentBuiltInState } from "../runtime.js";
 
 /**
  * Count tool calls in a list of messages.

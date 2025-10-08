@@ -17,13 +17,13 @@ import {
 } from "@langchain/langgraph";
 
 import { RunnableCallable } from "../RunnableCallable.js";
-import {
-  PreHookAnnotation,
-  AnyAnnotationRoot,
-  ToAnnotationRoot,
-} from "../annotation.js";
+import { PreHookAnnotation } from "../annotation.js";
 import { mergeAbortSignals } from "./utils.js";
 import { ToolInvocationError } from "../errors.js";
+import type {
+  ToAnnotationRoot,
+  AnyAnnotationRoot,
+} from "../middleware/types.js";
 
 export interface ToolNodeOptions {
   /**

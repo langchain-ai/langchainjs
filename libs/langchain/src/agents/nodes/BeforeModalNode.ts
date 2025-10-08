@@ -1,12 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { RunnableConfig } from "@langchain/core/runnables";
 import { MiddlewareNode, type MiddlewareNodeOptions } from "./middleware.js";
-import type {
-  AgentBuiltInState,
-  AgentMiddleware,
-  MiddlewareResult,
-  Runtime,
-} from "../types.js";
+import type { AgentMiddleware, MiddlewareResult } from "../middleware/types.js";
+import type { AgentBuiltInState, Runtime } from "../runtime.js";
 
 /**
  * Node for executing a single middleware's beforeModel hook.

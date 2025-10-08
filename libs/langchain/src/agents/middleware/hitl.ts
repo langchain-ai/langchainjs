@@ -8,7 +8,7 @@ import {
 import { interrupt } from "@langchain/langgraph";
 
 import { createMiddleware } from "../middleware.js";
-import type { AgentBuiltInState, Runtime } from "../types.js";
+import type { AgentBuiltInState, Runtime } from "../runtime.js";
 
 const ToolConfigSchema = z.object({
   /**

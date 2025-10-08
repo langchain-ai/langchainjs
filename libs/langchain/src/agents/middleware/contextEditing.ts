@@ -17,7 +17,7 @@ import {
 
 import { countTokensApproximately } from "./utils.js";
 import { createMiddleware } from "../middleware.js";
-import type { ModelRequest } from "../types.js";
+import type { ModelRequest } from "../nodes/types.js";
 
 const DEFAULT_TOOL_PLACEHOLDER = "[cleared]";
 

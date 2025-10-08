@@ -6,16 +6,12 @@ import type {
   InferInteropZodInput,
   InferInteropZodOutput,
 } from "@langchain/core/utils/types";
-import type {
-  AgentMiddleware,
-  Runtime,
-  MiddlewareResult,
-  AgentBuiltInState,
-  ModelRequest,
-  JumpToTarget,
-} from "./types.js";
-import type { ClientTool, ServerTool } from "./types.js";
 
+import type { JumpToTarget } from "./constants.js";
+import type { ClientTool, ServerTool } from "./tools.js";
+import type { Runtime, AgentBuiltInState } from "./runtime.js";
+import type { AgentMiddleware, MiddlewareResult } from "./middleware/types.js";
+import type { ModelRequest } from "./nodes/types.js";
 /**
  * Creates a middleware instance with automatic schema inference.
  *

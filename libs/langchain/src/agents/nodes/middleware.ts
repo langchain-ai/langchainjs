@@ -4,13 +4,9 @@ import { LangGraphRunnableConfig, Command } from "@langchain/langgraph";
 import { interopParse } from "@langchain/core/utils/types";
 
 import { RunnableCallable, RunnableCallableArgs } from "../RunnableCallable.js";
-import type {
-  Runtime,
-  AgentMiddleware,
-  MiddlewareResult,
-  JumpToTarget,
-  PrivateState,
-} from "../types.js";
+import type { JumpToTarget } from "../constants.js";
+import type { Runtime, PrivateState } from "../runtime.js";
+import type { AgentMiddleware, MiddlewareResult } from "../middleware/types.js";
 import { derivePrivateState, parseJumpToTarget } from "./utils.js";
 
 type NodeOutput<TStateSchema extends Record<string, any>> =

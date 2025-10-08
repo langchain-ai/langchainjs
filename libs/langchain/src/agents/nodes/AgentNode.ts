@@ -16,7 +16,7 @@ import type { ToolCall } from "@langchain/core/messages/tool";
 import { initChatModel } from "../../chat_models/universal.js";
 import { MultipleStructuredOutputsError } from "../errors.js";
 import { RunnableCallable } from "../RunnableCallable.js";
-import { PreHookAnnotation, AnyAnnotationRoot } from "../annotation.js";
+import { PreHookAnnotation } from "../annotation.js";
 import {
   bindTools,
   getPromptRunnable,
@@ -25,15 +25,14 @@ import {
   isClientTool,
 } from "../utils.js";
 import { mergeAbortSignals } from "../nodes/utils.js";
-import {
-  ModelRequest,
-  CreateAgentParams,
-  InternalAgentState,
-  Runtime,
+import { CreateAgentParams } from "../types.js";
+import type { InternalAgentState, Runtime, PrivateState } from "../runtime.js";
+import type {
   AgentMiddleware,
-  PrivateState,
-} from "../types.js";
-import type { ClientTool, ServerTool } from "../types.js";
+  AnyAnnotationRoot,
+} from "../middleware/types.js";
+import type { ModelRequest } from "./types.js";
+import type { ClientTool, ServerTool } from "../tools.js";
 import { withAgentName } from "../withAgentName.js";
 import {
   ToolStrategy,

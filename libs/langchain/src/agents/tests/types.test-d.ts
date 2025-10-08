@@ -4,7 +4,7 @@ import { tool } from "@langchain/core/tools";
 import type { BaseStore } from "@langchain/langgraph";
 
 import { createAgent } from "../index.js";
-import type { Runtime, WithMaybeContext } from "../types.js";
+import type { Runtime, WithMaybeContext } from "../runtime.js";
 
 describe("WithMaybeContext", () => {
   it("should work with string prompt", async () => {

@@ -29,28 +29,31 @@ import {
   parseJumpToTarget,
 } from "./nodes/utils.js";
 
-import type { ClientTool, ServerTool, WithStateGraphNodes } from "./types.js";
+import type { WithStateGraphNodes } from "./types.js";
+import type { ClientTool, ServerTool } from "./tools.js";
 
 import type {
   CreateAgentParams,
-  AgentMiddleware,
-  InferMiddlewareStates,
-  InferMiddlewareInputStates,
   BuiltInState,
-  InferMiddlewareContextInputs,
-  InferContextInput,
-  InvokeConfiguration,
-  StreamConfiguration,
   JumpTo,
   UserInput,
-  PrivateState,
 } from "./types.js";
+import type {
+  PrivateState,
+  InvokeConfiguration,
+  StreamConfiguration,
+} from "./runtime.js";
+import type {
+  AgentMiddleware,
+  InferMiddlewareContextInputs,
+  InferMiddlewareStates,
+  InferMiddlewareInputStates,
+  InferContextInput,
+  ToAnnotationRoot,
+  AnyAnnotationRoot,
+} from "./middleware/types.js";
 
-import {
-  type AnyAnnotationRoot,
-  type ToAnnotationRoot,
-  type ResponseFormatUndefined,
-} from "./annotation.js";
+import { type ResponseFormatUndefined } from "./annotation.js";
 
 // Helper type to get the state definition with middleware states
 type MergedAgentState<
@@ -134,12 +137,7 @@ export class ReactAgent<
     const middlewareTools = (this.options.middleware
       ?.filter((m) => m.tools)
       .flatMap((m) => m.tools) ?? []) as (ClientTool | ServerTool)[];
-    const toolClasses = [
-      ...((Array.isArray(options.tools)
-        ? options.tools
-        : options.tools?.tools) ?? []),
-      ...middlewareTools,
-    ];
+    const toolClasses = [...(options.tools ?? []), ...middlewareTools];
 
     /**
      * If any of the tools are configured to return_directly after running,

@@ -8,10 +8,11 @@ import {
   type BinaryOperatorAggregate,
   type LastValue,
 } from "@langchain/langgraph";
-import type { InteropZodToStateDefinition } from "@langchain/langgraph/zod";
-import type { InteropZodObject } from "@langchain/core/utils/types";
 
-import type { AgentMiddleware, InferMiddlewareStates } from "./types.js";
+import type {
+  AgentMiddleware,
+  InferMiddlewareStates,
+} from "./middleware/types.js";
 
 /**
  * Special type to indicate that no response format is provided.
@@ -20,15 +21,6 @@ import type { AgentMiddleware, InferMiddlewareStates } from "./types.js";
 export type ResponseFormatUndefined = {
   __responseFormatUndefined: true;
 };
-
-export type AnyAnnotationRoot = AnnotationRoot<any>;
-
-export type ToAnnotationRoot<A extends AnyAnnotationRoot | InteropZodObject> =
-  A extends AnyAnnotationRoot
-    ? A
-    : A extends InteropZodObject
-    ? AnnotationRoot<InteropZodToStateDefinition<A>>
-    : never;
 
 /**
  * Create annotation conditionally - for ResponseFormatUndefined, don't include structuredResponse

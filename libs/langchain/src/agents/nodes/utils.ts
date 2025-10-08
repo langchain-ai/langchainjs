@@ -8,7 +8,8 @@ import {
 import { type ZodIssue } from "zod/v3";
 import { END } from "@langchain/langgraph";
 
-import type { AgentMiddleware, JumpTo } from "../types.js";
+import type { JumpTo } from "../types.js";
+import type { AgentMiddleware } from "../middleware/types.js";
 
 /**
  * Helper function to initialize middleware state defaults.

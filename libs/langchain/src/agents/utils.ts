@@ -25,7 +25,7 @@ import {
 } from "@langchain/core/runnables";
 
 import { isBaseChatModel, isConfigurableModel } from "./model.js";
-import type { ClientTool, ServerTool } from "./types.js";
+import type { ClientTool, ServerTool } from "./tools.js";
 import { MultipleToolsBoundError } from "./errors.js";
 import { PROMPT_RUNNABLE_NAME } from "./constants.js";
 
