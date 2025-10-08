@@ -25,12 +25,12 @@ export type MiddlewareResult<TState> = TState | void;
  * Base middleware interface.
  */
 export interface AgentMiddleware<
-  TSchema extends InteropZodObject | undefined = undefined,
+  TSchema extends InteropZodObject | undefined = any,
   TContextSchema extends
     | InteropZodObject
     | InteropZodDefault<InteropZodObject>
     | InteropZodOptional<InteropZodObject>
-    | undefined = undefined,
+    | undefined = any,
   TFullContext = any
 > {
   stateSchema?: TSchema;

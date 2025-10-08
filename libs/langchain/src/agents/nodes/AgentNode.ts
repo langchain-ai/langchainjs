@@ -616,7 +616,7 @@ export class AgentNode<
     return Boolean(
       remainingSteps &&
         ((remainingSteps < 1 && allToolsReturnDirect) ||
-          (remainingSteps < 2 && hasToolCalls(state.messages)))
+          (remainingSteps < 2 && hasToolCalls(state.messages.at(-1))))
     );
   }
 
