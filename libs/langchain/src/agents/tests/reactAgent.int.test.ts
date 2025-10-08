@@ -1,11 +1,11 @@
-import { describe, it, expect, vi } from "vitest";
+import { describe, it, expect, vi, beforeEach } from "vitest";
 import { tool } from "@langchain/core/tools";
 import { z } from "zod";
 import { ChatAnthropic } from "@langchain/anthropic";
 import { ChatOpenAI } from "@langchain/openai";
 import { HumanMessage, AIMessage } from "@langchain/core/messages";
 
-import { createMiddleware, createAgent } from "../index.js";
+import { createMiddleware, createAgent, providerStrategy } from "../index.js";
 
 describe("modifyModelRequest", () => {
   it("should allow middleware to update model, messages and systemPrompt", async () => {
@@ -184,54 +184,94 @@ Please provide a clear, direct, and authoritative answer, as this information wi
     });
 
     // Mock the OpenAI response with proper headers
-    openAIFetchMock.mockImplementation(async () => {
-      // Return a proper Response-like object
-      return {
-        ok: true,
-        status: 200,
-        statusText: "OK",
-        headers: new Headers({
-          "content-type": "application/json",
-        }),
-        json: async () => ({
-          id: "chatcmpl-test",
-          object: "chat.completion",
-          created: Date.now(),
-          model: "gpt-4",
-          choices: [
-            {
-              index: 0,
-              message: {
-                role: "assistant",
-                content: null,
-                tool_calls: [
-                  {
-                    id: "call_test123",
-                    type: "function",
-                    function: {
-                      name: "getWeather",
-                      arguments: JSON.stringify({ location: "New York" }),
+    // First call returns tool call, second call returns final answer
+    openAIFetchMock
+      .mockImplementationOnce(async () => {
+        // First call: Return tool call
+        return {
+          ok: true,
+          status: 200,
+          statusText: "OK",
+          headers: new Headers({
+            "content-type": "application/json",
+          }),
+          json: async () => ({
+            id: "chatcmpl-test",
+            object: "chat.completion",
+            created: Date.now(),
+            model: "gpt-4",
+            choices: [
+              {
+                index: 0,
+                message: {
+                  role: "assistant",
+                  content: null,
+                  tool_calls: [
+                    {
+                      id: "call_test123",
+                      type: "function",
+                      function: {
+                        name: "getWeather",
+                        arguments: JSON.stringify({ location: "New York" }),
+                      },
                     },
-                  },
-                ],
+                  ],
+                },
+                finish_reason: "tool_calls",
               },
-              finish_reason: "tool_calls",
+            ],
+            usage: {
+              prompt_tokens: 50,
+              completion_tokens: 20,
+              total_tokens: 70,
             },
-          ],
-          usage: {
-            prompt_tokens: 50,
-            completion_tokens: 20,
-            total_tokens: 70,
-          },
-        }),
-        text: async () => "",
-        arrayBuffer: async () => new ArrayBuffer(0),
-        blob: async () => new Blob(),
-        clone: () => ({}),
-        body: null,
-        bodyUsed: false,
-      };
-    });
+          }),
+          text: async () => "",
+          arrayBuffer: async () => new ArrayBuffer(0),
+          blob: async () => new Blob(),
+          clone: () => ({}),
+          body: null,
+          bodyUsed: false,
+        };
+      })
+      .mockImplementationOnce(async () => {
+        // Second call: Return final text answer
+        return {
+          ok: true,
+          status: 200,
+          statusText: "OK",
+          headers: new Headers({
+            "content-type": "application/json",
+          }),
+          json: async () => ({
+            id: "chatcmpl-test2",
+            object: "chat.completion",
+            created: Date.now(),
+            model: "gpt-4",
+            choices: [
+              {
+                index: 0,
+                message: {
+                  role: "assistant",
+                  content: "The weather in New York is sunny and 72 degrees.",
+                },
+                finish_reason: "stop",
+              },
+            ],
+            usage: {
+              prompt_tokens: 75,
+              completion_tokens: 15,
+              total_tokens: 90,
+            },
+          }),
+          text: async () => "",
+          arrayBuffer: async () => new ArrayBuffer(0),
+          blob: async () => new Blob(),
+          clone: () => ({}),
+          body: null,
+          bodyUsed: false,
+        };
+      });
 
     // Create agent with the middleware
     const agent = createAgent({
@@ -247,7 +287,7 @@ Please provide a clear, direct, and authoritative answer, as this information wi
     });
 
     // Verify the OpenAI API was called with the correct tools and tool_choice
-    expect(openAIFetchMock).toHaveBeenCalledOnce();
+    expect(openAIFetchMock).toHaveBeenCalledTimes(2);
     const [, options] = openAIFetchMock.mock.calls[0];
     const requestBody = JSON.parse(options.body);
 
@@ -285,11 +325,20 @@ Please provide a clear, direct, and authoritative answer, as this information wi
       function: { name: "getWeather" },
     });
 
-    // Verify the result contains the tool call
+    // Verify the result contains the final AI response
     const aiResponse = result.messages[result.messages.length - 1];
     expect(aiResponse).toBeInstanceOf(AIMessage);
-    expect((aiResponse as AIMessage).tool_calls).toHaveLength(1);
-    expect((aiResponse as AIMessage).tool_calls?.[0]).toMatchObject({
+    expect((aiResponse as AIMessage).content).toBe(
+      "The weather in New York is sunny and 72 degrees."
+    );
+
+    // Verify tool call was made in the message history
+    const toolCallMessage = result.messages.find(
+      (msg) => AIMessage.isInstance(msg) && msg.tool_calls?.length
+    ) as AIMessage;
+    expect(toolCallMessage).toBeDefined();
+    expect(toolCallMessage.tool_calls).toHaveLength(1);
+    expect(toolCallMessage.tool_calls?.[0]).toMatchObject({
       name: "getWeather",
       args: { location: "New York" },
       id: "call_test123",
@@ -298,6 +347,34 @@ Please provide a clear, direct, and authoritative answer, as this information wi
 });
 
 describe("structured response format", () => {
+  const toolMock = vi.fn(async (input: { city: string }) => {
+    return `It's always sunny in ${input.city}!`;
+  });
+  const toolSchema = {
+    name: "getWeather",
+    schema: z.object({
+      city: z.string().describe("The city to get the weather for"),
+    }),
+    description: "Get weather for a given city",
+  };
+  const getWeather = tool(toolMock, toolSchema);
+  const fetchMock = vi.fn(fetch);
+  const model = new ChatAnthropic({
+    model: "claude-3-5-sonnet-20240620",
+    clientOptions: {
+      fetch: fetchMock,
+    },
+  });
+
+  const answerSchema = z.object({
+    answer: z.enum(["yes", "no"]).describe("Whether the weather is sunny"),
+    city: z.string().describe("The city that was queried"),
+  });
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
   it("should automatically use provider strategy if the model supports JSON schema output", async () => {
     const weatherTool = tool(
       async (input: { city: string }) => {
@@ -385,7 +462,7 @@ describe("structured response format", () => {
     expect(toolCalls[1].name).toContain("extract-");
   });
 
-  it.only("simple tool use without any middleware", async () => {
+  it("simple tool use without any middleware", async () => {
     const weatherTool = tool(
       async (input: { city: string }) => {
         return `Weather in ${input.city}: Sunny, 72°F`;
@@ -410,5 +487,74 @@ describe("structured response format", () => {
     });
 
     expect(result.messages.at(-1)?.content).toContain("72°F");
+  });
+
+  it("should work with Anthropic and return structured response", async () => {
+    const agent = createAgent({
+      model,
+      tools: [getWeather],
+      responseFormat: answerSchema,
+    });
+
+    const result = await agent.invoke({
+      messages: [new HumanMessage("What's the weather in Tokyo?")],
+    });
+
+    expect(result.structuredResponse).toBeDefined();
+    expect(result.structuredResponse?.answer).toBe("yes");
+    expect(result.structuredResponse?.city).toBe("Tokyo");
+    expect(result.messages).toBeDefined();
+    expect(result.messages.length).toBeGreaterThan(0);
+
+    // validate that the tool was called at least once
+    expect(toolMock).toHaveBeenCalledTimes(1);
+    // given we are using tool output as response format, we expect at least 2 LLM calls
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+  });
+
+  it("should throw if a user tries to use native response format with Anthropic", async () => {
+    const agent = createAgent({
+      model,
+      tools: [getWeather],
+      responseFormat: providerStrategy(answerSchema),
+    });
+
+    await expect(
+      agent.invoke({
+        messages: [new HumanMessage("What's the weather in Tokyo?")],
+      })
+    ).rejects.toThrow(
+      /Model does not support native structured output responses/
+    );
+  });
+
+  it("should support native response format with OpenAI", async () => {
+    const model = new ChatOpenAI({
+      model: "gpt-4o-mini",
+      configuration: {
+        fetch: fetchMock,
+      },
+    });
+
+    const agent = createAgent({
+      model,
+      tools: [getWeather],
+      responseFormat: providerStrategy(answerSchema),
+    });
+
+    const result = await agent.invoke({
+      messages: [new HumanMessage("What's the weather in Tokyo?")],
+    });
+
+    expect(result.structuredResponse).toBeDefined();
+    expect(result.structuredResponse?.answer).toBe("yes");
+    expect(result.structuredResponse?.city).toBe("Tokyo");
+    expect(result.messages).toBeDefined();
+    expect(result.messages.length).toBeGreaterThan(0);
+
+    // validate that the tool was called at least once
+    expect(toolMock).toHaveBeenCalledTimes(1);
+    // given we are using tool output as response format, we expect at least 2 LLM calls
+    expect(fetchMock).toHaveBeenCalledTimes(2);
   });
 });

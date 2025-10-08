@@ -575,9 +575,10 @@ export type CreateAgentParams<
    * ```
    */
   contextSchema?: ContextSchema;
-  /** An optional checkpoint saver to persist the agent's state. */
-  checkpointSaver?: BaseCheckpointSaver | boolean;
-  /** An optional checkpoint saver to persist the agent's state. Alias of "checkpointSaver". */
+  /**
+   * An optional checkpoint saver to persist the agent's state.
+   * @see {@link https://docs.langchain.com/oss/javascript/langgraph/persistence | Checkpointing}
+   */
   checkpointer?: BaseCheckpointSaver | boolean;
   /**
    * An optional store to persist the agent's state.
@@ -642,6 +643,8 @@ export type CreateAgentParams<
   /**
    * Middleware instances to run during agent execution.
    * Each middleware can define its own state schema and hook into the agent lifecycle.
+   *
+   * @see {@link https://docs.langchain.com/oss/javascript/langchain/middleware | Middleware}
    */
   middleware?: readonly AgentMiddleware<any, any, any>[];
 

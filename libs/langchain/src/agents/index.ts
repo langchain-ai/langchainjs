@@ -373,4 +373,18 @@ export function createAgent<
   return new ReactAgent(params);
 }
 
+// Re-export types and utilities
+export * from "./types.js";
+export * from "./errors.js";
+export * from "./annotation.js";
+export { ToolNode } from "./nodes/ToolNode.js";
+export {
+  toolStrategy,
+  providerStrategy,
+  ToolStrategy,
+  ProviderStrategy,
+  type ResponseFormat,
+} from "./responses.js";
 export { createMiddleware } from "./middleware.js";
+export { FakeToolCallingModel } from "./tests/utils.js";
+export type { ReactAgent } from "./ReactAgent.js";

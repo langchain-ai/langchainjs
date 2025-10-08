@@ -18,7 +18,7 @@ import { IterableReadableStream } from "@langchain/core/utils/stream";
 import type { RunnableConfig } from "@langchain/core/runnables";
 
 import { createAgentAnnotationConditional } from "./annotation.js";
-import { isClientTool } from "./utils.js";
+import { isClientTool, validateLLMHasNoBoundTools } from "./utils.js";
 
 import { AgentNode } from "./nodes/AgentNode.js";
 import { ToolNode } from "./nodes/ToolNode.js";
@@ -113,6 +113,20 @@ export class ReactAgent<
     public options: CreateAgentParams<StructuredResponseFormat, ContextSchema>
   ) {
     this.#toolBehaviorVersion = options.version ?? this.#toolBehaviorVersion;
+
+    /**
+     * validate that model option is provided
+     */
+    if (!options.model) {
+      throw new Error("`model` option is required to create an agent.");
+    }
+
+    /**
+     * Check if the LLM already has bound tools and throw if it does.
+     */
+    if (typeof options.model !== "string") {
+      validateLLMHasNoBoundTools(options.model);
+    }
 
     /**
      * define complete list of tools based on options and middleware
@@ -425,7 +439,7 @@ export class ReactAgent<
      * compile the graph
      */
     this.#graph = allNodeWorkflows.compile({
-      checkpointer: this.options.checkpointer ?? this.options.checkpointSaver,
+      checkpointer: this.options.checkpointer,
       store: this.options.store,
       name: this.options.name,
       description: this.options.description,
