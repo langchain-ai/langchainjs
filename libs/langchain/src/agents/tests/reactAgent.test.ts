@@ -647,7 +647,7 @@ describe("createAgent", () => {
   });
 
   describe("supports abort signal", () => {
-    test("should handle abort signal", async () => {
+    it("should handle abort signal", async () => {
       const model = new FakeToolCallingChatModel({
         responses: [new AIMessage("ai response")],
       });
@@ -666,7 +666,7 @@ describe("createAgent", () => {
       );
     });
 
-    test("should handle abort signal in tools", async () => {
+    it("should handle abort signal in tools", async () => {
       const abortController = new AbortController();
 
       const abortableTool = tool(
@@ -729,7 +729,7 @@ describe("createAgent", () => {
       });
     });
 
-    test("should merge abort signals from agent and config", async () => {
+    it("should merge abort signals from agent and config", async () => {
       const agentAbortController = new AbortController();
       const configAbortController = new AbortController();
 
