@@ -384,4 +384,31 @@ describe("structured response format", () => {
     expect(toolCalls[0].name).toBe("getWeather");
     expect(toolCalls[1].name).toContain("extract-");
   });
+
+  it.only("simple tool use without any middleware", async () => {
+    const weatherTool = tool(
+      async (input: { city: string }) => {
+        return `Weather in ${input.city}: Sunny, 72°F`;
+      },
+      {
+        name: "getWeather",
+        schema: z.object({
+          city: z.string(),
+        }),
+        description: "Get the current weather for a city",
+      }
+    );
+
+    const agent = createAgent({
+      model: "gpt-4o-mini",
+      tools: [weatherTool],
+      middleware: [],
+    });
+
+    const result = await agent.invoke({
+      messages: [new HumanMessage("What's the weather in Tokyo?")],
+    });
+
+    expect(result.messages.at(-1)?.content).toContain("72°F");
+  });
 });

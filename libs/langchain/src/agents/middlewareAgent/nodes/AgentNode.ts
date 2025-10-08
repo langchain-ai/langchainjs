@@ -772,9 +772,11 @@ export class AgentNode<
         : {}
     );
 
-    // Use tools from preparedOptions if provided, otherwise use default tools
+    /**
+     * Use tools from preparedOptions if provided, otherwise use default tools
+     */
     const allTools = [
-      ...(preparedOptions?.tools ?? []),
+      ...(preparedOptions?.tools ?? this.#options.toolClasses),
       ...structuredTools.map((toolStrategy) => toolStrategy.tool),
     ];
 
