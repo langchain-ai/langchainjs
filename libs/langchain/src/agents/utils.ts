@@ -325,12 +325,11 @@ export function validateLLMHasNoBoundTools(llm: LanguageModelLike): void {
  * @param messages - The messages to check.
  * @returns True if the last message has tool calls, false otherwise.
  */
-export function hasToolCalls(messages: BaseMessage[]): boolean {
-  const lastMessage = messages.at(-1);
+export function hasToolCalls(message?: BaseMessage): boolean {
   return Boolean(
-    AIMessage.isInstance(lastMessage) &&
-      lastMessage.tool_calls &&
-      lastMessage.tool_calls.length > 0
+    AIMessage.isInstance(message) &&
+      message.tool_calls &&
+      message.tool_calls.length > 0
   );
 }
 

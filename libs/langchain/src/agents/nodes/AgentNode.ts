@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable no-instanceof/no-instanceof */
 import { Runnable, RunnableConfig } from "@langchain/core/runnables";
 import { BaseMessage, AIMessage, ToolMessage } from "@langchain/core/messages";
@@ -67,14 +66,8 @@ export interface AgentNodeOptions<
   toolClasses: (ClientTool | ServerTool)[];
   shouldReturnDirect: Set<string>;
   signal?: AbortSignal;
-  modifyModelRequestHookMiddleware?: [
-    AgentMiddleware<any, any, any>,
-    () => any
-  ][];
-  retryModelRequestHookMiddleware?: [
-    AgentMiddleware<any, any, any>,
-    () => any
-  ][];
+  modifyModelRequestHookMiddleware?: [AgentMiddleware, () => ModelRequest][];
+  retryModelRequestHookMiddleware?: [AgentMiddleware, () => ModelRequest][];
 }
 
 interface NativeResponseFormat {
@@ -97,10 +90,11 @@ export class AgentNode<
   ContextSchema extends AnyAnnotationRoot | InteropZodObject = AnyAnnotationRoot
 > extends RunnableCallable<
   InternalAgentState<StructuredResponseFormat> & PreHookAnnotation["State"],
-  | (
+  | ((
       | { messages: BaseMessage[] }
       | { structuredResponse: StructuredResponseFormat }
-    ) & { _privateState: PrivateState }
+    ) & { _privateState: PrivateState })
+  | Command
 > {
   #options: AgentNodeOptions<StructuredResponseFormat, ContextSchema>;
 
@@ -113,8 +107,7 @@ export class AgentNode<
   ) {
     super({
       name: options.name ?? "model",
-      func: (input, config) =>
-        this.#run(input, config as RunnableConfig) as any,
+      func: (input, config) => this.#run(input, config as RunnableConfig),
     });
 
     this.#options = options;
@@ -197,7 +190,7 @@ export class AgentNode<
       /**
        * return directly without invoking the model again
        */
-      return { messages: [] };
+      return { messages: [], _privateState: this.getState()._privateState };
     }
 
     const privateState = this.getState()._privateState;
@@ -623,7 +616,7 @@ export class AgentNode<
     return Boolean(
       remainingSteps &&
         ((remainingSteps < 1 && allToolsReturnDirect) ||
-          (remainingSteps < 2 && hasToolCalls(state.messages)))
+          (remainingSteps < 2 && hasToolCalls(state.messages.at(-1))))
     );
   }
 
@@ -866,22 +859,25 @@ export class AgentNode<
     messages: BaseMessage[];
     _privateState: PrivateState;
   } {
+    const state = super.getState();
     const origState =
-      super.getState() ??
-      ({
-        _privateState: {
-          threadLevelCallCount: 0,
-          runModelCallCount: 0,
-        },
-      } as {
-        messages?: BaseMessage[];
-        _privateState?: PrivateState;
-      });
+      state && !(state instanceof Command)
+        ? state
+        : ({
+            _privateState: {
+              threadLevelCallCount: 0,
+              runModelCallCount: 0,
+            },
+          } as {
+            messages?: BaseMessage[];
+            _privateState?: PrivateState;
+          });
 
     return {
       messages: [],
       ...origState,
       _privateState: {
+        threadLevelCallCount: 0,
         ...(origState._privateState ?? {}),
         ...this.#runState,
       },

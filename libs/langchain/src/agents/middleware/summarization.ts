@@ -17,6 +17,7 @@ import {
 import { REMOVE_ALL_MESSAGES } from "@langchain/langgraph";
 import { createMiddleware } from "../middleware.js";
 import { countTokensApproximately } from "./utils.js";
+import { hasToolCalls } from "../utils.js";
 
 const DEFAULT_SUMMARY_PROMPT = `<role>
 Context Extraction Assistant
@@ -321,18 +322,6 @@ function isSafeCutoffPoint(
   }
 
   return true;
-}
-
-/**
- * Check if message is an AI message with tool calls
- */
-function hasToolCalls(message: BaseMessage): boolean {
-  return (
-    AIMessage.isInstance(message) &&
-    "tool_calls" in message &&
-    Array.isArray(message.tool_calls) &&
-    message.tool_calls.length > 0
-  );
 }
 
 /**
