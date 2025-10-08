@@ -32,6 +32,9 @@ describe("WithMaybeContext", () => {
         expectTypeOf(runtime.context).toEqualTypeOf<
           z.infer<typeof contextSchema> | undefined
         >();
+        expectTypeOf(runtime.configurable?.thread_id).toEqualTypeOf<
+          string | undefined
+        >();
         expectTypeOf(runtime.store).toEqualTypeOf<BaseStore | undefined>();
         expectTypeOf(runtime.writer).toEqualTypeOf<
           ((chunk: unknown) => void) | undefined

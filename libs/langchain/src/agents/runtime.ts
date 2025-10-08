@@ -34,7 +34,7 @@ export type WithMaybeContext<TContext> = undefined extends TContext
  * Runtime information available to middleware (readonly).
  */
 export type Runtime<TContext = unknown> = Partial<
-  Omit<LangGraphRuntime<TContext>, "context">
+  Omit<LangGraphRuntime<TContext>, "context" | "configurable">
 > &
   WithMaybeContext<TContext> &
   PrivateState & {
