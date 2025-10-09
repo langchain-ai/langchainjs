@@ -14,6 +14,9 @@ import type {
 } from "ollama";
 import { v4 as uuidv4 } from "uuid";
 
+// Track previous thinking content to calculate incremental changes
+let previousThinkingContent = "";
+
 export function convertOllamaMessagesToLangChain(
   messages: OllamaMessage,
   extra?: {
@@ -22,8 +25,24 @@ export function convertOllamaMessagesToLangChain(
     usageMetadata?: UsageMetadata;
   }
 ): AIMessageChunk {
+  // Prepare additional_kwargs to include thinking content if it exists
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const additionalKwargs: Record<string, any> = {};
+  if (messages.thinking) {
+    // Calculate incremental thinking content
+    let incrementalThinking = messages.thinking;
+    if (messages.thinking.startsWith(previousThinkingContent)) {
+      incrementalThinking = messages.thinking.slice(previousThinkingContent.length);
+    }
+    previousThinkingContent = messages.thinking;
+    
+    if (incrementalThinking) {
+      additionalKwargs.thinking_content = incrementalThinking;
+    }
+  }
+
   return new AIMessageChunk({
-    content: messages.thinking ?? messages.content ?? "",
+    content: messages.content ?? "",
     tool_call_chunks: messages.tool_calls?.map((tc) => ({
       name: tc.function.name,
       args: JSON.stringify(tc.function.arguments),
@@ -31,6 +50,7 @@ export function convertOllamaMessagesToLangChain(
       index: 0,
       id: uuidv4(),
     })),
+    additional_kwargs: additionalKwargs,
     response_metadata: extra?.responseMetadata,
     usage_metadata: extra?.usageMetadata,
   });
