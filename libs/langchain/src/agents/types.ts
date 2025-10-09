@@ -198,20 +198,7 @@ export type CreateAgentParams<
   tools?: (ServerTool | ClientTool)[];
 
   /**
-   * An optional prompt for the LLM. This takes full graph state BEFORE the LLM is called and prepares the input to LLM.
-   *
-   * Can take a few different forms:
-   *
-   * - str: This is converted to a SystemMessage and added to the beginning of the list of messages in state["messages"].
-   * - SystemMessage: this is added to the beginning of the list of messages in state["messages"].
-   * - Function: This function should take in full graph state and the output is then passed to the language model.
-   * - Runnable: This runnable should take in full graph state and the output is then passed to the language model.
-   *
-   * Note:
-   * Prior to `v0.2.46`, the prompt was set using `stateModifier` / `messagesModifier` parameters.
-   * This is now deprecated and will be removed in a future release.
-   *
-   * Cannot be used together with `modifyModelRequest`.
+   * An optional system message for the model.
    */
   systemPrompt?: string;
 

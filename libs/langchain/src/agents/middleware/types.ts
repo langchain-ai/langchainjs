@@ -68,7 +68,7 @@ export interface AgentMiddleware<
    * }
    * ```
    */
-  wrapModelRequest?<TReturn = AIMessage>(
+  wrapModelRequest?(
     handler: (
       request: ModelRequest<
         (TSchema extends InteropZodObject
@@ -77,13 +77,13 @@ export interface AgentMiddleware<
           AgentBuiltInState,
         TFullContext
       >
-    ) => Promise<TReturn> | TReturn,
+    ) => Promise<AIMessage> | AIMessage,
     request: ModelRequest<
       (TSchema extends InteropZodObject ? InferInteropZodInput<TSchema> : {}) &
         AgentBuiltInState,
       TFullContext
     >
-  ): Promise<TReturn> | TReturn;
+  ): Promise<AIMessage> | AIMessage;
   beforeModel?(
     state: (TSchema extends InteropZodObject
       ? InferInteropZodInput<TSchema>

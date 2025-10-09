@@ -6,6 +6,9 @@ import type { Runtime, AgentBuiltInState } from "../runtime.js";
 /**
  * Configuration for modifying a model call at runtime.
  * All fields are optional and only provided fields will override defaults.
+ *
+ * @template TState - The agent's state type, must extend Record<string, unknown>. Defaults to Record<string, unknown>.
+ * @template TContext - The runtime context type for accessing metadata and control flow. Defaults to unknown.
  */
 export interface ModelRequest<
   TState extends Record<string, unknown> = Record<string, unknown>,

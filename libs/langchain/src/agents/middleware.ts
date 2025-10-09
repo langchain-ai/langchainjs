@@ -113,7 +113,7 @@ export function createMiddleware<
    * }
    * ```
    */
-  wrapModelRequest?: <TReturn = AIMessage>(
+  wrapModelRequest?: (
     handler: (
       request: ModelRequest<
         (TSchema extends InteropZodObject
@@ -128,7 +128,7 @@ export function createMiddleware<
           ? Partial<InferInteropZodOutput<TContextSchema>>
           : never
       >
-    ) => Promise<TReturn> | TReturn,
+    ) => Promise<AIMessage> | AIMessage,
     request: ModelRequest<
       (TSchema extends InteropZodObject ? InferInteropZodInput<TSchema> : {}) &
         AgentBuiltInState,
@@ -140,7 +140,7 @@ export function createMiddleware<
         ? Partial<InferInteropZodOutput<TContextSchema>>
         : never
     >
-  ) => Promise<TReturn> | TReturn;
+  ) => Promise<AIMessage> | AIMessage;
   /**
    * The function to run before the model call. This function is called before the model is invoked and before the `wrapModelRequest` hook.
    * It allows to modify the state of the agent.

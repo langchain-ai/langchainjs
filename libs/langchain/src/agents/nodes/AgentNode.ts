@@ -48,6 +48,15 @@ type ResponseHandlerResult<StructuredResponseFormat> =
     }
   | Promise<Command>;
 
+/**
+ * Wrap the base handler with middleware wrapModelRequest hooks
+ * Middleware are composed so the first middleware is the outermost wrapper
+ * Example: [auth, retry, cache] means auth wraps retry wraps cache wraps baseHandler
+ */
+type InternalModelResponse<StructuredResponseFormat> =
+  | AIMessage
+  | ResponseHandlerResult<StructuredResponseFormat>;
+
 export interface AgentNodeOptions<
   StructuredResponseFormat extends Record<string, unknown> = Record<
     string,
@@ -348,30 +357,33 @@ export class AgentNode<
       );
     };
 
-    /**
-     * Wrap the base handler with middleware wrapModelRequest hooks
-     * Middleware are applied in reverse order so the first middleware is the outermost wrapper
-     */
     const wrapperMiddleware =
       this.#options.wrapModelRequestHookMiddleware ?? [];
     let wrappedHandler: (
-      request: ModelRequest
-    ) => Promise<AIMessage | ResponseHandlerResult<StructuredResponseFormat>> =
-      baseHandler as any;
+      request: ModelRequest<
+        InternalAgentState<StructuredResponseFormat> &
+          PreHookAnnotation["State"],
+        unknown
+      >
+    ) => Promise<InternalModelResponse<StructuredResponseFormat>> = baseHandler;
 
-    // Apply middleware wrappers in reverse order
+    /**
+     * Build composed handler from last to first so first middleware becomes outermost
+     */
     for (let i = wrapperMiddleware.length - 1; i >= 0; i--) {
       const [middleware, getMiddlewareState] = wrapperMiddleware[i];
       if (middleware.wrapModelRequest) {
-        const currentHandler = wrappedHandler;
+        const innerHandler = wrappedHandler;
         const currentMiddleware = middleware;
         const currentGetState = getMiddlewareState;
 
         wrappedHandler = async (
-          request: ModelRequest
-        ): Promise<
-          AIMessage | ResponseHandlerResult<StructuredResponseFormat>
-        > => {
+          request: ModelRequest<
+            InternalAgentState<StructuredResponseFormat> &
+              PreHookAnnotation["State"],
+            unknown
+          >
+        ): Promise<InternalModelResponse<StructuredResponseFormat>> => {
           /**
            * Merge context with default context of middleware
            */
@@ -397,26 +409,37 @@ export class AgentNode<
           /**
            * Create the request with state and runtime
            */
-          const requestWithStateAndRuntime = {
+          const requestWithStateAndRuntime: ModelRequest<
+            InternalAgentState<StructuredResponseFormat> &
+              PreHookAnnotation["State"],
+            unknown
+          > = {
             ...request,
             state: {
               ...currentGetState(),
               messages: state.messages,
-            },
+            } as InternalAgentState<StructuredResponseFormat> &
+              PreHookAnnotation["State"],
             runtime,
           };
 
           /**
-           * Call the middleware's wrapModelRequest with a handler that validates tools
+           * Create handler that validates tools and calls the inner handler
            */
-          const handlerWithValidation = async (req: any) => {
+          const handlerWithValidation = async (
+            req: ModelRequest<
+              InternalAgentState<StructuredResponseFormat> &
+                PreHookAnnotation["State"],
+              unknown
+            >
+          ): Promise<InternalModelResponse<StructuredResponseFormat>> => {
             /**
              * Verify that the user didn't add any new tools.
              * We can't allow this as the ToolNode is already initiated with given tools.
              */
             const modifiedTools = req.tools ?? [];
             const newTools = modifiedTools.filter(
-              (tool: any) =>
+              (tool) =>
                 isClientTool(tool) &&
                 !this.#options.toolClasses.some((t) => t.name === tool.name)
             );
@@ -425,7 +448,7 @@ export class AgentNode<
                 `You have added a new tool in "wrapModelRequest" hook of middleware "${
                   currentMiddleware.name
                 }": ${newTools
-                  .map((tool: any) => tool.name)
+                  .map((tool) => tool.name)
                   .join(", ")}. This is not supported.`
               );
             }
@@ -435,7 +458,7 @@ export class AgentNode<
              * We can't allow this as the ToolNode is already initiated with given tools.
              */
             const invalidTools = modifiedTools.filter(
-              (tool: any) =>
+              (tool) =>
                 isClientTool(tool) &&
                 this.#options.toolClasses.every((t) => t !== tool)
             );
@@ -444,18 +467,49 @@ export class AgentNode<
                 `You have modified a tool in "wrapModelRequest" hook of middleware "${
                   currentMiddleware.name
                 }": ${invalidTools
-                  .map((tool: any) => tool.name)
+                  .map((tool) => tool.name)
                   .join(", ")}. This is not supported.`
               );
             }
 
-            return currentHandler(req);
+            return innerHandler(req);
           };
 
-          return (currentMiddleware.wrapModelRequest as any)!(
-            handlerWithValidation,
-            requestWithStateAndRuntime
-          );
+          // Call middleware's wrapModelRequest with the validation handler
+          if (!currentMiddleware.wrapModelRequest) {
+            return handlerWithValidation(requestWithStateAndRuntime);
+          }
+
+          try {
+            const middlewareResponse = await (
+              currentMiddleware.wrapModelRequest as (
+                handler: typeof handlerWithValidation,
+                request: typeof requestWithStateAndRuntime
+              ) => Promise<InternalModelResponse<StructuredResponseFormat>>
+            )(handlerWithValidation, requestWithStateAndRuntime);
+
+            /**
+             * Validate that this specific middleware returned a valid AIMessage
+             */
+            if (!AIMessage.isInstance(middlewareResponse)) {
+              throw new Error(
+                `Invalid response from "wrapModelRequest" in middleware "${
+                  currentMiddleware.name
+                }": expected AIMessage, got ${typeof middlewareResponse}`
+              );
+            }
+
+            return middlewareResponse;
+          } catch (error) {
+            // Add middleware context to error if not already added
+            if (
+              error instanceof Error &&
+              !error.message.includes(`middleware "${currentMiddleware.name}"`)
+            ) {
+              error.message = `Error in middleware "${currentMiddleware.name}": ${error.message}`;
+            }
+            throw error;
+          }
         };
       }
     }
@@ -463,22 +517,26 @@ export class AgentNode<
     /**
      * Execute the wrapped handler with the initial request
      */
-    const initialRequest = {
+    const initialRequest: ModelRequest<
+      InternalAgentState<StructuredResponseFormat> & PreHookAnnotation["State"],
+      unknown
+    > = {
       model,
       systemPrompt: this.#options.systemPrompt,
       messages: state.messages,
       tools: this.#options.toolClasses,
       state: {
         messages: state.messages,
-      },
+      } as InternalAgentState<StructuredResponseFormat> &
+        PreHookAnnotation["State"],
       runtime: Object.freeze({
         ...this.getState()._privateState,
         context: lgConfig?.context,
         writer: lgConfig.writer,
         interrupt: lgConfig.interrupt,
         signal: lgConfig.signal,
-      }),
-    } as any;
+      }) as Runtime<unknown>,
+    };
 
     return wrappedHandler(initialRequest);
   }

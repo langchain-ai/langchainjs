@@ -1,29 +1,17 @@
-import { expect, describe, it, vi } from "vitest";
-import { tool } from "@langchain/core/tools";
-import { HumanMessage, AIMessage } from "@langchain/core/messages";
-import { LanguageModelLike } from "@langchain/core/language_models/base";
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import { describe, it, expect, vi, expectTypeOf } from "vitest";
 import { z } from "zod/v3";
+import {
+  AIMessage,
+  HumanMessage,
+  SystemMessage,
+  BaseMessage,
+  ToolMessage,
+} from "@langchain/core/messages";
+import { tool } from "@langchain/core/tools";
 
 import { createAgent, createMiddleware } from "../index.js";
 import { FakeToolCallingChatModel, FakeToolCallingModel } from "./utils.js";
-
-function createMockModel(name = "ChatAnthropic", model = "anthropic") {
-  // Mock Anthropic model
-  const invokeCallback = vi
-    .fn()
-    .mockResolvedValue(new AIMessage("Response from model"));
-  return {
-    getName: () => name,
-    bindTools: vi.fn().mockReturnThis(),
-    _streamResponseChunks: vi.fn().mockReturnThis(),
-    bind: vi.fn().mockReturnThis(),
-    invoke: invokeCallback,
-    lc_runnable: true,
-    _modelType: model,
-    _generate: vi.fn(),
-    _llmType: () => model,
-  } as unknown as LanguageModelLike;
-}
 
 describe("middleware", () => {
   it("should propagate state schema to middleware hooks and result", async () => {
@@ -329,183 +317,653 @@ describe("middleware", () => {
     });
   });
 
-  describe("modifyModelRequest", () => {
-    const tools = [
-      tool(async () => "Tool response", {
-        name: "toolA",
-      }),
-      tool(async () => "Tool response", {
-        name: "toolB",
-      }),
-      tool(async () => "Tool response", {
-        name: "toolC",
-      }),
-    ];
+  describe("wrapModelRequest", () => {
+    it("should compose three middlewares where first is outermost wrapper", async () => {
+      /**
+       * Test demonstrates:
+       * 1. Middleware composition order (first middleware wraps all others)
+       * 2. Request modification (each middleware adds to system prompt)
+       * 3. Response modification (each middleware adds prefix to response)
+       *
+       * Expected flow:
+       * - Request: auth -> retry -> cache -> model
+       * - Response: model -> cache -> retry -> auth
+       */
 
-    it("should allow to add", async () => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const model = createMockModel() as any;
-      const middleware = createMiddleware({
-        name: "middleware",
-        tools: [
-          tool(async () => "Tool response", {
-            name: "toolD",
-          }),
-        ],
-        modifyModelRequest: async (request) => {
-          return {
+      const executionOrder: string[] = [];
+      const systemPrompts: string[] = [];
+      let actualSystemPromptSentToModel: string | undefined;
+
+      // Auth middleware (first = outermost wrapper)
+      const authMiddleware = createMiddleware({
+        name: "AuthMiddleware",
+        contextSchema: z.object({
+          foobar: z.string().optional(),
+        }),
+        wrapModelRequest: async (handler, request) => {
+          executionOrder.push("auth:before");
+          systemPrompts.push(request.systemPrompt || "");
+
+          // Modify request: add auth context to system prompt
+          const modifiedRequest = {
             ...request,
-            tools: request.tools.filter((tool) => tool.name === "toolD"),
-            toolChoice: "required",
+            systemPrompt: `${
+              request.systemPrompt || ""
+            }\n[AUTH: user authenticated]`,
           };
+
+          // Call inner handler (retry middleware)
+          const response = await handler(modifiedRequest);
+
+          executionOrder.push("auth:after");
+
+          // Modify response: add auth prefix
+          return new AIMessage({
+            ...response,
+            content: `[AUTH-WRAPPED] ${response.content}`,
+          });
         },
       });
+
+      // Retry middleware (second = middle wrapper)
+      const retryMiddleware = createMiddleware({
+        name: "RetryMiddleware",
+        wrapModelRequest: async (handler, request) => {
+          executionOrder.push("retry:before");
+          systemPrompts.push(request.systemPrompt || "");
+
+          // Modify request: add retry info to system prompt
+          const modifiedRequest = {
+            ...request,
+            systemPrompt: `${request.systemPrompt || ""}\n[RETRY: attempt 1]`,
+          };
+
+          // Call inner handler (cache middleware)
+          const response = await handler(modifiedRequest);
+
+          executionOrder.push("retry:after");
+
+          // Modify response: add retry prefix
+          return new AIMessage({
+            ...response,
+            content: `[RETRY-WRAPPED] ${response.content}`,
+          });
+        },
+      });
+
+      // Cache middleware (third = innermost wrapper, closest to model)
+      const cacheMiddleware = createMiddleware({
+        name: "CacheMiddleware",
+        wrapModelRequest: async (handler, request) => {
+          executionOrder.push("cache:before");
+          systemPrompts.push(request.systemPrompt || "");
+
+          // Modify request: add cache info to system prompt
+          const modifiedRequest = {
+            ...request,
+            systemPrompt: `${request.systemPrompt || ""}\n[CACHE: miss]`,
+          };
+
+          // Capture what will actually be sent to the model
+          actualSystemPromptSentToModel = modifiedRequest.systemPrompt;
+
+          // Call inner handler (base model handler)
+          const response = await handler(modifiedRequest);
+
+          executionOrder.push("cache:after");
+
+          // Modify response: add cache prefix
+          return new AIMessage({
+            ...response,
+            content: `[CACHE-WRAPPED] ${response.content}`,
+          });
+        },
+      });
+
+      const model = new FakeToolCallingChatModel({
+        responses: [new AIMessage("Hello from model")],
+      });
+
+      // Spy on the model's invoke to verify what it receives
+      const invokeSpy = vi.spyOn(model, "invoke");
+
       const agent = createAgent({
         model,
-        tools,
-        middleware: [middleware] as const,
+        tools: [],
+        systemPrompt: "You are helpful",
+        middleware: [authMiddleware, retryMiddleware, cacheMiddleware] as const,
       });
-      await agent.invoke({
-        messages: [new HumanMessage("Hello, world!")],
+
+      const result = await agent.invoke({
+        messages: [{ role: "user", content: "Hi" }],
       });
-      expect(model.bindTools).toHaveBeenCalledWith(
-        [expect.objectContaining({ name: "toolD" })],
+
+      // Verify execution order: auth -> retry -> cache -> model -> cache -> retry -> auth
+      expect(executionOrder).toEqual([
+        "auth:before",
+        "retry:before",
+        "cache:before",
+        "cache:after",
+        "retry:after",
+        "auth:after",
+      ]);
+
+      // Verify system prompts were accumulated correctly
+      // Each middleware sees the prompt BEFORE it adds its own modification
+      expect(systemPrompts).toHaveLength(3);
+      expect(systemPrompts).toMatchInlineSnapshot(`
+      [
+        "You are helpful",
+        "You are helpful
+      [AUTH: user authenticated]",
+        "You are helpful
+      [AUTH: user authenticated]
+      [RETRY: attempt 1]",
+      ]
+    `);
+
+      // Verify response was wrapped in correct order (innermost to outermost)
+      const lastMessage = result.messages[result.messages.length - 1];
+      expect(lastMessage.content).toBe(
+        "[AUTH-WRAPPED] [RETRY-WRAPPED] [CACHE-WRAPPED] Hello from model"
+      );
+
+      // Verify the final system prompt that was sent to the model
+      expect(actualSystemPromptSentToModel).toMatchInlineSnapshot(`
+      "You are helpful
+      [AUTH: user authenticated]
+      [RETRY: attempt 1]
+      [CACHE: miss]"
+    `);
+
+      // Verify model received the correct messages structure
+      expect(invokeSpy).toHaveBeenCalledTimes(1);
+      const [systemMessage] = invokeSpy.mock.calls[0][0] as BaseMessage[];
+
+      // Model should receive system message + user message
+      expect(systemMessage).toBeInstanceOf(SystemMessage);
+      expect(systemMessage.content).toBe(actualSystemPromptSentToModel);
+    });
+
+    it("should allow middleware to access state and runtime", async () => {
+      /**
+       * Test verifies that middleware receives state and runtime in the request
+       */
+      let capturedState: any;
+      let capturedRuntime: any;
+
+      const inspectorMiddleware = createMiddleware({
+        name: "InspectorMiddleware",
+        stateSchema: z.object({
+          foobar: z.string(),
+        }),
+        contextSchema: z.object({
+          middlewareContext: z.number(),
+        }),
+        wrapModelRequest: async (handler, request) => {
+          expectTypeOf(request.state).toMatchObjectType<{
+            foobar: string;
+            messages: BaseMessage[];
+          }>();
+          expectTypeOf(request.runtime.context).toMatchObjectType<{
+            middlewareContext: number;
+          }>();
+          expectTypeOf(request.systemPrompt!).toBeString();
+          expectTypeOf(request.runtime.runModelCallCount).toBeNumber();
+          expectTypeOf(request.runtime.threadLevelCallCount).toBeNumber();
+
+          // Capture state and runtime
+          capturedState = request.state;
+          capturedRuntime = request.runtime as unknown as Record<
+            string,
+            unknown
+          >;
+
+          return handler(request);
+        },
+      });
+
+      const model = new FakeToolCallingChatModel({
+        responses: [new AIMessage("Response")],
+      });
+
+      const agent = createAgent({
+        model,
+        tools: [],
+        middleware: [inspectorMiddleware] as const,
+        contextSchema: z.object({
+          globalContext: z.number(),
+        }),
+      });
+
+      await agent.invoke(
         {
-          tool_choice: "required",
+          messages: [{ role: "user", content: "Test" }],
+          foobar: "123",
+        },
+        {
+          context: {
+            globalContext: 1,
+            middlewareContext: 2,
+          },
         }
       );
+
+      // Verify state was provided and contains messages
+      expect(capturedState).toBeDefined();
+      expect(capturedState?.messages).toBeDefined();
+      expect(Array.isArray(capturedState?.messages)).toBe(true);
+      expect((capturedState?.messages as BaseMessage[])[0].content).toBe(
+        "Test"
+      );
+
+      const { context, threadLevelCallCount, runModelCallCount } =
+        capturedRuntime;
+      expect({
+        context,
+        threadLevelCallCount,
+        runModelCallCount,
+      }).toMatchInlineSnapshot(`
+      {
+        "context": {
+          "middlewareContext": 2,
+        },
+        "runModelCallCount": 0,
+        "threadLevelCallCount": 0,
+      }
+    `);
     });
 
-    it("should throw if user adds a new tool", async () => {
-      const model = createMockModel();
-      const middleware = createMiddleware({
-        name: "middleware",
-        modifyModelRequest: async (request) => {
-          return {
+    it("should handle errors in middleware and allow retry", async () => {
+      /**
+       * Test shows how middleware can handle errors and retry with modifications
+       */
+
+      let attemptCount = 0;
+
+      const errorHandlingMiddleware = createMiddleware({
+        name: "ErrorHandlingMiddleware",
+        wrapModelRequest: async (handler, request) => {
+          attemptCount++;
+
+          try {
+            return await handler(request);
+          } catch (error) {
+            // First attempt fails, retry with different model behavior
+            if (attemptCount === 1) {
+              // Retry with modified request
+              const retryRequest = {
+                ...request,
+                systemPrompt: `${request.systemPrompt}\n[RETRY: Attempting recovery]`,
+              };
+              return await handler(retryRequest);
+            }
+            throw error;
+          }
+        },
+      });
+
+      // Model that fails first time, succeeds second time
+      let callCount = 0;
+      const model = new FakeToolCallingChatModel({
+        responses: [
+          new AIMessage("This should not appear"),
+          new AIMessage("Success after retry"),
+        ],
+      });
+
+      // Override _generate to throw on first call
+      const originalGenerate = model._generate.bind(model);
+      model._generate = async function (messages, options, runManager) {
+        callCount++;
+        if (callCount === 1) {
+          // Increment idx before throwing so next call uses next response
+          this.idx++;
+          throw new Error("Temporary failure");
+        }
+        return originalGenerate(messages, options, runManager);
+      };
+
+      const agent = createAgent({
+        model,
+        tools: [],
+        systemPrompt: "You are helpful",
+        middleware: [errorHandlingMiddleware],
+      });
+
+      const result = await agent.invoke({
+        messages: [{ role: "user", content: "Hi" }],
+      });
+
+      // Verify middleware retried
+      expect(attemptCount).toBe(1);
+      expect(callCount).toBe(2);
+
+      // Verify we got the success response
+      expect(result.messages).toHaveLength(2);
+      const lastMessage = result.messages[result.messages.length - 1];
+      expect(lastMessage.content).toBe("Success after retry");
+    });
+
+    it("should allow middleware to modify model and tools", async () => {
+      const model = new FakeToolCallingChatModel({
+        responses: [new AIMessage("Guten Tag!")],
+      });
+      const pirateModel = new FakeToolCallingChatModel({
+        responses: [new AIMessage("Arr matey!")],
+      });
+      const modifyingMiddleware = createMiddleware({
+        name: "ModifyingMiddleware",
+        wrapModelRequest: async (handler, request) => {
+          // Middleware could modify the request in various ways
+          const modifiedRequest = {
             ...request,
-            tools: [
-              ...request.tools,
-              tool(async () => "Tool response", {
-                name: "toolE",
-              }),
+            systemPrompt: "OVERRIDDEN: You are a pirate",
+            model: pirateModel,
+          };
+
+          return handler(modifiedRequest);
+        },
+      });
+
+      const agent = createAgent({
+        model,
+        tools: [],
+        systemPrompt: "You are helpful",
+        middleware: [modifyingMiddleware],
+      });
+
+      const result = await agent.invoke({
+        messages: [{ role: "user", content: "Hi" }],
+      });
+
+      // Verify the agent completed successfully with modified behavior
+      expect(result.messages.at(-1)?.content).toBe("Arr matey!");
+    });
+
+    it("should allow to skip model call", async () => {
+      const model = new FakeToolCallingChatModel({
+        responses: [new AIMessage("Arr matey!")],
+      });
+      const modifyingMiddleware = createMiddleware({
+        name: "ModifyingMiddleware",
+        wrapModelRequest: () => new AIMessage("skipped"),
+      });
+
+      const agent = createAgent({
+        model,
+        systemPrompt: "You are helpful",
+        middleware: [modifyingMiddleware] as const,
+      });
+
+      const result = await agent.invoke({
+        messages: [{ role: "user", content: "Hi" }],
+      });
+
+      // Verify the agent completed successfully with modified behavior
+      expect(result.messages.at(-1)?.content).toBe("skipped");
+    });
+
+    it("should throw meaningful error if something invalid gets returned", async () => {
+      const model = new FakeToolCallingChatModel({
+        responses: [new AIMessage("Arr matey!")],
+      });
+      const modifyingMiddleware = createMiddleware({
+        name: "ModifyingMiddleware",
+        // @ts-expect-error should have AIMessage as return value
+        wrapModelRequest: () => {},
+      });
+
+      const agent = createAgent({
+        model,
+        systemPrompt: "You are helpful",
+        middleware: [modifyingMiddleware] as const,
+      });
+
+      await expect(
+        agent.invoke({
+          messages: [{ role: "user", content: "Hi" }],
+        })
+      ).rejects.toThrow(
+        'Invalid response from "wrapModelRequest" in middleware "ModifyingMiddleware": expected AIMessage, got undefined'
+      );
+    });
+
+    it("should propagate the middleware name in the error", async () => {
+      const model = new FakeToolCallingChatModel({
+        responses: [new AIMessage("Arr matey!")],
+      });
+      const modifyingMiddleware = createMiddleware({
+        name: "ModifyingMiddleware",
+        wrapModelRequest: () => {
+          throw new Error("foobar");
+        },
+      });
+
+      const agent = createAgent({
+        model,
+        systemPrompt: "You are helpful",
+        middleware: [modifyingMiddleware] as const,
+      });
+
+      await expect(
+        agent.invoke({
+          messages: [{ role: "user", content: "Hi" }],
+        })
+      ).rejects.toThrow('Error in middleware "ModifyingMiddleware": foobar');
+    });
+
+    it("should allow middleware to modify tool calls in response", async () => {
+      /**
+       * Test demonstrates middleware intercepting and modifying tool calls
+       * Model calls toolA, but middleware changes it to toolB
+       */
+
+      // Define two tools
+      const toolAMock = vi.fn(
+        async ({ input }: { input: string }) => `Tool A executed: ${input}`
+      );
+      const toolA = tool(toolAMock, {
+        name: "toolA",
+        description: "Tool A",
+        schema: z.object({
+          input: z.string(),
+        }),
+      });
+
+      const toolBMock = vi.fn(
+        async ({ input }: { input: string }) => `Tool B executed: ${input}`
+      );
+      const toolB = tool(toolBMock, {
+        name: "toolB",
+        description: "Tool B",
+        schema: z.object({
+          input: z.string(),
+        }),
+      });
+
+      let originalToolCall: string | undefined;
+      let modifiedToolCall: string | undefined;
+
+      // Middleware that intercepts and modifies tool calls
+      const toolRedirectMiddleware = createMiddleware({
+        name: "ToolRedirectMiddleware",
+        wrapModelRequest: async (handler, request) => {
+          // Call the model
+          const response = await handler(request);
+
+          // If the response has tool calls, modify them
+          if (response.tool_calls && response.tool_calls.length > 0) {
+            originalToolCall = response.tool_calls[0].name;
+
+            // Change tool call from toolA to toolB
+            if (response.tool_calls[0].name === "toolA") {
+              modifiedToolCall = "toolB";
+
+              return new AIMessage({
+                ...response,
+                content: response.content,
+                tool_calls: [
+                  {
+                    ...response.tool_calls[0],
+                    name: "toolB",
+                    // Keep the same arguments
+                    args: response.tool_calls[0].args,
+                  },
+                ],
+              });
+            }
+          }
+
+          return response;
+        },
+      });
+
+      // Model that calls toolA
+      const model = new FakeToolCallingChatModel({
+        responses: [
+          new AIMessage({
+            content: "",
+            tool_calls: [
+              {
+                id: "call_1",
+                name: "toolA",
+                args: { input: "test data" },
+              },
             ],
-          };
-        },
+          }),
+          new AIMessage("Done"),
+        ],
       });
+
       const agent = createAgent({
         model,
-        tools,
-        middleware: [middleware] as const,
+        tools: [toolA, toolB],
+        middleware: [toolRedirectMiddleware],
       });
-      await expect(
-        agent.invoke({ messages: [new HumanMessage("Hello, world!")] })
-      ).rejects.toThrow(
-        'You have added a new tool in "modifyModelRequest" hook of middleware "middleware": toolE. This is not supported.'
-      );
+
+      const result = await agent.invoke({
+        messages: [{ role: "user", content: "Call a tool" }],
+      });
+
+      // Verify the tool call was modified
+      expect(originalToolCall).toBe("toolA");
+      expect(modifiedToolCall).toBe("toolB");
+
+      // Verify toolB was actually executed (not toolA)
+      const toolMessage = result.messages.find((m) =>
+        ToolMessage.isInstance(m)
+      ) as any;
+      expect(toolMessage).toBeDefined();
+      expect(toolMessage.content).toContain("Tool B executed: test data");
+      expect(toolMessage.name).toBe("toolB");
+
+      expect(toolAMock).not.toBeCalled();
+      expect(toolBMock).toBeCalled();
     });
 
-    it("should throw if user modifies a tool", async () => {
-      const model = createMockModel();
-      const middleware = createMiddleware({
-        name: "middleware",
-        modifyModelRequest: async (request) => {
-          return {
-            ...request,
-            tools: request.tools.map((tool) => ({
-              ...tool,
-              description: "Modified tool",
-            })),
-          };
-        },
-      });
-      const agent = createAgent({
-        model,
-        tools,
-        middleware: [middleware] as const,
-      });
-      await expect(
-        agent.invoke({ messages: [new HumanMessage("Hello, world!")] })
-      ).rejects.toThrow(
-        'You have modified a tool in "modifyModelRequest" hook of middleware "middleware": toolA, toolB, toolC. This is not supported.'
-      );
-    });
-  });
+    it("should support async operations in middleware", async () => {
+      /**
+       * Test verifies middleware can perform async operations
+       */
 
-  describe("retryModelRequest", () => {
-    it("should retry the model request with the new model", async () => {
-      const model = createMockModel();
-      model.invoke = vi.fn().mockRejectedValue(new Error("Model error"));
-      const retryModel = createMockModel("ChatAnthropic", "anthropic");
-      const middleware = createMiddleware({
-        name: "middleware",
-        retryModelRequest: async (_, request) => {
-          return {
-            ...request,
-            model: retryModel,
-          };
-        },
-      });
-      const agent = createAgent({
-        model,
-        tools: [],
-        middleware: [middleware] as const,
-      });
-      await agent.invoke({ messages: [new HumanMessage("Hello, world!")] });
-      expect(model.invoke).toHaveBeenCalledTimes(1);
-      expect(retryModel.invoke).toHaveBeenCalledTimes(1);
-    });
+      const delays: number[] = [];
 
-    it("should not retry the model request if the middleware returns undefined", async () => {
-      const model = createMockModel();
-      model.invoke = vi.fn().mockRejectedValue(new Error("Model error"));
-      const retryModel = createMockModel("ChatAnthropic", "anthropic");
-      const middleware = createMiddleware({
-        name: "middleware",
-        retryModelRequest: async () => {
-          return;
+      const asyncMiddleware1 = createMiddleware({
+        name: "AsyncMiddleware1",
+        wrapModelRequest: async (handler, request) => {
+          const start = Date.now();
+          await new Promise((resolve) => setTimeout(resolve, 50));
+          const delay = Date.now() - start;
+          delays.push(delay);
+
+          return handler(request);
         },
       });
+
+      const asyncMiddleware2 = createMiddleware({
+        name: "AsyncMiddleware2",
+        wrapModelRequest: async (handler, request) => {
+          const start = Date.now();
+          await new Promise((resolve) => setTimeout(resolve, 30));
+          const delay = Date.now() - start;
+          delays.push(delay);
+
+          return handler(request);
+        },
+      });
+
+      const model = new FakeToolCallingChatModel({
+        responses: [new AIMessage("Response")],
+        sleep: 0, // No sleep in model to test middleware timing
+      });
+
       const agent = createAgent({
         model,
         tools: [],
-        middleware: [middleware] as const,
+        middleware: [asyncMiddleware1, asyncMiddleware2],
       });
-      await expect(
-        agent.invoke({ messages: [new HumanMessage("Hello, world!")] })
-      ).rejects.toThrow("Model error");
-      expect(model.invoke).toHaveBeenCalledTimes(1);
-      expect(retryModel.invoke).toHaveBeenCalledTimes(0);
+
+      const startTime = Date.now();
+      await agent.invoke({
+        messages: [{ role: "user", content: "Test" }],
+      });
+      const totalTime = Date.now() - startTime;
+
+      // Verify async operations occurred
+      expect(delays).toHaveLength(2);
+      expect(delays[0]).toBeGreaterThanOrEqual(45); // ~50ms
+      expect(delays[1]).toBeGreaterThanOrEqual(25); // ~30ms
+
+      // Total time should be at least the sum of delays
+      expect(totalTime).toBeGreaterThanOrEqual(75);
     });
 
-    it("should break after the first middleware that returns a request", async () => {
-      const model = createMockModel();
-      model.invoke = vi
-        .fn()
-        .mockRejectedValueOnce(new Error("Model error"))
-        .mockResolvedValueOnce(new AIMessage("Response from model"));
-      const retryModel = createMockModel("ChatAnthropic", "anthropic");
+    it("should pass correct state to each middleware", async () => {
       const middleware1 = createMiddleware({
-        name: "middleware1",
-        retryModelRequest: async (_, request) => request,
-      });
-      const middleware2 = createMiddleware({
-        name: "middleware2",
-        retryModelRequest: async (_, request) => {
-          return {
+        name: "Middleware1",
+        wrapModelRequest: async (handler, request) => {
+          /**
+           * we don't allow to change state within these hooks
+           */
+          expect(request.state.messages.length).toBe(2);
+          return handler({
             ...request,
-            model: retryModel,
-          };
+            messages: [...request.messages, new AIMessage("some changes")],
+          });
         },
       });
+
+      const middleware2 = createMiddleware({
+        name: "Middleware2",
+        wrapModelRequest: async (handler, request) => {
+          /**
+           * we don't allow to change state within these hooks
+           */
+          expect(request.state.messages.length).toBe(2);
+          return handler({
+            ...request,
+            messages: [...request.messages, new AIMessage("some changes")],
+          });
+        },
+      });
+
+      const model = new FakeToolCallingChatModel({
+        responses: [new AIMessage("Response")],
+      });
+
       const agent = createAgent({
         model,
         tools: [],
-        middleware: [middleware1, middleware2] as const,
+        middleware: [middleware1, middleware2],
       });
 
-      await agent.invoke({ messages: [new HumanMessage("Hello, world!")] });
-      expect(model.invoke).toHaveBeenCalledTimes(2);
-      expect(retryModel.invoke).toHaveBeenCalledTimes(0);
+      await agent.invoke({
+        messages: [
+          { role: "user", content: "Message 1" },
+          { role: "assistant", content: "Message 2" },
+        ],
+      });
     });
   });
 });

@@ -160,9 +160,10 @@ describe("middleware state management", () => {
           },
         };
       },
-      modifyModelRequest: async (_, __, runtime) => {
-        expect(runtime.threadLevelCallCount).toBe(0);
-        expect(runtime.runModelCallCount).toBe(0);
+      wrapModelRequest: async (handler, request) => {
+        expect(request.runtime.threadLevelCallCount).toBe(0);
+        expect(request.runtime.runModelCallCount).toBe(0);
+        return handler(request);
       },
       afterModel: async (_, runtime) => {
         expect(runtime.threadLevelCallCount).toBe(1);
@@ -210,9 +211,10 @@ describe("middleware state management", () => {
         expect(runtime.threadLevelCallCount).toBe(1);
         expect(runtime.runModelCallCount).toBe(0);
       },
-      modifyModelRequest: async (_, __, runtime) => {
-        expect(runtime.threadLevelCallCount).toBe(1);
-        expect(runtime.runModelCallCount).toBe(0);
+      wrapModelRequest: async (handler, request) => {
+        expect(request.runtime.threadLevelCallCount).toBe(1);
+        expect(request.runtime.runModelCallCount).toBe(0);
+        return handler(request);
       },
       afterModel: async (_, runtime) => {
         expect(runtime.threadLevelCallCount).toBe(2);

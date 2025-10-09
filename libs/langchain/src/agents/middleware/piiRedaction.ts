@@ -231,7 +231,7 @@ function restoreMessage(
  *
  * The middleware intercepts agent execution at two points:
  *
- * ### Request Phase (`modifyModelRequest`)
+ * ### Request Phase (`wrapModelRequest`)
  * - Applies regex-based pattern matching to all message content (HumanMessage, ToolMessage, SystemMessage, AIMessage)
  * - Processes both message text and AIMessage tool call arguments
  * - Each matched pattern generates:

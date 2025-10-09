@@ -48,21 +48,24 @@ const agent = createAgent({
     createMiddleware({
       name: "dynamicModelSelection",
       contextSchema: context,
-      modifyModelRequest: (request, state, runtime) => {
+      wrapModelRequest: (handler, request) => {
         /**
          * if model preference is provided by content, use it
          */
-        if (runtime.context?.model) {
-          console.log("\n🧠 Using model from context:", runtime.context.model);
-          return {
+        if (request.runtime.context?.model) {
+          console.log(
+            "\n🧠 Using model from context:",
+            request.runtime.context.model
+          );
+          return handler({
             ...request,
             model: new ChatOpenAI({
-              model: runtime.context.model,
+              model: request.runtime.context.model,
             }),
-          };
+          });
         }
 
-        const last = state.messages[state.messages.length - 1];
+        const last = request.messages[request.state.messages.length - 1];
         const content = typeof last.content === "string" ? last.content : "";
         const text = content.toLowerCase();
         const isComplex =
@@ -71,13 +74,13 @@ const agent = createAgent({
         console.log(
           `\n🧠 Model router → ${modelId} | Query: "${content.slice(0, 60)}..."`
         );
-        return {
+        return handler({
           ...request,
           model: new ChatOpenAI({
             model: modelId,
             temperature: modelId === "gpt-4o" ? 0.2 : 0.5,
           }),
-        };
+        });
       },
     }),
   ],
