@@ -360,21 +360,21 @@ export function piiRedactionMiddleware(
   return createMiddleware({
     name: "PIIRedactionMiddleware",
     contextSchema,
-    modifyModelRequest: async (request, state, runtime) => {
+    wrapModelRequest: async (handler, request) => {
       /**
        * Merge options with context, following bigTool.ts pattern
        */
-      const rules = runtime.context.rules ?? options.rules ?? {};
+      const rules = request.runtime.context.rules ?? options.rules ?? {};
 
       /**
        * If no rules are provided, skip processing
        */
       if (Object.keys(rules).length === 0) {
-        return;
+        return handler(request);
       }
 
       const processedMessages = await Promise.all(
-        state.messages.map((message: BaseMessage) =>
+        request.state.messages.map((message: BaseMessage) =>
           processMessage(message, {
             rules,
             redactionMap,
@@ -382,10 +382,10 @@ export function piiRedactionMiddleware(
         )
       );
 
-      return {
+      return handler({
         ...request,
         messages: processedMessages,
-      };
+      });
     },
     afterModel: async (state) => {
       /**

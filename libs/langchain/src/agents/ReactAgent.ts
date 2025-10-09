@@ -173,14 +173,7 @@ export class ReactAgent<
       name: string;
       allowed?: string[];
     }[] = [];
-    const modifyModelRequestHookMiddleware: [
-      AgentMiddleware,
-      /**
-       * ToDo: better type to get the state of middleware
-       */
-      () => any
-    ][] = [];
-    const retryModelRequestHookMiddleware: [
+    const wrapModelRequestHookMiddleware: [
       AgentMiddleware,
       /**
        * ToDo: better type to get the state of middleware
@@ -198,8 +191,7 @@ export class ReactAgent<
       toolClasses,
       shouldReturnDirect,
       signal: this.options.signal,
-      modifyModelRequestHookMiddleware,
-      retryModelRequestHookMiddleware,
+      wrapModelRequestHookMiddleware,
     });
 
     const middlewareNames = new Set<string>();
@@ -246,18 +238,8 @@ export class ReactAgent<
         );
       }
 
-      if (m.modifyModelRequest) {
-        modifyModelRequestHookMiddleware.push([
-          m,
-          () => ({
-            ...beforeModelNode?.getState(),
-            ...afterModelNode?.getState(),
-          }),
-        ]);
-      }
-
-      if (m.retryModelRequest) {
-        retryModelRequestHookMiddleware.push([
+      if (m.wrapModelRequest) {
+        wrapModelRequestHookMiddleware.push([
           m,
           () => ({
             ...beforeModelNode?.getState(),

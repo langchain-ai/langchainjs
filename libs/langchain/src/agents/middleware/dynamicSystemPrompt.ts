@@ -49,10 +49,10 @@ export function dynamicSystemPromptMiddleware<TContextSchema = unknown>(
 ) {
   return createMiddleware({
     name: "DynamicSystemPromptMiddleware",
-    modifyModelRequest: async (options, state, runtime) => {
+    wrapModelRequest: async (handler, request) => {
       const systemPrompt = await fn(
-        state as AgentBuiltInState,
-        runtime as Runtime<TContextSchema>
+        request.state as AgentBuiltInState,
+        request.runtime as Runtime<TContextSchema>
       );
 
       if (typeof systemPrompt !== "string") {
@@ -61,7 +61,7 @@ export function dynamicSystemPromptMiddleware<TContextSchema = unknown>(
         );
       }
 
-      return { ...options, systemPrompt };
+      return handler({ ...request, systemPrompt });
     },
   });
 }

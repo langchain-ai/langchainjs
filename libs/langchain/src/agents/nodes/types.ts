@@ -1,12 +1,16 @@
 import type { LanguageModelLike } from "@langchain/core/language_models/base";
 import type { BaseMessage } from "@langchain/core/messages";
 import type { ServerTool, ClientTool } from "../tools.js";
+import type { Runtime, AgentBuiltInState } from "../runtime.js";
 
 /**
  * Configuration for modifying a model call at runtime.
  * All fields are optional and only provided fields will override defaults.
  */
-export interface ModelRequest {
+export interface ModelRequest<
+  TState extends Record<string, unknown> = Record<string, unknown>,
+  TContext = unknown
+> {
   /**
    * The model to use for this step.
    */
@@ -37,4 +41,14 @@ export interface ModelRequest {
    * The tools to make available for this step.
    */
   tools: (ServerTool | ClientTool)[];
+
+  /**
+   * The current agent state (includes both middleware state and built-in state).
+   */
+  state: TState & AgentBuiltInState;
+
+  /**
+   * The runtime context containing metadata, signal, writer, interrupt, etc.
+   */
+  runtime: Runtime<TContext>;
 }

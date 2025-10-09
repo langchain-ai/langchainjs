@@ -326,11 +326,12 @@ export function planningMiddleware(options?: PlanningMiddlewareOptions) {
     name: "planningMiddleware",
     stateSchema,
     tools: [writeTodos],
-    modifyModelRequest: (request) => ({
-      ...request,
-      systemPrompt:
-        (request.systemPrompt ? `${request.systemPrompt}\n\n` : "") +
-        (options?.systemPrompt ?? PLANNING_MIDDLEWARE_SYSTEM_PROMPT),
-    }),
+    wrapModelRequest: (handler, request) =>
+      handler({
+        ...request,
+        systemPrompt:
+          (request.systemPrompt ? `${request.systemPrompt}\n\n` : "") +
+          (options?.systemPrompt ?? PLANNING_MIDDLEWARE_SYSTEM_PROMPT),
+      }),
   });
 }

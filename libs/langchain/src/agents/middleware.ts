@@ -6,6 +6,7 @@ import type {
   InferInteropZodInput,
   InferInteropZodOutput,
 } from "@langchain/core/utils/types";
+import type { AIMessage } from "@langchain/core/messages";
 
 import type { JumpToTarget } from "./constants.js";
 import type { ClientTool, ServerTool } from "./tools.js";
@@ -19,7 +20,7 @@ import type { ModelRequest } from "./nodes/types.js";
  * @param config.name - The name of the middleware
  * @param config.stateSchema - The schema of the middleware state
  * @param config.contextSchema - The schema of the middleware context
- * @param config.modifyModelRequest - The function to prepare the model request
+ * @param config.wrapModelRequest - The function to wrap model invocation
  * @param config.beforeModel - The function to run before the model call
  * @param config.afterModel - The function to run after the model call
  * @returns A middleware instance
@@ -83,26 +84,54 @@ export function createMiddleware<
    */
   tools?: (ClientTool | ServerTool)[];
   /**
-   * The function to modify the model request. This function is called after the `beforeModel` hook of this middleware and before the model is invoked.
-   * It allows to modify the model request before it is passed to the model.
+   * Wraps the model invocation with custom logic. This allows you to:
+   * - Modify the request before calling the model
+   * - Handle errors and retry with different parameters
+   * - Post-process the response
+   * - Implement custom caching, logging, or other cross-cutting concerns
    *
-   * @param request - The model request
-   * @param request.model - The model to use for this step.
-   * @param request.messages - The messages to send to the model.
-   * @param request.systemPrompt - The system message for this step.
-   * @param request.toolChoice - The tool choice configuration for this step.
-   * @param request.tools - The tools to make available for this step.
-   * @param state - The middleware state
-   * @param runtime - The middleware runtime
-   * @returns The modified model request or undefined to pass through
+   * The request parameter contains: model, messages, systemPrompt, tools, state, and runtime.
+   *
+   * @param handler - The function that invokes the model. Call this with a ModelRequest to get the response.
+   * @param request - The model request containing all the parameters needed.
+   * @returns The response from the model (or a modified version).
+   *
+   * @example
+   * ```ts
+   * wrapModelRequest: async (handler, request) => {
+   *   // Modify request before calling
+   *   const modifiedRequest = { ...request, systemPrompt: "You are helpful" };
+   *
+   *   try {
+   *     // Call the model
+   *     return await handler(modifiedRequest);
+   *   } catch (error) {
+   *     // Handle errors and retry with fallback
+   *     const fallbackRequest = { ...request, model: fallbackModel };
+   *     return await handler(fallbackRequest);
+   *   }
+   * }
+   * ```
    */
-  modifyModelRequest?: (
-    options: ModelRequest,
-    state: (TSchema extends InteropZodObject
-      ? InferInteropZodInput<TSchema>
-      : {}) &
-      AgentBuiltInState,
-    runtime: Runtime<
+  wrapModelRequest?: <TReturn = AIMessage>(
+    handler: (
+      request: ModelRequest<
+        (TSchema extends InteropZodObject
+          ? InferInteropZodInput<TSchema>
+          : {}) &
+          AgentBuiltInState,
+        TContextSchema extends InteropZodObject
+          ? InferInteropZodOutput<TContextSchema>
+          : TContextSchema extends InteropZodDefault<any>
+          ? InferInteropZodOutput<TContextSchema>
+          : TContextSchema extends InteropZodOptional<any>
+          ? Partial<InferInteropZodOutput<TContextSchema>>
+          : never
+      >
+    ) => Promise<TReturn> | TReturn,
+    request: ModelRequest<
+      (TSchema extends InteropZodObject ? InferInteropZodInput<TSchema> : {}) &
+        AgentBuiltInState,
       TContextSchema extends InteropZodObject
         ? InferInteropZodOutput<TContextSchema>
         : TContextSchema extends InteropZodDefault<any>
@@ -111,37 +140,9 @@ export function createMiddleware<
         ? Partial<InferInteropZodOutput<TContextSchema>>
         : never
     >
-  ) => Promise<ModelRequest | void> | ModelRequest | void;
+  ) => Promise<TReturn> | TReturn;
   /**
-   * The function to handle model invocation errors and optionally retry.
-   *
-   * @param error - The exception that occurred during model invocation
-   * @param request - The original model request that failed
-   * @param state - The current agent state
-   * @param runtime - The runtime context
-   * @param attempt - The current attempt number (1-indexed)
-   * @returns Modified request to retry with, or undefined/null to propagate the error (re-raise)
-   */
-  retryModelRequest?: (
-    error: Error,
-    request: ModelRequest,
-    state: (TSchema extends InteropZodObject
-      ? InferInteropZodInput<TSchema>
-      : {}) &
-      AgentBuiltInState,
-    runtime: Runtime<
-      TContextSchema extends InteropZodObject
-        ? InferInteropZodOutput<TContextSchema>
-        : TContextSchema extends InteropZodDefault<any>
-        ? InferInteropZodOutput<TContextSchema>
-        : TContextSchema extends InteropZodOptional<any>
-        ? Partial<InferInteropZodOutput<TContextSchema>>
-        : never
-    >,
-    attempt: number
-  ) => Promise<ModelRequest | void> | ModelRequest | void;
-  /**
-   * The function to run before the model call. This function is called before the model is invoked and before the `modifyModelRequest` hook.
+   * The function to run before the model call. This function is called before the model is invoked and before the `wrapModelRequest` hook.
    * It allows to modify the state of the agent.
    *
    * @param state - The middleware state
@@ -224,50 +225,9 @@ export function createMiddleware<
     tools: config.tools ?? [],
   };
 
-  if (config.modifyModelRequest) {
-    middleware.modifyModelRequest = async (options, state, runtime) =>
-      Promise.resolve(
-        config.modifyModelRequest!(
-          options,
-          state,
-          runtime as Runtime<
-            TContextSchema extends InteropZodObject
-              ? InferInteropZodOutput<TContextSchema>
-              : TContextSchema extends InteropZodDefault<any>
-              ? InferInteropZodOutput<TContextSchema>
-              : TContextSchema extends InteropZodOptional<any>
-              ? Partial<InferInteropZodOutput<TContextSchema>>
-              : never
-          >
-        )
-      );
-  }
-
-  if (config.retryModelRequest) {
-    middleware.retryModelRequest = async (
-      error,
-      request,
-      state,
-      runtime,
-      attempt
-    ) =>
-      Promise.resolve(
-        config.retryModelRequest!(
-          error,
-          request,
-          state,
-          runtime as Runtime<
-            TContextSchema extends InteropZodObject
-              ? InferInteropZodOutput<TContextSchema>
-              : TContextSchema extends InteropZodDefault<any>
-              ? InferInteropZodOutput<TContextSchema>
-              : TContextSchema extends InteropZodOptional<any>
-              ? Partial<InferInteropZodOutput<TContextSchema>>
-              : never
-          >,
-          attempt
-        )
-      );
+  if (config.wrapModelRequest) {
+    middleware.wrapModelRequest = async (handler, request) =>
+      Promise.resolve(config.wrapModelRequest!(handler, request));
   }
 
   if (config.beforeModel) {

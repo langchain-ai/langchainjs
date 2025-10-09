@@ -66,8 +66,10 @@ export interface AgentNodeOptions<
   toolClasses: (ClientTool | ServerTool)[];
   shouldReturnDirect: Set<string>;
   signal?: AbortSignal;
-  modifyModelRequestHookMiddleware?: [AgentMiddleware, () => ModelRequest][];
-  retryModelRequestHookMiddleware?: [AgentMiddleware, () => ModelRequest][];
+  wrapModelRequestHookMiddleware?: [
+    AgentMiddleware,
+    () => Record<string, unknown>
+  ][];
 }
 
 interface NativeResponseFormat {
@@ -265,178 +267,220 @@ export class AgentNode<
     } = {}
   ): Promise<AIMessage | ResponseHandlerResult<StructuredResponseFormat>> {
     const model = await this.#deriveModel();
+    const lgConfig = config as LangGraphRunnableConfig;
 
     /**
-     * Execute modifyModelRequest hooks from beforeModelNodes
+     * Create the base handler that performs the actual model invocation
      */
-    let preparedOptions = await this.#executePrepareModelRequestHooks(
-      model,
-      state,
-      config
-    );
+    const baseHandler = async (
+      request: ModelRequest
+    ): Promise<AIMessage | ResponseHandlerResult<StructuredResponseFormat>> => {
+      /**
+       * Check if the LLM already has bound tools and throw if it does.
+       */
+      validateLLMHasNoBoundTools(request.model);
 
-    /**
-     * Retry loop for model invocation with error handling
-     * Hard limit of 100 attempts to prevent infinite loops from buggy middleware
-     */
-    const maxAttempts = 100;
-    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
-      try {
-        /**
-         * If user provides a model in the preparedOptions, use it,
-         * otherwise use the model from the options
-         */
-        const finalModel = preparedOptions?.model ?? model;
+      const structuredResponseFormat = this.#getResponseFormat(request.model);
+      const modelWithTools = await this.#bindTools(
+        request.model,
+        request,
+        structuredResponseFormat
+      );
 
-        /**
-         * Check if the LLM already has bound tools and throw if it does.
-         */
-        validateLLMHasNoBoundTools(finalModel);
+      let modelInput = this.#getModelInputState(state);
+      modelInput = { ...modelInput, messages: request.messages };
 
-        const structuredResponseFormat = this.#getResponseFormat(finalModel);
-        const modelWithTools = await this.#bindTools(
-          finalModel,
-          preparedOptions,
+      const signal = mergeAbortSignals(this.#options.signal, config.signal);
+      const invokeConfig = { ...config, signal };
+      const response = (await modelWithTools.invoke(
+        modelInput,
+        invokeConfig
+      )) as AIMessage;
+
+      /**
+       * if the user requests a native schema output, try to parse the response
+       * and return the structured response if it is valid
+       */
+      if (structuredResponseFormat?.type === "native") {
+        const structuredResponse =
+          structuredResponseFormat.strategy.parse(response);
+        if (structuredResponse) {
+          return { structuredResponse, messages: [response] };
+        }
+
+        return response;
+      }
+
+      if (!structuredResponseFormat || !response.tool_calls) {
+        return response;
+      }
+
+      const toolCalls = response.tool_calls.filter(
+        (call) => call.name in structuredResponseFormat.tools
+      );
+
+      /**
+       * if there were not structured tool calls, we can return the response
+       */
+      if (toolCalls.length === 0) {
+        return response;
+      }
+
+      /**
+       * if there were multiple structured tool calls, we should throw an error as this
+       * scenario is not defined/supported.
+       */
+      if (toolCalls.length > 1) {
+        return this.#handleMultipleStructuredOutputs(
+          response,
+          toolCalls,
           structuredResponseFormat
         );
-        let modelInput = this.#getModelInputState(state);
+      }
 
-        /**
-         * Use messages from preparedOptions if provided
-         */
-        if (preparedOptions?.messages) {
-          modelInput = { ...modelInput, messages: preparedOptions.messages };
-        }
+      const toolStrategy = structuredResponseFormat.tools[toolCalls[0].name];
+      const toolMessageContent = toolStrategy?.options?.toolMessageContent;
+      return this.#handleSingleStructuredOutput(
+        response,
+        toolCalls[0],
+        structuredResponseFormat,
+        toolMessageContent ?? options.lastMessage
+      );
+    };
 
-        const signal = mergeAbortSignals(this.#options.signal, config.signal);
-        const invokeConfig = { ...config, signal };
-        const response = (await modelWithTools.invoke(
-          modelInput,
-          invokeConfig
-        )) as AIMessage;
+    /**
+     * Wrap the base handler with middleware wrapModelRequest hooks
+     * Middleware are applied in reverse order so the first middleware is the outermost wrapper
+     */
+    const wrapperMiddleware =
+      this.#options.wrapModelRequestHookMiddleware ?? [];
+    let wrappedHandler: (
+      request: ModelRequest
+    ) => Promise<AIMessage | ResponseHandlerResult<StructuredResponseFormat>> =
+      baseHandler as any;
 
-        /**
-         * if the user requests a native schema output, try to parse the response
-         * and return the structured response if it is valid
-         */
-        if (structuredResponseFormat?.type === "native") {
-          const structuredResponse =
-            structuredResponseFormat.strategy.parse(response);
-          if (structuredResponse) {
-            return { structuredResponse, messages: [response] };
-          }
+    // Apply middleware wrappers in reverse order
+    for (let i = wrapperMiddleware.length - 1; i >= 0; i--) {
+      const [middleware, getMiddlewareState] = wrapperMiddleware[i];
+      if (middleware.wrapModelRequest) {
+        const currentHandler = wrappedHandler;
+        const currentMiddleware = middleware;
+        const currentGetState = getMiddlewareState;
 
-          return response;
-        }
+        wrappedHandler = async (
+          request: ModelRequest
+        ): Promise<
+          AIMessage | ResponseHandlerResult<StructuredResponseFormat>
+        > => {
+          /**
+           * Merge context with default context of middleware
+           */
+          const context = currentMiddleware.contextSchema
+            ? interopParse(
+                currentMiddleware.contextSchema,
+                lgConfig?.context || {}
+              )
+            : lgConfig?.context;
 
-        if (!structuredResponseFormat || !response.tool_calls) {
-          return response;
-        }
+          /**
+           * Create runtime
+           */
+          const privateState = this.getState()._privateState;
+          const runtime: Runtime<unknown> = Object.freeze({
+            ...privateState,
+            context,
+            writer: lgConfig.writer,
+            interrupt: lgConfig.interrupt,
+            signal: lgConfig.signal,
+          });
 
-        const toolCalls = response.tool_calls.filter(
-          (call) => call.name in structuredResponseFormat.tools
-        );
+          /**
+           * Create the request with state and runtime
+           */
+          const requestWithStateAndRuntime = {
+            ...request,
+            state: {
+              ...currentGetState(),
+              messages: state.messages,
+            },
+            runtime,
+          };
 
-        /**
-         * if there were not structured tool calls, we can return the response
-         */
-        if (toolCalls.length === 0) {
-          return response;
-        }
-
-        /**
-         * if there were multiple structured tool calls, we should throw an error as this
-         * scenario is not defined/supported.
-         */
-        if (toolCalls.length > 1) {
-          return this.#handleMultipleStructuredOutputs(
-            response,
-            toolCalls,
-            structuredResponseFormat
-          );
-        }
-
-        const toolStrategy = structuredResponseFormat.tools[toolCalls[0].name];
-        const toolMessageContent = toolStrategy?.options?.toolMessageContent;
-        return this.#handleSingleStructuredOutput(
-          response,
-          toolCalls[0],
-          structuredResponseFormat,
-          toolMessageContent ?? options.lastMessage
-        );
-      } catch (error) {
-        // Try retry_model_request on each middleware
-        const retryMiddleware =
-          this.#options.retryModelRequestHookMiddleware ?? [];
-        let shouldRetry = false;
-
-        for (const [middleware, getMiddlewareState] of retryMiddleware) {
-          if (middleware.retryModelRequest) {
+          /**
+           * Call the middleware's wrapModelRequest with a handler that validates tools
+           */
+          const handlerWithValidation = async (req: any) => {
             /**
-             * Cast config to LangGraphRunnableConfig to access LangGraph-specific properties
+             * Verify that the user didn't add any new tools.
+             * We can't allow this as the ToolNode is already initiated with given tools.
              */
-            const lgConfig = config as LangGraphRunnableConfig;
-
-            /**
-             * Merge context with default context of middleware
-             */
-            const context = middleware.contextSchema
-              ? interopParse(middleware.contextSchema, lgConfig?.context || {})
-              : lgConfig?.context;
-
-            /**
-             * Create runtime
-             */
-            const privateState = this.getState()._privateState;
-            const runtime: Runtime<unknown> = {
-              ...privateState,
-              context,
-              writer: lgConfig.writer,
-              interrupt: lgConfig.interrupt,
-              signal: lgConfig.signal,
-            };
-
-            const retryRequest = await middleware.retryModelRequest(
-              error as Error,
-              {
-                model: preparedOptions?.model ?? model,
-                systemPrompt: preparedOptions?.systemPrompt,
-                messages: preparedOptions?.messages ?? state.messages,
-                tools: this.#options.toolClasses,
-              },
-              {
-                ...getMiddlewareState(),
-                messages: state.messages,
-              },
-              /**
-               * ensure runtime is frozen to prevent modifications
-               */
-              Object.freeze({
-                ...runtime,
-                context,
-              }),
-              attempt
+            const modifiedTools = req.tools ?? [];
+            const newTools = modifiedTools.filter(
+              (tool: any) =>
+                isClientTool(tool) &&
+                !this.#options.toolClasses.some((t) => t.name === tool.name)
             );
-
-            if (retryRequest) {
-              // Update preparedOptions with the modified request
-              preparedOptions = retryRequest;
-              shouldRetry = true;
-              // Break on first middleware that wants to retry
-              break;
+            if (newTools.length > 0) {
+              throw new Error(
+                `You have added a new tool in "wrapModelRequest" hook of middleware "${
+                  currentMiddleware.name
+                }": ${newTools
+                  .map((tool: any) => tool.name)
+                  .join(", ")}. This is not supported.`
+              );
             }
-          }
-        }
 
-        // If no middleware wants to retry, re-raise the error
-        if (!shouldRetry) {
-          throw error;
-        }
+            /**
+             * Verify that user has not added or modified a tool with the same name.
+             * We can't allow this as the ToolNode is already initiated with given tools.
+             */
+            const invalidTools = modifiedTools.filter(
+              (tool: any) =>
+                isClientTool(tool) &&
+                this.#options.toolClasses.every((t) => t !== tool)
+            );
+            if (invalidTools.length > 0) {
+              throw new Error(
+                `You have modified a tool in "wrapModelRequest" hook of middleware "${
+                  currentMiddleware.name
+                }": ${invalidTools
+                  .map((tool: any) => tool.name)
+                  .join(", ")}. This is not supported.`
+              );
+            }
+
+            return currentHandler(req);
+          };
+
+          return (currentMiddleware.wrapModelRequest as any)!(
+            handlerWithValidation,
+            requestWithStateAndRuntime
+          );
+        };
       }
     }
 
-    // If we exit the loop, max attempts exceeded
-    throw new Error(`Maximum retry attempts (${maxAttempts}) exceeded`);
+    /**
+     * Execute the wrapped handler with the initial request
+     */
+    const initialRequest = {
+      model,
+      systemPrompt: this.#options.systemPrompt,
+      messages: state.messages,
+      tools: this.#options.toolClasses,
+      state: {
+        messages: state.messages,
+      },
+      runtime: Object.freeze({
+        ...this.getState()._privateState,
+        context: lgConfig?.context,
+        writer: lgConfig.writer,
+        interrupt: lgConfig.interrupt,
+        signal: lgConfig.signal,
+      }),
+    } as any;
+
+    return wrappedHandler(initialRequest);
   }
 
   /**
@@ -635,121 +679,6 @@ export class AgentNode<
       InternalAgentState<StructuredResponseFormat>,
       "llmInputMessages"
     >;
-  }
-
-  async #executePrepareModelRequestHooks(
-    model: LanguageModelLike,
-    state: InternalAgentState<StructuredResponseFormat> &
-      PreHookAnnotation["State"],
-    config: LangGraphRunnableConfig
-  ): Promise<ModelRequest | undefined> {
-    if (
-      !this.#options.modifyModelRequestHookMiddleware ||
-      this.#options.modifyModelRequestHookMiddleware.length === 0
-    ) {
-      return undefined;
-    }
-
-    /**
-     * Get the prompt for system message
-     */
-    const systemPrompt = this.#options.systemPrompt;
-
-    /**
-     * Prepare the initial call options
-     */
-    let currentOptions: ModelRequest = {
-      model,
-      systemPrompt,
-      messages: state.messages,
-      tools: this.#options.toolClasses,
-    };
-
-    /**
-     * Execute modifyModelRequest hooks from all middleware
-     */
-    const middlewareList = this.#options.modifyModelRequestHookMiddleware;
-    for (const [middleware, getMiddlewareState] of middlewareList) {
-      /**
-       * Merge context with default context of middleware
-       */
-      const context = middleware.contextSchema
-        ? interopParse(middleware.contextSchema, config?.context || {})
-        : config?.context;
-
-      /**
-       * Create runtime
-       */
-      const privateState = this.getState()._privateState;
-      const runtime: Runtime<unknown> = {
-        ...privateState,
-        context,
-        writer: config.writer,
-        interrupt: config.interrupt,
-        signal: config.signal,
-      };
-
-      const result = await middleware.modifyModelRequest!(
-        currentOptions,
-        {
-          ...getMiddlewareState(),
-          messages: state.messages,
-        },
-        /**
-         * ensure runtime is frozen to prevent modifications
-         */
-        Object.freeze({
-          ...runtime,
-          context,
-        })
-      );
-
-      if (result) {
-        const modifiedTools = result.tools ?? [];
-
-        /**
-         * Verify that the user didn't add any new tools.
-         * We can't allow this as the ToolNode is already initiated with given tools.
-         */
-        const newTools = modifiedTools.filter(
-          (tool) =>
-            isClientTool(tool) &&
-            !this.#options.toolClasses.some((t) => t.name === tool.name)
-        );
-        if (newTools.length > 0) {
-          throw new Error(
-            `You have added a new tool in "modifyModelRequest" hook of middleware "${
-              middleware.name
-            }": ${newTools
-              .map((tool) => tool.name)
-              .join(", ")}. This is not supported.`
-          );
-        }
-
-        /**
-         * Verify that user has not added or modified a tool with the same name.
-         * We can't allow this as the ToolNode is already initiated with given tools.
-         */
-        const invalidTools = modifiedTools.filter(
-          (tool) =>
-            isClientTool(tool) &&
-            this.#options.toolClasses.every((t) => t !== tool)
-        );
-        if (invalidTools.length > 0) {
-          throw new Error(
-            `You have modified a tool in "modifyModelRequest" hook of middleware "${
-              middleware.name
-            }": ${invalidTools
-              .map((tool) => tool.name)
-              .join(", ")}. This is not supported.`
-          );
-        }
-
-        currentOptions = { ...currentOptions, ...result };
-      }
-    }
-
-    return currentOptions;
   }
 
   async #bindTools(

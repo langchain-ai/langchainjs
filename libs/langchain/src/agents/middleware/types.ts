@@ -8,6 +8,7 @@ import type {
 } from "@langchain/core/utils/types";
 import type { AnnotationRoot } from "@langchain/langgraph";
 import type { InteropZodToStateDefinition } from "@langchain/langgraph/zod";
+import type { AIMessage } from "@langchain/core/messages";
 
 import type { JumpToTarget } from "../constants.js";
 import type { ClientTool, ServerTool } from "../tools.js";
@@ -40,42 +41,49 @@ export interface AgentMiddleware<
   afterModelJumpTo?: JumpToTarget[];
   tools?: (ClientTool | ServerTool)[];
   /**
-   * Runs before each LLM call, can modify call parameters, changes are not persistent
-   * e.g. if you change `model`, it will only be changed for the next model call
+   * Wraps the model invocation with custom logic. This allows you to:
+   * - Modify the request before calling the model
+   * - Handle errors and retry with different parameters
+   * - Post-process the response
+   * - Implement custom caching, logging, or other cross-cutting concerns
    *
-   * @param options - Current call options (can be modified by previous middleware)
-   * @param state - Current state (read-only in this phase)
-   * @param runtime - Runtime context and metadata
-   * @returns Modified options or undefined to pass through
-   */
-  modifyModelRequest?(
-    request: ModelRequest,
-    state: (TSchema extends InteropZodObject
-      ? InferInteropZodInput<TSchema>
-      : {}) &
-      AgentBuiltInState,
-    runtime: Runtime<TFullContext>
-  ): Promise<Partial<ModelRequest> | void> | Partial<ModelRequest> | void;
-  /**
-   * Logic to handle model invocation errors and optionally retry.
+   * @param handler - The function that invokes the model. Call this with a ModelRequest to get the response.
+   * @param request - The model request containing model, messages, systemPrompt, tools, state, and runtime.
+   * @returns The response from the model (or a modified version).
    *
-   * @param error - The exception that occurred during model invocation.
-   * @param request - The original model request that failed.
-   * @param state - The current agent state.
-   * @param runtime - The runtime context.
-   * @param attempt - The current attempt number (1-indexed).
-   * @returns Modified request to retry with, or undefined/null to propagate the error (re-raise).
+   * @example
+   * ```ts
+   * wrapModelRequest: async (handler, request) => {
+   *   // Modify request before calling
+   *   const modifiedRequest = { ...request, systemPrompt: "You are helpful" };
+   *
+   *   try {
+   *     // Call the model
+   *     return await handler(modifiedRequest);
+   *   } catch (error) {
+   *     // Handle errors and retry with fallback
+   *     const fallbackRequest = { ...request, model: fallbackModel };
+   *     return await handler(fallbackRequest);
+   *   }
+   * }
+   * ```
    */
-  retryModelRequest?(
-    error: Error,
-    request: ModelRequest,
-    state: (TSchema extends InteropZodObject
-      ? InferInteropZodInput<TSchema>
-      : {}) &
-      AgentBuiltInState,
-    runtime: Runtime<TFullContext>,
-    attempt: number
-  ): Promise<ModelRequest | void> | ModelRequest | void;
+  wrapModelRequest?<TReturn = AIMessage>(
+    handler: (
+      request: ModelRequest<
+        (TSchema extends InteropZodObject
+          ? InferInteropZodInput<TSchema>
+          : {}) &
+          AgentBuiltInState,
+        TFullContext
+      >
+    ) => Promise<TReturn> | TReturn,
+    request: ModelRequest<
+      (TSchema extends InteropZodObject ? InferInteropZodInput<TSchema> : {}) &
+        AgentBuiltInState,
+      TFullContext
+    >
+  ): Promise<TReturn> | TReturn;
   beforeModel?(
     state: (TSchema extends InteropZodObject
       ? InferInteropZodInput<TSchema>
