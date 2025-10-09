@@ -170,27 +170,28 @@ export function anthropicPromptCachingMiddleware(
   return createMiddleware({
     name: "PromptCachingMiddleware",
     contextSchema,
-    modifyModelRequest: (request, state, runtime) => {
+    wrapModelRequest: (request, handler) => {
       /**
        * Prefer runtime context values over middleware options values over defaults
        */
       const enableCaching =
-        runtime.context.enableCaching ??
+        request.runtime.context.enableCaching ??
         middlewareOptions?.enableCaching ??
         DEFAULT_ENABLE_CACHING;
-      const ttl = runtime.context.ttl ?? middlewareOptions?.ttl ?? DEFAULT_TTL;
+      const ttl =
+        request.runtime.context.ttl ?? middlewareOptions?.ttl ?? DEFAULT_TTL;
       const minMessagesToCache =
-        runtime.context.minMessagesToCache ??
+        request.runtime.context.minMessagesToCache ??
         middlewareOptions?.minMessagesToCache ??
         DEFAULT_MIN_MESSAGES_TO_CACHE;
       const unsupportedModelBehavior =
-        runtime.context.unsupportedModelBehavior ??
+        request.runtime.context.unsupportedModelBehavior ??
         middlewareOptions?.unsupportedModelBehavior ??
         DEFAULT_UNSUPPORTED_MODEL_BEHAVIOR;
 
       // Skip if caching is disabled
       if (!enableCaching || !request.model) {
-        return undefined;
+        return handler(request);
       }
 
       const isAnthropicModel =
@@ -220,14 +221,14 @@ export function anthropicPromptCachingMiddleware(
             `PromptCachingMiddleware: Skipping caching for ${modelName}. Consider switching to an Anthropic model for caching benefits.`
           );
         }
-        return undefined;
+        return handler(request);
       }
 
       const messagesCount =
-        state.messages.length + (request.systemPrompt ? 1 : 0);
+        request.state.messages.length + (request.systemPrompt ? 1 : 0);
 
       if (messagesCount < minMessagesToCache) {
-        return request;
+        return handler(request);
       }
 
       /**
@@ -235,7 +236,7 @@ export function anthropicPromptCachingMiddleware(
        */
       const lastMessage = request.messages.at(-1);
       if (!lastMessage) {
-        return request;
+        return handler(request);
       }
 
       const NewMessageConstructor =
@@ -254,10 +255,10 @@ export function anthropicPromptCachingMiddleware(
             } as ContentBlock,
           ],
         });
-        return {
+        return handler({
           ...request,
           messages: [...request.messages.slice(0, -1), newMessage],
-        };
+        });
       } else if (typeof lastMessage.content === "string") {
         const newMessage = new NewMessageConstructor({
           ...lastMessage,
@@ -272,10 +273,10 @@ export function anthropicPromptCachingMiddleware(
             },
           ],
         });
-        return {
+        return handler({
           ...request,
           messages: [...request.messages.slice(0, -1), newMessage],
-        };
+        });
       }
 
       throw new PromptCachingMiddlewareError(

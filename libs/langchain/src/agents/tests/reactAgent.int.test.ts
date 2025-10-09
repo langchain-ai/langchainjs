@@ -7,7 +7,7 @@ import { HumanMessage, AIMessage } from "@langchain/core/messages";
 
 import { createMiddleware, createAgent, providerStrategy } from "../index.js";
 
-describe("modifyModelRequest", () => {
+describe("wrapModelRequest", () => {
   it("should allow middleware to update model, messages and systemPrompt", async () => {
     // Setup mocked fetch functions for both providers
     const openAIFetchMock = vi.fn((url, options) => fetch(url, options));
@@ -33,7 +33,7 @@ describe("modifyModelRequest", () => {
     // Create middleware that will change the model and messages
     const modelSwitchMiddleware = createMiddleware({
       name: "modelSwitcher",
-      modifyModelRequest: async (_request, _state, _runtime) => {
+      wrapModelRequest: async (request, handler) => {
         // Create a new ChatAnthropic instance
         const anthropicModel = new ChatAnthropic({
           model: "claude-opus-4-20250514",
@@ -67,13 +67,14 @@ Please provide a clear, direct, and authoritative answer, as this information wi
         ];
 
         // Return partial ModelRequest - tools will be merged from original request
-        return {
+        return handler({
+          ...request,
           model: anthropicModel,
           messages: newMessages,
           systemPrompt: "You are a geography expert.",
           toolChoice: "none",
           tools: [],
-        };
+        });
       },
     });
 
@@ -126,7 +127,7 @@ Please provide a clear, direct, and authoritative answer, as this information wi
     expect(responseContent).not.toMatch(/tokyo|weather/i);
   });
 
-  it("can change tools and toolChoice in modifyModelRequest", async () => {
+  it("can change tools and toolChoice in wrapModelRequest", async () => {
     // Setup mocked fetch for OpenAI
     const openAIFetchMock = vi.fn();
 
@@ -158,21 +159,22 @@ Please provide a clear, direct, and authoritative answer, as this information wi
     );
 
     // Create middleware that adds tools and sets toolChoice
-    const toolsMiddleware = {
+    const toolsMiddleware = createMiddleware({
       name: "toolsModifier",
       tools: [weatherTool, newsTool],
-      modifyModelRequest: async () => {
+      wrapModelRequest: async (request, handler) => {
         // Set toolChoice to force specific tool
-        return {
+        return handler({
+          ...request,
           toolChoice: {
             type: "function" as const,
             function: {
               name: "getWeather",
             },
           },
-        };
+        });
       },
-    };
+    });
 
     // Create OpenAI model initially without any tools
     const model = new ChatOpenAI({

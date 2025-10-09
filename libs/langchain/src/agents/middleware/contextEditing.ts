@@ -17,7 +17,6 @@ import {
 
 import { countTokensApproximately } from "./utils.js";
 import { createMiddleware } from "../middleware.js";
-import type { ModelRequest } from "../nodes/types.js";
 
 const DEFAULT_TOOL_PLACEHOLDER = "[cleared]";
 
@@ -448,9 +447,9 @@ export function contextEditingMiddleware(
 
   return createMiddleware({
     name: "ContextEditingMiddleware",
-    modifyModelRequest: async (request: ModelRequest) => {
+    wrapModelRequest: async (request, handler) => {
       if (!request.messages || request.messages.length === 0) {
-        return request;
+        return handler(request);
       }
 
       /**
@@ -503,7 +502,7 @@ export function contextEditingMiddleware(
         });
       }
 
-      return request;
+      return handler(request);
     },
   });
 }

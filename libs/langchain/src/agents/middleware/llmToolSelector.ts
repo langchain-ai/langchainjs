@@ -122,14 +122,14 @@ export function llmToolSelectorMiddleware(
   return createMiddleware({
     name: "LLMToolSelector",
     contextSchema: LLMToolSelectorOptionsSchema,
-    async modifyModelRequest(request, _, runtime): Promise<ModelRequest> {
+    async wrapModelRequest(request, handler) {
       const selectionRequest = await prepareSelectionRequest(
         request,
         options,
-        runtime
+        request.runtime
       );
       if (!selectionRequest) {
-        return request;
+        return handler(request);
       }
 
       // Create dynamic response model with union of literal tool names
@@ -153,12 +153,14 @@ export function llmToolSelectorMiddleware(
         );
       }
 
-      return processSelectionResponse(
-        response as { tools: string[] },
-        selectionRequest.availableTools,
-        selectionRequest.validToolNames,
-        request,
-        options
+      return handler(
+        processSelectionResponse(
+          response as { tools: string[] },
+          selectionRequest.availableTools,
+          selectionRequest.validToolNames,
+          request,
+          options
+        )
       );
     },
   });
@@ -172,8 +174,11 @@ export function llmToolSelectorMiddleware(
  * @param runtime - Runtime context.
  * @returns SelectionRequest with prepared inputs, or null if no selection is needed.
  */
-async function prepareSelectionRequest(
-  request: ModelRequest,
+async function prepareSelectionRequest<
+  TState extends Record<string, unknown> = Record<string, unknown>,
+  TContext = unknown
+>(
+  request: ModelRequest<TState, TContext>,
   options: LLMToolSelectorConfig,
   runtime: Runtime<LLMToolSelectorConfig>
 ): Promise<SelectionRequest | undefined> {
@@ -289,13 +294,16 @@ async function prepareSelectionRequest(
  * @param options - Configuration options.
  * @returns Modified ModelRequest with filtered tools.
  */
-function processSelectionResponse(
+function processSelectionResponse<
+  TState extends Record<string, unknown> = Record<string, unknown>,
+  TContext = unknown
+>(
   response: { tools: string[] },
   availableTools: StructuredToolInterface[],
   validToolNames: string[],
-  request: ModelRequest,
+  request: ModelRequest<TState, TContext>,
   options: LLMToolSelectorConfig
-): ModelRequest {
+): ModelRequest<TState, TContext> {
   const maxTools = options.maxTools;
   const alwaysInclude = options.alwaysInclude ?? [];
 
