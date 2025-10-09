@@ -1,13 +1,13 @@
+import { Document } from "@langchain/core/documents";
+import type { EmbeddingsInterface } from "@langchain/core/embeddings";
+import { VectorStore } from "@langchain/core/vectorstores";
 import type {
-  createCluster,
   createClient,
+  createCluster,
   RediSearchSchema,
   SearchOptions,
 } from "redis";
 import { SchemaFieldTypes, VectorAlgorithms } from "redis";
-import type { EmbeddingsInterface } from "@langchain/core/embeddings";
-import { VectorStore } from "@langchain/core/vectorstores";
-import { Document } from "@langchain/core/documents";
 
 // Adapated from internal redis types which aren't exported
 /**
@@ -57,7 +57,23 @@ export type RedisSearchLanguages = `${NonNullable<
 export type RedisVectorStoreIndexOptions = Omit<
   CreateIndexOptions,
   "LANGUAGE"
-> & { LANGUAGE?: RedisSearchLanguages };
+> & {
+  LANGUAGE?: RedisSearchLanguages;
+};
+
+/**
+ * Interface for custom schema field definitions
+ */
+export interface CustomSchemaField {
+  type: SchemaFieldTypes;
+  required?: boolean;
+  SORTABLE?: boolean | "UNF";
+  NOINDEX?: boolean;
+  SEPARATOR?: string; // For TAG fields
+  CASESENSITIVE?: true; // For TAG fields (Redis expects true, not boolean)
+  NOSTEM?: true; // For TEXT fields (Redis expects true, not boolean)
+  WEIGHT?: number; // For TEXT fields
+}
 
 /**
  * Interface for the configuration of the RedisVectorStore. It includes
@@ -77,6 +93,7 @@ export interface RedisVectorStoreConfig {
   vectorKey?: string;
   filter?: RedisVectorStoreFilterType;
   ttl?: number; // ttl in second
+  customSchema?: Record<string, CustomSchemaField>; // Custom schema fields for metadata
 }
 
 /**
@@ -126,8 +143,63 @@ export class RedisVectorStore extends VectorStore {
 
   ttl?: number;
 
+  customSchema?: Record<string, CustomSchemaField>;
+
   _vectorstoreType(): string {
     return "redis";
+  }
+
+  /**
+   * Validates metadata against the custom schema if defined
+   * @param metadata The metadata object to validate
+   * @throws Error if validation fails
+   */
+  private validateMetadata(metadata: Record<string, unknown>): void {
+    if (!this.customSchema) {
+      return; // No schema defined, skip validation
+    }
+
+    for (const [fieldName, fieldConfig] of Object.entries(this.customSchema)) {
+      const value = metadata[fieldName];
+
+      // Check if required field is missing
+      if (fieldConfig.required && (value === undefined || value === null)) {
+        throw new Error(`Required metadata field '${fieldName}' is missing`);
+      }
+
+      // Skip validation for optional fields that are not provided
+      if (value === undefined || value === null) {
+        continue;
+      }
+
+      // Basic type validation based on schema field type
+      switch (fieldConfig.type) {
+        case SchemaFieldTypes.NUMERIC:
+          if (typeof value !== "number") {
+            throw new Error(
+              `Metadata field '${fieldName}' must be a number, got ${typeof value}`
+            );
+          }
+          break;
+        case SchemaFieldTypes.TAG:
+          if (typeof value !== "string" && !Array.isArray(value)) {
+            throw new Error(
+              `Metadata field '${fieldName}' must be a string or array, got ${typeof value}`
+            );
+          }
+          break;
+        case SchemaFieldTypes.TEXT:
+          if (typeof value !== "string") {
+            throw new Error(
+              `Metadata field '${fieldName}' must be a string, got ${typeof value}`
+            );
+          }
+          break;
+        default:
+          // For other field types, skip validation
+          break;
+      }
+    }
   }
 
   constructor(
@@ -148,6 +220,7 @@ export class RedisVectorStore extends VectorStore {
     this.vectorKey = _dbConfig.vectorKey ?? "content_vector";
     this.filter = _dbConfig.filter;
     this.ttl = _dbConfig.ttl;
+    this.customSchema = _dbConfig.customSchema;
     this.createIndexOptions = {
       ON: "HASH",
       PREFIX: this.keyPrefix,
@@ -200,6 +273,18 @@ export class RedisVectorStore extends VectorStore {
           info.num_docs,
         10
       ) || 0;
+
+    // Validate all metadata against custom schema first
+    if (this.customSchema) {
+      for (let idx = 0; idx < documents.length; idx += 1) {
+        const metadata =
+          documents[idx] && documents[idx].metadata
+            ? documents[idx].metadata
+            : {};
+        this.validateMetadata(metadata);
+      }
+    }
+
     const multi = this.redisClient.multi();
 
     await Promise.all(
@@ -213,11 +298,39 @@ export class RedisVectorStore extends VectorStore {
             ? documents[idx].metadata
             : {};
 
-        multi.hSet(key, {
+        // Prepare hash fields
+        const hashFields: Record<string, string | Buffer> = {
           [this.vectorKey]: this.getFloat32Buffer(vector),
           [this.contentKey]: documents[idx].pageContent,
           [this.metadataKey]: this.escapeSpecialChars(JSON.stringify(metadata)),
-        });
+        };
+
+        // Add individual metadata fields for indexing if custom schema is defined
+        if (this.customSchema) {
+          for (const [fieldName, fieldConfig] of Object.entries(
+            this.customSchema
+          )) {
+            const fieldValue = metadata[fieldName];
+            if (fieldValue !== undefined && fieldValue !== null) {
+              const indexedFieldName = `${this.metadataKey}.${fieldName}`;
+
+              // Handle different field types appropriately
+              if (
+                fieldConfig.type === SchemaFieldTypes.TAG &&
+                Array.isArray(fieldValue)
+              ) {
+                // For TAG arrays, join with separator (default comma)
+                const separator = fieldConfig.SEPARATOR || ",";
+                hashFields[indexedFieldName] = fieldValue.join(separator);
+              } else {
+                // For other types, store as-is
+                hashFields[indexedFieldName] = fieldValue;
+              }
+            }
+          }
+        }
+
+        multi.hSet(key, hashFields);
 
         if (this.ttl) {
           multi.expire(key, this.ttl);
@@ -271,6 +384,66 @@ export class RedisVectorStore extends VectorStore {
                     (document.metadata ?? "{}") as string
                   )
                 ),
+              }),
+              Number(document.vector_score),
+            ]);
+          }
+        }
+      }
+    }
+
+    return result;
+  }
+
+  /**
+   * Method for performing a similarity search with custom metadata filtering.
+   * Uses the custom schema fields for efficient filtering.
+   * @param query The query vector.
+   * @param k The number of nearest neighbors to return.
+   * @param metadataFilter Object with metadata field filters using custom schema.
+   * @returns A promise that resolves to an array of documents and their scores.
+   */
+  async similaritySearchVectorWithScoreAndMetadata(
+    query: number[],
+    k: number,
+    metadataFilter?: Record<string, unknown>
+  ): Promise<[Document, number][]> {
+    const results = await this.redisClient.ft.search(
+      this.indexName,
+      ...this.buildCustomQuery(query, k, metadataFilter)
+    );
+    const result: [Document, number][] = [];
+
+    if (results.total) {
+      for (const res of results.documents) {
+        if (res.value) {
+          const document = res.value;
+          if (document.vector_score) {
+            // Reconstruct metadata from both the JSON field and individual fields
+            let metadata: Record<string, unknown> = {};
+            try {
+              metadata = JSON.parse(
+                this.unEscapeSpecialChars((document.metadata ?? "{}") as string)
+              );
+            } catch (e) {
+              // If JSON parsing fails, construct from individual fields
+              metadata = {};
+            }
+
+            // Add individual schema fields to metadata if they exist
+            if (this.customSchema) {
+              for (const fieldName of Object.keys(this.customSchema)) {
+                const fieldKey = `${this.metadataKey}.${fieldName}`;
+                if (document[fieldKey] !== undefined) {
+                  metadata[fieldName] = document[fieldKey] as unknown;
+                }
+              }
+            }
+
+            result.push([
+              new Document({
+                pageContent: (document[this.contentKey] ?? "") as string,
+                metadata,
               }),
               Number(document.vector_score),
             ]);
@@ -380,6 +553,38 @@ export class RedisVectorStore extends VectorStore {
       [this.metadataKey]: SchemaFieldTypes.TEXT,
     };
 
+    // Add custom metadata schema fields for better filtering and searching
+    if (this.customSchema) {
+      for (const [fieldName, fieldConfig] of Object.entries(
+        this.customSchema
+      )) {
+        // Create field name with metadata prefix (e.g., metadata.userId)
+        const indexedFieldName = `${this.metadataKey}.${fieldName}`;
+
+        // Convert CustomSchemaField to proper Redis schema field
+        if (fieldConfig.type === SchemaFieldTypes.TAG) {
+          schema[indexedFieldName] = {
+            type: SchemaFieldTypes.TAG,
+            SORTABLE: fieldConfig.SORTABLE ? true : undefined,
+            SEPARATOR: (fieldConfig.SEPARATOR as string) || ",",
+          };
+        } else if (fieldConfig.type === SchemaFieldTypes.NUMERIC) {
+          schema[indexedFieldName] = {
+            type: SchemaFieldTypes.NUMERIC,
+            SORTABLE: fieldConfig.SORTABLE ? true : undefined,
+          };
+        } else if (fieldConfig.type === SchemaFieldTypes.TEXT) {
+          schema[indexedFieldName] = {
+            type: SchemaFieldTypes.TEXT,
+            SORTABLE: fieldConfig.SORTABLE ? true : undefined,
+          };
+        } else {
+          // Fallback for other types - just use the field type directly
+          schema[indexedFieldName] = fieldConfig.type;
+        }
+      }
+    }
+
     await this.redisClient.ft.create(
       this.indexName,
       schema,
@@ -432,7 +637,101 @@ export class RedisVectorStore extends VectorStore {
     }
 
     const baseQuery = `${hybridFields} => [KNN ${k} @${this.vectorKey} $vector AS ${vectorScoreField}]`;
+
+    // Include custom schema fields in return fields for better access
     const returnFields = [this.metadataKey, this.contentKey, vectorScoreField];
+    if (this.customSchema) {
+      for (const fieldName of Object.keys(this.customSchema)) {
+        returnFields.push(`${this.metadataKey}.${fieldName}`);
+      }
+    }
+
+    const options: SearchOptions = {
+      PARAMS: {
+        vector: this.getFloat32Buffer(query),
+      },
+      RETURN: returnFields,
+      SORTBY: vectorScoreField,
+      DIALECT: 2,
+      LIMIT: {
+        from: 0,
+        size: k,
+      },
+    };
+
+    return [baseQuery, options];
+  }
+
+  /**
+   * Builds a query with custom metadata field filtering
+   * @param query The query vector
+   * @param k Number of results to return
+   * @param metadataFilter Object with metadata field filters
+   * @returns Query string and search options
+   */
+  buildCustomQuery(
+    query: number[],
+    k: number,
+    metadataFilter?: Record<string, unknown>
+  ): [string, SearchOptions] {
+    const vectorScoreField = "vector_score";
+
+    let hybridFields = "*";
+
+    // Build filter using custom schema fields
+    if (metadataFilter && this.customSchema) {
+      const filterClauses: string[] = [];
+
+      for (const [fieldName, value] of Object.entries(metadataFilter)) {
+        if (this.customSchema[fieldName]) {
+          const fieldConfig = this.customSchema[fieldName];
+          const indexedFieldName = `${this.metadataKey}.${fieldName}`;
+
+          if (fieldConfig.type === SchemaFieldTypes.NUMERIC) {
+            // Handle numeric range queries
+            if (typeof value === "object" && value !== null) {
+              if ("min" in value && "max" in value) {
+                filterClauses.push(
+                  `@${indexedFieldName}:[${value.min} ${value.max}]`
+                );
+              } else if ("min" in value) {
+                filterClauses.push(`@${indexedFieldName}:[${value.min} +inf]`);
+              } else if ("max" in value) {
+                filterClauses.push(`@${indexedFieldName}:[-inf ${value.max}]`);
+              }
+            } else {
+              // Exact numeric match
+              filterClauses.push(`@${indexedFieldName}:[${value} ${value}]`);
+            }
+          } else if (fieldConfig.type === SchemaFieldTypes.TAG) {
+            // Handle tag filtering
+            if (Array.isArray(value)) {
+              const tagFilter = value.map((v) => `{${v}}`).join("|");
+              filterClauses.push(`@${indexedFieldName}:(${tagFilter})`);
+            } else {
+              filterClauses.push(`@${indexedFieldName}:{${value}}`);
+            }
+          } else if (fieldConfig.type === SchemaFieldTypes.TEXT) {
+            // Handle text search
+            filterClauses.push(`@${indexedFieldName}:(${value})`);
+          }
+        }
+      }
+
+      if (filterClauses.length > 0) {
+        hybridFields = filterClauses.join(" ");
+      }
+    }
+
+    const baseQuery = `${hybridFields} => [KNN ${k} @${this.vectorKey} $vector AS ${vectorScoreField}]`;
+
+    // Include custom schema fields in return fields
+    const returnFields = [this.metadataKey, this.contentKey, vectorScoreField];
+    if (this.customSchema) {
+      for (const fieldName of Object.keys(this.customSchema)) {
+        returnFields.push(`${this.metadataKey}.${fieldName}`);
+      }
+    }
 
     const options: SearchOptions = {
       PARAMS: {
