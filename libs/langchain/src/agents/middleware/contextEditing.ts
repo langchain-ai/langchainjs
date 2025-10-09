@@ -447,7 +447,7 @@ export function contextEditingMiddleware(
 
   return createMiddleware({
     name: "ContextEditingMiddleware",
-    wrapModelRequest: async (handler, request) => {
+    wrapModelRequest: async (request, handler) => {
       if (!request.messages || request.messages.length === 0) {
         return handler(request);
       }

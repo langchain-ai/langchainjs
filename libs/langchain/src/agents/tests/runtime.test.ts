@@ -51,7 +51,7 @@ describe("runtime", () => {
     const model = new FakeToolCallingModel({});
     const middleware = createMiddleware({
       name: "middleware",
-      wrapModelRequest: async (handler, request) => {
+      wrapModelRequest: async (request, handler) => {
         request.runtime.runModelCallCount = 123;
         return handler(request);
       },

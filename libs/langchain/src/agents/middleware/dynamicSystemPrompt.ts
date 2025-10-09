@@ -49,7 +49,7 @@ export function dynamicSystemPromptMiddleware<TContextSchema = unknown>(
 ) {
   return createMiddleware({
     name: "DynamicSystemPromptMiddleware",
-    wrapModelRequest: async (handler, request) => {
+    wrapModelRequest: async (request, handler) => {
       const systemPrompt = await fn(
         request.state as AgentBuiltInState,
         request.runtime as Runtime<TContextSchema>

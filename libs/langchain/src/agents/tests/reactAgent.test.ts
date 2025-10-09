@@ -361,7 +361,7 @@ describe("createAgent", () => {
       middleware: [
         createMiddleware({
           name: "prompt",
-          wrapModelRequest: (handler, request) => {
+          wrapModelRequest: (request, handler) => {
             return handler({ ...request, systemPrompt: "User name is Alice" });
           },
         }),

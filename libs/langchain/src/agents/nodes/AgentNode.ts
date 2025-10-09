@@ -483,10 +483,10 @@ export class AgentNode<
           try {
             const middlewareResponse = await (
               currentMiddleware.wrapModelRequest as (
-                handler: typeof handlerWithValidation,
-                request: typeof requestWithStateAndRuntime
+                request: typeof requestWithStateAndRuntime,
+                handler: typeof handlerWithValidation
               ) => Promise<InternalModelResponse<StructuredResponseFormat>>
-            )(handlerWithValidation, requestWithStateAndRuntime);
+            )(requestWithStateAndRuntime, handlerWithValidation);
 
             /**
              * Validate that this specific middleware returned a valid AIMessage

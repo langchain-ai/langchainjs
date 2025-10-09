@@ -67,7 +67,7 @@ async function selectTopKBySimilarity(query: string, k = 6) {
 // 3) Use middleware to expose only the top-k most relevant tools each turn
 const selectToolsMiddleware = createMiddleware({
   name: "SelectToolsMiddleware",
-  wrapModelRequest: async (handler, request) => {
+  wrapModelRequest: async (request, handler) => {
     const last = request.messages.at(-1);
     const tools = last?.content
       ? // only give me the most relevant tool

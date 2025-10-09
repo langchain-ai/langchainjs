@@ -360,7 +360,7 @@ export function piiRedactionMiddleware(
   return createMiddleware({
     name: "PIIRedactionMiddleware",
     contextSchema,
-    wrapModelRequest: async (handler, request) => {
+    wrapModelRequest: async (request, handler) => {
       /**
        * Merge options with context, following bigTool.ts pattern
        */

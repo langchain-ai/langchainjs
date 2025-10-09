@@ -340,7 +340,7 @@ describe("middleware", () => {
         contextSchema: z.object({
           foobar: z.string().optional(),
         }),
-        wrapModelRequest: async (handler, request) => {
+        wrapModelRequest: async (request, handler) => {
           executionOrder.push("auth:before");
           systemPrompts.push(request.systemPrompt || "");
 
@@ -368,7 +368,7 @@ describe("middleware", () => {
       // Retry middleware (second = middle wrapper)
       const retryMiddleware = createMiddleware({
         name: "RetryMiddleware",
-        wrapModelRequest: async (handler, request) => {
+        wrapModelRequest: async (request, handler) => {
           executionOrder.push("retry:before");
           systemPrompts.push(request.systemPrompt || "");
 
@@ -394,7 +394,7 @@ describe("middleware", () => {
       // Cache middleware (third = innermost wrapper, closest to model)
       const cacheMiddleware = createMiddleware({
         name: "CacheMiddleware",
-        wrapModelRequest: async (handler, request) => {
+        wrapModelRequest: async (request, handler) => {
           executionOrder.push("cache:before");
           systemPrompts.push(request.systemPrompt || "");
 
@@ -500,7 +500,7 @@ describe("middleware", () => {
         contextSchema: z.object({
           middlewareContext: z.number(),
         }),
-        wrapModelRequest: async (handler, request) => {
+        wrapModelRequest: async (request, handler) => {
           expectTypeOf(request.state).toMatchObjectType<{
             foobar: string;
             messages: BaseMessage[];
@@ -583,7 +583,7 @@ describe("middleware", () => {
 
       const errorHandlingMiddleware = createMiddleware({
         name: "ErrorHandlingMiddleware",
-        wrapModelRequest: async (handler, request) => {
+        wrapModelRequest: async (request, handler) => {
           attemptCount++;
 
           try {
@@ -654,7 +654,7 @@ describe("middleware", () => {
       });
       const modifyingMiddleware = createMiddleware({
         name: "ModifyingMiddleware",
-        wrapModelRequest: async (handler, request) => {
+        wrapModelRequest: async (request, handler) => {
           // Middleware could modify the request in various ways
           const modifiedRequest = {
             ...request,
@@ -788,7 +788,7 @@ describe("middleware", () => {
       // Middleware that intercepts and modifies tool calls
       const toolRedirectMiddleware = createMiddleware({
         name: "ToolRedirectMiddleware",
-        wrapModelRequest: async (handler, request) => {
+        wrapModelRequest: async (request, handler) => {
           // Call the model
           const response = await handler(request);
 
@@ -871,7 +871,7 @@ describe("middleware", () => {
 
       const asyncMiddleware1 = createMiddleware({
         name: "AsyncMiddleware1",
-        wrapModelRequest: async (handler, request) => {
+        wrapModelRequest: async (request, handler) => {
           const start = Date.now();
           await new Promise((resolve) => setTimeout(resolve, 50));
           const delay = Date.now() - start;
@@ -883,7 +883,7 @@ describe("middleware", () => {
 
       const asyncMiddleware2 = createMiddleware({
         name: "AsyncMiddleware2",
-        wrapModelRequest: async (handler, request) => {
+        wrapModelRequest: async (request, handler) => {
           const start = Date.now();
           await new Promise((resolve) => setTimeout(resolve, 30));
           const delay = Date.now() - start;
@@ -922,7 +922,7 @@ describe("middleware", () => {
     it("should pass correct state to each middleware", async () => {
       const middleware1 = createMiddleware({
         name: "Middleware1",
-        wrapModelRequest: async (handler, request) => {
+        wrapModelRequest: async (request, handler) => {
           /**
            * we don't allow to change state within these hooks
            */
@@ -936,7 +936,7 @@ describe("middleware", () => {
 
       const middleware2 = createMiddleware({
         name: "Middleware2",
-        wrapModelRequest: async (handler, request) => {
+        wrapModelRequest: async (request, handler) => {
           /**
            * we don't allow to change state within these hooks
            */

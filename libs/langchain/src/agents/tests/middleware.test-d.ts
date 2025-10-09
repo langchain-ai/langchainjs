@@ -183,7 +183,7 @@ describe("middleware types", () => {
             customRequiredContextProp: string;
           }>();
         },
-        wrapModelRequest: async (handler, request) => {
+        wrapModelRequest: async (request, handler) => {
           expectTypeOf(request.tools).toEqualTypeOf<
             (ServerTool | ClientTool)[]
           >();
@@ -246,7 +246,7 @@ describe("middleware types", () => {
             >
           >();
         },
-        wrapModelRequest: async (_, request) => {
+        wrapModelRequest: async (request) => {
           expectTypeOf(request.runtime.context).toEqualTypeOf<
             Partial<
               | {
@@ -298,7 +298,7 @@ describe("middleware types", () => {
             }>
           >();
         },
-        wrapModelRequest: async (_, request) => {
+        wrapModelRequest: async (request) => {
           expectTypeOf(request.runtime.context).toEqualTypeOf<
             Partial<{
               customDefaultContextProp: string;

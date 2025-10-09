@@ -48,7 +48,7 @@ const agent = createAgent({
     createMiddleware({
       name: "dynamicModelSelection",
       contextSchema: context,
-      wrapModelRequest: (handler, request) => {
+      wrapModelRequest: (request, handler) => {
         /**
          * if model preference is provided by content, use it
          */

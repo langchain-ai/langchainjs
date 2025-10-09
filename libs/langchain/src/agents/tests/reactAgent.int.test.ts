@@ -33,7 +33,7 @@ describe("wrapModelRequest", () => {
     // Create middleware that will change the model and messages
     const modelSwitchMiddleware = createMiddleware({
       name: "modelSwitcher",
-      wrapModelRequest: async (handler, request) => {
+      wrapModelRequest: async (request, handler) => {
         // Create a new ChatAnthropic instance
         const anthropicModel = new ChatAnthropic({
           model: "claude-opus-4-20250514",
@@ -162,7 +162,7 @@ Please provide a clear, direct, and authoritative answer, as this information wi
     const toolsMiddleware = createMiddleware({
       name: "toolsModifier",
       tools: [weatherTool, newsTool],
-      wrapModelRequest: async (handler, request) => {
+      wrapModelRequest: async (request, handler) => {
         // Set toolChoice to force specific tool
         return handler({
           ...request,

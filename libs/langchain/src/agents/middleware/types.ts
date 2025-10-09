@@ -47,13 +47,13 @@ export interface AgentMiddleware<
    * - Post-process the response
    * - Implement custom caching, logging, or other cross-cutting concerns
    *
-   * @param handler - The function that invokes the model. Call this with a ModelRequest to get the response.
    * @param request - The model request containing model, messages, systemPrompt, tools, state, and runtime.
+   * @param handler - The function that invokes the model. Call this with a ModelRequest to get the response.
    * @returns The response from the model (or a modified version).
    *
    * @example
    * ```ts
-   * wrapModelRequest: async (handler, request) => {
+   * wrapModelRequest: async (request, handler) => {
    *   // Modify request before calling
    *   const modifiedRequest = { ...request, systemPrompt: "You are helpful" };
    *
@@ -69,6 +69,11 @@ export interface AgentMiddleware<
    * ```
    */
   wrapModelRequest?(
+    request: ModelRequest<
+      (TSchema extends InteropZodObject ? InferInteropZodInput<TSchema> : {}) &
+        AgentBuiltInState,
+      TFullContext
+    >,
     handler: (
       request: ModelRequest<
         (TSchema extends InteropZodObject
@@ -77,12 +82,7 @@ export interface AgentMiddleware<
           AgentBuiltInState,
         TFullContext
       >
-    ) => Promise<AIMessage> | AIMessage,
-    request: ModelRequest<
-      (TSchema extends InteropZodObject ? InferInteropZodInput<TSchema> : {}) &
-        AgentBuiltInState,
-      TFullContext
-    >
+    ) => Promise<AIMessage> | AIMessage
   ): Promise<AIMessage> | AIMessage;
   beforeModel?(
     state: (TSchema extends InteropZodObject

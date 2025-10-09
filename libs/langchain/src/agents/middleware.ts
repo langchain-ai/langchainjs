@@ -92,13 +92,13 @@ export function createMiddleware<
    *
    * The request parameter contains: model, messages, systemPrompt, tools, state, and runtime.
    *
-   * @param handler - The function that invokes the model. Call this with a ModelRequest to get the response.
    * @param request - The model request containing all the parameters needed.
+   * @param handler - The function that invokes the model. Call this with a ModelRequest to get the response.
    * @returns The response from the model (or a modified version).
    *
    * @example
    * ```ts
-   * wrapModelRequest: async (handler, request) => {
+   * wrapModelRequest: async (request, handler) => {
    *   // Modify request before calling
    *   const modifiedRequest = { ...request, systemPrompt: "You are helpful" };
    *
@@ -114,6 +114,17 @@ export function createMiddleware<
    * ```
    */
   wrapModelRequest?: (
+    request: ModelRequest<
+      (TSchema extends InteropZodObject ? InferInteropZodInput<TSchema> : {}) &
+        AgentBuiltInState,
+      TContextSchema extends InteropZodObject
+        ? InferInteropZodOutput<TContextSchema>
+        : TContextSchema extends InteropZodDefault<any>
+        ? InferInteropZodOutput<TContextSchema>
+        : TContextSchema extends InteropZodOptional<any>
+        ? Partial<InferInteropZodOutput<TContextSchema>>
+        : never
+    >,
     handler: (
       request: ModelRequest<
         (TSchema extends InteropZodObject
@@ -128,18 +139,7 @@ export function createMiddleware<
           ? Partial<InferInteropZodOutput<TContextSchema>>
           : never
       >
-    ) => Promise<AIMessage> | AIMessage,
-    request: ModelRequest<
-      (TSchema extends InteropZodObject ? InferInteropZodInput<TSchema> : {}) &
-        AgentBuiltInState,
-      TContextSchema extends InteropZodObject
-        ? InferInteropZodOutput<TContextSchema>
-        : TContextSchema extends InteropZodDefault<any>
-        ? InferInteropZodOutput<TContextSchema>
-        : TContextSchema extends InteropZodOptional<any>
-        ? Partial<InferInteropZodOutput<TContextSchema>>
-        : never
-    >
+    ) => Promise<AIMessage> | AIMessage
   ) => Promise<AIMessage> | AIMessage;
   /**
    * The function to run before the model call. This function is called before the model is invoked and before the `wrapModelRequest` hook.
@@ -226,8 +226,8 @@ export function createMiddleware<
   };
 
   if (config.wrapModelRequest) {
-    middleware.wrapModelRequest = async (handler, request) =>
-      Promise.resolve(config.wrapModelRequest!(handler, request));
+    middleware.wrapModelRequest = async (request, handler) =>
+      Promise.resolve(config.wrapModelRequest!(request, handler));
   }
 
   if (config.beforeModel) {
