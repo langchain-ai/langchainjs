@@ -10,52 +10,6 @@ import { interrupt } from "@langchain/langgraph";
 import { createMiddleware } from "../middleware.js";
 import type { AgentBuiltInState, Runtime } from "../types.js";
 
-const ToolConfigSchema = z.object({
-  /**
-   * Whether the human can approve the current action without changes
-   */
-  allowAccept: z.boolean().optional(),
-  /**
-   * Whether the human can reject the current action with feedback
-   */
-  allowEdit: z.boolean().optional(),
-  /**
-   * Whether the human can approve the current action with edited content
-   */
-  allowRespond: z.boolean().optional(),
-  /**
-   * The description attached to the request for human input.
-   * Can be either:
-   * - A static string describing the approval request
-   * - A callable that dynamically generates the description based on agent state,
-   *   runtime, and tool call information
-   *
-   * @example
-   * Static string description
-   * ```typescript
-   * const config: ToolConfig = {
-   *   allowAccept: true,
-   *   description: "Please review this tool execution"
-   * };
-   * ```
-   *
-   * @example
-   * Dynamic callable description
-   * ```typescript
-   * const formatToolDescription: DescriptionFactory = (toolCall, state, runtime) => {
-   *   return `Tool: ${toolCall.name}\nArguments:\n${JSON.stringify(toolCall.args, null, 2)}`;
-   * };
-   *
-   * const config: ToolConfig = {
-   *   allowAccept: true,
-   *   description: formatToolDescription
-   * };
-   * ```
-   */
-  description: z.union([z.string(), z.function()]).optional(),
-});
-
-type ToolConfigSchema = z.input<typeof ToolConfigSchema>;
 type ToolCall = NonNullable<AIMessage["tool_calls"]>[number];
 
 /**
@@ -70,13 +24,20 @@ export type DescriptionFactory<
   runtime: Runtime<unknown>
 ) => string | Promise<string>;
 
+
 /**
- * Configuration that defines which reviewer response types are permitted during a human interrupt.
- * These flags control what the human reviewer may do (e.g., accept/edit/respond),
- * not the tool action the agent has requested.
+ * Represents a tool action with its name and arguments.
  */
-export interface HumanInTheLoopConfig
-  extends Omit<ToolConfigSchema, "description"> {}
+export interface Action {
+  /**
+   * The tool/action name (e.g., "send_email").
+   */
+  name: string;
+  /**
+   * Arguments for the tool call (e.g., {"a": 1, "b": 2}).
+   */
+  arguments: Record<string, any>;
+}
 
 /**
  * Describes the agent-requested tool action (name and arguments).
@@ -86,75 +47,121 @@ export interface ActionRequest {
   /**
    * The tool/action name requested by the agent (e.g., "send_email").
    */
-  action: string;
+  name: string;
   /**
    * Arguments for the requested tool call (e.g., {"a": 1, "b": 2}).
    */
-  args: Record<string, any>;
-}
-
-/**
- * Represents an interrupt triggered by the graph that requires human intervention
- * to approve, edit, or respond to an agent-requested tool action.
- *
- * @example
- * ```ts
- * const hitlRequest: HumanInTheLoopRequest = {
- *   actionRequest: { action: "Approve XYZ action", args: { ... } },
- *   config: { allowAccept: true, allowEdit: true, allowRespond: true },
- *   description: "Please review the command before execution"
- * };
- * response = interrupt([request])[0]
- * ```
- */
-export interface HumanInTheLoopRequest {
+  arguments: Record<string, any>;
   /**
-   * The agent-requested tool action to be reviewed.
-   */
-  actionRequest: ActionRequest;
-  /**
-   * Which reviewer responses are allowed (accept/edit/respond).
-   */
-  config: HumanInTheLoopConfig;
-  /**
-   * Optional human-facing description shown in the approval prompt.
+   * Optional human-facing description for this specific action request.
    */
   description?: string;
 }
 
 /**
- * Response when a human approves the agent-requested action.
+ * Decision types that can be made by the human reviewer.
  */
-export interface AcceptPayload {
-  type: "accept";
+export type DecisionType = "approve" | "edit" | "reject";
+
+/**
+ * Configuration for reviewing a specific action.
+ */
+export interface ReviewConfig {
+  /**
+   * The name of the action being reviewed.
+   */
+  actionName: string;
+  /**
+   * List of decision types allowed for this action.
+   */
+  allowedDecisions: DecisionType[];
+  /**
+   * Optional schema for validating action arguments.
+   */
+  argumentsSchema?: Record<string, any>;
 }
 
 /**
- * Response when a human provides a manual response instead of executing
- * the agent-requested action.
+ * Represents an interrupt triggered by the graph that requires human intervention
+ * to approve, edit, or reject agent-requested tool actions.
+ *
+ * @example
+ * ```ts
+ * const hitlRequest: HITLRequest = {
+ *   actionRequests: [
+ *     { name: "write_file", arguments: { filename: "test.txt" }, description: "Writing file" }
+ *   ],
+ *   reviewConfigs: [
+ *     { actionName: "write_file", allowedDecisions: ["approve", "edit", "reject"] }
+ *   ]
+ * };
+ * const response = interrupt(hitlRequest);
+ * ```
  */
-export interface ResponsePayload {
-  type: "response";
-  args?: string;
+export interface HITLRequest {
+  /**
+   * List of agent-requested tool actions to be reviewed.
+   */
+  actionRequests: ActionRequest[];
+  /**
+   * Configuration for each action specifying allowed decisions.
+   */
+  reviewConfigs: ReviewConfig[];
 }
 
 /**
- * Response when a human edits the agent-requested action (tool name and/or args).
+ * Decision to approve the agent-requested action as-is.
  */
-export interface EditPayload {
+export interface ApproveDecision {
+  type: "approve";
+}
+
+/**
+ * Decision to edit the agent-requested action before execution.
+ */
+export interface EditDecision {
   type: "edit";
-  args: ActionRequest;
+  /**
+   * The modified action with updated name and/or arguments.
+   */
+  editedAction: Action;
 }
 
-export type HumanInTheLoopMiddlewareHumanResponse =
-  | AcceptPayload
-  | ResponsePayload
-  | EditPayload;
+/**
+ * Decision to reject the agent-requested action.
+ */
+export interface RejectDecision {
+  type: "reject";
+  /**
+   * Optional message explaining the rejection.
+   */
+  message?: string;
+}
 
 /**
- * Configuration for a tool requiring human in the loop.
+ * Union type representing all possible decision types.
  */
-export interface ToolConfig extends HumanInTheLoopConfig {
+export type Decision = ApproveDecision | EditDecision | RejectDecision;
+
+/**
+ * Response containing decisions for all interrupted actions.
+ */
+export interface HITLResponse {
+  /**
+   * List of decisions corresponding to each action request.
+   */
+  decisions: Decision[];
+}
+
+
+/**
+ * Configuration for interrupting on a specific tool.
+ */
+export interface InterruptOnConfig {
+  /**
+   * List of decision types allowed for this tool.
+   */
+  allowedDecisions: DecisionType[];
   /**
    * Human-facing description shown in the approval request.
    * Can be either:
@@ -163,24 +170,45 @@ export interface ToolConfig extends HumanInTheLoopConfig {
    *   runtime, and tool call information
    */
   description?: string | DescriptionFactory;
+  /**
+   * Optional schema for validating action arguments.
+   */
+  argumentsSchema?: Record<string, any>;
 }
+
+const InterruptOnConfigSchema = z.object({
+  /**
+   * List of decision types allowed for this tool.
+   */
+  allowedDecisions: z.array(z.enum(["approve", "edit", "reject"])),
+  /**
+   * Human-facing description shown in the approval request.
+   */
+  description: z.union([z.string(), z.function()]).optional(),
+  /**
+   * Optional schema for validating action arguments.
+   */
+  argumentsSchema: z.record(z.any()).optional(),
+});
 
 const contextSchema = z.object({
   /**
    * Mapping of tool name to allowed reviewer responses.
    * If a tool doesn't have an entry, it's auto-approved by default.
    *
-   * - `true` -> pause for approval and allow accept/edit/respond
+   * - `true` -> pause for approval and allow approve/edit/reject
    * - `false` -> auto-approve (no human review)
-   * - `ToolConfig` -> explicitly specify which reviewer responses are allowed for this tool
+   * - `InterruptOnConfig` -> explicitly specify which decisions are allowed for this tool
    */
-  interruptOn: z.record(z.union([z.boolean(), ToolConfigSchema])).optional(),
+  interruptOn: z
+    .record(z.union([z.boolean(), InterruptOnConfigSchema]))
+    .optional(),
   /**
    * Prefix used when constructing human-facing approval messages.
    * Provides context about the tool call being reviewed; does not change the underlying action.
    *
    * Note: This prefix is only applied for tools that do not provide a custom
-   * `description` via their {@link ToolConfig}. If a tool specifies a custom
+   * `description` via their configuration. If a tool specifies a custom
    * `description`, that per-tool text is used and this prefix is ignored.
    */
   descriptionPrefix: z.string().default("Tool execution requires approval"),
@@ -201,30 +229,30 @@ export type HumanInTheLoopMiddlewareConfig = InferInteropZodInput<
  * which tools were interrupted, and how to handle them separately.
  *
  * ```ts
- * import { type ToolApprovalRequest, type HumanInTheLoopMiddlewareHumanResponse } from "langchain";
+ * import { type HITLRequest, type HITLResponse } from "langchain";
  * import { type Interrupt } from "langchain";
  *
  * const result = await agent.invoke(request);
- * const interruptRequest = initialResult.__interrupt__?.[0] as Interrupt<
- *   ToolApprovalRequest[]
- * >;
- * const resume: HumanInTheLoopMiddlewareHumanResponse[] =
- *   interruptRequest.value.map((request) => {
- *     if (request.action === "calculator") {
- *       return { id: request.toolCallId, type: "accept" };
- *     } else if (request.action === "write_file") {
- *       return {
- *         id: request.toolCallId,
- *         type: "edit",
- *         args: { filename: "safe.txt", content: "Safe content" },
- *       };
- *     }
+ * const interruptRequest = result.__interrupt__?.[0] as Interrupt<HITLRequest>;
  *
- *     throw new Error(`Unknown action: ${request.action}`);
- *   });
+ * const decisions = interruptRequest.value.actionRequests.map((actionRequest) => {
+ *   if (actionRequest.name === "calculator") {
+ *     return { type: "approve" as const };
+ *   } else if (actionRequest.name === "write_file") {
+ *     return {
+ *       type: "edit" as const,
+ *       editedAction: {
+ *         name: "write_file",
+ *         arguments: { filename: "safe.txt", content: "Safe content" }
+ *       },
+ *     };
+ *   }
+ *
+ *   throw new Error(`Unknown action: ${actionRequest.name}`);
+ * });
  *
  * // Resume with approval
- * await agent.invoke(new Command({ resume }), config);
+ * await agent.invoke(new Command({ resume: { decisions } }), config);
  * ```
  *
  * ## Features
@@ -234,21 +262,19 @@ export type HumanInTheLoopMiddlewareConfig = InferInteropZodInput<
  * - **Asynchronous Workflow**: Uses LangGraph's interrupt mechanism for non-blocking approval
  * - **Custom Approval Messages**: Provide context-specific descriptions for approval requests
  *
- * ## Response Types
+ * ## Decision Types
  *
  * When a tool requires approval, the human operator can respond with:
- * - `accept`: Execute the tool with original arguments
- * - `edit`: Modify the tool arguments before execution
- * - `ignore`: Skip the tool and terminate the agent
- * - `response`: Provide a manual response instead of executing the tool
+ * - `approve`: Execute the tool with original arguments
+ * - `edit`: Modify the tool name and/or arguments before execution
+ * - `reject`: Reject the tool execution and provide an optional message
  *
  * @param options - Configuration options for the middleware
  * @param options.interruptOn - Per-tool configuration mapping tool names to their settings
- * @param options.interruptOn[toolName].allowAccept - Whether the human can approve the current action without changes
- * @param options.interruptOn[toolName].allowEdit - Whether the human can reject the current action with feedback
- * @param options.interruptOn[toolName].allowRespond - Whether the human can approve the current action with edited content
+ * @param options.interruptOn[toolName].allowedDecisions - Array of decision types allowed for this tool ("approve", "edit", "reject")
  * @param options.interruptOn[toolName].description - Custom approval message for the tool. Can be either a static string or a callable that dynamically generates the description based on agent state, runtime, and tool call information
- * @param options.messagePrefix - Default prefix for approval messages (default: "Tool execution requires approval"). Only used for tools that do not define a custom `description` in their ToolConfig.
+ * @param options.interruptOn[toolName].argumentsSchema - Optional schema for validating action arguments
+ * @param options.descriptionPrefix - Default prefix for approval messages (default: "Tool execution requires approval"). Only used for tools that do not define a custom `description` in their configuration.
  *
  * @returns A middleware instance that can be passed to `createAgent`
  *
@@ -260,10 +286,9 @@ export type HumanInTheLoopMiddlewareConfig = InferInteropZodInput<
  *
  * const hitlMiddleware = humanInTheLoopMiddleware({
  *   interruptOn: {
- *     // Interrupt write_file tool and allow edits or accepts
+ *     // Interrupt write_file tool and allow edits or approvals
  *     "write_file": {
- *       allowEdit: true,
- *       allowAccept: true,
+ *       allowedDecisions: ["approve", "edit", "reject"],
  *       description: "⚠️ File write operation requires approval"
  *     },
  *     // Auto-approve read_file tool
@@ -281,7 +306,7 @@ export type HumanInTheLoopMiddlewareConfig = InferInteropZodInput<
  * @example
  * Handling approval requests
  * ```typescript
- * import { type HumanInTheLoopRequest, type Interrupt } from "langchain";
+ * import { type HITLRequest, type Interrupt } from "langchain";
  * import { Command } from "@langchain/langgraph";
  *
  * // Initial agent invocation
@@ -291,46 +316,47 @@ export type HumanInTheLoopMiddlewareConfig = InferInteropZodInput<
  *
  * // Check if agent is paused for approval
  * if (result.__interrupt__) {
- *   const interruptRequest = initialResult.__interrupt__?.[0] as Interrupt<
- *     HumanInTheLoopRequest[]
- *   >;
+ *   const interruptRequest = result.__interrupt__?.[0] as Interrupt<HITLRequest>;
  *
  *   // Show tool call details to user
- *   console.log("Tool:", interruptRequest.value[0].actionRequest);
- *   console.log("Allowed actions:", interruptRequest.value[0].config);
+ *   console.log("Actions:", interruptRequest.value.actionRequests);
+ *   console.log("Review configs:", interruptRequest.value.reviewConfigs);
  *
  *   // Resume with approval
  *   await agent.invoke(
- *     new Command({ resume: [{ type: "accept" }] }),
+ *     new Command({ resume: { decisions: [{ type: "approve" }] } }),
  *     config
  *   );
  * }
  * ```
  *
  * @example
- * Different response types
+ * Different decision types
  * ```typescript
- * // Accept the tool call as-is
- * new Command({ resume: [{ type: "accept" }] })
+ * // Approve the tool call as-is
+ * new Command({ resume: { decisions: [{ type: "approve" }] } })
  *
- * // Edit the tool arguments
+ * // Edit the tool name and/or arguments
  * new Command({
- *   resume: [{
- *     type: "edit",
- *     args: { action: "write_file", args: { filename: "safe.txt", content: "Modified" } }
- *   }]
+ *   resume: {
+ *     decisions: [{
+ *       type: "edit",
+ *       editedAction: { name: "write_file", arguments: { filename: "safe.txt", content: "Modified" } }
+ *     }]
+ *   }
  * })
  *
- * // Skip tool and terminate agent
- * new Command({ resume: [{ type: "response" }] })
+ * // Reject the tool call
+ * new Command({ resume: { decisions: [{ type: "reject" }] } })
  *
- * // Provide manual response
+ * // Reject with custom message
  * new Command({
- *   resume: [{
- *     type: "response",
- *     // this must be a string
- *     args: "File operation not allowed in demo mode"
- *   }]
+ *   resume: {
+ *     decisions: [{
+ *       type: "reject",
+ *       message: "File operation not allowed in demo mode"
+ *     }]
+ *   }
  * })
  * ```
  *
@@ -340,18 +366,16 @@ export type HumanInTheLoopMiddlewareConfig = InferInteropZodInput<
  * const hitlMiddleware = humanInTheLoopMiddleware({
  *   interruptOn: {
  *     "execute_sql": {
- *       allowAccept: true,
- *       allowEdit: true,
- *       allowRespond: true,
+ *       allowedDecisions: ["approve", "edit", "reject"],
  *       description: "🚨 SQL query requires DBA approval\nPlease review for safety and performance"
  *     },
  *     "read_schema": false  // Reading metadata is safe
  *     "delete_records": {
- *       allowAccept: true,
+ *       allowedDecisions: ["approve", "reject"],
  *       description: "⛔ DESTRUCTIVE OPERATION - Requires manager approval"
  *     }
  *   },
- *   messagePrefix: "Database operation pending approval"
+ *   descriptionPrefix: "Database operation pending approval"
  * });
  * ```
  *
@@ -368,14 +392,13 @@ export type HumanInTheLoopMiddlewareConfig = InferInteropZodInput<
  * const hitlMiddleware = humanInTheLoopMiddleware({
  *   interruptOn: {
  *     "write_file": {
- *       allowAccept: true,
- *       allowEdit: true,
+ *       allowedDecisions: ["approve", "edit", "reject"],
  *       // Use dynamic description that can access tool call, state, and runtime
  *       description: formatToolDescription
  *     },
  *     // Or use an inline function
  *     "send_email": {
- *       allowAccept: true,
+ *       allowedDecisions: ["approve", "reject"],
  *       description: (toolCall, state, runtime) => {
  *         const { to, subject } = toolCall.args;
  *         return `Email to ${to}\nSubject: ${subject}\n\nRequires approval before sending`;
@@ -434,19 +457,17 @@ export function humanInTheLoopMiddleware(
         return;
       }
 
-      // Resolve per-tool configs (boolean true -> all actions allowed; false -> auto-approve)
-      const resolvedToolConfigs: Record<string, ToolConfig> = {};
+      // Resolve per-tool configs (boolean true -> all decisions allowed; false -> auto-approve)
+      const resolvedToolConfigs: Record<string, InterruptOnConfig> = {};
       for (const [toolName, toolConfig] of Object.entries(config.interruptOn)) {
         if (typeof toolConfig === "boolean") {
           if (toolConfig === true) {
             resolvedToolConfigs[toolName] = {
-              allowAccept: true,
-              allowEdit: true,
-              allowRespond: true,
+              allowedDecisions: ["approve", "edit", "reject"],
             };
           }
         } else {
-          resolvedToolConfigs[toolName] = toolConfig as ToolConfig;
+          resolvedToolConfigs[toolName] = toolConfig as InterruptOnConfig;
         }
       }
 
@@ -468,7 +489,7 @@ export function humanInTheLoopMiddleware(
         return;
       }
 
-      const hitlRequests: HumanInTheLoopRequest[] = await Promise.all(
+      const actionRequests: ActionRequest[] = await Promise.all(
         interruptToolCalls.map(async (toolCall) => {
           const toolConfig = resolvedToolConfigs[toolCall.name]!;
           const description = toolConfig.description
@@ -489,48 +510,71 @@ export function humanInTheLoopMiddleware(
               }\nArgs: ${JSON.stringify(toolCall.args, null, 2)}`;
 
           return {
-            actionRequest: { action: toolCall.name, args: toolCall.args },
-            config: toolConfig,
+            name: toolCall.name,
+            arguments: toolCall.args,
             description,
           };
         })
       );
 
-      const responses = (await interrupt(
-        hitlRequests
-      )) as HumanInTheLoopMiddlewareHumanResponse[];
+      const reviewConfigs: ReviewConfig[] = interruptToolCalls.map(
+        (toolCall) => {
+          const toolConfig = resolvedToolConfigs[toolCall.name]!;
+          return {
+            actionName: toolCall.name,
+            allowedDecisions: toolConfig.allowedDecisions,
+            argumentsSchema: toolConfig.argumentsSchema,
+          };
+        }
+      );
 
-      if (responses.length !== interruptToolCalls.length) {
+      const hitlRequest: HITLRequest = {
+        actionRequests,
+        reviewConfigs,
+      };
+
+      const hitlResponse = (await interrupt(hitlRequest)) as HITLResponse;
+
+      if (hitlResponse.decisions.length !== interruptToolCalls.length) {
         throw new Error(
-          `Number of human responses (${responses.length}) does not match number of hanging tool calls (${interruptToolCalls.length}).`
+          `Number of human decisions (${hitlResponse.decisions.length}) does not match number of interrupted tool calls (${interruptToolCalls.length}).`
         );
       }
 
       const approvedToolCalls: ToolCall[] = [...autoApprovedToolCalls];
       const artificialToolMessages: ToolMessage[] = [];
 
-      for (const [i, response] of responses.entries()) {
+      for (const [i, decision] of hitlResponse.decisions.entries()) {
         const toolCall = interruptToolCalls[i]!;
-        const toolConfig = resolvedToolConfigs[toolCall.name]!;
+        const reviewConfig = reviewConfigs[i]!;
 
-        if (response.type === "accept" && toolConfig?.allowAccept) {
+        if (
+          decision.type === "approve" &&
+          reviewConfig.allowedDecisions.includes("approve")
+        ) {
           approvedToolCalls.push(toolCall);
           continue;
         }
 
-        if (response.type === "edit" && toolConfig?.allowEdit) {
-          const edited = response.args;
+        if (
+          decision.type === "edit" &&
+          reviewConfig.allowedDecisions.includes("edit")
+        ) {
+          const edited = decision.editedAction;
           approvedToolCalls.push({
             id: toolCall.id,
-            name: edited.action,
-            args: edited.args,
+            name: edited.name,
+            args: edited.arguments,
           });
           continue;
         }
 
-        if (response.type === "response" && toolConfig?.allowRespond) {
+        if (
+          decision.type === "reject" &&
+          reviewConfig.allowedDecisions.includes("reject")
+        ) {
           const content =
-            response.args ??
+            decision.message ??
             `User rejected the tool call for \`${toolCall.name}\` with id ${toolCall.id}`;
 
           /**
@@ -567,19 +611,13 @@ export function humanInTheLoopMiddleware(
           continue;
         }
 
-        const allowedActions = [
-          toolConfig?.allowAccept && "accept",
-          toolConfig?.allowEdit && "edit",
-          toolConfig?.allowRespond && "response",
-        ]
-          .filter(Boolean)
-          .join('", "');
+        const allowedDecisions = reviewConfig.allowedDecisions.join('", "');
         throw new Error(
-          `Unexpected human response: ${JSON.stringify(
-            response
-          )}. Response action '${response.type}' is not allowed for tool '${
+          `Unexpected human decision: ${JSON.stringify(
+            decision
+          )}. Decision type '${decision.type}' is not allowed for tool '${
             toolCall.name
-          }'. Expected one of: "${allowedActions}", based on the tool's configuration.`
+          }'. Expected one of: "${allowedDecisions}", based on the tool's configuration.`
         );
       }
 

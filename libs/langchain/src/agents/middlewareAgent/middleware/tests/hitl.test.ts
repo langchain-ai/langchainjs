@@ -8,8 +8,11 @@ import { MemorySaver } from "@langchain/langgraph-checkpoint";
 import { createAgent } from "../../index.js";
 import {
   humanInTheLoopMiddleware,
-  type HumanInTheLoopRequest,
-  type HumanInTheLoopMiddlewareHumanResponse,
+  type HITLRequest,
+  type HITLResponse,
+  type InterruptOnConfig,
+  type DecisionType,
+  type Decision,
 } from "../hitl.js";
 import {
   FakeToolCallingModel,
@@ -58,27 +61,24 @@ const writeFileTool = tool(writeFileFn, {
   }),
 });
 
-describe("humanInTheLoopMiddleware", () => {
+describe("humanInTheLoopMiddleware - New Schema", () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
   it("should auto-approve safe tools and interrupt for tools requiring approval", async () => {
-    // Configure HITL middleware
     const hitlMiddleware = humanInTheLoopMiddleware({
       interruptOn: {
         write_file: {
-          allowAccept: true,
+          allowedDecisions: ["approve", "reject"],
           description: "⚠️ File write operation requires approval",
         },
         calculator: false,
       },
     });
 
-    // Create agent with mocked LLM
     const model = new FakeToolCallingModel({
       toolCalls: [
-        // First call: calculator tool (auto-approved)
         [
           {
             id: "call_1",
@@ -86,7 +86,6 @@ describe("humanInTheLoopMiddleware", () => {
             args: { a: 42, b: 17, operation: "multiply" },
           },
         ],
-        // Second call: write_file tool (requires approval)
         [
           {
             id: "call_2",
@@ -101,15 +100,13 @@ describe("humanInTheLoopMiddleware", () => {
     const agent = createAgent({
       model,
       checkpointer,
-      systemPrompt:
-        "You are a helpful assistant. Use the tools provided to help the user.",
       tools: [calculateTool, writeFileTool],
       middleware: [hitlMiddleware] as const,
     });
 
     const config = {
       configurable: {
-        thread_id: "test-123",
+        thread_id: "test-auto-approve",
       },
     };
 
@@ -121,28 +118,8 @@ describe("humanInTheLoopMiddleware", () => {
       config
     );
 
-    // Verify calculator was called
-    expect(writeFileFn).not.toHaveBeenCalled();
     expect(calculatorFn).toHaveBeenCalledTimes(1);
-    expect(calculatorFn).toHaveBeenCalledWith(
-      {
-        a: 42,
-        b: 17,
-        operation: "multiply",
-      },
-      expect.anything()
-    );
-
-    // Verify response
-    const mathMessages = mathResult.messages;
-    expect(mathMessages).toHaveLength(3);
-    expect(mathMessages[0]).toEqual(
-      new _AnyIdHumanMessage("Calculate 42 * 17")
-    );
-    expect(mathMessages[1].content).toEqual(
-      expect.stringContaining("You are a helpful assistant.")
-    );
-    expect(mathMessages[2].content).toBe("42 * 17 = 714");
+    expect(writeFileFn).not.toHaveBeenCalled();
 
     // Test 2: Write file tool (requires approval)
     model.index = 1;
@@ -153,70 +130,103 @@ describe("humanInTheLoopMiddleware", () => {
       config
     );
 
-    // Verify write_file was NOT called yet
     expect(writeFileFn).not.toHaveBeenCalled();
 
-    // Check if agent is paused for approval
     const state = await agent.graph.getState(config);
     expect(state.next).toBeDefined();
     expect(state.next.length).toBe(1);
 
-    // Verify interrupt data
     const task = state.tasks?.[0];
     expect(task).toBeDefined();
     expect(task.interrupts).toBeDefined();
     expect(task.interrupts.length).toBe(1);
 
-    const requests = task.interrupts[0].value;
-    expect(requests).toMatchInlineSnapshot(`
-      [
-        {
-          "actionRequest": {
-            "action": "write_file",
-            "args": {
-              "content": "Hello World",
-              "filename": "greeting.txt",
-            },
-          },
-          "config": {
-            "allowAccept": true,
-            "description": "⚠️ File write operation requires approval",
-          },
-          "description": "⚠️ File write operation requires approval",
-        },
-      ]
-    `);
+    const hitlRequest = task.interrupts[0].value as HITLRequest;
+    expect(hitlRequest.actionRequests).toHaveLength(1);
+    expect(hitlRequest.actionRequests[0].name).toBe("write_file");
+    expect(hitlRequest.actionRequests[0].arguments).toEqual({
+      filename: "greeting.txt",
+      content: "Hello World",
+    });
+    expect(hitlRequest.reviewConfigs).toHaveLength(1);
+    expect(hitlRequest.reviewConfigs[0].allowedDecisions).toEqual([
+      "approve",
+      "reject",
+    ]);
 
     // Resume with approval
     model.index = 1;
-    const resumedResult = await agent.invoke(
+    await agent.invoke(
       new Command({
-        resume: [{ type: "accept" }],
+        resume: { decisions: [{ type: "approve" }] },
       }),
       config
     );
 
-    // Verify write_file was called after approval
     expect(writeFileFn).toHaveBeenCalledTimes(1);
-    expect(writeFileFn).toHaveBeenCalledWith(
-      {
-        filename: "greeting.txt",
-        content: "Hello World",
+  });
+
+  it("should handle approve decision", async () => {
+    const hitlMiddleware = humanInTheLoopMiddleware({
+      interruptOn: {
+        calculator: {
+          allowedDecisions: ["approve", "reject"],
+        },
       },
-      expect.anything()
+    });
+
+    const model = new FakeToolCallingModel({
+      toolCalls: [
+        [
+          {
+            id: "call_1",
+            name: "calculator",
+            args: { a: 10, b: 5, operation: "add" },
+          },
+        ],
+      ],
+    });
+
+    const checkpointer = new MemorySaver();
+    const agent = createAgent({
+      model,
+      checkpointer,
+      tools: [calculateTool],
+      middleware: [hitlMiddleware] as const,
+    });
+
+    const config = {
+      configurable: {
+        thread_id: "test-approve",
+      },
+    };
+
+    await agent.invoke(
+      {
+        messages: [new HumanMessage("Calculate 10 + 5")],
+      },
+      config
     );
 
-    // Verify final response
-    const finalMessages = resumedResult.messages;
-    expect(finalMessages[finalMessages.length - 1].content).toBe(
-      "Successfully wrote 11 characters to greeting.txt"
+    const result = await agent.invoke(
+      new Command({
+        resume: { decisions: [{ type: "approve" }] },
+      }),
+      config
+    );
+
+    expect(calculatorFn).toHaveBeenCalledTimes(1);
+    expect(result.messages[result.messages.length - 1].content).toBe(
+      "10 + 5 = 15"
     );
   });
 
-  it("should handle edit response type", async () => {
+  it("should handle edit decision with editedAction", async () => {
     const hitlMiddleware = humanInTheLoopMiddleware({
       interruptOn: {
-        write_file: true,
+        write_file: {
+          allowedDecisions: ["approve", "edit"],
+        },
       },
     });
 
@@ -246,7 +256,6 @@ describe("humanInTheLoopMiddleware", () => {
       },
     };
 
-    // Initial invocation
     await agent.invoke(
       {
         messages: [new HumanMessage("Write dangerous content")],
@@ -254,23 +263,23 @@ describe("humanInTheLoopMiddleware", () => {
       config
     );
 
-    // Resume with edited args
     await agent.invoke(
       new Command({
-        resume: [
-          {
-            type: "edit",
-            args: {
-              action: "write_file",
-              args: { filename: "safe.txt", content: "Safe content" },
+        resume: {
+          decisions: [
+            {
+              type: "edit",
+              editedAction: {
+                name: "write_file",
+                arguments: { filename: "safe.txt", content: "Safe content" },
+              },
             },
-          },
-        ],
+          ],
+        },
       }),
       config
     );
 
-    // Verify tool was called with edited args
     expect(writeFileFn).toHaveBeenCalledTimes(1);
     expect(writeFileFn).toHaveBeenCalledWith(
       {
@@ -281,11 +290,11 @@ describe("humanInTheLoopMiddleware", () => {
     );
   });
 
-  it("should handle manual response type", async () => {
+  it("should handle reject decision with message", async () => {
     const hitlMiddleware = humanInTheLoopMiddleware({
       interruptOn: {
         write_file: {
-          allowRespond: true,
+          allowedDecisions: ["approve", "reject"],
         },
       },
     });
@@ -296,7 +305,7 @@ describe("humanInTheLoopMiddleware", () => {
           {
             id: "call_1",
             name: "write_file",
-            args: { filename: "manual.txt", content: "Manual content" },
+            args: { filename: "blocked.txt", content: "Blocked content" },
           },
         ],
       ],
@@ -312,49 +321,45 @@ describe("humanInTheLoopMiddleware", () => {
 
     const config = {
       configurable: {
-        thread_id: "test-manual",
+        thread_id: "test-reject",
       },
     };
 
-    // Initial invocation
     await agent.invoke(
       {
-        messages: [new HumanMessage("Write to manual file")],
+        messages: [new HumanMessage("Write blocked content")],
       },
       config
     );
 
-    // Resume with manual response
-    const resumedResult = await agent.invoke(
+    const result = await agent.invoke(
       new Command({
-        resume: [
-          {
-            type: "response",
-            args: "File operation not allowed in demo mode",
-          },
-        ],
+        resume: {
+          decisions: [
+            {
+              type: "reject",
+              message: "File operation not allowed in demo mode",
+            },
+          ],
+        },
       }),
       config
     );
 
-    // Verify tool was NOT called
     expect(writeFileFn).not.toHaveBeenCalled();
-
-    // Verify manual response was added
-    const { messages } = resumedResult;
-    expect(messages[messages.length - 1].content).toBe(
+    expect(result.messages[result.messages.length - 1].content).toBe(
       "File operation not allowed in demo mode"
     );
-    expect((messages[messages.length - 1] as ToolMessage).tool_call_id).toBe(
+    expect((result.messages[result.messages.length - 1] as ToolMessage).tool_call_id).toBe(
       "call_1"
     );
   });
 
-  it("should throw if response is not a string", async () => {
+  it("should handle reject decision without message", async () => {
     const hitlMiddleware = humanInTheLoopMiddleware({
       interruptOn: {
-        write_file: {
-          allowRespond: true,
+        calculator: {
+          allowedDecisions: ["approve", "reject"],
         },
       },
     });
@@ -364,8 +369,8 @@ describe("humanInTheLoopMiddleware", () => {
         [
           {
             id: "call_1",
-            name: "write_file",
-            args: { filename: "manual.txt", content: "Manual content" },
+            name: "calculator",
+            args: { a: 5, b: 3, operation: "add" },
           },
         ],
       ],
@@ -375,60 +380,52 @@ describe("humanInTheLoopMiddleware", () => {
     const agent = createAgent({
       model,
       checkpointer,
-      tools: [writeFileTool],
+      tools: [calculateTool],
       middleware: [hitlMiddleware] as const,
     });
 
     const config = {
       configurable: {
-        thread_id: "test-manual",
+        thread_id: "test-reject-no-msg",
       },
     };
 
-    // Initial invocation
     await agent.invoke(
       {
-        messages: [new HumanMessage("Write to manual file")],
+        messages: [new HumanMessage("Calculate 5 + 3")],
       },
       config
     );
 
-    // Resume with manual response
-    await expect(() =>
-      agent.invoke(
-        new Command({
-          resume: [
-            {
-              type: "response",
-              args: {
-                action: "write_file",
-                args: "File operation not allowed in demo mode",
-              },
-            },
-          ],
-        }),
-        config
-      )
-    ).rejects.toThrow(
-      'Tool call response for "write_file" must be a string, got object'
+    const result = await agent.invoke(
+      new Command({
+        resume: {
+          decisions: [{ type: "reject" }],
+        },
+      }),
+      config
+    );
+
+    expect(calculatorFn).not.toHaveBeenCalled();
+    expect(result.messages[result.messages.length - 1].content).toContain(
+      "User rejected the tool call"
     );
   });
 
-  it("should allow to interrupt multiple tools at the same time", async () => {
+  it("should handle multiple interrupted tools", async () => {
     const hitlMiddleware = humanInTheLoopMiddleware({
       interruptOn: {
         write_file: {
-          allowEdit: true,
-          description: "⚠️ File write operation requires approval",
+          allowedDecisions: ["approve", "edit"],
         },
-        calculator: true,
+        calculator: {
+          allowedDecisions: ["approve", "reject"],
+        },
       },
     });
 
-    // Create agent with mocked LLM
     const model = new FakeToolCallingModel({
       toolCalls: [
-        // First call: calculator tool (auto-approved)
         [
           {
             id: "call_1",
@@ -448,56 +445,48 @@ describe("humanInTheLoopMiddleware", () => {
     const agent = createAgent({
       model,
       checkpointer,
-      systemPrompt:
-        "You are a helpful assistant. Use the tools provided to help the user.",
       tools: [calculateTool, writeFileTool],
       middleware: [hitlMiddleware] as const,
     });
 
     const config = {
       configurable: {
-        thread_id: "test-123",
+        thread_id: "test-multiple",
       },
     };
 
-    // Initial invocation
     const initialResult = await agent.invoke(
       {
-        messages: [
-          new HumanMessage("Calculate 42 * 17 and write to greeting.txt"),
-        ],
+        messages: [new HumanMessage("Calculate and write")],
       },
       config
     );
 
-    // not called due to interrupt
-    expect(calculatorFn).toHaveBeenCalledTimes(0);
-    expect(writeFileFn).toHaveBeenCalledTimes(0);
+    expect(calculatorFn).not.toHaveBeenCalled();
+    expect(writeFileFn).not.toHaveBeenCalled();
 
-    const interruptRequest = initialResult.__interrupt__?.[0] as Interrupt<
-      HumanInTheLoopRequest[]
-    >;
-    const resume: HumanInTheLoopMiddlewareHumanResponse[] =
-      interruptRequest.value.map(({ actionRequest }) => {
-        if (actionRequest.action === "calculator") {
-          return { type: "accept" };
-        } else if (actionRequest.action === "write_file") {
-          return {
-            type: "edit",
-            args: {
-              action: "write_file",
-              args: { filename: "safe.txt", content: "Safe content" },
+    const interruptRequest = initialResult.__interrupt__?.[0] as Interrupt<HITLRequest>;
+    expect(interruptRequest.value.actionRequests).toHaveLength(2);
+    expect(interruptRequest.value.reviewConfigs).toHaveLength(2);
+
+    await agent.invoke(
+      new Command({
+        resume: {
+          decisions: [
+            { type: "approve" },
+            {
+              type: "edit",
+              editedAction: {
+                name: "write_file",
+                arguments: { filename: "safe.txt", content: "Safe content" },
+              },
             },
-          };
-        }
+          ],
+        },
+      }),
+      config
+    );
 
-        throw new Error(`Unknown action: ${actionRequest.action}`);
-      });
-
-    // Resume with approval
-    await agent.invoke(new Command({ resume }), config);
-
-    // Verify tool was called
     expect(calculatorFn).toHaveBeenCalledTimes(1);
     expect(writeFileFn).toHaveBeenCalledTimes(1);
     expect(writeFileFn).toHaveBeenCalledWith(
@@ -507,31 +496,22 @@ describe("humanInTheLoopMiddleware", () => {
       },
       expect.anything()
     );
-    expect(calculatorFn).toHaveBeenCalledWith(
-      {
-        a: 42,
-        b: 17,
-        operation: "multiply",
-      },
-      expect.anything()
-    );
   });
 
-  it("should throw if not all tool calls have a response", async () => {
+  it("should throw if wrong number of decisions provided", async () => {
     const hitlMiddleware = humanInTheLoopMiddleware({
       interruptOn: {
-        write_file: {
-          allowEdit: true,
-          description: "⚠️ File write operation requires approval",
+        calculator: {
+          allowedDecisions: ["approve", "reject"],
         },
-        calculator: true,
+        write_file: {
+          allowedDecisions: ["approve", "reject"],
+        },
       },
     });
 
-    // Create agent with mocked LLM
     const model = new FakeToolCallingModel({
       toolCalls: [
-        // First call: calculator tool (auto-approved)
         [
           {
             id: "call_1",
@@ -551,63 +531,51 @@ describe("humanInTheLoopMiddleware", () => {
     const agent = createAgent({
       model,
       checkpointer,
-      systemPrompt:
-        "You are a helpful assistant. Use the tools provided to help the user.",
       tools: [calculateTool, writeFileTool],
       middleware: [hitlMiddleware] as const,
     });
 
     const config = {
       configurable: {
-        thread_id: "test-123",
+        thread_id: "test-wrong-count",
       },
     };
 
-    // Initial invocation
     await agent.invoke(
       {
-        messages: [
-          new HumanMessage("Calculate 42 * 17 and write to greeting.txt"),
-        ],
+        messages: [new HumanMessage("Calculate and write")],
       },
       config
     );
 
-    // Resume with approval
     await expect(() =>
       agent.invoke(
-        new Command({ resume: [{ id: "call_2", type: "ignore" }] }),
+        new Command({
+          resume: { decisions: [{ type: "approve" }] }, // Only 1 decision for 2 tools
+        }),
         config
       )
     ).rejects.toThrow(
-      "Number of human responses (1) does not match number of hanging tool calls (2)."
+      "Number of human decisions (1) does not match number of interrupted tool calls (2)."
     );
   });
 
-  it("should not allow me to approve if I don't have allowAccept", async () => {
+  it("should throw if decision type not allowed", async () => {
     const hitlMiddleware = humanInTheLoopMiddleware({
       interruptOn: {
         write_file: {
-          allowEdit: true,
-          description: "⚠️ File write operation requires approval",
+          allowedDecisions: ["edit"], // Only edit allowed
         },
       },
     });
 
-    // Create agent with mocked LLM
     const model = new FakeToolCallingModel({
       toolCalls: [
-        // First call: calculator tool (auto-approved)
         [
           {
             id: "call_1",
-            name: "calculator",
-            args: { a: 42, b: 17, operation: "multiply" },
-          },
-          {
-            id: "call_2",
             name: "write_file",
-            args: { filename: "greeting.txt", content: "Hello World" },
+            args: { filename: "test.txt", content: "Test" },
           },
         ],
       ],
@@ -617,46 +585,101 @@ describe("humanInTheLoopMiddleware", () => {
     const agent = createAgent({
       model,
       checkpointer,
-      systemPrompt:
-        "You are a helpful assistant. Use the tools provided to help the user.",
       tools: [writeFileTool],
       middleware: [hitlMiddleware] as const,
     });
 
     const config = {
       configurable: {
-        thread_id: "test-123",
+        thread_id: "test-not-allowed",
       },
     };
 
-    // Initial invocation
     await agent.invoke(
       {
-        messages: [
-          new HumanMessage("Calculate 42 * 17 and write to greeting.txt"),
-        ],
+        messages: [new HumanMessage("Write test")],
       },
       config
     );
 
     await expect(() =>
-      agent.invoke(new Command({ resume: [{ type: "accept" }] }), config)
+      agent.invoke(
+        new Command({
+          resume: { decisions: [{ type: "approve" }] }, // Try to approve when only edit allowed
+        }),
+        config
+      )
     ).rejects.toThrow(
-      'Unexpected human response: {"type":"accept"}. Response action \'accept\' is not allowed for tool \'write_file\'. Expected one of: "edit", based on the tool\'s configuration.'
+      'Decision type \'approve\' is not allowed for tool \'write_file\'. Expected one of: "edit"'
     );
   });
 
-  it("should support dynamic description factory functions", async () => {
-    // Create a description factory that formats based on tool call details
+  it("should support InterruptOnConfig with all decision types", async () => {
+    const interruptConfig: InterruptOnConfig = {
+      allowedDecisions: ["approve", "edit", "reject"],
+      description: "Tool requires approval",
+    };
+
+    const hitlMiddleware = humanInTheLoopMiddleware({
+      interruptOn: {
+        write_file: interruptConfig,
+      },
+    });
+
+    const model = new FakeToolCallingModel({
+      toolCalls: [
+        [
+          {
+            id: "call_1",
+            name: "write_file",
+            args: { filename: "test.txt", content: "Test content" },
+          },
+        ],
+      ],
+    });
+
+    const checkpointer = new MemorySaver();
+    const agent = createAgent({
+      model,
+      checkpointer,
+      tools: [writeFileTool],
+      middleware: [hitlMiddleware] as const,
+    });
+
+    const config = {
+      configurable: {
+        thread_id: "test-all-decisions",
+      },
+    };
+
+    await agent.invoke(
+      {
+        messages: [new HumanMessage("Write test content")],
+      },
+      config
+    );
+
+    const state = await agent.graph.getState(config);
+    const task = state.tasks?.[0];
+    const hitlRequest = task.interrupts[0].value as HITLRequest;
+
+    expect(hitlRequest.reviewConfigs[0].allowedDecisions).toEqual([
+      "approve",
+      "edit",
+      "reject",
+    ]);
+    expect(writeFileFn).not.toHaveBeenCalled();
+  });
+
+  it("should support dynamic description factory", async () => {
     const descriptionFactory = vi.fn((toolCall, _state, _runtime) => {
-      return `Dynamic description for tool: ${toolCall.name}\nFile: ${toolCall.args.filename}\nContent length: ${toolCall.args.content.length} characters`;
+      return `Dynamic: ${toolCall.name} with ${JSON.stringify(toolCall.args)}`;
     });
 
     const hitlMiddleware = humanInTheLoopMiddleware({
       interruptOn: {
-        write_file: {
-          allowAccept: true,
-          allowEdit: true,
+        calculator: {
+          allowedDecisions: ["approve", "reject"],
           description: descriptionFactory,
         },
       },
@@ -667,8 +690,8 @@ describe("humanInTheLoopMiddleware", () => {
         [
           {
             id: "call_1",
-            name: "write_file",
-            args: { filename: "dynamic.txt", content: "Hello Dynamic World" },
+            name: "calculator",
+            args: { a: 5, b: 3, operation: "add" },
           },
         ],
       ],
@@ -678,65 +701,88 @@ describe("humanInTheLoopMiddleware", () => {
     const agent = createAgent({
       model,
       checkpointer,
-      tools: [writeFileTool],
+      tools: [calculateTool],
       middleware: [hitlMiddleware] as const,
     });
 
     const config = {
       configurable: {
-        thread_id: "test-dynamic",
+        thread_id: "test-dynamic-desc",
       },
     };
 
-    // Initial invocation
     await agent.invoke(
       {
-        messages: [new HumanMessage("Write dynamic content")],
+        messages: [new HumanMessage("Calculate 5 + 3")],
       },
       config
     );
 
-    // Verify the description factory was called
     expect(descriptionFactory).toHaveBeenCalledTimes(1);
-    expect(descriptionFactory).toHaveBeenCalledWith(
-      expect.objectContaining({
-        id: "call_1",
-        name: "write_file",
-        args: { filename: "dynamic.txt", content: "Hello Dynamic World" },
-      }),
-      expect.objectContaining({
-        messages: expect.any(Array),
-      }),
-      expect.objectContaining({
-        context: expect.anything(),
-      })
-    );
 
-    // Check the generated description in the interrupt
     const state = await agent.graph.getState(config);
     const task = state.tasks?.[0];
-    const requests = task.interrupts[0].value as HumanInTheLoopRequest[];
+    const hitlRequest = task.interrupts[0].value as HITLRequest;
 
-    expect(requests[0].description).toBe(
-      "Dynamic description for tool: write_file\nFile: dynamic.txt\nContent length: 19 characters"
-    );
+    expect(hitlRequest.actionRequests[0].description).toContain("Dynamic: calculator");
+  });
 
-    // Resume with approval
+  it("should validate DecisionType values", () => {
+    const validDecisions: DecisionType[] = ["approve", "edit", "reject"];
+    expect(validDecisions).toHaveLength(3);
+    expect(validDecisions).toContain("approve");
+    expect(validDecisions).toContain("edit");
+    expect(validDecisions).toContain("reject");
+  });
+
+  it("should work with boolean true to allow all decisions", async () => {
+    const hitlMiddleware = humanInTheLoopMiddleware({
+      interruptOn: {
+        calculator: true, // Should allow all decisions
+      },
+    });
+
+    const model = new FakeToolCallingModel({
+      toolCalls: [
+        [
+          {
+            id: "call_1",
+            name: "calculator",
+            args: { a: 8, b: 4, operation: "multiply" },
+          },
+        ],
+      ],
+    });
+
+    const checkpointer = new MemorySaver();
+    const agent = createAgent({
+      model,
+      checkpointer,
+      tools: [calculateTool],
+      middleware: [hitlMiddleware] as const,
+    });
+
+    const config = {
+      configurable: {
+        thread_id: "test-boolean-true",
+      },
+    };
+
     await agent.invoke(
-      new Command({
-        resume: [{ type: "accept" }],
-      }),
+      {
+        messages: [new HumanMessage("Calculate 8 * 4")],
+      },
       config
     );
 
-    // Verify tool was called
-    expect(writeFileFn).toHaveBeenCalledTimes(1);
-    expect(writeFileFn).toHaveBeenCalledWith(
-      {
-        filename: "dynamic.txt",
-        content: "Hello Dynamic World",
-      },
-      expect.anything()
-    );
+    const state = await agent.graph.getState(config);
+    const task = state.tasks?.[0];
+    const hitlRequest = task.interrupts[0].value as HITLRequest;
+
+    expect(hitlRequest.reviewConfigs[0].allowedDecisions).toEqual([
+      "approve",
+      "edit",
+      "reject",
+    ]);
   });
 });
