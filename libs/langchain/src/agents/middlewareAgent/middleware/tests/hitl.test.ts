@@ -142,17 +142,22 @@ describe("humanInTheLoopMiddleware - New Schema", () => {
     expect(task.interrupts.length).toBe(1);
 
     const hitlRequest = task.interrupts[0].value as HITLRequest;
-    expect(hitlRequest.actionRequests).toHaveLength(1);
-    expect(hitlRequest.actionRequests[0].name).toBe("write_file");
-    expect(hitlRequest.actionRequests[0].arguments).toEqual({
-      filename: "greeting.txt",
-      content: "Hello World",
+    expect(hitlRequest).toMatchObject({
+      actionRequests: [
+        {
+          name: "write_file",
+          arguments: {
+            filename: "greeting.txt",
+            content: "Hello World",
+          },
+        },
+      ],
+      reviewConfigs: [
+        {
+          allowedDecisions: ["approve", "reject"],
+        },
+      ],
     });
-    expect(hitlRequest.reviewConfigs).toHaveLength(1);
-    expect(hitlRequest.reviewConfigs[0].allowedDecisions).toEqual([
-      "approve",
-      "reject",
-    ]);
 
     // Resume with approval
     model.index = 1;
@@ -350,9 +355,9 @@ describe("humanInTheLoopMiddleware - New Schema", () => {
     expect(result.messages[result.messages.length - 1].content).toBe(
       "File operation not allowed in demo mode"
     );
-    expect((result.messages[result.messages.length - 1] as ToolMessage).tool_call_id).toBe(
-      "call_1"
-    );
+    expect(
+      (result.messages[result.messages.length - 1] as ToolMessage).tool_call_id
+    ).toBe("call_1");
   });
 
   it("should handle reject decision without message", async () => {
@@ -465,9 +470,24 @@ describe("humanInTheLoopMiddleware - New Schema", () => {
     expect(calculatorFn).not.toHaveBeenCalled();
     expect(writeFileFn).not.toHaveBeenCalled();
 
-    const interruptRequest = initialResult.__interrupt__?.[0] as Interrupt<HITLRequest>;
-    expect(interruptRequest.value.actionRequests).toHaveLength(2);
-    expect(interruptRequest.value.reviewConfigs).toHaveLength(2);
+    const interruptRequest = initialResult
+      .__interrupt__?.[0] as Interrupt<HITLRequest>;
+    expect(interruptRequest.value).toMatchObject({
+      actionRequests: [
+        {
+          name: "calculator",
+          arguments: { a: 42, b: 17, operation: "multiply" },
+        },
+        {
+          name: "write_file",
+          arguments: { filename: "greeting.txt", content: "Hello World" },
+        },
+      ],
+      reviewConfigs: [
+        { allowedDecisions: ["approve", "reject"] },
+        { allowedDecisions: ["approve", "edit"] },
+      ],
+    });
 
     await agent.invoke(
       new Command({
@@ -610,7 +630,7 @@ describe("humanInTheLoopMiddleware - New Schema", () => {
         config
       )
     ).rejects.toThrow(
-      'Decision type \'approve\' is not allowed for tool \'write_file\'. Expected one of: "edit"'
+      "Decision type 'approve' is not allowed for tool 'write_file'. Expected one of: \"edit\""
     );
   });
 
@@ -663,11 +683,19 @@ describe("humanInTheLoopMiddleware - New Schema", () => {
     const task = state.tasks?.[0];
     const hitlRequest = task.interrupts[0].value as HITLRequest;
 
-    expect(hitlRequest.reviewConfigs[0].allowedDecisions).toEqual([
-      "approve",
-      "edit",
-      "reject",
-    ]);
+    expect(hitlRequest).toMatchObject({
+      actionRequests: [
+        {
+          name: "write_file",
+          arguments: { filename: "test.txt", content: "Test content" },
+        },
+      ],
+      reviewConfigs: [
+        {
+          allowedDecisions: ["approve", "edit", "reject"],
+        },
+      ],
+    });
     expect(writeFileFn).not.toHaveBeenCalled();
   });
 
@@ -724,7 +752,9 @@ describe("humanInTheLoopMiddleware - New Schema", () => {
     const task = state.tasks?.[0];
     const hitlRequest = task.interrupts[0].value as HITLRequest;
 
-    expect(hitlRequest.actionRequests[0].description).toContain("Dynamic: calculator");
+    expect(hitlRequest.actionRequests[0].description).toContain(
+      "Dynamic: calculator"
+    );
   });
 
   it("should validate DecisionType values", () => {
@@ -779,10 +809,18 @@ describe("humanInTheLoopMiddleware - New Schema", () => {
     const task = state.tasks?.[0];
     const hitlRequest = task.interrupts[0].value as HITLRequest;
 
-    expect(hitlRequest.reviewConfigs[0].allowedDecisions).toEqual([
-      "approve",
-      "edit",
-      "reject",
-    ]);
+    expect(hitlRequest).toMatchObject({
+      actionRequests: [
+        {
+          name: "calculator",
+          arguments: { a: 8, b: 4, operation: "multiply" },
+        },
+      ],
+      reviewConfigs: [
+        {
+          allowedDecisions: ["approve", "edit", "reject"],
+        },
+      ],
+    });
   });
 });
