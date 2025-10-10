@@ -23,6 +23,7 @@ import { ToolInvocationError } from "../errors.js";
 import type {
   ToAnnotationRoot,
   AnyAnnotationRoot,
+  ToolCallWrapper,
 } from "../middleware/types.js";
 
 export interface ToolNodeOptions {
@@ -56,6 +57,12 @@ export interface ToolNodeOptions {
   handleToolErrors?:
     | boolean
     | ((error: unknown, toolCall: ToolCall) => ToolMessage | undefined);
+  /**
+   * Optional wrapper function for tool execution.
+   * Allows middleware to intercept and modify tool calls before execution.
+   * The wrapper receives the tool call request and a handler function to execute the tool.
+   */
+  wrapToolCall?: ToolCallWrapper;
 }
 
 const isBaseMessageArray = (input: unknown): input is BaseMessage[] =>
@@ -130,11 +137,13 @@ export class ToolNode<
     | boolean
     | ((error: unknown, toolCall: ToolCall) => ToolMessage | undefined) = true;
 
+  wrapToolCall?: ToolCallWrapper;
+
   constructor(
     tools: (StructuredToolInterface | DynamicTool | RunnableToolLike)[],
     public options?: ToolNodeOptions
   ) {
-    const { name, tags, handleToolErrors } = options ?? {};
+    const { name, tags, handleToolErrors, wrapToolCall } = options ?? {};
     super({
       name,
       tags,
@@ -147,21 +156,26 @@ export class ToolNode<
     });
     this.tools = tools;
     this.handleToolErrors = handleToolErrors ?? this.handleToolErrors;
+    this.wrapToolCall = wrapToolCall;
     this.signal = options?.signal;
   }
 
   protected async runTool(
     call: ToolCall,
-    config: RunnableConfig
+    config: RunnableConfig,
+    state?: ToAnnotationRoot<StateSchema>["State"] & PreHookAnnotation["State"]
   ): Promise<ToolMessage | Command> {
-    const tool = this.tools.find((tool) => tool.name === call.name);
-    try {
+    // Define the base handler that executes the tool
+    const baseHandler = async (
+      toolCall: ToolCall
+    ): Promise<ToolMessage | Command> => {
+      const tool = this.tools.find((tool) => tool.name === toolCall.name);
       if (tool === undefined) {
-        throw new Error(`Tool "${call.name}" not found.`);
+        throw new Error(`Tool "${toolCall.name}" not found.`);
       }
 
       const output = await tool.invoke(
-        { ...call, type: "tool_call" },
+        { ...toolCall, type: "tool_call" },
         {
           ...config,
           signal: mergeAbortSignals(this.signal, config.signal),
@@ -175,8 +189,26 @@ export class ToolNode<
       return new ToolMessage({
         name: tool.name,
         content: typeof output === "string" ? output : JSON.stringify(output),
-        tool_call_id: call.id!,
+        tool_call_id: toolCall.id!,
       });
+    };
+
+    try {
+      // If wrapToolCall is provided, use it to wrap the tool execution
+      if (this.wrapToolCall && state) {
+        // Extract runtime from config - it's added by LangGraph
+        const runtime = (config as any).configurable?.langgraph_runtime;
+        
+        const request = {
+          toolCall: call,
+          state: state as any,
+          runtime: runtime as any,
+        };
+        return await this.wrapToolCall(request, baseHandler);
+      }
+
+      // Otherwise, execute the tool directly
+      return await baseHandler(call);
     } catch (e: unknown) {
       /**
        * If tool invocation fails due to input parsing error, throw a {@link ToolInvocationError}
@@ -239,7 +271,7 @@ export class ToolNode<
     let outputs: (ToolMessage | Command)[];
 
     if (isSendInput(state)) {
-      outputs = [await this.runTool(state.lg_tool_call, config)];
+      outputs = [await this.runTool(state.lg_tool_call, config, state)];
     } else {
       let messages: BaseMessage[];
       if (isBaseMessageArray(state)) {
@@ -274,7 +306,7 @@ export class ToolNode<
       outputs = await Promise.all(
         aiMessage.tool_calls
           ?.filter((call) => call.id == null || !toolMessageIds.has(call.id))
-          .map((call) => this.runTool(call, config)) ?? []
+          .map((call) => this.runTool(call, config, state)) ?? []
       );
     }
 

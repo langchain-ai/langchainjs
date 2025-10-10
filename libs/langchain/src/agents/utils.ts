@@ -28,6 +28,7 @@ import { isBaseChatModel, isConfigurableModel } from "./model.js";
 import type { ClientTool, ServerTool } from "./tools.js";
 import { MultipleToolsBoundError } from "./errors.js";
 import { PROMPT_RUNNABLE_NAME } from "./constants.js";
+import type { ToolCallWrapper, ToolCallHandler } from "./middleware/types.js";
 
 const NAME_PATTERN = /<name>(.*?)<\/name>/s;
 const CONTENT_PATTERN = /<content>(.*?)<\/content>/s;
@@ -406,4 +407,78 @@ export async function bindTools(
   }
 
   throw new Error(`llm ${llm} must define bindTools method.`);
+}
+
+/**
+ * Compose multiple wrapToolCall handlers into a single middleware stack.
+ *
+ * Composes handlers so the first in the list becomes the outermost layer.
+ * Each handler receives a handler callback to execute inner layers.
+ *
+ * @param handlers - List of handlers. First handler wraps all others.
+ * @returns Composed handler, or undefined if handlers array is empty.
+ *
+ * @example
+ * ```typescript
+ * // handlers=[auth, retry] means: auth wraps retry
+ * // Flow: auth calls retry, retry calls base handler
+ * const auth: ToolCallWrapper = async (request, handler) => {
+ *   try {
+ *     return await handler(request.toolCall);
+ *   } catch (error) {
+ *     if (error.message === "Unauthorized") {
+ *       await refreshToken();
+ *       return await handler(request.toolCall);
+ *     }
+ *     throw error;
+ *   }
+ * };
+ *
+ * const retry: ToolCallWrapper = async (request, handler) => {
+ *   for (let attempt = 0; attempt < 3; attempt++) {
+ *     try {
+ *       return await handler(request.toolCall);
+ *     } catch (error) {
+ *       if (attempt === 2) throw error;
+ *     }
+ *   }
+ *   throw new Error("Unreachable");
+ * };
+ *
+ * const composedHandler = chainToolCallHandlers([auth, retry]);
+ * ```
+ */
+export function chainToolCallHandlers(
+  handlers: ToolCallWrapper[]
+): ToolCallWrapper | undefined {
+  if (handlers.length === 0) {
+    return undefined;
+  }
+
+  if (handlers.length === 1) {
+    return handlers[0];
+  }
+
+  // Compose two handlers where outer wraps inner
+  function composeTwo(
+    outer: ToolCallWrapper,
+    inner: ToolCallWrapper
+  ): ToolCallWrapper {
+    return async (request, handler) => {
+      // Create a wrapper that calls inner with the base handler
+      const innerHandler: ToolCallHandler = async (_toolCall) =>
+        inner(request, async (tc) => handler(tc));
+
+      // Call outer with the wrapped inner as its handler
+      return outer(request, innerHandler);
+    };
+  }
+
+  // Compose right-to-left: outer(inner(innermost(handler)))
+  let result = handlers[handlers.length - 1];
+  for (let i = handlers.length - 2; i >= 0; i--) {
+    result = composeTwo(handlers[i], result);
+  }
+
+  return result;
 }
