@@ -107,15 +107,16 @@ export function createMiddleware<
    * @example
    * ```ts
    * wrapToolCall: async (request, handler) => {
-   *   console.log(`Calling tool: ${request.toolCall.name}`);
+   *   console.log(`Calling tool: ${request.tool.name}`);
+   *   console.log(`Tool description: ${request.tool.description}`);
    *
    *   try {
    *     // Execute the tool
    *     const result = await handler(request.toolCall);
-   *     console.log(`Tool ${request.toolCall.name} succeeded`);
+   *     console.log(`Tool ${request.tool.name} succeeded`);
    *     return result;
    *   } catch (error) {
-   *     console.error(`Tool ${request.toolCall.name} failed:`, error);
+   *     console.error(`Tool ${request.tool.name} failed:`, error);
    *     // Could return a custom error message or retry
    *     throw error;
    *   }
@@ -126,7 +127,7 @@ export function createMiddleware<
    * ```ts
    * wrapToolCall: async (request, handler) => {
    *   // Check if user is authorized for this tool
-   *   if (!request.runtime.context.isAuthorized(request.toolCall.name)) {
+   *   if (!request.runtime.context.isAuthorized(request.tool.name)) {
    *     return new ToolMessage({
    *       content: "Unauthorized to call this tool",
    *       tool_call_id: request.toolCall.id,

@@ -9,7 +9,6 @@ import {
   START,
   Send,
   Command,
-  isCommand,
   CompiledStateGraph,
   type GetStateOptions,
   type LangGraphRunnableConfig,
@@ -24,7 +23,7 @@ import { createAgentAnnotationConditional } from "./annotation.js";
 import {
   isClientTool,
   validateLLMHasNoBoundTools,
-  chainToolCallHandlers,
+  wrapToolCall,
 } from "./utils.js";
 
 import { AgentNode } from "./nodes/AgentNode.js";
@@ -47,7 +46,6 @@ import type {
 } from "./types.js";
 import type {
   PrivateState,
-  AgentBuiltInState,
   InvokeConfiguration,
   StreamConfiguration,
 } from "./runtime.js";
@@ -59,8 +57,6 @@ import type {
   InferContextInput,
   ToAnnotationRoot,
   AnyAnnotationRoot,
-  ToolCallWrapper,
-  ToolCallRequest,
 } from "./middleware/types.js";
 import { type ResponseFormatUndefined } from "./responses.js";
 
@@ -272,47 +268,7 @@ export class ReactAgent<
      * Collect and compose wrapToolCall handlers from middleware
      * Wrap each handler with error handling and validation
      */
-    const middlewareWithWrapToolCall = middleware.filter((m) => m.wrapToolCall);
-    const wrapToolCallHandler =
-      middlewareWithWrapToolCall.length > 0
-        ? chainToolCallHandlers(
-            middlewareWithWrapToolCall.map((m) => {
-              const originalHandler = m.wrapToolCall!;
-              // Wrap with error handling and validation
-              const wrappedHandler: ToolCallWrapper = async (
-                request,
-                handler
-              ) => {
-                try {
-                  const result = await originalHandler(
-                    request as ToolCallRequest<AgentBuiltInState, any>,
-                    handler
-                  );
-
-                  // Validate return type
-                  if (!ToolMessage.isInstance(result) && !isCommand(result)) {
-                    throw new Error(
-                      `Invalid response from "wrapToolCall" in middleware "${m.name}": ` +
-                        `expected ToolMessage or Command, got ${typeof result}`
-                    );
-                  }
-
-                  return result;
-                } catch (error) {
-                  // Add middleware context to error if not already added
-                  if (
-                    error instanceof Error &&
-                    !error.message.includes(`middleware "${m.name}"`)
-                  ) {
-                    error.message = `Error in middleware "${m.name}": ${error.message}`;
-                  }
-                  throw error;
-                }
-              };
-              return wrappedHandler;
-            })
-          )
-        : undefined;
+    const wrapToolCallHandler = wrapToolCall(middleware);
 
     /**
      * add single tool node for all tools
@@ -321,6 +277,7 @@ export class ReactAgent<
       const toolNode = new ToolNode(toolClasses.filter(isClientTool), {
         signal: this.options.signal,
         wrapToolCall: wrapToolCallHandler,
+        getPrivateState: () => this.#agentNode.getState()._privateState,
       });
       allNodeWorkflows.addNode("tools", toolNode);
     }

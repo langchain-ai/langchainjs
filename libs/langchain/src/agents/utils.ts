@@ -5,8 +5,9 @@ import {
   BaseMessageLike,
   SystemMessage,
   MessageContent,
+  ToolMessage,
 } from "@langchain/core/messages";
-import { MessagesAnnotation } from "@langchain/langgraph";
+import { MessagesAnnotation, isCommand } from "@langchain/langgraph";
 import {
   BaseChatModel,
   type BaseChatModelCallOptions,
@@ -28,7 +29,13 @@ import { isBaseChatModel, isConfigurableModel } from "./model.js";
 import type { ClientTool, ServerTool } from "./tools.js";
 import { MultipleToolsBoundError } from "./errors.js";
 import { PROMPT_RUNNABLE_NAME } from "./constants.js";
-import type { ToolCallWrapper, ToolCallHandler } from "./middleware/types.js";
+import type { AgentBuiltInState } from "./runtime.js";
+import type {
+  ToolCallWrapper,
+  ToolCallHandler,
+  AgentMiddleware,
+  ToolCallRequest,
+} from "./middleware/types.js";
 
 const NAME_PATTERN = /<name>(.*?)<\/name>/s;
 const CONTENT_PATTERN = /<content>(.*?)<\/content>/s;
@@ -448,7 +455,7 @@ export async function bindTools(
  * const composedHandler = chainToolCallHandlers([auth, retry]);
  * ```
  */
-export function chainToolCallHandlers(
+function chainToolCallHandlers(
   handlers: ToolCallWrapper[]
 ): ToolCallWrapper | undefined {
   if (handlers.length === 0) {
@@ -466,7 +473,7 @@ export function chainToolCallHandlers(
   ): ToolCallWrapper {
     return async (request, handler) => {
       // Create a wrapper that calls inner with the base handler
-      const innerHandler: ToolCallHandler = async (_toolCall) =>
+      const innerHandler: ToolCallHandler = async () =>
         inner(request, async (tc) => handler(tc));
 
       // Call outer with the wrapped inner as its handler
@@ -481,4 +488,62 @@ export function chainToolCallHandlers(
   }
 
   return result;
+}
+
+/**
+ * Wrapping `wrapToolCall` invocation so we can inject middleware name into
+ * the error message.
+ *
+ * @param middleware list of middleware passed to the agent
+ * @returns single wrap function
+ */
+export function wrapToolCall(middleware: readonly AgentMiddleware[]) {
+  const middlewareWithWrapToolCall = middleware.filter((m) => m.wrapToolCall);
+
+  if (middlewareWithWrapToolCall.length === 0) {
+    return;
+  }
+
+  return chainToolCallHandlers(
+    middlewareWithWrapToolCall.map((m) => {
+      const originalHandler = m.wrapToolCall!;
+      /**
+       * Wrap with error handling and validation
+       */
+      const wrappedHandler: ToolCallWrapper = async (request, handler) => {
+        try {
+          const result = await originalHandler(
+            request as ToolCallRequest<AgentBuiltInState, unknown>,
+            handler
+          );
+
+          /**
+           * Validate return type
+           */
+          if (!ToolMessage.isInstance(result) && !isCommand(result)) {
+            console.log(111, result);
+            throw new Error(
+              `Invalid response from "wrapToolCall" in middleware "${m.name}": ` +
+                `expected ToolMessage or Command, got ${typeof result}`
+            );
+          }
+
+          return result;
+        } catch (error) {
+          /**
+           * Add middleware context to error if not already added
+           */
+          if (
+            // eslint-disable-next-line no-instanceof/no-instanceof
+            error instanceof Error &&
+            !error.message.includes(`middleware "${m.name}"`)
+          ) {
+            error.message = `Error in middleware "${m.name}": ${error.message}`;
+          }
+          throw error;
+        }
+      };
+      return wrappedHandler;
+    })
+  );
 }

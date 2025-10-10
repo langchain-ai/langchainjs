@@ -7,8 +7,10 @@ import {
   SystemMessage,
   BaseMessage,
   ToolMessage,
+  ToolCall,
 } from "@langchain/core/messages";
 import { tool } from "@langchain/core/tools";
+import { Command } from "@langchain/langgraph";
 
 import { createAgent, createMiddleware } from "../index.js";
 import { FakeToolCallingChatModel, FakeToolCallingModel } from "./utils.js";
@@ -989,8 +991,16 @@ describe("middleware", () => {
       // Middleware that logs tool executions and modifies the result
       const loggingMiddleware = createMiddleware({
         name: "LoggingMiddleware",
+        contextSchema: z.object({
+          foo: z.number(),
+        }),
+        stateSchema: z.object({
+          bar: z.boolean(),
+        }),
         wrapToolCall: async (request, handler) => {
           toolExecutions.push(`before:${request.toolCall.name}`);
+          expect(request.tool.name).toBe("get_weather");
+          expect(request.tool.description).toBe("Get weather for a location");
           expect(request.toolCall).toMatchInlineSnapshot(`
             {
               "args": {
@@ -1001,6 +1011,10 @@ describe("middleware", () => {
               "type": "tool_call",
             }
           `);
+          expect(request.runtime.context).toEqual({ foo: 123 });
+          expect(request.state.bar).toBe(true);
+          expect(request.runtime.runModelCallCount).toBe(1);
+          expect(request.runtime.threadLevelCallCount).toBe(1);
 
           /**
            * Let's test if we can modify tool args
@@ -1030,12 +1044,20 @@ describe("middleware", () => {
       const agent = createAgent({
         model,
         tools: [weatherTool],
-        middleware: [loggingMiddleware],
+        middleware: [loggingMiddleware] as const,
       });
 
-      const result = await agent.invoke({
-        messages: [new HumanMessage("What's the weather in SF?")],
-      });
+      const result = await agent.invoke(
+        {
+          messages: [new HumanMessage("What's the weather in SF?")],
+          bar: true,
+        },
+        {
+          context: {
+            foo: 123,
+          },
+        }
+      );
 
       expect(weatherToolMock).toHaveBeenCalledOnce();
       expect(toolExecutions).toEqual([
@@ -1220,7 +1242,7 @@ describe("middleware", () => {
     it("should include middleware name in error messages", async () => {
       /**
        * Test that errors thrown in wrapToolCall include the middleware name
-       * Since ToolNode handles errors by default, we check the ToolMessage content
+       * With the default error handler (matching Python), errors from middleware bubble up
        */
       const errorTool = tool(async () => "Success", {
         name: "error_tool",
@@ -1246,25 +1268,20 @@ describe("middleware", () => {
         middleware: [errorMiddleware],
       });
 
-      const result = await agent.invoke({
-        messages: [new HumanMessage("Call the error tool")],
-      });
-
-      // The error is caught by ToolNode and converted to a ToolMessage
-      // Check that the ToolMessage contains the middleware name in the error
-      const toolMessage = result.messages[2] as ToolMessage;
-      expect(toolMessage.content).toContain(
-        'Error in middleware "ErrorThrowingMiddleware"'
-      );
-      expect(toolMessage.content).toContain(
-        "Something went wrong in middleware"
+      // With default error handling (matches Python), errors from middleware bubble up
+      await expect(
+        agent.invoke({
+          messages: [new HumanMessage("Call the error tool")],
+        })
+      ).rejects.toThrow(
+        'Error in middleware "ErrorThrowingMiddleware": Something went wrong in middleware'
       );
     });
 
     it("should validate that wrapToolCall returns ToolMessage or Command", async () => {
       /**
        * Test that wrapToolCall must return ToolMessage or Command
-       * The validation error is caught by ToolNode and converted to a ToolMessage
+       * With default error handling (matches Python), validation errors bubble up
        */
       const validTool = tool(async () => "Success", {
         name: "valid_tool",
@@ -1291,18 +1308,564 @@ describe("middleware", () => {
         middleware: [invalidMiddleware],
       });
 
-      const result = await agent.invoke({
-        messages: [new HumanMessage("Call the valid tool")],
+      // With default error handling (matches Python), validation errors bubble up
+      await expect(
+        agent.invoke({
+          messages: [new HumanMessage("Call the valid tool")],
+        })
+      ).rejects.toThrow(
+        'Invalid response from "wrapToolCall" in middleware "InvalidReturnMiddleware": ' +
+          "expected ToolMessage or Command, got string"
+      );
+    });
+
+    it("should support returning Command from wrapToolCall", async () => {
+      /**
+       * Test that wrapToolCall can return Command for advanced control flow
+       */
+      const commandTool = tool(async () => "Tool result", {
+        name: "command_tool",
+        description: "A tool that can return commands",
+        schema: z.object({}),
       });
 
-      // The validation error is caught by ToolNode and converted to a ToolMessage
+      const commandMiddleware = createMiddleware({
+        name: "CommandMiddleware",
+        wrapToolCall: async (request, handler) => {
+          // Execute tool normally
+          await handler(request.toolCall);
+
+          // Return a Command instead of ToolMessage
+          return new Command({
+            update: {
+              messages: [
+                new ToolMessage({
+                  content: "Command-based response",
+                  tool_call_id: request.toolCall.id!,
+                }),
+              ],
+            },
+          });
+        },
+      });
+
+      const model = new FakeToolCallingModel({
+        toolCalls: [[{ name: "command_tool", args: {}, id: "1" }]],
+      });
+
+      const agent = createAgent({
+        model,
+        tools: [commandTool],
+        middleware: [commandMiddleware],
+      });
+
+      const result = await agent.invoke({
+        messages: [new HumanMessage("Call command tool")],
+      });
+
       const toolMessage = result.messages[2] as ToolMessage;
-      expect(toolMessage.content).toContain(
-        'Invalid response from "wrapToolCall" in middleware "InvalidReturnMiddleware"'
+      expect(toolMessage.content).toBe("Command-based response");
+    });
+
+    it("should work with multiple tools being called", async () => {
+      /**
+       * Test wrapToolCall with multiple tool calls in sequence
+       */
+      const toolCalls: string[] = [];
+
+      const tool1 = tool(async () => "Result 1", {
+        name: "tool1",
+        description: "First tool",
+        schema: z.object({}),
+      });
+
+      const tool2 = tool(async () => "Result 2", {
+        name: "tool2",
+        description: "Second tool",
+        schema: z.object({}),
+      });
+
+      const trackingMiddleware = createMiddleware({
+        name: "TrackingMiddleware",
+        wrapToolCall: async (request, handler) => {
+          toolCalls.push(request.tool.name as string);
+          return handler(request.toolCall);
+        },
+      });
+
+      const model = new FakeToolCallingModel({
+        toolCalls: [
+          [
+            { name: "tool1", args: {}, id: "1" },
+            { name: "tool2", args: {}, id: "2" },
+          ],
+        ],
+      });
+
+      const agent = createAgent({
+        model,
+        tools: [tool1, tool2],
+        middleware: [trackingMiddleware] as const,
+      });
+
+      await agent.invoke({
+        messages: [new HumanMessage("Call both tools")],
+      });
+
+      // Verify both tools were tracked
+      expect(toolCalls).toEqual(["tool1", "tool2"]);
+    });
+
+    it("should work alongside wrapModelRequest middleware", async () => {
+      /**
+       * Test that wrapToolCall and wrapModelRequest can coexist
+       * and that modifications to tool_calls in wrapModelRequest are propagated to wrapToolCall
+       */
+      const events: string[] = [];
+      let capturedToolCallInWrapTool: ToolCall | undefined;
+
+      const calculatorTool = tool(async ({ x }: { x: number }) => x * 2, {
+        name: "multiply",
+        description: "Multiply by 2",
+        schema: z.object({
+          x: z.number(),
+        }),
+      });
+
+      const combinedMiddleware = createMiddleware({
+        name: "CombinedMiddleware",
+        wrapModelRequest: async (request, handler) => {
+          events.push("before_model");
+          const result = await handler(request);
+          events.push("after_model");
+
+          // Modify the AIMessage tool_calls
+          if (result.tool_calls && result.tool_calls.length > 0) {
+            return new AIMessage({
+              ...result,
+              content: result.content,
+              tool_calls: result.tool_calls.map((tc) => ({
+                ...tc,
+                args: {
+                  ...tc.args,
+                  x: (tc.args.x as number) * 10, // Modify the argument
+                },
+              })),
+            });
+          }
+
+          return result;
+        },
+        wrapToolCall: async (request, handler) => {
+          events.push("before_tool");
+          // Capture the tool call to verify it was modified
+          capturedToolCallInWrapTool = request.toolCall;
+          const result = await handler(request.toolCall);
+          events.push("after_tool");
+          return result;
+        },
+      });
+
+      const model = new FakeToolCallingModel({
+        toolCalls: [[{ name: "multiply", args: { x: 5 }, id: "1" }]],
+      });
+
+      const agent = createAgent({
+        model,
+        tools: [calculatorTool],
+        middleware: [combinedMiddleware],
+      });
+
+      await agent.invoke({
+        messages: [new HumanMessage("Multiply 5 by 2")],
+      });
+
+      // Verify both hooks were called in the right order
+      // Should see: 1st model call -> tool execution -> 2nd model call (to finish)
+      expect(events).toEqual([
+        "before_model", // First model call
+        "after_model", // First model call
+        "before_tool", // Tool execution
+        "after_tool", // Tool execution
+        "before_model", // Second model call (to check if done)
+        "after_model", // Second model call
+      ]);
+
+      // Verify that the modified tool call was propagated to wrapToolCall
+      expect(capturedToolCallInWrapTool).toBeDefined();
+      expect(capturedToolCallInWrapTool?.name).toBe("multiply");
+      expect(capturedToolCallInWrapTool?.args.x).toBe(50); // 5 * 10 from wrapModelRequest
+    });
+
+    it("should allow conditional tool execution based on state", async () => {
+      /**
+       * Test conditional tool execution based on agent state
+       */
+      const adminTool = tool(async () => "Admin action executed", {
+        name: "admin_action",
+        description: "An admin-only action",
+        schema: z.object({}),
+      });
+
+      const authMiddleware = createMiddleware({
+        name: "AuthMiddleware",
+        stateSchema: z.object({
+          isAdmin: z.boolean().default(false),
+        }),
+        wrapToolCall: async (request, handler) => {
+          // Check if user is admin
+          if (request.tool.name === "admin_action" && !request.state.isAdmin) {
+            return new ToolMessage({
+              content: "Access denied: admin privileges required",
+              tool_call_id: request.toolCall.id!,
+            });
+          }
+          return handler(request.toolCall);
+        },
+      });
+
+      const model = new FakeToolCallingModel({
+        toolCalls: [[{ name: "admin_action", args: {}, id: "1" }]],
+      });
+
+      const agent = createAgent({
+        model,
+        tools: [adminTool],
+        middleware: [authMiddleware],
+      });
+
+      // Test with non-admin user
+      const result1 = await agent.invoke({
+        messages: [new HumanMessage("Perform admin action")],
+        isAdmin: false,
+      } as any);
+
+      const toolMessage1 = result1.messages[2] as ToolMessage;
+      expect(toolMessage1.content).toBe(
+        "Access denied: admin privileges required"
       );
-      expect(toolMessage.content).toContain(
-        "expected ToolMessage or Command, got string"
+
+      // Test with admin user
+      const result2 = await agent.invoke({
+        messages: [new HumanMessage("Perform admin action")],
+        isAdmin: true,
+      } as any);
+
+      const toolMessage2 = result2.messages[2] as ToolMessage;
+      expect(toolMessage2.content).toBe("Admin action executed");
+    });
+
+    it("should support tool execution timing and metrics", async () => {
+      /**
+       * Test collecting metrics about tool execution
+       */
+      const metrics: Array<{ tool: string; duration: number }> = [];
+
+      const slowTool = tool(
+        async () => {
+          await new Promise((resolve) => setTimeout(resolve, 10));
+          return "Slow result";
+        },
+        {
+          name: "slow_operation",
+          description: "A slow operation",
+          schema: z.object({}),
+        }
       );
+
+      const metricsMiddleware = createMiddleware({
+        name: "MetricsMiddleware",
+        wrapToolCall: async (request, handler) => {
+          const startTime = Date.now();
+          const result = await handler(request.toolCall);
+          const duration = Date.now() - startTime;
+
+          metrics.push({
+            tool: request.tool.name as string,
+            duration,
+          });
+
+          return result;
+        },
+      });
+
+      const model = new FakeToolCallingModel({
+        toolCalls: [[{ name: "slow_operation", args: {}, id: "1" }]],
+      });
+
+      const agent = createAgent({
+        model,
+        tools: [slowTool],
+        middleware: [metricsMiddleware],
+      });
+
+      await agent.invoke({
+        messages: [new HumanMessage("Run slow operation")],
+      });
+
+      expect(metrics).toHaveLength(1);
+      expect(metrics[0].tool).toBe("slow_operation");
+      expect(metrics[0].duration).toBeGreaterThanOrEqual(10);
+    });
+
+    it("should support retry logic with exponential backoff", async () => {
+      /**
+       * Test retry logic in wrapToolCall
+       */
+      let attemptCount = 0;
+      const maxRetries = 3;
+
+      const flakyTool = tool(
+        async () => {
+          attemptCount += 1;
+          if (attemptCount < 3) {
+            throw new Error(`Attempt ${attemptCount} failed`);
+          }
+          return "Success on attempt 3";
+        },
+        {
+          name: "flaky_tool",
+          description: "A flaky tool that fails twice",
+          schema: z.object({}),
+        }
+      );
+
+      const retryMiddleware = createMiddleware({
+        name: "RetryMiddleware",
+        wrapToolCall: async (request, handler) => {
+          for (let attempt = 0; attempt < maxRetries; attempt++) {
+            try {
+              return await handler(request.toolCall);
+            } catch (error) {
+              if (attempt === maxRetries - 1) {
+                throw error;
+              }
+              // Simple backoff for testing
+              await new Promise((resolve) => setTimeout(resolve, 1));
+            }
+          }
+          throw new Error("Unreachable");
+        },
+      });
+
+      const model = new FakeToolCallingModel({
+        toolCalls: [[{ name: "flaky_tool", args: {}, id: "1" }]],
+      });
+
+      const agent = createAgent({
+        model,
+        tools: [flakyTool],
+        middleware: [retryMiddleware],
+      });
+
+      const result = await agent.invoke({
+        messages: [new HumanMessage("Call flaky tool")],
+      });
+
+      // Tool should succeed after retries
+      expect(attemptCount).toBe(3);
+      const toolMessage = result.messages[2] as ToolMessage;
+      expect(toolMessage.content).toBe("Success on attempt 3");
+    });
+
+    it("should support caching tool results", async () => {
+      /**
+       * Test caching tool results to avoid redundant executions
+       */
+      const cache = new Map<string, ToolMessage>();
+      let executionCount = 0;
+
+      const expensiveTool = tool(
+        async ({ input }: { input: string }) => {
+          executionCount += 1;
+          return `Expensive result for: ${input}`;
+        },
+        {
+          name: "expensive_operation",
+          description: "An expensive operation",
+          schema: z.object({
+            input: z.string(),
+          }),
+        }
+      );
+
+      const cacheMiddleware = createMiddleware({
+        name: "CacheMiddleware",
+        wrapToolCall: async (request, handler) => {
+          const cacheKey = `${request.tool.name}:${JSON.stringify(
+            request.toolCall.args
+          )}`;
+
+          // Check cache first
+          if (cache.has(cacheKey)) {
+            return cache.get(cacheKey)!;
+          }
+
+          // Execute and cache
+          const result = (await handler(request.toolCall)) as ToolMessage;
+          cache.set(cacheKey, result);
+          return result;
+        },
+      });
+
+      const model = new FakeToolCallingModel({
+        toolCalls: [
+          [{ name: "expensive_operation", args: { input: "test" }, id: "1" }],
+          [{ name: "expensive_operation", args: { input: "test" }, id: "2" }],
+        ],
+      });
+
+      const agent = createAgent({
+        model,
+        tools: [expensiveTool],
+        middleware: [cacheMiddleware],
+      });
+
+      // First invocation - should execute tool
+      await agent.invoke({
+        messages: [new HumanMessage("Run expensive operation")],
+      });
+      expect(executionCount).toBe(1);
+
+      // Second invocation with same args - should use cache
+      await agent.invoke({
+        messages: [new HumanMessage("Run expensive operation again")],
+      });
+      expect(executionCount).toBe(1); // Still 1, not incremented
+    });
+
+    it("should allow modifying tool results based on tool properties", async () => {
+      /**
+       * Test modifying results differently based on tool metadata
+       */
+      const publicTool = tool(async () => "Public data", {
+        name: "get_public_data",
+        description: "Get public data",
+        schema: z.object({}),
+      });
+
+      const privateTool = tool(async () => "Sensitive data", {
+        name: "get_private_data",
+        description: "Get private data",
+        schema: z.object({}),
+      });
+
+      const redactionMiddleware = createMiddleware({
+        name: "RedactionMiddleware",
+        wrapToolCall: async (request, handler) => {
+          const result = (await handler(request.toolCall)) as ToolMessage;
+
+          // Redact private tool results
+          if ((request.tool.name as string).includes("private")) {
+            return new ToolMessage({
+              content: "[REDACTED]",
+              tool_call_id: result.tool_call_id,
+              name: result.name,
+            });
+          }
+
+          return result;
+        },
+      });
+
+      const model = new FakeToolCallingModel({
+        toolCalls: [
+          [
+            { name: "get_public_data", args: {}, id: "1" },
+            { name: "get_private_data", args: {}, id: "2" },
+          ],
+        ],
+      });
+
+      const agent = createAgent({
+        model,
+        tools: [publicTool, privateTool],
+        middleware: [redactionMiddleware],
+      });
+
+      const result = await agent.invoke({
+        messages: [new HumanMessage("Get both data types")],
+      });
+
+      const publicMessage = result.messages[2] as ToolMessage;
+      const privateMessage = result.messages[3] as ToolMessage;
+
+      expect(publicMessage.content).toBe("Public data");
+      expect(privateMessage.content).toBe("[REDACTED]");
+    });
+
+    it("should work with three layers of middleware chaining", async () => {
+      /**
+       * Test complex middleware composition with three layers
+       */
+      const executionFlow: string[] = [];
+
+      const testTool = tool(
+        async () => {
+          executionFlow.push("tool");
+          return "result";
+        },
+        {
+          name: "test",
+          description: "Test",
+          schema: z.object({}),
+        }
+      );
+
+      const layer1 = createMiddleware({
+        name: "Layer1",
+        wrapToolCall: async (request, handler) => {
+          executionFlow.push("layer1_before");
+          const result = await handler(request.toolCall);
+          executionFlow.push("layer1_after");
+          return result;
+        },
+      });
+
+      const layer2 = createMiddleware({
+        name: "Layer2",
+        wrapToolCall: async (request, handler) => {
+          executionFlow.push("layer2_before");
+          const result = await handler(request.toolCall);
+          executionFlow.push("layer2_after");
+          return result;
+        },
+      });
+
+      const layer3 = createMiddleware({
+        name: "Layer3",
+        wrapToolCall: async (request, handler) => {
+          executionFlow.push("layer3_before");
+          const result = await handler(request.toolCall);
+          executionFlow.push("layer3_after");
+          return result;
+        },
+      });
+
+      const model = new FakeToolCallingModel({
+        toolCalls: [[{ name: "test", args: {}, id: "1" }]],
+      });
+
+      const agent = createAgent({
+        model,
+        tools: [testTool],
+        middleware: [layer1, layer2, layer3],
+      });
+
+      await agent.invoke({
+        messages: [new HumanMessage("Test")],
+      });
+
+      // Verify correct nesting: layer1 -> layer2 -> layer3 -> tool
+      expect(executionFlow).toEqual([
+        "layer1_before",
+        "layer2_before",
+        "layer3_before",
+        "tool",
+        "layer3_after",
+        "layer2_after",
+        "layer1_after",
+      ]);
     });
   });
 });

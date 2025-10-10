@@ -1,4 +1,5 @@
 import { z } from "zod/v3";
+import { z as z4, ZodError } from "zod/v4";
 import {
   validate,
   type Schema as ValidationSchema,
@@ -224,6 +225,10 @@ export abstract class StructuredTool<
         let message = `Received tool input did not match expected schema`;
         if (this.verboseParsingErrors) {
           message = `${message}\nDetails: ${(e as Error).message}`;
+        }
+        // eslint-disable-next-line no-instanceof/no-instanceof
+        if (e instanceof Error && e.constructor.name === "ZodError") {
+          message = `${message}\n\n${z4.prettifyError(e as ZodError)}`;
         }
         // Pass the original raw input arg to the exception
         throw new ToolInputParsingException(message, JSON.stringify(arg));

@@ -37,6 +37,11 @@ export interface ToolCallRequest<
    */
   toolCall: ToolCall;
   /**
+   * The BaseTool instance being invoked.
+   * Provides access to tool metadata like name, description, schema, etc.
+   */
+  tool: ClientTool | ServerTool;
+  /**
    * The current agent state (includes both middleware state and built-in state).
    */
   state: TState & AgentBuiltInState;
@@ -102,15 +107,16 @@ export interface AgentMiddleware<
    * @example
    * ```ts
    * wrapToolCall: async (request, handler) => {
-   *   console.log(`Calling tool: ${request.toolCall.name}`);
+   *   console.log(`Calling tool: ${request.tool.name}`);
+   *   console.log(`Tool description: ${request.tool.description}`);
    *
    *   try {
    *     // Execute the tool
    *     const result = await handler(request.toolCall);
-   *     console.log(`Tool ${request.toolCall.name} succeeded`);
+   *     console.log(`Tool ${request.tool.name} succeeded`);
    *     return result;
    *   } catch (error) {
-   *     console.error(`Tool ${request.toolCall.name} failed:`, error);
+   *     console.error(`Tool ${request.tool.name} failed:`, error);
    *     // Could return a custom error message or retry
    *     throw error;
    *   }
@@ -121,7 +127,7 @@ export interface AgentMiddleware<
    * ```ts
    * wrapToolCall: async (request, handler) => {
    *   // Check if user is authorized for this tool
-   *   if (!request.runtime.context.isAuthorized(request.toolCall.name)) {
+   *   if (!request.runtime.context.isAuthorized(request.tool.name)) {
    *     return new ToolMessage({
    *       content: "Unauthorized to call this tool",
    *       tool_call_id: request.toolCall.id,
@@ -135,7 +141,7 @@ export interface AgentMiddleware<
    * ```ts
    * const cache = new Map();
    * wrapToolCall: async (request, handler) => {
-   *   const cacheKey = `${request.toolCall.name}:${JSON.stringify(request.toolCall.args)}`;
+   *   const cacheKey = `${request.tool.name}:${JSON.stringify(request.toolCall.args)}`;
    *   if (cache.has(cacheKey)) {
    *     return cache.get(cacheKey);
    *   }
