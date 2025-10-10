@@ -521,7 +521,6 @@ export function wrapToolCall(middleware: readonly AgentMiddleware[]) {
            * Validate return type
            */
           if (!ToolMessage.isInstance(result) && !isCommand(result)) {
-            console.log(111, result);
             throw new Error(
               `Invalid response from "wrapToolCall" in middleware "${m.name}": ` +
                 `expected ToolMessage or Command, got ${typeof result}`
