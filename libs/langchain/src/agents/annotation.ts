@@ -1,70 +1,40 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { BaseMessage } from "@langchain/core/messages";
+import { z } from "zod/v3";
 import {
-  Annotation,
   Messages,
   AnnotationRoot,
-  messagesStateReducer,
+  MessagesZodMeta,
   type BinaryOperatorAggregate,
-  type LastValue,
 } from "@langchain/langgraph";
+import { withLangGraph } from "@langchain/langgraph/zod";
 
-import type {
-  AgentMiddleware,
-  InferMiddlewareStates,
-} from "./middleware/types.js";
-import type { ResponseFormatUndefined } from "./responses.js";
-
-/**
- * Create annotation conditionally - for ResponseFormatUndefined, don't include structuredResponse
- * Helper type for the merged annotation
- */
-type MergedAnnotationSpec<
-  T extends Record<string, any> | ResponseFormatUndefined,
-  TMiddleware extends readonly AgentMiddleware<any, any, any>[]
-> = {
-  messages: BinaryOperatorAggregate<BaseMessage[], Messages>;
-  jumpTo: LastValue<"model_request" | "tools" | undefined>;
-} & (T extends ResponseFormatUndefined
-  ? {}
-  : { structuredResponse: LastValue<T> }) &
-  InferMiddlewareStates<TMiddleware>;
+import type { AgentMiddleware } from "./middleware/types.js";
 
 export function createAgentAnnotationConditional<
-  T extends Record<string, any> | ResponseFormatUndefined,
   TMiddleware extends readonly AgentMiddleware<any, any, any>[] = []
 >(
   hasStructuredResponse = true,
   middlewareList: TMiddleware = [] as unknown as TMiddleware
-): AnnotationRoot<MergedAnnotationSpec<T, TMiddleware>> {
-  const baseAnnotation: Record<string, any> = {
-    messages: Annotation<BaseMessage[], Messages>({
-      reducer: messagesStateReducer,
-      default: () => [],
-    }),
-    jumpTo: Annotation<"model_request" | "tools" | undefined>({
-      /**
-       * Since `jumpTo` acts as a control command, we only want
-       * to apply it if explicitly set.
-       */
-      reducer: (_x: any, y: any) => y,
-      default: () => undefined,
-    }),
+) {
+  /**
+   * Create Zod schema object to preserve jsonSchemaExtra
+   * metadata for LangGraph Studio using v3-compatible withLangGraph
+   */
+  const zodSchema: Record<string, any> = {
+    messages: withLangGraph(z.custom<BaseMessage[]>(), MessagesZodMeta),
+    jumpTo: z
+      .union([z.literal("model_request"), z.literal("tools"), z.undefined()])
+      .optional(),
   };
 
-  // Add middleware state properties to the annotation
+  /**
+   * Add middleware state properties to the Zod schema
+   */
   for (const middleware of middlewareList) {
     if (middleware.stateSchema) {
-      // Parse empty object to get default values
-      let parsedDefaults: Record<string, any> = {};
-      try {
-        parsedDefaults = middleware.stateSchema.parse({});
-      } catch {
-        // If parsing fails, we'll use undefined as defaults
-      }
-
       const { shape } = middleware.stateSchema;
-      for (const [key] of Object.entries(shape)) {
+      for (const [key, schema] of Object.entries(shape)) {
         /**
          * Skip private state properties
          */
@@ -72,41 +42,41 @@ export function createAgentAnnotationConditional<
           continue;
         }
 
-        if (!(key in baseAnnotation)) {
-          const defaultValue = parsedDefaults[key] ?? undefined;
-          baseAnnotation[key] = Annotation({
-            reducer: (x: any, y: any) => y ?? x,
-            default: () => defaultValue,
-          });
+        if (!(key in zodSchema)) {
+          zodSchema[key] = schema;
         }
       }
     }
   }
 
   if (!hasStructuredResponse) {
-    return Annotation.Root(baseAnnotation) as AnnotationRoot<
-      MergedAnnotationSpec<T, TMiddleware>
-    >;
+    return z.object(zodSchema);
   }
 
-  return Annotation.Root({
-    ...baseAnnotation,
-    structuredResponse:
-      Annotation<T extends ResponseFormatUndefined ? never : T>(),
-  }) as unknown as AnnotationRoot<MergedAnnotationSpec<T, TMiddleware>>;
+  return z.object({
+    ...zodSchema,
+    structuredResponse: z.any().optional(),
+  });
 }
 
 export const PreHookAnnotation: AnnotationRoot<{
   llmInputMessages: BinaryOperatorAggregate<BaseMessage[], Messages>;
   messages: BinaryOperatorAggregate<BaseMessage[], Messages>;
-}> = Annotation.Root({
-  llmInputMessages: Annotation<BaseMessage[], Messages>({
-    reducer: (_, update) => messagesStateReducer([], update),
+}> = z.object({
+  llmInputMessages: withLangGraph(z.custom<BaseMessage[]>(), {
+    reducer: {
+      fn: (_x: Messages, update: Messages) =>
+        MessagesZodMeta.reducer!.fn([], update),
+    },
     default: () => [],
   }),
-  messages: Annotation<BaseMessage[], Messages>({
-    reducer: messagesStateReducer,
-    default: () => [],
-  }),
-});
+  /**
+   * Use MessagesZodMeta to preserve jsonSchemaExtra metadata
+   * for LangGraph Studio UI to render proper messages input field
+   */
+  messages: withLangGraph(z.custom<BaseMessage[]>(), MessagesZodMeta),
+}) as unknown as AnnotationRoot<{
+  llmInputMessages: BinaryOperatorAggregate<BaseMessage[], Messages>;
+  messages: BinaryOperatorAggregate<BaseMessage[], Messages>;
+}>;
 export type PreHookAnnotation = typeof PreHookAnnotation;

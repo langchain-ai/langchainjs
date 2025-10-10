@@ -149,17 +149,17 @@ export class ReactAgent<
         .map((tool) => tool.name)
     );
 
-    // Create a schema that merges agent base schema with middleware state schemas
-    const schema = createAgentAnnotationConditional<
-      StructuredResponseFormat,
-      TMiddleware
-    >(
+    /**
+     * Create a schema that merges agent base schema with middleware state schemas
+     * Using Zod with withLangGraph ensures LangGraph Studio gets proper metadata
+     */
+    const schema = createAgentAnnotationConditional<TMiddleware>(
       this.options.responseFormat !== undefined,
       this.options.middleware as TMiddleware
     );
 
     const workflow = new StateGraph(
-      schema as AnnotationRoot<any>,
+      schema as unknown as AnnotationRoot<any>,
       this.options.contextSchema
     );
 
