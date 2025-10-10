@@ -1,6 +1,8 @@
+import { OpenAI as OpenAIClient } from "openai";
 import {
   StandardImageBlock,
   StandardTextBlock,
+  UsageMetadata,
 } from "@langchain/core/messages";
 
 /**
@@ -38,4 +40,29 @@ export function handleMultiModalOutput(
   }
 
   return content;
+}
+
+export function _convertOpenAIResponsesUsageToLangChainUsage(
+  usage?: OpenAIClient.Responses.ResponseUsage
+): UsageMetadata {
+  // TODO: Remove raw OpenAI usage details in v1
+  const inputTokenDetails = {
+    ...(usage?.input_tokens_details?.cached_tokens != null && {
+      ...usage?.input_tokens_details,
+      cache_read: usage?.input_tokens_details?.cached_tokens,
+    }),
+  };
+  const outputTokenDetails = {
+    ...(usage?.output_tokens_details?.reasoning_tokens != null && {
+      ...usage?.output_tokens_details,
+      reasoning: usage?.output_tokens_details?.reasoning_tokens,
+    }),
+  };
+  return {
+    input_tokens: usage?.input_tokens ?? 0,
+    output_tokens: usage?.output_tokens ?? 0,
+    total_tokens: usage?.total_tokens ?? 0,
+    input_token_details: inputTokenDetails,
+    output_token_details: outputTokenDetails,
+  };
 }
