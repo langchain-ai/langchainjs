@@ -5,6 +5,7 @@ import { toJsonSchema } from "@langchain/core/utils/json_schema";
 import { load } from "@langchain/core/load";
 import { tool } from "@langchain/core/tools";
 import { ChatOpenAI } from "../chat_models.js";
+import { _convertOpenAIResponsesUsageToLangChainUsage } from "../utils/output.js";
 
 describe("ChatOpenAI", () => {
   describe("should initialize with correct values", () => {
@@ -630,6 +631,72 @@ describe("ChatOpenAI", () => {
           url: "data:image/png;base64,image2",
         },
       ]);
+    });
+  });
+
+  describe("Responses API usage metadata conversion", () => {
+    it("should convert OpenAI Responses usage to LangChain format with cached tokens", () => {
+      const usage = {
+        input_tokens: 100,
+        output_tokens: 50,
+        total_tokens: 150,
+        input_tokens_details: {
+          cached_tokens: 75,
+          text_tokens: 25,
+        },
+        output_tokens_details: {
+          reasoning_tokens: 10,
+          text_tokens: 40,
+        },
+      };
+
+      const result = _convertOpenAIResponsesUsageToLangChainUsage(usage as any);
+
+      expect(result).toEqual({
+        input_tokens: 100,
+        output_tokens: 50,
+        total_tokens: 150,
+        input_token_details: {
+          cached_tokens: 75,
+          text_tokens: 25,
+          cache_read: 75,
+        },
+        output_token_details: {
+          reasoning_tokens: 10,
+          text_tokens: 40,
+          reasoning: 10,
+        },
+      });
+    });
+
+    it("should handle missing usage details gracefully", () => {
+      const usage = {
+        input_tokens: 100,
+        output_tokens: 50,
+        total_tokens: 150,
+      };
+
+      const result = _convertOpenAIResponsesUsageToLangChainUsage(usage as any);
+
+      expect(result).toEqual({
+        input_tokens: 100,
+        output_tokens: 50,
+        total_tokens: 150,
+        input_token_details: {},
+        output_token_details: {},
+      });
+    });
+
+    it("should handle undefined usage", () => {
+      const result = _convertOpenAIResponsesUsageToLangChainUsage(undefined);
+
+      expect(result).toEqual({
+        input_tokens: 0,
+        output_tokens: 0,
+        total_tokens: 0,
+        input_token_details: {},
+        output_token_details: {},
+      });
     });
   });
 });
