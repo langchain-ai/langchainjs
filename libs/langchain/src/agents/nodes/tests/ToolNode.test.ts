@@ -975,8 +975,14 @@ describe("ToolNode error handling", () => {
     // Tool error should be caught and converted to ToolMessage
     const toolMessage = result.messages[2] as ToolMessage;
     expect(toolMessage.content).toContain("Expected number, received string");
-    expect(toolMessage.content).toContain(
-      `invoking tool 'strict_tool' with kwargs {"value":"123"}`
-    );
+
+    /**
+     * fails in dep test as it is relying on `@langchain/core` changes
+     */
+    if (!process.env.LC_DEPENDENCY_RANGE_TESTS) {
+      expect(toolMessage.content).toContain(
+        `invoking tool 'strict_tool' with kwargs {"value":"123"}`
+      );
+    }
   });
 });
