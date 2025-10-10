@@ -657,4 +657,131 @@ describe("ChatOpenAI", () => {
       );
     });
   });
+
+  describe("Responses API usage metadata conversion", () => {
+    it("should convert OpenAI Responses usage to LangChain format with cached tokens", async () => {
+      const mockFetch = jest.fn<(url: any, options?: any) => Promise<any>>();
+      mockFetch.mockImplementation(() => {
+        return Promise.resolve({
+          ok: true,
+          json: () =>
+            Promise.resolve({
+              id: "resp-123",
+              output: [{ type: "message", content: "Hello" }],
+              usage: {
+                input_tokens: 100,
+                output_tokens: 50,
+                total_tokens: 150,
+                input_tokens_details: {
+                  cached_tokens: 75,
+                  text_tokens: 25,
+                },
+                output_tokens_details: {
+                  reasoning_tokens: 10,
+                  text_tokens: 40,
+                },
+              },
+            }),
+        });
+      });
+
+      const model = new ChatOpenAI({
+        model: "gpt-4o-mini",
+        apiKey: "test-key",
+        useResponsesApi: true,
+        configuration: {
+          fetch: mockFetch,
+        },
+      });
+
+      const response = await model.invoke("test");
+
+      expect(response.usage_metadata).toEqual({
+        input_tokens: 100,
+        output_tokens: 50,
+        total_tokens: 150,
+        input_token_details: {
+          cached_tokens: 75,
+          text_tokens: 25,
+          cache_read: 75,
+        },
+        output_token_details: {
+          reasoning_tokens: 10,
+          text_tokens: 40,
+          reasoning: 10,
+        },
+      });
+    });
+
+    it("should handle missing usage details gracefully", async () => {
+      const mockFetch = jest.fn<(url: any, options?: any) => Promise<any>>();
+      mockFetch.mockImplementation(() => {
+        return Promise.resolve({
+          ok: true,
+          json: () =>
+            Promise.resolve({
+              id: "resp-123",
+              output: [{ type: "message", content: "Hello" }],
+              usage: {
+                input_tokens: 100,
+                output_tokens: 50,
+                total_tokens: 150,
+              },
+            }),
+        });
+      });
+
+      const model = new ChatOpenAI({
+        model: "gpt-4o-mini",
+        apiKey: "test-key",
+        useResponsesApi: true,
+        configuration: {
+          fetch: mockFetch,
+        },
+      });
+
+      const response = await model.invoke("test");
+
+      expect(response.usage_metadata).toEqual({
+        input_tokens: 100,
+        output_tokens: 50,
+        total_tokens: 150,
+        input_token_details: {},
+        output_token_details: {},
+      });
+    });
+
+    it("should handle undefined usage", async () => {
+      const mockFetch = jest.fn<(url: any, options?: any) => Promise<any>>();
+      mockFetch.mockImplementation(() => {
+        return Promise.resolve({
+          ok: true,
+          json: () =>
+            Promise.resolve({
+              id: "resp-123",
+              output: [{ type: "message", content: "Hello" }],
+            }),
+        });
+      });
+
+      const model = new ChatOpenAI({
+        model: "gpt-4o-mini",
+        apiKey: "test-key",
+        useResponsesApi: true,
+        configuration: {
+          fetch: mockFetch,
+        },
+      });
+
+      const response = await model.invoke("test");
+
+      expect(response.usage_metadata).toEqual({
+        input_tokens: 0,
+        output_tokens: 0,
+        total_tokens: 0,
+        input_token_details: {},
+        output_token_details: {},
+      });
+    });
+  });
 });
