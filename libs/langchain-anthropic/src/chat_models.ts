@@ -753,6 +753,8 @@ export class ChatAnthropicMessages<
     this.streamUsage = fields?.streamUsage ?? this.streamUsage;
 
     this.thinking = fields?.thinking ?? this.thinking;
+    this.contextManagement =
+      fields?.contextManagement ?? this.contextManagement;
 
     this.createClient =
       fields?.createClient ??
