@@ -166,16 +166,13 @@ export function handleMultiModalOutput(
 export function _convertOpenAIResponsesUsageToLangChainUsage(
   usage?: OpenAIClient.Responses.ResponseUsage
 ): UsageMetadata {
-  // TODO: Remove raw OpenAI usage details in v1
   const inputTokenDetails = {
     ...(usage?.input_tokens_details?.cached_tokens != null && {
-      ...usage?.input_tokens_details,
       cache_read: usage?.input_tokens_details?.cached_tokens,
     }),
   };
   const outputTokenDetails = {
     ...(usage?.output_tokens_details?.reasoning_tokens != null && {
-      ...usage?.output_tokens_details,
       reasoning: usage?.output_tokens_details?.reasoning_tokens,
     }),
   };
