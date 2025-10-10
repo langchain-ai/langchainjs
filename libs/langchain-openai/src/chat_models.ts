@@ -423,36 +423,6 @@ export function _convertMessagesToOpenAIParams(
   });
 }
 
-// function _convertOpenAIUsageToLangChainUsage(
-//   usage:
-//     | OpenAIClient.Responses.ResponseUsage
-//     | OpenAIClient.Completions.CompletionUsage
-// ): UsageMetadata {
-//   const inputTokenDetails = {
-//     ...(usage.prompt_tokens_details?.audio_tokens !== null && {
-//       audio: usage.prompt_tokens_details?.audio_tokens,
-//     }),
-//     ...(usage.prompt_tokens_details?.cached_tokens !== null && {
-//       cache_read: usage.prompt_tokens_details?.cached_tokens,
-//     }),
-//   };
-//   const outputTokenDetails = {
-//     ...(usage.completion_tokens_details?.audio_tokens !== null && {
-//       audio: usage.completion_tokens_details?.audio_tokens,
-//     }),
-//     ...(usage.completion_tokens_details?.reasoning_tokens !== null && {
-//       reasoning: usage.completion_tokens_details?.reasoning_tokens,
-//     }),
-//   };
-//   return {
-//     input_tokens: usage.prompt_tokens,
-//     output_tokens: usage.completion_tokens,
-//     total_tokens: usage.total_tokens,
-//     input_token_details: inputTokenDetails,
-//     output_token_details: outputTokenDetails,
-//   };
-// }
-
 export interface BaseChatOpenAICallOptions
   extends OpenAICallOptions,
     BaseFunctionCallOptions {
