@@ -423,6 +423,36 @@ export function _convertMessagesToOpenAIParams(
   });
 }
 
+// function _convertOpenAIUsageToLangChainUsage(
+//   usage:
+//     | OpenAIClient.Responses.ResponseUsage
+//     | OpenAIClient.Completions.CompletionUsage
+// ): UsageMetadata {
+//   const inputTokenDetails = {
+//     ...(usage.prompt_tokens_details?.audio_tokens !== null && {
+//       audio: usage.prompt_tokens_details?.audio_tokens,
+//     }),
+//     ...(usage.prompt_tokens_details?.cached_tokens !== null && {
+//       cache_read: usage.prompt_tokens_details?.cached_tokens,
+//     }),
+//   };
+//   const outputTokenDetails = {
+//     ...(usage.completion_tokens_details?.audio_tokens !== null && {
+//       audio: usage.completion_tokens_details?.audio_tokens,
+//     }),
+//     ...(usage.completion_tokens_details?.reasoning_tokens !== null && {
+//       reasoning: usage.completion_tokens_details?.reasoning_tokens,
+//     }),
+//   };
+//   return {
+//     input_tokens: usage.prompt_tokens,
+//     output_tokens: usage.completion_tokens,
+//     total_tokens: usage.total_tokens,
+//     input_token_details: inputTokenDetails,
+//     output_token_details: outputTokenDetails,
+//   };
+// }
+
 export interface BaseChatOpenAICallOptions
   extends OpenAICallOptions,
     BaseFunctionCallOptions {
@@ -1425,6 +1455,31 @@ type ChatResponsesInvocationParams = Omit<
   "input"
 >;
 
+function _convertOpenAIResponsesUsageToLangChainUsage(
+  usage?: OpenAIClient.Responses.ResponseUsage
+): UsageMetadata {
+  // TODO: Remove raw OpenAI usage details in v1
+  const inputTokenDetails = {
+    ...(usage?.input_tokens_details?.cached_tokens != null && {
+      ...usage?.input_tokens_details,
+      cache_read: usage?.input_tokens_details?.cached_tokens,
+    }),
+  };
+  const outputTokenDetails = {
+    ...(usage?.output_tokens_details?.reasoning_tokens != null && {
+      ...usage?.output_tokens_details,
+      reasoning: usage?.output_tokens_details?.reasoning_tokens,
+    }),
+  };
+  return {
+    input_tokens: usage?.input_tokens ?? 0,
+    output_tokens: usage?.output_tokens ?? 0,
+    total_tokens: usage?.total_tokens ?? 0,
+    input_token_details: inputTokenDetails,
+    output_token_details: outputTokenDetails,
+  };
+}
+
 /**
  * OpenAI Responses API implementation.
  *
@@ -1755,7 +1810,9 @@ export class ChatOpenAIResponses<
       content,
       tool_calls,
       invalid_tool_calls,
-      usage_metadata: response.usage,
+      usage_metadata: _convertOpenAIResponsesUsageToLangChainUsage(
+        response.usage
+      ),
       additional_kwargs,
       response_metadata,
     });
@@ -1831,7 +1888,10 @@ export class ChatOpenAIResponses<
     } else if (chunk.type === "response.completed") {
       const msg = this._convertResponsesMessageToBaseMessage(chunk.response);
 
-      usage_metadata = chunk.response.usage;
+      usage_metadata = _convertOpenAIResponsesUsageToLangChainUsage(
+        chunk.response.usage
+      );
+
       if (chunk.response.text?.format?.type === "json_schema") {
         additional_kwargs.parsed ??= JSON.parse(msg.text);
       }
