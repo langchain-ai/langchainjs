@@ -104,7 +104,6 @@
     "readline": "^1.3.0",
     "redis": "^4.6.13",
     "sqlite3": "^5.1.4",
-    "typeorm": "^0.3.20",
     "typesense": "^1.5.3",
     "uuid": "^10.0.0",
     "voy-search": "0.6.2",
@@ -129,7 +128,9 @@
     "eslint-plugin-prettier": "^4.2.1",
     "eslint-plugin-unused-imports": "^3.0.0",
     "prettier": "^2.8.3",
+    "reflect-metadata": "^0.2.2",
     "tsx": "^3.12.3",
+    "typeorm": "^0.3.20",
     "typescript": "~5.1.6"
   }
 }

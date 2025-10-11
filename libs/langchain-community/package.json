@@ -208,6 +208,7 @@
     "puppeteer": "^22.0.0",
     "pyodide": "^0.26.2",
     "redis": "^4.6.6",
+    "reflect-metadata": "^0.2.2",
     "release-it": "^18.1.2",
     "replicate": "^1.0.1",
     "rollup": "^3.19.1",

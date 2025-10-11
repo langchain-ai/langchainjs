@@ -54,8 +54,10 @@
     "dotenv": "^16.0.3",
     "lint-staged": "^13.1.1",
     "prettier": "^2.8.3",
+    "reflect-metadata": "^0.2.2",
     "semver": "^7.5.4",
     "turbo": "^2.5.4",
+    "typeorm": "^0.3.20",
     "typescript": "~5.8.3"
   },
   "resolutions": {
