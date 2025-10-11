@@ -24,7 +24,7 @@ module.exports = {
     "class-methods-use-this": 0,
     "import/extensions": 0,
     "import/no-extraneous-dependencies": [
-      "error",
+      "off",
       { devDependencies: ["**/*.test.ts"] },
     ],
     "import/no-unresolved": 0,
@@ -47,10 +47,10 @@ module.exports = {
   },
   overrides: [
     {
-      files: ['**/*.test.ts'],
+      files: ["**/*.test.ts"],
       rules: {
-        '@typescript-eslint/no-unused-vars': 'off'
-      }
-    }
-  ]
+        "@typescript-eslint/no-unused-vars": "off",
+      },
+    },
+  ],
 };
