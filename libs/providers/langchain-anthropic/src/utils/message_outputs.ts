@@ -70,10 +70,14 @@ export function _makeMessageChunkFromAnthropicEvent(
         cache_read: (data.usage as any).cache_read_input_tokens,
       },
     };
+    const responseMetadata =
+      "context_management" in data.delta
+        ? { context_management: data.delta.context_management }
+        : undefined;
     return {
       chunk: new AIMessageChunk({
         content: fields.coerceContentToString ? "" : [],
-        response_metadata,
+        response_metadata: responseMetadata,
         additional_kwargs: { ...data.delta },
         usage_metadata: fields.streamUsage ? usageMetadata : undefined,
       }),
