@@ -1527,6 +1527,96 @@ describe("Zod utility functions", () => {
       });
     });
 
+    it("should handle nested transforms in optional objects", () => {
+      // Create a schema where nested objects are transformed and outside is optional
+      const userSchema = z4.object({
+        name: z4.string().transform((s) => s.toUpperCase()),
+        age: z4.number(),
+      });
+      const inputSchema = z4.object({
+        user: z4.optional(userSchema),
+        metadata: z4.string(),
+      });
+      const result = interopZodTransformInputSchema(inputSchema, true);
+      expect(result).toBeInstanceOf(z4.ZodObject);
+      const resultShape = getInteropZodObjectShape(result as any);
+      expect(Object.keys(resultShape)).toEqual(["user", "metadata"]);
+      expect(resultShape.user).toBeInstanceOf(z4.ZodOptional);
+      const userInnerType = (resultShape.user as z4.ZodOptional).def.innerType;
+      expect(userInnerType).toBeInstanceOf(z4.ZodObject);
+      const userShape = getInteropZodObjectShape(userInnerType as any);
+      expect(Object.keys(userShape)).toEqual(["name", "age"]);
+      expect(userShape.name).toBeInstanceOf(z4.ZodString);
+      expect(userShape.age).toBeInstanceOf(z4.ZodNumber);
+    });
+
+    it("should handle nested transforms in optional arrays", () => {
+      // Create a schema where nested arrays are transformed and outside is optional
+      const userSchema = z4.object({
+        name: z4.string().transform((s) => s.toUpperCase()),
+        age: z4.number(),
+      });
+      const inputSchema = z4.object({
+        users: z4.optional(z4.array(userSchema)),
+        metadata: z4.string(),
+      });
+      const result = interopZodTransformInputSchema(inputSchema, true);
+      expect(result).toBeInstanceOf(z4.ZodObject);
+      const resultShape = getInteropZodObjectShape(result as any);
+      expect(Object.keys(resultShape)).toEqual(["users", "metadata"]);
+      expect(resultShape.users).toBeInstanceOf(z4.ZodOptional);
+      const userInnerType = (resultShape.users as z4.ZodOptional).def.innerType;
+      expect(userInnerType).toBeInstanceOf(z4.ZodArray);
+      const arrayElement = (userInnerType as z4.ZodArray)._zod.def.element;
+      expect(arrayElement).toBeInstanceOf(z4.ZodObject);
+      const usersShape = getInteropZodObjectShape(arrayElement as any);
+      expect(Object.keys(usersShape)).toEqual(["name", "age"]);
+      expect(usersShape.name).toBeInstanceOf(z4.ZodString);
+      expect(usersShape.age).toBeInstanceOf(z4.ZodNumber);
+    });
+
+    it("should handle transforms on optional objects", () => {
+      const userSchema = z4
+        .object({
+          name: z4.string(),
+          age: z4.number(),
+        })
+        .transform((x) => x)
+        .optional();
+
+      const result = interopZodTransformInputSchema(userSchema, true);
+      expect(result).toBeInstanceOf(z4.ZodOptional);
+      const resultInnerType = (result as z4.ZodOptional).def.innerType;
+      expect(resultInnerType).toBeInstanceOf(z4.ZodObject);
+      const resultShape = getInteropZodObjectShape(resultInnerType as any);
+      expect(Object.keys(resultShape)).toEqual(["name", "age"]);
+      expect(resultShape.name).toBeInstanceOf(z4.ZodString);
+      expect(resultShape.age).toBeInstanceOf(z4.ZodNumber);
+    });
+
+    it("should handle transforms on optional arrays", () => {
+      const userSchema = z4
+        .array(
+          z4.object({
+            name: z4.string(),
+            age: z4.number(),
+          })
+        )
+        .transform((x) => x)
+        .optional();
+
+      const result = interopZodTransformInputSchema(userSchema, true);
+      expect(result).toBeInstanceOf(z4.ZodOptional);
+      const resultInnerType = (result as z4.ZodOptional).def.innerType;
+      expect(resultInnerType).toBeInstanceOf(z4.ZodArray);
+      const arrayElement = (resultInnerType as z4.ZodArray)._zod.def.element;
+      expect(arrayElement).toBeInstanceOf(z4.ZodObject);
+      const arrayElementShape = getInteropZodObjectShape(arrayElement as any);
+      expect(Object.keys(arrayElementShape)).toEqual(["name", "age"]);
+      expect(arrayElementShape.name).toBeInstanceOf(z4.ZodString);
+      expect(arrayElementShape.age).toBeInstanceOf(z4.ZodNumber);
+    });
+
     it("should throw error for non-schema values", () => {
       expect(() => interopZodTransformInputSchema(null as any)).toThrow();
       expect(() => interopZodTransformInputSchema(undefined as any)).toThrow();
