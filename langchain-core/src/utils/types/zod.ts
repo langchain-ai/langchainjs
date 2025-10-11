@@ -23,6 +23,8 @@ export type ZodObjectV3 = z3.ZodObject<any, any, any, any>;
 
 export type ZodObjectV4 = z4.$ZodObject;
 
+export type ZodTypeV4 = z4.$ZodType;
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type InteropZodType<Output = any, Input = Output> =
   | z3.ZodType<Output, z3.ZodTypeDef, Input>
@@ -748,7 +750,9 @@ export function interopZodTransformInputSchema(
     if (recursive) {
       // Handle nested object schemas
       if (isZodObjectV4(outputSchema)) {
-        const outputShape: Mutable<z4.$ZodShape> = outputSchema._zod.def.shape;
+        const outputShape: Mutable<z4.$ZodShape> = {
+          ...outputSchema._zod.def.shape,
+        };
         for (const [key, keySchema] of Object.entries(
           outputSchema._zod.def.shape
         )) {
@@ -780,4 +784,28 @@ export function interopZodTransformInputSchema(
   }
 
   throw new Error("Schema must be an instance of z3.ZodType or z4.$ZodType");
+}
+
+/**
+ * Sanitizes a Zod schema by transforming it to its input schema and then making it strict.
+ * Supports both Zod v3 and v4 schemas. If `recursive` is true, applies strictness recursively to all nested object schemas and arrays of object schemas.
+ *
+ * @param schema - The Zod schema instance (v3 or v4)
+ * @param {boolean} [recursive=false] - Whether to recursively process nested objects/arrays.
+ * @returns The sanitized Zod schema.
+ */
+export function interopZodSanitizeSchema(
+  schema: InteropZodType,
+  recursive: boolean = false
+): InteropZodType {
+  const inputSchema = interopZodTransformInputSchema(schema, recursive);
+  if (isZodObjectV4(inputSchema)) {
+    const strictSchema = interopZodObjectStrict(
+      inputSchema,
+      recursive
+    ) as ZodObjectV4;
+    return strictSchema;
+  } else {
+    return inputSchema;
+  }
 }

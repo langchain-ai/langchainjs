@@ -1525,6 +1525,48 @@ describe("Zod utility functions", () => {
         expect(elementShape.name).toBeInstanceOf(z4.ZodString);
         expect(elementShape.age).toBeInstanceOf(z4.ZodNumber);
       });
+
+      it("should not mutate the original schema when object", () => {
+        const inputSchema = z4.object({
+          user: z4.object({
+            name: z4.string().transform((s) => s.toUpperCase()),
+            age: z4.number().transform((n) => n * 2),
+          }),
+        });
+
+        const result = interopZodTransformInputSchema(inputSchema, true);
+
+        expect(result).not.toBe(inputSchema);
+        expect(inputSchema.shape.user.shape.name).toBeInstanceOf(z4.ZodPipe);
+        expect(inputSchema.shape.user.shape.age).toBeInstanceOf(z4.ZodPipe);
+        expect((result as z4.ZodObject).shape.user.shape.name).toBeInstanceOf(
+          z4.ZodString
+        );
+        expect((result as z4.ZodObject).shape.user.shape.age).toBeInstanceOf(
+          z4.ZodNumber
+        );
+      });
+
+      it("should not mutate the original schema when array", () => {
+        const inputSchema = z4.array(
+          z4.object({
+            name: z4.string().transform((s) => s.toUpperCase()),
+            age: z4.number().transform((n) => n * 2),
+          })
+        );
+
+        const result = interopZodTransformInputSchema(inputSchema, true);
+
+        expect(result).not.toBe(inputSchema);
+        expect(inputSchema.element.shape.name).toBeInstanceOf(z4.ZodPipe);
+        expect(inputSchema.element.shape.age).toBeInstanceOf(z4.ZodPipe);
+        expect(
+          ((result as z4.ZodArray).element as z4.ZodObject).shape.name
+        ).toBeInstanceOf(z4.ZodString);
+        expect(
+          ((result as z4.ZodArray).element as z4.ZodObject).shape.age
+        ).toBeInstanceOf(z4.ZodNumber);
+      });
     });
 
     it("should throw error for non-schema values", () => {
