@@ -4,10 +4,18 @@ export {
 } from "./summarization.js";
 export {
   humanInTheLoopMiddleware,
-  type HumanInTheLoopRequest,
-  type HumanInTheLoopMiddlewareHumanResponse,
+  type Action,
+  type ApproveDecision,
+  type Decision,
+  type DecisionType,
+  type DescriptionFactory,
+  type EditDecision,
+  type HITLRequest,
+  type HITLResponse,
   type HumanInTheLoopMiddlewareConfig,
-  type ActionRequest,
+  type InterruptOnConfig,
+  type RejectDecision,
+  type ReviewConfig,
 } from "./hitl.js";
 export {
   anthropicPromptCachingMiddleware,
