@@ -8,8 +8,9 @@ import { MemorySaver } from "@langchain/langgraph-checkpoint";
 import { createAgent } from "../../index.js";
 import {
   humanInTheLoopMiddleware,
-  type HumanInTheLoopRequest,
-  type HumanInTheLoopMiddlewareHumanResponse,
+  type HITLRequest,
+  type HITLResponse,
+  type Decision,
 } from "../hitl.js";
 import {
   FakeToolCallingModel,
@@ -68,7 +69,7 @@ describe("humanInTheLoopMiddleware", () => {
     const hitlMiddleware = humanInTheLoopMiddleware({
       interruptOn: {
         write_file: {
-          allowAccept: true,
+          allowedDecisions: ["approve"],
           description: "⚠️ File write operation requires approval",
         },
         calculator: false,
@@ -167,31 +168,35 @@ describe("humanInTheLoopMiddleware", () => {
     expect(task.interrupts).toBeDefined();
     expect(task.interrupts.length).toBe(1);
 
-    const requests = task.interrupts[0].value;
-    expect(requests).toMatchInlineSnapshot(`
-      [
-        {
-          "actionRequest": {
-            "action": "write_file",
-            "args": {
+    const hitlRequest = task.interrupts[0].value as HITLRequest;
+    expect(hitlRequest).toMatchInlineSnapshot(`
+      {
+        "actionRequests": [
+          {
+            "arguments": {
               "content": "Hello World",
               "filename": "greeting.txt",
             },
+            "name": "write_file",
           },
-          "config": {
-            "allowAccept": true,
+        ],
+        "reviewConfigs": [
+          {
+            "actionName": "write_file",
+            "allowedDecisions": [
+              "approve",
+            ],
             "description": "⚠️ File write operation requires approval",
           },
-          "description": "⚠️ File write operation requires approval",
-        },
-      ]
+        ],
+      }
     `);
 
     // Resume with approval
     model.index = 1;
     const resumedResult = await agent.invoke(
       new Command({
-        resume: [{ type: "accept" }],
+        resume: { decisions: [{ type: "approve" }] } as HITLResponse,
       }),
       config
     );
@@ -257,15 +262,17 @@ describe("humanInTheLoopMiddleware", () => {
     // Resume with edited args
     await agent.invoke(
       new Command({
-        resume: [
-          {
-            type: "edit",
-            args: {
-              action: "write_file",
-              args: { filename: "safe.txt", content: "Safe content" },
+        resume: {
+          decisions: [
+            {
+              type: "edit",
+              editedAction: {
+                name: "write_file",
+                arguments: { filename: "safe.txt", content: "Safe content" },
+              },
             },
-          },
-        ],
+          ],
+        } as HITLResponse,
       }),
       config
     );
@@ -285,7 +292,7 @@ describe("humanInTheLoopMiddleware", () => {
     const hitlMiddleware = humanInTheLoopMiddleware({
       interruptOn: {
         write_file: {
-          allowRespond: true,
+          allowedDecisions: ["reject"],
         },
       },
     });
@@ -327,12 +334,14 @@ describe("humanInTheLoopMiddleware", () => {
     // Resume with manual response
     const resumedResult = await agent.invoke(
       new Command({
-        resume: [
-          {
-            type: "response",
-            args: "File operation not allowed in demo mode",
-          },
-        ],
+        resume: {
+          decisions: [
+            {
+              type: "reject",
+              message: "File operation not allowed in demo mode",
+            },
+          ],
+        } as HITLResponse,
       }),
       config
     );
@@ -354,7 +363,7 @@ describe("humanInTheLoopMiddleware", () => {
     const hitlMiddleware = humanInTheLoopMiddleware({
       interruptOn: {
         write_file: {
-          allowRespond: true,
+          allowedDecisions: ["reject"],
         },
       },
     });
@@ -393,19 +402,24 @@ describe("humanInTheLoopMiddleware", () => {
       config
     );
 
-    // Resume with manual response
+    // Resume with manual response - this should fail because message must be a string
+    // but we're passing an object
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const invalidMessage: any = {
+      action: "write_file",
+      args: "File operation not allowed in demo mode",
+    };
     await expect(() =>
       agent.invoke(
         new Command({
-          resume: [
-            {
-              type: "response",
-              args: {
-                action: "write_file",
-                args: "File operation not allowed in demo mode",
+          resume: {
+            decisions: [
+              {
+                type: "reject",
+                message: invalidMessage,
               },
-            },
-          ],
+            ],
+          } as HITLResponse,
         }),
         config
       )
@@ -418,7 +432,7 @@ describe("humanInTheLoopMiddleware", () => {
     const hitlMiddleware = humanInTheLoopMiddleware({
       interruptOn: {
         write_file: {
-          allowEdit: true,
+          allowedDecisions: ["edit"],
           description: "⚠️ File write operation requires approval",
         },
         calculator: true,
@@ -474,28 +488,29 @@ describe("humanInTheLoopMiddleware", () => {
     expect(calculatorFn).toHaveBeenCalledTimes(0);
     expect(writeFileFn).toHaveBeenCalledTimes(0);
 
-    const interruptRequest = initialResult.__interrupt__?.[0] as Interrupt<
-      HumanInTheLoopRequest[]
-    >;
-    const resume: HumanInTheLoopMiddlewareHumanResponse[] =
-      interruptRequest.value.map(({ actionRequest }) => {
-        if (actionRequest.action === "calculator") {
-          return { type: "accept" };
-        } else if (actionRequest.action === "write_file") {
-          return {
-            type: "edit",
-            args: {
-              action: "write_file",
-              args: { filename: "safe.txt", content: "Safe content" },
-            },
-          };
-        }
+    const interruptRequest = initialResult.__interrupt__?.[0] as Interrupt<HITLRequest>;
+    const hitlRequest = interruptRequest.value;
+    const decisions: Decision[] = hitlRequest.actionRequests.map((action) => {
+      if (action.name === "calculator") {
+        return { type: "approve" };
+      } else if (action.name === "write_file") {
+        return {
+          type: "edit",
+          editedAction: {
+            name: "write_file",
+            arguments: { filename: "safe.txt", content: "Safe content" },
+          },
+        };
+      }
 
-        throw new Error(`Unknown action: ${actionRequest.action}`);
-      });
+      throw new Error(`Unknown action: ${action.name}`);
+    });
 
     // Resume with approval
-    await agent.invoke(new Command({ resume }), config);
+    await agent.invoke(
+      new Command({ resume: { decisions } as HITLResponse }),
+      config
+    );
 
     // Verify tool was called
     expect(calculatorFn).toHaveBeenCalledTimes(1);
@@ -521,7 +536,7 @@ describe("humanInTheLoopMiddleware", () => {
     const hitlMiddleware = humanInTheLoopMiddleware({
       interruptOn: {
         write_file: {
-          allowEdit: true,
+          allowedDecisions: ["edit"],
           description: "⚠️ File write operation requires approval",
         },
         calculator: true,
@@ -573,22 +588,24 @@ describe("humanInTheLoopMiddleware", () => {
       config
     );
 
-    // Resume with approval
+    // Resume with only one decision when two are needed
     await expect(() =>
       agent.invoke(
-        new Command({ resume: [{ id: "call_2", type: "ignore" }] }),
+        new Command({
+          resume: { decisions: [{ type: "approve" }] } as HITLResponse,
+        }),
         config
       )
     ).rejects.toThrow(
-      "Number of human responses (1) does not match number of hanging tool calls (2)."
+      "Number of human decisions (1) does not match number of hanging tool calls (2)."
     );
   });
 
-  it("should not allow me to approve if I don't have allowAccept", async () => {
+  it("should not allow me to approve if I don't have approve in allowedDecisions", async () => {
     const hitlMiddleware = humanInTheLoopMiddleware({
       interruptOn: {
         write_file: {
-          allowEdit: true,
+          allowedDecisions: ["edit"],
           description: "⚠️ File write operation requires approval",
         },
       },
@@ -640,9 +657,14 @@ describe("humanInTheLoopMiddleware", () => {
     );
 
     await expect(() =>
-      agent.invoke(new Command({ resume: [{ type: "accept" }] }), config)
+      agent.invoke(
+        new Command({
+          resume: { decisions: [{ type: "approve" }] } as HITLResponse,
+        }),
+        config
+      )
     ).rejects.toThrow(
-      'Unexpected human response: {"type":"accept"}. Response action \'accept\' is not allowed for tool \'write_file\'. Expected one of: "edit", based on the tool\'s configuration.'
+      'Unexpected human decision: {"type":"approve"}. Decision type \'approve\' is not allowed for tool \'write_file\'. Expected one of ["edit"] based on the tool\'s configuration.'
     );
   });
 
@@ -655,8 +677,7 @@ describe("humanInTheLoopMiddleware", () => {
     const hitlMiddleware = humanInTheLoopMiddleware({
       interruptOn: {
         write_file: {
-          allowAccept: true,
-          allowEdit: true,
+          allowedDecisions: ["approve", "edit"],
           description: descriptionFactory,
         },
       },
@@ -715,16 +736,16 @@ describe("humanInTheLoopMiddleware", () => {
     // Check the generated description in the interrupt
     const state = await agent.graph.getState(config);
     const task = state.tasks?.[0];
-    const requests = task.interrupts[0].value as HumanInTheLoopRequest[];
+    const hitlRequest = task.interrupts[0].value as HITLRequest;
 
-    expect(requests[0].description).toBe(
+    expect(hitlRequest.reviewConfigs[0].description).toBe(
       "Dynamic description for tool: write_file\nFile: dynamic.txt\nContent length: 19 characters"
     );
 
     // Resume with approval
     await agent.invoke(
       new Command({
-        resume: [{ type: "accept" }],
+        resume: { decisions: [{ type: "approve" }] } as HITLResponse,
       }),
       config
     );
