@@ -276,13 +276,13 @@ importers:
         version: 2.0.8
       lunary:
         specifier: ^0.8.8
-        version: 0.8.8(@anthropic-ai/sdk@0.56.0)(openai@5.12.2(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.5))(zod@3.25.76))(react@19.0.0)
+        version: 0.8.8(@anthropic-ai/sdk@0.65.0(zod@3.25.76))(openai@5.12.2(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.5))(zod@3.25.76))(react@19.0.0)
       mariadb:
         specifier: ^3.4.0
         version: 3.4.5
       mem0ai:
         specifier: ^2.1.8
-        version: 2.1.36(@anthropic-ai/sdk@0.56.0)(@cloudflare/workers-types@4.20250801.0)(@google/genai@1.12.0(@modelcontextprotocol/sdk@1.19.1)(bufferutil@4.0.9)(encoding@0.1.13)(utf-8-validate@6.0.5))(@langchain/core@libs+langchain-core)(@mistralai/mistralai@1.7.5(zod@3.25.76))(@qdrant/js-client-rest@1.15.0(typescript@5.1.6))(@supabase/supabase-js@2.53.0(bufferutil@4.0.9)(utf-8-validate@6.0.5))(@types/jest@29.5.14)(@types/pg@8.15.5)(@types/sqlite3@3.1.11)(cloudflare@4.5.0(encoding@0.1.13))(encoding@0.1.13)(groq-sdk@0.19.0(encoding@0.1.13))(neo4j-driver@5.28.1)(ollama@0.5.16)(pg@8.16.3)(redis@4.7.1)(sqlite3@5.1.7)(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.5))
+        version: 2.1.36(@anthropic-ai/sdk@0.65.0(zod@3.25.76))(@cloudflare/workers-types@4.20250801.0)(@google/genai@1.12.0(@modelcontextprotocol/sdk@1.19.1)(bufferutil@4.0.9)(encoding@0.1.13)(utf-8-validate@6.0.5))(@langchain/core@libs+langchain-core)(@mistralai/mistralai@1.7.5(zod@3.25.76))(@qdrant/js-client-rest@1.15.0(typescript@5.1.6))(@supabase/supabase-js@2.53.0(bufferutil@4.0.9)(utf-8-validate@6.0.5))(@types/jest@29.5.14)(@types/pg@8.15.5)(@types/sqlite3@3.1.11)(cloudflare@4.5.0(encoding@0.1.13))(encoding@0.1.13)(groq-sdk@0.19.0(encoding@0.1.13))(neo4j-driver@5.28.1)(ollama@0.5.16)(pg@8.16.3)(redis@4.7.1)(sqlite3@5.1.7)(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.5))
       mongodb:
         specifier: ^6.17.0
         version: 6.18.0(@aws-sdk/credential-providers@3.858.0)(socks@2.8.6)
@@ -386,31 +386,31 @@ importers:
         version: 0.25.8
       '@rolldown/binding-darwin-arm64':
         specifier: '*'
-        version: 1.0.0-beta.41
+        version: 1.0.0-beta.42
       '@rolldown/binding-darwin-x64':
         specifier: '*'
-        version: 1.0.0-beta.41
+        version: 1.0.0-beta.42
       '@rolldown/binding-linux-arm64-gnu':
         specifier: '*'
-        version: 1.0.0-beta.41
+        version: 1.0.0-beta.42
       '@rolldown/binding-linux-arm64-musl':
         specifier: '*'
-        version: 1.0.0-beta.41
+        version: 1.0.0-beta.42
       '@rolldown/binding-linux-x64-gnu':
         specifier: '*'
-        version: 1.0.0-beta.41
+        version: 1.0.0-beta.42
       '@rolldown/binding-linux-x64-musl':
         specifier: '*'
-        version: 1.0.0-beta.41
+        version: 1.0.0-beta.42
       '@rolldown/binding-win32-arm64-msvc':
         specifier: '*'
-        version: 1.0.0-beta.41
+        version: 1.0.0-beta.42
       '@rolldown/binding-win32-ia32-msvc':
         specifier: '*'
-        version: 1.0.0-beta.41
+        version: 1.0.0-beta.42
       '@rolldown/binding-win32-x64-msvc':
         specifier: '*'
-        version: 1.0.0-beta.41
+        version: 1.0.0-beta.42
       '@swc/core-win32-x64-msvc':
         specifier: '*'
         version: 1.13.3
@@ -932,13 +932,13 @@ importers:
         version: 2.0.8
       lunary:
         specifier: ^0.8.8
-        version: 0.8.8(@anthropic-ai/sdk@0.56.0)(openai@5.12.2(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.5))(zod@4.1.11))(react@19.0.0)
+        version: 0.8.8(@anthropic-ai/sdk@0.65.0(zod@4.1.11))(openai@5.12.2(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.5))(zod@4.1.11))(react@19.0.0)
       mariadb:
         specifier: ^3.4.0
         version: 3.4.5
       mem0ai:
         specifier: ^2.1.8
-        version: 2.1.36(@anthropic-ai/sdk@0.56.0)(@cloudflare/workers-types@4.20250801.0)(@google/genai@1.12.0(@modelcontextprotocol/sdk@1.19.1)(bufferutil@4.0.9)(encoding@0.1.13)(utf-8-validate@6.0.5))(@langchain/core@libs+langchain-core)(@mistralai/mistralai@1.7.5(zod@4.1.11))(@qdrant/js-client-rest@1.15.0(typescript@5.8.3))(@supabase/supabase-js@2.53.0(bufferutil@4.0.9)(utf-8-validate@6.0.5))(@types/jest@29.5.14)(@types/pg@8.15.5)(@types/sqlite3@3.1.11)(cloudflare@4.5.0(encoding@0.1.13))(encoding@0.1.13)(groq-sdk@0.19.0(encoding@0.1.13))(neo4j-driver@5.28.1)(ollama@0.5.16)(pg@8.16.3)(redis@4.7.1)(sqlite3@5.1.7)(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.5))
+        version: 2.1.36(@anthropic-ai/sdk@0.65.0(zod@4.1.11))(@cloudflare/workers-types@4.20250801.0)(@google/genai@1.12.0(@modelcontextprotocol/sdk@1.19.1)(bufferutil@4.0.9)(encoding@0.1.13)(utf-8-validate@6.0.5))(@langchain/core@libs+langchain-core)(@mistralai/mistralai@1.7.5(zod@4.1.11))(@qdrant/js-client-rest@1.15.0(typescript@5.8.3))(@supabase/supabase-js@2.53.0(bufferutil@4.0.9)(utf-8-validate@6.0.5))(@types/jest@29.5.14)(@types/pg@8.15.5)(@types/sqlite3@3.1.11)(cloudflare@4.5.0(encoding@0.1.13))(encoding@0.1.13)(groq-sdk@0.19.0(encoding@0.1.13))(neo4j-driver@5.28.1)(ollama@0.5.16)(pg@8.16.3)(redis@4.7.1)(sqlite3@5.1.7)(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.5))
       mongodb:
         specifier: ^6.17.0
         version: 6.18.0(@aws-sdk/credential-providers@3.858.0)(socks@2.8.6)
@@ -1453,7 +1453,7 @@ importers:
         version: 3.4.5
       mem0ai:
         specifier: ^2.1.8
-        version: 2.1.36(@anthropic-ai/sdk@0.56.0)(@cloudflare/workers-types@4.20250801.0)(@google/genai@1.12.0(@modelcontextprotocol/sdk@1.19.1)(bufferutil@4.0.9)(encoding@0.1.13)(utf-8-validate@6.0.5))(@langchain/core@libs+langchain-core)(@mistralai/mistralai@1.7.5(zod@3.25.76))(@qdrant/js-client-rest@1.15.0(typescript@5.8.3))(@supabase/supabase-js@2.53.0(bufferutil@4.0.9)(utf-8-validate@6.0.5))(@types/jest@29.5.14)(@types/pg@8.15.5)(@types/sqlite3@3.1.11)(cloudflare@4.5.0(encoding@0.1.13))(encoding@0.1.13)(groq-sdk@0.19.0(encoding@0.1.13))(neo4j-driver@5.28.1)(ollama@0.5.16)(pg@8.16.3)(redis@4.7.1)(sqlite3@5.1.7)(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.5))
+        version: 2.1.36(@anthropic-ai/sdk@0.65.0(zod@3.25.76))(@cloudflare/workers-types@4.20250801.0)(@google/genai@1.12.0(@modelcontextprotocol/sdk@1.19.1)(bufferutil@4.0.9)(encoding@0.1.13)(utf-8-validate@6.0.5))(@langchain/core@libs+langchain-core)(@mistralai/mistralai@1.7.5(zod@3.25.76))(@qdrant/js-client-rest@1.15.0(typescript@5.8.3))(@supabase/supabase-js@2.53.0(bufferutil@4.0.9)(utf-8-validate@6.0.5))(@types/jest@29.5.14)(@types/pg@8.15.5)(@types/sqlite3@3.1.11)(cloudflare@4.5.0(encoding@0.1.13))(encoding@0.1.13)(groq-sdk@0.19.0(encoding@0.1.13))(neo4j-driver@5.28.1)(ollama@0.5.16)(pg@8.16.3)(redis@4.7.1)(sqlite3@5.1.7)(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.5))
       mongodb:
         specifier: ^6.17.0
         version: 6.18.0(@aws-sdk/credential-providers@3.858.0)(socks@2.8.6)
@@ -1816,12 +1816,12 @@ importers:
   libs/providers/langchain-anthropic:
     dependencies:
       '@anthropic-ai/sdk':
-        specifier: ^0.56.0
-        version: 0.56.0
+        specifier: ^0.65.0
+        version: 0.65.0(zod@3.25.76)
     devDependencies:
       '@anthropic-ai/vertex-sdk':
         specifier: ^0.11.5
-        version: 0.11.5
+        version: 0.11.5(zod@3.25.76)
       '@langchain/core':
         specifier: workspace:*
         version: link:../../langchain-core
@@ -3705,6 +3705,15 @@ packages:
   '@anthropic-ai/sdk@0.56.0':
     resolution: {integrity: sha512-SLCB8M8+VMg1cpCucnA1XWHGWqVSZtIWzmOdDOEu3eTFZMB+A0sGZ1ESO5MHDnqrNTXz3safMrWx9x4rMZSOqA==}
     hasBin: true
+
+  '@anthropic-ai/sdk@0.65.0':
+    resolution: {integrity: sha512-zIdPOcrCVEI8t3Di40nH4z9EoeyGZfXbYSvWdDLsB/KkaSYMnEgC7gmcgWu83g2NTn1ZTpbMvpdttWDGGIk6zw==}
+    hasBin: true
+    peerDependencies:
+      zod: ^3.25.0 || ^4.0.0
+    peerDependenciesMeta:
+      zod:
+        optional: true
 
   '@anthropic-ai/vertex-sdk@0.11.5':
     resolution: {integrity: sha512-V7sB5nY80unEQu8lSQaEzh1WhYwpIdpC3iXNRHUskghkuQDhS6dQu2ASZBgA5MNuJ1Yv5PhY61NM15dLaQhPQw==}
@@ -7220,8 +7229,8 @@ packages:
     cpu: [arm64]
     os: [darwin]
 
-  '@rolldown/binding-darwin-arm64@1.0.0-beta.41':
-    resolution: {integrity: sha512-XGCzqfjdk7550PlyZRTBKbypXrB7ATtXhw/+bjtxnklLQs0mKP/XkQVOKyn9qGKSlvH8I56JLYryVxl0PCvSNw==}
+  '@rolldown/binding-darwin-arm64@1.0.0-beta.42':
+    resolution: {integrity: sha512-abw/wtgJA8OCgaTlL+xJxnN/Z01BwV1rfzIp5Hh9x+IIO6xOBfPsQ0nzi0+rWx3TyZ9FZXyC7bbC+5NpQ9EaXQ==}
     engines: {node: ^20.19.0 || >=22.12.0}
     cpu: [arm64]
     os: [darwin]
@@ -7231,8 +7240,8 @@ packages:
     cpu: [x64]
     os: [darwin]
 
-  '@rolldown/binding-darwin-x64@1.0.0-beta.41':
-    resolution: {integrity: sha512-Ho6lIwGJed98zub7n0xcRKuEtnZgbxevAmO4x3zn3C3N4GVXZD5xvCvTVxSMoeBJwTcIYzkVDRTIhylQNsTgLQ==}
+  '@rolldown/binding-darwin-x64@1.0.0-beta.42':
+    resolution: {integrity: sha512-Y/UrZIRVr8CvXVEB88t6PeC46r1K9/QdPEo2ASE/b/KBEyXIx+QbM6kv9QfQVWU2Atly2+SVsQzxQsIvuk3lZQ==}
     engines: {node: ^20.19.0 || >=22.12.0}
     cpu: [x64]
     os: [darwin]
@@ -7252,8 +7261,8 @@ packages:
     cpu: [arm64]
     os: [linux]
 
-  '@rolldown/binding-linux-arm64-gnu@1.0.0-beta.41':
-    resolution: {integrity: sha512-F8bUwJq8v/JAU8HSwgF4dztoqJ+FjdyjuvX4//3+Fbe2we9UktFeZ27U4lRMXF1vxWtdV4ey6oCSqI7yUrSEeg==}
+  '@rolldown/binding-linux-arm64-gnu@1.0.0-beta.42':
+    resolution: {integrity: sha512-LMYHM5Sf6ROq+VUwHMDVX2IAuEsWTv4SnlFEedBnMGpvRuQ14lCmD4m5Q8sjyAQCgyha9oghdGoK8AEg1sXZKg==}
     engines: {node: ^20.19.0 || >=22.12.0}
     cpu: [arm64]
     os: [linux]
@@ -7263,8 +7272,8 @@ packages:
     cpu: [arm64]
     os: [linux]
 
-  '@rolldown/binding-linux-arm64-musl@1.0.0-beta.41':
-    resolution: {integrity: sha512-MioXcCIX/wB1pBnBoJx8q4OGucUAfC1+/X1ilKFsjDK05VwbLZGRgOVD5OJJpUQPK86DhQciNBrfOKDiatxNmg==}
+  '@rolldown/binding-linux-arm64-musl@1.0.0-beta.42':
+    resolution: {integrity: sha512-/bNTYb9aKNhzdbPn3O4MK2aLv55AlrkUKPE4KNfBYjkoZUfDr4jWp7gsSlvTc5A/99V1RCm9axvt616ZzeXGyA==}
     engines: {node: ^20.19.0 || >=22.12.0}
     cpu: [arm64]
     os: [linux]
@@ -7279,8 +7288,8 @@ packages:
     cpu: [x64]
     os: [linux]
 
-  '@rolldown/binding-linux-x64-gnu@1.0.0-beta.41':
-    resolution: {integrity: sha512-m66M61fizvRCwt5pOEiZQMiwBL9/y0bwU/+Kc4Ce/Pef6YfoEkR28y+DzN9rMdjo8Z28NXjsDPq9nH4mXnAP0g==}
+  '@rolldown/binding-linux-x64-gnu@1.0.0-beta.42':
+    resolution: {integrity: sha512-n/SLa4h342oyeGykZdch7Y3GNCNliRPL4k5wkeZ/5eQZs+c6/ZG1SHCJQoy7bZcmxiMyaXs9HoFmv1PEKrZgWg==}
     engines: {node: ^20.19.0 || >=22.12.0}
     cpu: [x64]
     os: [linux]
@@ -7290,8 +7299,8 @@ packages:
     cpu: [x64]
     os: [linux]
 
-  '@rolldown/binding-linux-x64-musl@1.0.0-beta.41':
-    resolution: {integrity: sha512-yRxlSfBvWnnfrdtJfvi9lg8xfG5mPuyoSHm0X01oiE8ArmLRvoJGHUTJydCYz+wbK2esbq5J4B4Tq9WAsOlP1Q==}
+  '@rolldown/binding-linux-x64-musl@1.0.0-beta.42':
+    resolution: {integrity: sha512-4PSd46sFzqpLHSGdaSViAb1mk55sCUMpJg+X8ittXaVocQsV3QLG/uydSH8RyL0ngHX5fy3D70LcCzlB15AgHw==}
     engines: {node: ^20.19.0 || >=22.12.0}
     cpu: [x64]
     os: [linux]
@@ -7306,8 +7315,8 @@ packages:
     cpu: [arm64]
     os: [win32]
 
-  '@rolldown/binding-win32-arm64-msvc@1.0.0-beta.41':
-    resolution: {integrity: sha512-NIYGuCcuXaq5BC4Q3upbiMBvmZsTsEPG9k/8QKQdmrch+ocSy5Jv9tdpdmXJyighKqm182nh/zBt+tSJkYoNlg==}
+  '@rolldown/binding-win32-arm64-msvc@1.0.0-beta.42':
+    resolution: {integrity: sha512-hC1kShXW/z221eG+WzQMN06KepvPbMBknF0iGR3VMYJLOe9gwnSTfGxFT5hf8XrPv7CEZqTWRd0GQpkSHRbGsw==}
     engines: {node: ^20.19.0 || >=22.12.0}
     cpu: [arm64]
     os: [win32]
@@ -7317,8 +7326,8 @@ packages:
     cpu: [ia32]
     os: [win32]
 
-  '@rolldown/binding-win32-ia32-msvc@1.0.0-beta.41':
-    resolution: {integrity: sha512-kANdsDbE5FkEOb5NrCGBJBCaZ2Sabp3D7d4PRqMYJqyLljwh9mDyYyYSv5+QNvdAmifj+f3lviNEUUuUZPEFPw==}
+  '@rolldown/binding-win32-ia32-msvc@1.0.0-beta.42':
+    resolution: {integrity: sha512-AICBYromawouGjj+GS33369E8Vwhy6UwhQEhQ5evfS8jPCsyVvoICJatbDGDGH01dwtVGLD5eDFzPicUOVpe4g==}
     engines: {node: ^20.19.0 || >=22.12.0}
     cpu: [ia32]
     os: [win32]
@@ -7328,8 +7337,8 @@ packages:
     cpu: [x64]
     os: [win32]
 
-  '@rolldown/binding-win32-x64-msvc@1.0.0-beta.41':
-    resolution: {integrity: sha512-UlpxKmFdik0Y2VjZrgUCgoYArZJiZllXgIipdBRV1hw6uK45UbQabSTW6Kp6enuOu7vouYWftwhuxfpE8J2JAg==}
+  '@rolldown/binding-win32-x64-msvc@1.0.0-beta.42':
+    resolution: {integrity: sha512-XpZ0M+tjoEiSc9c+uZR7FCnOI0uxDRNs1elGOMjeB0pUP1QmvVbZGYNsyLbLoP4u7e3VQN8rie1OQ8/mB6rcJg==}
     engines: {node: ^20.19.0 || >=22.12.0}
     cpu: [x64]
     os: [win32]
@@ -12356,6 +12365,10 @@ packages:
     resolution: {integrity: sha512-lR4MXjGNgkJc7tkQ97kb2nuEMnNCyU//XYVH0MKTGcXEiSudQ5MKGKen3C5QubYy0vmq+JGitUg92uuywGEwIA==}
     engines: {node: ^18.17.0 || >=20.5.0}
 
+  json-schema-to-ts@3.1.1:
+    resolution: {integrity: sha512-+DWg8jCJG2TEnpy7kOm/7/AxaYoaRbjVB4LFZLySZlWn8exGs3A4OLJR966cVvU26N7X9TWxl+Jsw7dzAqKT6g==}
+    engines: {node: '>=16'}
+
   json-schema-to-typescript@13.1.2:
     resolution: {integrity: sha512-17G+mjx4nunvOpkPvcz7fdwUwYCEwyH8vR3Ym3rFiQ8uzAL3go+c1306Kk7iGRk8HuXBXqy+JJJmpYl0cvOllw==}
     engines: {node: '>=12.0.0'}
@@ -15353,6 +15366,9 @@ packages:
     resolution: {integrity: sha512-aZbgViZrg1QNcG+LULa7nhZpJTZSLm/mXnHXnbAbjmN5aSa0y7V+wvv6+4WaBtpISJzThKy+PIPxc1Nq1EJ9mg==}
     engines: {node: '>= 14.0.0'}
 
+  ts-algebra@2.0.0:
+    resolution: {integrity: sha512-FPAhNPFMrkwz76P7cdjdmiShwMynZYN6SgOujD1urY4oNm80Ou9oMdmbR45LotcKOXoy7wSmHkRFE6Mxbrhefw==}
+
   ts-api-utils@2.1.0:
     resolution: {integrity: sha512-CUgTZL1irw8u29bzrOD/nH85jqyc74D6SshFgujOIA7osm2Rz7dYH77agkx7H4FBNxDq7Cjf+IjaX/8zwFW+ZQ==}
     engines: {node: '>=18.12'}
@@ -16386,15 +16402,29 @@ snapshots:
     transitivePeerDependencies:
       - encoding
 
-  '@anthropic-ai/sdk@0.56.0': {}
+  '@anthropic-ai/sdk@0.56.0':
+    optional: true
 
-  '@anthropic-ai/vertex-sdk@0.11.5':
+  '@anthropic-ai/sdk@0.65.0(zod@3.25.76)':
     dependencies:
-      '@anthropic-ai/sdk': 0.56.0
+      json-schema-to-ts: 3.1.1
+    optionalDependencies:
+      zod: 3.25.76
+
+  '@anthropic-ai/sdk@0.65.0(zod@4.1.11)':
+    dependencies:
+      json-schema-to-ts: 3.1.1
+    optionalDependencies:
+      zod: 4.1.11
+
+  '@anthropic-ai/vertex-sdk@0.11.5(zod@3.25.76)':
+    dependencies:
+      '@anthropic-ai/sdk': 0.65.0(zod@3.25.76)
       google-auth-library: 9.15.1(encoding@0.1.13)
     transitivePeerDependencies:
       - encoding
       - supports-color
+      - zod
 
   '@apify/consts@2.43.0': {}
 
@@ -21350,13 +21380,13 @@ snapshots:
   '@rolldown/binding-darwin-arm64@1.0.0-beta.30':
     optional: true
 
-  '@rolldown/binding-darwin-arm64@1.0.0-beta.41':
+  '@rolldown/binding-darwin-arm64@1.0.0-beta.42':
     optional: true
 
   '@rolldown/binding-darwin-x64@1.0.0-beta.30':
     optional: true
 
-  '@rolldown/binding-darwin-x64@1.0.0-beta.41':
+  '@rolldown/binding-darwin-x64@1.0.0-beta.42':
     optional: true
 
   '@rolldown/binding-freebsd-x64@1.0.0-beta.30':
@@ -21368,13 +21398,13 @@ snapshots:
   '@rolldown/binding-linux-arm64-gnu@1.0.0-beta.30':
     optional: true
 
-  '@rolldown/binding-linux-arm64-gnu@1.0.0-beta.41':
+  '@rolldown/binding-linux-arm64-gnu@1.0.0-beta.42':
     optional: true
 
   '@rolldown/binding-linux-arm64-musl@1.0.0-beta.30':
     optional: true
 
-  '@rolldown/binding-linux-arm64-musl@1.0.0-beta.41':
+  '@rolldown/binding-linux-arm64-musl@1.0.0-beta.42':
     optional: true
 
   '@rolldown/binding-linux-arm64-ohos@1.0.0-beta.30':
@@ -21383,13 +21413,13 @@ snapshots:
   '@rolldown/binding-linux-x64-gnu@1.0.0-beta.30':
     optional: true
 
-  '@rolldown/binding-linux-x64-gnu@1.0.0-beta.41':
+  '@rolldown/binding-linux-x64-gnu@1.0.0-beta.42':
     optional: true
 
   '@rolldown/binding-linux-x64-musl@1.0.0-beta.30':
     optional: true
 
-  '@rolldown/binding-linux-x64-musl@1.0.0-beta.41':
+  '@rolldown/binding-linux-x64-musl@1.0.0-beta.42':
     optional: true
 
   '@rolldown/binding-wasm32-wasi@1.0.0-beta.30':
@@ -21400,19 +21430,19 @@ snapshots:
   '@rolldown/binding-win32-arm64-msvc@1.0.0-beta.30':
     optional: true
 
-  '@rolldown/binding-win32-arm64-msvc@1.0.0-beta.41':
+  '@rolldown/binding-win32-arm64-msvc@1.0.0-beta.42':
     optional: true
 
   '@rolldown/binding-win32-ia32-msvc@1.0.0-beta.30':
     optional: true
 
-  '@rolldown/binding-win32-ia32-msvc@1.0.0-beta.41':
+  '@rolldown/binding-win32-ia32-msvc@1.0.0-beta.42':
     optional: true
 
   '@rolldown/binding-win32-x64-msvc@1.0.0-beta.30':
     optional: true
 
-  '@rolldown/binding-win32-x64-msvc@1.0.0-beta.41':
+  '@rolldown/binding-win32-x64-msvc@1.0.0-beta.42':
     optional: true
 
   '@rolldown/pluginutils@1.0.0-beta.30': {}
@@ -28023,6 +28053,11 @@ snapshots:
 
   json-parse-even-better-errors@4.0.0: {}
 
+  json-schema-to-ts@3.1.1:
+    dependencies:
+      '@babel/runtime': 7.28.2
+      ts-algebra: 2.0.0
+
   json-schema-to-typescript@13.1.2:
     dependencies:
       '@bcherny/json-schema-ref-parser': 10.0.5-fork
@@ -28506,19 +28541,19 @@ snapshots:
       openai: 5.11.0(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.5))(zod@3.25.76)
       react: 19.0.0
 
-  lunary@0.8.8(@anthropic-ai/sdk@0.56.0)(openai@5.12.2(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.5))(zod@3.25.76))(react@19.0.0):
+  lunary@0.8.8(@anthropic-ai/sdk@0.65.0(zod@3.25.76))(openai@5.12.2(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.5))(zod@3.25.76))(react@19.0.0):
     dependencies:
       unctx: 2.4.1
     optionalDependencies:
-      '@anthropic-ai/sdk': 0.56.0
+      '@anthropic-ai/sdk': 0.65.0(zod@3.25.76)
       openai: 5.12.2(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.5))(zod@3.25.76)
       react: 19.0.0
 
-  lunary@0.8.8(@anthropic-ai/sdk@0.56.0)(openai@5.12.2(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.5))(zod@4.1.11))(react@19.0.0):
+  lunary@0.8.8(@anthropic-ai/sdk@0.65.0(zod@4.1.11))(openai@5.12.2(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.5))(zod@4.1.11))(react@19.0.0):
     dependencies:
       unctx: 2.4.1
     optionalDependencies:
-      '@anthropic-ai/sdk': 0.56.0
+      '@anthropic-ai/sdk': 0.65.0(zod@4.1.11)
       openai: 5.12.2(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.5))(zod@4.1.11)
       react: 19.0.0
 
@@ -28630,9 +28665,9 @@ snapshots:
 
   media-typer@1.1.0: {}
 
-  mem0ai@2.1.36(@anthropic-ai/sdk@0.56.0)(@cloudflare/workers-types@4.20250801.0)(@google/genai@1.12.0(@modelcontextprotocol/sdk@1.19.1)(bufferutil@4.0.9)(encoding@0.1.13)(utf-8-validate@6.0.5))(@langchain/core@libs+langchain-core)(@mistralai/mistralai@1.7.5(zod@3.25.76))(@qdrant/js-client-rest@1.15.0(typescript@5.1.6))(@supabase/supabase-js@2.53.0(bufferutil@4.0.9)(utf-8-validate@6.0.5))(@types/jest@29.5.14)(@types/pg@8.15.5)(@types/sqlite3@3.1.11)(cloudflare@4.5.0(encoding@0.1.13))(encoding@0.1.13)(groq-sdk@0.19.0(encoding@0.1.13))(neo4j-driver@5.28.1)(ollama@0.5.16)(pg@8.16.3)(redis@4.7.1)(sqlite3@5.1.7)(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.5)):
+  mem0ai@2.1.36(@anthropic-ai/sdk@0.65.0(zod@3.25.76))(@cloudflare/workers-types@4.20250801.0)(@google/genai@1.12.0(@modelcontextprotocol/sdk@1.19.1)(bufferutil@4.0.9)(encoding@0.1.13)(utf-8-validate@6.0.5))(@langchain/core@libs+langchain-core)(@mistralai/mistralai@1.7.5(zod@3.25.76))(@qdrant/js-client-rest@1.15.0(typescript@5.1.6))(@supabase/supabase-js@2.53.0(bufferutil@4.0.9)(utf-8-validate@6.0.5))(@types/jest@29.5.14)(@types/pg@8.15.5)(@types/sqlite3@3.1.11)(cloudflare@4.5.0(encoding@0.1.13))(encoding@0.1.13)(groq-sdk@0.19.0(encoding@0.1.13))(neo4j-driver@5.28.1)(ollama@0.5.16)(pg@8.16.3)(redis@4.7.1)(sqlite3@5.1.7)(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.5)):
     dependencies:
-      '@anthropic-ai/sdk': 0.56.0
+      '@anthropic-ai/sdk': 0.65.0(zod@3.25.76)
       '@cloudflare/workers-types': 4.20250801.0
       '@google/genai': 1.12.0(@modelcontextprotocol/sdk@1.19.1)(bufferutil@4.0.9)(encoding@0.1.13)(utf-8-validate@6.0.5)
       '@langchain/core': link:libs/langchain-core
@@ -28658,9 +28693,9 @@ snapshots:
       - encoding
       - ws
 
-  mem0ai@2.1.36(@anthropic-ai/sdk@0.56.0)(@cloudflare/workers-types@4.20250801.0)(@google/genai@1.12.0(@modelcontextprotocol/sdk@1.19.1)(bufferutil@4.0.9)(encoding@0.1.13)(utf-8-validate@6.0.5))(@langchain/core@libs+langchain-core)(@mistralai/mistralai@1.7.5(zod@3.25.76))(@qdrant/js-client-rest@1.15.0(typescript@5.8.3))(@supabase/supabase-js@2.53.0(bufferutil@4.0.9)(utf-8-validate@6.0.5))(@types/jest@29.5.14)(@types/pg@8.15.5)(@types/sqlite3@3.1.11)(cloudflare@4.5.0(encoding@0.1.13))(encoding@0.1.13)(groq-sdk@0.19.0(encoding@0.1.13))(neo4j-driver@5.28.1)(ollama@0.5.16)(pg@8.16.3)(redis@4.7.1)(sqlite3@5.1.7)(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.5)):
+  mem0ai@2.1.36(@anthropic-ai/sdk@0.65.0(zod@3.25.76))(@cloudflare/workers-types@4.20250801.0)(@google/genai@1.12.0(@modelcontextprotocol/sdk@1.19.1)(bufferutil@4.0.9)(encoding@0.1.13)(utf-8-validate@6.0.5))(@langchain/core@libs+langchain-core)(@mistralai/mistralai@1.7.5(zod@3.25.76))(@qdrant/js-client-rest@1.15.0(typescript@5.8.3))(@supabase/supabase-js@2.53.0(bufferutil@4.0.9)(utf-8-validate@6.0.5))(@types/jest@29.5.14)(@types/pg@8.15.5)(@types/sqlite3@3.1.11)(cloudflare@4.5.0(encoding@0.1.13))(encoding@0.1.13)(groq-sdk@0.19.0(encoding@0.1.13))(neo4j-driver@5.28.1)(ollama@0.5.16)(pg@8.16.3)(redis@4.7.1)(sqlite3@5.1.7)(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.5)):
     dependencies:
-      '@anthropic-ai/sdk': 0.56.0
+      '@anthropic-ai/sdk': 0.65.0(zod@3.25.76)
       '@cloudflare/workers-types': 4.20250801.0
       '@google/genai': 1.12.0(@modelcontextprotocol/sdk@1.19.1)(bufferutil@4.0.9)(encoding@0.1.13)(utf-8-validate@6.0.5)
       '@langchain/core': link:libs/langchain-core
@@ -28686,9 +28721,9 @@ snapshots:
       - encoding
       - ws
 
-  mem0ai@2.1.36(@anthropic-ai/sdk@0.56.0)(@cloudflare/workers-types@4.20250801.0)(@google/genai@1.12.0(@modelcontextprotocol/sdk@1.19.1)(bufferutil@4.0.9)(encoding@0.1.13)(utf-8-validate@6.0.5))(@langchain/core@libs+langchain-core)(@mistralai/mistralai@1.7.5(zod@4.1.11))(@qdrant/js-client-rest@1.15.0(typescript@5.8.3))(@supabase/supabase-js@2.53.0(bufferutil@4.0.9)(utf-8-validate@6.0.5))(@types/jest@29.5.14)(@types/pg@8.15.5)(@types/sqlite3@3.1.11)(cloudflare@4.5.0(encoding@0.1.13))(encoding@0.1.13)(groq-sdk@0.19.0(encoding@0.1.13))(neo4j-driver@5.28.1)(ollama@0.5.16)(pg@8.16.3)(redis@4.7.1)(sqlite3@5.1.7)(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.5)):
+  mem0ai@2.1.36(@anthropic-ai/sdk@0.65.0(zod@4.1.11))(@cloudflare/workers-types@4.20250801.0)(@google/genai@1.12.0(@modelcontextprotocol/sdk@1.19.1)(bufferutil@4.0.9)(encoding@0.1.13)(utf-8-validate@6.0.5))(@langchain/core@libs+langchain-core)(@mistralai/mistralai@1.7.5(zod@4.1.11))(@qdrant/js-client-rest@1.15.0(typescript@5.8.3))(@supabase/supabase-js@2.53.0(bufferutil@4.0.9)(utf-8-validate@6.0.5))(@types/jest@29.5.14)(@types/pg@8.15.5)(@types/sqlite3@3.1.11)(cloudflare@4.5.0(encoding@0.1.13))(encoding@0.1.13)(groq-sdk@0.19.0(encoding@0.1.13))(neo4j-driver@5.28.1)(ollama@0.5.16)(pg@8.16.3)(redis@4.7.1)(sqlite3@5.1.7)(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.5)):
     dependencies:
-      '@anthropic-ai/sdk': 0.56.0
+      '@anthropic-ai/sdk': 0.65.0(zod@4.1.11)
       '@cloudflare/workers-types': 4.20250801.0
       '@google/genai': 1.12.0(@modelcontextprotocol/sdk@1.19.1)(bufferutil@4.0.9)(encoding@0.1.13)(utf-8-validate@6.0.5)
       '@langchain/core': link:libs/langchain-core
@@ -31641,6 +31676,8 @@ snapshots:
   tree-kill@1.2.2: {}
 
   triple-beam@1.4.1: {}
+
+  ts-algebra@2.0.0: {}
 
   ts-api-utils@2.1.0(typescript@5.8.3):
     dependencies:
