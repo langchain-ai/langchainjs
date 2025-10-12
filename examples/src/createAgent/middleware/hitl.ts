@@ -54,7 +54,7 @@ const writeFileTool = tool(
 const hitlMiddleware = humanInTheLoopMiddleware({
   interruptOn: {
     write_file: {
-      allowAccept: true,
+      allowedDecisions: ["approve", "reject"],
       description: "⚠️ File write operation requires approval",
     },
     calculator: false, // Math is safe

@@ -2,21 +2,7 @@ export {
   summarizationMiddleware,
   type SummarizationMiddlewareConfig,
 } from "./summarization.js";
-export {
-  humanInTheLoopMiddleware,
-  type Action,
-  type ApproveDecision,
-  type Decision,
-  type DecisionType,
-  type DescriptionFactory,
-  type EditDecision,
-  type HITLRequest,
-  type HITLResponse,
-  type HumanInTheLoopMiddlewareConfig,
-  type InterruptOnConfig,
-  type RejectDecision,
-  type ReviewConfig,
-} from "./hitl.js";
+export * from "./hitl.js";
 export {
   anthropicPromptCachingMiddleware,
   type PromptCachingMiddlewareConfig,

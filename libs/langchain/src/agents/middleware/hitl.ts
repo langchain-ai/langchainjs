@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { z } from "zod/v3";
-import { AIMessage, ToolMessage } from "@langchain/core/messages";
+import { AIMessage, ToolMessage, ToolCall } from "@langchain/core/messages";
 import {
   InferInteropZodInput,
   interopParse,
@@ -10,13 +10,39 @@ import { interrupt } from "@langchain/langgraph";
 import { createMiddleware } from "../middleware.js";
 import type { AgentBuiltInState, Runtime } from "../runtime.js";
 
+const DescriptionFunctionSchema = z
+  .function()
+  .args(
+    z.custom<ToolCall>(), // toolCall
+    z.custom<AgentBuiltInState>(), // state
+    z.custom<Runtime<unknown>>() // runtime
+  )
+  .returns(z.union([z.string(), z.promise(z.string())]));
+
+/**
+ * Function type that dynamically generates a description for a tool call approval request.
+ *
+ * @param toolCall - The tool call being reviewed
+ * @param state - The current agent state
+ * @param runtime - The agent runtime context
+ * @returns A string description or Promise that resolves to a string description
+ *
+ * @example
+ * ```typescript
+ * import { type DescriptionFactory, type ToolCall } from "langchain";
+ *
+ * const descriptionFactory: DescriptionFactory = (toolCall, state, runtime) => {
+ *   return `Please review: ${toolCall.name}(${JSON.stringify(toolCall.args)})`;
+ * };
+ * ```
+ */
+export type DescriptionFactory = z.infer<typeof DescriptionFunctionSchema>;
+
 const InterruptOnConfigSchema = z.object({
   /**
    * The decisions that are allowed for this action.
    */
-  allowedDecisions: z
-    .array(z.enum(["approve", "edit", "reject"]))
-    .optional(),
+  allowedDecisions: z.array(z.enum(["approve", "edit", "reject"])).optional(),
   /**
    * The description attached to the request for human input.
    * Can be either:
@@ -36,7 +62,14 @@ const InterruptOnConfigSchema = z.object({
    * @example
    * Dynamic callable description
    * ```typescript
-   * const formatToolDescription: DescriptionFactory = (toolCall, state, runtime) => {
+   * import { type DescriptionFactory, type ToolCall } from "langchain";
+   * import type { AgentBuiltInState, Runtime } from "langchain/agents";
+   *
+   * const formatToolDescription: DescriptionFactory = (
+   *   toolCall: ToolCall,
+   *   state: AgentBuiltInState,
+   *   runtime: Runtime<unknown>
+   * ) => {
    *   return `Tool: ${toolCall.name}\nArguments:\n${JSON.stringify(toolCall.args, null, 2)}`;
    * };
    *
@@ -46,7 +79,7 @@ const InterruptOnConfigSchema = z.object({
    * };
    * ```
    */
-  description: z.union([z.string(), z.function()]).optional(),
+  description: z.union([z.string(), DescriptionFunctionSchema]).optional(),
   /**
    * JSON schema for the arguments associated with the action, if edits are allowed.
    */
@@ -54,19 +87,6 @@ const InterruptOnConfigSchema = z.object({
 });
 
 type InterruptOnConfigSchema = z.input<typeof InterruptOnConfigSchema>;
-type ToolCall = NonNullable<AIMessage["tool_calls"]>[number];
-
-/**
- * Function type that dynamically generates a description based on agent state,
- * runtime, and tool call information.
- */
-export type DescriptionFactory<
-  State extends AgentBuiltInState = AgentBuiltInState
-> = (
-  toolCall: ToolCall,
-  state: State,
-  runtime: Runtime<unknown>
-) => string | Promise<string>;
 
 /**
  * Represents an action with a name and arguments.
@@ -86,6 +106,7 @@ export interface Action {
  * The type of decision a human can make.
  */
 export type DecisionType = "approve" | "edit" | "reject";
+const ALLOWED_DECISIONS: DecisionType[] = ["approve", "edit", "reject"];
 
 /**
  * Policy for reviewing a HITL request.
@@ -188,22 +209,39 @@ export interface HITLResponse {
 /**
  * Configuration for an action requiring human in the loop.
  * This is the configuration format used in the `humanInTheLoopMiddleware` function.
+ *
+ * @example
+ * ```typescript
+ * const config: InterruptOnConfig = {
+ *   allowedDecisions: ["approve", "edit"],
+ *   description: "Please review this operation",
+ *   argumentsSchema: {
+ *     type: "object",
+ *     properties: {
+ *       filename: { type: "string" },
+ *       content: { type: "string" }
+ *     }
+ *   }
+ * };
+ * ```
  */
 export interface InterruptOnConfig {
   /**
    * The decisions that are allowed for this action.
+   * Defaults to `["approve", "edit", "reject"]` if not specified.
    */
   allowedDecisions?: DecisionType[];
   /**
    * Human-facing description shown in the approval request.
    * Can be either:
    * - A static string describing the approval request
-   * - A callable that dynamically generates the description based on agent state,
-   *   runtime, and tool call information
+   * - A {@link DescriptionFactory} function that dynamically generates the description
+   *   based on the tool call, agent state, and runtime context
    */
   description?: string | DescriptionFactory;
   /**
    * JSON schema for the arguments associated with the action, if edits are allowed.
+   * Used to validate and provide structure for edited tool arguments.
    */
   argumentsSchema?: Record<string, any>;
 }
@@ -401,10 +439,15 @@ export type HumanInTheLoopMiddlewareConfig = InferInteropZodInput<
  * @example
  * Using dynamic callable descriptions
  * ```typescript
- * import { type DescriptionFactory } from "langchain";
+ * import { type DescriptionFactory, type ToolCall } from "langchain";
+ * import type { AgentBuiltInState, Runtime } from "langchain/agents";
  *
  * // Define a dynamic description factory
- * const formatToolDescription: DescriptionFactory = (toolCall, state, runtime) => {
+ * const formatToolDescription: DescriptionFactory = (
+ *   toolCall: ToolCall,
+ *   state: AgentBuiltInState,
+ *   runtime: Runtime<unknown>
+ * ) => {
  *   return `Tool: ${toolCall.name}\nArguments:\n${JSON.stringify(toolCall.args, null, 2)}`;
  * };
  *
@@ -458,12 +501,14 @@ export function humanInTheLoopMiddleware(
     } else if (descriptionValue !== undefined) {
       description = descriptionValue;
     } else {
-      description = `${options.descriptionPrefix ?? "Tool execution requires approval"}\n\nTool: ${toolName}\nArgs: ${JSON.stringify(toolArgs, null, 2)}`;
+      description = `${
+        options.descriptionPrefix ?? "Tool execution requires approval"
+      }\n\nTool: ${toolName}\nArgs: ${JSON.stringify(toolArgs, null, 2)}`;
     }
 
     const reviewConfig: ReviewConfig = {
       actionName: toolName,
-      allowedDecisions: config.allowedDecisions ?? ["approve", "edit", "reject"],
+      allowedDecisions: config.allowedDecisions ?? ALLOWED_DECISIONS,
       description,
     };
 
@@ -479,12 +524,7 @@ export function humanInTheLoopMiddleware(
     toolCall: ToolCall,
     config: InterruptOnConfig
   ): { revisedToolCall: ToolCall | null; toolMessage: ToolMessage | null } => {
-    const allowedDecisions = config.allowedDecisions ?? [
-      "approve",
-      "edit",
-      "reject",
-    ];
-
+    const allowedDecisions = config.allowedDecisions ?? ALLOWED_DECISIONS;
     if (decision.type === "approve" && allowedDecisions.includes("approve")) {
       return { revisedToolCall: toolCall, toolMessage: null };
     }
@@ -503,6 +543,20 @@ export function humanInTheLoopMiddleware(
     }
 
     if (decision.type === "reject" && allowedDecisions.includes("reject")) {
+      /**
+       * Validate that message is a string if provided
+       */
+      if (
+        decision.message !== undefined &&
+        typeof decision.message !== "string"
+      ) {
+        throw new Error(
+          `Tool call response for "${
+            toolCall.name
+          }" must be a string, got ${typeof decision.message}`
+        );
+      }
+
       // Create a tool message with the human's text response
       const content =
         decision.message ??
@@ -520,9 +574,7 @@ export function humanInTheLoopMiddleware(
 
     const msg = `Unexpected human decision: ${JSON.stringify(
       decision
-    )}. Decision type '${
-      decision.type
-    }' is not allowed for tool '${
+    )}. Decision type '${decision.type}' is not allowed for tool '${
       toolCall.name
     }'. Expected one of ${JSON.stringify(
       allowedDecisions
@@ -571,7 +623,7 @@ export function humanInTheLoopMiddleware(
         if (typeof toolConfig === "boolean") {
           if (toolConfig === true) {
             resolvedConfigs[toolName] = {
-              allowedDecisions: ["approve", "edit", "reject"],
+              allowedDecisions: ALLOWED_DECISIONS,
             };
           }
         } else if (

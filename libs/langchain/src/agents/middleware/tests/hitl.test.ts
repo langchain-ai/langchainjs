@@ -488,7 +488,8 @@ describe("humanInTheLoopMiddleware", () => {
     expect(calculatorFn).toHaveBeenCalledTimes(0);
     expect(writeFileFn).toHaveBeenCalledTimes(0);
 
-    const interruptRequest = initialResult.__interrupt__?.[0] as Interrupt<HITLRequest>;
+    const interruptRequest = initialResult
+      .__interrupt__?.[0] as Interrupt<HITLRequest>;
     const hitlRequest = interruptRequest.value;
     const decisions: Decision[] = hitlRequest.actionRequests.map((action) => {
       if (action.name === "calculator") {
