@@ -2,13 +2,7 @@ export {
   summarizationMiddleware,
   type SummarizationMiddlewareConfig,
 } from "./summarization.js";
-export {
-  humanInTheLoopMiddleware,
-  type HumanInTheLoopRequest,
-  type HumanInTheLoopMiddlewareHumanResponse,
-  type HumanInTheLoopMiddlewareConfig,
-  type ActionRequest,
-} from "./hitl.js";
+export * from "./hitl.js";
 export {
   anthropicPromptCachingMiddleware,
   type PromptCachingMiddlewareConfig,
