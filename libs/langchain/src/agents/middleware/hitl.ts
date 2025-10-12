@@ -38,11 +38,18 @@ const DescriptionFunctionSchema = z
  */
 export type DescriptionFactory = z.infer<typeof DescriptionFunctionSchema>;
 
+/**
+ * The type of decision a human can make.
+ */
+const ALLOWED_DECISIONS = ["approve", "edit", "reject"] as const;
+const DecisionType = z.enum(ALLOWED_DECISIONS);
+export type DecisionType = z.infer<typeof DecisionType>;
+
 const InterruptOnConfigSchema = z.object({
   /**
    * The decisions that are allowed for this action.
    */
-  allowedDecisions: z.array(z.enum(["approve", "edit", "reject"])).optional(),
+  allowedDecisions: z.array(DecisionType).optional(),
   /**
    * The description attached to the request for human input.
    * Can be either:
@@ -103,10 +110,22 @@ export interface Action {
 }
 
 /**
- * The type of decision a human can make.
+ * Represents an action request with a name, arguments, and description.
  */
-export type DecisionType = "approve" | "edit" | "reject";
-const ALLOWED_DECISIONS: DecisionType[] = ["approve", "edit", "reject"];
+export interface ActionRequest {
+  /**
+   * The name of the action being requested.
+   */
+  name: string;
+  /**
+   * Key-value pairs of arguments needed for the action (e.g., {"a": 1, "b": 2}).
+   */
+  arguments: Record<string, any>;
+  /**
+   * The description of the action to be reviewed.
+   */
+  description?: string;
+}
 
 /**
  * Policy for reviewing a HITL request.
@@ -120,10 +139,6 @@ export interface ReviewConfig {
    * The decisions that are allowed for this request.
    */
   allowedDecisions: DecisionType[];
-  /**
-   * The description of the action to be reviewed.
-   */
-  description?: string;
   /**
    * JSON schema for the arguments associated with the action, if edits are allowed.
    */
@@ -154,7 +169,7 @@ export interface HITLRequest {
   /**
    * A list of agent actions for human review.
    */
-  actionRequests: Action[];
+  actionRequests: ActionRequest[];
   /**
    * Review configuration for all possible actions.
    */
@@ -228,9 +243,8 @@ export interface HITLResponse {
 export interface InterruptOnConfig {
   /**
    * The decisions that are allowed for this action.
-   * Defaults to `["approve", "edit", "reject"]` if not specified.
    */
-  allowedDecisions?: DecisionType[];
+  allowedDecisions: DecisionType[];
   /**
    * Human-facing description shown in the approval request.
    * Can be either:
@@ -484,12 +498,15 @@ export type HumanInTheLoopMiddlewareConfig = InferInteropZodInput<
 export function humanInTheLoopMiddleware(
   options: NonNullable<HumanInTheLoopMiddlewareConfig>
 ) {
-  const createReviewConfig = async (
+  const createActionAndConfig = async (
     toolCall: ToolCall,
     config: InterruptOnConfig,
     state: AgentBuiltInState,
     runtime: Runtime<unknown>
-  ): Promise<ReviewConfig> => {
+  ): Promise<{
+    actionRequest: ActionRequest;
+    reviewConfig: ReviewConfig;
+  }> => {
     const toolName = toolCall.name;
     const toolArgs = toolCall.args;
 
@@ -506,17 +523,28 @@ export function humanInTheLoopMiddleware(
       }\n\nTool: ${toolName}\nArgs: ${JSON.stringify(toolArgs, null, 2)}`;
     }
 
+    /**
+     * Create ActionRequest with description
+     */
+    const actionRequest: ActionRequest = {
+      name: toolName,
+      arguments: toolArgs,
+      description,
+    };
+
+    /**
+     * Create ReviewConfig
+     */
     const reviewConfig: ReviewConfig = {
       actionName: toolName,
-      allowedDecisions: config.allowedDecisions ?? ALLOWED_DECISIONS,
-      description,
+      allowedDecisions: config.allowedDecisions,
     };
 
     if (config.argumentsSchema) {
       reviewConfig.argumentsSchema = config.argumentsSchema;
     }
 
-    return reviewConfig;
+    return { actionRequest, reviewConfig };
   };
 
   const processDecision = (
@@ -524,7 +552,7 @@ export function humanInTheLoopMiddleware(
     toolCall: ToolCall,
     config: InterruptOnConfig
   ): { revisedToolCall: ToolCall | null; toolMessage: ToolMessage | null } => {
-    const allowedDecisions = config.allowedDecisions ?? ALLOWED_DECISIONS;
+    const allowedDecisions = config.allowedDecisions;
     if (decision.type === "approve" && allowedDecisions.includes("approve")) {
       return { revisedToolCall: toolCall, toolMessage: null };
     }
@@ -623,15 +651,10 @@ export function humanInTheLoopMiddleware(
         if (typeof toolConfig === "boolean") {
           if (toolConfig === true) {
             resolvedConfigs[toolName] = {
-              allowedDecisions: ALLOWED_DECISIONS,
+              allowedDecisions: [...ALLOWED_DECISIONS],
             };
           }
-        } else if (
-          typeof toolConfig === "object" &&
-          toolConfig !== null &&
-          "allowedDecisions" in toolConfig &&
-          toolConfig.allowedDecisions
-        ) {
+        } else if (toolConfig.allowedDecisions) {
           resolvedConfigs[toolName] = toolConfig as InterruptOnConfig;
         }
       }
@@ -655,25 +678,20 @@ export function humanInTheLoopMiddleware(
       }
 
       // Create action requests and review configs for all tools that need approval
-      const actionRequests: Action[] = [];
+      const actionRequests: ActionRequest[] = [];
       const reviewConfigs: ReviewConfig[] = [];
 
       for (const toolCall of interruptToolCalls) {
-        const toolName = toolCall.name;
-        const toolArgs = toolCall.args;
-        const interruptConfig = resolvedConfigs[toolName]!;
+        const interruptConfig = resolvedConfigs[toolCall.name]!;
 
-        // Create Action
-        const action: Action = { name: toolName, arguments: toolArgs };
-        actionRequests.push(action);
-
-        // Create ReviewConfig using helper method
-        const reviewConfig = await createReviewConfig(
+        // Create ActionRequest and ReviewConfig using helper method
+        const { actionRequest, reviewConfig } = await createActionAndConfig(
           toolCall,
           interruptConfig,
           state,
           runtime
         );
+        actionRequests.push(actionRequest);
         reviewConfigs.push(reviewConfig);
       }
 
@@ -722,14 +740,7 @@ export function humanInTheLoopMiddleware(
         lastMessage.tool_calls = revisedToolCalls;
       }
 
-      if (revisedToolCalls.length > 0) {
-        return { messages: [...state.messages, ...artificialToolMessages] };
-      }
-
-      return {
-        jumpTo: "model",
-        messages: [...state.messages, ...artificialToolMessages],
-      };
+      return { messages: [lastMessage, ...artificialToolMessages] };
     },
   });
 }

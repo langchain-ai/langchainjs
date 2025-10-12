@@ -177,6 +177,7 @@ describe("humanInTheLoopMiddleware", () => {
               "content": "Hello World",
               "filename": "greeting.txt",
             },
+            "description": "⚠️ File write operation requires approval",
             "name": "write_file",
           },
         ],
@@ -186,7 +187,6 @@ describe("humanInTheLoopMiddleware", () => {
             "allowedDecisions": [
               "approve",
             ],
-            "description": "⚠️ File write operation requires approval",
           },
         ],
       }
@@ -739,7 +739,7 @@ describe("humanInTheLoopMiddleware", () => {
     const task = state.tasks?.[0];
     const hitlRequest = task.interrupts[0].value as HITLRequest;
 
-    expect(hitlRequest.reviewConfigs[0].description).toBe(
+    expect(hitlRequest.actionRequests[0].description).toBe(
       "Dynamic description for tool: write_file\nFile: dynamic.txt\nContent length: 19 characters"
     );
 
