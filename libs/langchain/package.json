@@ -112,28 +112,6 @@
       },
       "input": "./src/chat_models/universal.ts"
     },
-    "./embeddings/cache_backed": {
-      "import": {
-        "types": "./dist/embeddings/cache_backed.d.ts",
-        "default": "./dist/embeddings/cache_backed.js"
-      },
-      "require": {
-        "types": "./dist/embeddings/cache_backed.d.cts",
-        "default": "./dist/embeddings/cache_backed.cjs"
-      },
-      "input": "./src/embeddings/cache_backed.ts"
-    },
-    "./embeddings/fake": {
-      "import": {
-        "types": "./dist/embeddings/fake.d.ts",
-        "default": "./dist/embeddings/fake.js"
-      },
-      "require": {
-        "types": "./dist/embeddings/fake.d.cts",
-        "default": "./dist/embeddings/fake.cjs"
-      },
-      "input": "./src/embeddings/fake.ts"
-    },
     "./hub": {
       "import": {
         "types": "./dist/hub/index.d.ts",
