@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { z } from "zod/v3";
 import {
   BaseMessage,
   AIMessage,
@@ -231,7 +231,7 @@ function restoreMessage(
  *
  * The middleware intercepts agent execution at two points:
  *
- * ### Request Phase (`modifyModelRequest`)
+ * ### Request Phase (`wrapModelRequest`)
  * - Applies regex-based pattern matching to all message content (HumanMessage, ToolMessage, SystemMessage, AIMessage)
  * - Processes both message text and AIMessage tool call arguments
  * - Each matched pattern generates:
@@ -283,7 +283,7 @@ function restoreMessage(
  * import { piiRedactionMiddleware } from "langchain";
  * import { createAgent } from "langchain";
  * import { tool } from "@langchain/core/tools";
- * import { z } from "zod";
+ * import { z } from "zod/v3";
  *
  * const PII_RULES = {
  *   ssn: /\b\d{3}-?\d{2}-?\d{4}\b/g,
@@ -360,21 +360,21 @@ export function piiRedactionMiddleware(
   return createMiddleware({
     name: "PIIRedactionMiddleware",
     contextSchema,
-    modifyModelRequest: async (request, state, runtime) => {
+    wrapModelRequest: async (request, handler) => {
       /**
        * Merge options with context, following bigTool.ts pattern
        */
-      const rules = runtime.context.rules ?? options.rules ?? {};
+      const rules = request.runtime.context.rules ?? options.rules ?? {};
 
       /**
        * If no rules are provided, skip processing
        */
       if (Object.keys(rules).length === 0) {
-        return;
+        return handler(request);
       }
 
       const processedMessages = await Promise.all(
-        state.messages.map((message: BaseMessage) =>
+        request.state.messages.map((message: BaseMessage) =>
           processMessage(message, {
             rules,
             redactionMap,
@@ -382,10 +382,10 @@ export function piiRedactionMiddleware(
         )
       );
 
-      return {
+      return handler({
         ...request,
         messages: processedMessages,
-      };
+      });
     },
     afterModel: async (state) => {
       /**

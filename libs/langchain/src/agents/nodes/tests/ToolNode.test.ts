@@ -1,9 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import {
-  StructuredTool,
-  tool,
-  ToolInputParsingException,
-} from "@langchain/core/tools";
+import { StructuredTool, tool } from "@langchain/core/tools";
 
 import {
   AIMessage,
@@ -29,13 +25,14 @@ import {
 
 import { ToolNode } from "../ToolNode.js";
 
-import { ToolInvocationError } from "../../errors.js";
 import {
   _AnyIdAIMessage,
   _AnyIdHumanMessage,
   _AnyIdToolMessage,
+  FakeToolCallingModel,
   MemorySaverAssertImmutable,
 } from "../../tests/utils.js";
+import { createAgent } from "../../index.js";
 
 const searchSchema = z.object({
   query: z.string().describe("The query to search for."),
@@ -910,29 +907,82 @@ describe("ToolNode error handling", () => {
     expect(result.messages[0].content).toBe("handled error");
   });
 
-  it("should throw an ToolInvocationError if tool parameters aren't valid", async () => {
-    const handleToolErrors = vi.fn();
-    const toolWithArgs = tool(
-      async () => {
-        throw new ToolInputParsingException("foo", "bar");
+  it("should use default error handling, only catch ToolInvocationError", async () => {
+    const strictTool = tool(
+      ({ value }: { value: number }) => {
+        /**
+         * Tool that will cause a ToolInvocationError
+         */
+        throw new Error(`ups ${value}`);
       },
       {
-        name: "tool_with_error",
+        name: "strict_tool",
+        description: "A tool with strict validation",
+        schema: z.object({
+          value: z.number(),
+        }),
       }
     );
-    const toolNode = new ToolNode([toolWithArgs], {
-      handleToolErrors,
+
+    const model = new FakeToolCallingModel({
+      toolCalls: [[{ name: "strict_tool", args: { value: 123 }, id: "1" }]],
     });
-    await expect(
-      toolNode.invoke({
-        messages: [
-          new AIMessage({
-            content: "",
-            tool_calls: [{ name: "tool_with_error", args: {}, id: "testid" }],
-          }),
-        ],
-      })
-    ).rejects.toThrow(ToolInvocationError);
-    expect(handleToolErrors).not.toHaveBeenCalled();
+
+    const agent = createAgent({
+      model,
+      tools: [strictTool],
+    });
+
+    const result = await agent.invoke({
+      messages: [new HumanMessage("Call strict tool with invalid args")],
+    });
+
+    // Tool error should be caught and converted to ToolMessage
+    const toolMessage = result.messages[2] as ToolMessage;
+    expect(toolMessage.content).toContain("ups 123");
+    expect(toolMessage.content).toContain("Please fix your mistakes");
   });
+
+  /**
+   * fails in dep test as it is relying on `@langchain/core` changes
+   */
+  if (!process.env.LC_DEPENDENCY_RANGE_TESTS) {
+    it("should use send error tool message if model creates wrong args", async () => {
+      const strictTool = tool(
+        ({ value }: { value: number }) => `Result: ${value}`,
+        {
+          name: "strict_tool",
+          description: "A tool with strict validation",
+          schema: z.object({
+            value: z.number(),
+          }),
+        }
+      );
+
+      const model = new FakeToolCallingModel({
+        toolCalls: [
+          // Invalid args - will cause ToolInvocationError
+          [{ name: "strict_tool", args: { value: "123" }, id: "1" }],
+        ],
+      });
+
+      const agent = createAgent({
+        model,
+        tools: [strictTool],
+        // No middleware - testing default ToolNode behavior
+      });
+
+      const result = await agent.invoke({
+        messages: [new HumanMessage("Call strict tool with invalid args")],
+      });
+
+      // Tool error should be caught and converted to ToolMessage
+      const toolMessage = result.messages[2] as ToolMessage;
+      expect(toolMessage.content).toContain("Expected number, received string");
+
+      expect(toolMessage.content).toContain(
+        `invoking tool 'strict_tool' with kwargs {"value":"123"}`
+      );
+    });
+  }
 });

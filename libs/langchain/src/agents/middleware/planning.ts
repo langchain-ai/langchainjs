@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { z } from "zod/v3";
 import { Command } from "@langchain/langgraph";
 import { tool } from "@langchain/core/tools";
 import { ToolMessage } from "@langchain/core/messages";
@@ -326,11 +326,12 @@ export function planningMiddleware(options?: PlanningMiddlewareOptions) {
     name: "planningMiddleware",
     stateSchema,
     tools: [writeTodos],
-    modifyModelRequest: (request) => ({
-      ...request,
-      systemPrompt:
-        (request.systemPrompt ? `${request.systemPrompt}\n\n` : "") +
-        (options?.systemPrompt ?? PLANNING_MIDDLEWARE_SYSTEM_PROMPT),
-    }),
+    wrapModelRequest: (request, handler) =>
+      handler({
+        ...request,
+        systemPrompt:
+          (request.systemPrompt ? `${request.systemPrompt}\n\n` : "") +
+          (options?.systemPrompt ?? PLANNING_MIDDLEWARE_SYSTEM_PROMPT),
+      }),
   });
 }

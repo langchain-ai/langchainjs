@@ -14,15 +14,18 @@ import {
   Command,
   Send,
   isGraphInterrupt,
+  type LangGraphRunnableConfig,
 } from "@langchain/langgraph";
 
 import { RunnableCallable } from "../RunnableCallable.js";
 import { PreHookAnnotation } from "../annotation.js";
 import { mergeAbortSignals } from "./utils.js";
 import { ToolInvocationError } from "../errors.js";
+import type { PrivateState } from "../runtime.js";
 import type {
   ToAnnotationRoot,
   AnyAnnotationRoot,
+  ToolCallWrapper,
 } from "../middleware/types.js";
 
 export interface ToolNodeOptions {
@@ -41,21 +44,36 @@ export interface ToolNodeOptions {
   /**
    * Whether to throw the error immediately if the tool fails or handle it by the `onToolError` function or via ToolMessage.
    *
-   * If `true` (default):
-   *   - a tool message with the error will be returned to the LLM
+   * **Default behavior** (matches Python):
+   *   - Catches only `ToolInvocationError` (invalid arguments from model) and converts to ToolMessage
+   *   - Re-raises all other errors including errors from `wrapToolCall` middleware
+   *
+   * If `true`:
+   *   - Catches all errors and returns a ToolMessage with the error
    *
    * If `false`:
-   *   - the error will be thrown immediately
+   *   - All errors are thrown immediately
    *
    * If a function is provided:
-   *   - returns a custom {@link ToolMessage} as result
-   *   - throws an error otherwise
+   *   - If function returns a `ToolMessage`, use it as the result
+   *   - If function returns `undefined`, re-raise the error
    *
-   * @default true
+   * @default A function that only catches ToolInvocationError
    */
   handleToolErrors?:
     | boolean
     | ((error: unknown, toolCall: ToolCall) => ToolMessage | undefined);
+  /**
+   * Optional wrapper function for tool execution.
+   * Allows middleware to intercept and modify tool calls before execution.
+   * The wrapper receives the tool call request and a handler function to execute the tool.
+   */
+  wrapToolCall?: ToolCallWrapper;
+  /**
+   * Optional function to get the private state (threadLevelCallCount, runModelCallCount).
+   * Used to provide runtime metadata to wrapToolCall middleware.
+   */
+  getPrivateState?: () => PrivateState;
 }
 
 const isBaseMessageArray = (input: unknown): input is BaseMessage[] =>
@@ -71,6 +89,37 @@ const isMessagesState = (
 
 const isSendInput = (input: unknown): input is { lg_tool_call: ToolCall } =>
   typeof input === "object" && input != null && "lg_tool_call" in input;
+
+/**
+ * Default error handler for tool errors.
+ *
+ * This is applied to errors from baseHandler (tool execution).
+ * For errors from wrapToolCall middleware, those are handled separately
+ * and will bubble up by default.
+ *
+ * Catches all tool execution errors and converts them to ToolMessage.
+ * This allows the LLM to see the error and potentially retry with different arguments.
+ */
+function defaultHandleToolErrors(
+  error: unknown,
+  toolCall: ToolCall
+): ToolMessage | undefined {
+  if (error instanceof ToolInvocationError) {
+    return new ToolMessage({
+      content: error.message,
+      tool_call_id: toolCall.id!,
+      name: toolCall.name,
+    });
+  }
+  /**
+   * Catch all other tool errors and convert to ToolMessage
+   */
+  return new ToolMessage({
+    content: `${error}\n Please fix your mistakes.`,
+    tool_call_id: toolCall.id!,
+    name: toolCall.name,
+  });
+}
 
 /**
  * `ToolNode` is a built-in LangGraph component that handles tool calls within an agent's workflow.
@@ -128,13 +177,19 @@ export class ToolNode<
 
   handleToolErrors:
     | boolean
-    | ((error: unknown, toolCall: ToolCall) => ToolMessage | undefined) = true;
+    | ((error: unknown, toolCall: ToolCall) => ToolMessage | undefined) =
+    defaultHandleToolErrors;
+
+  wrapToolCall?: ToolCallWrapper;
+
+  getPrivateState?: () => PrivateState;
 
   constructor(
     tools: (StructuredToolInterface | DynamicTool | RunnableToolLike)[],
     public options?: ToolNodeOptions
   ) {
-    const { name, tags, handleToolErrors } = options ?? {};
+    const { name, tags, handleToolErrors, wrapToolCall, getPrivateState } =
+      options ?? {};
     super({
       name,
       tags,
@@ -147,88 +202,193 @@ export class ToolNode<
     });
     this.tools = tools;
     this.handleToolErrors = handleToolErrors ?? this.handleToolErrors;
+    this.wrapToolCall = wrapToolCall;
+    this.getPrivateState = getPrivateState;
     this.signal = options?.signal;
+  }
+
+  /**
+   * Handle errors from tool execution or middleware.
+   * @param error - The error to handle
+   * @param call - The tool call that caused the error
+   * @param isMiddlewareError - Whether the error came from wrapToolCall middleware
+   * @returns ToolMessage if error is handled, otherwise re-throws
+   */
+  #handleError(
+    error: unknown,
+    call: ToolCall,
+    isMiddlewareError: boolean
+  ): ToolMessage {
+    /**
+     * {@link NodeInterrupt} errors are a breakpoint to bring a human into the loop.
+     * As such, they are not recoverable by the agent and shouldn't be fed
+     * back. Instead, re-throw these errors even when `handleToolErrors = true`.
+     */
+    if (isGraphInterrupt(error)) {
+      throw error;
+    }
+
+    /**
+     * If the signal is aborted, we want to bubble up the error to the invoke caller.
+     */
+    if (this.signal?.aborted) {
+      throw error;
+    }
+
+    /**
+     * If error is from middleware and handleToolErrors is not true, bubble up
+     * (default handler and false both re-raise middleware errors)
+     */
+    if (isMiddlewareError && this.handleToolErrors !== true) {
+      throw error;
+    }
+
+    /**
+     * If handleToolErrors is false, throw all errors
+     */
+    if (!this.handleToolErrors) {
+      throw error;
+    }
+
+    /**
+     * Apply handleToolErrors to the error
+     */
+    if (typeof this.handleToolErrors === "function") {
+      const result = this.handleToolErrors(error, call);
+      if (result && ToolMessage.isInstance(result)) {
+        return result;
+      }
+
+      /**
+       * `handleToolErrors` returned undefined - re-raise
+       */
+      throw error;
+    } else if (this.handleToolErrors) {
+      return new ToolMessage({
+        name: call.name,
+        content: `${error}\n Please fix your mistakes.`,
+        tool_call_id: call.id!,
+      });
+    }
+
+    /**
+     * Shouldn't reach here, but throw as fallback
+     */
+    throw error;
   }
 
   protected async runTool(
     call: ToolCall,
-    config: RunnableConfig
+    config: RunnableConfig,
+    state?: ToAnnotationRoot<StateSchema>["State"] & PreHookAnnotation["State"]
   ): Promise<ToolMessage | Command> {
-    const tool = this.tools.find((tool) => tool.name === call.name);
-    try {
+    /**
+     * Define the base handler that executes the tool.
+     * When wrapToolCall middleware is present, this handler does NOT catch errors
+     * so the middleware can handle them.
+     * When no middleware, errors are caught and handled here.
+     */
+    const baseHandler = async (
+      toolCall: ToolCall
+    ): Promise<ToolMessage | Command> => {
+      const tool = this.tools.find((tool) => tool.name === toolCall.name);
       if (tool === undefined) {
-        throw new Error(`Tool "${call.name}" not found.`);
+        throw new Error(`Tool "${toolCall.name}" not found.`);
       }
 
-      const output = await tool.invoke(
-        { ...call, type: "tool_call" },
-        {
-          ...config,
-          signal: mergeAbortSignals(this.signal, config.signal),
+      try {
+        const output = await tool.invoke(
+          { ...toolCall, type: "tool_call" },
+          {
+            ...config,
+            signal: mergeAbortSignals(this.signal, config.signal),
+          }
+        );
+
+        if (ToolMessage.isInstance(output) || isCommand(output)) {
+          return output as ToolMessage | Command;
         }
-      );
 
-      if (ToolMessage.isInstance(output) || isCommand(output)) {
-        return output as ToolMessage | Command;
-      }
-
-      return new ToolMessage({
-        name: tool.name,
-        content: typeof output === "string" ? output : JSON.stringify(output),
-        tool_call_id: call.id!,
-      });
-    } catch (e: unknown) {
-      /**
-       * If tool invocation fails due to input parsing error, throw a {@link ToolInvocationError}
-       */
-      if (e instanceof ToolInputParsingException) {
-        throw new ToolInvocationError(e, call);
-      }
-
-      /**
-       * throw the error if user prefers not to handle tool errors
-       */
-      if (!this.handleToolErrors) {
-        throw e;
-      }
-
-      if (isGraphInterrupt(e)) {
+        return new ToolMessage({
+          name: tool.name,
+          content: typeof output === "string" ? output : JSON.stringify(output),
+          tool_call_id: toolCall.id!,
+        });
+      } catch (e: unknown) {
         /**
-         * {@link NodeInterrupt} errors are a breakpoint to bring a human into the loop.
-         * As such, they are not recoverable by the agent and shouldn't be fed
-         * back. Instead, re-throw these errors even when `handleToolErrors = true`.
+         * Handle errors from tool execution (not from wrapToolCall)
+         * If tool invocation fails due to input parsing error, throw a {@link ToolInvocationError}
+         */
+        if (e instanceof ToolInputParsingException) {
+          throw new ToolInvocationError(e, toolCall);
+        }
+        /**
+         * Re-throw to be handled by caller
          */
         throw e;
       }
+    };
 
-      /**
-       * If the signal is aborted, we want to bubble up the error to the invoke caller.
-       */
-      if (this.signal?.aborted) {
-        throw e;
-      }
+    /**
+     * If wrapToolCall is provided, use it to wrap the tool execution
+     */
+    if (this.wrapToolCall && state) {
+      try {
+        /**
+         * Build runtime from LangGraph config (similar to MiddlewareNode)
+         */
+        const lgConfig = config as LangGraphRunnableConfig;
 
-      /**
-       * if the user provides a function, call it with the error and tool call
-       * and return the result if it is a {@link ToolMessage}
-       */
-      if (typeof this.handleToolErrors === "function") {
-        const result = this.handleToolErrors(e, call);
-        if (result && ToolMessage.isInstance(result)) {
-          return result;
+        /**
+         * Get private state if available
+         */
+        const privateState = this.getPrivateState?.() || {
+          threadLevelCallCount: 0,
+          runModelCallCount: 0,
+        };
+
+        const runtime = {
+          context: lgConfig?.context,
+          writer: lgConfig?.writer,
+          interrupt: lgConfig?.interrupt,
+          signal: lgConfig?.signal,
+          threadLevelCallCount: privateState.threadLevelCallCount,
+          runModelCallCount: privateState.runModelCallCount,
+        };
+
+        /**
+         * Find the tool instance to include in the request
+         */
+        const tool = this.tools.find((t) => t.name === call.name);
+        if (!tool) {
+          throw new Error(`Tool "${call.name}" not found.`);
         }
-      } else if (this.handleToolErrors) {
-        return new ToolMessage({
-          name: call.name,
-          content: `${e}\n Please fix your mistakes.`,
-          tool_call_id: call.id!,
-        });
-      }
 
+        const request = {
+          toolCall: call,
+          tool,
+          state,
+          runtime,
+        };
+        return await this.wrapToolCall(request, baseHandler);
+      } catch (e: unknown) {
+        /**
+         * Handle middleware errors
+         */
+        return this.#handleError(e, call, true);
+      }
+    }
+
+    /**
+     * No wrapToolCall - execute tool directly and handle errors here
+     */
+    try {
+      return await baseHandler(call);
+    } catch (e: unknown) {
       /**
-       * If the user doesn't handle the error, throw it
+       * Handle tool errors when no middleware provided
        */
-      throw e;
+      return this.#handleError(e, call, false);
     }
   }
 
@@ -239,7 +399,7 @@ export class ToolNode<
     let outputs: (ToolMessage | Command)[];
 
     if (isSendInput(state)) {
-      outputs = [await this.runTool(state.lg_tool_call, config)];
+      outputs = [await this.runTool(state.lg_tool_call, config, state)];
     } else {
       let messages: BaseMessage[];
       if (isBaseMessageArray(state)) {
@@ -274,7 +434,7 @@ export class ToolNode<
       outputs = await Promise.all(
         aiMessage.tool_calls
           ?.filter((call) => call.id == null || !toolMessageIds.has(call.id))
-          .map((call) => this.runTool(call, config)) ?? []
+          .map((call) => this.runTool(call, config, state)) ?? []
       );
     }
 

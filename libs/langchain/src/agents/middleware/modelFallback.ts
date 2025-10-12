@@ -1,6 +1,5 @@
 import type { LanguageModelLike } from "@langchain/core/language_models/base";
 import { initChatModel } from "../../chat_models/universal.js";
-import type { ModelRequest } from "../nodes/types.js";
 import type { AgentMiddleware } from "./types.js";
 import { createMiddleware } from "../middleware.js";
 
@@ -44,41 +43,43 @@ export function modelFallbackMiddleware(
 ): AgentMiddleware {
   return createMiddleware({
     name: "modelFallbackMiddleware",
-    retryModelRequest: async (
-      _error,
-      request,
-      _state,
-      _runtime,
-      attempt
-    ): Promise<ModelRequest | undefined> => {
+    wrapModelRequest: async (request, handler) => {
       /**
-       * attempt 1 = primary model failed, try models[0] (first fallback)
+       * Try the primary model first
        */
-      const fallbackIndex = attempt - 1;
+      try {
+        return await handler(request);
+      } catch (error) {
+        /**
+         * If primary model fails, try fallback models in sequence
+         */
+        for (let i = 0; i < fallbackModels.length; i++) {
+          try {
+            const fallbackModel = fallbackModels[i];
+            const model =
+              typeof fallbackModel === "string"
+                ? await initChatModel(fallbackModel)
+                : fallbackModel;
 
-      /**
-       * All fallback models exhausted
-       */
-      if (fallbackIndex >= fallbackModels.length) {
-        return undefined;
+            return await handler({
+              ...request,
+              model,
+            });
+          } catch (fallbackError) {
+            /**
+             * If this is the last fallback, throw the error
+             */
+            if (i === fallbackModels.length - 1) {
+              throw fallbackError;
+            }
+            // Otherwise, continue to next fallback
+          }
+        }
+        /**
+         * If no fallbacks were provided, re-throw the original error
+         */
+        throw error;
       }
-
-      /**
-       * Get or initialize the fallback model
-       */
-      const fallbackModel = fallbackModels[fallbackIndex];
-      const model =
-        typeof fallbackModel === "string"
-          ? await initChatModel(fallbackModel)
-          : fallbackModel;
-
-      /**
-       * Try next fallback model
-       */
-      return {
-        ...request,
-        model,
-      };
     },
   });
 }

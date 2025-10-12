@@ -11,14 +11,20 @@ import {
   Command,
   CompiledStateGraph,
   type GetStateOptions,
+  type LangGraphRunnableConfig,
 } from "@langchain/langgraph";
 import type { CheckpointListOptions } from "@langchain/langgraph-checkpoint";
 import { ToolMessage, AIMessage } from "@langchain/core/messages";
 import { IterableReadableStream } from "@langchain/core/utils/stream";
-import type { RunnableConfig } from "@langchain/core/runnables";
+import type { Runnable, RunnableConfig } from "@langchain/core/runnables";
+import type { StreamEvent } from "@langchain/core/tracers/log_stream";
 
 import { createAgentAnnotationConditional } from "./annotation.js";
-import { isClientTool, validateLLMHasNoBoundTools } from "./utils.js";
+import {
+  isClientTool,
+  validateLLMHasNoBoundTools,
+  wrapToolCall,
+} from "./utils.js";
 
 import { AgentNode } from "./nodes/AgentNode.js";
 import { ToolNode } from "./nodes/ToolNode.js";
@@ -143,17 +149,17 @@ export class ReactAgent<
         .map((tool) => tool.name)
     );
 
-    // Create a schema that merges agent base schema with middleware state schemas
-    const schema = createAgentAnnotationConditional<
-      StructuredResponseFormat,
-      TMiddleware
-    >(
+    /**
+     * Create a schema that merges agent base schema with middleware state schemas
+     * Using Zod with withLangGraph ensures LangGraph Studio gets proper metadata
+     */
+    const schema = createAgentAnnotationConditional<TMiddleware>(
       this.options.responseFormat !== undefined,
       this.options.middleware as TMiddleware
     );
 
     const workflow = new StateGraph(
-      schema as AnnotationRoot<any>,
+      schema as unknown as AnnotationRoot<any>,
       this.options.contextSchema
     );
 
@@ -173,14 +179,7 @@ export class ReactAgent<
       name: string;
       allowed?: string[];
     }[] = [];
-    const modifyModelRequestHookMiddleware: [
-      AgentMiddleware,
-      /**
-       * ToDo: better type to get the state of middleware
-       */
-      () => any
-    ][] = [];
-    const retryModelRequestHookMiddleware: [
+    const wrapModelRequestHookMiddleware: [
       AgentMiddleware,
       /**
        * ToDo: better type to get the state of middleware
@@ -198,8 +197,7 @@ export class ReactAgent<
       toolClasses,
       shouldReturnDirect,
       signal: this.options.signal,
-      modifyModelRequestHookMiddleware,
-      retryModelRequestHookMiddleware,
+      wrapModelRequestHookMiddleware,
     });
 
     const middlewareNames = new Set<string>();
@@ -246,18 +244,8 @@ export class ReactAgent<
         );
       }
 
-      if (m.modifyModelRequest) {
-        modifyModelRequestHookMiddleware.push([
-          m,
-          () => ({
-            ...beforeModelNode?.getState(),
-            ...afterModelNode?.getState(),
-          }),
-        ]);
-      }
-
-      if (m.retryModelRequest) {
-        retryModelRequestHookMiddleware.push([
+      if (m.wrapModelRequest) {
+        wrapModelRequestHookMiddleware.push([
           m,
           () => ({
             ...beforeModelNode?.getState(),
@@ -277,11 +265,19 @@ export class ReactAgent<
     );
 
     /**
+     * Collect and compose wrapToolCall handlers from middleware
+     * Wrap each handler with error handling and validation
+     */
+    const wrapToolCallHandler = wrapToolCall(middleware);
+
+    /**
      * add single tool node for all tools
      */
     if (toolClasses.filter(isClientTool).length > 0) {
       const toolNode = new ToolNode(toolClasses.filter(isClientTool), {
         signal: this.options.signal,
+        wrapToolCall: wrapToolCallHandler,
+        getPrivateState: () => this.#agentNode.getState()._privateState,
       });
       allNodeWorkflows.addNode("tools", toolNode);
     }
@@ -889,82 +885,6 @@ export class ReactAgent<
   }
 
   /**
-   * Executes the agent with low-level event streaming, returning detailed events as they occur.
-   *
-   * This method provides fine-grained control over streaming, emitting events for every
-   * operation during execution. This is useful when you need to:
-   * - Stream individual LLM tokens as they're generated
-   * - Monitor detailed execution flow with timing information
-   * - Handle specific event types (model start/end, tool calls, etc.)
-   * - Debug or trace agent behavior at a granular level
-   *
-   * For simpler state-based streaming, use `stream` instead.
-   *
-   * @param state - The initial state for the agent execution. Can be:
-   *   - An object containing `messages` array and any middleware-specific state properties
-   *   - A Command object for more advanced control flow
-   *
-   * @param config - Optional runtime configuration including:
-   * @param config.context - The context for the agent execution.
-   * @param config.configurable - LangGraph configuration options like `thread_id`, `run_id`, etc.
-   * @param config.store - The store for the agent execution for persisting state, see more in {@link https://docs.langchain.com/oss/javascript/langgraph/memory#memory-storage | Memory storage}.
-   * @param config.signal - An optional {@link https://developer.mozilla.org/en-US/docs/Web/API/AbortSignal | `AbortSignal`} for the agent execution.
-   * @param config.recursionLimit - The recursion limit for the agent execution.
-   * @param config.streamMode - The streaming mode for the agent execution, see more in {@link https://docs.langchain.com/oss/javascript/langgraph/streaming#supported-stream-modes | Supported stream modes}.
-   *
-   * @param streamOptions - Additional streaming options (passed to LangGraph's streamEvents).
-   *
-   * @returns An IterableReadableStream of detailed events including:
-   *          - `on_chat_model_start`: When the LLM begins processing
-   *          - `on_chat_model_stream`: Streaming tokens from the LLM
-   *          - `on_chat_model_end`: When the LLM completes
-   *          - `on_tool_start`: When a tool execution begins
-   *          - `on_tool_end`: When a tool execution completes
-   *          - `on_chain_start`: When middleware chains begin
-   *          - `on_chain_end`: When middleware chains complete
-   *          - And other LangGraph v2 stream events
-   *
-   * @example
-   * ```typescript
-   * const agent = new ReactAgent({
-   *   llm: myModel,
-   *   tools: [calculator, webSearch]
-   * });
-   *
-   * const stream = await agent.streamEvents({
-   *   messages: [{ role: "human", content: "What's 2+2 and the weather in NYC?" }]
-   * }, {
-   *   version: "v2"
-   * });
-   *
-   * for await (const event of stream) {
-   *   if (event.event === "on_chat_model_stream") {
-   *     process.stdout.write(event.data.chunk.content); // Stream tokens
-   *   }
-   * }
-   * ```
-   */
-  async streamEvents(
-    state: InvokeStateParameter<TMiddleware>,
-    config?: StreamConfiguration<
-      InferContextInput<ContextSchema> &
-        InferMiddlewareContextInputs<TMiddleware>
-    > & { version?: "v1" | "v2" },
-    streamOptions?: any
-  ): Promise<IterableReadableStream<any>> {
-    const initializedState = await this.#initializeMiddlewareStates(state);
-    await this.#populatePrivateState(config);
-    return this.#graph.streamEvents(
-      initializedState,
-      {
-        ...(config as any),
-        version: config?.version ?? "v2",
-      },
-      streamOptions
-    ) as IterableReadableStream<any>;
-  }
-
-  /**
    * Visualize the graph as a PNG image.
    * @param params - Parameters for the drawMermaidPng method.
    * @param params.withStyles - Whether to include styles in the graph.
@@ -1019,6 +939,26 @@ export class ReactAgent<
   /**
    * @internal
    */
+  streamEvents(
+    state: InvokeStateParameter<TMiddleware>,
+    config?: StreamConfiguration<
+      InferContextInput<ContextSchema> &
+        InferMiddlewareContextInputs<TMiddleware>
+    > & { version?: "v1" | "v2" },
+    streamOptions?: Parameters<Runnable["streamEvents"]>[2]
+  ): IterableReadableStream<StreamEvent> {
+    return this.#graph.streamEvents(
+      state,
+      {
+        ...(config as any),
+        version: config?.version ?? "v2",
+      },
+      streamOptions
+    );
+  }
+  /**
+   * @internal
+   */
   getGraphAsync(config?: RunnableConfig) {
     return this.#graph.getGraphAsync(config) as never;
   }
@@ -1045,5 +985,15 @@ export class ReactAgent<
    */
   getSubgraphAsync(namespace?: string, recurse?: boolean) {
     return this.#graph.getSubgraphsAsync(namespace, recurse) as never;
+  }
+  /**
+   * @internal
+   */
+  updateState(
+    inputConfig: LangGraphRunnableConfig,
+    values: Record<string, unknown> | unknown,
+    asNode?: string
+  ) {
+    return this.#graph.updateState(inputConfig, values, asNode) as never;
   }
 }

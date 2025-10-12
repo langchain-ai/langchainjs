@@ -47,12 +47,13 @@ describe("runtime", () => {
     ).rejects.toThrow("Cannot assign to read only property");
   });
 
-  it("should throw on the attempt to write to the runtime in modifyModelRequest", async () => {
+  it("should throw on the attempt to write to the runtime in wrapModelRequest", async () => {
     const model = new FakeToolCallingModel({});
     const middleware = createMiddleware({
       name: "middleware",
-      modifyModelRequest: async (_, __, runtime) => {
-        runtime.runModelCallCount = 123;
+      wrapModelRequest: async (request, handler) => {
+        request.runtime.runModelCallCount = 123;
+        return handler(request);
       },
     });
 

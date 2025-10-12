@@ -1,6 +1,6 @@
 import { describe, it, expectTypeOf } from "vitest";
 import { z } from "zod/v3";
-import { HumanMessage, BaseMessage } from "@langchain/core/messages";
+import { HumanMessage, BaseMessage, AIMessage } from "@langchain/core/messages";
 import { tool } from "@langchain/core/tools";
 
 import { createAgent, createMiddleware } from "../index.js";
@@ -183,20 +183,20 @@ describe("middleware types", () => {
             customRequiredContextProp: string;
           }>();
         },
-        modifyModelRequest: async (request, _state, runtime) => {
+        wrapModelRequest: async (request, handler) => {
           expectTypeOf(request.tools).toEqualTypeOf<
             (ServerTool | ClientTool)[]
           >();
-          expectTypeOf(runtime.context).toEqualTypeOf<{
+          expectTypeOf(request.runtime.context).toEqualTypeOf<{
             customDefaultContextProp: string;
             customOptionalContextProp?: string;
             customRequiredContextProp: string;
           }>();
 
-          return {
+          return handler({
             ...request,
             tools: [tool(() => "result", { name: "toolA" })],
-          };
+          });
         },
       });
 
@@ -246,8 +246,8 @@ describe("middleware types", () => {
             >
           >();
         },
-        modifyModelRequest: async (_request, _state, runtime) => {
-          expectTypeOf(runtime.context).toEqualTypeOf<
+        wrapModelRequest: async (request) => {
+          expectTypeOf(request.runtime.context).toEqualTypeOf<
             Partial<
               | {
                   customOptionalContextProp: string;
@@ -255,6 +255,8 @@ describe("middleware types", () => {
               | undefined
             >
           >();
+
+          return new AIMessage("foobar");
         },
       });
 
@@ -296,12 +298,14 @@ describe("middleware types", () => {
             }>
           >();
         },
-        modifyModelRequest: async (_request, _state, runtime) => {
-          expectTypeOf(runtime.context).toEqualTypeOf<
+        wrapModelRequest: async (request) => {
+          expectTypeOf(request.runtime.context).toEqualTypeOf<
             Partial<{
               customDefaultContextProp: string;
             }>
           >();
+
+          return new AIMessage("foobar");
         },
       });
 
