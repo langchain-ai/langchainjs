@@ -943,46 +943,46 @@ describe("ToolNode error handling", () => {
     expect(toolMessage.content).toContain("Please fix your mistakes");
   });
 
-  it("should use send error tool message if model creates wrong args", async () => {
-    const strictTool = tool(
-      ({ value }: { value: number }) => `Result: ${value}`,
-      {
-        name: "strict_tool",
-        description: "A tool with strict validation",
-        schema: z.object({
-          value: z.number(),
-        }),
-      }
-    );
+  /**
+   * fails in dep test as it is relying on `@langchain/core` changes
+   */
+  if (!process.env.LC_DEPENDENCY_RANGE_TESTS) {
+    it("should use send error tool message if model creates wrong args", async () => {
+      const strictTool = tool(
+        ({ value }: { value: number }) => `Result: ${value}`,
+        {
+          name: "strict_tool",
+          description: "A tool with strict validation",
+          schema: z.object({
+            value: z.number(),
+          }),
+        }
+      );
 
-    const model = new FakeToolCallingModel({
-      toolCalls: [
-        // Invalid args - will cause ToolInvocationError
-        [{ name: "strict_tool", args: { value: "123" }, id: "1" }],
-      ],
-    });
+      const model = new FakeToolCallingModel({
+        toolCalls: [
+          // Invalid args - will cause ToolInvocationError
+          [{ name: "strict_tool", args: { value: "123" }, id: "1" }],
+        ],
+      });
 
-    const agent = createAgent({
-      model,
-      tools: [strictTool],
-      // No middleware - testing default ToolNode behavior
-    });
+      const agent = createAgent({
+        model,
+        tools: [strictTool],
+        // No middleware - testing default ToolNode behavior
+      });
 
-    const result = await agent.invoke({
-      messages: [new HumanMessage("Call strict tool with invalid args")],
-    });
+      const result = await agent.invoke({
+        messages: [new HumanMessage("Call strict tool with invalid args")],
+      });
 
-    // Tool error should be caught and converted to ToolMessage
-    const toolMessage = result.messages[2] as ToolMessage;
-    expect(toolMessage.content).toContain("Expected number, received string");
+      // Tool error should be caught and converted to ToolMessage
+      const toolMessage = result.messages[2] as ToolMessage;
+      expect(toolMessage.content).toContain("Expected number, received string");
 
-    /**
-     * fails in dep test as it is relying on `@langchain/core` changes
-     */
-    if (!process.env.LC_DEPENDENCY_RANGE_TESTS) {
       expect(toolMessage.content).toContain(
         `invoking tool 'strict_tool' with kwargs {"value":"123"}`
       );
-    }
-  });
+    });
+  }
 });
