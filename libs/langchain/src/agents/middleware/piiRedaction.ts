@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { z } from "zod/v3";
 import {
   BaseMessage,
   AIMessage,
@@ -283,7 +283,7 @@ function restoreMessage(
  * import { piiRedactionMiddleware } from "langchain";
  * import { createAgent } from "langchain";
  * import { tool } from "@langchain/core/tools";
- * import { z } from "zod";
+ * import { z } from "zod/v3";
  *
  * const PII_RULES = {
  *   ssn: /\b\d{3}-?\d{2}-?\d{4}\b/g,

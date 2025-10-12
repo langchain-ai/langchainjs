@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { z } from "zod/v3";
 import { Command } from "@langchain/langgraph";
 import { tool } from "@langchain/core/tools";
 import { ToolMessage } from "@langchain/core/messages";
