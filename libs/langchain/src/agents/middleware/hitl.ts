@@ -49,7 +49,7 @@ const InterruptOnConfigSchema = z.object({
   /**
    * The decisions that are allowed for this action.
    */
-  allowedDecisions: z.array(DecisionType).optional(),
+  allowedDecisions: z.array(DecisionType),
   /**
    * The description attached to the request for human input.
    * Can be either:
@@ -60,6 +60,8 @@ const InterruptOnConfigSchema = z.object({
    * @example
    * Static string description
    * ```typescript
+   * import type { InterruptOnConfig } from "langchain";
+   *
    * const config: InterruptOnConfig = {
    *   allowedDecisions: ["approve", "reject"],
    *   description: "Please review this tool execution"
@@ -69,8 +71,13 @@ const InterruptOnConfigSchema = z.object({
    * @example
    * Dynamic callable description
    * ```typescript
-   * import { type DescriptionFactory, type ToolCall } from "langchain";
-   * import type { AgentBuiltInState, Runtime } from "langchain/agents";
+   * import type {
+   *   AgentBuiltInState,
+   *   Runtime,
+   *   DescriptionFactory,
+   *   ToolCall,
+   *   InterruptOnConfig
+   * } from "langchain";
    *
    * const formatToolDescription: DescriptionFactory = (
    *   toolCall: ToolCall,
@@ -92,8 +99,7 @@ const InterruptOnConfigSchema = z.object({
    */
   argumentsSchema: z.record(z.any()).optional(),
 });
-
-type InterruptOnConfigSchema = z.input<typeof InterruptOnConfigSchema>;
+export type InterruptOnConfig = z.input<typeof InterruptOnConfigSchema>;
 
 /**
  * Represents an action with a name and arguments.
@@ -219,45 +225,6 @@ export interface HITLResponse {
    * The decisions made by the human.
    */
   decisions: Decision[];
-}
-
-/**
- * Configuration for an action requiring human in the loop.
- * This is the configuration format used in the `humanInTheLoopMiddleware` function.
- *
- * @example
- * ```typescript
- * const config: InterruptOnConfig = {
- *   allowedDecisions: ["approve", "edit"],
- *   description: "Please review this operation",
- *   argumentsSchema: {
- *     type: "object",
- *     properties: {
- *       filename: { type: "string" },
- *       content: { type: "string" }
- *     }
- *   }
- * };
- * ```
- */
-export interface InterruptOnConfig {
-  /**
-   * The decisions that are allowed for this action.
-   */
-  allowedDecisions: DecisionType[];
-  /**
-   * Human-facing description shown in the approval request.
-   * Can be either:
-   * - A static string describing the approval request
-   * - A {@link DescriptionFactory} function that dynamically generates the description
-   *   based on the tool call, agent state, and runtime context
-   */
-  description?: string | DescriptionFactory;
-  /**
-   * JSON schema for the arguments associated with the action, if edits are allowed.
-   * Used to validate and provide structure for edited tool arguments.
-   */
-  argumentsSchema?: Record<string, any>;
 }
 
 const contextSchema = z.object({
@@ -559,6 +526,24 @@ export function humanInTheLoopMiddleware(
 
     if (decision.type === "edit" && allowedDecisions.includes("edit")) {
       const editedAction = decision.editedAction;
+
+      /**
+       * Validate edited action structure
+       */
+      if (!editedAction || typeof editedAction.name !== "string") {
+        throw new Error(
+          `Invalid edited action for tool "${toolCall.name}": name must be a string`
+        );
+      }
+      if (
+        !editedAction.arguments ||
+        typeof editedAction.arguments !== "object"
+      ) {
+        throw new Error(
+          `Invalid edited action for tool "${toolCall.name}": arguments must be an object`
+        );
+      }
+
       return {
         revisedToolCall: {
           type: "tool_call",
@@ -645,7 +630,9 @@ export function humanInTheLoopMiddleware(
         return;
       }
 
-      // Resolve per-tool configs (boolean true -> all decisions allowed; false -> auto-approve)
+      /**
+       * Resolve per-tool configs (boolean true -> all decisions allowed; false -> auto-approve)
+       */
       const resolvedConfigs: Record<string, InterruptOnConfig> = {};
       for (const [toolName, toolConfig] of Object.entries(config.interruptOn)) {
         if (typeof toolConfig === "boolean") {
@@ -677,14 +664,18 @@ export function humanInTheLoopMiddleware(
         return;
       }
 
-      // Create action requests and review configs for all tools that need approval
+      /**
+       * Create action requests and review configs for all tools that need approval
+       */
       const actionRequests: ActionRequest[] = [];
       const reviewConfigs: ReviewConfig[] = [];
 
       for (const toolCall of interruptToolCalls) {
         const interruptConfig = resolvedConfigs[toolCall.name]!;
 
-        // Create ActionRequest and ReviewConfig using helper method
+        /**
+         * Create ActionRequest and ReviewConfig using helper method
+         */
         const { actionRequest, reviewConfig } = await createActionAndConfig(
           toolCall,
           interruptConfig,
@@ -695,17 +686,32 @@ export function humanInTheLoopMiddleware(
         reviewConfigs.push(reviewConfig);
       }
 
-      // Create single HITLRequest with all actions and configs
+      /**
+       * Create single HITLRequest with all actions and configs
+       */
       const hitlRequest: HITLRequest = {
         actionRequests,
         reviewConfigs,
       };
 
-      // Send interrupt and get response
+      /**
+       * Send interrupt and get response
+       */
       const hitlResponse = (await interrupt(hitlRequest)) as HITLResponse;
       const decisions = hitlResponse.decisions;
 
-      // Validate that the number of decisions matches the number of interrupt tool calls
+      /**
+       * Validate that decisions is a valid array before checking length
+       */
+      if (!decisions || !Array.isArray(decisions)) {
+        throw new Error(
+          "Invalid HITLResponse: decisions must be a non-empty array"
+        );
+      }
+
+      /**
+       * Validate that the number of decisions matches the number of interrupt tool calls
+       */
       if (decisions.length !== interruptToolCalls.length) {
         throw new Error(
           `Number of human decisions (${decisions.length}) does not match number of hanging tool calls (${interruptToolCalls.length}).`
@@ -715,7 +721,9 @@ export function humanInTheLoopMiddleware(
       const revisedToolCalls: ToolCall[] = [...autoApprovedToolCalls];
       const artificialToolMessages: ToolMessage[] = [];
 
-      // Process each decision using helper method
+      /**
+       * Process each decision using helper method
+       */
       for (let i = 0; i < decisions.length; i++) {
         const decision = decisions[i]!;
         const toolCall = interruptToolCalls[i]!;
@@ -735,7 +743,9 @@ export function humanInTheLoopMiddleware(
         }
       }
 
-      // Update the AI message to only include approved tool calls
+      /**
+       * Update the AI message to only include approved tool calls
+       */
       if (AIMessage.isInstance(lastMessage)) {
         lastMessage.tool_calls = revisedToolCalls;
       }

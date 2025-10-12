@@ -761,4 +761,328 @@ describe("humanInTheLoopMiddleware", () => {
       expect.anything()
     );
   });
+
+  it("should throw error when edited action has invalid name", async () => {
+    const hitlMiddleware = humanInTheLoopMiddleware({
+      interruptOn: {
+        write_file: {
+          allowedDecisions: ["edit"],
+        },
+      },
+    });
+
+    const model = new FakeToolCallingModel({
+      toolCalls: [
+        [
+          {
+            id: "call_1",
+            name: "write_file",
+            args: { filename: "test.txt", content: "test" },
+          },
+        ],
+      ],
+    });
+
+    const checkpointer = new MemorySaver();
+    const agent = createAgent({
+      model,
+      checkpointer,
+      tools: [writeFileTool],
+      middleware: [hitlMiddleware] as const,
+    });
+
+    const config = {
+      configurable: {
+        thread_id: "test-invalid-name",
+      },
+    };
+
+    // Initial invocation
+    await agent.invoke(
+      {
+        messages: [new HumanMessage("Write test file")],
+      },
+      config
+    );
+
+    // Resume with invalid edited action (name is not a string)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const invalidEditedAction: any = {
+      name: 123, // Invalid: should be string
+      arguments: { filename: "test.txt", content: "test" },
+    };
+
+    await expect(() =>
+      agent.invoke(
+        new Command({
+          resume: {
+            decisions: [
+              {
+                type: "edit",
+                editedAction: invalidEditedAction,
+              },
+            ],
+          } as HITLResponse,
+        }),
+        config
+      )
+    ).rejects.toThrow(
+      'Invalid edited action for tool "write_file": name must be a string'
+    );
+  });
+
+  it("should throw error when edited action has invalid arguments", async () => {
+    const hitlMiddleware = humanInTheLoopMiddleware({
+      interruptOn: {
+        write_file: {
+          allowedDecisions: ["edit"],
+        },
+      },
+    });
+
+    const model = new FakeToolCallingModel({
+      toolCalls: [
+        [
+          {
+            id: "call_1",
+            name: "write_file",
+            args: { filename: "test.txt", content: "test" },
+          },
+        ],
+      ],
+    });
+
+    const checkpointer = new MemorySaver();
+    const agent = createAgent({
+      model,
+      checkpointer,
+      tools: [writeFileTool],
+      middleware: [hitlMiddleware] as const,
+    });
+
+    const config = {
+      configurable: {
+        thread_id: "test-invalid-arguments",
+      },
+    };
+
+    // Initial invocation
+    await agent.invoke(
+      {
+        messages: [new HumanMessage("Write test file")],
+      },
+      config
+    );
+
+    // Resume with invalid edited action (arguments is not an object)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const invalidEditedAction: any = {
+      name: "write_file",
+      arguments: "not an object", // Invalid: should be object
+    };
+
+    await expect(() =>
+      agent.invoke(
+        new Command({
+          resume: {
+            decisions: [
+              {
+                type: "edit",
+                editedAction: invalidEditedAction,
+              },
+            ],
+          } as HITLResponse,
+        }),
+        config
+      )
+    ).rejects.toThrow(
+      'Invalid edited action for tool "write_file": arguments must be an object'
+    );
+  });
+
+  it("should throw error when edited action is missing", async () => {
+    const hitlMiddleware = humanInTheLoopMiddleware({
+      interruptOn: {
+        write_file: {
+          allowedDecisions: ["edit"],
+        },
+      },
+    });
+
+    const model = new FakeToolCallingModel({
+      toolCalls: [
+        [
+          {
+            id: "call_1",
+            name: "write_file",
+            args: { filename: "test.txt", content: "test" },
+          },
+        ],
+      ],
+    });
+
+    const checkpointer = new MemorySaver();
+    const agent = createAgent({
+      model,
+      checkpointer,
+      tools: [writeFileTool],
+      middleware: [hitlMiddleware] as const,
+    });
+
+    const config = {
+      configurable: {
+        thread_id: "test-missing-edited-action",
+      },
+    };
+
+    // Initial invocation
+    await agent.invoke(
+      {
+        messages: [new HumanMessage("Write test file")],
+      },
+      config
+    );
+
+    // Resume with missing editedAction
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const invalidDecision: any = {
+      type: "edit",
+      // editedAction is missing
+    };
+
+    await expect(() =>
+      agent.invoke(
+        new Command({
+          resume: {
+            decisions: [invalidDecision],
+          } as HITLResponse,
+        }),
+        config
+      )
+    ).rejects.toThrow(
+      'Invalid edited action for tool "write_file": name must be a string'
+    );
+  });
+
+  it("should throw error when decisions array is not provided", async () => {
+    const hitlMiddleware = humanInTheLoopMiddleware({
+      interruptOn: {
+        write_file: {
+          allowedDecisions: ["approve"],
+        },
+      },
+    });
+
+    const model = new FakeToolCallingModel({
+      toolCalls: [
+        [
+          {
+            id: "call_1",
+            name: "write_file",
+            args: { filename: "test.txt", content: "test" },
+          },
+        ],
+      ],
+    });
+
+    const checkpointer = new MemorySaver();
+    const agent = createAgent({
+      model,
+      checkpointer,
+      tools: [writeFileTool],
+      middleware: [hitlMiddleware] as const,
+    });
+
+    const config = {
+      configurable: {
+        thread_id: "test-no-decisions",
+      },
+    };
+
+    // Initial invocation
+    await agent.invoke(
+      {
+        messages: [new HumanMessage("Write test file")],
+      },
+      config
+    );
+
+    // Resume with invalid HITLResponse (no decisions array)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const invalidResponse: any = {
+      // decisions is missing
+    };
+
+    await expect(() =>
+      agent.invoke(
+        new Command({
+          resume: invalidResponse,
+        }),
+        config
+      )
+    ).rejects.toThrow(
+      "Invalid HITLResponse: decisions must be a non-empty array"
+    );
+  });
+
+  it("should throw error when decisions is not an array", async () => {
+    const hitlMiddleware = humanInTheLoopMiddleware({
+      interruptOn: {
+        write_file: {
+          allowedDecisions: ["approve"],
+        },
+      },
+    });
+
+    const model = new FakeToolCallingModel({
+      toolCalls: [
+        [
+          {
+            id: "call_1",
+            name: "write_file",
+            args: { filename: "test.txt", content: "test" },
+          },
+        ],
+      ],
+    });
+
+    const checkpointer = new MemorySaver();
+    const agent = createAgent({
+      model,
+      checkpointer,
+      tools: [writeFileTool],
+      middleware: [hitlMiddleware] as const,
+    });
+
+    const config = {
+      configurable: {
+        thread_id: "test-decisions-not-array",
+      },
+    };
+
+    // Initial invocation
+    await agent.invoke(
+      {
+        messages: [new HumanMessage("Write test file")],
+      },
+      config
+    );
+
+    // Resume with invalid HITLResponse (decisions is not an array)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const invalidResponse: any = {
+      decisions: "not an array",
+    };
+
+    await expect(() =>
+      agent.invoke(
+        new Command({
+          resume: invalidResponse,
+        }),
+        config
+      )
+    ).rejects.toThrow(
+      "Invalid HITLResponse: decisions must be a non-empty array"
+    );
+  });
 });
