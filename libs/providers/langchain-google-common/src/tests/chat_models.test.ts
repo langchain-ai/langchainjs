@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { expect, test, jest } from "@jest/globals";
+// import { expect, test, jest } from "@jest/globals";
+import { describe, test, expect, vi } from "vitest";
 import {
   AIMessage,
   BaseMessage,
@@ -61,7 +62,7 @@ describe("Mock ChatGoogle - Gemini", () => {
   test("Setting invalid model parameters", async () => {
     expect(() => {
       const model = new ChatGoogle({
-        temperature: 1.2,
+        temperature: 2.2,
       });
       expect(model).toBeNull(); // For linting. Should never reach.
     }).toThrowError(/temperature/);
@@ -536,7 +537,7 @@ describe("Mock ChatGoogle - Gemini", () => {
     ];
 
     const retryableError = new MockClientError(429);
-    const requestSpy = jest
+    const requestSpy = vi
       .spyOn(MockClient.prototype, "request")
       .mockRejectedValueOnce(retryableError);
 

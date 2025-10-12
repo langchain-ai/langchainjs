@@ -4,6 +4,8 @@ module.exports = {
   testEnvironment: "./jest.env.cjs",
   modulePathIgnorePatterns: ["dist/", "docs/"],
   moduleNameMapper: {
+    "^@langchain/core/(.*)$": "<rootDir>/../../langchain-core/$1",
+    "^@langchain/core/utils/stream$": "<rootDir>/../../langchain-core/utils/stream.js",
     "^(\\.{1,2}/.*)\\.js$": "$1",
   },
   transform: {

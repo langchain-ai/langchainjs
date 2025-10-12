@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { test } from "@jest/globals";
+import { describe, expect, test } from "vitest";
 import { MockClientAuthInfo, mockId } from "./mock.js";
 import { ChatGoogle } from "./chat_models.test.js";
 import {

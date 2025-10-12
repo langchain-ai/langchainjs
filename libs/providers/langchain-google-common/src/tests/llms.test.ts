@@ -1,4 +1,4 @@
-import { expect, test, jest } from "@jest/globals";
+import { describe, expect, test, vi } from "vitest";
 import {
   BaseMessage,
   HumanMessageChunk,
@@ -34,7 +34,7 @@ describe("Mock Google LLM", () => {
   test("Setting invalid model parameters", async () => {
     expect(() => {
       const model = new GoogleLLM({
-        temperature: 1.2,
+        temperature: 2.2,
       });
       expect(model).toBeNull(); // For linting. Should never reach.
     }).toThrowError(/temperature/);
@@ -206,7 +206,7 @@ describe("Mock Google LLM", () => {
     });
 
     const retryableError = new MockClientError(429);
-    const requestSpy = jest
+    const requestSpy = vi
       .spyOn(MockClient.prototype, "request")
       .mockRejectedValueOnce(retryableError);
 
