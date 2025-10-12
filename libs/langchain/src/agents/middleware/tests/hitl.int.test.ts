@@ -8,7 +8,11 @@ import { Command } from "@langchain/langgraph";
 
 import { tool } from "@langchain/core/tools";
 import { createAgent } from "../../index.js";
-import { humanInTheLoopMiddleware } from "../hitl.js";
+import {
+  type HITLRequest,
+  type HITLResponse,
+  humanInTheLoopMiddleware,
+} from "../hitl.js";
 
 const calculator = tool(
   ({ a, b, operation }: { a: number; b: number; operation: string }) => {
@@ -169,17 +173,7 @@ describe("humanInTheLoopMiddleware", () => {
 
       const editedMessage =
         "Hello John Doe,\n\nI hope this message finds you well! Just wanted to say hello.\n\nBest regards,\nHans Claasen";
-      const hitlRequest = result.__interrupt__?.[0].value as any;
-
-      // If hitlRequest is undefined, the model may have already completed the task
-      if (!hitlRequest || !hitlRequest.actionRequests) {
-        expect(result).toHaveProperty("structuredResponse");
-        expect(result.structuredResponse).toEqual({
-          success: true,
-        });
-        return;
-      }
-
+      const hitlRequest = result.__interrupt__?.[0].value as HITLRequest;
       const resume = await agent.invoke(
         new Command({
           resume: {
@@ -197,7 +191,7 @@ describe("humanInTheLoopMiddleware", () => {
                 },
               },
             ],
-          },
+          } satisfies HITLResponse,
         }),
         thread
       );
@@ -257,7 +251,7 @@ describe("humanInTheLoopMiddleware", () => {
                 message: "The calculation result is 500 (custom override)",
               },
             ],
-          },
+          } satisfies HITLResponse,
         }),
         thread
       );
@@ -311,7 +305,7 @@ describe("humanInTheLoopMiddleware", () => {
                 type: "approve",
               },
             ],
-          },
+          } satisfies HITLResponse,
         }),
         thread
       );
