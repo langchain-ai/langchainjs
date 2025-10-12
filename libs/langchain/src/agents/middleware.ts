@@ -6,12 +6,18 @@ import type {
   InferInteropZodInput,
   InferInteropZodOutput,
 } from "@langchain/core/utils/types";
-import type { AIMessage } from "@langchain/core/messages";
+import type { AIMessage, ToolMessage } from "@langchain/core/messages";
+import type { Command } from "@langchain/langgraph";
 
 import type { JumpToTarget } from "./constants.js";
 import type { ClientTool, ServerTool } from "./tools.js";
 import type { Runtime, AgentBuiltInState } from "./runtime.js";
-import type { AgentMiddleware, MiddlewareResult } from "./middleware/types.js";
+import type {
+  AgentMiddleware,
+  MiddlewareResult,
+  ToolCallRequest,
+  ToolCallHandler,
+} from "./middleware/types.js";
 import type { ModelRequest } from "./nodes/types.js";
 /**
  * Creates a middleware instance with automatic schema inference.
@@ -83,6 +89,68 @@ export function createMiddleware<
    * Additional tools registered by the middleware.
    */
   tools?: (ClientTool | ServerTool)[];
+  /**
+   * Wraps tool execution with custom logic. This allows you to:
+   * - Modify tool call parameters before execution
+   * - Handle errors and retry with different parameters
+   * - Post-process tool results
+   * - Implement caching, logging, authentication, or other cross-cutting concerns
+   * - Return Command objects for advanced control flow
+   *
+   * The handler receives a ToolCallRequest containing the tool call, state, and runtime,
+   * along with a handler function to execute the actual tool.
+   *
+   * @param request - The tool call request containing toolCall, state, and runtime.
+   * @param handler - The function that executes the tool. Call this with a ToolCall to get the result.
+   * @returns The tool result as a ToolMessage or a Command for advanced control flow.
+   *
+   * @example
+   * ```ts
+   * wrapToolCall: async (request, handler) => {
+   *   console.log(`Calling tool: ${request.tool.name}`);
+   *   console.log(`Tool description: ${request.tool.description}`);
+   *
+   *   try {
+   *     // Execute the tool
+   *     const result = await handler(request.toolCall);
+   *     console.log(`Tool ${request.tool.name} succeeded`);
+   *     return result;
+   *   } catch (error) {
+   *     console.error(`Tool ${request.tool.name} failed:`, error);
+   *     // Could return a custom error message or retry
+   *     throw error;
+   *   }
+   * }
+   * ```
+   *
+   * @example Authentication
+   * ```ts
+   * wrapToolCall: async (request, handler) => {
+   *   // Check if user is authorized for this tool
+   *   if (!request.runtime.context.isAuthorized(request.tool.name)) {
+   *     return new ToolMessage({
+   *       content: "Unauthorized to call this tool",
+   *       tool_call_id: request.toolCall.id,
+   *     });
+   *   }
+   *   return handler(request.toolCall);
+   * }
+   * ```
+   */
+  wrapToolCall?: (
+    request: ToolCallRequest<
+      (TSchema extends InteropZodObject ? InferInteropZodInput<TSchema> : {}) &
+        AgentBuiltInState,
+      TContextSchema extends InteropZodObject
+        ? InferInteropZodOutput<TContextSchema>
+        : TContextSchema extends InteropZodDefault<any>
+        ? InferInteropZodOutput<TContextSchema>
+        : TContextSchema extends InteropZodOptional<any>
+        ? Partial<InferInteropZodOutput<TContextSchema>>
+        : never
+    >,
+    handler: ToolCallHandler
+  ) => Promise<ToolMessage | Command> | ToolMessage | Command;
   /**
    * Wraps the model invocation with custom logic. This allows you to:
    * - Modify the request before calling the model
@@ -224,6 +292,11 @@ export function createMiddleware<
     afterModelJumpTo: config.afterModelJumpTo,
     tools: config.tools ?? [],
   };
+
+  if (config.wrapToolCall) {
+    middleware.wrapToolCall = async (request, handler) =>
+      Promise.resolve(config.wrapToolCall!(request, handler));
+  }
 
   if (config.wrapModelRequest) {
     middleware.wrapModelRequest = async (request, handler) =>

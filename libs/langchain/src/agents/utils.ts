@@ -5,8 +5,9 @@ import {
   BaseMessageLike,
   SystemMessage,
   MessageContent,
+  ToolMessage,
 } from "@langchain/core/messages";
-import { MessagesAnnotation } from "@langchain/langgraph";
+import { MessagesAnnotation, isCommand } from "@langchain/langgraph";
 import {
   BaseChatModel,
   type BaseChatModelCallOptions,
@@ -28,6 +29,13 @@ import { isBaseChatModel, isConfigurableModel } from "./model.js";
 import type { ClientTool, ServerTool } from "./tools.js";
 import { MultipleToolsBoundError } from "./errors.js";
 import { PROMPT_RUNNABLE_NAME } from "./constants.js";
+import type { AgentBuiltInState } from "./runtime.js";
+import type {
+  ToolCallWrapper,
+  ToolCallHandler,
+  AgentMiddleware,
+  ToolCallRequest,
+} from "./middleware/types.js";
 
 const NAME_PATTERN = /<name>(.*?)<\/name>/s;
 const CONTENT_PATTERN = /<content>(.*?)<\/content>/s;
@@ -406,4 +414,135 @@ export async function bindTools(
   }
 
   throw new Error(`llm ${llm} must define bindTools method.`);
+}
+
+/**
+ * Compose multiple wrapToolCall handlers into a single middleware stack.
+ *
+ * Composes handlers so the first in the list becomes the outermost layer.
+ * Each handler receives a handler callback to execute inner layers.
+ *
+ * @param handlers - List of handlers. First handler wraps all others.
+ * @returns Composed handler, or undefined if handlers array is empty.
+ *
+ * @example
+ * ```typescript
+ * // handlers=[auth, retry] means: auth wraps retry
+ * // Flow: auth calls retry, retry calls base handler
+ * const auth: ToolCallWrapper = async (request, handler) => {
+ *   try {
+ *     return await handler(request.toolCall);
+ *   } catch (error) {
+ *     if (error.message === "Unauthorized") {
+ *       await refreshToken();
+ *       return await handler(request.toolCall);
+ *     }
+ *     throw error;
+ *   }
+ * };
+ *
+ * const retry: ToolCallWrapper = async (request, handler) => {
+ *   for (let attempt = 0; attempt < 3; attempt++) {
+ *     try {
+ *       return await handler(request.toolCall);
+ *     } catch (error) {
+ *       if (attempt === 2) throw error;
+ *     }
+ *   }
+ *   throw new Error("Unreachable");
+ * };
+ *
+ * const composedHandler = chainToolCallHandlers([auth, retry]);
+ * ```
+ */
+function chainToolCallHandlers(
+  handlers: ToolCallWrapper[]
+): ToolCallWrapper | undefined {
+  if (handlers.length === 0) {
+    return undefined;
+  }
+
+  if (handlers.length === 1) {
+    return handlers[0];
+  }
+
+  // Compose two handlers where outer wraps inner
+  function composeTwo(
+    outer: ToolCallWrapper,
+    inner: ToolCallWrapper
+  ): ToolCallWrapper {
+    return async (request, handler) => {
+      // Create a wrapper that calls inner with the base handler
+      const innerHandler: ToolCallHandler = async () =>
+        inner(request, async (tc) => handler(tc));
+
+      // Call outer with the wrapped inner as its handler
+      return outer(request, innerHandler);
+    };
+  }
+
+  // Compose right-to-left: outer(inner(innermost(handler)))
+  let result = handlers[handlers.length - 1];
+  for (let i = handlers.length - 2; i >= 0; i--) {
+    result = composeTwo(handlers[i], result);
+  }
+
+  return result;
+}
+
+/**
+ * Wrapping `wrapToolCall` invocation so we can inject middleware name into
+ * the error message.
+ *
+ * @param middleware list of middleware passed to the agent
+ * @returns single wrap function
+ */
+export function wrapToolCall(middleware: readonly AgentMiddleware[]) {
+  const middlewareWithWrapToolCall = middleware.filter((m) => m.wrapToolCall);
+
+  if (middlewareWithWrapToolCall.length === 0) {
+    return;
+  }
+
+  return chainToolCallHandlers(
+    middlewareWithWrapToolCall.map((m) => {
+      const originalHandler = m.wrapToolCall!;
+      /**
+       * Wrap with error handling and validation
+       */
+      const wrappedHandler: ToolCallWrapper = async (request, handler) => {
+        try {
+          const result = await originalHandler(
+            request as ToolCallRequest<AgentBuiltInState, unknown>,
+            handler
+          );
+
+          /**
+           * Validate return type
+           */
+          if (!ToolMessage.isInstance(result) && !isCommand(result)) {
+            throw new Error(
+              `Invalid response from "wrapToolCall" in middleware "${m.name}": ` +
+                `expected ToolMessage or Command, got ${typeof result}`
+            );
+          }
+
+          return result;
+        } catch (error) {
+          /**
+           * Add middleware context to error if not already added
+           */
+          if (
+            // eslint-disable-next-line no-instanceof/no-instanceof
+            error instanceof Error &&
+            !error.message.includes(`middleware "${m.name}"`)
+          ) {
+            error.message = `Error in middleware "${m.name}": ${error.message}`;
+          }
+          throw error;
+        }
+      };
+      return wrappedHandler;
+    })
+  );
 }

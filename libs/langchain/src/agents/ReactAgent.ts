@@ -20,7 +20,11 @@ import type { Runnable, RunnableConfig } from "@langchain/core/runnables";
 import type { StreamEvent } from "@langchain/core/tracers/log_stream";
 
 import { createAgentAnnotationConditional } from "./annotation.js";
-import { isClientTool, validateLLMHasNoBoundTools } from "./utils.js";
+import {
+  isClientTool,
+  validateLLMHasNoBoundTools,
+  wrapToolCall,
+} from "./utils.js";
 
 import { AgentNode } from "./nodes/AgentNode.js";
 import { ToolNode } from "./nodes/ToolNode.js";
@@ -145,17 +149,17 @@ export class ReactAgent<
         .map((tool) => tool.name)
     );
 
-    // Create a schema that merges agent base schema with middleware state schemas
-    const schema = createAgentAnnotationConditional<
-      StructuredResponseFormat,
-      TMiddleware
-    >(
+    /**
+     * Create a schema that merges agent base schema with middleware state schemas
+     * Using Zod with withLangGraph ensures LangGraph Studio gets proper metadata
+     */
+    const schema = createAgentAnnotationConditional<TMiddleware>(
       this.options.responseFormat !== undefined,
       this.options.middleware as TMiddleware
     );
 
     const workflow = new StateGraph(
-      schema as AnnotationRoot<any>,
+      schema as unknown as AnnotationRoot<any>,
       this.options.contextSchema
     );
 
@@ -261,11 +265,19 @@ export class ReactAgent<
     );
 
     /**
+     * Collect and compose wrapToolCall handlers from middleware
+     * Wrap each handler with error handling and validation
+     */
+    const wrapToolCallHandler = wrapToolCall(middleware);
+
+    /**
      * add single tool node for all tools
      */
     if (toolClasses.filter(isClientTool).length > 0) {
       const toolNode = new ToolNode(toolClasses.filter(isClientTool), {
         signal: this.options.signal,
+        wrapToolCall: wrapToolCallHandler,
+        getPrivateState: () => this.#agentNode.getState()._privateState,
       });
       allNodeWorkflows.addNode("tools", toolNode);
     }
