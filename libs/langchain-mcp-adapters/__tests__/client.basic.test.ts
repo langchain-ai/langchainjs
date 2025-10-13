@@ -547,5 +547,80 @@ describe("MultiServerMCPClient", () => {
 
       expect(closeMock).toHaveBeenCalledOnce();
     });
+
+    test("should handle connection errors gracefully when handleConnectionErrorsGracefully is true", async () => {
+      // Mock one successful and one failing connection
+      let clientCallCount = 0;
+      (Client as Mock).mockImplementation(() => {
+        clientCallCount += 1;
+        if (clientCallCount === 1) {
+          // First server fails
+          return {
+            connect: vi
+              .fn()
+              .mockReturnValue(Promise.reject(new Error("Connection failed"))),
+            listTools: vi.fn().mockReturnValue(Promise.resolve({ tools: [] })),
+          };
+        } else {
+          // Second server succeeds
+          return {
+            connect: vi.fn().mockReturnValue(Promise.resolve()),
+            listTools: vi.fn().mockReturnValue(Promise.resolve({ tools: [] })),
+          };
+        }
+      });
+
+      const client = new MultiServerMCPClient({
+        mcpServers: {
+          "failing-server": {
+            transport: "http",
+            url: "http://localhost:8000/mcp",
+          },
+          "working-server": {
+            transport: "http",
+            url: "http://localhost:8001/mcp",
+          },
+        },
+        handleConnectionErrorsGracefully: true,
+      });
+
+      // Should not throw, even though one server fails
+      const tools = await client.initializeConnections();
+
+      // Should have tools from the working server only
+      expect(tools).toBeDefined();
+
+      // Working server should be accessible
+      const workingClient = await client.getClient("working-server");
+      expect(workingClient).toBeDefined();
+
+      // Failing server should not be accessible
+      const failingClient = await client.getClient("failing-server");
+      expect(failingClient).toBeUndefined();
+    });
+
+    test("should throw on connection failure when handleConnectionErrorsGracefully is false", async () => {
+      (Client as Mock).mockImplementationOnce(() => ({
+        connect: vi
+          .fn()
+          .mockReturnValue(Promise.reject(new Error("Connection failed"))),
+        listTools: vi.fn().mockReturnValue(Promise.resolve({ tools: [] })),
+      }));
+
+      const client = new MultiServerMCPClient({
+        mcpServers: {
+          "failing-server": {
+            transport: "http",
+            url: "http://localhost:8000/mcp",
+          },
+        },
+        handleConnectionErrorsGracefully: false,
+      });
+
+      // Should throw when handleConnectionErrorsGracefully is false (default behavior)
+      await expect(() => client.initializeConnections()).rejects.toThrow(
+        MCPClientError
+      );
+    });
   });
 });

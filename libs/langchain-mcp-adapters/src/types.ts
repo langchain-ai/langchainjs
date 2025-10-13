@@ -480,6 +480,18 @@ export const clientConfigSchema = z
       )
       .optional()
       .default(false),
+    /**
+     * Whether to handle connection errors gracefully without throwing exceptions
+     *
+     * @default false
+     */
+    handleConnectionErrorsGracefully: z
+      .boolean()
+      .describe(
+        "Whether to handle connection errors gracefully without throwing exceptions"
+      )
+      .optional()
+      .default(false),
   })
   .and(baseConfigSchema)
   .describe("Configuration for the MCP client");
@@ -587,6 +599,13 @@ export type LoadMcpToolsOptions = {
    * If not specified, tools will use their own configured timeout values.
    */
   defaultToolTimeout?: number;
+
+  /**
+   * Whether to handle connection errors gracefully without throwing exceptions
+   *
+   * @default false
+   */
+  handleConnectionErrorsGracefully?: boolean;
 };
 
 /**

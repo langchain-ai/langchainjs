@@ -58,6 +58,9 @@ const client = new MultiServerMCPClient({
   // Use standardized content block format in tool outputs
   useStandardContentBlocks: true,
 
+  // Whether to skip connecting to MCP servers that fail to connect (optional, default: false)
+  handleConnectionErrorsGracefully: true,
+
   // Server configuration
   mcpServers: {
     // adds a STDIO connection to a server named "math"
@@ -232,6 +235,7 @@ When loading MCP tools either directly through `loadMcpTools` or via `MultiServe
 | `useStandardContentBlocks`     | `boolean`                              | `false`                                               | See [Tool Output Mapping](#tool-output-mapping); set true for new applications       |
 | `outputHandling`               | `"content"`, `"artifact"`, or `object` | `resource` -> `"artifact"`, all others -> `"content"` | See [Tool Output Mapping](#tool-output-mapping)                                      |
 | `defaultToolTimeout`           | `number`                               | `0`                                                   | Default timeout for all tools (overridable on a per-tool basis)                      |
+| `handleConnectionErrorsGracefully` | `boolean`                          | `false`                                               | Whether to skip servers that fail to connect instead of throwing an error            |
 
 ## Tool Output Mapping
 
@@ -530,6 +534,40 @@ The library provides different error types to help with debugging:
 - **MCPClientError**: For client connection and initialization issues
 - **ToolException**: For errors during tool execution
 - **ZodError**: For configuration validation errors (invalid connection settings, etc.)
+
+### Graceful Connection Error Handling
+
+By default, the `MultiServerMCPClient` will throw an error if any server fails to connect. You can change this behavior by setting `handleConnectionErrorsGracefully: true` in the client configuration. When enabled:
+
+- Servers that fail to connect are skipped and logged as warnings
+- The client continues to work with only the servers that successfully connected
+- Failed servers are removed from the connection list and won't be retried
+- If no servers successfully connect, a warning is logged but no error is thrown
+
+```ts
+const client = new MultiServerMCPClient({
+  mcpServers: {
+    "working-server": {
+      transport: "stdio",
+      command: "npx",
+      args: ["-y", "@modelcontextprotocol/server-math"],
+    },
+    "broken-server": {
+      transport: "http",
+      url: "http://localhost:9999/mcp", // This server doesn't exist
+    },
+  },
+  handleConnectionErrorsGracefully: true, // Skip failed connections
+  useStandardContentBlocks: true,
+});
+
+// This won't throw even though "broken-server" fails to connect
+const tools = await client.getTools(); // Only tools from "working-server"
+
+// You can check which servers are actually connected
+const workingClient = await client.getClient("working-server"); // Returns client
+const brokenClient = await client.getClient("broken-server");   // Returns undefined
+```
 
 Example error handling:
 
