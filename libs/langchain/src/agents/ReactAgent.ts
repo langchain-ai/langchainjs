@@ -539,9 +539,16 @@ export class ReactAgent<
         const allowedMapped = firstAfterAgent.allowed
           .map((t) => parseJumpToTarget(t))
           .filter((dest) => dest !== "tools" || hasTools);
-        const destinations = Array.from(
-          new Set([loopEntryNode, ...allowedMapped])
-        ) as ("tools" | "model_request" | typeof END)[];
+
+        /**
+         * For after_agent, only use explicitly allowed destinations (don't add loopEntryNode)
+         * The default destination (when no jump occurs) should be END
+         */
+        const destinations = Array.from(new Set([END, ...allowedMapped])) as (
+          | "tools"
+          | "model_request"
+          | typeof END
+        )[];
 
         allNodeWorkflows.addConditionalEdges(
           firstAfterAgentNode,
