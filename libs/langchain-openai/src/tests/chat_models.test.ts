@@ -682,13 +682,9 @@ describe("ChatOpenAI", () => {
         output_tokens: 50,
         total_tokens: 150,
         input_token_details: {
-          cached_tokens: 75,
-          text_tokens: 25,
           cache_read: 75,
         },
         output_token_details: {
-          reasoning_tokens: 10,
-          text_tokens: 40,
           reasoning: 10,
         },
       });
