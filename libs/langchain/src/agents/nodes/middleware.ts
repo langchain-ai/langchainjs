@@ -120,20 +120,33 @@ export abstract class MiddlewareNode<
     /**
      * Verify that the jump target is allowed for the middleware
      */
-    const jumpToConstraint = this.name?.startsWith("BeforeModelNode_")
-      ? this.middleware.beforeModelJumpTo
-      : this.middleware.afterModelJumpTo;
+    let jumpToConstraint: JumpToTarget[] | undefined;
+    let constraint: string | undefined;
+
+    if (this.name?.startsWith("BeforeAgentNode_")) {
+      jumpToConstraint = this.middleware.beforeAgentJumpTo;
+      constraint = "beforeAgentJumpTo";
+    } else if (this.name?.startsWith("BeforeModelNode_")) {
+      jumpToConstraint = this.middleware.beforeModelJumpTo;
+      constraint = "beforeModelJumpTo";
+    } else if (this.name?.startsWith("AfterAgentNode_")) {
+      jumpToConstraint = this.middleware.afterAgentJumpTo;
+      constraint = "afterAgentJumpTo";
+    } else if (this.name?.startsWith("AfterModelNode_")) {
+      jumpToConstraint = this.middleware.afterModelJumpTo;
+      constraint = "afterModelJumpTo";
+    }
+
     if (
       typeof result.jumpTo === "string" &&
       !jumpToConstraint?.includes(result.jumpTo as JumpToTarget)
     ) {
-      const constraint = this.name?.startsWith("BeforeModelNode_")
-        ? "beforeModelJumpTo"
-        : "afterModelJumpTo";
       const suggestion =
         jumpToConstraint && jumpToConstraint.length > 0
           ? `must be one of: ${jumpToConstraint?.join(", ")}.`
-          : `no ${constraint} defined in middleware ${this.middleware.name}.`;
+          : constraint
+          ? `no ${constraint} defined in middleware ${this.middleware.name}.`
+          : "";
       throw new Error(`Invalid jump target: ${result.jumpTo}, ${suggestion}.`);
     }
 

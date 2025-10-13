@@ -2370,5 +2370,61 @@ describe("middleware", () => {
       expect(beforeAgentCall).toHaveBeenCalledTimes(3);
       expect(afterAgentCall).toHaveBeenCalledTimes(3);
     });
+
+    it("should jump to afterAgent when beforeAgent jumps to end", async () => {
+      const executionLog: string[] = [];
+
+      const middleware1 = createMiddleware({
+        name: "Middleware1",
+        beforeAgentJumpTo: ["end"],
+        beforeAgent: async () => {
+          executionLog.push("before_agent_1");
+          return {
+            jumpTo: "end",
+          };
+        },
+        afterAgent: async () => {
+          executionLog.push("after_agent_1");
+        },
+      });
+
+      const middleware2 = createMiddleware({
+        name: "Middleware2",
+        beforeAgent: async () => {
+          executionLog.push("before_agent_2");
+        },
+        afterAgent: async () => {
+          executionLog.push("after_agent_2");
+        },
+      });
+
+      const model = new FakeToolCallingChatModel({
+        responses: [new AIMessage("Response")],
+      });
+
+      const agent = createAgent({
+        model,
+        tools: [],
+        middleware: [middleware1, middleware2],
+      });
+
+      const result = await agent.invoke({
+        messages: [new HumanMessage("Test")],
+      });
+
+      // When beforeAgent jumps to "end", it should:
+      // 1. Skip remaining beforeAgent hooks (beforeAgent_2 not called)
+      // 2. Skip model execution
+      // 3. Jump to afterAgent hooks (both afterAgent_2 and afterAgent_1 are called)
+      expect(executionLog).toEqual([
+        "before_agent_1",
+        "after_agent_2",
+        "after_agent_1",
+      ]);
+
+      // Verify that only the input message is in the result (no model response)
+      expect(result.messages).toHaveLength(1);
+      expect(result.messages[0].content).toBe("Test");
+    });
   });
 });

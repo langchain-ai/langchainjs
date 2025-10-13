@@ -368,15 +368,20 @@ export class ReactAgent<
         const allowedMapped = node.allowed
           .map((t) => parseJumpToTarget(t))
           .filter((dest) => dest !== "tools" || hasTools);
+        // Replace END with exitNode (which could be an afterAgent node)
         const destinations = Array.from(
-          new Set([nextDefault, ...allowedMapped])
+          new Set([
+            nextDefault,
+            ...allowedMapped.map((dest) => (dest === END ? exitNode : dest)),
+          ])
         ) as ("tools" | "model_request" | typeof END)[];
 
         allNodeWorkflows.addConditionalEdges(
           current,
-          this.#createBeforeModelRouter(
+          this.#createBeforeAgentRouter(
             toolClasses.filter(isClientTool),
-            nextDefault
+            nextDefault,
+            exitNode
           ),
           destinations
         );
@@ -844,6 +849,36 @@ export class ReactAgent<
         }
       }
       return nextDefault as any;
+    };
+  }
+
+  /**
+   * Create routing function for jumpTo functionality after beforeAgent hooks.
+   * Falls back to the default next node if no jumpTo is present.
+   * When jumping to END, routes to exitNode (which could be an afterAgent node).
+   */
+  #createBeforeAgentRouter(
+    toolClasses: (ClientTool | ServerTool)[],
+    nextDefault: string,
+    exitNode: string | typeof END
+  ) {
+    return (state: BuiltInState) => {
+      if (!state.jumpTo) {
+        return nextDefault;
+      }
+      const destination = parseJumpToTarget(state.jumpTo);
+      if (destination === END) {
+        // When beforeAgent jumps to END, route to exitNode (first afterAgent node)
+        return exitNode;
+      }
+      if (destination === "tools") {
+        if (toolClasses.length === 0) {
+          return exitNode;
+        }
+        return new Send("tools", { ...state, jumpTo: undefined });
+      }
+      // destination === "model_request"
+      return new Send("model_request", { ...state, jumpTo: undefined });
     };
   }
 
