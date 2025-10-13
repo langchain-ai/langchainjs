@@ -1,4 +1,4 @@
-import { expect, test, describe } from "@jest/globals";
+import { expect, test, describe } from "vitest";
 import { Readable } from "stream";
 import { NodeJsonStream } from "../auth.js";
 

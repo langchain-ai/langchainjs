@@ -1,4 +1,4 @@
-import { test } from "@jest/globals";
+import { describe, expect, test } from "vitest";
 import { BaseLanguageModelInput } from "@langchain/core/language_models/base";
 import { ChatPromptValue } from "@langchain/core/prompt_values";
 import {
@@ -28,7 +28,9 @@ import { BlobStoreGoogleCloudStorage } from "../media.js";
 
 describe("GAuth Chat", () => {
   test("invoke", async () => {
-    const model = new ChatGoogle();
+    const model = new ChatGoogle({
+      modelName: "gemini-2.0-flash",
+    });
     const res = await model.invoke("What is 1 + 1?");
     expect(res).toBeDefined();
     expect(res._getType()).toEqual("ai");
@@ -54,7 +56,9 @@ describe("GAuth Chat", () => {
   });
 
   test("generate", async () => {
-    const model = new ChatGoogle();
+    const model = new ChatGoogle({
+      modelName: "gemini-2.0-flash",
+    });
     const messages: BaseMessage[] = [
       new SystemMessage(
         "You will reply to all requests to flip a coin with either H, indicating heads, or T, indicating tails."
@@ -72,7 +76,7 @@ describe("GAuth Chat", () => {
 
     expect(typeof aiMessage.content).toBe("string");
     const text = aiMessage.content as string;
-    expect(["H", "T"]).toContainEqual(text);
+    expect(["H", "T"]).toContainEqual(text.trim());
 
     /*
       expect(aiMessage.content.length).toBeGreaterThan(0);
@@ -89,7 +93,9 @@ describe("GAuth Chat", () => {
   });
 
   test("stream", async () => {
-    const model = new ChatGoogle();
+    const model = new ChatGoogle({
+      modelName: "gemini-2.0-flash",
+    });
     const input: BaseLanguageModelInput = new ChatPromptValue([
       new SystemMessage(
         "You will reply to all requests to flip a coin with either H, indicating heads, or T, indicating tails."
@@ -135,7 +141,9 @@ describe("GAuth Chat", () => {
         ],
       },
     ];
-    const model = new ChatGoogle().bindTools(tools);
+    const model = new ChatGoogle({
+      modelName: "gemini-2.0-flash",
+    }).bindTools(tools);
     const result = await model.invoke("Run a test on the cobalt project");
     expect(result).toHaveProperty("content");
     expect(result.content).toBe("");
@@ -179,7 +187,9 @@ describe("GAuth Chat", () => {
         ],
       },
     ];
-    const model = new ChatGoogle().bindTools(tools);
+    const model = new ChatGoogle({
+      modelName: "gemini-2.0-flash",
+    }).bindTools(tools);
     const toolResult = {
       testPassed: true,
     };
@@ -222,7 +232,9 @@ describe("GAuth Chat", () => {
         required: ["location"],
       },
     };
-    const model = new ChatGoogle().withStructuredOutput(tool);
+    const model = new ChatGoogle({
+      modelName: "gemini-2.0-flash",
+    }).withStructuredOutput(tool);
     const result = await model.invoke("What is the weather in Paris?");
     expect(result).toHaveProperty("location");
   });
@@ -256,7 +268,7 @@ describe("GAuth Chat", () => {
       resolvers: [resolver],
     });
     const model = new ChatGoogle({
-      modelName: "gemini-1.5-flash",
+      modelName: "gemini-2.0-flash",
       apiConfig: {
         mediaManager,
       },
