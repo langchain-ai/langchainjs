@@ -2262,47 +2262,6 @@ describe("middleware", () => {
       expect(messageContents).toContain("Original message");
     });
 
-    // it.skip("should handle Command objects in before_agent and after_agent", async () => {
-    //   const executionLog: string[] = [];
-
-    //   const middleware = createMiddleware({
-    //     name: "CommandMiddleware",
-    //     stateSchema: z.object({
-    //       shouldSkip: z.boolean().default(false),
-    //     }),
-    //     beforeAgent: async (state) => {
-    //       executionLog.push("before_agent");
-    //       if (state.shouldSkip) {
-    //         // Can use Command to control flow
-    //         return new Command({
-    //           shouldSkip: true,
-    //         });
-    //       }
-    //       return undefined;
-    //     },
-    //     afterAgent: async () => {
-    //       executionLog.push("after_agent");
-    //     },
-    //   });
-
-    //   const model = new FakeToolCallingChatModel({
-    //     responses: [new AIMessage("Response")],
-    //   });
-
-    //   const agent = createAgent({
-    //     model,
-    //     tools: [],
-    //     middleware: [middleware],
-    //   });
-
-    //   await agent.invoke({
-    //     messages: [new HumanMessage("Test")],
-    //     shouldSkip: false as any,
-    //   } as any);
-
-    //   expect(executionLog).toEqual(["before_agent", "after_agent"]);
-    // });
-
     it("should allow accessing runtime metadata in before_agent and after_agent", async () => {
       const middleware = createMiddleware({
         name: "RuntimeAccessMiddleware",
