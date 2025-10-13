@@ -412,6 +412,7 @@ function mergeMessages(messages: AnthropicMessageCreateParams["messages"]) {
           | AnthropicRedactedThinkingBlockParam
           | AnthropicServerToolUseBlockParam
           | AnthropicWebSearchToolResultBlockParam
+          | AnthropicSearchResultBlockParam
         >
   ): Array<
     | AnthropicTextBlockParam
@@ -423,6 +424,7 @@ function mergeMessages(messages: AnthropicMessageCreateParams["messages"]) {
     | AnthropicRedactedThinkingBlockParam
     | AnthropicServerToolUseBlockParam
     | AnthropicWebSearchToolResultBlockParam
+    | AnthropicSearchResultBlockParam
   > => {
     if (typeof content === "string") {
       return [
