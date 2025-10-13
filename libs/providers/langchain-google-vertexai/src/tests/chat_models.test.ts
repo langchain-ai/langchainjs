@@ -1,4 +1,4 @@
-import { test, expect } from "@jest/globals";
+import { test, expect } from "vitest";
 import { ChatVertexAI } from "../chat_models.js";
 
 test("Serialization", () => {

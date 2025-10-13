@@ -1,4 +1,4 @@
-import { expect, test } from "@jest/globals";
+import { afterEach, beforeEach, describe, expect, test } from "vitest";
 import fs from "fs/promises";
 import { BaseLanguageModelInput } from "@langchain/core/language_models/base";
 import { ChatPromptValue } from "@langchain/core/prompt_values";
@@ -63,12 +63,11 @@ const calculatorTool = tool((_) => "no-op", {
  * Which models do we want to run the test suite against?
  */
 const testGeminiModelNames = [
-  ["gemini-1.5-pro-002"],
-  ["gemini-1.5-flash-002"],
   ["gemini-2.0-flash-001"],
   ["gemini-2.0-flash-lite-001"],
-  ["gemini-2.5-flash-preview-04-17"],
-  ["gemini-2.5-pro-preview-05-06"],
+  ["gemini-2.5-flash-lite"],
+  ["gemini-2.5-flash"],
+  ["gemini-2.5-pro"],
 ];
 
 /*
@@ -81,7 +80,7 @@ const testGeminiModelDelay: Record<string, number> = {
   "gemini-2.5-flash-preview-04-17": 5000,
 };
 
-describe.each(testGeminiModelNames)("GAuth Gemini Chat (%s)", (modelName) => {
+describe.each(testGeminiModelNames)("VertexAI Gemini Chat (%s)", (modelName) => {
   let recorder: GoogleRequestRecorder;
   let callbacks: BaseCallbackHandler[];
 
@@ -216,7 +215,7 @@ describe.each(testGeminiModelNames)("GAuth Gemini Chat (%s)", (modelName) => {
       },
     ];
     const model = new ChatVertexAI({ modelName }).bindTools(tools);
-    const result = await model.invoke("Run a test on the cobalt project");
+    const result = await model.invoke("Run the cobalt test");
     expect(result).toHaveProperty("content");
     expect(result.content).toBe("");
     const args = result?.lc_kwargs?.additional_kwargs;
@@ -264,26 +263,18 @@ describe.each(testGeminiModelNames)("GAuth Gemini Chat (%s)", (modelName) => {
       testPassed: true,
     };
     const messages: BaseMessageLike[] = [
-      new HumanMessage("Run a test on the cobalt project."),
-      new AIMessage("", {
-        tool_calls: [
-          {
-            id: "test",
-            type: "function",
-            function: {
-              name: "test",
-              arguments: '{"testName":"cobalt"}',
-            },
-          },
-        ],
-      }),
-      new ToolMessage(JSON.stringify(toolResult), "test"),
+      new HumanMessage("Run the test named cobalt."),
     ];
+    const res1 = await model.invoke(messages);
+    console.log(res1);
+    messages.push(res1);
+    messages.push(new ToolMessage(JSON.stringify(toolResult), "test"));
     const res = await model.stream(messages);
     const resArray: BaseMessageChunk[] = [];
     for await (const chunk of res) {
       resArray.push(chunk);
     }
+    console.log(resArray);
   });
 
   test("withStructuredOutput", async () => {
@@ -687,7 +678,7 @@ const testAnthropicModelNames = [
 ];
 
 describe.each(testAnthropicModelNames)(
-  "GAuth Anthropic Chat (%s)",
+  "VertexAI Anthropic Chat (%s)",
   (modelName) => {
     let recorder: GoogleRequestRecorder;
     let callbacks: BaseCallbackHandler[];
@@ -818,7 +809,7 @@ describe.each(testAnthropicModelNames)(
 
 const testAnthropicThinkingModelNames = [["claude-3-7-sonnet@20250219"]];
 describe.each(testAnthropicThinkingModelNames)(
-  "GAuth Anthropic Thinking (%s)",
+  "VertexAI Anthropic Thinking (%s)",
   (modelName) => {
     let recorder: GoogleRequestRecorder;
     let callbacks: BaseCallbackHandler[];

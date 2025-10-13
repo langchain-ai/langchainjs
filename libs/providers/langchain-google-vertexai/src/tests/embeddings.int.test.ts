@@ -1,4 +1,4 @@
-import { test, expect } from "@jest/globals";
+import { describe, test, expect } from "vitest";
 import { VertexAIEmbeddings } from "../embeddings.js";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
