@@ -1,8 +1,13 @@
 import { z } from "zod/v3";
 import { RunnableConfig } from "@langchain/core/runnables";
+import type {
+  AgentMiddleware,
+  MiddlewareResult,
+  AgentBuiltInState,
+  Runtime,
+} from "@langchain/core/middleware";
+
 import { MiddlewareNode, MiddlewareNodeOptions } from "./middleware.js";
-import type { AgentMiddleware, MiddlewareResult } from "../middleware/types.js";
-import type { AgentBuiltInState, Runtime } from "../runtime.js";
 
 /**
  * Node for executing a single middleware's afterAgent hook.

@@ -16,16 +16,15 @@ import {
   isGraphInterrupt,
   type LangGraphRunnableConfig,
 } from "@langchain/langgraph";
+import type { PrivateState, ToolCallWrapper } from "@langchain/core/middleware";
 
 import { RunnableCallable } from "../RunnableCallable.js";
 import { PreHookAnnotation } from "../annotation.js";
 import { mergeAbortSignals } from "./utils.js";
 import { ToolInvocationError } from "../errors.js";
-import type { PrivateState } from "../runtime.js";
 import type {
   ToAnnotationRoot,
   AnyAnnotationRoot,
-  ToolCallWrapper,
 } from "../middleware/types.js";
 
 export interface ToolNodeOptions {
@@ -68,7 +67,7 @@ export interface ToolNodeOptions {
    * Allows middleware to intercept and modify tool calls before execution.
    * The wrapper receives the tool call request and a handler function to execute the tool.
    */
-  wrapToolCall?: ToolCallWrapper;
+  wrapToolCall?: ToolCallWrapper<Command>;
   /**
    * Optional function to get the private state (threadLevelCallCount, runModelCallCount).
    * Used to provide runtime metadata to wrapToolCall middleware.
@@ -180,7 +179,7 @@ export class ToolNode<
     | ((error: unknown, toolCall: ToolCall) => ToolMessage | undefined) =
     defaultHandleToolErrors;
 
-  wrapToolCall?: ToolCallWrapper;
+  wrapToolCall?: ToolCallWrapper<Command>;
 
   getPrivateState?: () => PrivateState;
 

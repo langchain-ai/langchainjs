@@ -1,7 +1,8 @@
 import type { LanguageModelLike } from "@langchain/core/language_models/base";
 import type { BaseMessage } from "@langchain/core/messages";
-import type { ServerTool, ClientTool } from "../tools.js";
-import type { Runtime, AgentBuiltInState } from "../runtime.js";
+import type { AgentBuiltInState } from "@langchain/core/middleware";
+import type { Runtime } from "@langchain/core/middleware";
+import type { ServerTool, ClientTool } from "@langchain/core/tools";
 
 /**
  * Configuration for modifying a model call at runtime.

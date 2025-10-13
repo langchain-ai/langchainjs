@@ -7,18 +7,18 @@ import type {
   InferInteropZodOutput,
 } from "@langchain/core/utils/types";
 import type { AIMessage, ToolMessage } from "@langchain/core/messages";
-import type { Command } from "@langchain/langgraph";
 
 import type { JumpToTarget } from "./constants.js";
-import type { ClientTool, ServerTool } from "./tools.js";
-import type { Runtime, AgentBuiltInState } from "./runtime.js";
+import type { ClientTool, ServerTool } from "../tools/index.js";
+import type { Runtime } from "./runtime.js";
 import type {
+  AgentBuiltInState,
   AgentMiddleware,
   MiddlewareResult,
   ToolCallRequest,
   ToolCallHandler,
-} from "./middleware/types.js";
-import type { ModelRequest } from "./nodes/types.js";
+  ModelRequest,
+} from "./types.js";
 /**
  * Creates a middleware instance with automatic schema inference.
  *
@@ -58,7 +58,8 @@ export function createMiddleware<
     | InteropZodObject
     | InteropZodOptional<InteropZodObject>
     | InteropZodDefault<InteropZodObject>
-    | undefined = undefined
+    | undefined = undefined,
+  Command = void
 >(config: {
   /**
    * The name of the middleware
@@ -160,8 +161,11 @@ export function createMiddleware<
         ? Partial<InferInteropZodOutput<TContextSchema>>
         : never
     >,
-    handler: ToolCallHandler
-  ) => Promise<ToolMessage | Command> | ToolMessage | Command;
+    handler: ToolCallHandler<Command>
+  ) =>
+    | Promise<ToolMessage | any /* Command */>
+    | ToolMessage
+    | any /* Command */;
   /**
    * Wraps the model invocation with custom logic. This allows you to:
    * - Modify the request before calling the model

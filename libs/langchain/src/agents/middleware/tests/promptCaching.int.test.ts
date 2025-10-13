@@ -10,7 +10,7 @@ import {
   instances,
 } from "@langchain/anthropic";
 
-import { anthropicPromptCachingMiddleware } from "../promptCaching.js";
+import { anthropicPromptCachingMiddleware } from "../../../../../providers/langchain-anthropic/src/promptCaching.js";
 import { createAgent } from "../../index.js";
 
 /**

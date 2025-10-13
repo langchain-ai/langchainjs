@@ -1,12 +1,95 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import type {
   InteropZodObject,
+  InferInteropZodOutput,
   InferInteropZodInput,
-} from "@langchain/core/utils/types";
-import type { AnnotationRoot } from "@langchain/langgraph";
-import type { InteropZodToStateDefinition } from "@langchain/langgraph/zod";
+  InteropZodDefault,
+  InteropZodOptional,
+} from "../utils/types/index.js";
+import type { LanguageModelLike } from "../language_models/base.js";
+import type { BaseMessage, AIMessage, ToolMessage } from "../messages/index.js";
+import type { JumpToTarget } from "./constants.js";
+import type { ClientTool, ServerTool } from "../tools/index.js";
+import type { Runtime } from "./runtime.js";
 
-export type AnyAnnotationRoot = AnnotationRoot<any>;
+/**
+ * Configuration for modifying a model call at runtime.
+ * All fields are optional and only provided fields will override defaults.
+ *
+ * @template TState - The agent's state type, must extend Record<string, unknown>. Defaults to Record<string, unknown>.
+ * @template TContext - The runtime context type for accessing metadata and control flow. Defaults to unknown.
+ */
+export interface ModelRequest<
+  TState extends Record<string, unknown> = Record<string, unknown>,
+  TContext = unknown
+> {
+  /**
+   * The model to use for this step.
+   */
+  model: LanguageModelLike;
+  /**
+   * The messages to send to the model.
+   */
+  messages: BaseMessage[];
+  /**
+   * The system message for this step.
+   */
+  systemPrompt?: string;
+  /**
+   * Tool choice configuration (model-specific format).
+   * Can be one of:
+   * - `"auto"`: means the model can pick between generating a message or calling one or more tools.
+   * - `"none"`: means the model will not call any tool and instead generates a message.
+   * - `"required"`: means the model must call one or more tools.
+   * - `{ type: "function", function: { name: string } }`: The model will use the specified function.
+   */
+  toolChoice?:
+    | "auto"
+    | "none"
+    | "required"
+    | { type: "function"; function: { name: string } };
+
+  /**
+   * The tools to make available for this step.
+   */
+  tools: (ServerTool | ClientTool)[];
+
+  /**
+   * The current agent state (includes both middleware state and built-in state).
+   */
+  state: TState & AgentBuiltInState;
+
+  /**
+   * The runtime context containing metadata, signal, writer, interrupt, etc.
+   */
+  runtime: Runtime<TContext>;
+}
+
+/**
+ * Information about a tool call that has been executed.
+ */
+export interface ToolCall {
+  /**
+   * The ID of the tool call.
+   */
+  id: string;
+  /**
+   * The name of the tool that was called.
+   */
+  name: string;
+  /**
+   * The arguments that were passed to the tool.
+   */
+  args: Record<string, any>;
+  /**
+   * The result of the tool call.
+   */
+  result?: unknown;
+  /**
+   * An optional error message if the tool call failed.
+   */
+  error?: string;
+}
 
 /**
  * Result type for middleware functions.
@@ -44,7 +127,7 @@ export interface ToolCallRequest<
  * Handler function type for wrapping tool calls.
  * Takes a tool call and returns the tool result or a command.
  */
-export type ToolCallHandler = (
+export type ToolCallHandler<Command> = (
   toolCall: ToolCall
 ) => Promise<ToolMessage | Command> | ToolMessage | Command;
 
@@ -53,11 +136,12 @@ export type ToolCallHandler = (
  * Allows middleware to intercept and modify tool execution.
  */
 export type ToolCallWrapper<
+  Command,
   TState extends Record<string, unknown> = Record<string, unknown>,
   TContext = unknown
 > = (
   request: ToolCallRequest<TState, TContext>,
-  handler: ToolCallHandler
+  handler: ToolCallHandler<Command>
 ) => Promise<ToolMessage | Command> | ToolMessage | Command;
 
 /**
@@ -160,7 +244,7 @@ export interface AgentMiddleware<
    *
    * @example
    * ```ts
-   * wrapModelCall: async (request, handler) => {
+   * wrapModelRequest: async (request, handler) => {
    *   // Modify request before calling
    *   const modifiedRequest = { ...request, systemPrompt: "You are helpful" };
    *
@@ -175,7 +259,7 @@ export interface AgentMiddleware<
    * }
    * ```
    */
-  wrapModelCall?(
+  wrapModelRequest?(
     request: ModelRequest<
       (TSchema extends InteropZodObject ? InferInteropZodInput<TSchema> : {}) &
         AgentBuiltInState,
@@ -244,6 +328,38 @@ export interface AgentMiddleware<
     >
   >;
 }
+
+/**
+ * Type for the agent's built-in state properties.
+ */
+export type AgentBuiltInState = {
+  /**
+   * Array of messages representing the conversation history.
+   *
+   * This includes all messages exchanged during the agent's execution:
+   * - Human messages: Input from the user
+   * - AI messages: Responses from the language model
+   * - Tool messages: Results from tool executions
+   * - System messages: System-level instructions or information
+   *
+   * Messages are accumulated throughout the agent's lifecycle and can be
+   * accessed or modified by middleware hooks during execution.
+   */
+  messages: BaseMessage[];
+  /**
+   * Structured response data returned by the agent when a `responseFormat` is configured.
+   *
+   * This property is only populated when you provide a `responseFormat` schema
+   * (as Zod or JSON schema) to the agent configuration. The agent will format
+   * its final output to match the specified schema and store it in this property.
+   *
+   * Note: The type is specified as `Record<string, unknown>` because TypeScript cannot
+   * infer the actual response format type in contexts like middleware, where the agent's
+   * generic type parameters are not accessible. You may need to cast this to your specific
+   * response type when accessing it.
+   */
+  structuredResponse?: Record<string, unknown>;
+};
 
 /**
  * Helper type to filter out properties that start with underscore (private properties)
@@ -380,21 +496,3 @@ export type InferMiddlewareContextInputs<T extends readonly AgentMiddleware[]> =
         : InferMiddlewareContextInput<First>
       : {}
     : {};
-
-/**
- * Helper type to extract input type from context schema (with optional defaults)
- */
-export type InferContextInput<
-  ContextSchema extends AnyAnnotationRoot | InteropZodObject
-> = ContextSchema extends InteropZodObject
-  ? InferInteropZodInput<ContextSchema>
-  : ContextSchema extends AnyAnnotationRoot
-  ? ToAnnotationRoot<ContextSchema>["State"]
-  : {};
-
-export type ToAnnotationRoot<A extends AnyAnnotationRoot | InteropZodObject> =
-  A extends AnyAnnotationRoot
-    ? A
-    : A extends InteropZodObject
-    ? AnnotationRoot<InteropZodToStateDefinition<A>>
-    : never;

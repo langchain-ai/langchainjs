@@ -1,13 +1,14 @@
 /**
  * Tool call limit middleware for agents.
  */
-
+import {
+  createMiddleware,
+  type AgentBuiltInState,
+  type AgentMiddleware as _,
+} from "@langchain/core/middleware";
 import { AIMessage, BaseMessage, HumanMessage } from "@langchain/core/messages";
 import { z } from "zod/v3";
 import type { InferInteropZodInput } from "@langchain/core/utils/types";
-
-import { createMiddleware } from "../middleware.js";
-import type { AgentBuiltInState } from "../runtime.js";
 
 /**
  * Count tool calls in a list of messages.

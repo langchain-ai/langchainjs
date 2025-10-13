@@ -8,8 +8,7 @@ import {
   SystemMessage,
 } from "@langchain/core/messages";
 import type { InferInteropZodInput } from "@langchain/core/utils/types";
-
-import { createMiddleware } from "../middleware.js";
+import { createMiddleware } from "@langchain/core/middleware";
 
 /**
  * Type for the redaction map that stores original values by ID

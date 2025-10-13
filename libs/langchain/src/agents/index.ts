@@ -3,10 +3,11 @@ import type {
   InteropZodObject,
   InteropZodType,
 } from "@langchain/core/utils/types";
+import type { AgentMiddleware } from "@langchain/core/middleware";
 
 import type { ResponseFormatUndefined } from "./responses.js";
 import type { CreateAgentParams } from "./types.js";
-import type { AgentMiddleware, AnyAnnotationRoot } from "./middleware/types.js";
+import type { AnyAnnotationRoot } from "./middleware/types.js";
 import type { ExtractZodArrayTypes } from "./types.js";
 import type {
   ToolStrategy,
@@ -340,11 +341,6 @@ export {
   type ResponseFormat,
   type ResponseFormatUndefined,
 } from "./responses.js";
-export { createMiddleware } from "./middleware.js";
-export type {
-  ToolCallRequest,
-  ToolCallHandler,
-  ToolCallWrapper,
-} from "./middleware/types.js";
 export { FakeToolCallingModel } from "./tests/utils.js";
 export type { ReactAgent } from "./ReactAgent.js";
+export * from "@langchain/core/middleware";
