@@ -1,5 +1,17 @@
 # @langchain/openai
 
+## 0.6.16
+
+### Patch Changes
+
+- b8ffc1e: fix(openai): Remove raw OpenAI fields from token usage
+
+## 0.6.15
+
+### Patch Changes
+
+- e63c7cc: fix(openai): Convert OpenAI responses API usage to tracing format
+
 ## 0.6.14
 
 ### Patch Changes

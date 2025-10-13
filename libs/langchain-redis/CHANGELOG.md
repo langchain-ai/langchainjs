@@ -1,5 +1,11 @@
 # @langchain/redis
 
+## 0.1.4
+
+### Patch Changes
+
+- 86d05ab: add supprt for custom schemas in vectorstore
+
 ## 0.1.3
 
 ### Patch Changes
