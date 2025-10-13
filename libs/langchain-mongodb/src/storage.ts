@@ -65,6 +65,9 @@ export class MongoDBStore extends BaseStore<string, Uint8Array> {
     this.yieldKeysScanBatchSize =
       fields.yieldKeysScanBatchSize ?? this.yieldKeysScanBatchSize;
     this.namespace = fields.namespace;
+    this.collection.db.client.appendMetadata({
+      name: "langchainjs_storage",
+    });
   }
 
   _getPrefixedKey(key: string) {

@@ -107,7 +107,10 @@ import {
   ResponsesTool,
   ResponsesToolChoice,
 } from "./utils/tools.js";
-import { handleMultiModalOutput } from "./utils/output.js";
+import {
+  _convertOpenAIResponsesUsageToLangChainUsage,
+  handleMultiModalOutput,
+} from "./utils/output.js";
 
 const _FUNCTION_CALL_IDS_MAP_KEY = "__openai_function_call_ids__";
 
@@ -622,7 +625,7 @@ export abstract class BaseChatOpenAI<
    * OpenAI organization or project. This must be configured directly with OpenAI.
    *
    * See:
-   * https://help.openai.com/en/articles/10503543-data-residency-for-the-openai-api
+   * https://platform.openai.com/docs/guides/your-data
    * https://platform.openai.com/docs/api-reference/responses/create#responses-create-store
    *
    * @default false
@@ -1755,7 +1758,9 @@ export class ChatOpenAIResponses<
       content,
       tool_calls,
       invalid_tool_calls,
-      usage_metadata: response.usage,
+      usage_metadata: _convertOpenAIResponsesUsageToLangChainUsage(
+        response.usage
+      ),
       additional_kwargs,
       response_metadata,
     });
@@ -1831,7 +1836,10 @@ export class ChatOpenAIResponses<
     } else if (chunk.type === "response.completed") {
       const msg = this._convertResponsesMessageToBaseMessage(chunk.response);
 
-      usage_metadata = chunk.response.usage;
+      usage_metadata = _convertOpenAIResponsesUsageToLangChainUsage(
+        chunk.response.usage
+      );
+
       if (chunk.response.text?.format?.type === "json_schema") {
         additional_kwargs.parsed ??= JSON.parse(msg.text);
       }

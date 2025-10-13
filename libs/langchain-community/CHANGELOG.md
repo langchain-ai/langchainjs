@@ -1,5 +1,17 @@
 # @langchain/community
 
+## 0.3.57
+
+### Patch Changes
+
+- fd4691f: use `keyEncoder` instead of insecure cache key getter
+- Updated dependencies [fd4691f]
+- Updated dependencies [2f19cd5]
+- Updated dependencies [d38e9d6]
+- Updated dependencies [3c94076]
+  - langchain@0.3.35
+  - @langchain/openai@0.6.14
+
 ## 0.3.56
 
 ### Patch Changes

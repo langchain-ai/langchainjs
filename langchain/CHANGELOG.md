@@ -1,5 +1,15 @@
 # langchain
 
+## 0.3.35
+
+### Patch Changes
+
+- fd4691f: use `keyEncoder` instead of insecure cache key getter
+- 2f19cd5: feat: Add Perplexity support to universal chat model
+- 3c94076: fix(langchain): Bind schemas for other types of pulled hub prompts
+- Updated dependencies [d38e9d6]
+  - @langchain/openai@0.6.14
+
 ## 0.3.34
 
 ### Patch Changes

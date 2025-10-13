@@ -1,6 +1,6 @@
 {
   "name": "@langchain/anthropic",
-  "version": "0.3.28",
+  "version": "0.3.30",
   "description": "Anthropic integrations for LangChain.js",
   "type": "module",
   "engines": {
@@ -35,7 +35,7 @@
   "author": "LangChain",
   "license": "MIT",
   "dependencies": {
-    "@anthropic-ai/sdk": "^0.56.0",
+    "@anthropic-ai/sdk": "^0.65.0",
     "fast-xml-parser": "^4.4.1"
   },
   "peerDependencies": {

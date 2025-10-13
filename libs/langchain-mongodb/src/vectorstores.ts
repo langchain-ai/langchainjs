@@ -79,6 +79,9 @@ export class MongoDBAtlasVectorSearch extends VectorStore {
     this.embeddingKey = args.embeddingKey ?? "embedding";
     this.primaryKey = args.primaryKey ?? "_id";
     this.caller = new AsyncCaller(args);
+    this.collection.db.client.appendMetadata({
+      name: "langchainjs_vector",
+    });
   }
 
   /**

@@ -126,6 +126,9 @@ import {
   ChatGenerationChunk,
   GenerationChunk
 } from "@langchain/core/outputs";
+import {
+  Client
+} from "langsmith";
 const chat_models__openai = {
   ChatOpenAI
 };
@@ -234,3 +237,7 @@ const schema__output = {
   GenerationChunk
 };
 export { schema__output };
+const langsmith = {
+  Client
+};
+export { langsmith };

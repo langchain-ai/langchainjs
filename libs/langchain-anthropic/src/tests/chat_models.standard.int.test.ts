@@ -20,7 +20,7 @@ class ChatAnthropicStandardIntegrationTests extends ChatModelIntegrationTests<
       chatModelHasStructuredOutput: true,
       supportsParallelToolCalls: true,
       constructorArgs: {
-        model: "claude-3-haiku-20240307",
+        model: "claude-sonnet-4-5-20250929",
       },
       supportsStandardContentType: {
         text: true,
