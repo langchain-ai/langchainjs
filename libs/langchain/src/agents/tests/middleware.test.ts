@@ -2332,5 +2332,43 @@ describe("middleware", () => {
 
       expect(result.trackedValue).toBe("final_value");
     });
+
+    it("hooks run before/after every invocation", async () => {
+      const beforeAgentCall = vi.fn();
+      const afterAgentCall = vi.fn();
+      const middleware = createMiddleware({
+        name: "CallTracker",
+        beforeAgent: beforeAgentCall,
+        afterAgent: afterAgentCall,
+      });
+
+      const model = new FakeToolCallingChatModel({
+        responses: [new AIMessage("Response")],
+      });
+
+      const agent = createAgent({
+        model,
+        tools: [],
+        middleware: [middleware] as const,
+      });
+
+      await agent.invoke({
+        messages: "Test",
+      });
+      expect(beforeAgentCall).toHaveBeenCalledTimes(1);
+      expect(afterAgentCall).toHaveBeenCalledTimes(1);
+
+      await agent.invoke({
+        messages: "Test2",
+      });
+      expect(beforeAgentCall).toHaveBeenCalledTimes(2);
+      expect(afterAgentCall).toHaveBeenCalledTimes(2);
+
+      await agent.invoke({
+        messages: "Test3",
+      });
+      expect(beforeAgentCall).toHaveBeenCalledTimes(3);
+      expect(afterAgentCall).toHaveBeenCalledTimes(3);
+    });
   });
 });
