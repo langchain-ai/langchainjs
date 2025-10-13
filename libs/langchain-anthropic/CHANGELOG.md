@@ -1,5 +1,11 @@
 # @langchain/anthropic
 
+## 0.3.31
+
+### Patch Changes
+
+- 51f638e: fix content management param
+
 ## 0.3.30
 
 ### Patch Changes

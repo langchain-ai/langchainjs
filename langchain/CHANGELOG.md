@@ -1,5 +1,14 @@
 # langchain
 
+## 0.3.36
+
+### Patch Changes
+
+- cabd762: fix(langchain): add ChatMistralAI to well known models
+- Updated dependencies [e63c7cc]
+- Updated dependencies [b8ffc1e]
+  - @langchain/openai@0.6.16
+
 ## 0.3.35
 
 ### Patch Changes
