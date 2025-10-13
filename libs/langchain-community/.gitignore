@@ -118,6 +118,10 @@ tools/wolframalpha.cjs
 tools/wolframalpha.js
 tools/wolframalpha.d.ts
 tools/wolframalpha.d.cts
+tools/file_management.cjs
+tools/file_management.js
+tools/file_management.d.ts
+tools/file_management.d.cts
 agents/toolkits/aws_sfn.cjs
 agents/toolkits/aws_sfn.js
 agents/toolkits/aws_sfn.d.ts
