@@ -408,6 +408,24 @@ export function createMiddleware<
       );
   }
 
+  if (config.beforeAgent) {
+    middleware.beforeAgent = async (state, runtime) =>
+      Promise.resolve(
+        config.beforeAgent!(
+          state,
+          runtime as Runtime<
+            TContextSchema extends InteropZodObject
+              ? InferInteropZodOutput<TContextSchema>
+              : TContextSchema extends InteropZodDefault<any>
+              ? InferInteropZodOutput<TContextSchema>
+              : TContextSchema extends InteropZodOptional<any>
+              ? Partial<InferInteropZodOutput<TContextSchema>>
+              : never
+          >
+        )
+      );
+  }
+
   if (config.beforeModel) {
     middleware.beforeModel = async (state, runtime) =>
       Promise.resolve(
