@@ -319,6 +319,17 @@
       },
       "input": "./src/memory.ts"
     },
+    "./middleware": {
+      "require": {
+        "types": "./dist/middleware/index.d.cts",
+        "default": "./dist/middleware/index.cjs"
+      },
+      "import": {
+        "types": "./dist/middleware/index.d.ts",
+        "default": "./dist/middleware/index.js"
+      },
+      "input": "./src/middleware/index.ts"
+    },
     "./messages": {
       "require": {
         "types": "./dist/messages/index.d.cts",

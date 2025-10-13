@@ -1,15 +1,14 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { z } from "zod/v3";
+import { z, type ZodIssue } from "zod/v3";
 import { type BaseMessage } from "@langchain/core/messages";
 import {
   interopSafeParseAsync,
   interopZodObjectMakeFieldsOptional,
 } from "@langchain/core/utils/types";
-import { type ZodIssue } from "zod/v3";
+import type { AgentMiddleware } from "@langchain/core/middleware";
 import { END } from "@langchain/langgraph";
 
 import type { JumpTo } from "../types.js";
-import type { AgentMiddleware } from "../middleware/types.js";
 
 /**
  * Helper function to initialize middleware state defaults.

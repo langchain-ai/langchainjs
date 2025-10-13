@@ -30,7 +30,8 @@
     "format:check": "prettier --config .prettierrc --check \"src\""
   },
   "dependencies": {
-    "@anthropic-ai/sdk": "^0.56.0"
+    "@anthropic-ai/sdk": "^0.56.0",
+    "zod": "3.25.76"
   },
   "peerDependencies": {
     "@langchain/core": "^1.0.0-alpha.6"
@@ -50,8 +51,7 @@
     "release-it-pnpm": "^4.6.6",
     "rimraf": "^5.0.1",
     "typescript": "~5.8.3",
-    "vitest": "^3.2.4",
-    "zod": "3.25.76"
+    "vitest": "^3.2.4"
   },
   "publishConfig": {
     "access": "public"

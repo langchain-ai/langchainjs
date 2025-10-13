@@ -7,7 +7,8 @@ import {
   MessageContent,
   ToolMessage,
 } from "@langchain/core/messages";
-import { MessagesAnnotation, isCommand } from "@langchain/langgraph";
+import type { ClientTool, ServerTool } from "@langchain/core/tools";
+import { MessagesAnnotation, isCommand, Command } from "@langchain/langgraph";
 import {
   BaseChatModel,
   type BaseChatModelCallOptions,
@@ -24,18 +25,17 @@ import {
   RunnableSequence,
   RunnableBinding,
 } from "@langchain/core/runnables";
-
-import { isBaseChatModel, isConfigurableModel } from "./model.js";
-import type { ClientTool, ServerTool } from "./tools.js";
-import { MultipleToolsBoundError } from "./errors.js";
-import { PROMPT_RUNNABLE_NAME } from "./constants.js";
-import type { AgentBuiltInState } from "./runtime.js";
 import type {
+  AgentBuiltInState,
   ToolCallWrapper,
   ToolCallHandler,
   AgentMiddleware,
   ToolCallRequest,
-} from "./middleware/types.js";
+} from "@langchain/core/middleware";
+
+import { isBaseChatModel, isConfigurableModel } from "./model.js";
+import { MultipleToolsBoundError } from "./errors.js";
+import { PROMPT_RUNNABLE_NAME } from "./constants.js";
 
 const NAME_PATTERN = /<name>(.*?)<\/name>/s;
 const CONTENT_PATTERN = /<content>(.*?)<\/content>/s;
@@ -456,8 +456,8 @@ export async function bindTools(
  * ```
  */
 function chainToolCallHandlers(
-  handlers: ToolCallWrapper[]
-): ToolCallWrapper | undefined {
+  handlers: ToolCallWrapper<Command>[]
+): ToolCallWrapper<Command> | undefined {
   if (handlers.length === 0) {
     return undefined;
   }
@@ -468,12 +468,12 @@ function chainToolCallHandlers(
 
   // Compose two handlers where outer wraps inner
   function composeTwo(
-    outer: ToolCallWrapper,
-    inner: ToolCallWrapper
-  ): ToolCallWrapper {
+    outer: ToolCallWrapper<Command>,
+    inner: ToolCallWrapper<Command>
+  ): ToolCallWrapper<Command> {
     return async (request, handler) => {
       // Create a wrapper that calls inner with the base handler
-      const innerHandler: ToolCallHandler = async () =>
+      const innerHandler: ToolCallHandler<Command> = async () =>
         inner(request, async (tc) => handler(tc));
 
       // Call outer with the wrapped inner as its handler
@@ -510,7 +510,10 @@ export function wrapToolCall(middleware: readonly AgentMiddleware[]) {
       /**
        * Wrap with error handling and validation
        */
-      const wrappedHandler: ToolCallWrapper = async (request, handler) => {
+      const wrappedHandler: ToolCallWrapper<Command> = async (
+        request,
+        handler
+      ) => {
         try {
           const result = await originalHandler(
             request as ToolCallRequest<AgentBuiltInState, unknown>,

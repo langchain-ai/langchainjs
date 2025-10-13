@@ -3,10 +3,9 @@ import { BaseLanguageModel } from "@langchain/core/language_models/base";
 import type { InferInteropZodInput } from "@langchain/core/utils/types";
 import { HumanMessage } from "@langchain/core/messages";
 import type { StructuredToolInterface } from "@langchain/core/tools";
+import { createMiddleware, type Runtime } from "@langchain/core/middleware";
 
-import { createMiddleware } from "../middleware.js";
 import { initChatModel } from "../../chat_models/universal.js";
-import type { Runtime } from "../runtime.js";
 import type { ModelRequest } from "../nodes/types.js";
 
 const DEFAULT_SYSTEM_PROMPT =

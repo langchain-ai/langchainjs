@@ -9,7 +9,7 @@ import {
 } from "@langchain/langgraph";
 import { withLangGraph } from "@langchain/langgraph/zod";
 
-import type { AgentMiddleware } from "./middleware/types.js";
+import type { AgentMiddleware } from "@langchain/core/middleware";
 
 export function createAgentAnnotationConditional<
   TMiddleware extends readonly AgentMiddleware<any, any, any>[] = []

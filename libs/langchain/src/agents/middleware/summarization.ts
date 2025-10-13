@@ -15,7 +15,10 @@ import {
   InferInteropZodInput,
 } from "@langchain/core/utils/types";
 import { REMOVE_ALL_MESSAGES } from "@langchain/langgraph";
-import { createMiddleware } from "../middleware.js";
+import {
+  createMiddleware,
+  type AgentMiddleware as _,
+} from "@langchain/core/middleware";
 import { countTokensApproximately } from "./utils.js";
 import { hasToolCalls } from "../utils.js";
 

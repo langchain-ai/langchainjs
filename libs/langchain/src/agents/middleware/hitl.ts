@@ -2,13 +2,16 @@
 import { z } from "zod/v3";
 import { AIMessage, ToolMessage, ToolCall } from "@langchain/core/messages";
 import {
+  createMiddleware,
+  type AgentBuiltInState,
+  type Runtime,
+  type AgentMiddleware as _,
+} from "@langchain/core/middleware";
+import {
   InferInteropZodInput,
   interopParse,
 } from "@langchain/core/utils/types";
 import { interrupt } from "@langchain/langgraph";
-
-import { createMiddleware } from "../middleware.js";
-import type { AgentBuiltInState, Runtime } from "../runtime.js";
 
 const DescriptionFunctionSchema = z
   .function()

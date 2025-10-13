@@ -6,7 +6,7 @@ export * from "./hitl.js";
 export {
   anthropicPromptCachingMiddleware,
   type PromptCachingMiddlewareConfig,
-} from "./promptCaching.js";
+} from "../../../../providers/langchain-anthropic/src/promptCaching.js";
 export {
   dynamicSystemPromptMiddleware,
   type DynamicSystemPromptMiddlewareConfig,
@@ -37,5 +37,4 @@ export {
   type ModelCallLimitMiddlewareConfig,
 } from "./callLimit.js";
 export { modelFallbackMiddleware } from "./modelFallback.js";
-export { type AgentMiddleware } from "./types.js";
 export { countTokensApproximately } from "./utils.js";

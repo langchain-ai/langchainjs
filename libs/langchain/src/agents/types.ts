@@ -4,6 +4,8 @@ import type {
   InteropZodType,
 } from "@langchain/core/utils/types";
 import type { START, END, StateGraph } from "@langchain/langgraph";
+import type { ServerTool, ClientTool } from "@langchain/core/tools";
+import type { AgentMiddleware, JumpToTarget } from "@langchain/core/middleware";
 
 import type { LanguageModelLike } from "@langchain/core/language_models/base";
 import type { BaseMessage } from "@langchain/core/messages";
@@ -21,9 +23,7 @@ import type {
   JsonSchemaFormat,
   ResponseFormatUndefined,
 } from "./responses.js";
-import type { AgentMiddleware, AnyAnnotationRoot } from "./middleware/types.js";
-import type { ServerTool, ClientTool } from "./tools.js";
-import type { JumpToTarget } from "./constants.js";
+import type { AnyAnnotationRoot } from "./middleware/types.js";
 
 export type N = typeof START | "model_request" | "tools";
 
@@ -61,32 +61,6 @@ export interface BuiltInState {
 export type UserInput = {
   messages: Messages;
 };
-
-/**
- * Information about a tool call that has been executed.
- */
-export interface ToolCall {
-  /**
-   * The ID of the tool call.
-   */
-  id: string;
-  /**
-   * The name of the tool that was called.
-   */
-  name: string;
-  /**
-   * The arguments that were passed to the tool.
-   */
-  args: Record<string, any>;
-  /**
-   * The result of the tool call.
-   */
-  result?: unknown;
-  /**
-   * An optional error message if the tool call failed.
-   */
-  error?: string;
-}
 
 /**
  * Information about a tool result from a tool execution.
