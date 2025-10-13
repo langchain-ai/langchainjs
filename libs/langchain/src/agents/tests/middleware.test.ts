@@ -12,7 +12,7 @@ import {
 import { tool } from "@langchain/core/tools";
 import { Command } from "@langchain/langgraph";
 
-import { createAgent, createMiddleware } from "../index.js";
+import { createAgent, createMiddleware, toolStrategy } from "../index.js";
 import { FakeToolCallingChatModel, FakeToolCallingModel } from "./utils.js";
 
 describe("middleware", () => {
@@ -1712,6 +1712,7 @@ describe("middleware", () => {
         toolCalls: [
           [{ name: "expensive_operation", args: { input: "test" }, id: "1" }],
           [{ name: "expensive_operation", args: { input: "test" }, id: "2" }],
+          [], // No more tool calls - agent should stop
         ],
       });
 
@@ -1722,15 +1723,25 @@ describe("middleware", () => {
       });
 
       // First invocation - should execute tool
-      await agent.invoke({
-        messages: [new HumanMessage("Run expensive operation")],
-      });
+      await agent.invoke(
+        {
+          messages: [new HumanMessage("Run expensive operation")],
+        },
+        {
+          recursionLimit: 100,
+        }
+      );
       expect(executionCount).toBe(1);
 
       // Second invocation with same args - should use cache
-      await agent.invoke({
-        messages: [new HumanMessage("Run expensive operation again")],
-      });
+      await agent.invoke(
+        {
+          messages: [new HumanMessage("Run expensive operation again")],
+        },
+        {
+          recursionLimit: 100,
+        }
+      );
       expect(executionCount).toBe(1); // Still 1, not incremented
     });
 
@@ -1866,6 +1877,501 @@ describe("middleware", () => {
         "layer2_after",
         "layer1_after",
       ]);
+    });
+  });
+
+  describe("before/after agent hook", () => {
+    it("should run before_agent and after_agent only once with multiple model calls", async () => {
+      const executionLog: string[] = [];
+
+      const sampleTool = tool(
+        async ({ query }: { query: string }) => `Result for: ${query}`,
+        {
+          name: "sample_tool",
+          description: "A sample tool for testing",
+          schema: z.object({
+            query: z.string(),
+          }),
+        }
+      );
+
+      const middleware = createMiddleware({
+        name: "TestMiddleware",
+        beforeAgent: async () => {
+          executionLog.push("before_agent");
+        },
+        beforeModel: async () => {
+          executionLog.push("before_model");
+        },
+        afterModel: async () => {
+          executionLog.push("after_model");
+        },
+        afterAgent: async () => {
+          executionLog.push("after_agent");
+        },
+      });
+
+      // Model will call a tool twice, then respond with final answer
+      // This creates 3 model invocations total, but agent hooks should still run once
+      const model = new FakeToolCallingModel({
+        toolCalls: [
+          [{ name: "sample_tool", args: { query: "first" }, id: "1" }],
+          [{ name: "sample_tool", args: { query: "second" }, id: "2" }],
+          [], // Third call returns no tool calls (final answer)
+        ],
+      });
+
+      const agent = createAgent({
+        model,
+        tools: [sampleTool],
+        middleware: [middleware],
+      });
+
+      await agent.invoke({
+        messages: [new HumanMessage("Test")],
+      });
+
+      // Should see: before_agent once, then (before_model + after_model) 3 times, then after_agent once
+      expect(executionLog).toEqual([
+        "before_agent",
+        "before_model",
+        "after_model",
+        "before_model",
+        "after_model",
+        "before_model",
+        "after_model",
+        "after_agent",
+      ]);
+    });
+
+    it("should execute multiple before_agent and after_agent middleware in correct order", async () => {
+      const executionLog: string[] = [];
+
+      const middleware1 = createMiddleware({
+        name: "Middleware1",
+        beforeAgent: async () => {
+          executionLog.push("before_agent_1");
+        },
+        afterAgent: async () => {
+          executionLog.push("after_agent_1");
+        },
+      });
+
+      const middleware2 = createMiddleware({
+        name: "Middleware2",
+        beforeAgent: async () => {
+          executionLog.push("before_agent_2");
+        },
+        afterAgent: async () => {
+          executionLog.push("after_agent_2");
+        },
+      });
+
+      const model = new FakeToolCallingChatModel({
+        responses: [new AIMessage("Response")],
+      });
+
+      const agent = createAgent({
+        model,
+        tools: [],
+        middleware: [middleware1, middleware2],
+      });
+
+      await agent.invoke({
+        messages: [new HumanMessage("Test")],
+      });
+
+      // before_agent runs forward, after_agent runs in reverse
+      expect(executionLog).toEqual([
+        "before_agent_1",
+        "before_agent_2",
+        "after_agent_2",
+        "after_agent_1",
+      ]);
+    });
+
+    it("should allow state modifications in before and after agent hook", async () => {
+      const middleware = createMiddleware({
+        name: "TestMiddleware",
+        stateSchema: z.object({
+          customField: z.string().default("initial"),
+        }),
+        beforeAgent: async (state) => {
+          expect(state.customField).toBe("initial");
+          return {
+            customField: "modified_by_before_agent",
+          };
+        },
+        beforeModel: async (state) => {
+          expect(state.customField).toBe("modified_by_before_agent");
+        },
+        afterAgent: async (state) => {
+          expect(state.customField).toBe("modified_by_before_agent");
+          return {
+            customField: "modified_by_after_agent",
+          };
+        },
+      });
+
+      const model = new FakeToolCallingChatModel({
+        responses: [new AIMessage("Response")],
+      });
+
+      const agent = createAgent({
+        model,
+        tools: [],
+        middleware: [middleware] as const,
+      });
+
+      const result = await agent.invoke({
+        messages: [new HumanMessage("Test")],
+      });
+
+      expect(result.customField).toBe("modified_by_after_agent");
+    });
+
+    it("should allow modifying structured response in after_agent hook", async () => {
+      const responseSchema = z.object({
+        answer: z.string(),
+        confidence: z.number(),
+      });
+
+      const middleware = createMiddleware({
+        name: "ResponseModifier",
+        afterAgent: async (state) => {
+          // Modify the structured response
+          const currentResponse = (state as any).structuredResponse as {
+            answer: string;
+            confidence: number;
+          };
+
+          return {
+            structuredResponse: {
+              ...currentResponse,
+              confidence: 0.95, // Override confidence
+            },
+          } as any;
+        },
+      });
+
+      const model = new FakeToolCallingChatModel({
+        responses: [
+          new AIMessage({
+            content: "",
+            tool_calls: [
+              {
+                name: "extract-1",
+                args: { answer: "42", confidence: 0.5 },
+                id: "call_1",
+                type: "tool_call",
+              },
+            ],
+          }),
+        ],
+      });
+
+      const agent = createAgent({
+        model,
+        tools: [],
+        responseFormat: toolStrategy(responseSchema),
+        middleware: [middleware],
+      });
+
+      const result = await agent.invoke({
+        messages: [new HumanMessage("What is the answer?")],
+      });
+
+      expect(result.structuredResponse).toEqual({
+        answer: "42",
+        confidence: 0.95, // Modified by after_agent hook
+      });
+    });
+
+    it("should only allow middleware to modify its own state, not other middleware state", async () => {
+      const middleware1 = createMiddleware({
+        name: "Middleware1",
+        stateSchema: z.object({
+          field1: z.string().default("value1"),
+        }),
+        beforeAgent: async (state) => {
+          // Should only see its own field, not field2 from middleware2
+          expect(state).not.toHaveProperty("field2");
+          return {
+            field1: "modified1",
+          };
+        },
+      });
+
+      const middleware2 = createMiddleware({
+        name: "Middleware2",
+        stateSchema: z.object({
+          field2: z.string().default("value2"),
+        }),
+        beforeAgent: async (state) => {
+          // Should only see its own field, not field1 from middleware1
+          expect(state).not.toHaveProperty("field1");
+          return {
+            field2: "modified2",
+          };
+        },
+      });
+
+      const model = new FakeToolCallingChatModel({
+        responses: [new AIMessage("Response")],
+      });
+
+      const agent = createAgent({
+        model,
+        tools: [],
+        middleware: [middleware1, middleware2] as const,
+      });
+
+      const result = await agent.invoke({
+        messages: [new HumanMessage("Test")],
+      });
+
+      // Both fields should be in the final result
+      expect(result.field1).toBe("modified1");
+      expect(result.field2).toBe("modified2");
+    });
+
+    it("should not allow middleware to modify context in before_agent", async () => {
+      const middleware = createMiddleware({
+        name: "TestMiddleware",
+        contextSchema: z.object({
+          userId: z.string(),
+        }),
+        beforeAgent: async (_state, runtime) => {
+          runtime.context.userId = "123user";
+        },
+      });
+
+      const model = new FakeToolCallingChatModel({
+        responses: [new AIMessage("Response")],
+      });
+
+      const agent = createAgent({
+        model,
+        tools: [],
+        middleware: [middleware],
+      });
+
+      await expect(
+        agent.invoke(
+          {
+            messages: [new HumanMessage("Test")],
+          },
+          {
+            context: { userId: "user123" },
+          }
+        )
+      ).rejects.toThrow(
+        "Cannot assign to read only property 'userId' of object '#<AgentContext>'"
+      );
+    });
+
+    it("should support all hooks together with correct execution order", async () => {
+      const executionLog: string[] = [];
+
+      const sampleTool = tool(
+        async ({ query }: { query: string }) => {
+          executionLog.push("tool_execution");
+          return `Result for: ${query}`;
+        },
+        {
+          name: "sample_tool",
+          description: "A sample tool",
+          schema: z.object({
+            query: z.string(),
+          }),
+        }
+      );
+
+      const middleware = createMiddleware({
+        name: "FullMiddleware",
+        beforeAgent: async () => {
+          executionLog.push("before_agent");
+        },
+        beforeModel: async () => {
+          executionLog.push("before_model");
+        },
+        afterModel: async () => {
+          executionLog.push("after_model");
+        },
+        afterAgent: async () => {
+          executionLog.push("after_agent");
+        },
+      });
+
+      const model = new FakeToolCallingModel({
+        toolCalls: [
+          [{ name: "sample_tool", args: { query: "test" }, id: "1" }],
+          [], // Second call - no more tools
+        ],
+      });
+
+      const agent = createAgent({
+        model,
+        tools: [sampleTool],
+        middleware: [middleware],
+      });
+
+      await agent.invoke({
+        messages: [new HumanMessage("Test")],
+      });
+
+      expect(executionLog).toEqual([
+        "before_agent",
+        "before_model",
+        "after_model",
+        "tool_execution",
+        "before_model",
+        "after_model",
+        "after_agent",
+      ]);
+    });
+
+    it("should preserve message additions in before_agent", async () => {
+      const middleware = createMiddleware({
+        name: "MessageModifier",
+        beforeAgent: async (_state) => {
+          return {
+            messages: [new SystemMessage("Added by before_agent")],
+          };
+        },
+      });
+
+      const model = new FakeToolCallingChatModel({
+        responses: [new AIMessage("Response")],
+      });
+
+      const agent = createAgent({
+        model,
+        tools: [],
+        middleware: [middleware],
+      });
+
+      const result = await agent.invoke({
+        messages: [new HumanMessage("Original message")],
+      });
+
+      const messageContents = result.messages.map(
+        (m: BaseMessage) => m.content
+      );
+      expect(messageContents).toContain("Added by before_agent");
+      expect(messageContents).toContain("Original message");
+    });
+
+    // it.skip("should handle Command objects in before_agent and after_agent", async () => {
+    //   const executionLog: string[] = [];
+
+    //   const middleware = createMiddleware({
+    //     name: "CommandMiddleware",
+    //     stateSchema: z.object({
+    //       shouldSkip: z.boolean().default(false),
+    //     }),
+    //     beforeAgent: async (state) => {
+    //       executionLog.push("before_agent");
+    //       if (state.shouldSkip) {
+    //         // Can use Command to control flow
+    //         return new Command({
+    //           shouldSkip: true,
+    //         });
+    //       }
+    //       return undefined;
+    //     },
+    //     afterAgent: async () => {
+    //       executionLog.push("after_agent");
+    //     },
+    //   });
+
+    //   const model = new FakeToolCallingChatModel({
+    //     responses: [new AIMessage("Response")],
+    //   });
+
+    //   const agent = createAgent({
+    //     model,
+    //     tools: [],
+    //     middleware: [middleware],
+    //   });
+
+    //   await agent.invoke({
+    //     messages: [new HumanMessage("Test")],
+    //     shouldSkip: false as any,
+    //   } as any);
+
+    //   expect(executionLog).toEqual(["before_agent", "after_agent"]);
+    // });
+
+    it("should allow accessing runtime metadata in before_agent and after_agent", async () => {
+      const middleware = createMiddleware({
+        name: "RuntimeAccessMiddleware",
+        beforeAgent: async (_state, runtime) => {
+          expect(runtime.threadLevelCallCount).toBe(0);
+          expect(runtime.runModelCallCount).toBe(0);
+        },
+        afterAgent: async (_state, runtime) => {
+          // After the agent completes, counts should be updated
+          expect(runtime.threadLevelCallCount).toBe(1);
+          expect(runtime.runModelCallCount).toBe(1);
+        },
+      });
+
+      const model = new FakeToolCallingChatModel({
+        responses: [new AIMessage("Response")],
+      });
+
+      const agent = createAgent({
+        model,
+        tools: [],
+        middleware: [middleware],
+      });
+
+      await agent.invoke({
+        messages: [new HumanMessage("Test")],
+      });
+    });
+
+    it("should propagate state changes from before_agent through the entire agent execution", async () => {
+      const middleware = createMiddleware({
+        name: "StateTracker",
+        stateSchema: z.object({
+          trackedValue: z.string().default("initial"),
+        }),
+        beforeAgent: async () => {
+          return {
+            trackedValue: "set_in_before_agent",
+          };
+        },
+        beforeModel: async (state) => {
+          expect(state.trackedValue).toBe("set_in_before_agent");
+        },
+        afterModel: async (state) => {
+          expect(state.trackedValue).toBe("set_in_before_agent");
+        },
+        afterAgent: async (state) => {
+          expect(state.trackedValue).toBe("set_in_before_agent");
+          return {
+            trackedValue: "final_value",
+          };
+        },
+      });
+
+      const model = new FakeToolCallingChatModel({
+        responses: [new AIMessage("Response")],
+      });
+
+      const agent = createAgent({
+        model,
+        tools: [],
+        middleware: [middleware] as const,
+      });
+
+      const result = await agent.invoke({
+        messages: [new HumanMessage("Test")],
+      });
+
+      expect(result.trackedValue).toBe("final_value");
     });
   });
 });

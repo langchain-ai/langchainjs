@@ -332,14 +332,20 @@ describe("createAgent", () => {
       messages: [new HumanMessage({ content: "Test normal", id: "hum1" })],
     });
 
-    expect(result.messages).toHaveLength(3);
+    expect(result.messages).toHaveLength(4);
+    expect(HumanMessage.isInstance(result.messages[0])).toBe(true);
     expect(result.messages[0]).toEqual(
       new HumanMessage({ content: "Test normal", id: "hum1" })
     );
+    expect(AIMessage.isInstance(result.messages[1])).toBe(true);
+    expect((result.messages[1] as AIMessage).tool_calls?.length).toBe(1);
+    expect(ToolMessage.isInstance(result.messages[2])).toBe(true);
     expect((result.messages[2] as ToolMessage).content).toBe(
       "Normal result: Test normal"
     );
     expect((result.messages[2] as ToolMessage).name).toBe("toolNormal");
+    expect(AIMessage.isInstance(result.messages[3])).toBe(true);
+    expect((result.messages[3] as AIMessage).tool_calls?.length).toBe(0);
   });
 
   it("should work with store integration", async () => {

@@ -78,6 +78,10 @@ export function createMiddleware<
    */
   contextSchema?: TContextSchema;
   /**
+   * Explitictly defines which targets are allowed to be jumped to from the `beforeAgent` hook.
+   */
+  beforeAgentJumpTo?: JumpToTarget[];
+  /**
    * Explitictly defines which targets are allowed to be jumped to from the `beforeModel` hook.
    */
   beforeModelJumpTo?: JumpToTarget[];
@@ -85,6 +89,10 @@ export function createMiddleware<
    * Explitictly defines which targets are allowed to be jumped to from the `afterModel` hook.
    */
   afterModelJumpTo?: JumpToTarget[];
+  /**
+   * Explitictly defines which targets are allowed to be jumped to from the `afterAgent` hook.
+   */
+  afterAgentJumpTo?: JumpToTarget[];
   /**
    * Additional tools registered by the middleware.
    */
@@ -210,6 +218,43 @@ export function createMiddleware<
     ) => Promise<AIMessage> | AIMessage
   ) => Promise<AIMessage> | AIMessage;
   /**
+   * The function to run before the agent execution starts. This function is called once at the start of the agent invocation.
+   * It allows to modify the state of the agent before any model calls or tool executions.
+   *
+   * @param state - The middleware state
+   * @param runtime - The middleware runtime
+   * @returns The modified middleware state or undefined to pass through
+   */
+  beforeAgent?: (
+    state: (TSchema extends InteropZodObject
+      ? InferInteropZodInput<TSchema>
+      : {}) &
+      AgentBuiltInState,
+    runtime: Runtime<
+      TContextSchema extends InteropZodObject
+        ? InferInteropZodOutput<TContextSchema>
+        : TContextSchema extends InteropZodDefault<any>
+        ? InferInteropZodOutput<TContextSchema>
+        : TContextSchema extends InteropZodOptional<any>
+        ? Partial<InferInteropZodOutput<TContextSchema>>
+        : never
+    >
+  ) =>
+    | Promise<
+        MiddlewareResult<
+          Partial<
+            TSchema extends InteropZodObject
+              ? InferInteropZodInput<TSchema>
+              : {}
+          >
+        >
+      >
+    | MiddlewareResult<
+        Partial<
+          TSchema extends InteropZodObject ? InferInteropZodInput<TSchema> : {}
+        >
+      >;
+  /**
    * The function to run before the model call. This function is called before the model is invoked and before the `wrapModelRequest` hook.
    * It allows to modify the state of the agent.
    *
@@ -283,13 +328,52 @@ export function createMiddleware<
           TSchema extends InteropZodObject ? InferInteropZodInput<TSchema> : {}
         >
       >;
+  /**
+   * The function to run after the agent execution completes. This function is called once at the end of the agent invocation.
+   * It allows to modify the final state of the agent after all model calls and tool executions are complete.
+   *
+   * @param state - The middleware state
+   * @param runtime - The middleware runtime
+   * @returns The modified middleware state or undefined to pass through
+   */
+  afterAgent?: (
+    state: (TSchema extends InteropZodObject
+      ? InferInteropZodInput<TSchema>
+      : {}) &
+      AgentBuiltInState,
+    runtime: Runtime<
+      TContextSchema extends InteropZodObject
+        ? InferInteropZodOutput<TContextSchema>
+        : TContextSchema extends InteropZodDefault<any>
+        ? InferInteropZodOutput<TContextSchema>
+        : TContextSchema extends InteropZodOptional<any>
+        ? Partial<InferInteropZodOutput<TContextSchema>>
+        : never
+    >
+  ) =>
+    | Promise<
+        MiddlewareResult<
+          Partial<
+            TSchema extends InteropZodObject
+              ? InferInteropZodInput<TSchema>
+              : {}
+          >
+        >
+      >
+    | MiddlewareResult<
+        Partial<
+          TSchema extends InteropZodObject ? InferInteropZodInput<TSchema> : {}
+        >
+      >;
 }): AgentMiddleware<TSchema, TContextSchema, any> {
   const middleware: AgentMiddleware<TSchema, TContextSchema, any> = {
     name: config.name,
     stateSchema: config.stateSchema,
     contextSchema: config.contextSchema,
+    beforeAgentJumpTo: config.beforeAgentJumpTo,
     beforeModelJumpTo: config.beforeModelJumpTo,
     afterModelJumpTo: config.afterModelJumpTo,
+    afterAgentJumpTo: config.afterAgentJumpTo,
     tools: config.tools ?? [],
   };
 
@@ -301,6 +385,24 @@ export function createMiddleware<
   if (config.wrapModelRequest) {
     middleware.wrapModelRequest = async (request, handler) =>
       Promise.resolve(config.wrapModelRequest!(request, handler));
+  }
+
+  if (config.beforeAgent) {
+    middleware.beforeAgent = async (state, runtime) =>
+      Promise.resolve(
+        config.beforeAgent!(
+          state,
+          runtime as Runtime<
+            TContextSchema extends InteropZodObject
+              ? InferInteropZodOutput<TContextSchema>
+              : TContextSchema extends InteropZodDefault<any>
+              ? InferInteropZodOutput<TContextSchema>
+              : TContextSchema extends InteropZodOptional<any>
+              ? Partial<InferInteropZodOutput<TContextSchema>>
+              : never
+          >
+        )
+      );
   }
 
   if (config.beforeModel) {
@@ -325,6 +427,24 @@ export function createMiddleware<
     middleware.afterModel = async (state, runtime) =>
       Promise.resolve(
         config.afterModel!(
+          state,
+          runtime as Runtime<
+            TContextSchema extends InteropZodObject
+              ? InferInteropZodOutput<TContextSchema>
+              : TContextSchema extends InteropZodDefault<any>
+              ? InferInteropZodOutput<TContextSchema>
+              : TContextSchema extends InteropZodOptional<any>
+              ? Partial<InferInteropZodOutput<TContextSchema>>
+              : never
+          >
+        )
+      );
+  }
+
+  if (config.afterAgent) {
+    middleware.afterAgent = async (state, runtime) =>
+      Promise.resolve(
+        config.afterAgent!(
           state,
           runtime as Runtime<
             TContextSchema extends InteropZodObject

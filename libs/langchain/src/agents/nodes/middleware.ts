@@ -9,6 +9,12 @@ import type { Runtime, PrivateState } from "../runtime.js";
 import type { AgentMiddleware, MiddlewareResult } from "../middleware/types.js";
 import { derivePrivateState, parseJumpToTarget } from "./utils.js";
 
+/**
+ * Named class for context objects to provide better error messages
+ */
+class AgentContext {}
+class AgentRuntime {}
+
 type NodeOutput<TStateSchema extends Record<string, any>> =
   | TStateSchema
   | Command<any, TStateSchema, string>;
@@ -89,10 +95,18 @@ export abstract class MiddlewareNode<
 
     const result = await this.runHook(
       state,
-      Object.freeze({
-        ...runtime,
-        context: filteredContext,
-      })
+      /**
+       * assign runtime and context values into empty named class
+       * instances to create a better error message.
+       */
+      Object.freeze(
+        Object.assign(new AgentRuntime(), {
+          ...runtime,
+          context: Object.freeze(
+            Object.assign(new AgentContext(), filteredContext)
+          ),
+        })
+      )
     );
     delete result?._privateState;
 

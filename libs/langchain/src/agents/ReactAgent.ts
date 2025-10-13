@@ -28,8 +28,10 @@ import {
 
 import { AgentNode } from "./nodes/AgentNode.js";
 import { ToolNode } from "./nodes/ToolNode.js";
+import { BeforeAgentNode } from "./nodes/BeforeAgentNode.js";
 import { BeforeModelNode } from "./nodes/BeforeModelNode.js";
 import { AfterModelNode } from "./nodes/AfterModelNode.js";
+import { AfterAgentNode } from "./nodes/AfterAgentNode.js";
 import {
   initializeMiddlewareStates,
   parseJumpToTarget,
@@ -169,12 +171,22 @@ export class ReactAgent<
     >;
 
     // Generate node names for middleware nodes that have hooks
+    const beforeAgentNodes: {
+      index: number;
+      name: string;
+      allowed?: string[];
+    }[] = [];
     const beforeModelNodes: {
       index: number;
       name: string;
       allowed?: string[];
     }[] = [];
     const afterModelNodes: {
+      index: number;
+      name: string;
+      allowed?: string[];
+    }[] = [];
+    const afterAgentNodes: {
       index: number;
       name: string;
       allowed?: string[];
@@ -203,14 +215,32 @@ export class ReactAgent<
     const middlewareNames = new Set<string>();
     const middleware = this.options.middleware ?? [];
     for (let i = 0; i < middleware.length; i++) {
+      let beforeAgentNode: BeforeAgentNode | undefined;
       let beforeModelNode: BeforeModelNode | undefined;
       let afterModelNode: AfterModelNode | undefined;
+      let afterAgentNode: AfterAgentNode | undefined;
       const m = middleware[i];
       if (middlewareNames.has(m.name)) {
         throw new Error(`Middleware ${m.name} is defined multiple times`);
       }
 
       middlewareNames.add(m.name);
+      if (m.beforeAgent) {
+        beforeAgentNode = new BeforeAgentNode(m, {
+          getPrivateState: () => this.#agentNode.getState()._privateState,
+        });
+        const name = `${m.name}.before_agent`;
+        beforeAgentNodes.push({
+          index: i,
+          name,
+          allowed: m.beforeAgentJumpTo,
+        });
+        allNodeWorkflows.addNode(
+          name,
+          beforeAgentNode,
+          beforeAgentNode.nodeOptions
+        );
+      }
       if (m.beforeModel) {
         beforeModelNode = new BeforeModelNode(m, {
           getPrivateState: () => this.#agentNode.getState()._privateState,
@@ -243,13 +273,31 @@ export class ReactAgent<
           afterModelNode.nodeOptions
         );
       }
+      if (m.afterAgent) {
+        afterAgentNode = new AfterAgentNode(m, {
+          getPrivateState: () => this.#agentNode.getState()._privateState,
+        });
+        const name = `${m.name}.after_agent`;
+        afterAgentNodes.push({
+          index: i,
+          name,
+          allowed: m.afterAgentJumpTo,
+        });
+        allNodeWorkflows.addNode(
+          name,
+          afterAgentNode,
+          afterAgentNode.nodeOptions
+        );
+      }
 
       if (m.wrapModelRequest) {
         wrapModelRequestHookMiddleware.push([
           m,
           () => ({
+            ...beforeAgentNode?.getState(),
             ...beforeModelNode?.getState(),
             ...afterModelNode?.getState(),
+            ...afterAgentNode?.getState(),
           }),
         ]);
       }
@@ -285,13 +333,56 @@ export class ReactAgent<
     /**
      * Add Edges
      */
-    // Determine starting point based on what nodes exist
-    if (beforeModelNodes.length > 0) {
-      // If we have beforeModel nodes, start with the first one
-      allNodeWorkflows.addEdge(START, beforeModelNodes[0].name);
+    // Determine the entry node (runs once at start): before_agent -> before_model -> model_request
+    let entryNode: string;
+    if (beforeAgentNodes.length > 0) {
+      entryNode = beforeAgentNodes[0].name;
+    } else if (beforeModelNodes.length > 0) {
+      entryNode = beforeModelNodes[0].name;
     } else {
-      // If no beforeModel nodes, go directly to agent
-      allNodeWorkflows.addEdge(START, "model_request");
+      entryNode = "model_request";
+    }
+
+    // Determine the loop entry node (beginning of agent loop, excludes before_agent)
+    // This is where tools will loop back to for the next iteration
+    const loopEntryNode =
+      beforeModelNodes.length > 0 ? beforeModelNodes[0].name : "model_request";
+
+    // Determine the exit node (runs once at end): after_agent or END
+    const exitNode =
+      afterAgentNodes.length > 0
+        ? afterAgentNodes[afterAgentNodes.length - 1].name
+        : END;
+
+    allNodeWorkflows.addEdge(START, entryNode);
+
+    // Connect beforeAgent nodes (run once at start)
+    for (let i = 0; i < beforeAgentNodes.length; i++) {
+      const node = beforeAgentNodes[i];
+      const current = node.name;
+      const isLast = i === beforeAgentNodes.length - 1;
+      const nextDefault = isLast ? loopEntryNode : beforeAgentNodes[i + 1].name;
+
+      if (node.allowed && node.allowed.length > 0) {
+        const hasTools = toolClasses.filter(isClientTool).length > 0;
+        const allowedMapped = node.allowed
+          .map((t) => parseJumpToTarget(t))
+          .filter((dest) => dest !== "tools" || hasTools);
+        const destinations = Array.from(
+          new Set([nextDefault, ...allowedMapped])
+        ) as ("tools" | "model_request" | typeof END)[];
+
+        allNodeWorkflows.addConditionalEdges(
+          current,
+          this.#createBeforeModelRouter(
+            toolClasses.filter(isClientTool),
+            nextDefault
+          ),
+          destinations
+        );
+      } else {
+        allNodeWorkflows.addEdge(current, nextDefault);
+      }
     }
 
     // Connect beforeModel nodes; add conditional routing ONLY if allowed jumps are specified
@@ -332,13 +423,17 @@ export class ReactAgent<
     } else {
       // If no afterModel nodes, connect model_request directly to model paths
       const modelPaths = this.#getModelPaths(toolClasses.filter(isClientTool));
-      if (modelPaths.length === 1) {
-        allNodeWorkflows.addEdge("model_request", modelPaths[0]);
+      // Replace END with exitNode in destinations, since exitNode might be an afterAgent node
+      const destinations = modelPaths.map((p) =>
+        p === END ? exitNode : p
+      ) as ("tools" | "model_request" | typeof END)[];
+      if (destinations.length === 1) {
+        allNodeWorkflows.addEdge("model_request", destinations[0]);
       } else {
         allNodeWorkflows.addConditionalEdges(
           "model_request",
-          this.#createModelRouter(),
-          modelPaths
+          this.#createModelRouter(exitNode),
+          destinations
         );
       }
     }
@@ -376,6 +471,8 @@ export class ReactAgent<
     if (afterModelNodes.length > 0) {
       const firstAfterModel = afterModelNodes[0];
       const firstAfterModelNode = firstAfterModel.name;
+
+      // Include exitNode in the paths since afterModel should be able to route to after_agent or END
       const modelPaths = this.#getModelPaths(
         toolClasses.filter(isClientTool),
         true
@@ -387,35 +484,91 @@ export class ReactAgent<
         firstAfterModel.allowed && firstAfterModel.allowed.length > 0
       );
 
-      const destinations = modelPaths;
+      // Replace END with exitNode in destinations, since exitNode might be an afterAgent node
+      const destinations = modelPaths.map((p) =>
+        p === END ? exitNode : p
+      ) as ("tools" | "model_request" | typeof END)[];
 
       allNodeWorkflows.addConditionalEdges(
         firstAfterModelNode,
         this.#createAfterModelRouter(
           toolClasses.filter(isClientTool),
-          allowJump
+          allowJump,
+          exitNode
         ),
         destinations
       );
+    }
+
+    // Connect afterAgent nodes (run once at end, in reverse order like afterModel)
+    for (let i = afterAgentNodes.length - 1; i > 0; i--) {
+      const node = afterAgentNodes[i];
+      const current = node.name;
+      const nextDefault = afterAgentNodes[i - 1].name;
+
+      if (node.allowed && node.allowed.length > 0) {
+        const hasTools = toolClasses.filter(isClientTool).length > 0;
+        const allowedMapped = node.allowed
+          .map((t) => parseJumpToTarget(t))
+          .filter((dest) => dest !== "tools" || hasTools);
+        const destinations = Array.from(
+          new Set([nextDefault, ...allowedMapped])
+        ) as ("tools" | "model_request" | typeof END)[];
+
+        allNodeWorkflows.addConditionalEdges(
+          current,
+          this.#createAfterModelSequenceRouter(
+            toolClasses.filter(isClientTool),
+            node.allowed,
+            nextDefault
+          ),
+          destinations
+        );
+      } else {
+        allNodeWorkflows.addEdge(current, nextDefault);
+      }
+    }
+
+    // Connect the first afterAgent node (last to execute) to END
+    if (afterAgentNodes.length > 0) {
+      const firstAfterAgent = afterAgentNodes[0];
+      const firstAfterAgentNode = firstAfterAgent.name;
+
+      if (firstAfterAgent.allowed && firstAfterAgent.allowed.length > 0) {
+        const hasTools = toolClasses.filter(isClientTool).length > 0;
+        const allowedMapped = firstAfterAgent.allowed
+          .map((t) => parseJumpToTarget(t))
+          .filter((dest) => dest !== "tools" || hasTools);
+        const destinations = Array.from(
+          new Set([loopEntryNode, ...allowedMapped])
+        ) as ("tools" | "model_request" | typeof END)[];
+
+        allNodeWorkflows.addConditionalEdges(
+          firstAfterAgentNode,
+          this.#createAfterModelSequenceRouter(
+            toolClasses.filter(isClientTool),
+            firstAfterAgent.allowed,
+            END as string
+          ),
+          destinations
+        );
+      } else {
+        allNodeWorkflows.addEdge(firstAfterAgentNode, END);
+      }
     }
 
     /**
      * add edges for tools node
      */
     if (toolClasses.filter(isClientTool).length > 0) {
-      // Tools should return to first beforeModel node or agent
-      let toolReturnTarget: string;
-      if (beforeModelNodes.length > 0) {
-        toolReturnTarget = beforeModelNodes[0].name;
-      } else {
-        toolReturnTarget = "model_request";
-      }
+      // Tools should return to loop entry node (not including before_agent)
+      const toolReturnTarget = loopEntryNode;
 
       if (shouldReturnDirect.size > 0) {
         allNodeWorkflows.addConditionalEdges(
           "tools",
-          this.#createToolsRouter(shouldReturnDirect),
-          [toolReturnTarget, END]
+          this.#createToolsRouter(shouldReturnDirect, exitNode),
+          [toolReturnTarget, exitNode as string]
         );
       } else {
         allNodeWorkflows.addEdge("tools", toolReturnTarget);
@@ -471,7 +624,10 @@ export class ReactAgent<
   /**
    * Create routing function for tools node conditional edges.
    */
-  #createToolsRouter(shouldReturnDirect: Set<string>) {
+  #createToolsRouter(
+    shouldReturnDirect: Set<string>,
+    exitNode: string | typeof END
+  ) {
     /**
      * ToDo: fix type
      */
@@ -486,8 +642,8 @@ export class ReactAgent<
         shouldReturnDirect.has(lastMessage.name)
       ) {
         // If we have a response format, route to agent to generate structured response
-        // Otherwise, return directly
-        return this.options.responseFormat ? "model_request" : END;
+        // Otherwise, return directly to exit node (could be after_agent or END)
+        return this.options.responseFormat ? "model_request" : exitNode;
       }
 
       // For non-returnDirect tools, always route back to agent
@@ -497,8 +653,9 @@ export class ReactAgent<
 
   /**
    * Create routing function for model node conditional edges.
+   * @param exitNode - The exit node to route to (could be after_agent or END)
    */
-  #createModelRouter() {
+  #createModelRouter(exitNode: string | typeof END = END) {
     /**
      * determine if the agent should continue or not
      */
@@ -511,7 +668,7 @@ export class ReactAgent<
         !lastMessage.tool_calls ||
         lastMessage.tool_calls.length === 0
       ) {
-        return END;
+        return exitNode;
       }
 
       // Check if all tool calls are for structured response extraction
@@ -520,9 +677,9 @@ export class ReactAgent<
       );
 
       if (hasOnlyStructuredResponseCalls) {
-        // If all tool calls are for structured response extraction, go to END
+        // If all tool calls are for structured response extraction, go to exit node
         // The AgentNode will handle these internally and return the structured response
-        return END;
+        return exitNode;
       }
 
       /**
@@ -540,7 +697,7 @@ export class ReactAgent<
       );
 
       if (regularToolCalls.length === 0) {
-        return END;
+        return exitNode;
       }
 
       return regularToolCalls.map(
@@ -559,35 +716,38 @@ export class ReactAgent<
    * The jumpTo property is automatically cleared after use to prevent infinite loops.
    *
    * @param toolClasses - Available tool classes for validation
+   * @param allowJump - Whether jumping is allowed
+   * @param exitNode - The exit node to route to (could be after_agent or END)
    * @returns Router function that handles jumpTo logic and normal routing
    */
   #createAfterModelRouter(
     toolClasses: (ClientTool | ServerTool)[],
-    allowJump: boolean
+    allowJump: boolean,
+    exitNode: string | typeof END
   ) {
     const hasStructuredResponse = Boolean(this.options.responseFormat);
 
     return (state: Omit<BuiltInState, "jumpTo"> & { jumpTo?: JumpTo }) => {
       // First, check if we just processed a structured response
-      // If so, ignore any existing jumpTo and go to END
+      // If so, ignore any existing jumpTo and go to exitNode
       const messages = state.messages;
       const lastMessage = messages.at(-1);
       if (
         AIMessage.isInstance(lastMessage) &&
         (!lastMessage.tool_calls || lastMessage.tool_calls.length === 0)
       ) {
-        return END;
+        return exitNode;
       }
 
       // Check if jumpTo is set in the state and allowed
       if (allowJump && state.jumpTo) {
         if (state.jumpTo === END) {
-          return END;
+          return exitNode;
         }
         if (state.jumpTo === "tools") {
-          // If trying to jump to tools but no tools are available, go to END
+          // If trying to jump to tools but no tools are available, go to exitNode
           if (toolClasses.length === 0) {
-            return END;
+            return exitNode;
           }
           return new Send("tools", { ...state, jumpTo: undefined });
         }
@@ -627,7 +787,7 @@ export class ReactAgent<
         !lastMessage.tool_calls ||
         lastMessage.tool_calls.length === 0
       ) {
-        return END;
+        return exitNode;
       }
 
       // Check if all tool calls are for structured response extraction
@@ -641,7 +801,7 @@ export class ReactAgent<
       );
 
       if (hasOnlyStructuredResponseCalls || !hasRegularToolCalls) {
-        return END;
+        return exitNode;
       }
 
       /**

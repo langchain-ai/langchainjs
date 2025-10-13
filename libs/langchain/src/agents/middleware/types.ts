@@ -86,8 +86,10 @@ export interface AgentMiddleware<
   stateSchema?: TSchema;
   contextSchema?: TContextSchema;
   name: string;
+  beforeAgentJumpTo?: JumpToTarget[];
   beforeModelJumpTo?: JumpToTarget[];
   afterModelJumpTo?: JumpToTarget[];
+  afterAgentJumpTo?: JumpToTarget[];
   tools?: (ClientTool | ServerTool)[];
   /**
    * Wraps tool execution with custom logic. This allows you to:
@@ -200,6 +202,19 @@ export interface AgentMiddleware<
       >
     ) => Promise<AIMessage> | AIMessage
   ): Promise<AIMessage> | AIMessage;
+  beforeAgent?(
+    state: (TSchema extends InteropZodObject
+      ? InferInteropZodInput<TSchema>
+      : {}) &
+      AgentBuiltInState,
+    runtime: Runtime<TFullContext>
+  ): Promise<
+    MiddlewareResult<
+      Partial<
+        TSchema extends InteropZodObject ? InferInteropZodInput<TSchema> : {}
+      >
+    >
+  >;
   beforeModel?(
     state: (TSchema extends InteropZodObject
       ? InferInteropZodInput<TSchema>
@@ -214,6 +229,19 @@ export interface AgentMiddleware<
     >
   >;
   afterModel?(
+    state: (TSchema extends InteropZodObject
+      ? InferInteropZodInput<TSchema>
+      : {}) &
+      AgentBuiltInState,
+    runtime: Runtime<TFullContext>
+  ): Promise<
+    MiddlewareResult<
+      Partial<
+        TSchema extends InteropZodObject ? InferInteropZodInput<TSchema> : {}
+      >
+    >
+  >;
+  afterAgent?(
     state: (TSchema extends InteropZodObject
       ? InferInteropZodInput<TSchema>
       : {}) &

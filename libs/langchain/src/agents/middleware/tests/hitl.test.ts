@@ -1,7 +1,7 @@
 import { z } from "zod/v3";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { tool } from "@langchain/core/tools";
-import { HumanMessage, ToolMessage } from "@langchain/core/messages";
+import { AIMessage, HumanMessage, ToolMessage } from "@langchain/core/messages";
 import { Command } from "@langchain/langgraph";
 import { MemorySaver } from "@langchain/langgraph-checkpoint";
 
@@ -95,6 +95,7 @@ describe("humanInTheLoopMiddleware", () => {
             args: { filename: "greeting.txt", content: "Hello World" },
           },
         ],
+        [],
       ],
     });
 
@@ -136,14 +137,35 @@ describe("humanInTheLoopMiddleware", () => {
 
     // Verify response
     const mathMessages = mathResult.messages;
-    expect(mathMessages).toHaveLength(3);
+    expect(mathMessages).toHaveLength(4);
+    /**
+     * 1st message: Human message with prompt
+     */
+    expect(HumanMessage.isInstance(mathMessages[0])).toBe(true);
     expect(mathMessages[0]).toEqual(
       new _AnyIdHumanMessage("Calculate 42 * 17")
     );
+    /**
+     * 2nd message: AIMessage calling tool
+     */
+    expect(AIMessage.isInstance(mathMessages[1])).toBe(true);
     expect(mathMessages[1].content).toEqual(
       expect.stringContaining("You are a helpful assistant.")
     );
-    expect(mathMessages[2].content).toBe("42 * 17 = 714");
+    /**
+     * 3rd message: ToolMessage with tool response
+     */
+    expect(ToolMessage.isInstance(mathMessages[2])).toBe(true);
+    expect(mathMessages[2].content).toEqual(
+      expect.stringContaining("42 * 17 = 714")
+    );
+    /**
+     * 4th message: AI response
+     */
+    expect(AIMessage.isInstance(mathMessages[3])).toBe(true);
+    expect(mathMessages[3].content).toEqual(
+      expect.stringContaining("42 * 17 = 714")
+    );
 
     // Test 2: Write file tool (requires approval)
     model.index = 1;
