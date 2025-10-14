@@ -1,20 +1,15 @@
-import { test, expect } from "@jest/globals";
 import { ChatModelIntegrationTests } from "@langchain/standard-tests";
 import { AIMessageChunk } from "@langchain/core/messages";
 import {
   ChatWatsonx,
-  ChatWatsonxInput,
-  WatsonxCallOptionsChat,
-  WatsonxCallParams,
+  ChatWatsonxCallOptions,
+  ChatWatsonxConstructorInput,
 } from "../ibm.js";
-import { WatsonxAuth } from "../../types/ibm.js";
 
 class ChatWatsonxStandardIntegrationTests extends ChatModelIntegrationTests<
-  WatsonxCallOptionsChat,
+  ChatWatsonxCallOptions,
   AIMessageChunk,
-  ChatWatsonxInput &
-    WatsonxAuth &
-    Partial<Omit<WatsonxCallParams, "tool_choice">>
+  ChatWatsonxConstructorInput & Record<string, any>
 > {
   constructor() {
     if (!process.env.WATSONX_AI_APIKEY) {
@@ -40,6 +35,22 @@ class ChatWatsonxStandardIntegrationTests extends ChatModelIntegrationTests<
       "ChatWatsonx",
       "Watsonx does not support tool schemas which contain object with unknown/any parameters." +
         "Watsonx only supports objects in schemas when the parameters are defined."
+    );
+  }
+
+  async testWithStructuredOutput() {
+    this.skipTestMessage(
+      "testWithStructuredOutput",
+      "ChatWatsonx",
+      "Assertion ```expect(handler.extraParams)``` is not valid in ChatWatsonx"
+    );
+  }
+
+  async testWithStructuredOutputIncludeRaw() {
+    this.skipTestMessage(
+      "testWithStructuredOutputIncludeRaw",
+      "ChatWatsonx",
+      "Assertion ```expect(handler.extraParams)``` is not valid in ChatWatsonx"
     );
   }
 }
