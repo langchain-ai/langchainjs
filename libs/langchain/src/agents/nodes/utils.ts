@@ -88,6 +88,8 @@ export function derivePrivateState(
 ): z.ZodObject<z.ZodRawShape> {
   const builtInStateSchema = {
     messages: z.custom<BaseMessage[]>(() => []),
+    // Include optional structuredResponse so after_agent hooks can access/modify it
+    structuredResponse: z.any().optional(),
   };
 
   if (!stateSchema) {
@@ -95,7 +97,7 @@ export function derivePrivateState(
   }
 
   const { shape } = stateSchema;
-  const privateShape: Record<string, any> = builtInStateSchema;
+  const privateShape: Record<string, any> = { ...builtInStateSchema };
 
   // Filter properties that start with underscore and make them optional
   for (const [key, value] of Object.entries(shape)) {

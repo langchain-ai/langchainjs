@@ -9,6 +9,12 @@ import type { Runtime, PrivateState } from "../runtime.js";
 import type { AgentMiddleware, MiddlewareResult } from "../middleware/types.js";
 import { derivePrivateState, parseJumpToTarget } from "./utils.js";
 
+/**
+ * Named class for context objects to provide better error messages
+ */
+class AgentContext {}
+class AgentRuntime {}
+
 type NodeOutput<TStateSchema extends Record<string, any>> =
   | TStateSchema
   | Command<any, TStateSchema, string>;
@@ -89,10 +95,18 @@ export abstract class MiddlewareNode<
 
     const result = await this.runHook(
       state,
-      Object.freeze({
-        ...runtime,
-        context: filteredContext,
-      })
+      /**
+       * assign runtime and context values into empty named class
+       * instances to create a better error message.
+       */
+      Object.freeze(
+        Object.assign(new AgentRuntime(), {
+          ...runtime,
+          context: Object.freeze(
+            Object.assign(new AgentContext(), filteredContext)
+          ),
+        })
+      )
     );
     delete result?._privateState;
 
@@ -106,20 +120,33 @@ export abstract class MiddlewareNode<
     /**
      * Verify that the jump target is allowed for the middleware
      */
-    const jumpToConstraint = this.name?.startsWith("BeforeModelNode_")
-      ? this.middleware.beforeModelJumpTo
-      : this.middleware.afterModelJumpTo;
+    let jumpToConstraint: JumpToTarget[] | undefined;
+    let constraint: string | undefined;
+
+    if (this.name?.startsWith("BeforeAgentNode_")) {
+      jumpToConstraint = this.middleware.beforeAgentJumpTo;
+      constraint = "beforeAgentJumpTo";
+    } else if (this.name?.startsWith("BeforeModelNode_")) {
+      jumpToConstraint = this.middleware.beforeModelJumpTo;
+      constraint = "beforeModelJumpTo";
+    } else if (this.name?.startsWith("AfterAgentNode_")) {
+      jumpToConstraint = this.middleware.afterAgentJumpTo;
+      constraint = "afterAgentJumpTo";
+    } else if (this.name?.startsWith("AfterModelNode_")) {
+      jumpToConstraint = this.middleware.afterModelJumpTo;
+      constraint = "afterModelJumpTo";
+    }
+
     if (
       typeof result.jumpTo === "string" &&
       !jumpToConstraint?.includes(result.jumpTo as JumpToTarget)
     ) {
-      const constraint = this.name?.startsWith("BeforeModelNode_")
-        ? "beforeModelJumpTo"
-        : "afterModelJumpTo";
       const suggestion =
         jumpToConstraint && jumpToConstraint.length > 0
           ? `must be one of: ${jumpToConstraint?.join(", ")}.`
-          : `no ${constraint} defined in middleware ${this.middleware.name}.`;
+          : constraint
+          ? `no ${constraint} defined in middleware ${this.middleware.name}.`
+          : "";
       throw new Error(`Invalid jump target: ${result.jumpTo}, ${suggestion}.`);
     }
 

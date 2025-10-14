@@ -8,8 +8,12 @@ import type { JumpToTarget } from "../constants.js";
 // rather than exhaustive combinations which would result in 13,122 test cases
 
 type Case = {
+  aBeforeAgent?: JumpToTarget[];
+  aAfterAgent?: JumpToTarget[];
   aBefore?: JumpToTarget[];
   aAfter?: JumpToTarget[];
+  bBeforeAgent?: JumpToTarget[];
+  bAfterAgent?: JumpToTarget[];
   bBefore?: JumpToTarget[];
   bAfter?: JumpToTarget[];
   hasTool: boolean;
@@ -184,6 +188,62 @@ const strategicCases: Omit<Case, "hasTool">[] = [
     bBefore: ["tools", "model", "end"],
     bAfter: ["tools", "model", "end"],
   },
+
+  // Agent-level hooks - beforeAgent and afterAgent
+  {
+    aBeforeAgent: ["tools"],
+    aAfterAgent: undefined,
+    aBefore: undefined,
+    aAfter: undefined,
+    bBefore: undefined,
+    bAfter: undefined,
+  },
+  {
+    aBeforeAgent: undefined,
+    aAfterAgent: ["model"],
+    aBefore: undefined,
+    aAfter: undefined,
+    bBefore: undefined,
+    bAfter: undefined,
+  },
+  {
+    aBeforeAgent: ["tools"],
+    aAfterAgent: ["end"],
+    aBefore: ["model"],
+    aAfter: ["tools"],
+    bBefore: undefined,
+    bAfter: undefined,
+  },
+  {
+    aBeforeAgent: ["tools"],
+    aAfterAgent: undefined,
+    aBefore: undefined,
+    aAfter: undefined,
+    bBeforeAgent: ["model"],
+    bAfterAgent: undefined,
+    bBefore: undefined,
+    bAfter: undefined,
+  },
+  {
+    aBeforeAgent: undefined,
+    aAfterAgent: ["tools"],
+    aBefore: undefined,
+    aAfter: undefined,
+    bBeforeAgent: undefined,
+    bAfterAgent: ["model"],
+    bBefore: undefined,
+    bAfter: undefined,
+  },
+  {
+    aBeforeAgent: ["tools", "model", "end"],
+    aAfterAgent: ["tools", "model", "end"],
+    aBefore: ["tools"],
+    aAfter: ["model"],
+    bBeforeAgent: undefined,
+    bAfterAgent: undefined,
+    bBefore: undefined,
+    bAfter: undefined,
+  },
 ];
 
 const hasToolOptions = [false, true];
@@ -195,8 +255,12 @@ const matrix: Case[] = hasToolOptions.flatMap((hasTool) =>
 );
 
 const collected: {
+  aBeforeAgentLabel: string;
+  aAfterAgentLabel: string;
   aBeforeLabel: string;
   aAfterLabel: string;
+  bBeforeAgentLabel: string;
+  bAfterAgentLabel: string;
   bBeforeLabel: string;
   bAfterLabel: string;
   toolsLabel: string;
@@ -208,23 +272,41 @@ const someTool = tool(async () => "Hello, world!", {
 });
 
 describe.each(matrix)(
-  "graph (A before: $aBefore, A after: $aAfter | B before: $bBefore, B after: $bAfter | tools: $hasTool)",
-  ({ aBefore, aAfter, bBefore, bAfter, hasTool }) => {
+  "graph (A beforeAgent: $aBeforeAgent, A afterAgent: $aAfterAgent, A before: $aBefore, A after: $aAfter | B beforeAgent: $bBeforeAgent, B afterAgent: $bAfterAgent, B before: $bBefore, B after: $bAfter | tools: $hasTool)",
+  ({
+    aBeforeAgent,
+    aAfterAgent,
+    aBefore,
+    aAfter,
+    bBeforeAgent,
+    bAfterAgent,
+    bBefore,
+    bAfter,
+    hasTool,
+  }) => {
     it("should create correct graph structure", async () => {
       const middleware1 = createMiddleware({
         name: "MiddlewareA",
+        beforeAgentJumpTo: aBeforeAgent,
+        afterAgentJumpTo: aAfterAgent,
         beforeModelJumpTo: aBefore,
         afterModelJumpTo: aAfter,
-        beforeModel: () => {},
-        afterModel: () => {},
+        ...(aBeforeAgent !== undefined && { beforeAgent: () => {} }),
+        ...(aAfterAgent !== undefined && { afterAgent: () => {} }),
+        ...(aBefore !== undefined && { beforeModel: () => {} }),
+        ...(aAfter !== undefined && { afterModel: () => {} }),
       });
 
       const middleware2 = createMiddleware({
         name: "MiddlewareB",
+        beforeAgentJumpTo: bBeforeAgent,
+        afterAgentJumpTo: bAfterAgent,
         beforeModelJumpTo: bBefore,
         afterModelJumpTo: bAfter,
-        beforeModel: () => {},
-        afterModel: () => {},
+        ...(bBeforeAgent !== undefined && { beforeAgent: () => {} }),
+        ...(bAfterAgent !== undefined && { afterAgent: () => {} }),
+        ...(bBefore !== undefined && { beforeModel: () => {} }),
+        ...(bAfter !== undefined && { afterModel: () => {} }),
       });
 
       const agent = createAgent({
@@ -233,22 +315,30 @@ describe.each(matrix)(
         middleware: [middleware1, middleware2] as const,
       });
 
-      expect(agent.graph).toMatchSnapshot();
+      expect(await agent.drawMermaid()).toMatchSnapshot();
       const fmt = (v?: JumpToTarget[]) =>
         v === undefined
           ? "undefined"
           : v.length === 0
           ? "empty"
           : `<code>${v.join("</code>, <code>")}</code>`;
+      const aBeforeAgentLabel = fmt(aBeforeAgent);
+      const aAfterAgentLabel = fmt(aAfterAgent);
       const aBeforeLabel = fmt(aBefore);
       const aAfterLabel = fmt(aAfter);
+      const bBeforeAgentLabel = fmt(bBeforeAgent);
+      const bAfterAgentLabel = fmt(bAfterAgent);
       const bBeforeLabel = fmt(bBefore);
       const bAfterLabel = fmt(bAfter);
       const toolsLabel = hasTool ? "yes" : "no";
       const mermaid = await agent.drawMermaid({ withStyles: false });
       collected.push({
+        aBeforeAgentLabel,
+        aAfterAgentLabel,
         aBeforeLabel,
         aAfterLabel,
+        bBeforeAgentLabel,
+        bAfterAgentLabel,
         bBeforeLabel,
         bAfterLabel,
         toolsLabel,
@@ -260,22 +350,30 @@ describe.each(matrix)(
 
 afterAll(() => {
   const content = `# Graph Matrix (Mermaid)\n\n
-This test creates a matrix of all possible combinations of before and after model jump targets for two middleware instances.
+This test creates a matrix of all possible combinations of before/after agent and before/after model jump targets for two middleware instances.
 The basic test setup is as follows:
 
 \`\`\`ts
 const middleware1 = createMiddleware({
     name: "MiddlewareA",
+    beforeAgentJumpTo: aBeforeAgent,
+    afterAgentJumpTo: aAfterAgent,
     beforeModelJumpTo: aBefore,
     afterModelJumpTo: aAfter,
+    beforeAgent: () => {},
+    afterAgent: () => {},
     beforeModel: () => {},
     afterModel: () => {},
 });
 
 const middleware2 = createMiddleware({
     name: "MiddlewareB",
+    beforeAgentJumpTo: bBeforeAgent,
+    afterAgentJumpTo: bAfterAgent,
     beforeModelJumpTo: bBefore,
     afterModelJumpTo: bAfter,
+    beforeAgent: () => {},
+    afterAgent: () => {},
     beforeModel: () => {},
     afterModel: () => {},
 });
@@ -290,8 +388,12 @@ const agent = createAgent({
 ${collected
   .map(
     ({
+      aBeforeAgentLabel,
+      aAfterAgentLabel,
       aBeforeLabel,
       aAfterLabel,
+      bBeforeAgentLabel,
+      bAfterAgentLabel,
       bBeforeLabel,
       bAfterLabel,
       toolsLabel,
@@ -300,8 +402,12 @@ ${collected
       `<details>
 <summary>
 
+MiddlewareA beforeAgent: ${aBeforeAgentLabel}<br/>
+MiddlewareA afterAgent: ${aAfterAgentLabel}<br/>
 MiddlewareA before: ${aBeforeLabel}<br/>
 MiddlewareA after: ${aAfterLabel}<br/>
+MiddlewareB beforeAgent: ${bBeforeAgentLabel}<br/>
+MiddlewareB afterAgent: ${bAfterAgentLabel}<br/>
 MiddlewareB before: ${bBeforeLabel}<br/>
 MiddlewareB after: ${bAfterLabel}<br/>
 Tools: <code>${toolsLabel}</code>

@@ -367,7 +367,7 @@ describe("Interceptor hooks (stdio/http/sse)", () => {
     try {
       const tools = await client.getTools();
       const agent = createAgent({
-        llm: model,
+        model,
         tools: tools,
       });
       const result = await agent.invoke({

@@ -330,7 +330,8 @@ export class FakeToolCallingModel extends BaseChatModel {
 
   toolStyle: "openai" | "anthropic";
 
-  index: number;
+  // Use a shared reference object so the index persists across bindTools calls
+  private indexRef: { current: number };
 
   structuredResponse?: any;
 
@@ -341,13 +342,24 @@ export class FakeToolCallingModel extends BaseChatModel {
     toolStyle = "openai",
     index = 0,
     structuredResponse,
+    indexRef,
     ...rest
-  }: FakeToolCallingModelFields = {}) {
+  }: FakeToolCallingModelFields & { indexRef?: { current: number } } = {}) {
     super(rest);
     this.toolCalls = toolCalls;
     this.toolStyle = toolStyle;
-    this.index = index;
+    // Share the same index reference across instances
+    this.indexRef = indexRef ?? { current: index };
     this.structuredResponse = structuredResponse;
+  }
+
+  // Getter/setter for backwards compatibility
+  get index(): number {
+    return this.indexRef.current;
+  }
+
+  set index(value: number) {
+    this.indexRef.current = value;
   }
 
   _llmType(): string {
@@ -370,8 +382,9 @@ export class FakeToolCallingModel extends BaseChatModel {
     const newInstance = new FakeToolCallingModel({
       toolCalls: this.toolCalls,
       toolStyle: this.toolStyle,
-      index: this.index,
       structuredResponse: this.structuredResponse,
+      // Pass the same indexRef so all instances share the same index state
+      indexRef: this.indexRef,
     });
     newInstance.tools = [...this.tools, ...tools];
     return newInstance;
@@ -395,8 +408,17 @@ export class FakeToolCallingModel extends BaseChatModel {
 
     // Handle prompt concatenation
     if (messages.length > 1) {
-      const parts = messages.map((m) => m.content as string).filter(Boolean);
+      const parts = messages.map((m) => m.content).filter(Boolean);
       content = parts.join("-");
+    }
+
+    // Reset index at the start of a new conversation (only human message)
+    // This allows the model to be reused across multiple agent.invoke() calls
+    const isStartOfConversation =
+      messages.length === 1 ||
+      (messages.length === 2 && messages.every(HumanMessage.isInstance));
+    if (isStartOfConversation && this.index !== 0) {
+      this.index = 0;
     }
 
     const currentToolCalls = this.toolCalls[this.index] || [];

@@ -49,14 +49,12 @@ export function createAgentAnnotationConditional<
     }
   }
 
-  if (!hasStructuredResponse) {
-    return z.object(zodSchema);
+  // Only include structuredResponse when responseFormat is defined
+  if (hasStructuredResponse) {
+    zodSchema.structuredResponse = z.any().optional();
   }
 
-  return z.object({
-    ...zodSchema,
-    structuredResponse: z.any().optional(),
-  });
+  return z.object(zodSchema);
 }
 
 export const PreHookAnnotation: AnnotationRoot<{
