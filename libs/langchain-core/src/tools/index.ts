@@ -139,6 +139,7 @@ export abstract class StructuredTool<
       fields?.verboseParsingErrors ?? this.verboseParsingErrors;
     this.responseFormat = fields?.responseFormat ?? this.responseFormat;
     this.defaultConfig = fields?.defaultConfig ?? this.defaultConfig;
+    this.metadata = fields?.metadata ?? this.metadata;
   }
 
   protected abstract _call(
@@ -313,6 +314,7 @@ export abstract class StructuredTool<
       artifact,
       toolCallId,
       name: this.name,
+      metadata: this.metadata,
     });
     await runManager?.handleToolEnd(formattedOutput);
     return formattedOutput as ToolReturnType<TArg, TConfig, ToolOutputT>;
@@ -732,8 +734,9 @@ function _formatToolOutput<TOutput extends ToolOutputType>(params: {
   name: string;
   artifact?: unknown;
   toolCallId?: string;
+  metadata?: Record<string, unknown>;
 }): ToolMessage | TOutput {
-  const { content, artifact, toolCallId } = params;
+  const { content, artifact, toolCallId, metadata } = params;
   if (toolCallId && !isDirectToolOutput(content)) {
     if (
       typeof content === "string" ||
@@ -741,17 +744,21 @@ function _formatToolOutput<TOutput extends ToolOutputType>(params: {
         content.every((item) => typeof item === "object"))
     ) {
       return new ToolMessage({
+        status: "success",
         content,
         artifact,
         tool_call_id: toolCallId,
         name: params.name,
+        metadata,
       });
     } else {
       return new ToolMessage({
+        status: "success",
         content: _stringify(content),
         artifact,
         tool_call_id: toolCallId,
         name: params.name,
+        metadata,
       });
     }
   } else {

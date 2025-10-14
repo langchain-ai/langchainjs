@@ -641,11 +641,13 @@ class _StringImageMessagePromptTemplate<
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             additionalContentFields = prompt.additionalContentFields as any;
           }
-          content.push({
-            ...additionalContentFields,
-            type: "text",
-            text: formatted,
-          });
+          if (formatted !== "") {
+            content.push({
+              ...additionalContentFields,
+              type: "text",
+              text: formatted,
+            });
+          }
           /** @TODO replace this */
           // eslint-disable-next-line no-instanceof/no-instanceof
         } else if (prompt instanceof ImagePromptTemplate) {

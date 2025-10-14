@@ -81,6 +81,10 @@ export interface ToolParams extends BaseLangChainParams {
    * @default false
    */
   verboseParsingErrors?: boolean;
+  /**
+   * Metadata for the tool.
+   */
+  metadata?: Record<string, unknown>;
 }
 
 export type ToolRunnableConfig<
