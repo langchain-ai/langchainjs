@@ -160,8 +160,7 @@ export interface AgentMiddleware<
     | InteropZodObject
     | InteropZodDefault<InteropZodObject>
     | InteropZodOptional<InteropZodObject>
-    | undefined = any,
-  TFullContext extends Record<string, unknown> = any
+    | undefined = any
 > {
   stateSchema?: TSchema;
   contextSchema?: TContextSchema;
@@ -237,7 +236,15 @@ export interface AgentMiddleware<
     any,
     (TSchema extends InteropZodObject ? InferInteropZodInput<TSchema> : {}) &
       AgentBuiltInState,
-    Runtime<TFullContext>
+    Runtime<
+      TContextSchema extends InteropZodObject
+        ? InferInteropZodOutput<TContextSchema>
+        : TContextSchema extends InteropZodDefault<any>
+        ? InferInteropZodOutput<TContextSchema>
+        : TContextSchema extends InteropZodOptional<any>
+        ? Partial<InferInteropZodOutput<TContextSchema>>
+        : never
+    >
   >;
   /**
    * Wraps the model invocation with custom logic. This allows you to:
@@ -271,7 +278,15 @@ export interface AgentMiddleware<
     request: ModelRequest<
       (TSchema extends InteropZodObject ? InferInteropZodInput<TSchema> : {}) &
         AgentBuiltInState,
-      Runtime<TFullContext>
+      Runtime<
+        TContextSchema extends InteropZodObject
+          ? InferInteropZodOutput<TContextSchema>
+          : TContextSchema extends InteropZodDefault<any>
+          ? InferInteropZodOutput<TContextSchema>
+          : TContextSchema extends InteropZodOptional<any>
+          ? Partial<InferInteropZodOutput<TContextSchema>>
+          : never
+      >
     >,
     handler: (
       request: ModelRequest<
@@ -279,7 +294,15 @@ export interface AgentMiddleware<
           ? InferInteropZodInput<TSchema>
           : {}) &
           AgentBuiltInState,
-        Runtime<TFullContext>
+        Runtime<
+          TContextSchema extends InteropZodObject
+            ? InferInteropZodOutput<TContextSchema>
+            : TContextSchema extends InteropZodDefault<any>
+            ? InferInteropZodOutput<TContextSchema>
+            : TContextSchema extends InteropZodOptional<any>
+            ? Partial<InferInteropZodOutput<TContextSchema>>
+            : never
+        >
       >
     ) => Promise<AIMessage> | AIMessage
   ): Promise<AIMessage> | AIMessage;
@@ -288,7 +311,15 @@ export interface AgentMiddleware<
       ? InferInteropZodInput<TSchema>
       : {}) &
       AgentBuiltInState,
-    runtime: Runtime<TFullContext>
+    runtime: Runtime<
+      TContextSchema extends InteropZodObject
+        ? InferInteropZodOutput<TContextSchema>
+        : TContextSchema extends InteropZodDefault<any>
+        ? InferInteropZodOutput<TContextSchema>
+        : TContextSchema extends InteropZodOptional<any>
+        ? Partial<InferInteropZodOutput<TContextSchema>>
+        : never
+    >
   ):
     | Promise<
         MiddlewareResult<
@@ -309,7 +340,15 @@ export interface AgentMiddleware<
       ? InferInteropZodInput<TSchema>
       : {}) &
       AgentBuiltInState,
-    runtime: Runtime<TFullContext>
+    runtime: Runtime<
+      TContextSchema extends InteropZodObject
+        ? InferInteropZodOutput<TContextSchema>
+        : TContextSchema extends InteropZodDefault<any>
+        ? InferInteropZodOutput<TContextSchema>
+        : TContextSchema extends InteropZodOptional<any>
+        ? Partial<InferInteropZodOutput<TContextSchema>>
+        : never
+    >
   ):
     | Promise<
         MiddlewareResult<
@@ -330,7 +369,15 @@ export interface AgentMiddleware<
       ? InferInteropZodInput<TSchema>
       : {}) &
       AgentBuiltInState,
-    runtime: Runtime<TFullContext>
+    runtime: Runtime<
+      TContextSchema extends InteropZodObject
+        ? InferInteropZodOutput<TContextSchema>
+        : TContextSchema extends InteropZodDefault<any>
+        ? InferInteropZodOutput<TContextSchema>
+        : TContextSchema extends InteropZodOptional<any>
+        ? Partial<InferInteropZodOutput<TContextSchema>>
+        : never
+    >
   ):
     | Promise<
         MiddlewareResult<
@@ -351,7 +398,15 @@ export interface AgentMiddleware<
       ? InferInteropZodInput<TSchema>
       : {}) &
       AgentBuiltInState,
-    runtime: Runtime<TFullContext>
+    runtime: Runtime<
+      TContextSchema extends InteropZodObject
+        ? InferInteropZodOutput<TContextSchema>
+        : TContextSchema extends InteropZodDefault<any>
+        ? InferInteropZodOutput<TContextSchema>
+        : TContextSchema extends InteropZodOptional<any>
+        ? Partial<InferInteropZodOutput<TContextSchema>>
+        : never
+    >
   ):
     | Promise<
         MiddlewareResult<
@@ -413,7 +468,7 @@ type FilterPrivateProps<T> = {
  * This filters out private properties (those starting with underscore)
  */
 export type InferMiddlewareState<T extends AgentMiddleware> =
-  T extends AgentMiddleware<infer S, any, any>
+  T extends AgentMiddleware<infer S>
     ? S extends InteropZodObject
       ? FilterPrivateProps<InferInteropZodOutput<S>>
       : {}
@@ -424,7 +479,7 @@ export type InferMiddlewareState<T extends AgentMiddleware> =
  * This filters out private properties (those starting with underscore)
  */
 export type InferMiddlewareInputState<T extends AgentMiddleware> =
-  T extends AgentMiddleware<infer S, any, any>
+  T extends AgentMiddleware<infer S>
     ? S extends InteropZodObject
       ? FilterPrivateProps<InferInteropZodInput<S>>
       : {}
@@ -473,7 +528,7 @@ export type InferMergedInputState<T extends readonly AgentMiddleware[]> =
  * Helper type to infer the context schema type from a middleware
  */
 export type InferMiddlewareContext<T extends AgentMiddleware> =
-  T extends AgentMiddleware<any, infer C, any>
+  T extends AgentMiddleware<any, infer C>
     ? C extends InteropZodObject
       ? InferInteropZodInput<C>
       : {}
@@ -483,7 +538,7 @@ export type InferMiddlewareContext<T extends AgentMiddleware> =
  * Helper type to infer the input context schema type from a middleware (with optional defaults)
  */
 export type InferMiddlewareContextInput<T extends AgentMiddleware> =
-  T extends AgentMiddleware<any, infer C, any>
+  T extends AgentMiddleware<any, infer C>
     ? C extends InteropZodOptional<infer Inner>
       ? InferInteropZodInput<Inner> | undefined
       : C extends InteropZodObject

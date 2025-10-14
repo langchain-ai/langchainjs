@@ -1,4 +1,3 @@
-import { z } from "zod/v3";
 import { RunnableConfig } from "@langchain/core/runnables";
 import { MiddlewareNode, type MiddlewareNodeOptions } from "./middleware.js";
 import type {
@@ -18,10 +17,7 @@ export class BeforeAgentNode<
   lc_namespace = ["langchain", "agents", "beforeAgentNodes"];
 
   constructor(
-    public middleware: AgentMiddleware<
-      z.ZodObject<z.ZodRawShape>,
-      z.ZodObject<z.ZodRawShape>
-    >,
+    public middleware: AgentMiddleware,
     options: MiddlewareNodeOptions
   ) {
     super(
@@ -39,7 +35,7 @@ export class BeforeAgentNode<
   runHook(state: TStateSchema, runtime: Runtime<TContextSchema>) {
     return this.middleware.beforeAgent!(
       state as Record<string, unknown> & AgentBuiltInState,
-      runtime as Runtime<unknown>
+      runtime
     ) as Promise<MiddlewareResult<TStateSchema>>;
   }
 }

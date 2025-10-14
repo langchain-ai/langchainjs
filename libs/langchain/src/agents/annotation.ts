@@ -12,7 +12,7 @@ import { withLangGraph } from "@langchain/langgraph/zod";
 import type { AgentMiddleware } from "@langchain/core/middleware";
 
 export function createAgentAnnotationConditional<
-  TMiddleware extends readonly AgentMiddleware<any, any, any>[] = []
+  TMiddleware extends readonly AgentMiddleware<any, any>[] = []
 >(
   hasStructuredResponse = true,
   middlewareList: TMiddleware = [] as unknown as TMiddleware

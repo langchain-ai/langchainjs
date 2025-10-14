@@ -5,12 +5,12 @@ import { z } from "zod";
 import { HumanMessage, AIMessage } from "@langchain/core/messages";
 import {
   ChatAnthropic,
+  promptCachingMiddleware,
   type AnthropicInput,
   // @ts-expect-error - instances is mocked
   instances,
 } from "@langchain/anthropic";
 
-import { promptCachingMiddleware } from "@langchain/anthropic";
 import { createAgent } from "../../index.js";
 
 /**

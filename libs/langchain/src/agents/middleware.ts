@@ -338,10 +338,9 @@ export function createMiddleware<
           TSchema extends InteropZodObject ? InferInteropZodInput<TSchema> : {}
         >
       >;
-}): AgentMiddleware<TSchema, TContextSchema, any> {
+}): AgentMiddleware<TSchema, TContextSchema> {
   return coreCreateMiddleware(config) as AgentMiddleware<
     TSchema,
-    TContextSchema,
-    any
+    TContextSchema
   >;
 }

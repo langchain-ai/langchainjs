@@ -292,7 +292,7 @@ export type CreateAgentParams<
    *
    * @see {@link https://docs.langchain.com/oss/javascript/langchain/middleware | Middleware}
    */
-  middleware?: readonly AgentMiddleware<any, any, any>[];
+  middleware?: readonly AgentMiddleware<any, any>[];
 
   /**
    * An optional name for the agent.
