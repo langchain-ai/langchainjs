@@ -231,7 +231,7 @@ function restoreMessage(
  *
  * The middleware intercepts agent execution at two points:
  *
- * ### Request Phase (`wrapModelRequest`)
+ * ### Request Phase (`wrapModelCall`)
  * - Applies regex-based pattern matching to all message content (HumanMessage, ToolMessage, SystemMessage, AIMessage)
  * - Processes both message text and AIMessage tool call arguments
  * - Each matched pattern generates:
@@ -360,7 +360,7 @@ export function piiRedactionMiddleware(
   return createMiddleware({
     name: "PIIRedactionMiddleware",
     contextSchema,
-    wrapModelRequest: async (request, handler) => {
+    wrapModelCall: async (request, handler) => {
       /**
        * Merge options with context, following bigTool.ts pattern
        */

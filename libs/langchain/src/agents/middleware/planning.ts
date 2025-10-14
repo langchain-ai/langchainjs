@@ -326,7 +326,7 @@ export function planningMiddleware(options?: PlanningMiddlewareOptions) {
     name: "planningMiddleware",
     stateSchema,
     tools: [writeTodos],
-    wrapModelRequest: (request, handler) =>
+    wrapModelCall: (request, handler) =>
       handler({
         ...request,
         systemPrompt:

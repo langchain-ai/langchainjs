@@ -26,9 +26,12 @@ import type { ModelRequest } from "./nodes/types.js";
  * @param config.name - The name of the middleware
  * @param config.stateSchema - The schema of the middleware state
  * @param config.contextSchema - The schema of the middleware context
- * @param config.wrapModelRequest - The function to wrap model invocation
+ * @param config.wrapModelCall - The function to wrap model invocation
+ * @param config.wrapToolCall - The function to wrap tool invocation
  * @param config.beforeModel - The function to run before the model call
  * @param config.afterModel - The function to run after the model call
+ * @param config.beforeAgent - The function to run before the agent execution starts
+ * @param config.afterAgent - The function to run after the agent execution completes
  * @returns A middleware instance
  *
  * @example
@@ -174,7 +177,7 @@ export function createMiddleware<
    *
    * @example
    * ```ts
-   * wrapModelRequest: async (request, handler) => {
+   * wrapModelCall: async (request, handler) => {
    *   // Modify request before calling
    *   const modifiedRequest = { ...request, systemPrompt: "You are helpful" };
    *
@@ -189,7 +192,7 @@ export function createMiddleware<
    * }
    * ```
    */
-  wrapModelRequest?: (
+  wrapModelCall?: (
     request: ModelRequest<
       (TSchema extends InteropZodObject ? InferInteropZodInput<TSchema> : {}) &
         AgentBuiltInState,
@@ -255,7 +258,7 @@ export function createMiddleware<
         >
       >;
   /**
-   * The function to run before the model call. This function is called before the model is invoked and before the `wrapModelRequest` hook.
+   * The function to run before the model call. This function is called before the model is invoked and before the `wrapModelCall` hook.
    * It allows to modify the state of the agent.
    *
    * @param state - The middleware state
@@ -382,9 +385,9 @@ export function createMiddleware<
       Promise.resolve(config.wrapToolCall!(request, handler));
   }
 
-  if (config.wrapModelRequest) {
-    middleware.wrapModelRequest = async (request, handler) =>
-      Promise.resolve(config.wrapModelRequest!(request, handler));
+  if (config.wrapModelCall) {
+    middleware.wrapModelCall = async (request, handler) =>
+      Promise.resolve(config.wrapModelCall!(request, handler));
   }
 
   if (config.beforeAgent) {

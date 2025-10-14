@@ -191,7 +191,7 @@ export class ReactAgent<
       name: string;
       allowed?: string[];
     }[] = [];
-    const wrapModelRequestHookMiddleware: [
+    const wrapModelCallHookMiddleware: [
       AgentMiddleware,
       /**
        * ToDo: better type to get the state of middleware
@@ -209,7 +209,7 @@ export class ReactAgent<
       toolClasses,
       shouldReturnDirect,
       signal: this.options.signal,
-      wrapModelRequestHookMiddleware,
+      wrapModelCallHookMiddleware,
     });
 
     const middlewareNames = new Set<string>();
@@ -290,8 +290,8 @@ export class ReactAgent<
         );
       }
 
-      if (m.wrapModelRequest) {
-        wrapModelRequestHookMiddleware.push([
+      if (m.wrapModelCall) {
+        wrapModelCallHookMiddleware.push([
           m,
           () => ({
             ...beforeAgentNode?.getState(),
