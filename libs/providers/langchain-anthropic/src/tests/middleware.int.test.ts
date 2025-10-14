@@ -9,9 +9,9 @@ import {
   // @ts-expect-error - instances is mocked
   instances,
 } from "@langchain/anthropic";
+import { createAgent } from "langchain";
 
-import { anthropicPromptCachingMiddleware } from "../promptCaching.js";
-import { createAgent } from "../../index.js";
+import { anthropicPromptCachingMiddleware } from "../middleware.js";
 
 /**
  * Mock the Anthropic module to return a ChatAnthropicMock instance

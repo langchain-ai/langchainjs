@@ -18,6 +18,9 @@
     "allowJs": true,
     "strict": true
   },
-  "include": ["src/**/*"],
+  "include": [
+    "src/**/*",
+    "../providers/langchain-anthropic/src/promptCaching.ts"
+  ],
   "exclude": ["node_modules", "dist", "docs"]
 }

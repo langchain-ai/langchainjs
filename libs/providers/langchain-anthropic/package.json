@@ -45,12 +45,17 @@
     "dotenv": "^17.2.1",
     "dpdm": "^3.14.0",
     "eslint": "^9.34.0",
+    "langchain": "workspace:*",
     "prettier": "^2.8.3",
     "release-it": "^19.0.4",
     "release-it-pnpm": "^4.6.6",
     "rimraf": "^5.0.1",
     "typescript": "~5.8.3",
     "vitest": "^3.2.4",
+    "zod": "3.25.76"
+  },
+  "optionalDependencies": {
+    "langchain": "workspace:*",
     "zod": "3.25.76"
   },
   "publishConfig": {
@@ -83,6 +88,17 @@
         "default": "./dist/index.cjs"
       },
       "input": "./src/index.ts"
+    },
+    "./middleware": {
+      "import": {
+        "types": "./dist/middleware.d.ts",
+        "default": "./dist/middleware.js"
+      },
+      "require": {
+        "types": "./dist/middleware.d.cts",
+        "default": "./dist/middleware.cjs"
+      },
+      "input": "./src/middleware.ts"
     },
     "./package.json": "./package.json"
   },

@@ -12,10 +12,10 @@ import {
   SystemMessage,
 } from "@langchain/core/messages";
 import type { LanguageModelLike } from "@langchain/core/language_models/base";
-import { ChatOpenAI } from "@langchain/openai";
+import { createAgent } from "langchain";
 
-import { anthropicPromptCachingMiddleware } from "../promptCaching.js";
-import { createAgent } from "../../index.js";
+import { ChatAnthropic } from "../chat_models.js";
+import { anthropicPromptCachingMiddleware } from "../middleware.js";
 
 function createMockModel(name = "ChatAnthropic", modelType = "anthropic") {
   // Mock Anthropic model
@@ -176,7 +176,7 @@ describe("anthropicPromptCachingMiddleware", () => {
         });
 
         const agent = createAgent({
-          model: new ChatOpenAI({ model: "gpt-4o" }),
+          model: new ChatAnthropic({ model: "gpt-4o" }),
           middleware: [middleware] as const,
         });
 

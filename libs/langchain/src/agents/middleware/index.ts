@@ -4,10 +4,6 @@ export {
 } from "./summarization.js";
 export * from "./hitl.js";
 export {
-  anthropicPromptCachingMiddleware,
-  type PromptCachingMiddlewareConfig,
-} from "./promptCaching.js";
-export {
   dynamicSystemPromptMiddleware,
   type DynamicSystemPromptMiddlewareConfig,
 } from "./dynamicSystemPrompt.js";
