@@ -1,23 +1,37 @@
 /* eslint-disable no-process-env */
+/* eslint-disable dot-notation */
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import WatsonxAiMlVml_v1 from "@ibm-cloud/watsonx-ai/dist/watsonx-ai-ml/vml_v1.js";
 import { z } from "zod";
 import { DynamicStructuredTool } from "@langchain/core/tools";
+import { jest } from "@jest/globals";
+import { Gateway } from "@ibm-cloud/watsonx-ai/gateway";
+import {
+  transformStreamToObjectStream,
+  WatsonXAI,
+} from "@ibm-cloud/watsonx-ai";
+import { AIMessage, AIMessageChunk } from "@langchain/core/messages";
+import { IterableReadableStream } from "@langchain/core/utils/stream";
 import {
   ChatWatsonx,
   ChatWatsonxConstructor,
+  ChatWatsonxGatewayInput,
   ChatWatsonxInput,
   WatsonxCallParams,
 } from "../ibm.js";
-import { authenticateAndSetInstance } from "../../utils/ibm.js";
 
 const fakeAuthProp = {
   watsonxAIAuthType: "iam",
   watsonxAIApikey: "fake_key",
 };
+
+const model = "mistralai/mistral-medium-2505";
+const projectId = process.env.WATSONX_AI_PROJECT_ID || "testString";
+const serviceUrl = process.env.WATSONX_AI_SERVICE_URL as string;
+
 export function getKey<K>(key: K): K {
   return key;
 }
+
 export const testProperties = (
   instance: ChatWatsonx,
   testProps: ChatWatsonxConstructor,
@@ -52,35 +66,27 @@ export const testProperties = (
     checkProperty<typeof notExTestProps>(notExTestProps, instance, false);
 };
 
-describe("LLM unit tests", () => {
-  describe("Positive tests", () => {
-    test("Test authentication function", () => {
-      const instance = authenticateAndSetInstance({
-        version: "2024-05-31",
-        serviceUrl: process.env.WATSONX_AI_SERVICE_URL as string,
-        ...fakeAuthProp,
-      });
-      expect(instance).toBeInstanceOf(WatsonxAiMlVml_v1);
-    });
-
+describe("Chat unit tests", () => {
+  describe("Positive tests for default usage", () => {
     test("Test basic properties after init", async () => {
       const testProps = {
-        model: "mistralai/mistral-large",
+        model,
         version: "2024-05-31",
-        serviceUrl: process.env.WATSONX_AI_SERVICE_URL as string,
-        projectId: process.env.WATSONX_AI_PROJECT_ID || "testString",
+        serviceUrl,
+        projectId,
       };
       const instance = new ChatWatsonx({ ...testProps, ...fakeAuthProp });
 
       testProperties(instance, testProps);
+      expect(instance["service"]).toBeInstanceOf(WatsonXAI);
     });
 
     test("Authenticate with projectId", async () => {
       const testProps = {
-        model: "mistralai/mistral-large",
+        model,
         version: "2024-05-31",
-        serviceUrl: process.env.WATSONX_AI_SERVICE_URL as string,
-        projectId: process.env.WATSONX_AI_PROJECT_ID || "testString",
+        serviceUrl,
+        projectId,
       };
       const instance = new ChatWatsonx({ ...testProps, ...fakeAuthProp });
 
@@ -89,9 +95,9 @@ describe("LLM unit tests", () => {
 
     test("Authenticate with spaceId", async () => {
       const testProps = {
-        model: "mistralai/mistral-large",
+        model,
         version: "2024-05-31",
-        serviceUrl: process.env.WATSONX_AI_SERVICE_URL as string,
+        serviceUrl,
         spaceId: process.env.WATSONX_AI_SPACE_ID || "testString",
       };
       const instance = new ChatWatsonx({ ...testProps, ...fakeAuthProp });
@@ -102,7 +108,7 @@ describe("LLM unit tests", () => {
     test("Authenticate with idOrName", async () => {
       const testProps = {
         version: "2024-05-31",
-        serviceUrl: process.env.WATSONX_AI_SERVICE_URL as string,
+        serviceUrl,
         idOrName: process.env.WATSONX_AI_ID_OR_NAME || "testString",
       };
       const instance = new ChatWatsonx({ ...testProps, ...fakeAuthProp });
@@ -111,10 +117,10 @@ describe("LLM unit tests", () => {
 
     test("Test methods after init", () => {
       const testProps: ChatWatsonxInput = {
-        model: "mistralai/mistral-large",
+        model,
         version: "2024-05-31",
-        serviceUrl: process.env.WATSONX_AI_SERVICE_URL as string,
-        projectId: process.env.WATSONX_AI_PROJECT_ID || "testString",
+        serviceUrl,
+        projectId,
       };
       const instance = new ChatWatsonx({
         ...testProps,
@@ -129,8 +135,8 @@ describe("LLM unit tests", () => {
     test("Test properties after init", async () => {
       const testProps: WatsonxCallParams & ChatWatsonxInput = {
         version: "2024-05-31",
-        serviceUrl: process.env.WATSONX_AI_SERVICE_URL as string,
-        projectId: process.env.WATSONX_AI_PROJECT_ID || "testString",
+        serviceUrl,
+        projectId,
         model: "ibm/granite-13b-chat-v2",
         maxTokens: 100,
         maxCompletionTokens: 100,
@@ -144,26 +150,131 @@ describe("LLM unit tests", () => {
 
       testProperties(instance, testProps);
     });
-
-    test("Missing id", async () => {
-      const testProps: ChatWatsonxInput = {
-        model: "mistralai/mistral-large",
+    test("Calling correct method regarding the mode without streaming", async () => {
+      const testProps = {
         version: "2024-05-31",
-        serviceUrl: process.env.WATSONX_AI_SERVICE_URL as string,
+        serviceUrl,
+        model,
+        maxTokens: 100,
+        temperature: 0.1,
+        topP: 1,
+        projectId,
       };
-      const intance = new ChatWatsonx({
-        ...testProps,
-        ...fakeAuthProp,
+      const instance = new ChatWatsonx({ ...testProps, ...fakeAuthProp });
+      if (instance["service"]) {
+        const spy = jest.spyOn(instance["service"], "textChat");
+        spy.mockResolvedValue({
+          status: 200,
+          headers: {},
+          statusText: "OK",
+          result: {
+            id: "",
+            created: 1752142071,
+            model_id: model,
+            choices: [
+              {
+                index: 0,
+                message: {
+                  role: "assistant",
+                  content: " Hello! AI stands for",
+                  refusal: "",
+                  tool_calls: [],
+                },
+                finish_reason: "length",
+              },
+            ],
+            usage: {
+              prompt_tokens: 9,
+              completion_tokens: 5,
+              total_tokens: 14,
+            },
+          },
+        });
+        const res = await instance.invoke("hello");
+        expect(res).toBeInstanceOf(AIMessage);
+        spy.mockClear();
+      } else throw new Error("Service is undefined");
+    });
+    test("Calling correct method regarding the mode with streaming", async () => {
+      const testProps = {
+        version: "2024-05-31",
+        serviceUrl,
+        model,
+        maxTokens: 100,
+        temperature: 0.1,
+        topP: 1,
+        projectId,
+      };
+      const instance = new ChatWatsonx({ ...testProps, ...fakeAuthProp });
+      const chunk: WatsonXAI.TextChatStreamResponse = {
+        id: "",
+        created: 1752142071,
+        model_id: model,
+        choices: [
+          {
+            index: 0,
+            delta: {
+              role: "assistant",
+              content: "HELLO",
+              refusal: "",
+            },
+            finish_reason: "length",
+          },
+        ],
+      };
+      if (instance["service"]) {
+        const spy = jest.spyOn(instance["service"], "textChatStream");
+        const stream = [
+          `id: 1\nevent: message\ndata: ${JSON.stringify(chunk)}\n\n`,
+          `id: 2\nevent: message\ndata: ${JSON.stringify(chunk)}\n\n`,
+        ][Symbol.iterator]();
+
+        const transform = await transformStreamToObjectStream<
+          WatsonXAI.ObjectStreamed<WatsonXAI.TextChatStreamResponse>
+        >({
+          result: stream,
+        });
+
+        spy.mockResolvedValue(transform);
+        const res = await instance.stream("hello");
+        expect(res).toBeInstanceOf(IterableReadableStream<AIMessageChunk>);
+        spy.mockClear();
+      } else throw new Error("Service is undefined");
+    });
+
+    test("Test override properties with invocationParams", async () => {
+      const testProps = {
+        version: "2024-05-31",
+        serviceUrl,
+        projectId,
+        model,
+        maxTokens: 100,
+        temperature: 0.1,
+        topP: 1,
+      };
+      const instance = new ChatWatsonx({ ...testProps, ...fakeAuthProp });
+
+      testProperties(instance, testProps);
+
+      const props = instance.invocationParams({
+        maxTokens: 10,
+        topP: 2,
       });
-      expect(intance).toBeDefined();
+
+      expect(props).toEqual({
+        maxTokens: 10,
+        temperature: 0.1,
+        topP: 2,
+        projectId,
+      });
     });
 
     test("Tool conversion handles both Zod schemas and JSON schemas", () => {
       const testProps: ChatWatsonxInput = {
         model: "ibm/granite-13b-chat-v2",
         version: "2024-05-31",
-        serviceUrl: process.env.WATSONX_AI_SERVICE_URL as string,
-        projectId: process.env.WATSONX_AI_PROJECT_ID || "testString",
+        serviceUrl,
+        projectId,
       };
       const model = new ChatWatsonx({ ...testProps, ...fakeAuthProp });
 
@@ -215,11 +326,147 @@ describe("LLM unit tests", () => {
     });
   });
 
+  describe("Positive tests with model gateway", () => {
+    test("Authenticate", async () => {
+      const testProps = {
+        model,
+        version: "2024-05-31",
+        serviceUrl,
+        modelGateway: true,
+      };
+      const instance = new ChatWatsonx({ ...testProps, ...fakeAuthProp });
+
+      testProperties(instance, testProps);
+      expect(instance["gateway"]).toBeInstanceOf(Gateway);
+    });
+
+    test("Test properties after init", async () => {
+      const testProps: ChatWatsonxGatewayInput = {
+        version: "2024-05-31",
+        serviceUrl,
+        model: "ibm/granite-13b-chat-v2",
+        maxTokens: 100,
+        temperature: 0.1,
+        topP: 1,
+        maxRetries: 3,
+        maxConcurrency: 3,
+        modelGatewayKwargs: {
+          serviceTier: "test",
+          functions: {
+            test: "test",
+          },
+        },
+        modelGateway: true,
+      };
+      const instance = new ChatWatsonx({ ...testProps, ...fakeAuthProp });
+
+      testProperties(instance, testProps);
+    });
+
+    test("Test override properties with invocationParams", async () => {
+      const testProps: ChatWatsonxGatewayInput = {
+        version: "2024-05-31",
+        serviceUrl,
+        model,
+        maxTokens: 100,
+        temperature: 0.1,
+        topP: 1,
+        modelGateway: true,
+      };
+      const instance = new ChatWatsonx({ ...testProps, ...fakeAuthProp });
+
+      testProperties(instance, testProps);
+
+      const props = instance.invocationParams({
+        maxTokens: 10,
+        topP: 2,
+      });
+
+      expect(props).toEqual({
+        maxTokens: 10,
+        temperature: 0.1,
+        topP: 2,
+      });
+    });
+
+    test("Calling correct method in modelGateway mode", async () => {
+      const testProps = {
+        version: "2024-05-31",
+        serviceUrl,
+        model,
+        maxTokens: 100,
+        temperature: 0.1,
+        topP: 1,
+        modelGateway: true,
+        streaming: false,
+      };
+
+      const instance = new ChatWatsonx({ ...testProps, ...fakeAuthProp });
+      if (instance["gateway"]) {
+        const spy = jest.spyOn(instance["gateway"].chat.completion, "create");
+
+        spy.mockResolvedValue({
+          status: 200,
+          headers: {},
+          statusText: "OK",
+          result: {
+            id: "",
+            object: "chat.completion",
+            created: 1752142071,
+            model,
+            choices: [
+              {
+                index: 0,
+                message: {
+                  role: "assistant",
+                  content: " Hello! AI stands for",
+                  refusal: "",
+                  tool_calls: [],
+                },
+                finish_reason: "length",
+              },
+            ],
+            usage: {
+              prompt_tokens: 9,
+              completion_tokens: 5,
+              total_tokens: 14,
+            },
+            service_tier: "null",
+            system_fingerprint: "",
+            cached: false,
+            prompt_filter_results: [],
+          },
+        });
+
+        const res = await instance.invoke("hello");
+        expect(res).toBeInstanceOf(AIMessage);
+        spy.mockClear();
+      } else throw new Error("Gateway is undefined");
+    });
+  });
+
   describe("Negative tests", () => {
+    test("Missing id", async () => {
+      const testProps: ChatWatsonxInput = {
+        model,
+        version: "2024-05-31",
+        serviceUrl,
+      };
+      expect(
+        () =>
+          new ChatWatsonx({
+            ...testProps,
+            ...fakeAuthProp,
+          })
+      ).toThrow(
+        /Expected exactly one of: spaceId, projectId, idOrName, modelGateway./
+      );
+    });
+
     test("Missing other props", async () => {
       // @ts-expect-error Intentionally passing not enough parameters
       const testPropsProjectId: ChatWatsonxInput = {
-        projectId: process.env.WATSONX_AI_PROJECT_ID || "testString",
+        projectId,
       };
 
       expect(
@@ -231,7 +478,7 @@ describe("LLM unit tests", () => {
       ).toThrowError();
       // @ts-expect-error Intentionally passing not enough parameters
       const testPropsServiceUrl: ChatWatsonxInput = {
-        serviceUrl: process.env.WATSONX_AI_SERVICE_URL as string,
+        serviceUrl,
       };
       expect(
         () =>
@@ -254,10 +501,10 @@ describe("LLM unit tests", () => {
 
     test("Passing more than one id", async () => {
       const testProps: ChatWatsonxInput = {
-        model: "mistralai/mistral-large",
+        model,
         version: "2024-05-31",
-        serviceUrl: process.env.WATSONX_AI_SERVICE_URL as string,
-        projectId: process.env.WATSONX_AI_PROJECT_ID || "testString",
+        serviceUrl,
+        projectId,
         spaceId: process.env.WATSONX_AI_PROJECT_ID || "testString",
       };
       expect(
@@ -268,13 +515,65 @@ describe("LLM unit tests", () => {
           })
       ).toThrowError();
     });
-
+    test("Id with modelGateway", async () => {
+      const testProps = {
+        model,
+        version: "2024-05-31",
+        serviceUrl,
+        projectId,
+        modelGateway: true,
+      };
+      expect(
+        () =>
+          // @ts-expect-error Pass invalid props with modelGateway
+          new ChatWatsonx({
+            ...testProps,
+            ...fakeAuthProp,
+          })
+      ).toThrow(
+        /Expected exactly one of: spaceId, projectId, idOrName, modelGateway. Got: projectId, modelGateway/
+      );
+    });
+    test("projectId with invalid props", async () => {
+      const testProps = {
+        model,
+        version: "2024-05-31",
+        serviceUrl,
+        projectId,
+        modelGatewayKwargs: {},
+      };
+      expect(
+        () =>
+          // @ts-expect-error Pass invalid props with projectId
+          new ChatWatsonx({
+            ...testProps,
+            ...fakeAuthProp,
+          })
+      ).toThrow(/Unexpected properties: modelGatewayKwargs./);
+    });
+    test("modelGateway with invalid props", async () => {
+      const testProps = {
+        model,
+        version: "2024-05-31",
+        serviceUrl,
+        modelGateway: true,
+        timeLimit: 10,
+      };
+      expect(
+        () =>
+          // @ts-expect-error Pass invalid props with modelGateway
+          new ChatWatsonx({
+            ...testProps,
+            ...fakeAuthProp,
+          })
+      ).toThrow(/Unexpected properties: timeLimit./);
+    });
     test("Not existing property passed", async () => {
       const testProps = {
-        model: "mistralai/mistral-large",
+        model,
         version: "2024-05-31",
-        serviceUrl: process.env.WATSONX_AI_SERVICE_URL as string,
-        projectId: process.env.WATSONX_AI_PROJECT_ID || "testString",
+        serviceUrl,
+        projectId,
       };
       const notExTestProps = {
         notExisting: 12,
@@ -282,12 +581,14 @@ describe("LLM unit tests", () => {
           notExProp: 12,
         },
       };
-      const instance = new ChatWatsonx({
-        ...testProps,
-        ...notExTestProps,
-        ...fakeAuthProp,
-      });
-      testProperties(instance, testProps, notExTestProps);
+      expect(
+        () =>
+          new ChatWatsonx({
+            ...testProps,
+            ...notExTestProps,
+            ...fakeAuthProp,
+          })
+      ).toThrow(/Unexpected properties: notExisting, notExObj./);
     });
   });
 });

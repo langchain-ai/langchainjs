@@ -7078,14 +7078,15 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@ibm-cloud/watsonx-ai@npm:^1.6.10":
-  version: 1.6.10
-  resolution: "@ibm-cloud/watsonx-ai@npm:1.6.10"
+"@ibm-cloud/watsonx-ai@npm:^1.7.0":
+  version: 1.7.0
+  resolution: "@ibm-cloud/watsonx-ai@npm:1.7.0"
   dependencies:
     "@types/node": ^18.0.0
     extend: 3.0.2
-    ibm-cloud-sdk-core: ^5.3.2
-  checksum: 8eb1d7b714918d51f9a3a6e21e37ccc5baac67807348969338d6caad5574c58a78d2f54bf43ce367b0fb2ae8bcd90e64d75762e42adfe920cb17e5d54cea1b24
+    form-data: ^4.0.4
+    ibm-cloud-sdk-core: ^5.4.3
+  checksum: 9013e00c58b2c0a60a87a9ac36dff8217b64f63e51a195bb426162f6fb3eb2a38dc7f2774fd3c4a1cb64577812bfe1e561a4d55b7dfa1da912155b4a9ee9de77
   languageName: node
   linkType: hard
 
@@ -8675,7 +8676,7 @@ __metadata:
     "@gradientai/nodejs-sdk": ^1.2.0
     "@huggingface/inference": ^4.0.5
     "@huggingface/transformers": ^3.5.2
-    "@ibm-cloud/watsonx-ai": ^1.6.10
+    "@ibm-cloud/watsonx-ai": ^1.7.0
     "@jest/globals": ^29.5.0
     "@lancedb/lancedb": ^0.19.1
     "@langchain/core": "workspace:*"
@@ -17110,6 +17111,17 @@ __metadata:
     form-data: ^4.0.4
     proxy-from-env: ^1.1.0
   checksum: f2a109efea16711907ae86acc46434d52da28e889bf1d2fc2b66844e82c9908f6d96d988ad9043b37d4146abc182e67d61abd87367152bbbc1cd73afa3c5de71
+  languageName: node
+  linkType: hard
+
+"axios@npm:^1.12.2":
+  version: 1.12.2
+  resolution: "axios@npm:1.12.2"
+  dependencies:
+    follow-redirects: ^1.15.6
+    form-data: ^4.0.4
+    proxy-from-env: ^1.1.0
+  checksum: f0331594fe053a4bbff04104edb073973a3aabfad2e56b0aa18de82428aa63f6f0839ca3d837258ec739cb4528014121793b1649a21e5115ffb2bf8237eadca3
   languageName: node
   linkType: hard
 
@@ -25786,7 +25798,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"ibm-cloud-sdk-core@npm:^5.0.2, ibm-cloud-sdk-core@npm:^5.3.2":
+"ibm-cloud-sdk-core@npm:^5.0.2":
   version: 5.4.2
   resolution: "ibm-cloud-sdk-core@npm:5.4.2"
   dependencies:
@@ -25806,6 +25818,29 @@ __metadata:
     retry-axios: ^2.6.0
     tough-cookie: ^4.1.3
   checksum: e79501cd817a4e01ed10eec4495f5b3f71b4b505d2b7e0c1fa4aae467add68b0ed8faa0b80d70e839c15ab9e92875be44178cec78e06642c8b5ab6f4d7cad2bd
+  languageName: node
+  linkType: hard
+
+"ibm-cloud-sdk-core@npm:^5.4.3":
+  version: 5.4.3
+  resolution: "ibm-cloud-sdk-core@npm:5.4.3"
+  dependencies:
+    "@types/debug": ^4.1.12
+    "@types/node": ^18.19.80
+    "@types/tough-cookie": ^4.0.0
+    axios: ^1.12.2
+    camelcase: ^6.3.0
+    debug: ^4.3.4
+    dotenv: ^16.4.5
+    extend: 3.0.2
+    file-type: 16.5.4
+    form-data: ^4.0.4
+    isstream: 0.1.2
+    jsonwebtoken: ^9.0.2
+    mime-types: 2.1.35
+    retry-axios: ^2.6.0
+    tough-cookie: ^4.1.3
+  checksum: fc662c5a54164f570aa31a7bf10255c354c4c793d0269445a2ca612c7b3465b7453b4fc0691bdea7869efdf9c8ce03d0da780792a25c94d191e1df9300fc3530
   languageName: node
   linkType: hard
 

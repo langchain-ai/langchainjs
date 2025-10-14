@@ -1,25 +1,46 @@
 /* eslint-disable no-process-env */
+/* eslint-disable dot-notation */
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import WatsonxAiMlVml_v1 from "@ibm-cloud/watsonx-ai/dist/watsonx-ai-ml/vml_v1.js";
+import { Gateway } from "@ibm-cloud/watsonx-ai/gateway";
+import { jest } from "@jest/globals";
+import { AIMessageChunk } from "@langchain/core/messages";
+import {
+  transformStreamToObjectStream,
+  WatsonXAI,
+} from "@ibm-cloud/watsonx-ai";
+import { IterableReadableStream } from "@langchain/core/utils/stream";
 import { WatsonxLLM, WatsonxInputLLM, WatsonxLLMConstructor } from "../ibm.js";
 import { authenticateAndSetInstance } from "../../utils/ibm.js";
-import { WatsonxEmbeddings } from "../../embeddings/ibm.js";
+import {
+  WatsonxEmbeddings,
+  WatsonxEmbeddingsConstructor,
+} from "../../embeddings/ibm.js";
 
 const fakeAuthProp = {
   watsonxAIAuthType: "iam",
   watsonxAIApikey: "fake_key",
 };
+
+const model = "mistralai/mistral-medium-2505";
+const projectId = process.env.WATSONX_AI_PROJECT_ID || "testString";
+const spaceId = process.env.WATSONX_AI_SPACE_ID || "testString";
+const serviceUrl = process.env.WATSONX_AI_SERVICE_URL as string;
+
 export function getKey<K>(key: K): K {
   return key;
 }
+
 export const testProperties = (
   instance: WatsonxLLM | WatsonxEmbeddings,
-  testProps: WatsonxLLMConstructor,
+  testProps: WatsonxLLMConstructor | WatsonxEmbeddingsConstructor,
   notExTestProps?: { [key: string]: any }
 ) => {
-  const checkProperty = <T extends { [key: string]: any }>(
+  const checkProperty = <
+    T extends { [key: string]: any },
+    K extends { [key: string]: any }
+  >(
     testProps: T,
-    instance: T,
+    instance: K,
     existing = true
   ) => {
     Object.keys(testProps).forEach((key) => {
@@ -27,36 +48,44 @@ export const testProperties = (
       type Type = Pick<T, typeof keys>;
 
       if (typeof testProps[key as keyof T] === "object")
-        checkProperty<Type>(testProps[key as keyof T], instance[key], existing);
+        checkProperty<Type, typeof instance>(
+          testProps[key as keyof T],
+          instance[key],
+          existing
+        );
       else {
         if (existing)
-          expect(instance[key as keyof T]).toBe(testProps[key as keyof T]);
-        else if (instance) expect(instance[key as keyof T]).toBeUndefined();
+          expect(instance[key as keyof K]).toBe(testProps[key as keyof T]);
+        else if (instance) expect(instance[key as keyof K]).toBeUndefined();
       }
     });
   };
-  checkProperty<typeof testProps>(testProps, instance);
+  checkProperty<typeof testProps, typeof instance>(testProps, instance);
   if (notExTestProps)
-    checkProperty<typeof notExTestProps>(notExTestProps, instance, false);
+    checkProperty<typeof notExTestProps, typeof instance>(
+      notExTestProps,
+      instance,
+      false
+    );
 };
 
 describe("LLM unit tests", () => {
-  describe("Positive tests", () => {
+  describe("Positive tests with default mode", () => {
     test("Test authentication function", () => {
       const instance = authenticateAndSetInstance({
         version: "2024-05-31",
-        serviceUrl: process.env.WATSONX_AI_SERVICE_URL as string,
+        serviceUrl,
         ...fakeAuthProp,
       });
-      expect(instance).toBeInstanceOf(WatsonxAiMlVml_v1);
+      expect(instance).toBeInstanceOf(WatsonXAI);
     });
 
     test("Test basic properties after init", async () => {
       const testProps = {
-        model: "ibm/granite-13b-chat-v2",
+        model,
         version: "2024-05-31",
-        serviceUrl: process.env.WATSONX_AI_SERVICE_URL as string,
-        projectId: process.env.WATSONX_AI_PROJECT_ID || "testString",
+        serviceUrl,
+        projectId,
       };
       const instance = new WatsonxLLM({ ...testProps, ...fakeAuthProp });
 
@@ -66,7 +95,7 @@ describe("LLM unit tests", () => {
     test("Test basic properties after init", async () => {
       const testProps = {
         version: "2024-05-31",
-        serviceUrl: process.env.WATSONX_AI_SERVICE_URL as string,
+        serviceUrl,
         idOrName: process.env.WATSONX_AI_PROJECT_ID || "testString",
       };
       const instance = new WatsonxLLM({ ...testProps, ...fakeAuthProp });
@@ -76,10 +105,10 @@ describe("LLM unit tests", () => {
 
     test("Test methods after init", () => {
       const testProps: WatsonxInputLLM = {
-        model: "ibm/granite-13b-chat-v2",
+        model,
         version: "2024-05-31",
-        serviceUrl: process.env.WATSONX_AI_SERVICE_URL as string,
-        projectId: process.env.WATSONX_AI_PROJECT_ID || "testString",
+        serviceUrl,
+        projectId,
       };
       const instance = new WatsonxLLM({
         ...testProps,
@@ -94,9 +123,9 @@ describe("LLM unit tests", () => {
     test("Test properties after init", async () => {
       const testProps: WatsonxInputLLM = {
         version: "2024-05-31",
-        serviceUrl: process.env.WATSONX_AI_SERVICE_URL as string,
-        projectId: process.env.WATSONX_AI_PROJECT_ID || "testString",
-        model: "ibm/granite-13b-chat-v2",
+        serviceUrl,
+        projectId,
+        model,
         maxNewTokens: 100,
         decodingMethod: "sample",
         lengthPenalty: { decay_factor: 1, start_index: 1 },
@@ -125,25 +154,195 @@ describe("LLM unit tests", () => {
 
       testProperties(instance, testProps);
     });
-    test("Missing id", async () => {
-      const testProps: WatsonxInputLLM = {
-        model: "ibm/granite-13b-chat-v2",
+
+    test("Calling correct method regarding the mode without streaming", async () => {
+      const testProps = {
         version: "2024-05-31",
-        serviceUrl: process.env.WATSONX_AI_SERVICE_URL as string,
+        serviceUrl,
+        model,
+        temperature: 0.1,
+        topP: 1,
+        projectId,
       };
-      const instance = new WatsonxLLM({
-        ...testProps,
-        ...fakeAuthProp,
-      });
-      expect(instance).toBeDefined();
+      const instance = new WatsonxLLM({ ...testProps, ...fakeAuthProp });
+      if (instance["service"]) {
+        const spy = jest.spyOn(instance["service"], "generateText");
+        spy.mockResolvedValue({
+          status: 200,
+          headers: {},
+          statusText: "OK",
+          result: {
+            model_id: model,
+            created_at: "",
+            results: [{ generated_text: "hello", stop_reason: "finish" }],
+          },
+        });
+        const res = await instance.invoke("hello");
+        expect(res).toBe("hello");
+        spy.mockClear();
+      } else throw new Error("Something wrong with instance");
+    });
+    test("Calling correct method regarding the mode with streaming", async () => {
+      const testProps = {
+        version: "2024-05-31",
+        serviceUrl,
+        model,
+        temperature: 0.1,
+        topP: 1,
+        projectId,
+      };
+      const instance = new WatsonxLLM({ ...testProps, ...fakeAuthProp });
+      const chunk: WatsonXAI.TextGenResponse = {
+        model_id: "",
+        created_at: "",
+        results: [{ generated_text: "hello", stop_reason: "finish" }],
+      };
+      if (instance["service"]) {
+        const spy = jest.spyOn(instance["service"], "generateTextStream");
+        const stream = [
+          `id: 1\nevent: message\ndata: ${JSON.stringify(chunk)}\n\n`,
+          `id: 2\nevent: message\ndata: ${JSON.stringify(chunk)}\n\n`,
+        ][Symbol.iterator]();
+
+        const transform = await transformStreamToObjectStream<
+          WatsonXAI.ObjectStreamed<WatsonXAI.TextGenResponse>
+        >({
+          result: stream,
+        });
+
+        spy.mockResolvedValue(transform);
+        const res = await instance.stream("hello");
+        expect(res).toBeInstanceOf(IterableReadableStream<AIMessageChunk>);
+        spy.mockClear();
+      } else throw new Error("Service is not set");
     });
   });
+  describe("Positive tests with model gateway", () => {
+    test("Authenticate", async () => {
+      const testProps = {
+        model,
+        version: "2024-05-31",
+        serviceUrl,
+        modelGateway: true,
+      };
+      const instance = new WatsonxLLM({ ...testProps, ...fakeAuthProp });
 
+      testProperties(instance, testProps);
+      expect(instance["gateway"]).toBeInstanceOf(Gateway);
+    });
+
+    test("Test properties after init", async () => {
+      const testProps = {
+        version: "2024-05-31",
+        serviceUrl,
+        model,
+        temperature: 0.1,
+        topP: 1,
+        maxRetries: 3,
+        maxConcurrency: 3,
+        maxTokens: 10,
+        modelGateway: true,
+      };
+      const instance = new WatsonxLLM({ ...testProps, ...fakeAuthProp });
+
+      testProperties(instance, testProps);
+    });
+
+    test("Test override properties with invocationParams", async () => {
+      const testProps = {
+        version: "2024-05-31",
+        serviceUrl,
+        model,
+        temperature: 0.1,
+
+        topP: 1,
+        modelGateway: true,
+      };
+      const instance = new WatsonxLLM({ ...testProps, ...fakeAuthProp });
+
+      testProperties(instance, testProps);
+
+      const props = instance.invocationParams({
+        parameters: {
+          temperature: 0.1,
+          topP: 2,
+        },
+      });
+      expect(props).toEqual({
+        temperature: 0.1,
+        topP: 2,
+      });
+    });
+
+    test("Calling correct method in modelGateway mode", async () => {
+      const testProps = {
+        version: "2024-05-31",
+        serviceUrl,
+        model,
+        temperature: 0.1,
+        topP: 1,
+        modelGateway: true,
+        streaming: false,
+      };
+
+      const instance = new WatsonxLLM({ ...testProps, ...fakeAuthProp });
+      if (instance["gateway"]) {
+        const spy = jest.spyOn(instance["gateway"].completion, "create");
+
+        spy.mockResolvedValue({
+          status: 200,
+          headers: {},
+          statusText: "OK",
+          result: {
+            id: "",
+            object: "chat.completion",
+            created: 1752142071,
+            model,
+            choices: [
+              {
+                index: 0,
+                text: " Hello! AI stands for",
+
+                finish_reason: "length",
+              },
+            ],
+            usage: {
+              prompt_tokens: 9,
+              completion_tokens: 5,
+              total_tokens: 14,
+            },
+            system_fingerprint: "",
+            cached: false,
+          },
+        });
+
+        const res = await instance.invoke("hello");
+        expect(typeof res).toBe("string");
+        spy.mockClear();
+      } else throw new Error("Gateway is not set");
+    });
+  });
   describe("Negative tests", () => {
+    test("Missing id", async () => {
+      const testProps: WatsonxInputLLM = {
+        model,
+        version: "2024-05-31",
+        serviceUrl,
+      };
+      expect(
+        () =>
+          new WatsonxLLM({
+            ...testProps,
+            ...fakeAuthProp,
+          })
+      ).toThrow(
+        /Expected exactly one of: spaceId, projectId, idOrName, modelGateway./
+      );
+    });
     test("Missing other props", async () => {
       // @ts-expect-error Intentionally passing not enough parameters
       const testPropsProjectId: WatsonxInputLLM = {
-        projectId: process.env.WATSONX_AI_PROJECT_ID || "testString",
+        projectId,
       };
 
       expect(
@@ -166,12 +365,12 @@ describe("LLM unit tests", () => {
     });
 
     test("Passing more than one id", async () => {
-      const testProps: WatsonxInputLLM = {
-        model: "ibm/granite-13b-chat-v2",
+      const testProps = {
+        model,
         version: "2024-05-31",
-        serviceUrl: process.env.WATSONX_AI_SERVICE_URL as string,
-        projectId: process.env.WATSONX_AI_PROJECT_ID || "testString",
-        spaceId: process.env.WATSONX_AI_PROJECT_ID || "testString",
+        serviceUrl,
+        projectId,
+        spaceId,
       };
       expect(
         () =>
@@ -181,13 +380,65 @@ describe("LLM unit tests", () => {
           })
       ).toThrowError();
     });
-
+    test("Id with modelGateway", async () => {
+      const testProps = {
+        model,
+        version: "2024-05-31",
+        serviceUrl,
+        projectId,
+        modelGateway: true,
+      };
+      expect(
+        () =>
+          // @ts-expect-error Passing wrong props with modelGateway
+          new WatsonxLLM({
+            ...testProps,
+            ...fakeAuthProp,
+          })
+      ).toThrow(
+        /Expected exactly one of: spaceId, projectId, idOrName, modelGateway. Got: projectId, modelGateway/
+      );
+    });
+    test("projectId with invalid props", async () => {
+      const testProps = {
+        model,
+        version: "2024-05-31",
+        serviceUrl,
+        projectId,
+        modelGatewayKwargs: {},
+      };
+      expect(
+        () =>
+          // @ts-expect-error Passing wrong props with projectId
+          new WatsonxLLM({
+            ...testProps,
+            ...fakeAuthProp,
+          })
+      ).toThrow(/Unexpected properties: modelGatewayKwargs./);
+    });
+    test("modelGateway with invalid props", async () => {
+      const testProps = {
+        model,
+        version: "2024-05-31",
+        serviceUrl,
+        modelGateway: true,
+        timeLimit: 10,
+      };
+      expect(
+        () =>
+          // @ts-expect-error Passing wrong props with modelGateway
+          new WatsonxLLM({
+            ...testProps,
+            ...fakeAuthProp,
+          })
+      ).toThrow(/Unexpected properties: timeLimit./);
+    });
     test("Not existing property passed", async () => {
       const testProps = {
-        model: "ibm/granite-13b-chat-v2",
+        model,
         version: "2024-05-31",
-        serviceUrl: process.env.WATSONX_AI_SERVICE_URL as string,
-        projectId: process.env.WATSONX_AI_PROJECT_ID || "testString",
+        serviceUrl,
+        projectId,
       };
       const notExTestProps = {
         notExisting: 12,
@@ -195,12 +446,14 @@ describe("LLM unit tests", () => {
           notExProp: 12,
         },
       };
-      const instance = new WatsonxLLM({
-        ...testProps,
-        ...notExTestProps,
-        ...fakeAuthProp,
-      });
-      testProperties(instance, testProps, notExTestProps);
+      expect(
+        () =>
+          new WatsonxLLM({
+            ...testProps,
+            ...notExTestProps,
+            ...fakeAuthProp,
+          })
+      ).toThrow(/Unexpected properties: notExisting, notExObj./);
     });
   });
 });

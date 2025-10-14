@@ -80,7 +80,7 @@
     "@gradientai/nodejs-sdk": "^1.2.0",
     "@huggingface/inference": "^4.0.5",
     "@huggingface/transformers": "^3.5.2",
-    "@ibm-cloud/watsonx-ai": "^1.6.10",
+    "@ibm-cloud/watsonx-ai": "^1.7.0",
     "@jest/globals": "^29.5.0",
     "@lancedb/lancedb": "^0.19.1",
     "@langchain/core": "workspace:*",

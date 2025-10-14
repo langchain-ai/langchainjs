@@ -4,6 +4,7 @@ import {
   IamAuthenticator,
   BearerTokenAuthenticator,
   CloudPakForDataAuthenticator,
+  Authenticator,
 } from "ibm-cloud-sdk-core";
 import {
   JsonOutputKeyToolsParserParamsInterop,
@@ -18,7 +19,42 @@ import {
   InteropZodType,
   interopSafeParseAsync,
 } from "@langchain/core/utils/types";
+import { Gateway } from "@ibm-cloud/watsonx-ai/gateway";
 import { WatsonxAuth, WatsonxInit } from "../types/ibm.js";
+
+const createAuthenticator = ({
+  watsonxAIApikey,
+  watsonxAIAuthType,
+  watsonxAIBearerToken,
+  watsonxAIUsername,
+  watsonxAIPassword,
+  watsonxAIUrl,
+  disableSSL,
+  serviceUrl,
+}: WatsonxAuth): Authenticator | undefined => {
+  if (watsonxAIAuthType === "iam" && watsonxAIApikey) {
+    return new IamAuthenticator({
+      apikey: watsonxAIApikey,
+    });
+  } else if (watsonxAIAuthType === "bearertoken" && watsonxAIBearerToken) {
+    return new BearerTokenAuthenticator({
+      bearerToken: watsonxAIBearerToken,
+    });
+  } else if (watsonxAIAuthType === "cp4d") {
+    // cp4d auth requires username with either Password of ApiKey but not both.
+    if (watsonxAIUsername && (watsonxAIPassword || watsonxAIApikey)) {
+      const watsonxCPDAuthUrl = watsonxAIUrl ?? serviceUrl;
+      return new CloudPakForDataAuthenticator({
+        username: watsonxAIUsername,
+        password: watsonxAIPassword,
+        url: watsonxCPDAuthUrl.concat("/icp4d-api/v1/authorize"),
+        apikey: watsonxAIApikey,
+        disableSslVerification: disableSSL,
+      });
+    }
+  }
+  return undefined;
+};
 
 export const authenticateAndSetInstance = ({
   watsonxAIApikey,
@@ -71,6 +107,35 @@ export const authenticateAndSetInstance = ({
     });
   return undefined;
 };
+
+export function authenticateAndSetGatewayInstance({
+  watsonxAIApikey,
+  watsonxAIAuthType,
+  watsonxAIBearerToken,
+  watsonxAIUsername,
+  watsonxAIPassword,
+  watsonxAIUrl,
+  disableSSL,
+  version,
+  serviceUrl,
+}: WatsonxAuth & Omit<WatsonxInit, "authenticator">) {
+  const authenticator = createAuthenticator({
+    watsonxAIApikey,
+    watsonxAIAuthType,
+    watsonxAIBearerToken,
+    watsonxAIUsername,
+    watsonxAIPassword,
+    watsonxAIUrl,
+    disableSSL,
+    serviceUrl,
+  });
+
+  return new Gateway({
+    version,
+    serviceUrl,
+    authenticator,
+  });
+}
 
 // Mistral enforces a specific pattern for tool call IDs
 // Thanks to Mistral for implementing this, I was unable to import which is why this is copied 1:1
@@ -245,7 +310,9 @@ export function jsonSchemaToZod(obj: WatsonXAI.JsonObject | undefined) {
             });
         } else if (prop.type === "boolean") zodType = z.boolean();
         else if (prop.type === "array")
-          zodType = z.array(jsonSchemaToZod(prop.items));
+          zodType = z.array(
+            prop.items ? jsonSchemaToZod(prop.items) : z.string()
+          );
         else if (prop.type === "object") {
           zodType = jsonSchemaToZod(prop);
         } else throw new Error(`Unsupported type: ${prop.type}`);
@@ -265,3 +332,38 @@ export function jsonSchemaToZod(obj: WatsonXAI.JsonObject | undefined) {
   }
   throw new Error("Unsupported root schema type");
 }
+
+export const expectOneOf = (
+  params: Record<string, any>,
+  keys: string[],
+  exactlyOneOf = false
+) => {
+  const provided = keys.filter(
+    (key) => key in params && params[key] !== undefined
+  );
+  if (exactlyOneOf && provided.length !== 1) {
+    throw new Error(
+      `Expected exactly one of: ${keys.join(", ")}. Got: ${provided.join(", ")}`
+    );
+  } else if (!exactlyOneOf && provided.length > 1) {
+    throw new Error(
+      `Expected one of: ${keys.join(", ")} or none. Got: ${provided.join(", ")}`
+    );
+  }
+};
+
+export const checkValidProps = (
+  params: Record<string, any>,
+  allowedKeys: string[]
+) => {
+  const unexpected = Object.keys(params).filter(
+    (key) => !allowedKeys.includes(key)
+  );
+  if (unexpected.length > 0) {
+    throw new Error(
+      `Unexpected properties: ${unexpected.join(
+        ", "
+      )}. Expected only: ${allowedKeys.join(", ")}.`
+    );
+  }
+};

@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
 import { BaseLLM, BaseLLMParams } from "@langchain/core/language_models/llms";
-import { WatsonXAI } from "@ibm-cloud/watsonx-ai";
+import { Stream, WatsonXAI } from "@ibm-cloud/watsonx-ai";
 import {
   RequestCallbacks,
   ReturnOptionProperties,
@@ -17,23 +17,35 @@ import {
 } from "@langchain/core/outputs";
 import { BaseLanguageModelCallOptions } from "@langchain/core/language_models/base";
 import { AsyncCaller } from "@langchain/core/utils/async_caller";
-import { authenticateAndSetInstance } from "../utils/ibm.js";
+import {
+  CreateCompletionsParams,
+  Gateway,
+  TextCompletionStream,
+} from "@ibm-cloud/watsonx-ai/gateway";
+import {
+  authenticateAndSetGatewayInstance,
+  authenticateAndSetInstance,
+  checkValidProps,
+  expectOneOf,
+} from "../utils/ibm.js";
 import {
   GenerationInfo,
-  Neverify,
   ResponseChunk,
   TokenUsage,
   WatsonxAuth,
-  WatsonxDeployedParams,
-  WatsonxParams,
+  WatsonxInit,
+  WatsonxLLMBasicOptions,
+  XOR,
 } from "../types/ibm.js";
 
 /**
  * Input to LLM class.
  */
 
+/** Parameters for basic llm invoke */
 export interface WatsonxLLMParams {
   maxNewTokens?: number;
+  maxTokens?: number;
   decodingMethod?: TextGenParameters.Constants.DecodingMethod | string;
   lengthPenalty?: TextGenLengthPenalty;
   minNewTokens?: number;
@@ -47,35 +59,65 @@ export interface WatsonxLLMParams {
   truncateInpuTokens?: number;
   returnOptions?: ReturnOptionProperties;
   includeStopSequence?: boolean;
+  headers?: Record<string, any>;
+  signal?: AbortSignal;
 }
-
+/** Parameters for basic llm invoke */
 export interface WatsonxDeploymentLLMParams {
   idOrName: string;
 }
+/** Gateway parameters */
 
-export interface WatsonxCallOptionsLLM extends BaseLanguageModelCallOptions {
+interface WatsonxLLMGatewayKwargs
+  extends Omit<
+    CreateCompletionsParams,
+    keyof WatsonxLLMParams | "model" | "stream" | "prompt" | "maxTokens"
+  > {}
+
+export interface WatsonxLLMGatewayParams
+  extends WatsonxInit,
+    Omit<
+      CreateCompletionsParams,
+      keyof WatsonxLLMGatewayKwargs | "stream" | "prompt"
+    > {
+  /** Additional parameters usable only in model gateway */
+  modelGatewayKwargs?: WatsonxLLMGatewayKwargs;
+  modelGateway: boolean;
+}
+
+/** Call interface for second parameter of inbuild methods */
+export interface WatsonxCallOptionsLLM
+  extends BaseLanguageModelCallOptions,
+    Partial<WatsonxInit> {
   maxRetries?: number;
-  parameters?: Partial<WatsonxLLMParams>;
+  parameters?: XOR<Partial<WatsonxLLMParams>, Partial<WatsonxLLMGatewayParams>>;
   watsonxCallbacks?: RequestCallbacks;
 }
 
-export interface WatsonxInputLLM
-  extends WatsonxParams,
-    BaseLLMParams,
-    WatsonxLLMParams,
-    Neverify<WatsonxDeploymentLLMParams> {}
+/** Constructor input interfaces for each mode */
 
-export interface WatsonxDeployedInputLLM
-  extends WatsonxDeployedParams,
-    BaseLLMParams,
-    Neverify<WatsonxLLMParams> {
-  model?: never;
+export interface WatsonxInputLLM
+  extends WatsonxLLMBasicOptions,
+    WatsonxLLMParams {
+  model: string;
+  spaceId?: string;
+  projectId?: string;
 }
 
-export type WatsonxLLMConstructor = BaseLLMParams &
-  WatsonxLLMParams &
-  Partial<WatsonxParams> &
-  WatsonxDeployedParams;
+export interface WatsonxDeployedInputLLM
+  extends WatsonxLLMBasicOptions,
+    WatsonxDeploymentLLMParams {}
+
+export interface WatsonxGatewayInputLLM
+  extends WatsonxLLMBasicOptions,
+    WatsonxLLMGatewayParams {}
+
+// Combined input for chat excluding each mode to not be present at the same time
+export type WatsonxLLMConstructor = XOR<
+  XOR<WatsonxInputLLM, WatsonxDeployedInputLLM>,
+  WatsonxGatewayInputLLM
+> &
+  WatsonxAuth;
 
 /**
  * Integration with an LLM.
@@ -84,11 +126,11 @@ export class WatsonxLLM<
     CallOptions extends WatsonxCallOptionsLLM = WatsonxCallOptionsLLM
   >
   extends BaseLLM<CallOptions>
-  implements WatsonxLLMConstructor
+  implements BaseLLMParams
 {
   // Used for tracing, replace with the same name as your class
   static lc_name() {
-    return "Watsonx";
+    return "WatsonxLLM";
   }
 
   lc_serializable = true;
@@ -103,6 +145,8 @@ export class WatsonxLLM<
 
   serviceUrl: string;
 
+  maxTokens?: number;
+
   maxNewTokens?: number;
 
   spaceId?: string;
@@ -111,7 +155,9 @@ export class WatsonxLLM<
 
   idOrName?: string;
 
-  decodingMethod?: TextGenParameters.Constants.DecodingMethod | string;
+  decodingMethod?:
+    | WatsonXAI.TextGenParameters.Constants.DecodingMethod
+    | string;
 
   lengthPenalty?: TextGenLengthPenalty;
 
@@ -141,50 +187,138 @@ export class WatsonxLLM<
 
   watsonxCallbacks?: RequestCallbacks;
 
-  private service: WatsonXAI;
+  modelGateway = false;
 
-  constructor(
-    fields: (WatsonxInputLLM | WatsonxDeployedInputLLM) & WatsonxAuth
+  modelGatewayKwargs: WatsonxLLMGatewayKwargs = {};
+
+  protected service?: WatsonXAI;
+
+  protected gateway?: Gateway;
+
+  private checkValidProperties(
+    fields:
+      | WatsonxLLMConstructor
+      | XOR<Partial<WatsonxLLMParams>, Partial<WatsonxLLMGatewayParams>>,
+    includeCommonProps = true
   ) {
-    super(fields);
+    const authProps = [
+      "serviceUrl",
+      "watsonxAIApikey",
+      "watsonxAIBearerToken",
+      "watsonxAIUsername",
+      "watsonxAIPassword",
+      "watsonxAIUrl",
+      "watsonxAIAuthType",
+      "disableSSL",
+    ];
 
-    if (fields.model) {
-      this.model = fields.model ?? this.model;
-      this.version = fields.version;
-      this.maxNewTokens = fields.maxNewTokens ?? this.maxNewTokens;
-      this.serviceUrl = fields.serviceUrl;
-      this.decodingMethod = fields.decodingMethod;
-      this.lengthPenalty = fields.lengthPenalty;
-      this.minNewTokens = fields.minNewTokens;
-      this.randomSeed = fields.randomSeed;
-      this.stopSequence = fields.stopSequence;
-      this.temperature = fields.temperature;
-      this.timeLimit = fields.timeLimit;
-      this.topK = fields.topK;
-      this.topP = fields.topP;
-      this.repetitionPenalty = fields.repetitionPenalty;
-      this.truncateInpuTokens = fields.truncateInpuTokens;
-      this.returnOptions = fields.returnOptions;
-      this.includeStopSequence = fields.includeStopSequence;
-      this.projectId = fields?.projectId;
-      this.spaceId = fields?.spaceId;
-    } else {
-      this.idOrName = fields?.idOrName;
+    const sharedProps = [
+      "maxRetries",
+      "watsonxCallbacks",
+      "authenticator",
+      "serviceUrl",
+      "version",
+      "streaming",
+      "callbackManager",
+      "callbacks",
+      "maxConcurrency",
+      "cache",
+      "metadata",
+      "concurrency",
+      "onFailedAttempt",
+      "concurrency",
+      "verbose",
+      "tags",
+    ];
+
+    const gatewayProps = [
+      "temperature",
+      "topP",
+      "model",
+      "modelGatewayKwargs",
+      "modelGateway",
+      "verbose",
+      "tags",
+      "maxTokens",
+    ];
+
+    const deploymentProps = ["idOrName"];
+
+    const projectOrSpaceProps = [
+      "spaceId",
+      "projectId",
+      "temperature",
+      "topP",
+      "timeLimit",
+      "model",
+      "maxNewTokens",
+      "decodingMethod",
+      "lengthPenalty",
+      "minNewTokens",
+      "randomSeed",
+      "stopSequence",
+      "topK",
+      "repetitionPenalty",
+      "truncateInpuTokens",
+      "returnOptions",
+      "includeStopSequence",
+    ];
+
+    const validProps: string[] = [];
+    if (includeCommonProps) validProps.push(...authProps, ...sharedProps);
+
+    if (this.modelGateway) {
+      validProps.push(...gatewayProps);
+    } else if (this.idOrName) {
+      validProps.push(...deploymentProps);
+    } else if (this.spaceId || this.projectId) {
+      validProps.push(...projectOrSpaceProps);
     }
+    checkValidProps(fields, validProps);
+  }
+
+  constructor(fields: WatsonxLLMConstructor) {
+    super(fields);
+    expectOneOf(
+      fields,
+      ["spaceId", "projectId", "idOrName", "modelGateway"],
+      true
+    );
+    this.idOrName = fields?.idOrName;
+    this.projectId = fields?.projectId;
+    this.modelGateway = fields.modelGateway || this.modelGateway;
+    this.spaceId = fields?.spaceId;
+
+    this.checkValidProperties(fields);
+
+    this.model = fields.model ?? this.model;
+    this.serviceUrl = fields.serviceUrl;
+    this.version = fields.version;
+
+    this.topP = fields.topP;
+    this.temperature = fields.temperature;
+    this.maxNewTokens = fields.maxNewTokens ?? fields.maxTokens;
+    this.decodingMethod = fields.decodingMethod;
+    this.lengthPenalty = fields.lengthPenalty;
+    this.minNewTokens = fields.minNewTokens;
+    this.maxTokens = fields.maxTokens;
+    this.randomSeed = fields.randomSeed;
+    this.stopSequence = fields.stopSequence;
+    this.timeLimit = fields.timeLimit;
+    this.topK = fields.topK;
+    this.repetitionPenalty = fields.repetitionPenalty;
+    this.truncateInpuTokens = fields.truncateInpuTokens;
+    this.returnOptions = fields.returnOptions;
+    this.includeStopSequence = fields.includeStopSequence;
+
+    this.modelGatewayKwargs =
+      fields.modelGatewayKwargs || this.modelGatewayKwargs;
 
     this.maxRetries = fields.maxRetries || this.maxRetries;
     this.maxConcurrency = fields.maxConcurrency;
     this.streaming = fields.streaming || this.streaming;
     this.watsonxCallbacks = fields.watsonxCallbacks || this.watsonxCallbacks;
 
-    if (
-      ("projectId" in fields && "spaceId" in fields) ||
-      ("projectId" in fields && "idOrName" in fields) ||
-      ("spaceId" in fields && "idOrName" in fields)
-    )
-      throw new Error("Maximum 1 id type can be specified per instance");
-
-    this.serviceUrl = fields?.serviceUrl;
     const {
       watsonxAIApikey,
       watsonxAIAuthType,
@@ -197,7 +331,7 @@ export class WatsonxLLM<
       serviceUrl,
     } = fields;
 
-    const auth = authenticateAndSetInstance({
+    const authData = {
       watsonxAIApikey,
       watsonxAIAuthType,
       watsonxAIBearerToken,
@@ -207,9 +341,19 @@ export class WatsonxLLM<
       disableSSL,
       version,
       serviceUrl,
-    });
-    if (auth) this.service = auth;
-    else throw new Error("You have not provided one type of authentication");
+    };
+
+    if (this.modelGateway) {
+      const gateway = authenticateAndSetGatewayInstance(authData);
+
+      if (gateway) this.gateway = gateway;
+      else throw new Error("You have not provided any type of authentication");
+    } else {
+      const service = authenticateAndSetInstance(authData);
+
+      if (service) this.service = service;
+      else throw new Error("You have not provided any type of authentication");
+    }
   }
 
   get lc_secrets(): { [key: string]: string } {
@@ -242,21 +386,38 @@ export class WatsonxLLM<
 
   invocationParams(options: this["ParsedCallOptions"]) {
     const { parameters } = options;
-    const { signal, ...rest } = options;
+    const { signal, maxRetries, maxConcurrency, timeout, ...rest } = options;
+    if (parameters) this.checkValidProperties(parameters, false);
     if (this.idOrName && Object.keys(rest).length > 0)
       throw new Error("Options cannot be provided to a deployed model");
     if (this.idOrName) return undefined;
+
+    if (this.modelGateway) {
+      return {
+        stop: options?.stop ?? this.stopSequence,
+        temperature: parameters?.temperature ?? this.temperature,
+        topP: parameters?.topP ?? this.topP,
+        maxTokens: parameters?.maxTokens ?? this.maxTokens,
+        ...this?.modelGatewayKwargs,
+        ...parameters?.modelGatewayKwargs,
+      };
+    }
+
     return {
-      max_new_tokens: parameters?.maxNewTokens ?? this.maxNewTokens,
+      stop_sequences: options?.stop ?? this.stopSequence,
+      temperature: parameters?.temperature ?? this.temperature,
+      top_p: parameters?.topP ?? this.topP,
+      max_new_tokens:
+        parameters?.maxNewTokens ??
+        this.maxNewTokens ??
+        parameters?.maxTokens ??
+        this.maxTokens,
       decoding_method: parameters?.decodingMethod ?? this.decodingMethod,
       length_penalty: parameters?.lengthPenalty ?? this.lengthPenalty,
       min_new_tokens: parameters?.minNewTokens ?? this.minNewTokens,
       random_seed: parameters?.randomSeed ?? this.randomSeed,
-      stop_sequences: options?.stop ?? this.stopSequence,
-      temperature: parameters?.temperature ?? this.temperature,
-      time_limit: parameters?.timeLimit ?? this.timeLimit,
+      time_limit: parameters?.timeLimit ?? this.timeLimit ?? timeout,
       top_k: parameters?.topK ?? this.topK,
-      top_p: parameters?.topP ?? this.topP,
       repetition_penalty:
         parameters?.repetitionPenalty ?? this.repetitionPenalty,
       truncate_input_tokens:
@@ -278,17 +439,26 @@ export class WatsonxLLM<
       return { spaceId: this.spaceId, modelId: this.model };
     else if (this.idOrName)
       return { idOrName: this.idOrName, modelId: this.model };
-    else return { modelId: this.model };
+    else if (this.modelGateway) return { modelId: this.model };
+    else
+      throw new Error(
+        "Invalid mode type. Please make sure you have provided correct parameters"
+      );
   }
 
   async listModels() {
-    const listModelParams = {
-      filters: "function_text_generation",
-    };
-    const listModels = await this.completionWithRetry(() =>
-      this.service.listFoundationModelSpecs(listModelParams)
-    );
-    return listModels.result.resources?.map((item) => item.model_id);
+    if (this.service) {
+      const { service } = this;
+      const listModelParams = {
+        filters: "function_text_generation",
+      };
+      const listModels = await this.completionWithRetry(() =>
+        service.listFoundationModelSpecs(listModelParams)
+      );
+      return listModels.result.resources?.map((item) => item.model_id);
+    } else {
+      throw new Error("This method is not supported in this model gateway");
+    }
   }
 
   private async generateSingleMessage(
@@ -296,7 +466,8 @@ export class WatsonxLLM<
     options: this["ParsedCallOptions"],
     stream: true
   ): Promise<
-    AsyncIterable<WatsonXAI.ObjectStreamed<WatsonXAI.TextGenResponse>>
+    | Stream<WatsonXAI.ObjectStreamed<WatsonXAI.TextGenResponse>>
+    | Stream<TextCompletionStream>
   >;
 
   private async generateSingleMessage(
@@ -318,14 +489,14 @@ export class WatsonxLLM<
       timeout,
       ...requestOptions
     } = options;
-    const tokenUsage = { generated_token_count: 0, input_token_count: 0 };
-    const idOrName = this.idOrName;
     const parameters = this.invocationParams(options);
     const watsonxCallbacks = this.invocationCallbacks(options);
+
     if (stream) {
-      const textStream = idOrName
-        ? this.service.deploymentGenerateTextStream({
-            idOrName,
+      if (this.service) {
+        if (this.idOrName) {
+          return await this.service.deploymentGenerateTextStream({
+            idOrName: this.idOrName,
             ...requestOptions,
             parameters: {
               ...parameters,
@@ -334,66 +505,104 @@ export class WatsonxLLM<
               },
             },
             returnObject: true,
-          })
-        : this.service.generateTextStream(
+            signal,
+          });
+        } else {
+          return await this.service.generateTextStream(
             {
               input,
               parameters,
               ...this.scopeId(),
               ...requestOptions,
               returnObject: true,
+              signal,
             },
             watsonxCallbacks
           );
-      return (await textStream) as AsyncIterable<
-        WatsonXAI.ObjectStreamed<WatsonXAI.TextGenResponse>
-      >;
-    } else {
-      const textGenerationPromise = idOrName
-        ? this.service.deploymentGenerateText(
-            {
-              ...requestOptions,
-              idOrName,
-              parameters: {
-                ...parameters,
-                prompt_variables: {
-                  input,
-                },
-              },
-            },
-            watsonxCallbacks
-          )
-        : this.service.generateText(
-            {
-              input,
-              parameters,
-              ...this.scopeId(),
-              ...requestOptions,
-            },
-            watsonxCallbacks
-          );
-
-      const textGeneration = await textGenerationPromise;
-      const singleGeneration: Generation[] = textGeneration.result.results.map(
-        (result) => {
-          tokenUsage.generated_token_count += result.generated_token_count
-            ? result.generated_token_count
-            : 0;
-          tokenUsage.input_token_count += result.input_token_count
-            ? result.input_token_count
-            : 0;
-          return {
-            text: result.generated_text,
-            generationInfo: {
-              stop_reason: result.stop_reason,
-              input_token_count: result.input_token_count,
-              generated_token_count: result.generated_token_count,
-            },
-          };
         }
-      );
-      return singleGeneration;
+      } else if (this.gateway) {
+        return await this.gateway.completion.create({
+          ...parameters,
+          model: this.model,
+          prompt: input,
+          stream: true,
+          signal,
+        });
+      }
+    } else {
+      if (this.service) {
+        const tokenUsage = { generated_token_count: 0, input_token_count: 0 };
+
+        const textGenerationPromise = this.idOrName
+          ? this.service.deploymentGenerateText(
+              {
+                ...requestOptions,
+                idOrName: this.idOrName,
+                parameters: {
+                  ...parameters,
+                  prompt_variables: {
+                    input,
+                  },
+                },
+                signal,
+              },
+              watsonxCallbacks
+            )
+          : this.service.generateText(
+              {
+                input,
+                parameters,
+                ...this.scopeId(),
+                ...requestOptions,
+                signal,
+              },
+              watsonxCallbacks
+            );
+
+        const textGeneration = await textGenerationPromise;
+        const singleGeneration: Generation[] =
+          textGeneration.result.results.map((result) => {
+            tokenUsage.generated_token_count += result.generated_token_count
+              ? result.generated_token_count
+              : 0;
+            tokenUsage.input_token_count += result.input_token_count
+              ? result.input_token_count
+              : 0;
+            return {
+              text: result.generated_text,
+              generationInfo: {
+                stop_reason: result.stop_reason,
+                input_token_count: result.input_token_count,
+                generated_token_count: result.generated_token_count,
+              },
+            };
+          });
+        return singleGeneration;
+      } else if (this.gateway) {
+        const textGeneration = await this.gateway.completion.create({
+          ...parameters,
+          prompt: input,
+          model: this.model,
+          signal,
+        });
+        const tokenUsage = textGeneration.result.usage;
+        const singleGeneration: Generation[] =
+          textGeneration.result.choices.map((choice) => {
+            return {
+              text: choice.text ?? "",
+              generationInfo: {
+                stop_reason: choice.finish_reason,
+                input_token_count: tokenUsage?.prompt_tokens,
+                generated_token_count: tokenUsage?.completion_tokens,
+              },
+            };
+          });
+        return singleGeneration;
+      }
     }
+    throw new Error(
+      "No service or gateway set. Please check your intsance init"
+    );
   }
 
   async completionWithRetry<T>(
@@ -514,16 +723,19 @@ export class WatsonxLLM<
     content: string,
     options?: TextTokenizeParameters
   ): Promise<number> {
-    const params: TextTokenizationParams = {
-      ...this.scopeId(),
-      input: content,
-      parameters: options,
-    };
-    const callback = () => this.service.tokenizeText(params);
-    type ReturnTokens = ReturnType<typeof callback>;
+    if (this.service) {
+      const { service } = this;
+      const params: TextTokenizationParams = {
+        ...this.scopeId(),
+        input: content,
+        parameters: options,
+      };
+      const callback = () => service.tokenizeText(params);
+      type ReturnTokens = ReturnType<typeof callback>;
 
-    const response = await this.completionWithRetry<ReturnTokens>(callback);
-    return response.result.result.token_count;
+      const response = await this.completionWithRetry<ReturnTokens>(callback);
+      return response.result.result.token_count;
+    } else throw new Error("This method is not supported in model gateway");
   }
 
   async *_streamResponseChunks(
@@ -547,21 +759,43 @@ export class WatsonxLLM<
         throw new Error("AbortError");
       }
 
-      for (const [index, item] of chunk.data.results.entries()) {
-        yield new GenerationChunk({
-          text: item.generated_text,
-          generationInfo: {
-            stop_reason: item.stop_reason,
-            completion: index,
-            usage_metadata: {
-              generated_token_count: item.generated_token_count,
-              input_token_count: item.input_token_count,
-              stop_reason: item.stop_reason,
-            },
-          },
-        });
+      const results =
+        "model_id" in chunk.data
+          ? chunk.data.results.entries()
+          : chunk.data.choices.entries();
+      const usage = "usage" in chunk.data ? chunk.data.usage : {};
+      for (const [index, item] of results) {
+        const params =
+          "generated_text" in item
+            ? {
+                text: item.generated_text,
+                generationInfo: {
+                  stop_reason: item.stop_reason,
+                  completion: index,
+                  usage_metadata: {
+                    generated_token_count: item.generated_token_count,
+                    input_token_count: item.input_token_count,
+                    stop_reason: item.stop_reason,
+                  },
+                },
+              }
+            : {
+                text: item.text ?? "",
+                generationInfo: {
+                  stop_reason: item.finish_reason,
+                  completion: index,
+                  usage_metadata: {
+                    generated_token_count: usage?.completion_tokens,
+                    input_token_count: usage?.prompt_tokens,
+                    stop_reason: item.finish_reason,
+                  },
+                },
+              };
+        yield new GenerationChunk(params);
         if (!this.streaming)
-          void runManager?.handleLLMNewToken(item.generated_text);
+          void runManager?.handleLLMNewToken(
+            "generated_text" in item ? item.generated_text : item.text ?? ""
+          );
       }
       Object.assign(responseChunk, { id: 0, event: "", data: {} });
     }
