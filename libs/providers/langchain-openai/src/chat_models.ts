@@ -2636,7 +2636,9 @@ export interface ChatOpenAIFields extends BaseChatOpenAIFields {
  *   timeout: undefined,
  *   maxRetries: 2,
  *   // apiKey: "...",
- *   // baseUrl: "...",
+ *   // configuration: {
+ *   //   baseURL: "...",
+ *   // }
  *   // organization: "...",
  *   // other params...
  * });
