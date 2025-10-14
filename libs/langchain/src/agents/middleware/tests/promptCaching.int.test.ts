@@ -14,6 +14,16 @@ import {
 import { createAgent } from "../../index.js";
 
 /**
+ * Cast the promptCachingMiddleware to `any` to avoid the following error:
+ * > Type instantiation is excessively deep and possibly infinite.
+ *
+ * This is because the actual `promptCachingMiddleware` is implemented within
+ * the `@langchain/anthropic` package and tesed in here. To avoid circular dependencies,
+ * we have to run the unit and integration tests here as we need `createAgent`.
+ */
+const anthropicPromptCachingMiddleware = promptCachingMiddleware as any;
+
+/**
  * Mock the Anthropic module to return a ChatAnthropicMock instance
  */
 vi.mock("@langchain/anthropic", async (origModule) => {
@@ -107,7 +117,7 @@ describe("promptCachingMiddleware", () => {
       tools: [simpleTool],
       systemPrompt: "You are a geography expert.",
       middleware: [
-        promptCachingMiddleware({
+        anthropicPromptCachingMiddleware({
           ttl: "5m",
           minMessagesToCache: 1,
         }),
@@ -168,7 +178,7 @@ describe("promptCachingMiddleware", () => {
       tools: [simpleTool],
       systemPrompt: "You are a geography expert.",
       middleware: [
-        promptCachingMiddleware({
+        anthropicPromptCachingMiddleware({
           ttl: "5m",
           minMessagesToCache: 1,
         }),
