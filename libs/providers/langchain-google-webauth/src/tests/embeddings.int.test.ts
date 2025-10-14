@@ -1,4 +1,4 @@
-import { test, expect } from "@jest/globals";
+import { describe, test, expect } from "vitest";
 import { GooglePlatformType } from "@langchain/google-common";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import { GoogleEmbeddings, GoogleEmbeddingsInput } from "../embeddings.js";

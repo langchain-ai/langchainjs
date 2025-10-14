@@ -1,6 +1,6 @@
 import { StructuredTool, tool } from "@langchain/core/tools";
 import { z } from "zod/v3";
-import { afterEach, expect, jest, test } from "@jest/globals";
+import { afterEach, beforeEach, describe, expect, vi, test } from "vitest";
 import {
   AIMessage,
   AIMessageChunk,
@@ -37,7 +37,7 @@ import {
 } from "@langchain/core/prompts";
 import { ChatGoogle, ChatGoogleInput } from "../chat_models.js";
 import { BlobStoreAIStudioFile } from "../media.js";
-import MockedFunction = jest.MockedFunction;
+import MockedFunction = vi.MockedFunction;
 
 function propSum(o: Record<string, number>): number {
   if (typeof o !== "object") {
@@ -45,7 +45,7 @@ function propSum(o: Record<string, number>): number {
   }
   return Object.keys(o)
     .map((key) => o[key])
-    .reduce((acc, val) => acc + val);
+    .reduce((acc, val) => acc + val, 0);
 }
 
 const weatherToolSchema = z.object({
@@ -69,13 +69,11 @@ class WeatherTool extends StructuredTool {
 }
 
 const apiKeyModelNames = [
-  ["gemini-1.5-pro-002"],
-  ["gemini-1.5-flash-002"],
   ["gemini-2.0-flash-001"],
   ["gemini-2.0-flash-lite-001"],
+  ["gemini-2.5-flash-lite"], // GA
   ["gemini-2.5-flash"], // GA
   ["gemini-2.5-pro"], // GA
-  ["gemini-2.5-flash-lite-preview-06-17"],
   ["gemma-3-27b-it"],
   ["gemma-3n-e4b-it"],
 ];
@@ -446,18 +444,6 @@ const calculatorTool = tool((_) => "no-op", {
  */
 const testGeminiModelNames = [
   {
-    modelName: "gemini-1.5-pro-002",
-    platformType: "gai",
-    apiVersion: "v1beta",
-  },
-  { modelName: "gemini-1.5-pro-002", platformType: "gcp", apiVersion: "v1" },
-  {
-    modelName: "gemini-1.5-flash-002",
-    platformType: "gai",
-    apiVersion: "v1beta",
-  },
-  { modelName: "gemini-1.5-flash-002", platformType: "gcp", apiVersion: "v1" },
-  {
     modelName: "gemini-2.0-flash-001",
     platformType: "gai",
     apiVersion: "v1beta",
@@ -547,7 +533,7 @@ describe.each(testGeminiModelNames)(
     }
 
     beforeEach(async () => {
-      warnSpy = jest.spyOn(global.console, "warn");
+      warnSpy = vi.spyOn(global.console, "warn");
       const delay = testGeminiModelDelay[modelName] ?? 0;
       if (delay) {
         await new Promise((resolve) => setTimeout(resolve, delay));
@@ -726,7 +712,7 @@ describe.each(testGeminiModelNames)(
         tools,
         temperature: 0.1,
       });
-      const history = [new HumanMessage("What is the weather in New York?")];
+      const history: BaseMessage[] = [new HumanMessage("What is the weather in New York?")];
       const result1 = await model.invoke(history);
       history.push(result1);
 
@@ -767,26 +753,19 @@ describe.each(testGeminiModelNames)(
         testPassed: true,
       };
       const messages: BaseMessageLike[] = [
-        new HumanMessage("Run a test on the cobalt project."),
-        new AIMessage({
-          tool_calls: [
-            {
-              id: "test",
-              type: "function",
-              function: {
-                name: "test",
-                arguments: '{"testName":"cobalt"}',
-              },
-            },
-          ],
-        }),
-        new ToolMessage(JSON.stringify(toolResult), "test"),
+        new HumanMessage("Run a test named cobalt."),
       ];
+      const res1 = await model.invoke(messages);
+      messages.push(res1);
+      messages.push(
+        new ToolMessage(JSON.stringify(toolResult), "test")
+      );
       const res = await model.stream(messages);
       const resArray: BaseMessageChunk[] = [];
       for await (const chunk of res) {
         resArray.push(chunk);
       }
+      expect(resArray.length).toBeGreaterThan(1);
     });
 
     test("withStructuredOutput", async () => {
@@ -1665,7 +1644,7 @@ describe.each(testReasoningModelNames)(
     }
 
     beforeEach(async () => {
-      warnSpy = jest.spyOn(global.console, "warn");
+      warnSpy = vi.spyOn(global.console, "warn");
       const delay = testGeminiModelDelay[modelName] ?? 0;
       if (delay) {
         await new Promise((resolve) => setTimeout(resolve, delay));
