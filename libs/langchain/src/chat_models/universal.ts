@@ -227,9 +227,9 @@ export function _inferModelProvider(model: string): string | undefined {
     return "google-vertexai";
   } else if (model.startsWith("amazon.")) {
     return "bedrock";
-  } else if (modelName.startsWith("mistral")) {
+  } else if (model.startsWith("mistral")) {
     return "mistralai";
-  } else if (modelName.startsWith("sonar") || modelName.startsWith("pplx")) {
+  } else if (model.startsWith("sonar") || model.startsWith("pplx")) {
     return "perplexity";
   } else {
     return undefined;
