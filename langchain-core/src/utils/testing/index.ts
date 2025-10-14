@@ -493,12 +493,28 @@ export class FakeListChatModel extends BaseChatModel<FakeListChatModelCallOption
 
   emitCustomEvent = false;
 
+  private tools: (StructuredTool | ToolSpec)[] = [];
+
   constructor(params: FakeChatInput) {
     super(params);
     const { responses, sleep, emitCustomEvent } = params;
     this.responses = responses;
     this.sleep = sleep;
     this.emitCustomEvent = emitCustomEvent ?? this.emitCustomEvent;
+  }
+
+  bindTools(tools: (StructuredTool | ToolSpec)[]) {
+    const merged = [...this.tools, ...tools];
+    
+    /* creating a *new* instance – mirrors LangChain .bind semantics for type-safety and avoiding noise */
+    const next = new FakeListChatModel({
+      responses: this.responses,
+      sleep: this.sleep,
+      emitCustomEvent: this.emitCustomEvent,
+    });
+    next.tools = merged;
+
+    return next.withConfig({ tools: merged } as BaseChatModelCallOptions);
   }
 
   _combineLLMOutput() {
