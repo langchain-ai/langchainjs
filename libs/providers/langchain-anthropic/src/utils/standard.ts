@@ -79,7 +79,16 @@ function _formatStandardCitations(
 }
 
 function _formatBase64Data(data: string | Uint8Array): string {
-  return typeof data === "string" ? data : Buffer.from(data).toString("base64");
+  if (typeof data === "string") return data;
+  else return _encodeUint8Array(data);
+}
+
+function _encodeUint8Array(data: Uint8Array): string {
+  const output = [];
+  for (let i = 0, { length } = data; i < length; i++) {
+    output.push(String.fromCharCode(data[i]));
+  }
+  return btoa(output.join(""));
 }
 
 function _normalizeMimeType(mimeType?: string | null): string {
