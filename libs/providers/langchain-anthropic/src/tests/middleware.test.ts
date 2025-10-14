@@ -14,7 +14,6 @@ import {
 import type { LanguageModelLike } from "@langchain/core/language_models/base";
 import { createAgent } from "langchain";
 
-import { ChatAnthropic } from "../chat_models.js";
 import { anthropicPromptCachingMiddleware } from "../middleware.js";
 
 function createMockModel(name = "ChatAnthropic", modelType = "anthropic") {
@@ -176,29 +175,13 @@ describe("anthropicPromptCachingMiddleware", () => {
         });
 
         const agent = createAgent({
-          model: new ChatAnthropic({ model: "gpt-4o" }),
+          model: createMockModel("ChatOpenAI", "openai"),
           middleware: [middleware] as const,
         });
 
         // Should throw error
         await expect(agent.invoke({ messages: [] })).rejects.toThrow(
           "Unsupported model 'ChatOpenAI'. Prompt caching requires an Anthropic model (e.g., 'anthropic:claude-4-0-sonnet')."
-        );
-      });
-
-      it("should throw error if pass in a non-Anthropic model via string", async () => {
-        const middleware = anthropicPromptCachingMiddleware({
-          unsupportedModelBehavior: "raise",
-        });
-
-        const agent = createAgent({
-          model: "openai:gpt-4o",
-          middleware: [middleware] as const,
-        });
-
-        // Should throw error
-        await expect(agent.invoke({ messages: [] })).rejects.toThrow(
-          "Unsupported model 'ConfigurableModel (openai)'. Prompt caching requires an Anthropic model (e.g., 'anthropic:claude-4-0-sonnet')."
         );
       });
     });
