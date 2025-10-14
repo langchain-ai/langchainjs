@@ -96,6 +96,18 @@ export class AIMessage<TStructure extends MessageStructure = MessageStructure>
         initParams.tool_calls = [];
         initParams.invalid_tool_calls = [];
       }
+
+      // Convert content to content blocks if output version is v1
+      if (
+        initParams.response_metadata !== undefined &&
+        "output_version" in initParams.response_metadata &&
+        initParams.response_metadata.output_version === "v1"
+      ) {
+        initParams.contentBlocks =
+          initParams.content as Array<ContentBlock.Standard>;
+        initParams.content = undefined;
+      }
+
       if (initParams.contentBlocks !== undefined) {
         // Add constructor tool calls as content blocks
         initParams.contentBlocks.push(

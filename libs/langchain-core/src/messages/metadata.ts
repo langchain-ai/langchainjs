@@ -1,8 +1,10 @@
 import { _mergeDicts } from "./base.js";
+import type { MessageOutputVersion } from "./message.js";
 
 export type ResponseMetadata = {
   model_provider?: string;
   model_name?: string;
+  output_version?: MessageOutputVersion;
   [key: string]: unknown;
 };
 

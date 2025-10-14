@@ -28,6 +28,44 @@ describe("AIMessage", () => {
     ]);
   });
 
+  it("should contain tool call content blocks when output version is v1", () => {
+    const message = new AIMessage({
+      content: [
+        {
+          type: "tool_call",
+          id: "123",
+          name: "get_weather",
+          args: {
+            location: "San Francisco",
+          },
+        },
+      ],
+      response_metadata: {
+        output_version: "v1",
+      },
+    });
+    expect(message.contentBlocks).toEqual([
+      {
+        type: "tool_call",
+        id: "123",
+        name: "get_weather",
+        args: {
+          location: "San Francisco",
+        },
+      },
+    ]);
+    expect(message.tool_calls).toEqual([
+      {
+        type: "tool_call",
+        id: "123",
+        name: "get_weather",
+        args: {
+          location: "San Francisco",
+        },
+      },
+    ]);
+  });
+
   describe(".contentBlocks", () => {
     it("should have tool call content blocks from .tool_calls", () => {
       const message = new AIMessage({
