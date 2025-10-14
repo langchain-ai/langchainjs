@@ -481,6 +481,11 @@ export abstract class Runnable<
     return outputs;
   }
 
+  /** @internal */
+  _concatOutputChunks<O>(first: O, second: O): O {
+    return concat(first, second);
+  }
+
   /**
    * Helper method to transform an Iterator of Input values into an Iterator of
    * Output values, with callbacks.
@@ -505,6 +510,7 @@ export abstract class Runnable<
 
     const config = ensureConfig(options);
     const callbackManager_ = await getCallbackManagerForConfig(config);
+    const outerThis = this;
     async function* wrapInputForTracing() {
       for await (const chunk of inputGenerator) {
         if (finalInputSupported) {
@@ -512,8 +518,11 @@ export abstract class Runnable<
             finalInput = chunk;
           } else {
             try {
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              finalInput = concat(finalInput, chunk as any);
+              finalInput = outerThis._concatOutputChunks(
+                finalInput,
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                chunk as any
+              );
             } catch {
               finalInput = undefined;
               finalInputSupported = false;
@@ -571,8 +580,11 @@ export abstract class Runnable<
             finalOutput = chunk;
           } else {
             try {
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              finalOutput = concat(finalOutput, chunk as any);
+              finalOutput = this._concatOutputChunks(
+                finalOutput,
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                chunk as any
+              );
             } catch {
               finalOutput = undefined;
               finalOutputSupported = false;
@@ -675,7 +687,7 @@ export abstract class Runnable<
         // Make a best effort to gather, for any type that supports concat.
         // This method should throw an error if gathering fails.
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        finalChunk = concat(finalChunk, chunk as any);
+        finalChunk = this._concatOutputChunks(finalChunk, chunk as any);
       }
     }
     yield* this._streamIterator(finalChunk, ensureConfig(options));
@@ -1413,6 +1425,11 @@ export class RunnableBinding<
     return this.bound.batch(inputs, mergedOptions, batchOptions);
   }
 
+  /** @internal */
+  override _concatOutputChunks<O>(first: O, second: O): O {
+    return this.bound._concatOutputChunks(first, second);
+  }
+
   async *_streamIterator(
     input: RunInput,
     options?: Partial<CallOptions> | undefined
@@ -2042,6 +2059,11 @@ export class RunnableSequence<
     return nextStepInputs;
   }
 
+  /** @internal */
+  override _concatOutputChunks<O>(first: O, second: O): O {
+    return this.last._concatOutputChunks(first, second);
+  }
+
   async *_streamIterator(
     input: RunInput,
     options?: RunnableConfig
@@ -2092,7 +2114,7 @@ export class RunnableSequence<
           } else {
             try {
               // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              finalOutput = concat(finalOutput, chunk as any);
+              finalOutput = this._concatOutputChunks(finalOutput, chunk as any);
             } catch {
               finalOutput = undefined;
               concatSupported = false;
@@ -2626,8 +2648,11 @@ export class RunnableLambda<
                 } else {
                   // Make a best effort to gather, for any type that supports concat.
                   try {
-                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                    finalOutput = concat(finalOutput, chunk as any);
+                    finalOutput = this._concatOutputChunks(
+                      finalOutput,
+                      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                      chunk as any
+                    );
                   } catch {
                     finalOutput = chunk as RunOutput;
                   }
@@ -2646,8 +2671,11 @@ export class RunnableLambda<
                 } else {
                   // Make a best effort to gather, for any type that supports concat.
                   try {
-                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                    finalOutput = concat(finalOutput, chunk as any);
+                    finalOutput = this._concatOutputChunks(
+                      finalOutput,
+                      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                      chunk as any
+                    );
                   } catch {
                     finalOutput = chunk as RunOutput;
                   }
@@ -2684,7 +2712,7 @@ export class RunnableLambda<
         // Make a best effort to gather, for any type that supports concat.
         try {
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          finalChunk = concat(finalChunk, chunk as any);
+          finalChunk = this._concatOutputChunks(finalChunk, chunk as any);
         } catch {
           finalChunk = chunk;
         }
@@ -2991,7 +3019,10 @@ export class RunnableWithFallbacks<RunInput, RunOutput> extends Runnable<
       for await (const chunk of stream) {
         yield chunk;
         try {
-          output = output === undefined ? output : concat(output, chunk);
+          output =
+            output === undefined
+              ? output
+              : this._concatOutputChunks(output, chunk);
         } catch {
           output = undefined;
         }

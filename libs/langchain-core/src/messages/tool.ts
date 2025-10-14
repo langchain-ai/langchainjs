@@ -24,6 +24,7 @@ export interface ToolMessageFields<
   artifact?: any;
   tool_call_id: string;
   status?: "success" | "error";
+  metadata?: Record<string, unknown>;
 }
 
 /**
@@ -74,6 +75,8 @@ export class ToolMessage<TStructure extends MessageStructure = MessageStructure>
 
   tool_call_id: string;
 
+  metadata?: Record<string, unknown>;
+
   /**
    * Artifact of the Tool execution which is not meant to be sent to the model.
    *
@@ -107,6 +110,7 @@ export class ToolMessage<TStructure extends MessageStructure = MessageStructure>
     this.tool_call_id = toolMessageFields.tool_call_id;
     this.artifact = toolMessageFields.artifact;
     this.status = toolMessageFields.status;
+    this.metadata = toolMessageFields.metadata;
   }
 
   static isInstance(message: unknown): message is ToolMessage {
