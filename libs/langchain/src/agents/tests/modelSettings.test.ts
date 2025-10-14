@@ -22,15 +22,16 @@ function createMockModel(name = "ChatAnthropic", model = "anthropic") {
   } as unknown as LanguageModelLike;
 }
 
-describe("callOptions middleware support", () => {
-  it("should pass callOptions from middleware to model.invoke", async () => {
-    const model = createMockModel();
+describe("modelSettings middleware support", () => {
+  it("should pass modelSettings from middleware to model.bindTools", async () => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const model = createMockModel() as any;
     const middleware = createMiddleware({
       name: "testMiddleware",
       wrapModelRequest: async (request, handler) => {
         return handler({
           ...request,
-          callOptions: {
+          modelSettings: {
             temperature: 0.5,
             max_tokens: 100,
           },
@@ -48,21 +49,22 @@ describe("callOptions middleware support", () => {
       messages: [new HumanMessage("Hello, world!")],
     });
 
-    expect(model.invoke).toHaveBeenCalled();
-    const callArgs = (model.invoke as unknown as MockInstance).mock.calls[0];
-    const config = callArgs[1];
-    expect(config).toHaveProperty("temperature", 0.5);
-    expect(config).toHaveProperty("max_tokens", 100);
+    expect(model.bindTools).toHaveBeenCalled();
+    const callArgs = (model.bindTools as unknown as MockInstance).mock.calls[0];
+    const options = callArgs[1];
+    expect(options).toHaveProperty("temperature", 0.5);
+    expect(options).toHaveProperty("max_tokens", 100);
   });
 
-  it("should pass headers from middleware callOptions to model.invoke", async () => {
-    const model = createMockModel();
+  it("should pass headers from middleware modelSettings to model.bindTools", async () => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const model = createMockModel() as any;
     const middleware = createMiddleware({
       name: "testMiddleware",
       wrapModelRequest: async (request, handler) => {
         return handler({
           ...request,
-          callOptions: {
+          modelSettings: {
             headers: {
               "X-Custom-Header": "middleware-value",
               "X-Middleware-Only": "middleware-only",
@@ -82,26 +84,26 @@ describe("callOptions middleware support", () => {
       messages: [new HumanMessage("Hello, world!")],
     });
 
-    expect(model.invoke).toHaveBeenCalled();
-    const callArgs = (model.invoke as unknown as MockInstance).mock.calls[0];
-    const config = callArgs[1];
-    expect(config.headers).toEqual({
+    expect(model.bindTools).toHaveBeenCalled();
+    const callArgs = (model.bindTools as unknown as MockInstance).mock.calls[0];
+    const options = callArgs[1];
+    expect(options.headers).toEqual({
       "X-Custom-Header": "middleware-value",
       "X-Middleware-Only": "middleware-only",
     });
   });
 
-  it("should pass headers from middleware callOptions to model.invoke config", async () => {
+  it("should pass headers from middleware modelSettings to model.bindTools", async () => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const model = createMockModel() as any;
 
-    // Middleware that adds headers via callOptions
+    // Middleware that adds headers via modelSettings
     const middleware = createMiddleware({
       name: "testMiddleware",
       wrapModelRequest: async (request, handler) => {
         return handler({
           ...request,
-          callOptions: {
+          modelSettings: {
             headers: {
               "X-Middleware-Header": "from-middleware",
               "X-Custom-Header": "custom-value",
@@ -121,25 +123,26 @@ describe("callOptions middleware support", () => {
       messages: [new HumanMessage("Hello, world!")],
     });
 
-    // Verify model.invoke was called with headers in the config
-    expect(model.invoke).toHaveBeenCalled();
-    const callArgs = (model.invoke as unknown as MockInstance).mock.calls[0];
-    const config = callArgs[1];
+    // Verify model.bindTools was called with headers in the options
+    expect(model.bindTools).toHaveBeenCalled();
+    const callArgs = (model.bindTools as unknown as MockInstance).mock.calls[0];
+    const options = callArgs[1];
 
-    expect(config.headers).toEqual({
+    expect(options.headers).toEqual({
       "X-Middleware-Header": "from-middleware",
       "X-Custom-Header": "custom-value",
     });
   });
 
-  it("should handle callOptions without headers", async () => {
-    const model = createMockModel();
+  it("should handle modelSettings without headers", async () => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const model = createMockModel() as any;
     const middleware = createMiddleware({
       name: "testMiddleware",
       wrapModelRequest: async (request, handler) => {
         return handler({
           ...request,
-          callOptions: {
+          modelSettings: {
             temperature: 0.7,
           },
         });
@@ -156,21 +159,22 @@ describe("callOptions middleware support", () => {
       messages: [new HumanMessage("Hello, world!")],
     });
 
-    expect(model.invoke).toHaveBeenCalled();
-    const callArgs = (model.invoke as unknown as MockInstance).mock.calls[0];
-    const config = callArgs[1];
-    expect(config).toHaveProperty("temperature", 0.7);
-    expect(config.headers).toBeUndefined();
+    expect(model.bindTools).toHaveBeenCalled();
+    const callArgs = (model.bindTools as unknown as MockInstance).mock.calls[0];
+    const options = callArgs[1];
+    expect(options).toHaveProperty("temperature", 0.7);
+    expect(options.headers).toBeUndefined();
   });
 
-  it("should only add headers when either config or callOptions has headers", async () => {
-    const model = createMockModel();
+  it("should only add headers when modelSettings has headers", async () => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const model = createMockModel() as any;
     const middleware = createMiddleware({
       name: "testMiddleware",
       wrapModelRequest: async (request, handler) => {
         return handler({
           ...request,
-          callOptions: {
+          modelSettings: {
             temperature: 0.8,
           },
         });
@@ -187,20 +191,21 @@ describe("callOptions middleware support", () => {
       messages: [new HumanMessage("Hello, world!")],
     });
 
-    expect(model.invoke).toHaveBeenCalled();
-    const callArgs = (model.invoke as unknown as MockInstance).mock.calls[0];
-    const config = callArgs[1];
-    expect(config).not.toHaveProperty("headers");
+    expect(model.bindTools).toHaveBeenCalled();
+    const callArgs = (model.bindTools as unknown as MockInstance).mock.calls[0];
+    const options = callArgs[1];
+    expect(options).not.toHaveProperty("headers");
   });
 
-  it("should support multiple middleware with callOptions", async () => {
-    const model = createMockModel();
+  it("should support multiple middleware with modelSettings", async () => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const model = createMockModel() as any;
     const middleware1 = createMiddleware({
       name: "middleware1",
       wrapModelRequest: async (request, handler) => {
         return handler({
           ...request,
-          callOptions: {
+          modelSettings: {
             temperature: 0.5,
             headers: {
               "X-Middleware-1": "value1",
@@ -215,7 +220,7 @@ describe("callOptions middleware support", () => {
       wrapModelRequest: async (request, handler) => {
         return handler({
           ...request,
-          callOptions: {
+          modelSettings: {
             max_tokens: 200,
             headers: {
               "X-Middleware-2": "value2",
@@ -235,25 +240,26 @@ describe("callOptions middleware support", () => {
       messages: [new HumanMessage("Hello, world!")],
     });
 
-    expect(model.invoke).toHaveBeenCalled();
-    const callArgs = (model.invoke as unknown as MockInstance).mock.calls[0];
-    const config = callArgs[1];
+    expect(model.bindTools).toHaveBeenCalled();
+    const callArgs = (model.bindTools as unknown as MockInstance).mock.calls[0];
+    const options = callArgs[1];
     // Last middleware wins for overlapping properties
-    expect(config).toHaveProperty("max_tokens", 200);
-    expect(config.headers).toEqual({
+    expect(options).toHaveProperty("max_tokens", 200);
+    expect(options.headers).toEqual({
       "X-Middleware-2": "value2",
     });
   });
 
-  it("should preserve signal from config when merging callOptions", async () => {
-    const model = createMockModel();
+  it("should pass modelSettings to bindTools while preserving invoke signal", async () => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const model = createMockModel() as any;
     const abortController = new AbortController();
     const middleware = createMiddleware({
       name: "testMiddleware",
       wrapModelRequest: async (request, handler) => {
         return handler({
           ...request,
-          callOptions: {
+          modelSettings: {
             temperature: 0.5,
           },
         });
@@ -275,10 +281,16 @@ describe("callOptions middleware support", () => {
       }
     );
 
+    // modelSettings goes to bindTools
+    expect(model.bindTools).toHaveBeenCalled();
+    const bindCallArgs = (model.bindTools as unknown as MockInstance).mock.calls[0];
+    const bindOptions = bindCallArgs[1];
+    expect(bindOptions).toHaveProperty("temperature", 0.5);
+
+    // signal still goes to invoke
     expect(model.invoke).toHaveBeenCalled();
-    const callArgs = (model.invoke as unknown as MockInstance).mock.calls[0];
-    const config = callArgs[1];
-    expect(config).toHaveProperty("signal");
-    expect(config).toHaveProperty("temperature", 0.5);
+    const invokeCallArgs = (model.invoke as unknown as MockInstance).mock.calls[0];
+    const invokeConfig = invokeCallArgs[1];
+    expect(invokeConfig).toHaveProperty("signal");
   });
 });

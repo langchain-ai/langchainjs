@@ -300,11 +300,7 @@ export class AgentNode<
       modelInput = { ...modelInput, messages: request.messages };
 
       const signal = mergeAbortSignals(this.#options.signal, config.signal);
-      const invokeConfig = {
-        ...config,
-        signal,
-        ...request?.callOptions,
-      };
+      const invokeConfig = { ...config, signal };
       const response = (await modelWithTools.invoke(
         modelInput,
         invokeConfig
@@ -810,6 +806,7 @@ export class AgentNode<
      */
     const modelWithTools = await bindTools(model, allTools, {
       ...options,
+      ...(preparedOptions?.modelSettings ?? {}),
       tool_choice: toolChoice,
     });
 
