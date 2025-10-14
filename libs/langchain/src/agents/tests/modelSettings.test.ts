@@ -3,6 +3,7 @@ import { HumanMessage, AIMessage } from "@langchain/core/messages";
 import type { LanguageModelLike } from "@langchain/core/language_models/base";
 
 import { createAgent, createMiddleware } from "../index.js";
+import { ChatAnthropic } from "@langchain/anthropic";
 
 function createMockModel(name = "ChatAnthropic", model = "anthropic") {
   // Mock Anthropic model
@@ -28,7 +29,7 @@ describe("modelSettings middleware support", () => {
     const model = createMockModel() as any;
     const middleware = createMiddleware({
       name: "testMiddleware",
-      wrapModelRequest: async (request, handler) => {
+      wrapModelCall: async (request, handler) => {
         return handler({
           ...request,
           modelSettings: {
@@ -61,7 +62,7 @@ describe("modelSettings middleware support", () => {
     const model = createMockModel() as any;
     const middleware = createMiddleware({
       name: "testMiddleware",
-      wrapModelRequest: async (request, handler) => {
+      wrapModelCall: async (request, handler) => {
         return handler({
           ...request,
           modelSettings: {
@@ -100,7 +101,7 @@ describe("modelSettings middleware support", () => {
     // Middleware that adds headers via modelSettings
     const middleware = createMiddleware({
       name: "testMiddleware",
-      wrapModelRequest: async (request, handler) => {
+      wrapModelCall: async (request, handler) => {
         return handler({
           ...request,
           modelSettings: {
@@ -139,7 +140,7 @@ describe("modelSettings middleware support", () => {
     const model = createMockModel() as any;
     const middleware = createMiddleware({
       name: "testMiddleware",
-      wrapModelRequest: async (request, handler) => {
+      wrapModelCall: async (request, handler) => {
         return handler({
           ...request,
           modelSettings: {
@@ -171,7 +172,7 @@ describe("modelSettings middleware support", () => {
     const model = createMockModel() as any;
     const middleware = createMiddleware({
       name: "testMiddleware",
-      wrapModelRequest: async (request, handler) => {
+      wrapModelCall: async (request, handler) => {
         return handler({
           ...request,
           modelSettings: {
@@ -202,7 +203,7 @@ describe("modelSettings middleware support", () => {
     const model = createMockModel() as any;
     const middleware1 = createMiddleware({
       name: "middleware1",
-      wrapModelRequest: async (request, handler) => {
+      wrapModelCall: async (request, handler) => {
         return handler({
           ...request,
           modelSettings: {
@@ -217,7 +218,7 @@ describe("modelSettings middleware support", () => {
 
     const middleware2 = createMiddleware({
       name: "middleware2",
-      wrapModelRequest: async (request, handler) => {
+      wrapModelCall: async (request, handler) => {
         return handler({
           ...request,
           modelSettings: {
@@ -256,7 +257,7 @@ describe("modelSettings middleware support", () => {
     const abortController = new AbortController();
     const middleware = createMiddleware({
       name: "testMiddleware",
-      wrapModelRequest: async (request, handler) => {
+      wrapModelCall: async (request, handler) => {
         return handler({
           ...request,
           modelSettings: {
@@ -283,14 +284,85 @@ describe("modelSettings middleware support", () => {
 
     // modelSettings goes to bindTools
     expect(model.bindTools).toHaveBeenCalled();
-    const bindCallArgs = (model.bindTools as unknown as MockInstance).mock.calls[0];
+    const bindCallArgs = (model.bindTools as unknown as MockInstance).mock
+      .calls[0];
     const bindOptions = bindCallArgs[1];
     expect(bindOptions).toHaveProperty("temperature", 0.5);
 
     // signal still goes to invoke
     expect(model.invoke).toHaveBeenCalled();
-    const invokeCallArgs = (model.invoke as unknown as MockInstance).mock.calls[0];
+    const invokeCallArgs = (model.invoke as unknown as MockInstance).mock
+      .calls[0];
     const invokeConfig = invokeCallArgs[1];
     expect(invokeConfig).toHaveProperty("signal");
+  });
+
+  it("should pass modelSettings to real Anthropic model via bindTools", async () => {
+    // Mock the Anthropic client
+    const mockCreate = vi.fn().mockResolvedValue({
+      id: "msg_123",
+      type: "message",
+      role: "assistant",
+      content: [{ type: "text", text: "Response from model" }],
+      model: "claude-sonnet-4-20250514",
+      stop_reason: "end_turn",
+      usage: { input_tokens: 10, output_tokens: 20 },
+    });
+
+    const mockClient = {
+      messages: {
+        create: mockCreate,
+      },
+    };
+
+    // Create real ChatAnthropic with mocked client
+    const model = new ChatAnthropic({
+      model: "claude-sonnet-4-20250514",
+      temperature: 0,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      createClient: () => mockClient as any,
+    });
+
+    const middleware = createMiddleware({
+      name: "testMiddleware",
+      wrapModelCall: async (request, handler) => {
+        return handler({
+          ...request,
+          modelSettings: {
+            temperature: 0.5,
+            headers: {
+              "anthropic-beta":
+                "code-execution-2025-08-25,files-api-2025-04-14",
+            },
+            container: "container_abc123",
+          },
+        });
+      },
+    });
+
+    const agent = createAgent({
+      model,
+      tools: [],
+      middleware: [middleware] as const,
+    });
+
+    await agent.invoke({
+      messages: [new HumanMessage("Hello, world!")],
+    });
+
+    // Verify the client was called
+    expect(mockCreate).toHaveBeenCalled();
+
+    // Check the actual parameters passed to the Anthropic client
+    const clientCallArgs = mockCreate.mock.calls[0][0];
+    expect(clientCallArgs).toHaveProperty("container", "container_abc123");
+
+    // Check that headers were passed via options (second parameter)
+    const clientOptions = mockCreate.mock.calls[0][1];
+    expect(clientOptions).toHaveProperty("headers");
+    expect(clientOptions.headers).toHaveProperty(
+      "anthropic-beta",
+      "code-execution-2025-08-25,files-api-2025-04-14"
+    );
   });
 });
