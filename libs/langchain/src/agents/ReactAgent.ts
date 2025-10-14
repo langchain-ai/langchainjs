@@ -52,13 +52,11 @@ import type {
   BuiltInState,
   JumpTo,
   UserInput,
-} from "./types.js";
-import type { InvokeConfiguration, StreamConfiguration } from "./runtime.js";
-import type {
   InferContextInput,
   ToAnnotationRoot,
   AnyAnnotationRoot,
-} from "./middleware/types.js";
+} from "./types.js";
+import type { InvokeConfiguration, StreamConfiguration } from "./runtime.js";
 import { type ResponseFormatUndefined } from "./responses.js";
 
 // Helper type to get the state definition with middleware states

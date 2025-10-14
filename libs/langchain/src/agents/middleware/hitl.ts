@@ -4,7 +4,6 @@ import { AIMessage, ToolMessage, ToolCall } from "@langchain/core/messages";
 import {
   createMiddleware,
   type AgentBuiltInState,
-  type Runtime,
   type AgentMiddleware as _,
 } from "@langchain/core/middleware";
 import {
@@ -12,6 +11,8 @@ import {
   interopParse,
 } from "@langchain/core/utils/types";
 import { interrupt } from "@langchain/langgraph";
+
+import type { Runtime } from "../types.js";
 
 const DescriptionFunctionSchema = z
   .function()

@@ -13,8 +13,8 @@ import {
 } from "@langchain/core/messages";
 import type { LanguageModelLike } from "@langchain/core/language_models/base";
 import { ChatOpenAI } from "@langchain/openai";
+import { promptCachingMiddleware } from "@langchain/anthropic";
 
-import { anthropicPromptCachingMiddleware } from "../../../../../providers/langchain-anthropic/src/promptCaching.js";
 import { createAgent } from "../../index.js";
 
 function createMockModel(name = "ChatAnthropic", modelType = "anthropic") {
@@ -37,7 +37,7 @@ function createMockModel(name = "ChatAnthropic", modelType = "anthropic") {
 
 const consoleWarn = vi.spyOn(console, "warn");
 
-describe("anthropicPromptCachingMiddleware", () => {
+describe("promptCachingMiddleware", () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
@@ -45,7 +45,7 @@ describe("anthropicPromptCachingMiddleware", () => {
   it("should add cache_control to model settings when conditions are met", async () => {
     const model = createMockModel();
 
-    const middleware = anthropicPromptCachingMiddleware({
+    const middleware = promptCachingMiddleware({
       ttl: "5m",
       minMessagesToCache: 3,
     });
@@ -80,7 +80,7 @@ describe("anthropicPromptCachingMiddleware", () => {
   it("should not add cache_control on multiple messages", async () => {
     const model = createMockModel();
 
-    const middleware = anthropicPromptCachingMiddleware({
+    const middleware = promptCachingMiddleware({
       ttl: "5m",
       minMessagesToCache: 3,
     });
@@ -119,7 +119,7 @@ describe("anthropicPromptCachingMiddleware", () => {
 
   it("should not add cache_control when message count is below threshold", async () => {
     const model = createMockModel();
-    const middleware = anthropicPromptCachingMiddleware({
+    const middleware = promptCachingMiddleware({
       ttl: "1h",
       minMessagesToCache: 5, // High threshold
     });
@@ -143,7 +143,7 @@ describe("anthropicPromptCachingMiddleware", () => {
 
   it("should respect enableCaching setting", async () => {
     const model = createMockModel();
-    const middleware = anthropicPromptCachingMiddleware({
+    const middleware = promptCachingMiddleware({
       enableCaching: false, // Disabled
       ttl: "5m",
       minMessagesToCache: 1,
@@ -171,7 +171,7 @@ describe("anthropicPromptCachingMiddleware", () => {
   describe("non-Anthropic models", () => {
     describe("if unsupportedModelBehavior is 'raise'", () => {
       it("should throw error if pass in a non-Anthropic chat instance", async () => {
-        const middleware = anthropicPromptCachingMiddleware({
+        const middleware = promptCachingMiddleware({
           unsupportedModelBehavior: "raise",
         });
 
@@ -187,7 +187,7 @@ describe("anthropicPromptCachingMiddleware", () => {
       });
 
       it("should throw error if pass in a non-Anthropic model via string", async () => {
-        const middleware = anthropicPromptCachingMiddleware({
+        const middleware = promptCachingMiddleware({
           unsupportedModelBehavior: "raise",
         });
 
@@ -206,7 +206,7 @@ describe("anthropicPromptCachingMiddleware", () => {
     describe("if unsupportedModelBehavior is 'warn'", () => {
       it("should warn if pass in a non-Anthropic chat instance", async () => {
         const model = createMockModel("ChatOpenAI", "openai");
-        const middleware = anthropicPromptCachingMiddleware({
+        const middleware = promptCachingMiddleware({
           enableCaching: true,
           ttl: "5m",
           minMessagesToCache: 1,
@@ -240,7 +240,7 @@ describe("anthropicPromptCachingMiddleware", () => {
     describe("if unsupportedModelBehavior is 'ignore'", () => {
       it("should ignore if pass in a non-Anthropic chat instance", async () => {
         const model = createMockModel("ChatOpenAI", "openai");
-        const middleware = anthropicPromptCachingMiddleware({
+        const middleware = promptCachingMiddleware({
           enableCaching: true,
           ttl: "5m",
           minMessagesToCache: 1,
@@ -272,7 +272,7 @@ describe("anthropicPromptCachingMiddleware", () => {
 
   it("should include system message in message count", async () => {
     const model = createMockModel();
-    const middleware = anthropicPromptCachingMiddleware({
+    const middleware = promptCachingMiddleware({
       ttl: "1h",
       minMessagesToCache: 3,
     });
@@ -297,7 +297,7 @@ describe("anthropicPromptCachingMiddleware", () => {
 
   it("should allow runtime context override", async () => {
     const model = createMockModel();
-    const middleware = anthropicPromptCachingMiddleware({
+    const middleware = promptCachingMiddleware({
       ttl: "5m",
       minMessagesToCache: 3,
     });

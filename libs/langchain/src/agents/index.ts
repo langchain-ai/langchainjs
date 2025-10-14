@@ -7,8 +7,7 @@ import type { AgentMiddleware } from "@langchain/core/middleware";
 
 import type { ResponseFormatUndefined } from "./responses.js";
 import type { CreateAgentParams } from "./types.js";
-import type { AnyAnnotationRoot } from "./middleware/types.js";
-import type { ExtractZodArrayTypes } from "./types.js";
+import type { ExtractZodArrayTypes, AnyAnnotationRoot } from "./types.js";
 import type {
   ToolStrategy,
   TypedToolStrategy,
@@ -331,8 +330,6 @@ export function createAgent<
 // Re-export types and utilities
 export * from "./types.js";
 export * from "./errors.js";
-export type { JumpToTarget } from "./constants.js";
-export type { Runtime } from "./runtime.js";
 export {
   toolStrategy,
   providerStrategy,
@@ -343,4 +340,10 @@ export {
 } from "./responses.js";
 export { FakeToolCallingModel } from "./tests/utils.js";
 export type { ReactAgent } from "./ReactAgent.js";
-export * from "@langchain/core/middleware";
+export { type AgentMiddleware } from "@langchain/core/middleware";
+
+/**
+ * Re-export createMiddleware from core but provide a
+ * typed wrapper that uses LangGraph Runtime
+ */
+export { createMiddleware } from "./middleware.js";

@@ -10,18 +10,18 @@ import type { LanguageModelLike } from "../language_models/base.js";
 import type { BaseMessage, AIMessage, ToolMessage } from "../messages/index.js";
 import type { JumpToTarget } from "./constants.js";
 import type { ClientTool, ServerTool } from "../tools/index.js";
-import type { Runtime } from "./runtime.js";
+import type { BaseRuntime as Runtime } from "./runtime.js";
 
 /**
  * Configuration for modifying a model call at runtime.
  * All fields are optional and only provided fields will override defaults.
  *
  * @template TState - The agent's state type, must extend Record<string, unknown>. Defaults to Record<string, unknown>.
- * @template TContext - The runtime context type for accessing metadata and control flow. Defaults to unknown.
+ * @template TRuntime - The runtime type. Defaults to Runtime<unknown>.
  */
 export interface ModelRequest<
   TState extends Record<string, unknown> = Record<string, unknown>,
-  TContext = unknown
+  TRuntime = Runtime<unknown>
 > {
   /**
    * The model to use for this step.
@@ -62,7 +62,7 @@ export interface ModelRequest<
   /**
    * The runtime context containing metadata, signal, writer, interrupt, etc.
    */
-  runtime: Runtime<TContext>;
+  runtime: TRuntime;
 }
 
 /**
@@ -99,10 +99,13 @@ export type MiddlewareResult<TState> = TState | void;
 /**
  * Represents a tool call request for the wrapToolCall hook.
  * Contains the tool call information along with the agent's current state and runtime.
+ *
+ * @template TState - The agent's state type, must extend Record<string, unknown>. Defaults to Record<string, unknown>.
+ * @template TRuntime - The runtime type. Defaults to Runtime<unknown>.
  */
 export interface ToolCallRequest<
   TState extends Record<string, unknown> = Record<string, unknown>,
-  TContext = unknown
+  TRuntime = Runtime<unknown>
 > {
   /**
    * The tool call to be executed
@@ -120,15 +123,19 @@ export interface ToolCallRequest<
   /**
    * The runtime context containing metadata, signal, writer, interrupt, etc.
    */
-  runtime: Runtime<TContext>;
+  runtime: TRuntime;
 }
 
 /**
  * Handler function type for wrapping tool calls.
  * Takes a tool call and returns the tool result or a command.
  */
-export type ToolCallHandler<Command> = (
-  toolCall: ToolCall
+export type ToolCallHandler<
+  Command,
+  TState extends Record<string, unknown> = Record<string, unknown>,
+  TRuntime = Runtime<unknown>
+> = (
+  request: ToolCallRequest<TState, TRuntime>
 ) => Promise<ToolMessage | Command> | ToolMessage | Command;
 
 /**
@@ -138,10 +145,10 @@ export type ToolCallHandler<Command> = (
 export type ToolCallWrapper<
   Command,
   TState extends Record<string, unknown> = Record<string, unknown>,
-  TContext = unknown
+  TRuntime = Runtime<unknown>
 > = (
-  request: ToolCallRequest<TState, TContext>,
-  handler: ToolCallHandler<Command>
+  request: ToolCallRequest<TState, TRuntime>,
+  handler: ToolCallHandler<Command, TState, TRuntime>
 ) => Promise<ToolMessage | Command> | ToolMessage | Command;
 
 /**
@@ -154,7 +161,7 @@ export interface AgentMiddleware<
     | InteropZodDefault<InteropZodObject>
     | InteropZodOptional<InteropZodObject>
     | undefined = any,
-  TFullContext = any
+  TFullContext extends Record<string, unknown> = any
 > {
   stateSchema?: TSchema;
   contextSchema?: TContextSchema;
@@ -227,9 +234,10 @@ export interface AgentMiddleware<
    * ```
    */
   wrapToolCall?: ToolCallWrapper<
+    any,
     (TSchema extends InteropZodObject ? InferInteropZodInput<TSchema> : {}) &
       AgentBuiltInState,
-    TFullContext
+    Runtime<TFullContext>
   >;
   /**
    * Wraps the model invocation with custom logic. This allows you to:
@@ -244,13 +252,13 @@ export interface AgentMiddleware<
    *
    * @example
    * ```ts
-   * wrapModelRequest: async (request, handler) => {
+   * wrapModelCall: async (request, handler) => {
    *   // Modify request before calling
-   *   const modifiedRequest = { ...request, systemPrompt: "You are helpful" };
+   *   const modifiedCall = { ...request, systemPrompt: "You are helpful" };
    *
    *   try {
    *     // Call the model
-   *     return await handler(modifiedRequest);
+   *     return await handler(modifiedCall);
    *   } catch (error) {
    *     // Handle errors and retry with fallback
    *     const fallbackRequest = { ...request, model: fallbackModel };
@@ -259,11 +267,11 @@ export interface AgentMiddleware<
    * }
    * ```
    */
-  wrapModelRequest?(
+  wrapModelCall?(
     request: ModelRequest<
       (TSchema extends InteropZodObject ? InferInteropZodInput<TSchema> : {}) &
         AgentBuiltInState,
-      TFullContext
+      Runtime<TFullContext>
     >,
     handler: (
       request: ModelRequest<
@@ -271,7 +279,7 @@ export interface AgentMiddleware<
           ? InferInteropZodInput<TSchema>
           : {}) &
           AgentBuiltInState,
-        TFullContext
+        Runtime<TFullContext>
       >
     ) => Promise<AIMessage> | AIMessage
   ): Promise<AIMessage> | AIMessage;
@@ -281,52 +289,84 @@ export interface AgentMiddleware<
       : {}) &
       AgentBuiltInState,
     runtime: Runtime<TFullContext>
-  ): Promise<
-    MiddlewareResult<
-      Partial<
-        TSchema extends InteropZodObject ? InferInteropZodInput<TSchema> : {}
+  ):
+    | Promise<
+        MiddlewareResult<
+          Partial<
+            TSchema extends InteropZodObject
+              ? InferInteropZodInput<TSchema>
+              : {}
+          >
+        >
       >
-    >
-  >;
+    | MiddlewareResult<
+        Partial<
+          TSchema extends InteropZodObject ? InferInteropZodInput<TSchema> : {}
+        >
+      >;
   beforeModel?(
     state: (TSchema extends InteropZodObject
       ? InferInteropZodInput<TSchema>
       : {}) &
       AgentBuiltInState,
     runtime: Runtime<TFullContext>
-  ): Promise<
-    MiddlewareResult<
-      Partial<
-        TSchema extends InteropZodObject ? InferInteropZodInput<TSchema> : {}
+  ):
+    | Promise<
+        MiddlewareResult<
+          Partial<
+            TSchema extends InteropZodObject
+              ? InferInteropZodInput<TSchema>
+              : {}
+          >
+        >
       >
-    >
-  >;
+    | MiddlewareResult<
+        Partial<
+          TSchema extends InteropZodObject ? InferInteropZodInput<TSchema> : {}
+        >
+      >;
   afterModel?(
     state: (TSchema extends InteropZodObject
       ? InferInteropZodInput<TSchema>
       : {}) &
       AgentBuiltInState,
     runtime: Runtime<TFullContext>
-  ): Promise<
-    MiddlewareResult<
-      Partial<
-        TSchema extends InteropZodObject ? InferInteropZodInput<TSchema> : {}
+  ):
+    | Promise<
+        MiddlewareResult<
+          Partial<
+            TSchema extends InteropZodObject
+              ? InferInteropZodInput<TSchema>
+              : {}
+          >
+        >
       >
-    >
-  >;
+    | MiddlewareResult<
+        Partial<
+          TSchema extends InteropZodObject ? InferInteropZodInput<TSchema> : {}
+        >
+      >;
   afterAgent?(
     state: (TSchema extends InteropZodObject
       ? InferInteropZodInput<TSchema>
       : {}) &
       AgentBuiltInState,
     runtime: Runtime<TFullContext>
-  ): Promise<
-    MiddlewareResult<
-      Partial<
-        TSchema extends InteropZodObject ? InferInteropZodInput<TSchema> : {}
+  ):
+    | Promise<
+        MiddlewareResult<
+          Partial<
+            TSchema extends InteropZodObject
+              ? InferInteropZodInput<TSchema>
+              : {}
+          >
+        >
       >
-    >
-  >;
+    | MiddlewareResult<
+        Partial<
+          TSchema extends InteropZodObject ? InferInteropZodInput<TSchema> : {}
+        >
+      >;
 }
 
 /**

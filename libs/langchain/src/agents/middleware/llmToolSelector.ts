@@ -3,10 +3,11 @@ import { BaseLanguageModel } from "@langchain/core/language_models/base";
 import type { InferInteropZodInput } from "@langchain/core/utils/types";
 import { HumanMessage } from "@langchain/core/messages";
 import type { StructuredToolInterface } from "@langchain/core/tools";
-import { createMiddleware, type Runtime } from "@langchain/core/middleware";
+import { createMiddleware } from "@langchain/core/middleware";
 
 import { initChatModel } from "../../chat_models/universal.js";
 import type { ModelRequest } from "../nodes/types.js";
+import type { Runtime } from "../types.js";
 
 const DEFAULT_SYSTEM_PROMPT =
   "Your goal is to select the most relevant tools for answering the user's query.";

@@ -1,9 +1,10 @@
 import {
   createMiddleware,
   type AgentMiddleware as _,
-  type Runtime,
   type AgentBuiltInState,
 } from "@langchain/core/middleware";
+
+import type { Runtime } from "../types.js";
 
 export type DynamicSystemPromptMiddlewareConfig<TContextSchema> = (
   state: AgentBuiltInState,

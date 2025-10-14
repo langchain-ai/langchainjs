@@ -4,10 +4,10 @@ import type {
   AgentMiddleware,
   MiddlewareResult,
   AgentBuiltInState,
-  Runtime,
 } from "@langchain/core/middleware";
 
 import { MiddlewareNode, MiddlewareNodeOptions } from "./middleware.js";
+import type { Runtime } from "../types.js";
 
 /**
  * Node for executing a single middleware's afterAgent hook.

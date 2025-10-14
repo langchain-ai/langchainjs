@@ -2,9 +2,9 @@ import { describe, it, expectTypeOf } from "vitest";
 import { z } from "zod/v3";
 import { tool } from "@langchain/core/tools";
 import type { BaseStore } from "@langchain/langgraph";
+import type { WithMaybeContext } from "@langchain/core/middleware";
 
-import { createAgent } from "../index.js";
-import type { Runtime, WithMaybeContext } from "../runtime.js";
+import { createAgent, type Runtime } from "../index.js";
 
 describe("WithMaybeContext", () => {
   it("should work with string prompt", async () => {

@@ -2,10 +2,22 @@
 import type {
   InteropZodObject,
   InteropZodType,
+  InferInteropZodInput,
 } from "@langchain/core/utils/types";
-import type { START, END, StateGraph } from "@langchain/langgraph";
+import type {
+  AnnotationRoot,
+  START,
+  END,
+  StateGraph,
+  Runtime as LangGraphRuntime,
+} from "@langchain/langgraph";
+import type { InteropZodToStateDefinition } from "@langchain/langgraph/zod";
 import type { ServerTool, ClientTool } from "@langchain/core/tools";
-import type { AgentMiddleware, JumpToTarget } from "@langchain/core/middleware";
+import type {
+  AgentMiddleware,
+  JumpToTarget,
+  BaseRuntime,
+} from "@langchain/core/middleware";
 
 import type { LanguageModelLike } from "@langchain/core/language_models/base";
 import type { BaseMessage } from "@langchain/core/messages";
@@ -23,7 +35,6 @@ import type {
   JsonSchemaFormat,
   ResponseFormatUndefined,
 } from "./responses.js";
-import type { AnyAnnotationRoot } from "./middleware/types.js";
 
 export type N = typeof START | "model_request" | "tools";
 
@@ -345,3 +356,28 @@ export type WithStateGraphNodes<
 >
   ? StateGraph<SD, S, U, N | K, I, O, C>
   : never;
+
+export type AnyAnnotationRoot = AnnotationRoot<any>;
+
+export type ToAnnotationRoot<A extends AnyAnnotationRoot | InteropZodObject> =
+  A extends AnyAnnotationRoot
+    ? A
+    : A extends InteropZodObject
+    ? AnnotationRoot<InteropZodToStateDefinition<A>>
+    : never;
+
+/**
+ * Helper type to extract input type from context schema (with optional defaults)
+ */
+export type InferContextInput<
+  ContextSchema extends AnyAnnotationRoot | InteropZodObject
+> = ContextSchema extends InteropZodObject
+  ? InferInteropZodInput<ContextSchema>
+  : ContextSchema extends AnyAnnotationRoot
+  ? ToAnnotationRoot<ContextSchema>["State"]
+  : {};
+
+/**
+ * Export Runtime with LangGraph primitives
+ */
+export type Runtime<Context = unknown> = BaseRuntime<Context, LangGraphRuntime>;

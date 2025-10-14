@@ -7,7 +7,6 @@ import {
   StructuredToolInterface,
   ToolInputParsingException,
 } from "@langchain/core/tools";
-import type { ToolCall } from "@langchain/core/messages/tool";
 import type { InteropZodObject } from "@langchain/core/utils/types";
 import {
   isCommand,
@@ -16,16 +15,14 @@ import {
   isGraphInterrupt,
   type LangGraphRunnableConfig,
 } from "@langchain/langgraph";
-import type { PrivateState, ToolCallWrapper } from "@langchain/core/middleware";
+import type { PrivateState, ToolCall } from "@langchain/core/middleware";
 
+import type { ToolCallWrapper, ToolCallRequest } from "../middleware.js";
 import { RunnableCallable } from "../RunnableCallable.js";
 import { PreHookAnnotation } from "../annotation.js";
 import { mergeAbortSignals } from "./utils.js";
 import { ToolInvocationError } from "../errors.js";
-import type {
-  ToAnnotationRoot,
-  AnyAnnotationRoot,
-} from "../middleware/types.js";
+import type { ToAnnotationRoot, AnyAnnotationRoot } from "../types.js";
 
 export interface ToolNodeOptions {
   /**
@@ -363,13 +360,17 @@ export class ToolNode<
           throw new Error(`Tool "${call.name}" not found.`);
         }
 
-        const request = {
+        const request: ToolCallRequest<
+          ToAnnotationRoot<StateSchema>["State"] & PreHookAnnotation["State"]
+        > = {
           toolCall: call,
           tool,
           state,
           runtime,
         };
-        return await this.wrapToolCall(request, baseHandler);
+        return await this.wrapToolCall(request, ({ toolCall }) =>
+          baseHandler(toolCall)
+        );
       } catch (e: unknown) {
         /**
          * Handle middleware errors
@@ -433,7 +434,7 @@ export class ToolNode<
       outputs = await Promise.all(
         aiMessage.tool_calls
           ?.filter((call) => call.id == null || !toolMessageIds.has(call.id))
-          .map((call) => this.runTool(call, config, state)) ?? []
+          .map((call) => this.runTool(call as ToolCall, config, state)) ?? []
       );
     }
 

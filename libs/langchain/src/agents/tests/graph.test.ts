@@ -1,8 +1,8 @@
 import fs from "node:fs";
 import { describe, it, expect, afterAll } from "vitest";
 import { tool } from "@langchain/core/tools";
+import type { JumpToTarget } from "@langchain/core/middleware";
 import { createAgent, createMiddleware } from "../index.js";
-import type { JumpToTarget } from "../constants.js";
 
 // Strategic test cases covering meaningful middleware interaction patterns
 // rather than exhaustive combinations which would result in 13,122 test cases

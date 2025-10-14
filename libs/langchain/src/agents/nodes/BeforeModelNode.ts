@@ -1,8 +1,12 @@
 import { z } from "zod/v3";
 import { RunnableConfig } from "@langchain/core/runnables";
 import { MiddlewareNode, type MiddlewareNodeOptions } from "./middleware.js";
-import type { AgentMiddleware, MiddlewareResult } from "../middleware/types.js";
-import type { AgentBuiltInState, Runtime } from "../runtime.js";
+import type {
+  AgentMiddleware,
+  MiddlewareResult,
+  AgentBuiltInState,
+} from "@langchain/core/middleware";
+import type { Runtime } from "../types.js";
 
 /**
  * Node for executing a single middleware's beforeModel hook.

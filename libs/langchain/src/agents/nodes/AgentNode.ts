@@ -12,11 +12,7 @@ import {
 } from "@langchain/core/utils/types";
 import type { ToolCall } from "@langchain/core/messages/tool";
 import type { ClientTool, ServerTool } from "@langchain/core/tools";
-import type {
-  AgentMiddleware,
-  Runtime,
-  PrivateState,
-} from "@langchain/core/middleware";
+import type { AgentMiddleware, PrivateState } from "@langchain/core/middleware";
 
 import { initChatModel } from "../../chat_models/universal.js";
 import { MultipleStructuredOutputsError } from "../errors.js";
@@ -32,9 +28,8 @@ import {
 import { mergeAbortSignals } from "../nodes/utils.js";
 import { CreateAgentParams } from "../types.js";
 import type { InternalAgentState } from "../runtime.js";
-import type { AnyAnnotationRoot } from "../middleware/types.js";
 import type { ModelRequest } from "./types.js";
-import type {} from "../tools.js";
+import type { Runtime, AnyAnnotationRoot } from "../types.js";
 import { withAgentName } from "../withAgentName.js";
 import {
   ToolStrategy,

@@ -18,14 +18,27 @@ export type WithMaybeContext<TContext> = undefined extends TContext
   ? { readonly context?: TContext }
   : { readonly context: TContext };
 
+/**
+ * Base runtime interface that can be extended by framework-specific runtime types.
+ * This empty interface serves as a fallback when no specific runtime is available.
+ *
+ * @example
+ * // In a package with LangGraph dependency:
+ * import { Runtime as LangGraphRuntime } from "@langchain/langgraph";
+ * export type Runtime<Context> = BaseRuntime<Context, LangGraphRuntime>;
+ */
 export interface IBaseRuntime {}
 
 /**
  * Runtime information available to middleware (readonly).
+ *
+ * @template TContext - The context type for middleware
+ * @template BaseRuntime - The framework-specific runtime type (defaults to empty IBaseRuntime)
  */
-export type Runtime<TContext = unknown, BaseRuntime = IBaseRuntime> = Partial<
-  Omit<BaseRuntime, "context" | "configurable">
-> &
+export type BaseRuntime<
+  TContext = unknown,
+  BaseRuntime = IBaseRuntime
+> = Partial<Omit<BaseRuntime, "context" | "configurable">> &
   WithMaybeContext<TContext> &
   PrivateState & {
     configurable?: {

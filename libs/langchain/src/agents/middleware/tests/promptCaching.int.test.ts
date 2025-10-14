@@ -10,14 +10,15 @@ import {
   instances,
 } from "@langchain/anthropic";
 
-import { anthropicPromptCachingMiddleware } from "../../../../../providers/langchain-anthropic/src/promptCaching.js";
+import { promptCachingMiddleware } from "@langchain/anthropic";
 import { createAgent } from "../../index.js";
 
 /**
  * Mock the Anthropic module to return a ChatAnthropicMock instance
  */
 vi.mock("@langchain/anthropic", async (origModule) => {
-  const { ChatAnthropic } = (await origModule()) as any;
+  const { ChatAnthropic, promptCachingMiddleware } =
+    (await origModule()) as any;
   const instances: ChatAnthropicMock[] = [];
   class ChatAnthropicMock extends ChatAnthropic {
     anthropicResponse: MockInstance;
@@ -50,6 +51,7 @@ vi.mock("@langchain/anthropic", async (origModule) => {
     }
   }
   return {
+    promptCachingMiddleware,
     ChatAnthropic: ChatAnthropicMock,
     instances,
   };
@@ -90,7 +92,7 @@ const messages = [
   new HumanMessage("What is the capital of France?"),
 ];
 
-describe("anthropicPromptCachingMiddleware", () => {
+describe("promptCachingMiddleware", () => {
   it("should allow middleware to update model, messages and systemPrompt", async () => {
     const model = new ChatAnthropic({
       model: "claude-opus-4-20250514",
@@ -105,7 +107,7 @@ describe("anthropicPromptCachingMiddleware", () => {
       tools: [simpleTool],
       systemPrompt: "You are a geography expert.",
       middleware: [
-        anthropicPromptCachingMiddleware({
+        promptCachingMiddleware({
           ttl: "5m",
           minMessagesToCache: 1,
         }),
@@ -166,7 +168,7 @@ describe("anthropicPromptCachingMiddleware", () => {
       tools: [simpleTool],
       systemPrompt: "You are a geography expert.",
       middleware: [
-        anthropicPromptCachingMiddleware({
+        promptCachingMiddleware({
           ttl: "5m",
           minMessagesToCache: 1,
         }),

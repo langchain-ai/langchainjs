@@ -27,15 +27,17 @@ import {
 } from "@langchain/core/runnables";
 import type {
   AgentBuiltInState,
-  ToolCallWrapper,
-  ToolCallHandler,
   AgentMiddleware,
-  ToolCallRequest,
 } from "@langchain/core/middleware";
 
 import { isBaseChatModel, isConfigurableModel } from "./model.js";
 import { MultipleToolsBoundError } from "./errors.js";
 import { PROMPT_RUNNABLE_NAME } from "./constants.js";
+import type {
+  ToolCallWrapper,
+  ToolCallHandler,
+  ToolCallRequest,
+} from "./middleware.js";
 
 const NAME_PATTERN = /<name>(.*?)<\/name>/s;
 const CONTENT_PATTERN = /<content>(.*?)<\/content>/s;

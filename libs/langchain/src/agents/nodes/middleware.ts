@@ -4,7 +4,6 @@ import { LangGraphRunnableConfig, Command } from "@langchain/langgraph";
 import { interopParse } from "@langchain/core/utils/types";
 import type {
   JumpToTarget,
-  Runtime,
   PrivateState,
   AgentMiddleware,
   MiddlewareResult,
@@ -12,6 +11,7 @@ import type {
 
 import { RunnableCallable, RunnableCallableArgs } from "../RunnableCallable.js";
 import { derivePrivateState, parseJumpToTarget } from "./utils.js";
+import type { Runtime } from "../types.js";
 
 /**
  * Named class for context objects to provide better error messages
