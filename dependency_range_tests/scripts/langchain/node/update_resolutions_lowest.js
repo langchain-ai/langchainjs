@@ -19,15 +19,10 @@ if (
   ).version;
 
   // Check if the minimum version matches the workspace version
-  const corePackageJsonPath = "/app/libs/langchain-core/package.json";
+  const corePackageJsonPath = "/libs/langchain-core/package.json";
   const corePackageJson = JSON.parse(fs.readFileSync(corePackageJsonPath));
 
   if (corePackageJson.version === minVersion) {
-    // Link workspace version if it matches the minimum version
-    currentPackageJson.peerDependencies = {
-      ...currentPackageJson.peerDependencies,
-      "@langchain/core": `file:/libs/langchain-core`,
-    };
     currentPackageJson.pnpm.overrides[
       "@langchain/core"
     ] = `file:/libs/langchain-core`;
