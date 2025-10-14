@@ -198,7 +198,7 @@ export function _convertMessagesToOpenAIParams(
 ): OpenAIClient.Chat.Completions.ChatCompletionMessageParam[] {
   return messages.flatMap((message) => {
     if (
-      isAIMessage(message) &&
+      "output_version" in message.response_metadata &&
       message.response_metadata?.output_version === "v1"
     ) {
       return _convertToCompletionsMessageFromV1(message);

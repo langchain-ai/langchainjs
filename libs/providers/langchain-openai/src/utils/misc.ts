@@ -1,5 +1,5 @@
 import type { OpenAI as OpenAIClient } from "openai";
-import type { BaseMessage, ChatMessage } from "@langchain/core/messages";
+import { BaseMessage, ChatMessage } from "@langchain/core/messages";
 
 export const iife = <T>(fn: () => T) => fn();
 
