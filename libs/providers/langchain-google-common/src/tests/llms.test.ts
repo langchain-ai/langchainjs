@@ -307,7 +307,7 @@ describe("Mock Google LLM", () => {
     });
     let caught = false;
     try {
-      await model.call("Hello world");
+      await model.invoke("Hello world");
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (xx: any) {
       caught = true;
