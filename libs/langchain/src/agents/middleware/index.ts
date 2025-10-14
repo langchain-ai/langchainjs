@@ -36,6 +36,11 @@ export {
   modelCallLimitMiddleware,
   type ModelCallLimitMiddlewareConfig,
 } from "./callLimit.js";
+export {
+  stateFileSystemMiddleware,
+  EDIT_DESCRIPTION,
+  TOOL_DESCRIPTION,
+} from "./stateFileSystem.js";
 export { modelFallbackMiddleware } from "./modelFallback.js";
 export { type AgentMiddleware } from "./types.js";
 export { countTokensApproximately } from "./utils.js";

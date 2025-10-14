@@ -37,6 +37,7 @@ export {
  * LangChain Agents
  */
 export * from "./agents/index.js";
+export * from "./agents/deepagent/index.js";
 
 /**
  * `createAgent` pre-built middleware
