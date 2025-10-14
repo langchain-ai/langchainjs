@@ -75,6 +75,58 @@ const response = await model.stream({
 });
 ```
 
+## Middleware
+
+This package exports middleware that can be used with [`createAgent`](https://docs.langchain.com/oss/javascript/langchain/agents) to extend agent functionality.
+
+### Anthropic Prompt Caching
+
+Reduce API costs by caching repetitive prompt prefixes with Anthropic models. This middleware is perfect for:
+
+- Applications with long, repeated system prompts
+- Agents that reuse the same context across invocations
+- Reducing API costs for high-volume deployments
+
+> **Note:** Learn more about [Anthropic Prompt Caching](https://docs.anthropic.com/en/docs/build-with-claude/prompt-caching#cache-limitations) strategies and limitations.
+
+#### Usage
+
+```typescript
+import { createAgent } from "langchain";
+import { promptCachingMiddleware } from "@langchain/anthropic";
+import { HumanMessage } from "@langchain/core/messages";
+
+const LONG_PROMPT = `
+You are a helpful assistant with extensive knowledge.
+<Lots more context that you want to cache...>
+`;
+
+const agent = createAgent({
+  model: "anthropic:claude-sonnet-4-latest",
+  systemPrompt: LONG_PROMPT,
+  middleware: [promptCachingMiddleware({ ttl: "5m" })],
+});
+
+// First call: cache is created
+await agent.invoke({
+  messages: [new HumanMessage("Hi, my name is Bob")],
+});
+
+// Second call: cache hit, system prompt is reused from cache
+const result = await agent.invoke({
+  messages: [new HumanMessage("What's my name?")],
+});
+```
+
+#### Configuration Options
+
+| Parameter                  | Description                                                         | Default  |
+| -------------------------- | ------------------------------------------------------------------- | -------- |
+| `enableCaching`            | Whether to enable prompt caching                                    | `true`   |
+| `ttl`                      | Cache time-to-live (`"5m"` or `"1h"`)                               | `"5m"`   |
+| `minMessagesToCache`       | Minimum number of messages before caching starts                    | `3`      |
+| `unsupportedModelBehavior` | Behavior for non-Anthropic models (`"ignore"`, `"warn"`, `"raise"`) | `"warn"` |
+
 ## Development
 
 To develop the Anthropic package, you'll need to follow these instructions:
@@ -103,8 +155,8 @@ Test files should live within a `tests/` file in the `src/` folder. Unit tests s
 end in `.int.test.ts`:
 
 ```bash
-$ pnpm test
-$ pnpm test:int
+pnpm test
+pnpm test:int
 ```
 
 ### Lint & Format
@@ -124,5 +176,5 @@ If you add a new file to be exported, either import & re-export from `src/index.
 After running `pnpm build`, publish a new version with:
 
 ```bash
-$ npm publish
+npm publish
 ```
