@@ -319,7 +319,7 @@ describe("middleware", () => {
     });
   });
 
-  describe("wrapModelRequest", () => {
+  describe("wrapModelCall", () => {
     it("should compose three middlewares where first is outermost wrapper", async () => {
       /**
        * Test demonstrates:
@@ -342,7 +342,7 @@ describe("middleware", () => {
         contextSchema: z.object({
           foobar: z.string().optional(),
         }),
-        wrapModelRequest: async (request, handler) => {
+        wrapModelCall: async (request, handler) => {
           executionOrder.push("auth:before");
           systemPrompts.push(request.systemPrompt || "");
 
@@ -370,7 +370,7 @@ describe("middleware", () => {
       // Retry middleware (second = middle wrapper)
       const retryMiddleware = createMiddleware({
         name: "RetryMiddleware",
-        wrapModelRequest: async (request, handler) => {
+        wrapModelCall: async (request, handler) => {
           executionOrder.push("retry:before");
           systemPrompts.push(request.systemPrompt || "");
 
@@ -396,7 +396,7 @@ describe("middleware", () => {
       // Cache middleware (third = innermost wrapper, closest to model)
       const cacheMiddleware = createMiddleware({
         name: "CacheMiddleware",
-        wrapModelRequest: async (request, handler) => {
+        wrapModelCall: async (request, handler) => {
           executionOrder.push("cache:before");
           systemPrompts.push(request.systemPrompt || "");
 
@@ -502,7 +502,7 @@ describe("middleware", () => {
         contextSchema: z.object({
           middlewareContext: z.number(),
         }),
-        wrapModelRequest: async (request, handler) => {
+        wrapModelCall: async (request, handler) => {
           expectTypeOf(request.state).toMatchObjectType<{
             foobar: string;
             messages: BaseMessage[];
@@ -585,7 +585,7 @@ describe("middleware", () => {
 
       const errorHandlingMiddleware = createMiddleware({
         name: "ErrorHandlingMiddleware",
-        wrapModelRequest: async (request, handler) => {
+        wrapModelCall: async (request, handler) => {
           attemptCount++;
 
           try {
@@ -656,7 +656,7 @@ describe("middleware", () => {
       });
       const modifyingMiddleware = createMiddleware({
         name: "ModifyingMiddleware",
-        wrapModelRequest: async (request, handler) => {
+        wrapModelCall: async (request, handler) => {
           // Middleware could modify the request in various ways
           const modifiedRequest = {
             ...request,
@@ -689,7 +689,7 @@ describe("middleware", () => {
       });
       const modifyingMiddleware = createMiddleware({
         name: "ModifyingMiddleware",
-        wrapModelRequest: () => new AIMessage("skipped"),
+        wrapModelCall: () => new AIMessage("skipped"),
       });
 
       const agent = createAgent({
@@ -713,7 +713,7 @@ describe("middleware", () => {
       const modifyingMiddleware = createMiddleware({
         name: "ModifyingMiddleware",
         // @ts-expect-error should have AIMessage as return value
-        wrapModelRequest: () => {},
+        wrapModelCall: () => {},
       });
 
       const agent = createAgent({
@@ -727,7 +727,7 @@ describe("middleware", () => {
           messages: [{ role: "user", content: "Hi" }],
         })
       ).rejects.toThrow(
-        'Invalid response from "wrapModelRequest" in middleware "ModifyingMiddleware": expected AIMessage, got undefined'
+        'Invalid response from "wrapModelCall" in middleware "ModifyingMiddleware": expected AIMessage, got undefined'
       );
     });
 
@@ -737,7 +737,7 @@ describe("middleware", () => {
       });
       const modifyingMiddleware = createMiddleware({
         name: "ModifyingMiddleware",
-        wrapModelRequest: () => {
+        wrapModelCall: () => {
           throw new Error("foobar");
         },
       });
@@ -790,7 +790,7 @@ describe("middleware", () => {
       // Middleware that intercepts and modifies tool calls
       const toolRedirectMiddleware = createMiddleware({
         name: "ToolRedirectMiddleware",
-        wrapModelRequest: async (request, handler) => {
+        wrapModelCall: async (request, handler) => {
           // Call the model
           const response = await handler(request);
 
@@ -873,7 +873,7 @@ describe("middleware", () => {
 
       const asyncMiddleware1 = createMiddleware({
         name: "AsyncMiddleware1",
-        wrapModelRequest: async (request, handler) => {
+        wrapModelCall: async (request, handler) => {
           const start = Date.now();
           await new Promise((resolve) => setTimeout(resolve, 50));
           const delay = Date.now() - start;
@@ -885,7 +885,7 @@ describe("middleware", () => {
 
       const asyncMiddleware2 = createMiddleware({
         name: "AsyncMiddleware2",
-        wrapModelRequest: async (request, handler) => {
+        wrapModelCall: async (request, handler) => {
           const start = Date.now();
           await new Promise((resolve) => setTimeout(resolve, 30));
           const delay = Date.now() - start;
@@ -924,7 +924,7 @@ describe("middleware", () => {
     it("should pass correct state to each middleware", async () => {
       const middleware1 = createMiddleware({
         name: "Middleware1",
-        wrapModelRequest: async (request, handler) => {
+        wrapModelCall: async (request, handler) => {
           /**
            * we don't allow to change state within these hooks
            */
@@ -938,7 +938,7 @@ describe("middleware", () => {
 
       const middleware2 = createMiddleware({
         name: "Middleware2",
-        wrapModelRequest: async (request, handler) => {
+        wrapModelCall: async (request, handler) => {
           /**
            * we don't allow to change state within these hooks
            */
@@ -1416,10 +1416,10 @@ describe("middleware", () => {
       expect(toolCalls).toEqual(["tool1", "tool2"]);
     });
 
-    it("should work alongside wrapModelRequest middleware", async () => {
+    it("should work alongside wrapModelCall middleware", async () => {
       /**
-       * Test that wrapToolCall and wrapModelRequest can coexist
-       * and that modifications to tool_calls in wrapModelRequest are propagated to wrapToolCall
+       * Test that wrapToolCall and wrapModelCall can coexist
+       * and that modifications to tool_calls in wrapModelCall are propagated to wrapToolCall
        */
       const events: string[] = [];
       let capturedToolCallInWrapTool: ToolCall | undefined;
@@ -1434,7 +1434,7 @@ describe("middleware", () => {
 
       const combinedMiddleware = createMiddleware({
         name: "CombinedMiddleware",
-        wrapModelRequest: async (request, handler) => {
+        wrapModelCall: async (request, handler) => {
           events.push("before_model");
           const result = await handler(request);
           events.push("after_model");
@@ -1494,7 +1494,7 @@ describe("middleware", () => {
       // Verify that the modified tool call was propagated to wrapToolCall
       expect(capturedToolCallInWrapTool).toBeDefined();
       expect(capturedToolCallInWrapTool?.name).toBe("multiply");
-      expect(capturedToolCallInWrapTool?.args.x).toBe(50); // 5 * 10 from wrapModelRequest
+      expect(capturedToolCallInWrapTool?.args.x).toBe(50); // 5 * 10 from wrapModelCall
     });
 
     it("should allow conditional tool execution based on state", async () => {

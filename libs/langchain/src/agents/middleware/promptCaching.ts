@@ -170,7 +170,7 @@ export function anthropicPromptCachingMiddleware(
   return createMiddleware({
     name: "PromptCachingMiddleware",
     contextSchema,
-    wrapModelRequest: (request, handler) => {
+    wrapModelCall: (request, handler) => {
       /**
        * Prefer runtime context values over middleware options values over defaults
        */

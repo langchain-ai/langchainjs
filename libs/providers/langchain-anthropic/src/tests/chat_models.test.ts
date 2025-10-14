@@ -192,6 +192,44 @@ test("Can properly format anthropic messages when given two tool results", async
   });
 });
 
+test("invocationParams includes container when provided in call options", () => {
+  const model = new ChatAnthropic({
+    modelName: "claude-3-haiku-20240307",
+    temperature: 0,
+    anthropicApiKey: "testing",
+  });
+
+  const params = model.invocationParams({ container: "container_123" });
+
+  expect(params.container).toBe("container_123");
+});
+
+test("invocationParams does not include container when not provided", () => {
+  const model = new ChatAnthropic({
+    modelName: "claude-3-haiku-20240307",
+    temperature: 0,
+    anthropicApiKey: "testing",
+  });
+
+  const params = model.invocationParams({});
+
+  expect(params.container).toBeUndefined();
+});
+
+test("invocationParams includes container with thinking enabled", () => {
+  const model = new ChatAnthropic({
+    modelName: "claude-3-haiku-20240307",
+    temperature: 1,
+    anthropicApiKey: "testing",
+    thinking: { type: "enabled", budget_tokens: 1000 },
+  });
+
+  const params = model.invocationParams({ container: "container_456" });
+
+  expect(params.container).toBe("container_456");
+  expect(params.thinking).toEqual({ type: "enabled", budget_tokens: 1000 });
+});
+
 test("Can properly format messages with container_upload blocks", async () => {
   const messageHistory = [
     new HumanMessage({
@@ -235,6 +273,120 @@ test("Drop content blocks that we don't know how to handle", async () => {
       {
         role: "user",
         content: [{ type: "text", text: "Hello" }],
+      },
+    ],
+    system: undefined,
+  });
+});
+
+test("Can properly format messages with bash_code_execution_tool_result blocks", async () => {
+  const messageHistory = [
+    new AIMessage({
+      content: [
+        {
+          type: "server_tool_use",
+          id: "bash_call",
+          name: "bash_code_execution",
+          input: { command: "echo 'hello'" },
+        },
+        {
+          type: "bash_code_execution_tool_result",
+          tool_use_id: "bash_call",
+          content: {
+            type: "bash_code_execution_result",
+            stdout: "hello\n",
+            stderr: "",
+            return_code: 0,
+            content: [],
+          },
+        },
+      ],
+    }),
+  ];
+
+  const formattedMessages = _convertMessagesToAnthropicPayload(messageHistory);
+
+  expect(formattedMessages).toEqual({
+    messages: [
+      {
+        role: "assistant",
+        content: [
+          {
+            type: "server_tool_use",
+            id: "bash_call",
+            name: "bash_code_execution",
+            input: { command: "echo 'hello'" },
+          },
+          {
+            type: "bash_code_execution_tool_result",
+            tool_use_id: "bash_call",
+            content: {
+              type: "bash_code_execution_result",
+              stdout: "hello\n",
+              stderr: "",
+              return_code: 0,
+              content: [],
+            },
+          },
+        ],
+      },
+    ],
+    system: undefined,
+  });
+});
+
+test("Can properly format messages with text_editor_code_execution_tool_result blocks", async () => {
+  const messageHistory = [
+    new AIMessage({
+      content: [
+        {
+          type: "server_tool_use",
+          id: "editor_call",
+          name: "text_editor_code_execution",
+          input: { command: "view", path: "/tmp/test.txt" },
+        },
+        {
+          type: "text_editor_code_execution_tool_result",
+          tool_use_id: "editor_call",
+          content: {
+            type: "text_editor_code_execution_view_result",
+            file_type: "text",
+            content: "file contents here",
+            num_lines: 1,
+            start_line: 1,
+            total_lines: 1,
+          },
+        },
+      ],
+    }),
+  ];
+
+  const formattedMessages = _convertMessagesToAnthropicPayload(messageHistory);
+
+  expect(formattedMessages).toEqual({
+    messages: [
+      {
+        role: "assistant",
+        content: [
+          {
+            type: "server_tool_use",
+            id: "editor_call",
+            name: "text_editor_code_execution",
+            input: { command: "view", path: "/tmp/test.txt" },
+          },
+          {
+            type: "text_editor_code_execution_tool_result",
+            tool_use_id: "editor_call",
+            content: {
+              type: "text_editor_code_execution_view_result",
+              file_type: "text",
+              content: "file contents here",
+              num_lines: 1,
+              start_line: 1,
+              total_lines: 1,
+            },
+          },
+        ],
       },
     ],
     system: undefined,

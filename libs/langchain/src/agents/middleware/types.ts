@@ -171,7 +171,7 @@ export interface AgentMiddleware<
    *
    * @example
    * ```ts
-   * wrapModelRequest: async (request, handler) => {
+   * wrapModelCall: async (request, handler) => {
    *   // Modify request before calling
    *   const modifiedRequest = { ...request, systemPrompt: "You are helpful" };
    *
@@ -186,7 +186,7 @@ export interface AgentMiddleware<
    * }
    * ```
    */
-  wrapModelRequest?(
+  wrapModelCall?(
     request: ModelRequest<
       (TSchema extends InteropZodObject ? InferInteropZodInput<TSchema> : {}) &
         AgentBuiltInState,
