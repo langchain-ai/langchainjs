@@ -17,7 +17,8 @@ import {
   START,
   MessagesAnnotation,
 } from "@langchain/langgraph";
-import { HumanMessage, AIMessage, SystemMessage, ToolNode } from "langchain";
+import { HumanMessage, AIMessage, SystemMessage } from "langchain";
+import { ToolNode } from "@langchain/langgraph/prebuilt";
 import dotenv from "dotenv";
 import fs from "fs";
 import path from "path";

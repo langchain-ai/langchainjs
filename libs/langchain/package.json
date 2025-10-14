@@ -214,17 +214,6 @@
       },
       "input": "./src/storage/file_system.ts"
     },
-    "./middleware": {
-      "import": {
-        "types": "./dist/agents/middlewareAgent/middleware/index.d.ts",
-        "default": "./dist/agents/middlewareAgent/middleware/index.js"
-      },
-      "require": {
-        "types": "./dist/agents/middlewareAgent/middleware/index.d.cts",
-        "default": "./dist/agents/middlewareAgent/middleware/index.cjs"
-      },
-      "input": "./src/agents/middlewareAgent/middleware/index.ts"
-    },
     "./package.json": "./package.json"
   }
 }

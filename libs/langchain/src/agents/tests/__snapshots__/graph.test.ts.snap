@@ -1,149 +1,1411 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`Graph > React Agent Graph Structure > should create correct graph structure: no_tools_no_hooks_no_format 1`] = `
-"graph TD;
-	__start__ --> agent;
-	agent --> __end__;
+exports[`graph (A beforeAgent: [ 'tools' ], A afterAgent: [ 'end' ], A before: [ 'model' ], A after: [ 'tools' ] | B beforeAgent: undefined, B afterAgent: undefined, B before: undefined, B after: undefined | tools: false) > should create correct graph structure 1`] = `
+"%%{init: {'flowchart': {'curve': 'linear'}}}%%
+graph TD;
+	__start__([<p>__start__</p>]):::first
+	MiddlewareA_before_agent(MiddlewareA.before_agent)
+	MiddlewareA_before_model(MiddlewareA.before_model)
+	MiddlewareA_after_model(MiddlewareA.after_model)
+	MiddlewareA_after_agent(MiddlewareA.after_agent)
+	model_request(model_request)
+	__end__([<p>__end__</p>]):::last
+	__start__ --> MiddlewareA_before_agent;
+	model_request --> MiddlewareA_after_model;
+	MiddlewareA_before_agent -.-> MiddlewareA_before_model;
+	MiddlewareA_before_model -.-> model_request;
+	MiddlewareA_after_model -.-> model_request;
+	MiddlewareA_after_model -.-> MiddlewareA_after_agent;
+	MiddlewareA_after_agent -.-> __end__;
+	classDef default fill:#f2f0ff,line-height:1.2;
+	classDef first fill-opacity:0;
+	classDef last fill:#bfb6fc;
 "
 `;
 
-exports[`Graph > React Agent Graph Structure > should create correct graph structure: no_tools_no_hooks_with_format 1`] = `
-"graph TD;
-	__start__ --> agent;
-	agent --> __end__;
+exports[`graph (A beforeAgent: [ 'tools' ], A afterAgent: [ 'end' ], A before: [ 'model' ], A after: [ 'tools' ] | B beforeAgent: undefined, B afterAgent: undefined, B before: undefined, B after: undefined | tools: true) > should create correct graph structure 1`] = `
+"%%{init: {'flowchart': {'curve': 'linear'}}}%%
+graph TD;
+	__start__([<p>__start__</p>]):::first
+	MiddlewareA_before_agent(MiddlewareA.before_agent)
+	MiddlewareA_before_model(MiddlewareA.before_model)
+	MiddlewareA_after_model(MiddlewareA.after_model)
+	MiddlewareA_after_agent(MiddlewareA.after_agent)
+	model_request(model_request)
+	tools(tools)
+	__end__([<p>__end__</p>]):::last
+	__start__ --> MiddlewareA_before_agent;
+	model_request --> MiddlewareA_after_model;
+	tools --> MiddlewareA_before_model;
+	MiddlewareA_before_agent -.-> MiddlewareA_before_model;
+	MiddlewareA_before_agent -.-> tools;
+	MiddlewareA_before_model -.-> model_request;
+	MiddlewareA_after_model -.-> tools;
+	MiddlewareA_after_model -.-> model_request;
+	MiddlewareA_after_model -.-> MiddlewareA_after_agent;
+	MiddlewareA_after_agent -.-> __end__;
+	classDef default fill:#f2f0ff,line-height:1.2;
+	classDef first fill-opacity:0;
+	classDef last fill:#bfb6fc;
 "
 `;
 
-exports[`Graph > React Agent Graph Structure > should create correct graph structure: no_tools_with_both_hooks_no_format 1`] = `
-"graph TD;
-	__start__ --> pre_model_hook;
-	agent --> post_model_hook;
-	post_model_hook --> __end__;
-	pre_model_hook --> agent;
+exports[`graph (A beforeAgent: [ 'tools' ], A afterAgent: undefined, A before: undefined, A after: undefined | B beforeAgent: [ 'model' ], B afterAgent: undefined, B before: undefined, B after: undefined | tools: false) > should create correct graph structure 1`] = `
+"%%{init: {'flowchart': {'curve': 'linear'}}}%%
+graph TD;
+	__start__([<p>__start__</p>]):::first
+	MiddlewareA_before_agent(MiddlewareA.before_agent)
+	MiddlewareB_before_agent(MiddlewareB.before_agent)
+	model_request(model_request)
+	__end__([<p>__end__</p>]):::last
+	__start__ --> MiddlewareA_before_agent;
+	model_request --> __end__;
+	MiddlewareA_before_agent -.-> MiddlewareB_before_agent;
+	MiddlewareB_before_agent -.-> model_request;
+	classDef default fill:#f2f0ff,line-height:1.2;
+	classDef first fill-opacity:0;
+	classDef last fill:#bfb6fc;
 "
 `;
 
-exports[`Graph > React Agent Graph Structure > should create correct graph structure: no_tools_with_both_hooks_with_format 1`] = `
-"graph TD;
-	__start__ --> pre_model_hook;
-	agent --> post_model_hook;
-	post_model_hook --> __end__;
-	pre_model_hook --> agent;
+exports[`graph (A beforeAgent: [ 'tools' ], A afterAgent: undefined, A before: undefined, A after: undefined | B beforeAgent: [ 'model' ], B afterAgent: undefined, B before: undefined, B after: undefined | tools: true) > should create correct graph structure 1`] = `
+"%%{init: {'flowchart': {'curve': 'linear'}}}%%
+graph TD;
+	__start__([<p>__start__</p>]):::first
+	MiddlewareA_before_agent(MiddlewareA.before_agent)
+	MiddlewareB_before_agent(MiddlewareB.before_agent)
+	model_request(model_request)
+	tools(tools)
+	__end__([<p>__end__</p>]):::last
+	__start__ --> MiddlewareA_before_agent;
+	tools --> model_request;
+	MiddlewareA_before_agent -.-> MiddlewareB_before_agent;
+	MiddlewareA_before_agent -.-> tools;
+	MiddlewareB_before_agent -.-> model_request;
+	model_request -.-> tools;
+	model_request -.-> __end__;
+	classDef default fill:#f2f0ff,line-height:1.2;
+	classDef first fill-opacity:0;
+	classDef last fill:#bfb6fc;
 "
 `;
 
-exports[`Graph > React Agent Graph Structure > should create correct graph structure: no_tools_with_post_hook_no_format 1`] = `
-"graph TD;
-	__start__ --> agent;
-	agent --> post_model_hook;
-	post_model_hook --> __end__;
+exports[`graph (A beforeAgent: [ 'tools' ], A afterAgent: undefined, A before: undefined, A after: undefined | B beforeAgent: undefined, B afterAgent: undefined, B before: undefined, B after: undefined | tools: false) > should create correct graph structure 1`] = `
+"%%{init: {'flowchart': {'curve': 'linear'}}}%%
+graph TD;
+	__start__([<p>__start__</p>]):::first
+	MiddlewareA_before_agent(MiddlewareA.before_agent)
+	model_request(model_request)
+	__end__([<p>__end__</p>]):::last
+	__start__ --> MiddlewareA_before_agent;
+	model_request --> __end__;
+	MiddlewareA_before_agent -.-> model_request;
+	classDef default fill:#f2f0ff,line-height:1.2;
+	classDef first fill-opacity:0;
+	classDef last fill:#bfb6fc;
 "
 `;
 
-exports[`Graph > React Agent Graph Structure > should create correct graph structure: no_tools_with_post_hook_with_format 1`] = `
-"graph TD;
-	__start__ --> agent;
-	agent --> post_model_hook;
-	post_model_hook --> __end__;
+exports[`graph (A beforeAgent: [ 'tools' ], A afterAgent: undefined, A before: undefined, A after: undefined | B beforeAgent: undefined, B afterAgent: undefined, B before: undefined, B after: undefined | tools: true) > should create correct graph structure 1`] = `
+"%%{init: {'flowchart': {'curve': 'linear'}}}%%
+graph TD;
+	__start__([<p>__start__</p>]):::first
+	MiddlewareA_before_agent(MiddlewareA.before_agent)
+	model_request(model_request)
+	tools(tools)
+	__end__([<p>__end__</p>]):::last
+	__start__ --> MiddlewareA_before_agent;
+	tools --> model_request;
+	MiddlewareA_before_agent -.-> model_request;
+	MiddlewareA_before_agent -.-> tools;
+	model_request -.-> tools;
+	model_request -.-> __end__;
+	classDef default fill:#f2f0ff,line-height:1.2;
+	classDef first fill-opacity:0;
+	classDef last fill:#bfb6fc;
 "
 `;
 
-exports[`Graph > React Agent Graph Structure > should create correct graph structure: no_tools_with_pre_hook_no_format 1`] = `
-"graph TD;
-	__start__ --> pre_model_hook;
-	agent --> __end__;
-	pre_model_hook --> agent;
+exports[`graph (A beforeAgent: [ 'tools', 'model', 'end' ], A afterAgent: [ 'tools', 'model', 'end' ], A before: [ 'tools' ], A after: [ 'model' ] | B beforeAgent: undefined, B afterAgent: undefined, B before: undefined, B after: undefined | tools: false) > should create correct graph structure 1`] = `
+"%%{init: {'flowchart': {'curve': 'linear'}}}%%
+graph TD;
+	__start__([<p>__start__</p>]):::first
+	MiddlewareA_before_agent(MiddlewareA.before_agent)
+	MiddlewareA_before_model(MiddlewareA.before_model)
+	MiddlewareA_after_model(MiddlewareA.after_model)
+	MiddlewareA_after_agent(MiddlewareA.after_agent)
+	model_request(model_request)
+	__end__([<p>__end__</p>]):::last
+	__start__ --> MiddlewareA_before_agent;
+	model_request --> MiddlewareA_after_model;
+	MiddlewareA_before_agent -.-> MiddlewareA_before_model;
+	MiddlewareA_before_agent -.-> model_request;
+	MiddlewareA_before_agent -.-> MiddlewareA_after_agent;
+	MiddlewareA_before_model -.-> model_request;
+	MiddlewareA_after_model -.-> model_request;
+	MiddlewareA_after_model -.-> MiddlewareA_after_agent;
+	MiddlewareA_after_agent -.-> __end__;
+	MiddlewareA_after_agent -.-> model_request;
+	classDef default fill:#f2f0ff,line-height:1.2;
+	classDef first fill-opacity:0;
+	classDef last fill:#bfb6fc;
 "
 `;
 
-exports[`Graph > React Agent Graph Structure > should create correct graph structure: no_tools_with_pre_hook_with_format 1`] = `
-"graph TD;
-	__start__ --> pre_model_hook;
-	agent --> __end__;
-	pre_model_hook --> agent;
+exports[`graph (A beforeAgent: [ 'tools', 'model', 'end' ], A afterAgent: [ 'tools', 'model', 'end' ], A before: [ 'tools' ], A after: [ 'model' ] | B beforeAgent: undefined, B afterAgent: undefined, B before: undefined, B after: undefined | tools: true) > should create correct graph structure 1`] = `
+"%%{init: {'flowchart': {'curve': 'linear'}}}%%
+graph TD;
+	__start__([<p>__start__</p>]):::first
+	MiddlewareA_before_agent(MiddlewareA.before_agent)
+	MiddlewareA_before_model(MiddlewareA.before_model)
+	MiddlewareA_after_model(MiddlewareA.after_model)
+	MiddlewareA_after_agent(MiddlewareA.after_agent)
+	model_request(model_request)
+	tools(tools)
+	__end__([<p>__end__</p>]):::last
+	__start__ --> MiddlewareA_before_agent;
+	model_request --> MiddlewareA_after_model;
+	tools --> MiddlewareA_before_model;
+	MiddlewareA_before_agent -.-> MiddlewareA_before_model;
+	MiddlewareA_before_agent -.-> tools;
+	MiddlewareA_before_agent -.-> model_request;
+	MiddlewareA_before_agent -.-> MiddlewareA_after_agent;
+	MiddlewareA_before_model -.-> model_request;
+	MiddlewareA_before_model -.-> tools;
+	MiddlewareA_after_model -.-> tools;
+	MiddlewareA_after_model -.-> model_request;
+	MiddlewareA_after_model -.-> MiddlewareA_after_agent;
+	MiddlewareA_after_agent -.-> __end__;
+	MiddlewareA_after_agent -.-> tools;
+	MiddlewareA_after_agent -.-> model_request;
+	classDef default fill:#f2f0ff,line-height:1.2;
+	classDef first fill-opacity:0;
+	classDef last fill:#bfb6fc;
 "
 `;
 
-exports[`Graph > React Agent Graph Structure > should create correct graph structure: two_tools_no_hooks_no_format 1`] = `
-"graph TD;
-	__start__ --> agent;
-	tools --> agent;
-	agent -.-> tools;
-	agent -.-> __end__;
+exports[`graph (A beforeAgent: undefined, A afterAgent: [ 'model' ], A before: undefined, A after: undefined | B beforeAgent: undefined, B afterAgent: undefined, B before: undefined, B after: undefined | tools: false) > should create correct graph structure 1`] = `
+"%%{init: {'flowchart': {'curve': 'linear'}}}%%
+graph TD;
+	__start__([<p>__start__</p>]):::first
+	MiddlewareA_after_agent(MiddlewareA.after_agent)
+	model_request(model_request)
+	__end__([<p>__end__</p>]):::last
+	__start__ --> model_request;
+	model_request --> MiddlewareA_after_agent;
+	MiddlewareA_after_agent -.-> __end__;
+	MiddlewareA_after_agent -.-> model_request;
+	classDef default fill:#f2f0ff,line-height:1.2;
+	classDef first fill-opacity:0;
+	classDef last fill:#bfb6fc;
 "
 `;
 
-exports[`Graph > React Agent Graph Structure > should create correct graph structure: two_tools_no_hooks_with_format 1`] = `
-"graph TD;
-	__start__ --> agent;
-	tools --> agent;
-	agent -.-> tools;
-	agent -.-> __end__;
+exports[`graph (A beforeAgent: undefined, A afterAgent: [ 'model' ], A before: undefined, A after: undefined | B beforeAgent: undefined, B afterAgent: undefined, B before: undefined, B after: undefined | tools: true) > should create correct graph structure 1`] = `
+"%%{init: {'flowchart': {'curve': 'linear'}}}%%
+graph TD;
+	__start__([<p>__start__</p>]):::first
+	MiddlewareA_after_agent(MiddlewareA.after_agent)
+	model_request(model_request)
+	tools(tools)
+	__end__([<p>__end__</p>]):::last
+	__start__ --> model_request;
+	tools --> model_request;
+	model_request -.-> tools;
+	model_request -.-> MiddlewareA_after_agent;
+	MiddlewareA_after_agent -.-> __end__;
+	MiddlewareA_after_agent -.-> model_request;
+	classDef default fill:#f2f0ff,line-height:1.2;
+	classDef first fill-opacity:0;
+	classDef last fill:#bfb6fc;
 "
 `;
 
-exports[`Graph > React Agent Graph Structure > should create correct graph structure: two_tools_with_both_hooks_no_format 1`] = `
-"graph TD;
-	__start__ --> pre_model_hook;
-	agent --> post_model_hook;
-	pre_model_hook --> agent;
-	tools --> pre_model_hook;
-	post_model_hook -.-> pre_model_hook;
-	post_model_hook -.-> tools;
-	post_model_hook -.-> __end__;
+exports[`graph (A beforeAgent: undefined, A afterAgent: [ 'tools' ], A before: undefined, A after: undefined | B beforeAgent: undefined, B afterAgent: [ 'model' ], B before: undefined, B after: undefined | tools: false) > should create correct graph structure 1`] = `
+"%%{init: {'flowchart': {'curve': 'linear'}}}%%
+graph TD;
+	__start__([<p>__start__</p>]):::first
+	MiddlewareA_after_agent(MiddlewareA.after_agent)
+	MiddlewareB_after_agent(MiddlewareB.after_agent)
+	model_request(model_request)
+	__end__([<p>__end__</p>]):::last
+	__start__ --> model_request;
+	model_request --> MiddlewareB_after_agent;
+	MiddlewareB_after_agent -.-> MiddlewareA_after_agent;
+	MiddlewareB_after_agent -.-> model_request;
+	MiddlewareA_after_agent -.-> __end__;
+	classDef default fill:#f2f0ff,line-height:1.2;
+	classDef first fill-opacity:0;
+	classDef last fill:#bfb6fc;
 "
 `;
 
-exports[`Graph > React Agent Graph Structure > should create correct graph structure: two_tools_with_both_hooks_with_format 1`] = `
-"graph TD;
-	__start__ --> pre_model_hook;
-	agent --> post_model_hook;
-	pre_model_hook --> agent;
-	tools --> pre_model_hook;
-	post_model_hook -.-> pre_model_hook;
-	post_model_hook -.-> tools;
-	post_model_hook -.-> __end__;
+exports[`graph (A beforeAgent: undefined, A afterAgent: [ 'tools' ], A before: undefined, A after: undefined | B beforeAgent: undefined, B afterAgent: [ 'model' ], B before: undefined, B after: undefined | tools: true) > should create correct graph structure 1`] = `
+"%%{init: {'flowchart': {'curve': 'linear'}}}%%
+graph TD;
+	__start__([<p>__start__</p>]):::first
+	MiddlewareA_after_agent(MiddlewareA.after_agent)
+	MiddlewareB_after_agent(MiddlewareB.after_agent)
+	model_request(model_request)
+	tools(tools)
+	__end__([<p>__end__</p>]):::last
+	__start__ --> model_request;
+	tools --> model_request;
+	model_request -.-> tools;
+	model_request -.-> MiddlewareB_after_agent;
+	MiddlewareB_after_agent -.-> MiddlewareA_after_agent;
+	MiddlewareB_after_agent -.-> model_request;
+	MiddlewareA_after_agent -.-> __end__;
+	MiddlewareA_after_agent -.-> tools;
+	classDef default fill:#f2f0ff,line-height:1.2;
+	classDef first fill-opacity:0;
+	classDef last fill:#bfb6fc;
 "
 `;
 
-exports[`Graph > React Agent Graph Structure > should create correct graph structure: two_tools_with_post_hook_no_format 1`] = `
-"graph TD;
-	__start__ --> agent;
-	agent --> post_model_hook;
-	tools --> agent;
-	post_model_hook -.-> agent;
-	post_model_hook -.-> tools;
-	post_model_hook -.-> __end__;
+exports[`graph (A beforeAgent: undefined, A afterAgent: undefined, A before: [ 'end' ], A after: [ 'tools' ] | B beforeAgent: undefined, B afterAgent: undefined, B before: [ 'end' ], B after: [ 'model' ] | tools: false) > should create correct graph structure 1`] = `
+"%%{init: {'flowchart': {'curve': 'linear'}}}%%
+graph TD;
+	__start__([<p>__start__</p>]):::first
+	MiddlewareA_before_model(MiddlewareA.before_model)
+	MiddlewareA_after_model(MiddlewareA.after_model)
+	MiddlewareB_before_model(MiddlewareB.before_model)
+	MiddlewareB_after_model(MiddlewareB.after_model)
+	model_request(model_request)
+	__end__([<p>__end__</p>]):::last
+	__start__ --> MiddlewareA_before_model;
+	model_request --> MiddlewareB_after_model;
+	MiddlewareA_before_model -.-> MiddlewareB_before_model;
+	MiddlewareA_before_model -.-> __end__;
+	MiddlewareB_before_model -.-> model_request;
+	MiddlewareB_before_model -.-> __end__;
+	MiddlewareB_after_model -.-> MiddlewareA_after_model;
+	MiddlewareB_after_model -.-> model_request;
+	MiddlewareA_after_model -.-> model_request;
+	MiddlewareA_after_model -.-> __end__;
+	classDef default fill:#f2f0ff,line-height:1.2;
+	classDef first fill-opacity:0;
+	classDef last fill:#bfb6fc;
 "
 `;
 
-exports[`Graph > React Agent Graph Structure > should create correct graph structure: two_tools_with_post_hook_with_format 1`] = `
-"graph TD;
-	__start__ --> agent;
-	agent --> post_model_hook;
-	tools --> agent;
-	post_model_hook -.-> agent;
-	post_model_hook -.-> tools;
-	post_model_hook -.-> __end__;
+exports[`graph (A beforeAgent: undefined, A afterAgent: undefined, A before: [ 'end' ], A after: [ 'tools' ] | B beforeAgent: undefined, B afterAgent: undefined, B before: [ 'end' ], B after: [ 'model' ] | tools: true) > should create correct graph structure 1`] = `
+"%%{init: {'flowchart': {'curve': 'linear'}}}%%
+graph TD;
+	__start__([<p>__start__</p>]):::first
+	MiddlewareA_before_model(MiddlewareA.before_model)
+	MiddlewareA_after_model(MiddlewareA.after_model)
+	MiddlewareB_before_model(MiddlewareB.before_model)
+	MiddlewareB_after_model(MiddlewareB.after_model)
+	model_request(model_request)
+	tools(tools)
+	__end__([<p>__end__</p>]):::last
+	__start__ --> MiddlewareA_before_model;
+	model_request --> MiddlewareB_after_model;
+	tools --> MiddlewareA_before_model;
+	MiddlewareA_before_model -.-> MiddlewareB_before_model;
+	MiddlewareA_before_model -.-> __end__;
+	MiddlewareB_before_model -.-> model_request;
+	MiddlewareB_before_model -.-> __end__;
+	MiddlewareB_after_model -.-> MiddlewareA_after_model;
+	MiddlewareB_after_model -.-> model_request;
+	MiddlewareA_after_model -.-> tools;
+	MiddlewareA_after_model -.-> model_request;
+	MiddlewareA_after_model -.-> __end__;
+	classDef default fill:#f2f0ff,line-height:1.2;
+	classDef first fill-opacity:0;
+	classDef last fill:#bfb6fc;
 "
 `;
 
-exports[`Graph > React Agent Graph Structure > should create correct graph structure: two_tools_with_pre_hook_no_format 1`] = `
-"graph TD;
-	__start__ --> pre_model_hook;
-	pre_model_hook --> agent;
-	tools --> pre_model_hook;
-	agent -.-> tools;
-	agent -.-> __end__;
+exports[`graph (A beforeAgent: undefined, A afterAgent: undefined, A before: [ 'end' ], A after: undefined | B beforeAgent: undefined, B afterAgent: undefined, B before: [ 'tools' ], B after: undefined | tools: false) > should create correct graph structure 1`] = `
+"%%{init: {'flowchart': {'curve': 'linear'}}}%%
+graph TD;
+	__start__([<p>__start__</p>]):::first
+	MiddlewareA_before_model(MiddlewareA.before_model)
+	MiddlewareB_before_model(MiddlewareB.before_model)
+	model_request(model_request)
+	__end__([<p>__end__</p>]):::last
+	__start__ --> MiddlewareA_before_model;
+	model_request --> __end__;
+	MiddlewareA_before_model -.-> MiddlewareB_before_model;
+	MiddlewareA_before_model -.-> __end__;
+	MiddlewareB_before_model -.-> model_request;
+	classDef default fill:#f2f0ff,line-height:1.2;
+	classDef first fill-opacity:0;
+	classDef last fill:#bfb6fc;
 "
 `;
 
-exports[`Graph > React Agent Graph Structure > should create correct graph structure: two_tools_with_pre_hook_with_format 1`] = `
-"graph TD;
-	__start__ --> pre_model_hook;
-	pre_model_hook --> agent;
-	tools --> pre_model_hook;
-	agent -.-> tools;
-	agent -.-> __end__;
+exports[`graph (A beforeAgent: undefined, A afterAgent: undefined, A before: [ 'end' ], A after: undefined | B beforeAgent: undefined, B afterAgent: undefined, B before: [ 'tools' ], B after: undefined | tools: true) > should create correct graph structure 1`] = `
+"%%{init: {'flowchart': {'curve': 'linear'}}}%%
+graph TD;
+	__start__([<p>__start__</p>]):::first
+	MiddlewareA_before_model(MiddlewareA.before_model)
+	MiddlewareB_before_model(MiddlewareB.before_model)
+	model_request(model_request)
+	tools(tools)
+	__end__([<p>__end__</p>]):::last
+	__start__ --> MiddlewareA_before_model;
+	tools --> MiddlewareA_before_model;
+	MiddlewareA_before_model -.-> MiddlewareB_before_model;
+	MiddlewareA_before_model -.-> __end__;
+	MiddlewareB_before_model -.-> model_request;
+	MiddlewareB_before_model -.-> tools;
+	model_request -.-> tools;
+	model_request -.-> __end__;
+	classDef default fill:#f2f0ff,line-height:1.2;
+	classDef first fill-opacity:0;
+	classDef last fill:#bfb6fc;
+"
+`;
+
+exports[`graph (A beforeAgent: undefined, A afterAgent: undefined, A before: [ 'end' ], A after: undefined | B beforeAgent: undefined, B afterAgent: undefined, B before: undefined, B after: undefined | tools: false) > should create correct graph structure 1`] = `
+"%%{init: {'flowchart': {'curve': 'linear'}}}%%
+graph TD;
+	__start__([<p>__start__</p>]):::first
+	MiddlewareA_before_model(MiddlewareA.before_model)
+	model_request(model_request)
+	__end__([<p>__end__</p>]):::last
+	__start__ --> MiddlewareA_before_model;
+	model_request --> __end__;
+	MiddlewareA_before_model -.-> model_request;
+	MiddlewareA_before_model -.-> __end__;
+	classDef default fill:#f2f0ff,line-height:1.2;
+	classDef first fill-opacity:0;
+	classDef last fill:#bfb6fc;
+"
+`;
+
+exports[`graph (A beforeAgent: undefined, A afterAgent: undefined, A before: [ 'end' ], A after: undefined | B beforeAgent: undefined, B afterAgent: undefined, B before: undefined, B after: undefined | tools: true) > should create correct graph structure 1`] = `
+"%%{init: {'flowchart': {'curve': 'linear'}}}%%
+graph TD;
+	__start__([<p>__start__</p>]):::first
+	MiddlewareA_before_model(MiddlewareA.before_model)
+	model_request(model_request)
+	tools(tools)
+	__end__([<p>__end__</p>]):::last
+	__start__ --> MiddlewareA_before_model;
+	tools --> MiddlewareA_before_model;
+	MiddlewareA_before_model -.-> model_request;
+	MiddlewareA_before_model -.-> __end__;
+	model_request -.-> tools;
+	model_request -.-> __end__;
+	classDef default fill:#f2f0ff,line-height:1.2;
+	classDef first fill-opacity:0;
+	classDef last fill:#bfb6fc;
+"
+`;
+
+exports[`graph (A beforeAgent: undefined, A afterAgent: undefined, A before: [ 'model' ], A after: [ 'tools' ] | B beforeAgent: undefined, B afterAgent: undefined, B before: undefined, B after: undefined | tools: false) > should create correct graph structure 1`] = `
+"%%{init: {'flowchart': {'curve': 'linear'}}}%%
+graph TD;
+	__start__([<p>__start__</p>]):::first
+	MiddlewareA_before_model(MiddlewareA.before_model)
+	MiddlewareA_after_model(MiddlewareA.after_model)
+	model_request(model_request)
+	__end__([<p>__end__</p>]):::last
+	__start__ --> MiddlewareA_before_model;
+	model_request --> MiddlewareA_after_model;
+	MiddlewareA_before_model -.-> model_request;
+	MiddlewareA_after_model -.-> model_request;
+	MiddlewareA_after_model -.-> __end__;
+	classDef default fill:#f2f0ff,line-height:1.2;
+	classDef first fill-opacity:0;
+	classDef last fill:#bfb6fc;
+"
+`;
+
+exports[`graph (A beforeAgent: undefined, A afterAgent: undefined, A before: [ 'model' ], A after: [ 'tools' ] | B beforeAgent: undefined, B afterAgent: undefined, B before: undefined, B after: undefined | tools: true) > should create correct graph structure 1`] = `
+"%%{init: {'flowchart': {'curve': 'linear'}}}%%
+graph TD;
+	__start__([<p>__start__</p>]):::first
+	MiddlewareA_before_model(MiddlewareA.before_model)
+	MiddlewareA_after_model(MiddlewareA.after_model)
+	model_request(model_request)
+	tools(tools)
+	__end__([<p>__end__</p>]):::last
+	__start__ --> MiddlewareA_before_model;
+	model_request --> MiddlewareA_after_model;
+	tools --> MiddlewareA_before_model;
+	MiddlewareA_before_model -.-> model_request;
+	MiddlewareA_after_model -.-> tools;
+	MiddlewareA_after_model -.-> model_request;
+	MiddlewareA_after_model -.-> __end__;
+	classDef default fill:#f2f0ff,line-height:1.2;
+	classDef first fill-opacity:0;
+	classDef last fill:#bfb6fc;
+"
+`;
+
+exports[`graph (A beforeAgent: undefined, A afterAgent: undefined, A before: [ 'model' ], A after: undefined | B beforeAgent: undefined, B afterAgent: undefined, B before: [ 'tools' ], B after: undefined | tools: false) > should create correct graph structure 1`] = `
+"%%{init: {'flowchart': {'curve': 'linear'}}}%%
+graph TD;
+	__start__([<p>__start__</p>]):::first
+	MiddlewareA_before_model(MiddlewareA.before_model)
+	MiddlewareB_before_model(MiddlewareB.before_model)
+	model_request(model_request)
+	__end__([<p>__end__</p>]):::last
+	__start__ --> MiddlewareA_before_model;
+	model_request --> __end__;
+	MiddlewareA_before_model -.-> MiddlewareB_before_model;
+	MiddlewareA_before_model -.-> model_request;
+	MiddlewareB_before_model -.-> model_request;
+	classDef default fill:#f2f0ff,line-height:1.2;
+	classDef first fill-opacity:0;
+	classDef last fill:#bfb6fc;
+"
+`;
+
+exports[`graph (A beforeAgent: undefined, A afterAgent: undefined, A before: [ 'model' ], A after: undefined | B beforeAgent: undefined, B afterAgent: undefined, B before: [ 'tools' ], B after: undefined | tools: true) > should create correct graph structure 1`] = `
+"%%{init: {'flowchart': {'curve': 'linear'}}}%%
+graph TD;
+	__start__([<p>__start__</p>]):::first
+	MiddlewareA_before_model(MiddlewareA.before_model)
+	MiddlewareB_before_model(MiddlewareB.before_model)
+	model_request(model_request)
+	tools(tools)
+	__end__([<p>__end__</p>]):::last
+	__start__ --> MiddlewareA_before_model;
+	tools --> MiddlewareA_before_model;
+	MiddlewareA_before_model -.-> MiddlewareB_before_model;
+	MiddlewareA_before_model -.-> model_request;
+	MiddlewareB_before_model -.-> model_request;
+	MiddlewareB_before_model -.-> tools;
+	model_request -.-> tools;
+	model_request -.-> __end__;
+	classDef default fill:#f2f0ff,line-height:1.2;
+	classDef first fill-opacity:0;
+	classDef last fill:#bfb6fc;
+"
+`;
+
+exports[`graph (A beforeAgent: undefined, A afterAgent: undefined, A before: [ 'model' ], A after: undefined | B beforeAgent: undefined, B afterAgent: undefined, B before: undefined, B after: undefined | tools: false) > should create correct graph structure 1`] = `
+"%%{init: {'flowchart': {'curve': 'linear'}}}%%
+graph TD;
+	__start__([<p>__start__</p>]):::first
+	MiddlewareA_before_model(MiddlewareA.before_model)
+	model_request(model_request)
+	__end__([<p>__end__</p>]):::last
+	__start__ --> MiddlewareA_before_model;
+	model_request --> __end__;
+	MiddlewareA_before_model -.-> model_request;
+	classDef default fill:#f2f0ff,line-height:1.2;
+	classDef first fill-opacity:0;
+	classDef last fill:#bfb6fc;
+"
+`;
+
+exports[`graph (A beforeAgent: undefined, A afterAgent: undefined, A before: [ 'model' ], A after: undefined | B beforeAgent: undefined, B afterAgent: undefined, B before: undefined, B after: undefined | tools: true) > should create correct graph structure 1`] = `
+"%%{init: {'flowchart': {'curve': 'linear'}}}%%
+graph TD;
+	__start__([<p>__start__</p>]):::first
+	MiddlewareA_before_model(MiddlewareA.before_model)
+	model_request(model_request)
+	tools(tools)
+	__end__([<p>__end__</p>]):::last
+	__start__ --> MiddlewareA_before_model;
+	tools --> MiddlewareA_before_model;
+	MiddlewareA_before_model -.-> model_request;
+	model_request -.-> tools;
+	model_request -.-> __end__;
+	classDef default fill:#f2f0ff,line-height:1.2;
+	classDef first fill-opacity:0;
+	classDef last fill:#bfb6fc;
+"
+`;
+
+exports[`graph (A beforeAgent: undefined, A afterAgent: undefined, A before: [ 'model', 'end' ], A after: undefined | B beforeAgent: undefined, B afterAgent: undefined, B before: [ 'tools' ], B after: undefined | tools: false) > should create correct graph structure 1`] = `
+"%%{init: {'flowchart': {'curve': 'linear'}}}%%
+graph TD;
+	__start__([<p>__start__</p>]):::first
+	MiddlewareA_before_model(MiddlewareA.before_model)
+	MiddlewareB_before_model(MiddlewareB.before_model)
+	model_request(model_request)
+	__end__([<p>__end__</p>]):::last
+	__start__ --> MiddlewareA_before_model;
+	model_request --> __end__;
+	MiddlewareA_before_model -.-> MiddlewareB_before_model;
+	MiddlewareA_before_model -.-> model_request;
+	MiddlewareA_before_model -.-> __end__;
+	MiddlewareB_before_model -.-> model_request;
+	classDef default fill:#f2f0ff,line-height:1.2;
+	classDef first fill-opacity:0;
+	classDef last fill:#bfb6fc;
+"
+`;
+
+exports[`graph (A beforeAgent: undefined, A afterAgent: undefined, A before: [ 'model', 'end' ], A after: undefined | B beforeAgent: undefined, B afterAgent: undefined, B before: [ 'tools' ], B after: undefined | tools: true) > should create correct graph structure 1`] = `
+"%%{init: {'flowchart': {'curve': 'linear'}}}%%
+graph TD;
+	__start__([<p>__start__</p>]):::first
+	MiddlewareA_before_model(MiddlewareA.before_model)
+	MiddlewareB_before_model(MiddlewareB.before_model)
+	model_request(model_request)
+	tools(tools)
+	__end__([<p>__end__</p>]):::last
+	__start__ --> MiddlewareA_before_model;
+	tools --> MiddlewareA_before_model;
+	MiddlewareA_before_model -.-> MiddlewareB_before_model;
+	MiddlewareA_before_model -.-> model_request;
+	MiddlewareA_before_model -.-> __end__;
+	MiddlewareB_before_model -.-> model_request;
+	MiddlewareB_before_model -.-> tools;
+	model_request -.-> tools;
+	model_request -.-> __end__;
+	classDef default fill:#f2f0ff,line-height:1.2;
+	classDef first fill-opacity:0;
+	classDef last fill:#bfb6fc;
+"
+`;
+
+exports[`graph (A beforeAgent: undefined, A afterAgent: undefined, A before: [ 'tools' ], A after: [ 'end' ] | B beforeAgent: undefined, B afterAgent: undefined, B before: [ 'model' ], B after: undefined | tools: false) > should create correct graph structure 1`] = `
+"%%{init: {'flowchart': {'curve': 'linear'}}}%%
+graph TD;
+	__start__([<p>__start__</p>]):::first
+	MiddlewareA_before_model(MiddlewareA.before_model)
+	MiddlewareA_after_model(MiddlewareA.after_model)
+	MiddlewareB_before_model(MiddlewareB.before_model)
+	model_request(model_request)
+	__end__([<p>__end__</p>]):::last
+	__start__ --> MiddlewareA_before_model;
+	model_request --> MiddlewareA_after_model;
+	MiddlewareA_before_model -.-> MiddlewareB_before_model;
+	MiddlewareB_before_model -.-> model_request;
+	MiddlewareA_after_model -.-> model_request;
+	MiddlewareA_after_model -.-> __end__;
+	classDef default fill:#f2f0ff,line-height:1.2;
+	classDef first fill-opacity:0;
+	classDef last fill:#bfb6fc;
+"
+`;
+
+exports[`graph (A beforeAgent: undefined, A afterAgent: undefined, A before: [ 'tools' ], A after: [ 'end' ] | B beforeAgent: undefined, B afterAgent: undefined, B before: [ 'model' ], B after: undefined | tools: true) > should create correct graph structure 1`] = `
+"%%{init: {'flowchart': {'curve': 'linear'}}}%%
+graph TD;
+	__start__([<p>__start__</p>]):::first
+	MiddlewareA_before_model(MiddlewareA.before_model)
+	MiddlewareA_after_model(MiddlewareA.after_model)
+	MiddlewareB_before_model(MiddlewareB.before_model)
+	model_request(model_request)
+	tools(tools)
+	__end__([<p>__end__</p>]):::last
+	__start__ --> MiddlewareA_before_model;
+	model_request --> MiddlewareA_after_model;
+	tools --> MiddlewareA_before_model;
+	MiddlewareA_before_model -.-> MiddlewareB_before_model;
+	MiddlewareA_before_model -.-> tools;
+	MiddlewareB_before_model -.-> model_request;
+	MiddlewareA_after_model -.-> tools;
+	MiddlewareA_after_model -.-> model_request;
+	MiddlewareA_after_model -.-> __end__;
+	classDef default fill:#f2f0ff,line-height:1.2;
+	classDef first fill-opacity:0;
+	classDef last fill:#bfb6fc;
+"
+`;
+
+exports[`graph (A beforeAgent: undefined, A afterAgent: undefined, A before: [ 'tools' ], A after: [ 'model' ] | B beforeAgent: undefined, B afterAgent: undefined, B before: undefined, B after: undefined | tools: false) > should create correct graph structure 1`] = `
+"%%{init: {'flowchart': {'curve': 'linear'}}}%%
+graph TD;
+	__start__([<p>__start__</p>]):::first
+	MiddlewareA_before_model(MiddlewareA.before_model)
+	MiddlewareA_after_model(MiddlewareA.after_model)
+	model_request(model_request)
+	__end__([<p>__end__</p>]):::last
+	__start__ --> MiddlewareA_before_model;
+	model_request --> MiddlewareA_after_model;
+	MiddlewareA_before_model -.-> model_request;
+	MiddlewareA_after_model -.-> model_request;
+	MiddlewareA_after_model -.-> __end__;
+	classDef default fill:#f2f0ff,line-height:1.2;
+	classDef first fill-opacity:0;
+	classDef last fill:#bfb6fc;
+"
+`;
+
+exports[`graph (A beforeAgent: undefined, A afterAgent: undefined, A before: [ 'tools' ], A after: [ 'model' ] | B beforeAgent: undefined, B afterAgent: undefined, B before: undefined, B after: undefined | tools: true) > should create correct graph structure 1`] = `
+"%%{init: {'flowchart': {'curve': 'linear'}}}%%
+graph TD;
+	__start__([<p>__start__</p>]):::first
+	MiddlewareA_before_model(MiddlewareA.before_model)
+	MiddlewareA_after_model(MiddlewareA.after_model)
+	model_request(model_request)
+	tools(tools)
+	__end__([<p>__end__</p>]):::last
+	__start__ --> MiddlewareA_before_model;
+	model_request --> MiddlewareA_after_model;
+	tools --> MiddlewareA_before_model;
+	MiddlewareA_before_model -.-> model_request;
+	MiddlewareA_before_model -.-> tools;
+	MiddlewareA_after_model -.-> tools;
+	MiddlewareA_after_model -.-> model_request;
+	MiddlewareA_after_model -.-> __end__;
+	classDef default fill:#f2f0ff,line-height:1.2;
+	classDef first fill-opacity:0;
+	classDef last fill:#bfb6fc;
+"
+`;
+
+exports[`graph (A beforeAgent: undefined, A afterAgent: undefined, A before: [ 'tools' ], A after: [ 'model', 'end' ] | B beforeAgent: undefined, B afterAgent: undefined, B before: [ 'model' ], B after: [ 'tools' ] | tools: false) > should create correct graph structure 1`] = `
+"%%{init: {'flowchart': {'curve': 'linear'}}}%%
+graph TD;
+	__start__([<p>__start__</p>]):::first
+	MiddlewareA_before_model(MiddlewareA.before_model)
+	MiddlewareA_after_model(MiddlewareA.after_model)
+	MiddlewareB_before_model(MiddlewareB.before_model)
+	MiddlewareB_after_model(MiddlewareB.after_model)
+	model_request(model_request)
+	__end__([<p>__end__</p>]):::last
+	__start__ --> MiddlewareA_before_model;
+	model_request --> MiddlewareB_after_model;
+	MiddlewareA_before_model -.-> MiddlewareB_before_model;
+	MiddlewareB_before_model -.-> model_request;
+	MiddlewareB_after_model -.-> MiddlewareA_after_model;
+	MiddlewareA_after_model -.-> model_request;
+	MiddlewareA_after_model -.-> __end__;
+	classDef default fill:#f2f0ff,line-height:1.2;
+	classDef first fill-opacity:0;
+	classDef last fill:#bfb6fc;
+"
+`;
+
+exports[`graph (A beforeAgent: undefined, A afterAgent: undefined, A before: [ 'tools' ], A after: [ 'model', 'end' ] | B beforeAgent: undefined, B afterAgent: undefined, B before: [ 'model' ], B after: [ 'tools' ] | tools: true) > should create correct graph structure 1`] = `
+"%%{init: {'flowchart': {'curve': 'linear'}}}%%
+graph TD;
+	__start__([<p>__start__</p>]):::first
+	MiddlewareA_before_model(MiddlewareA.before_model)
+	MiddlewareA_after_model(MiddlewareA.after_model)
+	MiddlewareB_before_model(MiddlewareB.before_model)
+	MiddlewareB_after_model(MiddlewareB.after_model)
+	model_request(model_request)
+	tools(tools)
+	__end__([<p>__end__</p>]):::last
+	__start__ --> MiddlewareA_before_model;
+	model_request --> MiddlewareB_after_model;
+	tools --> MiddlewareA_before_model;
+	MiddlewareA_before_model -.-> MiddlewareB_before_model;
+	MiddlewareA_before_model -.-> tools;
+	MiddlewareB_before_model -.-> model_request;
+	MiddlewareB_after_model -.-> MiddlewareA_after_model;
+	MiddlewareB_after_model -.-> tools;
+	MiddlewareA_after_model -.-> tools;
+	MiddlewareA_after_model -.-> model_request;
+	MiddlewareA_after_model -.-> __end__;
+	classDef default fill:#f2f0ff,line-height:1.2;
+	classDef first fill-opacity:0;
+	classDef last fill:#bfb6fc;
+"
+`;
+
+exports[`graph (A beforeAgent: undefined, A afterAgent: undefined, A before: [ 'tools' ], A after: undefined | B beforeAgent: undefined, B afterAgent: undefined, B before: [ 'model' ], B after: undefined | tools: false) > should create correct graph structure 1`] = `
+"%%{init: {'flowchart': {'curve': 'linear'}}}%%
+graph TD;
+	__start__([<p>__start__</p>]):::first
+	MiddlewareA_before_model(MiddlewareA.before_model)
+	MiddlewareB_before_model(MiddlewareB.before_model)
+	model_request(model_request)
+	__end__([<p>__end__</p>]):::last
+	__start__ --> MiddlewareA_before_model;
+	model_request --> __end__;
+	MiddlewareA_before_model -.-> MiddlewareB_before_model;
+	MiddlewareB_before_model -.-> model_request;
+	classDef default fill:#f2f0ff,line-height:1.2;
+	classDef first fill-opacity:0;
+	classDef last fill:#bfb6fc;
+"
+`;
+
+exports[`graph (A beforeAgent: undefined, A afterAgent: undefined, A before: [ 'tools' ], A after: undefined | B beforeAgent: undefined, B afterAgent: undefined, B before: [ 'model' ], B after: undefined | tools: true) > should create correct graph structure 1`] = `
+"%%{init: {'flowchart': {'curve': 'linear'}}}%%
+graph TD;
+	__start__([<p>__start__</p>]):::first
+	MiddlewareA_before_model(MiddlewareA.before_model)
+	MiddlewareB_before_model(MiddlewareB.before_model)
+	model_request(model_request)
+	tools(tools)
+	__end__([<p>__end__</p>]):::last
+	__start__ --> MiddlewareA_before_model;
+	tools --> MiddlewareA_before_model;
+	MiddlewareA_before_model -.-> MiddlewareB_before_model;
+	MiddlewareA_before_model -.-> tools;
+	MiddlewareB_before_model -.-> model_request;
+	model_request -.-> tools;
+	model_request -.-> __end__;
+	classDef default fill:#f2f0ff,line-height:1.2;
+	classDef first fill-opacity:0;
+	classDef last fill:#bfb6fc;
+"
+`;
+
+exports[`graph (A beforeAgent: undefined, A afterAgent: undefined, A before: [ 'tools' ], A after: undefined | B beforeAgent: undefined, B afterAgent: undefined, B before: undefined, B after: undefined | tools: false) > should create correct graph structure 1`] = `
+"%%{init: {'flowchart': {'curve': 'linear'}}}%%
+graph TD;
+	__start__([<p>__start__</p>]):::first
+	MiddlewareA_before_model(MiddlewareA.before_model)
+	model_request(model_request)
+	__end__([<p>__end__</p>]):::last
+	__start__ --> MiddlewareA_before_model;
+	model_request --> __end__;
+	MiddlewareA_before_model -.-> model_request;
+	classDef default fill:#f2f0ff,line-height:1.2;
+	classDef first fill-opacity:0;
+	classDef last fill:#bfb6fc;
+"
+`;
+
+exports[`graph (A beforeAgent: undefined, A afterAgent: undefined, A before: [ 'tools' ], A after: undefined | B beforeAgent: undefined, B afterAgent: undefined, B before: undefined, B after: undefined | tools: true) > should create correct graph structure 1`] = `
+"%%{init: {'flowchart': {'curve': 'linear'}}}%%
+graph TD;
+	__start__([<p>__start__</p>]):::first
+	MiddlewareA_before_model(MiddlewareA.before_model)
+	model_request(model_request)
+	tools(tools)
+	__end__([<p>__end__</p>]):::last
+	__start__ --> MiddlewareA_before_model;
+	tools --> MiddlewareA_before_model;
+	MiddlewareA_before_model -.-> model_request;
+	MiddlewareA_before_model -.-> tools;
+	model_request -.-> tools;
+	model_request -.-> __end__;
+	classDef default fill:#f2f0ff,line-height:1.2;
+	classDef first fill-opacity:0;
+	classDef last fill:#bfb6fc;
+"
+`;
+
+exports[`graph (A beforeAgent: undefined, A afterAgent: undefined, A before: [ 'tools', 'end' ], A after: undefined | B beforeAgent: undefined, B afterAgent: undefined, B before: [ 'model' ], B after: undefined | tools: false) > should create correct graph structure 1`] = `
+"%%{init: {'flowchart': {'curve': 'linear'}}}%%
+graph TD;
+	__start__([<p>__start__</p>]):::first
+	MiddlewareA_before_model(MiddlewareA.before_model)
+	MiddlewareB_before_model(MiddlewareB.before_model)
+	model_request(model_request)
+	__end__([<p>__end__</p>]):::last
+	__start__ --> MiddlewareA_before_model;
+	model_request --> __end__;
+	MiddlewareA_before_model -.-> MiddlewareB_before_model;
+	MiddlewareA_before_model -.-> __end__;
+	MiddlewareB_before_model -.-> model_request;
+	classDef default fill:#f2f0ff,line-height:1.2;
+	classDef first fill-opacity:0;
+	classDef last fill:#bfb6fc;
+"
+`;
+
+exports[`graph (A beforeAgent: undefined, A afterAgent: undefined, A before: [ 'tools', 'end' ], A after: undefined | B beforeAgent: undefined, B afterAgent: undefined, B before: [ 'model' ], B after: undefined | tools: true) > should create correct graph structure 1`] = `
+"%%{init: {'flowchart': {'curve': 'linear'}}}%%
+graph TD;
+	__start__([<p>__start__</p>]):::first
+	MiddlewareA_before_model(MiddlewareA.before_model)
+	MiddlewareB_before_model(MiddlewareB.before_model)
+	model_request(model_request)
+	tools(tools)
+	__end__([<p>__end__</p>]):::last
+	__start__ --> MiddlewareA_before_model;
+	tools --> MiddlewareA_before_model;
+	MiddlewareA_before_model -.-> MiddlewareB_before_model;
+	MiddlewareA_before_model -.-> tools;
+	MiddlewareA_before_model -.-> __end__;
+	MiddlewareB_before_model -.-> model_request;
+	model_request -.-> tools;
+	model_request -.-> __end__;
+	classDef default fill:#f2f0ff,line-height:1.2;
+	classDef first fill-opacity:0;
+	classDef last fill:#bfb6fc;
+"
+`;
+
+exports[`graph (A beforeAgent: undefined, A afterAgent: undefined, A before: [ 'tools', 'model' ], A after: [ 'end' ] | B beforeAgent: undefined, B afterAgent: undefined, B before: [ 'tools' ], B after: [ 'model' ] | tools: false) > should create correct graph structure 1`] = `
+"%%{init: {'flowchart': {'curve': 'linear'}}}%%
+graph TD;
+	__start__([<p>__start__</p>]):::first
+	MiddlewareA_before_model(MiddlewareA.before_model)
+	MiddlewareA_after_model(MiddlewareA.after_model)
+	MiddlewareB_before_model(MiddlewareB.before_model)
+	MiddlewareB_after_model(MiddlewareB.after_model)
+	model_request(model_request)
+	__end__([<p>__end__</p>]):::last
+	__start__ --> MiddlewareA_before_model;
+	model_request --> MiddlewareB_after_model;
+	MiddlewareA_before_model -.-> MiddlewareB_before_model;
+	MiddlewareA_before_model -.-> model_request;
+	MiddlewareB_before_model -.-> model_request;
+	MiddlewareB_after_model -.-> MiddlewareA_after_model;
+	MiddlewareB_after_model -.-> model_request;
+	MiddlewareA_after_model -.-> model_request;
+	MiddlewareA_after_model -.-> __end__;
+	classDef default fill:#f2f0ff,line-height:1.2;
+	classDef first fill-opacity:0;
+	classDef last fill:#bfb6fc;
+"
+`;
+
+exports[`graph (A beforeAgent: undefined, A afterAgent: undefined, A before: [ 'tools', 'model' ], A after: [ 'end' ] | B beforeAgent: undefined, B afterAgent: undefined, B before: [ 'tools' ], B after: [ 'model' ] | tools: true) > should create correct graph structure 1`] = `
+"%%{init: {'flowchart': {'curve': 'linear'}}}%%
+graph TD;
+	__start__([<p>__start__</p>]):::first
+	MiddlewareA_before_model(MiddlewareA.before_model)
+	MiddlewareA_after_model(MiddlewareA.after_model)
+	MiddlewareB_before_model(MiddlewareB.before_model)
+	MiddlewareB_after_model(MiddlewareB.after_model)
+	model_request(model_request)
+	tools(tools)
+	__end__([<p>__end__</p>]):::last
+	__start__ --> MiddlewareA_before_model;
+	model_request --> MiddlewareB_after_model;
+	tools --> MiddlewareA_before_model;
+	MiddlewareA_before_model -.-> MiddlewareB_before_model;
+	MiddlewareA_before_model -.-> tools;
+	MiddlewareA_before_model -.-> model_request;
+	MiddlewareB_before_model -.-> model_request;
+	MiddlewareB_before_model -.-> tools;
+	MiddlewareB_after_model -.-> MiddlewareA_after_model;
+	MiddlewareB_after_model -.-> model_request;
+	MiddlewareA_after_model -.-> tools;
+	MiddlewareA_after_model -.-> model_request;
+	MiddlewareA_after_model -.-> __end__;
+	classDef default fill:#f2f0ff,line-height:1.2;
+	classDef first fill-opacity:0;
+	classDef last fill:#bfb6fc;
+"
+`;
+
+exports[`graph (A beforeAgent: undefined, A afterAgent: undefined, A before: [ 'tools', 'model' ], A after: undefined | B beforeAgent: undefined, B afterAgent: undefined, B before: undefined, B after: undefined | tools: false) > should create correct graph structure 1`] = `
+"%%{init: {'flowchart': {'curve': 'linear'}}}%%
+graph TD;
+	__start__([<p>__start__</p>]):::first
+	MiddlewareA_before_model(MiddlewareA.before_model)
+	model_request(model_request)
+	__end__([<p>__end__</p>]):::last
+	__start__ --> MiddlewareA_before_model;
+	model_request --> __end__;
+	MiddlewareA_before_model -.-> model_request;
+	classDef default fill:#f2f0ff,line-height:1.2;
+	classDef first fill-opacity:0;
+	classDef last fill:#bfb6fc;
+"
+`;
+
+exports[`graph (A beforeAgent: undefined, A afterAgent: undefined, A before: [ 'tools', 'model' ], A after: undefined | B beforeAgent: undefined, B afterAgent: undefined, B before: undefined, B after: undefined | tools: true) > should create correct graph structure 1`] = `
+"%%{init: {'flowchart': {'curve': 'linear'}}}%%
+graph TD;
+	__start__([<p>__start__</p>]):::first
+	MiddlewareA_before_model(MiddlewareA.before_model)
+	model_request(model_request)
+	tools(tools)
+	__end__([<p>__end__</p>]):::last
+	__start__ --> MiddlewareA_before_model;
+	tools --> MiddlewareA_before_model;
+	MiddlewareA_before_model -.-> model_request;
+	MiddlewareA_before_model -.-> tools;
+	model_request -.-> tools;
+	model_request -.-> __end__;
+	classDef default fill:#f2f0ff,line-height:1.2;
+	classDef first fill-opacity:0;
+	classDef last fill:#bfb6fc;
+"
+`;
+
+exports[`graph (A beforeAgent: undefined, A afterAgent: undefined, A before: [ 'tools', 'model', 'end' ], A after: [ 'tools', 'model', 'end' ] | B beforeAgent: undefined, B afterAgent: undefined, B before: [ 'tools', 'model', 'end' ], B after: [ 'tools', 'model', 'end' ] | tools: false) > should create correct graph structure 1`] = `
+"%%{init: {'flowchart': {'curve': 'linear'}}}%%
+graph TD;
+	__start__([<p>__start__</p>]):::first
+	MiddlewareA_before_model(MiddlewareA.before_model)
+	MiddlewareA_after_model(MiddlewareA.after_model)
+	MiddlewareB_before_model(MiddlewareB.before_model)
+	MiddlewareB_after_model(MiddlewareB.after_model)
+	model_request(model_request)
+	__end__([<p>__end__</p>]):::last
+	__start__ --> MiddlewareA_before_model;
+	model_request --> MiddlewareB_after_model;
+	MiddlewareA_before_model -.-> MiddlewareB_before_model;
+	MiddlewareA_before_model -.-> model_request;
+	MiddlewareA_before_model -.-> __end__;
+	MiddlewareB_before_model -.-> model_request;
+	MiddlewareB_before_model -.-> __end__;
+	MiddlewareB_after_model -.-> MiddlewareA_after_model;
+	MiddlewareB_after_model -.-> model_request;
+	MiddlewareB_after_model -.-> __end__;
+	MiddlewareA_after_model -.-> model_request;
+	MiddlewareA_after_model -.-> __end__;
+	classDef default fill:#f2f0ff,line-height:1.2;
+	classDef first fill-opacity:0;
+	classDef last fill:#bfb6fc;
+"
+`;
+
+exports[`graph (A beforeAgent: undefined, A afterAgent: undefined, A before: [ 'tools', 'model', 'end' ], A after: [ 'tools', 'model', 'end' ] | B beforeAgent: undefined, B afterAgent: undefined, B before: [ 'tools', 'model', 'end' ], B after: [ 'tools', 'model', 'end' ] | tools: true) > should create correct graph structure 1`] = `
+"%%{init: {'flowchart': {'curve': 'linear'}}}%%
+graph TD;
+	__start__([<p>__start__</p>]):::first
+	MiddlewareA_before_model(MiddlewareA.before_model)
+	MiddlewareA_after_model(MiddlewareA.after_model)
+	MiddlewareB_before_model(MiddlewareB.before_model)
+	MiddlewareB_after_model(MiddlewareB.after_model)
+	model_request(model_request)
+	tools(tools)
+	__end__([<p>__end__</p>]):::last
+	__start__ --> MiddlewareA_before_model;
+	model_request --> MiddlewareB_after_model;
+	tools --> MiddlewareA_before_model;
+	MiddlewareA_before_model -.-> MiddlewareB_before_model;
+	MiddlewareA_before_model -.-> tools;
+	MiddlewareA_before_model -.-> model_request;
+	MiddlewareA_before_model -.-> __end__;
+	MiddlewareB_before_model -.-> model_request;
+	MiddlewareB_before_model -.-> tools;
+	MiddlewareB_before_model -.-> __end__;
+	MiddlewareB_after_model -.-> MiddlewareA_after_model;
+	MiddlewareB_after_model -.-> tools;
+	MiddlewareB_after_model -.-> model_request;
+	MiddlewareB_after_model -.-> __end__;
+	MiddlewareA_after_model -.-> tools;
+	MiddlewareA_after_model -.-> model_request;
+	MiddlewareA_after_model -.-> __end__;
+	classDef default fill:#f2f0ff,line-height:1.2;
+	classDef first fill-opacity:0;
+	classDef last fill:#bfb6fc;
+"
+`;
+
+exports[`graph (A beforeAgent: undefined, A afterAgent: undefined, A before: [ 'tools', 'model', 'end' ], A after: undefined | B beforeAgent: undefined, B afterAgent: undefined, B before: undefined, B after: [ 'tools', 'model', 'end' ] | tools: false) > should create correct graph structure 1`] = `
+"%%{init: {'flowchart': {'curve': 'linear'}}}%%
+graph TD;
+	__start__([<p>__start__</p>]):::first
+	MiddlewareA_before_model(MiddlewareA.before_model)
+	MiddlewareB_after_model(MiddlewareB.after_model)
+	model_request(model_request)
+	__end__([<p>__end__</p>]):::last
+	__start__ --> MiddlewareA_before_model;
+	model_request --> MiddlewareB_after_model;
+	MiddlewareA_before_model -.-> model_request;
+	MiddlewareA_before_model -.-> __end__;
+	MiddlewareB_after_model -.-> model_request;
+	MiddlewareB_after_model -.-> __end__;
+	classDef default fill:#f2f0ff,line-height:1.2;
+	classDef first fill-opacity:0;
+	classDef last fill:#bfb6fc;
+"
+`;
+
+exports[`graph (A beforeAgent: undefined, A afterAgent: undefined, A before: [ 'tools', 'model', 'end' ], A after: undefined | B beforeAgent: undefined, B afterAgent: undefined, B before: undefined, B after: [ 'tools', 'model', 'end' ] | tools: true) > should create correct graph structure 1`] = `
+"%%{init: {'flowchart': {'curve': 'linear'}}}%%
+graph TD;
+	__start__([<p>__start__</p>]):::first
+	MiddlewareA_before_model(MiddlewareA.before_model)
+	MiddlewareB_after_model(MiddlewareB.after_model)
+	model_request(model_request)
+	tools(tools)
+	__end__([<p>__end__</p>]):::last
+	__start__ --> MiddlewareA_before_model;
+	model_request --> MiddlewareB_after_model;
+	tools --> MiddlewareA_before_model;
+	MiddlewareA_before_model -.-> model_request;
+	MiddlewareA_before_model -.-> tools;
+	MiddlewareA_before_model -.-> __end__;
+	MiddlewareB_after_model -.-> tools;
+	MiddlewareB_after_model -.-> model_request;
+	MiddlewareB_after_model -.-> __end__;
+	classDef default fill:#f2f0ff,line-height:1.2;
+	classDef first fill-opacity:0;
+	classDef last fill:#bfb6fc;
+"
+`;
+
+exports[`graph (A beforeAgent: undefined, A afterAgent: undefined, A before: [], A after: [] | B beforeAgent: undefined, B afterAgent: undefined, B before: [], B after: [] | tools: false) > should create correct graph structure 1`] = `
+"%%{init: {'flowchart': {'curve': 'linear'}}}%%
+graph TD;
+	__start__([<p>__start__</p>]):::first
+	MiddlewareA_before_model(MiddlewareA.before_model)
+	MiddlewareA_after_model(MiddlewareA.after_model)
+	MiddlewareB_before_model(MiddlewareB.before_model)
+	MiddlewareB_after_model(MiddlewareB.after_model)
+	model_request(model_request)
+	__end__([<p>__end__</p>]):::last
+	MiddlewareA_before_model --> MiddlewareB_before_model;
+	MiddlewareB_after_model --> MiddlewareA_after_model;
+	MiddlewareB_before_model --> model_request;
+	__start__ --> MiddlewareA_before_model;
+	model_request --> MiddlewareB_after_model;
+	MiddlewareA_after_model -.-> model_request;
+	MiddlewareA_after_model -.-> __end__;
+	classDef default fill:#f2f0ff,line-height:1.2;
+	classDef first fill-opacity:0;
+	classDef last fill:#bfb6fc;
+"
+`;
+
+exports[`graph (A beforeAgent: undefined, A afterAgent: undefined, A before: [], A after: [] | B beforeAgent: undefined, B afterAgent: undefined, B before: [], B after: [] | tools: true) > should create correct graph structure 1`] = `
+"%%{init: {'flowchart': {'curve': 'linear'}}}%%
+graph TD;
+	__start__([<p>__start__</p>]):::first
+	MiddlewareA_before_model(MiddlewareA.before_model)
+	MiddlewareA_after_model(MiddlewareA.after_model)
+	MiddlewareB_before_model(MiddlewareB.before_model)
+	MiddlewareB_after_model(MiddlewareB.after_model)
+	model_request(model_request)
+	tools(tools)
+	__end__([<p>__end__</p>]):::last
+	MiddlewareA_before_model --> MiddlewareB_before_model;
+	MiddlewareB_after_model --> MiddlewareA_after_model;
+	MiddlewareB_before_model --> model_request;
+	__start__ --> MiddlewareA_before_model;
+	model_request --> MiddlewareB_after_model;
+	tools --> MiddlewareA_before_model;
+	MiddlewareA_after_model -.-> tools;
+	MiddlewareA_after_model -.-> model_request;
+	MiddlewareA_after_model -.-> __end__;
+	classDef default fill:#f2f0ff,line-height:1.2;
+	classDef first fill-opacity:0;
+	classDef last fill:#bfb6fc;
+"
+`;
+
+exports[`graph (A beforeAgent: undefined, A afterAgent: undefined, A before: undefined, A after: [ 'end' ] | B beforeAgent: undefined, B afterAgent: undefined, B before: undefined, B after: [ 'tools' ] | tools: false) > should create correct graph structure 1`] = `
+"%%{init: {'flowchart': {'curve': 'linear'}}}%%
+graph TD;
+	__start__([<p>__start__</p>]):::first
+	MiddlewareA_after_model(MiddlewareA.after_model)
+	MiddlewareB_after_model(MiddlewareB.after_model)
+	model_request(model_request)
+	__end__([<p>__end__</p>]):::last
+	__start__ --> model_request;
+	model_request --> MiddlewareB_after_model;
+	MiddlewareB_after_model -.-> MiddlewareA_after_model;
+	MiddlewareA_after_model -.-> model_request;
+	MiddlewareA_after_model -.-> __end__;
+	classDef default fill:#f2f0ff,line-height:1.2;
+	classDef first fill-opacity:0;
+	classDef last fill:#bfb6fc;
+"
+`;
+
+exports[`graph (A beforeAgent: undefined, A afterAgent: undefined, A before: undefined, A after: [ 'end' ] | B beforeAgent: undefined, B afterAgent: undefined, B before: undefined, B after: [ 'tools' ] | tools: true) > should create correct graph structure 1`] = `
+"%%{init: {'flowchart': {'curve': 'linear'}}}%%
+graph TD;
+	__start__([<p>__start__</p>]):::first
+	MiddlewareA_after_model(MiddlewareA.after_model)
+	MiddlewareB_after_model(MiddlewareB.after_model)
+	model_request(model_request)
+	tools(tools)
+	__end__([<p>__end__</p>]):::last
+	__start__ --> model_request;
+	model_request --> MiddlewareB_after_model;
+	tools --> model_request;
+	MiddlewareB_after_model -.-> MiddlewareA_after_model;
+	MiddlewareB_after_model -.-> tools;
+	MiddlewareA_after_model -.-> tools;
+	MiddlewareA_after_model -.-> model_request;
+	MiddlewareA_after_model -.-> __end__;
+	classDef default fill:#f2f0ff,line-height:1.2;
+	classDef first fill-opacity:0;
+	classDef last fill:#bfb6fc;
+"
+`;
+
+exports[`graph (A beforeAgent: undefined, A afterAgent: undefined, A before: undefined, A after: [ 'end' ] | B beforeAgent: undefined, B afterAgent: undefined, B before: undefined, B after: undefined | tools: false) > should create correct graph structure 1`] = `
+"%%{init: {'flowchart': {'curve': 'linear'}}}%%
+graph TD;
+	__start__([<p>__start__</p>]):::first
+	MiddlewareA_after_model(MiddlewareA.after_model)
+	model_request(model_request)
+	__end__([<p>__end__</p>]):::last
+	__start__ --> model_request;
+	model_request --> MiddlewareA_after_model;
+	MiddlewareA_after_model -.-> model_request;
+	MiddlewareA_after_model -.-> __end__;
+	classDef default fill:#f2f0ff,line-height:1.2;
+	classDef first fill-opacity:0;
+	classDef last fill:#bfb6fc;
+"
+`;
+
+exports[`graph (A beforeAgent: undefined, A afterAgent: undefined, A before: undefined, A after: [ 'end' ] | B beforeAgent: undefined, B afterAgent: undefined, B before: undefined, B after: undefined | tools: true) > should create correct graph structure 1`] = `
+"%%{init: {'flowchart': {'curve': 'linear'}}}%%
+graph TD;
+	__start__([<p>__start__</p>]):::first
+	MiddlewareA_after_model(MiddlewareA.after_model)
+	model_request(model_request)
+	tools(tools)
+	__end__([<p>__end__</p>]):::last
+	__start__ --> model_request;
+	model_request --> MiddlewareA_after_model;
+	tools --> model_request;
+	MiddlewareA_after_model -.-> tools;
+	MiddlewareA_after_model -.-> model_request;
+	MiddlewareA_after_model -.-> __end__;
+	classDef default fill:#f2f0ff,line-height:1.2;
+	classDef first fill-opacity:0;
+	classDef last fill:#bfb6fc;
+"
+`;
+
+exports[`graph (A beforeAgent: undefined, A afterAgent: undefined, A before: undefined, A after: [ 'model' ] | B beforeAgent: undefined, B afterAgent: undefined, B before: undefined, B after: [ 'tools' ] | tools: false) > should create correct graph structure 1`] = `
+"%%{init: {'flowchart': {'curve': 'linear'}}}%%
+graph TD;
+	__start__([<p>__start__</p>]):::first
+	MiddlewareA_after_model(MiddlewareA.after_model)
+	MiddlewareB_after_model(MiddlewareB.after_model)
+	model_request(model_request)
+	__end__([<p>__end__</p>]):::last
+	__start__ --> model_request;
+	model_request --> MiddlewareB_after_model;
+	MiddlewareB_after_model -.-> MiddlewareA_after_model;
+	MiddlewareA_after_model -.-> model_request;
+	MiddlewareA_after_model -.-> __end__;
+	classDef default fill:#f2f0ff,line-height:1.2;
+	classDef first fill-opacity:0;
+	classDef last fill:#bfb6fc;
+"
+`;
+
+exports[`graph (A beforeAgent: undefined, A afterAgent: undefined, A before: undefined, A after: [ 'model' ] | B beforeAgent: undefined, B afterAgent: undefined, B before: undefined, B after: [ 'tools' ] | tools: true) > should create correct graph structure 1`] = `
+"%%{init: {'flowchart': {'curve': 'linear'}}}%%
+graph TD;
+	__start__([<p>__start__</p>]):::first
+	MiddlewareA_after_model(MiddlewareA.after_model)
+	MiddlewareB_after_model(MiddlewareB.after_model)
+	model_request(model_request)
+	tools(tools)
+	__end__([<p>__end__</p>]):::last
+	__start__ --> model_request;
+	model_request --> MiddlewareB_after_model;
+	tools --> model_request;
+	MiddlewareB_after_model -.-> MiddlewareA_after_model;
+	MiddlewareB_after_model -.-> tools;
+	MiddlewareA_after_model -.-> tools;
+	MiddlewareA_after_model -.-> model_request;
+	MiddlewareA_after_model -.-> __end__;
+	classDef default fill:#f2f0ff,line-height:1.2;
+	classDef first fill-opacity:0;
+	classDef last fill:#bfb6fc;
+"
+`;
+
+exports[`graph (A beforeAgent: undefined, A afterAgent: undefined, A before: undefined, A after: [ 'model' ] | B beforeAgent: undefined, B afterAgent: undefined, B before: undefined, B after: undefined | tools: false) > should create correct graph structure 1`] = `
+"%%{init: {'flowchart': {'curve': 'linear'}}}%%
+graph TD;
+	__start__([<p>__start__</p>]):::first
+	MiddlewareA_after_model(MiddlewareA.after_model)
+	model_request(model_request)
+	__end__([<p>__end__</p>]):::last
+	__start__ --> model_request;
+	model_request --> MiddlewareA_after_model;
+	MiddlewareA_after_model -.-> model_request;
+	MiddlewareA_after_model -.-> __end__;
+	classDef default fill:#f2f0ff,line-height:1.2;
+	classDef first fill-opacity:0;
+	classDef last fill:#bfb6fc;
+"
+`;
+
+exports[`graph (A beforeAgent: undefined, A afterAgent: undefined, A before: undefined, A after: [ 'model' ] | B beforeAgent: undefined, B afterAgent: undefined, B before: undefined, B after: undefined | tools: true) > should create correct graph structure 1`] = `
+"%%{init: {'flowchart': {'curve': 'linear'}}}%%
+graph TD;
+	__start__([<p>__start__</p>]):::first
+	MiddlewareA_after_model(MiddlewareA.after_model)
+	model_request(model_request)
+	tools(tools)
+	__end__([<p>__end__</p>]):::last
+	__start__ --> model_request;
+	model_request --> MiddlewareA_after_model;
+	tools --> model_request;
+	MiddlewareA_after_model -.-> tools;
+	MiddlewareA_after_model -.-> model_request;
+	MiddlewareA_after_model -.-> __end__;
+	classDef default fill:#f2f0ff,line-height:1.2;
+	classDef first fill-opacity:0;
+	classDef last fill:#bfb6fc;
+"
+`;
+
+exports[`graph (A beforeAgent: undefined, A afterAgent: undefined, A before: undefined, A after: [ 'tools' ] | B beforeAgent: undefined, B afterAgent: undefined, B before: undefined, B after: [ 'model' ] | tools: false) > should create correct graph structure 1`] = `
+"%%{init: {'flowchart': {'curve': 'linear'}}}%%
+graph TD;
+	__start__([<p>__start__</p>]):::first
+	MiddlewareA_after_model(MiddlewareA.after_model)
+	MiddlewareB_after_model(MiddlewareB.after_model)
+	model_request(model_request)
+	__end__([<p>__end__</p>]):::last
+	__start__ --> model_request;
+	model_request --> MiddlewareB_after_model;
+	MiddlewareB_after_model -.-> MiddlewareA_after_model;
+	MiddlewareB_after_model -.-> model_request;
+	MiddlewareA_after_model -.-> model_request;
+	MiddlewareA_after_model -.-> __end__;
+	classDef default fill:#f2f0ff,line-height:1.2;
+	classDef first fill-opacity:0;
+	classDef last fill:#bfb6fc;
+"
+`;
+
+exports[`graph (A beforeAgent: undefined, A afterAgent: undefined, A before: undefined, A after: [ 'tools' ] | B beforeAgent: undefined, B afterAgent: undefined, B before: undefined, B after: [ 'model' ] | tools: true) > should create correct graph structure 1`] = `
+"%%{init: {'flowchart': {'curve': 'linear'}}}%%
+graph TD;
+	__start__([<p>__start__</p>]):::first
+	MiddlewareA_after_model(MiddlewareA.after_model)
+	MiddlewareB_after_model(MiddlewareB.after_model)
+	model_request(model_request)
+	tools(tools)
+	__end__([<p>__end__</p>]):::last
+	__start__ --> model_request;
+	model_request --> MiddlewareB_after_model;
+	tools --> model_request;
+	MiddlewareB_after_model -.-> MiddlewareA_after_model;
+	MiddlewareB_after_model -.-> model_request;
+	MiddlewareA_after_model -.-> tools;
+	MiddlewareA_after_model -.-> model_request;
+	MiddlewareA_after_model -.-> __end__;
+	classDef default fill:#f2f0ff,line-height:1.2;
+	classDef first fill-opacity:0;
+	classDef last fill:#bfb6fc;
+"
+`;
+
+exports[`graph (A beforeAgent: undefined, A afterAgent: undefined, A before: undefined, A after: [ 'tools' ] | B beforeAgent: undefined, B afterAgent: undefined, B before: undefined, B after: undefined | tools: false) > should create correct graph structure 1`] = `
+"%%{init: {'flowchart': {'curve': 'linear'}}}%%
+graph TD;
+	__start__([<p>__start__</p>]):::first
+	MiddlewareA_after_model(MiddlewareA.after_model)
+	model_request(model_request)
+	__end__([<p>__end__</p>]):::last
+	__start__ --> model_request;
+	model_request --> MiddlewareA_after_model;
+	MiddlewareA_after_model -.-> model_request;
+	MiddlewareA_after_model -.-> __end__;
+	classDef default fill:#f2f0ff,line-height:1.2;
+	classDef first fill-opacity:0;
+	classDef last fill:#bfb6fc;
+"
+`;
+
+exports[`graph (A beforeAgent: undefined, A afterAgent: undefined, A before: undefined, A after: [ 'tools' ] | B beforeAgent: undefined, B afterAgent: undefined, B before: undefined, B after: undefined | tools: true) > should create correct graph structure 1`] = `
+"%%{init: {'flowchart': {'curve': 'linear'}}}%%
+graph TD;
+	__start__([<p>__start__</p>]):::first
+	MiddlewareA_after_model(MiddlewareA.after_model)
+	model_request(model_request)
+	tools(tools)
+	__end__([<p>__end__</p>]):::last
+	__start__ --> model_request;
+	model_request --> MiddlewareA_after_model;
+	tools --> model_request;
+	MiddlewareA_after_model -.-> tools;
+	MiddlewareA_after_model -.-> model_request;
+	MiddlewareA_after_model -.-> __end__;
+	classDef default fill:#f2f0ff,line-height:1.2;
+	classDef first fill-opacity:0;
+	classDef last fill:#bfb6fc;
+"
+`;
+
+exports[`graph (A beforeAgent: undefined, A afterAgent: undefined, A before: undefined, A after: [ 'tools', 'model' ] | B beforeAgent: undefined, B afterAgent: undefined, B before: undefined, B after: undefined | tools: false) > should create correct graph structure 1`] = `
+"%%{init: {'flowchart': {'curve': 'linear'}}}%%
+graph TD;
+	__start__([<p>__start__</p>]):::first
+	MiddlewareA_after_model(MiddlewareA.after_model)
+	model_request(model_request)
+	__end__([<p>__end__</p>]):::last
+	__start__ --> model_request;
+	model_request --> MiddlewareA_after_model;
+	MiddlewareA_after_model -.-> model_request;
+	MiddlewareA_after_model -.-> __end__;
+	classDef default fill:#f2f0ff,line-height:1.2;
+	classDef first fill-opacity:0;
+	classDef last fill:#bfb6fc;
+"
+`;
+
+exports[`graph (A beforeAgent: undefined, A afterAgent: undefined, A before: undefined, A after: [ 'tools', 'model' ] | B beforeAgent: undefined, B afterAgent: undefined, B before: undefined, B after: undefined | tools: true) > should create correct graph structure 1`] = `
+"%%{init: {'flowchart': {'curve': 'linear'}}}%%
+graph TD;
+	__start__([<p>__start__</p>]):::first
+	MiddlewareA_after_model(MiddlewareA.after_model)
+	model_request(model_request)
+	tools(tools)
+	__end__([<p>__end__</p>]):::last
+	__start__ --> model_request;
+	model_request --> MiddlewareA_after_model;
+	tools --> model_request;
+	MiddlewareA_after_model -.-> tools;
+	MiddlewareA_after_model -.-> model_request;
+	MiddlewareA_after_model -.-> __end__;
+	classDef default fill:#f2f0ff,line-height:1.2;
+	classDef first fill-opacity:0;
+	classDef last fill:#bfb6fc;
+"
+`;
+
+exports[`graph (A beforeAgent: undefined, A afterAgent: undefined, A before: undefined, A after: undefined | B beforeAgent: undefined, B afterAgent: undefined, B before: [ 'tools' ], B after: [ 'model' ] | tools: false) > should create correct graph structure 1`] = `
+"%%{init: {'flowchart': {'curve': 'linear'}}}%%
+graph TD;
+	__start__([<p>__start__</p>]):::first
+	MiddlewareB_before_model(MiddlewareB.before_model)
+	MiddlewareB_after_model(MiddlewareB.after_model)
+	model_request(model_request)
+	__end__([<p>__end__</p>]):::last
+	__start__ --> MiddlewareB_before_model;
+	model_request --> MiddlewareB_after_model;
+	MiddlewareB_before_model -.-> model_request;
+	MiddlewareB_after_model -.-> model_request;
+	MiddlewareB_after_model -.-> __end__;
+	classDef default fill:#f2f0ff,line-height:1.2;
+	classDef first fill-opacity:0;
+	classDef last fill:#bfb6fc;
+"
+`;
+
+exports[`graph (A beforeAgent: undefined, A afterAgent: undefined, A before: undefined, A after: undefined | B beforeAgent: undefined, B afterAgent: undefined, B before: [ 'tools' ], B after: [ 'model' ] | tools: true) > should create correct graph structure 1`] = `
+"%%{init: {'flowchart': {'curve': 'linear'}}}%%
+graph TD;
+	__start__([<p>__start__</p>]):::first
+	MiddlewareB_before_model(MiddlewareB.before_model)
+	MiddlewareB_after_model(MiddlewareB.after_model)
+	model_request(model_request)
+	tools(tools)
+	__end__([<p>__end__</p>]):::last
+	__start__ --> MiddlewareB_before_model;
+	model_request --> MiddlewareB_after_model;
+	tools --> MiddlewareB_before_model;
+	MiddlewareB_before_model -.-> model_request;
+	MiddlewareB_before_model -.-> tools;
+	MiddlewareB_after_model -.-> tools;
+	MiddlewareB_after_model -.-> model_request;
+	MiddlewareB_after_model -.-> __end__;
+	classDef default fill:#f2f0ff,line-height:1.2;
+	classDef first fill-opacity:0;
+	classDef last fill:#bfb6fc;
+"
+`;
+
+exports[`graph (A beforeAgent: undefined, A afterAgent: undefined, A before: undefined, A after: undefined | B beforeAgent: undefined, B afterAgent: undefined, B before: undefined, B after: undefined | tools: false) > should create correct graph structure 1`] = `
+"%%{init: {'flowchart': {'curve': 'linear'}}}%%
+graph TD;
+	__start__([<p>__start__</p>]):::first
+	model_request(model_request)
+	__end__([<p>__end__</p>]):::last
+	__start__ --> model_request;
+	model_request --> __end__;
+	classDef default fill:#f2f0ff,line-height:1.2;
+	classDef first fill-opacity:0;
+	classDef last fill:#bfb6fc;
+"
+`;
+
+exports[`graph (A beforeAgent: undefined, A afterAgent: undefined, A before: undefined, A after: undefined | B beforeAgent: undefined, B afterAgent: undefined, B before: undefined, B after: undefined | tools: true) > should create correct graph structure 1`] = `
+"%%{init: {'flowchart': {'curve': 'linear'}}}%%
+graph TD;
+	__start__([<p>__start__</p>]):::first
+	model_request(model_request)
+	tools(tools)
+	__end__([<p>__end__</p>]):::last
+	__start__ --> model_request;
+	tools --> model_request;
+	model_request -.-> tools;
+	model_request -.-> __end__;
+	classDef default fill:#f2f0ff,line-height:1.2;
+	classDef first fill-opacity:0;
+	classDef last fill:#bfb6fc;
 "
 `;

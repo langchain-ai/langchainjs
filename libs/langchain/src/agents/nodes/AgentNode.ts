@@ -1,32 +1,37 @@
 /* eslint-disable no-instanceof/no-instanceof */
 import { Runnable, RunnableConfig } from "@langchain/core/runnables";
 import { BaseMessage, AIMessage, ToolMessage } from "@langchain/core/messages";
-import { Command } from "@langchain/langgraph";
+import { z } from "zod/v3";
+import { Command, type LangGraphRunnableConfig } from "@langchain/langgraph";
 import { type LanguageModelLike } from "@langchain/core/language_models/base";
 import { type BaseChatModelCallOptions } from "@langchain/core/language_models/chat_models";
 import {
   InteropZodObject,
   getSchemaDescription,
+  interopParse,
 } from "@langchain/core/utils/types";
 import type { ToolCall } from "@langchain/core/messages/tool";
 
 import { initChatModel } from "../../chat_models/universal.js";
 import { MultipleStructuredOutputsError } from "../errors.js";
 import { RunnableCallable } from "../RunnableCallable.js";
-import { PreHookAnnotation, AnyAnnotationRoot } from "../annotation.js";
-import { mergeAbortSignals } from "./utils.js";
+import { PreHookAnnotation } from "../annotation.js";
 import {
   bindTools,
   getPromptRunnable,
   validateLLMHasNoBoundTools,
   hasToolCalls,
+  isClientTool,
 } from "../utils.js";
-import {
-  InternalAgentState,
-  ClientTool,
-  ServerTool,
-  CreateAgentParams,
-} from "../types.js";
+import { mergeAbortSignals } from "../nodes/utils.js";
+import { CreateAgentParams } from "../types.js";
+import type { InternalAgentState, Runtime, PrivateState } from "../runtime.js";
+import type {
+  AgentMiddleware,
+  AnyAnnotationRoot,
+} from "../middleware/types.js";
+import type { ModelRequest } from "./types.js";
+import type { ClientTool, ServerTool } from "../tools.js";
 import { withAgentName } from "../withAgentName.js";
 import {
   ToolStrategy,
@@ -43,20 +48,37 @@ type ResponseHandlerResult<StructuredResponseFormat> =
     }
   | Promise<Command>;
 
+/**
+ * Wrap the base handler with middleware wrapModelRequest hooks
+ * Middleware are composed so the first middleware is the outermost wrapper
+ * Example: [auth, retry, cache] means auth wraps retry wraps cache wraps baseHandler
+ */
+type InternalModelResponse<StructuredResponseFormat> =
+  | AIMessage
+  | ResponseHandlerResult<StructuredResponseFormat>;
+
 export interface AgentNodeOptions<
-  StateSchema extends AnyAnnotationRoot | InteropZodObject = AnyAnnotationRoot,
   StructuredResponseFormat extends Record<string, unknown> = Record<
     string,
     unknown
   >,
   ContextSchema extends AnyAnnotationRoot | InteropZodObject = AnyAnnotationRoot
 > extends Pick<
-    CreateAgentParams<StateSchema, StructuredResponseFormat, ContextSchema>,
-    "llm" | "model" | "prompt" | "includeAgentName" | "name" | "responseFormat"
+    CreateAgentParams<StructuredResponseFormat, ContextSchema>,
+    | "model"
+    | "systemPrompt"
+    | "includeAgentName"
+    | "name"
+    | "responseFormat"
+    | "middleware"
   > {
   toolClasses: (ClientTool | ServerTool)[];
   shouldReturnDirect: Set<string>;
   signal?: AbortSignal;
+  wrapModelRequestHookMiddleware?: [
+    AgentMiddleware,
+    () => Record<string, unknown>
+  ][];
 }
 
 interface NativeResponseFormat {
@@ -72,7 +94,6 @@ interface ToolResponseFormat {
 type ResponseFormat = NativeResponseFormat | ToolResponseFormat;
 
 export class AgentNode<
-  StateSchema extends AnyAnnotationRoot | InteropZodObject = AnyAnnotationRoot,
   StructuredResponseFormat extends Record<string, unknown> = Record<
     string,
     unknown
@@ -80,26 +101,24 @@ export class AgentNode<
   ContextSchema extends AnyAnnotationRoot | InteropZodObject = AnyAnnotationRoot
 > extends RunnableCallable<
   InternalAgentState<StructuredResponseFormat> & PreHookAnnotation["State"],
-  { messages: BaseMessage[] } | { structuredResponse: StructuredResponseFormat }
+  | ((
+      | { messages: BaseMessage[] }
+      | { structuredResponse: StructuredResponseFormat }
+    ) & { _privateState: PrivateState })
+  | Command
 > {
-  #options: AgentNodeOptions<
-    StateSchema,
-    StructuredResponseFormat,
-    ContextSchema
-  >;
+  #options: AgentNodeOptions<StructuredResponseFormat, ContextSchema>;
+
+  #runState: Pick<PrivateState, "runModelCallCount"> = {
+    runModelCallCount: 0,
+  };
 
   constructor(
-    options: AgentNodeOptions<
-      StateSchema,
-      StructuredResponseFormat,
-      ContextSchema
-    >
+    options: AgentNodeOptions<StructuredResponseFormat, ContextSchema>
   ) {
     super({
       name: options.name ?? "model",
-      func: (input, config) =>
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        this.#run(input, config as RunnableConfig) as any,
+      func: (input, config) => this.#run(input, config as RunnableConfig),
     });
 
     this.#options = options;
@@ -159,7 +178,7 @@ export class AgentNode<
       /**
        * there can only be one provider strategy
        */
-      strategy: strategies[0],
+      strategy: strategies[0] as ProviderStrategy,
     };
   }
 
@@ -172,8 +191,9 @@ export class AgentNode<
      * Check if we just executed a returnDirect tool
      * If so, we should generate structured response (if needed) and stop
      */
-    const lastMessage = state.messages[state.messages.length - 1];
+    const lastMessage = state.messages.at(-1);
     if (
+      lastMessage &&
       ToolMessage.isInstance(lastMessage) &&
       lastMessage.name &&
       this.#options.shouldReturnDirect.has(lastMessage.name)
@@ -181,10 +201,16 @@ export class AgentNode<
       /**
        * return directly without invoking the model again
        */
-      return { messages: [] };
+      return { messages: [], _privateState: this.getState()._privateState };
     }
 
+    const privateState = this.getState()._privateState;
     const response = await this.#invokeModel(state, config);
+    this.#runState.runModelCallCount++;
+    const _privateState = {
+      ...privateState,
+      threadLevelCallCount: privateState.threadLevelCallCount + 1,
+    };
 
     /**
      * if we were able to generate a structured response, return it
@@ -193,6 +219,7 @@ export class AgentNode<
       return {
         messages: [...state.messages, ...(response.messages || [])],
         structuredResponse: response.structuredResponse,
+        _privateState,
       };
     }
 
@@ -215,10 +242,11 @@ export class AgentNode<
             id: response.id,
           }),
         ],
+        _privateState,
       };
     }
 
-    return { messages: [response] };
+    return { messages: [response], _privateState };
   }
 
   /**
@@ -227,35 +255,16 @@ export class AgentNode<
    * @param config - The config of the agent.
    * @returns The model.
    */
-  #deriveModel(
-    state: InternalAgentState<StructuredResponseFormat> &
-      PreHookAnnotation["State"],
-    config: RunnableConfig
-  ) {
+  #deriveModel() {
+    if (typeof this.#options.model === "string") {
+      return initChatModel(this.#options.model);
+    }
+
     if (this.#options.model) {
-      if (typeof this.#options.model === "string") {
-        return initChatModel(this.#options.model);
-      }
-
-      throw new Error("`model` option must be a string.");
+      return this.#options.model;
     }
 
-    const model = this.#options.llm;
-
-    /**
-     * If the model is a function, call it to get the model.
-     */
-    if (typeof model === "function") {
-      return model(state, config);
-    }
-
-    if (model) {
-      return model;
-    }
-
-    throw new Error(
-      "No model option was provided, either via `model` or via `llm` option."
-    );
+    throw new Error("No model option was provided, either via `model` option.");
   }
 
   async #invokeModel(
@@ -266,79 +275,274 @@ export class AgentNode<
       lastMessage?: string;
     } = {}
   ): Promise<AIMessage | ResponseHandlerResult<StructuredResponseFormat>> {
-    const model = await this.#deriveModel(state, config);
+    const model = await this.#deriveModel();
+    const lgConfig = config as LangGraphRunnableConfig;
 
     /**
-     * Check if the LLM already has bound tools and throw if it does.
+     * Create the base handler that performs the actual model invocation
      */
-    validateLLMHasNoBoundTools(model);
+    const baseHandler = async (
+      request: ModelRequest
+    ): Promise<AIMessage | ResponseHandlerResult<StructuredResponseFormat>> => {
+      /**
+       * Check if the LLM already has bound tools and throw if it does.
+       */
+      validateLLMHasNoBoundTools(request.model);
 
-    const structuredResponseFormat = this.#getResponseFormat(model);
-    const modelWithTools = await this.#bindTools(
-      model,
-      structuredResponseFormat
-    );
-    const modelInput = this.#getModelInputState(state);
-    const signal = mergeAbortSignals(this.#options.signal, config.signal);
-    const invokeConfig = {
-      ...config,
-      signal,
-    };
-
-    const response = (await modelWithTools.invoke(
-      modelInput,
-      invokeConfig
-    )) as AIMessage;
-
-    /**
-     * if the user requests a native schema output, try to parse the response
-     * and return the structured response if it is valid
-     */
-    if (structuredResponseFormat?.type === "native") {
-      const structuredResponse =
-        structuredResponseFormat.strategy.parse(response);
-      if (structuredResponse) {
-        return { structuredResponse, messages: [response] };
-      }
-
-      return response;
-    }
-
-    if (!structuredResponseFormat || !response.tool_calls) {
-      return response;
-    }
-
-    const toolCalls = response.tool_calls.filter(
-      (call) => call.name in structuredResponseFormat.tools
-    );
-
-    /**
-     * if there were not structured tool calls, we can return the response
-     */
-    if (toolCalls.length === 0) {
-      return response;
-    }
-
-    /**
-     * if there were multiple structured tool calls, we should throw an error as this
-     * scenario is not defined/supported.
-     */
-    if (toolCalls.length > 1) {
-      return this.#handleMultipleStructuredOutputs(
-        response,
-        toolCalls,
+      const structuredResponseFormat = this.#getResponseFormat(request.model);
+      const modelWithTools = await this.#bindTools(
+        request.model,
+        request,
         structuredResponseFormat
       );
+
+      let modelInput = this.#getModelInputState(state);
+      modelInput = { ...modelInput, messages: request.messages };
+
+      const signal = mergeAbortSignals(this.#options.signal, config.signal);
+      const invokeConfig = {
+        ...config,
+        signal,
+        ...request?.callOptions,
+      };
+      const response = (await modelWithTools.invoke(
+        modelInput,
+        invokeConfig
+      )) as AIMessage;
+
+      /**
+       * if the user requests a native schema output, try to parse the response
+       * and return the structured response if it is valid
+       */
+      if (structuredResponseFormat?.type === "native") {
+        const structuredResponse =
+          structuredResponseFormat.strategy.parse(response);
+        if (structuredResponse) {
+          return { structuredResponse, messages: [response] };
+        }
+
+        return response;
+      }
+
+      if (!structuredResponseFormat || !response.tool_calls) {
+        return response;
+      }
+
+      const toolCalls = response.tool_calls.filter(
+        (call) => call.name in structuredResponseFormat.tools
+      );
+
+      /**
+       * if there were not structured tool calls, we can return the response
+       */
+      if (toolCalls.length === 0) {
+        return response;
+      }
+
+      /**
+       * if there were multiple structured tool calls, we should throw an error as this
+       * scenario is not defined/supported.
+       */
+      if (toolCalls.length > 1) {
+        return this.#handleMultipleStructuredOutputs(
+          response,
+          toolCalls,
+          structuredResponseFormat
+        );
+      }
+
+      const toolStrategy = structuredResponseFormat.tools[toolCalls[0].name];
+      const toolMessageContent = toolStrategy?.options?.toolMessageContent;
+      return this.#handleSingleStructuredOutput(
+        response,
+        toolCalls[0],
+        structuredResponseFormat,
+        toolMessageContent ?? options.lastMessage
+      );
+    };
+
+    const wrapperMiddleware =
+      this.#options.wrapModelRequestHookMiddleware ?? [];
+    let wrappedHandler: (
+      request: ModelRequest<
+        InternalAgentState<StructuredResponseFormat> &
+          PreHookAnnotation["State"],
+        unknown
+      >
+    ) => Promise<InternalModelResponse<StructuredResponseFormat>> = baseHandler;
+
+    /**
+     * Build composed handler from last to first so first middleware becomes outermost
+     */
+    for (let i = wrapperMiddleware.length - 1; i >= 0; i--) {
+      const [middleware, getMiddlewareState] = wrapperMiddleware[i];
+      if (middleware.wrapModelRequest) {
+        const innerHandler = wrappedHandler;
+        const currentMiddleware = middleware;
+        const currentGetState = getMiddlewareState;
+
+        wrappedHandler = async (
+          request: ModelRequest<
+            InternalAgentState<StructuredResponseFormat> &
+              PreHookAnnotation["State"],
+            unknown
+          >
+        ): Promise<InternalModelResponse<StructuredResponseFormat>> => {
+          /**
+           * Merge context with default context of middleware
+           */
+          const context = currentMiddleware.contextSchema
+            ? interopParse(
+                currentMiddleware.contextSchema,
+                lgConfig?.context || {}
+              )
+            : lgConfig?.context;
+
+          /**
+           * Create runtime
+           */
+          const privateState = this.getState()._privateState;
+          const runtime: Runtime<unknown> = Object.freeze({
+            ...privateState,
+            context,
+            writer: lgConfig.writer,
+            interrupt: lgConfig.interrupt,
+            signal: lgConfig.signal,
+          });
+
+          /**
+           * Create the request with state and runtime
+           */
+          const requestWithStateAndRuntime: ModelRequest<
+            InternalAgentState<StructuredResponseFormat> &
+              PreHookAnnotation["State"],
+            unknown
+          > = {
+            ...request,
+            state: {
+              ...currentGetState(),
+              messages: state.messages,
+            } as InternalAgentState<StructuredResponseFormat> &
+              PreHookAnnotation["State"],
+            runtime,
+          };
+
+          /**
+           * Create handler that validates tools and calls the inner handler
+           */
+          const handlerWithValidation = async (
+            req: ModelRequest<
+              InternalAgentState<StructuredResponseFormat> &
+                PreHookAnnotation["State"],
+              unknown
+            >
+          ): Promise<InternalModelResponse<StructuredResponseFormat>> => {
+            /**
+             * Verify that the user didn't add any new tools.
+             * We can't allow this as the ToolNode is already initiated with given tools.
+             */
+            const modifiedTools = req.tools ?? [];
+            const newTools = modifiedTools.filter(
+              (tool) =>
+                isClientTool(tool) &&
+                !this.#options.toolClasses.some((t) => t.name === tool.name)
+            );
+            if (newTools.length > 0) {
+              throw new Error(
+                `You have added a new tool in "wrapModelRequest" hook of middleware "${
+                  currentMiddleware.name
+                }": ${newTools
+                  .map((tool) => tool.name)
+                  .join(", ")}. This is not supported.`
+              );
+            }
+
+            /**
+             * Verify that user has not added or modified a tool with the same name.
+             * We can't allow this as the ToolNode is already initiated with given tools.
+             */
+            const invalidTools = modifiedTools.filter(
+              (tool) =>
+                isClientTool(tool) &&
+                this.#options.toolClasses.every((t) => t !== tool)
+            );
+            if (invalidTools.length > 0) {
+              throw new Error(
+                `You have modified a tool in "wrapModelRequest" hook of middleware "${
+                  currentMiddleware.name
+                }": ${invalidTools
+                  .map((tool) => tool.name)
+                  .join(", ")}. This is not supported.`
+              );
+            }
+
+            return innerHandler(req);
+          };
+
+          // Call middleware's wrapModelRequest with the validation handler
+          if (!currentMiddleware.wrapModelRequest) {
+            return handlerWithValidation(requestWithStateAndRuntime);
+          }
+
+          try {
+            const middlewareResponse = await (
+              currentMiddleware.wrapModelRequest as (
+                request: typeof requestWithStateAndRuntime,
+                handler: typeof handlerWithValidation
+              ) => Promise<InternalModelResponse<StructuredResponseFormat>>
+            )(requestWithStateAndRuntime, handlerWithValidation);
+
+            /**
+             * Validate that this specific middleware returned a valid AIMessage
+             */
+            if (!AIMessage.isInstance(middlewareResponse)) {
+              throw new Error(
+                `Invalid response from "wrapModelRequest" in middleware "${
+                  currentMiddleware.name
+                }": expected AIMessage, got ${typeof middlewareResponse}`
+              );
+            }
+
+            return middlewareResponse;
+          } catch (error) {
+            // Add middleware context to error if not already added
+            if (
+              error instanceof Error &&
+              !error.message.includes(`middleware "${currentMiddleware.name}"`)
+            ) {
+              error.message = `Error in middleware "${currentMiddleware.name}": ${error.message}`;
+            }
+            throw error;
+          }
+        };
+      }
     }
 
-    const toolStrategy = structuredResponseFormat.tools[toolCalls[0].name];
-    const toolMessageContent = toolStrategy?.options?.toolMessageContent;
-    return this.#handleSingleStructuredOutput(
-      response,
-      toolCalls[0],
-      structuredResponseFormat,
-      toolMessageContent ?? options.lastMessage
-    );
+    /**
+     * Execute the wrapped handler with the initial request
+     */
+    const initialRequest: ModelRequest<
+      InternalAgentState<StructuredResponseFormat> & PreHookAnnotation["State"],
+      unknown
+    > = {
+      model,
+      systemPrompt: this.#options.systemPrompt,
+      messages: state.messages,
+      tools: this.#options.toolClasses,
+      state: {
+        messages: state.messages,
+      } as InternalAgentState<StructuredResponseFormat> &
+        PreHookAnnotation["State"],
+      runtime: Object.freeze({
+        ...this.getState()._privateState,
+        context: lgConfig?.context,
+        writer: lgConfig.writer,
+        interrupt: lgConfig.interrupt,
+        signal: lgConfig.signal,
+      }) as Runtime<unknown>,
+    };
+
+    return wrappedHandler(initialRequest);
   }
 
   /**
@@ -350,17 +554,8 @@ export class AgentNode<
   #handleMultipleStructuredOutputs(
     response: AIMessage,
     toolCalls: ToolCall[],
-    structuredResponseFormat: ToolResponseFormat
+    responseFormat: ToolResponseFormat
   ): Promise<Command> {
-    /**
-     * the following should never happen, let's throw an error if it does
-     */
-    if (this.#options.responseFormat instanceof ProviderStrategy) {
-      throw new Error(
-        "Multiple structured outputs should not apply to native structured output responses"
-      );
-    }
-
     const multipleStructuredOutputsError = new MultipleStructuredOutputsError(
       toolCalls.map((call) => call.name)
     );
@@ -369,7 +564,7 @@ export class AgentNode<
       multipleStructuredOutputsError,
       response,
       toolCalls[0],
-      structuredResponseFormat
+      responseFormat
     );
   }
 
@@ -381,10 +576,10 @@ export class AgentNode<
   #handleSingleStructuredOutput(
     response: AIMessage,
     toolCall: ToolCall,
-    structuredResponseFormat: ToolResponseFormat,
+    responseFormat: ToolResponseFormat,
     lastMessage?: string
   ): ResponseHandlerResult<StructuredResponseFormat> {
-    const tool = structuredResponseFormat.tools[toolCall.name];
+    const tool = responseFormat.tools[toolCall.name];
 
     try {
       const structuredResponse = tool.parse(
@@ -408,7 +603,7 @@ export class AgentNode<
         error as ToolStrategyError,
         response,
         toolCall,
-        structuredResponseFormat
+        responseFormat
       );
     }
   }
@@ -417,7 +612,7 @@ export class AgentNode<
     error: ToolStrategyError,
     response: AIMessage,
     toolCall: ToolCall,
-    structuredResponseFormat: ToolResponseFormat
+    responseFormat: ToolResponseFormat
   ): Promise<Command> {
     /**
      * Using the `errorHandler` option of the first `ToolStrategy` entry is sufficient here.
@@ -426,8 +621,8 @@ export class AgentNode<
      * schema objects, these will be transformed into multiple `ToolStrategy` entries but all
      * with the same `handleError` option.
      */
-    const errorHandler = Object.values(structuredResponseFormat.tools).at(0)
-      ?.options?.handleError;
+    const errorHandler = Object.values(responseFormat.tools).at(0)?.options
+      ?.handleError;
 
     const toolCallId = toolCall.id;
     if (!toolCallId) {
@@ -527,7 +722,7 @@ export class AgentNode<
     return Boolean(
       remainingSteps &&
         ((remainingSteps < 1 && allToolsReturnDirect) ||
-          (remainingSteps < 2 && hasToolCalls(state.messages)))
+          (remainingSteps < 2 && hasToolCalls(state.messages.at(-1))))
     );
   }
 
@@ -550,22 +745,31 @@ export class AgentNode<
 
   async #bindTools(
     model: LanguageModelLike,
+    preparedOptions: ModelRequest | undefined,
     structuredResponseFormat: ResponseFormat | undefined
   ): Promise<Runnable> {
     const options: Partial<BaseChatModelCallOptions> = {};
-    const structuredTools =
-      structuredResponseFormat?.type === "tool"
-        ? Object.values(structuredResponseFormat.tools)
-        : [];
-    const allTools = this.#options.toolClasses.concat(
-      ...structuredTools.map((toolStrategy) => toolStrategy.tool)
+    const structuredTools = Object.values(
+      structuredResponseFormat && "tools" in structuredResponseFormat
+        ? structuredResponseFormat.tools
+        : {}
     );
+
+    /**
+     * Use tools from preparedOptions if provided, otherwise use default tools
+     */
+    const allTools = [
+      ...(preparedOptions?.tools ?? this.#options.toolClasses),
+      ...structuredTools.map((toolStrategy) => toolStrategy.tool),
+    ];
 
     /**
      * If there are structured tools, we need to set the tool choice to "any"
      * so that the model can choose to use a structured tool or not.
      */
-    const toolChoice = structuredTools.length > 0 ? "any" : undefined;
+    const toolChoice =
+      preparedOptions?.toolChoice ||
+      (structuredTools.length > 0 ? "any" : undefined);
 
     /**
      * check if the user requests a native schema output
@@ -613,12 +817,61 @@ export class AgentNode<
     /**
      * Create a model runnable with the prompt and agent name
      */
-    const modelRunnable = getPromptRunnable(this.#options.prompt).pipe(
+    const modelRunnable = getPromptRunnable(
+      preparedOptions?.systemPrompt ?? this.#options.systemPrompt
+    ).pipe(
       this.#options.includeAgentName === "inline"
         ? withAgentName(modelWithTools, this.#options.includeAgentName)
         : modelWithTools
     );
 
     return modelRunnable;
+  }
+
+  static get nodeOptions(): {
+    input: z.ZodObject<{
+      messages: z.ZodArray<z.ZodType<BaseMessage>>;
+      _privateState: z.ZodObject<{
+        threadLevelCallCount: z.ZodNumber;
+      }>;
+    }>;
+  } {
+    return {
+      input: z.object({
+        messages: z.array(z.custom<BaseMessage>()),
+        _privateState: z.object({
+          threadLevelCallCount: z.number(),
+        }),
+      }),
+    };
+  }
+
+  getState(): {
+    messages: BaseMessage[];
+    _privateState: PrivateState;
+  } {
+    const state = super.getState();
+    const origState =
+      state && !(state instanceof Command)
+        ? state
+        : ({
+            _privateState: {
+              threadLevelCallCount: 0,
+              runModelCallCount: 0,
+            },
+          } as {
+            messages?: BaseMessage[];
+            _privateState?: PrivateState;
+          });
+
+    return {
+      messages: [],
+      ...origState,
+      _privateState: {
+        threadLevelCallCount: 0,
+        ...(origState._privateState ?? {}),
+        ...this.#runState,
+      },
+    };
   }
 }

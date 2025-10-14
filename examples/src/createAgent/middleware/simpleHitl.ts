@@ -1,5 +1,5 @@
 import { createMiddleware, createAgent, HumanMessage } from "langchain";
-import { Command, interrupt, MemorySaver } from "@langchain/langgraph";
+import { Command, MemorySaver } from "@langchain/langgraph";
 
 const checkpointer = new MemorySaver();
 
@@ -12,7 +12,7 @@ const checkpointer = new MemorySaver();
 const humanInTheLoopMiddleware = createMiddleware({
   name: "HumanInTheLoopMiddleware",
 
-  beforeModel: (state) => {
+  beforeModel: (state, runtime) => {
     // Check if the user's question is missing critical information
     const lastUserMessage = [...state.messages]
       .reverse()
@@ -25,7 +25,7 @@ const humanInTheLoopMiddleware = createMiddleware({
     const userContent = lastUserMessage.content.toString().toLowerCase();
 
     // Interrupt to ask for clarification
-    const clarification = interrupt({
+    const clarification = runtime.interrupt?.({
       type: "missing_information",
       question: "Which country or state's capital are you asking about?",
       originalQuery: userContent,

@@ -3,14 +3,13 @@ import { describe, it, test, expect } from "vitest";
 import { tool } from "@langchain/core/tools";
 import { z } from "zod/v3";
 
-import { ChatPromptTemplate, PromptTemplate } from "@langchain/core/prompts";
+import { ChatPromptTemplate } from "@langchain/core/prompts";
 import { RunLogPatch, StreamEvent } from "@langchain/core/tracers/log_stream";
 import { AIMessageChunk } from "@langchain/core/messages";
 import { concat } from "@langchain/core/utils/stream";
 import { awaitAllCallbacks } from "@langchain/core/callbacks/promises";
 
 import { createAgent } from "../../agents/index.js";
-import { pull } from "../../hub/index.js";
 import { initChatModel } from "../universal.js";
 
 // Make copies of API keys and remove them from the environment to avoid conflicts.
@@ -354,7 +353,7 @@ test("ConfigurableModel works with agent after withStructuredOutput is called", 
 
   // The original model should still work with the agent
   const agent = await createAgent({
-    llm: model,
+    model,
     tools: [searchTool],
   });
 
@@ -579,7 +578,10 @@ describe("Works with all model providers", () => {
   });
 });
 
-test("Is compatible with agents", async () => {
+/**
+ * @skip new agent doesn't support Runnable prompts.
+ */
+test.skip("Is compatible with agents", async () => {
   const gpt4 = await initChatModel(undefined, {
     modelProvider: "openai",
     temperature: 0.25, // Funky temperature to verify it's being set properly.
@@ -598,12 +600,12 @@ test("Is compatible with agents", async () => {
     }
   );
 
-  const prompt = await pull<PromptTemplate>("hwchase17/react");
+  // const systemPrompt = await pull<PromptTemplate>("hwchase17/react");
 
   const agent = await createAgent({
-    llm: gpt4,
+    model: gpt4,
     tools: [weatherTool],
-    prompt,
+    // systemPrompt, // new createAgent only supports strings here
   });
 
   const result = await agent.invoke({

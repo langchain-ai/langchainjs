@@ -3,7 +3,7 @@ import { humanInTheLoopMiddleware } from "langchain";
 import { Command, MemorySaver } from "@langchain/langgraph";
 import { z } from "zod";
 
-const checkpointSaver = new MemorySaver();
+const checkpointer = new MemorySaver();
 
 // Define a safe tool (no approval needed)
 const calculateTool = tool(
@@ -54,7 +54,7 @@ const writeFileTool = tool(
 const hitlMiddleware = humanInTheLoopMiddleware({
   interruptOn: {
     write_file: {
-      allowAccept: true,
+      allowedDecisions: ["approve", "reject"],
       description: "⚠️ File write operation requires approval",
     },
     calculator: false, // Math is safe
@@ -64,7 +64,7 @@ const hitlMiddleware = humanInTheLoopMiddleware({
 // Create agent with HITL middleware
 const agent = createAgent({
   model: "openai:gpt-4o-mini",
-  checkpointSaver,
+  checkpointer,
   systemPrompt:
     "You are a helpful assistant. Use the tools provided to help the user.",
   tools: [calculateTool, writeFileTool],
@@ -109,15 +109,19 @@ if (state.next && state.next.length > 0) {
   // Get the interrupt data from the task
   const task = state.tasks?.[0];
   if (task?.interrupts && task.interrupts.length > 0) {
-    const requests = task.interrupts[0].value;
-    console.log("Tool:", requests[0].action);
-    console.log("Args:", JSON.stringify(requests[0].args, null, 2));
+    const hitlRequest = task.interrupts[0].value;
+    console.log("Tool:", hitlRequest.actionRequests[0].name);
+    console.log(
+      "Args:",
+      JSON.stringify(hitlRequest.actionRequests[0].arguments, null, 2)
+    );
+    console.log("Description:", hitlRequest.actionRequests[0].description);
 
     console.log("\nℹ️  In a real application, you would:");
     console.log("  - Show this to the user");
-    console.log("  - Get their response (accept/edit/ignore/manual)");
+    console.log("  - Get their response (approve/edit/reject)");
     console.log(
-      "  - Resume with: agent.invoke(new Command({ resume: response }))"
+      "  - Resume with: agent.invoke(new Command({ resume: { decisions: [...] } }))"
     );
 
     console.log("\n✅ Simulating user approval...\n");
@@ -125,7 +129,7 @@ if (state.next && state.next.length > 0) {
     // Resume with approval
     const resumedResult = await agent.invoke(
       new Command({
-        resume: [{ type: "accept" }], // Approve the tool call
+        resume: { decisions: [{ type: "approve" }] }, // Approve the tool call
       }),
       config
     );

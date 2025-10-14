@@ -34,7 +34,7 @@ const saveUserInfo = tool(
 );
 
 const agent = createAgent({
-  llm: new ChatOpenAI({ model: "gpt-4o" }),
+  model: new ChatOpenAI({ model: "gpt-4o" }),
   tools: [getUserInfo, saveUserInfo],
   store: new InMemoryStore(),
 });

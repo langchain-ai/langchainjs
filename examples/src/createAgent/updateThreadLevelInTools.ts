@@ -23,7 +23,7 @@ import { createAgent, tool } from "langchain";
 import { ChatOpenAI } from "@langchain/openai";
 import { z } from "zod";
 
-const llm = new ChatOpenAI({ model: "gpt-4o", temperature: 0 });
+const model = new ChatOpenAI({ model: "gpt-4o", temperature: 0 });
 
 /**
  * Simulated project state that persists across tool calls
@@ -328,9 +328,9 @@ ${projectState.tasks
 
 // Create the agent with stateful tools
 const agent = createAgent({
-  llm,
+  model,
   tools: [createTaskTool, updateTaskStatusTool, projectOverviewTool],
-  prompt: `You are a project management assistant that helps teams organize and track their work.
+  systemPrompt: `You are a project management assistant that helps teams organize and track their work.
 
 Your tools can:
 - create_task: Create new tasks and automatically update project state

@@ -26,7 +26,7 @@ export class FakeChatMessageHistory extends BaseChatMessageHistory {
     this.messages.push(new HumanMessage(message));
   }
 
-  async addAIChatMessage(message: string): Promise<void> {
+  async addAIMessage(message: string): Promise<void> {
     this.messages.push(new AIMessage(message));
   }
 

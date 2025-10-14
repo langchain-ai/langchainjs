@@ -23,8 +23,6 @@ export interface RetrievalQAChainInput extends Omit<ChainInputs, "memory"> {
 }
 
 /**
- * @deprecated This class will be removed in 1.0.0. See below for an example implementation using
- * `createRetrievalChain`:
  * Class representing a chain for performing question-answering tasks with
  * a retrieval component.
  * @example
@@ -100,7 +98,7 @@ export class RetrievalQAChain
       throw new Error(`Question key "${this.inputKey}" not found.`);
     }
     const question: string = values[this.inputKey];
-    const docs = await this.retriever.getRelevantDocuments(
+    const docs = await this.retriever.invoke(
       question,
       runManager?.getChild("retriever")
     );

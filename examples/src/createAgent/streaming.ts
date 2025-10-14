@@ -78,7 +78,7 @@ const calculateTool = tool(
  * Create the agent
  */
 const agent = createAgent({
-  llm: new ChatOpenAI({
+  model: new ChatOpenAI({
     model: "gpt-4o-mini",
     temperature: 0,
   }),
@@ -204,7 +204,7 @@ const WeatherReport = z.object({
 });
 
 const weatherAgent = createAgent({
-  llm: new ChatOpenAI({ model: "gpt-4o-mini" }),
+  model: new ChatOpenAI({ model: "gpt-4o-mini" }),
   tools: [weatherTool],
   responseFormat: WeatherReport,
 });
