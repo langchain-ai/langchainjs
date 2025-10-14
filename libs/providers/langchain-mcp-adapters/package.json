@@ -75,7 +75,6 @@
     "langchain": "workspace:*",
     "npm-run-all2": "^8.0.4",
     "prettier": "^3.6.2",
-    "release-it": "^17.11.0",
     "rollup": "^4.52.3",
     "ts-node": "^10.9.2",
     "typescript": "~5.8.3",

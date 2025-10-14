@@ -43,8 +43,6 @@
     "dpdm": "^3.14.0",
     "eslint": "^9.34.0",
     "prettier": "^2.8.3",
-    "release-it": "^19.0.4",
-    "release-it-pnpm": "^4.6.6",
     "rollup": "^4.5.2",
     "testcontainers": "^10.25.0",
     "vitest": "^3.2.4",

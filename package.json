@@ -21,17 +21,13 @@
     "test": "pnpm test:unit && pnpm test:exports:docker",
     "test:unit": "turbo test --filter=\"!test-exports-*\" --filter=!examples --filter=!create-langchain-integration",
     "test:unit:ci": "turbo test:ci",
-    "test:int": "pnpm run test:int:deps && turbo test:integration ; pnpm run test:int:deps:down",
-    "test:int:deps": "docker compose -f test-int-deps-docker-compose.yml up -d",
-    "test:int:deps:down": "docker compose -f test-int-deps-docker-compose.yml down",
     "test:ranges:docker": "docker compose -f dependency_range_tests/docker-compose.yml up --force-recreate",
     "test:exports:docker": "docker compose -f environment_tests/docker-compose.yml up --force-recreate",
     "test:standard:unit": "turbo test:standard:unit",
     "test:standard:int": "turbo test:standard:int",
     "test:standard": "pnpm test:standard:unit && pnpm test:standard:int",
     "example": "pnpm --filter examples start",
-    "precommit": "turbo precommit",
-    "release": "node release_workspace.js --workspace"
+    "precommit": "turbo precommit"
   },
   "devDependencies": {
     "@tsconfig/recommended": "^1.0.2",
