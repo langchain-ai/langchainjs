@@ -3,7 +3,7 @@ import { Command } from "@langchain/langgraph";
 import { tool } from "@langchain/core/tools";
 import { ToolMessage } from "@langchain/core/messages";
 
-import { createMiddleware } from "../../index.js";
+import { createMiddleware } from "../index.js";
 
 /**
  * Description for the write_todos tool
@@ -223,7 +223,7 @@ Using the todo list here is overkill and wastes time and tokens. These three too
 Being proactive with task management demonstrates attentiveness and ensures you complete all requirements successfully
 Remember: If you only need to make a few tool calls to complete a task, and it is clear what you need to do, it is better to just do the task directly and NOT call this tool at all.`;
 
-export const PLANNING_MIDDLEWARE_SYSTEM_PROMPT = `## \`write_todos\`
+export const TODO_LIST_MIDDLEWARE_SYSTEM_PROMPT = `## \`write_todos\`
 
 You have access to the \`write_todos\` tool to help you manage and plan complex objectives. 
 Use this tool for complex objectives to ensure that you are tracking each necessary step and giving the user visibility into your progress.
@@ -249,7 +249,7 @@ const stateSchema = z.object({
 });
 export type TodoMiddlewareState = z.infer<typeof stateSchema>;
 
-export interface PlanningMiddlewareOptions {
+export interface TodoListMiddlewareOptions {
   /**
    * Custom system prompt to guide the agent on using the todo tool.
    * If not provided, uses the default {@link PLANNING_MIDDLEWARE_SYSTEM_PROMPT}.
@@ -275,11 +275,11 @@ export interface PlanningMiddlewareOptions {
  *
  * @example
  * ```typescript
- * import { planningMiddleware, createAgent } from 'langchain';
+ * import { todoListMiddleware, createAgent } from 'langchain';
  *
  * const agent = createAgent({
  *   model: "openai:gpt-4o",
- *   middleware: [planningMiddleware()],
+ *   middleware: [todoListMiddleware()],
  * });
  *
  * // Agent now has access to write_todos tool and todo state tracking
@@ -295,7 +295,7 @@ export interface PlanningMiddlewareOptions {
  * @see {@link TodoMiddlewareState} for the state schema
  * @see {@link writeTodos} for the tool implementation
  */
-export function planningMiddleware(options?: PlanningMiddlewareOptions) {
+export function todoListMiddleware(options?: TodoListMiddlewareOptions) {
   /**
    * Write todos tool - manages todo list with Command return
    */
@@ -323,7 +323,7 @@ export function planningMiddleware(options?: PlanningMiddlewareOptions) {
   );
 
   return createMiddleware({
-    name: "planningMiddleware",
+    name: "todoListMiddleware",
     stateSchema,
     tools: [writeTodos],
     wrapModelCall: (request, handler) =>
@@ -331,7 +331,7 @@ export function planningMiddleware(options?: PlanningMiddlewareOptions) {
         ...request,
         systemPrompt:
           (request.systemPrompt ? `${request.systemPrompt}\n\n` : "") +
-          (options?.systemPrompt ?? PLANNING_MIDDLEWARE_SYSTEM_PROMPT),
+          (options?.systemPrompt ?? TODO_LIST_MIDDLEWARE_SYSTEM_PROMPT),
       }),
   });
 }
