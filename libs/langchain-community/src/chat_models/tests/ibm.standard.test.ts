@@ -23,7 +23,7 @@ class ChatWatsonxStandardTests extends ChatModelUnitTests<
       chatModelHasToolCalling: true,
       chatModelHasStructuredOutput: true,
       constructorArgs: {
-        model: "mistralai/mistral-large",
+        model: "mistralai/mistral-medium-2505",
         watsonxAIApikey: "testString",
         version: "2024-05-31",
         serviceUrl: process.env.WATSONX_AI_SERVICE_URL ?? "testString",
@@ -44,6 +44,15 @@ class ChatWatsonxStandardTests extends ChatModelUnitTests<
       ls_temperature: 0,
       ls_max_tokens: 0,
     };
+  }
+
+  async testChatModelInitApiKey() {
+    this.skipTestMessage(
+      "testChatModelInitApiKey",
+      "ChatWatsonx",
+      "Watsonx does not support init with apiKey parameter" +
+        "Watsonx only supports watsonxApiKey."
+    );
   }
 }
 

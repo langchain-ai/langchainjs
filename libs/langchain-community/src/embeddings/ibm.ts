@@ -1,26 +1,71 @@
-import { Embeddings } from "@langchain/core/embeddings";
+import { Embeddings, EmbeddingsParams } from "@langchain/core/embeddings";
 import {
-  EmbeddingParameters,
+  EmbeddingReturnOptions,
   TextEmbeddingsParams,
 } from "@ibm-cloud/watsonx-ai/dist/watsonx-ai-ml/vml_v1.js";
 import { WatsonXAI } from "@ibm-cloud/watsonx-ai";
 import { AsyncCaller } from "@langchain/core/utils/async_caller";
-import { WatsonxAuth, WatsonxParams } from "../types/ibm.js";
-import { authenticateAndSetInstance } from "../utils/ibm.js";
+import { CreateEmbeddingsParams, Gateway } from "@ibm-cloud/watsonx-ai/gateway";
+import {
+  WatsonxAuth,
+  WatsonxEmbeddingsBasicOptions,
+  XOR,
+} from "../types/ibm.js";
+import {
+  authenticateAndSetGatewayInstance,
+  authenticateAndSetInstance,
+  checkValidProps,
+  expectOneOf,
+} from "../utils/ibm.js";
 
 export interface WatsonxEmbeddingsParams
-  extends Pick<TextEmbeddingsParams, "headers"> {
+  extends EmbeddingsParams,
+    Omit<TextEmbeddingsParams, "modelId" | "inputs" | "parameters"> {
+  /** Represents the maximum number of input tokens accepted. This can be used to avoid requests failing due to
+   *  input being longer than configured limits. If the text is truncated, then it truncates the end of the input (on
+   *  the right), so the start of the input will remain the same. If this value exceeds the `maximum sequence length`
+   *  (refer to the documentation to find this value for the model) then the call will fail if the total number of
+   *  tokens exceeds the `maximum sequence length`.
+   */
   truncateInputTokens?: number;
+  /** The return options for text embeddings. */
+  returnOptions?: EmbeddingReturnOptions;
+  /** The `id` of the model to be used for this request. Please refer to the [list of
+   *  models](https://dataplatform.cloud.ibm.com/docs/content/wsj/analyze-data/fm-models-embed.html?context=wx&audience=wdp).
+   */
+  model: string;
+}
+export interface WatsonxInputEmbeddings
+  extends WatsonxEmbeddingsBasicOptions,
+    WatsonxEmbeddingsParams {}
+
+export type WatsonxEmbeddingsGatewayKwargs = Omit<
+  CreateEmbeddingsParams,
+  "input" | keyof WatsonxEmbeddingsParams
+>;
+
+export interface WatsonxEmbeddingsGatewayParams extends EmbeddingsParams {
+  modelGatewayKwargs?: WatsonxEmbeddingsGatewayKwargs;
+  modelGateway: boolean;
 }
 
-export interface WatsonxInputEmbeddings
-  extends Omit<WatsonxParams, "idOrName"> {
-  truncateInputTokens?: number;
-}
+export interface WatsonxInputGatewayEmbeddings
+  extends WatsonxEmbeddingsBasicOptions,
+    WatsonxEmbeddingsGatewayParams,
+    Omit<
+      CreateEmbeddingsParams,
+      keyof WatsonxEmbeddingsGatewayKwargs | "input"
+    > {}
+
+export type WatsonxEmbeddingsConstructor = XOR<
+  WatsonxInputEmbeddings,
+  WatsonxInputGatewayEmbeddings
+> &
+  WatsonxAuth;
 
 export class WatsonxEmbeddings
   extends Embeddings
-  implements WatsonxEmbeddingsParams, WatsonxParams
+  implements WatsonxEmbeddingsParams, WatsonxInputGatewayEmbeddings
 {
   model: string;
 
@@ -34,30 +79,95 @@ export class WatsonxEmbeddings
 
   truncateInputTokens?: number;
 
+  returnOptions?: EmbeddingReturnOptions;
+
   maxRetries?: number;
 
-  maxConcurrency?: number;
+  maxConcurrency = 1;
 
-  private service: WatsonXAI;
+  modelGatewayKwargs?: WatsonxEmbeddingsGatewayKwargs | undefined;
 
-  constructor(fields: WatsonxInputEmbeddings & WatsonxAuth) {
-    const superProps = { maxConcurrency: 2, ...fields };
-    super(superProps);
+  modelGateway = false;
+
+  protected service?: WatsonXAI;
+
+  protected gateway?: Gateway;
+
+  private checkValidProperties(fields: any, includeCommonProps = true) {
+    const alwaysAllowedProps = ["headers", "signal", "promptIndex"];
+
+    const authProps = [
+      "serviceUrl",
+      "watsonxAIApikey",
+      "watsonxAIBearerToken",
+      "watsonxAIUsername",
+      "watsonxAIPassword",
+      "watsonxAIUrl",
+      "watsonxAIAuthType",
+      "disableSSL",
+    ];
+
+    const sharedProps = [
+      "maxRetries",
+      "watsonxCallbacks",
+      "authenticator",
+      "serviceUrl",
+      "version",
+      "streaming",
+      "callbackManager",
+      "callbacks",
+      "maxConcurrency",
+      "cache",
+      "metadata",
+      "concurrency",
+      "onFailedAttempt",
+      "concurrency",
+      "verbose",
+      "tags",
+      "headers",
+      "signal",
+      "disableStreaming",
+    ];
+
+    const projectOrSpaceProps = [
+      "truncateInputTokens",
+      "returnOptions",
+      "model",
+      "projectId",
+      "spaceId",
+    ];
+    const gatewayProps = ["model", "modelGatewayKwargs", "modelGateway"];
+    const validProps: string[] = [...alwaysAllowedProps];
+    if (includeCommonProps) validProps.push(...authProps, ...sharedProps);
+
+    if (this.modelGateway) {
+      validProps.push(...gatewayProps);
+    } else if (this.spaceId || this.projectId) {
+      validProps.push(...projectOrSpaceProps);
+    }
+
+    checkValidProps(fields, validProps);
+  }
+
+  constructor(fields: WatsonxEmbeddingsConstructor) {
+    super(fields);
+    expectOneOf(fields, ["projectId", "spaceId", "modelGateway"], true);
+    this.projectId = fields?.projectId;
+    this.spaceId = fields?.spaceId;
+    this.modelGateway = fields.modelGateway ?? this.modelGateway;
+
+    this.checkValidProperties(fields);
+
     this.model = fields.model;
     this.version = fields.version;
     this.serviceUrl = fields.serviceUrl;
     this.truncateInputTokens = fields.truncateInputTokens;
-    this.maxConcurrency = fields.maxConcurrency;
+    this.returnOptions = fields.returnOptions;
+    this.maxConcurrency = fields.maxConcurrency ?? this.maxConcurrency;
     this.maxRetries = fields.maxRetries ?? 0;
-    if (fields.projectId && fields.spaceId)
-      throw new Error("Maximum 1 id type can be specified per instance");
-    else if (!fields.projectId && !fields.spaceId)
-      throw new Error(
-        "No id specified! At least id of 1 type has to be specified"
-      );
-    this.projectId = fields?.projectId;
-    this.spaceId = fields?.spaceId;
     this.serviceUrl = fields?.serviceUrl;
+    this.modelGatewayKwargs = fields.modelGatewayKwargs;
+
     const {
       watsonxAIApikey,
       watsonxAIAuthType,
@@ -69,61 +179,109 @@ export class WatsonxEmbeddings
       version,
       serviceUrl,
     } = fields;
-    const auth = authenticateAndSetInstance({
-      watsonxAIApikey,
-      watsonxAIAuthType,
-      watsonxAIBearerToken,
-      watsonxAIUsername,
-      watsonxAIPassword,
-      watsonxAIUrl,
-      disableSSL,
-      version,
-      serviceUrl,
-    });
-    if (auth) this.service = auth;
-    else throw new Error("You have not provided one type of authentication");
+
+    if (this.modelGateway) {
+      const auth = authenticateAndSetGatewayInstance({
+        watsonxAIApikey,
+        watsonxAIAuthType,
+        watsonxAIBearerToken,
+        watsonxAIUsername,
+        watsonxAIPassword,
+        watsonxAIUrl,
+        disableSSL,
+        version,
+        serviceUrl,
+      });
+      if (auth) this.gateway = auth;
+      else throw new Error("You have not provided one type of authentication");
+    } else {
+      const auth = authenticateAndSetInstance({
+        watsonxAIApikey,
+        watsonxAIAuthType,
+        watsonxAIBearerToken,
+        watsonxAIUsername,
+        watsonxAIPassword,
+        watsonxAIUrl,
+        disableSSL,
+        version,
+        serviceUrl,
+      });
+      if (auth) this.service = auth;
+      else throw new Error("You have not provided one type of authentication");
+    }
   }
 
   scopeId() {
     if (this.projectId)
       return { projectId: this.projectId, modelId: this.model };
-    else return { spaceId: this.spaceId, modelId: this.model };
+    else if (this.spaceId)
+      return { spaceId: this.spaceId, modelId: this.model };
+    else
+      return {
+        model: this.model,
+      };
   }
 
-  invocationParams(): EmbeddingParameters {
+  invocationParams() {
     return {
       truncate_input_tokens: this.truncateInputTokens,
+      return_options: this.returnOptions,
     };
   }
 
   async listModels() {
-    const listModelParams = {
-      filters: "function_embedding",
-    };
-    const caller = new AsyncCaller({
-      maxConcurrency: this.maxConcurrency,
-      maxRetries: this.maxRetries,
-    });
-    const listModels = await caller.call(() =>
-      this.service.listFoundationModelSpecs(listModelParams)
-    );
-    return listModels.result.resources?.map((item) => item.model_id);
+    if (this.service) {
+      const { service } = this;
+      const listModelParams = {
+        filters: "function_embedding",
+      };
+      const caller = new AsyncCaller({
+        maxConcurrency: this.maxConcurrency,
+        maxRetries: this.maxRetries,
+      });
+      const listModels = await caller.call(() =>
+        service.listFoundationModelSpecs(listModelParams)
+      );
+      return listModels.result.resources?.map((item) => item.model_id);
+    } else throw new Error("This method is not supported in model gateway");
   }
 
   private async embedSingleText(inputs: string[]) {
-    const textEmbeddingParams: TextEmbeddingsParams = {
-      inputs,
-      ...this.scopeId(),
-      parameters: this.invocationParams(),
-    };
-    const caller = new AsyncCaller({
-      maxConcurrency: this.maxConcurrency,
-      maxRetries: this.maxRetries,
-    });
-    const embeddings = await caller.call(() =>
-      this.service.embedText(textEmbeddingParams)
+    const scopeId = this.scopeId();
+    if (scopeId.modelId && this.service) {
+      const { service } = this;
+      const textEmbeddingParams: TextEmbeddingsParams = {
+        inputs,
+        ...scopeId,
+        parameters: this.invocationParams(),
+      };
+      const caller = new AsyncCaller({
+        maxConcurrency: this.maxConcurrency,
+        maxRetries: this.maxRetries,
+      });
+      const embeddings = await caller.call(() =>
+        service.embedText(textEmbeddingParams)
+      );
+      return embeddings.result.results.map((item) => item.embedding);
+    } else if (this.gateway && scopeId.model) {
+      const { gateway } = this;
+      const textEmbeddingParams: CreateEmbeddingsParams = {
+        input: inputs,
+        ...scopeId,
+      };
+      const caller = new AsyncCaller({
+        maxConcurrency: this.maxConcurrency,
+        maxRetries: this.maxRetries,
+      });
+      const embeddings = await caller.call(() =>
+        gateway.embeddings.completion.create(textEmbeddingParams)
+      );
+      const res = embeddings.result.data.map((item) => item.embedding);
+      return res;
+    }
+    throw new Error(
+      "Invalid parameters provided. Please check passed properties to class instance"
     );
-    return embeddings.result.results.map((item) => item.embedding);
   }
 
   async embedDocuments(documents: string[]): Promise<number[][]> {
