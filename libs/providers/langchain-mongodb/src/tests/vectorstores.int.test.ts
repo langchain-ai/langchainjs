@@ -107,6 +107,16 @@ function getEmbeddings() {
   return new OpenAIEmbeddings();
 }
 
+test("MongoDBStore sets client metadata", () => {
+  const spy = jest.spyOn(client, "appendMetadata");
+  // eslint-disable-next-line no-new
+  new PatchedVectorStore(getEmbeddings(), {
+    collection,
+  });
+  expect(spy).toHaveBeenCalledWith({ name: "langchainjs_vector" });
+  jest.clearAllMocks();
+});
+
 test("MongoDBAtlasVectorSearch with external ids", async () => {
   const vectorStore = new PatchedVectorStore(getEmbeddings(), {
     collection,
