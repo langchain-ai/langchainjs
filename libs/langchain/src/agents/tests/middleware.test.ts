@@ -864,6 +864,252 @@ describe("middleware", () => {
       expect(toolBMock).toBeCalled();
     });
 
+    it("should allow middleware to redirect tool call and transform arguments in wrapModelCall", async () => {
+      // Tool A: searches by user ID
+      const searchByUserIdMock = vi.fn(
+        async ({ userId, limit }: { userId: string; limit: number }) =>
+          `Searched for user ${userId} with limit ${limit}`
+      );
+      const searchByUserId = tool(searchByUserIdMock, {
+        name: "search_by_user_id",
+        description: "Search by user ID",
+        schema: z.object({
+          userId: z.string(),
+          limit: z.number(),
+        }),
+      });
+
+      // Tool B: searches by username (different schema)
+      const searchByUsernameMock = vi.fn(
+        async ({
+          username,
+          maxResults,
+        }: {
+          username: string;
+          maxResults: number;
+        }) => `Searched for username ${username} with max ${maxResults}`
+      );
+      const searchByUsername = tool(searchByUsernameMock, {
+        name: "search_by_username",
+        description: "Search by username",
+        schema: z.object({
+          username: z.string(),
+          maxResults: z.number(),
+        }),
+      });
+
+      let capturedOriginalCall: ToolCall | undefined;
+      let capturedModifiedCall: ToolCall | undefined;
+
+      // Middleware that redirects and transforms the call
+      const transformMiddleware = createMiddleware({
+        name: "TransformMiddleware",
+        wrapModelCall: async (request, handler) => {
+          const response = await handler(request);
+
+          // Redirect search_by_user_id to search_by_username with transformed args
+          if (response.tool_calls && response.tool_calls.length > 0) {
+            const toolCall = response.tool_calls[0];
+            capturedOriginalCall = toolCall;
+
+            if (toolCall.name === "search_by_user_id") {
+              // Transform arguments from userId schema to username schema
+              const modifiedToolCall = {
+                ...toolCall,
+                name: "search_by_username",
+                args: {
+                  username: `user_${toolCall.args.userId}`, // Transform userId to username format
+                  maxResults: (toolCall.args.limit as number) * 2, // Transform limit to maxResults
+                },
+              };
+
+              capturedModifiedCall = modifiedToolCall;
+
+              return new AIMessage({
+                ...response,
+                content: response.content,
+                tool_calls: [modifiedToolCall],
+              });
+            }
+          }
+
+          return response;
+        },
+      });
+
+      // Model tries to call search_by_user_id
+      const model = new FakeToolCallingChatModel({
+        responses: [
+          new AIMessage({
+            content: "",
+            tool_calls: [
+              {
+                id: "call_1",
+                name: "search_by_user_id",
+                args: { userId: "12345", limit: 10 },
+              },
+            ],
+          }),
+          new AIMessage("Search complete"),
+        ],
+      });
+
+      const agent = createAgent({
+        model,
+        tools: [searchByUserId, searchByUsername],
+        middleware: [transformMiddleware],
+      });
+
+      const result = await agent.invoke({
+        messages: [{ role: "user", content: "Search for user 12345" }],
+      });
+
+      // Verify the original call was captured
+      expect(capturedOriginalCall).toEqual({
+        id: "call_1",
+        name: "search_by_user_id",
+        args: { userId: "12345", limit: 10 },
+      });
+
+      // Verify the modified call was created with transformed args
+      expect(capturedModifiedCall).toEqual({
+        id: "call_1",
+        name: "search_by_username",
+        args: { username: "user_12345", maxResults: 20 },
+      });
+
+      // Verify search_by_username was executed with transformed arguments
+      expect(searchByUsernameMock).toHaveBeenCalledWith(
+        {
+          username: "user_12345",
+          maxResults: 20,
+        },
+        expect.any(Object)
+      );
+
+      // Verify search_by_user_id was NOT executed
+      expect(searchByUserIdMock).not.toHaveBeenCalled();
+
+      // Verify the tool message contains the correct result
+      const toolMessage = result.messages.find((m) =>
+        ToolMessage.isInstance(m)
+      ) as ToolMessage;
+      expect(toolMessage).toBeDefined();
+      expect(toolMessage.content).toBe(
+        "Searched for username user_12345 with max 20"
+      );
+      expect(toolMessage.name).toBe("search_by_username");
+    });
+
+    it("should allow middleware to modify tool arguments before handler execution in wrapToolCall", async () => {
+      /**
+       * Test demonstrates modifying tool arguments BEFORE calling the handler
+       * This is different from wrapModelCall - here we intercept the actual tool execution
+       */
+
+      const calculatorMock = vi.fn(
+        async ({
+          a,
+          b,
+          operation,
+        }: {
+          a: number;
+          b: number;
+          operation: string;
+        }) => `Performed ${operation} on ${a} and ${b}`
+      );
+      const calculator = tool(calculatorMock, {
+        name: "calculator",
+        description: "Perform calculations",
+        schema: z.object({
+          a: z.number(),
+          b: z.number(),
+          operation: z.string(),
+        }),
+      });
+
+      let capturedOriginalArgs: any;
+      let capturedModifiedArgs: any;
+
+      // Middleware that modifies arguments BEFORE the tool executes
+      const argTransformMiddleware = createMiddleware({
+        name: "ArgTransformMiddleware",
+        wrapToolCall: async (request, handler) => {
+          // Capture original arguments
+          capturedOriginalArgs = { ...request.toolCall.args };
+
+          // Modify the tool call arguments before passing to handler
+          if (request.tool.name === "calculator") {
+            // Double both numbers before executing
+            const modifiedRequest = {
+              ...request,
+              toolCall: {
+                ...request.toolCall,
+                args: {
+                  a: (request.toolCall.args.a as number) * 2,
+                  b: (request.toolCall.args.b as number) * 2,
+                  operation: request.toolCall.args.operation,
+                },
+              },
+            };
+
+            capturedModifiedArgs = { ...modifiedRequest.toolCall.args };
+
+            // Call handler with modified arguments
+            return handler(modifiedRequest);
+          }
+
+          return handler(request);
+        },
+      });
+
+      const model = new FakeToolCallingModel({
+        toolCalls: [
+          [
+            {
+              name: "calculator",
+              args: { a: 5, b: 10, operation: "add" },
+              id: "1",
+            },
+          ],
+        ],
+      });
+
+      const agent = createAgent({
+        model,
+        tools: [calculator],
+        middleware: [argTransformMiddleware],
+      });
+
+      await agent.invoke({
+        messages: [new HumanMessage("Add 5 and 10")],
+      });
+
+      // Verify original arguments were captured
+      expect(capturedOriginalArgs).toEqual({
+        a: 5,
+        b: 10,
+        operation: "add",
+      });
+
+      // Verify modified arguments were created
+      expect(capturedModifiedArgs).toEqual({
+        a: 10, // doubled
+        b: 20, // doubled
+        operation: "add",
+      });
+
+      // Verify the tool was called with MODIFIED arguments
+      expect(calculatorMock).toHaveBeenCalledWith(
+        {
+          a: 10,
+          b: 20,
+          operation: "add",
+        },
+        expect.any(Object)
+      );
+    });
+
     it("should support async operations in middleware", async () => {
       /**
        * Test verifies middleware can perform async operations
@@ -1292,9 +1538,10 @@ describe("middleware", () => {
       // Middleware that returns invalid type
       const invalidMiddleware = createMiddleware({
         name: "InvalidReturnMiddleware",
+        // @ts-expect-error - test invalid return type
         wrapToolCall: async () => {
           // Return invalid type (string instead of ToolMessage or Command)
-          return "invalid return value" as any;
+          return "invalid return value";
         },
       });
 
