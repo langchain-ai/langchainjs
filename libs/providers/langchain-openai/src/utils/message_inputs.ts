@@ -19,8 +19,6 @@ import type {
 import { _convertToCompletionsMessageFromV1 } from "./standard.js";
 import { isReasoningModel, messageToOpenAIRole } from "./misc.js";
 
-export type ResponsesInputItem = OpenAIClient.Responses.ResponseInputItem;
-
 export const completionsApiContentBlockConverter: StandardContentBlockConverter<{
   text: ChatCompletionContentPartText;
   image: ChatCompletionContentPartImage;

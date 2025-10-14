@@ -6,7 +6,8 @@ import {
   type ContentBlock,
 } from "@langchain/core/messages";
 import { iife, isReasoningModel, messageToOpenAIRole } from "./misc.js";
-import { ResponsesInputItem } from "./message_inputs.js";
+
+export type ResponsesInputItem = OpenAIClient.Responses.ResponseInputItem;
 
 type ChatCompletionContentData =
   | OpenAIClient.Chat.Completions.ChatCompletionContentPartImage
