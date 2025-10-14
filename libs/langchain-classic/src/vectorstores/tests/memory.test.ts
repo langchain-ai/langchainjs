@@ -60,7 +60,7 @@ test("MemoryVectorStore stores and retrieves document IDs", async () => {
     { pageContent: "hello", metadata: { namespace: 4 }, id: "4" },
   ]);
 
-  const results = await retriever.getRelevantDocuments("hello");
+  const results = await retriever.invoke("hello");
 
   expect(results).toHaveLength(2);
 
@@ -98,7 +98,7 @@ test("MemoryVectorStore as retriever can filter metadata", async () => {
     { pageContent: "hello", metadata: { namespace: 4 } },
   ]);
 
-  const results = await retriever.getRelevantDocuments("hello");
+  const results = await retriever.invoke("hello");
 
   expect(results).toHaveLength(2);
 
