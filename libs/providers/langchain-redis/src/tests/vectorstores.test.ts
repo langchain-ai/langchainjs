@@ -310,17 +310,17 @@ describe("RedisVectorStore delete", () => {
 
 describe("RedisVectorStore with Custom Schema", () => {
   const createRedisClientWithCustomSchema = () => {
-    const hSetMock = jest.fn();
-    const expireMock = jest.fn();
-    const delMock = jest.fn<any>().mockResolvedValue(1);
+    const hSetMock = vi.fn();
+    const expireMock = vi.fn();
+    const delMock = vi.fn<any>().mockResolvedValue(1);
 
     return {
       ft: {
-        info: jest.fn<any>().mockResolvedValue({
+        info: vi.fn<any>().mockResolvedValue({
           numDocs: 0,
         }),
-        create: jest.fn(),
-        search: jest.fn<any>().mockResolvedValue({
+        create: vi.fn(),
+        search: vi.fn<any>().mockResolvedValue({
           total: 2,
           documents: [
             {
@@ -355,13 +355,13 @@ describe("RedisVectorStore with Custom Schema", () => {
             },
           ],
         }),
-        dropIndex: jest.fn(),
+        dropIndex: vi.fn(),
       },
       hSet: hSetMock,
       expire: expireMock,
       del: delMock,
-      multi: jest.fn<any>().mockImplementation(() => ({
-        exec: jest.fn(),
+      multi: vi.fn<any>().mockImplementation(() => ({
+        exec: vi.fn(),
         hSet: hSetMock,
         expire: expireMock,
       })),
@@ -386,7 +386,7 @@ describe("RedisVectorStore with Custom Schema", () => {
       customSchema,
     });
 
-    store.checkIndexExists = jest.fn<any>().mockResolvedValue(false);
+    store.checkIndexExists = vi.fn<any>().mockResolvedValue(false);
     await store.createIndex();
 
     expect(client.ft.create).toHaveBeenCalledWith(
