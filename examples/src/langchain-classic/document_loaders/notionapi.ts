@@ -7,7 +7,6 @@ const pageLoader = new NotionAPILoader({
     auth: "<NOTION_INTEGRATION_TOKEN>",
   },
   id: "<PAGE_ID>",
-  type: "page",
 });
 
 const splitter = new RecursiveCharacterTextSplitter();
@@ -25,7 +24,6 @@ const dbLoader = new NotionAPILoader({
     auth: "<NOTION_INTEGRATION_TOKEN>",
   },
   id: "<DATABASE_ID>",
-  type: "database",
   onDocumentLoaded: (current, total, currentTitle) => {
     console.log(`Loaded Page: ${currentTitle} (${current}/${total})`);
   },

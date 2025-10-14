@@ -1,11 +1,7 @@
-import { TavilySearchResults } from "@langchain/community/tools/tavily_search";
+import { TavilySearch } from "@langchain/tavily";
 import { ChatOpenAI } from "@langchain/openai";
 
-const tools = [
-  new TavilySearchResults({
-    maxResults: 1,
-  }),
-];
+const tools = [new TavilySearch({ maxResults: 1 })];
 
 const chat = new ChatOpenAI({
   model: "gpt-3.5-turbo-1106",

@@ -4,10 +4,10 @@ import {
   createToolCallingAgent,
 } from "@langchain/classic/agents";
 import { ChatPromptTemplate } from "@langchain/core/prompts";
-import { TavilySearchResults } from "@langchain/community/tools/tavily_search";
+import { TavilySearch } from "@langchain/tavily";
 import { Calculator } from "@langchain/community/tools/calculator";
 
-const tools = [new TavilySearchResults(), new Calculator()];
+const tools = [new TavilySearch(), new Calculator()];
 
 // Prompt template must have "input" and "agent_scratchpad input variables
 const prompt = ChatPromptTemplate.fromMessages([

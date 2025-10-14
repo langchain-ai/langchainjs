@@ -73,9 +73,9 @@ const retrieverTool = await createRetrieverTool(retriever, {
     "Search for information about LangSmith. For any questions about LangSmith, you must use this tool!",
 });
 
-import { TavilySearchResults } from "@langchain/community/tools/tavily_search";
+import { TavilySearch } from "@langchain/tavily";
 
-const searchTool = new TavilySearchResults();
+const searchTool = new TavilySearch();
 
 const tools = [retrieverTool, searchTool];
 

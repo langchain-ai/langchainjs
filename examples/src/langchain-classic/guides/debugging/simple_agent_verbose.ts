@@ -4,11 +4,11 @@ import {
 } from "@langchain/classic/agents";
 import { ChatAnthropic } from "@langchain/anthropic";
 import { ChatPromptTemplate } from "@langchain/core/prompts";
-import { TavilySearchResults } from "@langchain/community/tools/tavily_search";
+import { TavilySearch } from "@langchain/tavily";
 import { Calculator } from "@langchain/community/tools/calculator";
 
 const tools = [
-  new TavilySearchResults({ verbose: true }),
+  new TavilySearch({ verbose: true }),
   new Calculator({ verbose: true }),
 ];
 

@@ -2,7 +2,7 @@ import { RetrievalQAChain, loadQAStuffChain } from "@langchain/classic/chains";
 import { CheerioWebBaseLoader } from "@langchain/community/document_loaders/web/cheerio";
 import { RecursiveCharacterTextSplitter } from "@langchain/textsplitters";
 import { HNSWLib } from "@langchain/community/vectorstores/hnswlib";
-import { Ollama } from "@langchain/community/llms/ollama";
+import { Ollama } from "@langchain/ollama";
 import { HuggingFaceTransformersEmbeddings } from "@langchain/community/embeddings/huggingface_transformers";
 import { PromptTemplate } from "@langchain/core/prompts";
 

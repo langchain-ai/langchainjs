@@ -1,4 +1,4 @@
-import { TavilySearchResults } from "@langchain/community/tools/tavily_search";
+import { TavilySearch } from "@langchain/tavily";
 import { ChatOpenAI } from "@langchain/openai";
 import type { ChatPromptTemplate } from "@langchain/core/prompts";
 
@@ -9,7 +9,7 @@ import {
 } from "@langchain/classic/agents";
 
 // Define the tools the agent will have access to.
-const tools = [new TavilySearchResults({ maxResults: 1 })];
+const tools = [new TavilySearch({ maxResults: 1 })];
 
 // Get the prompt to use - you can modify this!
 // If you want to see the prompt in full, you can at:
