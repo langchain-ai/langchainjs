@@ -81,36 +81,6 @@ function _formatImage(imageUrl: string) {
   );
 }
 
-/**
- * Work around Anthropic API bug where bash_code_execution_output blocks
- * cause 500 errors when included in conversation history.
- * Filters out bash_code_execution_output blocks from bash_code_execution_tool_result blocks.
- *
- * @param contentPart The content block to potentially filter
- */
-function _filterBashCodeExecutionOutputs(contentPart: { type: string }): void {
-  if (contentPart.type !== "bash_code_execution_tool_result") {
-    return;
-  }
-
-  const toolResult =
-    contentPart as unknown as Anthropic.Beta.Messages.BetaBashCodeExecutionToolResultBlockParam;
-
-  if (
-    toolResult.content.type === "bash_code_execution_result" &&
-    Array.isArray(toolResult.content.content)
-  ) {
-    // Filter out bash_code_execution_output blocks
-    const filteredContent = toolResult.content.content.filter(
-      (c) => c.type !== "bash_code_execution_output"
-    );
-    toolResult.content = {
-      ...toolResult.content,
-      content: filteredContent,
-    };
-  }
-}
-
 function _ensureMessageContents(messages: BaseMessage[]): BaseMessage[] {
   // Merge runs of human/tool messages into single human messages with content blocks.
   const updatedMsgs = [];
@@ -298,9 +268,6 @@ function* _formatContentBlocks(
           }
         }
       }
-
-      _filterBashCodeExecutionOutputs(contentPartCopy);
-
       // TODO: Fix when SDK types are fixed
       yield {
         ...contentPartCopy,
