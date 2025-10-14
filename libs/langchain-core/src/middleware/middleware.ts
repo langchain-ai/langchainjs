@@ -20,19 +20,7 @@ import type {
   ModelRequest,
 } from "./types.js";
 /**
- * Creates a middleware instance with automatic schema inference.
- *
- * @param config - Middleware configuration
- * @param config.name - The name of the middleware
- * @param config.stateSchema - The schema of the middleware state
- * @param config.contextSchema - The schema of the middleware context
- * @param config.wrapModelCall - The function to wrap model invocation
- * @param config.wrapToolCall - The function to wrap tool invocation
- * @param config.beforeModel - The function to run before the model call
- * @param config.afterModel - The function to run after the model call
- * @param config.beforeAgent - The function to run before the agent execution starts
- * @param config.afterAgent - The function to run after the agent execution completes
- * @returns A middleware instance
+ * @internal
  */
 export function createMiddleware<
   TSchema extends InteropZodObject | undefined = undefined,

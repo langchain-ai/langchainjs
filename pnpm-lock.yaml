@@ -1844,14 +1844,14 @@ importers:
     dependencies:
       '@anthropic-ai/sdk':
         specifier: ^0.65.0
-        version: 0.65.0(zod@3.25.76)
+        version: 0.65.0(zod@4.1.11)
       zod:
-        specifier: ^3.25.76
-        version: 3.25.76
+        specifier: ^3.25.76 || ^4
+        version: 4.1.11
     devDependencies:
       '@anthropic-ai/vertex-sdk':
         specifier: ^0.11.5
-        version: 0.11.5(zod@3.25.76)
+        version: 0.11.5(zod@4.1.11)
       '@langchain/core':
         specifier: workspace:*
         version: link:../../langchain-core
@@ -16394,9 +16394,9 @@ snapshots:
     optionalDependencies:
       zod: 4.1.11
 
-  '@anthropic-ai/vertex-sdk@0.11.5(zod@3.25.76)':
+  '@anthropic-ai/vertex-sdk@0.11.5(zod@4.1.11)':
     dependencies:
-      '@anthropic-ai/sdk': 0.65.0(zod@3.25.76)
+      '@anthropic-ai/sdk': 0.65.0(zod@4.1.11)
       google-auth-library: 9.15.1(encoding@0.1.13)
     transitivePeerDependencies:
       - encoding

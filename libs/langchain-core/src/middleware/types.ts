@@ -16,6 +16,7 @@ import type { BaseRuntime as Runtime } from "./runtime.js";
  * Configuration for modifying a model call at runtime.
  * All fields are optional and only provided fields will override defaults.
  *
+ * @internal
  * @template TState - The agent's state type, must extend Record<string, unknown>. Defaults to Record<string, unknown>.
  * @template TRuntime - The runtime type. Defaults to Runtime<unknown>.
  */
@@ -67,6 +68,8 @@ export interface ModelRequest<
 
 /**
  * Information about a tool call that has been executed.
+ *
+ * @internal
  */
 export interface ToolCall {
   /**
@@ -93,6 +96,8 @@ export interface ToolCall {
 
 /**
  * Result type for middleware functions.
+ *
+ * @internal
  */
 export type MiddlewareResult<TState> = TState | void;
 
@@ -102,6 +107,7 @@ export type MiddlewareResult<TState> = TState | void;
  *
  * @template TState - The agent's state type, must extend Record<string, unknown>. Defaults to Record<string, unknown>.
  * @template TRuntime - The runtime type. Defaults to Runtime<unknown>.
+ * @internal
  */
 export interface ToolCallRequest<
   TState extends Record<string, unknown> = Record<string, unknown>,
@@ -129,6 +135,7 @@ export interface ToolCallRequest<
 /**
  * Handler function type for wrapping tool calls.
  * Takes a tool call and returns the tool result or a command.
+ * @internal
  */
 export type ToolCallHandler<
   Command,
@@ -141,6 +148,7 @@ export type ToolCallHandler<
 /**
  * Wrapper function type for the wrapToolCall hook.
  * Allows middleware to intercept and modify tool execution.
+ * @internal
  */
 export type ToolCallWrapper<
   Command,
@@ -153,6 +161,7 @@ export type ToolCallWrapper<
 
 /**
  * Base middleware interface.
+ * @internal
  */
 export interface AgentMiddleware<
   TSchema extends InteropZodObject | undefined = any,
@@ -426,6 +435,7 @@ export interface AgentMiddleware<
 
 /**
  * Type for the agent's built-in state properties.
+ * @internal
  */
 export type AgentBuiltInState = {
   /**
@@ -466,6 +476,7 @@ type FilterPrivateProps<T> = {
 /**
  * Helper type to infer the state schema type from a middleware
  * This filters out private properties (those starting with underscore)
+ * @internal
  */
 export type InferMiddlewareState<T extends AgentMiddleware> =
   T extends AgentMiddleware<infer S>
@@ -477,6 +488,7 @@ export type InferMiddlewareState<T extends AgentMiddleware> =
 /**
  * Helper type to infer the input state schema type from a middleware (all properties optional)
  * This filters out private properties (those starting with underscore)
+ * @internal
  */
 export type InferMiddlewareInputState<T extends AgentMiddleware> =
   T extends AgentMiddleware<infer S>
@@ -487,6 +499,7 @@ export type InferMiddlewareInputState<T extends AgentMiddleware> =
 
 /**
  * Helper type to infer merged state from an array of middleware (just the middleware states)
+ * @internal
  */
 export type InferMiddlewareStates<T = AgentMiddleware[]> = T extends readonly []
   ? {}
@@ -500,6 +513,7 @@ export type InferMiddlewareStates<T = AgentMiddleware[]> = T extends readonly []
 
 /**
  * Helper type to infer merged input state from an array of middleware (with optional defaults)
+ * @internal
  */
 export type InferMiddlewareInputStates<T extends readonly AgentMiddleware[]> =
   T extends readonly []
@@ -514,18 +528,21 @@ export type InferMiddlewareInputStates<T extends readonly AgentMiddleware[]> =
 
 /**
  * Helper type to infer merged state from an array of middleware (includes built-in state)
+ * @internal
  */
 export type InferMergedState<T extends readonly AgentMiddleware[]> =
   InferMiddlewareStates<T> & AgentBuiltInState;
 
 /**
  * Helper type to infer merged input state from an array of middleware (includes built-in state)
+ * @internal
  */
 export type InferMergedInputState<T extends readonly AgentMiddleware[]> =
   InferMiddlewareInputStates<T> & AgentBuiltInState;
 
 /**
  * Helper type to infer the context schema type from a middleware
+ * @internal
  */
 export type InferMiddlewareContext<T extends AgentMiddleware> =
   T extends AgentMiddleware<any, infer C>
@@ -536,6 +553,7 @@ export type InferMiddlewareContext<T extends AgentMiddleware> =
 
 /**
  * Helper type to infer the input context schema type from a middleware (with optional defaults)
+ * @internal
  */
 export type InferMiddlewareContextInput<T extends AgentMiddleware> =
   T extends AgentMiddleware<any, infer C>
@@ -548,6 +566,7 @@ export type InferMiddlewareContextInput<T extends AgentMiddleware> =
 
 /**
  * Helper type to infer merged context from an array of middleware
+ * @internal
  */
 export type InferMiddlewareContexts<T extends readonly AgentMiddleware[]> =
   T extends readonly []
@@ -577,6 +596,7 @@ type MergeContextTypes<A, B> = [A] extends [undefined]
 
 /**
  * Helper type to infer merged input context from an array of middleware (with optional defaults)
+ * @internal
  */
 export type InferMiddlewareContextInputs<T extends readonly AgentMiddleware[]> =
   T extends readonly []

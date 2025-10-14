@@ -10,6 +10,9 @@ import type {
 type IsOptionalZodObject<T> = T extends InteropZodOptional<any> ? true : false;
 type IsDefaultZodObject<T> = T extends InteropZodDefault<any> ? true : false;
 
+/**
+ * @internal
+ */
 export type WithMaybeContext<TContext> = undefined extends TContext
   ? { readonly context?: TContext }
   : IsOptionalZodObject<TContext> extends true
@@ -22,16 +25,14 @@ export type WithMaybeContext<TContext> = undefined extends TContext
  * Base runtime interface that can be extended by framework-specific runtime types.
  * This empty interface serves as a fallback when no specific runtime is available.
  *
- * @example
- * // In a package with LangGraph dependency:
- * import { Runtime as LangGraphRuntime } from "@langchain/langgraph";
- * export type Runtime<Context> = BaseRuntime<Context, LangGraphRuntime>;
+ * @internal
  */
 export interface IBaseRuntime {}
 
 /**
  * Runtime information available to middleware (readonly).
  *
+ * @internal
  * @template TContext - The context type for middleware
  * @template BaseRuntime - The framework-specific runtime type (defaults to empty IBaseRuntime)
  */
@@ -47,6 +48,9 @@ export type BaseRuntime<
     };
   };
 
+/**
+ * @internal
+ */
 export interface RunLevelPrivateState {
   /**
    * The number of times the model has been called at the run level.
@@ -54,6 +58,10 @@ export interface RunLevelPrivateState {
    */
   runModelCallCount: number;
 }
+
+/**
+ * @internal
+ */
 export interface ThreadLevelPrivateState {
   /**
    * The number of times the model has been called at the thread level.
@@ -67,6 +75,8 @@ export interface ThreadLevelPrivateState {
  * As private state we consider all information we want to track within
  * the lifecycle of the agent, without exposing it to the user. These informations
  * are propagated to the user as _readonly_ runtime properties.
+ *
+ * @internal
  */
 export interface PrivateState
   extends ThreadLevelPrivateState,
