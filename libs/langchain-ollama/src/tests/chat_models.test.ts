@@ -1,5 +1,20 @@
-import { test } from "@jest/globals";
+/* eslint-disable no-process-env */
+import { test, expect } from "@jest/globals";
+import { convertOllamaMessagesToLangChain } from "../utils.js";
 
-test("Test chat model", async () => {
-  // Your test here
+test("convertOllamaMessagesToLangChain separates thinking into reasoning_content", () => {
+  const msg = {
+    role: "assistant",
+    content: "Hello! How can I help?",
+    thinking: "We should respond politely.",
+  } as unknown as Parameters<typeof convertOllamaMessagesToLangChain>[0];
+
+  const chunk = convertOllamaMessagesToLangChain(msg);
+
+  expect(typeof chunk.content === "string" ? chunk.content : "").toBe(
+    "Hello! How can I help?"
+  );
+  expect(chunk.additional_kwargs?.reasoning_content).toBe(
+    "We should respond politely."
+  );
 });
