@@ -31,7 +31,7 @@
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.65.0",
-    "zod": "^3.25.76"
+    "zod": "^3.25.76 || ^4"
   },
   "peerDependencies": {
     "@langchain/core": "^1.0.0-alpha.6"
