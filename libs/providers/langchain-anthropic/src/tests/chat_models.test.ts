@@ -192,6 +192,44 @@ test("Can properly format anthropic messages when given two tool results", async
   });
 });
 
+test("invocationParams includes container when provided in call options", () => {
+  const model = new ChatAnthropic({
+    modelName: "claude-3-haiku-20240307",
+    temperature: 0,
+    anthropicApiKey: "testing",
+  });
+
+  const params = model.invocationParams({ container: "container_123" });
+
+  expect(params.container).toBe("container_123");
+});
+
+test("invocationParams does not include container when not provided", () => {
+  const model = new ChatAnthropic({
+    modelName: "claude-3-haiku-20240307",
+    temperature: 0,
+    anthropicApiKey: "testing",
+  });
+
+  const params = model.invocationParams({});
+
+  expect(params.container).toBeUndefined();
+});
+
+test("invocationParams includes container with thinking enabled", () => {
+  const model = new ChatAnthropic({
+    modelName: "claude-3-haiku-20240307",
+    temperature: 1,
+    anthropicApiKey: "testing",
+    thinking: { type: "enabled", budget_tokens: 1000 },
+  });
+
+  const params = model.invocationParams({ container: "container_456" });
+
+  expect(params.container).toBe("container_456");
+  expect(params.thinking).toEqual({ type: "enabled", budget_tokens: 1000 });
+});
+
 test("Can properly format messages with container_upload blocks", async () => {
   const messageHistory = [
     new HumanMessage({
