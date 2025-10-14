@@ -19,7 +19,7 @@ if (
   ).version;
 
   // Check if the minimum version matches the workspace version
-  const corePackageJsonPath = "/app/monorepo/libs/langchain-core/package.json";
+  const corePackageJsonPath = "/app/libs/langchain-core/package.json";
   const corePackageJson = JSON.parse(fs.readFileSync(corePackageJsonPath));
 
   if (corePackageJson.version === minVersion) {
