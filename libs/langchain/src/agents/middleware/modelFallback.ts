@@ -43,7 +43,7 @@ export function modelFallbackMiddleware(
 ): AgentMiddleware {
   return createMiddleware({
     name: "modelFallbackMiddleware",
-    wrapModelRequest: async (request, handler) => {
+    wrapModelCall: async (request, handler) => {
       /**
        * Try the primary model first
        */

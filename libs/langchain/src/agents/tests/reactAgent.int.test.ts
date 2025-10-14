@@ -7,7 +7,7 @@ import { HumanMessage, AIMessage } from "@langchain/core/messages";
 
 import { createMiddleware, createAgent, providerStrategy } from "../index.js";
 
-describe("wrapModelRequest", () => {
+describe("wrapModelCall", () => {
   it("should allow middleware to update model, messages and systemPrompt", async () => {
     // Setup mocked fetch functions for both providers
     const openAIFetchMock = vi.fn((url, options) => fetch(url, options));
@@ -33,7 +33,7 @@ describe("wrapModelRequest", () => {
     // Create middleware that will change the model and messages
     const modelSwitchMiddleware = createMiddleware({
       name: "modelSwitcher",
-      wrapModelRequest: async (request, handler) => {
+      wrapModelCall: async (request, handler) => {
         // Create a new ChatAnthropic instance
         const anthropicModel = new ChatAnthropic({
           model: "claude-opus-4-20250514",
@@ -127,7 +127,7 @@ Please provide a clear, direct, and authoritative answer, as this information wi
     expect(responseContent).not.toMatch(/tokyo|weather/i);
   });
 
-  it("can change tools and toolChoice in wrapModelRequest", async () => {
+  it("can change tools and toolChoice in wrapModelCall", async () => {
     // Setup mocked fetch for OpenAI
     const openAIFetchMock = vi.fn();
 
@@ -162,7 +162,7 @@ Please provide a clear, direct, and authoritative answer, as this information wi
     const toolsMiddleware = createMiddleware({
       name: "toolsModifier",
       tools: [weatherTool, newsTool],
-      wrapModelRequest: async (request, handler) => {
+      wrapModelCall: async (request, handler) => {
         // Set toolChoice to force specific tool
         return handler({
           ...request,

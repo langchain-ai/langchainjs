@@ -122,7 +122,7 @@ export function llmToolSelectorMiddleware(
   return createMiddleware({
     name: "LLMToolSelector",
     contextSchema: LLMToolSelectorOptionsSchema,
-    async wrapModelRequest(request, handler) {
+    async wrapModelCall(request, handler) {
       const selectionRequest = await prepareSelectionRequest(
         request,
         options,

@@ -49,7 +49,7 @@ type ResponseHandlerResult<StructuredResponseFormat> =
   | Promise<Command>;
 
 /**
- * Wrap the base handler with middleware wrapModelRequest hooks
+ * Wrap the base handler with middleware wrapModelCall hooks
  * Middleware are composed so the first middleware is the outermost wrapper
  * Example: [auth, retry, cache] means auth wraps retry wraps cache wraps baseHandler
  */
@@ -75,7 +75,7 @@ export interface AgentNodeOptions<
   toolClasses: (ClientTool | ServerTool)[];
   shouldReturnDirect: Set<string>;
   signal?: AbortSignal;
-  wrapModelRequestHookMiddleware?: [
+  wrapModelCallHookMiddleware?: [
     AgentMiddleware,
     () => Record<string, unknown>
   ][];
@@ -357,8 +357,7 @@ export class AgentNode<
       );
     };
 
-    const wrapperMiddleware =
-      this.#options.wrapModelRequestHookMiddleware ?? [];
+    const wrapperMiddleware = this.#options.wrapModelCallHookMiddleware ?? [];
     let wrappedHandler: (
       request: ModelRequest<
         InternalAgentState<StructuredResponseFormat> &
@@ -372,7 +371,7 @@ export class AgentNode<
      */
     for (let i = wrapperMiddleware.length - 1; i >= 0; i--) {
       const [middleware, getMiddlewareState] = wrapperMiddleware[i];
-      if (middleware.wrapModelRequest) {
+      if (middleware.wrapModelCall) {
         const innerHandler = wrappedHandler;
         const currentMiddleware = middleware;
         const currentGetState = getMiddlewareState;
@@ -445,7 +444,7 @@ export class AgentNode<
             );
             if (newTools.length > 0) {
               throw new Error(
-                `You have added a new tool in "wrapModelRequest" hook of middleware "${
+                `You have added a new tool in "wrapModelCall" hook of middleware "${
                   currentMiddleware.name
                 }": ${newTools
                   .map((tool) => tool.name)
@@ -464,7 +463,7 @@ export class AgentNode<
             );
             if (invalidTools.length > 0) {
               throw new Error(
-                `You have modified a tool in "wrapModelRequest" hook of middleware "${
+                `You have modified a tool in "wrapModelCall" hook of middleware "${
                   currentMiddleware.name
                 }": ${invalidTools
                   .map((tool) => tool.name)
@@ -475,14 +474,14 @@ export class AgentNode<
             return innerHandler(req);
           };
 
-          // Call middleware's wrapModelRequest with the validation handler
-          if (!currentMiddleware.wrapModelRequest) {
+          // Call middleware's wrapModelCall with the validation handler
+          if (!currentMiddleware.wrapModelCall) {
             return handlerWithValidation(requestWithStateAndRuntime);
           }
 
           try {
             const middlewareResponse = await (
-              currentMiddleware.wrapModelRequest as (
+              currentMiddleware.wrapModelCall as (
                 request: typeof requestWithStateAndRuntime,
                 handler: typeof handlerWithValidation
               ) => Promise<InternalModelResponse<StructuredResponseFormat>>
@@ -493,7 +492,7 @@ export class AgentNode<
              */
             if (!AIMessage.isInstance(middlewareResponse)) {
               throw new Error(
-                `Invalid response from "wrapModelRequest" in middleware "${
+                `Invalid response from "wrapModelCall" in middleware "${
                   currentMiddleware.name
                 }": expected AIMessage, got ${typeof middlewareResponse}`
               );
