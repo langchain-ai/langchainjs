@@ -1,9 +1,6 @@
 import { z } from "zod/v3";
 import { ContentBlock } from "@langchain/core/messages";
-import {
-  createMiddleware,
-  type AgentMiddleware as _,
-} from "@langchain/core/middleware";
+import { createMiddleware } from "@langchain/core/middleware";
 import { InferInteropZodInput } from "@langchain/core/utils/types";
 
 interface ConfigurableModel {
@@ -173,7 +170,7 @@ class PromptCachingMiddlewareError extends Error {
  */
 export function promptCachingMiddleware(
   middlewareOptions?: PromptCachingMiddlewareConfig
-) {
+): AgentMiddleware {
   return createMiddleware({
     name: "PromptCachingMiddleware",
     contextSchema,
