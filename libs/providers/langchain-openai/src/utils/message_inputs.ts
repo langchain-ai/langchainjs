@@ -19,8 +19,6 @@ import type {
 import { _convertToCompletionsMessageFromV1 } from "./standard.js";
 import { isReasoningModel, messageToOpenAIRole } from "./misc.js";
 
-export type ResponsesInputItem = OpenAIClient.Responses.ResponseInputItem;
-
 export const completionsApiContentBlockConverter: StandardContentBlockConverter<{
   text: ChatCompletionContentPartText;
   image: ChatCompletionContentPartImage;
@@ -198,7 +196,7 @@ export function _convertMessagesToOpenAIParams(
 ): OpenAIClient.Chat.Completions.ChatCompletionMessageParam[] {
   return messages.flatMap((message) => {
     if (
-      isAIMessage(message) &&
+      "output_version" in message.response_metadata &&
       message.response_metadata?.output_version === "v1"
     ) {
       return _convertToCompletionsMessageFromV1(message);

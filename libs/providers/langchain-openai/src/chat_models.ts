@@ -1626,10 +1626,10 @@ export class ChatOpenAIResponses<
   protected _convertMessagesToResponsesParams(messages: BaseMessage[]) {
     return messages.flatMap(
       (lcMsg): ResponsesInputItem | ResponsesInputItem[] => {
-        if (
-          isAIMessage(lcMsg) &&
-          lcMsg.response_metadata?.output_version === "v1"
-        ) {
+        const responseMetadata = lcMsg.response_metadata as
+          | Record<string, unknown>
+          | undefined;
+        if (responseMetadata?.output_version === "v1") {
           return _convertToResponsesMessageFromV1(lcMsg);
         }
 
@@ -1697,7 +1697,7 @@ export class ChatOpenAIResponses<
           }
 
           // Handle custom tool output
-          if (toolMessage.metadata?.customTool) {
+          if (toolMessage.additional_kwargs?.customTool) {
             return {
               type: "custom_tool_call_output",
               call_id: toolMessage.tool_call_id,
@@ -1720,12 +1720,12 @@ export class ChatOpenAIResponses<
           // if we have the original response items, just reuse them
           if (
             !this.zdrEnabled &&
-            lcMsg.response_metadata.output != null &&
-            Array.isArray(lcMsg.response_metadata.output) &&
-            lcMsg.response_metadata.output.length > 0 &&
-            lcMsg.response_metadata.output.every((item) => "type" in item)
+            responseMetadata?.output != null &&
+            Array.isArray(responseMetadata?.output) &&
+            responseMetadata?.output.length > 0 &&
+            responseMetadata?.output.every((item) => "type" in item)
           ) {
-            return lcMsg.response_metadata.output;
+            return responseMetadata?.output;
           }
 
           // otherwise, try to reconstruct the response from what we have
@@ -1827,9 +1827,9 @@ export class ChatOpenAIResponses<
           }
 
           const toolOutputs = (
-            lcMsg.response_metadata.output as Array<ResponsesInputItem>
+            responseMetadata?.output as Array<ResponsesInputItem>
           )?.length
-            ? lcMsg.response_metadata.output
+            ? responseMetadata?.output
             : additional_kwargs.tool_outputs;
 
           const fallthroughCallTypes: ResponsesInputItem["type"][] = [
