@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { test } from "@jest/globals";
+import { describe, expect, test } from "vitest";
 import {
   AIMessage,
   AIMessageChunk,
@@ -34,12 +34,15 @@ class WeatherTool extends StructuredTool {
   }
 }
 
+const modelName = "gemini-2.0-flash";
+
 describe("Google APIKey Chat", () => {
   test("invoke", async () => {
     const model = new ChatVertexAI({
+      modelName,
       authOptions: {
         credentials: JSON.parse(
-          process.env.GOOGLE_VERTEX_AI_WEB_CREDENTIALS ?? ""
+          process.env.GOOGLE_WEB_CREDENTIALS ?? ""
         ),
       },
     });
@@ -56,7 +59,9 @@ describe("Google APIKey Chat", () => {
   });
 
   test("generate", async () => {
-    const model = new ChatVertexAI();
+    const model = new ChatVertexAI({
+      modelName,
+    });
     const messages: BaseMessage[] = [
       new SystemMessage(
         "You will reply to all requests to flip a coin with either H, indicating heads, or T, indicating tails."
@@ -76,7 +81,9 @@ describe("Google APIKey Chat", () => {
   });
 
   test("stream", async () => {
-    const model = new ChatVertexAI();
+    const model = new ChatVertexAI({
+      modelName,
+    });
     const input: BaseLanguageModelInput = new ChatPromptValue([
       new SystemMessage(
         "You will reply to all requests to flip a coin with either H, indicating heads, or T, indicating tails."
@@ -105,7 +112,9 @@ describe("Google APIKey Chat", () => {
   });
 
   test("Tool call", async () => {
-    const chat = new ChatVertexAI().bindTools([new WeatherTool()]);
+    const chat = new ChatVertexAI({
+      modelName,
+    }).bindTools([new WeatherTool()]);
     const res = await chat.invoke("What is the weather in SF and LA");
     // console.log(res);
     expect(res.tool_calls?.length).toEqual(1);
@@ -130,7 +139,9 @@ describe("Google APIKey Chat", () => {
         required: ["location"],
       },
     };
-    const model = new ChatVertexAI().withStructuredOutput(tool);
+    const model = new ChatVertexAI({
+      modelName,
+    }).withStructuredOutput(tool);
     const result = await model.invoke("What is the weather in Paris?");
     expect(result).toHaveProperty("location");
   });
@@ -138,7 +149,9 @@ describe("Google APIKey Chat", () => {
 
 describe("Google Webauth Chat", () => {
   test("invoke", async () => {
-    const model = new ChatVertexAI();
+    const model = new ChatVertexAI({
+      modelName,
+    });
     const res = await model.invoke("What is 1 + 1?");
     expect(res).toBeDefined();
     expect(res._getType()).toEqual("ai");
@@ -151,7 +164,9 @@ describe("Google Webauth Chat", () => {
   });
 
   test("generate", async () => {
-    const model = new ChatVertexAI();
+    const model = new ChatVertexAI({
+      modelName,
+    });
     const messages: BaseMessage[] = [
       new SystemMessage(
         "You will reply to all requests to flip a coin with either H, indicating heads, or T, indicating tails."
@@ -172,7 +187,9 @@ describe("Google Webauth Chat", () => {
   });
 
   test("stream", async () => {
-    const model = new ChatVertexAI();
+    const model = new ChatVertexAI({
+      modelName,
+    });
     const input: BaseLanguageModelInput = new ChatPromptValue([
       new SystemMessage(
         "You will reply to all requests to flip a coin with either H, indicating heads, or T, indicating tails."
