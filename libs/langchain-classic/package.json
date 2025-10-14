@@ -23,7 +23,6 @@
     "lint": "pnpm lint:eslint && pnpm lint:dpdm",
     "lint:fix": "pnpm lint:eslint --fix && pnpm lint:dpdm",
     "precommit": "lint-staged",
-    "postinstall": "prisma generate --schema ./examples/indexes/vector_stores/prisma_vectorstore/prisma/schema.prisma",
     "clean": "rm -rf .turbo dist/",
     "release": "release-it --only-version --config .release-it.json",
     "test": "vitest run",
