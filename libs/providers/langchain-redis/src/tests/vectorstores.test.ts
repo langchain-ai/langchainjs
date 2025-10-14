@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { test, expect, vi, describe } from "vitest";
+import { vi, test, expect, describe } from "vitest";
 import { FakeEmbeddings } from "@langchain/core/utils/testing";
 import { SchemaFieldTypes } from "redis";
 
@@ -8,14 +8,15 @@ import { RedisVectorStore, RedisVectorStoreConfig } from "../vectorstores.js";
 const createRedisClientMockup = () => {
   const hSetMock = vi.fn();
   const expireMock = vi.fn();
+  const delMock = vi.fn<any>().mockResolvedValue(1);
 
   return {
     ft: {
-      info: vi.fn().mockResolvedValue({
+      info: vi.fn<any>().mockResolvedValue({
         numDocs: 0,
       }),
       create: vi.fn(),
-      search: vi.fn().mockResolvedValue({
+      search: vi.fn<any>().mockResolvedValue({
         total: 0,
         documents: [],
       }),
@@ -23,7 +24,8 @@ const createRedisClientMockup = () => {
     },
     hSet: hSetMock,
     expire: expireMock,
-    multi: vi.fn().mockImplementation(() => ({
+    del: delMock,
+    multi: vi.fn<any>().mockImplementation(() => ({
       exec: vi.fn(),
       hSet: hSetMock,
       expire: expireMock,
@@ -214,7 +216,7 @@ describe("RedisVectorStore createIndex when index does not exist", () => {
       redisClient: client as any,
       indexName: "documents",
     });
-    store.checkIndexExists = vi.fn().mockResolvedValue(false);
+    store.checkIndexExists = vi.fn<any>().mockResolvedValue(false);
 
     await store.createIndex();
 
@@ -249,7 +251,7 @@ describe("RedisVectorStore createIndex when index does not exist", () => {
         LANGUAGE: "German",
       },
     });
-    store.checkIndexExists = vi.fn().mockResolvedValue(false);
+    store.checkIndexExists = vi.fn<any>().mockResolvedValue(false);
 
     await store.createIndex();
 
