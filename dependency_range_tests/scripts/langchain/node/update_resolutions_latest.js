@@ -27,11 +27,10 @@ const workspaceDependencies = [
 
 for (const [depName, depVersion] of workspaceDependencies) {
   /**
-   * for the peer dependency @langchain/core, we want to make sure to install max version
-   * defined above
+   * for the peer dependency @langchain/core, we will link to the workspace dependency
    */
   if (depName === "@langchain/core") {
-    delete currentPackageJson.devDependencies[depName];
+    currentPackageJson.devDependencies[depName] = `file:/libs/langchain-core`;
     continue;
   }
 

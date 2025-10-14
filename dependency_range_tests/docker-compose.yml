@@ -9,6 +9,7 @@ services:
     working_dir: /app
     volumes:
       - ../libs/langchain:/langchain
+      - ../libs/langchain-core:/libs/langchain-core
       - ../libs/langchain-textsplitters:/libs/langchain-textsplitters
       - ../libs/providers/langchain-openai:/libs/langchain-openai
       - ../libs/providers/langchain-anthropic:/libs/langchain-anthropic

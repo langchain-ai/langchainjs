@@ -1,9 +1,13 @@
 import { z } from "zod/v3";
 import { ContentBlock } from "@langchain/core/messages";
+import { createMiddleware } from "@langchain/core/middleware";
 import { InferInteropZodInput } from "@langchain/core/utils/types";
 
-import { ConfigurableModel } from "../../chat_models/universal.js";
-import { createMiddleware } from "../middleware.js";
+interface ConfigurableModel {
+  _defaultConfig?: {
+    modelProvider: string;
+  };
+}
 
 const DEFAULT_ENABLE_CACHING = true;
 const DEFAULT_TTL = "5m";
@@ -80,12 +84,12 @@ class PromptCachingMiddlewareError extends Error {
  * Basic usage with default settings
  * ```typescript
  * import { createAgent } from "langchain";
- * import { anthropicPromptCachingMiddleware } from "langchain";
+ * import { promptCachingMiddleware } from "langchain";
  *
  * const agent = createAgent({
  *   model: "anthropic:claude-3-5-sonnet",
  *   middleware: [
- *     anthropicPromptCachingMiddleware()
+ *     promptCachingMiddleware()
  *   ]
  * });
  * ```
@@ -93,7 +97,7 @@ class PromptCachingMiddlewareError extends Error {
  * @example
  * Custom configuration for longer conversations
  * ```typescript
- * const cachingMiddleware = anthropicPromptCachingMiddleware({
+ * const cachingMiddleware = promptCachingMiddleware({
  *   ttl: "1h",  // Cache for 1 hour instead of default 5 minutes
  *   minMessagesToCache: 5  // Only cache after 5 messages
  * });
@@ -111,7 +115,7 @@ class PromptCachingMiddlewareError extends Error {
  * const agent = createAgent({
  *   model: "anthropic:claude-3-5-sonnet",
  *   middleware: [
- *     anthropicPromptCachingMiddleware({
+ *     promptCachingMiddleware({
  *       enableCaching: true,
  *       ttl: "5m"
  *     })
@@ -144,7 +148,7 @@ class PromptCachingMiddlewareError extends Error {
  *   `,
  *   tools: [searchKnowledgeBase, createTicket, checkOrderStatus],
  *   middleware: [
- *     anthropicPromptCachingMiddleware({
+ *     promptCachingMiddleware({
  *       ttl: "1h",  // Long TTL for stable system prompt
  *       minMessagesToCache: 1  // Cache immediately due to large system prompt
  *     })
@@ -164,9 +168,9 @@ class PromptCachingMiddlewareError extends Error {
  * @see {@link https://docs.anthropic.com/en/docs/build-with-claude/prompt-caching} Anthropic's prompt caching documentation
  * @public
  */
-export function anthropicPromptCachingMiddleware(
+export function promptCachingMiddleware(
   middlewareOptions?: PromptCachingMiddlewareConfig
-) {
+): AgentMiddleware {
   return createMiddleware({
     name: "PromptCachingMiddleware",
     contextSchema,

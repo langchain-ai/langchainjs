@@ -26,7 +26,7 @@
     "format:check": "prettier --config .prettierrc --check \"src\""
   },
   "dependencies": {
-    "mongodb": "^6.17.0"
+    "mongodb": "^6.20.0"
   },
   "peerDependencies": {
     "@langchain/core": ">=0.2.21 <0.4.0"

@@ -17,7 +17,7 @@ import {
   pickRunnableConfigKeys,
   type RunnableConfig,
 } from "../runnables/config.js";
-import type { RunnableFunc } from "../runnables/base.js";
+import type { RunnableFunc, RunnableToolLike } from "../runnables/base.js";
 import { isDirectToolOutput, ToolCall, ToolMessage } from "../messages/tool.js";
 import { AsyncLocalStorageProviderSingleton } from "../singletons/index.js";
 import {
@@ -773,3 +773,9 @@ function _stringify(content: unknown): string {
     return `${content}`;
   }
 }
+
+export type ServerTool = Record<string, unknown>;
+export type ClientTool =
+  | StructuredToolInterface
+  | DynamicTool
+  | RunnableToolLike;

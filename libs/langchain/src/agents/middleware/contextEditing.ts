@@ -14,9 +14,12 @@ import {
   ToolMessage,
   SystemMessage,
 } from "@langchain/core/messages";
+import {
+  createMiddleware,
+  type AgentMiddleware as _,
+} from "@langchain/core/middleware";
 
 import { countTokensApproximately } from "./utils.js";
-import { createMiddleware } from "../middleware.js";
 
 const DEFAULT_TOOL_PLACEHOLDER = "[cleared]";
 

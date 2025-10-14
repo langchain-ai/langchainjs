@@ -2,12 +2,16 @@
 import { z } from "zod/v3";
 import { LangGraphRunnableConfig, Command } from "@langchain/langgraph";
 import { interopParse } from "@langchain/core/utils/types";
+import type {
+  JumpToTarget,
+  PrivateState,
+  AgentMiddleware,
+  MiddlewareResult,
+} from "@langchain/core/middleware";
 
 import { RunnableCallable, RunnableCallableArgs } from "../RunnableCallable.js";
-import type { JumpToTarget } from "../constants.js";
-import type { Runtime, PrivateState } from "../runtime.js";
-import type { AgentMiddleware, MiddlewareResult } from "../middleware/types.js";
 import { derivePrivateState, parseJumpToTarget } from "./utils.js";
+import type { Runtime } from "../types.js";
 
 /**
  * Named class for context objects to provide better error messages

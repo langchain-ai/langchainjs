@@ -5,19 +5,30 @@ import { z } from "zod";
 import { HumanMessage, AIMessage } from "@langchain/core/messages";
 import {
   ChatAnthropic,
+  promptCachingMiddleware,
   type AnthropicInput,
   // @ts-expect-error - instances is mocked
   instances,
 } from "@langchain/anthropic";
 
-import { anthropicPromptCachingMiddleware } from "../promptCaching.js";
 import { createAgent } from "../../index.js";
+
+/**
+ * Cast the promptCachingMiddleware to `any` to avoid the following error:
+ * > Type instantiation is excessively deep and possibly infinite.
+ *
+ * This is because the actual `promptCachingMiddleware` is implemented within
+ * the `@langchain/anthropic` package and tesed in here. To avoid circular dependencies,
+ * we have to run the unit and integration tests here as we need `createAgent`.
+ */
+const anthropicPromptCachingMiddleware = promptCachingMiddleware as any;
 
 /**
  * Mock the Anthropic module to return a ChatAnthropicMock instance
  */
 vi.mock("@langchain/anthropic", async (origModule) => {
-  const { ChatAnthropic } = (await origModule()) as any;
+  const { ChatAnthropic, promptCachingMiddleware } =
+    (await origModule()) as any;
   const instances: ChatAnthropicMock[] = [];
   class ChatAnthropicMock extends ChatAnthropic {
     anthropicResponse: MockInstance;
@@ -50,6 +61,7 @@ vi.mock("@langchain/anthropic", async (origModule) => {
     }
   }
   return {
+    promptCachingMiddleware,
     ChatAnthropic: ChatAnthropicMock,
     instances,
   };
@@ -90,7 +102,7 @@ const messages = [
   new HumanMessage("What is the capital of France?"),
 ];
 
-describe("anthropicPromptCachingMiddleware", () => {
+describe("promptCachingMiddleware", () => {
   it("should allow middleware to update model, messages and systemPrompt", async () => {
     const model = new ChatAnthropic({
       model: "claude-opus-4-20250514",

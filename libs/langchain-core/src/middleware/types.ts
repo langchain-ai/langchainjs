@@ -1,36 +1,117 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import type {
   InteropZodObject,
+  InferInteropZodOutput,
+  InferInteropZodInput,
   InteropZodDefault,
   InteropZodOptional,
-  InferInteropZodInput,
-  InferInteropZodOutput,
-} from "@langchain/core/utils/types";
-import type { AnnotationRoot } from "@langchain/langgraph";
-import type { InteropZodToStateDefinition } from "@langchain/langgraph/zod";
-import type { AIMessage, ToolMessage } from "@langchain/core/messages";
-import type { ToolCall } from "@langchain/core/messages/tool";
-import type { Command } from "@langchain/langgraph";
+} from "../utils/types/index.js";
+import type { LanguageModelLike } from "../language_models/base.js";
+import type { BaseMessage, AIMessage, ToolMessage } from "../messages/index.js";
+import type { JumpToTarget } from "./constants.js";
+import type { ClientTool, ServerTool } from "../tools/index.js";
+import type { BaseRuntime as Runtime } from "./runtime.js";
 
-import type { JumpToTarget } from "../constants.js";
-import type { ClientTool, ServerTool } from "../tools.js";
-import type { Runtime, AgentBuiltInState } from "../runtime.js";
-import type { ModelRequest } from "../nodes/types.js";
+/**
+ * Configuration for modifying a model call at runtime.
+ * All fields are optional and only provided fields will override defaults.
+ *
+ * @internal
+ * @template TState - The agent's state type, must extend Record<string, unknown>. Defaults to Record<string, unknown>.
+ * @template TRuntime - The runtime type. Defaults to Runtime<unknown>.
+ */
+export interface ModelRequest<
+  TState extends Record<string, unknown> = Record<string, unknown>,
+  TRuntime = Runtime<unknown>
+> {
+  /**
+   * The model to use for this step.
+   */
+  model: LanguageModelLike;
+  /**
+   * The messages to send to the model.
+   */
+  messages: BaseMessage[];
+  /**
+   * The system message for this step.
+   */
+  systemPrompt?: string;
+  /**
+   * Tool choice configuration (model-specific format).
+   * Can be one of:
+   * - `"auto"`: means the model can pick between generating a message or calling one or more tools.
+   * - `"none"`: means the model will not call any tool and instead generates a message.
+   * - `"required"`: means the model must call one or more tools.
+   * - `{ type: "function", function: { name: string } }`: The model will use the specified function.
+   */
+  toolChoice?:
+    | "auto"
+    | "none"
+    | "required"
+    | { type: "function"; function: { name: string } };
 
-export type AnyAnnotationRoot = AnnotationRoot<any>;
+  /**
+   * The tools to make available for this step.
+   */
+  tools: (ServerTool | ClientTool)[];
+
+  /**
+   * The current agent state (includes both middleware state and built-in state).
+   */
+  state: TState & AgentBuiltInState;
+
+  /**
+   * The runtime context containing metadata, signal, writer, interrupt, etc.
+   */
+  runtime: TRuntime;
+}
+
+/**
+ * Information about a tool call that has been executed.
+ *
+ * @internal
+ */
+export interface ToolCall {
+  /**
+   * The ID of the tool call.
+   */
+  id: string;
+  /**
+   * The name of the tool that was called.
+   */
+  name: string;
+  /**
+   * The arguments that were passed to the tool.
+   */
+  args: Record<string, any>;
+  /**
+   * The result of the tool call.
+   */
+  result?: unknown;
+  /**
+   * An optional error message if the tool call failed.
+   */
+  error?: string;
+}
 
 /**
  * Result type for middleware functions.
+ *
+ * @internal
  */
 export type MiddlewareResult<TState> = TState | void;
 
 /**
  * Represents a tool call request for the wrapToolCall hook.
  * Contains the tool call information along with the agent's current state and runtime.
+ *
+ * @template TState - The agent's state type, must extend Record<string, unknown>. Defaults to Record<string, unknown>.
+ * @template TRuntime - The runtime type. Defaults to Runtime<unknown>.
+ * @internal
  */
 export interface ToolCallRequest<
   TState extends Record<string, unknown> = Record<string, unknown>,
-  TContext = unknown
+  TRuntime = Runtime<unknown>
 > {
   /**
    * The tool call to be executed
@@ -48,31 +129,39 @@ export interface ToolCallRequest<
   /**
    * The runtime context containing metadata, signal, writer, interrupt, etc.
    */
-  runtime: Runtime<TContext>;
+  runtime: TRuntime;
 }
 
 /**
  * Handler function type for wrapping tool calls.
  * Takes a tool call and returns the tool result or a command.
+ * @internal
  */
-export type ToolCallHandler = (
-  toolCall: ToolCall
+export type ToolCallHandler<
+  Command,
+  TState extends Record<string, unknown> = Record<string, unknown>,
+  TRuntime = Runtime<unknown>
+> = (
+  request: ToolCallRequest<TState, TRuntime>
 ) => Promise<ToolMessage | Command> | ToolMessage | Command;
 
 /**
  * Wrapper function type for the wrapToolCall hook.
  * Allows middleware to intercept and modify tool execution.
+ * @internal
  */
 export type ToolCallWrapper<
+  Command,
   TState extends Record<string, unknown> = Record<string, unknown>,
-  TContext = unknown
+  TRuntime = Runtime<unknown>
 > = (
-  request: ToolCallRequest<TState, TContext>,
-  handler: ToolCallHandler
+  request: ToolCallRequest<TState, TRuntime>,
+  handler: ToolCallHandler<Command, TState, TRuntime>
 ) => Promise<ToolMessage | Command> | ToolMessage | Command;
 
 /**
  * Base middleware interface.
+ * @internal
  */
 export interface AgentMiddleware<
   TSchema extends InteropZodObject | undefined = any,
@@ -80,8 +169,7 @@ export interface AgentMiddleware<
     | InteropZodObject
     | InteropZodDefault<InteropZodObject>
     | InteropZodOptional<InteropZodObject>
-    | undefined = any,
-  TFullContext = any
+    | undefined = any
 > {
   stateSchema?: TSchema;
   contextSchema?: TContextSchema;
@@ -154,9 +242,18 @@ export interface AgentMiddleware<
    * ```
    */
   wrapToolCall?: ToolCallWrapper<
+    any,
     (TSchema extends InteropZodObject ? InferInteropZodInput<TSchema> : {}) &
       AgentBuiltInState,
-    TFullContext
+    Runtime<
+      TContextSchema extends InteropZodObject
+        ? InferInteropZodOutput<TContextSchema>
+        : TContextSchema extends InteropZodDefault<any>
+        ? InferInteropZodOutput<TContextSchema>
+        : TContextSchema extends InteropZodOptional<any>
+        ? Partial<InferInteropZodOutput<TContextSchema>>
+        : never
+    >
   >;
   /**
    * Wraps the model invocation with custom logic. This allows you to:
@@ -173,11 +270,11 @@ export interface AgentMiddleware<
    * ```ts
    * wrapModelCall: async (request, handler) => {
    *   // Modify request before calling
-   *   const modifiedRequest = { ...request, systemPrompt: "You are helpful" };
+   *   const modifiedCall = { ...request, systemPrompt: "You are helpful" };
    *
    *   try {
    *     // Call the model
-   *     return await handler(modifiedRequest);
+   *     return await handler(modifiedCall);
    *   } catch (error) {
    *     // Handle errors and retry with fallback
    *     const fallbackRequest = { ...request, model: fallbackModel };
@@ -190,7 +287,15 @@ export interface AgentMiddleware<
     request: ModelRequest<
       (TSchema extends InteropZodObject ? InferInteropZodInput<TSchema> : {}) &
         AgentBuiltInState,
-      TFullContext
+      Runtime<
+        TContextSchema extends InteropZodObject
+          ? InferInteropZodOutput<TContextSchema>
+          : TContextSchema extends InteropZodDefault<any>
+          ? InferInteropZodOutput<TContextSchema>
+          : TContextSchema extends InteropZodOptional<any>
+          ? Partial<InferInteropZodOutput<TContextSchema>>
+          : never
+      >
     >,
     handler: (
       request: ModelRequest<
@@ -198,7 +303,15 @@ export interface AgentMiddleware<
           ? InferInteropZodInput<TSchema>
           : {}) &
           AgentBuiltInState,
-        TFullContext
+        Runtime<
+          TContextSchema extends InteropZodObject
+            ? InferInteropZodOutput<TContextSchema>
+            : TContextSchema extends InteropZodDefault<any>
+            ? InferInteropZodOutput<TContextSchema>
+            : TContextSchema extends InteropZodOptional<any>
+            ? Partial<InferInteropZodOutput<TContextSchema>>
+            : never
+        >
       >
     ) => Promise<AIMessage> | AIMessage
   ): Promise<AIMessage> | AIMessage;
@@ -207,54 +320,151 @@ export interface AgentMiddleware<
       ? InferInteropZodInput<TSchema>
       : {}) &
       AgentBuiltInState,
-    runtime: Runtime<TFullContext>
-  ): Promise<
-    MiddlewareResult<
-      Partial<
-        TSchema extends InteropZodObject ? InferInteropZodInput<TSchema> : {}
-      >
+    runtime: Runtime<
+      TContextSchema extends InteropZodObject
+        ? InferInteropZodOutput<TContextSchema>
+        : TContextSchema extends InteropZodDefault<any>
+        ? InferInteropZodOutput<TContextSchema>
+        : TContextSchema extends InteropZodOptional<any>
+        ? Partial<InferInteropZodOutput<TContextSchema>>
+        : never
     >
-  >;
+  ):
+    | Promise<
+        MiddlewareResult<
+          Partial<
+            TSchema extends InteropZodObject
+              ? InferInteropZodInput<TSchema>
+              : {}
+          >
+        >
+      >
+    | MiddlewareResult<
+        Partial<
+          TSchema extends InteropZodObject ? InferInteropZodInput<TSchema> : {}
+        >
+      >;
   beforeModel?(
     state: (TSchema extends InteropZodObject
       ? InferInteropZodInput<TSchema>
       : {}) &
       AgentBuiltInState,
-    runtime: Runtime<TFullContext>
-  ): Promise<
-    MiddlewareResult<
-      Partial<
-        TSchema extends InteropZodObject ? InferInteropZodInput<TSchema> : {}
-      >
+    runtime: Runtime<
+      TContextSchema extends InteropZodObject
+        ? InferInteropZodOutput<TContextSchema>
+        : TContextSchema extends InteropZodDefault<any>
+        ? InferInteropZodOutput<TContextSchema>
+        : TContextSchema extends InteropZodOptional<any>
+        ? Partial<InferInteropZodOutput<TContextSchema>>
+        : never
     >
-  >;
+  ):
+    | Promise<
+        MiddlewareResult<
+          Partial<
+            TSchema extends InteropZodObject
+              ? InferInteropZodInput<TSchema>
+              : {}
+          >
+        >
+      >
+    | MiddlewareResult<
+        Partial<
+          TSchema extends InteropZodObject ? InferInteropZodInput<TSchema> : {}
+        >
+      >;
   afterModel?(
     state: (TSchema extends InteropZodObject
       ? InferInteropZodInput<TSchema>
       : {}) &
       AgentBuiltInState,
-    runtime: Runtime<TFullContext>
-  ): Promise<
-    MiddlewareResult<
-      Partial<
-        TSchema extends InteropZodObject ? InferInteropZodInput<TSchema> : {}
-      >
+    runtime: Runtime<
+      TContextSchema extends InteropZodObject
+        ? InferInteropZodOutput<TContextSchema>
+        : TContextSchema extends InteropZodDefault<any>
+        ? InferInteropZodOutput<TContextSchema>
+        : TContextSchema extends InteropZodOptional<any>
+        ? Partial<InferInteropZodOutput<TContextSchema>>
+        : never
     >
-  >;
+  ):
+    | Promise<
+        MiddlewareResult<
+          Partial<
+            TSchema extends InteropZodObject
+              ? InferInteropZodInput<TSchema>
+              : {}
+          >
+        >
+      >
+    | MiddlewareResult<
+        Partial<
+          TSchema extends InteropZodObject ? InferInteropZodInput<TSchema> : {}
+        >
+      >;
   afterAgent?(
     state: (TSchema extends InteropZodObject
       ? InferInteropZodInput<TSchema>
       : {}) &
       AgentBuiltInState,
-    runtime: Runtime<TFullContext>
-  ): Promise<
-    MiddlewareResult<
-      Partial<
-        TSchema extends InteropZodObject ? InferInteropZodInput<TSchema> : {}
-      >
+    runtime: Runtime<
+      TContextSchema extends InteropZodObject
+        ? InferInteropZodOutput<TContextSchema>
+        : TContextSchema extends InteropZodDefault<any>
+        ? InferInteropZodOutput<TContextSchema>
+        : TContextSchema extends InteropZodOptional<any>
+        ? Partial<InferInteropZodOutput<TContextSchema>>
+        : never
     >
-  >;
+  ):
+    | Promise<
+        MiddlewareResult<
+          Partial<
+            TSchema extends InteropZodObject
+              ? InferInteropZodInput<TSchema>
+              : {}
+          >
+        >
+      >
+    | MiddlewareResult<
+        Partial<
+          TSchema extends InteropZodObject ? InferInteropZodInput<TSchema> : {}
+        >
+      >;
 }
+
+/**
+ * Type for the agent's built-in state properties.
+ * @internal
+ */
+export type AgentBuiltInState = {
+  /**
+   * Array of messages representing the conversation history.
+   *
+   * This includes all messages exchanged during the agent's execution:
+   * - Human messages: Input from the user
+   * - AI messages: Responses from the language model
+   * - Tool messages: Results from tool executions
+   * - System messages: System-level instructions or information
+   *
+   * Messages are accumulated throughout the agent's lifecycle and can be
+   * accessed or modified by middleware hooks during execution.
+   */
+  messages: BaseMessage[];
+  /**
+   * Structured response data returned by the agent when a `responseFormat` is configured.
+   *
+   * This property is only populated when you provide a `responseFormat` schema
+   * (as Zod or JSON schema) to the agent configuration. The agent will format
+   * its final output to match the specified schema and store it in this property.
+   *
+   * Note: The type is specified as `Record<string, unknown>` because TypeScript cannot
+   * infer the actual response format type in contexts like middleware, where the agent's
+   * generic type parameters are not accessible. You may need to cast this to your specific
+   * response type when accessing it.
+   */
+  structuredResponse?: Record<string, unknown>;
+};
 
 /**
  * Helper type to filter out properties that start with underscore (private properties)
@@ -266,9 +476,10 @@ type FilterPrivateProps<T> = {
 /**
  * Helper type to infer the state schema type from a middleware
  * This filters out private properties (those starting with underscore)
+ * @internal
  */
 export type InferMiddlewareState<T extends AgentMiddleware> =
-  T extends AgentMiddleware<infer S, any, any>
+  T extends AgentMiddleware<infer S>
     ? S extends InteropZodObject
       ? FilterPrivateProps<InferInteropZodOutput<S>>
       : {}
@@ -277,9 +488,10 @@ export type InferMiddlewareState<T extends AgentMiddleware> =
 /**
  * Helper type to infer the input state schema type from a middleware (all properties optional)
  * This filters out private properties (those starting with underscore)
+ * @internal
  */
 export type InferMiddlewareInputState<T extends AgentMiddleware> =
-  T extends AgentMiddleware<infer S, any, any>
+  T extends AgentMiddleware<infer S>
     ? S extends InteropZodObject
       ? FilterPrivateProps<InferInteropZodInput<S>>
       : {}
@@ -287,6 +499,7 @@ export type InferMiddlewareInputState<T extends AgentMiddleware> =
 
 /**
  * Helper type to infer merged state from an array of middleware (just the middleware states)
+ * @internal
  */
 export type InferMiddlewareStates<T = AgentMiddleware[]> = T extends readonly []
   ? {}
@@ -300,6 +513,7 @@ export type InferMiddlewareStates<T = AgentMiddleware[]> = T extends readonly []
 
 /**
  * Helper type to infer merged input state from an array of middleware (with optional defaults)
+ * @internal
  */
 export type InferMiddlewareInputStates<T extends readonly AgentMiddleware[]> =
   T extends readonly []
@@ -314,21 +528,24 @@ export type InferMiddlewareInputStates<T extends readonly AgentMiddleware[]> =
 
 /**
  * Helper type to infer merged state from an array of middleware (includes built-in state)
+ * @internal
  */
 export type InferMergedState<T extends readonly AgentMiddleware[]> =
   InferMiddlewareStates<T> & AgentBuiltInState;
 
 /**
  * Helper type to infer merged input state from an array of middleware (includes built-in state)
+ * @internal
  */
 export type InferMergedInputState<T extends readonly AgentMiddleware[]> =
   InferMiddlewareInputStates<T> & AgentBuiltInState;
 
 /**
  * Helper type to infer the context schema type from a middleware
+ * @internal
  */
 export type InferMiddlewareContext<T extends AgentMiddleware> =
-  T extends AgentMiddleware<any, infer C, any>
+  T extends AgentMiddleware<any, infer C>
     ? C extends InteropZodObject
       ? InferInteropZodInput<C>
       : {}
@@ -336,9 +553,10 @@ export type InferMiddlewareContext<T extends AgentMiddleware> =
 
 /**
  * Helper type to infer the input context schema type from a middleware (with optional defaults)
+ * @internal
  */
 export type InferMiddlewareContextInput<T extends AgentMiddleware> =
-  T extends AgentMiddleware<any, infer C, any>
+  T extends AgentMiddleware<any, infer C>
     ? C extends InteropZodOptional<infer Inner>
       ? InferInteropZodInput<Inner> | undefined
       : C extends InteropZodObject
@@ -348,6 +566,7 @@ export type InferMiddlewareContextInput<T extends AgentMiddleware> =
 
 /**
  * Helper type to infer merged context from an array of middleware
+ * @internal
  */
 export type InferMiddlewareContexts<T extends readonly AgentMiddleware[]> =
   T extends readonly []
@@ -377,6 +596,7 @@ type MergeContextTypes<A, B> = [A] extends [undefined]
 
 /**
  * Helper type to infer merged input context from an array of middleware (with optional defaults)
+ * @internal
  */
 export type InferMiddlewareContextInputs<T extends readonly AgentMiddleware[]> =
   T extends readonly []
@@ -391,21 +611,3 @@ export type InferMiddlewareContextInputs<T extends readonly AgentMiddleware[]> =
         : InferMiddlewareContextInput<First>
       : {}
     : {};
-
-/**
- * Helper type to extract input type from context schema (with optional defaults)
- */
-export type InferContextInput<
-  ContextSchema extends AnyAnnotationRoot | InteropZodObject
-> = ContextSchema extends InteropZodObject
-  ? InferInteropZodInput<ContextSchema>
-  : ContextSchema extends AnyAnnotationRoot
-  ? ToAnnotationRoot<ContextSchema>["State"]
-  : {};
-
-export type ToAnnotationRoot<A extends AnyAnnotationRoot | InteropZodObject> =
-  A extends AnyAnnotationRoot
-    ? A
-    : A extends InteropZodObject
-    ? AnnotationRoot<InteropZodToStateDefinition<A>>
-    : never;

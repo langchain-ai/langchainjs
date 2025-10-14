@@ -2,8 +2,10 @@ import { z } from "zod/v3";
 import { Command } from "@langchain/langgraph";
 import { tool } from "@langchain/core/tools";
 import { ToolMessage } from "@langchain/core/messages";
-
-import { createMiddleware } from "../../index.js";
+import {
+  createMiddleware,
+  type AgentMiddleware as _,
+} from "@langchain/core/middleware";
 
 /**
  * Description for the write_todos tool

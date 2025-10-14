@@ -21,6 +21,7 @@ export * as language_models__chat_models from "../language_models/chat_models.js
 export * as language_models__llms from "../language_models/llms.js";
 export * as load__serializable from "../load/serializable.js";
 export * as memory from "../memory.js";
+export * as middleware from "../middleware/index.js";
 export * as messages from "../messages/index.js";
 export * as messages__tool from "../messages/tool.js";
 export * as output_parsers from "../output_parsers/index.js";

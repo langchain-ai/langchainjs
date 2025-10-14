@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import {
   describe,
   it,
@@ -13,9 +14,19 @@ import {
 } from "@langchain/core/messages";
 import type { LanguageModelLike } from "@langchain/core/language_models/base";
 import { ChatOpenAI } from "@langchain/openai";
+import { promptCachingMiddleware } from "@langchain/anthropic";
 
-import { anthropicPromptCachingMiddleware } from "../promptCaching.js";
 import { createAgent } from "../../index.js";
+
+/**
+ * Cast the promptCachingMiddleware to `any` to avoid the following error:
+ * > Type instantiation is excessively deep and possibly infinite.
+ *
+ * This is because the actual `promptCachingMiddleware` is implemented within
+ * the `@langchain/anthropic` package and tesed in here. To avoid circular dependencies,
+ * we have to run the unit and integration tests here as we need `createAgent`.
+ */
+const anthropicPromptCachingMiddleware = promptCachingMiddleware as any;
 
 function createMockModel(name = "ChatAnthropic", modelType = "anthropic") {
   // Mock Anthropic model
@@ -37,7 +48,7 @@ function createMockModel(name = "ChatAnthropic", modelType = "anthropic") {
 
 const consoleWarn = vi.spyOn(console, "warn");
 
-describe("anthropicPromptCachingMiddleware", () => {
+describe("promptCachingMiddleware", () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });

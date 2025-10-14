@@ -1,8 +1,10 @@
 import { z } from "zod/v3";
 import { AIMessage } from "@langchain/core/messages";
 import { InferInteropZodInput } from "@langchain/core/utils/types";
-
-import { createMiddleware } from "../middleware.js";
+import {
+  createMiddleware,
+  type AgentMiddleware as _,
+} from "@langchain/core/middleware";
 
 const DEFAULT_EXIT_BEHAVIOR = "end";
 

@@ -6,21 +6,81 @@ import type {
   InferInteropZodInput,
   InferInteropZodOutput,
 } from "@langchain/core/utils/types";
-import type { AIMessage, ToolMessage } from "@langchain/core/messages";
+import {
+  createMiddleware as coreCreateMiddleware,
+  type AgentBuiltInState,
+  type AgentMiddleware,
+  type JumpToTarget,
+  type ModelRequest as CoreModelRequest,
+  type ToolCallRequest as CoreToolCallRequest,
+  type MiddlewareResult,
+} from "@langchain/core/middleware";
 import type { Command } from "@langchain/langgraph";
+import type { AIMessage, ToolMessage } from "@langchain/core/messages";
+import type { ClientTool, ServerTool } from "@langchain/core/tools";
+import type { Runtime } from "./types.js";
 
-import type { JumpToTarget } from "./constants.js";
-import type { ClientTool, ServerTool } from "./tools.js";
-import type { Runtime, AgentBuiltInState } from "./runtime.js";
-import type {
-  AgentMiddleware,
-  MiddlewareResult,
-  ToolCallRequest,
-  ToolCallHandler,
-} from "./middleware/types.js";
-import type { ModelRequest } from "./nodes/types.js";
 /**
- * Creates a middleware instance with automatic schema inference.
+ * Configuration for modifying a model call at runtime.
+ * All fields are optional and only provided fields will override defaults.
+ *
+ * @template TState - The agent's state type, must extend Record<string, unknown>. Defaults to Record<string, unknown>.
+ * @template TContext - The runtime context type for accessing metadata and control flow. Defaults to unknown.
+ */
+export interface ModelRequest<
+  TState extends Record<string, unknown> = Record<string, unknown>,
+  TContext = unknown
+> extends CoreModelRequest<TState> {
+  /**
+   * The runtime context containing metadata, signal, writer, interrupt, etc.
+   */
+  runtime: Runtime<TContext>;
+}
+
+/**
+ * Represents a tool call request for the wrapToolCall hook.
+ * Contains the tool call information along with the agent's current state and runtime.
+ */
+export interface ToolCallRequest<
+  TState extends Record<string, unknown> = Record<string, unknown>,
+  TContext = unknown
+> extends CoreToolCallRequest<TState> {
+  /**
+   * The runtime context containing metadata, signal, writer, interrupt, etc.
+   */
+  runtime: Runtime<TContext>;
+}
+
+/**
+ * Handler function type for wrapping tool calls.
+ * Takes a tool call and returns the tool result or a command.
+ */
+export type ToolCallHandler<
+  Command,
+  TState extends Record<string, unknown> = Record<string, unknown>,
+  TContext = unknown
+> = (
+  request: ToolCallRequest<TState, TContext>
+) => Promise<ToolMessage | Command> | ToolMessage | Command;
+
+/**
+ * Wrapper function type for the wrapToolCall hook.
+ * Allows middleware to intercept and modify tool execution.
+ */
+export type ToolCallWrapper<
+  Command,
+  TState extends Record<string, unknown> = Record<string, unknown>,
+  TContext = unknown
+> = (
+  request: ToolCallRequest<TState, TContext>,
+  handler: ToolCallHandler<Command, TState, TContext>
+) => Promise<ToolMessage | Command> | ToolMessage | Command;
+
+/**
+ * Creates a middleware instance with automatic schema inference and LangGraph Runtime support.
+ *
+ * This is a typed wrapper around the core createMiddleware that provides proper type inference
+ * for the LangGraph Runtime type, including properties like `interrupt`, `writer`, and `signal`.
  *
  * @param config - Middleware configuration
  * @param config.name - The name of the middleware
@@ -36,18 +96,17 @@ import type { ModelRequest } from "./nodes/types.js";
  *
  * @example
  * ```ts
- * const authMiddleware = createMiddleware({
- *   name: "AuthMiddleware",
- *   stateSchema: z.object({
- *     isAuthenticated: z.boolean().default(false),
- *   }),
- *   contextSchema: z.object({
- *     userId: z.string(),
- *   }),
- *   beforeModel: async (state, runtime, controls) => {
- *     if (!state.isAuthenticated) {
- *       return controls.terminate(new Error("Not authenticated"));
- *     }
+ * import { createMiddleware } from "langchain";
+ * import { z } from "zod";
+ *
+ * const hitlMiddleware = createMiddleware({
+ *   name: "HumanInTheLoop",
+ *   beforeModel: async (state, runtime) => {
+ *     const userInput = runtime.interrupt?.({
+ *       type: "review",
+ *       data: state.messages
+ *     });
+ *     return { approved: userInput === "yes" };
  *   },
  * });
  * ```
@@ -65,19 +124,11 @@ export function createMiddleware<
    */
   name: string;
   /**
-   * The schema of the middleware state. Middleware state is persisted between multiple invocations. It can be either:
-   * - A Zod object
-   * - A Zod optional object
-   * - A Zod default object
-   * - Undefined
+   * The schema of the middleware state. Middleware state is persisted between multiple invocations.
    */
   stateSchema?: TSchema;
   /**
-   * The schema of the middleware context. Middleware context is read-only and not persisted between multiple invocations. It can be either:
-   * - A Zod object
-   * - A Zod optional object
-   * - A Zod default object
-   * - Undefined
+   * The schema of the middleware context. Middleware context is read-only and not persisted between multiple invocations.
    */
   contextSchema?: TContextSchema;
   /**
@@ -101,52 +152,7 @@ export function createMiddleware<
    */
   tools?: (ClientTool | ServerTool)[];
   /**
-   * Wraps tool execution with custom logic. This allows you to:
-   * - Modify tool call parameters before execution
-   * - Handle errors and retry with different parameters
-   * - Post-process tool results
-   * - Implement caching, logging, authentication, or other cross-cutting concerns
-   * - Return Command objects for advanced control flow
-   *
-   * The handler receives a ToolCallRequest containing the tool call, state, and runtime,
-   * along with a handler function to execute the actual tool.
-   *
-   * @param request - The tool call request containing toolCall, state, and runtime.
-   * @param handler - The function that executes the tool. Call this with a ToolCall to get the result.
-   * @returns The tool result as a ToolMessage or a Command for advanced control flow.
-   *
-   * @example
-   * ```ts
-   * wrapToolCall: async (request, handler) => {
-   *   console.log(`Calling tool: ${request.tool.name}`);
-   *   console.log(`Tool description: ${request.tool.description}`);
-   *
-   *   try {
-   *     // Execute the tool
-   *     const result = await handler(request.toolCall);
-   *     console.log(`Tool ${request.tool.name} succeeded`);
-   *     return result;
-   *   } catch (error) {
-   *     console.error(`Tool ${request.tool.name} failed:`, error);
-   *     // Could return a custom error message or retry
-   *     throw error;
-   *   }
-   * }
-   * ```
-   *
-   * @example Authentication
-   * ```ts
-   * wrapToolCall: async (request, handler) => {
-   *   // Check if user is authorized for this tool
-   *   if (!request.runtime.context.isAuthorized(request.tool.name)) {
-   *     return new ToolMessage({
-   *       content: "Unauthorized to call this tool",
-   *       tool_call_id: request.toolCall.id,
-   *     });
-   *   }
-   *   return handler(request.toolCall);
-   * }
-   * ```
+   * Wraps tool execution with custom logic.
    */
   wrapToolCall?: (
     request: ToolCallRequest<
@@ -160,37 +166,21 @@ export function createMiddleware<
         ? Partial<InferInteropZodOutput<TContextSchema>>
         : never
     >,
-    handler: ToolCallHandler
+    handler: ToolCallHandler<
+      Command,
+      (TSchema extends InteropZodObject ? InferInteropZodInput<TSchema> : {}) &
+        AgentBuiltInState,
+      TContextSchema extends InteropZodObject
+        ? InferInteropZodOutput<TContextSchema>
+        : TContextSchema extends InteropZodDefault<any>
+        ? InferInteropZodOutput<TContextSchema>
+        : TContextSchema extends InteropZodOptional<any>
+        ? Partial<InferInteropZodOutput<TContextSchema>>
+        : never
+    >
   ) => Promise<ToolMessage | Command> | ToolMessage | Command;
   /**
-   * Wraps the model invocation with custom logic. This allows you to:
-   * - Modify the request before calling the model
-   * - Handle errors and retry with different parameters
-   * - Post-process the response
-   * - Implement custom caching, logging, or other cross-cutting concerns
-   *
-   * The request parameter contains: model, messages, systemPrompt, tools, state, and runtime.
-   *
-   * @param request - The model request containing all the parameters needed.
-   * @param handler - The function that invokes the model. Call this with a ModelRequest to get the response.
-   * @returns The response from the model (or a modified version).
-   *
-   * @example
-   * ```ts
-   * wrapModelCall: async (request, handler) => {
-   *   // Modify request before calling
-   *   const modifiedRequest = { ...request, systemPrompt: "You are helpful" };
-   *
-   *   try {
-   *     // Call the model
-   *     return await handler(modifiedRequest);
-   *   } catch (error) {
-   *     // Handle errors and retry with fallback
-   *     const fallbackRequest = { ...request, model: fallbackModel };
-   *     return await handler(fallbackRequest);
-   *   }
-   * }
-   * ```
+   * Wraps the model invocation with custom logic.
    */
   wrapModelCall?: (
     request: ModelRequest<
@@ -221,12 +211,7 @@ export function createMiddleware<
     ) => Promise<AIMessage> | AIMessage
   ) => Promise<AIMessage> | AIMessage;
   /**
-   * The function to run before the agent execution starts. This function is called once at the start of the agent invocation.
-   * It allows to modify the state of the agent before any model calls or tool executions.
-   *
-   * @param state - The middleware state
-   * @param runtime - The middleware runtime
-   * @returns The modified middleware state or undefined to pass through
+   * The function to run before the agent execution starts.
    */
   beforeAgent?: (
     state: (TSchema extends InteropZodObject
@@ -258,12 +243,7 @@ export function createMiddleware<
         >
       >;
   /**
-   * The function to run before the model call. This function is called before the model is invoked and before the `wrapModelCall` hook.
-   * It allows to modify the state of the agent.
-   *
-   * @param state - The middleware state
-   * @param runtime - The middleware runtime
-   * @returns The modified middleware state or undefined to pass through
+   * The function to run before the model call.
    */
   beforeModel?: (
     state: (TSchema extends InteropZodObject
@@ -295,12 +275,7 @@ export function createMiddleware<
         >
       >;
   /**
-   * The function to run after the model call. This function is called after the model is invoked and before any tools are called.
-   * It allows to modify the state of the agent after the model is invoked, e.g. to update tool call parameters.
-   *
-   * @param state - The middleware state
-   * @param runtime - The middleware runtime
-   * @returns The modified middleware state or undefined to pass through
+   * The function to run after the model call.
    */
   afterModel?: (
     state: (TSchema extends InteropZodObject
@@ -332,12 +307,7 @@ export function createMiddleware<
         >
       >;
   /**
-   * The function to run after the agent execution completes. This function is called once at the end of the agent invocation.
-   * It allows to modify the final state of the agent after all model calls and tool executions are complete.
-   *
-   * @param state - The middleware state
-   * @param runtime - The middleware runtime
-   * @returns The modified middleware state or undefined to pass through
+   * The function to run after the agent execution completes.
    */
   afterAgent?: (
     state: (TSchema extends InteropZodObject
@@ -368,99 +338,9 @@ export function createMiddleware<
           TSchema extends InteropZodObject ? InferInteropZodInput<TSchema> : {}
         >
       >;
-}): AgentMiddleware<TSchema, TContextSchema, any> {
-  const middleware: AgentMiddleware<TSchema, TContextSchema, any> = {
-    name: config.name,
-    stateSchema: config.stateSchema,
-    contextSchema: config.contextSchema,
-    beforeAgentJumpTo: config.beforeAgentJumpTo,
-    beforeModelJumpTo: config.beforeModelJumpTo,
-    afterModelJumpTo: config.afterModelJumpTo,
-    afterAgentJumpTo: config.afterAgentJumpTo,
-    tools: config.tools ?? [],
-  };
-
-  if (config.wrapToolCall) {
-    middleware.wrapToolCall = async (request, handler) =>
-      Promise.resolve(config.wrapToolCall!(request, handler));
-  }
-
-  if (config.wrapModelCall) {
-    middleware.wrapModelCall = async (request, handler) =>
-      Promise.resolve(config.wrapModelCall!(request, handler));
-  }
-
-  if (config.beforeAgent) {
-    middleware.beforeAgent = async (state, runtime) =>
-      Promise.resolve(
-        config.beforeAgent!(
-          state,
-          runtime as Runtime<
-            TContextSchema extends InteropZodObject
-              ? InferInteropZodOutput<TContextSchema>
-              : TContextSchema extends InteropZodDefault<any>
-              ? InferInteropZodOutput<TContextSchema>
-              : TContextSchema extends InteropZodOptional<any>
-              ? Partial<InferInteropZodOutput<TContextSchema>>
-              : never
-          >
-        )
-      );
-  }
-
-  if (config.beforeModel) {
-    middleware.beforeModel = async (state, runtime) =>
-      Promise.resolve(
-        config.beforeModel!(
-          state,
-          runtime as Runtime<
-            TContextSchema extends InteropZodObject
-              ? InferInteropZodOutput<TContextSchema>
-              : TContextSchema extends InteropZodDefault<any>
-              ? InferInteropZodOutput<TContextSchema>
-              : TContextSchema extends InteropZodOptional<any>
-              ? Partial<InferInteropZodOutput<TContextSchema>>
-              : never
-          >
-        )
-      );
-  }
-
-  if (config.afterModel) {
-    middleware.afterModel = async (state, runtime) =>
-      Promise.resolve(
-        config.afterModel!(
-          state,
-          runtime as Runtime<
-            TContextSchema extends InteropZodObject
-              ? InferInteropZodOutput<TContextSchema>
-              : TContextSchema extends InteropZodDefault<any>
-              ? InferInteropZodOutput<TContextSchema>
-              : TContextSchema extends InteropZodOptional<any>
-              ? Partial<InferInteropZodOutput<TContextSchema>>
-              : never
-          >
-        )
-      );
-  }
-
-  if (config.afterAgent) {
-    middleware.afterAgent = async (state, runtime) =>
-      Promise.resolve(
-        config.afterAgent!(
-          state,
-          runtime as Runtime<
-            TContextSchema extends InteropZodObject
-              ? InferInteropZodOutput<TContextSchema>
-              : TContextSchema extends InteropZodDefault<any>
-              ? InferInteropZodOutput<TContextSchema>
-              : TContextSchema extends InteropZodOptional<any>
-              ? Partial<InferInteropZodOutput<TContextSchema>>
-              : never
-          >
-        )
-      );
-  }
-
-  return middleware;
+}): AgentMiddleware<TSchema, TContextSchema> {
+  return coreCreateMiddleware(config) as AgentMiddleware<
+    TSchema,
+    TContextSchema
+  >;
 }
