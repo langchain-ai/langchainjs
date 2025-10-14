@@ -61,4 +61,4 @@ const callTool = (toolInvocation: Record<string, any>): Runnable => {
 
 export const callToolList: Runnable = new RunnableLambda({
   func: callTool,
-}).map();
+});
