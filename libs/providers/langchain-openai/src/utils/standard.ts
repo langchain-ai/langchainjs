@@ -1,6 +1,6 @@
 import type { OpenAI as OpenAIClient } from "openai";
 import {
-  AIMessage,
+  isAIMessage,
   BaseMessage,
   ToolMessage,
   type ContentBlock,
@@ -134,7 +134,7 @@ export function _convertToCompletionsMessageFromV1(
 
 export function _convertToResponsesMessageFromV1(message: BaseMessage) {
   const isResponsesMessage =
-    AIMessage.isInstance(message) &&
+    isAIMessage(message) &&
     message.response_metadata?.model_provider === "openai";
 
   function* iterateItems(): Generator<OpenAIClient.Responses.ResponseInputItem> {
