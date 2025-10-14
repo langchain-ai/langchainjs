@@ -33,7 +33,6 @@
   "dependencies": {
     "@langchain/classic": "workspace:*",
     "@langchain/openai": ">=0.2.0 <0.7.0",
-    "@langchain/weaviate": "^0.2.0",
     "binary-extensions": "^2.2.0",
     "expr-eval": "^2.0.2",
     "flat": "^5.0.2",
@@ -44,10 +43,7 @@
   "devDependencies": {
     "@arcjet/redact": "^v1.0.0-alpha.23",
     "@aws-crypto/sha256-js": "^5.0.0",
-    "@aws-sdk/client-bedrock-agent-runtime": "^3.749.0",
-    "@aws-sdk/client-bedrock-runtime": "^3.840.0",
     "@aws-sdk/client-dynamodb": "^3.749.0",
-    "@aws-sdk/client-kendra": "^3.749.0",
     "@aws-sdk/client-lambda": "^3.749.0",
     "@aws-sdk/client-s3": "^3.749.0",
     "@aws-sdk/client-sagemaker-runtime": "^3.749.0",
@@ -60,7 +56,6 @@
     "@browserbasehq/sdk": "^1.1.5",
     "@browserbasehq/stagehand": "^1.0.0",
     "@clickhouse/client": "^0.2.5",
-    "@cloudflare/ai": "1.0.12",
     "@cloudflare/workers-types": "^4.20230922.0",
     "@datastax/astra-db-ts": "^1.5.0",
     "@elastic/elasticsearch": "^8.4.0",
@@ -69,7 +64,6 @@
     "@getzep/zep-cloud": "^1.0.6",
     "@getzep/zep-js": "^0.9.0",
     "@gomomento/sdk-core": "^1.51.1",
-    "@google-ai/generativelanguage": "^2.5.0",
     "@google-cloud/storage": "^7.15.2",
     "@gradientai/nodejs-sdk": "^1.2.0",
     "@huggingface/inference": "^4.0.5",
@@ -112,6 +106,7 @@
     "@types/d3-dsv": "^3.0.7",
     "@types/flat": "^5.0.2",
     "@types/html-to-text": "^9",
+    "@types/js-yaml": "^4.0.9",
     "@types/jsdom": "^21.1.1",
     "@types/jsonwebtoken": "^9",
     "@types/lodash": "^4",
@@ -172,7 +167,6 @@
     "jest-environment-node": "^29.6.4",
     "jsdom": "^22.1.0",
     "jsonwebtoken": "^9.0.2",
-    "llmonitor": "^0.5.9",
     "lodash": "^4.17.21",
     "lunary": "^0.7.10",
     "mammoth": "^1.6.0",
@@ -214,10 +208,7 @@
   "peerDependencies": {
     "@arcjet/redact": "^v1.0.0-alpha.23",
     "@aws-crypto/sha256-js": "^5.0.0",
-    "@aws-sdk/client-bedrock-agent-runtime": "^3.749.0",
-    "@aws-sdk/client-bedrock-runtime": "^3.749.0",
     "@aws-sdk/client-dynamodb": "^3.749.0",
-    "@aws-sdk/client-kendra": "^3.749.0",
     "@aws-sdk/client-lambda": "^3.749.0",
     "@aws-sdk/client-s3": "^3.749.0",
     "@aws-sdk/client-sagemaker-runtime": "^3.749.0",
@@ -228,14 +219,12 @@
     "@browserbasehq/sdk": "*",
     "@browserbasehq/stagehand": "^1.0.0",
     "@clickhouse/client": "^0.2.5",
-    "@cloudflare/ai": "*",
     "@datastax/astra-db-ts": "^1.0.0",
     "@elastic/elasticsearch": "^8.4.0",
     "@getmetal/metal-sdk": "*",
     "@getzep/zep-cloud": "^1.0.6",
     "@getzep/zep-js": "^0.9.0",
     "@gomomento/sdk-core": "^1.51.1",
-    "@google-ai/generativelanguage": "*",
     "@google-cloud/storage": "^6.10.1 || ^7.7.0",
     "@gradientai/nodejs-sdk": "^1.2.0",
     "@huggingface/inference": "^4.0.5",
@@ -251,10 +240,8 @@
     "@neondatabase/serverless": "*",
     "@notionhq/client": "^2.2.10",
     "@opensearch-project/opensearch": "*",
-    "@pinecone-database/pinecone": "*",
     "@planetscale/database": "^1.8.0",
     "@premai/prem-sdk": "^0.3.25",
-    "@qdrant/js-client-rest": "^1.15.0",
     "@raycast/api": "^1.55.2",
     "@rockset/client": "^0.9.1",
     "@smithy/eventstream-codec": "^2.0.5",
@@ -272,7 +259,6 @@
     "@vercel/postgres": "*",
     "@writerai/writer-sdk": "^0.40.2",
     "@xata.io/client": "^0.28.0",
-    "@xenova/transformers": "*",
     "@zilliz/milvus2-sdk-node": ">=2.3.5",
     "apify-client": "^2.7.1",
     "assemblyai": "^4.6.0",
@@ -285,7 +271,6 @@
     "closevector-common": "0.1.3",
     "closevector-node": "0.1.6",
     "closevector-web": "0.1.6",
-    "cohere-ai": "*",
     "convex": "^1.3.1",
     "crypto-js": "^4.2.0",
     "d3-dsv": "^2.0.0",
@@ -306,13 +291,11 @@
     "it-all": "^3.0.4",
     "jsdom": "*",
     "jsonwebtoken": "^9.0.2",
-    "llmonitor": "^0.5.9",
     "lodash": "^4.17.21",
     "lunary": "^0.7.10",
     "mammoth": "^1.6.0",
     "mariadb": "^3.4.0",
     "mem0ai": "^2.1.8",
-    "mongodb": "^6.17.0",
     "mysql2": "^3.9.8",
     "neo4j-driver": "*",
     "node-llama-cpp": ">=3.0.0",
@@ -327,7 +310,6 @@
     "portkey-ai": "^0.1.11",
     "puppeteer": "*",
     "pyodide": ">=0.24.1 <0.27.0",
-    "redis": "*",
     "replicate": "*",
     "sonix-speech-recognition": "^2.1.1",
     "srt-parser-2": "^1.2.3",
@@ -335,7 +317,6 @@
     "typesense": "^1.5.3",
     "usearch": "^1.1.1",
     "voy-search": "0.6.2",
-    "weaviate-client": "^3.5.2",
     "word-extractor": "*",
     "ws": "^8.14.2",
     "youtubei.js": "*"
@@ -347,16 +328,7 @@
     "@aws-crypto/sha256-js": {
       "optional": true
     },
-    "@aws-sdk/client-bedrock-agent-runtime": {
-      "optional": true
-    },
-    "@aws-sdk/client-bedrock-runtime": {
-      "optional": true
-    },
     "@aws-sdk/client-dynamodb": {
-      "optional": true
-    },
-    "@aws-sdk/client-kendra": {
       "optional": true
     },
     "@aws-sdk/client-lambda": {
@@ -389,9 +361,6 @@
     "@clickhouse/client": {
       "optional": true
     },
-    "@cloudflare/ai": {
-      "optional": true
-    },
     "@datastax/astra-db-ts": {
       "optional": true
     },
@@ -408,9 +377,6 @@
       "optional": true
     },
     "@gomomento/sdk-core": {
-      "optional": true
-    },
-    "@google-ai/generativelanguage": {
       "optional": true
     },
     "@google-cloud/storage": {
@@ -612,9 +578,6 @@
       "optional": true
     },
     "jsonwebtoken": {
-      "optional": true
-    },
-    "llmonitor": {
       "optional": true
     },
     "lodash": {
@@ -1025,17 +988,6 @@
       },
       "input": "./src/tools/stackexchange.ts"
     },
-    "./tools/tavily_search": {
-      "import": {
-        "types": "./dist/tools/tavily_search.d.ts",
-        "default": "./dist/tools/tavily_search.js"
-      },
-      "require": {
-        "types": "./dist/tools/tavily_search.d.cts",
-        "default": "./dist/tools/tavily_search.cjs"
-      },
-      "input": "./src/tools/tavily_search.ts"
-    },
     "./tools/wikipedia_query_run": {
       "import": {
         "types": "./dist/tools/wikipedia_query_run.d.ts",
@@ -1124,28 +1076,6 @@
       },
       "input": "./src/embeddings/alibaba_tongyi.ts"
     },
-    "./embeddings/baidu_qianfan": {
-      "import": {
-        "types": "./dist/embeddings/baidu_qianfan.d.ts",
-        "default": "./dist/embeddings/baidu_qianfan.js"
-      },
-      "require": {
-        "types": "./dist/embeddings/baidu_qianfan.d.cts",
-        "default": "./dist/embeddings/baidu_qianfan.cjs"
-      },
-      "input": "./src/embeddings/baidu_qianfan.ts"
-    },
-    "./embeddings/bedrock": {
-      "import": {
-        "types": "./dist/embeddings/bedrock.d.ts",
-        "default": "./dist/embeddings/bedrock.js"
-      },
-      "require": {
-        "types": "./dist/embeddings/bedrock.d.cts",
-        "default": "./dist/embeddings/bedrock.cjs"
-      },
-      "input": "./src/embeddings/bedrock.ts"
-    },
     "./embeddings/bytedance_doubao": {
       "import": {
         "types": "./dist/embeddings/bytedance_doubao.d.ts",
@@ -1156,28 +1086,6 @@
         "default": "./dist/embeddings/bytedance_doubao.cjs"
       },
       "input": "./src/embeddings/bytedance_doubao.ts"
-    },
-    "./embeddings/cloudflare_workersai": {
-      "import": {
-        "types": "./dist/embeddings/cloudflare_workersai.d.ts",
-        "default": "./dist/embeddings/cloudflare_workersai.js"
-      },
-      "require": {
-        "types": "./dist/embeddings/cloudflare_workersai.d.cts",
-        "default": "./dist/embeddings/cloudflare_workersai.cjs"
-      },
-      "input": "./src/embeddings/cloudflare_workersai.ts"
-    },
-    "./embeddings/cohere": {
-      "import": {
-        "types": "./dist/embeddings/cohere.d.ts",
-        "default": "./dist/embeddings/cohere.js"
-      },
-      "require": {
-        "types": "./dist/embeddings/cohere.d.cts",
-        "default": "./dist/embeddings/cohere.cjs"
-      },
-      "input": "./src/embeddings/cohere.ts"
     },
     "./embeddings/deepinfra": {
       "import": {
@@ -1222,17 +1130,6 @@
         "default": "./dist/embeddings/hf.cjs"
       },
       "input": "./src/embeddings/hf.ts"
-    },
-    "./embeddings/hf_transformers": {
-      "import": {
-        "types": "./dist/embeddings/hf_transformers.d.ts",
-        "default": "./dist/embeddings/hf_transformers.js"
-      },
-      "require": {
-        "types": "./dist/embeddings/hf_transformers.d.cts",
-        "default": "./dist/embeddings/hf_transformers.cjs"
-      },
-      "input": "./src/embeddings/hf_transformers.ts"
     },
     "./embeddings/huggingface_transformers": {
       "import": {
@@ -1288,17 +1185,6 @@
         "default": "./dist/embeddings/minimax.cjs"
       },
       "input": "./src/embeddings/minimax.ts"
-    },
-    "./embeddings/ollama": {
-      "import": {
-        "types": "./dist/embeddings/ollama.d.ts",
-        "default": "./dist/embeddings/ollama.js"
-      },
-      "require": {
-        "types": "./dist/embeddings/ollama.d.cts",
-        "default": "./dist/embeddings/ollama.cjs"
-      },
-      "input": "./src/embeddings/ollama.ts"
     },
     "./embeddings/premai": {
       "import": {
@@ -1432,28 +1318,6 @@
       },
       "input": "./src/llms/bedrock/web.ts"
     },
-    "./llms/cloudflare_workersai": {
-      "import": {
-        "types": "./dist/llms/cloudflare_workersai.d.ts",
-        "default": "./dist/llms/cloudflare_workersai.js"
-      },
-      "require": {
-        "types": "./dist/llms/cloudflare_workersai.d.cts",
-        "default": "./dist/llms/cloudflare_workersai.cjs"
-      },
-      "input": "./src/llms/cloudflare_workersai.ts"
-    },
-    "./llms/cohere": {
-      "import": {
-        "types": "./dist/llms/cohere.d.ts",
-        "default": "./dist/llms/cohere.js"
-      },
-      "require": {
-        "types": "./dist/llms/cohere.d.cts",
-        "default": "./dist/llms/cohere.cjs"
-      },
-      "input": "./src/llms/cohere.ts"
-    },
     "./llms/deepinfra": {
       "import": {
         "types": "./dist/llms/deepinfra.d.ts",
@@ -1531,17 +1395,6 @@
       },
       "input": "./src/llms/llama_cpp.ts"
     },
-    "./llms/ollama": {
-      "import": {
-        "types": "./dist/llms/ollama.d.ts",
-        "default": "./dist/llms/ollama.js"
-      },
-      "require": {
-        "types": "./dist/llms/ollama.d.cts",
-        "default": "./dist/llms/ollama.cjs"
-      },
-      "input": "./src/llms/ollama.ts"
-    },
     "./llms/portkey": {
       "import": {
         "types": "./dist/llms/portkey.d.ts",
@@ -1597,17 +1450,6 @@
       },
       "input": "./src/llms/togetherai.ts"
     },
-    "./llms/watsonx_ai": {
-      "import": {
-        "types": "./dist/llms/watsonx_ai.d.ts",
-        "default": "./dist/llms/watsonx_ai.js"
-      },
-      "require": {
-        "types": "./dist/llms/watsonx_ai.d.cts",
-        "default": "./dist/llms/watsonx_ai.cjs"
-      },
-      "input": "./src/llms/watsonx_ai.ts"
-    },
     "./llms/writer": {
       "import": {
         "types": "./dist/llms/writer.d.ts",
@@ -1618,17 +1460,6 @@
         "default": "./dist/llms/writer.cjs"
       },
       "input": "./src/llms/writer.ts"
-    },
-    "./llms/yandex": {
-      "import": {
-        "types": "./dist/llms/yandex.d.ts",
-        "default": "./dist/llms/yandex.js"
-      },
-      "require": {
-        "types": "./dist/llms/yandex.d.cts",
-        "default": "./dist/llms/yandex.cjs"
-      },
-      "input": "./src/llms/yandex.ts"
     },
     "./llms/layerup_security": {
       "import": {
@@ -1685,17 +1516,6 @@
       },
       "input": "./src/vectorstores/azure_aisearch.ts"
     },
-    "./vectorstores/azure_cosmosdb": {
-      "import": {
-        "types": "./dist/vectorstores/azure_cosmosdb.d.ts",
-        "default": "./dist/vectorstores/azure_cosmosdb.js"
-      },
-      "require": {
-        "types": "./dist/vectorstores/azure_cosmosdb.d.cts",
-        "default": "./dist/vectorstores/azure_cosmosdb.cjs"
-      },
-      "input": "./src/vectorstores/azure_cosmosdb.ts"
-    },
     "./vectorstores/cassandra": {
       "import": {
         "types": "./dist/vectorstores/cassandra.d.ts",
@@ -1750,17 +1570,6 @@
         "default": "./dist/vectorstores/closevector/web.cjs"
       },
       "input": "./src/vectorstores/closevector/web.ts"
-    },
-    "./vectorstores/cloudflare_vectorize": {
-      "import": {
-        "types": "./dist/vectorstores/cloudflare_vectorize.d.ts",
-        "default": "./dist/vectorstores/cloudflare_vectorize.js"
-      },
-      "require": {
-        "types": "./dist/vectorstores/cloudflare_vectorize.d.cts",
-        "default": "./dist/vectorstores/cloudflare_vectorize.cjs"
-      },
-      "input": "./src/vectorstores/cloudflare_vectorize.ts"
     },
     "./vectorstores/convex": {
       "import": {
@@ -1894,17 +1703,6 @@
       },
       "input": "./src/vectorstores/momento_vector_index.ts"
     },
-    "./vectorstores/mongodb_atlas": {
-      "import": {
-        "types": "./dist/vectorstores/mongodb_atlas.d.ts",
-        "default": "./dist/vectorstores/mongodb_atlas.js"
-      },
-      "require": {
-        "types": "./dist/vectorstores/mongodb_atlas.d.cts",
-        "default": "./dist/vectorstores/mongodb_atlas.cjs"
-      },
-      "input": "./src/vectorstores/mongodb_atlas.ts"
-    },
     "./vectorstores/myscale": {
       "import": {
         "types": "./dist/vectorstores/myscale.d.ts",
@@ -1960,17 +1758,6 @@
       },
       "input": "./src/vectorstores/pgvector.ts"
     },
-    "./vectorstores/pinecone": {
-      "import": {
-        "types": "./dist/vectorstores/pinecone.d.ts",
-        "default": "./dist/vectorstores/pinecone.js"
-      },
-      "require": {
-        "types": "./dist/vectorstores/pinecone.d.cts",
-        "default": "./dist/vectorstores/pinecone.cjs"
-      },
-      "input": "./src/vectorstores/pinecone.ts"
-    },
     "./vectorstores/prisma": {
       "import": {
         "types": "./dist/vectorstores/prisma.d.ts",
@@ -1981,28 +1768,6 @@
         "default": "./dist/vectorstores/prisma.cjs"
       },
       "input": "./src/vectorstores/prisma.ts"
-    },
-    "./vectorstores/qdrant": {
-      "import": {
-        "types": "./dist/vectorstores/qdrant.d.ts",
-        "default": "./dist/vectorstores/qdrant.js"
-      },
-      "require": {
-        "types": "./dist/vectorstores/qdrant.d.cts",
-        "default": "./dist/vectorstores/qdrant.cjs"
-      },
-      "input": "./src/vectorstores/qdrant.ts"
-    },
-    "./vectorstores/redis": {
-      "import": {
-        "types": "./dist/vectorstores/redis.d.ts",
-        "default": "./dist/vectorstores/redis.js"
-      },
-      "require": {
-        "types": "./dist/vectorstores/redis.d.cts",
-        "default": "./dist/vectorstores/redis.cjs"
-      },
-      "input": "./src/vectorstores/redis.ts"
     },
     "./vectorstores/rockset": {
       "import": {
@@ -2136,17 +1901,6 @@
       },
       "input": "./src/vectorstores/voy.ts"
     },
-    "./vectorstores/weaviate": {
-      "import": {
-        "types": "./dist/vectorstores/weaviate.d.ts",
-        "default": "./dist/vectorstores/weaviate.js"
-      },
-      "require": {
-        "types": "./dist/vectorstores/weaviate.d.cts",
-        "default": "./dist/vectorstores/weaviate.cjs"
-      },
-      "input": "./src/vectorstores/weaviate.ts"
-    },
     "./vectorstores/xata": {
       "import": {
         "types": "./dist/vectorstores/xata.d.ts",
@@ -2202,17 +1956,6 @@
       },
       "input": "./src/chat_models/arcjet.ts"
     },
-    "./chat_models/baiduwenxin": {
-      "import": {
-        "types": "./dist/chat_models/baiduwenxin.d.ts",
-        "default": "./dist/chat_models/baiduwenxin.js"
-      },
-      "require": {
-        "types": "./dist/chat_models/baiduwenxin.d.cts",
-        "default": "./dist/chat_models/baiduwenxin.cjs"
-      },
-      "input": "./src/chat_models/baiduwenxin.ts"
-    },
     "./chat_models/bedrock": {
       "import": {
         "types": "./dist/chat_models/bedrock/index.d.ts",
@@ -2234,17 +1977,6 @@
         "default": "./dist/chat_models/bedrock/web.cjs"
       },
       "input": "./src/chat_models/bedrock/web.ts"
-    },
-    "./chat_models/cloudflare_workersai": {
-      "import": {
-        "types": "./dist/chat_models/cloudflare_workersai.d.ts",
-        "default": "./dist/chat_models/cloudflare_workersai.js"
-      },
-      "require": {
-        "types": "./dist/chat_models/cloudflare_workersai.d.cts",
-        "default": "./dist/chat_models/cloudflare_workersai.cjs"
-      },
-      "input": "./src/chat_models/cloudflare_workersai.ts"
     },
     "./chat_models/deepinfra": {
       "import": {
@@ -2356,17 +2088,6 @@
       },
       "input": "./src/chat_models/novita.ts"
     },
-    "./chat_models/ollama": {
-      "import": {
-        "types": "./dist/chat_models/ollama.d.ts",
-        "default": "./dist/chat_models/ollama.js"
-      },
-      "require": {
-        "types": "./dist/chat_models/ollama.d.cts",
-        "default": "./dist/chat_models/ollama.cjs"
-      },
-      "input": "./src/chat_models/ollama.ts"
-    },
     "./chat_models/perplexity": {
       "import": {
         "types": "./dist/chat_models/perplexity.d.ts",
@@ -2444,17 +2165,6 @@
       },
       "input": "./src/chat_models/webllm.ts"
     },
-    "./chat_models/yandex": {
-      "import": {
-        "types": "./dist/chat_models/yandex.d.ts",
-        "default": "./dist/chat_models/yandex.js"
-      },
-      "require": {
-        "types": "./dist/chat_models/yandex.d.cts",
-        "default": "./dist/chat_models/yandex.cjs"
-      },
-      "input": "./src/chat_models/yandex.ts"
-    },
     "./chat_models/zhipuai": {
       "import": {
         "types": "./dist/chat_models/zhipuai.d.ts",
@@ -2465,17 +2175,6 @@
         "default": "./dist/chat_models/zhipuai.cjs"
       },
       "input": "./src/chat_models/zhipuai.ts"
-    },
-    "./callbacks/handlers/llmonitor": {
-      "import": {
-        "types": "./dist/callbacks/handlers/llmonitor.d.ts",
-        "default": "./dist/callbacks/handlers/llmonitor.js"
-      },
-      "require": {
-        "types": "./dist/callbacks/handlers/llmonitor.d.cts",
-        "default": "./dist/callbacks/handlers/llmonitor.cjs"
-      },
-      "input": "./src/callbacks/handlers/llmonitor.ts"
     },
     "./callbacks/handlers/lunary": {
       "import": {
@@ -2498,28 +2197,6 @@
         "default": "./dist/callbacks/handlers/upstash_ratelimit.cjs"
       },
       "input": "./src/callbacks/handlers/upstash_ratelimit.ts"
-    },
-    "./retrievers/amazon_kendra": {
-      "import": {
-        "types": "./dist/retrievers/amazon_kendra.d.ts",
-        "default": "./dist/retrievers/amazon_kendra.js"
-      },
-      "require": {
-        "types": "./dist/retrievers/amazon_kendra.d.cts",
-        "default": "./dist/retrievers/amazon_kendra.cjs"
-      },
-      "input": "./src/retrievers/amazon_kendra.ts"
-    },
-    "./retrievers/amazon_knowledge_base": {
-      "import": {
-        "types": "./dist/retrievers/amazon_knowledge_base.d.ts",
-        "default": "./dist/retrievers/amazon_knowledge_base.js"
-      },
-      "require": {
-        "types": "./dist/retrievers/amazon_knowledge_base.d.cts",
-        "default": "./dist/retrievers/amazon_knowledge_base.cjs"
-      },
-      "input": "./src/retrievers/amazon_knowledge_base.ts"
     },
     "./retrievers/arxiv": {
       "import": {
@@ -2564,17 +2241,6 @@
         "default": "./dist/retrievers/chaindesk.cjs"
       },
       "input": "./src/retrievers/chaindesk.ts"
-    },
-    "./retrievers/databerry": {
-      "import": {
-        "types": "./dist/retrievers/databerry.d.ts",
-        "default": "./dist/retrievers/databerry.js"
-      },
-      "require": {
-        "types": "./dist/retrievers/databerry.d.cts",
-        "default": "./dist/retrievers/databerry.cjs"
-      },
-      "input": "./src/retrievers/databerry.ts"
     },
     "./retrievers/metal": {
       "import": {
@@ -2664,17 +2330,6 @@
       },
       "input": "./src/structured_query/chroma.ts"
     },
-    "./structured_query/qdrant": {
-      "import": {
-        "types": "./dist/structured_query/qdrant.d.ts",
-        "default": "./dist/structured_query/qdrant.js"
-      },
-      "require": {
-        "types": "./dist/structured_query/qdrant.d.cts",
-        "default": "./dist/structured_query/qdrant.cjs"
-      },
-      "input": "./src/structured_query/qdrant.ts"
-    },
     "./structured_query/supabase": {
       "import": {
         "types": "./dist/structured_query/supabase.d.ts",
@@ -2707,17 +2362,6 @@
         "default": "./dist/retrievers/zep_cloud.cjs"
       },
       "input": "./src/retrievers/zep_cloud.ts"
-    },
-    "./caches/cloudflare_kv": {
-      "import": {
-        "types": "./dist/caches/cloudflare_kv.d.ts",
-        "default": "./dist/caches/cloudflare_kv.js"
-      },
-      "require": {
-        "types": "./dist/caches/cloudflare_kv.d.cts",
-        "default": "./dist/caches/cloudflare_kv.cjs"
-      },
-      "input": "./src/caches/cloudflare_kv.ts"
     },
     "./caches/ioredis": {
       "import": {
@@ -2939,17 +2583,6 @@
       },
       "input": "./src/stores/message/cassandra.ts"
     },
-    "./stores/message/cloudflare_d1": {
-      "import": {
-        "types": "./dist/stores/message/cloudflare_d1.d.ts",
-        "default": "./dist/stores/message/cloudflare_d1.js"
-      },
-      "require": {
-        "types": "./dist/stores/message/cloudflare_d1.d.cts",
-        "default": "./dist/stores/message/cloudflare_d1.cjs"
-      },
-      "input": "./src/stores/message/cloudflare_d1.ts"
-    },
     "./stores/message/convex": {
       "import": {
         "types": "./dist/stores/message/convex.d.ts",
@@ -3038,17 +2671,6 @@
       },
       "input": "./src/stores/message/momento.ts"
     },
-    "./stores/message/mongodb": {
-      "import": {
-        "types": "./dist/stores/message/mongodb.d.ts",
-        "default": "./dist/stores/message/mongodb.js"
-      },
-      "require": {
-        "types": "./dist/stores/message/mongodb.d.cts",
-        "default": "./dist/stores/message/mongodb.cjs"
-      },
-      "input": "./src/stores/message/mongodb.ts"
-    },
     "./stores/message/neo4j": {
       "import": {
         "types": "./dist/stores/message/neo4j.d.ts",
@@ -3092,17 +2714,6 @@
         "default": "./dist/stores/message/aurora_dsql.cjs"
       },
       "input": "./src/stores/message/aurora_dsql.ts"
-    },
-    "./stores/message/redis": {
-      "import": {
-        "types": "./dist/stores/message/redis.d.ts",
-        "default": "./dist/stores/message/redis.js"
-      },
-      "require": {
-        "types": "./dist/stores/message/redis.d.cts",
-        "default": "./dist/stores/message/redis.cjs"
-      },
-      "input": "./src/stores/message/redis.ts"
     },
     "./stores/message/upstash_redis": {
       "import": {
@@ -3785,28 +3396,6 @@
         "default": "./dist/experimental/multimodal_embeddings/googlevertexai.cjs"
       },
       "input": "./src/experimental/multimodal_embeddings/googlevertexai.ts"
-    },
-    "./experimental/hubs/makersuite/googlemakersuitehub": {
-      "import": {
-        "types": "./dist/experimental/hubs/makersuite/googlemakersuitehub.d.ts",
-        "default": "./dist/experimental/hubs/makersuite/googlemakersuitehub.js"
-      },
-      "require": {
-        "types": "./dist/experimental/hubs/makersuite/googlemakersuitehub.d.cts",
-        "default": "./dist/experimental/hubs/makersuite/googlemakersuitehub.cjs"
-      },
-      "input": "./src/experimental/hubs/makersuite/googlemakersuitehub.ts"
-    },
-    "./experimental/chat_models/ollama_functions": {
-      "import": {
-        "types": "./dist/experimental/chat_models/ollama_functions.d.ts",
-        "default": "./dist/experimental/chat_models/ollama_functions.js"
-      },
-      "require": {
-        "types": "./dist/experimental/chat_models/ollama_functions.d.cts",
-        "default": "./dist/experimental/chat_models/ollama_functions.cjs"
-      },
-      "input": "./src/experimental/chat_models/ollama_functions.ts"
     },
     "./experimental/llms/chrome_ai": {
       "import": {

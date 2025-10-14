@@ -7,7 +7,6 @@ import {
 } from "@langchain/core/tools";
 import { formatDocumentsAsString } from "../../../util/document.js";
 
-/** @deprecated Use "@langchain/classic/tools/retriever" instead. */
 export function createRetrieverTool(
   retriever: BaseRetrieverInterface,
   input: Omit<DynamicStructuredToolInput, "func" | "schema">
@@ -16,7 +15,7 @@ export function createRetrieverTool(
     { input }: { input: string },
     runManager?: CallbackManagerForToolRun
   ) => {
-    const docs = await retriever.getRelevantDocuments(
+    const docs = await retriever.invoke(
       input,
       runManager?.getChild("retriever")
     );

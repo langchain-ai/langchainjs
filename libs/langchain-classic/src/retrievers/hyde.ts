@@ -56,7 +56,7 @@ export type HydeRetrieverOptions<V extends VectorStore> =
  *     "My favourite food is pasta.",
  *   ].map((pageContent) => new Document({ pageContent })),
  * );
- * const results = await retriever.getRelevantDocuments(
+ * const results = await retriever.invoke(
  *   "What is my favourite food?",
  * );
  * ```

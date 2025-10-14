@@ -280,7 +280,7 @@ class GenerativeAgentMemoryChain extends BaseChain {
     _now?: Date,
     runManager?: CallbackManagerForChainRun
   ): Promise<Document[]> {
-    return this.memoryRetriever.getRelevantDocuments(
+    return this.memoryRetriever.invoke(
       observation,
       runManager?.getChild("memory_retriever")
     );

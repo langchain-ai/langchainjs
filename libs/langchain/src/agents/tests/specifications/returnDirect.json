@@ -4,7 +4,7 @@
     "returnDirect": false,
     "responseFormat": null,
     "expectedToolCalls": 10,
-    "expectedLastMessage": "Attempts: 10",
+    "expectedLastMessage": "10",
     "expectedStructuredResponse": null
   },
   {

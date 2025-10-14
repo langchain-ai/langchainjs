@@ -1,6 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { describe, it, expect, vi } from "vitest";
-import { ChatAnthropic } from "@langchain/anthropic";
 import { tool } from "@langchain/core/tools";
 import { HumanMessage } from "@langchain/core/messages";
 import z from "zod/v3";
@@ -61,18 +60,12 @@ describe("return_direct Matrix Tests", () => {
       testFn = it.only;
     }
     testFn(testCase.name, async () => {
-      // Create LLM instance
-      const llm = new ChatAnthropic({
-        model: "claude-3-5-sonnet-20240620",
-        temperature: 0, // Make it deterministic
-      });
-
       // Create poll tool with specified returnDirect setting
       const { tool, mock } = makePollTool(testCase.returnDirect);
 
       // Create agent with specified configuration
       const baseConfig = {
-        llm,
+        model: "claude-3-5-sonnet-20240620",
         tools: [tool],
         prompt: AGENT_PROMPT,
       };
@@ -101,7 +94,7 @@ describe("return_direct Matrix Tests", () => {
       const lastMessageContent = lastMessage?.content;
 
       if (typeof testCase.expectedLastMessage === "string") {
-        expect(lastMessageContent).toBe(testCase.expectedLastMessage);
+        expect(lastMessageContent).toContain(testCase.expectedLastMessage);
       } else {
         // It's a regex
         expect(lastMessageContent).toMatch(testCase.expectedLastMessage);

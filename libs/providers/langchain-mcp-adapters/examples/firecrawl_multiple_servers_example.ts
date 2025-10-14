@@ -81,7 +81,7 @@ async function runExample() {
 
     // Create the React agent
     const agent = createAgent({
-      llm: model,
+      model,
       tools: mcpTools,
     });
 

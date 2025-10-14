@@ -1224,7 +1224,7 @@ describe("Citations", () => {
       },
     }).bindTools([ragTool]);
 
-    const messages = [
+    const messages: BaseMessage[] = [
       new HumanMessage(
         "Search for information about France and tell me what you find with proper citations."
       ),
@@ -1287,7 +1287,7 @@ test("Test thinking blocks multiturn invoke", async () => {
     return response;
   }
 
-  const invokeMessages = [new HumanMessage("Hello")];
+  const invokeMessages: BaseMessage[] = [new HumanMessage("Hello")];
 
   invokeMessages.push(await doInvoke(invokeMessages));
   invokeMessages.push(new HumanMessage("What is 42+7?"));
@@ -1328,7 +1328,7 @@ test("Test thinking blocks multiturn streaming", async () => {
     return full as AIMessageChunk;
   }
 
-  const streamingMessages = [new HumanMessage("Hello")];
+  const streamingMessages: BaseMessage[] = [new HumanMessage("Hello")];
 
   streamingMessages.push(await doStreaming(streamingMessages));
   streamingMessages.push(new HumanMessage("What is 42+7?"));
@@ -1361,7 +1361,7 @@ test("Test redacted thinking blocks multiturn invoke", async () => {
     return response;
   }
 
-  const invokeMessages = [
+  const invokeMessages: BaseMessage[] = [
     new HumanMessage(
       "ANTHROPIC_MAGIC_STRING_TRIGGER_REDACTED_THINKING_46C9A13E193C177646C7398A98432ECCCE4C1253D5E2D82641AC0E52CC2876CB"
     ),
@@ -1405,7 +1405,7 @@ test("Test redacted thinking blocks multiturn streaming", async () => {
     return full as AIMessageChunk;
   }
 
-  const streamingMessages = [
+  const streamingMessages: BaseMessage[] = [
     new HumanMessage(
       "ANTHROPIC_MAGIC_STRING_TRIGGER_REDACTED_THINKING_46C9A13E193C177646C7398A98432ECCCE4C1253D5E2D82641AC0E52CC2876CB"
     ),
@@ -1430,6 +1430,7 @@ test("Can handle google function calling blocks in content", async () => {
     new AIMessage({
       content: [
         {
+          type: "function_call",
           // Pass a content block with the `functionCall` object that Google returns.
           functionCall: {
             args: {
@@ -1461,14 +1462,60 @@ test("Can handle google function calling blocks in content", async () => {
   expect(res.content.length).toBeGreaterThan(1);
 });
 
-test("Can handle opus 4.1 without passing any args", async () => {
-  const model = new ChatAnthropic({
-    model: "claude-opus-4-1",
+describe("Opus 4.1", () => {
+  it("works without passing any args", async () => {
+    const model = new ChatAnthropic({
+      model: "claude-opus-4-1",
+    });
+
+    const response = await model.invoke(
+      "Please respond to this message simply with: Hello"
+    );
+
+    expect(response.content.length).toBeGreaterThan(0);
   });
 
-  const response = await model.invoke(
-    "Please respond to this message simply with: Hello"
-  );
+  it("works with streaming and thinking", async () => {
+    const model = new ChatAnthropic({
+      model: "claude-opus-4-1",
+      thinking: {
+        type: "enabled",
+        budget_tokens: 1024,
+      },
+    });
 
-  expect(response.content.length).toBeGreaterThan(0);
+    const response = await model.invoke(
+      "Please respond to this message simply with: Hello"
+    );
+
+    expect(response.content.length).toBeGreaterThan(0);
+  });
+});
+
+describe("Sonnet 4.5", () => {
+  it("works without passing any args", async () => {
+    const model = new ChatAnthropic({
+      model: "claude-sonnet-4-5-20250929",
+    });
+    const response = await model.invoke(
+      "Please respond to this message simply with: Hello"
+    );
+    expect(response.content.length).toBeGreaterThan(0);
+  });
+
+  it("works with streaming and thinking", async () => {
+    const model = new ChatAnthropic({
+      model: "claude-sonnet-4-5-20250929",
+      thinking: {
+        type: "enabled",
+        budget_tokens: 1024,
+      },
+    });
+
+    const response = await model.invoke(
+      "Please respond to this message simply with: Hello"
+    );
+
+    expect(response.content.length).toBeGreaterThan(0);
+  });
 });

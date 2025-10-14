@@ -38,6 +38,7 @@ import {
 } from "./utils/message_outputs.js";
 import {
   AnthropicBuiltInToolUnion,
+  AnthropicContextManagementConfigParam,
   AnthropicMessageCreateParams,
   AnthropicMessageStreamEvent,
   AnthropicRequestOptions,
@@ -83,7 +84,7 @@ function _documentsInParams(
         block != null &&
         block.type === "document" &&
         typeof block.citations === "object" &&
-        block.citations.enabled
+        block.citations?.enabled
       ) {
         return true;
       }
@@ -104,13 +105,16 @@ function isAnthropicTool(tool: any): tool is Anthropic.Messages.Tool {
 }
 
 function isBuiltinTool(tool: unknown): tool is AnthropicBuiltInToolUnion {
-  const builtinTools = [
-    "web_search",
-    "bash",
-    "code_execution",
-    "computer",
-    "str_replace_editor",
-    "str_replace_based_edit_tool",
+  const builtInToolPrefixes = [
+    "text_editor_",
+    "computer_",
+    "bash_",
+    "web_search_",
+    "web_fetch_",
+    "str_replace_editor_",
+    "str_replace_based_edit_tool_",
+    "code_execution_",
+    "memory_",
   ];
   return (
     typeof tool === "object" &&
@@ -118,8 +122,9 @@ function isBuiltinTool(tool: unknown): tool is AnthropicBuiltInToolUnion {
     "type" in tool &&
     "name" in tool &&
     typeof tool.type === "string" &&
-    typeof tool.name === "string" &&
-    builtinTools.includes(tool.name)
+    builtInToolPrefixes.some(
+      (prefix) => typeof tool.type === "string" && tool.type.startsWith(prefix)
+    )
   );
 }
 
@@ -160,18 +165,12 @@ export interface AnthropicInput {
    * To not set this field, pass `null`. If `undefined` is passed,
    * the default (-1) will be used.
    *
-   * For Opus 4.1, this defaults to `null`.
+   * For Opus 4.1 and Sonnet 4.5, this defaults to `null`.
    */
   topP?: number | null;
 
   /** A maximum number of tokens to generate before stopping. */
   maxTokens?: number;
-
-  /**
-   * A maximum number of tokens to generate before stopping.
-   * @deprecated Use "maxTokens" instead.
-   */
-  maxTokensToSample?: number;
 
   /** A list of strings upon which to stop generating.
    * You probably want `["\n\nHuman:"]`, as that's the cue for
@@ -222,6 +221,11 @@ export interface AnthropicInput {
    * Options for extended thinking.
    */
   thinking?: AnthropicThinkingConfigParam;
+
+  /**
+   * Configuration for context management. See https://docs.claude.com/en/docs/build-with-claude/context-editing
+   */
+  contextManagement?: AnthropicContextManagementConfigParam;
 }
 
 /**
@@ -682,6 +686,8 @@ export class ChatAnthropicMessages<
 
   thinking: AnthropicThinkingConfigParam = { type: "disabled" };
 
+  contextManagement?: AnthropicContextManagementConfigParam;
+
   // Used for non-streaming requests
   protected batchClient: Anthropic;
 
@@ -721,7 +727,7 @@ export class ChatAnthropicMessages<
 
     this.invocationKwargs = fields?.invocationKwargs ?? {};
 
-    if (this.model.includes("opus-4-1")) {
+    if (this.model.includes("opus-4-1") || this.model.includes("sonnet-4-5")) {
       // Default to `undefined` for `topP` for Opus 4.1 models
       this.topP = fields?.topP === null ? undefined : fields?.topP;
     } else {
@@ -735,14 +741,15 @@ export class ChatAnthropicMessages<
         ? undefined
         : fields?.temperature ?? this.temperature;
     this.topK = fields?.topK ?? this.topK;
-    this.maxTokens =
-      fields?.maxTokensToSample ?? fields?.maxTokens ?? this.maxTokens;
+    this.maxTokens = fields?.maxTokens ?? this.maxTokens;
     this.stopSequences = fields?.stopSequences ?? this.stopSequences;
 
     this.streaming = fields?.streaming ?? false;
     this.streamUsage = fields?.streamUsage ?? this.streamUsage;
 
     this.thinking = fields?.thinking ?? this.thinking;
+    this.contextManagement =
+      fields?.contextManagement ?? this.contextManagement;
 
     this.createClient =
       fields?.createClient ??
@@ -838,7 +845,11 @@ export class ChatAnthropicMessages<
       if (this.topK !== -1) {
         throw new Error("topK is not supported when thinking is enabled");
       }
-      if (this.topP !== -1) {
+      if (
+        this.model.includes("opus-4-1") || this.model.includes("sonnet-4-5")
+          ? this.topP !== undefined
+          : this.topP !== -1
+      ) {
         throw new Error("topP is not supported when thinking is enabled");
       }
       if (this.temperature !== 1) {
@@ -855,6 +866,7 @@ export class ChatAnthropicMessages<
         tools: this.formatStructuredToolToAnthropic(options?.tools),
         tool_choice,
         thinking: this.thinking,
+        context_management: this.contextManagement,
         ...this.invocationKwargs,
       };
     }
@@ -869,6 +881,7 @@ export class ChatAnthropicMessages<
       tools: this.formatStructuredToolToAnthropic(options?.tools),
       tool_choice,
       thinking: this.thinking,
+      context_management: this.contextManagement,
       ...this.invocationKwargs,
     };
   }

@@ -192,6 +192,55 @@ test("Can properly format anthropic messages when given two tool results", async
   });
 });
 
+test("Can properly format messages with container_upload blocks", async () => {
+  const messageHistory = [
+    new HumanMessage({
+      content: [
+        { type: "text", text: "Analyze this CSV data" },
+        { type: "container_upload", file_id: "file_abc123" },
+      ],
+    }),
+  ];
+
+  const formattedMessages = _convertMessagesToAnthropicPayload(messageHistory);
+
+  expect(formattedMessages).toEqual({
+    messages: [
+      {
+        role: "user",
+        content: [
+          { type: "text", text: "Analyze this CSV data" },
+          { type: "container_upload", file_id: "file_abc123" },
+        ],
+      },
+    ],
+    system: undefined,
+  });
+});
+
+test("Drop content blocks that we don't know how to handle", async () => {
+  const messageHistory = [
+    new HumanMessage({
+      content: [
+        { type: "text", text: "Hello" },
+        { type: "some-unexpected-block-type", some_unexpected_field: "abc123" },
+      ],
+    }),
+  ];
+
+  const formattedMessages = _convertMessagesToAnthropicPayload(messageHistory);
+
+  expect(formattedMessages).toEqual({
+    messages: [
+      {
+        role: "user",
+        content: [{ type: "text", text: "Hello" }],
+      },
+    ],
+    system: undefined,
+  });
+});
+
 test("Can properly format messages with bash_code_execution_tool_result blocks", async () => {
   const messageHistory = [
     new AIMessage({

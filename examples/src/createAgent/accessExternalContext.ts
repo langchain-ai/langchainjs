@@ -23,7 +23,7 @@
  */
 
 import fs from "node:fs/promises";
-import { createAgent, tool } from "langchain";
+import { createAgent, dynamicSystemPromptMiddleware, tool } from "langchain";
 import { ChatOpenAI } from "@langchain/openai";
 import { z } from "zod";
 
@@ -84,28 +84,24 @@ const accountInfoTool = tool(
  * Create agent that uses runtime context to customize behavior
  */
 const supportAgent = createAgent({
-  llm: new ChatOpenAI({ model: "gpt-4" }),
+  model: new ChatOpenAI({ model: "gpt-4" }),
   tools: [accountInfoTool],
-  prompt: async (state) => {
-    // Access runtime context to customize system prompt
-    const userId = runtimeContext.userId ?? "unknown";
-    const userDetails = getUserDetails(userId);
+  middleware: [
+    dynamicSystemPromptMiddleware(async () => {
+      // Access runtime context to customize system prompt
+      const userId = runtimeContext.userId ?? "unknown";
+      const userDetails = getUserDetails(userId);
 
-    return [
-      {
-        role: "system",
-        content: `You are a customer support agent helping ${userDetails.username}.
+      return `You are a customer support agent helping ${userDetails.username}.
 
 User Context (from runtime parameters):
 - User ID: ${userId}
 - Account Tier: ${userDetails.tier}
 - Member Since: ${userDetails.joinDate}
 
-Tailor your responses based on their ${userDetails.tier} tier. Enterprise users get priority treatment, premium users get detailed explanations, basic users get simple guidance.`,
-      },
-      ...state.messages,
-    ];
-  },
+Tailor your responses based on their ${userDetails.tier} tier. Enterprise users get priority treatment, premium users get detailed explanations, basic users get simple guidance.`;
+    }),
+  ],
 });
 
 /**
