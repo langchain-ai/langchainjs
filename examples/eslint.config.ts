@@ -11,6 +11,7 @@ const config: ConfigArray = [
       "@typescript-eslint/no-floating-promises": "off",
       "no-instanceof/no-instanceof": "off",
       "@typescript-eslint/no-misused-promises": "off",
+      "import/no-extraneous-dependencies": "off",
     },
   },
 ];
