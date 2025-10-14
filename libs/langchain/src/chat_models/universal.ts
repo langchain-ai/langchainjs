@@ -85,6 +85,10 @@ export const MODEL_PROVIDER_CONFIG = {
     package: "@langchain/mistralai",
     className: "ChatMistralAI",
   },
+  mistral: {
+    package: "@langchain/mistralai",
+    className: "ChatMistralAI",
+  },
   groq: {
     package: "@langchain/groq",
     className: "ChatGroq",

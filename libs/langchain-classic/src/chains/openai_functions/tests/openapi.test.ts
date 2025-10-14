@@ -1,4 +1,4 @@
-import { test, expect } from "vitest";
+import { test, expect } from "@jest/globals";
 
 import { OpenAPIV3, OpenAPIV3_1 } from "openapi-types";
 import {
@@ -67,6 +67,21 @@ test("Test convert OpenAPI params to JSON Schema", async () => {
                 items: {
                   type: "string",
                 },
+              },
+            },
+            {
+              name: "refParam",
+              in: "query",
+              schema: {
+                $ref: "#/components/schemas/RefObject",
+              },
+            },
+            {
+              name: "refArrayParam",
+              in: "query",
+              schema: {
+                type: "array",
+                items: { $ref: "#/components/schemas/RefObject" },
               },
             },
             {
@@ -142,6 +157,21 @@ test("Test convert OpenAPI params to JSON Schema", async () => {
                   },
                 },
               },
+            },
+          },
+        },
+      },
+    },
+    components: {
+      schemas: {
+        RefObject: {
+          type: "object",
+          properties: {
+            foo: {
+              type: "string",
+            },
+            bar: {
+              type: "number",
             },
           },
         },
@@ -224,6 +254,26 @@ test("Test convert OpenAPI params to JSON Schema", async () => {
   );
   expect(typedStringArrayParamSchema.items).not.toBeUndefined();
   expectType("string", typedStringArrayParamSchema.items);
+
+  const refParamSchema = convertOpenAPISchemaToJSONSchema(
+    getParamSchema(createWidget, "refParam"),
+    spec
+  );
+  const typedRefParamSchema = expectType("object", refParamSchema);
+  expectType("string", typedRefParamSchema.properties.foo);
+  expectType("number", typedRefParamSchema.properties.bar);
+
+  const refArrayParamSchema = convertOpenAPISchemaToJSONSchema(
+    getParamSchema(createWidget, "refArrayParam"),
+    spec
+  );
+  const typedRefArrayParamSchema = expectType("array", refArrayParamSchema);
+  const typedRefArrayParamSchemaItems = expectType(
+    "object",
+    typedRefArrayParamSchema.items
+  );
+  expectType("string", typedRefArrayParamSchemaItems.properties.foo);
+  expectType("number", typedRefArrayParamSchemaItems.properties.bar);
 
   const nestedObjectInArrayParamSchema = convertOpenAPISchemaToJSONSchema(
     getParamSchema(createWidget, "nestedObjectInArrayParam"),

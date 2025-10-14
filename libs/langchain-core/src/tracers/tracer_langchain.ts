@@ -93,6 +93,7 @@ export class LangChainTracer
   }
 
   updateFromRunTree(runTree: RunTree) {
+    this.runTreeMap.set(runTree.id, runTree);
     let rootRun: RunTree = runTree;
     const visited = new Set<string>();
     while (rootRun.parent_run) {
