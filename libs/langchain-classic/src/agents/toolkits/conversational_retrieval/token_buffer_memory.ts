@@ -113,7 +113,7 @@ export class OpenAIAgentTokenBufferMemory extends BaseChatMemory {
     for (const message of intermediateStepMessages) {
       await this.chatHistory.addMessage(message);
     }
-    await this.chatHistory.addAIChatMessage(outputValue);
+    await this.chatHistory.addAIMessage(outputValue);
     const currentMessages = await this.chatHistory.getMessages();
     let tokenInfo = await this.llm.getNumTokensFromMessages(currentMessages);
     if (tokenInfo.totalCount > this.maxTokenLimit) {

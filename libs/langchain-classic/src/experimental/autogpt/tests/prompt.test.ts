@@ -8,9 +8,7 @@ const mockTokenCounter = async (text: string): Promise<number> => text.length;
 // Todo: replace any with actual interface
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const mockMemory: any = {
-  getRelevantDocuments: async () => [
-    { pageContent: "relevant content", metadata: {} },
-  ],
+  invoke: async () => [{ pageContent: "relevant content", metadata: {} }],
 };
 
 describe("AutoGPTPrompt", () => {
