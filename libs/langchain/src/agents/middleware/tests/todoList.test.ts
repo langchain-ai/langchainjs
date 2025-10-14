@@ -4,7 +4,7 @@ import { BaseChatModel } from "@langchain/core/language_models/chat_models";
 import { ChatOpenAI } from "@langchain/openai";
 
 import { createAgent } from "../../index.js";
-import { planningMiddleware } from "../planning.js";
+import { todoListMiddleware } from "../todoListMiddleware.js";
 
 function createMockModel(name = "ChatAnthropic", modelType = "anthropic") {
   // Mock Chat model extending BaseChatModel
@@ -24,9 +24,9 @@ function createMockModel(name = "ChatAnthropic", modelType = "anthropic") {
   return mockModel;
 }
 
-describe("planningMiddleware", () => {
+describe("todoListMiddleware", () => {
   it("should add the system prompt to the model request", async () => {
-    const middleware = planningMiddleware();
+    const middleware = todoListMiddleware();
     const model = createMockModel();
     const agent = createAgent({
       model,
@@ -98,7 +98,7 @@ describe("planningMiddleware", () => {
       });
     });
 
-    const middleware = planningMiddleware({
+    const middleware = todoListMiddleware({
       systemPrompt: "Custom system prompt",
       toolDescription: "Custom tool description",
     });
