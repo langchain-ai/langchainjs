@@ -155,12 +155,14 @@ function* _formatContentBlocks(
   content: ContentBlock[]
 ): Generator<Anthropic.Beta.BetaContentBlockParam> {
   const toolTypes = [
-    "tool_use",
-    "tool_result",
+    "bash_code_execution_tool_result",
     "input_json_delta",
     "server_tool_use",
-    "web_search_tool_result",
+    "text_editor_code_execution_tool_result",
+    "tool_result",
+    "tool_use",
     "web_search_result",
+    "web_search_tool_result",
   ];
   const textTypes = ["text", "text_delta"];
   for (const contentPart of content) {
