@@ -26,6 +26,7 @@ function _formatStandardCitations(
         if (annotation.source === "char") {
           yield {
             type: "char_location" as const,
+            file_id: annotation.url ?? "",
             start_char_index: annotation.startIndex ?? 0,
             end_char_index: annotation.endIndex ?? 0,
             document_title: annotation.title ?? null,
@@ -35,6 +36,7 @@ function _formatStandardCitations(
         } else if (annotation.source === "page") {
           yield {
             type: "page_location" as const,
+            file_id: annotation.url ?? "",
             start_page_number: annotation.startIndex ?? 0,
             end_page_number: annotation.endIndex ?? 0,
             document_title: annotation.title ?? null,
@@ -44,6 +46,7 @@ function _formatStandardCitations(
         } else if (annotation.source === "block") {
           yield {
             type: "content_block_location" as const,
+            file_id: annotation.url ?? "",
             start_block_index: annotation.startIndex ?? 0,
             end_block_index: annotation.endIndex ?? 0,
             document_title: annotation.title ?? null,
@@ -75,12 +78,104 @@ function _formatStandardCitations(
   return Array.from(iterateAnnotations());
 }
 
+function _formatBase64Data(data: string | Uint8Array): string {
+  if (typeof data === "string") return data;
+  else return _encodeUint8Array(data);
+}
+
+function _encodeUint8Array(data: Uint8Array): string {
+  const output = [];
+  for (let i = 0, { length } = data; i < length; i++) {
+    output.push(String.fromCharCode(data[i]));
+  }
+  return btoa(output.join(""));
+}
+
+function _normalizeMimeType(mimeType?: string | null): string {
+  return (mimeType ?? "").split(";")[0].toLowerCase();
+}
+
+function _extractMetadataValue<T>(
+  metadata: unknown,
+  key: string
+): T | undefined {
+  if (
+    metadata !== undefined &&
+    metadata !== null &&
+    typeof metadata === "object" &&
+    key in metadata
+  ) {
+    return (metadata as Record<string, unknown>)[key] as T;
+  }
+  return undefined;
+}
+
+function _applyDocumentMetadata(
+  block: Anthropic.Beta.BetaRequestDocumentBlock,
+  metadata: unknown
+): Anthropic.Beta.BetaRequestDocumentBlock {
+  const cacheControl =
+    _extractMetadataValue<Anthropic.Beta.BetaCacheControlEphemeral | null>(
+      metadata,
+      "cache_control"
+    );
+  if (cacheControl !== undefined) {
+    block.cache_control = cacheControl;
+  }
+  const citations =
+    _extractMetadataValue<Anthropic.Beta.BetaCitationsConfigParam | null>(
+      metadata,
+      "citations"
+    );
+  if (citations !== undefined) {
+    block.citations = citations;
+  }
+  const context = _extractMetadataValue<string | null>(metadata, "context");
+  if (context !== undefined) {
+    block.context = context;
+  }
+  const title = _extractMetadataValue<string | null>(metadata, "title");
+  if (title !== undefined) {
+    block.title = title;
+  }
+  return block;
+}
+
+function _applyImageMetadata(
+  block: Anthropic.Beta.BetaImageBlockParam,
+  metadata: unknown
+): Anthropic.Beta.BetaImageBlockParam {
+  const cacheControl =
+    _extractMetadataValue<Anthropic.Beta.BetaCacheControlEphemeral | null>(
+      metadata,
+      "cache_control"
+    );
+  if (cacheControl !== undefined) {
+    block.cache_control = cacheControl;
+  }
+  return block;
+}
+
+function _hasAllowedImageMimeType(
+  mimeType: string
+): mimeType is "image/jpeg" | "image/png" | "image/gif" | "image/webp" {
+  const ALLOWED_IMAGE_MIME_TYPES = new Set([
+    "image/jpeg",
+    "image/png",
+    "image/gif",
+    "image/webp",
+  ]);
+  return ALLOWED_IMAGE_MIME_TYPES.has(mimeType);
+}
+
 export function _formatStandardContent(
   message: BaseMessage
 ): Anthropic.Beta.BetaContentBlockParam[] {
   const result: Anthropic.Beta.BetaContentBlockParam[] = [];
   const responseMetadata = message.response_metadata as ResponseMetadata;
-  const modelProvider = responseMetadata?.model_provider;
+  const isAnthropicMessage =
+    "model_provider" in responseMetadata &&
+    responseMetadata?.model_provider === "anthropic";
   for (const block of message.contentBlocks) {
     if (block.type === "text") {
       if (block.annotations) {
@@ -121,16 +216,13 @@ export function _formatStandardContent(
         name: block.name ?? "",
         input,
       });
-    } else if (block.type === "reasoning" && modelProvider === "anthropic") {
+    } else if (block.type === "reasoning" && isAnthropicMessage) {
       result.push({
         type: "thinking",
         thinking: block.reasoning,
         signature: String(block.signature),
       });
-    } else if (
-      block.type === "server_tool_call" &&
-      modelProvider == "anthropic"
-    ) {
+    } else if (block.type === "server_tool_call" && isAnthropicMessage) {
       if (block.name === "web_search") {
         result.push({
           type: "server_tool_use",
@@ -146,10 +238,7 @@ export function _formatStandardContent(
           input: block.args,
         });
       }
-    } else if (
-      block.type === "server_tool_call_result" &&
-      modelProvider === "anthropic"
-    ) {
+    } else if (block.type === "server_tool_call_result" && isAnthropicMessage) {
       if (block.name === "web_search" && Array.isArray(block.output.urls)) {
         const content = block.output.urls.map((url) => ({
           type: "web_search_result" as const,
@@ -177,6 +266,181 @@ export function _formatStandardContent(
           content: block.output as any,
         });
       }
+    } else if (block.type === "audio") {
+      throw new Error("Anthropic does not support audio content blocks.");
+    } else if (block.type === "file") {
+      const metadata = block.metadata;
+      if (block.fileId) {
+        result.push(
+          _applyDocumentMetadata(
+            {
+              type: "document",
+              source: {
+                type: "file",
+                file_id: block.fileId,
+              },
+            },
+            metadata
+          )
+        );
+        continue;
+      }
+      if (block.url) {
+        const mimeType = _normalizeMimeType(block.mimeType);
+        if (mimeType === "application/pdf" || mimeType === "") {
+          result.push(
+            _applyDocumentMetadata(
+              {
+                type: "document",
+                source: {
+                  type: "url",
+                  url: block.url,
+                },
+              },
+              metadata
+            )
+          );
+          continue;
+        }
+      }
+      if (block.data) {
+        const mimeType = _normalizeMimeType(block.mimeType);
+        if (mimeType === "" || mimeType === "application/pdf") {
+          result.push(
+            _applyDocumentMetadata(
+              {
+                type: "document",
+                source: {
+                  type: "base64",
+                  data: _formatBase64Data(block.data),
+                  media_type: "application/pdf",
+                },
+              },
+              metadata
+            )
+          );
+        } else if (mimeType === "text/plain") {
+          result.push(
+            _applyDocumentMetadata(
+              {
+                type: "document",
+                source: {
+                  type: "text",
+                  data: _formatBase64Data(block.data),
+                  media_type: "text/plain",
+                },
+              },
+              metadata
+            )
+          );
+        } else {
+          if (_hasAllowedImageMimeType(mimeType)) {
+            result.push(
+              _applyDocumentMetadata(
+                {
+                  type: "document",
+                  source: {
+                    type: "content",
+                    content: [
+                      {
+                        type: "image",
+                        source: {
+                          type: "base64",
+                          data: _formatBase64Data(block.data),
+                          media_type: mimeType,
+                        },
+                      },
+                    ],
+                  },
+                },
+                metadata
+              )
+            );
+          } else {
+            throw new Error(
+              `Unsupported file mime type for Anthropic base64 source: ${mimeType}`
+            );
+          }
+        }
+        continue;
+      }
+      throw new Error(
+        "File content block must include a fileId, url, or data property."
+      );
+    } else if (block.type === "image") {
+      const metadata = block.metadata;
+      if (block.fileId) {
+        result.push(
+          _applyImageMetadata(
+            {
+              type: "image",
+              source: {
+                type: "file",
+                file_id: block.fileId,
+              },
+            },
+            metadata
+          )
+        );
+        continue;
+      }
+      if (block.url) {
+        result.push(
+          _applyImageMetadata(
+            {
+              type: "image",
+              source: {
+                type: "url",
+                url: block.url,
+              },
+            },
+            metadata
+          )
+        );
+        continue;
+      }
+      if (block.data) {
+        const mimeType = _normalizeMimeType(block.mimeType) || "image/png";
+        if (_hasAllowedImageMimeType(mimeType)) {
+          result.push(
+            _applyImageMetadata(
+              {
+                type: "image",
+                source: {
+                  type: "base64",
+                  data: _formatBase64Data(block.data),
+                  media_type: mimeType,
+                },
+              },
+              metadata
+            )
+          );
+        }
+        continue;
+      }
+      throw new Error(
+        "Image content block must include a fileId, url, or data property."
+      );
+    } else if (block.type === "video") {
+      // no-op
+    } else if (block.type === "text-plain") {
+      if (block.data) {
+        result.push(
+          _applyDocumentMetadata(
+            {
+              type: "document",
+              source: {
+                type: "text",
+                data: _formatBase64Data(block.data),
+                media_type: "text/plain",
+              },
+            },
+            block.metadata
+          )
+        );
+      }
+    } else if (block.type === "non_standard" && isAnthropicMessage) {
+      result.push(block.value as Anthropic.Beta.BetaContentBlockParam);
     }
   }
   return result;
