@@ -314,6 +314,7 @@ export abstract class StructuredTool<
       artifact,
       toolCallId,
       name: this.name,
+      metadata: this.metadata,
     });
     await runManager?.handleToolEnd(formattedOutput);
     return formattedOutput as ToolReturnType<TArg, TConfig, ToolOutputT>;
