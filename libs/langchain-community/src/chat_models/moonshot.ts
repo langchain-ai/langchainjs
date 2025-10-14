@@ -84,11 +84,6 @@ interface ChatCompletionResponse extends BaseResponse {
 export interface ChatMoonshotParams {
   /**
    * @default "moonshot-v1-8k"
-   * Alias for `model`
-   */
-  modelName: ModelName;
-  /**
-   * @default "moonshot-v1-8k"
    */
   model: ModelName;
 
@@ -201,8 +196,6 @@ export class ChatMoonshot extends BaseChatModel implements ChatMoonshotParams {
 
   messages?: MoonshotMessage[];
 
-  modelName: ChatCompletionRequest["model"];
-
   model: ChatCompletionRequest["model"];
 
   apiUrl: string;
@@ -237,8 +230,14 @@ export class ChatMoonshot extends BaseChatModel implements ChatMoonshotParams {
     this.topP = fields.topP ?? 1;
     this.stop = fields.stop;
     this.maxTokens = fields.maxTokens;
-    this.modelName = fields?.model ?? fields.modelName ?? "moonshot-v1-8k";
-    this.model = this.modelName;
+    this.model =
+      fields?.model ??
+      /**
+       * ToDo: remove in v2
+       */
+      // @ts-expect-error - modelName has been removed from public types, keeping it to reduce the user impact
+      fields?.modelName ??
+      "moonshot-v1-8k";
     this.presencePenalty = fields.presencePenalty ?? 0;
     this.frequencyPenalty = fields.frequencyPenalty ?? 0;
     this.n = fields.n ?? 1;

@@ -118,7 +118,7 @@ test("serialize + deserialize llm", async () => {
   process.env.OPENAI_API_KEY = "openai-key";
   const llm = new OpenAI({
     temperature: 0.5,
-    modelName: "davinci",
+    model: "davinci",
   });
   llm.temperature = 0.7;
   const lc_argumentsBefore = llm.lc_kwargs;

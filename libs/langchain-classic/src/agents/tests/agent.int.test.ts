@@ -170,7 +170,7 @@ test("Add a fallback method", async () => {
 });
 
 test("Run agent with an abort signal", async () => {
-  const model = new OpenAI({ temperature: 0, modelName: "text-babbage-001" });
+  const model = new OpenAI({ temperature: 0, model: "text-babbage-001" });
   const tools = [new Calculator()];
 
   const executor = await initializeAgentExecutorWithOptions(tools, model, {
@@ -192,7 +192,7 @@ test("Run agent with an abort signal", async () => {
 test("Run agent with incorrect api key should throw error", async () => {
   const model = new OpenAI({
     temperature: 0,
-    modelName: "text-babbage-001",
+    model: "text-babbage-001",
     openAIApiKey: "invalid",
   });
   const tools = [

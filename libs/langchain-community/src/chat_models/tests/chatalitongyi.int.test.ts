@@ -3,7 +3,7 @@ import { SystemMessage, HumanMessage } from "@langchain/core/messages";
 import { ChatAlibabaTongyi } from "../alibaba_tongyi.js";
 
 interface TestConfig {
-  modelName: string | undefined;
+  model: string | undefined;
   config: {
     description?: string;
     temperature?: number;
@@ -22,13 +22,13 @@ interface TestConfig {
 }
 
 const runTest = async ({
-  modelName,
+  model,
   config,
   system = "",
   message = "Hello!",
   shouldThrow = false,
 }: TestConfig) => {
-  const description = `Test ChatAlibabaTongyi ${modelName || "default model"} ${
+  const description = `Test ChatAlibabaTongyi ${model || "default model"} ${
     config.description || ""
   }`.trim();
   let nrNewTokens = 0;
@@ -46,7 +46,7 @@ const runTest = async ({
   }
   test.skip(description, async () => {
     const chat = new ChatAlibabaTongyi({
-      modelName,
+      model,
       ...config,
     });
 
@@ -82,19 +82,19 @@ const runTest = async ({
 };
 
 const testConfigs: TestConfig[] = [
-  { modelName: undefined, config: {} },
-  { modelName: "qwen-turbo", config: {} },
+  { model: undefined, config: {} },
+  { model: "qwen-turbo", config: {} },
   {
-    modelName: "qwen-turbo",
+    model: "qwen-turbo",
     config: { description: "with temperature", temperature: 1 },
   },
-  { modelName: "qwen-turbo", config: { description: "with topP", topP: 1 } },
+  { model: "qwen-turbo", config: { description: "with topP", topP: 1 } },
   {
-    modelName: "qwen-turbo",
+    model: "qwen-turbo",
     config: { description: "with repetitionPenalty", repetitionPenalty: 1 },
   },
   {
-    modelName: "qwen-turbo",
+    model: "qwen-turbo",
     config: {
       description: "in streaming mode",
       streaming: true,
@@ -102,7 +102,7 @@ const testConfigs: TestConfig[] = [
     message: "您好，请讲个长笑话",
   },
   {
-    modelName: "qwen-turbo",
+    model: "qwen-turbo",
     config: {
       description: "illegal input should throw an error",
       temperature: 0,
@@ -110,7 +110,7 @@ const testConfigs: TestConfig[] = [
     shouldThrow: true,
   },
   {
-    modelName: "qwen-turbo",
+    model: "qwen-turbo",
     config: {
       description: "illegal input in streaming mode should throw an error",
       streaming: true,
@@ -118,9 +118,9 @@ const testConfigs: TestConfig[] = [
     },
     shouldThrow: true,
   },
-  { modelName: "qwen-plus", config: {} },
+  { model: "qwen-plus", config: {} },
   {
-    modelName: "qwen-plus",
+    model: "qwen-plus",
     config: {
       description: "in streaming mode",
       streaming: true,
@@ -128,14 +128,14 @@ const testConfigs: TestConfig[] = [
     message: "您好，请讲个长笑话",
   },
   {
-    modelName: "qwen-plus",
+    model: "qwen-plus",
     config: {
       description: "with system message",
     },
     system: "你是一个说文言文的人",
   },
   {
-    modelName: "qwen-turbo-max",
+    model: "qwen-turbo-max",
     config: {},
   },
 ];

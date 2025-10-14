@@ -11,7 +11,7 @@ import { ContextualCompressionRetriever } from "../contextual_compression.js";
 import { LLMChainExtractor } from "../document_compressors/chain_extract.js";
 
 test("Test LLMChainExtractor", async () => {
-  const model = new OpenAI({ modelName: "gpt-3.5-turbo-instruct" });
+  const model = new OpenAI({ model: "gpt-3.5-turbo-instruct" });
   const prompt = PromptTemplate.fromTemplate(
     "Print {question}, and ignore {chat_history}"
   );

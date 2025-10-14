@@ -76,7 +76,7 @@ class ChatOpenAIStandardIntegrationTests extends ChatModelIntegrationTests<
     
     ${readme}
     `;
-    const llm = new ChatOpenAI({ modelName: "gpt-4o-mini", streamUsage: true });
+    const llm = new ChatOpenAI({ model: "gpt-4o-mini", streamUsage: true });
     await invoke(llm, input, stream);
     // invoke twice so first invocation is cached
     return invoke(llm, input, stream);

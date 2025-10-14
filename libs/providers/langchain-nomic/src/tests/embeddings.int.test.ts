@@ -36,7 +36,7 @@ test("NomicEmbeddings can embed query", async () => {
 
 test("NomicEmbeddings can embed with non-default model", async () => {
   const nomicEmbeddings = new NomicEmbeddings({
-    modelName: "nomic-embed-text-v1.5",
+    model: "nomic-embed-text-v1.5",
   });
   const query = "hello world";
   const embeddings = await nomicEmbeddings.embedQuery(query);
@@ -45,7 +45,7 @@ test("NomicEmbeddings can embed with non-default model", async () => {
 
 test("NomicEmbeddings can embed with non-default num of dimensions", async () => {
   const nomicEmbeddings = new NomicEmbeddings({
-    modelName: "nomic-embed-text-v1.5",
+    model: "nomic-embed-text-v1.5",
     dimensionality: 256,
   });
   const query = "hello world";

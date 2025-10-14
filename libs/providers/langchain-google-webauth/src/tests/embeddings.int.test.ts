@@ -10,45 +10,45 @@ function onFailedAttempt(err: any): any {
 
 const testModels = [
   {
-    modelName: "text-embedding-005",
+    model: "text-embedding-005",
     platformType: "gcp",
     location: "us-central1",
     defaultOutputDimensions: 768,
   },
   {
-    modelName: "text-embedding-005",
+    model: "text-embedding-005",
     platformType: "gcp",
     location: "europe-west9",
     defaultOutputDimensions: 768,
   },
   {
-    modelName: "text-multilingual-embedding-002",
+    model: "text-multilingual-embedding-002",
     platformType: "gcp",
     location: "us-central1",
     defaultOutputDimensions: 768,
   },
   {
-    modelName: "text-multilingual-embedding-002",
+    model: "text-multilingual-embedding-002",
     platformType: "gcp",
     location: "europe-west9",
     defaultOutputDimensions: 768,
   },
   {
-    modelName: "gemini-embedding-001",
+    model: "gemini-embedding-001",
     platformType: "gcp",
     location: "us-central1",
     defaultOutputDimensions: 3072,
   },
   {
-    modelName: "gemini-embedding-001",
+    model: "gemini-embedding-001",
     platformType: "gai",
     defaultOutputDimensions: 3072,
   },
 ];
 
 describe.each(testModels)(
-  `Webauth Embeddings ($modelName) ($location)`,
-  ({ modelName, platformType, location, defaultOutputDimensions }) => {
+  `Webauth Embeddings ($model) ($location)`,
+  ({ model, platformType, location, defaultOutputDimensions }) => {
     function newModel(
       fields?: Omit<GoogleEmbeddingsInput, "model">
     ): GoogleEmbeddings {
@@ -58,7 +58,7 @@ describe.each(testModels)(
           : undefined;
 
       return new GoogleEmbeddings({
-        model: modelName,
+        model,
         platformType: platformType as GooglePlatformType,
         apiKey,
         location,

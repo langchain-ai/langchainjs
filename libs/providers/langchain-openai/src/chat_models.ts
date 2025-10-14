@@ -407,6 +407,11 @@ export abstract class BaseChatOpenAI<
       "streaming",
       "streamUsage",
       "model",
+      /**
+       * This has to remain as long as we want to stay backwards compatible with old
+       * serialization strings that use modelName.
+       * @deprecated
+       */
       "modelName",
       "modelKwargs",
       "stop",
@@ -472,7 +477,14 @@ export abstract class BaseChatOpenAI<
       fields?.configuration?.organization ??
       getEnvironmentVariable("OPENAI_ORGANIZATION");
 
-    this.model = fields?.model ?? fields?.modelName ?? this.model;
+    this.model =
+      fields?.model ??
+      /**
+       * ToDo: remove in v2
+       */
+      // @ts-expect-error - modelName has been removed from public types, keeping it to reduce the user impact
+      fields?.modelName ??
+      this.model;
     this.modelKwargs = fields?.modelKwargs ?? {};
     this.timeout = fields?.timeout;
 

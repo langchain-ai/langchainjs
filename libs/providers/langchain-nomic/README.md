@@ -30,7 +30,7 @@ import { NomicEmbeddings } from "@langchain/nomic";
 
 const nomicEmbeddings = new NomicEmbeddings({
   apiKey: process.env.NOMIC_API_KEY, // Default value.
-  modelName: "nomic-embed-text-v1", // Default value.
+  model: "nomic-embed-text-v1", // Default value.
 });
 
 const docs = [
