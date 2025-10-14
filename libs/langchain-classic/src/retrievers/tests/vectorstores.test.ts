@@ -51,7 +51,7 @@ test("Test Memory Retriever with Callback", async () => {
     ],
   });
 
-  const results = await retriever.getRelevantDocuments(queryStr);
+  const results = await retriever.invoke(queryStr);
 
   expect(results).toEqual([new Document({ metadata: { a: 1 }, pageContent })]);
   await startPromise;

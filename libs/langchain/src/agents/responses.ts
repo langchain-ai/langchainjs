@@ -15,8 +15,15 @@ import {
   StructuredOutputParsingError,
   MultipleStructuredOutputsError,
 } from "./errors.js";
-import type { ResponseFormatUndefined } from "./annotation.js";
 import { isConfigurableModel, isBaseChatModel } from "./model.js";
+
+/**
+ * Special type to indicate that no response format is provided.
+ * When this type is used, the structuredResponse property should not be present in the result.
+ */
+export type ResponseFormatUndefined = {
+  __responseFormatUndefined: true;
+};
 
 /**
  * This is a global counter for generating unique names for tools.

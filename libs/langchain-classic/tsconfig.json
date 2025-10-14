@@ -2,10 +2,10 @@
   "extends": "@tsconfig/recommended",
   "compilerOptions": {
     "outDir": "../dist",
-    "rootDir": "./",
+    "rootDir": "./src",
     "target": "ES2022",
     "lib": ["ES2022", "ES2022.Object", "DOM"],
-    "module": "ES2022",
+    "module": "ES2020",
     "moduleResolution": "bundler",
     "esModuleInterop": true,
     "declaration": true,
@@ -15,13 +15,9 @@
     "noUnusedParameters": true,
     "useDefineForClassFields": true,
     "strictPropertyInitialization": false,
-    "skipLibCheck": true,
     "allowJs": true,
-    "strict": true,
-    "paths": {
-      "@langchain/classic/*": ["./src/*"]
-    }
+    "strict": true
   },
-  "include": ["**/*.ts"],
-  "exclude": ["**/node_modules", "**/dist", "eslint.config.ts"]
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "dist", "docs"]
 }

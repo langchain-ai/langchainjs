@@ -27,6 +27,7 @@ import {
   AnthropicWebSearchToolResultBlockParam,
   AnthropicSearchResultBlockParam,
   AnthropicToolResponse,
+  AnthropicContainerUploadBlockParam,
 } from "../types.js";
 import {
   _isAnthropicImageBlockParam,
@@ -271,7 +272,18 @@ function* _formatContentBlocks(
         ...(cacheControl ? { cache_control: cacheControl } : {}),
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
       } as any;
+    } else if (contentPart.type === "container_upload") {
+      yield {
+        ...contentPart,
+        ...(cacheControl ? { cache_control: cacheControl } : {}),
+      } as AnthropicContainerUploadBlockParam;
     }
+
+    // Note that we are intentionally dropping any blocks that we don't
+    // recognize. This is to allow for cross-compatibility between different
+    // providers that may have different block types. Ie if we take a message
+    // output from OpenAI and send it to Anthropic, we want to drop any blocks
+    // that Anthropic doesn't understand.
   }
 }
 
@@ -400,6 +412,7 @@ function mergeMessages(messages: AnthropicMessageCreateParams["messages"]) {
           | AnthropicRedactedThinkingBlockParam
           | AnthropicServerToolUseBlockParam
           | AnthropicWebSearchToolResultBlockParam
+          | AnthropicSearchResultBlockParam
         >
   ): Array<
     | AnthropicTextBlockParam
@@ -411,6 +424,7 @@ function mergeMessages(messages: AnthropicMessageCreateParams["messages"]) {
     | AnthropicRedactedThinkingBlockParam
     | AnthropicServerToolUseBlockParam
     | AnthropicWebSearchToolResultBlockParam
+    | AnthropicSearchResultBlockParam
   > => {
     if (typeof content === "string") {
       return [

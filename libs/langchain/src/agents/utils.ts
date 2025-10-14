@@ -5,11 +5,11 @@ import {
   BaseMessageLike,
   SystemMessage,
   MessageContent,
+  ToolMessage,
 } from "@langchain/core/messages";
-import { MessagesAnnotation } from "@langchain/langgraph";
+import { MessagesAnnotation, isCommand } from "@langchain/langgraph";
 import {
   BaseChatModel,
-  type BindToolsInput,
   type BaseChatModelCallOptions,
 } from "@langchain/core/language_models/chat_models";
 import {
@@ -25,10 +25,17 @@ import {
   RunnableBinding,
 } from "@langchain/core/runnables";
 
+import { isBaseChatModel, isConfigurableModel } from "./model.js";
+import type { ClientTool, ServerTool } from "./tools.js";
 import { MultipleToolsBoundError } from "./errors.js";
 import { PROMPT_RUNNABLE_NAME } from "./constants.js";
-import { ServerTool, ClientTool, Prompt } from "./types.js";
-import { isBaseChatModel, isConfigurableModel } from "./model.js";
+import type { AgentBuiltInState } from "./runtime.js";
+import type {
+  ToolCallWrapper,
+  ToolCallHandler,
+  AgentMiddleware,
+  ToolCallRequest,
+} from "./middleware/types.js";
 
 const NAME_PATTERN = /<name>(.*?)<\/name>/s;
 const CONTENT_PATTERN = /<content>(.*?)<\/content>/s;
@@ -194,6 +201,11 @@ export function isClientTool(
   return Runnable.isRunnable(tool);
 }
 
+/**
+ * Helper function to check if a language model has a bindTools method.
+ * @param llm - The language model to check if it has a bindTools method.
+ * @returns True if the language model has a bindTools method, false otherwise.
+ */
 function _isChatModelWithBindTools(
   llm: LanguageModelLike
 ): llm is BaseChatModel & Required<Pick<BaseChatModel, "bindTools">> {
@@ -201,147 +213,13 @@ function _isChatModelWithBindTools(
   return "bindTools" in llm && typeof llm.bindTools === "function";
 }
 
-export function getPromptRunnable(prompt?: Prompt): Runnable {
-  let promptRunnable: Runnable;
-
-  if (prompt == null) {
-    promptRunnable = RunnableLambda.from(
-      (state: typeof MessagesAnnotation.State) => state.messages
-    ).withConfig({ runName: PROMPT_RUNNABLE_NAME });
-  } else if (typeof prompt === "string") {
-    const systemMessage = new SystemMessage(prompt);
-    promptRunnable = RunnableLambda.from(
-      (state: typeof MessagesAnnotation.State) => {
-        return [systemMessage, ...(state.messages ?? [])];
-      }
-    ).withConfig({ runName: PROMPT_RUNNABLE_NAME });
-  } else if (SystemMessage.isInstance(prompt)) {
-    promptRunnable = RunnableLambda.from(
-      (state: typeof MessagesAnnotation.State) => [prompt, ...state.messages]
-    ).withConfig({ runName: PROMPT_RUNNABLE_NAME });
-  } else if (typeof prompt === "function") {
-    promptRunnable = RunnableLambda.from(prompt).withConfig({
-      runName: PROMPT_RUNNABLE_NAME,
-    });
-  } else if (Runnable.isRunnable(prompt)) {
-    promptRunnable = prompt;
-  } else {
-    throw new Error(`Got unexpected type for 'prompt': ${typeof prompt}`);
-  }
-
-  return promptRunnable;
-}
-
-export async function shouldBindTools(
-  llm: LanguageModelLike,
-  tools: (ClientTool | ServerTool)[]
-): Promise<boolean> {
-  // If model is a RunnableSequence, find a RunnableBinding or BaseChatModel in its steps
-  let model = llm;
-  if (RunnableSequence.isRunnableSequence(model)) {
-    model =
-      model.steps.find(
-        (step) =>
-          RunnableBinding.isRunnableBinding(step) ||
-          isBaseChatModel(step) ||
-          isConfigurableModel(step)
-      ) || model;
-  }
-
-  if (isConfigurableModel(model)) {
-    model = await model._model();
-  }
-
-  // If not a RunnableBinding, we should bind tools
-  if (!RunnableBinding.isRunnableBinding(model)) {
-    return true;
-  }
-
-  let boundTools = (() => {
-    // check if model.kwargs contain the tools key
-    if (
-      model.kwargs != null &&
-      typeof model.kwargs === "object" &&
-      "tools" in model.kwargs &&
-      Array.isArray(model.kwargs.tools)
-    ) {
-      return (model.kwargs.tools ?? null) as BindToolsInput[] | null;
-    }
-
-    // Some models can bind the tools via `withConfig()` instead of `bind()`
-    if (
-      model.config != null &&
-      typeof model.config === "object" &&
-      "tools" in model.config &&
-      Array.isArray(model.config.tools)
-    ) {
-      return (model.config.tools ?? null) as BindToolsInput[] | null;
-    }
-
-    return null;
-  })();
-
-  // google-style
-  if (
-    boundTools != null &&
-    boundTools.length === 1 &&
-    "functionDeclarations" in boundTools[0]
-  ) {
-    boundTools = boundTools[0].functionDeclarations;
-  }
-
-  // If no tools in kwargs, we should bind tools
-  if (boundTools == null) return true;
-
-  // Check if tools count matches
-  if (tools.length !== boundTools.length) {
-    throw new Error(
-      "Number of tools in the model.bindTools() and tools passed to createAgent must match"
-    );
-  }
-
-  const toolNames = new Set<string>(
-    tools.flatMap((tool) => (isClientTool(tool) ? tool.name : []))
-  );
-
-  const boundToolNames = new Set<string>();
-
-  for (const boundTool of boundTools) {
-    let boundToolName: string | undefined;
-
-    // OpenAI-style tool
-    if ("type" in boundTool && boundTool.type === "function") {
-      boundToolName = boundTool.function.name;
-    }
-    // Anthropic or Google-style tool
-    else if ("name" in boundTool) {
-      boundToolName = boundTool.name;
-    }
-    // Bedrock-style tool
-    else if ("toolSpec" in boundTool && "name" in boundTool.toolSpec) {
-      boundToolName = boundTool.toolSpec.name;
-    }
-    // unknown tool type so we'll ignore it
-    else {
-      continue;
-    }
-
-    if (boundToolName) {
-      boundToolNames.add(boundToolName);
-    }
-  }
-
-  const missingTools = [...toolNames].filter((x) => !boundToolNames.has(x));
-  if (missingTools.length > 0) {
-    throw new Error(
-      `Missing tools '${missingTools}' in the model.bindTools().` +
-        `Tools in the model.bindTools() must match the tools passed to createAgent.`
-    );
-  }
-
-  return false;
-}
-
+/**
+ * Helper function to bind tools to a language model.
+ * @param llm - The language model to bind tools to.
+ * @param toolClasses - The tools to bind to the language model.
+ * @param options - The options to pass to the language model.
+ * @returns The language model with the tools bound to it.
+ */
 const _simpleBindTools = (
   llm: LanguageModelLike,
   toolClasses: (ClientTool | ServerTool)[],
@@ -376,51 +254,6 @@ const _simpleBindTools = (
 
   return null;
 };
-
-export async function bindTools(
-  llm: LanguageModelLike,
-  toolClasses: (ClientTool | ServerTool)[],
-  options: Partial<BaseChatModelCallOptions> = {}
-): Promise<
-  | RunnableSequence<unknown, unknown>
-  | RunnableBinding<unknown, unknown, RunnableConfig<Record<string, unknown>>>
-  | Runnable<BaseLanguageModelInput, AIMessageChunk, BaseChatModelCallOptions>
-> {
-  const model = _simpleBindTools(llm, toolClasses, options);
-  if (model) return model;
-
-  if (isConfigurableModel(llm)) {
-    const model = _simpleBindTools(await llm._model(), toolClasses, options);
-    if (model) return model;
-  }
-
-  if (RunnableSequence.isRunnableSequence(llm)) {
-    const modelStep = llm.steps.findIndex(
-      (step) =>
-        RunnableBinding.isRunnableBinding(step) ||
-        isBaseChatModel(step) ||
-        isConfigurableModel(step)
-    );
-
-    if (modelStep >= 0) {
-      const model = _simpleBindTools(
-        llm.steps[modelStep],
-        toolClasses,
-        options
-      );
-      if (model) {
-        const nextSteps: unknown[] = llm.steps.slice();
-        nextSteps.splice(modelStep, 1, model);
-
-        return RunnableSequence.from(
-          nextSteps as [RunnableLike, ...RunnableLike[], RunnableLike]
-        );
-      }
-    }
-  }
-
-  throw new Error(`llm ${llm} must define bindTools method.`);
-}
 
 /**
  * Check if the LLM already has bound tools and throw if it does.
@@ -500,11 +333,216 @@ export function validateLLMHasNoBoundTools(llm: LanguageModelLike): void {
  * @param messages - The messages to check.
  * @returns True if the last message has tool calls, false otherwise.
  */
-export function hasToolCalls(messages: BaseMessage[]): boolean {
-  const lastMessage = messages.at(-1);
+export function hasToolCalls(message?: BaseMessage): boolean {
   return Boolean(
-    AIMessage.isInstance(lastMessage) &&
-      lastMessage.tool_calls &&
-      lastMessage.tool_calls.length > 0
+    AIMessage.isInstance(message) &&
+      message.tool_calls &&
+      message.tool_calls.length > 0
+  );
+}
+
+type Prompt = string | SystemMessage;
+
+export function getPromptRunnable(prompt?: Prompt): Runnable {
+  let promptRunnable: Runnable;
+
+  if (prompt == null) {
+    promptRunnable = RunnableLambda.from(
+      (state: typeof MessagesAnnotation.State) => state.messages
+    ).withConfig({ runName: PROMPT_RUNNABLE_NAME });
+  } else if (typeof prompt === "string") {
+    const systemMessage = new SystemMessage(prompt);
+    promptRunnable = RunnableLambda.from(
+      (state: typeof MessagesAnnotation.State) => {
+        return [systemMessage, ...(state.messages ?? [])];
+      }
+    ).withConfig({ runName: PROMPT_RUNNABLE_NAME });
+  } else {
+    throw new Error(`Got unexpected type for 'prompt': ${typeof prompt}`);
+  }
+
+  return promptRunnable;
+}
+
+/**
+ * Helper function to bind tools to a language model.
+ * @param llm - The language model to bind tools to.
+ * @param toolClasses - The tools to bind to the language model.
+ * @param options - The options to pass to the language model.
+ * @returns The language model with the tools bound to it.
+ */
+export async function bindTools(
+  llm: LanguageModelLike,
+  toolClasses: (ClientTool | ServerTool)[],
+  options: Partial<BaseChatModelCallOptions> = {}
+): Promise<
+  | RunnableSequence<unknown, unknown>
+  | RunnableBinding<unknown, unknown, RunnableConfig<Record<string, unknown>>>
+  | Runnable<BaseLanguageModelInput, AIMessageChunk, BaseChatModelCallOptions>
+> {
+  const model = _simpleBindTools(llm, toolClasses, options);
+  if (model) return model;
+
+  if (isConfigurableModel(llm)) {
+    const model = _simpleBindTools(await llm._model(), toolClasses, options);
+    if (model) return model;
+  }
+
+  if (RunnableSequence.isRunnableSequence(llm)) {
+    const modelStep = llm.steps.findIndex(
+      (step) =>
+        RunnableBinding.isRunnableBinding(step) ||
+        isBaseChatModel(step) ||
+        isConfigurableModel(step)
+    );
+
+    if (modelStep >= 0) {
+      const model = _simpleBindTools(
+        llm.steps[modelStep],
+        toolClasses,
+        options
+      );
+      if (model) {
+        const nextSteps: unknown[] = llm.steps.slice();
+        nextSteps.splice(modelStep, 1, model);
+
+        return RunnableSequence.from(
+          nextSteps as [RunnableLike, ...RunnableLike[], RunnableLike]
+        );
+      }
+    }
+  }
+
+  throw new Error(`llm ${llm} must define bindTools method.`);
+}
+
+/**
+ * Compose multiple wrapToolCall handlers into a single middleware stack.
+ *
+ * Composes handlers so the first in the list becomes the outermost layer.
+ * Each handler receives a handler callback to execute inner layers.
+ *
+ * @param handlers - List of handlers. First handler wraps all others.
+ * @returns Composed handler, or undefined if handlers array is empty.
+ *
+ * @example
+ * ```typescript
+ * // handlers=[auth, retry] means: auth wraps retry
+ * // Flow: auth calls retry, retry calls base handler
+ * const auth: ToolCallWrapper = async (request, handler) => {
+ *   try {
+ *     return await handler(request.toolCall);
+ *   } catch (error) {
+ *     if (error.message === "Unauthorized") {
+ *       await refreshToken();
+ *       return await handler(request.toolCall);
+ *     }
+ *     throw error;
+ *   }
+ * };
+ *
+ * const retry: ToolCallWrapper = async (request, handler) => {
+ *   for (let attempt = 0; attempt < 3; attempt++) {
+ *     try {
+ *       return await handler(request.toolCall);
+ *     } catch (error) {
+ *       if (attempt === 2) throw error;
+ *     }
+ *   }
+ *   throw new Error("Unreachable");
+ * };
+ *
+ * const composedHandler = chainToolCallHandlers([auth, retry]);
+ * ```
+ */
+function chainToolCallHandlers(
+  handlers: ToolCallWrapper[]
+): ToolCallWrapper | undefined {
+  if (handlers.length === 0) {
+    return undefined;
+  }
+
+  if (handlers.length === 1) {
+    return handlers[0];
+  }
+
+  // Compose two handlers where outer wraps inner
+  function composeTwo(
+    outer: ToolCallWrapper,
+    inner: ToolCallWrapper
+  ): ToolCallWrapper {
+    return async (request, handler) => {
+      // Create a wrapper that calls inner with the base handler
+      const innerHandler: ToolCallHandler = async () =>
+        inner(request, async (tc) => handler(tc));
+
+      // Call outer with the wrapped inner as its handler
+      return outer(request, innerHandler);
+    };
+  }
+
+  // Compose right-to-left: outer(inner(innermost(handler)))
+  let result = handlers[handlers.length - 1];
+  for (let i = handlers.length - 2; i >= 0; i--) {
+    result = composeTwo(handlers[i], result);
+  }
+
+  return result;
+}
+
+/**
+ * Wrapping `wrapToolCall` invocation so we can inject middleware name into
+ * the error message.
+ *
+ * @param middleware list of middleware passed to the agent
+ * @returns single wrap function
+ */
+export function wrapToolCall(middleware: readonly AgentMiddleware[]) {
+  const middlewareWithWrapToolCall = middleware.filter((m) => m.wrapToolCall);
+
+  if (middlewareWithWrapToolCall.length === 0) {
+    return;
+  }
+
+  return chainToolCallHandlers(
+    middlewareWithWrapToolCall.map((m) => {
+      const originalHandler = m.wrapToolCall!;
+      /**
+       * Wrap with error handling and validation
+       */
+      const wrappedHandler: ToolCallWrapper = async (request, handler) => {
+        try {
+          const result = await originalHandler(
+            request as ToolCallRequest<AgentBuiltInState, unknown>,
+            handler
+          );
+
+          /**
+           * Validate return type
+           */
+          if (!ToolMessage.isInstance(result) && !isCommand(result)) {
+            throw new Error(
+              `Invalid response from "wrapToolCall" in middleware "${m.name}": ` +
+                `expected ToolMessage or Command, got ${typeof result}`
+            );
+          }
+
+          return result;
+        } catch (error) {
+          /**
+           * Add middleware context to error if not already added
+           */
+          if (
+            // eslint-disable-next-line no-instanceof/no-instanceof
+            error instanceof Error &&
+            !error.message.includes(`middleware "${m.name}"`)
+          ) {
+            error.message = `Error in middleware "${m.name}": ${error.message}`;
+          }
+          throw error;
+        }
+      };
+      return wrappedHandler;
+    })
   );
 }

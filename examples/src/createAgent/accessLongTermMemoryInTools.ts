@@ -24,7 +24,7 @@ import { InMemoryStore } from "@langchain/langgraph";
 import { ChatOpenAI } from "@langchain/openai";
 import { z } from "zod";
 
-const llm = new ChatOpenAI({ model: "gpt-4o", temperature: 0 });
+const model = new ChatOpenAI({ model: "gpt-4o", temperature: 0 });
 
 /**
  * Long-term memory store using LangChain primitives
@@ -218,10 +218,10 @@ This information will be used to personalize future interactions.`;
  * Create the agent with memory-aware tools
  */
 const agent = createAgent({
-  llm,
+  model,
   tools: [knowledgeRetrievalTool, preferencelearningTool],
   store, // Pass the store to the agent
-  prompt: `You are a personalized AI assistant with access to long-term memory about users and past interactions.
+  systemPrompt: `You are a personalized AI assistant with access to long-term memory about users and past interactions.
 
 Use the knowledge_retrieval tool to:
 - Find relevant information from past conversations

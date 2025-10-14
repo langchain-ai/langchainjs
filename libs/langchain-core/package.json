@@ -429,17 +429,6 @@
       },
       "input": "./src/runnables/graph.ts"
     },
-    "./runnables/remote": {
-      "require": {
-        "types": "./dist/runnables/remote.d.cts",
-        "default": "./dist/runnables/remote.cjs"
-      },
-      "import": {
-        "types": "./dist/runnables/remote.d.ts",
-        "default": "./dist/runnables/remote.js"
-      },
-      "input": "./src/runnables/remote.ts"
-    },
     "./retrievers": {
       "require": {
         "types": "./dist/retrievers/index.d.cts",
@@ -528,17 +517,6 @@
       },
       "input": "./src/tracers/console.ts"
     },
-    "./tracers/initialize": {
-      "require": {
-        "types": "./dist/tracers/initialize.d.cts",
-        "default": "./dist/tracers/initialize.cjs"
-      },
-      "import": {
-        "types": "./dist/tracers/initialize.d.ts",
-        "default": "./dist/tracers/initialize.js"
-      },
-      "input": "./src/tracers/initialize.ts"
-    },
     "./tracers/log_stream": {
       "require": {
         "types": "./dist/tracers/log_stream.d.cts",
@@ -571,17 +549,6 @@
         "default": "./dist/tracers/tracer_langchain.js"
       },
       "input": "./src/tracers/tracer_langchain.ts"
-    },
-    "./tracers/tracer_langchain_v1": {
-      "require": {
-        "types": "./dist/tracers/tracer_langchain_v1.d.cts",
-        "default": "./dist/tracers/tracer_langchain_v1.cjs"
-      },
-      "import": {
-        "types": "./dist/tracers/tracer_langchain_v1.d.ts",
-        "default": "./dist/tracers/tracer_langchain_v1.js"
-      },
-      "input": "./src/tracers/tracer_langchain_v1.ts"
     },
     "./types/stream": {
       "require": {

@@ -18,7 +18,7 @@
  */
 
 import fs from "node:fs/promises";
-import { createAgent, tool } from "langchain";
+import { createAgent, createMiddleware, tool } from "langchain";
 import { ChatOpenAI } from "@langchain/openai";
 import { z } from "zod";
 
@@ -48,43 +48,48 @@ const checkSystemStatus = tool(
  * Create agent with preModelHook for state management
  */
 const agent = createAgent({
-  llm: new ChatOpenAI({ model: "gpt-4" }),
+  model: new ChatOpenAI({ model: "gpt-4" }),
   tools: [checkSystemStatus],
-  preModelHook: (state) => {
-    /**
-     * Memory management - prevent token overflow
-     */
-    if (state.messages.length > 20) {
-      console.log("Trimming conversation history to manage memory");
-      return {
-        ...state,
-        messages: [
-          /**
-           * Keep original system message if present
-           */
-          state.messages[0],
-          /**
-           * Keep last 10 messages
-           */
-          ...state.messages.slice(-10),
-        ],
-      };
-    }
+  middleware: [
+    createMiddleware({
+      name: "updateThreadLevel",
+      beforeModel: (state) => {
+        /**
+         * Memory management - prevent token overflow
+         */
+        if (state.messages.length > 20) {
+          console.log("Trimming conversation history to manage memory");
+          return {
+            ...state,
+            messages: [
+              /**
+               * Keep original system message if present
+               */
+              state.messages[0],
+              /**
+               * Keep last 10 messages
+               */
+              ...state.messages.slice(-10),
+            ],
+          };
+        }
 
-    /**
-     * Inject real-time context before model call
-     */
-    const currentTime = new Date().toISOString();
-    const systemStatusMessage = {
-      role: "system",
-      content: `Current time: ${currentTime}. Note: Check system status if user reports issues.`,
-    };
+        /**
+         * Inject real-time context before model call
+         */
+        const currentTime = new Date().toISOString();
+        const systemStatusMessage = {
+          role: "system",
+          content: `Current time: ${currentTime}. Note: Check system status if user reports issues.`,
+        };
 
-    return {
-      ...state,
-      messages: [...state.messages, systemStatusMessage],
-    };
-  },
+        return {
+          ...state,
+          messages: [...state.messages, systemStatusMessage],
+        };
+      },
+    }),
+  ],
 });
 
 /**

@@ -65,7 +65,7 @@ async function runExample() {
 
     // Create a React agent using LangGraph's createReactAgent
     const agent = createAgent({
-      llm: model,
+      model,
       tools: firecrawlTools,
     });
 

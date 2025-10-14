@@ -63,14 +63,7 @@ export type RuntimeEnvironment = {
 
 let runtimeEnvironment: RuntimeEnvironment | undefined;
 
-/**
- * @deprecated Use getRuntimeEnvironmentSync instead
- */
-export async function getRuntimeEnvironment(): Promise<RuntimeEnvironment> {
-  return getRuntimeEnvironmentSync();
-}
-
-export function getRuntimeEnvironmentSync(): RuntimeEnvironment {
+export function getRuntimeEnvironment(): RuntimeEnvironment {
   if (runtimeEnvironment === undefined) {
     const env = getEnv();
 

@@ -11,7 +11,6 @@ import {
 import {
   _addInlineAgentName,
   _removeInlineAgentName,
-  shouldBindTools,
   bindTools,
 } from "../utils.js";
 import { FakeToolCallingChatModel, FakeConfigurableModel } from "./utils.js";
@@ -162,117 +161,7 @@ message</content>`;
   });
 });
 
-describe("shouldBindTools", () => {
-  it.each(["openai", "anthropic", "google", "bedrock"] as const)(
-    "Should determine when to bind tools - %s style",
-    async (toolStyle) => {
-      const tool1 = tool((input) => `Tool 1: ${input.someVal}`, {
-        name: "tool1",
-        description: "Tool 1 docstring.",
-        schema: z.object({
-          someVal: z.number().describe("Input value"),
-        }),
-      });
-
-      const tool2 = tool((input) => `Tool 2: ${input.someVal}`, {
-        name: "tool2",
-        description: "Tool 2 docstring.",
-        schema: z.object({
-          someVal: z.number().describe("Input value"),
-        }),
-      });
-
-      const model = new FakeToolCallingChatModel({
-        responses: [new AIMessage("test")],
-        toolStyle,
-      });
-
-      // Should bind when a regular model
-      expect(await shouldBindTools(model, [])).toBe(true);
-      expect(await shouldBindTools(model, [tool1])).toBe(true);
-
-      // Should bind when a seq
-      const seq = RunnableSequence.from([
-        model,
-        RunnableLambda.from((message) => message),
-      ]);
-      expect(await shouldBindTools(seq, [])).toBe(true);
-      expect(await shouldBindTools(seq, [tool1])).toBe(true);
-
-      // Should not bind when a model with tools
-      const modelWithTools = model.bindTools([tool1]);
-      expect(await shouldBindTools(modelWithTools, [tool1])).toBe(false);
-
-      // Should not bind when a seq with tools
-      const seqWithTools = RunnableSequence.from([
-        model.bindTools([tool1]),
-        RunnableLambda.from((message) => message),
-      ]);
-      expect(await shouldBindTools(seqWithTools, [tool1])).toBe(false);
-
-      // Should raise on invalid inputs
-      await expect(
-        async () => await shouldBindTools(model.bindTools([tool1]), [])
-      ).rejects.toThrow();
-      await expect(
-        async () => await shouldBindTools(model.bindTools([tool1]), [tool2])
-      ).rejects.toThrow();
-      await expect(
-        async () =>
-          await shouldBindTools(model.bindTools([tool1]), [tool1, tool2])
-      ).rejects.toThrow();
-
-      // test configurable model
-      const configurableModel = new FakeConfigurableModel({
-        model,
-      });
-
-      // Should bind when a regular model
-      expect(await shouldBindTools(configurableModel, [])).toBe(true);
-      expect(await shouldBindTools(configurableModel, [tool1])).toBe(true);
-
-      // Should bind when a seq
-      const configurableSeq = RunnableSequence.from([
-        configurableModel,
-        RunnableLambda.from((message) => message),
-      ]);
-      expect(await shouldBindTools(configurableSeq, [])).toBe(true);
-      expect(await shouldBindTools(configurableSeq, [tool1])).toBe(true);
-
-      // Should not bind when a model with tools
-      const configurableModelWithTools = configurableModel.bindTools([tool1]);
-      expect(await shouldBindTools(configurableModelWithTools, [tool1])).toBe(
-        false
-      );
-
-      // Should not bind when a seq with tools
-      const configurableSeqWithTools = RunnableSequence.from([
-        configurableModel.bindTools([tool1]),
-        RunnableLambda.from((message) => message),
-      ]);
-      expect(await shouldBindTools(configurableSeqWithTools, [tool1])).toBe(
-        false
-      );
-
-      // Should raise on invalid inputs
-      await expect(
-        async () =>
-          await shouldBindTools(configurableModel.bindTools([tool1]), [])
-      ).rejects.toThrow();
-      await expect(
-        async () =>
-          await shouldBindTools(configurableModel.bindTools([tool1]), [tool2])
-      ).rejects.toThrow();
-      await expect(
-        async () =>
-          await shouldBindTools(configurableModel.bindTools([tool1]), [
-            tool1,
-            tool2,
-          ])
-      ).rejects.toThrow();
-    }
-  );
-
+describe("bindTools", () => {
   it("should bind model with bindTools", async () => {
     const tool1 = tool((input) => `Tool 1: ${input.someVal}`, {
       name: "tool1",
@@ -395,32 +284,5 @@ describe("shouldBindTools", () => {
         ])
       )
     );
-  });
-
-  it("should handle bindTool with server tools", async () => {
-    const tool1 = tool((input) => `Tool 1: ${input.someVal}`, {
-      name: "tool1",
-      description: "Tool 1 docstring.",
-      schema: z.object({ someVal: z.number().describe("Input value") }),
-    });
-
-    const server = { type: "web_search_preview" };
-
-    const model = new FakeToolCallingChatModel({
-      responses: [new AIMessage("test")],
-    });
-
-    expect(await shouldBindTools(model, [tool1, server])).toBe(true);
-    expect(
-      await shouldBindTools(model.bindTools([tool1, server]), [tool1, server])
-    ).toBe(false);
-
-    await expect(
-      shouldBindTools(model.bindTools([tool1]), [tool1, server])
-    ).rejects.toThrow();
-
-    await expect(
-      shouldBindTools(model.bindTools([server]), [tool1, server])
-    ).rejects.toThrow();
   });
 });

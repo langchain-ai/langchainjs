@@ -16,7 +16,7 @@
  * prompt always includes the current TODOs so the model can plan next steps.
  */
 import fs from "node:fs/promises";
-import { createAgent, tool } from "langchain";
+import { createAgent, dynamicSystemPromptMiddleware, tool } from "langchain";
 import { ChatOpenAI } from "@langchain/openai";
 import { z } from "zod";
 
@@ -60,31 +60,27 @@ const removeTodo = tool(
  * Create agent that injects thread-level state into the prompt
  */
 const agent = createAgent({
-  llm: new ChatOpenAI({ model: "gpt-4" }),
+  model: new ChatOpenAI({ model: "gpt-4" }),
   tools: [addTodo, removeTodo],
-  prompt: async (state) => {
-    /**
-     * Pull dynamic, thread-level state (maintained by tools) into the system prompt
-     */
-    const { todos } = threadState;
-    const todosSection =
-      todos.length > 0
-        ? `Current TODOs (thread state):\n- ${todos.join("\n- ")}`
-        : "Current TODOs (thread state):\n- (none)";
+  middleware: [
+    dynamicSystemPromptMiddleware(() => {
+      /**
+       * Pull dynamic, thread-level state (maintained by tools) into the system prompt
+       */
+      const { todos } = threadState;
+      const todosSection =
+        todos.length > 0
+          ? `Current TODOs (thread state):\n- ${todos.join("\n- ")}`
+          : "Current TODOs (thread state):\n- (none)";
 
-    return [
-      {
-        role: "system",
-        content: `You are a helpful assistant that manages a thread-level TODO list.
+      return `You are a helpful assistant that manages a thread-level TODO list.
 
 ${todosSection}
 
 When planning or responding, consider the current TODOs. If the user asks to update the list,
-use the appropriate tools. If asked for next steps, reference and prioritize items in the list.`,
-      },
-      ...state.messages,
-    ];
-  },
+use the appropriate tools. If asked for next steps, reference and prioritize items in the list.`;
+    }),
+  ],
 });
 
 /**

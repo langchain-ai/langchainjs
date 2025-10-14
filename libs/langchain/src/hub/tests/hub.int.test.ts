@@ -20,7 +20,7 @@ test("Test LangChain Hub client pushing a new repo", async () => {
     process.env.LANGCHAIN_HUB_USERNAME
   }/langchainjs-${new Date().getTime()}`;
   await hub.push(repoName, prompt, {
-    newRepoIsPublic: false,
+    isPublic: false,
   });
   const pulledPrompt = await hub.pull(repoName);
   expect(await prompt.invoke({ input: "testing" })).toEqual(
@@ -40,7 +40,7 @@ test("Test LangChain Hub client pushing a new chat template repo", async () => {
     process.env.LANGCHAIN_HUB_USERNAME
   }/langchainjs-${new Date().getTime()}`;
   await hub.push(repoName, prompt, {
-    newRepoIsPublic: false,
+    isPublic: false,
   });
   const pulledPrompt = await hub.pull(repoName);
   expect(await prompt.invoke({ input: "testing" })).toEqual(

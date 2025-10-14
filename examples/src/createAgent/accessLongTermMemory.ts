@@ -24,7 +24,7 @@
  */
 
 import fs from "node:fs/promises";
-import { createAgent, tool } from "langchain";
+import { createAgent, dynamicSystemPromptMiddleware, tool } from "langchain";
 import { InMemoryStore } from "@langchain/langgraph";
 import { ChatOpenAI } from "@langchain/openai";
 import { z } from "zod";
@@ -165,23 +165,27 @@ const updateProceduralMemoryTool = tool(
  * Create coding assistant with procedural memory from LangChain store
  */
 const codingAssistant = createAgent({
-  llm: new ChatOpenAI({ model: "gpt-4" }),
+  model: new ChatOpenAI({ model: "gpt-4" }),
   tools: [getProceduralMemoryTool, updateProceduralMemoryTool],
   store, // Pass the store to the agent
-  prompt: async (state, config) => {
-    /**
-     * PROGRAMMATIC LOOKUP: Always retrieve procedural memory for this user
-     * This is deterministic - we're not searching, just loading stored preferences
-     */
-    const storeInstance = config.store;
-    const userId = config.configurable?.userId;
+  middleware: [
+    dynamicSystemPromptMiddleware(async (_, runtime) => {
+      /**
+       * PROGRAMMATIC LOOKUP: Always retrieve procedural memory for this user
+       * This is deterministic - we're not searching, just loading stored preferences
+       */
+      const storeInstance = runtime.store;
+      const userId = runtime.configurable?.userId as string;
 
-    let memoryPrompt = "";
-    if (storeInstance && userId) {
-      const memoryData = await storeInstance.get(["procedural_memory"], userId);
-      if (memoryData?.value) {
-        const memory = memoryData.value as ProceduralMemory;
-        memoryPrompt = `
+      let memoryPrompt = "";
+      if (storeInstance && userId) {
+        const memoryData = await storeInstance.get(
+          ["procedural_memory"],
+          userId
+        );
+        if (memoryData?.value) {
+          const memory = memoryData.value as ProceduralMemory;
+          memoryPrompt = `
 PROCEDURAL MEMORY (${memory.lastUpdated}):
 
 Coding Preferences:
@@ -193,21 +197,16 @@ ${memory.behaviorInstructions.map((inst) => `• ${inst}`).join("\n")}
 Communication Style: ${memory.communicationStyle}
 
 ---`;
+        }
       }
-    }
 
-    return [
-      {
-        role: "system",
-        content: `You are a coding assistant with access to the user's long-term preferences stored in LangChain memory.
+      return `You are a coding assistant with access to the user's long-term preferences stored in LangChain memory.
 
 ${memoryPrompt}
 
-Use the above procedural memory to maintain consistent behavior and preferences across all interactions. You can also use the tools to retrieve or update memory as needed.`,
-      },
-      ...state.messages,
-    ];
-  },
+Use the above procedural memory to maintain consistent behavior and preferences across all interactions. You can also use the tools to retrieve or update memory as needed.`;
+    }),
+  ],
 });
 
 /**

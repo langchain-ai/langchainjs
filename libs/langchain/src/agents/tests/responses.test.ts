@@ -24,7 +24,7 @@ describe("structured output handling", () => {
           ],
         });
         const agent = createAgent({
-          llm: model,
+          model,
           tools: [],
           responseFormat: toolStrategy([
             z.object({
@@ -56,7 +56,7 @@ describe("structured output handling", () => {
           ],
         });
         const agent = createAgent({
-          llm: model,
+          model,
           tools: [],
           responseFormat: toolStrategy(
             [
@@ -90,7 +90,7 @@ describe("structured output handling", () => {
           ],
         });
         const agent = createAgent({
-          llm: model,
+          model,
           tools: [],
           responseFormat: toolStrategy(
             [
@@ -129,7 +129,7 @@ describe("structured output handling", () => {
           ],
         });
         const agent = createAgent({
-          llm: model,
+          model,
           tools: [],
           responseFormat: toolStrategy(
             [
@@ -165,7 +165,7 @@ describe("structured output handling", () => {
           ],
         });
         const agent = createAgent({
-          llm: model,
+          model,
           tools: [],
           responseFormat: toolStrategy(
             [
@@ -200,7 +200,7 @@ describe("structured output handling", () => {
           ],
         });
         const agent = createAgent({
-          llm: model,
+          model,
           tools: [],
           responseFormat: toolStrategy(
             z.object({
@@ -226,7 +226,7 @@ describe("structured output handling", () => {
           ],
         });
         const agent = createAgent({
-          llm: model,
+          model,
           tools: [],
           responseFormat: toolStrategy(
             z.object({
@@ -250,7 +250,7 @@ describe("structured output handling", () => {
         });
 
         const agent = createAgent({
-          llm: model,
+          model,
           tools: [],
           responseFormat: toolStrategy(
             z.object({
@@ -285,7 +285,7 @@ describe("structured output handling", () => {
           ],
         });
         const agent = createAgent({
-          llm: model,
+          model,
           tools: [],
           responseFormat: toolStrategy([
             z.object({
