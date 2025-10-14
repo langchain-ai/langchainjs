@@ -4,7 +4,10 @@ import { BaseMessage, ChatMessage } from "@langchain/core/messages";
 export const iife = <T>(fn: () => T) => fn();
 
 export function isReasoningModel(model?: string) {
-  return model && /^o\d/.test(model);
+  if (!model) return false;
+  if (/^o\d/.test(model ?? "")) return true;
+  if (model.startsWith("gpt-5") && !model.startsWith("gpt-5-chat")) return true;
+  return false;
 }
 
 export function extractGenericMessageCustomRole(message: ChatMessage) {
