@@ -628,7 +628,9 @@ export class ChatGoogleGenerativeAI
     return (
       this.model.includes("vision") ||
       this.model.startsWith("gemini-1.5") ||
-      this.model.startsWith("gemini-2")
+      this.model.startsWith("gemini-2") ||
+      (this.model.startsWith("gemma-3-") &&
+        !this.model.startsWith("gemma-3-1b")) // gemma-3 models are multimodal(but gemma-3n-* and gemma-3-1b are not)
     );
   }
 
