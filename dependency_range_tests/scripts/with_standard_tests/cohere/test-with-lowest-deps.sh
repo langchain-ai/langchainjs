@@ -23,6 +23,8 @@ bash /scripts/with_standard_tests/shared.sh providers/langchain-cohere
 mkdir -p "$updater_script_dir"
 cp "$original_updater_script_dir"/* "$updater_script_dir/"
 cd "$updater_script_dir"
+# Install deps (e.g semver) for the updater script
+pnpm install
 # Run the updater script
 node "update_resolutions_lowest.js"
 
