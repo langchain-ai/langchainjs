@@ -112,7 +112,7 @@ export function createMiddleware<
    * along with a handler function to execute the actual tool.
    *
    * @param request - The tool call request containing toolCall, state, and runtime.
-   * @param handler - The function that executes the tool. Call this with a ToolCall to get the result.
+   * @param handler - The function that executes the tool. Call this with a ToolCallRequest to get the result.
    * @returns The tool result as a ToolMessage or a Command for advanced control flow.
    *
    * @example
@@ -123,7 +123,7 @@ export function createMiddleware<
    *
    *   try {
    *     // Execute the tool
-   *     const result = await handler(request.toolCall);
+   *     const result = await handler(request);
    *     console.log(`Tool ${request.tool.name} succeeded`);
    *     return result;
    *   } catch (error) {
@@ -144,7 +144,7 @@ export function createMiddleware<
    *       tool_call_id: request.toolCall.id,
    *     });
    *   }
-   *   return handler(request.toolCall);
+   *   return handler(request);
    * }
    * ```
    */
@@ -160,7 +160,17 @@ export function createMiddleware<
         ? Partial<InferInteropZodOutput<TContextSchema>>
         : never
     >,
-    handler: ToolCallHandler
+    handler: ToolCallHandler<
+      (TSchema extends InteropZodObject ? InferInteropZodInput<TSchema> : {}) &
+        AgentBuiltInState,
+      TContextSchema extends InteropZodObject
+        ? InferInteropZodOutput<TContextSchema>
+        : TContextSchema extends InteropZodDefault<any>
+        ? InferInteropZodOutput<TContextSchema>
+        : TContextSchema extends InteropZodOptional<any>
+        ? Partial<InferInteropZodOutput<TContextSchema>>
+        : never
+    >
   ) => Promise<ToolMessage | Command> | ToolMessage | Command;
   /**
    * Wraps the model invocation with custom logic. This allows you to:

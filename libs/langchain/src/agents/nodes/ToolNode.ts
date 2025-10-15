@@ -26,6 +26,7 @@ import type {
   ToAnnotationRoot,
   AnyAnnotationRoot,
   ToolCallWrapper,
+  ToolCallRequest,
 } from "../middleware/types.js";
 
 export interface ToolNodeOptions {
@@ -289,8 +290,9 @@ export class ToolNode<
      * When no middleware, errors are caught and handled here.
      */
     const baseHandler = async (
-      toolCall: ToolCall
+      request: ToolCallRequest
     ): Promise<ToolMessage | Command> => {
+      const { toolCall } = request;
       const tool = this.tools.find((tool) => tool.name === toolCall.name);
       if (tool === undefined) {
         throw new Error(`Tool "${toolCall.name}" not found.`);
@@ -383,7 +385,43 @@ export class ToolNode<
      * No wrapToolCall - execute tool directly and handle errors here
      */
     try {
-      return await baseHandler(call);
+      /**
+       * Build runtime from LangGraph config
+       */
+      const lgConfig = config as LangGraphRunnableConfig;
+
+      /**
+       * Get private state if available
+       */
+      const privateState = this.getPrivateState?.() || {
+        threadLevelCallCount: 0,
+        runModelCallCount: 0,
+      };
+
+      const runtime = {
+        context: lgConfig?.context,
+        writer: lgConfig?.writer,
+        interrupt: lgConfig?.interrupt,
+        signal: lgConfig?.signal,
+        threadLevelCallCount: privateState.threadLevelCallCount,
+        runModelCallCount: privateState.runModelCallCount,
+      };
+
+      /**
+       * Find the tool instance to include in the request
+       */
+      const tool = this.tools.find((t) => t.name === call.name);
+      if (!tool) {
+        throw new Error(`Tool "${call.name}" not found.`);
+      }
+
+      const request = {
+        toolCall: call,
+        tool,
+        state: state || ({} as any),
+        runtime,
+      };
+      return await baseHandler(request);
     } catch (e: unknown) {
       /**
        * Handle tool errors when no middleware provided
