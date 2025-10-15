@@ -35,19 +35,27 @@
     "zod": "^3.25.76 || ^4"
   },
   "peerDependencies": {
-    "@langchain/core": "^1.0.0-alpha.6"
+    "@langchain/core": "^1.0.0-alpha.6",
+    "langchain": "workspace:*"
+  },
+  "peerDependenciesMeta": {
+    "langchain": {
+      "optional": true
+    }
   },
   "devDependencies": {
     "@azure/identity": "^4.2.1",
     "@cfworker/json-schema": "^4.1.1",
     "@langchain/core": "workspace:*",
     "@langchain/eslint": "workspace:*",
+    "@langchain/langgraph-checkpoint": "^0.1.1",
     "@langchain/standard-tests": "workspace:*",
     "@tsconfig/recommended": "^1.0.10",
     "@vitest/coverage-v8": "^3.2.4",
     "dotenv": "^17.2.1",
     "dpdm": "^3.14.0",
     "eslint": "^9.34.0",
+    "langchain": "workspace:*",
     "prettier": "^2.8.3",
     "rimraf": "^5.0.1",
     "typescript": "~5.8.3",
@@ -85,6 +93,17 @@
         "default": "./dist/index.cjs"
       },
       "input": "./src/index.ts"
+    },
+    "./middleware": {
+      "import": {
+        "types": "./dist/middleware/index.d.ts",
+        "default": "./dist/middleware/index.js"
+      },
+      "require": {
+        "types": "./dist/middleware/index.d.cts",
+        "default": "./dist/middleware/index.cjs"
+      },
+      "input": "./src/middleware/index.ts"
     },
     "./package.json": "./package.json"
   },
