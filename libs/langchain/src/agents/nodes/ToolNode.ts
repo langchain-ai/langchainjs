@@ -332,46 +332,47 @@ export class ToolNode<
     };
 
     /**
+     * Build runtime from LangGraph config
+     */
+    const lgConfig = config as LangGraphRunnableConfig;
+
+    /**
+     * Get private state if available
+     */
+    const privateState = this.getPrivateState?.() || {
+      threadLevelCallCount: 0,
+      runModelCallCount: 0,
+    };
+
+    const runtime = {
+      context: lgConfig?.context,
+      writer: lgConfig?.writer,
+      interrupt: lgConfig?.interrupt,
+      signal: lgConfig?.signal,
+      threadLevelCallCount: privateState.threadLevelCallCount,
+      runModelCallCount: privateState.runModelCallCount,
+    };
+
+    /**
+     * Find the tool instance to include in the request
+     */
+    const tool = this.tools.find((t) => t.name === call.name);
+    if (!tool) {
+      throw new Error(`Tool "${call.name}" not found.`);
+    }
+
+    const request = {
+      toolCall: call,
+      tool,
+      state: state || ({} as any),
+      runtime,
+    };
+
+    /**
      * If wrapToolCall is provided, use it to wrap the tool execution
      */
     if (this.wrapToolCall && state) {
       try {
-        /**
-         * Build runtime from LangGraph config (similar to MiddlewareNode)
-         */
-        const lgConfig = config as LangGraphRunnableConfig;
-
-        /**
-         * Get private state if available
-         */
-        const privateState = this.getPrivateState?.() || {
-          threadLevelCallCount: 0,
-          runModelCallCount: 0,
-        };
-
-        const runtime = {
-          context: lgConfig?.context,
-          writer: lgConfig?.writer,
-          interrupt: lgConfig?.interrupt,
-          signal: lgConfig?.signal,
-          threadLevelCallCount: privateState.threadLevelCallCount,
-          runModelCallCount: privateState.runModelCallCount,
-        };
-
-        /**
-         * Find the tool instance to include in the request
-         */
-        const tool = this.tools.find((t) => t.name === call.name);
-        if (!tool) {
-          throw new Error(`Tool "${call.name}" not found.`);
-        }
-
-        const request = {
-          toolCall: call,
-          tool,
-          state,
-          runtime,
-        };
         return await this.wrapToolCall(request, baseHandler);
       } catch (e: unknown) {
         /**
@@ -385,42 +386,6 @@ export class ToolNode<
      * No wrapToolCall - execute tool directly and handle errors here
      */
     try {
-      /**
-       * Build runtime from LangGraph config
-       */
-      const lgConfig = config as LangGraphRunnableConfig;
-
-      /**
-       * Get private state if available
-       */
-      const privateState = this.getPrivateState?.() || {
-        threadLevelCallCount: 0,
-        runModelCallCount: 0,
-      };
-
-      const runtime = {
-        context: lgConfig?.context,
-        writer: lgConfig?.writer,
-        interrupt: lgConfig?.interrupt,
-        signal: lgConfig?.signal,
-        threadLevelCallCount: privateState.threadLevelCallCount,
-        runModelCallCount: privateState.runModelCallCount,
-      };
-
-      /**
-       * Find the tool instance to include in the request
-       */
-      const tool = this.tools.find((t) => t.name === call.name);
-      if (!tool) {
-        throw new Error(`Tool "${call.name}" not found.`);
-      }
-
-      const request = {
-        toolCall: call,
-        tool,
-        state: state || ({} as any),
-        runtime,
-      };
       return await baseHandler(request);
     } catch (e: unknown) {
       /**
