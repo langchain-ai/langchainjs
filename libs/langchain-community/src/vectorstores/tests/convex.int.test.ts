@@ -1,9 +1,6 @@
-/* eslint-disable no-process-env */
-
 import { ConvexHttpClient } from "convex/browser";
 
 import { expect, test } from "@jest/globals";
-// eslint-disable-next-line import/no-relative-packages
 import { api } from "./convex/convex/_generated/api.js";
 
 // To run these tests at least once, follow these steps:
@@ -13,12 +10,12 @@ import { api } from "./convex/convex/_generated/api.js";
 // 3. `cd ../../../..`
 // 3. `cp src/vectorstores/tests/convex/.env.local .env`
 // 4. Add your OpenAI key to `.env` (see `.env.example`)
-// 5. `yarn test:single src/vectorstores/tests/convex.int.test.ts`
+// 5. `pnpm test:single src/vectorstores/tests/convex.int.test.ts`
 //
 // If you're developing these tests, after you've done the above:
 //
 // In `langchain/src/vectorstores/tests/convex` run `npx convex dev`
-// In `langchain` run `yarn test:single src/vectorstores/tests/convex.int.test.ts`
+// In `langchain` run `pnpm test:single src/vectorstores/tests/convex.int.test.ts`
 
 describe.skip("Convex Vectorstore", () => {
   test("Convex ingest, similaritySearch", async () => {

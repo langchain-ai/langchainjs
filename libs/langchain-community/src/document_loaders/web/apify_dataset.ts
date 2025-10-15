@@ -120,8 +120,9 @@ export class ApifyDatasetLoader<Metadata extends Record<string, any>>
   private static _addUserAgent(config: any): any {
     const updatedConfig = { ...config };
     updatedConfig.headers ??= {};
-    updatedConfig.headers["User-Agent"] =
-      (updatedConfig.headers["User-Agent"] ?? "") + "; Origin/langchainjs";
+    updatedConfig.headers["User-Agent"] = `${
+      updatedConfig.headers["User-Agent"] ?? ""
+    }; Origin/langchainjs`;
     return updatedConfig;
   }
 

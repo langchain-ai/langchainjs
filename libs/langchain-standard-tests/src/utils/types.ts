@@ -1,20 +1,12 @@
-import {
-  MessageContentImageUrl,
-  MessageContentText,
-} from "@langchain/core/messages";
+import { type ContentBlock } from "@langchain/core/messages";
 
 export type MessageContentUnknown = Record<string, unknown> & {
   type: string;
 };
 
-export type MessageContentComplex =
-  | MessageContentText
-  | MessageContentImageUrl
-  | MessageContentUnknown;
+export type MessageContent = string | ContentBlock[];
 
-export type MessageContent = string | MessageContentComplex[];
-
-export function isMessageContentText(obj: unknown): obj is MessageContentText {
+export function isMessageContentText(obj: unknown): obj is ContentBlock.Text {
   return (
     typeof obj === "object" &&
     obj !== null &&
@@ -29,7 +21,9 @@ export function isMessageContentText(obj: unknown): obj is MessageContentText {
  * Checks if an object is a valid MessageContentImageUrl which can be either a simple URL string
  * or an object with a `url` property. We assume that the `url` property is always a string
  */
-function isMessageContentImageUrl(obj: unknown): obj is MessageContentImageUrl {
+function isMessageContentImageUrl(
+  obj: unknown
+): obj is ContentBlock.Data.URLContentBlock {
   if (
     typeof obj === "object" &&
     obj !== null &&
@@ -53,11 +47,9 @@ function isMessageContentImageUrl(obj: unknown): obj is MessageContentImageUrl {
 }
 
 /**
- * Checks if an object is a valid MessageContentComplex object.
+ * Checks if an object is a valid ContentBlock object.
  */
-export function isMessageContentComplex(
-  obj: unknown
-): obj is MessageContentComplex {
+export function isContentBlock(obj: unknown): obj is ContentBlock {
   if (
     typeof obj === "object" &&
     obj !== null &&

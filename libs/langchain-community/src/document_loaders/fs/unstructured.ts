@@ -7,7 +7,7 @@ import {
   DirectoryLoader,
   UnknownHandling,
   LoadersMapping,
-} from "langchain/document_loaders/fs/directory";
+} from "@langchain/classic/document_loaders/fs/directory";
 import { BaseDocumentLoader } from "@langchain/core/document_loaders/base";
 
 export const UNSTRUCTURED_API_FILETYPES = [
@@ -420,7 +420,6 @@ export class UnstructuredDirectoryLoader extends DirectoryLoader {
     const loader = (p: string) => new UnstructuredLoader(p, options);
     const loaders = UNSTRUCTURED_API_FILETYPES.reduce(
       (loadersObject: LoadersMapping, filetype: string) => {
-        // eslint-disable-next-line no-param-reassign
         loadersObject[filetype] = loader;
         return loadersObject;
       },

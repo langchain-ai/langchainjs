@@ -1,9 +1,6 @@
 {
   "name": "test-exports-vite",
   "version": "0.0.0",
-  "workspaces": [
-    "libs/*"
-  ],
   "private": true,
   "type": "module",
   "scripts": {
@@ -16,6 +13,7 @@
     "@langchain/anthropic": "workspace:*",
     "@langchain/community": "workspace:*",
     "@langchain/core": "workspace:*",
+    "@langchain/classic": "workspace:*",
     "@langchain/openai": "workspace:*",
     "langchain": "workspace:*",
     "typescript": "^5.0.0",

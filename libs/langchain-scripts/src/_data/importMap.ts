@@ -231,11 +231,6 @@ export const importMap: Array<DeprecatedEntrypoint> = [
     namedImport: "serializeGeneration",
   },
   {
-    old: "langchain/cache/base",
-    new: "@langchain/core/caches",
-    namedImport: "getCacheKey",
-  },
-  {
     old: "langchain/schema/*",
     new: "@langchain/core/caches",
     namedImport: "BaseCache",
@@ -3966,34 +3961,9 @@ export const importMap: Array<DeprecatedEntrypoint> = [
     namedImport: "MomentoCache",
   },
   {
-    old: "langchain/agents/*",
-    new: "@langchain/community/agents/toolkits/base",
-    namedImport: "Toolkit",
-  },
-  {
-    old: "langchain/agents/toolkits/aws_sfn",
-    new: "@langchain/community/agents/toolkits/aws_sfn",
-    namedImport: "AWSSfnToolkitArgs",
-  },
-  {
-    old: "langchain/agents/toolkits/aws_sfn",
-    new: "@langchain/community/agents/toolkits/aws_sfn",
-    namedImport: "AWSSfnToolkit",
-  },
-  {
-    old: "langchain/agents/toolkits/aws_sfn",
-    new: "@langchain/community/agents/toolkits/aws_sfn",
-    namedImport: "createAWSSfnAgent",
-  },
-  {
     old: "langchain/stores/doc/gcs",
     new: "@langchain/community/stores/doc/gcs",
     namedImport: null,
-  },
-  {
-    old: "langchain/agents/toolkits/connery/*",
-    new: "@langchain/community/agents/toolkits/connery",
-    namedImport: "ConneryToolkit",
   },
   {
     old: "langchain/embeddings/base",
@@ -4993,26 +4963,6 @@ export const importMap: Array<DeprecatedEntrypoint> = [
   {
     old: "langchain/cache/base",
     new: "@langchain/core/caches",
-    namedImport: null,
-  },
-  {
-    old: "langchain/agents/toolkits/base",
-    new: "@langchain/community/agents/toolkits/base",
-    namedImport: null,
-  },
-  {
-    old: "langchain/agents/toolkits/connery/*",
-    new: "@langchain/community/agents/toolkits/connery",
-    namedImport: null,
-  },
-  {
-    old: "langchain/experimental/chat_models/ollama_functions",
-    new: "@langchain/community/experimental/chat_models/ollama_functions",
-    namedImport: null,
-  },
-  {
-    old: "langchain/experimental/multimodal_embeddings/googlevertexai",
-    new: "@langchain/community/experimental/multimodal_embeddings/googlevertexai",
     namedImport: null,
   },
 ];

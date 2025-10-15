@@ -16,16 +16,10 @@
     "allowJs": true,
     "strict": true
   },
-  "include": [
-    "langchain/src/**/*",
-    "langchain-core/src/**/*",
-    "libs/*/src/**/*",
-    "internal/**/*"
-  ],
+  "include": ["libs/**/src/**/*", "internal/**/*"],
   "exclude": [
     "node_modules",
     "**/dist/",
-    "docs",
     "langchain/dist/",
     "langchain-core/dist/",
     "libs/*/dist/"

@@ -10,7 +10,7 @@ import {
   JsonOutputToolsParser,
 } from "@langchain/core/output_parsers/openai_tools";
 import { OutputParserException } from "@langchain/core/output_parsers";
-import { z } from "zod";
+import { z } from "zod/v3";
 import { ChatGeneration } from "@langchain/core/outputs";
 import { AIMessageChunk } from "@langchain/core/messages";
 import { ToolCall } from "@langchain/core/messages/tool";

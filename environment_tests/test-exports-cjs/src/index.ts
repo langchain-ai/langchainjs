@@ -1,10 +1,10 @@
 import assert from "assert";
 import { OpenAI } from "@langchain/openai";
-import { LLMChain } from "langchain/chains";
+import { LLMChain } from "@langchain/classic/chains";
 import { ChatOllama } from "@langchain/ollama";
 import { ChatGoogle } from "@langchain/google-gauth";
 import { ChatPromptTemplate } from "@langchain/core/prompts";
-import { MemoryVectorStore } from "langchain/vectorstores/memory";
+import { MemoryVectorStore } from "@langchain/classic/vectorstores/memory";
 import { HuggingFaceTransformersEmbeddings } from "@langchain/community/embeddings/huggingface_transformers";
 import { Document } from "@langchain/core/documents";
 

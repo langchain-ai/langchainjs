@@ -35,7 +35,6 @@ describe("JiraDocumentConverter Unit Tests", () => {
       id: issue.id,
       host: converter.host,
       projectKey: converter.projectKey,
-      title: expect.any(String),
     });
   });
 
@@ -259,7 +258,6 @@ export function someJiraIssue(overrides: Partial<JiraIssue> = {}): JiraIssue {
         : undefined,
     },
   };
-  console.log(baseIssue.fields.duedate);
 
   return {
     ...baseIssue,

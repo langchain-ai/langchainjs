@@ -185,7 +185,6 @@ export class JiraDocumentConverter {
       }),
       metadata: {
         id: issue.id,
-        title: issue.fields.summary,
         host: this.host,
         projectKey: this.projectKey,
       },

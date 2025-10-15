@@ -1,5 +1,6 @@
 import { Document } from "@langchain/core/documents";
 import type { EmbeddingsInterface } from "@langchain/core/embeddings";
+import type { DocumentInterface } from "@langchain/core/documents";
 import { VectorStore } from "@langchain/core/vectorstores";
 
 const IdColumnSymbol = Symbol("id");
@@ -102,6 +103,15 @@ type DefaultPrismaVectorStore = PrismaVectorStore<
 >;
 
 /**
+ * Configuration for column types to enable proper type casting in SQL queries.
+ * This is particularly important for columns that require explicit casting,
+ * such as UUID columns in PostgreSQL.
+ */
+export interface ColumnTypeConfig {
+  [key: string]: "uuid" | "text" | "integer" | "bigint" | "jsonb";
+}
+
+/**
  * A specific implementation of the VectorStore class that is designed to
  * work with Prisma. It provides methods for adding models, documents, and
  * vectors, as well as for performing similarity searches.
@@ -126,6 +136,8 @@ export class PrismaVectorStore<
 
   contentColumn: keyof TModel & string;
 
+  protected columnTypes?: ColumnTypeConfig;
+
   static IdColumn: typeof IdColumnSymbol = IdColumnSymbol;
 
   static ContentColumn: typeof ContentColumnSymbol = ContentColumnSymbol;
@@ -147,6 +159,7 @@ export class PrismaVectorStore<
       vectorColumnName: string;
       columns: TSelectModel;
       filter?: TFilterModel;
+      columnTypes?: ColumnTypeConfig;
     }
   ) {
     super(embeddings, {});
@@ -168,6 +181,7 @@ export class PrismaVectorStore<
 
     this.tableName = config.tableName;
     this.vectorColumnName = config.vectorColumnName;
+    this.columnTypes = config.columnTypes;
 
     this.selectColumns = entries
       .map(([key, alias]) => (alias && key) || null)
@@ -196,6 +210,7 @@ export class PrismaVectorStore<
         vectorColumnName: string;
         columns: TColumns;
         filter?: TFilters;
+        columnTypes?: ColumnTypeConfig;
       }
     ) {
       type ModelName = keyof TPrisma["ModelName"] & string;
@@ -217,6 +232,7 @@ export class PrismaVectorStore<
         tableName: keyof TPrisma["ModelName"] & string;
         vectorColumnName: string;
         columns: TColumns;
+        columnTypes?: ColumnTypeConfig;
       }
     ) {
       const docs: Document[] = [];
@@ -247,6 +263,7 @@ export class PrismaVectorStore<
         tableName: keyof TPrisma["ModelName"] & string;
         vectorColumnName: string;
         columns: TColumns;
+        columnTypes?: ColumnTypeConfig;
       }
     ) {
       type ModelName = keyof TPrisma["ModelName"] & string;
@@ -306,14 +323,30 @@ export class PrismaVectorStore<
     const vectorColumnRaw = this.Prisma.raw(`"${this.vectorColumnName}"`);
 
     await this.db.$transaction(
-      vectors.map((vector, idx) =>
-        this.db.$executeRaw(
+      vectors.map((vector, idx) => {
+        const idValue = documents[idx].metadata[this.idColumn];
+        const columnType = this.columnTypes?.[this.idColumn];
+
+        // Apply type casting based on configured column type
+        let whereClause;
+        if (columnType === "uuid") {
+          whereClause = this.Prisma.sql`${idColumnRaw} = ${idValue}::uuid`;
+        } else if (columnType === "integer") {
+          whereClause = this.Prisma.sql`${idColumnRaw} = ${idValue}::integer`;
+        } else if (columnType === "bigint") {
+          whereClause = this.Prisma.sql`${idColumnRaw} = ${idValue}::bigint`;
+        } else {
+          // Default behavior for backward compatibility
+          whereClause = this.Prisma.sql`${idColumnRaw} = ${idValue}`;
+        }
+
+        return this.db.$executeRaw(
           this.Prisma.sql`UPDATE ${tableNameRaw}
             SET ${vectorColumnRaw} = ${`[${vector.join(",")}]`}::vector
-            WHERE ${idColumnRaw} = ${documents[idx].metadata[this.idColumn]}
+            WHERE ${whereClause}
           `
-        )
-      )
+        );
+      })
     );
   }
 
@@ -352,7 +385,8 @@ export class PrismaVectorStore<
     query: string,
     k?: number,
     filter?: this["FilterType"]
-  ) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  ): Promise<[DocumentInterface<Record<string, any>>, number][]> {
     return super.similaritySearchWithScore(query, k, filter);
   }
 
@@ -424,6 +458,7 @@ export class PrismaVectorStore<
           const opNameKey = opName as keyof typeof OpMap;
           const colRaw = this.Prisma.raw(`"${key}"`);
           const opRaw = this.Prisma.raw(OpMap[opNameKey]);
+          const columnType = this.columnTypes?.[key];
 
           switch (OpMap[opNameKey]) {
             case OpMap.notIn:
@@ -447,6 +482,39 @@ export class PrismaVectorStore<
                 return this.Prisma.sql`${!isInOperator}`;
               }
 
+              // Apply type casting for IN/NOT IN operators based on column type
+              if (columnType === "uuid") {
+                const castedValues = value.map(
+                  (v) => this.Prisma.sql`${v}::uuid`
+                );
+                return this.Prisma.sql`${colRaw} ${opRaw} (${this.Prisma.join(
+                  castedValues
+                )})`;
+              } else if (columnType === "integer") {
+                const castedValues = value.map(
+                  (v) => this.Prisma.sql`${v}::integer`
+                );
+                return this.Prisma.sql`${colRaw} ${opRaw} (${this.Prisma.join(
+                  castedValues
+                )})`;
+              } else if (columnType === "bigint") {
+                const castedValues = value.map(
+                  (v) => this.Prisma.sql`${v}::bigint`
+                );
+                return this.Prisma.sql`${colRaw} ${opRaw} (${this.Prisma.join(
+                  castedValues
+                )})`;
+              } else if (columnType === "jsonb") {
+                const castedValues = value.map((v) => {
+                  const jsonValue =
+                    typeof v === "object" ? JSON.stringify(v) : v;
+                  return this.Prisma.sql`${jsonValue}::jsonb`;
+                });
+                return this.Prisma.sql`${colRaw} ${opRaw} (${this.Prisma.join(
+                  castedValues
+                )})`;
+              }
+
               return this.Prisma.sql`${colRaw} ${opRaw} (${this.Prisma.join(
                 value
               )})`;
@@ -455,7 +523,28 @@ export class PrismaVectorStore<
             case OpMap.isNotNull:
               return this.Prisma.sql`${colRaw} ${opRaw}`;
             default:
-              return this.Prisma.sql`${colRaw}::text ${opRaw} ${value}`;
+              // Apply proper type casting based on column type
+              if (columnType === "uuid") {
+                return this.Prisma.sql`${colRaw} ${opRaw} ${value}::uuid`;
+              } else if (columnType === "integer") {
+                return this.Prisma.sql`${colRaw} ${opRaw} ${value}::integer`;
+              } else if (columnType === "bigint") {
+                return this.Prisma.sql`${colRaw} ${opRaw} ${value}::bigint`;
+              } else if (columnType === "jsonb") {
+                // For JSONB, cast the value to JSON string then to jsonb
+                const jsonValue =
+                  typeof value === "object" ? JSON.stringify(value) : value;
+                return this.Prisma.sql`${colRaw} ${opRaw} ${jsonValue}::jsonb`;
+              } else if (columnType) {
+                // For other specified types, apply the cast
+                return this.Prisma
+                  .sql`${colRaw} ${opRaw} ${value}::${this.Prisma.raw(
+                  columnType
+                )}`;
+              } else {
+                // Default behavior for backward compatibility - cast column to text
+                return this.Prisma.sql`${colRaw}::text ${opRaw} ${value}`;
+              }
           }
         })
       ),
@@ -482,6 +571,7 @@ export class PrismaVectorStore<
       tableName: string;
       vectorColumnName: string;
       columns: ModelColumns<Record<string, unknown>>;
+      columnTypes?: ColumnTypeConfig;
     }
   ): Promise<DefaultPrismaVectorStore> {
     const docs: Document[] = [];
@@ -513,6 +603,7 @@ export class PrismaVectorStore<
       tableName: string;
       vectorColumnName: string;
       columns: ModelColumns<Record<string, unknown>>;
+      columnTypes?: ColumnTypeConfig;
     }
   ): Promise<DefaultPrismaVectorStore> {
     const instance = new PrismaVectorStore(embeddings, dbConfig);

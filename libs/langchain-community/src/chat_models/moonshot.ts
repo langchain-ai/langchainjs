@@ -318,6 +318,7 @@ export class ChatMoonshot extends BaseChatModel implements ChatMoonshotParams {
                 response.usage = data.usage;
               }
 
+              // eslint-disable-next-line no-void
               void runManager?.handleLLMNewToken(text ?? "");
               if (finish_reason && finish_reason !== "null") {
                 if (resolved || rejected) return;
