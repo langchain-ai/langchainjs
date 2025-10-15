@@ -58,4 +58,52 @@ describe("customTool", () => {
     const result2 = await modelWithTools.invoke(history);
     expect(result2).toBeInstanceOf(AIMessage);
   });
+
+  test("custom tool with grammar format uses Responses API", async () => {
+    const MATH_GRAMMAR = `
+start: expr
+expr: term (SP ADD SP term)* -> add
+|| term
+term: factor (SP MUL SP factor)* -> mul
+|| factor
+factor: INT
+SP: " "
+ADD: "+"
+MUL: "*"
+%import common.INT
+`;
+
+    const mathTool = customTool(
+      async () => {
+        // Simple mock implementation
+        return "42";
+      },
+      {
+        name: "do_math",
+        description: "Evaluate a math expression",
+        format: { type: "grammar", definition: MATH_GRAMMAR, syntax: "lark" },
+      }
+    );
+
+    const model = new ChatOpenAI({
+      model: "gpt-5",
+      reasoning: { effort: "minimal" },
+    });
+    const modelWithTools = model.bindTools([mathTool]);
+
+    const history: BaseMessage[] = [
+      new HumanMessage("Use the tool to calculate 3 + 4"),
+    ];
+
+    const result = await modelWithTools.invoke(history);
+    expect(result).toBeInstanceOf(AIMessage);
+
+    // Verify tool was called correctly
+    expect(result.tool_calls?.[0].name).toBe("do_math");
+
+    history.push(result);
+    const toolOutput = await mathTool.invoke(result.tool_calls?.[0]);
+    expect(toolOutput).toBeInstanceOf(ToolMessage);
+    expect((toolOutput as ToolMessage).content).toBe("42");
+  });
 });
