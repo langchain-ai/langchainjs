@@ -31,7 +31,7 @@
     "@mixedbread-ai/sdk": "^2.2.3"
   },
   "peerDependencies": {
-    "@langchain/core": ">=0.2.5 <0.4.0"
+    "@langchain/core": "^1.0.0-alpha.6"
   },
   "devDependencies": {
     "@langchain/core": "workspace:*",
