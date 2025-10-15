@@ -53,10 +53,13 @@ export interface ToolCallRequest<
 
 /**
  * Handler function type for wrapping tool calls.
- * Takes a tool call and returns the tool result or a command.
+ * Takes a tool call request and returns the tool result or a command.
  */
-export type ToolCallHandler = (
-  toolCall: ToolCall
+export type ToolCallHandler<
+  TState extends Record<string, unknown> = Record<string, unknown>,
+  TContext = unknown
+> = (
+  request: ToolCallRequest<TState, TContext>
 ) => Promise<ToolMessage | Command> | ToolMessage | Command;
 
 /**
@@ -68,7 +71,7 @@ export type ToolCallWrapper<
   TContext = unknown
 > = (
   request: ToolCallRequest<TState, TContext>,
-  handler: ToolCallHandler
+  handler: ToolCallHandler<TState, TContext>
 ) => Promise<ToolMessage | Command> | ToolMessage | Command;
 
 /**
@@ -103,7 +106,7 @@ export interface AgentMiddleware<
    * along with a handler function to execute the actual tool.
    *
    * @param request - The tool call request containing toolCall, state, and runtime.
-   * @param handler - The function that executes the tool. Call this with a ToolCall to get the result.
+   * @param handler - The function that executes the tool. Call this with a ToolCallRequest to get the result.
    * @returns The tool result as a ToolMessage or a Command for advanced control flow.
    *
    * @example
@@ -114,7 +117,7 @@ export interface AgentMiddleware<
    *
    *   try {
    *     // Execute the tool
-   *     const result = await handler(request.toolCall);
+   *     const result = await handler(request);
    *     console.log(`Tool ${request.tool.name} succeeded`);
    *     return result;
    *   } catch (error) {
@@ -135,7 +138,7 @@ export interface AgentMiddleware<
    *       tool_call_id: request.toolCall.id,
    *     });
    *   }
-   *   return handler(request.toolCall);
+   *   return handler(request);
    * }
    * ```
    *
@@ -147,7 +150,7 @@ export interface AgentMiddleware<
    *   if (cache.has(cacheKey)) {
    *     return cache.get(cacheKey);
    *   }
-   *   const result = await handler(request.toolCall);
+   *   const result = await handler(request);
    *   cache.set(cacheKey, result);
    *   return result;
    * }

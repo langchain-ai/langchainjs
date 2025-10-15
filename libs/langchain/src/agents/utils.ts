@@ -431,11 +431,11 @@ export async function bindTools(
  * // Flow: auth calls retry, retry calls base handler
  * const auth: ToolCallWrapper = async (request, handler) => {
  *   try {
- *     return await handler(request.toolCall);
+ *     return await handler(request);
  *   } catch (error) {
  *     if (error.message === "Unauthorized") {
  *       await refreshToken();
- *       return await handler(request.toolCall);
+ *       return await handler(request);
  *     }
  *     throw error;
  *   }
@@ -444,7 +444,7 @@ export async function bindTools(
  * const retry: ToolCallWrapper = async (request, handler) => {
  *   for (let attempt = 0; attempt < 3; attempt++) {
  *     try {
- *       return await handler(request.toolCall);
+ *       return await handler(request);
  *     } catch (error) {
  *       if (attempt === 2) throw error;
  *     }
@@ -473,8 +473,8 @@ function chainToolCallHandlers(
   ): ToolCallWrapper {
     return async (request, handler) => {
       // Create a wrapper that calls inner with the base handler
-      const innerHandler: ToolCallHandler = async () =>
-        inner(request, async (tc) => handler(tc));
+      const innerHandler: ToolCallHandler = async (req) =>
+        inner(req, async (innerReq) => handler(innerReq));
 
       // Call outer with the wrapped inner as its handler
       return outer(request, innerHandler);

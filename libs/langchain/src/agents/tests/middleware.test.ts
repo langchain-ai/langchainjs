@@ -1021,7 +1021,7 @@ describe("middleware", () => {
            */
           (request.toolCall.args as any).location += "O";
 
-          const result = (await handler(request.toolCall)) as ToolMessage;
+          const result = (await handler(request)) as ToolMessage;
           toolExecutions.push(`after:${request.toolCall.name}`);
 
           /**
@@ -1097,7 +1097,7 @@ describe("middleware", () => {
         name: "AuthMiddleware",
         wrapToolCall: async (request, handler) => {
           executionOrder.push("auth_before");
-          const result = await handler(request.toolCall);
+          const result = await handler(request);
           executionOrder.push("auth_after");
           return result;
         },
@@ -1108,7 +1108,7 @@ describe("middleware", () => {
         name: "CacheMiddleware",
         wrapToolCall: async (request, handler) => {
           executionOrder.push("cache_before");
-          const result = await handler(request.toolCall);
+          const result = await handler(request);
           executionOrder.push("cache_after");
           return result;
         },
@@ -1160,7 +1160,7 @@ describe("middleware", () => {
         name: "ErrorHandlerMiddleware",
         wrapToolCall: async (request, handler) => {
           try {
-            return await handler(request.toolCall);
+            return await handler(request);
           } catch (error) {
             return new ToolMessage({
               content: `Error handled by middleware: ${error}`,
@@ -1213,7 +1213,7 @@ describe("middleware", () => {
         }),
         wrapToolCall: async (request, handler) => {
           capturedState = request.state;
-          return handler(request.toolCall);
+          return handler(request);
         },
       });
 
@@ -1333,7 +1333,7 @@ describe("middleware", () => {
         name: "CommandMiddleware",
         wrapToolCall: async (request, handler) => {
           // Execute tool normally
-          await handler(request.toolCall);
+          await handler(request);
 
           // Return a Command instead of ToolMessage
           return new Command({
@@ -1389,7 +1389,7 @@ describe("middleware", () => {
         name: "TrackingMiddleware",
         wrapToolCall: async (request, handler) => {
           toolCalls.push(request.tool.name as string);
-          return handler(request.toolCall);
+          return handler(request);
         },
       });
 
@@ -1460,7 +1460,7 @@ describe("middleware", () => {
           events.push("before_tool");
           // Capture the tool call to verify it was modified
           capturedToolCallInWrapTool = request.toolCall;
-          const result = await handler(request.toolCall);
+          const result = await handler(request);
           events.push("after_tool");
           return result;
         },
@@ -1520,7 +1520,7 @@ describe("middleware", () => {
               tool_call_id: request.toolCall.id!,
             });
           }
-          return handler(request.toolCall);
+          return handler(request);
         },
       });
 
@@ -1577,7 +1577,7 @@ describe("middleware", () => {
         name: "MetricsMiddleware",
         wrapToolCall: async (request, handler) => {
           const startTime = Date.now();
-          const result = await handler(request.toolCall);
+          const result = await handler(request);
           const duration = Date.now() - startTime;
 
           metrics.push({
@@ -1635,7 +1635,7 @@ describe("middleware", () => {
         wrapToolCall: async (request, handler) => {
           for (let attempt = 0; attempt < maxRetries; attempt++) {
             try {
-              return await handler(request.toolCall);
+              return await handler(request);
             } catch (error) {
               if (attempt === maxRetries - 1) {
                 throw error;
@@ -1702,7 +1702,7 @@ describe("middleware", () => {
           }
 
           // Execute and cache
-          const result = (await handler(request.toolCall)) as ToolMessage;
+          const result = (await handler(request)) as ToolMessage;
           cache.set(cacheKey, result);
           return result;
         },
@@ -1764,7 +1764,7 @@ describe("middleware", () => {
       const redactionMiddleware = createMiddleware({
         name: "RedactionMiddleware",
         wrapToolCall: async (request, handler) => {
-          const result = (await handler(request.toolCall)) as ToolMessage;
+          const result = (await handler(request)) as ToolMessage;
 
           // Redact private tool results
           if ((request.tool.name as string).includes("private")) {
@@ -1827,7 +1827,7 @@ describe("middleware", () => {
         name: "Layer1",
         wrapToolCall: async (request, handler) => {
           executionFlow.push("layer1_before");
-          const result = await handler(request.toolCall);
+          const result = await handler(request);
           executionFlow.push("layer1_after");
           return result;
         },
@@ -1837,7 +1837,7 @@ describe("middleware", () => {
         name: "Layer2",
         wrapToolCall: async (request, handler) => {
           executionFlow.push("layer2_before");
-          const result = await handler(request.toolCall);
+          const result = await handler(request);
           executionFlow.push("layer2_after");
           return result;
         },
@@ -1847,7 +1847,7 @@ describe("middleware", () => {
         name: "Layer3",
         wrapToolCall: async (request, handler) => {
           executionFlow.push("layer3_before");
-          const result = await handler(request.toolCall);
+          const result = await handler(request);
           executionFlow.push("layer3_after");
           return result;
         },
