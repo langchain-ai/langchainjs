@@ -2,78 +2,76 @@ import { Document } from "@langchain/core/documents";
 import type { EmbeddingsInterface } from "@langchain/core/embeddings";
 import { VectorStore } from "@langchain/core/vectorstores";
 import type {
-  createClient,
   createCluster,
+  createClient,
   RediSearchSchema,
   SearchOptions,
 } from "redis";
+import { v4 as uuidv4 } from "uuid";
 import { SchemaFieldTypes, VectorAlgorithms } from "redis";
-
-// Adapated from internal redis types which aren't exported
-/**
- * Type for creating a schema vector field. It includes the algorithm,
- * distance metric, and initial capacity.
- */
-export type CreateSchemaVectorField<
-  T extends VectorAlgorithms,
-  A extends Record<string, unknown>,
-> = {
-  ALGORITHM: T;
-  DISTANCE_METRIC: "L2" | "IP" | "COSINE";
-  INITIAL_CAP?: number;
-} & A;
-/**
- * Type for creating a flat schema vector field. It extends
- * CreateSchemaVectorField with a block size property.
- */
-export type CreateSchemaFlatVectorField = CreateSchemaVectorField<
-  VectorAlgorithms.FLAT,
-  {
-    BLOCK_SIZE?: number;
-  }
->;
-/**
- * Type for creating a HNSW schema vector field. It extends
- * CreateSchemaVectorField with M, EF_CONSTRUCTION, and EF_RUNTIME
- * properties.
- */
-export type CreateSchemaHNSWVectorField = CreateSchemaVectorField<
-  VectorAlgorithms.HNSW,
-  {
-    M?: number;
-    EF_CONSTRUCTION?: number;
-    EF_RUNTIME?: number;
-  }
->;
-
-type CreateIndexOptions = NonNullable<
-  Parameters<ReturnType<typeof createClient>["ft"]["create"]>[3]
->;
-
-export type RedisSearchLanguages = `${NonNullable<
-  CreateIndexOptions["LANGUAGE"]
->}`;
-
-export type RedisVectorStoreIndexOptions = Omit<
+import {
+  FilterExpression,
+  AndFilter,
+  OrFilter,
+  TagFilter,
+  NumericFilter,
+  TextFilter,
+  GeoFilter,
+  TimestampFilter,
+  Custom,
+  CustomFilter,
+  Tag,
+  Num,
+  Text,
+  Geo,
+  Timestamp,
+} from "./filters.js";
+import type {
+  CreateSchemaVectorField,
+  CreateSchemaFlatVectorField,
+  CreateSchemaHNSWVectorField,
   CreateIndexOptions,
-  "LANGUAGE"
-> & {
-  LANGUAGE?: RedisSearchLanguages;
+  RedisSearchLanguages,
+  RedisVectorStoreIndexOptions,
+  MetadataFieldSchema,
+} from "./schema.js";
+import {
+  buildMetadataSchema,
+  serializeMetadataField,
+  deserializeMetadataField,
+  inferMetadataSchema,
+  checkForSchemaMismatch,
+} from "./schema.js";
+
+// Re-export filter classes and functions for backward compatibility
+export {
+  FilterExpression,
+  AndFilter,
+  OrFilter,
+  TagFilter,
+  NumericFilter,
+  TextFilter,
+  GeoFilter,
+  TimestampFilter,
+  Tag,
+  Num,
+  Text,
+  Geo,
+  Timestamp,
+  Custom,
+  CustomFilter,
 };
 
-/**
- * Interface for custom schema field definitions
- */
-export interface CustomSchemaField {
-  type: SchemaFieldTypes;
-  required?: boolean;
-  SORTABLE?: boolean | "UNF";
-  NOINDEX?: boolean;
-  SEPARATOR?: string; // For TAG fields
-  CASESENSITIVE?: true; // For TAG fields (Redis expects true, not boolean)
-  NOSTEM?: true; // For TEXT fields (Redis expects true, not boolean)
-  WEIGHT?: number; // For TEXT fields
-}
+// Re-export schema types and utilities for backward compatibility
+export type {
+  CreateSchemaVectorField,
+  CreateSchemaFlatVectorField,
+  CreateSchemaHNSWVectorField,
+  CreateIndexOptions,
+  RedisSearchLanguages,
+  RedisVectorStoreIndexOptions,
+  MetadataFieldSchema,
+};
 
 /**
  * Interface for the configuration of the RedisVectorStore. It includes
@@ -93,7 +91,7 @@ export interface RedisVectorStoreConfig {
   vectorKey?: string;
   filter?: RedisVectorStoreFilterType;
   ttl?: number; // ttl in second
-  customSchema?: Record<string, CustomSchemaField>; // Custom schema fields for metadata
+  customSchema?: MetadataFieldSchema[];
 }
 
 /**
@@ -106,12 +104,12 @@ export interface RedisAddOptions {
 }
 
 /**
- * Type for the filter used in the RedisVectorStore. It is an array of
- * strings.
- * If a string is passed instead of an array the value is used directly, this
- * allows custom filters to be passed.
+ * Type for the filter used in the RedisVectorStore. Supports multiple formats:
+ * - string[]: Array of strings for simple OR filtering (legacy format)
+ * - string: Raw Redis query string for custom filters (legacy format)
+ * - FilterExpression: Advanced filter expressions (recommended approach)
  */
-export type RedisVectorStoreFilterType = string[] | string;
+export type RedisVectorStoreFilterType = string[] | string | FilterExpression;
 
 /**
  * Class representing a RedisVectorStore. It extends the VectorStore class
@@ -143,63 +141,10 @@ export class RedisVectorStore extends VectorStore {
 
   ttl?: number;
 
-  customSchema?: Record<string, CustomSchemaField>;
+  customSchema?: MetadataFieldSchema[];
 
   _vectorstoreType(): string {
     return "redis";
-  }
-
-  /**
-   * Validates metadata against the custom schema if defined
-   * @param metadata The metadata object to validate
-   * @throws Error if validation fails
-   */
-  private validateMetadata(metadata: Record<string, unknown>): void {
-    if (!this.customSchema) {
-      return; // No schema defined, skip validation
-    }
-
-    for (const [fieldName, fieldConfig] of Object.entries(this.customSchema)) {
-      const value = metadata[fieldName];
-
-      // Check if required field is missing
-      if (fieldConfig.required && (value === undefined || value === null)) {
-        throw new Error(`Required metadata field '${fieldName}' is missing`);
-      }
-
-      // Skip validation for optional fields that are not provided
-      if (value === undefined || value === null) {
-        continue;
-      }
-
-      // Basic type validation based on schema field type
-      switch (fieldConfig.type) {
-        case SchemaFieldTypes.NUMERIC:
-          if (typeof value !== "number") {
-            throw new Error(
-              `Metadata field '${fieldName}' must be a number, got ${typeof value}`
-            );
-          }
-          break;
-        case SchemaFieldTypes.TAG:
-          if (typeof value !== "string" && !Array.isArray(value)) {
-            throw new Error(
-              `Metadata field '${fieldName}' must be a string or array, got ${typeof value}`
-            );
-          }
-          break;
-        case SchemaFieldTypes.TEXT:
-          if (typeof value !== "string") {
-            throw new Error(
-              `Metadata field '${fieldName}' must be a string, got ${typeof value}`
-            );
-          }
-          break;
-        default:
-          // For other field types, skip validation
-          break;
-      }
-    }
   }
 
   constructor(
@@ -263,68 +208,39 @@ export class RedisVectorStore extends VectorStore {
       throw new Error("No vectors provided");
     }
     // check if the index exists and create it if it doesn't
-    await this.createIndex(vectors[0].length);
-
-    const info = await this.redisClient.ft.info(this.indexName);
-    const lastKeyCount =
-      parseInt(
-        info.numDocs ||
-          // @ts-expect-error - num_docs is not typed as not used by all redis connectors
-          info.num_docs,
-        10
-      ) || 0;
-
-    // Validate all metadata against custom schema first
-    if (this.customSchema) {
-      for (let idx = 0; idx < documents.length; idx += 1) {
-        const metadata =
-          documents[idx] && documents[idx].metadata
-            ? documents[idx].metadata
-            : {};
-        this.validateMetadata(metadata);
-      }
-    }
+    await this.createIndex(documents, vectors[0].length);
 
     const multi = this.redisClient.multi();
 
     await Promise.all(
       vectors.map(async (vector, idx) => {
         const key =
-          keys && keys.length
-            ? keys[idx]
-            : `${this.keyPrefix}${idx + lastKeyCount}`;
+          keys && keys.length ? keys[idx] : `${this.keyPrefix}${uuidv4()}`;
+
         const metadata =
           documents[idx] && documents[idx].metadata
             ? documents[idx].metadata
             : {};
 
-        // Prepare hash fields
-        const hashFields: Record<string, string | Buffer> = {
+        const hashFields: Record<string, string | number | Buffer> = {
           [this.vectorKey]: this.getFloat32Buffer(vector),
           [this.contentKey]: documents[idx].pageContent,
-          [this.metadataKey]: this.escapeSpecialChars(JSON.stringify(metadata)),
         };
 
-        // Add individual metadata fields for indexing if custom schema is defined
-        if (this.customSchema) {
-          for (const [fieldName, fieldConfig] of Object.entries(
-            this.customSchema
-          )) {
-            const fieldValue = metadata[fieldName];
-            if (fieldValue !== undefined && fieldValue !== null) {
-              const indexedFieldName = `${this.metadataKey}.${fieldName}`;
-
-              // Handle different field types appropriately
-              if (
-                fieldConfig.type === SchemaFieldTypes.TAG &&
-                Array.isArray(fieldValue)
-              ) {
-                // For TAG arrays, join with separator (default comma)
-                const separator = fieldConfig.SEPARATOR || ",";
-                hashFields[indexedFieldName] = fieldValue.join(separator);
-              } else {
-                // For other types, store as-is
-                hashFields[indexedFieldName] = fieldValue;
+        // Handle metadata based on schema configuration
+        if (this.customSchema && this.customSchema.length > 0) {
+          if (this.customSchema[0].name === this.metadataKey) {
+            // handling legacy metadata schema for simple filters (string or array of string)
+            hashFields[this.metadataKey] = JSON.stringify(metadata);
+          } else {
+            // Store individual metadata fields for proper indexing
+            for (const fieldSchema of this.customSchema) {
+              const fieldValue = metadata[fieldSchema.name];
+              if (fieldValue !== undefined && fieldValue !== null) {
+                hashFields[fieldSchema.name] = serializeMetadataField(
+                  fieldSchema,
+                  fieldValue
+                );
               }
             }
           }
@@ -376,67 +292,40 @@ export class RedisVectorStore extends VectorStore {
         if (res.value) {
           const document = res.value;
           if (document.vector_score) {
-            result.push([
-              new Document({
-                pageContent: (document[this.contentKey] ?? "") as string,
-                metadata: JSON.parse(
-                  this.unEscapeSpecialChars(
-                    (document.metadata ?? "{}") as string
-                  )
-                ),
-              }),
-              Number(document.vector_score),
-            ]);
-          }
-        }
-      }
-    }
-
-    return result;
-  }
-
-  /**
-   * Method for performing a similarity search with custom metadata filtering.
-   * Uses the custom schema fields for efficient filtering.
-   * @param query The query vector.
-   * @param k The number of nearest neighbors to return.
-   * @param metadataFilter Object with metadata field filters using custom schema.
-   * @returns A promise that resolves to an array of documents and their scores.
-   */
-  async similaritySearchVectorWithScoreAndMetadata(
-    query: number[],
-    k: number,
-    metadataFilter?: Record<string, unknown>
-  ): Promise<[Document, number][]> {
-    const results = await this.redisClient.ft.search(
-      this.indexName,
-      ...this.buildCustomQuery(query, k, metadataFilter)
-    );
-    const result: [Document, number][] = [];
-
-    if (results.total) {
-      for (const res of results.documents) {
-        if (res.value) {
-          const document = res.value;
-          if (document.vector_score) {
-            // Reconstruct metadata from both the JSON field and individual fields
+            // Reconstruct metadata from individual fields if schema is configured
             let metadata: Record<string, unknown> = {};
-            try {
-              metadata = JSON.parse(
-                this.unEscapeSpecialChars((document.metadata ?? "{}") as string)
-              );
-            } catch {
-              // If JSON parsing fails, construct from individual fields
-              metadata = {};
+
+            if (this.customSchema && this.customSchema.length > 0) {
+              // Build metadata from individual schema fields
+              for (const fieldSchema of this.customSchema) {
+                // Skip the metadata JSON field itself - it's used for legacy filter support
+                // and will be parsed separately below
+                if (fieldSchema.name === this.metadataKey) {
+                  continue;
+                }
+                const fieldValue = document[fieldSchema.name];
+                if (fieldValue !== undefined && fieldValue !== null) {
+                  metadata[fieldSchema.name] = deserializeMetadataField(
+                    fieldSchema,
+                    fieldValue
+                  );
+                }
+              }
             }
 
-            // Add individual schema fields to metadata if they exist
-            if (this.customSchema) {
-              for (const fieldName of Object.keys(this.customSchema)) {
-                const fieldKey = `${this.metadataKey}.${fieldName}`;
-                if (document[fieldKey] !== undefined) {
-                  metadata[fieldName] = document[fieldKey] as unknown;
-                }
+            // Also try to parse the JSON metadata field for any additional fields
+            try {
+              const jsonMetadata = JSON.parse(
+                this.unEscapeSpecialChars(
+                  (document[this.metadataKey] ?? "{}") as string
+                )
+              );
+              // Merge with schema-based metadata, giving priority to schema fields
+              metadata = { ...jsonMetadata, ...metadata };
+            } catch (error) {
+              // If JSON parsing fails, use only schema-based metadata
+              if (!this.customSchema || this.customSchema.length === 0) {
+                metadata = {};
               }
             }
 
@@ -514,9 +403,14 @@ export class RedisVectorStore extends VectorStore {
    * Method for checking if an index exists in the RedisVectorStore.
    * @returns A promise that resolves to a boolean indicating whether the index exists.
    */
-  async checkIndexExists() {
+  async checkIndexState() {
     try {
-      await this.redisClient.ft.info(this.indexName);
+      const result = await this.redisClient.ft.info(this.indexName);
+      return result.attributes.some(
+        (attr) => attr.identifier === this.metadataKey
+      )
+        ? "legacy"
+        : "default";
     } catch (err) {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       if ((err as any)?.message.includes("unknown command")) {
@@ -525,24 +419,33 @@ export class RedisVectorStore extends VectorStore {
         );
       }
       // index doesn't exist
-      return false;
+      return "none";
     }
-
-    return true;
   }
 
   /**
    * Method for creating an index in the RedisVectorStore. If the index
    * already exists, it does nothing.
    * @param dimensions The dimensions of the index
+   * @param documents Optional documents to infer metadata schema from
    * @returns A promise that resolves when the index has been created.
    */
-  async createIndex(dimensions = 1536): Promise<void> {
-    if (await this.checkIndexExists()) {
-      return;
-    }
+  async createIndex(documents?: Document[], dimensions = 1536): Promise<void> {
+    // at that point we have decided on the metadata schema, which is needed even if the index already existed
+    // however we only create the index in case it doesn't exist
+    const indexState = await this.checkIndexState();
 
-    const schema: RediSearchSchema = {
+    // Determine if we need compatibility mode for legacy string/string[] filters
+    const needsLegacyMetadataField =
+      typeof this.filter === "string" ||
+      Array.isArray(this.filter) ||
+      indexState === "legacy";
+
+    // at least one document needs to contain metadata so we can
+    const hasMetadata = documents && documents.some((doc) => doc.metadata);
+
+    // default schema - any customizations or additional fields will be added on top of this
+    let schema: RediSearchSchema = {
       [this.vectorKey]: {
         type: SchemaFieldTypes.VECTOR,
         TYPE: "FLOAT32",
@@ -550,46 +453,51 @@ export class RedisVectorStore extends VectorStore {
         ...this.indexOptions,
       },
       [this.contentKey]: SchemaFieldTypes.TEXT,
-      [this.metadataKey]: SchemaFieldTypes.TEXT,
     };
 
-    // Add custom metadata schema fields for better filtering and searching
-    if (this.customSchema) {
-      for (const [fieldName, fieldConfig] of Object.entries(
-        this.customSchema
-      )) {
-        // Create field name with metadata prefix (e.g., metadata.userId)
-        const indexedFieldName = `${this.metadataKey}.${fieldName}`;
+    // --- METADATA PROCESSING
 
-        // Convert CustomSchemaField to proper Redis schema field
-        if (fieldConfig.type === SchemaFieldTypes.TAG) {
-          schema[indexedFieldName] = {
-            type: SchemaFieldTypes.TAG,
-            SORTABLE: fieldConfig.SORTABLE ? true : undefined,
-            SEPARATOR: (fieldConfig.SEPARATOR as string) || ",",
-          };
-        } else if (fieldConfig.type === SchemaFieldTypes.NUMERIC) {
-          schema[indexedFieldName] = {
-            type: SchemaFieldTypes.NUMERIC,
-            SORTABLE: fieldConfig.SORTABLE ? true : undefined,
-          };
-        } else if (fieldConfig.type === SchemaFieldTypes.TEXT) {
-          schema[indexedFieldName] = {
-            type: SchemaFieldTypes.TEXT,
-            SORTABLE: fieldConfig.SORTABLE ? true : undefined,
-          };
-        } else {
-          // Fallback for other types - just use the field type directly
-          schema[indexedFieldName] = fieldConfig.type;
-        }
+    if (this.customSchema && this.customSchema.length !== 0) {
+      // providing a custom metadata schema takes precedence above all other considerations
+      // in this case, no matter if the documents have metadata, if the filter is a simple filter, etc. we proceed
+      // with the custom schema, we do however warn the user if the schema does not match the metadata provided
+      if (
+        !documents ||
+        checkForSchemaMismatch(
+          this.customSchema,
+          inferMetadataSchema(documents)
+        )
+      ) {
+        console.warn(
+          "The custom schema does not match the metadata schema inferred from the documents. " +
+            "This is not necessarily an issue, but could indicate an invalid custom schema."
+        );
       }
+    } else if (!needsLegacyMetadataField && hasMetadata) {
+      // if we don't have a custom schema, but we have documents with metadata, we can infer the schema
+      // unless a legacy filter is provided, in which case we need to fall back to the legacy mode
+      this.customSchema = inferMetadataSchema(documents);
+    } else {
+      // If we don't have a custom schema or documents with metadata (needed to infer the metadata), irrespective of
+      // type of filter, we need to fall back to the legacy mode which would have only one text field for metadata
+      this.customSchema = [
+        {
+          name: this.metadataKey,
+          type: "text",
+        },
+      ];
     }
 
-    await this.redisClient.ft.create(
-      this.indexName,
-      schema,
-      this.createIndexOptions
-    );
+    schema = buildMetadataSchema(this.customSchema, schema);
+
+    if (indexState === "none") {
+      // we create an index only if it doesn't exist
+      await this.redisClient.ft.create(
+        this.indexName,
+        schema,
+        this.createIndexOptions
+      );
+    }
   }
 
   /**
@@ -656,19 +564,17 @@ export class RedisVectorStore extends VectorStore {
 
     let hybridFields = "*";
     // if a filter is set, modify the hybrid query
-    if (filter && filter.length) {
-      // `filter` is a list of strings, then it's applied using the OR operator in the metadata key
-      // for example: filter = ['foo', 'bar'] => this will filter all metadata containing either 'foo' OR 'bar'
-      hybridFields = `@${this.metadataKey}:(${this.prepareFilter(filter)})`;
+    if (filter) {
+      hybridFields = this.prepareFilter(filter);
     }
 
     const baseQuery = `${hybridFields} => [KNN ${k} @${this.vectorKey} $vector AS ${vectorScoreField}]`;
 
     // Include custom schema fields in return fields for better access
-    const returnFields = [this.metadataKey, this.contentKey, vectorScoreField];
+    const returnFields = [this.contentKey, vectorScoreField];
     if (this.customSchema) {
-      for (const fieldName of Object.keys(this.customSchema)) {
-        returnFields.push(`${this.metadataKey}.${fieldName}`);
+      for (const fieldName of this.customSchema) {
+        returnFields.push(`${fieldName.name}`);
       }
     }
 
@@ -688,98 +594,48 @@ export class RedisVectorStore extends VectorStore {
     return [baseQuery, options];
   }
 
-  /**
-   * Builds a query with custom metadata field filtering
-   * @param query The query vector
-   * @param k Number of results to return
-   * @param metadataFilter Object with metadata field filters
-   * @returns Query string and search options
-   */
-  buildCustomQuery(
-    query: number[],
-    k: number,
-    metadataFilter?: Record<string, unknown>
-  ): [string, SearchOptions] {
-    const vectorScoreField = "vector_score";
+  private prepareFilter(filter: RedisVectorStoreFilterType): string {
+    if (!filter) {
+      return "*";
+    }
 
-    let hybridFields = "*";
-
-    // Build filter using custom schema fields
-    if (metadataFilter && this.customSchema) {
-      const filterClauses: string[] = [];
-
-      for (const [fieldName, value] of Object.entries(metadataFilter)) {
-        if (this.customSchema[fieldName]) {
-          const fieldConfig = this.customSchema[fieldName];
-          const indexedFieldName = `${this.metadataKey}.${fieldName}`;
-
-          if (fieldConfig.type === SchemaFieldTypes.NUMERIC) {
-            // Handle numeric range queries
-            if (typeof value === "object" && value !== null) {
-              if ("min" in value && "max" in value) {
-                filterClauses.push(
-                  `@${indexedFieldName}:[${value.min} ${value.max}]`
-                );
-              } else if ("min" in value) {
-                filterClauses.push(`@${indexedFieldName}:[${value.min} +inf]`);
-              } else if ("max" in value) {
-                filterClauses.push(`@${indexedFieldName}:[-inf ${value.max}]`);
-              }
-            } else {
-              // Exact numeric match
-              filterClauses.push(`@${indexedFieldName}:[${value} ${value}]`);
-            }
-          } else if (fieldConfig.type === SchemaFieldTypes.TAG) {
-            // Handle tag filtering
-            if (Array.isArray(value)) {
-              const tagFilter = value.map((v) => `{${v}}`).join("|");
-              filterClauses.push(`@${indexedFieldName}:(${tagFilter})`);
-            } else {
-              filterClauses.push(`@${indexedFieldName}:{${value}}`);
-            }
-          } else if (fieldConfig.type === SchemaFieldTypes.TEXT) {
-            // Handle text search
-            filterClauses.push(`@${indexedFieldName}:(${value})`);
-          }
+    // Legacy filter support, works with TEXT fields only
+    if (Array.isArray(filter) || typeof filter === "string") {
+      let metadataField = this.metadataKey;
+      if (
+        !this.customSchema?.some((field) => field.name === this.metadataKey)
+      ) {
+        // a rare case where the user has provided a simple filter, but the custom schema doesn't include the metadata
+        // field, for example no filter was provided during vector store creation and the index creation logic assumed
+        // we will be using inferred schema
+        const firstTextField = this.customSchema?.find(
+          (field) => field.type === "text"
+        )?.name;
+        if (firstTextField) {
+          metadataField = firstTextField;
         }
       }
 
-      if (filterClauses.length > 0) {
-        hybridFields = filterClauses.join(" ");
+      if (Array.isArray(filter)) {
+        const escapedFilter = filter
+          .map((v) => `${this.escapeSpecialChars(v)}`)
+          .join(",");
+        return `(@${metadataField}: ${escapedFilter})`;
       }
+      return `(@${metadataField}: ${filter})`;
     }
 
-    const baseQuery = `${hybridFields} => [KNN ${k} @${this.vectorKey} $vector AS ${vectorScoreField}]`;
-
-    // Include custom schema fields in return fields
-    const returnFields = [this.metadataKey, this.contentKey, vectorScoreField];
-    if (this.customSchema) {
-      for (const fieldName of Object.keys(this.customSchema)) {
-        returnFields.push(`${this.metadataKey}.${fieldName}`);
-      }
+    // Check for FilterExpression objects (but not arrays)
+    if (
+      typeof filter === "object" &&
+      "toString" in filter &&
+      typeof filter.toString === "function"
+    ) {
+      // Use the filter expression's toString method
+      return filter.toString();
     }
 
-    const options: SearchOptions = {
-      PARAMS: {
-        vector: this.getFloat32Buffer(query),
-      },
-      RETURN: returnFields,
-      SORTBY: vectorScoreField,
-      DIALECT: 2,
-      LIMIT: {
-        from: 0,
-        size: k,
-      },
-    };
-
-    return [baseQuery, options];
-  }
-
-  private prepareFilter(filter: RedisVectorStoreFilterType) {
-    if (Array.isArray(filter)) {
-      return filter.map(this.escapeSpecialChars).join("|");
-    }
-    return filter;
+    return "*";
   }
 
   /**

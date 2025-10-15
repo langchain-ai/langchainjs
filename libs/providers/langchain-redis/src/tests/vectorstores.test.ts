@@ -1,9 +1,22 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { vi, test, expect, describe } from "vitest";
 import { FakeEmbeddings } from "@langchain/core/utils/testing";
+import { Document } from "@langchain/core/documents";
 import { SchemaFieldTypes } from "redis";
 
-import { RedisVectorStore, RedisVectorStoreConfig } from "../vectorstores.js";
+import {
+  RedisVectorStore,
+  TagFilter,
+  NumericFilter,
+  TextFilter,
+  GeoFilter,
+  TimestampFilter,
+  Tag,
+  Num,
+  Text,
+  Geo,
+  Timestamp,
+} from "../vectorstores.js";
 
 const createRedisClientMockup = () => {
   const hSetMock = vi.fn();
@@ -40,6 +53,7 @@ test("RedisVectorStore with external keys", async () => {
   const store = new RedisVectorStore(embeddings, {
     redisClient: client as any,
     indexName: "documents",
+    filter: "1",
   });
 
   expect(store).toBeDefined();
@@ -61,7 +75,7 @@ test("RedisVectorStore with external keys", async () => {
   expect(client.hSet).toHaveBeenCalledWith("id1", {
     content_vector: Buffer.from(new Float32Array([0.1, 0.2, 0.3, 0.4]).buffer),
     content: "hello",
-    metadata: `{\\"a\\"\\:1,\\"b\\"\\:{\\"nested\\"\\:[1,{\\"a\\"\\:4}]}}`,
+    metadata: `{"a":1,"b":{"nested":[1,{"a":4}]}}`,
   });
 
   const results = await store.similaritySearch("goodbye", 1);
@@ -105,7 +119,11 @@ test("RedisVectorStore with TTL", async () => {
 
   expect(client.hSet).toHaveBeenCalledTimes(1);
   expect(client.expire).toHaveBeenCalledTimes(1);
-  expect(client.expire).toHaveBeenCalledWith("doc:documents:0", ttl);
+
+  // Verify expire was called with the correct TTL, regardless of the UUID
+  const expireCall = (client.expire as any).mock.calls[0];
+  expect(expireCall[0]).toMatch(/^doc:documents:/); // Key starts with the expected prefix
+  expect(expireCall[1]).toBe(ttl); // TTL value is correct
 });
 
 test("RedisVectorStore with filters", async () => {
@@ -123,12 +141,12 @@ test("RedisVectorStore with filters", async () => {
 
   expect(client.ft.search).toHaveBeenCalledWith(
     "documents",
-    "@metadata:(a|b|c) => [KNN 1 @content_vector $vector AS vector_score]",
+    "(@metadata: a,b,c) => [KNN 1 @content_vector $vector AS vector_score]",
     {
       PARAMS: {
         vector: Buffer.from(new Float32Array([0.1, 0.2, 0.3, 0.4]).buffer),
       },
-      RETURN: ["metadata", "content", "vector_score"],
+      RETURN: ["content", "vector_score"],
       SORTBY: "vector_score",
       DIALECT: 2,
       LIMIT: {
@@ -154,12 +172,12 @@ test("RedisVectorStore with raw filter", async () => {
 
   expect(client.ft.search).toHaveBeenCalledWith(
     "documents",
-    "@metadata:(a b c) => [KNN 1 @content_vector $vector AS vector_score]",
+    "(@metadata: a b c) => [KNN 1 @content_vector $vector AS vector_score]",
     {
       PARAMS: {
         vector: Buffer.from(new Float32Array([0.1, 0.2, 0.3, 0.4]).buffer),
       },
-      RETURN: ["metadata", "content", "vector_score"],
+      RETURN: ["content", "vector_score"],
       SORTBY: "vector_score",
       DIALECT: 2,
       LIMIT: {
@@ -216,7 +234,7 @@ describe("RedisVectorStore createIndex when index does not exist", () => {
       redisClient: client as any,
       indexName: "documents",
     });
-    store.checkIndexExists = vi.fn<any>().mockResolvedValue(false);
+    store.checkIndexState = vi.fn<any>().mockResolvedValue("none");
 
     await store.createIndex();
 
@@ -251,7 +269,7 @@ describe("RedisVectorStore createIndex when index does not exist", () => {
         LANGUAGE: "German",
       },
     });
-    store.checkIndexExists = vi.fn<any>().mockResolvedValue(false);
+    store.checkIndexState = vi.fn<any>().mockResolvedValue("none");
 
     await store.createIndex();
 
@@ -310,548 +328,285 @@ describe("RedisVectorStore delete", () => {
   });
 });
 
-describe("RedisVectorStore with Custom Schema", () => {
-  const createRedisClientWithCustomSchema = () => {
-    const hSetMock = vi.fn();
-    const expireMock = vi.fn();
-    const delMock = vi.fn<any>().mockResolvedValue(1);
-
-    return {
-      ft: {
-        info: vi.fn<any>().mockResolvedValue({
-          numDocs: 0,
-        }),
-        create: vi.fn(),
-        search: vi.fn<any>().mockResolvedValue({
-          total: 2,
-          documents: [
-            {
-              value: {
-                content_vector: Buffer.from(
-                  new Float32Array([0.1, 0.2, 0.3, 0.4]).buffer
-                ),
-                content: "Test document 1",
-                metadata:
-                  '{"category":"tech","score":95,"tags":"javascript,nodejs"}',
-                "metadata.userId": "user123",
-                "metadata.category": "tech",
-                "metadata.score": 95,
-                "metadata.tags": "javascript,nodejs",
-                vector_score: 0.1,
-              },
-            },
-            {
-              value: {
-                content_vector: Buffer.from(
-                  new Float32Array([0.2, 0.3, 0.4, 0.5]).buffer
-                ),
-                content: "Test document 2",
-                metadata:
-                  '{"category":"science","score":87,"tags":"python,ai"}',
-                "metadata.userId": "user456",
-                "metadata.category": "science",
-                "metadata.score": 87,
-                "metadata.tags": "python,ai",
-                vector_score: 0.2,
-              },
-            },
-          ],
-        }),
-        dropIndex: vi.fn(),
-      },
-      hSet: hSetMock,
-      expire: expireMock,
-      del: delMock,
-      multi: vi.fn<any>().mockImplementation(() => ({
-        exec: vi.fn(),
-        hSet: hSetMock,
-        expire: expireMock,
-      })),
-    };
-  };
-
-  test("creates index with custom schema fields", async () => {
-    const client = createRedisClientWithCustomSchema();
-    const embeddings = new FakeEmbeddings();
-
-    const customSchema: RedisVectorStoreConfig["customSchema"] = {
-      userId: { type: SchemaFieldTypes.TEXT, required: true, SORTABLE: true },
-      category: { type: SchemaFieldTypes.TAG, SORTABLE: true, SEPARATOR: "," },
-      score: { type: SchemaFieldTypes.NUMERIC, SORTABLE: true },
-      tags: { type: SchemaFieldTypes.TAG, SEPARATOR: ",", CASESENSITIVE: true },
-      description: { type: SchemaFieldTypes.TEXT, NOSTEM: true, WEIGHT: 2.0 },
-    };
-
-    const store = new RedisVectorStore(embeddings, {
-      redisClient: client as any,
-      indexName: "test-custom-schema",
-      customSchema,
-    });
-
-    store.checkIndexExists = vi.fn<any>().mockResolvedValue(false);
-    await store.createIndex();
-
-    expect(client.ft.create).toHaveBeenCalledWith(
-      "test-custom-schema",
-      expect.objectContaining({
-        content_vector: expect.any(Object),
-        content: "TEXT",
-        metadata: "TEXT",
-        "metadata.userId": {
-          type: SchemaFieldTypes.TEXT,
-          SORTABLE: true,
-        },
-        "metadata.category": {
-          type: SchemaFieldTypes.TAG,
-          SORTABLE: true,
-          SEPARATOR: ",",
-        },
-        "metadata.score": {
-          type: SchemaFieldTypes.NUMERIC,
-          SORTABLE: true,
-        },
-        "metadata.tags": {
-          type: SchemaFieldTypes.TAG,
-          SORTABLE: undefined,
-          SEPARATOR: ",",
-        },
-        "metadata.description": {
-          type: SchemaFieldTypes.TEXT,
-          SORTABLE: undefined,
-        },
-      }),
-      expect.any(Object)
-    );
-  });
-
-  test("validates metadata against custom schema - success", async () => {
-    const client = createRedisClientWithCustomSchema();
-    const embeddings = new FakeEmbeddings();
-
-    const customSchema: RedisVectorStoreConfig["customSchema"] = {
-      userId: { type: SchemaFieldTypes.TEXT, required: true },
-      category: { type: SchemaFieldTypes.TAG },
-      score: { type: SchemaFieldTypes.NUMERIC },
-      tags: { type: SchemaFieldTypes.TAG },
-    };
-
-    const store = new RedisVectorStore(embeddings, {
-      redisClient: client as any,
-      indexName: "test-validation",
-      customSchema,
-    });
-
-    const validDocument = {
-      pageContent: "Valid document",
-      metadata: {
-        userId: "user123",
-        category: "tech",
-        score: 95,
-        tags: ["javascript", "nodejs"],
-      },
-    };
-
-    // Should not throw
-    await store.addDocuments([validDocument]);
-    expect(client.hSet).toHaveBeenCalled();
-  });
-
-  test("validates metadata against custom schema - missing required field", async () => {
-    const client = createRedisClientWithCustomSchema();
-    const embeddings = new FakeEmbeddings();
-
-    const customSchema: RedisVectorStoreConfig["customSchema"] = {
-      userId: { type: SchemaFieldTypes.TEXT, required: true },
-      category: { type: SchemaFieldTypes.TAG },
-    };
-
-    const store = new RedisVectorStore(embeddings, {
-      redisClient: client as any,
-      indexName: "test-validation-error",
-      customSchema,
-    });
-
-    const invalidDocument = {
-      pageContent: "Invalid document",
-      metadata: {
-        category: "tech",
-        // Missing required userId
-      },
-    };
-
-    await expect(store.addDocuments([invalidDocument])).rejects.toThrow(
-      "Required metadata field 'userId' is missing"
-    );
-  });
-
-  test("validates metadata against custom schema - wrong type", async () => {
-    const client = createRedisClientWithCustomSchema();
-    const embeddings = new FakeEmbeddings();
-
-    const customSchema: RedisVectorStoreConfig["customSchema"] = {
-      score: { type: SchemaFieldTypes.NUMERIC, required: true },
-    };
-
-    const store = new RedisVectorStore(embeddings, {
-      redisClient: client as any,
-      indexName: "test-type-validation",
-      customSchema,
-    });
-
-    const invalidDocument = {
-      pageContent: "Invalid document",
-      metadata: {
-        score: "not-a-number", // Should be number
-      },
-    };
-
-    await expect(store.addDocuments([invalidDocument])).rejects.toThrow(
-      "Metadata field 'score' must be a number, got string"
-    );
-  });
-
-  test("stores individual metadata fields for indexing", async () => {
-    const client = createRedisClientWithCustomSchema();
-    const embeddings = new FakeEmbeddings();
-
-    const customSchema: RedisVectorStoreConfig["customSchema"] = {
-      userId: { type: SchemaFieldTypes.TEXT },
-      category: { type: SchemaFieldTypes.TAG },
-      score: { type: SchemaFieldTypes.NUMERIC },
-      tags: { type: SchemaFieldTypes.TAG, SEPARATOR: "," },
-    };
-
-    const store = new RedisVectorStore(embeddings, {
-      redisClient: client as any,
-      indexName: "test-indexing",
-      customSchema,
-    });
-
-    const document = {
-      pageContent: "Test document",
-      metadata: {
-        userId: "user123",
-        category: "tech",
-        score: 95,
-        tags: ["javascript", "nodejs"],
-      },
-    };
-
-    await store.addDocuments([document], { keys: ["doc1"] });
-
-    expect(client.hSet).toHaveBeenCalledWith("doc1", {
-      content_vector: expect.any(Buffer),
-      content: "Test document",
-      metadata: expect.any(String),
-      "metadata.userId": "user123",
-      "metadata.category": "tech",
-      "metadata.score": 95,
-      "metadata.tags": "javascript,nodejs", // Array joined with separator
-    });
-  });
-
-  test("similaritySearchVectorWithScoreAndMetadata with custom filtering", async () => {
-    const client = createRedisClientWithCustomSchema();
-    const embeddings = new FakeEmbeddings();
-
-    const customSchema: RedisVectorStoreConfig["customSchema"] = {
-      userId: { type: SchemaFieldTypes.TEXT },
-      category: { type: SchemaFieldTypes.TAG },
-      score: { type: SchemaFieldTypes.NUMERIC },
-    };
-
-    const store = new RedisVectorStore(embeddings, {
-      redisClient: client as any,
-      indexName: "test-custom-search",
-      customSchema,
-    });
-
-    const metadataFilter = {
-      category: "tech",
-      score: { min: 90, max: 100 },
-    };
-
-    const results = await store.similaritySearchVectorWithScoreAndMetadata(
-      [0.1, 0.2, 0.3, 0.4],
-      2,
-      metadataFilter
-    );
-
-    expect(client.ft.search).toHaveBeenCalledWith(
-      "test-custom-search",
-      "@metadata.category:{tech} @metadata.score:[90 100] => [KNN 2 @content_vector $vector AS vector_score]",
-      {
-        PARAMS: {
-          vector: expect.any(Buffer),
-        },
-        RETURN: [
-          "metadata",
-          "content",
-          "vector_score",
-          "metadata.userId",
-          "metadata.category",
-          "metadata.score",
-        ],
-        SORTBY: "vector_score",
-        DIALECT: 2,
-        LIMIT: {
-          from: 0,
-          size: 2,
-        },
-      }
-    );
-
-    expect(results).toHaveLength(2);
-    expect(results[0][0].metadata).toEqual({
-      category: "tech",
-      score: 95,
-      userId: "user123",
-      tags: "javascript,nodejs",
-    });
-  });
-
-  test("buildCustomQuery with numeric range filters", async () => {
-    const client = createRedisClientWithCustomSchema();
-    const embeddings = new FakeEmbeddings();
-
-    const customSchema = {
-      score: { type: SchemaFieldTypes.NUMERIC },
-      price: { type: SchemaFieldTypes.NUMERIC },
-    };
-
-    const store = new RedisVectorStore(embeddings, {
-      redisClient: client as any,
-      indexName: "test-numeric-filters",
-      customSchema,
-    });
-
-    // Test different numeric filter formats
-    const [query1] = store.buildCustomQuery([0.1, 0.2, 0.3, 0.4], 5, {
-      score: { min: 80, max: 100 },
-      price: { min: 50 }, // Only minimum
-    });
-
-    expect(query1).toBe(
-      "@metadata.score:[80 100] @metadata.price:[50 +inf] => [KNN 5 @content_vector $vector AS vector_score]"
-    );
-
-    // Test exact numeric match
-    const [query2] = store.buildCustomQuery([0.1, 0.2, 0.3, 0.4], 5, {
-      score: 95, // Exact match
-    });
-
-    expect(query2).toBe(
-      "@metadata.score:[95 95] => [KNN 5 @content_vector $vector AS vector_score]"
-    );
-  });
-
-  test("buildCustomQuery with tag filters", async () => {
-    const client = createRedisClientWithCustomSchema();
-    const embeddings = new FakeEmbeddings();
-
-    const customSchema = {
-      category: { type: SchemaFieldTypes.TAG },
-      tags: { type: SchemaFieldTypes.TAG },
-    };
-
-    const store = new RedisVectorStore(embeddings, {
-      redisClient: client as any,
-      indexName: "test-tag-filters",
-      customSchema,
-    });
-
-    // Test single tag
-    const [query1] = store.buildCustomQuery([0.1, 0.2, 0.3, 0.4], 5, {
-      category: "tech",
-    });
-
-    expect(query1).toBe(
-      "@metadata.category:{tech} => [KNN 5 @content_vector $vector AS vector_score]"
-    );
-
-    // Test multiple tags (OR operation)
-    const [query2] = store.buildCustomQuery([0.1, 0.2, 0.3, 0.4], 5, {
-      category: ["tech", "science"],
-    });
-
-    expect(query2).toBe(
-      "@metadata.category:({tech}|{science}) => [KNN 5 @content_vector $vector AS vector_score]"
-    );
-  });
-
-  test("buildCustomQuery with text filters", async () => {
-    const client = createRedisClientWithCustomSchema();
-    const embeddings = new FakeEmbeddings();
-
-    const customSchema = {
-      title: { type: SchemaFieldTypes.TEXT },
-      description: { type: SchemaFieldTypes.TEXT },
-    };
-
-    const store = new RedisVectorStore(embeddings, {
-      redisClient: client as any,
-      indexName: "test-text-filters",
-      customSchema,
-    });
-
-    const [query] = store.buildCustomQuery([0.1, 0.2, 0.3, 0.4], 5, {
-      title: "javascript tutorial",
-    });
-
-    expect(query).toBe(
-      "@metadata.title:(javascript tutorial) => [KNN 5 @content_vector $vector AS vector_score]"
-    );
-  });
-
-  test("buildCustomQuery with mixed filter types", async () => {
-    const client = createRedisClientWithCustomSchema();
-    const embeddings = new FakeEmbeddings();
-
-    const customSchema = {
-      category: { type: SchemaFieldTypes.TAG },
-      score: { type: SchemaFieldTypes.NUMERIC },
-      title: { type: SchemaFieldTypes.TEXT },
-    };
-
-    const store = new RedisVectorStore(embeddings, {
-      redisClient: client as any,
-      indexName: "test-mixed-filters",
-      customSchema,
-    });
-
-    const [query] = store.buildCustomQuery([0.1, 0.2, 0.3, 0.4], 5, {
-      category: "tech",
-      score: { min: 90 },
-      title: "javascript",
-    });
-
-    expect(query).toBe(
-      "@metadata.category:{tech} @metadata.score:[90 +inf] @metadata.title:(javascript) => [KNN 5 @content_vector $vector AS vector_score]"
-    );
-  });
-
-  test("includes custom schema fields in search return fields", async () => {
-    const client = createRedisClientWithCustomSchema();
-    const embeddings = new FakeEmbeddings();
-
-    const customSchema = {
-      userId: { type: SchemaFieldTypes.TEXT },
-      category: { type: SchemaFieldTypes.TAG },
-      score: { type: SchemaFieldTypes.NUMERIC },
-    };
-
-    const store = new RedisVectorStore(embeddings, {
-      redisClient: client as any,
-      indexName: "test-return-fields",
-      customSchema,
-    });
-
-    await store.similaritySearch("test query", 2);
-
-    expect(client.ft.search).toHaveBeenCalledWith(
-      "test-return-fields",
-      expect.any(String),
-      expect.objectContaining({
-        RETURN: [
-          "metadata",
-          "content",
-          "vector_score",
-          "metadata.userId",
-          "metadata.category",
-          "metadata.score",
-        ],
-      })
-    );
-  });
-
-  test("handles optional metadata fields correctly", async () => {
-    const client = createRedisClientWithCustomSchema();
-    const embeddings = new FakeEmbeddings();
-
-    const customSchema = {
-      userId: { type: SchemaFieldTypes.TEXT, required: true },
-      category: { type: SchemaFieldTypes.TAG, required: false }, // Optional
-      score: { type: SchemaFieldTypes.NUMERIC }, // Optional (default)
-    };
-
-    const store = new RedisVectorStore(embeddings, {
-      redisClient: client as any,
-      indexName: "test-optional-fields",
-      customSchema,
-    });
-
-    const documentWithPartialMetadata = {
-      pageContent: "Test document",
-      metadata: {
-        userId: "user123",
-        // category and score are optional and not provided
-      },
-    };
-
-    // Should not throw for missing optional fields
-    await store.addDocuments([documentWithPartialMetadata]);
-    expect(client.hSet).toHaveBeenCalled();
-  });
-
-  test("ignores unknown schema fields in metadata filter", async () => {
-    const client = createRedisClientWithCustomSchema();
-    const embeddings = new FakeEmbeddings();
-
-    const customSchema = {
-      category: { type: SchemaFieldTypes.TAG },
-    };
-
-    const store = new RedisVectorStore(embeddings, {
-      redisClient: client as any,
-      indexName: "test-unknown-fields",
-      customSchema,
-    });
-
-    const [query] = store.buildCustomQuery([0.1, 0.2, 0.3, 0.4], 5, {
-      category: "tech",
-      unknownField: "ignored", // This should be ignored
-    });
-
-    // Should only include the known schema field
-    expect(query).toBe(
-      "@metadata.category:{tech} => [KNN 5 @content_vector $vector AS vector_score]"
-    );
-  });
-
-  test("works without custom schema (backward compatibility)", async () => {
+describe("Metadata Schema Tests", () => {
+  test("RedisVectorStore with metadata schema", async () => {
     const client = createRedisClientMockup();
     const embeddings = new FakeEmbeddings();
 
     const store = new RedisVectorStore(embeddings, {
       redisClient: client as any,
-      indexName: "test-no-schema",
-      // No customSchema provided
+      indexName: "documents",
+      customSchema: [
+        { name: "category", type: "tag" },
+        { name: "price", type: "numeric" },
+        { name: "title", type: "text" },
+        { name: "location", type: "geo" },
+        { name: "created_at", type: "numeric" }, // Timestamps are stored as numeric fields
+      ],
     });
 
-    const document = {
-      pageContent: "Test document",
-      metadata: { any: "field" },
-    };
+    expect(store).toBeDefined();
+    expect(store.customSchema).toHaveLength(5);
+  });
 
-    // Should work normally without custom schema
-    await store.addDocuments([document]);
-    expect(client.hSet).toHaveBeenCalledWith(
-      expect.any(String),
-      expect.objectContaining({
-        content: "Test document",
-        metadata: expect.any(String),
-        // Should not have individual metadata fields
-      })
-    );
+  test("Advanced filter with metadata schema", async () => {
+    const client = createRedisClientMockup();
+    const embeddings = new FakeEmbeddings();
 
-    // Should not include custom schema fields in return
-    await store.similaritySearch("test", 1);
+    const store = new RedisVectorStore(embeddings, {
+      redisClient: client as any,
+      indexName: "documents",
+      customSchema: [
+        { name: "category", type: "tag" },
+        { name: "price", type: "numeric" },
+      ],
+    });
+
+    const complexFilter = Tag("category")
+      .eq("electronics")
+      .and(Num("price").between(50, 200));
+
+    await store.similaritySearch("test query", 1, complexFilter);
+
     expect(client.ft.search).toHaveBeenCalledWith(
-      expect.any(String),
-      expect.any(String),
+      "documents",
+      "(@category:{electronics} @price:[50 200]) => [KNN 1 @content_vector $vector AS vector_score]",
       expect.objectContaining({
-        RETURN: ["metadata", "content", "vector_score"], // No custom fields
+        PARAMS: {
+          vector: Buffer.from(new Float32Array([0.1, 0.2, 0.3, 0.4]).buffer),
+        },
+        RETURN: ["content", "vector_score", "category", "price"],
+        SORTBY: "vector_score",
+        DIALECT: 2,
+        LIMIT: {
+          from: 0,
+          size: 1,
+        },
       })
     );
+  });
+
+  test("Backward compatibility with legacy filters", async () => {
+    const client = createRedisClientMockup();
+    const embeddings = new FakeEmbeddings();
+
+    const store = new RedisVectorStore(embeddings, {
+      redisClient: client as any,
+      indexName: "documents",
+    });
+
+    // Test legacy array filter
+    await store.similaritySearch("test query", 1, ["electronics", "books"]);
+
+    expect(client.ft.search).toHaveBeenCalledWith(
+      "documents",
+      "(@metadata: electronics,books) => [KNN 1 @content_vector $vector AS vector_score]",
+      expect.objectContaining({
+        RETURN: ["content", "vector_score"],
+      })
+    );
+
+    // Test legacy string filter
+    await store.similaritySearch("test query", 1, "electronics");
+
+    expect(client.ft.search).toHaveBeenCalledWith(
+      "documents",
+      "(@metadata: electronics) => [KNN 1 @content_vector $vector AS vector_score]",
+      expect.any(Object)
+    );
+  });
+
+  test("Schema generation with metadata schema and no legacy filter", async () => {
+    const client = createRedisClientMockup();
+    const embeddings = new FakeEmbeddings();
+
+    const store = new RedisVectorStore(embeddings, {
+      redisClient: client as any,
+      indexName: "documents",
+      customSchema: [
+        { name: "category", type: "tag" },
+        { name: "price", type: "numeric" },
+      ],
+    });
+
+    store.checkIndexState = vi.fn<any>().mockResolvedValue("none");
+
+    await store.createIndex();
+
+    // Verify that ft.create was called with the correct schema
+    expect(client.ft.create).toHaveBeenCalledWith(
+      "documents",
+      expect.objectContaining({
+        content_vector: expect.any(Object),
+        content: expect.any(String),
+        // metadata field should NOT be in the schema when using customSchema without legacy filter
+        category: expect.any(Object),
+        price: expect.any(Object),
+      }),
+      expect.any(Object)
+    );
+
+    // Verify metadata field is NOT in the schema
+    const schemaArg = (client.ft.create as any).mock.calls[0][1];
+    expect(schemaArg.metadata).toBeUndefined();
+  });
+
+  test("Schema generation with metadata schema and legacy string filter", async () => {
+    const client = createRedisClientMockup();
+    const embeddings = new FakeEmbeddings();
+
+    const store = new RedisVectorStore(embeddings, {
+      redisClient: client as any,
+      indexName: "documents",
+      customSchema: [
+        { name: "category", type: "tag" },
+        { name: "price", type: "numeric" },
+      ],
+      filter: "electronics", // Legacy string filter
+    });
+
+    store.checkIndexState = vi.fn<any>().mockResolvedValue("none");
+
+    await store.createIndex();
+
+    // Verify that ft.create was called with the correct schema including metadata field
+    const schemaArg = (client.ft.create as any).mock.calls[0][1];
+    expect(schemaArg.category).toBeDefined();
+    expect(schemaArg.price).toBeDefined();
+  });
+
+  test("Schema generation with metadata schema and legacy array filter", async () => {
+    const client = createRedisClientMockup();
+    const embeddings = new FakeEmbeddings();
+
+    const store = new RedisVectorStore(embeddings, {
+      redisClient: client as any,
+      indexName: "documents",
+      customSchema: [
+        { name: "category", type: "tag" },
+        { name: "price", type: "numeric" },
+      ],
+      filter: ["electronics", "books"], // Legacy array filter
+    });
+
+    store.checkIndexState = vi.fn<any>().mockResolvedValue("none");
+
+    await store.createIndex();
+
+    // Verify that ft.create was called with the correct schema including metadata field
+    const schemaArg = (client.ft.create as any).mock.calls[0][1];
+    expect(schemaArg.category).toBeDefined();
+    expect(schemaArg.price).toBeDefined();
+  });
+
+  test("Schema generation without metadata schema includes metadata field", async () => {
+    const client = createRedisClientMockup();
+    const embeddings = new FakeEmbeddings();
+
+    const store = new RedisVectorStore(embeddings, {
+      redisClient: client as any,
+      indexName: "documents",
+    });
+
+    store.checkIndexState = vi.fn<any>().mockResolvedValue("none");
+
+    await store.createIndex();
+
+    // Verify that ft.create was called with the correct schema including metadata field
+    const schemaArg = (client.ft.create as any).mock.calls[0][1];
+    expect(schemaArg.metadata).toBeDefined();
+  });
+
+  test("Automatic schema inference from documents", async () => {
+    const client = createRedisClientMockup();
+    const embeddings = new FakeEmbeddings();
+
+    const store = new RedisVectorStore(embeddings, {
+      redisClient: client as any,
+      indexName: "test-auto-infer",
+      // No customSchema provided, no legacy filter
+    });
+
+    store.checkIndexState = vi.fn<any>().mockResolvedValue("none");
+
+    const documents = [
+      new Document({
+        pageContent: "doc1",
+        metadata: { category: "tech", price: 99, location: "-122.4, 37.7]" },
+      }),
+      new Document({
+        pageContent: "doc2",
+        metadata: { category: "books", price: 15, location: "-118.2, 34.0" },
+      }),
+      new Document({
+        pageContent: "doc3",
+        metadata: { category: "tech", price: 50, location: "-73.9, 40.7" },
+      }),
+      new Document({
+        pageContent: "doc4",
+        metadata: { category: "tech", price: 75, location: "-0.1, 51.5" },
+      }),
+      new Document({
+        pageContent: "doc5",
+        metadata: { category: "books", price: 20, location: "2.3, 48.9" },
+      }),
+      new Document({
+        pageContent: "doc6",
+        metadata: { category: "tech", price: 120, location: "139.7, 35.7" },
+      }),
+    ];
+
+    await store.createIndex(documents, 1536);
+
+    const schemaArg = (client.ft.create as any).mock.calls[0][1];
+
+    // Should NOT include metadata field (using inferred schema instead)
+    expect(schemaArg.metadata).toBeUndefined();
+
+    // Should include inferred metadata fields
+    expect(schemaArg.category).toBeDefined();
+    expect(schemaArg.category.type).toBe(SchemaFieldTypes.TEXT);
+
+    expect(schemaArg.price).toBeDefined();
+    expect(schemaArg.price.type).toBe(SchemaFieldTypes.NUMERIC);
+
+    expect(schemaArg.location).toBeDefined();
+    expect(schemaArg.location.type).toBe(SchemaFieldTypes.GEO);
+  });
+
+  test("Automatic schema inference with legacy filter still includes metadata field", async () => {
+    const client = createRedisClientMockup();
+    const embeddings = new FakeEmbeddings();
+
+    const store = new RedisVectorStore(embeddings, {
+      redisClient: client as any,
+      indexName: "test-auto-infer-legacy",
+      filter: "tech", // Legacy string filter
+    });
+
+    store.checkIndexState = vi.fn<any>().mockResolvedValue("none");
+
+    const documents = [
+      new Document({
+        pageContent: "doc1",
+        metadata: { category: "tech", price: 99 },
+      }),
+      new Document({
+        pageContent: "doc2",
+        metadata: { category: "books", price: 15 },
+      }),
+    ];
+
+    await store.createIndex(documents, 1536);
+
+    const schemaArg = (client.ft.create as any).mock.calls[0][1];
+
+    // Should include metadata field for legacy compatibility
+    expect(schemaArg.metadata).toBeDefined();
+    expect(schemaArg.metadata.type).toBe(SchemaFieldTypes.TEXT);
+
+    // Should NOT include inferred fields (legacy mode)
+    expect(schemaArg.category).toBeUndefined();
+    expect(schemaArg.price).toBeUndefined();
   });
 });
