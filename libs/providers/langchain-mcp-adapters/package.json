@@ -42,8 +42,8 @@
     "zod": "^3.25.76 || ^4"
   },
   "peerDependencies": {
-    "@langchain/core": ">=1.0.0-alpha.5 <1.0.0 || >=1.0.0 <2.0.0",
-    "@langchain/langgraph": ">=1.0.0-alpha.5 <1.0.0 || >=1.0.0 <2.0.0"
+    "@langchain/core": "^1.0.0-alpha.6",
+    "@langchain/langgraph": "^1.0.0-alpha.6"
   },
   "peerDependenciesMeta": {
     "@langchain/core": {

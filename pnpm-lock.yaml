@@ -772,8 +772,8 @@ importers:
         specifier: workspace:*
         version: link:../providers/langchain-anthropic
       '@langchain/aws':
-        specifier: ^0.1.15
-        version: 0.1.15(@langchain/core@libs+langchain-core)
+        specifier: workspace:*
+        version: link:../providers/langchain-aws
       '@langchain/azure-cosmosdb':
         specifier: workspace:*
         version: link:../providers/langchain-azure-cosmosdb
@@ -2016,8 +2016,8 @@ importers:
         specifier: workspace:*
         version: link:../../../internal/eslint
       '@langchain/openai':
-        specifier: ^0.6.0
-        version: 0.6.3(@langchain/core@libs+langchain-core)(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.5))
+        specifier: workspace:*
+        version: link:../langchain-openai
       '@tsconfig/recommended':
         specifier: ^1.0.3
         version: 1.0.10
@@ -2115,9 +2115,6 @@ importers:
 
   libs/providers/langchain-cloudflare:
     dependencies:
-      '@langchain/core':
-        specifier: workspace:*
-        version: link:../../langchain-core
       uuid:
         specifier: ^10.0.0
         version: 10.0.0
@@ -2125,6 +2122,9 @@ importers:
       '@cloudflare/workers-types':
         specifier: ^4.20240909.0
         version: 4.20250801.0
+      '@langchain/core':
+        specifier: workspace:*
+        version: link:../../langchain-core
       '@langchain/eslint':
         specifier: workspace:*
         version: link:../../../internal/eslint
@@ -2560,8 +2560,8 @@ importers:
         specifier: workspace:*
         version: link:../../../internal/eslint
       '@langchain/google-common':
-        specifier: ^0.2.16
-        version: 0.2.16(@langchain/core@libs+langchain-core)
+        specifier: workspace:*
+        version: link:../langchain-google-common
       '@langchain/standard-tests':
         specifier: workspace:*
         version: link:../../langchain-standard-tests
@@ -2618,8 +2618,8 @@ importers:
         specifier: workspace:*
         version: link:../../../internal/eslint
       '@langchain/google-common':
-        specifier: ^0.2.16
-        version: 0.2.16(@langchain/core@libs+langchain-core)
+        specifier: workspace:*
+        version: link:../langchain-google-common
       '@langchain/standard-tests':
         specifier: workspace:*
         version: link:../../langchain-standard-tests
@@ -3413,8 +3413,8 @@ importers:
   libs/providers/langchain-xai:
     dependencies:
       '@langchain/openai':
-        specifier: ^0.6.0
-        version: 0.6.3(@langchain/core@libs+langchain-core)(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.5))
+        specifier: ^1.0.0-alpha.1
+        version: 1.0.0-alpha.3(@langchain/core@libs+langchain-core)(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.5))
     devDependencies:
       '@langchain/core':
         specifier: workspace:*
@@ -6054,6 +6054,12 @@ packages:
   '@langchain/openai@0.6.3':
     resolution: {integrity: sha512-dSNuXDTJitDzN8D2wFNqWVELDbBRhMpJiFeiWpHjfPuq7R6wSjzNNY/Uk6x+FLpvbOs/zKNWy5+0q0p3KrCjRQ==}
     engines: {node: '>=18'}
+    peerDependencies:
+      '@langchain/core': workspace:*
+
+  '@langchain/openai@1.0.0-alpha.3':
+    resolution: {integrity: sha512-re2NXLYeLatPzoB6YRoFgB1fW6i5ygcLGa7PlNOhi3f93uU1vSlWMgjkO9dcN9ALmr/bhoruqJEn7U0Eva+6/w==}
+    engines: {node: '>=20'}
     peerDependencies:
       '@langchain/core': workspace:*
 
@@ -18829,6 +18835,7 @@ snapshots:
       '@langchain/core': link:libs/langchain-core
     transitivePeerDependencies:
       - aws-crt
+    optional: true
 
   '@langchain/cohere@0.3.4(@langchain/core@libs+langchain-core)(encoding@0.1.13)':
     dependencies:
@@ -18947,6 +18954,15 @@ snapshots:
       '@langchain/core': link:libs/langchain-core
       js-tiktoken: 1.0.20
       openai: 5.12.2(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.5))(zod@3.25.76)
+      zod: 3.25.76
+    transitivePeerDependencies:
+      - ws
+
+  '@langchain/openai@1.0.0-alpha.3(@langchain/core@libs+langchain-core)(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.5))':
+    dependencies:
+      '@langchain/core': link:libs/langchain-core
+      js-tiktoken: 1.0.20
+      openai: 6.3.0(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.5))(zod@3.25.76)
       zod: 3.25.76
     transitivePeerDependencies:
       - ws

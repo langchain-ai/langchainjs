@@ -46,7 +46,7 @@
     "@google/generative-ai": "^0.7.0",
     "@lancedb/lancedb": "^0.19.1",
     "@langchain/anthropic": "workspace:*",
-    "@langchain/aws": "^0.1.15",
+    "@langchain/aws": "workspace:*",
     "@langchain/azure-cosmosdb": "workspace:*",
     "@langchain/azure-dynamic-sessions": "workspace:*",
     "@langchain/baidu-qianfan": "workspace:*",
@@ -140,7 +140,7 @@
     "zod-to-json-schema": "^3.24.6"
   },
   "peerDependencies": {
-    "@langchain/core": "^1.0.0-alpha.6 <2.0.0",
+    "@langchain/core": "^1.0.0-alpha.6",
     "cheerio": "*",
     "peggy": "^3.0.2",
     "typeorm": "*"

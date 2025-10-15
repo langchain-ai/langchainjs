@@ -35,7 +35,7 @@
     "weaviate-client": "^3.5.2"
   },
   "peerDependencies": {
-    "@langchain/core": ">=0.2.21 <0.4.0"
+    "@langchain/core": "^1.0.0-alpha.6"
   },
   "devDependencies": {
     "@langchain/core": "workspace:*",
