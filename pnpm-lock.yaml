@@ -2560,8 +2560,8 @@ importers:
         specifier: workspace:*
         version: link:../../../internal/eslint
       '@langchain/google-common':
-        specifier: workspace:*
-        version: link:../langchain-google-common
+        specifier: ^0.2.16
+        version: 0.2.16(@langchain/core@libs+langchain-core)
       '@langchain/standard-tests':
         specifier: workspace:*
         version: link:../../langchain-standard-tests
