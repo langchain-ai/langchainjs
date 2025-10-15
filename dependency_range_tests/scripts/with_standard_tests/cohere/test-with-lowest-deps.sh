@@ -39,5 +39,5 @@ cd "$monorepo_cohere_dir"
 core_version=$(node -p "require('./package.json').peerDependencies?.['@langchain/core']")
 
 # Install @langchain/core at the specified version
-pnpm add @langchain/core@$core_version
+pnpm install @langchain/core@$core_version
 pnpm test
