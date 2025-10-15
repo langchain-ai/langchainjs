@@ -22,15 +22,16 @@ bash /scripts/with_standard_tests/shared.sh providers/langchain-cohere
 # Copy the updater script to the monorepo
 mkdir -p "$updater_script_dir"
 cp "$original_updater_script_dir"/* "$updater_script_dir/"
-cd "$updater_script_dir"
+
 # Install deps (e.g semver) for the updater script
-pnpm install
+cd "$updater_script_dir"
+pnpm install --no-frozen-lockfile
 # Run the updater script
 node "update_resolutions_lowest.js"
 
 # Navigate back to monorepo root and install dependencies
 cd "$monorepo_dir"
-pnpm install --prod --no-frozen-lockfile
+pnpm install --no-frozen-lockfile
 
 # Navigate into `@langchain/cohere` to build and run tests
 # We need to run inside the cohere directory so turbo repo does
@@ -42,5 +43,5 @@ core_version=$(node -p "require('./package.json').peerDependencies?.['@langchain
 
 # Install @langchain/core at the specified version
 pnpm install --no-frozen-lockfile
-pnpm add @langchain/core@$core_version
+pnpm install @langchain/core@$core_version
 pnpm test
