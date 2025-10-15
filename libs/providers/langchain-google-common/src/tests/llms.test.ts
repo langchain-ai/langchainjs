@@ -76,7 +76,7 @@ describe("Mock Google LLM", () => {
 
     expect(record?.opts?.headers).toHaveProperty("User-Agent");
     expect(record.opts.headers["User-Agent"]).toMatch(
-      /langchain-js\/[0-9.]+-GoogleLLMConnection/
+      /langchain-js\/[0-9.]+-ChatConnection/
     );
   });
 
@@ -307,7 +307,7 @@ describe("Mock Google LLM", () => {
     });
     let caught = false;
     try {
-      await model.invoke("Hello world");
+      await model.generate(["Hello world"]);
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (xx: any) {
       caught = true;
