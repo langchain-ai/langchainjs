@@ -167,7 +167,7 @@ export class CouchbaseSearchVectorStore extends VectorStore {
       store._bucket = store.cluster.bucket(store.bucketName);
       store._scope = store._bucket.scope(store.scopeName);
       store._collection = store._scope.collection(store.collectionName);
-    } catch (err) {
+    } catch {
       throw new Error(
         "Error connecting to couchbase, Please check connection and credentials"
       );
@@ -229,7 +229,7 @@ export class CouchbaseSearchVectorStore extends VectorStore {
     try {
       await bucketManager.getBucket(this.bucketName);
       return true;
-    } catch (error) {
+    } catch {
       throw new Error(
         `Bucket ${this.bucketName} does not exist. Please create the bucket before searching.`
       );

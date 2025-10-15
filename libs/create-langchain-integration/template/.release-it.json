@@ -1,4 +1,7 @@
 {
+  "plugins": {
+    "release-it-pnpm": {}
+  },
   "github": {
     "release": true,
     "autoGenerate": true,

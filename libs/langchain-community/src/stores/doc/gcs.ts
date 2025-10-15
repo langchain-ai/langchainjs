@@ -1,7 +1,7 @@
 import { Storage, File } from "@google-cloud/storage";
 
 import { Document } from "@langchain/core/documents";
-import { Docstore } from "langchain/stores/doc/base";
+import { Docstore } from "@langchain/classic/stores/doc/base";
 
 /**
  * Interface that defines the configuration for the

@@ -172,6 +172,7 @@ export class PortkeyChat extends BaseChatModel {
         },
       });
       yield chunk;
+      // eslint-disable-next-line no-void
       void runManager?.handleLLMNewToken(chunk.text ?? "");
     }
     if (options.signal?.aborted) {

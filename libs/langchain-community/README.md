@@ -5,7 +5,7 @@
 ## Quick Install
 
 ```bash
-$ yarn add @langchain/community
+$ pnpm install @langchain/community
 ```
 
 This package, along with the main LangChain package, depends on [`@langchain/core`](https://npmjs.com/package/@langchain/core/).

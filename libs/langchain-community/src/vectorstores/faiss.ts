@@ -1,12 +1,10 @@
-/* eslint-disable */
-// @ts-nocheck
 import type { IndexFlatL2 } from "faiss-node";
 import type { NameRegistry, Parser } from "pickleparser";
 import * as uuid from "uuid";
 import type { EmbeddingsInterface } from "@langchain/core/embeddings";
 import { SaveableVectorStore } from "@langchain/core/vectorstores";
 import { Document } from "@langchain/core/documents";
-import { SynchronousInMemoryDocstore } from "../stores/doc/in_memory.js";
+import { SynchronousInMemoryDocstore } from "@langchain/classic/stores/doc/in_memory";
 
 /**
  * Interface for the arguments required to initialize a FaissStore
@@ -207,7 +205,6 @@ export class FaissStore extends SaveableVectorStore {
       );
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     const indexIdToDelete = documentIds.map((id) => reversedMappings.get(id)!);
 
     // remove from index

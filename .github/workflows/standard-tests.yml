@@ -3,7 +3,7 @@ name: Standard Tests (Integration)
 on:
   workflow_dispatch:
   schedule:
-    - cron: '0 13 * * *'
+    - cron: "0 13 * * *"
 
 jobs:
   standard-tests:
@@ -11,18 +11,30 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        package: [anthropic, cohere, google-genai, groq, mistralai, aws, google-vertexai-web]
+        package:
+          [
+            anthropic,
+            cohere,
+            google-genai,
+            groq,
+            mistralai,
+            aws,
+            google-vertexai-web,
+            agents,
+          ]
     steps:
       - uses: actions/checkout@v4
-      - name: Use Node.js 18.x
-        uses: actions/setup-node@v3
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4.1.0
+      - name: Use Node.js
+        uses: actions/setup-node@v4
         with:
-          node-version: 18.x
-          cache: "yarn"
+          node-version-file: ".nvmrc"
+          cache: "pnpm"
       - name: Install dependencies
-        run: yarn install --immutable --mode=skip-build
+        run: pnpm install --frozen-lockfile
       - name: Run integration tests for ${{ matrix.package }}
-        run: yarn turbo test:integration --filter=@langchain/${{ matrix.package }}
+        run: pnpm turbo test:integration --filter @langchain/${{ matrix.package }}
         env:
           ANTHROPIC_API_KEY: ${{ matrix.package == 'anthropic' && secrets.ANTHROPIC_API_KEY || '' }}
           COHERE_API_KEY: ${{ matrix.package == 'cohere' && secrets.COHERE_API_KEY || '' }}
@@ -41,56 +53,39 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Use Node.js 18.x
-        uses: actions/setup-node@v3
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4.1.0
+      - name: Use Node.js
+        uses: actions/setup-node@v4
         with:
-          node-version: 18.x
-          cache: "yarn"
+          node-version-file: ".nvmrc"
+          cache: "pnpm"
       - name: Install dependencies
-        run: yarn install --immutable --mode=skip-build
+        run: pnpm install --frozen-lockfile
       - name: Build `@langchain/openai`
-        run: yarn build --filter=@langchain/openai
+        run: pnpm build --filter @langchain/openai
       - name: Run integration tests for ChatOpenAI
-        run: yarn workspace @langchain/openai test:single src/tests/chat_models_structured_output.int.test.ts src/tests/chat_models_responses.int.test.ts src/tests/chat_models-extended.int.test.ts src/tests/chat_models-vision.int.test.ts src/tests/chat_models.int.test.ts src/tests/chat_models.standard.int.test.ts src/tests/chat_models_responses.standard.int.test.ts
+        run: pnpm --filter @langchain/openai test:single src/tests/chat_models_structured_output.int.test.ts src/tests/chat_models_responses.int.test.ts src/tests/chat_models-extended.int.test.ts src/tests/chat_models-vision.int.test.ts src/tests/chat_models.int.test.ts src/tests/chat_models.standard.int.test.ts src/tests/chat_models_responses.standard.int.test.ts
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-
-  standard-tests-azure-openai:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Use Node.js 18.x
-        uses: actions/setup-node@v3
-        with:
-          node-version: 18.x
-          cache: "yarn"
-      - name: Install dependencies
-        run: yarn install --immutable --mode=skip-build
-      - name: Build `@langchain/openai`
-        run: yarn build --filter=@langchain/openai
-      - name: Run integration tests for `@langchain/openai` AzureChatOpenAI
-        run: yarn workspace @langchain/openai test:single src/tests/azure/chat_models.standard.int.test.ts src/tests/azure/chat_models.int.test.ts
-        env:
-          AZURE_OPENAI_API_KEY: ${{ secrets.AZURE_OPENAI_API_KEY }}
-          AZURE_OPENAI_API_DEPLOYMENT_NAME: "chat"
-          AZURE_OPENAI_API_VERSION: ${{ secrets.AZURE_OPENAI_API_VERSION }}
-          AZURE_OPENAI_BASE_PATH: ${{ secrets.AZURE_OPENAI_BASE_PATH }}
 
   standard-tests-bedrock:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Use Node.js 18.x
-        uses: actions/setup-node@v3
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4.1.0
+      - name: Use Node.js
+        uses: actions/setup-node@v4
         with:
-          node-version: 18.x
-          cache: "yarn"
+          node-version-file: ".nvmrc"
+          cache: "pnpm"
       - name: Install dependencies
-        run: yarn install --immutable --mode=skip-build
+        run: pnpm install --frozen-lockfile
       - name: Build `@langchain/community`
-        run: yarn build --filter=@langchain/community
+        run: pnpm build --filter @langchain/community
       - name: Run standard tests (integration) for `@langchain/community` BedrockChat
-        run: yarn workspace @langchain/community test:single src/chat_models/tests/chatbedrock.standard.int.test.ts
+        run: pnpm --filter @langchain/community test:single src/chat_models/tests/chatbedrock.standard.int.test.ts
         env:
           BEDROCK_AWS_REGION: "us-east-1"
           BEDROCK_AWS_SECRET_ACCESS_KEY: ${{ secrets.BEDROCK_AWS_SECRET_ACCESS_KEY }}
@@ -100,16 +95,18 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Use Node.js 18.x
-        uses: actions/setup-node@v3
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4.1.0
+      - name: Use Node.js
+        uses: actions/setup-node@v4
         with:
-          node-version: 18.x
-          cache: "yarn"
+          node-version-file: ".nvmrc"
+          cache: "pnpm"
       - name: Install dependencies
-        run: yarn install --immutable --mode=skip-build
+        run: pnpm install --frozen-lockfile
       - name: Build `@langchain/community`
-        run: yarn build --filter=@langchain/community
+        run: pnpm build --filter @langchain/community
       - name: Run standard tests (integration) for `@langchain/community` ChatFireworks
-        run: yarn workspace @langchain/community test:single src/chat_models/tests/chatfireworks.standard.int.test.ts
+        run: pnpm --filter @langchain/community test:single src/chat_models/tests/chatfireworks.standard.int.test.ts
         env:
           FIREWORKS_API_KEY: ${{ secrets.FIREWORKS_API_KEY }}

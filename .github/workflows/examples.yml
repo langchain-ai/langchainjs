@@ -9,12 +9,9 @@ on:
   pull_request:
     # Only run if examples, langchain, core, or integration package code changes.
     paths:
-      - 'examples/**'
-      - 'langchain/**'
-      - 'langchain-core/**'
-      - 'libs/**/**'
-  workflow_dispatch:  # Allows triggering the workflow manually in GitHub UI
-
+      - "examples/**"
+      - "libs/**"
+  workflow_dispatch: # Allows triggering the workflow manually in GitHub UI
 
 # If another push to the same PR or branch happens while this workflow is still running,
 # cancel the earlier run in favor of the next run.
@@ -30,15 +27,16 @@ jobs:
   build:
     name: Build
     runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
     steps:
       - uses: actions/checkout@v4
-      - name: Use Node.js 18.x
-        uses: actions/setup-node@v3
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4.1.0
+      - name: Use Node.js
+        uses: actions/setup-node@v4
         with:
-          node-version: 18.x
+          node-version-file: ".nvmrc"
+          cache: "pnpm"
       - name: Install dependencies
-        run: yarn install --immutable
+        run: pnpm install --frozen-lockfile
       - name: Build examples
-        run: yarn turbo:command build --filter=examples
+        run: pnpm build --filter examples

@@ -7,12 +7,12 @@ on:
   push:
     branches: ["main"]
   pull_request:
-    # Only run when LangChain, or LangChain Core code changes.
+    # Only run when LangChain, LangChain Core, or LangChain Classic code changes.
     paths:
-      - 'langchain/**'
-      - 'langchain-core/**'
-  workflow_dispatch:  # Allows triggering the workflow manually in GitHub UI
-
+      - "libs/langchain/**"
+      - "libs/langchain-core/**"
+      - "libs/langchain-classic/**"
+  workflow_dispatch: # Allows triggering the workflow manually in GitHub UI
 
 # If another push to the same PR or branch happens while this workflow is still running,
 # cancel the earlier run in favor of the next run.
@@ -30,31 +30,33 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest]
-        node-version: [18.x, 20.x]
+        node-version: [20.x, 22.x]
         # See Node.js release schedule at https://nodejs.org/en/about/releases/
         # include:
-          # - os: windows-latest
-          #   node-version: 20.x
-          # - os: macos-latest
-          #   node-version: 20.x
+        # - os: windows-latest
+        #   node-version: 20.x
+        # - os: macos-latest
+        #   node-version: 20.x
     runs-on: ${{ matrix.os }}
     env:
       PUPPETEER_SKIP_DOWNLOAD: "true"
       PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: "true"
     steps:
       - uses: actions/checkout@v4
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4.1.0
       - name: Use Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
-          node-version: ${{ matrix.node-version }}
-          cache: "yarn"
+          node-version-file: ".nvmrc"
+          cache: "pnpm"
       - name: Install dependencies
-        run: yarn install --immutable
+        run: pnpm install --frozen-lockfile
         # Running `test:unit:ci` from root will build first, however debugging
         # in CI is easier if we separate the build step from the test step.
       - name: Build LangChain
-        run: yarn build --filter=langchain
+        run: pnpm build --filter langchain
       - name: Test
-        run: yarn run test:unit:ci --filter=langchain
+        run: pnpm run test:unit:ci --filter langchain
         env:
           COHERE_API_KEY: ${{ secrets.COHERE_API_KEY }}

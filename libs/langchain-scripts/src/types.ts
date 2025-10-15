@@ -92,7 +92,7 @@ export interface ExtraImportMapEntry {
 export interface LangChainConfig {
   /**
    * This lists all the entrypoints for the library. Each key corresponds to an
-   * importable path, eg. `import { AgentExecutor } from "langchain/agents"`.
+   * importable path, eg. `import { createAgent } from "langchain"`.
    * The value is the path to the file in `src/` that exports the entrypoint.
    * This is used to generate the `exports` field in package.json.
    * Order is not important.

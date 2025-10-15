@@ -2,7 +2,7 @@
 
 ⚡ Building applications with LLMs through composability ⚡
 
- ![npm](https://img.shields.io/npm/dm/langchain) [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT) [![Twitter](https://img.shields.io/twitter/url/https/twitter.com/langchainai.svg?style=social&label=Follow%20%40LangChainAI)](https://twitter.com/langchainai) [![Open in Dev Containers](https://img.shields.io/static/v1?label=Dev%20Containers&message=Open&color=blue&logo=visualstudiocode)](https://vscode.dev/redirect?url=vscode://ms-vscode-remote.remote-containers/cloneInVolume?url=https://github.com/langchain-ai/langchainjs)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT) ![npm](https://img.shields.io/npm/dm/langchain) [![Twitter](https://img.shields.io/twitter/url/https/twitter.com/langchainai.svg?style=social&label=Follow%20%40LangChainAI)](https://twitter.com/langchainai) [![Open in Dev Containers](https://img.shields.io/static/v1?label=Dev%20Containers&message=Open&color=blue&logo=visualstudiocode)](https://vscode.dev/redirect?url=vscode://ms-vscode-remote.remote-containers/cloneInVolume?url=https://github.com/langchain-ai/langchainjs)
 [<img src="https://github.com/codespaces/badge.svg" title="Open in Github Codespace" width="150" height="20">](https://codespaces.new/langchain-ai/langchainjs)
 
 Looking for the Python version? Check out [LangChain](https://github.com/langchain-ai/langchain).
@@ -12,15 +12,15 @@ To help you ship LangChain apps to production faster, check out [LangSmith](http
 
 ## ⚡️ Quick Install
 
-You can use npm, yarn, or pnpm to install LangChain.js
+You can use npm, pnpm, or yarn to install LangChain.js
 
-`npm install -S langchain` or `yarn add langchain` or `pnpm add langchain`
+`npm install -S langchain` or `pnpm install langchain` or `yarn add langchain`
 
 ## 🌐 Supported Environments
 
 LangChain is written in TypeScript and can be used in:
 
-- Node.js (ESM and CommonJS) - 18.x, 19.x, 20.x, 22.x
+- Node.js (ESM and CommonJS) - 20.x, 22.x, 24.x
 - Cloudflare Workers
 - Vercel / Next.js (Browser, Serverless and Edge functions)
 - Supabase Edge Functions

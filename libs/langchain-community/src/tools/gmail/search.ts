@@ -1,17 +1,20 @@
 import { gmail_v1 } from "googleapis";
-import { z } from "zod";
+import { z } from "zod/v3";
 import { InferInteropZodOutput } from "@langchain/core/utils/types";
 import { GmailBaseTool, GmailBaseToolParams } from "./base.js";
 import { SEARCH_DESCRIPTION } from "./descriptions.js";
 
+const searchSchema = z.object({
+  query: z.string(),
+  maxResults: z.number().optional(),
+  resource: z.enum(["messages", "threads"]).optional(),
+});
+export type SearchSchema = z.infer<typeof searchSchema>;
+
 export class GmailSearch extends GmailBaseTool {
   name = "search_gmail";
 
-  schema = z.object({
-    query: z.string(),
-    maxResults: z.number().optional(),
-    resource: z.enum(["messages", "threads"]).optional(),
-  });
+  schema = searchSchema;
 
   description = SEARCH_DESCRIPTION;
 
@@ -19,7 +22,7 @@ export class GmailSearch extends GmailBaseTool {
     super(fields);
   }
 
-  async _call(arg: InferInteropZodOutput<typeof this.schema>) {
+  async _call(arg: InferInteropZodOutput<SearchSchema>) {
     const { query, maxResults = 10, resource = "messages" } = arg;
 
     try {
@@ -128,9 +131,3 @@ export class GmailSearch extends GmailBaseTool {
     return parsedThreads;
   }
 }
-
-export type SearchSchema = {
-  query: string;
-  maxResults?: number;
-  resource?: "messages" | "threads";
-};

@@ -80,7 +80,7 @@ const testExports: Array<[string, (p: string) => string]> = [
   ["test-exports-bun", (p: string) => `export * from "langchain/${p}";`],
 ];
 
-const DEFAULT_GITIGNORE_PATHS = ["node_modules", "dist", ".yarn"];
+const DEFAULT_GITIGNORE_PATHS = ["node_modules", "dist"];
 
 async function createImportMapFile(config: LangChainConfig): Promise<void> {
   const createImportStatement = (k: string, p: string) =>

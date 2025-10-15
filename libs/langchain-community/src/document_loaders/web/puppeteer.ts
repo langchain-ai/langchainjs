@@ -4,8 +4,8 @@ import type {
   Page,
   Browser,
   PuppeteerLaunchOptions,
-  ConnectOptions,
   connect,
+  ConnectOptions,
 } from "puppeteer";
 
 import { Document } from "@langchain/core/documents";
@@ -181,14 +181,13 @@ export class PuppeteerWebBaseLoader
     connect: typeof connect;
   }> {
     try {
-      // eslint-disable-next-line import/no-extraneous-dependencies
       const { launch, connect } = await import("puppeteer");
 
       return { launch, connect };
     } catch (e) {
       console.error(e);
       throw new Error(
-        "Please install puppeteer as a dependency with, e.g. `yarn add puppeteer`"
+        "Please install puppeteer as a dependency with, e.g. `pnpm install puppeteer`"
       );
     }
   }
