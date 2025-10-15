@@ -10,8 +10,6 @@ import * as chains_combine_documents_reduce from "@langchain/classic/chains/comb
 import * as chains_history_aware_retriever from "@langchain/classic/chains/history_aware_retriever";
 import * as chains_openai_functions from "@langchain/classic/chains/openai_functions";
 import * as chains_retrieval from "@langchain/classic/chains/retrieval";
-import * as embeddings_cache_backed from "langchain/embeddings/cache_backed";
-import * as embeddings_fake from "langchain/embeddings/fake";
 import * as vectorstores_memory from "@langchain/classic/vectorstores/memory";
 import * as text_splitter from "@langchain/classic/text_splitter";
 import * as memory from "@langchain/classic/memory";

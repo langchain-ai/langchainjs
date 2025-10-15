@@ -10,8 +10,6 @@ export * from "@langchain/classic/chains/combine_documents/reduce";
 export * from "@langchain/classic/chains/history_aware_retriever";
 export * from "@langchain/classic/chains/openai_functions";
 export * from "@langchain/classic/chains/retrieval";
-export * from "langchain/embeddings/cache_backed";
-export * from "langchain/embeddings/fake";
 export * from "@langchain/classic/vectorstores/memory";
 export * from "@langchain/classic/text_splitter";
 export * from "@langchain/classic/memory";
