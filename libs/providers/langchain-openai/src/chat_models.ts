@@ -651,7 +651,7 @@ export abstract class BaseChatOpenAI<
     }
     return this.withConfig({
       tools: tools.map((tool) =>
-        isBuiltInTool(tool)
+        isBuiltInTool(tool) || isCustomTool(tool)
           ? tool
           : this._convertChatOpenAIToolToCompletionsTool(tool, { strict })
       ),
@@ -1980,6 +1980,14 @@ export class ChatOpenAIResponses<
           tool.partial_images = 1;
         }
         reducedTools.push(tool);
+      } else if (isCustomTool(tool)) {
+        const customToolData = tool.metadata.customTool;
+        reducedTools.push({
+          type: "custom",
+          name: customToolData.name,
+          description: customToolData.description,
+          format: customToolData.format,
+        } as ResponsesTool);
       } else if (isOpenAIFunctionTool(tool)) {
         reducedTools.push({
           type: "function",
@@ -3158,7 +3166,9 @@ export class ChatOpenAI<
       options?.include != null ||
       options?.reasoning?.summary != null ||
       this.reasoning?.summary != null;
-    const hasCustomTools = options?.tools?.some(isOpenAICustomTool);
+    const hasCustomTools =
+      options?.tools?.some(isOpenAICustomTool) ||
+      options?.tools?.some(isCustomTool);
 
     return (
       this.useResponsesApi ||
