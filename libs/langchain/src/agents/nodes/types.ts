@@ -54,4 +54,20 @@ export interface ModelRequest<
    * The runtime context containing metadata, signal, writer, interrupt, etc.
    */
   runtime: Runtime<TContext>;
+
+  /**
+   * Additional settings to bind to the model when preparing it for invocation.
+   * These settings are applied via `bindTools()` and can include parameters like
+   * `headers`, `container`, etc. The model is re-bound on each request,
+   * so these settings can vary per invocation.
+   *
+   * @example
+   * ```ts
+   * modelSettings: {
+   *   headers: { "anthropic-beta": "code-execution-2025-08-25" },
+   *   container: "container_abc123"
+   * }
+   * ```
+   */
+  modelSettings?: Record<string, unknown>;
 }
