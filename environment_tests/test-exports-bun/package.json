@@ -24,7 +24,8 @@
     "@langchain/openai": "workspace:*",
     "d3-dsv": "2",
     "hnswlib-node": "^3.0.0",
-    "langchain": "workspace:*"
+    "langchain": "workspace:*",
+    "zod": "^3.25.76 || ^4"
   },
   "devDependencies": {
     "@tsconfig/recommended": "^1.0.2",
