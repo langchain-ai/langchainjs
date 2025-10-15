@@ -72,7 +72,7 @@ describe("Mock Google LLM", () => {
     const model = new GoogleLLM({
       authOptions,
     });
-    await model.call("Hello world");
+    await model.invoke("Hello world");
 
     expect(record?.opts?.headers).toHaveProperty("User-Agent");
     expect(record.opts.headers["User-Agent"]).toMatch(
