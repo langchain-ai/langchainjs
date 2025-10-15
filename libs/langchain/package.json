@@ -156,39 +156,6 @@
       },
       "input": "./src/load/serializable.ts"
     },
-    "./storage/encoder_backed": {
-      "import": {
-        "types": "./dist/storage/encoder_backed.d.ts",
-        "default": "./dist/storage/encoder_backed.js"
-      },
-      "require": {
-        "types": "./dist/storage/encoder_backed.d.cts",
-        "default": "./dist/storage/encoder_backed.cjs"
-      },
-      "input": "./src/storage/encoder_backed.ts"
-    },
-    "./storage/in_memory": {
-      "import": {
-        "types": "./dist/storage/in_memory.d.ts",
-        "default": "./dist/storage/in_memory.js"
-      },
-      "require": {
-        "types": "./dist/storage/in_memory.d.cts",
-        "default": "./dist/storage/in_memory.cjs"
-      },
-      "input": "./src/storage/in_memory.ts"
-    },
-    "./storage/file_system": {
-      "import": {
-        "types": "./dist/storage/file_system.d.ts",
-        "default": "./dist/storage/file_system.js"
-      },
-      "require": {
-        "types": "./dist/storage/file_system.d.cts",
-        "default": "./dist/storage/file_system.cjs"
-      },
-      "input": "./src/storage/file_system.ts"
-    },
     "./package.json": "./package.json"
   }
 }
