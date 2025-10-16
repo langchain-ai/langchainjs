@@ -11,7 +11,11 @@ import type { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager
 import type { ChatResult } from "@langchain/core/outputs";
 import { StructuredTool, tool } from "@langchain/core/tools";
 import { RunnableLambda } from "@langchain/core/runnables";
-import { Command, type BaseCheckpointSaver } from "@langchain/langgraph";
+import {
+  Command,
+  getCurrentTaskInput,
+  type BaseCheckpointSaver,
+} from "@langchain/langgraph";
 
 import { providerStrategy, createAgent, createMiddleware } from "../index.js";
 
@@ -823,5 +827,55 @@ describe("createAgent", () => {
         })
       ).toThrow("`model` option is required to create an agent.");
     });
+  });
+
+  it("should make passed in state available in context", async () => {
+    const model = new FakeToolCallingChatModel({
+      responses: [
+        new AIMessage({
+          content: "result1",
+          tool_calls: [
+            {
+              name: "state_check_tool",
+              id: "tool_abcd123",
+              args: { query: "foo" },
+            },
+          ],
+        }),
+        new AIMessage("result2"),
+      ],
+    });
+
+    const stateCheckTool = tool(
+      async (_, config) => {
+        const taskInput = await getCurrentTaskInput(config);
+        return JSON.stringify(taskInput);
+      },
+      {
+        name: "state_check_tool",
+        description: "A tool that checks the current task input",
+        schema: z.object({
+          query: z.string(),
+        }),
+      }
+    );
+
+    const agent = createAgent({
+      model,
+      tools: [stateCheckTool],
+      stateSchema: z.object({
+        customField: z.string().optional(),
+      }),
+    });
+
+    const result = await agent.invoke({
+      messages: [new HumanMessage("Hello Input!")],
+      customField: "test-value",
+    });
+
+    expect(result.messages).toHaveLength(4);
+    const toolMessage = result.messages[2] as ToolMessage;
+    const taskInput = JSON.parse(toolMessage.content as string);
+    expect(taskInput.customField).toBe("test-value");
   });
 });
