@@ -1,5 +1,9 @@
-import { createAgent, HumanMessage, tool } from "langchain";
-import { humanInTheLoopMiddleware } from "langchain";
+import {
+  createAgent,
+  HumanMessage,
+  tool,
+  humanInTheLoopMiddleware,
+} from "langchain";
 import { Command, MemorySaver } from "@langchain/langgraph";
 import { z } from "zod";
 
@@ -113,7 +117,7 @@ if (state.next && state.next.length > 0) {
     console.log("Tool:", hitlRequest.actionRequests[0].name);
     console.log(
       "Args:",
-      JSON.stringify(hitlRequest.actionRequests[0].arguments, null, 2)
+      JSON.stringify(hitlRequest.actionRequests[0].args, null, 2)
     );
     console.log("Description:", hitlRequest.actionRequests[0].description);
 
