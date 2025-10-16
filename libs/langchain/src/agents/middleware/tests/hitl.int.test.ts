@@ -182,8 +182,8 @@ describe("humanInTheLoopMiddleware", () => {
                 type: "edit",
                 editedAction: {
                   name: "draft_email",
-                  arguments: {
-                    ...hitlRequest.actionRequests[0].arguments,
+                  args: {
+                    ...hitlRequest.actionRequests[0].args,
                     message: editedMessage,
                     to: ["john.doe@example.com"],
                     subject: "Hello",
