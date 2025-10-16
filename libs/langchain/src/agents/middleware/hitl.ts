@@ -535,10 +535,7 @@ export function humanInTheLoopMiddleware(
           `Invalid edited action for tool "${toolCall.name}": name must be a string`
         );
       }
-      if (
-        !editedAction.args ||
-        typeof editedAction.args !== "object"
-      ) {
+      if (!editedAction.args || typeof editedAction.args !== "object") {
         throw new Error(
           `Invalid edited action for tool "${toolCall.name}": args must be an object`
         );
