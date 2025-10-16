@@ -6,8 +6,8 @@ const { spawn } = require("child_process");
 const readline = require("readline");
 const semver = require("semver");
 
-const RELEASE_BRANCH = "release";
-const MAIN_BRANCH = "main";
+const RELEASE_BRANCH = "v0-release";
+const MAIN_BRANCH = "v0.3";
 
 /**
  * Handles execSync errors and logs them in a readable format.
