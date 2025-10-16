@@ -163,8 +163,6 @@ export interface AnthropicInput {
    *
    * To not set this field, pass `null`. If `undefined` is passed,
    * the default (-1) will be used.
-   *
-   * For Opus 4.1 and Sonnet 4.5, this defaults to `null`.
    */
   topP?: number | null;
 
@@ -731,8 +729,11 @@ export class ChatAnthropicMessages<
 
     this.invocationKwargs = fields?.invocationKwargs ?? {};
 
-    // Default to `undefined` for `topP` for Opus 4.1 and Sonnet 4.5 models
-    if (this.model.includes("opus-4-1") || this.model.includes("sonnet-4-5")) {
+    if (
+      this.model.includes("opus-4-1") ||
+      this.model.includes("sonnet-4-5") ||
+      this.model.includes("haiku-4-5")
+    ) {
       this.topP = fields?.topP === null ? undefined : fields?.topP;
     } else {
       this.topP = fields?.topP ?? this.topP;
@@ -851,7 +852,9 @@ export class ChatAnthropicMessages<
         throw new Error("topK is not supported when thinking is enabled");
       }
       if (
-        this.model.includes("opus-4-1") || this.model.includes("sonnet-4-5")
+        this.model.includes("opus-4-1") ||
+        this.model.includes("sonnet-4-5") ||
+        this.model.includes("haiku-4-5")
           ? this.topP !== undefined
           : this.topP !== -1
       ) {
