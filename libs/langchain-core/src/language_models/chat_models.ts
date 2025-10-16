@@ -527,7 +527,6 @@ export abstract class BaseChatModel<
             { ...parsedOptions, promptIndex: i },
             runManagers?.[i]
           );
-          console.log("outputVersion", outputVersion);
           if (outputVersion === "v1") {
             for (const generation of generateResults.generations) {
               generation.message = castStandardMessageContent(
