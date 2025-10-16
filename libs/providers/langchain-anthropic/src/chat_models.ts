@@ -732,8 +732,8 @@ export class ChatAnthropicMessages<
 
     this.invocationKwargs = fields?.invocationKwargs ?? {};
 
-    if (this.model.includes("opus-4-1") || this.model.includes("sonnet-4-5")) {
-      // Default to `undefined` for `topP` for Opus 4.1 models
+    if (this.model.includes("opus-4-1") || this.model.includes("sonnet-4-5") || this.model.includes("haiku-4-5")) {
+      // Default to `undefined` for `topP` for Claude 4 models (Opus 4.1, Sonnet 4.5, Haiku 4.5)
       this.topP = fields?.topP === null ? undefined : fields?.topP;
     } else {
       this.topP = fields?.topP ?? this.topP;
@@ -851,7 +851,7 @@ export class ChatAnthropicMessages<
         throw new Error("topK is not supported when thinking is enabled");
       }
       if (
-        this.model.includes("opus-4-1") || this.model.includes("sonnet-4-5")
+        this.model.includes("opus-4-1") || this.model.includes("sonnet-4-5") || this.model.includes("haiku-4-5")
           ? this.topP !== undefined
           : this.topP !== -1
       ) {
