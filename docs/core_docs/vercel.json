@@ -15804,6 +15804,22 @@
     {
       "source": "/v0.2/docs/how_to/generative_ui",
       "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/classes/_langchain_google_common.index.BaseGoogleSearchOutputParser.html",
+      "destination": "https://reference.langchain.com/javascript/index.html"
+    },
+    {
+      "source": "/classes/_langchain_google_common.index.MarkdownGoogleSearchOutputParser.html",
+      "destination": "https://reference.langchain.com/javascript/index.html"
+    },
+    {
+      "source": "/classes/_langchain_google_common.index.SimpleGoogleSearchOutputParser.html",
+      "destination": "https://reference.langchain.com/javascript/index.html"
+    },
+    {
+      "source": "/classes/_langchain_pinecone.PineconeStore.html",
+      "destination": "https://reference.langchain.com/javascript/index.html"
     }
   ]
 }
