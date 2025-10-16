@@ -97,7 +97,7 @@ const InterruptOnConfigSchema = z.object({
   /**
    * JSON schema for the arguments associated with the action, if edits are allowed.
    */
-  argumentsSchema: z.record(z.any()).optional(),
+  argsSchema: z.record(z.any()).optional(),
 });
 export type InterruptOnConfig = z.input<typeof InterruptOnConfigSchema>;
 
@@ -112,7 +112,7 @@ export interface Action {
   /**
    * Key-value pairs of arguments needed for the action (e.g., {"a": 1, "b": 2}).
    */
-  arguments: Record<string, any>;
+  args: Record<string, any>;
 }
 
 /**
@@ -126,7 +126,7 @@ export interface ActionRequest {
   /**
    * Key-value pairs of arguments needed for the action (e.g., {"a": 1, "b": 2}).
    */
-  arguments: Record<string, any>;
+  args: Record<string, any>;
   /**
    * The description of the action to be reviewed.
    */
@@ -148,7 +148,7 @@ export interface ReviewConfig {
   /**
    * JSON schema for the arguments associated with the action, if edits are allowed.
    */
-  argumentsSchema?: Record<string, any>;
+  argsSchema?: Record<string, any>;
 }
 
 /**
@@ -158,7 +158,7 @@ export interface ReviewConfig {
  * ```ts
  * const hitlRequest: HITLRequest = {
  *   actionRequests: [
- *     { name: "send_email", arguments: { to: "user@example.com", subject: "Hello" } }
+ *     { name: "send_email", args: { to: "user@example.com", subject: "Hello" } }
  *   ],
  *   reviewConfigs: [
  *     {
@@ -282,7 +282,7 @@ export type HumanInTheLoopMiddlewareConfig = InferInteropZodInput<
  *     } else if (action.name === "write_file") {
  *       return {
  *         type: "edit",
- *         editedAction: { name: "write_file", arguments: { filename: "safe.txt", content: "Safe content" } }
+ *         editedAction: { name: "write_file", args: { filename: "safe.txt", content: "Safe content" } }
  *       };
  *     }
  *     return { type: "reject", message: "Action not allowed" };
@@ -311,7 +311,7 @@ export type HumanInTheLoopMiddlewareConfig = InferInteropZodInput<
  * @param options.interruptOn - Per-tool configuration mapping tool names to their settings
  * @param options.interruptOn[toolName].allowedDecisions - Array of decision types allowed for this tool (e.g., ["approve", "edit", "reject"])
  * @param options.interruptOn[toolName].description - Custom approval message for the tool. Can be either a static string or a callable that dynamically generates the description based on agent state, runtime, and tool call information
- * @param options.interruptOn[toolName].argumentsSchema - JSON schema for the arguments associated with the action, if edits are allowed
+ * @param options.interruptOn[toolName].argsSchema - JSON schema for the arguments associated with the action, if edits are allowed
  * @param options.descriptionPrefix - Default prefix for approval messages (default: "Tool execution requires approval"). Only used for tools that do not define a custom `description` in their InterruptOnConfig.
  *
  * @returns A middleware instance that can be passed to `createAgent`
@@ -385,7 +385,7 @@ export type HumanInTheLoopMiddlewareConfig = InferInteropZodInput<
  * const resume: HITLResponse = {
  *   decisions: [{
  *     type: "edit",
- *     editedAction: { name: "write_file", arguments: { filename: "safe.txt", content: "Modified" } }
+ *     editedAction: { name: "write_file", args: { filename: "safe.txt", content: "Modified" } }
  *   }]
  * };
  *
@@ -495,7 +495,7 @@ export function humanInTheLoopMiddleware(
      */
     const actionRequest: ActionRequest = {
       name: toolName,
-      arguments: toolArgs,
+      args: toolArgs,
       description,
     };
 
@@ -507,8 +507,8 @@ export function humanInTheLoopMiddleware(
       allowedDecisions: config.allowedDecisions,
     };
 
-    if (config.argumentsSchema) {
-      reviewConfig.argumentsSchema = config.argumentsSchema;
+    if (config.argsSchema) {
+      reviewConfig.argsSchema = config.argsSchema;
     }
 
     return { actionRequest, reviewConfig };
@@ -536,11 +536,11 @@ export function humanInTheLoopMiddleware(
         );
       }
       if (
-        !editedAction.arguments ||
-        typeof editedAction.arguments !== "object"
+        !editedAction.args ||
+        typeof editedAction.args !== "object"
       ) {
         throw new Error(
-          `Invalid edited action for tool "${toolCall.name}": arguments must be an object`
+          `Invalid edited action for tool "${toolCall.name}": args must be an object`
         );
       }
 
@@ -548,7 +548,7 @@ export function humanInTheLoopMiddleware(
         revisedToolCall: {
           type: "tool_call",
           name: editedAction.name,
-          args: editedAction.arguments,
+          args: editedAction.args,
           id: toolCall.id,
         },
         toolMessage: null,

@@ -195,7 +195,7 @@ describe("humanInTheLoopMiddleware", () => {
       {
         "actionRequests": [
           {
-            "arguments": {
+            "args": {
               "content": "Hello World",
               "filename": "greeting.txt",
             },
@@ -290,7 +290,7 @@ describe("humanInTheLoopMiddleware", () => {
               type: "edit",
               editedAction: {
                 name: "write_file",
-                arguments: { filename: "safe.txt", content: "Safe content" },
+                args: { filename: "safe.txt", content: "Safe content" },
               },
             },
           ],
@@ -521,7 +521,7 @@ describe("humanInTheLoopMiddleware", () => {
           type: "edit",
           editedAction: {
             name: "write_file",
-            arguments: { filename: "safe.txt", content: "Safe content" },
+            args: { filename: "safe.txt", content: "Safe content" },
           },
         };
       }
@@ -831,7 +831,7 @@ describe("humanInTheLoopMiddleware", () => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const invalidEditedAction: any = {
       name: 123, // Invalid: should be string
-      arguments: { filename: "test.txt", content: "test" },
+      args: { filename: "test.txt", content: "test" },
     };
 
     await expect(() =>
@@ -896,11 +896,11 @@ describe("humanInTheLoopMiddleware", () => {
       config
     );
 
-    // Resume with invalid edited action (arguments is not an object)
+    // Resume with invalid edited action (args is not an object)
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const invalidEditedAction: any = {
       name: "write_file",
-      arguments: "not an object", // Invalid: should be object
+      args: "not an object", // Invalid: should be object
     };
 
     await expect(() =>
@@ -918,7 +918,7 @@ describe("humanInTheLoopMiddleware", () => {
         config
       )
     ).rejects.toThrow(
-      'Invalid edited action for tool "write_file": arguments must be an object'
+      'Invalid edited action for tool "write_file": args must be an object'
     );
   });
 
