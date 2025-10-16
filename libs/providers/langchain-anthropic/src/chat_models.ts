@@ -1224,6 +1224,7 @@ export class ChatAnthropicMessages<
       console.warn(thinkingAdmonition);
 
       llm = this.withConfig({
+        outputVersion: "v0",
         tools,
         ls_structured_output_format: {
           kwargs: { method: "functionCalling" },
@@ -1241,6 +1242,7 @@ export class ChatAnthropicMessages<
       llm = llm.pipe(raiseIfNoToolCalls);
     } else {
       llm = this.withConfig({
+        outputVersion: "v0",
         tools,
         tool_choice: {
           type: "tool",

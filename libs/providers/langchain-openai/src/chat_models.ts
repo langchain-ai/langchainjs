@@ -30,6 +30,7 @@ import {
   BaseChatModel,
   type LangSmithParams,
   type BaseChatModelParams,
+  BaseChatModelCallOptions,
 } from "@langchain/core/language_models/chat_models";
 import {
   isOpenAITool as isOpenAIFunctionTool,
@@ -104,9 +105,11 @@ import {
 import {
   _convertMessagesToOpenAIParams,
   completionsApiContentBlockConverter,
-  ResponsesInputItem,
 } from "./utils/message_inputs.js";
-import { _convertToResponsesMessageFromV1 } from "./utils/standard.js";
+import {
+  _convertToResponsesMessageFromV1,
+  ResponsesInputItem,
+} from "./utils/standard.js";
 import { iife, isReasoningModel, messageToOpenAIRole } from "./utils/misc.js";
 
 const _FUNCTION_CALL_IDS_MAP_KEY = "__openai_function_call_ids__";
@@ -123,7 +126,13 @@ export type { OpenAICallOptions, OpenAIChatInput };
 
 export interface BaseChatOpenAICallOptions
   extends OpenAICallOptions,
+    BaseChatModelCallOptions,
     BaseFunctionCallOptions {
+  /**
+   * Additional options to pass to the underlying axios request.
+   */
+  options?: OpenAICoreRequestOptions;
+
   /**
    * A list of tools that the model may use to generate responses.
    * Each tool can be a function, a built-in tool, or a custom tool definition.
@@ -464,9 +473,13 @@ export abstract class BaseChatOpenAI<
   constructor(fields?: BaseChatOpenAIFields) {
     super(fields ?? {});
 
+    const configApiKey =
+      typeof fields?.configuration?.apiKey === "string"
+        ? fields?.configuration?.apiKey
+        : undefined;
     this.apiKey =
       fields?.apiKey ??
-      fields?.configuration?.apiKey ??
+      configApiKey ??
       getEnvironmentVariable("OPENAI_API_KEY");
     this.organization =
       fields?.configuration?.organization ??
@@ -929,6 +942,7 @@ export abstract class BaseChatOpenAI<
       }
       const asJsonSchema = toJsonSchema(schema);
       llm = this.withConfig({
+        outputVersion: "v0",
         response_format: { type: "json_object" },
         ls_structured_output_format: {
           kwargs: { method: "json_mode" },
@@ -944,6 +958,7 @@ export abstract class BaseChatOpenAI<
       };
       const asJsonSchema = toJsonSchema(openaiJsonSchemaParams.schema);
       llm = this.withConfig({
+        outputVersion: "v0",
         response_format: {
           type: "json_schema",
           json_schema: openaiJsonSchemaParams,
@@ -976,6 +991,7 @@ export abstract class BaseChatOpenAI<
       if (isInteropZodSchema(schema)) {
         const asJsonSchema = toJsonSchema(schema);
         llm = this.withConfig({
+          outputVersion: "v0",
           tools: [
             {
               type: "function" as const,
@@ -1023,6 +1039,7 @@ export abstract class BaseChatOpenAI<
         }
         const asJsonSchema = toJsonSchema(schema);
         llm = this.withConfig({
+          outputVersion: "v0",
           tools: [
             {
               type: "function" as const,
@@ -1944,7 +1961,7 @@ export class ChatOpenAIResponses<
       reasoning.summary.length > 1
         ? reasoning.summary.reduce(
             (acc, curr) => {
-              const last = acc.at(-1);
+              const last = acc[acc.length - 1];
 
               if (last!.index === curr.index) {
                 last!.text += curr.text;

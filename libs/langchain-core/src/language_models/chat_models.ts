@@ -10,6 +10,7 @@ import {
   isAIMessageChunk,
   isBaseMessage,
   isAIMessage,
+  MessageOutputVersion,
 } from "../messages/index.js";
 import {
   convertToOpenAIImageBlock,
@@ -113,7 +114,7 @@ export type BaseChatModelParams = BaseLanguageModelParams & {
    *
    * @default "v0"
    */
-  outputVersion?: "v0" | "v1";
+  outputVersion?: MessageOutputVersion;
 };
 
 /**
@@ -135,6 +136,22 @@ export type BaseChatModelCallOptions = BaseLanguageModelCallOptions & {
    * if used with an unsupported model.
    */
   tool_choice?: ToolChoice;
+  /**
+   * Version of `AIMessage` output format to store in message content.
+   *
+   * `AIMessage.contentBlocks` will lazily parse the contents of `content` into a
+   * standard format. This flag can be used to additionally store the standard format
+   * as the message content, e.g., for serialization purposes.
+   *
+   * - "v0": provider-specific format in content (can lazily parse with `.contentBlocks`)
+   * - "v1": standardized format in content (consistent with `.contentBlocks`)
+   *
+   * You can also set `LC_OUTPUT_VERSION` as an environment variable to "v1" to
+   * enable this by default.
+   *
+   * @default "v0"
+   */
+  outputVersion?: MessageOutputVersion;
 };
 
 function _formatForTracing(messages: BaseMessage[]): BaseMessage[] {
@@ -202,7 +219,7 @@ export abstract class BaseChatModel<
 
   disableStreaming = false;
 
-  outputVersion?: "v0" | "v1";
+  outputVersion?: MessageOutputVersion;
 
   constructor(fields: BaseChatModelParams) {
     super(fields);
@@ -308,6 +325,7 @@ export abstract class BaseChatModel<
         invocation_params: this?.invocationParams(callOptions),
         batch_size: 1,
       };
+      const outputVersion = callOptions.outputVersion ?? this.outputVersion;
       const runManagers = await callbackManager_?.handleChatModelStart(
         this.toJSON(),
         [_formatForTracing(messages)],
@@ -335,7 +353,7 @@ export abstract class BaseChatModel<
             ...chunk.generationInfo,
             ...chunk.message.response_metadata,
           };
-          if (this.outputVersion === "v1") {
+          if (outputVersion === "v1") {
             yield castStandardMessageContent(
               chunk.message
             ) as OutputMessageType;
@@ -440,6 +458,7 @@ export abstract class BaseChatModel<
         handledOptions.runName
       );
     }
+    const outputVersion = parsedOptions.outputVersion ?? this.outputVersion;
     const generations: ChatGeneration[][] = [];
     const llmOutputs: LLMResult["llmOutput"][] = [];
     // Even if stream is not explicitly called, check if model is implicitly
@@ -508,7 +527,8 @@ export abstract class BaseChatModel<
             { ...parsedOptions, promptIndex: i },
             runManagers?.[i]
           );
-          if (this.outputVersion === "v1") {
+          console.log("outputVersion", outputVersion);
+          if (outputVersion === "v1") {
             for (const generation of generateResults.generations) {
               generation.message = castStandardMessageContent(
                 generation.message
@@ -650,6 +670,7 @@ export abstract class BaseChatModel<
       );
 
     // Handle results and call run managers
+    const outputVersion = parsedOptions.outputVersion ?? this.outputVersion;
     const generations: Generation[][] = [];
     await Promise.all(
       cachedResults.map(async ({ result: promiseResult, runManager }, i) => {
@@ -666,7 +687,7 @@ export abstract class BaseChatModel<
                 output_tokens: 0,
                 total_tokens: 0,
               };
-              if (this.outputVersion === "v1") {
+              if (outputVersion === "v1") {
                 result.message = castStandardMessageContent(result.message);
               }
             }

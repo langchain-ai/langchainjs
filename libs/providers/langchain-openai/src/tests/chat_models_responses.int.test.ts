@@ -1,7 +1,7 @@
 import { randomUUID } from "node:crypto";
 
 import { z } from "zod/v3";
-import { test, expect } from "vitest";
+import { describe, it, test, expect } from "vitest";
 
 import {
   AIMessage,
@@ -933,4 +933,16 @@ describe("promptCacheKey", () => {
       response2.response_metadata.usage.prompt_tokens_details.cached_tokens
     ).toBeGreaterThan(0);
   });
+});
+
+it.only("won't modify structured output content if outputVersion is set", async () => {
+  const schema = z.object({ name: z.string() });
+  const model = new ChatOpenAI({
+    model: "gpt-5",
+    outputVersion: "v1",
+  });
+  const response = await model
+    .withStructuredOutput(schema)
+    .invoke("respond with the name 'John'");
+  expect(response.name).toBeDefined();
 });
