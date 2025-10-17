@@ -7,7 +7,6 @@ import type {
   InferInteropZodOutput,
 } from "@langchain/core/utils/types";
 import type { AnnotationRoot } from "@langchain/langgraph";
-import type { InteropZodToStateDefinition } from "@langchain/langgraph/zod";
 import type { AIMessage, ToolMessage } from "@langchain/core/messages";
 import type { ToolCall } from "@langchain/core/messages/tool";
 import type { Command } from "@langchain/langgraph";
@@ -16,6 +15,7 @@ import type { JumpToTarget } from "../constants.js";
 import type { ClientTool, ServerTool } from "../tools.js";
 import type { Runtime, AgentBuiltInState } from "../runtime.js";
 import type { ModelRequest } from "../nodes/types.js";
+import { InteropZodToStateDefinition } from "@langchain/langgraph/zod";
 
 export type AnyAnnotationRoot = AnnotationRoot<any>;
 
@@ -266,6 +266,13 @@ type FilterPrivateProps<T> = {
   [K in keyof T as K extends `_${string}` ? never : K]: T[K];
 };
 
+export type InferChannelType<T extends AnyAnnotationRoot | InteropZodObject> =
+  T extends AnyAnnotationRoot
+    ? ToAnnotationRoot<T>["State"]
+    : T extends InteropZodObject
+    ? InferInteropZodInput<T>
+    : {};
+
 /**
  * Helper type to infer the state schema type from a middleware
  * This filters out private properties (those starting with underscore)
@@ -412,3 +419,9 @@ export type ToAnnotationRoot<A extends AnyAnnotationRoot | InteropZodObject> =
     : A extends InteropZodObject
     ? AnnotationRoot<InteropZodToStateDefinition<A>>
     : never;
+
+export type InferSchemaInput<
+  A extends AnyAnnotationRoot | InteropZodObject | undefined
+> = A extends AnyAnnotationRoot | InteropZodObject
+  ? ToAnnotationRoot<A>["State"]
+  : {};

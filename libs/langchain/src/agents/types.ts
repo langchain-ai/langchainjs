@@ -21,7 +21,11 @@ import type {
   JsonSchemaFormat,
   ResponseFormatUndefined,
 } from "./responses.js";
-import type { AgentMiddleware, AnyAnnotationRoot } from "./middleware/types.js";
+import type {
+  AgentMiddleware,
+  AnyAnnotationRoot,
+  InferSchemaInput,
+} from "./middleware/types.js";
 import type { ServerTool, ClientTool } from "./tools.js";
 import type { JumpToTarget } from "./constants.js";
 
@@ -58,7 +62,12 @@ export interface BuiltInState {
 /**
  * Base input type for `.invoke` and `.stream` methods.
  */
-export type UserInput = {
+export type UserInput<
+  TStateSchema extends
+    | AnyAnnotationRoot
+    | InteropZodObject
+    | undefined = undefined
+> = InferSchemaInput<TStateSchema> & {
   messages: Messages;
 };
 
@@ -135,6 +144,10 @@ export interface ExecutedToolCall {
 
 export type CreateAgentParams<
   StructuredResponseType extends Record<string, any> = Record<string, any>,
+  StateSchema extends
+    | AnyAnnotationRoot
+    | InteropZodObject
+    | undefined = undefined,
   ContextSchema extends
     | AnyAnnotationRoot
     | InteropZodObject = AnyAnnotationRoot,
@@ -202,6 +215,51 @@ export type CreateAgentParams<
    */
   systemPrompt?: string;
 
+  /**
+   * An optional schema for the agent state. It allows you to define custom state properties that persist
+   * across agent invocations and can be accessed in hooks, middleware, and throughout the agent's execution.
+   * The state is persisted when using a checkpointer and can be updated by middleware or during execution.
+   *
+   * As opposed to the context (defined in `contextSchema`), the state is persisted between agent invocations
+   * when using a checkpointer, making it suitable for maintaining conversation history, user preferences,
+   * or any other data that should persist across multiple interactions.
+   *
+   * @example
+   * ```ts
+   * import { z } from "zod";
+   * import { createAgent } from "@langchain/langgraph";
+   *
+   * const agent = createAgent({
+   *   model: "openai:gpt-4o",
+   *   tools: [getWeather],
+   *   stateSchema: z.object({
+   *     userPreferences: z.object({
+   *       temperatureUnit: z.enum(["celsius", "fahrenheit"]).default("celsius"),
+   *       location: z.string().optional(),
+   *     }).optional(),
+   *     conversationCount: z.number().default(0),
+   *   }),
+   *   prompt: (state, config) => {
+   *     const unit = state.userPreferences?.temperatureUnit || "celsius";
+   *     return [
+   *       new SystemMessage(`You are a helpful assistant. Use ${unit} for temperature.`),
+   *     ];
+   *   },
+   * });
+   *
+   * const result = await agent.invoke({
+   *   messages: [
+   *     new HumanMessage("What's the weather like?"),
+   *   ],
+   *   userPreferences: {
+   *     temperatureUnit: "fahrenheit",
+   *     location: "New York",
+   *   },
+   *   conversationCount: 1,
+   * });
+   * ```
+   */
+  stateSchema?: StateSchema;
   /**
    * An optional schema for the context. It allows to pass in a typed context object into the agent
    * invocation and allows to access it in hooks such as `prompt` and middleware.

@@ -62,9 +62,10 @@ export interface AgentNodeOptions<
     string,
     unknown
   >,
+  StateSchema extends AnyAnnotationRoot | InteropZodObject = AnyAnnotationRoot,
   ContextSchema extends AnyAnnotationRoot | InteropZodObject = AnyAnnotationRoot
 > extends Pick<
-    CreateAgentParams<StructuredResponseFormat, ContextSchema>,
+    CreateAgentParams<StructuredResponseFormat, StateSchema, ContextSchema>,
     | "model"
     | "systemPrompt"
     | "includeAgentName"

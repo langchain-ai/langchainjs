@@ -9,12 +9,18 @@ import {
 } from "@langchain/langgraph";
 import { withLangGraph } from "@langchain/langgraph/zod";
 
-import type { AgentMiddleware } from "./middleware/types.js";
+import type { AgentMiddleware, AnyAnnotationRoot } from "./middleware/types.js";
+import { InteropZodObject } from "@langchain/core/utils/types";
 
 export function createAgentAnnotationConditional<
+  TStateSchema extends
+    | AnyAnnotationRoot
+    | InteropZodObject
+    | undefined = undefined,
   TMiddleware extends readonly AgentMiddleware<any, any, any>[] = []
 >(
   hasStructuredResponse = true,
+  stateSchema: TStateSchema,
   middlewareList: TMiddleware = [] as unknown as TMiddleware
 ) {
   /**
@@ -28,24 +34,30 @@ export function createAgentAnnotationConditional<
       .optional(),
   };
 
-  /**
-   * Add middleware state properties to the Zod schema
-   */
+  const applySchema = (schema: { shape: Record<string, any> }) => {
+    const { shape } = schema;
+    for (const [key, schema] of Object.entries(shape)) {
+      /**
+       * Skip private state properties
+       */
+      if (key.startsWith("_")) {
+        continue;
+      }
+
+      if (!(key in zodSchema)) {
+        zodSchema[key] = schema;
+      }
+    }
+  };
+
+  // Add state schema properties to the Zod schema
+  if (stateSchema && "shape" in stateSchema) {
+    applySchema(stateSchema);
+  }
+
   for (const middleware of middlewareList) {
     if (middleware.stateSchema) {
-      const { shape } = middleware.stateSchema;
-      for (const [key, schema] of Object.entries(shape)) {
-        /**
-         * Skip private state properties
-         */
-        if (key.startsWith("_")) {
-          continue;
-        }
-
-        if (!(key in zodSchema)) {
-          zodSchema[key] = schema;
-        }
-      }
+      applySchema(middleware.stateSchema);
     }
   }
 
@@ -77,4 +89,5 @@ export const PreHookAnnotation: AnnotationRoot<{
   llmInputMessages: BinaryOperatorAggregate<BaseMessage[], Messages>;
   messages: BinaryOperatorAggregate<BaseMessage[], Messages>;
 }>;
+
 export type PreHookAnnotation = typeof PreHookAnnotation;

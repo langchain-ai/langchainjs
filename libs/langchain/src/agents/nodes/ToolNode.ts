@@ -23,10 +23,10 @@ import { mergeAbortSignals } from "./utils.js";
 import { ToolInvocationError } from "../errors.js";
 import type { PrivateState } from "../runtime.js";
 import type {
-  ToAnnotationRoot,
   AnyAnnotationRoot,
   ToolCallWrapper,
   ToolCallRequest,
+  ToAnnotationRoot,
 } from "../middleware/types.js";
 
 export interface ToolNodeOptions {
