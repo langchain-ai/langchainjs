@@ -16,7 +16,8 @@ import type { JumpToTarget } from "../constants.js";
 import type { ClientTool, ServerTool } from "../tools.js";
 import type { Runtime, AgentBuiltInState } from "../runtime.js";
 import type { ModelRequest } from "../nodes/types.js";
-import type { PromiseOrValue } from "../types.js";
+
+type PromiseOrValue<T> = T | Promise<T>;
 
 export type AnyAnnotationRoot = AnnotationRoot<any>;
 

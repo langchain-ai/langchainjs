@@ -9,7 +9,6 @@ import type { Runtime, PrivateState } from "../runtime.js";
 import type { AgentMiddleware, MiddlewareResult } from "../middleware/types.js";
 import { derivePrivateState, parseJumpToTarget } from "./utils.js";
 import { getHookConstraint } from "../middleware/utils.js";
-import { PromiseOrValue } from "../types.js";
 
 /**
  * Named class for context objects to provide better error messages
@@ -47,7 +46,7 @@ export abstract class MiddlewareNode<
   abstract runHook(
     state: TStateSchema,
     config?: Runtime<TContextSchema>
-  ): PromiseOrValue<MiddlewareResult<TStateSchema>>;
+  ): Promise<MiddlewareResult<TStateSchema>> | MiddlewareResult<TStateSchema>;
 
   async invokeMiddleware(
     state: TStateSchema,
