@@ -3,6 +3,7 @@ import { RunnableConfig } from "@langchain/core/runnables";
 import { MiddlewareNode, MiddlewareNodeOptions } from "./middleware.js";
 import type { AgentMiddleware, MiddlewareResult } from "../middleware/types.js";
 import type { AgentBuiltInState, Runtime } from "../runtime.js";
+import { getHookFunction } from "../middleware/utils.js";
 
 /**
  * Node for executing a single middleware's afterAgent hook.
@@ -33,7 +34,8 @@ export class AfterAgentNode<
   }
 
   runHook(state: TStateSchema, runtime: Runtime<TContextSchema>) {
-    return this.middleware.afterAgent!(
+    const fn = getHookFunction(this.middleware.afterAgent!);
+    return fn(
       state as Record<string, unknown> & AgentBuiltInState,
       runtime as Runtime<unknown>
     ) as Promise<MiddlewareResult<TStateSchema>>;

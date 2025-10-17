@@ -7,7 +7,6 @@ import { z } from "zod/v3";
 import type { InferInteropZodInput } from "@langchain/core/utils/types";
 
 import { createMiddleware } from "../middleware.js";
-import type { AgentBuiltInState } from "../runtime.js";
 
 /**
  * Count tool calls in a list of messages.
@@ -294,59 +293,68 @@ export function toolCallLimitMiddleware(options: ToolCallLimitConfig) {
 
   return createMiddleware({
     name: middlewareName,
-    beforeModelJumpTo: ["end"],
-    async beforeModel(state: AgentBuiltInState) {
-      const messages = state.messages;
+    beforeModel: {
+      canJumpTo: ["end"],
+      hook: (state) => {
+        const messages = state.messages;
 
-      /**
-       * Count tool calls in entire thread
-       */
-      const threadCount = countToolCallsInMessages(messages, options.toolName);
+        /**
+         * Count tool calls in entire thread
+         */
+        const threadCount = countToolCallsInMessages(
+          messages,
+          options.toolName
+        );
 
-      /**
-       * Count tool calls in current run (after last HumanMessage)
-       */
-      const runMessages = getRunMessages(messages);
-      const runCount = countToolCallsInMessages(runMessages, options.toolName);
+        /**
+         * Count tool calls in current run (after last HumanMessage)
+         */
+        const runMessages = getRunMessages(messages);
+        const runCount = countToolCallsInMessages(
+          runMessages,
+          options.toolName
+        );
 
-      /**
-       * Check if any limits are exceeded
-       */
-      const threadLimitExceeded =
-        options.threadLimit !== undefined && threadCount >= options.threadLimit;
-      const runLimitExceeded =
-        options.runLimit !== undefined && runCount >= options.runLimit;
+        /**
+         * Check if any limits are exceeded
+         */
+        const threadLimitExceeded =
+          options.threadLimit !== undefined &&
+          threadCount >= options.threadLimit;
+        const runLimitExceeded =
+          options.runLimit !== undefined && runCount >= options.runLimit;
 
-      if (!threadLimitExceeded && !runLimitExceeded) {
-        return undefined;
-      }
+        if (!threadLimitExceeded && !runLimitExceeded) {
+          return undefined;
+        }
 
-      if (exitBehavior === "error") {
-        throw new ToolCallLimitExceededError(
+        if (exitBehavior === "error") {
+          throw new ToolCallLimitExceededError(
+            threadCount,
+            runCount,
+            options.threadLimit,
+            options.runLimit,
+            options.toolName
+          );
+        }
+
+        /**
+         * Create a message indicating the limit was exceeded
+         */
+        const limitMessage = buildToolLimitExceededMessage(
           threadCount,
           runCount,
           options.threadLimit,
           options.runLimit,
           options.toolName
         );
-      }
+        const limitAiMessage = new AIMessage(limitMessage);
 
-      /**
-       * Create a message indicating the limit was exceeded
-       */
-      const limitMessage = buildToolLimitExceededMessage(
-        threadCount,
-        runCount,
-        options.threadLimit,
-        options.runLimit,
-        options.toolName
-      );
-      const limitAiMessage = new AIMessage(limitMessage);
-
-      return {
-        jumpTo: "end",
-        messages: [limitAiMessage],
-      };
+        return {
+          jumpTo: "end",
+          messages: [limitAiMessage],
+        };
+      },
     },
   });
 }

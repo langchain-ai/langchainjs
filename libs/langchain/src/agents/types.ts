@@ -429,3 +429,5 @@ export type WithStateGraphNodes<
 >
   ? StateGraph<SD, S, U, N | K, I, O, C>
   : never;
+
+export type PromiseOrValue<T> = T | Promise<T>;

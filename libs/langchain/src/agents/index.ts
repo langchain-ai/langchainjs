@@ -435,7 +435,7 @@ export { createMiddleware } from "./middleware.js";
 export type {
   ToolCallRequest,
   ToolCallHandler,
-  ToolCallWrapper,
+  WrapToolCallHook,
 } from "./middleware/types.js";
 export { FakeToolCallingModel } from "./tests/utils.js";
 export type { ReactAgent } from "./ReactAgent.js";

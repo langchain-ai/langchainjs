@@ -18,6 +18,7 @@ import {
 } from "../toolCallLimit.js";
 import { createAgent } from "../../index.js";
 import { FakeToolCallingChatModel } from "../../tests/utils.js";
+import { getHookFunction } from "../utils.js";
 
 describe("toolCallLimitMiddleware", () => {
   // Helper to create test tools
@@ -495,7 +496,8 @@ describe("toolCallLimitMiddleware", () => {
       };
 
       await expect(async () => {
-        await middleware.beforeModel!(state as any, {} as any);
+        const fn = getHookFunction(middleware.beforeModel!);
+        await fn(state as any, {} as any);
       }).rejects.toThrow(ToolCallLimitExceededError);
     });
 
@@ -526,7 +528,8 @@ describe("toolCallLimitMiddleware", () => {
       };
 
       try {
-        await middleware.beforeModel!(state as any, {} as any);
+        const fn = getHookFunction(middleware.beforeModel!);
+        await fn(state as any, {} as any);
         expect.fail("Should have thrown error");
       } catch (error) {
         expect(error).toBeInstanceOf(ToolCallLimitExceededError);
@@ -571,7 +574,8 @@ describe("toolCallLimitMiddleware", () => {
       };
 
       try {
-        await middleware.beforeModel!(state as any, {} as any);
+        const fn = getHookFunction(middleware.beforeModel!);
+        await fn(state as any, {} as any);
         expect.fail("Should have thrown error");
       } catch (error) {
         expect(error).toBeInstanceOf(ToolCallLimitExceededError);
@@ -695,7 +699,8 @@ describe("toolCallLimitMiddleware", () => {
         messages: [],
       };
 
-      const result = await middleware.beforeModel!(state as any, {} as any);
+      const fn = getHookFunction(middleware.beforeModel!);
+      const result = await fn(state as any, {} as any);
       expect(result).toBeUndefined();
     });
 
@@ -719,7 +724,8 @@ describe("toolCallLimitMiddleware", () => {
         ],
       };
 
-      const result = await middleware.beforeModel!(state as any, {} as any);
+      const fn = getHookFunction(middleware.beforeModel!);
+      const result = await fn(state as any, {} as any);
 
       // Should hit limit (3 tool calls)
       expect(result).toBeDefined();

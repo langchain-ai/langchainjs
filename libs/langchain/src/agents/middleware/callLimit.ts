@@ -133,52 +133,55 @@ export function modelCallLimitMiddleware(
   return createMiddleware({
     name: "ModelCallLimitMiddleware",
     contextSchema,
-    beforeModelJumpTo: ["end"],
-    beforeModel: (state, runtime) => {
-      const exitBehavior =
-        runtime.context.exitBehavior ??
-        middlewareOptions?.exitBehavior ??
-        DEFAULT_EXIT_BEHAVIOR;
-      const threadLimit =
-        runtime.context.threadLimit ?? middlewareOptions?.threadLimit;
-      const runLimit = runtime.context.runLimit ?? middlewareOptions?.runLimit;
+    beforeModel: {
+      canJumpTo: ["end"],
+      hook: (state, runtime) => {
+        const exitBehavior =
+          runtime.context.exitBehavior ??
+          middlewareOptions?.exitBehavior ??
+          DEFAULT_EXIT_BEHAVIOR;
+        const threadLimit =
+          runtime.context.threadLimit ?? middlewareOptions?.threadLimit;
+        const runLimit =
+          runtime.context.runLimit ?? middlewareOptions?.runLimit;
 
-      if (
-        typeof threadLimit === "number" &&
-        threadLimit <= runtime.threadLevelCallCount
-      ) {
-        const error = new ModelCallLimitMiddlewareError({
-          threadLimit,
-          threadCount: runtime.threadLevelCallCount,
-        });
-        if (exitBehavior === "end") {
-          return {
-            jumpTo: "end",
-            messages: [new AIMessage(error.message)],
-          };
+        if (
+          typeof threadLimit === "number" &&
+          threadLimit <= runtime.threadLevelCallCount
+        ) {
+          const error = new ModelCallLimitMiddlewareError({
+            threadLimit,
+            threadCount: runtime.threadLevelCallCount,
+          });
+          if (exitBehavior === "end") {
+            return {
+              jumpTo: "end",
+              messages: [new AIMessage(error.message)],
+            };
+          }
+
+          throw error;
+        }
+        if (
+          typeof runLimit === "number" &&
+          runLimit <= runtime.runModelCallCount
+        ) {
+          const error = new ModelCallLimitMiddlewareError({
+            runLimit,
+            runCount: runtime.runModelCallCount,
+          });
+          if (exitBehavior === "end") {
+            return {
+              jumpTo: "end",
+              messages: [new AIMessage(error.message)],
+            };
+          }
+
+          throw error;
         }
 
-        throw error;
-      }
-      if (
-        typeof runLimit === "number" &&
-        runLimit <= runtime.runModelCallCount
-      ) {
-        const error = new ModelCallLimitMiddlewareError({
-          runLimit,
-          runCount: runtime.runModelCallCount,
-        });
-        if (exitBehavior === "end") {
-          return {
-            jumpTo: "end",
-            messages: [new AIMessage(error.message)],
-          };
-        }
-
-        throw error;
-      }
-
-      return state;
+        return state;
+      },
     },
   });
 }

@@ -287,26 +287,61 @@ describe.each(matrix)(
     it("should create correct graph structure", async () => {
       const middleware1 = createMiddleware({
         name: "MiddlewareA",
-        beforeAgentJumpTo: aBeforeAgent,
-        afterAgentJumpTo: aAfterAgent,
-        beforeModelJumpTo: aBefore,
-        afterModelJumpTo: aAfter,
-        ...(aBeforeAgent !== undefined && { beforeAgent: () => {} }),
-        ...(aAfterAgent !== undefined && { afterAgent: () => {} }),
-        ...(aBefore !== undefined && { beforeModel: () => {} }),
-        ...(aAfter !== undefined && { afterModel: () => {} }),
+        ...(aBeforeAgent !== undefined
+          ? {
+              beforeAgent: () => {},
+              canJumpTo: aBeforeAgent,
+            }
+          : {}),
+
+        ...(aAfterAgent !== undefined
+          ? {
+              afterAgent: () => {},
+              canJumpTo: aAfterAgent,
+            }
+          : {}),
+
+        ...(aBefore !== undefined
+          ? {
+              beforeModel: () => {},
+              canJumpTo: aBefore,
+            }
+          : {}),
+
+        ...(aAfter !== undefined
+          ? {
+              afterModel: () => {},
+              canJumpTo: aAfter,
+            }
+          : {}),
       });
 
       const middleware2 = createMiddleware({
         name: "MiddlewareB",
-        beforeAgentJumpTo: bBeforeAgent,
-        afterAgentJumpTo: bAfterAgent,
-        beforeModelJumpTo: bBefore,
-        afterModelJumpTo: bAfter,
-        ...(bBeforeAgent !== undefined && { beforeAgent: () => {} }),
-        ...(bAfterAgent !== undefined && { afterAgent: () => {} }),
-        ...(bBefore !== undefined && { beforeModel: () => {} }),
-        ...(bAfter !== undefined && { afterModel: () => {} }),
+        ...(bBeforeAgent !== undefined
+          ? {
+              beforeAgent: () => {},
+              canJumpTo: bBeforeAgent,
+            }
+          : {}),
+        ...(bAfterAgent !== undefined
+          ? {
+              afterAgent: () => {},
+              canJumpTo: bAfterAgent,
+            }
+          : {}),
+        ...(bBefore !== undefined
+          ? {
+              beforeModel: () => {},
+              canJumpTo: bBefore,
+            }
+          : {}),
+        ...(bAfter !== undefined
+          ? {
+              afterModel: () => {},
+              canJumpTo: bAfter,
+            }
+          : {}),
       });
 
       const agent = createAgent({
