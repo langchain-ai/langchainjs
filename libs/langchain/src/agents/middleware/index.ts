@@ -43,4 +43,17 @@ export {
 } from "./callLimit.js";
 export { modelFallbackMiddleware } from "./modelFallback.js";
 export { type AgentMiddleware } from "./types.js";
+export {
+  codeExecutionMiddleware,
+  type CodeExecutionMiddleware,
+  type CodeExecutionMiddlewareState,
+} from "./codeExecution.js";
+export type {
+  ContainerProvider,
+  FileProvider,
+  UploadFileToContainerOpts,
+  UploadFileToContainerRet,
+  ContainerInfo,
+  FileFromProvider,
+} from "./codeExecution.js";
 export { countTokensApproximately } from "./utils.js";

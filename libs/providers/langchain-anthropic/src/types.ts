@@ -48,6 +48,7 @@ export type AnthropicWebSearchToolResultBlockParam =
 export type AnthropicWebSearchResultBlockParam =
   Anthropic.Messages.WebSearchResultBlockParam;
 export type AnthropicSearchResultBlockParam = Anthropic.SearchResultBlockParam;
+// TODO(hntrl): beta blocks should be separated
 export type AnthropicContainerUploadBlockParam =
   Anthropic.Beta.BetaContainerUploadBlockParam;
 

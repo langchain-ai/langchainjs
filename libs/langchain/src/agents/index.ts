@@ -432,6 +432,7 @@ export {
   type ResponseFormatUndefined,
 } from "./responses.js";
 export { createMiddleware } from "./middleware.js";
+export { type ModelRequest } from "./nodes/types.js";
 export type {
   ToolCallRequest,
   ToolCallHandler,
@@ -439,3 +440,4 @@ export type {
 } from "./middleware/types.js";
 export { FakeToolCallingModel } from "./tests/utils.js";
 export type { ReactAgent } from "./ReactAgent.js";
+export { MemoryFileProvider } from "./MemoryFileProvider.js";

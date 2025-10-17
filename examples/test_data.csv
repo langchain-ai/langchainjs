@@ -1,0 +1,11 @@
+date,region,product,sales,units
+2024-01-15,North,Widget A,1250.50,25
+2024-01-16,South,Widget B,890.25,18
+2024-01-17,East,Widget A,1456.75,29
+2024-01-18,West,Widget C,2100.00,42
+2024-01-19,North,Widget B,765.50,15
+2024-01-20,South,Widget A,1890.00,38
+2024-01-21,East,Widget C,2340.25,47
+2024-01-22,West,Widget B,1123.75,22
+2024-01-23,North,Widget C,1567.50,31
+2024-01-24,South,Widget B,934.25,19
