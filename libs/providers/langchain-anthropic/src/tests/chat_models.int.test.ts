@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import { expect, test, describe } from "vitest";
+import { expect, test, it, describe } from "vitest";
 import fs from "fs/promises";
 import {
   AIMessage,
@@ -58,7 +58,7 @@ async function invoke(
 const extendedThinkingModelName = "claude-3-7-sonnet-20250219";
 
 // use this for tests involving citations
-const citationsModelName = "claude-3-5-sonnet-20241022";
+const citationsModelName = "claude-sonnet-4-5-20250929";
 
 // use this for tests involving PDF documents
 const pdfModelName = "claude-3-5-haiku-20241022";
@@ -987,7 +987,7 @@ test("Can accept PDF documents", async () => {
   });
 
   const pdfPath =
-    "../langchain-community/src/document_loaders/tests/example_data/Jacob_Lee_Resume_2023.pdf";
+    "../../langchain-community/src/document_loaders/tests/example_data/Jacob_Lee_Resume_2023.pdf";
   const pdfBase64 = await fs.readFile(pdfPath, "base64");
 
   const response = await model.invoke([

@@ -1227,8 +1227,6 @@ export abstract class ChatModelIntegrationTests<
       callOptionsWithHandler
     );
 
-    console.log("result", handler.extraParams, handler);
-
     // Verify that the 'a' field is present and is a number
     this.expect(result.a).toBeDefined();
     this.expect(typeof result.a).toBe("number");
