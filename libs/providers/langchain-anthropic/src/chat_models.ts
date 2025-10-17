@@ -49,6 +49,29 @@ import {
 } from "./types.js";
 import { wrapAnthropicClientError } from "./utils/errors.js";
 
+const MODEL_DEFAULT_MAX_OUTPUT_TOKENS: Partial<
+  Record<Anthropic.Model, number>
+> = {
+  "claude-opus-4-1": 8192,
+  "claude-opus-4": 8192,
+  "claude-sonnet-4": 8192,
+  "claude-sonnet-3-7-sonnet": 8192,
+  "claude-3-5-sonnet": 4096,
+  "claude-3-5-haiku": 4096,
+  "claude-3-haiku": 2048,
+};
+const FALLBACK_MAX_OUTPUT_TOKENS = 2048;
+
+function defaultMaxOutputTokensForModel(model?: Anthropic.Model): number {
+  if (!model) {
+    return FALLBACK_MAX_OUTPUT_TOKENS;
+  }
+  const maxTokens = Object.entries(MODEL_DEFAULT_MAX_OUTPUT_TOKENS).find(
+    ([key]) => model.startsWith(key)
+  )?.[1];
+  return maxTokens ?? FALLBACK_MAX_OUTPUT_TOKENS;
+}
+
 export interface ChatAnthropicCallOptions
   extends BaseChatModelCallOptions,
     Pick<AnthropicInput, "streamUsage"> {
@@ -144,40 +167,36 @@ export type AnthropicMessagesModelId =
  * Input to AnthropicChat class.
  */
 export interface AnthropicInput {
-  /** Amount of randomness injected into the response. Ranges
-   * from 0 to 1. Use temp closer to 0 for analytical /
-   * multiple choice, and temp closer to 1 for creative
+  /**
+   * Amount of randomness injected into the response. Ranges
+   * from 0 to 1. Use temperature closer to 0 for analytical /
+   * multiple choice, and temperature closer to 1 for creative
    * and generative tasks.
-   * To not set this field, pass `null`. If `undefined` is passed,
-   * the default (1) will be used.
    */
-  temperature?: number | null;
+  temperature?: number;
 
-  /** Only sample from the top K options for each subsequent
+  /**
+   * Only sample from the top K options for each subsequent
    * token. Used to remove "long tail" low probability
-   * responses. Defaults to -1, which disables it.
+   * responses.
    */
   topK?: number;
 
-  /** Does nucleus sampling, in which we compute the
+  /**
+   * Does nucleus sampling, in which we compute the
    * cumulative distribution over all the options for each
    * subsequent token in decreasing probability order and
    * cut it off once it reaches a particular probability
-   * specified by top_p. Defaults to -1, which disables it.
-   * Note that you should either alter temperature or top_p,
-   * but not both.
-   *
-   * To not set this field, pass `null`. If `undefined` is passed,
-   * the default (-1) will be used.
-   *
-   * For Opus 4.1 and Sonnet 4.5, this defaults to `null`.
+   * specified by top_p. Note that you should either alter
+   * temperature or top_p, but not both.
    */
   topP?: number | null;
 
   /** A maximum number of tokens to generate before stopping. */
   maxTokens?: number;
 
-  /** A list of strings upon which to stop generating.
+  /**
+   * A list of strings upon which to stop generating.
    * You probably want `["\n\nHuman:"]`, as that's the cue for
    * the next turn in the dialog agent.
    */
@@ -304,7 +323,7 @@ function extractToken(chunk: AIMessageChunk): string | undefined {
  * import { ChatAnthropic } from '@langchain/anthropic';
  *
  * const llm = new ChatAnthropic({
- *   model: "claude-3-5-sonnet-20240620",
+ *   model: "claude-sonnet-4-5-20250929",
  *   temperature: 0,
  *   maxTokens: undefined,
  *   maxRetries: 2,
@@ -334,7 +353,7 @@ function extractToken(chunk: AIMessageChunk): string | undefined {
  *   "content": "Here's the translation to French:\n\nJ'adore la programmation.",
  *   "response_metadata": {
  *     "id": "msg_01QDpd78JUHpRP6bRRNyzbW3",
- *     "model": "claude-3-5-sonnet-20240620",
+ *     "model": "claude-sonnet-4-5-20250929",
  *     "stop_reason": "end_turn",
  *     "stop_sequence": null,
  *     "usage": {
@@ -372,7 +391,7 @@ function extractToken(chunk: AIMessageChunk): string | undefined {
  *     "id": "msg_01N8MwoYxiKo9w4chE4gXUs4",
  *     "type": "message",
  *     "role": "assistant",
- *     "model": "claude-3-5-sonnet-20240620"
+ *     "model": "claude-sonnet-4-5-20250929"
  *   },
  *   "usage_metadata": {
  *     "input_tokens": 25,
@@ -441,7 +460,7 @@ function extractToken(chunk: AIMessageChunk): string | undefined {
  *     "id": "msg_01SBTb5zSGXfjUc7yQ8EKEEA",
  *     "type": "message",
  *     "role": "assistant",
- *     "model": "claude-3-5-sonnet-20240620",
+ *     "model": "claude-sonnet-4-5-20250929",
  *     "stop_reason": "end_turn",
  *     "stop_sequence": null
  *   },
@@ -626,7 +645,7 @@ function extractToken(chunk: AIMessageChunk): string | undefined {
  * ```txt
  * {
  *   id: 'msg_01STxeQxJmp4sCSpioD6vK3L',
- *   model: 'claude-3-5-sonnet-20240620',
+ *   model: 'claude-sonnet-4-5-20250929',
  *   stop_reason: 'end_turn',
  *   stop_sequence: null,
  *   usage: { input_tokens: 25, output_tokens: 19 },
@@ -669,17 +688,17 @@ export class ChatAnthropicMessages<
 
   apiUrl?: string;
 
-  temperature: number | undefined = 1;
+  temperature?: number;
 
-  topK = -1;
+  topK?: number;
 
-  topP: number | undefined = -1;
+  topP?: number;
 
-  maxTokens = 2048;
+  maxTokens: number;
 
-  modelName = "claude-2.1";
+  modelName = "claude-3-5-sonnet-latest";
 
-  model = "claude-2.1";
+  model = "claude-3-5-sonnet-latest";
 
   invocationKwargs?: Kwargs;
 
@@ -732,21 +751,12 @@ export class ChatAnthropicMessages<
 
     this.invocationKwargs = fields?.invocationKwargs ?? {};
 
-    if (this.model.includes("opus-4-1") || this.model.includes("sonnet-4-5")) {
-      // Default to `undefined` for `topP` for Opus 4.1 models
-      this.topP = fields?.topP === null ? undefined : fields?.topP;
-    } else {
-      this.topP = fields?.topP ?? this.topP;
-    }
+    this.topP = fields?.topP ?? this.topP;
 
-    // If the user passes `null`, set it to `undefined`. Otherwise, use their value or the default. We have to check for null, because
-    // there's no way for us to know if they explicitly set it to `undefined`, or never passed a value
-    this.temperature =
-      fields?.temperature === null
-        ? undefined
-        : fields?.temperature ?? this.temperature;
+    this.temperature = fields?.temperature ?? this.temperature;
     this.topK = fields?.topK ?? this.topK;
-    this.maxTokens = fields?.maxTokens ?? this.maxTokens;
+    this.maxTokens =
+      fields?.maxTokens ?? defaultMaxOutputTokensForModel(this.model);
     this.stopSequences = fields?.stopSequences ?? this.stopSequences;
 
     this.streaming = fields?.streaming ?? false;
@@ -847,17 +857,10 @@ export class ChatAnthropicMessages<
       | undefined = handleToolChoice(options?.tool_choice);
 
     if (this.thinking.type === "enabled") {
-      if (this.topK !== -1) {
+      if (this.topP !== undefined && this.topK !== -1) {
         throw new Error("topK is not supported when thinking is enabled");
       }
-      if (
-        this.model.includes("opus-4-1") || this.model.includes("sonnet-4-5")
-          ? this.topP !== undefined
-          : this.topP !== -1
-      ) {
-        throw new Error("topP is not supported when thinking is enabled");
-      }
-      if (this.temperature !== 1) {
+      if (this.temperature !== undefined && this.temperature !== 1) {
         throw new Error(
           "temperature is not supported when thinking is enabled"
         );
@@ -999,7 +1002,6 @@ export class ChatAnthropicMessages<
       content,
       additionalKwargs
     );
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { role: _role, type: _type, ...rest } = additionalKwargs;
     return { generations, llmOutput: rest };
   }
