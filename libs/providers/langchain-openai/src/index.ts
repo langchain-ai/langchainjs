@@ -1,27 +1,27 @@
 export { OpenAI as OpenAIClient, type ClientOptions, toFile } from "openai";
 
 export {
-  BaseChatOpenAICallOptions,
+  type BaseChatOpenAICallOptions,
+  type BaseChatOpenAIFields,
   BaseChatOpenAI,
-  BaseChatOpenAIFields,
 } from "./chat_models/base.js";
 export {
-  ChatOpenAIResponsesCallOptions,
+  type ChatOpenAIResponsesCallOptions,
   ChatOpenAIResponses,
 } from "./chat_models/responses.js";
 export {
-  ChatOpenAICompletionsCallOptions,
+  type ChatOpenAICompletionsCallOptions,
   ChatOpenAICompletions,
 } from "./chat_models/completions.js";
 export {
-  OpenAICallOptions,
-  OpenAIChatInput,
-  ChatOpenAICallOptions,
-  ChatOpenAIFields,
+  type OpenAICallOptions,
+  type OpenAIChatInput,
+  type ChatOpenAICallOptions,
+  type ChatOpenAIFields,
   ChatOpenAI,
 } from "./chat_models/index.js";
 
-export { AzureChatOpenAIFields } from "./azure/chat_models/common.js";
+export { type AzureChatOpenAIFields } from "./azure/chat_models/common.js";
 export { AzureChatOpenAICompletions } from "./azure/chat_models/completions.js";
 export { AzureChatOpenAIResponses } from "./azure/chat_models/responses.js";
 export { AzureChatOpenAI } from "./azure/chat_models/index.js";

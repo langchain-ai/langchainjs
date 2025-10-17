@@ -40,6 +40,16 @@ export const AZURE_SERIALIZABLE_KEYS = [
   "openAIApiVersion",
 ];
 
+export interface AzureChatOpenAIFields
+  extends BaseChatOpenAIFields,
+    Partial<AzureOpenAIChatInput> {
+  /**
+   * Whether to use the responses API for all requests. If `false` the responses API will be used
+   * only when required in order to fulfill the request.
+   */
+  useResponsesApi?: boolean;
+}
+
 export function _constructAzureFields(
   this: Partial<AzureOpenAIChatInput>,
   fields?: AzureChatOpenAIFields
@@ -205,14 +215,4 @@ export function _serializeAzureChat(
   }
 
   return json;
-}
-
-export interface AzureChatOpenAIFields
-  extends BaseChatOpenAIFields,
-    Partial<AzureOpenAIChatInput> {
-  /**
-   * Whether to use the responses API for all requests. If `false` the responses API will be used
-   * only when required in order to fulfill the request.
-   */
-  useResponsesApi?: boolean;
 }
