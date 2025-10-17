@@ -221,6 +221,10 @@ export abstract class BaseChatModel<
 
   outputVersion?: MessageOutputVersion;
 
+  get callKeys(): string[] {
+    return [...super.callKeys, "outputVersion"];
+  }
+
   constructor(fields: BaseChatModelParams) {
     super(fields);
     this.outputVersion = iife(() => {

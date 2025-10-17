@@ -603,6 +603,10 @@ export class ChatOpenAI<
     return [...super.lc_serializable_keys, "useResponsesApi"];
   }
 
+  get callKeys(): string[] {
+    return [...super.callKeys, "useResponsesApi"];
+  }
+
   constructor(protected fields?: ChatOpenAIFields) {
     super(fields);
     this.useResponsesApi = fields?.useResponsesApi ?? false;
