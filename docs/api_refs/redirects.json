@@ -14946,5 +14946,341 @@
   {
     "source": "/classes/_langchain_pinecone.PineconeStore.html",
     "destination": "https://reference.langchain.com/javascript/index.html"
+  },
+  {
+    "source": "/classes/langchain_openai.ChatOpenAI.html",
+    "destination": "https://reference.langchain.com/javascript/"
+  },
+  {
+    "source": "/classes/langchain_openai.OpenAIEmbeddings.html",
+    "destination": "https://reference.langchain.com/javascript/"
+  },
+  {
+    "source": "/classes/langchain_core_prompts.PromptTemplate.html",
+    "destination": "https://reference.langchain.com/javascript/"
+  },
+  {
+    "source": "/modules/langchain_mongodb.html",
+    "destination": "https://reference.langchain.com/javascript/"
+  },
+  {
+    "source": "/classes/langchain_core_documents.Document.html",
+    "destination": "https://reference.langchain.com/javascript/"
+  },
+  {
+    "source": "/classes/langchain_core_messages.HumanMessage.html",
+    "destination": "https://reference.langchain.com/javascript/"
+  },
+  {
+    "source": "/classes/langchain_core_runnables.RunnableSequence.html",
+    "destination": "https://reference.langchain.com/javascript/"
+  },
+  {
+    "source": "/classes/langchain_anthropic.ChatAnthropic.html",
+    "destination": "https://reference.langchain.com/javascript/"
+  },
+  {
+    "source": "/classes/langchain_community_vectorstores_hnswlib.HNSWLib.html",
+    "destination": "https://reference.langchain.com/javascript/"
+  },
+  {
+    "source": "/classes/langchain_chains.ConversationChain.html",
+    "destination": "https://reference.langchain.com/javascript/"
+  },
+  {
+    "source": "/classes/langchain_mongodb.MongoDBAtlasVectorSearch.html",
+    "destination": "https://reference.langchain.com/javascript/"
+  },
+  {
+    "source": "/interfaces/langchain_openai.ChatOpenAICallOptions.html",
+    "destination": "https://reference.langchain.com/javascript/"
+  },
+  {
+    "source": "/classes/langchain_core_output_parsers.BytesOutputParser.html",
+    "destination": "https://reference.langchain.com/javascript/"
+  },
+  {
+    "source": "/functions/langchain_chains_combine_documents.createStuffDocumentsChain.html",
+    "destination": "https://reference.langchain.com/javascript/"
+  },
+  {
+    "source": "/classes/langchain_chains.ConversationalRetrievalQAChain.html",
+    "destination": "https://reference.langchain.com/javascript/"
+  },
+  {
+    "source": "/classes/langchain_experimental_masking.MaskingParser.html",
+    "destination": "https://reference.langchain.com/javascript/"
+  },
+  {
+    "source": "/classes/langchain_experimental_masking.RegexMaskingTransformer.html",
+    "destination": "https://reference.langchain.com/javascript/"
+  },
+  {
+    "source": "/functions/langchain_chains_retrieval.createRetrievalChain.html",
+    "destination": "https://reference.langchain.com/javascript/"
+  },
+  {
+    "source": "/classes/langchain_community_vectorstores_chroma.Chroma.html",
+    "destination": "https://reference.langchain.com/javascript/"
+  },
+  {
+    "source": "/classes/embeddings_base.Embeddings.html",
+    "destination": "https://reference.langchain.com/javascript/"
+  },
+  {
+    "source": "/classes/langchain_community_embeddings_fireworks.FireworksEmbeddings.html",
+    "destination": "https://reference.langchain.com/javascript/"
+  },
+  {
+    "source": "/classes/langchain_core_messages.AIMessage.html",
+    "destination": "https://reference.langchain.com/javascript/"
+  },
+  {
+    "source": "/classes/langchain_core_runnables.RunnablePassthrough.html",
+    "destination": "https://reference.langchain.com/javascript/"
+  },
+  {
+    "source": "/classes/langchain_groq.ChatGroq.html",
+    "destination": "https://reference.langchain.com/javascript/"
+  },
+  {
+    "source": "/classes/langchain_pinecone.PineconeStore.html",
+    "destination": "https://reference.langchain.com/javascript/"
+  },
+  {
+    "source": "/interfaces/langchain_core_callbacks_base.CallbackHandlerMethods.html",
+    "destination": "https://reference.langchain.com/javascript/"
+  },
+  {
+    "source": "/interfaces/langchain_core.language_models_base.ToolDefinition.html",
+    "destination": "https://reference.langchain.com/javascript/"
+  },
+  {
+    "source": "/classes/langchain_community_retrievers_tavily_search_api.TavilySearchAPIRetriever.html",
+    "destination": "https://reference.langchain.com/javascript/"
+  },
+  {
+    "source": "/classes/langchain_community_vectorstores_faiss.FaissStore.html",
+    "destination": "https://reference.langchain.com/javascript/"
+  },
+  {
+    "source": "/classes/langchain_core_tracers_console.ConsoleCallbackHandler.html",
+    "destination": "https://reference.langchain.com/javascript/"
+  },
+  {
+    "source": "/classes/langchain_community_chat_models_fireworks.ChatFireworks.html",
+    "destination": "https://reference.langchain.com/javascript/"
+  },
+  {
+    "source": "/classes/langchain_community_llms_bedrock.Bedrock.html",
+    "destination": "https://reference.langchain.com/javascript/"
+  },
+  {
+    "source": "/classes/langchain_core_runnables.RunnableLambda.html",
+    "destination": "https://reference.langchain.com/javascript/"
+  },
+  {
+    "source": "/classes/langchain_exa.ExaRetriever.html",
+    "destination": "https://reference.langchain.com/javascript/"
+  },
+  {
+    "source": "/classes/langchain_mistralai.ChatMistralAI.html",
+    "destination": "https://reference.langchain.com/javascript/"
+  },
+  {
+    "source": "/classes/langchain_output_parsers.StructuredOutputParser.html",
+    "destination": "https://reference.langchain.com/javascript/"
+  },
+  {
+    "source": "/classes/_langchain_pinecone.PineconeEmbeddings.html",
+    "destination": "https://reference.langchain.com/javascript/"
+  },
+  {
+    "source": "/classes/langchain_aws.BedrockEmbeddings.html",
+    "destination": "https://reference.langchain.com/javascript/"
+  },
+  {
+    "source": "/classes/langchain_cohere.Cohere.html",
+    "destination": "https://reference.langchain.com/javascript/"
+  },
+  {
+    "source": "/classes/langchain_community_vectorstores_upstash.UpstashVectorStore.html",
+    "destination": "https://reference.langchain.com/javascript/"
+  },
+  {
+    "source": "/classes/langchain_core_runnables_remote.RemoteRunnable.html",
+    "destination": "https://reference.langchain.com/javascript/"
+  },
+  {
+    "source": "/classes/langchain_core_runnables.Runnable.html",
+    "destination": "https://reference.langchain.com/javascript/"
+  },
+  {
+    "source": "/classes/langchain_google_vertexai.VertexAI.html",
+    "destination": "https://reference.langchain.com/javascript/"
+  },
+  {
+    "source": "/classes/langchain_output_parsers.OutputFixingParser.html",
+    "destination": "https://reference.langchain.com/javascript/"
+  },
+  {
+    "source": "/classes/langchain_tools_webbrowser.WebBrowser.html",
+    "destination": "https://reference.langchain.com/javascript/"
+  },
+  {
+    "source": "/classes/langchain_weaviate.WeaviateStore.html",
+    "destination": "https://reference.langchain.com/javascript/"
+  },
+  {
+    "source": "/functions/langchain_agents.createOpenAIToolsAgent.html",
+    "destination": "https://reference.langchain.com/javascript/"
+  },
+  {
+    "source": "/functions/langchain_chains_history_aware_retriever.createHistoryAwareRetriever.html",
+    "destination": "https://reference.langchain.com/javascript/"
+  },
+  {
+    "source": "/classes/schema.BaseMessage.html",
+    "destination": "https://reference.langchain.com/javascript/"
+  },
+  {
+    "source": "/types/load_serializable.Serialized.html",
+    "destination": "https://reference.langchain.com/javascript/"
+  },
+  {
+    "source": "/interfaces/document_loaders_web_github.GithubRepoLoaderParams.html",
+    "destination": "https://reference.langchain.com/javascript/"
+  },
+  {
+    "source": "/classes/_langchain_community.embeddings_bytedance_doubao.ByteDanceDoubaoEmbeddings.html",
+    "destination": "https://reference.langchain.com/javascript/"
+  },
+  {
+    "source": "/classes/langchain_community_chat_models_llama_cpp.ChatLlamaCpp.html",
+    "destination": "https://reference.langchain.com/javascript/"
+  },
+  {
+    "source": "/classes/langchain_core_prompts.PipelinePromptTemplate.html",
+    "destination": "https://reference.langchain.com/javascript/"
+  },
+  {
+    "source": "/classes/langchain_core_runnables.RunnableBranch.html",
+    "destination": "https://reference.langchain.com/javascript/"
+  },
+  {
+    "source": "/classes/langchain_core.tools.DynamicStructuredTool.html",
+    "destination": "https://reference.langchain.com/javascript/"
+  },
+  {
+    "source": "/classes/langchain_retrievers_parent_document.ParentDocumentRetriever.html",
+    "destination": "https://reference.langchain.com/javascript/"
+  },
+  {
+    "source": "/modules/langchain_community_embeddings_fireworks.html",
+    "destination": "https://reference.langchain.com/javascript/"
+  },
+  {
+    "source": "/modules/langchain_openai.html",
+    "destination": "https://reference.langchain.com/javascript/"
+  },
+  {
+    "source": "/classes/langchain_core_output_parsers.JsonOutputParser.html",
+    "destination": "https://reference.langchain.com/javascript/"
+  },
+  {
+    "source": "/classes/langchain_core_runnables.RunnableParallel.html",
+    "destination": "https://reference.langchain.com/javascript/"
+  },
+  {
+    "source": "/classes/langchain_document_loaders_web_recursive_url.RecursiveUrlLoader.html",
+    "destination": "https://reference.langchain.com/javascript/"
+  },
+  {
+    "source": "/classes/langchain_runnables_remote.RemoteRunnable.html",
+    "destination": "https://reference.langchain.com/javascript/"
+  },
+  {
+    "source": "/classes/langchain_tools.BingSerpAPI.html",
+    "destination": "https://reference.langchain.com/javascript/"
+  },
+  {
+    "source": "/classes/langchain_tools.GoogleCustomSearch.html",
+    "destination": "https://reference.langchain.com/javascript/"
+  },
+  {
+    "source": "/classes/langchain_tools.SerpAPI.html",
+    "destination": "https://reference.langchain.com/javascript/"
+  },
+  {
+    "source": "/classes/langchain_tools.WikipediaQueryRun.html",
+    "destination": "https://reference.langchain.com/javascript/"
+  },
+  {
+    "source": "/classes/langchain_tools.WolframAlphaTool.html",
+    "destination": "https://reference.langchain.com/javascript/"
+  },
+  {
+    "source": "/classes/langchain_tools_calculator.Calculator.html",
+    "destination": "https://reference.langchain.com/javascript/"
+  },
+  {
+    "source": "/classes/langchain_core_output_parsers.StructuredOutputParser.html",
+    "destination": "https://reference.langchain.com/javascript/"
+  },
+  {
+    "source": "/classes/langchain_core_output_parsers.XMLOutputParser.html",
+    "destination": "https://reference.langchain.com/javascript/"
+  },
+  {
+    "source": "/functions/langchain_core_callbacks_promises.awaitAllCallbacks.html",
+    "destination": "https://reference.langchain.com/javascript/"
+  },
+  {
+    "source": "/interfaces/langchain_core_runnables.RunnableConfig.html",
+    "destination": "https://reference.langchain.com/javascript/"
+  },
+  {
+    "source": "/modules/langchain_aws.html",
+    "destination": "https://reference.langchain.com/javascript/"
+  },
+  {
+    "source": "/modules/langchain_cohere.html",
+    "destination": "https://reference.langchain.com/javascript/"
+  },
+  {
+    "source": "/modules/langchain_community_llms_bedrock.html",
+    "destination": "https://reference.langchain.com/javascript/"
+  },
+  {
+    "source": "/classes/%5C_langchain_community.embeddings_bytedance_doubao.ByteDanceDoubaoEmbeddings.html",
+    "destination": "https://reference.langchain.com/javascript/"
+  },
+  {
+    "source": "/classes/%5C_langchain_community.tools_serpapi.SerpAPI.html",
+    "destination": "https://reference.langchain.com/javascript/"
+  },
+  {
+    "source": "/classes/%5C_langchain_pinecone.PineconeEmbeddings.html",
+    "destination": "https://reference.langchain.com/javascript/"
+  },
+  {
+    "source": "/classes/chat_models_googlevertexai.ChatGoogleVertexAI.html",
+    "destination": "https://reference.langchain.com/javascript/"
+  },
+  {
+    "source": "/classes/document_loaders_fs_text.TextLoader.html",
+    "destination": "https://reference.langchain.com/javascript/"
+  },
+  {
+    "source": "/classes/schema_runnable.Runnable.html",
+    "destination": "https://reference.langchain.com/javascript/"
+  },
+  {
+    "source": "/classes/vectorstores_base.VectorStoreRetriever.html",
+    "destination": "https://reference.langchain.com/javascript/"
+  },
+  {
+    "source": "/functions/util_document.formatDocumentsAsString.html",
+    "destination": "https://reference.langchain.com/javascript/"
   }
 ]
