@@ -287,59 +287,75 @@ describe.each(matrix)(
     it("should create correct graph structure", async () => {
       const middleware1 = createMiddleware({
         name: "MiddlewareA",
-        ...(aBeforeAgent !== undefined
+        ...(aBeforeAgent
           ? {
-              beforeAgent: () => {},
-              canJumpTo: aBeforeAgent,
+              beforeAgent: {
+                hook: () => {},
+                canJumpTo: aBeforeAgent,
+              },
             }
           : {}),
 
-        ...(aAfterAgent !== undefined
+        ...(aAfterAgent
           ? {
-              afterAgent: () => {},
-              canJumpTo: aAfterAgent,
+              afterAgent: {
+                hook: () => {},
+                canJumpTo: aAfterAgent,
+              },
             }
           : {}),
 
-        ...(aBefore !== undefined
+        ...(aBefore
           ? {
-              beforeModel: () => {},
-              canJumpTo: aBefore,
+              beforeModel: {
+                hook: () => {},
+                canJumpTo: aBefore,
+              },
             }
           : {}),
 
-        ...(aAfter !== undefined
+        ...(aAfter
           ? {
-              afterModel: () => {},
-              canJumpTo: aAfter,
+              afterModel: {
+                hook: () => {},
+                canJumpTo: aAfter,
+              },
             }
           : {}),
       });
 
       const middleware2 = createMiddleware({
         name: "MiddlewareB",
-        ...(bBeforeAgent !== undefined
+        ...(bBeforeAgent
           ? {
-              beforeAgent: () => {},
-              canJumpTo: bBeforeAgent,
+              beforeAgent: {
+                hook: () => {},
+                canJumpTo: bBeforeAgent,
+              },
             }
           : {}),
-        ...(bAfterAgent !== undefined
+        ...(bAfterAgent
           ? {
-              afterAgent: () => {},
-              canJumpTo: bAfterAgent,
+              afterAgent: {
+                hook: () => {},
+                canJumpTo: bAfterAgent,
+              },
             }
           : {}),
-        ...(bBefore !== undefined
+        ...(bBefore
           ? {
-              beforeModel: () => {},
-              canJumpTo: bBefore,
+              beforeModel: {
+                hook: () => {},
+                canJumpTo: bBefore,
+              },
             }
           : {}),
-        ...(bAfter !== undefined
+        ...(bAfter
           ? {
-              afterModel: () => {},
-              canJumpTo: bAfter,
+              afterModel: {
+                hook: () => {},
+                canJumpTo: bAfter,
+              },
             }
           : {}),
       });
@@ -391,26 +407,42 @@ The basic test setup is as follows:
 \`\`\`ts
 const middleware1 = createMiddleware({
     name: "MiddlewareA",
-    beforeAgentJumpTo: aBeforeAgent,
-    afterAgentJumpTo: aAfterAgent,
-    beforeModelJumpTo: aBefore,
-    afterModelJumpTo: aAfter,
-    beforeAgent: () => {},
-    afterAgent: () => {},
-    beforeModel: () => {},
-    afterModel: () => {},
+    beforeAgent: {
+        hook: () => {},
+        canJumpTo: aBeforeAgent,
+    },
+    afterAgent: {
+        hook: () => {},
+        canJumpTo: aAfterAgent,
+    },
+    beforeModel: {
+        hook: () => {},
+        canJumpTo: aBefore,
+    },
+    afterModel: {
+        hook: () => {},
+        canJumpTo: aAfter,
+    },
 });
 
 const middleware2 = createMiddleware({
     name: "MiddlewareB",
-    beforeAgentJumpTo: bBeforeAgent,
-    afterAgentJumpTo: bAfterAgent,
-    beforeModelJumpTo: bBefore,
-    afterModelJumpTo: bAfter,
-    beforeAgent: () => {},
-    afterAgent: () => {},
-    beforeModel: () => {},
-    afterModel: () => {},
+    beforeAgent: {
+        hook: () => {},
+        canJumpTo: bBeforeAgent,
+    },
+    afterAgent: {
+        hook: () => {},
+        canJumpTo: bAfterAgent,
+    },
+    beforeModel: {
+        hook: () => {},
+        canJumpTo: bBefore,
+    },
+    afterModel: {
+        hook: () => {},
+        canJumpTo: bAfter,
+    },
 });
 
 const agent = createAgent({

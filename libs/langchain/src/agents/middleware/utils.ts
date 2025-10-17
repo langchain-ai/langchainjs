@@ -46,7 +46,7 @@ export function getHookConstraint(
   if (!hook || typeof hook === "function") {
     return undefined;
   }
-  return hook.canJumpTo ?? undefined;
+  return hook.canJumpTo;
 }
 
 export function getHookFunction(

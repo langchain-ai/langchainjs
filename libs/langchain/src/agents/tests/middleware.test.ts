@@ -264,7 +264,7 @@ describe("middleware", () => {
       await expect(
         agent.invoke({ messages: [new HumanMessage("Hello, world!")] })
       ).rejects.toThrow(
-        "Invalid jump target: model, no beforeModelJumpTo defined in middleware foobar."
+        "Invalid jump target: model, no beforeModel.canJumpTo defined in middleware foobar."
       );
     });
 
@@ -275,12 +275,12 @@ describe("middleware", () => {
       const middleware = createMiddleware({
         name: "foobar",
         beforeModel: {
+          canJumpTo: [],
           hook: () => {
             return {
               jumpTo: "model",
             };
           },
-          canJumpTo: ["tools", "end"],
         },
       });
       const agent = createAgent({
@@ -291,7 +291,7 @@ describe("middleware", () => {
       await expect(
         agent.invoke({ messages: [new HumanMessage("Hello, world!")] })
       ).rejects.toThrow(
-        "Invalid jump target: model, no beforeModelJumpTo defined in middleware foobar."
+        "Invalid jump target: model, no beforeModel.canJumpTo defined in middleware foobar."
       );
     });
 
