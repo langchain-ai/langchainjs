@@ -378,6 +378,41 @@ export abstract class BaseMessage<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return `${(this.constructor as any).lc_name()} ${printable}`;
   }
+
+  /**
+   * Protected method for derived classes to add type-specific details
+   * to the pretty print output. Returns an array of strings to be inserted
+   * between the title and content sections.
+   */
+  protected _prettyPrintDetails(): string[] {
+    return [];
+  }
+
+  prettyPrint(): string {
+    const lines: string[] = [];
+
+    // Create title line
+    const title = ` ${
+      this.type.charAt(0).toUpperCase() + this.type.slice(1)
+    } Message `;
+    const sepLen = Math.floor((80 - title.length) / 2);
+    const sep = "=".repeat(sepLen);
+    const secondSep = title.length % 2 === 0 ? sep : `${sep}=`;
+    lines.push(`${sep}${title}${secondSep}`);
+
+    // Add type-specific details
+    lines.push(...this._prettyPrintDetails());
+
+    // Add content if it's a string and not empty
+    if (typeof this.content === "string" && this.content.trim()) {
+      if (lines.length > 1) {
+        lines.push(""); // blank line before content
+      }
+      lines.push(this.content);
+    }
+
+    return lines.join("\n");
+  }
 }
 
 /**
