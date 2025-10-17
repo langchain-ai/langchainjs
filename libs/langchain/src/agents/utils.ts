@@ -31,10 +31,10 @@ import { MultipleToolsBoundError } from "./errors.js";
 import { PROMPT_RUNNABLE_NAME } from "./constants.js";
 import type { AgentBuiltInState } from "./runtime.js";
 import type {
-  ToolCallWrapper,
   ToolCallHandler,
   AgentMiddleware,
   ToolCallRequest,
+  WrapToolCallHook,
 } from "./middleware/types.js";
 
 const NAME_PATTERN = /<name>(.*?)<\/name>/s;
@@ -456,8 +456,8 @@ export async function bindTools(
  * ```
  */
 function chainToolCallHandlers(
-  handlers: ToolCallWrapper[]
-): ToolCallWrapper | undefined {
+  handlers: WrapToolCallHook[]
+): WrapToolCallHook | undefined {
   if (handlers.length === 0) {
     return undefined;
   }
@@ -468,9 +468,9 @@ function chainToolCallHandlers(
 
   // Compose two handlers where outer wraps inner
   function composeTwo(
-    outer: ToolCallWrapper,
-    inner: ToolCallWrapper
-  ): ToolCallWrapper {
+    outer: WrapToolCallHook,
+    inner: WrapToolCallHook
+  ): WrapToolCallHook {
     return async (request, handler) => {
       // Create a wrapper that calls inner with the base handler
       const innerHandler: ToolCallHandler = async (req) =>
@@ -510,7 +510,7 @@ export function wrapToolCall(middleware: readonly AgentMiddleware[]) {
       /**
        * Wrap with error handling and validation
        */
-      const wrappedHandler: ToolCallWrapper = async (request, handler) => {
+      const wrappedHandler: WrapToolCallHook = async (request, handler) => {
         try {
           const result = await originalHandler(
             request as ToolCallRequest<AgentBuiltInState, unknown>,

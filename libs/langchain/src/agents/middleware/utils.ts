@@ -1,4 +1,11 @@
 import type { BaseMessage } from "@langchain/core/messages";
+import {
+  AfterModelHook,
+  AfterAgentHook,
+  BeforeAgentHook,
+  BeforeModelHook,
+} from "./types.js";
+import { JumpToTarget } from "../constants.js";
 
 /**
  * Default token counter that approximates based on character count
@@ -26,4 +33,27 @@ export function countTokensApproximately(messages: BaseMessage[]): number {
   }
   // Approximate 1 token = 4 characters
   return Math.ceil(totalChars / 4);
+}
+
+export function getHookConstraint(
+  hook:
+    | BeforeAgentHook
+    | BeforeModelHook
+    | AfterAgentHook
+    | AfterModelHook
+    | undefined
+): JumpToTarget[] | undefined {
+  if (!hook || typeof hook === "function") {
+    return undefined;
+  }
+  return hook.canJumpTo;
+}
+
+export function getHookFunction(
+  arg: BeforeAgentHook | BeforeModelHook | AfterAgentHook | AfterModelHook
+) {
+  if (typeof arg === "function") {
+    return arg;
+  }
+  return arg.hook;
 }

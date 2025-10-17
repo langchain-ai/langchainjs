@@ -595,159 +595,163 @@ export function humanInTheLoopMiddleware(
   return createMiddleware({
     name: "HumanInTheLoopMiddleware",
     contextSchema,
-    afterModelJumpTo: ["model"],
-    afterModel: async (state, runtime) => {
-      const config = interopParse(contextSchema, {
-        ...options,
-        ...(runtime.context || {}),
-      });
-      if (!config) {
-        return;
-      }
-
-      const { messages } = state;
-      if (!messages.length) {
-        return;
-      }
-
-      /**
-       * Don't do anything if the last message isn't an AI message with tool calls.
-       */
-      const lastMessage = [...messages]
-        .reverse()
-        .find((msg) => AIMessage.isInstance(msg)) as AIMessage;
-      if (!lastMessage || !lastMessage.tool_calls?.length) {
-        return;
-      }
-
-      /**
-       * If the user omits the interruptOn config, we don't do anything.
-       */
-      if (!config.interruptOn) {
-        return;
-      }
-
-      /**
-       * Resolve per-tool configs (boolean true -> all decisions allowed; false -> auto-approve)
-       */
-      const resolvedConfigs: Record<string, InterruptOnConfig> = {};
-      for (const [toolName, toolConfig] of Object.entries(config.interruptOn)) {
-        if (typeof toolConfig === "boolean") {
-          if (toolConfig === true) {
-            resolvedConfigs[toolName] = {
-              allowedDecisions: [...ALLOWED_DECISIONS],
-            };
-          }
-        } else if (toolConfig.allowedDecisions) {
-          resolvedConfigs[toolName] = toolConfig as InterruptOnConfig;
+    afterModel: {
+      canJumpTo: ["model"],
+      hook: async (state, runtime) => {
+        const config = interopParse(contextSchema, {
+          ...options,
+          ...(runtime.context || {}),
+        });
+        if (!config) {
+          return;
         }
-      }
 
-      const interruptToolCalls: ToolCall[] = [];
-      const autoApprovedToolCalls: ToolCall[] = [];
-
-      for (const toolCall of lastMessage.tool_calls) {
-        if (toolCall.name in resolvedConfigs) {
-          interruptToolCalls.push(toolCall);
-        } else {
-          autoApprovedToolCalls.push(toolCall);
+        const { messages } = state;
+        if (!messages.length) {
+          return;
         }
-      }
-
-      /**
-       * No interrupt tool calls, so we can just return.
-       */
-      if (!interruptToolCalls.length) {
-        return;
-      }
-
-      /**
-       * Create action requests and review configs for all tools that need approval
-       */
-      const actionRequests: ActionRequest[] = [];
-      const reviewConfigs: ReviewConfig[] = [];
-
-      for (const toolCall of interruptToolCalls) {
-        const interruptConfig = resolvedConfigs[toolCall.name]!;
 
         /**
-         * Create ActionRequest and ReviewConfig using helper method
+         * Don't do anything if the last message isn't an AI message with tool calls.
          */
-        const { actionRequest, reviewConfig } = await createActionAndConfig(
-          toolCall,
-          interruptConfig,
-          state,
-          runtime
-        );
-        actionRequests.push(actionRequest);
-        reviewConfigs.push(reviewConfig);
-      }
-
-      /**
-       * Create single HITLRequest with all actions and configs
-       */
-      const hitlRequest: HITLRequest = {
-        actionRequests,
-        reviewConfigs,
-      };
-
-      /**
-       * Send interrupt and get response
-       */
-      const hitlResponse = (await interrupt(hitlRequest)) as HITLResponse;
-      const decisions = hitlResponse.decisions;
-
-      /**
-       * Validate that decisions is a valid array before checking length
-       */
-      if (!decisions || !Array.isArray(decisions)) {
-        throw new Error(
-          "Invalid HITLResponse: decisions must be a non-empty array"
-        );
-      }
-
-      /**
-       * Validate that the number of decisions matches the number of interrupt tool calls
-       */
-      if (decisions.length !== interruptToolCalls.length) {
-        throw new Error(
-          `Number of human decisions (${decisions.length}) does not match number of hanging tool calls (${interruptToolCalls.length}).`
-        );
-      }
-
-      const revisedToolCalls: ToolCall[] = [...autoApprovedToolCalls];
-      const artificialToolMessages: ToolMessage[] = [];
-
-      /**
-       * Process each decision using helper method
-       */
-      for (let i = 0; i < decisions.length; i++) {
-        const decision = decisions[i]!;
-        const toolCall = interruptToolCalls[i]!;
-        const interruptConfig = resolvedConfigs[toolCall.name]!;
-
-        const { revisedToolCall, toolMessage } = processDecision(
-          decision,
-          toolCall,
-          interruptConfig
-        );
-
-        if (revisedToolCall) {
-          revisedToolCalls.push(revisedToolCall);
+        const lastMessage = [...messages]
+          .reverse()
+          .find((msg) => AIMessage.isInstance(msg)) as AIMessage;
+        if (!lastMessage || !lastMessage.tool_calls?.length) {
+          return;
         }
-        if (toolMessage) {
-          artificialToolMessages.push(toolMessage);
+
+        /**
+         * If the user omits the interruptOn config, we don't do anything.
+         */
+        if (!config.interruptOn) {
+          return;
         }
-      }
 
-      /**
-       * Update the AI message to only include approved tool calls
-       */
-      if (AIMessage.isInstance(lastMessage)) {
-        lastMessage.tool_calls = revisedToolCalls;
-      }
+        /**
+         * Resolve per-tool configs (boolean true -> all decisions allowed; false -> auto-approve)
+         */
+        const resolvedConfigs: Record<string, InterruptOnConfig> = {};
+        for (const [toolName, toolConfig] of Object.entries(
+          config.interruptOn
+        )) {
+          if (typeof toolConfig === "boolean") {
+            if (toolConfig === true) {
+              resolvedConfigs[toolName] = {
+                allowedDecisions: [...ALLOWED_DECISIONS],
+              };
+            }
+          } else if (toolConfig.allowedDecisions) {
+            resolvedConfigs[toolName] = toolConfig as InterruptOnConfig;
+          }
+        }
 
-      return { messages: [lastMessage, ...artificialToolMessages] };
+        const interruptToolCalls: ToolCall[] = [];
+        const autoApprovedToolCalls: ToolCall[] = [];
+
+        for (const toolCall of lastMessage.tool_calls) {
+          if (toolCall.name in resolvedConfigs) {
+            interruptToolCalls.push(toolCall);
+          } else {
+            autoApprovedToolCalls.push(toolCall);
+          }
+        }
+
+        /**
+         * No interrupt tool calls, so we can just return.
+         */
+        if (!interruptToolCalls.length) {
+          return;
+        }
+
+        /**
+         * Create action requests and review configs for all tools that need approval
+         */
+        const actionRequests: ActionRequest[] = [];
+        const reviewConfigs: ReviewConfig[] = [];
+
+        for (const toolCall of interruptToolCalls) {
+          const interruptConfig = resolvedConfigs[toolCall.name]!;
+
+          /**
+           * Create ActionRequest and ReviewConfig using helper method
+           */
+          const { actionRequest, reviewConfig } = await createActionAndConfig(
+            toolCall,
+            interruptConfig,
+            state,
+            runtime
+          );
+          actionRequests.push(actionRequest);
+          reviewConfigs.push(reviewConfig);
+        }
+
+        /**
+         * Create single HITLRequest with all actions and configs
+         */
+        const hitlRequest: HITLRequest = {
+          actionRequests,
+          reviewConfigs,
+        };
+
+        /**
+         * Send interrupt and get response
+         */
+        const hitlResponse = (await interrupt(hitlRequest)) as HITLResponse;
+        const decisions = hitlResponse.decisions;
+
+        /**
+         * Validate that decisions is a valid array before checking length
+         */
+        if (!decisions || !Array.isArray(decisions)) {
+          throw new Error(
+            "Invalid HITLResponse: decisions must be a non-empty array"
+          );
+        }
+
+        /**
+         * Validate that the number of decisions matches the number of interrupt tool calls
+         */
+        if (decisions.length !== interruptToolCalls.length) {
+          throw new Error(
+            `Number of human decisions (${decisions.length}) does not match number of hanging tool calls (${interruptToolCalls.length}).`
+          );
+        }
+
+        const revisedToolCalls: ToolCall[] = [...autoApprovedToolCalls];
+        const artificialToolMessages: ToolMessage[] = [];
+
+        /**
+         * Process each decision using helper method
+         */
+        for (let i = 0; i < decisions.length; i++) {
+          const decision = decisions[i]!;
+          const toolCall = interruptToolCalls[i]!;
+          const interruptConfig = resolvedConfigs[toolCall.name]!;
+
+          const { revisedToolCall, toolMessage } = processDecision(
+            decision,
+            toolCall,
+            interruptConfig
+          );
+
+          if (revisedToolCall) {
+            revisedToolCalls.push(revisedToolCall);
+          }
+          if (toolMessage) {
+            artificialToolMessages.push(toolMessage);
+          }
+        }
+
+        /**
+         * Update the AI message to only include approved tool calls
+         */
+        if (AIMessage.isInstance(lastMessage)) {
+          lastMessage.tool_calls = revisedToolCalls;
+        }
+
+        return { messages: [lastMessage, ...artificialToolMessages] };
+      },
     },
   });
 }

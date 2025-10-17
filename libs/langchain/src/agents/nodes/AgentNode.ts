@@ -29,6 +29,7 @@ import type { InternalAgentState, Runtime, PrivateState } from "../runtime.js";
 import type {
   AgentMiddleware,
   AnyAnnotationRoot,
+  WrapModelCallHandler,
 } from "../middleware/types.js";
 import type { ModelRequest } from "./types.js";
 import type { ClientTool, ServerTool } from "../tools.js";
@@ -481,12 +482,10 @@ export class AgentNode<
           }
 
           try {
-            const middlewareResponse = await (
-              currentMiddleware.wrapModelCall as (
-                request: typeof requestWithStateAndRuntime,
-                handler: typeof handlerWithValidation
-              ) => Promise<InternalModelResponse<StructuredResponseFormat>>
-            )(requestWithStateAndRuntime, handlerWithValidation);
+            const middlewareResponse = await currentMiddleware.wrapModelCall(
+              requestWithStateAndRuntime,
+              handlerWithValidation as WrapModelCallHandler
+            );
 
             /**
              * Validate that this specific middleware returned a valid AIMessage

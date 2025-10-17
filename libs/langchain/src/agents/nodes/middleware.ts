@@ -8,6 +8,7 @@ import type { JumpToTarget } from "../constants.js";
 import type { Runtime, PrivateState } from "../runtime.js";
 import type { AgentMiddleware, MiddlewareResult } from "../middleware/types.js";
 import { derivePrivateState, parseJumpToTarget } from "./utils.js";
+import { getHookConstraint } from "../middleware/utils.js";
 
 /**
  * Named class for context objects to provide better error messages
@@ -45,7 +46,7 @@ export abstract class MiddlewareNode<
   abstract runHook(
     state: TStateSchema,
     config?: Runtime<TContextSchema>
-  ): Promise<MiddlewareResult<TStateSchema>>;
+  ): Promise<MiddlewareResult<TStateSchema>> | MiddlewareResult<TStateSchema>;
 
   async invokeMiddleware(
     state: TStateSchema,
@@ -124,17 +125,17 @@ export abstract class MiddlewareNode<
     let constraint: string | undefined;
 
     if (this.name?.startsWith("BeforeAgentNode_")) {
-      jumpToConstraint = this.middleware.beforeAgentJumpTo;
-      constraint = "beforeAgentJumpTo";
+      jumpToConstraint = getHookConstraint(this.middleware.beforeAgent);
+      constraint = "beforeAgent.canJumpTo";
     } else if (this.name?.startsWith("BeforeModelNode_")) {
-      jumpToConstraint = this.middleware.beforeModelJumpTo;
-      constraint = "beforeModelJumpTo";
+      jumpToConstraint = getHookConstraint(this.middleware.beforeModel);
+      constraint = "beforeModel.canJumpTo";
     } else if (this.name?.startsWith("AfterAgentNode_")) {
-      jumpToConstraint = this.middleware.afterAgentJumpTo;
-      constraint = "afterAgentJumpTo";
+      jumpToConstraint = getHookConstraint(this.middleware.afterAgent);
+      constraint = "afterAgent.canJumpTo";
     } else if (this.name?.startsWith("AfterModelNode_")) {
-      jumpToConstraint = this.middleware.afterModelJumpTo;
-      constraint = "afterModelJumpTo";
+      jumpToConstraint = getHookConstraint(this.middleware.afterModel);
+      constraint = "afterModel.canJumpTo";
     }
 
     if (
@@ -145,7 +146,7 @@ export abstract class MiddlewareNode<
         jumpToConstraint && jumpToConstraint.length > 0
           ? `must be one of: ${jumpToConstraint?.join(", ")}.`
           : constraint
-          ? `no ${constraint} defined in middleware ${this.middleware.name}.`
+          ? `no ${constraint} defined in middleware ${this.middleware.name}`
           : "";
       throw new Error(`Invalid jump target: ${result.jumpTo}, ${suggestion}.`);
     }

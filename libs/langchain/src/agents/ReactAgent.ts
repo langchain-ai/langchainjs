@@ -62,6 +62,7 @@ import type {
   ToAnnotationRoot,
 } from "./middleware/types.js";
 import { type ResponseFormatUndefined } from "./responses.js";
+import { getHookConstraint } from "./middleware/utils.js";
 
 // Helper type to get the state definition with middleware states
 type MergedAgentState<
@@ -257,7 +258,7 @@ export class ReactAgent<
         beforeAgentNodes.push({
           index: i,
           name,
-          allowed: m.beforeAgentJumpTo,
+          allowed: getHookConstraint(m.beforeAgent),
         });
         allNodeWorkflows.addNode(
           name,
@@ -273,7 +274,7 @@ export class ReactAgent<
         beforeModelNodes.push({
           index: i,
           name,
-          allowed: m.beforeModelJumpTo,
+          allowed: getHookConstraint(m.beforeModel),
         });
         allNodeWorkflows.addNode(
           name,
@@ -289,7 +290,7 @@ export class ReactAgent<
         afterModelNodes.push({
           index: i,
           name,
-          allowed: m.afterModelJumpTo,
+          allowed: getHookConstraint(m.afterModel),
         });
         allNodeWorkflows.addNode(
           name,
@@ -305,7 +306,7 @@ export class ReactAgent<
         afterAgentNodes.push({
           index: i,
           name,
-          allowed: m.afterAgentJumpTo,
+          allowed: getHookConstraint(m.afterAgent),
         });
         allNodeWorkflows.addNode(
           name,

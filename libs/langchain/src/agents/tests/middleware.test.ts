@@ -264,7 +264,7 @@ describe("middleware", () => {
       await expect(
         agent.invoke({ messages: [new HumanMessage("Hello, world!")] })
       ).rejects.toThrow(
-        "Invalid jump target: model, no beforeModelJumpTo defined in middleware foobar."
+        "Invalid jump target: model, no beforeModel.canJumpTo defined in middleware foobar."
       );
     });
 
@@ -274,11 +274,13 @@ describe("middleware", () => {
       });
       const middleware = createMiddleware({
         name: "foobar",
-        beforeModelJumpTo: [],
-        beforeModel: () => {
-          return {
-            jumpTo: "model",
-          };
+        beforeModel: {
+          canJumpTo: [],
+          hook: () => {
+            return {
+              jumpTo: "model",
+            };
+          },
         },
       });
       const agent = createAgent({
@@ -289,7 +291,7 @@ describe("middleware", () => {
       await expect(
         agent.invoke({ messages: [new HumanMessage("Hello, world!")] })
       ).rejects.toThrow(
-        "Invalid jump target: model, no beforeModelJumpTo defined in middleware foobar."
+        "Invalid jump target: model, no beforeModel.canJumpTo defined in middleware foobar."
       );
     });
 
@@ -299,11 +301,13 @@ describe("middleware", () => {
       });
       const middleware = createMiddleware({
         name: "foobar",
-        beforeModelJumpTo: ["tools", "end"],
-        beforeModel: () => {
-          return {
-            jumpTo: "model",
-          };
+        beforeModel: {
+          hook: () => {
+            return {
+              jumpTo: "model",
+            };
+          },
+          canJumpTo: ["tools", "end"],
         },
       });
       const agent = createAgent({
@@ -2376,12 +2380,14 @@ describe("middleware", () => {
 
       const middleware1 = createMiddleware({
         name: "Middleware1",
-        beforeAgentJumpTo: ["end"],
-        beforeAgent: async () => {
-          executionLog.push("before_agent_1");
-          return {
-            jumpTo: "end",
-          };
+        beforeAgent: {
+          hook: async () => {
+            executionLog.push("before_agent_1");
+            return {
+              jumpTo: "end",
+            };
+          },
+          canJumpTo: ["end"],
         },
         afterAgent: async () => {
           executionLog.push("after_agent_1");
