@@ -587,7 +587,7 @@ export interface ChatOpenAIFields extends BaseChatOpenAIFields {
  * <br />
  */
 export class ChatOpenAI<
-  CallOptions extends ChatOpenAICallOptions = ChatOpenAICallOptions
+  CallOptions extends ChatOpenAICallOptions = ChatOpenAICallOptions,
 > extends BaseChatOpenAI<CallOptions> {
   /**
    * Whether to use the responses API for all requests. If `false` the responses API will be used
@@ -601,6 +601,10 @@ export class ChatOpenAI<
 
   get lc_serializable_keys(): string[] {
     return [...super.lc_serializable_keys, "useResponsesApi"];
+  }
+
+  get callKeys(): string[] {
+    return [...super.callKeys, "useResponsesApi"];
   }
 
   constructor(protected fields?: ChatOpenAIFields) {
