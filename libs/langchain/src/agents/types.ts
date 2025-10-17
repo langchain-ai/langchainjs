@@ -21,10 +21,13 @@ import type {
   JsonSchemaFormat,
   ResponseFormatUndefined,
 } from "./responses.js";
-import type { AgentMiddleware, AnyAnnotationRoot } from "./middleware/types.js";
+import type {
+  AgentMiddleware,
+  AnyAnnotationRoot,
+  InferSchemaInput,
+} from "./middleware/types.js";
 import type { ServerTool, ClientTool } from "./tools.js";
 import type { JumpToTarget } from "./constants.js";
-import { InferSchemaInput } from "./annotation.js";
 
 export type N = typeof START | "model_request" | "tools";
 

@@ -19,11 +19,7 @@ import { IterableReadableStream } from "@langchain/core/utils/stream";
 import type { Runnable, RunnableConfig } from "@langchain/core/runnables";
 import type { StreamEvent } from "@langchain/core/tracers/log_stream";
 
-import {
-  createAgentAnnotationConditional,
-  InferSchemaInput,
-  ToAnnotationRoot,
-} from "./annotation.js";
+import { createAgentAnnotationConditional } from "./annotation.js";
 import {
   isClientTool,
   validateLLMHasNoBoundTools,
@@ -62,6 +58,8 @@ import type {
   InferMiddlewareInputStates,
   InferContextInput,
   AnyAnnotationRoot,
+  InferSchemaInput,
+  ToAnnotationRoot,
 } from "./middleware/types.js";
 import { type ResponseFormatUndefined } from "./responses.js";
 

@@ -18,7 +18,7 @@ import {
 } from "@langchain/langgraph";
 
 import { RunnableCallable } from "../RunnableCallable.js";
-import { PreHookAnnotation, ToAnnotationRoot } from "../annotation.js";
+import { PreHookAnnotation } from "../annotation.js";
 import { mergeAbortSignals } from "./utils.js";
 import { ToolInvocationError } from "../errors.js";
 import type { PrivateState } from "../runtime.js";
@@ -26,6 +26,7 @@ import type {
   AnyAnnotationRoot,
   ToolCallWrapper,
   ToolCallRequest,
+  ToAnnotationRoot,
 } from "../middleware/types.js";
 
 export interface ToolNodeOptions {
