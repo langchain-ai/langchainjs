@@ -16,10 +16,10 @@ import {
 } from "@langchain/core/messages";
 import { tool } from "@langchain/core/tools";
 import { BaseLanguageModelInput } from "@langchain/core/language_models/base";
-import { ChatOpenAI } from "../chat_models.js";
-import { REASONING_OUTPUT_MESSAGES } from "./data/computer-use-inputs.js";
-import { ChatOpenAIReasoningSummary } from "../types.js";
-import { LONG_PROMPT } from "./data/long-prompt.js";
+import { ChatOpenAI } from "../index.js";
+import { REASONING_OUTPUT_MESSAGES } from "../../tests/data/computer-use-inputs.js";
+import { ChatOpenAIReasoningSummary } from "../../types.js";
+import { LONG_PROMPT } from "../../tests/data/long-prompt.js";
 
 async function concatStream(stream: Promise<AsyncIterable<AIMessageChunk>>) {
   let full: AIMessageChunk | undefined;
@@ -151,7 +151,7 @@ test.each(["stream", "invoke"])(
       return concatStream(llm.stream(prompt));
     }
 
-    const messages = [new HumanMessage("whats 5 * 4")];
+    const messages: BaseMessage[] = [new HumanMessage("whats 5 * 4")];
 
     const aiMessage = (await invoke(invocationType, messages)) as AIMessage;
 

@@ -9,7 +9,7 @@ import {
 import { concat } from "@langchain/core/utils/stream";
 import { InMemoryCache } from "@langchain/core/caches";
 
-import { ChatOpenAI } from "../chat_models.js";
+import { ChatOpenAI } from "../index.js";
 
 test("Test ChatOpenAI JSON mode", async () => {
   const chat = new ChatOpenAI({

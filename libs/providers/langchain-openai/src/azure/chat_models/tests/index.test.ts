@@ -1,7 +1,7 @@
 import { test, expect, beforeEach } from "vitest";
 
-import { env } from "../utils.js";
-import { AzureChatOpenAI } from "../../azure/chat_models.js";
+import { env } from "../../../tests/utils.js";
+import { AzureChatOpenAI } from "../index.js";
 
 beforeEach(() => {
   delete process.env.OPENAI_API_KEY;
