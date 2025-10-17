@@ -62,7 +62,7 @@ export type HandlebarsPromptTemplateInput<RunInput extends InputValues> =
 
 export class HandlebarsPromptTemplate<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  RunInput extends InputValues = any,
+  RunInput extends InputValues = any
 > extends CustomFormatPromptTemplate<RunInput> {
   static lc_name() {
     return "HandlebarsPromptTemplate";
@@ -73,7 +73,7 @@ export class HandlebarsPromptTemplate<
    */
   static fromTemplate<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    RunInput extends InputValues = Record<string, any>,
+    RunInput extends InputValues = Record<string, any>
   >(
     template: string,
     params?: Omit<

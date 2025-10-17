@@ -752,8 +752,9 @@ export async function runOnDataset(
     { run_id: string; execution_time?: number; feedback: Feedback[] }
   > = {};
   if (evaluationConfig) {
-    const loadedEvalConfig =
-      await LoadedEvalConfig.fromRunEvalConfig(evaluationConfig);
+    const loadedEvalConfig = await LoadedEvalConfig.fromRunEvalConfig(
+      evaluationConfig
+    );
     evalResults = await applyEvaluators({
       evaluation: loadedEvalConfig,
       runs,

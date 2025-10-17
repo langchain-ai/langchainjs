@@ -952,7 +952,7 @@ export class ChatBedrockConverse
 
   withStructuredOutput<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    RunOutput extends Record<string, any> = Record<string, any>,
+    RunOutput extends Record<string, any> = Record<string, any>
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
   >(
     outputSchema:
@@ -964,7 +964,7 @@ export class ChatBedrockConverse
 
   withStructuredOutput<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    RunOutput extends Record<string, any> = Record<string, any>,
+    RunOutput extends Record<string, any> = Record<string, any>
   >(
     outputSchema:
       | InteropZodType<RunOutput>
@@ -975,7 +975,7 @@ export class ChatBedrockConverse
 
   withStructuredOutput<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    RunOutput extends Record<string, any> = Record<string, any>,
+    RunOutput extends Record<string, any> = Record<string, any>
   >(
     outputSchema:
       | InteropZodType<RunOutput>

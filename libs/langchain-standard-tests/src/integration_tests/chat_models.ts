@@ -89,7 +89,7 @@ const MATH_ADDITION_PROMPT = /* #__PURE__ */ ChatPromptTemplate.fromMessages([
 interface ChatModelIntegrationTestsFields<
   CallOptions extends BaseChatModelCallOptions = BaseChatModelCallOptions,
   OutputMessageType extends BaseMessageChunk = BaseMessageChunk,
-  ConstructorArgs extends RecordStringAny = RecordStringAny,
+  ConstructorArgs extends RecordStringAny = RecordStringAny
 > extends BaseChatModelsTestsFields<
     CallOptions,
     OutputMessageType,
@@ -117,7 +117,7 @@ interface ChatModelIntegrationTestsFields<
 export abstract class ChatModelIntegrationTests<
   CallOptions extends BaseChatModelCallOptions = BaseChatModelCallOptions,
   OutputMessageType extends BaseMessageChunk = BaseMessageChunk,
-  ConstructorArgs extends RecordStringAny = RecordStringAny,
+  ConstructorArgs extends RecordStringAny = RecordStringAny
 > extends BaseChatModelsTests<CallOptions, OutputMessageType, ConstructorArgs> {
   functionId = "abc123";
 
@@ -500,8 +500,9 @@ export abstract class ChatModelIntegrationTests<
     if (
       this.supportedUsageMetadataDetails.invoke.includes("reasoning_output")
     ) {
-      const msgWithReasoningOutput =
-        await this.invokeWithReasoningOutput(false);
+      const msgWithReasoningOutput = await this.invokeWithReasoningOutput(
+        false
+      );
       this.assertReasoningOutputMetadata(msgWithReasoningOutput);
     }
 
@@ -515,8 +516,9 @@ export abstract class ChatModelIntegrationTests<
     if (
       this.supportedUsageMetadataDetails.invoke.includes("cache_creation_input")
     ) {
-      const msgWithCacheCreationInput =
-        await this.invokeWithCacheCreationInput(false);
+      const msgWithCacheCreationInput = await this.invokeWithCacheCreationInput(
+        false
+      );
       this.assertCacheCreationInputMetadata(msgWithCacheCreationInput);
     }
   }
@@ -720,8 +722,9 @@ export abstract class ChatModelIntegrationTests<
     if (
       this.supportedUsageMetadataDetails.invoke.includes("cache_creation_input")
     ) {
-      const msgWithCacheCreationInput =
-        await this.invokeWithCacheCreationInput(true);
+      const msgWithCacheCreationInput = await this.invokeWithCacheCreationInput(
+        true
+      );
       this.assertCacheCreationInputMetadata(msgWithCacheCreationInput);
     }
   }

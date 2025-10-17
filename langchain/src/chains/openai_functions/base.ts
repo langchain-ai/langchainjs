@@ -24,7 +24,7 @@ import { JsonOutputFunctionsParser } from "../../output_parsers/openai_functions
 export type CreateOpenAIFnRunnableConfig<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   RunInput extends Record<string, any>,
-  RunOutput,
+  RunOutput
 > = {
   functions: FunctionDefinition[];
   /** Language model to use, assumed to support the OpenAI function-calling API. */
@@ -102,7 +102,7 @@ export function createOpenAIFnRunnable<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   RunInput extends Record<string, any> = Record<string, any>,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  RunOutput extends Record<string, any> = Record<string, any>,
+  RunOutput extends Record<string, any> = Record<string, any>
 >(
   config: CreateOpenAIFnRunnableConfig<RunInput, RunOutput>
 ): Runnable<RunInput, RunOutput> {
@@ -133,7 +133,7 @@ export function createOpenAIFnRunnable<
 export type CreateStructuredOutputRunnableConfig<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   RunInput extends Record<string, any>,
-  RunOutput,
+  RunOutput
 > = {
   /**
    * Schema to output. Must be either valid JSONSchema or a Zod schema.
@@ -214,7 +214,7 @@ export function createStructuredOutputRunnable<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   RunInput extends Record<string, any> = Record<string, any>,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  RunOutput extends Record<string, any> = Record<string, any>,
+  RunOutput extends Record<string, any> = Record<string, any>
 >(
   config: CreateStructuredOutputRunnableConfig<RunInput, RunOutput>
 ): Runnable<RunInput, RunOutput> {

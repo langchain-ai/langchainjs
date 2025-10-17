@@ -70,7 +70,7 @@ export type WeaviateStructuredQueryResult = {
  * ```
  */
 export class WeaviateTranslator<
-  T extends WeaviateStore,
+  T extends WeaviateStore
 > extends BaseTranslator<T> {
   declare VisitOperationOutput: WeaviateOperationResult;
 

@@ -7,7 +7,7 @@ export const deserializeHelper = async <
   T extends string,
   U extends Record<string, unknown>,
   V extends AgentInput,
-  Z,
+  Z
 >(
   llm: BaseLanguageModelInterface | undefined,
   tools: ToolInterface[] | undefined,

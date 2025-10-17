@@ -1184,9 +1184,9 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
       Array.isArray(response.data) && response.data[0]
         ? response.data[0]
         : response.data &&
-            (response.data as GenerateContentResponseData).candidates
-          ? (response.data as GenerateContentResponseData)
-          : undefined;
+          (response.data as GenerateContentResponseData).candidates
+        ? (response.data as GenerateContentResponseData)
+        : undefined;
     if (!data) {
       return {};
     }

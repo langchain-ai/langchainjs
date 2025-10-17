@@ -42,10 +42,7 @@ function getDebugLog() {
  * Error class for MCP client operations
  */
 export class MCPClientError extends Error {
-  constructor(
-    message: string,
-    public readonly serverName?: string
-  ) {
+  constructor(message: string, public readonly serverName?: string) {
     super(message);
     this.name = "MCPClientError";
   }

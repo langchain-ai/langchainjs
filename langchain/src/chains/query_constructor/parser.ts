@@ -112,13 +112,10 @@ export class QueryTransformer {
           return node.values.map((value) => traverse(value));
         }
         case "object_literal": {
-          return node.values.reduce(
-            (acc, value) => {
-              acc[value.identifier] = traverse(value.value);
-              return acc;
-            },
-            {} as { [key: string]: TraverseType }
-          );
+          return node.values.reduce((acc, value) => {
+            acc[value.identifier] = traverse(value.value);
+            return acc;
+          }, {} as { [key: string]: TraverseType });
         }
         case "boolean_literal": {
           return node.value;

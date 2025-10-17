@@ -58,7 +58,7 @@ export function removeAdditionalProperties(
 
 export function schemaToGenerativeAIParameters<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  RunOutput extends Record<string, any> = Record<string, any>,
+  RunOutput extends Record<string, any> = Record<string, any>
 >(
   schema: InteropZodType<RunOutput> | JsonSchema7Type
 ): GenerativeAIFunctionDeclarationSchema {

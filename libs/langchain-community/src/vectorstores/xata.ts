@@ -23,7 +23,7 @@ type XataFilter = object;
  * and perform similarity searches.
  */
 export class XataVectorSearch<
-  XataClient extends BaseClient,
+  XataClient extends BaseClient
 > extends VectorStore {
   declare FilterType: XataFilter;
 

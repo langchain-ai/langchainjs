@@ -410,15 +410,15 @@ export class SingleStoreVectorStore extends VectorStore {
           }, __score1 * ? + __score2 * ? as __score
           FROM (
               SELECT ${this.idColumnName}, ${this.contentColumnName}, ${
-                this.metadataColumnName
-              }, MATCH (${this.contentColumnName}) AGAINST (?) as __score1 
+            this.metadataColumnName
+          }, MATCH (${this.contentColumnName}) AGAINST (?) as __score1 
           FROM ${this.tableName} ${whereClause}) r1 FULL OUTER JOIN (
               SELECT ${this.idColumnName}, ${this.distanceMetric}(${
-                this.vectorColumnName
-              }, JSON_ARRAY_PACK('[?]')) as __score2
+            this.vectorColumnName
+          }, JSON_ARRAY_PACK('[?]')) as __score2
               FROM ${this.tableName} ${whereClause} ORDER BY __score2 ${
-                OrderingDirective[this.distanceMetric]
-              } LIMIT ?
+            OrderingDirective[this.distanceMetric]
+          } LIMIT ?
           ) r2 ON r1.${this.idColumnName} = r2.${
             this.idColumnName
           } ORDER BY __score ${OrderingDirective[this.distanceMetric]} LIMIT ?`,
@@ -445,7 +445,7 @@ export class SingleStoreVectorStore extends VectorStore {
         | OkPacket[]
         | ResultSetHeader
       ),
-      FieldPacket[],
+      FieldPacket[]
     ] = await this.connectionPool.query(queryText);
     const result: [Document, number][] = [];
     for (const row of rows as RowDataPacket[]) {

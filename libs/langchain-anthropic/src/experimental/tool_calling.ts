@@ -310,7 +310,7 @@ export class ChatAnthropicTools extends BaseChatModel<ChatAnthropicToolsCallOpti
 
   withStructuredOutput<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    RunOutput extends Record<string, any> = Record<string, any>,
+    RunOutput extends Record<string, any> = Record<string, any>
   >(
     outputSchema:
       | StructuredOutputMethodParams<RunOutput, false>
@@ -322,7 +322,7 @@ export class ChatAnthropicTools extends BaseChatModel<ChatAnthropicToolsCallOpti
 
   withStructuredOutput<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    RunOutput extends Record<string, any> = Record<string, any>,
+    RunOutput extends Record<string, any> = Record<string, any>
   >(
     outputSchema:
       | StructuredOutputMethodParams<RunOutput, true>
@@ -334,7 +334,7 @@ export class ChatAnthropicTools extends BaseChatModel<ChatAnthropicToolsCallOpti
 
   withStructuredOutput<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    RunOutput extends Record<string, any> = Record<string, any>,
+    RunOutput extends Record<string, any> = Record<string, any>
   >(
     outputSchema:
       | StructuredOutputMethodParams<RunOutput, boolean>

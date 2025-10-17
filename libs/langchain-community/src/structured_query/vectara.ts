@@ -38,7 +38,7 @@ function processValue(value: Value): string {
 }
 
 export class VectaraTranslator<
-  T extends VectaraStore,
+  T extends VectaraStore
 > extends BaseTranslator<T> {
   declare VisitOperationOutput: VectaraOperationResult;
 

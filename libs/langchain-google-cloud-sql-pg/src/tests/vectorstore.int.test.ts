@@ -441,8 +441,9 @@ describe("VectorStore methods", () => {
   test("applyVectorIndex - HNSWIndex", async () => {
     const index = new HNSWIndex();
     await vectorStoreInstance.applyVectorIndex(index);
-    const isValidIndex =
-      await vectorStoreInstance.isValidIndex(DEFAULT_INDEX_NAME);
+    const isValidIndex = await vectorStoreInstance.isValidIndex(
+      DEFAULT_INDEX_NAME
+    );
 
     expect(isValidIndex).toBe(true);
     await vectorStoreInstance.dropVectorIndex();
@@ -453,8 +454,9 @@ describe("VectorStore methods", () => {
       distanceStrategy: DistanceStrategy.EUCLIDEAN,
     });
     await vectorStoreInstance.applyVectorIndex(index);
-    let isValidIVFFlatIndex =
-      await vectorStoreInstance.isValidIndex(DEFAULT_INDEX_NAME);
+    let isValidIVFFlatIndex = await vectorStoreInstance.isValidIndex(
+      DEFAULT_INDEX_NAME
+    );
     expect(isValidIVFFlatIndex).toBe(true);
 
     index = new IVFFlatIndex({
@@ -469,8 +471,9 @@ describe("VectorStore methods", () => {
   });
 
   test("reIndex", async () => {
-    let isValidIndex =
-      await vectorStoreInstance.isValidIndex(DEFAULT_INDEX_NAME);
+    let isValidIndex = await vectorStoreInstance.isValidIndex(
+      DEFAULT_INDEX_NAME
+    );
     if (!isValidIndex) {
       const index = new HNSWIndex();
       await vectorStoreInstance.applyVectorIndex(index);
@@ -484,8 +487,9 @@ describe("VectorStore methods", () => {
 
   test("dropVectorIndex", async () => {
     await vectorStoreInstance.dropVectorIndex();
-    const isValidIndex =
-      await vectorStoreInstance.isValidIndex(DEFAULT_INDEX_NAME);
+    const isValidIndex = await vectorStoreInstance.isValidIndex(
+      DEFAULT_INDEX_NAME
+    );
     expect(isValidIndex).toBe(false);
   });
 

@@ -102,7 +102,7 @@ export interface RunnableWithMessageHistoryInputs<RunInput, RunOutput>
  */
 export class RunnableWithMessageHistory<
   RunInput,
-  RunOutput,
+  RunOutput
 > extends RunnableBinding<RunInput, RunOutput> {
   runnable: Runnable<RunInput, RunOutput>;
 
@@ -300,8 +300,9 @@ export class RunnableWithMessageHistory<
     }
     // attach messageHistory
     const { sessionId } = config.configurable;
-    config.configurable.messageHistory =
-      await this.getMessageHistory(sessionId);
+    config.configurable.messageHistory = await this.getMessageHistory(
+      sessionId
+    );
     return config;
   }
 }

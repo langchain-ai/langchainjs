@@ -17,7 +17,7 @@ export class CustomFormatPromptTemplate<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   RunInput extends InputValues = any,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  PartialVariableName extends string = any,
+  PartialVariableName extends string = any
 > extends PromptTemplate<RunInput, PartialVariableName> {
   static lc_name() {
     return "CustomPromptTemplate";
@@ -55,7 +55,7 @@ export class CustomFormatPromptTemplate<
    */
   static fromTemplate<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    RunInput extends InputValues = Record<string, any>,
+    RunInput extends InputValues = Record<string, any>
   >(
     template: string,
     {

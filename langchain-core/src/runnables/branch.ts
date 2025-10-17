@@ -20,12 +20,12 @@ import { concat } from "../utils/stream.js";
  */
 export type Branch<RunInput, RunOutput> = [
   Runnable<RunInput, boolean>,
-  Runnable<RunInput, RunOutput>,
+  Runnable<RunInput, RunOutput>
 ];
 
 export type BranchLike<RunInput, RunOutput> = [
   RunnableLike<RunInput, boolean>,
-  RunnableLike<RunInput, RunOutput>,
+  RunnableLike<RunInput, RunOutput>
 ];
 
 /**
@@ -118,7 +118,7 @@ export class RunnableBranch<RunInput = any, RunOutput = any> extends Runnable<
   static from<RunInput = any, RunOutput = any>(
     branches: [
       ...BranchLike<RunInput, RunOutput>[],
-      RunnableLike<RunInput, RunOutput>,
+      RunnableLike<RunInput, RunOutput>
     ]
   ) {
     if (branches.length < 1) {

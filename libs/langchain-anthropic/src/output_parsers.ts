@@ -16,7 +16,7 @@ interface AnthropicToolsOutputParserParams<T extends Record<string, any>>
 
 export class AnthropicToolsOutputParser<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  T extends Record<string, any> = Record<string, any>,
+  T extends Record<string, any> = Record<string, any>
 > extends BaseLLMOutputParser<T> {
   static lc_name() {
     return "AnthropicToolsOutputParser";

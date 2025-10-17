@@ -209,8 +209,9 @@ ORDER BY TABLE_NAME, ORDINAL_POSITION;`;
       FROM TABLE_COLUMNS
       WHERE SCHEMA_NAME='${schema}'`;
 
-    const rep: Array<{ [key: string]: string }> =
-      await appDataSource.query(sql);
+    const rep: Array<{ [key: string]: string }> = await appDataSource.query(
+      sql
+    );
 
     const repLowerCase: Array<RawResultTableAndColumn> = [];
     rep.forEach((_rep) =>

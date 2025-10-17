@@ -17,7 +17,7 @@ import { Document } from "@langchain/core/documents";
  */
 export type CreateSchemaVectorField<
   T extends VectorAlgorithms,
-  A extends Record<string, unknown>,
+  A extends Record<string, unknown>
 > = {
   ALGORITHM: T;
   DISTANCE_METRIC: "L2" | "IP" | "COSINE";

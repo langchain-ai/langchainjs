@@ -11,8 +11,9 @@ type UnionToIntersectionFn<U> = (
 // It leverages the behavior of TypeScript when inferring from an intersection
 // of overloaded function signatures. For instance, if you have (() => A) & (() => B),
 // calling this function type would typically resolve to B (the "last" overload).
-type GetUnionLast<U> =
-  UnionToIntersectionFn<U> extends () => infer L ? L : never;
+type GetUnionLast<U> = UnionToIntersectionFn<U> extends () => infer L
+  ? L
+  : never;
 
 // Helper type: Prepends an element to the beginning of a tuple.
 type Prepend<Tuple extends unknown[], First> = [First, ...Tuple];
@@ -24,7 +25,7 @@ type Prepend<Tuple extends unknown[], First> = [First, ...Tuple];
  */
 export type UnionToTuple<
   Union,
-  _Result extends unknown[] = [], // Internal accumulator for the tuple elements
+  _Result extends unknown[] = [] // Internal accumulator for the tuple elements
 > = [Union] extends [never] // Base case: If the Union is empty (never),
   ? _Result // we're done, return the accumulated tuple.
   : UnionToTuple<

@@ -359,8 +359,8 @@ export class HanaDB extends VectorStore {
           ${HanaDB.escapeSqlIdentifier(this.contentColumn)} NCLOB,
           ${HanaDB.escapeSqlIdentifier(this.metadataColumn)} NCLOB,
           ${HanaDB.escapeSqlIdentifier(this.vectorColumn)} REAL_VECTOR${
-            vectorColumnLength ? `(${vectorColumnLength})` : ""
-          }
+        vectorColumnLength ? `(${vectorColumnLength})` : ""
+      }
         )`;
       const client = this.connection;
       await this.executeQuery(client, query);
@@ -489,7 +489,7 @@ export class HanaDB extends VectorStore {
           }
           const [betweenFrom, betweenTo] = specialVal as [
             ComparisonRValue,
-            ComparisonRValue,
+            ComparisonRValue
           ];
           operator = BETWEEN_OPERATOR_TO_SQL[specialOp];
           sqlParam = "? AND ?";

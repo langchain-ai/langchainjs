@@ -753,8 +753,8 @@ export class ChatOllama
 
       // when think is enabled, try thinking first
       const token = this.think
-        ? (responseMessage.thinking ?? responseMessage.content ?? "")
-        : (responseMessage.content ?? "");
+        ? responseMessage.thinking ?? responseMessage.content ?? ""
+        : responseMessage.content ?? "";
 
       yield new ChatGenerationChunk({
         text: token,
@@ -776,7 +776,7 @@ export class ChatOllama
 
   withStructuredOutput<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    RunOutput extends Record<string, any> = Record<string, any>,
+    RunOutput extends Record<string, any> = Record<string, any>
   >(
     outputSchema:
       | InteropZodType<RunOutput>
@@ -787,7 +787,7 @@ export class ChatOllama
 
   withStructuredOutput<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    RunOutput extends Record<string, any> = Record<string, any>,
+    RunOutput extends Record<string, any> = Record<string, any>
   >(
     outputSchema:
       | InteropZodType<RunOutput>
@@ -798,7 +798,7 @@ export class ChatOllama
 
   withStructuredOutput<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    RunOutput extends Record<string, any> = Record<string, any>,
+    RunOutput extends Record<string, any> = Record<string, any>
   >(
     outputSchema:
       | InteropZodType<RunOutput>
@@ -817,7 +817,7 @@ export class ChatOllama
 
   withStructuredOutput<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    RunOutput extends Record<string, any> = Record<string, any>,
+    RunOutput extends Record<string, any> = Record<string, any>
   >(
     outputSchema:
       | InteropZodType<RunOutput>

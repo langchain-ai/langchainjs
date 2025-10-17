@@ -279,7 +279,7 @@ export type ProviderFormatTypes<
   TextFormat = unknown,
   ImageFormat = unknown,
   AudioFormat = unknown,
-  FileFormat = unknown,
+  FileFormat = unknown
 > = {
   text: TextFormat;
   image: ImageFormat;
@@ -295,7 +295,7 @@ export type ProviderFormatTypes<
  * {@link convertToStandardContentBlock} rather than being consumed directly.
  */
 export interface StandardContentBlockConverter<
-  Formats extends Partial<ProviderFormatTypes>,
+  Formats extends Partial<ProviderFormatTypes>
 > {
   /**
    * The name of the provider type that corresponds to the provider-specific content block types
@@ -343,7 +343,7 @@ export interface StandardContentBlockConverter<
  * @throws An error if the standard data content block type is not supported.
  */
 export function convertToProviderContentBlock<
-  Formats extends Partial<ProviderFormatTypes>,
+  Formats extends Partial<ProviderFormatTypes>
 >(
   block: DataContentBlock,
   converter: StandardContentBlockConverter<Formats>

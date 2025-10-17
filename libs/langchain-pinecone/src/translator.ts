@@ -27,7 +27,7 @@ import {
  * ```
  */
 export class PineconeTranslator<
-  T extends VectorStoreInterface,
+  T extends VectorStoreInterface
 > extends BasicTranslator<T> {
   constructor() {
     super({

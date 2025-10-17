@@ -558,7 +558,7 @@ export type BaseMessageLike =
       StringWithAutocomplete<
         MessageType | "user" | "assistant" | "placeholder"
       >,
-      MessageContent,
+      MessageContent
     ]
   | string
   /**

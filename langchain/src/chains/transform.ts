@@ -16,7 +16,7 @@ import { ChainInputs, BaseChain } from "./base.js";
  */
 export interface TransformChainFields<
   I extends ChainValues,
-  O extends ChainValues,
+  O extends ChainValues
 > extends ChainInputs {
   transform: (values: I, callbacks?: Callbacks) => O | Promise<O>;
   inputVariables: (keyof I extends string ? keyof I : never)[];
@@ -35,7 +35,7 @@ export interface TransformChainFields<
  */
 export class TransformChain<
   I extends ChainValues,
-  O extends ChainValues,
+  O extends ChainValues
 > extends BaseChain {
   static lc_name() {
     return "TransformChain";

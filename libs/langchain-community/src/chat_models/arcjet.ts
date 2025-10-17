@@ -16,8 +16,8 @@ type ValidEntities<Detect> = Array<
   undefined extends Detect
     ? ArcjetSensitiveInfoType
     : Detect extends DetectSensitiveInfoEntities<infer CustomEntities>
-      ? ArcjetSensitiveInfoType | CustomEntities
-      : never
+    ? ArcjetSensitiveInfoType | CustomEntities
+    : never
 >;
 
 export interface ArcjetRedactOptions<Detect> extends BaseChatModelParams {
@@ -80,7 +80,7 @@ function transformTextMessage(
 
 export class ArcjetRedact<
   Detect extends DetectSensitiveInfoEntities<CustomEntities> | undefined,
-  CustomEntities extends string,
+  CustomEntities extends string
 > extends BaseChatModel {
   static lc_name() {
     return "ArcjetRedact";

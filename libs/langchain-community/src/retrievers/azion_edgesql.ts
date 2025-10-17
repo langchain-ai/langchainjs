@@ -282,8 +282,8 @@ export class AzionRetriever extends BaseRetriever {
       SELECT id, content, ${metadata.replace("hybrid", "similarity")}
       FROM ${this.vectorTable}  
       WHERE ${filters} rowid IN vector_top_k('${
-        this.vectorTable
-      }_idx', vector('[${embeddedQuery}]'), ${rowsNumber})
+      this.vectorTable
+    }_idx', vector('[${embeddedQuery}]'), ${rowsNumber})
     `;
 
     return { ftsQuery, similarityQuery };

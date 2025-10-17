@@ -12,7 +12,7 @@ const stripThinkTags = (text: string): string => {
 };
 
 export class ReasoningStructuredOutputParser<
-  RunOutput extends InteropZodType,
+  RunOutput extends InteropZodType
 > extends StructuredOutputParser<RunOutput> {
   constructor(schema: RunOutput) {
     super(schema);
@@ -25,7 +25,7 @@ export class ReasoningStructuredOutputParser<
 }
 
 export class ReasoningJsonOutputParser<
-  RunOutput extends Record<string, unknown>,
+  RunOutput extends Record<string, unknown>
 > extends JsonOutputParser<RunOutput> {
   async parse(text: string): Promise<RunOutput> {
     const cleanedText = stripThinkTags(text);

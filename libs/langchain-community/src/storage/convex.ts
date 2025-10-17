@@ -39,7 +39,7 @@ export type ConvexKVStoreConfig<
     "mutation",
     "internal",
     { table: string; index: string; keyField: string; key: string }
-  >,
+  >
 > = {
   readonly ctx: GenericActionCtx<DataModel>;
   /**
@@ -99,7 +99,7 @@ export class ConvexKVStore<
     "mutation",
     "internal",
     { table: string; index: string; keyField: string; key: string }
-  >,
+  >
 > extends BaseStore<string, T> {
   lc_namespace = ["langchain", "storage", "convex"];
 

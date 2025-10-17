@@ -62,7 +62,7 @@ export type HydeRetrieverOptions<V extends VectorStore> =
  * ```
  */
 export class HydeRetriever<
-  V extends VectorStore = VectorStore,
+  V extends VectorStore = VectorStore
 > extends VectorStoreRetriever<V> {
   static lc_name() {
     return "HydeRetriever";

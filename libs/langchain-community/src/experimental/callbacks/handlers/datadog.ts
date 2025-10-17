@@ -63,7 +63,7 @@ export interface DatadogLLMObsRequestBody {
 
 export type FormatDocument<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  Metadata extends Record<string, any> = Record<string, any>,
+  Metadata extends Record<string, any> = Record<string, any>
 > = (document: Document<Metadata>) => {
   text: string;
   id: string;

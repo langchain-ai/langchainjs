@@ -26,7 +26,7 @@ import {
 
 class EmbeddingsConnection<
   CallOptions extends AsyncCallerCallOptions,
-  AuthOptions,
+  AuthOptions
 > extends GoogleAIConnection<
   CallOptions,
   VertexEmbeddingsInstance[],

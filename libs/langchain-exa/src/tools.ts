@@ -6,7 +6,7 @@ import Exa, { ContentsOptions, RegularSearchOptions } from "exa-js";
  * Options for the ExaSearchResults tool.
  */
 export type ExaSearchRetrieverFields<
-  T extends ContentsOptions = { text: true },
+  T extends ContentsOptions = { text: true }
 > = ToolParams & {
   client: Exa;
   searchArgs?: RegularSearchOptions & T;
@@ -84,7 +84,7 @@ export type ExaSearchRetrieverFields<
  * </details>
  */
 export class ExaSearchResults<
-  T extends ContentsOptions = { text: true },
+  T extends ContentsOptions = { text: true }
 > extends Tool {
   static lc_name(): string {
     return "ExaSearchResults";
@@ -116,7 +116,7 @@ export class ExaSearchResults<
 }
 
 export class ExaFindSimilarResults<
-  T extends ContentsOptions = { text: true },
+  T extends ContentsOptions = { text: true }
 > extends Tool {
   static lc_name(): string {
     return "ExaFindSimilarResults";

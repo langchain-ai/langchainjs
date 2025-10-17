@@ -125,7 +125,7 @@ export class Typesense extends VectorStore {
    * @param collectionName
    */
   private async importToTypesense<
-    T extends Record<string, unknown> = Record<string, unknown>,
+    T extends Record<string, unknown> = Record<string, unknown>
   >(data: T[], collectionName: string) {
     const chunkSize = 2000;
     for (let i = 0; i < data.length; i += chunkSize) {

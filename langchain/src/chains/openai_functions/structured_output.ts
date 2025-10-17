@@ -27,7 +27,7 @@ import { OutputFunctionsParser } from "../../output_parsers/openai_functions.js"
  * output.
  */
 export type StructuredOutputChainInput<
-  T extends InteropZodObject = InteropZodObject,
+  T extends InteropZodObject = InteropZodObject
 > = Omit<LLMChainInput, "outputParser" | "llm"> & {
   outputSchema?: JsonSchema7Type;
   prompt: BasePromptTemplate;
@@ -36,7 +36,7 @@ export type StructuredOutputChainInput<
 };
 
 export type FunctionCallStructuredOutputParserFields<
-  T extends InteropZodObject = InteropZodObject,
+  T extends InteropZodObject = InteropZodObject
 > = {
   jsonSchema?: JsonSchema7Type;
   zodSchema?: T;
@@ -56,7 +56,7 @@ function isJsonSchema7Type(
  * functionality for parsing the structured output based on a JSON schema.
  */
 export class FunctionCallStructuredOutputParser<
-  T extends InteropZodObject,
+  T extends InteropZodObject
 > extends BaseLLMOutputParser<InferInteropZodOutput<T>> {
   lc_namespace = ["langchain", "chains", "openai_functions"];
 
@@ -109,8 +109,9 @@ export class FunctionCallStructuredOutputParser<
    * @returns The parsed result if it is valid according to the JSON schema.
    */
   async parseResult(generations: ChatGeneration[]) {
-    const initialResult =
-      await this.functionOutputParser.parseResult(generations);
+    const initialResult = await this.functionOutputParser.parseResult(
+      generations
+    );
     const parsedResult = JSON.parse(initialResult, (_, value) => {
       if (value === null) {
         return undefined;
@@ -160,7 +161,7 @@ export class FunctionCallStructuredOutputParser<
  * @returns OpenAPIChain
  */
 export function createStructuredOutputChain<
-  T extends InteropZodObject = InteropZodObject,
+  T extends InteropZodObject = InteropZodObject
 >(input: StructuredOutputChainInput<T>) {
   const {
     outputSchema,

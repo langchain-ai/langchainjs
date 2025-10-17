@@ -703,8 +703,8 @@ export class AzionVectorStore extends VectorStore {
       SELECT id, content, ${metadata}, rank as bm25_similarity
       FROM ${this.tableName}_fts  
       WHERE ${filters} ${this.tableName}_fts MATCH '${this.convert2FTSQuery(
-        query
-      )}'
+      query
+    )}'
       LIMIT ${kfts}`;
 
     const { data, error } = await useQuery(this.dbName, [fullTextQuery]);

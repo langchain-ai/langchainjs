@@ -679,7 +679,7 @@ function getRelImportQuery({
 }
 
 function toObjects<
-  RecordShape extends Record<string, Any> = Record<string, Any>,
+  RecordShape extends Record<string, Any> = Record<string, Any>
 >(records: Neo4jRecord<RecordShape>): RecordShape[] {
   return records.map((record: Any) => {
     const rObj = record.toObject();

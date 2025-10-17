@@ -546,7 +546,7 @@ export class ChatXAI extends ChatOpenAICompletions<ChatXAICallOptions> {
 
   override withStructuredOutput<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    RunOutput extends Record<string, any> = Record<string, any>,
+    RunOutput extends Record<string, any> = Record<string, any>
   >(
     outputSchema:
       | InteropZodType<RunOutput>
@@ -557,7 +557,7 @@ export class ChatXAI extends ChatOpenAICompletions<ChatXAICallOptions> {
 
   override withStructuredOutput<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    RunOutput extends Record<string, any> = Record<string, any>,
+    RunOutput extends Record<string, any> = Record<string, any>
   >(
     outputSchema:
       | InteropZodType<RunOutput>
@@ -568,7 +568,7 @@ export class ChatXAI extends ChatOpenAICompletions<ChatXAICallOptions> {
 
   override withStructuredOutput<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    RunOutput extends Record<string, any> = Record<string, any>,
+    RunOutput extends Record<string, any> = Record<string, any>
   >(
     outputSchema:
       | InteropZodType<RunOutput>
@@ -581,7 +581,7 @@ export class ChatXAI extends ChatOpenAICompletions<ChatXAICallOptions> {
 
   override withStructuredOutput<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    RunOutput extends Record<string, any> = Record<string, any>,
+    RunOutput extends Record<string, any> = Record<string, any>
   >(
     outputSchema:
       | InteropZodType<RunOutput>

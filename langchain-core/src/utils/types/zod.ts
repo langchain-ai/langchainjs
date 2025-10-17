@@ -31,34 +31,39 @@ export type InteropZodType<Output = any, Input = Output> =
 export type InteropZodObject = ZodObjectV3 | ZodObjectV4;
 
 export type InteropZodObjectShape<
-  T extends InteropZodObject = InteropZodObject,
-> =
-  T extends z3.ZodObject<infer Shape>
-    ? { [K in keyof Shape]: Shape[K] }
-    : T extends z4.$ZodObject<infer Shape>
-      ? { [K in keyof Shape]: Shape[K] }
-      : never;
+  T extends InteropZodObject = InteropZodObject
+> = T extends z3.ZodObject<infer Shape>
+  ? { [K in keyof Shape]: Shape[K] }
+  : T extends z4.$ZodObject<infer Shape>
+  ? { [K in keyof Shape]: Shape[K] }
+  : never;
 
 export type InteropZodIssue = z3.ZodIssue | z4.$ZodIssue;
 
 // Simplified type inference to avoid circular dependencies
-export type InferInteropZodInput<T> =
-  T extends z3.ZodType<unknown, z3.ZodTypeDef, infer Input>
-    ? Input
-    : T extends z4.$ZodType<unknown, infer Input>
-      ? Input
-      : T extends { _zod: { input: infer Input } }
-        ? Input
-        : never;
+export type InferInteropZodInput<T> = T extends z3.ZodType<
+  unknown,
+  z3.ZodTypeDef,
+  infer Input
+>
+  ? Input
+  : T extends z4.$ZodType<unknown, infer Input>
+  ? Input
+  : T extends { _zod: { input: infer Input } }
+  ? Input
+  : never;
 
-export type InferInteropZodOutput<T> =
-  T extends z3.ZodType<infer Output, z3.ZodTypeDef, unknown>
-    ? Output
-    : T extends z4.$ZodType<infer Output, unknown>
-      ? Output
-      : T extends { _zod: { output: infer Output } }
-        ? Output
-        : never;
+export type InferInteropZodOutput<T> = T extends z3.ZodType<
+  infer Output,
+  z3.ZodTypeDef,
+  unknown
+>
+  ? Output
+  : T extends z4.$ZodType<infer Output, unknown>
+  ? Output
+  : T extends { _zod: { output: infer Output } }
+  ? Output
+  : never;
 
 export type Mutable<T> = {
   -readonly [P in keyof T]: T[P];
@@ -106,7 +111,7 @@ export function isZodSchemaV3(
 
 /** Backward compatible isZodSchema for Zod 3 */
 export function isZodSchema<
-  RunOutput extends Record<string, unknown> = Record<string, unknown>,
+  RunOutput extends Record<string, unknown> = Record<string, unknown>
 >(
   schema: z3.ZodType<RunOutput> | Record<string, unknown>
 ): schema is z3.ZodType<RunOutput> {

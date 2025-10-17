@@ -120,11 +120,12 @@ describe("tool type tests", () => {
             ({
               lc_direct_tool_output: true,
               output: `test ${input}`,
-            }) as ToolOutputT,
+            } as ToolOutputT),
         });
 
-        const output: ToolOutputT =
-          await directOutputDynamicTool.invoke(toolCall);
+        const output: ToolOutputT = await directOutputDynamicTool.invoke(
+          toolCall
+        );
 
         expect(output).toEqual({
           lc_direct_tool_output: true,
@@ -195,11 +196,12 @@ describe("tool type tests", () => {
             ({
               lc_direct_tool_output: true,
               output: `test ${input}`,
-            }) as ToolOutputT,
+            } as ToolOutputT),
         });
 
-        const output: ToolOutputT =
-          await directOutputDynamicTool.call(toolCall);
+        const output: ToolOutputT = await directOutputDynamicTool.call(
+          toolCall
+        );
 
         expect(output).toEqual({
           lc_direct_tool_output: true,
@@ -243,8 +245,9 @@ describe("tool type tests", () => {
           args: { input: "test" },
           type: "tool_call",
         };
-        const output: ToolMessage =
-          await testDynamicStructuredTool.invoke(toolCall);
+        const output: ToolMessage = await testDynamicStructuredTool.invoke(
+          toolCall
+        );
         expect(output).toBeInstanceOf(ToolMessage);
       });
 
@@ -308,11 +311,12 @@ describe("tool type tests", () => {
             ({
               lc_direct_tool_output: true,
               output: `test ${input}`,
-            }) as ToolOutputT,
+            } as ToolOutputT),
         });
 
-        const output: ToolOutputT =
-          await directOutputDynamicTool.invoke(toolCall);
+        const output: ToolOutputT = await directOutputDynamicTool.invoke(
+          toolCall
+        );
 
         expect(output).toEqual({
           lc_direct_tool_output: true,
@@ -338,8 +342,9 @@ describe("tool type tests", () => {
           type: "tool_call",
         };
 
-        const output: ToolMessage =
-          await testDynamicStructuredTool.call(toolCall);
+        const output: ToolMessage = await testDynamicStructuredTool.call(
+          toolCall
+        );
         expect(output).toBeInstanceOf(ToolMessage);
       });
 
@@ -404,7 +409,7 @@ describe("tool type tests", () => {
             ({
               lc_direct_tool_output: true,
               output: `test ${input.input}`,
-            }) as ToolOutputT,
+            } as ToolOutputT),
           schema: z.object({ input: z.string() }),
         });
 

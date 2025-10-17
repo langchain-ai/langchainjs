@@ -81,7 +81,7 @@ export class OutputFunctionsParser extends BaseLLMOutputParser<string> {
  * instance of `OutputFunctionsParser` to parse the output.
  */
 export class JsonOutputFunctionsParser<
-  Output extends object = object,
+  Output extends object = object
 > extends BaseCumulativeTransformOutputParser<Output> {
   static lc_name() {
     return "JsonOutputFunctionsParser";
@@ -180,7 +180,7 @@ export class JsonOutputFunctionsParser<
  * to parse the output.
  */
 export class JsonKeyOutputFunctionsParser<
-  T = object,
+  T = object
 > extends BaseLLMOutputParser<T> {
   static lc_name() {
     return "JsonKeyOutputFunctionsParser";

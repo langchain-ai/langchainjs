@@ -195,13 +195,10 @@ export const checkValidTemplate = (
                          should be one of ${validFormats}`);
   }
   try {
-    const dummyInputs: InputValues = inputVariables.reduce(
-      (acc, v) => {
-        acc[v] = "foo";
-        return acc;
-      },
-      {} as Record<string, string>
-    );
+    const dummyInputs: InputValues = inputVariables.reduce((acc, v) => {
+      acc[v] = "foo";
+      return acc;
+    }, {} as Record<string, string>);
     if (Array.isArray(template)) {
       template.forEach((message) => {
         if (message.type === "text") {
