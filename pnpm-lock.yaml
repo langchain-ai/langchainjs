@@ -1138,7 +1138,7 @@ importers:
         version: 4.0.6
       '@getzep/zep-cloud':
         specifier: ^1.0.6
-        version: 1.0.12(@langchain/core@libs+langchain-core)(encoding@0.1.13)(langchain@0.3.30(5959d0afb921947ba7e6061cf1c93b65))
+        version: 1.0.12(@langchain/core@libs+langchain-core)(encoding@0.1.13)(langchain@0.3.30(61ae153cb4d157fd7b2f5a5383cfe419))
       '@getzep/zep-js':
         specifier: ^0.9.0
         version: 0.9.0
@@ -2517,8 +2517,8 @@ importers:
   libs/providers/langchain-google-gauth:
     dependencies:
       '@langchain/google-common':
-        specifier: ^0.2.16
-        version: 0.2.16(@langchain/core@libs+langchain-core)
+        specifier: ^1.0.0
+        version: 1.0.0
       google-auth-library:
         specifier: ^10.1.0
         version: 10.2.0
@@ -5956,9 +5956,21 @@ packages:
     peerDependencies:
       '@langchain/core': workspace:*
 
+  '@langchain/deepseek@1.0.0':
+    resolution: {integrity: sha512-jNMnX4iiqc+/T7kSr8JlDvtneFc1Jxc+I1feoBtGhnoGr8jN4R7t5oFvkuIZBaGNvS/mtJlP6Ujy3Z/X1qqjxg==}
+    engines: {node: '>=20'}
+    peerDependencies:
+      '@langchain/core': workspace:*
+
   '@langchain/google-common@0.2.16':
     resolution: {integrity: sha512-RZmXGXDJcW0qdOe6yvp42/GILbe2vOvgZ+rUV1onZAJUYm4JjyByoj4+Zxyxza3b4EjWaqo6QegDiyF55sxpgg==}
     engines: {node: '>=18'}
+    peerDependencies:
+      '@langchain/core': workspace:*
+
+  '@langchain/google-common@1.0.0':
+    resolution: {integrity: sha512-4xrh8amC8AtvNAaA4CjptQ/P5jNycCiLNgU/m6T775yBSsJTNWlD8TKsqnOFDpD7q0T5sCIaU0oBAhOU7kjD6w==}
+    engines: {node: '>=20'}
     peerDependencies:
       '@langchain/core': workspace:*
 
@@ -18017,7 +18029,7 @@ snapshots:
     transitivePeerDependencies:
       - debug
 
-  '@getzep/zep-cloud@1.0.12(@langchain/core@libs+langchain-core)(encoding@0.1.13)(langchain@0.3.30(5959d0afb921947ba7e6061cf1c93b65))':
+  '@getzep/zep-cloud@1.0.12(@langchain/core@libs+langchain-core)(encoding@0.1.13)(langchain@0.3.30(61ae153cb4d157fd7b2f5a5383cfe419))':
     dependencies:
       form-data: 4.0.0
       node-fetch: 2.7.0(encoding@0.1.13)
@@ -18026,7 +18038,7 @@ snapshots:
       zod: 3.25.76
     optionalDependencies:
       '@langchain/core': link:libs/langchain-core
-      langchain: 0.3.30(5959d0afb921947ba7e6061cf1c93b65)
+      langchain: 0.3.30(61ae153cb4d157fd7b2f5a5383cfe419)
     transitivePeerDependencies:
       - encoding
 
@@ -18841,9 +18853,21 @@ snapshots:
       - encoding
     optional: true
 
+  '@langchain/deepseek@1.0.0(@langchain/core@libs+langchain-core)(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.5))':
+    dependencies:
+      '@langchain/core': link:libs/langchain-core
+      '@langchain/openai': 1.0.0(@langchain/core@libs+langchain-core)(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.5))
+    transitivePeerDependencies:
+      - ws
+    optional: true
+
   '@langchain/google-common@0.2.16(@langchain/core@libs+langchain-core)':
     dependencies:
       '@langchain/core': link:libs/langchain-core
+      uuid: 10.0.0
+
+  '@langchain/google-common@1.0.0':
+    dependencies:
       uuid: 10.0.0
 
   '@langchain/google-gauth@0.2.16(@langchain/core@libs+langchain-core)':
@@ -26087,7 +26111,7 @@ snapshots:
 
   kuler@2.0.0: {}
 
-  langchain@0.3.30(5959d0afb921947ba7e6061cf1c93b65):
+  langchain@0.3.30(61ae153cb4d157fd7b2f5a5383cfe419):
     dependencies:
       '@langchain/core': link:libs/langchain-core
       '@langchain/openai': 0.6.3(@langchain/core@libs+langchain-core)(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.5))
@@ -26105,6 +26129,7 @@ snapshots:
       '@langchain/anthropic': 1.0.0(@langchain/core@libs+langchain-core)(zod@3.25.76)
       '@langchain/aws': 1.0.0(@langchain/core@libs+langchain-core)
       '@langchain/cohere': 0.3.4(@langchain/core@libs+langchain-core)(encoding@0.1.13)
+      '@langchain/deepseek': 1.0.0(@langchain/core@libs+langchain-core)(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.5))
       '@langchain/google-genai': 0.2.16(@langchain/core@libs+langchain-core)
       '@langchain/google-vertexai': 0.2.16(@langchain/core@libs+langchain-core)
       '@langchain/google-vertexai-web': 0.2.16(@langchain/core@libs+langchain-core)

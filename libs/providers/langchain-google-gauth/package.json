@@ -1,6 +1,6 @@
 {
   "name": "@langchain/google-gauth",
-  "version": "0.2.16",
+  "version": "1.0.0",
   "description": "Google auth based authentication support for Google services",
   "author": "LangChain",
   "license": "MIT",
@@ -31,7 +31,7 @@
     "format:check": "prettier --config .prettierrc --check \"src\""
   },
   "dependencies": {
-    "@langchain/google-common": "^0.2.16",
+    "@langchain/google-common": "^1.0.0",
     "google-auth-library": "^10.1.0"
   },
   "devDependencies": {
