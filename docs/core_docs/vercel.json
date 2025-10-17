@@ -18,39 +18,39 @@
   ],
   "redirects": [
     {
-      "source": "/docs/how_to/callbacks_backgrounding(/?)",
+      "source": "/docs/how_to/callbacks_backgrounding",
       "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
     },
     {
-      "source": "/docs(/?)",
+      "source": "/docs",
       "destination": "https://docs.langchain.com/oss/javascript/langchain/install"
     },
     {
-      "source": "/docs/get_started/introduction(/?)",
+      "source": "/docs/get_started/introduction",
       "destination": "https://docs.langchain.com/oss/javascript/langchain/install"
     },
     {
-      "source": "/docs/how_to/tool_calls_multi_modal(/?)",
+      "source": "/docs/how_to/tool_calls_multi_modal",
       "destination": "https://docs.langchain.com/oss/javascript/langchain/models"
     },
     {
-      "source": "/docs/langgraph(/?)",
+      "source": "/docs/langgraph",
       "destination": "https://langchain-ai.github.io/langgraphjs/"
     },
     {
-      "source": "/docs/langsmith(/?)",
+      "source": "/docs/langsmith",
       "destination": "https://docs.smith.langchain.com/"
     },
     {
-      "source": "/docs/integrations/chat/chrome_ai(/?)",
+      "source": "/docs/integrations/chat/chrome_ai",
       "destination": "https://docs.langchain.com/oss/javascript/langchain/models"
     },
     {
-      "source": "/docs/integrations/retrievers/vectorstore(/?)",
+      "source": "/docs/integrations/retrievers/vectorstore",
       "destination": "https://docs.langchain.com/oss/javascript/langchain/retrieval"
     },
     {
-      "source": "/docs/integrations/chat_memory(/?)",
+      "source": "/docs/integrations/chat_memory",
       "destination": "https://docs.langchain.com/oss/javascript/langchain/long-term-memory"
     },
     {
@@ -58,43 +58,43 @@
       "destination": "https://docs.langchain.com/oss/javascript/langchain/long-term-memory"
     },
     {
-      "source": "/docs/integrations/llms/togetherai(/?)",
+      "source": "/docs/integrations/llms/togetherai",
       "destination": "https://docs.langchain.com/oss/javascript/langchain/models"
     },
     {
-      "source": "/docs/tutorials/query_analysis(/?)",
+      "source": "/docs/tutorials/query_analysis",
       "destination": "https://docs.langchain.com/oss/javascript/langchain/rag"
     },
     {
-      "source": "/docs/tutorials/local_rag(/?)",
+      "source": "/docs/tutorials/local_rag",
       "destination": "https://docs.langchain.com/oss/javascript/langchain/rag"
     },
     {
-      "source": "/docs/tutorials/pdf_qa(/?)",
+      "source": "/docs/tutorials/pdf_qa",
       "destination": "https://docs.langchain.com/oss/javascript/langchain/retrieval"
     },
     {
-      "source": "/docs/tutorials/agents(/?)",
+      "source": "/docs/tutorials/agents",
       "destination": "https://langchain-ai.github.io/langgraphjs/tutorials/quickstart/"
     },
     {
-      "source": "/docs/troubleshooting/errors/GRAPH_RECURSION_LIMIT(/?)",
+      "source": "/docs/troubleshooting/errors/GRAPH_RECURSION_LIMIT",
       "destination": "https://langchain-ai.github.io/langgraphjs/troubleshooting/errors/GRAPH_RECURSION_LIMIT/"
     },
     {
-      "source": "/docs/troubleshooting/errors/INVALID_CONCURRENT_GRAPH_UPDATE(/?)",
+      "source": "/docs/troubleshooting/errors/INVALID_CONCURRENT_GRAPH_UPDATE",
       "destination": "https://langchain-ai.github.io/langgraphjs/troubleshooting/errors/INVALID_CONCURRENT_GRAPH_UPDATE/"
     },
     {
-      "source": "/docs/troubleshooting/errors/INVALID_GRAPH_NODE_RETURN_VALUE(/?)",
+      "source": "/docs/troubleshooting/errors/INVALID_GRAPH_NODE_RETURN_VALUE",
       "destination": "https://langchain-ai.github.io/langgraphjs/troubleshooting/errors/INVALID_GRAPH_NODE_RETURN_VALUE/"
     },
     {
-      "source": "/docs/troubleshooting/errors/MULTIPLE_SUBGRAPHS(/?)",
+      "source": "/docs/troubleshooting/errors/MULTIPLE_SUBGRAPHS",
       "destination": "https://langchain-ai.github.io/langgraphjs/troubleshooting/errors/MULTIPLE_SUBGRAPHS/"
     },
     {
-      "source": "/docs/integrations/llms/watsonx_ai(/?)",
+      "source": "/docs/integrations/llms/watsonx_ai",
       "destination": "https://js.langchain.com/docs/integrations/llms/ibm/"
     },
     {
@@ -102,15 +102,15 @@
       "destination": "https://docs.langchain.com/oss/javascript/langchain/models"
     },
     {
-      "source": "/docs/modules/model_io/prompts(/?)",
+      "source": "/docs/modules/model_io/prompts",
       "destination": "https://docs.langchain.com/oss/javascript/langchain/models"
     },
     {
-      "source": "/docs/guides/expression_language/cookbook(/?)",
+      "source": "/docs/guides/expression_language/cookbook",
       "destination": "https://docs.langchain.com/oss/javascript/langchain/middleware"
     },
     {
-      "source": "/docs/modules/model_io/models(/?)",
+      "source": "/docs/modules/model_io/models",
       "destination": "https://docs.langchain.com/oss/javascript/langchain/models"
     },
     {
