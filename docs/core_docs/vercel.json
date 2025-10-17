@@ -54,7 +54,7 @@
       "destination": "https://docs.langchain.com/oss/javascript/langchain/long-term-memory"
     },
     {
-      "source": "/docs/integrations/chat_memory/:path(.*/?)*",
+      "source": "/docs/integrations/chat_memory/:path*",
       "destination": "https://docs.langchain.com/oss/javascript/langchain/long-term-memory"
     },
     {
@@ -898,20 +898,12 @@
       "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
     },
     {
-      "source": "/docs",
-      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
-    },
-    {
       "source": "/docs/integrations/vectorstores/lancedb",
       "destination": "https://docs.langchain.com/oss/javascript/integrations/vectorstores"
     },
     {
       "source": "/docs/integrations/chat/ibm",
       "destination": "https://docs.langchain.com/oss/javascript/integrations/chat"
-    },
-    {
-      "source": "/docs/get_started/introduction",
-      "destination": "https://docs.langchain.com/oss/javascript/langchain/install"
     },
     {
       "source": "/docs/modules/chains/index_related_chains/retrieval_qa",
@@ -936,10 +928,6 @@
     {
       "source": "/404.html",
       "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
-    },
-    {
-      "source": "/docs/integrations/llms/watsonx_ai",
-      "destination": "https://docs.langchain.com/oss/javascript/integrations/llms"
     },
     {
       "source": "/docs/modules/experimental/mask",
@@ -996,10 +984,6 @@
     {
       "source": "/docs/integrations/vectorstores/supabase",
       "destination": "https://docs.langchain.com/oss/javascript/integrations/vectorstores"
-    },
-    {
-      "source": "/docs/tutorials/local_rag",
-      "destination": "https://docs.langchain.com/oss/javascript/langchain/rag"
     },
     {
       "source": "/docs/modules/agents/tools",
@@ -1338,10 +1322,6 @@
       "destination": "https://docs.langchain.com/oss/javascript/integrations/vectorstores"
     },
     {
-      "source": "/docs/langgraph",
-      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
-    },
-    {
       "source": "/docs/modules/data_connection/document_transformers/code_splitter",
       "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
     },
@@ -1416,10 +1396,6 @@
     {
       "source": "/docs/modules/model_io/chat",
       "destination": "https://docs.langchain.com/oss/javascript/langchain/models"
-    },
-    {
-      "source": "/docs/guides/expression_language/cookbook",
-      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
     },
     {
       "source": "/docs/modules/chains/popular/structured_output",
@@ -2722,10 +2698,6 @@
       "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
     },
     {
-      "source": "/docs/tutorials/query_analysis",
-      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
-    },
-    {
       "source": "/docs/integrations/document_loaders/file_loaders/multi_file",
       "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
     },
@@ -2804,10 +2776,6 @@
     {
       "source": "/docs/guides/langsmith_evaluation",
       "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
-    },
-    {
-      "source": "/docs/integrations/chat_memory",
-      "destination": "https://docs.langchain.com/oss/javascript/integrations/chat"
     },
     {
       "source": "/docs/integrations/chat_memory/convex",
@@ -3243,10 +3211,6 @@
     },
     {
       "source": "/docs/integrations/tools/google_calendar",
-      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
-    },
-    {
-      "source": "/docs/tutorials/agents",
       "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
     },
     {
