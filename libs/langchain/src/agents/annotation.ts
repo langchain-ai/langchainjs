@@ -7,10 +7,7 @@ import {
   MessagesZodMeta,
   type BinaryOperatorAggregate,
 } from "@langchain/langgraph";
-import {
-  InteropZodToStateDefinition,
-  withLangGraph,
-} from "@langchain/langgraph/zod";
+import { withLangGraph } from "@langchain/langgraph/zod";
 
 import type { AgentMiddleware, AnyAnnotationRoot } from "./middleware/types.js";
 import { InteropZodObject } from "@langchain/core/utils/types";
@@ -94,16 +91,3 @@ export const PreHookAnnotation: AnnotationRoot<{
 }>;
 
 export type PreHookAnnotation = typeof PreHookAnnotation;
-
-export type ToAnnotationRoot<A extends AnyAnnotationRoot | InteropZodObject> =
-  A extends AnyAnnotationRoot
-    ? A
-    : A extends InteropZodObject
-    ? AnnotationRoot<InteropZodToStateDefinition<A>>
-    : never;
-
-export type InferSchemaInput<
-  A extends AnyAnnotationRoot | InteropZodObject | undefined
-> = A extends AnyAnnotationRoot | InteropZodObject
-  ? ToAnnotationRoot<A>["State"]
-  : {};

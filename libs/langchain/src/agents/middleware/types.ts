@@ -15,7 +15,7 @@ import type { JumpToTarget } from "../constants.js";
 import type { ClientTool, ServerTool } from "../tools.js";
 import type { Runtime, AgentBuiltInState } from "../runtime.js";
 import type { ModelRequest } from "../nodes/types.js";
-import { ToAnnotationRoot } from "../annotation.js";
+import { InteropZodToStateDefinition } from "@langchain/langgraph/zod";
 
 export type AnyAnnotationRoot = AnnotationRoot<any>;
 
@@ -411,4 +411,17 @@ export type InferContextInput<
   ? InferInteropZodInput<ContextSchema>
   : ContextSchema extends AnyAnnotationRoot
   ? ToAnnotationRoot<ContextSchema>["State"]
+  : {};
+
+export type ToAnnotationRoot<A extends AnyAnnotationRoot | InteropZodObject> =
+  A extends AnyAnnotationRoot
+    ? A
+    : A extends InteropZodObject
+    ? AnnotationRoot<InteropZodToStateDefinition<A>>
+    : never;
+
+export type InferSchemaInput<
+  A extends AnyAnnotationRoot | InteropZodObject | undefined
+> = A extends AnyAnnotationRoot | InteropZodObject
+  ? ToAnnotationRoot<A>["State"]
   : {};
