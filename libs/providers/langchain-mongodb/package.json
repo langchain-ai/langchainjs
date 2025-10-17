@@ -56,6 +56,7 @@
   "types": "./dist/index.d.ts",
   "exports": {
     ".": {
+      "input": "./src/index.ts",
       "import": {
         "types": "./dist/index.d.cts",
         "default": "./dist/index.cjs"
@@ -63,16 +64,14 @@
       "require": {
         "types": "./dist/index.d.cts",
         "default": "./dist/index.cjs"
-      },
-      "input": "./src/index.ts"
+      }
     },
     "./package.json": "./package.json"
   },
   "files": [
     "dist/",
-    "index.cjs",
-    "index.js",
-    "index.d.ts",
-    "index.d.cts"
+    "CHANGELOG.md",
+    "README.md",
+    "LICENSE"
   ]
 }
