@@ -1,6 +1,6 @@
 {
   "name": "@langchain/tavily",
-  "version": "0.1.4",
+  "version": "1.0.0",
   "description": "Tavily integration for LangChain.js",
   "author": "LangChain",
   "license": "MIT",
@@ -30,7 +30,7 @@
     "zod": "^3.25.76 || ^4"
   },
   "peerDependencies": {
-    "@langchain/core": "^1.0.0-alpha.6"
+    "@langchain/core": "^1.0.0"
   },
   "devDependencies": {
     "@langchain/core": "workspace:*",
