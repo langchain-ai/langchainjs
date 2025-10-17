@@ -587,7 +587,7 @@ export interface ChatOpenAIFields extends BaseChatOpenAIFields {
  * <br />
  */
 export class ChatOpenAI<
-  CallOptions extends ChatOpenAICallOptions = ChatOpenAICallOptions,
+  CallOptions extends ChatOpenAICallOptions = ChatOpenAICallOptions
 > extends BaseChatOpenAI<CallOptions> {
   /**
    * Whether to use the responses API for all requests. If `false` the responses API will be used
