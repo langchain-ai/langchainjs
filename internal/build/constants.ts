@@ -40,6 +40,11 @@ export const optionalEntrypoints: Record<string, string[]> = {
 
 export const deprecatedOmitFromImportMap: Record<string, string[]> = {
   langchain: ["hub", "hub/node"],
+  "@langchain/core": [
+    "context",
+    "callbacks/dispatch/web",
+    "callbacks/dispatch",
+  ],
   "@langchain/classic": ["hub", "hub/node"],
 };
 
