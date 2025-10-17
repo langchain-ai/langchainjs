@@ -15252,18 +15252,6 @@
     "destination": "https://reference.langchain.com/javascript/"
   },
   {
-    "source": "/classes/%5C_langchain_community.embeddings_bytedance_doubao.ByteDanceDoubaoEmbeddings.html",
-    "destination": "https://reference.langchain.com/javascript/"
-  },
-  {
-    "source": "/classes/%5C_langchain_community.tools_serpapi.SerpAPI.html",
-    "destination": "https://reference.langchain.com/javascript/"
-  },
-  {
-    "source": "/classes/%5C_langchain_pinecone.PineconeEmbeddings.html",
-    "destination": "https://reference.langchain.com/javascript/"
-  },
-  {
     "source": "/classes/chat_models_googlevertexai.ChatGoogleVertexAI.html",
     "destination": "https://reference.langchain.com/javascript/"
   },

@@ -2182,10 +2182,6 @@
       "destination": "https://docs.langchain.com/oss/javascript/integrations/retrievers"
     },
     {
-      "source": "/docs/modules/data_connection/text_embedding/)",
-      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
-    },
-    {
       "source": "/docs/modules/data_connection/vectorstores/integrations/hnswlib",
       "destination": "https://docs.langchain.com/oss/javascript/integrations/vectorstores"
     },
@@ -2426,10 +2422,6 @@
       "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
     },
     {
-      "source": "/docs/modules/indexes/document_loaders/examples/file_loaders/unstructured)%E4%BB%A5%E4%BA%86%E8%A7%A3%E5%A6%82%E4%BD%95%E8%BF%9B%E8%A1%8C%E6%93%8D%E4%BD%9C%E3%80%82",
-      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
-    },
-    {
       "source": "/docs/modules/indexes/document_loaders/examples/web_loaders/web_puppeteer",
       "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
     },
@@ -2500,14 +2492,6 @@
     {
       "source": "/docs/modules/model_io/quick_start",
       "destination": "https://docs.langchain.com/oss/javascript/langchain/models"
-    },
-    {
-      "source": "/docs/modules/model%5C_io/chat/caching",
-      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
-    },
-    {
-      "source": "/docs/use_cases/autonomous_agents/sales_gpt%C2%A0",
-      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
     },
     {
       "source": "/docs/use_cases/summarization",
