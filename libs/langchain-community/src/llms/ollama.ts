@@ -121,7 +121,7 @@ export class Ollama extends LLM<OllamaCallOptions> implements OllamaInput {
     this.model = fields.model ?? this.model;
     this.baseUrl = fields.baseUrl?.endsWith("/")
       ? fields.baseUrl.slice(0, -1)
-      : fields.baseUrl ?? this.baseUrl;
+      : (fields.baseUrl ?? this.baseUrl);
     this.keepAlive = fields.keepAlive ?? this.keepAlive;
 
     this.headers = fields.headers ?? this.headers;

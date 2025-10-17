@@ -7,13 +7,10 @@ module.exports = {
     "^(\\.{1,2}/.*)\\.js$": "$1",
   },
   transform: {
-    '^.+\\.tsx?$': ['@swc/jest'],
+    "^.+\\.tsx?$": ["@swc/jest"],
   },
-  transformIgnorePatterns: [
-    "/node_modules/",
-    "\\.pnp\\.[^\\/]+$",
-  ],
+  transformIgnorePatterns: ["/node_modules/", "\\.pnp\\.[^\\/]+$"],
   setupFiles: ["dotenv/config"],
   testTimeout: 20_000,
-  passWithNoTests: true
+  passWithNoTests: true,
 };

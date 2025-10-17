@@ -470,9 +470,8 @@ describe("Works with all model providers", () => {
       temperature: 0,
     });
 
-    const googleVertexaiResult = await googleVertexai.invoke(
-      "what's your name"
-    );
+    const googleVertexaiResult =
+      await googleVertexai.invoke("what's your name");
     expect(googleVertexaiResult).toBeDefined();
     expect(googleVertexaiResult.content.length).toBeGreaterThan(0);
   });

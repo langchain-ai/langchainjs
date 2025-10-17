@@ -6,13 +6,12 @@ name: CI
 on:
   pull_request:
     paths_ignore:
-      - 'docs/**'
-      - 'dependency_range_tests/**'
-      - 'environment_tests/**'
-      - '.github/**'
-      - '!.github/workflows/ci.yml'
-  workflow_dispatch:  # Allows triggering the workflow manually in GitHub UI
-
+      - "docs/**"
+      - "dependency_range_tests/**"
+      - "environment_tests/**"
+      - ".github/**"
+      - "!.github/workflows/ci.yml"
+  workflow_dispatch: # Allows triggering the workflow manually in GitHub UI
 
 # If another push to the same PR or branch happens while this workflow is still running,
 # cancel the earlier run in favor of the next run.

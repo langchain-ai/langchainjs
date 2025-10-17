@@ -347,7 +347,7 @@ export class AzureChatOpenAI
           toolCalls: message.additional_kwargs.tool_calls,
           functionCall: message.additional_kwargs.function_call,
           toolCallId: (message as ToolMessage).tool_call_id,
-        } as ChatRequestMessage)
+        }) as ChatRequestMessage
     );
   }
 
@@ -542,9 +542,8 @@ export class AzureChatOpenAI
         options?.function_call
       );
 
-      const completionTokenUsage = await this.getNumTokensFromGenerations(
-        generations
-      );
+      const completionTokenUsage =
+        await this.getNumTokensFromGenerations(generations);
 
       tokenUsage.promptTokens = promptTokenUsage;
       tokenUsage.completionTokens = completionTokenUsage;

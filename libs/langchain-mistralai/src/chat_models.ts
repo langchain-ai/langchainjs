@@ -865,7 +865,7 @@ function _convertToolToMistralTool(
  * <br />
  */
 export class ChatMistralAI<
-    CallOptions extends ChatMistralAICallOptions = ChatMistralAICallOptions
+    CallOptions extends ChatMistralAICallOptions = ChatMistralAICallOptions,
   >
   extends BaseChatModel<CallOptions, AIMessageChunk>
   implements ChatMistralAIInput
@@ -1315,7 +1315,7 @@ export class ChatMistralAI<
 
   withStructuredOutput<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    RunOutput extends Record<string, any> = Record<string, any>
+    RunOutput extends Record<string, any> = Record<string, any>,
   >(
     outputSchema:
       | InteropZodType<RunOutput>
@@ -1326,7 +1326,7 @@ export class ChatMistralAI<
 
   withStructuredOutput<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    RunOutput extends Record<string, any> = Record<string, any>
+    RunOutput extends Record<string, any> = Record<string, any>,
   >(
     outputSchema:
       | InteropZodType<RunOutput>
@@ -1337,7 +1337,7 @@ export class ChatMistralAI<
 
   withStructuredOutput<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    RunOutput extends Record<string, any> = Record<string, any>
+    RunOutput extends Record<string, any> = Record<string, any>,
   >(
     outputSchema:
       | InteropZodType<RunOutput>

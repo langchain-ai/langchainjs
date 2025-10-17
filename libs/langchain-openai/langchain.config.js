@@ -9,9 +9,13 @@ function abs(relativePath) {
   return resolve(dirname(fileURLToPath(import.meta.url)), relativePath);
 }
 
-
 export const config = {
-  internals: [/node\:/, /@langchain\/core\//, /zod\/v[34]\/core/, "openai/helpers/zod"],
+  internals: [
+    /node\:/,
+    /@langchain\/core\//,
+    /zod\/v[34]\/core/,
+    "openai/helpers/zod",
+  ],
   entrypoints: {
     index: "index",
   },
@@ -19,4 +23,4 @@ export const config = {
   cjsSource: "./dist-cjs",
   cjsDestination: "./dist",
   abs,
-}
+};

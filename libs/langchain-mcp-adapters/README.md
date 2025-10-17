@@ -8,19 +8,16 @@ This library provides a lightweight wrapper that makes [Anthropic Model Context 
 ## Features
 
 - 🔌 **Transport Options**
-
   - Connect to MCP servers via stdio (local) or Streamable HTTP (remote)
     - Streamable HTTP automatically falls back to SSE for compatibility with legacy MCP server implementations
   - Support for custom headers in SSE connections for authentication
   - Configurable reconnection strategies for both transport types
 
 - 🔄 **Multi-Server Management**
-
   - Connect to multiple MCP servers simultaneously
   - Auto-organize tools by server or access them as a flattened collection
 
 - 🧩 **Agent Integration**
-
   - Compatible with LangChain.js and LangGraph.js
   - Optimized for OpenAI, Anthropic, and Google models
   - Supports rich content responses including text, images, and embedded resources

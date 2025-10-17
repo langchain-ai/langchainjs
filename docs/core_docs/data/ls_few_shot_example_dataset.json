@@ -7,9 +7,7 @@
     "dataset_id": "d64fd4c5-5642-40fe-85d1-d757467415b6",
     "source_run_id": "0d1e8e6e-35d4-4fcc-a467-86df53b6d1db",
     "metadata": {
-      "dataset_split": [
-        "base"
-      ]
+      "dataset_split": ["base"]
     },
     "inputs": {
       "input": "-(2 + 1/1)",
@@ -257,9 +255,7 @@
     "dataset_id": "d64fd4c5-5642-40fe-85d1-d757467415b6",
     "source_run_id": "d70c2f5c-c67f-4df5-a171-44fbaaef8973",
     "metadata": {
-      "dataset_split": [
-        "base"
-      ]
+      "dataset_split": ["base"]
     },
     "inputs": {
       "input": "evaluate negate(-131,778)",
@@ -481,9 +477,7 @@
     "dataset_id": "d64fd4c5-5642-40fe-85d1-d757467415b6",
     "source_run_id": "96448823-4e13-48c4-97c2-87302334d5dc",
     "metadata": {
-      "dataset_split": [
-        "base"
-      ]
+      "dataset_split": ["base"]
     },
     "inputs": {
       "input": "If I earn 5% monthly interest, and I start with 10 dollars how much money will I have at the end of the year?",
@@ -741,9 +735,7 @@
     "dataset_id": "d64fd4c5-5642-40fe-85d1-d757467415b6",
     "source_run_id": "e53ce0b6-e3c0-4710-be31-d7110c1dd20d",
     "metadata": {
-      "dataset_split": [
-        "base"
-      ]
+      "dataset_split": ["base"]
     },
     "inputs": {
       "input": "What is the product of the odd numbers between 0-10?",
@@ -1045,9 +1037,7 @@
     "dataset_id": "d64fd4c5-5642-40fe-85d1-d757467415b6",
     "source_run_id": "3e207d90-6880-4496-ba67-093b41d2bf3d",
     "metadata": {
-      "dataset_split": [
-        "base"
-      ]
+      "dataset_split": ["base"]
     },
     "inputs": {
       "input": "evaluate the negation of -100",
@@ -1273,9 +1263,7 @@
     "dataset_id": "d64fd4c5-5642-40fe-85d1-d757467415b6",
     "source_run_id": "2ce994c9-cc39-4d8b-a145-7f23fd03b945",
     "metadata": {
-      "dataset_split": [
-        "base"
-      ]
+      "dataset_split": ["base"]
     },
     "inputs": {
       "input": "if one gazoink is 4 badoinks, each of which is 6 foos, each of wich is 3 bars - how many bars in 3 gazoinks?",
@@ -1489,9 +1477,7 @@
     "dataset_id": "d64fd4c5-5642-40fe-85d1-d757467415b6",
     "source_run_id": "e313510f-5155-48fb-a1af-8ec998cd7dbd",
     "metadata": {
-      "dataset_split": [
-        "base"
-      ]
+      "dataset_split": ["base"]
     },
     "inputs": {
       "input": "What is the value of tangent of 15 degrees?",
@@ -1855,9 +1841,7 @@
     "dataset_id": "d64fd4c5-5642-40fe-85d1-d757467415b6",
     "source_run_id": "08825d00-6d61-4ce9-adae-dd9181dac5dc",
     "metadata": {
-      "dataset_split": [
-        "base"
-      ]
+      "dataset_split": ["base"]
     },
     "inputs": {
       "input": "For the first 5 days of the week I ran 45 minutes each day, and on the weekend I did one 100 minute run. How many minutes did I spend running this week?",
@@ -2019,9 +2003,7 @@
     "dataset_id": "d64fd4c5-5642-40fe-85d1-d757467415b6",
     "source_run_id": "6e4eb059-d73d-4b8b-9b04-4a809e374139",
     "metadata": {
-      "dataset_split": [
-        "base"
-      ]
+      "dataset_split": ["base"]
     },
     "inputs": {
       "input": "Negate the value of 2 subtracted from 5",

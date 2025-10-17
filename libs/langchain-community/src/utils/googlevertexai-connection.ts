@@ -18,7 +18,7 @@ import type {
 
 export abstract class GoogleConnection<
   CallOptions extends AsyncCallerCallOptions,
-  ResponseType extends GoogleResponse
+  ResponseType extends GoogleResponse,
 > {
   caller: AsyncCaller;
 
@@ -72,7 +72,7 @@ export abstract class GoogleConnection<
 export abstract class GoogleVertexAIConnection<
     CallOptions extends AsyncCallerCallOptions,
     ResponseType extends GoogleResponse,
-    AuthOptions
+    AuthOptions,
   >
   extends GoogleConnection<CallOptions, ResponseType>
   implements GoogleVertexAIConnectionParams<AuthOptions>
@@ -176,7 +176,7 @@ export class GoogleVertexAILLMConnection<
     CallOptions extends BaseLanguageModelCallOptions,
     InstanceType,
     PredictionType extends GoogleVertexAIBasePrediction,
-    AuthOptions
+    AuthOptions,
   >
   extends GoogleVertexAIConnection<
     CallOptions,
@@ -257,7 +257,7 @@ export class GoogleVertexAILLMConnection<
 }
 
 export interface GoogleVertexAILLMResponse<
-  PredictionType extends GoogleVertexAIBasePrediction
+  PredictionType extends GoogleVertexAIBasePrediction,
 > extends GoogleResponse {
   data: GoogleVertexAIStream | GoogleVertexAILLMPredictions<PredictionType>;
 }

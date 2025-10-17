@@ -10,7 +10,7 @@ We'll be referencing this PR adding Gradient Embeddings as an example: https://g
 
 ## General ideas
 
-The general idea for adding new third-party Text Embeddings is to subclass the `Embeddings` class and implement the `embedDocuments` and `embedQuery` methods. 
+The general idea for adding new third-party Text Embeddings is to subclass the `Embeddings` class and implement the `embedDocuments` and `embedQuery` methods.
 
 The `embedDocuments` method should take a list of documents and return a list of embeddings for each document. The `embedQuery` method should take a query and return an embedding for that query.
 

@@ -52,9 +52,8 @@ test("Should return a part of a document if a parent splitter is passed", async 
   const retrievedDocs = await retriever.getRelevantDocuments(query);
   // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
   // @ts-expect-error unused var
-  const vectorstoreRetreivedDocs = await vectorstore.similaritySearch(
-    "justice breyer"
-  );
+  const vectorstoreRetreivedDocs =
+    await vectorstore.similaritySearch("justice breyer");
   // console.log(vectorstoreRetreivedDocs, vectorstoreRetreivedDocs.length);
   // console.log(retrievedDocs);
   expect(retrievedDocs.length).toBeGreaterThan(1);
@@ -105,9 +104,8 @@ test("Should return a part of a document if a parent splitter is passed", async 
   const retrievedDocs = await retriever.getRelevantDocuments(query);
   // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
   // @ts-expect-error unused var
-  const vectorstoreRetreivedDocs = await vectorstore.similaritySearch(
-    "justice breyer"
-  );
+  const vectorstoreRetreivedDocs =
+    await vectorstore.similaritySearch("justice breyer");
   // console.log(vectorstoreRetreivedDocs, vectorstoreRetreivedDocs.length);
   // console.log(retrievedDocs);
   expect(retrievedDocs.length).toBeGreaterThan(1);
@@ -145,9 +143,8 @@ test("Should use a custom retriever to retrieve one doc", async () => {
   const retrievedDocs = await retriever.getRelevantDocuments(query);
   // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
   // @ts-expect-error unused var
-  const vectorstoreRetreivedDocs = await vectorstore.similaritySearch(
-    "justice breyer"
-  );
+  const vectorstoreRetreivedDocs =
+    await vectorstore.similaritySearch("justice breyer");
   // console.log(vectorstoreRetreivedDocs, vectorstoreRetreivedDocs.length);
   // console.log(retrievedDocs);
   expect(retrievedDocs).toHaveLength(1);

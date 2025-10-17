@@ -81,7 +81,7 @@ export function removeAdditionalProperties(
 
 export function schemaToGeminiParameters<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  RunOutput extends Record<string, any> = Record<string, any>
+  RunOutput extends Record<string, any> = Record<string, any>,
 >(schema: InteropZodType<RunOutput> | JsonSchema7Type): GeminiFunctionSchema {
   // Gemini doesn't accept either the $schema or additionalProperties
   // attributes, so we need to explicitly remove them.

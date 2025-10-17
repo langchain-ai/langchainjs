@@ -357,8 +357,8 @@ export class Neo4jVectorStore extends VectorStore {
         RETURN reduce(str='', k IN ${JSON.stringify(textNodeProperties)} |
         str + '\\n' + k + ': ' + coalesce(node[k], '')) AS text,
         node {.*, \`${embeddingNodeProperty}\`: Null, id: Null, ${textNodeProperties
-        .map((prop) => `\`${prop}\`: Null`)
-        .join(", ")} } AS metadata, score
+          .map((prop) => `\`${prop}\`: Null`)
+          .join(", ")} } AS metadata, score
       `;
     }
 
@@ -378,9 +378,8 @@ export class Neo4jVectorStore extends VectorStore {
     }
 
     if (searchType === "hybrid") {
-      const ftsNodeLabel = await store.retrieveExistingFtsIndex(
-        textNodeProperties
-      );
+      const ftsNodeLabel =
+        await store.retrieveExistingFtsIndex(textNodeProperties);
 
       if (!ftsNodeLabel) {
         await store.createNewKeywordIndex(textNodeProperties);
@@ -1020,8 +1019,8 @@ function handleFieldFilter(
       throw new Error(`Invalid filter condition. Expected a value which is a dictionary
         with a single key that corresponds to an operator but got a dictionary
         with ${keys.length} keys. The first few keys are: ${keys
-        .slice(0, 3)
-        .join(", ")}
+          .slice(0, 3)
+          .join(", ")}
       `);
     }
 

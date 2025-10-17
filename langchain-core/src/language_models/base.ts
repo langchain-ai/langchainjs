@@ -160,7 +160,7 @@ export interface BaseLangChainParams {
 export abstract class BaseLangChain<
     RunInput,
     RunOutput,
-    CallOptions extends RunnableConfig = RunnableConfig
+    CallOptions extends RunnableConfig = RunnableConfig,
   >
   extends Runnable<RunInput, RunOutput, CallOptions>
   implements BaseLangChainParams
@@ -294,7 +294,7 @@ export type StructuredOutputMethodOptions<IncludeRaw extends boolean = false> =
 /** @deprecated Use StructuredOutputMethodOptions instead */
 export type StructuredOutputMethodParams<
   RunOutput,
-  IncludeRaw extends boolean = false
+  IncludeRaw extends boolean = false,
 > = {
   /** @deprecated Pass schema in as the first argument */
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -307,7 +307,8 @@ export type StructuredOutputMethodParams<
 export interface BaseLanguageModelInterface<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   RunOutput = any,
-  CallOptions extends BaseLanguageModelCallOptions = BaseLanguageModelCallOptions
+  CallOptions extends
+    BaseLanguageModelCallOptions = BaseLanguageModelCallOptions,
 > extends RunnableInterface<BaseLanguageModelInput, RunOutput, CallOptions> {
   get callKeys(): string[];
 
@@ -363,7 +364,8 @@ export type LanguageModelLike = Runnable<
 export abstract class BaseLanguageModel<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     RunOutput = any,
-    CallOptions extends BaseLanguageModelCallOptions = BaseLanguageModelCallOptions
+    CallOptions extends
+      BaseLanguageModelCallOptions = BaseLanguageModelCallOptions,
   >
   extends BaseLangChain<BaseLanguageModelInput, RunOutput, CallOptions>
   implements
@@ -562,7 +564,7 @@ export abstract class BaseLanguageModel<
 
   withStructuredOutput?<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    RunOutput extends Record<string, any> = Record<string, any>
+    RunOutput extends Record<string, any> = Record<string, any>,
   >(
     schema:
       | ZodTypeV3<RunOutput>
@@ -573,7 +575,7 @@ export abstract class BaseLanguageModel<
 
   withStructuredOutput?<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    RunOutput extends Record<string, any> = Record<string, any>
+    RunOutput extends Record<string, any> = Record<string, any>,
   >(
     schema:
       | ZodTypeV3<RunOutput>
@@ -584,7 +586,7 @@ export abstract class BaseLanguageModel<
 
   withStructuredOutput?<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    RunOutput extends Record<string, any> = Record<string, any>
+    RunOutput extends Record<string, any> = Record<string, any>,
   >(
     schema:
       | ZodTypeV4<RunOutput>
@@ -595,7 +597,7 @@ export abstract class BaseLanguageModel<
 
   withStructuredOutput?<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    RunOutput extends Record<string, any> = Record<string, any>
+    RunOutput extends Record<string, any> = Record<string, any>,
   >(
     schema:
       | ZodTypeV4<RunOutput>
@@ -619,7 +621,7 @@ export abstract class BaseLanguageModel<
    */
   withStructuredOutput?<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    RunOutput extends Record<string, any> = Record<string, any>
+    RunOutput extends Record<string, any> = Record<string, any>,
   >(
     schema:
       | InteropZodType<RunOutput>

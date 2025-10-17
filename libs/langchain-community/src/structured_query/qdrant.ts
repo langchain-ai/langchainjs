@@ -38,7 +38,7 @@ import {
  * ```
  */
 export class QdrantTranslator<
-  T extends QdrantVectorStore
+  T extends QdrantVectorStore,
 > extends BaseTranslator<T> {
   declare VisitOperationOutput: QdrantFilter;
 

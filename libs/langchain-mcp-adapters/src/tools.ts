@@ -300,7 +300,7 @@ async function _convertCallToolResult({
 }: ConvertCallToolResultArgs): Promise<
   [
     (MessageContentComplex | DataContentBlock)[],
-    (EmbeddedResource | DataContentBlock)[]
+    (EmbeddedResource | DataContentBlock)[],
   ]
 > {
   if (!result) {
@@ -426,7 +426,7 @@ async function _callTool({
 }: CallToolArgs): Promise<
   [
     (MessageContentComplex | DataContentBlock)[],
-    (EmbeddedResource | DataContentBlock)[]
+    (EmbeddedResource | DataContentBlock)[],
   ]
 > {
   try {

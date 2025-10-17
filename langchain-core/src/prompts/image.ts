@@ -20,7 +20,7 @@ export interface ImagePromptTemplateInput<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   RunInput extends InputValues = any,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  PartialVariableName extends string = any
+  PartialVariableName extends string = any,
 > extends BasePromptTemplateInput<RunInput, PartialVariableName> {
   /**
    * The prompt template
@@ -57,7 +57,7 @@ export class ImagePromptTemplate<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   RunInput extends InputValues = any,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  PartialVariableName extends string = any
+  PartialVariableName extends string = any,
 > extends BasePromptTemplate<RunInput, ImagePromptValue, PartialVariableName> {
   static lc_name() {
     return "ImagePromptTemplate";

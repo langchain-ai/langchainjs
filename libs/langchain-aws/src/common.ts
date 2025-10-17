@@ -269,7 +269,7 @@ export function extractImageInfo(base64: string): ContentBlock.ImageMember {
 }
 
 function convertLangChainContentBlockToConverseContentBlock<
-  BlockT extends MessageContentComplex | DataContentBlock | string
+  BlockT extends MessageContentComplex | DataContentBlock | string,
 >({
   block,
   onUnknown,
@@ -279,11 +279,11 @@ function convertLangChainContentBlockToConverseContentBlock<
 }): ContentBlock | BlockT;
 
 function convertLangChainContentBlockToConverseContentBlock<
-  BlockT extends MessageContentComplex | DataContentBlock | string
+  BlockT extends MessageContentComplex | DataContentBlock | string,
 >({ block, onUnknown }: { block: BlockT; onUnknown?: "throw" }): ContentBlock;
 
 function convertLangChainContentBlockToConverseContentBlock<
-  BlockT extends MessageContentComplex | DataContentBlock | string
+  BlockT extends MessageContentComplex | DataContentBlock | string,
 >({
   block,
   onUnknown = "throw",

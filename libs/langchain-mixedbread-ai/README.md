@@ -23,7 +23,7 @@ This package provides access to the different embedding models provided by the M
 Learn more: [Embeddings API](https://mixedbread.ai/docs/embeddings)
 
 ```typescript
-const embeddings = new MixedbreadAIEmbeddings({ apiKey: 'your-api-key' });
+const embeddings = new MixedbreadAIEmbeddings({ apiKey: "your-api-key" });
 const texts = ["Baking bread is fun", "I love baking"];
 const result = await embeddings.embedDocuments(texts);
 console.log(result);
@@ -36,8 +36,11 @@ This package provides access to the reranking API provided by Mixedbread AI. It 
 Learn more: [Reranking API](https://mixedbread.ai/docs/reranking)
 
 ```typescript
-const reranker = new MixedbreadAIReranker({ apiKey: 'your-api-key' });
-const documents = [{ pageContent: "To bake bread you need flour" }, { pageContent: "To bake bread you need yeast" }];
+const reranker = new MixedbreadAIReranker({ apiKey: "your-api-key" });
+const documents = [
+  { pageContent: "To bake bread you need flour" },
+  { pageContent: "To bake bread you need yeast" },
+];
 const query = "What do you need to bake bread?";
 const result = await reranker.compressDocuments(documents, query);
 console.log(result);

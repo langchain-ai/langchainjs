@@ -52,7 +52,7 @@ export type ConvexChatMessageHistoryInput<
     "mutation",
     "internal",
     { table: string; index: string; keyField: string; key: string }
-  > = any
+  > = any,
 > = {
   readonly ctx: GenericActionCtx<DataModel>;
   readonly sessionId: DocumentByName<DataModel, TableName>[SessionIdFieldName];
@@ -113,7 +113,7 @@ export class ConvexChatMessageHistory<
     "mutation",
     "internal",
     { table: string; index: string; keyField: string; key: string }
-  > = any
+  > = any,
 > extends BaseListChatMessageHistory {
   lc_namespace = ["langchain", "stores", "message", "convex"];
 

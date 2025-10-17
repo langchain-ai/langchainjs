@@ -148,7 +148,7 @@ export class ChatOllama
     this.model = fields.model ?? this.model;
     this.baseUrl = fields.baseUrl?.endsWith("/")
       ? fields.baseUrl.slice(0, -1)
-      : fields.baseUrl ?? this.baseUrl;
+      : (fields.baseUrl ?? this.baseUrl);
     this.keepAlive = fields.keepAlive ?? this.keepAlive;
     this.embeddingOnly = fields.embeddingOnly;
     this.f16KV = fields.f16KV;

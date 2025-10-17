@@ -228,7 +228,8 @@ interface AzureChatOpenAIFields
 }
 
 class AzureChatOpenAIResponses<
-    CallOptions extends ChatOpenAIResponsesCallOptions = ChatOpenAIResponsesCallOptions
+    CallOptions extends
+      ChatOpenAIResponsesCallOptions = ChatOpenAIResponsesCallOptions,
   >
   extends ChatOpenAIResponses<CallOptions>
   implements Partial<AzureOpenAIChatInput>
@@ -292,7 +293,8 @@ class AzureChatOpenAIResponses<
 }
 
 class AzureChatOpenAICompletions<
-    CallOptions extends ChatOpenAICompletionsCallOptions = ChatOpenAICompletionsCallOptions
+    CallOptions extends
+      ChatOpenAICompletionsCallOptions = ChatOpenAICompletionsCallOptions,
   >
   extends ChatOpenAICompletions<CallOptions>
   implements Partial<AzureOpenAIChatInput>
@@ -768,7 +770,7 @@ class AzureChatOpenAICompletions<
  * </details>
  */
 export class AzureChatOpenAI<
-    CallOptions extends ChatOpenAICallOptions = ChatOpenAICallOptions
+    CallOptions extends ChatOpenAICallOptions = ChatOpenAICallOptions,
   >
   extends ChatOpenAI<CallOptions>
   implements Partial<AzureOpenAIChatInput>

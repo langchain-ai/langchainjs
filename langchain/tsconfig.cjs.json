@@ -5,10 +5,5 @@
     "moduleResolution": "node10",
     "declaration": false
   },
-  "exclude": [
-    "node_modules",
-    "dist",
-    "docs",
-    "**/tests"
-  ]
+  "exclude": ["node_modules", "dist", "docs", "**/tests"]
 }

@@ -5,7 +5,7 @@ import { parseTemplate, renderTemplate, TemplateFormat } from "./template.js";
 
 export class DictPromptTemplate<
   RunInput extends InputValues = InputValues,
-  RunOutput extends Record<string, unknown> = Record<string, unknown>
+  RunOutput extends Record<string, unknown> = Record<string, unknown>,
 > extends Runnable<TypedPromptInputValues<RunInput>, RunOutput> {
   lc_namespace = ["langchain_core", "prompts", "dict"];
 

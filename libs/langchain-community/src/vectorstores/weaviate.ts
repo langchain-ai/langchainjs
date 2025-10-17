@@ -119,7 +119,10 @@ export class WeaviateStore extends VectorStore {
     return "weaviate";
   }
 
-  constructor(public embeddings: EmbeddingsInterface, args: WeaviateLibArgs) {
+  constructor(
+    public embeddings: EmbeddingsInterface,
+    args: WeaviateLibArgs
+  ) {
     super(embeddings, args);
 
     this.client = args.client;

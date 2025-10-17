@@ -149,7 +149,7 @@ export class FaissStore extends SaveableVectorStore {
       const uuid = this._mapping[id];
       return [this.docstore.search(uuid), result.distances[index]] as [
         Document,
-        number
+        number,
       ];
     });
   }

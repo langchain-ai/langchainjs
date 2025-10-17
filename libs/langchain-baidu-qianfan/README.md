@@ -2,7 +2,6 @@
 
 This package contains the LangChain.js integrations for Baidu Qianfan via the qianfan/sdk package.
 
-
 ## Installation
 
 ```bash npm2yarn
@@ -27,7 +26,7 @@ import { ChatBaiduQianfan } from "@langchain/baidu-qianfan";
 import { HumanMessage } from "@langchain/core/messages";
 
 const chat = new ChatBaiduQianfan({
-    model: 'ERNIE-Lite-8K'
+  model: "ERNIE-Lite-8K",
 });
 const message = new HumanMessage("北京天气");
 

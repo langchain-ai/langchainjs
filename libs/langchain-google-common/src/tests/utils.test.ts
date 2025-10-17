@@ -382,9 +382,8 @@ describe("media core", () => {
 
     test("environment", async () => {
       expect(resolverMemory.length).toEqual(2);
-      const fooBlob = await mediaManager.resolvers?.[0]?.fetch(
-        "resolve://host/foo"
-      );
+      const fooBlob =
+        await mediaManager.resolvers?.[0]?.fetch("resolve://host/foo");
       expect(await fooBlob?.asString()).toEqual("fooing");
     });
 

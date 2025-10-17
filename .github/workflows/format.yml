@@ -5,9 +5,8 @@ name: Format
 on:
   pull_request:
     paths_ignore:
-      - '.github/**'
-  workflow_dispatch:  # Allows triggering the workflow manually in GitHub UI
-
+      - ".github/**"
+  workflow_dispatch: # Allows triggering the workflow manually in GitHub UI
 
 # If another push to the same PR or branch happens while this workflow is still running,
 # cancel the earlier run in favor of the next run.

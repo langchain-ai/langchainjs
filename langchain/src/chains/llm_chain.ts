@@ -35,7 +35,7 @@ type CallOptionsIfAvailable<T> = T extends { CallOptions: infer CO } ? CO : any;
  */
 export interface LLMChainInput<
   T extends string | object = string,
-  Model extends LLMType = LLMType
+  Model extends LLMType = LLMType,
 > extends ChainInputs {
   /** Prompt object to use */
   prompt: BasePromptTemplate;
@@ -91,7 +91,7 @@ function _getLanguageModel(llmLike: RunnableInterface): BaseLanguageModel {
  */
 export class LLMChain<
     T extends string | object = string,
-    Model extends LLMType = LLMType
+    Model extends LLMType = LLMType,
   >
   extends BaseChain
   implements LLMChainInput<T>

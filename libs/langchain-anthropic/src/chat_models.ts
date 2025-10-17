@@ -636,7 +636,7 @@ function extractToken(chunk: AIMessageChunk): string | undefined {
  * <br />
  */
 export class ChatAnthropicMessages<
-    CallOptions extends ChatAnthropicCallOptions = ChatAnthropicCallOptions
+    CallOptions extends ChatAnthropicCallOptions = ChatAnthropicCallOptions,
   >
   extends BaseChatModel<CallOptions, AIMessageChunk>
   implements AnthropicInput
@@ -744,7 +744,7 @@ export class ChatAnthropicMessages<
     this.temperature =
       fields?.temperature === null
         ? undefined
-        : fields?.temperature ?? this.temperature;
+        : (fields?.temperature ?? this.temperature);
     this.topK = fields?.topK ?? this.topK;
     this.maxTokens =
       fields?.maxTokensToSample ?? fields?.maxTokens ?? this.maxTokens;
@@ -1126,7 +1126,7 @@ export class ChatAnthropicMessages<
 
   withStructuredOutput<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    RunOutput extends Record<string, any> = Record<string, any>
+    RunOutput extends Record<string, any> = Record<string, any>,
   >(
     outputSchema:
       | InteropZodType<RunOutput>
@@ -1137,7 +1137,7 @@ export class ChatAnthropicMessages<
 
   withStructuredOutput<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    RunOutput extends Record<string, any> = Record<string, any>
+    RunOutput extends Record<string, any> = Record<string, any>,
   >(
     outputSchema:
       | InteropZodType<RunOutput>
@@ -1148,7 +1148,7 @@ export class ChatAnthropicMessages<
 
   withStructuredOutput<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    RunOutput extends Record<string, any> = Record<string, any>
+    RunOutput extends Record<string, any> = Record<string, any>,
   >(
     outputSchema:
       | InteropZodType<RunOutput>

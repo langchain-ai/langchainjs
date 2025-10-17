@@ -369,7 +369,7 @@ function _convertToolChoiceToWatsonxToolChoice(
 export class ChatWatsonx<
     CallOptions extends WatsonxCallOptionsChat =
       | WatsonxCallOptionsChat
-      | WatsonxCallOptionsDeployedChat
+      | WatsonxCallOptionsDeployedChat,
   >
   extends BaseChatModel<CallOptions>
   implements ChatWatsonxConstructor
@@ -832,7 +832,7 @@ export class ChatWatsonx<
 
   withStructuredOutput<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    RunOutput extends Record<string, any> = Record<string, any>
+    RunOutput extends Record<string, any> = Record<string, any>,
   >(
     outputSchema:
       | InteropZodType<RunOutput>
@@ -843,7 +843,7 @@ export class ChatWatsonx<
 
   withStructuredOutput<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    RunOutput extends Record<string, any> = Record<string, any>
+    RunOutput extends Record<string, any> = Record<string, any>,
   >(
     outputSchema:
       | InteropZodType<RunOutput>
@@ -854,7 +854,7 @@ export class ChatWatsonx<
 
   withStructuredOutput<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    RunOutput extends Record<string, any> = Record<string, any>
+    RunOutput extends Record<string, any> = Record<string, any>,
   >(
     outputSchema:
       | InteropZodType<RunOutput>

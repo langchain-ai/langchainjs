@@ -49,7 +49,7 @@ export const config = {
     "retrievers/document_compressors": "retrievers/document_compressors/base",
     singletons: "singletons/index",
     stores: "stores",
-    "structured_query": "structured_query/index",
+    structured_query: "structured_query/index",
     tools: "tools/index",
     "tracers/base": "tracers/base",
     "tracers/console": "tracers/console",
@@ -81,4 +81,4 @@ export const config = {
   cjsSource: "./dist-cjs",
   cjsDestination: "./dist",
   abs,
-}
+};

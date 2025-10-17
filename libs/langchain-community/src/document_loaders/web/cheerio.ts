@@ -53,7 +53,10 @@ export class CheerioWebBaseLoader
 
   headers?: HeadersInit;
 
-  constructor(public webPath: string, fields?: CheerioWebBaseLoaderParams) {
+  constructor(
+    public webPath: string,
+    fields?: CheerioWebBaseLoaderParams
+  ) {
     super();
     const { timeout, selector, textDecoder, headers, ...rest } = fields ?? {};
     this.timeout = timeout ?? 10000;

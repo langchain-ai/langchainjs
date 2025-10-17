@@ -89,7 +89,7 @@ const OpMap = {
 
 type SimilarityModel<
   TModel extends Record<string, unknown> = Record<string, unknown>,
-  TColumns extends ModelColumns<TModel> = ModelColumns<TModel>
+  TColumns extends ModelColumns<TModel> = ModelColumns<TModel>,
 > = Pick<TModel, keyof ObjectIntersect<TModel, TColumns>> & {
   _distance: number | null;
 };
@@ -110,7 +110,7 @@ export class PrismaVectorStore<
   TModel extends Record<string, unknown>,
   TModelName extends string,
   TSelectModel extends ModelColumns<TModel>,
-  TFilterModel extends PrismaSqlFilter<TModel>
+  TFilterModel extends PrismaSqlFilter<TModel>,
 > extends VectorStore {
   declare FilterType: TFilterModel;
 
@@ -187,7 +187,7 @@ export class PrismaVectorStore<
     function create<
       TPrisma extends PrismaNamespace,
       TColumns extends ModelColumns<TModel>,
-      TFilters extends PrismaSqlFilter<TModel>
+      TFilters extends PrismaSqlFilter<TModel>,
     >(
       embeddings: EmbeddingsInterface,
       config: {
@@ -207,7 +207,7 @@ export class PrismaVectorStore<
 
     async function fromTexts<
       TPrisma extends PrismaNamespace,
-      TColumns extends ModelColumns<TModel>
+      TColumns extends ModelColumns<TModel>,
     >(
       texts: string[],
       metadatas: TModel[],
@@ -238,7 +238,7 @@ export class PrismaVectorStore<
     async function fromDocuments<
       TPrisma extends PrismaNamespace,
       TColumns extends ModelColumns<TModel>,
-      TFilters extends PrismaSqlFilter<TModel>
+      TFilters extends PrismaSqlFilter<TModel>,
     >(
       docs: Document<TModel>[],
       embeddings: EmbeddingsInterface,

@@ -130,8 +130,8 @@ async function notifyUpdate(): Promise<void> {
         packageManager === "yarn"
           ? "yarn global add create-langchain-integration@latest"
           : packageManager === "pnpm"
-          ? "pnpm add -g create-langchain-integration@latest"
-          : "npm i -g create-langchain-integration@latest";
+            ? "pnpm add -g create-langchain-integration@latest"
+            : "npm i -g create-langchain-integration@latest";
 
       console.log(
         yellow(

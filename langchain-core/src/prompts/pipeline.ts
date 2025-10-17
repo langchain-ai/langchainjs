@@ -7,7 +7,7 @@ import { ChatPromptTemplate } from "./chat.js";
  * Type that includes the name of the prompt and the prompt itself.
  */
 export type PipelinePromptParams<
-  PromptTemplateType extends BasePromptTemplate
+  PromptTemplateType extends BasePromptTemplate,
 > = {
   name: string;
   prompt: PromptTemplateType;
@@ -19,7 +19,7 @@ export type PipelinePromptParams<
  * finalPrompt.
  */
 export type PipelinePromptTemplateInput<
-  PromptTemplateType extends BasePromptTemplate
+  PromptTemplateType extends BasePromptTemplate,
 > = Omit<BasePromptTemplateInput, "inputVariables"> & {
   pipelinePrompts: PipelinePromptParams<PromptTemplateType>[];
   finalPrompt: PromptTemplateType;
@@ -71,7 +71,7 @@ export type PipelinePromptTemplateInput<
  * ```
  */
 export class PipelinePromptTemplate<
-  PromptTemplateType extends BasePromptTemplate
+  PromptTemplateType extends BasePromptTemplate,
 > extends BasePromptTemplate {
   static lc_name() {
     return "PipelinePromptTemplate";

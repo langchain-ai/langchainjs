@@ -4,11 +4,11 @@ on:
   pull_request:
     # Only run workflow if files in these directories are changed
     paths:
-      - 'langchain/**'
-      - 'langchain-core/**'
-      - 'libs/langchain-anthropic/**'
-      - 'libs/langchain-community/**'
-      - 'libs/langchain-openai/**'
+      - "langchain/**"
+      - "langchain-core/**"
+      - "libs/langchain-anthropic/**"
+      - "libs/langchain-community/**"
+      - "libs/langchain-openai/**"
   workflow_dispatch: # Allows triggering the workflow manually in GitHub UI
 
 # If another push to the same PR or branch happens while this workflow is still running,
@@ -126,7 +126,7 @@ jobs:
           cache: "yarn"
       - name: Install dependencies
         run: yarn install --immutable
-    
+
       - name: Build dependencies
         run: yarn build --filter=langchain --filter=@langchain/anthropic --filter=@langchain/community --filter=@langchain/openai
         shell: bash
@@ -147,7 +147,7 @@ jobs:
           cache: "yarn"
       - name: Install dependencies
         run: yarn install --immutable
-      
+
       - name: Build dependencies
         run: yarn build --filter=langchain --filter=@langchain/anthropic --filter=@langchain/community --filter=@langchain/openai
         shell: bash

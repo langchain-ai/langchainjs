@@ -279,7 +279,7 @@ function serialize<RunInput>(input: RunInput): any {
 export class RemoteRunnable<
   RunInput,
   RunOutput,
-  CallOptions extends RunnableConfig
+  CallOptions extends RunnableConfig,
 > extends Runnable<RunInput, RunOutput, CallOptions> {
   private url: string;
 
@@ -386,11 +386,11 @@ export class RemoteRunnable<
           [...pk, k],
         ] as [
           RunnableConfig[],
-          Omit<Partial<CallOptions>, keyof RunnableConfig>[]
+          Omit<Partial<CallOptions>, keyof RunnableConfig>[],
         ],
       [[], []] as [
         RunnableConfig[],
-        Omit<Partial<CallOptions>, keyof RunnableConfig>[]
+        Omit<Partial<CallOptions>, keyof RunnableConfig>[],
       ]
     ) ?? [undefined, undefined];
     const response = await this.post<{

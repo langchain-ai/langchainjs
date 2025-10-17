@@ -81,7 +81,7 @@ export type WatsonxLLMConstructor = BaseLLMParams &
  * Integration with an LLM.
  */
 export class WatsonxLLM<
-    CallOptions extends WatsonxCallOptionsLLM = WatsonxCallOptionsLLM
+    CallOptions extends WatsonxCallOptionsLLM = WatsonxCallOptionsLLM,
   >
   extends BaseLLM<CallOptions>
   implements WatsonxLLMConstructor

@@ -1,8 +1,9 @@
-# @langchain/azure-cosmosdb 
+# @langchain/azure-cosmosdb
 
 This package contains the [Azure CosmosDB](https://learn.microsoft.com/azure/cosmos-db/) vector store integrations.
 
 Learn more about how to use this package in the LangChain documentation:
+
 - [Azure CosmosDB for NoSQL](https://js.langchain.com/docs/integrations/vector_stores/azure_cosmosdb_nosql)
 - [Azure CosmosDB for MongoDB vCore](https://js.langchain.com/docs/integrations/vector_stores/azure_cosmosdb_mongodb)
 

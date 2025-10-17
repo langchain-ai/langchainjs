@@ -24,7 +24,7 @@ type ExtractRunOutput<AsAgent extends boolean | undefined> =
     : ThreadMessage[] | RequiredActionFunctionToolCall[];
 
 export type OpenAIAssistantRunnableInput<
-  AsAgent extends boolean | undefined = undefined
+  AsAgent extends boolean | undefined = undefined,
 > = {
   client?: OpenAIClient;
   clientOptions?: ClientOptions;
@@ -36,7 +36,7 @@ export type OpenAIAssistantRunnableInput<
 export class OpenAIAssistantRunnable<
   AsAgent extends boolean | undefined,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  RunInput extends Record<string, any> = Record<string, any>
+  RunInput extends Record<string, any> = Record<string, any>,
 > extends Runnable<RunInput, ExtractRunOutput<AsAgent>> {
   lc_namespace = ["langchain", "experimental", "openai_assistant"];
 
@@ -251,11 +251,14 @@ export class OpenAIAssistantRunnable<
       "run_metadata",
     ]
       .filter((key) => key in input)
-      .reduce((obj, key) => {
-        const newObj = obj;
-        newObj[key] = input[key];
-        return newObj;
-      }, {} as Record<string, unknown>);
+      .reduce(
+        (obj, key) => {
+          const newObj = obj;
+          newObj[key] = input[key];
+          return newObj;
+        },
+        {} as Record<string, unknown>
+      );
     const run = this.client.beta.threads.createAndRun({
       ...params,
       thread: input.thread,

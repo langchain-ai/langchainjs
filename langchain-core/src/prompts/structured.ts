@@ -39,7 +39,7 @@ export interface StructuredPromptInput<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   RunInput extends InputValues = any,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  PartialVariableName extends string = any
+  PartialVariableName extends string = any,
 > extends ChatPromptTemplateInput<RunInput, PartialVariableName> {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   schema: Record<string, any>;
@@ -50,7 +50,7 @@ export class StructuredPrompt<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     RunInput extends InputValues = any,
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    PartialVariableName extends string = any
+    PartialVariableName extends string = any,
   >
   extends ChatPromptTemplate<RunInput, PartialVariableName>
   implements StructuredPromptInput<RunInput, PartialVariableName>

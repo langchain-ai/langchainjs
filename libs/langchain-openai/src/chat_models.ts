@@ -556,7 +556,7 @@ export interface BaseChatOpenAIFields
 
 /** @internal */
 export abstract class BaseChatOpenAI<
-    CallOptions extends BaseChatOpenAICallOptions
+    CallOptions extends BaseChatOpenAICallOptions,
   >
   extends BaseChatModel<CallOptions, AIMessageChunk>
   implements Partial<OpenAIChatInput>
@@ -799,7 +799,7 @@ export abstract class BaseChatOpenAI<
     this.audio = fields?.audio;
     this.modalities = fields?.modalities;
     this.reasoning =
-      fields?.reasoning ?? fields?.reasoningEffort
+      (fields?.reasoning ?? fields?.reasoningEffort)
         ? { effort: fields.reasoningEffort }
         : undefined;
     this.maxTokens = fields?.maxCompletionTokens ?? fields?.maxTokens;
@@ -1157,7 +1157,7 @@ export abstract class BaseChatOpenAI<
 
   withStructuredOutput<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    RunOutput extends Record<string, any> = Record<string, any>
+    RunOutput extends Record<string, any> = Record<string, any>,
   >(
     outputSchema:
       | InteropZodType<RunOutput>
@@ -1168,7 +1168,7 @@ export abstract class BaseChatOpenAI<
 
   withStructuredOutput<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    RunOutput extends Record<string, any> = Record<string, any>
+    RunOutput extends Record<string, any> = Record<string, any>,
   >(
     outputSchema:
       | InteropZodType<RunOutput>
@@ -1179,7 +1179,7 @@ export abstract class BaseChatOpenAI<
 
   withStructuredOutput<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    RunOutput extends Record<string, any> = Record<string, any>
+    RunOutput extends Record<string, any> = Record<string, any>,
   >(
     outputSchema:
       | InteropZodType<RunOutput>
@@ -1192,7 +1192,7 @@ export abstract class BaseChatOpenAI<
 
   withStructuredOutput<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    RunOutput extends Record<string, any> = Record<string, any>
+    RunOutput extends Record<string, any> = Record<string, any>,
   >(
     outputSchema:
       | InteropZodType<RunOutput>
@@ -1436,7 +1436,8 @@ type ChatResponsesInvocationParams = Omit<
  * @internal
  */
 export class ChatOpenAIResponses<
-  CallOptions extends ChatOpenAIResponsesCallOptions = ChatOpenAIResponsesCallOptions
+  CallOptions extends
+    ChatOpenAIResponsesCallOptions = ChatOpenAIResponsesCallOptions,
 > extends BaseChatOpenAI<CallOptions> {
   override invocationParams(
     options?: this["ParsedCallOptions"]
@@ -1932,13 +1933,13 @@ export class ChatOpenAIResponses<
   protected _convertMessagesToResponsesParams(messages: BaseMessage[]) {
     return messages.flatMap(
       (lcMsg): ResponsesInputItem | ResponsesInputItem[] => {
-        const additional_kwargs = lcMsg.additional_kwargs as
-          | BaseMessageFields["additional_kwargs"] & {
-              [_FUNCTION_CALL_IDS_MAP_KEY]?: Record<string, string>;
-              reasoning?: OpenAIClient.Responses.ResponseReasoningItem;
-              type?: string;
-              refusal?: string;
-            };
+        const additional_kwargs =
+          lcMsg.additional_kwargs as BaseMessageFields["additional_kwargs"] & {
+            [_FUNCTION_CALL_IDS_MAP_KEY]?: Record<string, string>;
+            reasoning?: OpenAIClient.Responses.ResponseReasoningItem;
+            type?: string;
+            refusal?: string;
+          };
 
         let role = messageToOpenAIRole(lcMsg);
         if (role === "system" && isReasoningModel(this.model))
@@ -2288,7 +2289,8 @@ type ChatCompletionsInvocationParams = Omit<
  * @internal
  */
 export class ChatOpenAICompletions<
-  CallOptions extends ChatOpenAICompletionsCallOptions = ChatOpenAICompletionsCallOptions
+  CallOptions extends
+    ChatOpenAICompletionsCallOptions = ChatOpenAICompletionsCallOptions,
 > extends BaseChatOpenAI<CallOptions> {
   /** @internal */
   override invocationParams(
@@ -2410,9 +2412,8 @@ export class ChatOpenAICompletions<
         functions,
         function_call
       );
-      const completionTokenUsage = await this._getNumTokensFromGenerations(
-        generations
-      );
+      const completionTokenUsage =
+        await this._getNumTokensFromGenerations(generations);
 
       usageMetadata.input_tokens = promptTokenUsage;
       usageMetadata.output_tokens = completionTokenUsage;
@@ -3402,7 +3403,7 @@ export interface ChatOpenAIFields extends BaseChatOpenAIFields {
  * <br />
  */
 export class ChatOpenAI<
-  CallOptions extends ChatOpenAICallOptions = ChatOpenAICallOptions
+  CallOptions extends ChatOpenAICallOptions = ChatOpenAICallOptions,
 > extends BaseChatOpenAI<CallOptions> {
   /**
    * Whether to use the responses API for all requests. If `false` the responses API will be used

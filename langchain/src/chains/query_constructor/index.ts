@@ -124,13 +124,16 @@ export class StructuredQueryOutputParser extends AsymmetricStructuredOutputParse
 }
 
 export function formatAttributeInfo(info: AttributeInfo[]) {
-  const infoObj = info.reduce((acc, attr) => {
-    acc[attr.name] = {
-      type: attr.type,
-      description: attr.description,
-    };
-    return acc;
-  }, {} as { [name: string]: { type: string; description: string } });
+  const infoObj = info.reduce(
+    (acc, attr) => {
+      acc[attr.name] = {
+        type: attr.type,
+        description: attr.description,
+      };
+      return acc;
+    },
+    {} as { [name: string]: { type: string; description: string } }
+  );
 
   return JSON.stringify(infoObj, null, 2)
     .replaceAll("{", "{{")

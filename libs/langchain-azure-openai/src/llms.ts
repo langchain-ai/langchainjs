@@ -35,7 +35,7 @@ export interface TokenUsage {
 
 /** @deprecated Import from "@langchain/openai" instead. */
 export class AzureOpenAI<
-    CallOptions extends OpenAICallOptions = OpenAICallOptions
+    CallOptions extends OpenAICallOptions = OpenAICallOptions,
   >
   extends BaseLLM<CallOptions>
   implements OpenAIInput, AzureOpenAIInput

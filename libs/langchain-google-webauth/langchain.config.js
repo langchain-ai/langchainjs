@@ -9,9 +9,13 @@ function abs(relativePath) {
   return resolve(dirname(fileURLToPath(import.meta.url)), relativePath);
 }
 
-
 export const config = {
-  internals: [/node\:/, /@langchain\/core\//, /web-auth-library\/google/, /@langchain\/google-common/],
+  internals: [
+    /node\:/,
+    /@langchain\/core\//,
+    /web-auth-library\/google/,
+    /@langchain\/google-common/,
+  ],
   entrypoints: {
     index: "index",
     utils: "utils",
@@ -21,4 +25,4 @@ export const config = {
   cjsSource: "./dist-cjs",
   cjsDestination: "./dist",
   abs,
-}
+};

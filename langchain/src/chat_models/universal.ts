@@ -267,7 +267,8 @@ interface ConfigurableModelFields extends BaseChatModelParams {
  */
 export class ConfigurableModel<
   RunInput extends BaseLanguageModelInput = BaseLanguageModelInput,
-  CallOptions extends ConfigurableChatModelCallOptions = ConfigurableChatModelCallOptions
+  CallOptions extends
+    ConfigurableChatModelCallOptions = ConfigurableChatModelCallOptions,
 > extends BaseChatModel<CallOptions, AIMessageChunk> {
   _llmType(): string {
     return "chat_model";
@@ -586,7 +587,8 @@ export type ConfigurableFields = "any" | string[];
 
 export async function initChatModel<
   RunInput extends BaseLanguageModelInput = BaseLanguageModelInput,
-  CallOptions extends ConfigurableChatModelCallOptions = ConfigurableChatModelCallOptions
+  CallOptions extends
+    ConfigurableChatModelCallOptions = ConfigurableChatModelCallOptions,
 >(
   model: string,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -599,7 +601,8 @@ export async function initChatModel<
 
 export async function initChatModel<
   RunInput extends BaseLanguageModelInput = BaseLanguageModelInput,
-  CallOptions extends ConfigurableChatModelCallOptions = ConfigurableChatModelCallOptions
+  CallOptions extends
+    ConfigurableChatModelCallOptions = ConfigurableChatModelCallOptions,
 >(
   model: never,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -612,7 +615,8 @@ export async function initChatModel<
 
 export async function initChatModel<
   RunInput extends BaseLanguageModelInput = BaseLanguageModelInput,
-  CallOptions extends ConfigurableChatModelCallOptions = ConfigurableChatModelCallOptions
+  CallOptions extends
+    ConfigurableChatModelCallOptions = ConfigurableChatModelCallOptions,
 >(
   model?: string,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -839,7 +843,8 @@ export async function initChatModel<
  */
 export async function initChatModel<
   RunInput extends BaseLanguageModelInput = BaseLanguageModelInput,
-  CallOptions extends ConfigurableChatModelCallOptions = ConfigurableChatModelCallOptions
+  CallOptions extends
+    ConfigurableChatModelCallOptions = ConfigurableChatModelCallOptions,
 >(
   model?: string,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any

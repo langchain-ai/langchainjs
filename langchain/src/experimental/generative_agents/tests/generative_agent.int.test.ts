@@ -285,9 +285,8 @@ test.skip(
         initialObservation: string
       ): Promise<void> => {
         // Starts the conversation bewteen two agents
-        const [, observation] = await agents[1].generateReaction(
-          initialObservation
-        );
+        const [, observation] =
+          await agents[1].generateReaction(initialObservation);
         // console.log("Initial reply:", observation);
 
         // eslint-disable-next-line no-constant-condition

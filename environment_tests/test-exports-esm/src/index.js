@@ -15,7 +15,9 @@ assert(typeof MemoryVectorStore === "function");
 assert(typeof HuggingFaceTransformersEmbeddings === "function");
 assert(typeof CallbackManager === "function");
 
-const vs = new MemoryVectorStore(new HuggingFaceTransformersEmbeddings({ model: "Xenova/all-MiniLM-L6-v2", }));
+const vs = new MemoryVectorStore(
+  new HuggingFaceTransformersEmbeddings({ model: "Xenova/all-MiniLM-L6-v2" })
+);
 
 await vs.addVectors(
   [

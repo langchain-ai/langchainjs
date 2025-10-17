@@ -306,7 +306,7 @@ export function convertOpenAPISpecToOpenAIFunctions(spec: OpenAPISpec): {
       openAIFunctions.push(openAIFunction);
       const baseUrl = (spec.baseUrl ?? "").endsWith("/")
         ? (spec.baseUrl ?? "").slice(0, -1)
-        : spec.baseUrl ?? "";
+        : (spec.baseUrl ?? "");
       nameToCallMap[openAIFunction.name] = {
         method,
         url: baseUrl + path,

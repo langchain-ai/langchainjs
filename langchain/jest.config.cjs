@@ -7,7 +7,7 @@ module.exports = {
     "^(\\.{1,2}/.*)\\.js$": "$1",
   },
   transform: {
-    '^.+\\.tsx?$': ['@swc/jest'],
+    "^.+\\.tsx?$": ["@swc/jest"],
   },
   transformIgnorePatterns: [
     "/node_modules/",
@@ -17,5 +17,5 @@ module.exports = {
   setupFiles: ["dotenv/config"],
   setupFilesAfterEnv: ["./scripts/jest-setup-after-env.js"],
   testTimeout: 20_000,
-  collectCoverageFrom: ["src/**/*.ts"]
+  collectCoverageFrom: ["src/**/*.ts"],
 };

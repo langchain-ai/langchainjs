@@ -603,7 +603,7 @@ export class FakeListChatModel extends BaseChatModel<FakeListChatModelCallOption
 
   withStructuredOutput<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    RunOutput extends Record<string, any> = Record<string, any>
+    RunOutput extends Record<string, any> = Record<string, any>,
   >(
     _params:
       | StructuredOutputMethodParams<RunOutput, false>
@@ -615,7 +615,7 @@ export class FakeListChatModel extends BaseChatModel<FakeListChatModelCallOption
 
   withStructuredOutput<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    RunOutput extends Record<string, any> = Record<string, any>
+    RunOutput extends Record<string, any> = Record<string, any>,
   >(
     _params:
       | StructuredOutputMethodParams<RunOutput, true>
@@ -627,7 +627,7 @@ export class FakeListChatModel extends BaseChatModel<FakeListChatModelCallOption
 
   withStructuredOutput<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    RunOutput extends Record<string, any> = Record<string, any>
+    RunOutput extends Record<string, any> = Record<string, any>,
   >(
     _params:
       | StructuredOutputMethodParams<RunOutput, boolean>
@@ -719,7 +719,7 @@ export class FakeTracer extends BaseTracer {
 
 export interface FakeToolParams<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  T extends InteropZodObject = InteropZodObject
+  T extends InteropZodObject = InteropZodObject,
 > extends ToolParams {
   name: string;
   description: string;
@@ -728,7 +728,7 @@ export interface FakeToolParams<
 
 export class FakeTool<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  T extends InteropZodObject = InteropZodObject
+  T extends InteropZodObject = InteropZodObject,
 > extends StructuredTool<T> {
   name: string;
 

@@ -19,7 +19,7 @@ function sortedValues<T>(values: Record<string, T>): T[] {
  * class.
  */
 export type SemanticSimilarityExampleSelectorInput<
-  V extends VectorStoreInterface = VectorStoreInterface
+  V extends VectorStoreInterface = VectorStoreInterface,
 > =
   | {
       vectorStore: V;
@@ -68,7 +68,7 @@ export type SemanticSimilarityExampleSelectorInput<
  * ```
  */
 export class SemanticSimilarityExampleSelector<
-  V extends VectorStoreInterface = VectorStoreInterface
+  V extends VectorStoreInterface = VectorStoreInterface,
 > extends BaseExampleSelector {
   vectorStoreRetriever: VectorStoreRetrieverInterface<V>;
 

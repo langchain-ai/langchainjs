@@ -236,9 +236,8 @@ export class OpenAIAgent extends Agent {
       }
     }
 
-    const promptValue = await this.llmChain.prompt.formatPromptValue(
-      valuesForPrompt
-    );
+    const promptValue =
+      await this.llmChain.prompt.formatPromptValue(valuesForPrompt);
 
     const message = await (
       llm as Runnable<

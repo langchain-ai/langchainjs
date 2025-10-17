@@ -7,11 +7,10 @@ on:
   pull_request:
     # Only run this workflow if the following directories have changed.
     paths:
-      - 'langchain/**'
-      - 'langchain-core/**'
-      - 'libs/**'
-  workflow_dispatch:  # Allows triggering the workflow manually in GitHub UI
-
+      - "langchain/**"
+      - "langchain-core/**"
+      - "libs/**"
+  workflow_dispatch: # Allows triggering the workflow manually in GitHub UI
 
 # If another push to the same PR or branch happens while this workflow is still running,
 # cancel the earlier run in favor of the next run.
