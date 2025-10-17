@@ -14,12 +14,12 @@
  */
 
 @font-face {
-  font-family: 'Manrope';
-  src: url('/fonts/Manrope-VariableFont_wght.ttf') format('truetype');
+  font-family: "Manrope";
+  src: url("/fonts/Manrope-VariableFont_wght.ttf") format("truetype");
 }
 @font-face {
-  font-family: 'Public Sans';
-  src: url('/fonts/PublicSans-VariableFont_wght.ttf') format('truetype');
+  font-family: "Public Sans";
+  src: url("/fonts/PublicSans-VariableFont_wght.ttf") format("truetype");
 }
 
 /* You can override the default Infima variables here. */
@@ -33,13 +33,12 @@
   --ifm-color-primary-lightest: #3cad6e;
   --ifm-font-weight-bold: 600;
   --ifm-code-font-size: 95%;
-  --ifm-font-family-base: 'Public Sans';
+  --ifm-font-family-base: "Public Sans";
   --ifm-menu-link-padding-horizontal: 0.5rem;
   --ifm-menu-link-padding-vertical: 0.5rem;
   --doc-sidebar-width: 275px !important;
   /* Code highlighting background color */
   --docusaurus-highlighted-code-line-bg: rgb(202, 203, 205);
-
 }
 
 /* For readability concerns, you should choose a lighter palette in dark mode. */
@@ -55,8 +54,12 @@
   --docusaurus-highlighted-code-line-bg: rgb(73, 73, 73);
 }
 
-nav, h1, h2, h3, h4 {
-  font-family: 'Manrope';
+nav,
+h1,
+h2,
+h3,
+h4 {
+  font-family: "Manrope";
 }
 
 .footer__links {
@@ -77,7 +80,6 @@ nav, h1, h2, h3, h4 {
 .beta {
   position: relative;
 }
-
 
 .menu__list-item.node-only .menu__link {
   padding-right: 80px;
@@ -168,7 +170,6 @@ nav, h1, h2, h3, h4 {
   color: #fff;
 }
 
-
 .theme-code-block.language-python,
 .theme-code-block.language-javascript,
 .theme-code-block.language-js,
@@ -198,7 +199,10 @@ nav, h1, h2, h3, h4 {
 
 .theme-doc-sidebar-menu > .theme-doc-sidebar-item-category:not(:first-of-type),
 .theme-doc-sidebar-menu > .theme-doc-sidebar-item-link,
-.theme-doc-sidebar-menu > .theme-doc-sidebar-item-link.theme-doc-sidebar-item-link-level-1:not(:first-of-type) {
+.theme-doc-sidebar-menu
+  > .theme-doc-sidebar-item-link.theme-doc-sidebar-item-link-level-1:not(
+    :first-of-type
+  ) {
   margin-top: 1rem;
 }
 
@@ -218,7 +222,8 @@ nav, h1, h2, h3, h4 {
   margin-top: 0;
 }
 
-.theme-doc-sidebar-item-category, .theme-doc-sidebar-menu > .theme-doc-sidebar-item-link {
+.theme-doc-sidebar-item-category,
+.theme-doc-sidebar-menu > .theme-doc-sidebar-item-link {
   font-size: 1rem;
   font-weight: 700;
 }
@@ -228,8 +233,9 @@ nav, h1, h2, h3, h4 {
   width: 1.25rem;
 }
 
-.theme-doc-sidebar-item-link, .theme-doc-sidebar-item-category .theme-doc-sidebar-item-category {
-  font-size: .9rem;
+.theme-doc-sidebar-item-link,
+.theme-doc-sidebar-item-category .theme-doc-sidebar-item-category {
+  font-size: 0.9rem;
   font-weight: 500;
 }
 
@@ -259,7 +265,7 @@ nav, h1, h2, h3, h4 {
   padding-bottom: 1rem;
 }
 
-.markdown > :not(h2) +  h3 {
+.markdown > :not(h2) + h3 {
   margin-top: 1rem;
 }
 
@@ -286,7 +292,7 @@ nav, h1, h2, h3, h4 {
 }
 
 .header-github-link::before {
-  content: '';
+  content: "";
   width: 24px;
   height: 24px;
   display: flex;
@@ -295,7 +301,8 @@ nav, h1, h2, h3, h4 {
 }
 
 [data-theme="dark"] .header-github-link::before {
-  background: url("data:image/svg+xml,%3Csvg viewBox='0 0 24 24' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath fill='white' d='M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12'/%3E%3C/svg%3E") no-repeat;
+  background: url("data:image/svg+xml,%3Csvg viewBox='0 0 24 24' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath fill='white' d='M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12'/%3E%3C/svg%3E")
+    no-repeat;
 }
 
 .announcementBar_node_modules-\@docusaurus-theme-classic-lib-theme-AnnouncementBar-styles-module {
@@ -303,12 +310,15 @@ nav, h1, h2, h3, h4 {
   font-size: 20px !important;
 }
 
-[data-theme='dark'] .announcementBar_node_modules-\@docusaurus-theme-classic-lib-theme-AnnouncementBar-styles-module {
+[data-theme="dark"]
+  .announcementBar_node_modules-\@docusaurus-theme-classic-lib-theme-AnnouncementBar-styles-module {
   background-color: #1b1b1b;
   color: #fff;
 }
 
-[data-theme='dark'] .announcementBar_node_modules-\@docusaurus-theme-classic-lib-theme-AnnouncementBar-styles-module button {
+[data-theme="dark"]
+  .announcementBar_node_modules-\@docusaurus-theme-classic-lib-theme-AnnouncementBar-styles-module
+  button {
   color: #fff;
 }
 
@@ -316,6 +326,6 @@ nav, h1, h2, h3, h4 {
   font-size: 16px;
 }
 
-div[class^='announcementBar_'] {
-  padding: 20px 0; 
+div[class^="announcementBar_"] {
+  padding: 20px 0;
 }

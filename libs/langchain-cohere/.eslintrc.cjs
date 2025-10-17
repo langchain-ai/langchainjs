@@ -62,15 +62,15 @@ module.exports = {
     "func-names": 0,
     "no-lonely-if": 0,
     "prefer-rest-params": 0,
-    'jest/no-focused-tests': 'error',
+    "jest/no-focused-tests": "error",
     "new-cap": ["error", { properties: false, capIsNew: false }],
   },
   overrides: [
     {
-      files: ['**/*.test.ts'],
+      files: ["**/*.test.ts"],
       rules: {
-        '@typescript-eslint/no-unused-vars': 'off'
-      }
-    }
-  ]
+        "@typescript-eslint/no-unused-vars": "off",
+      },
+    },
+  ],
 };

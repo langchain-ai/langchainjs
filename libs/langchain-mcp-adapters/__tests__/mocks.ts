@@ -83,7 +83,8 @@ vi.mock("@modelcontextprotocol/sdk/client/streamableHttp.js", () => {
       config,
     };
   });
-  StreamableHTTPClientTransport.prototype = streamableHTTPClientTransportPrototype;
+  StreamableHTTPClientTransport.prototype =
+    streamableHTTPClientTransportPrototype;
   return {
     StreamableHTTPClientTransport,
   };

@@ -9,10 +9,9 @@ on:
   pull_request:
     # Only run when LangChain, or LangChain Core code changes.
     paths:
-      - 'langchain/**'
-      - 'langchain-core/**'
-  workflow_dispatch:  # Allows triggering the workflow manually in GitHub UI
-
+      - "langchain/**"
+      - "langchain-core/**"
+  workflow_dispatch: # Allows triggering the workflow manually in GitHub UI
 
 # If another push to the same PR or branch happens while this workflow is still running,
 # cancel the earlier run in favor of the next run.
@@ -33,10 +32,10 @@ jobs:
         node-version: [18.x, 20.x]
         # See Node.js release schedule at https://nodejs.org/en/about/releases/
         # include:
-          # - os: windows-latest
-          #   node-version: 20.x
-          # - os: macos-latest
-          #   node-version: 20.x
+        # - os: windows-latest
+        #   node-version: 20.x
+        # - os: macos-latest
+        #   node-version: 20.x
     runs-on: ${{ matrix.os }}
     env:
       PUPPETEER_SKIP_DOWNLOAD: "true"

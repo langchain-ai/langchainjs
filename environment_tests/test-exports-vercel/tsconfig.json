@@ -20,8 +20,5 @@
     }
   },
   "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx"],
-  "exclude": [
-    "node_modules",
-    "libs"
-  ]
+  "exclude": ["node_modules", "libs"]
 }

@@ -1932,13 +1932,13 @@ export class ChatOpenAIResponses<
   protected _convertMessagesToResponsesParams(messages: BaseMessage[]) {
     return messages.flatMap(
       (lcMsg): ResponsesInputItem | ResponsesInputItem[] => {
-        const additional_kwargs = lcMsg.additional_kwargs as
-          | BaseMessageFields["additional_kwargs"] & {
-              [_FUNCTION_CALL_IDS_MAP_KEY]?: Record<string, string>;
-              reasoning?: OpenAIClient.Responses.ResponseReasoningItem;
-              type?: string;
-              refusal?: string;
-            };
+        const additional_kwargs =
+          lcMsg.additional_kwargs as BaseMessageFields["additional_kwargs"] & {
+            [_FUNCTION_CALL_IDS_MAP_KEY]?: Record<string, string>;
+            reasoning?: OpenAIClient.Responses.ResponseReasoningItem;
+            type?: string;
+            refusal?: string;
+          };
 
         let role = messageToOpenAIRole(lcMsg);
         if (role === "system" && isReasoningModel(this.model))

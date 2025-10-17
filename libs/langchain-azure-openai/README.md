@@ -6,7 +6,7 @@
 
 This package contains the Azure SDK for OpenAI LangChain.js integrations.
 
-It provides Azure OpenAI support through the [Azure SDK for OpenAI](https://github.com/Azure/azure-sdk-for-js/tree/main/sdk/openai/openai) library. 
+It provides Azure OpenAI support through the [Azure SDK for OpenAI](https://github.com/Azure/azure-sdk-for-js/tree/main/sdk/openai/openai) library.
 
 ## Installation
 
@@ -96,7 +96,8 @@ const embeddings = new AzureOpenAIEmbeddings({
   // if not provided.
   azureOpenAIEndpoint: process.env.AZURE_OPENAI_API_ENDPOINT,
   azureOpenAIApiKey: process.env.AZURE_OPENAI_API_KEY,
-  azureOpenAIApiDeploymentName: process.env.AZURE_OPENAI_API_EMBEDDINGS_DEPLOYMENT_NAME,
+  azureOpenAIApiDeploymentName:
+    process.env.AZURE_OPENAI_API_EMBEDDINGS_DEPLOYMENT_NAME,
 });
 const res = await embeddings.embedQuery("Hello world");
 ```

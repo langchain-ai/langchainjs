@@ -9,12 +9,11 @@ on:
   pull_request:
     # Only run if examples, langchain, core, or integration package code changes.
     paths:
-      - 'examples/**'
-      - 'langchain/**'
-      - 'langchain-core/**'
-      - 'libs/**/**'
-  workflow_dispatch:  # Allows triggering the workflow manually in GitHub UI
-
+      - "examples/**"
+      - "langchain/**"
+      - "langchain-core/**"
+      - "libs/**/**"
+  workflow_dispatch: # Allows triggering the workflow manually in GitHub UI
 
 # If another push to the same PR or branch happens while this workflow is still running,
 # cancel the earlier run in favor of the next run.

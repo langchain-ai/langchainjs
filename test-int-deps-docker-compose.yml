@@ -1,28 +1,28 @@
-version: '3.8'
+version: "3.8"
 services:
   redis:
     image: redis:6.2-alpine
     restart: always
     ports:
-      - '6379:6379'
+      - "6379:6379"
     command: redis-server --save 20 1 --loglevel warning
   redis-vectorsearch:
     image: redis/redis-stack-server:latest
     restart: always
     ports:
-      - '6378:6379'
+      - "6378:6379"
     command: redis-stack-server
   weaviate:
     image: semitechnologies/weaviate:1.19.7
     ports:
-    - 8080:8080
+      - 8080:8080
     restart: on-failure:0
     environment:
       QUERY_DEFAULTS_LIMIT: 25
-      AUTHENTICATION_ANONYMOUS_ACCESS_ENABLED: 'true'
-      PERSISTENCE_DATA_PATH: '/var/lib/weaviate'
-      DEFAULT_VECTORIZER_MODULE: 'none'
-      CLUSTER_HOSTNAME: 'node1'
+      AUTHENTICATION_ANONYMOUS_ACCESS_ENABLED: "true"
+      PERSISTENCE_DATA_PATH: "/var/lib/weaviate"
+      DEFAULT_VECTORIZER_MODULE: "none"
+      CLUSTER_HOSTNAME: "node1"
   db:
     image: pgvector/pgvector:pg16
     ports:
@@ -40,12 +40,12 @@ services:
   neo4j:
     image: neo4j:latest
     volumes:
-        - $HOME/neo4j/logs:/var/lib/neo4j/logs
-        - $HOME/neo4j/config:/var/lib/neo4j/config
-        - $HOME/neo4j/data:/var/lib/neo4j/data
-        - $HOME/neo4j/plugins:/var/lib/neo4j/plugins
+      - $HOME/neo4j/logs:/var/lib/neo4j/logs
+      - $HOME/neo4j/config:/var/lib/neo4j/config
+      - $HOME/neo4j/data:/var/lib/neo4j/data
+      - $HOME/neo4j/plugins:/var/lib/neo4j/plugins
     environment:
-        - NEO4J_dbms_security_auth__enabled=false
+      - NEO4J_dbms_security_auth__enabled=false
     ports:
       - "7474:7474"
       - "7687:7687"

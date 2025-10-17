@@ -3,7 +3,7 @@ name: Standard Tests (Integration)
 on:
   workflow_dispatch:
   schedule:
-    - cron: '0 13 * * *'
+    - cron: "0 13 * * *"
 
 jobs:
   standard-tests:
@@ -11,7 +11,16 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        package: [anthropic, cohere, google-genai, groq, mistralai, aws, google-vertexai-web]
+        package:
+          [
+            anthropic,
+            cohere,
+            google-genai,
+            groq,
+            mistralai,
+            aws,
+            google-vertexai-web,
+          ]
     steps:
       - uses: actions/checkout@v4
       - name: Use Node.js 18.x

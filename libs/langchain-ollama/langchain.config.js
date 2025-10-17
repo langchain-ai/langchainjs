@@ -10,7 +10,7 @@ function abs(relativePath) {
 }
 
 export const config = {
-  internals: [/node\:/, /@langchain\/core\//, 'ollama/browser'],
+  internals: [/node\:/, /@langchain\/core\//, "ollama/browser"],
   entrypoints: {
     index: "index",
   },

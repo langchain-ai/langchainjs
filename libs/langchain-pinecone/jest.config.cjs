@@ -18,4 +18,4 @@ module.exports = {
   testTimeout: 20_000,
   passWithNoTests: true,
   collectCoverageFrom: ["src/**/*.ts"],
-  };
+};

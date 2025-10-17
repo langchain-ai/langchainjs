@@ -66,20 +66,20 @@ function getAllWorkspaces() {
         const subDirs = allDirs.map((dir) => {
           return {
             dir: `${workspaceDirectory.replace("*", "")}${dir}`,
-            packageJSON: require(path.join(
-              process.cwd(),
-              `${workspaceDirectory.replace("*", "")}${dir}`,
-              "package.json"
-            )),
+            packageJSON: require(
+              path.join(
+                process.cwd(),
+                `${workspaceDirectory.replace("*", "")}${dir}`,
+                "package.json"
+              )
+            ),
           };
         });
         return subDirs;
       }
-      const packageJSON = require(path.join(
-        process.cwd(),
-        workspaceDirectory,
-        "package.json"
-      ));
+      const packageJSON = require(
+        path.join(process.cwd(), workspaceDirectory, "package.json")
+      );
       return {
         dir: workspaceDirectory,
         packageJSON,

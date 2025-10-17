@@ -66,23 +66,23 @@ To use SSE with custom headers:
 ```typescript
 // Method 1: Using the connectToServerViaSSE method
 await client.connectToServerViaSSE(
-  'auth-server',
-  'http://localhost:8000/sse',
+  "auth-server",
+  "http://localhost:8000/sse",
   {
-    Authorization: 'Bearer your-token-here',
-    'X-Custom-Header': 'custom-value',
+    Authorization: "Bearer your-token-here",
+    "X-Custom-Header": "custom-value",
   },
   true // Use Node.js EventSource for headers support
 );
 
 // Method 2: Using the constructor with configuration
 const client = new MultiServerMCPClient({
-  'auth-server': {
-    transport: 'sse',
-    url: 'http://localhost:8000/sse',
+  "auth-server": {
+    transport: "sse",
+    url: "http://localhost:8000/sse",
     headers: {
-      Authorization: 'Bearer your-token-here',
-      'X-Custom-Header': 'custom-value',
+      Authorization: "Bearer your-token-here",
+      "X-Custom-Header": "custom-value",
     },
     useNodeEventSource: true,
   },

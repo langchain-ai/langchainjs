@@ -18,7 +18,7 @@ export const config = {
     /@langchain\/community/,
     "axios", // axios is a dependency of openai
     "mysql2/promise",
-    "notion-to-md/build/utils/notion.js"
+    "notion-to-md/build/utils/notion.js",
   ],
   entrypoints: {
     load: "load/index",
@@ -67,7 +67,7 @@ export const config = {
     // text_splitter
     text_splitter: "text_splitter",
     // memory
-    "memory": "memory/index",
+    memory: "memory/index",
     "memory/chat_memory": "memory/chat_memory",
     // document
     document: "document",
@@ -147,11 +147,7 @@ export const config = {
     "schema/query_constructor": "schema/query_constructor",
     "schema/prompt_template": "schema/prompt_template",
   },
-  deprecatedOmitFromImportMap: [
-    "document",
-    "load/serializable",
-    "runnables",
-  ],
+  deprecatedOmitFromImportMap: ["document", "load/serializable", "runnables"],
   requiresOptionalDependency: [
     "agents/load",
     "agents/toolkits/sql",
@@ -310,9 +306,7 @@ export const config = {
       path: "@langchain/core/prompts",
     },
     {
-      modules: [
-        "ImagePromptTemplate",
-      ],
+      modules: ["ImagePromptTemplate"],
       alias: ["prompts", "image"],
       path: "@langchain/core/prompts",
     },
@@ -359,7 +353,7 @@ export const config = {
       modules: ["Client"],
       alias: ["langsmith"],
       path: "langsmith",
-    }
+    },
   ],
   shouldTestExports: true,
   tsConfigPath: resolve("./tsconfig.json"),

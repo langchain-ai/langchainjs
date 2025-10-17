@@ -2,6 +2,4 @@
 
 export interface OptionalImportMap {}
 
-export interface SecretMap {
-
-}
+export interface SecretMap {}

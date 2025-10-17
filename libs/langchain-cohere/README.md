@@ -18,7 +18,7 @@ You can do so by adding appropriate field to your project's `package.json` like 
   "version": "0.0.0",
   "dependencies": {
     "@langchain/cohere": "^0.0.1",
-    "@langchain/core": "^0.3.0",
+    "@langchain/core": "^0.3.0"
   },
   "resolutions": {
     "@langchain/core": "0.3.0"

@@ -9,7 +9,6 @@ function abs(relativePath) {
   return resolve(dirname(fileURLToPath(import.meta.url)), relativePath);
 }
 
-
 export const config = {
   internals: [/node\:/, /@langchain\/core\//],
   entrypoints: {
@@ -19,4 +18,4 @@ export const config = {
   cjsSource: "./dist-cjs",
   cjsDestination: "./dist",
   abs,
-}
+};

@@ -8,16 +8,14 @@ environment it is running on.
 
 If you are running this on a platform where the credentials cannot
 be provided this way, consider using the @langchain/google-vertexai-web
-package *instead*. You do not need to use both packages. See the
+package _instead_. You do not need to use both packages. See the
 section on **Authorization** below.
-
 
 ## Installation
 
 ```bash
 $ yarn add @langchain/google-vertexai
 ```
-
 
 ## Authorization
 
@@ -32,9 +30,8 @@ credentials from the first of the following that apply:
 2. Credentials that are passed to the constructor using the `authInfo` attribute
 3. An API Key that is set in the environment variable `API_KEY`
 4. The Service Account credentials that are saved in a file. The path to
-   this file is set in the `GOOGLE_APPLICATION_CREDENTIALS` environment 
+   this file is set in the `GOOGLE_APPLICATION_CREDENTIALS` environment
    variable.
 5. If you are running on a Google Cloud Platform resource, or if you have
    logged in using `gcloud auth application-default login`, then the
    default credentials.
-

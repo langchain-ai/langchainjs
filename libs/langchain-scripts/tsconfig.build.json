@@ -4,11 +4,7 @@
     "outDir": "./dist_build",
     "rootDir": "./src",
     "target": "ES2021",
-    "lib": [
-      "ES2021",
-      "ES2022.Object",
-      "DOM"
-    ],
+    "lib": ["ES2021", "ES2022.Object", "DOM"],
     "module": "NodeNext",
     "moduleResolution": "nodenext",
     "esModuleInterop": true,
@@ -22,14 +18,6 @@
     "allowJs": true,
     "strict": true
   },
-  "include": [
-    "src/build/*"
-  ],
-  "exclude": [
-    "node_modules/",
-    "dist",
-    "docs",
-    "bin/",
-    "../../node_modules/"
-  ]
+  "include": ["src/build/*"],
+  "exclude": ["node_modules/", "dist", "docs", "bin/", "../../node_modules/"]
 }

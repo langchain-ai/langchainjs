@@ -1,7 +1,7 @@
 name: Deploy API Refs Prod
 
 on:
-  workflow_dispatch:  # Allows triggering the workflow manually in GitHub UI
+  workflow_dispatch: # Allows triggering the workflow manually in GitHub UI
   push:
     branches: ["main", "v0.2"]
 
