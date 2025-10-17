@@ -5,7 +5,7 @@ import path from "node:path";
 import { test } from "vitest";
 import { HumanMessage } from "@langchain/core/messages";
 
-import { ChatOpenAI } from "../chat_models.js";
+import { ChatOpenAI } from "../index.js";
 
 const __filename = url.fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);

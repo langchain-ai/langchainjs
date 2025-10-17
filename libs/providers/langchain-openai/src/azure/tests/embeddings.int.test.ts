@@ -1,5 +1,5 @@
 import { test, expect } from "vitest";
-import { AzureOpenAIEmbeddings as OpenAIEmbeddings } from "../../azure/embeddings.js";
+import { AzureOpenAIEmbeddings as OpenAIEmbeddings } from "../embeddings.js";
 
 test("Test AzureOpenAIEmbeddings.embedQuery", async () => {
   const embeddings = new OpenAIEmbeddings();

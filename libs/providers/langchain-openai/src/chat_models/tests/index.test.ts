@@ -4,8 +4,8 @@ import { z } from "zod/v3";
 import { toJsonSchema } from "@langchain/core/utils/json_schema";
 import { load } from "@langchain/core/load";
 import { tool } from "@langchain/core/tools";
-import { ChatOpenAI } from "../chat_models.js";
-import { _convertOpenAIResponsesUsageToLangChainUsage } from "../utils/output.js";
+import { ChatOpenAI } from "../index.js";
+import { _convertOpenAIResponsesUsageToLangChainUsage } from "../../utils/output.js";
 
 describe("ChatOpenAI", () => {
   describe("should initialize with correct values", () => {
@@ -331,7 +331,6 @@ describe("ChatOpenAI", () => {
       apiKey: "test-key",
       model: "o3-mini",
       somethingUnexpected: true,
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } as any);
     expect(JSON.stringify(chat)).toEqual(
       `{"lc":1,"type":"constructor","id":["langchain","chat_models","openai","ChatOpenAI"],"kwargs":{"openai_api_key":{"lc":1,"type":"secret","id":["OPENAI_API_KEY"]},"model":"o3-mini"}}`

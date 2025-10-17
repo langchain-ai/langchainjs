@@ -5,7 +5,7 @@ import { ChatModelIntegrationTests } from "@langchain/standard-tests/vitest";
 import { AIMessage, AIMessageChunk } from "@langchain/core/messages";
 import { concat } from "@langchain/core/utils/stream";
 import { BaseLanguageModelInput } from "@langchain/core/language_models/base";
-import { ChatOpenAI, ChatOpenAICallOptions } from "../chat_models.js";
+import { ChatOpenAI, ChatOpenAICallOptions } from "../index.js";
 
 const REPO_ROOT_DIR = process.cwd();
 

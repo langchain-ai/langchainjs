@@ -10,7 +10,7 @@ import {
 } from "@azure/identity";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
 
-import { AzureOpenAI } from "../../azure/llms.js";
+import { AzureOpenAI } from "../llms.js";
 
 // Save the original value of the 'LANGCHAIN_CALLBACKS_BACKGROUND' environment variable
 const originalBackground = process.env.LANGCHAIN_CALLBACKS_BACKGROUND;

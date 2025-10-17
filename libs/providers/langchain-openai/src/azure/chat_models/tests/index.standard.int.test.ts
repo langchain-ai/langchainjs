@@ -3,8 +3,8 @@ import { afterAll } from "vitest";
 import { ChatModelIntegrationTests } from "@langchain/standard-tests/vitest";
 import { AIMessageChunk } from "@langchain/core/messages";
 
-import { AzureChatOpenAI } from "../../azure/chat_models.js";
-import { ChatOpenAICallOptions } from "../../chat_models.js";
+import { AzureChatOpenAI } from "../index.js";
+import { ChatOpenAICallOptions } from "../../../chat_models/index.js";
 
 let openAIAPIKey: string | undefined;
 

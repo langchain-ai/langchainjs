@@ -23,8 +23,8 @@ import {
   getBearerTokenProvider,
 } from "@azure/identity";
 
-import { AzureChatOpenAI } from "../../azure/chat_models.js";
-import { env } from "../utils.js";
+import { AzureChatOpenAI } from "../index.js";
+import { env } from "../../../tests/utils.js";
 
 // Save the original value of the 'LANGCHAIN_CALLBACKS_BACKGROUND' environment variable
 const originalBackground = process.env.LANGCHAIN_CALLBACKS_BACKGROUND;

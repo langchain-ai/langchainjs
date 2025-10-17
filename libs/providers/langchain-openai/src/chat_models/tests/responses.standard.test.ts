@@ -1,9 +1,9 @@
 import { ChatModelUnitTests } from "@langchain/standard-tests/vitest";
 import { AIMessageChunk } from "@langchain/core/messages";
 
-import { ChatOpenAI, ChatOpenAICallOptions } from "../chat_models.js";
+import { ChatOpenAI, ChatOpenAICallOptions } from "../index.js";
 
-class ChatOpenAIStandardUnitTests extends ChatModelUnitTests<
+class ChatOpenAIResponsesStandardUnitTests extends ChatModelUnitTests<
   ChatOpenAICallOptions,
   AIMessageChunk
 > {
@@ -12,7 +12,7 @@ class ChatOpenAIStandardUnitTests extends ChatModelUnitTests<
       Cls: ChatOpenAI,
       chatModelHasToolCalling: true,
       chatModelHasStructuredOutput: true,
-      constructorArgs: {},
+      constructorArgs: { useResponsesApi: true },
     });
     // This must be set so method like `.bindTools` or `.withStructuredOutput`
     // which we call after instantiating the model will work.
@@ -30,5 +30,5 @@ class ChatOpenAIStandardUnitTests extends ChatModelUnitTests<
   }
 }
 
-const testClass = new ChatOpenAIStandardUnitTests();
-testClass.runTests("ChatOpenAIStandardUnitTests");
+const testClass = new ChatOpenAIResponsesStandardUnitTests();
+testClass.runTests("ChatOpenAIResponsesStandardUnitTests");

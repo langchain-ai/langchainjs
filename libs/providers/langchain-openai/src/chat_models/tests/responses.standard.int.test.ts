@@ -1,6 +1,6 @@
 import { ChatModelIntegrationTests } from "@langchain/standard-tests/vitest";
 import { AIMessageChunk } from "@langchain/core/messages";
-import { ChatOpenAI, ChatOpenAICallOptions } from "../chat_models.js";
+import { ChatOpenAI, ChatOpenAICallOptions } from "../index.js";
 
 class ChatOpenAIResponsesStandardIntegrationTests extends ChatModelIntegrationTests<
   ChatOpenAICallOptions,
