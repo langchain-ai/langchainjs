@@ -1519,3 +1519,15 @@ describe("Sonnet 4.5", () => {
     expect(response.content.length).toBeGreaterThan(0);
   });
 });
+
+it("won't modify structured output content if outputVersion is set", async () => {
+  const schema = z.object({ name: z.string() });
+  const model = new ChatAnthropic({
+    model: "claude-opus-4-1",
+    outputVersion: "v1",
+  });
+  const response = await model
+    .withStructuredOutput(schema)
+    .invoke("respond with the name 'John'");
+  expect(response.name).toBeDefined();
+});
