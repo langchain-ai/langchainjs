@@ -1,109 +1,217 @@
-# 🦜️🔗 LangChain.js
+# @langchain/classic
 
-⚡ Building applications with LLMs through composability ⚡
+This package contains functionality from LangChain v0.x that has been moved out of the main `langchain` package as part of the v1.0 release. It exists to provide backward compatibility for existing applications while the core `langchain` package focuses on the essential building blocks for modern agent development.
 
-[![CI](https://github.com/langchain-ai/langchainjs/actions/workflows/ci.yml/badge.svg)](https://github.com/langchain-ai/langchainjs/actions/workflows/ci.yml) ![npm](https://img.shields.io/npm/dm/langchain) [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT) [![Twitter](https://img.shields.io/twitter/url/https/twitter.com/langchainai.svg?style=social&label=Follow%20%40LangChainAI)](https://twitter.com/langchainai) [![Open in Dev Containers](https://img.shields.io/static/v1?label=Dev%20Containers&message=Open&color=blue&logo=visualstudiocode)](https://vscode.dev/redirect?url=vscode://ms-vscode-remote.remote-containers/cloneInVolume?url=https://github.com/langchain-ai/langchainjs)
-[<img src="https://github.com/codespaces/badge.svg" title="Open in Github Codespace" width="150" height="20">](https://codespaces.new/langchain-ai/langchainjs)
+## When to use this package
 
-Looking for the Python version? Check out [LangChain](https://github.com/langchain-ai/langchain).
+Use `@langchain/classic` if you:
 
-To help you ship LangChain apps to production faster, check out [LangSmith](https://smith.langchain.com).
-[LangSmith](https://smith.langchain.com) is a unified developer platform for building, testing, and monitoring LLM applications.
+- Have existing code that uses legacy chains (e.g., `LLMChain`, `ConversationalRetrievalQAChain`, `RetrievalQAChain`)
+- Use the indexing API
+- Depend on functionality from `@langchain/community` that was previously re-exported from `langchain`
+- Are maintaining an existing application and not yet ready to migrate to the new `createAgent` API
 
-## ⚡️ Quick Install
+## When NOT to use this package
 
-You can use npm, yarn, or pnpm to install LangChain.js
+**For new projects, use `langchain` v1.0 instead.** The new APIs provide:
 
-`npm install -S langchain` or `yarn add langchain` or `pnpm add langchain`
+- **`createAgent`**: A cleaner, more powerful way to build agents with middleware support
+- **Better performance**: Optimized for modern agent workflows
+- **Focused API surface**: Less complexity, easier to learn
+- **Active development**: New features and improvements will focus on v1.0 APIs
 
-## 🌐 Supported Environments
+See the [LangChain v1.0 release notes](https://docs.langchain.com/oss/javascript/releases/langchain-v1) for more information.
 
-LangChain is written in TypeScript and can be used in:
+## Installation
 
-- Node.js (ESM and CommonJS) - 18.x, 19.x, 20.x, 22.x
-- Cloudflare Workers
-- Vercel / Next.js (Browser, Serverless and Edge functions)
-- Supabase Edge Functions
-- Browser
-- Deno
+```bash npm2yarn
+npm install @langchain/classic
+```
 
-## 🤔 What is LangChain?
+This package requires `@langchain/core` as a peer dependency:
 
-**LangChain** is a framework for developing applications powered by language models. It enables applications that:
+```bash npm2yarn
+npm install @langchain/core
+```
 
-- **Are context-aware**: connect a language model to sources of context (prompt instructions, few shot examples, content to ground its response in, etc.)
-- **Reason**: rely on a language model to reason (about how to answer based on provided context, what actions to take, etc.)
+## What's included
 
-This framework consists of several parts.
+### Legacy Chains
 
-- **Open-source libraries**: Build your applications using LangChain's open-source [building blocks](https://js.langchain.com/docs/concepts/lcel), [components](https://js.langchain.com/docs/concepts), and [third-party integrations](https://js.langchain.com/docs/integrations/platforms/).
-  Use [LangGraph.js](https://js.langchain.com/docs/concepts/#langgraphjs) to build stateful agents with first-class streaming and human-in-the-loop support.
-- **Productionization**: Use [LangSmith](https://docs.smith.langchain.com/) to inspect, monitor and evaluate your chains, so that you can continuously optimize and deploy with confidence.
-- **Deployment**: Turn your LangGraph applications into production-ready APIs and Assistants with [LangGraph Cloud](https://langchain-ai.github.io/langgraph/cloud/).
+All chain implementations from v0.x, including:
 
-The LangChain libraries themselves are made up of several different packages.
+- `LLMChain` - Basic chain for calling an LLM with a prompt template
+- `ConversationalRetrievalQAChain` - Chain for conversational question-answering over documents
+- `RetrievalQAChain` - Chain for question-answering over documents without conversation memory
+- `StuffDocumentsChain` - Chain for stuffing documents into a prompt
+- `MapReduceDocumentsChain` - Chain for map-reduce operations over documents
+- `RefineDocumentsChain` - Chain for iterative refinement over documents
+- And many more...
 
-- **[`@langchain/core`](https://github.com/langchain-ai/langchainjs/blob/main/langchain-core)**: Base abstractions and LangChain Expression Language.
-- **[`@langchain/community`](https://github.com/langchain-ai/langchainjs/blob/main/libs/langchain-community)**: Third party integrations.
-- **[`langchain`](https://github.com/langchain-ai/langchainjs/blob/main/langchain)**: Chains, agents, and retrieval strategies that make up an application's cognitive architecture.
-- **[LangGraph.js](https://langchain-ai.github.io/langgraphjs/)**: LangGraph powers production-grade agents, trusted by Linkedin, Uber, Klarna, GitLab, and many more. Build robust and stateful multi-actor applications with LLMs by modeling steps as edges and nodes in a graph. Integrates smoothly with LangChain, but can be used without it.
+### Indexing API
 
-Integrations may also be split into their own compatible packages.
+The `RecordManager` and related indexing functionality for managing document updates in vector stores.
 
-![LangChain Stack](https://github.com/langchain-ai/langchainjs/blob/main/docs/core_docs/static/svg/langchain_stack_062024.svg)
+### Community Integrations
 
-This library aims to assist in the development of those types of applications. Common examples of these applications include:
+Re-exports from `@langchain/community` that were previously available in the main `langchain` package.
 
-**❓Question Answering over specific documents**
+### Other Deprecated Functionality
 
-- [Documentation](https://js.langchain.com/docs/tutorials/rag/)
-- End-to-end Example: [Doc-Chatbot](https://github.com/dissorial/doc-chatbot)
+Various utilities and abstractions that have been replaced by better alternatives in v1.0.
 
-**💬 Chatbots**
+## Migration
 
-- [Documentation](https://js.langchain.com/docs/tutorials/chatbot)
-- End-to-end Example: [Chat-LangChain](https://github.com/langchain-ai/chat-langchain)
+### From `langchain` v0.x to `@langchain/classic`
 
-## 🚀 How does LangChain help?
+If you're upgrading to `langchain` v1.0 but want to keep using legacy functionality:
 
-The main value props of the LangChain libraries are:
+1. Install `@langchain/classic`:
 
-1. **Components**: composable tools and integrations for working with language models. Components are modular and easy-to-use, whether you are using the rest of the LangChain framework or not
-2. **Off-the-shelf chains**: built-in assemblages of components for accomplishing higher-level tasks
+   ```bash npm2yarn
+   npm install @langchain/classic
+   ```
 
-Off-the-shelf chains make it easy to get started. Components make it easy to customize existing chains and build new ones.
+2. Update your imports:
 
-Components fall into the following **modules**:
+   ```typescript
+   // Before (v0.x)
+   import { LLMChain } from "langchain/chains";
+   import { ConversationalRetrievalQAChain } from "langchain/chains";
 
-**📃 Model I/O:**
+   // After (v1.0)
+   import { LLMChain } from "@langchain/classic/chains";
+   import { ConversationalRetrievalQAChain } from "@langchain/classic/chains";
+   ```
 
-This includes prompt management, prompt optimization, a generic interface for all LLMs, and common utilities for working with LLMs.
+   Or if you imported from the root:
 
-**📚 Retrieval:**
+   ```typescript
+   // Before (v0.x)
+   import { LLMChain } from "langchain";
 
-Data Augmented Generation involves specific types of chains that first interact with an external data source to fetch data for use in the generation step. Examples include summarization of long pieces of text and question/answering over specific data sources.
+   // After (v1.0)
+   import { LLMChain } from "@langchain/classic";
+   ```
 
-**🤖 Agents:**
+### From `@langchain/classic` to `langchain` v1.0
 
-Agents allow an LLM autonomy over how a task is accomplished. Agents make decisions about which Actions to take, then take that Action, observe the result, and repeat until the task is complete. LangChain provides a [standard interface for agents](https://js.langchain.com/docs/concepts/#agents), along with [LangGraph.js](https://github.com/langchain-ai/langgraphjs/) for building custom agents.
+**For new development, we recommend using `createAgent` instead of legacy chains.**
 
-## 📖 Additional Resources
+Example migration from `LLMChain`:
 
-- [Getting started](https://js.langchain.com/docs/introduction): installation, setting up the environment, simple examples
-- Overview of the [interfaces](https://js.langchain.com/docs/how_to/lcel_cheatsheet/), [modules](https://js.langchain.com/docs/concepts) and [integrations](https://js.langchain.com/docs/integrations/platforms/)
-- [Full Documentation](https://js.langchain.com)
-- [Tutorial](https://js.langchain.com/docs/tutorials/) walkthroughs
-- [Langhain Forum](https://forum.langchain.com)
-- [API Reference](https://api.js.langchain.com)
+```typescript
+// Before (using LLMChain)
+import { LLMChain } from "@langchain/classic/chains";
+import { ChatOpenAI } from "@langchain/openai";
+import { PromptTemplate } from "@langchain/core/prompts";
 
-## 💁 Contributing
+const model = new ChatOpenAI({ model: "gpt-4" });
+const prompt = PromptTemplate.fromTemplate(
+  "What is a good name for a company that makes {product}?"
+);
+const chain = new LLMChain({ llm: model, prompt });
+const result = await chain.call({ product: "colorful socks" });
 
-As an open-source project in a rapidly developing field, we are extremely open to contributions, whether it be in the form of a new feature, improved infrastructure, or better documentation.
+// After (using createAgent)
+import { createAgent } from "langchain";
 
-For detailed information on how to contribute, see [here](https://github.com/langchain-ai/langchainjs/blob/main/CONTRIBUTING.md).
+const agent = createAgent({
+  model: "openai:gpt-4",
+  systemPrompt: "You are a creative assistant that helps name companies.",
+});
 
-Please report any security issues or concerns following our [security guidelines](https://github.com/langchain-ai/langchainjs/blob/main/SECURITY.md).
+const result = await agent.invoke({
+  messages: [
+    {
+      role: "user",
+      content: "What is a good name for a company that makes colorful socks?",
+    },
+  ],
+});
+```
 
-## 🖇️ Relationship with Python LangChain
+For more complex migrations, see the [migration guide](https://docs.langchain.com/oss/javascript/migrate/langchain-v1).
 
-This is built to integrate as seamlessly as possible with the [LangChain Python package](https://github.com/langchain-ai/langchain). Specifically, this means all objects (prompts, LLMs, chains, etc) are designed in a way where they can be serialized and shared between languages.
+## Support and Maintenance
+
+`@langchain/classic` will receive:
+
+- **Bug fixes**: Critical bugs will be fixed
+- **Security updates**: Security vulnerabilities will be patched
+- **No new features**: New functionality will focus on `langchain` v1.0 APIs
+
+This package is in **maintenance mode**. For new features and active development, use `langchain` v1.0.
+
+## Examples
+
+### Using a legacy chain
+
+```typescript
+import { LLMChain } from "@langchain/classic/chains";
+import { ChatOpenAI } from "@langchain/openai";
+import { PromptTemplate } from "@langchain/core/prompts";
+
+const model = new ChatOpenAI({ model: "gpt-4" });
+
+const prompt = PromptTemplate.fromTemplate(
+  "Tell me a {adjective} joke about {content}."
+);
+
+const chain = new LLMChain({ llm: model, prompt });
+
+const result = await chain.call({
+  adjective: "funny",
+  content: "chickens",
+});
+
+console.log(result.text);
+```
+
+### Using ConversationalRetrievalQAChain
+
+```typescript
+import { ConversationalRetrievalQAChain } from "@langchain/classic/chains";
+import { ChatOpenAI } from "@langchain/openai";
+import { OpenAIEmbeddings } from "@langchain/openai";
+import { MemoryVectorStore } from "langchain/vectorstores/memory";
+
+// Create vector store with documents
+const vectorStore = await MemoryVectorStore.fromTexts(
+  ["Document 1 text...", "Document 2 text..."],
+  [{ id: 1 }, { id: 2 }],
+  new OpenAIEmbeddings()
+);
+
+// Create chain
+const model = new ChatOpenAI({ model: "gpt-4" });
+const chain = ConversationalRetrievalQAChain.fromLLM(
+  model,
+  vectorStore.asRetriever()
+);
+
+// Use chain
+const result = await chain.call({
+  question: "What is in the documents?",
+  chat_history: [],
+});
+
+console.log(result.text);
+```
+
+## Resources
+
+- [LangChain v1.0 Release Notes](https://docs.langchain.com/oss/javascript/releases/langchain-v1)
+- [Migration Guide](https://docs.langchain.com/oss/javascript/migrate/langchain-v1)
+- [LangChain v1.0 Documentation](https://docs.langchain.com/oss/javascript/langchain/agents)
+- [GitHub Repository](https://github.com/langchain-ai/langchainjs)
+
+## Support
+
+For bug reports and issues, please open an issue on [GitHub](https://github.com/langchain-ai/langchainjs/issues).
+
+For questions and discussions, join our [Discord community](https://discord.gg/langchain).
+
+## License
+
+This package is licensed under the MIT License. See the [LICENSE](../../LICENSE) file for details.
