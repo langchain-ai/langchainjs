@@ -1,6 +1,6 @@
 {
   "name": "@langchain/nomic",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "Nomic integration for LangChain.js",
   "author": "LangChain",
   "license": "MIT",
@@ -29,7 +29,7 @@
     "@nomic-ai/atlas": "^0.8.0"
   },
   "peerDependencies": {
-    "@langchain/core": "^1.0.0-alpha.6"
+    "@langchain/core": "^1.0.0"
   },
   "devDependencies": {
     "@jest/globals": "^29.5.0",
