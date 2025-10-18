@@ -31,14 +31,17 @@ export function copyAIModelParams(
 }
 
 function processToolChoice(
-  toolChoice: GoogleAIBaseLanguageModelCallOptions["tool_choice"],
-  allowedFunctionNames: GoogleAIBaseLanguageModelCallOptions["allowed_function_names"]
+  options: GoogleAIBaseLanguageModelCallOptions | undefined
 ):
   | {
       tool_choice: "any" | "auto" | "none";
       allowed_function_names?: string[];
     }
   | undefined {
+  const toolChoice = options?.tool_choice;
+  const allowedFunctionNames = options?.allowed_function_names;
+  const responseMimeType = options?.responseMimeType;
+  
   if (!toolChoice) {
     if (allowedFunctionNames) {
       // Allowed func names is passed, return 'any' so it forces the model to use a tool.
@@ -58,9 +61,11 @@ function processToolChoice(
   }
   if (typeof toolChoice === "string") {
     // String representing the function name.
-    // Return any to force the model to predict the specified function call.
+    // Use "auto" mode when responseMimeType is "application/json" for optimal performance
+    const isJsonMode = responseMimeType === "application/json";
+    const mode = isJsonMode ? "auto" : "any";
     return {
-      tool_choice: "any",
+      tool_choice: mode,
       allowed_function_names: [...(allowedFunctionNames ?? []), toolChoice],
     };
   }
@@ -205,10 +210,10 @@ export function copyAIModelParamsInto(
     options?.speechConfig ?? params?.speechConfig ?? target?.speechConfig
   );
   ret.streaming = options?.streaming ?? params?.streaming ?? target?.streaming;
-  const toolChoice = processToolChoice(
-    options?.tool_choice,
-    options?.allowed_function_names
-  );
+  const toolChoice = processToolChoice({
+    ...options,
+    responseMimeType: options?.responseMimeType ?? params?.responseMimeType ?? target?.responseMimeType
+  });
   if (toolChoice) {
     ret.tool_choice = toolChoice.tool_choice;
     ret.allowed_function_names = toolChoice.allowed_function_names;
