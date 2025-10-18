@@ -1,6 +1,6 @@
 {
   "name": "langchain",
-  "version": "1.0.0-alpha.9",
+  "version": "1.0.0",
   "description": "Typescript bindings for langchain",
   "author": "LangChain",
   "license": "MIT",
@@ -62,11 +62,11 @@
     "yaml": "^2.8.1"
   },
   "peerDependencies": {
-    "@langchain/core": "^1.0.0-alpha.6"
+    "@langchain/core": "^1.0.0"
   },
   "dependencies": {
-    "@langchain/langgraph": "next",
-    "@langchain/langgraph-checkpoint": "^0.1.1",
+    "@langchain/langgraph": "^1.0.0",
+    "@langchain/langgraph-checkpoint": "^1.0.0",
     "uuid": "^10.0.0",
     "zod": "^3.25.76 || ^4"
   },

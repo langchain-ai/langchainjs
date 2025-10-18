@@ -601,11 +601,11 @@ importers:
   libs/langchain:
     dependencies:
       '@langchain/langgraph':
-        specifier: next
-        version: 1.0.0-alpha.5(@langchain/core@libs+langchain-core)(react-dom@18.3.1(react@19.0.0))(react@19.0.0)(zod-to-json-schema@3.24.6(zod@3.25.76))(zod@3.25.76)
+        specifier: ^1.0.0
+        version: 1.0.0(@langchain/core@libs+langchain-core)(react-dom@18.3.1(react@19.0.0))(react@19.0.0)(zod-to-json-schema@3.24.6(zod@3.25.76))(zod@3.25.76)
       '@langchain/langgraph-checkpoint':
-        specifier: ^0.1.1
-        version: 0.1.1(@langchain/core@libs+langchain-core)
+        specifier: ^1.0.0
+        version: 1.0.0(@langchain/core@libs+langchain-core)
       uuid:
         specifier: ^10.0.0
         version: 10.0.0
