@@ -1,6 +1,6 @@
 {
   "name": "@langchain/redis",
-  "version": "0.1.1",
+  "version": "1.0.0",
   "description": "Sample integration for LangChain.js",
   "author": "LangChain",
   "license": "MIT",
