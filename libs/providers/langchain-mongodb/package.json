@@ -1,6 +1,6 @@
 {
   "name": "@langchain/mongodb",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "Sample integration for LangChain.js",
   "author": "LangChain",
   "license": "MIT",
@@ -29,7 +29,7 @@
     "mongodb": "^6.17.0"
   },
   "peerDependencies": {
-    "@langchain/core": "^1.0.0-alpha.6"
+    "@langchain/core": "^1.0.0"
   },
   "devDependencies": {
     "@langchain/core": "workspace:*",
