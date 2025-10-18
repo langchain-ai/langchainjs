@@ -52,7 +52,7 @@
     "@langchain/google-vertexai": "workspace:*",
     "@langchain/google-vertexai-web": "workspace:*",
     "@langchain/groq": "workspace:*",
-    "@langchain/langgraph": "next",
+    "@langchain/langgraph": "^1.0.0",
     "@langchain/mistralai": "workspace:*",
     "@langchain/mongodb": "workspace:*",
     "@langchain/nomic": "workspace:*",

@@ -1,6 +1,6 @@
 {
   "name": "@langchain/yandex",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "Yandex integration for LangChain.js",
   "author": "LangChain",
   "license": "MIT",
@@ -26,7 +26,7 @@
     "format:check": "prettier --config .prettierrc --check \"src\""
   },
   "peerDependencies": {
-    "@langchain/core": "^1.0.0-alpha.6"
+    "@langchain/core": "^1.0.0"
   },
   "devDependencies": {
     "@langchain/core": "workspace:*",
@@ -48,6 +48,7 @@
   "types": "./dist/index.d.ts",
   "exports": {
     ".": {
+      "input": "./src/index.ts",
       "import": {
         "types": "./dist/index.d.ts",
         "default": "./dist/index.js"
@@ -55,10 +56,10 @@
       "require": {
         "types": "./dist/index.d.cts",
         "default": "./dist/index.cjs"
-      },
-      "input": "./src/index.ts"
+      }
     },
     "./chat_models": {
+      "input": "./src/chat_models.ts",
       "import": {
         "types": "./dist/chat_models.d.ts",
         "default": "./dist/chat_models.js"
@@ -66,10 +67,10 @@
       "require": {
         "types": "./dist/chat_models.d.cts",
         "default": "./dist/chat_models.cjs"
-      },
-      "input": "./src/chat_models.ts"
+      }
     },
     "./embeddings": {
+      "input": "./src/embeddings.ts",
       "import": {
         "types": "./dist/embeddings.d.ts",
         "default": "./dist/embeddings.js"
@@ -77,10 +78,10 @@
       "require": {
         "types": "./dist/embeddings.d.cts",
         "default": "./dist/embeddings.cjs"
-      },
-      "input": "./src/embeddings.ts"
+      }
     },
     "./llms": {
+      "input": "./src/llms.ts",
       "import": {
         "types": "./dist/llms.d.ts",
         "default": "./dist/llms.js"
@@ -88,12 +89,14 @@
       "require": {
         "types": "./dist/llms.d.cts",
         "default": "./dist/llms.cjs"
-      },
-      "input": "./src/llms.ts"
+      }
     },
     "./package.json": "./package.json"
   },
   "files": [
-    "dist/"
+    "dist/",
+    "CHANGELOG.md",
+    "README.md",
+    "LICENSE"
   ]
 }

@@ -21,7 +21,7 @@ We aim to keep the same core APIs between the Python and JS versions of LangChai
 
 ### Want to add a specific integration?
 
-LangChain supports several different types of integrations with third-party providers and frameworks, including LLM providers (e.g. [OpenAI](https://github.com/langchain-ai/langchainjs/blob/main/libs/providers/langchain-openai/src/chat_models.ts)), vector stores (e.g. [FAISS](https://github.com/langchain-ai/langchainjs/blob/main/libs/langchain-community/src/vectorstores/faiss.ts), document loaders (e.g. [Apify](https://github.com/langchain-ai/langchainjs/blob/main/libs/langchain-community/src/document_loaders/web/apify_dataset.ts)) persistent message history stores (e.g. [Redis](https://github.com/langchain-ai/langchainjs/blob/main/libs/langchain-redis/src/caches.ts)), and more.
+LangChain supports several different types of integrations with third-party providers and frameworks, including LLM providers (e.g. [OpenAI](https://github.com/langchain-ai/langchainjs/blob/main/libs/providers/langchain-openai/src/chat_models.ts)), vector stores (e.g. [FAISS](https://github.com/langchain-ai/langchainjs/blob/main/libs/langchain-community/src/vectorstores/faiss.ts), document loaders (e.g. [Apify](https://github.com/langchain-ai/langchainjs/blob/main/libs/langchain-community/src/document_loaders/web/apify_dataset.ts)) persistent message history stores (e.g. [Redis](https://github.com/langchain-ai/langchainjs/blob/main/libs/providers/langchain-redis/src/caches.ts)), and more.
 
 We welcome such contributions, but ask that you read our dedicated [integration contribution guide](https://github.com/langchain-ai/langchainjs/blob/main/.github/contributing/INTEGRATIONS.md) for specific details and patterns to consider before opening a pull request.
 
@@ -30,23 +30,6 @@ You can also check out the [guides on extending LangChain.js](https://js.langcha
 #### Integration packages
 
 Integrations should generally reside in the `libs/langchain-community` workspace and be imported as `@langchain/community/module/name`. More in-depth integrations or suites of integrations may also reside in separate packages that depend on and extend `@langchain/core`. See [`@langchain/google-genai`](https://github.com/langchain-ai/langchainjs/blob/main/libs/langchain-google-genai) for an example.
-
-To make creating packages like this easier, we offer the [`create-langchain-integration`](https://github.com/langchain-ai/langchainjs/blob/main/libs/create-langchain-integration/) utility that will automatically scaffold a repo with support for both ESM + CJS entrypoints. You can run it like this:
-
-```bash
-npx create-langchain-integration
-```
-
-After creating the new integration package, you should add it to the [`unit-tests-integrations.yml`](./.github/workflows/unit-tests-integrations.yml) GitHub action workflow so that it is tested in CI. To do this,simply update the `env` section of the `prepare-matrix` job with your package name inside the `PACKAGES` variable:
-
-```yaml
-prepare-matrix:
-  needs: get-changed-files
-  runs-on: ubuntu-latest
-  env:
-    PACKAGES: "anthropic,cloudflare,<your-package>"
-    ...
-```
 
 ### Want to add a feature that's already in Python?
 
@@ -90,33 +73,8 @@ good code into the codebase.
 As of now, LangChain has an ad hoc release process: releases are cut with high frequency by
 a developer and published to [npm](https://www.npmjs.com/package/langchain).
 
-LangChain follows the [semver](https://semver.org/) versioning standard. However, as pre-1.0 software,
-even patch releases may contain [non-backwards-compatible changes](https://semver.org/#spec-item-4).
-
 If your contribution has made its way into a release, we will want to give you credit on Twitter (only if you want though)!
 If you have a Twitter account you would like us to mention, please let us know in the PR or in another manner.
-
-#### Integration releases
-
-The release script can be executed only while on a fresh `main` branch, with no un-committed changes, from the package root. If working from a fork of the repository, make sure to sync the forked `main` branch with the upstream `main` branch first.
-
-You can invoke the script by calling `pnpm release`. If new dependencies have been added to the integration package, install them first (i.e. run `pnpm install`, then `pnpm release`).
-
-There are three parameters which can be passed to this script, one required and two optional.
-
-- **Required**: `<workspace name>`. eg: `@langchain/core` The name of the package to release. Can be found in the `name` value of the package's `package.json`
-- **Optional**: `--bump-deps` eg `--bump-deps` Will find all packages in the repo which depend on this workspace and checkout a new branch, update the dep version, run pnpm install, commit & push to new branch. Generally, this is not necessary.
-- **Optional**: `--tag <tag>` eg `--tag beta` Add a tag to the NPM release. Useful if you want to push a release candidate.
-
-This script automatically bumps the package version, creates a new release branch with the changes, pushes the branch to GitHub, uses `release-it` to automatically release to NPM, and more depending on the flags passed.
-
-Halfway through this script, you'll be prompted to enter an NPM OTP (typically from an authenticator app). This value is not stored anywhere and is only used to authenticate the NPM release.
-
-> **Note** Unless releasing `langchain`, `no` should be answered to all prompts following `Publish @langchain/<package> to npm?`. Then, the change should be manually committed with the following commit message: `<package>[patch]: Release <new version>`. E.g.: `groq[patch]: Release 0.0.1`.
-
-Docker must be running if releasing one of `langchain`, `@langchain/core` or `@langchain/community`. These packages run LangChain's export tests, which run inside docker containers.
-
-Full example: `pnpm release @langchain/core`.
 
 ### 🛠️ Tooling
 
@@ -126,10 +84,7 @@ with if you plan to contribute:
 - **[pnpm](https://pnpm.io/) (v10.14.0)** - dependency management
 - **[eslint](https://eslint.org/)** - enforcing standard lint rules
 - **[prettier](https://prettier.io/)** - enforcing standard code formatting
-- **[jest](https://jestjs.io/)** - testing code
-- **[TypeDoc](https://typedoc.org/)** - reference doc generation from
-  comments
-- **[Docusaurus](https://docusaurus.io/)** - static site generation for documentation
+- **[vitest](https://vitest.dev/)** - testing code
 
 ## 🚀 Quick Start
 
@@ -144,10 +99,10 @@ Next, try running the following common tasks:
 ## ✅ Common Tasks
 
 Our goal is to make it as easy as possible for you to contribute to this project.
-All of the below commands should be run from within a workspace directory (e.g. `langchain`, `libs/langchain-community`) unless otherwise noted.
+All of the below commands should be run from within a workspace directory (e.g. `libs/langchain`, `libs/langchain-community`) unless otherwise noted.
 
 ```bash
-cd langchain
+cd libs/langchain
 ```
 
 Or, if you are working on a community integration:
@@ -166,7 +121,7 @@ To get started, you will need to install the dependencies for the project. To do
 pnpm install
 ```
 
-Then, you will need to switch directories into `langchain-core` and build core by running:
+Then, you will need to switch directories into `libs/langchain-core` and build core by running:
 
 ```bash
 cd libs/langchain-core
@@ -229,8 +184,8 @@ This is useful for developing individual features.
 If you add support for a new external API, please add a new integration test.
 Integration tests should be called `*.int.test.ts`.
 
-Note that most integration tests require credentials or other setup. You will likely need to set up a `langchain/.env` or `libs/langchain-community/.env` file
-like the example [here](https://github.com/langchain-ai/langchainjs/blob/main/langchain/.env.example).
+Note that most integration tests require credentials or other setup. You will likely need to set up a `libs/langchain/.env` or `libs/langchain-community/.env` file
+like the example [here](https://github.com/langchain-ai/langchainjs/blob/main/libs/langchain/.env.example).
 
 We generally recommend only running integration tests with `pnpm test:single`, but if you want to run all integration tests, run:
 
@@ -257,7 +212,7 @@ import { OpenAI } from "langchain/llms/openai";
 We call these subpaths "entrypoints". In general, you should create a new entrypoint if you are adding a new integration with a 3rd party library. If you're adding self-contained functionality without any external dependencies, you can add it to an existing entrypoint.
 
 In order to declare a new entrypoint that users can import from, you
-should edit the `langchain/langchain.config.js` or `libs/langchain-community/langchain.config.js` file. To add an
+should edit the `libs/langchain/langchain.config.js` or `libs/langchain-community/langchain.config.js` file. To add an
 entrypoint `tools` that imports from `tools/index.ts` you'd add
 the following to the `entrypoints` key inside the `config` variable:
 
@@ -270,7 +225,7 @@ entrypoints: {
 // ...
 ```
 
-If you're adding a new integration which requires installing a third party dependency, you must add the entrypoint to the `requiresOptionalDependency` array, also located inside `langchain/langchain.config.js` or `libs/langchain-community/langchain.config.js`.
+If you're adding a new integration which requires installing a third party dependency, you must add the entrypoint to the `requiresOptionalDependency` array, also located inside `libs/langchain/langchain.config.js` or `libs/langchain-community/langchain.config.js`.
 
 ```typescript
 // ...

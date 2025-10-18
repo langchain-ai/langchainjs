@@ -1,6 +1,6 @@
 {
   "name": "@langchain/weaviate",
-  "version": "0.2.1",
+  "version": "1.0.0",
   "description": "Weaviate integration for LangChain.js",
   "author": "LangChain",
   "license": "MIT",
@@ -35,7 +35,7 @@
     "weaviate-client": "^3.5.2"
   },
   "peerDependencies": {
-    "@langchain/core": "^1.0.0-alpha.6"
+    "@langchain/core": "^1.0.0"
   },
   "devDependencies": {
     "@langchain/core": "workspace:*",
@@ -60,6 +60,7 @@
   "types": "./dist/index.d.ts",
   "exports": {
     ".": {
+      "input": "./src/index.ts",
       "import": {
         "types": "./dist/index.d.ts",
         "default": "./dist/index.js"
@@ -67,12 +68,14 @@
       "require": {
         "types": "./dist/index.d.cts",
         "default": "./dist/index.cjs"
-      },
-      "input": "./src/index.ts"
+      }
     },
     "./package.json": "./package.json"
   },
   "files": [
-    "dist/"
+    "dist/",
+    "CHANGELOG.md",
+    "README.md",
+    "LICENSE"
   ]
 }

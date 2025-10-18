@@ -1,6 +1,6 @@
 {
   "name": "@langchain/qdrant",
-  "version": "0.1.2",
+  "version": "1.0.0",
   "description": "LangChain.js integration for the Qdrant vector database",
   "author": "LangChain",
   "license": "MIT",
@@ -31,7 +31,7 @@
     "uuid": "^10.0.0"
   },
   "peerDependencies": {
-    "@langchain/core": "^1.0.0-alpha.6"
+    "@langchain/core": "^1.0.0"
   },
   "devDependencies": {
     "@faker-js/faker": "^8.4.1",
@@ -55,6 +55,7 @@
   "types": "./dist/index.d.ts",
   "exports": {
     ".": {
+      "input": "./src/index.ts",
       "import": {
         "types": "./dist/index.d.ts",
         "default": "./dist/index.js"
@@ -62,12 +63,14 @@
       "require": {
         "types": "./dist/index.d.cts",
         "default": "./dist/index.cjs"
-      },
-      "input": "./src/index.ts"
+      }
     },
     "./package.json": "./package.json"
   },
   "files": [
-    "dist/"
+    "dist/",
+    "CHANGELOG.md",
+    "README.md",
+    "LICENSE"
   ]
 }

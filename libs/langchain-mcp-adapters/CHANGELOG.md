@@ -1,11 +1,8 @@
-# Changelog
+# @langchain/mcp-adapters
 
-All notable changes to this project will be documented in this file.
+## 1.0.0
 
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
-and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
-
-## [Unreleased]
+This release updates the package for compatibility with LangChain v1.0. See the v1.0 [release notes](https://docs.langchain.com/oss/javascript/releases/langchain-v1) for details on what's new.
 
 ## [0.1.7] - 2024-05-08
 
