@@ -149,8 +149,8 @@ importers:
         specifier: workspace:*
         version: link:../libs/providers/langchain-groq
       '@langchain/langgraph':
-        specifier: next
-        version: 1.0.0-alpha.5(@langchain/core@libs+langchain-core)(react-dom@18.3.1(react@19.0.0))(react@19.0.0)(zod-to-json-schema@3.24.6(zod@3.25.76))(zod@3.25.76)
+        specifier: ^1.0.0
+        version: 1.0.0(@langchain/core@libs+langchain-core)(react-dom@18.3.1(react@19.0.0))(react@19.0.0)(zod-to-json-schema@3.24.6(zod@3.25.76))(zod@3.25.76)
       '@langchain/mistralai':
         specifier: workspace:*
         version: link:../libs/providers/langchain-mistralai
@@ -1138,7 +1138,7 @@ importers:
         version: 4.0.6
       '@getzep/zep-cloud':
         specifier: ^1.0.6
-        version: 1.0.12(@langchain/core@libs+langchain-core)(encoding@0.1.13)(langchain@0.3.30(22d99ef81df01f1959e4ff309b721982))
+        version: 1.0.12(@langchain/core@libs+langchain-core)(encoding@0.1.13)(langchain@0.3.30(c79483ae37850228b93ee27f40833e2d))
       '@getzep/zep-js':
         specifier: ^0.9.0
         version: 0.9.0
@@ -5950,9 +5950,9 @@ packages:
     peerDependencies:
       '@langchain/core': workspace:*
 
-  '@langchain/cohere@0.3.4':
-    resolution: {integrity: sha512-TdOaxKtavYxf5iVO20OQHGwDUSvCTp2o6Jc0N26FyBZKP4J5LECOksmL28y6hNI/4duXPTl2IEXsNqlOTc2ssQ==}
-    engines: {node: '>=18'}
+  '@langchain/cohere@1.0.0':
+    resolution: {integrity: sha512-KqncspXKt2ueqkR5/LlOvm+rOIzx/AQhkITDYWFNOU4/BxPG238anE87jXnCOSE4LRlic+BdmFHEqstHd+lyYA==}
+    engines: {node: '>=20'}
     peerDependencies:
       '@langchain/core': workspace:*
 
@@ -18042,7 +18042,7 @@ snapshots:
     transitivePeerDependencies:
       - debug
 
-  '@getzep/zep-cloud@1.0.12(@langchain/core@libs+langchain-core)(encoding@0.1.13)(langchain@0.3.30(22d99ef81df01f1959e4ff309b721982))':
+  '@getzep/zep-cloud@1.0.12(@langchain/core@libs+langchain-core)(encoding@0.1.13)(langchain@0.3.30(c79483ae37850228b93ee27f40833e2d))':
     dependencies:
       form-data: 4.0.0
       node-fetch: 2.7.0(encoding@0.1.13)
@@ -18051,7 +18051,7 @@ snapshots:
       zod: 3.25.76
     optionalDependencies:
       '@langchain/core': link:libs/langchain-core
-      langchain: 0.3.30(22d99ef81df01f1959e4ff309b721982)
+      langchain: 0.3.30(c79483ae37850228b93ee27f40833e2d)
     transitivePeerDependencies:
       - encoding
 
@@ -18856,7 +18856,7 @@ snapshots:
       - aws-crt
     optional: true
 
-  '@langchain/cohere@0.3.4(@langchain/core@libs+langchain-core)(encoding@0.1.13)':
+  '@langchain/cohere@1.0.0(@langchain/core@libs+langchain-core)(encoding@0.1.13)':
     dependencies:
       '@langchain/core': link:libs/langchain-core
       cohere-ai: 7.18.0(encoding@0.1.13)
@@ -26139,7 +26139,7 @@ snapshots:
 
   kuler@2.0.0: {}
 
-  langchain@0.3.30(22d99ef81df01f1959e4ff309b721982):
+  langchain@0.3.30(c79483ae37850228b93ee27f40833e2d):
     dependencies:
       '@langchain/core': link:libs/langchain-core
       '@langchain/openai': 0.6.3(@langchain/core@libs+langchain-core)(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.5))
@@ -26156,7 +26156,7 @@ snapshots:
     optionalDependencies:
       '@langchain/anthropic': 1.0.0(@langchain/core@libs+langchain-core)(zod@3.25.76)
       '@langchain/aws': 1.0.0(@langchain/core@libs+langchain-core)
-      '@langchain/cohere': 0.3.4(@langchain/core@libs+langchain-core)(encoding@0.1.13)
+      '@langchain/cohere': 1.0.0(@langchain/core@libs+langchain-core)(encoding@0.1.13)
       '@langchain/deepseek': 1.0.0(@langchain/core@libs+langchain-core)(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.5))
       '@langchain/google-genai': 1.0.0(@langchain/core@libs+langchain-core)
       '@langchain/google-vertexai': 1.0.0(@langchain/core@libs+langchain-core)
