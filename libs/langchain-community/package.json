@@ -1,6 +1,6 @@
 {
   "name": "@langchain/community",
-  "version": "1.0.0-alpha.1",
+  "version": "1.0.0",
   "description": "Third-party integrations for LangChain.js",
   "author": "LangChain",
   "license": "MIT",
@@ -229,7 +229,7 @@
     "@huggingface/transformers": "^3.5.2",
     "@ibm-cloud/watsonx-ai": "*",
     "@lancedb/lancedb": "^0.19.1",
-    "@langchain/core": "^1.0.0-alpha.6",
+    "@langchain/core": "^1.0.0",
     "@layerup/layerup-security": "^1.5.12",
     "@libsql/client": "^0.14.0",
     "@mendable/firecrawl-js": "^1.4.3",
