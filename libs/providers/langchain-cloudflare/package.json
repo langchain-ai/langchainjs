@@ -1,6 +1,6 @@
 {
   "name": "@langchain/cloudflare",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "Cloudflare integration for LangChain.js",
   "author": "LangChain",
   "license": "MIT",
@@ -48,7 +48,7 @@
     "vitest": "^3.2.4"
   },
   "peerDependencies": {
-    "@langchain/core": "^1.0.0-alpha.6"
+    "@langchain/core": "^1.0.0"
   },
   "publishConfig": {
     "access": "public"
