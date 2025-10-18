@@ -1138,7 +1138,7 @@ importers:
         version: 4.0.6
       '@getzep/zep-cloud':
         specifier: ^1.0.6
-        version: 1.0.12(@langchain/core@libs+langchain-core)(encoding@0.1.13)(langchain@0.3.30(80e6646549e2bb3e3a96666d618cf235))
+        version: 1.0.12(@langchain/core@libs+langchain-core)(encoding@0.1.13)(langchain@0.3.30(22d99ef81df01f1959e4ff309b721982))
       '@getzep/zep-js':
         specifier: ^0.9.0
         version: 0.9.0
@@ -1658,8 +1658,8 @@ importers:
         specifier: workspace:*
         version: link:../../internal/eslint
       '@langchain/langgraph':
-        specifier: next
-        version: 1.0.0-alpha.5(@langchain/core@libs+langchain-core)(react-dom@18.3.1(react@19.0.0))(react@19.0.0)(zod-to-json-schema@3.24.6(zod@3.25.76))(zod@3.25.76)
+        specifier: ^1.0.0
+        version: 1.0.0(@langchain/core@libs+langchain-core)(react-dom@18.3.1(react@19.0.0))(react@19.0.0)(zod-to-json-schema@3.24.6(zod@3.25.76))(zod@3.25.76)
       '@langchain/openai':
         specifier: workspace:*
         version: link:../providers/langchain-openai
@@ -6004,6 +6004,12 @@ packages:
     peerDependencies:
       '@langchain/core': workspace:*
 
+  '@langchain/langgraph-checkpoint@1.0.0':
+    resolution: {integrity: sha512-xrclBGvNCXDmi0Nz28t3vjpxSH6UYx6w5XAXSiiB1WEdc2xD2iY/a913I3x3a31XpInUW/GGfXXfePfaghV54A==}
+    engines: {node: '>=18'}
+    peerDependencies:
+      '@langchain/core': workspace:*
+
   '@langchain/langgraph-sdk@0.1.9':
     resolution: {integrity: sha512-7WEDHtbI3pYPUiiHq+dPaF92ZN2W7lqObdpK0X+roa8zPdHUjve/HiqYuKNWS12u1N+L5QIuQWqZvVNvUA7BfQ==}
     peerDependencies:
@@ -6018,6 +6024,31 @@ packages:
       react-dom:
         optional: true
 
+  '@langchain/langgraph-sdk@1.0.0':
+    resolution: {integrity: sha512-g25ti2W7Dl5wUPlNK+0uIGbeNFqf98imhHlbdVVKTTkDYLhi/pI1KTgsSSkzkeLuBIfvt2b0q6anQwCs7XBlbw==}
+    peerDependencies:
+      '@langchain/core': workspace:*
+      react: ^18 || ^19
+      react-dom: ^18 || ^19
+    peerDependenciesMeta:
+      '@langchain/core':
+        optional: true
+      react:
+        optional: true
+      react-dom:
+        optional: true
+
+  '@langchain/langgraph@1.0.0':
+    resolution: {integrity: sha512-2k7Thk5qH0zMhP+sbNKwQZl6zSwxKtrsFmHGOEvUUMjH6Rb9n5IMxoF5WTJlP/CGMO9ulI+5UefNz3rOfjuPBg==}
+    engines: {node: '>=18'}
+    peerDependencies:
+      '@langchain/core': workspace:*
+      zod: ^3.25.32 || ^4.1.0
+      zod-to-json-schema: ^3.x
+    peerDependenciesMeta:
+      zod-to-json-schema:
+        optional: true
+
   '@langchain/langgraph@1.0.0-alpha.5':
     resolution: {integrity: sha512-Sg0LZ/zb0osMT+2/poTRH6GbmzSYxPVzZPXikjryCFMCw52HGbq0sLEXFsaqfs+1HCcDs1Ob6IPw8IucE5pM9Q==}
     engines: {node: '>=18'}
@@ -6029,9 +6060,9 @@ packages:
       zod-to-json-schema:
         optional: true
 
-  '@langchain/mistralai@0.2.3':
-    resolution: {integrity: sha512-U2gaoRF7zilpc5pvdSoPTpYWo/vF47PPeHwCwd98RSFBracEZ3WGJ4zoXTqM7+4/WF3bTbDZ5f6+YO2PDX66qQ==}
-    engines: {node: '>=18'}
+  '@langchain/mistralai@1.0.0':
+    resolution: {integrity: sha512-gzRjDjGGgd5RApF3pSO1t15nJmnbmutT/XcNfyemmJjL5LhD7+Z0PeMqDshmGdMh/holBo6b7su8aCLGon+X8g==}
+    engines: {node: '>=20'}
     peerDependencies:
       '@langchain/core': workspace:*
 
@@ -6061,6 +6092,12 @@ packages:
   '@langchain/textsplitters@0.1.0':
     resolution: {integrity: sha512-djI4uw9rlkAb5iMhtLED+xJebDdAG935AdP4eRTB02R7OB/act55Bj9wsskhZsvuyQRpO4O1wQOp85s6T6GWmw==}
     engines: {node: '>=18'}
+    peerDependencies:
+      '@langchain/core': workspace:*
+
+  '@langchain/xai@1.0.0':
+    resolution: {integrity: sha512-r/MsnUwueEL5zo3jYuSB+Kx7E/qamNLHIhUYUOPxVFl1QF4CKTB3JdrWMCRyvOHRAKYHBU1BXZ3iAhAoib51Rw==}
+    engines: {node: '>=20'}
     peerDependencies:
       '@langchain/core': workspace:*
 
@@ -18005,7 +18042,7 @@ snapshots:
     transitivePeerDependencies:
       - debug
 
-  '@getzep/zep-cloud@1.0.12(@langchain/core@libs+langchain-core)(encoding@0.1.13)(langchain@0.3.30(80e6646549e2bb3e3a96666d618cf235))':
+  '@getzep/zep-cloud@1.0.12(@langchain/core@libs+langchain-core)(encoding@0.1.13)(langchain@0.3.30(22d99ef81df01f1959e4ff309b721982))':
     dependencies:
       form-data: 4.0.0
       node-fetch: 2.7.0(encoding@0.1.13)
@@ -18014,7 +18051,7 @@ snapshots:
       zod: 3.25.76
     optionalDependencies:
       '@langchain/core': link:libs/langchain-core
-      langchain: 0.3.30(80e6646549e2bb3e3a96666d618cf235)
+      langchain: 0.3.30(22d99ef81df01f1959e4ff309b721982)
     transitivePeerDependencies:
       - encoding
 
@@ -18891,6 +18928,11 @@ snapshots:
       '@langchain/core': link:libs/langchain-core
       uuid: 10.0.0
 
+  '@langchain/langgraph-checkpoint@1.0.0(@langchain/core@libs+langchain-core)':
+    dependencies:
+      '@langchain/core': link:libs/langchain-core
+      uuid: 10.0.0
+
   '@langchain/langgraph-sdk@0.1.9(@langchain/core@libs+langchain-core)(react-dom@18.3.1(react@19.0.0))(react@19.0.0)':
     dependencies:
       '@types/json-schema': 7.0.15
@@ -18901,6 +18943,29 @@ snapshots:
       '@langchain/core': link:libs/langchain-core
       react: 19.0.0
       react-dom: 18.3.1(react@19.0.0)
+
+  '@langchain/langgraph-sdk@1.0.0(@langchain/core@libs+langchain-core)(react-dom@18.3.1(react@19.0.0))(react@19.0.0)':
+    dependencies:
+      p-queue: 6.6.2
+      p-retry: 4.6.2
+      uuid: 9.0.1
+    optionalDependencies:
+      '@langchain/core': link:libs/langchain-core
+      react: 19.0.0
+      react-dom: 18.3.1(react@19.0.0)
+
+  '@langchain/langgraph@1.0.0(@langchain/core@libs+langchain-core)(react-dom@18.3.1(react@19.0.0))(react@19.0.0)(zod-to-json-schema@3.24.6(zod@3.25.76))(zod@3.25.76)':
+    dependencies:
+      '@langchain/core': link:libs/langchain-core
+      '@langchain/langgraph-checkpoint': 1.0.0(@langchain/core@libs+langchain-core)
+      '@langchain/langgraph-sdk': 1.0.0(@langchain/core@libs+langchain-core)(react-dom@18.3.1(react@19.0.0))(react@19.0.0)
+      uuid: 10.0.0
+      zod: 3.25.76
+    optionalDependencies:
+      zod-to-json-schema: 3.24.6(zod@3.25.76)
+    transitivePeerDependencies:
+      - react
+      - react-dom
 
   '@langchain/langgraph@1.0.0-alpha.5(@langchain/core@libs+langchain-core)(react-dom@18.3.1(react@19.0.0))(react@19.0.0)(zod-to-json-schema@3.24.6(zod@3.25.76))(zod@3.25.76)':
     dependencies:
@@ -18915,7 +18980,7 @@ snapshots:
       - react
       - react-dom
 
-  '@langchain/mistralai@0.2.3(@langchain/core@libs+langchain-core)(zod@3.25.76)':
+  '@langchain/mistralai@1.0.0(@langchain/core@libs+langchain-core)(zod@3.25.76)':
     dependencies:
       '@langchain/core': link:libs/langchain-core
       '@mistralai/mistralai': 1.7.5(zod@3.25.76)
@@ -18970,6 +19035,14 @@ snapshots:
     dependencies:
       '@langchain/core': link:libs/langchain-core
       js-tiktoken: 1.0.20
+    optional: true
+
+  '@langchain/xai@1.0.0(@langchain/core@libs+langchain-core)(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.5))':
+    dependencies:
+      '@langchain/core': link:libs/langchain-core
+      '@langchain/openai': 1.0.0(@langchain/core@libs+langchain-core)(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.5))
+    transitivePeerDependencies:
+      - ws
     optional: true
 
   '@layerup/layerup-security@1.6.0(encoding@0.1.13)(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.5))(zod@3.25.76)':
@@ -26066,7 +26139,7 @@ snapshots:
 
   kuler@2.0.0: {}
 
-  langchain@0.3.30(80e6646549e2bb3e3a96666d618cf235):
+  langchain@0.3.30(22d99ef81df01f1959e4ff309b721982):
     dependencies:
       '@langchain/core': link:libs/langchain-core
       '@langchain/openai': 0.6.3(@langchain/core@libs+langchain-core)(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.5))
@@ -26089,8 +26162,9 @@ snapshots:
       '@langchain/google-vertexai': 1.0.0(@langchain/core@libs+langchain-core)
       '@langchain/google-vertexai-web': 1.0.0(@langchain/core@libs+langchain-core)
       '@langchain/groq': 1.0.0(@langchain/core@libs+langchain-core)(encoding@0.1.13)
-      '@langchain/mistralai': 0.2.3(@langchain/core@libs+langchain-core)(zod@3.25.76)
+      '@langchain/mistralai': 1.0.0(@langchain/core@libs+langchain-core)(zod@3.25.76)
       '@langchain/ollama': 1.0.0(@langchain/core@libs+langchain-core)
+      '@langchain/xai': 1.0.0(@langchain/core@libs+langchain-core)(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.5))
       axios: 1.11.0(debug@4.4.3)
       cheerio: 1.0.0-rc.12
       handlebars: 4.7.8
