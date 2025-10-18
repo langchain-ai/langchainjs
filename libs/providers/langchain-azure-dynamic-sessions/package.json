@@ -1,6 +1,6 @@
 {
   "name": "@langchain/azure-dynamic-sessions",
-  "version": "0.2.0",
+  "version": "1.0.0",
   "description": "Sample integration for LangChain.js",
   "author": "LangChain",
   "license": "MIT",
@@ -33,7 +33,7 @@
     "uuid": "^10.0.0"
   },
   "peerDependencies": {
-    "@langchain/core": "^1.0.0-alpha.6"
+    "@langchain/core": "^1.0.0"
   },
   "devDependencies": {
     "@langchain/core": "workspace:*",
