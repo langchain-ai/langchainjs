@@ -855,10 +855,10 @@ export async function initChatModel<
     ...(fields ?? {}),
   };
   if (modelProvider === undefined && model?.includes(":")) {
-    const modelComponents = model.split(":", 2);
-    if (SUPPORTED_PROVIDERS.includes(modelComponents[0] as ChatModelProvider)) {
+    const [provider, modelName] = model.split(/:(.+)/); // "ollama:gpt-oss:20b" -> ["ollama", "gpt-oss:20b"]
+    if (SUPPORTED_PROVIDERS.includes(provider as ChatModelProvider)) {
       // eslint-disable-next-line no-param-reassign
-      [modelProvider, model] = modelComponents;
+      [modelProvider, model] = [provider, modelName];
     }
   }
   let configurableFieldsCopy = Array.isArray(configurableFields)
