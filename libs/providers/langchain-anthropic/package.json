@@ -37,6 +37,7 @@
   },
   "devDependencies": {
     "@anthropic-ai/vertex-sdk": "^0.11.5",
+    "@cfworker/json-schema": "^4.1.1",
     "@langchain/core": "workspace:*",
     "@langchain/eslint": "workspace:*",
     "@langchain/standard-tests": "workspace:*",

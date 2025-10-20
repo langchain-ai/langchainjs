@@ -37,5 +37,5 @@ cd "$monorepo_openai_dir"
 
 # Clean and reinstall to avoid dependency conflicts
 pnpm install --no-frozen-lockfile
-pnpm add @langchain/core@alpha
+pnpm add @langchain/core
 pnpm test
