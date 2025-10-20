@@ -338,6 +338,52 @@ describe("ToolNode unregistered tool handling", () => {
     expect(capturedRequests[0].tool?.name).toBe("registered_tool");
   });
 
+  it("should work with dict input format", async () => {
+    /**
+     * skip as test requires primitives from `@langchain/core` that aren't released yet
+     * and fails in dependency range tests, remove after next release
+     */
+    if (process.env.LC_DEPENDENCY_RANGE_TESTS) {
+      return;
+    }
+
+    const interceptor: WrapToolCallHook = async (request, handler) => {
+      if (request.toolCall.name === "unregistered_tool") {
+        return new ToolMessage({
+          content: "Dict format works",
+          tool_call_id: request.toolCall.id!,
+          name: "unregistered_tool",
+        });
+      }
+      return handler(request);
+    };
+
+    const toolNode = new ToolNode([registeredTool], {
+      wrapToolCall: interceptor,
+    });
+
+    // Test with dict format instead of array format
+    const result = await toolNode.invoke({
+      messages: [
+        new AIMessage({
+          content: "",
+          tool_calls: [
+            {
+              name: "unregistered_tool",
+              args: {},
+              id: "1",
+              type: "tool_call",
+            },
+          ],
+        }),
+      ],
+    });
+
+    expect(result.messages).toHaveLength(1);
+    expect(result.messages[0].content).toBe("Dict format works");
+    expect((result.messages[0] as ToolMessage).tool_call_id).toBe("1");
+  });
+
   it("should handle interceptor exceptions for unregistered tools", async () => {
     /**
      * skip as test requires primitives from `@langchain/core` that aren't released yet
