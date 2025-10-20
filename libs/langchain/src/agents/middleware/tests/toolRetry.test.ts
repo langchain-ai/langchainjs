@@ -10,7 +10,7 @@ import { MemorySaver } from "@langchain/langgraph-checkpoint";
 import { performance } from "node:perf_hooks";
 
 import { createAgent, createMiddleware } from "../../index.js";
-import { toolRetryMiddleware } from "../toolRetry.js";
+import { toolRetryMiddleware, calculateRetryDelay } from "../toolRetry.js";
 import { FakeToolCallingModel } from "../../tests/utils.js";
 
 // Helper tools for testing
@@ -756,97 +756,47 @@ describe("toolRetryMiddleware", () => {
       // With exponential backoff (2.0), would be 50 + 100 = 150ms minimum
     });
 
-    it("should cap delay at maxDelay", async () => {
-      const tempFailingTool = createTemporaryFailureTool(2);
-
-      const model = new FakeToolCallingModel({
-        toolCalls: [
-          [
-            {
-              name: "temp_failing_tool",
-              args: { input: "test" },
-              id: "1",
-            },
-          ],
-          [],
-        ],
-      });
-
-      const retry = toolRetryMiddleware({
-        maxRetries: 2,
-        initialDelay: 100,
-        backoffFactor: 10.0, // Would cause large delays
-        maxDelay: 150, // But cap at 150ms
+    it("should cap delay at maxDelay", () => {
+      // Test calculateRetryDelay directly (like Python does)
+      const config = {
+        backoffFactor: 10.0, // Very aggressive backoff
+        initialDelay: 1000,
+        maxDelay: 2000, // Cap at 2 seconds
         jitter: false,
-      });
+      };
 
-      const agent = createAgent({
-        model,
-        tools: [tempFailingTool],
-        middleware: [retry] as const,
-        checkpointer: new MemorySaver(),
-      });
+      const delay0 = calculateRetryDelay(config, 0); // 1000
+      const delay1 = calculateRetryDelay(config, 1); // 10000 -> capped to 2000
+      const delay2 = calculateRetryDelay(config, 2); // 100000 -> capped to 2000
 
-      const startTime = performance.now();
-      const result = await agent.invoke(
-        { messages: [new HumanMessage("Use temp failing tool")] },
-        { configurable: { thread_id: "test" } }
-      );
-      const endTime = performance.now();
-
-      const toolMessages = result.messages.filter(ToolMessage.isInstance);
-      expect(toolMessages).toHaveLength(1);
-      expect(toolMessages[0].content).toContain("Success after 3 attempts");
-
-      // Without cap: 100 + 1000 = 1100ms
-      // With cap: 100 + 150 = 250ms
-      const actualDelay = endTime - startTime;
-      expect(actualDelay).toBeLessThan(500); // Should be much less than 1100ms
+      expect(delay0).toBe(1000);
+      expect(delay1).toBe(2000);
+      expect(delay2).toBe(2000);
     });
 
-    it("should add jitter to delays", async () => {
-      const retry = toolRetryMiddleware({
-        maxRetries: 1,
-        initialDelay: 100,
+    it("should add jitter to delays", () => {
+      // Test calculateRetryDelay directly (like Python does)
+      const config = {
         backoffFactor: 1.0,
+        initialDelay: 100,
+        maxDelay: 1000,
         jitter: true,
-      });
+      };
 
-      // Run multiple times to check for jitter variance
-      const delays: number[] = [];
-      for (let i = 0; i < 5; i++) {
-        const tool = createTemporaryFailureTool(1);
-        const agent2 = createAgent({
-          model: new FakeToolCallingModel({
-            toolCalls: [
-              [
-                {
-                  name: "temp_failing_tool",
-                  args: { input: "test" },
-                  id: "1",
-                },
-              ],
-              [],
-            ],
-          }),
-          tools: [tool],
-          middleware: [retry] as const,
-          checkpointer: new MemorySaver(),
-        });
+      // Calculate delays multiple times to verify jitter variation
+      const delays = Array.from({ length: 10 }, () =>
+        calculateRetryDelay(config, 0)
+      );
 
-        const startTime = performance.now();
-        await agent2.invoke(
-          { messages: [new HumanMessage("Use temp failing tool")] },
-          { configurable: { thread_id: `test-${i}` } }
-        );
-        const endTime = performance.now();
-        delays.push(endTime - startTime);
+      // All delays should be within the jitter range (±25%)
+      for (const delay of delays) {
+        expect(delay).toBeGreaterThanOrEqual(75); // 100 - 25%
+        expect(delay).toBeLessThanOrEqual(125); // 100 + 25%
       }
 
-      // With jitter, delays should vary (not all exactly the same)
-      // This is a weak test but checks basic jitter behavior
-      expect(delays.length).toBe(5);
-      // At least verify the test ran
+      // With jitter, delays should vary (not all the same)
+      const uniqueDelays = new Set(delays);
+      expect(uniqueDelays.size).toBeGreaterThan(1);
     });
   });
 

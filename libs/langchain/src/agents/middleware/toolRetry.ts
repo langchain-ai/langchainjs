@@ -19,6 +19,46 @@ class ValueError extends Error {
 }
 
 /**
+ * Calculate delay for a retry attempt with exponential backoff and jitter.
+ *
+ * @param retryNumber - The retry attempt number (0-indexed)
+ * @param config - Configuration for backoff calculation
+ * @returns Delay in milliseconds before next retry
+ *
+ * @internal Exported for testing purposes
+ */
+export function calculateRetryDelay(
+  config: {
+    backoffFactor: number;
+    initialDelay: number;
+    maxDelay: number;
+    jitter: boolean;
+  },
+  retryNumber: number
+): number {
+  const { backoffFactor, initialDelay, maxDelay, jitter } = config;
+
+  let delay: number;
+  if (backoffFactor === 0.0) {
+    delay = initialDelay;
+  } else {
+    delay = initialDelay * backoffFactor ** retryNumber;
+  }
+
+  // Cap at maxDelay
+  delay = Math.min(delay, maxDelay);
+
+  if (jitter && delay > 0) {
+    const jitterAmount = delay * 0.25;
+    delay = delay + (Math.random() * 2 - 1) * jitterAmount;
+    // Ensure delay is not negative after jitter
+    delay = Math.max(0, delay);
+  }
+
+  return delay;
+}
+
+/**
  * Configuration options for the Tool Retry Middleware.
  */
 export interface ToolRetryMiddlewareConfig {
@@ -233,29 +273,8 @@ export function toolRetryMiddleware(
     );
   };
 
-  /**
-   * Calculate delay for the given retry attempt.
-   */
-  const calculateDelay = (retryNumber: number): number => {
-    let delay: number;
-    if (backoffFactor === 0.0) {
-      delay = initialDelay;
-    } else {
-      delay = initialDelay * backoffFactor ** retryNumber;
-    }
-
-    // Cap at maxDelay
-    delay = Math.min(delay, maxDelay);
-
-    if (jitter && delay > 0) {
-      const jitterAmount = delay * 0.25;
-      delay = delay + (Math.random() * 2 - 1) * jitterAmount;
-      // Ensure delay is not negative after jitter
-      delay = Math.max(0, delay);
-    }
-
-    return delay;
-  };
+  // Use the exported calculateRetryDelay function with our config
+  const delayConfig = { backoffFactor, initialDelay, maxDelay, jitter };
 
   /**
    * Format the failure message when retries are exhausted.
@@ -339,7 +358,7 @@ export function toolRetryMiddleware(
           // Check if we have more retries left
           if (attempt < maxRetries) {
             // Calculate and apply backoff delay
-            const delay = calculateDelay(attempt);
+            const delay = calculateRetryDelay(delayConfig, attempt);
             if (delay > 0) {
               await sleep(delay);
             }
