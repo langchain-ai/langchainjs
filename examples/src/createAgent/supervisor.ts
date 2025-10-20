@@ -8,6 +8,10 @@
  *
  * A supervisor agent coordinates specialized sub-agents (calendar and email)
  * that are wrapped as tools, with human approval for sensitive operations.
+ *
+ * This example is designed to accompany the supervisor tutorial:
+ *
+ * https://docs.langchain.com/oss/javascript/langchain/supervisor
  */
 
 import { tool, createAgent, humanInTheLoopMiddleware } from "langchain";
