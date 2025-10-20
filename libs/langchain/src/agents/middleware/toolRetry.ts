@@ -317,13 +317,6 @@ export function toolRetryMiddleware(
     });
   };
 
-  /**
-   * Sleep for the specified number of milliseconds.
-   */
-  const sleep = (ms: number): Promise<void> => {
-    return new Promise((resolve) => setTimeout(resolve, ms));
-  };
-
   return createMiddleware({
     name: "toolRetryMiddleware",
     wrapToolCall: async (request, handler) => {
@@ -374,4 +367,11 @@ export function toolRetryMiddleware(
       throw new Error("Unexpected: retry loop completed without returning");
     },
   });
+}
+
+/**
+ * Sleep for the specified number of milliseconds.
+ */
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }
