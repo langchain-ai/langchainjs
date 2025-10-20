@@ -48,47 +48,43 @@ describe("ToolNode unregistered tool handling", () => {
     });
 
     // Test registered tool works normally
-    const result1 = await toolNode.invoke({
-      messages: [
-        new AIMessage({
-          content: "",
-          tool_calls: [
-            {
-              name: "registered_tool",
-              args: { x: 42 },
-              id: "1",
-              type: "tool_call",
-            },
-          ],
-        }),
-      ],
-    });
+    const result1 = await toolNode.invoke([
+      new AIMessage({
+        content: "",
+        tool_calls: [
+          {
+            name: "registered_tool",
+            args: { x: 42 },
+            id: "1",
+            type: "tool_call",
+          },
+        ],
+      }),
+    ]);
 
-    expect(result1.messages).toHaveLength(1);
-    expect(result1.messages[0].content).toBe("Result: 42");
-    expect((result1.messages[0] as ToolMessage).tool_call_id).toBe("1");
+    expect(result1).toHaveLength(1);
+    expect(result1[0].content).toBe("Result: 42");
+    expect((result1[0] as ToolMessage).tool_call_id).toBe("1");
 
     // Test unregistered tool is intercepted and handled
-    const result2 = await toolNode.invoke({
-      messages: [
-        new AIMessage({
-          content: "",
-          tool_calls: [
-            {
-              name: "unregistered_tool",
-              args: { x: 99 },
-              id: "2",
-              type: "tool_call",
-            },
-          ],
-        }),
-      ],
-    });
+    const result2 = await toolNode.invoke([
+      new AIMessage({
+        content: "",
+        tool_calls: [
+          {
+            name: "unregistered_tool",
+            args: { x: 99 },
+            id: "2",
+            type: "tool_call",
+          },
+        ],
+      }),
+    ]);
 
-    expect(result2.messages).toHaveLength(1);
-    expect(result2.messages[0].content).toBe("Handled by interceptor");
-    expect((result2.messages[0] as ToolMessage).tool_call_id).toBe("2");
-    expect((result2.messages[0] as ToolMessage).name).toBe("unregistered_tool");
+    expect(result2).toHaveLength(1);
+    expect(result2[0].content).toBe("Handled by interceptor");
+    expect((result2[0] as ToolMessage).tool_call_id).toBe("2");
+    expect((result2[0] as ToolMessage).name).toBe("unregistered_tool");
   });
 
   it("should return error when handler is called with unregistered tool", async () => {
@@ -111,42 +107,38 @@ describe("ToolNode unregistered tool handling", () => {
     });
 
     // Registered tool should still work
-    const result1 = await toolNode.invoke({
-      messages: [
-        new AIMessage({
-          content: "",
-          tool_calls: [
-            {
-              name: "registered_tool",
-              args: { x: 42 },
-              id: "1",
-              type: "tool_call",
-            },
-          ],
-        }),
-      ],
-    });
+    const result1 = await toolNode.invoke([
+      new AIMessage({
+        content: "",
+        tool_calls: [
+          {
+            name: "registered_tool",
+            args: { x: 42 },
+            id: "1",
+            type: "tool_call",
+          },
+        ],
+      }),
+    ]);
 
-    expect(result1.messages[0].content).toBe("Result: 42");
+    expect(result1[0].content).toBe("Result: 42");
 
     // Unregistered tool should return error when handler is called
-    const result2 = await toolNode.invoke({
-      messages: [
-        new AIMessage({
-          content: "",
-          tool_calls: [
-            {
-              name: "unregistered_tool",
-              args: { x: 99 },
-              id: "2",
-              type: "tool_call",
-            },
-          ],
-        }),
-      ],
-    });
+    const result2 = await toolNode.invoke([
+      new AIMessage({
+        content: "",
+        tool_calls: [
+          {
+            name: "unregistered_tool",
+            args: { x: 99 },
+            id: "2",
+            type: "tool_call",
+          },
+        ],
+      }),
+    ]);
 
-    const toolMsg = result2.messages[0] as ToolMessage;
+    const toolMsg = result2[0] as ToolMessage;
     expect(toolMsg.status).toBe("error");
     expect(toolMsg.content).toContain("is not a valid tool");
     expect(toolMsg.tool_call_id).toBe("2");
@@ -179,42 +171,40 @@ describe("ToolNode unregistered tool handling", () => {
     });
 
     // Test multiple tool calls - mix of registered and unregistered
-    const result = await toolNode.invoke({
-      messages: [
-        new AIMessage({
-          content: "",
-          tool_calls: [
-            {
-              name: "registered_tool",
-              args: { x: 10 },
-              id: "1",
-              type: "tool_call",
-            },
-            {
-              name: "magic_tool",
-              args: { value: 5 },
-              id: "2",
-              type: "tool_call",
-            },
-            {
-              name: "registered_tool",
-              args: { x: 20 },
-              id: "3",
-              type: "tool_call",
-            },
-          ],
-        }),
-      ],
-    });
+    const result = await toolNode.invoke([
+      new AIMessage({
+        content: "",
+        tool_calls: [
+          {
+            name: "registered_tool",
+            args: { x: 10 },
+            id: "1",
+            type: "tool_call",
+          },
+          {
+            name: "magic_tool",
+            args: { value: 5 },
+            id: "2",
+            type: "tool_call",
+          },
+          {
+            name: "registered_tool",
+            args: { x: 20 },
+            id: "3",
+            type: "tool_call",
+          },
+        ],
+      }),
+    ]);
 
     // All tools should execute successfully
-    expect(result.messages).toHaveLength(3);
-    expect(result.messages[0].content).toBe("Result: 10");
-    expect((result.messages[0] as ToolMessage).tool_call_id).toBe("1");
-    expect(result.messages[1].content).toBe("Magic result: 10");
-    expect((result.messages[1] as ToolMessage).tool_call_id).toBe("2");
-    expect(result.messages[2].content).toBe("Result: 20");
-    expect((result.messages[2] as ToolMessage).tool_call_id).toBe("3");
+    expect(result).toHaveLength(3);
+    expect(result[0].content).toBe("Result: 10");
+    expect((result[0] as ToolMessage).tool_call_id).toBe("1");
+    expect(result[1].content).toBe("Magic result: 10");
+    expect((result[1] as ToolMessage).tool_call_id).toBe("2");
+    expect(result[2].content).toBe("Result: 20");
+    expect((result[2] as ToolMessage).tool_call_id).toBe("3");
   });
 
   it("should allow interceptor to return Command for unregistered tool", async () => {
@@ -249,21 +239,19 @@ describe("ToolNode unregistered tool handling", () => {
       wrapToolCall: commandInterceptor,
     });
 
-    const result = await toolNode.invoke({
-      messages: [
-        new AIMessage({
-          content: "",
-          tool_calls: [
-            {
-              name: "routing_tool",
-              args: {},
-              id: "1",
-              type: "tool_call",
-            },
-          ],
-        }),
-      ],
-    });
+    const result = await toolNode.invoke([
+      new AIMessage({
+        content: "",
+        tool_calls: [
+          {
+            name: "routing_tool",
+            args: {},
+            id: "1",
+            type: "tool_call",
+          },
+        ],
+      }),
+    ]);
 
     // Should get Command back
     expect(Array.isArray(result)).toBe(true);
@@ -310,21 +298,19 @@ describe("ToolNode unregistered tool handling", () => {
     });
 
     // Test unregistered tool
-    await toolNode.invoke({
-      messages: [
-        new AIMessage({
-          content: "",
-          tool_calls: [
-            {
-              name: "unknown_tool",
-              args: {},
-              id: "1",
-              type: "tool_call",
-            },
-          ],
-        }),
-      ],
-    });
+    await toolNode.invoke([
+      new AIMessage({
+        content: "",
+        tool_calls: [
+          {
+            name: "unknown_tool",
+            args: {},
+            id: "1",
+            type: "tool_call",
+          },
+        ],
+      }),
+    ]);
 
     expect(capturedRequests).toHaveLength(1);
     expect(capturedRequests[0].tool).toBeUndefined();
@@ -333,21 +319,19 @@ describe("ToolNode unregistered tool handling", () => {
     // Clear and test registered tool
     capturedRequests.length = 0;
 
-    await toolNode.invoke({
-      messages: [
-        new AIMessage({
-          content: "",
-          tool_calls: [
-            {
-              name: "registered_tool",
-              args: { x: 10 },
-              id: "2",
-              type: "tool_call",
-            },
-          ],
-        }),
-      ],
-    });
+    await toolNode.invoke([
+      new AIMessage({
+        content: "",
+        tool_calls: [
+          {
+            name: "registered_tool",
+            args: { x: 10 },
+            id: "2",
+            type: "tool_call",
+          },
+        ],
+      }),
+    ]);
 
     expect(capturedRequests).toHaveLength(1);
     expect(capturedRequests[0].tool).toBeDefined();
@@ -377,24 +361,22 @@ describe("ToolNode unregistered tool handling", () => {
     });
 
     // Interceptor exception should be caught and converted to error message
-    const result = await toolNode.invoke({
-      messages: [
-        new AIMessage({
-          content: "",
-          tool_calls: [
-            {
-              name: "bad_tool",
-              args: {},
-              id: "1",
-              type: "tool_call",
-            },
-          ],
-        }),
-      ],
-    });
+    const result = await toolNode.invoke([
+      new AIMessage({
+        content: "",
+        tool_calls: [
+          {
+            name: "bad_tool",
+            args: {},
+            id: "1",
+            type: "tool_call",
+          },
+        ],
+      }),
+    ]);
 
-    expect(result.messages).toHaveLength(1);
-    const toolMsg = result.messages[0] as ToolMessage;
+    expect(result).toHaveLength(1);
+    const toolMsg = result[0] as ToolMessage;
     expect(toolMsg.content).toContain("Interceptor failed");
     expect(toolMsg.tool_call_id).toBe("1");
 
@@ -405,21 +387,19 @@ describe("ToolNode unregistered tool handling", () => {
     });
 
     await expect(
-      toolNodeNoHandling.invoke({
-        messages: [
-          new AIMessage({
-            content: "",
-            tool_calls: [
-              {
-                name: "bad_tool",
-                args: {},
-                id: "2",
-                type: "tool_call",
-              },
-            ],
-          }),
-        ],
-      })
+      toolNodeNoHandling.invoke([
+        new AIMessage({
+          content: "",
+          tool_calls: [
+            {
+              name: "bad_tool",
+              args: {},
+              id: "2",
+              type: "tool_call",
+            },
+          ],
+        }),
+      ])
     ).rejects.toThrow("Interceptor failed");
   });
 });
