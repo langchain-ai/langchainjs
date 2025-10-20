@@ -292,10 +292,20 @@ export class ToolNode<
     const baseHandler = async (
       request: ToolCallRequest
     ): Promise<ToolMessage | Command> => {
-      const { toolCall } = request;
-      const tool = this.tools.find((tool) => tool.name === toolCall.name);
+      const { toolCall, tool } = request;
+
+      /**
+       * Validate tool exists when we actually need to execute it.
+       * This validation is deferred to allow wrapToolCall middleware to
+       * short-circuit requests for unregistered tools.
+       */
       if (tool === undefined) {
-        throw new Error(`Tool "${toolCall.name}" not found.`);
+        return new ToolMessage({
+          name: toolCall.name,
+          content: `Error: ${toolCall.name} is not a valid tool, try one of the registered tools.`,
+          tool_call_id: toolCall.id!,
+          status: "error",
+        });
       }
 
       try {
@@ -354,12 +364,12 @@ export class ToolNode<
     };
 
     /**
-     * Find the tool instance to include in the request
+     * Find the tool instance to include in the request.
+     * Note: tool may be undefined for unregistered tools (e.g., schema-less tools
+     * like Anthropic's text editor). Validation is deferred to allow wrapToolCall
+     * middleware to intercept and handle unregistered tools.
      */
     const tool = this.tools.find((t) => t.name === call.name);
-    if (!tool) {
-      throw new Error(`Tool "${call.name}" not found.`);
-    }
 
     const request = {
       toolCall: call,
