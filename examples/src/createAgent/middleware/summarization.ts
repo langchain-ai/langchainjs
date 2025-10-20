@@ -33,7 +33,7 @@ const summaryMiddleware = summarizationMiddleware({
 const agent = createAgent({
   model: "openai:gpt-4o-mini",
   tools: [],
-  middleware: [summaryMiddleware] as const,
+  middleware: [summaryMiddleware],
 });
 
 console.log("🚀 Summarization Middleware Example");

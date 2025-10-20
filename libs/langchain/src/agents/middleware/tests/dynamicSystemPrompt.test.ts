@@ -41,7 +41,7 @@ describe("dynamicSystemPrompt", () => {
 
     const agent = createAgent({
       model,
-      middleware: [middleware] as const,
+      middleware: [middleware],
       contextSchema,
     });
 
@@ -81,7 +81,7 @@ describe("dynamicSystemPrompt", () => {
 
     const agent = createAgent({
       model,
-      middleware: [middleware] as const,
+      middleware: [middleware],
       contextSchema,
     });
 

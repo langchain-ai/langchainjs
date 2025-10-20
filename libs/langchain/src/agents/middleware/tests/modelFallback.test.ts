@@ -31,7 +31,7 @@ describe("modelFallbackMiddleware", () => {
     const agent = createAgent({
       model,
       tools: [],
-      middleware: [modelFallbackMiddleware(retryModel)] as const,
+      middleware: [modelFallbackMiddleware(retryModel)],
     });
     await agent.invoke({ messages: [new HumanMessage("Hello, world!")] });
     expect(model.invoke).toHaveBeenCalledTimes(1);

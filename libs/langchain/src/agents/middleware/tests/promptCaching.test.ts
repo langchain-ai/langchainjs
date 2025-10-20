@@ -52,7 +52,7 @@ describe("anthropicPromptCachingMiddleware", () => {
 
     const agent = createAgent({
       model,
-      middleware: [middleware] as const,
+      middleware: [middleware],
     });
 
     // Test with enough messages to trigger caching
@@ -87,7 +87,7 @@ describe("anthropicPromptCachingMiddleware", () => {
 
     const agent = createAgent({
       model,
-      middleware: [middleware] as const,
+      middleware: [middleware],
     });
 
     // Test with enough messages to trigger caching
@@ -126,7 +126,7 @@ describe("anthropicPromptCachingMiddleware", () => {
 
     const agent = createAgent({
       model,
-      middleware: [middleware] as const,
+      middleware: [middleware],
     });
 
     // Test with fewer messages than threshold
@@ -151,7 +151,7 @@ describe("anthropicPromptCachingMiddleware", () => {
 
     const agent = createAgent({
       model,
-      middleware: [middleware] as const,
+      middleware: [middleware],
     });
 
     const messages = [
@@ -177,7 +177,7 @@ describe("anthropicPromptCachingMiddleware", () => {
 
         const agent = createAgent({
           model: new ChatOpenAI({ model: "gpt-4o" }),
-          middleware: [middleware] as const,
+          middleware: [middleware],
         });
 
         // Should throw error
@@ -193,7 +193,7 @@ describe("anthropicPromptCachingMiddleware", () => {
 
         const agent = createAgent({
           model: "openai:gpt-4o",
-          middleware: [middleware] as const,
+          middleware: [middleware],
         });
 
         // Should throw error
@@ -215,7 +215,7 @@ describe("anthropicPromptCachingMiddleware", () => {
 
         const agent = createAgent({
           model,
-          middleware: [middleware] as const,
+          middleware: [middleware],
         });
 
         const messages = [
@@ -249,7 +249,7 @@ describe("anthropicPromptCachingMiddleware", () => {
 
         const agent = createAgent({
           model,
-          middleware: [middleware] as const,
+          middleware: [middleware],
         });
 
         const messages = [
@@ -280,7 +280,7 @@ describe("anthropicPromptCachingMiddleware", () => {
     const agent = createAgent({
       model,
       systemPrompt: "You are a helpful assistant", // Counts as 1 message
-      middleware: [middleware] as const,
+      middleware: [middleware],
     });
 
     // Only 2 user messages, but with system message makes 3 total
@@ -304,7 +304,7 @@ describe("anthropicPromptCachingMiddleware", () => {
 
     const agent = createAgent({
       model,
-      middleware: [middleware] as const,
+      middleware: [middleware],
     });
 
     const messages = [

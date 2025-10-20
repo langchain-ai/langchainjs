@@ -181,7 +181,7 @@ describe("toolCallLimitMiddleware", () => {
       const agent = createAgent({
         model,
         tools: [searchTool, calculatorTool],
-        middleware: [middleware] as const,
+        middleware: [middleware],
         checkpointer,
       });
 
@@ -202,7 +202,7 @@ describe("toolCallLimitMiddleware", () => {
       const agent2 = createAgent({
         model,
         tools: [searchTool, calculatorTool],
-        middleware: [middleware] as const,
+        middleware: [middleware],
         checkpointer,
       });
 

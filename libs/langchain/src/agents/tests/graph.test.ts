@@ -363,7 +363,7 @@ describe.each(matrix)(
       const agent = createAgent({
         model: "openai:gpt-4o-mini",
         tools: hasTool ? [someTool] : [],
-        middleware: [middleware1, middleware2] as const,
+        middleware: [middleware1, middleware2],
       });
 
       expect(await agent.drawMermaid()).toMatchSnapshot();
@@ -448,7 +448,7 @@ const middleware2 = createMiddleware({
 const agent = createAgent({
     model: "openai:gpt-4o-mini",
     tools: [someTool],
-    middleware: [middleware1, middleware2] as const,
+    middleware: [middleware1, middleware2],
 });
 \`\`\`
 
