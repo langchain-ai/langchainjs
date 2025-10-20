@@ -117,7 +117,7 @@ describe("middleware state management", () => {
 
     const agent = createAgent({
       model,
-      middleware: [middlewareA, middlewareB, middlewareC] as const,
+      middleware: [middlewareA, middlewareB, middlewareC],
     });
 
     const { messages, ...rest } = await agent.invoke({
@@ -183,7 +183,7 @@ describe("middleware state management", () => {
 
     const agent = createAgent({
       model,
-      middleware: [middleware] as const,
+      middleware: [middleware],
       checkpointer,
     });
 
@@ -224,7 +224,7 @@ describe("middleware state management", () => {
 
     const agent = createAgent({
       model,
-      middleware: [middleware] as const,
+      middleware: [middleware],
       checkpointer,
     });
 

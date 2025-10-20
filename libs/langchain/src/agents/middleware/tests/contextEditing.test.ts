@@ -65,7 +65,7 @@ describe("contextEditingMiddleware", () => {
 
       const agent = createAgent({
         model,
-        middleware: [middleware] as const,
+        middleware: [middleware],
       });
 
       // Create a conversation that doesn't exceed default 100K token threshold
@@ -113,7 +113,7 @@ describe("contextEditingMiddleware", () => {
 
       const agent = createAgent({
         model,
-        middleware: [middleware] as const,
+        middleware: [middleware],
       });
 
       const messages = createToolCallConversation();
@@ -156,7 +156,7 @@ describe("contextEditingMiddleware", () => {
 
       const agent = createAgent({
         model,
-        middleware: [middleware] as const,
+        middleware: [middleware],
       });
 
       const messages = createToolCallConversation();
@@ -189,7 +189,7 @@ describe("contextEditingMiddleware", () => {
 
       const agent = createAgent({
         model,
-        middleware: [middleware] as const,
+        middleware: [middleware],
       });
 
       const messages = createToolCallConversation();
@@ -221,7 +221,7 @@ describe("contextEditingMiddleware", () => {
 
       const agent = createAgent({
         model,
-        middleware: [middleware] as const,
+        middleware: [middleware],
       });
 
       const messages: BaseMessage[] = [
@@ -289,7 +289,7 @@ describe("contextEditingMiddleware", () => {
 
       const agent = createAgent({
         model,
-        middleware: [middleware] as const,
+        middleware: [middleware],
       });
 
       const messages = createToolCallConversation();
@@ -342,7 +342,7 @@ describe("contextEditingMiddleware", () => {
 
       const agent = createAgent({
         model,
-        middleware: [middleware] as const,
+        middleware: [middleware],
       });
 
       const messages = createToolCallConversation();
@@ -376,7 +376,7 @@ describe("contextEditingMiddleware", () => {
 
       const agent = createAgent({
         model,
-        middleware: [middleware] as const,
+        middleware: [middleware],
       });
 
       const messages = createToolCallConversation();
@@ -442,7 +442,7 @@ describe("contextEditingMiddleware", () => {
 
       const agent = createAgent({
         model,
-        middleware: [middleware] as const,
+        middleware: [middleware],
       });
 
       const messages = createToolCallConversation();
@@ -496,7 +496,7 @@ describe("contextEditingMiddleware", () => {
 
       const agent = createAgent({
         model,
-        middleware: [middleware] as const,
+        middleware: [middleware],
       });
 
       const messages = [new HumanMessage("Hello"), new AIMessage("Hi there!")];
@@ -521,7 +521,7 @@ describe("contextEditingMiddleware", () => {
 
       const agent = createAgent({
         model,
-        middleware: [middleware] as const,
+        middleware: [middleware],
       });
 
       const messages = [
@@ -549,7 +549,7 @@ describe("contextEditingMiddleware", () => {
 
       const agent = createAgent({
         model,
-        middleware: [middleware] as const,
+        middleware: [middleware],
       });
 
       const messages: BaseMessage[] = [
@@ -585,7 +585,7 @@ describe("contextEditingMiddleware", () => {
 
       const agent = createAgent({
         model,
-        middleware: [middleware] as const,
+        middleware: [middleware],
       });
 
       // Create a message that's already marked as cleared
@@ -638,7 +638,7 @@ describe("contextEditingMiddleware", () => {
 
       const agent = createAgent({
         model,
-        middleware: [middleware] as const,
+        middleware: [middleware],
       });
 
       // Tool message without a corresponding AI message (malformed conversation)

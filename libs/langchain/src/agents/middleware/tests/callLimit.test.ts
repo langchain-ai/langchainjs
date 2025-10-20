@@ -76,7 +76,7 @@ describe("ModelCallLimitMiddleware", () => {
         const agent = createAgent({
           model,
           tools,
-          middleware: [middleware] as const,
+          middleware: [middleware],
         });
 
         const result = await agent.invoke({ messages: ["Hello, world!"] });
@@ -130,7 +130,7 @@ describe("ModelCallLimitMiddleware", () => {
           model,
           tools,
           checkpointer,
-          middleware: [middleware] as const,
+          middleware: [middleware],
         });
         await expect(
           agent.invoke({ messages: ["Hello, world!"] }, config)
@@ -139,7 +139,7 @@ describe("ModelCallLimitMiddleware", () => {
         const agent2 = createAgent({
           model,
           tools,
-          middleware: [middleware] as const,
+          middleware: [middleware],
           checkpointer,
         });
         if (exitBehavior === "throw") {
@@ -165,7 +165,7 @@ describe("ModelCallLimitMiddleware", () => {
           model,
           tools,
           checkpointer,
-          middleware: [middleware] as const,
+          middleware: [middleware],
         });
         if (exitBehavior === "throw") {
           await expect(

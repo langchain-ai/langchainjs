@@ -80,7 +80,7 @@ const selectToolsMiddleware = createMiddleware({
 const semanticAgent = createAgent({
   model: "openai:gpt-4o",
   tools: fullCatalog, // superset for validation and typing
-  middleware: [selectToolsMiddleware] as const,
+  middleware: [selectToolsMiddleware],
 });
 
 const result = await semanticAgent.invoke({

@@ -106,7 +106,7 @@ describe("humanInTheLoopMiddleware", () => {
       systemPrompt:
         "You are a helpful assistant. Use the tools provided to help the user.",
       tools: [calculateTool, writeFileTool],
-      middleware: [hitlMiddleware] as const,
+      middleware: [hitlMiddleware],
     });
 
     const config = {
@@ -264,7 +264,7 @@ describe("humanInTheLoopMiddleware", () => {
       model,
       checkpointer,
       tools: [writeFileTool],
-      middleware: [hitlMiddleware] as const,
+      middleware: [hitlMiddleware],
     });
 
     const config = {
@@ -336,7 +336,7 @@ describe("humanInTheLoopMiddleware", () => {
       model,
       checkpointer,
       tools: [writeFileTool],
-      middleware: [hitlMiddleware] as const,
+      middleware: [hitlMiddleware],
     });
 
     const config = {
@@ -407,7 +407,7 @@ describe("humanInTheLoopMiddleware", () => {
       model,
       checkpointer,
       tools: [writeFileTool],
-      middleware: [hitlMiddleware] as const,
+      middleware: [hitlMiddleware],
     });
 
     const config = {
@@ -487,7 +487,7 @@ describe("humanInTheLoopMiddleware", () => {
       systemPrompt:
         "You are a helpful assistant. Use the tools provided to help the user.",
       tools: [calculateTool, writeFileTool],
-      middleware: [hitlMiddleware] as const,
+      middleware: [hitlMiddleware],
     });
 
     const config = {
@@ -592,7 +592,7 @@ describe("humanInTheLoopMiddleware", () => {
       systemPrompt:
         "You are a helpful assistant. Use the tools provided to help the user.",
       tools: [calculateTool, writeFileTool],
-      middleware: [hitlMiddleware] as const,
+      middleware: [hitlMiddleware],
     });
 
     const config = {
@@ -660,7 +660,7 @@ describe("humanInTheLoopMiddleware", () => {
       systemPrompt:
         "You are a helpful assistant. Use the tools provided to help the user.",
       tools: [writeFileTool],
-      middleware: [hitlMiddleware] as const,
+      middleware: [hitlMiddleware],
     });
 
     const config = {
@@ -723,7 +723,7 @@ describe("humanInTheLoopMiddleware", () => {
       model,
       checkpointer,
       tools: [writeFileTool],
-      middleware: [hitlMiddleware] as const,
+      middleware: [hitlMiddleware],
     });
 
     const config = {
@@ -810,7 +810,7 @@ describe("humanInTheLoopMiddleware", () => {
       model,
       checkpointer,
       tools: [writeFileTool],
-      middleware: [hitlMiddleware] as const,
+      middleware: [hitlMiddleware],
     });
 
     const config = {
@@ -879,7 +879,7 @@ describe("humanInTheLoopMiddleware", () => {
       model,
       checkpointer,
       tools: [writeFileTool],
-      middleware: [hitlMiddleware] as const,
+      middleware: [hitlMiddleware],
     });
 
     const config = {
@@ -948,7 +948,7 @@ describe("humanInTheLoopMiddleware", () => {
       model,
       checkpointer,
       tools: [writeFileTool],
-      middleware: [hitlMiddleware] as const,
+      middleware: [hitlMiddleware],
     });
 
     const config = {
@@ -1012,7 +1012,7 @@ describe("humanInTheLoopMiddleware", () => {
       model,
       checkpointer,
       tools: [writeFileTool],
-      middleware: [hitlMiddleware] as const,
+      middleware: [hitlMiddleware],
     });
 
     const config = {
@@ -1073,7 +1073,7 @@ describe("humanInTheLoopMiddleware", () => {
       model,
       checkpointer,
       tools: [writeFileTool],
-      middleware: [hitlMiddleware] as const,
+      middleware: [hitlMiddleware],
     });
 
     const config = {
