@@ -384,11 +384,11 @@ export abstract class BaseMessage<
    * to the pretty print output. Returns an array of strings to be inserted
    * between the title and content sections.
    */
-  protected _prettyPrintDetails(): string[] {
+  protected _toFormattedStringDetails(): string[] {
     return [];
   }
 
-  prettyPrint(): string {
+  toFormattedString(): string {
     const lines: string[] = [];
 
     // Create title line
@@ -401,7 +401,7 @@ export abstract class BaseMessage<
     lines.push(`${sep}${title}${secondSep}`);
 
     // Add type-specific details
-    lines.push(...this._prettyPrintDetails());
+    lines.push(...this._toFormattedStringDetails());
 
     // Add content if it's a string and not empty
     if (typeof this.content === "string" && this.content.trim()) {

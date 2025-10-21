@@ -125,7 +125,7 @@ export class ToolMessage<TStructure extends MessageStructure = MessageStructure>
     };
   }
 
-  protected override _prettyPrintDetails(): string[] {
+  protected override _toFormattedStringDetails(): string[] {
     const lines: string[] = [];
     if (this.name) {
       lines.push(`Name: ${this.name}`);
@@ -199,7 +199,7 @@ export class ToolMessageChunk<
     };
   }
 
-  protected override _prettyPrintDetails(): string[] {
+  protected override _toFormattedStringDetails(): string[] {
     const lines: string[] = [];
     if (this.name) {
       lines.push(`Name: ${this.name}`);

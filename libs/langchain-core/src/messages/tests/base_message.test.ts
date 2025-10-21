@@ -755,11 +755,11 @@ describe("usage_metadata serialized", () => {
   });
 });
 
-describe("prettyPrint", () => {
+describe("toFormattedString", () => {
   describe("BaseMessage (HumanMessage)", () => {
     it("formats a simple string message", () => {
       const message = new HumanMessage("Hello, world!");
-      const output = message.prettyPrint();
+      const output = message.toFormattedString();
       expect(output).toContain("Human Message");
       expect(output).toContain("Hello, world!");
       expect(output).toMatch(/={30,}/); // Check for separator line
@@ -767,14 +767,14 @@ describe("prettyPrint", () => {
 
     it("formats a message with empty content", () => {
       const message = new HumanMessage("");
-      const output = message.prettyPrint();
+      const output = message.toFormattedString();
       expect(output).toContain("Human Message");
       expect(output).not.toContain("\n\n"); // No blank line before content
     });
 
     it("formats a message with whitespace-only content", () => {
       const message = new HumanMessage("   ");
-      const output = message.prettyPrint();
+      const output = message.toFormattedString();
       expect(output).toContain("Human Message");
       // Whitespace-only content should be treated as empty
       expect(output.split("\n").length).toBe(1);
@@ -784,7 +784,7 @@ describe("prettyPrint", () => {
   describe("AIMessage", () => {
     it("formats an AI message without tool calls", () => {
       const message = new AIMessage("I can help with that!");
-      const output = message.prettyPrint();
+      const output = message.toFormattedString();
       expect(output).toContain("Ai Message");
       expect(output).toContain("I can help with that!");
     });
@@ -801,7 +801,7 @@ describe("prettyPrint", () => {
           },
         ],
       });
-      const output = message.prettyPrint();
+      const output = message.toFormattedString();
       expect(output).toContain("Ai Message");
       expect(output).toContain("Tool Calls:");
       expect(output).toContain("get_weather (call_123)");
@@ -829,7 +829,7 @@ describe("prettyPrint", () => {
           },
         ],
       });
-      const output = message.prettyPrint();
+      const output = message.toFormattedString();
       expect(output).toContain("search (call_1)");
       expect(output).toContain("calculator (call_2)");
     });
@@ -839,7 +839,7 @@ describe("prettyPrint", () => {
         content: "Just a message",
         tool_calls: [],
       });
-      const output = message.prettyPrint();
+      const output = message.toFormattedString();
       expect(output).toContain("Ai Message");
       expect(output).not.toContain("Tool Calls:");
       expect(output).toContain("Just a message");
@@ -853,7 +853,7 @@ describe("prettyPrint", () => {
         tool_call_id: "call_123",
         name: "get_weather",
       });
-      const output = message.prettyPrint();
+      const output = message.toFormattedString();
       expect(output).toContain("Tool Message");
       expect(output).toContain("Name: get_weather");
       expect(output).toContain('{"temperature": 72}');
@@ -864,7 +864,7 @@ describe("prettyPrint", () => {
         content: "Success",
         tool_call_id: "call_456",
       });
-      const output = message.prettyPrint();
+      const output = message.toFormattedString();
       expect(output).toContain("Tool Message");
       expect(output).not.toContain("Name:");
       expect(output).toContain("Success");
@@ -874,7 +874,7 @@ describe("prettyPrint", () => {
   describe("SystemMessage", () => {
     it("formats a system message", () => {
       const message = new SystemMessage("You are a helpful assistant.");
-      const output = message.prettyPrint();
+      const output = message.toFormattedString();
       expect(output).toContain("System Message");
       expect(output).toContain("You are a helpful assistant.");
     });
@@ -886,9 +886,9 @@ describe("prettyPrint", () => {
       const ai = new AIMessage("Hello");
       const system = new SystemMessage("System");
 
-      const humanOutput = human.prettyPrint();
-      const aiOutput = ai.prettyPrint();
-      const systemOutput = system.prettyPrint();
+      const humanOutput = human.toFormattedString();
+      const aiOutput = ai.toFormattedString();
+      const systemOutput = system.toFormattedString();
 
       const humanSep = humanOutput.split("\n")[0];
       const aiSep = aiOutput.split("\n")[0];
@@ -911,7 +911,7 @@ describe("prettyPrint", () => {
           },
         ],
       });
-      const output = messageWithDetails.prettyPrint();
+      const output = messageWithDetails.toFormattedString();
       const lines = output.split("\n");
       // Should have: title, Tool Calls:, tool info, blank line, content
       expect(lines).toContain("");

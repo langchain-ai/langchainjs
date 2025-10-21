@@ -206,7 +206,7 @@ export class AIMessage<TStructure extends MessageStructure = MessageStructure>
     };
   }
 
-  protected override _prettyPrintDetails(): string[] {
+  protected override _toFormattedStringDetails(): string[] {
     const lines: string[] = [];
     if (this.tool_calls && this.tool_calls.length > 0) {
       lines.push("Tool Calls:");
@@ -451,7 +451,7 @@ export class AIMessageChunk<
     };
   }
 
-  protected override _prettyPrintDetails(): string[] {
+  protected override _toFormattedStringDetails(): string[] {
     const lines: string[] = [];
     if (this.tool_calls && this.tool_calls.length > 0) {
       lines.push("Tool Calls:");
