@@ -14,10 +14,15 @@
  * https://docs.langchain.com/oss/javascript/langchain/supervisor
  */
 
-import { tool, createAgent, humanInTheLoopMiddleware } from "langchain";
 import { ChatAnthropic } from "@langchain/anthropic";
+import { HumanMessage } from "@langchain/core/messages";
+import {
+  Command,
+  getCurrentTaskInput,
+  MemorySaver,
+} from "@langchain/langgraph";
+import { createAgent, humanInTheLoopMiddleware, tool } from "langchain";
 import { z } from "zod";
-import { MemorySaver, Command } from "@langchain/langgraph";
 
 // ============================================================================
 // Step 1: Define low-level API tools (stubbed)
@@ -130,9 +135,26 @@ const emailAgent = createAgent({
 // ============================================================================
 
 const scheduleEvent = tool(
-  async ({ request }) => {
+  async ({ request }, config) => {
+    // Customize context received by sub-agent
+    // Access full thread messages from the config
+    const currentMessages =
+      getCurrentTaskInput<InternalAgentState>(config).messages;
+
+    const originalUserMessage = currentMessages.find(HumanMessage.isInstance);
+
+    const prompt = `
+You are assisting with the following user inquiry:
+
+${originalUserMessage?.content || "No context available"}
+
+You are tasked with the following sub-request:
+
+${request}
+    `.trim();
+
     const result = await calendarAgent.invoke({
-      messages: [{ role: "user", content: request }],
+      messages: [{ role: "user", content: prompt }],
     });
     const lastMessage = result.messages[result.messages.length - 1];
     return lastMessage.text;
@@ -154,9 +176,26 @@ Input: Natural language scheduling request (e.g., 'meeting with design team next
 );
 
 const manageEmail = tool(
-  async ({ request }) => {
+  async ({ request }, config) => {
+    // Customize context received by sub-agent
+    // Access full thread messages from the config
+    const currentMessages =
+      getCurrentTaskInput<InternalAgentState>(config).messages;
+
+    const originalUserMessage = currentMessages.find(HumanMessage.isInstance);
+
+    const prompt = `
+You are assisting with the following user inquiry:
+
+${originalUserMessage?.content || "No context available"}
+
+You are tasked with the following sub-request:
+
+${request}
+    `.trim();
+
     const result = await emailAgent.invoke({
-      messages: [{ role: "user", content: request }],
+      messages: [{ role: "user", content: prompt }],
     });
     const lastMessage = result.messages[result.messages.length - 1];
     return lastMessage.text;
@@ -201,7 +240,8 @@ const supervisorAgent = createAgent({
 
 async function main() {
   const query =
-    "Schedule a meeting with the design team next Tuesday at 2pm for 1 hour, " +
+    "Schedule a meeting with the design team (alice@example.com, bob@example.com) " +
+    "on January 28, 2025 at 2pm for 1 hour titled 'Design Review', " +
     "and send them an email reminder about reviewing the new mockups.";
 
   const config = { configurable: { thread_id: "6" } };
@@ -252,11 +292,11 @@ async function main() {
   const resume: Record<string, any> = {};
   for (const interrupt of interrupts) {
     // Check which interrupt this is by inspecting the tool
-    const toolName = interrupt.value.actionRequests[0].name;
+    const actionRequest = interrupt.value.actionRequests[0];
 
-    if (toolName === "send_email") {
+    if (actionRequest.name === "send_email") {
       // Edit email subject
-      const editedAction = { ...interrupt.value.actionRequests[0] };
+      const editedAction = { ...actionRequest };
       editedAction.arguments.subject = "Mockups reminder";
       resume[interrupt.id] = {
         decisions: [{ type: "edit", editedAction }],
