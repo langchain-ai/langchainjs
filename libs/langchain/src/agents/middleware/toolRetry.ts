@@ -3,20 +3,10 @@
  */
 
 import { ToolMessage } from "@langchain/core/messages";
-
-import type { AgentMiddleware } from "./types.js";
+import { z } from "zod";
 import { createMiddleware } from "../middleware.js";
 import type { ClientTool, ServerTool } from "../tools.js";
-
-/**
- * Custom error class for value validation errors.
- */
-class ValueError extends Error {
-  constructor(message: string) {
-    super(message);
-    this.name = "ValueError";
-  }
-}
+import type { AgentMiddleware } from "./types.js";
 
 /**
  * Calculate delay for a retry attempt with exponential backoff and jitter.
@@ -30,23 +20,23 @@ class ValueError extends Error {
 export function calculateRetryDelay(
   config: {
     backoffFactor: number;
-    initialDelay: number;
-    maxDelay: number;
+    initialDelayMs: number;
+    maxDelayMs: number;
     jitter: boolean;
   },
   retryNumber: number
 ): number {
-  const { backoffFactor, initialDelay, maxDelay, jitter } = config;
+  const { backoffFactor, initialDelayMs, maxDelayMs, jitter } = config;
 
   let delay: number;
   if (backoffFactor === 0.0) {
-    delay = initialDelay;
+    delay = initialDelayMs;
   } else {
-    delay = initialDelay * backoffFactor ** retryNumber;
+    delay = initialDelayMs * backoffFactor ** retryNumber;
   }
 
-  // Cap at maxDelay
-  delay = Math.min(delay, maxDelay);
+  // Cap at maxDelayMs
+  delay = Math.min(delay, maxDelayMs);
 
   if (jitter && delay > 0) {
     const jitterAmount = delay * 0.25;
@@ -61,27 +51,36 @@ export function calculateRetryDelay(
 /**
  * Configuration options for the Tool Retry Middleware.
  */
-export interface ToolRetryMiddlewareConfig {
+export const ToolRetryMiddlewareOptionsSchema = z.object({
   /**
    * Maximum number of retry attempts after the initial call.
    * Default is 2 retries (3 total attempts). Must be >= 0.
    */
-  maxRetries?: number;
+  maxRetries: z.number().min(0).default(2),
 
   /**
    * Optional list of tools or tool names to apply retry logic to.
    * Can be a list of `BaseTool` instances or tool name strings.
    * If `undefined`, applies to all tools. Default is `undefined`.
    */
-  tools?: (ClientTool | ServerTool | string)[];
+  tools: z
+    .array(
+      z.union([z.custom<ClientTool>(), z.custom<ServerTool>(), z.string()])
+    )
+    .optional(),
 
   /**
    * Either an array of error constructors to retry on, or a function
    * that takes an error and returns `true` if it should be retried.
    * Default is to retry on all errors.
    */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  retryOn?: ((error: Error) => boolean) | (new (...args: any[]) => Error)[];
+  retryOn: z
+    .union([
+      z.function().args(z.instanceof(Error)).returns(z.boolean()),
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      z.array(z.custom<new (...args: any[]) => Error>()),
+    ])
+    .default(() => () => true),
 
   /**
    * Behavior when all retries are exhausted. Options:
@@ -91,32 +90,42 @@ export interface ToolRetryMiddlewareConfig {
    * - Custom function: Function that takes the exception and returns a string
    *   for the ToolMessage content, allowing custom error formatting.
    */
-  onFailure?: "raise" | "return_message" | ((error: Error) => string);
+  onFailure: z
+    .union([
+      z.literal("raise"),
+      z.literal("return_message"),
+      z.function().args(z.instanceof(Error)).returns(z.string()),
+    ])
+    .default("return_message"),
 
   /**
    * Multiplier for exponential backoff. Each retry waits
-   * `initialDelay * (backoffFactor ** retryNumber)` milliseconds.
+   * `initialDelayMs * (backoffFactor ** retryNumber)` milliseconds.
    * Set to 0.0 for constant delay. Default is 2.0.
    */
-  backoffFactor?: number;
+  backoffFactor: z.number().min(0).default(2.0),
 
   /**
    * Initial delay in milliseconds before first retry. Default is 1000 (1 second).
    */
-  initialDelay?: number;
+  initialDelayMs: z.number().min(0).default(1000),
 
   /**
    * Maximum delay in milliseconds between retries. Caps exponential
    * backoff growth. Default is 60000 (60 seconds).
    */
-  maxDelay?: number;
+  maxDelayMs: z.number().min(0).default(60000),
 
   /**
    * Whether to add random jitter (±25%) to delay to avoid thundering herd.
    * Default is `true`.
    */
-  jitter?: boolean;
-}
+  jitter: z.boolean().default(true),
+});
+
+export type ToolRetryMiddlewareConfig = z.input<
+  typeof ToolRetryMiddlewareOptionsSchema
+>;
 
 /**
  * Middleware that automatically retries failed tool calls with configurable backoff.
@@ -202,7 +211,7 @@ export interface ToolRetryMiddlewareConfig {
  * const retry = toolRetryMiddleware({
  *   maxRetries: 5,
  *   backoffFactor: 0.0, // No exponential growth
- *   initialDelay: 2000, // Always wait 2 seconds
+ *   initialDelayMs: 2000, // Always wait 2 seconds
  * });
  * ```
  *
@@ -221,34 +230,23 @@ export function toolRetryMiddleware(
   config: ToolRetryMiddlewareConfig = {}
 ): AgentMiddleware {
   const {
-    maxRetries = 2,
+    maxRetries,
     tools,
-    retryOn = () => true, // Default: retry all errors
-    onFailure = "return_message",
-    backoffFactor = 2.0,
-    initialDelay = 1000, // 1 second in milliseconds
-    maxDelay = 60000, // 60 seconds in milliseconds
-    jitter = true,
-  } = config;
-
-  // Validate parameters
-  if (maxRetries < 0) {
-    throw new ValueError("maxRetries must be >= 0");
-  }
-  if (initialDelay < 0) {
-    throw new ValueError("initialDelay must be >= 0");
-  }
-  if (maxDelay < 0) {
-    throw new ValueError("maxDelay must be >= 0");
-  }
-  if (backoffFactor < 0) {
-    throw new ValueError("backoffFactor must be >= 0");
-  }
+    retryOn,
+    onFailure,
+    backoffFactor,
+    initialDelayMs,
+    maxDelayMs,
+    jitter,
+  } = ToolRetryMiddlewareOptionsSchema.parse(config);
 
   // Extract tool names from BaseTool instances or strings
-  const toolFilter: string[] | undefined = tools?.map((tool) =>
-    typeof tool === "string" ? tool : (tool.name as string)
-  );
+  const toolFilter = tools?.reduce((acc, tool) => {
+    if (typeof tool === "string") return [...acc, tool];
+    else if ("name" in tool && typeof tool.name === "string")
+      return [...acc, tool.name];
+    else return acc;
+  }, [] as string[]);
 
   /**
    * Check if retry logic should apply to this tool.
@@ -274,7 +272,7 @@ export function toolRetryMiddleware(
   };
 
   // Use the exported calculateRetryDelay function with our config
-  const delayConfig = { backoffFactor, initialDelay, maxDelay, jitter };
+  const delayConfig = { backoffFactor, initialDelayMs, maxDelayMs, jitter };
 
   /**
    * Format the failure message when retries are exhausted.
@@ -319,6 +317,7 @@ export function toolRetryMiddleware(
 
   return createMiddleware({
     name: "toolRetryMiddleware",
+    contextSchema: ToolRetryMiddlewareOptionsSchema,
     wrapToolCall: async (request, handler) => {
       const toolName = request.tool.name as string;
 

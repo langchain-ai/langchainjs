@@ -106,8 +106,8 @@ describe("toolRetryMiddleware", () => {
         retryOn: [TimeoutError, NetworkError],
         onFailure: "raise",
         backoffFactor: 1.5,
-        initialDelay: 500,
-        maxDelay: 30000,
+        initialDelayMs: 500,
+        maxDelayMs: 30000,
         jitter: false,
       });
       expect(retry).toBeDefined();
@@ -132,29 +132,68 @@ describe("toolRetryMiddleware", () => {
       expect(retry).toBeDefined();
       expect(retry.name).toBe("toolRetryMiddleware");
     });
+  });
 
-    it("should throw error for invalid maxRetries", () => {
-      expect(() => toolRetryMiddleware({ maxRetries: -1 })).toThrow(
-        "maxRetries must be >= 0"
-      );
+  describe("Validation", () => {
+    it("should throw ZodError for invalid maxRetries", () => {
+      try {
+        toolRetryMiddleware({ maxRetries: -1 });
+        expect.fail("Should have thrown an error");
+      } catch (error) {
+        expect(error).toBeInstanceOf(z.ZodError);
+        const zodError = error as z.ZodError;
+        expect(zodError.issues[0].path).toEqual(["maxRetries"]);
+        expect(zodError.issues[0].code).toBe("too_small");
+      }
     });
 
-    it("should throw error for invalid initialDelay", () => {
-      expect(() => toolRetryMiddleware({ initialDelay: -1 })).toThrow(
-        "initialDelay must be >= 0"
-      );
+    it("should throw ZodError for invalid initialDelayMs", () => {
+      try {
+        toolRetryMiddleware({ initialDelayMs: -1 });
+        expect.fail("Should have thrown an error");
+      } catch (error) {
+        expect(error).toBeInstanceOf(z.ZodError);
+        const zodError = error as z.ZodError;
+        expect(zodError.issues[0].path).toEqual(["initialDelayMs"]);
+        expect(zodError.issues[0].code).toBe("too_small");
+      }
     });
 
-    it("should throw error for invalid maxDelay", () => {
-      expect(() => toolRetryMiddleware({ maxDelay: -1 })).toThrow(
-        "maxDelay must be >= 0"
-      );
+    it("should throw ZodError for invalid maxDelayMs", () => {
+      try {
+        toolRetryMiddleware({ maxDelayMs: -1 });
+        expect.fail("Should have thrown an error");
+      } catch (error) {
+        expect(error).toBeInstanceOf(z.ZodError);
+        const zodError = error as z.ZodError;
+        expect(zodError.issues[0].path).toEqual(["maxDelayMs"]);
+        expect(zodError.issues[0].code).toBe("too_small");
+      }
     });
 
-    it("should throw error for invalid backoffFactor", () => {
-      expect(() => toolRetryMiddleware({ backoffFactor: -1 })).toThrow(
-        "backoffFactor must be >= 0"
-      );
+    it("should throw ZodError for invalid backoffFactor", () => {
+      try {
+        toolRetryMiddleware({ backoffFactor: -1 });
+        expect.fail("Should have thrown an error");
+      } catch (error) {
+        expect(error).toBeInstanceOf(z.ZodError);
+        const zodError = error as z.ZodError;
+        expect(zodError.issues[0].path).toEqual(["backoffFactor"]);
+        expect(zodError.issues[0].code).toBe("too_small");
+      }
+    });
+
+    it("should throw ZodError for invalid type (string instead of number)", () => {
+      try {
+        // @ts-expect-error - intentionally passing wrong type
+        toolRetryMiddleware({ maxRetries: "not a number" });
+        expect.fail("Should have thrown an error");
+      } catch (error) {
+        expect(error).toBeInstanceOf(z.ZodError);
+        const zodError = error as z.ZodError;
+        expect(zodError.issues[0].path).toEqual(["maxRetries"]);
+        expect(zodError.issues[0].code).toBe("invalid_type");
+      }
     });
   });
 
@@ -175,7 +214,7 @@ describe("toolRetryMiddleware", () => {
 
       const retry = toolRetryMiddleware({
         maxRetries: 2,
-        initialDelay: 10,
+        initialDelayMs: 10,
         jitter: false,
       });
 
@@ -213,7 +252,7 @@ describe("toolRetryMiddleware", () => {
 
       const retry = toolRetryMiddleware({
         maxRetries: 2,
-        initialDelay: 10,
+        initialDelayMs: 10,
         jitter: false,
         onFailure: "return_message",
       });
@@ -255,7 +294,7 @@ describe("toolRetryMiddleware", () => {
 
       const retry = toolRetryMiddleware({
         maxRetries: 2,
-        initialDelay: 10,
+        initialDelayMs: 10,
         jitter: false,
         onFailure: "raise",
       });
@@ -296,7 +335,7 @@ describe("toolRetryMiddleware", () => {
 
       const retry = toolRetryMiddleware({
         maxRetries: 1,
-        initialDelay: 10,
+        initialDelayMs: 10,
         jitter: false,
         onFailure: customFormatter,
       });
@@ -336,7 +375,7 @@ describe("toolRetryMiddleware", () => {
 
       const retry = toolRetryMiddleware({
         maxRetries: 3,
-        initialDelay: 10,
+        initialDelayMs: 10,
         jitter: false,
       });
 
@@ -384,7 +423,7 @@ describe("toolRetryMiddleware", () => {
       const retry = toolRetryMiddleware({
         maxRetries: 2,
         tools: ["failing_tool"],
-        initialDelay: 10,
+        initialDelayMs: 10,
         jitter: false,
         onFailure: "return_message",
       });
@@ -440,7 +479,7 @@ describe("toolRetryMiddleware", () => {
       const retry = toolRetryMiddleware({
         maxRetries: 2,
         tools: [failingTool], // Pass BaseTool instance
-        initialDelay: 10,
+        initialDelayMs: 10,
         jitter: false,
         onFailure: "return_message",
       });
@@ -524,7 +563,7 @@ describe("toolRetryMiddleware", () => {
       const retry = toolRetryMiddleware({
         maxRetries: 2,
         retryOn: [TimeoutError],
-        initialDelay: 10,
+        initialDelayMs: 10,
         jitter: false,
         onFailure: "return_message",
       });
@@ -618,7 +657,7 @@ describe("toolRetryMiddleware", () => {
       const retry = toolRetryMiddleware({
         maxRetries: 2,
         retryOn: shouldRetry,
-        initialDelay: 10,
+        initialDelayMs: 10,
         jitter: false,
         onFailure: "return_message",
       });
@@ -673,7 +712,7 @@ describe("toolRetryMiddleware", () => {
 
       const retry = toolRetryMiddleware({
         maxRetries: 3,
-        initialDelay: 50,
+        initialDelayMs: 50,
         backoffFactor: 2.0,
         jitter: false,
       });
@@ -723,7 +762,7 @@ describe("toolRetryMiddleware", () => {
 
       const retry = toolRetryMiddleware({
         maxRetries: 2,
-        initialDelay: 50,
+        initialDelayMs: 50,
         backoffFactor: 0.0, // Constant delay
         jitter: false,
       });
@@ -760,8 +799,8 @@ describe("toolRetryMiddleware", () => {
       // Test calculateRetryDelay directly (like Python does)
       const config = {
         backoffFactor: 10.0, // Very aggressive backoff
-        initialDelay: 1000,
-        maxDelay: 2000, // Cap at 2 seconds
+        initialDelayMs: 1000,
+        maxDelayMs: 2000, // Cap at 2 seconds
         jitter: false,
       };
 
@@ -778,8 +817,8 @@ describe("toolRetryMiddleware", () => {
       // Test calculateRetryDelay directly (like Python does)
       const config = {
         backoffFactor: 1.0,
-        initialDelay: 100,
-        maxDelay: 1000,
+        initialDelayMs: 100,
+        maxDelayMs: 1000,
         jitter: true,
       };
 
@@ -817,7 +856,7 @@ describe("toolRetryMiddleware", () => {
 
       const retry = toolRetryMiddleware({
         maxRetries: 0, // No retries
-        initialDelay: 10,
+        initialDelayMs: 10,
         jitter: false,
         onFailure: "return_message",
       });
@@ -872,7 +911,7 @@ describe("toolRetryMiddleware", () => {
 
       const retry = toolRetryMiddleware({
         maxRetries: 2,
-        initialDelay: 10,
+        initialDelayMs: 10,
         jitter: false,
       });
 
