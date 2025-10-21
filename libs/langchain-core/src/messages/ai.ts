@@ -206,22 +206,6 @@ export class AIMessage<TStructure extends MessageStructure = MessageStructure>
     };
   }
 
-  protected override _toFormattedStringDetails(): string[] {
-    const lines: string[] = [];
-    if (this.tool_calls && this.tool_calls.length > 0) {
-      lines.push("Tool Calls:");
-      for (const tc of this.tool_calls) {
-        lines.push(`  ${tc.name} (${tc.id})`);
-        lines.push(` Call ID: ${tc.id}`);
-        lines.push("  Args:");
-        for (const [key, value] of Object.entries(tc.args)) {
-          lines.push(`    ${key}: ${value}`);
-        }
-      }
-    }
-    return lines;
-  }
-
   static isInstance(obj: unknown): obj is AIMessage {
     return super.isInstance(obj) && obj.type === "ai";
   }
@@ -451,21 +435,21 @@ export class AIMessageChunk<
     };
   }
 
-  protected override _toFormattedStringDetails(): string[] {
-    const lines: string[] = [];
-    if (this.tool_calls && this.tool_calls.length > 0) {
-      lines.push("Tool Calls:");
-      for (const tc of this.tool_calls) {
-        lines.push(`  ${tc.name} (${tc.id})`);
-        lines.push(` Call ID: ${tc.id}`);
-        lines.push("  Args:");
-        for (const [key, value] of Object.entries(tc.args)) {
-          lines.push(`    ${key}: ${value}`);
-        }
-      }
-    }
-    return lines;
-  }
+  // protected _toFormattedStringDetails(): string[] {
+  //   const lines: string[] = [];
+  //   if (this.tool_calls && this.tool_calls.length > 0) {
+  //     lines.push("Tool Calls:");
+  //     for (const tc of this.tool_calls) {
+  //       lines.push(`  ${tc.name} (${tc.id})`);
+  //       lines.push(` Call ID: ${tc.id}`);
+  //       lines.push("  Args:");
+  //       for (const [key, value] of Object.entries(tc.args)) {
+  //         lines.push(`    ${key}: ${value}`);
+  //       }
+  //     }
+  //   }
+  //   return lines;
+  // }
 
   concat(chunk: AIMessageChunk<TStructure>) {
     const combinedFields: AIMessageChunkFields = {

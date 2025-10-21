@@ -124,14 +124,6 @@ export class ToolMessage<TStructure extends MessageStructure = MessageStructure>
       artifact: this.artifact,
     };
   }
-
-  protected override _toFormattedStringDetails(): string[] {
-    const lines: string[] = [];
-    if (this.name) {
-      lines.push(`Name: ${this.name}`);
-    }
-    return lines;
-  }
 }
 
 /**
@@ -197,14 +189,6 @@ export class ToolMessageChunk<
       tool_call_id: this.tool_call_id,
       artifact: this.artifact,
     };
-  }
-
-  protected override _toFormattedStringDetails(): string[] {
-    const lines: string[] = [];
-    if (this.name) {
-      lines.push(`Name: ${this.name}`);
-    }
-    return lines;
   }
 }
 
