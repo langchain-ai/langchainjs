@@ -365,7 +365,7 @@ importers:
         specifier: ^3.19.1
         version: 3.29.5
       sqlite3:
-        specifier: ^5.1.4
+        specifier: ^5.1.7
         version: 5.1.7
       typescript:
         specifier: ~5.8.3
