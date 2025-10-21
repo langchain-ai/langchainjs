@@ -1158,8 +1158,8 @@ importers:
         specifier: ^3.5.2
         version: 3.7.0
       '@ibm-cloud/watsonx-ai':
-        specifier: ^1.6.10
-        version: 1.6.10
+        specifier: ^1.7.0
+        version: 1.7.0
       '@jest/globals':
         specifier: ^29.5.0
         version: 29.7.0
@@ -5821,8 +5821,8 @@ packages:
     resolution: {integrity: sha512-bV0Tgo9K4hfPCek+aMAn81RppFKv2ySDQeMoSZuvTASywNTnVJCArCZE2FWqpvIatKu7VMRLWlR1EazvVhDyhQ==}
     engines: {node: '>=18.18'}
 
-  '@ibm-cloud/watsonx-ai@1.6.10':
-    resolution: {integrity: sha512-aZV50/s8VZc7w0t/qcaBw3RLT3WDsAeZUJlP8EbG/csZJF3a8F7alihbGOM4lJFM7R4Z81Lucz3nfHi2KR7J4Q==}
+  '@ibm-cloud/watsonx-ai@1.7.0':
+    resolution: {integrity: sha512-TmLaoFXmLc7yVFJIQS25mzZcuWfju4JmRXcO62KthDKNENyPpXXJukrHN6gXfv1BotzFt0M2kyRnO1Vt8ZLlxQ==}
     engines: {node: '>=18.0.0'}
 
   '@img/sharp-darwin-arm64@0.34.3':
@@ -9089,6 +9089,9 @@ packages:
   axios@1.11.0:
     resolution: {integrity: sha512-1Lx3WLFQWm3ooKDYZD1eXmoGO9fxYQjrycfHFC8P0sCfQVXyROp0p9PFWBehewBOdCwHc+f/b8I0fMto5eSfwA==}
 
+  axios@1.12.2:
+    resolution: {integrity: sha512-vMJzPewAlRyOgxV2dU0Cuz2O8zzzx9VYtbJOaBgXFeLc4IV/Eg50n4LowmehOOR61S8ZMpc2K5Sa7g6A4jfkUw==}
+
   axios@1.7.7:
     resolution: {integrity: sha512-S4kL7XrjgBmvdGut0sN3yJxqYzrDOnivkBiN0OFs6hLiUam3UPvswUo0kqGyhqUZGEOytHyumEdXsAkgCOUf3Q==}
 
@@ -11402,6 +11405,10 @@ packages:
 
   ibm-cloud-sdk-core@5.4.2:
     resolution: {integrity: sha512-5VFkKYU/vSIWFJTVt392XEdPmiEwUJqhxjn1MRO3lfELyU2FB+yYi8brbmXUgq+D1acHR1fpS7tIJ6IlnrR9Cg==}
+    engines: {node: '>=18'}
+
+  ibm-cloud-sdk-core@5.4.3:
+    resolution: {integrity: sha512-D0lvClcoCp/HXyaFlCbOT4aTYgGyeIb4ncxZpxRuiuw7Eo79C6c49W53+8WJRD9nxzT5vrIdaky3NBcTdBtaEg==}
     engines: {node: '>=18'}
 
   iconv-lite@0.4.24:
@@ -19571,11 +19578,12 @@ snapshots:
 
   '@humanwhocodes/retry@0.4.3': {}
 
-  '@ibm-cloud/watsonx-ai@1.6.10':
+  '@ibm-cloud/watsonx-ai@1.7.0':
     dependencies:
-      '@types/node': 18.19.121
+      '@types/node': 18.19.130
       extend: 3.0.2
-      ibm-cloud-sdk-core: 5.4.2
+      form-data: 4.0.4
+      ibm-cloud-sdk-core: 5.4.3
     transitivePeerDependencies:
       - supports-color
 
@@ -23711,6 +23719,14 @@ snapshots:
     transitivePeerDependencies:
       - debug
 
+  axios@1.12.2(debug@4.4.3):
+    dependencies:
+      follow-redirects: 1.15.11(debug@4.4.3)
+      form-data: 4.0.4
+      proxy-from-env: 1.1.0
+    transitivePeerDependencies:
+      - debug
+
   axios@1.7.7:
     dependencies:
       follow-redirects: 1.15.11(debug@4.4.3)
@@ -26856,6 +26872,26 @@ snapshots:
       jsonwebtoken: 9.0.2
       mime-types: 2.1.35
       retry-axios: 2.6.0(axios@1.11.0)
+      tough-cookie: 4.1.4
+    transitivePeerDependencies:
+      - supports-color
+
+  ibm-cloud-sdk-core@5.4.3:
+    dependencies:
+      '@types/debug': 4.1.12
+      '@types/node': 18.19.130
+      '@types/tough-cookie': 4.0.5
+      axios: 1.12.2(debug@4.4.3)
+      camelcase: 6.3.0
+      debug: 4.4.3(supports-color@8.1.1)
+      dotenv: 16.6.1
+      extend: 3.0.2
+      file-type: 16.5.4
+      form-data: 4.0.4
+      isstream: 0.1.2
+      jsonwebtoken: 9.0.2
+      mime-types: 2.1.35
+      retry-axios: 2.6.0(axios@1.12.2(debug@4.4.3))
       tough-cookie: 4.1.4
     transitivePeerDependencies:
       - supports-color
@@ -30198,6 +30234,10 @@ snapshots:
   retry-axios@2.6.0(axios@1.11.0):
     dependencies:
       axios: 1.11.0(debug@4.4.3)
+
+  retry-axios@2.6.0(axios@1.12.2(debug@4.4.3)):
+    dependencies:
+      axios: 1.12.2(debug@4.4.3)
 
   retry-request@7.0.2(encoding@0.1.13):
     dependencies:
