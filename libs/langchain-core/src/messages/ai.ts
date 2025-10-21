@@ -435,22 +435,6 @@ export class AIMessageChunk<
     };
   }
 
-  // protected _toFormattedStringDetails(): string[] {
-  //   const lines: string[] = [];
-  //   if (this.tool_calls && this.tool_calls.length > 0) {
-  //     lines.push("Tool Calls:");
-  //     for (const tc of this.tool_calls) {
-  //       lines.push(`  ${tc.name} (${tc.id})`);
-  //       lines.push(` Call ID: ${tc.id}`);
-  //       lines.push("  Args:");
-  //       for (const [key, value] of Object.entries(tc.args)) {
-  //         lines.push(`    ${key}: ${value}`);
-  //       }
-  //     }
-  //   }
-  //   return lines;
-  // }
-
   concat(chunk: AIMessageChunk<TStructure>) {
     const combinedFields: AIMessageChunkFields = {
       content: mergeContent(this.content, chunk.content),
