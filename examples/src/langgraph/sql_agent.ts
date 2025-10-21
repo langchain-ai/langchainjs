@@ -1,5 +1,10 @@
 import { SqlDatabase } from "@langchain/classic/sql_db";
-import { AIMessage, ToolMessage } from "@langchain/core/messages";
+import {
+  AIMessage,
+  HumanMessage,
+  SystemMessage,
+  ToolMessage,
+} from "@langchain/core/messages";
 import { RunnableConfig } from "@langchain/core/runnables";
 import { tool } from "@langchain/core/tools";
 import {
@@ -161,10 +166,7 @@ DO NOT make any DML statements (INSERT, UPDATE, DELETE, DROP etc.) to the databa
 `;
 
 async function generateQuery(state: typeof MessagesAnnotation.State) {
-  const systemMessage = {
-    role: "system" as const,
-    content: generateQuerySystemPrompt,
-  };
+  const systemMessage = new SystemMessage(generateQuerySystemPrompt);
   const llmWithTools = llm.bindTools([queryTool]);
   const response = await llmWithTools.invoke([
     systemMessage,
@@ -193,17 +195,14 @@ You will call the appropriate tool to execute the query after running this check
 `;
 
 async function checkQuery(state: typeof MessagesAnnotation.State) {
-  const systemMessage = {
-    role: "system" as const,
-    content: checkQuerySystemPrompt,
-  };
+  const systemMessage = new SystemMessage(checkQuerySystemPrompt);
 
   const lastMessage = state.messages[state.messages.length - 1];
   if (!lastMessage.tool_calls || lastMessage.tool_calls.length === 0) {
     throw new Error("No tool calls found in the last message");
   }
   const toolCall = lastMessage.tool_calls[0];
-  const userMessage = { role: "user" as const, content: toolCall.args.query };
+  const userMessage = new HumanMessage(toolCall.args.query);
   const llmWithTools = llm.bindTools([queryTool], {
     tool_choice: "any",
   });
