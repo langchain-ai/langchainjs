@@ -8,7 +8,6 @@ import {
   ChatWatsonxCallOptions,
   ChatWatsonxConstructorInput,
 } from "../ibm.js";
-import { RecordStringAny } from "../../../../langchain-standard-tests/dist/base.js";
 
 export class TestCallbackHandler extends BaseCallbackHandler {
   name = "TestCallbackHandler";
@@ -48,7 +47,7 @@ export class TestCallbackHandler extends BaseCallbackHandler {
 class ChatWatsonxStandardIntegrationTests extends ChatModelIntegrationTests<
   ChatWatsonxCallOptions,
   AIMessageChunk,
-  ChatWatsonxConstructorInput & RecordStringAny
+  ChatWatsonxConstructorInput & Record<string, any>
 > {
   constructor() {
     if (!process.env.WATSONX_AI_APIKEY) {
