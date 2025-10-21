@@ -99,3 +99,8 @@ export {
   createOpenAPIChain,
   convertOpenAPISpecToOpenAIFunctions,
 } from "./openai_functions/openapi.js";
+
+export {
+  type OpenAIModerationChainInput,
+  OpenAIModerationChain,
+} from "./openai_moderation.js";
