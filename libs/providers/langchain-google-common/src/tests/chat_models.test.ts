@@ -1721,6 +1721,69 @@ describe("Mock ChatGoogle - Gemini", () => {
     expect(func.parameters?.properties?.greeterName?.nullable).toEqual(true);
   });
 
+  test("4. Functions withStructuredOutput - default behavior", async () => {
+    const record: Record<string, any> = {};
+    const projectId = mockId();
+    const authOptions: MockClientAuthInfo = {
+      record,
+      projectId,
+      resultFile: "chat-4-mock.json",
+    };
+
+    const schema = {
+      type: "object",
+      properties: {
+        name: { type: "string", description: "The person's name" },
+        age: { type: "number", description: "The person's age" },
+      },
+      required: ["name", "age"],
+    };
+
+    // No responseMimeType set - should default to undefined
+    const model = new ChatGoogle({ authOptions }).withStructuredOutput(schema);
+    await model.invoke("Extract info about John Doe, software engineer");
+
+    const toolConfig = record?.opts?.data?.toolConfig;
+    expect(toolConfig.functionCallingConfig.mode).toEqual("auto");
+    expect(toolConfig.functionCallingConfig.allowedFunctionNames).toEqual(["extract"]);
+
+    const generationConfig = record?.opts?.data?.generationConfig;
+    expect(generationConfig.responseMimeType).toEqual("application/json");
+  });
+
+  test("4. Functions withStructuredOutput - overrides user setting", async () => {
+    const record: Record<string, any> = {};
+    const projectId = mockId();
+    const authOptions: MockClientAuthInfo = {
+      record,
+      projectId,
+      resultFile: "chat-4-mock.json",
+    };
+
+    const schema = {
+      type: "object",
+      properties: {
+        sender: { type: "string", description: "Email sender" },
+        subject: { type: "string", description: "Email subject" },
+      },
+      required: ["sender", "subject"],
+    };
+
+    // User explicitly sets text/plain - withStructuredOutput should override it
+    const model = new ChatGoogle({ 
+      authOptions,
+      responseMimeType: "text/plain"
+    }).withStructuredOutput(schema);
+    await model.invoke("Analyze email from sarah@company.com, subject: Project Update");
+
+    const toolConfig = record?.opts?.data?.toolConfig;
+    expect(toolConfig.functionCallingConfig.mode).toEqual("auto");
+    expect(toolConfig.functionCallingConfig.allowedFunctionNames).toEqual(["extract"]);
+
+    const generationConfig = record?.opts?.data?.generationConfig;
+    expect(generationConfig.responseMimeType).toEqual("application/json");
+  });
+
   test("4. Functions - results", async () => {
     const record: Record<string, any> = {};
     const projectId = mockId();
