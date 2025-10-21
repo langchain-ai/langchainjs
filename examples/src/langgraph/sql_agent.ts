@@ -1,3 +1,27 @@
+/**
+ * Custom SQL Agent with LangGraph
+ *
+ * This example demonstrates building a custom SQL agent using LangGraph primitives.
+ * Unlike higher-level agent abstractions, building directly in LangGraph provides
+ * fine-grained control over agent behavior through:
+ * - Dedicated nodes for specific tool-calls (list tables, get schema, run query)
+ * - Custom prompts for each step (query generation, query checking)
+ * - Enforced workflow with conditional edges
+ * - Human-in-the-loop review before executing queries
+ *
+ * The agent follows a ReAct-style pattern:
+ * 1. List available database tables
+ * 2. Retrieve schema for relevant tables
+ * 3. Generate a SQL query based on the user's question
+ * 4. Check the query for common mistakes
+ * 5. Execute the query (with optional human review)
+ * 6. Return results to the user
+ *
+ * Security Note:
+ * This example includes human-in-the-loop review to mitigate risks of executing
+ * model-generated SQL queries. Always scope database permissions narrowly.
+ */
+
 import { SqlDatabase } from "@langchain/classic/sql_db";
 import {
   AIMessage,
