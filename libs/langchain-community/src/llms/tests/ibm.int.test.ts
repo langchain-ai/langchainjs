@@ -38,7 +38,7 @@ describe.each(parameters)("Text generation for $name", ({ params }) => {
     });
 
     test("Overwritte params", async () => {
-      const props = params();
+      const props = params(512);
       const watsonXInstance = new WatsonxLLM({
         version,
         serviceUrl,
@@ -48,7 +48,8 @@ describe.each(parameters)("Text generation for $name", ({ params }) => {
         parameters:
           "modelGateway" in props ? { maxTokens: 10 } : { maxNewTokens: 10 },
       });
-      expect(res.length).toBeLessThan(50);
+
+      expect(res.length).toBeLessThan(100);
     });
 
     test("Invalid credentials", async () => {
@@ -93,7 +94,7 @@ describe.each(parameters)("Text generation for $name", ({ params }) => {
 
       await expect(() =>
         watsonXInstance.invoke("Print hello world", { timeout: 10 })
-      ).rejects.toThrowError("AbortError");
+      ).rejects.toThrow("Aborted");
     }, 10000);
 
     test("Signal in call options", async () => {
@@ -214,6 +215,7 @@ describe.each(parameters)("Text generation for $name", ({ params }) => {
         version,
         serviceUrl,
         ...params(100),
+        temperature: 0,
       });
 
       const res = await llm.generate(

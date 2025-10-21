@@ -1,8 +1,5 @@
 import { Embeddings, EmbeddingsParams } from "@langchain/core/embeddings";
-import {
-  EmbeddingReturnOptions,
-  TextEmbeddingsParams,
-} from "@ibm-cloud/watsonx-ai/dist/watsonx-ai-ml/vml_v1.js";
+
 import { WatsonXAI } from "@ibm-cloud/watsonx-ai";
 import { AsyncCaller } from "@langchain/core/utils/async_caller";
 import { CreateEmbeddingsParams, Gateway } from "@ibm-cloud/watsonx-ai/gateway";
@@ -20,7 +17,7 @@ import {
 
 export interface WatsonxEmbeddingsParams
   extends EmbeddingsParams,
-    Omit<TextEmbeddingsParams, "modelId" | "inputs" | "parameters"> {
+    Omit<WatsonXAI.TextEmbeddingsParams, "modelId" | "inputs" | "parameters"> {
   /** Represents the maximum number of input tokens accepted. This can be used to avoid requests failing due to
    *  input being longer than configured limits. If the text is truncated, then it truncates the end of the input (on
    *  the right), so the start of the input will remain the same. If this value exceeds the `maximum sequence length`
@@ -29,7 +26,7 @@ export interface WatsonxEmbeddingsParams
    */
   truncateInputTokens?: number;
   /** The return options for text embeddings. */
-  returnOptions?: EmbeddingReturnOptions;
+  returnOptions?: WatsonXAI.EmbeddingReturnOptions;
   /** The `id` of the model to be used for this request. Please refer to the [list of
    *  models](https://dataplatform.cloud.ibm.com/docs/content/wsj/analyze-data/fm-models-embed.html?context=wx&audience=wdp).
    */
@@ -79,7 +76,7 @@ export class WatsonxEmbeddings
 
   truncateInputTokens?: number;
 
-  returnOptions?: EmbeddingReturnOptions;
+  returnOptions?: WatsonXAI.EmbeddingReturnOptions;
 
   maxRetries?: number;
 
@@ -250,7 +247,7 @@ export class WatsonxEmbeddings
     const scopeId = this.scopeId();
     if (scopeId.modelId && this.service) {
       const { service } = this;
-      const textEmbeddingParams: TextEmbeddingsParams = {
+      const textEmbeddingParams: WatsonXAI.TextEmbeddingsParams = {
         inputs,
         ...scopeId,
         parameters: this.invocationParams(),

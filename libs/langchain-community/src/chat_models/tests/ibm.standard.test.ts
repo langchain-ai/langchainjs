@@ -1,21 +1,17 @@
 import { test, expect } from "@jest/globals";
-import { ChatModelUnitTests } from "@langchain/standard-tests";
 import { AIMessageChunk } from "@langchain/core/messages";
 import { LangSmithParams } from "@langchain/core/language_models/chat_models";
+import { ChatModelUnitTests } from "@langchain/standard-tests";
 import {
   ChatWatsonx,
-  ChatWatsonxInput,
+  ChatWatsonxConstructorInput,
   WatsonxCallOptionsChat,
-  WatsonxCallParams,
 } from "../ibm.js";
-import { WatsonxAuth } from "../../types/ibm.js";
 
 class ChatWatsonxStandardTests extends ChatModelUnitTests<
   WatsonxCallOptionsChat,
   AIMessageChunk,
-  ChatWatsonxInput &
-    WatsonxAuth &
-    Partial<Omit<WatsonxCallParams, "tool_choice">>
+  ChatWatsonxConstructorInput & Record<string, any>
 > {
   constructor() {
     super({

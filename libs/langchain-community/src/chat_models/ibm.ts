@@ -1037,6 +1037,7 @@ export class ChatWatsonx<
       if (!delta) {
         continue;
       }
+
       currentCompletion = choice.index ?? 0;
       const newTokenIndices = {
         prompt: options.promptIndex ?? 0,
@@ -1060,7 +1061,10 @@ export class ChatWatsonx<
         (delta.role as TextChatMessagesTextChatMessageAssistant.Constants.Role) ??
         defaultRole;
 
-      if (message === null || (!delta.content && !delta.tool_calls)) {
+      if (
+        message === null ||
+        (!delta.content && !delta.tool_calls && delta.role === "assistant")
+      ) {
         continue;
       }
       const generationChunk = new ChatGenerationChunk({
@@ -1070,7 +1074,6 @@ export class ChatWatsonx<
       });
 
       yield generationChunk;
-
       // eslint-disable-next-line no-void
       void _runManager?.handleLLMNewToken(
         generationChunk.text,

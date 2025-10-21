@@ -3,13 +3,12 @@ import { ChatModelIntegrationTests } from "@langchain/standard-tests";
 import { AIMessageChunk, BaseMessage } from "@langchain/core/messages";
 import { Serialized } from "@langchain/core/load/serializable";
 import { BaseCallbackHandler } from "@langchain/core/callbacks/base";
-import { WatsonxAuth } from "../../types/ibm.js";
 import {
   ChatWatsonx,
-  ChatWatsonxInput,
-  WatsonxCallOptionsChat,
-  WatsonxCallParams,
+  ChatWatsonxCallOptions,
+  ChatWatsonxConstructorInput,
 } from "../ibm.js";
+import { RecordStringAny } from "../../../../langchain-standard-tests/dist/base.js";
 
 export class TestCallbackHandler extends BaseCallbackHandler {
   name = "TestCallbackHandler";
@@ -47,11 +46,9 @@ export class TestCallbackHandler extends BaseCallbackHandler {
 }
 
 class ChatWatsonxStandardIntegrationTests extends ChatModelIntegrationTests<
-  WatsonxCallOptionsChat,
+  ChatWatsonxCallOptions,
   AIMessageChunk,
-  ChatWatsonxInput &
-    WatsonxAuth &
-    Partial<Omit<WatsonxCallParams, "tool_choice">>
+  ChatWatsonxConstructorInput & RecordStringAny
 > {
   constructor() {
     if (!process.env.WATSONX_AI_APIKEY) {
