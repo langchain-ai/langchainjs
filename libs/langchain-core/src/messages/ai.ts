@@ -261,7 +261,6 @@ export class AIMessageChunk<
       | AIMessageChunkFields<TStructure>
   ) {
     let initParams: AIMessageChunkFields<TStructure>;
-    console.log("constructor", fields);
     if (typeof fields === "string" || Array.isArray(fields)) {
       initParams = {
         content: fields,
