@@ -42,10 +42,18 @@ export interface ToolCallRequest<
    */
   toolCall: ToolCall;
   /**
-   * The BaseTool instance being invoked.
+   * The BaseTool instance being invoked, or undefined if the tool is not
+   * registered with the ToolNode.
+   *
    * Provides access to tool metadata like name, description, schema, etc.
+   *
+   * When tool is undefined, this indicates an unregistered tool (e.g., schema-less
+   * tools like Anthropic's text editor). Middleware can handle these by checking
+   * the tool name and returning a result without calling the handler. If the
+   * handler is called with an unregistered tool, validation will occur and return
+   * an error message.
    */
-  tool: ClientTool | ServerTool;
+  tool: ClientTool | ServerTool | undefined;
   /**
    * The current agent state (includes both middleware state and built-in state).
    */
