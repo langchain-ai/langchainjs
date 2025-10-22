@@ -12,6 +12,10 @@ import {
   isMessage,
   Message,
 } from "./message.js";
+import {
+  convertToFormattedString,
+  type MessageStringFormat,
+} from "./format.js";
 
 /** @internal */
 const MESSAGE_SYMBOL = Symbol.for("langchain.message");
@@ -377,6 +381,10 @@ export abstract class BaseMessage<
     );
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return `${(this.constructor as any).lc_name()} ${printable}`;
+  }
+
+  toFormattedString(format: MessageStringFormat = "pretty"): string {
+    return convertToFormattedString(this, format);
   }
 }
 

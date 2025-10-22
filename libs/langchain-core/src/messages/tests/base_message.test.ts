@@ -754,3 +754,167 @@ describe("usage_metadata serialized", () => {
     expect(jsonConcatenatedAIMessageChunk).toContain("total_tokens");
   });
 });
+
+describe("toFormattedString", () => {
+  describe("BaseMessage (HumanMessage)", () => {
+    it("formats a simple string message", () => {
+      const message = new HumanMessage("Hello, world!");
+      const output = message.toFormattedString();
+      expect(output).toContain("Human Message");
+      expect(output).toContain("Hello, world!");
+      expect(output).toMatch(/={30,}/); // Check for separator line
+    });
+
+    it("formats a message with empty content", () => {
+      const message = new HumanMessage("");
+      const output = message.toFormattedString();
+      expect(output).toContain("Human Message");
+      expect(output).not.toContain("\n\n"); // No blank line before content
+    });
+
+    it("formats a message with whitespace-only content", () => {
+      const message = new HumanMessage("   ");
+      const output = message.toFormattedString();
+      expect(output).toContain("Human Message");
+      // Whitespace-only content should be treated as empty
+      expect(output.split("\n").length).toBe(1);
+    });
+  });
+
+  describe("AIMessage", () => {
+    it("formats an AI message without tool calls", () => {
+      const message = new AIMessage("I can help with that!");
+      const output = message.toFormattedString();
+      expect(output).toContain("Ai Message");
+      expect(output).toContain("I can help with that!");
+    });
+
+    it("formats an AI message with tool calls", () => {
+      const message = new AIMessage({
+        content: "Let me check the weather",
+        tool_calls: [
+          {
+            id: "call_123",
+            name: "get_weather",
+            args: { location: "San Francisco", unit: "celsius" },
+            type: "tool_call",
+          },
+        ],
+      });
+      const output = message.toFormattedString();
+      expect(output).toContain("Ai Message");
+      expect(output).toContain("Tool Calls:");
+      expect(output).toContain("get_weather (call_123)");
+      expect(output).toContain("Call ID: call_123");
+      expect(output).toContain("Args:");
+      expect(output).toContain("location: San Francisco");
+      expect(output).toContain("unit: celsius");
+    });
+
+    it("formats an AI message with multiple tool calls", () => {
+      const message = new AIMessage({
+        content: "",
+        tool_calls: [
+          {
+            id: "call_1",
+            name: "search",
+            args: { query: "test" },
+            type: "tool_call",
+          },
+          {
+            id: "call_2",
+            name: "calculator",
+            args: { expression: "2+2" },
+            type: "tool_call",
+          },
+        ],
+      });
+      const output = message.toFormattedString();
+      expect(output).toContain("search (call_1)");
+      expect(output).toContain("calculator (call_2)");
+    });
+
+    it("formats an AI message with empty tool calls array", () => {
+      const message = new AIMessage({
+        content: "Just a message",
+        tool_calls: [],
+      });
+      const output = message.toFormattedString();
+      expect(output).toContain("Ai Message");
+      expect(output).not.toContain("Tool Calls:");
+      expect(output).toContain("Just a message");
+    });
+  });
+
+  describe("ToolMessage", () => {
+    it("formats a tool message with name", () => {
+      const message = new ToolMessage({
+        content: '{"temperature": 72}',
+        tool_call_id: "call_123",
+        name: "get_weather",
+      });
+      const output = message.toFormattedString();
+      expect(output).toContain("Tool Message");
+      expect(output).toContain("Name: get_weather");
+      expect(output).toContain('{"temperature": 72}');
+    });
+
+    it("formats a tool message without name", () => {
+      const message = new ToolMessage({
+        content: "Success",
+        tool_call_id: "call_456",
+      });
+      const output = message.toFormattedString();
+      expect(output).toContain("Tool Message");
+      expect(output).not.toContain("Name:");
+      expect(output).toContain("Success");
+    });
+  });
+
+  describe("SystemMessage", () => {
+    it("formats a system message", () => {
+      const message = new SystemMessage("You are a helpful assistant.");
+      const output = message.toFormattedString();
+      expect(output).toContain("System Message");
+      expect(output).toContain("You are a helpful assistant.");
+    });
+  });
+
+  describe("Message formatting consistency", () => {
+    it("maintains consistent separator length for different message types", () => {
+      const human = new HumanMessage("Hi");
+      const ai = new AIMessage("Hello");
+      const system = new SystemMessage("System");
+
+      const humanOutput = human.toFormattedString();
+      const aiOutput = ai.toFormattedString();
+      const systemOutput = system.toFormattedString();
+
+      const humanSep = humanOutput.split("\n")[0];
+      const aiSep = aiOutput.split("\n")[0];
+      const systemSep = systemOutput.split("\n")[0];
+
+      expect(humanSep.length).toBe(80);
+      expect(aiSep.length).toBe(80);
+      expect(systemSep.length).toBe(80);
+    });
+
+    it("adds blank line before content when details are present", () => {
+      const messageWithDetails = new AIMessage({
+        content: "Response",
+        tool_calls: [
+          {
+            id: "call_1",
+            name: "tool",
+            args: {},
+            type: "tool_call",
+          },
+        ],
+      });
+      const output = messageWithDetails.toFormattedString();
+      const lines = output.split("\n");
+      // Should have: title, Tool Calls:, tool info, blank line, content
+      expect(lines).toContain("");
+    });
+  });
+});
