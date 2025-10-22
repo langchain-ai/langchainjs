@@ -36,7 +36,7 @@ import { z } from "zod";
 const createCalendarEvent = tool(
   async ({ title, startTime, endTime, attendees, location }) => {
     // Stub: In practice, this would call Google Calendar API, Outlook API, etc.
-    return `Event created: ${title} from ${startTime} to ${endTime} with ${attendees.length} attendees`;
+    return `Event created: ${title} from ${startTime} to ${endTime} with ${attendees.length} attendees at ${location}`;
   },
   {
     name: "create_calendar_event",
@@ -54,7 +54,12 @@ const createCalendarEvent = tool(
 const sendEmail = tool(
   async ({ to, subject, body, cc }) => {
     // Stub: In practice, this would call SendGrid, Gmail API, etc.
-    return `Email sent to ${to.join(", ")} - Subject: ${subject}`;
+    return [
+      `Email sent to ${to.join(", ")}`,
+      `- Subject: ${subject}`,
+      `- Body: ${body}`,
+      `- CC: ${cc.join(", ")}`,
+    ].join("\n");
   },
   {
     name: "send_email",
@@ -70,7 +75,7 @@ const sendEmail = tool(
 );
 
 const getAvailableTimeSlots = tool(
-  async ({ attendees, date, durationMinutes }) => {
+  async () => {
     // Stub: In practice, this would query calendar APIs
     return ["09:00", "14:00", "16:00"];
   },
