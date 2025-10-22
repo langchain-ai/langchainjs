@@ -247,5 +247,6 @@ export * as experimental__callbacks__handlers__datadog from "../experimental/cal
 export * as experimental__graph_transformers__llm from "../experimental/graph_transformers/llm.js";
 export * as experimental__multimodal_embeddings__googlevertexai from "../experimental/multimodal_embeddings/googlevertexai.js";
 export * as experimental__llms__chrome_ai from "../experimental/llms/chrome_ai.js";
+export * as chat_loaders__whatsapp from "../chat_loaders/whatsapp.js";
 export * as experimental__tools__pyinterpreter from "../experimental/tools/pyinterpreter.js";
 export * as chains__graph_qa__cypher from "../chains/graph_qa/cypher.js";

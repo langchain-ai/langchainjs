@@ -3406,6 +3406,17 @@
         "default": "./dist/experimental/llms/chrome_ai.cjs"
       }
     },
+    "./chat_loaders/whatsapp": {
+      "input": "./src/chat_loaders/whatsapp.ts",
+      "import": {
+        "types": "./dist/chat_loaders/whatsapp.d.ts",
+        "default": "./dist/chat_loaders/whatsapp.js"
+      },
+      "require": {
+        "types": "./dist/chat_loaders/whatsapp.d.cts",
+        "default": "./dist/chat_loaders/whatsapp.cjs"
+      }
+    },
     "./experimental/tools/pyinterpreter": {
       "input": "./src/experimental/tools/pyinterpreter.ts",
       "import": {
