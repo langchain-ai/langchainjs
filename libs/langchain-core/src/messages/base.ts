@@ -12,7 +12,10 @@ import {
   isMessage,
   Message,
 } from "./message.js";
-import { convertToFormattedString } from "./utils.js";
+import {
+  convertToFormattedString,
+  type MessageStringFormat,
+} from "./format.js";
 
 /** @internal */
 const MESSAGE_SYMBOL = Symbol.for("langchain.message");
@@ -380,8 +383,8 @@ export abstract class BaseMessage<
     return `${(this.constructor as any).lc_name()} ${printable}`;
   }
 
-  toFormattedString(): string {
-    return convertToFormattedString(this);
+  toFormattedString(format: MessageStringFormat = "pretty"): string {
+    return convertToFormattedString(this, format);
   }
 }
 
