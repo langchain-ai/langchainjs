@@ -21,7 +21,12 @@ import {
   getCurrentTaskInput,
   MemorySaver,
 } from "@langchain/langgraph";
-import { createAgent, humanInTheLoopMiddleware, tool } from "langchain";
+import {
+  type BuiltInState,
+  createAgent,
+  humanInTheLoopMiddleware,
+  tool,
+} from "langchain";
 import { z } from "zod";
 
 // ============================================================================
@@ -138,8 +143,7 @@ const scheduleEvent = tool(
   async ({ request }, config) => {
     // Customize context received by sub-agent
     // Access full thread messages from the config
-    const currentMessages =
-      getCurrentTaskInput<InternalAgentState>(config).messages;
+    const currentMessages = getCurrentTaskInput<BuiltInState>(config).messages;
 
     const originalUserMessage = currentMessages.find(HumanMessage.isInstance);
 
@@ -179,8 +183,7 @@ const manageEmail = tool(
   async ({ request }, config) => {
     // Customize context received by sub-agent
     // Access full thread messages from the config
-    const currentMessages =
-      getCurrentTaskInput<InternalAgentState>(config).messages;
+    const currentMessages = getCurrentTaskInput<BuiltInState>(config).messages;
 
     const originalUserMessage = currentMessages.find(HumanMessage.isInstance);
 
