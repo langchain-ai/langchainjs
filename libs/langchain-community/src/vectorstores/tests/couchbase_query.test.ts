@@ -82,8 +82,11 @@ describe.skip("CouchbaseQueryVectorStore", () => {
   });
 
   beforeEach(async () => {
-    await cluster.buckets().flushBucket(config.bucketName);
-
+    try {
+      await cluster.buckets().flushBucket(config.bucketName);
+    } catch (error: any) {
+      console.warn("Could not flush bucket during cleanup:", error.message);
+    }
     // Initialize store
     try {
       const storeConfig: CouchbaseQueryVectorStoreArgs = {
@@ -121,7 +124,11 @@ describe.skip("CouchbaseQueryVectorStore", () => {
 
   afterAll(async () => {
     if (cluster) {
-      await cluster.buckets().flushBucket(config.bucketName);
+      try {
+        await cluster.buckets().flushBucket(config.bucketName);
+      } catch (error: any) {
+        console.warn("Could not flush bucket during aterAll cleanup:", error.message);
+      }
       await cluster.close();
     }
   });
