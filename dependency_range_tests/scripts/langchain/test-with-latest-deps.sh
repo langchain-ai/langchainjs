@@ -22,7 +22,7 @@ cd /app
 node /updater_script/update_resolutions_latest.js
 
 yarn
-yarn add @langchain/core
+yarn add @langchain/core@^0.3
 
 # Check the test command completes successfully
 NODE_OPTIONS=--experimental-vm-modules yarn run jest --testPathIgnorePatterns=\\.int\\.test.ts --testTimeout 30000 --maxWorkers=50%
