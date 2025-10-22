@@ -268,7 +268,10 @@ export class AIMessageChunk<
         invalid_tool_calls: [],
         tool_call_chunks: [],
       };
-    } else if (fields.tool_call_chunks === undefined) {
+    } else if (
+      fields.tool_call_chunks === undefined ||
+      fields.tool_call_chunks.length === 0
+    ) {
       initParams = {
         ...fields,
         tool_calls: fields.tool_calls ?? [],
@@ -310,7 +313,7 @@ export class AIMessageChunk<
         return acc;
       }, [] as ToolCallChunk[][]);
 
-      const toolCalls: ToolCall[] = fields.tool_calls ?? [];
+      const toolCalls: ToolCall[] = [];
       const invalidToolCalls: InvalidToolCall[] = [];
       for (const chunks of groupedToolCallChunks) {
         let parsedArgs: Record<string, unknown> | null = null;
