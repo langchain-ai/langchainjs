@@ -2,6 +2,35 @@ import { describe, it, expect } from "@jest/globals";
 import { AIMessageChunk } from "../ai.js";
 
 describe("AIMessageChunk", () => {
+  describe("constructor", () => {
+    it("can be constructed with tool calls using basic params", () => {
+      const chunk = new AIMessageChunk({
+        content: "",
+        tool_calls: [
+          {
+            name: "get_weather",
+            args: {
+              location: "San Francisco",
+            },
+          },
+        ],
+        invalid_tool_calls: [],
+        tool_call_chunks: [],
+        additional_kwargs: {},
+        response_metadata: {},
+      });
+      expect(chunk.tool_calls).toHaveLength(1);
+      expect(chunk.tool_calls).toEqual([
+        {
+          name: "get_weather",
+          args: {
+            location: "San Francisco",
+          },
+        },
+      ]);
+    });
+  });
+
   it("should properly merge tool call chunks that have matching indices and ids", () => {
     const chunk1 = new AIMessageChunk({
       content: "",
