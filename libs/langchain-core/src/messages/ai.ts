@@ -268,7 +268,10 @@ export class AIMessageChunk<
         invalid_tool_calls: [],
         tool_call_chunks: [],
       };
-    } else if (fields.tool_call_chunks === undefined) {
+    } else if (
+      fields.tool_call_chunks === undefined ||
+      fields.tool_call_chunks.length === 0
+    ) {
       initParams = {
         ...fields,
         tool_calls: fields.tool_calls ?? [],
@@ -280,37 +283,35 @@ export class AIMessageChunk<
             : undefined,
       };
     } else {
-      const groupedToolCallChunks = fields.tool_call_chunks.reduce(
-        (acc, chunk) => {
-          const matchedChunkIndex = acc.findIndex(([match]) => {
-            // If chunk has an id and index, match if both are present
-            if (
-              "id" in chunk &&
-              chunk.id &&
-              "index" in chunk &&
-              chunk.index !== undefined
-            ) {
-              return chunk.id === match.id && chunk.index === match.index;
-            }
-            // If chunk has an id, we match on id
-            if ("id" in chunk && chunk.id) {
-              return chunk.id === match.id;
-            }
-            // If chunk has an index, we match on index
-            if ("index" in chunk && chunk.index !== undefined) {
-              return chunk.index === match.index;
-            }
-            return false;
-          });
-          if (matchedChunkIndex !== -1) {
-            acc[matchedChunkIndex].push(chunk);
-          } else {
-            acc.push([chunk]);
+      const toolCallChunks = fields.tool_call_chunks ?? [];
+      const groupedToolCallChunks = toolCallChunks.reduce((acc, chunk) => {
+        const matchedChunkIndex = acc.findIndex(([match]) => {
+          // If chunk has an id and index, match if both are present
+          if (
+            "id" in chunk &&
+            chunk.id &&
+            "index" in chunk &&
+            chunk.index !== undefined
+          ) {
+            return chunk.id === match.id && chunk.index === match.index;
           }
-          return acc;
-        },
-        [] as ToolCallChunk[][]
-      );
+          // If chunk has an id, we match on id
+          if ("id" in chunk && chunk.id) {
+            return chunk.id === match.id;
+          }
+          // If chunk has an index, we match on index
+          if ("index" in chunk && chunk.index !== undefined) {
+            return chunk.index === match.index;
+          }
+          return false;
+        });
+        if (matchedChunkIndex !== -1) {
+          acc[matchedChunkIndex].push(chunk);
+        } else {
+          acc.push([chunk]);
+        }
+        return acc;
+      }, [] as ToolCallChunk[][]);
 
       const toolCalls: ToolCall[] = [];
       const invalidToolCalls: InvalidToolCall[] = [];
