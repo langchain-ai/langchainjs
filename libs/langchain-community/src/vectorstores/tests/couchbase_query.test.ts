@@ -23,6 +23,9 @@ import {
 describe.skip("CouchbaseQueryVectorStore", () => {
   // Configuration
   const config = {
+    // **Note** user must have permissions to create buckets and indexes, and must be able to flush buckets
+    // unfortunately, Couchbase Capella doesn't support this level of access for database users,
+    // so these tests must run against a local Couchbase server
     cluster: process.env.COUCHBASE_CLUSTER || "couchbase://localhost",
     username: process.env.COUCHBASE_USERNAME || "Administrator",
     password: process.env.COUCHBASE_PASSWORD || "password",
@@ -390,12 +393,12 @@ describe.skip("CouchbaseQueryVectorStore", () => {
       }
     }
 
-    test("should create BHIVE vector index", async () => {
-      const createBhiveIndexOptions = {
-        indexType: IndexType.BHIVE,
+    test("should create HYPERSCALE vector index", async () => {
+      const createHyperscaleIndexOptions = {
+        indexType: IndexType.HYPERSCALE,
         indexDescription: "IVF1024,SQ8",
         distanceMetric: DistanceStrategy.COSINE,
-        indexName: "my_bhive_vector_index",
+        indexName: "my_hyperscale_vector_index",
         vectorDimension: 1536,
         fields: ["text", "metadata"],
         whereClause: "metadata.source = 'bulk_test'",
@@ -405,7 +408,7 @@ describe.skip("CouchbaseQueryVectorStore", () => {
 
       // Test that createIndex doesn't throw an error
       await expect(
-        indexTestStore.createIndex(createBhiveIndexOptions)
+        indexTestStore.createIndex(createHyperscaleIndexOptions)
       ).resolves.not.toThrow();
 
       const indexes = await cluster
@@ -413,7 +416,7 @@ describe.skip("CouchbaseQueryVectorStore", () => {
         .getAllIndexes(config.indexTestBucketName);
       expect(
         indexes.some(
-          (index) => index.name === createBhiveIndexOptions.indexName
+          (index) => index.name === createHyperscaleIndexOptions.indexName
         )
       ).toBe(true);
     });
@@ -448,7 +451,7 @@ describe.skip("CouchbaseQueryVectorStore", () => {
 
     test("should create index with minimal options", async () => {
       const minimalOptions = {
-        indexType: IndexType.BHIVE,
+        indexType: IndexType.HYPERSCALE,
         indexDescription: "IVF,SQ8",
         indexName: "minimal_options_index",
         whereClause: "metadata.source = 'bulk_test'",
@@ -469,7 +472,7 @@ describe.skip("CouchbaseQueryVectorStore", () => {
 
     test("should auto-detect vector dimension from embeddings", async () => {
       const optionsWithoutDimension = {
-        indexType: IndexType.BHIVE,
+        indexType: IndexType.HYPERSCALE,
         indexDescription: "IVF,SQ8",
         indexName: "auto_dimension_index",
         whereClause: "metadata.source = 'bulk_test'",
@@ -492,7 +495,7 @@ describe.skip("CouchbaseQueryVectorStore", () => {
 
     test("should handle index creation errors gracefully", async () => {
       const invalidOptions = {
-        indexType: IndexType.BHIVE,
+        indexType: IndexType.HYPERSCALE,
         indexDescription: "", // Empty description should cause an error
         indexName: "invalid_index",
       };
@@ -510,12 +513,12 @@ describe.skip("CouchbaseQueryVectorStore", () => {
       ).toBe(false);
     });
 
-    test("should create both BHIVE and COMPOSITE indexes sequentially", async () => {
-      const createBhiveIndexOptions = {
-        indexType: IndexType.BHIVE,
+    test("should create both HYPERSCALE and COMPOSITE indexes sequentially", async () => {
+      const createHyperscaleIndexOptions = {
+        indexType: IndexType.HYPERSCALE,
         indexDescription: "IVF1024,SQ8",
         distanceMetric: DistanceStrategy.COSINE,
-        indexName: "sequential_bhive_index",
+        indexName: "sequential_hyperscale_index",
         whereClause: "metadata.source = 'bulk_test'",
       };
 
@@ -529,7 +532,7 @@ describe.skip("CouchbaseQueryVectorStore", () => {
 
       // Test creating both index types sequentially
       await expect(
-        indexTestStore.createIndex(createBhiveIndexOptions)
+        indexTestStore.createIndex(createHyperscaleIndexOptions)
       ).resolves.not.toThrow();
       await expect(
         indexTestStore.createIndex(createCompositeIndexOptions)
@@ -540,7 +543,7 @@ describe.skip("CouchbaseQueryVectorStore", () => {
         .getAllIndexes(config.indexTestBucketName);
       expect(
         indexes.some(
-          (index) => index.name === createBhiveIndexOptions.indexName
+          (index) => index.name === createHyperscaleIndexOptions.indexName
         )
       ).toBe(true);
       expect(
@@ -552,7 +555,7 @@ describe.skip("CouchbaseQueryVectorStore", () => {
 
     test("should use default distance strategy when not specified", async () => {
       const optionsWithoutDistance = {
-        indexType: IndexType.BHIVE,
+        indexType: IndexType.HYPERSCALE,
         indexDescription: "IVF,SQ8",
         indexName: "default_distance_index",
         whereClause: "metadata.source = 'bulk_test'",
@@ -583,7 +586,7 @@ describe.skip("CouchbaseQueryVectorStore", () => {
 
       for (let i = 0; i < distanceStrategies.length; i += 1) {
         const options = {
-          indexType: IndexType.BHIVE,
+          indexType: IndexType.HYPERSCALE,
           indexDescription: "IVF,SQ8",
           distanceMetric: distanceStrategies[i],
           indexName: `distance_test_index_${i}`,

@@ -21,7 +21,7 @@ export enum DistanceStrategy {
 
 export enum IndexType {
   COMPOSITE = "composite",
-  BHIVE = "bhive",
+  HYPERSCALE = "hyperscale",
 }
 
 /**
@@ -536,7 +536,7 @@ export class CouchbaseQueryVectorStore extends VectorStore {
    * Create a new vector index for the Query vector store.
    *
    * @param options - Configuration options for creating the index
-   * @param options.indexType - Type of the index (BHIVE or COMPOSITE) to create
+   * @param options.indexType - Type of the index (HYPERSCALE or COMPOSITE) to create
    * @param options.indexDescription - Description of the index like "IVF,SQ8"
    * @param options.distanceMetric - Distance metric to use for the index. Defaults to the distance metric in the constructor
    * @param options.indexName - Name of the index to create. Defaults to "langchain_{indexType}_query_index"
@@ -626,9 +626,9 @@ export class CouchbaseQueryVectorStore extends VectorStore {
     let indexQuery: string;
     let finalIndexName: string;
 
-    if (indexType === IndexType.BHIVE) {
-      finalIndexName = indexName || "langchain_bhive_query_index";
-      // BHIVE: Specialized vector index with INCLUDE clause for additional fields
+    if (indexType === IndexType.HYPERSCALE) {
+      finalIndexName = indexName || "langchain_hyperscale_query_index";
+      // HYPERSCALE: Specialized vector index with INCLUDE clause for additional fields
       indexQuery =
         `CREATE VECTOR INDEX \`${finalIndexName}\` ON \`${this.bucketName}\`.\`${this.scopeName}\`.\`${this.collectionName}\` ` +
         `(\`${vectorFieldName}\` VECTOR) INCLUDE (${includeFields
