@@ -391,14 +391,18 @@ export class WatsonxLLM<
       throw new Error("Options cannot be provided to a deployed model");
     if (this.idOrName) return undefined;
 
+
     if (this.modelGateway) {
+      const modelGatewayParams: Record<string, any> = {
+        ...this?.modelGatewayKwargs,
+        ...parameters?.modelGatewayKwargs,
+      };
       return {
         stop: options?.stop ?? this.stopSequence,
         temperature: parameters?.temperature ?? this.temperature,
         topP: parameters?.topP ?? this.topP,
         maxTokens: parameters?.maxTokens ?? this.maxTokens,
-        ...this?.modelGatewayKwargs,
-        ...parameters?.modelGatewayKwargs,
+        ...modelGatewayParams,
       };
     }
 

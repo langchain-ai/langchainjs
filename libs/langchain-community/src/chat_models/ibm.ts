@@ -122,7 +122,7 @@ export interface WatsonxDeployedParams extends WatsonxCallOptionsDeployedChat {
   version: string;
 }
 /** Gateway params */
-export default interface WatsonxGatewayChatKwargs
+export interface WatsonxGatewayChatKwargs
   extends Omit<
     CreateChatCompletionsParams,
     keyof TextChatParams | "model" | "stream" | "messages"
@@ -738,13 +738,15 @@ export class ChatWatsonx<
       frequencyPenalty: options.frequencyPenalty ?? this.frequencyPenalty,
     };
 
-    const toolParams = tools ? { tools: _convertToolToWatsonxTool(tools) } : {};
+    const toolParams: Record<string, any> = tools
+      ? { tools: _convertToolToWatsonxTool(tools) }
+      : {};
 
-    const toolChoiceParams = tool_choice
+    const toolChoiceParams: Record<string, any> = tool_choice
       ? _convertToolChoiceToWatsonxToolChoice(tool_choice)
       : {};
 
-    const gatewayParams = this.modelGateway
+    const gatewayParams: Record<string, any> = this.modelGateway
       ? { ...this.modelGatewayKwargs }
       : {
           timeLimit: timeLimit ?? this.timeLimit,
