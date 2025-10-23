@@ -18,16 +18,17 @@ import {
 import { concat } from "@langchain/core/utils/stream";
 import { ChatWatsonx } from "../ibm.js";
 
-const models = ["ibm/granite-3-2-8b-instruct", "mistralai/mistral-medium-2505"];
-const modelAlias = "mistral-medium";
+const models = ["ibm/granite-3-2-8b-instruct"];
+const modelAlias = "ibm/granite-3-2-8b-instruct";
 const projectId = process.env.WATSONX_AI_PROJECT_ID;
 const version = "2024-05-31";
 const serviceUrl = process.env.WATSONX_AI_SERVICE_URL as string;
+const serviceUrlGateway = process.env.WATSONX_AI_SERVICE_URL_GATEWAY as string;
 
 const parameters = [
   ...models.map((model) => ({
     name: "projectId",
-    params: { projectId, model, maxTokens: 5 },
+    params: { projectId, model, maxTokens: 5, serviceUrl },
   })),
   {
     name: "Model Gateway",
@@ -35,6 +36,7 @@ const parameters = [
       modelGateway: true,
       model: modelAlias,
       maxTokens: 5,
+      serviceUrl: serviceUrlGateway,
     },
   },
 ];
@@ -46,7 +48,6 @@ describe.each(parameters)(
       test("Basic invoke with projectId", async () => {
         const service = new ChatWatsonx({
           version,
-          serviceUrl,
           ...basicParams,
         });
         const res = await service.invoke("Print hello world");
@@ -56,7 +57,6 @@ describe.each(parameters)(
       test("Basic generate", async () => {
         const service = new ChatWatsonx({
           version,
-          serviceUrl,
           ...basicParams,
         });
         const message = new HumanMessage("Hello");
@@ -67,7 +67,6 @@ describe.each(parameters)(
       test("Invoke with system message", async () => {
         const service = new ChatWatsonx({
           version,
-          serviceUrl,
           ...basicParams,
         });
         const messages = [
@@ -83,7 +82,7 @@ describe.each(parameters)(
       test("Invoke with output parser", async () => {
         const service = new ChatWatsonx({
           version,
-          serviceUrl,
+
           ...basicParams,
         });
         const parser = new StringOutputParser();
@@ -101,7 +100,7 @@ describe.each(parameters)(
       test("Invoke with prompt", async () => {
         const service = new ChatWatsonx({
           version,
-          serviceUrl,
+
           ...basicParams,
         });
         const systemTemplate = "Translate the following into {language}:";
@@ -117,7 +116,7 @@ describe.each(parameters)(
       test("Invoke with chat conversation", async () => {
         const service = new ChatWatsonx({
           version,
-          serviceUrl,
+
           ...basicParams,
         });
         const res = await service.invoke([
@@ -138,7 +137,7 @@ describe.each(parameters)(
         };
         const service = new ChatWatsonx({
           version,
-          serviceUrl,
+
           ...basicParams,
           callbackManager: CallbackManager.fromHandlers({
             async handleLLMEnd(output: LLMResult) {
@@ -154,7 +153,6 @@ describe.each(parameters)(
       test("Timeout", async () => {
         const service = new ChatWatsonx({
           version: "2024-05-31",
-          serviceUrl: process.env.WATSONX_AI_SERVICE_URL ?? "testString",
           ...basicParams,
         });
         await expect(() =>
@@ -166,7 +164,7 @@ describe.each(parameters)(
       test("Controller options", async () => {
         const service = new ChatWatsonx({
           version,
-          serviceUrl,
+
           ...basicParams,
         });
         const controller = new AbortController();
@@ -184,7 +182,7 @@ describe.each(parameters)(
       test("Basic invoke", async () => {
         const service = new ChatWatsonx({
           version,
-          serviceUrl,
+
           ...basicParams,
         });
         const res = await service.invoke("Print hello world");
@@ -194,7 +192,7 @@ describe.each(parameters)(
       test("Basic generate", async () => {
         const service = new ChatWatsonx({
           version,
-          serviceUrl,
+
           ...basicParams,
         });
         const message = new HumanMessage("Hello");
@@ -204,7 +202,7 @@ describe.each(parameters)(
       test("Generate with n>1", async () => {
         const service = new ChatWatsonx({
           version,
-          serviceUrl,
+
           ...basicParams,
           n: 3,
         });
@@ -232,7 +230,7 @@ describe.each(parameters)(
         let tokenUsed = 0;
         const service = new ChatWatsonx({
           version,
-          serviceUrl,
+
           ...basicParams,
           n: 2,
           maxTokens: 5,
@@ -270,7 +268,7 @@ describe.each(parameters)(
       test("Invoke with system message", async () => {
         const service = new ChatWatsonx({
           version,
-          serviceUrl,
+
           ...basicParams,
         });
         const messages = [
@@ -285,7 +283,7 @@ describe.each(parameters)(
       test("Invoke with output parser", async () => {
         const service = new ChatWatsonx({
           version,
-          serviceUrl,
+
           ...basicParams,
         });
         const parser = new StringOutputParser();
@@ -302,7 +300,7 @@ describe.each(parameters)(
       test("Invoke with prompt", async () => {
         const service = new ChatWatsonx({
           version,
-          serviceUrl,
+
           ...basicParams,
         });
         const systemTemplate = "Translate the following into {language}:";
@@ -317,7 +315,7 @@ describe.each(parameters)(
       test("Invoke with chat conversation", async () => {
         const service = new ChatWatsonx({
           version,
-          serviceUrl,
+
           ...basicParams,
         });
         const res = await service.invoke([
@@ -338,7 +336,7 @@ describe.each(parameters)(
         };
         const service = new ChatWatsonx({
           version,
-          serviceUrl,
+
           ...basicParams,
           callbackManager: CallbackManager.fromHandlers({
             async handleLLMEnd(output: LLMResult) {
@@ -354,7 +352,7 @@ describe.each(parameters)(
       test("Timeout", async () => {
         const service = new ChatWatsonx({
           version,
-          serviceUrl,
+
           ...basicParams,
         });
         await expect(() =>
@@ -366,7 +364,7 @@ describe.each(parameters)(
       test("Controller options", async () => {
         const service = new ChatWatsonx({
           version,
-          serviceUrl,
+
           ...basicParams,
         });
         const controller = new AbortController();
@@ -384,7 +382,7 @@ describe.each(parameters)(
       test("Basic stream", async () => {
         const service = new ChatWatsonx({
           version,
-          serviceUrl,
+
           ...basicParams,
         });
         const prompt = ChatPromptTemplate.fromMessages([
@@ -404,7 +402,7 @@ describe.each(parameters)(
       test("Timeout", async () => {
         const service = new ChatWatsonx({
           version,
-          serviceUrl,
+
           ...basicParams,
         });
         await expect(() =>
@@ -416,7 +414,7 @@ describe.each(parameters)(
       test("Controller options", async () => {
         const service = new ChatWatsonx({
           version,
-          serviceUrl,
+
           ...basicParams,
         });
         const controller = new AbortController();
@@ -437,7 +435,7 @@ describe.each(parameters)(
         let generation = "";
         const service = new ChatWatsonx({
           version,
-          serviceUrl,
+
           ...basicParams,
           callbackManager: CallbackManager.fromHandlers({
             async handleLLMEnd(output: LLMResult) {
@@ -464,7 +462,7 @@ describe.each(parameters)(
       test("Token count usage_metadata", async () => {
         const service = new ChatWatsonx({
           version,
-          serviceUrl,
+
           ...basicParams,
         });
         let res: AIMessageChunk | null = null;
@@ -488,7 +486,7 @@ describe.each(parameters)(
       test("with n>1", async () => {
         const service = new ChatWatsonx({
           version,
-          serviceUrl,
+
           ...basicParams,
           n: 2,
         });
@@ -496,7 +494,7 @@ describe.each(parameters)(
         const stream = await service.stream("Hello. How are you?");
         const result = ["", ""];
         for await (const chunk of stream) {
-          result[chunk.response_metadata.completion] += chunk.content;
+          result[chunk.response_metadata.completion as number] += chunk.content;
           expect(typeof chunk.content).toBe("string");
         }
         result.forEach((item) => expect(typeof item).toBe("string"));
@@ -508,7 +506,7 @@ describe.each(parameters)(
       test("Passing tool to chat model", async () => {
         const service = new ChatWatsonx({
           version,
-          serviceUrl,
+
           ...toolParams,
         });
         const calculatorSchema = z.object({
@@ -563,7 +561,7 @@ describe.each(parameters)(
       test("Passing tool to chat model extended", async () => {
         const service = new ChatWatsonx({
           version,
-          serviceUrl,
+
           ...toolParams,
         });
         const calculatorSchema = z.object({
@@ -622,7 +620,7 @@ describe.each(parameters)(
       test("Binding model-specific formats", async () => {
         const service = new ChatWatsonx({
           version,
-          serviceUrl,
+
           ...toolParams,
         });
 
@@ -662,7 +660,7 @@ describe.each(parameters)(
       test("Passing tool to chat model", async () => {
         const service = new ChatWatsonx({
           version,
-          serviceUrl,
+
           ...toolParams,
         });
         const addTool = tool(
@@ -711,7 +709,6 @@ describe.each(parameters)(
       test("Passing tool to chat model and invoking the tools with stream", async () => {
         const service = new ChatWatsonx({
           version,
-          serviceUrl,
           ...toolParams,
         });
         const addTool = tool(
@@ -749,10 +746,13 @@ describe.each(parameters)(
           ),
         ];
         const res = await modelWithTools.stream(messages);
+
         let toolMessage: AIMessageChunk | undefined;
         for await (const chunk of res) {
+          console.log(chunk);
+
           toolMessage =
-            toolMessage !== undefined ? concat(toolMessage, chunk) : chunk;
+            toolMessage !== undefined ? toolMessage.concat(chunk) : chunk;
         }
         expect(toolMessage).toBeInstanceOf(AIMessageChunk);
         expect(toolMessage?.tool_calls).toBeDefined();
@@ -760,7 +760,6 @@ describe.each(parameters)(
       });
       test("React agent creation", async () => {
         const chat = new ChatWatsonx({
-          serviceUrl,
           version,
           ...toolParams,
         });
@@ -781,7 +780,7 @@ describe.each(parameters)(
       test("Schema with zod", async () => {
         const service = new ChatWatsonx({
           version,
-          serviceUrl,
+
           ...toolParams,
         });
         const joke = z.object({
@@ -803,7 +802,6 @@ describe.each(parameters)(
       test("Schema with zod and stream", async () => {
         const service = new ChatWatsonx({
           version,
-          serviceUrl,
           ...toolParams,
         });
         const joke = z.object({
@@ -828,7 +826,7 @@ describe.each(parameters)(
       test("Schema with object", async () => {
         const service = new ChatWatsonx({
           version,
-          serviceUrl,
+
           ...toolParams,
           temperature: 0.2,
         });
@@ -857,7 +855,7 @@ describe.each(parameters)(
       test("Schema with rawOutput", async () => {
         const service = new ChatWatsonx({
           version,
-          serviceUrl,
+
           ...toolParams,
           temperature: 0.2,
         });
@@ -892,7 +890,6 @@ describe.each(parameters)(
       test("Schema with zod and JSON mode", async () => {
         const service = new ChatWatsonx({
           version,
-          serviceUrl,
           ...toolParams,
           temperature: 0,
         });

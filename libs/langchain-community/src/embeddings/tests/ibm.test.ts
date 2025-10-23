@@ -1,5 +1,3 @@
-/* eslint-disable no-process-env */
-/* eslint-disable dot-notation */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { Gateway } from "@ibm-cloud/watsonx-ai/gateway";
 import { jest } from "@jest/globals";

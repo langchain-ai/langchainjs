@@ -336,7 +336,7 @@ function _convertDeltaToMessageChunk(
       )
     : undefined;
 
-  const role = delta.role ?? defaultRole ?? "assistant";
+  const role = delta.role || defaultRole || "assistant";
   const content = delta.content ?? "";
   const additional_kwargs = rawToolCalls ? { tool_calls: rawToolCalls } : {};
 
@@ -1029,11 +1029,11 @@ export class ChatWatsonx<
       const { data } = chunk;
       const choice = data.choices[0] as TextChatResultChoice &
         Record<"delta", TextChatResultMessage>;
+
       if (choice && !("delta" in choice)) {
         continue;
       }
       const delta = choice?.delta;
-
       if (!delta) {
         continue;
       }
@@ -1048,7 +1048,6 @@ export class ChatWatsonx<
         ...newTokenIndices,
         finish_reason: choice.finish_reason,
       };
-
       const message = _convertDeltaToMessageChunk(
         delta,
         data,
@@ -1056,10 +1055,8 @@ export class ChatWatsonx<
         chunk.data.usage,
         defaultRole
       );
-
-      defaultRole =
-        (delta.role as TextChatMessagesTextChatMessageAssistant.Constants.Role) ??
-        defaultRole;
+      defaultRole = (delta.role ||
+        defaultRole) as TextChatMessagesTextChatMessageAssistant.Constants.Role;
 
       if (
         message === null ||

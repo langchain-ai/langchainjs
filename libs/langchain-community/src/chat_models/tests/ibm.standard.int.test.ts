@@ -1,48 +1,11 @@
 import { test, expect } from "@jest/globals";
 import { ChatModelIntegrationTests } from "@langchain/standard-tests";
-import { AIMessageChunk, BaseMessage } from "@langchain/core/messages";
-import { Serialized } from "@langchain/core/load/serializable";
-import { BaseCallbackHandler } from "@langchain/core/callbacks/base";
+import { AIMessageChunk } from "@langchain/core/messages";
 import {
   ChatWatsonx,
   ChatWatsonxCallOptions,
   ChatWatsonxConstructorInput,
 } from "../ibm.js";
-
-export class TestCallbackHandler extends BaseCallbackHandler {
-  name = "TestCallbackHandler";
-
-  /**
-   * Internal array to store extra parameters from each chat model start event.
-   * @internal
-   */
-  _extraParams: Array<Record<string, unknown>> = [];
-
-  /**
-   * Returns a single object containing all accumulated extra parameters,
-   * merged together. If multiple runs provide extra parameters, later
-   * values will overwrite earlier ones for the same keys.
-   *
-   * @returns {Record<string, unknown>} The merged extra parameters.
-   */
-  get extraParams(): Record<string, unknown> {
-    return this._extraParams.reduce(Object.assign, {});
-  }
-
-  handleChatModelStart(
-    _llm: Serialized,
-    _messages: BaseMessage[][],
-    _runId: string,
-    _parentRunId?: string,
-    extraParams?: Record<string, unknown>,
-    _tags?: string[],
-    _metadata?: Record<string, unknown>,
-    _runName?: string
-  ) {
-    console.log(extraParams);
-    if (extraParams) this._extraParams.push(extraParams);
-  }
-}
 
 class ChatWatsonxStandardIntegrationTests extends ChatModelIntegrationTests<
   ChatWatsonxCallOptions,

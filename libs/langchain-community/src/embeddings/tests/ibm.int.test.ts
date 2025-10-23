@@ -4,18 +4,20 @@ import { WatsonxEmbeddings } from "../ibm.js";
 const projectId = process.env.WATSONX_AI_PROJECT_ID;
 const version = "2024-05-31";
 const serviceUrl = process.env.WATSONX_AI_SERVICE_URL as string;
+const serviceUrlGateway = process.env.WATSONX_AI_SERVICE_URL_GATEWAY as string;
 const model = "ibm/slate-125m-english-rtrvr";
 const modelAlias = "ibm/granite-embedding-107m-multilingual";
 const parameters = [
   {
     name: "projectId",
-    params: { projectId, model },
+    params: { projectId, model, serviceUrl },
   },
   {
     name: "Model Gateway",
     params: {
       modelGateway: true,
       model: modelAlias,
+      serviceUrl: serviceUrlGateway,
     },
   },
 ];
@@ -33,7 +35,6 @@ describe.each(parameters)("Test embeddings for $name", ({ params }) => {
   test("embedDocuments", async () => {
     const embeddings = new WatsonxEmbeddings({
       version,
-      serviceUrl,
       ...params,
     });
     const res = await embeddings.embedDocuments(["Hello world", "Bye world"]);
@@ -45,7 +46,6 @@ describe.each(parameters)("Test embeddings for $name", ({ params }) => {
   test("Concurrency", async () => {
     const embeddings = new WatsonxEmbeddings({
       version,
-      serviceUrl,
       maxConcurrency: 4,
       ...params,
     });
@@ -68,7 +68,6 @@ describe.each(parameters)("Test embeddings for $name", ({ params }) => {
   test("List models", async () => {
     const embeddings = new WatsonxEmbeddings({
       version,
-      serviceUrl,
       maxConcurrency: 4,
       ...params,
     });

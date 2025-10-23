@@ -6,15 +6,21 @@ import { WatsonxLLM, WatsonxInputLLM } from "../ibm.js";
 
 const originalBackground = process.env.LANGCHAIN_CALLBACKS_BACKGROUND;
 const model = "ibm/granite-3-8b-instruct";
-const modelAlias = "mistral-medium";
+const modelAlias = "ibm/granite-3-8b-instruct";
 const projectId = process.env.WATSONX_AI_PROJECT_ID;
 const version = "2024-05-31";
 const serviceUrl = process.env.WATSONX_AI_SERVICE_URL as string;
+const serviceUrlGateway = process.env.WATSONX_AI_SERVICE_URL_GATEWAY as string;
 
 const parameters = [
   {
     name: "projectId",
-    params: (token = 5) => ({ projectId, model, maxNewTokens: token }),
+    params: (token = 5) => ({
+      projectId,
+      model,
+      maxNewTokens: token,
+      serviceUrl,
+    }),
   },
   {
     name: "Model Gateway",
@@ -22,6 +28,7 @@ const parameters = [
       modelGateway: true,
       model: modelAlias,
       maxTokens: token,
+      serviceUrl: serviceUrlGateway,
     }),
   },
 ];
@@ -31,7 +38,7 @@ describe.each(parameters)("Text generation for $name", ({ params }) => {
     test("Correct value", async () => {
       const watsonXInstance = new WatsonxLLM({
         version,
-        serviceUrl,
+
         ...basicParams,
       });
       await watsonXInstance.invoke("Hello world?");
@@ -41,7 +48,7 @@ describe.each(parameters)("Text generation for $name", ({ params }) => {
       const props = params(512);
       const watsonXInstance = new WatsonxLLM({
         version,
-        serviceUrl,
+
         ...props,
       });
       const res = await watsonXInstance.invoke("Hello world?", {
@@ -55,7 +62,7 @@ describe.each(parameters)("Text generation for $name", ({ params }) => {
     test("Invalid credentials", async () => {
       const watsonXInstance = new WatsonxLLM({
         version,
-        serviceUrl,
+
         watsonxAIAuthType: "iam",
         watsonxAIApikey: "WrongApiKey",
         watsonxAIUrl: "https://wrong.wrong/",
@@ -67,7 +74,7 @@ describe.each(parameters)("Text generation for $name", ({ params }) => {
     test("Wrong value", async () => {
       const watsonXInstance = new WatsonxLLM({
         version,
-        serviceUrl,
+
         ...basicParams,
       });
       // @ts-expect-error Intentionally passing wrong value
@@ -77,7 +84,7 @@ describe.each(parameters)("Text generation for $name", ({ params }) => {
     test("Stop", async () => {
       const watsonXInstance = new WatsonxLLM({
         version,
-        serviceUrl,
+
         ...basicParams,
       });
       await watsonXInstance.invoke("Hello, how are you?", {
@@ -88,7 +95,6 @@ describe.each(parameters)("Text generation for $name", ({ params }) => {
     test("Stop with timeout", async () => {
       const watsonXInstance = new WatsonxLLM({
         version,
-        serviceUrl: "sdadasdas" as string,
         ...basicParams,
       });
 
@@ -100,7 +106,7 @@ describe.each(parameters)("Text generation for $name", ({ params }) => {
     test("Signal in call options", async () => {
       const watsonXInstance = new WatsonxLLM({
         version,
-        serviceUrl,
+
         maxRetries: 3,
         ...basicParams,
       });
@@ -125,7 +131,7 @@ describe.each(parameters)("Text generation for $name", ({ params }) => {
       const llm = new WatsonxLLM({
         maxConcurrency: 1,
         version,
-        serviceUrl,
+
         ...basicParams,
       });
       const res = await Promise.all([
@@ -147,7 +153,7 @@ describe.each(parameters)("Text generation for $name", ({ params }) => {
         const llm = new WatsonxLLM({
           version,
           maxConcurrency: 1,
-          serviceUrl,
+
           ...params(1),
           callbacks: CallbackManager.fromHandlers({
             async handleLLMEnd(output: LLMResult) {
@@ -176,7 +182,7 @@ describe.each(parameters)("Text generation for $name", ({ params }) => {
       let usedTokens = 0;
       const llm = new WatsonxLLM({
         version,
-        serviceUrl,
+
         streaming: true,
         ...basicParams,
         callbacks: CallbackManager.fromHandlers({
@@ -200,7 +206,7 @@ describe.each(parameters)("Text generation for $name", ({ params }) => {
     test("Basic usage", async () => {
       const llm = new WatsonxLLM({
         version,
-        serviceUrl,
+
         ...basicParams,
       });
       const res = await llm.generate([
@@ -213,7 +219,7 @@ describe.each(parameters)("Text generation for $name", ({ params }) => {
     test("Stop", async () => {
       const llm = new WatsonxLLM({
         version,
-        serviceUrl,
+
         ...params(100),
         temperature: 0,
       });
@@ -240,7 +246,7 @@ describe.each(parameters)("Text generation for $name", ({ params }) => {
       const completions = ["", "", ""];
       const llm = new WatsonxLLM({
         version,
-        serviceUrl,
+
         ...basicParams,
         streaming: true,
         callbacks: CallbackManager.fromHandlers({
@@ -269,7 +275,7 @@ describe.each(parameters)("Text generation for $name", ({ params }) => {
     test("Prompt value", async () => {
       const llm = new WatsonxLLM({
         version,
-        serviceUrl,
+
         ...basicParams,
       });
       const res = await llm.generatePrompt([
@@ -287,7 +293,7 @@ describe.each(parameters)("Text generation for $name", ({ params }) => {
       let streamedText = "";
       const llm = new WatsonxLLM({
         version,
-        serviceUrl,
+
         ...params(100),
         callbacks: CallbackManager.fromHandlers({
           async handleLLMNewToken(token: string) {
@@ -308,7 +314,7 @@ describe.each(parameters)("Text generation for $name", ({ params }) => {
     test("Stop", async () => {
       const llm = new WatsonxLLM({
         version,
-        serviceUrl,
+
         ...params(100),
       });
 
@@ -325,7 +331,7 @@ describe.each(parameters)("Text generation for $name", ({ params }) => {
     test("Timeout", async () => {
       const llm = new WatsonxLLM({
         version,
-        serviceUrl,
+
         ...params(1000),
       });
       await expect(async () => {
@@ -345,7 +351,7 @@ describe.each(parameters)("Text generation for $name", ({ params }) => {
     test("Signal in call options", async () => {
       const llm = new WatsonxLLM({
         version,
-        serviceUrl,
+
         ...params(10),
       });
       const controller = new AbortController();
@@ -373,7 +379,7 @@ describe.each(parameters)("Text generation for $name", ({ params }) => {
     test("Passing correct value", async () => {
       const testProps: WatsonxInputLLM = {
         version,
-        serviceUrl,
+
         ...basicParams,
       };
       const instance = new WatsonxLLM({
@@ -397,7 +403,7 @@ describe.each(parameters)("Text generation for $name", ({ params }) => {
     test("Passing wrong value", async () => {
       const instance = new WatsonxLLM({
         version,
-        serviceUrl,
+
         ...basicParams,
       });
 
