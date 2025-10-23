@@ -855,7 +855,11 @@ export async function initChatModel<
     ...(fields ?? {}),
   };
   if (modelProvider === undefined && model?.includes(":")) {
-    const modelComponents = model.split(":", 2);
+    const [provider, ...remainingParts] = model.split(":");
+    const modelComponents =
+      remainingParts.length === 0
+        ? [provider]
+        : [provider, remainingParts.join(":")];
     if (SUPPORTED_PROVIDERS.includes(modelComponents[0] as ChatModelProvider)) {
       // eslint-disable-next-line no-param-reassign
       [modelProvider, model] = modelComponents;

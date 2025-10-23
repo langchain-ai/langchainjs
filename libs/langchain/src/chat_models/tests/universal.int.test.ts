@@ -807,3 +807,19 @@ describe("Can be initialized without `modelProvider`", () => {
     expect(modelResult.content.length).toBeGreaterThan(0);
   });
 });
+
+describe.skip("Model name parsing with multiple colons preserves full model name", () => {
+  test.each([
+    "ollama:qwen2.5:14b",
+    "ollama:llama3:8b",
+    "ollama:deepseek-r1:1.5b",
+  ])("for %s", async (modelName) => {
+    const model = await initChatModel(modelName, {
+      temperature: 0,
+    });
+
+    const modelResult = await model.invoke("what's your name");
+    expect(modelResult).toBeDefined();
+    expect(modelResult.content.length).toBeGreaterThan(0);
+  });
+});
