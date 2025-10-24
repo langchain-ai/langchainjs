@@ -153,6 +153,11 @@ export const extraImportMapEntries: Record<
       alias: ["schema", "output"],
       path: "@langchain/core/outputs",
     },
+    {
+      modules: ["Client"],
+      alias: ["langsmith"],
+      path: "langsmith",
+    },
   ],
   "@langchain/classic": [
     {
