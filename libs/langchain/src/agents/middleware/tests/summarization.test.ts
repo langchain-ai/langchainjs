@@ -9,6 +9,7 @@ import {
 import { summarizationMiddleware } from "../summarization.js";
 import { countTokensApproximately } from "../utils.js";
 import { createAgent } from "../../index.js";
+import { hasToolCalls } from "../../utils.js";
 import { FakeToolCallingChatModel } from "../../tests/utils.js";
 
 describe("summarizationMiddleware", () => {
@@ -334,5 +335,59 @@ describe("summarizationMiddleware", () => {
     );
     expect(nonSystemMessages.length).toBeGreaterThanOrEqual(messagesToKeep);
     expect(nonSystemMessages.length).toBeLessThanOrEqual(messagesToKeep + 3); // Some buffer for safety
+  });
+
+  it("should not start preserved messages with AI message containing tool calls", async () => {
+    const summarizationModel = createMockSummarizationModel();
+    const model = createMockMainModel();
+
+    const middleware = summarizationMiddleware({
+      model: summarizationModel as any,
+      maxTokensBeforeSummary: 50, // Very low threshold to trigger summarization
+      messagesToKeep: 2, // Keep very few messages to force problematic cutoff
+    });
+
+    const agent = createAgent({
+      model,
+      middleware: [middleware],
+    });
+
+    // Create a conversation history that would cause the problematic scenario
+    // We need messages where an AI message with tool calls would be the first preserved message
+    // after summarization if the cutoff isn't adjusted properly
+    const messages = [
+      new HumanMessage(`First message with some content to take up tokens. ${"x".repeat(100)}`),
+      new AIMessage(`First response. ${"x".repeat(100)}`),
+      new HumanMessage(`Second message with more content to build up tokens. ${"x".repeat(100)}`),
+      new AIMessage(`Second response. ${"x".repeat(100)}`),
+      // This AI message with tool calls should NOT be the first preserved message
+      new AIMessage({
+        content: "Let me search for information.",
+        tool_calls: [{ id: "call_1", name: "search", args: { query: "test" } }],
+      }),
+      new ToolMessage({
+        content: "Search results",
+        tool_call_id: "call_1",
+      }),
+      new HumanMessage("What did you find?"),
+    ];
+
+    const result = await agent.invoke({ messages });
+
+    // Verify summarization occurred
+    expect(result.messages[0]).toBeInstanceOf(SystemMessage);
+    const systemPrompt = result.messages[0] as SystemMessage;
+    expect(systemPrompt.content).toContain("## Previous conversation summary:");
+
+    // Verify preserved messages don't start with AI(tool calls)
+    const preservedMessages = result.messages.filter(
+      (m) => !SystemMessage.isInstance(m)
+    );
+    expect(preservedMessages.length).toBeGreaterThan(0);
+    const firstPreserved = preservedMessages[0];
+    // The first preserved message should not be an AI message with tool calls
+    expect(
+      !(AIMessage.isInstance(firstPreserved) && hasToolCalls(firstPreserved))
+    ).toBe(true);
   });
 });
