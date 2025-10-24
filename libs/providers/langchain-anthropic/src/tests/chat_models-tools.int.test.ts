@@ -260,7 +260,7 @@ test("Can bind & stream AnthropicTools", async () => {
   if (!Array.isArray(finalMessage.content)) {
     throw new Error("Content is not an array");
   }
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
   const toolCall = finalMessage.tool_calls?.[0];
   if (toolCall === undefined) {
     throw new Error("No tool call found");
@@ -869,6 +869,42 @@ test("calling tool with no args should work", async () => {
 // });
 
 // https://docs.claude.com/en/docs/agents-and-tools/tool-use/memory-tool
+test("memory tool via LangChain provider definition", async () => {
+  const llm = new ChatAnthropic({
+    model: "claude-sonnet-4-5-20250929",
+    temperature: 0,
+    clientOptions: {
+      defaultHeaders: {
+        "anthropic-beta": "context-management-2025-06-27",
+      },
+    },
+  });
+
+  const memoryTool = tool(({ content }: { content: string }) => content, {
+    name: "memory",
+    description: "Anthropic memory tool (client-side)",
+    schema: z.object({ content: z.string() }),
+    providerToolDefinition: {
+      type: "memory_20250818",
+      name: "memory",
+    },
+  });
+
+  const llmWithTools = llm.bindTools([memoryTool]);
+  const response = await llmWithTools.invoke(
+    "Please remember that I enjoy hiking in the mountains."
+  );
+  expect(response).toBeInstanceOf(AIMessage);
+  expect(response.tool_calls).toBeDefined();
+  expect(response.tool_calls?.[0].name).toBe("memory");
+
+  // Memory tool always views existing memories before writing new ones
+  expect(response.tool_calls?.[0].args).toEqual({
+    command: "view",
+    path: "/memories",
+  });
+}, 60000);
+
 test("memory tool", async () => {
   const llm = new ChatAnthropic({
     model: "claude-sonnet-4-5-20250929",

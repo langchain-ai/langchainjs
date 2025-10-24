@@ -180,6 +180,38 @@ test("Does not double wrap a returned tool message even if a tool call with id i
   expect(toolResult.name).toBe("baz");
 });
 
+test("tool retains providerToolDefinition metadata when provided", () => {
+  const providerDefinition = { type: "memory_20250818", name: "memory" };
+
+  const memoryTool = tool(
+    (input: string) => input,
+    {
+      name: "memory",
+      providerToolDefinition: providerDefinition,
+    }
+  );
+
+  expect(memoryTool.providerToolDefinition).toBe(providerDefinition);
+
+  const structuredProviderDefinition = {
+    type: "memory_structured_20250818",
+    name: "memory_structured",
+  };
+
+  const structuredTool = tool(
+    (input: { content: string }) => input.content,
+    {
+      name: "memory_structured",
+      schema: z.object({ content: z.string() }),
+      providerToolDefinition: structuredProviderDefinition,
+    }
+  );
+
+  expect(structuredTool.providerToolDefinition).toBe(
+    structuredProviderDefinition
+  );
+});
+
 test("Tool can accept single string input", async () => {
   const toolCall = {
     id: "testid",

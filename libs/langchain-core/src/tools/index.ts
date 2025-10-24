@@ -389,12 +389,15 @@ export class DynamicTool<
 
   func: DynamicToolInput<ToolOutputT>["func"];
 
+  providerToolDefinition?: Record<string, unknown>;
+
   constructor(fields: DynamicToolInput<ToolOutputT>) {
     super(fields);
     this.name = fields.name;
     this.description = fields.description;
     this.func = fields.func;
     this.returnDirect = fields.returnDirect ?? this.returnDirect;
+    this.providerToolDefinition = fields.providerToolDefinition;
   }
 
   /**
@@ -453,6 +456,8 @@ export class DynamicStructuredTool<
 
   schema: SchemaT;
 
+  providerToolDefinition?: Record<string, unknown>;
+
   constructor(
     fields: DynamicStructuredToolInput<SchemaT, SchemaOutputT, ToolOutputT>
   ) {
@@ -462,6 +467,7 @@ export class DynamicStructuredTool<
     this.func = fields.func;
     this.returnDirect = fields.returnDirect ?? this.returnDirect;
     this.schema = fields.schema;
+    this.providerToolDefinition = fields.providerToolDefinition;
   }
 
   /**
@@ -552,6 +558,33 @@ interface ToolWrapperParams<RunInput = ToolInputSchemaBase | undefined>
    * an agent should stop looping.
    */
   returnDirect?: boolean;
+  /**
+   * Provider-specific tool definition to override the tool definition sent to the provider.
+   *
+   * This allows you to define a tool with client-side execution while using provider-specific
+   * built-in tool formats. For example, with Anthropic's memory tool:
+   *
+   * ```ts
+   * tool(
+   *   ({ content }, config) => { ... },
+   *   {
+   *     name: "memory",
+   *     description: "Store or retrieve information",
+   *     schema: z.object({ content: z.string() }),
+   *     providerToolDefinition: {
+   *       type: "memory_20250818",
+   *       name: "memory",
+   *     },
+   *   }
+   * );
+   * ```
+   *
+   * When this field is present:
+   * - The tool will be treated as a client tool that requires local execution
+   * - The provider-specific definition will be sent to the API instead of auto-generated definition
+   * - Your handler function will be called when the model uses the tool
+   */
+  providerToolDefinition?: Record<string, unknown>;
 }
 
 /**
