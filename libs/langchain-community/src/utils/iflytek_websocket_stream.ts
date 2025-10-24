@@ -81,6 +81,7 @@ export abstract class BaseWebSocketStream<
     });
 
     if (options.signal) {
+      // eslint-disable-next-line no-param-reassign
       options.signal.onabort = () => ws.close();
     }
 

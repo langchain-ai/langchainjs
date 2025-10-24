@@ -1,3 +1,5 @@
+/* eslint-disable no-process-env */
+/* eslint-disable @typescript-eslint/no-non-null-assertion */
 import { describe, expect } from "@jest/globals";
 import { faker } from "@faker-js/faker";
 import {

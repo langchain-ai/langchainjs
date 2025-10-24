@@ -88,19 +88,19 @@ To develop the <ADD_NAME_HERE> package, you'll need to follow these instructions
 ### Install dependencies
 
 ```bash
-pnpm install
+yarn install
 ```
 
 ### Build the package
 
 ```bash
-pnpm build
+yarn build
 ```
 
 Or from the repo root:
 
 ```bash
-pnpm build --filter @langchain/<ADD_PACKAGE_NAME_HERE>
+yarn build --filter=@langchain/<ADD_PACKAGE_NAME_HERE>
 ```
 
 ### Run tests
@@ -109,8 +109,8 @@ Test files should live within a `tests/` file in the `src/` folder. Unit tests s
 end in `.int.test.ts`:
 
 ```bash
-$ pnpm test
-$ pnpm test:int
+$ yarn test
+$ yarn test:int
 ```
 
 ### Lint & Format
@@ -118,9 +118,9 @@ $ pnpm test:int
 Run the linter & formatter to ensure your code is up to standard:
 
 ```bash
-pnpm lint && pnpm format
+yarn lint && yarn format
 ```
 
 ### Adding new entrypoints
 
-If you add a new file to be exported, either import & re-export from `src/index.ts`, or add it to the `exports` field in the `package.json` file and run `pnpm build` to generate the new entrypoint.
+If you add a new file to be exported, either import & re-export from `src/index.ts`, or add it to the `entrypoints` field in the `config` variable located inside `langchain.config.js` and run `yarn build` to generate the new entrypoint.

@@ -68,6 +68,7 @@ export class RecursiveUrlLoader
       new JSDOM(html, { virtualConsole }).window.document.querySelectorAll("a")
     ).map((a) => a.href);
     const absolutePaths = [];
+    // eslint-disable-next-line no-script-url
     const invalidPrefixes = ["javascript:", "mailto:", "#"];
     const invalidSuffixes = [
       ".css",
@@ -144,7 +145,7 @@ export class RecursiveUrlLoader
     try {
       res = await this.fetchWithTimeout(url, { timeout: this.timeout });
       res = await res.text();
-    } catch {
+    } catch (e) {
       return null;
     }
 
@@ -171,7 +172,7 @@ export class RecursiveUrlLoader
     try {
       res = await this.fetchWithTimeout(url, { timeout: this.timeout });
       res = await res.text();
-    } catch {
+    } catch (e) {
       return [];
     }
 

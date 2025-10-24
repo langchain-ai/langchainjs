@@ -23,12 +23,11 @@ test("TogetherAI should warn when using chat models", () => {
   console.warn = mockWarn;
 
   try {
-    const model = new TogetherAI({
+    void new TogetherAI({
       modelName: "meta-llama/Llama-3.2-11B-Vision-Instruct-Turbo",
       apiKey: "test-api-key",
     });
 
-    expect(model).toBeDefined();
     expect(mockWarn).toHaveBeenCalledWith(
       expect.stringContaining("appears to be a chat/instruct model")
     );

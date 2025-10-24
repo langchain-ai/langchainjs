@@ -1,0 +1,163 @@
+# LangChain Expression Language (LCEL)
+
+:::info Prerequisites
+
+- [Runnable Interface](/docs/concepts/runnables)
+
+:::
+
+The **L**ang**C**hain **E**xpression **L**anguage (LCEL) takes a [declarative](https://en.wikipedia.org/wiki/Declarative_programming) approach to building new [Runnables](/docs/concepts/runnables) from existing Runnables.
+
+This means that you describe what you want to happen, rather than how you want it to happen, allowing LangChain to optimize the run-time execution of the chains.
+
+We often refer to a `Runnable` created using LCEL as a "chain". It's important to remember that a "chain" is `Runnable` and it implements the full [Runnable Interface](/docs/concepts/runnables).
+
+:::note
+
+- The [LCEL cheatsheet](/docs/how_to/lcel_cheatsheet/) shows common patterns that involve the Runnable interface and LCEL expressions.
+- Please see the following list of [how-to guides](/docs/how_to/#langchain-expression-language-lcel) that cover common tasks with LCEL.
+- A list of built-in `Runnables` can be found in the [LangChain Core API Reference](https://api.js.langchain.com/modules/_langchain_core.runnables.html). Many of these Runnables are useful when composing custom "chains" in LangChain using LCEL.
+
+:::
+
+## Benefits of LCEL
+
+LangChain optimizes the run-time execution of chains built with LCEL in a number of ways:
+
+- **Optimize parallel execution**: Run Runnables in parallel using [RunnableParallel](#RunnableParallel) or run multiple inputs through a given chain in parallel using the [Runnable Batch API](/docs/concepts/runnables#batch). Parallel execution can significantly reduce the latency as processing can be done in parallel instead of sequentially.
+- **Simplify streaming**: LCEL chains can be streamed, allowing for incremental output as the chain is executed. LangChain can optimize the streaming of the output to minimize the time-to-first-token(time elapsed until the first chunk of output from a [chat model](/docs/concepts/chat_models) or [llm](/docs/concepts/text_llms) comes out).
+
+Other benefits include:
+
+- [**Seamless LangSmith tracing**](https://docs.smith.langchain.com)
+  As your chains get more and more complex, it becomes increasingly important to understand what exactly is happening at every step.
+  With LCEL, **all** steps are automatically logged to [LangSmith](https://docs.smith.langchain.com/) for maximum observability and debuggability.
+- **Standard API**: Because all chains are built using the Runnable interface, they can be used in the same way as any other Runnable.
+- [**Deployable with LangServe**](/docs/concepts/architecture#langserve): Chains built with LCEL can be deployed using for production use.
+
+## Should I use LCEL?
+
+LCEL is an [orchestration solution](<https://en.wikipedia.org/wiki/Orchestration_(computing)>) -- it allows LangChain to handle run-time execution of chains in an optimized way.
+
+While we have seen users run chains with hundreds of steps in production, we generally recommend using LCEL for simpler orchestration tasks. When the application requires complex state management, branching, cycles or multiple agents, we recommend that users take advantage of [LangGraph](/docs/concepts/architecture#langgraph).
+
+In LangGraph, users define graphs that specify the flow of the application. This allows users to keep using LCEL within individual nodes when LCEL is needed, while making it easy to define complex orchestration logic that is more readable and maintainable.
+
+Here are some guidelines:
+
+- If you are making a single LLM call, you don't need LCEL; instead call the underlying [chat model](/docs/concepts/chat_models) directly.
+- If you have a simple chain (e.g., prompt + llm + parser, simple retrieval set up etc.), LCEL is a reasonable fit, if you're taking advantage of the LCEL benefits.
+- If you're building a complex chain (e.g., with branching, cycles, multiple agents, etc.) use [LangGraph](/docs/concepts/architecture#langgraph) instead. Remember that you can always use LCEL within individual nodes in LangGraph.
+
+## Composition Primitives
+
+`LCEL` chains are built by composing existing `Runnables` together. The two main composition primitives are [RunnableSequence](https://api.js.langchain.com/classes/_langchain_core.runnables.RunnableSequence.html) and [RunnableParallel](https://api.js.langchain.com/classes/_langchain_core.runnables.RunnableParallel.html).
+
+Many other composition primitives (e.g., [RunnableAssign](https://api.js.langchain.com/classes/_langchain_core.runnables.RunnableAssign.html)) can be thought of as variations of these two primitives.
+
+:::note
+You can find a list of all composition primitives in the [LangChain Core API Reference](https://api.js.langchain.com/modules/_langchain_core.runnables.html).
+:::
+
+### RunnableSequence
+
+`RunnableSequence` is a composition primitive that allows you "chain" multiple runnables sequentially, with the output of one runnable serving as the input to the next.
+
+```typescript
+import { RunnableSequence } from "@langchain/core/runnables";
+const chain = new RunnableSequence({
+  first: runnable1,
+  // Optional, use if you have more than two runnables
+  // middle: [...],
+  last: runnable2,
+});
+```
+
+Invoking the `chain` with some input:
+
+```typescript
+const finalOutput = await chain.invoke(someInput);
+```
+
+corresponds to the following:
+
+```typescript
+const output1 = await runnable1.invoke(someInput);
+const finalOutput = await runnable2.invoke(output1);
+```
+
+:::note
+`runnable1` and `runnable2` are placeholders for any `Runnable` that you want to chain together.
+:::
+
+### RunnableParallel
+
+`RunnableParallel` is a composition primitive that allows you to run multiple runnables concurrently, with the same input provided to each.
+
+```typescript
+import { RunnableParallel } from "@langchain/core/runnables";
+const chain = new RunnableParallel({
+  key1: runnable1,
+  key2: runnable2,
+});
+```
+
+Invoking the `chain` with some input:
+
+```typescript
+const finalOutput = await chain.invoke(someInput);
+```
+
+Will yield a `finalOutput` object with the same keys as the input object, but with the values replaced by the output of the corresponding runnable.
+
+```typescript
+{
+  key1: await runnable1.invoke(someInput),
+  key2: await runnable2.invoke(someInput),
+}
+```
+
+Recall, that the runnables are executed in parallel, so while the result is the same as
+object comprehension shown above, the execution time is much faster.
+
+## Composition Syntax
+
+The usage of `RunnableSequence` and `RunnableParallel` is so common that we created a shorthand syntax for using them. This helps
+to make the code more readable and concise.
+
+### The `pipe` method.
+
+You can `pipe` runnables together using the `.pipe(runnable)` method.
+
+```typescript
+const chain = runnable1.pipe(runnable2);
+```
+
+is Equivalent to:
+
+```typescript
+const chain = new RunnableSequence({
+  first: runnable1,
+  last: runnable2,
+});
+```
+
+#### RunnableLambda functions
+
+You can define generic TypeScript functions are runnables through the `RunnableLambda` class.
+
+```typescript
+const someFunc = RunnableLambda.from((input) => {
+  return input;
+});
+
+const chain = someFunc.pipe(runnable1);
+```
+
+## Legacy chains
+
+LCEL aims to provide consistency around behavior and customization over legacy subclassed chains such as `LLMChain` and
+`ConversationalRetrievalChain`. Many of these legacy chains hide important details like prompts, and as a wider variety
+of viable models emerge, customization has become more and more important.
+
+For guides on how to do specific tasks with LCEL, check out [the relevant how-to guides](/docs/how_to/#langchain-expression-language-lcel).

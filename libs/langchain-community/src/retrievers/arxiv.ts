@@ -43,7 +43,7 @@ export class ArxivRetriever extends BaseRetriever {
         // Use summaries as documents
         return getDocsFromSummaries(results);
       }
-    } catch {
+    } catch (error) {
       throw new Error(`Error retrieving documents from arXiv.`);
     }
   }

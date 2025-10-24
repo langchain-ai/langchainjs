@@ -1,3 +1,4 @@
+/* eslint-disable import/no-extraneous-dependencies */
 import { execSync } from "child_process";
 import fs from "fs";
 import path from "path";
@@ -55,7 +56,7 @@ export function tryGitInit(root: string): boolean {
       }
     );
     return true;
-  } catch {
+  } catch (e) {
     if (didInit) {
       try {
         fs.rmSync(path.join(root, ".git"), { recursive: true, force: true });

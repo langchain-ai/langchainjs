@@ -3,10 +3,14 @@
   "compilerOptions": {
     "outDir": "./dist",
     "rootDir": "./src",
-    "lib": ["ES2021", "ES2022.Object", "DOM"],
+    "lib": [
+      "ES2021",
+      "ES2022.Object",
+      "DOM"
+    ],
     "target": "ES2021",
-    "module": "Node16",
-    "moduleResolution": "node16"
   },
-  "include": ["src/**/*"]
+  "include": [
+    "src/**/*"
+  ]
 }

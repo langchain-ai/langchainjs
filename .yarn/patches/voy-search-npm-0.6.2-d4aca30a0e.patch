@@ -1,0 +1,12 @@
+diff --git a/package.json b/package.json
+index 1823128f20579c0c70acfb394d84d5f2997aafb9..663f5b611870e762cf355b1d4810765f9c89b318 100644
+--- a/package.json
++++ b/package.json
+@@ -1,5 +1,7 @@
+ {
+   "name": "voy-search",
++  "type": "module",
++  "main": "voy_search.js",
+   "collaborators": [
+     "Daw-Chih Liou <dawochih.liou@gmail.com>"
+   ],

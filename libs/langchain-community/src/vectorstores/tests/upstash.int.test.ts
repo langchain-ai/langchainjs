@@ -1,3 +1,4 @@
+/* eslint-disable no-process-env */
 import { Index } from "@upstash/vector";
 import { Document } from "@langchain/core/documents";
 import {

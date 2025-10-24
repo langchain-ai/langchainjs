@@ -1,3 +1,4 @@
+/* eslint-disable no-process-env */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { WatsonxRerank, WatsonxInputRerank } from "../ibm.js";
 

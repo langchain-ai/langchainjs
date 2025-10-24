@@ -1,3 +1,4 @@
+/* eslint-disable no-process-env */
 import { Document } from "@langchain/core/documents";
 import { FakeEmbeddings } from "@langchain/core/utils/testing";
 import {

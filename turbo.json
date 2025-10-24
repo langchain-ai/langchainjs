@@ -49,6 +49,9 @@
     },
     "clean": {
       "dependsOn": ["^clean"]
+    },
+    "build:internal": {
+      "dependsOn": ["^build:internal"]
     }
   }
 }

@@ -1,10 +1,12 @@
+/* eslint-disable no-process-env */
+/* eslint-disable @typescript-eslint/no-non-null-assertion */
 import { expect, test } from "@jest/globals";
 import {
   SageMakerEndpoint,
   SageMakerLLMContentHandler,
 } from "../sagemaker_endpoint.js";
 
-// pnpm test:single /{path_to}/langchain/src/llms/tests/sagemaker.int.test.ts
+// yarn test:single /{path_to}/langchain/src/llms/tests/sagemaker.int.test.ts
 describe.skip("Test SageMaker LLM", () => {
   test("without streaming", async () => {
     interface ResponseJsonInterface {

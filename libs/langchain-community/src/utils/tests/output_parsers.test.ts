@@ -1,5 +1,5 @@
 import { describe, expect, test } from "@jest/globals";
-import { z } from "zod/v3";
+import { z } from "zod";
 import { OutputParserException } from "@langchain/core/output_parsers";
 import {
   ReasoningStructuredOutputParser,

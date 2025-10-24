@@ -1,6 +1,5 @@
 import { jest, expect, describe } from "@jest/globals";
 import { BaseChatModel } from "@langchain/core/language_models/chat_models";
-import { ChatResult } from "@langchain/core/outputs";
 import {
   GoogleCalendarCreateTool,
   GoogleCalendarViewTool,
@@ -32,7 +31,7 @@ class FakeLLM extends BaseChatModel {
   }
 
   async _generate() {
-    return {} as unknown as ChatResult;
+    return {} as any;
   }
 }
 

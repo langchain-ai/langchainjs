@@ -56,6 +56,13 @@ export const isPage = (res: GetResponse): res is PageObjectResponse =>
 export const isDatabase = (res: GetResponse): res is DatabaseObjectResponse =>
   isDatabaseResponse(res) && isFullDatabase(res);
 
+/**
+ * Represents the type of Notion API to load documents from. The options
+ * are "database" or "page".
+ */
+// @deprecated `type` property is now automatically determined.
+export type NotionAPIType = "database" | "page";
+
 export type OnDocumentLoadedCallback = (
   current: number,
   total: number,
@@ -66,6 +73,7 @@ export type OnDocumentLoadedCallback = (
 export type NotionAPILoaderOptions = {
   clientOptions: ConstructorParameters<typeof Client>[0];
   id: string;
+  type?: NotionAPIType; // @deprecated `type` property is now automatically determined.
   callerOptions?: ConstructorParameters<typeof AsyncCaller>[0];
   onDocumentLoaded?: OnDocumentLoadedCallback;
   propertiesAsHeader?: boolean;

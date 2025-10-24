@@ -1,3 +1,4 @@
+/* eslint-disable no-process-env */
 import {
   convertUtilityToolToWatsonxTool,
   WatsonXAI,
@@ -197,9 +198,8 @@ describe("Toolkit class tests", () => {
       });
       try {
         toolkit.getTool("iDoNotExist");
-      } catch (e) {
-        const error = e as Error;
-        expect(error.message).toBe("Tool with provided name does not exist");
+      } catch (e: any) {
+        expect(e.message).toBe("Tool with provided name does not exist");
       }
     });
   });

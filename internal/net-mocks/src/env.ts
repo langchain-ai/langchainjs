@@ -1,7 +1,7 @@
 import { BatchInterceptor } from "@mswjs/interceptors";
-import { ArchiveStore, NetMockContextHooks } from "./mock.js";
-import { toFileSafeString } from "./utils.js";
-import { HARArchive } from "./spec.js";
+import { ArchiveStore, NetMockContextHooks } from "./mock";
+import { toFileSafeString } from "./utils";
+import { HARArchive } from "./spec";
 
 declare global {
   interface Window {
@@ -88,7 +88,7 @@ export async function getArchiveStore(
         try {
           const file = await fs.readFile(getArchivePath(key), "utf-8");
           return JSON.parse(file);
-        } catch {
+        } catch (err) {
           return undefined;
         }
       },

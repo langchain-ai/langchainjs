@@ -364,7 +364,6 @@ export class ChatFriendli extends BaseChatModel<BaseChatModelCallOptions> {
 
         yield generationChunk;
 
-        // eslint-disable-next-line no-void
         void runManager?.handleLLMNewToken(generationChunk.text ?? "");
       }
     }

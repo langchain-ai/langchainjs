@@ -1,6 +1,6 @@
 import { expect, describe, test, beforeEach, afterEach } from "@jest/globals";
 import { Stagehand } from "@browserbasehq/stagehand";
-import { z } from "zod/v3";
+import { z } from "zod";
 import { ChatOpenAI } from "@langchain/openai";
 // import { createReactAgent } from "@langchain/langgraph/prebuilt";
 import { StagehandToolkit } from "../stagehand.js";

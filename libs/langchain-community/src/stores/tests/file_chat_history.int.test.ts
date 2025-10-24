@@ -1,3 +1,5 @@
+/*  eslint-disable no-promise-executor-return  */
+
 import { expect } from "@jest/globals";
 import { promises as fs } from "node:fs";
 import { HumanMessage, AIMessage } from "@langchain/core/messages";

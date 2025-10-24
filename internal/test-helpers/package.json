@@ -3,15 +3,10 @@
   "name": "@langchain/test-helpers",
   "version": "1.0.0",
   "description": "",
-  "exports": {
-    ".": {
-      "types": "./src/index.ts",
-      "default": "./src/index.ts"
-    }
-  },
+  "main": "src/index.ts",
   "scripts": {
-    "lint": "eslint --cache src/",
-    "lint:fix": "pnpm lint --fix",
+    "lint": "eslint --cache --ext .ts,.js src/",
+    "lint:fix": "yarn lint --fix",
     "format": "prettier --write \"src\"",
     "format:check": "prettier --check \"src\""
   },
@@ -23,8 +18,14 @@
     "@jest/globals": "^30.0.5"
   },
   "devDependencies": {
-    "@langchain/eslint": "workspace:*",
-    "eslint": "^9.34.0",
+    "@typescript-eslint/eslint-plugin": "^6.12.0",
+    "@typescript-eslint/parser": "^6.12.0",
+    "eslint": "^8.33.0",
+    "eslint-config-airbnb-base": "^15.0.0",
+    "eslint-config-prettier": "^8.6.0",
+    "eslint-plugin-import": "^2.27.5",
+    "eslint-plugin-no-instanceof": "^1.0.1",
+    "eslint-plugin-prettier": "^4.2.1",
     "prettier": "^3.6.1"
   }
 }

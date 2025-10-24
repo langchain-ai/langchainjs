@@ -1,7 +1,11 @@
+/* eslint-disable spaced-comment */
+
+// eslint-disable-next-line import/no-extraneous-dependencies
 import {
   internalQueryGeneric as internalQuery,
   internalMutationGeneric as internalMutation,
 } from "convex/server";
+// eslint-disable-next-line import/no-extraneous-dependencies
 import { GenericId, v } from "convex/values";
 
 export const get = /*#__PURE__*/ internalQuery({

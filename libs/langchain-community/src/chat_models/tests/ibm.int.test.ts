@@ -1,10 +1,11 @@
+/* eslint-disable no-process-env */
 import {
   AIMessage,
   AIMessageChunk,
   HumanMessage,
   SystemMessage,
 } from "@langchain/core/messages";
-import { z } from "zod/v3";
+import { z } from "zod";
 import { StringOutputParser } from "@langchain/core/output_parsers";
 import { CallbackManager } from "@langchain/core/callbacks/manager";
 import { LLMResult } from "@langchain/core/outputs";

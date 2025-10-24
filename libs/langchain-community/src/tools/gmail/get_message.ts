@@ -1,17 +1,14 @@
-import { z } from "zod/v3";
+import { z } from "zod";
 import { InferInteropZodOutput } from "@langchain/core/utils/types";
 import { GmailBaseToolParams, GmailBaseTool } from "./base.js";
 import { GET_MESSAGE_DESCRIPTION } from "./descriptions.js";
 
-const getMessageSchema = z.object({
-  messageId: z.string(),
-});
-export type GetMessageSchema = z.infer<typeof getMessageSchema>;
-
 export class GmailGetMessage extends GmailBaseTool {
   name = "gmail_get_message";
 
-  schema = getMessageSchema;
+  schema = z.object({
+    messageId: z.string(),
+  });
 
   description = GET_MESSAGE_DESCRIPTION;
 
@@ -19,7 +16,7 @@ export class GmailGetMessage extends GmailBaseTool {
     super(fields);
   }
 
-  async _call(arg: InferInteropZodOutput<GetMessageSchema>) {
+  async _call(arg: InferInteropZodOutput<typeof this.schema>) {
     const { messageId } = arg;
 
     const gmail = await this.getGmailClient();
@@ -91,3 +88,7 @@ export class GmailGetMessage extends GmailBaseTool {
     })}`;
   }
 }
+
+export type GetMessageSchema = {
+  messageId: string;
+};

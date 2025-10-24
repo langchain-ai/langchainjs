@@ -1,3 +1,4 @@
+/* eslint-disable no-restricted-globals */
 import type { BaseLanguageModelCallOptions } from "@langchain/core/language_models/base";
 import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
 import { GenerationChunk } from "@langchain/core/outputs";
@@ -191,8 +192,10 @@ export class ChromeAI extends LLM<ChromeAICallOptions> {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         IterableReadableStream.fromReadableStream<any>(stream);
 
+      let previousContent = "";
       for await (const chunk of iterableStream) {
         const newContent = chunk;
+        previousContent += newContent;
         yield new GenerationChunk({
           text: newContent,
         });

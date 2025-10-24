@@ -3,23 +3,21 @@ name: Check Broken Links
 on:
   workflow_dispatch:
   schedule:
-    - cron: "0 13 * * *"
+    - cron:  '0 13 * * *'
 
 jobs:
   check-links:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Setup pnpm
-        uses: pnpm/action-setup@a7487c7e89a18df4991f7f222e4898a00d66ddda
-      - name: Use Node.js
-        uses: actions/setup-node@v4
+      - name: Use Node.js 18.x
+        uses: actions/setup-node@v3
         with:
-          node-version-file: ".nvmrc"
-          cache: "pnpm"
+          node-version: 18.x
+          cache: "yarn"
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        run: yarn install --immutable --mode=skip-build
       - name: Build scripts
-        run: pnpm build --filter @langchain/scripts
+        run: yarn build --filter=@langchain/scripts
       - name: Check broken links
-        run: pnpm check:broken-links:ci
+        run: yarn workspace core_docs check:broken-links:ci

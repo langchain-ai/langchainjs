@@ -1,3 +1,5 @@
+/* eslint-disable no-process-env */
+
 import { test } from "@jest/globals";
 import { Redis as UpstashRedis } from "@upstash/redis";
 import { UpstashRedisStore } from "../upstash_redis.js";

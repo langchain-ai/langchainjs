@@ -412,7 +412,7 @@ export class ChatTencentHunyuan
             `[${data?.Response?.RequestId}] ${data?.Response?.Error?.Message}`
           );
         }
-      } catch {
+      } catch (e) {
         throw new Error(
           `Could not begin Hunyuan stream, received a non-JSON parseable response: ${text}.`
         );
@@ -438,7 +438,7 @@ export class ChatTencentHunyuan
         }
         try {
           yield JSON.parse(line.slice("data:".length).trim());
-        } catch {
+        } catch (e) {
           console.warn(`Received a non-JSON parseable chunk: ${line}`);
         }
       }

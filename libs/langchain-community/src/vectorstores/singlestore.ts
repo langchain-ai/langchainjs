@@ -129,6 +129,7 @@ export class SingleStoreVectorStore extends VectorStore {
 
   vectorIndexName: string;
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   vectorIndexOptions: Metadata;
 
   vectorSize: number;

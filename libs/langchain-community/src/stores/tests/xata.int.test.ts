@@ -1,3 +1,5 @@
+/* eslint-disable no-process-env */
+// eslint-disable-next-line import/no-extraneous-dependencies
 import { BaseClient } from "@xata.io/client";
 import { AIMessage, HumanMessage } from "@langchain/core/messages";
 import { XataChatMessageHistory } from "../message/xata.js";
@@ -52,6 +54,7 @@ describe("XataChatMessageHistory", () => {
       branch: process.env.XATA_BRANCH || "main",
     });
     const t = () => {
+      // eslint-disable-next-line no-new
       new XataChatMessageHistory({
         sessionId: randomSessionId(),
         client: xata,
@@ -63,6 +66,7 @@ describe("XataChatMessageHistory", () => {
     );
 
     const t1 = () => {
+      // eslint-disable-next-line no-new
       new XataChatMessageHistory({
         sessionId: randomSessionId(),
         client: xata,

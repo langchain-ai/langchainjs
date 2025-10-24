@@ -20,10 +20,12 @@ export class PortkeySession {
 
   constructor(options: PortkeyOptions = {}) {
     if (!options.apiKey) {
+      /* eslint-disable no-param-reassign */
       options.apiKey = readEnv("PORTKEY_API_KEY");
     }
 
     if (!options.baseURL) {
+      /* eslint-disable no-param-reassign */
       options.baseURL = readEnv("PORTKEY_BASE_URL", "https://api.portkey.ai");
     }
 
@@ -168,7 +170,6 @@ export class Portkey extends BaseLLM {
         },
       });
       yield chunk;
-      // eslint-disable-next-line no-void
       void runManager?.handleLLMNewToken(chunk.text ?? "");
     }
     if (options.signal?.aborted) {

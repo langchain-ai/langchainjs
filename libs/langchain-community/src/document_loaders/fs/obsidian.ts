@@ -7,7 +7,7 @@ import { BaseDocumentLoader } from "@langchain/core/document_loaders/base";
 import {
   DirectoryLoader,
   UnknownHandling,
-} from "@langchain/classic/document_loaders/fs/directory";
+} from "langchain/document_loaders/fs/directory";
 
 export type FrontMatter = {
   title?: string;
@@ -76,7 +76,7 @@ class ObsidianFileLoader extends BaseDocumentLoader {
       }
 
       return frontMatter;
-    } catch {
+    } catch (e) {
       console.warn("Encountered non-yaml frontmatter");
       return {};
     }

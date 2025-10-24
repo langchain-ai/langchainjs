@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
+// eslint-disable-next-line import/no-extraneous-dependencies
 import {
   DocumentByInfo,
   DocumentByName,

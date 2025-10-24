@@ -1,3 +1,4 @@
+/* eslint-disable no-process-env */
 import { Document } from "@langchain/core/documents";
 import { WatsonxRerank } from "../ibm.js";
 

@@ -3,7 +3,7 @@ import {
   ListKeyOptions,
   RecordManagerInterface,
   UpdateOptions,
-} from "@langchain/core/indexing";
+} from "./base.js";
 
 export type PostgresRecordManagerOptions = {
   postgresConnectionOptions?: PoolConfig;

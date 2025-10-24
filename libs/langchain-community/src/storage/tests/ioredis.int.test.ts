@@ -1,3 +1,5 @@
+/* eslint-disable no-promise-executor-return */
+
 import { test } from "@jest/globals";
 import { Redis } from "ioredis";
 import { RedisByteStore } from "../ioredis.js";

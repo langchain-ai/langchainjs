@@ -6,7 +6,7 @@ async function main() {
 }
 
 try {
-  await main();
+  void main();
 } catch {
   process.exit(1);
 }

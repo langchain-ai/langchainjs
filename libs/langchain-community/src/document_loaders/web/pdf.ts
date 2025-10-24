@@ -69,6 +69,7 @@ export class WebPDFLoader extends BaseDocumentLoader {
           } else {
             textItems.push(`\n${item.str}`);
           }
+          // eslint-disable-next-line prefer-destructuring
           lastY = item.transform[5];
         }
       }

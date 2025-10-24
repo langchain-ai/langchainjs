@@ -2,7 +2,7 @@
   "extends": ["//"],
   "tasks": {
     "build": {
-      "dependsOn": [],
+      "dependsOn": ["^build:internal"],
       "outputs": ["**/dist/**"]
     },
     "build:internal": {

@@ -1,3 +1,5 @@
+/* eslint-disable no-process-env */
+/* eslint-disable no-new */
 import {
   WatsonXAI,
   convertUtilityToolToWatsonxTool,
@@ -77,9 +79,8 @@ describe("Tool class tests", () => {
           },
           service
         );
-      } catch (e) {
-        const error = e as Error;
-        expect(error.message).toBe("Unsupported root schema type");
+      } catch (e: any) {
+        expect(e.message).toBe("Unsupported root schema type");
       }
     });
   });

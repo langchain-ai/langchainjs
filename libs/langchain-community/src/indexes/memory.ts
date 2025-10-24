@@ -1,8 +1,4 @@
-import {
-  ListKeyOptions,
-  RecordManager,
-  UpdateOptions,
-} from "@langchain/core/indexing";
+import { ListKeyOptions, RecordManager, UpdateOptions } from "./base.js";
 
 interface MemoryRecord {
   updatedAt: number;

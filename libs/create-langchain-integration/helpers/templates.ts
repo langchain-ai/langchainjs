@@ -7,13 +7,7 @@ import { copy } from "./copy.js";
 /**
  * Install a internal template to a given `root` directory.
  */
-export async function installTemplate({
-  appName,
-  root,
-}: {
-  appName: string;
-  root: string;
-}) {
+export async function installTemplate({ appName, root }: any) {
   /**
    * Copy the template files to the target directory.
    */
@@ -31,8 +25,7 @@ export async function installTemplate({
    * Update the package.json scripts.
    */
   const packageJsonFile = path.join(root, "package.json");
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const packageJson: Record<string, any> = JSON.parse(
+  const packageJson: any = JSON.parse(
     await fs.readFile(packageJsonFile, "utf8")
   );
 
@@ -41,7 +34,7 @@ export async function installTemplate({
     const integrationName = appName.replace("@langchain/", "");
     packageJson.description = `Integration for LangChain ${integrationName}`;
     packageJson.homepage = `https://github.com/langchain-ai/langchainjs/tree/main/libs/langchain-${integrationName}/`;
-    packageJson.scripts.build = `pnpm build --filter ${appName}`;
+    packageJson.scripts.build = `yarn turbo:command build:internal --filter=${appName}`;
   }
 
   await fs.writeFile(
@@ -51,7 +44,7 @@ export async function installTemplate({
 
   await fs.writeFile(
     path.join(root, ".gitignore"),
-    ["node_modules", "dist"].join("\n") + os.EOL
+    ["node_modules", "dist", ".yarn"].join("\n") + os.EOL
   );
 
   console.log("\nDone!\n");

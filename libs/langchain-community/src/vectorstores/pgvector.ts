@@ -41,7 +41,7 @@ import { maximalMarginalRelevance } from "@langchain/core/utils/math";
  * }
  * ```
  */
-type MetadataFilter = Record<
+type StrictMetadataFilter = Record<
   string,
   | string
   | number
@@ -65,6 +65,17 @@ type MetadataFilter = Record<
       neq?: string | number | boolean;
     }
 >;
+
+/**
+ * @deprecated Use StrictMetadataFilter for better type safety. This type will be removed.
+ * Legacy metadata filter type for backward compatibility
+ */
+type LegacyMetadataFilter = Record<string, unknown>;
+
+/**
+ * Metadata filter type that supports both strict typing and legacy usage
+ */
+type MetadataFilter = StrictMetadataFilter | LegacyMetadataFilter;
 
 type Metadata = Record<string, unknown>;
 

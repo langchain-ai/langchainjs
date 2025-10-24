@@ -15,13 +15,13 @@ Generate integration documentation using the CLI.
 1. Build the CLI:
 
 ```bash
-pnpm build --filter=@langchain/scripts
+yarn build --filter=@langchain/scripts
 ```
 
 2. Run the CLI:
 
 ```bash
-pnpm create:integration:doc --classname <Class Name> --type <Type>
+yarn create:integration:doc --classname <Class Name> --type <Type>
 ```
 
 The `--classname` field should be passed the full class name of the integration, e.g `ChatOpenAI` or `RecursiveUrlLoader`.

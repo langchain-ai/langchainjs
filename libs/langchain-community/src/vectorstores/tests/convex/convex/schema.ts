@@ -1,3 +1,5 @@
+/* eslint-disable import/no-extraneous-dependencies */
+
 import { defineSchema, defineTable } from "convex/server";
 import { v } from "convex/values";
 

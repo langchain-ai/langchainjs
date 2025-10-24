@@ -1,3 +1,4 @@
+/* eslint-disable no-process-env */
 import { test, expect } from "@jest/globals";
 
 import { OpenAIEmbeddings } from "@langchain/openai";

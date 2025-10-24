@@ -1,4 +1,5 @@
 import { ChatOpenAI } from "@langchain/openai";
+import { createOpenAIToolsAgent, AgentExecutor } from "langchain/agents";
 import { ChatPromptTemplate } from "@langchain/core/prompts";
 
 const model = new ChatOpenAI({
@@ -11,3 +12,16 @@ const prompt = ChatPromptTemplate.fromMessages([
   ["human", "{input}"],
   ["placeholder", "{agent_scratchpad}"],
 ]);
+
+const agent = await createOpenAIToolsAgent({
+  llm: model,
+  prompt,
+  tools: [],
+});
+
+const agentExecutor = new AgentExecutor({
+  agent,
+  tools: [],
+});
+
+console.log(agentExecutor);

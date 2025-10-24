@@ -1,0 +1,229 @@
+---
+sidebar_label: WatsonxToolkit
+title: WatsonxToolkit
+---
+
+export const quartoRawHtml = [
+  `
+<table>
+<colgroup>
+<col style="width: 26%" />
+<col style="width: 73%" />
+</colgroup>
+<thead>
+<tr>
+<th>Name</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>GoogleSearch</code></td>
+<td>Search for online trends, news, current events, real-time information, or research topics.</td>
+</tr>
+<tr>
+<td><code>WebCrawler</code></td>
+<td>Useful for when you need to summarize a webpage. Do not use for Web search.</td>
+</tr>
+<tr>
+<td><code>SDXLTurbo</code></td>
+<td>Generate an image from text using Stability.ai</td>
+</tr>
+<tr>
+<td><code>Weather</code></td>
+<td>Find the weather for a city.</td>
+</tr>
+<tr>
+<td><code>RAGQuery</code></td>
+<td>Search the documents in a vector index.</td>
+</tr>
+</tbody>
+</table>
+`,
+  `
+<table>
+<colgroup>
+<col style="width: 22%" />
+<col style="width: 22%" />
+<col style="width: 27%" />
+<col style="width: 27%" />
+</colgroup>
+<thead>
+<tr>
+<th style="text-align: left;">Class</th>
+<th style="text-align: left;">Package</th>
+<th style="text-align: center;"><a href="https://python.langchain.com/docs/integrations/tools/ibm_watsonx/">PY support</a></th>
+<th style="text-align: center;">Package latest</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><a href="https://api.js.langchain.com/classes/_langchain_community.agents_toolkits_ibm.WatsonxToolkit.html">WatsonxToolkit</a></td>
+<td style="text-align: left;"><a href="https://www.npmjs.com/package/@langchain/community"><code>@langchain/community</code></a></td>
+<td style="text-align: center;">✅</td>
+<td style="text-align: center;"><img src="https://img.shields.io/npm/v/@langchain/community?style=flat-square&amp;label=%20&amp;.png" alt="NPM - Version" /></td>
+</tr>
+</tbody>
+</table>
+`,
+];
+
+This will help you getting started with the
+[WatsonxToolkit](../../../docs/concepts/#toolkits). For detailed
+documentation of all WatsonxToolkit features and configurations head to
+the [API
+reference](https://api.js.langchain.com/modules/_langchain_community.agents_toolkits_ibm.html).
+
+The toolkit contains following tools:
+
+<div dangerouslySetInnerHTML={{ __html: quartoRawHtml[0] }} />
+
+### Integration details
+
+<div dangerouslySetInnerHTML={{ __html: quartoRawHtml[1] }} />
+
+## Setup
+
+If you want to get automated tracing from runs of individual tools, you
+can also set your [LangSmith](https://docs.smith.langchain.com/) API key
+by uncommenting below:
+
+`typescript process.env.LANGSMITH_TRACING="true" process.env.LANGSMITH_API_KEY="your-api-key"`
+
+### Installation
+
+This toolkit lives in the `@langchain/community` package:
+
+\`{=mdx} import IntegrationInstallTooltip from
+“(**mdx_components/integration_install_tooltip.mdx?**)”; import Npm2Yarn
+from “(**theme/Npm2Yarn?**)”;
+
+<IntegrationInstallTooltip></IntegrationInstallTooltip>
+
+<Npm2Yarn> (**langchain/community?**) (**langchain/core?**) </Npm2Yarn>
+\`
+
+## Instantiation
+
+Now we can instantiate our toolkit:
+
+```typescript
+import { WatsonxToolkit } from "@langchain/community/agents/toolkits/ibm";
+import "dotenv/config";
+
+const toolkit = await WatsonxToolkit.init({
+  version: "2024-05-31",
+  serviceUrl: process.env.WATSONX_AI_SERVICE_URL,
+});
+```
+
+```text
+[Module: null prototype] { default: {} }
+```
+
+## Tools
+
+View available tools:
+
+```typescript
+const tools = toolkit.getTools();
+
+console.log(
+  tools.map((tool) => ({
+    name: tool.name,
+    description: tool.description,
+  }))
+);
+```
+
+```text
+[
+ {
+ name: "GoogleSearch",
+ description: "Search for online trends, news, current events, real-time information, or research topics."
+ },
+ {
+ name: "WebCrawler",
+ description: "Useful for when you need to summarize a webpage. Do not use for Web search."
+ },
+ {
+ name: "SDXLTurbo",
+ description: "Generate an image from text using Stability.ai"
+ },
+ { name: "Weather", description: "Find the weather for a city." },
+ {
+ name: "RAGQuery",
+ description: "Search the documents in a vector index."
+ }
+]
+```
+
+For detailed info about tools please visit [watsonx.ai API
+docs](https://cloud.ibm.com/apidocs/watsonx-ai#get-utility-agent-tools)
+
+## Use within an agent
+
+First, ensure you have LangGraph installed:
+
+```mdx-code-block
+<Npm2Yarn>
+ @langchain/langgraph
+</Npm2Yarn>
+```
+
+Then, instantiate your LLM to be used in the React agent:
+
+```typescript
+import { ChatWatsonx } from "@langchain/community/chat_models/ibm";
+
+const llm = new ChatWatsonx({
+  version: "2024-05-31",
+  serviceUrl: process.env.WATSONX_AI_SERVICE_URL,
+  model: "ibm/granite-3-8b-instruct",
+  projectId: process.env.WATSONX_AI_PROJECT_ID,
+});
+```
+
+```typescript
+import { createReactAgent } from "@langchain/langgraph/prebuilt";
+
+const agent = createReactAgent({ llm, tools });
+```
+
+```typescript
+const exampleQuery = "Who won F1 championship in 2022?";
+
+const events = await agent.stream(
+  { messages: [{ role: "user", content: exampleQuery }] },
+  { streamMode: "values" }
+);
+
+for await (const event of events) {
+  const lastMsg = event.messages[event.messages.length - 1];
+  if (lastMsg.tool_calls?.length) {
+    console.dir(lastMsg.tool_calls, { depth: null });
+  } else if (lastMsg.content) {
+    console.log(lastMsg.content);
+  }
+}
+```
+
+```text
+Who won F1 championship in 2022?
+[
+ {
+ name: "GoogleSearch",
+ args: { input: "F1 championship 2022" },
+ type: "tool_call",
+ id: "chatcmpl-tool-9da3456b9bbc475fb822296fdb8353a8"
+ }
+]
+[{"title":"2022 DRIVER STANDINGS","description":"Official F1® Race Programme · Modern Slavery Statement; Do Not Sell or Share My Personal Information. Formula 1. © 2003-2025 Formula One World Championship ...","url":"https://www.formula1.com/en/results/2022/drivers"},{"title":"2022 Formula One World Championship - Wikipedia","description":"2022 Formula One World Championship · Max Verstappen won his second consecutive World Drivers' Championship driving for Red Bull Racing. · Charles Leclerc ...","url":"https://en.wikipedia.org/wiki/2022_Formula_One_World_Championship"},{"title":"2022 Formula One World Championship - Simple English Wikipedia ...","description":"Max Verstappen, who was the reigning Drivers' Champion, claimed his second title at the Japanese Grand Prix, while his team, Red Bull Racing, achieved their ...","url":"https://simple.wikipedia.org/wiki/2022_Formula_One_World_Championship"},{"title":"Max Verstappen wins the 2022 F1 Drivers World Championship : r ...","description":"Oct 9, 2022 ... One day this guy will win a championship just by finishing the race and celebrating with a world championship lap on the day he won.","url":"https://www.reddit.com/r/sports/comments/xzg8pf/max_verstappen_wins_the_2022_f1_drivers_world/"},{"title":"Red Bull Simulator Championship Edition | F1 Authentics","description":"Based on the livery of the 2022 Oracle Red Bull Racing Championship-winning RB18, this F1 simulator has been expertly engineered and manufactured by Memento ...","url":"https://www.f1authentics.com/products/red-bull-simulator-championship-edition"},{"title":"F1 2022 Drivers Championship without Max Verstappen : r/formula1","description":"Nov 26, 2022 ... 1.1K votes, 65 comments. 5.2M subscribers in the formula1 community. Welcome to r/Formula1, the best independent online Formula 1 community!","url":"https://www.reddit.com/r/formula1/comments/z5cwl7/f1_2022_drivers_championship_without_max/"},{"title":"F1® Sim Racing World Championship 2022","description":"World Championship 2022 Bahrain International Circuit Bahrain International Circuit Race Distance: 29 laps Track Length: 5.412 km","url":"https://f1esports.com/world/results/2022"},{"title":"Our personal F1 2022 Predictions Championship : r/formula1","description":"May 5, 2022 ... F1 2025 Driver Predictions from mathematical model. Leclerc and Sainz predicted to beat Hamilton and Albon. r/formula1 - F1 2025 Driver ...","url":"https://www.reddit.com/r/formula1/comments/uitbbu/our_personal_f1_2022_predictions_championship/"},{"title":"Haas F1 Team Esports announces roster for 2022 F1 Esports Series ...","description":"Sep 13, 2022 ... Haas F1 Team is ready to commence battle in the 2022 F1 Esports Series Pro Championship featuring an updated line-up for this season.","url":"https://www.haasf1team.com/news/haas-f1-team-esports-announces-roster-2022-f1-esports-series-pro-championship"},{"title":"2022 F1 Deconstructors Championship : r/formula1","description":"Nov 22, 2022 ... Congratulations to our 2022 champion Carlos Sainz. Alonso put in a late surge but had to settle for second place. Alfa put in the best effort ...","url":"https://www.reddit.com/r/formula1/comments/z1pkkx/2022_f1_deconstructors_championship/"}]
+Max Verstappen won the 2022 F1 Championship, driving for Red Bull Racing. He claimed his second title at the Japanese Grand Prix.
+```
+
+## API reference
+
+For detailed documentation of all `WatsonxToolkit` features and
+configurations head to the [API
+reference](https://api.js.langchain.com/modules/_langchain_community.agents_toolkits_ibm.html).

@@ -113,6 +113,7 @@ export class SortXYZBlockchainLoader extends BaseDocumentLoader {
     const docs: Document[] = [];
     let queryOffset = 0;
 
+    // eslint-disable-next-line no-constant-condition
     while (true) {
       let query = "";
 

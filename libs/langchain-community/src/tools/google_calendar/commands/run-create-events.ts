@@ -1,4 +1,4 @@
-import { z } from "zod/v3";
+import { z } from "zod";
 import { calendar_v3 } from "googleapis";
 import type { GaxiosResponse } from "googleapis-common";
 import { PromptTemplate } from "@langchain/core/prompts";

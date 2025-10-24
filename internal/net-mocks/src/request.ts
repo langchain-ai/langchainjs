@@ -9,8 +9,8 @@ import {
   HARQueryString,
   HARRequest,
   HARResponse,
-} from "./spec.js";
-import { deepEqual, delay, iife } from "./utils.js";
+} from "./spec";
+import { deepEqual, delay, iife } from "./utils";
 
 const WELL_KNOWN_HEADERS = ["accept", "accept-encoding", "content-type"];
 
@@ -247,7 +247,7 @@ export async function encodeEventStream(
         id: output.id,
         data: output.data,
       };
-    } catch {
+    } catch (error) {
       event = { data: decoder.decode(result.value) };
     }
 
@@ -286,7 +286,7 @@ export function readableHARResponseStream(
     const responseJson = iife<string | undefined>(() => {
       try {
         return JSON.parse(entry.response.content.text ?? "");
-      } catch {
+      } catch (error) {
         return undefined;
       }
     });

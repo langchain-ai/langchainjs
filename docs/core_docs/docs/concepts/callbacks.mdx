@@ -1,0 +1,59 @@
+# Callbacks
+
+:::note Prerequisites
+
+- [Runnable interface](/docs/concepts/runnables)
+
+:::
+
+LangChain provides a callback system that allows you to hook into the various stages of your LLM application. This is useful for logging, monitoring, streaming, and other tasks.
+
+You can subscribe to these events by using the `callbacks` argument available throughout the API. This argument is list of handler objects, which are expected to implement one or more of the methods described below in more detail.
+
+## Callback events
+
+| Event            | Event Trigger                               | Associated Method      |
+| ---------------- | ------------------------------------------- | ---------------------- |
+| Chat model start | When a chat model starts                    | `handleChatModelStart` |
+| LLM start        | When a llm starts                           | `handleLlmStart`       |
+| LLM new token    | When an llm OR chat model emits a new token | `handleLlmNewToken`    |
+| LLM ends         | When an llm OR chat model ends              | `handleLlmEnd`         |
+| LLM errors       | When an llm OR chat model errors            | `handleLlmError`       |
+| Chain start      | When a chain starts running                 | `handleChainStart`     |
+| Chain end        | When a chain ends                           | `handleChainEnd`       |
+| Chain error      | When a chain errors                         | `handleChainError`     |
+| Tool start       | When a tool starts running                  | `handleToolStart`      |
+| Tool end         | When a tool ends                            | `handleToolEnd`        |
+| Tool error       | When a tool errors                          | `handleToolError`      |
+| Retriever start  | When a retriever starts                     | `handleRetrieverStart` |
+| Retriever end    | When a retriever ends                       | `handleRetrieverEnd`   |
+| Retriever error  | When a retriever errors                     | `handleRetrieverError` |
+
+## Callback handlers
+
+- Callback handlers implement the [BaseCallbackHandler](https://api.js.langchain.com/classes/_langchain_core.callbacks_base.BaseCallbackHandler.html) interface.
+
+During run-time LangChain configures an appropriate callback manager (e.g., [CallbackManager](https://api.js.langchain.com/classes/_langchain_core.callbacks_manager.BaseCallbackManager.html)) which will be responsible for calling the appropriate method on each "registered" callback handler when the event is triggered.
+
+## Passing callbacks
+
+The `callbacks` property is available on most objects throughout the API (Models, Tools, Agents, etc.) in two different places:
+
+- **Request time callbacks**: Passed at the time of the request in addition to the input data.
+  Available on all standard `Runnable` objects. These callbacks are INHERITED by all children
+  of the object they are defined on. For example, `await chain.invoke({ number: 25 }, { callbacks: [handler] })`.
+- **Constructor callbacks**: `const chain = new TheNameOfSomeChain({ callbacks: [handler] })`. These callbacks
+  are passed as arguments to the constructor of the object. The callbacks are scoped
+  only to the object they are defined on, and are **not** inherited by any children of the object.
+
+:::warning
+
+Constructor callbacks are scoped only to the object they are defined on. They are **not** inherited by children
+of the object.
+
+:::
+
+If you're creating a custom chain or runnable, you need to remember to propagate request time
+callbacks to any child objects.
+
+For specifics on how to use callbacks, see the [relevant how-to guides here](/docs/how_to/#callbacks).

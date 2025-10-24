@@ -8,9 +8,8 @@ test("Test GithubRepoLoader", async () => {
   );
   const documents = await loader.load();
   expect(
-    documents.filter(
-      (document) => document.metadata.source === "pnpm-lock.yaml"
-    ).length
+    documents.filter((document) => document.metadata.source === "yarn.lock")
+      .length
   ).toBe(1);
   expect(
     documents.filter((document) => document.metadata.source === "README.md")
@@ -26,14 +25,13 @@ test("Test ignoreFiles with GithubRepoLoader", async () => {
       branch: "main",
       recursive: false,
       unknown: "warn",
-      ignoreFiles: ["pnpm-lock.yaml", "README.md"],
+      ignoreFiles: ["yarn.lock", "README.md"],
     }
   );
   const documents = await loader.load();
   expect(
-    documents.filter(
-      (document) => document.metadata.source === "pnpm-lock.yaml"
-    ).length
+    documents.filter((document) => document.metadata.source === "yarn.lock")
+      .length
   ).toBe(0);
   expect(
     documents.filter((document) => document.metadata.source === "README.md")
@@ -49,14 +47,13 @@ test("Test ignorePaths with GithubRepoLoader", async () => {
       branch: "main",
       recursive: false,
       unknown: "warn",
-      ignorePaths: ["pnpm-lock.yaml", "*.md"],
+      ignorePaths: ["yarn.lock", "*.md"],
     }
   );
   const documents = await loader.load();
   expect(
-    documents.filter(
-      (document) => document.metadata.source === "pnpm-lock.yaml"
-    ).length
+    documents.filter((document) => document.metadata.source === "yarn.lock")
+      .length
   ).toBe(0);
   expect(
     documents.filter((document) => document.metadata.source.endsWith(".md"))
@@ -81,9 +78,8 @@ test("Test streaming documents from GithubRepoLoader", async () => {
   }
 
   expect(
-    documents.filter(
-      (document) => document.metadata.source === "pnpm-lock.yaml"
-    ).length
+    documents.filter((document) => document.metadata.source === "yarn.lock")
+      .length
   ).toBe(1);
   expect(
     documents.filter((document) => document.metadata.source === "README.md")
@@ -98,7 +94,7 @@ test("Test ignorePaths streaming with GithubRepoLoader", async () => {
       branch: "main",
       recursive: false,
       unknown: "warn",
-      ignorePaths: ["pnpm-lock.yaml", "*.md"],
+      ignorePaths: ["yarn.lock", "*.md"],
     }
   );
 
@@ -108,9 +104,8 @@ test("Test ignorePaths streaming with GithubRepoLoader", async () => {
   }
 
   expect(
-    documents.filter(
-      (document) => document.metadata.source === "pnpm-lock.yaml"
-    ).length
+    documents.filter((document) => document.metadata.source === "yarn.lock")
+      .length
   ).toBe(0);
   expect(
     documents.filter((document) => document.metadata.source.endsWith(".md"))
@@ -125,7 +120,7 @@ test("Test ignoreFiles streaming with GithubRepoLoader", async () => {
       branch: "main",
       recursive: false,
       unknown: "warn",
-      ignoreFiles: ["pnpm-lock.yaml", "README.md"],
+      ignoreFiles: ["yarn.lock", "README.md"],
     }
   );
 
@@ -135,9 +130,8 @@ test("Test ignoreFiles streaming with GithubRepoLoader", async () => {
   }
 
   expect(
-    documents.filter(
-      (document) => document.metadata.source === "pnpm-lock.yaml"
-    ).length
+    documents.filter((document) => document.metadata.source === "yarn.lock")
+      .length
   ).toBe(0);
   expect(
     documents.filter((document) => document.metadata.source === "README.md")

@@ -523,6 +523,9 @@ export class BedrockChat
 
   endpointHost?: string;
 
+  /** @deprecated Use as a call option using .withConfig() instead. */
+  stopSequences?: string[];
+
   modelKwargs?: Record<string, unknown>;
 
   codec: EventStreamCodec = new EventStreamCodec(toUtf8, fromUtf8);
@@ -631,6 +634,7 @@ export class BedrockChat
     this.maxTokens = fields?.maxTokens ?? this.maxTokens;
     this.fetchFn = fields?.fetchFn ?? fetch.bind(globalThis);
     this.endpointHost = fields?.endpointHost ?? fields?.endpointUrl;
+    this.stopSequences = fields?.stopSequences;
     this.modelKwargs = fields?.modelKwargs;
     this.streaming = fields?.streaming ?? this.streaming;
     this.usesMessagesApi = canUseMessagesApi(this.model);
@@ -656,7 +660,7 @@ export class BedrockChat
       tools: options?.tools ? formatTools(options.tools) : undefined,
       temperature: this.temperature,
       max_tokens: this.maxTokens,
-      stop: options?.stop,
+      stop: options?.stop ?? this.stopSequences,
       modelKwargs: this.modelKwargs,
       guardrailConfig: this.guardrailConfig,
     };
@@ -1087,3 +1091,8 @@ function getModelProvider(modelId: string): string {
     return parts[0];
   }
 }
+
+/**
+ * @deprecated Use `BedrockChat` instead.
+ */
+export const ChatBedrock = BedrockChat;

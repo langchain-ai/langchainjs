@@ -1,21 +1,18 @@
-import { z } from "zod/v3";
+import { z } from "zod";
 import { InferInteropZodOutput } from "@langchain/core/utils/types";
 import { GmailBaseTool, GmailBaseToolParams } from "./base.js";
 import { GET_MESSAGE_DESCRIPTION } from "./descriptions.js";
 
-const sendMessageSchema = z.object({
-  message: z.string(),
-  to: z.array(z.string()),
-  subject: z.string(),
-  cc: z.array(z.string()).optional(),
-  bcc: z.array(z.string()).optional(),
-});
-export type SendMessageSchema = z.infer<typeof sendMessageSchema>;
-
 export class GmailSendMessage extends GmailBaseTool {
   name = "gmail_send_message";
 
-  schema = sendMessageSchema;
+  schema = z.object({
+    message: z.string(),
+    to: z.array(z.string()),
+    subject: z.string(),
+    cc: z.array(z.string()).optional(),
+    bcc: z.array(z.string()).optional(),
+  });
 
   description = GET_MESSAGE_DESCRIPTION;
 
@@ -29,7 +26,7 @@ export class GmailSendMessage extends GmailBaseTool {
     subject,
     cc,
     bcc,
-  }: SendMessageSchema): string {
+  }: InferInteropZodOutput<typeof this.schema>): string {
     const emailLines: string[] = [];
 
     // Format the recipient(s)
@@ -55,7 +52,7 @@ export class GmailSendMessage extends GmailBaseTool {
     subject,
     cc,
     bcc,
-  }: InferInteropZodOutput<SendMessageSchema>): Promise<string> {
+  }: InferInteropZodOutput<typeof this.schema>): Promise<string> {
     const rawMessage = this.createEmailMessage({
       message,
       to,
@@ -80,3 +77,11 @@ export class GmailSendMessage extends GmailBaseTool {
     }
   }
 }
+
+export type SendMessageSchema = {
+  message: string;
+  to: string[];
+  subject: string;
+  cc?: string[];
+  bcc?: string[];
+};

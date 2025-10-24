@@ -73,6 +73,9 @@ export class Bedrock extends LLM implements BaseBedrockInput {
 
   endpointHost?: string;
 
+  /** @deprecated */
+  stopSequences?: string[];
+
   modelKwargs?: Record<string, unknown>;
 
   codec: EventStreamCodec = new EventStreamCodec(toUtf8, fromUtf8);
@@ -139,6 +142,7 @@ export class Bedrock extends LLM implements BaseBedrockInput {
     this.maxTokens = fields?.maxTokens ?? this.maxTokens;
     this.fetchFn = fields?.fetchFn ?? fetch.bind(globalThis);
     this.endpointHost = fields?.endpointHost ?? fields?.endpointUrl;
+    this.stopSequences = fields?.stopSequences;
     this.modelKwargs = fields?.modelKwargs;
     this.streaming = fields?.streaming ?? this.streaming;
   }
@@ -204,7 +208,7 @@ export class Bedrock extends LLM implements BaseBedrockInput {
       prompt,
       this.maxTokens,
       this.temperature,
-      options.stop,
+      options.stop ?? this.stopSequences,
       this.modelKwargs,
       fields.bedrockMethod
     );
@@ -256,7 +260,7 @@ export class Bedrock extends LLM implements BaseBedrockInput {
       region: this.region,
       temperature: this.temperature,
       maxTokens: this.maxTokens,
-      stop: options?.stop,
+      stop: options?.stop ?? this.stopSequences,
       modelKwargs: this.modelKwargs,
     };
   }

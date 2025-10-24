@@ -368,7 +368,6 @@ export class ChatAlibabaTongyi
                 response.usage = data.usage;
               }
 
-              // eslint-disable-next-line no-void
               void runManager?.handleLLMNewToken(text ?? "");
               if (finish_reason && finish_reason !== "null") {
                 if (resolved || rejected) {
@@ -577,7 +576,8 @@ export class ChatAlibabaTongyi
         error = new Error(
           `Tongyi call failed with status code ${response.status}: ${json.error}`
         );
-      } catch {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      } catch (e: any) {
         error = new Error(
           `Tongyi call failed with status code ${response.status}: ${responseText}`
         );
@@ -604,7 +604,7 @@ export class ChatAlibabaTongyi
         }
         try {
           yield JSON.parse(line.slice("data:".length).trim());
-        } catch {
+        } catch (e) {
           console.warn(`Received a non-JSON parseable chunk: ${line}`);
         }
       }

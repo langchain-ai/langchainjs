@@ -41,4 +41,4 @@ export class ChatTencentHunyuan extends BaseChatTencentHunyuan {
   }
 }
 
-export type { TencentHunyuanChatInput } from "./base.js";
+export { TencentHunyuanChatInput } from "./base.js";

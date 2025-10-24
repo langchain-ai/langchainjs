@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 import {
   AIMessage,
   AIMessageChunk,
@@ -148,7 +150,7 @@ function _convertToolToWatsonxTool(
       type: "function",
       function: {
         name: tool.name,
-        description: tool.description ?? `Tool: ${tool.name}`,
+        description: tool.description ?? "Tool: " + tool.name,
         parameters,
       },
     };
@@ -225,10 +227,8 @@ function _watsonxResponseToChatMessage(
         try {
           const parsed = parseToolCall(rawToolCall, { returnId: true });
           toolCalls.push(parsed);
-        } catch (e: unknown) {
-          invalidToolCalls.push(
-            makeInvalidToolCall(rawToolCall, (e as Error).message)
-          );
+        } catch (e: any) {
+          invalidToolCalls.push(makeInvalidToolCall(rawToolCall, e.message));
         }
       }
       const additional_kwargs: Record<string, unknown> = {
@@ -794,7 +794,6 @@ export class ChatWatsonx<
 
       yield generationChunk;
 
-      // eslint-disable-next-line no-void
       void _runManager?.handleLLMNewToken(
         generationChunk.text ?? "",
         newTokenIndices,
@@ -898,7 +897,7 @@ export class ChatWatsonx<
               function: {
                 name: functionName,
                 description:
-                  asJsonSchema.description ?? `Tool: ${functionName}`,
+                  asJsonSchema.description ?? "Tool: " + functionName,
                 parameters: asJsonSchema,
               },
             },
@@ -966,7 +965,6 @@ export class ChatWatsonx<
     }
 
     const parserAssign = RunnablePassthrough.assign({
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       parsed: (input: any, config) => outputParser.invoke(input.raw, config),
     });
     const parserNone = RunnablePassthrough.assign({

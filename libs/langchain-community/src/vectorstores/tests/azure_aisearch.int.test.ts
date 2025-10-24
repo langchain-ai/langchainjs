@@ -1,3 +1,5 @@
+/* eslint-disable no-process-env */
+/* eslint-disable @typescript-eslint/no-non-null-assertion */
 import { jest, test, expect } from "@jest/globals";
 import { setTimeout } from "timers/promises";
 import { SearchIndexClient, AzureKeyCredential } from "@azure/search-documents";
@@ -47,7 +49,9 @@ describe.skip("AzureAISearchVectorStore e2e integration tests", () => {
       process.env.OPENAI_API_KEY || process.env.AZURE_OPENAI_API_KEY
     ).toBeDefined();
 
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     const endpoint = process.env.AZURE_AISEARCH_ENDPOINT!;
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     const credential = new AzureKeyCredential(process.env.AZURE_AISEARCH_KEY!);
     indexClient = new SearchIndexClient(endpoint, credential);
 
