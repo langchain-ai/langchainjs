@@ -170,10 +170,10 @@ export type ChatWatsonxConstructor = BaseChatModelParams &
   WatsonxCallParams &
   WatsonxDeployedParams;
 
-function _convertToValidToolId(model: string, tool_call_id: string) {
-  if (model.startsWith("mistralai"))
+function _convertToValidToolId(model: string, tool_call_id: string): string {
+  if (model.startsWith("mistralai") && tool_call_id)
     return _convertToolCallIdToMistralCompatible(tool_call_id);
-  else return tool_call_id;
+  return tool_call_id;
 }
 
 type ChatWatsonxToolType =
@@ -312,6 +312,7 @@ function _watsonxResponseToChatMessage(
 }
 
 function _convertDeltaToMessageChunk(
+  helperIndex: { ["value"]: number },
   delta: WatsonxDeltaStream,
   rawData: TextChatResponse | ChatsResponse,
   model?: string,
@@ -319,20 +320,28 @@ function _convertDeltaToMessageChunk(
   defaultRole?: TextChatMessagesTextChatMessageAssistant.Constants.Role
 ) {
   if (delta.refusal) throw new Error(delta.refusal);
+
   const rawToolCalls = delta.tool_calls?.length
     ? delta.tool_calls?.map(
         (
           toolCall,
           index
-        ): TextChatToolCall & {
-          index: number;
-          type: "function";
-        } => ({
-          index,
-          ...toolCall,
-          id: _convertToValidToolId(model ?? "", toolCall.id),
-          type: "function",
-        })
+        ): TextChatToolCall & { index: number; type: "function" } => {
+          const validId =
+            toolCall.id && toolCall.id !== ""
+              ? _convertToValidToolId(model ?? "", toolCall.id)
+              : undefined;
+          if (toolCall.id) helperIndex.value += 1;
+          return {
+            index:
+              delta?.tool_calls && delta?.tool_calls?.length > 1
+                ? index
+                : helperIndex.value,
+            ...toolCall,
+            ...(validId !== null && { id: validId }),
+            type: "function",
+          };
+        }
       )
     : undefined;
 
@@ -345,7 +354,7 @@ function _convertDeltaToMessageChunk(
     output_tokens: usage?.completion_tokens ?? 0,
     total_tokens: usage?.total_tokens ?? 0,
   };
-
+  let name;
   switch (role) {
     case "user":
       return new HumanMessageChunk({ content });
@@ -1023,6 +1032,7 @@ export class ChatWatsonx<
     let defaultRole;
     let usage: TextChatUsage | undefined;
     let currentCompletion = 0;
+    let counter = { value: -1 };
     for await (const chunk of stream) {
       if (options.signal?.aborted) {
         throw new Error("AbortError");
@@ -1050,7 +1060,9 @@ export class ChatWatsonx<
         ...newTokenIndices,
         finish_reason: choice.finish_reason,
       };
+
       const message = _convertDeltaToMessageChunk(
+        counter,
         delta,
         data,
         this.model,

@@ -749,10 +749,8 @@ describe.each(parameters)(
 
         let toolMessage: AIMessageChunk | undefined;
         for await (const chunk of res) {
-          console.log(chunk);
-
           toolMessage =
-            toolMessage !== undefined ? toolMessage.concat(chunk) : chunk;
+            toolMessage !== undefined ? concat(toolMessage, chunk) : chunk;
         }
         expect(toolMessage).toBeInstanceOf(AIMessageChunk);
         expect(toolMessage?.tool_calls).toBeDefined();
