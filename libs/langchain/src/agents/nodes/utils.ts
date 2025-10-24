@@ -1,15 +1,16 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { z } from "zod/v3";
 import { type BaseMessage } from "@langchain/core/messages";
 import {
+  getInteropZodObjectShape,
   interopSafeParseAsync,
   interopZodObjectMakeFieldsOptional,
 } from "@langchain/core/utils/types";
-import { type ZodIssue } from "zod/v3";
 import { END } from "@langchain/langgraph";
+import { schemaMetaRegistry } from "@langchain/langgraph/zod";
+import { z } from "zod/v3";
 
-import type { JumpTo } from "../types.js";
 import type { AgentMiddleware } from "../middleware/types.js";
+import type { JumpTo } from "../types.js";
 
 /**
  * Helper function to initialize middleware state defaults.
@@ -17,6 +18,10 @@ import type { AgentMiddleware } from "../middleware/types.js";
  *
  * Private properties (starting with _) are automatically made optional since
  * users cannot provide them when invoking the agent.
+ *
+ * This function also checks the LangGraph schemaMetaRegistry for fields with
+ * default values defined via withLangGraph(), and applies those defaults when
+ * the fields are omitted from the input state.
  */
 export async function initializeMiddlewareStates(
   middlewareList: readonly AgentMiddleware[],
@@ -41,36 +46,67 @@ export async function initializeMiddlewareStates(
       }
 
       /**
-       * If safeParse fails, there are required public fields missing
+       * If safeParse fails, check if the missing fields have defaults in the
+       * schemaMetaRegistry (from withLangGraph). If they do, apply the defaults.
+       * Only throw an error for truly required fields (no defaults, not optional).
        */
-      const requiredFields = parseResult.error.issues
-        .filter(
-          (issue: ZodIssue) =>
-            issue.code === "invalid_type" && issue.message === "Required"
-        )
-        .map(
-          (issue: ZodIssue) => `  - ${issue.path.join(".")}: ${issue.message}`
-        )
-        .join("\n");
+      const shape = getInteropZodObjectShape(middleware.stateSchema);
+      const missingRequiredFields: string[] = [];
+      const fieldsWithDefaults: Record<string, any> = {};
 
-      throw new Error(
-        `Middleware "${middleware.name}" has required state fields that must be initialized:\n` +
-          `${requiredFields}\n\n` +
-          `To fix this, either:\n` +
-          `1. Provide default values in your middleware's state schema using .default():\n` +
-          `   stateSchema: z.object({\n` +
-          `     myField: z.string().default("default value")\n` +
-          `   })\n\n` +
-          `2. Or make the fields optional using .optional():\n` +
-          `   stateSchema: z.object({\n` +
-          `     myField: z.string().optional()\n` +
-          `   })\n\n` +
-          `3. Or ensure you pass these values when invoking the agent:\n` +
-          `   agent.invoke({\n` +
-          `     messages: [...],\n` +
-          `     ${parseResult.error.issues[0]?.path.join(".")}: "value"\n` +
-          `   })`
-      );
+      for (const issue of parseResult.error.issues) {
+        if (issue.code === "invalid_type" && issue.message === "Required") {
+          const fieldName = issue.path[0] as string;
+          const fieldSchema = shape[fieldName];
+
+          if (fieldSchema) {
+            // Check if this field has a default in the registry
+            const meta = schemaMetaRegistry.get(fieldSchema);
+            if (meta?.default) {
+              // Apply the default value
+              fieldsWithDefaults[fieldName] = meta.default();
+            } else {
+              // No default found - this is truly required
+              missingRequiredFields.push(
+                `  - ${issue.path.join(".")}: ${issue.message}`
+              );
+            }
+          }
+        }
+      }
+
+      // If there are truly required fields (no defaults), throw an error
+      if (missingRequiredFields.length > 0) {
+        throw new Error(
+          `Middleware "${middleware.name}" has required state fields that must be initialized:\n` +
+            `${missingRequiredFields.join("\n")}\n\n` +
+            `To fix this, either:\n` +
+            `1. Provide default values in your middleware's state schema using withLangGraph():\n` +
+            `   import { withLangGraph } from "@langchain/langgraph/zod";\n` +
+            `   stateSchema: z.object({\n` +
+            `     myField: withLangGraph(z.string(), { default: () => "default value" })\n` +
+            `   })\n\n` +
+            `2. Or use Zod's .default():\n` +
+            `   stateSchema: z.object({\n` +
+            `     myField: z.string().default("default value")\n` +
+            `   })\n\n` +
+            `3. Or make the fields optional using .optional():\n` +
+            `   stateSchema: z.object({\n` +
+            `     myField: z.string().optional()\n` +
+            `   })\n\n` +
+            `4. Or ensure you pass these values when invoking the agent:\n` +
+            `   agent.invoke({\n` +
+            `     messages: [...],\n` +
+            `     ${missingRequiredFields[0]
+              ?.split(":")[0]
+              ?.trim()
+              .replace("- ", "")}: "value"\n` +
+            `   })`
+        );
+      }
+
+      // Merge the fields with applied defaults into middlewareStates
+      Object.assign(middlewareStates, fieldsWithDefaults);
     }
   }
 
