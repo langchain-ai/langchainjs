@@ -483,8 +483,14 @@ async function _callTool({
     debugLog(`INFO: Calling tool ${toolName}(${JSON.stringify(args)})`);
 
     // Extract timeout from RunnableConfig and pass to MCP SDK
+    // Note: ensureConfig() converts timeout into an AbortSignal and deletes the timeout field.
+    // To preserve the numeric timeout for SDKs that accept an explicit timeout value, we read
+    // it from metadata.__lc_originalTimeoutMs if present, falling back to any direct timeout.
+    const numericTimeout =
+      (config?.metadata?.__lc_originalTimeoutMs as number | undefined) ??
+      config?.timeout;
     const requestOptions: RequestOptions = {
-      ...(config?.timeout ? { timeout: config.timeout } : {}),
+      ...(numericTimeout ? { timeout: numericTimeout } : {}),
       ...(config?.signal ? { signal: config.signal } : {}),
       ...(onProgress
         ? {
