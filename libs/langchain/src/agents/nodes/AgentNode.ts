@@ -585,6 +585,11 @@ export class AgentNode<
         structuredResponse,
         messages: [
           response,
+          new ToolMessage({
+            tool_call_id: toolCall.id,
+            content: JSON.stringify(structuredResponse),
+            name: toolCall.name,
+          }),
           new AIMessage(
             lastMessage ??
               `Returning structured response: ${JSON.stringify(
