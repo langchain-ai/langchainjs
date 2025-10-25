@@ -1379,6 +1379,39 @@ describe("MultiServerMCPClient Integration Tests", () => {
     );
 
     it.each(["http", "sse"] as const)(
+      "%s should pass explicit per-call timeout through RunnableConfig",
+      async (transport) => {
+        const { baseUrl } = await testServers.createHTTPServer("timeout-test", {
+          disableStreamableHttp: transport === "sse",
+          supportSSEFallback: transport === "sse",
+        });
+
+        const client = new MultiServerMCPClient({
+          "timeout-server": {
+            transport,
+            url: `${baseUrl}/${transport === "http" ? "mcp" : "sse"}`,
+          },
+        });
+
+        try {
+          const tools = await client.getTools();
+          const testTool = tools.find((t) => t.name.includes("sleep_tool"));
+          expect(testTool).toBeDefined();
+
+          // Set a per-call timeout longer than the server default to ensure it is honored
+          // The server sleep is 1500ms; we set timeout to 2000ms so it should succeed
+          const result = await testTool!.invoke(
+            { sleepMsec: 1500 },
+            { timeout: 2000 }
+          );
+          expect(result).toContain("done");
+        } finally {
+          await client.close();
+        }
+      }
+    );
+
+    it.each(["http", "sse"] as const)(
       "%s should throw timeout error when tool call exceeds configured timeout from constructor options",
       async (transport) => {
         const { baseUrl } = await testServers.createHTTPServer("timeout-test", {
