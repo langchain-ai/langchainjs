@@ -1,5 +1,12 @@
 # langchain
 
+## 1.0.2
+
+### Patch Changes
+
+- 2e45c43: fix(langchain): remove bad dynamic import for LS
+- 28eceac: preserve full model name when deciding model provider
+
 ## 1.0.0
 
 🎉 **LangChain v1.0** is here! This release provides a focused, production-ready foundation for building agents. We've streamlined the framework around three core improvements: **`createAgent`**, **standard content blocks**, and a **simplified package structure**. See the [release notes](https://docs.langchain.com/oss/javascript/releases/langchain-v1) for complete details.

@@ -30,6 +30,7 @@
     "precommit": "turbo precommit"
   },
   "devDependencies": {
+    "@changesets/cli": "^2.29.7",
     "@tsconfig/recommended": "^1.0.2",
     "@types/jest": "^29.5.3",
     "@types/semver": "^7",
@@ -38,9 +39,9 @@
     "lint-staged": "^13.1.1",
     "prettier": "^2.8.3",
     "semver": "^7.5.4",
+    "tsx": "^4.20.3",
     "turbo": "^2.5.4",
-    "typescript": "^5.9.3",
-    "tsx": "^4.20.3"
+    "typescript": "^5.9.3"
   },
   "pnpm": {
     "overrides": {
