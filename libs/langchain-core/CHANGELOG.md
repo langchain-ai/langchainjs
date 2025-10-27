@@ -7,6 +7,12 @@
 - 6426eb6: fix chunks constructed with tool calls + chunks
 - 619ae64: Add `BaseMessage.toFormattedString()`
 
+## 1.0.1
+
+### Patch changes
+
+- cacc137: remove bad import map exports
+
 ## 1.0.0
 
 🎉 **LangChain v1.0** is here! This release provides a focused, production-ready foundation for building agents with significant improvements to the core abstractions and APIs. See the [release notes](https://docs.langchain.com/oss/javascript/releases/langchain-v1) for more details.
@@ -101,6 +107,12 @@ The `@langchain/core` package remains focused on essential abstractions:
 - [Agents Documentation](https://docs.langchain.com/oss/javascript/langchain/agents)
 
 ---
+
+## 0.3.79
+
+### Patch Changes
+
+- 1063b43: fix chunks constructed with tool calls + chunks
 
 ## 0.3.78
 
