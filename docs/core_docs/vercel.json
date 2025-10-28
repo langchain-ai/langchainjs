@@ -1538,10 +1538,6 @@
       "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
     },
     {
-      "source": "/docs/get_started/introductionhttps:/js.langchain.com/docs/get_started/introduction",
-      "destination": "https://docs.langchain.com/oss/javascript/langchain/install"
-    },
-    {
       "source": "/docs/integrations/chat_memory/dynamodb",
       "destination": "https://docs.langchain.com/oss/javascript/integrations/chat"
     },
@@ -2908,10 +2904,6 @@
     {
       "source": "/docs/modules/data_connection/vectorstores/integrations/memory",
       "destination": "https://docs.langchain.com/oss/javascript/integrations/vectorstores"
-    },
-    {
-      "source": "/docs/modules/data_connehttps:/github.com/tesseract-ocr/tesseract/tree/0768e4ff4c21aaf0b9beb297e6bb79ad8cb301b0ction/vectorstores",
-      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
     },
     {
       "source": "/docs/modules/indexes/document_loaders/examples/file_loaders/directory",
