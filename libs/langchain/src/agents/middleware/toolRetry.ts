@@ -242,18 +242,24 @@ export function toolRetryMiddleware(
   } = ToolRetryMiddlewareOptionsSchema.parse(config);
 
   // Extract tool names from BaseTool instances or strings
-  const toolFilter = tools?.reduce((acc, tool) => {
-    if (typeof tool === "string") return [...acc, tool];
-    else if ("name" in tool && typeof tool.name === "string")
-      return [...acc, tool.name];
-    else return acc;
-  }, [] as string[]);
+  const toolFilter: string[] = [];
+  for (const tool of tools ?? []) {
+    if (typeof tool === "string") {
+      toolFilter.push(tool);
+    } else if ("name" in tool && typeof tool.name === "string") {
+      toolFilter.push(tool.name);
+    } else {
+      throw new TypeError(
+        "Expected a tool name string or tool instance to be passed to toolRetryMiddleware"
+      );
+    }
+  }
 
   /**
    * Check if retry logic should apply to this tool.
    */
   const shouldRetryTool = (toolName: string): boolean => {
-    if (toolFilter === undefined) {
+    if (toolFilter.length === 0) {
       return true;
     }
     return toolFilter.includes(toolName);

@@ -511,6 +511,16 @@ describe("toolRetryMiddleware", () => {
       expect(workingMsg!.content).toContain("Success: test2");
       expect(workingMsg!.status).not.toBe("error");
     });
+
+    it("should reject invalid tool instances for filtering", () => {
+      expect(() => {
+        toolRetryMiddleware({
+          tools: [{ foo: "bar" }],
+        });
+      }).toThrow(
+        "Expected a tool name string or tool instance to be passed to toolRetryMiddleware"
+      );
+    });
   });
 
   describe("Exception filtering", () => {
