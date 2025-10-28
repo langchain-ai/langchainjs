@@ -1,5 +1,11 @@
 # @langchain/core
 
+## 0.3.79
+
+### Patch Changes
+
+- 1063b43: fix chunks constructed with tool calls + chunks
+
 ## 0.3.78
 
 ### Patch Changes

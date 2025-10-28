@@ -1,5 +1,11 @@
 # @langchain/anthropic
 
+## 0.3.33
+
+### Patch Changes
+
+- 247cfb6: support Haiku 4.5 topP parameter
+
 ## 0.3.31
 
 ### Patch Changes
