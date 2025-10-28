@@ -3284,6 +3284,10 @@
     {
       "source": "/docs/modules/memory/examples",
       "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/:path*",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
     }
   ]
 }
