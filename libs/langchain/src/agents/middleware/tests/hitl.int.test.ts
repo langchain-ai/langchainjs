@@ -94,7 +94,7 @@ describe("humanInTheLoopMiddleware", () => {
       expect(hitlRequest.actionRequests).toMatchInlineSnapshot(`
         [
           {
-            "arguments": {
+            "args": {
               "a": 42,
               "b": 17,
               "operation": "multiply",

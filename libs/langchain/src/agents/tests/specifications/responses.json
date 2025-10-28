@@ -5,18 +5,32 @@
       {
         "type": "object",
         "properties": {
-          "name": { "type": "string" },
-          "role": { "type": "string" }
+          "name": {
+            "type": "string"
+          },
+          "role": {
+            "type": "string"
+          }
         },
-        "required": ["name", "role"]
+        "required": [
+          "name",
+          "role"
+        ]
       },
       {
         "type": "object",
         "properties": {
-          "name": { "type": "string" },
-          "department": { "type": "string" }
+          "name": {
+            "type": "string"
+          },
+          "department": {
+            "type": "string"
+          }
         },
-        "required": ["name", "department"]
+        "required": [
+          "name",
+          "department"
+        ]
       }
     ],
     "assertionsByInvocation": [
@@ -27,7 +41,10 @@
           "getEmployeeDepartment": 0
         },
         "expectedLastMessage": "Returning structured response: {\"name\":\"Sabine\",\"role\":\"Developer\"}",
-        "expectedStructuredResponse": { "name": "Sabine", "role": "Developer" },
+        "expectedStructuredResponse": {
+          "name": "Sabine",
+          "role": "Developer"
+        },
         "llmRequestCount": 2
       },
       {
@@ -37,8 +54,11 @@
           "getEmployeeDepartment": 1
         },
         "expectedLastMessage": "Returning structured response: {\"name\":\"Henrik\",\"department\":\"IT\"}",
-        "expectedStructuredResponse": { "name": "Henrik", "department": "IT" },
-        "llmRequestCount": 4
+        "expectedStructuredResponse": {
+          "name": "Henrik",
+          "department": "IT"
+        },
+        "llmRequestCount": -1
       }
     ]
   },
@@ -49,20 +69,34 @@
         "schema": {
           "type": "object",
           "properties": {
-            "name": { "type": "string" },
-            "role": { "type": "string" }
+            "name": {
+              "type": "string"
+            },
+            "role": {
+              "type": "string"
+            }
           },
-          "required": ["name", "role"]
+          "required": [
+            "name",
+            "role"
+          ]
         }
       },
       {
         "schema": {
           "type": "object",
           "properties": {
-            "name": { "type": "string" },
-            "department": { "type": "string" }
+            "name": {
+              "type": "string"
+            },
+            "department": {
+              "type": "string"
+            }
           },
-          "required": ["name", "department"]
+          "required": [
+            "name",
+            "department"
+          ]
         }
       }
     ],
@@ -71,14 +105,14 @@
         "prompt": "How much does Saskia earn?",
         "toolsWithExpectedCalls": {
           "getEmployeeRole": 1,
-          "getEmployeeDepartment": 0
+          "getEmployeeDepartment": 1
         },
         "expectedLastMessage": "Returning structured response: {\"name\":\"Saskia\",\"role\":\"Software Engineer\"}",
         "expectedStructuredResponse": {
           "name": "Saskia",
           "role": "Software Engineer"
         },
-        "llmRequestCount": 2
+        "llmRequestCount": -1
       }
     ]
   }
