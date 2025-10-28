@@ -586,7 +586,7 @@ export class AgentNode<
         messages: [
           response,
           new ToolMessage({
-            tool_call_id: toolCall.id,
+            tool_call_id: toolCall.id ?? "",
             content: JSON.stringify(structuredResponse),
             name: toolCall.name,
           }),
