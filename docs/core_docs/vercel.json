@@ -4,16 +4,16 @@
   "trailingSlash": true,
   "rewrites": [
     {
-      "source": "/v0.1{/*path}",
-      "destination": "https://langchainjs-v01.vercel.app/v0.1{/*path}"
+      "source": "/v0.1:path*",
+      "destination": "https://langchainjs-v01.vercel.app/v0.1:path*"
     },
     {
-      "source": "/v0.2{/*path}",
-      "destination": "https://langchainjs-v02.vercel.app/v0.2{/*path}"
+      "source": "/v0.2:path*",
+      "destination": "https://langchainjs-v02.vercel.app/v0.2:path*"
     },
     {
-      "source": "/v0.3{/*path}",
-      "destination": "https://langchainjs-v03.vercel.app/v0.3{/*path}"
+      "source": "/v0.3:path*",
+      "destination": "https://langchainjs-v03.vercel.app/v0.3:path*"
     }
   ],
   "redirects": [
@@ -54,7 +54,7 @@
       "destination": "https://docs.langchain.com/oss/javascript/langchain/long-term-memory"
     },
     {
-      "source": "/docs/integrations/chat_memory{/*path}",
+      "source": "/docs/integrations/chat_memory:path*",
       "destination": "https://docs.langchain.com/oss/javascript/langchain/long-term-memory"
     },
     {
@@ -1602,10 +1602,6 @@
       "destination": "https://docs.langchain.com/oss/javascript/integrations/vectorstores"
     },
     {
-      "source": "http://js.langchain.com/docs/integrations/chat/xai",
-      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
-    },
-    {
       "source": "/docs/guides/expression_language/interface",
       "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
     },
@@ -2266,10 +2262,6 @@
       "destination": "https://docs.langchain.com/oss/javascript/integrations/retrievers"
     },
     {
-      "source": "http://js.langchain.com/docs/integrations/toolkits/sfn_agent",
-      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
-    },
-    {
       "source": "/docs/modules/memory/types/entity_summary_memory",
       "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
     },
@@ -2715,22 +2707,6 @@
     },
     {
       "source": "/docs/integrations/tools/wikipedia",
-      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
-    },
-    {
-      "source": "http://js.langchain.com/docs/integrations/chat_memory/dynamodb",
-      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
-    },
-    {
-      "source": "http://js.langchain.com/docs/modules/chains/index_related_chains/retrieval_qa",
-      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
-    },
-    {
-      "source": "http://js.langchain.com/docs/modules/indexes/text_splitters/examples/character",
-      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
-    },
-    {
-      "source": "http://js.langchain.com/docs/use_cases",
       "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
     },
     {
@@ -3248,10 +3224,6 @@
     {
       "source": "/docs/integrations/chat/cohere",
       "destination": "https://docs.langchain.com/oss/javascript/integrations/chat"
-    },
-    {
-      "source": "http://js.langchain.com",
-      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
     },
     {
       "source": "/docs/integrations/vectorstores/prisma",
