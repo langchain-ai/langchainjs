@@ -16,7 +16,7 @@ describe("runtime", () => {
 
     const agent = createAgent({
       model,
-      middleware: [middleware] as const,
+      middleware: [middleware],
     });
 
     await expect(
@@ -37,7 +37,7 @@ describe("runtime", () => {
 
     const agent = createAgent({
       model,
-      middleware: [middleware] as const,
+      middleware: [middleware],
     });
 
     await expect(
@@ -59,7 +59,7 @@ describe("runtime", () => {
 
     const agent = createAgent({
       model,
-      middleware: [middleware] as const,
+      middleware: [middleware],
     });
 
     await expect(

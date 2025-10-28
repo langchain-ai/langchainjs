@@ -1,6 +1,6 @@
 {
   "name": "@langchain/community",
-  "version": "1.0.0-alpha.1",
+  "version": "1.0.1",
   "description": "Third-party integrations for LangChain.js",
   "author": "LangChain",
   "license": "MIT",
@@ -169,7 +169,7 @@
     "jsonwebtoken": "^9.0.2",
     "lodash": "^4.17.21",
     "lunary": "^0.7.10",
-    "mammoth": "^1.6.0",
+    "mammoth": "^1.11.0",
     "mariadb": "^3.4.0",
     "mem0ai": "^2.1.8",
     "mongodb": "^6.17.0",
@@ -229,7 +229,7 @@
     "@huggingface/transformers": "^3.5.2",
     "@ibm-cloud/watsonx-ai": "*",
     "@lancedb/lancedb": "^0.19.1",
-    "@langchain/core": "^1.0.0-alpha.6",
+    "@langchain/core": "^1.0.0",
     "@layerup/layerup-security": "^1.5.12",
     "@libsql/client": "^0.14.0",
     "@mendable/firecrawl-js": "^1.4.3",
@@ -291,7 +291,7 @@
     "jsonwebtoken": "^9.0.2",
     "lodash": "^4.17.21",
     "lunary": "^0.7.10",
-    "mammoth": "^1.6.0",
+    "mammoth": "^1.11.0",
     "mariadb": "^3.4.0",
     "mem0ai": "^2.1.8",
     "mysql2": "^3.9.8",
@@ -679,6 +679,7 @@
   "types": "./dist/index.d.ts",
   "exports": {
     ".": {
+      "input": "./src/index.ts",
       "import": {
         "types": "./dist/index.d.ts",
         "default": "./dist/index.js"
@@ -686,10 +687,10 @@
       "require": {
         "types": "./dist/index.d.cts",
         "default": "./dist/index.cjs"
-      },
-      "input": "./src/index.ts"
+      }
     },
     "./load": {
+      "input": "./src/load/index.ts",
       "import": {
         "types": "./dist/load/index.d.ts",
         "default": "./dist/load/index.js"
@@ -697,10 +698,10 @@
       "require": {
         "types": "./dist/load/index.d.cts",
         "default": "./dist/load/index.cjs"
-      },
-      "input": "./src/load/index.ts"
+      }
     },
     "./load/serializable": {
+      "input": "./src/load/serializable.ts",
       "import": {
         "types": "./dist/load/serializable.d.ts",
         "default": "./dist/load/serializable.js"
@@ -708,10 +709,10 @@
       "require": {
         "types": "./dist/load/serializable.d.cts",
         "default": "./dist/load/serializable.cjs"
-      },
-      "input": "./src/load/serializable.ts"
+      }
     },
     "./tools/aiplugin": {
+      "input": "./src/tools/aiplugin.ts",
       "import": {
         "types": "./dist/tools/aiplugin.d.ts",
         "default": "./dist/tools/aiplugin.js"
@@ -719,10 +720,10 @@
       "require": {
         "types": "./dist/tools/aiplugin.d.cts",
         "default": "./dist/tools/aiplugin.cjs"
-      },
-      "input": "./src/tools/aiplugin.ts"
+      }
     },
     "./tools/aws_lambda": {
+      "input": "./src/tools/aws_lambda.ts",
       "import": {
         "types": "./dist/tools/aws_lambda.d.ts",
         "default": "./dist/tools/aws_lambda.js"
@@ -730,10 +731,10 @@
       "require": {
         "types": "./dist/tools/aws_lambda.d.cts",
         "default": "./dist/tools/aws_lambda.cjs"
-      },
-      "input": "./src/tools/aws_lambda.ts"
+      }
     },
     "./tools/aws_sfn": {
+      "input": "./src/tools/aws_sfn.ts",
       "import": {
         "types": "./dist/tools/aws_sfn.d.ts",
         "default": "./dist/tools/aws_sfn.js"
@@ -741,10 +742,10 @@
       "require": {
         "types": "./dist/tools/aws_sfn.d.cts",
         "default": "./dist/tools/aws_sfn.cjs"
-      },
-      "input": "./src/tools/aws_sfn.ts"
+      }
     },
     "./tools/bingserpapi": {
+      "input": "./src/tools/bingserpapi.ts",
       "import": {
         "types": "./dist/tools/bingserpapi.d.ts",
         "default": "./dist/tools/bingserpapi.js"
@@ -752,10 +753,10 @@
       "require": {
         "types": "./dist/tools/bingserpapi.d.cts",
         "default": "./dist/tools/bingserpapi.cjs"
-      },
-      "input": "./src/tools/bingserpapi.ts"
+      }
     },
     "./tools/brave_search": {
+      "input": "./src/tools/brave_search.ts",
       "import": {
         "types": "./dist/tools/brave_search.d.ts",
         "default": "./dist/tools/brave_search.js"
@@ -763,10 +764,10 @@
       "require": {
         "types": "./dist/tools/brave_search.d.cts",
         "default": "./dist/tools/brave_search.cjs"
-      },
-      "input": "./src/tools/brave_search.ts"
+      }
     },
     "./tools/duckduckgo_search": {
+      "input": "./src/tools/duckduckgo_search.ts",
       "import": {
         "types": "./dist/tools/duckduckgo_search.d.ts",
         "default": "./dist/tools/duckduckgo_search.js"
@@ -774,10 +775,10 @@
       "require": {
         "types": "./dist/tools/duckduckgo_search.d.cts",
         "default": "./dist/tools/duckduckgo_search.cjs"
-      },
-      "input": "./src/tools/duckduckgo_search.ts"
+      }
     },
     "./tools/calculator": {
+      "input": "./src/tools/calculator.ts",
       "import": {
         "types": "./dist/tools/calculator.d.ts",
         "default": "./dist/tools/calculator.js"
@@ -785,10 +786,10 @@
       "require": {
         "types": "./dist/tools/calculator.d.cts",
         "default": "./dist/tools/calculator.cjs"
-      },
-      "input": "./src/tools/calculator.ts"
+      }
     },
     "./tools/connery": {
+      "input": "./src/tools/connery.ts",
       "import": {
         "types": "./dist/tools/connery.d.ts",
         "default": "./dist/tools/connery.js"
@@ -796,10 +797,10 @@
       "require": {
         "types": "./dist/tools/connery.d.cts",
         "default": "./dist/tools/connery.cjs"
-      },
-      "input": "./src/tools/connery.ts"
+      }
     },
     "./tools/dadjokeapi": {
+      "input": "./src/tools/dadjokeapi.ts",
       "import": {
         "types": "./dist/tools/dadjokeapi.d.ts",
         "default": "./dist/tools/dadjokeapi.js"
@@ -807,10 +808,10 @@
       "require": {
         "types": "./dist/tools/dadjokeapi.d.cts",
         "default": "./dist/tools/dadjokeapi.cjs"
-      },
-      "input": "./src/tools/dadjokeapi.ts"
+      }
     },
     "./tools/discord": {
+      "input": "./src/tools/discord.ts",
       "import": {
         "types": "./dist/tools/discord.d.ts",
         "default": "./dist/tools/discord.js"
@@ -818,10 +819,10 @@
       "require": {
         "types": "./dist/tools/discord.d.cts",
         "default": "./dist/tools/discord.cjs"
-      },
-      "input": "./src/tools/discord.ts"
+      }
     },
     "./tools/dynamic": {
+      "input": "./src/tools/dynamic.ts",
       "import": {
         "types": "./dist/tools/dynamic.d.ts",
         "default": "./dist/tools/dynamic.js"
@@ -829,10 +830,10 @@
       "require": {
         "types": "./dist/tools/dynamic.d.cts",
         "default": "./dist/tools/dynamic.cjs"
-      },
-      "input": "./src/tools/dynamic.ts"
+      }
     },
     "./tools/dataforseo_api_search": {
+      "input": "./src/tools/dataforseo_api_search.ts",
       "import": {
         "types": "./dist/tools/dataforseo_api_search.d.ts",
         "default": "./dist/tools/dataforseo_api_search.js"
@@ -840,10 +841,10 @@
       "require": {
         "types": "./dist/tools/dataforseo_api_search.d.cts",
         "default": "./dist/tools/dataforseo_api_search.cjs"
-      },
-      "input": "./src/tools/dataforseo_api_search.ts"
+      }
     },
     "./tools/gmail": {
+      "input": "./src/tools/gmail/index.ts",
       "import": {
         "types": "./dist/tools/gmail/index.d.ts",
         "default": "./dist/tools/gmail/index.js"
@@ -851,10 +852,10 @@
       "require": {
         "types": "./dist/tools/gmail/index.d.cts",
         "default": "./dist/tools/gmail/index.cjs"
-      },
-      "input": "./src/tools/gmail/index.ts"
+      }
     },
     "./tools/google_calendar": {
+      "input": "./src/tools/google_calendar/index.ts",
       "import": {
         "types": "./dist/tools/google_calendar/index.d.ts",
         "default": "./dist/tools/google_calendar/index.js"
@@ -862,10 +863,10 @@
       "require": {
         "types": "./dist/tools/google_calendar/index.d.cts",
         "default": "./dist/tools/google_calendar/index.cjs"
-      },
-      "input": "./src/tools/google_calendar/index.ts"
+      }
     },
     "./tools/google_custom_search": {
+      "input": "./src/tools/google_custom_search.ts",
       "import": {
         "types": "./dist/tools/google_custom_search.d.ts",
         "default": "./dist/tools/google_custom_search.js"
@@ -873,10 +874,10 @@
       "require": {
         "types": "./dist/tools/google_custom_search.d.cts",
         "default": "./dist/tools/google_custom_search.cjs"
-      },
-      "input": "./src/tools/google_custom_search.ts"
+      }
     },
     "./tools/google_places": {
+      "input": "./src/tools/google_places.ts",
       "import": {
         "types": "./dist/tools/google_places.d.ts",
         "default": "./dist/tools/google_places.js"
@@ -884,10 +885,10 @@
       "require": {
         "types": "./dist/tools/google_places.d.cts",
         "default": "./dist/tools/google_places.cjs"
-      },
-      "input": "./src/tools/google_places.ts"
+      }
     },
     "./tools/google_trends": {
+      "input": "./src/tools/google_trends.ts",
       "import": {
         "types": "./dist/tools/google_trends.d.ts",
         "default": "./dist/tools/google_trends.js"
@@ -895,10 +896,10 @@
       "require": {
         "types": "./dist/tools/google_trends.d.cts",
         "default": "./dist/tools/google_trends.cjs"
-      },
-      "input": "./src/tools/google_trends.ts"
+      }
     },
     "./tools/google_routes": {
+      "input": "./src/tools/google_routes.ts",
       "import": {
         "types": "./dist/tools/google_routes.d.ts",
         "default": "./dist/tools/google_routes.js"
@@ -906,10 +907,10 @@
       "require": {
         "types": "./dist/tools/google_routes.d.cts",
         "default": "./dist/tools/google_routes.cjs"
-      },
-      "input": "./src/tools/google_routes.ts"
+      }
     },
     "./tools/google_scholar": {
+      "input": "./src/tools/google_scholar.ts",
       "import": {
         "types": "./dist/tools/google_scholar.d.ts",
         "default": "./dist/tools/google_scholar.js"
@@ -917,10 +918,10 @@
       "require": {
         "types": "./dist/tools/google_scholar.d.cts",
         "default": "./dist/tools/google_scholar.cjs"
-      },
-      "input": "./src/tools/google_scholar.ts"
+      }
     },
     "./tools/ifttt": {
+      "input": "./src/tools/ifttt.ts",
       "import": {
         "types": "./dist/tools/ifttt.d.ts",
         "default": "./dist/tools/ifttt.js"
@@ -928,10 +929,10 @@
       "require": {
         "types": "./dist/tools/ifttt.d.cts",
         "default": "./dist/tools/ifttt.cjs"
-      },
-      "input": "./src/tools/ifttt.ts"
+      }
     },
     "./tools/searchapi": {
+      "input": "./src/tools/searchapi.ts",
       "import": {
         "types": "./dist/tools/searchapi.d.ts",
         "default": "./dist/tools/searchapi.js"
@@ -939,10 +940,10 @@
       "require": {
         "types": "./dist/tools/searchapi.d.cts",
         "default": "./dist/tools/searchapi.cjs"
-      },
-      "input": "./src/tools/searchapi.ts"
+      }
     },
     "./tools/searxng_search": {
+      "input": "./src/tools/searxng_search.ts",
       "import": {
         "types": "./dist/tools/searxng_search.d.ts",
         "default": "./dist/tools/searxng_search.js"
@@ -950,10 +951,10 @@
       "require": {
         "types": "./dist/tools/searxng_search.d.cts",
         "default": "./dist/tools/searxng_search.cjs"
-      },
-      "input": "./src/tools/searxng_search.ts"
+      }
     },
     "./tools/serpapi": {
+      "input": "./src/tools/serpapi.ts",
       "import": {
         "types": "./dist/tools/serpapi.d.ts",
         "default": "./dist/tools/serpapi.js"
@@ -961,10 +962,10 @@
       "require": {
         "types": "./dist/tools/serpapi.d.cts",
         "default": "./dist/tools/serpapi.cjs"
-      },
-      "input": "./src/tools/serpapi.ts"
+      }
     },
     "./tools/serper": {
+      "input": "./src/tools/serper.ts",
       "import": {
         "types": "./dist/tools/serper.d.ts",
         "default": "./dist/tools/serper.js"
@@ -972,10 +973,10 @@
       "require": {
         "types": "./dist/tools/serper.d.cts",
         "default": "./dist/tools/serper.cjs"
-      },
-      "input": "./src/tools/serper.ts"
+      }
     },
     "./tools/stackexchange": {
+      "input": "./src/tools/stackexchange.ts",
       "import": {
         "types": "./dist/tools/stackexchange.d.ts",
         "default": "./dist/tools/stackexchange.js"
@@ -983,10 +984,10 @@
       "require": {
         "types": "./dist/tools/stackexchange.d.cts",
         "default": "./dist/tools/stackexchange.cjs"
-      },
-      "input": "./src/tools/stackexchange.ts"
+      }
     },
     "./tools/wikipedia_query_run": {
+      "input": "./src/tools/wikipedia_query_run.ts",
       "import": {
         "types": "./dist/tools/wikipedia_query_run.d.ts",
         "default": "./dist/tools/wikipedia_query_run.js"
@@ -994,10 +995,10 @@
       "require": {
         "types": "./dist/tools/wikipedia_query_run.d.cts",
         "default": "./dist/tools/wikipedia_query_run.cjs"
-      },
-      "input": "./src/tools/wikipedia_query_run.ts"
+      }
     },
     "./tools/wolframalpha": {
+      "input": "./src/tools/wolframalpha.ts",
       "import": {
         "types": "./dist/tools/wolframalpha.d.ts",
         "default": "./dist/tools/wolframalpha.js"
@@ -1005,10 +1006,10 @@
       "require": {
         "types": "./dist/tools/wolframalpha.d.cts",
         "default": "./dist/tools/wolframalpha.cjs"
-      },
-      "input": "./src/tools/wolframalpha.ts"
+      }
     },
     "./agents/toolkits/aws_sfn": {
+      "input": "./src/agents/toolkits/aws_sfn.ts",
       "import": {
         "types": "./dist/agents/toolkits/aws_sfn.d.ts",
         "default": "./dist/agents/toolkits/aws_sfn.js"
@@ -1016,10 +1017,10 @@
       "require": {
         "types": "./dist/agents/toolkits/aws_sfn.d.cts",
         "default": "./dist/agents/toolkits/aws_sfn.cjs"
-      },
-      "input": "./src/agents/toolkits/aws_sfn.ts"
+      }
     },
     "./agents/toolkits/base": {
+      "input": "./src/agents/toolkits/base.ts",
       "import": {
         "types": "./dist/agents/toolkits/base.d.ts",
         "default": "./dist/agents/toolkits/base.js"
@@ -1027,10 +1028,10 @@
       "require": {
         "types": "./dist/agents/toolkits/base.d.cts",
         "default": "./dist/agents/toolkits/base.cjs"
-      },
-      "input": "./src/agents/toolkits/base.ts"
+      }
     },
     "./agents/toolkits/connery": {
+      "input": "./src/agents/toolkits/connery/index.ts",
       "import": {
         "types": "./dist/agents/toolkits/connery/index.d.ts",
         "default": "./dist/agents/toolkits/connery/index.js"
@@ -1038,10 +1039,10 @@
       "require": {
         "types": "./dist/agents/toolkits/connery/index.d.cts",
         "default": "./dist/agents/toolkits/connery/index.cjs"
-      },
-      "input": "./src/agents/toolkits/connery/index.ts"
+      }
     },
     "./agents/toolkits/ibm": {
+      "input": "./src/agents/toolkits/ibm.ts",
       "import": {
         "types": "./dist/agents/toolkits/ibm.d.ts",
         "default": "./dist/agents/toolkits/ibm.js"
@@ -1049,10 +1050,10 @@
       "require": {
         "types": "./dist/agents/toolkits/ibm.d.cts",
         "default": "./dist/agents/toolkits/ibm.cjs"
-      },
-      "input": "./src/agents/toolkits/ibm.ts"
+      }
     },
     "./agents/toolkits/stagehand": {
+      "input": "./src/agents/toolkits/stagehand.ts",
       "import": {
         "types": "./dist/agents/toolkits/stagehand.d.ts",
         "default": "./dist/agents/toolkits/stagehand.js"
@@ -1060,10 +1061,10 @@
       "require": {
         "types": "./dist/agents/toolkits/stagehand.d.cts",
         "default": "./dist/agents/toolkits/stagehand.cjs"
-      },
-      "input": "./src/agents/toolkits/stagehand.ts"
+      }
     },
     "./embeddings/alibaba_tongyi": {
+      "input": "./src/embeddings/alibaba_tongyi.ts",
       "import": {
         "types": "./dist/embeddings/alibaba_tongyi.d.ts",
         "default": "./dist/embeddings/alibaba_tongyi.js"
@@ -1071,10 +1072,10 @@
       "require": {
         "types": "./dist/embeddings/alibaba_tongyi.d.cts",
         "default": "./dist/embeddings/alibaba_tongyi.cjs"
-      },
-      "input": "./src/embeddings/alibaba_tongyi.ts"
+      }
     },
     "./embeddings/bytedance_doubao": {
+      "input": "./src/embeddings/bytedance_doubao.ts",
       "import": {
         "types": "./dist/embeddings/bytedance_doubao.d.ts",
         "default": "./dist/embeddings/bytedance_doubao.js"
@@ -1082,10 +1083,10 @@
       "require": {
         "types": "./dist/embeddings/bytedance_doubao.d.cts",
         "default": "./dist/embeddings/bytedance_doubao.cjs"
-      },
-      "input": "./src/embeddings/bytedance_doubao.ts"
+      }
     },
     "./embeddings/deepinfra": {
+      "input": "./src/embeddings/deepinfra.ts",
       "import": {
         "types": "./dist/embeddings/deepinfra.d.ts",
         "default": "./dist/embeddings/deepinfra.js"
@@ -1093,10 +1094,10 @@
       "require": {
         "types": "./dist/embeddings/deepinfra.d.cts",
         "default": "./dist/embeddings/deepinfra.cjs"
-      },
-      "input": "./src/embeddings/deepinfra.ts"
+      }
     },
     "./embeddings/fireworks": {
+      "input": "./src/embeddings/fireworks.ts",
       "import": {
         "types": "./dist/embeddings/fireworks.d.ts",
         "default": "./dist/embeddings/fireworks.js"
@@ -1104,10 +1105,10 @@
       "require": {
         "types": "./dist/embeddings/fireworks.d.cts",
         "default": "./dist/embeddings/fireworks.cjs"
-      },
-      "input": "./src/embeddings/fireworks.ts"
+      }
     },
     "./embeddings/gradient_ai": {
+      "input": "./src/embeddings/gradient_ai.ts",
       "import": {
         "types": "./dist/embeddings/gradient_ai.d.ts",
         "default": "./dist/embeddings/gradient_ai.js"
@@ -1115,10 +1116,10 @@
       "require": {
         "types": "./dist/embeddings/gradient_ai.d.cts",
         "default": "./dist/embeddings/gradient_ai.cjs"
-      },
-      "input": "./src/embeddings/gradient_ai.ts"
+      }
     },
     "./embeddings/hf": {
+      "input": "./src/embeddings/hf.ts",
       "import": {
         "types": "./dist/embeddings/hf.d.ts",
         "default": "./dist/embeddings/hf.js"
@@ -1126,10 +1127,10 @@
       "require": {
         "types": "./dist/embeddings/hf.d.cts",
         "default": "./dist/embeddings/hf.cjs"
-      },
-      "input": "./src/embeddings/hf.ts"
+      }
     },
     "./embeddings/huggingface_transformers": {
+      "input": "./src/embeddings/huggingface_transformers.ts",
       "import": {
         "types": "./dist/embeddings/huggingface_transformers.d.ts",
         "default": "./dist/embeddings/huggingface_transformers.js"
@@ -1137,10 +1138,10 @@
       "require": {
         "types": "./dist/embeddings/huggingface_transformers.d.cts",
         "default": "./dist/embeddings/huggingface_transformers.cjs"
-      },
-      "input": "./src/embeddings/huggingface_transformers.ts"
+      }
     },
     "./embeddings/ibm": {
+      "input": "./src/embeddings/ibm.ts",
       "import": {
         "types": "./dist/embeddings/ibm.d.ts",
         "default": "./dist/embeddings/ibm.js"
@@ -1148,10 +1149,10 @@
       "require": {
         "types": "./dist/embeddings/ibm.d.cts",
         "default": "./dist/embeddings/ibm.cjs"
-      },
-      "input": "./src/embeddings/ibm.ts"
+      }
     },
     "./embeddings/jina": {
+      "input": "./src/embeddings/jina.ts",
       "import": {
         "types": "./dist/embeddings/jina.d.ts",
         "default": "./dist/embeddings/jina.js"
@@ -1159,10 +1160,10 @@
       "require": {
         "types": "./dist/embeddings/jina.d.cts",
         "default": "./dist/embeddings/jina.cjs"
-      },
-      "input": "./src/embeddings/jina.ts"
+      }
     },
     "./embeddings/llama_cpp": {
+      "input": "./src/embeddings/llama_cpp.ts",
       "import": {
         "types": "./dist/embeddings/llama_cpp.d.ts",
         "default": "./dist/embeddings/llama_cpp.js"
@@ -1170,10 +1171,10 @@
       "require": {
         "types": "./dist/embeddings/llama_cpp.d.cts",
         "default": "./dist/embeddings/llama_cpp.cjs"
-      },
-      "input": "./src/embeddings/llama_cpp.ts"
+      }
     },
     "./embeddings/minimax": {
+      "input": "./src/embeddings/minimax.ts",
       "import": {
         "types": "./dist/embeddings/minimax.d.ts",
         "default": "./dist/embeddings/minimax.js"
@@ -1181,10 +1182,10 @@
       "require": {
         "types": "./dist/embeddings/minimax.d.cts",
         "default": "./dist/embeddings/minimax.cjs"
-      },
-      "input": "./src/embeddings/minimax.ts"
+      }
     },
     "./embeddings/premai": {
+      "input": "./src/embeddings/premai.ts",
       "import": {
         "types": "./dist/embeddings/premai.d.ts",
         "default": "./dist/embeddings/premai.js"
@@ -1192,10 +1193,10 @@
       "require": {
         "types": "./dist/embeddings/premai.d.cts",
         "default": "./dist/embeddings/premai.cjs"
-      },
-      "input": "./src/embeddings/premai.ts"
+      }
     },
     "./embeddings/tensorflow": {
+      "input": "./src/embeddings/tensorflow.ts",
       "import": {
         "types": "./dist/embeddings/tensorflow.d.ts",
         "default": "./dist/embeddings/tensorflow.js"
@@ -1203,10 +1204,10 @@
       "require": {
         "types": "./dist/embeddings/tensorflow.d.cts",
         "default": "./dist/embeddings/tensorflow.cjs"
-      },
-      "input": "./src/embeddings/tensorflow.ts"
+      }
     },
     "./embeddings/tencent_hunyuan": {
+      "input": "./src/embeddings/tencent_hunyuan/index.ts",
       "import": {
         "types": "./dist/embeddings/tencent_hunyuan/index.d.ts",
         "default": "./dist/embeddings/tencent_hunyuan/index.js"
@@ -1214,10 +1215,10 @@
       "require": {
         "types": "./dist/embeddings/tencent_hunyuan/index.d.cts",
         "default": "./dist/embeddings/tencent_hunyuan/index.cjs"
-      },
-      "input": "./src/embeddings/tencent_hunyuan/index.ts"
+      }
     },
     "./embeddings/tencent_hunyuan/web": {
+      "input": "./src/embeddings/tencent_hunyuan/web.ts",
       "import": {
         "types": "./dist/embeddings/tencent_hunyuan/web.d.ts",
         "default": "./dist/embeddings/tencent_hunyuan/web.js"
@@ -1225,10 +1226,10 @@
       "require": {
         "types": "./dist/embeddings/tencent_hunyuan/web.d.cts",
         "default": "./dist/embeddings/tencent_hunyuan/web.cjs"
-      },
-      "input": "./src/embeddings/tencent_hunyuan/web.ts"
+      }
     },
     "./embeddings/togetherai": {
+      "input": "./src/embeddings/togetherai.ts",
       "import": {
         "types": "./dist/embeddings/togetherai.d.ts",
         "default": "./dist/embeddings/togetherai.js"
@@ -1236,10 +1237,10 @@
       "require": {
         "types": "./dist/embeddings/togetherai.d.cts",
         "default": "./dist/embeddings/togetherai.cjs"
-      },
-      "input": "./src/embeddings/togetherai.ts"
+      }
     },
     "./embeddings/voyage": {
+      "input": "./src/embeddings/voyage.ts",
       "import": {
         "types": "./dist/embeddings/voyage.d.ts",
         "default": "./dist/embeddings/voyage.js"
@@ -1247,10 +1248,10 @@
       "require": {
         "types": "./dist/embeddings/voyage.d.cts",
         "default": "./dist/embeddings/voyage.cjs"
-      },
-      "input": "./src/embeddings/voyage.ts"
+      }
     },
     "./embeddings/zhipuai": {
+      "input": "./src/embeddings/zhipuai.ts",
       "import": {
         "types": "./dist/embeddings/zhipuai.d.ts",
         "default": "./dist/embeddings/zhipuai.js"
@@ -1258,10 +1259,10 @@
       "require": {
         "types": "./dist/embeddings/zhipuai.d.cts",
         "default": "./dist/embeddings/zhipuai.cjs"
-      },
-      "input": "./src/embeddings/zhipuai.ts"
+      }
     },
     "./llms/ai21": {
+      "input": "./src/llms/ai21.ts",
       "import": {
         "types": "./dist/llms/ai21.d.ts",
         "default": "./dist/llms/ai21.js"
@@ -1269,10 +1270,10 @@
       "require": {
         "types": "./dist/llms/ai21.d.cts",
         "default": "./dist/llms/ai21.cjs"
-      },
-      "input": "./src/llms/ai21.ts"
+      }
     },
     "./llms/aleph_alpha": {
+      "input": "./src/llms/aleph_alpha.ts",
       "import": {
         "types": "./dist/llms/aleph_alpha.d.ts",
         "default": "./dist/llms/aleph_alpha.js"
@@ -1280,10 +1281,10 @@
       "require": {
         "types": "./dist/llms/aleph_alpha.d.cts",
         "default": "./dist/llms/aleph_alpha.cjs"
-      },
-      "input": "./src/llms/aleph_alpha.ts"
+      }
     },
     "./llms/arcjet": {
+      "input": "./src/llms/arcjet.ts",
       "import": {
         "types": "./dist/llms/arcjet.d.ts",
         "default": "./dist/llms/arcjet.js"
@@ -1291,10 +1292,10 @@
       "require": {
         "types": "./dist/llms/arcjet.d.cts",
         "default": "./dist/llms/arcjet.cjs"
-      },
-      "input": "./src/llms/arcjet.ts"
+      }
     },
     "./llms/bedrock": {
+      "input": "./src/llms/bedrock/index.ts",
       "import": {
         "types": "./dist/llms/bedrock/index.d.ts",
         "default": "./dist/llms/bedrock/index.js"
@@ -1302,10 +1303,10 @@
       "require": {
         "types": "./dist/llms/bedrock/index.d.cts",
         "default": "./dist/llms/bedrock/index.cjs"
-      },
-      "input": "./src/llms/bedrock/index.ts"
+      }
     },
     "./llms/bedrock/web": {
+      "input": "./src/llms/bedrock/web.ts",
       "import": {
         "types": "./dist/llms/bedrock/web.d.ts",
         "default": "./dist/llms/bedrock/web.js"
@@ -1313,10 +1314,10 @@
       "require": {
         "types": "./dist/llms/bedrock/web.d.cts",
         "default": "./dist/llms/bedrock/web.cjs"
-      },
-      "input": "./src/llms/bedrock/web.ts"
+      }
     },
     "./llms/deepinfra": {
+      "input": "./src/llms/deepinfra.ts",
       "import": {
         "types": "./dist/llms/deepinfra.d.ts",
         "default": "./dist/llms/deepinfra.js"
@@ -1324,10 +1325,10 @@
       "require": {
         "types": "./dist/llms/deepinfra.d.cts",
         "default": "./dist/llms/deepinfra.cjs"
-      },
-      "input": "./src/llms/deepinfra.ts"
+      }
     },
     "./llms/fireworks": {
+      "input": "./src/llms/fireworks.ts",
       "import": {
         "types": "./dist/llms/fireworks.d.ts",
         "default": "./dist/llms/fireworks.js"
@@ -1335,10 +1336,10 @@
       "require": {
         "types": "./dist/llms/fireworks.d.cts",
         "default": "./dist/llms/fireworks.cjs"
-      },
-      "input": "./src/llms/fireworks.ts"
+      }
     },
     "./llms/friendli": {
+      "input": "./src/llms/friendli.ts",
       "import": {
         "types": "./dist/llms/friendli.d.ts",
         "default": "./dist/llms/friendli.js"
@@ -1346,10 +1347,10 @@
       "require": {
         "types": "./dist/llms/friendli.d.cts",
         "default": "./dist/llms/friendli.cjs"
-      },
-      "input": "./src/llms/friendli.ts"
+      }
     },
     "./llms/gradient_ai": {
+      "input": "./src/llms/gradient_ai.ts",
       "import": {
         "types": "./dist/llms/gradient_ai.d.ts",
         "default": "./dist/llms/gradient_ai.js"
@@ -1357,10 +1358,10 @@
       "require": {
         "types": "./dist/llms/gradient_ai.d.cts",
         "default": "./dist/llms/gradient_ai.cjs"
-      },
-      "input": "./src/llms/gradient_ai.ts"
+      }
     },
     "./llms/hf": {
+      "input": "./src/llms/hf.ts",
       "import": {
         "types": "./dist/llms/hf.d.ts",
         "default": "./dist/llms/hf.js"
@@ -1368,10 +1369,10 @@
       "require": {
         "types": "./dist/llms/hf.d.cts",
         "default": "./dist/llms/hf.cjs"
-      },
-      "input": "./src/llms/hf.ts"
+      }
     },
     "./llms/ibm": {
+      "input": "./src/llms/ibm.ts",
       "import": {
         "types": "./dist/llms/ibm.d.ts",
         "default": "./dist/llms/ibm.js"
@@ -1379,10 +1380,10 @@
       "require": {
         "types": "./dist/llms/ibm.d.cts",
         "default": "./dist/llms/ibm.cjs"
-      },
-      "input": "./src/llms/ibm.ts"
+      }
     },
     "./llms/llama_cpp": {
+      "input": "./src/llms/llama_cpp.ts",
       "import": {
         "types": "./dist/llms/llama_cpp.d.ts",
         "default": "./dist/llms/llama_cpp.js"
@@ -1390,10 +1391,10 @@
       "require": {
         "types": "./dist/llms/llama_cpp.d.cts",
         "default": "./dist/llms/llama_cpp.cjs"
-      },
-      "input": "./src/llms/llama_cpp.ts"
+      }
     },
     "./llms/portkey": {
+      "input": "./src/llms/portkey.ts",
       "import": {
         "types": "./dist/llms/portkey.d.ts",
         "default": "./dist/llms/portkey.js"
@@ -1401,10 +1402,10 @@
       "require": {
         "types": "./dist/llms/portkey.d.cts",
         "default": "./dist/llms/portkey.cjs"
-      },
-      "input": "./src/llms/portkey.ts"
+      }
     },
     "./llms/raycast": {
+      "input": "./src/llms/raycast.ts",
       "import": {
         "types": "./dist/llms/raycast.d.ts",
         "default": "./dist/llms/raycast.js"
@@ -1412,10 +1413,10 @@
       "require": {
         "types": "./dist/llms/raycast.d.cts",
         "default": "./dist/llms/raycast.cjs"
-      },
-      "input": "./src/llms/raycast.ts"
+      }
     },
     "./llms/replicate": {
+      "input": "./src/llms/replicate.ts",
       "import": {
         "types": "./dist/llms/replicate.d.ts",
         "default": "./dist/llms/replicate.js"
@@ -1423,10 +1424,10 @@
       "require": {
         "types": "./dist/llms/replicate.d.cts",
         "default": "./dist/llms/replicate.cjs"
-      },
-      "input": "./src/llms/replicate.ts"
+      }
     },
     "./llms/sagemaker_endpoint": {
+      "input": "./src/llms/sagemaker_endpoint.ts",
       "import": {
         "types": "./dist/llms/sagemaker_endpoint.d.ts",
         "default": "./dist/llms/sagemaker_endpoint.js"
@@ -1434,10 +1435,10 @@
       "require": {
         "types": "./dist/llms/sagemaker_endpoint.d.cts",
         "default": "./dist/llms/sagemaker_endpoint.cjs"
-      },
-      "input": "./src/llms/sagemaker_endpoint.ts"
+      }
     },
     "./llms/togetherai": {
+      "input": "./src/llms/togetherai.ts",
       "import": {
         "types": "./dist/llms/togetherai.d.ts",
         "default": "./dist/llms/togetherai.js"
@@ -1445,10 +1446,10 @@
       "require": {
         "types": "./dist/llms/togetherai.d.cts",
         "default": "./dist/llms/togetherai.cjs"
-      },
-      "input": "./src/llms/togetherai.ts"
+      }
     },
     "./llms/writer": {
+      "input": "./src/llms/writer.ts",
       "import": {
         "types": "./dist/llms/writer.d.ts",
         "default": "./dist/llms/writer.js"
@@ -1456,10 +1457,10 @@
       "require": {
         "types": "./dist/llms/writer.d.cts",
         "default": "./dist/llms/writer.cjs"
-      },
-      "input": "./src/llms/writer.ts"
+      }
     },
     "./llms/layerup_security": {
+      "input": "./src/llms/layerup_security.ts",
       "import": {
         "types": "./dist/llms/layerup_security.d.ts",
         "default": "./dist/llms/layerup_security.js"
@@ -1467,10 +1468,10 @@
       "require": {
         "types": "./dist/llms/layerup_security.d.cts",
         "default": "./dist/llms/layerup_security.cjs"
-      },
-      "input": "./src/llms/layerup_security.ts"
+      }
     },
     "./vectorstores/analyticdb": {
+      "input": "./src/vectorstores/analyticdb.ts",
       "import": {
         "types": "./dist/vectorstores/analyticdb.d.ts",
         "default": "./dist/vectorstores/analyticdb.js"
@@ -1478,10 +1479,10 @@
       "require": {
         "types": "./dist/vectorstores/analyticdb.d.cts",
         "default": "./dist/vectorstores/analyticdb.cjs"
-      },
-      "input": "./src/vectorstores/analyticdb.ts"
+      }
     },
     "./vectorstores/astradb": {
+      "input": "./src/vectorstores/astradb.ts",
       "import": {
         "types": "./dist/vectorstores/astradb.d.ts",
         "default": "./dist/vectorstores/astradb.js"
@@ -1489,10 +1490,10 @@
       "require": {
         "types": "./dist/vectorstores/astradb.d.cts",
         "default": "./dist/vectorstores/astradb.cjs"
-      },
-      "input": "./src/vectorstores/astradb.ts"
+      }
     },
     "./vectorstores/azion_edgesql": {
+      "input": "./src/vectorstores/azion_edgesql.ts",
       "import": {
         "types": "./dist/vectorstores/azion_edgesql.d.ts",
         "default": "./dist/vectorstores/azion_edgesql.js"
@@ -1500,10 +1501,10 @@
       "require": {
         "types": "./dist/vectorstores/azion_edgesql.d.cts",
         "default": "./dist/vectorstores/azion_edgesql.cjs"
-      },
-      "input": "./src/vectorstores/azion_edgesql.ts"
+      }
     },
     "./vectorstores/azure_aisearch": {
+      "input": "./src/vectorstores/azure_aisearch.ts",
       "import": {
         "types": "./dist/vectorstores/azure_aisearch.d.ts",
         "default": "./dist/vectorstores/azure_aisearch.js"
@@ -1511,10 +1512,10 @@
       "require": {
         "types": "./dist/vectorstores/azure_aisearch.d.cts",
         "default": "./dist/vectorstores/azure_aisearch.cjs"
-      },
-      "input": "./src/vectorstores/azure_aisearch.ts"
+      }
     },
     "./vectorstores/cassandra": {
+      "input": "./src/vectorstores/cassandra.ts",
       "import": {
         "types": "./dist/vectorstores/cassandra.d.ts",
         "default": "./dist/vectorstores/cassandra.js"
@@ -1522,10 +1523,10 @@
       "require": {
         "types": "./dist/vectorstores/cassandra.d.cts",
         "default": "./dist/vectorstores/cassandra.cjs"
-      },
-      "input": "./src/vectorstores/cassandra.ts"
+      }
     },
     "./vectorstores/chroma": {
+      "input": "./src/vectorstores/chroma.ts",
       "import": {
         "types": "./dist/vectorstores/chroma.d.ts",
         "default": "./dist/vectorstores/chroma.js"
@@ -1533,10 +1534,10 @@
       "require": {
         "types": "./dist/vectorstores/chroma.d.cts",
         "default": "./dist/vectorstores/chroma.cjs"
-      },
-      "input": "./src/vectorstores/chroma.ts"
+      }
     },
     "./vectorstores/clickhouse": {
+      "input": "./src/vectorstores/clickhouse.ts",
       "import": {
         "types": "./dist/vectorstores/clickhouse.d.ts",
         "default": "./dist/vectorstores/clickhouse.js"
@@ -1544,10 +1545,10 @@
       "require": {
         "types": "./dist/vectorstores/clickhouse.d.cts",
         "default": "./dist/vectorstores/clickhouse.cjs"
-      },
-      "input": "./src/vectorstores/clickhouse.ts"
+      }
     },
     "./vectorstores/closevector/node": {
+      "input": "./src/vectorstores/closevector/node.ts",
       "import": {
         "types": "./dist/vectorstores/closevector/node.d.ts",
         "default": "./dist/vectorstores/closevector/node.js"
@@ -1555,10 +1556,10 @@
       "require": {
         "types": "./dist/vectorstores/closevector/node.d.cts",
         "default": "./dist/vectorstores/closevector/node.cjs"
-      },
-      "input": "./src/vectorstores/closevector/node.ts"
+      }
     },
     "./vectorstores/closevector/web": {
+      "input": "./src/vectorstores/closevector/web.ts",
       "import": {
         "types": "./dist/vectorstores/closevector/web.d.ts",
         "default": "./dist/vectorstores/closevector/web.js"
@@ -1566,10 +1567,10 @@
       "require": {
         "types": "./dist/vectorstores/closevector/web.d.cts",
         "default": "./dist/vectorstores/closevector/web.cjs"
-      },
-      "input": "./src/vectorstores/closevector/web.ts"
+      }
     },
     "./vectorstores/convex": {
+      "input": "./src/vectorstores/convex.ts",
       "import": {
         "types": "./dist/vectorstores/convex.d.ts",
         "default": "./dist/vectorstores/convex.js"
@@ -1577,10 +1578,10 @@
       "require": {
         "types": "./dist/vectorstores/convex.d.cts",
         "default": "./dist/vectorstores/convex.cjs"
-      },
-      "input": "./src/vectorstores/convex.ts"
+      }
     },
     "./vectorstores/couchbase_search": {
+      "input": "./src/vectorstores/couchbase_search.ts",
       "import": {
         "types": "./dist/vectorstores/couchbase_search.d.ts",
         "default": "./dist/vectorstores/couchbase_search.js"
@@ -1588,10 +1589,10 @@
       "require": {
         "types": "./dist/vectorstores/couchbase_search.d.cts",
         "default": "./dist/vectorstores/couchbase_search.cjs"
-      },
-      "input": "./src/vectorstores/couchbase_search.ts"
+      }
     },
     "./vectorstores/elasticsearch": {
+      "input": "./src/vectorstores/elasticsearch.ts",
       "import": {
         "types": "./dist/vectorstores/elasticsearch.d.ts",
         "default": "./dist/vectorstores/elasticsearch.js"
@@ -1599,10 +1600,10 @@
       "require": {
         "types": "./dist/vectorstores/elasticsearch.d.cts",
         "default": "./dist/vectorstores/elasticsearch.cjs"
-      },
-      "input": "./src/vectorstores/elasticsearch.ts"
+      }
     },
     "./vectorstores/faiss": {
+      "input": "./src/vectorstores/faiss.ts",
       "import": {
         "types": "./dist/vectorstores/faiss.d.ts",
         "default": "./dist/vectorstores/faiss.js"
@@ -1610,10 +1611,10 @@
       "require": {
         "types": "./dist/vectorstores/faiss.d.cts",
         "default": "./dist/vectorstores/faiss.cjs"
-      },
-      "input": "./src/vectorstores/faiss.ts"
+      }
     },
     "./vectorstores/googlevertexai": {
+      "input": "./src/vectorstores/googlevertexai.ts",
       "import": {
         "types": "./dist/vectorstores/googlevertexai.d.ts",
         "default": "./dist/vectorstores/googlevertexai.js"
@@ -1621,10 +1622,10 @@
       "require": {
         "types": "./dist/vectorstores/googlevertexai.d.cts",
         "default": "./dist/vectorstores/googlevertexai.cjs"
-      },
-      "input": "./src/vectorstores/googlevertexai.ts"
+      }
     },
     "./vectorstores/hnswlib": {
+      "input": "./src/vectorstores/hnswlib.ts",
       "import": {
         "types": "./dist/vectorstores/hnswlib.d.ts",
         "default": "./dist/vectorstores/hnswlib.js"
@@ -1632,10 +1633,10 @@
       "require": {
         "types": "./dist/vectorstores/hnswlib.d.cts",
         "default": "./dist/vectorstores/hnswlib.cjs"
-      },
-      "input": "./src/vectorstores/hnswlib.ts"
+      }
     },
     "./vectorstores/hanavector": {
+      "input": "./src/vectorstores/hanavector.ts",
       "import": {
         "types": "./dist/vectorstores/hanavector.d.ts",
         "default": "./dist/vectorstores/hanavector.js"
@@ -1643,10 +1644,10 @@
       "require": {
         "types": "./dist/vectorstores/hanavector.d.cts",
         "default": "./dist/vectorstores/hanavector.cjs"
-      },
-      "input": "./src/vectorstores/hanavector.ts"
+      }
     },
     "./vectorstores/lancedb": {
+      "input": "./src/vectorstores/lancedb.ts",
       "import": {
         "types": "./dist/vectorstores/lancedb.d.ts",
         "default": "./dist/vectorstores/lancedb.js"
@@ -1654,10 +1655,10 @@
       "require": {
         "types": "./dist/vectorstores/lancedb.d.cts",
         "default": "./dist/vectorstores/lancedb.cjs"
-      },
-      "input": "./src/vectorstores/lancedb.ts"
+      }
     },
     "./vectorstores/libsql": {
+      "input": "./src/vectorstores/libsql.ts",
       "import": {
         "types": "./dist/vectorstores/libsql.d.ts",
         "default": "./dist/vectorstores/libsql.js"
@@ -1665,10 +1666,10 @@
       "require": {
         "types": "./dist/vectorstores/libsql.d.cts",
         "default": "./dist/vectorstores/libsql.cjs"
-      },
-      "input": "./src/vectorstores/libsql.ts"
+      }
     },
     "./vectorstores/mariadb": {
+      "input": "./src/vectorstores/mariadb.ts",
       "import": {
         "types": "./dist/vectorstores/mariadb.d.ts",
         "default": "./dist/vectorstores/mariadb.js"
@@ -1676,10 +1677,10 @@
       "require": {
         "types": "./dist/vectorstores/mariadb.d.cts",
         "default": "./dist/vectorstores/mariadb.cjs"
-      },
-      "input": "./src/vectorstores/mariadb.ts"
+      }
     },
     "./vectorstores/milvus": {
+      "input": "./src/vectorstores/milvus.ts",
       "import": {
         "types": "./dist/vectorstores/milvus.d.ts",
         "default": "./dist/vectorstores/milvus.js"
@@ -1687,10 +1688,10 @@
       "require": {
         "types": "./dist/vectorstores/milvus.d.cts",
         "default": "./dist/vectorstores/milvus.cjs"
-      },
-      "input": "./src/vectorstores/milvus.ts"
+      }
     },
     "./vectorstores/momento_vector_index": {
+      "input": "./src/vectorstores/momento_vector_index.ts",
       "import": {
         "types": "./dist/vectorstores/momento_vector_index.d.ts",
         "default": "./dist/vectorstores/momento_vector_index.js"
@@ -1698,10 +1699,10 @@
       "require": {
         "types": "./dist/vectorstores/momento_vector_index.d.cts",
         "default": "./dist/vectorstores/momento_vector_index.cjs"
-      },
-      "input": "./src/vectorstores/momento_vector_index.ts"
+      }
     },
     "./vectorstores/myscale": {
+      "input": "./src/vectorstores/myscale.ts",
       "import": {
         "types": "./dist/vectorstores/myscale.d.ts",
         "default": "./dist/vectorstores/myscale.js"
@@ -1709,10 +1710,10 @@
       "require": {
         "types": "./dist/vectorstores/myscale.d.cts",
         "default": "./dist/vectorstores/myscale.cjs"
-      },
-      "input": "./src/vectorstores/myscale.ts"
+      }
     },
     "./vectorstores/neo4j_vector": {
+      "input": "./src/vectorstores/neo4j_vector.ts",
       "import": {
         "types": "./dist/vectorstores/neo4j_vector.d.ts",
         "default": "./dist/vectorstores/neo4j_vector.js"
@@ -1720,10 +1721,10 @@
       "require": {
         "types": "./dist/vectorstores/neo4j_vector.d.cts",
         "default": "./dist/vectorstores/neo4j_vector.cjs"
-      },
-      "input": "./src/vectorstores/neo4j_vector.ts"
+      }
     },
     "./vectorstores/neon": {
+      "input": "./src/vectorstores/neon.ts",
       "import": {
         "types": "./dist/vectorstores/neon.d.ts",
         "default": "./dist/vectorstores/neon.js"
@@ -1731,10 +1732,10 @@
       "require": {
         "types": "./dist/vectorstores/neon.d.cts",
         "default": "./dist/vectorstores/neon.cjs"
-      },
-      "input": "./src/vectorstores/neon.ts"
+      }
     },
     "./vectorstores/opensearch": {
+      "input": "./src/vectorstores/opensearch.ts",
       "import": {
         "types": "./dist/vectorstores/opensearch.d.ts",
         "default": "./dist/vectorstores/opensearch.js"
@@ -1742,10 +1743,10 @@
       "require": {
         "types": "./dist/vectorstores/opensearch.d.cts",
         "default": "./dist/vectorstores/opensearch.cjs"
-      },
-      "input": "./src/vectorstores/opensearch.ts"
+      }
     },
     "./vectorstores/pgvector": {
+      "input": "./src/vectorstores/pgvector.ts",
       "import": {
         "types": "./dist/vectorstores/pgvector.d.ts",
         "default": "./dist/vectorstores/pgvector.js"
@@ -1753,10 +1754,10 @@
       "require": {
         "types": "./dist/vectorstores/pgvector.d.cts",
         "default": "./dist/vectorstores/pgvector.cjs"
-      },
-      "input": "./src/vectorstores/pgvector.ts"
+      }
     },
     "./vectorstores/prisma": {
+      "input": "./src/vectorstores/prisma.ts",
       "import": {
         "types": "./dist/vectorstores/prisma.d.ts",
         "default": "./dist/vectorstores/prisma.js"
@@ -1764,10 +1765,10 @@
       "require": {
         "types": "./dist/vectorstores/prisma.d.cts",
         "default": "./dist/vectorstores/prisma.cjs"
-      },
-      "input": "./src/vectorstores/prisma.ts"
+      }
     },
     "./vectorstores/rockset": {
+      "input": "./src/vectorstores/rockset.ts",
       "import": {
         "types": "./dist/vectorstores/rockset.d.ts",
         "default": "./dist/vectorstores/rockset.js"
@@ -1775,10 +1776,10 @@
       "require": {
         "types": "./dist/vectorstores/rockset.d.cts",
         "default": "./dist/vectorstores/rockset.cjs"
-      },
-      "input": "./src/vectorstores/rockset.ts"
+      }
     },
     "./vectorstores/singlestore": {
+      "input": "./src/vectorstores/singlestore.ts",
       "import": {
         "types": "./dist/vectorstores/singlestore.d.ts",
         "default": "./dist/vectorstores/singlestore.js"
@@ -1786,10 +1787,10 @@
       "require": {
         "types": "./dist/vectorstores/singlestore.d.cts",
         "default": "./dist/vectorstores/singlestore.cjs"
-      },
-      "input": "./src/vectorstores/singlestore.ts"
+      }
     },
     "./vectorstores/supabase": {
+      "input": "./src/vectorstores/supabase.ts",
       "import": {
         "types": "./dist/vectorstores/supabase.d.ts",
         "default": "./dist/vectorstores/supabase.js"
@@ -1797,10 +1798,10 @@
       "require": {
         "types": "./dist/vectorstores/supabase.d.cts",
         "default": "./dist/vectorstores/supabase.cjs"
-      },
-      "input": "./src/vectorstores/supabase.ts"
+      }
     },
     "./vectorstores/tigris": {
+      "input": "./src/vectorstores/tigris.ts",
       "import": {
         "types": "./dist/vectorstores/tigris.d.ts",
         "default": "./dist/vectorstores/tigris.js"
@@ -1808,10 +1809,10 @@
       "require": {
         "types": "./dist/vectorstores/tigris.d.cts",
         "default": "./dist/vectorstores/tigris.cjs"
-      },
-      "input": "./src/vectorstores/tigris.ts"
+      }
     },
     "./vectorstores/turbopuffer": {
+      "input": "./src/vectorstores/turbopuffer.ts",
       "import": {
         "types": "./dist/vectorstores/turbopuffer.d.ts",
         "default": "./dist/vectorstores/turbopuffer.js"
@@ -1819,10 +1820,10 @@
       "require": {
         "types": "./dist/vectorstores/turbopuffer.d.cts",
         "default": "./dist/vectorstores/turbopuffer.cjs"
-      },
-      "input": "./src/vectorstores/turbopuffer.ts"
+      }
     },
     "./vectorstores/typeorm": {
+      "input": "./src/vectorstores/typeorm.ts",
       "import": {
         "types": "./dist/vectorstores/typeorm.d.ts",
         "default": "./dist/vectorstores/typeorm.js"
@@ -1830,10 +1831,10 @@
       "require": {
         "types": "./dist/vectorstores/typeorm.d.cts",
         "default": "./dist/vectorstores/typeorm.cjs"
-      },
-      "input": "./src/vectorstores/typeorm.ts"
+      }
     },
     "./vectorstores/typesense": {
+      "input": "./src/vectorstores/typesense.ts",
       "import": {
         "types": "./dist/vectorstores/typesense.d.ts",
         "default": "./dist/vectorstores/typesense.js"
@@ -1841,10 +1842,10 @@
       "require": {
         "types": "./dist/vectorstores/typesense.d.cts",
         "default": "./dist/vectorstores/typesense.cjs"
-      },
-      "input": "./src/vectorstores/typesense.ts"
+      }
     },
     "./vectorstores/upstash": {
+      "input": "./src/vectorstores/upstash.ts",
       "import": {
         "types": "./dist/vectorstores/upstash.d.ts",
         "default": "./dist/vectorstores/upstash.js"
@@ -1852,10 +1853,10 @@
       "require": {
         "types": "./dist/vectorstores/upstash.d.cts",
         "default": "./dist/vectorstores/upstash.cjs"
-      },
-      "input": "./src/vectorstores/upstash.ts"
+      }
     },
     "./vectorstores/usearch": {
+      "input": "./src/vectorstores/usearch.ts",
       "import": {
         "types": "./dist/vectorstores/usearch.d.ts",
         "default": "./dist/vectorstores/usearch.js"
@@ -1863,10 +1864,10 @@
       "require": {
         "types": "./dist/vectorstores/usearch.d.cts",
         "default": "./dist/vectorstores/usearch.cjs"
-      },
-      "input": "./src/vectorstores/usearch.ts"
+      }
     },
     "./vectorstores/vectara": {
+      "input": "./src/vectorstores/vectara.ts",
       "import": {
         "types": "./dist/vectorstores/vectara.d.ts",
         "default": "./dist/vectorstores/vectara.js"
@@ -1874,10 +1875,10 @@
       "require": {
         "types": "./dist/vectorstores/vectara.d.cts",
         "default": "./dist/vectorstores/vectara.cjs"
-      },
-      "input": "./src/vectorstores/vectara.ts"
+      }
     },
     "./vectorstores/vercel_postgres": {
+      "input": "./src/vectorstores/vercel_postgres.ts",
       "import": {
         "types": "./dist/vectorstores/vercel_postgres.d.ts",
         "default": "./dist/vectorstores/vercel_postgres.js"
@@ -1885,10 +1886,10 @@
       "require": {
         "types": "./dist/vectorstores/vercel_postgres.d.cts",
         "default": "./dist/vectorstores/vercel_postgres.cjs"
-      },
-      "input": "./src/vectorstores/vercel_postgres.ts"
+      }
     },
     "./vectorstores/voy": {
+      "input": "./src/vectorstores/voy.ts",
       "import": {
         "types": "./dist/vectorstores/voy.d.ts",
         "default": "./dist/vectorstores/voy.js"
@@ -1896,10 +1897,10 @@
       "require": {
         "types": "./dist/vectorstores/voy.d.cts",
         "default": "./dist/vectorstores/voy.cjs"
-      },
-      "input": "./src/vectorstores/voy.ts"
+      }
     },
     "./vectorstores/xata": {
+      "input": "./src/vectorstores/xata.ts",
       "import": {
         "types": "./dist/vectorstores/xata.d.ts",
         "default": "./dist/vectorstores/xata.js"
@@ -1907,10 +1908,10 @@
       "require": {
         "types": "./dist/vectorstores/xata.d.cts",
         "default": "./dist/vectorstores/xata.cjs"
-      },
-      "input": "./src/vectorstores/xata.ts"
+      }
     },
     "./vectorstores/zep": {
+      "input": "./src/vectorstores/zep.ts",
       "import": {
         "types": "./dist/vectorstores/zep.d.ts",
         "default": "./dist/vectorstores/zep.js"
@@ -1918,10 +1919,10 @@
       "require": {
         "types": "./dist/vectorstores/zep.d.cts",
         "default": "./dist/vectorstores/zep.cjs"
-      },
-      "input": "./src/vectorstores/zep.ts"
+      }
     },
     "./vectorstores/zep_cloud": {
+      "input": "./src/vectorstores/zep_cloud.ts",
       "import": {
         "types": "./dist/vectorstores/zep_cloud.d.ts",
         "default": "./dist/vectorstores/zep_cloud.js"
@@ -1929,10 +1930,10 @@
       "require": {
         "types": "./dist/vectorstores/zep_cloud.d.cts",
         "default": "./dist/vectorstores/zep_cloud.cjs"
-      },
-      "input": "./src/vectorstores/zep_cloud.ts"
+      }
     },
     "./chat_models/alibaba_tongyi": {
+      "input": "./src/chat_models/alibaba_tongyi.ts",
       "import": {
         "types": "./dist/chat_models/alibaba_tongyi.d.ts",
         "default": "./dist/chat_models/alibaba_tongyi.js"
@@ -1940,10 +1941,10 @@
       "require": {
         "types": "./dist/chat_models/alibaba_tongyi.d.cts",
         "default": "./dist/chat_models/alibaba_tongyi.cjs"
-      },
-      "input": "./src/chat_models/alibaba_tongyi.ts"
+      }
     },
     "./chat_models/arcjet": {
+      "input": "./src/chat_models/arcjet.ts",
       "import": {
         "types": "./dist/chat_models/arcjet.d.ts",
         "default": "./dist/chat_models/arcjet.js"
@@ -1951,10 +1952,10 @@
       "require": {
         "types": "./dist/chat_models/arcjet.d.cts",
         "default": "./dist/chat_models/arcjet.cjs"
-      },
-      "input": "./src/chat_models/arcjet.ts"
+      }
     },
     "./chat_models/bedrock": {
+      "input": "./src/chat_models/bedrock/index.ts",
       "import": {
         "types": "./dist/chat_models/bedrock/index.d.ts",
         "default": "./dist/chat_models/bedrock/index.js"
@@ -1962,10 +1963,10 @@
       "require": {
         "types": "./dist/chat_models/bedrock/index.d.cts",
         "default": "./dist/chat_models/bedrock/index.cjs"
-      },
-      "input": "./src/chat_models/bedrock/index.ts"
+      }
     },
     "./chat_models/bedrock/web": {
+      "input": "./src/chat_models/bedrock/web.ts",
       "import": {
         "types": "./dist/chat_models/bedrock/web.d.ts",
         "default": "./dist/chat_models/bedrock/web.js"
@@ -1973,10 +1974,10 @@
       "require": {
         "types": "./dist/chat_models/bedrock/web.d.cts",
         "default": "./dist/chat_models/bedrock/web.cjs"
-      },
-      "input": "./src/chat_models/bedrock/web.ts"
+      }
     },
     "./chat_models/deepinfra": {
+      "input": "./src/chat_models/deepinfra.ts",
       "import": {
         "types": "./dist/chat_models/deepinfra.d.ts",
         "default": "./dist/chat_models/deepinfra.js"
@@ -1984,10 +1985,10 @@
       "require": {
         "types": "./dist/chat_models/deepinfra.d.cts",
         "default": "./dist/chat_models/deepinfra.cjs"
-      },
-      "input": "./src/chat_models/deepinfra.ts"
+      }
     },
     "./chat_models/fireworks": {
+      "input": "./src/chat_models/fireworks.ts",
       "import": {
         "types": "./dist/chat_models/fireworks.d.ts",
         "default": "./dist/chat_models/fireworks.js"
@@ -1995,10 +1996,10 @@
       "require": {
         "types": "./dist/chat_models/fireworks.d.cts",
         "default": "./dist/chat_models/fireworks.cjs"
-      },
-      "input": "./src/chat_models/fireworks.ts"
+      }
     },
     "./chat_models/friendli": {
+      "input": "./src/chat_models/friendli.ts",
       "import": {
         "types": "./dist/chat_models/friendli.d.ts",
         "default": "./dist/chat_models/friendli.js"
@@ -2006,10 +2007,10 @@
       "require": {
         "types": "./dist/chat_models/friendli.d.cts",
         "default": "./dist/chat_models/friendli.cjs"
-      },
-      "input": "./src/chat_models/friendli.ts"
+      }
     },
     "./chat_models/ibm": {
+      "input": "./src/chat_models/ibm.ts",
       "import": {
         "types": "./dist/chat_models/ibm.d.ts",
         "default": "./dist/chat_models/ibm.js"
@@ -2017,10 +2018,10 @@
       "require": {
         "types": "./dist/chat_models/ibm.d.cts",
         "default": "./dist/chat_models/ibm.cjs"
-      },
-      "input": "./src/chat_models/ibm.ts"
+      }
     },
     "./chat_models/iflytek_xinghuo": {
+      "input": "./src/chat_models/iflytek_xinghuo/index.ts",
       "import": {
         "types": "./dist/chat_models/iflytek_xinghuo/index.d.ts",
         "default": "./dist/chat_models/iflytek_xinghuo/index.js"
@@ -2028,10 +2029,10 @@
       "require": {
         "types": "./dist/chat_models/iflytek_xinghuo/index.d.cts",
         "default": "./dist/chat_models/iflytek_xinghuo/index.cjs"
-      },
-      "input": "./src/chat_models/iflytek_xinghuo/index.ts"
+      }
     },
     "./chat_models/iflytek_xinghuo/web": {
+      "input": "./src/chat_models/iflytek_xinghuo/web.ts",
       "import": {
         "types": "./dist/chat_models/iflytek_xinghuo/web.d.ts",
         "default": "./dist/chat_models/iflytek_xinghuo/web.js"
@@ -2039,10 +2040,10 @@
       "require": {
         "types": "./dist/chat_models/iflytek_xinghuo/web.d.cts",
         "default": "./dist/chat_models/iflytek_xinghuo/web.cjs"
-      },
-      "input": "./src/chat_models/iflytek_xinghuo/web.ts"
+      }
     },
     "./chat_models/llama_cpp": {
+      "input": "./src/chat_models/llama_cpp.ts",
       "import": {
         "types": "./dist/chat_models/llama_cpp.d.ts",
         "default": "./dist/chat_models/llama_cpp.js"
@@ -2050,10 +2051,10 @@
       "require": {
         "types": "./dist/chat_models/llama_cpp.d.cts",
         "default": "./dist/chat_models/llama_cpp.cjs"
-      },
-      "input": "./src/chat_models/llama_cpp.ts"
+      }
     },
     "./chat_models/minimax": {
+      "input": "./src/chat_models/minimax.ts",
       "import": {
         "types": "./dist/chat_models/minimax.d.ts",
         "default": "./dist/chat_models/minimax.js"
@@ -2061,10 +2062,10 @@
       "require": {
         "types": "./dist/chat_models/minimax.d.cts",
         "default": "./dist/chat_models/minimax.cjs"
-      },
-      "input": "./src/chat_models/minimax.ts"
+      }
     },
     "./chat_models/moonshot": {
+      "input": "./src/chat_models/moonshot.ts",
       "import": {
         "types": "./dist/chat_models/moonshot.d.ts",
         "default": "./dist/chat_models/moonshot.js"
@@ -2072,10 +2073,10 @@
       "require": {
         "types": "./dist/chat_models/moonshot.d.cts",
         "default": "./dist/chat_models/moonshot.cjs"
-      },
-      "input": "./src/chat_models/moonshot.ts"
+      }
     },
     "./chat_models/novita": {
+      "input": "./src/chat_models/novita.ts",
       "import": {
         "types": "./dist/chat_models/novita.d.ts",
         "default": "./dist/chat_models/novita.js"
@@ -2083,10 +2084,10 @@
       "require": {
         "types": "./dist/chat_models/novita.d.cts",
         "default": "./dist/chat_models/novita.cjs"
-      },
-      "input": "./src/chat_models/novita.ts"
+      }
     },
     "./chat_models/perplexity": {
+      "input": "./src/chat_models/perplexity.ts",
       "import": {
         "types": "./dist/chat_models/perplexity.d.ts",
         "default": "./dist/chat_models/perplexity.js"
@@ -2094,10 +2095,10 @@
       "require": {
         "types": "./dist/chat_models/perplexity.d.cts",
         "default": "./dist/chat_models/perplexity.cjs"
-      },
-      "input": "./src/chat_models/perplexity.ts"
+      }
     },
     "./chat_models/portkey": {
+      "input": "./src/chat_models/portkey.ts",
       "import": {
         "types": "./dist/chat_models/portkey.d.ts",
         "default": "./dist/chat_models/portkey.js"
@@ -2105,10 +2106,10 @@
       "require": {
         "types": "./dist/chat_models/portkey.d.cts",
         "default": "./dist/chat_models/portkey.cjs"
-      },
-      "input": "./src/chat_models/portkey.ts"
+      }
     },
     "./chat_models/premai": {
+      "input": "./src/chat_models/premai.ts",
       "import": {
         "types": "./dist/chat_models/premai.d.ts",
         "default": "./dist/chat_models/premai.js"
@@ -2116,10 +2117,10 @@
       "require": {
         "types": "./dist/chat_models/premai.d.cts",
         "default": "./dist/chat_models/premai.cjs"
-      },
-      "input": "./src/chat_models/premai.ts"
+      }
     },
     "./chat_models/tencent_hunyuan": {
+      "input": "./src/chat_models/tencent_hunyuan/index.ts",
       "import": {
         "types": "./dist/chat_models/tencent_hunyuan/index.d.ts",
         "default": "./dist/chat_models/tencent_hunyuan/index.js"
@@ -2127,10 +2128,10 @@
       "require": {
         "types": "./dist/chat_models/tencent_hunyuan/index.d.cts",
         "default": "./dist/chat_models/tencent_hunyuan/index.cjs"
-      },
-      "input": "./src/chat_models/tencent_hunyuan/index.ts"
+      }
     },
     "./chat_models/tencent_hunyuan/web": {
+      "input": "./src/chat_models/tencent_hunyuan/web.ts",
       "import": {
         "types": "./dist/chat_models/tencent_hunyuan/web.d.ts",
         "default": "./dist/chat_models/tencent_hunyuan/web.js"
@@ -2138,10 +2139,10 @@
       "require": {
         "types": "./dist/chat_models/tencent_hunyuan/web.d.cts",
         "default": "./dist/chat_models/tencent_hunyuan/web.cjs"
-      },
-      "input": "./src/chat_models/tencent_hunyuan/web.ts"
+      }
     },
     "./chat_models/togetherai": {
+      "input": "./src/chat_models/togetherai.ts",
       "import": {
         "types": "./dist/chat_models/togetherai.d.ts",
         "default": "./dist/chat_models/togetherai.js"
@@ -2149,10 +2150,10 @@
       "require": {
         "types": "./dist/chat_models/togetherai.d.cts",
         "default": "./dist/chat_models/togetherai.cjs"
-      },
-      "input": "./src/chat_models/togetherai.ts"
+      }
     },
     "./chat_models/webllm": {
+      "input": "./src/chat_models/webllm.ts",
       "import": {
         "types": "./dist/chat_models/webllm.d.ts",
         "default": "./dist/chat_models/webllm.js"
@@ -2160,10 +2161,10 @@
       "require": {
         "types": "./dist/chat_models/webllm.d.cts",
         "default": "./dist/chat_models/webllm.cjs"
-      },
-      "input": "./src/chat_models/webllm.ts"
+      }
     },
     "./chat_models/zhipuai": {
+      "input": "./src/chat_models/zhipuai.ts",
       "import": {
         "types": "./dist/chat_models/zhipuai.d.ts",
         "default": "./dist/chat_models/zhipuai.js"
@@ -2171,10 +2172,10 @@
       "require": {
         "types": "./dist/chat_models/zhipuai.d.cts",
         "default": "./dist/chat_models/zhipuai.cjs"
-      },
-      "input": "./src/chat_models/zhipuai.ts"
+      }
     },
     "./callbacks/handlers/lunary": {
+      "input": "./src/callbacks/handlers/lunary.ts",
       "import": {
         "types": "./dist/callbacks/handlers/lunary.d.ts",
         "default": "./dist/callbacks/handlers/lunary.js"
@@ -2182,10 +2183,10 @@
       "require": {
         "types": "./dist/callbacks/handlers/lunary.d.cts",
         "default": "./dist/callbacks/handlers/lunary.cjs"
-      },
-      "input": "./src/callbacks/handlers/lunary.ts"
+      }
     },
     "./callbacks/handlers/upstash_ratelimit": {
+      "input": "./src/callbacks/handlers/upstash_ratelimit.ts",
       "import": {
         "types": "./dist/callbacks/handlers/upstash_ratelimit.d.ts",
         "default": "./dist/callbacks/handlers/upstash_ratelimit.js"
@@ -2193,10 +2194,10 @@
       "require": {
         "types": "./dist/callbacks/handlers/upstash_ratelimit.d.cts",
         "default": "./dist/callbacks/handlers/upstash_ratelimit.cjs"
-      },
-      "input": "./src/callbacks/handlers/upstash_ratelimit.ts"
+      }
     },
     "./retrievers/arxiv": {
+      "input": "./src/retrievers/arxiv.ts",
       "import": {
         "types": "./dist/retrievers/arxiv.d.ts",
         "default": "./dist/retrievers/arxiv.js"
@@ -2204,10 +2205,10 @@
       "require": {
         "types": "./dist/retrievers/arxiv.d.cts",
         "default": "./dist/retrievers/arxiv.cjs"
-      },
-      "input": "./src/retrievers/arxiv.ts"
+      }
     },
     "./retrievers/azion_edgesql": {
+      "input": "./src/retrievers/azion_edgesql.ts",
       "import": {
         "types": "./dist/retrievers/azion_edgesql.d.ts",
         "default": "./dist/retrievers/azion_edgesql.js"
@@ -2215,10 +2216,10 @@
       "require": {
         "types": "./dist/retrievers/azion_edgesql.d.cts",
         "default": "./dist/retrievers/azion_edgesql.cjs"
-      },
-      "input": "./src/retrievers/azion_edgesql.ts"
+      }
     },
     "./retrievers/bm25": {
+      "input": "./src/retrievers/bm25.ts",
       "import": {
         "types": "./dist/retrievers/bm25.d.ts",
         "default": "./dist/retrievers/bm25.js"
@@ -2226,10 +2227,10 @@
       "require": {
         "types": "./dist/retrievers/bm25.d.cts",
         "default": "./dist/retrievers/bm25.cjs"
-      },
-      "input": "./src/retrievers/bm25.ts"
+      }
     },
     "./retrievers/chaindesk": {
+      "input": "./src/retrievers/chaindesk.ts",
       "import": {
         "types": "./dist/retrievers/chaindesk.d.ts",
         "default": "./dist/retrievers/chaindesk.js"
@@ -2237,10 +2238,10 @@
       "require": {
         "types": "./dist/retrievers/chaindesk.d.cts",
         "default": "./dist/retrievers/chaindesk.cjs"
-      },
-      "input": "./src/retrievers/chaindesk.ts"
+      }
     },
     "./retrievers/metal": {
+      "input": "./src/retrievers/metal.ts",
       "import": {
         "types": "./dist/retrievers/metal.d.ts",
         "default": "./dist/retrievers/metal.js"
@@ -2248,10 +2249,10 @@
       "require": {
         "types": "./dist/retrievers/metal.d.cts",
         "default": "./dist/retrievers/metal.cjs"
-      },
-      "input": "./src/retrievers/metal.ts"
+      }
     },
     "./retrievers/remote": {
+      "input": "./src/retrievers/remote/index.ts",
       "import": {
         "types": "./dist/retrievers/remote/index.d.ts",
         "default": "./dist/retrievers/remote/index.js"
@@ -2259,10 +2260,10 @@
       "require": {
         "types": "./dist/retrievers/remote/index.d.cts",
         "default": "./dist/retrievers/remote/index.cjs"
-      },
-      "input": "./src/retrievers/remote/index.ts"
+      }
     },
     "./retrievers/supabase": {
+      "input": "./src/retrievers/supabase.ts",
       "import": {
         "types": "./dist/retrievers/supabase.d.ts",
         "default": "./dist/retrievers/supabase.js"
@@ -2270,10 +2271,10 @@
       "require": {
         "types": "./dist/retrievers/supabase.d.cts",
         "default": "./dist/retrievers/supabase.cjs"
-      },
-      "input": "./src/retrievers/supabase.ts"
+      }
     },
     "./retrievers/tavily_search_api": {
+      "input": "./src/retrievers/tavily_search_api.ts",
       "import": {
         "types": "./dist/retrievers/tavily_search_api.d.ts",
         "default": "./dist/retrievers/tavily_search_api.js"
@@ -2281,10 +2282,10 @@
       "require": {
         "types": "./dist/retrievers/tavily_search_api.d.cts",
         "default": "./dist/retrievers/tavily_search_api.cjs"
-      },
-      "input": "./src/retrievers/tavily_search_api.ts"
+      }
     },
     "./retrievers/vectara_summary": {
+      "input": "./src/retrievers/vectara_summary.ts",
       "import": {
         "types": "./dist/retrievers/vectara_summary.d.ts",
         "default": "./dist/retrievers/vectara_summary.js"
@@ -2292,10 +2293,10 @@
       "require": {
         "types": "./dist/retrievers/vectara_summary.d.cts",
         "default": "./dist/retrievers/vectara_summary.cjs"
-      },
-      "input": "./src/retrievers/vectara_summary.ts"
+      }
     },
     "./retrievers/vespa": {
+      "input": "./src/retrievers/vespa.ts",
       "import": {
         "types": "./dist/retrievers/vespa.d.ts",
         "default": "./dist/retrievers/vespa.js"
@@ -2303,10 +2304,10 @@
       "require": {
         "types": "./dist/retrievers/vespa.d.cts",
         "default": "./dist/retrievers/vespa.cjs"
-      },
-      "input": "./src/retrievers/vespa.ts"
+      }
     },
     "./retrievers/zep": {
+      "input": "./src/retrievers/zep.ts",
       "import": {
         "types": "./dist/retrievers/zep.d.ts",
         "default": "./dist/retrievers/zep.js"
@@ -2314,10 +2315,10 @@
       "require": {
         "types": "./dist/retrievers/zep.d.cts",
         "default": "./dist/retrievers/zep.cjs"
-      },
-      "input": "./src/retrievers/zep.ts"
+      }
     },
     "./structured_query/chroma": {
+      "input": "./src/structured_query/chroma.ts",
       "import": {
         "types": "./dist/structured_query/chroma.d.ts",
         "default": "./dist/structured_query/chroma.js"
@@ -2325,10 +2326,10 @@
       "require": {
         "types": "./dist/structured_query/chroma.d.cts",
         "default": "./dist/structured_query/chroma.cjs"
-      },
-      "input": "./src/structured_query/chroma.ts"
+      }
     },
     "./structured_query/supabase": {
+      "input": "./src/structured_query/supabase.ts",
       "import": {
         "types": "./dist/structured_query/supabase.d.ts",
         "default": "./dist/structured_query/supabase.js"
@@ -2336,10 +2337,10 @@
       "require": {
         "types": "./dist/structured_query/supabase.d.cts",
         "default": "./dist/structured_query/supabase.cjs"
-      },
-      "input": "./src/structured_query/supabase.ts"
+      }
     },
     "./structured_query/vectara": {
+      "input": "./src/structured_query/vectara.ts",
       "import": {
         "types": "./dist/structured_query/vectara.d.ts",
         "default": "./dist/structured_query/vectara.js"
@@ -2347,10 +2348,10 @@
       "require": {
         "types": "./dist/structured_query/vectara.d.cts",
         "default": "./dist/structured_query/vectara.cjs"
-      },
-      "input": "./src/structured_query/vectara.ts"
+      }
     },
     "./retrievers/zep_cloud": {
+      "input": "./src/retrievers/zep_cloud.ts",
       "import": {
         "types": "./dist/retrievers/zep_cloud.d.ts",
         "default": "./dist/retrievers/zep_cloud.js"
@@ -2358,10 +2359,10 @@
       "require": {
         "types": "./dist/retrievers/zep_cloud.d.cts",
         "default": "./dist/retrievers/zep_cloud.cjs"
-      },
-      "input": "./src/retrievers/zep_cloud.ts"
+      }
     },
     "./caches/ioredis": {
+      "input": "./src/caches/ioredis.ts",
       "import": {
         "types": "./dist/caches/ioredis.d.ts",
         "default": "./dist/caches/ioredis.js"
@@ -2369,10 +2370,10 @@
       "require": {
         "types": "./dist/caches/ioredis.d.cts",
         "default": "./dist/caches/ioredis.cjs"
-      },
-      "input": "./src/caches/ioredis.ts"
+      }
     },
     "./caches/momento": {
+      "input": "./src/caches/momento.ts",
       "import": {
         "types": "./dist/caches/momento.d.ts",
         "default": "./dist/caches/momento.js"
@@ -2380,10 +2381,10 @@
       "require": {
         "types": "./dist/caches/momento.d.cts",
         "default": "./dist/caches/momento.cjs"
-      },
-      "input": "./src/caches/momento.ts"
+      }
     },
     "./caches/upstash_redis": {
+      "input": "./src/caches/upstash_redis.ts",
       "import": {
         "types": "./dist/caches/upstash_redis.d.ts",
         "default": "./dist/caches/upstash_redis.js"
@@ -2391,10 +2392,10 @@
       "require": {
         "types": "./dist/caches/upstash_redis.d.cts",
         "default": "./dist/caches/upstash_redis.cjs"
-      },
-      "input": "./src/caches/upstash_redis.ts"
+      }
     },
     "./caches/vercel_kv": {
+      "input": "./src/caches/vercel_kv.ts",
       "import": {
         "types": "./dist/caches/vercel_kv.d.ts",
         "default": "./dist/caches/vercel_kv.js"
@@ -2402,10 +2403,10 @@
       "require": {
         "types": "./dist/caches/vercel_kv.d.cts",
         "default": "./dist/caches/vercel_kv.cjs"
-      },
-      "input": "./src/caches/vercel_kv.ts"
+      }
     },
     "./graphs/document": {
+      "input": "./src/graphs/document.ts",
       "import": {
         "types": "./dist/graphs/document.d.ts",
         "default": "./dist/graphs/document.js"
@@ -2413,10 +2414,10 @@
       "require": {
         "types": "./dist/graphs/document.d.cts",
         "default": "./dist/graphs/document.cjs"
-      },
-      "input": "./src/graphs/document.ts"
+      }
     },
     "./graphs/memgraph_graph": {
+      "input": "./src/graphs/memgraph_graph.ts",
       "import": {
         "types": "./dist/graphs/memgraph_graph.d.ts",
         "default": "./dist/graphs/memgraph_graph.js"
@@ -2424,10 +2425,10 @@
       "require": {
         "types": "./dist/graphs/memgraph_graph.d.cts",
         "default": "./dist/graphs/memgraph_graph.cjs"
-      },
-      "input": "./src/graphs/memgraph_graph.ts"
+      }
     },
     "./graphs/neo4j_graph": {
+      "input": "./src/graphs/neo4j_graph.ts",
       "import": {
         "types": "./dist/graphs/neo4j_graph.d.ts",
         "default": "./dist/graphs/neo4j_graph.js"
@@ -2435,10 +2436,10 @@
       "require": {
         "types": "./dist/graphs/neo4j_graph.d.cts",
         "default": "./dist/graphs/neo4j_graph.cjs"
-      },
-      "input": "./src/graphs/neo4j_graph.ts"
+      }
     },
     "./document_compressors/ibm": {
+      "input": "./src/document_compressors/ibm.ts",
       "import": {
         "types": "./dist/document_compressors/ibm.d.ts",
         "default": "./dist/document_compressors/ibm.js"
@@ -2446,10 +2447,10 @@
       "require": {
         "types": "./dist/document_compressors/ibm.d.cts",
         "default": "./dist/document_compressors/ibm.cjs"
-      },
-      "input": "./src/document_compressors/ibm.ts"
+      }
     },
     "./document_transformers/html_to_text": {
+      "input": "./src/document_transformers/html_to_text.ts",
       "import": {
         "types": "./dist/document_transformers/html_to_text.d.ts",
         "default": "./dist/document_transformers/html_to_text.js"
@@ -2457,10 +2458,10 @@
       "require": {
         "types": "./dist/document_transformers/html_to_text.d.cts",
         "default": "./dist/document_transformers/html_to_text.cjs"
-      },
-      "input": "./src/document_transformers/html_to_text.ts"
+      }
     },
     "./document_transformers/mozilla_readability": {
+      "input": "./src/document_transformers/mozilla_readability.ts",
       "import": {
         "types": "./dist/document_transformers/mozilla_readability.d.ts",
         "default": "./dist/document_transformers/mozilla_readability.js"
@@ -2468,10 +2469,10 @@
       "require": {
         "types": "./dist/document_transformers/mozilla_readability.d.cts",
         "default": "./dist/document_transformers/mozilla_readability.cjs"
-      },
-      "input": "./src/document_transformers/mozilla_readability.ts"
+      }
     },
     "./storage/cassandra": {
+      "input": "./src/storage/cassandra.ts",
       "import": {
         "types": "./dist/storage/cassandra.d.ts",
         "default": "./dist/storage/cassandra.js"
@@ -2479,10 +2480,10 @@
       "require": {
         "types": "./dist/storage/cassandra.d.cts",
         "default": "./dist/storage/cassandra.cjs"
-      },
-      "input": "./src/storage/cassandra.ts"
+      }
     },
     "./storage/convex": {
+      "input": "./src/storage/convex.ts",
       "import": {
         "types": "./dist/storage/convex.d.ts",
         "default": "./dist/storage/convex.js"
@@ -2490,10 +2491,10 @@
       "require": {
         "types": "./dist/storage/convex.d.cts",
         "default": "./dist/storage/convex.cjs"
-      },
-      "input": "./src/storage/convex.ts"
+      }
     },
     "./storage/ioredis": {
+      "input": "./src/storage/ioredis.ts",
       "import": {
         "types": "./dist/storage/ioredis.d.ts",
         "default": "./dist/storage/ioredis.js"
@@ -2501,10 +2502,10 @@
       "require": {
         "types": "./dist/storage/ioredis.d.cts",
         "default": "./dist/storage/ioredis.cjs"
-      },
-      "input": "./src/storage/ioredis.ts"
+      }
     },
     "./storage/upstash_redis": {
+      "input": "./src/storage/upstash_redis.ts",
       "import": {
         "types": "./dist/storage/upstash_redis.d.ts",
         "default": "./dist/storage/upstash_redis.js"
@@ -2512,10 +2513,10 @@
       "require": {
         "types": "./dist/storage/upstash_redis.d.cts",
         "default": "./dist/storage/upstash_redis.cjs"
-      },
-      "input": "./src/storage/upstash_redis.ts"
+      }
     },
     "./storage/vercel_kv": {
+      "input": "./src/storage/vercel_kv.ts",
       "import": {
         "types": "./dist/storage/vercel_kv.d.ts",
         "default": "./dist/storage/vercel_kv.js"
@@ -2523,10 +2524,10 @@
       "require": {
         "types": "./dist/storage/vercel_kv.d.cts",
         "default": "./dist/storage/vercel_kv.cjs"
-      },
-      "input": "./src/storage/vercel_kv.ts"
+      }
     },
     "./stores/doc/base": {
+      "input": "./src/stores/doc/base.ts",
       "import": {
         "types": "./dist/stores/doc/base.d.ts",
         "default": "./dist/stores/doc/base.js"
@@ -2534,10 +2535,10 @@
       "require": {
         "types": "./dist/stores/doc/base.d.cts",
         "default": "./dist/stores/doc/base.cjs"
-      },
-      "input": "./src/stores/doc/base.ts"
+      }
     },
     "./stores/doc/gcs": {
+      "input": "./src/stores/doc/gcs.ts",
       "import": {
         "types": "./dist/stores/doc/gcs.d.ts",
         "default": "./dist/stores/doc/gcs.js"
@@ -2545,10 +2546,10 @@
       "require": {
         "types": "./dist/stores/doc/gcs.d.cts",
         "default": "./dist/stores/doc/gcs.cjs"
-      },
-      "input": "./src/stores/doc/gcs.ts"
+      }
     },
     "./stores/doc/in_memory": {
+      "input": "./src/stores/doc/in_memory.ts",
       "import": {
         "types": "./dist/stores/doc/in_memory.d.ts",
         "default": "./dist/stores/doc/in_memory.js"
@@ -2556,10 +2557,10 @@
       "require": {
         "types": "./dist/stores/doc/in_memory.d.cts",
         "default": "./dist/stores/doc/in_memory.cjs"
-      },
-      "input": "./src/stores/doc/in_memory.ts"
+      }
     },
     "./stores/message/astradb": {
+      "input": "./src/stores/message/astradb.ts",
       "import": {
         "types": "./dist/stores/message/astradb.d.ts",
         "default": "./dist/stores/message/astradb.js"
@@ -2567,10 +2568,10 @@
       "require": {
         "types": "./dist/stores/message/astradb.d.cts",
         "default": "./dist/stores/message/astradb.cjs"
-      },
-      "input": "./src/stores/message/astradb.ts"
+      }
     },
     "./stores/message/cassandra": {
+      "input": "./src/stores/message/cassandra.ts",
       "import": {
         "types": "./dist/stores/message/cassandra.d.ts",
         "default": "./dist/stores/message/cassandra.js"
@@ -2578,10 +2579,10 @@
       "require": {
         "types": "./dist/stores/message/cassandra.d.cts",
         "default": "./dist/stores/message/cassandra.cjs"
-      },
-      "input": "./src/stores/message/cassandra.ts"
+      }
     },
     "./stores/message/convex": {
+      "input": "./src/stores/message/convex.ts",
       "import": {
         "types": "./dist/stores/message/convex.d.ts",
         "default": "./dist/stores/message/convex.js"
@@ -2589,10 +2590,10 @@
       "require": {
         "types": "./dist/stores/message/convex.d.cts",
         "default": "./dist/stores/message/convex.cjs"
-      },
-      "input": "./src/stores/message/convex.ts"
+      }
     },
     "./stores/message/dynamodb": {
+      "input": "./src/stores/message/dynamodb.ts",
       "import": {
         "types": "./dist/stores/message/dynamodb.d.ts",
         "default": "./dist/stores/message/dynamodb.js"
@@ -2600,10 +2601,10 @@
       "require": {
         "types": "./dist/stores/message/dynamodb.d.cts",
         "default": "./dist/stores/message/dynamodb.cjs"
-      },
-      "input": "./src/stores/message/dynamodb.ts"
+      }
     },
     "./stores/message/firestore": {
+      "input": "./src/stores/message/firestore.ts",
       "import": {
         "types": "./dist/stores/message/firestore.d.ts",
         "default": "./dist/stores/message/firestore.js"
@@ -2611,10 +2612,10 @@
       "require": {
         "types": "./dist/stores/message/firestore.d.cts",
         "default": "./dist/stores/message/firestore.cjs"
-      },
-      "input": "./src/stores/message/firestore.ts"
+      }
     },
     "./stores/message/file_system": {
+      "input": "./src/stores/message/file_system.ts",
       "import": {
         "types": "./dist/stores/message/file_system.d.ts",
         "default": "./dist/stores/message/file_system.js"
@@ -2622,10 +2623,10 @@
       "require": {
         "types": "./dist/stores/message/file_system.d.cts",
         "default": "./dist/stores/message/file_system.cjs"
-      },
-      "input": "./src/stores/message/file_system.ts"
+      }
     },
     "./stores/message/in_memory": {
+      "input": "./src/stores/message/in_memory.ts",
       "import": {
         "types": "./dist/stores/message/in_memory.d.ts",
         "default": "./dist/stores/message/in_memory.js"
@@ -2633,10 +2634,10 @@
       "require": {
         "types": "./dist/stores/message/in_memory.d.cts",
         "default": "./dist/stores/message/in_memory.cjs"
-      },
-      "input": "./src/stores/message/in_memory.ts"
+      }
     },
     "./stores/message/ipfs_datastore": {
+      "input": "./src/stores/message/ipfs_datastore.ts",
       "import": {
         "types": "./dist/stores/message/ipfs_datastore.d.ts",
         "default": "./dist/stores/message/ipfs_datastore.js"
@@ -2644,10 +2645,10 @@
       "require": {
         "types": "./dist/stores/message/ipfs_datastore.d.cts",
         "default": "./dist/stores/message/ipfs_datastore.cjs"
-      },
-      "input": "./src/stores/message/ipfs_datastore.ts"
+      }
     },
     "./stores/message/ioredis": {
+      "input": "./src/stores/message/ioredis.ts",
       "import": {
         "types": "./dist/stores/message/ioredis.d.ts",
         "default": "./dist/stores/message/ioredis.js"
@@ -2655,10 +2656,10 @@
       "require": {
         "types": "./dist/stores/message/ioredis.d.cts",
         "default": "./dist/stores/message/ioredis.cjs"
-      },
-      "input": "./src/stores/message/ioredis.ts"
+      }
     },
     "./stores/message/momento": {
+      "input": "./src/stores/message/momento.ts",
       "import": {
         "types": "./dist/stores/message/momento.d.ts",
         "default": "./dist/stores/message/momento.js"
@@ -2666,10 +2667,10 @@
       "require": {
         "types": "./dist/stores/message/momento.d.cts",
         "default": "./dist/stores/message/momento.cjs"
-      },
-      "input": "./src/stores/message/momento.ts"
+      }
     },
     "./stores/message/neo4j": {
+      "input": "./src/stores/message/neo4j.ts",
       "import": {
         "types": "./dist/stores/message/neo4j.d.ts",
         "default": "./dist/stores/message/neo4j.js"
@@ -2677,10 +2678,10 @@
       "require": {
         "types": "./dist/stores/message/neo4j.d.cts",
         "default": "./dist/stores/message/neo4j.cjs"
-      },
-      "input": "./src/stores/message/neo4j.ts"
+      }
     },
     "./stores/message/planetscale": {
+      "input": "./src/stores/message/planetscale.ts",
       "import": {
         "types": "./dist/stores/message/planetscale.d.ts",
         "default": "./dist/stores/message/planetscale.js"
@@ -2688,10 +2689,10 @@
       "require": {
         "types": "./dist/stores/message/planetscale.d.cts",
         "default": "./dist/stores/message/planetscale.cjs"
-      },
-      "input": "./src/stores/message/planetscale.ts"
+      }
     },
     "./stores/message/postgres": {
+      "input": "./src/stores/message/postgres.ts",
       "import": {
         "types": "./dist/stores/message/postgres.d.ts",
         "default": "./dist/stores/message/postgres.js"
@@ -2699,10 +2700,10 @@
       "require": {
         "types": "./dist/stores/message/postgres.d.cts",
         "default": "./dist/stores/message/postgres.cjs"
-      },
-      "input": "./src/stores/message/postgres.ts"
+      }
     },
     "./stores/message/aurora_dsql": {
+      "input": "./src/stores/message/aurora_dsql.ts",
       "import": {
         "types": "./dist/stores/message/aurora_dsql.d.ts",
         "default": "./dist/stores/message/aurora_dsql.js"
@@ -2710,10 +2711,10 @@
       "require": {
         "types": "./dist/stores/message/aurora_dsql.d.cts",
         "default": "./dist/stores/message/aurora_dsql.cjs"
-      },
-      "input": "./src/stores/message/aurora_dsql.ts"
+      }
     },
     "./stores/message/upstash_redis": {
+      "input": "./src/stores/message/upstash_redis.ts",
       "import": {
         "types": "./dist/stores/message/upstash_redis.d.ts",
         "default": "./dist/stores/message/upstash_redis.js"
@@ -2721,10 +2722,10 @@
       "require": {
         "types": "./dist/stores/message/upstash_redis.d.cts",
         "default": "./dist/stores/message/upstash_redis.cjs"
-      },
-      "input": "./src/stores/message/upstash_redis.ts"
+      }
     },
     "./stores/message/xata": {
+      "input": "./src/stores/message/xata.ts",
       "import": {
         "types": "./dist/stores/message/xata.d.ts",
         "default": "./dist/stores/message/xata.js"
@@ -2732,10 +2733,10 @@
       "require": {
         "types": "./dist/stores/message/xata.d.cts",
         "default": "./dist/stores/message/xata.cjs"
-      },
-      "input": "./src/stores/message/xata.ts"
+      }
     },
     "./stores/message/zep_cloud": {
+      "input": "./src/stores/message/zep_cloud.ts",
       "import": {
         "types": "./dist/stores/message/zep_cloud.d.ts",
         "default": "./dist/stores/message/zep_cloud.js"
@@ -2743,10 +2744,10 @@
       "require": {
         "types": "./dist/stores/message/zep_cloud.d.cts",
         "default": "./dist/stores/message/zep_cloud.cjs"
-      },
-      "input": "./src/stores/message/zep_cloud.ts"
+      }
     },
     "./memory/chat_memory": {
+      "input": "./src/memory/chat_memory.ts",
       "import": {
         "types": "./dist/memory/chat_memory.d.ts",
         "default": "./dist/memory/chat_memory.js"
@@ -2754,10 +2755,10 @@
       "require": {
         "types": "./dist/memory/chat_memory.d.cts",
         "default": "./dist/memory/chat_memory.cjs"
-      },
-      "input": "./src/memory/chat_memory.ts"
+      }
     },
     "./memory/mem0": {
+      "input": "./src/memory/mem0.ts",
       "import": {
         "types": "./dist/memory/mem0.d.ts",
         "default": "./dist/memory/mem0.js"
@@ -2765,10 +2766,10 @@
       "require": {
         "types": "./dist/memory/mem0.d.cts",
         "default": "./dist/memory/mem0.cjs"
-      },
-      "input": "./src/memory/mem0.ts"
+      }
     },
     "./memory/motorhead_memory": {
+      "input": "./src/memory/motorhead_memory.ts",
       "import": {
         "types": "./dist/memory/motorhead_memory.d.ts",
         "default": "./dist/memory/motorhead_memory.js"
@@ -2776,10 +2777,10 @@
       "require": {
         "types": "./dist/memory/motorhead_memory.d.cts",
         "default": "./dist/memory/motorhead_memory.cjs"
-      },
-      "input": "./src/memory/motorhead_memory.ts"
+      }
     },
     "./memory/zep": {
+      "input": "./src/memory/zep.ts",
       "import": {
         "types": "./dist/memory/zep.d.ts",
         "default": "./dist/memory/zep.js"
@@ -2787,10 +2788,10 @@
       "require": {
         "types": "./dist/memory/zep.d.cts",
         "default": "./dist/memory/zep.cjs"
-      },
-      "input": "./src/memory/zep.ts"
+      }
     },
     "./memory/zep_cloud": {
+      "input": "./src/memory/zep_cloud.ts",
       "import": {
         "types": "./dist/memory/zep_cloud.d.ts",
         "default": "./dist/memory/zep_cloud.js"
@@ -2798,10 +2799,10 @@
       "require": {
         "types": "./dist/memory/zep_cloud.d.cts",
         "default": "./dist/memory/zep_cloud.cjs"
-      },
-      "input": "./src/memory/zep_cloud.ts"
+      }
     },
     "./indexes/base": {
+      "input": "./src/indexes/base.ts",
       "import": {
         "types": "./dist/indexes/base.d.ts",
         "default": "./dist/indexes/base.js"
@@ -2809,10 +2810,10 @@
       "require": {
         "types": "./dist/indexes/base.d.cts",
         "default": "./dist/indexes/base.cjs"
-      },
-      "input": "./src/indexes/base.ts"
+      }
     },
     "./indexes/postgres": {
+      "input": "./src/indexes/postgres.ts",
       "import": {
         "types": "./dist/indexes/postgres.d.ts",
         "default": "./dist/indexes/postgres.js"
@@ -2820,10 +2821,10 @@
       "require": {
         "types": "./dist/indexes/postgres.d.cts",
         "default": "./dist/indexes/postgres.cjs"
-      },
-      "input": "./src/indexes/postgres.ts"
+      }
     },
     "./indexes/memory": {
+      "input": "./src/indexes/memory.ts",
       "import": {
         "types": "./dist/indexes/memory.d.ts",
         "default": "./dist/indexes/memory.js"
@@ -2831,10 +2832,10 @@
       "require": {
         "types": "./dist/indexes/memory.d.cts",
         "default": "./dist/indexes/memory.cjs"
-      },
-      "input": "./src/indexes/memory.ts"
+      }
     },
     "./indexes/sqlite": {
+      "input": "./src/indexes/sqlite.ts",
       "import": {
         "types": "./dist/indexes/sqlite.d.ts",
         "default": "./dist/indexes/sqlite.js"
@@ -2842,10 +2843,10 @@
       "require": {
         "types": "./dist/indexes/sqlite.d.cts",
         "default": "./dist/indexes/sqlite.cjs"
-      },
-      "input": "./src/indexes/sqlite.ts"
+      }
     },
     "./document_loaders/web/airtable": {
+      "input": "./src/document_loaders/web/airtable.ts",
       "import": {
         "types": "./dist/document_loaders/web/airtable.d.ts",
         "default": "./dist/document_loaders/web/airtable.js"
@@ -2853,10 +2854,10 @@
       "require": {
         "types": "./dist/document_loaders/web/airtable.d.cts",
         "default": "./dist/document_loaders/web/airtable.cjs"
-      },
-      "input": "./src/document_loaders/web/airtable.ts"
+      }
     },
     "./document_loaders/web/apify_dataset": {
+      "input": "./src/document_loaders/web/apify_dataset.ts",
       "import": {
         "types": "./dist/document_loaders/web/apify_dataset.d.ts",
         "default": "./dist/document_loaders/web/apify_dataset.js"
@@ -2864,10 +2865,10 @@
       "require": {
         "types": "./dist/document_loaders/web/apify_dataset.d.cts",
         "default": "./dist/document_loaders/web/apify_dataset.cjs"
-      },
-      "input": "./src/document_loaders/web/apify_dataset.ts"
+      }
     },
     "./document_loaders/web/assemblyai": {
+      "input": "./src/document_loaders/web/assemblyai.ts",
       "import": {
         "types": "./dist/document_loaders/web/assemblyai.d.ts",
         "default": "./dist/document_loaders/web/assemblyai.js"
@@ -2875,10 +2876,10 @@
       "require": {
         "types": "./dist/document_loaders/web/assemblyai.d.cts",
         "default": "./dist/document_loaders/web/assemblyai.cjs"
-      },
-      "input": "./src/document_loaders/web/assemblyai.ts"
+      }
     },
     "./document_loaders/web/azure_blob_storage_container": {
+      "input": "./src/document_loaders/web/azure_blob_storage_container.ts",
       "import": {
         "types": "./dist/document_loaders/web/azure_blob_storage_container.d.ts",
         "default": "./dist/document_loaders/web/azure_blob_storage_container.js"
@@ -2886,10 +2887,10 @@
       "require": {
         "types": "./dist/document_loaders/web/azure_blob_storage_container.d.cts",
         "default": "./dist/document_loaders/web/azure_blob_storage_container.cjs"
-      },
-      "input": "./src/document_loaders/web/azure_blob_storage_container.ts"
+      }
     },
     "./document_loaders/web/azure_blob_storage_file": {
+      "input": "./src/document_loaders/web/azure_blob_storage_file.ts",
       "import": {
         "types": "./dist/document_loaders/web/azure_blob_storage_file.d.ts",
         "default": "./dist/document_loaders/web/azure_blob_storage_file.js"
@@ -2897,10 +2898,10 @@
       "require": {
         "types": "./dist/document_loaders/web/azure_blob_storage_file.d.cts",
         "default": "./dist/document_loaders/web/azure_blob_storage_file.cjs"
-      },
-      "input": "./src/document_loaders/web/azure_blob_storage_file.ts"
+      }
     },
     "./document_loaders/web/browserbase": {
+      "input": "./src/document_loaders/web/browserbase.ts",
       "import": {
         "types": "./dist/document_loaders/web/browserbase.d.ts",
         "default": "./dist/document_loaders/web/browserbase.js"
@@ -2908,10 +2909,10 @@
       "require": {
         "types": "./dist/document_loaders/web/browserbase.d.cts",
         "default": "./dist/document_loaders/web/browserbase.cjs"
-      },
-      "input": "./src/document_loaders/web/browserbase.ts"
+      }
     },
     "./document_loaders/web/cheerio": {
+      "input": "./src/document_loaders/web/cheerio.ts",
       "import": {
         "types": "./dist/document_loaders/web/cheerio.d.ts",
         "default": "./dist/document_loaders/web/cheerio.js"
@@ -2919,10 +2920,10 @@
       "require": {
         "types": "./dist/document_loaders/web/cheerio.d.cts",
         "default": "./dist/document_loaders/web/cheerio.cjs"
-      },
-      "input": "./src/document_loaders/web/cheerio.ts"
+      }
     },
     "./document_loaders/web/html": {
+      "input": "./src/document_loaders/web/html.ts",
       "import": {
         "types": "./dist/document_loaders/web/html.d.ts",
         "default": "./dist/document_loaders/web/html.js"
@@ -2930,10 +2931,10 @@
       "require": {
         "types": "./dist/document_loaders/web/html.d.cts",
         "default": "./dist/document_loaders/web/html.cjs"
-      },
-      "input": "./src/document_loaders/web/html.ts"
+      }
     },
     "./document_loaders/web/puppeteer": {
+      "input": "./src/document_loaders/web/puppeteer.ts",
       "import": {
         "types": "./dist/document_loaders/web/puppeteer.d.ts",
         "default": "./dist/document_loaders/web/puppeteer.js"
@@ -2941,10 +2942,10 @@
       "require": {
         "types": "./dist/document_loaders/web/puppeteer.d.cts",
         "default": "./dist/document_loaders/web/puppeteer.cjs"
-      },
-      "input": "./src/document_loaders/web/puppeteer.ts"
+      }
     },
     "./document_loaders/web/playwright": {
+      "input": "./src/document_loaders/web/playwright.ts",
       "import": {
         "types": "./dist/document_loaders/web/playwright.d.ts",
         "default": "./dist/document_loaders/web/playwright.js"
@@ -2952,10 +2953,10 @@
       "require": {
         "types": "./dist/document_loaders/web/playwright.d.cts",
         "default": "./dist/document_loaders/web/playwright.cjs"
-      },
-      "input": "./src/document_loaders/web/playwright.ts"
+      }
     },
     "./document_loaders/web/college_confidential": {
+      "input": "./src/document_loaders/web/college_confidential.ts",
       "import": {
         "types": "./dist/document_loaders/web/college_confidential.d.ts",
         "default": "./dist/document_loaders/web/college_confidential.js"
@@ -2963,10 +2964,10 @@
       "require": {
         "types": "./dist/document_loaders/web/college_confidential.d.cts",
         "default": "./dist/document_loaders/web/college_confidential.cjs"
-      },
-      "input": "./src/document_loaders/web/college_confidential.ts"
+      }
     },
     "./document_loaders/web/google_cloud_storage": {
+      "input": "./src/document_loaders/web/google_cloud_storage.ts",
       "import": {
         "types": "./dist/document_loaders/web/google_cloud_storage.d.ts",
         "default": "./dist/document_loaders/web/google_cloud_storage.js"
@@ -2974,10 +2975,10 @@
       "require": {
         "types": "./dist/document_loaders/web/google_cloud_storage.d.cts",
         "default": "./dist/document_loaders/web/google_cloud_storage.cjs"
-      },
-      "input": "./src/document_loaders/web/google_cloud_storage.ts"
+      }
     },
     "./document_loaders/web/gitbook": {
+      "input": "./src/document_loaders/web/gitbook.ts",
       "import": {
         "types": "./dist/document_loaders/web/gitbook.d.ts",
         "default": "./dist/document_loaders/web/gitbook.js"
@@ -2985,10 +2986,10 @@
       "require": {
         "types": "./dist/document_loaders/web/gitbook.d.cts",
         "default": "./dist/document_loaders/web/gitbook.cjs"
-      },
-      "input": "./src/document_loaders/web/gitbook.ts"
+      }
     },
     "./document_loaders/web/hn": {
+      "input": "./src/document_loaders/web/hn.ts",
       "import": {
         "types": "./dist/document_loaders/web/hn.d.ts",
         "default": "./dist/document_loaders/web/hn.js"
@@ -2996,10 +2997,10 @@
       "require": {
         "types": "./dist/document_loaders/web/hn.d.cts",
         "default": "./dist/document_loaders/web/hn.cjs"
-      },
-      "input": "./src/document_loaders/web/hn.ts"
+      }
     },
     "./document_loaders/web/imsdb": {
+      "input": "./src/document_loaders/web/imsdb.ts",
       "import": {
         "types": "./dist/document_loaders/web/imsdb.d.ts",
         "default": "./dist/document_loaders/web/imsdb.js"
@@ -3007,10 +3008,10 @@
       "require": {
         "types": "./dist/document_loaders/web/imsdb.d.cts",
         "default": "./dist/document_loaders/web/imsdb.cjs"
-      },
-      "input": "./src/document_loaders/web/imsdb.ts"
+      }
     },
     "./document_loaders/web/jira": {
+      "input": "./src/document_loaders/web/jira.ts",
       "import": {
         "types": "./dist/document_loaders/web/jira.d.ts",
         "default": "./dist/document_loaders/web/jira.js"
@@ -3018,10 +3019,10 @@
       "require": {
         "types": "./dist/document_loaders/web/jira.d.cts",
         "default": "./dist/document_loaders/web/jira.cjs"
-      },
-      "input": "./src/document_loaders/web/jira.ts"
+      }
     },
     "./document_loaders/web/figma": {
+      "input": "./src/document_loaders/web/figma.ts",
       "import": {
         "types": "./dist/document_loaders/web/figma.d.ts",
         "default": "./dist/document_loaders/web/figma.js"
@@ -3029,10 +3030,10 @@
       "require": {
         "types": "./dist/document_loaders/web/figma.d.cts",
         "default": "./dist/document_loaders/web/figma.cjs"
-      },
-      "input": "./src/document_loaders/web/figma.ts"
+      }
     },
     "./document_loaders/web/firecrawl": {
+      "input": "./src/document_loaders/web/firecrawl.ts",
       "import": {
         "types": "./dist/document_loaders/web/firecrawl.d.ts",
         "default": "./dist/document_loaders/web/firecrawl.js"
@@ -3040,10 +3041,10 @@
       "require": {
         "types": "./dist/document_loaders/web/firecrawl.d.cts",
         "default": "./dist/document_loaders/web/firecrawl.cjs"
-      },
-      "input": "./src/document_loaders/web/firecrawl.ts"
+      }
     },
     "./document_loaders/web/github": {
+      "input": "./src/document_loaders/web/github.ts",
       "import": {
         "types": "./dist/document_loaders/web/github.d.ts",
         "default": "./dist/document_loaders/web/github.js"
@@ -3051,10 +3052,10 @@
       "require": {
         "types": "./dist/document_loaders/web/github.d.cts",
         "default": "./dist/document_loaders/web/github.cjs"
-      },
-      "input": "./src/document_loaders/web/github.ts"
+      }
     },
     "./document_loaders/web/taskade": {
+      "input": "./src/document_loaders/web/taskade.ts",
       "import": {
         "types": "./dist/document_loaders/web/taskade.d.ts",
         "default": "./dist/document_loaders/web/taskade.js"
@@ -3062,10 +3063,10 @@
       "require": {
         "types": "./dist/document_loaders/web/taskade.d.cts",
         "default": "./dist/document_loaders/web/taskade.cjs"
-      },
-      "input": "./src/document_loaders/web/taskade.ts"
+      }
     },
     "./document_loaders/web/notionapi": {
+      "input": "./src/document_loaders/web/notionapi.ts",
       "import": {
         "types": "./dist/document_loaders/web/notionapi.d.ts",
         "default": "./dist/document_loaders/web/notionapi.js"
@@ -3073,10 +3074,10 @@
       "require": {
         "types": "./dist/document_loaders/web/notionapi.d.cts",
         "default": "./dist/document_loaders/web/notionapi.cjs"
-      },
-      "input": "./src/document_loaders/web/notionapi.ts"
+      }
     },
     "./document_loaders/web/pdf": {
+      "input": "./src/document_loaders/web/pdf.ts",
       "import": {
         "types": "./dist/document_loaders/web/pdf.d.ts",
         "default": "./dist/document_loaders/web/pdf.js"
@@ -3084,10 +3085,10 @@
       "require": {
         "types": "./dist/document_loaders/web/pdf.d.cts",
         "default": "./dist/document_loaders/web/pdf.cjs"
-      },
-      "input": "./src/document_loaders/web/pdf.ts"
+      }
     },
     "./document_loaders/web/recursive_url": {
+      "input": "./src/document_loaders/web/recursive_url.ts",
       "import": {
         "types": "./dist/document_loaders/web/recursive_url.d.ts",
         "default": "./dist/document_loaders/web/recursive_url.js"
@@ -3095,10 +3096,10 @@
       "require": {
         "types": "./dist/document_loaders/web/recursive_url.d.cts",
         "default": "./dist/document_loaders/web/recursive_url.cjs"
-      },
-      "input": "./src/document_loaders/web/recursive_url.ts"
+      }
     },
     "./document_loaders/web/s3": {
+      "input": "./src/document_loaders/web/s3.ts",
       "import": {
         "types": "./dist/document_loaders/web/s3.d.ts",
         "default": "./dist/document_loaders/web/s3.js"
@@ -3106,10 +3107,10 @@
       "require": {
         "types": "./dist/document_loaders/web/s3.d.cts",
         "default": "./dist/document_loaders/web/s3.cjs"
-      },
-      "input": "./src/document_loaders/web/s3.ts"
+      }
     },
     "./document_loaders/web/sitemap": {
+      "input": "./src/document_loaders/web/sitemap.ts",
       "import": {
         "types": "./dist/document_loaders/web/sitemap.d.ts",
         "default": "./dist/document_loaders/web/sitemap.js"
@@ -3117,10 +3118,10 @@
       "require": {
         "types": "./dist/document_loaders/web/sitemap.d.cts",
         "default": "./dist/document_loaders/web/sitemap.cjs"
-      },
-      "input": "./src/document_loaders/web/sitemap.ts"
+      }
     },
     "./document_loaders/web/sonix_audio": {
+      "input": "./src/document_loaders/web/sonix_audio.ts",
       "import": {
         "types": "./dist/document_loaders/web/sonix_audio.d.ts",
         "default": "./dist/document_loaders/web/sonix_audio.js"
@@ -3128,10 +3129,10 @@
       "require": {
         "types": "./dist/document_loaders/web/sonix_audio.d.cts",
         "default": "./dist/document_loaders/web/sonix_audio.cjs"
-      },
-      "input": "./src/document_loaders/web/sonix_audio.ts"
+      }
     },
     "./document_loaders/web/confluence": {
+      "input": "./src/document_loaders/web/confluence.ts",
       "import": {
         "types": "./dist/document_loaders/web/confluence.d.ts",
         "default": "./dist/document_loaders/web/confluence.js"
@@ -3139,10 +3140,10 @@
       "require": {
         "types": "./dist/document_loaders/web/confluence.d.cts",
         "default": "./dist/document_loaders/web/confluence.cjs"
-      },
-      "input": "./src/document_loaders/web/confluence.ts"
+      }
     },
     "./document_loaders/web/couchbase": {
+      "input": "./src/document_loaders/web/couchbase.ts",
       "import": {
         "types": "./dist/document_loaders/web/couchbase.d.ts",
         "default": "./dist/document_loaders/web/couchbase.js"
@@ -3150,10 +3151,10 @@
       "require": {
         "types": "./dist/document_loaders/web/couchbase.d.cts",
         "default": "./dist/document_loaders/web/couchbase.cjs"
-      },
-      "input": "./src/document_loaders/web/couchbase.ts"
+      }
     },
     "./document_loaders/web/searchapi": {
+      "input": "./src/document_loaders/web/searchapi.ts",
       "import": {
         "types": "./dist/document_loaders/web/searchapi.d.ts",
         "default": "./dist/document_loaders/web/searchapi.js"
@@ -3161,10 +3162,10 @@
       "require": {
         "types": "./dist/document_loaders/web/searchapi.d.cts",
         "default": "./dist/document_loaders/web/searchapi.cjs"
-      },
-      "input": "./src/document_loaders/web/searchapi.ts"
+      }
     },
     "./document_loaders/web/serpapi": {
+      "input": "./src/document_loaders/web/serpapi.ts",
       "import": {
         "types": "./dist/document_loaders/web/serpapi.d.ts",
         "default": "./dist/document_loaders/web/serpapi.js"
@@ -3172,10 +3173,10 @@
       "require": {
         "types": "./dist/document_loaders/web/serpapi.d.cts",
         "default": "./dist/document_loaders/web/serpapi.cjs"
-      },
-      "input": "./src/document_loaders/web/serpapi.ts"
+      }
     },
     "./document_loaders/web/sort_xyz_blockchain": {
+      "input": "./src/document_loaders/web/sort_xyz_blockchain.ts",
       "import": {
         "types": "./dist/document_loaders/web/sort_xyz_blockchain.d.ts",
         "default": "./dist/document_loaders/web/sort_xyz_blockchain.js"
@@ -3183,10 +3184,10 @@
       "require": {
         "types": "./dist/document_loaders/web/sort_xyz_blockchain.d.cts",
         "default": "./dist/document_loaders/web/sort_xyz_blockchain.cjs"
-      },
-      "input": "./src/document_loaders/web/sort_xyz_blockchain.ts"
+      }
     },
     "./document_loaders/web/spider": {
+      "input": "./src/document_loaders/web/spider.ts",
       "import": {
         "types": "./dist/document_loaders/web/spider.d.ts",
         "default": "./dist/document_loaders/web/spider.js"
@@ -3194,10 +3195,10 @@
       "require": {
         "types": "./dist/document_loaders/web/spider.d.cts",
         "default": "./dist/document_loaders/web/spider.cjs"
-      },
-      "input": "./src/document_loaders/web/spider.ts"
+      }
     },
     "./document_loaders/web/youtube": {
+      "input": "./src/document_loaders/web/youtube.ts",
       "import": {
         "types": "./dist/document_loaders/web/youtube.d.ts",
         "default": "./dist/document_loaders/web/youtube.js"
@@ -3205,10 +3206,10 @@
       "require": {
         "types": "./dist/document_loaders/web/youtube.d.cts",
         "default": "./dist/document_loaders/web/youtube.cjs"
-      },
-      "input": "./src/document_loaders/web/youtube.ts"
+      }
     },
     "./document_loaders/fs/chatgpt": {
+      "input": "./src/document_loaders/fs/chatgpt.ts",
       "import": {
         "types": "./dist/document_loaders/fs/chatgpt.d.ts",
         "default": "./dist/document_loaders/fs/chatgpt.js"
@@ -3216,10 +3217,10 @@
       "require": {
         "types": "./dist/document_loaders/fs/chatgpt.d.cts",
         "default": "./dist/document_loaders/fs/chatgpt.cjs"
-      },
-      "input": "./src/document_loaders/fs/chatgpt.ts"
+      }
     },
     "./document_loaders/fs/srt": {
+      "input": "./src/document_loaders/fs/srt.ts",
       "import": {
         "types": "./dist/document_loaders/fs/srt.d.ts",
         "default": "./dist/document_loaders/fs/srt.js"
@@ -3227,10 +3228,10 @@
       "require": {
         "types": "./dist/document_loaders/fs/srt.d.cts",
         "default": "./dist/document_loaders/fs/srt.cjs"
-      },
-      "input": "./src/document_loaders/fs/srt.ts"
+      }
     },
     "./document_loaders/fs/pdf": {
+      "input": "./src/document_loaders/fs/pdf.ts",
       "import": {
         "types": "./dist/document_loaders/fs/pdf.d.ts",
         "default": "./dist/document_loaders/fs/pdf.js"
@@ -3238,10 +3239,10 @@
       "require": {
         "types": "./dist/document_loaders/fs/pdf.d.cts",
         "default": "./dist/document_loaders/fs/pdf.cjs"
-      },
-      "input": "./src/document_loaders/fs/pdf.ts"
+      }
     },
     "./document_loaders/fs/docx": {
+      "input": "./src/document_loaders/fs/docx.ts",
       "import": {
         "types": "./dist/document_loaders/fs/docx.d.ts",
         "default": "./dist/document_loaders/fs/docx.js"
@@ -3249,10 +3250,10 @@
       "require": {
         "types": "./dist/document_loaders/fs/docx.d.cts",
         "default": "./dist/document_loaders/fs/docx.cjs"
-      },
-      "input": "./src/document_loaders/fs/docx.ts"
+      }
     },
     "./document_loaders/fs/epub": {
+      "input": "./src/document_loaders/fs/epub.ts",
       "import": {
         "types": "./dist/document_loaders/fs/epub.d.ts",
         "default": "./dist/document_loaders/fs/epub.js"
@@ -3260,10 +3261,10 @@
       "require": {
         "types": "./dist/document_loaders/fs/epub.d.cts",
         "default": "./dist/document_loaders/fs/epub.cjs"
-      },
-      "input": "./src/document_loaders/fs/epub.ts"
+      }
     },
     "./document_loaders/fs/csv": {
+      "input": "./src/document_loaders/fs/csv.ts",
       "import": {
         "types": "./dist/document_loaders/fs/csv.d.ts",
         "default": "./dist/document_loaders/fs/csv.js"
@@ -3271,10 +3272,10 @@
       "require": {
         "types": "./dist/document_loaders/fs/csv.d.cts",
         "default": "./dist/document_loaders/fs/csv.cjs"
-      },
-      "input": "./src/document_loaders/fs/csv.ts"
+      }
     },
     "./document_loaders/fs/notion": {
+      "input": "./src/document_loaders/fs/notion.ts",
       "import": {
         "types": "./dist/document_loaders/fs/notion.d.ts",
         "default": "./dist/document_loaders/fs/notion.js"
@@ -3282,10 +3283,10 @@
       "require": {
         "types": "./dist/document_loaders/fs/notion.d.cts",
         "default": "./dist/document_loaders/fs/notion.cjs"
-      },
-      "input": "./src/document_loaders/fs/notion.ts"
+      }
     },
     "./document_loaders/fs/obsidian": {
+      "input": "./src/document_loaders/fs/obsidian.ts",
       "import": {
         "types": "./dist/document_loaders/fs/obsidian.d.ts",
         "default": "./dist/document_loaders/fs/obsidian.js"
@@ -3293,10 +3294,10 @@
       "require": {
         "types": "./dist/document_loaders/fs/obsidian.d.cts",
         "default": "./dist/document_loaders/fs/obsidian.cjs"
-      },
-      "input": "./src/document_loaders/fs/obsidian.ts"
+      }
     },
     "./document_loaders/fs/unstructured": {
+      "input": "./src/document_loaders/fs/unstructured.ts",
       "import": {
         "types": "./dist/document_loaders/fs/unstructured.d.ts",
         "default": "./dist/document_loaders/fs/unstructured.js"
@@ -3304,10 +3305,10 @@
       "require": {
         "types": "./dist/document_loaders/fs/unstructured.d.cts",
         "default": "./dist/document_loaders/fs/unstructured.cjs"
-      },
-      "input": "./src/document_loaders/fs/unstructured.ts"
+      }
     },
     "./document_loaders/fs/openai_whisper_audio": {
+      "input": "./src/document_loaders/fs/openai_whisper_audio.ts",
       "import": {
         "types": "./dist/document_loaders/fs/openai_whisper_audio.d.ts",
         "default": "./dist/document_loaders/fs/openai_whisper_audio.js"
@@ -3315,10 +3316,10 @@
       "require": {
         "types": "./dist/document_loaders/fs/openai_whisper_audio.d.cts",
         "default": "./dist/document_loaders/fs/openai_whisper_audio.cjs"
-      },
-      "input": "./src/document_loaders/fs/openai_whisper_audio.ts"
+      }
     },
     "./document_loaders/fs/pptx": {
+      "input": "./src/document_loaders/fs/pptx.ts",
       "import": {
         "types": "./dist/document_loaders/fs/pptx.d.ts",
         "default": "./dist/document_loaders/fs/pptx.js"
@@ -3326,10 +3327,10 @@
       "require": {
         "types": "./dist/document_loaders/fs/pptx.d.cts",
         "default": "./dist/document_loaders/fs/pptx.cjs"
-      },
-      "input": "./src/document_loaders/fs/pptx.ts"
+      }
     },
     "./utils/convex": {
+      "input": "./src/utils/convex.ts",
       "import": {
         "types": "./dist/utils/convex.d.ts",
         "default": "./dist/utils/convex.js"
@@ -3337,10 +3338,10 @@
       "require": {
         "types": "./dist/utils/convex.d.cts",
         "default": "./dist/utils/convex.cjs"
-      },
-      "input": "./src/utils/convex.ts"
+      }
     },
     "./utils/event_source_parse": {
+      "input": "./src/utils/event_source_parse.ts",
       "import": {
         "types": "./dist/utils/event_source_parse.d.ts",
         "default": "./dist/utils/event_source_parse.js"
@@ -3348,10 +3349,10 @@
       "require": {
         "types": "./dist/utils/event_source_parse.d.cts",
         "default": "./dist/utils/event_source_parse.cjs"
-      },
-      "input": "./src/utils/event_source_parse.ts"
+      }
     },
     "./utils/cassandra": {
+      "input": "./src/utils/cassandra.ts",
       "import": {
         "types": "./dist/utils/cassandra.d.ts",
         "default": "./dist/utils/cassandra.js"
@@ -3359,10 +3360,10 @@
       "require": {
         "types": "./dist/utils/cassandra.d.cts",
         "default": "./dist/utils/cassandra.cjs"
-      },
-      "input": "./src/utils/cassandra.ts"
+      }
     },
     "./experimental/callbacks/handlers/datadog": {
+      "input": "./src/experimental/callbacks/handlers/datadog.ts",
       "import": {
         "types": "./dist/experimental/callbacks/handlers/datadog.d.ts",
         "default": "./dist/experimental/callbacks/handlers/datadog.js"
@@ -3370,10 +3371,10 @@
       "require": {
         "types": "./dist/experimental/callbacks/handlers/datadog.d.cts",
         "default": "./dist/experimental/callbacks/handlers/datadog.cjs"
-      },
-      "input": "./src/experimental/callbacks/handlers/datadog.ts"
+      }
     },
     "./experimental/graph_transformers/llm": {
+      "input": "./src/experimental/graph_transformers/llm.ts",
       "import": {
         "types": "./dist/experimental/graph_transformers/llm.d.ts",
         "default": "./dist/experimental/graph_transformers/llm.js"
@@ -3381,10 +3382,10 @@
       "require": {
         "types": "./dist/experimental/graph_transformers/llm.d.cts",
         "default": "./dist/experimental/graph_transformers/llm.cjs"
-      },
-      "input": "./src/experimental/graph_transformers/llm.ts"
+      }
     },
     "./experimental/multimodal_embeddings/googlevertexai": {
+      "input": "./src/experimental/multimodal_embeddings/googlevertexai.ts",
       "import": {
         "types": "./dist/experimental/multimodal_embeddings/googlevertexai.d.ts",
         "default": "./dist/experimental/multimodal_embeddings/googlevertexai.js"
@@ -3392,10 +3393,10 @@
       "require": {
         "types": "./dist/experimental/multimodal_embeddings/googlevertexai.d.cts",
         "default": "./dist/experimental/multimodal_embeddings/googlevertexai.cjs"
-      },
-      "input": "./src/experimental/multimodal_embeddings/googlevertexai.ts"
+      }
     },
     "./experimental/llms/chrome_ai": {
+      "input": "./src/experimental/llms/chrome_ai.ts",
       "import": {
         "types": "./dist/experimental/llms/chrome_ai.d.ts",
         "default": "./dist/experimental/llms/chrome_ai.js"
@@ -3403,10 +3404,10 @@
       "require": {
         "types": "./dist/experimental/llms/chrome_ai.d.cts",
         "default": "./dist/experimental/llms/chrome_ai.cjs"
-      },
-      "input": "./src/experimental/llms/chrome_ai.ts"
+      }
     },
     "./experimental/tools/pyinterpreter": {
+      "input": "./src/experimental/tools/pyinterpreter.ts",
       "import": {
         "types": "./dist/experimental/tools/pyinterpreter.d.ts",
         "default": "./dist/experimental/tools/pyinterpreter.js"
@@ -3414,10 +3415,10 @@
       "require": {
         "types": "./dist/experimental/tools/pyinterpreter.d.cts",
         "default": "./dist/experimental/tools/pyinterpreter.cjs"
-      },
-      "input": "./src/experimental/tools/pyinterpreter.ts"
+      }
     },
     "./chains/graph_qa/cypher": {
+      "input": "./src/chains/graph_qa/cypher.ts",
       "import": {
         "types": "./dist/chains/graph_qa/cypher.d.ts",
         "default": "./dist/chains/graph_qa/cypher.js"
@@ -3425,12 +3426,14 @@
       "require": {
         "types": "./dist/chains/graph_qa/cypher.d.cts",
         "default": "./dist/chains/graph_qa/cypher.cjs"
-      },
-      "input": "./src/chains/graph_qa/cypher.ts"
+      }
     },
     "./package.json": "./package.json"
   },
   "files": [
-    "dist/"
+    "dist/",
+    "CHANGELOG.md",
+    "README.md",
+    "LICENSE"
   ]
 }

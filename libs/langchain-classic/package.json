@@ -1,6 +1,6 @@
 {
   "name": "@langchain/classic",
-  "version": "1.0.0-alpha.1",
+  "version": "1.0.1",
   "description": "Old abstractions form LangChain.js",
   "author": "LangChain",
   "license": "MIT",
@@ -9,7 +9,10 @@
     "node": ">=20"
   },
   "files": [
-    "dist/"
+    "dist/",
+    "CHANGELOG.md",
+    "README.md",
+    "LICENSE"
   ],
   "repository": {
     "type": "git",
@@ -140,7 +143,7 @@
     "zod-to-json-schema": "^3.24.6"
   },
   "peerDependencies": {
-    "@langchain/core": "^1.0.0-alpha.6",
+    "@langchain/core": "^1.0.0",
     "cheerio": "*",
     "peggy": "^3.0.2",
     "typeorm": "*"
@@ -192,6 +195,7 @@
   "types": "./dist/index.d.ts",
   "exports": {
     ".": {
+      "input": "./src/index.ts",
       "import": {
         "types": "./dist/index.d.ts",
         "default": "./dist/index.js"
@@ -199,10 +203,10 @@
       "require": {
         "types": "./dist/index.d.cts",
         "default": "./dist/index.cjs"
-      },
-      "input": "./src/index.ts"
+      }
     },
     "./load": {
+      "input": "./src/load/index.ts",
       "import": {
         "types": "./dist/load/index.d.ts",
         "default": "./dist/load/index.js"
@@ -210,10 +214,10 @@
       "require": {
         "types": "./dist/load/index.d.cts",
         "default": "./dist/load/index.cjs"
-      },
-      "input": "./src/load/index.ts"
+      }
     },
     "./load/serializable": {
+      "input": "./src/load/serializable.ts",
       "import": {
         "types": "./dist/load/serializable.d.ts",
         "default": "./dist/load/serializable.js"
@@ -221,10 +225,10 @@
       "require": {
         "types": "./dist/load/serializable.d.cts",
         "default": "./dist/load/serializable.cjs"
-      },
-      "input": "./src/load/serializable.ts"
+      }
     },
     "./agents": {
+      "input": "./src/agents/index.ts",
       "import": {
         "types": "./dist/agents/index.d.ts",
         "default": "./dist/agents/index.js"
@@ -232,10 +236,10 @@
       "require": {
         "types": "./dist/agents/index.d.cts",
         "default": "./dist/agents/index.cjs"
-      },
-      "input": "./src/agents/index.ts"
+      }
     },
     "./agents/load": {
+      "input": "./src/agents/load.ts",
       "import": {
         "types": "./dist/agents/load.d.ts",
         "default": "./dist/agents/load.js"
@@ -243,10 +247,10 @@
       "require": {
         "types": "./dist/agents/load.d.cts",
         "default": "./dist/agents/load.cjs"
-      },
-      "input": "./src/agents/load.ts"
+      }
     },
     "./agents/toolkits": {
+      "input": "./src/agents/toolkits/index.ts",
       "import": {
         "types": "./dist/agents/toolkits/index.d.ts",
         "default": "./dist/agents/toolkits/index.js"
@@ -254,10 +258,10 @@
       "require": {
         "types": "./dist/agents/toolkits/index.d.cts",
         "default": "./dist/agents/toolkits/index.cjs"
-      },
-      "input": "./src/agents/toolkits/index.ts"
+      }
     },
     "./agents/toolkits/sql": {
+      "input": "./src/agents/toolkits/sql/index.ts",
       "import": {
         "types": "./dist/agents/toolkits/sql/index.d.ts",
         "default": "./dist/agents/toolkits/sql/index.js"
@@ -265,10 +269,10 @@
       "require": {
         "types": "./dist/agents/toolkits/sql/index.d.cts",
         "default": "./dist/agents/toolkits/sql/index.cjs"
-      },
-      "input": "./src/agents/toolkits/sql/index.ts"
+      }
     },
     "./agents/format_scratchpad": {
+      "input": "./src/agents/format_scratchpad/openai_functions.ts",
       "import": {
         "types": "./dist/agents/format_scratchpad/openai_functions.d.ts",
         "default": "./dist/agents/format_scratchpad/openai_functions.js"
@@ -276,10 +280,10 @@
       "require": {
         "types": "./dist/agents/format_scratchpad/openai_functions.d.cts",
         "default": "./dist/agents/format_scratchpad/openai_functions.cjs"
-      },
-      "input": "./src/agents/format_scratchpad/openai_functions.ts"
+      }
     },
     "./agents/format_scratchpad/openai_tools": {
+      "input": "./src/agents/format_scratchpad/openai_tools.ts",
       "import": {
         "types": "./dist/agents/format_scratchpad/openai_tools.d.ts",
         "default": "./dist/agents/format_scratchpad/openai_tools.js"
@@ -287,10 +291,10 @@
       "require": {
         "types": "./dist/agents/format_scratchpad/openai_tools.d.cts",
         "default": "./dist/agents/format_scratchpad/openai_tools.cjs"
-      },
-      "input": "./src/agents/format_scratchpad/openai_tools.ts"
+      }
     },
     "./agents/format_scratchpad/log": {
+      "input": "./src/agents/format_scratchpad/log.ts",
       "import": {
         "types": "./dist/agents/format_scratchpad/log.d.ts",
         "default": "./dist/agents/format_scratchpad/log.js"
@@ -298,10 +302,10 @@
       "require": {
         "types": "./dist/agents/format_scratchpad/log.d.cts",
         "default": "./dist/agents/format_scratchpad/log.cjs"
-      },
-      "input": "./src/agents/format_scratchpad/log.ts"
+      }
     },
     "./agents/format_scratchpad/xml": {
+      "input": "./src/agents/format_scratchpad/xml.ts",
       "import": {
         "types": "./dist/agents/format_scratchpad/xml.d.ts",
         "default": "./dist/agents/format_scratchpad/xml.js"
@@ -309,10 +313,10 @@
       "require": {
         "types": "./dist/agents/format_scratchpad/xml.d.cts",
         "default": "./dist/agents/format_scratchpad/xml.cjs"
-      },
-      "input": "./src/agents/format_scratchpad/xml.ts"
+      }
     },
     "./agents/format_scratchpad/log_to_message": {
+      "input": "./src/agents/format_scratchpad/log_to_message.ts",
       "import": {
         "types": "./dist/agents/format_scratchpad/log_to_message.d.ts",
         "default": "./dist/agents/format_scratchpad/log_to_message.js"
@@ -320,10 +324,10 @@
       "require": {
         "types": "./dist/agents/format_scratchpad/log_to_message.d.cts",
         "default": "./dist/agents/format_scratchpad/log_to_message.cjs"
-      },
-      "input": "./src/agents/format_scratchpad/log_to_message.ts"
+      }
     },
     "./agents/react/output_parser": {
+      "input": "./src/agents/react/output_parser.ts",
       "import": {
         "types": "./dist/agents/react/output_parser.d.ts",
         "default": "./dist/agents/react/output_parser.js"
@@ -331,10 +335,10 @@
       "require": {
         "types": "./dist/agents/react/output_parser.d.cts",
         "default": "./dist/agents/react/output_parser.cjs"
-      },
-      "input": "./src/agents/react/output_parser.ts"
+      }
     },
     "./agents/xml/output_parser": {
+      "input": "./src/agents/xml/output_parser.ts",
       "import": {
         "types": "./dist/agents/xml/output_parser.d.ts",
         "default": "./dist/agents/xml/output_parser.js"
@@ -342,10 +346,10 @@
       "require": {
         "types": "./dist/agents/xml/output_parser.d.cts",
         "default": "./dist/agents/xml/output_parser.cjs"
-      },
-      "input": "./src/agents/xml/output_parser.ts"
+      }
     },
     "./agents/openai/output_parser": {
+      "input": "./src/agents/openai/output_parser.ts",
       "import": {
         "types": "./dist/agents/openai/output_parser.d.ts",
         "default": "./dist/agents/openai/output_parser.js"
@@ -353,10 +357,10 @@
       "require": {
         "types": "./dist/agents/openai/output_parser.d.cts",
         "default": "./dist/agents/openai/output_parser.cjs"
-      },
-      "input": "./src/agents/openai/output_parser.ts"
+      }
     },
     "./tools": {
+      "input": "./src/tools/index.ts",
       "import": {
         "types": "./dist/tools/index.d.ts",
         "default": "./dist/tools/index.js"
@@ -364,10 +368,10 @@
       "require": {
         "types": "./dist/tools/index.d.cts",
         "default": "./dist/tools/index.cjs"
-      },
-      "input": "./src/tools/index.ts"
+      }
     },
     "./tools/chain": {
+      "input": "./src/tools/chain.ts",
       "import": {
         "types": "./dist/tools/chain.d.ts",
         "default": "./dist/tools/chain.js"
@@ -375,10 +379,10 @@
       "require": {
         "types": "./dist/tools/chain.d.cts",
         "default": "./dist/tools/chain.cjs"
-      },
-      "input": "./src/tools/chain.ts"
+      }
     },
     "./tools/render": {
+      "input": "./src/tools/render.ts",
       "import": {
         "types": "./dist/tools/render.d.ts",
         "default": "./dist/tools/render.js"
@@ -386,10 +390,10 @@
       "require": {
         "types": "./dist/tools/render.d.cts",
         "default": "./dist/tools/render.cjs"
-      },
-      "input": "./src/tools/render.ts"
+      }
     },
     "./tools/retriever": {
+      "input": "./src/tools/retriever.ts",
       "import": {
         "types": "./dist/tools/retriever.d.ts",
         "default": "./dist/tools/retriever.js"
@@ -397,10 +401,10 @@
       "require": {
         "types": "./dist/tools/retriever.d.cts",
         "default": "./dist/tools/retriever.cjs"
-      },
-      "input": "./src/tools/retriever.ts"
+      }
     },
     "./tools/sql": {
+      "input": "./src/tools/sql.ts",
       "import": {
         "types": "./dist/tools/sql.d.ts",
         "default": "./dist/tools/sql.js"
@@ -408,10 +412,10 @@
       "require": {
         "types": "./dist/tools/sql.d.cts",
         "default": "./dist/tools/sql.cjs"
-      },
-      "input": "./src/tools/sql.ts"
+      }
     },
     "./tools/webbrowser": {
+      "input": "./src/tools/webbrowser.ts",
       "import": {
         "types": "./dist/tools/webbrowser.d.ts",
         "default": "./dist/tools/webbrowser.js"
@@ -419,10 +423,10 @@
       "require": {
         "types": "./dist/tools/webbrowser.d.cts",
         "default": "./dist/tools/webbrowser.cjs"
-      },
-      "input": "./src/tools/webbrowser.ts"
+      }
     },
     "./chains": {
+      "input": "./src/chains/index.ts",
       "import": {
         "types": "./dist/chains/index.d.ts",
         "default": "./dist/chains/index.js"
@@ -430,10 +434,10 @@
       "require": {
         "types": "./dist/chains/index.d.cts",
         "default": "./dist/chains/index.cjs"
-      },
-      "input": "./src/chains/index.ts"
+      }
     },
     "./chains/combine_documents": {
+      "input": "./src/chains/combine_documents/index.ts",
       "import": {
         "types": "./dist/chains/combine_documents/index.d.ts",
         "default": "./dist/chains/combine_documents/index.js"
@@ -441,10 +445,10 @@
       "require": {
         "types": "./dist/chains/combine_documents/index.d.cts",
         "default": "./dist/chains/combine_documents/index.cjs"
-      },
-      "input": "./src/chains/combine_documents/index.ts"
+      }
     },
     "./chains/combine_documents/reduce": {
+      "input": "./src/chains/combine_documents/reduce.ts",
       "import": {
         "types": "./dist/chains/combine_documents/reduce.d.ts",
         "default": "./dist/chains/combine_documents/reduce.js"
@@ -452,10 +456,10 @@
       "require": {
         "types": "./dist/chains/combine_documents/reduce.d.cts",
         "default": "./dist/chains/combine_documents/reduce.cjs"
-      },
-      "input": "./src/chains/combine_documents/reduce.ts"
+      }
     },
     "./chains/history_aware_retriever": {
+      "input": "./src/chains/history_aware_retriever.ts",
       "import": {
         "types": "./dist/chains/history_aware_retriever.d.ts",
         "default": "./dist/chains/history_aware_retriever.js"
@@ -463,10 +467,10 @@
       "require": {
         "types": "./dist/chains/history_aware_retriever.d.cts",
         "default": "./dist/chains/history_aware_retriever.cjs"
-      },
-      "input": "./src/chains/history_aware_retriever.ts"
+      }
     },
     "./chains/load": {
+      "input": "./src/chains/load.ts",
       "import": {
         "types": "./dist/chains/load.d.ts",
         "default": "./dist/chains/load.js"
@@ -474,10 +478,10 @@
       "require": {
         "types": "./dist/chains/load.d.cts",
         "default": "./dist/chains/load.cjs"
-      },
-      "input": "./src/chains/load.ts"
+      }
     },
     "./chains/openai_functions": {
+      "input": "./src/chains/openai_functions/index.ts",
       "import": {
         "types": "./dist/chains/openai_functions/index.d.ts",
         "default": "./dist/chains/openai_functions/index.js"
@@ -485,10 +489,10 @@
       "require": {
         "types": "./dist/chains/openai_functions/index.d.cts",
         "default": "./dist/chains/openai_functions/index.cjs"
-      },
-      "input": "./src/chains/openai_functions/index.ts"
+      }
     },
     "./chains/query_constructor": {
+      "input": "./src/chains/query_constructor/index.ts",
       "import": {
         "types": "./dist/chains/query_constructor/index.d.ts",
         "default": "./dist/chains/query_constructor/index.js"
@@ -496,10 +500,10 @@
       "require": {
         "types": "./dist/chains/query_constructor/index.d.cts",
         "default": "./dist/chains/query_constructor/index.cjs"
-      },
-      "input": "./src/chains/query_constructor/index.ts"
+      }
     },
     "./chains/query_constructor/ir": {
+      "input": "./src/chains/query_constructor/ir.ts",
       "import": {
         "types": "./dist/chains/query_constructor/ir.d.ts",
         "default": "./dist/chains/query_constructor/ir.js"
@@ -507,10 +511,10 @@
       "require": {
         "types": "./dist/chains/query_constructor/ir.d.cts",
         "default": "./dist/chains/query_constructor/ir.cjs"
-      },
-      "input": "./src/chains/query_constructor/ir.ts"
+      }
     },
     "./chains/retrieval": {
+      "input": "./src/chains/retrieval.ts",
       "import": {
         "types": "./dist/chains/retrieval.d.ts",
         "default": "./dist/chains/retrieval.js"
@@ -518,10 +522,10 @@
       "require": {
         "types": "./dist/chains/retrieval.d.cts",
         "default": "./dist/chains/retrieval.cjs"
-      },
-      "input": "./src/chains/retrieval.ts"
+      }
     },
     "./chains/sql_db": {
+      "input": "./src/chains/sql_db/index.ts",
       "import": {
         "types": "./dist/chains/sql_db/index.d.ts",
         "default": "./dist/chains/sql_db/index.js"
@@ -529,10 +533,10 @@
       "require": {
         "types": "./dist/chains/sql_db/index.d.cts",
         "default": "./dist/chains/sql_db/index.cjs"
-      },
-      "input": "./src/chains/sql_db/index.ts"
+      }
     },
     "./chains/graph_qa/cypher": {
+      "input": "./src/chains/graph_qa/cypher.ts",
       "import": {
         "types": "./dist/chains/graph_qa/cypher.d.ts",
         "default": "./dist/chains/graph_qa/cypher.js"
@@ -540,10 +544,10 @@
       "require": {
         "types": "./dist/chains/graph_qa/cypher.d.cts",
         "default": "./dist/chains/graph_qa/cypher.cjs"
-      },
-      "input": "./src/chains/graph_qa/cypher.ts"
+      }
     },
     "./chat_models/universal": {
+      "input": "./src/chat_models/universal.ts",
       "import": {
         "types": "./dist/chat_models/universal.d.ts",
         "default": "./dist/chat_models/universal.js"
@@ -551,10 +555,10 @@
       "require": {
         "types": "./dist/chat_models/universal.d.cts",
         "default": "./dist/chat_models/universal.cjs"
-      },
-      "input": "./src/chat_models/universal.ts"
+      }
     },
     "./embeddings/cache_backed": {
+      "input": "./src/embeddings/cache_backed.ts",
       "import": {
         "types": "./dist/embeddings/cache_backed.d.ts",
         "default": "./dist/embeddings/cache_backed.js"
@@ -562,10 +566,10 @@
       "require": {
         "types": "./dist/embeddings/cache_backed.d.cts",
         "default": "./dist/embeddings/cache_backed.cjs"
-      },
-      "input": "./src/embeddings/cache_backed.ts"
+      }
     },
     "./embeddings/fake": {
+      "input": "./src/embeddings/fake.ts",
       "import": {
         "types": "./dist/embeddings/fake.d.ts",
         "default": "./dist/embeddings/fake.js"
@@ -573,10 +577,10 @@
       "require": {
         "types": "./dist/embeddings/fake.d.cts",
         "default": "./dist/embeddings/fake.cjs"
-      },
-      "input": "./src/embeddings/fake.ts"
+      }
     },
     "./vectorstores/memory": {
+      "input": "./src/vectorstores/memory.ts",
       "import": {
         "types": "./dist/vectorstores/memory.d.ts",
         "default": "./dist/vectorstores/memory.js"
@@ -584,10 +588,10 @@
       "require": {
         "types": "./dist/vectorstores/memory.d.cts",
         "default": "./dist/vectorstores/memory.cjs"
-      },
-      "input": "./src/vectorstores/memory.ts"
+      }
     },
     "./text_splitter": {
+      "input": "./src/text_splitter.ts",
       "import": {
         "types": "./dist/text_splitter.d.ts",
         "default": "./dist/text_splitter.js"
@@ -595,10 +599,10 @@
       "require": {
         "types": "./dist/text_splitter.d.cts",
         "default": "./dist/text_splitter.cjs"
-      },
-      "input": "./src/text_splitter.ts"
+      }
     },
     "./memory": {
+      "input": "./src/memory/index.ts",
       "import": {
         "types": "./dist/memory/index.d.ts",
         "default": "./dist/memory/index.js"
@@ -606,10 +610,10 @@
       "require": {
         "types": "./dist/memory/index.d.cts",
         "default": "./dist/memory/index.cjs"
-      },
-      "input": "./src/memory/index.ts"
+      }
     },
     "./memory/chat_memory": {
+      "input": "./src/memory/chat_memory.ts",
       "import": {
         "types": "./dist/memory/chat_memory.d.ts",
         "default": "./dist/memory/chat_memory.js"
@@ -617,10 +621,10 @@
       "require": {
         "types": "./dist/memory/chat_memory.d.cts",
         "default": "./dist/memory/chat_memory.cjs"
-      },
-      "input": "./src/memory/chat_memory.ts"
+      }
     },
     "./document": {
+      "input": "./src/document.ts",
       "import": {
         "types": "./dist/document.d.ts",
         "default": "./dist/document.js"
@@ -628,10 +632,10 @@
       "require": {
         "types": "./dist/document.d.cts",
         "default": "./dist/document.cjs"
-      },
-      "input": "./src/document.ts"
+      }
     },
     "./document_loaders/base": {
+      "input": "./src/document_loaders/base.ts",
       "import": {
         "types": "./dist/document_loaders/base.d.ts",
         "default": "./dist/document_loaders/base.js"
@@ -639,10 +643,10 @@
       "require": {
         "types": "./dist/document_loaders/base.d.cts",
         "default": "./dist/document_loaders/base.cjs"
-      },
-      "input": "./src/document_loaders/base.ts"
+      }
     },
     "./document_loaders/fs/buffer": {
+      "input": "./src/document_loaders/fs/buffer.ts",
       "import": {
         "types": "./dist/document_loaders/fs/buffer.d.ts",
         "default": "./dist/document_loaders/fs/buffer.js"
@@ -650,10 +654,10 @@
       "require": {
         "types": "./dist/document_loaders/fs/buffer.d.cts",
         "default": "./dist/document_loaders/fs/buffer.cjs"
-      },
-      "input": "./src/document_loaders/fs/buffer.ts"
+      }
     },
     "./document_loaders/fs/directory": {
+      "input": "./src/document_loaders/fs/directory.ts",
       "import": {
         "types": "./dist/document_loaders/fs/directory.d.ts",
         "default": "./dist/document_loaders/fs/directory.js"
@@ -661,10 +665,10 @@
       "require": {
         "types": "./dist/document_loaders/fs/directory.d.cts",
         "default": "./dist/document_loaders/fs/directory.cjs"
-      },
-      "input": "./src/document_loaders/fs/directory.ts"
+      }
     },
     "./document_loaders/fs/json": {
+      "input": "./src/document_loaders/fs/json.ts",
       "import": {
         "types": "./dist/document_loaders/fs/json.d.ts",
         "default": "./dist/document_loaders/fs/json.js"
@@ -672,10 +676,10 @@
       "require": {
         "types": "./dist/document_loaders/fs/json.d.cts",
         "default": "./dist/document_loaders/fs/json.cjs"
-      },
-      "input": "./src/document_loaders/fs/json.ts"
+      }
     },
     "./document_loaders/fs/multi_file": {
+      "input": "./src/document_loaders/fs/multi_file.ts",
       "import": {
         "types": "./dist/document_loaders/fs/multi_file.d.ts",
         "default": "./dist/document_loaders/fs/multi_file.js"
@@ -683,10 +687,10 @@
       "require": {
         "types": "./dist/document_loaders/fs/multi_file.d.cts",
         "default": "./dist/document_loaders/fs/multi_file.cjs"
-      },
-      "input": "./src/document_loaders/fs/multi_file.ts"
+      }
     },
     "./document_loaders/fs/text": {
+      "input": "./src/document_loaders/fs/text.ts",
       "import": {
         "types": "./dist/document_loaders/fs/text.d.ts",
         "default": "./dist/document_loaders/fs/text.js"
@@ -694,10 +698,10 @@
       "require": {
         "types": "./dist/document_loaders/fs/text.d.cts",
         "default": "./dist/document_loaders/fs/text.cjs"
-      },
-      "input": "./src/document_loaders/fs/text.ts"
+      }
     },
     "./document_transformers/openai_functions": {
+      "input": "./src/document_transformers/openai_functions.ts",
       "import": {
         "types": "./dist/document_transformers/openai_functions.d.ts",
         "default": "./dist/document_transformers/openai_functions.js"
@@ -705,10 +709,10 @@
       "require": {
         "types": "./dist/document_transformers/openai_functions.d.cts",
         "default": "./dist/document_transformers/openai_functions.cjs"
-      },
-      "input": "./src/document_transformers/openai_functions.ts"
+      }
     },
     "./sql_db": {
+      "input": "./src/sql_db.ts",
       "import": {
         "types": "./dist/sql_db.d.ts",
         "default": "./dist/sql_db.js"
@@ -716,10 +720,10 @@
       "require": {
         "types": "./dist/sql_db.d.cts",
         "default": "./dist/sql_db.cjs"
-      },
-      "input": "./src/sql_db.ts"
+      }
     },
     "./callbacks": {
+      "input": "./src/callbacks/index.ts",
       "import": {
         "types": "./dist/callbacks/index.d.ts",
         "default": "./dist/callbacks/index.js"
@@ -727,10 +731,10 @@
       "require": {
         "types": "./dist/callbacks/index.d.cts",
         "default": "./dist/callbacks/index.cjs"
-      },
-      "input": "./src/callbacks/index.ts"
+      }
     },
     "./output_parsers": {
+      "input": "./src/output_parsers/index.ts",
       "import": {
         "types": "./dist/output_parsers/index.d.ts",
         "default": "./dist/output_parsers/index.js"
@@ -738,10 +742,10 @@
       "require": {
         "types": "./dist/output_parsers/index.d.cts",
         "default": "./dist/output_parsers/index.cjs"
-      },
-      "input": "./src/output_parsers/index.ts"
+      }
     },
     "./output_parsers/expression": {
+      "input": "./src/output_parsers/expression.ts",
       "import": {
         "types": "./dist/output_parsers/expression.d.ts",
         "default": "./dist/output_parsers/expression.js"
@@ -749,10 +753,10 @@
       "require": {
         "types": "./dist/output_parsers/expression.d.cts",
         "default": "./dist/output_parsers/expression.cjs"
-      },
-      "input": "./src/output_parsers/expression.ts"
+      }
     },
     "./retrievers/contextual_compression": {
+      "input": "./src/retrievers/contextual_compression.ts",
       "import": {
         "types": "./dist/retrievers/contextual_compression.d.ts",
         "default": "./dist/retrievers/contextual_compression.js"
@@ -760,10 +764,10 @@
       "require": {
         "types": "./dist/retrievers/contextual_compression.d.cts",
         "default": "./dist/retrievers/contextual_compression.cjs"
-      },
-      "input": "./src/retrievers/contextual_compression.ts"
+      }
     },
     "./retrievers/document_compressors": {
+      "input": "./src/retrievers/document_compressors/index.ts",
       "import": {
         "types": "./dist/retrievers/document_compressors/index.d.ts",
         "default": "./dist/retrievers/document_compressors/index.js"
@@ -771,10 +775,10 @@
       "require": {
         "types": "./dist/retrievers/document_compressors/index.d.cts",
         "default": "./dist/retrievers/document_compressors/index.cjs"
-      },
-      "input": "./src/retrievers/document_compressors/index.ts"
+      }
     },
     "./retrievers/ensemble": {
+      "input": "./src/retrievers/ensemble.ts",
       "import": {
         "types": "./dist/retrievers/ensemble.d.ts",
         "default": "./dist/retrievers/ensemble.js"
@@ -782,10 +786,10 @@
       "require": {
         "types": "./dist/retrievers/ensemble.d.cts",
         "default": "./dist/retrievers/ensemble.cjs"
-      },
-      "input": "./src/retrievers/ensemble.ts"
+      }
     },
     "./retrievers/multi_query": {
+      "input": "./src/retrievers/multi_query.ts",
       "import": {
         "types": "./dist/retrievers/multi_query.d.ts",
         "default": "./dist/retrievers/multi_query.js"
@@ -793,10 +797,10 @@
       "require": {
         "types": "./dist/retrievers/multi_query.d.cts",
         "default": "./dist/retrievers/multi_query.cjs"
-      },
-      "input": "./src/retrievers/multi_query.ts"
+      }
     },
     "./retrievers/multi_vector": {
+      "input": "./src/retrievers/multi_vector.ts",
       "import": {
         "types": "./dist/retrievers/multi_vector.d.ts",
         "default": "./dist/retrievers/multi_vector.js"
@@ -804,10 +808,10 @@
       "require": {
         "types": "./dist/retrievers/multi_vector.d.cts",
         "default": "./dist/retrievers/multi_vector.cjs"
-      },
-      "input": "./src/retrievers/multi_vector.ts"
+      }
     },
     "./retrievers/parent_document": {
+      "input": "./src/retrievers/parent_document.ts",
       "import": {
         "types": "./dist/retrievers/parent_document.d.ts",
         "default": "./dist/retrievers/parent_document.js"
@@ -815,10 +819,10 @@
       "require": {
         "types": "./dist/retrievers/parent_document.d.cts",
         "default": "./dist/retrievers/parent_document.cjs"
-      },
-      "input": "./src/retrievers/parent_document.ts"
+      }
     },
     "./retrievers/time_weighted": {
+      "input": "./src/retrievers/time_weighted.ts",
       "import": {
         "types": "./dist/retrievers/time_weighted.d.ts",
         "default": "./dist/retrievers/time_weighted.js"
@@ -826,10 +830,10 @@
       "require": {
         "types": "./dist/retrievers/time_weighted.d.cts",
         "default": "./dist/retrievers/time_weighted.cjs"
-      },
-      "input": "./src/retrievers/time_weighted.ts"
+      }
     },
     "./retrievers/document_compressors/chain_extract": {
+      "input": "./src/retrievers/document_compressors/chain_extract.ts",
       "import": {
         "types": "./dist/retrievers/document_compressors/chain_extract.d.ts",
         "default": "./dist/retrievers/document_compressors/chain_extract.js"
@@ -837,10 +841,10 @@
       "require": {
         "types": "./dist/retrievers/document_compressors/chain_extract.d.cts",
         "default": "./dist/retrievers/document_compressors/chain_extract.cjs"
-      },
-      "input": "./src/retrievers/document_compressors/chain_extract.ts"
+      }
     },
     "./retrievers/document_compressors/embeddings_filter": {
+      "input": "./src/retrievers/document_compressors/embeddings_filter.ts",
       "import": {
         "types": "./dist/retrievers/document_compressors/embeddings_filter.d.ts",
         "default": "./dist/retrievers/document_compressors/embeddings_filter.js"
@@ -848,10 +852,10 @@
       "require": {
         "types": "./dist/retrievers/document_compressors/embeddings_filter.d.cts",
         "default": "./dist/retrievers/document_compressors/embeddings_filter.cjs"
-      },
-      "input": "./src/retrievers/document_compressors/embeddings_filter.ts"
+      }
     },
     "./retrievers/hyde": {
+      "input": "./src/retrievers/hyde.ts",
       "import": {
         "types": "./dist/retrievers/hyde.d.ts",
         "default": "./dist/retrievers/hyde.js"
@@ -859,10 +863,10 @@
       "require": {
         "types": "./dist/retrievers/hyde.d.cts",
         "default": "./dist/retrievers/hyde.cjs"
-      },
-      "input": "./src/retrievers/hyde.ts"
+      }
     },
     "./retrievers/score_threshold": {
+      "input": "./src/retrievers/score_threshold.ts",
       "import": {
         "types": "./dist/retrievers/score_threshold.d.ts",
         "default": "./dist/retrievers/score_threshold.js"
@@ -870,10 +874,10 @@
       "require": {
         "types": "./dist/retrievers/score_threshold.d.cts",
         "default": "./dist/retrievers/score_threshold.cjs"
-      },
-      "input": "./src/retrievers/score_threshold.ts"
+      }
     },
     "./retrievers/self_query": {
+      "input": "./src/retrievers/self_query/index.ts",
       "import": {
         "types": "./dist/retrievers/self_query/index.d.ts",
         "default": "./dist/retrievers/self_query/index.js"
@@ -881,10 +885,10 @@
       "require": {
         "types": "./dist/retrievers/self_query/index.d.cts",
         "default": "./dist/retrievers/self_query/index.cjs"
-      },
-      "input": "./src/retrievers/self_query/index.ts"
+      }
     },
     "./retrievers/self_query/functional": {
+      "input": "./src/retrievers/self_query/functional.ts",
       "import": {
         "types": "./dist/retrievers/self_query/functional.d.ts",
         "default": "./dist/retrievers/self_query/functional.js"
@@ -892,10 +896,10 @@
       "require": {
         "types": "./dist/retrievers/self_query/functional.d.cts",
         "default": "./dist/retrievers/self_query/functional.cjs"
-      },
-      "input": "./src/retrievers/self_query/functional.ts"
+      }
     },
     "./retrievers/matryoshka_retriever": {
+      "input": "./src/retrievers/matryoshka_retriever.ts",
       "import": {
         "types": "./dist/retrievers/matryoshka_retriever.d.ts",
         "default": "./dist/retrievers/matryoshka_retriever.js"
@@ -903,10 +907,10 @@
       "require": {
         "types": "./dist/retrievers/matryoshka_retriever.d.cts",
         "default": "./dist/retrievers/matryoshka_retriever.cjs"
-      },
-      "input": "./src/retrievers/matryoshka_retriever.ts"
+      }
     },
     "./cache/file_system": {
+      "input": "./src/cache/file_system.ts",
       "import": {
         "types": "./dist/cache/file_system.d.ts",
         "default": "./dist/cache/file_system.js"
@@ -914,10 +918,10 @@
       "require": {
         "types": "./dist/cache/file_system.d.cts",
         "default": "./dist/cache/file_system.cjs"
-      },
-      "input": "./src/cache/file_system.ts"
+      }
     },
     "./stores/doc/base": {
+      "input": "./src/stores/doc/base.ts",
       "import": {
         "types": "./dist/stores/doc/base.d.ts",
         "default": "./dist/stores/doc/base.js"
@@ -925,10 +929,10 @@
       "require": {
         "types": "./dist/stores/doc/base.d.cts",
         "default": "./dist/stores/doc/base.cjs"
-      },
-      "input": "./src/stores/doc/base.ts"
+      }
     },
     "./stores/doc/in_memory": {
+      "input": "./src/stores/doc/in_memory.ts",
       "import": {
         "types": "./dist/stores/doc/in_memory.d.ts",
         "default": "./dist/stores/doc/in_memory.js"
@@ -936,10 +940,10 @@
       "require": {
         "types": "./dist/stores/doc/in_memory.d.cts",
         "default": "./dist/stores/doc/in_memory.cjs"
-      },
-      "input": "./src/stores/doc/in_memory.ts"
+      }
     },
     "./stores/file/in_memory": {
+      "input": "./src/stores/file/in_memory.ts",
       "import": {
         "types": "./dist/stores/file/in_memory.d.ts",
         "default": "./dist/stores/file/in_memory.js"
@@ -947,10 +951,10 @@
       "require": {
         "types": "./dist/stores/file/in_memory.d.cts",
         "default": "./dist/stores/file/in_memory.cjs"
-      },
-      "input": "./src/stores/file/in_memory.ts"
+      }
     },
     "./stores/file/node": {
+      "input": "./src/stores/file/node.ts",
       "import": {
         "types": "./dist/stores/file/node.d.ts",
         "default": "./dist/stores/file/node.js"
@@ -958,10 +962,10 @@
       "require": {
         "types": "./dist/stores/file/node.d.cts",
         "default": "./dist/stores/file/node.cjs"
-      },
-      "input": "./src/stores/file/node.ts"
+      }
     },
     "./stores/message/in_memory": {
+      "input": "./src/stores/message/in_memory.ts",
       "import": {
         "types": "./dist/stores/message/in_memory.d.ts",
         "default": "./dist/stores/message/in_memory.js"
@@ -969,10 +973,10 @@
       "require": {
         "types": "./dist/stores/message/in_memory.d.cts",
         "default": "./dist/stores/message/in_memory.cjs"
-      },
-      "input": "./src/stores/message/in_memory.ts"
+      }
     },
     "./storage/encoder_backed": {
+      "input": "./src/storage/encoder_backed.ts",
       "import": {
         "types": "./dist/storage/encoder_backed.d.ts",
         "default": "./dist/storage/encoder_backed.js"
@@ -980,10 +984,10 @@
       "require": {
         "types": "./dist/storage/encoder_backed.d.cts",
         "default": "./dist/storage/encoder_backed.cjs"
-      },
-      "input": "./src/storage/encoder_backed.ts"
+      }
     },
     "./storage/in_memory": {
+      "input": "./src/storage/in_memory.ts",
       "import": {
         "types": "./dist/storage/in_memory.d.ts",
         "default": "./dist/storage/in_memory.js"
@@ -991,10 +995,10 @@
       "require": {
         "types": "./dist/storage/in_memory.d.cts",
         "default": "./dist/storage/in_memory.cjs"
-      },
-      "input": "./src/storage/in_memory.ts"
+      }
     },
     "./storage/file_system": {
+      "input": "./src/storage/file_system.ts",
       "import": {
         "types": "./dist/storage/file_system.d.ts",
         "default": "./dist/storage/file_system.js"
@@ -1002,10 +1006,10 @@
       "require": {
         "types": "./dist/storage/file_system.d.cts",
         "default": "./dist/storage/file_system.cjs"
-      },
-      "input": "./src/storage/file_system.ts"
+      }
     },
     "./hub": {
+      "input": "./src/hub/index.ts",
       "import": {
         "types": "./dist/hub/index.d.ts",
         "default": "./dist/hub/index.js"
@@ -1013,10 +1017,10 @@
       "require": {
         "types": "./dist/hub/index.d.cts",
         "default": "./dist/hub/index.cjs"
-      },
-      "input": "./src/hub/index.ts"
+      }
     },
     "./hub/node": {
+      "input": "./src/hub/node.ts",
       "import": {
         "types": "./dist/hub/node.d.ts",
         "default": "./dist/hub/node.js"
@@ -1024,10 +1028,10 @@
       "require": {
         "types": "./dist/hub/node.d.cts",
         "default": "./dist/hub/node.cjs"
-      },
-      "input": "./src/hub/node.ts"
+      }
     },
     "./util/document": {
+      "input": "./src/util/document.ts",
       "import": {
         "types": "./dist/util/document.d.ts",
         "default": "./dist/util/document.js"
@@ -1035,10 +1039,10 @@
       "require": {
         "types": "./dist/util/document.d.cts",
         "default": "./dist/util/document.cjs"
-      },
-      "input": "./src/util/document.ts"
+      }
     },
     "./util/math": {
+      "input": "./src/util/math.ts",
       "import": {
         "types": "./dist/util/math.d.ts",
         "default": "./dist/util/math.js"
@@ -1046,10 +1050,10 @@
       "require": {
         "types": "./dist/util/math.d.cts",
         "default": "./dist/util/math.cjs"
-      },
-      "input": "./src/util/math.ts"
+      }
     },
     "./util/time": {
+      "input": "./src/util/time.ts",
       "import": {
         "types": "./dist/util/time.d.ts",
         "default": "./dist/util/time.js"
@@ -1057,10 +1061,10 @@
       "require": {
         "types": "./dist/util/time.d.cts",
         "default": "./dist/util/time.cjs"
-      },
-      "input": "./src/util/time.ts"
+      }
     },
     "./experimental/autogpt": {
+      "input": "./src/experimental/autogpt/index.ts",
       "import": {
         "types": "./dist/experimental/autogpt/index.d.ts",
         "default": "./dist/experimental/autogpt/index.js"
@@ -1068,10 +1072,10 @@
       "require": {
         "types": "./dist/experimental/autogpt/index.d.cts",
         "default": "./dist/experimental/autogpt/index.cjs"
-      },
-      "input": "./src/experimental/autogpt/index.ts"
+      }
     },
     "./experimental/openai_assistant": {
+      "input": "./src/experimental/openai_assistant/index.ts",
       "import": {
         "types": "./dist/experimental/openai_assistant/index.d.ts",
         "default": "./dist/experimental/openai_assistant/index.js"
@@ -1079,10 +1083,10 @@
       "require": {
         "types": "./dist/experimental/openai_assistant/index.d.cts",
         "default": "./dist/experimental/openai_assistant/index.cjs"
-      },
-      "input": "./src/experimental/openai_assistant/index.ts"
+      }
     },
     "./experimental/openai_files": {
+      "input": "./src/experimental/openai_files/index.ts",
       "import": {
         "types": "./dist/experimental/openai_files/index.d.ts",
         "default": "./dist/experimental/openai_files/index.js"
@@ -1090,10 +1094,10 @@
       "require": {
         "types": "./dist/experimental/openai_files/index.d.cts",
         "default": "./dist/experimental/openai_files/index.cjs"
-      },
-      "input": "./src/experimental/openai_files/index.ts"
+      }
     },
     "./experimental/babyagi": {
+      "input": "./src/experimental/babyagi/index.ts",
       "import": {
         "types": "./dist/experimental/babyagi/index.d.ts",
         "default": "./dist/experimental/babyagi/index.js"
@@ -1101,10 +1105,10 @@
       "require": {
         "types": "./dist/experimental/babyagi/index.d.cts",
         "default": "./dist/experimental/babyagi/index.cjs"
-      },
-      "input": "./src/experimental/babyagi/index.ts"
+      }
     },
     "./experimental/generative_agents": {
+      "input": "./src/experimental/generative_agents/index.ts",
       "import": {
         "types": "./dist/experimental/generative_agents/index.d.ts",
         "default": "./dist/experimental/generative_agents/index.js"
@@ -1112,10 +1116,10 @@
       "require": {
         "types": "./dist/experimental/generative_agents/index.d.cts",
         "default": "./dist/experimental/generative_agents/index.cjs"
-      },
-      "input": "./src/experimental/generative_agents/index.ts"
+      }
     },
     "./experimental/plan_and_execute": {
+      "input": "./src/experimental/plan_and_execute/index.ts",
       "import": {
         "types": "./dist/experimental/plan_and_execute/index.d.ts",
         "default": "./dist/experimental/plan_and_execute/index.js"
@@ -1123,10 +1127,10 @@
       "require": {
         "types": "./dist/experimental/plan_and_execute/index.d.cts",
         "default": "./dist/experimental/plan_and_execute/index.cjs"
-      },
-      "input": "./src/experimental/plan_and_execute/index.ts"
+      }
     },
     "./experimental/chains/violation_of_expectations": {
+      "input": "./src/experimental/chains/violation_of_expectations/index.ts",
       "import": {
         "types": "./dist/experimental/chains/violation_of_expectations/index.d.ts",
         "default": "./dist/experimental/chains/violation_of_expectations/index.js"
@@ -1134,10 +1138,10 @@
       "require": {
         "types": "./dist/experimental/chains/violation_of_expectations/index.d.cts",
         "default": "./dist/experimental/chains/violation_of_expectations/index.cjs"
-      },
-      "input": "./src/experimental/chains/violation_of_expectations/index.ts"
+      }
     },
     "./experimental/masking": {
+      "input": "./src/experimental/masking/index.ts",
       "import": {
         "types": "./dist/experimental/masking/index.d.ts",
         "default": "./dist/experimental/masking/index.js"
@@ -1145,10 +1149,10 @@
       "require": {
         "types": "./dist/experimental/masking/index.d.cts",
         "default": "./dist/experimental/masking/index.cjs"
-      },
-      "input": "./src/experimental/masking/index.ts"
+      }
     },
     "./experimental/prompts/custom_format": {
+      "input": "./src/experimental/prompts/custom_format.ts",
       "import": {
         "types": "./dist/experimental/prompts/custom_format.d.ts",
         "default": "./dist/experimental/prompts/custom_format.js"
@@ -1156,10 +1160,10 @@
       "require": {
         "types": "./dist/experimental/prompts/custom_format.d.cts",
         "default": "./dist/experimental/prompts/custom_format.cjs"
-      },
-      "input": "./src/experimental/prompts/custom_format.ts"
+      }
     },
     "./experimental/prompts/handlebars": {
+      "input": "./src/experimental/prompts/handlebars.ts",
       "import": {
         "types": "./dist/experimental/prompts/handlebars.d.ts",
         "default": "./dist/experimental/prompts/handlebars.js"
@@ -1167,10 +1171,10 @@
       "require": {
         "types": "./dist/experimental/prompts/handlebars.d.cts",
         "default": "./dist/experimental/prompts/handlebars.cjs"
-      },
-      "input": "./src/experimental/prompts/handlebars.ts"
+      }
     },
     "./evaluation": {
+      "input": "./src/evaluation/index.ts",
       "import": {
         "types": "./dist/evaluation/index.d.ts",
         "default": "./dist/evaluation/index.js"
@@ -1178,10 +1182,10 @@
       "require": {
         "types": "./dist/evaluation/index.d.cts",
         "default": "./dist/evaluation/index.cjs"
-      },
-      "input": "./src/evaluation/index.ts"
+      }
     },
     "./smith": {
+      "input": "./src/smith/index.ts",
       "import": {
         "types": "./dist/smith/index.d.ts",
         "default": "./dist/smith/index.js"
@@ -1189,10 +1193,10 @@
       "require": {
         "types": "./dist/smith/index.d.cts",
         "default": "./dist/smith/index.cjs"
-      },
-      "input": "./src/smith/index.ts"
+      }
     },
     "./indexes": {
+      "input": "./src/indexes/index.ts",
       "import": {
         "types": "./dist/indexes/index.d.ts",
         "default": "./dist/indexes/index.js"
@@ -1200,10 +1204,10 @@
       "require": {
         "types": "./dist/indexes/index.d.cts",
         "default": "./dist/indexes/index.cjs"
-      },
-      "input": "./src/indexes/index.ts"
+      }
     },
     "./schema/query_constructor": {
+      "input": "./src/schema/query_constructor.ts",
       "import": {
         "types": "./dist/schema/query_constructor.d.ts",
         "default": "./dist/schema/query_constructor.js"
@@ -1211,10 +1215,10 @@
       "require": {
         "types": "./dist/schema/query_constructor.d.cts",
         "default": "./dist/schema/query_constructor.cjs"
-      },
-      "input": "./src/schema/query_constructor.ts"
+      }
     },
     "./schema/prompt_template": {
+      "input": "./src/schema/prompt_template.ts",
       "import": {
         "types": "./dist/schema/prompt_template.d.ts",
         "default": "./dist/schema/prompt_template.js"
@@ -1222,8 +1226,7 @@
       "require": {
         "types": "./dist/schema/prompt_template.d.cts",
         "default": "./dist/schema/prompt_template.cjs"
-      },
-      "input": "./src/schema/prompt_template.ts"
+      }
     },
     "./package.json": "./package.json"
   }

@@ -1,6 +1,6 @@
 {
   "name": "@langchain/mcp-adapters",
-  "version": "0.6.0",
+  "version": "1.0.0",
   "description": "LangChain.js adapters for Model Context Protocol (MCP)",
   "author": "LangChain",
   "license": "MIT",
@@ -42,8 +42,8 @@
     "zod": "^3.25.76 || ^4"
   },
   "peerDependencies": {
-    "@langchain/core": "^1.0.0-alpha.6",
-    "@langchain/langgraph": "^1.0.0-alpha.6"
+    "@langchain/core": "^1.0.0",
+    "@langchain/langgraph": "^1.0.0"
   },
   "peerDependenciesMeta": {
     "@langchain/core": {
@@ -60,7 +60,7 @@
     "@eslint/js": "^9.36.0",
     "@langchain/core": "workspace:*",
     "@langchain/eslint": "workspace:*",
-    "@langchain/langgraph": "next",
+    "@langchain/langgraph": "^1.0.0",
     "@langchain/openai": "workspace:*",
     "@tsconfig/recommended": "^1.0.10",
     "@types/debug": "^4.1.12",
@@ -91,6 +91,7 @@
   "types": "dist/index.d.ts",
   "exports": {
     ".": {
+      "input": "./src/index.ts",
       "import": {
         "types": "./dist/index.d.ts",
         "default": "./dist/index.js"
@@ -98,12 +99,14 @@
       "require": {
         "types": "./dist/index.d.cts",
         "default": "./dist/index.cjs"
-      },
-      "input": "./src/index.ts"
+      }
     },
     "./package.json": "./package.json"
   },
   "files": [
-    "dist/"
+    "dist/",
+    "CHANGELOG.md",
+    "README.md",
+    "LICENSE"
   ]
 }

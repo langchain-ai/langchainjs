@@ -101,7 +101,7 @@ describe("middleware", () => {
     const agent = createAgent({
       model,
       tools: [],
-      middleware: [middlewareA, middlewareB, middlewareC] as const,
+      middleware: [middlewareA, middlewareB, middlewareC],
     });
 
     const result = await agent.invoke(initialState);
@@ -160,7 +160,7 @@ describe("middleware", () => {
         customContext: z.string(),
         customContext2: z.number().default(42),
       }),
-      middleware: [middleware] as const,
+      middleware: [middleware],
     });
 
     await agent.invoke(
@@ -199,7 +199,7 @@ describe("middleware", () => {
             }),
           }),
         ],
-        middleware: [middleware] as const,
+        middleware: [middleware],
       });
       await expect(
         agent.invoke({
@@ -233,7 +233,7 @@ describe("middleware", () => {
             }),
           }),
         ],
-        middleware: [middleware] as const,
+        middleware: [middleware],
       });
       await expect(
         agent.invoke({
@@ -259,7 +259,7 @@ describe("middleware", () => {
       const agent = createAgent({
         model,
         tools: [],
-        middleware: [middleware] as const,
+        middleware: [middleware],
       });
       await expect(
         agent.invoke({ messages: [new HumanMessage("Hello, world!")] })
@@ -286,7 +286,7 @@ describe("middleware", () => {
       const agent = createAgent({
         model,
         tools: [],
-        middleware: [middleware] as const,
+        middleware: [middleware],
       });
       await expect(
         agent.invoke({ messages: [new HumanMessage("Hello, world!")] })
@@ -313,7 +313,7 @@ describe("middleware", () => {
       const agent = createAgent({
         model,
         tools: [],
-        middleware: [middleware] as const,
+        middleware: [middleware],
       });
       await expect(
         agent.invoke({ messages: [new HumanMessage("Hello, world!")] })
@@ -437,7 +437,7 @@ describe("middleware", () => {
         model,
         tools: [],
         systemPrompt: "You are helpful",
-        middleware: [authMiddleware, retryMiddleware, cacheMiddleware] as const,
+        middleware: [authMiddleware, retryMiddleware, cacheMiddleware],
       });
 
       const result = await agent.invoke({
@@ -536,7 +536,7 @@ describe("middleware", () => {
       const agent = createAgent({
         model,
         tools: [],
-        middleware: [inspectorMiddleware] as const,
+        middleware: [inspectorMiddleware],
         contextSchema: z.object({
           globalContext: z.number(),
         }),
@@ -699,7 +699,7 @@ describe("middleware", () => {
       const agent = createAgent({
         model,
         systemPrompt: "You are helpful",
-        middleware: [modifyingMiddleware] as const,
+        middleware: [modifyingMiddleware],
       });
 
       const result = await agent.invoke({
@@ -723,7 +723,7 @@ describe("middleware", () => {
       const agent = createAgent({
         model,
         systemPrompt: "You are helpful",
-        middleware: [modifyingMiddleware] as const,
+        middleware: [modifyingMiddleware],
       });
 
       await expect(
@@ -749,7 +749,7 @@ describe("middleware", () => {
       const agent = createAgent({
         model,
         systemPrompt: "You are helpful",
-        middleware: [modifyingMiddleware] as const,
+        middleware: [modifyingMiddleware],
       });
 
       await expect(
@@ -1048,7 +1048,7 @@ describe("middleware", () => {
       const agent = createAgent({
         model,
         tools: [weatherTool],
-        middleware: [loggingMiddleware] as const,
+        middleware: [loggingMiddleware],
       });
 
       const result = await agent.invoke(
@@ -1409,7 +1409,7 @@ describe("middleware", () => {
       const agent = createAgent({
         model,
         tools: [tool1, tool2],
-        middleware: [trackingMiddleware] as const,
+        middleware: [trackingMiddleware],
       });
 
       await agent.invoke({
@@ -2024,7 +2024,7 @@ describe("middleware", () => {
       const agent = createAgent({
         model,
         tools: [],
-        middleware: [middleware] as const,
+        middleware: [middleware],
       });
 
       const result = await agent.invoke({
@@ -2127,7 +2127,7 @@ describe("middleware", () => {
       const agent = createAgent({
         model,
         tools: [],
-        middleware: [middleware1, middleware2] as const,
+        middleware: [middleware1, middleware2],
       });
 
       const result = await agent.invoke({
@@ -2327,7 +2327,7 @@ describe("middleware", () => {
       const agent = createAgent({
         model,
         tools: [],
-        middleware: [middleware] as const,
+        middleware: [middleware],
       });
 
       const result = await agent.invoke({
@@ -2353,7 +2353,7 @@ describe("middleware", () => {
       const agent = createAgent({
         model,
         tools: [],
-        middleware: [middleware] as const,
+        middleware: [middleware],
       });
 
       await agent.invoke({

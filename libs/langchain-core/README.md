@@ -72,27 +72,10 @@ leigh
 Note that for compatibility, all used LangChain packages (including the base LangChain package, which itself depends on core!) must share the same version of `@langchain/core`.
 This means that you may need to install/resolve a specific version of `@langchain/core` that matches the dependencies of your used packages.
 
-## 📕 Releases & Versioning
-
-`@langchain/core` is currently on version `0.3.x`.
-
-As `@langchain/core` contains the base abstractions and runtime for the whole LangChain ecosystem, we will communicate any breaking changes with advance notice and version bumps. The exception for this is anything in `@langchain/core/beta`. The reason for `@langchain/core/beta` is that given the rate of change of the field, being able to move quickly is still a priority, and this module is our attempt to do so.
-
-Minor version increases will occur for:
-
-- Breaking changes for any public interfaces NOT in `@langchain/core/beta`
-
-Patch version increases will occur for:
-
-- Bug fixes
-- New features
-- Any changes to private interfaces
-- Any changes to `@langchain/core/beta`
-
 ## 📦 Creating your own package
 
 Other LangChain packages should add this package as a dependency and extend the classes within.
-For an example, see the [@langchain/anthropic](https://github.com/langchain-ai/langchainjs/tree/main/libs/langchain-anthropic) in this repo.
+For an example, see the [@langchain/anthropic](https://github.com/langchain-ai/langchainjs/tree/main/libs/providers/langchain-anthropic) in this repo.
 
 Because all used packages must share the same version of core, packages should never directly depend on `@langchain/core`. Instead they should have core as a peer dependency and a dev dependency. We suggest using a tilde dependency to allow for different (backwards-compatible) patch versions:
 
@@ -116,12 +99,8 @@ Because all used packages must share the same version of core, packages should n
 }
 ```
 
-This recommendation will change to a caret once a major version (1.x.x) release has occurred.
-
 We suggest making all packages cross-compatible with ESM and CJS using a build step like the one in
-[@langchain/anthropic](https://github.com/langchain-ai/langchainjs/tree/main/libs/langchain-anthropic), then running `pnpm build` before running `npm publish`.
-
-We will be exploring how to make this process easier in the future.
+[@langchain/anthropic](https://github.com/langchain-ai/langchainjs/tree/main/libs/providers/langchain-anthropic), then running `pnpm build` before running `npm publish`.
 
 ## 💁 Contributing
 

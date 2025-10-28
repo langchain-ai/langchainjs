@@ -21,7 +21,7 @@ describe("afterAgent hook", () => {
     });
     const agent = createAgent({
       model: "openai:gpt-4o-mini",
-      middleware: [structuredOutputMiddleware] as const,
+      middleware: [structuredOutputMiddleware],
       responseFormat: z.object({
         name: z.string(),
         age: z.number(),
