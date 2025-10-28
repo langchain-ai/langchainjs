@@ -4,16 +4,16 @@
   "trailingSlash": true,
   "rewrites": [
     {
-      "source": "/v0.1/:path*",
-      "destination": "https://langchainjs-v01.vercel.app/v0.1/:path*"
+      "source": "/v0.1{/*path}",
+      "destination": "https://langchainjs-v01.vercel.app/v0.1{/*path}"
     },
     {
-      "source": "/v0.2/:path*",
-      "destination": "https://langchainjs-v02.vercel.app/v0.2/:path*"
+      "source": "/v0.2{/*path}",
+      "destination": "https://langchainjs-v02.vercel.app/v0.2{/*path}"
     },
     {
-      "source": "/v0.3/:path*",
-      "destination": "https://langchainjs-v03.vercel.app/v0.3/:path*"
+      "source": "/v0.3{/*path}",
+      "destination": "https://langchainjs-v03.vercel.app/v0.3{/*path}"
     }
   ],
   "redirects": [
@@ -54,7 +54,7 @@
       "destination": "https://docs.langchain.com/oss/javascript/langchain/long-term-memory"
     },
     {
-      "source": "/docs/integrations/chat_memory/:path*",
+      "source": "/docs/integrations/chat_memory{/*path}",
       "destination": "https://docs.langchain.com/oss/javascript/langchain/long-term-memory"
     },
     {
