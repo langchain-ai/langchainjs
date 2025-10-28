@@ -7,6 +7,7 @@ import { z } from "zod";
 import { createMiddleware } from "../middleware.js";
 import type { ClientTool, ServerTool } from "../tools.js";
 import type { AgentMiddleware } from "./types.js";
+import { sleep } from "./utils.js";
 
 /**
  * Calculate delay for a retry attempt with exponential backoff and jitter.
@@ -366,11 +367,4 @@ export function toolRetryMiddleware(
       throw new Error("Unexpected: retry loop completed without returning");
     },
   });
-}
-
-/**
- * Sleep for the specified number of milliseconds.
- */
-function sleep(ms: number): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, ms));
 }
