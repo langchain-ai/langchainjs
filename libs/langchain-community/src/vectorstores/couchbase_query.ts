@@ -1,4 +1,3 @@
-/* eslint-disable no-param-reassign */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable import/no-extraneous-dependencies */
 import { EmbeddingsInterface } from "@langchain/core/embeddings";
@@ -190,7 +189,7 @@ export class CouchbaseQueryVectorStore extends VectorStore {
       store._collection = store._scope.collection(store.collectionName);
     } catch (err) {
       throw new Error(
-        "Error connecting to couchbase, Please check connection and credentials"
+        `Error connecting to couchbase, Please check connection and credentials. ${err}`
       );
     }
 

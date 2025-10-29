@@ -1,5 +1,4 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable no-process-env */
 import {
   describe,
   test,
@@ -130,7 +129,10 @@ describe.skip("CouchbaseQueryVectorStore", () => {
       try {
         await cluster.buckets().flushBucket(config.bucketName);
       } catch (error: any) {
-        console.warn("Could not flush bucket during aterAll cleanup:", error.message);
+        console.warn(
+          "Could not flush bucket during aterAll cleanup:",
+          error.message
+        );
       }
       await cluster.close();
     }
