@@ -39,8 +39,10 @@ import {
   type ChatOpenAIResponseFormat,
   ResponseFormatConfiguration,
   OpenAIVerbosityParam,
+  type OpenAIApiKey,
 } from "../types.js";
 import { type OpenAIEndpointConfig, getEndpoint } from "../utils/azure.js";
+import { resolveOpenAIApiKey } from "../utils/client.js";
 import {
   type FunctionDef,
   formatFunctionDefinitions,
@@ -245,7 +247,7 @@ export abstract class BaseChatOpenAI<
 
   topLogprobs?: number;
 
-  apiKey?: string;
+  apiKey?: OpenAIApiKey;
 
   organization?: string;
 
@@ -419,10 +421,7 @@ export abstract class BaseChatOpenAI<
   constructor(fields?: BaseChatOpenAIFields) {
     super(fields ?? {});
 
-    const configApiKey =
-      typeof fields?.configuration?.apiKey === "string"
-        ? fields?.configuration?.apiKey
-        : undefined;
+    const configApiKey = fields?.configuration?.apiKey;
     this.apiKey =
       fields?.apiKey ??
       configApiKey ??
@@ -463,12 +462,19 @@ export abstract class BaseChatOpenAI<
     this.streamUsage = fields?.streamUsage ?? this.streamUsage;
     if (this.disableStreaming) this.streamUsage = false;
 
-    this.clientConfig = {
-      apiKey: this.apiKey,
-      organization: this.organization,
+    const clientConfig: ClientOptions = {
       dangerouslyAllowBrowser: true,
       ...fields?.configuration,
+      organization: this.organization,
     };
+
+    if (typeof this.apiKey === "string") {
+      clientConfig.apiKey = this.apiKey;
+    } else {
+      clientConfig.apiKey = undefined;
+    }
+
+    this.clientConfig = clientConfig;
 
     // If `supportsStrictToolCalling` is explicitly set, use that value.
     // Else leave undefined so it's not passed to OpenAI.
@@ -546,31 +552,45 @@ export abstract class BaseChatOpenAI<
   }
 
   /** @internal */
-  _getClientOptions(
+  protected async _getClientOptions(
     options: OpenAICoreRequestOptions | undefined
-  ): OpenAICoreRequestOptions {
+  ): Promise<OpenAICoreRequestOptions> {
+    const resolvedApiKey = await resolveOpenAIApiKey(this.apiKey);
+
     if (!this.client) {
       const openAIEndpointConfig: OpenAIEndpointConfig = {
         baseURL: this.clientConfig.baseURL,
       };
 
       const endpoint = getEndpoint(openAIEndpointConfig);
-      const params = {
+
+      const params: ClientOptions = {
         ...this.clientConfig,
         baseURL: endpoint,
         timeout: this.timeout,
         maxRetries: 0,
       };
+
+      if (resolvedApiKey !== undefined) {
+        params.apiKey = resolvedApiKey;
+      } else if (typeof this.clientConfig.apiKey === "string") {
+        params.apiKey = this.clientConfig.apiKey;
+      }
+
       if (!params.baseURL) {
         delete params.baseURL;
       }
 
       this.client = new OpenAIClient(params);
+    } else if (resolvedApiKey !== undefined) {
+      this.client.apiKey = resolvedApiKey;
     }
+
     const requestOptions = {
       ...this.clientConfig,
       ...options,
     } as OpenAICoreRequestOptions;
+
     return requestOptions;
   }
 

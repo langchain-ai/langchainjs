@@ -24,6 +24,8 @@ export type OpenAIChatModelId =
 
 export type OpenAIVerbosityParam = "low" | "medium" | "high" | null;
 
+export type OpenAIApiKey = string | (() => string | Promise<string>);
+
 export declare interface OpenAIBaseInput {
   /** Sampling temperature to use */
   temperature: number;
@@ -103,12 +105,12 @@ export declare interface OpenAIBaseInput {
    * `OPENAI_API_KEY` environment variable.
    * Alias for `apiKey`
    */
-  openAIApiKey?: string;
+  openAIApiKey?: OpenAIApiKey;
   /**
    * API key to use when making requests to OpenAI. Defaults to the value of
    * `OPENAI_API_KEY` environment variable.
    */
-  apiKey?: string;
+  apiKey?: OpenAIApiKey;
 
   /**
    * The verbosity of the model's response.

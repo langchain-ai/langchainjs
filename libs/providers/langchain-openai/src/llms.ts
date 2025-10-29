@@ -10,12 +10,13 @@ import {
 } from "@langchain/core/language_models/llms";
 import { chunkArray } from "@langchain/core/utils/chunk_array";
 import type {
+  OpenAIApiKey,
   OpenAICallOptions,
   OpenAICoreRequestOptions,
   OpenAIInput,
 } from "./types.js";
 import { OpenAIEndpointConfig, getEndpoint } from "./utils/azure.js";
-import { wrapOpenAIClientError } from "./utils/client.js";
+import { resolveOpenAIApiKey, wrapOpenAIClientError } from "./utils/client.js";
 
 export type { OpenAICallOptions, OpenAIInput };
 
@@ -121,9 +122,9 @@ export class OpenAI<CallOptions extends OpenAICallOptions = OpenAICallOptions>
 
   streaming = false;
 
-  openAIApiKey?: string;
+  openAIApiKey?: OpenAIApiKey;
 
-  apiKey?: string;
+  apiKey?: OpenAIApiKey;
 
   organization?: string;
 
@@ -191,12 +192,19 @@ export class OpenAI<CallOptions extends OpenAICallOptions = OpenAICallOptions>
       throw new Error("Cannot stream results when bestOf > 1");
     }
 
-    this.clientConfig = {
-      apiKey: this.apiKey,
-      organization: this.organization,
+    const clientConfig: ClientOptions = {
       dangerouslyAllowBrowser: true,
       ...fields?.configuration,
+      organization: this.organization,
     };
+
+    if (typeof this.apiKey === "string") {
+      clientConfig.apiKey = this.apiKey;
+    } else {
+      clientConfig.apiKey = undefined;
+    }
+
+    this.clientConfig = clientConfig;
   }
 
   /**
@@ -438,7 +446,7 @@ export class OpenAI<CallOptions extends OpenAICallOptions = OpenAICallOptions>
   ): Promise<
     AsyncIterable<OpenAIClient.Completion> | OpenAIClient.Completions.Completion
   > {
-    const requestOptions = this._getClientOptions(options);
+    const requestOptions = await this._getClientOptions(options);
     return this.caller.call(async () => {
       try {
         const res = await this.client.completions.create(
@@ -459,9 +467,11 @@ export class OpenAI<CallOptions extends OpenAICallOptions = OpenAICallOptions>
    * @param options Optional configuration for the API call.
    * @returns The response from the OpenAI API.
    */
-  protected _getClientOptions(
+  protected async _getClientOptions(
     options: OpenAICoreRequestOptions | undefined
-  ): OpenAICoreRequestOptions {
+  ): Promise<OpenAICoreRequestOptions> {
+    const resolvedApiKey = await resolveOpenAIApiKey(this.apiKey);
+
     if (!this.client) {
       const openAIEndpointConfig: OpenAIEndpointConfig = {
         baseURL: this.clientConfig.baseURL,
@@ -469,23 +479,33 @@ export class OpenAI<CallOptions extends OpenAICallOptions = OpenAICallOptions>
 
       const endpoint = getEndpoint(openAIEndpointConfig);
 
-      const params = {
+      const params: ClientOptions = {
         ...this.clientConfig,
         baseURL: endpoint,
         timeout: this.timeout,
         maxRetries: 0,
       };
 
+      if (resolvedApiKey !== undefined) {
+        params.apiKey = resolvedApiKey;
+      } else if (typeof this.clientConfig.apiKey === "string") {
+        params.apiKey = this.clientConfig.apiKey;
+      }
+
       if (!params.baseURL) {
         delete params.baseURL;
       }
 
       this.client = new OpenAIClient(params);
+    } else if (resolvedApiKey !== undefined) {
+      this.client.apiKey = resolvedApiKey;
     }
+
     const requestOptions = {
       ...this.clientConfig,
       ...options,
     } as OpenAICoreRequestOptions;
+
     return requestOptions;
   }
 

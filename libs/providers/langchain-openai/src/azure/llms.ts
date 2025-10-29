@@ -98,9 +98,9 @@ export class AzureOpenAI extends OpenAI {
     }
   }
 
-  protected _getClientOptions(
+  protected async _getClientOptions(
     options: OpenAICoreRequestOptions | undefined
-  ): OpenAICoreRequestOptions {
+  ): Promise<OpenAICoreRequestOptions> {
     if (!this.client) {
       const openAIEndpointConfig: OpenAIEndpointConfig = {
         azureOpenAIApiDeploymentName: this.azureOpenAIApiDeploymentName,

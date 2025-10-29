@@ -2,8 +2,9 @@ import { type ClientOptions, OpenAI as OpenAIClient } from "openai";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import { Embeddings, type EmbeddingsParams } from "@langchain/core/embeddings";
 import { chunkArray } from "@langchain/core/utils/chunk_array";
+import type { OpenAIApiKey } from "./types.js";
 import { getEndpoint, OpenAIEndpointConfig } from "./utils/azure.js";
-import { wrapOpenAIClientError } from "./utils/client.js";
+import { resolveOpenAIApiKey, wrapOpenAIClientError } from "./utils/client.js";
 
 /**
  * @see https://platform.openai.com/docs/guides/embeddings#embedding-models
@@ -102,6 +103,8 @@ export class OpenAIEmbeddings<TOutput = number[]>
 
   protected clientConfig: ClientOptions;
 
+  protected apiKey?: OpenAIApiKey;
+
   constructor(
     fields?: Partial<OpenAIEmbeddingsParams> & {
       verbose?: boolean;
@@ -109,9 +112,9 @@ export class OpenAIEmbeddings<TOutput = number[]>
        * The OpenAI API key to use.
        * Alias for `apiKey`.
        */
-      openAIApiKey?: string;
+      openAIApiKey?: OpenAIApiKey;
       /** The OpenAI API key to use. */
-      apiKey?: string;
+      apiKey?: OpenAIApiKey;
       configuration?: ClientOptions;
     }
   ) {
@@ -123,6 +126,8 @@ export class OpenAIEmbeddings<TOutput = number[]>
       fieldsWithDefaults?.apiKey ??
       fieldsWithDefaults?.openAIApiKey ??
       getEnvironmentVariable("OPENAI_API_KEY");
+
+    this.apiKey = apiKey;
 
     this.organization =
       fieldsWithDefaults?.configuration?.organization ??
@@ -138,12 +143,19 @@ export class OpenAIEmbeddings<TOutput = number[]>
     this.dimensions = fieldsWithDefaults?.dimensions;
     this.encodingFormat = fieldsWithDefaults?.encodingFormat;
 
-    this.clientConfig = {
-      apiKey,
-      organization: this.organization,
+    const clientConfig: ClientOptions = {
       dangerouslyAllowBrowser: true,
       ...fields?.configuration,
+      organization: this.organization,
     };
+
+    if (typeof apiKey === "string") {
+      clientConfig.apiKey = apiKey;
+    } else {
+      clientConfig.apiKey = undefined;
+    }
+
+    this.clientConfig = clientConfig;
   }
 
   /**
@@ -216,6 +228,8 @@ export class OpenAIEmbeddings<TOutput = number[]>
   protected async embeddingWithRetry(
     request: OpenAIClient.EmbeddingCreateParams
   ) {
+    const resolvedApiKey = await resolveOpenAIApiKey(this.apiKey);
+
     if (!this.client) {
       const openAIEndpointConfig: OpenAIEndpointConfig = {
         baseURL: this.clientConfig.baseURL,
@@ -223,18 +237,26 @@ export class OpenAIEmbeddings<TOutput = number[]>
 
       const endpoint = getEndpoint(openAIEndpointConfig);
 
-      const params = {
+      const params: ClientOptions = {
         ...this.clientConfig,
         baseURL: endpoint,
         timeout: this.timeout,
         maxRetries: 0,
       };
 
+      if (resolvedApiKey !== undefined) {
+        params.apiKey = resolvedApiKey;
+      } else if (typeof this.clientConfig.apiKey === "string") {
+        params.apiKey = this.clientConfig.apiKey;
+      }
+
       if (!params.baseURL) {
         delete params.baseURL;
       }
 
       this.client = new OpenAIClient(params);
+    } else if (resolvedApiKey !== undefined) {
+      this.client.apiKey = resolvedApiKey;
     }
     const requestOptions = {};
 
