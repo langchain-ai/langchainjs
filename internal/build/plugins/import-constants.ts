@@ -6,7 +6,7 @@ import type { PackageJson } from "type-fest";
 
 import { formatWithPrettier } from "../utils.js";
 
-interface ImportConstantsPluginOptions {
+export interface ImportConstantsPluginOptions {
   /**
    * Whether to enable import constants generation
    * @default true
@@ -18,16 +18,6 @@ interface ImportConstantsPluginOptions {
    * @default "load/import_constants.ts"
    */
   outputPath?: string;
-
-  /**
-   * Path to the package
-   */
-  packagePath: string;
-
-  /**
-   * Package path to read package.json from
-   */
-  packageInfo: PackageJson;
 
   /**
    * List of entrypoints that require optional dependencies
@@ -63,14 +53,14 @@ interface ImportConstantsPluginOptions {
  * 5. **Updates** the file only when entrypoints change to avoid unnecessary rebuilds
  */
 export function importConstantsPlugin(
-  options: ImportConstantsPluginOptions
+  options: ImportConstantsPluginOptions = {}
 ): Plugin {
   const opts = {
     enabled: true,
     outputPath: "load/import_constants.ts",
     deprecatedNodeOnly: [],
     ...options,
-  } as Required<ImportConstantsPluginOptions>;
+  };
 
   return {
     name: "import-constants",
@@ -84,25 +74,29 @@ export function importConstantsPlugin(
        * - enabled is true
        * - outputOptions.format is es so we only run during ESM build
        */
-      if (!opts.enabled || outputOptions.format !== "es") {
+      const format = outputOptions.format;
+      const isEsmBuild =
+        format === "es" || (Array.isArray(format) && format.includes("es"));
+
+      if (!opts.enabled || !isEsmBuild) {
         return;
       }
 
       try {
+        // Read package.json from current working directory
+        const packagePath = process.cwd();
+        const packageJsonPath = resolve(packagePath, "package.json");
+        const packageInfo = JSON.parse(
+          fs.readFileSync(packageJsonPath, "utf-8")
+        ) as PackageJson;
+
         // Generate import constants
-        const optionalEntrypoints = getOptionalEntrypoints(
-          opts.packageInfo,
-          opts
-        );
+        const optionalEntrypoints = getOptionalEntrypoints(packageInfo, opts);
         if (optionalEntrypoints.length > 0) {
           console.log(
             `📋 Found ${optionalEntrypoints.length} optional entrypoints`
           );
-          await generateImportConstants(
-            opts.packagePath,
-            optionalEntrypoints,
-            opts
-          );
+          await generateImportConstants(packagePath, optionalEntrypoints, opts);
         }
       } catch (error) {
         console.warn("⚠️ Import constants generation failed:", error);
@@ -148,10 +142,15 @@ function getOptionalEntrypoints(
 async function generateImportConstants(
   packagePath: string,
   optionalEntrypoints: string[],
-  opts: Required<ImportConstantsPluginOptions>
+  opts: ImportConstantsPluginOptions
 ): Promise<void> {
-  const packageSuffix = opts.packageInfo.name!.split("/")[1] || "";
-  const outputPath = resolve(packagePath, "src", opts.outputPath);
+  // Read package.json to get package name
+  const packageJsonPath = resolve(packagePath, "package.json");
+  const packageInfo = JSON.parse(
+    fs.readFileSync(packageJsonPath, "utf-8")
+  ) as PackageJson;
+  const packageSuffix = packageInfo.name!.split("/")[1] || "";
+  const outputPath = resolve(packagePath, "src", opts.outputPath!);
 
   // Ensure directory exists
   fs.mkdirSync(resolve(packagePath, "src", "load"), { recursive: true });

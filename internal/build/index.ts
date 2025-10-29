@@ -1,186 +1,126 @@
-import { resolve, extname } from "node:path";
-import { fileURLToPath } from "node:url";
+import fs from "node:fs";
+import { resolve } from "node:path";
+import { Options as BuildOptions } from "tsdown";
+import { type PackageJson } from "type-fest";
+import { extname } from "node:path";
+import { barrelDtsPlugin } from "./plugins/barrel-dts";
 
-import { build, type Format, type AttwOptions } from "tsdown";
-import type { PackageJson } from "type-fest";
-import type { Options as UnusedOptions } from "unplugin-unused";
+export {
+  type ImportConstantsPluginOptions,
+  importConstantsPlugin,
+} from "./plugins/import-constants";
+export {
+  type ImportMapPluginOptions,
+  importMapPlugin,
+} from "./plugins/import-map";
+export {
+  type SecretPluginOptions,
+  lcSecretsPlugin,
+} from "./plugins/lc-secrets";
+export {
+  type BarrelDtsPluginOptions,
+  barrelDtsPlugin,
+} from "./plugins/barrel-dts";
 
-import { lcSecretsPlugin } from "./plugins/lc-secrets.js";
-import { importConstantsPlugin } from "./plugins/import-constants.js";
-import { importMapPlugin } from "./plugins/import-map.js";
-import { findWorkspacePackages } from "./utils.js";
-import {
-  extraImportMapEntries,
-  optionalEntrypoints,
-  deprecatedOmitFromImportMap,
-} from "./constants.js";
-import type { CompilePackageOptions } from "./types.js";
-
-const __dirname = fileURLToPath(import.meta.url);
-const root = resolve(__dirname, "..", "..", "..");
-
-export async function compilePackages(opts: CompilePackageOptions) {
-  const packages = await findWorkspacePackages(root, opts);
-  if (packages.length === 0) {
-    const query = opts.packageQuery
-      ? `matching "${opts.packageQuery}"`
-      : "with no package query";
-    throw new Error(`No packages found ${query}!`);
+/**
+ * Extracts entry point paths from a package.json exports field.
+ * Filters out entries with file extensions and returns only the input paths.
+ */
+export function getPackageEntrypoints(pkg: PackageJson): string[] {
+  if (!pkg.exports) {
+    return [];
   }
 
-  await Promise.all(
-    packages.map(({ pkg, path }) => buildProject(path, pkg, opts))
-  );
+  const exportEntries = Object.entries(pkg.exports).filter(
+    ([exportPath]) => !extname(exportPath)
+  ) as [string, PackageJson.ExportConditions][];
+
+  const entrypoints = exportEntries
+    .map(([, conditions]) => conditions.input)
+    .filter(Boolean) as string[];
+
+  return entrypoints;
 }
 
-async function buildProject(
-  path: string,
-  pkg: PackageJson,
-  opts: CompilePackageOptions
-) {
-  const input = Object.entries(pkg.exports || {}).filter(
-    ([exp]) => !extname(exp)
-  ) as [string, PackageJson.ExportConditions][];
-  const entry = input.map(([, { input }]) => input).filter(Boolean) as string[];
-  const watch = opts.watch ?? false;
-  const sourcemap = !opts.skipSourcemap;
-  const exportsCJS = Object.values(pkg.exports || {}).some(
-    (exp) => typeof exp === "object" && exp && "require" in exp
-  );
-  const format: Format[] = exportsCJS ? ["esm", "cjs"] : ["esm"];
+/**
+ * Creates a standardized tsdown build configuration for LangChain packages.
+ *
+ * This function generates a build configuration with sensible defaults for building
+ * LangChain packages, including:
+ * - Dual format output (CommonJS and ESM)
+ * - TypeScript declaration files
+ * - Source maps
+ * - Validation via ATTW, publint, and unused exports checking
+ *
+ * @param options - Optional partial build options to override defaults
+ * @returns A complete tsdown build configuration object
+ *
+ * @example
+ * ```ts
+ * import { defineConfig } from "tsdown";
+ * import { getBuildConfig } from "@langchain/build";
+ *
+ * export default defineConfig(getBuildConfig());
+ * ```
+ *
+ * @example
+ * ```ts
+ * import { defineConfig } from "tsdown";
+ * import { getBuildConfig } from "@langchain/build";
+ *
+ * export default defineConfig(
+ *   getBuildConfig({
+ *     plugins: [myCustomPlugin()],
+ *   })
+ * );
+ * ```
+ */
+export function getBuildConfig(options?: Partial<BuildOptions>): BuildOptions {
+  // Read package.json from current working directory
+  const packagePath = process.cwd();
+  const packageJsonPath = resolve(packagePath, "package.json");
+  const pkg = JSON.parse(
+    fs.readFileSync(packageJsonPath, "utf-8")
+  ) as PackageJson;
 
-  /**
-   * don't clean if we:
-   * - user passes `--skipClean` or
-   * - have watch mode enabled (it would confuse the IDE due to missing type for a short moment)
-   * - if `--noEmit` is enabled (we don't want to clean previous builds if we're not emitting anything)
-   */
-  const clean = !opts.skipClean && !watch && !opts.noEmit;
+  const pluginOption = Array.isArray(options?.plugins)
+    ? options.plugins
+    : [options?.plugins];
 
-  /**
-   * generate type declarations if not disabled
-   */
-  const dts = !opts.noEmit
-    ? {
-        parallel: true,
-        cwd: path,
-        sourcemap,
-        tsgo: true,
-      }
-    : false;
-
-  /**
-   * if there are no entrypoints, skip the package
-   */
-  if (entry.length === 0) {
-    return;
-  }
-
-  /**
-   * build checks to run, automatically disabled if watch is enabled
-   */
-  const buildChecks = {
-    unused:
-      !watch && !opts.skipUnused
-        ? ({
-            root: path,
-            level: "error" as const,
-          } as UnusedOptions)
-        : false,
-    attw: {
-      profile: exportsCJS ? "node16" : "esmOnly",
-      level: "error",
-    } as AttwOptions,
-    /**
-     * skip publint if:
-     * - watch is enabled, to avoid running publint on every change
-     * - noEmit is enabled, as not emitting types fails this check
-     */
-    publint:
-      !watch && !opts.noEmit
-        ? ({
-            pkgDir: path,
-            level: "error" as const,
-            strict: true,
-          } as const)
-        : false,
-  };
-
-  /**
-   * plugins for serialization, automatically disabled if:
-   * - watch is enabled or
-   * - packages doesn't export a an "./load" entrypoint
-   */
-  const hasSerializationFeature =
-    typeof pkg.exports === "object" &&
-    !Array.isArray(pkg.exports) &&
-    pkg.exports?.["./load"];
-  const plugins =
-    !watch && hasSerializationFeature
-      ? [
-          lcSecretsPlugin({
-            // Enable/disable based on environment
-            enabled: process.env.SKIP_SECRET_SCANNING !== "true",
-            // Use lenient validation in development
-            strict: process.env.NODE_ENV === "production",
-            // package path for the secret map
-            packagePath: path,
-          }),
-          importConstantsPlugin({
-            // Enable/disable based on environment
-            enabled: process.env.SKIP_IMPORT_CONSTANTS !== "true",
-            // package path for reading package.json
-            packagePath: path,
-            // package info for reading package.json
-            packageInfo: pkg,
-            // Add optional entrypoints for langchain package
-            optionalEntrypoints: optionalEntrypoints[pkg.name!] || [],
-          }),
-          importMapPlugin({
-            // Enable/disable based on environment
-            enabled: process.env.SKIP_IMPORT_MAP !== "true",
-            // package path for the import map
-            packagePath: path,
-            // package info for reading entrypoints
-            packageInfo: pkg,
-            // Add extra import map entries for langchain package
-            extraImportMapEntries: extraImportMapEntries[pkg.name!] || [],
-            // Exclude deprecated entrypoints from import map
-            // or imports that would cause circular dependencies
-            deprecatedOmitFromImportMap:
-              deprecatedOmitFromImportMap[pkg.name!] || [],
-          }),
-        ]
-      : [];
-
-  await build({
-    entry,
-    clean,
-    cwd: path,
-    dts,
-    sourcemap,
-    unbundle: true,
-    platform: "node",
+  return {
+    entry: getPackageEntrypoints(pkg),
+    format: ["cjs", "esm"],
     target: "es2022",
-    outDir: "./dist",
-    format,
-    watch,
-    tsconfig: resolve(path, opts.tsconfigPath ?? "tsconfig.json"),
-    ignoreWatch: [
-      `${path}/.turbo`,
-      `${path}/dist`,
-      `${path}/node_modules`,
-      /**
-       * ignore files that are generated by the plugins
-       */
-      `${path}/src/load/import_constants.ts`,
-      `${path}/src/load/import_map.ts`,
-      `${path}/src/load/import_type.ts`,
-    ],
-    inputOptions: {
-      cwd: path,
+    platform: "node",
+    dts: true,
+    sourcemap: true,
+    unbundle: true,
+    attw: {
+      profile: "node16",
+      level: "error",
     },
-    plugins,
-    ...buildChecks,
-  });
+    publint: {
+      level: "error",
+      strict: true,
+    },
+    unused: {
+      level: "error",
+    },
+    ignoreWatch: [
+      `.turbo`,
+      `dist`,
+      `node_modules`,
+      // ignore files that are generated by plugins
+      `src/load/import_constants.ts`,
+      `src/load/import_map.ts`,
+      `src/load/import_type.ts`,
+    ],
+    plugins: [
+      ...pluginOption,
+      barrelDtsPlugin({
+        updatePackageJson: true,
+        additionalFiles: ["dist/", "CHANGELOG.md", "README.md", "LICENSE"],
+      }),
+    ],
+  };
 }

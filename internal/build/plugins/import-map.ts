@@ -12,7 +12,7 @@ interface ExtraImportMapEntry {
   path: string;
 }
 
-interface ImportMapPluginOptions {
+export interface ImportMapPluginOptions {
   /**
    * Whether to enable import map generation
    * @default true
@@ -24,16 +24,6 @@ interface ImportMapPluginOptions {
    * @default "load/import_map.ts"
    */
   outputPath?: string;
-
-  /**
-   * Path to the package
-   */
-  packagePath: string;
-
-  /**
-   * Package info for reading entrypoints
-   */
-  packageInfo: PackageJson;
 
   /**
    * List of entrypoints that are deprecated and node-only
@@ -84,7 +74,7 @@ interface ImportMapPluginOptions {
  * 4. **Handles** extra import map entries with complex import/export patterns
  * 5. **Generates** a TypeScript file with all re-exports
  */
-export function importMapPlugin(options: ImportMapPluginOptions): Plugin {
+export function importMapPlugin(options: ImportMapPluginOptions = {}): Plugin {
   const opts = {
     enabled: true,
     outputPath: "load/import_map.ts",
@@ -93,7 +83,7 @@ export function importMapPlugin(options: ImportMapPluginOptions): Plugin {
     deprecatedOmitFromImportMap: [],
     extraImportMapEntries: [],
     ...options,
-  } as Required<ImportMapPluginOptions>;
+  };
 
   return {
     name: "import-map",
@@ -107,29 +97,38 @@ export function importMapPlugin(options: ImportMapPluginOptions): Plugin {
        * - enabled is true
        * - outputOptions.format is es so we only run during ESM build
        */
-      if (!opts.enabled || outputOptions.format !== "es") {
+      const format = outputOptions.format;
+      const isEsmBuild =
+        format === "es" || (Array.isArray(format) && format.includes("es"));
+
+      if (!opts.enabled || !isEsmBuild) {
         return;
       }
 
       try {
+        // Read package.json from current working directory
+        const packagePath = process.cwd();
+        const packageJsonPath = resolve(packagePath, "package.json");
+        const packageInfo = JSON.parse(
+          fs.readFileSync(packageJsonPath, "utf-8")
+        ) as PackageJson;
+
         // Get entrypoints from package.json exports
-        const entrypoints = extractEntrypointsFromExports(
-          opts.packageInfo.exports
-        );
+        const entrypoints = extractEntrypointsFromExports(packageInfo.exports);
 
         // Generate import map
         const filteredEntrypoints = filterEntrypoints(entrypoints, opts);
 
         if (
           Object.keys(filteredEntrypoints).length > 0 ||
-          opts.extraImportMapEntries.length > 0
+          opts.extraImportMapEntries!.length > 0
         ) {
           console.log(
             `🗺️  Generating import map with ${
               Object.keys(filteredEntrypoints).length
             } entrypoints`
           );
-          await generateImportMap(opts.packagePath, filteredEntrypoints, opts);
+          await generateImportMap(packagePath, filteredEntrypoints, opts);
           console.log(`📝 Generated import map: ${opts.outputPath}`);
         }
       } catch (error) {
@@ -170,7 +169,7 @@ function extractEntrypointsFromExports(
  */
 function filterEntrypoints(
   entrypoints: Record<string, string>,
-  opts: Required<ImportMapPluginOptions>
+  opts: ImportMapPluginOptions
 ): Record<string, string> {
   const filtered: Record<string, string> = {};
 
@@ -179,13 +178,13 @@ function filterEntrypoints(
     if (key === "load") continue;
 
     // Skip if it's deprecated node-only
-    if (opts.deprecatedNodeOnly.includes(key)) continue;
+    if (opts.deprecatedNodeOnly?.includes(key)) continue;
 
     // Skip if it requires optional dependency
-    if (opts.requiresOptionalDependency.includes(key)) continue;
+    if (opts.requiresOptionalDependency?.includes(key)) continue;
 
     // Skip if it's deprecated and should be omitted from import map
-    if (opts.deprecatedOmitFromImportMap.includes(key)) continue;
+    if (opts.deprecatedOmitFromImportMap?.includes(key)) continue;
 
     filtered[key] = path;
   }
@@ -199,9 +198,9 @@ function filterEntrypoints(
 async function generateImportMap(
   packagePath: string,
   entrypoints: Record<string, string>,
-  opts: Required<ImportMapPluginOptions>
+  opts: ImportMapPluginOptions
 ): Promise<void> {
-  const outputPath = resolve(packagePath, "src", opts.outputPath);
+  const outputPath = resolve(packagePath, "src", opts.outputPath!);
 
   // Ensure directory exists
   fs.mkdirSync(resolve(packagePath, "src", "load"), { recursive: true });
@@ -227,7 +226,7 @@ async function generateImportMap(
 
   // Handle extra import map entries
   let extraContent = "";
-  if (opts.extraImportMapEntries.length > 0) {
+  if (opts.extraImportMapEntries && opts.extraImportMapEntries.length > 0) {
     // Process each entry separately to get the correct path-alias mapping
     const namespaceExports: string[] = [];
     const regularImports: Array<[string, string[]]> = [];
