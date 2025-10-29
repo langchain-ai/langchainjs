@@ -12,10 +12,7 @@
             "type": "string"
           }
         },
-        "required": [
-          "name",
-          "role"
-        ]
+        "required": ["name", "role"]
       },
       {
         "type": "object",
@@ -27,10 +24,7 @@
             "type": "string"
           }
         },
-        "required": [
-          "name",
-          "department"
-        ]
+        "required": ["name", "department"]
       }
     ],
     "assertionsByInvocation": [
@@ -76,10 +70,7 @@
               "type": "string"
             }
           },
-          "required": [
-            "name",
-            "role"
-          ]
+          "required": ["name", "role"]
         }
       },
       {
@@ -93,10 +84,7 @@
               "type": "string"
             }
           },
-          "required": [
-            "name",
-            "department"
-          ]
+          "required": ["name", "department"]
         }
       }
     ],
