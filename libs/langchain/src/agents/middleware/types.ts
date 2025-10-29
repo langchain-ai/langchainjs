@@ -22,16 +22,10 @@ type PromiseOrValue<T> = T | Promise<T>;
 export type AnyAnnotationRoot = AnnotationRoot<any>;
 
 type NormalizedSchemaInput<
-  TSchema extends
-    | InteropZodObject
-    | InteropZodDefault<InteropZodObject>
-    | undefined
-    | never = any
+  TSchema extends InteropZodObject | undefined | never = any
 > = [TSchema] extends [never]
   ? AgentBuiltInState
   : TSchema extends InteropZodObject
-  ? InferInteropZodOutput<TSchema> & AgentBuiltInState
-  : TSchema extends InteropZodDefault<InteropZodObject>
   ? InferInteropZodOutput<TSchema> & AgentBuiltInState
   : TSchema extends Record<string, unknown>
   ? TSchema & AgentBuiltInState
@@ -104,10 +98,7 @@ export type WrapToolCallHook<
  * @returns The AI message response from the model
  */
 export type WrapModelCallHandler<
-  TSchema extends
-    | InteropZodObject
-    | InteropZodDefault<InteropZodObject>
-    | undefined = undefined,
+  TSchema extends InteropZodObject | undefined = undefined,
   TContext = unknown
 > = (
   request: ModelRequest<NormalizedSchemaInput<TSchema>, TContext>
@@ -127,11 +118,7 @@ export type WrapModelCallHandler<
  * @returns The AI message response from the model (or a modified version)
  */
 export type WrapModelCallHook<
-  TSchema extends
-    | InteropZodObject
-    | InteropZodDefault<InteropZodObject>
-    | undefined
-    | never = undefined,
+  TSchema extends InteropZodObject | undefined = undefined,
   TContext = unknown
 > = (
   request: ModelRequest<NormalizedSchemaInput<TSchema>, TContext>,
@@ -157,10 +144,7 @@ type BeforeAgentHandler<TSchema, TContext> = (
  * This hook is called once at the start of the agent invocation.
  */
 export type BeforeAgentHook<
-  TSchema extends
-    | InteropZodObject
-    | InteropZodDefault<InteropZodObject>
-    | undefined = undefined,
+  TSchema extends InteropZodObject | undefined = undefined,
   TContext = unknown
 > =
   | BeforeAgentHandler<NormalizedSchemaInput<TSchema>, TContext>
@@ -188,10 +172,7 @@ type BeforeModelHandler<TSchema, TContext> = (
  * This hook is called before each model invocation.
  */
 export type BeforeModelHook<
-  TSchema extends
-    | InteropZodObject
-    | InteropZodDefault<InteropZodObject>
-    | undefined = undefined,
+  TSchema extends InteropZodObject | undefined = undefined,
   TContext = unknown
 > =
   | BeforeModelHandler<NormalizedSchemaInput<TSchema>, TContext>
@@ -220,10 +201,7 @@ type AfterModelHandler<TSchema, TContext> = (
  * This hook is called after each model invocation.
  */
 export type AfterModelHook<
-  TSchema extends
-    | InteropZodObject
-    | InteropZodDefault<InteropZodObject>
-    | undefined = undefined,
+  TSchema extends InteropZodObject | undefined = undefined,
   TContext = unknown
 > =
   | AfterModelHandler<NormalizedSchemaInput<TSchema>, TContext>
@@ -251,10 +229,7 @@ type AfterAgentHandler<TSchema, TContext> = (
  * This hook is called once at the end of the agent invocation.
  */
 export type AfterAgentHook<
-  TSchema extends
-    | InteropZodObject
-    | InteropZodDefault<InteropZodObject>
-    | undefined = undefined,
+  TSchema extends InteropZodObject | undefined = undefined,
   TContext = unknown
 > =
   | AfterAgentHandler<NormalizedSchemaInput<TSchema>, TContext>
@@ -267,10 +242,7 @@ export type AfterAgentHook<
  * Base middleware interface.
  */
 export interface AgentMiddleware<
-  TSchema extends
-    | InteropZodObject
-    | InteropZodDefault<InteropZodObject>
-    | undefined = any,
+  TSchema extends InteropZodObject | undefined = any,
   TContextSchema extends
     | InteropZodObject
     | InteropZodDefault<InteropZodObject>
