@@ -89,10 +89,7 @@ export type ToolCallHandler<
  * Allows middleware to intercept and modify tool execution.
  */
 export type WrapToolCallHook<
-  TSchema extends
-    | InteropZodObject
-    | InteropZodDefault<InteropZodObject>
-    | undefined = undefined,
+  TSchema extends InteropZodObject | undefined = undefined,
   TContext = unknown
 > = (
   request: ToolCallRequest<NormalizedSchemaInput<TSchema>, TContext>,
