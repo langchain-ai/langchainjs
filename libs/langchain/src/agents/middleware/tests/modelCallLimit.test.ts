@@ -4,7 +4,7 @@ import { tool } from "@langchain/core/tools";
 import { MemorySaver } from "@langchain/langgraph-checkpoint";
 
 import { FakeToolCallingChatModel } from "../../tests/utils.js";
-import { modelCallLimitMiddleware } from "../callLimit.js";
+import { modelCallLimitMiddleware } from "../modelCallLimit.js";
 import { createAgent } from "../../index.js";
 
 const toolCallMessage1 = new AIMessage({
