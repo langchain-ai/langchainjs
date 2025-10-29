@@ -119,7 +119,11 @@
       "destination": "/:path*/_langchain_core.:rest"
     },
     {
-      "source": "/:path*/langchain_anthropic_experimental(_|\\.):rest",
+      "source": "/:path*/langchain_anthropic_experimental_:rest",
+      "destination": "/:path*/_langchain_anthropic.experimental.:rest"
+    },
+    {
+      "source": "/:path*/langchain_anthropic_experimental.:rest",
       "destination": "/:path*/_langchain_anthropic.experimental.:rest"
     },
     {
@@ -139,23 +143,43 @@
       "destination": "/:path*/_langchain_anthropic.index.ChatAnthropicCallOptions.:rest"
     },
     {
-      "source": "/:path*/langchain_aws(_|\\.):rest",
+      "source": "/:path*/langchain_aws_:rest",
       "destination": "/:path*/_langchain_aws.:rest"
     },
     {
-      "source": "/:path*/langchain_azure_cosmosdb(_|\\.):rest",
+      "source": "/:path*/langchain_aws.:rest",
+      "destination": "/:path*/_langchain_aws.:rest"
+    },
+    {
+      "source": "/:path*/langchain_azure_cosmosdb_:rest",
       "destination": "/:path*/_langchain_azure_cosmosdb.:rest"
     },
     {
-      "source": "/:path*/langchain_azure_dynamic_sessions(_|\\.):rest",
+      "source": "/:path*/langchain_azure_cosmosdb.:rest",
+      "destination": "/:path*/_langchain_azure_cosmosdb.:rest"
+    },
+    {
+      "source": "/:path*/langchain_azure_dynamic_sessions_:rest",
       "destination": "/:path*/_langchain_azure_dynamic_sessions.:rest"
     },
     {
-      "source": "/:path*/langchain_baidu_qianfan(_|\\.):rest",
+      "source": "/:path*/langchain_azure_dynamic_sessions.:rest",
+      "destination": "/:path*/_langchain_azure_dynamic_sessions.:rest"
+    },
+    {
+      "source": "/:path*/langchain_baidu_qianfan_:rest",
       "destination": "/:path*/_langchain_baidu_qianfan.:rest"
     },
     {
-      "source": "/:path*/langchain_cloudflare_langgraph_checkpointers(_|\\.):rest",
+      "source": "/:path*/langchain_baidu_qianfan.:rest",
+      "destination": "/:path*/_langchain_baidu_qianfan.:rest"
+    },
+    {
+      "source": "/:path*/langchain_cloudflare_langgraph_checkpointers_:rest",
+      "destination": "/:path*/_langchain_cloudflare.langgraph_checkpointers.:rest"
+    },
+    {
+      "source": "/:path*/langchain_cloudflare_langgraph_checkpointers.:rest",
       "destination": "/:path*/_langchain_cloudflare.langgraph_checkpointers.:rest"
     },
     {
@@ -207,7 +231,11 @@
       "destination": "/:path*/_langchain_cloudflare.index.VectorizeDeleteParams:rest"
     },
     {
-      "source": "/:path*/langchain_cohere(_|\\.):rest",
+      "source": "/:path*/langchain_cohere_:rest",
+      "destination": "/:path*/_langchain_cohere.:rest"
+    },
+    {
+      "source": "/:path*/langchain_cohere.:rest",
       "destination": "/:path*/_langchain_cohere.:rest"
     },
     {
@@ -215,15 +243,27 @@
       "destination": "/:path*/_langchain_community.:rest"
     },
     {
-      "source": "/:path*/langchain_exa(_|\\.):rest",
+      "source": "/:path*/langchain_exa_:rest",
       "destination": "/:path*/_langchain_exa.:rest"
     },
     {
-      "source": "/:path*/langchain_google_common_types(_|\\.):rest",
+      "source": "/:path*/langchain_exa.:rest",
+      "destination": "/:path*/_langchain_exa.:rest"
+    },
+    {
+      "source": "/:path*/langchain_google_common_types_:rest",
       "destination": "/:path*/_langchain_google_common.types.:rest"
     },
     {
-      "source": "/:path*/langchain_google_common_utils(_|\\.):rest",
+      "source": "/:path*/langchain_google_common_types.:rest",
+      "destination": "/:path*/_langchain_google_common.types.:rest"
+    },
+    {
+      "source": "/:path*/langchain_google_common_utils_:rest",
+      "destination": "/:path*/_langchain_google_common.utils.:rest"
+    },
+    {
+      "source": "/:path*/langchain_google_common_utils.:rest",
       "destination": "/:path*/_langchain_google_common.utils.:rest"
     },
     {
@@ -363,15 +403,27 @@
       "destination": "/:path*/_langchain_google_common.index.zodToGeminiParameters.:rest"
     },
     {
-      "source": "/:path*/langchain_google_genai(_|\\.):rest",
+      "source": "/:path*/langchain_google_genai_:rest",
       "destination": "/:path*/_langchain_google_genai.:rest"
     },
     {
-      "source": "/:path*/langchain_google_vertexai_types(_|\\.):rest",
+      "source": "/:path*/langchain_google_genai.:rest",
+      "destination": "/:path*/_langchain_google_genai.:rest"
+    },
+    {
+      "source": "/:path*/langchain_google_vertexai_types_:rest",
       "destination": "/:path*/_langchain_google_vertexai.types.:rest"
     },
     {
-      "source": "/:path*/langchain_google_vertexai_utils(_|\\.):rest",
+      "source": "/:path*/langchain_google_vertexai_types.:rest",
+      "destination": "/:path*/_langchain_google_vertexai.types.:rest"
+    },
+    {
+      "source": "/:path*/langchain_google_vertexai_utils_:rest",
+      "destination": "/:path*/_langchain_google_vertexai.utils.:rest"
+    },
+    {
+      "source": "/:path*/langchain_google_vertexai_utils.:rest",
       "destination": "/:path*/_langchain_google_vertexai.utils.:rest"
     },
     {
@@ -399,11 +451,19 @@
       "destination": "/:path*/_langchain_google_vertexai.index.VertexAIInput.:rest"
     },
     {
-      "source": "/:path*/langchain_google_vertexai_web_types(_|\\.):rest",
+      "source": "/:path*/langchain_google_vertexai_web_types_:rest",
       "destination": "/:path*/_langchain_google_vertexai_web.types.:rest"
     },
     {
-      "source": "/:path*/langchain_google_vertexai_web_utils(_|\\.):rest",
+      "source": "/:path*/langchain_google_vertexai_web_types.:rest",
+      "destination": "/:path*/_langchain_google_vertexai_web.types.:rest"
+    },
+    {
+      "source": "/:path*/langchain_google_vertexai_web_utils_:rest",
+      "destination": "/:path*/_langchain_google_vertexai_web.utils.:rest"
+    },
+    {
+      "source": "/:path*/langchain_google_vertexai_web_utils.:rest",
       "destination": "/:path*/_langchain_google_vertexai_web.utils.:rest"
     },
     {
@@ -431,55 +491,107 @@
       "destination": "/:path*/_langchain_google_vertexai_web.index.VertexAIInput.:rest"
     },
     {
-      "source": "/:path*/langchain_groq(_|\\.):rest",
+      "source": "/:path*/langchain_groq_:rest",
       "destination": "/:path*/_langchain_groq.:rest"
     },
     {
-      "source": "/:path*/langchain_mistralai(_|\\.):rest",
+      "source": "/:path*/langchain_groq.:rest",
+      "destination": "/:path*/_langchain_groq.:rest"
+    },
+    {
+      "source": "/:path*/langchain_mistralai_:rest",
       "destination": "/:path*/_langchain_mistralai.:rest"
     },
     {
-      "source": "/:path*/langchain_mixedbread_ai(_|\\.):rest",
+      "source": "/:path*/langchain_mistralai.:rest",
+      "destination": "/:path*/_langchain_mistralai.:rest"
+    },
+    {
+      "source": "/:path*/langchain_mixedbread_ai_:rest",
       "destination": "/:path*/_langchain_mixedbread_ai.:rest"
     },
     {
-      "source": "/:path*/langchain_mongodb(_|\\.):rest",
+      "source": "/:path*/langchain_mixedbread_ai.:rest",
+      "destination": "/:path*/_langchain_mixedbread_ai.:rest"
+    },
+    {
+      "source": "/:path*/langchain_mongodb_:rest",
       "destination": "/:path*/_langchain_mongodb.:rest"
     },
     {
-      "source": "/:path*/langchain_nomic(_|\\.):rest",
+      "source": "/:path*/langchain_mongodb.:rest",
+      "destination": "/:path*/_langchain_mongodb.:rest"
+    },
+    {
+      "source": "/:path*/langchain_nomic_:rest",
       "destination": "/:path*/_langchain_nomic.:rest"
     },
     {
-      "source": "/:path*/langchain_ollama(_|\\.):rest",
+      "source": "/:path*/langchain_nomic.:rest",
+      "destination": "/:path*/_langchain_nomic.:rest"
+    },
+    {
+      "source": "/:path*/langchain_ollama_:rest",
       "destination": "/:path*/_langchain_ollama.:rest"
     },
     {
-      "source": "/:path*/langchain_openai(_|\\.):rest",
+      "source": "/:path*/langchain_ollama.:rest",
+      "destination": "/:path*/_langchain_ollama.:rest"
+    },
+    {
+      "source": "/:path*/langchain_openai_:rest",
       "destination": "/:path*/_langchain_openai.:rest"
     },
     {
-      "source": "/:path*/langchain_pinecone(_|\\.):rest",
+      "source": "/:path*/langchain_openai.:rest",
+      "destination": "/:path*/_langchain_openai.:rest"
+    },
+    {
+      "source": "/:path*/langchain_pinecone_:rest",
       "destination": "/:path*/_langchain_pinecone.:rest"
     },
     {
-      "source": "/:path*/langchain_qdrant(_|\\.):rest",
+      "source": "/:path*/langchain_pinecone.:rest",
+      "destination": "/:path*/_langchain_pinecone.:rest"
+    },
+    {
+      "source": "/:path*/langchain_qdrant_:rest",
       "destination": "/:path*/_langchain_qdrant.:rest"
     },
     {
-      "source": "/:path*/langchain_redis(_|\\.):rest",
+      "source": "/:path*/langchain_qdrant.:rest",
+      "destination": "/:path*/_langchain_qdrant.:rest"
+    },
+    {
+      "source": "/:path*/langchain_redis_:rest",
       "destination": "/:path*/_langchain_redis.:rest"
     },
     {
-      "source": "/:path*/langchain_textsplitters(_|\\.):rest",
+      "source": "/:path*/langchain_redis.:rest",
+      "destination": "/:path*/_langchain_redis.:rest"
+    },
+    {
+      "source": "/:path*/langchain_textsplitters_:rest",
       "destination": "/:path*/_langchain_textsplitters.:rest"
     },
     {
-      "source": "/:path*/langchain_weaviate(_|\\.):rest",
+      "source": "/:path*/langchain_textsplitters.:rest",
+      "destination": "/:path*/_langchain_textsplitters.:rest"
+    },
+    {
+      "source": "/:path*/langchain_weaviate_:rest",
       "destination": "/:path*/_langchain_weaviate.:rest"
     },
     {
-      "source": "/:path*/langchain_yandex(_|\\.):rest",
+      "source": "/:path*/langchain_weaviate.:rest",
+      "destination": "/:path*/_langchain_weaviate.:rest"
+    },
+    {
+      "source": "/:path*/langchain_yandex_:rest",
+      "destination": "/:path*/_langchain_yandex.:rest"
+    },
+    {
+      "source": "/:path*/langchain_yandex.:rest",
       "destination": "/:path*/_langchain_yandex.:rest"
     }
   ]
