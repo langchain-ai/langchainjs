@@ -271,10 +271,11 @@ describe("structured output handling", () => {
         /**
          * We expect 3 messages:
          * 1. The user message
-         * 2. The tool message
-         * 3. The structured response message
+         * 2. The AI message calling the tool
+         * 3. The tool message
+         * 4. A structured response message (for compatibility with some models)
          */
-        expect(res.messages.length).toBe(3);
+        expect(res.messages.length).toBe(4);
         expect(res.messages.at(-1)?.content).toContain("foobar");
       });
 
@@ -339,14 +340,14 @@ describe("hasSupportForJsonSchemaOutput", () => {
 
   it("should return false for Anthropic models that don't support JSON schema output", () => {
     const model = new ChatAnthropic({
-      model: "claude-3-5-sonnet-20240620",
+      model: "claude-sonnet-4-5-20250929",
       anthropicApiKey: "foobar",
     });
     expect(hasSupportForJsonSchemaOutput(model)).toBe(false);
     expect(
-      hasSupportForJsonSchemaOutput("anthropic:claude-3-5-sonnet-20240620")
+      hasSupportForJsonSchemaOutput("anthropic:claude-sonnet-4-5-20250929")
     ).toBe(false);
-    expect(hasSupportForJsonSchemaOutput("claude-3-5-sonnet-20240620")).toBe(
+    expect(hasSupportForJsonSchemaOutput("claude-sonnet-4-5-20250929")).toBe(
       false
     );
   });
