@@ -11,10 +11,8 @@ import { v4 as uuid } from "uuid";
  */
 export enum DistanceStrategy {
   DOT = "dot",
-  L2 = "l2",
-  EUCLIDEAN = "euclidean",
   COSINE = "cosine",
-  L2_SQUARED = "l2_squared",
+  EUCLIDEAN = "euclidean",
   EUCLIDEAN_SQUARED = "euclidean_squared",
 }
 

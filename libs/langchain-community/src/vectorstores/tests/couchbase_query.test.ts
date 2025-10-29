@@ -579,10 +579,8 @@ describe.skip("CouchbaseQueryVectorStore", () => {
     test("should handle different distance strategies", async () => {
       const distanceStrategies = [
         DistanceStrategy.DOT,
-        DistanceStrategy.L2,
         DistanceStrategy.EUCLIDEAN,
         DistanceStrategy.COSINE,
-        DistanceStrategy.L2_SQUARED,
         DistanceStrategy.EUCLIDEAN_SQUARED,
       ];
 
