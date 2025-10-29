@@ -3,7 +3,7 @@
  */
 
 import { ToolMessage } from "@langchain/core/messages";
-import { z } from "zod";
+import { z } from "zod/v3";
 import { createMiddleware } from "../middleware.js";
 import type { ClientTool, ServerTool } from "../tools.js";
 import type { AgentMiddleware } from "./types.js";
