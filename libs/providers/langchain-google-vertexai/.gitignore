@@ -1,15 +1,4 @@
-index.cjs
-index.js
-index.d.ts
-index.d.cts
-utils.cjs
-utils.js
-utils.d.ts
-utils.d.cts
-types.cjs
-types.js
-types.d.ts
-types.d.cts
+**/*.d.ts
+!src/**/*.d.ts
 node_modules
 dist
-.yarn

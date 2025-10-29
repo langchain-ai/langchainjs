@@ -14,7 +14,7 @@
   },
   "homepage": "https://github.com/langchain-ai/langchainjs/tree/main/libs/providers/langchain-openai/",
   "scripts": {
-    "build": "pnpm --filter @langchain/build compile @langchain/openai",
+    "build": "tsdown",
     "lint:eslint": "eslint --cache src/",
     "lint:dpdm": "dpdm --skip-dynamic-imports circular --exit-code circular:1 --no-warning --no-tree src/*.ts src/**/*.ts",
     "lint": "pnpm lint:eslint && pnpm lint:dpdm",
@@ -40,6 +40,7 @@
   "devDependencies": {
     "@azure/identity": "^4.2.1",
     "@cfworker/json-schema": "^4.1.1",
+    "@langchain/build": "workspace:*",
     "@langchain/core": "workspace:*",
     "@langchain/eslint": "workspace:*",
     "@langchain/standard-tests": "workspace:*",
@@ -50,6 +51,7 @@
     "eslint": "^9.34.0",
     "prettier": "^2.8.3",
     "rimraf": "^5.0.1",
+    "tsdown": "^0.15.12",
     "typescript": "~5.8.3",
     "uuid": "^11.1.0",
     "vitest": "^3.2.4",

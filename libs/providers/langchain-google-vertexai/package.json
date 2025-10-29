@@ -14,7 +14,7 @@
   },
   "homepage": "https://github.com/langchain-ai/langchainjs/tree/main/libs/langchain-google-vertexai/",
   "scripts": {
-    "build": "pnpm --filter @langchain/build compile @langchain/google-vertexai",
+    "build": "tsdown",
     "lint:eslint": "eslint --cache src/",
     "lint:dpdm": "dpdm --skip-dynamic-imports circular --exit-code circular:1 --no-warning --no-tree src/*.ts src/**/*.ts",
     "lint": "pnpm lint:eslint && pnpm lint:dpdm",
@@ -32,6 +32,7 @@
   },
   "devDependencies": {
     "@jest/globals": "^29.5.0",
+    "@langchain/build": "workspace:*",
     "@langchain/eslint": "workspace:*",
     "@langchain/google-common": "^1.0.0",
     "@langchain/standard-tests": "workspace:*",
@@ -46,6 +47,7 @@
     "prettier": "^2.8.3",
     "rollup": "^4.5.2",
     "ts-jest": "^29.1.0",
+    "tsdown": "^0.15.12",
     "typescript": "~5.8.3",
     "zod": "^3.25.76"
   },
@@ -94,6 +96,8 @@
     "dist/",
     "CHANGELOG.md",
     "README.md",
-    "LICENSE"
+    "LICENSE",
+    "utils.d.ts",
+    "types.d.ts"
   ]
 }

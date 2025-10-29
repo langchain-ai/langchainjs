@@ -14,7 +14,7 @@
   },
   "homepage": "https://github.com/langchain-ai/langchainjs/tree/main/libs/langchain-google-cloud-sql-pg/",
   "scripts": {
-    "build": "pnpm --filter @langchain/build compile @langchain/google-cloud-sql-pg",
+    "build": "tsdown",
     "lint:eslint": "eslint --cache src/",
     "lint:dpdm": "dpdm --skip-dynamic-imports circular --exit-code circular:1 --no-warning --no-tree src/*.ts src/**/*.ts",
     "lint": "pnpm lint:eslint && pnpm lint:dpdm",
@@ -36,6 +36,7 @@
   },
   "devDependencies": {
     "@jest/globals": "^29.5.0",
+    "@langchain/build": "workspace:*",
     "@langchain/core": "workspace:*",
     "@langchain/eslint": "workspace:*",
     "@swc/core": "^1.3.90",
@@ -53,6 +54,7 @@
     "rollup": "^4.5.2",
     "testcontainers": "^10.23.0",
     "ts-jest": "^29.1.0",
+    "tsdown": "^0.15.12",
     "typescript": "~5.8.3"
   },
   "publishConfig": {

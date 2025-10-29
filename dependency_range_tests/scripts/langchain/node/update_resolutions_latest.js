@@ -6,7 +6,7 @@ const currentPackageJson = JSON.parse(
 );
 currentPackageJson.pnpm = { overrides: {} };
 
-const INTERNAL_PACKAGES = ["@langchain/eslint"];
+const INTERNAL_PACKAGES = ["@langchain/build", "@langchain/eslint"];
 
 if (
   currentPackageJson.peerDependencies?.["@langchain/core"] &&

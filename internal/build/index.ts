@@ -1,26 +1,26 @@
 import fs from "node:fs";
 import { resolve } from "node:path";
 import { Options as BuildOptions } from "tsdown";
-import { type PackageJson } from "type-fest";
+import type { PackageJson } from "type-fest";
 import { extname } from "node:path";
-import { barrelDtsPlugin } from "./plugins/barrel-dts";
+import { barrelDtsPlugin } from "./plugins/barrel-dts.js";
 
 export {
   type ImportConstantsPluginOptions,
   importConstantsPlugin,
-} from "./plugins/import-constants";
+} from "./plugins/import-constants.js";
 export {
   type ImportMapPluginOptions,
   importMapPlugin,
-} from "./plugins/import-map";
+} from "./plugins/import-map.js";
 export {
   type SecretPluginOptions,
   lcSecretsPlugin,
-} from "./plugins/lc-secrets";
+} from "./plugins/lc-secrets.js";
 export {
   type BarrelDtsPluginOptions,
   barrelDtsPlugin,
-} from "./plugins/barrel-dts";
+} from "./plugins/barrel-dts.js";
 
 /**
  * Extracts entry point paths from a package.json exports field.

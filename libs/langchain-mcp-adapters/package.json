@@ -16,7 +16,7 @@
   },
   "scripts": {
     "build": "run-s build:main build:examples",
-    "build:main": "pnpm --filter @langchain/build compile @langchain/mcp-adapters",
+    "build:main": "tsdown",
     "build:examples": "tsc -p ./examples/tsconfig.json",
     "clean": "rm -rf dist/ dist-cjs/ .turbo/",
     "format": "prettier --config .prettierrc --write \"src/**/*.ts\" \"examples/**/*.ts\"",
@@ -58,6 +58,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.36.0",
+    "@langchain/build": "workspace:*",
     "@langchain/core": "workspace:*",
     "@langchain/eslint": "workspace:*",
     "@langchain/langgraph": "^1.0.0",
@@ -77,6 +78,7 @@
     "prettier": "^3.6.2",
     "rollup": "^4.52.3",
     "ts-node": "^10.9.2",
+    "tsdown": "^0.15.12",
     "typescript": "~5.8.3",
     "typescript-eslint": "^8.45.0",
     "vitest": "^3.2.4"

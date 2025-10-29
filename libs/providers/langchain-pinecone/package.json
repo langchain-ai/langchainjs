@@ -14,7 +14,7 @@
   },
   "homepage": "https://github.com/langchain-ai/langchainjs/tree/main/libs/langchain-pinecone/",
   "scripts": {
-    "build": "pnpm --filter @langchain/build compile @langchain/pinecone",
+    "build": "tsdown",
     "lint:eslint": "eslint --cache src/",
     "lint:dpdm": "dpdm --skip-dynamic-imports circular --exit-code circular:1 --no-warning --no-tree src/*.ts src/**/*.ts",
     "lint": "pnpm lint:eslint && pnpm lint:dpdm",
@@ -36,6 +36,7 @@
   },
   "devDependencies": {
     "@faker-js/faker": "^8.3.1",
+    "@langchain/build": "workspace:*",
     "@langchain/core": "workspace:*",
     "@langchain/eslint": "workspace:*",
     "@langchain/openai": "workspace:*",
@@ -49,6 +50,7 @@
     "eslint": "^9.34.0",
     "langchain": "workspace:*",
     "prettier": "^2.8.3",
+    "tsdown": "^0.15.12",
     "typescript": "~5.8.3",
     "vitest": "^3.2.4"
   },

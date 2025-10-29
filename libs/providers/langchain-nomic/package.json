@@ -14,7 +14,7 @@
   },
   "homepage": "https://github.com/langchain-ai/langchainjs/tree/main/libs/langchain-nomic/",
   "scripts": {
-    "build": "pnpm --filter @langchain/build compile @langchain/nomic",
+    "build": "tsdown",
     "lint:eslint": "eslint --cache src/",
     "lint:dpdm": "dpdm --skip-dynamic-imports circular --exit-code circular:1 --no-warning --no-tree src/*.ts src/**/*.ts",
     "lint": "pnpm lint:eslint && pnpm lint:dpdm",
@@ -33,6 +33,7 @@
   },
   "devDependencies": {
     "@jest/globals": "^29.5.0",
+    "@langchain/build": "workspace:*",
     "@langchain/core": "workspace:*",
     "@langchain/eslint": "workspace:*",
     "@langchain/openai": "workspace:*",
@@ -44,6 +45,7 @@
     "eslint": "^9.34.0",
     "prettier": "^2.8.3",
     "rollup": "^4.5.2",
+    "tsdown": "^0.15.12",
     "typescript": "~5.8.3",
     "vitest": "^3.2.4"
   },

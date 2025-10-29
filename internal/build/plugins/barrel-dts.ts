@@ -177,7 +177,7 @@ async function generateBarrelFiles(
   packagePath: string,
   barrelFiles: Record<string, string>
 ): Promise<void> {
-  for (const [barrelPath] of Object.entries(barrelFiles)) {
+  for (const [barrelPath, typesPath] of Object.entries(barrelFiles)) {
     const barrelFilePath = resolve(packagePath, `${barrelPath}.d.ts`);
 
     // Ensure parent directory exists
@@ -186,8 +186,8 @@ async function generateBarrelFiles(
       fs.mkdirSync(parentDir, { recursive: true });
     }
 
-    // Calculate relative path from barrel file to the dist path
-    const relativePath = calculateRelativePath(barrelPath);
+    // Calculate relative path from barrel file to the dist types file (without extension)
+    const relativePath = calculateRelativePath(barrelPath, typesPath);
 
     // Generate the barrel file content
     const content = `export * from "${relativePath}";`;
@@ -198,16 +198,25 @@ async function generateBarrelFiles(
 }
 
 /**
- * Calculate the relative path from barrel file location to the dist path
+ * Calculate the relative path from barrel file location to the dist types file
  * Returns path without file extension for proper TypeScript module resolution
  */
-function calculateRelativePath(barrelPath: string): string {
+function calculateRelativePath(barrelPath: string, typesPath: string): string {
   const barrelDepth = barrelPath.split("/").length - 1;
 
   // Build the relative path with appropriate ../
   const upLevels = barrelDepth > 0 ? "../".repeat(barrelDepth) : "./";
 
-  return `${upLevels}dist/${barrelPath}`;
+  // Remove the leading ./ and file extension from typesPath
+  const cleanPath = typesPath
+    .replace(/^\.\//, "")
+    .replace(/\.d\.cts$/, "")
+    .replace(/\.d\.ts$/, "")
+    .replace(/\.cts$/, "")
+    .replace(/\.ts$/, "")
+    .replace(/\.js$/, "");
+
+  return `${upLevels}${cleanPath}`;
 }
 
 /**

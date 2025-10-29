@@ -5,7 +5,6 @@ import {
   importMapPlugin,
   lcSecretsPlugin,
 } from "@langchain/build";
-import packageJson from "./package.json";
 
 export default defineConfig([
   getBuildConfig({

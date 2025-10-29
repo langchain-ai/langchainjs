@@ -18,7 +18,7 @@
   },
   "homepage": "https://github.com/langchain-ai/langchainjs/tree/main/libs/langchain-weaviate/",
   "scripts": {
-    "build": "pnpm --filter @langchain/build compile @langchain/weaviate",
+    "build": "tsdown",
     "lint:eslint": "eslint --cache src/",
     "lint:dpdm": "dpdm --skip-dynamic-imports circular --exit-code circular:1 --no-warning --no-tree src/*.ts src/**/*.ts",
     "lint": "pnpm lint:eslint && pnpm lint:dpdm",
@@ -38,6 +38,7 @@
     "@langchain/core": "^1.0.0"
   },
   "devDependencies": {
+    "@langchain/build": "workspace:*",
     "@langchain/core": "workspace:*",
     "@langchain/eslint": "workspace:*",
     "@langchain/openai": "workspace:^",
@@ -50,6 +51,7 @@
     "langchain": "workspace:*",
     "prettier": "^2.8.3",
     "rollup": "^4.5.2",
+    "tsdown": "^0.15.12",
     "typescript": "~5.8.3",
     "vitest": "^3.2.4"
   },
