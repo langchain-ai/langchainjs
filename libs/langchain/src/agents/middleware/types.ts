@@ -40,7 +40,11 @@ type NormalizedSchemaInput<
 /**
  * Result type for middleware functions.
  */
-export type MiddlewareResult<TState> = TState | void;
+export type MiddlewareResult<TState> =
+  | (TState & {
+      jumpTo?: JumpToTarget;
+    })
+  | void;
 
 /**
  * Represents a tool call request for the wrapToolCall hook.
