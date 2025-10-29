@@ -1074,6 +1074,2218 @@
       "destination": "https://docs.langchain.com/oss/javascript/integrations/chat"
     },
     {
+      "source": "/docs/how_to/callbacks_backgrounding",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/install"
+    },
+    {
+      "source": "/docs/how_to/tool_calls_multi_modal",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/models"
+    },
+    {
+      "source": "/docs/langgraph",
+      "destination": "https://langchain-ai.github.io/langgraphjs/"
+    },
+    {
+      "source": "/docs/langsmith",
+      "destination": "https://docs.smith.langchain.com/"
+    },
+    {
+      "source": "/docs/integrations/retrievers/vectorstore",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/retrieval"
+    },
+    {
+      "source": "/docs/integrations/chat_memory",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/long-term-memory"
+    },
+    {
+      "source": "/docs/integrations/chat_memory/:path*",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/long-term-memory"
+    },
+    {
+      "source": "/docs/troubleshooting/errors/GRAPH_RECURSION_LIMIT",
+      "destination": "https://langchain-ai.github.io/langgraphjs/troubleshooting/errors/GRAPH_RECURSION_LIMIT/"
+    },
+    {
+      "source": "/docs/troubleshooting/errors/INVALID_CONCURRENT_GRAPH_UPDATE",
+      "destination": "https://langchain-ai.github.io/langgraphjs/troubleshooting/errors/INVALID_CONCURRENT_GRAPH_UPDATE/"
+    },
+    {
+      "source": "/docs/troubleshooting/errors/INVALID_GRAPH_NODE_RETURN_VALUE",
+      "destination": "https://langchain-ai.github.io/langgraphjs/troubleshooting/errors/INVALID_GRAPH_NODE_RETURN_VALUE/"
+    },
+    {
+      "source": "/docs/troubleshooting/errors/MULTIPLE_SUBGRAPHS",
+      "destination": "https://langchain-ai.github.io/langgraphjs/troubleshooting/errors/MULTIPLE_SUBGRAPHS/"
+    },
+    {
+      "source": "/docs/modules/model_io/prompts/quick_start/",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/models"
+    },
+    {
+      "source": "/docs/modules/model_io/prompts",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/models"
+    },
+    {
+      "source": "/docs/guides/expression_language/cookbook",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/middleware"
+    },
+    {
+      "source": "/docs/modules/model_io/models",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/models"
+    },
+    {
+      "source": "/docs/integrations/vector_stores/azure_cosmosdb_nosql",
+      "destination": "https://docs.langchain.com/oss/javascript/integrations/vectorstores"
+    },
+    {
+      "source": "/docs/integrations/memory/ipfs_datastore",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/integrations/vector_stores/azure_cosmosdb_mongodb",
+      "destination": "https://docs.langchain.com/oss/javascript/integrations/vectorstores"
+    },
+    {
+      "source": "/",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/integrations/document_loaders/web_loaders/firecrawl",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/integrations/vectorstores/lancedb",
+      "destination": "https://docs.langchain.com/oss/javascript/integrations/vectorstores"
+    },
+    {
+      "source": "/docs/modules/chains/index_related_chains/retrieval_qa",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/introduction",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/integrations/text_embedding/ibm",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/use_cases",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/integrations/toolkits/sfn_agent",
+      "destination": "https://docs.langchain.com/oss/javascript/integrations/tools"
+    },
+    {
+      "source": "/404.html",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/modules/experimental/mask",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/integrations/stores/ioredis_storage",
+      "destination": "https://docs.langchain.com/oss/javascript/integrations/stores"
+    },
+    {
+      "source": "/docs/integrations/stores",
+      "destination": "https://docs.langchain.com/oss/javascript/integrations/stores"
+    },
+    {
+      "source": "/docs/integrations/platforms/google",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/use_cases/question_answering/local_retrieval_qa",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/rag"
+    },
+    {
+      "source": "/docs/integrations/document_compressors/ibm",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/how_to/custom_tools",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/tools"
+    },
+    {
+      "source": "/docs/integrations/platforms",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/modules/indexes/vector_stores/integrations/supabase",
+      "destination": "https://docs.langchain.com/oss/javascript/integrations/vectorstores"
+    },
+    {
+      "source": "/docs/modules/model_io/models/llms/integrations/ollama",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/models"
+    },
+    {
+      "source": "/docs/concepts",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/integrations/vectorstores/supabase",
+      "destination": "https://docs.langchain.com/oss/javascript/integrations/vectorstores"
+    },
+    {
+      "source": "/docs/modules/agents/tools",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/agents"
+    },
+    {
+      "source": "/docs/modules/chains",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/modules/agents/agents/examples/plan_and_execute_agent",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/agents"
+    },
+    {
+      "source": "/docs/modules/indexes/retrievers/supabase-hybrid",
+      "destination": "https://docs.langchain.com/oss/javascript/integrations/retrievers"
+    },
+    {
+      "source": "/docs/use_cases/question_answering",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/rag"
+    },
+    {
+      "source": "/docs/expression_language",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/modules/data_connection/vectorstores",
+      "destination": "https://docs.langchain.com/oss/javascript/integrations/vectorstores"
+    },
+    {
+      "source": "/docs/tutorials",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/integrations/chat",
+      "destination": "https://docs.langchain.com/oss/javascript/integrations/chat"
+    },
+    {
+      "source": "/docs/modules/indexes/vector_stores/integrations/pinecone",
+      "destination": "https://docs.langchain.com/oss/javascript/integrations/vectorstores"
+    },
+    {
+      "source": "/docs/modules/chains/document",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/modules/memory",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/modules/agents/agent_types/openai_functions_agent",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/agents"
+    },
+    {
+      "source": "/docs/modules/chains/document/stuff",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/how_to/lcel_cheatsheet",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/integrations/vectorstores/azure_aisearch",
+      "destination": "https://docs.langchain.com/oss/javascript/integrations/vectorstores"
+    },
+    {
+      "source": "/docs/modules/data_connection/document_transformers",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/modules/indexes/retrievers/supabase_hybrid",
+      "destination": "https://docs.langchain.com/oss/javascript/integrations/retrievers"
+    },
+    {
+      "source": "/docs/concepts/lcel",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/modules/agents/tools/dynamic",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/agents"
+    },
+    {
+      "source": "/docs/how_to/recursive_text_splitter",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/integrations/document_loaders/file_loaders/unstructured",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/modules/data_connection/retrievers",
+      "destination": "https://docs.langchain.com/oss/javascript/integrations/retrievers"
+    },
+    {
+      "source": "/docs/integrations/components",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/integrations/memory/google_cloudsql_pg",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/modules/indexes/document_loaders",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/integrations/vectorstores/google_cloudsql_pg",
+      "destination": "https://docs.langchain.com/oss/javascript/integrations/vectorstores"
+    },
+    {
+      "source": "/docs/integrations/document_loaders/web_loaders/google_cloudsql_pg",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/modules/data_connection",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/integrations/vectorstores/cloudflare_vectorize",
+      "destination": "https://docs.langchain.com/oss/javascript/integrations/vectorstores"
+    },
+    {
+      "source": "/docs/integrations/vectorstores",
+      "destination": "https://docs.langchain.com/oss/javascript/integrations/vectorstores"
+    },
+    {
+      "source": "/docs/modules/agents",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/agents"
+    },
+    {
+      "source": "/docs/integrations/vectorstores/hnswlib",
+      "destination": "https://docs.langchain.com/oss/javascript/integrations/vectorstores"
+    },
+    {
+      "source": "/docs/modules/indexes/vector_stores/integrations/chroma",
+      "destination": "https://docs.langchain.com/oss/javascript/integrations/vectorstores"
+    },
+    {
+      "source": "/docs/integrations/tools/exa_search",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/modules/chains/popular/vector_db_qa",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/modules/indexes/text_splitters",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/integrations/vectorstores/pinecone",
+      "destination": "https://docs.langchain.com/oss/javascript/integrations/vectorstores"
+    },
+    {
+      "source": "/docs/integrations/vectorstores/faiss",
+      "destination": "https://docs.langchain.com/oss/javascript/integrations/vectorstores"
+    },
+    {
+      "source": "/docs/use_cases/autonomous_agents/baby_agi",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/integrations/text_embedding",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/concepts/tool_calling",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/integrations/document_loaders/file_loaders/openai_whisper_audio",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/integrations/retrievers/supabase-hybrid",
+      "destination": "https://docs.langchain.com/oss/javascript/integrations/retrievers"
+    },
+    {
+      "source": "/docs/ecosystem/langserve",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/integrations/chat_memory/cloudflare_d1",
+      "destination": "https://docs.langchain.com/oss/javascript/integrations/chat"
+    },
+    {
+      "source": "/docs/integrations/tools",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/integrations/vectorstores/memory",
+      "destination": "https://docs.langchain.com/oss/javascript/integrations/vectorstores"
+    },
+    {
+      "source": "/docs/integrations/vectorstores/weaviate",
+      "destination": "https://docs.langchain.com/oss/javascript/integrations/vectorstores"
+    },
+    {
+      "source": "/docs/integrations/text_embedding/cloudflare_ai",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/modules/models",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/modules/indexes/vector_stores/integrations/mongodb_atlas",
+      "destination": "https://docs.langchain.com/oss/javascript/integrations/vectorstores"
+    },
+    {
+      "source": "/docs/modules/schema/document",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/integrations/vectorstores/chroma",
+      "destination": "https://docs.langchain.com/oss/javascript/integrations/vectorstores"
+    },
+    {
+      "source": "/docs/integrations/vectorstores/myscale",
+      "destination": "https://docs.langchain.com/oss/javascript/integrations/vectorstores"
+    },
+    {
+      "source": "/docs/integrations/vectorstores/singlestore",
+      "destination": "https://docs.langchain.com/oss/javascript/integrations/vectorstores"
+    },
+    {
+      "source": "/docs/integrations/vectorstores/mongodb_atlas",
+      "destination": "https://docs.langchain.com/oss/javascript/integrations/vectorstores"
+    },
+    {
+      "source": "/docs/modules/chains/popular/chat_vector_db",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/production/callbacks",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/use_cases/question_answering/conversational_retrieval_agents",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/rag"
+    },
+    {
+      "source": "/docs/concepts/text_splitters",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/modules/agents/agent_types",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/agents"
+    },
+    {
+      "source": "/docs/modules/agents/agent_types/plan_and_execute",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/agents"
+    },
+    {
+      "source": "/docs/integrations/vectorstores/zep",
+      "destination": "https://docs.langchain.com/oss/javascript/integrations/vectorstores"
+    },
+    {
+      "source": "/docs/integrations/vectorstores/closevector",
+      "destination": "https://docs.langchain.com/oss/javascript/integrations/vectorstores"
+    },
+    {
+      "source": "/docs/integrations/vectorstores/analyticdb",
+      "destination": "https://docs.langchain.com/oss/javascript/integrations/vectorstores"
+    },
+    {
+      "source": "/docs/get_started",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/modules/chains/other_chains/summarization",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/concepts/output_parsers",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/integrations/tools/searchapi",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/modules/data_connection/document_loaders",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/integrations/vectorstores/redis",
+      "destination": "https://docs.langchain.com/oss/javascript/integrations/vectorstores"
+    },
+    {
+      "source": "/docs/modules/data_connection/retrievers/similarity-score-threshold-retriever",
+      "destination": "https://docs.langchain.com/oss/javascript/integrations/retrievers"
+    },
+    {
+      "source": "/docs/modules/indexes/vector_stores/integrations/memory",
+      "destination": "https://docs.langchain.com/oss/javascript/integrations/vectorstores"
+    },
+    {
+      "source": "/docs/modules/data_connection/document_transformers/code_splitter",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/modules/data_connection/vectorstores/integrations/mongodb_atlas",
+      "destination": "https://docs.langchain.com/oss/javascript/integrations/vectorstores"
+    },
+    {
+      "source": "/docs/modules/indexes/document_loaders/examples/web_loaders/web_cheerio",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/modules/model_io/chat/function_calling",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/models"
+    },
+    {
+      "source": "/docs/modules/model_io/output_parsers/types/openai_tools",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/models"
+    },
+    {
+      "source": "/docs/use_cases/code_understanding",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/use_cases/query_analysis/techniques/decomposition",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/integrations/retrievers",
+      "destination": "https://docs.langchain.com/oss/javascript/integrations/retrievers"
+    },
+    {
+      "source": "/docs/integrations/document_loaders/web_loaders",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/integrations/document_loaders/file_loaders/csv",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/modules/callbacks",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/modules/indexes/vector_stores",
+      "destination": "https://docs.langchain.com/oss/javascript/integrations/vectorstores"
+    },
+    {
+      "source": "/docs/modules/data_connection/retrievers/self_query",
+      "destination": "https://docs.langchain.com/oss/javascript/integrations/retrievers"
+    },
+    {
+      "source": "/docs/api/llms_googlevertexai/classes/GoogleVertexAI",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/modules/data_connection/vectorstores/integrations/supabase",
+      "destination": "https://docs.langchain.com/oss/javascript/integrations/vectorstores"
+    },
+    {
+      "source": "/docs/concepts/chat_models",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/integrations/vectorstores/astradb",
+      "destination": "https://docs.langchain.com/oss/javascript/integrations/vectorstores"
+    },
+    {
+      "source": "/docs/modules/model_io/chat",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/models"
+    },
+    {
+      "source": "/docs/modules/chains/popular/structured_output",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/modules/data_connection/document_transformers/text_splitters/recursive_text_splitter",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/integrations/llms",
+      "destination": "https://docs.langchain.com/oss/javascript/integrations/llms"
+    },
+    {
+      "source": "/docs/integrations/tools/stagehand",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/modules/model_io/output_parsers",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/models"
+    },
+    {
+      "source": "/docs/integrations/text_embedding/openai",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/modules/model_io/prompts/prompt_templates",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/models"
+    },
+    {
+      "source": "/docs/modules/data_connection/vectorstores/integrations",
+      "destination": "https://docs.langchain.com/oss/javascript/integrations/vectorstores"
+    },
+    {
+      "source": "/docs/guides",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/integrations/retrievers/bedrock-knowledge-bases",
+      "destination": "https://docs.langchain.com/oss/javascript/integrations/retrievers"
+    },
+    {
+      "source": "/docs/modules/agents/agents/custom_llm",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/agents"
+    },
+    {
+      "source": "/docs/modules/chains/other_chains/analyze_document",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/modules",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/modules/data_connection/text_embedding",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/integrations/tools/tavily_search",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/integrations/document_loaders/file_loaders/json",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/expression_language/get_started",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/getting-started/guide-llm",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/integrations/toolkits/connery",
+      "destination": "https://docs.langchain.com/oss/javascript/integrations/tools"
+    },
+    {
+      "source": "/docs/modules/agents/agent_types/chat_conversation_agent",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/agents"
+    },
+    {
+      "source": "/docs/integrations/vectorstores/pgvector",
+      "destination": "https://docs.langchain.com/oss/javascript/integrations/vectorstores"
+    },
+    {
+      "source": "/docs/integrations/toolkits/json",
+      "destination": "https://docs.langchain.com/oss/javascript/integrations/tools"
+    },
+    {
+      "source": "/docs/expression_language/interface",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/modules/chains/foundational/llm_chain",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/modules/memory/integrations/xata",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/modules/models/embeddings",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/integrations/platforms/microsoft",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/modules/data_connection/document_loaders/integrations/file_loaders",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/modules/model_io",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/models"
+    },
+    {
+      "source": "/docs/integrations/document_loaders/web_loaders/web_cheerio",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/integrations/vectorstores/qdrant",
+      "destination": "https://docs.langchain.com/oss/javascript/integrations/vectorstores"
+    },
+    {
+      "source": "/docs/modules/data_connection/document_transformers/recursive_text_splitter",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/integrations/chat_memory/dynamodb",
+      "destination": "https://docs.langchain.com/oss/javascript/integrations/chat"
+    },
+    {
+      "source": "/docs/modules/data_connection/vectorstores/integrations/xata",
+      "destination": "https://docs.langchain.com/oss/javascript/integrations/vectorstores"
+    },
+    {
+      "source": "/docs/modules/indexes/text_splitters/examples/character",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/modules/indexes/text_splitters/examples/recursive_character",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/modules/indexes/vector_stores/integrations/hnswlib",
+      "destination": "https://docs.langchain.com/oss/javascript/integrations/vectorstores"
+    },
+    {
+      "source": "/docs/use_cases/rag/code_understanding",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/concepts/agents",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/concepts/document_loaders",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/concepts/retrievers",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/how_to/qa_sources",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/how_to/structured_output",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/modules/model_io/llms",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/models"
+    },
+    {
+      "source": "/docs/modules/indexes/vector_stores/integrations",
+      "destination": "https://docs.langchain.com/oss/javascript/integrations/vectorstores"
+    },
+    {
+      "source": "/docs/guides/expression_language/interface",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/modules/agents/how_to/logging_and_tracing",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/agents"
+    },
+    {
+      "source": "/docs/modules/agents/toolkits/examples/openapi",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/agents"
+    },
+    {
+      "source": "/docs/modules/agents/toolkits/sql",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/agents"
+    },
+    {
+      "source": "/docs/modules/data_connection/document_transformers/text_splitters/character_text_splitter",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/modules/data_connection/vectorstores/integrations/lancedb",
+      "destination": "https://docs.langchain.com/oss/javascript/integrations/vectorstores"
+    },
+    {
+      "source": "/docs/modules/memory/examples/momento",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/modules/memory/types/buffer",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/concepts/tools",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/concepts/vectorstores",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/modules/chains/document/map_reduce",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/modules/memory/types/summary",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/integrations/vectorstores/elasticsearch",
+      "destination": "https://docs.langchain.com/oss/javascript/integrations/vectorstores"
+    },
+    {
+      "source": "/docs/integrations/text_embedding/google_generativeai",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/api/runnables_remote/classes/RemoteRunnable",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/integrations/chat_memory/momento",
+      "destination": "https://docs.langchain.com/oss/javascript/integrations/chat"
+    },
+    {
+      "source": "/docs/modules/agents/agent_types/structured_chat",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/agents"
+    },
+    {
+      "source": "/docs/modules/agents/tools/how_to/dynamic",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/agents"
+    },
+    {
+      "source": "/docs/modules/chains/index_related_chains/document_qa",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/modules/data_connection/document_transformers/text_splitters/code_splitter",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/modules/data_connection/experimental/graph_databases/neo4j",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/modules/data_connection/text_embedding/integrations/azure_openai",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/modules/data_connection/text_embedding/integrations/ollama",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/modules/indexes/document_loaders/examples/web_loaders",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/modules/model_io/models/llms/integrations/cohere",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/models"
+    },
+    {
+      "source": "/docs/modules/model_io/prompts/quick_start",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/models"
+    },
+    {
+      "source": "/docs/integrations/document_loaders",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/troubleshooting/errors/OUTPUT_PARSING_FAILURE",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/integrations/vectorstores/milvus",
+      "destination": "https://docs.langchain.com/oss/javascript/integrations/vectorstores"
+    },
+    {
+      "source": "/docs/modules/chains/document/refine",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/guides/evaluation",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/modules/prompts/prompt_templates",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/integrations/document_loaders/web_loaders/github",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/integrations/tools/duckduckgo_search",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/api/document/classes/Document",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/expression_language/streaming",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/integrations/tools/linkup_search",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/modules/data_connection/retrievers/integrations/hyde",
+      "destination": "https://docs.langchain.com/oss/javascript/integrations/retrievers"
+    },
+    {
+      "source": "/docs/modules/data_connection/vectorstores/integrations/faiss",
+      "destination": "https://docs.langchain.com/oss/javascript/integrations/vectorstores"
+    },
+    {
+      "source": "/docs/modules/memory/examples/buffer_memory",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/modules/memory/types/buffer_memory_chat",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/modules/model_io/models/chat/integrations/azure",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/models"
+    },
+    {
+      "source": "/docs/modules/model_io/models/chat/integrations/ollama",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/models"
+    },
+    {
+      "source": "/docs/modules/models/chat",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/use_cases/api",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/how_to/chat_models_universal_init",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/concepts/runnables",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/integrations/tools/wolframalpha",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/integrations/document_transformers/html-to-text",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/integrations/document_loaders/file_loaders",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/integrations/document_loaders/web_loaders/web_puppeteer",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/modules/agents/tools/integrations",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/agents"
+    },
+    {
+      "source": "/docs/modules/model_io/models/chat",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/models"
+    },
+    {
+      "source": "/docs/modules/models/llms",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/use_cases/sql/agents",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/integrations/stores/upstash_redis_storage",
+      "destination": "https://docs.langchain.com/oss/javascript/integrations/stores"
+    },
+    {
+      "source": "/docs/api/chains/classes/ConversationChain",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/expression_language/how_to/routing",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/expression_language/why",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/getting-started/install",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/guides/fallbacks",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/modules/agents/agent_types/openai_assistant",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/agents"
+    },
+    {
+      "source": "/docs/modules/chains/index_related_chains/conversational_retrieval",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/modules/chains/llm_chain",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/modules/data_connection/vectorstores/integrations/pinecone",
+      "destination": "https://docs.langchain.com/oss/javascript/integrations/vectorstores"
+    },
+    {
+      "source": "/docs/modules/indexes/document_loaders/examples/web_loaders/apify_dataset",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/modules/memory/how_to/summary",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/modules/model_io/models/chat/integrations/openai",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/models"
+    },
+    {
+      "source": "/docs/use_cases/autonomous_agents/auto_gpt",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/how_to",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/how_to/sequence",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/concepts/embedding_models",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/concepts/rag",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/integrations/text_embedding/ollama",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/versions/v0_2",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/integrations/text_embedding/hugging_face_inference",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/how_to/vectorstore_retriever",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/how_to/contextual_compression",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/integrations/document_loaders/web_loaders/recursive_url_loader",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/integrations/text_embedding/azure_openai",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/integrations/tools/serpapi",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/integrations/stores/in_memory",
+      "destination": "https://docs.langchain.com/oss/javascript/integrations/stores"
+    },
+    {
+      "source": "/docs/integrations/vectorstores/libsql",
+      "destination": "https://docs.langchain.com/oss/javascript/integrations/vectorstores"
+    },
+    {
+      "source": "/docs/concepts/tokens",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/integrations/memory/postgres",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/integrations/text_embedding/cohere",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/integrations/document_loaders/web_loaders/sitemap",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/integrations/memory/redis",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/modules/data_connection/indexing",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/integrations/document_loaders/web_loaders/web_playwright",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/integrations/text_embedding/google_palm",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/integrations/memory/zep_memory",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/integrations/memory/motorhead_memory",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/use_cases/query_analysis",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/integrations/memory/xata",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/api",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/modules/model_io/models/llms",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/models"
+    },
+    {
+      "source": "/docs/integrations/stores/cassandra_storage",
+      "destination": "https://docs.langchain.com/oss/javascript/integrations/stores"
+    },
+    {
+      "source": "/docs/integrations/stores/file_system",
+      "destination": "https://docs.langchain.com/oss/javascript/integrations/stores"
+    },
+    {
+      "source": "/docs/integrations/vectorstores/couchbase",
+      "destination": "https://docs.langchain.com/oss/javascript/integrations/vectorstores"
+    },
+    {
+      "source": "/docs/how_to/agent_executor",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/modules/agents/agent_types/tool_calling",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/agents"
+    },
+    {
+      "source": "/docs/integrations/retrievers/tavily",
+      "destination": "https://docs.langchain.com/oss/javascript/integrations/retrievers"
+    },
+    {
+      "source": "/docs/integrations/text_embedding/mistralai",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/api/retrievers_amazon_kendra/classes/AmazonKendraRetriever",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/api/schema/classes/BaseMessage",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/api/tools_calculator/classes/Calculator",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/api/tools/classes/BingSerpAPI",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/ecosystem/helicone",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/expression_language/cookbook/prompt_llm_parser",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/expression_language/cookbook/retrieval",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/getting-started/guide-chat",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/integrations/retrievers/remote-retriever",
+      "destination": "https://docs.langchain.com/oss/javascript/integrations/retrievers"
+    },
+    {
+      "source": "/docs/modules/agents/agent_types/react",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/agents"
+    },
+    {
+      "source": "/docs/modules/chains/index_related_chains",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/modules/chains/other_chains/api_chain",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/modules/data_connection/document_loaders/creating_documents",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/modules/data_connection/document_loaders/how_to/pdf",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/modules/data_connection/document_loaders/integrations/web_loaders",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/modules/data_connection/document_loaders/integrations/web_loaders/youtube",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/modules/data_connection/retrievers/how_to/self_query",
+      "destination": "https://docs.langchain.com/oss/javascript/integrations/retrievers"
+    },
+    {
+      "source": "/docs/modules/data_connection/retrievers/multi-query-retriever",
+      "destination": "https://docs.langchain.com/oss/javascript/integrations/retrievers"
+    },
+    {
+      "source": "/docs/modules/data_connection/retrievers/vectorstore",
+      "destination": "https://docs.langchain.com/oss/javascript/integrations/retrievers"
+    },
+    {
+      "source": "/docs/modules/data_connection/vectorstores/integrations/hnswlib",
+      "destination": "https://docs.langchain.com/oss/javascript/integrations/vectorstores"
+    },
+    {
+      "source": "/docs/modules/indexes/document_loaders/examples/file_loaders/json",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/modules/indexes/text_splitters/examples",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/modules/prompts/example_selectors",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/use_cases/agent_simulations/violation_of_expectations_chain",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/how_to/convert_runnable_to_tool",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/how_to/tool_runtime",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/how_to/installation",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/how_to/multimodal_inputs",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/integrations/platforms/aws",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/how_to/output_parser_fixing",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/integrations/toolkits/sql",
+      "destination": "https://docs.langchain.com/oss/javascript/integrations/tools"
+    },
+    {
+      "source": "/docs/modules/data_connection/vectorstores/integrations/redis",
+      "destination": "https://docs.langchain.com/oss/javascript/integrations/vectorstores"
+    },
+    {
+      "source": "/docs/modules/data_connection/text_embedding/api_errors",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/how_to/custom_retriever",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/modules/data_connection/retrievers/how_to/contextual_compression",
+      "destination": "https://docs.langchain.com/oss/javascript/integrations/retrievers"
+    },
+    {
+      "source": "/docs/modules/prompts/output_parsers",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/modules/indexes/retrievers",
+      "destination": "https://docs.langchain.com/oss/javascript/integrations/retrievers"
+    },
+    {
+      "source": "/docs/modules/indexes/document_loaders/examples/file_loaders",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/ecosystem/integrations/helicone",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/integrations/vectorstores/neo4jvector",
+      "destination": "https://docs.langchain.com/oss/javascript/integrations/vectorstores"
+    },
+    {
+      "source": "/docs/modules/data_connection/retrievers/contextual_compression",
+      "destination": "https://docs.langchain.com/oss/javascript/integrations/retrievers"
+    },
+    {
+      "source": "/docs/modules/memory/types/entity_summary_memory",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/additional_resources/scrimba",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/api/chains/classes/MapReduceDocumentsChain",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/api/document_loaders_fs_pdf/classes/PDFLoader",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/api/text_splitter/classes/CharacterTextSplitter",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/api/tools_aws_lambda/classes/AWSLambda",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/api/tools/classes/GoogleCustomSearch",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/ecosystem/integrations/databerry",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/expression_language/how_to/with_history",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/how_to/callbacks_custom_events",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/integrations/text_embedding/ollamai",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/modules/agents/agents",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/agents"
+    },
+    {
+      "source": "/docs/modules/agents/quick_start",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/agents"
+    },
+    {
+      "source": "/docs/modules/agents/toolkits/sfn_agent",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/agents"
+    },
+    {
+      "source": "/docs/modules/agents/tools/integrations/google_calendar",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/agents"
+    },
+    {
+      "source": "/docs/modules/agents/tools/integrations/webbrowser",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/agents"
+    },
+    {
+      "source": "/docs/modules/agents/tools/integrations/zapier_agent",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/agents"
+    },
+    {
+      "source": "/docs/modules/agents/tools/zapier_agent",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/agents"
+    },
+    {
+      "source": "/docs/modules/chains/additional/multi_retrieval_qa_router",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/modules/chains/other_chains/sql",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/modules/chains/popular/summarize",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/modules/chains/sequential_chain",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/modules/data_connection/document_loaders/how_to/creating_documents",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/modules/data_connection/document_loaders/integrations/web_loaders/github",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/modules/data_connection/document_loaders/integrations/web_loaders/searchapi",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/modules/data_connection/document_transformers/text_splitters/token",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/modules/data_connection/document_transformers/token_splitter",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/modules/data_connection/retrievers/matryoshka_retriever",
+      "destination": "https://docs.langchain.com/oss/javascript/integrations/retrievers"
+    },
+    {
+      "source": "/docs/modules/data_connection/text_embedding/integrations/openai",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/modules/data_connection/vectorstores/integrations/singlestore",
+      "destination": "https://docs.langchain.com/oss/javascript/integrations/vectorstores"
+    },
+    {
+      "source": "/docs/modules/indexes/document_loaders/examples/file_loaders/pdf",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/modules/indexes/document_loaders/examples/web_loaders/web_puppeteer",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/modules/indexes/retrievers/datafuse-hybrid",
+      "destination": "https://docs.langchain.com/oss/javascript/integrations/retrievers"
+    },
+    {
+      "source": "/docs/modules/indexes/vector_stores/integrations/datafuse",
+      "destination": "https://docs.langchain.com/oss/javascript/integrations/vectorstores"
+    },
+    {
+      "source": "/docs/modules/memory/chat_memory",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/modules/memory/how_to/entity_summary_memory",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/modules/memory/how_to/vectorstore_retriever_memory",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/modules/memory/integrations/dynamodb",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/modules/model_io/chat/caching",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/models"
+    },
+    {
+      "source": "/docs/modules/model_io/chat/quick_start",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/models"
+    },
+    {
+      "source": "/docs/modules/model_io/chat/streaming",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/models"
+    },
+    {
+      "source": "/docs/modules/model_io/llms/quick_start",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/models"
+    },
+    {
+      "source": "/docs/modules/model_io/models/chat/how_to/function_calling",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/models"
+    },
+    {
+      "source": "/docs/modules/model_io/output_parsers/types/output_fixing",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/models"
+    },
+    {
+      "source": "/docs/modules/model_io/output_parsers/types/string",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/models"
+    },
+    {
+      "source": "/docs/modules/model_io/output_parsers/types/structured",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/models"
+    },
+    {
+      "source": "/docs/modules/model_io/prompts/example_selectors/similarity",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/models"
+    },
+    {
+      "source": "/docs/modules/model_io/prompts/prompt_selectors",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/models"
+    },
+    {
+      "source": "/docs/modules/model_io/quick_start",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/models"
+    },
+    {
+      "source": "/docs/use_cases/summarization",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/how_to/tool_artifacts",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/how_to/tool_configure",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/how_to/tool_stream_events",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/how_to/tools_error",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/concepts/structured_outputs",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/concepts/prompt_templates",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/concepts/messages",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/how_to/output_parser_structured",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/how_to/generative_ui",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/concepts/chat_history",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/concepts/why_langchain",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/integrations/text_embedding/alibaba_tongyi",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/community",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/integrations/tools/jigsawstack",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/integrations/memory/mongodb",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/additional_resources/tutorials",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/integrations/chat_memory/motorhead_memory",
+      "destination": "https://docs.langchain.com/oss/javascript/integrations/chat"
+    },
+    {
+      "source": "/docs/integrations/document_loaders/web_loaders/apify_dataset",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/how_to/tool_calling",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/integrations/toolkits/vectorstore",
+      "destination": "https://docs.langchain.com/oss/javascript/integrations/tools"
+    },
+    {
+      "source": "/docs/how_to/callbacks_serverless",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/use_cases/sql",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/modules/agents/how_to/custom_agent",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/agents"
+    },
+    {
+      "source": "/docs/modules/agents/how_to/custom_llm_agent",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/agents"
+    },
+    {
+      "source": "/docs/how_to/custom_chat",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/how_to/graph_constructing",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/expression_language/cookbook/multiple_chains",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/versions/overview",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/how_to/example_selectors",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/integrations/providers/openai",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/integrations/text_embedding/bedrock",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/modules/model_io/prompts/few_shot",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/models"
+    },
+    {
+      "source": "/docs/expression_language/how_to/map",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/integrations/vectorstores/azure_cosmosdb",
+      "destination": "https://docs.langchain.com/oss/javascript/integrations/vectorstores"
+    },
+    {
+      "source": "/docs/integrations/vectorstores/neon",
+      "destination": "https://docs.langchain.com/oss/javascript/integrations/vectorstores"
+    },
+    {
+      "source": "/docs/how_to/chatbots_retrieval",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/integrations/document_loaders/file_loaders/pdf",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/how_to/fallbacks",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/integrations/document_loaders/file_loaders/directory",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/modules/indexes",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/integrations/document_compressors/cohere_rerank",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/integrations/document_loaders/web_loaders/couchbase",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/integrations/document_loaders/web_loaders/imsdb",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/integrations/vectorstores/upstash",
+      "destination": "https://docs.langchain.com/oss/javascript/integrations/vectorstores"
+    },
+    {
+      "source": "/docs/how_to/document_loader_csv",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/integrations/callbacks/upstash_ratelimit_callback",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/integrations/tools/azure_dynamic_sessions",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/modules/indexes/document_loaders/examples/file_loaders/unstructured",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/people",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/integrations/document_loaders/file_loaders/multi_file",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/integrations/tools/discord",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/integrations/tools/gmail",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/integrations/tools/webbrowser",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/integrations/tools/wikipedia",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/integrations/document_loaders/web_loaders/pdf",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/api/base_language/interfaces/BaseLanguageModelCallOptions",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/api/chains/classes/RetrievalQAChain",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/api/chains/functions/loadQAChain",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/api/chat_models_base/classes/BaseChatModel",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/api/memory/classes/BufferMemory",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/api/output_parsers/classes/CommaSeparatedListOutputParser",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/api/tools/classes/DynamicStructuredTool",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/api/vectorstores_base/classes/VectorStore",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/getting_started/installations",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/guides/langsmith_evaluation",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/integrations/chat_memory/convex",
+      "destination": "https://docs.langchain.com/oss/javascript/integrations/chat"
+    },
+    {
+      "source": "/docs/integrations/chat_memory/postgres",
+      "destination": "https://docs.langchain.com/oss/javascript/integrations/chat"
+    },
+    {
+      "source": "/docs/integrations/document_loaders/web_loaders/__module_name___loader",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/integrations/toolkits",
+      "destination": "https://docs.langchain.com/oss/javascript/integrations/tools"
+    },
+    {
+      "source": "/docs/integrations/tools/langchain_agentql",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/integrations/tools/langchain_discord",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/modules/agents/agent_types/openai_tools_agent",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/agents"
+    },
+    {
+      "source": "/docs/modules/agents/agents/action/chat_mrkl",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/agents"
+    },
+    {
+      "source": "/docs/modules/agents/agents/action/conversational_agent",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/agents"
+    },
+    {
+      "source": "/docs/modules/agents/agents/action/llm_mrkl",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/agents"
+    },
+    {
+      "source": "/docs/modules/agents/agents/action/openai",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/agents"
+    },
+    {
+      "source": "/docs/modules/agents/agents/action/structured_chat",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/agents"
+    },
+    {
+      "source": "/docs/modules/agents/concepts",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/agents"
+    },
+    {
+      "source": "/docs/modules/agents/executor",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/agents"
+    },
+    {
+      "source": "/docs/modules/agents/executor/getting-started",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/agents"
+    },
+    {
+      "source": "/docs/modules/agents/how_to/custom_llm_chat_agent",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/agents"
+    },
+    {
+      "source": "/docs/modules/agents/tools/agents_with_vectorstores",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/agents"
+    },
+    {
+      "source": "/docs/modules/agents/tools/aiplugin-tool",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/agents"
+    },
+    {
+      "source": "/docs/modules/agents/tools/lambda_agent",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/agents"
+    },
+    {
+      "source": "/docs/modules/agents/tools/webbrowser",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/agents"
+    },
+    {
+      "source": "/docs/modules/callbacks/how_to/create_handlers",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/modules/chains/other_chains",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/modules/chains/other_chains/multi_prompt_chain",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/modules/chains/popular/api",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/modules/chains/popular/sqlite",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/modules/chains/popular/vector_db_q",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/modules/chains/prompt_selectors",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/modules/data_connection/document_loaders/csv",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/modules/data_connection/document_loaders/how_to/csv",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/modules/data_connection/document_loaders/integrations/web_loaders/notionapi",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/modules/data_connection/document_transformers/integrations/html-to-text",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/modules/data_connection/experimental/graph_databases/memgraph",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/modules/data_connection/retrievers/how_to/multi-vector-retriever",
+      "destination": "https://docs.langchain.com/oss/javascript/integrations/retrievers"
+    },
+    {
+      "source": "/docs/modules/data_connection/vectorstores/integrations/chroma",
+      "destination": "https://docs.langchain.com/oss/javascript/integrations/vectorstores"
+    },
+    {
+      "source": "/docs/modules/data_connection/vectorstores/integrations/memory",
+      "destination": "https://docs.langchain.com/oss/javascript/integrations/vectorstores"
+    },
+    {
+      "source": "/docs/modules/indexes/document_loaders/examples/file_loaders/directory",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/modules/indexes/document_loaders/examples/web_loaders/apify_datasetnk",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/modules/indexes/document_loaders/examples/web_loaders/notionapi",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/modules/indexes/retrievers/hyde",
+      "destination": "https://docs.langchain.com/oss/javascript/integrations/retrievers"
+    },
+    {
+      "source": "/docs/modules/indexes/vector_stores/integrations/prisma",
+      "destination": "https://docs.langchain.com/oss/javascript/integrations/vectorstores"
+    },
+    {
+      "source": "/docs/modules/memory/examples/buffer_memory_chat",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/modules/memory/examples/redis",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/modules/memory/examples/zep_memory",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/modules/memory/how_to/buffer_window_memory",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/modules/memory/how_to/multiple_memory",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/modules/memory/how_to/summary_buffer",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/modules/memory/integrations/upstash_redis",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/modules/model_io/concepts",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/models"
+    },
+    {
+      "source": "/docs/modules/model_io/llms/custom_llm",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/models"
+    },
+    {
+      "source": "/docs/modules/model_io/models/llms/integrations/ai21",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/models"
+    },
+    {
+      "source": "/docs/modules/model_io/output_parsers/structured",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/models"
+    },
+    {
+      "source": "/docs/modules/models/chat/additional_functionality",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/modules/models/chat/integrations",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/modules/models/embeddings/additional_functionality",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/modules/models/embeddings/integrations",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/modules/models/llms/additional_functionality",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/modules/models/llms/integrations",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/modules/prompts/prompt_templates/additional_functionality",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/modules/tools/tools/wikipedia",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/modules/vector_store/memory_vector_store",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/use_cases/agent_simulations/generative_agents",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/use_cases/chatbots/quickstart",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/use_cases/media",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/use_cases/question_answering/citations",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/rag"
+    },
+    {
+      "source": "/docs/use_cases/question_answering/quickstart",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/rag"
+    },
+    {
+      "source": "/images/get_started/introduction",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/v0.1",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/ecosystem",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/v0.2",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/integrations",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/troubleshooting/errors/INVALID_PROMPT_INPUT",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/how_to/trim_messages",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/how_to/code_splitter",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/integrations/document_loaders/file_loaders/text",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/how_to/chat_token_usage_tracking",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/how_to/streaming",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/how_to/self_query",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/how_to/multi_vector",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/security",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/concepts/retrieval",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/how_to/custom_callbacks",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/integrations/vectorstores/opensearch",
+      "destination": "https://docs.langchain.com/oss/javascript/integrations/vectorstores"
+    },
+    {
+      "source": "/docs/how_to/message_history",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/how_to/filter_messages",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/concepts/tracing",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/how_to/tools_prompting",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/integrations/vectorstores/azure_cosmosdb_nosql",
+      "destination": "https://docs.langchain.com/oss/javascript/integrations/vectorstores"
+    },
+    {
+      "source": "/docs/concepts/text_llms",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/integrations/document_transformers/mozilla_readability",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/integrations/vectorstores/azure_cosmosdb_mongodb",
+      "destination": "https://docs.langchain.com/oss/javascript/integrations/vectorstores"
+    },
+    {
+      "source": "/docs/integrations/providers",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/how_to/parallel",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/modules/agents/tools/toolkits",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/agents"
+    },
+    {
+      "source": "/docs/use_cases/graph/construction",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/how_to/llm_caching",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/integrations/tools/google_calendar",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/modules/memory/chat_messages",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/modules/model_io/output_parsers/types",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/models"
+    },
+    {
+      "source": "/docs/modules/memory/types/vectorstore_retriever_memory",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/integrations/tools/dalle",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/guides/extending_langchain",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/integrations/retrievers/self_query/pinecone",
+      "destination": "https://docs.langchain.com/oss/javascript/integrations/retrievers"
+    },
+    {
+      "source": "/docs/modules/prompts",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/search",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/integrations/vectorstores/prisma",
+      "destination": "https://docs.langchain.com/oss/javascript/integrations/vectorstores"
+    },
+    {
+      "source": "/docs/modules/agents/toolkits",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/agents"
+    },
+    {
+      "source": "/docs/integrations/retrievers/hyde",
+      "destination": "https://docs.langchain.com/oss/javascript/integrations/retrievers"
+    },
+    {
+      "source": "/docs/integrations/document_loaders/web_loaders/confluence",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/integrations/text_embedding/transformers",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/how_to/debugging",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/integrations/vectorstores/convex",
+      "destination": "https://docs.langchain.com/oss/javascript/integrations/vectorstores"
+    },
+    {
+      "source": "/docs/how_to/migrate_agent",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/modules/agents/additional_functionality",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/agents"
+    },
+    {
+      "source": "/docs/integrations/text_embedding/tensorflow",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/modules/chains/llmchain",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
+      "source": "/docs/modules/memory/examples",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
+    },
+    {
       "source": "/:path*",
       "destination": "https://docs.langchain.com/oss/javascript/langchain/overview"
     }
