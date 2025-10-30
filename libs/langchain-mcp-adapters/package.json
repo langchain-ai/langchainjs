@@ -58,7 +58,6 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.36.0",
-    "@langchain/build": "workspace:*",
     "@langchain/core": "workspace:*",
     "@langchain/eslint": "workspace:*",
     "@langchain/langgraph": "^1.0.0",
@@ -78,7 +77,6 @@
     "prettier": "^3.6.2",
     "rollup": "^4.52.3",
     "ts-node": "^10.9.2",
-    "tsdown": "^0.15.12",
     "typescript": "~5.8.3",
     "typescript-eslint": "^8.45.0",
     "vitest": "^3.2.4"

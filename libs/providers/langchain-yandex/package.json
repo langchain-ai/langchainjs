@@ -29,7 +29,6 @@
     "@langchain/core": "^1.0.0"
   },
   "devDependencies": {
-    "@langchain/build": "workspace:*",
     "@langchain/core": "workspace:*",
     "@langchain/eslint": "workspace:*",
     "@tsconfig/recommended": "^1.0.3",
@@ -39,7 +38,6 @@
     "eslint": "^9.34.0",
     "prettier": "^2.8.3",
     "rollup": "^4.5.2",
-    "tsdown": "^0.15.12",
     "typescript": "~5.8.3",
     "vitest": "^3.2.4"
   },

@@ -42,7 +42,6 @@
     "zod": "^3.25.76 || ^4"
   },
   "devDependencies": {
-    "@langchain/build": "workspace:*",
     "@langchain/eslint": "workspace:*",
     "@types/decamelize": "^1.2.0",
     "@types/mustache": "^4",
@@ -53,7 +52,6 @@
     "ml-matrix": "^6.10.4",
     "prettier": "^2.8.3",
     "rimraf": "^5.0.1",
-    "tsdown": "^0.15.12",
     "typescript": "~5.8.3",
     "vitest": "^3.2.4",
     "web-streams-polyfill": "^4.0.0"

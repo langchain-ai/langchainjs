@@ -32,7 +32,6 @@
     "@langchain/core": "^1.0.0"
   },
   "devDependencies": {
-    "@langchain/build": "workspace:*",
     "@langchain/core": "workspace:*",
     "@langchain/eslint": "workspace:*",
     "@langchain/openai": "workspace:*",
@@ -46,7 +45,6 @@
     "prettier": "^2.8.3",
     "rollup": "^4.5.2",
     "testcontainers": "^10.25.0",
-    "tsdown": "^0.15.12",
     "typescript": "~5.8.3",
     "uuid": "^10.0.0",
     "vitest": "^3.2.4"

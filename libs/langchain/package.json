@@ -35,7 +35,6 @@
   },
   "devDependencies": {
     "@langchain/anthropic": "workspace:*",
-    "@langchain/build": "workspace:*",
     "@langchain/cohere": "workspace:*",
     "@langchain/core": "workspace:*",
     "@langchain/eslint": "workspace:*",
@@ -55,7 +54,6 @@
     "prettier": "^2.8.3",
     "reflect-metadata": "^0.2.2",
     "rimraf": "^5.0.1",
-    "tsdown": "^0.15.12",
     "typeorm": "^0.3.20",
     "typescript": "~5.8.3",
     "vitest": "^3.2.4",

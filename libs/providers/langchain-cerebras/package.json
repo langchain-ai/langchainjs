@@ -36,7 +36,6 @@
   },
   "devDependencies": {
     "@jest/globals": "^29.5.0",
-    "@langchain/build": "workspace:*",
     "@langchain/core": "workspace:*",
     "@langchain/eslint": "workspace:*",
     "@langchain/standard-tests": "workspace:*",
@@ -52,7 +51,6 @@
     "prettier": "^2.8.3",
     "rollup": "^4.5.2",
     "ts-jest": "^29.1.0",
-    "tsdown": "^0.15.12",
     "typescript": "~5.8.3",
     "zod": "^3.25.76"
   },

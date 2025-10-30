@@ -33,7 +33,6 @@
   },
   "devDependencies": {
     "@jest/globals": "^29.5.0",
-    "@langchain/build": "workspace:*",
     "@langchain/core": "workspace:*",
     "@langchain/eslint": "workspace:*",
     "@langchain/openai": "workspace:*",
@@ -45,7 +44,6 @@
     "eslint": "^9.34.0",
     "prettier": "^2.8.3",
     "rollup": "^4.5.2",
-    "tsdown": "^0.15.12",
     "typescript": "~5.8.3",
     "vitest": "^3.2.4"
   },
