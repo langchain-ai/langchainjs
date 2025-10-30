@@ -189,4 +189,30 @@ describe("reactAgent", () => {
       });
     });
   });
+
+  it("supports base callback config", async () => {
+    const agent = createAgent({
+      model: "openai:gpt-4",
+    });
+    await agent.invoke(
+      {
+        messages: [new HumanMessage("Hello, world!")],
+      },
+      {
+        runName: "test",
+        metadata: {
+          test: "test",
+        },
+        callbacks: [
+          {
+            handleLLMStart: (input) => {
+              expectTypeOf({ id: input.id }).toMatchObjectType<{
+                id: string[];
+              }>();
+            },
+          },
+        ],
+      }
+    );
+  });
 });
