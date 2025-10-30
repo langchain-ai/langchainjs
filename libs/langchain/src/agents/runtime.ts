@@ -6,6 +6,7 @@ import type {
   PregelOptions,
 } from "@langchain/langgraph";
 import type { BaseMessage } from "@langchain/core/messages";
+import type { BaseCallbackConfig } from "@langchain/core/callbacks/manager";
 
 import type { ResponseFormatUndefined } from "./responses.js";
 
@@ -152,17 +153,24 @@ export type InvokeConfiguration<ContextSchema extends Record<string, any>> =
    * If the context schema is a default object, `context` can be optional
    */
   ContextSchema extends InteropZodDefault<any>
-    ? Partial<Pick<PregelOptions<any, any, any>, CreateAgentPregelOptions>> & {
-        context?: Partial<ContextSchema>;
-      }
+    ? BaseCallbackConfig &
+        Partial<
+          Pick<PregelOptions<any, any, any>, CreateAgentPregelOptions>
+        > & {
+          context?: Partial<ContextSchema>;
+        }
     : /**
      * If the context schema is all optional, `context` can be optional
      */
     IsAllOptional<ContextSchema> extends true
-    ? Partial<Pick<PregelOptions<any, any, any>, CreateAgentPregelOptions>> & {
-        context?: Partial<ContextSchema>;
-      }
-    : Partial<Pick<PregelOptions<any, any, any>, CreateAgentPregelOptions>> &
+    ? BaseCallbackConfig &
+        Partial<
+          Pick<PregelOptions<any, any, any>, CreateAgentPregelOptions>
+        > & {
+          context?: Partial<ContextSchema>;
+        }
+    : BaseCallbackConfig &
+        Partial<Pick<PregelOptions<any, any, any>, CreateAgentPregelOptions>> &
         WithMaybeContext<ContextSchema>;
 
 export type StreamConfiguration<ContextSchema extends Record<string, any>> =
