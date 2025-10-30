@@ -1,4 +1,4 @@
-import type { OpenAI as OpenAIClient } from "openai";
+import type { OpenAI as OpenAIClient, ClientOptions } from "openai";
 import type {
   ResponseFormatText,
   ResponseFormatJSONObject,
@@ -24,7 +24,7 @@ export type OpenAIChatModelId =
 
 export type OpenAIVerbosityParam = "low" | "medium" | "high" | null;
 
-export type OpenAIApiKey = string | (() => string | Promise<string>);
+export type OpenAIApiKey = ClientOptions["apiKey"];
 
 export declare interface OpenAIBaseInput {
   /** Sampling temperature to use */

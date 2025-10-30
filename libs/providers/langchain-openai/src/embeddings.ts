@@ -4,7 +4,7 @@ import { Embeddings, type EmbeddingsParams } from "@langchain/core/embeddings";
 import { chunkArray } from "@langchain/core/utils/chunk_array";
 import type { OpenAIApiKey } from "./types.js";
 import { getEndpoint, OpenAIEndpointConfig } from "./utils/azure.js";
-import { resolveOpenAIApiKey, wrapOpenAIClientError } from "./utils/client.js";
+import { wrapOpenAIClientError } from "./utils/client.js";
 
 /**
  * @see https://platform.openai.com/docs/guides/embeddings#embedding-models
@@ -149,10 +149,8 @@ export class OpenAIEmbeddings<TOutput = number[]>
       organization: this.organization,
     };
 
-    if (typeof apiKey === "string") {
+    if (apiKey !== undefined) {
       clientConfig.apiKey = apiKey;
-    } else {
-      clientConfig.apiKey = undefined;
     }
 
     this.clientConfig = clientConfig;
@@ -228,7 +226,7 @@ export class OpenAIEmbeddings<TOutput = number[]>
   protected async embeddingWithRetry(
     request: OpenAIClient.EmbeddingCreateParams
   ) {
-    const resolvedApiKey = await resolveOpenAIApiKey(this.apiKey);
+    const currentApiKey = this.apiKey ?? this.clientConfig.apiKey;
 
     if (!this.client) {
       const openAIEndpointConfig: OpenAIEndpointConfig = {
@@ -244,10 +242,8 @@ export class OpenAIEmbeddings<TOutput = number[]>
         maxRetries: 0,
       };
 
-      if (resolvedApiKey !== undefined) {
-        params.apiKey = resolvedApiKey;
-      } else if (typeof this.clientConfig.apiKey === "string") {
-        params.apiKey = this.clientConfig.apiKey;
+      if (currentApiKey !== undefined) {
+        params.apiKey = currentApiKey;
       }
 
       if (!params.baseURL) {
@@ -255,8 +251,12 @@ export class OpenAIEmbeddings<TOutput = number[]>
       }
 
       this.client = new OpenAIClient(params);
-    } else if (resolvedApiKey !== undefined) {
-      this.client.apiKey = resolvedApiKey;
+    } else if (currentApiKey !== undefined) {
+      if (typeof currentApiKey === "string") {
+        this.client.apiKey = currentApiKey;
+      } else {
+        this.client = this.client.withOptions({ apiKey: currentApiKey });
+      }
     }
     const requestOptions = {};
 

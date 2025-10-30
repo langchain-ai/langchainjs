@@ -42,7 +42,6 @@ import {
   type OpenAIApiKey,
 } from "../types.js";
 import { type OpenAIEndpointConfig, getEndpoint } from "../utils/azure.js";
-import { resolveOpenAIApiKey } from "../utils/client.js";
 import {
   type FunctionDef,
   formatFunctionDefinitions,
@@ -463,16 +462,11 @@ export abstract class BaseChatOpenAI<
     if (this.disableStreaming) this.streamUsage = false;
 
     const clientConfig: ClientOptions = {
+      apiKey: this.apiKey,
       dangerouslyAllowBrowser: true,
       ...fields?.configuration,
       organization: this.organization,
     };
-
-    if (typeof this.apiKey === "string") {
-      clientConfig.apiKey = this.apiKey;
-    } else {
-      clientConfig.apiKey = undefined;
-    }
 
     this.clientConfig = clientConfig;
 
@@ -555,7 +549,7 @@ export abstract class BaseChatOpenAI<
   protected async _getClientOptions(
     options: OpenAICoreRequestOptions | undefined
   ): Promise<OpenAICoreRequestOptions> {
-    const resolvedApiKey = await resolveOpenAIApiKey(this.apiKey);
+    const currentApiKey = this.apiKey ?? this.clientConfig.apiKey;
 
     if (!this.client) {
       const openAIEndpointConfig: OpenAIEndpointConfig = {
@@ -571,10 +565,8 @@ export abstract class BaseChatOpenAI<
         maxRetries: 0,
       };
 
-      if (resolvedApiKey !== undefined) {
-        params.apiKey = resolvedApiKey;
-      } else if (typeof this.clientConfig.apiKey === "string") {
-        params.apiKey = this.clientConfig.apiKey;
+      if (currentApiKey !== undefined) {
+        params.apiKey = currentApiKey;
       }
 
       if (!params.baseURL) {
@@ -582,8 +574,12 @@ export abstract class BaseChatOpenAI<
       }
 
       this.client = new OpenAIClient(params);
-    } else if (resolvedApiKey !== undefined) {
-      this.client.apiKey = resolvedApiKey;
+    } else if (currentApiKey !== undefined) {
+      if (typeof currentApiKey === "string") {
+        this.client.apiKey = currentApiKey;
+      } else {
+        this.client = this.client.withOptions({ apiKey: currentApiKey });
+      }
     }
 
     const requestOptions = {

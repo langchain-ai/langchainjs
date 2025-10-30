@@ -1,22 +1,5 @@
 import { APIConnectionTimeoutError, APIUserAbortError } from "openai";
-import type { OpenAIApiKey } from "../types.js";
 import { addLangChainErrorFields } from "./errors.js";
-
-export async function resolveOpenAIApiKey(
-  apiKey: OpenAIApiKey | undefined
-): Promise<string | undefined> {
-  if (typeof apiKey === "function") {
-    const value = await apiKey();
-    if (value == null || typeof value !== "string" || value.length === 0) {
-      throw new Error(
-        "OpenAI apiKey callback must resolve to a non-empty string value."
-      );
-    }
-    return value;
-  }
-
-  return apiKey;
-}
 
 export function wrapOpenAIClientError(e: unknown) {
   if (!e || typeof e !== "object") {

@@ -16,7 +16,7 @@ import type {
   OpenAIInput,
 } from "./types.js";
 import { OpenAIEndpointConfig, getEndpoint } from "./utils/azure.js";
-import { resolveOpenAIApiKey, wrapOpenAIClientError } from "./utils/client.js";
+import { wrapOpenAIClientError } from "./utils/client.js";
 
 export type { OpenAICallOptions, OpenAIInput };
 
@@ -198,10 +198,8 @@ export class OpenAI<CallOptions extends OpenAICallOptions = OpenAICallOptions>
       organization: this.organization,
     };
 
-    if (typeof this.apiKey === "string") {
+    if (this.apiKey !== undefined) {
       clientConfig.apiKey = this.apiKey;
-    } else {
-      clientConfig.apiKey = undefined;
     }
 
     this.clientConfig = clientConfig;
@@ -470,7 +468,7 @@ export class OpenAI<CallOptions extends OpenAICallOptions = OpenAICallOptions>
   protected async _getClientOptions(
     options: OpenAICoreRequestOptions | undefined
   ): Promise<OpenAICoreRequestOptions> {
-    const resolvedApiKey = await resolveOpenAIApiKey(this.apiKey);
+    const currentApiKey = this.apiKey ?? this.clientConfig.apiKey;
 
     if (!this.client) {
       const openAIEndpointConfig: OpenAIEndpointConfig = {
@@ -486,10 +484,8 @@ export class OpenAI<CallOptions extends OpenAICallOptions = OpenAICallOptions>
         maxRetries: 0,
       };
 
-      if (resolvedApiKey !== undefined) {
-        params.apiKey = resolvedApiKey;
-      } else if (typeof this.clientConfig.apiKey === "string") {
-        params.apiKey = this.clientConfig.apiKey;
+      if (currentApiKey !== undefined) {
+        params.apiKey = currentApiKey;
       }
 
       if (!params.baseURL) {
@@ -497,8 +493,8 @@ export class OpenAI<CallOptions extends OpenAICallOptions = OpenAICallOptions>
       }
 
       this.client = new OpenAIClient(params);
-    } else if (resolvedApiKey !== undefined) {
-      this.client.apiKey = resolvedApiKey;
+    } else if (currentApiKey !== undefined) {
+      this.client = this.client.withOptions({ apiKey: currentApiKey });
     }
 
     const requestOptions = {
