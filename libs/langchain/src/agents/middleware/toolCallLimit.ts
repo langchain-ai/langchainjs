@@ -2,69 +2,11 @@
  * Tool call limit middleware for agents.
  */
 
-import { AIMessage, BaseMessage, HumanMessage } from "@langchain/core/messages";
+import { AIMessage } from "@langchain/core/messages";
 import { z } from "zod/v3";
 import type { InferInteropZodInput } from "@langchain/core/utils/types";
 
 import { createMiddleware } from "../middleware.js";
-
-/**
- * Count tool calls in a list of messages.
- *
- * @param messages - List of messages to count tool calls in.
- * @param toolName - If specified, only count calls to this specific tool.
- *   If undefined, count all tool calls.
- * @returns The total number of tool calls (optionally filtered by toolName).
- */
-function countToolCallsInMessages(
-  messages: BaseMessage[],
-  toolName?: string
-): number {
-  let count = 0;
-  for (const message of messages) {
-    if (AIMessage.isInstance(message) && message.tool_calls) {
-      if (toolName === undefined) {
-        // Count all tool calls
-        count += message.tool_calls.length;
-      } else {
-        // Count only calls to the specified tool
-        count += message.tool_calls.filter((tc) => tc.name === toolName).length;
-      }
-    }
-  }
-  return count;
-}
-
-/**
- * Get messages from the current run (after the last HumanMessage).
- *
- * @param messages - Full list of messages.
- * @returns Messages from the current run (after last HumanMessage).
- */
-function getRunMessages(messages: BaseMessage[]): BaseMessage[] {
-  /**
-   * Find the last HumanMessage
-   */
-  let lastHumanIndex = -1;
-  for (let i = messages.length - 1; i >= 0; i--) {
-    if (HumanMessage.isInstance(messages[i])) {
-      lastHumanIndex = i;
-      break;
-    }
-  }
-
-  /**
-   * If no HumanMessage found, return all messages
-   */
-  if (lastHumanIndex === -1) {
-    return messages;
-  }
-
-  /**
-   * Return messages after the last HumanMessage
-   */
-  return messages.slice(lastHumanIndex + 1);
-}
 
 /**
  * Build a message indicating which tool call limits were reached.
@@ -183,6 +125,16 @@ export type ToolCallLimitConfig = InferInteropZodInput<
 >;
 
 /**
+ * Middleware state schema to track the number of model calls made at the thread and run level.
+ */
+const stateSchema = z.object({
+  threadToolCallCount: z.record(z.string(), z.number()).default({}),
+  runToolCallCount: z.record(z.string(), z.number()).default({}),
+});
+
+const DEFAULT_TOOL_COUNT_KEY = "__all__";
+
+/**
  * Middleware that tracks tool call counts and enforces limits.
  *
  * This middleware monitors the number of tool calls made during agent execution
@@ -293,27 +245,25 @@ export function toolCallLimitMiddleware(options: ToolCallLimitConfig) {
 
   return createMiddleware({
     name: middlewareName,
+    stateSchema,
     beforeModel: {
       canJumpTo: ["end"],
       hook: (state) => {
-        const messages = state.messages;
-
         /**
          * Count tool calls in entire thread
          */
-        const threadCount = countToolCallsInMessages(
-          messages,
-          options.toolName
-        );
+        const threadCount =
+          state.threadToolCallCount?.[
+            options.toolName ?? DEFAULT_TOOL_COUNT_KEY
+          ] ?? 0;
 
         /**
          * Count tool calls in current run (after last HumanMessage)
          */
-        const runMessages = getRunMessages(messages);
-        const runCount = countToolCallsInMessages(
-          runMessages,
-          options.toolName
-        );
+        const runCount =
+          state.runToolCallCount?.[
+            options.toolName ?? DEFAULT_TOOL_COUNT_KEY
+          ] ?? 0;
 
         /**
          * Check if any limits are exceeded
@@ -355,6 +305,34 @@ export function toolCallLimitMiddleware(options: ToolCallLimitConfig) {
           messages: [limitAiMessage],
         };
       },
+    },
+    afterModel: (state) => {
+      const lastAIMessage = [...state.messages]
+        .reverse()
+        .find(AIMessage.isInstance);
+      if (!lastAIMessage || !lastAIMessage.tool_calls) {
+        return state;
+      }
+
+      const toolCallCount = lastAIMessage.tool_calls.filter(
+        (toolCall) =>
+          options.toolName === undefined || toolCall.name === options.toolName
+      ).length;
+      if (toolCallCount === 0) {
+        return state;
+      }
+
+      const countKey = options.toolName ?? DEFAULT_TOOL_COUNT_KEY;
+      const threadCounts = state.threadToolCallCount;
+      const runCounts = state.runToolCallCount;
+
+      threadCounts[countKey] = (threadCounts[countKey] ?? 0) + toolCallCount;
+      runCounts[countKey] = (runCounts[countKey] ?? 0) + toolCallCount;
+
+      return {
+        threadToolCallCount: threadCounts,
+        runToolCallCount: runCounts,
+      };
     },
   });
 }

@@ -1,12 +1,10 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable no-instanceof/no-instanceof */
 import { describe, it, expect } from "vitest";
 import { z } from "zod/v3";
 import { tool } from "@langchain/core/tools";
 import {
   HumanMessage,
   AIMessage,
-  ToolMessage,
   type BaseMessage,
   type ToolCall,
 } from "@langchain/core/messages";
@@ -477,26 +475,17 @@ describe("toolCallLimitMiddleware", () => {
 
       // Test with state that has exceeded limit
       const state = {
-        messages: [
-          new HumanMessage("Q"),
-          new AIMessage({
-            content: "",
-            tool_calls: [
-              { id: "1", name: "search", args: { query: "test1" } },
-            ] as ToolCall[],
-          }),
-          new ToolMessage("Result", "1"),
-          new AIMessage({
-            content: "",
-            tool_calls: [
-              { id: "2", name: "search", args: { query: "test2" } },
-            ] as ToolCall[],
-          }),
-        ],
+        messages: [],
+        threadToolCallCount: {
+          __all__: 2,
+        },
+        runToolCallCount: {
+          __all__: 2,
+        },
       };
 
       await expect(async () => {
-        const fn = getHookFunction(middleware.beforeModel!);
+        const fn = getHookFunction(middleware.beforeModel as any);
         await fn(state as any, {} as any);
       }).rejects.toThrow(ToolCallLimitExceededError);
     });
@@ -509,39 +498,33 @@ describe("toolCallLimitMiddleware", () => {
       });
 
       const state = {
-        messages: [
-          new HumanMessage("Q"),
-          new AIMessage({
-            content: "",
-            tool_calls: [
-              { id: "1", name: "search", args: { query: "test1" } },
-            ] as ToolCall[],
-          }),
-          new ToolMessage("Result", "1"),
-          new AIMessage({
-            content: "",
-            tool_calls: [
-              { id: "2", name: "search", args: { query: "test2" } },
-            ] as ToolCall[],
-          }),
-        ],
+        messages: [],
+        threadToolCallCount: {
+          __all__: 2,
+        },
+        runToolCallCount: {
+          __all__: 2,
+        },
       };
 
       try {
-        const fn = getHookFunction(middleware.beforeModel!);
+        const fn = getHookFunction(middleware.beforeModel as any);
         await fn(state as any, {} as any);
         expect.fail("Should have thrown error");
       } catch (error) {
         expect(error).toBeInstanceOf(ToolCallLimitExceededError);
-        if (error instanceof ToolCallLimitExceededError) {
-          expect(error.threadCount).toBe(2);
-          expect(error.threadLimit).toBe(2);
-          expect(error.runCount).toBe(2);
-          expect(error.runLimit).toBe(1);
-          expect(error.toolName).toBeUndefined();
-          expect(error.message).toContain("thread limit reached (2/2)");
-          expect(error.message).toContain("run limit reached (2/1)");
-        }
+        const toolCallLimitExceededError = error as ToolCallLimitExceededError;
+        expect(toolCallLimitExceededError.threadCount).toBe(2);
+        expect(toolCallLimitExceededError.threadLimit).toBe(2);
+        expect(toolCallLimitExceededError.runCount).toBe(2);
+        expect(toolCallLimitExceededError.runLimit).toBe(1);
+        expect(toolCallLimitExceededError.toolName).toBeUndefined();
+        expect(toolCallLimitExceededError.message).toContain(
+          "thread limit reached (2/2)"
+        );
+        expect(toolCallLimitExceededError.message).toContain(
+          "run limit reached (2/1)"
+        );
       }
     });
 
@@ -553,36 +536,26 @@ describe("toolCallLimitMiddleware", () => {
       });
 
       const state = {
-        messages: [
-          new HumanMessage("Q"),
-          new AIMessage({
-            content: "",
-            tool_calls: [
-              { id: "1", name: "search", args: { query: "test1" } },
-              { id: "2", name: "calculator", args: { expression: "1+1" } },
-            ] as ToolCall[],
-          }),
-          new ToolMessage("Result", "1"),
-          new ToolMessage("Result", "2"),
-          new AIMessage({
-            content: "",
-            tool_calls: [
-              { id: "3", name: "search", args: { query: "test2" } },
-            ] as ToolCall[],
-          }),
-        ],
+        messages: [],
+        threadToolCallCount: {
+          search: 2,
+        },
+        runToolCallCount: {
+          search: 2,
+        },
       };
 
       try {
-        const fn = getHookFunction(middleware.beforeModel!);
+        const fn = getHookFunction(middleware.beforeModel! as any);
         await fn(state as any, {} as any);
         expect.fail("Should have thrown error");
       } catch (error) {
         expect(error).toBeInstanceOf(ToolCallLimitExceededError);
-        if (error instanceof ToolCallLimitExceededError) {
-          expect(error.toolName).toBe("search");
-          expect(error.message).toContain("'search' tool call");
-        }
+        const toolCallLimitExceededError = error as ToolCallLimitExceededError;
+        expect(toolCallLimitExceededError.toolName).toBe("search");
+        expect(toolCallLimitExceededError.message).toContain(
+          "'search' tool call"
+        );
       }
     });
   });
@@ -699,7 +672,7 @@ describe("toolCallLimitMiddleware", () => {
         messages: [],
       };
 
-      const fn = getHookFunction(middleware.beforeModel!);
+      const fn = getHookFunction(middleware.beforeModel! as any);
       const result = await fn(state as any, {} as any);
       expect(result).toBeUndefined();
     });
@@ -722,9 +695,15 @@ describe("toolCallLimitMiddleware", () => {
             ] as ToolCall[],
           }),
         ],
+        threadToolCallCount: {
+          __all__: 3,
+        },
+        runToolCallCount: {
+          __all__: 3,
+        },
       };
 
-      const fn = getHookFunction(middleware.beforeModel!);
+      const fn = getHookFunction(middleware.beforeModel! as any);
       const result = await fn(state as any, {} as any);
 
       // Should hit limit (3 tool calls)

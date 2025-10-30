@@ -5,9 +5,9 @@ import { interopParse } from "@langchain/core/utils/types";
 
 import { RunnableCallable, RunnableCallableArgs } from "../RunnableCallable.js";
 import type { JumpToTarget } from "../constants.js";
-import type { Runtime, PrivateState } from "../runtime.js";
+import type { Runtime } from "../runtime.js";
 import type { AgentMiddleware, MiddlewareResult } from "../middleware/types.js";
-import { derivePrivateState, parseJumpToTarget } from "./utils.js";
+import { derivePrivateState } from "./utils.js";
 import { getHookConstraint } from "../middleware/utils.js";
 
 /**
@@ -21,7 +21,7 @@ type NodeOutput<TStateSchema extends Record<string, any>> =
   | Command<any, TStateSchema, string>;
 
 export interface MiddlewareNodeOptions {
-  getPrivateState: () => PrivateState;
+  getState: () => Record<string, unknown>;
 }
 
 export abstract class MiddlewareNode<
@@ -49,7 +49,7 @@ export abstract class MiddlewareNode<
   ): Promise<MiddlewareResult<TStateSchema>> | MiddlewareResult<TStateSchema>;
 
   async invokeMiddleware(
-    state: TStateSchema,
+    invokeState: TStateSchema,
     config?: LangGraphRunnableConfig
   ): Promise<NodeOutput<TStateSchema>> {
     /**
@@ -83,6 +83,15 @@ export abstract class MiddlewareNode<
       }
     }
 
+    const state: TStateSchema = {
+      ...invokeState,
+      ...this.#options.getState(),
+      /**
+       * don't overwrite possible outdated messages from other middleware nodes
+       */
+      messages: invokeState.messages,
+    };
+
     /**
      * ToDo: implement later
      */
@@ -91,7 +100,6 @@ export abstract class MiddlewareNode<
       writer: config?.writer,
       interrupt: config?.interrupt,
       signal: config?.signal,
-      ...this.#options.getPrivateState(),
     };
 
     const result = await this.runHook(
@@ -109,7 +117,6 @@ export abstract class MiddlewareNode<
         })
       )
     );
-    delete result?._privateState;
 
     /**
      * If result is undefined, return current state
@@ -151,8 +158,6 @@ export abstract class MiddlewareNode<
       throw new Error(`Invalid jump target: ${result.jumpTo}, ${suggestion}.`);
     }
 
-    const jumpTo = parseJumpToTarget(result.jumpTo as string);
-
     /**
      * If result is a control action, handle it
      */
@@ -165,7 +170,7 @@ export abstract class MiddlewareNode<
         return {
           ...state,
           ...(result.result || {}),
-          jumpTo,
+          jumpTo: result.jumpTo,
         };
       }
 
@@ -175,7 +180,7 @@ export abstract class MiddlewareNode<
     /**
      * If result is a state update, merge it with current state
      */
-    return { ...state, ...result, jumpTo };
+    return { ...state, ...result, jumpTo: result.jumpTo };
   }
 
   get nodeOptions(): {
