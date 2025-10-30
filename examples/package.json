@@ -61,7 +61,6 @@
     "@langchain/pinecone": "workspace:*",
     "@langchain/qdrant": "workspace:*",
     "@langchain/redis": "workspace:*",
-    "@langchain/scripts": ">=0.1.0 <0.2.0",
     "@langchain/tavily": "workspace:*",
     "@langchain/textsplitters": "workspace:*",
     "@langchain/weaviate": "workspace:*",
