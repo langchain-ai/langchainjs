@@ -15,7 +15,7 @@
   },
   "homepage": "https://github.com/langchain-ai/langchainjs/tree/main/libs/langchain-standard-tests/",
   "scripts": {
-    "build": "pnpm --filter @langchain/build compile @langchain/standard-tests",
+    "build": "tsdown",
     "lint:eslint": "eslint --cache src/",
     "lint:dpdm": "dpdm --skip-dynamic-imports circular --exit-code circular:1 --no-warning --no-tree src/*.ts src/**/*.ts",
     "lint": "pnpm lint:eslint && pnpm lint:dpdm",
@@ -61,6 +61,10 @@
         "types": "./dist/index.d.ts",
         "default": "./dist/index.js"
       },
+      "require": {
+        "types": "./dist/index.d.cts",
+        "default": "./dist/index.cjs"
+      },
       "input": "./src/index.ts"
     },
     "./vitest": {
@@ -68,11 +72,19 @@
         "types": "./dist/vitest.d.ts",
         "default": "./dist/vitest.js"
       },
+      "require": {
+        "types": "./dist/vitest.d.cts",
+        "default": "./dist/vitest.cjs"
+      },
       "input": "./src/vitest.ts"
     },
     "./package.json": "./package.json"
   },
   "files": [
-    "dist/"
+    "dist/",
+    "vitest.d.ts",
+    "CHANGELOG.md",
+    "README.md",
+    "LICENSE"
   ]
 }

@@ -6,7 +6,7 @@ import type { Plugin, PluginContext, OutputOptions } from "rolldown";
 
 import { formatWithPrettier } from "../utils.js";
 
-interface SecretPluginOptions {
+export interface SecretPluginOptions {
   /**
    * Whether to enable secret scanning
    * @default true
@@ -100,7 +100,11 @@ export function lcSecretsPlugin(options: SecretPluginOptions = {}): Plugin {
        * - enabled is true
        * - outputOptions.format is es so we only run during ESM build
        */
-      if (!opts.enabled || outputOptions.format !== "es") {
+      const format = outputOptions.format;
+      const isEsmBuild =
+        format === "es" || (Array.isArray(format) && format.includes("es"));
+
+      if (!opts.enabled || !isEsmBuild) {
         return;
       }
 

@@ -14,7 +14,7 @@
   },
   "homepage": "https://github.com/langchain-ai/langchainjs/tree/main/libs/langchain-yandex/",
   "scripts": {
-    "build": "pnpm --filter @langchain/build compile @langchain/yandex",
+    "build": "tsdown",
     "lint:eslint": "eslint --cache src/",
     "lint:dpdm": "dpdm --skip-dynamic-imports circular --exit-code circular:1 --no-warning --no-tree src/*.ts src/**/*.ts",
     "lint": "pnpm lint:eslint && pnpm lint:dpdm",
@@ -38,8 +38,8 @@
     "eslint": "^9.34.0",
     "prettier": "^2.8.3",
     "rollup": "^4.5.2",
-    "vitest": "^3.2.4",
-    "typescript": "~5.8.3"
+    "typescript": "~5.8.3",
+    "vitest": "^3.2.4"
   },
   "publishConfig": {
     "access": "public"
@@ -97,6 +97,9 @@
     "dist/",
     "CHANGELOG.md",
     "README.md",
-    "LICENSE"
+    "LICENSE",
+    "chat_models.d.ts",
+    "embeddings.d.ts",
+    "llms.d.ts"
   ]
 }
