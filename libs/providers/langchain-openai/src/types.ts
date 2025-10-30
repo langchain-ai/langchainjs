@@ -287,7 +287,6 @@ export interface AzureOpenAIInput {
 export interface AzureOpenAIChatInput
   extends OpenAIChatInput,
     AzureOpenAIInput {
-  openAIApiKey?: string;
   openAIApiVersion?: string;
   openAIBasePath?: string;
   deploymentName?: string;

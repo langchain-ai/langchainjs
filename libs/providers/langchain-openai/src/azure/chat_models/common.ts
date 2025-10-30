@@ -43,8 +43,6 @@ export const AZURE_SERIALIZABLE_KEYS = [
 export interface AzureChatOpenAIFields
   extends BaseChatOpenAIFields,
     Partial<AzureOpenAIChatInput> {
-  apiKey?: string;
-  openAIApiKey?: string;
   /**
    * Whether to use the responses API for all requests. If `false` the responses API will be used
    * only when required in order to fulfill the request.
@@ -58,7 +56,9 @@ export function _constructAzureFields(
 ) {
   this.azureOpenAIApiKey =
     fields?.azureOpenAIApiKey ??
-    fields?.openAIApiKey ??
+    (typeof fields?.openAIApiKey === "string"
+      ? fields?.openAIApiKey
+      : undefined) ??
     (typeof fields?.apiKey === "string" ? fields?.apiKey : undefined) ??
     getEnvironmentVariable("AZURE_OPENAI_API_KEY");
 

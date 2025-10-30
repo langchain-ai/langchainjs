@@ -70,7 +70,9 @@ export class AzureOpenAI extends OpenAI {
 
     this.azureOpenAIApiKey =
       fields?.azureOpenAIApiKey ??
-      fields?.openAIApiKey ??
+      (typeof fields?.openAIApiKey === "string"
+        ? fields?.openAIApiKey
+        : undefined) ??
       (typeof fields?.apiKey === "string" ? fields?.apiKey : undefined) ??
       getEnvironmentVariable("AZURE_OPENAI_API_KEY");
 
