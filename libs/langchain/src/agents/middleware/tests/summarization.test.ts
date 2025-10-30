@@ -11,6 +11,36 @@ import { countTokensApproximately } from "../utils.js";
 import { createAgent } from "../../index.js";
 import { FakeToolCallingChatModel } from "../../tests/utils.js";
 
+// Mock @langchain/anthropic to test model string usage without requiring the built package
+vi.mock("@langchain/anthropic", async () => {
+  const { AIMessage } = await import("@langchain/core/messages");
+  return {
+    ChatAnthropic: class MockChatAnthropic {
+      lc_kwargs: Record<string, any>;
+
+      constructor(params?: any) {
+        this.lc_kwargs = params || {};
+      }
+
+      async invoke() {
+        return new AIMessage({ content: "Mocked response" });
+      }
+
+      getName() {
+        return "ChatAnthropic";
+      }
+
+      get _modelType() {
+        return "chat-anthropic";
+      }
+
+      get lc_runnable() {
+        return true;
+      }
+    },
+  };
+});
+
 describe("summarizationMiddleware", () => {
   // Mock summarization model
   function createMockSummarizationModel() {
@@ -334,5 +364,28 @@ describe("summarizationMiddleware", () => {
     );
     expect(nonSystemMessages.length).toBeGreaterThanOrEqual(messagesToKeep);
     expect(nonSystemMessages.length).toBeLessThanOrEqual(messagesToKeep + 3); // Some buffer for safety
+  });
+
+  it("can be created using a model string", async () => {
+    // Verify the mocked ChatAnthropic exists
+    const { ChatAnthropic } = await import("@langchain/anthropic");
+    expect(ChatAnthropic).toBeDefined();
+    expect(typeof ChatAnthropic).toBe("function");
+
+    const model = "anthropic:claude-sonnet-4-20250514";
+
+    const middleware = summarizationMiddleware({
+      model,
+      maxTokensBeforeSummary: 100,
+      messagesToKeep: 2,
+    });
+
+    const agent = createAgent({
+      model,
+      middleware: [middleware],
+    });
+
+    const result = await agent.invoke({ messages: [] });
+    expect(result.messages.length).toBeGreaterThan(0);
   });
 });

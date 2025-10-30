@@ -18,6 +18,7 @@ import { REMOVE_ALL_MESSAGES } from "@langchain/langgraph";
 import { createMiddleware } from "../middleware.js";
 import { countTokensApproximately } from "./utils.js";
 import { hasToolCalls } from "../utils.js";
+import { initChatModel } from "../../chat_models/universal.js";
 
 const DEFAULT_SUMMARY_PROMPT = `<role>
 Context Extraction Assistant
@@ -57,7 +58,7 @@ const SEARCH_RANGE_FOR_TOOL_PAIRS = 5;
 type TokenCounter = (messages: BaseMessage[]) => number | Promise<number>;
 
 const contextSchema = z.object({
-  model: z.custom<BaseLanguageModel>(),
+  model: z.custom<string | BaseLanguageModel>(),
   maxTokensBeforeSummary: z.number().optional(),
   messagesToKeep: z.number().default(DEFAULT_MESSAGES_TO_KEEP),
   tokenCounter: z
@@ -148,6 +149,11 @@ export function summarizationMiddleware(
       } as InferInteropZodOutput<typeof contextSchema>;
       const { messages } = state;
 
+      const model =
+        typeof config.model === "string"
+          ? await initChatModel(config.model)
+          : config.model;
+
       // Ensure all messages have IDs
       ensureMessageIds(messages);
 
@@ -180,7 +186,7 @@ export function summarizationMiddleware(
 
       const summary = await createSummary(
         messagesToSummarize,
-        config.model,
+        model,
         config.summaryPrompt,
         tokenCounter
       );
