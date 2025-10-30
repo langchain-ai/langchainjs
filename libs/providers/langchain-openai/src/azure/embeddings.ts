@@ -5,11 +5,7 @@ import {
 } from "openai";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import { OpenAIEmbeddings, OpenAIEmbeddingsParams } from "../embeddings.js";
-import {
-  AzureOpenAIInput,
-  OpenAICoreRequestOptions,
-  OpenAIApiKey,
-} from "../types.js";
+import { AzureOpenAIInput, OpenAICoreRequestOptions } from "../types.js";
 import {
   getEndpoint,
   OpenAIEndpointConfig,
@@ -43,24 +39,10 @@ export class AzureOpenAIEmbeddings extends OpenAIEmbeddings {
   ) {
     super(fields);
     this.batchSize = fields?.batchSize ?? 1;
-
-    const ensureAzureStringApiKey = (
-      key: OpenAIApiKey | undefined
-    ): string | undefined => {
-      if (typeof key === "function") {
-        throw new Error(
-          "Azure OpenAI apiKey must be a string. Provide azureADTokenProvider for callable tokens."
-        );
-      }
-      return key ?? undefined;
-    };
-
-    const candidateAzureKey =
-      fields?.azureOpenAIApiKey ?? (fields?.apiKey as OpenAIApiKey | undefined);
-
-    this.azureOpenAIApiKey = ensureAzureStringApiKey(
-      candidateAzureKey ?? getEnvironmentVariable("AZURE_OPENAI_API_KEY")
-    );
+    this.azureOpenAIApiKey =
+      fields?.azureOpenAIApiKey ??
+      (typeof fields?.apiKey === "string" ? fields?.apiKey : undefined) ??
+      getEnvironmentVariable("AZURE_OPENAI_API_KEY");
 
     this.azureOpenAIApiVersion =
       fields?.azureOpenAIApiVersion ??

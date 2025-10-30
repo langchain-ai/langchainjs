@@ -7,11 +7,7 @@ import {
   getEndpoint,
   normalizeHeaders,
 } from "../../utils/azure.js";
-import {
-  AzureOpenAIChatInput,
-  OpenAICoreRequestOptions,
-  OpenAIApiKey,
-} from "../../types.js";
+import { AzureOpenAIChatInput, OpenAICoreRequestOptions } from "../../types.js";
 import {
   BaseChatOpenAI,
   BaseChatOpenAIFields,
@@ -44,19 +40,9 @@ export const AZURE_SERIALIZABLE_KEYS = [
   "openAIApiVersion",
 ];
 
-type BaseChatAzureFields = Omit<
-  BaseChatOpenAIFields,
-  "apiKey" | "openAIApiKey"
->;
-
-type AzureOpenAIChatInputOverrides = Omit<
-  AzureOpenAIChatInput,
-  "apiKey" | "openAIApiKey"
->;
-
 export interface AzureChatOpenAIFields
-  extends BaseChatAzureFields,
-    Partial<AzureOpenAIChatInputOverrides> {
+  extends BaseChatOpenAIFields,
+    Partial<AzureOpenAIChatInput> {
   apiKey?: string;
   openAIApiKey?: string;
   /**
@@ -70,25 +56,11 @@ export function _constructAzureFields(
   this: Partial<AzureOpenAIChatInput>,
   fields?: AzureChatOpenAIFields
 ) {
-  const ensureAzureStringApiKey = (
-    key: OpenAIApiKey | undefined
-  ): string | undefined => {
-    if (typeof key === "function") {
-      throw new Error(
-        "Azure OpenAI apiKey must be a string. Provide azureADTokenProvider for callable tokens."
-      );
-    }
-    return key ?? undefined;
-  };
-
-  const candidateAzureKey =
+  this.azureOpenAIApiKey =
     fields?.azureOpenAIApiKey ??
     fields?.openAIApiKey ??
-    (fields?.apiKey as OpenAIApiKey | undefined);
-
-  this.azureOpenAIApiKey = ensureAzureStringApiKey(
-    candidateAzureKey ?? getEnvironmentVariable("AZURE_OPENAI_API_KEY")
-  );
+    (typeof fields?.apiKey === "string" ? fields?.apiKey : undefined) ??
+    getEnvironmentVariable("AZURE_OPENAI_API_KEY");
 
   this.azureOpenAIApiInstanceName =
     fields?.azureOpenAIApiInstanceName ??

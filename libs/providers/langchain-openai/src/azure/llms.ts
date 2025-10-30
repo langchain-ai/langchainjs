@@ -11,7 +11,6 @@ import type {
   OpenAIInput,
   AzureOpenAIInput,
   OpenAICoreRequestOptions,
-  OpenAIApiKey,
 } from "../types.js";
 
 export class AzureOpenAI extends OpenAI {
@@ -63,31 +62,17 @@ export class AzureOpenAI extends OpenAI {
   ) {
     super(fields);
 
-    const ensureAzureStringApiKey = (
-      key: OpenAIApiKey | undefined
-    ): string | undefined => {
-      if (typeof key === "function") {
-        throw new Error(
-          "Azure OpenAI apiKey must be a string. Provide azureADTokenProvider for callable tokens."
-        );
-      }
-      return key ?? undefined;
-    };
-
     this.azureOpenAIApiDeploymentName =
       (fields?.azureOpenAIApiCompletionsDeploymentName ||
         fields?.azureOpenAIApiDeploymentName) ??
       (getEnvironmentVariable("AZURE_OPENAI_API_COMPLETIONS_DEPLOYMENT_NAME") ||
         getEnvironmentVariable("AZURE_OPENAI_API_DEPLOYMENT_NAME"));
 
-    const candidateAzureKey =
+    this.azureOpenAIApiKey =
       fields?.azureOpenAIApiKey ??
       fields?.openAIApiKey ??
-      (fields?.apiKey as OpenAIApiKey | undefined);
-
-    this.azureOpenAIApiKey = ensureAzureStringApiKey(
-      candidateAzureKey ?? getEnvironmentVariable("AZURE_OPENAI_API_KEY")
-    );
+      (typeof fields?.apiKey === "string" ? fields?.apiKey : undefined) ??
+      getEnvironmentVariable("AZURE_OPENAI_API_KEY");
 
     this.azureOpenAIApiInstanceName =
       fields?.azureOpenAIApiInstanceName ??
@@ -113,9 +98,9 @@ export class AzureOpenAI extends OpenAI {
     }
   }
 
-  protected async _getClientOptions(
+  protected _getClientOptions(
     options: OpenAICoreRequestOptions | undefined
-  ): Promise<OpenAICoreRequestOptions> {
+  ): OpenAICoreRequestOptions {
     if (!this.client) {
       const openAIEndpointConfig: OpenAIEndpointConfig = {
         azureOpenAIApiDeploymentName: this.azureOpenAIApiDeploymentName,

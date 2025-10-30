@@ -68,9 +68,9 @@ export class AzureChatOpenAIResponses<
     _constructAzureFields.call(this, fields);
   }
 
-  override async _getClientOptions(
+  override _getClientOptions(
     options: OpenAICoreRequestOptions | undefined
-  ): Promise<OpenAICoreRequestOptions> {
+  ): OpenAICoreRequestOptions {
     return _getAzureClientOptions.call(this, options);
   }
 

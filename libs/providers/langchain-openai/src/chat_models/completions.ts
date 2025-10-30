@@ -436,7 +436,7 @@ export class ChatOpenAICompletions<
     | AsyncIterable<OpenAIClient.Chat.Completions.ChatCompletionChunk>
     | OpenAIClient.Chat.Completions.ChatCompletion
   > {
-    const clientOptions = await this._getClientOptions(requestOptions);
+    const clientOptions = this._getClientOptions(requestOptions);
     const isParseableFormat =
       request.response_format && request.response_format.type === "json_schema";
     return this.caller.call(async () => {

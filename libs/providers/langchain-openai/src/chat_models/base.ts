@@ -420,7 +420,11 @@ export abstract class BaseChatOpenAI<
   constructor(fields?: BaseChatOpenAIFields) {
     super(fields ?? {});
 
-    const configApiKey = fields?.configuration?.apiKey;
+    const configApiKey =
+      typeof fields?.configuration?.apiKey === "string" ||
+      typeof fields?.configuration?.apiKey === "function"
+        ? fields?.configuration?.apiKey
+        : undefined;
     this.apiKey =
       fields?.apiKey ??
       configApiKey ??
@@ -461,14 +465,12 @@ export abstract class BaseChatOpenAI<
     this.streamUsage = fields?.streamUsage ?? this.streamUsage;
     if (this.disableStreaming) this.streamUsage = false;
 
-    const clientConfig: ClientOptions = {
+    this.clientConfig = {
       apiKey: this.apiKey,
+      organization: this.organization,
       dangerouslyAllowBrowser: true,
       ...fields?.configuration,
-      organization: this.organization,
     };
-
-    this.clientConfig = clientConfig;
 
     // If `supportsStrictToolCalling` is explicitly set, use that value.
     // Else leave undefined so it's not passed to OpenAI.
@@ -546,11 +548,9 @@ export abstract class BaseChatOpenAI<
   }
 
   /** @internal */
-  protected async _getClientOptions(
+  protected _getClientOptions(
     options: OpenAICoreRequestOptions | undefined
-  ): Promise<OpenAICoreRequestOptions> {
-    const currentApiKey = this.apiKey ?? this.clientConfig.apiKey;
-
+  ): OpenAICoreRequestOptions {
     if (!this.client) {
       const openAIEndpointConfig: OpenAIEndpointConfig = {
         baseURL: this.clientConfig.baseURL,
@@ -558,35 +558,22 @@ export abstract class BaseChatOpenAI<
 
       const endpoint = getEndpoint(openAIEndpointConfig);
 
-      const params: ClientOptions = {
+      const params = {
         ...this.clientConfig,
         baseURL: endpoint,
         timeout: this.timeout,
         maxRetries: 0,
       };
-
-      if (currentApiKey !== undefined) {
-        params.apiKey = currentApiKey;
-      }
-
       if (!params.baseURL) {
         delete params.baseURL;
       }
 
       this.client = new OpenAIClient(params);
-    } else if (currentApiKey !== undefined) {
-      if (typeof currentApiKey === "string") {
-        this.client.apiKey = currentApiKey;
-      } else {
-        this.client = this.client.withOptions({ apiKey: currentApiKey });
-      }
     }
-
     const requestOptions = {
       ...this.clientConfig,
       ...options,
     } as OpenAICoreRequestOptions;
-
     return requestOptions;
   }
 

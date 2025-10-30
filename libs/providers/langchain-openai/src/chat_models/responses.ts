@@ -307,7 +307,7 @@ export class ChatOpenAIResponses<
     | OpenAIClient.Responses.Response
   > {
     return this.caller.call(async () => {
-      const clientOptions = await this._getClientOptions(requestOptions);
+      const clientOptions = this._getClientOptions(requestOptions);
       try {
         // use parse if dealing with json_schema
         if (request.text?.format?.type === "json_schema" && !request.stream) {

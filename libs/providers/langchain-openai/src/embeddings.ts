@@ -127,8 +127,6 @@ export class OpenAIEmbeddings<TOutput = number[]>
       fieldsWithDefaults?.openAIApiKey ??
       getEnvironmentVariable("OPENAI_API_KEY");
 
-    this.apiKey = apiKey;
-
     this.organization =
       fieldsWithDefaults?.configuration?.organization ??
       getEnvironmentVariable("OPENAI_ORGANIZATION");
@@ -143,17 +141,12 @@ export class OpenAIEmbeddings<TOutput = number[]>
     this.dimensions = fieldsWithDefaults?.dimensions;
     this.encodingFormat = fieldsWithDefaults?.encodingFormat;
 
-    const clientConfig: ClientOptions = {
+    this.clientConfig = {
+      apiKey,
+      organization: this.organization,
       dangerouslyAllowBrowser: true,
       ...fields?.configuration,
-      organization: this.organization,
     };
-
-    if (apiKey !== undefined) {
-      clientConfig.apiKey = apiKey;
-    }
-
-    this.clientConfig = clientConfig;
   }
 
   /**
@@ -226,8 +219,6 @@ export class OpenAIEmbeddings<TOutput = number[]>
   protected async embeddingWithRetry(
     request: OpenAIClient.EmbeddingCreateParams
   ) {
-    const currentApiKey = this.apiKey ?? this.clientConfig.apiKey;
-
     if (!this.client) {
       const openAIEndpointConfig: OpenAIEndpointConfig = {
         baseURL: this.clientConfig.baseURL,
@@ -235,28 +226,18 @@ export class OpenAIEmbeddings<TOutput = number[]>
 
       const endpoint = getEndpoint(openAIEndpointConfig);
 
-      const params: ClientOptions = {
+      const params = {
         ...this.clientConfig,
         baseURL: endpoint,
         timeout: this.timeout,
         maxRetries: 0,
       };
 
-      if (currentApiKey !== undefined) {
-        params.apiKey = currentApiKey;
-      }
-
       if (!params.baseURL) {
         delete params.baseURL;
       }
 
       this.client = new OpenAIClient(params);
-    } else if (currentApiKey !== undefined) {
-      if (typeof currentApiKey === "string") {
-        this.client.apiKey = currentApiKey;
-      } else {
-        this.client = this.client.withOptions({ apiKey: currentApiKey });
-      }
     }
     const requestOptions = {};
 
