@@ -6,7 +6,7 @@ import type {
   PregelOptions,
 } from "@langchain/langgraph";
 import type { BaseMessage } from "@langchain/core/messages";
-import { BaseCallbackConfig } from "@langchain/core/callbacks/manager";
+import type { BaseCallbackConfig } from "@langchain/core/callbacks/manager";
 
 import type { ResponseFormatUndefined } from "./responses.js";
 
