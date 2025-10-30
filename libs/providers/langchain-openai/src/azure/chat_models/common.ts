@@ -1,4 +1,4 @@
-import { AzureOpenAI as AzureOpenAIClient } from "openai";
+import { AzureOpenAI as AzureOpenAIClient, type ClientOptions } from "openai";
 import { getEnv, getEnvironmentVariable } from "@langchain/core/utils/env";
 import type { Serialized } from "@langchain/core/load/serializable";
 import { ChatOpenAICallOptions } from "../../chat_models/index.js";
@@ -7,7 +7,11 @@ import {
   getEndpoint,
   normalizeHeaders,
 } from "../../utils/azure.js";
-import { AzureOpenAIChatInput, OpenAICoreRequestOptions } from "../../types.js";
+import {
+  AzureOpenAIChatInput,
+  OpenAICoreRequestOptions,
+  OpenAIApiKey,
+} from "../../types.js";
 import {
   BaseChatOpenAI,
   BaseChatOpenAIFields,
@@ -40,9 +44,21 @@ export const AZURE_SERIALIZABLE_KEYS = [
   "openAIApiVersion",
 ];
 
+type BaseChatAzureFields = Omit<
+  BaseChatOpenAIFields,
+  "apiKey" | "openAIApiKey"
+>;
+
+type AzureOpenAIChatInputOverrides = Omit<
+  AzureOpenAIChatInput,
+  "apiKey" | "openAIApiKey"
+>;
+
 export interface AzureChatOpenAIFields
-  extends BaseChatOpenAIFields,
-    Partial<AzureOpenAIChatInput> {
+  extends BaseChatAzureFields,
+    Partial<AzureOpenAIChatInputOverrides> {
+  apiKey?: string;
+  openAIApiKey?: string;
   /**
    * Whether to use the responses API for all requests. If `false` the responses API will be used
    * only when required in order to fulfill the request.
@@ -54,11 +70,25 @@ export function _constructAzureFields(
   this: Partial<AzureOpenAIChatInput>,
   fields?: AzureChatOpenAIFields
 ) {
-  this.azureOpenAIApiKey =
+  const ensureAzureStringApiKey = (
+    key: OpenAIApiKey | undefined
+  ): string | undefined => {
+    if (typeof key === "function") {
+      throw new Error(
+        "Azure OpenAI apiKey must be a string. Provide azureADTokenProvider for callable tokens."
+      );
+    }
+    return key ?? undefined;
+  };
+
+  const candidateAzureKey =
     fields?.azureOpenAIApiKey ??
     fields?.openAIApiKey ??
-    fields?.apiKey ??
-    getEnvironmentVariable("AZURE_OPENAI_API_KEY");
+    (fields?.apiKey as OpenAIApiKey | undefined);
+
+  this.azureOpenAIApiKey = ensureAzureStringApiKey(
+    candidateAzureKey ?? getEnvironmentVariable("AZURE_OPENAI_API_KEY")
+  );
 
   this.azureOpenAIApiInstanceName =
     fields?.azureOpenAIApiInstanceName ??
@@ -106,8 +136,9 @@ export function _getAzureClientOptions(
 
     const endpoint = getEndpoint(openAIEndpointConfig);
 
-    const params = {
-      ...this.clientConfig,
+    const { apiKey: existingApiKey, ...clientConfigRest } = this.clientConfig;
+    const params: Omit<ClientOptions, "apiKey"> & { apiKey?: string } = {
+      ...clientConfigRest,
       baseURL: endpoint,
       timeout: this.timeout,
       maxRetries: 0,

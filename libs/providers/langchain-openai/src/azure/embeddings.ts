@@ -5,7 +5,11 @@ import {
 } from "openai";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import { OpenAIEmbeddings, OpenAIEmbeddingsParams } from "../embeddings.js";
-import { AzureOpenAIInput, OpenAICoreRequestOptions } from "../types.js";
+import {
+  AzureOpenAIInput,
+  OpenAICoreRequestOptions,
+  OpenAIApiKey,
+} from "../types.js";
 import {
   getEndpoint,
   OpenAIEndpointConfig,
@@ -39,10 +43,24 @@ export class AzureOpenAIEmbeddings extends OpenAIEmbeddings {
   ) {
     super(fields);
     this.batchSize = fields?.batchSize ?? 1;
-    this.azureOpenAIApiKey =
-      fields?.azureOpenAIApiKey ??
-      fields?.apiKey ??
-      getEnvironmentVariable("AZURE_OPENAI_API_KEY");
+
+    const ensureAzureStringApiKey = (
+      key: OpenAIApiKey | undefined
+    ): string | undefined => {
+      if (typeof key === "function") {
+        throw new Error(
+          "Azure OpenAI apiKey must be a string. Provide azureADTokenProvider for callable tokens."
+        );
+      }
+      return key ?? undefined;
+    };
+
+    const candidateAzureKey =
+      fields?.azureOpenAIApiKey ?? (fields?.apiKey as OpenAIApiKey | undefined);
+
+    this.azureOpenAIApiKey = ensureAzureStringApiKey(
+      candidateAzureKey ?? getEnvironmentVariable("AZURE_OPENAI_API_KEY")
+    );
 
     this.azureOpenAIApiVersion =
       fields?.azureOpenAIApiVersion ??
@@ -81,8 +99,9 @@ export class AzureOpenAIEmbeddings extends OpenAIEmbeddings {
 
       const endpoint = getEndpoint(openAIEndpointConfig);
 
-      const params = {
-        ...this.clientConfig,
+      const { apiKey: existingApiKey, ...clientConfigRest } = this.clientConfig;
+      const params: Omit<ClientOptions, "apiKey"> & { apiKey?: string } = {
+        ...clientConfigRest,
         baseURL: endpoint,
         timeout: this.timeout,
         maxRetries: 0,
