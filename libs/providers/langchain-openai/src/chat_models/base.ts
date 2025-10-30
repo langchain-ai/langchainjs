@@ -548,7 +548,7 @@ export abstract class BaseChatOpenAI<
   }
 
   /** @internal */
-  protected _getClientOptions(
+  _getClientOptions(
     options: OpenAICoreRequestOptions | undefined
   ): OpenAICoreRequestOptions {
     if (!this.client) {
@@ -557,7 +557,6 @@ export abstract class BaseChatOpenAI<
       };
 
       const endpoint = getEndpoint(openAIEndpointConfig);
-
       const params = {
         ...this.clientConfig,
         baseURL: endpoint,
