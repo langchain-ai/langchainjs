@@ -1184,6 +1184,17 @@
         "default": "./dist/embeddings/minimax.cjs"
       }
     },
+    "./embeddings/ovhcloud": {
+      "input": "./src/embeddings/ovhcloud.ts",
+      "import": {
+        "types": "./dist/embeddings/ovhcloud.d.ts",
+        "default": "./dist/embeddings/ovhcloud.js"
+      },
+      "require": {
+        "types": "./dist/embeddings/ovhcloud.d.cts",
+        "default": "./dist/embeddings/ovhcloud.cjs"
+      }
+    },
     "./embeddings/premai": {
       "input": "./src/embeddings/premai.ts",
       "import": {
@@ -2084,6 +2095,17 @@
       "require": {
         "types": "./dist/chat_models/novita.d.cts",
         "default": "./dist/chat_models/novita.cjs"
+      }
+    },
+    "./chat_models/ovhcloud": {
+      "input": "./src/chat_models/ovhcloud.ts",
+      "import": {
+        "types": "./dist/chat_models/ovhcloud.d.ts",
+        "default": "./dist/chat_models/ovhcloud.js"
+      },
+      "require": {
+        "types": "./dist/chat_models/ovhcloud.d.cts",
+        "default": "./dist/chat_models/ovhcloud.cjs"
       }
     },
     "./chat_models/perplexity": {
