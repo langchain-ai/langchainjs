@@ -52,6 +52,10 @@ const tools = [
     name: "tool_1",
     description: "tool_1",
   }),
+  tool(() => "barfoo", {
+    name: "tool_2",
+    description: "tool_2",
+  }),
 ];
 
 describe("ModelCallLimitMiddleware", () => {
@@ -143,14 +147,19 @@ describe("ModelCallLimitMiddleware", () => {
           checkpointer,
         });
         if (exitBehavior === "throw") {
-          await expect(
-            agent2.invoke({ messages: ["Hello, world!"] }, config)
-          ).resolves.not.toThrow();
+          const result = await agent2.invoke(
+            { messages: ["Hello, world!"] },
+            config
+          );
+          await expect(result.runModelCallCount).toBe(3);
+          await expect(result.threadModelCallCount).toBe(3);
         } else {
           const result = await agent2.invoke(
             { messages: ["Hello, world!"] },
             config
           );
+          await expect(result.runModelCallCount).toBe(3);
+          await expect(result.threadModelCallCount).toBe(3);
           expect(result.messages.at(-1)?.content).not.toContain(
             "Model call limits exceeded"
           );

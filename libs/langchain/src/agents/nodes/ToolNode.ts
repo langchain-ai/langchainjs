@@ -21,7 +21,6 @@ import { RunnableCallable } from "../RunnableCallable.js";
 import { PreHookAnnotation } from "../annotation.js";
 import { mergeAbortSignals } from "./utils.js";
 import { ToolInvocationError } from "../errors.js";
-import type { PrivateState } from "../runtime.js";
 import type {
   AnyAnnotationRoot,
   WrapToolCallHook,
@@ -70,11 +69,6 @@ export interface ToolNodeOptions {
    * The wrapper receives the tool call request and a handler function to execute the tool.
    */
   wrapToolCall?: WrapToolCallHook;
-  /**
-   * Optional function to get the private state (threadLevelCallCount, runModelCallCount).
-   * Used to provide runtime metadata to wrapToolCall middleware.
-   */
-  getPrivateState?: () => PrivateState;
 }
 
 const isBaseMessageArray = (input: unknown): input is BaseMessage[] =>
@@ -183,14 +177,11 @@ export class ToolNode<
 
   wrapToolCall?: WrapToolCallHook;
 
-  getPrivateState?: () => PrivateState;
-
   constructor(
     tools: (StructuredToolInterface | DynamicTool | RunnableToolLike)[],
     public options?: ToolNodeOptions
   ) {
-    const { name, tags, handleToolErrors, wrapToolCall, getPrivateState } =
-      options ?? {};
+    const { name, tags, handleToolErrors, wrapToolCall } = options ?? {};
     super({
       name,
       tags,
@@ -204,7 +195,6 @@ export class ToolNode<
     this.tools = tools;
     this.handleToolErrors = handleToolErrors ?? this.handleToolErrors;
     this.wrapToolCall = wrapToolCall;
-    this.getPrivateState = getPrivateState;
     this.signal = options?.signal;
   }
 
@@ -335,22 +325,11 @@ export class ToolNode<
      * Build runtime from LangGraph config
      */
     const lgConfig = config as LangGraphRunnableConfig;
-
-    /**
-     * Get private state if available
-     */
-    const privateState = this.getPrivateState?.() || {
-      threadLevelCallCount: 0,
-      runModelCallCount: 0,
-    };
-
     const runtime = {
       context: lgConfig?.context,
       writer: lgConfig?.writer,
       interrupt: lgConfig?.interrupt,
       signal: lgConfig?.signal,
-      threadLevelCallCount: privateState.threadLevelCallCount,
-      runModelCallCount: privateState.runModelCallCount,
     };
 
     /**

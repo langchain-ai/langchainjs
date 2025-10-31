@@ -46,11 +46,7 @@ import type {
   JumpTo,
   UserInput,
 } from "./types.js";
-import type {
-  PrivateState,
-  InvokeConfiguration,
-  StreamConfiguration,
-} from "./runtime.js";
+import type { InvokeConfiguration, StreamConfiguration } from "./runtime.js";
 import type {
   AgentMiddleware,
   InferMiddlewareContextInputs,
@@ -249,10 +245,20 @@ export class ReactAgent<
         throw new Error(`Middleware ${m.name} is defined multiple times`);
       }
 
+      const getState = () => {
+        return {
+          ...beforeAgentNode?.getState(),
+          ...beforeModelNode?.getState(),
+          ...afterModelNode?.getState(),
+          ...afterAgentNode?.getState(),
+          ...this.#agentNode.getState(),
+        };
+      };
+
       middlewareNames.add(m.name);
       if (m.beforeAgent) {
         beforeAgentNode = new BeforeAgentNode(m, {
-          getPrivateState: () => this.#agentNode.getState()._privateState,
+          getState,
         });
         const name = `${m.name}.before_agent`;
         beforeAgentNodes.push({
@@ -268,7 +274,7 @@ export class ReactAgent<
       }
       if (m.beforeModel) {
         beforeModelNode = new BeforeModelNode(m, {
-          getPrivateState: () => this.#agentNode.getState()._privateState,
+          getState,
         });
         const name = `${m.name}.before_model`;
         beforeModelNodes.push({
@@ -284,7 +290,7 @@ export class ReactAgent<
       }
       if (m.afterModel) {
         afterModelNode = new AfterModelNode(m, {
-          getPrivateState: () => this.#agentNode.getState()._privateState,
+          getState,
         });
         const name = `${m.name}.after_model`;
         afterModelNodes.push({
@@ -300,7 +306,7 @@ export class ReactAgent<
       }
       if (m.afterAgent) {
         afterAgentNode = new AfterAgentNode(m, {
-          getPrivateState: () => this.#agentNode.getState()._privateState,
+          getState,
         });
         const name = `${m.name}.after_agent`;
         afterAgentNodes.push({
@@ -316,15 +322,7 @@ export class ReactAgent<
       }
 
       if (m.wrapModelCall) {
-        wrapModelCallHookMiddleware.push([
-          m,
-          () => ({
-            ...beforeAgentNode?.getState(),
-            ...beforeModelNode?.getState(),
-            ...afterModelNode?.getState(),
-            ...afterAgentNode?.getState(),
-          }),
-        ]);
+        wrapModelCallHookMiddleware.push([m, getState]);
       }
     }
 
@@ -350,7 +348,6 @@ export class ReactAgent<
       const toolNode = new ToolNode(toolClasses.filter(isClientTool), {
         signal: this.options.signal,
         wrapToolCall: wrapToolCallHandler,
-        getPrivateState: () => this.#agentNode.getState()._privateState,
       });
       allNodeWorkflows.addNode("tools", toolNode);
     }
@@ -944,7 +941,8 @@ export class ReactAgent<
    * Initialize middleware states if not already present in the input state.
    */
   async #initializeMiddlewareStates(
-    state: InvokeStateParameter<StateSchema, TMiddleware>
+    state: InvokeStateParameter<StateSchema, TMiddleware>,
+    config: RunnableConfig
   ): Promise<InvokeStateParameter<StateSchema, TMiddleware>> {
     if (
       !this.options.middleware ||
@@ -959,10 +957,13 @@ export class ReactAgent<
       this.options.middleware,
       state
     );
-    const updatedState = { ...state } as InvokeStateParameter<
-      StateSchema,
-      TMiddleware
-    >;
+    const threadState = await this.#graph
+      .getState(config)
+      .catch(() => ({ values: {} }));
+    const updatedState = {
+      ...threadState.values,
+      ...state,
+    } as InvokeStateParameter<StateSchema, TMiddleware>;
     if (!updatedState) {
       return updatedState;
     }
@@ -975,35 +976,6 @@ export class ReactAgent<
     }
 
     return updatedState;
-  }
-
-  /**
-   * Populate the private state of the agent node from the previous state.
-   */
-  async #populatePrivateState(config?: RunnableConfig) {
-    /**
-     * not needed if thread_id is not provided
-     */
-    if (!config?.configurable?.thread_id) {
-      return;
-    }
-    const prevState = (await this.#graph.getState(config as any)) as {
-      values: {
-        _privateState: PrivateState;
-      };
-    };
-
-    /**
-     * not need if state is empty
-     */
-    if (!prevState.values._privateState) {
-      return;
-    }
-
-    this.#agentNode.setState({
-      structuredResponse: undefined,
-      _privateState: prevState.values._privateState,
-    });
   }
 
   /**
@@ -1061,8 +1033,10 @@ export class ReactAgent<
       StructuredResponseFormat,
       TMiddleware
     >;
-    const initializedState = await this.#initializeMiddlewareStates(state);
-    await this.#populatePrivateState(config);
+    const initializedState = await this.#initializeMiddlewareStates(
+      state,
+      config as RunnableConfig
+    );
 
     return this.#graph.invoke(
       initializedState,
@@ -1120,7 +1094,10 @@ export class ReactAgent<
         InferMiddlewareContextInputs<TMiddleware>
     >
   ): Promise<IterableReadableStream<any>> {
-    const initializedState = await this.#initializeMiddlewareStates(state);
+    const initializedState = await this.#initializeMiddlewareStates(
+      state,
+      config as RunnableConfig
+    );
     return this.#graph.stream(initializedState, config as Record<string, any>);
   }
 
