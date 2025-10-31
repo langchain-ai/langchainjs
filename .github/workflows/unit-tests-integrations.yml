@@ -42,7 +42,7 @@ jobs:
     needs: get-changed-files
     runs-on: ubuntu-latest
     env:
-      PACKAGES: "anthropic,aws,azure-cosmosdb,azure-dynamic-sessions,baidu-qianfan,cerebras,cloudflare,cohere,core,community,deepseek,exa,google-cloud-sql-pg,google-common,google-gauth,google-genai,google-vertexai,google-vertexai-web,google-webauth,groq,mcp-adapters,mistralai,mixedbread-ai,mongodb,nomic,ollama,openai,pinecone,qdrant,redis,scripts,standard-tests,tavily,textsplitters,weaviate,xai,yandex"
+      PACKAGES: "anthropic,aws,azure-cosmosdb,azure-dynamic-sessions,baidu-qianfan,cerebras,cloudflare,cohere,core,community,deepseek,exa,google-cloud-sql-pg,google-common,google-gauth,google-genai,google-vertexai,google-vertexai-web,google-webauth,groq,mcp-adapters,mistralai,mixedbread-ai,mongodb,nomic,ollama,openai,pinecone,qdrant,redis,standard-tests,tavily,textsplitters,weaviate,xai,yandex"
     outputs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
       matrix_length: ${{ steps.set-matrix.outputs.matrix_length }}
