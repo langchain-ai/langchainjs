@@ -159,7 +159,8 @@ export async function getChatModelByClassName(className: string) {
     const err = e as Error;
     if (
       "code" in err &&
-      err.code?.toString().includes("ERR_MODULE_NOT_FOUND")
+      err.code?.toString().includes("ERR_MODULE_NOT_FOUND") &&
+      "message" in err
     ) {
       const attemptedPackage = err.message
         .split("Error: Cannot find package '")[1]
@@ -216,6 +217,7 @@ export function _inferModelProvider(modelName: string): string | undefined {
   if (
     modelName.startsWith("gpt-3") ||
     modelName.startsWith("gpt-4") ||
+    modelName.startsWith("gpt-5") ||
     modelName.startsWith("o1") ||
     modelName.startsWith("o3") ||
     modelName.startsWith("o4")

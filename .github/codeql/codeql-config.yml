@@ -19,5 +19,4 @@ paths-ignore:
   - "**/*.test.ts"
   - "**/tests/**/*.ts"
   - "**/__tests__/**/*.ts"
-  - "/libs/langchain-scripts/**/*.ts"
   - "docs/core_docs/scripts/*.js"
