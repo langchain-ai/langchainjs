@@ -17,7 +17,6 @@ import {
   pickRunnableConfigKeys,
   type RunnableConfig,
 } from "../runnables/config.js";
-import type { RunnableFunc } from "../runnables/base.js";
 import { isDirectToolOutput, ToolCall, ToolMessage } from "../messages/tool.js";
 import { AsyncLocalStorageProviderSingleton } from "../singletons/index.js";
 import {
@@ -54,6 +53,7 @@ import type {
   StringInputToolSchema,
   ToolInterface,
   ToolOutputType,
+  ToolRuntime,
 } from "./types.js";
 import { type JSONSchema, validatesOnlyStrings } from "../utils/json_schema.js";
 
@@ -71,6 +71,7 @@ export type {
   ToolReturnType,
   ToolRunnableConfig,
   ToolInputSchemaBase as ToolSchemaBase,
+  ToolRuntime,
 } from "./types.js";
 
 export {
@@ -512,13 +513,63 @@ export abstract class BaseToolkit {
 }
 
 /**
+ * Helper type to check if a schema is defined (not undefined).
+ */
+type IsSchemaDefined<T> = T extends undefined ? false : true;
+
+/**
+ * Helper type to determine if runtime should be passed to the function.
+ */
+type ShouldPassRuntime<
+  StateSchema extends InteropZodObject | undefined,
+  ContextSchema extends InteropZodObject | undefined
+> = IsSchemaDefined<StateSchema> extends true
+  ? true
+  : IsSchemaDefined<ContextSchema> extends true
+  ? true
+  : false;
+
+/**
+ * Helper type to create RunnableFunc with optional runtime parameter.
+ */
+type RunnableFuncWithRuntime<
+  RunInput,
+  RunOutput,
+  StateSchema extends InteropZodObject | undefined,
+  ContextSchema extends InteropZodObject | undefined,
+  CallOptions extends RunnableConfig = RunnableConfig
+> = ShouldPassRuntime<StateSchema, ContextSchema> extends true
+  ? (
+      input: RunInput,
+      runtime: ToolRuntime<StateSchema, ContextSchema>,
+      options?:
+        | CallOptions
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        | Record<string, any>
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        | (Record<string, any> & CallOptions)
+    ) => RunOutput | Promise<RunOutput>
+  : (
+      input: RunInput,
+      options?:
+        | CallOptions
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        | Record<string, any>
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        | (Record<string, any> & CallOptions)
+    ) => RunOutput | Promise<RunOutput>;
+
+/**
  * Parameters for the tool function.
  * Schema can be provided as Zod or JSON schema.
  * Both schema types will be validated.
  * @template {ToolInputSchemaBase} RunInput The input schema for the tool.
  */
-interface ToolWrapperParams<RunInput = ToolInputSchemaBase | undefined>
-  extends ToolParams {
+interface ToolWrapperParams<
+  RunInput = ToolInputSchemaBase | undefined,
+  StateSchema extends InteropZodObject | undefined = undefined,
+  ContextSchema extends InteropZodObject | undefined = undefined
+> extends ToolParams {
   /**
    * The name of the tool. If using with an LLM, this
    * will be passed as the tool name.
@@ -552,6 +603,14 @@ interface ToolWrapperParams<RunInput = ToolInputSchemaBase | undefined>
    * an agent should stop looping.
    */
   returnDirect?: boolean;
+  /**
+   * The state schema for the tool runtime.
+   */
+  stateSchema?: StateSchema;
+  /**
+   * The context schema for the tool runtime.
+   */
+  contextSchema?: ContextSchema;
 }
 
 /**
@@ -562,6 +621,8 @@ interface ToolWrapperParams<RunInput = ToolInputSchemaBase | undefined>
  * @function
  * @template {ToolInputSchemaBase} SchemaT The input schema for the tool.
  * @template {ToolReturnType} ToolOutputT The output type of the tool.
+ * @template {InteropZodObject | undefined} StateSchema The state schema for the tool runtime.
+ * @template {InteropZodObject | undefined} ContextSchema The context schema for the tool runtime.
  *
  * @param {RunnableFunc<z.output<SchemaT>, ToolOutputT>} func - The function to invoke when the tool is called.
  * @param {ToolWrapperParams<SchemaT>} fields - An object containing the following properties:
@@ -571,56 +632,90 @@ interface ToolWrapperParams<RunInput = ToolInputSchemaBase | undefined>
  *
  * @returns {DynamicStructuredTool<SchemaT>} A new StructuredTool instance.
  */
-export function tool<SchemaT extends ZodStringV3, ToolOutputT = ToolOutputType>(
-  func: RunnableFunc<
+export function tool<
+  SchemaT extends ZodStringV3,
+  ToolOutputT = ToolOutputType,
+  StateSchema extends InteropZodObject | undefined = undefined,
+  ContextSchema extends InteropZodObject | undefined = undefined
+>(
+  func: RunnableFuncWithRuntime<
     InferInteropZodOutput<SchemaT>,
     ToolOutputT,
+    StateSchema,
+    ContextSchema,
     ToolRunnableConfig
   >,
-  fields: ToolWrapperParams<SchemaT>
+  fields: ToolWrapperParams<SchemaT, StateSchema, ContextSchema>
 ): DynamicTool<ToolOutputT>;
 
-export function tool<SchemaT extends ZodStringV4, ToolOutputT = ToolOutputType>(
-  func: RunnableFunc<
+export function tool<
+  SchemaT extends ZodStringV4,
+  ToolOutputT = ToolOutputType,
+  StateSchema extends InteropZodObject | undefined = undefined,
+  ContextSchema extends InteropZodObject | undefined = undefined
+>(
+  func: RunnableFuncWithRuntime<
     InferInteropZodOutput<SchemaT>,
     ToolOutputT,
+    StateSchema,
+    ContextSchema,
     ToolRunnableConfig
   >,
-  fields: ToolWrapperParams<SchemaT>
+  fields: ToolWrapperParams<SchemaT, StateSchema, ContextSchema>
 ): DynamicTool<ToolOutputT>;
 
 export function tool<
   SchemaT extends ZodObjectV3,
   SchemaOutputT = InferInteropZodOutput<SchemaT>,
   SchemaInputT = InferInteropZodInput<SchemaT>,
-  ToolOutputT = ToolOutputType
+  ToolOutputT = ToolOutputType,
+  StateSchema extends InteropZodObject | undefined = undefined,
+  ContextSchema extends InteropZodObject | undefined = undefined
 >(
-  func: RunnableFunc<SchemaOutputT, ToolOutputT, ToolRunnableConfig>,
-  fields: ToolWrapperParams<SchemaT>
+  func: RunnableFuncWithRuntime<
+    SchemaOutputT,
+    ToolOutputT,
+    StateSchema,
+    ContextSchema,
+    ToolRunnableConfig
+  >,
+  fields: ToolWrapperParams<SchemaT, StateSchema, ContextSchema>
 ): DynamicStructuredTool<SchemaT, SchemaOutputT, SchemaInputT, ToolOutputT>;
 
 export function tool<
   SchemaT extends ZodObjectV4,
   SchemaOutputT = InferInteropZodOutput<SchemaT>,
   SchemaInputT = InferInteropZodInput<SchemaT>,
-  ToolOutputT = ToolOutputType
+  ToolOutputT = ToolOutputType,
+  StateSchema extends InteropZodObject | undefined = undefined,
+  ContextSchema extends InteropZodObject | undefined = undefined
 >(
-  func: RunnableFunc<SchemaOutputT, ToolOutputT, ToolRunnableConfig>,
-  fields: ToolWrapperParams<SchemaT>
+  func: RunnableFuncWithRuntime<
+    SchemaOutputT,
+    ToolOutputT,
+    StateSchema,
+    ContextSchema,
+    ToolRunnableConfig
+  >,
+  fields: ToolWrapperParams<SchemaT, StateSchema, ContextSchema>
 ): DynamicStructuredTool<SchemaT, SchemaOutputT, SchemaInputT, ToolOutputT>;
 
 export function tool<
   SchemaT extends JSONSchema,
   SchemaOutputT = ToolInputSchemaOutputType<SchemaT>,
   SchemaInputT = ToolInputSchemaInputType<SchemaT>,
-  ToolOutputT = ToolOutputType
+  ToolOutputT = ToolOutputType,
+  StateSchema extends InteropZodObject | undefined = undefined,
+  ContextSchema extends InteropZodObject | undefined = undefined
 >(
-  func: RunnableFunc<
+  func: RunnableFuncWithRuntime<
     Parameters<DynamicStructuredToolInput<SchemaT>["func"]>[0],
     ToolOutputT,
+    StateSchema,
+    ContextSchema,
     ToolRunnableConfig
   >,
-  fields: ToolWrapperParams<SchemaT>
+  fields: ToolWrapperParams<SchemaT, StateSchema, ContextSchema>
 ): DynamicStructuredTool<SchemaT, SchemaOutputT, SchemaInputT, ToolOutputT>;
 
 export function tool<
@@ -630,15 +725,26 @@ export function tool<
     | JSONSchema = InteropZodObject,
   SchemaOutputT = ToolInputSchemaOutputType<SchemaT>,
   SchemaInputT = ToolInputSchemaInputType<SchemaT>,
-  ToolOutputT = ToolOutputType
+  ToolOutputT = ToolOutputType,
+  StateSchema extends InteropZodObject | undefined = undefined,
+  ContextSchema extends InteropZodObject | undefined = undefined
 >(
-  func: RunnableFunc<SchemaOutputT, ToolOutputT, ToolRunnableConfig>,
-  fields: ToolWrapperParams<SchemaT>
+  func: RunnableFuncWithRuntime<
+    SchemaOutputT,
+    ToolOutputT,
+    StateSchema,
+    ContextSchema,
+    ToolRunnableConfig
+  >,
+  fields: ToolWrapperParams<SchemaT, StateSchema, ContextSchema>
 ):
   | DynamicStructuredTool<SchemaT, SchemaOutputT, SchemaInputT, ToolOutputT>
   | DynamicTool<ToolOutputT> {
   const isSimpleStringSchema = isSimpleStringZodSchema(fields.schema);
   const isStringJSONSchema = validatesOnlyStrings(fields.schema);
+  const hasStateSchema = fields.stateSchema !== undefined;
+  const hasContextSchema = fields.contextSchema !== undefined;
+  const shouldPassRuntime = hasStateSchema || hasContextSchema;
 
   // If the schema is not provided, or it's a simple string schema, create a DynamicTool
   if (!fields.schema || isSimpleStringSchema || isStringJSONSchema) {
@@ -658,9 +764,50 @@ export function tool<
             pickRunnableConfigKeys(childConfig),
             async () => {
               try {
-                // TS doesn't restrict the type here based on the guard above
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                resolve(func(input as any, childConfig));
+                if (shouldPassRuntime) {
+                  // Construct runtime object from config
+                  // State will be provided by ToolNode, but we create a minimal runtime here
+                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                  const lgConfig = config as any;
+                  const toolConfig = childConfig as ToolRunnableConfig;
+                  const runtime: ToolRuntime<StateSchema, ContextSchema> = {
+                    state: (lgConfig?.state ||
+                      {}) as StateSchema extends InteropZodObject
+                      ? InferInteropZodOutput<StateSchema>
+                      : Record<string, unknown>,
+                    toolCallId: toolConfig?.toolCall?.id || "",
+                    config: toolConfig,
+                    context: (lgConfig?.context ||
+                      undefined) as ContextSchema extends InteropZodObject
+                      ? InferInteropZodOutput<ContextSchema>
+                      : unknown,
+                    store: lgConfig?.store || null,
+                    writer: lgConfig?.writer || null,
+                  };
+                  const funcWithRuntime = func as (
+                    input: unknown,
+                    runtime: ToolRuntime<StateSchema, ContextSchema>,
+                    options?: unknown
+                  ) => ToolOutputT | Promise<ToolOutputT>;
+                  resolve(
+                    await funcWithRuntime(
+                      input as InferInteropZodOutput<SchemaT>,
+                      runtime,
+                      childConfig
+                    )
+                  );
+                } else {
+                  const funcWithoutRuntime = func as (
+                    input: unknown,
+                    options?: unknown
+                  ) => ToolOutputT | Promise<ToolOutputT>;
+                  resolve(
+                    await funcWithoutRuntime(
+                      input as InferInteropZodOutput<SchemaT>,
+                      childConfig
+                    )
+                  );
+                }
               } catch (e) {
                 reject(e);
               }
@@ -703,7 +850,40 @@ export function tool<
           pickRunnableConfigKeys(childConfig),
           async () => {
             try {
-              const result = await func(input, childConfig);
+              let result: ToolOutputT;
+              if (shouldPassRuntime) {
+                // Construct runtime object from config
+                // State will be provided by ToolNode, but we create a minimal runtime here
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                const lgConfig = config as any;
+                const toolConfig = childConfig as ToolRunnableConfig;
+                const runtime: ToolRuntime<StateSchema, ContextSchema> = {
+                  state: (lgConfig?.state ||
+                    {}) as StateSchema extends InteropZodObject
+                    ? InferInteropZodOutput<StateSchema>
+                    : Record<string, unknown>,
+                  toolCallId: toolConfig?.toolCall?.id || "",
+                  config: toolConfig,
+                  context: (lgConfig?.context ||
+                    undefined) as ContextSchema extends InteropZodObject
+                    ? InferInteropZodOutput<ContextSchema>
+                    : unknown,
+                  store: lgConfig?.store || null,
+                  writer: lgConfig?.writer || null,
+                };
+                const funcWithRuntime = func as (
+                  input: SchemaOutputT,
+                  runtime: ToolRuntime<StateSchema, ContextSchema>,
+                  options?: unknown
+                ) => ToolOutputT | Promise<ToolOutputT>;
+                result = await funcWithRuntime(input, runtime, childConfig);
+              } else {
+                const funcWithoutRuntime = func as (
+                  input: SchemaOutputT,
+                  options?: unknown
+                ) => ToolOutputT | Promise<ToolOutputT>;
+                result = await funcWithoutRuntime(input, childConfig);
+              }
 
               /**
                * If the signal is aborted, we don't want to resolve the promise

@@ -20,9 +20,11 @@ import {
   type InferInteropZodInput,
   type InferInteropZodOutput,
   type InteropZodType,
+  type InteropZodObject,
   isInteropZodSchema,
 } from "../utils/types/zod.js";
 import { JSONSchema } from "../utils/json_schema.js";
+import type { BaseStore } from "../stores.js";
 
 export type ResponseFormat = "content" | "content_and_artifact" | string;
 
@@ -424,4 +426,99 @@ export function isLangChainTool(tool?: unknown): tool is StructuredToolParams {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     isStructuredTool(tool as any)
   );
+}
+
+/**
+ * Runtime context automatically injected into tools.
+ *
+ * When a tool function has a parameter named `tool_runtime` with type hint
+ * `ToolRuntime`, the tool execution system will automatically inject an instance
+ * containing:
+ *
+ * - `state`: The current graph state
+ * - `toolCallId`: The ID of the current tool call
+ * - `config`: `RunnableConfig` for the current execution
+ * - `context`: Runtime context
+ * - `store`: `BaseStore` instance for persistent storage
+ * - `writer`: Stream writer for streaming output
+ *
+ * No `Annotated` wrapper is needed - just use `runtime: ToolRuntime`
+ * as a parameter.
+ *
+ * @example
+ * ```typescript
+ * import { tool, ToolRuntime } from "@langchain/core/tools";
+ * import { z } from "zod";
+ *
+ * const stateSchema = z.object({
+ *   messages: z.array(z.any()),
+ *   userId: z.string().optional(),
+ * });
+ *
+ * const greet = tool(
+ *   async ({ name }, runtime) => {
+ *     // Access state
+ *     const messages = runtime.state.messages;
+ *
+ *     // Access tool_call_id
+ *     console.log(`Tool call ID: ${runtime.toolCallId}`);
+ *
+ *     // Access config
+ *     console.log(`Run ID: ${runtime.config.runId}`);
+ *
+ *     // Access runtime context
+ *     const userId = runtime.context?.userId;
+ *
+ *     // Access store
+ *     await runtime.store?.mset([["key", "value"]]);
+ *
+ *     // Stream output
+ *     runtime.writer?.("Processing...");
+ *
+ *     return `Hello! User ID: ${runtime.state.userId || "unknown"} ${name}`;
+ *   },
+ *   {
+ *     name: "greet",
+ *     description: "Use this to greet the user once you found their info.",
+ *     schema: z.object({ name: z.string() }),
+ *     stateSchema,
+ *   }
+ * );
+ * ```
+ *
+ * @template StateT - The type of the state schema (inferred from stateSchema)
+ * @template ContextT - The type of the context schema (inferred from contextSchema)
+ */
+export interface ToolRuntime<
+  StateT extends InteropZodObject | undefined = undefined,
+  ContextT extends InteropZodObject | undefined = undefined
+> {
+  /**
+   * The current graph state.
+   */
+  state: StateT extends InteropZodObject
+    ? InferInteropZodOutput<StateT>
+    : Record<string, unknown>;
+  /**
+   * The ID of the current tool call.
+   */
+  toolCallId: string;
+  /**
+   * RunnableConfig for the current execution.
+   */
+  config: ToolRunnableConfig;
+  /**
+   * Runtime context (from langgraph `Runtime`).
+   */
+  context: ContextT extends InteropZodObject
+    ? InferInteropZodOutput<ContextT>
+    : unknown;
+  /**
+   * BaseStore instance for persistent storage (from langgraph `Runtime`).
+   */
+  store: BaseStore<string, unknown> | null;
+  /**
+   * Stream writer for streaming output (from langgraph `Runtime`).
+   */
+  writer: ((chunk: unknown) => void) | null;
 }
