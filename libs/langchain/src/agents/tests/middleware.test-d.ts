@@ -4,6 +4,7 @@ import { HumanMessage, BaseMessage, AIMessage } from "@langchain/core/messages";
 import { tool } from "@langchain/core/tools";
 
 import { createAgent, createMiddleware } from "../index.js";
+import type { AgentBuiltInState } from "../runtime.js";
 import type { ServerTool, ClientTool } from "../tools.js";
 
 describe("middleware types", () => {
@@ -169,14 +170,33 @@ describe("middleware types", () => {
           .default({
             customRequiredContextProp: "default value",
           }),
-        beforeModel: async (_state, runtime) => {
+        stateSchema: z.object({
+          customDefaultStateProp: z.string().default("default value"),
+          customOptionalStateProp: z.string().optional(),
+          customRequiredStateProp: z.string(),
+        }),
+        beforeModel: async (state, runtime) => {
+          expectTypeOf(state).toEqualTypeOf<
+            {
+              customDefaultStateProp: string;
+              customOptionalStateProp?: string;
+              customRequiredStateProp: string;
+            } & AgentBuiltInState
+          >();
           expectTypeOf(runtime.context).toEqualTypeOf<{
             customDefaultContextProp: string;
             customOptionalContextProp?: string;
             customRequiredContextProp: string;
           }>();
         },
-        afterModel: async (_state, runtime) => {
+        afterModel: async (state, runtime) => {
+          expectTypeOf(state).toEqualTypeOf<
+            {
+              customDefaultStateProp: string;
+              customOptionalStateProp?: string;
+              customRequiredStateProp: string;
+            } & AgentBuiltInState
+          >();
           expectTypeOf(runtime.context).toEqualTypeOf<{
             customDefaultContextProp: string;
             customOptionalContextProp?: string;
@@ -209,6 +229,7 @@ describe("middleware types", () => {
       await agent.invoke(
         {
           messages: [new HumanMessage("Hello, world!")],
+          customRequiredStateProp: "default value",
         },
         {
           configurable: {

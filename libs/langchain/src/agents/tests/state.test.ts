@@ -146,6 +146,7 @@ describe("middleware state management", () => {
     const model = new FakeToolCallingModel({});
     const middleware = createMiddleware({
       name: "middleware",
+      // @ts-expect-error _privateState is not an expected return type
       beforeModel: async (_, runtime) => {
         expect(runtime.threadLevelCallCount).toBe(0);
         expect(runtime.runModelCallCount).toBe(0);
@@ -165,6 +166,7 @@ describe("middleware state management", () => {
         expect(request.runtime.runModelCallCount).toBe(0);
         return handler(request);
       },
+      // @ts-expect-error _privateState is not an expected return type
       afterModel: async (_, runtime) => {
         expect(runtime.threadLevelCallCount).toBe(1);
         expect(runtime.runModelCallCount).toBe(1);
