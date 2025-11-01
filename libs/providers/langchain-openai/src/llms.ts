@@ -10,6 +10,7 @@ import {
 } from "@langchain/core/language_models/llms";
 import { chunkArray } from "@langchain/core/utils/chunk_array";
 import type {
+  OpenAIApiKey,
   OpenAICallOptions,
   OpenAICoreRequestOptions,
   OpenAIInput,
@@ -121,9 +122,9 @@ export class OpenAI<CallOptions extends OpenAICallOptions = OpenAICallOptions>
 
   streaming = false;
 
-  openAIApiKey?: string;
+  openAIApiKey?: OpenAIApiKey;
 
-  apiKey?: string;
+  apiKey?: OpenAIApiKey;
 
   organization?: string;
 
