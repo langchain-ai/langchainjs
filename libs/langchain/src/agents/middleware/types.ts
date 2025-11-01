@@ -21,13 +21,24 @@ type PromiseOrValue<T> = T | Promise<T>;
 
 export type AnyAnnotationRoot = AnnotationRoot<any>;
 
-type NormalizedSchemaInput<TSchema extends InteropZodObject | undefined = any> =
-  TSchema extends InteropZodObject ? InferInteropZodInput<TSchema> : {};
+type NormalizedSchemaInput<
+  TSchema extends InteropZodObject | undefined | never = any
+> = [TSchema] extends [never]
+  ? AgentBuiltInState
+  : TSchema extends InteropZodObject
+  ? InferInteropZodOutput<TSchema> & AgentBuiltInState
+  : TSchema extends Record<string, unknown>
+  ? TSchema & AgentBuiltInState
+  : AgentBuiltInState;
 
 /**
  * Result type for middleware functions.
  */
-export type MiddlewareResult<TState> = TState | void;
+export type MiddlewareResult<TState> =
+  | (TState & {
+      jumpTo?: JumpToTarget;
+    })
+  | void;
 
 /**
  * Represents a tool call request for the wrapToolCall hook.
@@ -61,13 +72,10 @@ export interface ToolCallRequest<
  * Takes a tool call request and returns the tool result or a command.
  */
 export type ToolCallHandler<
-  TSchema extends InteropZodObject | undefined = any,
+  TSchema extends Record<string, unknown> = AgentBuiltInState,
   TContext = unknown
 > = (
-  request: ToolCallRequest<
-    NormalizedSchemaInput<TSchema> & AgentBuiltInState,
-    TContext
-  >
+  request: ToolCallRequest<TSchema, TContext>
 ) => PromiseOrValue<ToolMessage | Command>;
 
 /**
@@ -75,14 +83,11 @@ export type ToolCallHandler<
  * Allows middleware to intercept and modify tool execution.
  */
 export type WrapToolCallHook<
-  TSchema extends InteropZodObject | undefined = any,
+  TSchema extends InteropZodObject | undefined = undefined,
   TContext = unknown
 > = (
-  request: ToolCallRequest<
-    NormalizedSchemaInput<TSchema> & AgentBuiltInState,
-    TContext
-  >,
-  handler: ToolCallHandler<TSchema, TContext>
+  request: ToolCallRequest<NormalizedSchemaInput<TSchema>, TContext>,
+  handler: ToolCallHandler<NormalizedSchemaInput<TSchema>, TContext>
 ) => PromiseOrValue<ToolMessage | Command>;
 
 /**
@@ -93,13 +98,10 @@ export type WrapToolCallHook<
  * @returns The AI message response from the model
  */
 export type WrapModelCallHandler<
-  TSchema extends InteropZodObject | undefined = any,
+  TSchema extends InteropZodObject | undefined = undefined,
   TContext = unknown
 > = (
-  request: ModelRequest<
-    NormalizedSchemaInput<TSchema> & AgentBuiltInState,
-    TContext
-  >
+  request: ModelRequest<NormalizedSchemaInput<TSchema>, TContext>
 ) => PromiseOrValue<AIMessage>;
 
 /**
@@ -116,13 +118,10 @@ export type WrapModelCallHandler<
  * @returns The AI message response from the model (or a modified version)
  */
 export type WrapModelCallHook<
-  TSchema extends InteropZodObject | undefined = any,
+  TSchema extends InteropZodObject | undefined = undefined,
   TContext = unknown
 > = (
-  request: ModelRequest<
-    NormalizedSchemaInput<TSchema> & AgentBuiltInState,
-    TContext
-  >,
+  request: ModelRequest<NormalizedSchemaInput<TSchema>, TContext>,
   handler: WrapModelCallHandler<TSchema, TContext>
 ) => PromiseOrValue<AIMessage>;
 
@@ -134,13 +133,10 @@ export type WrapModelCallHook<
  * @param runtime - The runtime context containing metadata, signal, writer, interrupt, etc.
  * @returns A middleware result containing partial state updates or undefined to pass through
  */
-export type BeforeAgentHandler<
-  TSchema extends InteropZodObject | undefined = any,
-  TContext = unknown
-> = (
-  state: NormalizedSchemaInput<TSchema> & AgentBuiltInState,
+type BeforeAgentHandler<TSchema, TContext> = (
+  state: TSchema,
   runtime: Runtime<TContext>
-) => PromiseOrValue<MiddlewareResult<Partial<NormalizedSchemaInput<TSchema>>>>;
+) => PromiseOrValue<MiddlewareResult<Partial<TSchema>>>;
 
 /**
  * Hook type for the beforeAgent lifecycle event.
@@ -148,12 +144,12 @@ export type BeforeAgentHandler<
  * This hook is called once at the start of the agent invocation.
  */
 export type BeforeAgentHook<
-  TSchema extends InteropZodObject | undefined = any,
+  TSchema extends InteropZodObject | undefined = undefined,
   TContext = unknown
 > =
-  | BeforeAgentHandler<TSchema, TContext>
+  | BeforeAgentHandler<NormalizedSchemaInput<TSchema>, TContext>
   | {
-      hook: BeforeAgentHandler<TSchema, TContext>;
+      hook: BeforeAgentHandler<NormalizedSchemaInput<TSchema>, TContext>;
       canJumpTo?: JumpToTarget[];
     };
 
@@ -165,13 +161,10 @@ export type BeforeAgentHook<
  * @param runtime - The runtime context containing metadata, signal, writer, interrupt, etc.
  * @returns A middleware result containing partial state updates or undefined to pass through
  */
-export type BeforeModelHandler<
-  TSchema extends InteropZodObject | undefined = any,
-  TContext = unknown
-> = (
-  state: NormalizedSchemaInput<TSchema> & AgentBuiltInState,
+type BeforeModelHandler<TSchema, TContext> = (
+  state: TSchema,
   runtime: Runtime<TContext>
-) => PromiseOrValue<MiddlewareResult<Partial<NormalizedSchemaInput<TSchema>>>>;
+) => PromiseOrValue<MiddlewareResult<Partial<TSchema>>>;
 
 /**
  * Hook type for the beforeModel lifecycle event.
@@ -179,12 +172,12 @@ export type BeforeModelHandler<
  * This hook is called before each model invocation.
  */
 export type BeforeModelHook<
-  TSchema extends InteropZodObject | undefined = any,
+  TSchema extends InteropZodObject | undefined = undefined,
   TContext = unknown
 > =
-  | BeforeModelHandler<TSchema, TContext>
+  | BeforeModelHandler<NormalizedSchemaInput<TSchema>, TContext>
   | {
-      hook: BeforeModelHandler<TSchema, TContext>;
+      hook: BeforeModelHandler<NormalizedSchemaInput<TSchema>, TContext>;
       canJumpTo?: JumpToTarget[];
     };
 
@@ -197,13 +190,10 @@ export type BeforeModelHook<
  * @param runtime - The runtime context containing metadata, signal, writer, interrupt, etc.
  * @returns A middleware result containing partial state updates or undefined to pass through
  */
-export type AfterModelHandler<
-  TSchema extends InteropZodObject | undefined = any,
-  TContext = unknown
-> = (
-  state: NormalizedSchemaInput<TSchema> & AgentBuiltInState,
+type AfterModelHandler<TSchema, TContext> = (
+  state: TSchema,
   runtime: Runtime<TContext>
-) => PromiseOrValue<MiddlewareResult<Partial<NormalizedSchemaInput<TSchema>>>>;
+) => PromiseOrValue<MiddlewareResult<Partial<TSchema>>>;
 
 /**
  * Hook type for the afterModel lifecycle event.
@@ -211,12 +201,12 @@ export type AfterModelHandler<
  * This hook is called after each model invocation.
  */
 export type AfterModelHook<
-  TSchema extends InteropZodObject | undefined = any,
+  TSchema extends InteropZodObject | undefined = undefined,
   TContext = unknown
 > =
-  | AfterModelHandler<TSchema, TContext>
+  | AfterModelHandler<NormalizedSchemaInput<TSchema>, TContext>
   | {
-      hook: AfterModelHandler<TSchema, TContext>;
+      hook: AfterModelHandler<NormalizedSchemaInput<TSchema>, TContext>;
       canJumpTo?: JumpToTarget[];
     };
 
@@ -228,13 +218,10 @@ export type AfterModelHook<
  * @param runtime - The runtime context containing metadata, signal, writer, interrupt, etc.
  * @returns A middleware result containing partial state updates or undefined to pass through
  */
-export type AfterAgentHandler<
-  TSchema extends InteropZodObject | undefined = any,
-  TContext = unknown
-> = (
-  state: NormalizedSchemaInput<TSchema> & AgentBuiltInState,
+type AfterAgentHandler<TSchema, TContext> = (
+  state: TSchema,
   runtime: Runtime<TContext>
-) => PromiseOrValue<MiddlewareResult<Partial<NormalizedSchemaInput<TSchema>>>>;
+) => PromiseOrValue<MiddlewareResult<Partial<TSchema>>>;
 
 /**
  * Hook type for the afterAgent lifecycle event.
@@ -242,12 +229,12 @@ export type AfterAgentHandler<
  * This hook is called once at the end of the agent invocation.
  */
 export type AfterAgentHook<
-  TSchema extends InteropZodObject | undefined = any,
+  TSchema extends InteropZodObject | undefined = undefined,
   TContext = unknown
 > =
-  | AfterAgentHandler<TSchema, TContext>
+  | AfterAgentHandler<NormalizedSchemaInput<TSchema>, TContext>
   | {
-      hook: AfterAgentHandler<TSchema, TContext>;
+      hook: AfterAgentHandler<NormalizedSchemaInput<TSchema>, TContext>;
       canJumpTo?: JumpToTarget[];
     };
 

@@ -4,7 +4,7 @@ import { tool } from "@langchain/core/tools";
 import { MemorySaver } from "@langchain/langgraph-checkpoint";
 
 import { FakeToolCallingChatModel } from "../../tests/utils.js";
-import { modelCallLimitMiddleware } from "../callLimit.js";
+import { modelCallLimitMiddleware } from "../modelCallLimit.js";
 import { createAgent } from "../../index.js";
 
 const toolCallMessage1 = new AIMessage({
@@ -51,6 +51,10 @@ const tools = [
   tool(() => "foobar", {
     name: "tool_1",
     description: "tool_1",
+  }),
+  tool(() => "barfoo", {
+    name: "tool_2",
+    description: "tool_2",
   }),
 ];
 
@@ -143,14 +147,19 @@ describe("ModelCallLimitMiddleware", () => {
           checkpointer,
         });
         if (exitBehavior === "throw") {
-          await expect(
-            agent2.invoke({ messages: ["Hello, world!"] }, config)
-          ).resolves.not.toThrow();
+          const result = await agent2.invoke(
+            { messages: ["Hello, world!"] },
+            config
+          );
+          await expect(result.runModelCallCount).toBe(3);
+          await expect(result.threadModelCallCount).toBe(3);
         } else {
           const result = await agent2.invoke(
             { messages: ["Hello, world!"] },
             config
           );
+          await expect(result.runModelCallCount).toBe(3);
+          await expect(result.threadModelCallCount).toBe(3);
           expect(result.messages.at(-1)?.content).not.toContain(
             "Model call limits exceeded"
           );
