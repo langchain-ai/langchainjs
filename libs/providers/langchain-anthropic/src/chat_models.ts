@@ -796,6 +796,11 @@ export class ChatAnthropicMessages<
       return undefined;
     }
     return tools.map((tool) => {
+      // Check if tool has providerToolDefinition FIRST (built-in client tools)
+      // This must come before isBuiltinTool check because LangChain tools are not plain objects
+      if (isLangChainTool(tool) && tool.providerToolDefinition) {
+        return tool.providerToolDefinition as Anthropic.Messages.ToolUnion;
+      }
       if (isBuiltinTool(tool)) {
         return tool;
       }
