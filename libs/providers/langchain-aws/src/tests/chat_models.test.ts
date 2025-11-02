@@ -398,6 +398,220 @@ describe("convertToConverseMessages", () => {
         ],
       },
     },
+    {
+      name: "ephemeral prompt caching with 1h TTL",
+      input: [
+        new SystemMessage({
+          content: [
+            { type: "text", text: "You're an advanced AI assistant." },
+            {
+              cachePoint: {
+                type: "ephemeral",
+                ttl: "1h"
+              },
+            },
+            {
+              type: "text",
+              text: "Answer the user's questions using your own knowledge or provided tool.",
+            },
+          ],
+        }),
+        new HumanMessage({
+          content: [
+            {
+              type: "text",
+              text: "What is the capital of France?",
+            },
+            {
+              cachePoint: {
+                type: "ephemeral",
+                ttl: "1h"
+              },
+            },
+            {
+              type: "text",
+              text: "And what is the capital of Germany?",
+            },
+          ],
+        }),
+        new AIMessage({
+          content: [
+            {
+              type: "text",
+              text: "Sure! The capital of France is Paris.",
+            },
+            {
+              cachePoint: {
+                type: "ephemeral",
+                ttl: "1h"
+              },
+            },
+            {
+              type: "text",
+              text: "The capital of Germany is Berlin.",
+            },
+          ],
+        }),
+      ],
+      output: {
+        converseMessages: [
+          {
+            role: BedrockConversationRole.USER,
+            content: [
+              {
+                text: "What is the capital of France?",
+              },
+              {
+                cachePoint: {
+                  type: "ephemeral",
+                  ttl: "1h"
+                },
+              },
+              {
+                text: "And what is the capital of Germany?",
+              },
+            ],
+          },
+          {
+            role: BedrockConversationRole.ASSISTANT,
+            content: [
+              {
+                text: "Sure! The capital of France is Paris.",
+              },
+              {
+                cachePoint: {
+                  type: "ephemeral",
+                  ttl: "1h"
+                },
+              },
+              {
+                text: "The capital of Germany is Berlin.",
+              },
+            ],
+          },
+        ],
+        converseSystem: [
+          {
+            text: "You're an advanced AI assistant.",
+          },
+          {
+            cachePoint: {
+              type: "ephemeral",
+              ttl: "1h"
+            },
+          },
+          {
+            text: "Answer the user's questions using your own knowledge or provided tool.",
+          },
+        ],
+      },
+    },
+    {
+      name: "ephemeral prompt caching without TTL (defaults to 5m)",
+      input: [
+        new SystemMessage({
+          content: [
+            { type: "text", text: "You're an advanced AI assistant." },
+            {
+              cachePoint: {
+                type: "ephemeral"
+              },
+            },
+            {
+              type: "text",
+              text: "Answer the user's questions.",
+            },
+          ],
+        }),
+        new HumanMessage({
+          content: [
+            {
+              type: "text",
+              text: "What is 2+2?",
+            },
+          ],
+        }),
+      ],
+      output: {
+        converseMessages: [
+          {
+            role: BedrockConversationRole.USER,
+            content: [
+              {
+                text: "What is 2+2?",
+              },
+            ],
+          },
+        ],
+        converseSystem: [
+          {
+            text: "You're an advanced AI assistant.",
+          },
+          {
+            cachePoint: {
+              type: "ephemeral"
+            },
+          },
+          {
+            text: "Answer the user's questions.",
+          },
+        ],
+      },
+    },
+    {
+      name: "ephemeral prompt caching with 5m TTL",
+      input: [
+        new SystemMessage({
+          content: [
+            { type: "text", text: "You're an advanced AI assistant." },
+            {
+              cachePoint: {
+                type: "ephemeral",
+                ttl: "5m"
+              },
+            },
+            {
+              type: "text",
+              text: "Answer the user's questions.",
+            },
+          ],
+        }),
+        new HumanMessage({
+          content: [
+            {
+              type: "text",
+              text: "What is 3+3?",
+            },
+          ],
+        }),
+      ],
+      output: {
+        converseMessages: [
+          {
+            role: BedrockConversationRole.USER,
+            content: [
+              {
+                text: "What is 3+3?",
+              },
+            ],
+          },
+        ],
+        converseSystem: [
+          {
+            text: "You're an advanced AI assistant.",
+          },
+          {
+            cachePoint: {
+              type: "ephemeral",
+              ttl: "5m"
+            },
+          },
+          {
+            text: "Answer the user's questions.",
+          },
+        ],
+      },
+    },
   ];
 
   it.each(testCases.map((tc) => [tc.name, tc]))(
