@@ -16,12 +16,20 @@ import {
 
 export { deepCompareStrict, Validator } from "@cfworker/json-schema";
 
+export type ToJSONSchemaParams = NonNullable<
+  Parameters<typeof toJSONSchema>[1]
+>;
+
 /**
  * Converts a Zod schema or JSON schema to a JSON schema.
  * @param schema - The schema to convert.
+ * @param _params - The parameters to pass to the toJSONSchema function.
  * @returns The converted schema.
  */
-export function toJsonSchema(schema: InteropZodType | JSONSchema): JSONSchema {
+export function toJsonSchema(
+  schema: InteropZodType | JSONSchema,
+  _params?: ToJSONSchemaParams
+): JSONSchema {
   if (isZodSchemaV4(schema)) {
     const inputSchema = interopZodTransformInputSchema(schema, true);
     if (isZodObjectV4(inputSchema)) {
@@ -29,9 +37,9 @@ export function toJsonSchema(schema: InteropZodType | JSONSchema): JSONSchema {
         inputSchema,
         true
       ) as ZodObjectV4;
-      return toJSONSchema(strictSchema);
+      return toJSONSchema(strictSchema, _params);
     } else {
-      return toJSONSchema(schema);
+      return toJSONSchema(schema, _params);
     }
   }
   if (isZodSchemaV3(schema)) {

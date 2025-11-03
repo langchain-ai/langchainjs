@@ -1498,6 +1498,47 @@ describe("Zod utility functions", () => {
         expect(resultShape.metadata).toBeInstanceOf(z4.ZodString);
       });
 
+      it("should not mutate the original schema when removing transforms", () => {
+        const inputSchema = z4.object({
+          name: z4.string().transform((s) => s.toUpperCase()),
+          email: z4
+            .string()
+            .email()
+            .transform((s) => s.toLowerCase()),
+          age: z4.number(),
+          metadata: z4.object({
+            key: z4.string(),
+            value: z4.string().transform((s) => s.trim()),
+          }),
+        });
+
+        // Capture the original schema structure before processing
+        const originalSchemaJson = JSON.stringify(inputSchema);
+
+        // Process the schema
+        const result = interopZodTransformInputSchema(inputSchema, true);
+
+        // Verify the original schema is unchanged
+        const schemaJsonAfter = JSON.stringify(inputSchema);
+        expect(schemaJsonAfter).toBe(originalSchemaJson);
+
+        // Verify that the result is different from the original
+        const resultJson = JSON.stringify(result);
+        expect(resultJson).not.toBe(originalSchemaJson);
+
+        // Verify the result actually has transforms removed
+        expect(result).toBeInstanceOf(z4.ZodObject);
+        const resultShape = getInteropZodObjectShape(result as any);
+        expect(resultShape.name).toBeInstanceOf(z4.ZodString);
+        expect(resultShape.email).toBeInstanceOf(z4.ZodString);
+        expect(resultShape.age).toBeInstanceOf(z4.ZodNumber);
+
+        const metadataShape = getInteropZodObjectShape(
+          resultShape.metadata as any
+        );
+        expect(metadataShape.value).toBeInstanceOf(z4.ZodString);
+      });
+
       it("should handle transforms in array elements", () => {
         // Create a schema where array elements are transformed
         const userSchema = z4.object({
