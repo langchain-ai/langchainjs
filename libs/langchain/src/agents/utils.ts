@@ -499,6 +499,7 @@ function chainToolCallHandlers(
  * the error message.
  *
  * @param middleware list of middleware passed to the agent
+ * @param state state of the agent
  * @returns single wrap function
  */
 export function wrapToolCall(
