@@ -2,7 +2,7 @@
 
 yum -y update
 # Not sure we need all these
-yum install gcc bzip2-devel libffi-devel zlib-devel wget tar gzip -y
+yum install gcc bzip2-devel libffi-devel zlib-devel libstdc++6 wget tar gzip cmake -y
 
 # install quarto
 wget -q https://github.com/quarto-dev/quarto-cli/releases/download/v1.3.450/quarto-1.3.450-linux-amd64.tar.gz
