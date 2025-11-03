@@ -1660,6 +1660,74 @@ describe("Zod utility functions", () => {
         expect(deepNestedShape.deepMetadata).toBe(metadataListElement);
         expect(resultShape.topLevelMetadata).toBe(metadataListElement);
       });
+
+      it("should generate JSON schema with $ref for reused sub-schemas", () => {
+        // Create a shared address schema with transforms
+        const addressSchema = z4.object({
+          street: z4.string().transform((s) => s.toUpperCase()),
+          city: z4.string(),
+          zipCode: z4.string(),
+        });
+
+        const inputSchema = z4.object({
+          homeAddress: addressSchema,
+          workAddress: addressSchema,
+          billingAddress: addressSchema,
+          shippingAddresses: z4.array(addressSchema),
+        });
+
+        // Get the sanitized input schema with transforms removed
+        const sanitizedSchema = interopZodTransformInputSchema(
+          inputSchema,
+          true
+        );
+
+        // Generate JSON schema with refs for reused schemas
+        const jsonSchema = z4.toJSONSchema(sanitizedSchema as any, {
+          cycles: "ref",
+          reused: "ref",
+          override(ctx) {
+            ctx.jsonSchema.title = "TestSchema";
+          },
+        });
+
+        // Verify exact JSON schema structure with $ref for reused schemas
+        expect(jsonSchema).toEqual({
+          $schema: "https://json-schema.org/draft/2020-12/schema",
+          title: "TestSchema",
+          type: "object",
+          properties: {
+            homeAddress: { $ref: "#/$defs/__schema0" },
+            workAddress: { $ref: "#/$defs/__schema0" },
+            billingAddress: { $ref: "#/$defs/__schema0" },
+            shippingAddresses: {
+              title: "TestSchema",
+              type: "array",
+              items: { $ref: "#/$defs/__schema0" },
+            },
+          },
+          required: [
+            "homeAddress",
+            "workAddress",
+            "billingAddress",
+            "shippingAddresses",
+          ],
+          additionalProperties: false,
+          $defs: {
+            __schema0: {
+              title: "TestSchema",
+              type: "object",
+              properties: {
+                street: { title: "TestSchema", type: "string" },
+                city: { title: "TestSchema", type: "string" },
+                zipCode: { title: "TestSchema", type: "string" },
+              },
+              required: ["street", "city", "zipCode"],
+              additionalProperties: false,
+            },
+          },
+        });
+      });
     });
 
     it("should throw error for non-schema values", () => {
