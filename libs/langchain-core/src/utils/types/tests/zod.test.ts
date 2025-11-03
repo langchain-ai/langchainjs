@@ -1525,6 +1525,141 @@ describe("Zod utility functions", () => {
         expect(elementShape.name).toBeInstanceOf(z4.ZodString);
         expect(elementShape.age).toBeInstanceOf(z4.ZodNumber);
       });
+
+      it("should cache and reuse sanitized sub-schemas when same schema is used in multiple properties", () => {
+        // Create a shared sub-schema that will be used in multiple places
+        const addressSchema = z4.object({
+          street: z4.string().transform((s) => s.toUpperCase()),
+          city: z4.string(),
+        });
+
+        const inputSchema = z4.object({
+          homeAddress: addressSchema,
+          workAddress: addressSchema,
+          billingAddress: addressSchema,
+        });
+
+        const result = interopZodTransformInputSchema(inputSchema, true);
+
+        expect(result).toBeInstanceOf(z4.ZodObject);
+        const resultShape = getInteropZodObjectShape(result as any);
+
+        // All three address properties should reference the exact same sanitized instance
+        expect(resultShape.homeAddress).toBe(resultShape.workAddress);
+        expect(resultShape.workAddress).toBe(resultShape.billingAddress);
+        expect(resultShape.homeAddress).toBe(resultShape.billingAddress);
+      });
+
+      it("should cache and reuse sanitized sub-schemas when same schema is used in array and as property", () => {
+        // Create a shared user schema
+        const userSchema = z4.object({
+          name: z4.string().transform((s) => s.toUpperCase()),
+          age: z4.number(),
+        });
+
+        const inputSchema = z4.object({
+          primaryUser: userSchema,
+          secondaryUser: userSchema,
+          allUsers: z4.array(userSchema),
+        });
+
+        const result = interopZodTransformInputSchema(inputSchema, true);
+
+        expect(result).toBeInstanceOf(z4.ZodObject);
+        const resultShape = getInteropZodObjectShape(result as any);
+
+        // Extract the array element schema
+        const arrayElement = (resultShape.allUsers as any)._zod.def.element;
+
+        // All user schema references should be the exact same instance
+        expect(resultShape.primaryUser).toBe(resultShape.secondaryUser);
+        expect(resultShape.primaryUser).toBe(arrayElement);
+        expect(resultShape.secondaryUser).toBe(arrayElement);
+      });
+
+      it("should cache and reuse deeply nested shared schemas", () => {
+        // Create a deeply nested shared schema
+        const tagSchema = z4.object({
+          name: z4.string().transform((s) => s.toLowerCase()),
+          color: z4.string(),
+        });
+
+        const postSchema = z4.object({
+          title: z4.string(),
+          tags: z4.array(tagSchema),
+          primaryTag: tagSchema,
+        });
+
+        const inputSchema = z4.object({
+          posts: z4.array(postSchema),
+          featuredPost: postSchema,
+        });
+
+        const result = interopZodTransformInputSchema(inputSchema, true);
+
+        expect(result).toBeInstanceOf(z4.ZodObject);
+        const resultShape = getInteropZodObjectShape(result as any);
+
+        // Extract the post schema from the array
+        const postsArrayElement = (resultShape.posts as any)._zod.def.element;
+
+        // The featuredPost and the array element should be the same instance
+        expect(resultShape.featuredPost).toBe(postsArrayElement);
+
+        // Extract tag schemas from both places
+        const featuredPostShape = getInteropZodObjectShape(
+          resultShape.featuredPost as any
+        );
+        const postsArrayElementShape = getInteropZodObjectShape(
+          postsArrayElement as any
+        );
+
+        // Tag schemas should also be reused
+        const featuredPostTagsArray = (featuredPostShape.tags as any)._zod.def
+          .element;
+        const postsArrayTagsArray = (postsArrayElementShape.tags as any)._zod
+          .def.element;
+
+        expect(featuredPostShape.primaryTag).toBe(featuredPostTagsArray);
+        expect(postsArrayElementShape.primaryTag).toBe(postsArrayTagsArray);
+        expect(featuredPostTagsArray).toBe(postsArrayTagsArray);
+      });
+
+      it("should handle caching when same schema appears at different nesting levels", () => {
+        // Create a schema that appears at different nesting levels
+        const metadataSchema = z4.object({
+          key: z4.string(),
+          value: z4.string().transform((s) => s.trim()),
+        });
+
+        const inputSchema = z4.object({
+          topLevelMetadata: metadataSchema,
+          nested: z4.object({
+            nestedMetadata: metadataSchema,
+            deepNested: z4.object({
+              deepMetadata: metadataSchema,
+            }),
+          }),
+          metadataList: z4.array(metadataSchema),
+        });
+
+        const result = interopZodTransformInputSchema(inputSchema, true);
+
+        expect(result).toBeInstanceOf(z4.ZodObject);
+        const resultShape = getInteropZodObjectShape(result as any);
+        const nestedShape = getInteropZodObjectShape(resultShape.nested as any);
+        const deepNestedShape = getInteropZodObjectShape(
+          nestedShape.deepNested as any
+        );
+        const metadataListElement = (resultShape.metadataList as any)._zod.def
+          .element;
+
+        // All metadata schemas should reference the same sanitized instance
+        expect(resultShape.topLevelMetadata).toBe(nestedShape.nestedMetadata);
+        expect(nestedShape.nestedMetadata).toBe(deepNestedShape.deepMetadata);
+        expect(deepNestedShape.deepMetadata).toBe(metadataListElement);
+        expect(resultShape.topLevelMetadata).toBe(metadataListElement);
+      });
     });
 
     it("should throw error for non-schema values", () => {
