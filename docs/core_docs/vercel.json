@@ -5,15 +5,15 @@
   "rewrites": [
     {
       "source": "/v0.1/:path(.*)",
-      "destination": "https://langchainjs-v01.vercel.app/v0.1/:path(.*)"
+      "destination": "https://langchainjs-v01.vercel.app/v0.1/:path"
     },
     {
       "source": "/v0.2/:path(.*)",
-      "destination": "https://langchainjs-v02.vercel.app/v0.2/:path(.*)"
+      "destination": "https://langchainjs-v02.vercel.app/v0.2/:path"
     },
     {
       "source": "/v0.3/:path(.*)",
-      "destination": "https://langchainjs-v03.vercel.app/v0.3/:path(.*)"
+      "destination": "https://langchainjs-v03.vercel.app/v0.3/:path"
     }
   ],
   "redirects": [
@@ -1015,7 +1015,7 @@
     },
     {
       "source": "/docs/integrations/vectorstores/:path(.*)",
-      "destination": "https://docs.langchain.com/oss/javascript/integrations/vectorstores/:path(.*)"
+      "destination": "https://docs.langchain.com/oss/javascript/integrations/vectorstores/:path"
     },
     {
       "source": "/docs/get_started",
