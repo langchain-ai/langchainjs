@@ -882,10 +882,9 @@ export function interopZodTransformInputSchema(
       }
       // Handle optional schemas
       else if (isZodOptionalV4(outputSchema)) {
-        const innerSchema = interopZodTransformInputSchemaImpl(
+        const innerSchema = interopZodTransformInputSchema(
           outputSchema._zod.def.innerType as InteropZodType,
-          recursive,
-          cache
+          recursive
         );
         outputSchema = clone<z4.$ZodOptional>(outputSchema, {
           ...outputSchema._zod.def,
@@ -894,10 +893,9 @@ export function interopZodTransformInputSchema(
       }
       // Handle nullable schemas
       else if (isZodNullableV4(outputSchema)) {
-        const innerSchema = interopZodTransformInputSchemaImpl(
+        const innerSchema = interopZodTransformInputSchema(
           outputSchema._zod.def.innerType as InteropZodType,
-          recursive,
-          cache
+          recursive
         );
         outputSchema = clone<z4.$ZodNullable>(outputSchema, {
           ...outputSchema._zod.def,
