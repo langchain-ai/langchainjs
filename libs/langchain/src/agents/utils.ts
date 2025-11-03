@@ -9,6 +9,10 @@ import {
 } from "@langchain/core/messages";
 import { MessagesAnnotation, isCommand } from "@langchain/langgraph";
 import {
+  type InteropZodObject,
+  interopParse,
+} from "@langchain/core/utils/types";
+import {
   BaseChatModel,
   type BaseChatModelCallOptions,
 } from "@langchain/core/language_models/chat_models";
@@ -497,7 +501,10 @@ function chainToolCallHandlers(
  * @param middleware list of middleware passed to the agent
  * @returns single wrap function
  */
-export function wrapToolCall(middleware: readonly AgentMiddleware[]) {
+export function wrapToolCall(
+  middleware: readonly AgentMiddleware<InteropZodObject | undefined>[],
+  state: Record<string, unknown>
+) {
   const middlewareWithWrapToolCall = middleware.filter((m) => m.wrapToolCall);
 
   if (middlewareWithWrapToolCall.length === 0) {
@@ -513,7 +520,16 @@ export function wrapToolCall(middleware: readonly AgentMiddleware[]) {
       const wrappedHandler: WrapToolCallHook = async (request, handler) => {
         try {
           const result = await originalHandler(
-            request as ToolCallRequest<AgentBuiltInState, unknown>,
+            {
+              ...request,
+              /**
+               * override state with the state from the specific middleware
+               */
+              state: {
+                messages: request.state.messages,
+                ...(m.stateSchema ? interopParse(m.stateSchema, state) : {}),
+              },
+            } as ToolCallRequest<AgentBuiltInState, unknown>,
             handler
           );
 

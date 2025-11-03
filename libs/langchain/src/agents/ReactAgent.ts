@@ -20,11 +20,7 @@ import type { Runnable, RunnableConfig } from "@langchain/core/runnables";
 import type { StreamEvent } from "@langchain/core/tracers/log_stream";
 
 import { createAgentAnnotationConditional } from "./annotation.js";
-import {
-  isClientTool,
-  validateLLMHasNoBoundTools,
-  wrapToolCall,
-} from "./utils.js";
+import { isClientTool, validateLLMHasNoBoundTools } from "./utils.js";
 
 import { AgentNode } from "./nodes/AgentNode.js";
 import { ToolNode } from "./nodes/ToolNode.js";
@@ -36,6 +32,7 @@ import {
   initializeMiddlewareStates,
   parseJumpToTarget,
 } from "./nodes/utils.js";
+import { StateManager } from "./state.js";
 
 import type { WithStateGraphNodes } from "./types.js";
 import type { ClientTool, ServerTool } from "./tools.js";
@@ -128,6 +125,8 @@ export class ReactAgent<
   #toolBehaviorVersion: "v1" | "v2" = "v2";
 
   #agentNode: AgentNode<any, AnyAnnotationRoot>;
+
+  #stateManager = new StateManager();
 
   constructor(
     public options: CreateAgentParams<
@@ -245,21 +244,12 @@ export class ReactAgent<
         throw new Error(`Middleware ${m.name} is defined multiple times`);
       }
 
-      const getState = () => {
-        return {
-          ...beforeAgentNode?.getState(),
-          ...beforeModelNode?.getState(),
-          ...afterModelNode?.getState(),
-          ...afterAgentNode?.getState(),
-          ...this.#agentNode.getState(),
-        };
-      };
-
       middlewareNames.add(m.name);
       if (m.beforeAgent) {
         beforeAgentNode = new BeforeAgentNode(m, {
-          getState,
+          getState: () => this.#stateManager.getState(m.name),
         });
+        this.#stateManager.addNode(m, beforeAgentNode);
         const name = `${m.name}.before_agent`;
         beforeAgentNodes.push({
           index: i,
@@ -274,8 +264,9 @@ export class ReactAgent<
       }
       if (m.beforeModel) {
         beforeModelNode = new BeforeModelNode(m, {
-          getState,
+          getState: () => this.#stateManager.getState(m.name),
         });
+        this.#stateManager.addNode(m, beforeModelNode);
         const name = `${m.name}.before_model`;
         beforeModelNodes.push({
           index: i,
@@ -290,8 +281,9 @@ export class ReactAgent<
       }
       if (m.afterModel) {
         afterModelNode = new AfterModelNode(m, {
-          getState,
+          getState: () => this.#stateManager.getState(m.name),
         });
+        this.#stateManager.addNode(m, afterModelNode);
         const name = `${m.name}.after_model`;
         afterModelNodes.push({
           index: i,
@@ -306,8 +298,9 @@ export class ReactAgent<
       }
       if (m.afterAgent) {
         afterAgentNode = new AfterAgentNode(m, {
-          getState,
+          getState: () => this.#stateManager.getState(m.name),
         });
+        this.#stateManager.addNode(m, afterAgentNode);
         const name = `${m.name}.after_agent`;
         afterAgentNodes.push({
           index: i,
@@ -322,24 +315,17 @@ export class ReactAgent<
       }
 
       if (m.wrapModelCall) {
-        wrapModelCallHookMiddleware.push([m, getState]);
+        wrapModelCallHookMiddleware.push([
+          m,
+          () => this.#stateManager.getState(m.name),
+        ]);
       }
     }
 
     /**
      * Add Nodes
      */
-    allNodeWorkflows.addNode(
-      "model_request",
-      this.#agentNode,
-      AgentNode.nodeOptions
-    );
-
-    /**
-     * Collect and compose wrapToolCall handlers from middleware
-     * Wrap each handler with error handling and validation
-     */
-    const wrapToolCallHandler = wrapToolCall(middleware);
+    allNodeWorkflows.addNode("model_request", this.#agentNode);
 
     /**
      * add single tool node for all tools
@@ -347,7 +333,8 @@ export class ReactAgent<
     if (toolClasses.filter(isClientTool).length > 0) {
       const toolNode = new ToolNode(toolClasses.filter(isClientTool), {
         signal: this.options.signal,
-        wrapToolCall: wrapToolCallHandler,
+        middleware,
+        stateManager: this.#stateManager,
       });
       allNodeWorkflows.addNode("tools", toolNode);
     }

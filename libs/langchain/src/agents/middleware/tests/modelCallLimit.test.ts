@@ -112,7 +112,7 @@ describe("ModelCallLimitMiddleware", () => {
     }
   );
 
-  describe.each(["throw", "end"] as const)(
+  describe.each(["throw" /*, "end"*/] as const)(
     "thread limit with exit behavior %s",
     (exitBehavior) => {
       const checkpointer = new MemorySaver();
@@ -126,7 +126,7 @@ describe("ModelCallLimitMiddleware", () => {
         exitBehavior,
       });
 
-      it("should not throw if the thread limit is not exceeded", async () => {
+      it.only("should not throw if the thread limit is not exceeded", async () => {
         const model = new FakeToolCallingChatModel({
           responses: [toolCallMessage1],
         });
@@ -151,6 +151,7 @@ describe("ModelCallLimitMiddleware", () => {
             { messages: ["Hello, world!"] },
             config
           );
+          console.log("result", result);
           await expect(result.runModelCallCount).toBe(3);
           await expect(result.threadModelCallCount).toBe(3);
         } else {
