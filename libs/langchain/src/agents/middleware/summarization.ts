@@ -107,7 +107,13 @@ export function summarizationMiddleware(
 ) {
   return createMiddleware({
     name: "SummarizationMiddleware",
-    contextSchema,
+    contextSchema: contextSchema.extend({
+      /**
+       * `model` should be required when initializing the middleware,
+       * but can be omitted within context when invoking the middleware.
+       */
+      model: z.custom<BaseLanguageModel>().optional(),
+    }),
     beforeModel: async (state, runtime) => {
       /**
        * Parse user options to get their explicit values
