@@ -741,6 +741,11 @@ export function humanInTheLoopMiddleware(
 
           if (
             revisedToolCall &&
+            /**
+             * If any decision is a rejected, we are going back to the model
+             * with only the tool calls that were rejected as we don't know
+             * the results of the approved/updated tool calls at this point.
+             */
             (!hasRejectedToolCalls || decision.type === "reject")
           ) {
             revisedToolCalls.push(revisedToolCall);
