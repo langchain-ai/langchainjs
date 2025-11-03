@@ -3,8 +3,8 @@ import type {
   InteropZodObject,
   InferInteropZodOutput,
 } from "@langchain/core/utils/types";
+import type { ClientTool, ServerTool } from "@langchain/core/tools";
 
-import type { ClientTool, ServerTool } from "./tools.js";
 import type {
   AgentMiddleware,
   WrapToolCallHook,

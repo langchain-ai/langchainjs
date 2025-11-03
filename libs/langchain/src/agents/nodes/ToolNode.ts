@@ -20,15 +20,13 @@ import {
 import { RunnableCallable } from "../RunnableCallable.js";
 import { PreHookAnnotation } from "../annotation.js";
 import { mergeAbortSignals } from "./utils.js";
-import { wrapToolCall } from "../utils.js";
 import { ToolInvocationError } from "../errors.js";
 import type {
-  AnyAnnotationRoot,
+  WrapToolCallHook,
   ToolCallRequest,
   ToAnnotationRoot,
 } from "../middleware/types.js";
-import type { AgentMiddleware } from "../middleware/types.js";
-import type { StateManager } from "../state.js";
+import type { AgentBuiltInState } from "../runtime.js";
 
 export interface ToolNodeOptions {
   /**
@@ -66,13 +64,11 @@ export interface ToolNodeOptions {
     | boolean
     | ((error: unknown, toolCall: ToolCall) => ToolMessage | undefined);
   /**
-   * The middleware to use for tool execution.
+   * Optional wrapper function for tool execution.
+   * Allows middleware to intercept and modify tool calls before execution.
+   * The wrapper receives the tool call request and a handler function to execute the tool.
    */
-  middleware?: readonly AgentMiddleware[];
-  /**
-   * The state manager to use for tool execution.
-   */
-  stateManager?: StateManager;
+  wrapToolCall?: WrapToolCallHook;
 }
 
 const isBaseMessageArray = (input: unknown): input is BaseMessage[] =>
@@ -165,8 +161,8 @@ function defaultHandleToolErrors(
  * ```
  */
 export class ToolNode<
-  StateSchema extends AnyAnnotationRoot | InteropZodObject = any,
-  ContextSchema extends AnyAnnotationRoot | InteropZodObject = any
+  StateSchema extends InteropZodObject = any,
+  ContextSchema extends InteropZodObject = any
 > extends RunnableCallable<StateSchema, ContextSchema> {
   tools: (StructuredToolInterface | DynamicTool | RunnableToolLike)[];
 
@@ -179,15 +175,13 @@ export class ToolNode<
     | ((error: unknown, toolCall: ToolCall) => ToolMessage | undefined) =
     defaultHandleToolErrors;
 
-  middleware: readonly AgentMiddleware[] = [];
-
-  stateManager?: StateManager;
+  wrapToolCall: WrapToolCallHook | undefined;
 
   constructor(
     tools: (StructuredToolInterface | DynamicTool | RunnableToolLike)[],
     public options?: ToolNodeOptions
   ) {
-    const { name, tags, handleToolErrors, middleware, stateManager, signal } =
+    const { name, tags, handleToolErrors, signal, wrapToolCall } =
       options ?? {};
     super({
       name,
@@ -201,9 +195,8 @@ export class ToolNode<
     });
     this.tools = tools;
     this.handleToolErrors = handleToolErrors ?? this.handleToolErrors;
-    this.middleware = middleware ?? [];
     this.signal = signal;
-    this.stateManager = stateManager;
+    this.wrapToolCall = wrapToolCall;
   }
 
   /**
@@ -279,7 +272,7 @@ export class ToolNode<
   protected async runTool(
     call: ToolCall,
     config: RunnableConfig,
-    state: ToAnnotationRoot<StateSchema>["State"] & PreHookAnnotation["State"]
+    state: AgentBuiltInState
   ): Promise<ToolMessage | Command> {
     /**
      * Define the base handler that executes the tool.
@@ -356,19 +349,11 @@ export class ToolNode<
     };
 
     /**
-     * Collect and compose wrapToolCall handlers from middleware
-     * Wrap each handler with error handling and validation
-     */
-    const wrapToolCallHandler = this.stateManager
-      ? wrapToolCall(this.middleware, state)
-      : undefined;
-
-    /**
      * If wrapToolCall is provided, use it to wrap the tool execution
      */
-    if (wrapToolCallHandler) {
+    if (this.wrapToolCall) {
       try {
-        return await wrapToolCallHandler(request, baseHandler);
+        return await this.wrapToolCall(request, baseHandler);
       } catch (e: unknown) {
         /**
          * Handle middleware errors

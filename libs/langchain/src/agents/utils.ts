@@ -28,9 +28,9 @@ import {
   RunnableSequence,
   RunnableBinding,
 } from "@langchain/core/runnables";
+import type { ClientTool, ServerTool } from "@langchain/core/tools";
 
 import { isBaseChatModel, isConfigurableModel } from "./model.js";
-import type { ClientTool, ServerTool } from "./tools.js";
 import { MultipleToolsBoundError } from "./errors.js";
 import { PROMPT_RUNNABLE_NAME } from "./constants.js";
 import type { AgentBuiltInState } from "./runtime.js";
@@ -477,8 +477,8 @@ function chainToolCallHandlers(
   ): WrapToolCallHook {
     return async (request, handler) => {
       // Create a wrapper that calls inner with the base handler
-      const innerHandler: ToolCallHandler = async (req) =>
-        inner(req, async (innerReq) => handler(innerReq));
+      const innerHandler: ToolCallHandler = async () =>
+        inner(request, async () => handler(request));
 
       // Call outer with the wrapped inner as its handler
       return outer(request, innerHandler);
@@ -503,8 +503,7 @@ function chainToolCallHandlers(
  * @returns single wrap function
  */
 export function wrapToolCall(
-  middleware: readonly AgentMiddleware<InteropZodObject | undefined>[],
-  state: Record<string, unknown>
+  middleware: readonly AgentMiddleware<InteropZodObject | undefined>[]
 ) {
   const middlewareWithWrapToolCall = middleware.filter((m) => m.wrapToolCall);
 
@@ -528,7 +527,9 @@ export function wrapToolCall(
                */
               state: {
                 messages: request.state.messages,
-                ...(m.stateSchema ? interopParse(m.stateSchema, state) : {}),
+                ...(m.stateSchema
+                  ? interopParse(m.stateSchema, { ...request.state })
+                  : {}),
               },
             } as ToolCallRequest<AgentBuiltInState, unknown>,
             handler

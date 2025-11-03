@@ -2,10 +2,10 @@ import { describe, it, expectTypeOf } from "vitest";
 import { z } from "zod/v3";
 import { HumanMessage, BaseMessage, AIMessage } from "@langchain/core/messages";
 import { tool } from "@langchain/core/tools";
+import type { ServerTool, ClientTool } from "@langchain/core/tools";
 
 import { createAgent, createMiddleware } from "../index.js";
 import type { AgentBuiltInState } from "../runtime.js";
-import type { ServerTool, ClientTool } from "../tools.js";
 
 describe("middleware types", () => {
   it("a middleware can define a state schema which is propagated to the result", async () => {
@@ -202,11 +202,33 @@ describe("middleware types", () => {
             customDefaultContextProp: string;
             customOptionalContextProp?: string;
           }>();
+          expectTypeOf(request.state).toEqualTypeOf<
+            {
+              customDefaultStateProp: string;
+              customOptionalStateProp?: string;
+              customRequiredStateProp: string;
+            } & AgentBuiltInState
+          >();
 
           return handler({
             ...request,
             tools: [tool(() => "result", { name: "toolA" })],
           });
+        },
+        wrapToolCall: async (request, handler) => {
+          expectTypeOf(request.runtime.context).toEqualTypeOf<{
+            customDefaultContextProp: string;
+            customOptionalContextProp?: string;
+          }>();
+          expectTypeOf(request.state).toEqualTypeOf<
+            {
+              customDefaultStateProp: string;
+              customOptionalStateProp?: string;
+              customRequiredStateProp: string;
+            } & AgentBuiltInState
+          >();
+
+          return handler(request);
         },
       });
 
