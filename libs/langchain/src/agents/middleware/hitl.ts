@@ -9,6 +9,7 @@ import { interrupt } from "@langchain/langgraph";
 
 import { createMiddleware } from "../middleware.js";
 import type { AgentBuiltInState, Runtime } from "../runtime.js";
+import type { JumpToTarget } from "../constants.js";
 
 const DescriptionFunctionSchema = z
   .function()
@@ -720,6 +721,9 @@ export function humanInTheLoopMiddleware(
 
         const revisedToolCalls: ToolCall[] = [...autoApprovedToolCalls];
         const artificialToolMessages: ToolMessage[] = [];
+        const hasRejectedToolCalls = decisions.some(
+          (decision) => decision.type === "reject"
+        );
 
         /**
          * Process each decision using helper method
@@ -735,7 +739,10 @@ export function humanInTheLoopMiddleware(
             interruptConfig
           );
 
-          if (revisedToolCall) {
+          if (
+            revisedToolCall &&
+            (!hasRejectedToolCalls || decision.type === "reject")
+          ) {
             revisedToolCalls.push(revisedToolCall);
           }
           if (toolMessage) {
@@ -750,7 +757,13 @@ export function humanInTheLoopMiddleware(
           lastMessage.tool_calls = revisedToolCalls;
         }
 
-        return { messages: [lastMessage, ...artificialToolMessages] };
+        const jumpTo: JumpToTarget | undefined = hasRejectedToolCalls
+          ? "model"
+          : undefined;
+        return {
+          messages: [lastMessage, ...artificialToolMessages],
+          jumpTo,
+        };
       },
     },
   });
