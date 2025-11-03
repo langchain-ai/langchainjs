@@ -53,6 +53,7 @@
     "commander": "^11.1.0",
     "dotenv": "^16.0.3",
     "lint-staged": "^13.1.1",
+    "node-gyp": "^11.5.0",
     "prettier": "^2.8.3",
     "reflect-metadata": "^0.2.2",
     "semver": "^7.5.4",
