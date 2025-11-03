@@ -11,6 +11,7 @@ import {
   interopZodObjectPartial,
 } from "@langchain/core/utils/types";
 import type { ToolCall } from "@langchain/core/messages/tool";
+import type { ClientTool, ServerTool } from "@langchain/core/tools";
 
 import { initChatModel } from "../../chat_models/universal.js";
 import { MultipleStructuredOutputsError } from "../errors.js";
@@ -32,7 +33,6 @@ import type {
   WrapModelCallHandler,
 } from "../middleware/types.js";
 import type { ModelRequest } from "./types.js";
-import type { ClientTool, ServerTool } from "../tools.js";
 import { withAgentName } from "../withAgentName.js";
 import {
   ToolStrategy,

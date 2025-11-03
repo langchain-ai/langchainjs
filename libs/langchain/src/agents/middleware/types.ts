@@ -11,9 +11,9 @@ import type { AnnotationRoot } from "@langchain/langgraph";
 import type { AIMessage, ToolMessage } from "@langchain/core/messages";
 import type { ToolCall } from "@langchain/core/messages/tool";
 import type { Command } from "@langchain/langgraph";
+import type { ClientTool, ServerTool } from "@langchain/core/tools";
 
 import type { JumpToTarget } from "../constants.js";
-import type { ClientTool, ServerTool } from "../tools.js";
 import type { Runtime, AgentBuiltInState } from "../runtime.js";
 import type { ModelRequest } from "../nodes/types.js";
 
@@ -21,7 +21,7 @@ type PromiseOrValue<T> = T | Promise<T>;
 
 export type AnyAnnotationRoot = AnnotationRoot<any>;
 
-type NormalizedSchemaInput<
+export type NormalizedSchemaInput<
   TSchema extends InteropZodObject | undefined | never = any
 > = [TSchema] extends [never]
   ? AgentBuiltInState

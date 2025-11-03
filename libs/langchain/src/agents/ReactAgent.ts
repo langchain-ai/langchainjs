@@ -18,9 +18,14 @@ import { ToolMessage, AIMessage } from "@langchain/core/messages";
 import { IterableReadableStream } from "@langchain/core/utils/stream";
 import type { Runnable, RunnableConfig } from "@langchain/core/runnables";
 import type { StreamEvent } from "@langchain/core/tracers/log_stream";
+import type { ClientTool, ServerTool } from "@langchain/core/tools";
 
 import { createAgentAnnotationConditional } from "./annotation.js";
-import { isClientTool, validateLLMHasNoBoundTools } from "./utils.js";
+import {
+  isClientTool,
+  validateLLMHasNoBoundTools,
+  wrapToolCall,
+} from "./utils.js";
 
 import { AgentNode } from "./nodes/AgentNode.js";
 import { ToolNode } from "./nodes/ToolNode.js";
@@ -35,7 +40,6 @@ import {
 import { StateManager } from "./state.js";
 
 import type { WithStateGraphNodes } from "./types.js";
-import type { ClientTool, ServerTool } from "./tools.js";
 
 import type {
   CreateAgentParams,
@@ -333,8 +337,7 @@ export class ReactAgent<
     if (toolClasses.filter(isClientTool).length > 0) {
       const toolNode = new ToolNode(toolClasses.filter(isClientTool), {
         signal: this.options.signal,
-        middleware,
-        stateManager: this.#stateManager,
+        wrapToolCall: wrapToolCall(middleware),
       });
       allNodeWorkflows.addNode("tools", toolNode);
     }
