@@ -689,9 +689,7 @@ export function humanInTheLoopMiddleware(
             typeof toolConfigOrToolConfigFactory === "function"
               ? toolCall
                 ? await toolConfigOrToolConfigFactory(toolCall)
-                : (() => {
-                    throw new Error(`Tool call for "${toolName}" not found`);
-                  })()
+                : undefined
               : toolConfigOrToolConfigFactory;
 
           if (typeof toolConfig === "boolean") {
@@ -700,7 +698,7 @@ export function humanInTheLoopMiddleware(
                 allowedDecisions: [...ALLOWED_DECISIONS],
               };
             }
-          } else if (toolConfig.allowedDecisions) {
+          } else if (toolConfig?.allowedDecisions) {
             resolvedConfigs[toolName] = toolConfig as InterruptOnConfig;
           }
         }
