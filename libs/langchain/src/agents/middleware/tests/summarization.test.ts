@@ -6,6 +6,7 @@ import {
   SystemMessage,
   ToolMessage,
 } from "@langchain/core/messages";
+
 import { summarizationMiddleware } from "../summarization.js";
 import { countTokensApproximately } from "../utils.js";
 import { createAgent } from "../../index.js";
@@ -367,13 +368,7 @@ describe("summarizationMiddleware", () => {
   });
 
   it("can be created using a model string", async () => {
-    // Verify the mocked ChatAnthropic exists
-    const { ChatAnthropic } = await import("@langchain/anthropic");
-    expect(ChatAnthropic).toBeDefined();
-    expect(typeof ChatAnthropic).toBe("function");
-
     const model = "anthropic:claude-sonnet-4-20250514";
-
     const middleware = summarizationMiddleware({
       model,
       maxTokensBeforeSummary: 100,
@@ -386,6 +381,6 @@ describe("summarizationMiddleware", () => {
     });
 
     const result = await agent.invoke({ messages: [] });
-    expect(result.messages.length).toBeGreaterThan(0);
+    expect(result.messages.at(-1)?.content).toBe("Mocked response");
   });
 });
