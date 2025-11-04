@@ -1017,4 +1017,285 @@ describe("toolCallLimitMiddleware", () => {
       expect((result2 as any)?.jumpTo).toBe("end");
     });
   });
+
+  describe("Parallel Tool Call Limits", () => {
+    /**
+     * Test parallel tool calls with a limit of 1 in 'continue' mode.
+     *
+     * When the model proposes 3 tool calls with a limit of 1:
+     * - The first call should execute successfully
+     * - The 2nd and 3rd calls should be blocked with error ToolMessages
+     * - Execution should continue (no jump_to)
+     */
+    it("should handle parallel tool calls with limit in continue mode", async () => {
+      const searchToolMock = vi.fn(async ({ query }: { query: string }) => {
+        return `Results: ${query}`;
+      });
+      const search = tool(searchToolMock, {
+        name: "search",
+        description: "Search for information",
+        schema: z.object({ query: z.string() }),
+      });
+
+      // Model proposes 3 parallel search calls in a single AIMessage
+      const model = new FakeToolCallingChatModel({
+        responses: [
+          new AIMessage({
+            content: "",
+            tool_calls: [
+              { id: "1", name: "search", args: { query: "q1" } },
+              { id: "2", name: "search", args: { query: "q2" } },
+              { id: "3", name: "search", args: { query: "q3" } },
+            ],
+          }),
+          new AIMessage("Final response"), // Model stops after seeing the errors
+        ],
+      });
+
+      const limiter = toolCallLimitMiddleware({
+        threadLimit: 1,
+        exitBehavior: "continue",
+      });
+      const agent = createAgent({
+        model,
+        tools: [search],
+        middleware: [limiter],
+        checkpointer: new MemorySaver(),
+      });
+
+      const result = await agent.invoke(
+        { messages: [new HumanMessage("Test")] },
+        { configurable: { thread_id: "test" } }
+      );
+      const messages = result.messages;
+
+      // Verify tool message counts
+      const toolMessages = messages.filter((msg): msg is ToolMessage =>
+        ToolMessage.isInstance(msg)
+      );
+      const successfulToolMessages = toolMessages.filter(
+        (msg) => msg.status !== "error"
+      );
+      const errorToolMessages = toolMessages.filter(
+        (msg) => msg.status === "error"
+      );
+
+      expect(successfulToolMessages.length).toBe(1);
+      expect(errorToolMessages.length).toBe(2);
+
+      // Verify the successful call is q1
+      expect(successfulToolMessages[0].content).toContain("q1");
+
+      // Verify error messages explain the limit
+      for (const errorMsg of errorToolMessages) {
+        const content =
+          typeof errorMsg.content === "string"
+            ? errorMsg.content
+            : String(errorMsg.content);
+        expect(content.toLowerCase()).toContain("limit");
+      }
+
+      // Verify execution continued (no early termination)
+      const aiMessages = messages.filter((msg): msg is AIMessage =>
+        AIMessage.isInstance(msg)
+      );
+      // Should have: initial AI message with 3 tool calls, then final AI message (no tool calls)
+      expect(aiMessages.length).toBeGreaterThanOrEqual(2);
+      expect(searchToolMock).toHaveBeenCalledTimes(1);
+    });
+
+    /**
+     * Test parallel tool calls with a limit of 1 in 'end' mode.
+     *
+     * When the model proposes 3 tool calls with a limit of 1:
+     * - The first call would be allowed (within limit)
+     * - The 2nd and 3rd calls exceed the limit and get blocked with error ToolMessages
+     * - Execution stops immediately (jump_to: end) so NO tools actually execute
+     * - An AI message explains why execution stopped
+     */
+    it("should handle parallel tool calls with limit in end mode", async () => {
+      const search = tool(
+        async ({ query }: { query: string }) => {
+          return `Results: ${query}`;
+        },
+        {
+          name: "search",
+          description: "Search for information",
+          schema: z.object({ query: z.string() }),
+        }
+      );
+
+      // Model proposes 3 parallel search calls
+      const model = new FakeToolCallingChatModel({
+        responses: [
+          new AIMessage({
+            content: "",
+            tool_calls: [
+              { id: "1", name: "search", args: { query: "q1" } },
+              { id: "2", name: "search", args: { query: "q2" } },
+              { id: "3", name: "search", args: { query: "q3" } },
+            ],
+          }),
+          new AIMessage("Should not reach here"),
+        ],
+      });
+
+      const limiter = toolCallLimitMiddleware({
+        threadLimit: 1,
+        exitBehavior: "end",
+      });
+      const agent = createAgent({
+        model,
+        tools: [search],
+        middleware: [limiter],
+        checkpointer: new MemorySaver(),
+      });
+
+      const result = await agent.invoke(
+        { messages: [new HumanMessage("Test")] },
+        { configurable: { thread_id: "test" } }
+      );
+      const messages = result.messages;
+
+      // Verify tool message counts
+      // With "end" behavior, when we jump to end, NO tools execute (not even allowed ones)
+      // We only get error ToolMessages for the 2 blocked calls
+      const toolMessages = messages.filter((msg): msg is ToolMessage =>
+        ToolMessage.isInstance(msg)
+      );
+      const successfulToolMessages = toolMessages.filter(
+        (msg) => msg.status !== "error"
+      );
+      const errorToolMessages = toolMessages.filter(
+        (msg) => msg.status === "error"
+      );
+
+      expect(successfulToolMessages.length).toBe(0);
+      expect(errorToolMessages.length).toBe(2);
+
+      // Verify error tool messages (sent to model - include "Do not" instruction)
+      for (const errorMsg of errorToolMessages) {
+        const content =
+          typeof errorMsg.content === "string"
+            ? errorMsg.content
+            : String(errorMsg.content);
+        expect(content).toContain("Tool call limit exceeded");
+        expect(content).toContain("Do not");
+      }
+
+      // Verify AI message explaining why execution stopped (displayed to user - includes thread/run details)
+      const aiLimitMessages = messages.filter(
+        (msg): msg is AIMessage =>
+          AIMessage.isInstance(msg) &&
+          (!msg.tool_calls || msg.tool_calls.length === 0) &&
+          (() => {
+            const content =
+              typeof msg.content === "string"
+                ? msg.content
+                : String(msg.content);
+            return content.toLowerCase().includes("limit");
+          })()
+      );
+      expect(aiLimitMessages.length).toBeGreaterThanOrEqual(1);
+
+      if (aiLimitMessages.length > 0) {
+        const aiMsgContent =
+          typeof aiLimitMessages[0].content === "string"
+            ? aiLimitMessages[0].content
+            : String(aiLimitMessages[0].content);
+        expect(
+          aiMsgContent.toLowerCase().includes("thread limit exceeded") ||
+            aiMsgContent.toLowerCase().includes("run limit exceeded")
+        ).toBe(true);
+      }
+    });
+
+    /**
+     * Test parallel calls to different tools when limiting a specific tool.
+     *
+     * When limiting 'search' to 1 call, and model proposes 3 search + 2 calculator calls:
+     * - First search call should execute
+     * - Other 2 search calls should be blocked
+     * - All calculator calls should execute (not limited)
+     */
+    it("should handle parallel mixed tool calls with specific tool limit", async () => {
+      const search = tool(
+        async ({ query }: { query: string }) => {
+          return `Search: ${query}`;
+        },
+        {
+          name: "search",
+          description: "Search for information",
+          schema: z.object({ query: z.string() }),
+        }
+      );
+
+      const calculator = tool(
+        async ({ expression }: { expression: string }) => {
+          return `Calc: ${expression}`;
+        },
+        {
+          name: "calculator",
+          description: "Calculate an expression",
+          schema: z.object({ expression: z.string() }),
+        }
+      );
+
+      const model = new FakeToolCallingChatModel({
+        responses: [
+          new AIMessage({
+            content: "",
+            tool_calls: [
+              { id: "1", name: "search", args: { query: "q1" } },
+              { id: "2", name: "calculator", args: { expression: "1+1" } },
+              { id: "3", name: "search", args: { query: "q2" } },
+              { id: "4", name: "calculator", args: { expression: "2+2" } },
+              { id: "5", name: "search", args: { query: "q3" } },
+            ],
+          }),
+          new AIMessage("Final response"),
+        ],
+      });
+
+      const searchLimiter = toolCallLimitMiddleware({
+        toolName: "search",
+        threadLimit: 1,
+        exitBehavior: "continue",
+      });
+      const agent = createAgent({
+        model,
+        tools: [search, calculator],
+        middleware: [searchLimiter],
+        checkpointer: new MemorySaver(),
+      });
+
+      const result = await agent.invoke(
+        { messages: [new HumanMessage("Test")] },
+        { configurable: { thread_id: "test" } }
+      );
+      const messages = result.messages;
+
+      const toolMessages = messages.filter((msg): msg is ToolMessage =>
+        ToolMessage.isInstance(msg)
+      );
+      const searchSuccess = toolMessages.filter(
+        (m) => m.name === "search" && m.status !== "error"
+      );
+      const searchBlocked = toolMessages.filter((m) => {
+        if (m.name !== "search" || m.status !== "error") {
+          return false;
+        }
+        const content =
+          typeof m.content === "string" ? m.content : String(m.content);
+        return content.toLowerCase().includes("limit");
+      });
+      const calcSuccess = toolMessages.filter(
+        (m) => m.name === "calculator" && m.status !== "error"
+      );
+
+      expect(searchSuccess.length).toBe(1);
+      expect(searchBlocked.length).toBe(2);
+      expect(calcSuccess.length).toBe(2);
+    });
+  });
 });
