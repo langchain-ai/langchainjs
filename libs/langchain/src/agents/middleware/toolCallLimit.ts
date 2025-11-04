@@ -1,22 +1,18 @@
-/**
- * Tool call limit middleware for agents.
- */
-
-import { AIMessage } from "@langchain/core/messages";
+import { AIMessage, ToolMessage } from "@langchain/core/messages";
 import { z } from "zod/v3";
 import type { InferInteropZodInput } from "@langchain/core/utils/types";
 
 import { createMiddleware } from "../middleware.js";
 
 /**
- * Build a message indicating which tool call limits were reached.
+ * Build a message indicating which tool call limits were exceeded.
  *
  * @param threadCount - Current thread tool call count.
  * @param runCount - Current run tool call count.
  * @param threadLimit - Thread tool call limit (if set).
  * @param runLimit - Run tool call limit (if set).
  * @param toolName - Tool name being limited (if specific tool), or undefined for all tools.
- * @returns A formatted message describing which limits were reached.
+ * @returns A formatted message describing which limits were exceeded.
  */
 function buildToolLimitExceededMessage(
   threadCount: number,
@@ -25,19 +21,25 @@ function buildToolLimitExceededMessage(
   runLimit: number | undefined,
   toolName: string | undefined
 ): string {
-  const toolDesc = toolName ? `'${toolName}' tool call` : "Tool call";
+  const toolDesc = toolName ? `'${toolName}' tool` : "Tool";
   const exceededLimits: string[] = [];
 
-  if (threadLimit !== undefined && threadCount >= threadLimit) {
-    exceededLimits.push(`thread limit reached (${threadCount}/${threadLimit})`);
+  if (threadLimit !== undefined && threadCount > threadLimit) {
+    exceededLimits.push(
+      `thread limit exceeded (${threadCount}/${threadLimit} calls)`
+    );
   }
-  if (runLimit !== undefined && runCount >= runLimit) {
-    exceededLimits.push(`run limit reached (${runCount}/${runLimit})`);
+  if (runLimit !== undefined && runCount > runLimit) {
+    exceededLimits.push(`run limit exceeded (${runCount}/${runLimit} calls)`);
   }
 
-  return `${toolDesc} limit${
-    exceededLimits.length > 1 ? "s" : ""
-  }: ${exceededLimits.join(", ")}. Stopping to prevent further tool calls.`;
+  const limitsText = exceededLimits.join(" and ");
+
+  // Build a concise message
+  if (toolName) {
+    return `${toolDesc} call limit reached: ${limitsText}. Do not call '${toolName}' again.`;
+  }
+  return `${toolDesc} call limit reached: ${limitsText}. Do not make additional tool calls.`;
 }
 
 /**
@@ -113,11 +115,13 @@ export const ToolCallLimitOptionsSchema = z.object({
   runLimit: z.number().optional(),
   /**
    * What to do when limits are exceeded.
-   * - "end": Jump to the end of the agent execution and inject an artificial
-   *   AI message indicating that the limit was exceeded.
-   * - "error": throws a ToolCallLimitExceededError
+   * - "continue": Block exceeded tools with error messages, let other tools continue (default)
+   * - "error": Raise a ToolCallLimitExceededError exception
+   * - "end": Stop execution immediately, injecting a ToolMessage and an AI message
+   *   for the single tool call that exceeded the limit. Raises NotImplementedError
+   *   if there are multiple tool calls.
    */
-  exitBehavior: z.enum(["end", "error"]).default("end"),
+  exitBehavior: z.enum(["continue", "error", "end"]).default("continue"),
 });
 
 export type ToolCallLimitConfig = InferInteropZodInput<
@@ -152,68 +156,66 @@ const DEFAULT_TOOL_COUNT_KEY = "__all__";
  * @param options.threadLimit - Maximum number of tool calls allowed per thread. undefined means no limit.
  * @param options.runLimit - Maximum number of tool calls allowed per run. undefined means no limit.
  * @param options.exitBehavior - What to do when limits are exceeded.
- *   - "end": Jump to the end of the agent execution and inject an artificial AI message indicating that the limit was exceeded.
- *   - "error": throws a ToolCallLimitExceededError
+ *   - "continue": Block exceeded tools with error messages, let other tools continue. Model decides when to end. (default)
+ *   - "error": Raise a ToolCallLimitExceededError exception
+ *   - "end": Stop execution immediately with a ToolMessage + AI message for the single tool call that exceeded the limit. Raises NotImplementedError if there are multiple tool calls.
  *
- * @throws {Error} If both limits are undefined or if exitBehavior is invalid.
+ * @throws {Error} If both limits are undefined.
+ * @throws {NotImplementedError} If exitBehavior is "end" and there are multiple tool calls.
  *
- * @example Limit all tool calls globally
+ * @example Continue execution with blocked tools (default)
  * ```ts
  * import { toolCallLimitMiddleware } from "@langchain/langchain/agents/middleware";
  * import { createAgent } from "@langchain/langchain/agents";
  *
- * const globalLimiter = toolCallLimitMiddleware({
+ * // Block exceeded tools but let other tools and model continue
+ * const limiter = toolCallLimitMiddleware({
  *   threadLimit: 20,
  *   runLimit: 10,
- *   exitBehavior: "end"
+ *   exitBehavior: "continue", // default
  * });
  *
  * const agent = createAgent({
  *   model: "openai:gpt-4o",
- *   middleware: [globalLimiter]
+ *   middleware: [limiter]
  * });
  * ```
  *
- * @example Limit a specific tool
+ * @example Stop immediately when limit exceeded
  * ```ts
- * import { toolCallLimitMiddleware } from "@langchain/langchain/agents/middleware";
- * import { createAgent } from "@langchain/langchain/agents";
- *
- * const searchLimiter = toolCallLimitMiddleware({
- *   toolName: "search",
- *   threadLimit: 5,
- *   runLimit: 3,
+ * // End execution immediately with an AI message
+ * const limiter = toolCallLimitMiddleware({
+ *   runLimit: 5,
  *   exitBehavior: "end"
  * });
  *
  * const agent = createAgent({
  *   model: "openai:gpt-4o",
- *   middleware: [searchLimiter]
+ *   middleware: [limiter]
  * });
  * ```
  *
- * @example Use both in the same agent
+ * @example Raise exception on limit
  * ```ts
- * import { toolCallLimitMiddleware } from "@langchain/langchain/agents/middleware";
- * import { createAgent } from "@langchain/langchain/agents";
- *
- * const globalLimiter = toolCallLimitMiddleware({
- *   threadLimit: 20,
- *   runLimit: 10,
- *   exitBehavior: "end"
- * });
- *
- * const searchLimiter = toolCallLimitMiddleware({
+ * // Strict limit with exception handling
+ * const limiter = toolCallLimitMiddleware({
  *   toolName: "search",
  *   threadLimit: 5,
- *   runLimit: 3,
- *   exitBehavior: "end"
+ *   exitBehavior: "error"
  * });
  *
  * const agent = createAgent({
  *   model: "openai:gpt-4o",
- *   middleware: [globalLimiter, searchLimiter]
+ *   middleware: [limiter]
  * });
+ *
+ * try {
+ *   const result = await agent.invoke({ messages: [new HumanMessage("Task")] });
+ * } catch (error) {
+ *   if (error instanceof ToolCallLimitExceededError) {
+ *     console.log(`Search limit exceeded: ${error}`);
+ *   }
+ * }
  * ```
  */
 export function toolCallLimitMiddleware(options: ToolCallLimitConfig) {
@@ -227,14 +229,9 @@ export function toolCallLimitMiddleware(options: ToolCallLimitConfig) {
   }
 
   /**
-   * Apply default for exitBehavior and validate
+   * Apply default for exitBehavior
    */
-  const exitBehavior = options.exitBehavior ?? "end";
-  if (exitBehavior !== "end" && exitBehavior !== "error") {
-    throw new Error(
-      `Invalid exit behavior: ${exitBehavior}. Must be 'end' or 'error'`
-    );
-  }
+  const exitBehavior = options.exitBehavior ?? "continue";
 
   /**
    * Generate the middleware name based on the tool name
@@ -246,42 +243,82 @@ export function toolCallLimitMiddleware(options: ToolCallLimitConfig) {
   return createMiddleware({
     name: middlewareName,
     stateSchema,
-    beforeModel: {
+    afterModel: {
       canJumpTo: ["end"],
       hook: (state) => {
         /**
-         * Count tool calls in entire thread
+         * Get the last AI message to check for tool calls
          */
-        const threadCount =
-          state.threadToolCallCount?.[
-            options.toolName ?? DEFAULT_TOOL_COUNT_KEY
-          ] ?? 0;
+        const lastAIMessage = [...state.messages]
+          .reverse()
+          .find(AIMessage.isInstance);
 
-        /**
-         * Count tool calls in current run (after last HumanMessage)
-         */
-        const runCount =
-          state.runToolCallCount?.[
-            options.toolName ?? DEFAULT_TOOL_COUNT_KEY
-          ] ?? 0;
-
-        /**
-         * Check if any limits are exceeded
-         */
-        const threadLimitExceeded =
-          options.threadLimit !== undefined &&
-          threadCount >= options.threadLimit;
-        const runLimitExceeded =
-          options.runLimit !== undefined && runCount >= options.runLimit;
-
-        if (!threadLimitExceeded && !runLimitExceeded) {
+        if (!lastAIMessage || !lastAIMessage.tool_calls) {
           return undefined;
         }
 
+        /**
+         * Count tool calls matching our filter (all tools or specific tool)
+         */
+        const toolCallCount = lastAIMessage.tool_calls.filter(
+          (toolCall) =>
+            options.toolName === undefined || toolCall.name === options.toolName
+        ).length;
+
+        if (toolCallCount === 0) {
+          return undefined;
+        }
+
+        /**
+         * Get or initialize counts
+         */
+        const countKey = options.toolName ?? DEFAULT_TOOL_COUNT_KEY;
+        const threadCounts = { ...(state.threadToolCallCount ?? {}) };
+        const runCounts = { ...(state.runToolCallCount ?? {}) };
+
+        /**
+         * Increment counts for this key
+         */
+        const newThreadCount = (threadCounts[countKey] ?? 0) + toolCallCount;
+        const newRunCount = (runCounts[countKey] ?? 0) + toolCallCount;
+
+        threadCounts[countKey] = newThreadCount;
+        runCounts[countKey] = newRunCount;
+
+        /**
+         * Check if any limits are exceeded after incrementing
+         */
+        const threadLimitExceeded =
+          options.threadLimit !== undefined &&
+          newThreadCount > options.threadLimit;
+        const runLimitExceeded =
+          options.runLimit !== undefined && newRunCount > options.runLimit;
+
+        if (!threadLimitExceeded && !runLimitExceeded) {
+          /**
+           * No limits exceeded, just return updated counts
+           */
+          return {
+            threadToolCallCount: threadCounts,
+            runToolCallCount: runCounts,
+          };
+        }
+
+        /**
+         * Limits exceeded - build error message
+         */
+        const limitMessage = buildToolLimitExceededMessage(
+          newThreadCount,
+          newRunCount,
+          options.threadLimit,
+          options.runLimit,
+          options.toolName
+        );
+
         if (exitBehavior === "error") {
           throw new ToolCallLimitExceededError(
-            threadCount,
-            runCount,
+            newThreadCount,
+            newRunCount,
             options.threadLimit,
             options.runLimit,
             options.toolName
@@ -289,50 +326,67 @@ export function toolCallLimitMiddleware(options: ToolCallLimitConfig) {
         }
 
         /**
-         * Create a message indicating the limit was exceeded
+         * For both "continue" and "end", inject artificial error ToolMessages
+         * for tool calls that exceeded their limits
          */
-        const limitMessage = buildToolLimitExceededMessage(
-          threadCount,
-          runCount,
-          options.threadLimit,
-          options.runLimit,
-          options.toolName
-        );
-        const limitAiMessage = new AIMessage(limitMessage);
+        const artificialMessages: Array<ToolMessage | AIMessage> = [];
+        for (const toolCall of lastAIMessage.tool_calls) {
+          // Only inject errors for tool calls that match our filter
+          if (
+            options.toolName === undefined ||
+            toolCall.name === options.toolName
+          ) {
+            artificialMessages.push(
+              new ToolMessage({
+                content: limitMessage,
+                tool_call_id: toolCall.id!,
+                name: toolCall.name,
+                status: "error",
+              })
+            );
+          }
+        }
 
+        if (exitBehavior === "end") {
+          /**
+           * For "end" behavior, only support single tool call scenarios
+           */
+          const toolsToBeCalled = new Set(
+            lastAIMessage.tool_calls.map((toolCall) => toolCall.name)
+          );
+          if (toolsToBeCalled.size > 1) {
+            throw new Error(
+              `The 'end' exit behavior only supports a single tool type. Found ${
+                toolsToBeCalled.size
+              } different tools (${Array.from(toolsToBeCalled).join(
+                ", "
+              )}). Use 'continue' or 'error' behavior instead.`
+            );
+          }
+
+          /**
+           * Add final AI message explaining why we're stopping
+           */
+          artificialMessages.push(new AIMessage(limitMessage));
+
+          return {
+            threadToolCallCount: threadCounts,
+            runToolCallCount: runCounts,
+            jumpTo: "end" as const,
+            messages: artificialMessages,
+          };
+        }
+
+        /**
+         * For exit_behavior="continue", just return the error messages
+         * This prevents exceeded tools from being called but lets the model continue
+         */
         return {
-          jumpTo: "end",
-          messages: [limitAiMessage],
+          threadToolCallCount: threadCounts,
+          runToolCallCount: runCounts,
+          messages: artificialMessages,
         };
       },
-    },
-    afterModel: (state) => {
-      const lastAIMessage = [...state.messages]
-        .reverse()
-        .find(AIMessage.isInstance);
-      if (!lastAIMessage || !lastAIMessage.tool_calls) {
-        return state;
-      }
-
-      const toolCallCount = lastAIMessage.tool_calls.filter(
-        (toolCall) =>
-          options.toolName === undefined || toolCall.name === options.toolName
-      ).length;
-      if (toolCallCount === 0) {
-        return state;
-      }
-
-      const countKey = options.toolName ?? DEFAULT_TOOL_COUNT_KEY;
-      const threadCounts = state.threadToolCallCount;
-      const runCounts = state.runToolCallCount;
-
-      threadCounts[countKey] = (threadCounts[countKey] ?? 0) + toolCallCount;
-      runCounts[countKey] = (runCounts[countKey] ?? 0) + toolCallCount;
-
-      return {
-        threadToolCallCount: threadCounts,
-        runToolCallCount: runCounts,
-      };
     },
   });
 }
