@@ -815,8 +815,14 @@ describe("toolCallLimitMiddleware", () => {
       expect(result).toBeDefined();
 
       const messages = (result as { messages: BaseMessage[] }).messages;
-      expect(messages[0].content).toContain("thread limit exceeded");
-      expect(messages[0].content).toContain("5/3");
+      // First message is ToolMessage (sent to model - no thread/run details)
+      expect(messages[0]).toBeInstanceOf(ToolMessage);
+      expect(messages[0].content).toContain("Tool call limit exceeded");
+      // Last message is AI message (displayed to user - includes thread/run details)
+      const aiMessage = messages[messages.length - 1];
+      expect(aiMessage).toBeInstanceOf(AIMessage);
+      expect(aiMessage.content).toContain("thread limit exceeded");
+      expect(aiMessage.content).toContain("5/3");
     });
 
     it("should only support end for a single duplicate tool call", async () => {
@@ -849,7 +855,7 @@ describe("toolCallLimitMiddleware", () => {
       await expect(async () => {
         await fn(state as any, {} as any);
       }).rejects.toThrow(
-        "The 'end' exit behavior only supports a single tool type"
+        "Cannot end execution with other tool calls pending. Found calls to: search, calculator."
       );
     });
   });
@@ -955,7 +961,7 @@ describe("toolCallLimitMiddleware", () => {
         const fn = getHookFunction(middleware.afterModel! as any);
         await fn(state as any, {} as any);
       }).rejects.toThrow(
-        "The 'end' exit behavior only supports a single tool type"
+        "Cannot end execution with other tool calls pending. Found calls to: search. Use 'continue' or 'error' behavior instead."
       );
     });
   });
