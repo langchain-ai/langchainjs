@@ -22,7 +22,6 @@ import { getHookFunction } from "../utils.js";
 describe("toolCallLimitMiddleware", () => {
   // Helper to create test tools
   const searchToolMock = vi.fn(async ({ query }: { query: string }) => {
-    console.log(11, "EXECUTE SEARCH TOOL");
     return `Results for: ${query}`;
   });
   const searchTool = tool(searchToolMock, {
