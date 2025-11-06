@@ -371,10 +371,11 @@ describe("toolCallLimitMiddleware", () => {
 
       const threadConfig = { configurable: { thread_id: "test-thread" } };
       const checkpointer = new MemorySaver();
+      const model = createModel();
 
       // First run - should hit run limit
       const agent1 = createAgent({
-        model: createModel(),
+        model,
         tools: [searchTool],
         middleware: [middleware],
         checkpointer,
@@ -392,9 +393,9 @@ describe("toolCallLimitMiddleware", () => {
         "3/2"
       );
 
-      // Second run with new model - run count resets, should also hit limit
+      // Second run with new model - run count resets
       const agent2 = createAgent({
-        model: createModel(),
+        model,
         tools: [searchTool],
         middleware: [middleware],
         checkpointer,
@@ -405,8 +406,7 @@ describe("toolCallLimitMiddleware", () => {
         threadConfig
       );
       const lastMessage = result2.messages[result2.messages.length - 1].content;
-      expect(lastMessage).toContain("run limit exceeded");
-      expect(lastMessage).toContain("5/2");
+      expect(lastMessage).toContain("Response 3");
       expect(searchToolMock).toHaveBeenCalledTimes(2);
     });
   });

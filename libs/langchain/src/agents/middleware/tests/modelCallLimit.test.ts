@@ -17,8 +17,28 @@ const toolCallMessage1 = new AIMessage({
     },
   ],
 });
+const toolCallMessageForRunLimit = new AIMessage({
+  content: "",
+  tool_calls: [
+    {
+      id: "call_1",
+      name: "tool_1",
+      args: { arg1: "arg1" },
+    },
+    {
+      id: "call_2",
+      name: "tool_2",
+      args: { arg1: "arg2" },
+    },
+    {
+      id: "call_3",
+      name: "tool_3",
+      args: { arg1: "arg3" },
+    },
+  ],
+});
 const toolCallMessage2 = new AIMessage({
-  content: "bar",
+  content: "",
   tool_calls: [
     {
       id: "call_1",
@@ -28,7 +48,7 @@ const toolCallMessage2 = new AIMessage({
   ],
 });
 const toolCallMessage3 = new AIMessage({
-  content: "baz",
+  content: "",
   tool_calls: [
     {
       id: "call_1",
@@ -43,9 +63,6 @@ const responseMessage1 = new AIMessage({
 const responseMessage2 = new AIMessage({
   content: "fuzbaz",
 });
-const responseMessage3 = new AIMessage({
-  content: "fuzbazbaz",
-});
 
 const tools = [
   tool(() => "foobar", {
@@ -56,6 +73,10 @@ const tools = [
     name: "tool_2",
     description: "tool_2",
   }),
+  tool(() => "barfoo", {
+    name: "tool_3",
+    description: "tool_3",
+  }),
 ];
 
 describe("ModelCallLimitMiddleware", () => {
@@ -63,14 +84,24 @@ describe("ModelCallLimitMiddleware", () => {
     "run limit with exit behavior %s",
     (exitBehavior) => {
       it("should not throw if the run limit exceeds", async () => {
+        // First invocation: 2 model calls (within limit)
+        //   Call 1: Makes tool calls for 3 tools -> tools execute -> Call 2: Final response
+        // Second invocation: 3 model calls (exceeds limit of 2)
+        //   Call 1: Makes tool call -> tool executes -> Call 2: Makes tool call -> tool executes -> Call 3: Should fail
         const model = new FakeToolCallingChatModel({
           responses: [
-            toolCallMessage1,
+            // First invocation - Call 1: Makes 3 tool calls
+            toolCallMessageForRunLimit,
+            // First invocation - Call 2: Final response after tools execute
             responseMessage1,
+            // Second invocation - Call 1: Makes 1 tool call
+            toolCallMessage1,
+            // Second invocation - Call 2: Makes 1 tool call (after first tool executes)
             toolCallMessage2,
-            responseMessage2,
+            // Second invocation - Call 3: Makes 1 tool call (should fail here - limit exceeded)
             toolCallMessage3,
-            responseMessage3,
+            // Second invocation - Call 4: Final response (should never reach this)
+            responseMessage2,
           ],
         });
         const middleware = modelCallLimitMiddleware({
@@ -151,14 +182,14 @@ describe("ModelCallLimitMiddleware", () => {
             { messages: ["Hello, world!"] },
             config
           );
-          await expect(result.runModelCallCount).toBe(3);
+          await expect(result.runModelCallCount).toBe(0);
           await expect(result.threadModelCallCount).toBe(3);
         } else {
           const result = await agent2.invoke(
             { messages: ["Hello, world!"] },
             config
           );
-          await expect(result.runModelCallCount).toBe(3);
+          await expect(result.runModelCallCount).toBe(0);
           await expect(result.threadModelCallCount).toBe(3);
           expect(result.messages.at(-1)?.content).not.toContain(
             "Model call limits exceeded"

@@ -513,5 +513,11 @@ export function toolCallLimitMiddleware(options: ToolCallLimitConfig) {
         };
       },
     },
+    /**
+     * reset the run tool call count after the agent execution completes
+     */
+    afterAgent: () => ({
+      runToolCallCount: {},
+    }),
   });
 }

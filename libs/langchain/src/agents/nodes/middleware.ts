@@ -84,8 +84,8 @@ export abstract class MiddlewareNode<
     }
 
     const state: TStateSchema = {
-      ...invokeState,
       ...this.#options.getState(),
+      ...invokeState,
       /**
        * don't overwrite possible outdated messages from other middleware nodes
        */
