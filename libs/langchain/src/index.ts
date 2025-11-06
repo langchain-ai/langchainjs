@@ -49,14 +49,6 @@ export * from "./agents/middleware/index.js";
 export { InMemoryStore } from "@langchain/core/stores";
 
 /**
- * LangChain Context
- */
-export {
-  setContextVariable,
-  getContextVariable,
-} from "@langchain/core/context";
-
-/**
  * LangChain Documents
  */
 export { type DocumentInput, Document } from "@langchain/core/documents";

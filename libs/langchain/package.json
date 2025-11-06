@@ -101,17 +101,6 @@
         "default": "./dist/index.cjs"
       }
     },
-    "./web": {
-      "input": "./src/web.ts",
-      "import": {
-        "types": "./dist/web.d.ts",
-        "default": "./dist/web.js"
-      },
-      "require": {
-        "types": "./dist/web.d.cts",
-        "default": "./dist/web.cjs"
-      }
-    },
     "./chat_models/universal": {
       "input": "./src/chat_models/universal.ts",
       "import": {
