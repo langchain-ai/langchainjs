@@ -13,34 +13,10 @@ import { createAgent } from "../../index.js";
 import { FakeToolCallingChatModel } from "../../tests/utils.js";
 
 // Mock @langchain/anthropic to test model string usage without requiring the built package
-vi.mock("@langchain/anthropic", async () => {
-  const { AIMessage } = await import("@langchain/core/messages");
-  return {
-    ChatAnthropic: class MockChatAnthropic {
-      lc_kwargs: Record<string, any>;
-
-      constructor(params?: any) {
-        this.lc_kwargs = params || {};
-      }
-
-      async invoke() {
-        return new AIMessage({ content: "Mocked response" });
-      }
-
-      getName() {
-        return "ChatAnthropic";
-      }
-
-      get _modelType() {
-        return "chat-anthropic";
-      }
-
-      get lc_runnable() {
-        return true;
-      }
-    },
-  };
-});
+vi.mock(
+  "@langchain/anthropic",
+  () => import("./__mocks__/@langchain/anthropic.js")
+);
 
 describe("summarizationMiddleware", () => {
   // Mock summarization model
@@ -381,6 +357,8 @@ describe("summarizationMiddleware", () => {
     });
 
     const result = await agent.invoke({ messages: [] });
-    expect(result.messages.at(-1)?.content).toBe("Mocked response");
+    expect(result.messages.at(-1)?.content).toBe(
+      "Emulated response for anthropic"
+    );
   });
 });
