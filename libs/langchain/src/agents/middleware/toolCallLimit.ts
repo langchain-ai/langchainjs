@@ -1,4 +1,5 @@
 import { AIMessage, ToolMessage } from "@langchain/core/messages";
+import { z as z4 } from "zod/v4";
 import { z } from "zod/v3";
 import type { InferInteropZodInput } from "@langchain/core/utils/types";
 import type { ToolCall } from "@langchain/core/messages/tool";
@@ -60,6 +61,13 @@ function buildFinalAIMessageContent(
   const limitsText = exceededLimits.join(" and ");
   return `${toolDesc} call limit reached: ${limitsText}.`;
 }
+
+/**
+ * Schema for the exit behavior.
+ */
+const exitBehaviorSchema = z
+  .enum(VALID_EXIT_BEHAVIORS)
+  .default(DEFAULT_EXIT_BEHAVIOR);
 
 /**
  * Exception raised when tool call limits are exceeded.
@@ -142,7 +150,7 @@ export const ToolCallLimitOptionsSchema = z.object({
    *
    * @default "continue"
    */
-  exitBehavior: z.enum(VALID_EXIT_BEHAVIORS).default(DEFAULT_EXIT_BEHAVIOR),
+  exitBehavior: exitBehaviorSchema,
 });
 
 export type ToolCallLimitConfig = InferInteropZodInput<
@@ -253,12 +261,9 @@ export function toolCallLimitMiddleware(options: ToolCallLimitConfig) {
    * Validate exitBehavior (Zod schema already validates, but provide helpful error)
    */
   const exitBehavior = options.exitBehavior ?? DEFAULT_EXIT_BEHAVIOR;
-  if (!VALID_EXIT_BEHAVIORS.includes(exitBehavior)) {
-    throw new Error(
-      `Invalid exitBehavior: '${exitBehavior}'. Must be one of ${VALID_EXIT_BEHAVIORS.join(
-        ", "
-      )}`
-    );
+  const parseResult = exitBehaviorSchema.safeParse(exitBehavior);
+  if (!parseResult.success) {
+    throw new Error(z4.prettifyError(parseResult.error).slice(2));
   }
 
   /**

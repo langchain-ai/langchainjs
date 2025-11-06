@@ -556,6 +556,18 @@ describe("toolCallLimitMiddleware", () => {
       );
     });
 
+    it("should raise if invalid exit behavior is provided", async () => {
+      expect(() =>
+        toolCallLimitMiddleware({
+          threadLimit: 2,
+          runLimit: 1,
+          exitBehavior: "invalid" as any,
+        })
+      ).toThrow(
+        "Invalid enum value. Expected 'continue' | 'error' | 'end', received 'invalid'"
+      );
+    });
+
     it("should throw ToolCallLimitExceededError when exitBehavior is error", async () => {
       const middleware = toolCallLimitMiddleware({
         threadLimit: 2,
