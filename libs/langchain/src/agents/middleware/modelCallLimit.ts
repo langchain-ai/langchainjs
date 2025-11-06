@@ -192,5 +192,8 @@ export function modelCallLimitMiddleware(
       runModelCallCount: state.runModelCallCount + 1,
       threadModelCallCount: state.threadModelCallCount + 1,
     }),
+    afterAgent: () => ({
+      runModelCallCount: 0,
+    }),
   });
 }
