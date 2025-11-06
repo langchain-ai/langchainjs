@@ -544,6 +544,18 @@ describe("toolCallLimitMiddleware", () => {
   });
 
   describe("Error Behavior", () => {
+    it("should throw an error if run limit exceeds thread limit", async () => {
+      expect(() =>
+        toolCallLimitMiddleware({
+          threadLimit: 2,
+          runLimit: 3,
+          exitBehavior: "error",
+        })
+      ).toThrow(
+        "runLimit (3) cannot exceed threadLimit (2). The run limit should be less than or equal to the thread limit."
+      );
+    });
+
     it("should throw ToolCallLimitExceededError when exitBehavior is error", async () => {
       const middleware = toolCallLimitMiddleware({
         threadLimit: 2,
@@ -651,6 +663,49 @@ describe("toolCallLimitMiddleware", () => {
         );
       }
     });
+
+    it("should run remaining tools until limit is exceeded", async () => {
+      const middleware = toolCallLimitMiddleware({
+        threadLimit: 3,
+        runLimit: 2,
+        exitBehavior: "continue",
+      });
+
+      const model = new FakeToolCallingChatModel({
+        responses: [
+          new AIMessage({
+            content: "",
+            tool_calls: [
+              { id: "1", name: "search", args: { query: "test1" } },
+              { id: "2", name: "search", args: { query: "test2" } },
+              { id: "3", name: "calculator", args: { expression: "1+1" } },
+            ],
+          }),
+          new AIMessage({
+            content: "",
+            tool_calls: [{ id: "4", name: "search", args: { query: "test3" } }],
+          }),
+          new AIMessage("Should not reach here"),
+        ],
+      });
+
+      const agent = createAgent({
+        model,
+        tools: [searchTool, calculatorTool],
+        middleware: [middleware],
+      });
+
+      const result = await agent.invoke({
+        messages: [new HumanMessage("Search and calculate")],
+      });
+
+      const lastMessage = result.messages[result.messages.length - 1];
+      expect(lastMessage.content).toContain(
+        "Tool call limit exceeded. Do not make additional tool calls."
+      );
+      expect(searchToolMock).toHaveBeenCalledTimes(2);
+      expect(calculatorToolMock).toHaveBeenCalledTimes(0);
+    });
   });
 
   describe("Combined Thread and Run Limits", () => {
@@ -715,7 +770,7 @@ describe("toolCallLimitMiddleware", () => {
 
       const middleware = toolCallLimitMiddleware({
         threadLimit: 2, // Will hit this
-        runLimit: 10, // Won't hit this
+        runLimit: 2, // Won't hit this
         exitBehavior: "end",
       });
 
