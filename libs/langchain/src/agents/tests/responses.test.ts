@@ -4,7 +4,7 @@ import { z } from "zod/v3";
 import { ChatOpenAI } from "@langchain/openai";
 import { ChatAnthropic } from "@langchain/anthropic";
 
-import { createAgent, toolStrategy } from "../index.js";
+import { createAgent, toolStrategy, providerStrategy } from "../index.js";
 import { FakeToolCallingModel, FakeToolCallingChatModel } from "./utils.js";
 import { hasSupportForJsonSchemaOutput } from "../responses.js";
 
@@ -303,6 +303,32 @@ describe("structured output handling", () => {
         });
 
         expect(res.structuredResponse).toEqual({ bar: "foo" });
+      });
+    });
+  });
+  describe("providerStrategy", () => {
+    describe("use provider strategy directly", () => {
+      it("should not throw error if use provider strategy directly", async () => {
+        const model = new FakeToolCallingModel({
+          toolCalls: [
+            [{ name: "extract-16", args: { foo: "bar" }, id: "call_2" }],
+          ],
+        });
+        const agent = createAgent({
+          model,
+          tools: [],
+          responseFormat: providerStrategy(
+            z.object({
+              foo: z.string(),
+            })
+          ),
+        });
+
+        await expect(
+          agent.invoke({
+            messages: [{ role: "user", content: "hi" }],
+          })
+        ).resolves.not.toThrowError();
       });
     });
   });
