@@ -2,6 +2,7 @@ import { z } from "zod/v3";
 import { BaseMessage, HumanMessage } from "@langchain/core/messages";
 import { LanguageModelLike } from "@langchain/core/language_models/base";
 import { describe, it, expectTypeOf } from "vitest";
+import type { IterableReadableStream } from "@langchain/core/utils/stream";
 
 import { createAgent } from "../index.js";
 
@@ -59,6 +60,54 @@ describe("reactAgent", () => {
         customOptionalContextProp: 456,
       },
     });
+  });
+
+  it("supports streaming", async () => {
+    const agent = createAgent({
+      model: "openai:gpt-4",
+    });
+    const stream = await agent.stream(
+      {
+        messages: [new HumanMessage("Hello, world!")],
+      },
+      {
+        encoding: "text/event-stream",
+        streamMode: ["values", "updates", "messages"],
+        configurable: {
+          thread_id: "test-123",
+        },
+        recursionLimit: 10,
+      }
+    );
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    expectTypeOf(stream).toEqualTypeOf<IterableReadableStream<any>>();
+
+    await agent.invoke(
+      {
+        messages: [new HumanMessage("Hello, world!")],
+      },
+      {
+        // @ts-expect-error encoding is not a valid property
+        encoding: "text/event-stream",
+        configurable: {
+          thread_id: "test-123",
+        },
+        recursionLimit: 10,
+      }
+    );
+    await agent.invoke(
+      {
+        messages: [new HumanMessage("Hello, world!")],
+      },
+      {
+        // @ts-expect-error encoding is not a valid property
+        streamMode: ["values", "updates", "messages"],
+        configurable: {
+          thread_id: "test-123",
+        },
+        recursionLimit: 10,
+      }
+    );
   });
 
   it("should allow a state schema that makes invoke calls require to pass in a state", async () => {

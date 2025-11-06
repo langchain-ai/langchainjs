@@ -119,6 +119,11 @@ type CreateAgentPregelOptions =
   | "timeout";
 
 /**
+ * Pregel stream options that are propagated to the agent
+ */
+type CreateAgentPregelStreamOptions = "encoding" | "streamMode";
+
+/**
  * Decide whether provided configuration requires a context
  */
 export type InvokeConfiguration<ContextSchema extends Record<string, any>> =
@@ -161,7 +166,7 @@ export type StreamConfiguration<ContextSchema extends Record<string, any>> =
     ? Partial<
         Pick<
           PregelOptions<any, any, any>,
-          CreateAgentPregelOptions | "streamMode"
+          CreateAgentPregelOptions | CreateAgentPregelStreamOptions
         >
       > & {
         context?: Partial<ContextSchema>;
@@ -169,7 +174,7 @@ export type StreamConfiguration<ContextSchema extends Record<string, any>> =
     : Partial<
         Pick<
           PregelOptions<any, any, any>,
-          CreateAgentPregelOptions | "streamMode"
+          CreateAgentPregelOptions | CreateAgentPregelStreamOptions
         >
       > &
         WithMaybeContext<ContextSchema>;
