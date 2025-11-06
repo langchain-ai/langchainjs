@@ -27,6 +27,7 @@
     "format:check": "prettier --config .prettierrc --check \"src\""
   },
   "dependencies": {
+    "uuid": "^10.0.0",
     "redis": "^4.6.13"
   },
   "peerDependencies": {
@@ -44,7 +45,6 @@
     "eslint": "^9.34.0",
     "prettier": "^2.8.3",
     "typescript": "~5.8.3",
-    "uuid": "^10.0.0",
     "vitest": "^3.2.4"
   },
   "publishConfig": {
