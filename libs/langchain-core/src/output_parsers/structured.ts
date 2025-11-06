@@ -19,6 +19,39 @@ import {
   type JsonSchema7NullableType,
 } from "../utils/json_schema.js";
 
+/**
+ * Escapes literal newline characters inside quoted JSON string values.
+ *
+ * LLMs often produce multi-line string fields without properly escaping
+ * newline characters, which causes JSON.parse to throw:
+ * "Bad control character in string literal".
+ *
+ * Example input:
+ *   "line1
+ *    line2"
+ * Output:
+ *   "line1\nline2"
+ */
+
+function escapeNewlinesInsideStrings(input: string): string {
+  let inString = false;
+  let escaped = "";
+  for (let i = 0; i < input.length; i++) {
+    const char = input[i];
+
+    if (char === '"' && input[i - 1] !== "\\") {
+      inString = !inString;
+    }
+
+    if (inString && char === "\n") {
+      escaped += "\\n";
+    } else {
+      escaped += char;
+    }
+  }
+  return escaped;
+}
+
 export type JsonMarkdownStructuredOutputParserInput = {
   interpolationDepth?: number;
 };
@@ -101,34 +134,50 @@ ${JSON.stringify(toJsonSchema(this.schema))}
 
   /**
    * Parses the given text according to the schema.
-   * @param text The text to parse
-   * @returns The parsed output.
+   * Supports both plain JSON and function/tool-call style JSON.
    */
   async parse(text: string): Promise<InferInteropZodOutput<T>> {
-    try {
-      const trimmedText = text.trim();
-
-      const json =
-        // first case: if back ticks appear at the start of the text
-        trimmedText.match(/^```(?:json)?\s*([\s\S]*?)```/)?.[1] ||
-        // second case: if back ticks with `json` appear anywhere in the text
-        trimmedText.match(/```json\s*([\s\S]*?)```/)?.[1] ||
-        // otherwise, return the trimmed text
-        trimmedText;
-
-      const escapedJson = json
-        .replace(/"([^"\\]*(\\.[^"\\]*)*)"/g, (_match, capturedGroup) => {
-          const escapedInsideQuotes = capturedGroup.replace(/\n/g, "\\n");
-          return `"${escapedInsideQuotes}"`;
-        })
-        .replace(/\n/g, "");
-
-      return await interopParseAsync(this.schema, JSON.parse(escapedJson));
-    } catch (e) {
-      throw new OutputParserException(
-        `Failed to parse. Text: "${text}". Error: ${e}`,
-        text
+    const extractJson = (input: string) => {
+      const trimmed = input.trim();
+      return (
+        trimmed.match(/^```(?:json)?\s*([\s\S]*?)```/)?.[1] ||
+        trimmed.match(/```json\s*([\s\S]*?)```/)?.[1] ||
+        trimmed
       );
+    };
+
+    const tryParse = async (raw: string) => {
+      const cleaned = escapeNewlinesInsideStrings(raw);
+
+      const parsed = JSON.parse(cleaned);
+
+      if (
+        typeof parsed === "object" &&
+        parsed !== null &&
+        "arguments" in parsed &&
+        typeof (parsed as Record<string, unknown>).arguments === "object"
+      ) {
+        return await interopParseAsync(
+          this.schema,
+          (parsed as Record<string, unknown>).arguments
+        );
+      }
+
+      return await interopParseAsync(this.schema, parsed);
+    };
+
+    try {
+      const jsonPart = extractJson(text);
+      return await tryParse(jsonPart);
+    } catch {
+      try {
+        return await tryParse(extractJson(text.trim()));
+      } catch (e2) {
+        throw new OutputParserException(
+          `Failed to parse. Text: "${text}". Error: ${e2}`,
+          text
+        );
+      }
     }
   }
 }
