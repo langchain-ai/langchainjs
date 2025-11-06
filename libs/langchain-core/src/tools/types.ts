@@ -493,7 +493,7 @@ export function isLangChainTool(tool?: unknown): tool is StructuredToolParams {
 export type ToolRuntime<
   TState = unknown,
   TContext = unknown
-> = ToolRunnableConfig & {
+> = RunnableConfig & {
   /**
    * The current graph state.
    */
@@ -506,6 +506,10 @@ export type ToolRuntime<
    * The ID of the current tool call.
    */
   toolCallId: string;
+  /**
+   * The current tool call.
+   */
+  toolCall?: ToolCall;
   /**
    * RunnableConfig for the current execution.
    */
