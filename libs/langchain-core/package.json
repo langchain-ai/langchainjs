@@ -602,6 +602,17 @@
         "default": "./dist/utils/event_source_parse.js"
       }
     },
+    "./utils/format": {
+      "input": "./src/utils/format.ts",
+      "require": {
+        "types": "./dist/utils/format.d.cts",
+        "default": "./dist/utils/format.cjs"
+      },
+      "import": {
+        "types": "./dist/utils/format.d.ts",
+        "default": "./dist/utils/format.js"
+      }
+    },
     "./utils/function_calling": {
       "input": "./src/utils/function_calling.ts",
       "require": {

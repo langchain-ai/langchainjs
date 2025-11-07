@@ -1,8 +1,6 @@
 import type { BasePromptValue } from "@langchain/core/prompt_values";
 import type { OpenAI } from "openai";
 
-import { _convertMessagesToOpenAIParams } from "./message_inputs.js";
-
 /**
  * Convert a formatted LangChain prompt (e.g. pulled from the hub) into
  * a format expected by OpenAI's JS SDK.
@@ -39,8 +37,8 @@ export function convertPromptToOpenAI(formattedPrompt: BasePromptValue): {
 } {
   const messages = formattedPrompt.toChatMessages();
   return {
-    messages: _convertMessagesToOpenAIParams(
-      messages
-    ) as OpenAI.Chat.ChatCompletionMessageParam[],
+    messages: convertMessagesToCompletionsMessageParams({
+      messages,
+    }) as OpenAI.Chat.ChatCompletionMessageParam[],
   };
 }

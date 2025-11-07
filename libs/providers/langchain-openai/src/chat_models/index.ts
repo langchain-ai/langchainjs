@@ -5,21 +5,19 @@ import { type BaseLanguageModelInput } from "@langchain/core/language_models/bas
 import { Runnable } from "@langchain/core/runnables";
 import { type OpenAICallOptions, type OpenAIChatInput } from "../types.js";
 import {
-  _convertToOpenAITool,
   isBuiltInTool,
   isCustomTool,
   isOpenAICustomTool,
 } from "../utils/tools.js";
-import { _convertOpenAIResponsesUsageToLangChainUsage } from "../utils/output.js";
-import { _convertMessagesToOpenAIParams } from "../utils/message_inputs.js";
-import { _convertToResponsesMessageFromV1 } from "../utils/standard.js";
 import {
+  ChatCompletionsInvocationParams,
   ChatOpenAICompletions,
   ChatOpenAICompletionsCallOptions,
 } from "./completions.js";
 import {
   ChatOpenAIResponses,
   ChatOpenAIResponsesCallOptions,
+  ChatResponsesInvocationParams,
 } from "./responses.js";
 import { BaseChatOpenAI, BaseChatOpenAIFields } from "./base.js";
 
@@ -643,7 +641,9 @@ export class ChatOpenAI<
     return this.completions.getLsParams(optionsWithDefaults);
   }
 
-  override invocationParams(options?: this["ParsedCallOptions"]) {
+  override invocationParams(
+    options?: this["ParsedCallOptions"]
+  ): ChatResponsesInvocationParams | ChatCompletionsInvocationParams {
     const optionsWithDefaults = this._combineCallOptions(options);
     if (this._useResponsesApi(options)) {
       return this.responses.invocationParams(optionsWithDefaults);
