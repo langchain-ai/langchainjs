@@ -133,7 +133,7 @@
     "rimraf": "^5.0.1",
     "rollup": "^3.19.1",
     "sqlite3": "^5.1.4",
-    "typeorm": "^0.3.20",
+    "typeorm": "^0.3.26",
     "typescript": "~5.8.3",
     "typesense": "^1.5.3",
     "vitest": "^3.2.4",
