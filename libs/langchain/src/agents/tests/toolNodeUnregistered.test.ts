@@ -184,14 +184,6 @@ describe("ToolNode unregistered tool handling", () => {
   });
 
   it("should allow interceptor to return Command for unregistered tool", async () => {
-    /**
-     * skip as test requires primitives from `@langchain/core` that aren't released yet
-     * and fails in dependency range tests, remove after next release
-     */
-    if (process.env.LC_DEPENDENCY_RANGE_TESTS) {
-      return;
-    }
-
     const commandInterceptor: WrapToolCallHook = async (request, handler) => {
       // Return Command for unregistered tools
       if (request.toolCall.name === "routing_tool") {
