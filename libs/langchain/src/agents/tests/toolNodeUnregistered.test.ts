@@ -235,14 +235,6 @@ describe("ToolNode unregistered tool handling", () => {
   });
 
   it("should verify that request.tool is undefined for unregistered tools", async () => {
-    /**
-     * skip as test requires primitives from `@langchain/core` that aren't released yet
-     * and fails in dependency range tests, remove after next release
-     */
-    if (process.env.LC_DEPENDENCY_RANGE_TESTS) {
-      return;
-    }
-
     const capturedRequests: ToolCallRequest[] = [];
 
     const capturingInterceptor: WrapToolCallHook = async (request, handler) => {
