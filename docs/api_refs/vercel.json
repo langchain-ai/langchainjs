@@ -3,6 +3,10 @@
   "trailingSlash": false,
   "redirects": [
     {
+      "source": "/:path*",
+      "destination": "https://reference.langchain.com/javascript/"
+    },
+    {
       "source": "/:path(.*)/langchain_load:rest",
       "destination": "/:path/langchain.load:rest"
     },
