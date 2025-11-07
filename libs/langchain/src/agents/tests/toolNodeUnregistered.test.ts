@@ -129,14 +129,6 @@ describe("ToolNode unregistered tool handling", () => {
   });
 
   it("should handle mix of registered and unregistered tools", async () => {
-    /**
-     * skip as test requires primitives from `@langchain/core` that aren't released yet
-     * and fails in dependency range tests, remove after next release
-     */
-    if (process.env.LC_DEPENDENCY_RANGE_TESTS) {
-      return;
-    }
-
     const selectiveInterceptor: WrapToolCallHook = async (request, handler) => {
       // Handle unregistered tools, pass through registered ones
       if (request.toolCall.name === "magic_tool") {
