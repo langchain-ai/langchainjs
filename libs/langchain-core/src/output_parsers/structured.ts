@@ -135,6 +135,8 @@ ${JSON.stringify(toJsonSchema(this.schema))}
   /**
    * Parses the given text according to the schema.
    * Supports both plain JSON and function/tool-call style JSON.
+   * @param text The text to parse
+   * @returns The parsed output.
    */
   async parse(text: string): Promise<InferInteropZodOutput<T>> {
     const extractJson = (input: string) => {
