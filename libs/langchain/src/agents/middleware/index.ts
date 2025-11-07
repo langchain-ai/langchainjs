@@ -40,7 +40,11 @@ export {
 export {
   modelCallLimitMiddleware,
   type ModelCallLimitMiddlewareConfig,
-} from "./callLimit.js";
+} from "./modelCallLimit.js";
 export { modelFallbackMiddleware } from "./modelFallback.js";
+export {
+  toolRetryMiddleware,
+  type ToolRetryMiddlewareConfig,
+} from "./toolRetry.js";
 export { type AgentMiddleware } from "./types.js";
 export { countTokensApproximately } from "./utils.js";

@@ -61,7 +61,6 @@
     "@langchain/pinecone": "workspace:*",
     "@langchain/qdrant": "workspace:*",
     "@langchain/redis": "workspace:*",
-    "@langchain/scripts": ">=0.1.0 <0.2.0",
     "@langchain/tavily": "workspace:*",
     "@langchain/textsplitters": "workspace:*",
     "@langchain/weaviate": "workspace:*",
@@ -151,7 +150,7 @@
     "prettier": "^2.8.3",
     "reflect-metadata": "^0.2.2",
     "tsx": "^3.12.3",
-    "typeorm": "^0.3.20",
+    "typeorm": "^0.3.26",
     "typescript": "~5.1.6",
     "zod": "^3.25.76"
   }

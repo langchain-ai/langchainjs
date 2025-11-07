@@ -20,6 +20,7 @@ import {
 import type { RunnableFunc } from "../runnables/base.js";
 import { isDirectToolOutput, ToolCall, ToolMessage } from "../messages/tool.js";
 import { AsyncLocalStorageProviderSingleton } from "../singletons/index.js";
+import type { RunnableToolLike } from "../runnables/base.js";
 import {
   _configHasToolCallId,
   _isToolCall,
@@ -54,6 +55,7 @@ import type {
   StringInputToolSchema,
   ToolInterface,
   ToolOutputType,
+  ToolRuntime,
 } from "./types.js";
 import { type JSONSchema, validatesOnlyStrings } from "../utils/json_schema.js";
 
@@ -78,6 +80,7 @@ export {
   isRunnableToolLike,
   isStructuredTool,
   isStructuredToolParams,
+  type ToolRuntime,
 } from "./types.js";
 
 export { ToolInputParsingException };
@@ -636,6 +639,98 @@ export function tool<
   fields: ToolWrapperParams<SchemaT>
 ):
   | DynamicStructuredTool<SchemaT, SchemaOutputT, SchemaInputT, ToolOutputT>
+  | DynamicTool<ToolOutputT>;
+
+// Overloads with ToolRuntime as CallOptions
+export function tool<
+  SchemaT extends ZodStringV3,
+  ToolOutputT = ToolOutputType,
+  TState = unknown,
+  TContext = unknown
+>(
+  func: (
+    input: InferInteropZodOutput<SchemaT>,
+    runtime: ToolRuntime<TState, TContext>
+  ) => ToolOutputT | Promise<ToolOutputT>,
+  fields: ToolWrapperParams<SchemaT>
+): DynamicTool<ToolOutputT>;
+
+export function tool<
+  SchemaT extends ZodStringV4,
+  ToolOutputT = ToolOutputType,
+  TState = unknown,
+  TContext = unknown
+>(
+  func: (
+    input: InferInteropZodOutput<SchemaT>,
+    runtime: ToolRuntime<TState, TContext>
+  ) => ToolOutputT | Promise<ToolOutputT>,
+  fields: ToolWrapperParams<SchemaT>
+): DynamicTool<ToolOutputT>;
+
+export function tool<
+  SchemaT extends ZodObjectV3,
+  SchemaOutputT = InferInteropZodOutput<SchemaT>,
+  SchemaInputT = InferInteropZodInput<SchemaT>,
+  ToolOutputT = ToolOutputType,
+  TState = unknown,
+  TContext = unknown
+>(
+  func: (
+    input: SchemaOutputT,
+    runtime: ToolRuntime<TState, TContext>
+  ) => ToolOutputT | Promise<ToolOutputT>,
+  fields: ToolWrapperParams<SchemaT>
+): DynamicStructuredTool<SchemaT, SchemaOutputT, SchemaInputT, ToolOutputT>;
+
+export function tool<
+  SchemaT extends ZodObjectV4,
+  SchemaOutputT = InferInteropZodOutput<SchemaT>,
+  SchemaInputT = InferInteropZodInput<SchemaT>,
+  ToolOutputT = ToolOutputType,
+  TState = unknown,
+  TContext = unknown
+>(
+  func: (
+    input: SchemaOutputT,
+    runtime: ToolRuntime<TState, TContext>
+  ) => ToolOutputT | Promise<ToolOutputT>,
+  fields: ToolWrapperParams<SchemaT>
+): DynamicStructuredTool<SchemaT, SchemaOutputT, SchemaInputT, ToolOutputT>;
+
+export function tool<
+  SchemaT extends JSONSchema,
+  SchemaOutputT = ToolInputSchemaOutputType<SchemaT>,
+  SchemaInputT = ToolInputSchemaInputType<SchemaT>,
+  ToolOutputT = ToolOutputType,
+  TState = unknown,
+  TContext = unknown
+>(
+  func: (
+    input: Parameters<DynamicStructuredToolInput<SchemaT>["func"]>[0],
+    runtime: ToolRuntime<TState, TContext>
+  ) => ToolOutputT | Promise<ToolOutputT>,
+  fields: ToolWrapperParams<SchemaT>
+): DynamicStructuredTool<SchemaT, SchemaOutputT, SchemaInputT, ToolOutputT>;
+
+export function tool<
+  SchemaT extends
+    | InteropZodObject
+    | InteropZodType<string>
+    | JSONSchema = InteropZodObject,
+  SchemaOutputT = ToolInputSchemaOutputType<SchemaT>,
+  SchemaInputT = ToolInputSchemaInputType<SchemaT>,
+  ToolOutputT = ToolOutputType,
+  TState = unknown,
+  TContext = unknown
+>(
+  func: (
+    input: SchemaOutputT,
+    runtime: ToolRuntime<TState, TContext>
+  ) => ToolOutputT | Promise<ToolOutputT>,
+  fields: ToolWrapperParams<SchemaT>
+):
+  | DynamicStructuredTool<SchemaT, SchemaOutputT, SchemaInputT, ToolOutputT>
   | DynamicTool<ToolOutputT> {
   const isSimpleStringSchema = isSimpleStringZodSchema(fields.schema);
   const isStringJSONSchema = validatesOnlyStrings(fields.schema);
@@ -658,9 +753,8 @@ export function tool<
             pickRunnableConfigKeys(childConfig),
             async () => {
               try {
-                // TS doesn't restrict the type here based on the guard above
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                resolve(func(input as any, childConfig));
+                resolve(func(input as any, childConfig as any));
               } catch (e) {
                 reject(e);
               }
@@ -703,7 +797,8 @@ export function tool<
           pickRunnableConfigKeys(childConfig),
           async () => {
             try {
-              const result = await func(input, childConfig);
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              const result = await func(input as any, childConfig as any);
 
               /**
                * If the signal is aborted, we don't want to resolve the promise
@@ -773,3 +868,9 @@ function _stringify(content: unknown): string {
     return `${content}`;
   }
 }
+
+export type ServerTool = Record<string, unknown>;
+export type ClientTool =
+  | StructuredToolInterface
+  | DynamicTool
+  | RunnableToolLike;

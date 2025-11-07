@@ -36,7 +36,6 @@ const dockerPackages: WorkspacePackage[] = [
     pkg: { name: "@langchain/standard-tests" },
     path: "/langchain-standard-tests",
   },
-  { pkg: { name: "@langchain/scripts" }, path: "/langchain-scripts" },
   {
     pkg: { name: "@langchain/textsplitters" },
     path: "/langchain-textsplitters",

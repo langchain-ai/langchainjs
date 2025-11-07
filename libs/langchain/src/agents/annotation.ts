@@ -30,7 +30,12 @@ export function createAgentAnnotationConditional<
   const zodSchema: Record<string, any> = {
     messages: withLangGraph(z.custom<BaseMessage[]>(), MessagesZodMeta),
     jumpTo: z
-      .union([z.literal("model_request"), z.literal("tools"), z.undefined()])
+      .union([
+        z.literal("model_request"),
+        z.literal("tools"),
+        z.literal("end"),
+        z.undefined(),
+      ])
       .optional(),
   };
 

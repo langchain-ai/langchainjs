@@ -6,11 +6,42 @@ import {
   SystemMessage,
   ToolMessage,
 } from "@langchain/core/messages";
+
 import { summarizationMiddleware } from "../summarization.js";
 import { countTokensApproximately } from "../utils.js";
 import { createAgent } from "../../index.js";
 import { hasToolCalls } from "../../utils.js";
 import { FakeToolCallingChatModel } from "../../tests/utils.js";
+
+// Mock @langchain/anthropic to test model string usage without requiring the built package
+vi.mock("@langchain/anthropic", async () => {
+  const { AIMessage } = await import("@langchain/core/messages");
+  return {
+    ChatAnthropic: class MockChatAnthropic {
+      lc_kwargs: Record<string, any>;
+
+      constructor(params?: any) {
+        this.lc_kwargs = params || {};
+      }
+
+      async invoke() {
+        return new AIMessage({ content: "Mocked response" });
+      }
+
+      getName() {
+        return "ChatAnthropic";
+      }
+
+      get _modelType() {
+        return "chat-anthropic";
+      }
+
+      get lc_runnable() {
+        return true;
+      }
+    },
+  };
+});
 
 describe("summarizationMiddleware", () => {
   // Mock summarization model
@@ -335,6 +366,22 @@ describe("summarizationMiddleware", () => {
     );
     expect(nonSystemMessages.length).toBeGreaterThanOrEqual(messagesToKeep);
     expect(nonSystemMessages.length).toBeLessThanOrEqual(messagesToKeep + 3); // Some buffer for safety
+  });
+
+  it("can be created using a model string", async () => {
+    const model = "anthropic:claude-sonnet-4-20250514";
+    const middleware = summarizationMiddleware({
+      model,
+      maxTokensBeforeSummary: 100,
+      messagesToKeep: 2,
+    });
+
+    const agent = createAgent({
+      model,
+      middleware: [middleware],
+    });
+    const result = await agent.invoke({ messages: [] });
+    expect(result.messages.at(-1)?.content).toBe("Mocked response");
   });
 
   it("should not start preserved messages with AI message containing tool calls", async () => {

@@ -1,12 +1,10 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import type {
   InteropZodObject,
-  InteropZodDefault,
-  InteropZodOptional,
   InferInteropZodOutput,
 } from "@langchain/core/utils/types";
+import type { ClientTool, ServerTool } from "@langchain/core/tools";
 
-import type { ClientTool, ServerTool } from "./tools.js";
 import type {
   AgentMiddleware,
   WrapToolCallHook,
@@ -52,11 +50,7 @@ import type {
  */
 export function createMiddleware<
   TSchema extends InteropZodObject | undefined = undefined,
-  TContextSchema extends
-    | InteropZodObject
-    | InteropZodOptional<InteropZodObject>
-    | InteropZodDefault<InteropZodObject>
-    | undefined = undefined
+  TContextSchema extends InteropZodObject | undefined = undefined
 >(config: {
   /**
    * The name of the middleware
@@ -232,15 +226,7 @@ export function createMiddleware<
 }
 
 type NormalizeContextSchema<
-  TContextSchema extends
-    | InteropZodObject
-    | InteropZodOptional<InteropZodObject>
-    | InteropZodDefault<InteropZodObject>
-    | undefined = undefined
+  TContextSchema extends InteropZodObject | undefined = undefined
 > = TContextSchema extends InteropZodObject
   ? InferInteropZodOutput<TContextSchema>
-  : TContextSchema extends InteropZodDefault<any>
-  ? InferInteropZodOutput<TContextSchema>
-  : TContextSchema extends InteropZodOptional<any>
-  ? Partial<InferInteropZodOutput<TContextSchema>>
   : never;

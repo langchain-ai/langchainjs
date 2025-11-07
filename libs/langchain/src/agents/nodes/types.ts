@@ -1,6 +1,7 @@
 import type { LanguageModelLike } from "@langchain/core/language_models/base";
 import type { BaseMessage } from "@langchain/core/messages";
-import type { ServerTool, ClientTool } from "../tools.js";
+import type { ServerTool, ClientTool } from "@langchain/core/tools";
+
 import type { Runtime, AgentBuiltInState } from "../runtime.js";
 
 /**

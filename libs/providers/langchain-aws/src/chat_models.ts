@@ -659,6 +659,8 @@ export class ChatBedrockConverse
   get lc_aliases(): { [key: string]: string } | undefined {
     return {
       apiKey: "API_KEY_NAME",
+      model: "model_id",
+      region: "region_name",
     };
   }
 

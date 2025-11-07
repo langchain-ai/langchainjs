@@ -28,6 +28,14 @@ export type ModelCallLimitMiddlewareConfig = Partial<
 >;
 
 /**
+ * Middleware state schema to track the number of model calls made at the thread and run level.
+ */
+const stateSchema = z.object({
+  threadModelCallCount: z.number().default(0),
+  runModelCallCount: z.number().default(0),
+});
+
+/**
  * Error thrown when the model call limit is exceeded.
  *
  * @param threadLimit - The maximum number of model calls allowed per thread.
@@ -133,6 +141,7 @@ export function modelCallLimitMiddleware(
   return createMiddleware({
     name: "ModelCallLimitMiddleware",
     contextSchema,
+    stateSchema,
     beforeModel: {
       canJumpTo: ["end"],
       hook: (state, runtime) => {
@@ -145,13 +154,12 @@ export function modelCallLimitMiddleware(
         const runLimit =
           runtime.context.runLimit ?? middlewareOptions?.runLimit;
 
-        if (
-          typeof threadLimit === "number" &&
-          threadLimit <= runtime.threadLevelCallCount
-        ) {
+        const threadCount = state.threadModelCallCount;
+        const runCount = state.runModelCallCount;
+        if (typeof threadLimit === "number" && threadLimit <= threadCount) {
           const error = new ModelCallLimitMiddlewareError({
             threadLimit,
-            threadCount: runtime.threadLevelCallCount,
+            threadCount,
           });
           if (exitBehavior === "end") {
             return {
@@ -162,13 +170,10 @@ export function modelCallLimitMiddleware(
 
           throw error;
         }
-        if (
-          typeof runLimit === "number" &&
-          runLimit <= runtime.runModelCallCount
-        ) {
+        if (typeof runLimit === "number" && runLimit <= runCount) {
           const error = new ModelCallLimitMiddlewareError({
             runLimit,
-            runCount: runtime.runModelCallCount,
+            runCount,
           });
           if (exitBehavior === "end") {
             return {
@@ -183,5 +188,12 @@ export function modelCallLimitMiddleware(
         return state;
       },
     },
+    afterModel: (state) => ({
+      runModelCallCount: state.runModelCallCount + 1,
+      threadModelCallCount: state.threadModelCallCount + 1,
+    }),
+    afterAgent: () => ({
+      runModelCallCount: 0,
+    }),
   });
 }

@@ -17,6 +17,7 @@ import { describe, expect, test, it } from "vitest";
 import { convertToConverseMessages } from "../utils/message_inputs.js";
 import { handleConverseStreamContentBlockDelta } from "../utils/message_outputs.js";
 import { ChatBedrockConverse } from "../chat_models.js";
+import { load } from "@langchain/core/load";
 
 describe("convertToConverseMessages", () => {
   const testCases: {
@@ -665,4 +666,44 @@ describe("tool_choice works for supported models", () => {
       );
     }
   );
+});
+
+test("Test ChatBedrockConverse deserialization from model_id and region_name", async () => {
+  delete process.env.AWS_ACCESS_KEY_ID;
+  delete process.env.AWS_SECRET_ACCESS_KEY;
+  delete process.env.AWS_DEFAULT_REGION;
+
+  // Simulate a serialized ChatBedrockConverse with Python naming (model_id, region_name)
+  // This matches the format that LangSmith Hub stores prompts with model configuration
+  const serialized = JSON.stringify({
+    lc: 1,
+    type: "constructor",
+    id: [
+      "langchain",
+      "chat_models",
+      "chat_bedrock_converse",
+      "ChatBedrockConverse",
+    ],
+    kwargs: {
+      model_id: "anthropic.claude-3-sonnet-20240229-v1:0",
+      region_name: "us-west-2",
+      temperature: 0.7,
+      credentials: {
+        accessKeyId: "test-key",
+        secretAccessKey: "test-secret",
+      },
+    },
+  });
+
+  const loaded = await load<ChatBedrockConverse>(serialized, {
+    importMap: {
+      chat_models__chat_bedrock_converse: { ChatBedrockConverse },
+    },
+  });
+
+  // Verify deserialization correctly maps model_id -> model and region_name -> region
+  expect(loaded).toBeInstanceOf(ChatBedrockConverse);
+  expect(loaded.model).toBe("anthropic.claude-3-sonnet-20240229-v1:0");
+  expect(loaded.region).toBe("us-west-2");
+  expect(loaded.temperature).toBe(0.7);
 });
