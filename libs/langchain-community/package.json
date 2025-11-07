@@ -34,7 +34,7 @@
     "@langchain/classic": "workspace:*",
     "@langchain/openai": "workspace:*",
     "binary-extensions": "^2.2.0",
-    "expr-eval": "^2.0.2",
+    "math-expression-evaluator": "^2.0.0",
     "flat": "^5.0.2",
     "js-yaml": "^4.1.0",
     "uuid": "^10.0.0",
