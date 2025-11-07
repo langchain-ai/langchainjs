@@ -46,5 +46,9 @@ export {
   toolRetryMiddleware,
   type ToolRetryMiddlewareConfig,
 } from "./toolRetry.js";
+export {
+  filesystemFileSearchMiddleware,
+  type FilesystemFileSearchMiddlewareConfig,
+} from "./filesystemFileSearch.js";
 export { type AgentMiddleware } from "./types.js";
 export { countTokensApproximately } from "./utils.js";
