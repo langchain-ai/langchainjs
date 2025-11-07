@@ -734,6 +734,8 @@ export class ChatAnthropicMessages<
       this.model.includes("sonnet-4-5") ||
       this.model.includes("haiku-4-5")
     ) {
+      this.temperature =
+        fields?.temperature === null ? undefined : fields?.temperature;
       this.topP = fields?.topP === null ? undefined : fields?.topP;
     } else {
       this.topP = fields?.topP ?? this.topP;
