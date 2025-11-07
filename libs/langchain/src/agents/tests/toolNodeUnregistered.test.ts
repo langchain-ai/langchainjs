@@ -80,14 +80,6 @@ describe("ToolNode unregistered tool handling", () => {
   });
 
   it("should return error when handler is called with unregistered tool", async () => {
-    /**
-     * skip as test requires primitives from `@langchain/core` that aren't released yet
-     * and fails in dependency range tests, remove after next release
-     */
-    if (process.env.LC_DEPENDENCY_RANGE_TESTS) {
-      return;
-    }
-
     const badInterceptor: WrapToolCallHook = async (request, handler) => {
       // This should fail validation when handler is called
       return handler(request);
