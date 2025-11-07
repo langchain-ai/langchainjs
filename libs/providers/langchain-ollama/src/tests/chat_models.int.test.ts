@@ -4,6 +4,7 @@ import fs from "node:fs/promises";
 import url from "node:url";
 import path from "node:path";
 
+import { z } from "zod/v3";
 import { AIMessage, HumanMessage } from "@langchain/core/messages";
 import { PromptTemplate } from "@langchain/core/prompts";
 import {
@@ -209,4 +210,23 @@ test("test max tokens (numPredict)", async () => {
   // Ollama doesn't always stream back the exact number of tokens, so we
   // check for a number which is slightly above the `numPredict`.
   expect(numTokens).toBeLessThanOrEqual(12);
+});
+
+test("sturctured output with tools", async () => {
+  const ollama = new ChatOllama({
+    maxRetries: 1,
+  });
+
+  const schemaForWSO = z.object({
+    location: z.string().describe("The city and state, e.g. San Francisco, CA"),
+  });
+
+  const llmWithStructuredOutput = ollama.withStructuredOutput(schemaForWSO, {
+    name: "get_current_weather",
+  });
+
+  const resultFromWSO = await llmWithStructuredOutput.invoke(
+    "What's the weather like today in San Francisco? Ensure you use the 'get_current_weather' tool."
+  );
+  expect(resultFromWSO).toEqual({ location: "San Francisco, CA" });
 });
