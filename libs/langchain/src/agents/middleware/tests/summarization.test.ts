@@ -403,9 +403,15 @@ describe("summarizationMiddleware", () => {
     // We need messages where an AI message with tool calls would be the first preserved message
     // after summarization if the cutoff isn't adjusted properly
     const messages = [
-      new HumanMessage(`First message with some content to take up tokens. ${"x".repeat(100)}`),
+      new HumanMessage(
+        `First message with some content to take up tokens. ${"x".repeat(100)}`
+      ),
       new AIMessage(`First response. ${"x".repeat(100)}`),
-      new HumanMessage(`Second message with more content to build up tokens. ${"x".repeat(100)}`),
+      new HumanMessage(
+        `Second message with more content to build up tokens. ${"x".repeat(
+          100
+        )}`
+      ),
       new AIMessage(`Second response. ${"x".repeat(100)}`),
       // This AI message with tool calls should NOT be the first preserved message
       new AIMessage({
