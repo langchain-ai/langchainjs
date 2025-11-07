@@ -1,4 +1,4 @@
-import Mexp from "math-expression-evaluator"
+import Mexp from "math-expression-evaluator";
 
 import { Tool } from "@langchain/core/tools";
 
