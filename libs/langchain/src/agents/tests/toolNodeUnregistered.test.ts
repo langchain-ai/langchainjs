@@ -299,14 +299,6 @@ describe("ToolNode unregistered tool handling", () => {
   });
 
   it("should work with dict input format", async () => {
-    /**
-     * skip as test requires primitives from `@langchain/core` that aren't released yet
-     * and fails in dependency range tests, remove after next release
-     */
-    if (process.env.LC_DEPENDENCY_RANGE_TESTS) {
-      return;
-    }
-
     const interceptor: WrapToolCallHook = async (request, handler) => {
       if (request.toolCall.name === "unregistered_tool") {
         return new ToolMessage({
