@@ -316,6 +316,15 @@ function isSafeCutoffPoint(
     return true;
   }
 
+  // Prevent preserved messages from starting with AI message containing tool calls
+  if (
+    cutoffIndex < messages.length &&
+    AIMessage.isInstance(messages[cutoffIndex]) &&
+    hasToolCalls(messages[cutoffIndex])
+  ) {
+    return false;
+  }
+
   const searchStart = Math.max(0, cutoffIndex - SEARCH_RANGE_FOR_TOOL_PAIRS);
   const searchEnd = Math.min(
     messages.length,
