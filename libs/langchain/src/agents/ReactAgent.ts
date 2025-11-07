@@ -3,7 +3,6 @@
 import { InteropZodObject } from "@langchain/core/utils/types";
 
 import {
-  AnnotationRoot,
   StateGraph,
   END,
   START,
@@ -185,7 +184,7 @@ export class ReactAgent<
     );
 
     const workflow = new StateGraph(
-      schema as unknown as AnnotationRoot<any>,
+      schema as unknown as AnyAnnotationRoot,
       this.options.contextSchema
     );
 
