@@ -46,5 +46,18 @@ export {
   toolRetryMiddleware,
   type ToolRetryMiddlewareConfig,
 } from "./toolRetry.js";
+export {
+  shellToolMiddleware,
+  type ShellToolMiddlewareOptions,
+  HostExecutionPolicy,
+  DockerExecutionPolicy,
+  CodexSandboxExecutionPolicy,
+  BaseExecutionPolicy,
+  type RedactionRule,
+  ResolvedRedactionRule,
+  PIIDetectionError,
+  type PIIMatch,
+  CommonRedactionRules,
+} from "./shellTool/index.js";
 export { type AgentMiddleware } from "./types.js";
 export { countTokensApproximately } from "./utils.js";
