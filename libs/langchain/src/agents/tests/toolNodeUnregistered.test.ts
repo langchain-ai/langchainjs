@@ -377,14 +377,6 @@ describe("ToolNode unregistered tool handling", () => {
   });
 
   it("should handle interceptor exceptions for unregistered tools", async () => {
-    /**
-     * skip as test requires primitives from `@langchain/core` that aren't released yet
-     * and fails in dependency range tests, remove after next release
-     */
-    if (process.env.LC_DEPENDENCY_RANGE_TESTS) {
-      return;
-    }
-
     const failingInterceptor: WrapToolCallHook = async (request, handler) => {
       // Throw exception for unregistered tools
       if (request.toolCall.name === "bad_tool") {
