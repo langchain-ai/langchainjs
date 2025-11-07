@@ -16,6 +16,5 @@ export function addLangChainErrorFields(
   lc_error_code: LangChainErrorCodes
 ) {
   (error as any).lc_error_code = lc_error_code;
-  error.message = `${error.message}\n\nTroubleshooting URL: https://js.langchain.com/docs/troubleshooting/errors/${lc_error_code}/\n`;
   return error;
 }
