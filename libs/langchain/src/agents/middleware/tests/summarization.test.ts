@@ -127,10 +127,12 @@ describe("summarizationMiddleware", () => {
     expect(summarizationModel.invoke).toHaveBeenCalled();
 
     // Verify the result has a system message with summary
-    expect(result.messages[0]).toBeInstanceOf(SystemMessage);
-    const systemPrompt = result.messages[0] as SystemMessage;
-    expect(systemPrompt.content).toContain("## Previous conversation summary:");
-    expect(systemPrompt.content).toContain("Previous conversation covered:");
+    expect(result.messages[0]).toBeInstanceOf(HumanMessage);
+    const summaryMessage = result.messages[0] as HumanMessage;
+    expect(summaryMessage.content).toContain(
+      "## Previous conversation summary:"
+    );
+    expect(summaryMessage.content).toContain("Previous conversation covered:");
 
     // Verify only recent messages are kept (plus the new response)
     expect(result.messages.length).toBeLessThanOrEqual(5); // system + kept messages + new response
@@ -253,16 +255,18 @@ describe("summarizationMiddleware", () => {
     const result = await agent.invoke({ messages });
 
     // Verify system message is updated with new summary
-    expect(result.messages[0]).toBeInstanceOf(SystemMessage);
-    const systemPrompt = result.messages[0] as SystemMessage;
-    expect(systemPrompt.content).toContain("You are a helpful assistant");
-    expect(systemPrompt.content).toContain("## Previous conversation summary:");
+    expect(result.messages[0]).toBeInstanceOf(HumanMessage);
+    const summaryMessage = result.messages[0] as HumanMessage;
+    expect(summaryMessage.content).toContain("You are a helpful assistant");
+    expect(summaryMessage.content).toContain(
+      "## Previous conversation summary:"
+    );
 
     // Should have replaced the old summary with new one
-    expect(systemPrompt.content).not.toContain(
+    expect(summaryMessage.content).not.toContain(
       "Previous discussion about databases"
     );
-    expect(systemPrompt.content).toContain("Previous conversation covered:");
+    expect(summaryMessage.content).toContain("Previous conversation covered:");
   });
 
   it("should use custom token counter when provided", async () => {
@@ -428,9 +432,11 @@ describe("summarizationMiddleware", () => {
     const result = await agent.invoke({ messages });
 
     // Verify summarization occurred
-    expect(result.messages[0]).toBeInstanceOf(SystemMessage);
-    const systemPrompt = result.messages[0] as SystemMessage;
-    expect(systemPrompt.content).toContain("## Previous conversation summary:");
+    expect(result.messages[0]).toBeInstanceOf(HumanMessage);
+    const summaryMessage = result.messages[0] as HumanMessage;
+    expect(summaryMessage.content).toContain(
+      "## Previous conversation summary:"
+    );
 
     // Verify preserved messages don't start with AI(tool calls)
     const preservedMessages = result.messages.filter(

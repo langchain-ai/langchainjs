@@ -7,6 +7,7 @@ import {
   ToolMessage,
   RemoveMessage,
   trimMessages,
+  HumanMessage,
 } from "@langchain/core/messages";
 import { BaseLanguageModel } from "@langchain/core/language_models/base";
 import {
@@ -154,7 +155,9 @@ export function summarizationMiddleware(
           ? await initChatModel(config.model)
           : config.model;
 
-      // Ensure all messages have IDs
+      /**
+       * Ensure all messages have IDs
+       */
       ensureMessageIds(messages);
 
       const tokenCounter = config.tokenCounter || countTokensApproximately;
@@ -191,7 +194,7 @@ export function summarizationMiddleware(
         tokenCounter
       );
 
-      const updatedSystemMessage = buildUpdatedSystemMessage(
+      const summaryMessage = buildSummaryMessage(
         systemPrompt,
         summary,
         config.summaryPrefix
@@ -200,7 +203,7 @@ export function summarizationMiddleware(
       return {
         messages: [
           new RemoveMessage({ id: REMOVE_ALL_MESSAGES }),
-          updatedSystemMessage,
+          summaryMessage,
           ...preservedMessages,
         ],
       };
@@ -258,13 +261,13 @@ function partitionMessages(
 }
 
 /**
- * Build updated system message incorporating the summary
+ * Build summary message incorporating the summary
  */
-function buildUpdatedSystemMessage(
+function buildSummaryMessage(
   originalSystemMessage: SystemMessage | null,
   summary: string,
   summaryPrefix: string
-): SystemMessage {
+): HumanMessage {
   let originalContent = "";
   if (originalSystemMessage) {
     const { content } = originalSystemMessage;
@@ -277,7 +280,7 @@ function buildUpdatedSystemMessage(
     ? `${originalContent}\n${summaryPrefix}\n${summary}`
     : `${summaryPrefix}\n${summary}`;
 
-  return new SystemMessage({
+  return new HumanMessage({
     content,
     id: originalSystemMessage?.id || uuid(),
   });
@@ -316,7 +319,9 @@ function isSafeCutoffPoint(
     return true;
   }
 
-  // Prevent preserved messages from starting with AI message containing tool calls
+  /**
+   * Prevent preserved messages from starting with AI message containing tool calls
+   */
   if (
     cutoffIndex < messages.length &&
     AIMessage.isInstance(messages[cutoffIndex]) &&
@@ -440,7 +445,9 @@ async function trimMessagesForSummary(
       includeSystem: true,
     });
   } catch {
-    // Fallback to last N messages if trimming fails
+    /**
+     * Fallback to last N messages if trimming fails
+     */
     return messages.slice(-DEFAULT_FALLBACK_MESSAGE_COUNT);
   }
 }
