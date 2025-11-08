@@ -1,3 +1,4 @@
+import { OpenAI as OpenAIClient } from "openai";
 import {
   InteropZodType,
   isZodSchemaV3,
@@ -6,7 +7,7 @@ import {
 import { toJSONSchema as toJSONSchemaV4, parse as parseV4 } from "zod/v4/core";
 import { ResponseFormatJSONSchema } from "openai/resources";
 import { zodResponseFormat } from "openai/helpers/zod";
-import { ContentBlock } from "@langchain/core/messages";
+import { ContentBlock, UsageMetadata } from "@langchain/core/messages";
 
 const SUPPORTED_METHODS = [
   "jsonSchema",
@@ -160,4 +161,27 @@ export function handleMultiModalOutput(
   }
 
   return content;
+}
+
+// TODO: make this a converter
+export function _convertOpenAIResponsesUsageToLangChainUsage(
+  usage?: OpenAIClient.Responses.ResponseUsage
+): UsageMetadata {
+  const inputTokenDetails = {
+    ...(usage?.input_tokens_details?.cached_tokens != null && {
+      cache_read: usage?.input_tokens_details?.cached_tokens,
+    }),
+  };
+  const outputTokenDetails = {
+    ...(usage?.output_tokens_details?.reasoning_tokens != null && {
+      reasoning: usage?.output_tokens_details?.reasoning_tokens,
+    }),
+  };
+  return {
+    input_tokens: usage?.input_tokens ?? 0,
+    output_tokens: usage?.output_tokens ?? 0,
+    total_tokens: usage?.total_tokens ?? 0,
+    input_token_details: inputTokenDetails,
+    output_token_details: outputTokenDetails,
+  };
 }

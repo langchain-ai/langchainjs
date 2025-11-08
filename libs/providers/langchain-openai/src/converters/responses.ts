@@ -1176,7 +1176,7 @@ export const convertMessagesToResponsesInput: Converter<
                 name: toolCall.name,
                 arguments: JSON.stringify(toolCall.args),
                 call_id: toolCall.id!,
-                ...(zdrEnabled ? { id: functionCallIds?.[toolCall.id!] } : {}),
+                ...(!zdrEnabled ? { id: functionCallIds?.[toolCall.id!] } : {}),
               };
             })
           );
@@ -1188,7 +1188,7 @@ export const convertMessagesToResponsesInput: Converter<
                 name: toolCall.function.name,
                 call_id: toolCall.id,
                 arguments: toolCall.function.arguments,
-                ...(zdrEnabled ? { id: functionCallIds?.[toolCall.id] } : {}),
+                ...(!zdrEnabled ? { id: functionCallIds?.[toolCall.id] } : {}),
               })
             )
           );

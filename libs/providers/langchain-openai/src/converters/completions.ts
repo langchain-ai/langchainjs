@@ -18,6 +18,7 @@ import {
   isDataContentBlock,
   ContentBlock,
   iife,
+  convertToProviderContentBlock,
 } from "@langchain/core/messages";
 import {
   convertLangChainToolCallToOpenAI,
@@ -34,7 +35,6 @@ import type {
 import { OpenAI as OpenAIClient } from "openai";
 import { handleMultiModalOutput } from "../utils/output.js";
 import { isReasoningModel, messageToOpenAIRole } from "../utils/misc.js";
-import { convertToProviderContentBlock } from "../../../../langchain-core/dist/messages/index.cjs";
 
 /**
  * @deprecated This converter is an internal detail of the OpenAI provider. Do not use it directly. This will be revisited in a future release.
@@ -293,7 +293,7 @@ export const convertCompletionsMessageToBaseMessage: Converter<
         function_call: message.function_call,
         tool_calls: rawToolCalls,
       };
-      if (includeRawResponse) {
+      if (includeRawResponse !== undefined) {
         additional_kwargs.__raw_response = rawResponse;
       }
       const response_metadata: Record<string, unknown> | undefined = {

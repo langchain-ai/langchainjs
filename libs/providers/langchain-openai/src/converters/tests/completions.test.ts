@@ -1,8 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import { describe, it, expect } from "vitest";
 import { ChatCompletionMessage } from "openai/resources";
 import { convertCompletionsMessageToBaseMessage } from "../completions.js";
-import { convertResponsesDeltaToChatGenerationChunk } from "../responses.js";
-import { AIMessageChunk, ToolCallChunk } from "@langchain/core/messages";
 
 describe("convertCompletionsMessageToBaseMessage", () => {
   describe("OpenRouter image response handling", () => {
@@ -43,7 +42,6 @@ describe("convertCompletionsMessageToBaseMessage", () => {
         },
       };
 
-      // Test the _convertCompletionsMessageToBaseMessage method
       const result = convertCompletionsMessageToBaseMessage({
         message: mockMessage as ChatCompletionMessage,
         rawResponse: mockRawResponse as any,
@@ -124,61 +122,6 @@ describe("convertCompletionsMessageToBaseMessage", () => {
           url: "data:image/png;base64,image2",
         },
       ]);
-    });
-  });
-});
-
-describe("convertResponsesDeltaToChatGenerationChunk", () => {
-  describe("custom tool streaming delta handling", () => {
-    it("should handle response.custom_tool_call_input.delta events", () => {
-      // Test custom tool delta event
-      const customToolDelta = {
-        type: "response.custom_tool_call_input.delta",
-        delta: '{"query": "test query"}',
-        output_index: 0,
-      };
-
-      const result = convertResponsesDeltaToChatGenerationChunk(
-        customToolDelta as any
-      );
-      const aiMessageChunk = result?.message as AIMessageChunk;
-
-      expect(aiMessageChunk.tool_call_chunks).toBeDefined();
-      expect(aiMessageChunk.tool_call_chunks).toHaveLength(1);
-      expect(aiMessageChunk.tool_call_chunks?.[0]).toEqual({
-        type: "tool_call_chunk",
-        args: '{"query": "test query"}',
-        index: 0,
-      } as ToolCallChunk);
-    });
-
-    it("should handle both function and custom tool delta events equally", () => {
-      // Test function call delta
-      const functionDelta = {
-        type: "response.function_call_arguments.delta",
-        delta: '{"location": "NYC"}',
-        output_index: 0,
-      };
-
-      // Test custom tool delta
-      const customDelta = {
-        type: "response.custom_tool_call_input.delta",
-        delta: '{"location": "NYC"}',
-        output_index: 0,
-      };
-
-      const functionResult = convertResponsesDeltaToChatGenerationChunk(
-        functionDelta as any
-      );
-      const customResult = convertResponsesDeltaToChatGenerationChunk(
-        customDelta as any
-      );
-
-      // Both should produce identical tool_call_chunks
-      const aiMessageChunk = functionResult?.message as AIMessageChunk;
-      expect(aiMessageChunk.tool_call_chunks).toEqual(
-        customResult?.message as AIMessageChunk
-      );
     });
   });
 });

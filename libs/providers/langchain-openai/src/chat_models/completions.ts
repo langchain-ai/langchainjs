@@ -7,6 +7,7 @@ import {
   isAIMessage,
   type UsageMetadata,
   type BaseMessageFields,
+  BaseMessageChunk,
 } from "@langchain/core/messages";
 import {
   ChatGenerationChunk,
@@ -15,11 +16,14 @@ import {
 } from "@langchain/core/outputs";
 import { NewTokenIndices } from "@langchain/core/callbacks/base";
 import { wrapOpenAIClientError } from "../utils/client.js";
-import { OpenAIToolChoice } from "../utils/tools.js";
+import {
+  OpenAIToolChoice,
+  formatToOpenAIToolChoice,
+  _convertToOpenAITool,
+} from "../utils/tools.js";
 import { isReasoningModel } from "../utils/misc.js";
 import { BaseChatOpenAICallOptions } from "./base.js";
 import { BaseChatOpenAI } from "./base.js";
-import { convertToolChoiceToCompletionsToolChoice } from "../converters/tools.js";
 import {
   convertCompletionsDeltaToBaseMessageChunk,
   convertCompletionsMessageToBaseMessage,
@@ -29,7 +33,7 @@ import {
 export interface ChatOpenAICompletionsCallOptions
   extends BaseChatOpenAICallOptions {}
 
-export type ChatCompletionsInvocationParams = Omit<
+type ChatCompletionsInvocationParams = Omit<
   OpenAIClient.Chat.Completions.ChatCompletionCreateParams,
   "messages"
 >;
@@ -81,7 +85,7 @@ export class ChatOpenAICompletions<
             this._convertChatOpenAIToolToCompletionsTool(tool, { strict })
           )
         : undefined,
-      tool_choice: convertToolChoiceToCompletionsToolChoice(
+      tool_choice: formatToOpenAIToolChoice(
         options?.tool_choice as OpenAIToolChoice
       ),
       response_format: this._getResponseFormat(options?.response_format),
@@ -250,11 +254,10 @@ export class ChatOpenAICompletions<
         const text = part.message?.content ?? "";
         const generation: ChatGeneration = {
           text,
-          message: convertCompletionsMessageToBaseMessage({
-            message: part.message ?? { role: "assistant" },
-            rawResponse: data,
-            includeRawResponse: this.__includeRawResponse,
-          }),
+          message: this._convertCompletionsMessageToBaseMessage(
+            part.message ?? { role: "assistant" },
+            data
+          ),
         };
         generation.generationInfo = {
           ...(part.finish_reason ? { finish_reason: part.finish_reason } : {}),
@@ -322,12 +325,11 @@ export class ChatOpenAICompletions<
       if (!delta) {
         continue;
       }
-      const chunk = convertCompletionsDeltaToBaseMessageChunk({
+      const chunk = this._convertCompletionsDeltaToBaseMessageChunk(
         delta,
-        rawResponse: data,
-        includeRawResponse: this.__includeRawResponse,
-        defaultRole,
-      });
+        data,
+        defaultRole
+      );
       defaultRole = delta.role ?? defaultRole;
       const newTokenIndices = {
         prompt: options.promptIndex ?? 0,
@@ -448,6 +450,45 @@ export class ChatOpenAICompletions<
         const error = wrapOpenAIClientError(e);
         throw error;
       }
+    });
+  }
+
+  /**
+   * @deprecated
+   * This function was hoisted into a publicly accessible function from a
+   * different export, but to maintain backwards compatibility with chat models
+   * that depend on ChatOpenAICompletions, we'll keep it here as an overridable
+   * method. This will be removed in a future release
+   */
+  protected _convertCompletionsDeltaToBaseMessageChunk(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    delta: Record<string, any>,
+    rawResponse: OpenAIClient.Chat.Completions.ChatCompletionChunk,
+    defaultRole?: OpenAIClient.Chat.ChatCompletionRole
+  ): BaseMessageChunk {
+    return convertCompletionsDeltaToBaseMessageChunk({
+      delta,
+      rawResponse,
+      includeRawResponse: this.__includeRawResponse,
+      defaultRole,
+    });
+  }
+
+  /**
+   * @deprecated
+   * This function was hoisted into a publicly accessible function from a
+   * different export, but to maintain backwards compatibility with chat models
+   * that depend on ChatOpenAICompletions, we'll keep it here as an overridable
+   * method. This will be removed in a future release
+   */
+  protected _convertCompletionsMessageToBaseMessage(
+    message: OpenAIClient.ChatCompletionMessage,
+    rawResponse: OpenAIClient.ChatCompletion
+  ): BaseMessage {
+    return convertCompletionsMessageToBaseMessage({
+      message,
+      rawResponse,
+      includeRawResponse: this.__includeRawResponse,
     });
   }
 }

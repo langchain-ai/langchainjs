@@ -2,8 +2,18 @@ import { OpenAI as OpenAIClient } from "openai";
 import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
 import { AIMessage, type BaseMessage } from "@langchain/core/messages";
 import { ChatGenerationChunk, type ChatResult } from "@langchain/core/outputs";
+import { isOpenAITool as isOpenAIFunctionTool } from "@langchain/core/language_models/base";
 import { wrapOpenAIClientError } from "../utils/client.js";
-import { isBuiltInToolChoice } from "../utils/tools.js";
+import {
+  ChatOpenAIToolType,
+  convertCompletionsCustomTool,
+  formatToOpenAIToolChoice,
+  isBuiltInTool,
+  isBuiltInToolChoice,
+  isCustomTool,
+  isOpenAICustomTool,
+  ResponsesTool,
+} from "../utils/tools.js";
 import { BaseChatOpenAI, BaseChatOpenAICallOptions } from "./base.js";
 import {
   convertMessagesToResponsesInput,
@@ -11,10 +21,6 @@ import {
   convertResponsesMessageToAIMessage,
 } from "../converters/responses.js";
 import { OpenAIVerbosityParam } from "../types.js";
-import {
-  convertToolChoiceToCompletionsToolChoice,
-  convertToolsInputToResponsesTools,
-} from "../converters/tools.js";
 
 export interface ChatOpenAIResponsesCallOptions
   extends BaseChatOpenAICallOptions {
@@ -83,8 +89,7 @@ export class ChatOpenAIResponses<
       truncation: options?.truncation,
       include: options?.include,
       tools: options?.tools?.length
-        ? convertToolsInputToResponsesTools({
-            tools: options.tools,
+        ? this._reduceChatOpenAITools(options.tools, {
             stream: this.streaming,
             strict,
           })
@@ -92,9 +97,7 @@ export class ChatOpenAIResponses<
       tool_choice: isBuiltInToolChoice(options?.tool_choice)
         ? options?.tool_choice
         : (() => {
-            const formatted = convertToolChoiceToCompletionsToolChoice(
-              options?.tool_choice
-            );
+            const formatted = formatToOpenAIToolChoice(options?.tool_choice);
             if (typeof formatted === "object" && "type" in formatted) {
               if (formatted.type === "function") {
                 return { type: "function", name: formatted.function.name };
@@ -279,5 +282,42 @@ export class ChatOpenAIResponses<
         throw error;
       }
     });
+  }
+
+  /** @internal */
+  protected _reduceChatOpenAITools(
+    tools: ChatOpenAIToolType[],
+    fields: { stream?: boolean; strict?: boolean }
+  ): ResponsesTool[] {
+    const reducedTools: ResponsesTool[] = [];
+    for (const tool of tools) {
+      if (isBuiltInTool(tool)) {
+        if (tool.type === "image_generation" && fields?.stream) {
+          // OpenAI sends a 400 error if partial_images is not set and we want to stream.
+          // We also set it to 1 since we don't support partial images yet.
+          tool.partial_images = 1;
+        }
+        reducedTools.push(tool);
+      } else if (isCustomTool(tool)) {
+        const customToolData = tool.metadata.customTool;
+        reducedTools.push({
+          type: "custom",
+          name: customToolData.name,
+          description: customToolData.description,
+          format: customToolData.format,
+        } as ResponsesTool);
+      } else if (isOpenAIFunctionTool(tool)) {
+        reducedTools.push({
+          type: "function",
+          name: tool.function.name,
+          parameters: tool.function.parameters,
+          description: tool.function.description,
+          strict: fields?.strict ?? null,
+        });
+      } else if (isOpenAICustomTool(tool)) {
+        reducedTools.push(convertCompletionsCustomTool(tool));
+      }
+    }
+    return reducedTools;
   }
 }
