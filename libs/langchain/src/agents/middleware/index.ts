@@ -46,5 +46,6 @@ export {
   toolRetryMiddleware,
   type ToolRetryMiddlewareConfig,
 } from "./toolRetry.js";
+export { mcpMiddleware, type MCPMiddlewareConfig } from "./mcp.js";
 export { type AgentMiddleware } from "./types.js";
 export { countTokensApproximately } from "./utils.js";
