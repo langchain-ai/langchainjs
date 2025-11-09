@@ -11,6 +11,9 @@ import {
   CompiledStateGraph,
   type GetStateOptions,
   type LangGraphRunnableConfig,
+  type StreamMode,
+  type StreamOutputMap,
+  type PregelOptions,
 } from "@langchain/langgraph";
 import type { CheckpointListOptions } from "@langchain/langgraph-checkpoint";
 import { ToolMessage, AIMessage } from "@langchain/core/messages";
@@ -1076,18 +1079,42 @@ export class ReactAgent<
    * }
    * ```
    */
-  async stream(
+  async stream<
+    TStreamMode extends StreamMode | StreamMode[] | undefined,
+    TEncoding extends "text/event-stream" | undefined
+  >(
     state: InvokeStateParameter<StateSchema, TMiddleware>,
     config?: StreamConfiguration<
       InferContextInput<ContextSchema> &
         InferMiddlewareContextInputs<TMiddleware>
+    > & {
+      streamMode?: TStreamMode;
+      encoding?: TEncoding;
+    }
+  ): Promise<
+    IterableReadableStream<
+      StreamOutputMap<
+        TStreamMode,
+        false,
+        any,
+        any,
+        string,
+        unknown,
+        any,
+        TEncoding
+      >
     >
-  ): Promise<IterableReadableStream<any>> {
+  > {
     const initializedState = await this.#initializeMiddlewareStates(
       state,
       config as RunnableConfig
     );
-    return this.#graph.stream(initializedState, config as Record<string, any>);
+    return this.#graph.stream(
+      initializedState,
+      config as Partial<
+        PregelOptions<any, any, any, TStreamMode, false, TEncoding>
+      >
+    );
   }
 
   /**
