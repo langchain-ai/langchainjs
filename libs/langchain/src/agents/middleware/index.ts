@@ -68,5 +68,6 @@ export {
   toolEmulatorMiddleware,
   type ToolEmulatorOptions,
 } from "./toolEmulator.js";
+export { mcpMiddleware, type MCPMiddlewareConfig } from "./mcp.js";
 export { type AgentMiddleware } from "./types.js";
 export { countTokensApproximately } from "./utils.js";
