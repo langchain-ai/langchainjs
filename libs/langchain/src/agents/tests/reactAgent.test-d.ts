@@ -5,6 +5,7 @@ import { describe, it, expectTypeOf } from "vitest";
 import type { IterableReadableStream } from "@langchain/core/utils/stream";
 
 import { createAgent } from "../index.js";
+import type { StreamOutputMap } from "@langchain/langgraph";
 
 describe("reactAgent", () => {
   it("should require model as only required property", async () => {
@@ -79,8 +80,51 @@ describe("reactAgent", () => {
         recursionLimit: 10,
       }
     );
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    expectTypeOf(stream).toEqualTypeOf<IterableReadableStream<any>>();
+    expectTypeOf(stream).toEqualTypeOf<
+      IterableReadableStream<
+        StreamOutputMap<
+          "values" | "updates" | "messages",
+          false,
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          any,
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          any,
+          string,
+          unknown,
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          any,
+          "text/event-stream"
+        >
+      >
+    >();
+
+    for await (const chunk of stream) {
+      expectTypeOf(chunk).toEqualTypeOf<Uint8Array>();
+    }
+
+    const multiModeStream = await agent.stream(
+      {
+        messages: [new HumanMessage("Hello, world!")],
+      },
+      {
+        streamMode: ["updates", "messages", "custom"],
+      }
+    );
+
+    for await (const chunk of multiModeStream) {
+      const [mode, value] = chunk;
+      expectTypeOf(mode).toEqualTypeOf<"updates" | "messages" | "custom">();
+      if (mode === "messages") {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        expectTypeOf(value).toExtend<[BaseMessage, Record<string, any>]>();
+      } else if (mode === "updates") {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        expectTypeOf(value).toExtend<Record<string, any>>();
+      } else {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        expectTypeOf(value).toExtend<any>();
+      }
+    }
 
     await agent.invoke(
       {
