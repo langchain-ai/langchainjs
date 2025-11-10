@@ -163,6 +163,7 @@ export function handleMultiModalOutput(
   return content;
 }
 
+// TODO: make this a converter
 export function _convertOpenAIResponsesUsageToLangChainUsage(
   usage?: OpenAIClient.Responses.ResponseUsage
 ): UsageMetadata {
