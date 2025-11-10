@@ -2345,6 +2345,46 @@ importers:
         specifier: ^3.2.4
         version: 3.2.4(@types/debug@4.1.12)(@types/node@25.2.2)(jiti@2.6.1)(jsdom@28.0.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
 
+  libs/providers/langchain-google:
+    dependencies:
+      eventsource-parser:
+        specifier: ^3.0.6
+        version: 3.0.6
+      google-auth-library:
+        specifier: ^10.5.0
+        version: 10.5.0
+    devDependencies:
+      '@langchain/core':
+        specifier: workspace:^
+        version: link:../../langchain-core
+      '@langchain/eslint':
+        specifier: workspace:*
+        version: link:../../../internal/eslint
+      '@langchain/standard-tests':
+        specifier: workspace:*
+        version: link:../../../internal/standard-tests
+      '@tsconfig/recommended':
+        specifier: ^1.0.10
+        version: 1.0.13
+      dpdm:
+        specifier: ^3.14.0
+        version: 3.15.1
+      eslint:
+        specifier: ^9.34.0
+        version: 9.39.2(jiti@2.6.1)
+      prettier:
+        specifier: ^2.8.3
+        version: 2.8.8
+      typescript:
+        specifier: ~5.8.3
+        version: 5.8.3
+      vitest:
+        specifier: ^3.2.4
+        version: 3.2.4(@types/debug@4.1.12)(@types/node@25.2.2)(jiti@2.6.1)(jsdom@28.0.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
+      zod-to-json-schema:
+        specifier: ^3.24.6
+        version: 3.25.1(zod@4.3.6)
+
   libs/providers/langchain-google-cloud-sql-pg:
     dependencies:
       '@google-cloud/cloud-sql-connector':
