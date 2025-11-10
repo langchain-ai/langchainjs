@@ -1,0 +1,84 @@
+{
+  "name": "@langchain/google",
+  "version": "1.0.0",
+  "description": "Google integrations for LangChain.js",
+  "author": "LangChain",
+  "license": "MIT",
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:langchain-ai/langchainjs.git",
+    "directory": "libs/providers/langchain-google"
+  },
+  "scripts": {
+    "build": "pnpm --filter @langchain/build compile @langchain/google",
+    "lint:eslint": "eslint --cache src/",
+    "lint:dpdm": "dpdm --skip-dynamic-imports circular --exit-code circular:1 --no-warning --no-tree src/**/*.ts",
+    "lint": "pnpm lint:eslint && pnpm lint:dpdm",
+    "lint:fix": "pnpm lint:eslint --fix && pnpm lint:dpdm",
+    "clean": "rm -rf .turbo dist/",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:int": "vitest run --mode int",
+    "test:standard:unit": "vitest run --mode standard-unit",
+    "test:standard:int": "vitest run --mode standard-int",
+    "test:standard": "pnpm test:standard:unit && pnpm test:standard:int",
+    "format": "prettier --config .prettierrc --write \"src\"",
+    "format:check": "prettier --config .prettierrc --check \"src\""
+  },
+  "dependencies": {
+    "eventsource-parser": "^3.0.6",
+    "google-auth-library": "^10.5.0"
+  },
+  "peerDependencies": {
+    "@langchain/core": "^1.0.0"
+  },
+  "devDependencies": {
+    "@langchain/core": "workspace:*",
+    "@langchain/eslint": "workspace:*",
+    "@langchain/standard-tests": "workspace:*",
+    "@tsconfig/recommended": "^1.0.10",
+    "dpdm": "^3.14.0",
+    "eslint": "^9.34.0",
+    "prettier": "^2.8.3",
+    "typescript": "~5.8.3",
+    "vitest": "^3.2.4",
+    "zod-to-json-schema": "^3.24.6"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "exports": {
+    ".": {
+      "input": "./src/index.ts",
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      },
+      "require": {
+        "types": "./dist/index.d.cts",
+        "default": "./dist/index.cjs"
+      }
+    },
+    "./node": {
+      "input": "./src/node.ts",
+      "import": {
+        "types": "./dist/node.d.ts",
+        "default": "./dist/node.js"
+      },
+      "require": {
+        "types": "./dist/node.d.cts",
+        "default": "./dist/node.cjs"
+      }
+    }
+  },
+  "files": [
+    "dist/",
+    "CHANGELOG.md",
+    "README.md",
+    "LICENSE"
+  ]
+}

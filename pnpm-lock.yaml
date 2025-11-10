@@ -2342,6 +2342,46 @@ importers:
         specifier: ^3.2.4
         version: 3.2.4(@types/debug@4.1.12)(@types/node@25.0.10)(jiti@2.6.1)(jsdom@26.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.5))(terser@5.46.0)(tsx@4.20.3)(yaml@2.8.2)
 
+  libs/providers/langchain-google:
+    dependencies:
+      eventsource-parser:
+        specifier: ^3.0.6
+        version: 3.0.6
+      google-auth-library:
+        specifier: ^10.5.0
+        version: 10.5.0
+    devDependencies:
+      '@langchain/core':
+        specifier: workspace:*
+        version: link:../../langchain-core
+      '@langchain/eslint':
+        specifier: workspace:*
+        version: link:../../../internal/eslint
+      '@langchain/standard-tests':
+        specifier: workspace:*
+        version: link:../../../internal/standard-tests
+      '@tsconfig/recommended':
+        specifier: ^1.0.10
+        version: 1.0.10
+      dpdm:
+        specifier: ^3.14.0
+        version: 3.14.0
+      eslint:
+        specifier: ^9.34.0
+        version: 9.39.1(jiti@2.6.1)
+      prettier:
+        specifier: ^2.8.3
+        version: 2.8.8
+      typescript:
+        specifier: ~5.8.3
+        version: 5.8.3
+      vitest:
+        specifier: ^3.2.4
+        version: 3.2.4(@types/debug@4.1.12)(@types/node@25.0.10)(jiti@2.6.1)(jsdom@26.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.5))(terser@5.46.0)(tsx@4.20.3)(yaml@2.8.2)
+      zod-to-json-schema:
+        specifier: ^3.24.6
+        version: 3.25.1(zod@4.3.6)
+
   libs/providers/langchain-google-cloud-sql-pg:
     dependencies:
       '@google-cloud/cloud-sql-connector':
@@ -21214,7 +21254,7 @@ snapshots:
     dependencies:
       '@googleapis/sqladmin': 31.1.0
       gaxios: 7.1.1
-      google-auth-library: 10.2.0
+      google-auth-library: 10.5.0
       p-throttle: 7.0.0
     transitivePeerDependencies:
       - supports-color
@@ -22450,7 +22490,7 @@ snapshots:
   '@mistralai/mistralai@1.7.5(zod@3.25.76)':
     dependencies:
       zod: 3.25.76
-      zod-to-json-schema: 3.24.6(zod@3.25.76)
+      zod-to-json-schema: 3.25.1(zod@3.25.76)
 
   '@mixedbread-ai/sdk@2.2.11(encoding@0.1.13)':
     dependencies:
@@ -28822,7 +28862,6 @@ snapshots:
       rimraf: 5.0.10
     transitivePeerDependencies:
       - supports-color
-    optional: true
 
   gcp-metadata@6.1.1(encoding@0.1.13):
     dependencies:
@@ -28848,7 +28887,6 @@ snapshots:
       json-bigint: 1.0.0
     transitivePeerDependencies:
       - supports-color
-    optional: true
 
   generate-function@2.3.1:
     dependencies:
@@ -29036,7 +29074,6 @@ snapshots:
       jws: 4.0.1
     transitivePeerDependencies:
       - supports-color
-    optional: true
 
   google-auth-library@9.15.1(encoding@0.1.13):
     dependencies:
@@ -29073,8 +29110,7 @@ snapshots:
 
   google-logging-utils@1.1.1: {}
 
-  google-logging-utils@1.1.3:
-    optional: true
+  google-logging-utils@1.1.3: {}
 
   google-protobuf@3.21.2: {}
 
@@ -29093,8 +29129,8 @@ snapshots:
   googleapis-common@8.0.2-rc.0:
     dependencies:
       extend: 3.0.2
-      gaxios: 7.1.1
-      google-auth-library: 10.2.0
+      gaxios: 7.1.3
+      google-auth-library: 10.5.0
       qs: 6.14.0
       url-template: 2.0.8
     transitivePeerDependencies:
@@ -29153,8 +29189,8 @@ snapshots:
 
   gtoken@8.0.0:
     dependencies:
-      gaxios: 7.1.1
-      jws: 4.0.0
+      gaxios: 7.1.3
+      jws: 4.0.1
     transitivePeerDependencies:
       - supports-color
 
