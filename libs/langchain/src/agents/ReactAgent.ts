@@ -13,7 +13,6 @@ import {
   type LangGraphRunnableConfig,
   type StreamMode,
   type StreamOutputMap,
-  type PregelOptions,
 } from "@langchain/langgraph";
 import type { CheckpointListOptions } from "@langchain/langgraph-checkpoint";
 import { ToolMessage, AIMessage } from "@langchain/core/messages";
@@ -1086,35 +1085,32 @@ export class ReactAgent<
     state: InvokeStateParameter<StateSchema, TMiddleware>,
     config?: StreamConfiguration<
       InferContextInput<ContextSchema> &
-        InferMiddlewareContextInputs<TMiddleware>
-    > & {
-      streamMode?: TStreamMode;
-      encoding?: TEncoding;
-    }
-  ): Promise<
-    IterableReadableStream<
-      StreamOutputMap<
-        TStreamMode,
-        false,
-        any,
-        any,
-        string,
-        unknown,
-        any,
-        TEncoding
-      >
+        InferMiddlewareContextInputs<TMiddleware>,
+      TStreamMode,
+      TEncoding
     >
-  > {
+  ) {
     const initializedState = await this.#initializeMiddlewareStates(
       state,
       config as RunnableConfig
     );
     return this.#graph.stream(
       initializedState,
-      config as Partial<
-        PregelOptions<any, any, any, TStreamMode, false, TEncoding>
+      config as Record<string, any>
+    ) as Promise<
+      IterableReadableStream<
+        StreamOutputMap<
+          TStreamMode,
+          false,
+          MergedAgentState<StateSchema, StructuredResponseFormat, TMiddleware>,
+          MergedAgentState<StateSchema, StructuredResponseFormat, TMiddleware>,
+          string,
+          unknown,
+          unknown,
+          TEncoding
+        >
       >
-    );
+    >;
   }
 
   /**
@@ -1176,7 +1172,9 @@ export class ReactAgent<
     state: InvokeStateParameter<StateSchema, TMiddleware>,
     config?: StreamConfiguration<
       InferContextInput<ContextSchema> &
-        InferMiddlewareContextInputs<TMiddleware>
+        InferMiddlewareContextInputs<TMiddleware>,
+      StreamMode | StreamMode[] | undefined,
+      "text/event-stream" | undefined
     > & { version?: "v1" | "v2" },
     streamOptions?: Parameters<Runnable["streamEvents"]>[2]
   ): IterableReadableStream<StreamEvent> {

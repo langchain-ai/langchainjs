@@ -4,7 +4,7 @@ import { LanguageModelLike } from "@langchain/core/language_models/base";
 import { describe, it, expectTypeOf } from "vitest";
 import type { IterableReadableStream } from "@langchain/core/utils/stream";
 
-import { createAgent } from "../index.js";
+import { type BuiltInState, createAgent } from "../index.js";
 import type { StreamOutputMap } from "@langchain/langgraph";
 
 describe("reactAgent", () => {
@@ -85,14 +85,11 @@ describe("reactAgent", () => {
         StreamOutputMap<
           "values" | "updates" | "messages",
           false,
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          any,
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          any,
+          Record<string, unknown>,
+          Record<string, unknown>,
           string,
           unknown,
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          any,
+          unknown,
           "text/event-stream"
         >
       >
@@ -107,22 +104,22 @@ describe("reactAgent", () => {
         messages: [new HumanMessage("Hello, world!")],
       },
       {
-        streamMode: ["updates", "messages", "custom"],
+        streamMode: ["updates", "messages", "values"],
       }
     );
 
     for await (const chunk of multiModeStream) {
       const [mode, value] = chunk;
-      expectTypeOf(mode).toEqualTypeOf<"updates" | "messages" | "custom">();
+      expectTypeOf(mode).toEqualTypeOf<"updates" | "messages" | "values">();
       if (mode === "messages") {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        expectTypeOf(value).toExtend<[BaseMessage, Record<string, any>]>();
+        expectTypeOf(value).toEqualTypeOf<[BaseMessage, Record<string, any>]>();
       } else if (mode === "updates") {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        expectTypeOf(value).toExtend<Record<string, any>>();
+        expectTypeOf(value).toEqualTypeOf<
+          Record<string, Omit<BuiltInState, "jumpTo">>
+        >();
       } else {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        expectTypeOf(value).toExtend<any>();
+        expectTypeOf(value.messages).toEqualTypeOf<BaseMessage[]>();
       }
     }
 
