@@ -120,7 +120,7 @@ export abstract class BaseChain<
           if (fullValues.signal && listener) {
             fullValues.signal.removeEventListener("abort", listener);
           }
-        })) as Promise<RunOutput>;
+        })) as RunOutput;
       } else {
         outputValues = await this._call(
           fullValues as RunInput,
