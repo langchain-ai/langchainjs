@@ -420,7 +420,6 @@ export function summarizationMiddleware(
         model
       );
 
-      console.log("doSummarize", doSummarize);
       if (!doSummarize) {
         return;
       }
@@ -435,7 +434,6 @@ export function summarizationMiddleware(
         model
       );
 
-      console.log("cutoffIndex", cutoffIndex);
       if (cutoffIndex <= 0) {
         return;
       }

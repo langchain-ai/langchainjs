@@ -347,8 +347,8 @@ describe("summarizationMiddleware", () => {
       responses: [new AIMessage("Response")],
     });
     // Set both model and modelName properties for getProfileLimits to work
-    (modelWithProfile as any).model = "gpt-4";
-    (modelWithProfile as any).modelName = "gpt-4";
+    (modelWithProfile as any).model = "gpt-5";
+    (modelWithProfile as any).modelName = "gpt-5";
     // Set profile directly on the model instance
     Object.defineProperty(modelWithProfile, "profile", {
       value: { max_input_tokens: 8192 },
