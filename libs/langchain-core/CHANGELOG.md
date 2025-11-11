@@ -1,5 +1,11 @@
 # @langchain/core
 
+## 1.0.4
+
+### Patch Changes
+
+- 8319201: Export standard converter function utility
+
 ## 1.0.3
 
 ### Patch Changes

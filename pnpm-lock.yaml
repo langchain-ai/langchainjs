@@ -434,31 +434,31 @@ importers:
         version: 0.25.8
       '@rolldown/binding-darwin-arm64':
         specifier: '*'
-        version: 1.0.0-beta.47
+        version: 1.0.0-beta.49
       '@rolldown/binding-darwin-x64':
         specifier: '*'
-        version: 1.0.0-beta.47
+        version: 1.0.0-beta.49
       '@rolldown/binding-linux-arm64-gnu':
         specifier: '*'
-        version: 1.0.0-beta.47
+        version: 1.0.0-beta.49
       '@rolldown/binding-linux-arm64-musl':
         specifier: '*'
-        version: 1.0.0-beta.47
+        version: 1.0.0-beta.49
       '@rolldown/binding-linux-x64-gnu':
         specifier: '*'
-        version: 1.0.0-beta.47
+        version: 1.0.0-beta.49
       '@rolldown/binding-linux-x64-musl':
         specifier: '*'
-        version: 1.0.0-beta.47
+        version: 1.0.0-beta.49
       '@rolldown/binding-win32-arm64-msvc':
         specifier: '*'
-        version: 1.0.0-beta.47
+        version: 1.0.0-beta.49
       '@rolldown/binding-win32-ia32-msvc':
         specifier: '*'
-        version: 1.0.0-beta.47
+        version: 1.0.0-beta.49
       '@rolldown/binding-win32-x64-msvc':
         specifier: '*'
-        version: 1.0.0-beta.47
+        version: 1.0.0-beta.49
       '@swc/core-win32-x64-msvc':
         specifier: '*'
         version: 1.13.3
@@ -1100,7 +1100,7 @@ importers:
         version: 4.0.6
       '@getzep/zep-cloud':
         specifier: ^1.0.6
-        version: 1.0.12(@langchain/core@libs+langchain-core)(encoding@0.1.13)(langchain@0.3.30(7c719f01a9b8ef1eeb9a8dffcdbc1400))
+        version: 1.0.12(@langchain/core@libs+langchain-core)(encoding@0.1.13)(langchain@0.3.30(e12467a0d395003da75a5c4cace4796a))
       '@getzep/zep-js':
         specifier: ^0.9.0
         version: 0.9.0
@@ -2192,8 +2192,8 @@ importers:
   libs/providers/langchain-deepseek:
     dependencies:
       '@langchain/openai':
-        specifier: ^1.0.0
-        version: 1.0.0(@langchain/core@libs+langchain-core)(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.5))
+        specifier: ^1.1.0
+        version: 1.1.0(@langchain/core@libs+langchain-core)(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.5))
     devDependencies:
       '@langchain/core':
         specifier: workspace:*
@@ -3305,8 +3305,8 @@ importers:
   libs/providers/langchain-xai:
     dependencies:
       '@langchain/openai':
-        specifier: ^1.0.0
-        version: 1.0.0(@langchain/core@libs+langchain-core)(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.5))
+        specifier: ^1.1.0
+        version: 1.1.0(@langchain/core@libs+langchain-core)(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.5))
     devDependencies:
       '@langchain/core':
         specifier: workspace:*
@@ -6242,8 +6242,8 @@ packages:
     peerDependencies:
       '@langchain/core': workspace:*
 
-  '@langchain/aws@1.0.0':
-    resolution: {integrity: sha512-6eCDhXF6rauF2ItsbRtRecG/qEhpvmYM7p8hdP64dyuGUvkEF7Yqs587Lwgyj5DqV63k5zUZre6l8ITAd26Uqw==}
+  '@langchain/aws@1.0.1':
+    resolution: {integrity: sha512-vYBux3mSe52zd8kuBtOKZyYi4rkZj5v+vYdWxihttOAhDsaNCwUjAnGWdwVR7pM7FYv6AJ+ZPtjECwIhTLsa0A==}
     engines: {node: '>=20'}
     peerDependencies:
       '@langchain/core': workspace:*
@@ -6364,8 +6364,8 @@ packages:
     peerDependencies:
       '@langchain/core': workspace:*
 
-  '@langchain/ollama@1.0.0':
-    resolution: {integrity: sha512-zqn6i7haMjvZW4FQWo0GrF4wYL5mLurdL0qoe+moYWYSCGaay4K7e/4dqM5C/MR16/HPFDzFbBRMkni2PDRBgA==}
+  '@langchain/ollama@1.0.1':
+    resolution: {integrity: sha512-Pe32hhTpMvnRlNFJxkdu6r1QzsONGz5uvoLiMU1TpgAUu7EyKr2osymlgjBLqDe2vMKUmqHb+yWRH0IppDBUOg==}
     engines: {node: '>=20'}
     peerDependencies:
       '@langchain/core': workspace:*
@@ -6376,8 +6376,8 @@ packages:
     peerDependencies:
       '@langchain/core': workspace:*
 
-  '@langchain/openai@1.0.0':
-    resolution: {integrity: sha512-olKEUIjb3HBOiD/NR056iGJz4wiN6HhQ/u65YmGWYadWWoKOcGwheBw/FE0x6SH4zDlI3QmP+vMhuQoaww19BQ==}
+  '@langchain/openai@1.1.0':
+    resolution: {integrity: sha512-GUUnt0VBKeCB+WwPxDamYt5EZfe4NXCzJC7x9OFAlt1C60/rSBbAGJokSL0VWz4oXxQwkqSvR8xA54FBvGgxQw==}
     engines: {node: '>=20'}
     peerDependencies:
       '@langchain/core': workspace:*
@@ -7199,8 +7199,8 @@ packages:
     cpu: [arm64]
     os: [darwin]
 
-  '@rolldown/binding-darwin-arm64@1.0.0-beta.47':
-    resolution: {integrity: sha512-Lc3nrkxeaDVCVl8qR3qoxh6ltDZfkQ98j5vwIr5ALPkgjZtDK4BGCrrBoLpGVMg+csWcaqUbwbKwH5yvVa0oOw==}
+  '@rolldown/binding-darwin-arm64@1.0.0-beta.49':
+    resolution: {integrity: sha512-kN0N/8m8HUYO13PqlIwxcXD7fu2E6GKu0J4iH7wUJw3T3QK+nvrc20rxtTZ0J6sA1sGCE8UYvvvnurDwMUp0dg==}
     engines: {node: ^20.19.0 || >=22.12.0}
     cpu: [arm64]
     os: [darwin]
@@ -7210,8 +7210,8 @@ packages:
     cpu: [x64]
     os: [darwin]
 
-  '@rolldown/binding-darwin-x64@1.0.0-beta.47':
-    resolution: {integrity: sha512-eBYxQDwP0O33plqNVqOtUHqRiSYVneAknviM5XMawke3mwMuVlAsohtOqEjbCEl/Loi/FWdVeks5WkqAkzkYWQ==}
+  '@rolldown/binding-darwin-x64@1.0.0-beta.49':
+    resolution: {integrity: sha512-29qmvsgY2A4ymfy8sQkFFOFc13m04SLUcYn1iil41gpkYrAspBLkvsOQMHPCs3rQCOImgweT4tFotqTAonwphQ==}
     engines: {node: ^20.19.0 || >=22.12.0}
     cpu: [x64]
     os: [darwin]
@@ -7231,8 +7231,8 @@ packages:
     cpu: [arm64]
     os: [linux]
 
-  '@rolldown/binding-linux-arm64-gnu@1.0.0-beta.47':
-    resolution: {integrity: sha512-CyIunZ6D9U9Xg94roQI1INt/bLkOpPsZjZZkiaAZ0r6uccQdICmC99M9RUPlMLw/qg4yEWLlQhG73W/mG437NA==}
+  '@rolldown/binding-linux-arm64-gnu@1.0.0-beta.49':
+    resolution: {integrity: sha512-bJinAiuWUJvlBxPa8ZmRnWkmmAoUlSWtZT4pRkWi/QX3HlgHfUUbhF+d7aZLciai+iFfbiPqOwCL2tqNXXrUsA==}
     engines: {node: ^20.19.0 || >=22.12.0}
     cpu: [arm64]
     os: [linux]
@@ -7242,8 +7242,8 @@ packages:
     cpu: [arm64]
     os: [linux]
 
-  '@rolldown/binding-linux-arm64-musl@1.0.0-beta.47':
-    resolution: {integrity: sha512-doozc/Goe7qRCSnzfJbFINTHsMktqmZQmweull6hsZZ9sjNWQ6BWQnbvOlfZJe4xE5NxM1NhPnY5Giqnl3ZrYQ==}
+  '@rolldown/binding-linux-arm64-musl@1.0.0-beta.49':
+    resolution: {integrity: sha512-gwueY8EJU7afq5tNwKSjYy5JqTR/0MNzZfv6s5dX+rMgeUpTNhwIToLO1F41TPYEa+6LRTXUWG23DO/ONPzUJA==}
     engines: {node: ^20.19.0 || >=22.12.0}
     cpu: [arm64]
     os: [linux]
@@ -7258,8 +7258,8 @@ packages:
     cpu: [x64]
     os: [linux]
 
-  '@rolldown/binding-linux-x64-gnu@1.0.0-beta.47':
-    resolution: {integrity: sha512-fodvSMf6Aqwa0wEUSTPewmmZOD44rc5Tpr5p9NkwQ6W1SSpUKzD3SwpJIgANDOhwiYhDuiIaYPGB7Ujkx1q0UQ==}
+  '@rolldown/binding-linux-x64-gnu@1.0.0-beta.49':
+    resolution: {integrity: sha512-VXYkjzzEZh5N5Ue1IEcBgL8RuJu5jWrIKmg8WY6hhCbnNJ1IOsObT4HFW+rE8ZaKNjoIXzImoiYi1UAkKiQRYA==}
     engines: {node: ^20.19.0 || >=22.12.0}
     cpu: [x64]
     os: [linux]
@@ -7269,8 +7269,8 @@ packages:
     cpu: [x64]
     os: [linux]
 
-  '@rolldown/binding-linux-x64-musl@1.0.0-beta.47':
-    resolution: {integrity: sha512-Rxm5hYc0mGjwLh5sjlGmMygxAaV2gnsx7CNm2lsb47oyt5UQyPDZf3GP/ct8BEcwuikdqzsrrlIp8+kCSvMFNQ==}
+  '@rolldown/binding-linux-x64-musl@1.0.0-beta.49':
+    resolution: {integrity: sha512-S5Yw6g/ftiW7MpNpnOM5vSIlDzGuohDY8y7VOI47+92HhO6WqsNfcMkDZXm3G5l6YIfUNStGBV86NWrzasp+sw==}
     engines: {node: ^20.19.0 || >=22.12.0}
     cpu: [x64]
     os: [linux]
@@ -7285,8 +7285,8 @@ packages:
     cpu: [arm64]
     os: [win32]
 
-  '@rolldown/binding-win32-arm64-msvc@1.0.0-beta.47':
-    resolution: {integrity: sha512-o5BpmBnXU+Cj+9+ndMcdKjhZlPb79dVPBZnWwMnI4RlNSSq5yOvFZqvfPYbyacvnW03Na4n5XXQAPhu3RydZ0w==}
+  '@rolldown/binding-win32-arm64-msvc@1.0.0-beta.49':
+    resolution: {integrity: sha512-dnheX8aXsN9P12uwPOW3TVvqSnQ1cfjKQlYgU2dTkrRpnco0kTGvqE1nEWybGukTyuPdzVvrGElgSGEJ7crcSQ==}
     engines: {node: ^20.19.0 || >=22.12.0}
     cpu: [arm64]
     os: [win32]
@@ -7296,8 +7296,8 @@ packages:
     cpu: [ia32]
     os: [win32]
 
-  '@rolldown/binding-win32-ia32-msvc@1.0.0-beta.47':
-    resolution: {integrity: sha512-FVOmfyYehNE92IfC9Kgs913UerDog2M1m+FADJypKz0gmRg3UyTt4o1cZMCAl7MiR89JpM9jegNO1nXuP1w1vw==}
+  '@rolldown/binding-win32-ia32-msvc@1.0.0-beta.49':
+    resolution: {integrity: sha512-Blt1aODXiAuEdZBqHYXGJwVFlonXKkVEJy5hhxOgnAVi/0mzFNWDxc8qVlxl7dpQjQdboW/wXdgMHpTDfomicg==}
     engines: {node: ^20.19.0 || >=22.12.0}
     cpu: [ia32]
     os: [win32]
@@ -7307,8 +7307,8 @@ packages:
     cpu: [x64]
     os: [win32]
 
-  '@rolldown/binding-win32-x64-msvc@1.0.0-beta.47':
-    resolution: {integrity: sha512-by/70F13IUE101Bat0oeH8miwWX5mhMFPk1yjCdxoTNHTyTdLgb0THNaebRM6AP7Kz+O3O2qx87sruYuF5UxHg==}
+  '@rolldown/binding-win32-x64-msvc@1.0.0-beta.49':
+    resolution: {integrity: sha512-sSu4qUlL/62QJrR3P+Bd+EblD8tUpnovUz65qow3PA7YxH+f5NFDbCJMR1m5b8zBuVZwZIHfzbuawz+Vl34/xg==}
     engines: {node: ^20.19.0 || >=22.12.0}
     cpu: [x64]
     os: [win32]
@@ -19561,7 +19561,7 @@ snapshots:
     transitivePeerDependencies:
       - debug
 
-  '@getzep/zep-cloud@1.0.12(@langchain/core@libs+langchain-core)(encoding@0.1.13)(langchain@0.3.30(7c719f01a9b8ef1eeb9a8dffcdbc1400))':
+  '@getzep/zep-cloud@1.0.12(@langchain/core@libs+langchain-core)(encoding@0.1.13)(langchain@0.3.30(e12467a0d395003da75a5c4cace4796a))':
     dependencies:
       form-data: 4.0.0
       node-fetch: 2.7.0(encoding@0.1.13)
@@ -19570,7 +19570,7 @@ snapshots:
       zod: 3.25.76
     optionalDependencies:
       '@langchain/core': link:libs/langchain-core
-      langchain: 0.3.30(7c719f01a9b8ef1eeb9a8dffcdbc1400)
+      langchain: 0.3.30(e12467a0d395003da75a5c4cace4796a)
     transitivePeerDependencies:
       - encoding
 
@@ -20485,7 +20485,7 @@ snapshots:
       - zod
     optional: true
 
-  '@langchain/aws@1.0.0(@langchain/core@libs+langchain-core)':
+  '@langchain/aws@1.0.1(@langchain/core@libs+langchain-core)':
     dependencies:
       '@aws-sdk/client-bedrock-agent-runtime': 3.926.0
       '@aws-sdk/client-bedrock-runtime': 3.926.0
@@ -20509,7 +20509,7 @@ snapshots:
   '@langchain/deepseek@1.0.0(@langchain/core@libs+langchain-core)(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.5))':
     dependencies:
       '@langchain/core': link:libs/langchain-core
-      '@langchain/openai': 1.0.0(@langchain/core@libs+langchain-core)(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.5))
+      '@langchain/openai': 1.1.0(@langchain/core@libs+langchain-core)(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.5))
     transitivePeerDependencies:
       - ws
     optional: true
@@ -20627,7 +20627,7 @@ snapshots:
       uuid: 10.0.0
     optional: true
 
-  '@langchain/ollama@1.0.0(@langchain/core@libs+langchain-core)':
+  '@langchain/ollama@1.0.1(@langchain/core@libs+langchain-core)':
     dependencies:
       '@langchain/core': link:libs/langchain-core
       ollama: 0.5.18
@@ -20644,10 +20644,10 @@ snapshots:
       - ws
     optional: true
 
-  '@langchain/openai@1.0.0(@langchain/core@libs+langchain-core)(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.5))':
+  '@langchain/openai@1.1.0(@langchain/core@libs+langchain-core)(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.5))':
     dependencies:
       '@langchain/core': link:libs/langchain-core
-      js-tiktoken: 1.0.20
+      js-tiktoken: 1.0.21
       openai: 6.3.0(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.5))(zod@3.25.76)
       zod: 3.25.76
     transitivePeerDependencies:
@@ -20662,7 +20662,7 @@ snapshots:
   '@langchain/xai@1.0.0(@langchain/core@libs+langchain-core)(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.5))':
     dependencies:
       '@langchain/core': link:libs/langchain-core
-      '@langchain/openai': 1.0.0(@langchain/core@libs+langchain-core)(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.5))
+      '@langchain/openai': 1.1.0(@langchain/core@libs+langchain-core)(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.5))
     transitivePeerDependencies:
       - ws
     optional: true
@@ -21505,13 +21505,13 @@ snapshots:
   '@rolldown/binding-darwin-arm64@1.0.0-beta.30':
     optional: true
 
-  '@rolldown/binding-darwin-arm64@1.0.0-beta.47':
+  '@rolldown/binding-darwin-arm64@1.0.0-beta.49':
     optional: true
 
   '@rolldown/binding-darwin-x64@1.0.0-beta.30':
     optional: true
 
-  '@rolldown/binding-darwin-x64@1.0.0-beta.47':
+  '@rolldown/binding-darwin-x64@1.0.0-beta.49':
     optional: true
 
   '@rolldown/binding-freebsd-x64@1.0.0-beta.30':
@@ -21523,13 +21523,13 @@ snapshots:
   '@rolldown/binding-linux-arm64-gnu@1.0.0-beta.30':
     optional: true
 
-  '@rolldown/binding-linux-arm64-gnu@1.0.0-beta.47':
+  '@rolldown/binding-linux-arm64-gnu@1.0.0-beta.49':
     optional: true
 
   '@rolldown/binding-linux-arm64-musl@1.0.0-beta.30':
     optional: true
 
-  '@rolldown/binding-linux-arm64-musl@1.0.0-beta.47':
+  '@rolldown/binding-linux-arm64-musl@1.0.0-beta.49':
     optional: true
 
   '@rolldown/binding-linux-arm64-ohos@1.0.0-beta.30':
@@ -21538,13 +21538,13 @@ snapshots:
   '@rolldown/binding-linux-x64-gnu@1.0.0-beta.30':
     optional: true
 
-  '@rolldown/binding-linux-x64-gnu@1.0.0-beta.47':
+  '@rolldown/binding-linux-x64-gnu@1.0.0-beta.49':
     optional: true
 
   '@rolldown/binding-linux-x64-musl@1.0.0-beta.30':
     optional: true
 
-  '@rolldown/binding-linux-x64-musl@1.0.0-beta.47':
+  '@rolldown/binding-linux-x64-musl@1.0.0-beta.49':
     optional: true
 
   '@rolldown/binding-wasm32-wasi@1.0.0-beta.30':
@@ -21555,19 +21555,19 @@ snapshots:
   '@rolldown/binding-win32-arm64-msvc@1.0.0-beta.30':
     optional: true
 
-  '@rolldown/binding-win32-arm64-msvc@1.0.0-beta.47':
+  '@rolldown/binding-win32-arm64-msvc@1.0.0-beta.49':
     optional: true
 
   '@rolldown/binding-win32-ia32-msvc@1.0.0-beta.30':
     optional: true
 
-  '@rolldown/binding-win32-ia32-msvc@1.0.0-beta.47':
+  '@rolldown/binding-win32-ia32-msvc@1.0.0-beta.49':
     optional: true
 
   '@rolldown/binding-win32-x64-msvc@1.0.0-beta.30':
     optional: true
 
-  '@rolldown/binding-win32-x64-msvc@1.0.0-beta.47':
+  '@rolldown/binding-win32-x64-msvc@1.0.0-beta.49':
     optional: true
 
   '@rolldown/pluginutils@1.0.0-beta.30': {}
@@ -27982,7 +27982,6 @@ snapshots:
   js-tiktoken@1.0.21:
     dependencies:
       base64-js: 1.5.1
-    optional: true
 
   js-tokens@4.0.0: {}
 
@@ -28206,7 +28205,7 @@ snapshots:
 
   kuler@2.0.0: {}
 
-  langchain@0.3.30(7c719f01a9b8ef1eeb9a8dffcdbc1400):
+  langchain@0.3.30(e12467a0d395003da75a5c4cace4796a):
     dependencies:
       '@langchain/core': link:libs/langchain-core
       '@langchain/openai': 0.6.16(@langchain/core@libs+langchain-core)(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.5))
@@ -28222,7 +28221,7 @@ snapshots:
       zod: 3.25.76
     optionalDependencies:
       '@langchain/anthropic': 1.0.0(@langchain/core@libs+langchain-core)(zod@3.25.76)
-      '@langchain/aws': 1.0.0(@langchain/core@libs+langchain-core)
+      '@langchain/aws': 1.0.1(@langchain/core@libs+langchain-core)
       '@langchain/cohere': 1.0.0(@langchain/core@libs+langchain-core)(encoding@0.1.13)
       '@langchain/deepseek': 1.0.0(@langchain/core@libs+langchain-core)(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.5))
       '@langchain/google-genai': 1.0.0(@langchain/core@libs+langchain-core)
@@ -28230,7 +28229,7 @@ snapshots:
       '@langchain/google-vertexai-web': 1.0.0(@langchain/core@libs+langchain-core)
       '@langchain/groq': 1.0.0(@langchain/core@libs+langchain-core)(encoding@0.1.13)
       '@langchain/mistralai': 1.0.0(@langchain/core@libs+langchain-core)
-      '@langchain/ollama': 1.0.0(@langchain/core@libs+langchain-core)
+      '@langchain/ollama': 1.0.1(@langchain/core@libs+langchain-core)
       '@langchain/xai': 1.0.0(@langchain/core@libs+langchain-core)(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.5))
       axios: 1.13.2(debug@4.4.3)
       cheerio: 1.0.0-rc.12
