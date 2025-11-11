@@ -1,5 +1,14 @@
 # @langchain/classic
 
+## 1.0.2
+
+### Patch Changes
+
+- Updated dependencies [8319201]
+- Updated dependencies [4906522]
+  - @langchain/openai@1.1.0
+  - @langchain/textsplitters@1.0.0
+
 ## 1.0.1
 
 ### Patch Changes

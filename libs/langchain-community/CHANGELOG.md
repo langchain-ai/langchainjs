@@ -1,5 +1,17 @@
 # @langchain/community
 
+## 1.0.2
+
+### Patch Changes
+
+- b17762a: fix(community): export type properly in duckduckgo_search
+- e4a3b3b: improve(pdf-loader): update error message to specify support for pdf-parse v1 only
+- ecc7a8a: swap problematic eval package
+- Updated dependencies [8319201]
+- Updated dependencies [4906522]
+  - @langchain/openai@1.1.0
+  - @langchain/classic@1.0.2
+
 ## 1.0.1
 
 ### Patch Changes
