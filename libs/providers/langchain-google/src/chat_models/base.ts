@@ -88,11 +88,10 @@ export abstract class BaseChatGoogle<
 
   constructor(protected params: BaseChatGoogleParams) {
     super(params);
-    this.model = params.model;
-
     if (!params.apiClient) {
       throw new Error("BaseChatGoogle requires an apiClient");
     }
+    this.model = params.model;
     this.apiClient = params.apiClient;
   }
 
@@ -435,9 +434,7 @@ export abstract class BaseChatGoogle<
 
     // Determine llm and outputParser based on method
     let llm: Runnable<BaseMessage[], AIMessageChunk, CallOptions>;
-    let outputParser:
-      | RunnableLambda<BaseMessage, RunOutput>
-      | JsonOutputKeyToolsParser<RunOutput>;
+    let outputParser: Runnable<BaseMessage, RunOutput>;
 
     if (method === "jsonMode") {
       // Use JSON mode with responseSchema

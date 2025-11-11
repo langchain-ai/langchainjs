@@ -311,6 +311,7 @@ export class RequestError extends GoogleError("request") {
     });
 
     const message =
+      errorBody?.error?.message ??
       errorBody?.message ??
       errorBody?.error ??
       `Request failed with status code ${response.status}`;

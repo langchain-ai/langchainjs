@@ -1,3 +1,4 @@
+import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import {
   type ChatGoogleVertexAIParams,
   ChatGoogleVertexAI,
@@ -27,6 +28,9 @@ class ChatGoogleGenerativeAINode extends ChatGoogleGenerativeAI {
     paramsArg?: Omit<ChatGoogleGenerativeAINodeParams, "model">
   ) {
     const params = getGoogleChatModelParams(modelOrParams, paramsArg);
+    if (!params.googleAuthOptions) {
+      params.apiKey = params.apiKey ?? getEnvironmentVariable("GOOGLE_API_KEY");
+    }
     if (params.googleAuthOptions) {
       params.googleAuthOptions = ensureAuthScopes(
         params.googleAuthOptions,
@@ -53,6 +57,9 @@ class ChatGoogleVertexAINode extends ChatGoogleVertexAI {
     paramsArg?: Omit<ChatGoogleVertexAINodeParams, "model">
   ) {
     const params = getGoogleChatModelParams(modelOrParams, paramsArg);
+    if (!params.googleAuthOptions) {
+      params.apiKey = params.apiKey ?? getEnvironmentVariable("GOOGLE_API_KEY");
+    }
     if (params.googleAuthOptions) {
       params.googleAuthOptions = ensureAuthScopes(
         params.googleAuthOptions,
