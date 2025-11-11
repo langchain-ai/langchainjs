@@ -108,7 +108,7 @@ export abstract class BaseChain<
     try {
       if (fullValues.signal) {
         let listener: (() => void) | undefined;
-        outputValues = await Promise.race([
+        outputValues = (await Promise.race([
           this._call(fullValues as RunInput, runManager, config),
           new Promise<never>((_, reject) => {
             listener = () => {
@@ -120,9 +120,13 @@ export abstract class BaseChain<
           if (fullValues.signal && listener) {
             fullValues.signal.removeEventListener("abort", listener);
           }
-        }) as Promise<RunOutput>;
+        })) as Promise<RunOutput>;
       } else {
-        outputValues = await this._call(fullValues as RunInput, runManager, config);
+        outputValues = await this._call(
+          fullValues as RunInput,
+          runManager,
+          config
+        );
       }
     } catch (e) {
       await runManager?.handleChainError(e);
