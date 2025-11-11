@@ -30,6 +30,10 @@ import {
 // https://www.npmjs.com/package/js-tiktoken
 
 export const getModelNameForTiktoken = (modelName: string): TiktokenModel => {
+  if (modelName.startsWith("gpt-5")) {
+    return "gpt-5" as TiktokenModel;
+  }
+
   if (modelName.startsWith("gpt-3.5-turbo-16k")) {
     return "gpt-3.5-turbo-16k";
   }
@@ -62,28 +66,103 @@ export const getEmbeddingContextSize = (modelName?: string): number => {
   }
 };
 
+/**
+ * Get the context window size (max input tokens) for a given model.
+ *
+ * Context window sizes are sourced from official model documentation:
+ * - OpenAI: https://platform.openai.com/docs/models
+ * - Anthropic: https://docs.anthropic.com/claude/docs/models-overview
+ * - Google: https://ai.google.dev/gemini/docs/models/gemini
+ *
+ * @param modelName - The name of the model
+ * @returns The context window size in tokens
+ */
 export const getModelContextSize = (modelName: string): number => {
-  switch (getModelNameForTiktoken(modelName)) {
-    case "gpt-3.5-turbo-16k":
-      return 16384;
-    case "gpt-3.5-turbo":
-      return 4096;
+  const normalizedName = getModelNameForTiktoken(modelName) as string;
+
+  switch (normalizedName) {
+    // GPT-5 series
+    case "gpt-5":
+    case "gpt-5-turbo":
+    case "gpt-5-turbo-preview":
+      return 400000;
+
+    // GPT-4o series
+    case "gpt-4o":
+    case "gpt-4o-mini":
+    case "gpt-4o-2024-05-13":
+    case "gpt-4o-2024-08-06":
+      return 128000;
+
+    // GPT-4 Turbo series
+    case "gpt-4-turbo":
+    case "gpt-4-turbo-preview":
+    case "gpt-4-turbo-2024-04-09":
+    case "gpt-4-0125-preview":
+    case "gpt-4-1106-preview":
+      return 128000;
+
+    // GPT-4 series
     case "gpt-4-32k":
+    case "gpt-4-32k-0314":
+    case "gpt-4-32k-0613":
       return 32768;
     case "gpt-4":
+    case "gpt-4-0314":
+    case "gpt-4-0613":
       return 8192;
+
+    // GPT-3.5 Turbo series
+    case "gpt-3.5-turbo-16k":
+    case "gpt-3.5-turbo-16k-0613":
+      return 16384;
+    case "gpt-3.5-turbo":
+    case "gpt-3.5-turbo-0301":
+    case "gpt-3.5-turbo-0613":
+    case "gpt-3.5-turbo-1106":
+    case "gpt-3.5-turbo-0125":
+      return 4096;
+
+    // Legacy GPT-3 models
     case "text-davinci-003":
+    case "text-davinci-002":
       return 4097;
+    case "text-davinci-001":
+      return 2049;
     case "text-curie-001":
-      return 2048;
     case "text-babbage-001":
-      return 2048;
     case "text-ada-001":
       return 2048;
+
+    // Code models
     case "code-davinci-002":
+    case "code-davinci-001":
       return 8000;
     case "code-cushman-001":
       return 2048;
+
+    // Claude models (Anthropic)
+    case "claude-3-5-sonnet-20241022":
+    case "claude-3-5-sonnet-20240620":
+    case "claude-3-opus-20240229":
+    case "claude-3-sonnet-20240229":
+    case "claude-3-haiku-20240307":
+    case "claude-2.1":
+      return 200000;
+    case "claude-2.0":
+    case "claude-instant-1.2":
+      return 100000;
+
+    // Gemini models (Google)
+    case "gemini-1.5-pro":
+    case "gemini-1.5-pro-latest":
+    case "gemini-1.5-flash":
+    case "gemini-1.5-flash-latest":
+      return 1000000; // 1M tokens
+    case "gemini-pro":
+    case "gemini-pro-vision":
+      return 32768;
+
     default:
       return 4097;
   }
