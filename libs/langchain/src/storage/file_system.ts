@@ -142,6 +142,7 @@ export class LocalFileStore extends BaseStore<string, Uint8Array> {
 
   /**
    * Sets the values for the given keys in the store.
+   * The last value for duplicate keys will be used.
    * @param keyValuePairs Array of key-value pairs to set in the store.
    * @returns Promise that resolves when all key-value pairs have been set.
    */
