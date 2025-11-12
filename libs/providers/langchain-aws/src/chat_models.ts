@@ -673,7 +673,7 @@ export class ChatBedrockConverse
 
   model = "anthropic.claude-3-haiku-20240307-v1:0";
 
-  applicationInferenceProfile?: string | undefined = undefined;
+  applicationInferenceProfile?: string;
 
   streaming = false;
 
