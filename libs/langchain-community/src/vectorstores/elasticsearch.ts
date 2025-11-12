@@ -25,6 +25,36 @@ interface VectorSearchOptions {
 }
 
 /**
+ * Configuration options for hybrid retrieval strategy.
+ */
+export interface HybridRetrievalStrategyConfig {
+  rankWindowSize?: number;
+  rankConstant?: number;
+  textField?: string;
+  /**
+   * For Elasticsearch 9.x, set to `false` to include vectors in responses.
+   */
+  excludeSourceVectors?: boolean;
+}
+
+/**
+ * Hybrid search strategy combining vector and BM25 search using RRF.
+ */
+export class HybridRetrievalStrategy {
+  public readonly rankWindowSize: number;
+  public readonly rankConstant: number;
+  public readonly textField: string;
+  public readonly excludeSourceVectors?: boolean;
+
+  constructor(config: HybridRetrievalStrategyConfig = {}) {
+    this.rankWindowSize = config.rankWindowSize ?? 100;
+    this.rankConstant = config.rankConstant ?? 60;
+    this.textField = config.textField ?? "text";
+    this.excludeSourceVectors = config.excludeSourceVectors;
+  }
+}
+
+/**
  * Interface defining the arguments required to create an Elasticsearch
  * client.
  */
@@ -32,6 +62,7 @@ export interface ElasticClientArgs {
   readonly client: Client;
   readonly indexName?: string;
   readonly vectorSearchOptions?: VectorSearchOptions;
+  readonly strategy?: HybridRetrievalStrategy;
 }
 
 /**
