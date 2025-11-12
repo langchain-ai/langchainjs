@@ -37,6 +37,8 @@ export class LocalFileStore extends BaseStore<string, Uint8Array> {
 
   rootPath: string;
 
+  private keyLocks: Map<string, Promise<void>> = new Map();
+
   constructor(fields: { rootPath: string }) {
     super(fields);
     this.rootPath = fields.rootPath;
@@ -79,15 +81,18 @@ export class LocalFileStore extends BaseStore<string, Uint8Array> {
    * @param fileContent An object with the key-value pairs to be written to the file.
    */
   private async setFileContent(content: Uint8Array, key: string) {
-    try {
-      await fs.writeFile(this.getFullPath(key), content);
-    } catch (error) {
-      throw new Error(
-        `Error writing file at path: ${this.getFullPath(
-          key
-        )}.\nError: ${JSON.stringify(error)}`
-      );
-    }
+    await this.withKeyLock(key, async () => {
+      const fullPath = this.getFullPath(key);
+      try {
+        await this.writeFileAtomically(content, fullPath);
+      } catch (error) {
+        throw new Error(
+          `Error writing file at path: ${fullPath}.\nError: ${JSON.stringify(
+            error
+          )}`
+        );
+      }
+    });
   }
 
   /**
@@ -141,8 +146,15 @@ export class LocalFileStore extends BaseStore<string, Uint8Array> {
    * @returns Promise that resolves when all key-value pairs have been set.
    */
   async mset(keyValuePairs: [string, Uint8Array][]): Promise<void> {
+    const deduped = new Map<string, Uint8Array>();
+    for (const [key, value] of keyValuePairs) {
+      deduped.set(key, value);
+    }
+
     await Promise.all(
-      keyValuePairs.map(([key, value]) => this.setFileContent(value, key))
+      Array.from(deduped.entries(), ([key, value]) =>
+        this.setFileContent(value, key)
+      )
     );
   }
 
@@ -152,7 +164,19 @@ export class LocalFileStore extends BaseStore<string, Uint8Array> {
    * @returns Promise that resolves when all keys have been deleted.
    */
   async mdelete(keys: string[]): Promise<void> {
-    await Promise.all(keys.map((key) => fs.unlink(this.getFullPath(key))));
+    await Promise.all(
+      keys.map((key) =>
+        this.withKeyLock(key, async () => {
+          try {
+            await fs.unlink(this.getFullPath(key));
+          } catch (error) {
+            if (!error || (error as { code?: string }).code !== "ENOENT") {
+              throw error;
+            }
+          }
+        })
+      )
+    );
   }
 
   /**
@@ -162,8 +186,10 @@ export class LocalFileStore extends BaseStore<string, Uint8Array> {
    * @returns AsyncGenerator that yields keys from the store.
    */
   async *yieldKeys(prefix?: string): AsyncGenerator<string> {
-    const allFiles = await fs.readdir(this.rootPath);
-    const allKeys = allFiles.map((file) => file.replace(".txt", ""));
+    const allFiles: string[] = await fs.readdir(this.rootPath);
+    const allKeys = allFiles
+      .filter((file) => file.endsWith(".txt"))
+      .map((file) => file.replace(/\.txt$/, ""));
     for (const key of allKeys) {
       if (prefix === undefined || key.startsWith(prefix)) {
         yield key;
@@ -194,6 +220,77 @@ export class LocalFileStore extends BaseStore<string, Uint8Array> {
       }
     }
 
+    // Clean up orphaned temp files left by interrupted atomic writes.
+    try {
+      const entries = await fs.readdir(rootPath);
+      await Promise.all(
+        entries
+          .filter((file) => file.endsWith(".tmp"))
+          .map((tempFile) =>
+            fs.unlink(path.join(rootPath, tempFile)).catch(() => {})
+          )
+      );
+    } catch {
+      // Ignore cleanup errors.
+    }
+
     return new this({ rootPath });
+  }
+
+  /**
+   * Ensures calls for the same key run sequentially by chaining promises.
+   * @param key Key to serialize operations for.
+   * @param fn Async work to execute while the lock is held.
+   * @returns Promise resolving with the callback result once the lock releases.
+   */
+  private async withKeyLock<T>(key: string, fn: () => Promise<T>): Promise<T> {
+    const previous = this.keyLocks.get(key) ?? Promise.resolve();
+    const waitForPrevious = previous.catch(() => {});
+
+    let resolveCurrent: (() => void) | undefined;
+    const current = new Promise<void>((resolve) => {
+      resolveCurrent = resolve;
+    });
+
+    const tail = waitForPrevious.then(() => current);
+    this.keyLocks.set(key, tail);
+
+    await waitForPrevious;
+    try {
+      return await fn();
+    } finally {
+      resolveCurrent?.();
+      if (this.keyLocks.get(key) === tail) {
+        this.keyLocks.delete(key);
+      }
+    }
+  }
+
+  private async writeFileAtomically(content: Uint8Array, fullPath: string) {
+    const directory = path.dirname(fullPath);
+    await fs.mkdir(directory, { recursive: true });
+
+    const tempPath = `${fullPath}.${Date.now()}-${Math.random()
+      .toString(16)
+      .slice(2)}.tmp`;
+
+    try {
+      await fs.writeFile(tempPath, content);
+
+      try {
+        await fs.rename(tempPath, fullPath);
+      } catch (renameError) {
+        const code = (renameError as { code?: string }).code;
+        if (renameError && (code === "EPERM" || code === "EACCES")) {
+          await fs.writeFile(fullPath, content);
+          await fs.unlink(tempPath).catch(() => {});
+        } else {
+          throw renameError;
+        }
+      }
+    } catch (error) {
+      await fs.unlink(tempPath).catch(() => {});
+      throw error;
+    }
   }
 }
