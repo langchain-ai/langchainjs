@@ -5,6 +5,9 @@
     "build:compile": {
       "dependsOn": ["^build:compile"]
     },
+    "build:examples": {
+      "dependsOn": ["^build:examples"]
+    },
     "lint": {
       "dependsOn": ["^lint"]
     },
