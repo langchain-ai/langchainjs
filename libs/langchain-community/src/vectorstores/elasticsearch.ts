@@ -220,6 +220,15 @@ export class ElasticVectorSearch extends VectorStore {
     k: number,
     filter?: ElasticFilter
   ): Promise<[Document, number][]> {
+    if (this.strategy && this.lastQueryText) {
+      return this.hybridSearchVectorWithScore(
+        this.lastQueryText,
+        query,
+        k,
+        filter
+      );
+    }
+
     const result = await this.client.search({
       index: this.indexName,
       size: k,
@@ -230,6 +239,58 @@ export class ElasticVectorSearch extends VectorStore {
         k,
         num_candidates: this.candidates,
       },
+    });
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return result.hits.hits.map((hit: any) => [
+      new Document({
+        pageContent: hit._source.text,
+        metadata: hit._source.metadata,
+      }),
+      hit._score,
+    ]);
+  }
+
+  private async hybridSearchVectorWithScore(
+    queryText: string,
+    queryVector: number[],
+    k: number,
+    filter?: ElasticFilter
+  ): Promise<[Document, number][]> {
+    const metadataTerms = this.buildMetadataTerms(filter);
+    const filterClauses = metadataTerms.must.length > 0 || metadataTerms.must_not.length > 0
+      ? { bool: metadataTerms }
+      : undefined;
+
+    const result = await this.client.search({
+      index: this.indexName,
+      size: k,
+      retriever: {
+        rrf: {
+          retrievers: [
+            {
+              standard: {
+                query: {
+                  match: {
+                    [this.strategy!.textField]: queryText,
+                  },
+                },
+              },
+            },
+            {
+              knn: {
+                field: "embedding",
+                query_vector: queryVector,
+                k,
+                num_candidates: this.candidates,
+              },
+            },
+          ],
+          rank_window_size: this.strategy!.rankWindowSize,
+          rank_constant: this.strategy!.rankConstant,
+        },
+      },
+      ...(filterClauses && { query: filterClauses }),
     });
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
