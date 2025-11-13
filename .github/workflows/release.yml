@@ -48,6 +48,8 @@ jobs:
         uses: changesets/action@e0145edc7d9d8679003495b11f87bd8ef63c0cba
         with:
           version: pnpm run changeset:version
+          commit: "chore: version packages"
+          title: "chore: version packages"
           publish: pnpm run release
           createGithubReleases: false
         env:
