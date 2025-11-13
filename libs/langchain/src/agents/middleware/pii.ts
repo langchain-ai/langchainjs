@@ -720,36 +720,3 @@ export function piiMiddleware(
     },
   });
 }
-
-/**
- * @deprecated Use `piiMiddleware` instead. This function is kept for backward compatibility.
- */
-export function piiRedactionMiddleware(
-  options: { rules?: Record<string, RegExp> } = {}
-): ReturnType<typeof createMiddleware> {
-  // For backward compatibility, create multiple middleware instances
-  // This is not ideal but maintains API compatibility
-  const rules = options.rules ?? {};
-
-  if (Object.keys(rules).length === 0) {
-    // Return a no-op middleware if no rules
-    return createMiddleware({
-      name: "PIIRedactionMiddleware",
-      contextSchema: z.object({}),
-    });
-  }
-
-  // Note: This doesn't fully replicate the old behavior (redaction map restoration)
-  // but provides basic functionality
-  throw new Error(
-    "piiRedactionMiddleware is deprecated. Use piiMiddleware instead. " +
-      "For multiple PII types, create multiple piiMiddleware instances."
-  );
-}
-
-/**
- * @deprecated Use `PIIMiddlewareConfig` instead.
- */
-export type PIIRedactionMiddlewareConfig = {
-  rules?: Record<string, RegExp>;
-};

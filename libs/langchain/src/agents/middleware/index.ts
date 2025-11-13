@@ -17,9 +17,7 @@ export {
 } from "./llmToolSelector.js";
 export {
   piiMiddleware,
-  piiRedactionMiddleware,
   type PIIMiddlewareConfig,
-  type PIIRedactionMiddlewareConfig,
   type PIIMatch,
   type PIIStrategy,
   type BuiltInPIIType,
@@ -35,6 +33,10 @@ export {
   applyStrategy,
   resolveRedactionRule,
 } from "./pii.js";
+export {
+  piiRedactionMiddleware,
+  type PIIRedactionMiddlewareConfig,
+} from "./piiRedaction.js";
 export {
   contextEditingMiddleware,
   ClearToolUsesEdit,
