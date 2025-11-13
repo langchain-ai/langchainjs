@@ -23,7 +23,7 @@ jobs:
           fetch-depth: 0
 
       - name: 📦 Setup pnpm
-        uses: pnpm/action-setup@v4
+        uses: pnpm/action-setup@a7487c7e89a18df4991f7f222e4898a00d66ddda
 
       - name: ⎔ Setup node
         uses: actions/setup-node@v4
@@ -45,7 +45,7 @@ jobs:
         # and this action will build + publish to npm.
       - name: 🚀 PR / Publish
         id: changesets
-        uses: changesets/action@v1
+        uses: changesets/action@e0145edc7d9d8679003495b11f87bd8ef63c0cba
         with:
           version: pnpm run changeset:version
           publish: pnpm run release
