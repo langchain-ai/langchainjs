@@ -1,4 +1,4 @@
-import { Parser } from "expr-eval";
+import Mexp from "math-expression-evaluator";
 
 import { Tool } from "@langchain/core/tools";
 
@@ -15,6 +15,8 @@ import { Tool } from "@langchain/core/tools";
  * // The sum of 99 and 99 is: 198
  * ```
  */
+
+const Parser = new Mexp();
 export class Calculator extends Tool {
   static lc_name() {
     return "Calculator";
@@ -29,7 +31,7 @@ export class Calculator extends Tool {
   /** @ignore */
   async _call(input: string) {
     try {
-      return Parser.evaluate(input).toString();
+      return Parser.eval(input).toString();
     } catch (error) {
       return "I don't know how to do that.";
     }
