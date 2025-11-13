@@ -105,7 +105,7 @@ describe("toolEmulatorMiddleware", () => {
       expect(handler).not.toHaveBeenCalled();
       // Should return emulated result
       expect(result).toBeInstanceOf(ToolMessage);
-      expect((result as ToolMessage).content).toContain("Emulated response");
+      expect((result as ToolMessage).content).toContain("Mocked response");
     });
 
     it("should emulate all tools when tools is empty array", async () => {
@@ -133,7 +133,7 @@ describe("toolEmulatorMiddleware", () => {
       expect(handler).not.toHaveBeenCalled();
       // Should return emulated result
       expect(result).toBeInstanceOf(ToolMessage);
-      expect((result as ToolMessage).content).toContain("Emulated response");
+      expect((result as ToolMessage).content).toContain("Mocked response");
     });
 
     it("should emulate specific tools by name", async () => {
@@ -165,7 +165,7 @@ describe("toolEmulatorMiddleware", () => {
       expect(searchHandler).not.toHaveBeenCalled();
       expect(searchResult).toBeInstanceOf(ToolMessage);
       expect((searchResult as ToolMessage).content).toContain(
-        "Emulated response"
+        "Mocked response"
       );
 
       // Non-emulated tool
@@ -242,7 +242,7 @@ describe("toolEmulatorMiddleware", () => {
       expect(searchHandler).not.toHaveBeenCalled();
       expect(searchResult).toBeInstanceOf(ToolMessage);
       expect((searchResult as ToolMessage).content).toContain(
-        "Emulated response"
+        "Mocked response"
       );
 
       const calcRequest = {
@@ -259,9 +259,7 @@ describe("toolEmulatorMiddleware", () => {
       );
       expect(calcHandler).not.toHaveBeenCalled();
       expect(calcResult).toBeInstanceOf(ToolMessage);
-      expect((calcResult as ToolMessage).content).toContain(
-        "Emulated response"
-      );
+      expect((calcResult as ToolMessage).content).toContain("Mocked response");
     });
   });
 
@@ -299,7 +297,7 @@ describe("toolEmulatorMiddleware", () => {
         .reverse()
         .filter((msg): msg is ToolMessage => ToolMessage.isInstance(msg));
       expect(toolMessages.length).toBeGreaterThan(0);
-      expect(toolMessages[0].content).toContain("Emulated response");
+      expect(toolMessages[0].content).toContain("Mocked response");
       expect(searchToolMock).toHaveBeenCalledTimes(0);
     });
 
