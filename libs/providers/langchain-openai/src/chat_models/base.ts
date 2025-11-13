@@ -57,8 +57,6 @@ import {
   interopZodResponseFormat,
   _convertOpenAIResponsesUsageToLangChainUsage,
 } from "../utils/output.js";
-import { _convertMessagesToOpenAIParams } from "../utils/message_inputs.js";
-import { _convertToResponsesMessageFromV1 } from "../utils/standard.js";
 import { isReasoningModel, messageToOpenAIRole } from "../utils/misc.js";
 
 interface OpenAILLMOutput {
@@ -615,7 +613,7 @@ export abstract class BaseChatOpenAI<
           : this._convertChatOpenAIToolToCompletionsTool(tool, { strict })
       ),
       ...kwargs,
-    });
+    } as Partial<CallOptions>);
   }
 
   override async stream(input: BaseLanguageModelInput, options?: CallOptions) {
@@ -894,7 +892,7 @@ export abstract class BaseChatOpenAI<
           kwargs: { method: "json_mode" },
           schema: { title: name ?? "extract", ...asJsonSchema },
         },
-      });
+      } as Partial<CallOptions>);
     } else if (method === "jsonSchema") {
       const openaiJsonSchemaParams = {
         name: name ?? "extract",
@@ -917,7 +915,7 @@ export abstract class BaseChatOpenAI<
             ...asJsonSchema,
           },
         },
-      });
+      } as Partial<CallOptions>);
       if (isInteropZodSchema(schema)) {
         const altParser = StructuredOutputParser.fromZodSchema(schema);
         outputParser = RunnableLambda.from<AIMessageChunk, RunOutput>(
@@ -960,7 +958,7 @@ export abstract class BaseChatOpenAI<
           },
           // Do not pass `strict` argument to OpenAI if `config.strict` is undefined
           ...(config?.strict !== undefined ? { strict: config.strict } : {}),
-        });
+        } as Partial<CallOptions>);
         outputParser = new JsonOutputKeyToolsParser({
           returnSingle: true,
           keyName: functionName,
@@ -1004,7 +1002,7 @@ export abstract class BaseChatOpenAI<
           },
           // Do not pass `strict` argument to OpenAI if `config.strict` is undefined
           ...(config?.strict !== undefined ? { strict: config.strict } : {}),
-        });
+        } as Partial<CallOptions>);
         outputParser = new JsonOutputKeyToolsParser<RunOutput>({
           returnSingle: true,
           keyName: functionName,

@@ -1,5 +1,25 @@
 # @langchain/community
 
+## 1.0.2
+
+### Patch Changes
+
+- b17762a: fix(community): export type properly in duckduckgo_search
+- e4a3b3b: improve(pdf-loader): update error message to specify support for pdf-parse v1 only
+- ecc7a8a: swap problematic eval package
+- Updated dependencies [8319201]
+- Updated dependencies [4906522]
+  - @langchain/openai@1.1.0
+  - @langchain/classic@1.0.2
+
+## 1.0.1
+
+### Patch Changes
+
+- Updated dependencies [dda9ea4]
+  - @langchain/classic@1.0.1
+  - @langchain/openai@1.0.0
+
 ## 1.0.0
 
 This release updates the package for compatibility with LangChain v1.0. See the v1.0 [release notes](https://docs.langchain.com/oss/javascript/releases/langchain-v1) for details on what's new.
