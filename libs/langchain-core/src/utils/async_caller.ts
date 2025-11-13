@@ -140,14 +140,20 @@ export class AsyncCaller {
     // Note this doesn't cancel the underlying request,
     // when available prefer to use the signal option of the underlying call
     if (options.signal) {
+      let listener: (() => void) | undefined;
       return Promise.race([
         this.call<A, T>(callable, ...args),
         new Promise<never>((_, reject) => {
-          options.signal?.addEventListener("abort", () => {
+          listener = () => {
             reject(getAbortSignalError(options.signal));
-          });
+          };
+          options.signal?.addEventListener("abort", listener);
         }),
-      ]);
+      ]).finally(() => {
+        if (options.signal && listener) {
+          options.signal.removeEventListener("abort", listener);
+        }
+      });
     }
     return this.call<A, T>(callable, ...args);
   }

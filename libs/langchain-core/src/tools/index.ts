@@ -783,10 +783,19 @@ export function tool<
     schema,
     func: async (input, runManager, config) => {
       return new Promise<ToolOutputT>((resolve, reject) => {
+        let listener: (() => void) | undefined;
+        const cleanup = () => {
+          if (config?.signal && listener) {
+            config.signal.removeEventListener("abort", listener);
+          }
+        };
+
         if (config?.signal) {
-          config.signal.addEventListener("abort", () => {
-            return reject(getAbortSignalError(config.signal));
-          });
+          listener = () => {
+            cleanup();
+            reject(getAbortSignalError(config.signal));
+          };
+          config.signal.addEventListener("abort", listener);
         }
 
         const childConfig = patchConfig(config, {
@@ -805,11 +814,14 @@ export function tool<
                * as the promise is already rejected.
                */
               if (config?.signal?.aborted) {
+                cleanup();
                 return;
               }
 
+              cleanup();
               resolve(result);
             } catch (e) {
+              cleanup();
               reject(e);
             }
           }

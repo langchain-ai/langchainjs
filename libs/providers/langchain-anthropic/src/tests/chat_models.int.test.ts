@@ -1518,6 +1518,18 @@ describe("Sonnet 4.5", () => {
 
     expect(response.content.length).toBeGreaterThan(0);
   });
+
+  // https://github.com/langchain-ai/langchainjs/issues/9258
+  it("works when passing topP arg", async () => {
+    const model = new ChatAnthropic({
+      model: "claude-sonnet-4-5-20250929",
+      topP: 0.99,
+    });
+    const response = await model.invoke(
+      "Please respond to this message simply with: Hello"
+    );
+    expect(response.content.length).toBeGreaterThan(0);
+  });
 });
 
 it("won't modify structured output content if outputVersion is set", async () => {

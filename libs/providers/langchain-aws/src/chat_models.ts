@@ -814,13 +814,26 @@ export class ChatBedrockConverse
           : undefined,
       };
     }
+    const candidateInferenceConfig: NonNullable<
+      ConverseCommandParams["inferenceConfig"]
+    > = {
+      maxTokens: this.maxTokens,
+      temperature: this.temperature,
+      topP: this.topP,
+      stopSequences: options?.stop,
+    };
+
+    const hasInferenceValues =
+      candidateInferenceConfig.maxTokens !== undefined ||
+      candidateInferenceConfig.temperature !== undefined ||
+      candidateInferenceConfig.topP !== undefined ||
+      (Array.isArray(candidateInferenceConfig.stopSequences) &&
+        candidateInferenceConfig.stopSequences.length > 0);
+
     return {
-      inferenceConfig: {
-        maxTokens: this.maxTokens,
-        temperature: this.temperature,
-        topP: this.topP,
-        stopSequences: options?.stop,
-      },
+      inferenceConfig: hasInferenceValues
+        ? candidateInferenceConfig
+        : undefined,
       toolConfig,
       additionalModelRequestFields:
         this.additionalModelRequestFields ??
@@ -870,7 +883,9 @@ export class ChatBedrockConverse
     const command = new ConverseCommand({
       modelId: this.model,
       messages: converseMessages,
-      system: converseSystem,
+      ...(Array.isArray(converseSystem) && converseSystem.length > 0
+        ? { system: converseSystem }
+        : {}),
       requestMetadata: options.requestMetadata,
       ...params,
     });
@@ -911,7 +926,9 @@ export class ChatBedrockConverse
     const command = new ConverseStreamCommand({
       modelId: this.model,
       messages: converseMessages,
-      system: converseSystem,
+      ...(Array.isArray(converseSystem) && converseSystem.length > 0
+        ? { system: converseSystem }
+        : {}),
       requestMetadata: options.requestMetadata,
       ...params,
     });

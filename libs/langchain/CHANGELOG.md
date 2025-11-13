@@ -1,5 +1,12 @@
 # langchain
 
+## 1.0.4
+
+### Patch Changes
+
+- b401680: avoid invalid message order after summarization
+- f63fc0f: fix(langchain): export ToolRuntime from langchain
+
 ## 1.0.3
 
 ### Patch Changes

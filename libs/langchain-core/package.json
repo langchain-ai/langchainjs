@@ -1,6 +1,6 @@
 {
   "name": "@langchain/core",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "Core LangChain.js abstractions and schemas",
   "type": "module",
   "engines": {
@@ -600,6 +600,17 @@
       "import": {
         "types": "./dist/utils/event_source_parse.d.ts",
         "default": "./dist/utils/event_source_parse.js"
+      }
+    },
+    "./utils/format": {
+      "input": "./src/utils/format.ts",
+      "require": {
+        "types": "./dist/utils/format.d.cts",
+        "default": "./dist/utils/format.cjs"
+      },
+      "import": {
+        "types": "./dist/utils/format.d.ts",
+        "default": "./dist/utils/format.js"
       }
     },
     "./utils/function_calling": {
