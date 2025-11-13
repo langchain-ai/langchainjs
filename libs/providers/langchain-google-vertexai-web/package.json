@@ -14,7 +14,8 @@
   },
   "homepage": "https://github.com/langchain-ai/langchainjs/tree/main/libs/langchain-google-vertexai-web/",
   "scripts": {
-    "build": "pnpm --filter @langchain/build compile @langchain/google-vertexai-web",
+    "build": "turbo build:compile --filter @langchain/google-vertexai-web",
+    "build:compile": "pnpm --filter @langchain/build compile @langchain/google-vertexai-web",
     "lint:eslint": "eslint --cache src/",
     "lint:dpdm": "dpdm --skip-dynamic-imports circular --exit-code circular:1 --no-warning --no-tree src/*.ts src/**/*.ts",
     "lint": "pnpm lint:eslint && pnpm lint:dpdm",
