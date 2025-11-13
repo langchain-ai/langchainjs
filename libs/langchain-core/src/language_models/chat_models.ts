@@ -62,7 +62,6 @@ import { callbackHandlerPrefersStreaming } from "../callbacks/base.js";
 import { toJsonSchema } from "../utils/json_schema.js";
 import { getEnvironmentVariable } from "../utils/env.js";
 import { castStandardMessageContent, iife } from "./utils.js";
-import { type ModelProfile } from "./profile.js";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type ToolChoice = string | Record<string, any> | "auto" | "any";
@@ -836,15 +835,6 @@ export abstract class BaseChatModel<
   }
 
   abstract _llmType(): string;
-
-  /**
-   * Return profiling information for the model.
-   *
-   * @returns {ModelProfile} An object describing the model's capabilities and constraints
-   */
-  get profile(): ModelProfile {
-    return {};
-  }
 
   /**
    * Generates a prompt based on the input prompt values.
