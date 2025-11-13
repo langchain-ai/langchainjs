@@ -39,7 +39,6 @@ import {
   ProviderStrategy,
   transformResponseFormat,
   ToolStrategyError,
-  hasSupportForJsonSchemaOutput,
 } from "../responses.js";
 
 type ResponseHandlerResult<StructuredResponseFormat> =
@@ -763,15 +762,6 @@ export class AgentNode<
      * check if the user requests a native schema output
      */
     if (structuredResponseFormat?.type === "native") {
-      /**
-       * if the model does not support JSON schema output, throw an error
-       */
-      if (!hasSupportForJsonSchemaOutput(model)) {
-        throw new Error(
-          "Model does not support native structured output responses. Please use a model that supports native structured output responses or use a tool output."
-        );
-      }
-
       const jsonSchemaParams = {
         name: structuredResponseFormat.strategy.schema?.name ?? "extract",
         description: getSchemaDescription(

@@ -28,6 +28,7 @@ export { initChatModel } from "./chat_models/universal.js";
 export {
   tool,
   Tool,
+  type ToolRuntime,
   DynamicTool,
   StructuredTool,
   DynamicStructuredTool,

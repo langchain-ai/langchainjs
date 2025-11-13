@@ -1,5 +1,6 @@
 import {
   AIMessage,
+  AIMessageChunk,
   UsageMetadata,
   type BaseMessage,
 } from "@langchain/core/messages";
@@ -19,7 +20,6 @@ import {
 // @ts-ignore CJS type resolution workaround
 import { Ollama } from "ollama/browser";
 import { ChatGenerationChunk, ChatResult } from "@langchain/core/outputs";
-import { AIMessageChunk } from "@langchain/core/messages";
 import type {
   ChatRequest as OllamaChatRequest,
   ChatResponse as OllamaChatResponse,
@@ -28,6 +28,7 @@ import type {
 } from "ollama";
 import {
   Runnable,
+  RunnableLambda,
   RunnablePassthrough,
   RunnableSequence,
 } from "@langchain/core/runnables";
@@ -40,6 +41,7 @@ import {
 import {
   InteropZodType,
   isInteropZodSchema,
+  interopParseAsync,
 } from "@langchain/core/utils/types";
 import { toJsonSchema } from "@langchain/core/utils/json_schema";
 import {
@@ -680,9 +682,9 @@ export class ChatOllama
       runManager
     )) {
       if (!finalChunk) {
-        finalChunk = chunk.message;
+        finalChunk = chunk.message as AIMessageChunk;
       } else {
-        finalChunk = concat(finalChunk, chunk.message);
+        finalChunk = concat(finalChunk, chunk.message as AIMessageChunk);
       }
     }
 
@@ -836,11 +838,12 @@ export class ChatOllama
       const jsonSchema = outputSchemaIsZod
         ? toJsonSchema(outputSchema)
         : outputSchema;
+      const functionName = config?.name ?? "extract";
       const llm = this.bindTools([
         {
           type: "function" as const,
           function: {
-            name: "extract",
+            name: functionName,
             description: jsonSchema.description,
             parameters: jsonSchema,
           },
@@ -852,9 +855,68 @@ export class ChatOllama
           schema: toJsonSchema(outputSchema),
         },
       });
-      const outputParser = outputSchemaIsZod
-        ? StructuredOutputParser.fromZodSchema(outputSchema)
-        : new JsonOutputParser<RunOutput>();
+
+      /**
+       * Create a parser that handles both tool calls and JSON content
+       */
+      const outputParser = RunnableLambda.from<BaseMessage, RunOutput>(
+        async (input: BaseMessage): Promise<RunOutput> => {
+          /**
+           * Ensure input is an AI message (either AIMessage or AIMessageChunk)
+           */
+          if (
+            !AIMessage.isInstance(input) &&
+            !AIMessageChunk.isInstance(input)
+          ) {
+            throw new Error("Input is not an AIMessage or AIMessageChunk.");
+          }
+
+          /**
+           * First, check if there are tool calls - extract args from the tool call
+           */
+          if (input.tool_calls && input.tool_calls.length > 0) {
+            const toolCall = input.tool_calls.find(
+              (tc) => tc.name === functionName
+            );
+            if (toolCall && toolCall.args) {
+              /**
+               * Validate with schema if Zod schema is provided
+               */
+              if (outputSchemaIsZod) {
+                return await interopParseAsync(
+                  outputSchema as InteropZodType<RunOutput>,
+                  toolCall.args
+                );
+              }
+              return toolCall.args as RunOutput;
+            }
+          }
+
+          /**
+           * Fallback: parse content as JSON (when format: "json" is set)
+           */
+          const content =
+            typeof input.content === "string" ? input.content : "";
+          if (!content) {
+            throw new Error(
+              "No tool calls found and content is empty. Cannot parse structured output."
+            );
+          }
+
+          /**
+           * Use the appropriate parser based on schema type
+           */
+          if (outputSchemaIsZod) {
+            const zodParser = StructuredOutputParser.fromZodSchema(
+              outputSchema as InteropZodType<RunOutput>
+            );
+            return await zodParser.parse(content);
+          } else {
+            const jsonParser = new JsonOutputParser<RunOutput>();
+            return await jsonParser.parse(content);
+          }
+        }
+      );
 
       if (!config?.includeRaw) {
         return llm.pipe(outputParser) as Runnable<
