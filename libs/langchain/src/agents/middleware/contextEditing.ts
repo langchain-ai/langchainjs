@@ -70,10 +70,6 @@ export interface ContextEdit {
    */
   apply(params: {
     /**
-     * Current token count of all messages
-     */
-    tokens: number;
-    /**
      * Array of messages to potentially edit (modify in-place)
      */
     messages: BaseMessage[];
@@ -85,7 +81,7 @@ export interface ContextEdit {
      * Optional model instance for model profile information
      */
     model?: LanguageModelLike;
-  }): number | Promise<number>;
+  }): void | Promise<void>;
 }
 
 /**
@@ -275,12 +271,12 @@ export class ClearToolUsesEdit implements ContextEdit {
   }
 
   async apply(params: {
-    tokens: number;
     messages: BaseMessage[];
-    countTokens: TokenCounter;
     model: BaseLanguageModel;
-  }): Promise<number> {
-    const { tokens, messages, countTokens, model } = params;
+    countTokens: TokenCounter;
+  }): Promise<void> {
+    const { messages, model, countTokens } = params;
+    const tokens = await countTokens(messages);
 
     /**
      * Always remove orphaned tool messages (those without corresponding AI messages)
@@ -331,7 +327,7 @@ export class ClearToolUsesEdit implements ContextEdit {
      * Check if editing should be triggered
      */
     if (!this.#shouldEdit(messages, currentTokens, model)) {
-      return currentTokens;
+      return;
     }
 
     /**
@@ -346,7 +342,7 @@ export class ClearToolUsesEdit implements ContextEdit {
     }
 
     if (candidates.length === 0) {
-      return currentTokens;
+      return;
     }
 
     /**
@@ -556,8 +552,6 @@ export class ClearToolUsesEdit implements ContextEdit {
         clearedTokens = Math.max(0, currentTokens - newTokenCount);
       }
     }
-
-    return currentTokens - clearedTokens;
   }
 
   /**
@@ -943,17 +937,14 @@ export function contextEditingMiddleware(
               );
             };
 
-      let tokens = await countTokens(request.messages);
-
       /**
        * Apply each edit in sequence
        */
       for (const edit of edits) {
-        tokens = await edit.apply({
-          tokens,
+        await edit.apply({
           messages: request.messages,
-          countTokens,
           model: request.model as BaseLanguageModel,
+          countTokens,
         });
       }
 

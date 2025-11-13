@@ -513,14 +513,14 @@ describe("contextEditingMiddleware", () => {
        */
       class RemoveHumanMessages implements ContextEdit {
         async apply(params: {
-          tokens: number;
           messages: BaseMessage[];
           countTokens: TokenCounter;
           model?: any;
-        }): Promise<number> {
+        }): Promise<void> {
           customEditCalled = true;
+          const tokens = await params.countTokens(params.messages);
 
-          if (params.tokens > 100) {
+          if (tokens > 100) {
             // Remove all human messages except the last one
             const humanIndices: number[] = [];
             params.messages.forEach((msg, idx) => {
@@ -537,10 +537,10 @@ describe("contextEditingMiddleware", () => {
               }
             }
 
-            return await params.countTokens(params.messages);
+            return;
           }
 
-          return params.tokens;
+          return;
         }
       }
 
@@ -576,26 +576,23 @@ describe("contextEditingMiddleware", () => {
       let strategy2Called = false;
 
       class Strategy1 implements ContextEdit {
-        async apply(params: {
-          tokens: number;
+        async apply(_params: {
           messages: BaseMessage[];
           countTokens: TokenCounter;
           model?: any;
-        }): Promise<number> {
+        }): Promise<void> {
           strategy1Called = true;
-          return params.tokens;
+          return;
         }
       }
 
       class Strategy2 implements ContextEdit {
-        async apply(params: {
-          tokens: number;
+        async apply(_params: {
           messages: BaseMessage[];
           countTokens: TokenCounter;
           model?: any;
-        }): Promise<number> {
+        }): Promise<void> {
           strategy2Called = true;
-          return params.tokens;
         }
       }
 
