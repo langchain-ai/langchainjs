@@ -16,6 +16,7 @@ export * as indexing from "../indexing/index.js";
 export * as language_models__base from "../language_models/base.js";
 export * as language_models__chat_models from "../language_models/chat_models.js";
 export * as language_models__llms from "../language_models/llms.js";
+export * as language_models__profile from "../language_models/profile.js";
 export * as load__serializable from "../load/serializable.js";
 export * as memory from "../memory.js";
 export * as messages from "../messages/index.js";

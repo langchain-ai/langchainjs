@@ -28,7 +28,9 @@
     "test:standard:int": "NODE_OPTIONS=--experimental-vm-modules jest --testPathPattern=\\.standard\\.int\\.test.ts --testTimeout 100000 --maxWorkers=50%",
     "test:standard": "pnpm test:standard:unit && pnpm test:standard:int",
     "format": "prettier --config .prettierrc --write \"src\"",
-    "format:check": "prettier --config .prettierrc --check \"src\""
+    "format:check": "prettier --config .prettierrc --check \"src\"",
+    "typegen": "pnpm run typegen:profiles",
+    "typegen:profiles": "pnpm --filter @langchain/model-profiles make --config profiles.toml"
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.0",

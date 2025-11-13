@@ -283,6 +283,17 @@
         "default": "./dist/language_models/llms.js"
       }
     },
+    "./language_models/profile": {
+      "input": "./src/language_models/profile.ts",
+      "require": {
+        "types": "./dist/language_models/profile.d.cts",
+        "default": "./dist/language_models/profile.cjs"
+      },
+      "import": {
+        "types": "./dist/language_models/profile.d.ts",
+        "default": "./dist/language_models/profile.js"
+      }
+    },
     "./load": {
       "input": "./src/load/index.ts",
       "require": {
