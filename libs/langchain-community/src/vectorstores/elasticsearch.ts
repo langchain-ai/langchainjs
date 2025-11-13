@@ -104,6 +104,8 @@ export class ElasticVectorSearch extends VectorStore {
 
   private readonly candidates: number;
 
+  private readonly strategy?: HybridRetrievalStrategy;
+
   _vectorstoreType(): string {
     return "elasticsearch";
   }
@@ -116,9 +118,14 @@ export class ElasticVectorSearch extends VectorStore {
     this.m = args.vectorSearchOptions?.m ?? 16;
     this.efConstruction = args.vectorSearchOptions?.efConstruction ?? 100;
     this.candidates = args.vectorSearchOptions?.candidates ?? 200;
+    this.strategy = args.strategy;
+
+    const userAgent = this.strategy
+      ? "langchain-js-vs-hybrid/0.0.1"
+      : "langchain-js-vs/0.0.1";
 
     this.client = args.client.child({
-      headers: { "user-agent": "langchain-js-vs/0.0.1" },
+      headers: { "user-agent": userAgent },
     });
     this.indexName = args.indexName ?? "documents";
   }
