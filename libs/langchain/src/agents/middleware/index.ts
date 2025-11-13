@@ -1,6 +1,7 @@
 export {
   summarizationMiddleware,
   type SummarizationMiddlewareConfig,
+  type TokenCounter,
 } from "./summarization.js";
 export * from "./hitl.js";
 export {
@@ -25,7 +26,6 @@ export {
   type ContextEditingMiddlewareConfig,
   type ContextEdit,
   type ClearToolUsesEditConfig,
-  type TokenCounter,
 } from "./contextEditing.js";
 export {
   toolCallLimitMiddleware,
