@@ -268,6 +268,11 @@ export class LocalFileStore extends BaseStore<string, Uint8Array> {
     }
   }
 
+  /**
+   * Writes data to a temporary file before atomically renaming it into place.
+   * @param content Serialized value to persist.
+   * @param fullPath Destination path for the stored key.
+   */
   private async writeFileAtomically(content: Uint8Array, fullPath: string) {
     const directory = path.dirname(fullPath);
     await fs.mkdir(directory, { recursive: true });
