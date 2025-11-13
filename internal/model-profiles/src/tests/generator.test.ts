@@ -113,7 +113,7 @@ describe("generator", () => {
       expect(content).toContain("@langchain/core/language_models/profile");
 
       // Check for models variable
-      expect(content).toContain("const models");
+      expect(content).toContain("const PROFILES");
 
       // Check for model entries
       expect(content).toContain('"gpt-4"');
