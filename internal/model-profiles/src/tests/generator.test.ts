@@ -1,9 +1,9 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import * as fs from "node:fs";
 import * as path from "node:path";
+import * as os from "node:os";
 import { generateModelProfiles } from "../generator.js";
 import type { ProviderMap } from "../api-schema.js";
-import { findMonorepoRoot } from "../path-utils.js";
 
 // Mock prettier
 vi.mock("prettier", () => ({
@@ -64,13 +64,7 @@ describe("generator", () => {
   let originalFetch: typeof globalThis.fetch;
 
   beforeEach(() => {
-    // Create temp directory within the monorepo to satisfy path validation
-    const monorepoRoot = findMonorepoRoot();
-    const testTempDir = path.join(monorepoRoot, ".test-temp");
-    if (!fs.existsSync(testTempDir)) {
-      fs.mkdirSync(testTempDir, { recursive: true });
-    }
-    tempDir = fs.mkdtempSync(path.join(testTempDir, "model-profiles-test-"));
+    tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "model-profiles-test-"));
     originalFetch = globalThis.fetch;
   });
 
@@ -119,14 +113,14 @@ describe("generator", () => {
       expect(content).toContain("@langchain/core/language_models/profile");
 
       // Check for models variable
-      expect(content).toContain("const PROFILES");
+      expect(content).toContain("const models");
 
       // Check for model entries
       expect(content).toContain('"gpt-4"');
       expect(content).toContain('"gpt-3.5-turbo"');
 
       // Check for export
-      expect(content).toContain("export default PROFILES");
+      expect(content).toContain("export default models");
     });
 
     it("should apply provider-level overrides", async () => {

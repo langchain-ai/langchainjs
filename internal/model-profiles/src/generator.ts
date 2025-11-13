@@ -5,7 +5,6 @@ import prettier from "prettier";
 import type { ModelProfile } from "@langchain/core/language_models/profile";
 import type { Model, ProviderMap } from "./api-schema.js";
 import { type ModelProfileOverride, applyOverrides } from "./config.js";
-import { validatePathInMonorepo } from "./config.js";
 
 /**
  * Converts a Model from the API schema to a ModelProfile.
@@ -203,9 +202,10 @@ export async function generateModelProfiles(
 
   const typescriptCode = generateTypeScript(profiles);
 
-  // Validate that the output path is within the monorepo (defensive check)
-  // outputPath should already be validated by parseConfig, but we validate again for safety
-  const resolvedOutputPath = validatePathInMonorepo(outputPath);
+  // outputPath should already be resolved by parseConfig, but ensure it's absolute
+  const resolvedOutputPath = path.isAbsolute(outputPath)
+    ? outputPath
+    : path.resolve(outputPath);
 
   // Ensure the directory exists
   const outputDir = path.dirname(resolvedOutputPath);
