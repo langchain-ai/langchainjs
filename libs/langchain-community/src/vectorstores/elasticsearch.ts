@@ -3,6 +3,7 @@ import { Client, estypes } from "@elastic/elasticsearch";
 import type { EmbeddingsInterface } from "@langchain/core/embeddings";
 import { VectorStore } from "@langchain/core/vectorstores";
 import { Document } from "@langchain/core/documents";
+import type { Callbacks } from "@langchain/core/callbacks/manager";
 /**
  * Type representing the k-nearest neighbors (k-NN) engine used in
  * Elasticsearch.
@@ -106,6 +107,8 @@ export class ElasticVectorSearch extends VectorStore {
 
   private readonly strategy?: HybridRetrievalStrategy;
 
+  private lastQueryText?: string;
+
   _vectorstoreType(): string {
     return "elasticsearch";
   }
@@ -191,6 +194,16 @@ export class ElasticVectorSearch extends VectorStore {
       throw new Error(`Failed to insert documents:\n${reasons.join("\n")}`);
     }
     return documentIds;
+  }
+
+  async similaritySearch(
+    query: string,
+    k = 4,
+    filter?: ElasticFilter,
+    _callbacks?: Callbacks
+  ): Promise<Document[]> {
+    this.lastQueryText = query;
+    return super.similaritySearch(query, k, filter, _callbacks);
   }
 
   /**
@@ -352,6 +365,12 @@ export class ElasticVectorSearch extends VectorStore {
         },
       },
     };
+
+    if (this.strategy?.excludeSourceVectors !== undefined) {
+      request.settings = {
+        "index.mapping.exclude_source_vectors": this.strategy.excludeSourceVectors,
+      };
+    }
 
     const indexExists = await this.doesIndexExist();
     if (indexExists) return;
