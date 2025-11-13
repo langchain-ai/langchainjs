@@ -18,6 +18,9 @@
     "format:check:fix": "turbo format:check --concurrency=50 -- --write",
     "lint": "turbo lint --concurrency=50",
     "lint:fix": "turbo lint:fix --concurrency=50",
+    "precommit": "turbo precommit",
+    "prerelease": "pnpm build",
+    "release": "changeset publish",
     "test": "pnpm test:unit && pnpm test:exports:docker",
     "test:unit": "turbo test --filter=\"!test-exports-*\" --filter=!examples --filter=!create-langchain-integration",
     "test:unit:ci": "turbo test:ci",
@@ -26,10 +29,11 @@
     "test:standard:unit": "turbo test:standard:unit",
     "test:standard:int": "turbo test:standard:int",
     "test:standard": "pnpm test:standard:unit && pnpm test:standard:int",
-    "example": "pnpm --filter examples start",
-    "precommit": "turbo precommit"
+    "changeset": "pnpm changeset",
+    "changeset:version": "pnpm changeset version"
   },
   "devDependencies": {
+    "@changesets/changelog-github": "^0.5.1",
     "@changesets/cli": "^2.29.7",
     "@tsconfig/recommended": "^1.0.2",
     "@types/jest": "^29.5.3",
