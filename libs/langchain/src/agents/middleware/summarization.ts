@@ -194,42 +194,18 @@ export type SummarizationMiddlewareConfig = InferInteropZodInput<
 /**
  * Get max input tokens from model profile or fallback to model name lookup
  */
-function getProfileLimits(model: BaseLanguageModel): number | undefined {
-  try {
-    /**
-     * Try to access profile property (for future compatibility with model-profiles)
-     */
-    const modelWithProfile = model as BaseLanguageModel & {
-      profile?: { max_input_tokens?: number };
-    };
-    if (
-      modelWithProfile.profile &&
-      typeof modelWithProfile.profile.max_input_tokens === "number"
-    ) {
-      return modelWithProfile.profile.max_input_tokens;
-    }
-  } catch {
-    /**
-     * Profile not available, continue to fallback
-     */
+function getProfileLimits(input: BaseLanguageModel): number | undefined {
+  // Access maxInputTokens on the model profile directly if available
+  if (input.profile.maxInputTokens) {
+    return input.profile.maxInputTokens;
   }
 
-  /**
-   * Fallback: try to get model name and use getModelContextSize
-   */
-  try {
-    const modelWithName = model as BaseLanguageModel & {
-      model?: string;
-      modelName?: string;
-    };
-    const modelName = modelWithName.model || modelWithName.modelName;
-    if (typeof modelName === "string") {
-      return getModelContextSize(modelName);
-    }
-  } catch {
-    /**
-     * Model name not available
-     */
+  // Fallback to using model name if available
+  if ("model" in input && typeof input.model === "string") {
+    return getModelContextSize(input.model);
+  }
+  if ("modelName" in input && typeof input.modelName === "string") {
+    return getModelContextSize(input.modelName);
   }
 
   return undefined;
