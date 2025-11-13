@@ -120,7 +120,7 @@ describe("generator", () => {
       expect(content).toContain('"gpt-3.5-turbo"');
 
       // Check for export
-      expect(content).toContain("export default models");
+      expect(content).toContain("export default PROFILES");
     });
 
     it("should apply provider-level overrides", async () => {
