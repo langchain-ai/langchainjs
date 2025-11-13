@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { test, expect } from "vitest";
+import * as z4 from "zod/v4";
+import { describe, test, expect } from "vitest";
 import {
   AIMessageChunk,
   BaseMessage,
@@ -1302,4 +1303,56 @@ test.skip("Allow overriding completions", async () => {
   for await (const chunk of stream) {
     expect(chunk).toBeDefined();
   }
+});
+
+// https://github.com/langchain-ai/langchainjs/issues/9307
+describe("structured output works with different schema types", () => {
+  test.each([
+    {
+      name: "zod v4 - directly nested schema",
+      prompt: "What is the home address of the user?",
+      getSchema() {
+        return z4.object({
+          homeAddress: z4.object({
+            street: z4.string().transform((s) => s.toUpperCase()),
+            city: z4.string(),
+          }),
+          workAddress: z4.object({
+            street: z4.string().transform((s) => s.toUpperCase()),
+            city: z4.string(),
+          }),
+          billingAddress: z4.object({
+            street: z4.string().transform((s) => s.toUpperCase()),
+            city: z4.string(),
+          }),
+        });
+      },
+    },
+    {
+      name: "zod v4 - indirectly nested schema",
+      prompt: "What is the home address of the user?",
+      getSchema() {
+        const addressSchema = z4.object({
+          street: z4.string().transform((s) => s.toUpperCase()),
+          city: z4.string(),
+        });
+        return z4.object({
+          homeAddress: addressSchema,
+          workAddress: addressSchema,
+          billingAddress: addressSchema,
+        });
+      },
+    },
+  ])("%name", async ({ prompt, getSchema }) => {
+    const schema = getSchema();
+    const model = new ChatOpenAI({
+      model: "gpt-4o-mini",
+    });
+    const chain = model.withStructuredOutput(schema);
+    const result = await chain.invoke(prompt);
+    expect(result).toBeDefined();
+    expect(result.homeAddress).toBeDefined();
+    expect(result.workAddress).toBeDefined();
+    expect(result.billingAddress).toBeDefined();
+  });
 });
