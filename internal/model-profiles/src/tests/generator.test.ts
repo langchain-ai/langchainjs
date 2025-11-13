@@ -1,9 +1,9 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import * as fs from "node:fs";
 import * as path from "node:path";
-import * as os from "node:os";
 import { generateModelProfiles } from "../generator.js";
 import type { ProviderMap } from "../api-schema.js";
+import { findMonorepoRoot } from "../path-utils.js";
 
 // Mock prettier
 vi.mock("prettier", () => ({
@@ -64,7 +64,13 @@ describe("generator", () => {
   let originalFetch: typeof globalThis.fetch;
 
   beforeEach(() => {
-    tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "model-profiles-test-"));
+    // Create temp directory within the monorepo to satisfy path validation
+    const monorepoRoot = findMonorepoRoot();
+    const testTempDir = path.join(monorepoRoot, ".test-temp");
+    if (!fs.existsSync(testTempDir)) {
+      fs.mkdirSync(testTempDir, { recursive: true });
+    }
+    tempDir = fs.mkdtempSync(path.join(testTempDir, "model-profiles-test-"));
     originalFetch = globalThis.fetch;
   });
 

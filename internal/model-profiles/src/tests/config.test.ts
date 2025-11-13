@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { separateOverrides, applyOverrides } from "../config.js";
+import { parseConfig, separateOverrides, applyOverrides } from "../config.js";
 
 describe("config", () => {
   describe("separateOverrides", () => {
