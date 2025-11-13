@@ -1,0 +1,8 @@
+{
+  "entryPoints": [
+    "src/index.ts"
+  ],
+  "extends": [
+    "../../docs/api_refs/typedoc.base.json"
+  ]
+}

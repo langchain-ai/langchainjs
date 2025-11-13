@@ -1,0 +1,251 @@
+---
+keywords:
+  - RunnableBinding
+  - LCEL
+title: How to attach runtime arguments to a Runnable
+---
+
+
+
+
+# How to attach runtime arguments to a Runnable
+
+:::info Prerequisites
+
+This guide assumes familiarity with the following concepts:
+
+-   [LangChain Expression Language (LCEL)](../../docs/concepts/lcel)
+-   [Chaining runnables](../../docs/how_to/sequence/)
+-   [Tool calling](../../docs/how_to/tool_calling/)
+
+:::
+
+Sometimes we want to invoke a
+[`Runnable`](https://api.js.langchain.com/classes/langchain_core.runnables.Runnable.html)
+within a
+[RunnableSequence](https://api.js.langchain.com/classes/langchain_core.runnables.RunnableSequence.html)
+with constant arguments that are not part of the output of the preceding
+Runnable in the sequence, and which are not part of the user input. We
+can use the
+[`Runnable.bind()`](https://api.js.langchain.com/classes/langchain_core.runnables.Runnable.html#bind)
+method to set these arguments ahead of time.
+
+## Binding stop sequences
+
+Suppose we have a simple prompt + model chain:
+
+````mdx-code-block
+import IntegrationInstallTooltip from "@mdx_components/integration_install_tooltip.mdx";
+import Npm2Yarn from "@theme/Npm2Yarn";
+
+<IntegrationInstallTooltip></IntegrationInstallTooltip>
+
+<Npm2Yarn>
+  @langchain/openai @langchain/core
+</Npm2Yarn>
+````
+
+```typescript
+import { StringOutputParser } from "@langchain/core/output_parsers";
+import { ChatPromptTemplate } from "@langchain/core/prompts";
+import { ChatOpenAI } from "@langchain/openai";
+
+const prompt = ChatPromptTemplate.fromMessages(
+    [
+        [
+            "system",
+            "Write out the following equation using algebraic symbols then solve it. Use the format\n\nEQUATION:...\nSOLUTION:...\n\n",
+        ],
+        ["human", "{equation_statement}"],
+    ]
+)
+
+const model = new ChatOpenAI({ temperature: 0 });
+
+const runnable = prompt.pipe(model).pipe(new StringOutputParser());
+
+const res = await runnable.invoke({
+  equation_statement: "x raised to the third plus seven equals 12"
+});
+
+console.log(res);
+```
+
+``` text
+EQUATION: x^3 + 7 = 12
+
+SOLUTION: 
+Subtract 7 from both sides:
+x^3 = 5
+
+Take the cube root of both sides:
+x = ∛5
+```
+
+and want to call the model with certain `stop` words so that we shorten
+the output, which is useful in certain types of prompting techniques.
+While we can pass some arguments into the constructor, other runtime
+args use the `.bind()` method as follows:
+
+```typescript
+const runnableWithStop = prompt
+  .pipe(model.bind({ stop: ["SOLUTION"] }))
+  .pipe(new StringOutputParser());
+
+const shorterResponse = await runnableWithStop.invoke({
+  equation_statement: "x raised to the third plus seven equals 12"
+});
+
+console.log(shorterResponse);
+```
+
+``` text
+EQUATION: x^3 + 7 = 12
+
+```
+
+What you can bind to a Runnable will depend on the extra parameters you
+can pass when invoking it.
+
+## Attaching OpenAI tools
+
+Another common use-case is tool calling. While you should generally use
+the [`.bind_tools()`](../../docs/how_to/tool_calling/) method for
+tool-calling models, you can also bind provider-specific args directly
+if you want lower level control:
+
+```typescript
+const tools = [
+  {
+    "type": "function",
+    "function": {
+      "name": "get_current_weather",
+      "description": "Get the current weather in a given location",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "location": {
+            "type": "string",
+            "description": "The city and state, e.g. San Francisco, CA",
+          },
+          "unit": {"type": "string", "enum": ["celsius", "fahrenheit"]},
+        },
+        "required": ["location"],
+      },
+    },
+  }
+];
+
+const modelWithTools = new ChatOpenAI({ model: "gpt-4o" }).bind({ tools });
+
+await modelWithTools.invoke("What's the weather in SF, NYC and LA?")
+```
+
+``` text
+AIMessage {
+  lc_serializable: true,
+  lc_kwargs: {
+    content: "",
+    tool_calls: [
+      {
+        name: "get_current_weather",
+        args: { location: "San Francisco, CA" },
+        id: "call_iDKz4zU8PKBaaIT052fJkMMF"
+      },
+      {
+        name: "get_current_weather",
+        args: { location: "New York, NY" },
+        id: "call_niQwZDOqO6OJTBiDBFG8FODc"
+      },
+      {
+        name: "get_current_weather",
+        args: { location: "Los Angeles, CA" },
+        id: "call_zLXH2cDVQy0nAVC0ViWuEP4m"
+      }
+    ],
+    invalid_tool_calls: [],
+    additional_kwargs: {
+      function_call: undefined,
+      tool_calls: [
+        {
+          id: "call_iDKz4zU8PKBaaIT052fJkMMF",
+          type: "function",
+          function: [Object]
+        },
+        {
+          id: "call_niQwZDOqO6OJTBiDBFG8FODc",
+          type: "function",
+          function: [Object]
+        },
+        {
+          id: "call_zLXH2cDVQy0nAVC0ViWuEP4m",
+          type: "function",
+          function: [Object]
+        }
+      ]
+    },
+    response_metadata: {}
+  },
+  lc_namespace: [ "langchain_core", "messages" ],
+  content: "",
+  name: undefined,
+  additional_kwargs: {
+    function_call: undefined,
+    tool_calls: [
+      {
+        id: "call_iDKz4zU8PKBaaIT052fJkMMF",
+        type: "function",
+        function: {
+          name: "get_current_weather",
+          arguments: '{"location": "San Francisco, CA"}'
+        }
+      },
+      {
+        id: "call_niQwZDOqO6OJTBiDBFG8FODc",
+        type: "function",
+        function: {
+          name: "get_current_weather",
+          arguments: '{"location": "New York, NY"}'
+        }
+      },
+      {
+        id: "call_zLXH2cDVQy0nAVC0ViWuEP4m",
+        type: "function",
+        function: {
+          name: "get_current_weather",
+          arguments: '{"location": "Los Angeles, CA"}'
+        }
+      }
+    ]
+  },
+  response_metadata: {
+    tokenUsage: { completionTokens: 70, promptTokens: 82, totalTokens: 152 },
+    finish_reason: "tool_calls"
+  },
+  tool_calls: [
+    {
+      name: "get_current_weather",
+      args: { location: "San Francisco, CA" },
+      id: "call_iDKz4zU8PKBaaIT052fJkMMF"
+    },
+    {
+      name: "get_current_weather",
+      args: { location: "New York, NY" },
+      id: "call_niQwZDOqO6OJTBiDBFG8FODc"
+    },
+    {
+      name: "get_current_weather",
+      args: { location: "Los Angeles, CA" },
+      id: "call_zLXH2cDVQy0nAVC0ViWuEP4m"
+    }
+  ],
+  invalid_tool_calls: []
+}
+```
+
+## Next steps
+
+You now know how to bind runtime arguments to a Runnable.
+
+Next, you might be interested in our how-to guides on [passing data
+through a chain](../../docs/how_to/passthrough/).

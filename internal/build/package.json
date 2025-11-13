@@ -1,0 +1,34 @@
+{
+  "name": "@langchain/build",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "compile": "tsx cli.ts",
+    "watch": "tsx cli.ts --watch"
+  },
+  "dependencies": {
+    "@arethetypeswrong/core": "^0.18.2",
+    "@tsconfig/recommended": "^1.0.10",
+    "@typescript/native-preview": "^7.0.0-dev.20250730.1",
+    "prettier": "^3.6.2",
+    "publint": "^0.3.12",
+    "tsdown": "^0.13.0",
+    "tsx": "^4.20.3",
+    "type-fest": "^4.41.0",
+    "unplugin-unused": "^0.5.1"
+  },
+  "optionalDependencies": {
+    "@esbuild/win32-x64": "*",
+    "@rolldown/binding-darwin-arm64": "*",
+    "@rolldown/binding-darwin-x64": "*",
+    "@rolldown/binding-linux-arm64-gnu": "*",
+    "@rolldown/binding-linux-arm64-musl": "*",
+    "@rolldown/binding-linux-x64-gnu": "*",
+    "@rolldown/binding-linux-x64-musl": "*",
+    "@rolldown/binding-win32-arm64-msvc": "*",
+    "@rolldown/binding-win32-ia32-msvc": "*",
+    "@rolldown/binding-win32-x64-msvc": "*",
+    "@swc/core-win32-x64-msvc": "*"
+  }
+}

@@ -1,4 +1,3 @@
-/* eslint-disable prefer-template */
 import { v4 as uuidv4 } from "uuid";
 import type { EmbeddingsInterface } from "@langchain/core/embeddings";
 import {
@@ -12,17 +11,10 @@ import {
   CassandraClientArgs,
   Column,
   Filter,
-  Index,
   WhereClause,
   CassandraTableArgs,
   CassandraTable,
 } from "../utils/cassandra.js";
-
-/**
- * @deprecated
- * Import from "../utils/cassandra.js" instead.
- */
-export { Column, Filter, Index, WhereClause };
 
 export type SupportedVectorTypes = "cosine" | "dot_product" | "euclidean";
 
@@ -44,7 +36,6 @@ export interface CassandraLibArgs
  * texts or documents.
  */
 export class CassandraStore extends VectorStore {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   declare FilterType: WhereClause;
 
   private readonly table: CassandraTable;

@@ -1,5 +1,3 @@
-/* eslint-disable no-process-env */
-/* eslint-disable @typescript-eslint/no-non-null-assertion */
 import { test, expect } from "@jest/globals";
 
 import { HumanMessage, AIMessage } from "@langchain/core/messages";
@@ -9,11 +7,11 @@ import { FirestoreChatMessageHistory } from "../message/firestore.js";
 const sessionId = Date.now().toString();
 
 // firebase emulators:start --only firestore --project your-project-id
-// FIRESTORE_EMULATOR_HOST="localhost:8080" yarn test:single -- firestore.int.test.ts
+// FIRESTORE_EMULATOR_HOST="localhost:8080" pnpm test:single -- firestore.int.test.ts
 
 test.skip("Test firestore message history store", async () => {
   const messageHistory = new FirestoreChatMessageHistory({
-    collectionName: "langchain",
+    collections: ["langchain"],
     sessionId,
     userId: "a@example.com",
     config: { projectId: "your-project-id" },

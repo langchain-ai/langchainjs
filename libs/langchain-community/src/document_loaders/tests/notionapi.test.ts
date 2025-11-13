@@ -1,5 +1,3 @@
-/* eslint-disable no-process-env */
-/* eslint-disable @typescript-eslint/no-non-null-assertion */
 import * as fs from "node:fs";
 import * as url from "node:url";
 import * as path from "node:path";

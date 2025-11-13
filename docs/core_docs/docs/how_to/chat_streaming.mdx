@@ -1,0 +1,315 @@
+---
+sidebar_position: 1.5
+title: How to stream chat model responses
+---
+
+
+
+
+# How to stream chat model responses
+
+All [chat
+models](https://api.js.langchain.com/classes/langchain_core.language_models_chat_models.BaseChatModel.html)
+implement the [Runnable
+interface](https://.api.js.langchain.com/classes/langchain_core.runnables.Runnable.html),
+which comes with **default** implementations of standard runnable
+methods (i.e. `invoke`, `batch`, `stream`, `streamEvents`). This guide
+covers how to use these methods to stream output from chat models.
+
+:::tip
+
+The **default** implementation does **not** provide support for
+token-by-token streaming, and will instead return an
+[`AsyncGenerator`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/AsyncGenerator)
+that will yield all model output in a single chunk. It exists to ensures
+that the the model can be swapped in for any other model as it supports
+the same standard interface.
+
+The ability to stream the output token-by-token depends on whether the
+provider has implemented token-by-token streaming support.
+
+You can see which [integrations support token-by-token streaming
+here](../../docs/integrations/chat/).
+
+:::
+
+## Streaming
+
+Below, we use a `---` to help visualize the delimiter between tokens.
+
+````mdx-code-block
+import ChatModelTabs from "@theme/ChatModelTabs";
+
+<ChatModelTabs />
+````
+
+```typescript
+// @lc-docs-hide-cell
+import { ChatAnthropic } from "@langchain/anthropic";
+
+const model = new ChatAnthropic({
+  model: "claude-3-5-sonnet-20240620",
+});
+```
+
+
+```typescript
+const stream = await model.stream("Write me a 1 verse song about goldfish on the moon")
+
+for await (const chunk of stream) {
+  console.log(`${chunk.content}\n---`);
+}
+```
+
+``` text
+
+---
+Here's
+---
+ a one
+---
+-
+---
+verse song about goldfish on
+---
+ the moon:
+
+Verse
+---
+:
+Swimming
+---
+ through the stars
+---
+,
+---
+ in
+---
+ a cosmic
+---
+ lag
+---
+oon
+---
+
+Little
+---
+ golden
+---
+ scales
+---
+,
+---
+ reflecting the moon
+---
+
+No
+---
+ gravity to
+---
+ hold them,
+---
+ they
+---
+ float with
+---
+ glee
+Goldfish
+---
+ astron
+---
+auts, on a lunar
+---
+ sp
+---
+ree
+---
+
+Bub
+---
+bles rise
+---
+ like
+---
+ com
+---
+ets, in the
+---
+ star
+---
+ry night
+---
+
+Their fins like
+---
+ tiny
+---
+ rockets, a
+---
+ w
+---
+ondrous sight
+Who
+---
+ knew
+---
+ these
+---
+ small
+---
+ creatures
+---
+,
+---
+ could con
+---
+quer space?
+---
+
+Goldfish on the moon,
+---
+ with
+---
+ such
+---
+ fis
+---
+hy grace
+---
+
+---
+
+---
+```
+
+## Stream events
+
+Chat models also support the standard
+[`streamEvents()`](https://api.js.langchain.com/classes/langchain_core.runnables.Runnable.html#streamEvents)
+method to stream more granular events from within chains.
+
+This method is useful if you’re streaming output from a larger LLM
+application that contains multiple steps (e.g., a chain composed of a
+prompt, chat model and parser):
+
+```typescript
+const eventStream = await model.streamEvents(
+  "Write me a 1 verse song about goldfish on the moon",
+  {
+    version: "v2"
+  },
+);
+
+const events = [];
+for await (const event of eventStream) {
+  events.push(event);
+}
+
+events.slice(0, 3);
+```
+
+``` text
+[
+  {
+    event: "on_chat_model_start",
+    data: { input: "Write me a 1 verse song about goldfish on the moon" },
+    name: "ChatAnthropic",
+    tags: [],
+    run_id: "d60a87d6-acf0-4ae1-bf27-e570aa101960",
+    metadata: {
+      ls_provider: "openai",
+      ls_model_name: "claude-3-5-sonnet-20240620",
+      ls_model_type: "chat",
+      ls_temperature: 1,
+      ls_max_tokens: 2048,
+      ls_stop: undefined
+    }
+  },
+  {
+    event: "on_chat_model_stream",
+    run_id: "d60a87d6-acf0-4ae1-bf27-e570aa101960",
+    name: "ChatAnthropic",
+    tags: [],
+    metadata: {
+      ls_provider: "openai",
+      ls_model_name: "claude-3-5-sonnet-20240620",
+      ls_model_type: "chat",
+      ls_temperature: 1,
+      ls_max_tokens: 2048,
+      ls_stop: undefined
+    },
+    data: {
+      chunk: AIMessageChunk {
+        lc_serializable: true,
+        lc_kwargs: {
+          content: "",
+          additional_kwargs: [Object],
+          tool_calls: [],
+          invalid_tool_calls: [],
+          tool_call_chunks: [],
+          response_metadata: {}
+        },
+        lc_namespace: [ "langchain_core", "messages" ],
+        content: "",
+        name: undefined,
+        additional_kwargs: {
+          id: "msg_01JaaH9ZUXg7bUnxzktypRak",
+          type: "message",
+          role: "assistant",
+          model: "claude-3-5-sonnet-20240620"
+        },
+        response_metadata: {},
+        id: undefined,
+        tool_calls: [],
+        invalid_tool_calls: [],
+        tool_call_chunks: [],
+        usage_metadata: undefined
+      }
+    }
+  },
+  {
+    event: "on_chat_model_stream",
+    run_id: "d60a87d6-acf0-4ae1-bf27-e570aa101960",
+    name: "ChatAnthropic",
+    tags: [],
+    metadata: {
+      ls_provider: "openai",
+      ls_model_name: "claude-3-5-sonnet-20240620",
+      ls_model_type: "chat",
+      ls_temperature: 1,
+      ls_max_tokens: 2048,
+      ls_stop: undefined
+    },
+    data: {
+      chunk: AIMessageChunk {
+        lc_serializable: true,
+        lc_kwargs: {
+          content: "Here's",
+          additional_kwargs: {},
+          tool_calls: [],
+          invalid_tool_calls: [],
+          tool_call_chunks: [],
+          response_metadata: {}
+        },
+        lc_namespace: [ "langchain_core", "messages" ],
+        content: "Here's",
+        name: undefined,
+        additional_kwargs: {},
+        response_metadata: {},
+        id: undefined,
+        tool_calls: [],
+        invalid_tool_calls: [],
+        tool_call_chunks: [],
+        usage_metadata: undefined
+      }
+    }
+  }
+]
+```
+
+## Next steps
+
+You’ve now seen a few ways you can stream chat model responses.
+
+Next, check out this guide for more on [streaming with other LangChain
+modules](../../docs/how_to/streaming).

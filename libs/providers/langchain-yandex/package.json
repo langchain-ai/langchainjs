@@ -1,0 +1,102 @@
+{
+  "name": "@langchain/yandex",
+  "version": "1.0.0",
+  "description": "Yandex integration for LangChain.js",
+  "author": "LangChain",
+  "license": "MIT",
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:langchain-ai/langchainjs.git"
+  },
+  "homepage": "https://github.com/langchain-ai/langchainjs/tree/main/libs/langchain-yandex/",
+  "scripts": {
+    "build": "pnpm --filter @langchain/build compile @langchain/yandex",
+    "lint:eslint": "eslint --cache src/",
+    "lint:dpdm": "dpdm --skip-dynamic-imports circular --exit-code circular:1 --no-warning --no-tree src/*.ts src/**/*.ts",
+    "lint": "pnpm lint:eslint && pnpm lint:dpdm",
+    "lint:fix": "pnpm lint:eslint --fix && pnpm lint:dpdm",
+    "clean": "rm -rf .turbo dist/",
+    "test:watch": "vitest --watch",
+    "test:int": "vitest --mode int",
+    "format": "prettier --config .prettierrc --write \"src\"",
+    "format:check": "prettier --config .prettierrc --check \"src\""
+  },
+  "peerDependencies": {
+    "@langchain/core": "^1.0.0"
+  },
+  "devDependencies": {
+    "@langchain/core": "workspace:*",
+    "@langchain/eslint": "workspace:*",
+    "@tsconfig/recommended": "^1.0.3",
+    "@vitest/coverage-v8": "^3.2.4",
+    "dotenv": "^16.3.1",
+    "dpdm": "^3.14.0",
+    "eslint": "^9.34.0",
+    "prettier": "^2.8.3",
+    "rollup": "^4.5.2",
+    "vitest": "^3.2.4",
+    "typescript": "~5.8.3"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "input": "./src/index.ts",
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      },
+      "require": {
+        "types": "./dist/index.d.cts",
+        "default": "./dist/index.cjs"
+      }
+    },
+    "./chat_models": {
+      "input": "./src/chat_models.ts",
+      "import": {
+        "types": "./dist/chat_models.d.ts",
+        "default": "./dist/chat_models.js"
+      },
+      "require": {
+        "types": "./dist/chat_models.d.cts",
+        "default": "./dist/chat_models.cjs"
+      }
+    },
+    "./embeddings": {
+      "input": "./src/embeddings.ts",
+      "import": {
+        "types": "./dist/embeddings.d.ts",
+        "default": "./dist/embeddings.js"
+      },
+      "require": {
+        "types": "./dist/embeddings.d.cts",
+        "default": "./dist/embeddings.cjs"
+      }
+    },
+    "./llms": {
+      "input": "./src/llms.ts",
+      "import": {
+        "types": "./dist/llms.d.ts",
+        "default": "./dist/llms.js"
+      },
+      "require": {
+        "types": "./dist/llms.d.cts",
+        "default": "./dist/llms.cjs"
+      }
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist/",
+    "CHANGELOG.md",
+    "README.md",
+    "LICENSE"
+  ]
+}

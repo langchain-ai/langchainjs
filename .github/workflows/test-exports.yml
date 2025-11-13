@@ -4,11 +4,12 @@ on:
   pull_request:
     # Only run workflow if files in these directories are changed
     paths:
-      - 'langchain/**'
-      - 'langchain-core/**'
-      - 'libs/langchain-anthropic/**'
-      - 'libs/langchain-community/**'
-      - 'libs/langchain-openai/**'
+      - "libs/langchain/**"
+      - "libs/langchain-core/**"
+      - "libs/langchain-classic/**"
+      - "libs/langchain-community/**"
+      - "libs/providers/langchain-anthropic/**"
+      - "libs/providers/langchain-openai/**"
   workflow_dispatch: # Allows triggering the workflow manually in GitHub UI
 
 # If another push to the same PR or branch happens while this workflow is still running,
@@ -24,27 +25,36 @@ concurrency:
 env:
   PUPPETEER_SKIP_DOWNLOAD: "true"
   PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: "true"
-  NODE_VERSION: "18.x"
+  NODE_VERSION: "20.x"
 
-# Run a separate job for each check in the docker-compose file,
+# Run a separate job for each check` in the docker-compose file,
 # so that they run in parallel instead of overwhelming the default 2 CPU runner.
 jobs:
   exports-esbuild:
     runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
     steps:
       - uses: actions/checkout@v4
+      - name: Setup pnpm
+        uses: pnpm/action-setup@a7487c7e89a18df4991f7f222e4898a00d66ddda
       - name: Use Node.js ${{ env.NODE_VERSION }}
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: "yarn"
+          cache: "pnpm"
       - name: Install dependencies
-        run: yarn install --immutable
+        run: pnpm install --frozen-lockfile
 
       - name: Build dependencies
-        run: yarn build --filter=langchain --filter=@langchain/anthropic --filter=@langchain/community --filter=@langchain/openai
+        run: >
+          pnpm build
+          --filter langchain
+          --filter @langchain/core
+          --filter @langchain/anthropic
+          --filter @langchain/community
+          --filter @langchain/openai
+          --filter @langchain/ollama
+          --filter @langchain/google-gauth
+          --filter @langchain/textsplitters
         shell: bash
 
       - name: Test esbuild exports
@@ -52,20 +62,29 @@ jobs:
 
   exports-esm:
     runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
     steps:
       - uses: actions/checkout@v4
+      - name: Setup pnpm
+        uses: pnpm/action-setup@a7487c7e89a18df4991f7f222e4898a00d66ddda
       - name: Use Node.js ${{ env.NODE_VERSION }}
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: "yarn"
+          cache: "pnpm"
       - name: Install dependencies
-        run: yarn install --immutable
+        run: pnpm install --frozen-lockfile
 
       - name: Build dependencies
-        run: yarn build --filter=langchain --filter=@langchain/anthropic --filter=@langchain/community --filter=@langchain/openai
+        run: >
+          pnpm build
+          --filter langchain
+          --filter @langchain/core
+          --filter @langchain/anthropic
+          --filter @langchain/community
+          --filter @langchain/openai
+          --filter @langchain/ollama
+          --filter @langchain/google-gauth
+
         shell: bash
 
       - name: Test esm exports
@@ -73,20 +92,29 @@ jobs:
 
   exports-cjs:
     runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
     steps:
       - uses: actions/checkout@v4
+      - name: Setup pnpm
+        uses: pnpm/action-setup@a7487c7e89a18df4991f7f222e4898a00d66ddda
       - name: Use Node.js ${{ env.NODE_VERSION }}
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: "yarn"
+          cache: "pnpm"
       - name: Install dependencies
-        run: yarn install --immutable
+        run: pnpm install --frozen-lockfile
 
       - name: Build dependencies
-        run: yarn build --filter=langchain --filter=@langchain/anthropic --filter=@langchain/community --filter=@langchain/openai
+        run: >
+          pnpm build
+          --filter langchain
+          --filter @langchain/core
+          --filter @langchain/anthropic
+          --filter @langchain/community
+          --filter @langchain/openai
+          --filter @langchain/ollama
+          --filter @langchain/google-gauth
+
         shell: bash
 
       - name: Test cjs exports
@@ -94,20 +122,29 @@ jobs:
 
   exports-cf:
     runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
     steps:
       - uses: actions/checkout@v4
+      - name: Setup pnpm
+        uses: pnpm/action-setup@a7487c7e89a18df4991f7f222e4898a00d66ddda
       - name: Use Node.js ${{ env.NODE_VERSION }}
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: "yarn"
+          cache: "pnpm"
       - name: Install dependencies
-        run: yarn install --immutable
+        run: pnpm install --frozen-lockfile
 
       - name: Build dependencies
-        run: yarn build --filter=langchain --filter=@langchain/anthropic --filter=@langchain/community --filter=@langchain/openai
+        run: >
+          pnpm build
+          --filter langchain
+          --filter @langchain/core
+          --filter @langchain/anthropic
+          --filter @langchain/community
+          --filter @langchain/openai
+          --filter @langchain/ollama
+          --filter @langchain/google-gauth
+
         shell: bash
 
       - name: Test cf exports
@@ -115,20 +152,29 @@ jobs:
 
   exports-vercel:
     runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
     steps:
       - uses: actions/checkout@v4
+      - name: Setup pnpm
+        uses: pnpm/action-setup@a7487c7e89a18df4991f7f222e4898a00d66ddda
       - name: Use Node.js ${{ env.NODE_VERSION }}
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: "yarn"
+          cache: "pnpm"
       - name: Install dependencies
-        run: yarn install --immutable
-    
+        run: pnpm install --frozen-lockfile
+
       - name: Build dependencies
-        run: yarn build --filter=langchain --filter=@langchain/anthropic --filter=@langchain/community --filter=@langchain/openai
+        run: >
+          pnpm build
+          --filter langchain
+          --filter @langchain/core
+          --filter @langchain/anthropic
+          --filter @langchain/community
+          --filter @langchain/openai
+          --filter @langchain/ollama
+          --filter @langchain/google-gauth
+
         shell: bash
 
       - name: Test vercel exports
@@ -136,20 +182,29 @@ jobs:
 
   exports-vite:
     runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
     steps:
       - uses: actions/checkout@v4
+      - name: Setup pnpm
+        uses: pnpm/action-setup@a7487c7e89a18df4991f7f222e4898a00d66ddda
       - name: Use Node.js ${{ env.NODE_VERSION }}
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: "yarn"
+          cache: "pnpm"
       - name: Install dependencies
-        run: yarn install --immutable
-      
+        run: pnpm install --frozen-lockfile
+
       - name: Build dependencies
-        run: yarn build --filter=langchain --filter=@langchain/anthropic --filter=@langchain/community --filter=@langchain/openai
+        run: >
+          pnpm build
+          --filter langchain
+          --filter @langchain/core
+          --filter @langchain/anthropic
+          --filter @langchain/community
+          --filter @langchain/openai
+          --filter @langchain/ollama
+          --filter @langchain/google-gauth
+
         shell: bash
 
       - name: Test vite exports
@@ -157,39 +212,57 @@ jobs:
 
   exports-tsc:
     runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
     steps:
       - uses: actions/checkout@v4
+      - name: Setup pnpm
+        uses: pnpm/action-setup@a7487c7e89a18df4991f7f222e4898a00d66ddda
       - name: Use Node.js ${{ env.NODE_VERSION }}
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: "yarn"
+          cache: "pnpm"
       - name: Install dependencies
-        run: yarn install --immutable
+        run: pnpm install --frozen-lockfile
 
       - name: Build dependencies
-        run: yarn build --filter=langchain --filter=@langchain/anthropic --filter=@langchain/community --filter=@langchain/openai
+        run: >
+          pnpm build
+          --filter langchain
+          --filter @langchain/core
+          --filter @langchain/anthropic
+          --filter @langchain/community
+          --filter @langchain/openai
+          --filter @langchain/ollama
+          --filter @langchain/google-gauth
+
         shell: bash
 
       - name: Test compiling exports with tsc
         run: docker compose -f environment_tests/docker-compose.yml run test-exports-tsc
 
-  # exports-bun:
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - uses: actions/checkout@v4
-  #     - name: Use Node.js ${{ env.NODE_VERSION }}
-  #       uses: actions/setup-node@v3
-  #       with:
-  #         node-version: ${{ env.NODE_VERSION }}
-  #         cache: "yarn"
-  #     - name: Install dependencies
-  #       run: yarn install --immutable
-  #     - name: Build
-  #       run: yarn workspace langchain build
-  #       shell: bash
+  exports-bun:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup pnpm
+        uses: pnpm/action-setup@a7487c7e89a18df4991f7f222e4898a00d66ddda
+      - name: Use Node.js ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "pnpm"
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
 
-  #     - name: Test bun exports
-  #       run: docker compose -f environment_tests/docker-compose.yml run test-exports-bun
+      - name: Build dependencies
+        run: >
+          pnpm build
+          --filter langchain
+          --filter @langchain/core
+          --filter @langchain/anthropic
+          --filter @langchain/community
+          --filter @langchain/openai
+        shell: bash
+
+      - name: Test bun exports
+        run: docker compose -f environment_tests/docker-compose.yml run test-exports-bun

@@ -1,16 +1,13 @@
 {
   "name": "test-exports-esm",
   "version": "0.0.0",
-  "workspaces": [
-    "libs/*"
-  ],
   "private": true,
   "description": "Tests for the things exported by the langchain package",
   "main": "./index.mjs",
   "type": "module",
   "scripts": {
     "build": "tsc",
-    "test": "npm run test:esm && npm run test:cjs && npm run test:cjs:import && npm run test:entrypoints && npm run test:ts",
+    "test": "pnpm run test:esm && pnpm run test:cjs && pnpm run test:cjs:import && pnpm run test:entrypoints && pnpm run test:ts",
     "test:esm": "node src/index.js",
     "test:cjs": "node src/require.cjs",
     "test:cjs:import": "node src/import.cjs",
@@ -25,10 +22,15 @@
     "@langchain/anthropic": "workspace:*",
     "@langchain/community": "workspace:*",
     "@langchain/core": "workspace:*",
+    "@langchain/classic": "workspace:*",
     "@langchain/openai": "workspace:*",
     "@tsconfig/recommended": "^1.0.2",
+    "@types/node": "^24.3.0",
     "@xenova/transformers": "^2.17.2",
+    "cheerio": "^1.1.2",
     "langchain": "workspace:*",
+    "typeorm": "^0.3.25",
+    "reflect-metadata": "^0.1.13",
     "typescript": "^5.0.0"
   },
   "devDependencies": {

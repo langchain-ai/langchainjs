@@ -1,4 +1,4 @@
-import { DynamicTool, DynamicToolInput } from "./dynamic.js";
+import { DynamicTool, DynamicToolInput } from "@langchain/core/tools";
 
 /**
  * Interface for the configuration of the AWS Lambda function.
@@ -116,7 +116,7 @@ async function LambdaImports() {
   } catch (e) {
     console.error(e);
     throw new Error(
-      "Failed to load @aws-sdk/client-lambda'. Please install it eg. `yarn add @aws-sdk/client-lambda`."
+      "Failed to load @aws-sdk/client-lambda'. Please install it eg. `pnpm install @aws-sdk/client-lambda`."
     );
   }
 }

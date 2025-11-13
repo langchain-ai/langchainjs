@@ -39,7 +39,7 @@ export const encodeApiKey = (apiSecretKey?: string, cache = true): string => {
       };
     }
     return ret;
-  } catch (e) {
+  } catch {
     throw new Error("invalid api_key");
   }
 };

@@ -1,0 +1,11 @@
+{
+  "entryPoints": [
+    "src/chat_models.ts",
+    "src/embeddings.ts",
+    "src/index.ts",
+    "src/llms.ts"
+  ],
+  "extends": [
+    "../../docs/api_refs/typedoc.base.json"
+  ]
+}

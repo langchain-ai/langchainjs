@@ -1,0 +1,12 @@
+{
+  "entryPoints": [
+    "src/index.ts",
+    "src/utils/index.ts",
+    "src/types.ts",
+    "src/experimental/media.ts",
+    "src/experimental/utils/media_core.ts"
+  ],
+  "extends": [
+    "../../docs/api_refs/typedoc.base.json"
+  ]
+}

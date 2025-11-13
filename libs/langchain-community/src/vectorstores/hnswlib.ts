@@ -180,7 +180,6 @@ export class HNSWLib extends SaveableVectorStore {
         return true;
       }
       const document = this.docstore.search(String(label));
-      // eslint-disable-next-line no-instanceof/no-instanceof
       if (typeof document !== "string") {
         return filter(document);
       }
@@ -212,7 +211,7 @@ export class HNSWLib extends SaveableVectorStore {
     const path = await import("node:path");
     try {
       await fs.access(path.join(params.directory, "hnswlib.index"));
-    } catch (err) {
+    } catch {
       throw new Error(
         `Directory ${params.directory} does not contain a hnswlib.index file.`
       );

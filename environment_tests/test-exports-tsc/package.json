@@ -2,9 +2,6 @@
   "name": "test-exports-tsc",
   "version": "0.0.0",
   "type": "module",
-  "workspaces": [
-    "libs/*"
-  ],
   "private": true,
   "description": "TSC Tests for the things exported by the langchain package",
   "main": "./index.mjs",
@@ -18,7 +15,9 @@
     "@langchain/anthropic": "workspace:*",
     "@langchain/community": "workspace:*",
     "@langchain/core": "workspace:*",
+    "@langchain/classic": "workspace:*",
     "@langchain/openai": "workspace:*",
+    "@types/node": "^24.3.0",
     "langchain": "workspace:*",
     "typescript": "5.5.4"
   },

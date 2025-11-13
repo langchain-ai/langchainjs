@@ -1,17 +1,66 @@
 const fs = require("fs");
 
 const communityPackageJsonPath = "package.json";
-const currentPackageJson = JSON.parse(fs.readFileSync(communityPackageJsonPath));
+const currentPackageJson = JSON.parse(
+  fs.readFileSync(communityPackageJsonPath)
+);
+currentPackageJson.pnpm = { overrides: {} };
 
-if (currentPackageJson.devDependencies["@langchain/core"]) {
-  delete currentPackageJson.devDependencies["@langchain/core"];
-  currentPackageJson.peerDependencies["@langchain/core"] = "latest";
+const INTERNAL_PACKAGES = ["@langchain/eslint"];
+
+if (
+  currentPackageJson.peerDependencies?.["@langchain/core"] &&
+  !currentPackageJson.peerDependencies["@langchain/core"].includes("rc")
+) {
+  currentPackageJson.peerDependencies = {
+    ...currentPackageJson.peerDependencies,
+  };
 }
 
-// Stupid hack
-currentPackageJson.resolutions = {
-  ...currentPackageJson.resolutions,
-  "jackspeak": "2.1.1"
-};
+/**
+ * Link workspace dependencies via file path
+ */
+const workspaceDependencies = [
+  ...Object.entries(currentPackageJson.devDependencies),
+  ...Object.entries(currentPackageJson.dependencies),
+].filter(([, depVersion]) => depVersion.includes("workspace:"));
 
-fs.writeFileSync(communityPackageJsonPath, JSON.stringify(currentPackageJson, null, 2));
+for (const [depName, depVersion] of workspaceDependencies) {
+  /**
+   * for the peer dependency @langchain/core, we want to make sure to install max version
+   * defined above
+   */
+  if (depName === "@langchain/core") {
+    delete currentPackageJson.devDependencies[depName];
+    continue;
+  }
+
+  const libName = depName.split("/")[1];
+
+  if (INTERNAL_PACKAGES.includes(depName)) {
+    /**
+     * reference the workspace dependency as a file path
+     */
+    currentPackageJson.devDependencies[depName] = `file:/internal/${libName}`;
+    continue;
+  }
+
+  /**
+   * reference the workspace dependency as a file path
+   */
+  currentPackageJson.devDependencies[
+    depName
+  ] = `file:/libs/langchain-${libName}`;
+  /**
+   * ensure that peer dependencies are also installed from the file path
+   * e.g. @langchain/openai depends on @langchain/core which should be resolved from the file path
+   */
+  currentPackageJson.pnpm.overrides[
+    depName
+  ] = `file:/libs/langchain-${libName}`;
+}
+
+fs.writeFileSync(
+  communityPackageJsonPath,
+  JSON.stringify(currentPackageJson, null, 2)
+);

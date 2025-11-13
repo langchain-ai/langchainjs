@@ -22,7 +22,6 @@
  * - Ability to expand the graph with additional nodes for more complex workflows
  */
 
-/* eslint-disable no-console */
 import { ChatOpenAI } from "@langchain/openai";
 import {
   StateGraph,
@@ -30,8 +29,8 @@ import {
   START,
   MessagesAnnotation,
 } from "@langchain/langgraph";
+import { HumanMessage, AIMessage, BaseMessage } from "langchain";
 import { ToolNode } from "@langchain/langgraph/prebuilt";
-import { HumanMessage, AIMessage, BaseMessage } from "@langchain/core/messages";
 import dotenv from "dotenv";
 
 // MCP client imports

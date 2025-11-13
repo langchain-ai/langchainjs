@@ -10,7 +10,6 @@
  * 3. Structured handling of complex multi-file operations
  */
 
-/* eslint-disable no-console */
 import { MultiServerMCPClient } from "../src/index.js";
 import { runExample as runFileSystemExample } from "./filesystem_langgraph_example.js";
 

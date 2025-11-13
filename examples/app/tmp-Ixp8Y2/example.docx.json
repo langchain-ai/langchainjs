@@ -1,0 +1,77 @@
+{
+    "docName": "example.docx",
+    "totalPages": 1,
+    "metadata": {
+        "coreProperties": {
+            "title": null,
+            "subject": null,
+            "creator": "Ernie Chaewon Jeong",
+            "created": null,
+            "keywords": null,
+            "lastModifiedBy": "sophia",
+            "modified": "2025-04-22T05:56:00Z"
+        },
+        "fsProperties": {
+            "sourcePath": "/app/tempFiles/f9e78fa9-17dd-4781-b10b-5c6b13dd7b4e/"
+        }
+    },
+    "pages": [
+        {
+            "pageNum": 1,
+            "pageWidth": 11906,
+            "pageHeight": 16838,
+            "elements": [
+                {
+                    "type": "text",
+                    "id": "te0",
+                    "boundaryBox": {
+                        "left": 2429,
+                        "top": 1696,
+                        "right": 9670,
+                        "bottom": 2752
+                    },
+                    "content": {
+                        "text": "Polaris Office Test Document"
+                    }
+                },
+                {
+                    "id": "im9",
+                    "type": "image",
+                    "boundaryBox": {
+                        "left": 2765,
+                        "top": 2749,
+                        "right": 9140,
+                        "bottom": 8044
+                    },
+                    "content": {
+                        "src": "example.docx_image9.png"
+                    }
+                },
+                {
+                    "type": "text",
+                    "id": "te1",
+                    "boundaryBox": {
+                        "left": 2774,
+                        "top": 2752,
+                        "right": 9433,
+                        "bottom": 8205
+                    },
+                    "content": {
+                        "text": " "
+                    }
+                }
+            ],
+            "extractionSummary": {
+                "text": 2,
+                "image": 1,
+                "shape": 0,
+                "chart": 0,
+                "table": 0,
+                "equation": 0,
+                "caption": 0,
+                "header": 0,
+                "footer": 0
+            }
+        }
+    ]
+}

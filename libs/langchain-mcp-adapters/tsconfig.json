@@ -3,10 +3,10 @@
   "compilerOptions": {
     "outDir": "dist",
     "rootDir": "./src",
-    "target": "ES2021",
-    "lib": ["ES2021", "ES2022.Object", "DOM"],
-    "module": "ES2020",
-    "moduleResolution": "bundler",
+    "target": "ES2022",
+    "lib": ["ES2022", "ES2022.Object", "DOM"],
+    "module": "NodeNext",
+    "moduleResolution": "Node16",
     "esModuleInterop": true,
     "declaration": true,
     "noImplicitReturns": true,
@@ -15,6 +15,7 @@
     "noUnusedParameters": true,
     "useDefineForClassFields": true,
     "strictPropertyInitialization": false,
+    "resolveJsonModule": true,
     "allowJs": true,
     "strict": true
   },

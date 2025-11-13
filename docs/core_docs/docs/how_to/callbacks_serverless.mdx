@@ -1,0 +1,101 @@
+---
+title: How to await callbacks in serverless environments
+---
+
+
+
+
+# How to await callbacks in serverless environments
+
+:::info Prerequisites
+
+This guide assumes familiarity with the following concepts:
+
+-   [Callbacks](../../docs/concepts/callbacks)
+
+:::
+
+As of `@langchain/core@0.3.0`, LangChain.js callbacks run in the
+background. This means that execution will **not** wait for the callback
+to either return before continuing. Prior to `0.3.0`, this behavior was
+the opposite.
+
+If you are running code in [serverless
+environments](https://en.wikipedia.org/wiki/Serverless_computing) such
+as [AWS Lambda](https://aws.amazon.com/pm/lambda/) or [Cloudflare
+Workers](https://workers.cloudflare.com/) you should set your callbacks
+to be blocking to allow them time to finish or timeout.
+
+To make callbacks blocking, set the `LANGCHAIN_CALLBACKS_BACKGROUND`
+environment variable to `"false"`. Alternatively, you can import the
+global
+[`awaitAllCallbacks`](https://api.js.langchain.com/functions/langchain_core.callbacks_promises.awaitAllCallbacks.html)
+method to ensure all callbacks finish if necessary.
+
+To illustrate this, we’ll create a [custom callback
+handler](../../docs/how_to/custom_callbacks) that takes some time to
+resolve, and show the timing with and without
+`LANGCHAIN_CALLBACKS_BACKGROUND` set to `"false"`. Here it is without
+the variable set along with the `awaitAllCallbacks` global:
+
+```typescript
+import { RunnableLambda } from "@langchain/core/runnables";
+import { awaitAllCallbacks } from "@langchain/core/callbacks/promises";
+
+const runnable = RunnableLambda.from(() => "hello!");
+
+const customHandler = {
+  handleChainEnd: async () => {
+    await new Promise((resolve) => setTimeout(resolve, 2000));
+    console.log("Call finished");
+  },
+};
+
+const startTime = new Date().getTime();
+
+await runnable.invoke({ number: "2" }, { callbacks: [customHandler] });
+
+console.log(`Elapsed time: ${new Date().getTime() - startTime}ms`);
+
+await awaitAllCallbacks();
+
+console.log(`Final elapsed time: ${new Date().getTime() - startTime}ms`);
+```
+
+``` text
+Elapsed time: 1ms
+Call finished
+Final elapsed time: 2164ms
+```
+
+We can see that the initial `runnable.invoke()` call finishes in a short
+amount of time, and then roughly two seconds later, the callbacks
+finish.
+
+And here it is with backgrounding off:
+
+```typescript
+process.env.LANGCHAIN_CALLBACKS_BACKGROUND = "false";
+
+const startTimeBlocking = new Date().getTime();
+
+await runnable.invoke({ number: "2" }, { callbacks: [customHandler] });
+
+console.log(`Initial elapsed time: ${new Date().getTime() - startTimeBlocking}ms`);
+```
+
+``` text
+Call finished
+Initial elapsed time: 2002ms
+```
+
+This time, the initial call by itself takes two seconds because the
+`invoke()` call waits for the callback to return before returning.
+
+## Next steps
+
+You’ve now learned how to run callbacks in the background to reduce
+latency.
+
+Next, check out the other how-to guides in this section, such as [how to
+create custom callback handlers](../../docs/how_to/custom_callbacks).
