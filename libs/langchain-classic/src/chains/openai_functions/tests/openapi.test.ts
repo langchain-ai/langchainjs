@@ -319,8 +319,6 @@ test("Test convert OpenAPI params to JSON Schema", async () => {
   );
 });
 
-
-
 test("Parent required should not include child due to child's internal required", async () => {
   const spec = new OpenAPISpec({
     openapi: "3.1.0",
