@@ -1,6 +1,6 @@
 {
   "name": "@langchain/google-common",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Core types and classes for Google services.",
   "type": "module",
   "engines": {
@@ -12,7 +12,8 @@
   },
   "homepage": "https://github.com/langchain-ai/langchainjs/tree/main/libs/langchain-google-common/",
   "scripts": {
-    "build": "pnpm --filter @langchain/build compile @langchain/google-common",
+    "build": "turbo build:compile --filter @langchain/google-common",
+    "build:compile": "pnpm --filter @langchain/build compile @langchain/google-common",
     "lint:eslint": "eslint --cache src/",
     "lint:dpdm": "dpdm --skip-dynamic-imports circular --exit-code circular:1 --no-warning --no-tree src/*.ts src/**/*.ts",
     "lint": "pnpm lint:eslint && pnpm lint:dpdm",
@@ -23,7 +24,9 @@
     "test:single": "NODE_OPTIONS=--experimental-vm-modules pnpm run jest --config jest.config.cjs --testTimeout 100000",
     "test:int": "NODE_OPTIONS=--experimental-vm-modules jest --testPathPattern=\\.int\\.test.ts --testTimeout 100000 --maxWorkers=50%",
     "format": "prettier --config .prettierrc --write \"src\"",
-    "format:check": "prettier --config .prettierrc --check \"src\""
+    "format:check": "prettier --config .prettierrc --check \"src\"",
+    "typegen": "pnpm run typegen:profiles",
+    "typegen:profiles": "pnpm --filter @langchain/model-profiles make --config profiles.toml"
   },
   "author": "LangChain",
   "license": "MIT",

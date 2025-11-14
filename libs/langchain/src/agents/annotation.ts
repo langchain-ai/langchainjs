@@ -7,7 +7,7 @@ import {
   MessagesZodMeta,
   type BinaryOperatorAggregate,
 } from "@langchain/langgraph";
-import { withLangGraph } from "@langchain/langgraph/zod";
+import { withLangGraph, schemaMetaRegistry } from "@langchain/langgraph/zod";
 
 import type { AgentMiddleware, AnyAnnotationRoot } from "./middleware/types.js";
 import { InteropZodObject } from "@langchain/core/utils/types";
@@ -27,7 +27,7 @@ export function createAgentAnnotationConditional<
    * Create Zod schema object to preserve jsonSchemaExtra
    * metadata for LangGraph Studio using v3-compatible withLangGraph
    */
-  const zodSchema: Record<string, any> = {
+  const schemaShape: Record<string, any> = {
     messages: withLangGraph(z.custom<BaseMessage[]>(), MessagesZodMeta),
     jumpTo: z
       .union([
@@ -49,8 +49,8 @@ export function createAgentAnnotationConditional<
         continue;
       }
 
-      if (!(key in zodSchema)) {
-        zodSchema[key] = schema;
+      if (!(key in schemaShape)) {
+        schemaShape[key] = schema;
       }
     }
   };
@@ -68,10 +68,12 @@ export function createAgentAnnotationConditional<
 
   // Only include structuredResponse when responseFormat is defined
   if (hasStructuredResponse) {
-    zodSchema.structuredResponse = z.any().optional();
+    schemaShape.structuredResponse = z.any().optional();
   }
 
-  return z.object(zodSchema);
+  const zodSchema = z.object(schemaShape);
+  const stateDefinition = schemaMetaRegistry.getChannelsForSchema(zodSchema);
+  return stateDefinition;
 }
 
 export const PreHookAnnotation: AnnotationRoot<{

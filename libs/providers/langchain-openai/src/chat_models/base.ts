@@ -15,6 +15,7 @@ import {
   type FunctionDefinition,
   type StructuredOutputMethodOptions,
 } from "@langchain/core/language_models/base";
+import { ModelProfile } from "@langchain/core/language_models/profile";
 import {
   Runnable,
   RunnableLambda,
@@ -39,8 +40,13 @@ import {
   type ChatOpenAIResponseFormat,
   ResponseFormatConfiguration,
   OpenAIVerbosityParam,
+  type OpenAIApiKey,
 } from "../types.js";
-import { type OpenAIEndpointConfig, getEndpoint } from "../utils/azure.js";
+import {
+  type OpenAIEndpointConfig,
+  getEndpoint,
+  getHeadersWithUserAgent,
+} from "../utils/azure.js";
 import {
   type FunctionDef,
   formatFunctionDefinitions,
@@ -57,9 +63,8 @@ import {
   interopZodResponseFormat,
   _convertOpenAIResponsesUsageToLangChainUsage,
 } from "../utils/output.js";
-import { _convertMessagesToOpenAIParams } from "../utils/message_inputs.js";
-import { _convertToResponsesMessageFromV1 } from "../utils/standard.js";
 import { isReasoningModel, messageToOpenAIRole } from "../utils/misc.js";
+import PROFILES from "./profiles.js";
 
 interface OpenAILLMOutput {
   tokenUsage: {
@@ -245,7 +250,7 @@ export abstract class BaseChatOpenAI<
 
   topLogprobs?: number;
 
-  apiKey?: string;
+  apiKey?: OpenAIApiKey;
 
   organization?: string;
 
@@ -420,7 +425,8 @@ export abstract class BaseChatOpenAI<
     super(fields ?? {});
 
     const configApiKey =
-      typeof fields?.configuration?.apiKey === "string"
+      typeof fields?.configuration?.apiKey === "string" ||
+      typeof fields?.configuration?.apiKey === "function"
         ? fields?.configuration?.apiKey
         : undefined;
     this.apiKey =
@@ -565,6 +571,8 @@ export abstract class BaseChatOpenAI<
         delete params.baseURL;
       }
 
+      params.defaultHeaders = getHeadersWithUserAgent(params.defaultHeaders);
+
       this.client = new OpenAIClient(params);
     }
     const requestOptions = {
@@ -615,7 +623,7 @@ export abstract class BaseChatOpenAI<
           : this._convertChatOpenAIToolToCompletionsTool(tool, { strict })
       ),
       ...kwargs,
-    });
+    } as Partial<CallOptions>);
   }
 
   override async stream(input: BaseLanguageModelInput, options?: CallOptions) {
@@ -783,6 +791,27 @@ export abstract class BaseChatOpenAI<
     return tokens;
   }
 
+  /**
+   * Return profiling information for the model.
+   *
+   * Provides information about the model's capabilities and constraints,
+   * including token limits, multimodal support, and advanced features like
+   * tool calling and structured output.
+   *
+   * @returns {ModelProfile} An object describing the model's capabilities and constraints
+   *
+   * @example
+   * ```typescript
+   * const model = new ChatOpenAI({ model: "gpt-4o" });
+   * const profile = model.profile;
+   * console.log(profile.maxInputTokens); // 128000
+   * console.log(profile.imageInputs); // true
+   * ```
+   */
+  get profile(): ModelProfile {
+    return PROFILES[this.model] ?? {};
+  }
+
   /** @internal */
   protected _getStructuredOutputMethod(
     config: StructuredOutputMethodOptions<boolean>
@@ -894,7 +923,7 @@ export abstract class BaseChatOpenAI<
           kwargs: { method: "json_mode" },
           schema: { title: name ?? "extract", ...asJsonSchema },
         },
-      });
+      } as Partial<CallOptions>);
     } else if (method === "jsonSchema") {
       const openaiJsonSchemaParams = {
         name: name ?? "extract",
@@ -917,7 +946,7 @@ export abstract class BaseChatOpenAI<
             ...asJsonSchema,
           },
         },
-      });
+      } as Partial<CallOptions>);
       if (isInteropZodSchema(schema)) {
         const altParser = StructuredOutputParser.fromZodSchema(schema);
         outputParser = RunnableLambda.from<AIMessageChunk, RunOutput>(
@@ -960,7 +989,7 @@ export abstract class BaseChatOpenAI<
           },
           // Do not pass `strict` argument to OpenAI if `config.strict` is undefined
           ...(config?.strict !== undefined ? { strict: config.strict } : {}),
-        });
+        } as Partial<CallOptions>);
         outputParser = new JsonOutputKeyToolsParser({
           returnSingle: true,
           keyName: functionName,
@@ -1004,7 +1033,7 @@ export abstract class BaseChatOpenAI<
           },
           // Do not pass `strict` argument to OpenAI if `config.strict` is undefined
           ...(config?.strict !== undefined ? { strict: config.strict } : {}),
-        });
+        } as Partial<CallOptions>);
         outputParser = new JsonOutputKeyToolsParser<RunOutput>({
           returnSingle: true,
           keyName: functionName,

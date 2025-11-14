@@ -294,6 +294,12 @@ export class ToolNode<
           { ...toolCall, type: "tool_call" },
           {
             ...config,
+            /**
+             * extend to match ToolRuntime
+             */
+            config,
+            toolCallId: toolCall.id!,
+            state: config.configurable?.__pregel_scratchpad?.currentTaskInput,
             signal: mergeAbortSignals(this.signal, config.signal),
           }
         );

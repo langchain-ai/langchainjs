@@ -28,6 +28,7 @@ export { initChatModel } from "./chat_models/universal.js";
 export {
   tool,
   Tool,
+  type ToolRuntime,
   DynamicTool,
   StructuredTool,
   DynamicStructuredTool,
@@ -47,14 +48,6 @@ export * from "./agents/middleware/index.js";
  * LangChain Stores
  */
 export { InMemoryStore } from "@langchain/core/stores";
-
-/**
- * LangChain Context
- */
-export {
-  setContextVariable,
-  getContextVariable,
-} from "@langchain/core/context";
 
 /**
  * LangChain Documents

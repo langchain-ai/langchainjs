@@ -101,6 +101,7 @@ test("Test with built-in web search", async () => {
   // Use OpenAI's stateful API
   const response = await llm.invoke("what about a negative one", {
     tools: [{ type: "web_search_preview" }],
+    // @ts-expect-error - FIXME(hntrl): bad unknown type
     previous_response_id: firstResponse.response_metadata.id,
   });
   assertResponse(response);
@@ -308,6 +309,7 @@ test("Test stateful API", async () => {
   expect(response.response_metadata).toHaveProperty("id");
 
   const secondResponse = await llm.invoke("what's my name", {
+    // @ts-expect-error - FIXME(hntrl): bad unknown type
     previous_response_id: response.response_metadata.id,
   });
   expect(Array.isArray(secondResponse.content)).toBe(true);
@@ -437,6 +439,7 @@ test("Test Remote MCP", async () => {
   const response2 = await model.invoke(
     [new HumanMessage({ content: approvals })],
     {
+      // @ts-expect-error - FIXME(hntrl): bad unknown type
       previous_response_id: response.response_metadata.id,
     }
   );
@@ -746,6 +749,108 @@ describe("reasoning summaries", () => {
     }
   );
 
+  // https://github.com/langchain-ai/langchainjs/issues/9072
+  test.each([false, true])(
+    "when zdrEnabled=%s, reasoning summaries should be properly paired with function calls",
+    async (zdrEnabled) => {
+      // This test verifies that reasoning summaries are correctly included or excluded
+      // based on the zdrEnabled flag when the model makes tool calls. When zero data retention
+      // is disabled, reasoning summaries should be present; when enabled, they should be absent.
+
+      // Create a tool for calculating powers
+      const powerTool = tool(
+        (args) => {
+          return Math.pow(args.base, args.exponent).toString();
+        },
+        {
+          name: "calculate_power",
+          description: "Calculate base raised to the power of exponent",
+          schema: z.object({
+            base: z.number().describe("The base number"),
+            exponent: z.number().describe("The exponent"),
+          }),
+        }
+      );
+
+      // Instantiate the model with tools bound
+      const model = new ChatOpenAI({
+        model: "gpt-5",
+        useResponsesApi: true,
+        zdrEnabled,
+      }).bindTools([powerTool]);
+
+      // Create initial messages
+      const messages: BaseMessage[] = [
+        new SystemMessage(
+          "You are a helpful assistant that uses tools to answer questions accurately."
+        ),
+        new HumanMessage("What is 3 to the power of 3?"),
+      ];
+
+      // First invocation - should trigger tool call
+      let response: BaseMessage = await model.invoke(messages, {});
+
+      // Verify response is an AIMessage
+      expect(isAIMessage(response)).toBe(true);
+      const aiResponse = response as AIMessage;
+
+      // Verify tool calls were made
+      expect(aiResponse.tool_calls).toBeDefined();
+      expect(Array.isArray(aiResponse.tool_calls)).toBe(true);
+      expect(aiResponse.tool_calls!.length).toBeGreaterThan(0);
+
+      // Verify reasoning summary based on zdrEnabled
+      const reasoning = aiResponse.additional_kwargs.reasoning as
+        | ChatOpenAIReasoningSummary
+        | undefined;
+      if (!zdrEnabled) {
+        // When zdrEnabled is false, reasoning summaries should be present
+        expect(reasoning).toBeDefined();
+        expect(reasoning?.type).toBe("reasoning");
+        expect(reasoning?.id).toBeDefined();
+        expect(reasoning?.summary).toBeDefined();
+        expect(Array.isArray(reasoning?.summary)).toBe(true);
+        if (reasoning?.summary && reasoning.summary.length > 0) {
+          for (const summaryItem of reasoning.summary) {
+            expect(summaryItem.type).toBe("summary_text");
+            expect(typeof summaryItem.text).toBe("string");
+          }
+        }
+      }
+
+      // Execute tools and create tool results
+      const toolResults: ToolMessage[] = [];
+      for (const toolCall of aiResponse.tool_calls!) {
+        const { name } = toolCall;
+        const tool = [powerTool].find((t) => t.name === name);
+        expect(tool).toBeDefined();
+
+        // Invoke the tool with the tool call - this returns a ToolMessage with the correct tool_call_id
+        const toolMessage: ToolMessage = await tool!.invoke(toolCall);
+        expect(toolMessage.tool_call_id).toBe(toolCall.id);
+        toolResults.push(toolMessage);
+      }
+
+      // Add response and tool results to messages
+      messages.push(aiResponse, ...toolResults);
+
+      // Second invocation - should use tool results to provide final answer
+      // This verifies that reasoning summaries are properly paired with function calls
+      response = await model.invoke(messages, {});
+      expect(isAIMessage(response)).toBe(true);
+      expect(response).toBeDefined();
+
+      // Verify reasoning summaries are properly paired throughout the flow
+      // The reasoning summary from the first call should be preserved when passed back
+      if (!zdrEnabled && reasoning) {
+        // Verify that the reasoning summary can be properly paired with function calls
+        // by checking that tool calls have proper IDs that can be matched
+        expect(aiResponse.tool_calls![0].id).toBeDefined();
+        expect(toolResults[0].tool_call_id).toBe(aiResponse.tool_calls![0].id);
+      }
+    }
+  );
+
   test("it can handle passing back reasoning outputs alongside computer calls", async () => {
     const model = new ChatOpenAI({
       model: "computer-use-preview",
@@ -912,6 +1017,7 @@ describe("promptCacheKey", () => {
     const response2 = await invoke();
     expect(response2).toBeDefined();
     expect(
+      // @ts-expect-error - FIXME(hntrl): bad unknown type=
       response2.response_metadata.usage.prompt_tokens_details.cached_tokens
     ).toBeGreaterThan(0);
   });
@@ -930,12 +1036,13 @@ describe("promptCacheKey", () => {
     const response2 = await invoke();
     expect(response2).toBeDefined();
     expect(
+      // @ts-expect-error - FIXME(hntrl): bad unknown type
       response2.response_metadata.usage.prompt_tokens_details.cached_tokens
     ).toBeGreaterThan(0);
   });
 });
 
-it.only("won't modify structured output content if outputVersion is set", async () => {
+it("won't modify structured output content if outputVersion is set", async () => {
   const schema = z.object({ name: z.string() });
   const model = new ChatOpenAI({
     model: "gpt-5",
