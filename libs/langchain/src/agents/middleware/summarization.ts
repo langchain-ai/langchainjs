@@ -198,7 +198,7 @@ export type SummarizationMiddlewareConfig = InferInteropZodInput<
 /**
  * Get max input tokens from model profile or fallback to model name lookup
  */
-function getProfileLimits(input: BaseLanguageModel): number | undefined {
+export function getProfileLimits(input: BaseLanguageModel): number | undefined {
   // Access maxInputTokens on the model profile directly if available
   if (input.profile.maxInputTokens) {
     return input.profile.maxInputTokens;
