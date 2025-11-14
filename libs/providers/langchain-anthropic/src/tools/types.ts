@@ -79,3 +79,120 @@ export interface TextEditor20250728InsertCommand {
   insert_line: number;
   new_str: string;
 }
+
+/**
+ * Computer use tool action types for Claude Opus 4.5.
+ * Includes zoom action which is not available in earlier versions.
+ * @see https://platform.claude.com/docs/en/agents-and-tools/tool-use/computer-use-tool
+ */
+export type Computer20251124Action =
+  | Computer20250124Action
+  | ComputerZoomAction;
+
+/**
+ * Computer use tool action types for Claude Sonnet 4.5, Haiku 4.5, Opus 4.1, Sonnet 4, Opus 4, and Sonnet 3.7 versions.
+ * @see https://platform.claude.com/docs/en/agents-and-tools/tool-use/computer-use-tool
+ */
+export type Computer20250124Action =
+  | ComputerScreenshotAction
+  | ComputerLeftClickAction
+  | ComputerRightClickAction
+  | ComputerMiddleClickAction
+  | ComputerDoubleClickAction
+  | ComputerTripleClickAction
+  | ComputerLeftClickDragAction
+  | ComputerLeftMouseDownAction
+  | ComputerLeftMouseUpAction
+  | ComputerScrollAction
+  | ComputerTypeAction
+  | ComputerKeyAction
+  | ComputerMouseMoveAction
+  | ComputerHoldKeyAction
+  | ComputerWaitAction;
+
+export interface ComputerScreenshotAction {
+  action: "screenshot";
+}
+
+export interface ComputerLeftClickAction {
+  action: "left_click";
+  coordinate: [number, number];
+}
+
+export interface ComputerRightClickAction {
+  action: "right_click";
+  coordinate: [number, number];
+}
+
+export interface ComputerMiddleClickAction {
+  action: "middle_click";
+  coordinate: [number, number];
+}
+
+export interface ComputerDoubleClickAction {
+  action: "double_click";
+  coordinate: [number, number];
+}
+
+export interface ComputerTripleClickAction {
+  action: "triple_click";
+  coordinate: [number, number];
+}
+
+export interface ComputerLeftClickDragAction {
+  action: "left_click_drag";
+  start_coordinate: [number, number];
+  end_coordinate: [number, number];
+}
+
+export interface ComputerLeftMouseDownAction {
+  action: "left_mouse_down";
+  coordinate: [number, number];
+}
+
+export interface ComputerLeftMouseUpAction {
+  action: "left_mouse_up";
+  coordinate: [number, number];
+}
+
+export interface ComputerScrollAction {
+  action: "scroll";
+  coordinate: [number, number];
+  scroll_direction: "up" | "down" | "left" | "right";
+  scroll_amount: number;
+}
+
+export interface ComputerTypeAction {
+  action: "type";
+  text: string;
+}
+
+export interface ComputerKeyAction {
+  action: "key";
+  key: string;
+}
+
+export interface ComputerMouseMoveAction {
+  action: "mouse_move";
+  coordinate: [number, number];
+}
+
+export interface ComputerHoldKeyAction {
+  action: "hold_key";
+  key: string;
+}
+
+export interface ComputerWaitAction {
+  action: "wait";
+  duration?: number;
+}
+
+/**
+ * Zoom action for Claude Opus 4.5 only.
+ * Allows viewing a specific region of the screen at full resolution.
+ */
+export interface ComputerZoomAction {
+  action: "zoom";
+  /** Coordinates [x1, y1, x2, y2] defining top-left and bottom-right corners */
+  region: [number, number, number, number];
+}

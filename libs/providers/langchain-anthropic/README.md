@@ -317,12 +317,8 @@ Available commands:
 - `insert` - Insert text at a specific line number
 
 ```typescript
-import {
-  ChatAnthropic,
-  tools,
-  type TextEditor20250728Command,
-} from "@langchain/anthropic";
-import fs from "fs";
+import fs from "node:fs";
+import { ChatAnthropic, tools } from "@langchain/anthropic";
 
 const llm = new ChatAnthropic({
   model: "claude-sonnet-4-5-20250929",
@@ -367,6 +363,88 @@ const response = await llmWithEditor.invoke(
 ```
 
 For more information, see [Anthropic's Text Editor Tool documentation](https://docs.anthropic.com/en/docs/agents-and-tools/tool-use/text-editor-tool).
+
+### Computer Use Tool
+
+The computer use tools enable Claude to interact with desktop environments through screenshot capture, mouse control, and keyboard input for autonomous desktop interaction.
+
+> **⚠️ Security Warning:** Computer use is a beta feature with unique risks. Use a dedicated virtual machine or container with minimal privileges. Avoid giving access to sensitive data.
+
+There are two variants:
+
+- **`computer_20251124`** - For Claude Opus 4.5 (includes zoom capability)
+- **`computer_20250124`** - For Claude 4 and Claude 3.7 models
+
+Available actions:
+
+- `screenshot` - Capture the current screen
+- `left_click`, `right_click`, `middle_click` - Mouse clicks at coordinates
+- `double_click`, `triple_click` - Multi-click actions
+- `left_click_drag` - Click and drag operations
+- `left_mouse_down`, `left_mouse_up` - Granular mouse control
+- `scroll` - Scroll the screen
+- `type` - Type text
+- `key` - Press keyboard keys/shortcuts
+- `mouse_move` - Move the cursor
+- `hold_key` - Hold a key while performing other actions
+- `wait` - Wait for a specified duration
+- `zoom` - View specific screen regions at full resolution (Claude Opus 4.5 only)
+
+```typescript
+import {
+  ChatAnthropic,
+  tools,
+  type Computer20250124Action,
+} from "@langchain/anthropic";
+
+const llm = new ChatAnthropic({
+  model: "claude-sonnet-4-5-20250929",
+});
+
+const computer = tools.computer_20250124({
+  // Required: specify display dimensions
+  displayWidthPx: 1024,
+  displayHeightPx: 768,
+  // Optional: X11 display number
+  displayNumber: 1,
+  execute: async (action: Computer20250124Action) => {
+    switch (action.action) {
+      case "screenshot":
+      // Capture and return base64-encoded screenshot
+      // ...
+      case "left_click":
+      // Click at the specified coordinates
+      // ...
+      // ...
+    }
+  },
+});
+
+const llmWithComputer = llm.bindTools([computer]);
+
+const response = await llmWithComputer.invoke(
+  "Save a picture of a cat to my desktop."
+);
+```
+
+For Claude Opus 4.5 with zoom support:
+
+```typescript
+import { tools } from "@langchain/anthropic";
+
+const computer = tools.computer_20251124({
+  displayWidthPx: 1920,
+  displayHeightPx: 1080,
+  // Enable zoom for detailed screen region inspection
+  enableZoom: true,
+  execute: async (action) => {
+    // Handle actions including "zoom" for Claude Opus 4.5
+    // ...
+  },
+});
+```
+
+For more information, see [Anthropic's Computer Use documentation](https://docs.anthropic.com/en/docs/agents-and-tools/tool-use/computer-use).
 
 ## Development
 
