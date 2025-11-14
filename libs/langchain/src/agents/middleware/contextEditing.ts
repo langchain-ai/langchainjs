@@ -174,7 +174,6 @@ export interface ClearToolUsesEditConfig {
  * ```ts
  * import { ClearToolUsesEdit } from "langchain";
  *
- * // New API with ContextSize
  * const edit = new ClearToolUsesEdit({
  *   trigger: { tokens: 100000 },  // Start clearing at 100K tokens
  *   keep: { messages: 3 },        // Keep 3 most recent tool results
