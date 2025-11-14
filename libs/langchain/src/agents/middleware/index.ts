@@ -50,5 +50,9 @@ export {
   toolEmulatorMiddleware,
   type ToolEmulatorOptions,
 } from "./toolEmulator.js";
+export {
+  openAIModerationMiddleware,
+  type OpenAIModerationMiddlewareOptions,
+} from "./provider/openai/moderation.js";
 export { type AgentMiddleware } from "./types.js";
 export { countTokensApproximately } from "./utils.js";
