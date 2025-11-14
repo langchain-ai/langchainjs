@@ -99,7 +99,7 @@ export class AzureOpenAIEmbeddings extends OpenAIEmbeddings {
 
       params.defaultHeaders = getHeadersWithUserAgent(
         params.defaultHeaders,
-        "langchainjs-azure-openai",
+        true,
         "2.0.0"
       );
 

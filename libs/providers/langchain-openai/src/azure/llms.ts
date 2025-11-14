@@ -133,7 +133,7 @@ export class AzureOpenAI extends OpenAI {
 
       params.defaultHeaders = getHeadersWithUserAgent(
         params.defaultHeaders,
-        "langchainjs-azure-openai",
+        true,
         "2.0.0"
       );
 

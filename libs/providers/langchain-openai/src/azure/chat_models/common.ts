@@ -126,7 +126,7 @@ export function _getAzureClientOptions(
 
     params.defaultHeaders = getHeadersWithUserAgent(
       params.defaultHeaders,
-      "langchainjs-azure-openai",
+      true,
       "2.0.0"
     );
 

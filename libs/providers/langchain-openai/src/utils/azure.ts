@@ -85,7 +85,7 @@ export type HeadersLike =
   | Record<string, HeaderValue | readonly HeaderValue[]>
   | undefined
   | null
-  // | NullableHeaders;
+  // NullableHeaders
   | { values: Headers; [key: string]: unknown };
 
 export function isHeaders(headers: unknown): headers is Headers {
@@ -168,17 +168,20 @@ export function getFormattedEnv() {
   return env;
 }
 
+// Note: ideally version would be imported from package.json, but there's
+// currently no good way to do that for all supported environments (Node, Deno, Browser).
 export function getHeadersWithUserAgent(
   headers: HeadersLike,
-  libraryName: string,
-  libraryVersion = "1.0.0"
+  isAzure = false,
+  version = "1.0.0"
 ): Record<string, string> {
   const normalizedHeaders = normalizeHeaders(headers);
   const env = getFormattedEnv();
+  const library = `langchainjs${isAzure ? "-azure" : ""}-openai`;
   return {
     ...normalizedHeaders,
     "User-Agent": normalizedHeaders["User-Agent"]
-      ? `${libraryName}/${libraryVersion} (${env})${normalizedHeaders["User-Agent"]}`
-      : `${libraryName}/${libraryVersion} (${env})`,
+      ? `${library}/${version} (${env})${normalizedHeaders["User-Agent"]}`
+      : `${library}/${version} (${env})`,
   };
 }

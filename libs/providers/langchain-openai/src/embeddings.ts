@@ -241,10 +241,7 @@ export class OpenAIEmbeddings<TOutput = number[]>
         delete params.baseURL;
       }
 
-      params.defaultHeaders = getHeadersWithUserAgent(
-        params.defaultHeaders,
-        "langchainjs-openai"
-      );
+      params.defaultHeaders = getHeadersWithUserAgent(params.defaultHeaders);
 
       this.client = new OpenAIClient(params);
     }

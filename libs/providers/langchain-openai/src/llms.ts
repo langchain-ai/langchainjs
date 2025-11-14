@@ -485,10 +485,7 @@ export class OpenAI<CallOptions extends OpenAICallOptions = OpenAICallOptions>
         delete params.baseURL;
       }
 
-      params.defaultHeaders = getHeadersWithUserAgent(
-        params.defaultHeaders,
-        "langchainjs-openai"
-      );
+      params.defaultHeaders = getHeadersWithUserAgent(params.defaultHeaders);
 
       this.client = new OpenAIClient(params);
     }
