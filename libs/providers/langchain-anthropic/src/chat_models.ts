@@ -16,6 +16,7 @@ import {
   type BaseLanguageModelInput,
   isOpenAITool,
 } from "@langchain/core/language_models/base";
+import { ModelProfile } from "@langchain/core/language_models/profile";
 import { toJsonSchema } from "@langchain/core/utils/json_schema";
 import { BaseLLMOutputParser } from "@langchain/core/output_parsers";
 import {
@@ -48,6 +49,7 @@ import {
   ChatAnthropicToolType,
 } from "./types.js";
 import { wrapAnthropicClientError } from "./utils/errors.js";
+import PROFILES from "./profiles.js";
 
 const MODEL_DEFAULT_MAX_OUTPUT_TOKENS: Partial<
   Record<Anthropic.Model, number>
@@ -1124,6 +1126,27 @@ export class ChatAnthropicMessages<
 
   _llmType() {
     return "anthropic";
+  }
+
+  /**
+   * Return profiling information for the model.
+   *
+   * Provides information about the model's capabilities and constraints,
+   * including token limits, multimodal support, and advanced features like
+   * tool calling and structured output.
+   *
+   * @returns {ModelProfile} An object describing the model's capabilities and constraints
+   *
+   * @example
+   * ```typescript
+   * const model = new ChatAnthropic({ model: "claude-opus-4-0" });
+   * const profile = model.profile;
+   * console.log(profile.maxInputTokens); // 200000
+   * console.log(profile.imageInputs); // true
+   * ```
+   */
+  get profile(): ModelProfile {
+    return PROFILES[this.model] ?? {};
   }
 
   withStructuredOutput<

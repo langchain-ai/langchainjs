@@ -1,6 +1,6 @@
 {
   "name": "@langchain/core",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "description": "Core LangChain.js abstractions and schemas",
   "type": "module",
   "engines": {
@@ -14,7 +14,8 @@
   },
   "homepage": "https://github.com/langchain-ai/langchainjs/tree/main/langchain-core/",
   "scripts": {
-    "build": "pnpm --filter @langchain/build compile @langchain/core",
+    "build": "turbo build:compile --filter @langchain/core",
+    "build:compile": "pnpm --filter @langchain/build compile @langchain/core",
     "clean": "rm -rf .turbo dist/",
     "lint:eslint": "eslint --cache src/",
     "lint:dpdm": "dpdm --skip-dynamic-imports circular --exit-code circular:1 --no-warning --no-tree src/*.ts src/**/*.ts --exclude \"(node_modules|src/utils/zod-to-json-schema)\" --transform",
@@ -281,6 +282,17 @@
       "import": {
         "types": "./dist/language_models/llms.d.ts",
         "default": "./dist/language_models/llms.js"
+      }
+    },
+    "./language_models/profile": {
+      "input": "./src/language_models/profile.ts",
+      "require": {
+        "types": "./dist/language_models/profile.d.cts",
+        "default": "./dist/language_models/profile.cjs"
+      },
+      "import": {
+        "types": "./dist/language_models/profile.d.ts",
+        "default": "./dist/language_models/profile.js"
       }
     },
     "./load": {

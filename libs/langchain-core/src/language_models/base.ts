@@ -26,6 +26,7 @@ import {
   InteropZodObject,
   InteropZodType,
 } from "../utils/types/zod.js";
+import { ModelProfile } from "./profile.js";
 
 // https://www.npmjs.com/package/js-tiktoken
 
@@ -601,6 +602,15 @@ export abstract class BaseLanguageModel<
    */
   static async deserialize(_data: SerializedLLM): Promise<BaseLanguageModel> {
     throw new Error("Use .toJSON() instead");
+  }
+
+  /**
+   * Return profiling information for the model.
+   *
+   * @returns {ModelProfile} An object describing the model's capabilities and constraints
+   */
+  get profile(): ModelProfile {
+    return {};
   }
 
   withStructuredOutput?<

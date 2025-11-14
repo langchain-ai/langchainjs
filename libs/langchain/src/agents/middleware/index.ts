@@ -17,6 +17,24 @@ export {
   type LLMToolSelectorConfig,
 } from "./llmToolSelector.js";
 export {
+  piiMiddleware,
+  type PIIMiddlewareConfig,
+  type PIIMatch,
+  type PIIStrategy,
+  type BuiltInPIIType,
+  type PIIDetector,
+  type RedactionRuleConfig,
+  type ResolvedRedactionRule,
+  PIIDetectionError,
+  detectEmail,
+  detectCreditCard,
+  detectIP,
+  detectMacAddress,
+  detectUrl,
+  applyStrategy,
+  resolveRedactionRule,
+} from "./pii.js";
+export {
   piiRedactionMiddleware,
   type PIIRedactionMiddlewareConfig,
 } from "./piiRedaction.js";
@@ -46,5 +64,9 @@ export {
   toolRetryMiddleware,
   type ToolRetryMiddlewareConfig,
 } from "./toolRetry.js";
+export {
+  toolEmulatorMiddleware,
+  type ToolEmulatorOptions,
+} from "./toolEmulator.js";
 export { type AgentMiddleware } from "./types.js";
 export { countTokensApproximately } from "./utils.js";
