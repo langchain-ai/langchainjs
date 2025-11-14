@@ -1137,7 +1137,7 @@ importers:
         version: 4.0.6
       '@getzep/zep-cloud':
         specifier: ^1.0.6
-        version: 1.0.12(@langchain/core@libs+langchain-core)(encoding@0.1.13)(langchain@0.3.30(36f4229235067d2920af8183c9a9a118))
+        version: 1.0.12(@langchain/core@libs+langchain-core)(encoding@0.1.13)(langchain@0.3.30(cf9b1e929b871d115e6d0b23a02f7d1d))
       '@getzep/zep-js':
         specifier: ^0.9.0
         version: 0.9.0
@@ -2229,8 +2229,8 @@ importers:
   libs/providers/langchain-deepseek:
     dependencies:
       '@langchain/openai':
-        specifier: ^1.1.0
-        version: 1.1.0(@langchain/core@libs+langchain-core)(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.5))
+        specifier: ^1.1.1
+        version: 1.1.1(@langchain/core@libs+langchain-core)(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.5))
     devDependencies:
       '@langchain/core':
         specifier: workspace:*
@@ -2446,8 +2446,8 @@ importers:
   libs/providers/langchain-google-gauth:
     dependencies:
       '@langchain/google-common':
-        specifier: ^1.0.0
-        version: 1.0.0(@langchain/core@libs+langchain-core)
+        specifier: ^1.0.1
+        version: 1.0.1(@langchain/core@libs+langchain-core)
       google-auth-library:
         specifier: ^10.1.0
         version: 10.2.0
@@ -2565,8 +2565,8 @@ importers:
   libs/providers/langchain-google-vertexai:
     dependencies:
       '@langchain/google-gauth':
-        specifier: ^1.0.0
-        version: 1.0.0(@langchain/core@libs+langchain-core)
+        specifier: ^1.0.1
+        version: 1.0.1(@langchain/core@libs+langchain-core)
     devDependencies:
       '@jest/globals':
         specifier: ^29.5.0
@@ -2575,8 +2575,8 @@ importers:
         specifier: workspace:*
         version: link:../../../internal/eslint
       '@langchain/google-common':
-        specifier: ^1.0.0
-        version: 1.0.0(@langchain/core@libs+langchain-core)
+        specifier: ^1.0.1
+        version: 1.0.1(@langchain/core@libs+langchain-core)
       '@langchain/standard-tests':
         specifier: workspace:*
         version: link:../../langchain-standard-tests
@@ -2623,8 +2623,8 @@ importers:
   libs/providers/langchain-google-vertexai-web:
     dependencies:
       '@langchain/google-webauth':
-        specifier: ^1.0.0
-        version: 1.0.0(@langchain/core@libs+langchain-core)
+        specifier: ^1.0.1
+        version: 1.0.1(@langchain/core@libs+langchain-core)
     devDependencies:
       '@jest/globals':
         specifier: ^29.5.0
@@ -2681,8 +2681,8 @@ importers:
   libs/providers/langchain-google-webauth:
     dependencies:
       '@langchain/google-common':
-        specifier: ^1.0.0
-        version: 1.0.0(@langchain/core@libs+langchain-core)
+        specifier: ^1.0.1
+        version: 1.0.1(@langchain/core@libs+langchain-core)
       web-auth-library:
         specifier: ^1.0.3
         version: 1.0.3
@@ -3342,8 +3342,8 @@ importers:
   libs/providers/langchain-xai:
     dependencies:
       '@langchain/openai':
-        specifier: ^1.1.0
-        version: 1.1.0(@langchain/core@libs+langchain-core)(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.5))
+        specifier: ^1.1.1
+        version: 1.1.1(@langchain/core@libs+langchain-core)(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.5))
     devDependencies:
       '@langchain/core':
         specifier: workspace:*
@@ -6420,8 +6420,8 @@ packages:
     peerDependencies:
       apache-arrow: '>=15.0.0 <=18.1.0'
 
-  '@langchain/anthropic@1.0.0':
-    resolution: {integrity: sha512-Lud/FrkFmXMYW5R9y0FC+RGdgjBBVQ2JAnG3A8E1I4+sqv5JgJttw3HKRpFkyBUSyacs6LMfSn5dbJ6TT9nMiQ==}
+  '@langchain/anthropic@1.0.1':
+    resolution: {integrity: sha512-yVKePAT+nNHtybyyPlWqiq6lqcoDlIuMgL9B4WMEU5gbmzL170iodiqcgcZNFQLOC1V2wCOzywq6Zr0kB24AFg==}
     engines: {node: '>=20'}
     peerDependencies:
       '@langchain/core': workspace:*
@@ -6438,44 +6438,44 @@ packages:
     peerDependencies:
       '@langchain/core': workspace:*
 
-  '@langchain/deepseek@1.0.0':
-    resolution: {integrity: sha512-jNMnX4iiqc+/T7kSr8JlDvtneFc1Jxc+I1feoBtGhnoGr8jN4R7t5oFvkuIZBaGNvS/mtJlP6Ujy3Z/X1qqjxg==}
+  '@langchain/deepseek@1.0.1':
+    resolution: {integrity: sha512-VkRZGQHOvLp0S2enqGTk8N5jTj7L4y3j9QKpRIqgTojfR1T/9tcB57wzNEvL+wsA0xprMQ1tUB6ZHBIUdmm0eg==}
     engines: {node: '>=20'}
     peerDependencies:
       '@langchain/core': workspace:*
 
-  '@langchain/google-common@1.0.0':
-    resolution: {integrity: sha512-4xrh8amC8AtvNAaA4CjptQ/P5jNycCiLNgU/m6T775yBSsJTNWlD8TKsqnOFDpD7q0T5sCIaU0oBAhOU7kjD6w==}
+  '@langchain/google-common@1.0.1':
+    resolution: {integrity: sha512-7NJeXas5Ga5lg/pQWQxRsquGHOPq5piqxYq+fZzV3jtx94gXCdtxzZSAdyuTFBIkoSaPKKEOLbRXmXx5ZT729w==}
     engines: {node: '>=20'}
     peerDependencies:
       '@langchain/core': workspace:*
 
-  '@langchain/google-gauth@1.0.0':
-    resolution: {integrity: sha512-WKH182y54WAwbkG8S1TgeCyNYLGu6N8+Fk3g2cknbFuCmQHsEnbLMnjdiDI+BQJAqcmO6P5RX6fV5EfWarARNQ==}
+  '@langchain/google-gauth@1.0.1':
+    resolution: {integrity: sha512-tgJUxBfYhXY4LXYyVmc0jPZ/5DHiiEDVM5FhFvq0tamerJ975ZP5HUaE6EhZ3u+/XyvYsUrLniaL4Wezc9e63A==}
     engines: {node: '>=20'}
 
-  '@langchain/google-genai@1.0.0':
-    resolution: {integrity: sha512-ICUBZl/46nG6+Yhe5v7kp/2TQBGOzqEkpfKPLDeNyJ4x9OOL46xsW3ZZrHJjhGMQuR6/JMmQMTU9kLoYgsd1Tg==}
-    engines: {node: '>=20'}
-    peerDependencies:
-      '@langchain/core': workspace:*
-
-  '@langchain/google-vertexai-web@1.0.0':
-    resolution: {integrity: sha512-3/I8pQsgnfJdMWg0UMn8rGoJ4oIQq5pyFTGwnn5KbgVswukG6icBR2FP+CTw1LvkKCPt7KYy9NSLQWUBwpCWgA==}
-    engines: {node: '>=20'}
-
-  '@langchain/google-vertexai@1.0.0':
-    resolution: {integrity: sha512-t0N45IX0ftQnz6khm+k6AvaDXtEjEmvPxj3UJvBsdC9Vnvt3ljwUQ1WqxuT/TqpBQDkftk6j+/3jygj0bfJsDw==}
-    engines: {node: '>=20'}
-
-  '@langchain/google-webauth@1.0.0':
-    resolution: {integrity: sha512-4FCk41tfBSQMbSLzqmdd6EChaRa3FNMBtG1HN7SzihLcn2dthJQ0nVob4TsJ5HKb1ftxa348zVBTntJf01pI9g==}
+  '@langchain/google-genai@1.0.1':
+    resolution: {integrity: sha512-a9Bzaswp1P+eA2V8hAWSBypqjxmH+/zhOY1TBdalQuPQBTRH35jBMVgX3CTTAheAzBUGQtlDD4/dR9tyemDbhw==}
     engines: {node: '>=20'}
     peerDependencies:
       '@langchain/core': workspace:*
 
-  '@langchain/groq@1.0.0':
-    resolution: {integrity: sha512-6fG9MEQHNXnxgObFHSPh+BPYyTGcoDnKd+GhI9l96cpHh+QNI+IvypicRCZVSsLdqzRCFHISvBQaH+SP5vgjIw==}
+  '@langchain/google-vertexai-web@1.0.1':
+    resolution: {integrity: sha512-cy6qed8+myqZIb490RidxZ+tylcdxX/aJEqQAW0iBLQpo4DsdQJSjsDMh4qt1psUgie3Gdc2qMlKozNDsfRwEQ==}
+    engines: {node: '>=20'}
+
+  '@langchain/google-vertexai@1.0.1':
+    resolution: {integrity: sha512-LJ/BnJXtep1WPlJ78/Q9za9N5gbzQeDxTLZLv3T4L0/7ZUiXt/cSmXrDBSAg5tZ8mrDjdLxkwz+5GdeobW7YVA==}
+    engines: {node: '>=20'}
+
+  '@langchain/google-webauth@1.0.1':
+    resolution: {integrity: sha512-7C5O2/rciRKt0Khl+9yGULiY1ujgxbr2N+8H14ecppNdTXPN/s36RvkhX6cM67CTcIIYzfo2dn4UQZ7H/A1xAg==}
+    engines: {node: '>=20'}
+    peerDependencies:
+      '@langchain/core': workspace:*
+
+  '@langchain/groq@1.0.1':
+    resolution: {integrity: sha512-vDQzv6A3mjG0/W/7vL4Iq+dnmhSbMHln+b7Rna810trjZzfNPZhAP6omqZyzCKIqjsQYUH4ODLnSUCNiarfYsQ==}
     engines: {node: '>=20'}
     peerDependencies:
       '@langchain/core': workspace:*
@@ -6560,8 +6560,8 @@ packages:
     peerDependencies:
       '@langchain/core': workspace:*
 
-  '@langchain/openai@1.1.0':
-    resolution: {integrity: sha512-GUUnt0VBKeCB+WwPxDamYt5EZfe4NXCzJC7x9OFAlt1C60/rSBbAGJokSL0VWz4oXxQwkqSvR8xA54FBvGgxQw==}
+  '@langchain/openai@1.1.1':
+    resolution: {integrity: sha512-0kUaXejo/sn6QAohWHDaAUapC4CJRkJIajGaWfJC+llSqpDBnmBE1oHg1M2fi1OCeP+ns9SxB6BTsq4Qbiqmig==}
     engines: {node: '>=20'}
     peerDependencies:
       '@langchain/core': workspace:*
@@ -6572,8 +6572,8 @@ packages:
     peerDependencies:
       '@langchain/core': workspace:*
 
-  '@langchain/xai@1.0.0':
-    resolution: {integrity: sha512-r/MsnUwueEL5zo3jYuSB+Kx7E/qamNLHIhUYUOPxVFl1QF4CKTB3JdrWMCRyvOHRAKYHBU1BXZ3iAhAoib51Rw==}
+  '@langchain/xai@1.0.1':
+    resolution: {integrity: sha512-h1em23oDFPaC4IMYeXfSPdCZmcPpWayZFm27VbvKNd5Zupul+LFMaQFTPYw/elSyb0AeFYPUwJkQqlkCJJ7QOQ==}
     engines: {node: '>=20'}
     peerDependencies:
       '@langchain/core': workspace:*
@@ -13486,18 +13486,6 @@ packages:
       zod:
         optional: true
 
-  openai@6.3.0:
-    resolution: {integrity: sha512-E6vOGtZvdcb4yXQ5jXvDlUG599OhIkb/GjBLZXS+qk0HF+PJReIldEc9hM8Ft81vn+N6dRdFRb7BZNK8bbvXrw==}
-    hasBin: true
-    peerDependencies:
-      ws: ^8.18.0
-      zod: ^3.25 || ^4.0
-    peerDependenciesMeta:
-      ws:
-        optional: true
-      zod:
-        optional: true
-
   openai@6.9.0:
     resolution: {integrity: sha512-n2sJRYmM+xfJ0l3OfH8eNnIyv3nQY7L08gZQu3dw6wSdfPtKAk92L83M2NIP5SS8Cl/bsBBG3yKzEOjkx0O+7A==}
     hasBin: true
@@ -19971,7 +19959,7 @@ snapshots:
     transitivePeerDependencies:
       - debug
 
-  '@getzep/zep-cloud@1.0.12(@langchain/core@libs+langchain-core)(encoding@0.1.13)(langchain@0.3.30(36f4229235067d2920af8183c9a9a118))':
+  '@getzep/zep-cloud@1.0.12(@langchain/core@libs+langchain-core)(encoding@0.1.13)(langchain@0.3.30(cf9b1e929b871d115e6d0b23a02f7d1d))':
     dependencies:
       form-data: 4.0.0
       node-fetch: 2.7.0(encoding@0.1.13)
@@ -19980,7 +19968,7 @@ snapshots:
       zod: 3.25.76
     optionalDependencies:
       '@langchain/core': link:libs/langchain-core
-      langchain: 0.3.30(36f4229235067d2920af8183c9a9a118)
+      langchain: 0.3.30(cf9b1e929b871d115e6d0b23a02f7d1d)
     transitivePeerDependencies:
       - encoding
 
@@ -20740,7 +20728,7 @@ snapshots:
       '@lancedb/lancedb-win32-arm64-msvc': 0.19.1
       '@lancedb/lancedb-win32-x64-msvc': 0.19.1
 
-  '@langchain/anthropic@1.0.0(@langchain/core@libs+langchain-core)(zod@3.25.76)':
+  '@langchain/anthropic@1.0.1(@langchain/core@libs+langchain-core)(zod@3.25.76)':
     dependencies:
       '@anthropic-ai/sdk': 0.65.0(zod@3.25.76)
       '@langchain/core': link:libs/langchain-core
@@ -20769,56 +20757,56 @@ snapshots:
       - encoding
     optional: true
 
-  '@langchain/deepseek@1.0.0(@langchain/core@libs+langchain-core)(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.5))':
+  '@langchain/deepseek@1.0.1(@langchain/core@libs+langchain-core)(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.5))':
     dependencies:
       '@langchain/core': link:libs/langchain-core
-      '@langchain/openai': 1.1.0(@langchain/core@libs+langchain-core)(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.5))
+      '@langchain/openai': 1.1.1(@langchain/core@libs+langchain-core)(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.5))
     transitivePeerDependencies:
       - ws
     optional: true
 
-  '@langchain/google-common@1.0.0(@langchain/core@libs+langchain-core)':
+  '@langchain/google-common@1.0.1(@langchain/core@libs+langchain-core)':
     dependencies:
       '@langchain/core': link:libs/langchain-core
       uuid: 10.0.0
 
-  '@langchain/google-gauth@1.0.0(@langchain/core@libs+langchain-core)':
+  '@langchain/google-gauth@1.0.1(@langchain/core@libs+langchain-core)':
     dependencies:
-      '@langchain/google-common': 1.0.0(@langchain/core@libs+langchain-core)
+      '@langchain/google-common': 1.0.1(@langchain/core@libs+langchain-core)
       google-auth-library: 10.2.0
     transitivePeerDependencies:
       - '@langchain/core'
       - supports-color
 
-  '@langchain/google-genai@1.0.0(@langchain/core@libs+langchain-core)':
+  '@langchain/google-genai@1.0.1(@langchain/core@libs+langchain-core)':
     dependencies:
       '@google/generative-ai': 0.24.1
       '@langchain/core': link:libs/langchain-core
       uuid: 11.1.0
     optional: true
 
-  '@langchain/google-vertexai-web@1.0.0(@langchain/core@libs+langchain-core)':
+  '@langchain/google-vertexai-web@1.0.1(@langchain/core@libs+langchain-core)':
     dependencies:
-      '@langchain/google-webauth': 1.0.0(@langchain/core@libs+langchain-core)
+      '@langchain/google-webauth': 1.0.1(@langchain/core@libs+langchain-core)
     transitivePeerDependencies:
       - '@langchain/core'
     optional: true
 
-  '@langchain/google-vertexai@1.0.0(@langchain/core@libs+langchain-core)':
+  '@langchain/google-vertexai@1.0.1(@langchain/core@libs+langchain-core)':
     dependencies:
-      '@langchain/google-gauth': 1.0.0(@langchain/core@libs+langchain-core)
+      '@langchain/google-gauth': 1.0.1(@langchain/core@libs+langchain-core)
     transitivePeerDependencies:
       - '@langchain/core'
       - supports-color
     optional: true
 
-  '@langchain/google-webauth@1.0.0(@langchain/core@libs+langchain-core)':
+  '@langchain/google-webauth@1.0.1(@langchain/core@libs+langchain-core)':
     dependencies:
       '@langchain/core': link:libs/langchain-core
-      '@langchain/google-common': 1.0.0(@langchain/core@libs+langchain-core)
+      '@langchain/google-common': 1.0.1(@langchain/core@libs+langchain-core)
       web-auth-library: 1.0.3
 
-  '@langchain/groq@1.0.0(@langchain/core@libs+langchain-core)(encoding@0.1.13)':
+  '@langchain/groq@1.0.1(@langchain/core@libs+langchain-core)(encoding@0.1.13)':
     dependencies:
       '@langchain/core': link:libs/langchain-core
       groq-sdk: 0.19.0(encoding@0.1.13)
@@ -20907,11 +20895,11 @@ snapshots:
       - ws
     optional: true
 
-  '@langchain/openai@1.1.0(@langchain/core@libs+langchain-core)(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.5))':
+  '@langchain/openai@1.1.1(@langchain/core@libs+langchain-core)(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.5))':
     dependencies:
       '@langchain/core': link:libs/langchain-core
       js-tiktoken: 1.0.21
-      openai: 6.3.0(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.5))(zod@4.1.12)
+      openai: 6.9.0(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.5))(zod@4.1.12)
       zod: 4.1.12
     transitivePeerDependencies:
       - ws
@@ -20922,10 +20910,10 @@ snapshots:
       js-tiktoken: 1.0.21
     optional: true
 
-  '@langchain/xai@1.0.0(@langchain/core@libs+langchain-core)(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.5))':
+  '@langchain/xai@1.0.1(@langchain/core@libs+langchain-core)(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.5))':
     dependencies:
       '@langchain/core': link:libs/langchain-core
-      '@langchain/openai': 1.1.0(@langchain/core@libs+langchain-core)(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.5))
+      '@langchain/openai': 1.1.1(@langchain/core@libs+langchain-core)(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.5))
     transitivePeerDependencies:
       - ws
     optional: true
@@ -28437,7 +28425,7 @@ snapshots:
 
   kuler@2.0.0: {}
 
-  langchain@0.3.30(36f4229235067d2920af8183c9a9a118):
+  langchain@0.3.30(cf9b1e929b871d115e6d0b23a02f7d1d):
     dependencies:
       '@langchain/core': link:libs/langchain-core
       '@langchain/openai': 0.6.16(@langchain/core@libs+langchain-core)(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.5))
@@ -28452,17 +28440,17 @@ snapshots:
       yaml: 2.8.1
       zod: 3.25.76
     optionalDependencies:
-      '@langchain/anthropic': 1.0.0(@langchain/core@libs+langchain-core)(zod@3.25.76)
+      '@langchain/anthropic': 1.0.1(@langchain/core@libs+langchain-core)(zod@3.25.76)
       '@langchain/aws': 1.0.1(@langchain/core@libs+langchain-core)
       '@langchain/cohere': 1.0.0(@langchain/core@libs+langchain-core)(encoding@0.1.13)
-      '@langchain/deepseek': 1.0.0(@langchain/core@libs+langchain-core)(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.5))
-      '@langchain/google-genai': 1.0.0(@langchain/core@libs+langchain-core)
-      '@langchain/google-vertexai': 1.0.0(@langchain/core@libs+langchain-core)
-      '@langchain/google-vertexai-web': 1.0.0(@langchain/core@libs+langchain-core)
-      '@langchain/groq': 1.0.0(@langchain/core@libs+langchain-core)(encoding@0.1.13)
+      '@langchain/deepseek': 1.0.1(@langchain/core@libs+langchain-core)(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.5))
+      '@langchain/google-genai': 1.0.1(@langchain/core@libs+langchain-core)
+      '@langchain/google-vertexai': 1.0.1(@langchain/core@libs+langchain-core)
+      '@langchain/google-vertexai-web': 1.0.1(@langchain/core@libs+langchain-core)
+      '@langchain/groq': 1.0.1(@langchain/core@libs+langchain-core)(encoding@0.1.13)
       '@langchain/mistralai': 1.0.0(@langchain/core@libs+langchain-core)
       '@langchain/ollama': 1.0.1(@langchain/core@libs+langchain-core)
-      '@langchain/xai': 1.0.0(@langchain/core@libs+langchain-core)(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.5))
+      '@langchain/xai': 1.0.1(@langchain/core@libs+langchain-core)(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.5))
       axios: 1.13.2(debug@4.4.3)
       cheerio: 1.0.0-rc.12
       handlebars: 4.7.8
@@ -29548,15 +29536,15 @@ snapshots:
       ws: 8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.5)
       zod: 3.25.76
 
-  openai@6.3.0(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.5))(zod@4.1.12):
-    optionalDependencies:
-      ws: 8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.5)
-      zod: 4.1.12
-
   openai@6.9.0(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.5))(zod@3.25.76):
     optionalDependencies:
       ws: 8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.5)
       zod: 3.25.76
+
+  openai@6.9.0(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.5))(zod@4.1.12):
+    optionalDependencies:
+      ws: 8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.5)
+      zod: 4.1.12
 
   openapi-types@12.1.3: {}
 
