@@ -40,8 +40,13 @@ import {
   type ChatOpenAIResponseFormat,
   ResponseFormatConfiguration,
   OpenAIVerbosityParam,
+  type OpenAIApiKey,
 } from "../types.js";
-import { type OpenAIEndpointConfig, getEndpoint } from "../utils/azure.js";
+import {
+  type OpenAIEndpointConfig,
+  getEndpoint,
+  getHeadersWithUserAgent,
+} from "../utils/azure.js";
 import {
   type FunctionDef,
   formatFunctionDefinitions,
@@ -245,7 +250,7 @@ export abstract class BaseChatOpenAI<
 
   topLogprobs?: number;
 
-  apiKey?: string;
+  apiKey?: OpenAIApiKey;
 
   organization?: string;
 
@@ -420,7 +425,8 @@ export abstract class BaseChatOpenAI<
     super(fields ?? {});
 
     const configApiKey =
-      typeof fields?.configuration?.apiKey === "string"
+      typeof fields?.configuration?.apiKey === "string" ||
+      typeof fields?.configuration?.apiKey === "function"
         ? fields?.configuration?.apiKey
         : undefined;
     this.apiKey =
@@ -564,6 +570,8 @@ export abstract class BaseChatOpenAI<
       if (!params.baseURL) {
         delete params.baseURL;
       }
+
+      params.defaultHeaders = getHeadersWithUserAgent(params.defaultHeaders);
 
       this.client = new OpenAIClient(params);
     }

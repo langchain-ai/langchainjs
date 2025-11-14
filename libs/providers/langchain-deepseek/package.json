@@ -1,6 +1,6 @@
 {
   "name": "@langchain/deepseek",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Deepseek integration for LangChain.js",
   "type": "module",
   "author": "LangChain",
@@ -14,7 +14,8 @@
   },
   "homepage": "https://github.com/langchain-ai/langchainjs/tree/main/libs/langchain-deepseek",
   "scripts": {
-    "build": "pnpm --filter @langchain/build compile @langchain/deepseek",
+    "build": "turbo build:compile --filter @langchain/deepseek",
+    "build:compile": "pnpm --filter @langchain/build compile @langchain/deepseek",
     "lint:eslint": "eslint --cache src/",
     "lint:dpdm": "dpdm --skip-dynamic-imports circular --exit-code circular:1 --no-warning --no-tree src/*.ts src/**/*.ts",
     "lint": "pnpm lint:eslint && pnpm lint:dpdm",
@@ -32,7 +33,7 @@
     "typegen:profiles": "pnpm --filter @langchain/model-profiles make --config profiles.toml"
   },
   "dependencies": {
-    "@langchain/openai": "^1.1.0"
+    "@langchain/openai": "^1.1.1"
   },
   "peerDependencies": {
     "@langchain/core": "^1.0.0"

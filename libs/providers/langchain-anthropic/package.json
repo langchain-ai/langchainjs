@@ -1,6 +1,6 @@
 {
   "name": "@langchain/anthropic",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Anthropic integrations for LangChain.js",
   "author": "LangChain",
   "license": "MIT",
@@ -14,7 +14,8 @@
   },
   "homepage": "https://github.com/langchain-ai/langchainjs/tree/main/libs/langchain-anthropic/",
   "scripts": {
-    "build": "pnpm --filter @langchain/build compile @langchain/anthropic",
+    "build": "turbo build:compile --filter @langchain/anthropic",
+    "build:compile": "pnpm --filter @langchain/build compile @langchain/anthropic",
     "lint:eslint": "eslint --cache src/",
     "lint:dpdm": "dpdm --skip-dynamic-imports circular --exit-code circular:1 --no-warning --no-tree src/*.ts src/**/*.ts",
     "lint": "pnpm lint:eslint && pnpm lint:dpdm",

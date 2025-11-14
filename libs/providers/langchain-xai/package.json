@@ -1,6 +1,6 @@
 {
   "name": "@langchain/xai",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "xAI integration for LangChain.js",
   "author": "LangChain",
   "license": "MIT",
@@ -14,7 +14,8 @@
   },
   "homepage": "https://github.com/langchain-ai/langchainjs/tree/main/libs/langchain-xai/",
   "scripts": {
-    "build": "pnpm --filter @langchain/build compile @langchain/xai",
+    "build": "turbo build:compile --filter @langchain/xai",
+    "build:compile": "pnpm --filter @langchain/build compile @langchain/xai",
     "lint:eslint": "eslint --cache src/",
     "lint:dpdm": "dpdm --skip-dynamic-imports circular --exit-code circular:1 --no-warning --no-tree src/*.ts src/**/*.ts",
     "lint": "pnpm lint:eslint && pnpm lint:dpdm",
@@ -32,7 +33,7 @@
     "typegen:profiles": "pnpm --filter @langchain/model-profiles make --config profiles.toml"
   },
   "dependencies": {
-    "@langchain/openai": "^1.1.0"
+    "@langchain/openai": "^1.1.1"
   },
   "peerDependencies": {
     "@langchain/core": "^1.0.0"
