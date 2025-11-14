@@ -1,5 +1,5 @@
 import { z } from "zod/v3";
-import { createHash } from "crypto";
+import { sha256 } from "@langchain/core/utils/hash";
 import { AIMessage, HumanMessage, ToolMessage } from "@langchain/core/messages";
 import type { InferInteropZodInput } from "@langchain/core/utils/types";
 
@@ -384,10 +384,7 @@ function applyHashStrategy(
   // Process matches in reverse order to preserve indices
   for (let i = matches.length - 1; i >= 0; i--) {
     const match = matches[i];
-    const hash = createHash("sha256")
-      .update(match.text)
-      .digest("hex")
-      .slice(0, 8);
+    const hash = sha256(match.text).slice(0, 8);
     const replacement = `<${piiType}_hash:${hash}>`;
     result =
       result.slice(0, match.start) + replacement + result.slice(match.end);

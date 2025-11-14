@@ -695,14 +695,14 @@ describe("summarizationMiddleware", () => {
       })
     ).toThrow();
 
-    // Invalid: messages <= 0 - should throw during invocation
+    // Valid: messages = 0 - should be allowed (keep nothing)
     expect(() =>
       summarizationMiddleware({
         model: summarizationModel as any,
         trigger: { tokens: 1000 },
         keep: { messages: 0 },
       })
-    ).toThrow();
+    ).not.toThrow();
 
     // Invalid: keep with multiple properties - should throw during invocation
     expect(() =>
