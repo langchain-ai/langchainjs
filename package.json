@@ -29,8 +29,8 @@
     "test:standard:unit": "turbo test:standard:unit",
     "test:standard:int": "turbo test:standard:int",
     "test:standard": "pnpm test:standard:unit && pnpm test:standard:int",
-    "changeset": "pnpm changeset",
-    "changeset:version": "pnpm changeset version"
+    "changeset": "changeset",
+    "changeset:version": "changeset version"
   },
   "devDependencies": {
     "@changesets/changelog-github": "^0.5.1",
