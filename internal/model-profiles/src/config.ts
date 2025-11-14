@@ -74,9 +74,23 @@ export interface ConfigFile {
 export function parseConfig(configPath: string): ConfigFile & {
   configDir: string;
 } {
+  // Find the trusted monorepo root using process.cwd() as the trusted starting point
+  const trustedMonorepoRoot = findMonorepoRoot();
+
   // When running via pnpm --filter, pnpm sets INIT_CWD to the original working directory
-  // where the command was invoked. Use that if available, otherwise use process.cwd().
-  const baseDir = process.env.INIT_CWD || process.cwd();
+  // where the command was invoked. Validate that it's within the trusted monorepo root.
+  const candidateBaseDir = process.env.INIT_CWD || process.cwd();
+  const resolvedBaseDir = path.resolve(candidateBaseDir);
+
+  // Validate that baseDir is within the trusted monorepo root
+  if (!isPathWithin(resolvedBaseDir, trustedMonorepoRoot)) {
+    throw new Error(
+      `Base directory "${candidateBaseDir}" resolves to "${resolvedBaseDir}" which is outside the trusted monorepo root "${trustedMonorepoRoot}". ` +
+        `All paths must be within the monorepo for security reasons.`
+    );
+  }
+
+  const baseDir = resolvedBaseDir;
 
   // Validate that the config path is within the monorepo
   const resolvedPath = validatePathInMonorepo(configPath, baseDir);
@@ -173,16 +187,61 @@ export function applyOverrides(
 }
 
 /**
+ * Checks if a child path is within a parent directory.
+ *
+ * @param childPath - The child path to check (must be absolute)
+ * @param parentPath - The parent directory path (must be absolute)
+ * @returns True if child is within parent, false otherwise
+ */
+function isPathWithin(childPath: string, parentPath: string): boolean {
+  const normalizedChild = path.normalize(path.resolve(childPath));
+  const normalizedParent = path.normalize(path.resolve(parentPath));
+  const relative = path.relative(normalizedParent, normalizedChild);
+  // If relative path doesn't start with ".." and isn't absolute, it's within parent
+  return !relative.startsWith("..") && !path.isAbsolute(relative);
+}
+
+/**
  * Finds the monorepo root directory by looking for pnpm-workspace.yaml or
  * a package.json file with "private": true at the root.
  *
- * @param startDir - Directory to start searching from (defaults to current working directory)
+ * Always uses process.cwd() as the trusted starting point to prevent path traversal attacks.
+ * If a startDir is provided, it will be validated against the trusted root.
+ *
+ * @param startDir - Optional directory to start searching from (will be validated against trusted root)
+ * @returns The absolute path to the monorepo root
+ * @throws Error if the monorepo root cannot be found or if startDir is outside the monorepo
+ */
+export function findMonorepoRoot(startDir?: string): string {
+  // Always use process.cwd() as the trusted starting point to find the monorepo root
+  const trustedStart = process.cwd();
+  const trustedRoot = findMonorepoRootFromDir(trustedStart);
+
+  // If a startDir is provided, validate it's within the trusted root
+  if (startDir) {
+    const resolvedStartDir = path.resolve(startDir);
+    if (!isPathWithin(resolvedStartDir, trustedRoot)) {
+      throw new Error(
+        `Start directory "${startDir}" resolves to "${resolvedStartDir}" which is outside the trusted monorepo root "${trustedRoot}".`
+      );
+    }
+  }
+
+  // Always return the trusted root found from process.cwd()
+  return trustedRoot;
+}
+
+/**
+ * Internal helper to find monorepo root from a given directory.
+ * This function performs the actual search logic.
+ *
+ * @param startDir - Directory to start searching from (must be absolute)
  * @returns The absolute path to the monorepo root
  * @throws Error if the monorepo root cannot be found
  */
-export function findMonorepoRoot(startDir?: string): string {
-  const start = startDir ? path.resolve(startDir) : process.cwd();
-  let current = start;
+function findMonorepoRootFromDir(startDir: string): string {
+  let current = path.resolve(startDir);
+  const originalStart = current;
 
   while (true) {
     // Check for pnpm-workspace.yaml (most reliable indicator)
@@ -214,7 +273,7 @@ export function findMonorepoRoot(startDir?: string): string {
     if (parent === current) {
       // We've reached the filesystem root
       throw new Error(
-        `Could not find monorepo root. Started searching from: ${start}`
+        `Could not find monorepo root. Started searching from: ${originalStart}`
       );
     }
     current = parent;
@@ -226,6 +285,9 @@ export function findMonorepoRoot(startDir?: string): string {
  * Resolves the path to an absolute path and checks that it's contained
  * within the monorepo boundaries.
  *
+ * Uses process.cwd() as the trusted starting point to find the monorepo root,
+ * then validates the provided path against that trusted root.
+ *
  * @param filePath - The path to validate (can be absolute or relative)
  * @param baseDir - Base directory for resolving relative paths (defaults to current working directory)
  * @returns The resolved absolute path if valid
@@ -235,8 +297,20 @@ export function validatePathInMonorepo(
   filePath: string,
   baseDir?: string
 ): string {
+  // Find the trusted monorepo root using process.cwd() as the trusted starting point
+  const trustedMonorepoRoot = findMonorepoRoot();
+
+  // Resolve baseDir, defaulting to process.cwd()
   const base = baseDir ? path.resolve(baseDir) : process.cwd();
-  const monorepoRoot = findMonorepoRoot(base);
+
+  // Validate that baseDir is within the trusted monorepo root
+  if (!isPathWithin(base, trustedMonorepoRoot)) {
+    throw new Error(
+      `Base directory "${
+        baseDir || process.cwd()
+      }" resolves to "${base}" which is outside the trusted monorepo root "${trustedMonorepoRoot}".`
+    );
+  }
 
   // Resolve the path to absolute
   const resolvedPath = path.isAbsolute(filePath)
@@ -245,17 +319,12 @@ export function validatePathInMonorepo(
 
   // Normalize paths to handle symlinks and relative segments
   const normalizedPath = path.normalize(resolvedPath);
-  const normalizedRoot = path.normalize(monorepoRoot);
+  const normalizedRoot = path.normalize(trustedMonorepoRoot);
 
-  // Check if the resolved path is within the monorepo root
-  // Use path.relative to check if the path is contained
-  const relativePath = path.relative(normalizedRoot, normalizedPath);
-
-  // If relativePath starts with ".." or is absolute, it's outside the monorepo
-  if (relativePath.startsWith("..") || path.isAbsolute(relativePath)) {
+  // Check if the resolved path is within the monorepo root using isPathWithin
+  if (!isPathWithin(normalizedPath, normalizedRoot)) {
     throw new Error(
-      `Path "${filePath}" resolves to "${normalizedPath}" which is outside the monorepo root "${normalizedRoot}". ` +
-        `All paths must be within the monorepo for security reasons.`
+      `Path "${filePath}" resolves to "${normalizedPath}" which is outside the monorepo root "${normalizedRoot}".`
     );
   }
 
