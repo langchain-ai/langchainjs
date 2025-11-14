@@ -3,7 +3,11 @@ import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import { Embeddings, type EmbeddingsParams } from "@langchain/core/embeddings";
 import { chunkArray } from "@langchain/core/utils/chunk_array";
 import type { OpenAIApiKey } from "./types.js";
-import { getEndpoint, OpenAIEndpointConfig } from "./utils/azure.js";
+import {
+  getEndpoint,
+  OpenAIEndpointConfig,
+  getHeadersWithUserAgent,
+} from "./utils/azure.js";
 import { wrapOpenAIClientError } from "./utils/client.js";
 
 /**
@@ -236,6 +240,11 @@ export class OpenAIEmbeddings<TOutput = number[]>
       if (!params.baseURL) {
         delete params.baseURL;
       }
+
+      params.defaultHeaders = getHeadersWithUserAgent(
+        params.defaultHeaders,
+        "langchainjs-openai"
+      );
 
       this.client = new OpenAIClient(params);
     }

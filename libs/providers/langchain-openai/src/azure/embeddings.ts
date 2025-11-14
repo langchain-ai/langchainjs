@@ -9,7 +9,7 @@ import { AzureOpenAIInput, OpenAICoreRequestOptions } from "../types.js";
 import {
   getEndpoint,
   OpenAIEndpointConfig,
-  normalizeHeaders,
+  getHeadersWithUserAgent,
 } from "../utils/azure.js";
 import { wrapOpenAIClientError } from "../utils/client.js";
 
@@ -97,13 +97,11 @@ export class AzureOpenAIEmbeddings extends OpenAIEmbeddings {
         delete params.baseURL;
       }
 
-      const defaultHeaders = normalizeHeaders(params.defaultHeaders);
-      params.defaultHeaders = {
-        ...params.defaultHeaders,
-        "User-Agent": defaultHeaders["User-Agent"]
-          ? `${defaultHeaders["User-Agent"]}: langchainjs-azure-openai-v2`
-          : `langchainjs-azure-openai-v2`,
-      };
+      params.defaultHeaders = getHeadersWithUserAgent(
+        params.defaultHeaders,
+        "langchainjs-azure-openai",
+        "2.0.0"
+      );
 
       this.client = new AzureOpenAIClient({
         apiVersion: this.azureOpenAIApiVersion,

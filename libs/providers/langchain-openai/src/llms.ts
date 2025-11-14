@@ -15,7 +15,11 @@ import type {
   OpenAICoreRequestOptions,
   OpenAIInput,
 } from "./types.js";
-import { OpenAIEndpointConfig, getEndpoint } from "./utils/azure.js";
+import {
+  OpenAIEndpointConfig,
+  getEndpoint,
+  getHeadersWithUserAgent,
+} from "./utils/azure.js";
 import { wrapOpenAIClientError } from "./utils/client.js";
 
 export type { OpenAICallOptions, OpenAIInput };
@@ -480,6 +484,11 @@ export class OpenAI<CallOptions extends OpenAICallOptions = OpenAICallOptions>
       if (!params.baseURL) {
         delete params.baseURL;
       }
+
+      params.defaultHeaders = getHeadersWithUserAgent(
+        params.defaultHeaders,
+        "langchainjs-openai"
+      );
 
       this.client = new OpenAIClient(params);
     }

@@ -1,3 +1,4 @@
+import { getEnv } from "@langchain/core/utils/env";
 import { iife } from "./misc.js";
 
 export interface OpenAIEndpointConfig {
@@ -84,7 +85,7 @@ export type HeadersLike =
   | Record<string, HeaderValue | readonly HeaderValue[]>
   | undefined
   | null
-  // NullableHeaders
+  // | NullableHeaders;
   | { values: Headers; [key: string]: unknown };
 
 export function isHeaders(headers: unknown): headers is Headers {
@@ -157,4 +158,27 @@ export function normalizeHeaders(
   });
 
   return Object.fromEntries(output.entries());
+}
+
+export function getFormattedEnv() {
+  let env = getEnv();
+  if (env === "node" || env === "deno") {
+    env = `(${env}/${process.version}; ${process.platform}; ${process.arch})`;
+  }
+  return env;
+}
+
+export function getHeadersWithUserAgent(
+  headers: HeadersLike,
+  libraryName: string,
+  libraryVersion = "1.0.0"
+): Record<string, string> {
+  const normalizedHeaders = normalizeHeaders(headers);
+  const env = getFormattedEnv();
+  return {
+    ...normalizedHeaders,
+    "User-Agent": normalizedHeaders["User-Agent"]
+      ? `${libraryName}/${libraryVersion} (${env})${normalizedHeaders["User-Agent"]}`
+      : `${libraryName}/${libraryVersion} (${env})`,
+  };
 }

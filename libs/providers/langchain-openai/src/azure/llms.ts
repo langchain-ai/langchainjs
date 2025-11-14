@@ -5,7 +5,7 @@ import { OpenAI } from "../llms.js";
 import {
   OpenAIEndpointConfig,
   getEndpoint,
-  normalizeHeaders,
+  getHeadersWithUserAgent,
 } from "../utils/azure.js";
 import type {
   OpenAIInput,
@@ -131,13 +131,11 @@ export class AzureOpenAI extends OpenAI {
         delete params.baseURL;
       }
 
-      const defaultHeaders = normalizeHeaders(params.defaultHeaders);
-      params.defaultHeaders = {
-        ...params.defaultHeaders,
-        "User-Agent": defaultHeaders["User-Agent"]
-          ? `${defaultHeaders["User-Agent"]}: langchainjs-azure-openai-v2`
-          : `langchainjs-azure-openai-v2`,
-      };
+      params.defaultHeaders = getHeadersWithUserAgent(
+        params.defaultHeaders,
+        "langchainjs-azure-openai",
+        "2.0.0"
+      );
 
       this.client = new AzureOpenAIClient({
         apiVersion: this.azureOpenAIApiVersion,
