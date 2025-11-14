@@ -30,6 +30,7 @@ function createMockSummarizationModel() {
     getName: () => "mock-summarizer",
     _modelType: "mock",
     lc_runnable: true,
+    profile: {},
   };
 }
 
@@ -351,7 +352,7 @@ describe("summarizationMiddleware", () => {
     (modelWithProfile as any).modelName = "gpt-5";
     // Set profile directly on the model instance
     Object.defineProperty(modelWithProfile, "profile", {
-      value: { max_input_tokens: 8192 },
+      value: { maxInputTokens: 8192 },
       writable: true,
       enumerable: true,
       configurable: true,
