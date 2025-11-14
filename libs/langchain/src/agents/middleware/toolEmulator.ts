@@ -4,8 +4,6 @@ import type { ClientTool, ServerTool } from "@langchain/core/tools";
 import { initChatModel } from "../../chat_models/universal.js";
 import { createMiddleware } from "../middleware.js";
 
-const DEFAULT_MODEL = "anthropic:claude-sonnet-4-5-20250929";
-
 /**
  * Options for configuring the Tool Emulator middleware.
  */
@@ -22,7 +20,7 @@ export interface ToolEmulatorOptions {
    * Model to use for emulation.
    * - Can be a model identifier string (e.g., "anthropic:claude-sonnet-4-5-20250929")
    * - Can be a BaseChatModel instance
-   * - Defaults to "anthropic:claude-sonnet-4-5-20250929"
+   * - Defaults to agent model
    */
   model?: string | BaseChatModel;
 }
@@ -77,6 +75,7 @@ export interface ToolEmulatorOptions {
 export function toolEmulatorMiddleware(
   options: ToolEmulatorOptions = {}
 ): ReturnType<typeof createMiddleware> {
+  let agentModel: BaseChatModel | undefined;
   const { tools, model } = options;
 
   /**
@@ -102,19 +101,32 @@ export function toolEmulatorMiddleware(
    * Initialize emulator model
    * We'll initialize it lazily in wrapToolCall to handle async initChatModel
    */
-  let emulatorModel: BaseChatModel | Promise<BaseChatModel> | undefined;
+  let emulatorModel: BaseChatModel | undefined;
   const getEmulatorModel = async (): Promise<BaseChatModel> => {
     if (typeof model === "object") {
       return model;
     }
-    emulatorModel =
-      emulatorModel ??
-      (await initChatModel(model ?? DEFAULT_MODEL, { temperature: 1 }));
-    return emulatorModel;
+    if (typeof model === "string") {
+      emulatorModel =
+        emulatorModel ??
+        (await initChatModel(model, { temperature: 1 }).catch((err) => {
+          console.error(
+            "Error initializing emulator model, using agent model:",
+            err
+          );
+          return agentModel as BaseChatModel;
+        }));
+      return emulatorModel;
+    }
+    return agentModel as BaseChatModel;
   };
 
   return createMiddleware({
     name: "ToolEmulatorMiddleware",
+    wrapModelCall: async (request, handler) => {
+      agentModel = request.model as BaseChatModel;
+      return handler(request);
+    },
     wrapToolCall: async (request, handler) => {
       const toolName = request.toolCall.name;
 
