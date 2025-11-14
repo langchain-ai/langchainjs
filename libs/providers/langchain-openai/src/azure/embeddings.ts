@@ -41,7 +41,7 @@ export class AzureOpenAIEmbeddings extends OpenAIEmbeddings {
     this.batchSize = fields?.batchSize ?? 1;
     this.azureOpenAIApiKey =
       fields?.azureOpenAIApiKey ??
-      fields?.apiKey ??
+      (typeof fields?.apiKey === "string" ? fields?.apiKey : undefined) ??
       getEnvironmentVariable("AZURE_OPENAI_API_KEY");
 
     this.azureOpenAIApiVersion =
@@ -81,8 +81,9 @@ export class AzureOpenAIEmbeddings extends OpenAIEmbeddings {
 
       const endpoint = getEndpoint(openAIEndpointConfig);
 
-      const params = {
-        ...this.clientConfig,
+      const { apiKey: existingApiKey, ...clientConfigRest } = this.clientConfig;
+      const params: Omit<ClientOptions, "apiKey"> & { apiKey?: string } = {
+        ...clientConfigRest,
         baseURL: endpoint,
         timeout: this.timeout,
         maxRetries: 0,

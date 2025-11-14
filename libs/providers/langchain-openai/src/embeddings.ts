@@ -2,6 +2,7 @@ import { type ClientOptions, OpenAI as OpenAIClient } from "openai";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import { Embeddings, type EmbeddingsParams } from "@langchain/core/embeddings";
 import { chunkArray } from "@langchain/core/utils/chunk_array";
+import type { OpenAIApiKey } from "./types.js";
 import { getEndpoint, OpenAIEndpointConfig } from "./utils/azure.js";
 import { wrapOpenAIClientError } from "./utils/client.js";
 
@@ -102,6 +103,8 @@ export class OpenAIEmbeddings<TOutput = number[]>
 
   protected clientConfig: ClientOptions;
 
+  protected apiKey?: OpenAIApiKey;
+
   constructor(
     fields?: Partial<OpenAIEmbeddingsParams> & {
       verbose?: boolean;
@@ -109,9 +112,9 @@ export class OpenAIEmbeddings<TOutput = number[]>
        * The OpenAI API key to use.
        * Alias for `apiKey`.
        */
-      openAIApiKey?: string;
+      openAIApiKey?: OpenAIApiKey;
       /** The OpenAI API key to use. */
-      apiKey?: string;
+      apiKey?: OpenAIApiKey;
       configuration?: ClientOptions;
     }
   ) {
