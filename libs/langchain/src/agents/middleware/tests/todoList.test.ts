@@ -31,7 +31,7 @@ describe("todoListMiddleware", () => {
     const agent = createAgent({
       model,
       systemPrompt: "You are a helpful assistant.",
-      middleware: [middleware] as const,
+      middleware: [middleware],
     });
 
     const result = await agent.invoke({
@@ -115,7 +115,7 @@ describe("todoListMiddleware", () => {
     const agent = createAgent({
       model,
       systemPrompt: "You are a helpful assistant.",
-      middleware: [middleware] as const,
+      middleware: [middleware],
     });
 
     const result = await agent.invoke({

@@ -1,5 +1,15 @@
 # @langchain/aws
 
+## 1.0.1
+
+### Patch Changes
+
+- bce4e45: fix(aws): conditional inference config and system message | ChatBedrockConverse
+
+## 1.0.0
+
+This release updates the package for compatibility with LangChain v1.0. See the v1.0 [release notes](https://docs.langchain.com/oss/javascript/releases/langchain-v1) for details on what's new.
+
 ## 0.1.15
 
 ### Patch Changes

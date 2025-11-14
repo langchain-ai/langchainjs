@@ -1,6 +1,6 @@
 {
   "name": "@langchain/pinecone",
-  "version": "0.2.0",
+  "version": "1.0.0",
   "description": "LangChain integration for Pinecone's vector database",
   "author": "Pinecone, Inc",
   "license": "MIT",
@@ -14,7 +14,8 @@
   },
   "homepage": "https://github.com/langchain-ai/langchainjs/tree/main/libs/langchain-pinecone/",
   "scripts": {
-    "build": "pnpm --filter @langchain/build compile @langchain/pinecone",
+    "build": "turbo build:compile --filter @langchain/pinecone",
+    "build:compile": "pnpm --filter @langchain/build compile @langchain/pinecone",
     "lint:eslint": "eslint --cache src/",
     "lint:dpdm": "dpdm --skip-dynamic-imports circular --exit-code circular:1 --no-warning --no-tree src/*.ts src/**/*.ts",
     "lint": "pnpm lint:eslint && pnpm lint:dpdm",
@@ -31,7 +32,7 @@
     "uuid": "^10.0.0"
   },
   "peerDependencies": {
-    "@langchain/core": "^1.0.0-alpha.6",
+    "@langchain/core": "^1.0.0",
     "@pinecone-database/pinecone": "^5.0.2"
   },
   "devDependencies": {
@@ -59,6 +60,7 @@
   "types": "./dist/index.d.ts",
   "exports": {
     ".": {
+      "input": "./src/index.ts",
       "import": {
         "types": "./dist/index.d.ts",
         "default": "./dist/index.js"
@@ -66,12 +68,14 @@
       "require": {
         "types": "./dist/index.d.cts",
         "default": "./dist/index.cjs"
-      },
-      "input": "./src/index.ts"
+      }
     },
     "./package.json": "./package.json"
   },
   "files": [
-    "dist/"
+    "dist/",
+    "CHANGELOG.md",
+    "README.md",
+    "LICENSE"
   ]
 }

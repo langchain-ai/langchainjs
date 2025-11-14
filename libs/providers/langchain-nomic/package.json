@@ -1,6 +1,6 @@
 {
   "name": "@langchain/nomic",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "Nomic integration for LangChain.js",
   "author": "LangChain",
   "license": "MIT",
@@ -14,7 +14,8 @@
   },
   "homepage": "https://github.com/langchain-ai/langchainjs/tree/main/libs/langchain-nomic/",
   "scripts": {
-    "build": "pnpm --filter @langchain/build compile @langchain/nomic",
+    "build": "turbo build:compile --filter @langchain/nomic",
+    "build:compile": "pnpm --filter @langchain/build compile @langchain/nomic",
     "lint:eslint": "eslint --cache src/",
     "lint:dpdm": "dpdm --skip-dynamic-imports circular --exit-code circular:1 --no-warning --no-tree src/*.ts src/**/*.ts",
     "lint": "pnpm lint:eslint && pnpm lint:dpdm",
@@ -29,7 +30,7 @@
     "@nomic-ai/atlas": "^0.8.0"
   },
   "peerDependencies": {
-    "@langchain/core": "^1.0.0-alpha.6"
+    "@langchain/core": "^1.0.0"
   },
   "devDependencies": {
     "@jest/globals": "^29.5.0",
@@ -54,6 +55,7 @@
   "types": "./dist/index.d.ts",
   "exports": {
     ".": {
+      "input": "./src/index.ts",
       "import": {
         "types": "./dist/index.d.ts",
         "default": "./dist/index.js"
@@ -61,12 +63,14 @@
       "require": {
         "types": "./dist/index.d.cts",
         "default": "./dist/index.cjs"
-      },
-      "input": "./src/index.ts"
+      }
     },
     "./package.json": "./package.json"
   },
   "files": [
-    "dist/"
+    "dist/",
+    "CHANGELOG.md",
+    "README.md",
+    "LICENSE"
   ]
 }

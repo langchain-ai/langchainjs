@@ -56,7 +56,7 @@ const agent = createAgent({
     userId: z.string(),
   }),
   tools: [],
-  middleware: [summarizationMiddleware] as const,
+  middleware: [summarizationMiddleware],
 });
 
 const config = {

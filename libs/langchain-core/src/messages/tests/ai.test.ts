@@ -314,6 +314,32 @@ describe("AIMessageChunk", () => {
         },
       ]);
     });
+
+    it("can be constructed with tool calls using basic params", () => {
+      const chunk = new AIMessageChunk({
+        tool_calls: [
+          {
+            name: "get_weather",
+            args: {
+              location: "San Francisco",
+            },
+          },
+        ],
+        invalid_tool_calls: [],
+        tool_call_chunks: [],
+        additional_kwargs: {},
+        response_metadata: {},
+      });
+      expect(chunk.tool_calls).toHaveLength(1);
+      expect(chunk.tool_calls).toEqual([
+        {
+          name: "get_weather",
+          args: {
+            location: "San Francisco",
+          },
+        },
+      ]);
+    });
   });
 
   it("should properly merge tool call chunks that have matching indices and ids", () => {

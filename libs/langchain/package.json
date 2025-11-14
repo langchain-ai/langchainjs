@@ -1,6 +1,6 @@
 {
   "name": "langchain",
-  "version": "1.0.0-alpha.9",
+  "version": "1.0.4",
   "description": "Typescript bindings for langchain",
   "author": "LangChain",
   "license": "MIT",
@@ -9,7 +9,10 @@
     "node": ">=20"
   },
   "files": [
-    "dist/"
+    "dist/",
+    "CHANGELOG.md",
+    "README.md",
+    "LICENSE"
   ],
   "repository": {
     "type": "git",
@@ -17,7 +20,8 @@
   },
   "homepage": "https://github.com/langchain-ai/langchainjs/tree/main/langchain/",
   "scripts": {
-    "build": "pnpm --filter @langchain/build compile langchain",
+    "build": "turbo build:compile --filter langchain",
+    "build:compile": "pnpm --filter @langchain/build compile langchain",
     "lint:eslint": "eslint --cache src/",
     "lint:dpdm": "dpdm --skip-dynamic-imports circular --exit-code circular:1 --no-warning --no-tree src/*.ts src/**/*.ts",
     "lint": "pnpm lint:eslint && pnpm lint:dpdm",
@@ -46,29 +50,26 @@
     "dotenv": "^16.0.3",
     "dpdm": "^3.14.0",
     "eslint": "^9.34.0",
-    "langsmith": "^0.3.64",
     "openai": "^5.1.0",
     "peggy": "^3.0.2",
     "prettier": "^2.8.3",
     "reflect-metadata": "^0.2.2",
     "rimraf": "^5.0.1",
     "rollup": "^3.19.1",
-    "typeorm": "^0.3.20",
+    "typeorm": "^0.3.26",
     "typescript": "~5.8.3",
     "vitest": "^3.2.4",
     "yaml": "^2.8.1"
   },
   "peerDependencies": {
-    "@langchain/core": "^1.0.0-alpha.6"
+    "@langchain/core": "^1.0.5"
   },
   "dependencies": {
-    "@langchain/langgraph": "next",
-    "@langchain/langgraph-checkpoint": "^0.1.1",
+    "@langchain/langgraph": "^1.0.0",
+    "@langchain/langgraph-checkpoint": "^1.0.0",
+    "langsmith": "~0.3.74",
     "uuid": "^10.0.0",
     "zod": "^3.25.76 || ^4"
-  },
-  "optionalDependencies": {
-    "langsmith": "^0.3.64"
   },
   "publishConfig": {
     "access": "public"
@@ -91,6 +92,7 @@
   "types": "./dist/index.d.ts",
   "exports": {
     ".": {
+      "input": "./src/index.ts",
       "import": {
         "types": "./dist/index.d.ts",
         "default": "./dist/index.js"
@@ -98,10 +100,10 @@
       "require": {
         "types": "./dist/index.d.cts",
         "default": "./dist/index.cjs"
-      },
-      "input": "./src/index.ts"
+      }
     },
     "./chat_models/universal": {
+      "input": "./src/chat_models/universal.ts",
       "import": {
         "types": "./dist/chat_models/universal.d.ts",
         "default": "./dist/chat_models/universal.js"
@@ -109,10 +111,10 @@
       "require": {
         "types": "./dist/chat_models/universal.d.cts",
         "default": "./dist/chat_models/universal.cjs"
-      },
-      "input": "./src/chat_models/universal.ts"
+      }
     },
     "./hub": {
+      "input": "./src/hub/index.ts",
       "import": {
         "types": "./dist/hub/index.d.ts",
         "default": "./dist/hub/index.js"
@@ -120,10 +122,10 @@
       "require": {
         "types": "./dist/hub/index.d.cts",
         "default": "./dist/hub/index.cjs"
-      },
-      "input": "./src/hub/index.ts"
+      }
     },
     "./hub/node": {
+      "input": "./src/hub/node.ts",
       "import": {
         "types": "./dist/hub/node.d.ts",
         "default": "./dist/hub/node.js"
@@ -131,10 +133,10 @@
       "require": {
         "types": "./dist/hub/node.d.cts",
         "default": "./dist/hub/node.cjs"
-      },
-      "input": "./src/hub/node.ts"
+      }
     },
     "./load": {
+      "input": "./src/load/index.ts",
       "import": {
         "types": "./dist/load/index.d.ts",
         "default": "./dist/load/index.js"
@@ -142,10 +144,10 @@
       "require": {
         "types": "./dist/load/index.d.cts",
         "default": "./dist/load/index.cjs"
-      },
-      "input": "./src/load/index.ts"
+      }
     },
     "./load/serializable": {
+      "input": "./src/load/serializable.ts",
       "import": {
         "types": "./dist/load/serializable.d.ts",
         "default": "./dist/load/serializable.js"
@@ -153,10 +155,10 @@
       "require": {
         "types": "./dist/load/serializable.d.cts",
         "default": "./dist/load/serializable.cjs"
-      },
-      "input": "./src/load/serializable.ts"
+      }
     },
     "./storage/encoder_backed": {
+      "input": "./src/storage/encoder_backed.ts",
       "import": {
         "types": "./dist/storage/encoder_backed.d.ts",
         "default": "./dist/storage/encoder_backed.js"
@@ -164,10 +166,10 @@
       "require": {
         "types": "./dist/storage/encoder_backed.d.cts",
         "default": "./dist/storage/encoder_backed.cjs"
-      },
-      "input": "./src/storage/encoder_backed.ts"
+      }
     },
     "./storage/in_memory": {
+      "input": "./src/storage/in_memory.ts",
       "import": {
         "types": "./dist/storage/in_memory.d.ts",
         "default": "./dist/storage/in_memory.js"
@@ -175,10 +177,10 @@
       "require": {
         "types": "./dist/storage/in_memory.d.cts",
         "default": "./dist/storage/in_memory.cjs"
-      },
-      "input": "./src/storage/in_memory.ts"
+      }
     },
     "./storage/file_system": {
+      "input": "./src/storage/file_system.ts",
       "import": {
         "types": "./dist/storage/file_system.d.ts",
         "default": "./dist/storage/file_system.js"
@@ -186,8 +188,7 @@
       "require": {
         "types": "./dist/storage/file_system.d.cts",
         "default": "./dist/storage/file_system.cjs"
-      },
-      "input": "./src/storage/file_system.ts"
+      }
     },
     "./package.json": "./package.json"
   }

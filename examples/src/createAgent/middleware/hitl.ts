@@ -72,7 +72,7 @@ const agent = createAgent({
   systemPrompt:
     "You are a helpful assistant. Use the tools provided to help the user.",
   tools: [calculateTool, writeFileTool],
-  middleware: [hitlMiddleware] as const,
+  middleware: [hitlMiddleware],
 });
 const config = {
   configurable: {

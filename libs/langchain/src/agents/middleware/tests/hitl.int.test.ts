@@ -5,9 +5,10 @@ import { ChatOpenAI } from "@langchain/openai";
 import { HumanMessage, AIMessage } from "@langchain/core/messages";
 import { MemorySaver } from "@langchain/langgraph-checkpoint";
 import { Command } from "@langchain/langgraph";
+import { ToolMessage } from "@langchain/core/messages";
 
 import { tool } from "@langchain/core/tools";
-import { createAgent } from "../../index.js";
+import { createAgent, type Interrupt } from "../../index.js";
 import {
   type HITLRequest,
   type HITLResponse,
@@ -94,7 +95,7 @@ describe("humanInTheLoopMiddleware", () => {
       expect(hitlRequest.actionRequests).toMatchInlineSnapshot(`
         [
           {
-            "arguments": {
+            "args": {
               "a": 42,
               "b": 17,
               "operation": "multiply",
@@ -299,7 +300,6 @@ describe("humanInTheLoopMiddleware", () => {
             decisions: [
               {
                 type: "reject",
-                message: "The calculation result is 500 (custom override)",
               },
               {
                 type: "approve",
@@ -309,10 +309,127 @@ describe("humanInTheLoopMiddleware", () => {
         }),
         thread
       );
-      expect(resume.structuredResponse).toEqual({
+
+      /**
+       * we expect another interrupt as model updates the tool call
+       */
+      expect("__interrupt__" in resume).toBe(true);
+
+      const lastMessage = resume.messages.at(-1) as AIMessage;
+      const finalResume = await agent.invoke(
+        new Command({
+          resume: {
+            decisions:
+              lastMessage.tool_calls?.map(() => ({
+                type: "approve",
+              })) ?? [],
+          } satisfies HITLResponse,
+        }),
+        thread
+      );
+
+      expect(finalResume.structuredResponse).toEqual({
         result: expect.toBeOneOf([500, 579]),
         name: "Thomas",
       });
+      /**
+       * we expect the final resume to have 8 messages:
+       * 1. human message
+       * 2. AI message with 2 calls
+       * 3. Rejected tool message
+       * 4. new tool call
+       * 5. approved tool message
+       * 6. approved tool message
+       * 7. AI message with final response
+       */
+      expect(finalResume.messages).toHaveLength(7);
+    });
+
+    it("should allow to reject tool calls and give model feedback", async () => {
+      const checkpointer = new MemorySaver();
+      const sendEmailTool = tool(
+        () => {
+          return "Email sent!";
+        },
+        {
+          name: "send_email",
+          description: "Sends an email",
+          schema: z.object({
+            message: z.string(),
+            to: z.array(z.string()),
+            subject: z.string(),
+          }),
+        }
+      );
+      const agent = createAgent({
+        model,
+        middleware: [
+          humanInTheLoopMiddleware({
+            interruptOn: {
+              send_email: true,
+            },
+          }),
+        ] as const,
+        tools: [sendEmailTool],
+        checkpointer,
+      });
+
+      const result = await agent.invoke(
+        {
+          messages: [
+            new HumanMessage(
+              "Send an email to john.doe@example.com, saying hello!"
+            ),
+          ],
+        },
+        thread
+      );
+
+      /**
+       * first interception
+       */
+      expect("__interrupt__" in result).toBe(true);
+      const resume = await agent.invoke(
+        new Command({
+          resume: {
+            decisions: [
+              {
+                type: "reject",
+                message:
+                  "Send the email speaking like a pirate starting the message with 'Arrr, matey!'",
+              },
+            ],
+          } satisfies HITLResponse,
+        }),
+        thread
+      );
+
+      /**
+       * second interception, verify model as updated the tool call and approve
+       */
+      const interrupt = resume.__interrupt__?.[0] as Interrupt<HITLRequest>;
+      expect(
+        interrupt?.value?.actionRequests[0].args.message.startsWith(
+          "Arrr, matey!"
+        )
+      ).toBe(true);
+      const finalResume = await agent.invoke(
+        new Command({
+          resume: {
+            decisions: [
+              {
+                type: "approve",
+              },
+            ],
+          } satisfies HITLResponse,
+        }),
+        thread
+      );
+      const toolMessage = [...finalResume.messages]
+        .reverse()
+        .find(ToolMessage.isInstance);
+      expect(toolMessage).toBeDefined();
+      expect(toolMessage?.content).toBe("Email sent!");
     });
   });
 });

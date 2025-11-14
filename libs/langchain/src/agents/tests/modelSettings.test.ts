@@ -49,7 +49,7 @@ describe("modelSettings middleware support", () => {
     const agent = createAgent({
       model,
       tools: [],
-      middleware: [middleware] as const,
+      middleware: [middleware],
     });
 
     await agent.invoke({

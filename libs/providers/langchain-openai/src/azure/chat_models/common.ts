@@ -1,11 +1,11 @@
-import { AzureOpenAI as AzureOpenAIClient } from "openai";
-import { getEnv, getEnvironmentVariable } from "@langchain/core/utils/env";
+import { AzureOpenAI as AzureOpenAIClient, type ClientOptions } from "openai";
+import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import type { Serialized } from "@langchain/core/load/serializable";
 import { ChatOpenAICallOptions } from "../../chat_models/index.js";
 import {
   OpenAIEndpointConfig,
   getEndpoint,
-  normalizeHeaders,
+  getHeadersWithUserAgent,
 } from "../../utils/azure.js";
 import { AzureOpenAIChatInput, OpenAICoreRequestOptions } from "../../types.js";
 import {
@@ -56,8 +56,10 @@ export function _constructAzureFields(
 ) {
   this.azureOpenAIApiKey =
     fields?.azureOpenAIApiKey ??
-    fields?.openAIApiKey ??
-    fields?.apiKey ??
+    (typeof fields?.openAIApiKey === "string"
+      ? fields?.openAIApiKey
+      : undefined) ??
+    (typeof fields?.apiKey === "string" ? fields?.apiKey : undefined) ??
     getEnvironmentVariable("AZURE_OPENAI_API_KEY");
 
   this.azureOpenAIApiInstanceName =
@@ -106,8 +108,9 @@ export function _getAzureClientOptions(
 
     const endpoint = getEndpoint(openAIEndpointConfig);
 
-    const params = {
-      ...this.clientConfig,
+    const { apiKey: existingApiKey, ...clientConfigRest } = this.clientConfig;
+    const params: Omit<ClientOptions, "apiKey"> & { apiKey?: string } = {
+      ...clientConfigRest,
       baseURL: endpoint,
       timeout: this.timeout,
       maxRetries: 0,
@@ -121,18 +124,11 @@ export function _getAzureClientOptions(
       delete params.baseURL;
     }
 
-    let env = getEnv();
-    if (env === "node" || env === "deno") {
-      env = `(${env}/${process.version}; ${process.platform}; ${process.arch})`;
-    }
-
-    const defaultHeaders = normalizeHeaders(params.defaultHeaders);
-    params.defaultHeaders = {
-      ...params.defaultHeaders,
-      "User-Agent": defaultHeaders["User-Agent"]
-        ? `langchainjs-azure-openai/2.0.0 (${env})${defaultHeaders["User-Agent"]}`
-        : `langchainjs-azure-openai/2.0.0 (${env})`,
-    };
+    params.defaultHeaders = getHeadersWithUserAgent(
+      params.defaultHeaders,
+      true,
+      "2.0.0"
+    );
 
     this.client = new AzureOpenAIClient({
       apiVersion: this.azureOpenAIApiVersion,

@@ -23,7 +23,7 @@ mkdir -p "$updater_script_dir"
 cp "$original_updater_script_dir"/* "$updater_script_dir/"
 cd "$updater_script_dir"
 # Update any workspace dep to the latest version since not all workspaces are
-# available in the test enviroment.
+# available in the test environment.
 node "update_resolutions_latest.js"
 
 # Navigate back to monorepo root and install dependencies
@@ -37,5 +37,5 @@ cd "$monorepo_openai_dir"
 
 # Clean and reinstall to avoid dependency conflicts
 pnpm install --no-frozen-lockfile
-pnpm add @langchain/core@alpha
+pnpm add @langchain/core
 pnpm test

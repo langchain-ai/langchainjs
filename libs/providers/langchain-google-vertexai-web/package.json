@@ -1,6 +1,6 @@
 {
   "name": "@langchain/google-vertexai-web",
-  "version": "0.2.16",
+  "version": "1.0.1",
   "description": "LangChain.js support for Google Vertex AI Web",
   "author": "LangChain",
   "license": "MIT",
@@ -14,7 +14,8 @@
   },
   "homepage": "https://github.com/langchain-ai/langchainjs/tree/main/libs/langchain-google-vertexai-web/",
   "scripts": {
-    "build": "pnpm --filter @langchain/build compile @langchain/google-vertexai-web",
+    "build": "turbo build:compile --filter @langchain/google-vertexai-web",
+    "build:compile": "pnpm --filter @langchain/build compile @langchain/google-vertexai-web",
     "lint:eslint": "eslint --cache src/",
     "lint:dpdm": "dpdm --skip-dynamic-imports circular --exit-code circular:1 --no-warning --no-tree src/*.ts src/**/*.ts",
     "lint": "pnpm lint:eslint && pnpm lint:dpdm",
@@ -28,7 +29,7 @@
     "format:check": "prettier --config .prettierrc --check \"src\""
   },
   "dependencies": {
-    "@langchain/google-webauth": "^0.2.16"
+    "@langchain/google-webauth": "^1.0.1"
   },
   "devDependencies": {
     "@jest/globals": "^29.5.0",
@@ -56,6 +57,7 @@
   "types": "./dist/index.d.ts",
   "exports": {
     ".": {
+      "input": "./src/index.ts",
       "import": {
         "types": "./dist/index.d.ts",
         "default": "./dist/index.js"
@@ -63,10 +65,10 @@
       "require": {
         "types": "./dist/index.d.cts",
         "default": "./dist/index.cjs"
-      },
-      "input": "./src/index.ts"
+      }
     },
     "./utils": {
+      "input": "./src/utils.ts",
       "import": {
         "types": "./dist/utils.d.ts",
         "default": "./dist/utils.js"
@@ -74,10 +76,10 @@
       "require": {
         "types": "./dist/utils.d.cts",
         "default": "./dist/utils.cjs"
-      },
-      "input": "./src/utils.ts"
+      }
     },
     "./types": {
+      "input": "./src/types.ts",
       "import": {
         "types": "./dist/types.d.ts",
         "default": "./dist/types.js"
@@ -85,12 +87,14 @@
       "require": {
         "types": "./dist/types.d.cts",
         "default": "./dist/types.cjs"
-      },
-      "input": "./src/types.ts"
+      }
     },
     "./package.json": "./package.json"
   },
   "files": [
-    "dist/"
+    "dist/",
+    "CHANGELOG.md",
+    "README.md",
+    "LICENSE"
   ]
 }

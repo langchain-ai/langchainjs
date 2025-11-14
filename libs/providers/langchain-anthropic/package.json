@@ -1,6 +1,6 @@
 {
   "name": "@langchain/anthropic",
-  "version": "1.0.0-alpha.2",
+  "version": "1.0.1",
   "description": "Anthropic integrations for LangChain.js",
   "author": "LangChain",
   "license": "MIT",
@@ -14,7 +14,8 @@
   },
   "homepage": "https://github.com/langchain-ai/langchainjs/tree/main/libs/langchain-anthropic/",
   "scripts": {
-    "build": "pnpm --filter @langchain/build compile @langchain/anthropic",
+    "build": "turbo build:compile --filter @langchain/anthropic",
+    "build:compile": "pnpm --filter @langchain/build compile @langchain/anthropic",
     "lint:eslint": "eslint --cache src/",
     "lint:dpdm": "dpdm --skip-dynamic-imports circular --exit-code circular:1 --no-warning --no-tree src/*.ts src/**/*.ts",
     "lint": "pnpm lint:eslint && pnpm lint:dpdm",
@@ -27,16 +28,19 @@
     "test:standard:int": "vitest run --mode standard-int",
     "test:standard": "pnpm test:standard:unit && pnpm test:standard:int",
     "format": "prettier --config .prettierrc --write \"src\"",
-    "format:check": "prettier --config .prettierrc --check \"src\""
+    "format:check": "prettier --config .prettierrc --check \"src\"",
+    "typegen": "pnpm run typegen:profiles",
+    "typegen:profiles": "pnpm --filter @langchain/model-profiles make --config profiles.toml"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.65.0"
   },
   "peerDependencies": {
-    "@langchain/core": "^1.0.0-alpha.6"
+    "@langchain/core": "^1.0.0"
   },
   "devDependencies": {
     "@anthropic-ai/vertex-sdk": "^0.11.5",
+    "@cfworker/json-schema": "^4.1.1",
     "@langchain/core": "workspace:*",
     "@langchain/eslint": "workspace:*",
     "@langchain/standard-tests": "workspace:*",
@@ -48,6 +52,7 @@
     "prettier": "^2.8.3",
     "rimraf": "^5.0.1",
     "typescript": "~5.8.3",
+    "uuid": "^13.0.0",
     "vitest": "^3.2.4",
     "zod": "3.25.76"
   },
@@ -72,6 +77,7 @@
   "types": "./dist/index.d.ts",
   "exports": {
     ".": {
+      "input": "./src/index.ts",
       "import": {
         "types": "./dist/index.d.ts",
         "default": "./dist/index.js"
@@ -79,12 +85,14 @@
       "require": {
         "types": "./dist/index.d.cts",
         "default": "./dist/index.cjs"
-      },
-      "input": "./src/index.ts"
+      }
     },
     "./package.json": "./package.json"
   },
   "files": [
-    "dist/"
+    "dist/",
+    "CHANGELOG.md",
+    "README.md",
+    "LICENSE"
   ]
 }

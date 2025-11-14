@@ -1,6 +1,6 @@
 {
   "name": "@langchain/mongodb",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "Sample integration for LangChain.js",
   "author": "LangChain",
   "license": "MIT",
@@ -14,14 +14,15 @@
   },
   "homepage": "https://github.com/langchain-ai/langchainjs/tree/main/libs/langchain-mongodb/",
   "scripts": {
-    "build": "pnpm --filter @langchain/build compile @langchain/mongodb",
+    "build": "turbo build:compile --filter @langchain/mongodb",
+    "build:compile": "pnpm --filter @langchain/build compile @langchain/mongodb",
     "lint:eslint": "eslint --cache src/",
     "lint:dpdm": "dpdm --skip-dynamic-imports circular --exit-code circular:1 --no-warning --no-tree src/*.ts src/**/*.ts",
     "lint": "pnpm lint:eslint && pnpm lint:dpdm",
     "lint:fix": "pnpm lint:eslint --fix && pnpm lint:dpdm",
     "clean": "rm -rf .turbo dist/",
     "test:watch": "vitest",
-    "test:int": "vitest run --mode int --testTimeout 100000 --maxWorkers=50%",
+    "test:int": "vitest run --mode int --testTimeout 10000 --maxWorkers=50%",
     "format": "prettier --config .prettierrc --write \"src\"",
     "format:check": "prettier --config .prettierrc --check \"src\""
   },
@@ -29,7 +30,7 @@
     "mongodb": "^6.17.0"
   },
   "peerDependencies": {
-    "@langchain/core": "^1.0.0-alpha.6"
+    "@langchain/core": "^1.0.0"
   },
   "devDependencies": {
     "@langchain/core": "workspace:*",
@@ -56,6 +57,7 @@
   "types": "./dist/index.d.ts",
   "exports": {
     ".": {
+      "input": "./src/index.ts",
       "import": {
         "types": "./dist/index.d.cts",
         "default": "./dist/index.cjs"
@@ -63,16 +65,14 @@
       "require": {
         "types": "./dist/index.d.cts",
         "default": "./dist/index.cjs"
-      },
-      "input": "./src/index.ts"
+      }
     },
     "./package.json": "./package.json"
   },
   "files": [
     "dist/",
-    "index.cjs",
-    "index.js",
-    "index.d.ts",
-    "index.d.cts"
+    "CHANGELOG.md",
+    "README.md",
+    "LICENSE"
   ]
 }

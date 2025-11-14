@@ -11,8 +11,6 @@ import {
   isOpenAICustomTool,
 } from "../utils/tools.js";
 import { _convertOpenAIResponsesUsageToLangChainUsage } from "../utils/output.js";
-import { _convertMessagesToOpenAIParams } from "../utils/message_inputs.js";
-import { _convertToResponsesMessageFromV1 } from "../utils/standard.js";
 import {
   ChatOpenAICompletions,
   ChatOpenAICompletionsCallOptions,
@@ -601,6 +599,10 @@ export class ChatOpenAI<
 
   get lc_serializable_keys(): string[] {
     return [...super.lc_serializable_keys, "useResponsesApi"];
+  }
+
+  get callKeys(): string[] {
+    return [...super.callKeys, "useResponsesApi"];
   }
 
   constructor(protected fields?: ChatOpenAIFields) {

@@ -1,6 +1,6 @@
 {
   "name": "@langchain/core",
-  "version": "1.0.0-alpha.7",
+  "version": "1.0.5",
   "description": "Core LangChain.js abstractions and schemas",
   "type": "module",
   "engines": {
@@ -14,7 +14,8 @@
   },
   "homepage": "https://github.com/langchain-ai/langchainjs/tree/main/langchain-core/",
   "scripts": {
-    "build": "pnpm --filter @langchain/build compile @langchain/core",
+    "build": "turbo build:compile --filter @langchain/core",
+    "build:compile": "pnpm --filter @langchain/build compile @langchain/core",
     "clean": "rm -rf .turbo dist/",
     "lint:eslint": "eslint --cache src/",
     "lint:dpdm": "dpdm --skip-dynamic-imports circular --exit-code circular:1 --no-warning --no-tree src/*.ts src/**/*.ts --exclude \"(node_modules|src/utils/zod-to-json-schema)\" --transform",
@@ -75,6 +76,7 @@
   ],
   "exports": {
     ".": {
+      "input": "./src/index.ts",
       "require": {
         "types": "./dist/index.d.cts",
         "default": "./dist/index.cjs"
@@ -82,10 +84,10 @@
       "import": {
         "types": "./dist/index.d.ts",
         "default": "./dist/index.js"
-      },
-      "input": "./src/index.ts"
+      }
     },
     "./agents": {
+      "input": "./src/agents.ts",
       "require": {
         "types": "./dist/agents.d.cts",
         "default": "./dist/agents.cjs"
@@ -93,10 +95,10 @@
       "import": {
         "types": "./dist/agents.d.ts",
         "default": "./dist/agents.js"
-      },
-      "input": "./src/agents.ts"
+      }
     },
     "./caches": {
+      "input": "./src/caches/base.ts",
       "require": {
         "types": "./dist/caches/base.d.cts",
         "default": "./dist/caches/base.cjs"
@@ -104,10 +106,10 @@
       "import": {
         "types": "./dist/caches/base.d.ts",
         "default": "./dist/caches/base.js"
-      },
-      "input": "./src/caches/base.ts"
+      }
     },
     "./callbacks/base": {
+      "input": "./src/callbacks/base.ts",
       "require": {
         "types": "./dist/callbacks/base.d.cts",
         "default": "./dist/callbacks/base.cjs"
@@ -115,10 +117,10 @@
       "import": {
         "types": "./dist/callbacks/base.d.ts",
         "default": "./dist/callbacks/base.js"
-      },
-      "input": "./src/callbacks/base.ts"
+      }
     },
     "./callbacks/dispatch": {
+      "input": "./src/callbacks/dispatch/index.ts",
       "require": {
         "types": "./dist/callbacks/dispatch/index.d.cts",
         "default": "./dist/callbacks/dispatch/index.cjs"
@@ -126,10 +128,10 @@
       "import": {
         "types": "./dist/callbacks/dispatch/index.d.ts",
         "default": "./dist/callbacks/dispatch/index.js"
-      },
-      "input": "./src/callbacks/dispatch/index.ts"
+      }
     },
     "./callbacks/dispatch/web": {
+      "input": "./src/callbacks/dispatch/web.ts",
       "require": {
         "types": "./dist/callbacks/dispatch/web.d.cts",
         "default": "./dist/callbacks/dispatch/web.cjs"
@@ -137,10 +139,10 @@
       "import": {
         "types": "./dist/callbacks/dispatch/web.d.ts",
         "default": "./dist/callbacks/dispatch/web.js"
-      },
-      "input": "./src/callbacks/dispatch/web.ts"
+      }
     },
     "./callbacks/manager": {
+      "input": "./src/callbacks/manager.ts",
       "require": {
         "types": "./dist/callbacks/manager.d.cts",
         "default": "./dist/callbacks/manager.cjs"
@@ -148,10 +150,10 @@
       "import": {
         "types": "./dist/callbacks/manager.d.ts",
         "default": "./dist/callbacks/manager.js"
-      },
-      "input": "./src/callbacks/manager.ts"
+      }
     },
     "./callbacks/promises": {
+      "input": "./src/callbacks/promises.ts",
       "require": {
         "types": "./dist/callbacks/promises.d.cts",
         "default": "./dist/callbacks/promises.cjs"
@@ -159,10 +161,10 @@
       "import": {
         "types": "./dist/callbacks/promises.d.ts",
         "default": "./dist/callbacks/promises.js"
-      },
-      "input": "./src/callbacks/promises.ts"
+      }
     },
     "./chat_history": {
+      "input": "./src/chat_history.ts",
       "require": {
         "types": "./dist/chat_history.d.cts",
         "default": "./dist/chat_history.cjs"
@@ -170,10 +172,10 @@
       "import": {
         "types": "./dist/chat_history.d.ts",
         "default": "./dist/chat_history.js"
-      },
-      "input": "./src/chat_history.ts"
+      }
     },
     "./context": {
+      "input": "./src/context.ts",
       "require": {
         "types": "./dist/context.d.cts",
         "default": "./dist/context.cjs"
@@ -181,10 +183,10 @@
       "import": {
         "types": "./dist/context.d.ts",
         "default": "./dist/context.js"
-      },
-      "input": "./src/context.ts"
+      }
     },
     "./documents": {
+      "input": "./src/documents/index.ts",
       "require": {
         "types": "./dist/documents/index.d.cts",
         "default": "./dist/documents/index.cjs"
@@ -192,10 +194,10 @@
       "import": {
         "types": "./dist/documents/index.d.ts",
         "default": "./dist/documents/index.js"
-      },
-      "input": "./src/documents/index.ts"
+      }
     },
     "./document_loaders/base": {
+      "input": "./src/document_loaders/base.ts",
       "require": {
         "types": "./dist/document_loaders/base.d.cts",
         "default": "./dist/document_loaders/base.cjs"
@@ -203,10 +205,10 @@
       "import": {
         "types": "./dist/document_loaders/base.d.ts",
         "default": "./dist/document_loaders/base.js"
-      },
-      "input": "./src/document_loaders/base.ts"
+      }
     },
     "./document_loaders/langsmith": {
+      "input": "./src/document_loaders/langsmith.ts",
       "require": {
         "types": "./dist/document_loaders/langsmith.d.cts",
         "default": "./dist/document_loaders/langsmith.cjs"
@@ -214,10 +216,10 @@
       "import": {
         "types": "./dist/document_loaders/langsmith.d.ts",
         "default": "./dist/document_loaders/langsmith.js"
-      },
-      "input": "./src/document_loaders/langsmith.ts"
+      }
     },
     "./embeddings": {
+      "input": "./src/embeddings.ts",
       "require": {
         "types": "./dist/embeddings.d.cts",
         "default": "./dist/embeddings.cjs"
@@ -225,10 +227,10 @@
       "import": {
         "types": "./dist/embeddings.d.ts",
         "default": "./dist/embeddings.js"
-      },
-      "input": "./src/embeddings.ts"
+      }
     },
     "./example_selectors": {
+      "input": "./src/example_selectors/index.ts",
       "require": {
         "types": "./dist/example_selectors/index.d.cts",
         "default": "./dist/example_selectors/index.cjs"
@@ -236,10 +238,10 @@
       "import": {
         "types": "./dist/example_selectors/index.d.ts",
         "default": "./dist/example_selectors/index.js"
-      },
-      "input": "./src/example_selectors/index.ts"
+      }
     },
     "./indexing": {
+      "input": "./src/indexing/index.ts",
       "require": {
         "types": "./dist/indexing/index.d.cts",
         "default": "./dist/indexing/index.cjs"
@@ -247,10 +249,10 @@
       "import": {
         "types": "./dist/indexing/index.d.ts",
         "default": "./dist/indexing/index.js"
-      },
-      "input": "./src/indexing/index.ts"
+      }
     },
     "./language_models/base": {
+      "input": "./src/language_models/base.ts",
       "require": {
         "types": "./dist/language_models/base.d.cts",
         "default": "./dist/language_models/base.cjs"
@@ -258,10 +260,10 @@
       "import": {
         "types": "./dist/language_models/base.d.ts",
         "default": "./dist/language_models/base.js"
-      },
-      "input": "./src/language_models/base.ts"
+      }
     },
     "./language_models/chat_models": {
+      "input": "./src/language_models/chat_models.ts",
       "require": {
         "types": "./dist/language_models/chat_models.d.cts",
         "default": "./dist/language_models/chat_models.cjs"
@@ -269,10 +271,10 @@
       "import": {
         "types": "./dist/language_models/chat_models.d.ts",
         "default": "./dist/language_models/chat_models.js"
-      },
-      "input": "./src/language_models/chat_models.ts"
+      }
     },
     "./language_models/llms": {
+      "input": "./src/language_models/llms.ts",
       "require": {
         "types": "./dist/language_models/llms.d.cts",
         "default": "./dist/language_models/llms.cjs"
@@ -280,10 +282,21 @@
       "import": {
         "types": "./dist/language_models/llms.d.ts",
         "default": "./dist/language_models/llms.js"
+      }
+    },
+    "./language_models/profile": {
+      "input": "./src/language_models/profile.ts",
+      "require": {
+        "types": "./dist/language_models/profile.d.cts",
+        "default": "./dist/language_models/profile.cjs"
       },
-      "input": "./src/language_models/llms.ts"
+      "import": {
+        "types": "./dist/language_models/profile.d.ts",
+        "default": "./dist/language_models/profile.js"
+      }
     },
     "./load": {
+      "input": "./src/load/index.ts",
       "require": {
         "types": "./dist/load/index.d.cts",
         "default": "./dist/load/index.cjs"
@@ -291,10 +304,10 @@
       "import": {
         "types": "./dist/load/index.d.ts",
         "default": "./dist/load/index.js"
-      },
-      "input": "./src/load/index.ts"
+      }
     },
     "./load/serializable": {
+      "input": "./src/load/serializable.ts",
       "require": {
         "types": "./dist/load/serializable.d.cts",
         "default": "./dist/load/serializable.cjs"
@@ -302,10 +315,10 @@
       "import": {
         "types": "./dist/load/serializable.d.ts",
         "default": "./dist/load/serializable.js"
-      },
-      "input": "./src/load/serializable.ts"
+      }
     },
     "./memory": {
+      "input": "./src/memory.ts",
       "require": {
         "types": "./dist/memory.d.cts",
         "default": "./dist/memory.cjs"
@@ -313,10 +326,10 @@
       "import": {
         "types": "./dist/memory.d.ts",
         "default": "./dist/memory.js"
-      },
-      "input": "./src/memory.ts"
+      }
     },
     "./messages": {
+      "input": "./src/messages/index.ts",
       "require": {
         "types": "./dist/messages/index.d.cts",
         "default": "./dist/messages/index.cjs"
@@ -324,10 +337,10 @@
       "import": {
         "types": "./dist/messages/index.d.ts",
         "default": "./dist/messages/index.js"
-      },
-      "input": "./src/messages/index.ts"
+      }
     },
     "./messages/tool": {
+      "input": "./src/messages/tool.ts",
       "require": {
         "types": "./dist/messages/tool.d.cts",
         "default": "./dist/messages/tool.cjs"
@@ -335,10 +348,10 @@
       "import": {
         "types": "./dist/messages/tool.d.ts",
         "default": "./dist/messages/tool.js"
-      },
-      "input": "./src/messages/tool.ts"
+      }
     },
     "./output_parsers": {
+      "input": "./src/output_parsers/index.ts",
       "require": {
         "types": "./dist/output_parsers/index.d.cts",
         "default": "./dist/output_parsers/index.cjs"
@@ -346,10 +359,10 @@
       "import": {
         "types": "./dist/output_parsers/index.d.ts",
         "default": "./dist/output_parsers/index.js"
-      },
-      "input": "./src/output_parsers/index.ts"
+      }
     },
     "./output_parsers/openai_tools": {
+      "input": "./src/output_parsers/openai_tools/index.ts",
       "require": {
         "types": "./dist/output_parsers/openai_tools/index.d.cts",
         "default": "./dist/output_parsers/openai_tools/index.cjs"
@@ -357,10 +370,10 @@
       "import": {
         "types": "./dist/output_parsers/openai_tools/index.d.ts",
         "default": "./dist/output_parsers/openai_tools/index.js"
-      },
-      "input": "./src/output_parsers/openai_tools/index.ts"
+      }
     },
     "./output_parsers/openai_functions": {
+      "input": "./src/output_parsers/openai_functions/index.ts",
       "require": {
         "types": "./dist/output_parsers/openai_functions/index.d.cts",
         "default": "./dist/output_parsers/openai_functions/index.cjs"
@@ -368,10 +381,10 @@
       "import": {
         "types": "./dist/output_parsers/openai_functions/index.d.ts",
         "default": "./dist/output_parsers/openai_functions/index.js"
-      },
-      "input": "./src/output_parsers/openai_functions/index.ts"
+      }
     },
     "./outputs": {
+      "input": "./src/outputs.ts",
       "require": {
         "types": "./dist/outputs.d.cts",
         "default": "./dist/outputs.cjs"
@@ -379,10 +392,10 @@
       "import": {
         "types": "./dist/outputs.d.ts",
         "default": "./dist/outputs.js"
-      },
-      "input": "./src/outputs.ts"
+      }
     },
     "./prompts": {
+      "input": "./src/prompts/index.ts",
       "require": {
         "types": "./dist/prompts/index.d.cts",
         "default": "./dist/prompts/index.cjs"
@@ -390,10 +403,10 @@
       "import": {
         "types": "./dist/prompts/index.d.ts",
         "default": "./dist/prompts/index.js"
-      },
-      "input": "./src/prompts/index.ts"
+      }
     },
     "./prompt_values": {
+      "input": "./src/prompt_values.ts",
       "require": {
         "types": "./dist/prompt_values.d.cts",
         "default": "./dist/prompt_values.cjs"
@@ -401,10 +414,10 @@
       "import": {
         "types": "./dist/prompt_values.d.ts",
         "default": "./dist/prompt_values.js"
-      },
-      "input": "./src/prompt_values.ts"
+      }
     },
     "./runnables": {
+      "input": "./src/runnables/index.ts",
       "require": {
         "types": "./dist/runnables/index.d.cts",
         "default": "./dist/runnables/index.cjs"
@@ -412,10 +425,10 @@
       "import": {
         "types": "./dist/runnables/index.d.ts",
         "default": "./dist/runnables/index.js"
-      },
-      "input": "./src/runnables/index.ts"
+      }
     },
     "./runnables/graph": {
+      "input": "./src/runnables/graph.ts",
       "require": {
         "types": "./dist/runnables/graph.d.cts",
         "default": "./dist/runnables/graph.cjs"
@@ -423,10 +436,10 @@
       "import": {
         "types": "./dist/runnables/graph.d.ts",
         "default": "./dist/runnables/graph.js"
-      },
-      "input": "./src/runnables/graph.ts"
+      }
     },
     "./retrievers": {
+      "input": "./src/retrievers/index.ts",
       "require": {
         "types": "./dist/retrievers/index.d.cts",
         "default": "./dist/retrievers/index.cjs"
@@ -434,10 +447,10 @@
       "import": {
         "types": "./dist/retrievers/index.d.ts",
         "default": "./dist/retrievers/index.js"
-      },
-      "input": "./src/retrievers/index.ts"
+      }
     },
     "./retrievers/document_compressors": {
+      "input": "./src/retrievers/document_compressors/base.ts",
       "require": {
         "types": "./dist/retrievers/document_compressors/base.d.cts",
         "default": "./dist/retrievers/document_compressors/base.cjs"
@@ -445,10 +458,10 @@
       "import": {
         "types": "./dist/retrievers/document_compressors/base.d.ts",
         "default": "./dist/retrievers/document_compressors/base.js"
-      },
-      "input": "./src/retrievers/document_compressors/base.ts"
+      }
     },
     "./singletons": {
+      "input": "./src/singletons/index.ts",
       "require": {
         "types": "./dist/singletons/index.d.cts",
         "default": "./dist/singletons/index.cjs"
@@ -456,10 +469,10 @@
       "import": {
         "types": "./dist/singletons/index.d.ts",
         "default": "./dist/singletons/index.js"
-      },
-      "input": "./src/singletons/index.ts"
+      }
     },
     "./stores": {
+      "input": "./src/stores.ts",
       "require": {
         "types": "./dist/stores.d.cts",
         "default": "./dist/stores.cjs"
@@ -467,10 +480,10 @@
       "import": {
         "types": "./dist/stores.d.ts",
         "default": "./dist/stores.js"
-      },
-      "input": "./src/stores.ts"
+      }
     },
     "./structured_query": {
+      "input": "./src/structured_query/index.ts",
       "require": {
         "types": "./dist/structured_query/index.d.cts",
         "default": "./dist/structured_query/index.cjs"
@@ -478,10 +491,10 @@
       "import": {
         "types": "./dist/structured_query/index.d.ts",
         "default": "./dist/structured_query/index.js"
-      },
-      "input": "./src/structured_query/index.ts"
+      }
     },
     "./tools": {
+      "input": "./src/tools/index.ts",
       "require": {
         "types": "./dist/tools/index.d.cts",
         "default": "./dist/tools/index.cjs"
@@ -489,10 +502,10 @@
       "import": {
         "types": "./dist/tools/index.d.ts",
         "default": "./dist/tools/index.js"
-      },
-      "input": "./src/tools/index.ts"
+      }
     },
     "./tracers/base": {
+      "input": "./src/tracers/base.ts",
       "require": {
         "types": "./dist/tracers/base.d.cts",
         "default": "./dist/tracers/base.cjs"
@@ -500,10 +513,10 @@
       "import": {
         "types": "./dist/tracers/base.d.ts",
         "default": "./dist/tracers/base.js"
-      },
-      "input": "./src/tracers/base.ts"
+      }
     },
     "./tracers/console": {
+      "input": "./src/tracers/console.ts",
       "require": {
         "types": "./dist/tracers/console.d.cts",
         "default": "./dist/tracers/console.cjs"
@@ -511,10 +524,10 @@
       "import": {
         "types": "./dist/tracers/console.d.ts",
         "default": "./dist/tracers/console.js"
-      },
-      "input": "./src/tracers/console.ts"
+      }
     },
     "./tracers/log_stream": {
+      "input": "./src/tracers/log_stream.ts",
       "require": {
         "types": "./dist/tracers/log_stream.d.cts",
         "default": "./dist/tracers/log_stream.cjs"
@@ -522,10 +535,10 @@
       "import": {
         "types": "./dist/tracers/log_stream.d.ts",
         "default": "./dist/tracers/log_stream.js"
-      },
-      "input": "./src/tracers/log_stream.ts"
+      }
     },
     "./tracers/run_collector": {
+      "input": "./src/tracers/run_collector.ts",
       "require": {
         "types": "./dist/tracers/run_collector.d.cts",
         "default": "./dist/tracers/run_collector.cjs"
@@ -533,10 +546,10 @@
       "import": {
         "types": "./dist/tracers/run_collector.d.ts",
         "default": "./dist/tracers/run_collector.js"
-      },
-      "input": "./src/tracers/run_collector.ts"
+      }
     },
     "./tracers/tracer_langchain": {
+      "input": "./src/tracers/tracer_langchain.ts",
       "require": {
         "types": "./dist/tracers/tracer_langchain.d.cts",
         "default": "./dist/tracers/tracer_langchain.cjs"
@@ -544,10 +557,10 @@
       "import": {
         "types": "./dist/tracers/tracer_langchain.d.ts",
         "default": "./dist/tracers/tracer_langchain.js"
-      },
-      "input": "./src/tracers/tracer_langchain.ts"
+      }
     },
     "./types/stream": {
+      "input": "./src/types/stream.ts",
       "require": {
         "types": "./dist/types/stream.d.cts",
         "default": "./dist/types/stream.cjs"
@@ -555,10 +568,10 @@
       "import": {
         "types": "./dist/types/stream.d.ts",
         "default": "./dist/types/stream.js"
-      },
-      "input": "./src/types/stream.ts"
+      }
     },
     "./utils/async_caller": {
+      "input": "./src/utils/async_caller.ts",
       "require": {
         "types": "./dist/utils/async_caller.d.cts",
         "default": "./dist/utils/async_caller.cjs"
@@ -566,10 +579,10 @@
       "import": {
         "types": "./dist/utils/async_caller.d.ts",
         "default": "./dist/utils/async_caller.js"
-      },
-      "input": "./src/utils/async_caller.ts"
+      }
     },
     "./utils/chunk_array": {
+      "input": "./src/utils/chunk_array.ts",
       "require": {
         "types": "./dist/utils/chunk_array.d.cts",
         "default": "./dist/utils/chunk_array.cjs"
@@ -577,10 +590,10 @@
       "import": {
         "types": "./dist/utils/chunk_array.d.ts",
         "default": "./dist/utils/chunk_array.js"
-      },
-      "input": "./src/utils/chunk_array.ts"
+      }
     },
     "./utils/env": {
+      "input": "./src/utils/env.ts",
       "require": {
         "types": "./dist/utils/env.d.cts",
         "default": "./dist/utils/env.cjs"
@@ -588,10 +601,10 @@
       "import": {
         "types": "./dist/utils/env.d.ts",
         "default": "./dist/utils/env.js"
-      },
-      "input": "./src/utils/env.ts"
+      }
     },
     "./utils/event_source_parse": {
+      "input": "./src/utils/event_source_parse.ts",
       "require": {
         "types": "./dist/utils/event_source_parse.d.cts",
         "default": "./dist/utils/event_source_parse.cjs"
@@ -599,10 +612,21 @@
       "import": {
         "types": "./dist/utils/event_source_parse.d.ts",
         "default": "./dist/utils/event_source_parse.js"
+      }
+    },
+    "./utils/format": {
+      "input": "./src/utils/format.ts",
+      "require": {
+        "types": "./dist/utils/format.d.cts",
+        "default": "./dist/utils/format.cjs"
       },
-      "input": "./src/utils/event_source_parse.ts"
+      "import": {
+        "types": "./dist/utils/format.d.ts",
+        "default": "./dist/utils/format.js"
+      }
     },
     "./utils/function_calling": {
+      "input": "./src/utils/function_calling.ts",
       "require": {
         "types": "./dist/utils/function_calling.d.cts",
         "default": "./dist/utils/function_calling.cjs"
@@ -610,10 +634,10 @@
       "import": {
         "types": "./dist/utils/function_calling.d.ts",
         "default": "./dist/utils/function_calling.js"
-      },
-      "input": "./src/utils/function_calling.ts"
+      }
     },
     "./utils/hash": {
+      "input": "./src/utils/hash.ts",
       "require": {
         "types": "./dist/utils/hash.d.cts",
         "default": "./dist/utils/hash.cjs"
@@ -621,10 +645,10 @@
       "import": {
         "types": "./dist/utils/hash.d.ts",
         "default": "./dist/utils/hash.js"
-      },
-      "input": "./src/utils/hash.ts"
+      }
     },
     "./utils/json_patch": {
+      "input": "./src/utils/json_patch.ts",
       "require": {
         "types": "./dist/utils/json_patch.d.cts",
         "default": "./dist/utils/json_patch.cjs"
@@ -632,10 +656,10 @@
       "import": {
         "types": "./dist/utils/json_patch.d.ts",
         "default": "./dist/utils/json_patch.js"
-      },
-      "input": "./src/utils/json_patch.ts"
+      }
     },
     "./utils/json_schema": {
+      "input": "./src/utils/json_schema.ts",
       "require": {
         "types": "./dist/utils/json_schema.d.cts",
         "default": "./dist/utils/json_schema.cjs"
@@ -643,10 +667,10 @@
       "import": {
         "types": "./dist/utils/json_schema.d.ts",
         "default": "./dist/utils/json_schema.js"
-      },
-      "input": "./src/utils/json_schema.ts"
+      }
     },
     "./utils/math": {
+      "input": "./src/utils/math.ts",
       "require": {
         "types": "./dist/utils/math.d.cts",
         "default": "./dist/utils/math.cjs"
@@ -654,10 +678,10 @@
       "import": {
         "types": "./dist/utils/math.d.ts",
         "default": "./dist/utils/math.js"
-      },
-      "input": "./src/utils/math.ts"
+      }
     },
     "./utils/stream": {
+      "input": "./src/utils/stream.ts",
       "require": {
         "types": "./dist/utils/stream.d.cts",
         "default": "./dist/utils/stream.cjs"
@@ -665,10 +689,10 @@
       "import": {
         "types": "./dist/utils/stream.d.ts",
         "default": "./dist/utils/stream.js"
-      },
-      "input": "./src/utils/stream.ts"
+      }
     },
     "./utils/testing": {
+      "input": "./src/utils/testing/index.ts",
       "require": {
         "types": "./dist/utils/testing/index.d.cts",
         "default": "./dist/utils/testing/index.cjs"
@@ -676,10 +700,10 @@
       "import": {
         "types": "./dist/utils/testing/index.d.ts",
         "default": "./dist/utils/testing/index.js"
-      },
-      "input": "./src/utils/testing/index.ts"
+      }
     },
     "./utils/tiktoken": {
+      "input": "./src/utils/tiktoken.ts",
       "require": {
         "types": "./dist/utils/tiktoken.d.cts",
         "default": "./dist/utils/tiktoken.cjs"
@@ -687,10 +711,10 @@
       "import": {
         "types": "./dist/utils/tiktoken.d.ts",
         "default": "./dist/utils/tiktoken.js"
-      },
-      "input": "./src/utils/tiktoken.ts"
+      }
     },
     "./utils/types": {
+      "input": "./src/utils/types/index.ts",
       "require": {
         "types": "./dist/utils/types/index.d.cts",
         "default": "./dist/utils/types/index.cjs"
@@ -698,10 +722,10 @@
       "import": {
         "types": "./dist/utils/types/index.d.ts",
         "default": "./dist/utils/types/index.js"
-      },
-      "input": "./src/utils/types/index.ts"
+      }
     },
     "./vectorstores": {
+      "input": "./src/vectorstores.ts",
       "require": {
         "types": "./dist/vectorstores.d.cts",
         "default": "./dist/vectorstores.cjs"
@@ -709,12 +733,14 @@
       "import": {
         "types": "./dist/vectorstores.d.ts",
         "default": "./dist/vectorstores.js"
-      },
-      "input": "./src/vectorstores.ts"
+      }
     },
     "./package.json": "./package.json"
   },
   "files": [
-    "dist/"
+    "dist/",
+    "CHANGELOG.md",
+    "README.md",
+    "LICENSE"
   ]
 }

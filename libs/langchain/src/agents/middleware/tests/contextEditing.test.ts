@@ -1,13 +1,19 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { describe, it, expect } from "vitest";
-import { HumanMessage, AIMessage, ToolMessage } from "@langchain/core/messages";
+import {
+  HumanMessage,
+  AIMessage,
+  ToolMessage,
+  type MessageStructure,
+  type MessageType,
+} from "@langchain/core/messages";
 import type { BaseMessage } from "@langchain/core/messages";
 import {
   contextEditingMiddleware,
   ClearToolUsesEdit,
   type ContextEdit,
-  type TokenCounter,
 } from "../contextEditing.js";
+import type { TokenCounter } from "../summarization.js";
 import { createAgent } from "../../index.js";
 import { FakeToolCallingChatModel } from "../../tests/utils.js";
 
@@ -55,8 +61,28 @@ describe("contextEditingMiddleware", () => {
     return messages;
   }
 
+  function filterClearedMessages(
+    messages: BaseMessage<MessageStructure, MessageType>[]
+  ): ToolMessage[] {
+    return messages
+      .filter(ToolMessage.isInstance)
+      .filter(
+        (msg) => (msg.response_metadata as any)?.context_editing?.cleared
+      );
+  }
+
+  function filterUnclearedMessages(
+    messages: BaseMessage<MessageStructure, MessageType>[]
+  ): ToolMessage[] {
+    return messages
+      .filter(ToolMessage.isInstance)
+      .filter(
+        (msg) => !(msg.response_metadata as any)?.context_editing?.cleared
+      );
+  }
+
   describe("default behavior", () => {
-    it("should use default ClearToolUsesEdit with Anthropic defaults when no params provided", async () => {
+    it("should use not clear anything if the conversation is below the default threshold", async () => {
       const model = new FakeToolCallingChatModel({
         responses: [new AIMessage("Final response")],
       });
@@ -65,7 +91,7 @@ describe("contextEditingMiddleware", () => {
 
       const agent = createAgent({
         model,
-        middleware: [middleware] as const,
+        middleware: [middleware],
       });
 
       // Create a conversation that doesn't exceed default 100K token threshold
@@ -88,11 +114,7 @@ describe("contextEditingMiddleware", () => {
       const result = await agent.invoke({ messages });
 
       // With default 100K token threshold, nothing should be cleared
-      const toolMessages = result.messages.filter(ToolMessage.isInstance);
-      const clearedMessages = toolMessages.filter(
-        (msg) => (msg.response_metadata as any)?.context_editing?.cleared
-      );
-
+      const clearedMessages = filterClearedMessages(result.messages);
       expect(clearedMessages.length).toBe(0);
     });
 
@@ -105,27 +127,23 @@ describe("contextEditingMiddleware", () => {
       const middleware = contextEditingMiddleware({
         edits: [
           new ClearToolUsesEdit({
-            triggerTokens: 100, // Very low threshold
-            keep: 1, // Keep only 1 most recent
+            trigger: { tokens: 100 }, // Very low threshold
+            keep: { messages: 1 }, // Keep only 1 most recent
           }),
         ],
       });
 
       const agent = createAgent({
         model,
-        middleware: [middleware] as const,
+        middleware: [middleware],
       });
 
       const messages = createToolCallConversation();
       const result = await agent.invoke({ messages });
 
       // Should clear the older tool message
-      const toolMessages = result.messages.filter(ToolMessage.isInstance);
-      const clearedMessages = toolMessages.filter(
-        (msg) => (msg.response_metadata as any)?.context_editing?.cleared
-      );
-
-      expect(clearedMessages.length).toBeGreaterThan(0);
+      const clearedMessages = filterClearedMessages(result.messages);
+      expect(clearedMessages.length).toBe(1);
 
       // Verify cleared message has placeholder
       const clearedMsg = clearedMessages[0];
@@ -140,7 +158,7 @@ describe("contextEditingMiddleware", () => {
   });
 
   describe("custom ClearToolUsesEdit configuration", () => {
-    it("should respect custom triggerTokens threshold", async () => {
+    it("should respect custom trigger threshold", async () => {
       const model = new FakeToolCallingChatModel({
         responses: [new AIMessage("Response")],
       });
@@ -148,28 +166,23 @@ describe("contextEditingMiddleware", () => {
       const middleware = contextEditingMiddleware({
         edits: [
           new ClearToolUsesEdit({
-            triggerTokens: 50, // Very low threshold
-            keep: 0, // Clear all
+            trigger: { tokens: 50 }, // Very low threshold
+            keep: { messages: 0 }, // Clear all
           }),
         ],
       });
 
       const agent = createAgent({
         model,
-        middleware: [middleware] as const,
+        middleware: [middleware],
       });
 
       const messages = createToolCallConversation();
       const result = await agent.invoke({ messages });
 
-      const clearedMessages = result.messages.filter(
-        (msg) =>
-          ToolMessage.isInstance(msg) &&
-          (msg.response_metadata as any)?.context_editing?.cleared
-      );
-
-      // Should clear tool messages
-      expect(clearedMessages.length).toBeGreaterThan(0);
+      const clearedMessages = filterClearedMessages(result.messages);
+      expect(result.messages.length).toBe(10);
+      expect(clearedMessages.length).toBe(2);
     });
 
     it("should keep the specified number of most recent tool results", async () => {
@@ -181,24 +194,20 @@ describe("contextEditingMiddleware", () => {
       const middleware = contextEditingMiddleware({
         edits: [
           new ClearToolUsesEdit({
-            triggerTokens: 50,
-            keep: keepCount,
+            trigger: { tokens: 50 },
+            keep: { messages: keepCount },
           }),
         ],
       });
 
       const agent = createAgent({
         model,
-        middleware: [middleware] as const,
+        middleware: [middleware],
       });
 
       const messages = createToolCallConversation();
       const result = await agent.invoke({ messages });
-
-      const toolMessages = result.messages.filter(ToolMessage.isInstance);
-      const unclearedMessages = toolMessages.filter(
-        (msg) => !(msg.response_metadata as any)?.context_editing?.cleared
-      );
+      const unclearedMessages = filterUnclearedMessages(result.messages);
 
       // Should keep at least 'keepCount' uncleared tool messages
       expect(unclearedMessages.length).toBeGreaterThanOrEqual(keepCount);
@@ -212,8 +221,8 @@ describe("contextEditingMiddleware", () => {
       const middleware = contextEditingMiddleware({
         edits: [
           new ClearToolUsesEdit({
-            triggerTokens: 50,
-            keep: 0,
+            trigger: { tokens: 50 },
+            keep: { messages: 2 },
             excludeTools: ["important_search"],
           }),
         ],
@@ -221,7 +230,7 @@ describe("contextEditingMiddleware", () => {
 
       const agent = createAgent({
         model,
-        middleware: [middleware] as const,
+        middleware: [middleware],
       });
 
       const messages: BaseMessage[] = [
@@ -280,8 +289,8 @@ describe("contextEditingMiddleware", () => {
       const middleware = contextEditingMiddleware({
         edits: [
           new ClearToolUsesEdit({
-            triggerTokens: 50,
-            keep: 0,
+            trigger: { tokens: 50 },
+            keep: { messages: 1 },
             clearToolInputs: true,
           }),
         ],
@@ -289,39 +298,30 @@ describe("contextEditingMiddleware", () => {
 
       const agent = createAgent({
         model,
-        middleware: [middleware] as const,
+        middleware: [middleware],
       });
 
       const messages = createToolCallConversation();
       const result = await agent.invoke({ messages });
 
       // Find an AI message whose tool output was cleared
-      const clearedToolMsg = result.messages.find(
+      const clearedToolMsg = filterClearedMessages(result.messages)[0];
+      expect(clearedToolMsg).toBeDefined();
+      // Find the corresponding AI message
+      const aiMsg = result.messages.find(
         (msg) =>
-          ToolMessage.isInstance(msg) &&
-          (msg.response_metadata as any)?.context_editing?.cleared
-      ) as ToolMessage;
+          AIMessage.isInstance(msg) &&
+          msg.tool_calls?.some((tc) => tc.id === clearedToolMsg.tool_call_id)
+      ) as AIMessage;
 
-      if (clearedToolMsg) {
-        // Find the corresponding AI message
-        const aiMsg = result.messages.find(
-          (msg) =>
-            AIMessage.isInstance(msg) &&
-            msg.tool_calls?.some((tc) => tc.id === clearedToolMsg.tool_call_id)
-        ) as AIMessage;
-
-        if (aiMsg) {
-          const toolCall = aiMsg.tool_calls?.find(
-            (tc) => tc.id === clearedToolMsg.tool_call_id
-          );
-          // Tool call args should be cleared
-          expect(toolCall?.args).toEqual({});
-          expect(
-            (aiMsg.response_metadata as any)?.context_editing
-              ?.cleared_tool_inputs
-          ).toContain(clearedToolMsg.tool_call_id);
-        }
-      }
+      const toolCall = aiMsg.tool_calls?.find(
+        (tc) => tc.id === clearedToolMsg.tool_call_id
+      );
+      // Tool call args should be cleared
+      expect(toolCall?.args).toEqual({});
+      expect(
+        (aiMsg.response_metadata as any)?.context_editing?.cleared_tool_inputs
+      ).toContain(clearedToolMsg.tool_call_id);
     });
 
     it("should use custom placeholder text", async () => {
@@ -333,8 +333,8 @@ describe("contextEditingMiddleware", () => {
       const middleware = contextEditingMiddleware({
         edits: [
           new ClearToolUsesEdit({
-            triggerTokens: 50,
-            keep: 0,
+            trigger: { tokens: 50 },
+            keep: { messages: 1 },
             placeholder: customPlaceholder,
           }),
         ],
@@ -342,24 +342,20 @@ describe("contextEditingMiddleware", () => {
 
       const agent = createAgent({
         model,
-        middleware: [middleware] as const,
+        middleware: [middleware],
       });
 
       const messages = createToolCallConversation();
       const result = await agent.invoke({ messages });
 
-      const clearedMessages = result.messages.filter(
-        (msg) =>
-          ToolMessage.isInstance(msg) &&
-          (msg.response_metadata as any)?.context_editing?.cleared
-      );
-
-      if (clearedMessages.length > 0) {
-        expect(clearedMessages[0].content).toBe(customPlaceholder);
-      }
+      const clearedMessages = filterClearedMessages(result.messages);
+      expect(clearedMessages.length).toBe(1);
+      expect(clearedMessages[0].content).toBe(customPlaceholder);
     });
+  });
 
-    it("should clear at least the specified number of tokens", async () => {
+  describe("deprecated properties", () => {
+    it("should support deprecated triggerTokens property", async () => {
       const model = new FakeToolCallingChatModel({
         responses: [new AIMessage("Response")],
       });
@@ -367,29 +363,140 @@ describe("contextEditingMiddleware", () => {
       const middleware = contextEditingMiddleware({
         edits: [
           new ClearToolUsesEdit({
-            triggerTokens: 100,
-            clearAtLeast: 500,
-            keep: 0,
+            triggerTokens: 100, // Deprecated property
+            keep: { messages: 1 },
           }),
         ],
       });
 
       const agent = createAgent({
         model,
-        middleware: [middleware] as const,
+        middleware: [middleware],
       });
 
       const messages = createToolCallConversation();
       const result = await agent.invoke({ messages });
+      expect(result.messages.length).toBe(10);
 
-      const clearedMessages = result.messages.filter(
-        (msg) =>
-          ToolMessage.isInstance(msg) &&
-          (msg.response_metadata as any)?.context_editing?.cleared
-      );
+      // Should still work and clear messages
+      const clearedMessages = filterClearedMessages(result.messages);
+      expect(clearedMessages.length).toBe(1);
+    });
 
-      // Should clear messages until clearAtLeast tokens are reclaimed
-      expect(clearedMessages.length).toBeGreaterThan(0);
+    it("should support deprecated keepMessages property", async () => {
+      const model = new FakeToolCallingChatModel({
+        responses: [new AIMessage("Response")],
+      });
+
+      const middleware = contextEditingMiddleware({
+        edits: [
+          new ClearToolUsesEdit({
+            trigger: { tokens: 100 },
+            keepMessages: 1, // Deprecated property
+          }),
+        ],
+      });
+
+      const agent = createAgent({
+        model,
+        middleware: [middleware],
+      });
+
+      const messages = createToolCallConversation();
+      const result = await agent.invoke({ messages });
+      expect(result.messages.length).toBe(10);
+
+      // Should still work and keep the specified number of messages
+      const unclearedMessages = filterUnclearedMessages(result.messages);
+      expect(unclearedMessages.length).toBe(1);
+    });
+
+    it("should support deprecated clearAtLeast property", async () => {
+      const model = new FakeToolCallingChatModel({
+        responses: [new AIMessage("Response")],
+      });
+
+      // Create a conversation with multiple large tool results
+      const messages: BaseMessage[] = [
+        new HumanMessage("Search for 'React'"),
+        new AIMessage({
+          content: "I'll search for that.",
+          tool_calls: [
+            {
+              id: "call_1",
+              name: "search",
+              args: { query: "React" },
+            },
+          ],
+        }),
+        new ToolMessage({
+          content: "x".repeat(500), // Large result ~500 tokens
+          tool_call_id: "call_1",
+        }),
+        new AIMessage("Found React information."),
+        new HumanMessage("Now search for 'TypeScript'"),
+        new AIMessage({
+          content: "I'll search for TypeScript.",
+          tool_calls: [
+            {
+              id: "call_2",
+              name: "search",
+              args: { query: "TypeScript" },
+            },
+          ],
+        }),
+        new ToolMessage({
+          content: "y".repeat(500), // Large result ~500 tokens
+          tool_call_id: "call_2",
+        }),
+        new AIMessage("Found TypeScript information."),
+        new HumanMessage("Search for 'JavaScript'"),
+        new AIMessage({
+          content: "I'll search for JavaScript.",
+          tool_calls: [
+            {
+              id: "call_3",
+              name: "search",
+              args: { query: "JavaScript" },
+            },
+          ],
+        }),
+        new ToolMessage({
+          content: "z".repeat(500), // Large result ~500 tokens
+          tool_call_id: "call_3",
+        }),
+        new AIMessage("Found JavaScript information."),
+        new HumanMessage("One more search"),
+      ];
+
+      const middleware = contextEditingMiddleware({
+        edits: [
+          new ClearToolUsesEdit({
+            trigger: { tokens: 100 }, // Low threshold to trigger
+            keep: { messages: 1 }, // Keep only 1 most recent tool result
+            clearAtLeast: 800, // Deprecated property - require at least 800 tokens cleared
+          }),
+        ],
+      });
+
+      const agent = createAgent({
+        model,
+        middleware: [middleware],
+      });
+
+      const result = await agent.invoke({ messages });
+
+      const clearedMessages = filterClearedMessages(result.messages);
+      const unclearedMessages = filterUnclearedMessages(result.messages);
+
+      // With keep: { messages: 1 }, we'd normally keep 1 message
+      // But with clearAtLeast: 800, we need to clear more to meet the token requirement
+      // So we should clear at least 2 messages (to get ~1000 tokens cleared)
+      expect(clearedMessages.length).toBeGreaterThanOrEqual(2);
+
+      // Should still respect keep policy as much as possible
+      // But may clear more if clearAtLeast requires it
+      expect(unclearedMessages.length).toBeLessThanOrEqual(1);
     });
   });
 
@@ -406,13 +513,14 @@ describe("contextEditingMiddleware", () => {
        */
       class RemoveHumanMessages implements ContextEdit {
         async apply(params: {
-          tokens: number;
           messages: BaseMessage[];
           countTokens: TokenCounter;
-        }): Promise<number> {
+          model?: any;
+        }): Promise<void> {
           customEditCalled = true;
+          const tokens = await params.countTokens(params.messages);
 
-          if (params.tokens > 100) {
+          if (tokens > 100) {
             // Remove all human messages except the last one
             const humanIndices: number[] = [];
             params.messages.forEach((msg, idx) => {
@@ -429,10 +537,10 @@ describe("contextEditingMiddleware", () => {
               }
             }
 
-            return await params.countTokens(params.messages);
+            return;
           }
 
-          return params.tokens;
+          return;
         }
       }
 
@@ -442,14 +550,13 @@ describe("contextEditingMiddleware", () => {
 
       const agent = createAgent({
         model,
-        middleware: [middleware] as const,
+        middleware: [middleware],
       });
 
       const messages = createToolCallConversation();
       const humanCountBefore = messages.filter(HumanMessage.isInstance).length;
 
       const result = await agent.invoke({ messages });
-
       expect(customEditCalled).toBe(true);
 
       const humanCountAfter = result.messages.filter(
@@ -469,24 +576,23 @@ describe("contextEditingMiddleware", () => {
       let strategy2Called = false;
 
       class Strategy1 implements ContextEdit {
-        async apply(params: {
-          tokens: number;
+        async apply(_params: {
           messages: BaseMessage[];
           countTokens: TokenCounter;
-        }): Promise<number> {
+          model?: any;
+        }): Promise<void> {
           strategy1Called = true;
-          return params.tokens;
+          return;
         }
       }
 
       class Strategy2 implements ContextEdit {
-        async apply(params: {
-          tokens: number;
+        async apply(_params: {
           messages: BaseMessage[];
           countTokens: TokenCounter;
-        }): Promise<number> {
+          model?: any;
+        }): Promise<void> {
           strategy2Called = true;
-          return params.tokens;
         }
       }
 
@@ -496,7 +602,7 @@ describe("contextEditingMiddleware", () => {
 
       const agent = createAgent({
         model,
-        middleware: [middleware] as const,
+        middleware: [middleware],
       });
 
       const messages = [new HumanMessage("Hello"), new AIMessage("Hi there!")];
@@ -521,7 +627,7 @@ describe("contextEditingMiddleware", () => {
 
       const agent = createAgent({
         model,
-        middleware: [middleware] as const,
+        middleware: [middleware],
       });
 
       const messages = [
@@ -541,15 +647,15 @@ describe("contextEditingMiddleware", () => {
       const middleware = contextEditingMiddleware({
         edits: [
           new ClearToolUsesEdit({
-            triggerTokens: 50,
-            keep: 0,
+            trigger: { tokens: 50 },
+            keep: { messages: 0 }, // Clear all
           }),
         ],
       });
 
       const agent = createAgent({
         model,
-        middleware: [middleware] as const,
+        middleware: [middleware],
       });
 
       const messages: BaseMessage[] = [
@@ -564,7 +670,9 @@ describe("contextEditingMiddleware", () => {
         }),
       ];
 
-      await expect(agent.invoke({ messages })).resolves.toBeDefined();
+      const result = await agent.invoke({ messages });
+      const clearedMessages = filterClearedMessages(result.messages);
+      expect(clearedMessages.length).toBe(0);
     });
   });
 
@@ -577,15 +685,15 @@ describe("contextEditingMiddleware", () => {
       const middleware = contextEditingMiddleware({
         edits: [
           new ClearToolUsesEdit({
-            triggerTokens: 50,
-            keep: 0,
+            trigger: { tokens: 50 },
+            keep: { messages: 2 },
           }),
         ],
       });
 
       const agent = createAgent({
         model,
-        middleware: [middleware] as const,
+        middleware: [middleware],
       });
 
       // Create a message that's already marked as cleared
@@ -630,15 +738,15 @@ describe("contextEditingMiddleware", () => {
       const middleware = contextEditingMiddleware({
         edits: [
           new ClearToolUsesEdit({
-            triggerTokens: 50,
-            keep: 0,
+            trigger: { tokens: 50 },
+            keep: { messages: 0 },
           }),
         ],
       });
 
       const agent = createAgent({
         model,
-        middleware: [middleware] as const,
+        middleware: [middleware],
       });
 
       // Tool message without a corresponding AI message (malformed conversation)
@@ -652,7 +760,15 @@ describe("contextEditingMiddleware", () => {
       ];
 
       // Should handle gracefully without throwing
-      await expect(agent.invoke({ messages })).resolves.toBeDefined();
+      const result = await agent.invoke({ messages });
+      expect(
+        result.messages.find(
+          (msg) =>
+            ToolMessage.isInstance(msg) && msg.tool_call_id === "orphan_call"
+        )
+      ).not.toBeDefined();
+      const clearedMessages = filterClearedMessages(result.messages);
+      expect(clearedMessages.length).toBe(0);
     });
   });
 });

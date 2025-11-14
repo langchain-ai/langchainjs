@@ -101,7 +101,7 @@ describe("middleware", () => {
     const agent = createAgent({
       model,
       tools: [],
-      middleware: [middlewareA, middlewareB, middlewareC] as const,
+      middleware: [middlewareA, middlewareB, middlewareC],
     });
 
     const result = await agent.invoke(initialState);
@@ -160,7 +160,7 @@ describe("middleware", () => {
         customContext: z.string(),
         customContext2: z.number().default(42),
       }),
-      middleware: [middleware] as const,
+      middleware: [middleware],
     });
 
     await agent.invoke(
@@ -199,7 +199,7 @@ describe("middleware", () => {
             }),
           }),
         ],
-        middleware: [middleware] as const,
+        middleware: [middleware],
       });
       await expect(
         agent.invoke({
@@ -233,7 +233,7 @@ describe("middleware", () => {
             }),
           }),
         ],
-        middleware: [middleware] as const,
+        middleware: [middleware],
       });
       await expect(
         agent.invoke({
@@ -259,7 +259,7 @@ describe("middleware", () => {
       const agent = createAgent({
         model,
         tools: [],
-        middleware: [middleware] as const,
+        middleware: [middleware],
       });
       await expect(
         agent.invoke({ messages: [new HumanMessage("Hello, world!")] })
@@ -286,7 +286,7 @@ describe("middleware", () => {
       const agent = createAgent({
         model,
         tools: [],
-        middleware: [middleware] as const,
+        middleware: [middleware],
       });
       await expect(
         agent.invoke({ messages: [new HumanMessage("Hello, world!")] })
@@ -313,7 +313,7 @@ describe("middleware", () => {
       const agent = createAgent({
         model,
         tools: [],
-        middleware: [middleware] as const,
+        middleware: [middleware],
       });
       await expect(
         agent.invoke({ messages: [new HumanMessage("Hello, world!")] })
@@ -437,7 +437,7 @@ describe("middleware", () => {
         model,
         tools: [],
         systemPrompt: "You are helpful",
-        middleware: [authMiddleware, retryMiddleware, cacheMiddleware] as const,
+        middleware: [authMiddleware, retryMiddleware, cacheMiddleware],
       });
 
       const result = await agent.invoke({
@@ -515,8 +515,6 @@ describe("middleware", () => {
             middlewareContext: number;
           }>();
           expectTypeOf(request.systemPrompt!).toBeString();
-          expectTypeOf(request.runtime.runModelCallCount).toBeNumber();
-          expectTypeOf(request.runtime.threadLevelCallCount).toBeNumber();
 
           // Capture state and runtime
           capturedState = request.state;
@@ -536,7 +534,7 @@ describe("middleware", () => {
       const agent = createAgent({
         model,
         tools: [],
-        middleware: [inspectorMiddleware] as const,
+        middleware: [inspectorMiddleware],
         contextSchema: z.object({
           globalContext: z.number(),
         }),
@@ -563,19 +561,14 @@ describe("middleware", () => {
         "Test"
       );
 
-      const { context, threadLevelCallCount, runModelCallCount } =
-        capturedRuntime;
+      const { context } = capturedRuntime;
       expect({
         context,
-        threadLevelCallCount,
-        runModelCallCount,
       }).toMatchInlineSnapshot(`
       {
         "context": {
           "middlewareContext": 2,
         },
-        "runModelCallCount": 0,
-        "threadLevelCallCount": 0,
       }
     `);
     });
@@ -699,7 +692,7 @@ describe("middleware", () => {
       const agent = createAgent({
         model,
         systemPrompt: "You are helpful",
-        middleware: [modifyingMiddleware] as const,
+        middleware: [modifyingMiddleware],
       });
 
       const result = await agent.invoke({
@@ -723,7 +716,7 @@ describe("middleware", () => {
       const agent = createAgent({
         model,
         systemPrompt: "You are helpful",
-        middleware: [modifyingMiddleware] as const,
+        middleware: [modifyingMiddleware],
       });
 
       await expect(
@@ -749,7 +742,7 @@ describe("middleware", () => {
       const agent = createAgent({
         model,
         systemPrompt: "You are helpful",
-        middleware: [modifyingMiddleware] as const,
+        middleware: [modifyingMiddleware],
       });
 
       await expect(
@@ -1017,8 +1010,6 @@ describe("middleware", () => {
           `);
           expect(request.runtime.context).toEqual({ foo: 123 });
           expect(request.state.bar).toBe(true);
-          expect(request.runtime.runModelCallCount).toBe(1);
-          expect(request.runtime.threadLevelCallCount).toBe(1);
 
           /**
            * Let's test if we can modify tool args
@@ -1048,7 +1039,7 @@ describe("middleware", () => {
       const agent = createAgent({
         model,
         tools: [weatherTool],
-        middleware: [loggingMiddleware] as const,
+        middleware: [loggingMiddleware],
       });
 
       const result = await agent.invoke(
@@ -1409,7 +1400,7 @@ describe("middleware", () => {
       const agent = createAgent({
         model,
         tools: [tool1, tool2],
-        middleware: [trackingMiddleware] as const,
+        middleware: [trackingMiddleware],
       });
 
       await agent.invoke({
@@ -2024,7 +2015,7 @@ describe("middleware", () => {
       const agent = createAgent({
         model,
         tools: [],
-        middleware: [middleware] as const,
+        middleware: [middleware],
       });
 
       const result = await agent.invoke({
@@ -2127,7 +2118,7 @@ describe("middleware", () => {
       const agent = createAgent({
         model,
         tools: [],
-        middleware: [middleware1, middleware2] as const,
+        middleware: [middleware1, middleware2],
       });
 
       const result = await agent.invoke({
@@ -2266,35 +2257,6 @@ describe("middleware", () => {
       expect(messageContents).toContain("Original message");
     });
 
-    it("should allow accessing runtime metadata in before_agent and after_agent", async () => {
-      const middleware = createMiddleware({
-        name: "RuntimeAccessMiddleware",
-        beforeAgent: async (_state, runtime) => {
-          expect(runtime.threadLevelCallCount).toBe(0);
-          expect(runtime.runModelCallCount).toBe(0);
-        },
-        afterAgent: async (_state, runtime) => {
-          // After the agent completes, counts should be updated
-          expect(runtime.threadLevelCallCount).toBe(1);
-          expect(runtime.runModelCallCount).toBe(1);
-        },
-      });
-
-      const model = new FakeToolCallingChatModel({
-        responses: [new AIMessage("Response")],
-      });
-
-      const agent = createAgent({
-        model,
-        tools: [],
-        middleware: [middleware],
-      });
-
-      await agent.invoke({
-        messages: [new HumanMessage("Test")],
-      });
-    });
-
     it("should propagate state changes from before_agent through the entire agent execution", async () => {
       const middleware = createMiddleware({
         name: "StateTracker",
@@ -2327,7 +2289,7 @@ describe("middleware", () => {
       const agent = createAgent({
         model,
         tools: [],
-        middleware: [middleware] as const,
+        middleware: [middleware],
       });
 
       const result = await agent.invoke({
@@ -2353,7 +2315,7 @@ describe("middleware", () => {
       const agent = createAgent({
         model,
         tools: [],
-        middleware: [middleware] as const,
+        middleware: [middleware],
       });
 
       await agent.invoke({
