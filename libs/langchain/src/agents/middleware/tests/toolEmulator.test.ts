@@ -82,7 +82,12 @@ describe("toolEmulatorMiddleware", () => {
 
   describe("Tool Filtering", () => {
     it("should emulate all tools when tools is undefined", async () => {
-      const middleware = toolEmulatorMiddleware();
+      const mockModel = new FakeToolCallingChatModel({
+        responses: [new AIMessage({ content: "Mocked response" })],
+      });
+      const middleware = toolEmulatorMiddleware({
+        model: mockModel,
+      });
 
       const request = {
         toolCall: { id: "1", name: "search", args: { query: "test" } },
@@ -109,7 +114,13 @@ describe("toolEmulatorMiddleware", () => {
     });
 
     it("should emulate all tools when tools is empty array", async () => {
-      const middleware = toolEmulatorMiddleware({ tools: [] });
+      const mockModel = new FakeToolCallingChatModel({
+        responses: [new AIMessage({ content: "Mocked response" })],
+      });
+      const middleware = toolEmulatorMiddleware({
+        tools: [],
+        model: mockModel,
+      });
       const wrapToolCall = middleware.wrapToolCall!;
 
       const request = {
@@ -137,8 +148,12 @@ describe("toolEmulatorMiddleware", () => {
     });
 
     it("should emulate specific tools by name", async () => {
+      const mockModel = new FakeToolCallingChatModel({
+        responses: [new AIMessage({ content: "Mocked response" })],
+      });
       const middleware = toolEmulatorMiddleware({
         tools: ["search"],
+        model: mockModel,
       });
 
       // Emulated tool
@@ -195,8 +210,12 @@ describe("toolEmulatorMiddleware", () => {
     });
 
     it("should emulate specific tools by tool instance", async () => {
+      const mockModel = new FakeToolCallingChatModel({
+        responses: [new AIMessage({ content: "Mocked response" })],
+      });
       const middleware = toolEmulatorMiddleware({
         tools: [searchTool],
+        model: mockModel,
       });
       const wrapToolCall = middleware.wrapToolCall!;
 
@@ -222,8 +241,12 @@ describe("toolEmulatorMiddleware", () => {
     });
 
     it("should handle mixed tool names and instances", async () => {
+      const mockModel = new FakeToolCallingChatModel({
+        responses: [new AIMessage({ content: "Mocked response" })],
+      });
       const middleware = toolEmulatorMiddleware({
         tools: ["search", calculatorTool],
+        model: mockModel,
       });
 
       // Both should be emulated
@@ -275,8 +298,13 @@ describe("toolEmulatorMiddleware", () => {
         ],
       });
 
+      const emulatorModel = new FakeToolCallingChatModel({
+        responses: [new AIMessage({ content: "Mocked response" })],
+      });
+
       const middleware = toolEmulatorMiddleware({
         tools: ["search"],
+        model: emulatorModel,
       });
 
       const agent = createAgent({
@@ -315,8 +343,13 @@ describe("toolEmulatorMiddleware", () => {
         ],
       });
 
+      const emulatorModel = new FakeToolCallingChatModel({
+        responses: [new AIMessage({ content: "Mocked response" })],
+      });
+
       const middleware = toolEmulatorMiddleware({
         tools: ["search"], // Only emulate search
+        model: emulatorModel,
       });
 
       const agent = createAgent({
@@ -357,7 +390,16 @@ describe("toolEmulatorMiddleware", () => {
         ],
       });
 
-      const middleware = toolEmulatorMiddleware(); // Emulate all
+      const emulatorModel = new FakeToolCallingChatModel({
+        responses: [new AIMessage({ content: "Mocked response" })],
+      });
+
+      // When no model is provided, middleware uses agent model
+      // Agent model will be set via wrapModelCall when createAgent runs
+      // For testing, we provide an explicit model to ensure consistent behavior
+      const middleware = toolEmulatorMiddleware({
+        model: emulatorModel,
+      }); // Emulate all
 
       const agent = createAgent({
         model,
@@ -372,6 +414,49 @@ describe("toolEmulatorMiddleware", () => {
       // Both tools should be emulated
       expect(searchToolMock).not.toHaveBeenCalled();
       expect(calculatorToolMock).not.toHaveBeenCalled();
+    });
+
+    it("should use agent model when no model is provided to middleware", async () => {
+      const emulatedResponseContent = "Agent model emulated response";
+      const model = new FakeToolCallingChatModel({
+        responses: [
+          // First response: agent decides to call tool
+          new AIMessage({
+            content: "",
+            tool_calls: [{ id: "1", name: "search", args: { query: "test" } }],
+          }),
+          // Second response: agent model used for emulation (when invoked with emulation prompt)
+          new AIMessage({ content: emulatedResponseContent }),
+          // Third response: agent's final response after receiving tool result
+          new AIMessage("Final response"),
+        ],
+      });
+
+      // Create middleware without providing a model - it should use agent model
+      const middleware = toolEmulatorMiddleware({
+        tools: ["search"],
+      });
+
+      const agent = createAgent({
+        model,
+        tools: [searchTool],
+        middleware: [middleware],
+      });
+
+      const result = await agent.invoke({
+        messages: [new HumanMessage("Search for something")],
+      });
+
+      // Tool should not have been called (emulated instead)
+      expect(searchToolMock).not.toHaveBeenCalled();
+
+      // Should have tool message in result
+      const toolMessages = [...result.messages]
+        .reverse()
+        .filter((msg): msg is ToolMessage => ToolMessage.isInstance(msg));
+      expect(toolMessages.length).toBe(1);
+      expect(toolMessages[0].content).toContain(emulatedResponseContent);
+      expect(result.messages.at(-1)?.content).toContain("Final response");
     });
   });
 });
