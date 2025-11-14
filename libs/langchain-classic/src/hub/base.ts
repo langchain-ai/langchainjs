@@ -121,6 +121,8 @@ export function generateModelImportMap(
       importMapKey = "chat_models__fireworks";
     } else if (modelLcName === "ChatGroq") {
       importMapKey = "chat_models__groq";
+    } else if (modelLcName === "ChatOVHCloudAIEndpoints") {
+      importMapKey = "chat_models__ovhcloud";
     } else {
       throw new Error("Received unsupported model class when pulling prompt.");
     }
