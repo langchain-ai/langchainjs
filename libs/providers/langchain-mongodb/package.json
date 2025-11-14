@@ -22,7 +22,7 @@
     "lint:fix": "pnpm lint:eslint --fix && pnpm lint:dpdm",
     "clean": "rm -rf .turbo dist/",
     "test:watch": "vitest",
-    "test:int": "vitest run --mode int --testTimeout 100000 --maxWorkers=50%",
+    "test:int": "vitest run --mode int --testTimeout 10000 --maxWorkers=50%",
     "format": "prettier --config .prettierrc --write \"src\"",
     "format:check": "prettier --config .prettierrc --check \"src\""
   },
