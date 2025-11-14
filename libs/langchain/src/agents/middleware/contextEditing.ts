@@ -8,10 +8,7 @@
  */
 
 import type { BaseMessage } from "@langchain/core/messages";
-import type {
-  LanguageModelLike,
-  BaseLanguageModel,
-} from "@langchain/core/language_models/base";
+import type { BaseLanguageModel } from "@langchain/core/language_models/base";
 import {
   AIMessage,
   ToolMessage,
@@ -80,7 +77,7 @@ export interface ContextEdit {
     /**
      * Optional model instance for model profile information
      */
-    model?: LanguageModelLike;
+    model?: BaseLanguageModel;
   }): void | Promise<void>;
 }
 
@@ -917,7 +914,7 @@ export function contextEditingMiddleware(
                */
               if ("getNumTokensFromMessages" in request.model) {
                 return (
-                  request.model as LanguageModelLike & {
+                  request.model as BaseLanguageModel & {
                     getNumTokensFromMessages: (
                       messages: BaseMessage[]
                     ) => Promise<{
