@@ -236,9 +236,19 @@ const contextSchema = z.object({
    * - `true` -> pause for approval and allow approve/edit/reject decisions
    * - `false` -> auto-approve (no human review)
    * - `InterruptOnConfig` -> explicitly specify which decisions are allowed for this tool
+   * - `(toolCall: ToolCall) => InterruptOnConfig | boolean` -> conditionally interrupt on a tool call
    */
   interruptOn: z
-    .record(z.union([z.boolean(), InterruptOnConfigSchema]))
+    .record(
+      z.union([
+        z.boolean(),
+        InterruptOnConfigSchema,
+        z
+          .function()
+          .args(z.custom<ToolCall>())
+          .returns(z.union([z.boolean(), InterruptOnConfigSchema])),
+      ])
+    )
     .optional(),
   /**
    * Prefix used when constructing human-facing approval messages.
@@ -452,6 +462,41 @@ export type HumanInTheLoopMiddlewareConfig = InferInteropZodInput<
  * });
  * ```
  *
+ * @example
+ * Using conditional interrupt functions
+ * ```typescript
+ * import { type ToolCall, type InterruptOnConfig } from "langchain";
+ *
+ * // Define a conditional function that decides whether to interrupt
+ * // based on tool call arguments
+ * const conditionalInterrupt = (toolCall: ToolCall): boolean | InterruptOnConfig => {
+ *   const filename = toolCall.args.filename as string;
+ *   // Only interrupt if filename contains "dangerous" or "admin"
+ *   if (filename.includes("dangerous") || filename.includes("admin")) {
+ *     return { allowedDecisions: ["approve", "edit"] };
+ *   }
+ *   // Auto-approve safe files
+ *   return false;
+ * };
+ *
+ * const hitlMiddleware = humanInTheLoopMiddleware({
+ *   interruptOn: {
+ *     // Use a function to conditionally interrupt based on tool call arguments
+ *     "write_file": conditionalInterrupt,
+ *     // Or use an inline function
+ *     "execute_sql": (toolCall: ToolCall) => {
+ *       const query = toolCall.args.query as string;
+ *       // Only interrupt for write operations (INSERT, UPDATE, DELETE)
+ *       if (/^\s*(INSERT|UPDATE|DELETE)/i.test(query)) {
+ *         return { allowedDecisions: ["approve", "reject"] };
+ *       }
+ *       // Auto-approve SELECT queries
+ *       return false;
+ *     }
+ *   }
+ * });
+ * ```
+ *
  * @remarks
  * - Tool calls are processed in the order they appear in the AI message
  * - Auto-approved tools execute immediately without interruption
@@ -633,16 +678,27 @@ export function humanInTheLoopMiddleware(
          * Resolve per-tool configs (boolean true -> all decisions allowed; false -> auto-approve)
          */
         const resolvedConfigs: Record<string, InterruptOnConfig> = {};
-        for (const [toolName, toolConfig] of Object.entries(
+        for (const [toolName, toolConfigOrToolConfigFactory] of Object.entries(
           config.interruptOn
         )) {
+          const toolCall = lastMessage.tool_calls.find(
+            (toolCall) => toolCall.name === toolName
+          );
+
+          const toolConfig =
+            typeof toolConfigOrToolConfigFactory === "function"
+              ? toolCall
+                ? await toolConfigOrToolConfigFactory(toolCall)
+                : undefined
+              : toolConfigOrToolConfigFactory;
+
           if (typeof toolConfig === "boolean") {
             if (toolConfig === true) {
               resolvedConfigs[toolName] = {
                 allowedDecisions: [...ALLOWED_DECISIONS],
               };
             }
-          } else if (toolConfig.allowedDecisions) {
+          } else if (toolConfig?.allowedDecisions) {
             resolvedConfigs[toolName] = toolConfig as InterruptOnConfig;
           }
         }

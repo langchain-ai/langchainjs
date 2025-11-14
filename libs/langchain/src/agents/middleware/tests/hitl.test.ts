@@ -1,13 +1,19 @@
 import { z } from "zod/v3";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { tool } from "@langchain/core/tools";
-import { AIMessage, HumanMessage, ToolMessage } from "@langchain/core/messages";
+import {
+  AIMessage,
+  HumanMessage,
+  ToolMessage,
+  ToolCall,
+} from "@langchain/core/messages";
 import { Command } from "@langchain/langgraph";
 import { MemorySaver } from "@langchain/langgraph-checkpoint";
 
 import { createAgent } from "../../index.js";
 import {
   humanInTheLoopMiddleware,
+  type InterruptOnConfig,
   type HITLRequest,
   type HITLResponse,
   type Decision,
@@ -688,6 +694,182 @@ describe("humanInTheLoopMiddleware", () => {
       )
     ).rejects.toThrow(
       'Unexpected human decision: {"type":"approve"}. Decision type \'approve\' is not allowed for tool \'write_file\'. Expected one of ["edit"] based on the tool\'s configuration.'
+    );
+  });
+
+  it("should support conditional interrupt on", async () => {
+    // Create a conditional function that only interrupts for dangerous files
+    const conditionalInterruptFn = (
+      toolCall: ToolCall
+    ): boolean | InterruptOnConfig => {
+      const filename = toolCall.args.filename as string;
+      // Only interrupt if filename contains "dangerous"
+      if (filename.includes("dangerous")) {
+        return { allowedDecisions: ["approve"] };
+      }
+      // Auto-approve safe files
+      return false;
+    };
+    const conditionalInterrupt = vi.fn(conditionalInterruptFn);
+
+    const hitlMiddleware = humanInTheLoopMiddleware({
+      interruptOn: {
+        write_file: conditionalInterrupt,
+      },
+    });
+
+    const model = new FakeToolCallingModel({
+      toolCalls: [
+        // First call: dangerous file (should interrupt)
+        [
+          {
+            id: "call_1",
+            name: "write_file",
+            args: {
+              filename: "dangerous.txt",
+              content: "Dangerous content",
+            },
+          },
+        ],
+        // Second call: safe file (should auto-approve)
+        [
+          {
+            id: "call_2",
+            name: "write_file",
+            args: {
+              filename: "safe.txt",
+              content: "Safe content",
+            },
+          },
+        ],
+        [],
+      ],
+    });
+
+    const checkpointer = new MemorySaver();
+    const agent = createAgent({
+      model,
+      checkpointer,
+      tools: [writeFileTool],
+      middleware: [hitlMiddleware],
+    });
+
+    const config = {
+      configurable: {
+        thread_id: "test-conditional",
+      },
+    };
+
+    // Test 1: Dangerous file should interrupt
+    model.index = 0;
+    await agent.invoke(
+      {
+        messages: [new HumanMessage("Write to dangerous file")],
+      },
+      config
+    );
+
+    // Verify conditional function was called
+    expect(conditionalInterrupt).toHaveBeenCalledTimes(1);
+    expect(conditionalInterrupt).toHaveBeenCalledWith(
+      expect.objectContaining({
+        id: "call_1",
+        name: "write_file",
+        args: {
+          filename: "dangerous.txt",
+          content: "Dangerous content",
+        },
+      })
+    );
+
+    // Verify write_file was NOT called yet (interrupted)
+    expect(writeFileFn).not.toHaveBeenCalled();
+
+    // Check if agent is paused for approval
+    const state = await agent.graph.getState(config);
+    expect(state.next).toBeDefined();
+    expect(state.next.length).toBe(1);
+
+    // Verify interrupt data
+    const task = state.tasks?.[0];
+    expect(task).toBeDefined();
+    expect(task.interrupts).toBeDefined();
+    expect(task.interrupts.length).toBe(1);
+
+    const hitlRequest = task.interrupts[0].value as HITLRequest;
+    expect(hitlRequest.actionRequests).toHaveLength(1);
+    expect(hitlRequest.actionRequests[0]).toEqual(
+      expect.objectContaining({
+        name: "write_file",
+        args: {
+          filename: "dangerous.txt",
+          content: "Dangerous content",
+        },
+      })
+    );
+    expect(hitlRequest.reviewConfigs[0].allowedDecisions).toEqual(["approve"]);
+
+    // Resume with approval
+    model.index = 0;
+    await agent.invoke(
+      new Command({
+        resume: { decisions: [{ type: "approve" }] } as HITLResponse,
+      }),
+      config
+    );
+
+    // Verify write_file was called after approval
+    expect(writeFileFn).toHaveBeenCalledTimes(1);
+    expect(writeFileFn).toHaveBeenCalledWith(
+      {
+        filename: "dangerous.txt",
+        content: "Dangerous content",
+      },
+      expect.anything()
+    );
+
+    // Test 2: Safe file should auto-approve (no interrupt)
+    model.index = 1;
+    writeFileFn.mockClear();
+    conditionalInterrupt.mockClear();
+
+    const safeResult = await agent.invoke(
+      {
+        messages: [new HumanMessage("Write to safe file")],
+      },
+      config
+    );
+
+    // Verify conditional function was called
+    expect(conditionalInterrupt).toHaveBeenCalledTimes(1);
+    expect(conditionalInterrupt).toHaveBeenCalledWith(
+      expect.objectContaining({
+        id: "call_2",
+        name: "write_file",
+        args: {
+          filename: "safe.txt",
+          content: "Safe content",
+        },
+      })
+    );
+
+    // Verify write_file was called immediately (auto-approved)
+    expect(writeFileFn).toHaveBeenCalledTimes(1);
+    expect(writeFileFn).toHaveBeenCalledWith(
+      {
+        filename: "safe.txt",
+        content: "Safe content",
+      },
+      expect.anything()
+    );
+
+    // Verify no interrupt occurred
+    expect("__interrupt__" in safeResult).toBe(false);
+
+    // Verify final response
+    const safeMessages = safeResult.messages;
+    expect(safeMessages[safeMessages.length - 1].content).toContain(
+      "Successfully wrote 12 characters to safe.txt"
     );
   });
 
