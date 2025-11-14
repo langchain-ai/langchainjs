@@ -33,7 +33,7 @@ export interface HybridRetrievalStrategyConfig {
   rankConstant?: number;
   textField?: string;
   /**
-   * For Elasticsearch 9.x, set to `false` to include vectors in responses.
+   * For Elasticsearch 9.2, set to `false` to include vectors in responses.
    */
   excludeSourceVectors?: boolean;
 }

@@ -396,3 +396,101 @@ describe("ElasticVectorSearch - Hybrid Search", () => {
     });
   });
 });
+
+describe("ElasticVectorSearch - ES 9.x Compatibility", () => {
+  let client: Client;
+  let embeddings: OpenAIEmbeddings;
+
+  beforeEach(() => {
+    if (!process.env.ELASTIC_URL) {
+      throw new Error("ELASTIC_URL not set");
+    }
+
+    const config: ClientOptions = {
+      node: process.env.ELASTIC_URL,
+    };
+    if (process.env.ELASTIC_API_KEY) {
+      config.auth = {
+        apiKey: process.env.ELASTIC_API_KEY,
+      };
+    } else if (process.env.ELASTIC_USERNAME && process.env.ELASTIC_PASSWORD) {
+      config.auth = {
+        username: process.env.ELASTIC_USERNAME,
+        password: process.env.ELASTIC_PASSWORD,
+      };
+    }
+    client = new Client(config);
+    embeddings = new OpenAIEmbeddings();
+  });
+
+  test.skip("Hybrid search with excludeSourceVectors set to false for ES 9.x", async () => {
+    const indexName = "test_es9_exclude_false";
+    const store = new ElasticVectorSearch(embeddings, {
+      client,
+      indexName,
+      strategy: new HybridRetrievalStrategy({
+        excludeSourceVectors: false,
+      }),
+    });
+    await store.deleteIfExists();
+
+    await store.addDocuments([
+      new Document({ pageContent: "Document for ES 9.x testing" }),
+      new Document({ pageContent: "Another document for compatibility" }),
+    ]);
+
+    const results = await store.similaritySearch("testing", 2);
+
+    expect(results).toHaveLength(2);
+    expect(results[0]).toBeInstanceOf(Document);
+
+    const indexSettings = await client.indices.getSettings({
+      index: indexName,
+    });
+    expect(
+      indexSettings[indexName].settings?.index?.mapping?.exclude_source_vectors
+    ).toBe("false");
+  });
+
+  test.skip("Hybrid search with excludeSourceVectors undefined uses ES defaults", async () => {
+    const indexName = "test_es_default_exclude";
+    const store = new ElasticVectorSearch(embeddings, {
+      client,
+      indexName,
+      strategy: new HybridRetrievalStrategy(),
+    });
+    await store.deleteIfExists();
+
+    await store.addDocuments([
+      new Document({ pageContent: "Test with default settings" }),
+    ]);
+
+    const results = await store.similaritySearch("test", 1);
+
+    expect(results).toHaveLength(1);
+    expect(results[0]).toBeInstanceOf(Document);
+  });
+
+  test.skip("Pure vector search with excludeSourceVectors for ES 9.x", async () => {
+    const indexName = "test_es9_pure_vector";
+    const store = new ElasticVectorSearch(embeddings, {
+      client,
+      indexName,
+      strategy: new HybridRetrievalStrategy({
+        excludeSourceVectors: false,
+      }),
+    });
+    await store.deleteIfExists();
+
+    await store.addDocuments([
+      new Document({ pageContent: "ES 9.x pure vector test" }),
+    ]);
+
+    const queryVector = await embeddings.embedQuery("vector test");
+    const results = await store.similaritySearchVectorWithScore(queryVector, 1);
+
+    expect(results).toHaveLength(1);
+    expect(results[0][0]).toBeInstanceOf(Document);
+    expect(typeof results[0][1]).toBe("number");
+  });
+});
