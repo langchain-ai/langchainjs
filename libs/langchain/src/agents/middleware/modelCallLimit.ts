@@ -17,11 +17,11 @@ const contextSchema = z.object({
   runLimit: z.number().optional(),
   /**
    * The behavior to take when the limit is exceeded.
-   * - "throw" will throw an error and stop the agent.
+   * - "error" will throw an error and stop the agent.
    * - "end" will end the agent.
    * @default "end"
    */
-  exitBehavior: z.enum(["throw", "end"]).optional(),
+  exitBehavior: z.enum(["error", "end"]).optional(),
 });
 export type ModelCallLimitMiddlewareConfig = Partial<
   InferInteropZodInput<typeof contextSchema>
