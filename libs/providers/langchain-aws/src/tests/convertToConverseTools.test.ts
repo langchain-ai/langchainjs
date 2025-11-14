@@ -153,7 +153,7 @@ describe("convertToConverseTools", () => {
   it("should throw error for invalid tool with helpful message", () => {
     const invalidTool = { invalid: "tool" };
 
-    expect(() => convertToConverseTools([invalidTool as any])).toThrow(
+    expect(() => convertToConverseTools([invalidTool])).toThrow(
       "Invalid tool passed at index 0"
     );
   });
