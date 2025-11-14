@@ -32,6 +32,7 @@
     "typescript": "^5.9.2"
   },
   "scripts": {
+    "build": "exit 0",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix"
   },
