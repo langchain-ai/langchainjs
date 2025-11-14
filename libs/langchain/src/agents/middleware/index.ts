@@ -16,6 +16,24 @@ export {
   type LLMToolSelectorConfig,
 } from "./llmToolSelector.js";
 export {
+  piiMiddleware,
+  type PIIMiddlewareConfig,
+  type PIIMatch,
+  type PIIStrategy,
+  type BuiltInPIIType,
+  type PIIDetector,
+  type RedactionRuleConfig,
+  type ResolvedRedactionRule,
+  PIIDetectionError,
+  detectEmail,
+  detectCreditCard,
+  detectIP,
+  detectMacAddress,
+  detectUrl,
+  applyStrategy,
+  resolveRedactionRule,
+} from "./pii.js";
+export {
   piiRedactionMiddleware,
   type PIIRedactionMiddlewareConfig,
 } from "./piiRedaction.js";
