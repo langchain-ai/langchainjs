@@ -99,6 +99,15 @@ export interface ChatBedrockConverseInput
   model?: string;
 
   /**
+   * Application Inference Profile ARN to use for the model.
+   * For example, "arn:aws:bedrock:eu-west-1:123456789102:application-inference-profile/fm16bt65tzgx", will override this.model in final /invoke URL call.
+   * Must still provide `model` as normal modelId to benefit from all the metadata.
+   * See the below link for more details on creating and using application inference profiles.
+   * @link https://docs.aws.amazon.com/bedrock/latest/userguide/inference-profiles-create.html
+   */
+  applicationInferenceProfile?: string;
+
+  /**
    * The AWS region e.g. `us-west-2`.
    * Fallback to AWS_DEFAULT_REGION env variable or region specified in ~/.aws/config
    * in case it is not provided here.
@@ -666,6 +675,8 @@ export class ChatBedrockConverse
 
   model = "anthropic.claude-3-haiku-20240307-v1:0";
 
+  applicationInferenceProfile?: string;
+
   streaming = false;
 
   region: string;
@@ -747,6 +758,7 @@ export class ChatBedrockConverse
 
     this.region = region;
     this.model = rest?.model ?? this.model;
+    this.applicationInferenceProfile = rest?.applicationInferenceProfile;
     this.streaming = rest?.streaming ?? this.streaming;
     this.temperature = rest?.temperature;
     this.maxTokens = rest?.maxTokens;
@@ -881,7 +893,7 @@ export class ChatBedrockConverse
     const params = this.invocationParams(options);
 
     const command = new ConverseCommand({
-      modelId: this.model,
+      modelId: this.applicationInferenceProfile ?? this.model,
       messages: converseMessages,
       ...(Array.isArray(converseSystem) && converseSystem.length > 0
         ? { system: converseSystem }
@@ -924,7 +936,7 @@ export class ChatBedrockConverse
       streamUsage = options.streamUsage;
     }
     const command = new ConverseStreamCommand({
-      modelId: this.model,
+      modelId: this.applicationInferenceProfile ?? this.model,
       messages: converseMessages,
       ...(Array.isArray(converseSystem) && converseSystem.length > 0
         ? { system: converseSystem }

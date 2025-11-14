@@ -9,11 +9,12 @@ import {
 import { concat } from "@langchain/core/utils/stream";
 import {
   ConversationRole as BedrockConversationRole,
+  BedrockRuntimeClient,
   type Message as BedrockMessage,
   type SystemContentBlock as BedrockSystemContentBlock,
 } from "@aws-sdk/client-bedrock-runtime";
 import { z } from "zod/v3";
-import { describe, expect, test, it } from "vitest";
+import { describe, expect, test, it, vi } from "vitest";
 import { convertToConverseMessages } from "../utils/message_inputs.js";
 import { handleConverseStreamContentBlockDelta } from "../utils/message_outputs.js";
 import { ChatBedrockConverse } from "../chat_models.js";
@@ -450,6 +451,206 @@ test("Streaming supports empty string chunks", async () => {
   expect(finalChunk).toBeDefined();
   if (!finalChunk) return;
   expect(finalChunk.content).toBe("Hello world!");
+});
+
+describe("applicationInferenceProfile parameter", () => {
+  const baseConstructorArgs = {
+    region: "us-east-1",
+    credentials: {
+      secretAccessKey: "test-secret-key",
+      accessKeyId: "test-access-key",
+    },
+  };
+
+  it("should initialize applicationInferenceProfile from constructor", () => {
+    const testArn =
+      "arn:aws:bedrock:eu-west-1:123456789012:application-inference-profile/test-profile";
+    const model = new ChatBedrockConverse({
+      ...baseConstructorArgs,
+      model: "anthropic.claude-3-haiku-20240307-v1:0",
+      applicationInferenceProfile: testArn,
+    });
+    expect(model.model).toBe("anthropic.claude-3-haiku-20240307-v1:0");
+    expect(model.applicationInferenceProfile).toBe(testArn);
+  });
+
+  it("should be undefined when not provided in constructor", () => {
+    const model = new ChatBedrockConverse({
+      ...baseConstructorArgs,
+      model: "anthropic.claude-3-haiku-20240307-v1:0",
+    });
+
+    expect(model.model).toBe("anthropic.claude-3-haiku-20240307-v1:0");
+    expect(model.applicationInferenceProfile).toBeUndefined();
+  });
+
+  it("should send applicationInferenceProfile as modelId in ConverseCommand when provided", async () => {
+    const testArn =
+      "arn:aws:bedrock:eu-west-1:123456789012:application-inference-profile/test-profile";
+    const mockSend = vi.fn().mockResolvedValue({
+      output: {
+        message: {
+          role: "assistant",
+          content: [{ text: "Test response" }],
+        },
+      },
+      stopReason: "end_turn",
+      usage: {
+        inputTokens: 10,
+        outputTokens: 5,
+        totalTokens: 15,
+      },
+    });
+
+    const mockClient = {
+      send: mockSend,
+    } as unknown as BedrockRuntimeClient;
+
+    const model = new ChatBedrockConverse({
+      ...baseConstructorArgs,
+      model: "anthropic.claude-3-haiku-20240307-v1:0",
+      applicationInferenceProfile: testArn,
+      client: mockClient,
+    });
+
+    await model.invoke([new HumanMessage("Hello")]);
+
+    // Verify that send was called
+    expect(mockSend).toHaveBeenCalledTimes(1);
+
+    // Verify that the command was created with applicationInferenceProfile as modelId
+    const commandArg = mockSend.mock.calls[0][0];
+    expect(commandArg.input.modelId).toBe(testArn);
+    expect(commandArg.input.modelId).not.toBe(
+      "anthropic.claude-3-haiku-20240307-v1:0"
+    );
+  });
+
+  it("should send model as modelId in ConverseCommand when applicationInferenceProfile is not provided", async () => {
+    const mockSend = vi.fn().mockResolvedValue({
+      output: {
+        message: {
+          role: "assistant",
+          content: [{ text: "Test response" }],
+        },
+      },
+      stopReason: "end_turn",
+      usage: {
+        inputTokens: 10,
+        outputTokens: 5,
+        totalTokens: 15,
+      },
+    });
+
+    const mockClient = {
+      send: mockSend,
+    } as unknown as BedrockRuntimeClient;
+
+    const model = new ChatBedrockConverse({
+      ...baseConstructorArgs,
+      model: "anthropic.claude-3-haiku-20240307-v1:0",
+      client: mockClient,
+    });
+
+    await model.invoke([new HumanMessage("Hello")]);
+
+    // Verify that send was called
+    expect(mockSend).toHaveBeenCalledTimes(1);
+
+    // Verify that the command was created with model as modelId
+    const commandArg = mockSend.mock.calls[0][0];
+    expect(commandArg.input.modelId).toBe(
+      "anthropic.claude-3-haiku-20240307-v1:0"
+    );
+  });
+
+  it("should send applicationInferenceProfile as modelId in ConverseStreamCommand when provided", async () => {
+    const testArn =
+      "arn:aws:bedrock:eu-west-1:123456789012:application-inference-profile/test-profile";
+    const mockSend = vi.fn().mockResolvedValue({
+      stream: (async function* () {
+        yield {
+          contentBlockDelta: {
+            contentBlockIndex: 0,
+            delta: { text: "Test" },
+          },
+        };
+        yield {
+          metadata: {
+            usage: {
+              inputTokens: 10,
+              outputTokens: 5,
+              totalTokens: 15,
+            },
+          },
+        };
+      })(),
+    });
+
+    const mockClient = {
+      send: mockSend,
+    } as unknown as BedrockRuntimeClient;
+
+    const model = new ChatBedrockConverse({
+      ...baseConstructorArgs,
+      model: "anthropic.claude-3-haiku-20240307-v1:0",
+      applicationInferenceProfile: testArn,
+      streaming: true,
+      client: mockClient,
+    });
+
+    await model.invoke([new HumanMessage("Hello")]);
+
+    expect(mockSend).toHaveBeenCalledTimes(1);
+
+    const commandArg = mockSend.mock.calls[0][0];
+    expect(commandArg.input.modelId).toBe(testArn);
+    expect(commandArg.input.modelId).not.toBe(
+      "anthropic.claude-3-haiku-20240307-v1:0"
+    );
+  });
+
+  it("should send model as modelId in ConverseStreamCommand when applicationInferenceProfile is not provided", async () => {
+    const mockSend = vi.fn().mockResolvedValue({
+      stream: (async function* () {
+        yield {
+          contentBlockDelta: {
+            contentBlockIndex: 0,
+            delta: { text: "Test" },
+          },
+        };
+        yield {
+          metadata: {
+            usage: {
+              inputTokens: 10,
+              outputTokens: 5,
+              totalTokens: 15,
+            },
+          },
+        };
+      })(),
+    });
+
+    const mockClient = {
+      send: mockSend,
+    } as unknown as BedrockRuntimeClient;
+
+    const model = new ChatBedrockConverse({
+      ...baseConstructorArgs,
+      model: "anthropic.claude-3-haiku-20240307-v1:0",
+      streaming: true,
+      client: mockClient,
+    });
+
+    await model.invoke([new HumanMessage("Hello")]);
+
+    expect(mockSend).toHaveBeenCalledTimes(1);
+
+    const commandArg = mockSend.mock.calls[0][0];
+    expect(commandArg.input.modelId).toBe(
+      "anthropic.claude-3-haiku-20240307-v1:0"
+    );
+  });
 });
 
 describe("tool_choice works for supported models", () => {
