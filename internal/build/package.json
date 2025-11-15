@@ -1,22 +1,27 @@
 {
   "name": "@langchain/build",
-  "version": "0.0.1",
   "private": true,
+  "version": "0.1.0",
   "type": "module",
-  "scripts": {
-    "compile": "tsx cli.ts",
-    "watch": "tsx cli.ts --watch"
+  "main": "./index.ts",
+  "exports": {
+    ".": {
+      "types": "./index.ts",
+      "import": "./index.ts"
+    }
   },
   "dependencies": {
     "@arethetypeswrong/core": "^0.18.2",
-    "@tsconfig/recommended": "^1.0.10",
     "@typescript/native-preview": "^7.0.0-dev.20250730.1",
     "prettier": "^3.6.2",
     "publint": "^0.3.12",
-    "tsdown": "^0.13.0",
-    "tsx": "^4.20.3",
+    "rolldown": "1.0.0-beta.30",
+    "tsdown": "^0.15.12",
     "type-fest": "^4.41.0",
     "unplugin-unused": "^0.5.1"
+  },
+  "devDependencies": {
+    "@tsconfig/recommended": "^1.0.10"
   },
   "optionalDependencies": {
     "@esbuild/win32-x64": "*",

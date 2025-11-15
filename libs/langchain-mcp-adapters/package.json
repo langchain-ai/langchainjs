@@ -16,7 +16,7 @@
   },
   "scripts": {
     "build": "turbo build:compile build:examples --filter @langchain/core",
-    "build:compile": "pnpm --filter @langchain/build compile @langchain/mcp-adapters",
+    "build:compile": "tsdown",
     "build:examples": "tsc -p ./examples/tsconfig.json",
     "clean": "rm -rf dist/ dist-cjs/ .turbo/",
     "format": "prettier --config .prettierrc --write \"src/**/*.ts\" \"examples/**/*.ts\"",
