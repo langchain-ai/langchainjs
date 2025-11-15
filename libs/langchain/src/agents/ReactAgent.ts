@@ -13,6 +13,7 @@ import {
   type LangGraphRunnableConfig,
   type StreamMode,
   type StreamOutputMap,
+  type PregelOptions,
 } from "@langchain/langgraph";
 import type { CheckpointListOptions } from "@langchain/langgraph-checkpoint";
 import { ToolMessage, AIMessage } from "@langchain/core/messages";
@@ -368,6 +369,7 @@ export class ReactAgent<
         : END;
 
     allNodeWorkflows.addEdge(START, entryNode);
+    const clientTools = toolClasses.filter(isClientTool);
 
     // Connect beforeAgent nodes (run once at start)
     for (let i = 0; i < beforeAgentNodes.length; i++) {
@@ -377,7 +379,7 @@ export class ReactAgent<
       const nextDefault = isLast ? loopEntryNode : beforeAgentNodes[i + 1].name;
 
       if (node.allowed && node.allowed.length > 0) {
-        const hasTools = toolClasses.filter(isClientTool).length > 0;
+        const hasTools = clientTools.length > 0;
         const allowedMapped = node.allowed
           .map((t) => parseJumpToTarget(t))
           .filter((dest) => dest !== "tools" || hasTools);
@@ -391,11 +393,7 @@ export class ReactAgent<
 
         allNodeWorkflows.addConditionalEdges(
           current,
-          this.#createBeforeAgentRouter(
-            toolClasses.filter(isClientTool),
-            nextDefault,
-            exitNode
-          ),
+          this.#createBeforeAgentRouter(clientTools, nextDefault, exitNode),
           destinations
         );
       } else {
@@ -413,7 +411,7 @@ export class ReactAgent<
         : beforeModelNodes[i + 1].name;
 
       if (node.allowed && node.allowed.length > 0) {
-        const hasTools = toolClasses.filter(isClientTool).length > 0;
+        const hasTools = clientTools.length > 0;
         const allowedMapped = node.allowed
           .map((t) => parseJumpToTarget(t))
           .filter((dest) => dest !== "tools" || hasTools);
@@ -423,10 +421,7 @@ export class ReactAgent<
 
         allNodeWorkflows.addConditionalEdges(
           current,
-          this.#createBeforeModelRouter(
-            toolClasses.filter(isClientTool),
-            nextDefault
-          ),
+          this.#createBeforeModelRouter(clientTools, nextDefault),
           destinations
         );
       } else {
@@ -440,7 +435,7 @@ export class ReactAgent<
       allNodeWorkflows.addEdge("model_request", lastAfterModelNode.name);
     } else {
       // If no afterModel nodes, connect model_request directly to model paths
-      const modelPaths = this.#getModelPaths(toolClasses.filter(isClientTool));
+      const modelPaths = this.#getModelPaths(clientTools);
       // Replace END with exitNode in destinations, since exitNode might be an afterAgent node
       const destinations = modelPaths.map((p) =>
         p === END ? exitNode : p
@@ -463,7 +458,7 @@ export class ReactAgent<
       const nextDefault = afterModelNodes[i - 1].name;
 
       if (node.allowed && node.allowed.length > 0) {
-        const hasTools = toolClasses.filter(isClientTool).length > 0;
+        const hasTools = clientTools.length > 0;
         const allowedMapped = node.allowed
           .map((t) => parseJumpToTarget(t))
           .filter((dest) => dest !== "tools" || hasTools);
@@ -474,7 +469,7 @@ export class ReactAgent<
         allNodeWorkflows.addConditionalEdges(
           current,
           this.#createAfterModelSequenceRouter(
-            toolClasses.filter(isClientTool),
+            clientTools,
             node.allowed,
             nextDefault
           ),
@@ -491,10 +486,7 @@ export class ReactAgent<
       const firstAfterModelNode = firstAfterModel.name;
 
       // Include exitNode in the paths since afterModel should be able to route to after_agent or END
-      const modelPaths = this.#getModelPaths(
-        toolClasses.filter(isClientTool),
-        true
-      ).filter(
+      const modelPaths = this.#getModelPaths(clientTools, true).filter(
         (p) => p !== "tools" || toolClasses.filter(isClientTool).length > 0
       );
 
@@ -509,11 +501,7 @@ export class ReactAgent<
 
       allNodeWorkflows.addConditionalEdges(
         firstAfterModelNode,
-        this.#createAfterModelRouter(
-          toolClasses.filter(isClientTool),
-          allowJump,
-          exitNode
-        ),
+        this.#createAfterModelRouter(clientTools, allowJump, exitNode),
         destinations
       );
     }
@@ -525,7 +513,7 @@ export class ReactAgent<
       const nextDefault = afterAgentNodes[i - 1].name;
 
       if (node.allowed && node.allowed.length > 0) {
-        const hasTools = toolClasses.filter(isClientTool).length > 0;
+        const hasTools = clientTools.length > 0;
         const allowedMapped = node.allowed
           .map((t) => parseJumpToTarget(t))
           .filter((dest) => dest !== "tools" || hasTools);
@@ -536,7 +524,7 @@ export class ReactAgent<
         allNodeWorkflows.addConditionalEdges(
           current,
           this.#createAfterModelSequenceRouter(
-            toolClasses.filter(isClientTool),
+            clientTools,
             node.allowed,
             nextDefault
           ),
@@ -553,7 +541,7 @@ export class ReactAgent<
       const firstAfterAgentNode = firstAfterAgent.name;
 
       if (firstAfterAgent.allowed && firstAfterAgent.allowed.length > 0) {
-        const hasTools = toolClasses.filter(isClientTool).length > 0;
+        const hasTools = clientTools.length > 0;
         const allowedMapped = firstAfterAgent.allowed
           .map((t) => parseJumpToTarget(t))
           .filter((dest) => dest !== "tools" || hasTools);
@@ -571,7 +559,7 @@ export class ReactAgent<
         allNodeWorkflows.addConditionalEdges(
           firstAfterAgentNode,
           this.#createAfterModelSequenceRouter(
-            toolClasses.filter(isClientTool),
+            clientTools,
             firstAfterAgent.allowed,
             END as string
           ),
@@ -585,7 +573,7 @@ export class ReactAgent<
     /**
      * add edges for tools node
      */
-    if (toolClasses.filter(isClientTool).length > 0) {
+    if (clientTools.length > 0) {
       // Tools should return to loop entry node (not including before_agent)
       const toolReturnTarget = loopEntryNode;
 
@@ -659,10 +647,7 @@ export class ReactAgent<
     shouldReturnDirect: Set<string>,
     exitNode: string | typeof END
   ) {
-    /**
-     * ToDo: fix type
-     */
-    return (state: any) => {
+    return (state: BuiltInState) => {
       const messages = state.messages;
       const lastMessage = messages[messages.length - 1];
 
@@ -867,7 +852,7 @@ export class ReactAgent<
           return new Send("model_request", { ...state, jumpTo: undefined });
         }
       }
-      return nextDefault as any;
+      return nextDefault;
     };
   }
 
@@ -1181,7 +1166,16 @@ export class ReactAgent<
     return this.#graph.streamEvents(
       state,
       {
-        ...(config as any),
+        ...(config as Partial<
+          PregelOptions<
+            any,
+            any,
+            any,
+            StreamMode | StreamMode[] | undefined,
+            boolean,
+            "text/event-stream"
+          >
+        >),
         version: config?.version ?? "v2",
       },
       streamOptions
