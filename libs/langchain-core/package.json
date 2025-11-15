@@ -6,8 +6,8 @@
   "engines": {
     "node": ">=20"
   },
-  "main": "./dist/index.js",
-  "types": "./dist/index.d.ts",
+  "main": "./dist/index.cjs",
+  "types": "./dist/index.d.cts",
   "repository": {
     "type": "git",
     "url": "git@github.com:langchain-ai/langchainjs.git"
@@ -15,7 +15,7 @@
   "homepage": "https://github.com/langchain-ai/langchainjs/tree/main/langchain-core/",
   "scripts": {
     "build": "turbo build:compile --filter @langchain/core",
-    "build:compile": "pnpm --filter @langchain/build compile @langchain/core",
+    "build:compile": "tsdown",
     "clean": "rm -rf .turbo dist/",
     "lint:eslint": "eslint --cache src/",
     "lint:dpdm": "dpdm --skip-dynamic-imports circular --exit-code circular:1 --no-warning --no-tree src/*.ts src/**/*.ts --exclude \"(node_modules|src/utils/zod-to-json-schema)\" --transform",
@@ -76,664 +76,240 @@
   ],
   "exports": {
     ".": {
-      "input": "./src/index.ts",
-      "require": {
-        "types": "./dist/index.d.cts",
-        "default": "./dist/index.cjs"
-      },
-      "import": {
-        "types": "./dist/index.d.ts",
-        "default": "./dist/index.js"
-      }
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
     },
     "./agents": {
-      "input": "./src/agents.ts",
-      "require": {
-        "types": "./dist/agents.d.cts",
-        "default": "./dist/agents.cjs"
-      },
-      "import": {
-        "types": "./dist/agents.d.ts",
-        "default": "./dist/agents.js"
-      }
+      "import": "./dist/agents.js",
+      "require": "./dist/agents.cjs"
     },
-    "./caches": {
-      "input": "./src/caches/base.ts",
-      "require": {
-        "types": "./dist/caches/base.d.cts",
-        "default": "./dist/caches/base.cjs"
-      },
-      "import": {
-        "types": "./dist/caches/base.d.ts",
-        "default": "./dist/caches/base.js"
-      }
+    "./caches/base": {
+      "import": "./dist/caches/base.js",
+      "require": "./dist/caches/base.cjs"
     },
     "./callbacks/base": {
-      "input": "./src/callbacks/base.ts",
-      "require": {
-        "types": "./dist/callbacks/base.d.cts",
-        "default": "./dist/callbacks/base.cjs"
-      },
-      "import": {
-        "types": "./dist/callbacks/base.d.ts",
-        "default": "./dist/callbacks/base.js"
-      }
+      "import": "./dist/callbacks/base.js",
+      "require": "./dist/callbacks/base.cjs"
     },
     "./callbacks/dispatch": {
-      "input": "./src/callbacks/dispatch/index.ts",
-      "require": {
-        "types": "./dist/callbacks/dispatch/index.d.cts",
-        "default": "./dist/callbacks/dispatch/index.cjs"
-      },
-      "import": {
-        "types": "./dist/callbacks/dispatch/index.d.ts",
-        "default": "./dist/callbacks/dispatch/index.js"
-      }
+      "import": "./dist/callbacks/dispatch/index.js",
+      "require": "./dist/callbacks/dispatch/index.cjs"
     },
     "./callbacks/dispatch/web": {
-      "input": "./src/callbacks/dispatch/web.ts",
-      "require": {
-        "types": "./dist/callbacks/dispatch/web.d.cts",
-        "default": "./dist/callbacks/dispatch/web.cjs"
-      },
-      "import": {
-        "types": "./dist/callbacks/dispatch/web.d.ts",
-        "default": "./dist/callbacks/dispatch/web.js"
-      }
+      "import": "./dist/callbacks/dispatch/web.js",
+      "require": "./dist/callbacks/dispatch/web.cjs"
     },
     "./callbacks/manager": {
-      "input": "./src/callbacks/manager.ts",
-      "require": {
-        "types": "./dist/callbacks/manager.d.cts",
-        "default": "./dist/callbacks/manager.cjs"
-      },
-      "import": {
-        "types": "./dist/callbacks/manager.d.ts",
-        "default": "./dist/callbacks/manager.js"
-      }
+      "import": "./dist/callbacks/manager.js",
+      "require": "./dist/callbacks/manager.cjs"
     },
     "./callbacks/promises": {
-      "input": "./src/callbacks/promises.ts",
-      "require": {
-        "types": "./dist/callbacks/promises.d.cts",
-        "default": "./dist/callbacks/promises.cjs"
-      },
-      "import": {
-        "types": "./dist/callbacks/promises.d.ts",
-        "default": "./dist/callbacks/promises.js"
-      }
+      "import": "./dist/callbacks/promises.js",
+      "require": "./dist/callbacks/promises.cjs"
     },
     "./chat_history": {
-      "input": "./src/chat_history.ts",
-      "require": {
-        "types": "./dist/chat_history.d.cts",
-        "default": "./dist/chat_history.cjs"
-      },
-      "import": {
-        "types": "./dist/chat_history.d.ts",
-        "default": "./dist/chat_history.js"
-      }
+      "import": "./dist/chat_history.js",
+      "require": "./dist/chat_history.cjs"
     },
     "./context": {
-      "input": "./src/context.ts",
-      "require": {
-        "types": "./dist/context.d.cts",
-        "default": "./dist/context.cjs"
-      },
-      "import": {
-        "types": "./dist/context.d.ts",
-        "default": "./dist/context.js"
-      }
-    },
-    "./documents": {
-      "input": "./src/documents/index.ts",
-      "require": {
-        "types": "./dist/documents/index.d.cts",
-        "default": "./dist/documents/index.cjs"
-      },
-      "import": {
-        "types": "./dist/documents/index.d.ts",
-        "default": "./dist/documents/index.js"
-      }
+      "import": "./dist/context.js",
+      "require": "./dist/context.cjs"
     },
     "./document_loaders/base": {
-      "input": "./src/document_loaders/base.ts",
-      "require": {
-        "types": "./dist/document_loaders/base.d.cts",
-        "default": "./dist/document_loaders/base.cjs"
-      },
-      "import": {
-        "types": "./dist/document_loaders/base.d.ts",
-        "default": "./dist/document_loaders/base.js"
-      }
+      "import": "./dist/document_loaders/base.js",
+      "require": "./dist/document_loaders/base.cjs"
     },
     "./document_loaders/langsmith": {
-      "input": "./src/document_loaders/langsmith.ts",
-      "require": {
-        "types": "./dist/document_loaders/langsmith.d.cts",
-        "default": "./dist/document_loaders/langsmith.cjs"
-      },
-      "import": {
-        "types": "./dist/document_loaders/langsmith.d.ts",
-        "default": "./dist/document_loaders/langsmith.js"
-      }
+      "import": "./dist/document_loaders/langsmith.js",
+      "require": "./dist/document_loaders/langsmith.cjs"
+    },
+    "./documents": {
+      "import": "./dist/documents/index.js",
+      "require": "./dist/documents/index.cjs"
     },
     "./embeddings": {
-      "input": "./src/embeddings.ts",
-      "require": {
-        "types": "./dist/embeddings.d.cts",
-        "default": "./dist/embeddings.cjs"
-      },
-      "import": {
-        "types": "./dist/embeddings.d.ts",
-        "default": "./dist/embeddings.js"
-      }
+      "import": "./dist/embeddings.js",
+      "require": "./dist/embeddings.cjs"
     },
     "./example_selectors": {
-      "input": "./src/example_selectors/index.ts",
-      "require": {
-        "types": "./dist/example_selectors/index.d.cts",
-        "default": "./dist/example_selectors/index.cjs"
-      },
-      "import": {
-        "types": "./dist/example_selectors/index.d.ts",
-        "default": "./dist/example_selectors/index.js"
-      }
+      "import": "./dist/example_selectors/index.js",
+      "require": "./dist/example_selectors/index.cjs"
     },
     "./indexing": {
-      "input": "./src/indexing/index.ts",
-      "require": {
-        "types": "./dist/indexing/index.d.cts",
-        "default": "./dist/indexing/index.cjs"
-      },
-      "import": {
-        "types": "./dist/indexing/index.d.ts",
-        "default": "./dist/indexing/index.js"
-      }
+      "import": "./dist/indexing/index.js",
+      "require": "./dist/indexing/index.cjs"
     },
     "./language_models/base": {
-      "input": "./src/language_models/base.ts",
-      "require": {
-        "types": "./dist/language_models/base.d.cts",
-        "default": "./dist/language_models/base.cjs"
-      },
-      "import": {
-        "types": "./dist/language_models/base.d.ts",
-        "default": "./dist/language_models/base.js"
-      }
+      "import": "./dist/language_models/base.js",
+      "require": "./dist/language_models/base.cjs"
     },
     "./language_models/chat_models": {
-      "input": "./src/language_models/chat_models.ts",
-      "require": {
-        "types": "./dist/language_models/chat_models.d.cts",
-        "default": "./dist/language_models/chat_models.cjs"
-      },
-      "import": {
-        "types": "./dist/language_models/chat_models.d.ts",
-        "default": "./dist/language_models/chat_models.js"
-      }
+      "import": "./dist/language_models/chat_models.js",
+      "require": "./dist/language_models/chat_models.cjs"
     },
     "./language_models/llms": {
-      "input": "./src/language_models/llms.ts",
-      "require": {
-        "types": "./dist/language_models/llms.d.cts",
-        "default": "./dist/language_models/llms.cjs"
-      },
-      "import": {
-        "types": "./dist/language_models/llms.d.ts",
-        "default": "./dist/language_models/llms.js"
-      }
+      "import": "./dist/language_models/llms.js",
+      "require": "./dist/language_models/llms.cjs"
     },
     "./language_models/profile": {
-      "input": "./src/language_models/profile.ts",
-      "require": {
-        "types": "./dist/language_models/profile.d.cts",
-        "default": "./dist/language_models/profile.cjs"
-      },
-      "import": {
-        "types": "./dist/language_models/profile.d.ts",
-        "default": "./dist/language_models/profile.js"
-      }
+      "import": "./dist/language_models/profile.js",
+      "require": "./dist/language_models/profile.cjs"
     },
     "./load": {
-      "input": "./src/load/index.ts",
-      "require": {
-        "types": "./dist/load/index.d.cts",
-        "default": "./dist/load/index.cjs"
-      },
-      "import": {
-        "types": "./dist/load/index.d.ts",
-        "default": "./dist/load/index.js"
-      }
+      "import": "./dist/load/index.js",
+      "require": "./dist/load/index.cjs"
     },
     "./load/serializable": {
-      "input": "./src/load/serializable.ts",
-      "require": {
-        "types": "./dist/load/serializable.d.cts",
-        "default": "./dist/load/serializable.cjs"
-      },
-      "import": {
-        "types": "./dist/load/serializable.d.ts",
-        "default": "./dist/load/serializable.js"
-      }
+      "import": "./dist/load/serializable.js",
+      "require": "./dist/load/serializable.cjs"
     },
     "./memory": {
-      "input": "./src/memory.ts",
-      "require": {
-        "types": "./dist/memory.d.cts",
-        "default": "./dist/memory.cjs"
-      },
-      "import": {
-        "types": "./dist/memory.d.ts",
-        "default": "./dist/memory.js"
-      }
+      "import": "./dist/memory.js",
+      "require": "./dist/memory.cjs"
     },
     "./messages": {
-      "input": "./src/messages/index.ts",
-      "require": {
-        "types": "./dist/messages/index.d.cts",
-        "default": "./dist/messages/index.cjs"
-      },
-      "import": {
-        "types": "./dist/messages/index.d.ts",
-        "default": "./dist/messages/index.js"
-      }
+      "import": "./dist/messages/index.js",
+      "require": "./dist/messages/index.cjs"
     },
     "./messages/tool": {
-      "input": "./src/messages/tool.ts",
-      "require": {
-        "types": "./dist/messages/tool.d.cts",
-        "default": "./dist/messages/tool.cjs"
-      },
-      "import": {
-        "types": "./dist/messages/tool.d.ts",
-        "default": "./dist/messages/tool.js"
-      }
+      "import": "./dist/messages/tool.js",
+      "require": "./dist/messages/tool.cjs"
     },
     "./output_parsers": {
-      "input": "./src/output_parsers/index.ts",
-      "require": {
-        "types": "./dist/output_parsers/index.d.cts",
-        "default": "./dist/output_parsers/index.cjs"
-      },
-      "import": {
-        "types": "./dist/output_parsers/index.d.ts",
-        "default": "./dist/output_parsers/index.js"
-      }
-    },
-    "./output_parsers/openai_tools": {
-      "input": "./src/output_parsers/openai_tools/index.ts",
-      "require": {
-        "types": "./dist/output_parsers/openai_tools/index.d.cts",
-        "default": "./dist/output_parsers/openai_tools/index.cjs"
-      },
-      "import": {
-        "types": "./dist/output_parsers/openai_tools/index.d.ts",
-        "default": "./dist/output_parsers/openai_tools/index.js"
-      }
+      "import": "./dist/output_parsers/index.js",
+      "require": "./dist/output_parsers/index.cjs"
     },
     "./output_parsers/openai_functions": {
-      "input": "./src/output_parsers/openai_functions/index.ts",
-      "require": {
-        "types": "./dist/output_parsers/openai_functions/index.d.cts",
-        "default": "./dist/output_parsers/openai_functions/index.cjs"
-      },
-      "import": {
-        "types": "./dist/output_parsers/openai_functions/index.d.ts",
-        "default": "./dist/output_parsers/openai_functions/index.js"
-      }
+      "import": "./dist/output_parsers/openai_functions/index.js",
+      "require": "./dist/output_parsers/openai_functions/index.cjs"
+    },
+    "./output_parsers/openai_tools": {
+      "import": "./dist/output_parsers/openai_tools/index.js",
+      "require": "./dist/output_parsers/openai_tools/index.cjs"
     },
     "./outputs": {
-      "input": "./src/outputs.ts",
-      "require": {
-        "types": "./dist/outputs.d.cts",
-        "default": "./dist/outputs.cjs"
-      },
-      "import": {
-        "types": "./dist/outputs.d.ts",
-        "default": "./dist/outputs.js"
-      }
-    },
-    "./prompts": {
-      "input": "./src/prompts/index.ts",
-      "require": {
-        "types": "./dist/prompts/index.d.cts",
-        "default": "./dist/prompts/index.cjs"
-      },
-      "import": {
-        "types": "./dist/prompts/index.d.ts",
-        "default": "./dist/prompts/index.js"
-      }
+      "import": "./dist/outputs.js",
+      "require": "./dist/outputs.cjs"
     },
     "./prompt_values": {
-      "input": "./src/prompt_values.ts",
-      "require": {
-        "types": "./dist/prompt_values.d.cts",
-        "default": "./dist/prompt_values.cjs"
-      },
-      "import": {
-        "types": "./dist/prompt_values.d.ts",
-        "default": "./dist/prompt_values.js"
-      }
+      "import": "./dist/prompt_values.js",
+      "require": "./dist/prompt_values.cjs"
     },
-    "./runnables": {
-      "input": "./src/runnables/index.ts",
-      "require": {
-        "types": "./dist/runnables/index.d.cts",
-        "default": "./dist/runnables/index.cjs"
-      },
-      "import": {
-        "types": "./dist/runnables/index.d.ts",
-        "default": "./dist/runnables/index.js"
-      }
-    },
-    "./runnables/graph": {
-      "input": "./src/runnables/graph.ts",
-      "require": {
-        "types": "./dist/runnables/graph.d.cts",
-        "default": "./dist/runnables/graph.cjs"
-      },
-      "import": {
-        "types": "./dist/runnables/graph.d.ts",
-        "default": "./dist/runnables/graph.js"
-      }
+    "./prompts": {
+      "import": "./dist/prompts/index.js",
+      "require": "./dist/prompts/index.cjs"
     },
     "./retrievers": {
-      "input": "./src/retrievers/index.ts",
-      "require": {
-        "types": "./dist/retrievers/index.d.cts",
-        "default": "./dist/retrievers/index.cjs"
-      },
-      "import": {
-        "types": "./dist/retrievers/index.d.ts",
-        "default": "./dist/retrievers/index.js"
-      }
+      "import": "./dist/retrievers/index.js",
+      "require": "./dist/retrievers/index.cjs"
     },
-    "./retrievers/document_compressors": {
-      "input": "./src/retrievers/document_compressors/base.ts",
-      "require": {
-        "types": "./dist/retrievers/document_compressors/base.d.cts",
-        "default": "./dist/retrievers/document_compressors/base.cjs"
-      },
-      "import": {
-        "types": "./dist/retrievers/document_compressors/base.d.ts",
-        "default": "./dist/retrievers/document_compressors/base.js"
-      }
+    "./retrievers/document_compressors/base": {
+      "import": "./dist/retrievers/document_compressors/base.js",
+      "require": "./dist/retrievers/document_compressors/base.cjs"
+    },
+    "./runnables": {
+      "import": "./dist/runnables/index.js",
+      "require": "./dist/runnables/index.cjs"
+    },
+    "./runnables/graph": {
+      "import": "./dist/runnables/graph.js",
+      "require": "./dist/runnables/graph.cjs"
     },
     "./singletons": {
-      "input": "./src/singletons/index.ts",
-      "require": {
-        "types": "./dist/singletons/index.d.cts",
-        "default": "./dist/singletons/index.cjs"
-      },
-      "import": {
-        "types": "./dist/singletons/index.d.ts",
-        "default": "./dist/singletons/index.js"
-      }
+      "import": "./dist/singletons/index.js",
+      "require": "./dist/singletons/index.cjs"
     },
     "./stores": {
-      "input": "./src/stores.ts",
-      "require": {
-        "types": "./dist/stores.d.cts",
-        "default": "./dist/stores.cjs"
-      },
-      "import": {
-        "types": "./dist/stores.d.ts",
-        "default": "./dist/stores.js"
-      }
+      "import": "./dist/stores.js",
+      "require": "./dist/stores.cjs"
     },
     "./structured_query": {
-      "input": "./src/structured_query/index.ts",
-      "require": {
-        "types": "./dist/structured_query/index.d.cts",
-        "default": "./dist/structured_query/index.cjs"
-      },
-      "import": {
-        "types": "./dist/structured_query/index.d.ts",
-        "default": "./dist/structured_query/index.js"
-      }
+      "import": "./dist/structured_query/index.js",
+      "require": "./dist/structured_query/index.cjs"
     },
     "./tools": {
-      "input": "./src/tools/index.ts",
-      "require": {
-        "types": "./dist/tools/index.d.cts",
-        "default": "./dist/tools/index.cjs"
-      },
-      "import": {
-        "types": "./dist/tools/index.d.ts",
-        "default": "./dist/tools/index.js"
-      }
+      "import": "./dist/tools/index.js",
+      "require": "./dist/tools/index.cjs"
     },
     "./tracers/base": {
-      "input": "./src/tracers/base.ts",
-      "require": {
-        "types": "./dist/tracers/base.d.cts",
-        "default": "./dist/tracers/base.cjs"
-      },
-      "import": {
-        "types": "./dist/tracers/base.d.ts",
-        "default": "./dist/tracers/base.js"
-      }
+      "import": "./dist/tracers/base.js",
+      "require": "./dist/tracers/base.cjs"
     },
     "./tracers/console": {
-      "input": "./src/tracers/console.ts",
-      "require": {
-        "types": "./dist/tracers/console.d.cts",
-        "default": "./dist/tracers/console.cjs"
-      },
-      "import": {
-        "types": "./dist/tracers/console.d.ts",
-        "default": "./dist/tracers/console.js"
-      }
+      "import": "./dist/tracers/console.js",
+      "require": "./dist/tracers/console.cjs"
     },
     "./tracers/log_stream": {
-      "input": "./src/tracers/log_stream.ts",
-      "require": {
-        "types": "./dist/tracers/log_stream.d.cts",
-        "default": "./dist/tracers/log_stream.cjs"
-      },
-      "import": {
-        "types": "./dist/tracers/log_stream.d.ts",
-        "default": "./dist/tracers/log_stream.js"
-      }
+      "import": "./dist/tracers/log_stream.js",
+      "require": "./dist/tracers/log_stream.cjs"
     },
     "./tracers/run_collector": {
-      "input": "./src/tracers/run_collector.ts",
-      "require": {
-        "types": "./dist/tracers/run_collector.d.cts",
-        "default": "./dist/tracers/run_collector.cjs"
-      },
-      "import": {
-        "types": "./dist/tracers/run_collector.d.ts",
-        "default": "./dist/tracers/run_collector.js"
-      }
+      "import": "./dist/tracers/run_collector.js",
+      "require": "./dist/tracers/run_collector.cjs"
     },
     "./tracers/tracer_langchain": {
-      "input": "./src/tracers/tracer_langchain.ts",
-      "require": {
-        "types": "./dist/tracers/tracer_langchain.d.cts",
-        "default": "./dist/tracers/tracer_langchain.cjs"
-      },
-      "import": {
-        "types": "./dist/tracers/tracer_langchain.d.ts",
-        "default": "./dist/tracers/tracer_langchain.js"
-      }
+      "import": "./dist/tracers/tracer_langchain.js",
+      "require": "./dist/tracers/tracer_langchain.cjs"
     },
     "./types/stream": {
-      "input": "./src/types/stream.ts",
-      "require": {
-        "types": "./dist/types/stream.d.cts",
-        "default": "./dist/types/stream.cjs"
-      },
-      "import": {
-        "types": "./dist/types/stream.d.ts",
-        "default": "./dist/types/stream.js"
-      }
+      "import": "./dist/types/stream.js",
+      "require": "./dist/types/stream.cjs"
     },
     "./utils/async_caller": {
-      "input": "./src/utils/async_caller.ts",
-      "require": {
-        "types": "./dist/utils/async_caller.d.cts",
-        "default": "./dist/utils/async_caller.cjs"
-      },
-      "import": {
-        "types": "./dist/utils/async_caller.d.ts",
-        "default": "./dist/utils/async_caller.js"
-      }
+      "import": "./dist/utils/async_caller.js",
+      "require": "./dist/utils/async_caller.cjs"
     },
     "./utils/chunk_array": {
-      "input": "./src/utils/chunk_array.ts",
-      "require": {
-        "types": "./dist/utils/chunk_array.d.cts",
-        "default": "./dist/utils/chunk_array.cjs"
-      },
-      "import": {
-        "types": "./dist/utils/chunk_array.d.ts",
-        "default": "./dist/utils/chunk_array.js"
-      }
+      "import": "./dist/utils/chunk_array.js",
+      "require": "./dist/utils/chunk_array.cjs"
     },
     "./utils/env": {
-      "input": "./src/utils/env.ts",
-      "require": {
-        "types": "./dist/utils/env.d.cts",
-        "default": "./dist/utils/env.cjs"
-      },
-      "import": {
-        "types": "./dist/utils/env.d.ts",
-        "default": "./dist/utils/env.js"
-      }
+      "import": "./dist/utils/env.js",
+      "require": "./dist/utils/env.cjs"
     },
     "./utils/event_source_parse": {
-      "input": "./src/utils/event_source_parse.ts",
-      "require": {
-        "types": "./dist/utils/event_source_parse.d.cts",
-        "default": "./dist/utils/event_source_parse.cjs"
-      },
-      "import": {
-        "types": "./dist/utils/event_source_parse.d.ts",
-        "default": "./dist/utils/event_source_parse.js"
-      }
+      "import": "./dist/utils/event_source_parse.js",
+      "require": "./dist/utils/event_source_parse.cjs"
     },
     "./utils/format": {
-      "input": "./src/utils/format.ts",
-      "require": {
-        "types": "./dist/utils/format.d.cts",
-        "default": "./dist/utils/format.cjs"
-      },
-      "import": {
-        "types": "./dist/utils/format.d.ts",
-        "default": "./dist/utils/format.js"
-      }
+      "import": "./dist/utils/format.js",
+      "require": "./dist/utils/format.cjs"
     },
     "./utils/function_calling": {
-      "input": "./src/utils/function_calling.ts",
-      "require": {
-        "types": "./dist/utils/function_calling.d.cts",
-        "default": "./dist/utils/function_calling.cjs"
-      },
-      "import": {
-        "types": "./dist/utils/function_calling.d.ts",
-        "default": "./dist/utils/function_calling.js"
-      }
+      "import": "./dist/utils/function_calling.js",
+      "require": "./dist/utils/function_calling.cjs"
     },
     "./utils/hash": {
-      "input": "./src/utils/hash.ts",
-      "require": {
-        "types": "./dist/utils/hash.d.cts",
-        "default": "./dist/utils/hash.cjs"
-      },
-      "import": {
-        "types": "./dist/utils/hash.d.ts",
-        "default": "./dist/utils/hash.js"
-      }
+      "import": "./dist/utils/hash.js",
+      "require": "./dist/utils/hash.cjs"
     },
     "./utils/json_patch": {
-      "input": "./src/utils/json_patch.ts",
-      "require": {
-        "types": "./dist/utils/json_patch.d.cts",
-        "default": "./dist/utils/json_patch.cjs"
-      },
-      "import": {
-        "types": "./dist/utils/json_patch.d.ts",
-        "default": "./dist/utils/json_patch.js"
-      }
-    },
-    "./utils/json_schema": {
-      "input": "./src/utils/json_schema.ts",
-      "require": {
-        "types": "./dist/utils/json_schema.d.cts",
-        "default": "./dist/utils/json_schema.cjs"
-      },
-      "import": {
-        "types": "./dist/utils/json_schema.d.ts",
-        "default": "./dist/utils/json_schema.js"
-      }
+      "import": "./dist/utils/json_patch.js",
+      "require": "./dist/utils/json_patch.cjs"
     },
     "./utils/math": {
-      "input": "./src/utils/math.ts",
-      "require": {
-        "types": "./dist/utils/math.d.cts",
-        "default": "./dist/utils/math.cjs"
-      },
-      "import": {
-        "types": "./dist/utils/math.d.ts",
-        "default": "./dist/utils/math.js"
-      }
+      "import": "./dist/utils/math.js",
+      "require": "./dist/utils/math.cjs"
     },
     "./utils/stream": {
-      "input": "./src/utils/stream.ts",
-      "require": {
-        "types": "./dist/utils/stream.d.cts",
-        "default": "./dist/utils/stream.cjs"
-      },
-      "import": {
-        "types": "./dist/utils/stream.d.ts",
-        "default": "./dist/utils/stream.js"
-      }
+      "import": "./dist/utils/stream.js",
+      "require": "./dist/utils/stream.cjs"
     },
     "./utils/testing": {
-      "input": "./src/utils/testing/index.ts",
-      "require": {
-        "types": "./dist/utils/testing/index.d.cts",
-        "default": "./dist/utils/testing/index.cjs"
-      },
-      "import": {
-        "types": "./dist/utils/testing/index.d.ts",
-        "default": "./dist/utils/testing/index.js"
-      }
+      "import": "./dist/utils/testing/index.js",
+      "require": "./dist/utils/testing/index.cjs"
     },
     "./utils/tiktoken": {
-      "input": "./src/utils/tiktoken.ts",
-      "require": {
-        "types": "./dist/utils/tiktoken.d.cts",
-        "default": "./dist/utils/tiktoken.cjs"
-      },
-      "import": {
-        "types": "./dist/utils/tiktoken.d.ts",
-        "default": "./dist/utils/tiktoken.js"
-      }
+      "import": "./dist/utils/tiktoken.js",
+      "require": "./dist/utils/tiktoken.cjs"
     },
     "./utils/types": {
-      "input": "./src/utils/types/index.ts",
-      "require": {
-        "types": "./dist/utils/types/index.d.cts",
-        "default": "./dist/utils/types/index.cjs"
-      },
-      "import": {
-        "types": "./dist/utils/types/index.d.ts",
-        "default": "./dist/utils/types/index.js"
-      }
+      "import": "./dist/utils/types/index.js",
+      "require": "./dist/utils/types/index.cjs"
     },
     "./vectorstores": {
-      "input": "./src/vectorstores.ts",
-      "require": {
-        "types": "./dist/vectorstores.d.cts",
-        "default": "./dist/vectorstores.cjs"
-      },
-      "import": {
-        "types": "./dist/vectorstores.d.ts",
-        "default": "./dist/vectorstores.js"
-      }
+      "import": "./dist/vectorstores.js",
+      "require": "./dist/vectorstores.cjs"
     },
     "./package.json": "./package.json"
   },
@@ -742,5 +318,6 @@
     "CHANGELOG.md",
     "README.md",
     "LICENSE"
-  ]
+  ],
+  "module": "./dist/index.js"
 }

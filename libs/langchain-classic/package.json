@@ -21,7 +21,7 @@
   "homepage": "https://github.com/langchain-ai/langchainjs/tree/main/langchain/",
   "scripts": {
     "build": "turbo build:compile --filter @langchain/classic",
-    "build:compile": "pnpm --filter @langchain/build compile @langchain/classic",
+    "build:compile": "tsdown",
     "lint:eslint": "eslint --cache",
     "lint:dpdm": "dpdm --skip-dynamic-imports circular --exit-code circular:1 --no-warning --no-tree src/*.ts src/**/*.ts",
     "lint": "pnpm lint:eslint && pnpm lint:dpdm",
