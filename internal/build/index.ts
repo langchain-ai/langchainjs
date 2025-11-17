@@ -32,29 +32,23 @@ export {
  *
  * @example
  * ```ts
- * import { defineConfig } from "tsdown";
+ * // tsdown.config.ts
  * import { getBuildConfig } from "@langchain/build";
  *
- * export default defineConfig(getBuildConfig());
+ * export default getBuildConfig();
  * ```
  *
  * @example
  * ```ts
- * import { defineConfig } from "tsdown";
+ * // tsdown.config.ts
  * import { getBuildConfig } from "@langchain/build";
  *
- * export default defineConfig(
- *   getBuildConfig({
- *     plugins: [myCustomPlugin()],
- *   })
- * );
+ * export default getBuildConfig({
+ *   plugins: [myCustomPlugin()],
+ * });
  * ```
  */
 export function getBuildConfig(options?: Partial<BuildOptions>): BuildOptions {
-  const pluginOption = Array.isArray(options?.plugins)
-    ? options.plugins
-    : [options?.plugins];
-
   return {
     format: ["cjs", "esm"],
     target: "es2022",
@@ -79,12 +73,5 @@ export function getBuildConfig(options?: Partial<BuildOptions>): BuildOptions {
     },
     ignoreWatch: [`.turbo`, `dist`, `node_modules`],
     ...options,
-    plugins: [
-      ...pluginOption,
-      // barrelDtsPlugin({
-      //   updatePackageJson: true,
-      //   additionalFiles: ["dist/", "CHANGELOG.md", "README.md", "LICENSE"],
-      // }),
-    ],
   };
 }
