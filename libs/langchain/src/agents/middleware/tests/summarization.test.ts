@@ -30,6 +30,7 @@ function createMockSummarizationModel() {
     getName: () => "mock-summarizer",
     _modelType: "mock",
     lc_runnable: true,
+    profile: {},
   };
 }
 
@@ -351,7 +352,7 @@ describe("summarizationMiddleware", () => {
     (modelWithProfile as any).modelName = "gpt-5";
     // Set profile directly on the model instance
     Object.defineProperty(modelWithProfile, "profile", {
-      value: { max_input_tokens: 8192 },
+      value: { maxInputTokens: 8192 },
       writable: true,
       enumerable: true,
       configurable: true,
@@ -694,14 +695,14 @@ describe("summarizationMiddleware", () => {
       })
     ).toThrow();
 
-    // Invalid: messages <= 0 - should throw during invocation
+    // Valid: messages = 0 - should be allowed (keep nothing)
     expect(() =>
       summarizationMiddleware({
         model: summarizationModel as any,
         trigger: { tokens: 1000 },
         keep: { messages: 0 },
       })
-    ).toThrow();
+    ).not.toThrow();
 
     // Invalid: keep with multiple properties - should throw during invocation
     expect(() =>

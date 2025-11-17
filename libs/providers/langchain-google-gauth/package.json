@@ -1,6 +1,6 @@
 {
   "name": "@langchain/google-gauth",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Google auth based authentication support for Google services",
   "author": "LangChain",
   "license": "MIT",
@@ -14,7 +14,8 @@
   },
   "homepage": "https://github.com/langchain-ai/langchainjs/tree/main/libs/langchain-google-gauth/",
   "scripts": {
-    "build": "pnpm --filter @langchain/build compile @langchain/google-gauth",
+    "build": "turbo build:compile --filter @langchain/google-gauth",
+    "build:compile": "pnpm --filter @langchain/build compile @langchain/google-gauth",
     "lint:eslint": "eslint --cache src/",
     "lint:dpdm": "dpdm --skip-dynamic-imports circular --exit-code circular:1 --no-warning --no-tree src/*.ts src/**/*.ts",
     "lint": "pnpm lint:eslint && pnpm lint:dpdm",
@@ -31,7 +32,7 @@
     "format:check": "prettier --config .prettierrc --check \"src\""
   },
   "dependencies": {
-    "@langchain/google-common": "^1.0.0",
+    "@langchain/google-common": "^1.0.1",
     "google-auth-library": "^10.1.0"
   },
   "devDependencies": {

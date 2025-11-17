@@ -15,8 +15,8 @@
     "url": "https://github.com/langchain-ai/langchainjs/issues"
   },
   "scripts": {
-    "build": "run-s build:main build:examples",
-    "build:main": "pnpm --filter @langchain/build compile @langchain/mcp-adapters",
+    "build": "turbo build:compile build:examples --filter @langchain/core",
+    "build:compile": "pnpm --filter @langchain/build compile @langchain/mcp-adapters",
     "build:examples": "tsc -p ./examples/tsconfig.json",
     "clean": "rm -rf dist/ dist-cjs/ .turbo/",
     "format": "prettier --config .prettierrc --write \"src/**/*.ts\" \"examples/**/*.ts\"",

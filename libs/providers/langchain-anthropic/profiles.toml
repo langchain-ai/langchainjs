@@ -1,0 +1,10 @@
+provider = "anthropic"
+output = "src/profiles.ts"
+
+# Overrides applicable to all Anthropic models
+[overrides]
+imageUrlInputs = true
+pdfInputs = true
+pdfToolMessage = true
+imageToolMessage = true
+structuredOutput = false

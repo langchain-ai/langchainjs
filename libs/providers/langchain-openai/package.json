@@ -1,6 +1,6 @@
 {
   "name": "@langchain/openai",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "OpenAI integrations for LangChain.js",
   "author": "LangChain",
   "license": "MIT",
@@ -14,7 +14,8 @@
   },
   "homepage": "https://github.com/langchain-ai/langchainjs/tree/main/libs/providers/langchain-openai/",
   "scripts": {
-    "build": "pnpm --filter @langchain/build compile @langchain/openai",
+    "build": "turbo build:compile --filter @langchain/openai",
+    "build:compile": "pnpm --filter @langchain/build compile @langchain/openai",
     "lint:eslint": "eslint --cache src/",
     "lint:dpdm": "dpdm --skip-dynamic-imports circular --exit-code circular:1 --no-warning --no-tree src/*.ts src/**/*.ts",
     "lint": "pnpm lint:eslint && pnpm lint:dpdm",
@@ -27,11 +28,13 @@
     "test:standard:int": "vitest run --mode standard-int",
     "test:standard": "pnpm test:standard:unit && pnpm test:standard:int",
     "format": "prettier --config .prettierrc --write \"src\"",
-    "format:check": "prettier --config .prettierrc --check \"src\""
+    "format:check": "prettier --config .prettierrc --check \"src\"",
+    "typegen": "pnpm run typegen:profiles",
+    "typegen:profiles": "pnpm --filter @langchain/model-profiles make --config profiles.toml"
   },
   "dependencies": {
     "js-tiktoken": "^1.0.12",
-    "openai": "^6.3.0",
+    "openai": "^6.9.0",
     "zod": "^3.25.76 || ^4"
   },
   "peerDependencies": {

@@ -66,7 +66,7 @@ export type TokenCounter = (
   messages: BaseMessage[]
 ) => number | Promise<number>;
 
-const contextSizeSchema = z
+export const contextSizeSchema = z
   .object({
     /**
      * Fraction of the model's context size to use as the trigger
@@ -102,24 +102,27 @@ const contextSizeSchema = z
   );
 export type ContextSize = z.infer<typeof contextSizeSchema>;
 
-const keepSchema = z
+export const keepSchema = z
   .object({
     /**
      * Fraction of the model's context size to keep
      */
     fraction: z
       .number()
-      .gt(0, "Fraction must be greater than 0")
+      .min(0, "Messages must be non-negative")
       .max(1, "Fraction must be less than or equal to 1")
       .optional(),
     /**
      * Number of tokens to keep
      */
-    tokens: z.number().positive("Tokens must be greater than 0").optional(),
+    tokens: z
+      .number()
+      .min(0, "Tokens must be greater than or equal to 0")
+      .optional(),
     messages: z
       .number()
       .int("Messages must be an integer")
-      .positive("Messages must be greater than 0")
+      .min(0, "Messages must be non-negative")
       .optional(),
   })
   .refine(
@@ -133,6 +136,7 @@ const keepSchema = z
       message: "Exactly one of fraction, tokens, or messages must be provided",
     }
   );
+export type KeepSize = z.infer<typeof keepSchema>;
 
 const contextSchema = z.object({
   /**
@@ -194,42 +198,18 @@ export type SummarizationMiddlewareConfig = InferInteropZodInput<
 /**
  * Get max input tokens from model profile or fallback to model name lookup
  */
-function getProfileLimits(model: BaseLanguageModel): number | undefined {
-  try {
-    /**
-     * Try to access profile property (for future compatibility with model-profiles)
-     */
-    const modelWithProfile = model as BaseLanguageModel & {
-      profile?: { max_input_tokens?: number };
-    };
-    if (
-      modelWithProfile.profile &&
-      typeof modelWithProfile.profile.max_input_tokens === "number"
-    ) {
-      return modelWithProfile.profile.max_input_tokens;
-    }
-  } catch {
-    /**
-     * Profile not available, continue to fallback
-     */
+export function getProfileLimits(input: BaseLanguageModel): number | undefined {
+  // Access maxInputTokens on the model profile directly if available
+  if (input.profile.maxInputTokens) {
+    return input.profile.maxInputTokens;
   }
 
-  /**
-   * Fallback: try to get model name and use getModelContextSize
-   */
-  try {
-    const modelWithName = model as BaseLanguageModel & {
-      model?: string;
-      modelName?: string;
-    };
-    const modelName = modelWithName.model || modelWithName.modelName;
-    if (typeof modelName === "string") {
-      return getModelContextSize(modelName);
-    }
-  } catch {
-    /**
-     * Model name not available
-     */
+  // Fallback to using model name if available
+  if ("model" in input && typeof input.model === "string") {
+    return getModelContextSize(input.model);
+  }
+  if ("modelName" in input && typeof input.modelName === "string") {
+    return getModelContextSize(input.modelName);
   }
 
   return undefined;
