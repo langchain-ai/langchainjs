@@ -1,5 +1,6 @@
 import { Anthropic, type ClientOptions } from "@anthropic-ai/sdk";
 import type { Stream } from "@anthropic-ai/sdk/streaming";
+import { transformJSONSchema } from "@anthropic-ai/sdk/lib/transform-json-schema.js";
 
 import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
 import { AIMessageChunk, type BaseMessage } from "@langchain/core/messages";
@@ -18,7 +19,10 @@ import {
 } from "@langchain/core/language_models/base";
 import { ModelProfile } from "@langchain/core/language_models/profile";
 import { toJsonSchema } from "@langchain/core/utils/json_schema";
-import { BaseLLMOutputParser } from "@langchain/core/output_parsers";
+import {
+  JsonOutputParser,
+  StructuredOutputParser,
+} from "@langchain/core/output_parsers";
 import {
   Runnable,
   RunnablePassthrough,
@@ -46,10 +50,12 @@ import {
   AnthropicStreamingMessageCreateParams,
   AnthropicThinkingConfigParam,
   AnthropicToolChoice,
+  ChatAnthropicOutputFormat,
   ChatAnthropicToolType,
 } from "./types.js";
 import { wrapAnthropicClientError } from "./utils/errors.js";
 import PROFILES from "./profiles.js";
+import { AnthropicBeta } from "@anthropic-ai/sdk/resources";
 
 const MODEL_DEFAULT_MAX_OUTPUT_TOKENS: Partial<
   Record<Anthropic.Model, number>
@@ -93,6 +99,16 @@ export interface ChatAnthropicCallOptions
    * Used with the code_execution_20250825 tool.
    */
   container?: string;
+  /**
+   * Output format to use for the response.
+   */
+  output_format?: ChatAnthropicOutputFormat;
+  /**
+   * Optional array of beta features to enable for the Anthropic API.
+   * Beta features are experimental capabilities that may change or be removed.
+   * See https://docs.anthropic.com/en/api/versioning for available beta features.
+   */
+  betas?: AnthropicBeta[];
 }
 
 function _toolsInParams(
@@ -156,6 +172,13 @@ function isBuiltinTool(tool: unknown): tool is AnthropicBuiltInToolUnion {
       (prefix) => typeof tool.type === "string" && tool.type.startsWith(prefix)
     )
   );
+}
+
+function _combineBetas(
+  a?: AnthropicBeta[],
+  b?: AnthropicBeta[]
+): AnthropicBeta[] {
+  return Array.from(new Set([...(a ?? []), ...(b ?? [])]));
 }
 
 /**
@@ -252,6 +275,13 @@ export interface AnthropicInput {
    * Configuration for context management. See https://docs.claude.com/en/docs/build-with-claude/context-editing
    */
   contextManagement?: AnthropicContextManagementConfigParam;
+
+  /**
+   * Optional array of beta features to enable for the Anthropic API.
+   * Beta features are experimental capabilities that may change or be removed.
+   * See https://docs.claude.com/en/api/beta-headers for available beta features.
+   */
+  betas?: AnthropicBeta[];
 }
 
 /**
@@ -541,6 +571,18 @@ function extractToken(chunk: AIMessageChunk): string | undefined {
  * <details>
  * <summary><strong>Structured Output</strong></summary>
  *
+ * ChatAnthropic supports structured output through two main approaches:
+ *
+ * 1. **Function Calling with `withStructuredOutput()`**: Uses Anthropic's tool calling
+ *    under the hood to constrain outputs to a specific schema.
+ * 2. **JSON Schema Mode**: Uses Anthropic's native JSON schema support for direct
+ *    structured output without tool calling overhead.
+ *
+ * **Using withStructuredOutput (Function Calling)**
+ *
+ * This method leverages Anthropic's tool calling capabilities to ensure the model
+ * returns data matching your schema:
+ *
  * ```typescript
  * import { z } from 'zod';
  *
@@ -560,6 +602,48 @@ function extractToken(chunk: AIMessageChunk): string | undefined {
  *   setup: "Why don't cats play poker in the jungle?",
  *   punchline: 'Too many cheetahs!',
  *   rating: 7
+ * }
+ * ```
+ *
+ * **Using JSON Schema Mode**
+ *
+ * For more direct control, you can use Anthropic's native JSON schema support by
+ * passing `method: "jsonSchema"`:
+ *
+ * ```typescript
+ * import { z } from 'zod';
+ *
+ * const RecipeSchema = z.object({
+ *   recipeName: z.string().describe("Name of the recipe"),
+ *   ingredients: z.array(z.string()).describe("List of ingredients needed"),
+ *   steps: z.array(z.string()).describe("Cooking steps in order"),
+ *   prepTime: z.number().describe("Preparation time in minutes")
+ * });
+ *
+ * const structuredLlm = llm.withStructuredOutput(RecipeSchema, {
+ *   method: "jsonSchema"
+ * });
+ *
+ * const recipe = await structuredLlm.invoke(
+ *   "Give me a simple recipe for chocolate chip cookies"
+ * );
+ * console.log(recipe);
+ * ```
+ *
+ * ```txt
+ * {
+ *   recipeName: 'Classic Chocolate Chip Cookies',
+ *   ingredients: [
+ *     '2 1/4 cups all-purpose flour',
+ *     '1 cup butter, softened',
+ *     ...
+ *   ],
+ *   steps: [
+ *     'Preheat oven to 375°F',
+ *     'Mix butter and sugars until creamy',
+ *     ...
+ *   ],
+ *   prepTime: 15
  * }
  * ```
  * </details>
@@ -722,6 +806,8 @@ export class ChatAnthropicMessages<
 
   streamUsage = true;
 
+  betas?: AnthropicBeta[];
+
   /**
    * Optional method that returns an initialized underlying Anthropic client.
    * Useful for accessing Anthropic models hosted on other cloud services
@@ -767,6 +853,7 @@ export class ChatAnthropicMessages<
     this.thinking = fields?.thinking ?? this.thinking;
     this.contextManagement =
       fields?.contextManagement ?? this.contextManagement;
+    this.betas = fields?.betas ?? this.betas;
 
     this.createClient =
       fields?.createClient ??
@@ -879,6 +966,8 @@ export class ChatAnthropicMessages<
         context_management: this.contextManagement,
         ...this.invocationKwargs,
         container: options?.container,
+        betas: _combineBetas(this.betas, options?.betas),
+        output_format: options?.output_format,
       };
     }
     return {
@@ -895,6 +984,8 @@ export class ChatAnthropicMessages<
       context_management: this.contextManagement,
       ...this.invocationKwargs,
       container: options?.container,
+      betas: _combineBetas(this.betas, options?.betas),
+      output_format: options?.output_format,
     };
   }
 
@@ -1071,11 +1162,26 @@ export class ChatAnthropicMessages<
         maxRetries: 0,
       });
     }
+    const { betas, ...rest } = request;
+
     const makeCompletionRequest = async () => {
       try {
+        if (request?.betas?.length) {
+          const stream = await this.streamingClient.beta.messages.create(
+            {
+              ...rest,
+              betas,
+              ...this.invocationKwargs,
+              stream: true,
+            } as AnthropicStreamingMessageCreateParams,
+            options
+          );
+          return stream as Stream<Anthropic.Messages.RawMessageStreamEvent>;
+        }
         return await this.streamingClient.messages.create(
           {
-            ...request,
+            ...rest,
+            betas,
             ...this.invocationKwargs,
             stream: true,
           } as AnthropicStreamingMessageCreateParams,
@@ -1104,11 +1210,24 @@ export class ChatAnthropicMessages<
         maxRetries: 0,
       });
     }
+    const { betas, ...rest } = request;
+
     const makeCompletionRequest = async () => {
       try {
+        if (request?.betas?.length) {
+          const response = await this.batchClient.beta.messages.create(
+            {
+              ...rest,
+              ...this.invocationKwargs,
+              betas,
+            } as AnthropicMessageCreateParams,
+            options
+          );
+          return response as Anthropic.Messages.Message;
+        }
         return await this.batchClient.messages.create(
           {
-            ...request,
+            ...rest,
             ...this.invocationKwargs,
           } as AnthropicMessageCreateParams,
           options
@@ -1186,98 +1305,125 @@ export class ChatAnthropicMessages<
         BaseLanguageModelInput,
         { raw: BaseMessage; parsed: RunOutput }
       > {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const schema: InteropZodType<RunOutput> | Record<string, any> =
-      outputSchema;
-    const name = config?.name;
-    const method = config?.method;
-    const includeRaw = config?.includeRaw;
+    let llm: Runnable<BaseLanguageModelInput>;
+    let outputParser: Runnable<AIMessageChunk, RunOutput>;
+
+    const { schema, name, includeRaw } = {
+      ...config,
+      schema: outputSchema,
+    };
+    let method = config?.method ?? "functionCalling";
+
     if (method === "jsonMode") {
-      throw new Error(`Anthropic only supports "functionCalling" as a method.`);
+      console.warn(
+        `"jsonMode" is not supported for Anthropic models. Falling back to "jsonSchema".`
+      );
+      method = "jsonSchema";
     }
-
-    let functionName = name ?? "extract";
-    let outputParser: BaseLLMOutputParser<RunOutput>;
-    let tools: Anthropic.Messages.Tool[];
-    if (isInteropZodSchema(schema)) {
-      const jsonSchema = toJsonSchema(schema);
-      tools = [
-        {
-          name: functionName,
-          description:
-            jsonSchema.description ?? "A function available to call.",
-          input_schema: jsonSchema as Anthropic.Messages.Tool.InputSchema,
+    if (method === "jsonSchema") {
+      // https://docs.claude.com/en/docs/build-with-claude/structured-outputs
+      outputParser = isInteropZodSchema(schema)
+        ? StructuredOutputParser.fromZodSchema(schema)
+        : new JsonOutputParser<RunOutput>();
+      const jsonSchema = transformJSONSchema(toJsonSchema(schema));
+      llm = this.withConfig({
+        outputVersion: "v0",
+        output_format: {
+          type: "json_schema",
+          schema: jsonSchema,
         },
-      ];
-      outputParser = new AnthropicToolsOutputParser({
-        returnSingle: true,
-        keyName: functionName,
-        zodSchema: schema,
-      });
-    } else {
-      let anthropicTools: Anthropic.Messages.Tool;
-      if (
-        typeof schema.name === "string" &&
-        typeof schema.description === "string" &&
-        typeof schema.input_schema === "object" &&
-        schema.input_schema != null
-      ) {
-        anthropicTools = schema as Anthropic.Messages.Tool;
-        functionName = schema.name;
+        betas: ["structured-outputs-2025-11-13"],
+        ls_structured_output_format: {
+          kwargs: { method: "json_schema" },
+          schema: jsonSchema,
+        },
+      } as Partial<CallOptions>);
+    } else if (method === "functionCalling") {
+      let functionName = name ?? "extract";
+      let tools: Anthropic.Messages.Tool[];
+      if (isInteropZodSchema(schema)) {
+        const jsonSchema = toJsonSchema(schema);
+        tools = [
+          {
+            name: functionName,
+            description:
+              jsonSchema.description ?? "A function available to call.",
+            input_schema: jsonSchema as Anthropic.Messages.Tool.InputSchema,
+          },
+        ];
+        outputParser = new AnthropicToolsOutputParser({
+          returnSingle: true,
+          keyName: functionName,
+          zodSchema: schema,
+        });
       } else {
-        anthropicTools = {
-          name: functionName,
-          description: schema.description ?? "",
-          input_schema: schema as Anthropic.Messages.Tool.InputSchema,
-        };
-      }
-      tools = [anthropicTools];
-      outputParser = new AnthropicToolsOutputParser<RunOutput>({
-        returnSingle: true,
-        keyName: functionName,
-      });
-    }
-    let llm;
-    if (this.thinking?.type === "enabled") {
-      const thinkingAdmonition =
-        "Anthropic structured output relies on forced tool calling, " +
-        "which is not supported when `thinking` is enabled. This method will raise " +
-        "OutputParserException if tool calls are not " +
-        "generated. Consider disabling `thinking` or adjust your prompt to ensure " +
-        "the tool is called.";
-
-      console.warn(thinkingAdmonition);
-
-      llm = this.withConfig({
-        outputVersion: "v0",
-        tools,
-        ls_structured_output_format: {
-          kwargs: { method: "functionCalling" },
-          schema: toJsonSchema(schema),
-        },
-      } as Partial<CallOptions>);
-
-      const raiseIfNoToolCalls = (message: AIMessageChunk) => {
-        if (!message.tool_calls || message.tool_calls.length === 0) {
-          throw new Error(thinkingAdmonition);
+        let anthropicTools: Anthropic.Messages.Tool;
+        if (
+          typeof schema.name === "string" &&
+          typeof schema.description === "string" &&
+          typeof schema.input_schema === "object" &&
+          schema.input_schema != null
+        ) {
+          anthropicTools = schema as Anthropic.Messages.Tool;
+          functionName = schema.name;
+        } else {
+          anthropicTools = {
+            name: functionName,
+            description: schema.description ?? "",
+            input_schema: schema as Anthropic.Messages.Tool.InputSchema,
+          };
         }
-        return message;
-      };
+        tools = [anthropicTools];
+        outputParser = new AnthropicToolsOutputParser<RunOutput>({
+          returnSingle: true,
+          keyName: functionName,
+        });
+      }
+      if (this.thinking?.type === "enabled") {
+        const thinkingAdmonition =
+          "Anthropic structured output relies on forced tool calling, " +
+          "which is not supported when `thinking` is enabled. This method will raise " +
+          "OutputParserException if tool calls are not " +
+          "generated. Consider disabling `thinking` or adjust your prompt to ensure " +
+          "the tool is called.";
 
-      llm = llm.pipe(raiseIfNoToolCalls);
+        console.warn(thinkingAdmonition);
+
+        llm = this.withConfig({
+          outputVersion: "v0",
+          tools,
+          ls_structured_output_format: {
+            kwargs: { method: "functionCalling" },
+            schema: toJsonSchema(schema),
+          },
+        } as Partial<CallOptions>);
+
+        const raiseIfNoToolCalls = (message: AIMessageChunk) => {
+          if (!message.tool_calls || message.tool_calls.length === 0) {
+            throw new Error(thinkingAdmonition);
+          }
+          return message;
+        };
+
+        llm = llm.pipe(raiseIfNoToolCalls);
+      } else {
+        llm = this.withConfig({
+          outputVersion: "v0",
+          tools,
+          tool_choice: {
+            type: "tool",
+            name: functionName,
+          },
+          ls_structured_output_format: {
+            kwargs: { method: "functionCalling" },
+            schema: toJsonSchema(schema),
+          },
+        } as Partial<CallOptions>);
+      }
     } else {
-      llm = this.withConfig({
-        outputVersion: "v0",
-        tools,
-        tool_choice: {
-          type: "tool",
-          name: functionName,
-        },
-        ls_structured_output_format: {
-          kwargs: { method: "functionCalling" },
-          schema: toJsonSchema(schema),
-        },
-      } as Partial<CallOptions>);
+      throw new TypeError(
+        `Unrecognized structured output method '${method}'. Expected 'functionCalling' or 'jsonSchema'`
+      );
     }
 
     if (!includeRaw) {
