@@ -35,7 +35,7 @@ const vectorStoreArgs: VectorStoreTableArgs = {
   metadataColumns: [new Column("page", "TEXT"), new Column("source", "TEXT")],
 };
 
-// Vector store table initilization
+// Vector store table initialization
 await engine.initVectorstoreTable(
   "my_vector_store_table",
   768,

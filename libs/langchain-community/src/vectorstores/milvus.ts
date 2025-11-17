@@ -573,9 +573,17 @@ export class Milvus extends VectorStore {
     });
     desc.schema.fields.forEach((field) => {
       this.fields.push(field.name);
-      // Only remove autoID fields from this.fields if we're using autoId mode
+      // Remove autoID fields from this.fields if we're using autoId mode
       // When autoId is false, we need to include the primary field for upsert operations
       if (field.autoID && this.autoId) {
+        const index = this.fields.indexOf(field.name);
+        if (index !== -1) {
+          this.fields.splice(index, 1);
+        }
+      }
+      // Remove isFunctionOutput fields from this.fields if this field is calculated on server side
+      // When isFunctionOutput is false, we need to include this field for upsert operations
+      if (field.is_function_output) {
         const index = this.fields.indexOf(field.name);
         if (index !== -1) {
           this.fields.splice(index, 1);

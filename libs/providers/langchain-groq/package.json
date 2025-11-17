@@ -1,6 +1,6 @@
 {
   "name": "@langchain/groq",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Groq integration for LangChain.js",
   "author": "LangChain",
   "license": "MIT",
@@ -14,7 +14,8 @@
   },
   "homepage": "https://github.com/langchain-ai/langchainjs/tree/main/libs/langchain-groq/",
   "scripts": {
-    "build": "pnpm --filter @langchain/build compile @langchain/groq",
+    "build": "turbo build:compile --filter @langchain/groq",
+    "build:compile": "pnpm --filter @langchain/build compile @langchain/groq",
     "lint:eslint": "eslint --cache src/",
     "lint:dpdm": "dpdm --skip-dynamic-imports circular --exit-code circular:1 --no-warning --no-tree src/*.ts src/**/*.ts",
     "lint": "pnpm lint:eslint && pnpm lint:dpdm",
@@ -27,7 +28,9 @@
     "test:standard:int": "vitest run --mode standard-int",
     "test:standard": "pnpm test:standard:unit && pnpm test:standard:int",
     "format": "prettier --config .prettierrc --write \"src\"",
-    "format:check": "prettier --config .prettierrc --check \"src\""
+    "format:check": "prettier --config .prettierrc --check \"src\"",
+    "typegen": "pnpm run typegen:profiles",
+    "typegen:profiles": "pnpm --filter @langchain/model-profiles make --config profiles.toml"
   },
   "dependencies": {
     "groq-sdk": "^0.19.0"

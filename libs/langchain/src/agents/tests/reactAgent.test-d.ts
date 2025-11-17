@@ -2,8 +2,10 @@ import { z } from "zod/v3";
 import { BaseMessage, HumanMessage } from "@langchain/core/messages";
 import { LanguageModelLike } from "@langchain/core/language_models/base";
 import { describe, it, expectTypeOf } from "vitest";
+import type { IterableReadableStream } from "@langchain/core/utils/stream";
 
-import { createAgent } from "../index.js";
+import { type BuiltInState, createAgent } from "../index.js";
+import type { StreamOutputMap } from "@langchain/langgraph";
 
 describe("reactAgent", () => {
   it("should require model as only required property", async () => {
@@ -59,6 +61,94 @@ describe("reactAgent", () => {
         customOptionalContextProp: 456,
       },
     });
+  });
+
+  it("supports streaming", async () => {
+    const agent = createAgent({
+      model: "openai:gpt-4",
+    });
+    const stream = await agent.stream(
+      {
+        messages: [new HumanMessage("Hello, world!")],
+      },
+      {
+        encoding: "text/event-stream",
+        streamMode: ["values", "updates", "messages"],
+        configurable: {
+          thread_id: "test-123",
+        },
+        recursionLimit: 10,
+      }
+    );
+    expectTypeOf(stream).toEqualTypeOf<
+      IterableReadableStream<
+        StreamOutputMap<
+          "values" | "updates" | "messages",
+          false,
+          Record<string, unknown>,
+          Record<string, unknown>,
+          string,
+          unknown,
+          unknown,
+          "text/event-stream"
+        >
+      >
+    >();
+
+    for await (const chunk of stream) {
+      expectTypeOf(chunk).toEqualTypeOf<Uint8Array>();
+    }
+
+    const multiModeStream = await agent.stream(
+      {
+        messages: [new HumanMessage("Hello, world!")],
+      },
+      {
+        streamMode: ["updates", "messages", "values"],
+      }
+    );
+
+    for await (const chunk of multiModeStream) {
+      const [mode, value] = chunk;
+      expectTypeOf(mode).toEqualTypeOf<"updates" | "messages" | "values">();
+      if (mode === "messages") {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        expectTypeOf(value).toEqualTypeOf<[BaseMessage, Record<string, any>]>();
+      } else if (mode === "updates") {
+        expectTypeOf(value).toEqualTypeOf<
+          Record<string, Omit<BuiltInState, "jumpTo">>
+        >();
+      } else {
+        expectTypeOf(value.messages).toEqualTypeOf<BaseMessage[]>();
+      }
+    }
+
+    await agent.invoke(
+      {
+        messages: [new HumanMessage("Hello, world!")],
+      },
+      {
+        // @ts-expect-error encoding is not a valid property
+        encoding: "text/event-stream",
+        configurable: {
+          thread_id: "test-123",
+        },
+        recursionLimit: 10,
+      }
+    );
+    await agent.invoke(
+      {
+        messages: [new HumanMessage("Hello, world!")],
+      },
+      {
+        // @ts-expect-error encoding is not a valid property
+        streamMode: ["values", "updates", "messages"],
+        configurable: {
+          thread_id: "test-123",
+        },
+        recursionLimit: 10,
+      }
+    );
   });
 
   it("should allow a state schema that makes invoke calls require to pass in a state", async () => {
@@ -188,5 +278,31 @@ describe("reactAgent", () => {
         foo: 123,
       });
     });
+  });
+
+  it("supports base callback config", async () => {
+    const agent = createAgent({
+      model: "openai:gpt-4",
+    });
+    await agent.invoke(
+      {
+        messages: [new HumanMessage("Hello, world!")],
+      },
+      {
+        runName: "test",
+        metadata: {
+          test: "test",
+        },
+        callbacks: [
+          {
+            handleLLMStart: (input) => {
+              expectTypeOf({ id: input.id }).toMatchObjectType<{
+                id: string[];
+              }>();
+            },
+          },
+        ],
+      }
+    );
   });
 });

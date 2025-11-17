@@ -14,7 +14,8 @@
   },
   "homepage": "https://github.com/langchain-ai/langchainjs/tree/main/libs/langchain-nomic/",
   "scripts": {
-    "build": "pnpm --filter @langchain/build compile @langchain/nomic",
+    "build": "turbo build:compile --filter @langchain/nomic",
+    "build:compile": "pnpm --filter @langchain/build compile @langchain/nomic",
     "lint:eslint": "eslint --cache src/",
     "lint:dpdm": "dpdm --skip-dynamic-imports circular --exit-code circular:1 --no-warning --no-tree src/*.ts src/**/*.ts",
     "lint": "pnpm lint:eslint && pnpm lint:dpdm",

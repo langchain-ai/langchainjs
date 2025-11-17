@@ -32,6 +32,9 @@ const contextSchema = z.object({
     .optional(),
 });
 
+/**
+ * @deprecated
+ */
 export type PIIRedactionMiddlewareConfig = InferInteropZodInput<
   typeof contextSchema
 >;
@@ -350,12 +353,16 @@ function restoreMessage(
  * // Generates markers like: [REDACTED_EMPLOYEE_ID_xyz789]
  * ```
  *
- * @public
+ * @deprecated
  */
 export function piiRedactionMiddleware(
   options: PIIRedactionMiddlewareConfig = {}
 ): ReturnType<typeof createMiddleware> {
   const redactionMap: RedactionMap = {};
+
+  console.warn(
+    "DEPRECATED: piiRedactionMiddleware is deprecated. Please use piiMiddleware instead, go to https://docs.langchain.com/oss/javascript/langchain/middleware/built-in#pii-detection for more information."
+  );
 
   return createMiddleware({
     name: "PIIRedactionMiddleware",

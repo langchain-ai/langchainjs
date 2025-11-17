@@ -65,7 +65,7 @@ describe("return_direct Matrix Tests", () => {
 
       // Create agent with specified configuration
       const baseConfig = {
-        model: "claude-3-5-sonnet-20240620",
+        model: "claude-sonnet-4-5-20250929",
         tools: [tool],
         prompt: AGENT_PROMPT,
       };

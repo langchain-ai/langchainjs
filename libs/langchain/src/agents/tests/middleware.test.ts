@@ -515,8 +515,6 @@ describe("middleware", () => {
             middlewareContext: number;
           }>();
           expectTypeOf(request.systemPrompt!).toBeString();
-          expectTypeOf(request.runtime.runModelCallCount).toBeNumber();
-          expectTypeOf(request.runtime.threadLevelCallCount).toBeNumber();
 
           // Capture state and runtime
           capturedState = request.state;
@@ -563,19 +561,14 @@ describe("middleware", () => {
         "Test"
       );
 
-      const { context, threadLevelCallCount, runModelCallCount } =
-        capturedRuntime;
+      const { context } = capturedRuntime;
       expect({
         context,
-        threadLevelCallCount,
-        runModelCallCount,
       }).toMatchInlineSnapshot(`
       {
         "context": {
           "middlewareContext": 2,
         },
-        "runModelCallCount": 0,
-        "threadLevelCallCount": 0,
       }
     `);
     });
@@ -1017,8 +1010,6 @@ describe("middleware", () => {
           `);
           expect(request.runtime.context).toEqual({ foo: 123 });
           expect(request.state.bar).toBe(true);
-          expect(request.runtime.runModelCallCount).toBe(1);
-          expect(request.runtime.threadLevelCallCount).toBe(1);
 
           /**
            * Let's test if we can modify tool args
@@ -2264,35 +2255,6 @@ describe("middleware", () => {
       );
       expect(messageContents).toContain("Added by before_agent");
       expect(messageContents).toContain("Original message");
-    });
-
-    it("should allow accessing runtime metadata in before_agent and after_agent", async () => {
-      const middleware = createMiddleware({
-        name: "RuntimeAccessMiddleware",
-        beforeAgent: async (_state, runtime) => {
-          expect(runtime.threadLevelCallCount).toBe(0);
-          expect(runtime.runModelCallCount).toBe(0);
-        },
-        afterAgent: async (_state, runtime) => {
-          // After the agent completes, counts should be updated
-          expect(runtime.threadLevelCallCount).toBe(1);
-          expect(runtime.runModelCallCount).toBe(1);
-        },
-      });
-
-      const model = new FakeToolCallingChatModel({
-        responses: [new AIMessage("Response")],
-      });
-
-      const agent = createAgent({
-        model,
-        tools: [],
-        middleware: [middleware],
-      });
-
-      await agent.invoke({
-        messages: [new HumanMessage("Test")],
-      });
     });
 
     it("should propagate state changes from before_agent through the entire agent execution", async () => {

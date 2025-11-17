@@ -1,4 +1,13 @@
-import { beforeAll, expect, vi, test, type MockInstance } from "vitest";
+import {
+  afterAll,
+  beforeAll,
+  beforeEach,
+  describe,
+  expect,
+  vi,
+  test,
+  type MockInstance,
+} from "vitest";
 import { Collection, MongoClient } from "mongodb";
 import { setTimeout } from "timers/promises";
 import { OpenAIEmbeddings, AzureOpenAIEmbeddings } from "@langchain/openai";
@@ -33,7 +42,7 @@ beforeAll(async () => {
   client = new MongoClient(uri(), { monitorCommands: true });
   await client.connect();
 
-  const namespace = "langchain.test";
+  const namespace = "langchain_test_db.langchain_test";
   const [dbName, collectionName] = namespace.split(".");
   collection = await client.db(dbName).createCollection(collectionName);
 
@@ -108,13 +117,13 @@ function getEmbeddings() {
 }
 
 test("MongoDBStore sets client metadata", () => {
-  const spy = jest.spyOn(client, "appendMetadata");
+  const spy = vi.spyOn(client, "appendMetadata");
   // eslint-disable-next-line no-new
   new PatchedVectorStore(getEmbeddings(), {
     collection,
   });
   expect(spy).toHaveBeenCalledWith({ name: "langchainjs_vector" });
-  jest.clearAllMocks();
+  vi.clearAllMocks();
 });
 
 test("MongoDBAtlasVectorSearch with external ids", async () => {
@@ -199,7 +208,7 @@ test("MongoDBAtlasVectorSearch with Maximal Marginal Relevance", async () => {
 
   const standardRetriever = await vectorStore.asRetriever();
 
-  const standardRetrieverOutput = await standardRetriever.getRelevantDocuments(
+  const standardRetrieverOutput = await standardRetriever._getRelevantDocuments(
     "foo"
   );
   expect(output).toHaveLength(texts.length);
@@ -218,7 +227,7 @@ test("MongoDBAtlasVectorSearch with Maximal Marginal Relevance", async () => {
     },
   });
 
-  const retrieverOutput = await retriever.getRelevantDocuments("foo");
+  const retrieverOutput = await retriever._getRelevantDocuments("foo");
   expect(output).toHaveLength(texts.length);
 
   const retrieverActual = retrieverOutput.map((doc) => doc.pageContent);

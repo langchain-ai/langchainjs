@@ -58,6 +58,7 @@ import {
   FunctionDefinition,
   StructuredOutputMethodOptions,
 } from "@langchain/core/language_models/base";
+import { ModelProfile } from "@langchain/core/language_models/profile";
 import {
   BaseLLMOutputParser,
   JsonOutputParser,
@@ -71,6 +72,8 @@ import {
 } from "@langchain/core/output_parsers/openai_tools";
 import { convertToOpenAITool } from "@langchain/core/utils/function_calling";
 import { ToolCallChunk } from "@langchain/core/messages/tool";
+
+import PROFILES from "./profiles.js";
 
 type ChatGroqToolType = BindToolsInput | ChatCompletionTool;
 
@@ -1350,6 +1353,27 @@ export class ChatGroq extends BaseChatModel<
       generations,
       llmOutput: { tokenUsage },
     };
+  }
+
+  /**
+   * Return profiling information for the model.
+   *
+   * Provides information about the model's capabilities and constraints,
+   * including token limits, multimodal support, and advanced features like
+   * tool calling and structured output.
+   *
+   * @returns {ModelProfile} An object describing the model's capabilities and constraints
+   *
+   * @example
+   * ```typescript
+   * const model = new ChatGroq({ model: "llama-3.1-8b-instant" });
+   * const profile = model.profile;
+   * console.log(profile.maxInputTokens); // 128000
+   * console.log(profile.imageInputs); // true
+   * ```
+   */
+  get profile(): ModelProfile {
+    return PROFILES[this.model] ?? {};
   }
 
   withStructuredOutput<

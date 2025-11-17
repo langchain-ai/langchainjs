@@ -1,4 +1,4 @@
-import type { OpenAI as OpenAIClient } from "openai";
+import type { OpenAI as OpenAIClient, ClientOptions } from "openai";
 import type {
   ResponseFormatText,
   ResponseFormatJSONObject,
@@ -23,6 +23,8 @@ export type OpenAIChatModelId =
   | (string & NonNullable<unknown>);
 
 export type OpenAIVerbosityParam = "low" | "medium" | "high" | null;
+
+export type OpenAIApiKey = ClientOptions["apiKey"];
 
 export declare interface OpenAIBaseInput {
   /** Sampling temperature to use */
@@ -103,12 +105,12 @@ export declare interface OpenAIBaseInput {
    * `OPENAI_API_KEY` environment variable.
    * Alias for `apiKey`
    */
-  openAIApiKey?: string;
+  openAIApiKey?: OpenAIApiKey;
   /**
    * API key to use when making requests to OpenAI. Defaults to the value of
    * `OPENAI_API_KEY` environment variable.
    */
-  apiKey?: string;
+  apiKey?: OpenAIApiKey;
 
   /**
    * The verbosity of the model's response.
@@ -285,7 +287,6 @@ export interface AzureOpenAIInput {
 export interface AzureOpenAIChatInput
   extends OpenAIChatInput,
     AzureOpenAIInput {
-  openAIApiKey?: string;
   openAIApiVersion?: string;
   openAIBasePath?: string;
   deploymentName?: string;

@@ -318,3 +318,41 @@ test("Test convert OpenAPI params to JSON Schema", async () => {
     ).properties.inception
   );
 });
+
+test("Parent required should not include child due to child's internal required", async () => {
+  const spec = new OpenAPISpec({
+    openapi: "3.1.0",
+    info: { title: "Spec for required propagation test", version: "0.0.1" },
+    paths: {},
+  });
+
+  const parentSchema: OpenAPIV3_1.SchemaObject = {
+    type: "object",
+    required: ["a"],
+    properties: {
+      a: { type: "string" },
+      b: {
+        type: "object",
+        required: ["y"],
+        properties: {
+          x: { type: "string" },
+          y: { type: "number" },
+        },
+      },
+    },
+  };
+
+  const jsonSchema = convertOpenAPISchemaToJSONSchema(
+    parentSchema,
+    spec
+  ) as JsonSchema7ObjectType;
+
+  // Parent should only require 'a'
+  expect(jsonSchema.type).toBe("object");
+  expect(jsonSchema.required).toEqual(["a"]);
+
+  // Child 'b' should keep its own required ['y']
+  const bSchema = jsonSchema.properties.b as JsonSchema7ObjectType;
+  expect(bSchema.type).toBe("object");
+  expect(bSchema.required).toEqual(["y"]);
+});

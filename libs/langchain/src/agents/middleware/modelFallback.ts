@@ -15,10 +15,10 @@ import { createMiddleware } from "../middleware.js";
  * import { createAgent, modelFallbackMiddleware } from "langchain";
  *
  * // Create middleware with fallback models (not including primary)
- * const fallback = modelFallbackMiddleware({
+ * const fallback = modelFallbackMiddleware(
  *   "openai:gpt-4o-mini",  // First fallback
  *   "anthropic:claude-sonnet-4-5-20250929",  // Second fallback
- * });
+ * );
  *
  * const agent = createAgent({
  *   model: "openai:gpt-4o",  // Primary model

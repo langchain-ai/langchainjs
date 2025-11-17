@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach } from "vitest";
 import { z } from "zod/v3";
+import { z as z4 } from "zod/v4";
 
 import {
   BaseMessage,
@@ -17,7 +18,12 @@ import {
   type BaseCheckpointSaver,
 } from "@langchain/langgraph";
 
-import { providerStrategy, createAgent, createMiddleware } from "../index.js";
+import {
+  providerStrategy,
+  createAgent,
+  createMiddleware,
+  toolStrategy,
+} from "../index.js";
 
 import {
   FakeToolCallingChatModel,
@@ -877,5 +883,129 @@ describe("createAgent", () => {
     const toolMessage = result.messages[2] as ToolMessage;
     const taskInput = JSON.parse(toolMessage.content as string);
     expect(taskInput.customField).toBe("test-value");
+  });
+
+  // https://github.com/langchain-ai/langchainjs/issues/9299
+  it("supports zod 3/4 schemas in createAgent and middleware", async () => {
+    // Create middleware with Zod v3 schemas
+    const middleware1 = createMiddleware({
+      name: "middleware1",
+      stateSchema: z.object({
+        middleware1Value: z.string().default("v3-default"),
+      }),
+      contextSchema: z.object({
+        middleware1Context: z.number(),
+      }),
+      beforeModel: (_state, { context }) => {
+        expect(context.middleware1Context).toBe(42);
+        return {
+          middleware1Value: "v3-modified",
+        };
+      },
+    });
+
+    // Create middleware with Zod v4 schemas
+    const middleware2 = createMiddleware({
+      name: "middleware2",
+      stateSchema: z4.object({
+        middleware2Value: z4.string().default("v4-default"),
+      }),
+      contextSchema: z4.object({
+        middleware2Context: z4.boolean(),
+      }),
+      beforeModel: (_state, { context }) => {
+        expect(context.middleware2Context).toBe(true);
+        return {
+          middleware2Value: "v4-modified",
+        };
+      },
+    });
+
+    // Create a tool with Zod v3 schema
+    const testTool = tool(async (input) => `Result: ${input.query}`, {
+      name: "test_tool",
+      description: "A test tool",
+      schema: z.object({
+        query: z.string(),
+      }),
+    });
+
+    const responseFormat = toolStrategy(
+      z.object({
+        result: z.string(),
+        score: z.number(),
+      })
+    );
+
+    const expectedStructuredResponse = { result: "success", score: 95 };
+    const model = new FakeToolCallingChatModel({
+      responses: [
+        new AIMessage({
+          content: "",
+          tool_calls: [
+            {
+              name: "test_tool",
+              id: "tool_1",
+              args: { query: "test" },
+            },
+          ],
+        }),
+        new AIMessage({
+          content: "",
+          tool_calls: [
+            {
+              name: responseFormat[0].tool.function.name,
+              id: "extract",
+              args: expectedStructuredResponse,
+            },
+          ],
+        }),
+      ],
+      structuredResponse: expectedStructuredResponse,
+    });
+
+    const agent = createAgent({
+      model,
+      tools: [testTool],
+      // Use Zod v4 for agent stateSchema
+      stateSchema: z4.object({
+        agentCounter: z4.number().default(0),
+        agentName: z4.string().optional(),
+      }),
+      responseFormat,
+      middleware: [middleware1, middleware2],
+    });
+
+    const result = await agent.invoke(
+      {
+        messages: [new HumanMessage("Test mixed schemas")],
+        agentCounter: 1,
+        agentName: "test-agent",
+      },
+      {
+        context: {
+          middleware1Context: 42,
+          middleware2Context: true,
+        },
+      }
+    );
+
+    // Verify agent state schema (Zod v3)
+    expect(result.agentCounter).toBe(1);
+    expect(result.agentName).toBe("test-agent");
+
+    // Verify middleware1 state (Zod v3)
+    expect(result.middleware1Value).toBe("v3-modified");
+
+    // Verify middleware2 state (Zod v4)
+    expect(result.middleware2Value).toBe("v4-modified");
+
+    // Verify structured response (Zod v4)
+    expect(result.structuredResponse).toEqual(expectedStructuredResponse);
+    expect(result.structuredResponse.result).toBe("success");
+    expect(result.structuredResponse.score).toBe(95);
+
+    // Verify messages were processed correctly
+    expect(result.messages.length).toBeGreaterThan(0);
   });
 });

@@ -9,7 +9,7 @@ import { AzureOpenAIInput, OpenAICoreRequestOptions } from "../types.js";
 import {
   getEndpoint,
   OpenAIEndpointConfig,
-  normalizeHeaders,
+  getHeadersWithUserAgent,
 } from "../utils/azure.js";
 import { wrapOpenAIClientError } from "../utils/client.js";
 
@@ -41,7 +41,7 @@ export class AzureOpenAIEmbeddings extends OpenAIEmbeddings {
     this.batchSize = fields?.batchSize ?? 1;
     this.azureOpenAIApiKey =
       fields?.azureOpenAIApiKey ??
-      fields?.apiKey ??
+      (typeof fields?.apiKey === "string" ? fields?.apiKey : undefined) ??
       getEnvironmentVariable("AZURE_OPENAI_API_KEY");
 
     this.azureOpenAIApiVersion =
@@ -81,8 +81,9 @@ export class AzureOpenAIEmbeddings extends OpenAIEmbeddings {
 
       const endpoint = getEndpoint(openAIEndpointConfig);
 
-      const params = {
-        ...this.clientConfig,
+      const { apiKey: existingApiKey, ...clientConfigRest } = this.clientConfig;
+      const params: Omit<ClientOptions, "apiKey"> & { apiKey?: string } = {
+        ...clientConfigRest,
         baseURL: endpoint,
         timeout: this.timeout,
         maxRetries: 0,
@@ -96,13 +97,11 @@ export class AzureOpenAIEmbeddings extends OpenAIEmbeddings {
         delete params.baseURL;
       }
 
-      const defaultHeaders = normalizeHeaders(params.defaultHeaders);
-      params.defaultHeaders = {
-        ...params.defaultHeaders,
-        "User-Agent": defaultHeaders["User-Agent"]
-          ? `${defaultHeaders["User-Agent"]}: langchainjs-azure-openai-v2`
-          : `langchainjs-azure-openai-v2`,
-      };
+      params.defaultHeaders = getHeadersWithUserAgent(
+        params.defaultHeaders,
+        true,
+        "2.0.0"
+      );
 
       this.client = new AzureOpenAIClient({
         apiVersion: this.azureOpenAIApiVersion,

@@ -2,6 +2,7 @@ import {
   BaseLanguageModelInput,
   StructuredOutputMethodOptions,
 } from "@langchain/core/language_models/base";
+import { ModelProfile } from "@langchain/core/language_models/profile";
 import { BaseMessage } from "@langchain/core/messages";
 import { Runnable } from "@langchain/core/runnables";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
@@ -12,6 +13,7 @@ import {
   ChatOpenAIFields,
   OpenAIClient,
 } from "@langchain/openai";
+import PROFILES from "./profiles.js";
 
 export interface ChatDeepSeekCallOptions extends ChatOpenAICallOptions {
   headers?: Record<string, string>;
@@ -473,6 +475,27 @@ export class ChatDeepSeek extends ChatOpenAICompletions<ChatDeepSeekCallOptions>
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (message as any).reasoning_content;
     return langChainMessage;
+  }
+
+  /**
+   * Return profiling information for the model.
+   *
+   * Provides information about the model's capabilities and constraints,
+   * including token limits, multimodal support, and advanced features like
+   * tool calling and structured output.
+   *
+   * @returns {ModelProfile} An object describing the model's capabilities and constraints
+   *
+   * @example
+   * ```typescript
+   * const model = new ChatDeepSeek({ model: "deepseek-chat" });
+   * const profile = model.profile;
+   * console.log(profile.maxInputTokens); // 128000
+   * console.log(profile.imageInputs); // false
+   * ```
+   */
+  get profile(): ModelProfile {
+    return PROFILES[this.model] ?? {};
   }
 
   withStructuredOutput<

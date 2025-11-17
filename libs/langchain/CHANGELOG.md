@@ -1,5 +1,23 @@
 # langchain
 
+## 1.0.4
+
+### Patch Changes
+
+- b401680: avoid invalid message order after summarization
+- f63fc0f: fix(langchain): export ToolRuntime from langchain
+
+## 1.0.3
+
+### Patch Changes
+
+- f1583cd: allow for model strings in summarization middleware
+- e960f97: check message property when pulling chat models for vercel compat
+- 66fc10c: fix(langchain): don't allow default or optional context schemas
+- 0a8a23b: feat(@langchain/core): support of ToolRuntime
+- b38be50: Add missing ToolMessage in toolStrategy structured output
+- 42930b5: fix(langchain): improved state schema typing
+
 ## 1.0.2
 
 ### Patch Changes

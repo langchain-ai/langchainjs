@@ -4,16 +4,10 @@ import {
   AIMessage,
   AIMessageChunk,
   type BaseMessage,
-  ChatMessage,
-  ChatMessageChunk,
-  FunctionMessageChunk,
-  HumanMessageChunk,
-  SystemMessageChunk,
-  ToolMessageChunk,
-  OpenAIToolCall,
   isAIMessage,
   type UsageMetadata,
   type BaseMessageFields,
+  BaseMessageChunk,
 } from "@langchain/core/messages";
 import {
   ChatGenerationChunk,
@@ -21,26 +15,20 @@ import {
   type ChatResult,
 } from "@langchain/core/outputs";
 import { NewTokenIndices } from "@langchain/core/callbacks/base";
-import {
-  makeInvalidToolCall,
-  parseToolCall,
-} from "@langchain/core/output_parsers/openai_tools";
-import type { ToolCallChunk } from "@langchain/core/messages/tool";
 import { wrapOpenAIClientError } from "../utils/client.js";
 import {
   OpenAIToolChoice,
   formatToOpenAIToolChoice,
   _convertToOpenAITool,
 } from "../utils/tools.js";
-import {
-  handleMultiModalOutput,
-  _convertOpenAIResponsesUsageToLangChainUsage,
-} from "../utils/output.js";
-import { _convertMessagesToOpenAIParams } from "../utils/message_inputs.js";
-import { _convertToResponsesMessageFromV1 } from "../utils/standard.js";
 import { isReasoningModel } from "../utils/misc.js";
 import { BaseChatOpenAICallOptions } from "./base.js";
 import { BaseChatOpenAI } from "./base.js";
+import {
+  convertCompletionsDeltaToBaseMessageChunk,
+  convertCompletionsMessageToBaseMessage,
+  convertMessagesToCompletionsMessageParams,
+} from "../converters/completions.js";
 
 export interface ChatOpenAICompletionsCallOptions
   extends BaseChatOpenAICallOptions {}
@@ -145,7 +133,10 @@ export class ChatOpenAICompletions<
     const usageMetadata = {} as UsageMetadata;
     const params = this.invocationParams(options);
     const messagesMapped: OpenAIClient.Chat.Completions.ChatCompletionMessageParam[] =
-      _convertMessagesToOpenAIParams(messages, this.model);
+      convertMessagesToCompletionsMessageParams({
+        messages,
+        model: this.model,
+      });
 
     if (params.stream) {
       const stream = this._streamResponseChunks(messages, options, runManager);
@@ -305,7 +296,10 @@ export class ChatOpenAICompletions<
     runManager?: CallbackManagerForLLMRun
   ): AsyncGenerator<ChatGenerationChunk> {
     const messagesMapped: OpenAIClient.Chat.Completions.ChatCompletionMessageParam[] =
-      _convertMessagesToOpenAIParams(messages, this.model);
+      convertMessagesToCompletionsMessageParams({
+        messages,
+        model: this.model,
+      });
 
     const params = {
       ...this.invocationParams(options, {
@@ -459,153 +453,42 @@ export class ChatOpenAICompletions<
     });
   }
 
-  /** @internal */
-  protected _convertCompletionsMessageToBaseMessage(
-    message: OpenAIClient.Chat.Completions.ChatCompletionMessage,
-    rawResponse: OpenAIClient.Chat.Completions.ChatCompletion
-  ): BaseMessage {
-    const rawToolCalls: OpenAIToolCall[] | undefined = message.tool_calls as
-      | OpenAIToolCall[]
-      | undefined;
-    switch (message.role) {
-      case "assistant": {
-        const toolCalls = [];
-        const invalidToolCalls = [];
-        for (const rawToolCall of rawToolCalls ?? []) {
-          try {
-            toolCalls.push(parseToolCall(rawToolCall, { returnId: true }));
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          } catch (e: any) {
-            invalidToolCalls.push(makeInvalidToolCall(rawToolCall, e.message));
-          }
-        }
-        const additional_kwargs: Record<string, unknown> = {
-          function_call: message.function_call,
-          tool_calls: rawToolCalls,
-        };
-        if (this.__includeRawResponse !== undefined) {
-          additional_kwargs.__raw_response = rawResponse;
-        }
-        const response_metadata: Record<string, unknown> | undefined = {
-          model_provider: "openai",
-          model_name: rawResponse.model,
-          ...(rawResponse.system_fingerprint
-            ? {
-                usage: { ...rawResponse.usage },
-                system_fingerprint: rawResponse.system_fingerprint,
-              }
-            : {}),
-        };
-
-        if (message.audio) {
-          additional_kwargs.audio = message.audio;
-        }
-
-        const content = handleMultiModalOutput(
-          message.content || "",
-          rawResponse.choices?.[0]?.message
-        );
-        return new AIMessage({
-          content,
-          tool_calls: toolCalls,
-          invalid_tool_calls: invalidToolCalls,
-          additional_kwargs,
-          response_metadata,
-          id: rawResponse.id,
-        });
-      }
-      default:
-        return new ChatMessage(
-          message.content || "",
-          message.role ?? "unknown"
-        );
-    }
-  }
-
-  /** @internal */
+  /**
+   * @deprecated
+   * This function was hoisted into a publicly accessible function from a
+   * different export, but to maintain backwards compatibility with chat models
+   * that depend on ChatOpenAICompletions, we'll keep it here as an overridable
+   * method. This will be removed in a future release
+   */
   protected _convertCompletionsDeltaToBaseMessageChunk(
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     delta: Record<string, any>,
     rawResponse: OpenAIClient.Chat.Completions.ChatCompletionChunk,
     defaultRole?: OpenAIClient.Chat.ChatCompletionRole
-  ) {
-    const role = delta.role ?? defaultRole;
-    const content = delta.content ?? "";
-    let additional_kwargs: Record<string, unknown>;
-    if (delta.function_call) {
-      additional_kwargs = {
-        function_call: delta.function_call,
-      };
-    } else if (delta.tool_calls) {
-      additional_kwargs = {
-        tool_calls: delta.tool_calls,
-      };
-    } else {
-      additional_kwargs = {};
-    }
-    if (this.__includeRawResponse) {
-      additional_kwargs.__raw_response = rawResponse;
-    }
+  ): BaseMessageChunk {
+    return convertCompletionsDeltaToBaseMessageChunk({
+      delta,
+      rawResponse,
+      includeRawResponse: this.__includeRawResponse,
+      defaultRole,
+    });
+  }
 
-    if (delta.audio) {
-      additional_kwargs.audio = {
-        ...delta.audio,
-        index: rawResponse.choices[0].index,
-      };
-    }
-
-    const response_metadata = {
-      model_provider: "openai",
-      usage: { ...rawResponse.usage },
-    };
-    if (role === "user") {
-      return new HumanMessageChunk({ content, response_metadata });
-    } else if (role === "assistant") {
-      const toolCallChunks: ToolCallChunk[] = [];
-      if (Array.isArray(delta.tool_calls)) {
-        for (const rawToolCall of delta.tool_calls) {
-          toolCallChunks.push({
-            name: rawToolCall.function?.name,
-            args: rawToolCall.function?.arguments,
-            id: rawToolCall.id,
-            index: rawToolCall.index,
-            type: "tool_call_chunk",
-          });
-        }
-      }
-      return new AIMessageChunk({
-        content,
-        tool_call_chunks: toolCallChunks,
-        additional_kwargs,
-        id: rawResponse.id,
-        response_metadata,
-      });
-    } else if (role === "system") {
-      return new SystemMessageChunk({ content, response_metadata });
-    } else if (role === "developer") {
-      return new SystemMessageChunk({
-        content,
-        response_metadata,
-        additional_kwargs: {
-          __openai_role__: "developer",
-        },
-      });
-    } else if (role === "function") {
-      return new FunctionMessageChunk({
-        content,
-        additional_kwargs,
-        name: delta.name,
-        response_metadata,
-      });
-    } else if (role === "tool") {
-      return new ToolMessageChunk({
-        content,
-        additional_kwargs,
-        tool_call_id: delta.tool_call_id,
-        response_metadata,
-      });
-    } else {
-      return new ChatMessageChunk({ content, role, response_metadata });
-    }
+  /**
+   * @deprecated
+   * This function was hoisted into a publicly accessible function from a
+   * different export, but to maintain backwards compatibility with chat models
+   * that depend on ChatOpenAICompletions, we'll keep it here as an overridable
+   * method. This will be removed in a future release
+   */
+  protected _convertCompletionsMessageToBaseMessage(
+    message: OpenAIClient.ChatCompletionMessage,
+    rawResponse: OpenAIClient.ChatCompletion
+  ): BaseMessage {
+    return convertCompletionsMessageToBaseMessage({
+      message,
+      rawResponse,
+      includeRawResponse: this.__includeRawResponse,
+    });
   }
 }

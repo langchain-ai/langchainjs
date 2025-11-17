@@ -16,35 +16,41 @@ export function isBedrockTool(tool: unknown): tool is BedrockTool {
 export function convertToConverseTools(
   tools: ChatBedrockConverseToolType[]
 ): BedrockTool[] {
-  if (tools.every(isOpenAITool)) {
-    return tools.map((tool) => ({
-      toolSpec: {
-        name: tool.function.name,
-        description: tool.function.description,
-        inputSchema: {
-          json: tool.function.parameters as __DocumentType,
+  return tools.map((tool, index) => {
+    if (isOpenAITool(tool)) {
+      return {
+        toolSpec: {
+          name: tool.function.name,
+          description: tool.function.description,
+          inputSchema: {
+            json: tool.function.parameters as __DocumentType,
+          },
         },
-      },
-    }));
-  } else if (tools.every(isLangChainTool)) {
-    return tools.map((tool) => ({
-      toolSpec: {
-        name: tool.name,
-        description: tool.description,
-        inputSchema: {
-          json: (isInteropZodSchema(tool.schema)
-            ? toJsonSchema(tool.schema)
-            : tool.schema) as __DocumentType,
+      };
+    } else if (isLangChainTool(tool)) {
+      return {
+        toolSpec: {
+          name: tool.name,
+          description: tool.description,
+          inputSchema: {
+            json: (isInteropZodSchema(tool.schema)
+              ? toJsonSchema(tool.schema)
+              : tool.schema) as __DocumentType,
+          },
         },
-      },
-    }));
-  } else if (tools.every(isBedrockTool)) {
-    return tools;
-  }
+      };
+    } else if (isBedrockTool(tool)) {
+      return tool;
+    }
 
-  throw new Error(
-    "Invalid tools passed. Must be an array of StructuredToolInterface, ToolDefinition, or BedrockTool."
-  );
+    const toolInfo =
+      typeof tool === "object" && tool !== null
+        ? `Tool at index ${index}: ${JSON.stringify(tool, null, 2)}`
+        : `Tool at index ${index}: ${String(tool)}`;
+    throw new Error(
+      `Invalid tool passed at index ${index}. Must be a StructuredToolInterface, ToolDefinition, or BedrockTool. ${toolInfo}`
+    );
+  });
 }
 
 export type BedrockConverseToolChoice =

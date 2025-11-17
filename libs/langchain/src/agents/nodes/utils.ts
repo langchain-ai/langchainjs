@@ -25,53 +25,55 @@ export async function initializeMiddlewareStates(
   const middlewareStates: Record<string, any> = {};
 
   for (const middleware of middlewareList) {
-    if (middleware.stateSchema) {
-      // Create a modified schema where private properties are optional
-      const modifiedSchema = interopZodObjectMakeFieldsOptional(
-        middleware.stateSchema,
-        (key) => key.startsWith("_")
-      );
-
-      // Use safeParse with the modified schema
-      const parseResult = await interopSafeParseAsync(modifiedSchema, state);
-
-      if (parseResult.success) {
-        Object.assign(middlewareStates, parseResult.data);
-        continue;
-      }
-
-      /**
-       * If safeParse fails, there are required public fields missing
-       */
-      const requiredFields = parseResult.error.issues
-        .filter(
-          (issue: ZodIssue) =>
-            issue.code === "invalid_type" && issue.message === "Required"
-        )
-        .map(
-          (issue: ZodIssue) => `  - ${issue.path.join(".")}: ${issue.message}`
-        )
-        .join("\n");
-
-      throw new Error(
-        `Middleware "${middleware.name}" has required state fields that must be initialized:\n` +
-          `${requiredFields}\n\n` +
-          `To fix this, either:\n` +
-          `1. Provide default values in your middleware's state schema using .default():\n` +
-          `   stateSchema: z.object({\n` +
-          `     myField: z.string().default("default value")\n` +
-          `   })\n\n` +
-          `2. Or make the fields optional using .optional():\n` +
-          `   stateSchema: z.object({\n` +
-          `     myField: z.string().optional()\n` +
-          `   })\n\n` +
-          `3. Or ensure you pass these values when invoking the agent:\n` +
-          `   agent.invoke({\n` +
-          `     messages: [...],\n` +
-          `     ${parseResult.error.issues[0]?.path.join(".")}: "value"\n` +
-          `   })`
-      );
+    /**
+     * skip middleware if it doesn't have a state schema
+     */
+    if (!middleware.stateSchema) {
+      continue;
     }
+
+    // Create a modified schema where private properties are optional
+    const modifiedSchema = interopZodObjectMakeFieldsOptional(
+      middleware.stateSchema,
+      (key) => key.startsWith("_")
+    );
+
+    // Use safeParse with the modified schema
+    const parseResult = await interopSafeParseAsync(modifiedSchema, state);
+    if (parseResult.success) {
+      Object.assign(middlewareStates, parseResult.data);
+      continue;
+    }
+
+    /**
+     * If safeParse fails, there are required public fields missing
+     */
+    const requiredFields = parseResult.error.issues
+      .filter(
+        (issue: ZodIssue) =>
+          issue.code === "invalid_type" && issue.message === "Required"
+      )
+      .map((issue: ZodIssue) => `  - ${issue.path.join(".")}: ${issue.message}`)
+      .join("\n");
+
+    throw new Error(
+      `Middleware "${middleware.name}" has required state fields that must be initialized:\n` +
+        `${requiredFields}\n\n` +
+        `To fix this, either:\n` +
+        `1. Provide default values in your middleware's state schema using .default():\n` +
+        `   stateSchema: z.object({\n` +
+        `     myField: z.string().default("default value")\n` +
+        `   })\n\n` +
+        `2. Or make the fields optional using .optional():\n` +
+        `   stateSchema: z.object({\n` +
+        `     myField: z.string().optional()\n` +
+        `   })\n\n` +
+        `3. Or ensure you pass these values when invoking the agent:\n` +
+        `   agent.invoke({\n` +
+        `     messages: [...],\n` +
+        `     ${parseResult.error.issues[0]?.path.join(".")}: "value"\n` +
+        `   })`
+    );
   }
 
   return middlewareStates;

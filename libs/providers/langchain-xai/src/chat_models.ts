@@ -8,6 +8,7 @@ import {
   LangSmithParams,
   type BaseChatModelParams,
 } from "@langchain/core/language_models/chat_models";
+import { ModelProfile } from "@langchain/core/language_models/profile";
 import { Serialized } from "@langchain/core/load/serializable";
 import { AIMessageChunk, BaseMessage } from "@langchain/core/messages";
 import { Runnable } from "@langchain/core/runnables";
@@ -19,6 +20,7 @@ import {
   OpenAIToolChoice,
   ChatOpenAICompletions,
 } from "@langchain/openai";
+import PROFILES from "./profiles.js";
 
 type ChatXAIToolType = BindToolsInput | OpenAIClient.ChatCompletionTool;
 
@@ -542,6 +544,27 @@ export class ChatXAI extends ChatOpenAICompletions<ChatXAICallOptions> {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (message as any).reasoning_content;
     return langChainMessage;
+  }
+
+  /**
+   * Return profiling information for the model.
+   *
+   * Provides information about the model's capabilities and constraints,
+   * including token limits, multimodal support, and advanced features like
+   * tool calling and structured output.
+   *
+   * @returns {ModelProfile} An object describing the model's capabilities and constraints
+   *
+   * @example
+   * ```typescript
+   * const model = new ChatXAI({ model: "grok-beta" });
+   * const profile = model.profile;
+   * console.log(profile.maxInputTokens); // 128000
+   * console.log(profile.imageInputs); // true
+   * ```
+   */
+  get profile(): ModelProfile {
+    return PROFILES[this.model] ?? {};
   }
 
   override withStructuredOutput<

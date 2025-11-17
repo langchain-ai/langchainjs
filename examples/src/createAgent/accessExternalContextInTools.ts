@@ -22,12 +22,11 @@
  */
 
 import fs from "node:fs/promises";
+import { createAgent, tool } from "langchain";
 import {
-  createAgent,
-  tool,
-  setContextVariable,
   getContextVariable,
-} from "langchain";
+  setContextVariable,
+} from "@langchain/core/context";
 import { z } from "zod";
 
 /**

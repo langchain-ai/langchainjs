@@ -1,8 +1,11 @@
 const fs = require("fs");
 
-const standardTestsPackageJsonPath = "/app/monorepo/libs/langchain-standard-tests/package.json";
+const standardTestsPackageJsonPath =
+  "/app/monorepo/libs/langchain-standard-tests/package.json";
 
-const currentPackageJson = JSON.parse(fs.readFileSync(standardTestsPackageJsonPath));
+const currentPackageJson = JSON.parse(
+  fs.readFileSync(standardTestsPackageJsonPath)
+);
 
 if (currentPackageJson.dependencies["@langchain/core"]) {
   currentPackageJson.dependencies = {
@@ -11,11 +14,7 @@ if (currentPackageJson.dependencies["@langchain/core"]) {
   };
 }
 
-if (currentPackageJson.devDependencies["@langchain/scripts"]) {
-  currentPackageJson.devDependencies = {
-    ...currentPackageJson.devDependencies,
-    "@langchain/scripts": "*",
-  };
-}
-
-fs.writeFileSync(standardTestsPackageJsonPath, JSON.stringify(currentPackageJson, null, 2));
+fs.writeFileSync(
+  standardTestsPackageJsonPath,
+  JSON.stringify(currentPackageJson, null, 2)
+);

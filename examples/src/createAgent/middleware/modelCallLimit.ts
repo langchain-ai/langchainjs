@@ -149,7 +149,7 @@ const agentWithThrow = createAgent({
   middleware: [
     modelCallLimitMiddleware({
       runLimit: 0, // Don't allow any model calls
-      exitBehavior: "throw", // Throw an error instead of ending gracefully
+      exitBehavior: "error", // Throw an error instead of ending gracefully
     }),
   ],
 });

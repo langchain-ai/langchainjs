@@ -10,26 +10,37 @@ const fields = [
   {
     name: "id",
     is_primary_key: true,
+    is_function_output: false,
     autoID: true,
     data_type: 21,
   },
   {
     name: "text",
     is_primary_key: false,
+    is_function_output: false,
     autoID: false,
     data_type: 21,
   },
   {
     name: "vector",
     is_primary_key: false,
+    is_function_output: false,
     autoID: false,
     data_type: 101,
   },
   {
     name: "custom_field",
     is_primary_key: false,
+    is_function_output: false,
     autoID: false,
     data_type: 21,
+  },
+  {
+    name: "vector_calculated",
+    is_primary_key: false,
+    is_function_output: true,
+    autoID: false,
+    data_type: 104,
   },
 ];
 

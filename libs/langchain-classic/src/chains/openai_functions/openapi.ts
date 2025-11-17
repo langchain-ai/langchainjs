@@ -172,8 +172,7 @@ export function convertOpenAPISchemaToJSONSchema(
           spec
         );
         if (
-          (openAPIProperty.required ||
-            schema.required?.includes(propertyName)) &&
+          schema.required?.includes(propertyName) &&
           jsonSchema.required !== undefined
         ) {
           jsonSchema.required.push(propertyName);

@@ -35,6 +35,18 @@ describe("getModelContextSize", () => {
     expect(await getModelContextSize("gpt-3.5-turbo")).toBe(4096);
     expect(await getModelContextSize("gpt-4")).toBe(8192);
     expect(await getModelContextSize("gpt-4-32k")).toBe(32768);
+    expect(await getModelContextSize("gpt-5")).toBe(400000);
+    expect(await getModelContextSize("gpt-5-turbo")).toBe(400000);
+    expect(await getModelContextSize("gpt-5-turbo-preview")).toBe(400000);
+    expect(await getModelContextSize("gpt-4o")).toBe(128000);
+    expect(await getModelContextSize("gpt-4o-mini")).toBe(128000);
+    expect(await getModelContextSize("gpt-4o-2024-05-13")).toBe(128000);
+    expect(await getModelContextSize("gpt-4o-2024-08-06")).toBe(128000);
+    expect(await getModelContextSize("gpt-4-turbo")).toBe(8192);
+    expect(await getModelContextSize("gpt-4-turbo-preview")).toBe(8192);
+    expect(await getModelContextSize("gpt-4-turbo-2024-04-09")).toBe(8192);
+    expect(await getModelContextSize("gpt-4-0125-preview")).toBe(8192);
+    expect(await getModelContextSize("gpt-4-1106-preview")).toBe(8192);
   });
 });
 

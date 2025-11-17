@@ -26,6 +26,7 @@ import {
   type LangSmithParams,
   type BaseChatModelParams,
 } from "@langchain/core/language_models/chat_models";
+import { ModelProfile } from "@langchain/core/language_models/profile";
 import { NewTokenIndices } from "@langchain/core/callbacks/base";
 import {
   BaseLanguageModelInput,
@@ -57,6 +58,7 @@ import {
 import { GoogleGenerativeAIToolsOutputParser } from "./output_parsers.js";
 import { GoogleGenerativeAIToolType } from "./types.js";
 import { convertToolsToGenAI } from "./utils/tools.js";
+import PROFILES from "./profiles.js";
 
 interface TokenUsage {
   completionTokens?: number;
@@ -992,6 +994,27 @@ export class ChatGoogleGenerativeAI
         }
       }
     );
+  }
+
+  /**
+   * Return profiling information for the model.
+   *
+   * Provides information about the model's capabilities and constraints,
+   * including token limits, multimodal support, and advanced features like
+   * tool calling and structured output.
+   *
+   * @returns {ModelProfile} An object describing the model's capabilities and constraints
+   *
+   * @example
+   * ```typescript
+   * const model = new ChatGoogleGenerativeAI({ model: "gemini-1.5-flash" });
+   * const profile = model.profile;
+   * console.log(profile.maxInputTokens); // 2000000
+   * console.log(profile.imageInputs); // true
+   * ```
+   */
+  get profile(): ModelProfile {
+    return PROFILES[this.model] ?? {};
   }
 
   withStructuredOutput<

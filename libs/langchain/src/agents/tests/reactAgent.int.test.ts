@@ -362,7 +362,7 @@ describe("structured response format", () => {
   const getWeather = tool(toolMock, toolSchema);
   const fetchMock = vi.fn(fetch);
   const model = new ChatAnthropic({
-    model: "claude-3-5-sonnet-20240620",
+    model: "claude-sonnet-4-5-20250929",
     clientOptions: {
       fetch: fetchMock,
     },
