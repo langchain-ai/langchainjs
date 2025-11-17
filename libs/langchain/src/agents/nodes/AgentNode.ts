@@ -1,7 +1,6 @@
 /* eslint-disable no-instanceof/no-instanceof */
 import { Runnable, RunnableConfig } from "@langchain/core/runnables";
 import { BaseMessage, AIMessage, ToolMessage } from "@langchain/core/messages";
-import { z } from "zod/v3";
 import { Command, type LangGraphRunnableConfig } from "@langchain/langgraph";
 import { type LanguageModelLike } from "@langchain/core/language_models/base";
 import { type BaseChatModelCallOptions } from "@langchain/core/language_models/chat_models";
@@ -9,8 +8,10 @@ import {
   InteropZodObject,
   getSchemaDescription,
   interopParse,
+  interopZodObjectPartial,
 } from "@langchain/core/utils/types";
 import type { ToolCall } from "@langchain/core/messages/tool";
+import type { ClientTool, ServerTool } from "@langchain/core/tools";
 
 import { initChatModel } from "../../chat_models/universal.js";
 import { MultipleStructuredOutputsError } from "../errors.js";
@@ -25,21 +26,19 @@ import {
 } from "../utils.js";
 import { mergeAbortSignals } from "../nodes/utils.js";
 import { CreateAgentParams } from "../types.js";
-import type { InternalAgentState, Runtime, PrivateState } from "../runtime.js";
+import type { InternalAgentState, Runtime } from "../runtime.js";
 import type {
   AgentMiddleware,
   AnyAnnotationRoot,
   WrapModelCallHandler,
 } from "../middleware/types.js";
 import type { ModelRequest } from "./types.js";
-import type { ClientTool, ServerTool } from "../tools.js";
 import { withAgentName } from "../withAgentName.js";
 import {
   ToolStrategy,
   ProviderStrategy,
   transformResponseFormat,
   ToolStrategyError,
-  hasSupportForJsonSchemaOutput,
 } from "../responses.js";
 
 type ResponseHandlerResult<StructuredResponseFormat> =
@@ -103,17 +102,13 @@ export class AgentNode<
   ContextSchema extends AnyAnnotationRoot | InteropZodObject = AnyAnnotationRoot
 > extends RunnableCallable<
   InternalAgentState<StructuredResponseFormat> & PreHookAnnotation["State"],
-  | ((
+  | (
       | { messages: BaseMessage[] }
       | { structuredResponse: StructuredResponseFormat }
-    ) & { _privateState: PrivateState })
+    )
   | Command
 > {
   #options: AgentNodeOptions<StructuredResponseFormat, ContextSchema>;
-
-  #runState: Pick<PrivateState, "runModelCallCount"> = {
-    runModelCallCount: 0,
-  };
 
   constructor(
     options: AgentNodeOptions<StructuredResponseFormat, ContextSchema>
@@ -203,16 +198,10 @@ export class AgentNode<
       /**
        * return directly without invoking the model again
        */
-      return { messages: [], _privateState: this.getState()._privateState };
+      return { messages: [] };
     }
 
-    const privateState = this.getState()._privateState;
     const response = await this.#invokeModel(state, config);
-    this.#runState.runModelCallCount++;
-    const _privateState = {
-      ...privateState,
-      threadLevelCallCount: privateState.threadLevelCallCount + 1,
-    };
 
     /**
      * if we were able to generate a structured response, return it
@@ -221,7 +210,6 @@ export class AgentNode<
       return {
         messages: [...state.messages, ...(response.messages || [])],
         structuredResponse: response.structuredResponse,
-        _privateState,
       };
     }
 
@@ -244,11 +232,10 @@ export class AgentNode<
             id: response.id,
           }),
         ],
-        _privateState,
       };
     }
 
-    return { messages: [response], _privateState };
+    return { messages: [response] };
   }
 
   /**
@@ -398,9 +385,7 @@ export class AgentNode<
           /**
            * Create runtime
            */
-          const privateState = this.getState()._privateState;
           const runtime: Runtime<unknown> = Object.freeze({
-            ...privateState,
             context,
             writer: lgConfig.writer,
             interrupt: lgConfig.interrupt,
@@ -417,6 +402,12 @@ export class AgentNode<
           > = {
             ...request,
             state: {
+              ...(middleware.stateSchema
+                ? interopParse(
+                    interopZodObjectPartial(middleware.stateSchema),
+                    state
+                  )
+                : {}),
               ...currentGetState(),
               messages: state.messages,
             } as InternalAgentState<StructuredResponseFormat> &
@@ -524,12 +515,8 @@ export class AgentNode<
       systemPrompt: this.#options.systemPrompt,
       messages: state.messages,
       tools: this.#options.toolClasses,
-      state: {
-        messages: state.messages,
-      } as InternalAgentState<StructuredResponseFormat> &
-        PreHookAnnotation["State"],
+      state,
       runtime: Object.freeze({
-        ...this.getState()._privateState,
         context: lgConfig?.context,
         writer: lgConfig.writer,
         interrupt: lgConfig.interrupt,
@@ -775,15 +762,6 @@ export class AgentNode<
      * check if the user requests a native schema output
      */
     if (structuredResponseFormat?.type === "native") {
-      /**
-       * if the model does not support JSON schema output, throw an error
-       */
-      if (!hasSupportForJsonSchemaOutput(model)) {
-        throw new Error(
-          "Model does not support native structured output responses. Please use a model that supports native structured output responses or use a tool output."
-        );
-      }
-
       const jsonSchemaParams = {
         name: structuredResponseFormat.strategy.schema?.name ?? "extract",
         description: getSchemaDescription(
@@ -829,50 +807,15 @@ export class AgentNode<
     return modelRunnable;
   }
 
-  static get nodeOptions(): {
-    input: z.ZodObject<{
-      messages: z.ZodArray<z.ZodType<BaseMessage>>;
-      _privateState: z.ZodObject<{
-        threadLevelCallCount: z.ZodNumber;
-      }>;
-    }>;
-  } {
-    return {
-      input: z.object({
-        messages: z.array(z.custom<BaseMessage>()),
-        _privateState: z.object({
-          threadLevelCallCount: z.number(),
-        }),
-      }),
-    };
-  }
-
   getState(): {
     messages: BaseMessage[];
-    _privateState: PrivateState;
   } {
     const state = super.getState();
-    const origState =
-      state && !(state instanceof Command)
-        ? state
-        : ({
-            _privateState: {
-              threadLevelCallCount: 0,
-              runModelCallCount: 0,
-            },
-          } as {
-            messages?: BaseMessage[];
-            _privateState?: PrivateState;
-          });
+    const origState = state && !(state instanceof Command) ? state : {};
 
     return {
       messages: [],
       ...origState,
-      _privateState: {
-        threadLevelCallCount: 0,
-        ...(origState._privateState ?? {}),
-        ...this.#runState,
-      },
     };
   }
 }

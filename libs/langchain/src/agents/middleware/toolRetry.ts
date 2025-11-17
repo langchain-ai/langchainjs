@@ -1,11 +1,11 @@
 /**
  * Tool retry middleware for agents.
  */
-
-import { ToolMessage } from "@langchain/core/messages";
 import { z } from "zod/v3";
+import { ToolMessage } from "@langchain/core/messages";
+import type { ClientTool, ServerTool } from "@langchain/core/tools";
+
 import { createMiddleware } from "../middleware.js";
-import type { ClientTool, ServerTool } from "../tools.js";
 import type { AgentMiddleware } from "./types.js";
 import { sleep } from "./utils.js";
 

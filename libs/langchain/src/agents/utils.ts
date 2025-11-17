@@ -9,6 +9,10 @@ import {
 } from "@langchain/core/messages";
 import { MessagesAnnotation, isCommand } from "@langchain/langgraph";
 import {
+  type InteropZodObject,
+  interopParse,
+} from "@langchain/core/utils/types";
+import {
   BaseChatModel,
   type BaseChatModelCallOptions,
 } from "@langchain/core/language_models/chat_models";
@@ -24,9 +28,9 @@ import {
   RunnableSequence,
   RunnableBinding,
 } from "@langchain/core/runnables";
+import type { ClientTool, ServerTool } from "@langchain/core/tools";
 
 import { isBaseChatModel, isConfigurableModel } from "./model.js";
-import type { ClientTool, ServerTool } from "./tools.js";
 import { MultipleToolsBoundError } from "./errors.js";
 import { PROMPT_RUNNABLE_NAME } from "./constants.js";
 import type { AgentBuiltInState } from "./runtime.js";
@@ -473,8 +477,8 @@ function chainToolCallHandlers(
   ): WrapToolCallHook {
     return async (request, handler) => {
       // Create a wrapper that calls inner with the base handler
-      const innerHandler: ToolCallHandler = async (req) =>
-        inner(req, async (innerReq) => handler(innerReq));
+      const innerHandler: ToolCallHandler = async () =>
+        inner(request, async () => handler(request));
 
       // Call outer with the wrapped inner as its handler
       return outer(request, innerHandler);
@@ -495,9 +499,12 @@ function chainToolCallHandlers(
  * the error message.
  *
  * @param middleware list of middleware passed to the agent
+ * @param state state of the agent
  * @returns single wrap function
  */
-export function wrapToolCall(middleware: readonly AgentMiddleware[]) {
+export function wrapToolCall(
+  middleware: readonly AgentMiddleware<InteropZodObject | undefined>[]
+) {
   const middlewareWithWrapToolCall = middleware.filter((m) => m.wrapToolCall);
 
   if (middlewareWithWrapToolCall.length === 0) {
@@ -513,7 +520,18 @@ export function wrapToolCall(middleware: readonly AgentMiddleware[]) {
       const wrappedHandler: WrapToolCallHook = async (request, handler) => {
         try {
           const result = await originalHandler(
-            request as ToolCallRequest<AgentBuiltInState, unknown>,
+            {
+              ...request,
+              /**
+               * override state with the state from the specific middleware
+               */
+              state: {
+                messages: request.state.messages,
+                ...(m.stateSchema
+                  ? interopParse(m.stateSchema, { ...request.state })
+                  : {}),
+              },
+            } as ToolCallRequest<AgentBuiltInState, unknown>,
             handler
           );
 

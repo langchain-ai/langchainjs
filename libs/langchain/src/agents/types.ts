@@ -12,6 +12,7 @@ import type {
   BaseStore,
 } from "@langchain/langgraph-checkpoint";
 import type { Messages } from "@langchain/langgraph/";
+import type { ClientTool, ServerTool } from "@langchain/core/tools";
 
 import type {
   ResponseFormat,
@@ -26,7 +27,6 @@ import type {
   AnyAnnotationRoot,
   InferSchemaInput,
 } from "./middleware/types.js";
-import type { ServerTool, ClientTool } from "./tools.js";
 import type { JumpToTarget } from "./constants.js";
 
 export type N = typeof START | "model_request" | "tools";

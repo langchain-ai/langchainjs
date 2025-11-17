@@ -252,7 +252,10 @@ async function main() {
     "on January 28, 2025 at 2pm for 1 hour titled 'Design Review', " +
     "and send them an email reminder about reviewing the new mockups.";
 
-  const config = { configurable: { thread_id: "6" } };
+  const config = {
+    configurable: { thread_id: "6" },
+    streamMode: "messages",
+  } as const;
 
   console.log("User Request:", query);
   console.log(`\n${"=".repeat(80)}\n`);

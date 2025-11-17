@@ -1,6 +1,6 @@
 {
   "name": "langchain",
-  "version": "1.0.2",
+  "version": "1.0.4",
   "description": "Typescript bindings for langchain",
   "author": "LangChain",
   "license": "MIT",
@@ -20,7 +20,8 @@
   },
   "homepage": "https://github.com/langchain-ai/langchainjs/tree/main/langchain/",
   "scripts": {
-    "build": "pnpm --filter @langchain/build compile langchain",
+    "build": "turbo build:compile --filter langchain",
+    "build:compile": "pnpm --filter @langchain/build compile langchain",
     "lint:eslint": "eslint --cache src/",
     "lint:dpdm": "dpdm --skip-dynamic-imports circular --exit-code circular:1 --no-warning --no-tree src/*.ts src/**/*.ts",
     "lint": "pnpm lint:eslint && pnpm lint:dpdm",
@@ -55,13 +56,13 @@
     "reflect-metadata": "^0.2.2",
     "rimraf": "^5.0.1",
     "rollup": "^3.19.1",
-    "typeorm": "^0.3.20",
+    "typeorm": "^0.3.26",
     "typescript": "~5.8.3",
     "vitest": "^3.2.4",
     "yaml": "^2.8.1"
   },
   "peerDependencies": {
-    "@langchain/core": "^1.0.0"
+    "@langchain/core": "^1.0.5"
   },
   "dependencies": {
     "@langchain/langgraph": "^1.0.0",
