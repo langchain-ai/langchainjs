@@ -18,7 +18,7 @@
     "type": "git",
     "url": "git+ssh://git@github.com/langchain-ai/langchainjs.git"
   },
-  "homepage": "https://github.com/langchain-ai/langchainjs/tree/main/langchain/",
+  "homepage": "https://github.com/langchain-ai/langchainjs/tree/main/libs/langchain/",
   "scripts": {
     "build": "turbo build:compile --filter langchain",
     "build:compile": "pnpm --filter @langchain/build compile langchain",
