@@ -28,6 +28,7 @@ export * as callbacks__dispatch__index from "../callbacks/dispatch/index.js";
 export * as stores from "../stores.js";
 export * as language_models__llms from "../language_models/llms.js";
 export * as utils__testing__index from "../utils/testing/index.js";
+export * as utils__json_schema from "../utils/json_schema.js";
 export * as tracers__console from "../tracers/console.js";
 export * as singletons__index from "../singletons/index.js";
 export * as indexing__index from "../indexing/index.js";

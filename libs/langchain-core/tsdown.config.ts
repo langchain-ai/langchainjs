@@ -61,6 +61,7 @@ export default getBuildConfig({
     "./src/utils/function_calling.ts",
     "./src/utils/hash.ts",
     "./src/utils/json_patch.ts",
+    "./src/utils/json_schema.ts",
     "./src/utils/math.ts",
     "./src/utils/stream.ts",
     "./src/utils/testing/index.ts",

@@ -287,6 +287,10 @@
       "import": "./dist/utils/json_patch.js",
       "require": "./dist/utils/json_patch.cjs"
     },
+    "./utils/json_schema": {
+      "import": "./dist/utils/json_schema.js",
+      "require": "./dist/utils/json_schema.cjs"
+    },
     "./utils/math": {
       "import": "./dist/utils/math.js",
       "require": "./dist/utils/math.cjs"

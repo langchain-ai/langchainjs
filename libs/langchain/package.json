@@ -88,108 +88,46 @@
     "embeddings",
     "vectorstores"
   ],
-  "main": "./dist/index.js",
-  "types": "./dist/index.d.ts",
+  "main": "./dist/index.cjs",
+  "types": "./dist/index.d.cts",
   "exports": {
     ".": {
-      "input": "./src/index.ts",
-      "import": {
-        "types": "./dist/index.d.ts",
-        "default": "./dist/index.js"
-      },
-      "require": {
-        "types": "./dist/index.d.cts",
-        "default": "./dist/index.cjs"
-      }
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
     },
     "./chat_models/universal": {
-      "input": "./src/chat_models/universal.ts",
-      "import": {
-        "types": "./dist/chat_models/universal.d.ts",
-        "default": "./dist/chat_models/universal.js"
-      },
-      "require": {
-        "types": "./dist/chat_models/universal.d.cts",
-        "default": "./dist/chat_models/universal.cjs"
-      }
+      "import": "./dist/chat_models/universal.js",
+      "require": "./dist/chat_models/universal.cjs"
     },
     "./hub": {
-      "input": "./src/hub/index.ts",
-      "import": {
-        "types": "./dist/hub/index.d.ts",
-        "default": "./dist/hub/index.js"
-      },
-      "require": {
-        "types": "./dist/hub/index.d.cts",
-        "default": "./dist/hub/index.cjs"
-      }
+      "import": "./dist/hub/index.js",
+      "require": "./dist/hub/index.cjs"
     },
     "./hub/node": {
-      "input": "./src/hub/node.ts",
-      "import": {
-        "types": "./dist/hub/node.d.ts",
-        "default": "./dist/hub/node.js"
-      },
-      "require": {
-        "types": "./dist/hub/node.d.cts",
-        "default": "./dist/hub/node.cjs"
-      }
+      "import": "./dist/hub/node.js",
+      "require": "./dist/hub/node.cjs"
     },
     "./load": {
-      "input": "./src/load/index.ts",
-      "import": {
-        "types": "./dist/load/index.d.ts",
-        "default": "./dist/load/index.js"
-      },
-      "require": {
-        "types": "./dist/load/index.d.cts",
-        "default": "./dist/load/index.cjs"
-      }
+      "import": "./dist/load/index.js",
+      "require": "./dist/load/index.cjs"
     },
     "./load/serializable": {
-      "input": "./src/load/serializable.ts",
-      "import": {
-        "types": "./dist/load/serializable.d.ts",
-        "default": "./dist/load/serializable.js"
-      },
-      "require": {
-        "types": "./dist/load/serializable.d.cts",
-        "default": "./dist/load/serializable.cjs"
-      }
+      "import": "./dist/load/serializable.js",
+      "require": "./dist/load/serializable.cjs"
     },
     "./storage/encoder_backed": {
-      "input": "./src/storage/encoder_backed.ts",
-      "import": {
-        "types": "./dist/storage/encoder_backed.d.ts",
-        "default": "./dist/storage/encoder_backed.js"
-      },
-      "require": {
-        "types": "./dist/storage/encoder_backed.d.cts",
-        "default": "./dist/storage/encoder_backed.cjs"
-      }
-    },
-    "./storage/in_memory": {
-      "input": "./src/storage/in_memory.ts",
-      "import": {
-        "types": "./dist/storage/in_memory.d.ts",
-        "default": "./dist/storage/in_memory.js"
-      },
-      "require": {
-        "types": "./dist/storage/in_memory.d.cts",
-        "default": "./dist/storage/in_memory.cjs"
-      }
+      "import": "./dist/storage/encoder_backed.js",
+      "require": "./dist/storage/encoder_backed.cjs"
     },
     "./storage/file_system": {
-      "input": "./src/storage/file_system.ts",
-      "import": {
-        "types": "./dist/storage/file_system.d.ts",
-        "default": "./dist/storage/file_system.js"
-      },
-      "require": {
-        "types": "./dist/storage/file_system.d.cts",
-        "default": "./dist/storage/file_system.cjs"
-      }
+      "import": "./dist/storage/file_system.js",
+      "require": "./dist/storage/file_system.cjs"
+    },
+    "./storage/in_memory": {
+      "import": "./dist/storage/in_memory.js",
+      "require": "./dist/storage/in_memory.cjs"
     },
     "./package.json": "./package.json"
-  }
+  },
+  "module": "./dist/index.js"
 }

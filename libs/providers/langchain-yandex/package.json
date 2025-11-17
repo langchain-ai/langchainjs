@@ -45,52 +45,24 @@
   "publishConfig": {
     "access": "public"
   },
-  "main": "./dist/index.js",
-  "types": "./dist/index.d.ts",
+  "main": "./dist/index.cjs",
+  "types": "./dist/index.d.cts",
   "exports": {
     ".": {
-      "input": "./src/index.ts",
-      "import": {
-        "types": "./dist/index.d.ts",
-        "default": "./dist/index.js"
-      },
-      "require": {
-        "types": "./dist/index.d.cts",
-        "default": "./dist/index.cjs"
-      }
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
     },
     "./chat_models": {
-      "input": "./src/chat_models.ts",
-      "import": {
-        "types": "./dist/chat_models.d.ts",
-        "default": "./dist/chat_models.js"
-      },
-      "require": {
-        "types": "./dist/chat_models.d.cts",
-        "default": "./dist/chat_models.cjs"
-      }
+      "import": "./dist/chat_models.js",
+      "require": "./dist/chat_models.cjs"
     },
     "./embeddings": {
-      "input": "./src/embeddings.ts",
-      "import": {
-        "types": "./dist/embeddings.d.ts",
-        "default": "./dist/embeddings.js"
-      },
-      "require": {
-        "types": "./dist/embeddings.d.cts",
-        "default": "./dist/embeddings.cjs"
-      }
+      "import": "./dist/embeddings.js",
+      "require": "./dist/embeddings.cjs"
     },
     "./llms": {
-      "input": "./src/llms.ts",
-      "import": {
-        "types": "./dist/llms.d.ts",
-        "default": "./dist/llms.js"
-      },
-      "require": {
-        "types": "./dist/llms.d.cts",
-        "default": "./dist/llms.cjs"
-      }
+      "import": "./dist/llms.js",
+      "require": "./dist/llms.cjs"
     },
     "./package.json": "./package.json"
   },
@@ -99,5 +71,6 @@
     "CHANGELOG.md",
     "README.md",
     "LICENSE"
-  ]
+  ],
+  "module": "./dist/index.js"
 }
