@@ -19,7 +19,7 @@
     "lint": "turbo lint --concurrency=50",
     "lint:fix": "turbo lint:fix --concurrency=50",
     "precommit": "turbo precommit",
-    "prerelease": "pnpm build",
+    "prerelease": "BUILD_MODE=prerelease pnpm build",
     "release": "changeset publish",
     "test": "pnpm test:unit && pnpm test:exports:docker",
     "test:unit": "turbo test --filter=\"!test-exports-*\" --filter=!examples --filter=!create-langchain-integration",

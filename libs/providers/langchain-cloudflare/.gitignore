@@ -1,7 +1,11 @@
-index.cjs
-index.js
-index.d.ts
-index.d.cts
+**/*.cjs
+**/*.js
+**/*.d.ts
+**/*.d.cts
+!src/**/*.cjs
+!src/**/*.js
+!src/**/*.d.ts
+!src/**/*.d.cts
+
 node_modules
 dist
-.yarn
