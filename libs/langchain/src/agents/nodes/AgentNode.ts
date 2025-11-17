@@ -80,6 +80,7 @@ export interface AgentNodeOptions<
     AgentMiddleware,
     () => Record<string, unknown>
   ][];
+  updateTools: (tools: ClientTool[]) => void;
 }
 
 interface NativeResponseFormat {
@@ -425,45 +426,47 @@ export class AgentNode<
               unknown
             >
           ): Promise<InternalModelResponse<StructuredResponseFormat>> => {
-            /**
-             * Verify that the user didn't add any new tools.
-             * We can't allow this as the ToolNode is already initiated with given tools.
-             */
-            const modifiedTools = req.tools ?? [];
-            const newTools = modifiedTools.filter(
-              (tool) =>
-                isClientTool(tool) &&
-                !this.#options.toolClasses.some((t) => t.name === tool.name)
-            );
-            if (newTools.length > 0) {
-              throw new Error(
-                `You have added a new tool in "wrapModelCall" hook of middleware "${
-                  currentMiddleware.name
-                }": ${newTools
-                  .map((tool) => tool.name)
-                  .join(", ")}. This is not supported.`
-              );
-            }
+            // /**
+            //  * Verify that the user didn't add any new tools.
+            //  * We can't allow this as the ToolNode is already initiated with given tools.
+            //  */
+            // const modifiedTools = req.tools ?? [];
+            // const newTools = modifiedTools.filter(
+            //   (tool) =>
+            //     isClientTool(tool) &&
+            //     !this.#options.toolClasses.some((t) => t.name === tool.name)
+            // );
+            // if (newTools.length > 0) {
+            //   throw new Error(
+            //     `You have added a new tool in "wrapModelCall" hook of middleware "${
+            //       currentMiddleware.name
+            //     }": ${newTools
+            //       .map((tool) => tool.name)
+            //       .join(", ")}. This is not supported.`
+            //   );
+            // }
 
-            /**
-             * Verify that user has not added or modified a tool with the same name.
-             * We can't allow this as the ToolNode is already initiated with given tools.
-             */
-            const invalidTools = modifiedTools.filter(
-              (tool) =>
-                isClientTool(tool) &&
-                this.#options.toolClasses.every((t) => t !== tool)
-            );
-            if (invalidTools.length > 0) {
-              throw new Error(
-                `You have modified a tool in "wrapModelCall" hook of middleware "${
-                  currentMiddleware.name
-                }": ${invalidTools
-                  .map((tool) => tool.name)
-                  .join(", ")}. This is not supported.`
-              );
-            }
+            // /**
+            //  * Verify that user has not added or modified a tool with the same name.
+            //  * We can't allow this as the ToolNode is already initiated with given tools.
+            //  */
+            // const invalidTools = modifiedTools.filter(
+            //   (tool) =>
+            //     isClientTool(tool) &&
+            //     this.#options.toolClasses.every((t) => t !== tool)
+            // );
+            // if (invalidTools.length > 0) {
+            //   throw new Error(
+            //     `You have modified a tool in "wrapModelCall" hook of middleware "${
+            //       currentMiddleware.name
+            //     }": ${invalidTools
+            //       .map((tool) => tool.name)
+            //       .join(", ")}. This is not supported.`
+            //   );
+            // }
 
+            const clientTools = req.tools.filter(isClientTool);
+            this.#options.updateTools?.(clientTools);
             return innerHandler(req);
           };
 
