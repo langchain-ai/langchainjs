@@ -33,9 +33,14 @@ export interface HybridRetrievalStrategyConfig {
   rankConstant?: number;
   textField?: string;
   /**
-   * For Elasticsearch 9.2, set to `false` to include vectors in responses.
+   * Include source vectors in search responses.
+   * 
+   * Elasticsearch 9.2+ excludes vectors from `_source` by default.
+   * Set to `true` to include vectors in responses for ES 9.2+.
+   * 
+   * Note: ES < 8.19 does not support this parameter.
    */
-  excludeSourceVectors?: boolean;
+  includeSourceVectors?: boolean;
 }
 
 /**
@@ -45,13 +50,13 @@ export class HybridRetrievalStrategy {
   public readonly rankWindowSize: number;
   public readonly rankConstant: number;
   public readonly textField: string;
-  public readonly excludeSourceVectors?: boolean;
+  public readonly includeSourceVectors?: boolean;
 
   constructor(config: HybridRetrievalStrategyConfig = {}) {
     this.rankWindowSize = config.rankWindowSize ?? 100;
     this.rankConstant = config.rankConstant ?? 60;
     this.textField = config.textField ?? "text";
-    this.excludeSourceVectors = config.excludeSourceVectors;
+    this.includeSourceVectors = config.includeSourceVectors;
   }
 }
 
@@ -83,10 +88,23 @@ type ElasticMetadataTerms = {
 };
 
 /**
- * Class for interacting with an Elasticsearch database. It extends the
- * VectorStore base class and provides methods for adding documents and
- * vectors to the Elasticsearch database, performing similarity searches,
- * deleting documents, and more.
+ * Elasticsearch vector store supporting vector and hybrid search.
+ * 
+ * Hybrid search combines kNN vector search with BM25 full-text search
+ * using RRF. Enable by passing a `HybridRetrievalStrategy` to the constructor.
+ * 
+ * @example
+ * ```typescript
+ * // Vector search (default)
+ * const vectorStore = new ElasticVectorSearch(embeddings, { client, indexName });
+ * 
+ * // Hybrid search
+ * const hybridStore = new ElasticVectorSearch(embeddings, {
+ *   client,
+ *   indexName,
+ *   strategy: new HybridRetrievalStrategy()
+ * });
+ * ```
  */
 export class ElasticVectorSearch extends VectorStore {
   declare FilterType: ElasticFilter;
@@ -239,6 +257,9 @@ export class ElasticVectorSearch extends VectorStore {
         k,
         num_candidates: this.candidates,
       },
+      ...(this.strategy?.includeSourceVectors === true && {
+        _source: { includes: ["*"] },
+      }),
     });
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -291,6 +312,9 @@ export class ElasticVectorSearch extends VectorStore {
         },
       },
       ...(filterClauses && { query: filterClauses }),
+      ...(this.strategy?.includeSourceVectors === true && {
+        _source: { includes: ["*"] },
+      }),
     });
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -426,12 +450,6 @@ export class ElasticVectorSearch extends VectorStore {
         },
       },
     };
-
-    if (this.strategy?.excludeSourceVectors !== undefined) {
-      request.settings = {
-        "index.mapping.exclude_source_vectors": this.strategy.excludeSourceVectors,
-      };
-    }
 
     const indexExists = await this.doesIndexExist();
     if (indexExists) return;

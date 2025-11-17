@@ -423,19 +423,19 @@ describe("ElasticVectorSearch - ES 9.x Compatibility", () => {
     embeddings = new OpenAIEmbeddings();
   });
 
-  test.skip("Hybrid search with excludeSourceVectors set to false for ES 9.x", async () => {
-    const indexName = "test_es9_exclude_false";
+  test.skip("Hybrid search with includeSourceVectors set to true for ES 9.2+", async () => {
+    const indexName = "test_es9_include_vectors";
     const store = new ElasticVectorSearch(embeddings, {
       client,
       indexName,
       strategy: new HybridRetrievalStrategy({
-        excludeSourceVectors: false,
+        includeSourceVectors: true,
       }),
     });
     await store.deleteIfExists();
 
     await store.addDocuments([
-      new Document({ pageContent: "Document for ES 9.x testing" }),
+      new Document({ pageContent: "Document for ES 9.2+ testing" }),
       new Document({ pageContent: "Another document for compatibility" }),
     ]);
 
@@ -443,17 +443,10 @@ describe("ElasticVectorSearch - ES 9.x Compatibility", () => {
 
     expect(results).toHaveLength(2);
     expect(results[0]).toBeInstanceOf(Document);
-
-    const indexSettings = await client.indices.getSettings({
-      index: indexName,
-    });
-    expect(
-      indexSettings[indexName].settings?.index?.mapping?.exclude_source_vectors
-    ).toBe("false");
   });
 
-  test.skip("Hybrid search with excludeSourceVectors undefined uses ES defaults", async () => {
-    const indexName = "test_es_default_exclude";
+  test.skip("Hybrid search with includeSourceVectors undefined uses ES defaults", async () => {
+    const indexName = "test_es_default_include";
     const store = new ElasticVectorSearch(embeddings, {
       client,
       indexName,
@@ -471,13 +464,13 @@ describe("ElasticVectorSearch - ES 9.x Compatibility", () => {
     expect(results[0]).toBeInstanceOf(Document);
   });
 
-  test.skip("Pure vector search with excludeSourceVectors for ES 9.x", async () => {
+  test.skip("Pure vector search with includeSourceVectors for ES 9.2+", async () => {
     const indexName = "test_es9_pure_vector";
     const store = new ElasticVectorSearch(embeddings, {
       client,
       indexName,
       strategy: new HybridRetrievalStrategy({
-        excludeSourceVectors: false,
+        includeSourceVectors: true,
       }),
     });
     await store.deleteIfExists();
