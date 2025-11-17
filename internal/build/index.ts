@@ -3,19 +3,19 @@ import { Options as BuildOptions } from "tsdown";
 export {
   type CjsCompatPluginOptions,
   cjsCompatPlugin,
-} from "./plugins/cjs-compat.js";
+} from "./plugins/cjs-compat";
 export {
   type ImportConstantsPluginOptions,
   importConstantsPlugin,
-} from "./plugins/import-constants.js";
+} from "./plugins/import-constants";
 export {
   type ImportMapPluginOptions,
   importMapPlugin,
-} from "./plugins/import-map.js";
+} from "./plugins/import-map";
 export {
   type SecretPluginOptions,
   lcSecretsPlugin,
-} from "./plugins/lc-secrets.js";
+} from "./plugins/lc-secrets";
 
 /**
  * Creates a standardized tsdown build configuration for LangChain packages.
