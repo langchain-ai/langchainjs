@@ -23,12 +23,12 @@ export type ToJSONSchemaParams = NonNullable<
 /**
  * Converts a Zod schema or JSON schema to a JSON schema.
  * @param schema - The schema to convert.
- * @param _params - The parameters to pass to the toJSONSchema function.
+ * @param params - The parameters to pass to the toJSONSchema function.
  * @returns The converted schema.
  */
 export function toJsonSchema(
   schema: InteropZodType | JSONSchema,
-  _params?: ToJSONSchemaParams
+  params?: ToJSONSchemaParams
 ): JSONSchema {
   if (isZodSchemaV4(schema)) {
     const inputSchema = interopZodTransformInputSchema(schema, true);
@@ -37,9 +37,9 @@ export function toJsonSchema(
         inputSchema,
         true
       ) as ZodObjectV4;
-      return toJSONSchema(strictSchema, _params);
+      return toJSONSchema(strictSchema, params);
     } else {
-      return toJSONSchema(schema, _params);
+      return toJSONSchema(schema, params);
     }
   }
   if (isZodSchemaV3(schema)) {
