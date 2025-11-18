@@ -9,6 +9,7 @@ import {
   TextPart,
   FileDataPart,
   InlineDataPart,
+  type GenerateContentResponse,
 } from "@google/generative-ai";
 import {
   AIMessage,
@@ -27,6 +28,7 @@ import {
   parseBase64DataUrl,
   convertToProviderContentBlock,
   isDataContentBlock,
+  InputTokenDetails,
 } from "@langchain/core/messages";
 import {
   ChatGeneration,
@@ -731,10 +733,10 @@ export function convertResponseContentToChatGenerationChunk(
   if (functionCalls) {
     toolCallChunks.push(
       ...functionCalls.map((fc) => ({
-        ...fc,
-        args: JSON.stringify(fc.functionCall.args),
-        index: extra.index,
         type: "tool_call_chunk" as const,
+        id: fc.id,
+        name: fc.functionCall.name,
+        args: JSON.stringify(fc.functionCall.args),
       }))
     );
   }
@@ -815,4 +817,42 @@ export function convertToGenerativeAITools(
       ),
     },
   ];
+}
+
+export function convertUsageMetadata(
+  usageMetadata: GenerateContentResponse["usageMetadata"],
+  model: string
+): UsageMetadata {
+  const output: UsageMetadata = {
+    input_tokens: usageMetadata?.promptTokenCount ?? 0,
+    output_tokens: usageMetadata?.candidatesTokenCount ?? 0,
+    total_tokens: usageMetadata?.totalTokenCount ?? 0,
+  };
+  if (usageMetadata?.cachedContentTokenCount) {
+    output.input_token_details ??= {};
+    output.input_token_details.cache_read =
+      usageMetadata.cachedContentTokenCount;
+  }
+  // gemini-3-pro-preview has bracket based tracking of tokens per request
+  // FIXME(hntrl): move this usageMetadata calculation elsewhere
+  if (model === "gemini-3-pro-preview") {
+    const over200k = Math.max(0, usageMetadata?.promptTokenCount ?? 0 - 200000);
+    const cachedOver200k = Math.max(
+      0,
+      usageMetadata?.cachedContentTokenCount ?? 0 - 200000
+    );
+    if (over200k) {
+      output.input_token_details = {
+        ...output.input_token_details,
+        over_200k: over200k,
+      } as InputTokenDetails;
+    }
+    if (cachedOver200k) {
+      output.input_token_details = {
+        ...output.input_token_details,
+        cache_read_over_200k: cachedOver200k,
+      } as InputTokenDetails;
+    }
+  }
+  return output;
 }
