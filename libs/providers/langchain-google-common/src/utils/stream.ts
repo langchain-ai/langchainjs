@@ -376,9 +376,35 @@ export class SseStream implements AbstractStream {
     }
     const ret: Record<string, string> = {};
 
+    // The old regex that was vulnerable to ReDoS: /^([^:]+): \s*(.+)\n*$/
+
+    // The new regex:
+    const regex = /^([^:]+):\s*([^\r\n]*?)(?:\r?\n)*$/;
+    /*
+    /^
+      ([^:]+)
+      :\s*
+      (
+        [^\r\n]             # [^\r\n]* matches any character except carriage return and newline, preventing the ambiguity with the trailing newline pattern
+        *?                  # uses non-greedy matching to prevent excessive backtracking
+      )
+      (?:                   # Uses a non-capturing group (?:...) and matches proper line endings including both Unix (\n) and Windows (\r\n) style 
+        \r?                 # The ? makes the \r optional for cross-platform compatibility
+        \n                  
+      )
+      *$
+    /
+
+    This regex is not a ReDoS vulnerability because:
+    - It removes the ambiguity between what .+ and \n* can match
+    - It uses character classes that are more specific and don't overlap
+    - It uses non-greedy quantifiers where appropriate
+    - It makes the regex more deterministic in its matching behavior
+    */
+
     const lines = event.split(/\n/);
     lines.forEach((line) => {
-      const match = line.match(/^([^:]+): \s*(.+)\n*$/);
+      const match = line.match(regex);
       if (match && match.length === 3) {
         const key = match[1];
         const val = match[2];
