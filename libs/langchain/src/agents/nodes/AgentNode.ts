@@ -57,6 +57,11 @@ type InternalModelResponse<StructuredResponseFormat> =
   | AIMessage
   | ResponseHandlerResult<StructuredResponseFormat>;
 
+/**
+ * The name of the agent node in the state graph.
+ */
+export const AGENT_NODE_NAME = "model_request";
+
 export interface AgentNodeOptions<
   StructuredResponseFormat extends Record<string, unknown> = Record<
     string,
@@ -652,7 +657,7 @@ export class AgentNode<
             }),
           ],
         },
-        goto: "model",
+        goto: AGENT_NODE_NAME,
       });
     }
 
@@ -670,7 +675,7 @@ export class AgentNode<
             }),
           ],
         },
-        goto: "model",
+        goto: AGENT_NODE_NAME,
       });
     }
 
@@ -693,7 +698,7 @@ export class AgentNode<
             }),
           ],
         },
-        goto: "model",
+        goto: AGENT_NODE_NAME,
       });
     }
 
@@ -710,7 +715,7 @@ export class AgentNode<
           }),
         ],
       },
-      goto: "model",
+      goto: AGENT_NODE_NAME,
     });
   }
 

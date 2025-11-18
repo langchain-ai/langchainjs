@@ -3,6 +3,7 @@ import { z } from "zod/v3";
 
 import { ChatOpenAI } from "@langchain/openai";
 import { ChatAnthropic } from "@langchain/anthropic";
+import { AIMessage } from "@langchain/core/messages";
 
 import { createAgent, toolStrategy, providerStrategy } from "../index.js";
 import { FakeToolCallingModel, FakeToolCallingChatModel } from "./utils.js";
@@ -12,15 +13,25 @@ describe("structured output handling", () => {
   describe("toolStrategy", () => {
     describe("multiple structured output tool calls", () => {
       it("should retry by default when multiple structured outputs are called", async () => {
-        const model = new FakeToolCallingModel({
-          toolCalls: [
-            [
-              /**
-               * `extract-3` and `extract-5` are the computed function names for the json schemas
-               */
-              { name: "extract-1", args: { foo: "foo" }, id: "call_1" },
-              { name: "extract-2", args: { bar: "bar" }, id: "call_2" },
-            ],
+        const model = new FakeToolCallingChatModel({
+          responses: [
+            new AIMessage({
+              content: "",
+              tool_calls: [
+                { name: "extract-1", args: { foo: "foo" }, id: "call_1" },
+                { name: "extract-2", args: { bar: "bar" }, id: "call_2" },
+              ],
+            }),
+            new AIMessage({
+              content: "",
+              tool_calls: [
+                {
+                  name: "extract-1",
+                  args: { foo: "valid structured value" },
+                  id: "call_1",
+                },
+              ],
+            }),
           ],
         });
         const agent = createAgent({
@@ -48,6 +59,9 @@ describe("structured output handling", () => {
               msg.content.includes("The model has called multiple tools")
           )
         ).toBe(true);
+        expect(res.structuredResponse).toEqual({
+          foo: "valid structured value",
+        });
       });
 
       it("should throw if error handler is set to false", async () => {
@@ -88,12 +102,27 @@ describe("structured output handling", () => {
       });
 
       it("should retry if error handler is set to true", async () => {
-        const model = new FakeToolCallingModel({
-          toolCalls: [
-            [
-              { name: "extract-5", args: { foo: "foo" }, id: "call_1" },
-              { name: "extract-6", args: { bar: "bar" }, id: "call_2" },
-            ],
+        const toolCalls = [
+          { name: "extract-5", args: { foo: "foo" }, id: "call_1" },
+          { name: "extract-6", args: { bar: "bar" }, id: "call_2" },
+        ];
+        const toolCall2 = [
+          {
+            name: "extract-5",
+            args: { foo: "valid structured value" },
+            id: "call_3",
+          },
+        ];
+        const model = new FakeToolCallingChatModel({
+          responses: [
+            new AIMessage({
+              content: "",
+              tool_calls: toolCalls,
+            }),
+            new AIMessage({
+              content: "",
+              tool_calls: toolCall2,
+            }),
           ],
         });
         const agent = createAgent({
@@ -118,21 +147,57 @@ describe("structured output handling", () => {
           messages: [{ role: "user", content: "hi!" }],
         });
 
-        expect(res.messages).toHaveLength(3);
+        expect(res.messages).toHaveLength(6);
         expect(res.messages[0].content).toContain("hi!");
-        expect(res.messages[1].content).toContain("hi!");
+        expect((res.messages[1] as AIMessage).tool_calls).toEqual(toolCalls);
         expect(res.messages[2].content).toContain(
           "The model has called multiple tools"
         );
+        expect((res.messages[3] as AIMessage).tool_calls).toEqual(toolCall2);
+        expect(res.messages[4].content).toContain(
+          JSON.stringify({
+            foo: "valid structured value",
+          })
+        );
+        expect(res.messages[5].content).toContain(
+          "Returning structured response"
+        );
+        expect(res.structuredResponse).toEqual({
+          foo: "valid structured value",
+        });
       });
 
       it("should retry if the error handler is set to the MultipleStructuredOutputsError", async () => {
-        const model = new FakeToolCallingModel({
-          toolCalls: [
-            [
-              { name: "extract-7", args: { foo: "foo" }, id: "call_1" },
-              { name: "extract-8", args: { bar: "bar" }, id: "call_2" },
-            ],
+        const toolCalls = [
+          { name: "extract-7", args: { foo: "foo" }, id: "call_1" },
+          { name: "extract-8", args: { bar: "bar" }, id: "call_2" },
+        ];
+        const toolCall2 = [
+          {
+            name: "extract-7",
+            args: { foo: "fixed structured value" },
+            id: "call_3",
+          },
+        ];
+        const model = new FakeToolCallingChatModel({
+          responses: [
+            new AIMessage({
+              content: "",
+              tool_calls: [
+                { name: "extract-7", args: { foo: "foo" }, id: "call_1" },
+                { name: "extract-8", args: { bar: "bar" }, id: "call_2" },
+              ],
+            }),
+            new AIMessage({
+              content: "",
+              tool_calls: [
+                {
+                  name: "extract-7",
+                  args: { foo: "fixed structured value" },
+                  id: "call_3",
+                },
+              ],
+            }),
           ],
         });
         const agent = createAgent({
@@ -157,18 +222,34 @@ describe("structured output handling", () => {
           messages: [{ role: "user", content: "hi!" }],
         });
 
+        expect(res.messages).toHaveLength(6);
         expect(res.messages[0].content).toContain("hi!");
-        expect(res.messages[1].content).toContain("hi!");
+        expect((res.messages[1] as AIMessage).tool_calls).toEqual(toolCalls);
         expect(res.messages[2].content).toContain("foobar");
+        expect((res.messages[3] as AIMessage).tool_calls).toEqual(toolCall2);
+        expect(res.messages[4].content).toContain(
+          JSON.stringify({
+            foo: "fixed structured value",
+          })
+        );
+        expect(res.messages[5].content).toContain(
+          "Returning structured response"
+        );
+        expect(res.structuredResponse).toEqual({
+          foo: "fixed structured value",
+        });
       });
 
       it("should throw if error handler throws an error", async () => {
-        const model = new FakeToolCallingModel({
-          toolCalls: [
-            [
-              { name: "extract-9", args: { foo: "foo" }, id: "call_1" },
-              { name: "extract-10", args: { bar: "bar" }, id: "call_2" },
-            ],
+        const model = new FakeToolCallingChatModel({
+          responses: [
+            new AIMessage({
+              content: "",
+              tool_calls: [
+                { name: "extract-9", args: { foo: "foo" }, id: "call_1" },
+                { name: "extract-10", args: { bar: "bar" }, id: "call_2" },
+              ],
+            }),
           ],
         });
         const agent = createAgent({
@@ -204,6 +285,13 @@ describe("structured output handling", () => {
         const model = new FakeToolCallingModel({
           toolCalls: [
             [{ name: "extract-11", args: { bar: "foo" }, id: "call_1" }],
+            [
+              {
+                name: "extract-11",
+                args: { foo: "fixed structured value" },
+                id: "call_2",
+              },
+            ],
           ],
         });
         const agent = createAgent({
@@ -222,8 +310,7 @@ describe("structured output handling", () => {
         const res = await agent.invoke({
           messages: [{ role: "user", content: "hi" }],
         });
-
-        expect(res.messages.length).toBeGreaterThan(1);
+        expect(res.messages.length).toBe(6);
         expect(
           res.messages.some(
             (msg) =>
@@ -231,6 +318,9 @@ describe("structured output handling", () => {
               msg.content.includes("Failed to parse structured output")
           )
         ).toBe(true);
+        expect(res.structuredResponse).toEqual({
+          foo: "fixed structured value",
+        });
       });
 
       it("should return a structured response if it matches the schema", async () => {
@@ -284,7 +374,6 @@ describe("structured output handling", () => {
         });
 
         expect(res.structuredResponse).toEqual({ foo: "bar" });
-
         /**
          * We expect 3 messages:
          * 1. The user message
@@ -314,15 +403,14 @@ describe("structured output handling", () => {
             }),
           ]),
         });
-
         const res = await agent.invoke({
           messages: [{ role: "user", content: "hi" }],
         });
-
         expect(res.structuredResponse).toEqual({ bar: "foo" });
       });
     });
   });
+
   describe("providerStrategy", () => {
     describe("use provider strategy directly", () => {
       it("should not throw error if use provider strategy directly", async () => {
