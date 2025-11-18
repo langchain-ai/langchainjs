@@ -341,7 +341,8 @@ function _convertLangChainContentToPart(
 export function convertMessageContentToParts(
   message: BaseMessage,
   isMultimodalModel: boolean,
-  previousMessages: BaseMessage[]
+  previousMessages: BaseMessage[],
+  model: string
 ): Part[] {
   if (isToolMessage(message)) {
     const messageName =
@@ -418,7 +419,7 @@ export function convertMessageContentToParts(
           name: tc.name,
           args: tc.args,
         },
-        thoughtSignature,
+        ...(model.includes("gemini-3") ? { thoughtSignature } : {}),
       };
     });
   }
@@ -429,7 +430,8 @@ export function convertMessageContentToParts(
 export function convertBaseMessagesToContent(
   messages: BaseMessage[],
   isMultimodalModel: boolean,
-  convertSystemMessageToHumanContent: boolean = false
+  convertSystemMessageToHumanContent: boolean = false,
+  model: string
 ) {
   return messages.reduce<{
     content: Content[];
@@ -459,7 +461,8 @@ export function convertBaseMessagesToContent(
       const parts = convertMessageContentToParts(
         message,
         isMultimodalModel,
-        messages.slice(0, index)
+        messages.slice(0, index),
+        model
       );
 
       if (acc.mergeWithPreviousContent) {

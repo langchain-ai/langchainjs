@@ -822,7 +822,8 @@ export class ChatGoogleGenerativeAI
     const prompt = convertBaseMessagesToContent(
       messages,
       this._isMultimodalModel,
-      this.useSystemInstruction
+      this.useSystemInstruction,
+      this.model
     );
     let actualPrompt = prompt;
     if (prompt[0].role === "system") {
@@ -896,7 +897,8 @@ export class ChatGoogleGenerativeAI
     const prompt = convertBaseMessagesToContent(
       messages,
       this._isMultimodalModel,
-      this.useSystemInstruction
+      this.useSystemInstruction,
+      this.model
     );
     let actualPrompt = prompt;
     if (prompt[0].role === "system") {
