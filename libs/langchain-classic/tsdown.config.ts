@@ -133,6 +133,7 @@ export default getBuildConfig({
         "document_loaders/fs/json",
         "document_loaders/fs/multi_file",
         "document_loaders/fs/text",
+        "load/index",
         "sql_db",
         "output_parsers/expression",
         "retrievers/self_query",

@@ -74,6 +74,7 @@ export default getBuildConfig({
     lcSecretsPlugin(),
     importMapPlugin({
       omitFromImportMap: [
+        "load/index",
         "context",
         "callbacks/dispatch/web",
         "callbacks/dispatch",

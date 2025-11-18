@@ -107,6 +107,7 @@ export default getBuildConfig({
         "chat_models/universal",
         "cache/file_system",
         "storage/file_system",
+        "load/index",
         "hub",
         "hub/node",
       ],
