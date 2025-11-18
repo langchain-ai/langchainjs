@@ -29,6 +29,27 @@ function GoogleError<TMarker extends string>(marker: TMarker) {
 }
 
 /**
+ * Error thrown when there is a configuration issue with the Google provider.
+ *
+ * This error is thrown when the Google provider encounters invalid configuration
+ * parameters or settings that prevent it from functioning correctly.
+ *
+ * @example
+ * ```typescript
+ * try {
+ *   const model = new ChatGoogle({ invalidOption: true });
+ * } catch (error) {
+ *   if (ConfigurationError.isInstance(error)) {
+ *     console.log(`Configuration error: ${error.message}`);
+ *   }
+ * }
+ * ```
+ */
+export class ConfigurationError extends GoogleError("configuration") {
+  readonly name = "ConfigurationError" as const;
+}
+
+/**
  * Parameters for constructing a PromptBlockedError
  */
 type PromptBlockedErrorParams = {
@@ -444,7 +465,7 @@ export class RequestError extends GoogleError("request") {
    *
    * @example
    * ```typescript
-   * if (error instanceof RequestError && error.isRetryable()) {
+   * if (RequestError.isInstance(error) && error.isRetryable()) {
    *   await sleep(1000);
    *   return retry(request);
    * }
