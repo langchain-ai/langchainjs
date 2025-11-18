@@ -2,6 +2,7 @@ import {
   BaseLanguageModelInput,
   ToolDefinition,
 } from "@langchain/core/language_models/base";
+import type { ModelProfile } from "@langchain/core/language_models/profile";
 import {
   BaseChatModel,
   BaseChatModelParams,
@@ -414,6 +415,11 @@ export class ConfigurableModel<
     }
 
     return modelParams;
+  }
+
+  async _getProfile(): Promise<ModelProfile> {
+    const model = await this._model();
+    return model.profile;
   }
 
   _removePrefix(str: string, prefix: string): string {

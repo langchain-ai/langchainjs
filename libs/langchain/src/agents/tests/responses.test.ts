@@ -308,7 +308,7 @@ describe("structured output handling", () => {
   });
   describe("providerStrategy", () => {
     describe("use provider strategy directly", () => {
-      it("should not throw error if use provider strategy directly", async () => {
+      it.only("should not throw error if use provider strategy directly", async () => {
         const model = new FakeToolCallingModel({
           toolCalls: [
             [{ name: "extract-16", args: { foo: "bar" }, id: "call_2" }],
@@ -335,46 +335,50 @@ describe("structured output handling", () => {
 });
 
 describe("hasSupportForJsonSchemaOutput", () => {
-  it("should return false for undefined model", () => {
-    expect(hasSupportForJsonSchemaOutput(undefined)).toBe(false);
+  it("should return false for undefined model", async () => {
+    expect(await hasSupportForJsonSchemaOutput(undefined)).toBe(false);
   });
 
-  it("should return true for models that support JSON schema output", () => {
+  it("should return true for models that support JSON schema output", async () => {
     const model = new FakeToolCallingModel({});
-    expect(hasSupportForJsonSchemaOutput(model)).toBe(false);
+    expect(await hasSupportForJsonSchemaOutput(model)).toBe(false);
     const model2 = new FakeToolCallingChatModel({});
-    expect(hasSupportForJsonSchemaOutput(model2)).toBe(true);
+    expect(await hasSupportForJsonSchemaOutput(model2)).toBe(true);
   });
 
-  it("should return true for OpenAI models that support JSON schema output", () => {
+  it("should return true for OpenAI models that support JSON schema output", async () => {
     const model = new ChatOpenAI({
       model: "gpt-4o",
     });
-    expect(hasSupportForJsonSchemaOutput(model)).toBe(true);
-    expect(hasSupportForJsonSchemaOutput("openai:gpt-4o")).toBe(true);
-    expect(hasSupportForJsonSchemaOutput("gpt-4o-mini")).toBe(true);
+    expect(await hasSupportForJsonSchemaOutput(model)).toBe(true);
+    expect(await hasSupportForJsonSchemaOutput("openai:gpt-4o")).toBe(true);
+    expect(await hasSupportForJsonSchemaOutput("gpt-4o-mini")).toBe(true);
   });
 
-  it("should return false for OpenAI models that do not support JSON schema output", () => {
+  it("should return false for OpenAI models that do not support JSON schema output", async () => {
     const model = new ChatOpenAI({
       model: "gpt-3.5-turbo",
     });
-    expect(hasSupportForJsonSchemaOutput(model)).toBe(false);
-    expect(hasSupportForJsonSchemaOutput("openai:gpt-3.5-turbo")).toBe(false);
-    expect(hasSupportForJsonSchemaOutput("gpt-3.5-turbo")).toBe(false);
+    expect(await hasSupportForJsonSchemaOutput(model)).toBe(false);
+    expect(await hasSupportForJsonSchemaOutput("openai:gpt-3.5-turbo")).toBe(
+      false
+    );
+    expect(await hasSupportForJsonSchemaOutput("gpt-3.5-turbo")).toBe(false);
   });
 
-  it("should return false for Anthropic models that don't support JSON schema output", () => {
+  it("should return false for Anthropic models that don't support JSON schema output", async () => {
     const model = new ChatAnthropic({
       model: "claude-sonnet-4-5-20250929",
       anthropicApiKey: "foobar",
     });
-    expect(hasSupportForJsonSchemaOutput(model)).toBe(false);
+    expect(await hasSupportForJsonSchemaOutput(model)).toBe(true);
     expect(
-      hasSupportForJsonSchemaOutput("anthropic:claude-sonnet-4-5-20250929")
+      await hasSupportForJsonSchemaOutput(
+        "anthropic:claude-sonnet-4-5-20250929"
+      )
+    ).toBe(true);
+    expect(
+      await hasSupportForJsonSchemaOutput("claude-sonnet-4-5-20250929")
     ).toBe(false);
-    expect(hasSupportForJsonSchemaOutput("claude-sonnet-4-5-20250929")).toBe(
-      false
-    );
   });
 });

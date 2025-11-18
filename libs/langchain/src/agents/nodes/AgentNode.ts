@@ -3,10 +3,12 @@ import { Runnable, RunnableConfig } from "@langchain/core/runnables";
 import { BaseMessage, AIMessage, ToolMessage } from "@langchain/core/messages";
 import { Command, type LangGraphRunnableConfig } from "@langchain/langgraph";
 import { type LanguageModelLike } from "@langchain/core/language_models/base";
-import { type BaseChatModelCallOptions } from "@langchain/core/language_models/chat_models";
+import {
+  type BaseChatModel,
+  type BaseChatModelCallOptions,
+} from "@langchain/core/language_models/chat_models";
 import {
   InteropZodObject,
-  getSchemaDescription,
   interopParse,
   interopZodObjectPartial,
 } from "@langchain/core/utils/types";
@@ -133,16 +135,15 @@ export class AgentNode<
    * @param model - The model to get the response format for.
    * @returns The response format.
    */
-  #getResponseFormat(
+  async #getResponseFormat(
     model: string | LanguageModelLike
-  ): ResponseFormat | undefined {
+  ): Promise<ResponseFormat | undefined> {
     if (!this.#options.responseFormat) {
       return undefined;
     }
 
-    const strategies = transformResponseFormat(
+    const strategies = await transformResponseFormat(
       this.#options.responseFormat,
-      undefined,
       model
     );
 
@@ -278,9 +279,11 @@ export class AgentNode<
        */
       validateLLMHasNoBoundTools(request.model);
 
-      const structuredResponseFormat = this.#getResponseFormat(request.model);
+      const structuredResponseFormat = await this.#getResponseFormat(
+        request.model
+      );
       const modelWithTools = await this.#bindTools(
-        request.model,
+        request.model as BaseChatModel,
         request,
         structuredResponseFormat
       );
@@ -293,20 +296,21 @@ export class AgentNode<
       const response = (await modelWithTools.invoke(
         modelInput,
         invokeConfig
-      )) as AIMessage;
+      )) as AIMessage | { raw: BaseMessage; parsed: StructuredResponseFormat };
 
       /**
-       * if the user requests a native schema output, try to parse the response
-       * and return the structured response if it is valid
+       * if the user requests a native schema output, we should receive a raw message
+       * with the structured response
        */
-      if (structuredResponseFormat?.type === "native") {
-        const structuredResponse =
-          structuredResponseFormat.strategy.parse(response);
-        if (structuredResponse) {
-          return { structuredResponse, messages: [response] };
+      if (structuredResponseFormat?.type === "native" || "raw" in response) {
+        if (!("raw" in response)) {
+          throw new Error("Response is not a structured response.");
         }
 
-        return response;
+        return {
+          structuredResponse: response.parsed,
+          messages: [response.raw],
+        };
       }
 
       if (!structuredResponseFormat || !response.tool_calls) {
@@ -731,7 +735,7 @@ export class AgentNode<
   }
 
   async #bindTools(
-    model: LanguageModelLike,
+    model: BaseChatModel,
     preparedOptions: ModelRequest | undefined,
     structuredResponseFormat: ResponseFormat | undefined
   ): Promise<Runnable> {
@@ -761,37 +765,26 @@ export class AgentNode<
     /**
      * check if the user requests a native schema output
      */
-    if (structuredResponseFormat?.type === "native") {
-      const jsonSchemaParams = {
-        name: structuredResponseFormat.strategy.schema?.name ?? "extract",
-        description: getSchemaDescription(
-          structuredResponseFormat.strategy.schema
-        ),
-        schema: structuredResponseFormat.strategy.schema,
-        strict: true,
-      };
-
-      Object.assign(options, {
-        response_format: {
-          type: "json_schema",
-          json_schema: jsonSchemaParams,
-        },
-        ls_structured_output_format: {
-          kwargs: { method: "json_schema" },
-          schema: structuredResponseFormat.strategy.schema,
-        },
-        strict: true,
-      });
-    }
+    const modelWithStructuredOutput =
+      structuredResponseFormat?.type === "native"
+        ? model.withStructuredOutput(structuredResponseFormat.strategy.schema, {
+            includeRaw: true,
+            method: "jsonSchema",
+          })
+        : model;
 
     /**
      * Bind tools to the model if they are not already bound.
      */
-    const modelWithTools = await bindTools(model, allTools, {
-      ...options,
-      ...(preparedOptions?.modelSettings ?? {}),
-      tool_choice: toolChoice,
-    });
+    const modelWithTools = await bindTools(
+      modelWithStructuredOutput as LanguageModelLike,
+      allTools,
+      {
+        ...options,
+        ...(preparedOptions?.modelSettings ?? {}),
+        tool_choice: toolChoice,
+      }
+    );
 
     /**
      * Create a model runnable with the prompt and agent name

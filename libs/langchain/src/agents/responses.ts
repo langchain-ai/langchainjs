@@ -10,12 +10,14 @@ import { type AIMessage } from "@langchain/core/messages";
 import { type LanguageModelLike } from "@langchain/core/language_models/base";
 import { toJsonSchema, Validator } from "@langchain/core/utils/json_schema";
 import { type FunctionDefinition } from "@langchain/core/language_models/base";
+import { type BaseChatModel } from "@langchain/core/language_models/chat_models";
 
+import { initChatModel } from "../chat_models/universal.js";
 import {
   StructuredOutputParsingError,
   MultipleStructuredOutputsError,
 } from "./errors.js";
-import { isConfigurableModel, isBaseChatModel } from "./model.js";
+import { isConfigurableModel } from "./model.js";
 
 /**
  * Special type to indicate that no response format is provided.
@@ -206,7 +208,7 @@ export type ResponseFormat = ToolStrategy<any> | ProviderStrategy<any>;
  * @param model - The model to check if it supports JSON schema output
  * @returns
  */
-export function transformResponseFormat(
+export async function transformResponseFormat(
   responseFormat?:
     | InteropZodType<any>
     | InteropZodType<any>[]
@@ -215,9 +217,8 @@ export function transformResponseFormat(
     | ResponseFormat
     | ToolStrategy<any>[]
     | ResponseFormatUndefined,
-  options?: ToolStrategyOptions,
   model?: LanguageModelLike | string
-): ResponseFormat[] {
+): Promise<ResponseFormat[]> {
   if (!responseFormat) {
     return [];
   }
@@ -237,46 +238,30 @@ export function transformResponseFormat(
    */
   if (Array.isArray(responseFormat)) {
     /**
+     * we don't allow to have a list of ProviderStrategy instances
+     */
+    if (responseFormat.some((item) => item instanceof ProviderStrategy)) {
+      throw new Error(
+        "Invalid response format: list contains ProviderStrategy instances. You can only use a single ProviderStrategy instance instead."
+      );
+    }
+
+    /**
      * if every entry is a ToolStrategy or ProviderStrategy instance, return the array as is
      */
-    if (
-      responseFormat.every(
-        (item) =>
-          item instanceof ToolStrategy || item instanceof ProviderStrategy
-      )
-    ) {
-      return responseFormat as unknown as ResponseFormat[];
-    }
-
-    /**
-     * Check if all items are Zod schemas
-     */
-    if (responseFormat.every((item) => isInteropZodObject(item))) {
-      return responseFormat.map((item) =>
-        ToolStrategy.fromSchema(item as InteropZodObject, options)
-      );
-    }
-
-    /**
-     * Check if all items are plain objects (JSON schema)
-     */
-    if (
-      responseFormat.every(
-        (item) =>
-          typeof item === "object" && item !== null && !isInteropZodObject(item)
-      )
-    ) {
-      return responseFormat.map((item) =>
-        ToolStrategy.fromSchema(item as JsonSchemaFormat, options)
-      );
+    if (responseFormat.every((item) => item instanceof ToolStrategy)) {
+      return responseFormat as ResponseFormat[];
     }
 
     throw new Error(
-      `Invalid response format: list contains mixed types.\n` +
+      `Invalid response format: list contains invalid values.\n` +
         `All items must be either InteropZodObject or plain JSON schema objects.`
     );
   }
 
+  /**
+   * if the response format is a ToolStrategy or ProviderStrategy instance, return it as is
+   */
   if (
     responseFormat instanceof ToolStrategy ||
     responseFormat instanceof ProviderStrategy
@@ -284,7 +269,10 @@ export function transformResponseFormat(
     return [responseFormat];
   }
 
-  const useProviderStrategy = hasSupportForJsonSchemaOutput(model);
+  /**
+   * If nothing is specified we have to check whether the model supports JSON schema output
+   */
+  const useProviderStrategy = await hasSupportForJsonSchemaOutput(model);
 
   /**
    * `responseFormat` is a Zod schema
@@ -292,7 +280,7 @@ export function transformResponseFormat(
   if (isInteropZodObject(responseFormat)) {
     return useProviderStrategy
       ? [ProviderStrategy.fromSchema(responseFormat)]
-      : [ToolStrategy.fromSchema(responseFormat, options)];
+      : [ToolStrategy.fromSchema(responseFormat)];
   }
 
   /**
@@ -305,7 +293,7 @@ export function transformResponseFormat(
   ) {
     return useProviderStrategy
       ? [ProviderStrategy.fromSchema(responseFormat as JsonSchemaFormat)]
-      : [ToolStrategy.fromSchema(responseFormat as JsonSchemaFormat, options)];
+      : [ToolStrategy.fromSchema(responseFormat as JsonSchemaFormat)];
   }
 
   throw new Error(`Invalid response format: ${String(responseFormat)}`);
@@ -380,7 +368,12 @@ export function toolStrategy(
     | JsonSchemaFormat[],
   options?: ToolStrategyOptions
 ): TypedToolStrategy {
-  return transformResponseFormat(responseFormat, options) as TypedToolStrategy;
+  const responseFormatArray = Array.isArray(responseFormat)
+    ? responseFormat
+    : [responseFormat];
+  return responseFormatArray.map((item) =>
+    ToolStrategy.fromSchema(item as InteropZodObject, options)
+  ) as TypedToolStrategy;
 }
 
 export function providerStrategy<T extends InteropZodType<any>>(
@@ -419,76 +412,27 @@ export type JsonSchemaFormat = {
   __brand?: never;
 };
 
-const CHAT_MODELS_THAT_SUPPORT_JSON_SCHEMA_OUTPUT = ["ChatOpenAI", "ChatXAI"];
-const MODEL_NAMES_THAT_SUPPORT_JSON_SCHEMA_OUTPUT = [
-  "grok",
-  "gpt-5",
-  "gpt-4.1",
-  "gpt-4o",
-  "gpt-oss",
-  "o3-pro",
-  "o3-mini",
-];
-
 /**
  * Identifies the models that support JSON schema output
  * @param model - The model to check
  * @returns True if the model supports JSON schema output, false otherwise
  */
-export function hasSupportForJsonSchemaOutput(
+export async function hasSupportForJsonSchemaOutput(
   model?: LanguageModelLike | string
-): boolean {
+): Promise<boolean> {
   if (!model) {
     return false;
   }
 
-  if (typeof model === "string") {
-    const modelName = model.split(":").pop() as string;
-    return MODEL_NAMES_THAT_SUPPORT_JSON_SCHEMA_OUTPUT.some(
-      (modelNameSnippet) => modelName.includes(modelNameSnippet)
-    );
+  const resolvedModel =
+    typeof model === "string"
+      ? await initChatModel(model)
+      : (model as BaseChatModel);
+
+  if (isConfigurableModel(resolvedModel)) {
+    const profile = await resolvedModel._getProfile();
+    return profile.structuredOutput ?? false;
   }
 
-  if (isConfigurableModel(model)) {
-    const configurableModel = model as unknown as {
-      _defaultConfig: { model: string };
-    };
-    return hasSupportForJsonSchemaOutput(
-      configurableModel._defaultConfig.model
-    );
-  }
-
-  if (!isBaseChatModel(model)) {
-    return false;
-  }
-
-  const chatModelClass = model.getName();
-
-  /**
-   * for testing purposes only
-   */
-  if (chatModelClass === "FakeToolCallingChatModel") {
-    return true;
-  }
-
-  if (
-    CHAT_MODELS_THAT_SUPPORT_JSON_SCHEMA_OUTPUT.includes(chatModelClass) &&
-    /**
-     * OpenAI models
-     */ (("model" in model &&
-      MODEL_NAMES_THAT_SUPPORT_JSON_SCHEMA_OUTPUT.some(
-        (modelNameSnippet) =>
-          typeof model.model === "string" &&
-          model.model.includes(modelNameSnippet)
-      )) ||
-      /**
-       * for testing purposes only
-       */
-      (chatModelClass === "FakeToolCallingModel" &&
-        "structuredResponse" in model))
-  ) {
-    return true;
-  }
-
-  return false;
+  return resolvedModel.profile.structuredOutput ?? false;
 }

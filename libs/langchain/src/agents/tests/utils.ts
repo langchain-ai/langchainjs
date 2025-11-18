@@ -175,6 +175,12 @@ export class FakeToolCallingChatModel extends BaseChatModel {
     return "fake";
   }
 
+  get profile() {
+    return {
+      structuredOutput: true,
+    };
+  }
+
   async _generate(
     messages: BaseMessage[],
     _options: this["ParsedCallOptions"],
