@@ -19,7 +19,6 @@ import { Document } from "@langchain/core/documents";
  * - Set ELASTIC_URL, ELASTIC_API_KEY (or ELASTIC_USERNAME/ELASTIC_PASSWORD)
  */
 export async function run() {
-  // Configure Elasticsearch client
   const config: ClientOptions = {
     node: process.env.ELASTIC_URL ?? "http://127.0.0.1:9200",
   };
@@ -36,20 +35,18 @@ export async function run() {
 
   const embeddings = new OpenAIEmbeddings();
 
-  // Create vector store with hybrid search strategy
   const clientArgs: ElasticClientArgs = {
     client: new Client(config),
     indexName: process.env.ELASTIC_INDEX ?? "test_hybrid_search",
     strategy: new HybridRetrievalStrategy({
-      rankWindowSize: 100,  // Number of documents to consider for RRF
-      rankConstant: 60,     // RRF constant for score normalization
-      textField: "text",    // Field to use for BM25 search
+      rankWindowSize: 100,
+      rankConstant: 60,
+      textField: "text",
     }),
   };
 
   const vectorStore = new ElasticVectorSearch(embeddings, clientArgs);
 
-  // Clean up any existing data
   await vectorStore.deleteIfExists();
 
   // Add sample documents
@@ -123,18 +120,4 @@ export async function run() {
   await vectorStore.deleteIfExists();
   console.log("Index deleted.");
 }
-
-/**
- * For Elasticsearch 9.2+:
- * If you need to include vectors in the response, set includeSourceVectors:
- * 
- * strategy: new HybridRetrievalStrategy({
- *   includeSourceVectors: true,
- *   rankWindowSize: 100,
- *   rankConstant: 60,
- * })
- * 
- * Note: This is only needed if you're on ES 9.2+ and want vector data
- * in search responses. ES 9.2+ excludes vectors by default for performance.
- */
 
