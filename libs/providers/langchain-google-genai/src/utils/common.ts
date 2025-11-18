@@ -342,7 +342,7 @@ export function convertMessageContentToParts(
   message: BaseMessage,
   isMultimodalModel: boolean,
   previousMessages: BaseMessage[],
-  model: string
+  model?: string
 ): Part[] {
   if (isToolMessage(message)) {
     const messageName =
@@ -412,7 +412,7 @@ export function convertMessageContentToParts(
             return signature;
           }
         }
-        if (model.includes("gemini-3")) {
+        if (model?.includes("gemini-3")) {
           return DUMMY_SIGNATURE;
         }
         return "";
