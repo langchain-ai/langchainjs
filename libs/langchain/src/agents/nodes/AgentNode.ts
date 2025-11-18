@@ -124,7 +124,7 @@ export class AgentNode<
   /**
    * Returns response format primtivies based on given model and response format provided by the user.
    *
-   * If the the user selects a tool output:
+   * If the user selects a tool output:
    * - return a record of tools to extract structured output from the model's response
    *
    * if the the user selects a native schema output or if the model supports JSON schema output:
