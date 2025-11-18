@@ -1,6 +1,6 @@
 import fs from "node:fs";
-import * as path from "node:path";
-import * as ts from "typescript";
+import path from "node:path";
+import ts from "typescript";
 import type { Plugin, PluginContext } from "rolldown";
 
 /**
