@@ -29,7 +29,7 @@
     "format:check": "prettier --config .prettierrc --check \"src\""
   },
   "dependencies": {
-    "@langchain/google-webauth": "^1.0.2"
+    "@langchain/google-webauth": "^1.0.1"
   },
   "devDependencies": {
     "@jest/globals": "^29.5.0",
