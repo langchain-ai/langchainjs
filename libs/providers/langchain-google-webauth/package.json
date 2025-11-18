@@ -1,6 +1,6 @@
 {
   "name": "@langchain/google-webauth",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Web-based authentication support for Google services",
   "author": "LangChain",
   "license": "MIT",
@@ -29,7 +29,7 @@
     "format:check": "prettier --config .prettierrc --check \"src\""
   },
   "dependencies": {
-    "@langchain/google-common": "^1.0.1",
+    "@langchain/google-common": "^1.0.2",
     "web-auth-library": "^1.0.3"
   },
   "peerDependencies": {

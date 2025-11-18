@@ -1,5 +1,11 @@
 # @langchain/core
 
+## 1.0.6
+
+### Patch Changes
+
+- [#9431](https://github.com/langchain-ai/langchainjs/pull/9431) [`5709cb6`](https://github.com/langchain-ai/langchainjs/commit/5709cb64cc3e4eb300bde5ec8ae90686d2aa3d8e) Thanks [@dqbd](https://github.com/dqbd)! - fix(core): `store` should be accessible from tools
+
 ## 1.0.5
 
 ### Patch Changes
