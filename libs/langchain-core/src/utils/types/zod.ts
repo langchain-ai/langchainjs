@@ -26,6 +26,7 @@ export type ZodDefaultV3<T extends z3.ZodTypeAny> = z3.ZodDefault<T>;
 export type ZodDefaultV4<T extends z4.SomeType> = z4.$ZodDefault<T>;
 export type ZodOptionalV3<T extends z3.ZodTypeAny> = z3.ZodOptional<T>;
 export type ZodOptionalV4<T extends z4.SomeType> = z4.$ZodOptional<T>;
+export type ZodNullableV4<T extends z4.SomeType> = z4.$ZodNullable<T>;
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type InteropZodType<Output = any, Input = Output> =
@@ -513,6 +514,46 @@ export function isZodArrayV4(obj: unknown): obj is z4.$ZodArray {
   return false;
 }
 
+export function isZodOptionalV4(obj: unknown): obj is z4.$ZodOptional {
+  if (!isZodSchemaV4(obj)) return false;
+  // Zod v4 optional schemas have _zod.def.type === "optional"
+  if (
+    typeof obj === "object" &&
+    obj !== null &&
+    "_zod" in obj &&
+    typeof obj._zod === "object" &&
+    obj._zod !== null &&
+    "def" in obj._zod &&
+    typeof obj._zod.def === "object" &&
+    obj._zod.def !== null &&
+    "type" in obj._zod.def &&
+    obj._zod.def.type === "optional"
+  ) {
+    return true;
+  }
+  return false;
+}
+
+export function isZodNullableV4(obj: unknown): obj is z4.$ZodNullable {
+  if (!isZodSchemaV4(obj)) return false;
+  // Zod v4 nullable schemas have _zod.def.type === "nullable"
+  if (
+    typeof obj === "object" &&
+    obj !== null &&
+    "_zod" in obj &&
+    typeof obj._zod === "object" &&
+    obj._zod !== null &&
+    "def" in obj._zod &&
+    typeof obj._zod.def === "object" &&
+    obj._zod.def !== null &&
+    "type" in obj._zod.def &&
+    obj._zod.def.type === "nullable"
+  ) {
+    return true;
+  }
+  return false;
+}
+
 /**
  * Determines if the provided value is an InteropZodObject (Zod v3 or v4 object schema).
  *
@@ -841,6 +882,30 @@ function interopZodTransformInputSchemaImpl(
         outputSchema = clone<z4.$ZodArray>(outputSchema, {
           ...outputSchema._zod.def,
           element: elementSchema as z4.$ZodType,
+        });
+      }
+      // Handle optional schemas
+      else if (isZodOptionalV4(outputSchema)) {
+        const innerSchema = interopZodTransformInputSchemaImpl(
+          outputSchema._zod.def.innerType as InteropZodType,
+          recursive,
+          cache
+        );
+        outputSchema = clone<z4.$ZodOptional>(outputSchema, {
+          ...outputSchema._zod.def,
+          innerType: innerSchema as z4.$ZodType,
+        });
+      }
+      // Handle nullable schemas
+      else if (isZodNullableV4(outputSchema)) {
+        const innerSchema = interopZodTransformInputSchemaImpl(
+          outputSchema._zod.def.innerType as InteropZodType,
+          recursive,
+          cache
+        );
+        outputSchema = clone<z4.$ZodNullable>(outputSchema, {
+          ...outputSchema._zod.def,
+          innerType: innerSchema as z4.$ZodType,
         });
       }
     }

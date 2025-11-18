@@ -1526,6 +1526,142 @@ describe("Zod utility functions", () => {
         expect(elementShape.age).toBeInstanceOf(z4.ZodNumber);
       });
 
+      it("should handle transforms in optional schemas", () => {
+        const inputSchema = z4.object({
+          name: z4
+            .string()
+            .transform((s) => s.toUpperCase())
+            .optional(),
+          age: z4.number().optional(),
+        });
+
+        const result = interopZodTransformInputSchema(inputSchema, true);
+
+        expect(result).toBeInstanceOf(z4.ZodObject);
+        const resultShape = getInteropZodObjectShape(result as any);
+        expect(Object.keys(resultShape)).toEqual(["name", "age"]);
+
+        // The name property should be optional string (transform removed)
+        expect(resultShape.name).toBeInstanceOf(z4.ZodOptional);
+        const nameInner = (resultShape.name as any)._zod.def.innerType;
+        expect(nameInner).toBeInstanceOf(z4.ZodString);
+
+        // The age property should remain optional number
+        expect(resultShape.age).toBeInstanceOf(z4.ZodOptional);
+        const ageInner = (resultShape.age as any)._zod.def.innerType;
+        expect(ageInner).toBeInstanceOf(z4.ZodNumber);
+      });
+
+      it("should handle transforms in nullable schemas", () => {
+        const inputSchema = z4.object({
+          name: z4
+            .string()
+            .transform((s) => s.toLowerCase())
+            .nullable(),
+          count: z4.number().nullable(),
+        });
+
+        const result = interopZodTransformInputSchema(inputSchema, true);
+
+        expect(result).toBeInstanceOf(z4.ZodObject);
+        const resultShape = getInteropZodObjectShape(result as any);
+        expect(Object.keys(resultShape)).toEqual(["name", "count"]);
+
+        // The name property should be nullable string (transform removed)
+        expect(resultShape.name).toBeInstanceOf(z4.ZodNullable);
+        const nameInner = (resultShape.name as any)._zod.def.innerType;
+        expect(nameInner).toBeInstanceOf(z4.ZodString);
+
+        // The count property should remain nullable number
+        expect(resultShape.count).toBeInstanceOf(z4.ZodNullable);
+        const countInner = (resultShape.count as any)._zod.def.innerType;
+        expect(countInner).toBeInstanceOf(z4.ZodNumber);
+      });
+
+      it("should handle transforms in nullish (optional + nullable) schemas", () => {
+        const inputSchema = z4.object({
+          name: z4
+            .string()
+            .transform((s) => s.trim())
+            .nullish(),
+          value: z4.number().nullish(),
+        });
+
+        const result = interopZodTransformInputSchema(inputSchema, true);
+
+        expect(result).toBeInstanceOf(z4.ZodObject);
+        const resultShape = getInteropZodObjectShape(result as any);
+        expect(Object.keys(resultShape)).toEqual(["name", "value"]);
+
+        // The name property should be optional(nullable(string)) with transform removed
+        expect(resultShape.name).toBeInstanceOf(z4.ZodOptional);
+        const nameOptionalInner = (resultShape.name as any)._zod.def.innerType;
+        expect(nameOptionalInner).toBeInstanceOf(z4.ZodNullable);
+        const nameNullableInner = (nameOptionalInner as any)._zod.def.innerType;
+        expect(nameNullableInner).toBeInstanceOf(z4.ZodString);
+
+        // The value property should remain nullish number
+        expect(resultShape.value).toBeInstanceOf(z4.ZodOptional);
+        const valueOptionalInner = (resultShape.value as any)._zod.def
+          .innerType;
+        expect(valueOptionalInner).toBeInstanceOf(z4.ZodNullable);
+        const valueNullableInner = (valueOptionalInner as any)._zod.def
+          .innerType;
+        expect(valueNullableInner).toBeInstanceOf(z4.ZodNumber);
+      });
+
+      it("should handle transforms in optional objects", () => {
+        const userSchema = z4.object({
+          name: z4.string().transform((s) => s.toUpperCase()),
+          age: z4.number(),
+        });
+
+        const inputSchema = z4.object({
+          user: userSchema.optional(),
+          metadata: z4.string(),
+        });
+
+        const result = interopZodTransformInputSchema(inputSchema, true);
+
+        expect(result).toBeInstanceOf(z4.ZodObject);
+        const resultShape = getInteropZodObjectShape(result as any);
+        expect(Object.keys(resultShape)).toEqual(["user", "metadata"]);
+
+        // The user property should be optional(object) with transform removed from inner properties
+        expect(resultShape.user).toBeInstanceOf(z4.ZodOptional);
+        const userInner = (resultShape.user as any)._zod.def.innerType;
+        expect(userInner).toBeInstanceOf(z4.ZodObject);
+
+        const userShape = getInteropZodObjectShape(userInner as any);
+        expect(Object.keys(userShape)).toEqual(["name", "age"]);
+        expect(userShape.name).toBeInstanceOf(z4.ZodString);
+        expect(userShape.age).toBeInstanceOf(z4.ZodNumber);
+      });
+
+      it("should handle transforms in arrays of optional schemas", () => {
+        const inputSchema = z4.object({
+          items: z4.array(
+            z4
+              .string()
+              .transform((s) => s.toUpperCase())
+              .optional()
+          ),
+        });
+
+        const result = interopZodTransformInputSchema(inputSchema, true);
+
+        expect(result).toBeInstanceOf(z4.ZodObject);
+        const resultShape = getInteropZodObjectShape(result as any);
+
+        // The items property should be an array of optional strings
+        expect(resultShape.items).toBeInstanceOf(z4.ZodArray);
+        const arrayElement = (resultShape.items as any)._zod.def.element;
+        expect(arrayElement).toBeInstanceOf(z4.ZodOptional);
+
+        const elementInner = (arrayElement as any)._zod.def.innerType;
+        expect(elementInner).toBeInstanceOf(z4.ZodString);
+      });
+
       it("should cache and reuse sanitized sub-schemas when same schema is used in multiple properties", () => {
         // Create a shared sub-schema that will be used in multiple places
         const addressSchema = z4.object({
