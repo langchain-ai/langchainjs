@@ -51,6 +51,7 @@ import {
   convertMessagesToGeminiSystemInstruction,
 } from "../converters/messages.js";
 import {
+  ConfigurationError,
   MalformedOutputError,
   NoCandidatesError,
   PromptBlockedError,
@@ -442,18 +443,23 @@ export abstract class BaseChatGoogle<
         BaseLanguageModelInput,
         { raw: BaseMessage; parsed: RunOutput }
       > {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const schema: InteropZodType<RunOutput> | Record<string, any> =
-      outputSchema;
-    const name = config?.name;
-    const method = config?.method ?? "jsonMode";
-    const includeRaw = config?.includeRaw;
-
-    // Determine llm and outputParser based on method
     let llm: Runnable<BaseMessage[], AIMessageChunk, CallOptions>;
     let outputParser: Runnable<BaseMessage, RunOutput>;
 
+    const { schema, name, includeRaw } = {
+      ...config,
+      schema: outputSchema,
+    };
+    let method = config?.method ?? "functionCalling";
+
     if (method === "jsonMode") {
+      console.warn(
+        `"jsonMode" is not supported for Anthropic models. Falling back to "jsonSchema".`
+      );
+      method = "jsonSchema";
+    }
+
+    if (method === "jsonSchema") {
       // Use JSON mode with responseSchema
       llm = this.withConfig({
         responseSchema: schema,
@@ -489,7 +495,7 @@ export abstract class BaseChatGoogle<
           }
         }
       );
-    } else {
+    } else if (method === "functionCalling") {
       // Use function calling mode
       let functionName = name ?? "extract";
       let tools: GeminiTool[];
@@ -548,6 +554,10 @@ export abstract class BaseChatGoogle<
       llm = this.bindTools(tools).withConfig({
         tool_choice: functionName,
       } as Partial<CallOptions>);
+    } else {
+      throw new ConfigurationError(
+        `Unrecognized structured output method '${method}'. Expected 'functionCalling' or 'jsonSchema'`
+      );
     }
 
     // Shared logic for handling includeRaw
