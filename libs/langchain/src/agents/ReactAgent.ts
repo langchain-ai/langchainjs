@@ -163,7 +163,7 @@ export class ReactAgent<
     const middlewareTools = (this.options.middleware
       ?.filter((m) => m.tools)
       .flatMap((m) => m.tools) ?? []) as (ClientTool | ServerTool)[];
-    const toolClasses = [...(options.tools ?? []), ...middlewareTools];
+    let toolClasses = [...(options.tools ?? []), ...middlewareTools];
 
     /**
      * If any of the tools are configured to return_directly after running,
@@ -224,19 +224,6 @@ export class ReactAgent<
        */
       () => any
     ][] = [];
-
-    this.#agentNode = new AgentNode({
-      model: this.options.model,
-      systemPrompt: this.options.systemPrompt,
-      includeAgentName: this.options.includeAgentName,
-      name: this.options.name,
-      responseFormat: this.options.responseFormat,
-      middleware: this.options.middleware,
-      toolClasses,
-      shouldReturnDirect,
-      signal: this.options.signal,
-      wrapModelCallHookMiddleware,
-    });
 
     const middlewareNames = new Set<string>();
     const middleware = this.options.middleware ?? [];
@@ -329,20 +316,38 @@ export class ReactAgent<
     }
 
     /**
-     * Add Nodes
-     */
-    allNodeWorkflows.addNode("model_request", this.#agentNode);
-
-    /**
      * add single tool node for all tools
      */
+    let toolNode: ToolNode | undefined;
     if (toolClasses.filter(isClientTool).length > 0) {
-      const toolNode = new ToolNode(toolClasses.filter(isClientTool), {
+      toolNode = new ToolNode(toolClasses.filter(isClientTool), {
         signal: this.options.signal,
         wrapToolCall: wrapToolCall(middleware),
       });
       allNodeWorkflows.addNode("tools", toolNode);
     }
+
+    this.#agentNode = new AgentNode({
+      model: this.options.model,
+      systemPrompt: this.options.systemPrompt,
+      includeAgentName: this.options.includeAgentName,
+      name: this.options.name,
+      responseFormat: this.options.responseFormat,
+      middleware: this.options.middleware,
+      toolClasses,
+      shouldReturnDirect,
+      signal: this.options.signal,
+      wrapModelCallHookMiddleware,
+      updateTools: (tools) => {
+        toolNode?.updateTools(tools);
+        toolClasses = tools;
+      },
+    });
+
+    /**
+     * Add Nodes
+     */
+    allNodeWorkflows.addNode("model_request", this.#agentNode);
 
     /**
      * Add Edges

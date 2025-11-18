@@ -3,6 +3,7 @@
 import { BaseMessage, ToolMessage, AIMessage } from "@langchain/core/messages";
 import { RunnableConfig, RunnableToolLike } from "@langchain/core/runnables";
 import {
+  type ClientTool,
   DynamicTool,
   StructuredToolInterface,
   ToolInputParsingException,
@@ -199,6 +200,10 @@ export class ToolNode<
     this.wrapToolCall = wrapToolCall;
   }
 
+  updateTools(tools: ClientTool[]) {
+    this.tools = tools;
+  }
+
   /**
    * Handle errors from tool execution or middleware.
    * @param error - The error to handle
@@ -274,6 +279,12 @@ export class ToolNode<
     config: RunnableConfig,
     state: AgentBuiltInState
   ): Promise<ToolMessage | Command> {
+    console.log(
+      "runTool",
+      call,
+      this.tools.map((t) => t.name)
+    );
+
     /**
      * Define the base handler that executes the tool.
      * When wrapToolCall middleware is present, this handler does NOT catch errors
@@ -385,6 +396,7 @@ export class ToolNode<
     state: ToAnnotationRoot<StateSchema>["State"] & PreHookAnnotation["State"],
     config: RunnableConfig
   ): Promise<ContextSchema> {
+    console.log("RUN MEE!!!!");
     let outputs: (ToolMessage | Command)[];
 
     if (isSendInput(state)) {
