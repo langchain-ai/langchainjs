@@ -1,5 +1,11 @@
 # @langchain/google-genai
 
+## 1.0.2
+
+### Patch Changes
+
+- [#9441](https://github.com/langchain-ai/langchainjs/pull/9441) [`269e5ba`](https://github.com/langchain-ai/langchainjs/commit/269e5bae04c76fdfbd42df66a97061bb0b93a834) Thanks [@hntrl](https://github.com/hntrl)! - add function calling thought signature support
+
 ## 1.0.1
 
 ### Patch Changes
