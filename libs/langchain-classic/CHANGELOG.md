@@ -1,5 +1,14 @@
 # @langchain/classic
 
+## 1.0.4
+
+### Patch Changes
+
+- [#9379](https://github.com/langchain-ai/langchainjs/pull/9379) [`34c472d`](https://github.com/langchain-ai/langchainjs/commit/34c472d129c9c3d58042fad6479fd15e0763feaf) Thanks [@kenowessels](https://github.com/kenowessels)! - OpenAPIToJSONSchema required from nested schema
+
+- Updated dependencies [[`415cb0b`](https://github.com/langchain-ai/langchainjs/commit/415cb0bfd26207583befdb02367bd12a46b33d51), [`a2ad61e`](https://github.com/langchain-ai/langchainjs/commit/a2ad61e787a06a55a615f63589a65ada05927792)]:
+  - @langchain/openai@1.1.2
+
 ## 1.0.3
 
 ### Patch Changes
