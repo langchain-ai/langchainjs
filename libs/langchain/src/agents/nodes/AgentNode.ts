@@ -631,7 +631,7 @@ export class AgentNode<
      */
     if (
       /**
-       * if the user has provided `true` as the `errorHandler`, `undefined`, or any true boolean, return a new AIMessage
+       * if the user has provided truthy value as the `errorHandler`, return a new AIMessage
        * with the error message and retry the tool call.
        */
       errorHandler === undefined ||
