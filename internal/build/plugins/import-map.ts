@@ -1,5 +1,6 @@
 import path from "node:path";
 import type { Plugin } from "rolldown";
+import { formatWithPrettier } from "../utils";
 
 /**
  * Configuration for an extra import map entry that should be included
@@ -159,7 +160,10 @@ export function importMapPlugin(param: ImportMapPluginOptions = {}): Plugin {
         }, [] as string[]),
       ];
 
-      await this.fs.writeFile(outputPath, lines.join("\n"));
+      await this.fs.writeFile(
+        outputPath,
+        await formatWithPrettier(lines.join("\n"))
+      );
       this.info(`📝 Generated import map file: ${outputPath}`);
     },
   };

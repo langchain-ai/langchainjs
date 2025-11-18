@@ -1,6 +1,7 @@
 import path from "node:path";
 import fs from "node:fs/promises";
 import type { Plugin } from "rolldown";
+import { isSafeProjectPath } from "../utils";
 
 /**
  * Options for configuring the CJS compatibility plugin.
@@ -147,22 +148,37 @@ export function cjsCompatPlugin(param: CjsCompatPluginOptions = {}): Plugin {
 
         if (options.mode === "clean") {
           if (options.shouldGenerate.dcts) {
-            await fs.unlink(`./${barrelPath}.d.cts`).catch(() => {});
+            const target = path.resolve(`./${barrelPath}.d.cts`);
+            if (isSafeProjectPath(target)) {
+              await fs.unlink(target).catch(() => {});
+            }
           }
           if (options.shouldGenerate.cjs) {
-            await fs.unlink(`./${barrelPath}.cjs`).catch(() => {});
+            const target = path.resolve(`./${barrelPath}.cjs`);
+            if (isSafeProjectPath(target)) {
+              await fs.unlink(target).catch(() => {});
+            }
           }
           if (options.shouldGenerate.dts) {
-            await fs.unlink(`./${barrelPath}.d.ts`).catch(() => {});
+            const target = path.resolve(`./${barrelPath}.d.ts`);
+            if (isSafeProjectPath(target)) {
+              await fs.unlink(target).catch(() => {});
+            }
           }
           if (options.shouldGenerate.esm) {
-            await fs.unlink(`./${barrelPath}.js`).catch(() => {});
+            const target = path.resolve(`./${barrelPath}.js`);
+            if (isSafeProjectPath(target)) {
+              await fs.unlink(target).catch(() => {});
+            }
           }
 
           // Remove any directories that were created for nested entrypoints
           const dirPath = path.dirname(barrelPath);
           if (dirPath !== ".") {
-            await fs.rmdir(dirPath, { recursive: true }).catch(() => {});
+            const target = path.resolve(dirPath);
+            if (isSafeProjectPath(target)) {
+              await fs.rmdir(target, { recursive: true }).catch(() => {});
+            }
           }
         }
       }

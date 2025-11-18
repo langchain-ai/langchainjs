@@ -93,10 +93,8 @@ export * as chains__index from "../chains/index.js";
 export * as agents__format_scratchpad__openai_functions from "../agents/format_scratchpad/openai_functions.js";
 export * as evaluation__index from "../evaluation/index.js";
 export * as retrievers__contextual_compression from "../retrievers/contextual_compression.js";
-import {
-  StringOutputParser
-} from "@langchain/core/output_parsers";
+import { StringOutputParser } from "@langchain/core/output_parsers";
 const schema__output_parser = {
-  StringOutputParser
+  StringOutputParser,
 };
 export { schema__output_parser };

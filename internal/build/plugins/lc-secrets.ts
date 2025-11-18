@@ -2,6 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 import ts from "typescript";
 import type { Plugin, PluginContext } from "rolldown";
+import { formatWithPrettier } from "../utils";
 
 /**
  * Configuration options for the lc-secrets plugin.
@@ -133,7 +134,10 @@ export function lcSecretsPlugin(options: SecretPluginOptions = {}): Plugin {
             `}`,
           ];
 
-          await this.fs.writeFile(outputPath, lines.join("\n"));
+          await this.fs.writeFile(
+            outputPath,
+            await formatWithPrettier(lines.join("\n"))
+          );
           this.info(`📝 Generated secret map: ${opts.outputPath}`);
         }
       } catch (error) {
