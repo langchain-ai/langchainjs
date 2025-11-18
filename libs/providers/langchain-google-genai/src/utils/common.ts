@@ -412,14 +412,17 @@ export function convertMessageContentToParts(
             return signature;
           }
         }
-        return DUMMY_SIGNATURE;
+        if (model.includes("gemini-3")) {
+          return DUMMY_SIGNATURE;
+        }
+        return "";
       });
       return {
         functionCall: {
           name: tc.name,
           args: tc.args,
         },
-        ...(model.includes("gemini-3") ? { thoughtSignature } : {}),
+        ...(thoughtSignature ? { thoughtSignature } : {}),
       };
     });
   }
