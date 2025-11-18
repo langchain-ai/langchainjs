@@ -137,6 +137,173 @@ export class PromptBlockedError extends GoogleError("prompt-blocked") {
   }
 }
 
+/**
+ * Parameters for constructing an AuthError
+ */
+type AuthErrorParams = {
+  /**
+   * The error message describing what went wrong
+   */
+  message: string;
+
+  /**
+   * The HTTP status code of the failed response.
+   * Common values include 400 (Bad Request), 401 (Unauthorized),
+   * 403 (Forbidden), 404 (Not Found), 429 (Too Many Requests),
+   * 500 (Internal Server Error), etc.
+   */
+  statusCode?: number;
+
+  /**
+   * The HTTP status text of the failed response.
+   * This is the human-readable status message that accompanies the status code
+   * (e.g., "Bad Request", "Internal Server Error").
+   */
+  statusText?: string;
+
+  /**
+   * The HTTP response headers from the failed request.
+   * Stored as a key-value record for easy access to header information.
+   */
+  headers?: Record<string, string>;
+
+  /**
+   * The response body data from the failed request.
+   * This may be a parsed JSON object, a text string, or null if the body
+   * could not be read. Often contains additional error details from the API.
+   */
+  data?: unknown;
+};
+
+/**
+ * Error class for authentication failures when communicating with Google APIs.
+ *
+ * This error is thrown when authentication with a Google API fails, typically
+ * during the OAuth token exchange process or when using service account credentials.
+ * It captures detailed information about the failed authentication attempt including
+ * the status code, headers, and response body to aid in debugging and error handling.
+ *
+ * Common authentication failure scenarios include:
+ * - Invalid or expired credentials
+ * - Incorrect service account configuration
+ * - Missing or invalid API keys
+ * - Insufficient permissions or scopes
+ * - Token exchange failures
+ *
+ * @example
+ * ```typescript
+ * try {
+ *   const token = await getAccessToken(credentials);
+ * } catch (error) {
+ *   if (AuthError.isInstance(error)) {
+ *     console.error(`Auth failed with status ${error.statusCode}: ${error.message}`);
+ *     console.error('Response data:', error.data);
+ *   }
+ * }
+ * ```
+ */
+export class AuthError extends GoogleError("auth") {
+  readonly name = "AuthError" as const;
+
+  /**
+   * The HTTP status code of the failed response.
+   * Common values include 400 (Bad Request), 401 (Unauthorized),
+   * 403 (Forbidden), 404 (Not Found), 429 (Too Many Requests),
+   * 500 (Internal Server Error), etc.
+   */
+  readonly statusCode?: number;
+
+  /**
+   * The HTTP status text of the failed response.
+   * This is the human-readable status message that accompanies the status code
+   * (e.g., "Bad Request", "Internal Server Error").
+   */
+  readonly statusText?: string;
+
+  /**
+   * The HTTP response headers from the failed request.
+   * Stored as a key-value record for easy access to header information.
+   */
+  readonly headers?: Record<string, string>;
+
+  /**
+   * The response body data from the failed request.
+   * This may be a parsed JSON object, a text string, or null if the body
+   * could not be read. Often contains additional error details from the API.
+   */
+  readonly data?: unknown;
+
+  constructor(params: AuthErrorParams) {
+    super(params.message);
+
+    this.statusCode = params.statusCode;
+    this.statusText = params.statusText;
+    this.headers = params.headers;
+    this.data = params.data;
+  }
+
+  /**
+   * Creates an AuthError from a failed HTTP response.
+   *
+   * This is a convenience factory method for creating authentication errors from
+   * HTTP responses. It automatically extracts the error message, status code,
+   * headers, and response body from the Response object.
+   *
+   * The method attempts to parse the response body as JSON to extract an
+   * `error_description` field if available. If JSON parsing fails or the
+   * content type is not JSON, it falls back to reading the response as text.
+   * If both fail, the error body will be null.
+   *
+   * @param response - The failed HTTP Response object from the authentication request
+   * @returns A Promise that resolves to a new AuthError instance with information from the response
+   *
+   * @example
+   * ```typescript
+   * const response = await fetch(tokenUrl, {
+   *   method: 'POST',
+   *   body: authRequestBody
+   * });
+   *
+   * if (!response.ok) {
+   *   throw await AuthError.fromResponse(response);
+   * }
+   * ```
+   */
+  static async fromResponse(response: Response): Promise<AuthError> {
+    const errorBody = await iife(async () => {
+      try {
+        const contentType = response.headers.get("content-type") ?? "";
+        if (contentType.includes("application/json")) {
+          return await response.json();
+        }
+        return await response.text();
+      } catch {
+        return null;
+      }
+    });
+
+    const message =
+      errorBody?.error_description ??
+      `Authentication failed with status code ${response.status}`;
+
+    const headers = iife(() => {
+      const object: Record<string, string> = {};
+      response.headers.forEach((value, name) => {
+        object[name] = value;
+      });
+      return object;
+    });
+
+    return new AuthError({
+      message,
+      statusCode: response.status,
+      statusText: response.statusText,
+      headers,
+      data: errorBody,
+    });
+  }
+}
+
 const RETRYABLE_STATUS_CODES = [
   408, // Request Timeout
   429, // Too Many Requests
@@ -154,24 +321,38 @@ type RequestErrorParams = {
    * The error message describing what went wrong
    */
   message: string;
+
   /**
-   * The URL of the failed request
+   * The URL of the failed request.
+   * This is the full URL that was being accessed when the error occurred.
    */
   url: string;
+
   /**
-   * Optional HTTP status code of the failed response
+   * The HTTP status code of the failed response.
+   * Common values include 400 (Bad Request), 401 (Unauthorized),
+   * 403 (Forbidden), 404 (Not Found), 429 (Too Many Requests),
+   * 500 (Internal Server Error), etc.
    */
   statusCode?: number;
+
   /**
-   * Optional HTTP status text of the failed response
+   * The HTTP status text of the failed response.
+   * This is the human-readable status message that accompanies the status code
+   * (e.g., "Bad Request", "Internal Server Error").
    */
   statusText?: string;
+
   /**
-   * Optional HTTP response headers from the failed request
+   * The HTTP response headers from the failed request.
+   * Stored as a key-value record for easy access to header information.
    */
   headers?: Record<string, string>;
+
   /**
-   * Optional response body data from the failed request
+   * The response body data from the failed request.
+   * This may be a parsed JSON object, a text string, or null if the body
+   * could not be read. Often contains additional error details from the API.
    */
   data?: unknown;
 };
