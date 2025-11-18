@@ -58,6 +58,7 @@ export interface WatsonxLLMParams {
   truncateInpuTokens?: number;
   returnOptions?: ReturnOptionProperties;
   includeStopSequence?: boolean;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   headers?: Record<string, any>;
   signal?: AbortSignal;
 }
@@ -391,8 +392,8 @@ export class WatsonxLLM<
       throw new Error("Options cannot be provided to a deployed model");
     if (this.idOrName) return undefined;
 
-
     if (this.modelGateway) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const modelGatewayParams: Record<string, any> = {
         ...this?.modelGatewayKwargs,
         ...parameters?.modelGatewayKwargs,

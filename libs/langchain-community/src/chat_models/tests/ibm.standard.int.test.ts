@@ -9,6 +9,7 @@ import {
 class ChatWatsonxStandardIntegrationTests extends ChatModelIntegrationTests<
   ChatWatsonxCallOptions,
   AIMessageChunk,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   ChatWatsonxConstructorInput & Record<string, any>
 > {
   constructor() {

@@ -90,6 +90,7 @@ export class WatsonxEmbeddings
 
   protected gateway?: Gateway;
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private checkValidProperties(fields: any, includeCommonProps = true) {
     const alwaysAllowedProps = ["headers", "signal", "promptIndex"];
 
@@ -177,26 +178,26 @@ export class WatsonxEmbeddings
       serviceUrl,
     } = fields;
 
-     const authData = {
-       watsonxAIApikey,
-       watsonxAIAuthType,
-       watsonxAIBearerToken,
-       watsonxAIUsername,
-       watsonxAIPassword,
-       watsonxAIUrl,
-       disableSSL,
-       version,
-       serviceUrl,
-     };
-     if (this.modelGateway) {
-       const auth = authenticateAndSetGatewayInstance(authData);
-       if (auth) this.gateway = auth;
-       else throw new Error("You have not provided one type of authentication");
-     } else {
-       const auth = authenticateAndSetInstance(authData);
-       if (auth) this.service = auth;
-       else throw new Error("You have not provided one type of authentication");
-     }
+    const authData = {
+      watsonxAIApikey,
+      watsonxAIAuthType,
+      watsonxAIBearerToken,
+      watsonxAIUsername,
+      watsonxAIPassword,
+      watsonxAIUrl,
+      disableSSL,
+      version,
+      serviceUrl,
+    };
+    if (this.modelGateway) {
+      const auth = authenticateAndSetGatewayInstance(authData);
+      if (auth) this.gateway = auth;
+      else throw new Error("You have not provided one type of authentication");
+    } else {
+      const auth = authenticateAndSetInstance(authData);
+      if (auth) this.service = auth;
+      else throw new Error("You have not provided one type of authentication");
+    }
   }
 
   scopeId() {

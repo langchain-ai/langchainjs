@@ -1,4 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable dot-notation */
 import { z } from "zod";
 import { DynamicStructuredTool } from "@langchain/core/tools";
 import { jest } from "@jest/globals";

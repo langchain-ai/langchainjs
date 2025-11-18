@@ -1,4 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable dot-notation */
 import { Gateway } from "@ibm-cloud/watsonx-ai/gateway";
 import { jest } from "@jest/globals";
 import { AIMessageChunk } from "@langchain/core/messages";

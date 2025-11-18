@@ -222,10 +222,7 @@ const getRole = (role: MessageType): string => {
   return watsonRole;
 };
 
-const getToolCalls = (
-  message: BaseMessage,
-  model?: string
-): TextChatToolCall[] | undefined => {
+const getToolCalls = (message: BaseMessage, model?: string) => {
   if (isAIMessage(message) && message.tool_calls?.length) {
     return message.tool_calls
       .map((toolCall) => ({
@@ -492,11 +489,7 @@ export class ChatWatsonx<
   }
 
   private checkValidProperties(
-    fields:
-      | WatsonxCallOptionsChat
-      | WatsonxCallOptionsDeployedChat
-      | WatsonxCallOptionsGatewayChat
-      | ChatWatsonxConstructorInput,
+    fields: this["ParsedCallOptions"] | ChatWatsonxConstructorInput,
     includeCommonProps = true
   ) {
     const PROPERTY_GROUPS = {
@@ -747,14 +740,16 @@ export class ChatWatsonx<
       frequencyPenalty: options.frequencyPenalty ?? this.frequencyPenalty,
     };
 
-    const toolParams: Record<string, any> = tools
+    const toolParams: Record<string, WatsonXAI.TextChatParameterTools[]> = tools
       ? { tools: _convertToolToWatsonxTool(tools) }
       : {};
 
-    const toolChoiceParams: Record<string, any> = tool_choice
-      ? _convertToolChoiceToWatsonxToolChoice(tool_choice)
-      : {};
+    const toolChoiceParams: Record<
+      string,
+      TextChatParameterTools | string | undefined
+    > = tool_choice ? _convertToolChoiceToWatsonxToolChoice(tool_choice) : {};
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const gatewayParams: Record<string, any> = this.modelGateway
       ? { ...this.modelGatewayKwargs }
       : {
@@ -1032,7 +1027,7 @@ export class ChatWatsonx<
     let defaultRole;
     let usage: TextChatUsage | undefined;
     let currentCompletion = 0;
-    let counter = { value: -1 };
+    const counter = { value: -1 };
     for await (const chunk of stream) {
       if (options.signal?.aborted) {
         throw new Error("AbortError");

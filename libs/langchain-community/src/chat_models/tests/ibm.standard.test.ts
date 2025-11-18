@@ -10,6 +10,7 @@ import {
 class ChatWatsonxStandardTests extends ChatModelUnitTests<
   WatsonxCallOptionsChat,
   AIMessageChunk,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   ChatWatsonxConstructorInput & Record<string, any>
 > {
   constructor() {
@@ -41,7 +42,7 @@ class ChatWatsonxStandardTests extends ChatModelUnitTests<
     };
   }
 
-  async testChatModelInitApiKey() {
+  testChatModelInitApiKey() {
     this.skipTestMessage(
       "testChatModelInitApiKey",
       "ChatWatsonx",
