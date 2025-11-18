@@ -1,5 +1,15 @@
 # @langchain/community
 
+## 1.0.4
+
+### Patch Changes
+
+- [#9326](https://github.com/langchain-ai/langchainjs/pull/9326) [`3e0cab6`](https://github.com/langchain-ai/langchainjs/commit/3e0cab61b32fae271936770b822cb9644f68b637) Thanks [@ayanyev](https://github.com/ayanyev)! - Milvus vector store client: ignore auto-calculated fields in collection schema during payload validation
+
+- Updated dependencies [[`415cb0b`](https://github.com/langchain-ai/langchainjs/commit/415cb0bfd26207583befdb02367bd12a46b33d51), [`a2ad61e`](https://github.com/langchain-ai/langchainjs/commit/a2ad61e787a06a55a615f63589a65ada05927792), [`34c472d`](https://github.com/langchain-ai/langchainjs/commit/34c472d129c9c3d58042fad6479fd15e0763feaf)]:
+  - @langchain/openai@1.1.2
+  - @langchain/classic@1.0.4
+
 ## 1.0.3
 
 ### Patch Changes

@@ -1,5 +1,17 @@
 # @langchain/anthropic
 
+## 1.1.0
+
+### Minor Changes
+
+- [#9424](https://github.com/langchain-ai/langchainjs/pull/9424) [`f17b2c9`](https://github.com/langchain-ai/langchainjs/commit/f17b2c9db047fab2d1db2d9aa791ec220cc9dd0a) Thanks [@hntrl](https://github.com/hntrl)! - add support for `betas` param
+
+- [#9424](https://github.com/langchain-ai/langchainjs/pull/9424) [`f17b2c9`](https://github.com/langchain-ai/langchainjs/commit/f17b2c9db047fab2d1db2d9aa791ec220cc9dd0a) Thanks [@hntrl](https://github.com/hntrl)! - add support for native structured output
+
+### Patch Changes
+
+- [#9424](https://github.com/langchain-ai/langchainjs/pull/9424) [`f17b2c9`](https://github.com/langchain-ai/langchainjs/commit/f17b2c9db047fab2d1db2d9aa791ec220cc9dd0a) Thanks [@hntrl](https://github.com/hntrl)! - bump sdk version
+
 ## 1.0.1
 
 ### Patch Changes

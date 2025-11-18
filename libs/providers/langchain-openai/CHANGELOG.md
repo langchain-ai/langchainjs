@@ -1,5 +1,13 @@
 # @langchain/openai
 
+## 1.1.2
+
+### Patch Changes
+
+- [#9408](https://github.com/langchain-ai/langchainjs/pull/9408) [`415cb0b`](https://github.com/langchain-ai/langchainjs/commit/415cb0bfd26207583befdb02367bd12a46b33d51) Thanks [@sinedied](https://github.com/sinedied)! - Fix missing and inconsistent user agent headers
+
+- [#9301](https://github.com/langchain-ai/langchainjs/pull/9301) [`a2ad61e`](https://github.com/langchain-ai/langchainjs/commit/a2ad61e787a06a55a615f63589a65ada05927792) Thanks [@sinedied](https://github.com/sinedied)! - support callable function for apiKey
+
 ## 1.1.1
 
 ### Patch Changes
