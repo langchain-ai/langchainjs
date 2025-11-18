@@ -632,7 +632,8 @@ export class ChatGoogleGenerativeAI
       this.model.startsWith("gemini-1.5") ||
       this.model.startsWith("gemini-2") ||
       (this.model.startsWith("gemma-3-") &&
-        !this.model.startsWith("gemma-3-1b")) // gemma-3 models are multimodal(but gemma-3n-* and gemma-3-1b are not)
+        !this.model.startsWith("gemma-3-1b")) || // gemma-3 models are multimodal(but gemma-3n-* and gemma-3-1b are not)
+      this.model.startsWith("gemini-3")
     );
   }
 
@@ -821,7 +822,8 @@ export class ChatGoogleGenerativeAI
     const prompt = convertBaseMessagesToContent(
       messages,
       this._isMultimodalModel,
-      this.useSystemInstruction
+      this.useSystemInstruction,
+      this.model
     );
     let actualPrompt = prompt;
     if (prompt[0].role === "system") {
@@ -895,7 +897,8 @@ export class ChatGoogleGenerativeAI
     const prompt = convertBaseMessagesToContent(
       messages,
       this._isMultimodalModel,
-      this.useSystemInstruction
+      this.useSystemInstruction,
+      this.model
     );
     let actualPrompt = prompt;
     if (prompt[0].role === "system") {

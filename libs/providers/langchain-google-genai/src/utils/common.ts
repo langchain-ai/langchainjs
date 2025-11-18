@@ -43,6 +43,13 @@ import {
 } from "./zod_to_genai_parameters.js";
 import { GoogleGenerativeAIToolType } from "../types.js";
 
+export const _FUNCTION_CALL_THOUGHT_SIGNATURES_MAP_KEY =
+  "__gemini_function_call_thought_signatures__";
+const DUMMY_SIGNATURE =
+  "ErYCCrMCAdHtim9kOoOkrPiCNVsmlpMIKd7ZMxgiFbVQOkgp7nlLcDMzVsZwIzvuT7nQROivoXA72ccC2lSDvR0Gh7dkWaGuj7ctv6t7ZceHnecx0QYa+ix8tYpRfjhyWozQ49lWiws6+YGjCt10KRTyWsZ2h6O7iHTYJwKIRwGUHRKy/qK/6kFxJm5ML00gLq4D8s5Z6DBpp2ZlR+uF4G8jJgeWQgyHWVdx2wGYElaceVAc66tZdPQRdOHpWtgYSI1YdaXgVI8KHY3/EfNc2YqqMIulvkDBAnuMhkAjV9xmBa54Tq+ih3Im4+r3DzqhGqYdsSkhS0kZMwte4Hjs65dZzCw9lANxIqYi1DJ639WNPYihp/DCJCos7o+/EeSPJaio5sgWDyUnMGkY1atsJZ+m7pj7DD5tvQ==";
+
+const iife = (fn: () => string) => fn();
+
 export function getMessageAuthor(message: BaseMessage) {
   const type = message._getType();
   if (ChatMessage.isInstance(message)) {
@@ -334,7 +341,8 @@ function _convertLangChainContentToPart(
 export function convertMessageContentToParts(
   message: BaseMessage,
   isMultimodalModel: boolean,
-  previousMessages: BaseMessage[]
+  previousMessages: BaseMessage[],
+  model?: string
 ): Part[] {
   if (isToolMessage(message)) {
     const messageName =
@@ -391,13 +399,30 @@ export function convertMessageContentToParts(
     );
   }
 
+  const functionThoughtSignatures = message.additional_kwargs?.[
+    _FUNCTION_CALL_THOUGHT_SIGNATURES_MAP_KEY
+  ] as Record<string, string>;
+
   if (isAIMessage(message) && message.tool_calls?.length) {
     functionCalls = message.tool_calls.map((tc) => {
+      const thoughtSignature = iife(() => {
+        if (tc.id) {
+          const signature = functionThoughtSignatures?.[tc.id];
+          if (signature) {
+            return signature;
+          }
+        }
+        if (model?.includes("gemini-3")) {
+          return DUMMY_SIGNATURE;
+        }
+        return "";
+      });
       return {
         functionCall: {
           name: tc.name,
           args: tc.args,
         },
+        ...(thoughtSignature ? { thoughtSignature } : {}),
       };
     });
   }
@@ -408,7 +433,8 @@ export function convertMessageContentToParts(
 export function convertBaseMessagesToContent(
   messages: BaseMessage[],
   isMultimodalModel: boolean,
-  convertSystemMessageToHumanContent: boolean = false
+  convertSystemMessageToHumanContent: boolean = false,
+  model: string
 ) {
   return messages.reduce<{
     content: Content[];
@@ -438,7 +464,8 @@ export function convertBaseMessagesToContent(
       const parts = convertMessageContentToParts(
         message,
         isMultimodalModel,
-        messages.slice(0, index)
+        messages.slice(0, index),
+        model
       );
 
       if (acc.mergeWithPreviousContent) {
@@ -496,10 +523,20 @@ export function mapGenerateContentResultToChatResult(
       },
     };
   }
-
-  const functionCalls = response.functionCalls();
   const [candidate] = response.candidates;
   const { content: candidateContent, ...generationInfo } = candidate;
+  const functionCalls = candidateContent.parts.reduce((acc, p) => {
+    if ("functionCall" in p && p.functionCall) {
+      acc.push({
+        ...p,
+        id:
+          "id" in p.functionCall && typeof p.functionCall.id === "string"
+            ? p.functionCall.id
+            : uuidv4(),
+      });
+    }
+    return acc;
+  }, [] as (FunctionCallPart & { id: string })[]);
   let content: MessageContent | undefined;
 
   if (
@@ -556,6 +593,13 @@ export function mapGenerateContentResultToChatResult(
     content = [];
   }
 
+  const functionThoughtSignatures = functionCalls?.reduce((acc, fc) => {
+    if ("thoughtSignature" in fc && typeof fc.thoughtSignature === "string") {
+      acc[fc.id] = fc.thoughtSignature;
+    }
+    return acc;
+  }, {} as Record<string, string>);
+
   let text = "";
   if (typeof content === "string") {
     text = content;
@@ -570,15 +614,15 @@ export function mapGenerateContentResultToChatResult(
     text,
     message: new AIMessage({
       content: content ?? "",
-      tool_calls: functionCalls?.map((fc) => {
-        return {
-          ...fc,
-          type: "tool_call",
-          id: "id" in fc && typeof fc.id === "string" ? fc.id : uuidv4(),
-        };
-      }),
+      tool_calls: functionCalls?.map((fc) => ({
+        type: "tool_call",
+        id: fc.id,
+        name: fc.functionCall.name,
+        args: fc.functionCall.args,
+      })),
       additional_kwargs: {
         ...generationInfo,
+        [_FUNCTION_CALL_THOUGHT_SIGNATURES_MAP_KEY]: functionThoughtSignatures,
       },
       usage_metadata: extra?.usageMetadata,
     }),
@@ -607,9 +651,20 @@ export function convertResponseContentToChatGenerationChunk(
   if (!response.candidates || response.candidates.length === 0) {
     return null;
   }
-  const functionCalls = response.functionCalls();
   const [candidate] = response.candidates;
   const { content: candidateContent, ...generationInfo } = candidate;
+  const functionCalls = candidateContent.parts.reduce((acc, p) => {
+    if ("functionCall" in p && p.functionCall) {
+      acc.push({
+        ...p,
+        id:
+          "id" in p.functionCall && typeof p.functionCall.id === "string"
+            ? p.functionCall.id
+            : uuidv4(),
+      });
+    }
+    return acc;
+  }, [] as (FunctionCallPart & { id: string })[]);
   let content: MessageContent | undefined;
   // Checks if some parts do not have text. If false, it means that the content is a string.
   if (
@@ -677,13 +732,19 @@ export function convertResponseContentToChatGenerationChunk(
     toolCallChunks.push(
       ...functionCalls.map((fc) => ({
         ...fc,
-        args: JSON.stringify(fc.args),
+        args: JSON.stringify(fc.functionCall.args),
         index: extra.index,
         type: "tool_call_chunk" as const,
-        id: "id" in fc && typeof fc.id === "string" ? fc.id : uuidv4(),
       }))
     );
   }
+
+  const functionThoughtSignatures = functionCalls?.reduce((acc, fc) => {
+    if ("thoughtSignature" in fc && typeof fc.thoughtSignature === "string") {
+      acc[fc.id] = fc.thoughtSignature;
+    }
+    return acc;
+  }, {} as Record<string, string>);
 
   return new ChatGenerationChunk({
     text,
@@ -693,7 +754,9 @@ export function convertResponseContentToChatGenerationChunk(
       tool_call_chunks: toolCallChunks,
       // Each chunk can have unique "generationInfo", and merging strategy is unclear,
       // so leave blank for now.
-      additional_kwargs: {},
+      additional_kwargs: {
+        [_FUNCTION_CALL_THOUGHT_SIGNATURES_MAP_KEY]: functionThoughtSignatures,
+      },
       response_metadata: {
         model_provider: "google-genai",
       },
