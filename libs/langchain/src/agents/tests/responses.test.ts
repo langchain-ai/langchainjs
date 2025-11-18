@@ -11,7 +11,7 @@ import { hasSupportForJsonSchemaOutput } from "../responses.js";
 describe("structured output handling", () => {
   describe("toolStrategy", () => {
     describe("multiple structured output tool calls", () => {
-      it("should throw if no error handler is provided", async () => {
+      it("should retry by default when multiple structured outputs are called", async () => {
         const model = new FakeToolCallingModel({
           toolCalls: [
             [
@@ -36,11 +36,18 @@ describe("structured output handling", () => {
           ]),
         });
 
-        await expect(
-          agent.invoke({
-            messages: [{ role: "user", content: "hi" }],
-          })
-        ).rejects.toThrow("The model has called multiple tools");
+        const res = await agent.invoke({
+          messages: [{ role: "user", content: "hi" }],
+        });
+
+        expect(res.messages.length).toBeGreaterThan(1);
+        expect(
+          res.messages.some(
+            (msg) =>
+              typeof msg.content === "string" &&
+              msg.content.includes("The model has called multiple tools")
+          )
+        ).toBe(true);
       });
 
       it("should throw if error handler is set to false", async () => {
@@ -193,7 +200,7 @@ describe("structured output handling", () => {
     });
 
     describe("single structured output tool call", () => {
-      it("should throw if error handler is set to true", async () => {
+      it("should retry if error handler is set to true", async () => {
         const model = new FakeToolCallingModel({
           toolCalls: [
             [{ name: "extract-11", args: { bar: "foo" }, id: "call_1" }],
@@ -205,15 +212,25 @@ describe("structured output handling", () => {
           responseFormat: toolStrategy(
             z.object({
               foo: z.string(),
-            })
+            }),
+            {
+              handleError: true,
+            }
           ),
         });
 
-        await expect(
-          agent.invoke({
-            messages: [{ role: "user", content: "hi" }],
-          })
-        ).rejects.toThrow("Failed to parse structured output");
+        const res = await agent.invoke({
+          messages: [{ role: "user", content: "hi" }],
+        });
+
+        expect(res.messages.length).toBeGreaterThan(1);
+        expect(
+          res.messages.some(
+            (msg) =>
+              typeof msg.content === "string" &&
+              msg.content.includes("Failed to parse structured output")
+          )
+        ).toBe(true);
       });
 
       it("should return a structured response if it matches the schema", async () => {
