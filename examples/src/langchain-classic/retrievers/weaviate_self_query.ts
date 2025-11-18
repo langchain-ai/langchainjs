@@ -119,7 +119,7 @@ const selfQueryRetriever = SelfQueryRetriever.fromLLM({
  * We can also ask questions like "Which movies are either comedy or drama and are less than 90 minutes?".
  * The retriever will automatically convert these questions into queries that can be used to retrieve documents.
  *
- * Note that unlike other vector stores, you have to make sure each metadata keys are actually presnt in the database,
+ * Note that unlike other vector stores, you have to make sure each metadata keys are actually present in the database,
  * meaning that Weaviate will throw an error if the self query chain generate a query with a metadata key that does
  * not exist in your Weaviate database.
  */
