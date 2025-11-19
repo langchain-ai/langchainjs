@@ -5,19 +5,19 @@ import path from "node:path";
 export {
   type CjsCompatPluginOptions,
   cjsCompatPlugin,
-} from "./plugins/cjs-compat.js";
+} from "./plugins/cjs-compat.ts";
 export {
   type ImportConstantsPluginOptions,
   importConstantsPlugin,
-} from "./plugins/import-constants.js";
+} from "./plugins/import-constants.ts";
 export {
   type ImportMapPluginOptions,
   importMapPlugin,
-} from "./plugins/import-map.js";
+} from "./plugins/import-map.ts";
 export {
   type SecretPluginOptions,
   lcSecretsPlugin,
-} from "./plugins/lc-secrets.js";
+} from "./plugins/lc-secrets.ts";
 
 /**
  * Creates a standardized tsdown build configuration for LangChain packages.
