@@ -2,8 +2,8 @@ import { z } from "zod/v3";
 import { ContentBlock } from "@langchain/core/messages";
 import { InferInteropZodInput } from "@langchain/core/utils/types";
 
-import { ConfigurableModel } from "../../chat_models/universal.js";
-import { createMiddleware } from "../middleware.js";
+import { ConfigurableModel } from "../../../../chat_models/universal.js";
+import { createMiddleware } from "../../../middleware.js";
 
 const DEFAULT_ENABLE_CACHING = true;
 const DEFAULT_TTL = "5m";

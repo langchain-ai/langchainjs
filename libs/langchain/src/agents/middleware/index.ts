@@ -1,13 +1,12 @@
+/**
+ * Core middleware
+ */
+export * from "./hitl.js";
 export {
   summarizationMiddleware,
   type SummarizationMiddlewareConfig,
   type TokenCounter,
 } from "./summarization.js";
-export * from "./hitl.js";
-export {
-  anthropicPromptCachingMiddleware,
-  type PromptCachingMiddlewareConfig,
-} from "./promptCaching.js";
 export {
   dynamicSystemPromptMiddleware,
   type DynamicSystemPromptMiddlewareConfig,
@@ -68,6 +67,10 @@ export {
   toolEmulatorMiddleware,
   type ToolEmulatorOptions,
 } from "./toolEmulator.js";
+
+/**
+ * Provider specific middleware
+ */
 export {
   modelRetryMiddleware,
   type ModelRetryMiddlewareConfig,
@@ -76,5 +79,13 @@ export {
   openAIModerationMiddleware,
   type OpenAIModerationMiddlewareOptions,
 } from "./provider/openai/moderation.js";
+export {
+  anthropicPromptCachingMiddleware,
+  type PromptCachingMiddlewareConfig,
+} from "./provider/anthropic/promptCaching.js";
+
+/**
+ * Types and utilities
+ */
 export { type AgentMiddleware } from "./types.js";
 export { countTokensApproximately } from "./utils.js";
