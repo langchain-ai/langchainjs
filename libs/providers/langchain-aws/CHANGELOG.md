@@ -1,5 +1,11 @@
 # @langchain/aws
 
+## 1.0.2
+
+### Patch Changes
+
+- [#9382](https://github.com/langchain-ai/langchainjs/pull/9382) [`f464366`](https://github.com/langchain-ai/langchainjs/commit/f4643668158a702d086da1defcbfd6ee3f050810) Thanks [@deepansh946](https://github.com/deepansh946)! - fix handling of multiple tool types in convertToConverseTools fn
+
 ## 1.0.1
 
 ### Patch Changes

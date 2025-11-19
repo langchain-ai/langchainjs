@@ -50,7 +50,7 @@ LangChain.js is written in TypeScript and can be used in:
 - [Getting started](https://docs.langchain.com/oss/javascript/langchain/overview): Installation, setting up the environment, simple examples
 - [Learn](https://docs.langchain.com/oss/javascript/langchain/learn): Learn about the core concepts of LangChain.
 - [LangChain Forum](https://forum.langchain.com): Connect with the community and share all of your technical questions, ideas, and feedback.
-- [Chat LangChain](https://chat.langchain.com): Ask questions & chat with our documentaiton.
+- [Chat LangChain](https://chat.langchain.com): Ask questions & chat with our documentation.
 
 ## 💁 Contributing
 

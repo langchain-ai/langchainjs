@@ -28,6 +28,11 @@ import type {
 } from "../middleware/types.js";
 import type { AgentBuiltInState } from "../runtime.js";
 
+/**
+ * The name of the tool node in the state graph.
+ */
+export const TOOLS_NODE_NAME = "tools";
+
 export interface ToolNodeOptions {
   /**
    * The name of the tool node.

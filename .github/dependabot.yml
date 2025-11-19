@@ -1,0 +1,18 @@
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule:
+      interval: weekly
+      time: "11:00"
+    open-pull-requests-limit: 10
+    groups:
+      patch-deps-updates:
+        update-types:
+          - "patch"
+      minor-deps-updates:
+        update-types:
+          - "minor"
+      major-deps-updates:
+        update-types:
+          - "major"

@@ -1,4 +1,8 @@
-import type { BaseMessage } from "@langchain/core/messages";
+import {
+  AIMessage,
+  ToolMessage,
+  type BaseMessage,
+} from "@langchain/core/messages";
 import {
   AfterModelHook,
   AfterAgentHook,
@@ -29,6 +33,19 @@ export function countTokensApproximately(messages: BaseMessage[]): number {
     } else {
       textContent = "";
     }
+
+    if (
+      AIMessage.isInstance(msg) &&
+      Array.isArray(msg.tool_calls) &&
+      msg.tool_calls.length > 0
+    ) {
+      textContent += JSON.stringify(msg.tool_calls);
+    }
+
+    if (ToolMessage.isInstance(msg)) {
+      textContent += msg.tool_call_id ?? "";
+    }
+
     totalChars += textContent.length;
   }
   // Approximate 1 token = 4 characters

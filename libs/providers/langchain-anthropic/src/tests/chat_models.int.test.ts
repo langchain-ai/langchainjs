@@ -1543,3 +1543,19 @@ it("won't modify structured output content if outputVersion is set", async () =>
     .invoke("respond with the name 'John'");
   expect(response.name).toBeDefined();
 });
+
+describe("will work with native structured output", () => {
+  const schema = z.object({ name: z.string() });
+  test.each(["claude-opus-4-1", "claude-sonnet-4-5-20250929"])(
+    "works with %s",
+    async (modelName) => {
+      const model = new ChatAnthropic({
+        model: modelName,
+      });
+      const response = await model
+        .withStructuredOutput(schema, { method: "jsonSchema" })
+        .invoke("respond with the name 'John'");
+      expect(response.name).toBeDefined();
+    }
+  );
+});

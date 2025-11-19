@@ -338,6 +338,8 @@ export interface ToolStrategyOptions {
    * - `false` - throw an error
    * - `string` - retry the tool call with the provided message
    * - `(error: ToolStrategyError) => Promise<string> | string` - retry with the provided message or throw the error
+   *
+   * @default true
    */
   handleError?:
     | boolean
