@@ -173,17 +173,19 @@ export function cjsCompatPlugin(param: CjsCompatPluginOptions = {}): Plugin {
         process.env.INIT_CWD ?? "",
         "package.json"
       );
-      const packageJson = JSON.parse(
-        await fs.readFile(packageJsonPath, "utf-8")
-      );
-      const newPackageJson = {
-        ...packageJson,
-        files: [...(options.files ?? []), ...Array.from(pathsToEmit)],
-      };
-      await fs.writeFile(
-        packageJsonPath,
-        JSON.stringify(newPackageJson, null, 2)
-      );
+      if (isSafeProjectPath(packageJsonPath)) {
+        const packageJson = JSON.parse(
+          await fs.readFile(packageJsonPath, "utf-8")
+        );
+        const newPackageJson = {
+          ...packageJson,
+          files: [...(options.files ?? []), ...Array.from(pathsToEmit)],
+        };
+        await fs.writeFile(
+          packageJsonPath,
+          JSON.stringify(newPackageJson, null, 2)
+        );
+      }
     },
     buildEnd: {
       async handler() {
@@ -193,17 +195,19 @@ export function cjsCompatPlugin(param: CjsCompatPluginOptions = {}): Plugin {
           process.env.INIT_CWD ?? "",
           "package.json"
         );
-        const packageJson = JSON.parse(
-          await fs.readFile(packageJsonPath, "utf-8")
-        );
-        packageJson.files = [
-          ...(options.files ?? []),
-          ...Array.from(pathsToEmit),
-        ];
-        await fs.writeFile(
-          packageJsonPath,
-          JSON.stringify(packageJson, null, 2)
-        );
+        if (isSafeProjectPath(packageJsonPath)) {
+          const packageJson = JSON.parse(
+            await fs.readFile(packageJsonPath, "utf-8")
+          );
+          packageJson.files = [
+            ...(options.files ?? []),
+            ...Array.from(pathsToEmit),
+          ];
+          await fs.writeFile(
+            packageJsonPath,
+            JSON.stringify(packageJson, null, 2)
+          );
+        }
       },
       order: "post",
     },
