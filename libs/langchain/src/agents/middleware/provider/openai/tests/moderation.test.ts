@@ -161,7 +161,7 @@ describe("openAIModerationMiddleware", () => {
   describe("Input Moderation", () => {
     it("should moderate user input when checkInput is true", async () => {
       const moderateContentMock = vi
-        .spyOn(mockModel, "moderateContent")
+        .spyOn(mockModel.client.moderations, "create")
         .mockResolvedValue(flaggedResponse);
       const middleware = openAIModerationMiddleware({
         model: mockModel,
@@ -211,7 +211,7 @@ describe("openAIModerationMiddleware", () => {
           : middleware.beforeModel;
       const result = await beforeModelHook?.(state as any, {} as any);
 
-      expect(mockModel.moderateContent).not.toHaveBeenCalled();
+      expect(mockModel.client.moderations.create).not.toHaveBeenCalled();
       expect(result).toBeUndefined();
     });
 
@@ -229,9 +229,9 @@ describe("openAIModerationMiddleware", () => {
         ],
       };
 
-      (mockModel.moderateContent as unknown as MockInstance).mockResolvedValue(
-        notFlaggedResponse
-      );
+      (
+        mockModel.client.moderations.create as unknown as MockInstance
+      ).mockResolvedValue(notFlaggedResponse);
 
       const middleware = openAIModerationMiddleware({
         model: mockModel,
@@ -249,7 +249,7 @@ describe("openAIModerationMiddleware", () => {
           : middleware.beforeModel;
       const result = await beforeModelHook?.(state as any, {} as any);
 
-      expect(mockModel.moderateContent).toHaveBeenCalled();
+      expect(mockModel.client.moderations.create).toHaveBeenCalled();
       expect(result).toBeUndefined();
     });
   });
@@ -275,9 +275,9 @@ describe("openAIModerationMiddleware", () => {
         ],
       };
 
-      (mockModel.moderateContent as unknown as MockInstance).mockResolvedValue(
-        flaggedResponse
-      );
+      (
+        mockModel.client.moderations.create as unknown as MockInstance
+      ).mockResolvedValue(flaggedResponse);
 
       const middleware = openAIModerationMiddleware({
         model: mockModel,
@@ -299,7 +299,7 @@ describe("openAIModerationMiddleware", () => {
           : middleware.afterModel;
       const result = await afterModelHook?.(state as any, {} as any);
 
-      expect(mockModel.moderateContent).toHaveBeenCalledWith(
+      expect(mockModel.client.moderations.create).toHaveBeenCalledWith(
         "Here's some violent content",
         expect.any(Object)
       );
@@ -330,7 +330,7 @@ describe("openAIModerationMiddleware", () => {
           : middleware.afterModel;
       const result = await afterModelHook?.(state as any, {} as any);
 
-      expect(mockModel.moderateContent).not.toHaveBeenCalled();
+      expect(mockModel.client.moderations.create).not.toHaveBeenCalled();
       expect(result).toBeUndefined();
     });
   });
@@ -356,9 +356,9 @@ describe("openAIModerationMiddleware", () => {
         ],
       };
 
-      (mockModel.moderateContent as unknown as MockInstance).mockResolvedValue(
-        flaggedResponse
-      );
+      (
+        mockModel.client.moderations.create as unknown as MockInstance
+      ).mockResolvedValue(flaggedResponse);
 
       const middleware = openAIModerationMiddleware({
         model: mockModel,
@@ -388,7 +388,7 @@ describe("openAIModerationMiddleware", () => {
           : middleware.beforeModel;
       const result = await beforeModelHook?.(state as any, {} as any);
 
-      expect(mockModel.moderateContent).toHaveBeenCalledWith(
+      expect(mockModel.client.moderations.create).toHaveBeenCalledWith(
         "Hateful tool result",
         expect.any(Object)
       );
@@ -425,7 +425,7 @@ describe("openAIModerationMiddleware", () => {
           : middleware.beforeModel;
       const result = await beforeModelHook?.(state as any, {} as any);
 
-      expect(mockModel.moderateContent).not.toHaveBeenCalled();
+      expect(mockModel.client.moderations.create).not.toHaveBeenCalled();
       expect(result).toBeUndefined();
     });
   });
@@ -445,9 +445,9 @@ describe("openAIModerationMiddleware", () => {
         ],
       };
 
-      (mockModel.moderateContent as unknown as MockInstance).mockResolvedValue(
-        flaggedResponse
-      );
+      (
+        mockModel.client.moderations.create as unknown as MockInstance
+      ).mockResolvedValue(flaggedResponse);
 
       const middleware = openAIModerationMiddleware({
         model: mockModel,
@@ -483,9 +483,9 @@ describe("openAIModerationMiddleware", () => {
         ],
       };
 
-      (mockModel.moderateContent as unknown as MockInstance).mockResolvedValue(
-        flaggedResponse
-      );
+      (
+        mockModel.client.moderations.create as unknown as MockInstance
+      ).mockResolvedValue(flaggedResponse);
 
       const middleware = openAIModerationMiddleware({
         model: mockModel,
@@ -523,9 +523,9 @@ describe("openAIModerationMiddleware", () => {
         ],
       };
 
-      (mockModel.moderateContent as unknown as MockInstance).mockResolvedValue(
-        flaggedResponse
-      );
+      (
+        mockModel.client.moderations.create as unknown as MockInstance
+      ).mockResolvedValue(flaggedResponse);
 
       const middleware = openAIModerationMiddleware({
         model: mockModel,
@@ -576,9 +576,9 @@ describe("openAIModerationMiddleware", () => {
         ],
       };
 
-      (mockModel.moderateContent as unknown as MockInstance).mockResolvedValue(
-        flaggedResponse
-      );
+      (
+        mockModel.client.moderations.create as unknown as MockInstance
+      ).mockResolvedValue(flaggedResponse);
 
       const middleware = openAIModerationMiddleware({
         model: mockModel,
@@ -617,9 +617,9 @@ describe("openAIModerationMiddleware", () => {
         ],
       };
 
-      (mockModel.moderateContent as unknown as MockInstance).mockResolvedValue(
-        flaggedResponse
-      );
+      (
+        mockModel.client.moderations.create as unknown as MockInstance
+      ).mockResolvedValue(flaggedResponse);
 
       const middleware = openAIModerationMiddleware({
         model: mockModel,
@@ -662,7 +662,7 @@ describe("openAIModerationMiddleware", () => {
           : middleware.beforeModel;
       const result = await beforeModelHook?.(state as any, {} as any);
 
-      expect(mockModel.moderateContent).not.toHaveBeenCalled();
+      expect(mockModel.client.moderations.create).not.toHaveBeenCalled();
       expect(result).toBeUndefined();
     });
 
@@ -687,12 +687,12 @@ describe("openAIModerationMiddleware", () => {
           : middleware.beforeModel;
       const result = await beforeModelHook?.(state as any, {} as any);
 
-      expect(mockModel.moderateContent).not.toHaveBeenCalled();
+      expect(mockModel.client.moderations.create).not.toHaveBeenCalled();
       expect(result).toBeUndefined();
     });
 
     it("should handle multiple tool results", async () => {
-      (mockModel.moderateContent as unknown as MockInstance)
+      (mockModel.client.moderations.create as unknown as MockInstance)
         .mockResolvedValueOnce({
           id: "modr-89",
           model: "omni-moderation-latest",
@@ -745,11 +745,11 @@ describe("openAIModerationMiddleware", () => {
           : middleware.beforeModel;
       const result: any = await beforeModelHook?.(state as any, {} as any);
 
-      expect(mockModel.moderateContent).toHaveBeenCalledWith(
+      expect(mockModel.client.moderations.create).toHaveBeenCalledWith(
         "Safe result",
         expect.any(Object)
       );
-      expect(mockModel.moderateContent).toHaveBeenCalledWith(
+      expect(mockModel.client.moderations.create).toHaveBeenCalledWith(
         "Violent result",
         expect.any(Object)
       );
@@ -760,7 +760,9 @@ describe("openAIModerationMiddleware", () => {
     });
 
     it("should use custom moderation model", async () => {
-      (mockModel.moderateContent as unknown as MockInstance).mockResolvedValue({
+      (
+        mockModel.client.moderations.create as unknown as MockInstance
+      ).mockResolvedValue({
         id: "modr-90",
         model: "text-moderation-stable",
         results: [
@@ -790,7 +792,7 @@ describe("openAIModerationMiddleware", () => {
           : middleware.beforeModel;
       await beforeModelHook?.(state as any, {} as any);
 
-      expect(mockModel.moderateContent).toHaveBeenCalledWith(
+      expect(mockModel.client.moderations.create).toHaveBeenCalledWith(
         "Test input",
         expect.objectContaining({ model: "text-moderation-stable" })
       );
@@ -812,9 +814,9 @@ describe("openAIModerationMiddleware", () => {
         ],
       };
 
-      (mockModel.moderateContent as unknown as MockInstance).mockResolvedValue(
-        flaggedResponse
-      );
+      (
+        mockModel.client.moderations.create as unknown as MockInstance
+      ).mockResolvedValue(flaggedResponse);
 
       const model = new FakeToolCallingChatModel({
         responses: [new AIMessage("Response")],
@@ -835,7 +837,7 @@ describe("openAIModerationMiddleware", () => {
         messages: [new HumanMessage("Violent input")],
       });
 
-      expect(mockModel.moderateContent).toHaveBeenCalled();
+      expect(mockModel.client.moderations.create).toHaveBeenCalled();
       expect(result.messages[result.messages.length - 1].content).toContain(
         "violence"
       );
@@ -868,7 +870,7 @@ describe("openAIModerationMiddleware", () => {
         ],
       };
 
-      (mockModel.moderateContent as unknown as MockInstance)
+      (mockModel.client.moderations.create as unknown as MockInstance)
         .mockResolvedValueOnce(safeInputResponse)
         .mockResolvedValueOnce(flaggedOutputResponse);
 
@@ -892,15 +894,15 @@ describe("openAIModerationMiddleware", () => {
         messages: [new HumanMessage("Tell me something")],
       });
 
-      expect(mockModel.moderateContent).toHaveBeenCalledTimes(2);
+      expect(mockModel.client.moderations.create).toHaveBeenCalledTimes(2);
       // First call is for input moderation
-      expect(mockModel.moderateContent).toHaveBeenNthCalledWith(
+      expect(mockModel.client.moderations.create).toHaveBeenNthCalledWith(
         1,
         "Tell me something",
         expect.any(Object)
       );
       // Second call is for output moderation
-      expect(mockModel.moderateContent).toHaveBeenNthCalledWith(
+      expect(mockModel.client.moderations.create).toHaveBeenNthCalledWith(
         2,
         "Hateful response content",
         expect.any(Object)
@@ -938,7 +940,7 @@ describe("openAIModerationMiddleware", () => {
         ],
       };
 
-      (mockModel.moderateContent as unknown as MockInstance)
+      (mockModel.client.moderations.create as unknown as MockInstance)
         .mockResolvedValueOnce(safeInputResponse)
         .mockResolvedValueOnce(flaggedToolResponse);
 
@@ -981,15 +983,15 @@ describe("openAIModerationMiddleware", () => {
         messages: [new HumanMessage("Use the tool")],
       });
 
-      expect(mockModel.moderateContent).toHaveBeenCalledTimes(2);
+      expect(mockModel.client.moderations.create).toHaveBeenCalledTimes(2);
       // First call is for input moderation
-      expect(mockModel.moderateContent).toHaveBeenNthCalledWith(
+      expect(mockModel.client.moderations.create).toHaveBeenNthCalledWith(
         1,
         "Use the tool",
         expect.any(Object)
       );
       // Second call is for tool result moderation
-      expect(mockModel.moderateContent).toHaveBeenNthCalledWith(
+      expect(mockModel.client.moderations.create).toHaveBeenNthCalledWith(
         2,
         "Inappropriate tool result",
         expect.any(Object)
@@ -1029,7 +1031,7 @@ describe("openAIModerationMiddleware", () => {
         ],
       };
 
-      (mockModel.moderateContent as unknown as MockInstance)
+      (mockModel.client.moderations.create as unknown as MockInstance)
         .mockResolvedValueOnce(safeInputResponse)
         .mockResolvedValueOnce(flaggedToolResponse);
 
@@ -1072,15 +1074,15 @@ describe("openAIModerationMiddleware", () => {
         messages: [new HumanMessage("Search for something")],
       });
 
-      expect(mockModel.moderateContent).toHaveBeenCalledTimes(2);
+      expect(mockModel.client.moderations.create).toHaveBeenCalledTimes(2);
       // First call is for input moderation
-      expect(mockModel.moderateContent).toHaveBeenNthCalledWith(
+      expect(mockModel.client.moderations.create).toHaveBeenNthCalledWith(
         1,
         "Search for something",
         expect.any(Object)
       );
       // Second call is for tool result moderation
-      expect(mockModel.moderateContent).toHaveBeenNthCalledWith(
+      expect(mockModel.client.moderations.create).toHaveBeenNthCalledWith(
         2,
         "Self-harm related content",
         expect.any(Object)
@@ -1111,9 +1113,9 @@ describe("openAIModerationMiddleware", () => {
         ],
       };
 
-      (mockModel.moderateContent as unknown as MockInstance).mockResolvedValue(
-        flaggedResponse
-      );
+      (
+        mockModel.client.moderations.create as unknown as MockInstance
+      ).mockResolvedValue(flaggedResponse);
       (initChatModel as unknown as MockInstance).mockResolvedValue(mockModel);
 
       const middleware = openAIModerationMiddleware({
@@ -1134,7 +1136,7 @@ describe("openAIModerationMiddleware", () => {
       const result = await beforeModelHook?.(state as any, {} as any);
 
       expect(initChatModel).toHaveBeenCalledWith("gpt-4o-mini");
-      expect(mockModel.moderateContent).toHaveBeenCalledWith(
+      expect(mockModel.client.moderations.create).toHaveBeenCalledWith(
         "Violent content",
         expect.objectContaining({ model: "omni-moderation-latest" })
       );
@@ -1182,9 +1184,9 @@ describe("openAIModerationMiddleware", () => {
         ],
       };
 
-      (mockModel.moderateContent as unknown as MockInstance).mockResolvedValue(
-        flaggedResponse
-      );
+      (
+        mockModel.client.moderations.create as unknown as MockInstance
+      ).mockResolvedValue(flaggedResponse);
 
       const middleware = openAIModerationMiddleware({
         model: "gpt-4o-mini",

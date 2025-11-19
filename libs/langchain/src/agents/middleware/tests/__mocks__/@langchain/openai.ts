@@ -5,25 +5,25 @@ import { AIMessage } from "@langchain/core/messages";
 export const ChatOpenAI = class MockChatOpenAI {
   lc_kwargs: Record<string, unknown>;
 
-  moderateContent = vi.fn(
-    (
-      input: string | string[],
-      params?: { model?: string; options?: unknown }
-    ) => {
-      // Default: no violations
-      const inputs = Array.isArray(input) ? input : [input];
-      return {
-        id: "moderation-mock-id",
-        model: params?.model || "omni-moderation-latest",
-        results: inputs.map(() => ({
-          flagged: false,
-          categories: {},
-          category_scores: {},
-          category_applied_input_types: {},
-        })),
-      };
-    }
-  );
+  client = {
+    moderations: {
+      create: vi.fn(
+        async (
+          input: string | string[],
+          params?: { model?: string; options?: unknown }
+        ) => ({
+          id: "moderation-mock-id",
+          model: params?.model || "omni-moderation-latest",
+          results: (Array.isArray(input) ? input : [input]).map(() => ({
+            flagged: false,
+            categories: {},
+            category_scores: {},
+            category_applied_input_types: {},
+          })),
+        })
+      ),
+    },
+  };
 
   constructor(params?: Record<string, unknown>) {
     this.lc_kwargs = params || {};
