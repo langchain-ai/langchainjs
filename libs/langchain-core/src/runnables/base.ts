@@ -1,5 +1,5 @@
 import { z } from "zod/v3";
-import pRetry from "p-retry";
+import pRetry, { type FailedAttemptError } from "p-retry";
 import { v4 as uuidv4 } from "uuid";
 
 import {
@@ -98,13 +98,11 @@ export type RunnableLike<
   | RunnableFunc<RunInput, RunOutput, CallOptions>
   | RunnableMapLike<RunInput, RunOutput>;
 
-export type RunnableRetryFailedAttemptHandler = (
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  error: any,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  input: any
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-) => any;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export type RunnableRetryFailedAttemptHandler<RunInput = any> = (
+  error: Error,
+  input: RunInput
+) => void | Promise<void>;
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function _coerceToDict(value: any, defaultKey: string) {
@@ -151,12 +149,16 @@ export abstract class Runnable<
    * Add retry logic to an existing runnable.
    * @param fields.stopAfterAttempt The number of attempts to retry.
    * @param fields.onFailedAttempt A function that is called when a retry fails.
+   * @param fields.retryOn Either an array of error constructors to retry on, or a function that takes an error and returns true if it should be retried.
+   * @param fields.backoffFactor Multiplier for exponential backoff. Each retry waits initialDelayMs * (backoffFactor ** retryNumber) milliseconds. Set to 0.0 for constant delay.
+   * @param fields.initialDelayMs Initial delay in milliseconds before first retry.
+   * @param fields.maxDelayMs Maximum delay in milliseconds between retries (caps exponential backoff growth).
+   * @param fields.jitter Whether to add random jitter (±25%) to delay to avoid thundering herd.
    * @returns A new RunnableRetry that, when invoked, will retry according to the parameters.
    */
-  withRetry(fields?: {
-    stopAfterAttempt?: number;
-    onFailedAttempt?: RunnableRetryFailedAttemptHandler;
-  }): RunnableRetry<RunInput, RunOutput, CallOptions> {
+  withRetry(
+    fields?: WithRetryOptions<RunInput>
+  ): RunnableRetry<RunInput, RunOutput, CallOptions> {
     // eslint-disable-next-line @typescript-eslint/no-use-before-define
     return new RunnableRetry({
       bound: this,
@@ -1320,10 +1322,9 @@ export class RunnableBinding<
     });
   }
 
-  withRetry(fields?: {
-    stopAfterAttempt?: number;
-    onFailedAttempt?: RunnableRetryFailedAttemptHandler;
-  }): RunnableRetry<RunInput, RunOutput, CallOptions> {
+  withRetry(
+    fields?: WithRetryOptions<RunInput>
+  ): RunnableRetry<RunInput, RunOutput, CallOptions> {
     // eslint-disable-next-line @typescript-eslint/no-use-before-define
     return new RunnableRetry({
       bound: this.bound,
@@ -1602,6 +1603,85 @@ export class RunnableEach<
 }
 
 /**
+ * Calculate delay for a retry attempt with exponential backoff and jitter.
+ *
+ * @param retryNumber - The retry attempt number (0-indexed)
+ * @param config - Configuration for backoff calculation
+ * @returns Delay in milliseconds before next retry
+ *
+ * @internal
+ */
+function calculateRetryDelay(
+  config: Pick<
+    RetryConfig,
+    "backoffFactor" | "initialDelayMs" | "maxDelayMs" | "jitter"
+  >,
+  retryNumber: number
+): number {
+  const { backoffFactor, initialDelayMs, maxDelayMs, jitter } = config;
+
+  let delay: number;
+  if (backoffFactor === 0.0) {
+    delay = initialDelayMs;
+  } else {
+    delay = initialDelayMs * backoffFactor ** retryNumber;
+  }
+
+  // Cap at maxDelayMs
+  delay = Math.min(delay, maxDelayMs);
+
+  if (jitter && delay > 0) {
+    const jitterAmount = delay * 0.25;
+    delay = delay + (Math.random() * 2 - 1) * jitterAmount;
+    // Ensure delay is not negative after jitter
+    delay = Math.max(0, delay);
+  }
+
+  return delay;
+}
+
+/**
+ * Sleep for the specified number of milliseconds.
+ *
+ * @internal
+ */
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+/**
+ * Configuration for retry logic.
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export interface RetryConfig<RunInput = any> {
+  onFailedAttempt: RunnableRetryFailedAttemptHandler<RunInput>;
+  maxAttemptNumber: number;
+  backoffFactor: number;
+  initialDelayMs: number;
+  maxDelayMs: number;
+  jitter: boolean;
+  retryOn:
+    | ((error: Error) => boolean)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    | (new (...args: any[]) => Error)[];
+}
+
+/**
+ * Configuration for the `withRetry` method.
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export interface WithRetryOptions<RunInput = any>
+/**
+ * historically `maxAttemptNumber` is not part of the options, it is set to the `stopAfterAttempt` value.
+ */
+  extends Omit<Partial<RetryConfig<RunInput>>, "maxAttemptNumber"> {
+  /**
+   * The number of attempts to retry.
+   */
+  stopAfterAttempt?: number;
+}
+
+/**
  * Base class for runnables that can be retried a
  * specified number of times.
  * @example
@@ -1643,6 +1723,26 @@ export class RunnableEach<
  *     console.error("Failed after multiple retries:", error.message);
  *   });
  * ```
+ *
+ * @example Advanced retry options
+ * ```typescript
+ * import { RunnableLambda } from "@langchain/core/runnables";
+ *
+ * const apiCallLambda = RunnableLambda.from(async (input: string) => {
+ *   // API call that might fail
+ *   throw new Error("Rate limit exceeded");
+ * });
+ *
+ * // Use advanced retry options
+ * const apiCallWithRetry = apiCallLambda.withRetry({
+ *   stopAfterAttempt: 5,
+ *   retryOn: (error) => error.message.includes("Rate limit"),
+ *   backoffFactor: 2.0,
+ *   initialDelayMs: 1000,
+ *   maxDelayMs: 60000,
+ *   jitter: true,
+ * });
+ * ```
  */
 export class RunnableRetry<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -1659,19 +1759,29 @@ export class RunnableRetry<
 
   protected maxAttemptNumber = 3;
 
-  onFailedAttempt: RunnableRetryFailedAttemptHandler = () => {
+  onFailedAttempt: RunnableRetryFailedAttemptHandler<RunInput> = () => {
     // empty
   };
 
+  // Advanced retry options
+  #retryOn?: RetryConfig["retryOn"];
+  #backoffFactor?: RetryConfig["backoffFactor"];
+  #initialDelayMs?: RetryConfig["initialDelayMs"];
+  #maxDelayMs?: RetryConfig["maxDelayMs"];
+  #jitter?: RetryConfig["jitter"];
+
   constructor(
-    fields: RunnableBindingArgs<RunInput, RunOutput, CallOptions> & {
-      maxAttemptNumber?: number;
-      onFailedAttempt?: RunnableRetryFailedAttemptHandler;
-    }
+    fields: RunnableBindingArgs<RunInput, RunOutput, CallOptions> &
+      Partial<RetryConfig<RunInput>>
   ) {
     super(fields);
     this.maxAttemptNumber = fields.maxAttemptNumber ?? this.maxAttemptNumber;
     this.onFailedAttempt = fields.onFailedAttempt ?? this.onFailedAttempt;
+    this.#retryOn = fields.retryOn;
+    this.#backoffFactor = fields.backoffFactor;
+    this.#initialDelayMs = fields.initialDelayMs;
+    this.#maxDelayMs = fields.maxDelayMs;
+    this.#jitter = fields.jitter;
   }
 
   _patchConfigForRetry(
@@ -1683,11 +1793,243 @@ export class RunnableRetry<
     return patchConfig(config, { callbacks: runManager?.getChild(tag) });
   }
 
+  /**
+   * Check if we should use custom retry logic (when advanced options are provided).
+   */
+  #shouldUseCustomRetry(): boolean {
+    return (
+      this.#retryOn !== undefined ||
+      this.#backoffFactor !== undefined ||
+      this.#initialDelayMs !== undefined ||
+      this.#maxDelayMs !== undefined ||
+      this.#jitter !== undefined
+    );
+  }
+
+  /**
+   * Check if the exception should trigger a retry.
+   */
+  #shouldRetryException(error: Error): boolean {
+    if (!this.#retryOn) {
+      return true; // Default: retry on all errors
+    }
+
+    if (typeof this.#retryOn === "function") {
+      return this.#retryOn(error);
+    }
+
+    // retryOn is an array of error constructors
+    return this.#retryOn.some(
+      (ErrorConstructor) =>
+        // eslint-disable-next-line no-instanceof/no-instanceof
+        error instanceof Error && error.constructor === ErrorConstructor
+    );
+  }
+
+  /**
+   * Execute a batch attempt: filter remaining inputs, call batch, and update results map.
+   *
+   * @param inputs - All input values
+   * @param configs - Configurations for each input
+   * @param runManagers - Run managers for each input
+   * @param resultsMap - Map to store results (index -> result)
+   * @param attemptNumber - Current attempt number (1-indexed)
+   * @param batchOptions - Options for batch execution
+   * @returns The first exception encountered, or undefined if all succeeded
+   */
+  async #executeBatchAttempt(
+    inputs: RunInput[],
+    configs: RunnableConfig[] | undefined,
+    runManagers: (CallbackManagerForChainRun | undefined)[] | undefined,
+    resultsMap: Record<string, RunOutput | Error>,
+    attemptNumber: number,
+    batchOptions: RunnableBatchOptions | undefined
+  ): Promise<Error | undefined> {
+    const remainingIndexes = inputs
+      .map((_, i) => i)
+      .filter(
+        (i) =>
+          resultsMap[i.toString()] === undefined ||
+          // eslint-disable-next-line no-instanceof/no-instanceof
+          resultsMap[i.toString()] instanceof Error
+      );
+
+    if (remainingIndexes.length === 0) {
+      return undefined; // All inputs succeeded
+    }
+
+    const remainingInputs = remainingIndexes.map((i) => inputs[i]);
+    const patchedConfigs = remainingIndexes.map((i) =>
+      this._patchConfigForRetry(
+        attemptNumber,
+        configs?.[i] as CallOptions,
+        runManagers?.[i]
+      )
+    );
+
+    const results = await super.batch(remainingInputs, patchedConfigs, {
+      ...batchOptions,
+      returnExceptions: true,
+    });
+
+    let firstException: Error | undefined;
+    for (let i = 0; i < results.length; i += 1) {
+      const result = results[i];
+      const resultMapIndex = remainingIndexes[i];
+      // eslint-disable-next-line no-instanceof/no-instanceof
+      if (result instanceof Error) {
+        if (firstException === undefined) {
+          firstException = result;
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          (firstException as any).input = remainingInputs[i];
+        }
+      }
+      resultsMap[resultMapIndex.toString()] = result;
+    }
+
+    return firstException;
+  }
+
+  /**
+   * Format batch results map into sorted array.
+   * This is a helper function to avoid code duplication.
+   *
+   * @param resultsMap - Map of results (index -> result)
+   * @returns Sorted array of results
+   */
+  #formatBatchResults<ReturnExceptions extends boolean>(
+    resultsMap: Record<string, RunOutput | Error>
+  ): ReturnExceptions extends false ? RunOutput[] : (RunOutput | Error)[] {
+    return Object.keys(resultsMap)
+      .sort((a, b) => parseInt(a, 10) - parseInt(b, 10))
+      .map(
+        (key) => resultsMap[parseInt(key, 10)]
+      ) as ReturnExceptions extends false ? RunOutput[] : (RunOutput | Error)[];
+  }
+
+  /**
+   * Handle retry logic for a failed attempt: check if should retry, call callback, and apply delay.
+   *
+   * @param error - The error that occurred
+   * @param attempt - Current attempt number (0-indexed)
+   * @param maxRetries - Maximum number of retry attempts
+   * @param delayConfig - Configuration for backoff delays
+   * @param onFailedAttemptInput - Input to pass to onFailedAttempt callback
+   * @throws The error if it should not be retried or if retries are exhausted
+   */
+  async #handleRetryAttempt(
+    error: unknown,
+    attempt: number,
+    maxRetries: number,
+    delayConfig: Pick<
+      RetryConfig,
+      "backoffFactor" | "initialDelayMs" | "maxDelayMs" | "jitter"
+    >,
+    onFailedAttemptInput: RunInput
+  ): Promise<void> {
+    // Ensure error is an Error instance
+    const err =
+      error && typeof error === "object" && "message" in error
+        ? (error as Error)
+        : new Error(String(error));
+
+    // Call onFailedAttempt callback
+    try {
+      await this.onFailedAttempt(err, onFailedAttemptInput);
+    } catch {
+      // Ignore errors in callback
+    }
+
+    // Check if we should retry this exception
+    if (!this.#shouldRetryException(err)) {
+      // Exception is not retryable, throw immediately
+      throw err;
+    }
+
+    // Check if we have more retries left
+    if (attempt < maxRetries) {
+      // Calculate and apply backoff delay
+      const delay = calculateRetryDelay(delayConfig, attempt);
+      if (delay > 0) {
+        await sleep(delay);
+      }
+      // Continue to next retry (return without throwing)
+    } else {
+      // No more retries, throw the error
+      throw err;
+    }
+  }
+
+  /**
+   * Execute a function with custom retry logic.
+   * This handles the retry loop, exception checking, backoff delays, and callbacks.
+   *
+   * @param operation - The async function to execute, receives attempt number (1-indexed)
+   * @param maxRetries - Maximum number of retry attempts
+   * @param delayConfig - Configuration for backoff delays
+   * @param onFailedAttemptInput - Input to pass to onFailedAttempt callback
+   * @returns The result of the operation
+   */
+  async #executeWithCustomRetry(
+    operation: (attemptNumber: number) => Promise<RunOutput>,
+    maxRetries: number,
+    delayConfig: Pick<
+      RetryConfig,
+      "backoffFactor" | "initialDelayMs" | "maxDelayMs" | "jitter"
+    >,
+    onFailedAttemptInput: RunInput
+  ): Promise<RunOutput> {
+    // Initial attempt + retries
+    for (let attempt = 0; attempt <= maxRetries; attempt++) {
+      try {
+        return await operation(attempt + 1);
+      } catch (error) {
+        await this.#handleRetryAttempt(
+          error,
+          attempt,
+          maxRetries,
+          delayConfig,
+          onFailedAttemptInput
+        );
+        // If handleRetryAttempt didn't throw, continue to next retry
+      }
+    }
+
+    // Unreachable: loop always returns via success or throw
+    throw new Error("Unexpected: retry loop completed without returning");
+  }
+
   protected async _invoke(
     input: RunInput,
     config?: CallOptions,
     runManager?: CallbackManagerForChainRun
   ): Promise<RunOutput> {
+    // Use custom retry logic if advanced options are provided
+    if (this.#shouldUseCustomRetry()) {
+      const maxRetries = Math.max(this.maxAttemptNumber - 1, 0);
+      const delayConfig: Pick<
+        RetryConfig,
+        "backoffFactor" | "initialDelayMs" | "maxDelayMs" | "jitter"
+      > = {
+        backoffFactor: this.#backoffFactor ?? 2.0,
+        initialDelayMs: this.#initialDelayMs ?? 1000,
+        maxDelayMs: this.#maxDelayMs ?? 60000,
+        jitter: this.#jitter ?? true,
+      };
+
+      return this.#executeWithCustomRetry(
+        async (attemptNumber: number) =>
+          super.invoke(
+            input,
+            this._patchConfigForRetry(attemptNumber, config, runManager)
+          ),
+        maxRetries,
+        delayConfig,
+        input
+      );
+    }
+
+    // Fall back to p-retry for backward compatibility
     return pRetry(
       (attemptNumber: number) =>
         super.invoke(
@@ -1695,8 +2037,7 @@ export class RunnableRetry<
           this._patchConfigForRetry(attemptNumber, config, runManager)
         ),
       {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        onFailedAttempt: (error: any) => this.onFailedAttempt(error, input),
+        onFailedAttempt: (error: Error) => this.onFailedAttempt(error, input),
         retries: Math.max(this.maxAttemptNumber - 1, 0),
         randomize: true,
       }
@@ -1724,52 +2065,98 @@ export class RunnableRetry<
     batchOptions?: RunnableBatchOptions
   ) {
     const resultsMap: Record<string, RunOutput | Error> = {};
+
+    // Use custom retry logic if advanced options are provided
+    if (this.#shouldUseCustomRetry()) {
+      const maxRetries = Math.max(this.maxAttemptNumber - 1, 0);
+      const backoffFactor = this.#backoffFactor ?? 2.0;
+      const initialDelayMs = this.#initialDelayMs ?? 1000;
+      const maxDelayMs = this.#maxDelayMs ?? 60000;
+      const jitter = this.#jitter ?? true;
+
+      const delayConfig: Pick<
+        RetryConfig,
+        "backoffFactor" | "initialDelayMs" | "maxDelayMs" | "jitter"
+      > = {
+        backoffFactor,
+        initialDelayMs,
+        maxDelayMs,
+        jitter,
+      };
+
+      try {
+        // Initial attempt + retries
+        for (let attempt = 0; attempt <= maxRetries; attempt++) {
+          const firstException = await this.#executeBatchAttempt(
+            inputs,
+            configs,
+            runManagers,
+            resultsMap,
+            attempt + 1,
+            batchOptions
+          );
+
+          // If all succeeded, break
+          if (!firstException) {
+            break;
+          }
+
+          // Handle retry logic for the first exception
+          try {
+            const input =
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              (firstException as any).input ?? inputs[0];
+            await this.#handleRetryAttempt(
+              firstException,
+              attempt,
+              maxRetries,
+              delayConfig,
+              input
+            );
+            // If handleRetryAttempt didn't throw, continue to next retry
+          } catch (error) {
+            // Handle retry logic for the caught error
+            await this.#handleRetryAttempt(
+              error,
+              attempt,
+              maxRetries,
+              delayConfig,
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              (error as any).input ?? inputs[0]
+            );
+            // If handleRetryAttempt didn't throw, continue to next retry
+          }
+        }
+      } catch (e) {
+        if (batchOptions?.returnExceptions !== true) {
+          throw e;
+        }
+      }
+
+      return this.#formatBatchResults<ReturnExceptions>(resultsMap);
+    }
+
+    // Fall back to p-retry for backward compatibility
     try {
       await pRetry(
         async (attemptNumber: number) => {
-          const remainingIndexes = inputs
-            .map((_, i) => i)
-            .filter(
-              (i) =>
-                resultsMap[i.toString()] === undefined ||
-                // eslint-disable-next-line no-instanceof/no-instanceof
-                resultsMap[i.toString()] instanceof Error
-            );
-          const remainingInputs = remainingIndexes.map((i) => inputs[i]);
-          const patchedConfigs = remainingIndexes.map((i) =>
-            this._patchConfigForRetry(
-              attemptNumber,
-              configs?.[i] as CallOptions,
-              runManagers?.[i]
-            )
+          const firstException = await this.#executeBatchAttempt(
+            inputs,
+            configs,
+            runManagers,
+            resultsMap,
+            attemptNumber,
+            batchOptions
           );
-          const results = await super.batch(remainingInputs, patchedConfigs, {
-            ...batchOptions,
-            returnExceptions: true,
-          });
-          let firstException;
-          for (let i = 0; i < results.length; i += 1) {
-            const result = results[i];
-            const resultMapIndex = remainingIndexes[i];
-            // eslint-disable-next-line no-instanceof/no-instanceof
-            if (result instanceof Error) {
-              if (firstException === undefined) {
-                firstException = result;
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                (firstException as any).input = remainingInputs[i];
-              }
-            }
-            resultsMap[resultMapIndex.toString()] = result;
-          }
           if (firstException) {
             throw firstException;
           }
-          return results;
+          // Return results array for p-retry (though we don't use it)
+          return Object.values(resultsMap);
         },
         {
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          onFailedAttempt: (error: any) =>
-            this.onFailedAttempt(error, error.input),
+          onFailedAttempt: (error: FailedAttemptError) =>
+            this.onFailedAttempt(error, inputs[error.attemptNumber - 1]),
           retries: Math.max(this.maxAttemptNumber - 1, 0),
           randomize: true,
         }
@@ -1779,11 +2166,7 @@ export class RunnableRetry<
         throw e;
       }
     }
-    return Object.keys(resultsMap)
-      .sort((a, b) => parseInt(a, 10) - parseInt(b, 10))
-      .map(
-        (key) => resultsMap[parseInt(key, 10)]
-      ) as ReturnExceptions extends false ? RunOutput[] : (RunOutput | Error)[];
+    return this.#formatBatchResults<ReturnExceptions>(resultsMap);
   }
 
   async batch(
