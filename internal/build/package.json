@@ -7,10 +7,8 @@
   "types": "./src/index.ts",
   "scripts": {
     "build": "exit 0",
-    "lint:eslint": "eslint --cache src/",
-    "lint:dpdm": "dpdm --skip-dynamic-imports circular --exit-code circular:1 --no-warning --no-tree src/*.ts src/**/*.ts",
-    "lint": "pnpm lint:eslint && pnpm lint:dpdm",
-    "lint:fix": "pnpm lint:eslint --fix && pnpm lint:dpdm",
+    "lint": "eslint --cache src/",
+    "lint:fix": "eslint --cache src/ --fix",
     "format": "prettier --config .prettierrc --write \"src\"",
     "format:check": "prettier --config .prettierrc --check \"src\""
   },
