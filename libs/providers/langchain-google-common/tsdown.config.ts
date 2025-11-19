@@ -8,5 +8,9 @@ export default getBuildConfig({
     "./src/experimental/media.ts",
     "./src/experimental/utils/media_core.ts",
   ],
-  plugins: [cjsCompatPlugin()],
+  plugins: [
+    cjsCompatPlugin({
+      files: ["dist/", "CHANGELOG.md", "README.md", "LICENSE"],
+    }),
+  ],
 });

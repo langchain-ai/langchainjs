@@ -104,10 +104,12 @@ export default getBuildConfig({
     "./src/schema/prompt_template.ts",
   ],
   plugins: [
-    cjsCompatPlugin(),
+    cjsCompatPlugin({
+      files: ["dist/", "CHANGELOG.md", "README.md", "LICENSE"],
+    }),
     lcSecretsPlugin(),
     importMapPlugin({
-      omitFromImportMap: ["hub", "hub/node"],
+      omitFromImportMap: ["hub/index", "hub/node", "load/index"],
       extraEntries: [
         {
           modules: ["StringOutputParser"],
@@ -133,7 +135,6 @@ export default getBuildConfig({
         "document_loaders/fs/json",
         "document_loaders/fs/multi_file",
         "document_loaders/fs/text",
-        "load/index",
         "sql_db",
         "output_parsers/expression",
         "retrievers/self_query",

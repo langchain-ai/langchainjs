@@ -92,40 +92,103 @@
   "types": "./dist/index.d.cts",
   "exports": {
     ".": {
-      "import": "./dist/index.js",
-      "require": "./dist/index.cjs"
+      "input": "./src/index.ts",
+      "require": {
+        "types": "./dist/index.d.cts",
+        "default": "./dist/index.cjs"
+      },
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      }
     },
     "./chat_models/universal": {
-      "import": "./dist/chat_models/universal.js",
-      "require": "./dist/chat_models/universal.cjs"
+      "input": "./src/chat_models/universal.ts",
+      "require": {
+        "types": "./dist/chat_models/universal.d.cts",
+        "default": "./dist/chat_models/universal.cjs"
+      },
+      "import": {
+        "types": "./dist/chat_models/universal.d.ts",
+        "default": "./dist/chat_models/universal.js"
+      }
     },
     "./hub": {
-      "import": "./dist/hub/index.js",
-      "require": "./dist/hub/index.cjs"
+      "input": "./src/hub/index.ts",
+      "require": {
+        "types": "./dist/hub/index.d.cts",
+        "default": "./dist/hub/index.cjs"
+      },
+      "import": {
+        "types": "./dist/hub/index.d.ts",
+        "default": "./dist/hub/index.js"
+      }
     },
     "./hub/node": {
-      "import": "./dist/hub/node.js",
-      "require": "./dist/hub/node.cjs"
+      "input": "./src/hub/node.ts",
+      "require": {
+        "types": "./dist/hub/node.d.cts",
+        "default": "./dist/hub/node.cjs"
+      },
+      "import": {
+        "types": "./dist/hub/node.d.ts",
+        "default": "./dist/hub/node.js"
+      }
     },
     "./load": {
-      "import": "./dist/load/index.js",
-      "require": "./dist/load/index.cjs"
+      "input": "./src/load/index.ts",
+      "require": {
+        "types": "./dist/load/index.d.cts",
+        "default": "./dist/load/index.cjs"
+      },
+      "import": {
+        "types": "./dist/load/index.d.ts",
+        "default": "./dist/load/index.js"
+      }
     },
     "./load/serializable": {
-      "import": "./dist/load/serializable.js",
-      "require": "./dist/load/serializable.cjs"
+      "input": "./src/load/serializable.ts",
+      "require": {
+        "types": "./dist/load/serializable.d.cts",
+        "default": "./dist/load/serializable.cjs"
+      },
+      "import": {
+        "types": "./dist/load/serializable.d.ts",
+        "default": "./dist/load/serializable.js"
+      }
     },
     "./storage/encoder_backed": {
-      "import": "./dist/storage/encoder_backed.js",
-      "require": "./dist/storage/encoder_backed.cjs"
+      "input": "./src/storage/encoder_backed.ts",
+      "require": {
+        "types": "./dist/storage/encoder_backed.d.cts",
+        "default": "./dist/storage/encoder_backed.cjs"
+      },
+      "import": {
+        "types": "./dist/storage/encoder_backed.d.ts",
+        "default": "./dist/storage/encoder_backed.js"
+      }
     },
     "./storage/file_system": {
-      "import": "./dist/storage/file_system.js",
-      "require": "./dist/storage/file_system.cjs"
+      "input": "./src/storage/file_system.ts",
+      "require": {
+        "types": "./dist/storage/file_system.d.cts",
+        "default": "./dist/storage/file_system.cjs"
+      },
+      "import": {
+        "types": "./dist/storage/file_system.d.ts",
+        "default": "./dist/storage/file_system.js"
+      }
     },
     "./storage/in_memory": {
-      "import": "./dist/storage/in_memory.js",
-      "require": "./dist/storage/in_memory.cjs"
+      "input": "./src/storage/in_memory.ts",
+      "require": {
+        "types": "./dist/storage/in_memory.d.cts",
+        "default": "./dist/storage/in_memory.cjs"
+      },
+      "import": {
+        "types": "./dist/storage/in_memory.d.ts",
+        "default": "./dist/storage/in_memory.js"
+      }
     },
     "./package.json": "./package.json"
   },

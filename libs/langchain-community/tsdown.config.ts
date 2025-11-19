@@ -253,5 +253,9 @@ export default getBuildConfig({
     "./src/experimental/tools/pyinterpreter.ts",
     "./src/chains/graph_qa/cypher.ts",
   ],
-  plugins: [cjsCompatPlugin()],
+  plugins: [
+    cjsCompatPlugin({
+      files: ["dist/", "CHANGELOG.md", "README.md", "LICENSE"],
+    }),
+  ],
 });

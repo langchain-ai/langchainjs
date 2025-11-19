@@ -49,20 +49,48 @@
   "types": "./dist/index.d.cts",
   "exports": {
     ".": {
-      "import": "./dist/index.js",
-      "require": "./dist/index.cjs"
+      "input": "./src/index.ts",
+      "require": {
+        "types": "./dist/index.d.cts",
+        "default": "./dist/index.cjs"
+      },
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      }
     },
     "./chat_models": {
-      "import": "./dist/chat_models.js",
-      "require": "./dist/chat_models.cjs"
+      "input": "./src/chat_models.ts",
+      "require": {
+        "types": "./dist/chat_models.d.cts",
+        "default": "./dist/chat_models.cjs"
+      },
+      "import": {
+        "types": "./dist/chat_models.d.ts",
+        "default": "./dist/chat_models.js"
+      }
     },
     "./embeddings": {
-      "import": "./dist/embeddings.js",
-      "require": "./dist/embeddings.cjs"
+      "input": "./src/embeddings.ts",
+      "require": {
+        "types": "./dist/embeddings.d.cts",
+        "default": "./dist/embeddings.cjs"
+      },
+      "import": {
+        "types": "./dist/embeddings.d.ts",
+        "default": "./dist/embeddings.js"
+      }
     },
     "./llms": {
-      "import": "./dist/llms.js",
-      "require": "./dist/llms.cjs"
+      "input": "./src/llms.ts",
+      "require": {
+        "types": "./dist/llms.d.cts",
+        "default": "./dist/llms.cjs"
+      },
+      "import": {
+        "types": "./dist/llms.d.ts",
+        "default": "./dist/llms.js"
+      }
     },
     "./package.json": "./package.json"
   },

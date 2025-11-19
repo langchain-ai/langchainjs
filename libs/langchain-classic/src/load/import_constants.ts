@@ -16,7 +16,6 @@ export const optionalImportEntrypoints: string[] = [
   "langchain_classic/document_loaders/fs/json",
   "langchain_classic/document_loaders/fs/multi_file",
   "langchain_classic/document_loaders/fs/text",
-  "langchain_classic/load/index",
   "langchain_classic/sql_db",
   "langchain_classic/output_parsers/expression",
   "langchain_classic/retrievers/self_query",

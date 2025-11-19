@@ -58,12 +58,26 @@
   "types": "./dist/index.d.cts",
   "exports": {
     ".": {
-      "import": "./dist/index.js",
-      "require": "./dist/index.cjs"
+      "input": "./src/index.ts",
+      "require": {
+        "types": "./dist/index.d.cts",
+        "default": "./dist/index.cjs"
+      },
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      }
     },
     "./vitest": {
-      "import": "./dist/vitest.js",
-      "require": "./dist/vitest.cjs"
+      "input": "./src/vitest.ts",
+      "require": {
+        "types": "./dist/vitest.d.cts",
+        "default": "./dist/vitest.cjs"
+      },
+      "import": {
+        "types": "./dist/vitest.d.ts",
+        "default": "./dist/vitest.js"
+      }
     },
     "./package.json": "./package.json"
   },

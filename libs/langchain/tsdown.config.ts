@@ -19,7 +19,9 @@ export default getBuildConfig({
     "./src/storage/file_system.ts",
   ],
   plugins: [
-    cjsCompatPlugin(),
+    cjsCompatPlugin({
+      files: ["dist/", "CHANGELOG.md", "README.md", "LICENSE"],
+    }),
     lcSecretsPlugin(),
     importMapPlugin({
       extraEntries: [
@@ -100,14 +102,13 @@ export default getBuildConfig({
           path: "@langchain/core/outputs",
         },
       ],
-      omitFromImportMap: ["hub", "hub/node"],
+      omitFromImportMap: ["hub/index", "hub/node", "load/index"],
     }),
     importConstantsPlugin({
       entrypoints: [
         "chat_models/universal",
         "cache/file_system",
         "storage/file_system",
-        "load/index",
         "hub/index",
         "hub/node",
       ],

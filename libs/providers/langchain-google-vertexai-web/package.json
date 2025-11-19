@@ -57,16 +57,37 @@
   "types": "./dist/index.d.cts",
   "exports": {
     ".": {
-      "import": "./dist/index.js",
-      "require": "./dist/index.cjs"
+      "input": "./src/index.ts",
+      "require": {
+        "types": "./dist/index.d.cts",
+        "default": "./dist/index.cjs"
+      },
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      }
     },
     "./types": {
-      "import": "./dist/types.js",
-      "require": "./dist/types.cjs"
+      "input": "./src/types.ts",
+      "require": {
+        "types": "./dist/types.d.cts",
+        "default": "./dist/types.cjs"
+      },
+      "import": {
+        "types": "./dist/types.d.ts",
+        "default": "./dist/types.js"
+      }
     },
     "./utils": {
-      "import": "./dist/utils.js",
-      "require": "./dist/utils.cjs"
+      "input": "./src/utils.ts",
+      "require": {
+        "types": "./dist/utils.d.cts",
+        "default": "./dist/utils.cjs"
+      },
+      "import": {
+        "types": "./dist/utils.d.ts",
+        "default": "./dist/utils.js"
+      }
     },
     "./package.json": "./package.json"
   },

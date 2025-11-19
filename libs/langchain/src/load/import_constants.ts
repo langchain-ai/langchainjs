@@ -4,7 +4,6 @@ export const optionalImportEntrypoints: string[] = [
   "langchain_langchain/chat_models/universal",
   "langchain_langchain/cache/file_system",
   "langchain_langchain/storage/file_system",
-  "langchain_langchain/load/index",
   "langchain_langchain/hub/index",
   "langchain_langchain/hub/node",
 ];

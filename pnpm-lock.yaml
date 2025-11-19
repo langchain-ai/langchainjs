@@ -431,44 +431,53 @@ importers:
       type-fest:
         specifier: ^4.41.0
         version: 4.41.0
+      typescript:
+        specifier: ^5.9.3
+        version: 5.9.3
       unplugin-unused:
         specifier: ^0.5.1
         version: 0.5.1
     devDependencies:
+      '@langchain/eslint':
+        specifier: workspace:*
+        version: link:../eslint
       '@tsconfig/recommended':
         specifier: ^1.0.10
         version: 1.0.10
+      eslint:
+        specifier: ^9.39.1
+        version: 9.39.1(jiti@2.6.1)
     optionalDependencies:
       '@esbuild/win32-x64':
         specifier: '*'
         version: 0.25.8
       '@rolldown/binding-darwin-arm64':
         specifier: '*'
-        version: 1.0.0-beta.50
+        version: 1.0.0-beta.51
       '@rolldown/binding-darwin-x64':
         specifier: '*'
-        version: 1.0.0-beta.50
+        version: 1.0.0-beta.51
       '@rolldown/binding-linux-arm64-gnu':
         specifier: '*'
-        version: 1.0.0-beta.50
+        version: 1.0.0-beta.51
       '@rolldown/binding-linux-arm64-musl':
         specifier: '*'
-        version: 1.0.0-beta.50
+        version: 1.0.0-beta.51
       '@rolldown/binding-linux-x64-gnu':
         specifier: '*'
-        version: 1.0.0-beta.50
+        version: 1.0.0-beta.51
       '@rolldown/binding-linux-x64-musl':
         specifier: '*'
-        version: 1.0.0-beta.50
+        version: 1.0.0-beta.51
       '@rolldown/binding-win32-arm64-msvc':
         specifier: '*'
-        version: 1.0.0-beta.50
+        version: 1.0.0-beta.51
       '@rolldown/binding-win32-ia32-msvc':
         specifier: '*'
-        version: 1.0.0-beta.50
+        version: 1.0.0-beta.51
       '@rolldown/binding-win32-x64-msvc':
         specifier: '*'
-        version: 1.0.0-beta.50
+        version: 1.0.0-beta.51
       '@swc/core-win32-x64-msvc':
         specifier: '*'
         version: 1.13.3
@@ -1144,7 +1153,7 @@ importers:
         version: 4.0.6
       '@getzep/zep-cloud':
         specifier: ^1.0.6
-        version: 1.0.12(@langchain/core@libs+langchain-core)(encoding@0.1.13)(langchain@0.3.30(9656a2ba34d9b102d5aa3b35f7761187))
+        version: 1.0.12(@langchain/core@libs+langchain-core)(encoding@0.1.13)(langchain@0.3.30(8db809012136e117abfb0b28e29d001f))
       '@getzep/zep-js':
         specifier: ^0.9.0
         version: 0.9.0
@@ -5706,12 +5715,24 @@ packages:
     resolution: {integrity: sha512-ENIdc4iLu0d93HeYirvKmrzshzofPw6VkZRKQGe9Nv46ZnWUzcF1xV01dcvEg/1wXUR61OmmlSfyeyO7EvjLxQ==}
     engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
 
+  '@eslint/config-array@0.21.1':
+    resolution: {integrity: sha512-aw1gNayWpdI/jSYVgzN5pL0cfzU02GT3NBpeT/DXbx1/1x7ZKxFPd9bwrzygx/qiwIQiJ1sw/zD8qY/kRvlGHA==}
+    engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
+
   '@eslint/config-helpers@0.3.1':
     resolution: {integrity: sha512-xR93k9WhrDYpXHORXpxVL5oHj3Era7wo6k/Wd8/IsQNnZUTzkGS29lyn3nAT05v6ltUuTFVCCYDEGfy2Or/sPA==}
     engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
 
+  '@eslint/config-helpers@0.4.2':
+    resolution: {integrity: sha512-gBrxN88gOIf3R7ja5K9slwNayVcZgK6SOUORm2uBzTeIEfeVaIhOpCtTox3P6R7o2jLFwLFTLnC7kU/RGcYEgw==}
+    engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
+
   '@eslint/core@0.15.2':
     resolution: {integrity: sha512-78Md3/Rrxh83gCxoUc0EiciuOHsIITzLy53m3d9UyiW8y9Dj2D29FeETqyKA+BRK76tnTp6RXWb3pCay8Oyomg==}
+    engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
+
+  '@eslint/core@0.17.0':
+    resolution: {integrity: sha512-yL/sLrpmtDaFEiUj1osRP4TI2MDz1AddJL+jZ7KSqvBuliN4xqYY54IfdN8qD8Toa6g1iloph1fxQNkjOxrrpQ==}
     engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
 
   '@eslint/eslintrc@3.3.1':
@@ -5722,12 +5743,24 @@ packages:
     resolution: {integrity: sha512-uhCbYtYynH30iZErszX78U+nR3pJU3RHGQ57NXy5QupD4SBVwDeU8TNBy+MjMngc1UyIW9noKqsRqfjQTBU2dw==}
     engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
 
+  '@eslint/js@9.39.1':
+    resolution: {integrity: sha512-S26Stp4zCy88tH94QbBv3XCuzRQiZ9yXofEILmglYTh/Ug/a9/umqvgFtYBAo3Lp0nsI/5/qH1CCrbdK3AP1Tw==}
+    engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
+
   '@eslint/object-schema@2.1.6':
     resolution: {integrity: sha512-RBMg5FRL0I0gs51M/guSAj5/e14VQ4tpZnQNWwuDT66P14I43ItmPfIZRhO9fUVIPOAQXU47atlywZ/czoqFPA==}
     engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
 
+  '@eslint/object-schema@2.1.7':
+    resolution: {integrity: sha512-VtAOaymWVfZcmZbp6E2mympDIHvyjXs/12LqWYjVw6qjrfF+VK+fyG33kChz3nnK+SU5/NeHOqrTEHS8sXO3OA==}
+    engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
+
   '@eslint/plugin-kit@0.3.5':
     resolution: {integrity: sha512-Z5kJ+wU3oA7MMIqVR9tyZRtjYPr4OC004Q4Rw7pgOKUOKkJfZ3O24nz3WYfGRpMDNmcOi3TwQOmgm7B7Tpii0w==}
+    engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
+
+  '@eslint/plugin-kit@0.4.1':
+    resolution: {integrity: sha512-43/qtrDUokr7LJqoF2c3+RInu/t4zfrpYdoSDfYyhg52rwLV6TnOvdG4fXm7IkSB3wErkcmJS9iEhjVtOSEjjA==}
     engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
 
   '@faker-js/faker@10.0.0':
@@ -6438,8 +6471,8 @@ packages:
     peerDependencies:
       apache-arrow: '>=15.0.0 <=18.1.0'
 
-  '@langchain/anthropic@1.1.0':
-    resolution: {integrity: sha512-eA4QXMDRNjRkIzK+kJCyxubbdbSvCUYwX1nzc5NqBUh8PCMHMASYOGqyk/uo2kN9sMUvTH5/oKmXFhLPSkhKGw==}
+  '@langchain/anthropic@1.1.1':
+    resolution: {integrity: sha512-TCjeZPQSKWAGcvyGAYg3EDrfumKTdJ0Z7NiW8eC7+SFfVhdH92ynfvt8CYk5PqpsuIcdzJf1jOzZK6WrWagTYw==}
     engines: {node: '>=20'}
     peerDependencies:
       '@langchain/core': workspace:*
@@ -6462,32 +6495,32 @@ packages:
     peerDependencies:
       '@langchain/core': workspace:*
 
-  '@langchain/google-common@1.0.1':
-    resolution: {integrity: sha512-7NJeXas5Ga5lg/pQWQxRsquGHOPq5piqxYq+fZzV3jtx94gXCdtxzZSAdyuTFBIkoSaPKKEOLbRXmXx5ZT729w==}
+  '@langchain/google-common@1.0.3':
+    resolution: {integrity: sha512-1i/Eh59NuTNGPhaGkmTMS8uxe0+H4tGjb1jVFOk8fNZA4sLfn3EwTijj4ipdP9zL4rj68COHlPqEhuf1EJDDug==}
     engines: {node: '>=20'}
     peerDependencies:
       '@langchain/core': workspace:*
 
-  '@langchain/google-gauth@1.0.1':
-    resolution: {integrity: sha512-tgJUxBfYhXY4LXYyVmc0jPZ/5DHiiEDVM5FhFvq0tamerJ975ZP5HUaE6EhZ3u+/XyvYsUrLniaL4Wezc9e63A==}
+  '@langchain/google-gauth@1.0.3':
+    resolution: {integrity: sha512-nRU8OWNOz4sqaSzCBYs4dM0ze3pM2mvdI3byhBvnFwFuMnmrhafw00v9k4ExicbrrHyQlgF6mM1QHa+9Cd4KSg==}
     engines: {node: '>=20'}
 
-  '@langchain/google-genai@1.0.2':
-    resolution: {integrity: sha512-qlV5zBRq8JJ6nBZKQuI0Adjgb4ERqSYvEYTyvkYZfymFwLrEYXmy9/Nogpqxsem5UDLy8yCqW8kxRXVZrzeu8Q==}
+  '@langchain/google-genai@1.0.3':
+    resolution: {integrity: sha512-ZN3f6SPFZI3FMjJ1C0y5A/lWlZ/x+A9RoIKg1PNYdX6bEu7/BR7oz0dYYI2+YGl3TRp1u75e3SzzL0MxmfWfDA==}
     engines: {node: '>=20'}
     peerDependencies:
       '@langchain/core': workspace:*
 
-  '@langchain/google-vertexai-web@1.0.2':
-    resolution: {integrity: sha512-WW7GnXezrdbkJEswUxzR9UqwDzV/PTy0yB2/dJi3CE/kUkyGwvmzhMUqidrN6xWwZQ2t90zKeiSQT59DtrIMog==}
+  '@langchain/google-vertexai-web@1.0.3':
+    resolution: {integrity: sha512-03ubxg417dPvPJshC7i2dm2Thaf/h46Ik4i2e9wYHzx7jgHAwkNmkgTE11yrENSRi6foWMcZsNV/4HOj0zXZeg==}
     engines: {node: '>=20'}
 
-  '@langchain/google-vertexai@1.0.2':
-    resolution: {integrity: sha512-6IFZMDbX8WTj/0i7kyglnsyKz0Feg8oHud6nQ+dxZ4OE1BqcyZ418wbhri7Uc+RcauNmrCI6DUqHEezE6g5SZg==}
+  '@langchain/google-vertexai@1.0.3':
+    resolution: {integrity: sha512-PyTR9z65A77ZtqghFpI2mDsT5u5Nk/TXTScHD5IR7lZrdpRCloGFO70xvVK7wgZ/hM7+zEUiXNXCs/AUcnFTkw==}
     engines: {node: '>=20'}
 
-  '@langchain/google-webauth@1.0.1':
-    resolution: {integrity: sha512-7C5O2/rciRKt0Khl+9yGULiY1ujgxbr2N+8H14ecppNdTXPN/s36RvkhX6cM67CTcIIYzfo2dn4UQZ7H/A1xAg==}
+  '@langchain/google-webauth@1.0.3':
+    resolution: {integrity: sha512-wADpOwqut+V7LpLJs8S59F9G6nHhfrsoYb9jXC0x/TEjWFa+gAOgOH3eOtsK0VyrWLYcqL1iPYfxtwILtn+J5Q==}
     engines: {node: '>=20'}
     peerDependencies:
       '@langchain/core': workspace:*
@@ -7397,8 +7430,8 @@ packages:
     cpu: [arm64]
     os: [darwin]
 
-  '@rolldown/binding-darwin-arm64@1.0.0-beta.50':
-    resolution: {integrity: sha512-+JRqKJhoFlt5r9q+DecAGPLZ5PxeLva+wCMtAuoFMWPoZzgcYrr599KQ+Ix0jwll4B4HGP43avu9My8KtSOR+w==}
+  '@rolldown/binding-darwin-arm64@1.0.0-beta.51':
+    resolution: {integrity: sha512-EL1aRW2Oq15ShUEkBPsDtLMO8GTqfb/ktM/dFaVzXKQiEE96Ss6nexMgfgQrg8dGnNpndFyffVDb5IdSibsu1g==}
     engines: {node: ^20.19.0 || >=22.12.0}
     cpu: [arm64]
     os: [darwin]
@@ -7408,8 +7441,8 @@ packages:
     cpu: [x64]
     os: [darwin]
 
-  '@rolldown/binding-darwin-x64@1.0.0-beta.50':
-    resolution: {integrity: sha512-fFXDjXnuX7/gQZQm/1FoivVtRcyAzdjSik7Eo+9iwPQ9EgtA5/nB2+jmbzaKtMGG3q+BnZbdKHCtOacmNrkIDA==}
+  '@rolldown/binding-darwin-x64@1.0.0-beta.51':
+    resolution: {integrity: sha512-uGtYKlFen9pMIPvkHPWZVDtmYhMQi5g5Ddsndg1gf3atScKYKYgs5aDP4DhHeTwGXQglhfBG7lEaOIZ4UAIWww==}
     engines: {node: ^20.19.0 || >=22.12.0}
     cpu: [x64]
     os: [darwin]
@@ -7429,8 +7462,8 @@ packages:
     cpu: [arm64]
     os: [linux]
 
-  '@rolldown/binding-linux-arm64-gnu@1.0.0-beta.50':
-    resolution: {integrity: sha512-ONgyjofCrrE3bnh5GZb8EINSFyR/hmwTzZ7oVuyUB170lboza1VMCnb8jgE6MsyyRgHYmN8Lb59i3NKGrxrYjw==}
+  '@rolldown/binding-linux-arm64-gnu@1.0.0-beta.51':
+    resolution: {integrity: sha512-xLd7da5jkfbVsBCm1buIRdWtuXY8+hU3+6ESXY/Tk5X5DPHaifrUblhYDgmA34dQt6WyNC2kfXGgrduPEvDI6Q==}
     engines: {node: ^20.19.0 || >=22.12.0}
     cpu: [arm64]
     os: [linux]
@@ -7440,8 +7473,8 @@ packages:
     cpu: [arm64]
     os: [linux]
 
-  '@rolldown/binding-linux-arm64-musl@1.0.0-beta.50':
-    resolution: {integrity: sha512-L0zRdH2oDPkmB+wvuTl+dJbXCsx62SkqcEqdM+79LOcB+PxbAxxjzHU14BuZIQdXcAVDzfpMfaHWzZuwhhBTcw==}
+  '@rolldown/binding-linux-arm64-musl@1.0.0-beta.51':
+    resolution: {integrity: sha512-EQFXTgHxxTzv3t5EmjUP/DfxzFYx9sMndfLsYaAY4DWF6KsK1fXGYsiupif6qPTViPC9eVmRm78q0pZU/kuIPg==}
     engines: {node: ^20.19.0 || >=22.12.0}
     cpu: [arm64]
     os: [linux]
@@ -7456,8 +7489,8 @@ packages:
     cpu: [x64]
     os: [linux]
 
-  '@rolldown/binding-linux-x64-gnu@1.0.0-beta.50':
-    resolution: {integrity: sha512-gyoI8o/TGpQd3OzkJnh1M2kxy1Bisg8qJ5Gci0sXm9yLFzEXIFdtc4EAzepxGvrT2ri99ar5rdsmNG0zP0SbIg==}
+  '@rolldown/binding-linux-x64-gnu@1.0.0-beta.51':
+    resolution: {integrity: sha512-p5P6Xpa68w3yFaAdSzIZJbj+AfuDnMDqNSeglBXM7UlJT14Q4zwK+rV+8Mhp9MiUb4XFISZtbI/seBprhkQbiQ==}
     engines: {node: ^20.19.0 || >=22.12.0}
     cpu: [x64]
     os: [linux]
@@ -7467,8 +7500,8 @@ packages:
     cpu: [x64]
     os: [linux]
 
-  '@rolldown/binding-linux-x64-musl@1.0.0-beta.50':
-    resolution: {integrity: sha512-zti8A7M+xFDpKlghpcCAzyOi+e5nfUl3QhU023ce5NCgUxRG5zGP2GR9LTydQ1rnIPwZUVBWd4o7NjZDaQxaXA==}
+  '@rolldown/binding-linux-x64-musl@1.0.0-beta.51':
+    resolution: {integrity: sha512-sNVVyLa8HB8wkFipdfz1s6i0YWinwpbMWk5hO5S+XAYH2UH67YzUT13gs6wZTKg2x/3gtgXzYnHyF5wMIqoDAw==}
     engines: {node: ^20.19.0 || >=22.12.0}
     cpu: [x64]
     os: [linux]
@@ -7483,8 +7516,8 @@ packages:
     cpu: [arm64]
     os: [win32]
 
-  '@rolldown/binding-win32-arm64-msvc@1.0.0-beta.50':
-    resolution: {integrity: sha512-7kcNLi7Ua59JTTLvbe1dYb028QEPaJPJQHqkmSZ5q3tJueUeb6yjRtx8mw4uIqgWZcnQHAR3PrLN4XRJxvgIkA==}
+  '@rolldown/binding-win32-arm64-msvc@1.0.0-beta.51':
+    resolution: {integrity: sha512-fj56buHRuMM+r/cb6ZYfNjNvO/0xeFybI6cTkTROJatdP4fvmQ1NS8D/Lm10FCSDEOkqIz8hK3TGpbAThbPHsA==}
     engines: {node: ^20.19.0 || >=22.12.0}
     cpu: [arm64]
     os: [win32]
@@ -7494,8 +7527,8 @@ packages:
     cpu: [ia32]
     os: [win32]
 
-  '@rolldown/binding-win32-ia32-msvc@1.0.0-beta.50':
-    resolution: {integrity: sha512-lL70VTNvSCdSZkDPPVMwWn/M2yQiYvSoXw9hTLgdIWdUfC3g72UaruezusR6ceRuwHCY1Ayu2LtKqXkBO5LIwg==}
+  '@rolldown/binding-win32-ia32-msvc@1.0.0-beta.51':
+    resolution: {integrity: sha512-fkqEqaeEx8AySXiDm54b/RdINb3C0VovzJA3osMhZsbn6FoD73H0AOIiaVAtGr6x63hefruVKTX8irAm4Jkt2w==}
     engines: {node: ^20.19.0 || >=22.12.0}
     cpu: [ia32]
     os: [win32]
@@ -7505,8 +7538,8 @@ packages:
     cpu: [x64]
     os: [win32]
 
-  '@rolldown/binding-win32-x64-msvc@1.0.0-beta.50':
-    resolution: {integrity: sha512-4qU4x5DXWB4JPjyTne/wBNPqkbQU8J45bl21geERBKtEittleonioACBL1R0PsBu0Aq21SwMK5a9zdBkWSlQtQ==}
+  '@rolldown/binding-win32-x64-msvc@1.0.0-beta.51':
+    resolution: {integrity: sha512-CWuLG/HMtrVcjKGa0C4GnuxONrku89g0+CsH8nT0SNhOtREXuzwgjIXNJImpE/A/DMf9JF+1Xkrq/YRr+F/rCg==}
     engines: {node: ^20.19.0 || >=22.12.0}
     cpu: [x64]
     os: [win32]
@@ -7733,6 +7766,7 @@ packages:
   '@smithy/core@3.18.3':
     resolution: {integrity: sha512-qqpNskkbHOSfrbFbjhYj5o8VMXO26fvN1K/+HbCzUNlTuxgNcPRouUDNm+7D6CkN244WG7aK533Ne18UtJEgAA==}
     engines: {node: '>=18.0.0'}
+    deprecated: Please upgrade your lockfile to use the latest 3.x version of @smithy/core for various fixes, see https://github.com/smithy-lang/smithy-typescript/blob/main/packages/core/CHANGELOG.md
 
   '@smithy/core@3.7.2':
     resolution: {integrity: sha512-JoLw59sT5Bm8SAjFCYZyuCGxK8y3vovmoVbZWLDPTH5XpPEIwpFd9m90jjVMwoypDuB/SdVgje5Y4T7w50lJaw==}
@@ -10761,6 +10795,16 @@ packages:
 
   eslint@9.36.0:
     resolution: {integrity: sha512-hB4FIzXovouYzwzECDcUkJ4OcfOEkXTv2zRY6B9bkwjx/cprAq0uvm1nl7zvQ0/TsUk0zQiN4uPfJpB9m+rPMQ==}
+    engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
+    hasBin: true
+    peerDependencies:
+      jiti: '*'
+    peerDependenciesMeta:
+      jiti:
+        optional: true
+
+  eslint@9.39.1:
+    resolution: {integrity: sha512-BhHmn2yNOFA9H9JmmIVKJmd288g9hrVRDkdoIgRCRuSySRUHH7r/DI6aAXW9T1WwUuY3DFgrcaqB+deURBLR5g==}
     engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
     hasBin: true
     peerDependencies:
@@ -19849,6 +19893,11 @@ snapshots:
       eslint: 9.36.0(jiti@2.6.1)
       eslint-visitor-keys: 3.4.3
 
+  '@eslint-community/eslint-utils@4.9.0(eslint@9.39.1(jiti@2.6.1))':
+    dependencies:
+      eslint: 9.39.1(jiti@2.6.1)
+      eslint-visitor-keys: 3.4.3
+
   '@eslint-community/regexpp@4.12.1': {}
 
   '@eslint/config-array@0.21.0':
@@ -19859,9 +19908,25 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
+  '@eslint/config-array@0.21.1':
+    dependencies:
+      '@eslint/object-schema': 2.1.7
+      debug: 4.4.3(supports-color@8.1.1)
+      minimatch: 3.1.2
+    transitivePeerDependencies:
+      - supports-color
+
   '@eslint/config-helpers@0.3.1': {}
 
+  '@eslint/config-helpers@0.4.2':
+    dependencies:
+      '@eslint/core': 0.17.0
+
   '@eslint/core@0.15.2':
+    dependencies:
+      '@types/json-schema': 7.0.15
+
+  '@eslint/core@0.17.0':
     dependencies:
       '@types/json-schema': 7.0.15
 
@@ -19881,11 +19946,20 @@ snapshots:
 
   '@eslint/js@9.36.0': {}
 
+  '@eslint/js@9.39.1': {}
+
   '@eslint/object-schema@2.1.6': {}
+
+  '@eslint/object-schema@2.1.7': {}
 
   '@eslint/plugin-kit@0.3.5':
     dependencies:
       '@eslint/core': 0.15.2
+      levn: 0.4.1
+
+  '@eslint/plugin-kit@0.4.1':
+    dependencies:
+      '@eslint/core': 0.17.0
       levn: 0.4.1
 
   '@faker-js/faker@10.0.0': {}
@@ -20011,7 +20085,7 @@ snapshots:
     transitivePeerDependencies:
       - debug
 
-  '@getzep/zep-cloud@1.0.12(@langchain/core@libs+langchain-core)(encoding@0.1.13)(langchain@0.3.30(9656a2ba34d9b102d5aa3b35f7761187))':
+  '@getzep/zep-cloud@1.0.12(@langchain/core@libs+langchain-core)(encoding@0.1.13)(langchain@0.3.30(8db809012136e117abfb0b28e29d001f))':
     dependencies:
       form-data: 4.0.0
       node-fetch: 2.7.0(encoding@0.1.13)
@@ -20020,7 +20094,7 @@ snapshots:
       zod: 3.25.76
     optionalDependencies:
       '@langchain/core': link:libs/langchain-core
-      langchain: 0.3.30(9656a2ba34d9b102d5aa3b35f7761187)
+      langchain: 0.3.30(8db809012136e117abfb0b28e29d001f)
     transitivePeerDependencies:
       - encoding
 
@@ -20929,7 +21003,7 @@ snapshots:
       '@lancedb/lancedb-win32-arm64-msvc': 0.19.1
       '@lancedb/lancedb-win32-x64-msvc': 0.19.1
 
-  '@langchain/anthropic@1.1.0(@langchain/core@libs+langchain-core)(zod@3.25.76)':
+  '@langchain/anthropic@1.1.1(@langchain/core@libs+langchain-core)(zod@3.25.76)':
     dependencies:
       '@anthropic-ai/sdk': 0.69.0(zod@3.25.76)
       '@langchain/core': link:libs/langchain-core
@@ -20966,47 +21040,47 @@ snapshots:
       - ws
     optional: true
 
-  '@langchain/google-common@1.0.1(@langchain/core@libs+langchain-core)':
+  '@langchain/google-common@1.0.3(@langchain/core@libs+langchain-core)':
     dependencies:
       '@langchain/core': link:libs/langchain-core
       uuid: 10.0.0
     optional: true
 
-  '@langchain/google-gauth@1.0.1(@langchain/core@libs+langchain-core)':
+  '@langchain/google-gauth@1.0.3(@langchain/core@libs+langchain-core)':
     dependencies:
-      '@langchain/google-common': 1.0.1(@langchain/core@libs+langchain-core)
+      '@langchain/google-common': 1.0.3(@langchain/core@libs+langchain-core)
       google-auth-library: 10.2.0
     transitivePeerDependencies:
       - '@langchain/core'
       - supports-color
     optional: true
 
-  '@langchain/google-genai@1.0.2(@langchain/core@libs+langchain-core)':
+  '@langchain/google-genai@1.0.3(@langchain/core@libs+langchain-core)':
     dependencies:
       '@google/generative-ai': 0.24.1
       '@langchain/core': link:libs/langchain-core
       uuid: 11.1.0
     optional: true
 
-  '@langchain/google-vertexai-web@1.0.2(@langchain/core@libs+langchain-core)':
+  '@langchain/google-vertexai-web@1.0.3(@langchain/core@libs+langchain-core)':
     dependencies:
-      '@langchain/google-webauth': 1.0.1(@langchain/core@libs+langchain-core)
+      '@langchain/google-webauth': 1.0.3(@langchain/core@libs+langchain-core)
     transitivePeerDependencies:
       - '@langchain/core'
     optional: true
 
-  '@langchain/google-vertexai@1.0.2(@langchain/core@libs+langchain-core)':
+  '@langchain/google-vertexai@1.0.3(@langchain/core@libs+langchain-core)':
     dependencies:
-      '@langchain/google-gauth': 1.0.1(@langchain/core@libs+langchain-core)
+      '@langchain/google-gauth': 1.0.3(@langchain/core@libs+langchain-core)
     transitivePeerDependencies:
       - '@langchain/core'
       - supports-color
     optional: true
 
-  '@langchain/google-webauth@1.0.1(@langchain/core@libs+langchain-core)':
+  '@langchain/google-webauth@1.0.3(@langchain/core@libs+langchain-core)':
     dependencies:
       '@langchain/core': link:libs/langchain-core
-      '@langchain/google-common': 1.0.1(@langchain/core@libs+langchain-core)
+      '@langchain/google-common': 1.0.3(@langchain/core@libs+langchain-core)
       web-auth-library: 1.0.3
     optional: true
 
@@ -21953,13 +22027,13 @@ snapshots:
   '@rolldown/binding-darwin-arm64@1.0.0-beta.30':
     optional: true
 
-  '@rolldown/binding-darwin-arm64@1.0.0-beta.50':
+  '@rolldown/binding-darwin-arm64@1.0.0-beta.51':
     optional: true
 
   '@rolldown/binding-darwin-x64@1.0.0-beta.30':
     optional: true
 
-  '@rolldown/binding-darwin-x64@1.0.0-beta.50':
+  '@rolldown/binding-darwin-x64@1.0.0-beta.51':
     optional: true
 
   '@rolldown/binding-freebsd-x64@1.0.0-beta.30':
@@ -21971,13 +22045,13 @@ snapshots:
   '@rolldown/binding-linux-arm64-gnu@1.0.0-beta.30':
     optional: true
 
-  '@rolldown/binding-linux-arm64-gnu@1.0.0-beta.50':
+  '@rolldown/binding-linux-arm64-gnu@1.0.0-beta.51':
     optional: true
 
   '@rolldown/binding-linux-arm64-musl@1.0.0-beta.30':
     optional: true
 
-  '@rolldown/binding-linux-arm64-musl@1.0.0-beta.50':
+  '@rolldown/binding-linux-arm64-musl@1.0.0-beta.51':
     optional: true
 
   '@rolldown/binding-linux-arm64-ohos@1.0.0-beta.30':
@@ -21986,13 +22060,13 @@ snapshots:
   '@rolldown/binding-linux-x64-gnu@1.0.0-beta.30':
     optional: true
 
-  '@rolldown/binding-linux-x64-gnu@1.0.0-beta.50':
+  '@rolldown/binding-linux-x64-gnu@1.0.0-beta.51':
     optional: true
 
   '@rolldown/binding-linux-x64-musl@1.0.0-beta.30':
     optional: true
 
-  '@rolldown/binding-linux-x64-musl@1.0.0-beta.50':
+  '@rolldown/binding-linux-x64-musl@1.0.0-beta.51':
     optional: true
 
   '@rolldown/binding-wasm32-wasi@1.0.0-beta.30':
@@ -22003,19 +22077,19 @@ snapshots:
   '@rolldown/binding-win32-arm64-msvc@1.0.0-beta.30':
     optional: true
 
-  '@rolldown/binding-win32-arm64-msvc@1.0.0-beta.50':
+  '@rolldown/binding-win32-arm64-msvc@1.0.0-beta.51':
     optional: true
 
   '@rolldown/binding-win32-ia32-msvc@1.0.0-beta.30':
     optional: true
 
-  '@rolldown/binding-win32-ia32-msvc@1.0.0-beta.50':
+  '@rolldown/binding-win32-ia32-msvc@1.0.0-beta.51':
     optional: true
 
   '@rolldown/binding-win32-x64-msvc@1.0.0-beta.30':
     optional: true
 
-  '@rolldown/binding-win32-x64-msvc@1.0.0-beta.50':
+  '@rolldown/binding-win32-x64-msvc@1.0.0-beta.51':
     optional: true
 
   '@rolldown/pluginutils@1.0.0-beta.30': {}
@@ -26398,6 +26472,47 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
+  eslint@9.39.1(jiti@2.6.1):
+    dependencies:
+      '@eslint-community/eslint-utils': 4.9.0(eslint@9.39.1(jiti@2.6.1))
+      '@eslint-community/regexpp': 4.12.1
+      '@eslint/config-array': 0.21.1
+      '@eslint/config-helpers': 0.4.2
+      '@eslint/core': 0.17.0
+      '@eslint/eslintrc': 3.3.1
+      '@eslint/js': 9.39.1
+      '@eslint/plugin-kit': 0.4.1
+      '@humanfs/node': 0.16.7
+      '@humanwhocodes/module-importer': 1.0.1
+      '@humanwhocodes/retry': 0.4.3
+      '@types/estree': 1.0.8
+      ajv: 6.12.6
+      chalk: 4.1.2
+      cross-spawn: 7.0.6
+      debug: 4.4.3(supports-color@8.1.1)
+      escape-string-regexp: 4.0.0
+      eslint-scope: 8.4.0
+      eslint-visitor-keys: 4.2.1
+      espree: 10.4.0
+      esquery: 1.6.0
+      esutils: 2.0.3
+      fast-deep-equal: 3.1.3
+      file-entry-cache: 8.0.0
+      find-up: 5.0.0
+      glob-parent: 6.0.2
+      ignore: 5.3.2
+      imurmurhash: 0.1.4
+      is-glob: 4.0.3
+      json-stable-stringify-without-jsonify: 1.0.1
+      lodash.merge: 4.6.2
+      minimatch: 3.1.2
+      natural-compare: 1.4.0
+      optionator: 0.9.4
+    optionalDependencies:
+      jiti: 2.6.1
+    transitivePeerDependencies:
+      - supports-color
+
   esm@3.2.25: {}
 
   espree@10.4.0:
@@ -28737,7 +28852,7 @@ snapshots:
 
   kuler@2.0.0: {}
 
-  langchain@0.3.30(9656a2ba34d9b102d5aa3b35f7761187):
+  langchain@0.3.30(8db809012136e117abfb0b28e29d001f):
     dependencies:
       '@langchain/core': link:libs/langchain-core
       '@langchain/openai': 0.6.16(@langchain/core@libs+langchain-core)(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.5))
@@ -28752,13 +28867,13 @@ snapshots:
       yaml: 2.8.1
       zod: 3.25.76
     optionalDependencies:
-      '@langchain/anthropic': 1.1.0(@langchain/core@libs+langchain-core)(zod@3.25.76)
+      '@langchain/anthropic': 1.1.1(@langchain/core@libs+langchain-core)(zod@3.25.76)
       '@langchain/aws': 1.0.2(@langchain/core@libs+langchain-core)
       '@langchain/cohere': 1.0.0(@langchain/core@libs+langchain-core)(encoding@0.1.13)
       '@langchain/deepseek': 1.0.1(@langchain/core@libs+langchain-core)(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.5))
-      '@langchain/google-genai': 1.0.2(@langchain/core@libs+langchain-core)
-      '@langchain/google-vertexai': 1.0.2(@langchain/core@libs+langchain-core)
-      '@langchain/google-vertexai-web': 1.0.2(@langchain/core@libs+langchain-core)
+      '@langchain/google-genai': 1.0.3(@langchain/core@libs+langchain-core)
+      '@langchain/google-vertexai': 1.0.3(@langchain/core@libs+langchain-core)
+      '@langchain/google-vertexai-web': 1.0.3(@langchain/core@libs+langchain-core)
       '@langchain/groq': 1.0.1(@langchain/core@libs+langchain-core)(encoding@0.1.13)
       '@langchain/mistralai': 1.0.0(@langchain/core@libs+langchain-core)
       '@langchain/ollama': 1.0.1(@langchain/core@libs+langchain-core)

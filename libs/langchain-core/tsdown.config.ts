@@ -70,7 +70,9 @@ export default getBuildConfig({
     "./src/vectorstores.ts",
   ],
   plugins: [
-    cjsCompatPlugin(),
+    cjsCompatPlugin({
+      files: ["dist/", "CHANGELOG.md", "README.md", "LICENSE"],
+    }),
     lcSecretsPlugin(),
     importMapPlugin({
       omitFromImportMap: [

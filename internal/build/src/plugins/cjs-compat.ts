@@ -1,7 +1,7 @@
 import path from "node:path";
 import fs from "node:fs/promises";
 import type { Plugin } from "rolldown";
-import { isSafeProjectPath } from "../utils";
+import { isSafeProjectPath } from "../utils.js";
 
 /**
  * Options for configuring the CJS compatibility plugin.
@@ -44,6 +44,14 @@ export interface CjsCompatPluginOptions {
      */
     esm?: boolean;
   };
+  /**
+   * Specifies which files should be included in the package.json `files` array.
+   *
+   * Because this plugin generates files in the root directory, it's important
+   * to specify which files should be included in the `files` array. In the case
+   * you need to include extra files in the npm bundle, you can specify them here.
+   */
+  files?: string[];
 }
 
 /**
@@ -80,6 +88,8 @@ export function cjsCompatPlugin(param: CjsCompatPluginOptions = {}): Plugin {
     },
   };
 
+  const pathsToEmit = new Set<string>();
+
   return {
     name: "cjs-compat",
     async buildStart({ input }) {
@@ -108,70 +118,45 @@ export function cjsCompatPlugin(param: CjsCompatPluginOptions = {}): Plugin {
         const importPath =
           barrelDepth === 0
             ? `./dist/${barrelTarget}`
-            : "../".repeat(barrelDepth) + `dist/${barrelTarget}`;
+            : `${"../".repeat(barrelDepth)}dist/${barrelTarget}`;
 
         // Skip the root barrel file
         if (barrelPath === ".") {
           continue;
         }
 
-        if (options.mode === "generate") {
-          if (options.shouldGenerate.dcts) {
+        const emitFile = async (fileName: string, source: string) => {
+          const topLevelPath = fileName.split("/")[0];
+          pathsToEmit.add(topLevelPath);
+          if (options.mode === "generate") {
             this.emitFile({
               type: "asset",
-              fileName: `../${barrelPath}.d.cts`,
-              source: generateDctsBarrel(importPath),
+              fileName: `../${fileName}`,
+              source,
             });
           }
-          if (options.shouldGenerate.cjs) {
-            this.emitFile({
-              type: "asset",
-              fileName: `../${barrelPath}.cjs`,
-              source: generateCjsBarrel(importPath),
-            });
+          if (options.mode === "clean") {
+            const target = path.resolve(`./${fileName}`);
+            if (isSafeProjectPath(target)) {
+              await fs.unlink(target).catch(() => {});
+            }
           }
-          if (options.shouldGenerate.dts) {
-            this.emitFile({
-              type: "asset",
-              fileName: `../${barrelPath}.d.ts`,
-              source: generateDtsBarrel(importPath),
-            });
-          }
-          if (options.shouldGenerate.esm) {
-            this.emitFile({
-              type: "asset",
-              fileName: `../${barrelPath}.js`,
-              source: generateEsmBarrel(importPath),
-            });
-          }
+        };
+
+        if (options.shouldGenerate.dcts) {
+          await emitFile(`${barrelPath}.d.cts`, generateDctsBarrel(importPath));
+        }
+        if (options.shouldGenerate.cjs) {
+          await emitFile(`${barrelPath}.cjs`, generateCjsBarrel(importPath));
+        }
+        if (options.shouldGenerate.dts) {
+          await emitFile(`${barrelPath}.d.ts`, generateDtsBarrel(importPath));
+        }
+        if (options.shouldGenerate.esm) {
+          await emitFile(`${barrelPath}.js`, generateEsmBarrel(importPath));
         }
 
         if (options.mode === "clean") {
-          if (options.shouldGenerate.dcts) {
-            const target = path.resolve(`./${barrelPath}.d.cts`);
-            if (isSafeProjectPath(target)) {
-              await fs.unlink(target).catch(() => {});
-            }
-          }
-          if (options.shouldGenerate.cjs) {
-            const target = path.resolve(`./${barrelPath}.cjs`);
-            if (isSafeProjectPath(target)) {
-              await fs.unlink(target).catch(() => {});
-            }
-          }
-          if (options.shouldGenerate.dts) {
-            const target = path.resolve(`./${barrelPath}.d.ts`);
-            if (isSafeProjectPath(target)) {
-              await fs.unlink(target).catch(() => {});
-            }
-          }
-          if (options.shouldGenerate.esm) {
-            const target = path.resolve(`./${barrelPath}.js`);
-            if (isSafeProjectPath(target)) {
-              await fs.unlink(target).catch(() => {});
-            }
-          }
-
           // Remove any directories that were created for nested entrypoints
           const dirPath = path.dirname(barrelPath);
           if (dirPath !== ".") {
@@ -182,6 +167,45 @@ export function cjsCompatPlugin(param: CjsCompatPluginOptions = {}): Plugin {
           }
         }
       }
+
+      // Add the files to the package.json files array
+      const packageJsonPath = path.resolve(
+        process.env.INIT_CWD ?? "",
+        "package.json"
+      );
+      const packageJson = JSON.parse(
+        await fs.readFile(packageJsonPath, "utf-8")
+      );
+      const newPackageJson = {
+        ...packageJson,
+        files: [...(options.files ?? []), ...Array.from(pathsToEmit)],
+      };
+      await fs.writeFile(
+        packageJsonPath,
+        JSON.stringify(newPackageJson, null, 2)
+      );
+    },
+    buildEnd: {
+      async handler() {
+        if (!options.enabled) return;
+
+        const packageJsonPath = path.resolve(
+          process.env.INIT_CWD ?? "",
+          "package.json"
+        );
+        const packageJson = JSON.parse(
+          await fs.readFile(packageJsonPath, "utf-8")
+        );
+        packageJson.files = [
+          ...(options.files ?? []),
+          ...Array.from(pathsToEmit),
+        ];
+        await fs.writeFile(
+          packageJsonPath,
+          JSON.stringify(packageJson, null, 2)
+        );
+      },
+      order: "post",
     },
   };
 }

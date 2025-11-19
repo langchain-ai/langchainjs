@@ -1,21 +1,23 @@
 import { Options as BuildOptions } from "tsdown";
+import { PackageJson } from "type-fest";
+import path from "node:path";
 
 export {
   type CjsCompatPluginOptions,
   cjsCompatPlugin,
-} from "./plugins/cjs-compat";
+} from "./plugins/cjs-compat.js";
 export {
   type ImportConstantsPluginOptions,
   importConstantsPlugin,
-} from "./plugins/import-constants";
+} from "./plugins/import-constants.js";
 export {
   type ImportMapPluginOptions,
   importMapPlugin,
-} from "./plugins/import-map";
+} from "./plugins/import-map.js";
 export {
   type SecretPluginOptions,
   lcSecretsPlugin,
-} from "./plugins/lc-secrets";
+} from "./plugins/lc-secrets.js";
 
 /**
  * Creates a standardized tsdown build configuration for LangChain packages.
@@ -59,7 +61,43 @@ export function getBuildConfig(options?: Partial<BuildOptions>): BuildOptions {
     },
     sourcemap: true,
     unbundle: true,
-    exports: true,
+    exports: {
+      customExports: async (exports) => {
+        return Object.entries(exports).reduce(
+          (acc, [key, value]) => {
+            if (
+              typeof value === "object" &&
+              value !== null &&
+              "import" in value
+            ) {
+              const outputPath = path.join(
+                path.dirname(value.import),
+                path.basename(value.import, path.extname(value.import))
+              );
+              const inputPath = path.join(
+                path.dirname(value.import).replace("./dist", "./src"),
+                `${path.basename(value.import, path.extname(value.import))}.ts`
+              );
+              acc[key] = {
+                input: `./${inputPath}`,
+                require: {
+                  types: `./${outputPath}.d.cts`,
+                  default: `./${outputPath}.cjs`,
+                },
+                import: {
+                  types: `./${outputPath}.d.ts`,
+                  default: `./${outputPath}.js`,
+                },
+              };
+            } else {
+              acc[key] = value;
+            }
+            return acc;
+          },
+          {} as Record<string, PackageJson.ExportConditions>
+        );
+      },
+    },
     attw: {
       profile: "node16",
       level: "error",

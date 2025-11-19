@@ -7,5 +7,9 @@ export default getBuildConfig({
     "./src/embeddings.ts",
     "./src/llms.ts",
   ],
-  plugins: [cjsCompatPlugin()],
+  plugins: [
+    cjsCompatPlugin({
+      files: ["dist/", "CHANGELOG.md", "README.md", "LICENSE"],
+    }),
+  ],
 });

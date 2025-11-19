@@ -62,24 +62,59 @@
   "types": "./dist/index.d.cts",
   "exports": {
     ".": {
-      "import": "./dist/index.js",
-      "require": "./dist/index.cjs"
+      "input": "./src/index.ts",
+      "require": {
+        "types": "./dist/index.d.cts",
+        "default": "./dist/index.cjs"
+      },
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      }
     },
     "./experimental/media": {
-      "import": "./dist/experimental/media.js",
-      "require": "./dist/experimental/media.cjs"
+      "input": "./src/experimental/media.ts",
+      "require": {
+        "types": "./dist/experimental/media.d.cts",
+        "default": "./dist/experimental/media.cjs"
+      },
+      "import": {
+        "types": "./dist/experimental/media.d.ts",
+        "default": "./dist/experimental/media.js"
+      }
     },
     "./experimental/utils/media_core": {
-      "import": "./dist/experimental/utils/media_core.js",
-      "require": "./dist/experimental/utils/media_core.cjs"
+      "input": "./src/experimental/utils/media_core.ts",
+      "require": {
+        "types": "./dist/experimental/utils/media_core.d.cts",
+        "default": "./dist/experimental/utils/media_core.cjs"
+      },
+      "import": {
+        "types": "./dist/experimental/utils/media_core.d.ts",
+        "default": "./dist/experimental/utils/media_core.js"
+      }
     },
     "./types": {
-      "import": "./dist/types.js",
-      "require": "./dist/types.cjs"
+      "input": "./src/types.ts",
+      "require": {
+        "types": "./dist/types.d.cts",
+        "default": "./dist/types.cjs"
+      },
+      "import": {
+        "types": "./dist/types.d.ts",
+        "default": "./dist/types.js"
+      }
     },
     "./utils": {
-      "import": "./dist/utils/index.js",
-      "require": "./dist/utils/index.cjs"
+      "input": "./src/utils/index.ts",
+      "require": {
+        "types": "./dist/utils/index.d.cts",
+        "default": "./dist/utils/index.cjs"
+      },
+      "import": {
+        "types": "./dist/utils/index.d.ts",
+        "default": "./dist/utils/index.js"
+      }
     },
     "./package.json": "./package.json"
   },

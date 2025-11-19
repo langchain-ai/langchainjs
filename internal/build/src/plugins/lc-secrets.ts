@@ -2,7 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 import ts from "typescript";
 import type { Plugin, PluginContext } from "rolldown";
-import { formatWithPrettier } from "../utils";
+import { formatWithPrettier } from "../utils.js";
 
 /**
  * Configuration options for the lc-secrets plugin.
@@ -190,7 +190,7 @@ function scanForSecrets(excludePatterns: string[]): SecretInfo[] {
       );
 
       scanSourceFile(sourceFile, fileName, secrets);
-    } catch (error) {
+    } catch {
       // Silently skip files that can't be parsed
     }
   }
