@@ -354,12 +354,14 @@ export function getPromptRunnable(prompt?: Prompt): Runnable {
     promptRunnable = RunnableLambda.from(
       (state: typeof MessagesAnnotation.State) => state.messages
     ).withConfig({ runName: PROMPT_RUNNABLE_NAME });
-  } else if (typeof prompt === "string") {
-    const systemMessage = new SystemMessage(prompt);
+  } else if (typeof prompt === "string" || SystemMessage.isInstance(prompt)) {
     promptRunnable = RunnableLambda.from(
-      (state: typeof MessagesAnnotation.State) => {
-        return [systemMessage, ...(state.messages ?? [])];
-      }
+      (state: typeof MessagesAnnotation.State) => [
+        typeof prompt === "string"
+          ? new SystemMessage({ content: prompt })
+          : prompt,
+        ...(state.messages ?? []),
+      ]
     ).withConfig({ runName: PROMPT_RUNNABLE_NAME });
   } else {
     throw new Error(`Got unexpected type for 'prompt': ${typeof prompt}`);

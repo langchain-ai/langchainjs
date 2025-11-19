@@ -1,5 +1,5 @@
 import type { LanguageModelLike } from "@langchain/core/language_models/base";
-import type { BaseMessage } from "@langchain/core/messages";
+import type { BaseMessage, SystemMessage } from "@langchain/core/messages";
 import type { ServerTool, ClientTool } from "@langchain/core/tools";
 
 import type { Runtime, AgentBuiltInState } from "../runtime.js";
@@ -25,8 +25,42 @@ export interface ModelRequest<
   messages: BaseMessage[];
   /**
    * The system message for this step.
+   *
+   * **When `systemPrompt` is a `string`**:
+   * - The string is converted to a single text block internally
+   * - Simple to use and modify in middleware (e.g., concatenating strings)
+   * - Suitable for basic system prompts without advanced features
+   *
+   * **When `systemPrompt` is a `SystemMessage`**:
+   * - Preserves structured content (array format) if provided
+   * - Enables advanced provider-specific features like Anthropic's per-block cache control
+   * - Use when you need multiple text blocks with different metadata or cache settings
+   *
+   * @example Extending SystemMessage content with cache control (e.g. using Anthropic)
+   * ```ts
+   * import { SystemMessage } from "@langchain/core/messages";
+   *
+   * wrapModelCall: async (request, handler) => {
+   *   const updatedSystemPrompt = new SystemMessage({
+   *     content: [
+   *       {
+   *         type: "text",
+   *         text: "Today's date is 2024-06-01.",
+   *         cache_control: { type: "ephemeral" },
+   *       },
+   *     ],
+   *   });
+   *
+   *   return handler({
+   *     ...request,
+   *     systemPrompt: request.systemPrompt
+   *       ? request.systemPrompt.concat(updatedSystemPrompt)
+   *       : updatedSystemPrompt,
+   *   });
+   * }
+   * ```
    */
-  systemPrompt?: string;
+  systemPrompt?: SystemMessage;
   /**
    * Tool choice configuration (model-specific format).
    * Can be one of:

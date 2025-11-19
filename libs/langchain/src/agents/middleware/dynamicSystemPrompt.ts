@@ -1,10 +1,12 @@
+import { SystemMessage } from "@langchain/core/messages";
+
 import { createMiddleware } from "../middleware.js";
 import type { Runtime, AgentBuiltInState } from "../runtime.js";
 
 export type DynamicSystemPromptMiddlewareConfig<TContextSchema> = (
   state: AgentBuiltInState,
   runtime: Runtime<TContextSchema>
-) => string | Promise<string>;
+) => string | SystemMessage | Promise<string | SystemMessage>;
 
 /**
  * Dynamic System Prompt Middleware
@@ -55,13 +57,22 @@ export function dynamicSystemPromptMiddleware<TContextSchema = unknown>(
         request.runtime as Runtime<TContextSchema>
       );
 
-      if (typeof systemPrompt !== "string") {
+      const isExpectedType =
+        typeof systemPrompt === "string" ||
+        SystemMessage.isInstance(systemPrompt);
+      if (!isExpectedType) {
         throw new Error(
-          "dynamicSystemPromptMiddleware function must return a string"
+          "dynamicSystemPromptMiddleware function must return a string or SystemMessage"
         );
       }
 
-      return handler({ ...request, systemPrompt });
+      return handler({
+        ...request,
+        systemPrompt:
+          typeof systemPrompt === "string"
+            ? new SystemMessage({ content: systemPrompt })
+            : systemPrompt,
+      });
     },
   });
 }

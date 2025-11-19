@@ -9,11 +9,7 @@
 
 import type { BaseMessage } from "@langchain/core/messages";
 import type { BaseLanguageModel } from "@langchain/core/language_models/base";
-import {
-  AIMessage,
-  ToolMessage,
-  SystemMessage,
-} from "@langchain/core/messages";
+import { AIMessage, ToolMessage } from "@langchain/core/messages";
 
 import { countTokensApproximately } from "./utils.js";
 import { createMiddleware } from "../middleware.js";
@@ -898,9 +894,7 @@ export function contextEditingMiddleware(
       /**
        * Use model's token counting method
        */
-      const systemMsg = request.systemPrompt
-        ? [new SystemMessage(request.systemPrompt)]
-        : [];
+      const systemMsg = request.systemPrompt ? [request.systemPrompt] : [];
 
       const countTokens: TokenCounter =
         tokenCountMethod === "approx"

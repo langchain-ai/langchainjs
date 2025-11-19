@@ -1,6 +1,11 @@
 /* eslint-disable no-instanceof/no-instanceof */
 import { Runnable, RunnableConfig } from "@langchain/core/runnables";
-import { BaseMessage, AIMessage, ToolMessage } from "@langchain/core/messages";
+import {
+  BaseMessage,
+  AIMessage,
+  ToolMessage,
+  SystemMessage,
+} from "@langchain/core/messages";
 import { Command, type LangGraphRunnableConfig } from "@langchain/langgraph";
 import { type LanguageModelLike } from "@langchain/core/language_models/base";
 import { type BaseChatModelCallOptions } from "@langchain/core/language_models/chat_models";
@@ -517,7 +522,12 @@ export class AgentNode<
       unknown
     > = {
       model,
-      systemPrompt: this.#options.systemPrompt,
+      systemPrompt:
+        typeof this.#options.systemPrompt === "string"
+          ? new SystemMessage({
+              content: this.#options.systemPrompt,
+            })
+          : this.#options.systemPrompt,
       messages: state.messages,
       tools: this.#options.toolClasses,
       state,

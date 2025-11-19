@@ -337,8 +337,8 @@ describe("middleware", () => {
        */
 
       const executionOrder: string[] = [];
-      const systemPrompts: string[] = [];
-      let actualSystemPromptSentToModel: string | undefined;
+      const systemPrompts: SystemMessage[] = [];
+      let actualSystemPromptSentToModel: SystemMessage | undefined;
 
       // Auth middleware (first = outermost wrapper)
       const authMiddleware = createMiddleware({
@@ -348,14 +348,14 @@ describe("middleware", () => {
         }),
         wrapModelCall: async (request, handler) => {
           executionOrder.push("auth:before");
-          systemPrompts.push(request.systemPrompt || "");
+          systemPrompts.push(request.systemPrompt!);
 
           // Modify request: add auth context to system prompt
           const modifiedRequest = {
             ...request,
-            systemPrompt: `${
-              request.systemPrompt || ""
-            }\n[AUTH: user authenticated]`,
+            systemPrompt: request.systemPrompt!.concat(
+              "[AUTH: user authenticated]"
+            ),
           };
 
           // Call inner handler (retry middleware)
@@ -376,12 +376,12 @@ describe("middleware", () => {
         name: "RetryMiddleware",
         wrapModelCall: async (request, handler) => {
           executionOrder.push("retry:before");
-          systemPrompts.push(request.systemPrompt || "");
+          systemPrompts.push(request.systemPrompt!);
 
           // Modify request: add retry info to system prompt
           const modifiedRequest = {
             ...request,
-            systemPrompt: `${request.systemPrompt || ""}\n[RETRY: attempt 1]`,
+            systemPrompt: request.systemPrompt!.concat("[RETRY: attempt 1]"),
           };
 
           // Call inner handler (cache middleware)
@@ -402,16 +402,16 @@ describe("middleware", () => {
         name: "CacheMiddleware",
         wrapModelCall: async (request, handler) => {
           executionOrder.push("cache:before");
-          systemPrompts.push(request.systemPrompt || "");
+          systemPrompts.push(request.systemPrompt!);
 
           // Modify request: add cache info to system prompt
           const modifiedRequest = {
             ...request,
-            systemPrompt: `${request.systemPrompt || ""}\n[CACHE: miss]`,
+            systemPrompt: request.systemPrompt!.concat("[CACHE: miss]"),
           };
 
           // Capture what will actually be sent to the model
-          actualSystemPromptSentToModel = modifiedRequest.systemPrompt;
+          actualSystemPromptSentToModel = modifiedRequest.systemPrompt!;
 
           // Call inner handler (base model handler)
           const response = await handler(modifiedRequest);
@@ -457,14 +457,11 @@ describe("middleware", () => {
       // Verify system prompts were accumulated correctly
       // Each middleware sees the prompt BEFORE it adds its own modification
       expect(systemPrompts).toHaveLength(3);
-      expect(systemPrompts).toMatchInlineSnapshot(`
+      expect(systemPrompts.map((prompt) => prompt.text)).toMatchInlineSnapshot(`
       [
         "You are helpful",
-        "You are helpful
-      [AUTH: user authenticated]",
-        "You are helpful
-      [AUTH: user authenticated]
-      [RETRY: attempt 1]",
+        "You are helpful[AUTH: user authenticated]",
+        "You are helpful[AUTH: user authenticated][RETRY: attempt 1]",
       ]
     `);
 
@@ -475,11 +472,8 @@ describe("middleware", () => {
       );
 
       // Verify the final system prompt that was sent to the model
-      expect(actualSystemPromptSentToModel).toMatchInlineSnapshot(`
-      "You are helpful
-      [AUTH: user authenticated]
-      [RETRY: attempt 1]
-      [CACHE: miss]"
+      expect(actualSystemPromptSentToModel?.text).toMatchInlineSnapshot(`
+      "You are helpful[AUTH: user authenticated][RETRY: attempt 1][CACHE: miss]"
     `);
 
       // Verify model received the correct messages structure
@@ -488,7 +482,7 @@ describe("middleware", () => {
 
       // Model should receive system message + user message
       expect(systemMessage).toBeInstanceOf(SystemMessage);
-      expect(systemMessage.content).toBe(actualSystemPromptSentToModel);
+      expect(systemMessage.content).toBe(actualSystemPromptSentToModel?.text);
     });
 
     it("should allow middleware to access state and runtime", async () => {
@@ -514,7 +508,9 @@ describe("middleware", () => {
           expectTypeOf(request.runtime.context).toMatchObjectType<{
             middlewareContext: number;
           }>();
-          expectTypeOf(request.systemPrompt!).toBeString();
+          expectTypeOf(request.systemPrompt).toEqualTypeOf<
+            SystemMessage | undefined
+          >();
 
           // Capture state and runtime
           capturedState = request.state;
@@ -593,7 +589,9 @@ describe("middleware", () => {
               // Retry with modified request
               const retryRequest = {
                 ...request,
-                systemPrompt: `${request.systemPrompt}\n[RETRY: Attempting recovery]`,
+                systemPrompt: request.systemPrompt!.concat(
+                  "[RETRY: Attempting recovery]"
+                ),
               };
               return await handler(retryRequest);
             }
@@ -657,7 +655,7 @@ describe("middleware", () => {
           // Middleware could modify the request in various ways
           const modifiedRequest = {
             ...request,
-            systemPrompt: "OVERRIDDEN: You are a pirate",
+            systemPrompt: new SystemMessage("OVERRIDDEN: You are a pirate"),
             model: pirateModel,
           };
 

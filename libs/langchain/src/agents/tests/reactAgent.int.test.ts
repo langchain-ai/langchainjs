@@ -3,7 +3,11 @@ import { tool } from "@langchain/core/tools";
 import { z } from "zod";
 import { ChatAnthropic } from "@langchain/anthropic";
 import { ChatOpenAI } from "@langchain/openai";
-import { HumanMessage, AIMessage } from "@langchain/core/messages";
+import {
+  HumanMessage,
+  AIMessage,
+  SystemMessage,
+} from "@langchain/core/messages";
 
 import { createMiddleware, createAgent, providerStrategy } from "../index.js";
 
@@ -71,7 +75,7 @@ Please provide a clear, direct, and authoritative answer, as this information wi
           ...request,
           model: anthropicModel,
           messages: newMessages,
-          systemPrompt: "You are a geography expert.",
+          systemPrompt: new SystemMessage("You are a geography expert."),
           toolChoice: "none",
           tools: [],
         });

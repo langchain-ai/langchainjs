@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from "vitest";
+import { describe, it, expect, vi, beforeEach } from "vitest";
 import { z } from "zod/v3";
 import { z as z4 } from "zod/v4";
 
@@ -7,7 +7,9 @@ import {
   AIMessage,
   HumanMessage,
   ToolMessage,
+  SystemMessage,
 } from "@langchain/core/messages";
+import { ChatAnthropic } from "@langchain/anthropic";
 import type { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
 import type { ChatResult } from "@langchain/core/outputs";
 import { StructuredTool, tool } from "@langchain/core/tools";
@@ -31,6 +33,11 @@ import {
   createCheckpointer,
   SearchAPI,
 } from "./utils.js";
+
+vi.mock(
+  "@langchain/anthropic",
+  () => import("../middleware/tests/__mocks__/@langchain/anthropic.js")
+);
 
 describe("createAgent", () => {
   let syncCheckpointer: BaseCheckpointSaver;
@@ -115,6 +122,62 @@ describe("createAgent", () => {
       ],
     };
     expect(response).toEqual(expectedResponse);
+  });
+
+  it("should accept a system message as object", async () => {
+    const systemPrompt = new SystemMessage({
+      content: [
+        {
+          type: "text",
+          text: "You are a helpful assistant.",
+        },
+        {
+          type: "text",
+          text: "Do what I say.",
+          cache_control: {
+            type: "ephemeral",
+          },
+        },
+      ],
+    });
+    const humanMessage = new HumanMessage("Hello, world!");
+    const model = new ChatAnthropic({
+      model: "claude-sonnet-4-20250514",
+    });
+    const agent = createAgent({
+      model,
+      tools: [],
+      systemPrompt,
+    });
+    await agent.invoke({
+      messages: [humanMessage],
+    });
+    expect(model.invoke).toBeCalledTimes(1);
+    expect(model.invoke).toBeCalledWith(
+      [systemPrompt, humanMessage],
+      expect.any(Object)
+    );
+  });
+
+  it("should accept a system message as string", async () => {
+    const systemPrompt = "You are a helpful assistant.";
+    const humanMessage = new HumanMessage("Hello, world!");
+    const model = new ChatAnthropic({
+      model: "claude-sonnet-4-20250514",
+    });
+    const agent = createAgent({
+      model,
+      tools: [],
+      systemPrompt,
+    });
+    await agent.invoke({
+      messages: [humanMessage],
+    });
+    expect(model.invoke).toBeCalledTimes(1);
+    expect(model.invoke).toBeCalledWith(
+      [new SystemMessage({ content: systemPrompt }), humanMessage],
+      expect.any(Object)
+    );
   });
 
   it("should validate messages correctly", () => {
@@ -378,7 +441,10 @@ describe("createAgent", () => {
         createMiddleware({
           name: "prompt",
           wrapModelCall: (request, handler) => {
-            return handler({ ...request, systemPrompt: "User name is Alice" });
+            return handler({
+              ...request,
+              systemPrompt: new SystemMessage("User name is Alice"),
+            });
           },
         }),
       ],

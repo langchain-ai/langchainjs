@@ -1,5 +1,4 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable import/no-extraneous-dependencies */
 import { expect } from "vitest";
 import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
 import {
@@ -409,7 +408,28 @@ export class FakeToolCallingModel extends BaseChatModel {
     // Handle prompt concatenation
     if (messages.length > 1) {
       const parts = messages.map((m) => m.content).filter(Boolean);
-      content = parts.join("-");
+      content = parts
+        .map((part) => {
+          if (typeof part === "string") {
+            return part;
+          } else if (typeof part === "object" && "text" in part) {
+            return part.text;
+          } else if (Array.isArray(part)) {
+            return part
+              .map((p) => {
+                if (typeof p === "string") {
+                  return p;
+                } else if (typeof p === "object" && "text" in p) {
+                  return p.text;
+                }
+                return "";
+              })
+              .join("-");
+          } else {
+            return JSON.stringify(part);
+          }
+        })
+        .join("-");
     }
 
     // Reset index at the start of a new conversation (only human message)

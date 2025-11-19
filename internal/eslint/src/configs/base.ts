@@ -90,7 +90,15 @@ const config: ConfigArray = tseslint.config(
       "import/extensions": ["error", "ignorePackages"],
       "import/no-extraneous-dependencies": [
         "error",
-        { devDependencies: ["**/*.test.ts", "**/*.test-d.ts", "**/*.spec.ts"] },
+        {
+          devDependencies: [
+            "**/*.test.ts",
+            "**/*.test-d.ts",
+            "**/*.spec.ts",
+            "**/tests/**/*.ts",
+            "**/__mocks__/**/*.ts",
+          ],
+        },
       ],
       "import/no-unresolved": "off",
       "import/prefer-default-export": "off",
@@ -145,7 +153,13 @@ const config: ConfigArray = tseslint.config(
   {
     // Test file overrides
     name: "test",
-    files: ["**/*.test.ts", "**/*.test-d.ts", "**/*.spec.ts"],
+    files: [
+      "**/*.test.ts",
+      "**/*.test-d.ts",
+      "**/*.spec.ts",
+      "**/tests/**/*.ts",
+      "**/__mocks__/**/*.ts",
+    ],
     rules: {
       "@typescript-eslint/no-unused-vars": "off",
       "no-process-env": "off",

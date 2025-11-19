@@ -1,7 +1,7 @@
 import { z } from "zod/v3";
 import { Command } from "@langchain/langgraph";
 import { tool } from "@langchain/core/tools";
-import { ToolMessage } from "@langchain/core/messages";
+import { ToolMessage, SystemMessage } from "@langchain/core/messages";
 
 import { createMiddleware } from "../index.js";
 
@@ -326,12 +326,23 @@ export function todoListMiddleware(options?: TodoListMiddlewareOptions) {
     name: "todoListMiddleware",
     stateSchema,
     tools: [writeTodos],
-    wrapModelCall: (request, handler) =>
-      handler({
+    wrapModelCall: (request, handler) => {
+      const updatedSystemPrompt = new SystemMessage({
+        content: [
+          {
+            type: "text",
+            text: `\n\n${
+              options?.systemPrompt ?? TODO_LIST_MIDDLEWARE_SYSTEM_PROMPT
+            }`,
+          },
+        ],
+      });
+      return handler({
         ...request,
-        systemPrompt:
-          (request.systemPrompt ? `${request.systemPrompt}\n\n` : "") +
-          (options?.systemPrompt ?? TODO_LIST_MIDDLEWARE_SYSTEM_PROMPT),
-      }),
+        systemPrompt: request.systemPrompt
+          ? request.systemPrompt.concat(updatedSystemPrompt)
+          : updatedSystemPrompt,
+      });
+    },
   });
 }
