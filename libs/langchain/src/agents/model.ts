@@ -1,10 +1,7 @@
 import type { LanguageModelLike } from "@langchain/core/language_models/base";
 import type { BaseChatModel } from "@langchain/core/language_models/chat_models";
 
-export interface ConfigurableModelInterface {
-  _queuedMethodOperations: Record<string, unknown>;
-  _model: () => Promise<BaseChatModel>;
-}
+import type { ConfigurableModel } from "../chat_models/universal.js";
 
 export function isBaseChatModel(
   model: LanguageModelLike
@@ -18,7 +15,7 @@ export function isBaseChatModel(
 
 export function isConfigurableModel(
   model: unknown
-): model is ConfigurableModelInterface {
+): model is ConfigurableModel {
   return (
     typeof model === "object" &&
     model != null &&

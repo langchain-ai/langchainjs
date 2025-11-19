@@ -151,7 +151,7 @@ const PROFILES: Record<string, ModelProfile> = {
     audioOutputs: false,
     videoOutputs: false,
     toolCalling: true,
-    structuredOutput: false,
+    structuredOutput: true,
     imageUrlInputs: true,
     pdfToolMessage: true,
     imageToolMessage: true,
