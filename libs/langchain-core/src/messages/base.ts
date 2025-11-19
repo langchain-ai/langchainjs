@@ -100,6 +100,8 @@ export function mergeContent(
     }
     if (typeof secondContent === "string") {
       return firstContent + secondContent;
+    } else if (Array.isArray(secondContent) && secondContent.length === 0) {
+      return firstContent;
     } else if (
       Array.isArray(secondContent) &&
       secondContent.some((c) => isDataContentBlock(c))
