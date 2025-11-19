@@ -2,7 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 import ts from "typescript";
 import type { Plugin, PluginContext } from "rolldown";
-import { formatWithPrettier } from "../utils.js";
+import { formatWithPrettier } from "../utils.ts";
 
 /**
  * Configuration options for the lc-secrets plugin.

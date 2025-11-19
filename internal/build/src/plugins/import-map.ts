@@ -1,6 +1,6 @@
 import path from "node:path";
 import type { Plugin } from "rolldown";
-import { formatWithPrettier } from "../utils.js";
+import { formatWithPrettier } from "../utils.ts";
 
 /**
  * Configuration for an extra import map entry that should be included

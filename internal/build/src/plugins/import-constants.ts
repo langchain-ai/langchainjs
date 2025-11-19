@@ -1,7 +1,7 @@
 import path from "node:path";
 import type { Plugin } from "rolldown";
 import type { PackageJson } from "type-fest";
-import { formatWithPrettier } from "../utils.js";
+import { formatWithPrettier } from "../utils.ts";
 
 /**
  * Configuration options for the import constants plugin.

@@ -1,7 +1,7 @@
 import path from "node:path";
 import fs from "node:fs/promises";
 import type { Plugin } from "rolldown";
-import { isSafeProjectPath } from "../utils.js";
+import { isSafeProjectPath } from "../utils.ts";
 
 /**
  * Options for configuring the CJS compatibility plugin.
