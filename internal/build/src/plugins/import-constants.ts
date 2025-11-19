@@ -2,6 +2,7 @@ import path from "node:path";
 import type { Plugin } from "rolldown";
 import type { PackageJson } from "type-fest";
 import { formatWithPrettier } from "../utils.ts";
+import { pathToFileURL } from "node:url";
 
 /**
  * Configuration options for the import constants plugin.
@@ -149,9 +150,12 @@ export function importConstantsPlugin(
     async buildStart() {
       if (!options.enabled) return;
 
-      const packageJson: PackageJson = await import(packageJsonPath, {
-        with: { type: "json" },
-      });
+      const packageJson: PackageJson = await import(
+        pathToFileURL(packageJsonPath).href,
+        {
+          with: { type: "json" },
+        }
+      );
       const packageSuffix = packageJson.name?.replace("@langchain/", "");
       await this.fs.mkdir(path.dirname(outputPath), { recursive: true });
 
