@@ -576,6 +576,17 @@ describe("Works with all model providers", () => {
     expect(perplexityResult).toBeDefined();
     expect(perplexityResult.content.length).toBeGreaterThan(0);
   });
+
+  it("Can invoke ovhcloud", async () => {
+    const ovhcloud = await initChatModel(undefined, {
+      modelProvider: "ovhcloud",
+      temperature: 0,
+    });
+
+    const ovhcloudResult = await ovhcloud.invoke("what's your name");
+    expect(ovhcloudResult).toBeDefined();
+    expect(ovhcloudResult.content.length).toBeGreaterThan(0);
+  });
 });
 
 /**

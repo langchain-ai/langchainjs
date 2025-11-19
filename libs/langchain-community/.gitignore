@@ -206,6 +206,10 @@ embeddings/ollama.cjs
 embeddings/ollama.js
 embeddings/ollama.d.ts
 embeddings/ollama.d.cts
+embeddings/ovhcloud.cjs
+embeddings/ovhcloud.js
+embeddings/ovhcloud.d.ts
+embeddings/ovhcloud.d.cts
 embeddings/premai.cjs
 embeddings/premai.js
 embeddings/premai.d.ts
@@ -598,6 +602,10 @@ chat_models/ollama.cjs
 chat_models/ollama.js
 chat_models/ollama.d.ts
 chat_models/ollama.d.cts
+chat_models/ovhcloud.cjs
+chat_models/ovhcloud.js
+chat_models/ovhcloud.d.ts
+chat_models/ovhcloud.d.cts
 chat_models/perplexity.cjs
 chat_models/perplexity.js
 chat_models/perplexity.d.ts

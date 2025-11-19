@@ -124,6 +124,11 @@ export const MODEL_PROVIDER_CONFIG = {
     className: "ChatPerplexity",
     hasCircularDependency: true,
   },
+  ovhcloud: {
+    package: "@langchain/community/chat_models/ovhcloud",
+    className: "ChatOVHCloudAIEndpoints",
+    hasCircularDependency: true,
+  },
 } as const;
 
 const SUPPORTED_PROVIDERS = Object.keys(
@@ -656,6 +661,7 @@ export async function initChatModel<
  *   - mistralai (@langchain/mistralai)
  *   - groq (@langchain/groq)
  *   - ollama (@langchain/ollama)
+ *   - ovhcloud (@langchain/community/chat_models/ovhcloud)
  *   - perplexity (@langchain/community/chat_models/perplexity)
  *   - cerebras (@langchain/cerebras)
  *   - deepseek (@langchain/deepseek)
