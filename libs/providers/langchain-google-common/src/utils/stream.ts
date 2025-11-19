@@ -376,9 +376,6 @@ export class SseStream implements AbstractStream {
     }
     const ret: Record<string, string> = {};
 
-    // The old regex that was vulnerable to ReDoS: /^([^:]+): \s*(.+)\n*$/
-
-    // The new regex:
     const regex = /^([^:]+):\s*([^\r\n]*?)(?:\r?\n)*$/;
     /*
     /^
