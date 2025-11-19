@@ -65,6 +65,10 @@ export {
   type ToolRetryMiddlewareConfig,
 } from "./toolRetry.js";
 export {
+  modelRetryMiddleware,
+  type ModelRetryMiddlewareConfig,
+} from "./modelRetry.js";
+export {
   toolEmulatorMiddleware,
   type ToolEmulatorOptions,
 } from "./toolEmulator.js";
