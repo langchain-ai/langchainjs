@@ -1,5 +1,5 @@
-import { Options as BuildOptions } from "tsdown";
-import { PackageJson } from "type-fest";
+import { type Options as BuildOptions } from "tsdown";
+import { type PackageJson } from "type-fest";
 import path from "node:path";
 
 export {
