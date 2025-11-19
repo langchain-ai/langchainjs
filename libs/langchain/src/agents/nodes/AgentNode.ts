@@ -57,6 +57,11 @@ type InternalModelResponse<StructuredResponseFormat> =
   | AIMessage
   | ResponseHandlerResult<StructuredResponseFormat>;
 
+/**
+ * The name of the agent node in the state graph.
+ */
+export const AGENT_NODE_NAME = "model_request";
+
 export interface AgentNodeOptions<
   StructuredResponseFormat extends Record<string, unknown> = Record<
     string,
@@ -619,13 +624,22 @@ export class AgentNode<
     }
 
     /**
+     * Default behavior: retry if `errorHandler` is undefined or truthy.
+     * Only throw if explicitly set to `false`.
+     */
+    if (errorHandler === false) {
+      throw error;
+    }
+
+    /**
      * retry if:
      */
     if (
       /**
-       * if the user has provided `true` as the `errorHandler` option, return a new AIMessage
+       * if the user has provided truthy value as the `errorHandler`, return a new AIMessage
        * with the error message and retry the tool call.
        */
+      errorHandler === undefined ||
       (typeof errorHandler === "boolean" && errorHandler) ||
       /**
        * if `errorHandler` is an array and contains MultipleStructuredOutputsError
@@ -643,7 +657,7 @@ export class AgentNode<
             }),
           ],
         },
-        goto: "model",
+        goto: AGENT_NODE_NAME,
       });
     }
 
@@ -661,7 +675,7 @@ export class AgentNode<
             }),
           ],
         },
-        goto: "model",
+        goto: AGENT_NODE_NAME,
       });
     }
 
@@ -684,14 +698,25 @@ export class AgentNode<
             }),
           ],
         },
-        goto: "model",
+        goto: AGENT_NODE_NAME,
       });
     }
 
     /**
-     * throw otherwise, e.g. if `errorHandler` is not defined or set to `false`
+     * Default: retry if we reach here
      */
-    throw error;
+    return new Command({
+      update: {
+        messages: [
+          response,
+          new ToolMessage({
+            content: error.message,
+            tool_call_id: toolCallId,
+          }),
+        ],
+      },
+      goto: AGENT_NODE_NAME,
+    });
   }
 
   #areMoreStepsNeeded(

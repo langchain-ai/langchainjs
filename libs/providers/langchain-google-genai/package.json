@@ -1,6 +1,6 @@
 {
   "name": "@langchain/google-genai",
-  "version": "1.0.1",
+  "version": "1.0.3",
   "description": "Google Generative AI integration for LangChain.js",
   "author": "LangChain",
   "license": "MIT",
@@ -23,7 +23,7 @@
     "clean": "rm -rf .turbo dist/",
     "test": "NODE_OPTIONS=--experimental-vm-modules jest --testPathIgnorePatterns=\\.int\\.test.ts --testTimeout 30000 --maxWorkers=50%",
     "test:watch": "NODE_OPTIONS=--experimental-vm-modules jest --watch --testPathIgnorePatterns=\\.int\\.test.ts",
-    "test:single": "NODE_OPTIONS=--experimental-vm-modules pnpm run jest --config jest.config.cjs --testTimeout 100000",
+    "test:single": "NODE_OPTIONS=--experimental-vm-modules jest --config jest.config.cjs --testTimeout 100000",
     "test:int": "NODE_OPTIONS=--experimental-vm-modules jest --testPathPattern=\\.int\\.test.ts --testTimeout 100000 --maxWorkers=50%",
     "test:standard:unit": "NODE_OPTIONS=--experimental-vm-modules jest --testPathPattern=\\.standard\\.test.ts --testTimeout 100000 --maxWorkers=50%",
     "test:standard:int": "NODE_OPTIONS=--experimental-vm-modules jest --testPathPattern=\\.standard\\.int\\.test.ts --testTimeout 100000 --maxWorkers=50%",
@@ -38,7 +38,7 @@
     "uuid": "^11.1.0"
   },
   "peerDependencies": {
-    "@langchain/core": "^1.0.0"
+    "@langchain/core": "workspace:*"
   },
   "devDependencies": {
     "@jest/globals": "^29.5.0",

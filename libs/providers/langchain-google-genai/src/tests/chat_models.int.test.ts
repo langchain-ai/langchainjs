@@ -23,6 +23,7 @@ import {
 } from "@google/generative-ai";
 import { concat } from "@langchain/core/utils/stream";
 import { ChatGoogleGenerativeAI } from "../chat_models.js";
+import { _FUNCTION_CALL_THOUGHT_SIGNATURES_MAP_KEY } from "../utils/common.js";
 
 // Save the original value of the 'LANGCHAIN_CALLBACKS_BACKGROUND' environment variable
 const originalBackground = process.env.LANGCHAIN_CALLBACKS_BACKGROUND;
@@ -810,66 +811,79 @@ test("calling tool with no args should work", async () => {
   expect(finalResult.content).toContain("80");
 });
 
-// test("calling tool with no args in agent should work", async () => {
-//   const { createReactAgent } = await import("@langchain/langgraph/prebuilt");
-//   const llm = new ChatGoogleGenerativeAI({
-//     model: "gemini-2.0-flash",
-//     maxRetries: 0,
-//   });
-//   const sfWeatherTool = tool(
-//     async ({}) => {
-//       return "The weather is 80 degrees and sunny";
-//     },
-//     {
-//       name: "sf_weather",
-//       description: "Get the weather in SF",
-//       schema: z.object({}),
-//     }
-//   );
-//   const agent = createReactAgent({
-//     llm,
-//     tools: [sfWeatherTool],
-//   });
-//   const result = await agent.invoke({
-//     messages: [
-//       {
-//         role: "user",
-//         content: "What is the weather in SF?",
-//       },
-//     ],
-//   });
-//   expect(result.messages.at(-1)?.content).toContain("80");
-// });
+describe("tool calling with thought signatures", () => {
+  const model = new ChatGoogleGenerativeAI({
+    model: "gemini-3-pro-preview",
+    maxRetries: 0,
+  });
+  const weatherTool = tool(async () => "The weather is 80 degrees and sunny", {
+    name: "weather",
+    description: "Gets the weather in SF",
+    schema: z.object({}),
+  });
+  const modelWithTools = model.bindTools([weatherTool]);
 
-// test("calling tool with no args in agent should work", async () => {
-//   const { createReactAgent } = await import("@langchain/langgraph/prebuilt");
-//   const llm = new ChatGoogleGenerativeAI({
-//     model: "gemini-2.0-flash",
-//     maxRetries: 0,
-//     streaming: true,
-//   });
-//   const sfWeatherTool = tool(
-//     async ({ location }) => {
-//       return `The weather in ${location} is 80 degrees and sunny`;
-//     },
-//     {
-//       name: "weather",
-//       description: "Get the weather in location",
-//       schema: z.object({ location: z.string() }),
-//     }
-//   );
-//   const agent = createReactAgent({
-//     llm,
-//     tools: [sfWeatherTool],
-//   });
-//   const result = await agent.invoke({
-//     messages: [
-//       {
-//         role: "user",
-//         content:
-//           "What is the weather in Llanfairpwllgwyngyllgogerychwyrndrobwllllantysiliogogogoch?",
-//       },
-//     ],
-//   });
-//   expect(result.messages.at(-1)?.content).toContain("80");
-// });
+  test("works when invoking", async () => {
+    const result = await modelWithTools.invoke(
+      "What is the current weather in SF?"
+    );
+    expect(result.tool_calls).toBeDefined();
+    expect(result.tool_calls!.length).toBe(1);
+    expect(result.tool_calls![0].id).toBeDefined();
+    const toolMessage = new ToolMessage({
+      content: "The weather is 80 degrees and sunny",
+      tool_call_id: result.tool_calls![0].id ?? "",
+    });
+    const thoughtSignatures = result.additional_kwargs?.[
+      _FUNCTION_CALL_THOUGHT_SIGNATURES_MAP_KEY
+    ] as Record<string, string>;
+    expect(thoughtSignatures?.[result.tool_calls![0].id ?? ""]).toBeDefined();
+    const finalResult = await model.invoke([
+      new HumanMessage("What is the current weather in SF?"),
+      result,
+      toolMessage,
+    ]);
+    expect(finalResult.content).toBeDefined();
+  });
+
+  test("works when streaming", async () => {
+    let finalChunk: AIMessageChunk | undefined;
+    for await (const chunk of await modelWithTools.stream(
+      "What is the current weather in SF?"
+    )) {
+      finalChunk = finalChunk ? finalChunk.concat(chunk) : chunk;
+    }
+    expect(finalChunk).toBeDefined();
+    expect(finalChunk?.tool_calls).toBeDefined();
+    expect(finalChunk?.tool_calls!.length).toBe(1);
+    const toolMessage = new ToolMessage({
+      content: "The weather is 80 degrees and sunny",
+      tool_call_id: finalChunk?.tool_calls![0].id ?? "",
+    });
+    const thoughtSignatures = finalChunk?.additional_kwargs?.[
+      _FUNCTION_CALL_THOUGHT_SIGNATURES_MAP_KEY
+    ] as Record<string, string>;
+    expect(
+      thoughtSignatures?.[finalChunk?.tool_calls![0].id ?? ""]
+    ).toBeDefined();
+    const finalResult = await model.invoke([
+      new HumanMessage("What is the current weather in SF?"),
+      finalChunk!,
+      toolMessage,
+    ]);
+    expect(finalResult.content).toBeDefined();
+  });
+});
+
+test("works with thinking config", async () => {
+  const model = new ChatGoogleGenerativeAI({
+    model: "gemini-3-pro-preview",
+    maxRetries: 0,
+    thinkingConfig: {
+      includeThoughts: true,
+      thinkingBudget: 100,
+    },
+  });
+  const result = await model.invoke("What is the current weather in SF?");
+  expect(result.content).toBeDefined();
+});
