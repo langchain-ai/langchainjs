@@ -32,15 +32,6 @@ export interface HybridRetrievalStrategyConfig {
   rankWindowSize?: number;
   rankConstant?: number;
   textField?: string;
-  /**
-   * Include source vectors in search responses.
-   * 
-   * Elasticsearch 9.2+ excludes vectors from `_source` by default.
-   * Set to `true` to include vectors in responses for ES 9.2+.
-   * 
-   * Note: ES < 8.19 does not support this parameter.
-   */
-  includeSourceVectors?: boolean;
 }
 
 /**
@@ -50,13 +41,11 @@ export class HybridRetrievalStrategy {
   public readonly rankWindowSize: number;
   public readonly rankConstant: number;
   public readonly textField: string;
-  public readonly includeSourceVectors?: boolean;
 
   constructor(config: HybridRetrievalStrategyConfig = {}) {
     this.rankWindowSize = config.rankWindowSize ?? 100;
     this.rankConstant = config.rankConstant ?? 60;
     this.textField = config.textField ?? "text";
-    this.includeSourceVectors = config.includeSourceVectors;
   }
 }
 
@@ -257,9 +246,6 @@ export class ElasticVectorSearch extends VectorStore {
         k,
         num_candidates: this.candidates,
       },
-      ...(this.strategy?.includeSourceVectors === true && {
-        _source: { includes: ["*"] },
-      }),
     });
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -312,9 +298,6 @@ export class ElasticVectorSearch extends VectorStore {
         },
       },
       ...(filterClauses && { query: filterClauses }),
-      ...(this.strategy?.includeSourceVectors === true && {
-        _source: { includes: ["*"] },
-      }),
     });
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
