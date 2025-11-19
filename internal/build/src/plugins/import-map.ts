@@ -151,7 +151,7 @@ export function importMapPlugin(param: ImportMapPluginOptions = {}): Plugin {
             ? cleanPath.replace(/\.ts$/, ".js")
             : `${cleanPath}.js`;
 
-          return `export * as ${exportName} from "../${path.posix.normalize(outputPath)}";`;
+          return `export * as ${exportName} from "../${outputPath.replace(/\\/g, "/")}";`;
         }),
         // Generate namespace imports for extra entries
         ...options.extraEntries.reduce((acc, { modules, alias, path }) => {
