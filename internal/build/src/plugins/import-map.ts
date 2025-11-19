@@ -133,14 +133,14 @@ export function importMapPlugin(param: ImportMapPluginOptions = {}): Plugin {
           );
 
           // Transform slashes to double underscores for export names
-          let normalizedKey = key.replace(/\\/g, "/");
+          let normalizedKey = key;
           if (normalizedKey.endsWith("/index")) {
             normalizedKey = normalizedKey.substring(
               0,
               normalizedKey.length - "/index".length
             );
           }
-          const exportName = normalizedKey.replace(/\//g, "__");
+          const exportName = normalizedKey.replace(/[/\\]/g, "__");
 
           // Transform the path to the compiled output
           // if path ends with .ts, replace with .js, otherwise append .js
@@ -151,7 +151,7 @@ export function importMapPlugin(param: ImportMapPluginOptions = {}): Plugin {
             ? cleanPath.replace(/\.ts$/, ".js")
             : `${cleanPath}.js`;
 
-          return `export * as ${exportName} from "../${outputPath}";`;
+          return `export * as ${exportName} from "../${path.posix.normalize(outputPath)}";`;
         }),
         // Generate namespace imports for extra entries
         ...options.extraEntries.reduce((acc, { modules, alias, path }) => {
