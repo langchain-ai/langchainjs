@@ -1,5 +1,11 @@
 # @langchain/anthropic
 
+## 1.1.1
+
+### Patch Changes
+
+- [#9451](https://github.com/langchain-ai/langchainjs/pull/9451) [`b1deda2`](https://github.com/langchain-ai/langchainjs/commit/b1deda21363b5a1a3f2b7bd77dc1d74764304666) Thanks [@hntrl](https://github.com/hntrl)! - fix betas being passed to client when streaming
+
 ## 1.1.0
 
 ### Minor Changes
