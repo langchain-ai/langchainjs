@@ -77,7 +77,7 @@ export default getBuildConfig({
         "load/index",
         "context",
         "callbacks/dispatch/web",
-        "callbacks/dispatch",
+        "callbacks/dispatch/index",
       ],
     }),
     importConstantsPlugin(),

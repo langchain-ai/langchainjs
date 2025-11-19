@@ -108,7 +108,7 @@ export default getBuildConfig({
         "cache/file_system",
         "storage/file_system",
         "load/index",
-        "hub",
+        "hub/index",
         "hub/node",
       ],
     }),

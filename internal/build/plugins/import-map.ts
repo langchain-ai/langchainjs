@@ -124,7 +124,14 @@ export function importMapPlugin(param: ImportMapPluginOptions = {}): Plugin {
           );
 
           // Transform slashes to double underscores for export names
-          const exportName = key.replace(/\//g, "__");
+          let normalizedKey = key;
+          if (normalizedKey.endsWith("/index")) {
+            normalizedKey = normalizedKey.substring(
+              0,
+              normalizedKey.length - "/index".length
+            );
+          }
+          const exportName = normalizedKey.replace(/\//g, "__");
 
           // Transform the path to the compiled output
           // if path ends with .ts, replace with .js, otherwise append .js

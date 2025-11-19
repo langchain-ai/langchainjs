@@ -4,10 +4,10 @@ export * as storage__file_system from "../storage/file_system.js";
 export * as storage__encoder_backed from "../storage/encoder_backed.js";
 export * as storage__in_memory from "../storage/in_memory.js";
 export * as load__serializable from "../load/serializable.js";
-export * as load__index from "../load/index.js";
+export * as load from "../load/index.js";
 export * as chat_models__universal from "../chat_models/universal.js";
 export * as index from "../index.js";
-export * as hub__index from "../hub/index.js";
+export * as hub from "../hub/index.js";
 import { PromptTemplate } from "@langchain/core/prompts";
 import {
   AIMessage,
