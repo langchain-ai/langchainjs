@@ -411,6 +411,9 @@ export function openAIModerationMiddleware(
       return undefined;
     }
 
+    /**
+     * Replace the original message with a new message that contains the violation text.
+     */
     const newMessages = [...messages];
     const original = newMessages[index];
     const MessageConstructor = Object.getPrototypeOf(original).constructor;
