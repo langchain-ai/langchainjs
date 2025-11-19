@@ -97,15 +97,15 @@
         "default": "./dist/agents.js"
       }
     },
-    "./caches/base": {
-      "input": "./src/caches/base.ts",
+    "./caches": {
+      "input": "./src/caches/index.ts",
       "require": {
-        "types": "./dist/caches/base.d.cts",
-        "default": "./dist/caches/base.cjs"
+        "types": "./dist/caches/index.d.cts",
+        "default": "./dist/caches/index.cjs"
       },
       "import": {
-        "types": "./dist/caches/base.d.ts",
-        "default": "./dist/caches/base.js"
+        "types": "./dist/caches/index.d.ts",
+        "default": "./dist/caches/index.js"
       }
     },
     "./callbacks/base": {

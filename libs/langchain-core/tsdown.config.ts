@@ -10,7 +10,7 @@ export default getBuildConfig({
   entry: [
     "./src/index.ts",
     "./src/agents.ts",
-    "./src/caches/base.ts",
+    "./src/caches/index.ts",
     "./src/callbacks/base.ts",
     "./src/callbacks/dispatch/index.ts",
     "./src/callbacks/dispatch/web.ts",

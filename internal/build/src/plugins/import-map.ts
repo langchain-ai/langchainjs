@@ -133,7 +133,7 @@ export function importMapPlugin(param: ImportMapPluginOptions = {}): Plugin {
           );
 
           // Transform slashes to double underscores for export names
-          let normalizedKey = key;
+          let normalizedKey = key.replace(/\\/g, "/");
           if (normalizedKey.endsWith("/index")) {
             normalizedKey = normalizedKey.substring(
               0,
