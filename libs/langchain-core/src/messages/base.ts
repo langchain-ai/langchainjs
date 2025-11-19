@@ -569,11 +569,18 @@ export abstract class BaseMessageChunk<
   abstract concat(chunk: BaseMessageChunk): BaseMessageChunk<TStructure, TRole>;
 
   static isInstance(obj: unknown): obj is BaseMessageChunk {
-    return (
-      super.isInstance(obj) &&
-      "concat" in obj &&
-      typeof obj.concat === "function"
-    );
+    if (!super.isInstance(obj)) {
+      return false;
+    }
+    // Check if obj is an instance of BaseMessageChunk by traversing the prototype chain
+    let proto = Object.getPrototypeOf(obj);
+    while (proto !== null) {
+      if (proto === BaseMessageChunk.prototype) {
+        return true;
+      }
+      proto = Object.getPrototypeOf(proto);
+    }
+    return false;
   }
 }
 
@@ -618,8 +625,5 @@ export function isBaseMessage(
 export function isBaseMessageChunk(
   messageLike?: unknown
 ): messageLike is BaseMessageChunk {
-  return (
-    isBaseMessage(messageLike) &&
-    typeof (messageLike as BaseMessageChunk).concat === "function"
-  );
+  return BaseMessageChunk.isInstance(messageLike);
 }
