@@ -1,5 +1,17 @@
 # @langchain/google-genai
 
+## 1.0.3
+
+### Patch Changes
+
+- [#9444](https://github.com/langchain-ai/langchainjs/pull/9444) [`39404ac`](https://github.com/langchain-ai/langchainjs/commit/39404acf76e81360054910f417d01df02981a4e6) Thanks [@hntrl](https://github.com/hntrl)! - add tier based usage metadata token count
+
+- [#9444](https://github.com/langchain-ai/langchainjs/pull/9444) [`39404ac`](https://github.com/langchain-ai/langchainjs/commit/39404acf76e81360054910f417d01df02981a4e6) Thanks [@hntrl](https://github.com/hntrl)! - fix streaming thought signature bug
+
+- [#9444](https://github.com/langchain-ai/langchainjs/pull/9444) [`39404ac`](https://github.com/langchain-ai/langchainjs/commit/39404acf76e81360054910f417d01df02981a4e6) Thanks [@hntrl](https://github.com/hntrl)! - add thinkingConfig support in ChatGoogleGenerativeAI
+
+- [#9444](https://github.com/langchain-ai/langchainjs/pull/9444) [`39404ac`](https://github.com/langchain-ai/langchainjs/commit/39404acf76e81360054910f417d01df02981a4e6) Thanks [@hntrl](https://github.com/hntrl)! - add cached token counts to usage metadata
+
 ## 1.0.2
 
 ### Patch Changes
