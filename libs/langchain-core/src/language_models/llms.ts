@@ -18,7 +18,7 @@ import {
   type BaseLanguageModelParams,
 } from "./base.js";
 import type { RunnableConfig } from "../runnables/config.js";
-import type { BaseCache } from "../caches/base.js";
+import type { BaseCache } from "../caches/index.js";
 import { concat } from "../utils/stream.js";
 import { callbackHandlerPrefersStreaming } from "../callbacks/base.js";
 

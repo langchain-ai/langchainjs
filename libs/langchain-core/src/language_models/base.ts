@@ -2,7 +2,7 @@ import type { Tiktoken, TiktokenModel } from "js-tiktoken/lite";
 import type { ZodType as ZodTypeV3 } from "zod/v3";
 import type { $ZodType as ZodTypeV4 } from "zod/v4/core";
 
-import { type BaseCache, InMemoryCache } from "../caches/base.js";
+import { type BaseCache, InMemoryCache } from "../caches/index.js";
 import {
   type BasePromptValueInterface,
   StringPromptValue,

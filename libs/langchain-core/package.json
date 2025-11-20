@@ -6,8 +6,8 @@
   "engines": {
     "node": ">=20"
   },
-  "main": "./dist/index.js",
-  "types": "./dist/index.d.ts",
+  "main": "./dist/index.cjs",
+  "types": "./dist/index.d.cts",
   "repository": {
     "type": "git",
     "url": "git@github.com:langchain-ai/langchainjs.git"
@@ -15,7 +15,7 @@
   "homepage": "https://github.com/langchain-ai/langchainjs/tree/main/langchain-core/",
   "scripts": {
     "build": "turbo build:compile --filter @langchain/core",
-    "build:compile": "pnpm --filter @langchain/build compile @langchain/core",
+    "build:compile": "tsdown",
     "clean": "rm -rf .turbo dist/",
     "lint:eslint": "eslint --cache src/",
     "lint:dpdm": "dpdm --skip-dynamic-imports circular --exit-code circular:1 --no-warning --no-tree src/*.ts src/**/*.ts --exclude \"(node_modules|src/utils/zod-to-json-schema)\" --transform",
@@ -98,14 +98,14 @@
       }
     },
     "./caches": {
-      "input": "./src/caches/base.ts",
+      "input": "./src/caches/index.ts",
       "require": {
-        "types": "./dist/caches/base.d.cts",
-        "default": "./dist/caches/base.cjs"
+        "types": "./dist/caches/index.d.cts",
+        "default": "./dist/caches/index.cjs"
       },
       "import": {
-        "types": "./dist/caches/base.d.ts",
-        "default": "./dist/caches/base.js"
+        "types": "./dist/caches/index.d.ts",
+        "default": "./dist/caches/index.js"
       }
     },
     "./callbacks/base": {
@@ -185,17 +185,6 @@
         "default": "./dist/context.js"
       }
     },
-    "./documents": {
-      "input": "./src/documents/index.ts",
-      "require": {
-        "types": "./dist/documents/index.d.cts",
-        "default": "./dist/documents/index.cjs"
-      },
-      "import": {
-        "types": "./dist/documents/index.d.ts",
-        "default": "./dist/documents/index.js"
-      }
-    },
     "./document_loaders/base": {
       "input": "./src/document_loaders/base.ts",
       "require": {
@@ -216,6 +205,17 @@
       "import": {
         "types": "./dist/document_loaders/langsmith.d.ts",
         "default": "./dist/document_loaders/langsmith.js"
+      }
+    },
+    "./documents": {
+      "input": "./src/documents/index.ts",
+      "require": {
+        "types": "./dist/documents/index.d.cts",
+        "default": "./dist/documents/index.cjs"
+      },
+      "import": {
+        "types": "./dist/documents/index.d.ts",
+        "default": "./dist/documents/index.js"
       }
     },
     "./embeddings": {
@@ -361,17 +361,6 @@
         "default": "./dist/output_parsers/index.js"
       }
     },
-    "./output_parsers/openai_tools": {
-      "input": "./src/output_parsers/openai_tools/index.ts",
-      "require": {
-        "types": "./dist/output_parsers/openai_tools/index.d.cts",
-        "default": "./dist/output_parsers/openai_tools/index.cjs"
-      },
-      "import": {
-        "types": "./dist/output_parsers/openai_tools/index.d.ts",
-        "default": "./dist/output_parsers/openai_tools/index.js"
-      }
-    },
     "./output_parsers/openai_functions": {
       "input": "./src/output_parsers/openai_functions/index.ts",
       "require": {
@@ -381,6 +370,17 @@
       "import": {
         "types": "./dist/output_parsers/openai_functions/index.d.ts",
         "default": "./dist/output_parsers/openai_functions/index.js"
+      }
+    },
+    "./output_parsers/openai_tools": {
+      "input": "./src/output_parsers/openai_tools/index.ts",
+      "require": {
+        "types": "./dist/output_parsers/openai_tools/index.d.cts",
+        "default": "./dist/output_parsers/openai_tools/index.cjs"
+      },
+      "import": {
+        "types": "./dist/output_parsers/openai_tools/index.d.ts",
+        "default": "./dist/output_parsers/openai_tools/index.js"
       }
     },
     "./outputs": {
@@ -394,6 +394,17 @@
         "default": "./dist/outputs.js"
       }
     },
+    "./prompt_values": {
+      "input": "./src/prompt_values.ts",
+      "require": {
+        "types": "./dist/prompt_values.d.cts",
+        "default": "./dist/prompt_values.cjs"
+      },
+      "import": {
+        "types": "./dist/prompt_values.d.ts",
+        "default": "./dist/prompt_values.js"
+      }
+    },
     "./prompts": {
       "input": "./src/prompts/index.ts",
       "require": {
@@ -405,15 +416,26 @@
         "default": "./dist/prompts/index.js"
       }
     },
-    "./prompt_values": {
-      "input": "./src/prompt_values.ts",
+    "./retrievers": {
+      "input": "./src/retrievers/index.ts",
       "require": {
-        "types": "./dist/prompt_values.d.cts",
-        "default": "./dist/prompt_values.cjs"
+        "types": "./dist/retrievers/index.d.cts",
+        "default": "./dist/retrievers/index.cjs"
       },
       "import": {
-        "types": "./dist/prompt_values.d.ts",
-        "default": "./dist/prompt_values.js"
+        "types": "./dist/retrievers/index.d.ts",
+        "default": "./dist/retrievers/index.js"
+      }
+    },
+    "./retrievers/document_compressors": {
+      "input": "./src/retrievers/document_compressors/index.ts",
+      "require": {
+        "types": "./dist/retrievers/document_compressors/index.d.cts",
+        "default": "./dist/retrievers/document_compressors/index.cjs"
+      },
+      "import": {
+        "types": "./dist/retrievers/document_compressors/index.d.ts",
+        "default": "./dist/retrievers/document_compressors/index.js"
       }
     },
     "./runnables": {
@@ -436,28 +458,6 @@
       "import": {
         "types": "./dist/runnables/graph.d.ts",
         "default": "./dist/runnables/graph.js"
-      }
-    },
-    "./retrievers": {
-      "input": "./src/retrievers/index.ts",
-      "require": {
-        "types": "./dist/retrievers/index.d.cts",
-        "default": "./dist/retrievers/index.cjs"
-      },
-      "import": {
-        "types": "./dist/retrievers/index.d.ts",
-        "default": "./dist/retrievers/index.js"
-      }
-    },
-    "./retrievers/document_compressors": {
-      "input": "./src/retrievers/document_compressors/base.ts",
-      "require": {
-        "types": "./dist/retrievers/document_compressors/base.d.cts",
-        "default": "./dist/retrievers/document_compressors/base.cjs"
-      },
-      "import": {
-        "types": "./dist/retrievers/document_compressors/base.d.ts",
-        "default": "./dist/retrievers/document_compressors/base.js"
       }
     },
     "./singletons": {
@@ -741,6 +741,103 @@
     "dist/",
     "CHANGELOG.md",
     "README.md",
-    "LICENSE"
-  ]
+    "LICENSE",
+    "load",
+    "load.d.cts",
+    "load.cjs",
+    "load.d.ts",
+    "load.js",
+    "prompts.d.cts",
+    "prompts.cjs",
+    "prompts.d.ts",
+    "prompts.js",
+    "utils",
+    "output_parsers",
+    "types",
+    "language_models",
+    "embeddings.d.cts",
+    "embeddings.cjs",
+    "embeddings.d.ts",
+    "embeddings.js",
+    "callbacks",
+    "caches",
+    "tracers",
+    "example_selectors.d.cts",
+    "example_selectors.cjs",
+    "example_selectors.d.ts",
+    "example_selectors.js",
+    "context.d.cts",
+    "context.cjs",
+    "context.d.ts",
+    "context.js",
+    "chat_history.d.cts",
+    "chat_history.cjs",
+    "chat_history.d.ts",
+    "chat_history.js",
+    "structured_query.d.cts",
+    "structured_query.cjs",
+    "structured_query.d.ts",
+    "structured_query.js",
+    "stores.d.cts",
+    "stores.cjs",
+    "stores.d.ts",
+    "stores.js",
+    "singletons.d.cts",
+    "singletons.cjs",
+    "singletons.d.ts",
+    "singletons.js",
+    "indexing.d.cts",
+    "indexing.cjs",
+    "indexing.d.ts",
+    "indexing.js",
+    "retrievers",
+    "documents.d.cts",
+    "documents.cjs",
+    "documents.d.ts",
+    "documents.js",
+    "messages.d.cts",
+    "messages.cjs",
+    "messages.d.ts",
+    "messages.js",
+    "runnables",
+    "output_parsers.d.cts",
+    "output_parsers.cjs",
+    "output_parsers.d.ts",
+    "output_parsers.js",
+    "prompt_values.d.cts",
+    "prompt_values.cjs",
+    "prompt_values.d.ts",
+    "prompt_values.js",
+    "document_loaders",
+    "retrievers.d.cts",
+    "retrievers.cjs",
+    "retrievers.d.ts",
+    "retrievers.js",
+    "memory.d.cts",
+    "memory.cjs",
+    "memory.d.ts",
+    "memory.js",
+    "runnables.d.cts",
+    "runnables.cjs",
+    "runnables.d.ts",
+    "runnables.js",
+    "tools.d.cts",
+    "tools.cjs",
+    "tools.d.ts",
+    "tools.js",
+    "vectorstores.d.cts",
+    "vectorstores.cjs",
+    "vectorstores.d.ts",
+    "vectorstores.js",
+    "agents.d.cts",
+    "agents.cjs",
+    "agents.d.ts",
+    "agents.js",
+    "messages",
+    "outputs.d.cts",
+    "outputs.cjs",
+    "outputs.d.ts",
+    "outputs.js"
+  ],
+  "module": "./dist/index.js"
 }

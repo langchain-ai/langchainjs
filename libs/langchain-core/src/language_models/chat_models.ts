@@ -40,7 +40,7 @@ import {
   type Callbacks,
 } from "../callbacks/manager.js";
 import type { RunnableConfig } from "../runnables/config.js";
-import type { BaseCache } from "../caches/base.js";
+import type { BaseCache } from "../caches/index.js";
 import {
   StructuredToolInterface,
   StructuredToolParams,
