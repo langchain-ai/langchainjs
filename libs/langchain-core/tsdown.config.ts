@@ -42,7 +42,7 @@ export default getBuildConfig({
     "./src/runnables/index.ts",
     "./src/runnables/graph.ts",
     "./src/retrievers/index.ts",
-    "./src/retrievers/document_compressors/base.ts",
+    "./src/retrievers/document_compressors/index.ts",
     "./src/singletons/index.ts",
     "./src/stores.ts",
     "./src/structured_query/index.ts",

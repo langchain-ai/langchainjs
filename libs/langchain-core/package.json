@@ -427,15 +427,15 @@
         "default": "./dist/retrievers/index.js"
       }
     },
-    "./retrievers/document_compressors/base": {
-      "input": "./src/retrievers/document_compressors/base.ts",
+    "./retrievers/document_compressors": {
+      "input": "./src/retrievers/document_compressors/index.ts",
       "require": {
-        "types": "./dist/retrievers/document_compressors/base.d.cts",
-        "default": "./dist/retrievers/document_compressors/base.cjs"
+        "types": "./dist/retrievers/document_compressors/index.d.cts",
+        "default": "./dist/retrievers/document_compressors/index.cjs"
       },
       "import": {
-        "types": "./dist/retrievers/document_compressors/base.d.ts",
-        "default": "./dist/retrievers/document_compressors/base.js"
+        "types": "./dist/retrievers/document_compressors/index.d.ts",
+        "default": "./dist/retrievers/document_compressors/index.js"
       }
     },
     "./runnables": {
