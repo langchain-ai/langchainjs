@@ -350,13 +350,13 @@ export function hasToolCalls(message?: BaseMessage): boolean {
  * Normalizes a system prompt to a SystemMessage object.
  * If it's already a SystemMessage, returns it as-is.
  * If it's a string, converts it to a SystemMessage.
- * If it's undefined, returns undefined.
+ * If it's undefined, creates an empty system message so it is easier to append to it later.
  */
 export function normalizeSystemPrompt(
   systemPrompt?: string | SystemMessage
-): SystemMessage | undefined {
+): SystemMessage {
   if (systemPrompt == null) {
-    return undefined;
+    return new SystemMessage("");
   }
   if (SystemMessage.isInstance(systemPrompt)) {
     return systemPrompt;
@@ -471,8 +471,11 @@ export function mergeStringWithSystemMessage(
  * @param prompt - The prompt to convert to a Runnable.
  * @returns The Runnable that will prepend the prompt to the messages.
  */
-export function getPromptRunnable(prompt?: SystemMessage): Runnable {
-  if (!prompt) {
+export function getPromptRunnable(prompt: SystemMessage): Runnable {
+  /**
+   * if no changes were made to the system message, return a noop runnable
+   */
+  if (prompt.text === "") {
     return RunnableLambda.from(
       (state: typeof MessagesAnnotation.State) => state.messages
     ).withConfig({ runName: PROMPT_RUNNABLE_NAME });

@@ -324,7 +324,7 @@ describe("middleware", () => {
   });
 
   describe("wrapModelCall", () => {
-    it("should compose three middlewares where first is outermost wrapper", async () => {
+    it.only("should compose three middlewares where first is outermost wrapper", async () => {
       /**
        * Test demonstrates:
        * 1. Middleware composition order (first middleware wraps all others)
@@ -348,14 +348,14 @@ describe("middleware", () => {
         }),
         wrapModelCall: async (request, handler) => {
           executionOrder.push("auth:before");
-          systemPrompts.push(request.systemPrompt || "");
+          systemPrompts.push(request.systemMessage.text);
 
           // Modify request: add auth context to system prompt
           const modifiedRequest = {
             ...request,
-            systemPrompt: `${
-              request.systemPrompt || ""
-            }\n[AUTH: user authenticated]`,
+            systemMessage: request.systemMessage.concat(
+              "\n[AUTH: user authenticated]"
+            ),
           };
 
           // Call inner handler (retry middleware)
@@ -376,12 +376,12 @@ describe("middleware", () => {
         name: "RetryMiddleware",
         wrapModelCall: async (request, handler) => {
           executionOrder.push("retry:before");
-          systemPrompts.push(request.systemPrompt || "");
+          systemPrompts.push(request.systemMessage.text);
 
           // Modify request: add retry info to system prompt
           const modifiedRequest = {
             ...request,
-            systemPrompt: `${request.systemPrompt || ""}\n[RETRY: attempt 1]`,
+            systemMessage: request.systemMessage.concat("\n[RETRY: attempt 1]"),
           };
 
           // Call inner handler (cache middleware)
@@ -402,16 +402,16 @@ describe("middleware", () => {
         name: "CacheMiddleware",
         wrapModelCall: async (request, handler) => {
           executionOrder.push("cache:before");
-          systemPrompts.push(request.systemPrompt || "");
+          systemPrompts.push(request.systemMessage.text);
 
           // Modify request: add cache info to system prompt
           const modifiedRequest = {
             ...request,
-            systemPrompt: `${request.systemPrompt || ""}\n[CACHE: miss]`,
+            systemMessage: request.systemMessage.concat("\n[CACHE: miss]"),
           };
 
           // Capture what will actually be sent to the model
-          actualSystemPromptSentToModel = modifiedRequest.systemPrompt;
+          actualSystemPromptSentToModel = modifiedRequest.systemMessage.text;
 
           // Call inner handler (base model handler)
           const response = await handler(modifiedRequest);

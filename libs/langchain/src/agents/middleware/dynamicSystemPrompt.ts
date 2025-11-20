@@ -65,7 +65,10 @@ export function dynamicSystemPromptMiddleware<TContextSchema = unknown>(
         );
       }
 
-      return handler({ ...request, systemPrompt });
+      return handler({
+        ...request,
+        systemMessage: request.systemMessage.concat(systemPrompt),
+      });
     },
   });
 }

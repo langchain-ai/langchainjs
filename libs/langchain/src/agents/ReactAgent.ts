@@ -27,6 +27,7 @@ import {
   isClientTool,
   validateLLMHasNoBoundTools,
   wrapToolCall,
+  normalizeSystemPrompt,
 } from "./utils.js";
 
 import { AgentNode, AGENT_NODE_NAME } from "./nodes/AgentNode.js";
@@ -240,7 +241,7 @@ export class ReactAgent<
 
     this.#agentNode = new AgentNode({
       model: this.options.model,
-      systemPrompt: this.options.systemPrompt,
+      systemMessage: normalizeSystemPrompt(this.options.systemPrompt),
       includeAgentName: this.options.includeAgentName,
       name: this.options.name,
       responseFormat: this.options.responseFormat,

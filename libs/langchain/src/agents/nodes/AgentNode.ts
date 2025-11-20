@@ -28,8 +28,6 @@ import {
   validateLLMHasNoBoundTools,
   hasToolCalls,
   isClientTool,
-  normalizeSystemPrompt,
-  mergeStringWithSystemMessage,
 } from "../utils.js";
 import { mergeAbortSignals } from "../nodes/utils.js";
 import { CreateAgentParams } from "../types.js";
@@ -78,16 +76,12 @@ export interface AgentNodeOptions<
   ContextSchema extends AnyAnnotationRoot | InteropZodObject = AnyAnnotationRoot
 > extends Pick<
     CreateAgentParams<StructuredResponseFormat, StateSchema, ContextSchema>,
-    | "model"
-    | "systemPrompt"
-    | "includeAgentName"
-    | "name"
-    | "responseFormat"
-    | "middleware"
+    "model" | "includeAgentName" | "name" | "responseFormat" | "middleware"
   > {
   toolClasses: (ClientTool | ServerTool)[];
   shouldReturnDirect: Set<string>;
   signal?: AbortSignal;
+  systemMessage: SystemMessage;
   wrapModelCallHookMiddleware?: [
     AgentMiddleware,
     () => Record<string, unknown>
@@ -121,8 +115,8 @@ export class AgentNode<
   | Command
 > {
   #options: AgentNodeOptions<StructuredResponseFormat, ContextSchema>;
-  #systemPrompt: SystemMessage | undefined;
-  #currentSystemPrompt: SystemMessage | undefined;
+  #systemMessage: SystemMessage;
+  #currentSystemMessage: SystemMessage;
 
   constructor(
     options: AgentNodeOptions<StructuredResponseFormat, ContextSchema>
@@ -133,9 +127,7 @@ export class AgentNode<
     });
 
     this.#options = options;
-    // Always normalize systemPrompt to SystemMessage internally
-    this.#systemPrompt = normalizeSystemPrompt(options.systemPrompt);
-    this.#currentSystemPrompt = this.#systemPrompt;
+    this.#systemMessage = options.systemMessage;
   }
 
   /**
@@ -482,40 +474,42 @@ export class AgentNode<
             }
 
             /**
-             * Handle systemPrompt conversion: if middleware modified systemPrompt as a string,
-             * we need to merge it with the current SystemMessage or create a new one.
-             * Update the class property to track the current state.
+             * Handle systemPrompt conversion:
+             * - check if systemPrompt is a string was changed, if so create a new SystemMessage
              */
             let normalizedReq = req;
-            if (req.systemPrompt !== undefined) {
-              if (typeof req.systemPrompt === "string") {
-                let newSystemMessage: SystemMessage;
-                if (this.#currentSystemPrompt) {
-                  // Scenario #2: Merge string with existing SystemMessage
-                  newSystemMessage = mergeStringWithSystemMessage(
-                    req.systemPrompt,
-                    this.#currentSystemPrompt
-                  );
-                } else {
-                  // Scenario #1 or #3: Convert string to SystemMessage
-                  newSystemMessage = normalizeSystemPrompt(req.systemPrompt)!;
-                }
-                // Update the current system prompt state
-                this.#currentSystemPrompt = newSystemMessage;
-                // Convert back to string for ModelRequest compatibility using .text getter
-                normalizedReq = {
-                  ...req,
-                  systemPrompt: newSystemMessage.text,
-                };
-              } else {
-                // Already a SystemMessage (shouldn't happen in ModelRequest, but handle it)
-                const systemMsg = req.systemPrompt as SystemMessage;
-                this.#currentSystemPrompt = systemMsg;
-                normalizedReq = {
-                  ...req,
-                  systemPrompt: systemMsg.text,
-                };
-              }
+            const hasSystemPromptChanged =
+              req.systemPrompt !== this.#currentSystemMessage.text;
+            const hasSystemMessageChanged =
+              req.systemMessage !== this.#currentSystemMessage;
+            if (hasSystemPromptChanged && hasSystemMessageChanged) {
+              throw new Error(
+                "Cannot change both systemPrompt and systemMessage in the same request."
+              );
+            }
+
+            if (hasSystemPromptChanged) {
+              this.#currentSystemMessage = new SystemMessage({
+                content: [{ type: "text", text: req.systemPrompt }],
+              });
+              normalizedReq = {
+                ...req,
+                systemPrompt: this.#currentSystemMessage.text,
+                systemMessage: this.#currentSystemMessage,
+              };
+            }
+            /**
+             * - if the systemMessage was changed, update the current system message
+             */
+            if (hasSystemMessageChanged) {
+              this.#currentSystemMessage = new SystemMessage({
+                ...req.systemMessage,
+              });
+              normalizedReq = {
+                ...req,
+                systemPrompt: this.#currentSystemMessage.text,
+                systemMessage: this.#currentSystemMessage,
+              };
             }
 
             return innerHandler(normalizedReq);
@@ -545,7 +539,9 @@ export class AgentNode<
 
             return middlewareResponse;
           } catch (error) {
-            // Add middleware context to error if not already added
+            /**
+             * Add middleware context to error if not already added
+             */
             if (
               error instanceof Error &&
               !error.message.includes(`middleware "${currentMiddleware.name}"`)
@@ -563,13 +559,14 @@ export class AgentNode<
      * Reset current system prompt to initial state and convert to string using .text getter
      * for backwards compatibility with ModelRequest
      */
-    this.#currentSystemPrompt = this.#systemPrompt;
+    this.#currentSystemMessage = this.#systemMessage;
     const initialRequest: ModelRequest<
       InternalAgentState<StructuredResponseFormat> & PreHookAnnotation["State"],
       unknown
-    > = {
+    > = Object.freeze({
       model,
-      systemPrompt: this.#currentSystemPrompt?.text,
+      systemPrompt: this.#currentSystemMessage?.text,
+      systemMessage: this.#currentSystemMessage,
       messages: state.messages,
       tools: this.#options.toolClasses,
       state,
@@ -579,7 +576,7 @@ export class AgentNode<
         interrupt: lgConfig.interrupt,
         signal: lgConfig.signal,
       }) as Runtime<unknown>,
-    };
+    });
 
     return wrappedHandler(initialRequest);
   }
@@ -874,7 +871,7 @@ export class AgentNode<
      * Create a model runnable with the prompt and agent name
      * Use current SystemMessage state (which may have been modified by middleware)
      */
-    const modelRunnable = getPromptRunnable(this.#currentSystemPrompt).pipe(
+    const modelRunnable = getPromptRunnable(this.#currentSystemMessage).pipe(
       this.#options.includeAgentName === "inline"
         ? withAgentName(modelWithTools, this.#options.includeAgentName)
         : modelWithTools

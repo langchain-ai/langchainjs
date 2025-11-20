@@ -24,11 +24,28 @@ export interface ModelRequest<
    */
   messages: BaseMessage[];
   /**
-   * The system message for this step.
-   * This is kept as string for backwards compatibility in ModelRequest.
-   * Use ModelRequestParameters for string | SystemMessage support.
+   * The system message string for this step.
+   *
+   * @default ""
+   * @deprecated Use {@link ModelRequest.systemMessage} instead.
    */
-  systemPrompt?: string;
+  systemPrompt: string;
+  /**
+   * The system message for this step. If no `systemPrompt` was provided, when `createAgent`
+   * was initialized, an empty system message will be used.
+   *
+   * @default new SystemMessage("")
+   * @example extend system message
+   * ```ts
+   * wrapModelCall: async (request, handler) => {
+   *   return handler({
+   *     ...request,
+   *     systemMessage: request.systemMessage.concat("something")
+   *   });
+   * }
+   * ```
+   */
+  systemMessage: SystemMessage;
   /**
    * Tool choice configuration (model-specific format).
    * Can be one of:
