@@ -43,7 +43,7 @@ export interface WatsonxLLMParams {
   topK?: number;
   topP?: number;
   repetitionPenalty?: number;
-  truncateInpuTokens?: number;
+  truncateInputTokens?: number;
   returnOptions?: ReturnOptionProperties;
   includeStopSequence?: boolean;
 }
@@ -130,7 +130,7 @@ export class WatsonxLLM<
 
   repetitionPenalty?: number;
 
-  truncateInpuTokens?: number;
+  truncateInputTokens?: number;
 
   returnOptions?: ReturnOptionProperties;
 
@@ -162,7 +162,7 @@ export class WatsonxLLM<
       this.topK = fields.topK;
       this.topP = fields.topP;
       this.repetitionPenalty = fields.repetitionPenalty;
-      this.truncateInpuTokens = fields.truncateInpuTokens;
+      this.truncateInputTokens = fields.truncateInputTokens;
       this.returnOptions = fields.returnOptions;
       this.includeStopSequence = fields.includeStopSequence;
       this.projectId = fields?.projectId;
@@ -259,7 +259,7 @@ export class WatsonxLLM<
       repetition_penalty:
         parameters?.repetitionPenalty ?? this.repetitionPenalty,
       truncate_input_tokens:
-        parameters?.truncateInpuTokens ?? this.truncateInpuTokens,
+        parameters?.truncateInputTokens ?? this.truncateInputTokens,
       return_options: parameters?.returnOptions ?? this.returnOptions,
       include_stop_sequence:
         parameters?.includeStopSequence ?? this.includeStopSequence,
