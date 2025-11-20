@@ -48,6 +48,14 @@ export class SystemMessage<
     if (SystemMessage.isInstance(chunk)) {
       return new SystemMessage({
         ...this,
+        additional_kwargs: {
+          ...this.additional_kwargs,
+          ...chunk.additional_kwargs,
+        },
+        response_metadata: {
+          ...this.response_metadata,
+          ...chunk.response_metadata,
+        },
         content: mergeContent(this.content, chunk.content),
       });
     }

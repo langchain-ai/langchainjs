@@ -108,7 +108,7 @@ export type WrapModelCallHandler<
   request: Omit<
     ModelRequest<NormalizedSchemaInput<TSchema>, TContext>,
     "systemPrompt"
-  > & { systemPrompt?: string | SystemMessage }
+  > & { systemPrompt?: string; systemMessage?: SystemMessage }
 ) => PromiseOrValue<AIMessage>;
 
 /**
