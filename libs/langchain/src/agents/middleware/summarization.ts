@@ -200,8 +200,15 @@ export type SummarizationMiddlewareConfig = InferInteropZodInput<
  */
 export function getProfileLimits(input: BaseLanguageModel): number | undefined {
   // Access maxInputTokens on the model profile directly if available
-  if (input.profile.maxInputTokens) {
-    return input.profile.maxInputTokens;
+  if (
+    "profile" in input &&
+    typeof input.profile === "object" &&
+    input.profile &&
+    "maxInputTokens" in input.profile &&
+    (typeof input.profile.maxInputTokens === "number" ||
+      input.profile.maxInputTokens == null)
+  ) {
+    return input.profile.maxInputTokens ?? undefined;
   }
 
   // Fallback to using model name if available
@@ -323,11 +330,11 @@ export function summarizationMiddleware(
        * Merge context with user options
        */
       const resolvedTrigger =
-        runtime.context.trigger !== undefined
+        runtime.context?.trigger !== undefined
           ? runtime.context.trigger
           : trigger;
       const resolvedKeep =
-        runtime.context.keep !== undefined
+        runtime.context?.keep !== undefined
           ? runtime.context.keep
           : keep ?? { messages: DEFAULT_MESSAGES_TO_KEEP };
 
@@ -373,13 +380,13 @@ export function summarizationMiddleware(
       }
 
       const summaryPrompt =
-        runtime.context.summaryPrompt === DEFAULT_SUMMARY_PROMPT
+        runtime.context?.summaryPrompt === DEFAULT_SUMMARY_PROMPT
           ? userOptions.summaryPrompt ?? DEFAULT_SUMMARY_PROMPT
-          : runtime.context.summaryPrompt ??
+          : runtime.context?.summaryPrompt ??
             userOptions.summaryPrompt ??
             DEFAULT_SUMMARY_PROMPT;
       const trimTokensToSummarize =
-        runtime.context.trimTokensToSummarize !== undefined
+        runtime.context?.trimTokensToSummarize !== undefined
           ? runtime.context.trimTokensToSummarize
           : userOptions.trimTokensToSummarize ?? DEFAULT_TRIM_TOKEN_LIMIT;
 
@@ -389,7 +396,7 @@ export function summarizationMiddleware(
       ensureMessageIds(state.messages);
 
       const tokenCounter =
-        runtime.context.tokenCounter !== undefined
+        runtime.context?.tokenCounter !== undefined
           ? runtime.context.tokenCounter
           : userOptions.tokenCounter ?? countTokensApproximately;
       const totalTokens = await tokenCounter(state.messages);

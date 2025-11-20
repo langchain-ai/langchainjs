@@ -1,5 +1,25 @@
 # langchain
 
+## 1.0.6
+
+### Patch Changes
+
+- [#9434](https://github.com/langchain-ai/langchainjs/pull/9434) [`f7cfece`](https://github.com/langchain-ai/langchainjs/commit/f7cfecec29bf0f121e1a8b0baface5327d731122) Thanks [@deepansh946](https://github.com/deepansh946)! - Updated error handling behaviour of AgentNode
+
+## 1.0.5
+
+### Patch Changes
+
+- [#9403](https://github.com/langchain-ai/langchainjs/pull/9403) [`944bf56`](https://github.com/langchain-ai/langchainjs/commit/944bf56ff0926e102c56a3073bfde6b751c97794) Thanks [@christian-bromann](https://github.com/christian-bromann)! - improvements to toolEmulator middleware
+
+- [#9388](https://github.com/langchain-ai/langchainjs/pull/9388) [`831168a`](https://github.com/langchain-ai/langchainjs/commit/831168a5450bff706a319842626214281204346d) Thanks [@hntrl](https://github.com/hntrl)! - use `profile.maxInputTokens` in summarization middleware
+
+- [#9393](https://github.com/langchain-ai/langchainjs/pull/9393) [`f1e2f9e`](https://github.com/langchain-ai/langchainjs/commit/f1e2f9eeb365bae78c8b5991ed41bfed58f25da6) Thanks [@christian-bromann](https://github.com/christian-bromann)! - align context editing with summarization interface
+
+- [#9427](https://github.com/langchain-ai/langchainjs/pull/9427) [`bad7aea`](https://github.com/langchain-ai/langchainjs/commit/bad7aea86d3f60616952104c34a33de9561867c7) Thanks [@dqbd](https://github.com/dqbd)! - fix(langchain): add tool call contents and tool call ID to improve token count approximation
+
+- [#9396](https://github.com/langchain-ai/langchainjs/pull/9396) [`ed6b581`](https://github.com/langchain-ai/langchainjs/commit/ed6b581e525cdf5d3b29abb1e17ca6169554c1b5) Thanks [@christian-bromann](https://github.com/christian-bromann)! - rename exit behavior from throw to error
+
 ## 1.0.4
 
 ### Patch Changes
