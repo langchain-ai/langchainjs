@@ -6,7 +6,7 @@ import type {
 import type { START, END, StateGraph } from "@langchain/langgraph";
 
 import type { LanguageModelLike } from "@langchain/core/language_models/base";
-import type { BaseMessage } from "@langchain/core/messages";
+import type { BaseMessage, SystemMessage } from "@langchain/core/messages";
 import type {
   BaseCheckpointSaver,
   BaseStore,
@@ -212,8 +212,9 @@ export type CreateAgentParams<
 
   /**
    * An optional system message for the model.
+   * Can be a string or a SystemMessage object (for advanced features like cache control).
    */
-  systemPrompt?: string;
+  systemPrompt?: string | SystemMessage;
 
   /**
    * An optional schema for the agent state. It allows you to define custom state properties that persist

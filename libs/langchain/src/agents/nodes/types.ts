@@ -1,5 +1,5 @@
 import type { LanguageModelLike } from "@langchain/core/language_models/base";
-import type { BaseMessage } from "@langchain/core/messages";
+import type { BaseMessage, SystemMessage } from "@langchain/core/messages";
 import type { ServerTool, ClientTool } from "@langchain/core/tools";
 
 import type { Runtime, AgentBuiltInState } from "../runtime.js";
@@ -25,6 +25,8 @@ export interface ModelRequest<
   messages: BaseMessage[];
   /**
    * The system message for this step.
+   * This is kept as string for backwards compatibility in ModelRequest.
+   * Use ModelRequestParameters for string | SystemMessage support.
    */
   systemPrompt?: string;
   /**
@@ -71,4 +73,22 @@ export interface ModelRequest<
    * ```
    */
   modelSettings?: Record<string, unknown>;
+}
+
+/**
+ * Extended ModelRequest that supports SystemMessage in addition to string for systemPrompt.
+ * This allows middleware to work with SystemMessage objects for advanced features like cache control.
+ *
+ * @template TState - The agent's state type, must extend Record<string, unknown>. Defaults to Record<string, unknown>.
+ * @template TContext - The runtime context type for accessing metadata and control flow. Defaults to unknown.
+ */
+export interface ModelRequestParameters<
+  TState extends Record<string, unknown> = Record<string, unknown>,
+  TContext = unknown
+> extends Omit<ModelRequest<TState, TContext>, "systemPrompt"> {
+  /**
+   * The system message for this step.
+   * Can be a string or SystemMessage object (for advanced features like cache control).
+   */
+  systemPrompt?: string | SystemMessage;
 }

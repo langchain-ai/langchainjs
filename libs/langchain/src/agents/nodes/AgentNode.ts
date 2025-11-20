@@ -1,6 +1,11 @@
 /* eslint-disable no-instanceof/no-instanceof */
 import { Runnable, RunnableConfig } from "@langchain/core/runnables";
-import { BaseMessage, AIMessage, ToolMessage } from "@langchain/core/messages";
+import {
+  BaseMessage,
+  AIMessage,
+  ToolMessage,
+  SystemMessage,
+} from "@langchain/core/messages";
 import { Command, type LangGraphRunnableConfig } from "@langchain/langgraph";
 import { type LanguageModelLike } from "@langchain/core/language_models/base";
 import { type BaseChatModelCallOptions } from "@langchain/core/language_models/chat_models";
@@ -23,6 +28,8 @@ import {
   validateLLMHasNoBoundTools,
   hasToolCalls,
   isClientTool,
+  normalizeSystemPrompt,
+  mergeStringWithSystemMessage,
 } from "../utils.js";
 import { mergeAbortSignals } from "../nodes/utils.js";
 import { CreateAgentParams } from "../types.js";
@@ -114,6 +121,8 @@ export class AgentNode<
   | Command
 > {
   #options: AgentNodeOptions<StructuredResponseFormat, ContextSchema>;
+  #systemPrompt: SystemMessage | undefined;
+  #currentSystemPrompt: SystemMessage | undefined;
 
   constructor(
     options: AgentNodeOptions<StructuredResponseFormat, ContextSchema>
@@ -124,6 +133,9 @@ export class AgentNode<
     });
 
     this.#options = options;
+    // Always normalize systemPrompt to SystemMessage internally
+    this.#systemPrompt = normalizeSystemPrompt(options.systemPrompt);
+    this.#currentSystemPrompt = this.#systemPrompt;
   }
 
   /**
@@ -469,7 +481,44 @@ export class AgentNode<
               );
             }
 
-            return innerHandler(req);
+            /**
+             * Handle systemPrompt conversion: if middleware modified systemPrompt as a string,
+             * we need to merge it with the current SystemMessage or create a new one.
+             * Update the class property to track the current state.
+             */
+            let normalizedReq = req;
+            if (req.systemPrompt !== undefined) {
+              if (typeof req.systemPrompt === "string") {
+                let newSystemMessage: SystemMessage;
+                if (this.#currentSystemPrompt) {
+                  // Scenario #2: Merge string with existing SystemMessage
+                  newSystemMessage = mergeStringWithSystemMessage(
+                    req.systemPrompt,
+                    this.#currentSystemPrompt
+                  );
+                } else {
+                  // Scenario #1 or #3: Convert string to SystemMessage
+                  newSystemMessage = normalizeSystemPrompt(req.systemPrompt)!;
+                }
+                // Update the current system prompt state
+                this.#currentSystemPrompt = newSystemMessage;
+                // Convert back to string for ModelRequest compatibility using .text getter
+                normalizedReq = {
+                  ...req,
+                  systemPrompt: newSystemMessage.text,
+                };
+              } else {
+                // Already a SystemMessage (shouldn't happen in ModelRequest, but handle it)
+                const systemMsg = req.systemPrompt as SystemMessage;
+                this.#currentSystemPrompt = systemMsg;
+                normalizedReq = {
+                  ...req,
+                  systemPrompt: systemMsg.text,
+                };
+              }
+            }
+
+            return innerHandler(normalizedReq);
           };
 
           // Call middleware's wrapModelCall with the validation handler
@@ -511,13 +560,16 @@ export class AgentNode<
 
     /**
      * Execute the wrapped handler with the initial request
+     * Reset current system prompt to initial state and convert to string using .text getter
+     * for backwards compatibility with ModelRequest
      */
+    this.#currentSystemPrompt = this.#systemPrompt;
     const initialRequest: ModelRequest<
       InternalAgentState<StructuredResponseFormat> & PreHookAnnotation["State"],
       unknown
     > = {
       model,
-      systemPrompt: this.#options.systemPrompt,
+      systemPrompt: this.#currentSystemPrompt?.text,
       messages: state.messages,
       tools: this.#options.toolClasses,
       state,
@@ -820,10 +872,9 @@ export class AgentNode<
 
     /**
      * Create a model runnable with the prompt and agent name
+     * Use current SystemMessage state (which may have been modified by middleware)
      */
-    const modelRunnable = getPromptRunnable(
-      preparedOptions?.systemPrompt ?? this.#options.systemPrompt
-    ).pipe(
+    const modelRunnable = getPromptRunnable(this.#currentSystemPrompt).pipe(
       this.#options.includeAgentName === "inline"
         ? withAgentName(modelWithTools, this.#options.includeAgentName)
         : modelWithTools

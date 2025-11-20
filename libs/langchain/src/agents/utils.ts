@@ -29,6 +29,7 @@ import {
   RunnableBinding,
 } from "@langchain/core/runnables";
 import type { ClientTool, ServerTool } from "@langchain/core/tools";
+import type { ContentBlock } from "@langchain/core/messages";
 
 import { isBaseChatModel, isConfigurableModel } from "./model.js";
 import { MultipleToolsBoundError } from "./errors.js";
@@ -345,27 +346,145 @@ export function hasToolCalls(message?: BaseMessage): boolean {
   );
 }
 
-type Prompt = string | SystemMessage;
+/**
+ * Normalizes a system prompt to a SystemMessage object.
+ * If it's already a SystemMessage, returns it as-is.
+ * If it's a string, converts it to a SystemMessage.
+ * If it's undefined, returns undefined.
+ */
+export function normalizeSystemPrompt(
+  systemPrompt?: string | SystemMessage
+): SystemMessage | undefined {
+  if (systemPrompt == null) {
+    return undefined;
+  }
+  if (SystemMessage.isInstance(systemPrompt)) {
+    return systemPrompt;
+  }
+  if (typeof systemPrompt === "string") {
+    return new SystemMessage({
+      content: [{ type: "text", text: systemPrompt }],
+    });
+  }
+  throw new Error(
+    `Invalid systemPrompt type: expected string or SystemMessage, got ${typeof systemPrompt}`
+  );
+}
 
-export function getPromptRunnable(prompt?: Prompt): Runnable {
-  let promptRunnable: Runnable;
+/**
+ * Extracts all text content from a SystemMessage.
+ * Handles both string and array content formats.
+ */
+function extractTextFromSystemMessage(systemMessage: SystemMessage): string[] {
+  if (typeof systemMessage.content === "string") {
+    return [systemMessage.content];
+  }
+  if (Array.isArray(systemMessage.content)) {
+    return systemMessage.content
+      .filter((block) => {
+        if (typeof block === "string") {
+          return true;
+        }
+        return block.type === "text" && typeof block.text === "string";
+      })
+      .map((block) => {
+        if (typeof block === "string") {
+          return block;
+        }
+        return block.text;
+      }) as string[];
+  }
+  return [];
+}
 
-  if (prompt == null) {
-    promptRunnable = RunnableLambda.from(
-      (state: typeof MessagesAnnotation.State) => state.messages
-    ).withConfig({ runName: PROMPT_RUNNABLE_NAME });
-  } else if (typeof prompt === "string") {
-    const systemMessage = new SystemMessage(prompt);
-    promptRunnable = RunnableLambda.from(
-      (state: typeof MessagesAnnotation.State) => {
-        return [systemMessage, ...(state.messages ?? [])];
+/**
+ * Merges a string with a SystemMessage, reconstructing the SystemMessage
+ * with the new text content while preserving existing content blocks.
+ *
+ * Scenario #2: If someone does:
+ *   systemPrompt: "Hello " + request.systemPrompt + "!"
+ * This will identify text content parts and reconstruct a new SystemMessage.
+ */
+export function mergeStringWithSystemMessage(
+  text: string,
+  systemMessage: SystemMessage
+): SystemMessage {
+  const textParts = extractTextFromSystemMessage(systemMessage);
+  const newTextParts: ContentBlock[] = [];
+
+  // Try to match text parts from the original SystemMessage in the new text
+  let lastIndex = 0;
+
+  for (const originalText of textParts) {
+    const index = text.indexOf(originalText, lastIndex);
+    if (index !== -1) {
+      // Found the original text, add prefix if any
+      if (index > lastIndex) {
+        newTextParts.push({
+          type: "text",
+          text: text.slice(lastIndex, index),
+        });
       }
-    ).withConfig({ runName: PROMPT_RUNNABLE_NAME });
-  } else {
-    throw new Error(`Got unexpected type for 'prompt': ${typeof prompt}`);
+      // Add the original text block (preserving any cache_control etc.)
+      const originalBlock = Array.isArray(systemMessage.content)
+        ? systemMessage.content.find(
+            (block) =>
+              block.type === "text" &&
+              typeof block.text === "string" &&
+              block.text === originalText
+          )
+        : null;
+      if (originalBlock) {
+        newTextParts.push(originalBlock as { type: "text"; text: string });
+      } else {
+        newTextParts.push({ type: "text", text: originalText });
+      }
+      lastIndex = index + originalText.length;
+    }
   }
 
-  return promptRunnable;
+  // Add any remaining text
+  if (lastIndex < text.length) {
+    newTextParts.push({
+      type: "text",
+      text: text.slice(lastIndex),
+    });
+  }
+
+  // If we couldn't match any parts, just create a new SystemMessage with the text
+  if (newTextParts.length === 0) {
+    return new SystemMessage({ content: [{ type: "text", text }] });
+  }
+
+  // Preserve non-text blocks from original if it was an array
+  const nonTextBlocks = Array.isArray(systemMessage.content)
+    ? systemMessage.content.filter((block) => block.type !== "text")
+    : [];
+
+  return new SystemMessage({
+    content: [...newTextParts, ...nonTextBlocks],
+  });
+}
+
+/**
+ * Converts a SystemMessage to a Runnable that will prepend the prompt to the messages.
+ * @param prompt - The prompt to convert to a Runnable.
+ * @returns The Runnable that will prepend the prompt to the messages.
+ */
+export function getPromptRunnable(prompt?: SystemMessage): Runnable {
+  if (!prompt) {
+    return RunnableLambda.from(
+      (state: typeof MessagesAnnotation.State) => state.messages
+    ).withConfig({ runName: PROMPT_RUNNABLE_NAME });
+  }
+
+  if (SystemMessage.isInstance(prompt)) {
+    return RunnableLambda.from((state: typeof MessagesAnnotation.State) => {
+      return [prompt, ...(state.messages ?? [])];
+    }).withConfig({ runName: PROMPT_RUNNABLE_NAME });
+  }
+
+  throw new Error(`Got unexpected type for 'prompt': ${typeof prompt}`);
 }
 
 /**

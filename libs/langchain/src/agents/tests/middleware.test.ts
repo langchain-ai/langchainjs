@@ -488,7 +488,24 @@ describe("middleware", () => {
 
       // Model should receive system message + user message
       expect(systemMessage).toBeInstanceOf(SystemMessage);
-      expect(systemMessage.content).toBe(actualSystemPromptSentToModel);
+      expect(systemMessage.content).toEqual([
+        {
+          text: "You are helpful",
+          type: "text",
+        },
+        {
+          text: "\n[AUTH: user authenticated]",
+          type: "text",
+        },
+        {
+          text: "\n[RETRY: attempt 1]",
+          type: "text",
+        },
+        {
+          text: "\n[CACHE: miss]",
+          type: "text",
+        },
+      ]);
     });
 
     it("should allow middleware to access state and runtime", async () => {
