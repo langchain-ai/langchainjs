@@ -67,6 +67,19 @@ import {
 } from "./utils/zod_to_gemini_parameters.js";
 import PROFILES from "./profiles.js";
 
+/**
+ * Helper to automatically infer Gemini property ordering from a Zod schema.
+ */
+function withPropertyOrdering<RunOutput extends Record<string, any>>(
+  schema: InteropZodType<RunOutput>
+): string[] {
+  try {
+    return Object.keys(schema.shape ?? {});
+  } catch {
+    return [];
+  }
+}
+
 export class ChatConnection<AuthOptions> extends AbstractGoogleLLMConnection<
   BaseMessage[],
   AuthOptions
@@ -178,7 +191,6 @@ export abstract class ChatGoogleBase<AuthOptions>
   extends BaseChatModel<GoogleAIBaseLanguageModelCallOptions, AIMessageChunk>
   implements ChatGoogleBaseInput<AuthOptions>
 {
-  // Used for tracing, replace with the same name as your class
   static lc_name() {
     return "ChatGoogle";
   }
@@ -191,52 +203,28 @@ export abstract class ChatGoogleBase<AuthOptions>
 
   lc_serializable = true;
 
-  // Set based on modelName
   model: string;
-
   modelName = "gemini-pro";
-
   temperature: number;
-
   maxOutputTokens: number;
-
   maxReasoningTokens: number;
-
   topP: number;
-
   topK: number;
-
   seed: number;
-
   presencePenalty: number;
-
   frequencyPenalty: number;
-
   stopSequences: string[] = [];
-
   logprobs: boolean;
-
   topLogprobs: number = 0;
-
   safetySettings: GoogleAISafetySetting[] = [];
-
   responseModalities?: GoogleAIModelModality[];
-
-  // May intentionally be undefined, meaning to compute this.
   convertSystemMessageToHumanContent: boolean | undefined;
-
   safetyHandler: GoogleAISafetyHandler;
-
   speechConfig: GoogleSpeechConfig;
-
   streamUsage = true;
-
   streaming = false;
-
   labels?: Record<string, string>;
-
   protected connection: ChatConnection<AuthOptions>;
-
   protected streamedConnection: ChatConnection<AuthOptions>;
 
   constructor(fields?: ChatGoogleBaseInput<AuthOptions>) {
@@ -319,14 +307,10 @@ export abstract class ChatGoogleBase<AuthOptions>
     return this.withConfig({ tools: convertToGeminiTools(tools), ...kwargs });
   }
 
-  // Replace
   _llmType() {
     return "chat_integration";
   }
 
-  /**
-   * Get the parameters used to invoke the model
-   */
   override invocationParams(options?: this["ParsedCallOptions"]) {
     return copyAIModelParams(this, options);
   }
@@ -346,9 +330,7 @@ export abstract class ChatGoogleBase<AuthOptions>
       if (!finalChunk) {
         throw new Error("No chunks were returned from the stream.");
       }
-      return {
-        generations: [finalChunk],
-      };
+      return { generations: [finalChunk] };
     }
 
     const response = await this.connection.request(
@@ -370,7 +352,6 @@ export abstract class ChatGoogleBase<AuthOptions>
     options: this["ParsedCallOptions"],
     runManager?: CallbackManagerForLLMRun
   ): AsyncGenerator<ChatGenerationChunk> {
-    // Make the call as a streaming request
     const parameters = this.invocationParams(options);
     const response = await this.streamedConnection.request(
       _messages,
@@ -378,20 +359,13 @@ export abstract class ChatGoogleBase<AuthOptions>
       options,
       runManager
     );
-
-    // Get the streaming parser of the response
     const stream = response.data as JsonStream;
     let usageMetadata: UsageMetadata | undefined;
-    // Loop until the end of the stream
-    // During the loop, yield each time we get a chunk from the streaming parser
-    // that is either available or added to the queue
     while (!stream.streamDone) {
       const output = await stream.nextChunk();
       await runManager?.handleCustomEvent(
         `google-chunk-${this.constructor.name}`,
-        {
-          output,
-        }
+        { output }
       );
       if (
         output &&
@@ -430,7 +404,6 @@ export abstract class ChatGoogleBase<AuthOptions>
     }
   }
 
-  /** @ignore */
   _combineLLMOutput() {
     return [];
   }
@@ -449,43 +422,15 @@ export abstract class ChatGoogleBase<AuthOptions>
   }
 
   withStructuredOutput<
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     RunOutput extends Record<string, any> = Record<string, any>
   >(
     outputSchema:
       | InteropZodType<RunOutput>
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      | Record<string, any>,
-    config?: StructuredOutputMethodOptions<false>
-  ): Runnable<BaseLanguageModelInput, RunOutput>;
-
-  withStructuredOutput<
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    RunOutput extends Record<string, any> = Record<string, any>
-  >(
-    outputSchema:
-      | InteropZodType<RunOutput>
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      | Record<string, any>,
-    config?: StructuredOutputMethodOptions<true>
-  ): Runnable<BaseLanguageModelInput, { raw: BaseMessage; parsed: RunOutput }>;
-
-  withStructuredOutput<
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    RunOutput extends Record<string, any> = Record<string, any>
-  >(
-    outputSchema:
-      | InteropZodType<RunOutput>
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
     config?: StructuredOutputMethodOptions<boolean>
   ):
     | Runnable<BaseLanguageModelInput, RunOutput>
-    | Runnable<
-        BaseLanguageModelInput,
-        { raw: BaseMessage; parsed: RunOutput }
-      > {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    | Runnable<BaseLanguageModelInput, { raw: BaseMessage; parsed: RunOutput }> {
     const schema: InteropZodType<RunOutput> | Record<string, any> =
       outputSchema;
     const name = config?.name;
@@ -498,8 +443,15 @@ export abstract class ChatGoogleBase<AuthOptions>
     let functionName = name ?? "extract";
     let outputParser: BaseLLMOutputParser<RunOutput>;
     let tools: GeminiTool[];
+
     if (isInteropZodSchema(schema)) {
       const jsonSchema = schemaToGeminiParameters(schema);
+
+      // 🧩 Add inferred property ordering for Gemini structured outputs
+      if (!jsonSchema.propertyOrdering) {
+        jsonSchema.propertyOrdering = withPropertyOrdering(schema);
+      }
+
       tools = [
         {
           functionDeclarations: [
@@ -527,7 +479,6 @@ export abstract class ChatGoogleBase<AuthOptions>
         geminiFunctionDefinition = schema as GeminiFunctionDeclaration;
         functionName = schema.name;
       } else {
-        // We are providing the schema for *just* the parameters, probably
         const parameters: GeminiJsonSchema = removeAdditionalProperties(schema);
         geminiFunctionDefinition = {
           name: functionName,
@@ -545,6 +496,7 @@ export abstract class ChatGoogleBase<AuthOptions>
         keyName: functionName,
       });
     }
+
     const llm = this.bindTools(tools).withConfig({ tool_choice: functionName });
 
     if (!includeRaw) {
@@ -554,7 +506,6 @@ export abstract class ChatGoogleBase<AuthOptions>
     }
 
     const parserAssign = RunnablePassthrough.assign({
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       parsed: (input: any, config) => outputParser.invoke(input.raw, config),
     });
     const parserNone = RunnablePassthrough.assign({
@@ -563,13 +514,12 @@ export abstract class ChatGoogleBase<AuthOptions>
     const parsedWithFallback = parserAssign.withFallbacks({
       fallbacks: [parserNone],
     });
+
     return RunnableSequence.from<
       BaseLanguageModelInput,
       { raw: BaseMessage; parsed: RunOutput }
     >([
-      {
-        raw: llm,
-      },
+      { raw: llm },
       parsedWithFallback,
     ]).withConfig({
       runName: "StructuredOutputRunnable",
