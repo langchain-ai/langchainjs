@@ -45,7 +45,10 @@ importers:
         version: 2.8.8
       semver:
         specifier: ^7.5.4
-        version: 7.7.2
+        version: 7.7.3
+      tsdown:
+        specifier: ^0.15.12
+        version: 0.15.12(@arethetypeswrong/core@0.18.2)(@typescript/native-preview@7.0.0-dev.20251117.1)(publint@0.3.15)(typescript@5.9.3)(unplugin-unused@0.5.6)
       tsx:
         specifier: ^4.20.3
         version: 4.20.6
@@ -255,7 +258,7 @@ importers:
         version: 3.0.0
       '@vitest/coverage-v8':
         specifier: ^3.2.4
-        version: 3.2.4(vitest@3.2.4(@types/debug@4.1.12)(@types/node@24.10.1)(jiti@2.5.1)(jsdom@26.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.5))(terser@5.44.1)(tsx@3.14.0)(yaml@2.8.1))
+        version: 3.2.4(vitest@3.2.4(@types/debug@4.1.12)(@types/node@24.10.1)(jiti@2.6.1)(jsdom@22.1.0(bufferutil@4.0.9))(terser@5.44.1)(tsx@3.14.0)(yaml@2.8.1))
       '@xata.io/client':
         specifier: ^0.28.0
         version: 0.28.4(typescript@5.8.3)
@@ -291,7 +294,7 @@ importers:
         version: 2.2.7
       eslint:
         specifier: ^9.36.0
-        version: 9.36.0(jiti@2.5.1)
+        version: 9.39.1(jiti@2.6.1)
       exa-js:
         specifier: ^1.0.12
         version: 1.10.2(encoding@0.1.13)(ws@8.18.3(bufferutil@4.0.9))
@@ -321,13 +324,13 @@ importers:
         version: 2.0.8
       lunary:
         specifier: ^0.8.8
-        version: 0.8.8(@anthropic-ai/sdk@0.65.0(zod@3.25.76))(openai@5.12.2(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.5))(zod@3.25.76))(react@19.0.0)
+        version: 0.8.8(@anthropic-ai/sdk@0.69.0(zod@3.25.76))(openai@5.23.2(ws@8.18.3(bufferutil@4.0.9))(zod@3.25.76))(react@19.0.0)
       mariadb:
         specifier: ^3.4.0
         version: 3.4.5
       mem0ai:
         specifier: ^2.1.8
-        version: 2.1.36(@anthropic-ai/sdk@0.65.0(zod@3.25.76))(@cloudflare/workers-types@4.20250801.0)(@google/genai@1.12.0(@modelcontextprotocol/sdk@1.19.1)(bufferutil@4.0.9)(encoding@0.1.13)(utf-8-validate@6.0.5))(@langchain/core@libs+langchain-core)(@mistralai/mistralai@1.10.0)(@qdrant/js-client-rest@1.15.0(typescript@5.8.3))(@supabase/supabase-js@2.53.0(bufferutil@4.0.9)(utf-8-validate@6.0.5))(@types/jest@29.5.14)(@types/pg@8.15.5)(@types/sqlite3@3.1.11)(cloudflare@4.5.0(encoding@0.1.13))(encoding@0.1.13)(groq-sdk@0.19.0(encoding@0.1.13))(neo4j-driver@5.28.1)(ollama@0.5.18)(pg@8.16.3)(redis@4.7.1)(sqlite3@5.1.7)(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.5))
+        version: 2.1.38(@anthropic-ai/sdk@0.69.0(zod@3.25.76))(@cloudflare/workers-types@4.20251117.0)(@google/genai@1.29.1(@modelcontextprotocol/sdk@1.22.0(@cfworker/json-schema@4.1.1))(bufferutil@4.0.9))(@langchain/core@libs+langchain-core)(@mistralai/mistralai@1.10.0)(@qdrant/js-client-rest@1.15.1(typescript@5.8.3))(@supabase/supabase-js@2.81.1(bufferutil@4.0.9))(@types/jest@29.5.14)(@types/pg@8.15.6)(@types/sqlite3@3.1.11)(cloudflare@4.5.0(encoding@0.1.13))(encoding@0.1.13)(groq-sdk@0.19.0(encoding@0.1.13))(neo4j-driver@5.28.2)(ollama@0.5.18)(pg@8.16.3)(redis@4.7.1)(sqlite3@5.1.7)(ws@8.18.3(bufferutil@4.0.9))
       mongodb:
         specifier: ^6.20.0
         version: 6.21.0(@aws-sdk/credential-providers@3.932.0)(socks@2.8.7)
@@ -384,7 +387,7 @@ importers:
         version: 10.0.0
       vitest:
         specifier: ^3.2.4
-        version: 3.2.4(@types/debug@4.1.12)(@types/node@24.10.1)(jiti@2.5.1)(jsdom@26.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.5))(terser@5.44.1)(tsx@3.14.0)(yaml@2.8.1)
+        version: 3.2.4(@types/debug@4.1.12)(@types/node@24.10.1)(jiti@2.6.1)(jsdom@22.1.0(bufferutil@4.0.9))(terser@5.44.1)(tsx@3.14.0)(yaml@2.8.1)
       voy-search:
         specifier: 0.6.2
         version: 0.6.2
@@ -410,9 +413,6 @@ importers:
       '@arethetypeswrong/core':
         specifier: ^0.18.2
         version: 0.18.2
-      '@tsconfig/recommended':
-        specifier: ^1.0.10
-        version: 1.0.10
       '@typescript/native-preview':
         specifier: ^7.0.0-dev.20250730.1
         version: 7.0.0-dev.20251117.1
@@ -421,13 +421,13 @@ importers:
         version: 3.6.2
       publint:
         specifier: ^0.3.12
-        version: 0.3.12
+        version: 0.3.15
+      rolldown:
+        specifier: 1.0.0-beta.30
+        version: 1.0.0-beta.30
       tsdown:
-        specifier: ^0.13.0
-        version: 0.13.1(@arethetypeswrong/core@0.18.2)(@typescript/native-preview@7.0.0-dev.20250801.1)(publint@0.3.12)(typescript@5.9.3)(unplugin-unused@0.5.1)
-      tsx:
-        specifier: ^4.20.3
-        version: 4.20.3
+        specifier: ^0.15.12
+        version: 0.15.12(@arethetypeswrong/core@0.18.2)(@typescript/native-preview@7.0.0-dev.20251117.1)(publint@0.3.15)(typescript@5.9.3)(unplugin-unused@0.5.6)
       type-fest:
         specifier: ^4.41.0
         version: 4.41.0
@@ -436,7 +436,17 @@ importers:
         version: 5.9.3
       unplugin-unused:
         specifier: ^0.5.1
-        version: 0.5.1
+        version: 0.5.6
+    devDependencies:
+      '@langchain/eslint':
+        specifier: workspace:*
+        version: link:../eslint
+      '@tsconfig/recommended':
+        specifier: ^1.0.10
+        version: 1.0.13
+      eslint:
+        specifier: ^9.39.1
+        version: 9.39.1(jiti@2.6.1)
     optionalDependencies:
       '@esbuild/win32-x64':
         specifier: '*'
@@ -482,16 +492,16 @@ importers:
         version: 24.10.1
       eslint-config-prettier:
         specifier: ^10.1.8
-        version: 10.1.8(eslint@9.36.0(jiti@2.5.1))
+        version: 10.1.8(eslint@9.39.1(jiti@2.6.1))
       eslint-plugin-import:
         specifier: ^2.32.0
-        version: 2.32.0(@typescript-eslint/parser@8.45.0(eslint@9.36.0(jiti@2.5.1))(typescript@5.9.3))(eslint@9.36.0(jiti@2.5.1))
+        version: 2.32.0(@typescript-eslint/parser@8.46.4(eslint@9.39.1(jiti@2.6.1))(typescript@5.9.3))(eslint@9.39.1(jiti@2.6.1))
       eslint-plugin-no-instanceof:
         specifier: ^1.0.1
         version: 1.0.1
       eslint-plugin-prettier:
         specifier: ^5.2.1
-        version: 5.5.4(@types/eslint@9.6.1)(eslint-config-prettier@10.1.8(eslint@9.36.0(jiti@2.5.1)))(eslint@9.36.0(jiti@2.5.1))(prettier@3.6.2)
+        version: 5.5.4(@types/eslint@9.6.1)(eslint-config-prettier@10.1.8(eslint@9.39.1(jiti@2.6.1)))(eslint@9.39.1(jiti@2.6.1))(prettier@3.6.2)
       globals:
         specifier: ^16.4.0
         version: 16.5.0
@@ -500,11 +510,11 @@ importers:
         version: 3.6.2
       typescript-eslint:
         specifier: ^8.40.0
-        version: 8.45.0(eslint@9.36.0(jiti@2.5.1))(typescript@5.9.3)
+        version: 8.46.4(eslint@9.39.1(jiti@2.6.1))(typescript@5.9.3)
     devDependencies:
       eslint:
         specifier: ^9.34.0
-        version: 9.36.0(jiti@2.5.1)
+        version: 9.39.1(jiti@2.6.1)
       typescript:
         specifier: ^5.9.2
         version: 5.9.3
@@ -554,7 +564,7 @@ importers:
         version: link:../eslint
       eslint:
         specifier: ^9.34.0
-        version: 9.36.0(jiti@2.5.1)
+        version: 9.39.1(jiti@2.6.1)
       prettier:
         specifier: ^3.6.1
         version: 3.6.2
@@ -584,7 +594,7 @@ importers:
         version: 16.6.1
       eslint:
         specifier: ^9.34.0
-        version: 9.36.0(jiti@2.5.1)
+        version: 9.39.1(jiti@2.6.1)
       fast-glob:
         specifier: ^3.3.2
         version: 3.3.3
@@ -657,7 +667,7 @@ importers:
         version: 8.18.1
       '@vitest/coverage-v8':
         specifier: ^3.2.4
-        version: 3.2.4(vitest@3.2.4(@types/debug@4.1.12)(@types/node@24.10.1)(jiti@2.5.1)(jsdom@26.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.5))(terser@5.44.1)(tsx@4.20.3)(yaml@2.8.1))
+        version: 3.2.4(vitest@3.2.4(@types/debug@4.1.12)(@types/node@24.10.1)(jiti@2.6.1)(jsdom@22.1.0(bufferutil@4.0.9))(terser@5.44.1)(tsx@4.20.6)(yaml@2.8.1))
       cheerio:
         specifier: 1.0.0-rc.12
         version: 1.0.0-rc.12
@@ -669,7 +679,7 @@ importers:
         version: 3.14.0
       eslint:
         specifier: ^9.34.0
-        version: 9.36.0(jiti@2.5.1)
+        version: 9.39.1(jiti@2.6.1)
       openai:
         specifier: ^5.1.0
         version: 5.23.2(ws@8.18.3(bufferutil@4.0.9))(zod@4.1.12)
@@ -696,7 +706,7 @@ importers:
         version: 5.8.3
       vitest:
         specifier: ^3.2.4
-        version: 3.2.4(@types/debug@4.1.12)(@types/node@24.10.1)(jiti@2.5.1)(jsdom@26.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.5))(terser@5.44.1)(tsx@4.20.3)(yaml@2.8.1)
+        version: 3.2.4(@types/debug@4.1.12)(@types/node@24.10.1)(jiti@2.6.1)(jsdom@22.1.0(bufferutil@4.0.9))(terser@5.44.1)(tsx@4.20.6)(yaml@2.8.1)
       yaml:
         specifier: ^2.8.1
         version: 2.8.1
@@ -919,7 +929,7 @@ importers:
         version: 3.0.0
       '@vitest/coverage-v8':
         specifier: ^3.2.4
-        version: 3.2.4(vitest@3.2.4(@types/debug@4.1.12)(@types/node@24.10.1)(jiti@2.5.1)(jsdom@26.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.5))(terser@5.44.1)(tsx@4.20.3)(yaml@2.8.1))
+        version: 3.2.4(vitest@3.2.4(@types/debug@4.1.12)(@types/node@24.10.1)(jiti@2.6.1)(jsdom@22.1.0(bufferutil@4.0.9))(terser@5.44.1)(tsx@4.20.6)(yaml@2.8.1))
       '@xata.io/client':
         specifier: ^0.28.4
         version: 0.28.4(typescript@5.8.3)
@@ -955,7 +965,7 @@ importers:
         version: 2.2.7
       eslint:
         specifier: ^9.36.0
-        version: 9.36.0(jiti@2.5.1)
+        version: 9.39.1(jiti@2.6.1)
       exa-js:
         specifier: ^1.0.12
         version: 1.10.2(encoding@0.1.13)(ws@8.18.3(bufferutil@4.0.9))
@@ -979,13 +989,13 @@ importers:
         version: 2.0.8
       lunary:
         specifier: ^0.8.8
-        version: 0.8.8(@anthropic-ai/sdk@0.65.0(zod@3.25.76))(openai@5.12.2(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.5))(zod@3.25.76))(react@19.0.0)
+        version: 0.8.8(@anthropic-ai/sdk@0.69.0(zod@4.1.12))(openai@5.23.2(ws@8.18.3(bufferutil@4.0.9))(zod@4.1.12))(react@19.0.0)
       mariadb:
         specifier: ^3.4.0
         version: 3.4.5
       mem0ai:
         specifier: ^2.1.8
-        version: 2.1.36(@anthropic-ai/sdk@0.65.0(zod@3.25.76))(@cloudflare/workers-types@4.20250801.0)(@google/genai@1.12.0(@modelcontextprotocol/sdk@1.19.1)(bufferutil@4.0.9)(encoding@0.1.13)(utf-8-validate@6.0.5))(@langchain/core@libs+langchain-core)(@mistralai/mistralai@1.10.0)(@qdrant/js-client-rest@1.15.0(typescript@5.8.3))(@supabase/supabase-js@2.53.0(bufferutil@4.0.9)(utf-8-validate@6.0.5))(@types/jest@29.5.14)(@types/pg@8.15.5)(@types/sqlite3@3.1.11)(cloudflare@4.5.0(encoding@0.1.13))(encoding@0.1.13)(groq-sdk@0.19.0(encoding@0.1.13))(neo4j-driver@5.28.1)(ollama@0.5.18)(pg@8.16.3)(redis@4.7.1)(sqlite3@5.1.7)(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.5))
+        version: 2.1.38(@anthropic-ai/sdk@0.69.0(zod@4.1.12))(@cloudflare/workers-types@4.20251117.0)(@google/genai@1.29.1(@modelcontextprotocol/sdk@1.22.0(@cfworker/json-schema@4.1.1))(bufferutil@4.0.9))(@langchain/core@libs+langchain-core)(@mistralai/mistralai@1.10.0)(@qdrant/js-client-rest@1.15.1(typescript@5.8.3))(@supabase/supabase-js@2.81.1(bufferutil@4.0.9))(@types/jest@29.5.14)(@types/pg@8.15.6)(@types/sqlite3@3.1.11)(cloudflare@4.5.0(encoding@0.1.13))(encoding@0.1.13)(groq-sdk@0.19.0(encoding@0.1.13))(neo4j-driver@5.28.2)(ollama@0.5.18)(pg@8.16.3)(redis@4.7.1)(sqlite3@5.1.7)(ws@8.18.3(bufferutil@4.0.9))
       mongodb:
         specifier: ^6.17.0
         version: 6.21.0(@aws-sdk/credential-providers@3.932.0)(socks@2.8.7)
@@ -1036,7 +1046,7 @@ importers:
         version: 1.8.2(@babel/runtime@7.28.4)
       vitest:
         specifier: ^3.2.4
-        version: 3.2.4(@types/debug@4.1.12)(@types/node@24.10.1)(jiti@2.5.1)(jsdom@26.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.5))(terser@5.44.1)(tsx@4.20.3)(yaml@2.8.1)
+        version: 3.2.4(@types/debug@4.1.12)(@types/node@24.10.1)(jiti@2.6.1)(jsdom@22.1.0(bufferutil@4.0.9))(terser@5.44.1)(tsx@4.20.6)(yaml@2.8.1)
       voy-search:
         specifier: 0.6.2
         version: 0.6.2
@@ -1143,7 +1153,7 @@ importers:
         version: 4.0.6
       '@getzep/zep-cloud':
         specifier: ^1.0.6
-        version: 1.0.12(@langchain/core@libs+langchain-core)(encoding@0.1.13)(langchain@0.3.30(7ab95453cc610a345a5692baeecbc52c))
+        version: 1.0.12(@langchain/core@libs+langchain-core)(encoding@0.1.13)(langchain@libs+langchain)
       '@getzep/zep-js':
         specifier: ^0.9.0
         version: 0.9.0
@@ -1410,7 +1420,7 @@ importers:
         version: 3.0.2(ts-toolbelt@9.6.0)
       eslint:
         specifier: ^9.34.0
-        version: 9.36.0(jiti@2.5.1)
+        version: 9.39.1(jiti@2.6.1)
       faiss-node:
         specifier: ^0.5.1
         version: 0.5.1
@@ -1479,7 +1489,10 @@ importers:
         version: 3.4.5
       mem0ai:
         specifier: ^2.1.8
-        version: 2.1.36(@anthropic-ai/sdk@0.65.0(zod@3.25.76))(@cloudflare/workers-types@4.20250801.0)(@google/genai@1.12.0(@modelcontextprotocol/sdk@1.19.1)(bufferutil@4.0.9)(encoding@0.1.13)(utf-8-validate@6.0.5))(@langchain/core@libs+langchain-core)(@mistralai/mistralai@1.10.0)(@qdrant/js-client-rest@1.15.0(typescript@5.8.3))(@supabase/supabase-js@2.53.0(bufferutil@4.0.9)(utf-8-validate@6.0.5))(@types/jest@29.5.14)(@types/pg@8.15.5)(@types/sqlite3@3.1.11)(cloudflare@4.5.0(encoding@0.1.13))(encoding@0.1.13)(groq-sdk@0.19.0(encoding@0.1.13))(neo4j-driver@5.28.1)(ollama@0.5.18)(pg@8.16.3)(redis@4.7.1)(sqlite3@5.1.7)(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.5))
+        version: 2.1.38(@anthropic-ai/sdk@0.69.0(zod@4.1.12))(@cloudflare/workers-types@4.20251117.0)(@google/genai@1.29.1(@modelcontextprotocol/sdk@1.22.0(@cfworker/json-schema@4.1.1))(bufferutil@4.0.9))(@langchain/core@libs+langchain-core)(@mistralai/mistralai@1.10.0)(@qdrant/js-client-rest@1.15.1(typescript@5.8.3))(@supabase/supabase-js@2.81.1(bufferutil@4.0.9))(@types/jest@29.5.14)(@types/pg@8.15.6)(@types/sqlite3@3.1.11)(cloudflare@4.5.0(encoding@0.1.13))(encoding@0.1.13)(groq-sdk@0.19.0(encoding@0.1.13))(neo4j-driver@5.28.2)(ollama@0.5.18)(pg@8.16.3)(redis@4.7.1)(sqlite3@5.1.7)(ws@8.18.3(bufferutil@4.0.9))
+      mime-types:
+        specifier: ^3.0.1
+        version: 3.0.1
       mongodb:
         specifier: ^6.17.0
         version: 6.21.0(@aws-sdk/credential-providers@3.932.0)(socks@2.8.7)
@@ -1630,7 +1643,7 @@ importers:
         version: 3.14.0
       eslint:
         specifier: ^9.34.0
-        version: 9.36.0(jiti@2.5.1)
+        version: 9.39.1(jiti@2.6.1)
       ml-matrix:
         specifier: ^6.10.4
         version: 6.12.1
@@ -1645,7 +1658,7 @@ importers:
         version: 5.8.3
       vitest:
         specifier: ^3.2.4
-        version: 3.2.4(@types/debug@4.1.12)(@types/node@24.10.1)(jiti@2.5.1)(jsdom@26.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.5))(terser@5.44.1)(tsx@4.20.3)(yaml@2.8.1)
+        version: 3.2.4(@types/debug@4.1.12)(@types/node@24.10.1)(jiti@2.6.1)(jsdom@22.1.0(bufferutil@4.0.9))(terser@5.44.1)(tsx@4.20.6)(yaml@2.8.1)
       web-streams-polyfill:
         specifier: ^4.0.0
         version: 4.2.0
@@ -1691,7 +1704,7 @@ importers:
         version: 22.19.1
       '@vitest/coverage-v8':
         specifier: ^3.2.4
-        version: 3.2.4(vitest@3.2.4(@types/debug@4.1.12)(@types/node@22.18.8)(jiti@2.5.1)(jsdom@26.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.5))(terser@5.44.1)(tsx@4.20.3)(yaml@2.8.1))
+        version: 3.2.4(vitest@3.2.4(@types/debug@4.1.12)(@types/node@22.19.1)(jiti@2.6.1)(jsdom@22.1.0(bufferutil@4.0.9))(terser@5.44.1)(tsx@4.20.6)(yaml@2.8.1))
       dotenv:
         specifier: ^16.6.1
         version: 16.6.1
@@ -1700,7 +1713,7 @@ importers:
         version: 3.14.0
       eslint:
         specifier: ^9.36.0
-        version: 9.36.0(jiti@2.5.1)
+        version: 9.39.1(jiti@2.6.1)
       eventsource:
         specifier: ^3.0.7
         version: 3.0.7
@@ -1727,10 +1740,10 @@ importers:
         version: 5.8.3
       typescript-eslint:
         specifier: ^8.45.0
-        version: 8.45.0(eslint@9.36.0(jiti@2.5.1))(typescript@5.8.3)
+        version: 8.46.4(eslint@9.39.1(jiti@2.6.1))(typescript@5.8.3)
       vitest:
         specifier: ^3.2.4
-        version: 3.2.4(@types/debug@4.1.12)(@types/node@22.18.8)(jiti@2.5.1)(jsdom@26.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.5))(terser@5.44.1)(tsx@4.20.3)(yaml@2.8.1)
+        version: 3.2.4(@types/debug@4.1.12)(@types/node@22.19.1)(jiti@2.6.1)(jsdom@22.1.0(bufferutil@4.0.9))(terser@5.44.1)(tsx@4.20.6)(yaml@2.8.1)
     optionalDependencies:
       extended-eventsource:
         specifier: ^1.7.0
@@ -1762,7 +1775,7 @@ importers:
         version: 3.14.0
       eslint:
         specifier: ^9.34.0
-        version: 9.36.0(jiti@2.5.1)
+        version: 9.39.1(jiti@2.6.1)
       jest:
         specifier: ^29.5.0
         version: 29.7.0(@types/node@24.10.1)(ts-node@10.9.2(@swc/core@1.15.2(@swc/helpers@0.5.17))(@types/node@24.10.1)(typescript@5.8.3))
@@ -1777,7 +1790,7 @@ importers:
         version: 5.8.3
       vitest:
         specifier: ^3.2.4
-        version: 3.2.4(@types/debug@4.1.12)(@types/node@24.10.1)(jiti@2.5.1)(jsdom@26.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.5))(terser@5.44.1)(tsx@4.20.3)(yaml@2.8.1)
+        version: 3.2.4(@types/debug@4.1.12)(@types/node@24.10.1)(jiti@2.6.1)(jsdom@22.1.0(bufferutil@4.0.9))(terser@5.44.1)(tsx@4.20.6)(yaml@2.8.1)
 
   libs/langchain-textsplitters:
     dependencies:
@@ -1796,7 +1809,7 @@ importers:
         version: 1.0.13
       '@vitest/coverage-v8':
         specifier: ^3.2.4
-        version: 3.2.4(vitest@3.2.4(@types/debug@4.1.12)(@types/node@24.10.1)(jiti@2.5.1)(jsdom@26.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.5))(terser@5.44.1)(tsx@4.20.3)(yaml@2.8.1))
+        version: 3.2.4(vitest@3.2.4(@types/debug@4.1.12)(@types/node@24.10.1)(jiti@2.6.1)(jsdom@22.1.0(bufferutil@4.0.9))(terser@5.44.1)(tsx@4.20.6)(yaml@2.8.1))
       dotenv:
         specifier: ^16.3.1
         version: 16.6.1
@@ -1805,7 +1818,7 @@ importers:
         version: 3.14.0
       eslint:
         specifier: ^9.34.0
-        version: 9.36.0(jiti@2.5.1)
+        version: 9.39.1(jiti@2.6.1)
       prettier:
         specifier: ^2.8.3
         version: 2.8.8
@@ -1817,7 +1830,7 @@ importers:
         version: 5.8.3
       vitest:
         specifier: ^3.2.4
-        version: 3.2.4(@types/debug@4.1.12)(@types/node@24.10.1)(jiti@2.5.1)(jsdom@26.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.5))(terser@5.44.1)(tsx@4.20.3)(yaml@2.8.1)
+        version: 3.2.4(@types/debug@4.1.12)(@types/node@24.10.1)(jiti@2.6.1)(jsdom@22.1.0(bufferutil@4.0.9))(terser@5.44.1)(tsx@4.20.6)(yaml@2.8.1)
 
   libs/providers/langchain-anthropic:
     dependencies:
@@ -1845,7 +1858,7 @@ importers:
         version: 1.0.13
       '@vitest/coverage-v8':
         specifier: ^3.2.4
-        version: 3.2.4(vitest@3.2.4(@types/debug@4.1.12)(@types/node@24.10.1)(jiti@2.5.1)(jsdom@26.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.5))(terser@5.44.1)(tsx@4.20.3)(yaml@2.8.1))
+        version: 3.2.4(vitest@3.2.4(@types/debug@4.1.12)(@types/node@24.10.1)(jiti@2.6.1)(jsdom@22.1.0(bufferutil@4.0.9))(terser@5.44.1)(tsx@4.20.6)(yaml@2.8.1))
       dotenv:
         specifier: ^17.2.1
         version: 17.2.3
@@ -1854,7 +1867,7 @@ importers:
         version: 3.14.0
       eslint:
         specifier: ^9.34.0
-        version: 9.36.0(jiti@2.5.1)
+        version: 9.39.1(jiti@2.6.1)
       prettier:
         specifier: ^2.8.3
         version: 2.8.8
@@ -1869,7 +1882,7 @@ importers:
         version: 13.0.0
       vitest:
         specifier: ^3.2.4
-        version: 3.2.4(@types/debug@4.1.12)(@types/node@24.10.1)(jiti@2.5.1)(jsdom@26.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.5))(terser@5.44.1)(tsx@4.20.3)(yaml@2.8.1)
+        version: 3.2.4(@types/debug@4.1.12)(@types/node@24.10.1)(jiti@2.6.1)(jsdom@22.1.0(bufferutil@4.0.9))(terser@5.44.1)(tsx@4.20.6)(yaml@2.8.1)
       zod:
         specifier: 3.25.76
         version: 3.25.76
@@ -1909,7 +1922,7 @@ importers:
         version: 1.0.13
       '@vitest/coverage-v8':
         specifier: ^3.2.4
-        version: 3.2.4(vitest@3.2.4(@types/debug@4.1.12)(@types/node@24.10.1)(jiti@2.5.1)(jsdom@26.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.5))(terser@5.44.1)(tsx@4.20.3)(yaml@2.8.1))
+        version: 3.2.4(vitest@3.2.4(@types/debug@4.1.12)(@types/node@24.10.1)(jiti@2.6.1)(jsdom@22.1.0(bufferutil@4.0.9))(terser@5.44.1)(tsx@4.20.6)(yaml@2.8.1))
       dotenv:
         specifier: ^16.3.1
         version: 16.6.1
@@ -1918,7 +1931,7 @@ importers:
         version: 3.14.0
       eslint:
         specifier: ^9.34.0
-        version: 9.36.0(jiti@2.5.1)
+        version: 9.39.1(jiti@2.6.1)
       prettier:
         specifier: ^2.8.3
         version: 2.8.8
@@ -1930,7 +1943,7 @@ importers:
         version: 5.8.3
       vitest:
         specifier: ^3.2.4
-        version: 3.2.4(@types/debug@4.1.12)(@types/node@24.10.1)(jiti@2.5.1)(jsdom@26.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.5))(terser@5.44.1)(tsx@4.20.3)(yaml@2.8.1)
+        version: 3.2.4(@types/debug@4.1.12)(@types/node@24.10.1)(jiti@2.6.1)(jsdom@22.1.0(bufferutil@4.0.9))(terser@5.44.1)(tsx@4.20.6)(yaml@2.8.1)
       zod:
         specifier: ^3.25.76
         version: 3.25.76
@@ -1961,7 +1974,7 @@ importers:
         version: 1.0.13
       '@vitest/coverage-v8':
         specifier: ^3.2.4
-        version: 3.2.4(vitest@3.2.4(@types/debug@4.1.12)(@types/node@24.10.1)(jiti@2.5.1)(jsdom@26.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.5))(terser@5.44.1)(tsx@4.20.3)(yaml@2.8.1))
+        version: 3.2.4(vitest@3.2.4(@types/debug@4.1.12)(@types/node@24.10.1)(jiti@2.6.1)(jsdom@22.1.0(bufferutil@4.0.9))(terser@5.44.1)(tsx@4.20.6)(yaml@2.8.1))
       dotenv:
         specifier: ^16.4.5
         version: 16.6.1
@@ -1970,7 +1983,7 @@ importers:
         version: 3.14.0
       eslint:
         specifier: ^9.34.0
-        version: 9.36.0(jiti@2.5.1)
+        version: 9.39.1(jiti@2.6.1)
       prettier:
         specifier: ^2.8.3
         version: 2.8.8
@@ -1982,7 +1995,7 @@ importers:
         version: 5.8.3
       vitest:
         specifier: ^3.2.4
-        version: 3.2.4(@types/debug@4.1.12)(@types/node@24.10.1)(jiti@2.5.1)(jsdom@26.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.5))(terser@5.44.1)(tsx@4.20.3)(yaml@2.8.1)
+        version: 3.2.4(@types/debug@4.1.12)(@types/node@24.10.1)(jiti@2.6.1)(jsdom@22.1.0(bufferutil@4.0.9))(terser@5.44.1)(tsx@4.20.6)(yaml@2.8.1)
 
   libs/providers/langchain-azure-dynamic-sessions:
     dependencies:
@@ -2007,7 +2020,7 @@ importers:
         version: 9.0.8
       '@vitest/coverage-v8':
         specifier: ^3.2.4
-        version: 3.2.4(vitest@3.2.4(@types/debug@4.1.12)(@types/node@24.10.1)(jiti@2.5.1)(jsdom@26.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.5))(terser@5.44.1)(tsx@4.20.3)(yaml@2.8.1))
+        version: 3.2.4(vitest@3.2.4(@types/debug@4.1.12)(@types/node@24.10.1)(jiti@2.6.1)(jsdom@22.1.0(bufferutil@4.0.9))(terser@5.44.1)(tsx@4.20.6)(yaml@2.8.1))
       dotenv:
         specifier: ^16.4.5
         version: 16.6.1
@@ -2016,7 +2029,7 @@ importers:
         version: 3.14.0
       eslint:
         specifier: ^9.34.0
-        version: 9.36.0(jiti@2.5.1)
+        version: 9.39.1(jiti@2.6.1)
       prettier:
         specifier: ^2.8.3
         version: 2.8.8
@@ -2028,7 +2041,7 @@ importers:
         version: 5.8.3
       vitest:
         specifier: ^3.2.4
-        version: 3.2.4(@types/debug@4.1.12)(@types/node@24.10.1)(jiti@2.5.1)(jsdom@26.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.5))(terser@5.44.1)(tsx@4.20.3)(yaml@2.8.1)
+        version: 3.2.4(@types/debug@4.1.12)(@types/node@24.10.1)(jiti@2.6.1)(jsdom@22.1.0(bufferutil@4.0.9))(terser@5.44.1)(tsx@4.20.6)(yaml@2.8.1)
 
   libs/providers/langchain-baidu-qianfan:
     dependencies:
@@ -2053,7 +2066,7 @@ importers:
         version: 9.0.8
       '@vitest/coverage-v8':
         specifier: ^3.2.4
-        version: 3.2.4(vitest@3.2.4(@types/debug@4.1.12)(@types/node@24.10.1)(jiti@2.5.1)(jsdom@26.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.5))(terser@5.44.1)(tsx@4.20.3)(yaml@2.8.1))
+        version: 3.2.4(vitest@3.2.4(@types/debug@4.1.12)(@types/node@24.10.1)(jiti@2.6.1)(jsdom@22.1.0(bufferutil@4.0.9))(terser@5.44.1)(tsx@4.20.6)(yaml@2.8.1))
       dotenv:
         specifier: ^16.3.1
         version: 16.6.1
@@ -2062,7 +2075,7 @@ importers:
         version: 3.14.0
       eslint:
         specifier: ^9.34.0
-        version: 9.36.0(jiti@2.5.1)
+        version: 9.39.1(jiti@2.6.1)
       prettier:
         specifier: ^2.8.3
         version: 2.8.8
@@ -2074,7 +2087,7 @@ importers:
         version: 5.8.3
       vitest:
         specifier: ^3.2.4
-        version: 3.2.4(@types/debug@4.1.12)(@types/node@24.10.1)(jiti@2.5.1)(jsdom@26.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.5))(terser@5.44.1)(tsx@4.20.3)(yaml@2.8.1)
+        version: 3.2.4(@types/debug@4.1.12)(@types/node@24.10.1)(jiti@2.6.1)(jsdom@22.1.0(bufferutil@4.0.9))(terser@5.44.1)(tsx@4.20.6)(yaml@2.8.1)
 
   libs/providers/langchain-cerebras:
     dependencies:
@@ -2117,7 +2130,7 @@ importers:
         version: 3.14.0
       eslint:
         specifier: ^9.34.0
-        version: 9.36.0(jiti@2.5.1)
+        version: 9.39.1(jiti@2.6.1)
       jest:
         specifier: ^29.5.0
         version: 29.7.0(@types/node@24.10.1)(ts-node@10.9.2(@swc/core@1.15.2(@swc/helpers@0.5.17))(@types/node@24.10.1)(typescript@5.8.3))
@@ -2166,7 +2179,7 @@ importers:
         version: 9.0.8
       '@vitest/coverage-v8':
         specifier: ^3.2.4
-        version: 3.2.4(vitest@3.2.4(@types/debug@4.1.12)(@types/node@24.10.1)(jiti@2.5.1)(jsdom@26.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.5))(terser@5.44.1)(tsx@4.20.3)(yaml@2.8.1))
+        version: 3.2.4(vitest@3.2.4(@types/debug@4.1.12)(@types/node@24.10.1)(jiti@2.6.1)(jsdom@22.1.0(bufferutil@4.0.9))(terser@5.44.1)(tsx@4.20.6)(yaml@2.8.1))
       dotenv:
         specifier: ^16.3.1
         version: 16.6.1
@@ -2175,7 +2188,7 @@ importers:
         version: 3.14.0
       eslint:
         specifier: ^9.34.0
-        version: 9.36.0(jiti@2.5.1)
+        version: 9.39.1(jiti@2.6.1)
       prettier:
         specifier: ^2.8.3
         version: 2.8.8
@@ -2187,7 +2200,7 @@ importers:
         version: 5.8.3
       vitest:
         specifier: ^3.2.4
-        version: 3.2.4(@types/debug@4.1.12)(@types/node@24.10.1)(jiti@2.5.1)(jsdom@26.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.5))(terser@5.44.1)(tsx@4.20.3)(yaml@2.8.1)
+        version: 3.2.4(@types/debug@4.1.12)(@types/node@24.10.1)(jiti@2.6.1)(jsdom@22.1.0(bufferutil@4.0.9))(terser@5.44.1)(tsx@4.20.6)(yaml@2.8.1)
 
   libs/providers/langchain-cohere:
     dependencies:
@@ -2215,7 +2228,7 @@ importers:
         version: 1.0.13
       '@vitest/coverage-v8':
         specifier: ^3.2.4
-        version: 3.2.4(vitest@3.2.4(@types/debug@4.1.12)(@types/node@24.10.1)(jiti@2.5.1)(jsdom@26.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.5))(terser@5.44.1)(tsx@4.20.3)(yaml@2.8.1))
+        version: 3.2.4(vitest@3.2.4(@types/debug@4.1.12)(@types/node@24.10.1)(jiti@2.6.1)(jsdom@22.1.0(bufferutil@4.0.9))(terser@5.44.1)(tsx@4.20.6)(yaml@2.8.1))
       dotenv:
         specifier: ^16.6.1
         version: 16.6.1
@@ -2224,7 +2237,7 @@ importers:
         version: 3.14.0
       eslint:
         specifier: ^9.34.0
-        version: 9.36.0(jiti@2.5.1)
+        version: 9.39.1(jiti@2.6.1)
       prettier:
         specifier: ^2.8.3
         version: 2.8.8
@@ -2236,7 +2249,7 @@ importers:
         version: 5.8.3
       vitest:
         specifier: ^3.2.4
-        version: 3.2.4(@types/debug@4.1.12)(@types/node@24.10.1)(jiti@2.5.1)(jsdom@26.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.5))(terser@5.44.1)(tsx@4.20.3)(yaml@2.8.1)
+        version: 3.2.4(@types/debug@4.1.12)(@types/node@24.10.1)(jiti@2.6.1)(jsdom@22.1.0(bufferutil@4.0.9))(terser@5.44.1)(tsx@4.20.6)(yaml@2.8.1)
       zod:
         specifier: ^3.25.76
         version: 3.25.76
@@ -2261,7 +2274,7 @@ importers:
         version: 1.0.13
       '@vitest/coverage-v8':
         specifier: ^3.2.4
-        version: 3.2.4(vitest@3.2.4(@types/debug@4.1.12)(@types/node@24.10.1)(jiti@2.5.1)(jsdom@26.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.5))(terser@5.44.1)(tsx@4.20.3)(yaml@2.8.1))
+        version: 3.2.4(vitest@3.2.4(@types/debug@4.1.12)(@types/node@24.10.1)(jiti@2.6.1)(jsdom@22.1.0(bufferutil@4.0.9))(terser@5.44.1)(tsx@4.20.6)(yaml@2.8.1))
       dotenv:
         specifier: ^16.3.1
         version: 16.6.1
@@ -2270,7 +2283,7 @@ importers:
         version: 3.14.0
       eslint:
         specifier: ^9.34.0
-        version: 9.36.0(jiti@2.5.1)
+        version: 9.39.1(jiti@2.6.1)
       prettier:
         specifier: ^2.8.3
         version: 2.8.8
@@ -2282,7 +2295,7 @@ importers:
         version: 5.8.3
       vitest:
         specifier: ^3.2.4
-        version: 3.2.4(@types/debug@4.1.12)(@types/node@24.10.1)(jiti@2.5.1)(jsdom@26.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.5))(terser@5.44.1)(tsx@4.20.3)(yaml@2.8.1)
+        version: 3.2.4(@types/debug@4.1.12)(@types/node@24.10.1)(jiti@2.6.1)(jsdom@22.1.0(bufferutil@4.0.9))(terser@5.44.1)(tsx@4.20.6)(yaml@2.8.1)
 
   libs/providers/langchain-exa:
     dependencies:
@@ -2304,7 +2317,7 @@ importers:
         version: 9.0.8
       '@vitest/coverage-v8':
         specifier: ^3.2.4
-        version: 3.2.4(vitest@3.2.4(@types/debug@4.1.12)(@types/node@24.10.1)(jiti@2.5.1)(jsdom@26.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.5))(terser@5.44.1)(tsx@4.20.3)(yaml@2.8.1))
+        version: 3.2.4(vitest@3.2.4(@types/debug@4.1.12)(@types/node@24.10.1)(jiti@2.6.1)(jsdom@22.1.0(bufferutil@4.0.9))(terser@5.44.1)(tsx@4.20.6)(yaml@2.8.1))
       dotenv:
         specifier: ^16.3.1
         version: 16.6.1
@@ -2313,7 +2326,7 @@ importers:
         version: 3.14.0
       eslint:
         specifier: ^9.34.0
-        version: 9.36.0(jiti@2.5.1)
+        version: 9.39.1(jiti@2.6.1)
       prettier:
         specifier: ^2.8.3
         version: 2.8.8
@@ -2325,7 +2338,7 @@ importers:
         version: 5.8.3
       vitest:
         specifier: ^3.2.4
-        version: 3.2.4(@types/debug@4.1.12)(@types/node@24.10.1)(jiti@2.5.1)(jsdom@26.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.5))(terser@5.44.1)(tsx@4.20.3)(yaml@2.8.1)
+        version: 3.2.4(@types/debug@4.1.12)(@types/node@24.10.1)(jiti@2.6.1)(jsdom@22.1.0(bufferutil@4.0.9))(terser@5.44.1)(tsx@4.20.6)(yaml@2.8.1)
 
   libs/providers/langchain-google-cloud-sql-pg:
     dependencies:
@@ -2374,7 +2387,7 @@ importers:
         version: 3.14.0
       eslint:
         specifier: ^9.34.0
-        version: 9.36.0(jiti@2.5.1)
+        version: 9.39.1(jiti@2.6.1)
       jest:
         specifier: ^29.5.0
         version: 29.7.0(@types/node@24.10.1)(ts-node@10.9.2(@swc/core@1.15.2(@swc/helpers@0.5.17))(@types/node@24.10.1)(typescript@5.8.3))
@@ -2435,7 +2448,7 @@ importers:
         version: 3.14.0
       eslint:
         specifier: ^9.34.0
-        version: 9.36.0(jiti@2.5.1)
+        version: 9.39.1(jiti@2.6.1)
       jest:
         specifier: ^29.5.0
         version: 29.7.0(@types/node@24.10.1)(ts-node@10.9.2(@swc/core@1.15.2(@swc/helpers@0.5.17))(@types/node@24.10.1)(typescript@5.8.3))
@@ -2490,7 +2503,7 @@ importers:
         version: 3.14.0
       eslint:
         specifier: ^9.34.0
-        version: 9.36.0(jiti@2.5.1)
+        version: 9.39.1(jiti@2.6.1)
       jest:
         specifier: ^29.5.0
         version: 29.7.0(@types/node@24.10.1)(ts-node@10.9.2(@swc/core@1.15.2(@swc/helpers@0.5.17))(@types/node@24.10.1)(typescript@5.8.3))
@@ -2551,7 +2564,7 @@ importers:
         version: 3.14.0
       eslint:
         specifier: ^9.34.0
-        version: 9.36.0(jiti@2.5.1)
+        version: 9.39.1(jiti@2.6.1)
       hnswlib-node:
         specifier: ^3.0.0
         version: 3.0.0
@@ -2580,8 +2593,8 @@ importers:
   libs/providers/langchain-google-vertexai:
     dependencies:
       '@langchain/google-gauth':
-        specifier: ^1.0.1
-        version: 1.0.1(@langchain/core@libs+langchain-core)
+        specifier: workspace:*
+        version: link:../langchain-google-gauth
     devDependencies:
       '@jest/globals':
         specifier: ^29.5.0
@@ -2612,7 +2625,7 @@ importers:
         version: 3.14.0
       eslint:
         specifier: ^9.34.0
-        version: 9.36.0(jiti@2.5.1)
+        version: 9.39.1(jiti@2.6.1)
       jest:
         specifier: ^29.5.0
         version: 29.7.0(@types/node@24.10.1)(ts-node@10.9.2(@swc/core@1.15.2(@swc/helpers@0.5.17))(@types/node@24.10.1)(typescript@5.8.3))
@@ -2638,8 +2651,8 @@ importers:
   libs/providers/langchain-google-vertexai-web:
     dependencies:
       '@langchain/google-webauth':
-        specifier: ^1.0.1
-        version: 1.0.1(@langchain/core@libs+langchain-core)
+        specifier: workspace:*
+        version: link:../langchain-google-webauth
     devDependencies:
       '@jest/globals':
         specifier: ^29.5.0
@@ -2670,7 +2683,7 @@ importers:
         version: 3.14.0
       eslint:
         specifier: ^9.34.0
-        version: 9.36.0(jiti@2.5.1)
+        version: 9.39.1(jiti@2.6.1)
       jest:
         specifier: ^29.5.0
         version: 29.7.0(@types/node@24.10.1)(ts-node@10.9.2(@swc/core@1.15.2(@swc/helpers@0.5.17))(@types/node@24.10.1)(typescript@5.8.3))
@@ -2728,7 +2741,7 @@ importers:
         version: 3.14.0
       eslint:
         specifier: ^9.34.0
-        version: 9.36.0(jiti@2.5.1)
+        version: 9.39.1(jiti@2.6.1)
       jest:
         specifier: ^29.5.0
         version: 29.7.0(@types/node@24.10.1)(ts-node@10.9.2(@swc/core@1.15.2(@swc/helpers@0.5.17))(@types/node@24.10.1)(typescript@5.8.3))
@@ -2777,7 +2790,7 @@ importers:
         version: 9.0.8
       '@vitest/coverage-v8':
         specifier: ^3.2.4
-        version: 3.2.4(vitest@3.2.4(@types/debug@4.1.12)(@types/node@24.10.1)(jiti@2.5.1)(jsdom@26.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.5))(terser@5.44.1)(tsx@4.20.3)(yaml@2.8.1))
+        version: 3.2.4(vitest@3.2.4(@types/debug@4.1.12)(@types/node@24.10.1)(jiti@2.6.1)(jsdom@22.1.0(bufferutil@4.0.9))(terser@5.44.1)(tsx@4.20.6)(yaml@2.8.1))
       dotenv:
         specifier: ^16.3.1
         version: 16.6.1
@@ -2786,7 +2799,7 @@ importers:
         version: 3.14.0
       eslint:
         specifier: ^9.34.0
-        version: 9.36.0(jiti@2.5.1)
+        version: 9.39.1(jiti@2.6.1)
       prettier:
         specifier: ^2.8.3
         version: 2.8.8
@@ -2798,7 +2811,7 @@ importers:
         version: 5.8.3
       vitest:
         specifier: ^3.2.4
-        version: 3.2.4(@types/debug@4.1.12)(@types/node@24.10.1)(jiti@2.5.1)(jsdom@26.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.5))(terser@5.44.1)(tsx@4.20.3)(yaml@2.8.1)
+        version: 3.2.4(@types/debug@4.1.12)(@types/node@24.10.1)(jiti@2.6.1)(jsdom@22.1.0(bufferutil@4.0.9))(terser@5.44.1)(tsx@4.20.6)(yaml@2.8.1)
       zod:
         specifier: ^4.0.14
         version: 4.1.12
@@ -2826,7 +2839,7 @@ importers:
         version: 1.0.13
       '@vitest/coverage-v8':
         specifier: ^3.2.4
-        version: 3.2.4(vitest@3.2.4(@types/debug@4.1.12)(@types/node@24.10.1)(jiti@2.5.1)(jsdom@26.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.5))(terser@5.44.1)(tsx@4.20.3)(yaml@2.8.1))
+        version: 3.2.4(vitest@3.2.4(@types/debug@4.1.12)(@types/node@24.10.1)(jiti@2.6.1)(jsdom@22.1.0(bufferutil@4.0.9))(terser@5.44.1)(tsx@4.20.6)(yaml@2.8.1))
       dotenv:
         specifier: ^16.3.1
         version: 16.6.1
@@ -2835,7 +2848,7 @@ importers:
         version: 3.14.0
       eslint:
         specifier: ^9.34.0
-        version: 9.36.0(jiti@2.5.1)
+        version: 9.39.1(jiti@2.6.1)
       prettier:
         specifier: ^2.8.3
         version: 2.8.8
@@ -2847,7 +2860,7 @@ importers:
         version: 5.8.3
       vitest:
         specifier: ^3.2.4
-        version: 3.2.4(@types/debug@4.1.12)(@types/node@24.10.1)(jiti@2.5.1)(jsdom@26.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.5))(terser@5.44.1)(tsx@4.20.3)(yaml@2.8.1)
+        version: 3.2.4(@types/debug@4.1.12)(@types/node@24.10.1)(jiti@2.6.1)(jsdom@22.1.0(bufferutil@4.0.9))(terser@5.44.1)(tsx@4.20.6)(yaml@2.8.1)
       zod:
         specifier: ^3.25.76
         version: 3.25.76
@@ -2872,7 +2885,7 @@ importers:
         version: 1.0.13
       '@vitest/coverage-v8':
         specifier: ^3.2.4
-        version: 3.2.4(vitest@3.2.4(@types/debug@4.1.12)(@types/node@24.10.1)(jiti@2.5.1)(jsdom@26.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.5))(terser@5.44.1)(tsx@4.20.3)(yaml@2.8.1))
+        version: 3.2.4(vitest@3.2.4(@types/debug@4.1.12)(@types/node@24.10.1)(jiti@2.6.1)(jsdom@22.1.0(bufferutil@4.0.9))(terser@5.44.1)(tsx@4.20.6)(yaml@2.8.1))
       dotenv:
         specifier: ^16.3.1
         version: 16.6.1
@@ -2881,7 +2894,7 @@ importers:
         version: 3.14.0
       eslint:
         specifier: ^9.34.0
-        version: 9.36.0(jiti@2.5.1)
+        version: 9.39.1(jiti@2.6.1)
       prettier:
         specifier: ^2.8.3
         version: 2.8.8
@@ -2893,7 +2906,7 @@ importers:
         version: 5.8.3
       vitest:
         specifier: ^3.2.4
-        version: 3.2.4(@types/debug@4.1.12)(@types/node@24.10.1)(jiti@2.5.1)(jsdom@26.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.5))(terser@5.44.1)(tsx@4.20.3)(yaml@2.8.1)
+        version: 3.2.4(@types/debug@4.1.12)(@types/node@24.10.1)(jiti@2.6.1)(jsdom@22.1.0(bufferutil@4.0.9))(terser@5.44.1)(tsx@4.20.6)(yaml@2.8.1)
 
   libs/providers/langchain-mongodb:
     dependencies:
@@ -2918,7 +2931,7 @@ importers:
         version: 9.0.8
       '@vitest/coverage-v8':
         specifier: ^3.2.4
-        version: 3.2.4(vitest@3.2.4(@types/debug@4.1.12)(@types/node@24.10.1)(jiti@2.5.1)(jsdom@26.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.5))(terser@5.44.1)(tsx@4.20.3)(yaml@2.8.1))
+        version: 3.2.4(vitest@3.2.4(@types/debug@4.1.12)(@types/node@24.10.1)(jiti@2.6.1)(jsdom@22.1.0(bufferutil@4.0.9))(terser@5.44.1)(tsx@4.20.6)(yaml@2.8.1))
       bson:
         specifier: ^6.10.4
         version: 6.10.4
@@ -2930,7 +2943,7 @@ importers:
         version: 3.14.0
       eslint:
         specifier: ^9.34.0
-        version: 9.36.0(jiti@2.5.1)
+        version: 9.39.1(jiti@2.6.1)
       prettier:
         specifier: ^2.8.3
         version: 2.8.8
@@ -2948,7 +2961,7 @@ importers:
         version: 10.0.0
       vitest:
         specifier: ^3.2.4
-        version: 3.2.4(@types/debug@4.1.12)(@types/node@24.10.1)(jiti@2.5.1)(jsdom@26.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.5))(terser@5.44.1)(tsx@4.20.3)(yaml@2.8.1)
+        version: 3.2.4(@types/debug@4.1.12)(@types/node@24.10.1)(jiti@2.6.1)(jsdom@22.1.0(bufferutil@4.0.9))(terser@5.44.1)(tsx@4.20.6)(yaml@2.8.1)
 
   libs/providers/langchain-nomic:
     dependencies:
@@ -2976,7 +2989,7 @@ importers:
         version: 9.0.8
       '@vitest/coverage-v8':
         specifier: ^3.2.4
-        version: 3.2.4(vitest@3.2.4(@types/debug@4.1.12)(@types/node@24.10.1)(jiti@2.5.1)(jsdom@26.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.5))(terser@5.44.1)(tsx@4.20.3)(yaml@2.8.1))
+        version: 3.2.4(vitest@3.2.4(@types/debug@4.1.12)(@types/node@24.10.1)(jiti@2.6.1)(jsdom@22.1.0(bufferutil@4.0.9))(terser@5.44.1)(tsx@4.20.6)(yaml@2.8.1))
       dotenv:
         specifier: ^16.3.1
         version: 16.6.1
@@ -2985,7 +2998,7 @@ importers:
         version: 3.14.0
       eslint:
         specifier: ^9.34.0
-        version: 9.36.0(jiti@2.5.1)
+        version: 9.39.1(jiti@2.6.1)
       prettier:
         specifier: ^2.8.3
         version: 2.8.8
@@ -2997,7 +3010,7 @@ importers:
         version: 5.8.3
       vitest:
         specifier: ^3.2.4
-        version: 3.2.4(@types/debug@4.1.12)(@types/node@24.10.1)(jiti@2.5.1)(jsdom@26.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.5))(terser@5.44.1)(tsx@4.20.3)(yaml@2.8.1)
+        version: 3.2.4(@types/debug@4.1.12)(@types/node@24.10.1)(jiti@2.6.1)(jsdom@22.1.0(bufferutil@4.0.9))(terser@5.44.1)(tsx@4.20.6)(yaml@2.8.1)
 
   libs/providers/langchain-ollama:
     dependencies:
@@ -3025,7 +3038,7 @@ importers:
         version: 1.0.13
       '@vitest/coverage-v8':
         specifier: ^3.2.4
-        version: 3.2.4(vitest@3.2.4(@types/debug@4.1.12)(@types/node@24.10.1)(jiti@2.5.1)(jsdom@26.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.5))(terser@5.44.1)(tsx@4.20.3)(yaml@2.8.1))
+        version: 3.2.4(vitest@3.2.4(@types/debug@4.1.12)(@types/node@24.10.1)(jiti@2.6.1)(jsdom@22.1.0(bufferutil@4.0.9))(terser@5.44.1)(tsx@4.20.6)(yaml@2.8.1))
       dotenv:
         specifier: ^16.3.1
         version: 16.6.1
@@ -3034,7 +3047,7 @@ importers:
         version: 3.14.0
       eslint:
         specifier: ^9.34.0
-        version: 9.36.0(jiti@2.5.1)
+        version: 9.39.1(jiti@2.6.1)
       prettier:
         specifier: ^2.8.3
         version: 2.8.8
@@ -3046,7 +3059,7 @@ importers:
         version: 5.8.3
       vitest:
         specifier: ^3.2.4
-        version: 3.2.4(@types/debug@4.1.12)(@types/node@24.10.1)(jiti@2.5.1)(jsdom@26.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.5))(terser@5.44.1)(tsx@4.20.3)(yaml@2.8.1)
+        version: 3.2.4(@types/debug@4.1.12)(@types/node@24.10.1)(jiti@2.6.1)(jsdom@22.1.0(bufferutil@4.0.9))(terser@5.44.1)(tsx@4.20.6)(yaml@2.8.1)
       zod:
         specifier: ^3.25.76
         version: 3.25.76
@@ -3083,7 +3096,7 @@ importers:
         version: 1.0.13
       '@vitest/coverage-v8':
         specifier: ^3.2.4
-        version: 3.2.4(vitest@3.2.4(@types/debug@4.1.12)(@types/node@24.10.1)(jiti@2.5.1)(jsdom@26.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.5))(terser@5.44.1)(tsx@4.20.3)(yaml@2.8.1))
+        version: 3.2.4(vitest@3.2.4(@types/debug@4.1.12)(@types/node@24.10.1)(jiti@2.6.1)(jsdom@22.1.0(bufferutil@4.0.9))(terser@5.44.1)(tsx@4.20.6)(yaml@2.8.1))
       dotenv:
         specifier: ^17.2.1
         version: 17.2.3
@@ -3092,7 +3105,7 @@ importers:
         version: 3.14.0
       eslint:
         specifier: ^9.34.0
-        version: 9.36.0(jiti@2.5.1)
+        version: 9.39.1(jiti@2.6.1)
       prettier:
         specifier: ^2.8.3
         version: 2.8.8
@@ -3107,7 +3120,7 @@ importers:
         version: 11.1.0
       vitest:
         specifier: ^3.2.4
-        version: 3.2.4(@types/debug@4.1.12)(@types/node@24.10.1)(jiti@2.5.1)(jsdom@26.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.5))(terser@5.44.1)(tsx@4.20.3)(yaml@2.8.1)
+        version: 3.2.4(@types/debug@4.1.12)(@types/node@24.10.1)(jiti@2.6.1)(jsdom@22.1.0(bufferutil@4.0.9))(terser@5.44.1)(tsx@4.20.6)(yaml@2.8.1)
       zod-to-json-schema:
         specifier: ^3.24.6
         version: 3.24.6(zod@4.1.12)
@@ -3147,7 +3160,7 @@ importers:
         version: 10.0.0
       '@vitest/coverage-v8':
         specifier: ^3.2.4
-        version: 3.2.4(vitest@3.2.4(@types/debug@4.1.12)(@types/node@24.10.1)(jiti@2.5.1)(jsdom@26.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.5))(terser@5.44.1)(tsx@4.20.3)(yaml@2.8.1))
+        version: 3.2.4(vitest@3.2.4(@types/debug@4.1.12)(@types/node@24.10.1)(jiti@2.6.1)(jsdom@22.1.0(bufferutil@4.0.9))(terser@5.44.1)(tsx@4.20.6)(yaml@2.8.1))
       dotenv:
         specifier: ^16.3.1
         version: 16.6.1
@@ -3156,7 +3169,7 @@ importers:
         version: 3.14.0
       eslint:
         specifier: ^9.34.0
-        version: 9.36.0(jiti@2.5.1)
+        version: 9.39.1(jiti@2.6.1)
       langchain:
         specifier: workspace:*
         version: link:../../langchain
@@ -3168,7 +3181,7 @@ importers:
         version: 5.8.3
       vitest:
         specifier: ^3.2.4
-        version: 3.2.4(@types/debug@4.1.12)(@types/node@24.10.1)(jiti@2.5.1)(jsdom@26.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.5))(terser@5.44.1)(tsx@4.20.3)(yaml@2.8.1)
+        version: 3.2.4(@types/debug@4.1.12)(@types/node@24.10.1)(jiti@2.6.1)(jsdom@22.1.0(bufferutil@4.0.9))(terser@5.44.1)(tsx@4.20.6)(yaml@2.8.1)
 
   libs/providers/langchain-qdrant:
     dependencies:
@@ -3196,7 +3209,7 @@ importers:
         version: 9.0.8
       '@vitest/coverage-v8':
         specifier: ^3.2.4
-        version: 3.2.4(vitest@3.2.4(@types/debug@4.1.12)(@types/node@24.10.1)(jiti@2.5.1)(jsdom@26.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.5))(terser@5.44.1)(tsx@4.20.3)(yaml@2.8.1))
+        version: 3.2.4(vitest@3.2.4(@types/debug@4.1.12)(@types/node@24.10.1)(jiti@2.6.1)(jsdom@22.1.0(bufferutil@4.0.9))(terser@5.44.1)(tsx@4.20.6)(yaml@2.8.1))
       dotenv:
         specifier: ^16.3.1
         version: 16.6.1
@@ -3205,7 +3218,7 @@ importers:
         version: 3.14.0
       eslint:
         specifier: ^9.34.0
-        version: 9.36.0(jiti@2.5.1)
+        version: 9.39.1(jiti@2.6.1)
       prettier:
         specifier: ^2.8.3
         version: 2.8.8
@@ -3217,7 +3230,7 @@ importers:
         version: 5.8.3
       vitest:
         specifier: ^3.2.4
-        version: 3.2.4(@types/debug@4.1.12)(@types/node@24.10.1)(jiti@2.5.1)(jsdom@26.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.5))(terser@5.44.1)(tsx@4.20.3)(yaml@2.8.1)
+        version: 3.2.4(@types/debug@4.1.12)(@types/node@24.10.1)(jiti@2.6.1)(jsdom@22.1.0(bufferutil@4.0.9))(terser@5.44.1)(tsx@4.20.6)(yaml@2.8.1)
 
   libs/providers/langchain-redis:
     dependencies:
@@ -3242,7 +3255,7 @@ importers:
         version: 9.0.8
       '@vitest/coverage-v8':
         specifier: ^3.2.4
-        version: 3.2.4(vitest@3.2.4(@types/debug@4.1.12)(@types/node@24.10.1)(jiti@2.5.1)(jsdom@26.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.5))(terser@5.44.1)(tsx@4.20.3)(yaml@2.8.1))
+        version: 3.2.4(vitest@3.2.4(@types/debug@4.1.12)(@types/node@24.10.1)(jiti@2.6.1)(jsdom@22.1.0(bufferutil@4.0.9))(terser@5.44.1)(tsx@4.20.6)(yaml@2.8.1))
       dotenv:
         specifier: ^16.3.1
         version: 16.6.1
@@ -3251,7 +3264,7 @@ importers:
         version: 3.14.0
       eslint:
         specifier: ^9.34.0
-        version: 9.36.0(jiti@2.5.1)
+        version: 9.39.1(jiti@2.6.1)
       prettier:
         specifier: ^2.8.3
         version: 2.8.8
@@ -3263,7 +3276,7 @@ importers:
         version: 10.0.0
       vitest:
         specifier: ^3.2.4
-        version: 3.2.4(@types/debug@4.1.12)(@types/node@24.10.1)(jiti@2.5.1)(jsdom@26.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.5))(terser@5.44.1)(tsx@4.20.3)(yaml@2.8.1)
+        version: 3.2.4(@types/debug@4.1.12)(@types/node@24.10.1)(jiti@2.6.1)(jsdom@22.1.0(bufferutil@4.0.9))(terser@5.44.1)(tsx@4.20.6)(yaml@2.8.1)
 
   libs/providers/langchain-tavily:
     dependencies:
@@ -3282,7 +3295,7 @@ importers:
         version: 1.0.13
       '@vitest/coverage-v8':
         specifier: ^3.2.4
-        version: 3.2.4(vitest@3.2.4(@types/debug@4.1.12)(@types/node@24.10.1)(jiti@2.5.1)(jsdom@26.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.5))(terser@5.44.1)(tsx@4.20.3)(yaml@2.8.1))
+        version: 3.2.4(vitest@3.2.4(@types/debug@4.1.12)(@types/node@24.10.1)(jiti@2.6.1)(jsdom@22.1.0(bufferutil@4.0.9))(terser@5.44.1)(tsx@4.20.6)(yaml@2.8.1))
       dotenv:
         specifier: ^16.3.1
         version: 16.6.1
@@ -3291,7 +3304,7 @@ importers:
         version: 3.14.0
       eslint:
         specifier: ^9.34.0
-        version: 9.36.0(jiti@2.5.1)
+        version: 9.39.1(jiti@2.6.1)
       prettier:
         specifier: ^2.8.3
         version: 2.8.8
@@ -3300,7 +3313,7 @@ importers:
         version: 5.8.3
       vitest:
         specifier: ^3.2.4
-        version: 3.2.4(@types/debug@4.1.12)(@types/node@24.10.1)(jiti@2.5.1)(jsdom@26.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.5))(terser@5.44.1)(tsx@4.20.3)(yaml@2.8.1)
+        version: 3.2.4(@types/debug@4.1.12)(@types/node@24.10.1)(jiti@2.6.1)(jsdom@22.1.0(bufferutil@4.0.9))(terser@5.44.1)(tsx@4.20.6)(yaml@2.8.1)
 
   libs/providers/langchain-weaviate:
     dependencies:
@@ -3328,7 +3341,7 @@ importers:
         version: 9.0.8
       '@vitest/coverage-v8':
         specifier: ^3.2.4
-        version: 3.2.4(vitest@3.2.4(@types/debug@4.1.12)(@types/node@24.10.1)(jiti@2.5.1)(jsdom@26.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.5))(terser@5.44.1)(tsx@4.20.3)(yaml@2.8.1))
+        version: 3.2.4(vitest@3.2.4(@types/debug@4.1.12)(@types/node@24.10.1)(jiti@2.6.1)(jsdom@22.1.0(bufferutil@4.0.9))(terser@5.44.1)(tsx@4.20.6)(yaml@2.8.1))
       dotenv:
         specifier: ^16.3.1
         version: 16.6.1
@@ -3337,7 +3350,7 @@ importers:
         version: 3.14.0
       eslint:
         specifier: ^9.34.0
-        version: 9.36.0(jiti@2.5.1)
+        version: 9.39.1(jiti@2.6.1)
       langchain:
         specifier: workspace:*
         version: link:../../langchain
@@ -3352,7 +3365,7 @@ importers:
         version: 5.8.3
       vitest:
         specifier: ^3.2.4
-        version: 3.2.4(@types/debug@4.1.12)(@types/node@24.10.1)(jiti@2.5.1)(jsdom@26.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.5))(terser@5.44.1)(tsx@4.20.3)(yaml@2.8.1)
+        version: 3.2.4(@types/debug@4.1.12)(@types/node@24.10.1)(jiti@2.6.1)(jsdom@22.1.0(bufferutil@4.0.9))(terser@5.44.1)(tsx@4.20.6)(yaml@2.8.1)
 
   libs/providers/langchain-xai:
     dependencies:
@@ -3377,7 +3390,7 @@ importers:
         version: 9.0.8
       '@vitest/coverage-v8':
         specifier: ^3.2.4
-        version: 3.2.4(vitest@3.2.4(@types/debug@4.1.12)(@types/node@24.10.1)(jiti@2.5.1)(jsdom@26.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.5))(terser@5.44.1)(tsx@4.20.3)(yaml@2.8.1))
+        version: 3.2.4(vitest@3.2.4(@types/debug@4.1.12)(@types/node@24.10.1)(jiti@2.6.1)(jsdom@22.1.0(bufferutil@4.0.9))(terser@5.44.1)(tsx@4.20.6)(yaml@2.8.1))
       dotenv:
         specifier: ^16.3.1
         version: 16.6.1
@@ -3386,7 +3399,7 @@ importers:
         version: 3.14.0
       eslint:
         specifier: ^9.34.0
-        version: 9.36.0(jiti@2.5.1)
+        version: 9.39.1(jiti@2.6.1)
       prettier:
         specifier: ^2.8.3
         version: 2.8.8
@@ -3398,7 +3411,7 @@ importers:
         version: 5.8.3
       vitest:
         specifier: ^3.2.4
-        version: 3.2.4(@types/debug@4.1.12)(@types/node@24.10.1)(jiti@2.5.1)(jsdom@26.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.5))(terser@5.44.1)(tsx@4.20.3)(yaml@2.8.1)
+        version: 3.2.4(@types/debug@4.1.12)(@types/node@24.10.1)(jiti@2.6.1)(jsdom@22.1.0(bufferutil@4.0.9))(terser@5.44.1)(tsx@4.20.6)(yaml@2.8.1)
       zod:
         specifier: ^3.25.76
         version: 3.25.76
@@ -3416,7 +3429,7 @@ importers:
         version: 1.0.13
       '@vitest/coverage-v8':
         specifier: ^3.2.4
-        version: 3.2.4(vitest@3.2.4(@types/debug@4.1.12)(@types/node@24.10.1)(jiti@2.5.1)(jsdom@26.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.5))(terser@5.44.1)(tsx@4.20.3)(yaml@2.8.1))
+        version: 3.2.4(vitest@3.2.4(@types/debug@4.1.12)(@types/node@24.10.1)(jiti@2.6.1)(jsdom@22.1.0(bufferutil@4.0.9))(terser@5.44.1)(tsx@4.20.6)(yaml@2.8.1))
       dotenv:
         specifier: ^16.3.1
         version: 16.6.1
@@ -3425,7 +3438,7 @@ importers:
         version: 3.14.0
       eslint:
         specifier: ^9.34.0
-        version: 9.36.0(jiti@2.5.1)
+        version: 9.39.1(jiti@2.6.1)
       prettier:
         specifier: ^2.8.3
         version: 2.8.8
@@ -3437,7 +3450,7 @@ importers:
         version: 5.8.3
       vitest:
         specifier: ^3.2.4
-        version: 3.2.4(@types/debug@4.1.12)(@types/node@24.10.1)(jiti@2.5.1)(jsdom@26.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.5))(terser@5.44.1)(tsx@4.20.3)(yaml@2.8.1)
+        version: 3.2.4(@types/debug@4.1.12)(@types/node@24.10.1)(jiti@2.6.1)(jsdom@22.1.0(bufferutil@4.0.9))(terser@5.44.1)(tsx@4.20.6)(yaml@2.8.1)
 
 packages:
 
@@ -3824,10 +3837,6 @@ packages:
     resolution: {integrity: sha512-3EwLFhZ38J4VyIP6WNtt2kUdW9dokXA9Cr4IVIFHuCpZ3H8/YFOl5JjZHisrn1fATPBmKKqXzDFvh9fUwHz6CQ==}
     engines: {node: '>=6.9.0'}
 
-  '@babel/generator@7.28.5':
-    resolution: {integrity: sha512-3EwLFhZ38J4VyIP6WNtt2kUdW9dokXA9Cr4IVIFHuCpZ3H8/YFOl5JjZHisrn1fATPBmKKqXzDFvh9fUwHz6CQ==}
-    engines: {node: '>=6.9.0'}
-
   '@babel/helper-annotate-as-pure@7.27.3':
     resolution: {integrity: sha512-fXSwMQqitTGeHLBC08Eq5yXz2m37E4pJX1qAU1+2cNedz/ifv/bVXft90VeSav5nFO61EcNgwr0aJxbyPaWBPg==}
     engines: {node: '>=6.9.0'}
@@ -3903,10 +3912,6 @@ packages:
     resolution: {integrity: sha512-qSs4ifwzKJSV39ucNjsvc6WVHs6b7S03sOh2OcHF9UHfVPqWWALUsNUVzhSBiItjRZoLHx7nIarVjqKVusUZ1Q==}
     engines: {node: '>=6.9.0'}
 
-  '@babel/helper-validator-identifier@7.28.5':
-    resolution: {integrity: sha512-qSs4ifwzKJSV39ucNjsvc6WVHs6b7S03sOh2OcHF9UHfVPqWWALUsNUVzhSBiItjRZoLHx7nIarVjqKVusUZ1Q==}
-    engines: {node: '>=6.9.0'}
-
   '@babel/helper-validator-option@7.27.1':
     resolution: {integrity: sha512-YvjJow9FxbhFFKDSuFnVCe2WxXk1zWc22fFePVNEaWJEu8IrZVlda6N0uHwzZrUM1il7NC9Mlp4MaJYbYd9JSg==}
     engines: {node: '>=6.9.0'}
@@ -3924,8 +3929,8 @@ packages:
     engines: {node: '>=6.0.0'}
     hasBin: true
 
-  '@babel/plugin-bugfix-firefox-class-in-computed-class-key@7.27.1':
-    resolution: {integrity: sha512-QPG3C9cCVRQLxAVwmefEmwdTanECuUBMQZ/ym5kiw3XKCGA7qkuQLcjWWHcrD/GKbn/WmJwaezfuuAOcyKlRPA==}
+  '@babel/plugin-bugfix-firefox-class-in-computed-class-key@7.28.5':
+    resolution: {integrity: sha512-87GDMS3tsmMSi/3bWOte1UblL+YUTFMV8SZPZ2eSEL17s74Cw/l63rR6NmGVKMYW2GYi85nE+/d6Hw5N0bEk2Q==}
     engines: {node: '>=6.9.0'}
     peerDependencies:
       '@babel/core': ^7.0.0
@@ -4450,10 +4455,6 @@ packages:
     resolution: {integrity: sha512-qQ5m48eI/MFLQ5PxQj4PFaprjyCTLI37ElWMmNs0K8Lk3dVeOdNpB3ks8jc7yM5CDmVC73eMVk/trk3fgmrUpA==}
     engines: {node: '>=6.9.0'}
 
-  '@babel/types@7.28.5':
-    resolution: {integrity: sha512-qQ5m48eI/MFLQ5PxQj4PFaprjyCTLI37ElWMmNs0K8Lk3dVeOdNpB3ks8jc7yM5CDmVC73eMVk/trk3fgmrUpA==}
-    engines: {node: '>=6.9.0'}
-
   '@baiducloud/qianfan@0.1.9':
     resolution: {integrity: sha512-p+pvfMVGHrjgPxkL5O5RAL2xWoSH/bIjxNOfk5KA6oqPAeJzSUMyKswwlCgFxLvt6flsgJmJ6PYVBCDNPhnYcQ==}
 
@@ -4783,9 +4784,6 @@ packages:
 
   '@emnapi/core@1.7.1':
     resolution: {integrity: sha512-o1uhUASyo921r2XtHYOHy7gdkGLge8ghBEQHMWmyJFoXlpU58kIrhhN3w26lpQb6dspetweapMn2CSNwQ8I4wg==}
-
-  '@emnapi/runtime@1.4.5':
-    resolution: {integrity: sha512-++LApOtY0pEEz1zrd9vy1/zXVaVJJ/EbAF3u0fXIzPJEDtnITsBGbbK0EkM72amhl/R5b+5xx0Y/QhcVOpuulg==}
 
   '@emnapi/runtime@1.7.1':
     resolution: {integrity: sha512-PVtJr5CmLwYAU9PZDMITZoR5iAOShYREoR45EyyLrbntV50mdePTgUn4AmOw90Ifcj+x2kRjdzr1HP3RrNiHGA==}
@@ -5389,12 +5387,8 @@ packages:
     resolution: {integrity: sha512-aw1gNayWpdI/jSYVgzN5pL0cfzU02GT3NBpeT/DXbx1/1x7ZKxFPd9bwrzygx/qiwIQiJ1sw/zD8qY/kRvlGHA==}
     engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
 
-  '@eslint/config-helpers@0.3.1':
-    resolution: {integrity: sha512-xR93k9WhrDYpXHORXpxVL5oHj3Era7wo6k/Wd8/IsQNnZUTzkGS29lyn3nAT05v6ltUuTFVCCYDEGfy2Or/sPA==}
-    engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
-
-  '@eslint/core@0.15.2':
-    resolution: {integrity: sha512-78Md3/Rrxh83gCxoUc0EiciuOHsIITzLy53m3d9UyiW8y9Dj2D29FeETqyKA+BRK76tnTp6RXWb3pCay8Oyomg==}
+  '@eslint/config-helpers@0.4.2':
+    resolution: {integrity: sha512-gBrxN88gOIf3R7ja5K9slwNayVcZgK6SOUORm2uBzTeIEfeVaIhOpCtTox3P6R7o2jLFwLFTLnC7kU/RGcYEgw==}
     engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
 
   '@eslint/core@0.17.0':
@@ -5409,16 +5403,16 @@ packages:
     resolution: {integrity: sha512-S26Stp4zCy88tH94QbBv3XCuzRQiZ9yXofEILmglYTh/Ug/a9/umqvgFtYBAo3Lp0nsI/5/qH1CCrbdK3AP1Tw==}
     engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
 
-  '@eslint/object-schema@2.1.6':
-    resolution: {integrity: sha512-RBMg5FRL0I0gs51M/guSAj5/e14VQ4tpZnQNWwuDT66P14I43ItmPfIZRhO9fUVIPOAQXU47atlywZ/czoqFPA==}
+  '@eslint/object-schema@2.1.7':
+    resolution: {integrity: sha512-VtAOaymWVfZcmZbp6E2mympDIHvyjXs/12LqWYjVw6qjrfF+VK+fyG33kChz3nnK+SU5/NeHOqrTEHS8sXO3OA==}
     engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
 
-  '@eslint/plugin-kit@0.3.5':
-    resolution: {integrity: sha512-Z5kJ+wU3oA7MMIqVR9tyZRtjYPr4OC004Q4Rw7pgOKUOKkJfZ3O24nz3WYfGRpMDNmcOi3TwQOmgm7B7Tpii0w==}
+  '@eslint/plugin-kit@0.4.1':
+    resolution: {integrity: sha512-43/qtrDUokr7LJqoF2c3+RInu/t4zfrpYdoSDfYyhg52rwLV6TnOvdG4fXm7IkSB3wErkcmJS9iEhjVtOSEjjA==}
     engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
 
-  '@faker-js/faker@10.0.0':
-    resolution: {integrity: sha512-UollFEUkVXutsaP+Vndjxar40Gs5JL2HeLcl8xO1QAjJgOdhc3OmBFWyEylS+RddWaaBiAzH+5/17PLQJwDiLw==}
+  '@faker-js/faker@10.1.0':
+    resolution: {integrity: sha512-C3mrr3b5dRVlKPJdfrAXS8+dq+rq8Qm5SNRazca0JKgw1HQERFmrVb0towvMmw5uu8hHKNiQasMaR/tydf3Zsg==}
     engines: {node: ^20.19.0 || ^22.13.0 || ^23.5.0 || >=24.0.0, npm: '>=10'}
 
   '@faker-js/faker@8.4.1':
@@ -6156,60 +6150,6 @@ packages:
     os: [darwin, linux, win32]
     peerDependencies:
       apache-arrow: '>=15.0.0 <=18.1.0'
-
-  '@langchain/anthropic@1.0.1':
-    resolution: {integrity: sha512-yVKePAT+nNHtybyyPlWqiq6lqcoDlIuMgL9B4WMEU5gbmzL170iodiqcgcZNFQLOC1V2wCOzywq6Zr0kB24AFg==}
-    engines: {node: '>=20'}
-    peerDependencies:
-      '@langchain/core': workspace:*
-
-  '@langchain/aws@1.0.1':
-    resolution: {integrity: sha512-vYBux3mSe52zd8kuBtOKZyYi4rkZj5v+vYdWxihttOAhDsaNCwUjAnGWdwVR7pM7FYv6AJ+ZPtjECwIhTLsa0A==}
-    engines: {node: '>=20'}
-    peerDependencies:
-      '@langchain/core': workspace:*
-
-  '@langchain/cohere@1.0.0':
-    resolution: {integrity: sha512-KqncspXKt2ueqkR5/LlOvm+rOIzx/AQhkITDYWFNOU4/BxPG238anE87jXnCOSE4LRlic+BdmFHEqstHd+lyYA==}
-    engines: {node: '>=20'}
-    peerDependencies:
-      '@langchain/core': workspace:*
-
-  '@langchain/deepseek@1.0.1':
-    resolution: {integrity: sha512-VkRZGQHOvLp0S2enqGTk8N5jTj7L4y3j9QKpRIqgTojfR1T/9tcB57wzNEvL+wsA0xprMQ1tUB6ZHBIUdmm0eg==}
-    engines: {node: '>=20'}
-    peerDependencies:
-      '@langchain/core': workspace:*
-
-  '@langchain/google-common@1.0.1':
-    resolution: {integrity: sha512-7NJeXas5Ga5lg/pQWQxRsquGHOPq5piqxYq+fZzV3jtx94gXCdtxzZSAdyuTFBIkoSaPKKEOLbRXmXx5ZT729w==}
-    engines: {node: '>=20'}
-    peerDependencies:
-      '@langchain/core': workspace:*
-
-  '@langchain/google-gauth@1.0.3':
-    resolution: {integrity: sha512-nRU8OWNOz4sqaSzCBYs4dM0ze3pM2mvdI3byhBvnFwFuMnmrhafw00v9k4ExicbrrHyQlgF6mM1QHa+9Cd4KSg==}
-    engines: {node: '>=20'}
-
-  '@langchain/google-genai@1.0.1':
-    resolution: {integrity: sha512-a9Bzaswp1P+eA2V8hAWSBypqjxmH+/zhOY1TBdalQuPQBTRH35jBMVgX3CTTAheAzBUGQtlDD4/dR9tyemDbhw==}
-    engines: {node: '>=20'}
-    peerDependencies:
-      '@langchain/core': workspace:*
-
-  '@langchain/google-vertexai-web@1.0.1':
-    resolution: {integrity: sha512-cy6qed8+myqZIb490RidxZ+tylcdxX/aJEqQAW0iBLQpo4DsdQJSjsDMh4qt1psUgie3Gdc2qMlKozNDsfRwEQ==}
-    engines: {node: '>=20'}
-
-  '@langchain/google-vertexai@1.0.1':
-    resolution: {integrity: sha512-LJ/BnJXtep1WPlJ78/Q9za9N5gbzQeDxTLZLv3T4L0/7ZUiXt/cSmXrDBSAg5tZ8mrDjdLxkwz+5GdeobW7YVA==}
-    engines: {node: '>=20'}
-
-  '@langchain/google-webauth@1.0.1':
-    resolution: {integrity: sha512-7C5O2/rciRKt0Khl+9yGULiY1ujgxbr2N+8H14ecppNdTXPN/s36RvkhX6cM67CTcIIYzfo2dn4UQZ7H/A1xAg==}
-    engines: {node: '>=20'}
-    peerDependencies:
-      '@langchain/core': workspace:*
 
   '@langchain/langgraph-checkpoint@0.1.1':
     resolution: {integrity: sha512-h2bP0RUikQZu0Um1ZUPErQLXyhzroJqKRbRcxYRTAh49oNlsfeq4A3K4YEDRbGGuyPZI/Jiqwhks1wZwY73AZw==}
@@ -7435,16 +7375,8 @@ packages:
     resolution: {integrity: sha512-ezHLe1tKLUxDJo2LHtDuEDyWXolw8WGOR92qb4bQdWq/zKenO5BvctZGrVJBK08zjezSk7bmbKFOXIVyChvDLw==}
     engines: {node: '>=18.0.0'}
 
-  '@smithy/core@3.18.3':
-    resolution: {integrity: sha512-qqpNskkbHOSfrbFbjhYj5o8VMXO26fvN1K/+HbCzUNlTuxgNcPRouUDNm+7D6CkN244WG7aK533Ne18UtJEgAA==}
-    engines: {node: '>=18.0.0'}
-
-  '@smithy/core@3.7.2':
-    resolution: {integrity: sha512-JoLw59sT5Bm8SAjFCYZyuCGxK8y3vovmoVbZWLDPTH5XpPEIwpFd9m90jjVMwoypDuB/SdVgje5Y4T7w50lJaw==}
-    engines: {node: '>=18.0.0'}
-
-  '@smithy/credential-provider-imds@4.0.6':
-    resolution: {integrity: sha512-hKMWcANhUiNbCJouYkZ9V3+/Qf9pteR1dnwgdyzR09R4ODEYx8BbUysHwRSyex4rZ9zapddZhLFTnT4ZijR4pw==}
+  '@smithy/core@3.18.4':
+    resolution: {integrity: sha512-o5tMqPZILBvvROfC8vC+dSVnWJl9a0u9ax1i1+Bq8515eYjUJqqk5XjjEsDLoeL5dSqGSh6WGdVx1eJ1E/Nwhw==}
     engines: {node: '>=18.0.0'}
 
   '@smithy/credential-provider-imds@4.2.5':
@@ -7858,11 +7790,8 @@ packages:
   '@tsconfig/node16@1.0.4':
     resolution: {integrity: sha512-vxhUy4J8lyeyinH7Azl1pdd43GJhZH/tP2weN8TntQblOY+A0XbT8DJk1/oCPuOOyg/Ja757rG0CgHcWC8OfMA==}
 
-  '@tsconfig/recommended@1.0.10':
-    resolution: {integrity: sha512-cGvydvg03lONp5Z9yaplW493Vw9/um7k588mvDkm+VFPF2PZUVPx0uswq4PFpeEySsLbQRETrDRhzh4Dmxaslw==}
-
-  '@tybys/wasm-util@0.10.0':
-    resolution: {integrity: sha512-VyyPYFlOMNylG45GoAe0xDoLwWuowvf92F9kySqzYh8vmYm7D2u4iUJKa1tOUpS70Ku13ASrOkS4ScXFsTaCNQ==}
+  '@tsconfig/recommended@1.0.13':
+    resolution: {integrity: sha512-sySRuBfMKyKO/j2ZAhR8kSembhjuPEV4Ra3AHtmWLq51+iGaudr45crPSzNC5b7/Ctrh9dfUpBuTlYrH6rM58Q==}
 
   '@tybys/wasm-util@0.10.1':
     resolution: {integrity: sha512-9tTaPJLSiejZKx+Bmog4uSubteqTvFrVrURwkmHixBo0G4seD0zUxp98E1DzUBJxLQ3NPwXrGKDiVjwx/DpPsg==}
@@ -10277,16 +10206,6 @@ packages:
       jiti:
         optional: true
 
-  eslint@9.39.1:
-    resolution: {integrity: sha512-BhHmn2yNOFA9H9JmmIVKJmd288g9hrVRDkdoIgRCRuSySRUHH7r/DI6aAXW9T1WwUuY3DFgrcaqB+deURBLR5g==}
-    engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
-    hasBin: true
-    peerDependencies:
-      jiti: '*'
-    peerDependenciesMeta:
-      jiti:
-        optional: true
-
   esm@3.2.25:
     resolution: {integrity: sha512-U1suiZ2oDVWv4zPO56S0NcR5QriEahGtdN2OR6FiOG4WJvcjBVFB0qI4+eKoWFH483PKGuLuu6V8Z4T5g63UVA==}
     engines: {node: '>=6'}
@@ -10504,15 +10423,6 @@ packages:
 
   fd-slicer@1.1.0:
     resolution: {integrity: sha512-cE1qsB/VwyQozZ+q1dGxR8LBYNZeofhEdUNGSMbQD3Gw2lAzX9Zb3uIU6Ebc/Fmyjo9AWWfnn0AUCHqtevs/8g==}
-
-  fdir@6.5.0:
-    resolution: {integrity: sha512-tIbYtZbucOs0BRGqPJkshJUYdL+SDH7dVM8gjy+ERp3WAUjLEFJE+02kanyHtwjWOnwrKYBiwAmM0p4kLJAnXg==}
-    engines: {node: '>=12.0.0'}
-    peerDependencies:
-      picomatch: ^3 || ^4
-    peerDependenciesMeta:
-      picomatch:
-        optional: true
 
   fdir@6.5.0:
     resolution: {integrity: sha512-tIbYtZbucOs0BRGqPJkshJUYdL+SDH7dVM8gjy+ERp3WAUjLEFJE+02kanyHtwjWOnwrKYBiwAmM0p4kLJAnXg==}
@@ -10861,9 +10771,6 @@ packages:
   get-symbol-description@1.1.0:
     resolution: {integrity: sha512-w9UMqWwJxHNOvoNzSJ2oPF5wvYcvP7jUvYzhp67yEhTi17ZDBBC1z9pTdGuzjD+EFIqLSYRweZjqfiPzQ06Ebg==}
     engines: {node: '>= 0.4'}
-
-  get-tsconfig@4.13.0:
-    resolution: {integrity: sha512-1VKTZJCwBrvbd+Wn3AOgQP/2Av+TfTCOlE4AcRJE72W1ksZXbAx8PPBR9RzgTeSPzlPMHrbANMH3LbltH73wxQ==}
 
   get-tsconfig@4.13.0:
     resolution: {integrity: sha512-1VKTZJCwBrvbd+Wn3AOgQP/2Av+TfTCOlE4AcRJE72W1ksZXbAx8PPBR9RzgTeSPzlPMHrbANMH3LbltH73wxQ==}
@@ -11763,10 +11670,6 @@ packages:
 
   jiti@1.21.7:
     resolution: {integrity: sha512-/imKNG4EbWNrVjoNC/1H5/9GFy+tqjGBHCaSsN+P2RnPqjsLmv6UD3Ej+Kj8nBWaRAwyk7kK5ZUc+OEatnTR3A==}
-    hasBin: true
-
-  jiti@2.6.1:
-    resolution: {integrity: sha512-ekilCSN1jwRvIbgeg/57YFh8qQDNbwDb9xT/qu2DAHbFFZUicIl4ygVaAvzveMhMVr3LnpSKTNnwt8PoOfmKhQ==}
     hasBin: true
 
   jiti@2.6.1:
@@ -12828,13 +12731,8 @@ packages:
   obuf@1.1.2:
     resolution: {integrity: sha512-PX1wu0AmAdPqOL1mWhqmlOd8kOIZQwGZw6rh7uby9fTc5lhaOWFLX3I6R1hrF9k3zUY40e6igsLGkDXK92LJNg==}
 
-  obug@1.0.0:
-    resolution: {integrity: sha512-WKcS43Yl6YPJekid7KiRdT6CHMSmYWVfJiSFbTaGxWQlC+cEBPxHa9jR1uS2cMiQmXd8Hsa2ipAKErQ/GLhSpg==}
-    peerDependencies:
-      ms: ^2.0.0
-    peerDependenciesMeta:
-      ms:
-        optional: true
+  obug@2.1.0:
+    resolution: {integrity: sha512-uu/tgLPoa75CFA7UDkmqspKbefvZh1WMPwkU3bNr0PY746a/+xwXVgbw5co5C3GvJj3h5u8g/pbxXzI0gd1QFg==}
 
   octokit@4.1.4:
     resolution: {integrity: sha512-cRvxRte6FU3vAHRC9+PMSY3D+mRAs2Rd9emMoqp70UGRvJRM3sbAoim2IXRZNNsf8wVfn4sGxVBHRAP+JBVX/g==}
@@ -13844,9 +13742,9 @@ packages:
     resolution: {integrity: sha512-CHhPh+UNHD2GTXNYhPWLnU8ONHdI+5DI+4EYIAOaiD63rHeYlZvyh8P+in5999TTSFgUYuKUAjzRI4mdh/p+2A==}
     engines: {node: '>=8.0'}
 
-  rolldown-plugin-dts@0.14.3:
-    resolution: {integrity: sha512-LsUPsPV2XpACe5wikxQzYBD0qg4nyxwUkLos5oF8v8qVO9jPpH6GRg2S5ZUELFry04Ab58C9Tibbi7dEbVLp2w==}
-    engines: {node: '>=20.18.0'}
+  rolldown-plugin-dts@0.17.8:
+    resolution: {integrity: sha512-76EEBlhF00yeY6M7VpMkWKI4r9WjuoMiOGey7j4D6zf3m0BR+ZrrY9hvSXdueJ3ljxSLq4DJBKFpX/X9+L7EKw==}
+    engines: {node: '>=20.19.0'}
     peerDependencies:
       '@ts-macro/tsc': ^0.3.6
       '@typescript/native-preview': '>=7.0.0-dev.20250601.1'
@@ -14509,10 +14407,6 @@ packages:
     resolution: {integrity: sha512-j2Zq4NyQYG5XMST4cbs02Ak8iJUdxRM0XI5QyxXuZOzKOINmWurp3smXu3y5wDcJrptwpSjgXHzIQxR0omXljQ==}
     engines: {node: '>=12.0.0'}
 
-  tinyglobby@0.2.15:
-    resolution: {integrity: sha512-j2Zq4NyQYG5XMST4cbs02Ak8iJUdxRM0XI5QyxXuZOzKOINmWurp3smXu3y5wDcJrptwpSjgXHzIQxR0omXljQ==}
-    engines: {node: '>=12.0.0'}
-
   tinypool@0.8.4:
     resolution: {integrity: sha512-i11VH5gS6IFeLY3gMBQ00/MmLncVP7JLXOw1vlgkytLmJK7QnEr7NXf0LBdxfmNPAeyetukOk0bOYrJrFGjYJQ==}
     engines: {node: '>=14.0.0'}
@@ -14657,8 +14551,8 @@ packages:
   tsconfig-paths@3.15.0:
     resolution: {integrity: sha512-2Ac2RgzDe/cn48GvOe3M+o82pEFewD3UPbyoUHHdKasHwJKjds4fLXWf/Ux5kATBKN20oaFGu+jbElp1pos0mg==}
 
-  tsdown@0.13.1:
-    resolution: {integrity: sha512-+rdxvqZvRKh+OwuupdQmJ2XAM31gLsdqcoo1O3aIlaD+MEXw5OaCRaCalg5wA+0nNk97f0GJliGZyUi0QlcCmQ==}
+  tsdown@0.15.12:
+    resolution: {integrity: sha512-c8VLlQm8/lFrOAg5VMVeN4NAbejZyVQkzd+ErjuaQgJFI/9MhR9ivr0H/CM7UlOF1+ELlF6YaI7sU/4itgGQ8w==}
     engines: {node: '>=20.19.0'}
     hasBin: true
     peerDependencies:
@@ -15594,7 +15488,7 @@ snapshots:
     optionalDependencies:
       zod: 3.25.76
 
-  '@anthropic-ai/sdk@0.65.0(zod@4.1.12)':
+  '@anthropic-ai/sdk@0.69.0(zod@4.1.12)':
     dependencies:
       json-schema-to-ts: 3.1.1
     optionalDependencies:
@@ -16887,14 +16781,6 @@ snapshots:
       '@jridgewell/trace-mapping': 0.3.31
       jsesc: 3.1.0
 
-  '@babel/generator@7.28.5':
-    dependencies:
-      '@babel/parser': 7.28.5
-      '@babel/types': 7.28.5
-      '@jridgewell/gen-mapping': 0.3.13
-      '@jridgewell/trace-mapping': 0.3.31
-      jsesc: 3.1.0
-
   '@babel/helper-annotate-as-pure@7.27.3':
     dependencies:
       '@babel/types': 7.28.5
@@ -16996,7 +16882,7 @@ snapshots:
 
   '@babel/helper-string-parser@7.27.1': {}
 
-  '@babel/helper-validator-identifier@7.27.1': {}
+  '@babel/helper-validator-identifier@7.28.5': {}
 
   '@babel/helper-validator-option@7.27.1': {}
 
@@ -17017,7 +16903,7 @@ snapshots:
     dependencies:
       '@babel/types': 7.28.5
 
-  '@babel/plugin-bugfix-firefox-class-in-computed-class-key@7.27.1(@babel/core@7.28.0)':
+  '@babel/plugin-bugfix-firefox-class-in-computed-class-key@7.28.5(@babel/core@7.28.5)':
     dependencies:
       '@babel/core': 7.28.5
       '@babel/helper-plugin-utils': 7.27.1
@@ -17672,7 +17558,7 @@ snapshots:
       '@babel/helper-string-parser': 7.27.1
       '@babel/helper-validator-identifier': 7.28.5
 
-  '@baiducloud/qianfan@0.1.9(@babel/core@7.28.0)(encoding@0.1.13)':
+  '@baiducloud/qianfan@0.1.9(@babel/core@7.28.5)(encoding@0.1.13)':
     dependencies:
       '@babel/preset-react': 7.28.5(@babel/core@7.28.5)
       '@rollup/plugin-inject': 5.0.5(rollup@3.29.5)
@@ -18172,11 +18058,6 @@ snapshots:
       tslib: 2.8.1
     optional: true
 
-  '@emnapi/runtime@1.4.5':
-    dependencies:
-      tslib: 2.8.1
-    optional: true
-
   '@emnapi/runtime@1.7.1':
     dependencies:
       tslib: 2.8.1
@@ -18478,9 +18359,9 @@ snapshots:
   '@esbuild/win32-x64@0.27.0':
     optional: true
 
-  '@eslint-community/eslint-utils@4.9.0(eslint@9.36.0(jiti@2.5.1))':
+  '@eslint-community/eslint-utils@4.9.0(eslint@9.39.1(jiti@2.6.1))':
     dependencies:
-      eslint: 9.36.0(jiti@2.5.1)
+      eslint: 9.39.1(jiti@2.6.1)
       eslint-visitor-keys: 3.4.3
 
   '@eslint-community/regexpp@4.12.2': {}
@@ -18493,11 +18374,9 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@eslint/config-helpers@0.3.1': {}
-
-  '@eslint/core@0.15.2':
+  '@eslint/config-helpers@0.4.2':
     dependencies:
-      '@types/json-schema': 7.0.15
+      '@eslint/core': 0.17.0
 
   '@eslint/core@0.17.0':
     dependencies:
@@ -18517,16 +18396,16 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@eslint/js@9.36.0': {}
+  '@eslint/js@9.39.1': {}
 
-  '@eslint/object-schema@2.1.6': {}
+  '@eslint/object-schema@2.1.7': {}
 
   '@eslint/plugin-kit@0.4.1':
     dependencies:
       '@eslint/core': 0.17.0
       levn: 0.4.1
 
-  '@faker-js/faker@10.0.0': {}
+  '@faker-js/faker@10.1.0': {}
 
   '@faker-js/faker@8.4.1': {}
 
@@ -18650,19 +18529,6 @@ snapshots:
       mime-types: 2.1.35
     transitivePeerDependencies:
       - debug
-
-  '@getzep/zep-cloud@1.0.12(@langchain/core@libs+langchain-core)(encoding@0.1.13)(langchain@0.3.30(7ab95453cc610a345a5692baeecbc52c))':
-    dependencies:
-      form-data: 4.0.0
-      node-fetch: 2.7.0(encoding@0.1.13)
-      qs: 6.11.2
-      url-join: 4.0.1
-      zod: 3.25.76
-    optionalDependencies:
-      '@langchain/core': link:libs/langchain-core
-      langchain: 0.3.30(7ab95453cc610a345a5692baeecbc52c)
-    transitivePeerDependencies:
-      - encoding
 
   '@getzep/zep-cloud@1.0.12(@langchain/core@libs+langchain-core)(encoding@0.1.13)(langchain@libs+langchain)':
     dependencies:
@@ -18953,7 +18819,7 @@ snapshots:
 
   '@img/sharp-wasm32@0.34.5':
     dependencies:
-      '@emnapi/runtime': 1.4.5
+      '@emnapi/runtime': 1.7.1
     optional: true
 
   '@img/sharp-win32-arm64@0.34.5':
@@ -19443,87 +19309,6 @@ snapshots:
       '@lancedb/lancedb-linux-x64-musl': 0.19.1
       '@lancedb/lancedb-win32-arm64-msvc': 0.19.1
       '@lancedb/lancedb-win32-x64-msvc': 0.19.1
-
-  '@langchain/anthropic@1.0.1(@langchain/core@libs+langchain-core)(zod@3.25.76)':
-    dependencies:
-      '@anthropic-ai/sdk': 0.65.0(zod@3.25.76)
-      '@langchain/core': link:libs/langchain-core
-    transitivePeerDependencies:
-      - zod
-    optional: true
-
-  '@langchain/aws@1.0.1(@langchain/core@libs+langchain-core)':
-    dependencies:
-      '@aws-sdk/client-bedrock-agent-runtime': 3.931.0
-      '@aws-sdk/client-bedrock-runtime': 3.931.0
-      '@aws-sdk/client-kendra': 3.931.0
-      '@aws-sdk/credential-provider-node': 3.931.0
-      '@langchain/core': link:libs/langchain-core
-    transitivePeerDependencies:
-      - aws-crt
-    optional: true
-
-  '@langchain/cohere@1.0.0(@langchain/core@libs+langchain-core)(encoding@0.1.13)':
-    dependencies:
-      '@langchain/core': link:libs/langchain-core
-      cohere-ai: 7.19.0(encoding@0.1.13)
-      uuid: 10.0.0
-    transitivePeerDependencies:
-      - aws-crt
-      - encoding
-    optional: true
-
-  '@langchain/deepseek@1.0.1(@langchain/core@libs+langchain-core)(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.5))':
-    dependencies:
-      '@langchain/core': link:libs/langchain-core
-      '@langchain/openai': 1.1.1(@langchain/core@libs+langchain-core)(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.5))
-    transitivePeerDependencies:
-      - ws
-    optional: true
-
-  '@langchain/google-common@1.0.1(@langchain/core@libs+langchain-core)':
-    dependencies:
-      '@langchain/core': link:libs/langchain-core
-      uuid: 10.0.0
-    optional: true
-
-  '@langchain/google-gauth@1.0.1(@langchain/core@libs+langchain-core)':
-    dependencies:
-      '@langchain/google-common': 1.0.1(@langchain/core@libs+langchain-core)
-      google-auth-library: 10.2.0
-    transitivePeerDependencies:
-      - '@langchain/core'
-      - supports-color
-    optional: true
-
-  '@langchain/google-genai@1.0.1(@langchain/core@libs+langchain-core)':
-    dependencies:
-      '@google/generative-ai': 0.24.1
-      '@langchain/core': link:libs/langchain-core
-      uuid: 11.1.0
-    optional: true
-
-  '@langchain/google-vertexai-web@1.0.1(@langchain/core@libs+langchain-core)':
-    dependencies:
-      '@langchain/google-webauth': 1.0.1(@langchain/core@libs+langchain-core)
-    transitivePeerDependencies:
-      - '@langchain/core'
-    optional: true
-
-  '@langchain/google-vertexai@1.0.1(@langchain/core@libs+langchain-core)':
-    dependencies:
-      '@langchain/google-gauth': 1.0.1(@langchain/core@libs+langchain-core)
-    transitivePeerDependencies:
-      - '@langchain/core'
-      - supports-color
-    optional: true
-
-  '@langchain/google-webauth@1.0.1(@langchain/core@libs+langchain-core)':
-    dependencies:
-      '@langchain/core': link:libs/langchain-core
-      '@langchain/google-common': 1.0.1(@langchain/core@libs+langchain-core)
-      web-auth-library: 1.0.3
-    optional: true
 
   '@langchain/langgraph-checkpoint@0.1.1(@langchain/core@libs+langchain-core)':
     dependencies:
@@ -21251,12 +21036,7 @@ snapshots:
 
   '@tsconfig/node16@1.0.4': {}
 
-  '@tsconfig/recommended@1.0.10': {}
-
-  '@tybys/wasm-util@0.10.0':
-    dependencies:
-      tslib: 2.8.1
-    optional: true
+  '@tsconfig/recommended@1.0.13': {}
 
   '@tybys/wasm-util@0.10.1':
     dependencies:
@@ -21593,15 +21373,15 @@ snapshots:
       '@types/node': 24.10.1
     optional: true
 
-  '@typescript-eslint/eslint-plugin@8.45.0(@typescript-eslint/parser@8.45.0(eslint@9.36.0(jiti@2.5.1))(typescript@5.8.3))(eslint@9.36.0(jiti@2.5.1))(typescript@5.8.3)':
+  '@typescript-eslint/eslint-plugin@8.46.4(@typescript-eslint/parser@8.46.4(eslint@9.39.1(jiti@2.6.1))(typescript@5.8.3))(eslint@9.39.1(jiti@2.6.1))(typescript@5.8.3)':
     dependencies:
-      '@eslint-community/regexpp': 4.12.1
-      '@typescript-eslint/parser': 8.45.0(eslint@9.36.0(jiti@2.5.1))(typescript@5.8.3)
-      '@typescript-eslint/scope-manager': 8.45.0
-      '@typescript-eslint/type-utils': 8.45.0(eslint@9.36.0(jiti@2.5.1))(typescript@5.8.3)
-      '@typescript-eslint/utils': 8.45.0(eslint@9.36.0(jiti@2.5.1))(typescript@5.8.3)
-      '@typescript-eslint/visitor-keys': 8.45.0
-      eslint: 9.36.0(jiti@2.5.1)
+      '@eslint-community/regexpp': 4.12.2
+      '@typescript-eslint/parser': 8.46.4(eslint@9.39.1(jiti@2.6.1))(typescript@5.8.3)
+      '@typescript-eslint/scope-manager': 8.46.4
+      '@typescript-eslint/type-utils': 8.46.4(eslint@9.39.1(jiti@2.6.1))(typescript@5.8.3)
+      '@typescript-eslint/utils': 8.46.4(eslint@9.39.1(jiti@2.6.1))(typescript@5.8.3)
+      '@typescript-eslint/visitor-keys': 8.46.4
+      eslint: 9.39.1(jiti@2.6.1)
       graphemer: 1.4.0
       ignore: 7.0.5
       natural-compare: 1.4.0
@@ -21610,15 +21390,15 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@typescript-eslint/eslint-plugin@8.45.0(@typescript-eslint/parser@8.45.0(eslint@9.36.0(jiti@2.5.1))(typescript@5.9.3))(eslint@9.36.0(jiti@2.5.1))(typescript@5.9.3)':
+  '@typescript-eslint/eslint-plugin@8.46.4(@typescript-eslint/parser@8.46.4(eslint@9.39.1(jiti@2.6.1))(typescript@5.9.3))(eslint@9.39.1(jiti@2.6.1))(typescript@5.9.3)':
     dependencies:
-      '@eslint-community/regexpp': 4.12.1
-      '@typescript-eslint/parser': 8.45.0(eslint@9.36.0(jiti@2.5.1))(typescript@5.9.3)
-      '@typescript-eslint/scope-manager': 8.45.0
-      '@typescript-eslint/type-utils': 8.45.0(eslint@9.36.0(jiti@2.5.1))(typescript@5.9.3)
-      '@typescript-eslint/utils': 8.45.0(eslint@9.36.0(jiti@2.5.1))(typescript@5.9.3)
-      '@typescript-eslint/visitor-keys': 8.45.0
-      eslint: 9.36.0(jiti@2.5.1)
+      '@eslint-community/regexpp': 4.12.2
+      '@typescript-eslint/parser': 8.46.4(eslint@9.39.1(jiti@2.6.1))(typescript@5.9.3)
+      '@typescript-eslint/scope-manager': 8.46.4
+      '@typescript-eslint/type-utils': 8.46.4(eslint@9.39.1(jiti@2.6.1))(typescript@5.9.3)
+      '@typescript-eslint/utils': 8.46.4(eslint@9.39.1(jiti@2.6.1))(typescript@5.9.3)
+      '@typescript-eslint/visitor-keys': 8.46.4
+      eslint: 9.39.1(jiti@2.6.1)
       graphemer: 1.4.0
       ignore: 7.0.5
       natural-compare: 1.4.0
@@ -21627,26 +21407,26 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@typescript-eslint/parser@8.45.0(eslint@9.36.0(jiti@2.5.1))(typescript@5.8.3)':
+  '@typescript-eslint/parser@8.46.4(eslint@9.39.1(jiti@2.6.1))(typescript@5.8.3)':
     dependencies:
       '@typescript-eslint/scope-manager': 8.46.4
       '@typescript-eslint/types': 8.46.4
       '@typescript-eslint/typescript-estree': 8.46.4(typescript@5.8.3)
       '@typescript-eslint/visitor-keys': 8.46.4
       debug: 4.4.3(supports-color@8.1.1)
-      eslint: 9.36.0(jiti@2.5.1)
+      eslint: 9.39.1(jiti@2.6.1)
       typescript: 5.8.3
     transitivePeerDependencies:
       - supports-color
 
-  '@typescript-eslint/parser@8.45.0(eslint@9.36.0(jiti@2.5.1))(typescript@5.9.3)':
+  '@typescript-eslint/parser@8.46.4(eslint@9.39.1(jiti@2.6.1))(typescript@5.9.3)':
     dependencies:
       '@typescript-eslint/scope-manager': 8.46.4
       '@typescript-eslint/types': 8.46.4
       '@typescript-eslint/typescript-estree': 8.46.4(typescript@5.9.3)
       '@typescript-eslint/visitor-keys': 8.46.4
       debug: 4.4.3(supports-color@8.1.1)
-      eslint: 9.36.0(jiti@2.5.1)
+      eslint: 9.39.1(jiti@2.6.1)
       typescript: 5.9.3
     transitivePeerDependencies:
       - supports-color
@@ -21682,25 +21462,25 @@ snapshots:
     dependencies:
       typescript: 5.9.3
 
-  '@typescript-eslint/type-utils@8.45.0(eslint@9.36.0(jiti@2.5.1))(typescript@5.8.3)':
+  '@typescript-eslint/type-utils@8.46.4(eslint@9.39.1(jiti@2.6.1))(typescript@5.8.3)':
     dependencies:
-      '@typescript-eslint/types': 8.45.0
-      '@typescript-eslint/typescript-estree': 8.45.0(typescript@5.8.3)
-      '@typescript-eslint/utils': 8.45.0(eslint@9.36.0(jiti@2.5.1))(typescript@5.8.3)
+      '@typescript-eslint/types': 8.46.4
+      '@typescript-eslint/typescript-estree': 8.46.4(typescript@5.8.3)
+      '@typescript-eslint/utils': 8.46.4(eslint@9.39.1(jiti@2.6.1))(typescript@5.8.3)
       debug: 4.4.3(supports-color@8.1.1)
-      eslint: 9.36.0(jiti@2.5.1)
+      eslint: 9.39.1(jiti@2.6.1)
       ts-api-utils: 2.1.0(typescript@5.8.3)
       typescript: 5.8.3
     transitivePeerDependencies:
       - supports-color
 
-  '@typescript-eslint/type-utils@8.45.0(eslint@9.36.0(jiti@2.5.1))(typescript@5.9.3)':
+  '@typescript-eslint/type-utils@8.46.4(eslint@9.39.1(jiti@2.6.1))(typescript@5.9.3)':
     dependencies:
-      '@typescript-eslint/types': 8.45.0
-      '@typescript-eslint/typescript-estree': 8.45.0(typescript@5.9.3)
-      '@typescript-eslint/utils': 8.45.0(eslint@9.36.0(jiti@2.5.1))(typescript@5.9.3)
+      '@typescript-eslint/types': 8.46.4
+      '@typescript-eslint/typescript-estree': 8.46.4(typescript@5.9.3)
+      '@typescript-eslint/utils': 8.46.4(eslint@9.39.1(jiti@2.6.1))(typescript@5.9.3)
       debug: 4.4.3(supports-color@8.1.1)
-      eslint: 9.36.0(jiti@2.5.1)
+      eslint: 9.39.1(jiti@2.6.1)
       ts-api-utils: 2.1.0(typescript@5.9.3)
       typescript: 5.9.3
     transitivePeerDependencies:
@@ -21740,24 +21520,24 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@typescript-eslint/utils@8.45.0(eslint@9.36.0(jiti@2.5.1))(typescript@5.8.3)':
+  '@typescript-eslint/utils@8.46.4(eslint@9.39.1(jiti@2.6.1))(typescript@5.8.3)':
     dependencies:
-      '@eslint-community/eslint-utils': 4.9.0(eslint@9.36.0(jiti@2.5.1))
-      '@typescript-eslint/scope-manager': 8.45.0
-      '@typescript-eslint/types': 8.45.0
-      '@typescript-eslint/typescript-estree': 8.45.0(typescript@5.8.3)
-      eslint: 9.36.0(jiti@2.5.1)
+      '@eslint-community/eslint-utils': 4.9.0(eslint@9.39.1(jiti@2.6.1))
+      '@typescript-eslint/scope-manager': 8.46.4
+      '@typescript-eslint/types': 8.46.4
+      '@typescript-eslint/typescript-estree': 8.46.4(typescript@5.8.3)
+      eslint: 9.39.1(jiti@2.6.1)
       typescript: 5.8.3
     transitivePeerDependencies:
       - supports-color
 
-  '@typescript-eslint/utils@8.45.0(eslint@9.36.0(jiti@2.5.1))(typescript@5.9.3)':
+  '@typescript-eslint/utils@8.46.4(eslint@9.39.1(jiti@2.6.1))(typescript@5.9.3)':
     dependencies:
-      '@eslint-community/eslint-utils': 4.9.0(eslint@9.36.0(jiti@2.5.1))
-      '@typescript-eslint/scope-manager': 8.45.0
-      '@typescript-eslint/types': 8.45.0
-      '@typescript-eslint/typescript-estree': 8.45.0(typescript@5.9.3)
-      eslint: 9.36.0(jiti@2.5.1)
+      '@eslint-community/eslint-utils': 4.9.0(eslint@9.39.1(jiti@2.6.1))
+      '@typescript-eslint/scope-manager': 8.46.4
+      '@typescript-eslint/types': 8.46.4
+      '@typescript-eslint/typescript-estree': 8.46.4(typescript@5.9.3)
+      eslint: 9.39.1(jiti@2.6.1)
       typescript: 5.9.3
     transitivePeerDependencies:
       - supports-color
@@ -21837,7 +21617,7 @@ snapshots:
     transitivePeerDependencies:
       - utf-8-validate
 
-  '@vitest/coverage-v8@3.2.4(vitest@3.2.4(@types/debug@4.1.12)(@types/node@22.18.8)(jiti@2.5.1)(jsdom@26.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.5))(terser@5.44.1)(tsx@4.20.3)(yaml@2.8.1))':
+  '@vitest/coverage-v8@3.2.4(vitest@3.2.4(@types/debug@4.1.12)(@types/node@22.19.1)(jiti@2.6.1)(jsdom@22.1.0(bufferutil@4.0.9))(terser@5.44.1)(tsx@4.20.6)(yaml@2.8.1))':
     dependencies:
       '@ampproject/remapping': 2.3.0
       '@bcoe/v8-coverage': 1.0.2
@@ -21852,11 +21632,11 @@ snapshots:
       std-env: 3.10.0
       test-exclude: 7.0.1
       tinyrainbow: 2.0.0
-      vitest: 3.2.4(@types/debug@4.1.12)(@types/node@22.18.8)(jiti@2.5.1)(jsdom@26.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.5))(terser@5.44.1)(tsx@4.20.3)(yaml@2.8.1)
+      vitest: 3.2.4(@types/debug@4.1.12)(@types/node@22.19.1)(jiti@2.6.1)(jsdom@22.1.0(bufferutil@4.0.9))(terser@5.44.1)(tsx@4.20.6)(yaml@2.8.1)
     transitivePeerDependencies:
       - supports-color
 
-  '@vitest/coverage-v8@3.2.4(vitest@3.2.4(@types/debug@4.1.12)(@types/node@24.10.1)(jiti@2.5.1)(jsdom@26.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.5))(terser@5.44.1)(tsx@3.14.0)(yaml@2.8.1))':
+  '@vitest/coverage-v8@3.2.4(vitest@3.2.4(@types/debug@4.1.12)(@types/node@24.10.1)(jiti@2.6.1)(jsdom@22.1.0(bufferutil@4.0.9))(terser@5.44.1)(tsx@3.14.0)(yaml@2.8.1))':
     dependencies:
       '@ampproject/remapping': 2.3.0
       '@bcoe/v8-coverage': 1.0.2
@@ -21871,11 +21651,11 @@ snapshots:
       std-env: 3.10.0
       test-exclude: 7.0.1
       tinyrainbow: 2.0.0
-      vitest: 3.2.4(@types/debug@4.1.12)(@types/node@24.10.1)(jiti@2.5.1)(jsdom@26.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.5))(terser@5.44.1)(tsx@3.14.0)(yaml@2.8.1)
+      vitest: 3.2.4(@types/debug@4.1.12)(@types/node@24.10.1)(jiti@2.6.1)(jsdom@22.1.0(bufferutil@4.0.9))(terser@5.44.1)(tsx@3.14.0)(yaml@2.8.1)
     transitivePeerDependencies:
       - supports-color
 
-  '@vitest/coverage-v8@3.2.4(vitest@3.2.4(@types/debug@4.1.12)(@types/node@24.10.1)(jiti@2.5.1)(jsdom@26.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.5))(terser@5.44.1)(tsx@4.20.3)(yaml@2.8.1))':
+  '@vitest/coverage-v8@3.2.4(vitest@3.2.4(@types/debug@4.1.12)(@types/node@24.10.1)(jiti@2.6.1)(jsdom@22.1.0(bufferutil@4.0.9))(terser@5.44.1)(tsx@4.20.6)(yaml@2.8.1))':
     dependencies:
       '@ampproject/remapping': 2.3.0
       '@bcoe/v8-coverage': 1.0.2
@@ -21890,7 +21670,7 @@ snapshots:
       std-env: 3.10.0
       test-exclude: 7.0.1
       tinyrainbow: 2.0.0
-      vitest: 3.2.4(@types/debug@4.1.12)(@types/node@24.10.1)(jiti@2.5.1)(jsdom@26.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.5))(terser@5.44.1)(tsx@4.20.3)(yaml@2.8.1)
+      vitest: 3.2.4(@types/debug@4.1.12)(@types/node@24.10.1)(jiti@2.6.1)(jsdom@22.1.0(bufferutil@4.0.9))(terser@5.44.1)(tsx@4.20.6)(yaml@2.8.1)
     transitivePeerDependencies:
       - supports-color
 
@@ -21908,29 +21688,29 @@ snapshots:
       chai: 5.3.3
       tinyrainbow: 2.0.0
 
-  '@vitest/mocker@3.2.4(vite@7.0.6(@types/node@22.18.8)(jiti@2.5.1)(terser@5.44.1)(tsx@4.20.3)(yaml@2.8.1))':
+  '@vitest/mocker@3.2.4(vite@7.2.2(@types/node@22.19.1)(jiti@2.6.1)(terser@5.44.1)(tsx@4.20.6)(yaml@2.8.1))':
     dependencies:
       '@vitest/spy': 3.2.4
       estree-walker: 3.0.3
       magic-string: 0.30.21
     optionalDependencies:
-      vite: 7.0.6(@types/node@22.18.8)(jiti@2.5.1)(terser@5.44.1)(tsx@4.20.3)(yaml@2.8.1)
+      vite: 7.2.2(@types/node@22.19.1)(jiti@2.6.1)(terser@5.44.1)(tsx@4.20.6)(yaml@2.8.1)
 
-  '@vitest/mocker@3.2.4(vite@7.0.6(@types/node@24.10.1)(jiti@2.5.1)(terser@5.44.1)(tsx@3.14.0)(yaml@2.8.1))':
+  '@vitest/mocker@3.2.4(vite@7.2.2(@types/node@24.10.1)(jiti@2.6.1)(terser@5.44.1)(tsx@3.14.0)(yaml@2.8.1))':
     dependencies:
       '@vitest/spy': 3.2.4
       estree-walker: 3.0.3
       magic-string: 0.30.21
     optionalDependencies:
-      vite: 7.0.6(@types/node@24.10.1)(jiti@2.5.1)(terser@5.44.1)(tsx@3.14.0)(yaml@2.8.1)
+      vite: 7.2.2(@types/node@24.10.1)(jiti@2.6.1)(terser@5.44.1)(tsx@3.14.0)(yaml@2.8.1)
 
-  '@vitest/mocker@3.2.4(vite@7.0.6(@types/node@24.10.1)(jiti@2.5.1)(terser@5.44.1)(tsx@4.20.3)(yaml@2.8.1))':
+  '@vitest/mocker@3.2.4(vite@7.2.2(@types/node@24.10.1)(jiti@2.6.1)(terser@5.44.1)(tsx@4.20.6)(yaml@2.8.1))':
     dependencies:
       '@vitest/spy': 3.2.4
       estree-walker: 3.0.3
       magic-string: 0.30.21
     optionalDependencies:
-      vite: 7.0.6(@types/node@24.10.1)(jiti@2.5.1)(terser@5.44.1)(tsx@4.20.3)(yaml@2.8.1)
+      vite: 7.2.2(@types/node@24.10.1)(jiti@2.6.1)(terser@5.44.1)(tsx@4.20.6)(yaml@2.8.1)
 
   '@vitest/pretty-format@3.2.4':
     dependencies:
@@ -23070,8 +22850,8 @@ snapshots:
       pathe: 1.1.2
       pkg-types: 1.3.1
       scule: 1.3.0
-      semver: 7.7.2
-      std-env: 3.9.0
+      semver: 7.7.3
+      std-env: 3.10.0
       yaml: 2.8.1
     transitivePeerDependencies:
       - magicast
@@ -24378,9 +24158,9 @@ snapshots:
     optionalDependencies:
       source-map: 0.6.1
 
-  eslint-config-prettier@10.1.8(eslint@9.36.0(jiti@2.5.1)):
+  eslint-config-prettier@10.1.8(eslint@9.39.1(jiti@2.6.1)):
     dependencies:
-      eslint: 9.36.0(jiti@2.5.1)
+      eslint: 9.39.1(jiti@2.6.1)
 
   eslint-import-resolver-node@0.3.9:
     dependencies:
@@ -24390,17 +24170,17 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  eslint-module-utils@2.12.1(@typescript-eslint/parser@8.45.0(eslint@9.36.0(jiti@2.5.1))(typescript@5.9.3))(eslint-import-resolver-node@0.3.9)(eslint@9.36.0(jiti@2.5.1)):
+  eslint-module-utils@2.12.1(@typescript-eslint/parser@8.46.4(eslint@9.39.1(jiti@2.6.1))(typescript@5.9.3))(eslint-import-resolver-node@0.3.9)(eslint@9.39.1(jiti@2.6.1)):
     dependencies:
       debug: 3.2.7
     optionalDependencies:
-      '@typescript-eslint/parser': 8.45.0(eslint@9.36.0(jiti@2.5.1))(typescript@5.9.3)
-      eslint: 9.36.0(jiti@2.5.1)
+      '@typescript-eslint/parser': 8.46.4(eslint@9.39.1(jiti@2.6.1))(typescript@5.9.3)
+      eslint: 9.39.1(jiti@2.6.1)
       eslint-import-resolver-node: 0.3.9
     transitivePeerDependencies:
       - supports-color
 
-  eslint-plugin-import@2.32.0(@typescript-eslint/parser@8.45.0(eslint@9.36.0(jiti@2.5.1))(typescript@5.9.3))(eslint@9.36.0(jiti@2.5.1)):
+  eslint-plugin-import@2.32.0(@typescript-eslint/parser@8.46.4(eslint@9.39.1(jiti@2.6.1))(typescript@5.9.3))(eslint@9.39.1(jiti@2.6.1)):
     dependencies:
       '@rtsao/scc': 1.1.0
       array-includes: 3.1.9
@@ -24409,9 +24189,9 @@ snapshots:
       array.prototype.flatmap: 1.3.3
       debug: 3.2.7
       doctrine: 2.1.0
-      eslint: 9.36.0(jiti@2.5.1)
+      eslint: 9.39.1(jiti@2.6.1)
       eslint-import-resolver-node: 0.3.9
-      eslint-module-utils: 2.12.1(@typescript-eslint/parser@8.45.0(eslint@9.36.0(jiti@2.5.1))(typescript@5.9.3))(eslint-import-resolver-node@0.3.9)(eslint@9.36.0(jiti@2.5.1))
+      eslint-module-utils: 2.12.1(@typescript-eslint/parser@8.46.4(eslint@9.39.1(jiti@2.6.1))(typescript@5.9.3))(eslint-import-resolver-node@0.3.9)(eslint@9.39.1(jiti@2.6.1))
       hasown: 2.0.2
       is-core-module: 2.16.1
       is-glob: 4.0.3
@@ -24423,7 +24203,7 @@ snapshots:
       string.prototype.trimend: 1.0.9
       tsconfig-paths: 3.15.0
     optionalDependencies:
-      '@typescript-eslint/parser': 8.45.0(eslint@9.36.0(jiti@2.5.1))(typescript@5.9.3)
+      '@typescript-eslint/parser': 8.46.4(eslint@9.39.1(jiti@2.6.1))(typescript@5.9.3)
     transitivePeerDependencies:
       - eslint-import-resolver-typescript
       - eslint-import-resolver-webpack
@@ -24431,15 +24211,15 @@ snapshots:
 
   eslint-plugin-no-instanceof@1.0.1: {}
 
-  eslint-plugin-prettier@5.5.4(@types/eslint@9.6.1)(eslint-config-prettier@10.1.8(eslint@9.36.0(jiti@2.5.1)))(eslint@9.36.0(jiti@2.5.1))(prettier@3.6.2):
+  eslint-plugin-prettier@5.5.4(@types/eslint@9.6.1)(eslint-config-prettier@10.1.8(eslint@9.39.1(jiti@2.6.1)))(eslint@9.39.1(jiti@2.6.1))(prettier@3.6.2):
     dependencies:
-      eslint: 9.36.0(jiti@2.5.1)
+      eslint: 9.39.1(jiti@2.6.1)
       prettier: 3.6.2
       prettier-linter-helpers: 1.0.0
       synckit: 0.11.11
     optionalDependencies:
       '@types/eslint': 9.6.1
-      eslint-config-prettier: 10.1.8(eslint@9.36.0(jiti@2.5.1))
+      eslint-config-prettier: 10.1.8(eslint@9.39.1(jiti@2.6.1))
 
   eslint-scope@5.1.1:
     dependencies:
@@ -24455,13 +24235,13 @@ snapshots:
 
   eslint-visitor-keys@4.2.1: {}
 
-  eslint@9.36.0(jiti@2.5.1):
+  eslint@9.39.1(jiti@2.6.1):
     dependencies:
-      '@eslint-community/eslint-utils': 4.9.0(eslint@9.36.0(jiti@2.5.1))
-      '@eslint-community/regexpp': 4.12.1
-      '@eslint/config-array': 0.21.0
-      '@eslint/config-helpers': 0.3.1
-      '@eslint/core': 0.15.2
+      '@eslint-community/eslint-utils': 4.9.0(eslint@9.39.1(jiti@2.6.1))
+      '@eslint-community/regexpp': 4.12.2
+      '@eslint/config-array': 0.21.1
+      '@eslint/config-helpers': 0.4.2
+      '@eslint/core': 0.17.0
       '@eslint/eslintrc': 3.3.1
       '@eslint/js': 9.39.1
       '@eslint/plugin-kit': 0.4.1
@@ -24492,7 +24272,7 @@ snapshots:
       natural-compare: 1.4.0
       optionator: 0.9.4
     optionalDependencies:
-      jiti: 2.5.1
+      jiti: 2.6.1
     transitivePeerDependencies:
       - supports-color
 
@@ -24798,10 +24578,6 @@ snapshots:
   fd-slicer@1.1.0:
     dependencies:
       pend: 1.2.0
-
-  fdir@6.5.0(picomatch@4.0.3):
-    optionalDependencies:
-      picomatch: 4.0.3
 
   fdir@6.5.0(picomatch@4.0.3):
     optionalDependencies:
@@ -25212,10 +24988,6 @@ snapshots:
       call-bound: 1.0.4
       es-errors: 1.3.0
       get-intrinsic: 1.3.0
-
-  get-tsconfig@4.13.0:
-    dependencies:
-      resolve-pkg-maps: 1.0.0
 
   get-tsconfig@4.13.0:
     dependencies:
@@ -26413,12 +26185,12 @@ snapshots:
       chalk: 4.1.2
       expect: 30.2.0
       graceful-fs: 4.2.11
-      jest-diff: 30.0.5
-      jest-matcher-utils: 30.0.5
-      jest-message-util: 30.0.5
-      jest-util: 30.0.5
-      pretty-format: 30.0.5
-      semver: 7.7.2
+      jest-diff: 30.2.0
+      jest-matcher-utils: 30.2.0
+      jest-message-util: 30.2.0
+      jest-util: 30.2.0
+      pretty-format: 30.2.0
+      semver: 7.7.3
       synckit: 0.11.11
     transitivePeerDependencies:
       - supports-color
@@ -26500,7 +26272,7 @@ snapshots:
 
   jiti@1.21.7: {}
 
-  jiti@2.5.1: {}
+  jiti@2.6.1: {}
 
   jose@4.15.9: {}
 
@@ -26702,46 +26474,7 @@ snapshots:
 
   kuler@2.0.0: {}
 
-  langchain@0.3.30(7ab95453cc610a345a5692baeecbc52c):
-    dependencies:
-      '@langchain/core': link:libs/langchain-core
-      '@langchain/openai': 0.6.16(@langchain/core@libs+langchain-core)(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.5))
-      '@langchain/textsplitters': 0.1.0(@langchain/core@libs+langchain-core)
-      js-tiktoken: 1.0.21
-      js-yaml: 4.1.1
-      jsonpointer: 5.0.1
-      langsmith: 0.3.79(@opentelemetry/api@1.9.0)(openai@5.12.2(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.5))(zod@3.25.76))
-      openapi-types: 12.1.3
-      p-retry: 4.6.2
-      uuid: 10.0.0
-      yaml: 2.8.1
-      zod: 3.25.76
-    optionalDependencies:
-      '@langchain/anthropic': 1.0.1(@langchain/core@libs+langchain-core)(zod@3.25.76)
-      '@langchain/aws': 1.0.1(@langchain/core@libs+langchain-core)
-      '@langchain/cohere': 1.0.0(@langchain/core@libs+langchain-core)(encoding@0.1.13)
-      '@langchain/deepseek': 1.0.1(@langchain/core@libs+langchain-core)(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.5))
-      '@langchain/google-genai': 1.0.1(@langchain/core@libs+langchain-core)
-      '@langchain/google-vertexai': 1.0.1(@langchain/core@libs+langchain-core)
-      '@langchain/google-vertexai-web': 1.0.1(@langchain/core@libs+langchain-core)
-      '@langchain/groq': 1.0.1(@langchain/core@libs+langchain-core)(encoding@0.1.13)
-      '@langchain/mistralai': 1.0.0(@langchain/core@libs+langchain-core)
-      '@langchain/ollama': 1.0.1(@langchain/core@libs+langchain-core)
-      '@langchain/xai': 1.0.1(@langchain/core@libs+langchain-core)(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.5))
-      axios: 1.13.2(debug@4.4.3)
-      cheerio: 1.0.0-rc.12
-      handlebars: 4.7.8
-      peggy: 3.0.2
-      typeorm: 0.3.26(better-sqlite3@9.5.0)(ioredis@5.7.0)(mongodb@6.20.0(@aws-sdk/credential-providers@3.931.0)(socks@2.8.6))(mysql2@3.14.3)(pg@8.16.3)(redis@4.7.1)(reflect-metadata@0.2.2)(sqlite3@5.1.7)(ts-node@10.9.2(@swc/core@1.13.3(@swc/helpers@0.5.17))(@types/node@24.10.0)(typescript@5.8.3))
-    transitivePeerDependencies:
-      - '@opentelemetry/api'
-      - '@opentelemetry/exporter-trace-otlp-proto'
-      - '@opentelemetry/sdk-trace-base'
-      - openai
-      - ws
-    optional: true
-
-  langsmith@0.3.74(@opentelemetry/api@1.9.0)(openai@5.12.2(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.5))(zod@3.25.76)):
+  langsmith@0.3.79(@opentelemetry/api@1.9.0)(openai@5.23.2(ws@8.18.3(bufferutil@4.0.9))(zod@3.25.76)):
     dependencies:
       '@types/uuid': 10.0.0
       chalk: 4.1.2
@@ -27024,12 +26757,20 @@ snapshots:
       openai: 6.9.0(ws@8.18.3(bufferutil@4.0.9))(zod@4.1.12)
       react: 19.0.0
 
-  lunary@0.8.8(@anthropic-ai/sdk@0.65.0(zod@3.25.76))(openai@5.12.2(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.5))(zod@3.25.76))(react@19.0.0):
+  lunary@0.8.8(@anthropic-ai/sdk@0.69.0(zod@3.25.76))(openai@5.23.2(ws@8.18.3(bufferutil@4.0.9))(zod@3.25.76))(react@19.0.0):
     dependencies:
       unctx: 2.4.1
     optionalDependencies:
-      '@anthropic-ai/sdk': 0.65.0(zod@3.25.76)
-      openai: 5.12.2(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.5))(zod@3.25.76)
+      '@anthropic-ai/sdk': 0.69.0(zod@3.25.76)
+      openai: 5.23.2(ws@8.18.3(bufferutil@4.0.9))(zod@3.25.76)
+      react: 19.0.0
+
+  lunary@0.8.8(@anthropic-ai/sdk@0.69.0(zod@4.1.12))(openai@5.23.2(ws@8.18.3(bufferutil@4.0.9))(zod@4.1.12))(react@19.0.0):
+    dependencies:
+      unctx: 2.4.1
+    optionalDependencies:
+      '@anthropic-ai/sdk': 0.69.0(zod@4.1.12)
+      openai: 5.23.2(ws@8.18.3(bufferutil@4.0.9))(zod@4.1.12)
       react: 19.0.0
 
   macos-release@3.4.0: {}
@@ -27142,11 +26883,11 @@ snapshots:
 
   media-typer@1.1.0: {}
 
-  mem0ai@2.1.36(@anthropic-ai/sdk@0.65.0(zod@3.25.76))(@cloudflare/workers-types@4.20250801.0)(@google/genai@1.12.0(@modelcontextprotocol/sdk@1.19.1)(bufferutil@4.0.9)(encoding@0.1.13)(utf-8-validate@6.0.5))(@langchain/core@libs+langchain-core)(@mistralai/mistralai@1.10.0)(@qdrant/js-client-rest@1.15.0(typescript@5.8.3))(@supabase/supabase-js@2.53.0(bufferutil@4.0.9)(utf-8-validate@6.0.5))(@types/jest@29.5.14)(@types/pg@8.15.5)(@types/sqlite3@3.1.11)(cloudflare@4.5.0(encoding@0.1.13))(encoding@0.1.13)(groq-sdk@0.19.0(encoding@0.1.13))(neo4j-driver@5.28.1)(ollama@0.5.18)(pg@8.16.3)(redis@4.7.1)(sqlite3@5.1.7)(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.5)):
+  mem0ai@2.1.38(@anthropic-ai/sdk@0.69.0(zod@3.25.76))(@cloudflare/workers-types@4.20251117.0)(@google/genai@1.29.1(@modelcontextprotocol/sdk@1.22.0(@cfworker/json-schema@4.1.1))(bufferutil@4.0.9))(@langchain/core@libs+langchain-core)(@mistralai/mistralai@1.10.0)(@qdrant/js-client-rest@1.15.1(typescript@5.8.3))(@supabase/supabase-js@2.81.1(bufferutil@4.0.9))(@types/jest@29.5.14)(@types/pg@8.15.6)(@types/sqlite3@3.1.11)(cloudflare@4.5.0(encoding@0.1.13))(encoding@0.1.13)(groq-sdk@0.19.0(encoding@0.1.13))(neo4j-driver@5.28.2)(ollama@0.5.18)(pg@8.16.3)(redis@4.7.1)(sqlite3@5.1.7)(ws@8.18.3(bufferutil@4.0.9)):
     dependencies:
-      '@anthropic-ai/sdk': 0.65.0(zod@3.25.76)
-      '@cloudflare/workers-types': 4.20250801.0
-      '@google/genai': 1.12.0(@modelcontextprotocol/sdk@1.19.1)(bufferutil@4.0.9)(encoding@0.1.13)(utf-8-validate@6.0.5)
+      '@anthropic-ai/sdk': 0.69.0(zod@3.25.76)
+      '@cloudflare/workers-types': 4.20251117.0
+      '@google/genai': 1.29.1(@modelcontextprotocol/sdk@1.22.0(@cfworker/json-schema@4.1.1))(bufferutil@4.0.9)
       '@langchain/core': link:libs/langchain-core
       '@mistralai/mistralai': 1.10.0
       '@qdrant/js-client-rest': 1.15.1(typescript@5.8.3)
@@ -27170,9 +26911,9 @@ snapshots:
       - encoding
       - ws
 
-  mem0ai@2.1.38(@anthropic-ai/sdk@0.65.0(zod@4.1.12))(@cloudflare/workers-types@4.20251117.0)(@google/genai@1.29.1(@modelcontextprotocol/sdk@1.22.0(@cfworker/json-schema@4.1.1))(bufferutil@4.0.9))(@langchain/core@libs+langchain-core)(@mistralai/mistralai@1.10.0)(@qdrant/js-client-rest@1.15.1(typescript@5.8.3))(@supabase/supabase-js@2.81.1(bufferutil@4.0.9))(@types/jest@29.5.14)(@types/pg@8.15.6)(@types/sqlite3@3.1.11)(cloudflare@4.5.0(encoding@0.1.13))(encoding@0.1.13)(groq-sdk@0.19.0(encoding@0.1.13))(neo4j-driver@5.28.2)(ollama@0.5.18)(pg@8.16.3)(redis@4.7.1)(sqlite3@5.1.7)(ws@8.18.3(bufferutil@4.0.9)):
+  mem0ai@2.1.38(@anthropic-ai/sdk@0.69.0(zod@4.1.12))(@cloudflare/workers-types@4.20251117.0)(@google/genai@1.29.1(@modelcontextprotocol/sdk@1.22.0(@cfworker/json-schema@4.1.1))(bufferutil@4.0.9))(@langchain/core@libs+langchain-core)(@mistralai/mistralai@1.10.0)(@qdrant/js-client-rest@1.15.1(typescript@5.8.3))(@supabase/supabase-js@2.81.1(bufferutil@4.0.9))(@types/jest@29.5.14)(@types/pg@8.15.6)(@types/sqlite3@3.1.11)(cloudflare@4.5.0(encoding@0.1.13))(encoding@0.1.13)(groq-sdk@0.19.0(encoding@0.1.13))(neo4j-driver@5.28.2)(ollama@0.5.18)(pg@8.16.3)(redis@4.7.1)(sqlite3@5.1.7)(ws@8.18.3(bufferutil@4.0.9)):
     dependencies:
-      '@anthropic-ai/sdk': 0.65.0(zod@4.1.12)
+      '@anthropic-ai/sdk': 0.69.0(zod@4.1.12)
       '@cloudflare/workers-types': 4.20251117.0
       '@google/genai': 1.29.1(@modelcontextprotocol/sdk@1.22.0(@cfworker/json-schema@4.1.1))(bufferutil@4.0.9)
       '@langchain/core': link:libs/langchain-core
@@ -27701,9 +27442,7 @@ snapshots:
 
   obuf@1.1.2: {}
 
-  obug@1.0.0(ms@2.1.3):
-    optionalDependencies:
-      ms: 2.1.3
+  obug@2.1.0: {}
 
   octokit@4.1.4:
     dependencies:
@@ -28880,22 +28619,22 @@ snapshots:
       semver-compare: 1.0.0
       sprintf-js: 1.1.3
 
-  rolldown-plugin-dts@0.14.3(@typescript/native-preview@7.0.0-dev.20250801.1)(rolldown@1.0.0-beta.30)(typescript@5.9.3):
+  rolldown-plugin-dts@0.17.8(@typescript/native-preview@7.0.0-dev.20251117.1)(rolldown@1.0.0-beta.30)(typescript@5.9.3):
     dependencies:
-      '@babel/generator': 7.28.0
-      '@babel/parser': 7.28.0
-      '@babel/types': 7.28.2
-      ast-kit: 2.1.1
-      birpc: 2.5.0
-      debug: 4.4.3(supports-color@8.1.1)
-      dts-resolver: 2.1.1
-      get-tsconfig: 4.10.1
+      '@babel/generator': 7.28.5
+      '@babel/parser': 7.28.5
+      '@babel/types': 7.28.5
+      ast-kit: 2.2.0
+      birpc: 2.8.0
+      dts-resolver: 2.1.3
+      get-tsconfig: 4.13.0
+      magic-string: 0.30.21
+      obug: 2.1.0
       rolldown: 1.0.0-beta.30
     optionalDependencies:
       '@typescript/native-preview': 7.0.0-dev.20251117.1
       typescript: 5.9.3
     transitivePeerDependencies:
-      - ms
       - oxc-resolver
 
   rolldown@1.0.0-beta.30:
@@ -29755,11 +29494,6 @@ snapshots:
       fdir: 6.5.0(picomatch@4.0.3)
       picomatch: 4.0.3
 
-  tinyglobby@0.2.15:
-    dependencies:
-      fdir: 6.5.0(picomatch@4.0.3)
-      picomatch: 4.0.3
-
   tinypool@0.8.4: {}
 
   tinypool@1.1.1: {}
@@ -29909,7 +29643,7 @@ snapshots:
       minimist: 1.2.8
       strip-bom: 3.0.0
 
-  tsdown@0.13.1(@arethetypeswrong/core@0.18.2)(@typescript/native-preview@7.0.0-dev.20250801.1)(publint@0.3.12)(typescript@5.9.3)(unplugin-unused@0.5.1):
+  tsdown@0.15.12(@arethetypeswrong/core@0.18.2)(@typescript/native-preview@7.0.0-dev.20251117.1)(publint@0.3.15)(typescript@5.9.3)(unplugin-unused@0.5.6):
     dependencies:
       ansis: 4.2.0
       cac: 6.7.14
@@ -29919,10 +29653,10 @@ snapshots:
       empathic: 2.0.0
       hookable: 5.5.3
       rolldown: 1.0.0-beta.30
-      rolldown-plugin-dts: 0.14.3(@typescript/native-preview@7.0.0-dev.20250801.1)(rolldown@1.0.0-beta.30)(typescript@5.9.3)
-      semver: 7.7.2
-      tinyexec: 1.0.1
-      tinyglobby: 0.2.14
+      rolldown-plugin-dts: 0.17.8(@typescript/native-preview@7.0.0-dev.20251117.1)(rolldown@1.0.0-beta.30)(typescript@5.9.3)
+      semver: 7.7.3
+      tinyexec: 1.0.2
+      tinyglobby: 0.2.15
       tree-kill: 1.2.2
       unconfig: 7.4.1
     optionalDependencies:
@@ -29933,7 +29667,6 @@ snapshots:
     transitivePeerDependencies:
       - '@ts-macro/tsc'
       - '@typescript/native-preview'
-      - ms
       - oxc-resolver
       - supports-color
       - vue-tsc
@@ -30096,52 +29829,22 @@ snapshots:
 
   typescript-eslint@8.46.4(eslint@9.39.1(jiti@2.6.1))(typescript@5.8.3):
     dependencies:
-      '@sqltools/formatter': 1.2.5
-      ansis: 3.17.0
-      app-root-path: 3.1.0
-      buffer: 6.0.3
-      dayjs: 1.11.19
-      debug: 4.4.3(supports-color@8.1.1)
-      dedent: 1.7.0
-      dotenv: 16.6.1
-      glob: 10.4.5
-      reflect-metadata: 0.2.2
-      sha.js: 2.4.12
-      sql-highlight: 6.1.0
-      tslib: 2.8.1
-      uuid: 11.1.0
-      yargs: 17.7.2
-    optionalDependencies:
-      better-sqlite3: 9.5.0
-      ioredis: 5.7.0
-      mongodb: 6.20.0(@aws-sdk/credential-providers@3.931.0)(socks@2.8.6)
-      mysql2: 3.14.3
-      pg: 8.16.3
-      redis: 4.7.1
-      sqlite3: 5.1.7
-      ts-node: 10.9.2(@swc/core@1.13.3(@swc/helpers@0.5.17))(@types/node@24.10.1)(typescript@5.8.3)
-    transitivePeerDependencies:
-      - babel-plugin-macros
-      - supports-color
-
-  typescript-eslint@8.45.0(eslint@9.36.0(jiti@2.5.1))(typescript@5.8.3):
-    dependencies:
-      '@typescript-eslint/eslint-plugin': 8.45.0(@typescript-eslint/parser@8.45.0(eslint@9.36.0(jiti@2.5.1))(typescript@5.8.3))(eslint@9.36.0(jiti@2.5.1))(typescript@5.8.3)
-      '@typescript-eslint/parser': 8.45.0(eslint@9.36.0(jiti@2.5.1))(typescript@5.8.3)
-      '@typescript-eslint/typescript-estree': 8.45.0(typescript@5.8.3)
-      '@typescript-eslint/utils': 8.45.0(eslint@9.36.0(jiti@2.5.1))(typescript@5.8.3)
-      eslint: 9.36.0(jiti@2.5.1)
+      '@typescript-eslint/eslint-plugin': 8.46.4(@typescript-eslint/parser@8.46.4(eslint@9.39.1(jiti@2.6.1))(typescript@5.8.3))(eslint@9.39.1(jiti@2.6.1))(typescript@5.8.3)
+      '@typescript-eslint/parser': 8.46.4(eslint@9.39.1(jiti@2.6.1))(typescript@5.8.3)
+      '@typescript-eslint/typescript-estree': 8.46.4(typescript@5.8.3)
+      '@typescript-eslint/utils': 8.46.4(eslint@9.39.1(jiti@2.6.1))(typescript@5.8.3)
+      eslint: 9.39.1(jiti@2.6.1)
       typescript: 5.8.3
     transitivePeerDependencies:
       - supports-color
 
-  typescript-eslint@8.45.0(eslint@9.36.0(jiti@2.5.1))(typescript@5.9.3):
+  typescript-eslint@8.46.4(eslint@9.39.1(jiti@2.6.1))(typescript@5.9.3):
     dependencies:
-      '@typescript-eslint/eslint-plugin': 8.45.0(@typescript-eslint/parser@8.45.0(eslint@9.36.0(jiti@2.5.1))(typescript@5.9.3))(eslint@9.36.0(jiti@2.5.1))(typescript@5.9.3)
-      '@typescript-eslint/parser': 8.45.0(eslint@9.36.0(jiti@2.5.1))(typescript@5.9.3)
-      '@typescript-eslint/typescript-estree': 8.45.0(typescript@5.9.3)
-      '@typescript-eslint/utils': 8.45.0(eslint@9.36.0(jiti@2.5.1))(typescript@5.9.3)
-      eslint: 9.36.0(jiti@2.5.1)
+      '@typescript-eslint/eslint-plugin': 8.46.4(@typescript-eslint/parser@8.46.4(eslint@9.39.1(jiti@2.6.1))(typescript@5.9.3))(eslint@9.39.1(jiti@2.6.1))(typescript@5.9.3)
+      '@typescript-eslint/parser': 8.46.4(eslint@9.39.1(jiti@2.6.1))(typescript@5.9.3)
+      '@typescript-eslint/typescript-estree': 8.46.4(typescript@5.9.3)
+      '@typescript-eslint/utils': 8.46.4(eslint@9.39.1(jiti@2.6.1))(typescript@5.9.3)
+      eslint: 9.39.1(jiti@2.6.1)
       typescript: 5.9.3
     transitivePeerDependencies:
       - supports-color
@@ -30394,13 +30097,13 @@ snapshots:
       - supports-color
       - terser
 
-  vite-node@3.2.4(@types/node@22.18.8)(jiti@2.5.1)(terser@5.44.1)(tsx@4.20.3)(yaml@2.8.1):
+  vite-node@3.2.4(@types/node@22.19.1)(jiti@2.6.1)(terser@5.44.1)(tsx@4.20.6)(yaml@2.8.1):
     dependencies:
       cac: 6.7.14
       debug: 4.4.3(supports-color@8.1.1)
       es-module-lexer: 1.7.0
       pathe: 2.0.3
-      vite: 7.0.6(@types/node@22.18.8)(jiti@2.5.1)(terser@5.44.1)(tsx@4.20.3)(yaml@2.8.1)
+      vite: 7.2.2(@types/node@22.19.1)(jiti@2.6.1)(terser@5.44.1)(tsx@4.20.6)(yaml@2.8.1)
     transitivePeerDependencies:
       - '@types/node'
       - jiti
@@ -30421,7 +30124,7 @@ snapshots:
       debug: 4.4.3(supports-color@8.1.1)
       es-module-lexer: 1.7.0
       pathe: 2.0.3
-      vite: 7.0.6(@types/node@24.10.1)(jiti@2.5.1)(terser@5.44.1)(tsx@3.14.0)(yaml@2.8.1)
+      vite: 7.2.2(@types/node@24.10.1)(jiti@2.6.1)(terser@5.44.1)(tsx@3.14.0)(yaml@2.8.1)
     transitivePeerDependencies:
       - '@types/node'
       - jiti
@@ -30436,13 +30139,13 @@ snapshots:
       - tsx
       - yaml
 
-  vite-node@3.2.4(@types/node@24.10.1)(jiti@2.5.1)(terser@5.44.1)(tsx@4.20.3)(yaml@2.8.1):
+  vite-node@3.2.4(@types/node@24.10.1)(jiti@2.6.1)(terser@5.44.1)(tsx@4.20.6)(yaml@2.8.1):
     dependencies:
       cac: 6.7.14
       debug: 4.4.3(supports-color@8.1.1)
       es-module-lexer: 1.7.0
       pathe: 2.0.3
-      vite: 7.0.6(@types/node@24.10.1)(jiti@2.5.1)(terser@5.44.1)(tsx@4.20.3)(yaml@2.8.1)
+      vite: 7.2.2(@types/node@24.10.1)(jiti@2.6.1)(terser@5.44.1)(tsx@4.20.6)(yaml@2.8.1)
     transitivePeerDependencies:
       - '@types/node'
       - jiti
@@ -30467,7 +30170,7 @@ snapshots:
       fsevents: 2.3.3
       terser: 5.44.1
 
-  vite@7.0.6(@types/node@22.18.8)(jiti@2.5.1)(terser@5.44.1)(tsx@4.20.3)(yaml@2.8.1):
+  vite@7.2.2(@types/node@22.19.1)(jiti@2.6.1)(terser@5.44.1)(tsx@4.20.6)(yaml@2.8.1):
     dependencies:
       esbuild: 0.25.12
       fdir: 6.5.0(picomatch@4.0.3)
@@ -30483,7 +30186,7 @@ snapshots:
       tsx: 4.20.6
       yaml: 2.8.1
 
-  vite@7.0.6(@types/node@24.10.1)(jiti@2.5.1)(terser@5.44.1)(tsx@3.14.0)(yaml@2.8.1):
+  vite@7.2.2(@types/node@24.10.1)(jiti@2.6.1)(terser@5.44.1)(tsx@3.14.0)(yaml@2.8.1):
     dependencies:
       esbuild: 0.25.12
       fdir: 6.5.0(picomatch@4.0.3)
@@ -30499,7 +30202,7 @@ snapshots:
       tsx: 3.14.0
       yaml: 2.8.1
 
-  vite@7.0.6(@types/node@24.10.1)(jiti@2.5.1)(terser@5.44.1)(tsx@4.20.3)(yaml@2.8.1):
+  vite@7.2.2(@types/node@24.10.1)(jiti@2.6.1)(terser@5.44.1)(tsx@4.20.6)(yaml@2.8.1):
     dependencies:
       esbuild: 0.25.12
       fdir: 6.5.0(picomatch@4.0.3)
@@ -30550,11 +30253,11 @@ snapshots:
       - supports-color
       - terser
 
-  vitest@3.2.4(@types/debug@4.1.12)(@types/node@22.18.8)(jiti@2.5.1)(jsdom@26.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.5))(terser@5.44.1)(tsx@4.20.3)(yaml@2.8.1):
+  vitest@3.2.4(@types/debug@4.1.12)(@types/node@22.19.1)(jiti@2.6.1)(jsdom@22.1.0(bufferutil@4.0.9))(terser@5.44.1)(tsx@4.20.6)(yaml@2.8.1):
     dependencies:
       '@types/chai': 5.2.3
       '@vitest/expect': 3.2.4
-      '@vitest/mocker': 3.2.4(vite@7.0.6(@types/node@22.18.8)(jiti@2.5.1)(terser@5.44.1)(tsx@4.20.3)(yaml@2.8.1))
+      '@vitest/mocker': 3.2.4(vite@7.2.2(@types/node@22.19.1)(jiti@2.6.1)(terser@5.44.1)(tsx@4.20.6)(yaml@2.8.1))
       '@vitest/pretty-format': 3.2.4
       '@vitest/runner': 3.2.4
       '@vitest/snapshot': 3.2.4
@@ -30572,8 +30275,8 @@ snapshots:
       tinyglobby: 0.2.15
       tinypool: 1.1.1
       tinyrainbow: 2.0.0
-      vite: 7.0.6(@types/node@22.18.8)(jiti@2.5.1)(terser@5.44.1)(tsx@4.20.3)(yaml@2.8.1)
-      vite-node: 3.2.4(@types/node@22.18.8)(jiti@2.5.1)(terser@5.44.1)(tsx@4.20.3)(yaml@2.8.1)
+      vite: 7.2.2(@types/node@22.19.1)(jiti@2.6.1)(terser@5.44.1)(tsx@4.20.6)(yaml@2.8.1)
+      vite-node: 3.2.4(@types/node@22.19.1)(jiti@2.6.1)(terser@5.44.1)(tsx@4.20.6)(yaml@2.8.1)
       why-is-node-running: 2.3.0
     optionalDependencies:
       '@types/debug': 4.1.12
@@ -30593,11 +30296,11 @@ snapshots:
       - tsx
       - yaml
 
-  vitest@3.2.4(@types/debug@4.1.12)(@types/node@24.10.1)(jiti@2.5.1)(jsdom@26.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.5))(terser@5.44.1)(tsx@3.14.0)(yaml@2.8.1):
+  vitest@3.2.4(@types/debug@4.1.12)(@types/node@24.10.1)(jiti@2.6.1)(jsdom@22.1.0(bufferutil@4.0.9))(terser@5.44.1)(tsx@3.14.0)(yaml@2.8.1):
     dependencies:
       '@types/chai': 5.2.3
       '@vitest/expect': 3.2.4
-      '@vitest/mocker': 3.2.4(vite@7.0.6(@types/node@24.10.1)(jiti@2.5.1)(terser@5.44.1)(tsx@3.14.0)(yaml@2.8.1))
+      '@vitest/mocker': 3.2.4(vite@7.2.2(@types/node@24.10.1)(jiti@2.6.1)(terser@5.44.1)(tsx@3.14.0)(yaml@2.8.1))
       '@vitest/pretty-format': 3.2.4
       '@vitest/runner': 3.2.4
       '@vitest/snapshot': 3.2.4
@@ -30615,8 +30318,8 @@ snapshots:
       tinyglobby: 0.2.15
       tinypool: 1.1.1
       tinyrainbow: 2.0.0
-      vite: 7.0.6(@types/node@24.10.1)(jiti@2.5.1)(terser@5.44.1)(tsx@3.14.0)(yaml@2.8.1)
-      vite-node: 3.2.4(@types/node@24.10.1)(jiti@2.5.1)(terser@5.44.1)(tsx@3.14.0)(yaml@2.8.1)
+      vite: 7.2.2(@types/node@24.10.1)(jiti@2.6.1)(terser@5.44.1)(tsx@3.14.0)(yaml@2.8.1)
+      vite-node: 3.2.4(@types/node@24.10.1)(jiti@2.6.1)(terser@5.44.1)(tsx@3.14.0)(yaml@2.8.1)
       why-is-node-running: 2.3.0
     optionalDependencies:
       '@types/debug': 4.1.12
@@ -30636,11 +30339,11 @@ snapshots:
       - tsx
       - yaml
 
-  vitest@3.2.4(@types/debug@4.1.12)(@types/node@24.10.1)(jiti@2.5.1)(jsdom@26.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.5))(terser@5.44.1)(tsx@4.20.3)(yaml@2.8.1):
+  vitest@3.2.4(@types/debug@4.1.12)(@types/node@24.10.1)(jiti@2.6.1)(jsdom@22.1.0(bufferutil@4.0.9))(terser@5.44.1)(tsx@4.20.6)(yaml@2.8.1):
     dependencies:
       '@types/chai': 5.2.3
       '@vitest/expect': 3.2.4
-      '@vitest/mocker': 3.2.4(vite@7.0.6(@types/node@24.10.1)(jiti@2.5.1)(terser@5.44.1)(tsx@4.20.3)(yaml@2.8.1))
+      '@vitest/mocker': 3.2.4(vite@7.2.2(@types/node@24.10.1)(jiti@2.6.1)(terser@5.44.1)(tsx@4.20.6)(yaml@2.8.1))
       '@vitest/pretty-format': 3.2.4
       '@vitest/runner': 3.2.4
       '@vitest/snapshot': 3.2.4
@@ -30658,8 +30361,8 @@ snapshots:
       tinyglobby: 0.2.15
       tinypool: 1.1.1
       tinyrainbow: 2.0.0
-      vite: 7.0.6(@types/node@24.10.1)(jiti@2.5.1)(terser@5.44.1)(tsx@4.20.3)(yaml@2.8.1)
-      vite-node: 3.2.4(@types/node@24.10.1)(jiti@2.5.1)(terser@5.44.1)(tsx@4.20.3)(yaml@2.8.1)
+      vite: 7.2.2(@types/node@24.10.1)(jiti@2.6.1)(terser@5.44.1)(tsx@4.20.6)(yaml@2.8.1)
+      vite-node: 3.2.4(@types/node@24.10.1)(jiti@2.6.1)(terser@5.44.1)(tsx@4.20.6)(yaml@2.8.1)
       why-is-node-running: 2.3.0
     optionalDependencies:
       '@types/debug': 4.1.12
