@@ -35,7 +35,7 @@ jobs:
         with:
           node-version-file: ".nvmrc"
           cache: "pnpm"
-      - name: Install dependencies for build and core workspaces
-        run: pnpm install --filter @langchain/build --filter @langchain/core
+      - name: Install dependencies
+        run: pnpm install
       - name: Build `@langchain/core`
-        run: pnpm --filter @langchain/core build
+        run: pnpm build --filter @langchain/core

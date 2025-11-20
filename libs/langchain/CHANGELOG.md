@@ -1,5 +1,11 @@
 # langchain
 
+## 1.0.6
+
+### Patch Changes
+
+- [#9434](https://github.com/langchain-ai/langchainjs/pull/9434) [`f7cfece`](https://github.com/langchain-ai/langchainjs/commit/f7cfecec29bf0f121e1a8b0baface5327d731122) Thanks [@deepansh946](https://github.com/deepansh946)! - Updated error handling behaviour of AgentNode
+
 ## 1.0.5
 
 ### Patch Changes

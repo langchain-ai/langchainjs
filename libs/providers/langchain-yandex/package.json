@@ -15,7 +15,7 @@
   "homepage": "https://github.com/langchain-ai/langchainjs/tree/main/libs/langchain-yandex/",
   "scripts": {
     "build": "turbo build:compile --filter @langchain/yandex",
-    "build:compile": "pnpm --filter @langchain/build compile @langchain/yandex",
+    "build:compile": "tsdown",
     "lint:eslint": "eslint --cache src/",
     "lint:dpdm": "dpdm --skip-dynamic-imports circular --exit-code circular:1 --no-warning --no-tree src/*.ts src/**/*.ts",
     "lint": "pnpm lint:eslint && pnpm lint:dpdm",
@@ -45,51 +45,51 @@
   "publishConfig": {
     "access": "public"
   },
-  "main": "./dist/index.js",
-  "types": "./dist/index.d.ts",
+  "main": "./dist/index.cjs",
+  "types": "./dist/index.d.cts",
   "exports": {
     ".": {
       "input": "./src/index.ts",
-      "import": {
-        "types": "./dist/index.d.ts",
-        "default": "./dist/index.js"
-      },
       "require": {
         "types": "./dist/index.d.cts",
         "default": "./dist/index.cjs"
+      },
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
       }
     },
     "./chat_models": {
       "input": "./src/chat_models.ts",
-      "import": {
-        "types": "./dist/chat_models.d.ts",
-        "default": "./dist/chat_models.js"
-      },
       "require": {
         "types": "./dist/chat_models.d.cts",
         "default": "./dist/chat_models.cjs"
+      },
+      "import": {
+        "types": "./dist/chat_models.d.ts",
+        "default": "./dist/chat_models.js"
       }
     },
     "./embeddings": {
       "input": "./src/embeddings.ts",
-      "import": {
-        "types": "./dist/embeddings.d.ts",
-        "default": "./dist/embeddings.js"
-      },
       "require": {
         "types": "./dist/embeddings.d.cts",
         "default": "./dist/embeddings.cjs"
+      },
+      "import": {
+        "types": "./dist/embeddings.d.ts",
+        "default": "./dist/embeddings.js"
       }
     },
     "./llms": {
       "input": "./src/llms.ts",
-      "import": {
-        "types": "./dist/llms.d.ts",
-        "default": "./dist/llms.js"
-      },
       "require": {
         "types": "./dist/llms.d.cts",
         "default": "./dist/llms.cjs"
+      },
+      "import": {
+        "types": "./dist/llms.d.ts",
+        "default": "./dist/llms.js"
       }
     },
     "./package.json": "./package.json"
@@ -99,5 +99,6 @@
     "CHANGELOG.md",
     "README.md",
     "LICENSE"
-  ]
+  ],
+  "module": "./dist/index.js"
 }
