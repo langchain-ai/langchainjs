@@ -1,0 +1,1 @@
+module.exports = require('./dist/check_broken_links.cjs');
