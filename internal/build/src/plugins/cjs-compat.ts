@@ -1,6 +1,8 @@
 import path from "node:path";
 import fs from "node:fs/promises";
 import type { Plugin } from "rolldown";
+import type { PackageJson } from "type-fest";
+import { pathToFileURL } from "node:url";
 import { isSafeProjectPath } from "../utils.ts";
 
 /**
@@ -174,8 +176,9 @@ export function cjsCompatPlugin(param: CjsCompatPluginOptions = {}): Plugin {
         "package.json"
       );
       if (isSafeProjectPath(packageJsonPath)) {
-        const packageJson = JSON.parse(
-          await fs.readFile(packageJsonPath, "utf-8")
+        const packageJson: PackageJson = await import(
+          pathToFileURL(packageJsonPath).href,
+          { with: { type: "json" } }
         );
         const newPackageJson = {
           ...packageJson,
