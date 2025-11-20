@@ -398,6 +398,28 @@ describe("systemMessage", () => {
     expect(HumanMessage.isInstance(payload[0])).toBe(true);
   });
 
+  it("should allow to reset system message in wrapModelCall", async () => {
+    const middleware = createMiddleware({
+      name: "TestMiddleware",
+      wrapModelCall: async (request, handler) => {
+        return handler({
+          ...request,
+          systemMessage: undefined,
+        });
+      },
+    });
+    const agent = createAgent({
+      model,
+      systemPrompt: "You are a helpful assistant.",
+      middleware: [middleware],
+    });
+    await agent.invoke({ messages: "Hello World!" });
+    expect(invokeSpy).toHaveBeenCalledTimes(1);
+    const payload = invokeSpy.mock.calls[0][0] as BaseMessage[];
+    expect(payload).toHaveLength(1);
+    expect(HumanMessage.isInstance(payload[0])).toBe(true);
+  });
+
   it("should handle middleware setting systemMessage to empty SystemMessage", async () => {
     const middleware = createMiddleware({
       name: "TestMiddleware",

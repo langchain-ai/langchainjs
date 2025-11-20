@@ -107,7 +107,10 @@ export type WrapModelCallHandler<
 > = (
   request: Omit<
     ModelRequest<NormalizedSchemaInput<TSchema>, TContext>,
-    "systemPrompt"
+    /**
+     * allow to reset the system prompt or system message
+     */
+    "systemPrompt" | "systemMessage"
   > & { systemPrompt?: string; systemMessage?: SystemMessage }
 ) => PromiseOrValue<AIMessage>;
 

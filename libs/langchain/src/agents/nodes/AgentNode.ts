@@ -473,10 +473,6 @@ export class AgentNode<
               );
             }
 
-            /**
-             * Handle systemPrompt conversion:
-             * - check if systemPrompt is a string was changed, if so create a new SystemMessage
-             */
             let normalizedReq = req;
             const hasSystemPromptChanged =
               req.systemPrompt !== this.#currentSystemMessage.text;
@@ -488,6 +484,9 @@ export class AgentNode<
               );
             }
 
+            /**
+             * Check if systemPrompt is a string was changed, if so create a new SystemMessage
+             */
             if (hasSystemPromptChanged) {
               this.#currentSystemMessage = new SystemMessage({
                 content: [{ type: "text", text: req.systemPrompt }],
@@ -499,7 +498,7 @@ export class AgentNode<
               };
             }
             /**
-             * - if the systemMessage was changed, update the current system message
+             * If the systemMessage was changed, update the current system message
              */
             if (hasSystemMessageChanged) {
               this.#currentSystemMessage = new SystemMessage({
@@ -563,7 +562,7 @@ export class AgentNode<
     const initialRequest: ModelRequest<
       InternalAgentState<StructuredResponseFormat> & PreHookAnnotation["State"],
       unknown
-    > = Object.freeze({
+    > = {
       model,
       systemPrompt: this.#currentSystemMessage?.text,
       systemMessage: this.#currentSystemMessage,
@@ -576,7 +575,7 @@ export class AgentNode<
         interrupt: lgConfig.interrupt,
         signal: lgConfig.signal,
       }) as Runtime<unknown>,
-    });
+    };
 
     return wrappedHandler(initialRequest);
   }

@@ -212,7 +212,72 @@ export type CreateAgentParams<
 
   /**
    * An optional system message for the model.
-   * Can be a string or a SystemMessage object (for advanced features like cache control).
+   *
+   * **Use a `string`** for simple, static system prompts. This is the most common use case
+   * and works well with template literals for dynamic content. When a string is provided,
+   * it's converted to a single text block internally.
+   *
+   * **Use a `SystemMessage`** when you need advanced features that require structured content:
+   * - **Anthropic cache control**: Use `SystemMessage` with array content to enable per-block
+   *   cache control settings (e.g., `cache_control: { type: "ephemeral" }`). This allows you
+   *   to have different cache settings for different parts of your system prompt.
+   * - **Multiple content blocks**: When you need multiple text blocks with different metadata
+   *   or formatting requirements.
+   * - **Integration with existing code**: When working with code that already produces
+   *   `SystemMessage` instances.
+   *
+   * @example Using a string (recommended for most cases)
+   * ```ts
+   * const agent = createAgent({
+   *   model: "anthropic:claude-3-5-sonnet",
+   *   systemPrompt: "You are a helpful assistant.",
+   *   // ...
+   * });
+   * ```
+   *
+   * @example Using a string with template literals
+   * ```ts
+   * const userRole = "premium";
+   * const agent = createAgent({
+   *   model: "anthropic:claude-3-5-sonnet",
+   *   systemPrompt: `You are a helpful assistant for ${userRole} users.`,
+   *   // ...
+   * });
+   * ```
+   *
+   * @example Using SystemMessage with cache control (Anthropic)
+   * ```ts
+   * import { SystemMessage } from "@langchain/core/messages";
+   *
+   * const agent = createAgent({
+   *   model: "anthropic:claude-3-5-sonnet",
+   *   systemPrompt: new SystemMessage({
+   *     content: [
+   *       {
+   *         type: "text",
+   *         text: "You are a helpful assistant.",
+   *       },
+   *       {
+   *         type: "text",
+   *         text: "Today's date is 2024-06-01.",
+   *         cache_control: { type: "ephemeral" },
+   *       },
+   *     ],
+   *   }),
+   *   // ...
+   * });
+   * ```
+   *
+   * @example Using SystemMessage (simple)
+   * ```ts
+   * import { SystemMessage } from "@langchain/core/messages";
+   *
+   * const agent = createAgent({
+   *   model: "anthropic:claude-3-5-sonnet",
+   *   systemPrompt: new SystemMessage("You are a helpful assistant."),
+   *   // ...
+   * });
+   * ```
    */
   systemPrompt?: string | SystemMessage;
 

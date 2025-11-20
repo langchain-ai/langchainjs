@@ -35,12 +35,29 @@ export interface ModelRequest<
    * was initialized, an empty system message will be used.
    *
    * @default new SystemMessage("")
-   * @example extend system message
+   * @example extend system message with a string
    * ```ts
    * wrapModelCall: async (request, handler) => {
    *   return handler({
    *     ...request,
    *     systemMessage: request.systemMessage.concat("something")
+   *   });
+   * }
+   * ```
+   * @example extend system message with a SystemMessage and cache control
+   * ```ts
+   * wrapModelCall: async (request, handler) => {
+   *   return handler({
+   *     ...request,
+   *     systemMessage: request.systemMessage.concat(
+   *       new SystemMessage({
+   *         content: [{
+   *           type: "text",
+   *           text: "something",
+   *           cache_control: { type: "ephemeral", ttl: "1m" }
+   *         }],
+   *       })
+   *     ),
    *   });
    * }
    * ```
@@ -90,22 +107,4 @@ export interface ModelRequest<
    * ```
    */
   modelSettings?: Record<string, unknown>;
-}
-
-/**
- * Extended ModelRequest that supports SystemMessage in addition to string for systemPrompt.
- * This allows middleware to work with SystemMessage objects for advanced features like cache control.
- *
- * @template TState - The agent's state type, must extend Record<string, unknown>. Defaults to Record<string, unknown>.
- * @template TContext - The runtime context type for accessing metadata and control flow. Defaults to unknown.
- */
-export interface ModelRequestParameters<
-  TState extends Record<string, unknown> = Record<string, unknown>,
-  TContext = unknown
-> extends Omit<ModelRequest<TState, TContext>, "systemPrompt"> {
-  /**
-   * The system message for this step.
-   * Can be a string or SystemMessage object (for advanced features like cache control).
-   */
-  systemPrompt?: string | SystemMessage;
 }

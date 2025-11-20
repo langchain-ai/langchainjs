@@ -324,7 +324,7 @@ describe("middleware", () => {
   });
 
   describe("wrapModelCall", () => {
-    it.only("should compose three middlewares where first is outermost wrapper", async () => {
+    it("should compose three middlewares where first is outermost wrapper", async () => {
       /**
        * Test demonstrates:
        * 1. Middleware composition order (first middleware wraps all others)
