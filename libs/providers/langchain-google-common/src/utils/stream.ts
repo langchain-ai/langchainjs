@@ -376,7 +376,7 @@ export class SseStream implements AbstractStream {
     }
     const ret: Record<string, string> = {};
 
-    const regex = /^([^:]+):\s*([^\r\n]*?)(?:\r?\n)*$/;
+    const regex = /^([^:]+):\s*(.+)$/;
     /*
     /^
       ([^:]+)
