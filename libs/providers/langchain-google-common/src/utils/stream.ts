@@ -29,6 +29,40 @@ export interface AbstractStream {
   get streamDone(): boolean;
 }
 
+/**
+ * Parse an SSE event line into key-value pair.
+ * Format: "field: value" or "field:value" (with optional whitespace after colon)
+ *
+ * Uses string operations instead of regex to avoid ReDoS vulnerabilities.
+ * This is safer and more performant than regex-based parsing.
+ */
+function parseEventLine(line: string): { key: string; value: string } | null {
+  const colonIndex = line.indexOf(":");
+  if (colonIndex === -1 || colonIndex === 0) {
+    return null;
+  }
+
+  const key = line.substring(0, colonIndex).trim();
+  if (key.length === 0) {
+    return null;
+  }
+
+  // Skip colon and any whitespace after it
+  let valueStart = colonIndex + 1;
+  while (
+    valueStart < line.length &&
+    (line[valueStart] === " " ||
+      line[valueStart] === "\t" ||
+      line[valueStart] === "\r" ||
+      line[valueStart] === "\n")
+  ) {
+    valueStart++;
+  }
+
+  const value = line.substring(valueStart);
+  return { key, value };
+}
+
 export function complexValue(value: unknown): unknown {
   if (value === null || typeof value === "undefined") {
     // I dunno what to put here. An error, probably
@@ -375,29 +409,13 @@ export class SseStream implements AbstractStream {
       return null;
     }
     const ret: Record<string, string> = {};
-
-    const regex = /^([^:]+):\s*(.+)$/;
-      /*
-       * Pattern breakdown:
-       *   ^([^:]+)    - Matches and captures the field name (one or more non-colon characters from start)
-       *   :\s*        - Matches colon followed by zero or more whitespace characters
-       *   (.+)$       - Matches and captures the field value (one or more characters until end of string)
-       *
-       * This regex is safe from ReDoS (Regular Expression Denial of Service) because:
-       * - Since lines are pre-split by /\n/, each line contains no newline characters
-       * - There is no ambiguity or overlapping patterns (like .+ and \n*) that could cause exponential backtracking
-       * - The greedy .+ quantifier is deterministic when anchored to $ (end of string)
-       * - No nested quantifiers or optional groups that could create backtracking complexity
-       */
-
     const lines = event.split(/\n/);
     lines.forEach((line) => {
-      const match = line.match(regex);
-      if (match && match.length === 3) {
-        const key = match[1];
-        const val = match[2];
+      const parsed = parseEventLine(line);
+      if (parsed) {
+        const { key, value } = parsed;
         const cur = ret[key] ?? "";
-        ret[key] = `${cur}${val}`;
+        ret[key] = `${cur}${value}`;
       }
     });
 
