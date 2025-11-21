@@ -12,7 +12,11 @@ export default defineConfig((env) => {
       globals: true,
       testTimeout: 30_000,
       maxWorkers: 0.5,
-      exclude: ["**/*.int.test.ts", ...configDefaults.exclude],
+      exclude: [
+        "**/*.int.test.ts",
+        "**/*.bench.test.ts",
+        ...configDefaults.exclude,
+      ],
       setupFiles: ["dotenv/config"],
     },
   };
