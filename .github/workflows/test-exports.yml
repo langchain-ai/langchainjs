@@ -27,6 +27,7 @@ env:
   PUPPETEER_SKIP_DOWNLOAD: "true"
   PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: "true"
   NODE_VERSION: "20.x"
+  BUILD_MODE: prerelease
 
 # Run a separate job for each check` in the docker-compose file,
 # so that they run in parallel instead of overwhelming the default 2 CPU runner.
@@ -46,8 +47,6 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Build dependencies
-        env:
-          BUILD_MODE: prerelease
         run: >
           pnpm build
           --filter langchain
