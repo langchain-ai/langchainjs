@@ -120,7 +120,7 @@ export class AsyncCaller {
               }
             }),
           {
-            onFailedAttempt: this.onFailedAttempt,
+            onFailedAttempt: ({ error }) => this.onFailedAttempt(error),
             retries: this.maxRetries,
             randomize: true,
             // If needed we can change some of the defaults here,
