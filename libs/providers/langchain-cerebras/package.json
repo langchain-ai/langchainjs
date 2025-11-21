@@ -1,6 +1,6 @@
 {
   "name": "@langchain/cerebras",
-  "version": "1.0.1",
+  "version": "1.0.0",
   "description": "Cerebras integration for LangChain.js",
   "author": "LangChain",
   "license": "MIT",

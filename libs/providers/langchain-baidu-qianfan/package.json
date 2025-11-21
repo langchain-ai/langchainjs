@@ -1,6 +1,6 @@
 {
   "name": "@langchain/baidu-qianfan",
-  "version": "1.0.1",
+  "version": "1.0.0",
   "description": "Baidu Qianfan integration for LangChain.js",
   "author": "LangChain",
   "license": "MIT",
