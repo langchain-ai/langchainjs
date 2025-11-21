@@ -4,9 +4,11 @@ module.exports = {
   modulePathIgnorePatterns: ["dist/", "docs/"],
   moduleNameMapper: {
     "^(\\.{1,2}/.*)\\.js$": "$1",
+    "^p-retry$": "<rootDir>/scripts/p-retry-mock.cjs",
+    "^p-queue$": "<rootDir>/scripts/p-queue-mock.cjs",
   },
   transform: {
-    "^.+\\.tsx?$": [
+    "^.+\\.(t|j)sx?$": [
       "@swc/jest",
       {
         jsc: {
