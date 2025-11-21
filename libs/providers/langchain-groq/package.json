@@ -1,6 +1,6 @@
 {
   "name": "@langchain/groq",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Groq integration for LangChain.js",
   "author": "LangChain",
   "license": "MIT",
