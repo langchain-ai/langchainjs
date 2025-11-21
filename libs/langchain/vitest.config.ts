@@ -30,6 +30,20 @@ export default defineConfig((env) => {
     } satisfies UserConfigExport;
   }
 
+  if (env.mode === "bench") {
+    return {
+      test: {
+        ...common.test,
+        globals: false,
+        testTimeout: 100_000,
+        exclude: configDefaults.exclude,
+        include: ["**/*.bench.test.ts"],
+        name: "bench",
+        environment: "node",
+      },
+    } satisfies UserConfigExport;
+  }
+
   return {
     test: {
       ...common.test,
