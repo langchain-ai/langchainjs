@@ -68,5 +68,9 @@ export {
   toolEmulatorMiddleware,
   type ToolEmulatorOptions,
 } from "./toolEmulator.js";
+export {
+  modelRetryMiddleware,
+  type ModelRetryMiddlewareConfig,
+} from "./modelRetry.js";
 export { type AgentMiddleware } from "./types.js";
 export { countTokensApproximately } from "./utils.js";
