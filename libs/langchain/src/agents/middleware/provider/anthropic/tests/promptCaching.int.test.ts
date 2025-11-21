@@ -11,7 +11,7 @@ import {
 } from "@langchain/anthropic";
 
 import { anthropicPromptCachingMiddleware } from "../promptCaching.js";
-import { createAgent } from "../../index.js";
+import { createAgent } from "../../../../index.js";
 
 /**
  * Mock the Anthropic module to return a ChatAnthropicMock instance

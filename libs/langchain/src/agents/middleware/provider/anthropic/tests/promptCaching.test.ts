@@ -15,7 +15,7 @@ import type { LanguageModelLike } from "@langchain/core/language_models/base";
 import { ChatOpenAI } from "@langchain/openai";
 
 import { anthropicPromptCachingMiddleware } from "../promptCaching.js";
-import { createAgent } from "../../index.js";
+import { createAgent } from "../../../../index.js";
 
 function createMockModel(name = "ChatAnthropic", modelType = "anthropic") {
   // Mock Anthropic model
