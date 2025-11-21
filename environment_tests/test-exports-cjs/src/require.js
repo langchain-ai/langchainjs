@@ -43,7 +43,7 @@ async function test() {
   assert(typeof RunnableLambda === "function");
   let attemptCount = 0;
   const flakyRunnable = new RunnableLambda({
-    func: (_input) => {
+    func: () => {
       attemptCount += 1;
       if (attemptCount < 3) {
         throw new Error(`Attempt ${attemptCount} failed`);
