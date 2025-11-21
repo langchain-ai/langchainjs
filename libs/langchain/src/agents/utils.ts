@@ -29,7 +29,6 @@ import {
   RunnableBinding,
 } from "@langchain/core/runnables";
 import type { ClientTool, ServerTool } from "@langchain/core/tools";
-import type { ContentBlock } from "@langchain/core/messages";
 
 import { isBaseChatModel, isConfigurableModel } from "./model.js";
 import { MultipleToolsBoundError } from "./errors.js";
