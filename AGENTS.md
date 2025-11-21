@@ -12,7 +12,7 @@ LangChain.js is a framework and ecosystem for building context-aware, LLM-powere
 
 - TypeScript targeting Node.js v20+ (repo `.nvmrc` pins v24.6.0)
 - pnpm workspaces (`pnpm-workspace.yaml`) with TurboRepo task orchestration (`turbo.json`)
-- Vitest and Jest (via Turbo) for unit and integration testing
+- Vitest for unit and integration testing
 - ESLint and Prettier for linting/formatting
 - Docker Compose for environment and integration test matrices
 - Documentation generation: TypeDoc (API refs) and Docusaurus (site)
@@ -41,13 +41,11 @@ LangChain.js is a framework and ecosystem for building context-aware, LLM-powere
   - Environment/exports matrix (Docker required): `pnpm test:exports:docker`
   - Dependency range tests (Docker required): `pnpm test:ranges:docker`
 - Watch build utilities: `pnpm --filter @langchain/build watch`
-- Release a package (maintainers): `pnpm release <workspace>` run on a clean `main`
 
 ## Coding Guidelines
 
 - Follow TypeScript strictness defined in package `tsconfig` files; prefer composable abstractions aligned with `@langchain/core`
 - Use Prettier (`.prettierrc`) and ESLint (`@langchain/eslint` presets) before submitting PRs
-- Add new public entrypoints in `langchain/langchain.config.js` or `libs/langchain-community/langchain.config.js`, and flag integrations requiring optional deps
 - Place tests alongside source (`tests/*.test.ts` for unit, `*.int.test.ts` for integration)
 
 ## Pull Request Guidelines
