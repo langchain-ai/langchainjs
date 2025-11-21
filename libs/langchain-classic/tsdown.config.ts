@@ -1,3 +1,4 @@
+import path from "path";
 import {
   getBuildConfig,
   cjsCompatPlugin,
@@ -5,6 +6,8 @@ import {
   importMapPlugin,
   importConstantsPlugin,
 } from "@langchain/build";
+
+const __dirname = path.dirname(new URL(import.meta.url).pathname);
 
 export default getBuildConfig({
   entry: [
@@ -109,6 +112,7 @@ export default getBuildConfig({
     }),
     lcSecretsPlugin(),
     importMapPlugin({
+      cwd: __dirname,
       omitFromImportMap: ["hub/index", "hub/node", "load/index"],
       extraEntries: [
         {
@@ -119,6 +123,7 @@ export default getBuildConfig({
       ],
     }),
     importConstantsPlugin({
+      cwd: __dirname,
       entrypoints: [
         "agents/load",
         "agents/toolkits/sql",

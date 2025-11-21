@@ -173,11 +173,15 @@ Entrypoint paths are transformed to namespace aliases using double underscores: 
 **Usage:**
 
 ```typescript
+import path from "node:path";
 import { getBuildConfig, importMapPlugin } from "@langchain/build";
+
+const __dirname = path.dirname(new URL(import.meta.url).pathname);
 
 export default getBuildConfig({
   plugins: [
     importMapPlugin({
+      cwd: __dirname,
       nodeOnly: ["node-specific-tool"],
       importsOptionalDependencies: ["openai", "anthropic"],
       extraEntries: [

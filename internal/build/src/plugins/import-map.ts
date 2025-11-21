@@ -33,6 +33,9 @@ export interface ImportMapPluginOptions {
 
   /** Additional import map entries to include beyond the standard entrypoints. */
   extraEntries?: ExtraImportMapEntry[];
+
+  /** The working directory to use for the plugin. Defaults to `process.env.INIT_CWD || ""`. */
+  cwd?: string;
 }
 
 /**
@@ -83,13 +86,11 @@ export function importMapPlugin(param: ImportMapPluginOptions = {}): Plugin {
     nodeOnly: [],
     omitFromImportMap: [],
     extraEntries: [],
+    cwd: process.env.INIT_CWD ?? "",
     ...param,
   } as Required<ImportMapPluginOptions>;
 
-  const outputPath = path.resolve(
-    process.env.INIT_CWD ?? "",
-    options.outputPath
-  );
+  const outputPath = path.resolve(options.cwd, options.outputPath);
 
   return {
     name: "import-map",
@@ -128,7 +129,7 @@ export function importMapPlugin(param: ImportMapPluginOptions = {}): Plugin {
         ...entrypoints.map(([key, entrypointPath]) => {
           // Get relative path of the entrypoint from the package root
           const relativePath = path.relative(
-            path.join(process.env.INIT_CWD ?? "", "src"),
+            path.join(options.cwd, "src"),
             entrypointPath
           );
 

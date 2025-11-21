@@ -1,3 +1,4 @@
+import path from "path";
 import {
   getBuildConfig,
   cjsCompatPlugin,
@@ -5,6 +6,8 @@ import {
   importMapPlugin,
   importConstantsPlugin,
 } from "@langchain/build";
+
+const __dirname = path.dirname(new URL(import.meta.url).pathname);
 
 export default getBuildConfig({
   entry: [
@@ -75,6 +78,7 @@ export default getBuildConfig({
     }),
     lcSecretsPlugin(),
     importMapPlugin({
+      cwd: __dirname,
       omitFromImportMap: [
         "load/index",
         "context",
@@ -82,6 +86,8 @@ export default getBuildConfig({
         "callbacks/dispatch/index",
       ],
     }),
-    importConstantsPlugin(),
+    importConstantsPlugin({
+      cwd: __dirname,
+    }),
   ],
 });

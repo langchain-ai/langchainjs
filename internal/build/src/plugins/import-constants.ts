@@ -51,6 +51,9 @@ export interface ImportConstantsPluginOptions {
    * ```
    */
   entrypoints?: string[];
+
+  /** The working directory to use for the plugin. Defaults to `process.env.INIT_CWD || ""`. */
+  cwd?: string;
 }
 
 /**
@@ -133,17 +136,12 @@ export function importConstantsPlugin(
     enabled: true,
     outputPath: "src/load/import_constants.ts",
     entrypoints: [],
+    cwd: process.env.INIT_CWD ?? "",
     ...param,
   } as Required<ImportConstantsPluginOptions>;
 
-  const packageJsonPath = path.resolve(
-    process.env.INIT_CWD ?? "",
-    "./package.json"
-  );
-  const outputPath = path.resolve(
-    process.env.INIT_CWD ?? "",
-    options.outputPath
-  );
+  const packageJsonPath = path.resolve(options.cwd, "./package.json");
+  const outputPath = path.resolve(options.cwd, options.outputPath);
 
   return {
     name: "import-constants",
