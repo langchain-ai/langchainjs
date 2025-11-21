@@ -15,7 +15,7 @@
     "url": "https://github.com/langchain-ai/langchainjs/issues"
   },
   "scripts": {
-    "build": "turbo build:compile build:examples --filter @langchain/core",
+    "build": "turbo build:compile build:examples --filter @langchain/core --output-logs new-only",
     "build:compile": "tsdown",
     "build:examples": "tsc -p ./examples/tsconfig.json",
     "clean": "rm -rf dist/ dist-cjs/ .turbo/",

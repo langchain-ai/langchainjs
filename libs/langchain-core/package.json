@@ -14,7 +14,7 @@
   },
   "homepage": "https://github.com/langchain-ai/langchainjs/tree/main/langchain-core/",
   "scripts": {
-    "build": "turbo build:compile --filter @langchain/core",
+    "build": "turbo build:compile --filter @langchain/core --output-logs new-only",
     "build:compile": "tsdown",
     "clean": "rm -rf .turbo dist/",
     "lint:eslint": "eslint --cache src/",

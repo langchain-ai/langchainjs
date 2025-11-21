@@ -95,7 +95,7 @@
   },
   "homepage": "https://github.com/langchain-ai/langchainjs/tree/main/langchain/",
   "scripts": {
-    "build": "turbo build:compile --filter @langchain/classic",
+    "build": "turbo build:compile --filter @langchain/classic --output-logs new-only",
     "build:compile": "tsdown",
     "lint:eslint": "eslint --cache",
     "lint:dpdm": "dpdm --skip-dynamic-imports circular --exit-code circular:1 --no-warning --no-tree src/*.ts src/**/*.ts",

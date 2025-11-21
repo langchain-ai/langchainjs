@@ -12,7 +12,7 @@
   },
   "homepage": "https://github.com/langchain-ai/langchainjs/tree/main/libs/langchain-google-common/",
   "scripts": {
-    "build": "turbo build:compile --filter @langchain/google-common",
+    "build": "turbo build:compile --filter @langchain/google-common --output-logs new-only",
     "build:compile": "tsdown",
     "lint:eslint": "eslint --cache src/",
     "lint:dpdm": "dpdm --skip-dynamic-imports circular --exit-code circular:1 --no-warning --no-tree src/*.ts src/**/*.ts",
