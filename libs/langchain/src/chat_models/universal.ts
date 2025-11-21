@@ -32,6 +32,7 @@ import {
 import { type StructuredToolInterface } from "@langchain/core/tools";
 import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
 import { ChatResult } from "@langchain/core/outputs";
+import { ModelProfile } from "@langchain/core/language_models/profile";
 
 // TODO: remove once `EventStreamCallbackHandlerInput` is exposed in core
 interface EventStreamCallbackHandlerInput
@@ -259,6 +260,11 @@ interface ConfigurableModelFields extends BaseChatModelParams {
    */
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   queuedMethodOperations?: Record<string, any>;
+  /**
+   * Overrides the profiling information for the model. If not provided,
+   * the profile will be inferred from the inner model instance.
+   */
+  profile?: ModelProfile;
 }
 
 /**
@@ -296,6 +302,15 @@ export class ConfigurableModel<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   _queuedMethodOperations: Record<string, any> = {};
 
+  /** @internal */
+  private _modelInstanceCache = new Map<
+    string,
+    BaseChatModel<BaseChatModelCallOptions, AIMessageChunk<MessageStructure>>
+  >();
+
+  /** @internal */
+  private _profile?: ModelProfile;
+
   constructor(fields: ConfigurableModelFields) {
     super(fields);
     this._defaultConfig = fields.defaultConfig ?? {};
@@ -319,13 +334,23 @@ export class ConfigurableModel<
 
     this._queuedMethodOperations =
       fields.queuedMethodOperations ?? this._queuedMethodOperations;
+
+    this._profile = fields.profile ?? undefined;
   }
 
-  async _model(
+  async _getModelInstance(
     config?: RunnableConfig
   ): Promise<
     BaseChatModel<BaseChatModelCallOptions, AIMessageChunk<MessageStructure>>
   > {
+    // Check cache first
+    const cacheKey = JSON.stringify(config ?? {});
+    const cachedModel = this._modelInstanceCache.get(cacheKey);
+    if (cachedModel) {
+      return cachedModel;
+    }
+
+    // Initialize model with merged params
     const params = { ...this._defaultConfig, ...this._modelParams(config) };
     let initializedModel = await _initChatModelHelper(
       params.model,
@@ -333,23 +358,20 @@ export class ConfigurableModel<
       params
     );
 
-    // Apply queued method operations
-    const queuedMethodOperationsEntries = Object.entries(
-      this._queuedMethodOperations
-    );
-    if (queuedMethodOperationsEntries.length > 0) {
-      for (const [method, args] of queuedMethodOperationsEntries) {
-        if (
-          method in initializedModel &&
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          typeof (initializedModel as any)[method] === "function"
-        ) {
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          initializedModel = await (initializedModel as any)[method](...args);
-        }
+    // Apply queued method operations in sequence
+    for (const [method, args] of Object.entries(this._queuedMethodOperations)) {
+      if (
+        method in initializedModel &&
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        typeof (initializedModel as any)[method] === "function"
+      ) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        initializedModel = await (initializedModel as any)[method](...args);
       }
     }
 
+    // Cache and return the initialized model
+    this._modelInstanceCache.set(cacheKey, initializedModel);
     return initializedModel;
   }
 
@@ -358,7 +380,7 @@ export class ConfigurableModel<
     options?: this["ParsedCallOptions"],
     runManager?: CallbackManagerForLLMRun
   ): Promise<ChatResult> {
-    const model = await this._model(options);
+    const model = await this._getModelInstance(options);
     return model._generate(messages, options ?? {}, runManager);
   }
 
@@ -464,7 +486,7 @@ export class ConfigurableModel<
     input: RunInput,
     options?: CallOptions
   ): Promise<AIMessageChunk> {
-    const model = await this._model(options);
+    const model = await this._getModelInstance(options);
     const config = ensureConfig(options);
     return model.invoke(input, config);
   }
@@ -473,7 +495,7 @@ export class ConfigurableModel<
     input: RunInput,
     options?: CallOptions
   ): Promise<IterableReadableStream<AIMessageChunk>> {
-    const model = await this._model(options);
+    const model = await this._getModelInstance(options);
     const wrappedGenerator = new AsyncGeneratorWithSetup({
       generator: await model.stream(input, options),
       config: options,
@@ -514,7 +536,7 @@ export class ConfigurableModel<
     generator: AsyncGenerator<RunInput>,
     options: CallOptions
   ): AsyncGenerator<AIMessageChunk> {
-    const model = await this._model(options);
+    const model = await this._getModelInstance(options);
     const config = ensureConfig(options);
 
     yield* model.transform(generator, config);
@@ -525,7 +547,7 @@ export class ConfigurableModel<
     options?: Partial<CallOptions>,
     streamOptions?: Omit<LogStreamCallbackHandlerInput, "autoClose">
   ): AsyncGenerator<RunLogPatch> {
-    const model = await this._model(options);
+    const model = await this._getModelInstance(options);
     const config = ensureConfig(options);
 
     yield* model.streamLog(input, config, {
@@ -565,7 +587,7 @@ export class ConfigurableModel<
   ): IterableReadableStream<StreamEvent | Uint8Array> {
     const outerThis = this;
     async function* wrappedGenerator() {
-      const model = await outerThis._model(options);
+      const model = await outerThis._getModelInstance(options);
       const config = ensureConfig(options);
       const eventStream = model.streamEvents(input, config, streamOptions);
 
@@ -574,6 +596,20 @@ export class ConfigurableModel<
       }
     }
     return IterableReadableStream.fromAsyncGenerator(wrappedGenerator());
+  }
+
+  /**
+   * Return profiling information for the model.
+   *
+   * @returns {ModelProfile} An object describing the model's capabilities and constraints
+   */
+  get profile(): ModelProfile {
+    if (this._profile) {
+      return this._profile;
+    }
+    const cacheKey = JSON.stringify({});
+    const instance = this._modelInstanceCache.get(cacheKey);
+    return instance?.profile ?? {};
   }
 }
 
@@ -609,6 +645,7 @@ export async function initChatModel<
     modelProvider?: string;
     configurableFields?: never;
     configPrefix?: string;
+    profile?: ModelProfile;
   }
 ): Promise<ConfigurableModel<RunInput, CallOptions>>;
 
@@ -622,6 +659,7 @@ export async function initChatModel<
     modelProvider?: string;
     configurableFields?: ConfigurableFields;
     configPrefix?: string;
+    profile?: ModelProfile;
   }
 ): Promise<ConfigurableModel<RunInput, CallOptions>>;
 
@@ -665,6 +703,8 @@ export async function initChatModel<
  *   - "any": All fields are configurable. (See Security Note in description)
  *   - string[]: Specified fields are configurable.
  * @param {string} [fields.configPrefix] - Prefix for configurable fields at runtime.
+ * @param {ModelProfile} [fields.profile] - Overrides the profiling information for the model. If not provided,
+ *   the profile will be inferred from the inner model instance.
  * @param {Record<string, any>} [fields.params] - Additional keyword args to pass to the ChatModel constructor.
  * @returns {Promise<ConfigurableModel<RunInput, CallOptions>>} A class which extends BaseChatModel.
  * @throws {Error} If modelProvider cannot be inferred or isn't supported.
@@ -818,6 +858,16 @@ export async function initChatModel<
  * );
  * ```
  *
+ * @example Initialize a model with a custom profile
+ * ```typescript
+ * import { initChatModel } from "langchain/chat_models/universal";
+ *
+ * const model = await initChatModel("gpt-4o-mini", {
+ *   profile: {
+ *     maxInputTokens: 100000,
+ *   },
+ * });
+ *
  * @description
  * This function initializes a ChatModel based on the provided model name and provider.
  * It supports various model providers and allows for runtime configuration of model parameters.
@@ -849,13 +899,15 @@ export async function initChatModel<
     modelProvider?: string;
     configurableFields?: string[] | "any";
     configPrefix?: string;
+    profile?: ModelProfile;
   }
 ): Promise<ConfigurableModel<RunInput, CallOptions>> {
   // eslint-disable-next-line prefer-const
-  let { configurableFields, configPrefix, modelProvider, ...params } = {
-    configPrefix: "",
-    ...(fields ?? {}),
-  };
+  let { configurableFields, configPrefix, modelProvider, profile, ...params } =
+    {
+      configPrefix: "",
+      ...(fields ?? {}),
+    };
   if (modelProvider === undefined && model?.includes(":")) {
     const [provider, ...remainingParts] = model.split(":");
     const modelComponents =
@@ -885,14 +937,17 @@ export async function initChatModel<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const paramsCopy: Record<string, any> = { ...params };
 
+  let configurableModel: ConfigurableModel<RunInput, CallOptions>;
+
   if (configurableFieldsCopy === undefined) {
-    return new ConfigurableModel<RunInput, CallOptions>({
+    configurableModel = new ConfigurableModel<RunInput, CallOptions>({
       defaultConfig: {
         ...paramsCopy,
         model,
         modelProvider,
       },
       configPrefix,
+      profile,
     });
   } else {
     if (model) {
@@ -901,10 +956,15 @@ export async function initChatModel<
     if (modelProvider) {
       paramsCopy.modelProvider = modelProvider;
     }
-    return new ConfigurableModel<RunInput, CallOptions>({
+    configurableModel = new ConfigurableModel<RunInput, CallOptions>({
       defaultConfig: paramsCopy,
       configPrefix,
       configurableFields: configurableFieldsCopy,
+      profile,
     });
   }
+
+  // Initialize the model instance to make sure a profile is available
+  await configurableModel._getModelInstance();
+  return configurableModel;
 }
