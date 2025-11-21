@@ -39,16 +39,32 @@ const DEFAULT_KEEP = 3;
  *
  * @example
  * ```ts
- * import { SystemMessage } from "langchain";
+ * import { HumanMessage, type ContextEdit, type BaseMessage  } from "langchain";
  *
- * class RemoveOldSystemMessages implements ContextEdit {
- *   async apply({ tokens, messages, countTokens }) {
- *     // Remove old system messages if over limit
+ * class RemoveOldHumanMessages implements ContextEdit {
+ *   constructor(private keepRecent: number = 10) {}
+ *
+ *   async apply({ messages, countTokens }) {
+ *     // Check current token count
+ *     const tokens = await countTokens(messages);
+ *
+ *     // Remove old human messages if over limit, keeping the most recent ones
  *     if (tokens > 50000) {
- *       messages = messages.filter(SystemMessage.isInstance);
- *       return await countTokens(messages);
+ *       const humanMessages: number[] = [];
+ *
+ *       // Find all human message indices
+ *       for (let i = 0; i < messages.length; i++) {
+ *         if (HumanMessage.isInstance(messages[i])) {
+ *           humanMessages.push(i);
+ *         }
+ *       }
+ *
+ *       // Remove old human messages (keep only the most recent N)
+ *       const toRemove = humanMessages.slice(0, -this.keepRecent);
+ *       for (let i = toRemove.length - 1; i >= 0; i--) {
+ *         messages.splice(toRemove[i]!, 1);
+ *       }
  *     }
- *     return tokens;
  *   }
  * }
  * ```

@@ -329,9 +329,9 @@ export function todoListMiddleware(options?: TodoListMiddlewareOptions) {
     wrapModelCall: (request, handler) =>
       handler({
         ...request,
-        systemPrompt:
-          (request.systemPrompt ? `${request.systemPrompt}\n\n` : "") +
-          (options?.systemPrompt ?? TODO_LIST_MIDDLEWARE_SYSTEM_PROMPT),
+        systemMessage: request.systemMessage.concat(
+          `\n\n${options?.systemPrompt ?? TODO_LIST_MIDDLEWARE_SYSTEM_PROMPT}`
+        ),
       }),
   });
 }
