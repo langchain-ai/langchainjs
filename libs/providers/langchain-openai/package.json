@@ -14,7 +14,7 @@
   },
   "homepage": "https://github.com/langchain-ai/langchainjs/tree/main/libs/providers/langchain-openai/",
   "scripts": {
-    "build": "turbo build:compile --filter @langchain/openai",
+    "build": "turbo build:compile --filter @langchain/openai --output-logs new-only",
     "build:compile": "tsdown",
     "lint:eslint": "eslint --cache src/",
     "lint:dpdm": "dpdm --skip-dynamic-imports circular --exit-code circular:1 --no-warning --no-tree src/*.ts src/**/*.ts",

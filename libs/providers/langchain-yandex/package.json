@@ -14,7 +14,7 @@
   },
   "homepage": "https://github.com/langchain-ai/langchainjs/tree/main/libs/langchain-yandex/",
   "scripts": {
-    "build": "turbo build:compile --filter @langchain/yandex",
+    "build": "turbo build:compile --filter @langchain/yandex --output-logs new-only",
     "build:compile": "tsdown",
     "lint:eslint": "eslint --cache src/",
     "lint:dpdm": "dpdm --skip-dynamic-imports circular --exit-code circular:1 --no-warning --no-tree src/*.ts src/**/*.ts",
@@ -98,7 +98,19 @@
     "dist/",
     "CHANGELOG.md",
     "README.md",
-    "LICENSE"
+    "LICENSE",
+    "llms.d.cts",
+    "llms.cjs",
+    "llms.d.ts",
+    "llms.js",
+    "embeddings.d.cts",
+    "embeddings.cjs",
+    "embeddings.d.ts",
+    "embeddings.js",
+    "chat_models.d.cts",
+    "chat_models.cjs",
+    "chat_models.d.ts",
+    "chat_models.js"
   ],
   "module": "./dist/index.js"
 }

@@ -11,6 +11,7 @@
   "packageManager": "pnpm@10.14.0",
   "scripts": {
     "build": "turbo build:compile",
+    "watch": "turbo watch build:compile",
     "clean": "turbo clean",
     "dev": "pnpm --filter @langchain/build watch",
     "format": "turbo format --concurrency=50",
