@@ -12,7 +12,19 @@
     "dist/",
     "CHANGELOG.md",
     "README.md",
-    "LICENSE"
+    "LICENSE",
+    "storage",
+    "load",
+    "load.d.cts",
+    "load.cjs",
+    "load.d.ts",
+    "load.js",
+    "hub",
+    "chat_models",
+    "hub.d.cts",
+    "hub.cjs",
+    "hub.d.ts",
+    "hub.js"
   ],
   "repository": {
     "type": "git",

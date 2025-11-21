@@ -1,5 +1,5 @@
 import type { LanguageModelLike } from "@langchain/core/language_models/base";
-import type { BaseMessage } from "@langchain/core/messages";
+import type { BaseMessage, SystemMessage } from "@langchain/core/messages";
 import type { ServerTool, ClientTool } from "@langchain/core/tools";
 
 import type { Runtime, AgentBuiltInState } from "../runtime.js";
@@ -24,9 +24,45 @@ export interface ModelRequest<
    */
   messages: BaseMessage[];
   /**
-   * The system message for this step.
+   * The system message string for this step.
+   *
+   * @default ""
+   * @deprecated Use {@link ModelRequest.systemMessage} instead.
    */
-  systemPrompt?: string;
+  systemPrompt: string;
+  /**
+   * The system message for this step. If no `systemPrompt` was provided, when `createAgent`
+   * was initialized, an empty system message will be used.
+   *
+   * @default new SystemMessage("")
+   * @example extend system message with a string
+   * ```ts
+   * wrapModelCall: async (request, handler) => {
+   *   return handler({
+   *     ...request,
+   *     systemMessage: request.systemMessage.concat("something")
+   *   });
+   * }
+   * ```
+   * @example extend system message with a SystemMessage and cache control
+   * ```ts
+   * wrapModelCall: async (request, handler) => {
+   *   return handler({
+   *     ...request,
+   *     systemMessage: request.systemMessage.concat(
+   *       new SystemMessage({
+   *         content: [{
+   *           type: "text",
+   *           text: "something",
+   *           cache_control: { type: "ephemeral", ttl: "1m" }
+   *         }],
+   *       })
+   *     ),
+   *   });
+   * }
+   * ```
+   */
+  systemMessage: SystemMessage;
   /**
    * Tool choice configuration (model-specific format).
    * Can be one of:

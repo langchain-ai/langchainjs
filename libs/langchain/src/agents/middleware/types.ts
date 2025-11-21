@@ -8,7 +8,11 @@ import type {
 } from "@langchain/core/utils/types";
 import type { InteropZodToStateDefinition } from "@langchain/langgraph/zod";
 import type { AnnotationRoot } from "@langchain/langgraph";
-import type { AIMessage, ToolMessage } from "@langchain/core/messages";
+import type {
+  AIMessage,
+  SystemMessage,
+  ToolMessage,
+} from "@langchain/core/messages";
 import type { ToolCall } from "@langchain/core/messages/tool";
 import type { Command } from "@langchain/langgraph";
 import type { ClientTool, ServerTool } from "@langchain/core/tools";
@@ -101,7 +105,13 @@ export type WrapModelCallHandler<
   TSchema extends InteropZodObject | undefined = undefined,
   TContext = unknown
 > = (
-  request: ModelRequest<NormalizedSchemaInput<TSchema>, TContext>
+  request: Omit<
+    ModelRequest<NormalizedSchemaInput<TSchema>, TContext>,
+    /**
+     * allow to reset the system prompt or system message
+     */
+    "systemPrompt" | "systemMessage"
+  > & { systemPrompt?: string; systemMessage?: SystemMessage }
 ) => PromiseOrValue<AIMessage>;
 
 /**
