@@ -557,7 +557,7 @@ describe("createAgent benchmarks", () => {
     bench.add(name, fn);
   }
 
-  beforeAll(bench.run.bind(bench), 230 * 1000);
+  beforeAll(bench.run.bind(bench), 60 * 1000);
 
   for (const [name, [, resultFn]] of Object.entries(benchmarks)) {
     it(name, () => {
