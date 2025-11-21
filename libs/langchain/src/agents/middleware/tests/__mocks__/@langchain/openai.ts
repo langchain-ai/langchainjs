@@ -25,6 +25,8 @@ export const ChatOpenAI = class MockChatOpenAI {
     },
   };
 
+  _getClientOptions = vi.fn(() => ({}));
+
   constructor(params?: Record<string, unknown>) {
     this.lc_kwargs = params || {};
   }

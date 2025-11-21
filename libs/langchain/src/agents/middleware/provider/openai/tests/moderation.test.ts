@@ -181,8 +181,8 @@ describe("openAIModerationMiddleware", () => {
       const result = await beforeModelHook?.(state as any, {} as any);
 
       expect(moderateContentMock).toHaveBeenCalledWith(
-        "I want to harm myself",
-        expect.objectContaining({ model: "omni-moderation-latest" })
+        { input: "I want to harm myself", model: "omni-moderation-latest" },
+        expect.any(Object)
       );
       expect(result).toEqual({
         jumpTo: "end",
@@ -300,7 +300,10 @@ describe("openAIModerationMiddleware", () => {
       const result = await afterModelHook?.(state as any, {} as any);
 
       expect(mockModel.client.moderations.create).toHaveBeenCalledWith(
-        "Here's some violent content",
+        {
+          input: "Here's some violent content",
+          model: "omni-moderation-latest",
+        },
         expect.any(Object)
       );
       expect(result).toEqual({
@@ -389,7 +392,7 @@ describe("openAIModerationMiddleware", () => {
       const result = await beforeModelHook?.(state as any, {} as any);
 
       expect(mockModel.client.moderations.create).toHaveBeenCalledWith(
-        "Hateful tool result",
+        { input: "Hateful tool result", model: "omni-moderation-latest" },
         expect.any(Object)
       );
       expect(result).toEqual({
@@ -746,11 +749,11 @@ describe("openAIModerationMiddleware", () => {
       const result: any = await beforeModelHook?.(state as any, {} as any);
 
       expect(mockModel.client.moderations.create).toHaveBeenCalledWith(
-        "Safe result",
+        { input: "Safe result", model: "omni-moderation-latest" },
         expect.any(Object)
       );
       expect(mockModel.client.moderations.create).toHaveBeenCalledWith(
-        "Violent result",
+        { input: "Violent result", model: "omni-moderation-latest" },
         expect.any(Object)
       );
       expect(result).toHaveProperty("jumpTo", "end");
@@ -793,8 +796,8 @@ describe("openAIModerationMiddleware", () => {
       await beforeModelHook?.(state as any, {} as any);
 
       expect(mockModel.client.moderations.create).toHaveBeenCalledWith(
-        "Test input",
-        expect.objectContaining({ model: "text-moderation-stable" })
+        { input: "Test input", model: "text-moderation-stable" },
+        expect.any(Object)
       );
     });
   });
@@ -898,13 +901,13 @@ describe("openAIModerationMiddleware", () => {
       // First call is for input moderation
       expect(mockModel.client.moderations.create).toHaveBeenNthCalledWith(
         1,
-        "Tell me something",
+        { input: "Tell me something", model: "omni-moderation-latest" },
         expect.any(Object)
       );
       // Second call is for output moderation
       expect(mockModel.client.moderations.create).toHaveBeenNthCalledWith(
         2,
-        "Hateful response content",
+        { input: "Hateful response content", model: "omni-moderation-latest" },
         expect.any(Object)
       );
       // Final message should be the violation message
@@ -987,13 +990,13 @@ describe("openAIModerationMiddleware", () => {
       // First call is for input moderation
       expect(mockModel.client.moderations.create).toHaveBeenNthCalledWith(
         1,
-        "Use the tool",
+        { input: "Use the tool", model: "omni-moderation-latest" },
         expect.any(Object)
       );
       // Second call is for tool result moderation
       expect(mockModel.client.moderations.create).toHaveBeenNthCalledWith(
         2,
-        "Inappropriate tool result",
+        { input: "Inappropriate tool result", model: "omni-moderation-latest" },
         expect.any(Object)
       );
       // Final message should be the violation message
@@ -1078,13 +1081,13 @@ describe("openAIModerationMiddleware", () => {
       // First call is for input moderation
       expect(mockModel.client.moderations.create).toHaveBeenNthCalledWith(
         1,
-        "Search for something",
+        { input: "Search for something", model: "omni-moderation-latest" },
         expect.any(Object)
       );
       // Second call is for tool result moderation
       expect(mockModel.client.moderations.create).toHaveBeenNthCalledWith(
         2,
-        "Self-harm related content",
+        { input: "Self-harm related content", model: "omni-moderation-latest" },
         expect.any(Object)
       );
       // Final message should be the violation message from tool result moderation
@@ -1137,8 +1140,8 @@ describe("openAIModerationMiddleware", () => {
 
       expect(initChatModel).toHaveBeenCalledWith("gpt-4o-mini");
       expect(mockModel.client.moderations.create).toHaveBeenCalledWith(
-        "Violent content",
-        expect.objectContaining({ model: "omni-moderation-latest" })
+        { input: "Violent content", model: "omni-moderation-latest" },
+        expect.any(Object)
       );
       expect(result).toHaveProperty("jumpTo", "end");
       expect(result).toHaveProperty("messages");

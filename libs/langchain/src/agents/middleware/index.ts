@@ -60,6 +60,10 @@ export {
 } from "./modelCallLimit.js";
 export { modelFallbackMiddleware } from "./modelFallback.js";
 export {
+  modelRetryMiddleware,
+  type ModelRetryMiddlewareConfig,
+} from "./modelRetry.js";
+export {
   toolRetryMiddleware,
   type ToolRetryMiddlewareConfig,
 } from "./toolRetry.js";
@@ -71,10 +75,6 @@ export {
 /**
  * Provider specific middleware
  */
-export {
-  modelRetryMiddleware,
-  type ModelRetryMiddlewareConfig,
-} from "./modelRetry.js";
 export {
   openAIModerationMiddleware,
   type OpenAIModerationMiddlewareOptions,
