@@ -292,7 +292,7 @@ describe("anthropicPromptCachingMiddleware", () => {
     const callArgs = (model.invoke as unknown as MockInstance).mock.calls[0];
     const [systemPrompt] = callArgs[0];
     expect(systemPrompt.type).toBe("system");
-    expect(systemPrompt.content).toBe("You are a helpful assistant");
+    expect(systemPrompt.text).toBe("You are a helpful assistant");
   });
 
   it("should allow runtime context override", async () => {
