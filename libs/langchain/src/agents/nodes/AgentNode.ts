@@ -15,6 +15,7 @@ import {
   interopParse,
   interopZodObjectPartial,
 } from "@langchain/core/utils/types";
+import { raceWithSignal } from "@langchain/core/runnables";
 import type { ToolCall } from "@langchain/core/messages/tool";
 import type { ClientTool, ServerTool } from "@langchain/core/tools";
 
@@ -24,7 +25,6 @@ import { RunnableCallable } from "../RunnableCallable.js";
 import { PreHookAnnotation } from "../annotation.js";
 import {
   bindTools,
-  getPromptRunnable,
   validateLLMHasNoBoundTools,
   hasToolCalls,
   isClientTool,
@@ -294,14 +294,23 @@ export class AgentNode<
         structuredResponseFormat
       );
 
-      let modelInput = this.#getModelInputState(state);
-      modelInput = { ...modelInput, messages: request.messages };
+      /**
+       * prepend the system message to the messages if it is not empty
+       */
+      const messages = [
+        ...(this.#currentSystemMessage.text === ""
+          ? []
+          : [this.#currentSystemMessage]),
+        ...request.messages,
+      ];
 
       const signal = mergeAbortSignals(this.#options.signal, config.signal);
-      const invokeConfig = { ...config, signal };
-      const response = (await modelWithTools.invoke(
-        modelInput,
-        invokeConfig
+      const response = (await raceWithSignal(
+        modelWithTools.invoke(messages, {
+          ...config,
+          signal,
+        }),
+        signal
       )) as AIMessage;
 
       /**
@@ -786,23 +795,6 @@ export class AgentNode<
     );
   }
 
-  #getModelInputState(
-    state: InternalAgentState<StructuredResponseFormat> &
-      PreHookAnnotation["State"]
-  ): Omit<InternalAgentState<StructuredResponseFormat>, "llmInputMessages"> {
-    const { messages, llmInputMessages, ...rest } = state;
-    if (llmInputMessages && llmInputMessages.length > 0) {
-      return { messages: llmInputMessages, ...rest } as Omit<
-        InternalAgentState<StructuredResponseFormat>,
-        "llmInputMessages"
-      >;
-    }
-    return { messages, ...rest } as Omit<
-      InternalAgentState<StructuredResponseFormat>,
-      "llmInputMessages"
-    >;
-  }
-
   async #bindTools(
     model: LanguageModelLike,
     preparedOptions: ModelRequest | undefined,
@@ -870,11 +862,10 @@ export class AgentNode<
      * Create a model runnable with the prompt and agent name
      * Use current SystemMessage state (which may have been modified by middleware)
      */
-    const modelRunnable = getPromptRunnable(this.#currentSystemMessage).pipe(
+    const modelRunnable =
       this.#options.includeAgentName === "inline"
         ? withAgentName(modelWithTools, this.#options.includeAgentName)
-        : modelWithTools
-    );
+        : modelWithTools;
 
     return modelRunnable;
   }

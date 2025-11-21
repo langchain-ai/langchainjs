@@ -7,7 +7,7 @@ import {
   MessageContent,
   ToolMessage,
 } from "@langchain/core/messages";
-import { MessagesAnnotation, isCommand } from "@langchain/langgraph";
+import { isCommand } from "@langchain/langgraph";
 import {
   type InteropZodObject,
   interopParse,
@@ -24,7 +24,6 @@ import {
   Runnable,
   RunnableLike,
   RunnableConfig,
-  RunnableLambda,
   RunnableSequence,
   RunnableBinding,
 } from "@langchain/core/runnables";
@@ -32,7 +31,6 @@ import type { ClientTool, ServerTool } from "@langchain/core/tools";
 
 import { isBaseChatModel, isConfigurableModel } from "./model.js";
 import { MultipleToolsBoundError } from "./errors.js";
-import { PROMPT_RUNNABLE_NAME } from "./constants.js";
 import type { AgentBuiltInState } from "./runtime.js";
 import type {
   ToolCallHandler,
@@ -368,30 +366,6 @@ export function normalizeSystemPrompt(
   throw new Error(
     `Invalid systemPrompt type: expected string or SystemMessage, got ${typeof systemPrompt}`
   );
-}
-
-/**
- * Converts a SystemMessage to a Runnable that will prepend the prompt to the messages.
- * @param prompt - The prompt to convert to a Runnable.
- * @returns The Runnable that will prepend the prompt to the messages.
- */
-export function getPromptRunnable(prompt: SystemMessage): Runnable {
-  /**
-   * if no changes were made to the system message, return a noop runnable
-   */
-  if (prompt.text === "") {
-    return RunnableLambda.from(
-      (state: typeof MessagesAnnotation.State) => state.messages
-    ).withConfig({ runName: PROMPT_RUNNABLE_NAME });
-  }
-
-  if (SystemMessage.isInstance(prompt)) {
-    return RunnableLambda.from((state: typeof MessagesAnnotation.State) => {
-      return [prompt, ...(state.messages ?? [])];
-    }).withConfig({ runName: PROMPT_RUNNABLE_NAME });
-  }
-
-  throw new Error(`Got unexpected type for 'prompt': ${typeof prompt}`);
 }
 
 /**

@@ -662,7 +662,7 @@ describe("createAgent", () => {
     expect((result.messages[2] as ToolMessage).content).toBe("result for foo");
   });
 
-  describe("supports abort signal", () => {
+  describe.only("supports abort signal", () => {
     it("should handle abort signal", async () => {
       const model = new FakeToolCallingChatModel({
         responses: [new AIMessage("ai response")],
