@@ -1696,7 +1696,8 @@ export class RunnableRetry<
         ),
       {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        onFailedAttempt: (error: any) => this.onFailedAttempt(error, input),
+        onFailedAttempt: ({ error }: { error: any }) =>
+          this.onFailedAttempt(error, input),
         retries: Math.max(this.maxAttemptNumber - 1, 0),
         randomize: true,
       }
@@ -1768,7 +1769,7 @@ export class RunnableRetry<
         },
         {
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          onFailedAttempt: (error: any) =>
+          onFailedAttempt: ({ error }: { error: any }) =>
             this.onFailedAttempt(error, error.input),
           retries: Math.max(this.maxAttemptNumber - 1, 0),
           randomize: true,
