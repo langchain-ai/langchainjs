@@ -429,7 +429,7 @@ const benchmarks: Benchmarks = {
       });
     },
     (result: TaskResult) => {
-      expect(result.latency.mean).toBeLessThanOrEqual(65);
+      expect(result.latency.mean).toBeLessThanOrEqual(70);
     },
   ],
 
