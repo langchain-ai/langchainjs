@@ -31,7 +31,7 @@
     "format:check": "prettier --config .prettierrc --check \"src\""
   },
   "dependencies": {
-    "ollama": "^0.5.12",
+    "ollama": "^0.6.3",
     "uuid": "^10.0.0"
   },
   "peerDependencies": {
