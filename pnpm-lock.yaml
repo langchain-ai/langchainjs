@@ -2245,8 +2245,8 @@ importers:
   libs/providers/langchain-deepseek:
     dependencies:
       '@langchain/openai':
-        specifier: ^1.1.1
-        version: 1.1.1(@langchain/core@libs+langchain-core)(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.5))
+        specifier: workspace:*
+        version: link:../langchain-openai
     devDependencies:
       '@langchain/core':
         specifier: workspace:*
@@ -3358,8 +3358,8 @@ importers:
   libs/providers/langchain-xai:
     dependencies:
       '@langchain/openai':
-        specifier: ^1.1.1
-        version: 1.1.1(@langchain/core@libs+langchain-core)(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.5))
+        specifier: workspace:*
+        version: link:../langchain-openai
     devDependencies:
       '@langchain/core':
         specifier: workspace:*
@@ -21193,6 +21193,7 @@ snapshots:
       zod: 4.1.12
     transitivePeerDependencies:
       - ws
+    optional: true
 
   '@langchain/textsplitters@0.1.0(@langchain/core@libs+langchain-core)':
     dependencies:
@@ -28652,6 +28653,7 @@ snapshots:
   js-tiktoken@1.0.21:
     dependencies:
       base64-js: 1.5.1
+    optional: true
 
   js-tokens@4.0.0: {}
 
@@ -30000,6 +30002,7 @@ snapshots:
     optionalDependencies:
       ws: 8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.5)
       zod: 4.1.12
+    optional: true
 
   openapi-types@12.1.3: {}
 
