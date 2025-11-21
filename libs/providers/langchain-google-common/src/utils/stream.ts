@@ -377,27 +377,18 @@ export class SseStream implements AbstractStream {
     const ret: Record<string, string> = {};
 
     const regex = /^([^:]+):\s*(.+)$/;
-    /*
-    /^
-      ([^:]+)
-      :\s*
-      (
-        [^\r\n]             # [^\r\n]* matches any character except carriage return and newline, preventing the ambiguity with the trailing newline pattern
-        *?                  # uses non-greedy matching to prevent excessive backtracking
-      )
-      (?:                   # Uses a non-capturing group (?:...) and matches proper line endings including both Unix (\n) and Windows (\r\n) style 
-        \r?                 # The ? makes the \r optional for cross-platform compatibility
-        \n                  
-      )
-      *$
-    /
-
-    This regex is not a ReDoS vulnerability because:
-    - It removes the ambiguity between what .+ and \n* can match
-    - It uses character classes that are more specific and don't overlap
-    - It uses non-greedy quantifiers where appropriate
-    - It makes the regex more deterministic in its matching behavior
-    */
+      /*
+       * Pattern breakdown:
+       *   ^([^:]+)    - Matches and captures the field name (one or more non-colon characters from start)
+       *   :\s*        - Matches colon followed by zero or more whitespace characters
+       *   (.+)$       - Matches and captures the field value (one or more characters until end of string)
+       *
+       * This regex is safe from ReDoS (Regular Expression Denial of Service) because:
+       * - Since lines are pre-split by /\n/, each line contains no newline characters
+       * - There is no ambiguity or overlapping patterns (like .+ and \n*) that could cause exponential backtracking
+       * - The greedy .+ quantifier is deterministic when anchored to $ (end of string)
+       * - No nested quantifiers or optional groups that could create backtracking complexity
+       */
 
     const lines = event.split(/\n/);
     lines.forEach((line) => {
