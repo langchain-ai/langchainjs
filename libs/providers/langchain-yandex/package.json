@@ -98,7 +98,19 @@
     "dist/",
     "CHANGELOG.md",
     "README.md",
-    "LICENSE"
+    "LICENSE",
+    "llms.d.cts",
+    "llms.cjs",
+    "llms.d.ts",
+    "llms.js",
+    "embeddings.d.cts",
+    "embeddings.cjs",
+    "embeddings.d.ts",
+    "embeddings.js",
+    "chat_models.d.cts",
+    "chat_models.cjs",
+    "chat_models.d.ts",
+    "chat_models.js"
   ],
   "module": "./dist/index.js"
 }

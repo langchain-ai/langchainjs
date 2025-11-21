@@ -1,8 +1,6 @@
 import path from "node:path";
 import fs from "node:fs/promises";
 import type { Plugin } from "rolldown";
-import type { PackageJson } from "type-fest";
-import { pathToFileURL } from "node:url";
 import { isSafeProjectPath } from "../utils.ts";
 
 /**
@@ -168,26 +166,6 @@ export function cjsCompatPlugin(param: CjsCompatPluginOptions = {}): Plugin {
             }
           }
         }
-      }
-
-      // Add the files to the package.json files array
-      const packageJsonPath = path.resolve(
-        process.env.INIT_CWD ?? "",
-        "package.json"
-      );
-      if (isSafeProjectPath(packageJsonPath)) {
-        const packageJson: PackageJson = await import(
-          pathToFileURL(packageJsonPath).href,
-          { with: { type: "json" } }
-        );
-        const newPackageJson = {
-          ...packageJson,
-          files: [...(options.files ?? []), ...Array.from(pathsToEmit)],
-        };
-        await fs.writeFile(
-          packageJsonPath,
-          JSON.stringify(newPackageJson, null, 2)
-        );
       }
     },
     buildEnd: {
