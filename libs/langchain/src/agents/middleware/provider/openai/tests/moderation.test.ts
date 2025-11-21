@@ -5,6 +5,7 @@ import {
   expect,
   vi,
   beforeEach,
+  afterEach,
   type MockInstance,
 } from "vitest";
 import { HumanMessage, AIMessage, ToolMessage } from "@langchain/core/messages";
