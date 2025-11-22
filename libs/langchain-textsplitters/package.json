@@ -1,6 +1,6 @@
 {
   "name": "@langchain/textsplitters",
-  "version": "1.0.1",
+  "version": "1.0.0",
   "description": "Various implementations of LangChain.js text splitters",
   "author": "LangChain",
   "license": "MIT",

@@ -1,6 +1,6 @@
 {
   "name": "@langchain/xai",
-  "version": "1.0.2",
+  "version": "1.0.1",
   "description": "xAI integration for LangChain.js",
   "author": "LangChain",
   "license": "MIT",
@@ -33,7 +33,7 @@
     "typegen:profiles": "pnpm --filter @langchain/model-profiles make --config profiles.toml"
   },
   "dependencies": {
-    "@langchain/openai": "^1.1.3"
+    "@langchain/openai": "workspace:*"
   },
   "peerDependencies": {
     "@langchain/core": "^1.0.0"

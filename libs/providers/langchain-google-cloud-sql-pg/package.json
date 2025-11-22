@@ -1,6 +1,6 @@
 {
   "name": "@langchain/google-cloud-sql-pg",
-  "version": "1.0.1",
+  "version": "1.0.0",
   "description": "LangChain.js integrations for Google Cloud SQL for PostgreSQL",
   "author": "Google LLC",
   "license": "MIT",
@@ -30,7 +30,7 @@
   },
   "dependencies": {
     "@google-cloud/cloud-sql-connector": "^1.6.0",
-    "@langchain/core": "^1.1.0",
+    "@langchain/core": "workspace:*",
     "google-auth-library": "^9.15.0",
     "knex": "^3.1.0",
     "uuid": "^11.0.5"
