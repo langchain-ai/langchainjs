@@ -1,6 +1,6 @@
 {
   "name": "@langchain/weaviate",
-  "version": "1.0.1",
+  "version": "1.0.0",
   "description": "Weaviate integration for LangChain.js",
   "author": "LangChain",
   "license": "MIT",
