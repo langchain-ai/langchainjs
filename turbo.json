@@ -1,97 +1,61 @@
 {
   "$schema": "https://turbo.build/schema.json",
-  "globalDependencies": [
-    "**/.env"
-  ],
+  "globalDependencies": ["**/.env"],
   "tasks": {
     "build:compile": {
-      "dependsOn": [
-        "^build:compile"
-      ],
-      "env": [
-        "BUILD_MODE"
-      ]
+      "dependsOn": ["^build:compile"],
+      "env": ["BUILD_MODE"]
     },
     "build:examples": {
-      "dependsOn": [
-        "^build:examples"
-      ]
+      "dependsOn": ["^build:examples"]
     },
     "lint": {
-      "dependsOn": [
-        "^lint"
-      ]
+      "dependsOn": ["^lint"]
     },
     "lint:fix": {
-      "dependsOn": [
-        "^lint:fix"
-      ]
+      "dependsOn": ["^lint:fix"]
     },
     "format": {
-      "dependsOn": [
-        "^format"
-      ]
+      "dependsOn": ["^format"]
     },
     "format:check": {
-      "dependsOn": [
-        "^format:check"
-      ]
+      "dependsOn": ["^format:check"]
     },
     "test": {
       "cache": false,
-      "dependsOn": [
-        "^build",
-        "build"
-      ]
+      "dependsOn": ["^build", "build"]
     },
     "test:ci": {
       "outputs": [],
-      "dependsOn": [
-        "^test",
-        "test"
-      ]
+      "dependsOn": ["^test", "test"]
     },
     "test:single": {
-      "dependsOn": [
-        "^build",
-        "build"
-      ]
+      "dependsOn": ["^build", "build"]
     },
     "test:int": {
-      "dependsOn": [
-        "^build",
-        "build"
-      ]
+      "dependsOn": ["^build", "build"]
     },
     "test:integration": {
-      "dependsOn": [
-        "^build",
-        "build",
-        "test:int"
-      ]
+      "dependsOn": ["^build", "build", "test:int"]
     },
     "test:standard:unit": {
       "outputs": [],
-      "dependsOn": [
-        "^build"
-      ]
+      "dependsOn": ["^build"]
     },
     "test:standard:int": {
       "outputs": [],
-      "dependsOn": [
-        "^build"
-      ]
+      "dependsOn": ["^build"]
     },
     "test:standard": {
       "outputs": [],
-      "dependsOn": [
-        "^build"
-      ]
+      "dependsOn": ["^build"]
+    },
+    "test:bench": {
+      "outputs": [],
+      "dependsOn": ["^build"]
     },
     "clean": {
-      "dependsOn": [
-        "^clean"
-      ]
+      "dependsOn": ["^clean"]
     }
   }
 }
