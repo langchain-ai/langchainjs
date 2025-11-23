@@ -1833,10 +1833,12 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
       };
     }
 
-    // force tool choice to be a single function name in case of structured output
+    const isJsonMode = parameters.responseMimeType === "application/json";
+    const mode = isJsonMode ? "auto" : "any";
+    
     return {
       functionCallingConfig: {
-        mode: "any",
+        mode,
         allowedFunctionNames: [parameters.tool_choice],
       },
     };
