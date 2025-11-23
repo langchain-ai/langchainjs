@@ -1,5 +1,14 @@
 # @langchain/google-vertexai-web
 
+## 2.0.0
+
+### Patch Changes
+
+- [#9479](https://github.com/langchain-ai/langchainjs/pull/9479) [`9eb7346`](https://github.com/langchain-ai/langchainjs/commit/9eb7346116f9069e2df1c9cd4bf8927b12fd64b6) Thanks [@christian-bromann](https://github.com/christian-bromann)! - fix 'moduleResultion: "node"' compatibility
+
+- Updated dependencies [[`9eb7346`](https://github.com/langchain-ai/langchainjs/commit/9eb7346116f9069e2df1c9cd4bf8927b12fd64b6)]:
+  - @langchain/google-webauth@2.0.0
+
 ## 1.0.3
 
 ### Patch Changes

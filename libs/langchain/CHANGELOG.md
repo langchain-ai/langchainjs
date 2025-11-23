@@ -1,5 +1,25 @@
 # langchain
 
+## 1.1.0
+
+### Minor Changes
+
+- [#9479](https://github.com/langchain-ai/langchainjs/pull/9479) [`9eb7346`](https://github.com/langchain-ai/langchainjs/commit/9eb7346116f9069e2df1c9cd4bf8927b12fd64b6) Thanks [@christian-bromann](https://github.com/christian-bromann)! - add new modelRetryMiddleware
+
+- [#9479](https://github.com/langchain-ai/langchainjs/pull/9479) [`9eb7346`](https://github.com/langchain-ai/langchainjs/commit/9eb7346116f9069e2df1c9cd4bf8927b12fd64b6) Thanks [@christian-bromann](https://github.com/christian-bromann)! - Support `SystemMessage` as `systemPrompt`
+
+- [#9479](https://github.com/langchain-ai/langchainjs/pull/9479) [`9eb7346`](https://github.com/langchain-ai/langchainjs/commit/9eb7346116f9069e2df1c9cd4bf8927b12fd64b6) Thanks [@christian-bromann](https://github.com/christian-bromann)! - Add OpenAI content moderation middleware
+
+### Patch Changes
+
+- [#9479](https://github.com/langchain-ai/langchainjs/pull/9479) [`9eb7346`](https://github.com/langchain-ai/langchainjs/commit/9eb7346116f9069e2df1c9cd4bf8927b12fd64b6) Thanks [@christian-bromann](https://github.com/christian-bromann)! - allow overriding profiles in `initChatModel`
+
+- [#9479](https://github.com/langchain-ai/langchainjs/pull/9479) [`9eb7346`](https://github.com/langchain-ai/langchainjs/commit/9eb7346116f9069e2df1c9cd4bf8927b12fd64b6) Thanks [@christian-bromann](https://github.com/christian-bromann)! - cache model instance imports for `initChatModel`
+
+- [#9479](https://github.com/langchain-ai/langchainjs/pull/9479) [`9eb7346`](https://github.com/langchain-ai/langchainjs/commit/9eb7346116f9069e2df1c9cd4bf8927b12fd64b6) Thanks [@christian-bromann](https://github.com/christian-bromann)! - fix 'moduleResultion: "node"' compatibility
+
+- [#9479](https://github.com/langchain-ai/langchainjs/pull/9479) [`9eb7346`](https://github.com/langchain-ai/langchainjs/commit/9eb7346116f9069e2df1c9cd4bf8927b12fd64b6) Thanks [@christian-bromann](https://github.com/christian-bromann)! - pass model profiles from chat models in `initChatModel`
+
 ## 1.0.6
 
 ### Patch Changes
