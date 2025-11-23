@@ -1,6 +1,6 @@
 {
   "name": "@langchain/nomic",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Nomic integration for LangChain.js",
   "author": "LangChain",
   "license": "MIT",

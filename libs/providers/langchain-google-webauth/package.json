@@ -1,6 +1,6 @@
 {
   "name": "@langchain/google-webauth",
-  "version": "1.0.3",
+  "version": "2.0.0",
   "description": "Web-based authentication support for Google services",
   "author": "LangChain",
   "license": "MIT",

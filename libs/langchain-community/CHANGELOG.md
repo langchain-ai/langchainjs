@@ -1,5 +1,15 @@
 # @langchain/community
 
+## 1.0.5
+
+### Patch Changes
+
+- [#9479](https://github.com/langchain-ai/langchainjs/pull/9479) [`9eb7346`](https://github.com/langchain-ai/langchainjs/commit/9eb7346116f9069e2df1c9cd4bf8927b12fd64b6) Thanks [@christian-bromann](https://github.com/christian-bromann)! - fix 'moduleResultion: "node"' compatibility
+
+- Updated dependencies [[`9eb7346`](https://github.com/langchain-ai/langchainjs/commit/9eb7346116f9069e2df1c9cd4bf8927b12fd64b6), [`9eb7346`](https://github.com/langchain-ai/langchainjs/commit/9eb7346116f9069e2df1c9cd4bf8927b12fd64b6)]:
+  - @langchain/openai@1.1.3
+  - @langchain/classic@1.0.5
+
 ## 1.0.4
 
 ### Patch Changes

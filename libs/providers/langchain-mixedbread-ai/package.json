@@ -1,6 +1,6 @@
 {
   "name": "@langchain/mixedbread-ai",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Mixedbread AI integration for LangChain.js",
   "author": "LangChain",
   "license": "MIT",
