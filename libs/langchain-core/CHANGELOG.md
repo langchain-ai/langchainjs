@@ -1,5 +1,17 @@
 # @langchain/core
 
+## 1.1.0
+
+### Minor Changes
+
+- [#9475](https://github.com/langchain-ai/langchainjs/pull/9475) [`708d360`](https://github.com/langchain-ai/langchainjs/commit/708d360df1869def7e4caaa5995d6e907bbf54cd) Thanks [@christian-bromann](https://github.com/christian-bromann)! - allow to concat system messages
+
+### Patch Changes
+
+- [#9416](https://github.com/langchain-ai/langchainjs/pull/9416) [`0fe9beb`](https://github.com/langchain-ai/langchainjs/commit/0fe9bebee6710f719e47f913eec1ec4f638e4de4) Thanks [@hntrl](https://github.com/hntrl)! - fix 'moduleResultion: "node"' compatibility
+
+- [#9463](https://github.com/langchain-ai/langchainjs/pull/9463) [`10fa2af`](https://github.com/langchain-ai/langchainjs/commit/10fa2afec0b81efd3467e61b59ba5c82e1043de5) Thanks [@christian-bromann](https://github.com/christian-bromann)! - fix(core): update p-retry to fix memory leak
+
 ## 1.0.6
 
 ### Patch Changes

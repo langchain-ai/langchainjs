@@ -1,6 +1,6 @@
 {
   "name": "@langchain/pinecone",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "LangChain integration for Pinecone's vector database",
   "author": "Pinecone, Inc",
   "license": "MIT",
