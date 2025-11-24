@@ -33,7 +33,7 @@
     "typegen:profiles": "pnpm --filter @langchain/model-profiles make --config profiles.toml"
   },
   "dependencies": {
-    "@anthropic-ai/sdk": "^0.69.0"
+    "@anthropic-ai/sdk": "^0.71.0"
   },
   "peerDependencies": {
     "@langchain/core": "^1.0.0"
