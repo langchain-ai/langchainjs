@@ -331,12 +331,18 @@ export class AIMessageChunk<
           ) {
             throw new Error("Malformed tool call chunk args.");
           }
-          toolCalls.push({
+          const toolCall: ToolCall = {
             name,
             args: parsedArgs,
             id,
             type: "tool_call",
-          });
+          };
+          // Preserve thoughtSignature from chunks for Gemini 3+
+          if ((chunks[0] as ToolCallChunk & { thoughtSignature?: string })?.thoughtSignature) {
+            (toolCall as ToolCall & { thoughtSignature?: string }).thoughtSignature =
+              (chunks[0] as ToolCallChunk & { thoughtSignature?: string }).thoughtSignature;
+          }
+          toolCalls.push(toolCall);
         } catch {
           invalidToolCalls.push({
             name,
@@ -472,7 +478,16 @@ export class AIMessageChunk<
       );
     }
     const Cls = this.constructor as Constructor<this>;
-    return new Cls(combinedFields);
+    const result = new Cls(combinedFields);
+    // Preserve thoughtSignature for Gemini 3+ models
+    if ((this as unknown as Record<string, unknown>).thoughtSignature !== undefined) {
+      (result as unknown as Record<string, unknown>).thoughtSignature =
+        (this as unknown as Record<string, unknown>).thoughtSignature;
+    } else if ((chunk as unknown as Record<string, unknown>).thoughtSignature !== undefined) {
+      (result as unknown as Record<string, unknown>).thoughtSignature =
+        (chunk as unknown as Record<string, unknown>).thoughtSignature;
+    }
+    return result;
   }
 
   static isInstance(obj: unknown): obj is AIMessageChunk {
