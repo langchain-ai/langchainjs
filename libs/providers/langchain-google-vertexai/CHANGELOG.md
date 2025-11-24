@@ -1,6 +1,6 @@
 # @langchain/google-vertexai
 
-## 2.0.0
+## 1.0.4
 
 ### Patch Changes
 
