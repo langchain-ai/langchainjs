@@ -74,7 +74,7 @@
     "yaml": "^2.8.1"
   },
   "peerDependencies": {
-    "@langchain/core": "^1.0.5"
+    "@langchain/core": "workspace:*"
   },
   "dependencies": {
     "@langchain/langgraph": "^1.0.0",
