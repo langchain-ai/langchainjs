@@ -1,5 +1,11 @@
 # langchain
 
+## 1.1.1
+
+### Patch Changes
+
+- [#9487](https://github.com/langchain-ai/langchainjs/pull/9487) [`4827945`](https://github.com/langchain-ai/langchainjs/commit/48279457ee44f36cdde175a537e2b12f5866627f) Thanks [@hntrl](https://github.com/hntrl)! - constrain lower bound core peer dep
+
 ## 1.1.0
 
 ### Minor Changes

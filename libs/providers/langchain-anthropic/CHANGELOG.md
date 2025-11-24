@@ -1,5 +1,11 @@
 # @langchain/anthropic
 
+## 1.1.3
+
+### Patch Changes
+
+- [#9488](https://github.com/langchain-ai/langchainjs/pull/9488) [`cfee39a`](https://github.com/langchain-ai/langchainjs/commit/cfee39a0b867e8cd4ae7bda3d64bba4124be4e10) Thanks [@hntrl](https://github.com/hntrl)! - add opus-4.5 to model strings
+
 ## 1.1.2
 
 ### Patch Changes
