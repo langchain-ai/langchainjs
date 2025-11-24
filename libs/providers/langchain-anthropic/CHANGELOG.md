@@ -1,5 +1,17 @@
 # @langchain/anthropic
 
+## 1.1.3
+
+### Patch Changes
+
+- [#9488](https://github.com/langchain-ai/langchainjs/pull/9488) [`cfee39a`](https://github.com/langchain-ai/langchainjs/commit/cfee39a0b867e8cd4ae7bda3d64bba4124be4e10) Thanks [@hntrl](https://github.com/hntrl)! - add opus-4.5 to model strings
+
+## 1.1.2
+
+### Patch Changes
+
+- [#9416](https://github.com/langchain-ai/langchainjs/pull/9416) [`0fe9beb`](https://github.com/langchain-ai/langchainjs/commit/0fe9bebee6710f719e47f913eec1ec4f638e4de4) Thanks [@hntrl](https://github.com/hntrl)! - fix 'moduleResultion: "node"' compatibility
+
 ## 1.1.1
 
 ### Patch Changes

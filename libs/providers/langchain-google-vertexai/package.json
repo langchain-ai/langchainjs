@@ -1,6 +1,6 @@
 {
   "name": "@langchain/google-vertexai",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "LangChain.js support for Google Vertex AI",
   "author": "LangChain",
   "license": "MIT",

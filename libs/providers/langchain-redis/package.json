@@ -1,6 +1,6 @@
 {
   "name": "@langchain/redis",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Sample integration for LangChain.js",
   "author": "LangChain",
   "license": "MIT",
@@ -31,7 +31,7 @@
     "redis": "^4.6.13"
   },
   "peerDependencies": {
-    "@langchain/core": "^1.0.0-alpha.6"
+    "@langchain/core": "^1.0.0"
   },
   "devDependencies": {
     "@faker-js/faker": "^8.4.0",

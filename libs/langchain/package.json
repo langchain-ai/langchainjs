@@ -1,6 +1,6 @@
 {
   "name": "langchain",
-  "version": "1.0.6",
+  "version": "1.1.1",
   "description": "Typescript bindings for langchain",
   "author": "LangChain",
   "license": "MIT",
@@ -76,7 +76,7 @@
     "yaml": "^2.8.1"
   },
   "peerDependencies": {
-    "@langchain/core": "^1.0.5"
+    "@langchain/core": "workspace:*"
   },
   "dependencies": {
     "@langchain/langgraph": "^1.0.0",

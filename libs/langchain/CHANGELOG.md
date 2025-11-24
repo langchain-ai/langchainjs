@@ -1,5 +1,31 @@
 # langchain
 
+## 1.1.1
+
+### Patch Changes
+
+- [#9487](https://github.com/langchain-ai/langchainjs/pull/9487) [`4827945`](https://github.com/langchain-ai/langchainjs/commit/48279457ee44f36cdde175a537e2b12f5866627f) Thanks [@hntrl](https://github.com/hntrl)! - constrain lower bound core peer dep
+
+## 1.1.0
+
+### Minor Changes
+
+- [#9476](https://github.com/langchain-ai/langchainjs/pull/9476) [`2a47c77`](https://github.com/langchain-ai/langchainjs/commit/2a47c77c29a873c4c4d4940458e0d5fb3b2e45ce) Thanks [@christian-bromann](https://github.com/christian-bromann)! - add new modelRetryMiddleware
+
+- [#9475](https://github.com/langchain-ai/langchainjs/pull/9475) [`708d360`](https://github.com/langchain-ai/langchainjs/commit/708d360df1869def7e4caaa5995d6e907bbf54cd) Thanks [@christian-bromann](https://github.com/christian-bromann)! - Support `SystemMessage` as `systemPrompt`
+
+- [#9475](https://github.com/langchain-ai/langchainjs/pull/9475) [`708d360`](https://github.com/langchain-ai/langchainjs/commit/708d360df1869def7e4caaa5995d6e907bbf54cd) Thanks [@christian-bromann](https://github.com/christian-bromann)! - Add OpenAI content moderation middleware
+
+### Patch Changes
+
+- [#9467](https://github.com/langchain-ai/langchainjs/pull/9467) [`2750e08`](https://github.com/langchain-ai/langchainjs/commit/2750e08547614de366019584940fdb1ba93e581c) Thanks [@hntrl](https://github.com/hntrl)! - allow overriding profiles in `initChatModel`
+
+- [#9467](https://github.com/langchain-ai/langchainjs/pull/9467) [`2750e08`](https://github.com/langchain-ai/langchainjs/commit/2750e08547614de366019584940fdb1ba93e581c) Thanks [@hntrl](https://github.com/hntrl)! - cache model instance imports for `initChatModel`
+
+- [#9416](https://github.com/langchain-ai/langchainjs/pull/9416) [`0fe9beb`](https://github.com/langchain-ai/langchainjs/commit/0fe9bebee6710f719e47f913eec1ec4f638e4de4) Thanks [@hntrl](https://github.com/hntrl)! - fix 'moduleResultion: "node"' compatibility
+
+- [#9467](https://github.com/langchain-ai/langchainjs/pull/9467) [`2750e08`](https://github.com/langchain-ai/langchainjs/commit/2750e08547614de366019584940fdb1ba93e581c) Thanks [@hntrl](https://github.com/hntrl)! - pass model profiles from chat models in `initChatModel`
+
 ## 1.0.6
 
 ### Patch Changes

@@ -6,7 +6,7 @@ LangChain is a framework for building LLM-powered applications. It helps you cha
 
 **Documentation**: To learn more about LangChain, check out [the docs](https://docs.langchain.com/oss/javascript/langchain/overview).
 
-If you're looking for more advanced customization or agent orchestration, check out [LangGraph.js](https://langchain-ai.github.io/langgraphjs/). our framework for building agents and controllable workflows.
+If you're looking for more advanced customization or agent orchestration, check out [LangGraph.js](https://docs.langchain.com/oss/javascript/langgraph/overview). our framework for building agents and controllable workflows.
 
 > [!NOTE]
 > Looking for the Python version? Check out [LangChain](https://github.com/langchain-ai/langchain).
@@ -56,6 +56,6 @@ LangChain.js is written in TypeScript and can be used in:
 
 As an open-source project in a rapidly developing field, we are extremely open to contributions, whether it be in the form of a new feature, improved infrastructure, or better documentation.
 
-For detailed information on how to contribute, see [here](https://github.com/langchain-ai/langchainjs/blob/main/CONTRIBUTING.md).
+For detailed information on how to contribute, see [`CONTRIBUTING.md`](https://github.com/langchain-ai/langchainjs/blob/main/CONTRIBUTING.md).
 
 Please report any security issues or concerns following our [security guidelines](https://github.com/langchain-ai/langchainjs/blob/main/SECURITY.md).
