@@ -10,8 +10,10 @@ import { MemorySaver } from "@langchain/langgraph-checkpoint";
 import { performance } from "node:perf_hooks";
 
 import { createAgent, createMiddleware } from "../../index.js";
-import { toolRetryMiddleware, calculateRetryDelay } from "../toolRetry.js";
+import { toolRetryMiddleware } from "../toolRetry.js";
+import { calculateRetryDelay } from "../utils.js";
 import { FakeToolCallingModel } from "../../tests/utils.js";
+import { InvalidRetryConfigError } from "../error.js";
 
 // Helper tools for testing
 
@@ -104,7 +106,7 @@ describe("toolRetryMiddleware", () => {
         maxRetries: 5,
         tools: ["tool1", "tool2"],
         retryOn: [TimeoutError, NetworkError],
-        onFailure: "raise",
+        onFailure: "error",
         backoffFactor: 1.5,
         initialDelayMs: 500,
         maxDelayMs: 30000,
@@ -135,64 +137,91 @@ describe("toolRetryMiddleware", () => {
   });
 
   describe("Validation", () => {
-    it("should throw ZodError for invalid maxRetries", () => {
+    it("should throw InvalidRetryConfigError for invalid maxRetries", () => {
       try {
         toolRetryMiddleware({ maxRetries: -1 });
         expect.fail("Should have thrown an error");
       } catch (error) {
-        expect(error).toBeInstanceOf(z.ZodError);
-        const zodError = error as z.ZodError;
-        expect(zodError.issues[0].path).toEqual(["maxRetries"]);
-        expect(zodError.issues[0].code).toBe("too_small");
+        expect(error).toBeInstanceOf(InvalidRetryConfigError);
+        expect((error as InvalidRetryConfigError).message).toContain(
+          "Number must be greater than or equal to 0"
+        );
+        expect((error as InvalidRetryConfigError).cause.issues[0].path).toEqual(
+          ["maxRetries"]
+        );
+        expect((error as InvalidRetryConfigError).cause.issues[0].code).toBe(
+          "too_small"
+        );
       }
     });
 
-    it("should throw ZodError for invalid initialDelayMs", () => {
+    it("should throw InvalidRetryConfigError for invalid initialDelayMs", () => {
       try {
         toolRetryMiddleware({ initialDelayMs: -1 });
         expect.fail("Should have thrown an error");
       } catch (error) {
-        expect(error).toBeInstanceOf(z.ZodError);
-        const zodError = error as z.ZodError;
-        expect(zodError.issues[0].path).toEqual(["initialDelayMs"]);
-        expect(zodError.issues[0].code).toBe("too_small");
+        expect(error).toBeInstanceOf(InvalidRetryConfigError);
+        expect((error as InvalidRetryConfigError).message).toContain(
+          "Number must be greater than or equal to 0"
+        );
+        expect((error as InvalidRetryConfigError).cause.issues[0].path).toEqual(
+          ["initialDelayMs"]
+        );
+        expect((error as InvalidRetryConfigError).cause.issues[0].code).toBe(
+          "too_small"
+        );
       }
     });
 
-    it("should throw ZodError for invalid maxDelayMs", () => {
+    it("should throw InvalidRetryConfigError for invalid maxDelayMs", () => {
       try {
         toolRetryMiddleware({ maxDelayMs: -1 });
         expect.fail("Should have thrown an error");
       } catch (error) {
-        expect(error).toBeInstanceOf(z.ZodError);
-        const zodError = error as z.ZodError;
-        expect(zodError.issues[0].path).toEqual(["maxDelayMs"]);
-        expect(zodError.issues[0].code).toBe("too_small");
+        expect(error).toBeInstanceOf(InvalidRetryConfigError);
+        expect((error as InvalidRetryConfigError).message).toContain(
+          "Number must be greater than or equal to 0"
+        );
+        expect((error as InvalidRetryConfigError).cause.issues[0].path).toEqual(
+          ["maxDelayMs"]
+        );
+        expect((error as InvalidRetryConfigError).cause.issues[0].code).toBe(
+          "too_small"
+        );
       }
     });
 
-    it("should throw ZodError for invalid backoffFactor", () => {
+    it("should throw InvalidRetryConfigError for invalid backoffFactor", () => {
       try {
         toolRetryMiddleware({ backoffFactor: -1 });
         expect.fail("Should have thrown an error");
       } catch (error) {
-        expect(error).toBeInstanceOf(z.ZodError);
-        const zodError = error as z.ZodError;
-        expect(zodError.issues[0].path).toEqual(["backoffFactor"]);
-        expect(zodError.issues[0].code).toBe("too_small");
+        expect(error).toBeInstanceOf(InvalidRetryConfigError);
+        expect((error as InvalidRetryConfigError).message).toContain(
+          "Number must be greater than or equal to 0"
+        );
+        expect((error as InvalidRetryConfigError).cause.issues[0].path).toEqual(
+          ["backoffFactor"]
+        );
+        expect((error as InvalidRetryConfigError).cause.issues[0].code).toBe(
+          "too_small"
+        );
       }
     });
 
-    it("should throw ZodError for invalid type (string instead of number)", () => {
+    it("should throw InvalidRetryConfigError for invalid type (string instead of number)", () => {
       try {
         // @ts-expect-error - intentionally passing wrong type
         toolRetryMiddleware({ maxRetries: "not a number" });
         expect.fail("Should have thrown an error");
       } catch (error) {
-        expect(error).toBeInstanceOf(z.ZodError);
-        const zodError = error as z.ZodError;
-        expect(zodError.issues[0].path).toEqual(["maxRetries"]);
-        expect(zodError.issues[0].code).toBe("invalid_type");
+        expect(error).toBeInstanceOf(InvalidRetryConfigError);
+        expect((error as InvalidRetryConfigError).cause.issues[0].path).toEqual(
+          ["maxRetries"]
+        );
+        expect((error as InvalidRetryConfigError).cause.issues[0].code).toBe(
+          "invalid_type"
+        );
       }
     });
   });
@@ -254,7 +283,7 @@ describe("toolRetryMiddleware", () => {
         maxRetries: 2,
         initialDelayMs: 10,
         jitter: false,
-        onFailure: "return_message",
+        onFailure: "continue",
       });
 
       const agent = createAgent({
@@ -296,7 +325,7 @@ describe("toolRetryMiddleware", () => {
         maxRetries: 2,
         initialDelayMs: 10,
         jitter: false,
-        onFailure: "raise",
+        onFailure: "error",
       });
 
       const agent = createAgent({
@@ -425,7 +454,7 @@ describe("toolRetryMiddleware", () => {
         tools: ["failing_tool"],
         initialDelayMs: 10,
         jitter: false,
-        onFailure: "return_message",
+        onFailure: "continue",
       });
 
       const agent = createAgent({
@@ -481,7 +510,7 @@ describe("toolRetryMiddleware", () => {
         tools: [failingTool], // Pass BaseTool instance
         initialDelayMs: 10,
         jitter: false,
-        onFailure: "return_message",
+        onFailure: "continue",
       });
 
       const agent = createAgent({
@@ -575,7 +604,7 @@ describe("toolRetryMiddleware", () => {
         retryOn: [TimeoutError],
         initialDelayMs: 10,
         jitter: false,
-        onFailure: "return_message",
+        onFailure: "continue",
       });
 
       const agent = createAgent({
@@ -669,7 +698,7 @@ describe("toolRetryMiddleware", () => {
         retryOn: shouldRetry,
         initialDelayMs: 10,
         jitter: false,
-        onFailure: "return_message",
+        onFailure: "continue",
       });
 
       const agent = createAgent({
@@ -868,7 +897,7 @@ describe("toolRetryMiddleware", () => {
         maxRetries: 0, // No retries
         initialDelayMs: 10,
         jitter: false,
-        onFailure: "return_message",
+        onFailure: "continue",
       });
 
       const agent = createAgent({

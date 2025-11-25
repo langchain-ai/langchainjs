@@ -7,7 +7,7 @@ import {
   MessageContent,
   ToolMessage,
 } from "@langchain/core/messages";
-import { MessagesAnnotation, isCommand } from "@langchain/langgraph";
+import { isCommand } from "@langchain/langgraph";
 import {
   type InteropZodObject,
   interopParse,
@@ -24,7 +24,6 @@ import {
   Runnable,
   RunnableLike,
   RunnableConfig,
-  RunnableLambda,
   RunnableSequence,
   RunnableBinding,
 } from "@langchain/core/runnables";
@@ -32,7 +31,6 @@ import type { ClientTool, ServerTool } from "@langchain/core/tools";
 
 import { isBaseChatModel, isConfigurableModel } from "./model.js";
 import { MultipleToolsBoundError } from "./errors.js";
-import { PROMPT_RUNNABLE_NAME } from "./constants.js";
 import type { AgentBuiltInState } from "./runtime.js";
 import type {
   ToolCallHandler,
@@ -345,27 +343,29 @@ export function hasToolCalls(message?: BaseMessage): boolean {
   );
 }
 
-type Prompt = string | SystemMessage;
-
-export function getPromptRunnable(prompt?: Prompt): Runnable {
-  let promptRunnable: Runnable;
-
-  if (prompt == null) {
-    promptRunnable = RunnableLambda.from(
-      (state: typeof MessagesAnnotation.State) => state.messages
-    ).withConfig({ runName: PROMPT_RUNNABLE_NAME });
-  } else if (typeof prompt === "string") {
-    const systemMessage = new SystemMessage(prompt);
-    promptRunnable = RunnableLambda.from(
-      (state: typeof MessagesAnnotation.State) => {
-        return [systemMessage, ...(state.messages ?? [])];
-      }
-    ).withConfig({ runName: PROMPT_RUNNABLE_NAME });
-  } else {
-    throw new Error(`Got unexpected type for 'prompt': ${typeof prompt}`);
+/**
+ * Normalizes a system prompt to a SystemMessage object.
+ * If it's already a SystemMessage, returns it as-is.
+ * If it's a string, converts it to a SystemMessage.
+ * If it's undefined, creates an empty system message so it is easier to append to it later.
+ */
+export function normalizeSystemPrompt(
+  systemPrompt?: string | SystemMessage
+): SystemMessage {
+  if (systemPrompt == null) {
+    return new SystemMessage("");
   }
-
-  return promptRunnable;
+  if (SystemMessage.isInstance(systemPrompt)) {
+    return systemPrompt;
+  }
+  if (typeof systemPrompt === "string") {
+    return new SystemMessage({
+      content: [{ type: "text", text: systemPrompt }],
+    });
+  }
+  throw new Error(
+    `Invalid systemPrompt type: expected string or SystemMessage, got ${typeof systemPrompt}`
+  );
 }
 
 /**

@@ -17,11 +17,11 @@ const contextSchema = z.object({
   runLimit: z.number().optional(),
   /**
    * The behavior to take when the limit is exceeded.
-   * - "throw" will throw an error and stop the agent.
+   * - "error" will throw an error and stop the agent.
    * - "end" will end the agent.
    * @default "end"
    */
-  exitBehavior: z.enum(["throw", "end"]).optional(),
+  exitBehavior: z.enum(["error", "end"]).optional(),
 });
 export type ModelCallLimitMiddlewareConfig = Partial<
   InferInteropZodInput<typeof contextSchema>
@@ -145,10 +145,19 @@ export function modelCallLimitMiddleware(
     beforeModel: {
       canJumpTo: ["end"],
       hook: (state, runtime) => {
-        const exitBehavior =
+        let exitBehavior =
           runtime.context.exitBehavior ??
           middlewareOptions?.exitBehavior ??
           DEFAULT_EXIT_BEHAVIOR;
+
+        // @ts-expect-error - throw is deprecated
+        if (exitBehavior === "throw") {
+          console.warn(
+            "The 'throw' exit behavior is deprecated. Please use 'error' instead."
+          );
+          exitBehavior = "error";
+        }
+
         const threadLimit =
           runtime.context.threadLimit ?? middlewareOptions?.threadLimit;
         const runLimit =

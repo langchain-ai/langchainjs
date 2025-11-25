@@ -1,6 +1,6 @@
 {
   "name": "@langchain/google-common",
-  "version": "1.0.0",
+  "version": "1.0.4",
   "description": "Core types and classes for Google services.",
   "type": "module",
   "engines": {
@@ -12,7 +12,8 @@
   },
   "homepage": "https://github.com/langchain-ai/langchainjs/tree/main/libs/langchain-google-common/",
   "scripts": {
-    "build": "pnpm --filter @langchain/build compile @langchain/google-common",
+    "build": "turbo build:compile --filter @langchain/google-common --output-logs new-only",
+    "build:compile": "tsdown",
     "lint:eslint": "eslint --cache src/",
     "lint:dpdm": "dpdm --skip-dynamic-imports circular --exit-code circular:1 --no-warning --no-tree src/*.ts src/**/*.ts",
     "lint": "pnpm lint:eslint && pnpm lint:dpdm",
@@ -23,7 +24,9 @@
     "test:single": "NODE_OPTIONS=--experimental-vm-modules pnpm run jest --config jest.config.cjs --testTimeout 100000",
     "test:int": "NODE_OPTIONS=--experimental-vm-modules jest --testPathPattern=\\.int\\.test.ts --testTimeout 100000 --maxWorkers=50%",
     "format": "prettier --config .prettierrc --write \"src\"",
-    "format:check": "prettier --config .prettierrc --check \"src\""
+    "format:check": "prettier --config .prettierrc --check \"src\"",
+    "typegen": "pnpm run typegen:profiles",
+    "typegen:profiles": "pnpm --filter @langchain/model-profiles make --config profiles.toml"
   },
   "author": "LangChain",
   "license": "MIT",
@@ -31,7 +34,7 @@
     "uuid": "^10.0.0"
   },
   "peerDependencies": {
-    "@langchain/core": "^1.0.0"
+    "@langchain/core": "workspace:*"
   },
   "devDependencies": {
     "@jest/globals": "^29.5.0",
@@ -55,62 +58,62 @@
   "publishConfig": {
     "access": "public"
   },
-  "main": "./dist/index.js",
-  "types": "./dist/index.d.ts",
+  "main": "./dist/index.cjs",
+  "types": "./dist/index.d.cts",
   "exports": {
     ".": {
       "input": "./src/index.ts",
-      "import": {
-        "types": "./dist/index.d.ts",
-        "default": "./dist/index.js"
-      },
       "require": {
         "types": "./dist/index.d.cts",
         "default": "./dist/index.cjs"
-      }
-    },
-    "./utils": {
-      "input": "./src/utils/index.ts",
-      "import": {
-        "types": "./dist/utils/index.d.ts",
-        "default": "./dist/utils/index.js"
       },
-      "require": {
-        "types": "./dist/utils/index.d.cts",
-        "default": "./dist/utils/index.cjs"
-      }
-    },
-    "./types": {
-      "input": "./src/types.ts",
       "import": {
-        "types": "./dist/types.d.ts",
-        "default": "./dist/types.js"
-      },
-      "require": {
-        "types": "./dist/types.d.cts",
-        "default": "./dist/types.cjs"
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
       }
     },
     "./experimental/media": {
       "input": "./src/experimental/media.ts",
-      "import": {
-        "types": "./dist/experimental/media.d.ts",
-        "default": "./dist/experimental/media.js"
-      },
       "require": {
         "types": "./dist/experimental/media.d.cts",
         "default": "./dist/experimental/media.cjs"
+      },
+      "import": {
+        "types": "./dist/experimental/media.d.ts",
+        "default": "./dist/experimental/media.js"
       }
     },
     "./experimental/utils/media_core": {
       "input": "./src/experimental/utils/media_core.ts",
-      "import": {
-        "types": "./dist/experimental/utils/media_core.d.ts",
-        "default": "./dist/experimental/utils/media_core.js"
-      },
       "require": {
         "types": "./dist/experimental/utils/media_core.d.cts",
         "default": "./dist/experimental/utils/media_core.cjs"
+      },
+      "import": {
+        "types": "./dist/experimental/utils/media_core.d.ts",
+        "default": "./dist/experimental/utils/media_core.js"
+      }
+    },
+    "./types": {
+      "input": "./src/types.ts",
+      "require": {
+        "types": "./dist/types.d.cts",
+        "default": "./dist/types.cjs"
+      },
+      "import": {
+        "types": "./dist/types.d.ts",
+        "default": "./dist/types.js"
+      }
+    },
+    "./utils": {
+      "input": "./src/utils/index.ts",
+      "require": {
+        "types": "./dist/utils/index.d.cts",
+        "default": "./dist/utils/index.cjs"
+      },
+      "import": {
+        "types": "./dist/utils/index.d.ts",
+        "default": "./dist/utils/index.js"
       }
     },
     "./package.json": "./package.json"
@@ -120,5 +123,6 @@
     "CHANGELOG.md",
     "README.md",
     "LICENSE"
-  ]
+  ],
+  "module": "./dist/index.js"
 }

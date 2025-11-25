@@ -29,6 +29,40 @@ export interface AbstractStream {
   get streamDone(): boolean;
 }
 
+/**
+ * Parse an SSE event line into key-value pair.
+ * Format: "field: value" or "field:value" (with optional whitespace after colon)
+ *
+ * Uses string operations instead of regex to avoid ReDoS vulnerabilities.
+ * This is safer and more performant than regex-based parsing.
+ */
+function parseEventLine(line: string): { key: string; value: string } | null {
+  const colonIndex = line.indexOf(":");
+  if (colonIndex === -1 || colonIndex === 0) {
+    return null;
+  }
+
+  const key = line.substring(0, colonIndex).trim();
+  if (key.length === 0) {
+    return null;
+  }
+
+  // Skip colon and any whitespace after it
+  let valueStart = colonIndex + 1;
+  while (
+    valueStart < line.length &&
+    (line[valueStart] === " " ||
+      line[valueStart] === "\t" ||
+      line[valueStart] === "\r" ||
+      line[valueStart] === "\n")
+  ) {
+    valueStart++;
+  }
+
+  const value = line.substring(valueStart);
+  return { key, value };
+}
+
 export function complexValue(value: unknown): unknown {
   if (value === null || typeof value === "undefined") {
     // I dunno what to put here. An error, probably
@@ -375,15 +409,13 @@ export class SseStream implements AbstractStream {
       return null;
     }
     const ret: Record<string, string> = {};
-
     const lines = event.split(/\n/);
     lines.forEach((line) => {
-      const match = line.match(/^([^:]+): \s*(.+)\n*$/);
-      if (match && match.length === 3) {
-        const key = match[1];
-        const val = match[2];
+      const parsed = parseEventLine(line);
+      if (parsed) {
+        const { key, value } = parsed;
         const cur = ret[key] ?? "";
-        ret[key] = `${cur}${val}`;
+        ret[key] = `${cur}${value}`;
       }
     });
 

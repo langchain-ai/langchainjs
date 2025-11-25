@@ -80,7 +80,7 @@ const tools = [
 ];
 
 describe("ModelCallLimitMiddleware", () => {
-  describe.each(["throw", "end"] as const)(
+  describe.each(["error", "end"] as const)(
     "run limit with exit behavior %s",
     (exitBehavior) => {
       it("should not throw if the run limit exceeds", async () => {
@@ -121,7 +121,7 @@ describe("ModelCallLimitMiddleware", () => {
          */
         expect(result.messages.at(-1)?.content).toBe("baz");
 
-        if (exitBehavior === "throw") {
+        if (exitBehavior === "error") {
           /**
            * next invocation should throw as 3 model calls are made
            */
@@ -143,7 +143,7 @@ describe("ModelCallLimitMiddleware", () => {
     }
   );
 
-  describe.each(["throw", "end"] as const)(
+  describe.each(["error", "end"] as const)(
     "thread limit with exit behavior %s",
     (exitBehavior) => {
       const checkpointer = new MemorySaver();
@@ -177,7 +177,7 @@ describe("ModelCallLimitMiddleware", () => {
           middleware: [middleware],
           checkpointer,
         });
-        if (exitBehavior === "throw") {
+        if (exitBehavior === "error") {
           const result = await agent2.invoke(
             { messages: ["Hello, world!"] },
             config
@@ -207,7 +207,7 @@ describe("ModelCallLimitMiddleware", () => {
           checkpointer,
           middleware: [middleware],
         });
-        if (exitBehavior === "throw") {
+        if (exitBehavior === "error") {
           await expect(
             agent.invoke({ messages: ["Hello, world!"] }, config)
           ).rejects.toThrow(

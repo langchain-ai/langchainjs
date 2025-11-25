@@ -1,6 +1,6 @@
 {
   "name": "@langchain/ollama",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Ollama integration for LangChain.js",
   "author": "LangChain",
   "license": "MIT",
@@ -14,7 +14,8 @@
   },
   "homepage": "https://github.com/langchain-ai/langchainjs/tree/main/libs/langchain-ollama/",
   "scripts": {
-    "build": "pnpm --filter @langchain/build compile @langchain/ollama",
+    "build": "turbo build:compile --filter @langchain/ollama --output-logs new-only",
+    "build:compile": "tsdown",
     "lint:eslint": "eslint --cache src/",
     "lint:dpdm": "dpdm --skip-dynamic-imports circular --exit-code circular:1 --no-warning --no-tree src/*.ts src/**/*.ts",
     "lint": "pnpm lint:eslint && pnpm lint:dpdm",
@@ -30,7 +31,7 @@
     "format:check": "prettier --config .prettierrc --check \"src\""
   },
   "dependencies": {
-    "ollama": "^0.5.12",
+    "ollama": "^0.6.3",
     "uuid": "^10.0.0"
   },
   "peerDependencies": {
@@ -55,18 +56,18 @@
   "publishConfig": {
     "access": "public"
   },
-  "main": "./dist/index.js",
-  "types": "./dist/index.d.ts",
+  "main": "./dist/index.cjs",
+  "types": "./dist/index.d.cts",
   "exports": {
     ".": {
       "input": "./src/index.ts",
-      "import": {
-        "types": "./dist/index.d.ts",
-        "default": "./dist/index.js"
-      },
       "require": {
         "types": "./dist/index.d.cts",
         "default": "./dist/index.cjs"
+      },
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
       }
     },
     "./package.json": "./package.json"
@@ -76,5 +77,6 @@
     "CHANGELOG.md",
     "README.md",
     "LICENSE"
-  ]
+  ],
+  "module": "./dist/index.js"
 }

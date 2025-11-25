@@ -1,6 +1,7 @@
 {
   "name": "@langchain/eslint",
-  "version": "0.1.0",
+  "version": "0.1.1",
+  "private": true,
   "description": "Shared ESLint configuration for LangChain.js projects",
   "author": "LangChain",
   "license": "MIT",
@@ -32,6 +33,7 @@
     "typescript": "^5.9.2"
   },
   "scripts": {
+    "build": "exit 0",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix"
   },

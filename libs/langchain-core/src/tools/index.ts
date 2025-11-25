@@ -33,6 +33,7 @@ import {
   type InteropZodType,
   interopParseAsync,
   isSimpleStringZodSchema,
+  isInteropZodError,
   isInteropZodSchema,
   type ZodStringV3,
   type ZodStringV4,
@@ -230,8 +231,7 @@ export abstract class StructuredTool<
         if (this.verboseParsingErrors) {
           message = `${message}\nDetails: ${(e as Error).message}`;
         }
-        // eslint-disable-next-line no-instanceof/no-instanceof
-        if (e instanceof Error && e.constructor.name === "ZodError") {
+        if (isInteropZodError(e)) {
           message = `${message}\n\n${z4.prettifyError(e as ZodError)}`;
         }
         // Pass the original raw input arg to the exception

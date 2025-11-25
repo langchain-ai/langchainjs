@@ -1,0 +1,234 @@
+import * as fs from "node:fs";
+import * as path from "node:path";
+import * as ts from "typescript";
+import prettier from "prettier";
+import type { ModelProfile } from "@langchain/core/language_models/profile";
+import type { Model, ProviderMap } from "./api-schema.js";
+import { type ModelProfileOverride, applyOverrides } from "./config.js";
+import { validatePathInMonorepo } from "./config.js";
+
+/**
+ * Converts a Model from the API schema to a ModelProfile.
+ */
+function modelToProfile(model: Model): ModelProfile {
+  return {
+    maxInputTokens: model.limit?.context,
+    imageInputs: model.modalities?.input?.includes("image") ?? false,
+    audioInputs: model.modalities?.input?.includes("audio") ?? false,
+    pdfInputs: model.modalities?.input?.includes("pdf") ?? false,
+    videoInputs: model.modalities?.input?.includes("video") ?? false,
+    maxOutputTokens: model.limit?.output,
+    reasoningOutput: model.reasoning ?? false,
+    imageOutputs: model.modalities?.output?.includes("image") ?? false,
+    audioOutputs: model.modalities?.output?.includes("audio") ?? false,
+    videoOutputs: model.modalities?.output?.includes("video") ?? false,
+    toolCalling: model.tool_call ?? false,
+    structuredOutput: model.structured_output ?? false,
+  };
+}
+
+/**
+ * Converts a JavaScript value to a TypeScript expression node.
+ */
+function valueToExpression(value: unknown): ts.Expression {
+  if (value === undefined || value === null) {
+    return ts.factory.createIdentifier("undefined");
+  }
+  if (typeof value === "boolean") {
+    return value ? ts.factory.createTrue() : ts.factory.createFalse();
+  }
+  if (typeof value === "number") {
+    return ts.factory.createNumericLiteral(value);
+  }
+  if (typeof value === "string") {
+    return ts.factory.createStringLiteral(value);
+  }
+  // Fallback to JSON for complex types
+  return ts.factory.createStringLiteral(JSON.stringify(value));
+}
+
+/**
+ * Generates TypeScript code for model profiles using the TypeScript AST API.
+ */
+function generateTypeScript(models: Record<string, ModelProfile>): string {
+  // Create property assignments for each profile
+  const modelProfiles = Object.entries(models).map(([modelName, profile]) => {
+    // Create property assignments for the profile
+    const profileProperties = Object.entries(profile)
+      .filter(([, value]) => value !== undefined)
+      .map(([key, value]) =>
+        ts.factory.createPropertyAssignment(
+          ts.factory.createIdentifier(key),
+          valueToExpression(value)
+        )
+      );
+
+    return ts.factory.createPropertyAssignment(
+      ts.factory.createStringLiteral(modelName),
+      ts.factory.createObjectLiteralExpression(profileProperties, true)
+    );
+  });
+
+  // Create the profiles object literal - use multiline for proper formatting
+  const profilesObject = ts.factory.createObjectLiteralExpression(
+    modelProfiles,
+    true // Use multiline to get newlines between entries
+  );
+
+  // Create the type annotation: Record<string, ModelProfile>
+  const recordType = ts.factory.createTypeReferenceNode(
+    ts.factory.createIdentifier("Record"),
+    [
+      ts.factory.createKeywordTypeNode(ts.SyntaxKind.StringKeyword),
+      ts.factory.createTypeReferenceNode(
+        ts.factory.createIdentifier("ModelProfile"),
+        undefined
+      ),
+    ]
+  );
+
+  // Create: const profiles: Record<string, ModelProfile> = { ... }
+  const profilesVariable = ts.factory.createVariableStatement(
+    undefined,
+    ts.factory.createVariableDeclarationList(
+      [
+        ts.factory.createVariableDeclaration(
+          ts.factory.createIdentifier("PROFILES"),
+          undefined,
+          recordType,
+          profilesObject
+        ),
+      ],
+      ts.NodeFlags.Const
+    )
+  );
+
+  // Create import: import type { ModelProfile } from "@langchain/core/language_models/profile";
+  const importSpecifier = ts.factory.createImportSpecifier(
+    false, // Specifier itself is not type-only (clause handles it)
+    undefined,
+    ts.factory.createIdentifier("ModelProfile")
+  );
+  const importDeclaration = ts.factory.createImportDeclaration(
+    undefined,
+    ts.factory.createImportClause(
+      true, // Mark the entire import clause as type-only
+      undefined,
+      ts.factory.createNamedImports([importSpecifier])
+    ),
+    ts.factory.createStringLiteral("@langchain/core/language_models/profile")
+  );
+
+  // Create export: export default models;
+  const exportDefault = ts.factory.createExportAssignment(
+    undefined,
+    false,
+    ts.factory.createIdentifier("PROFILES")
+  );
+
+  // Create the source file with empty statements for spacing
+  const sourceFile = ts.factory.createSourceFile(
+    [importDeclaration, profilesVariable, exportDefault],
+    ts.factory.createToken(ts.SyntaxKind.EndOfFileToken),
+    ts.NodeFlags.None
+  );
+
+  // Add JSDoc comment to the source file
+  ts.addSyntheticLeadingComment(
+    importDeclaration,
+    ts.SyntaxKind.MultiLineCommentTrivia,
+    "*\n * This file was automatically generated by an automated script. Do not edit manually.\n ",
+    true
+  );
+
+  // Print the source file to string
+  const printer = ts.createPrinter({
+    removeComments: false,
+  });
+  return printer.printFile(sourceFile);
+}
+
+/**
+ * Fetches provider data from the models.dev API.
+ */
+async function fetchProviderData(): Promise<ProviderMap> {
+  const response = await fetch("https://models.dev/api.json", {
+    signal: AbortSignal.timeout(30000),
+  });
+
+  if (!response.ok) {
+    throw new Error(`Failed to fetch models.dev API: ${response.statusText}`);
+  }
+
+  return (await response.json()) as ProviderMap;
+}
+
+/**
+ * Generates model profiles for a provider with overrides applied.
+ */
+export async function generateModelProfiles(
+  providerId: string,
+  providerOverrides: ModelProfileOverride,
+  modelOverrides: Record<string, ModelProfileOverride>,
+  outputPath: string
+): Promise<void> {
+  console.log(`Fetching provider data from models.dev API...`);
+  const data = await fetchProviderData();
+
+  const provider = data[providerId];
+  if (!provider) {
+    throw new Error(`Provider "${providerId}" not found in models.dev API`);
+  }
+
+  console.log(
+    `Found provider "${providerId}" with ${
+      Object.keys(provider.models).length
+    } models`
+  );
+
+  const profiles: Record<string, ModelProfile> = {};
+
+  for (const [modelName, modelData] of Object.entries(provider.models)) {
+    const baseProfile = modelToProfile(modelData);
+    const modelSpecificOverrides = modelOverrides[modelName];
+
+    const finalProfile = applyOverrides(
+      baseProfile,
+      providerOverrides,
+      modelSpecificOverrides
+    );
+
+    profiles[modelName] = finalProfile;
+  }
+
+  const typescriptCode = generateTypeScript(profiles);
+
+  // Validate that the output path is within the monorepo (defensive check)
+  // outputPath should already be validated by parseConfig, but we validate again for safety
+  const resolvedOutputPath = validatePathInMonorepo(outputPath);
+
+  // Ensure the directory exists
+  const outputDir = path.dirname(resolvedOutputPath);
+  if (!fs.existsSync(outputDir)) {
+    fs.mkdirSync(outputDir, { recursive: true });
+  }
+
+  // Format with Prettier using project's configuration
+  let formattedCode: string;
+  try {
+    const prettierConfig = await prettier.resolveConfig(resolvedOutputPath);
+    formattedCode = await prettier.format(typescriptCode, {
+      ...prettierConfig,
+      parser: "typescript",
+    });
+  } catch (error) {
+    console.warn(
+      "⚠️ Failed to format code with prettier, using unformatted code:",
+      error instanceof Error ? error.message : String(error)
+    );
+    formattedCode = typescriptCode;
+  }
+
+  fs.writeFileSync(resolvedOutputPath, formattedCode, "utf-8");
+  console.log(`✅ Generated model profiles file: ${resolvedOutputPath}`);
+}

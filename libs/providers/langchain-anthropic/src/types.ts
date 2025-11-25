@@ -31,6 +31,7 @@ export type AnthropicToolChoice =
   | "none"
   | string;
 export type ChatAnthropicToolType = Anthropic.Messages.Tool | BindToolsInput;
+export type ChatAnthropicOutputFormat = Anthropic.Beta.BetaJSONOutputFormat;
 
 export type AnthropicTextBlockParam = Anthropic.Messages.TextBlockParam;
 export type AnthropicImageBlockParam = Anthropic.Messages.ImageBlockParam;

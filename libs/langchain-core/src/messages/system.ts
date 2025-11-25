@@ -32,6 +32,37 @@ export class SystemMessage<
     super(fields);
   }
 
+  /**
+   * Concatenates a string or another system message with the current system message.
+   * @param chunk - The chunk to concatenate with the system message.
+   * @returns A new system message with the concatenated content.
+   */
+  concat(chunk: string | SystemMessage) {
+    if (typeof chunk === "string") {
+      return new SystemMessage({
+        ...this,
+        content: mergeContent(this.content, chunk),
+      });
+    }
+
+    if (SystemMessage.isInstance(chunk)) {
+      return new SystemMessage({
+        ...this,
+        additional_kwargs: {
+          ...this.additional_kwargs,
+          ...chunk.additional_kwargs,
+        },
+        response_metadata: {
+          ...this.response_metadata,
+          ...chunk.response_metadata,
+        },
+        content: mergeContent(this.content, chunk.content),
+      });
+    }
+
+    throw new Error("Unexpected chunk type for system message");
+  }
+
   static isInstance(obj: unknown): obj is SystemMessage {
     return super.isInstance(obj) && obj.type === "system";
   }

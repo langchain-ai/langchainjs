@@ -1,6 +1,6 @@
 {
   "name": "@langchain/google-cloud-sql-pg",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "LangChain.js integrations for Google Cloud SQL for PostgreSQL",
   "author": "Google LLC",
   "license": "MIT",
@@ -14,7 +14,8 @@
   },
   "homepage": "https://github.com/langchain-ai/langchainjs/tree/main/libs/langchain-google-cloud-sql-pg/",
   "scripts": {
-    "build": "pnpm --filter @langchain/build compile @langchain/google-cloud-sql-pg",
+    "build": "turbo build:compile --filter @langchain/google-cloud-sql-pg --output-logs new-only",
+    "build:compile": "tsdown",
     "lint:eslint": "eslint --cache src/",
     "lint:dpdm": "dpdm --skip-dynamic-imports circular --exit-code circular:1 --no-warning --no-tree src/*.ts src/**/*.ts",
     "lint": "pnpm lint:eslint && pnpm lint:dpdm",
@@ -29,7 +30,7 @@
   },
   "dependencies": {
     "@google-cloud/cloud-sql-connector": "^1.6.0",
-    "@langchain/core": "^1.0.4",
+    "@langchain/core": "workspace:*",
     "google-auth-library": "^9.15.0",
     "knex": "^3.1.0",
     "uuid": "^11.0.5"
@@ -58,18 +59,18 @@
   "publishConfig": {
     "access": "public"
   },
-  "main": "./dist/index.js",
-  "types": "./dist/index.d.ts",
+  "main": "./dist/index.cjs",
+  "types": "./dist/index.d.cts",
   "exports": {
     ".": {
       "input": "./src/index.ts",
-      "import": {
-        "types": "./dist/index.d.ts",
-        "default": "./dist/index.js"
-      },
       "require": {
         "types": "./dist/index.d.cts",
         "default": "./dist/index.cjs"
+      },
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
       }
     },
     "./package.json": "./package.json"
@@ -79,5 +80,6 @@
     "CHANGELOG.md",
     "README.md",
     "LICENSE"
-  ]
+  ],
+  "module": "./dist/index.js"
 }

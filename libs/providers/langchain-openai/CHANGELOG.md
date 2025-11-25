@@ -1,5 +1,31 @@
 # @langchain/openai
 
+## 1.1.3
+
+### Patch Changes
+
+- [#9416](https://github.com/langchain-ai/langchainjs/pull/9416) [`0fe9beb`](https://github.com/langchain-ai/langchainjs/commit/0fe9bebee6710f719e47f913eec1ec4f638e4de4) Thanks [@hntrl](https://github.com/hntrl)! - fix 'moduleResultion: "node"' compatibility
+
+## 1.1.2
+
+### Patch Changes
+
+- [#9408](https://github.com/langchain-ai/langchainjs/pull/9408) [`415cb0b`](https://github.com/langchain-ai/langchainjs/commit/415cb0bfd26207583befdb02367bd12a46b33d51) Thanks [@sinedied](https://github.com/sinedied)! - Fix missing and inconsistent user agent headers
+
+- [#9301](https://github.com/langchain-ai/langchainjs/pull/9301) [`a2ad61e`](https://github.com/langchain-ai/langchainjs/commit/a2ad61e787a06a55a615f63589a65ada05927792) Thanks [@sinedied](https://github.com/sinedied)! - support callable function for apiKey
+
+## 1.1.1
+
+### Patch Changes
+
+- [#9308](https://github.com/langchain-ai/langchainjs/pull/9308) [`04bd55c`](https://github.com/langchain-ai/langchainjs/commit/04bd55c63d8a0cb56f85da0b61a6bd6169b383f3) Thanks [@ro0sterjam](https://github.com/ro0sterjam)! - respect JSON schema references in interopZodTransformInputSchema
+
+- [#9387](https://github.com/langchain-ai/langchainjs/pull/9387) [`ac0d4fe`](https://github.com/langchain-ai/langchainjs/commit/ac0d4fe3807e05eb2185ae8a36da69498e6163d4) Thanks [@hntrl](https://github.com/hntrl)! - Add `ModelProfile` and `.profile` properties to ChatModel
+
+- [#9383](https://github.com/langchain-ai/langchainjs/pull/9383) [`39dbe63`](https://github.com/langchain-ai/langchainjs/commit/39dbe63e3d8390bb90bb8b17f00755fa648c5651) Thanks [@hntrl](https://github.com/hntrl)! - export converters
+
+- [#9397](https://github.com/langchain-ai/langchainjs/pull/9397) [`dfbe45f`](https://github.com/langchain-ai/langchainjs/commit/dfbe45f3cfade7a1dbe15b2d702a8e9f8e5ac93a) Thanks [@hntrl](https://github.com/hntrl)! - bump sdk version
+
 ## 1.1.0
 
 ### Minor Changes
