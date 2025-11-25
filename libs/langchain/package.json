@@ -42,6 +42,7 @@
     "clean": "rm -rf .turbo dist/",
     "test": "vitest run",
     "test:watch": "vitest --watch",
+    "test:bench": "vitest --mode bench --run",
     "test:integration": "vitest --mode int",
     "format": "prettier --config .prettierrc --write \"src\"",
     "format:check": "prettier --config .prettierrc --check \"src\""
@@ -68,6 +69,7 @@
     "reflect-metadata": "^0.2.2",
     "rimraf": "^5.0.1",
     "rollup": "^3.19.1",
+    "tinybench": "^5.1.0",
     "typeorm": "^0.3.26",
     "typescript": "~5.8.3",
     "vitest": "^3.2.4",

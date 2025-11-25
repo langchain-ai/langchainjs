@@ -23,6 +23,7 @@
     "prerelease": "BUILD_MODE=prerelease pnpm build",
     "release": "changeset publish",
     "test": "pnpm test:unit && pnpm test:exports:docker",
+    "test:bench": "turbo test:bench",
     "test:unit": "turbo test --filter=\"!test-exports-*\" --filter=!examples --filter=!create-langchain-integration",
     "test:unit:ci": "turbo test:ci",
     "test:ranges:docker": "docker compose -f dependency_range_tests/docker-compose.yml up --force-recreate",
