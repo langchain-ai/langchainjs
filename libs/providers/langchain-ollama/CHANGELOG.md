@@ -1,5 +1,11 @@
 # @langchain/ollama
 
+## 1.0.3
+
+### Patch Changes
+
+- [#9490](https://github.com/langchain-ai/langchainjs/pull/9490) [`57fe46f`](https://github.com/langchain-ai/langchainjs/commit/57fe46fdef09146814bf811dee6e439e01ced9a8) Thanks [@christian-bromann](https://github.com/christian-bromann)! - separate thinking content into reasoning_content field
+
 ## 1.0.2
 
 ### Patch Changes
