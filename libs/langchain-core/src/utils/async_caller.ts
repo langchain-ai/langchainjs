@@ -1,7 +1,19 @@
-import pRetry from "p-retry";
 import PQueueMod from "p-queue";
 
 import { getAbortSignalError } from "./signal.js";
+
+// p-retry is ESM-only, so we use dynamic import for CJS compatibility.
+// The module is cached after first import, so subsequent calls are essentially free.
+// This approach is recommended by the p-retry author for async contexts:
+// https://gist.github.com/sindresorhus/a39789f98801d908bbc7ff3ecc99d99c
+let pRetryModule: typeof import("p-retry") | null = null;
+
+async function getPRetry() {
+  if (!pRetryModule) {
+    pRetryModule = await import("p-retry");
+  }
+  return pRetryModule.default;
+}
 
 const STATUS_NO_RETRY = [
   400, // Bad Request
@@ -103,10 +115,11 @@ export class AsyncCaller {
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  call<A extends any[], T extends (...args: A) => Promise<any>>(
+  async call<A extends any[], T extends (...args: A) => Promise<any>>(
     callable: T,
     ...args: Parameters<T>
   ): Promise<Awaited<ReturnType<T>>> {
+    const pRetry = await getPRetry();
     return this.queue.add(
       () =>
         pRetry(
