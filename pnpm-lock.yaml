@@ -2902,7 +2902,7 @@ importers:
   libs/providers/langchain-mongodb:
     dependencies:
       mongodb:
-        specifier: ^6.17.0
+        specifier: ^6.20.0
         version: 6.20.0(@aws-sdk/credential-providers@3.932.0)(socks@2.8.6)
     devDependencies:
       '@langchain/core':
