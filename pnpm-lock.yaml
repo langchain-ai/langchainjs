@@ -1176,7 +1176,7 @@ importers:
         specifier: ^3.5.2
         version: 3.7.0
       '@ibm-cloud/watsonx-ai':
-        specifier: ^1.7.3
+        specifier: ^1.7.4
         version: 1.7.4
       '@jest/globals':
         specifier: ^29.5.0
@@ -19968,12 +19968,12 @@ snapshots:
   '@grpc/grpc-js@1.7.3':
     dependencies:
       '@grpc/proto-loader': 0.7.15
-      '@types/node': 24.10.0
+      '@types/node': 24.10.1
 
   '@grpc/grpc-js@1.9.0':
     dependencies:
       '@grpc/proto-loader': 0.7.15
-      '@types/node': 24.10.0
+      '@types/node': 24.10.1
 
   '@grpc/proto-loader@0.7.15':
     dependencies:
@@ -20319,7 +20319,7 @@ snapshots:
     dependencies:
       '@jest/fake-timers': 30.0.5
       '@jest/types': 30.0.5
-      '@types/node': 24.10.0
+      '@types/node': 24.10.1
       jest-mock: 30.0.5
 
   '@jest/expect-utils@29.7.0':
@@ -20506,7 +20506,7 @@ snapshots:
       '@jest/schemas': 30.0.5
       '@types/istanbul-lib-coverage': 2.0.6
       '@types/istanbul-reports': 3.0.4
-      '@types/node': 24.10.0
+      '@types/node': 24.10.1
       '@types/yargs': 17.0.33
       chalk: 4.1.2
 
@@ -22907,7 +22907,7 @@ snapshots:
 
   '@types/node-fetch@2.6.13':
     dependencies:
-      '@types/node': 24.10.0
+      '@types/node': 24.10.1
       form-data: 4.0.4
 
   '@types/node@12.20.55': {}
@@ -27833,7 +27833,7 @@ snapshots:
   jest-mock@30.0.5:
     dependencies:
       '@jest/types': 30.0.5
-      '@types/node': 24.10.0
+      '@types/node': 24.10.1
       jest-util: 30.0.5
 
   jest-pnp-resolver@1.2.3(jest-resolve@29.7.0):
@@ -30000,7 +30000,7 @@ snapshots:
       '@protobufjs/path': 1.1.2
       '@protobufjs/pool': 1.1.0
       '@protobufjs/utf8': 1.1.0
-      '@types/node': 24.10.0
+      '@types/node': 24.10.1
       long: 5.3.2
 
   protoc-gen-ts@0.8.7: {}
