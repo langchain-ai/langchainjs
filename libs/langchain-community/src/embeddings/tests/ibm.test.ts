@@ -1,4 +1,3 @@
- 
 /* eslint-disable dot-notation */
 import { Gateway } from "@ibm-cloud/watsonx-ai/gateway";
 import { jest } from "@jest/globals";
