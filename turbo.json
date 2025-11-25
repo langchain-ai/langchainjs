@@ -40,8 +40,8 @@
     "test": {
       "cache": false,
       "dependsOn": [
-        "^build",
-        "build"
+        "^build:compile",
+        "build:compile"
       ]
     },
     "test:ci": {
