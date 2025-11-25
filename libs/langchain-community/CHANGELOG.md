@@ -1,5 +1,17 @@
 # @langchain/community
 
+## 1.0.6
+
+### Patch Changes
+
+- [#9501](https://github.com/langchain-ai/langchainjs/pull/9501) [`8b9f66f`](https://github.com/langchain-ai/langchainjs/commit/8b9f66f7212f5fc1607566c130d247c2e17ca546) Thanks [@hntrl](https://github.com/hntrl)! - fix community exports (#9494)
+
+- [#9498](https://github.com/langchain-ai/langchainjs/pull/9498) [`31240d4`](https://github.com/langchain-ai/langchainjs/commit/31240d4314ec3bc776fa8aea7c33870c6ffa5a72) Thanks [@hntrl](https://github.com/hntrl)! - enable model gateway usage in IBM implementation
+
+- Updated dependencies []:
+  - @langchain/classic@1.0.5
+  - @langchain/openai@1.1.3
+
 ## 1.0.5
 
 ### Patch Changes
