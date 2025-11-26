@@ -8,6 +8,7 @@ import {
   type MockedFunction,
 } from "vitest";
 import { drawMermaidImage } from "../graph_mermaid.js";
+import { toBase64Url } from "../utils.js";
 
 // Mock global fetch
 const mockFetch = vi.fn() as MockedFunction<typeof fetch>;
@@ -36,7 +37,7 @@ describe("drawMermaidImage", () => {
     expect(mockFetch).toHaveBeenCalledTimes(1);
 
     // Check the URL construction
-    const expectedEncodedSyntax = btoa(mermaidSyntax);
+    const expectedEncodedSyntax = toBase64Url(mermaidSyntax);
     const expectedUrl = `https://mermaid.ink/img/${expectedEncodedSyntax}?bgColor=!white&type=png`;
     expect(mockFetch).toHaveBeenCalledWith(expectedUrl);
   });
@@ -54,7 +55,7 @@ describe("drawMermaidImage", () => {
     });
 
     expect(result).toBe(mockBlob);
-    const expectedEncodedSyntax = btoa(mermaidSyntax);
+    const expectedEncodedSyntax = toBase64Url(mermaidSyntax);
     const expectedUrl = `https://mermaid.ink/img/${expectedEncodedSyntax}?bgColor=!white&type=jpeg`;
     expect(mockFetch).toHaveBeenCalledWith(expectedUrl);
   });
@@ -72,7 +73,7 @@ describe("drawMermaidImage", () => {
     });
 
     expect(result).toBe(mockBlob);
-    const expectedEncodedSyntax = btoa(mermaidSyntax);
+    const expectedEncodedSyntax = toBase64Url(mermaidSyntax);
     const expectedUrl = `https://mermaid.ink/img/${expectedEncodedSyntax}?bgColor=!white&type=webp`;
     expect(mockFetch).toHaveBeenCalledWith(expectedUrl);
   });
@@ -90,7 +91,7 @@ describe("drawMermaidImage", () => {
     });
 
     expect(result).toBe(mockBlob);
-    const expectedEncodedSyntax = btoa(mermaidSyntax);
+    const expectedEncodedSyntax = toBase64Url(mermaidSyntax);
     const expectedUrl = `https://mermaid.ink/img/${expectedEncodedSyntax}?bgColor=#FF5733&type=png`;
     expect(mockFetch).toHaveBeenCalledWith(expectedUrl);
   });
@@ -108,7 +109,7 @@ describe("drawMermaidImage", () => {
     });
 
     expect(result).toBe(mockBlob);
-    const expectedEncodedSyntax = btoa(mermaidSyntax);
+    const expectedEncodedSyntax = toBase64Url(mermaidSyntax);
     const expectedUrl = `https://mermaid.ink/img/${expectedEncodedSyntax}?bgColor=#FFF&type=png`;
     expect(mockFetch).toHaveBeenCalledWith(expectedUrl);
   });
@@ -126,7 +127,7 @@ describe("drawMermaidImage", () => {
     });
 
     expect(result).toBe(mockBlob);
-    const expectedEncodedSyntax = btoa(mermaidSyntax);
+    const expectedEncodedSyntax = toBase64Url(mermaidSyntax);
     const expectedUrl = `https://mermaid.ink/img/${expectedEncodedSyntax}?bgColor=!transparent&type=png`;
     expect(mockFetch).toHaveBeenCalledWith(expectedUrl);
   });
@@ -176,7 +177,7 @@ describe("drawMermaidImage", () => {
     const result = await drawMermaidImage(complexSyntax);
 
     expect(result).toBe(mockBlob);
-    const expectedEncodedSyntax = btoa(complexSyntax);
+    const expectedEncodedSyntax = toBase64Url(complexSyntax);
     const expectedUrl = `https://mermaid.ink/img/${expectedEncodedSyntax}?bgColor=!white&type=png`;
     expect(mockFetch).toHaveBeenCalledWith(expectedUrl);
   });
@@ -194,7 +195,7 @@ describe("drawMermaidImage", () => {
     });
 
     expect(result).toBe(mockBlob);
-    const expectedEncodedSyntax = btoa(mermaidSyntax);
+    const expectedEncodedSyntax = toBase64Url(mermaidSyntax);
     const expectedUrl = `https://mermaid.ink/img/${expectedEncodedSyntax}?bgColor=!white&type=png`;
     expect(mockFetch).toHaveBeenCalledWith(expectedUrl);
   });
