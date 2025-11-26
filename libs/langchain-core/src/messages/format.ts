@@ -32,7 +32,11 @@ function convertToPrettyString(message: BaseMessage): string {
         lines.push(` Call ID: ${tc.id}`);
         lines.push("  Args:");
         for (const [key, value] of Object.entries(tc.args)) {
-          lines.push(`    ${key}: ${value}`);
+          lines.push(
+            `    ${key}: ${
+              typeof value === "object" ? JSON.stringify(value) : value
+            }`
+          );
         }
       }
     }
