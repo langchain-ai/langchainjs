@@ -113,7 +113,6 @@ export class FileSystemChatMessageHistory extends BaseListChatMessageHistory {
 
   protected async loadStore(): Promise<FileChatStore> {
     try {
-      await fs.access(this.filePath, fs.constants.F_OK);
       const store = await fs.readFile(this.filePath, "utf-8");
       return JSON.parse(store) as FileChatStore;
     } catch (_error) {
