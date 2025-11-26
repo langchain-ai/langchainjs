@@ -40,6 +40,7 @@ import {
   GoogleSearchToolSetting,
   GoogleSpeechConfig,
   GeminiJsonSchema,
+  GoogleAIResponseMimeType,
 } from "./types.js";
 import {
   convertToGeminiTools,
@@ -221,6 +222,8 @@ export abstract class ChatGoogleBase<AuthOptions>
   safetySettings: GoogleAISafetySetting[] = [];
 
   responseModalities?: GoogleAIModelModality[];
+
+  responseMimeType?: GoogleAIResponseMimeType;
 
   // May intentionally be undefined, meaning to compute this.
   convertSystemMessageToHumanContent: boolean | undefined;
@@ -470,6 +473,10 @@ export abstract class ChatGoogleBase<AuthOptions>
     config?: StructuredOutputMethodOptions<true>
   ): Runnable<BaseLanguageModelInput, { raw: BaseMessage; parsed: RunOutput }>;
 
+  /**
+   * Creates a structured output version that enforces a specific schema.
+   * Automatically sets responseMimeType to "application/json" for optimal function calling.
+   */
   withStructuredOutput<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     RunOutput extends Record<string, any> = Record<string, any>
@@ -545,7 +552,13 @@ export abstract class ChatGoogleBase<AuthOptions>
         keyName: functionName,
       });
     }
-    const llm = this.bindTools(tools).withConfig({ tool_choice: functionName });
+    // Configure for structured output: set responseMimeType to "application/json"
+    // This ensures the function calling mode is set to "auto" instead of "any"
+    // for optimal performance when extracting structured data
+    const llm = this.bindTools(tools).withConfig({ 
+      tool_choice: functionName,
+      responseMimeType: "application/json"
+    });
 
     if (!includeRaw) {
       return llm.pipe(outputParser).withConfig({
