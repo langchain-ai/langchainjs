@@ -122,7 +122,7 @@ export type JiraIssue = {
   fields: {
     assignee?: JiraUser;
     created: string;
-    description: string;
+    description: ADFNode;
     issuelinks: JiraIssueLink[];
     issuetype: JiraIssueType;
     labels?: string[];
@@ -150,6 +150,28 @@ export type JiraAPIResponse = {
   total: number;
   issues: JiraIssue[];
 };
+
+export interface ADFNode {
+  type: string;
+  text?: string;
+  content?: ADFNode[];
+}
+
+export interface ADFDocument extends ADFNode {
+  type: "doc";
+  version: number;
+  content: ADFNode[];
+}
+
+export function adfToText(adf: ADFNode | null | undefined): string {
+  if (!adf || !adf.content) return "";
+  const recur = (node: ADFNode): string => {
+    if (node.text) return node.text;
+    if (node.content) return node.content.map(recur).join("");
+    return "";
+  };
+  return recur(adf).trim();
+}
 
 /**
  * Interface representing the parameters for configuring the
@@ -198,60 +220,77 @@ export class JiraDocumentConverter {
     issue: JiraIssue;
     host: string;
   }): string {
+    const {
+      project,
+      status,
+      priority,
+      issuetype,
+      creator,
+      labels,
+      created,
+      updated,
+      reporter,
+      assignee,
+      duedate,
+      timeestimate,
+      timespent,
+      resolutiondate,
+      description,
+      progress,
+      parent,
+      subtasks,
+      issuelinks,
+    } = issue.fields;
+
     let text = `Issue: ${this.formatMainIssueInfoText({ issue, host })}\n`;
-    text += `Project: ${issue.fields.project.name} (${issue.fields.project.key}, ID ${issue.fields.project.id})\n`;
-    text += `Status: ${issue.fields.status.name}\n`;
-    text += `Priority: ${issue.fields.priority.name}\n`;
-    text += `Type: ${issue.fields.issuetype.name}\n`;
-    text += `Creator: ${issue.fields.creator?.displayName}\n`;
+    text += `Project: ${project.name} (${project.key}, ID ${project.id})\n`;
+    text += `Status: ${status.name}\n`;
+    text += `Priority: ${priority.name}\n`;
+    text += `Type: ${issuetype.name}\n`;
+    text += `Creator: ${creator?.displayName}\n`;
 
-    if (issue.fields.labels && issue.fields.labels.length > 0) {
-      text += `Labels: ${issue.fields.labels.join(", ")}\n`;
+    if (labels?.length) {
+      text += `Labels: ${labels.join(", ")}\n`;
     }
 
-    text += `Created: ${issue.fields.created}\n`;
-    text += `Updated: ${issue.fields.updated}\n`;
+    text += `Created: ${created}\n`;
+    text += `Updated: ${updated}\n`;
 
-    if (issue.fields.reporter) {
-      text += `Reporter: ${issue.fields.reporter.displayName}\n`;
+    if (reporter) {
+      text += `Reporter: ${reporter.displayName}\n`;
     }
 
-    text += `Assignee: ${issue.fields.assignee?.displayName ?? "Unassigned"}\n`;
+    text += `Assignee: ${assignee?.displayName ?? "Unassigned"}\n`;
 
-    if (issue.fields.duedate) {
-      text += `Due Date: ${issue.fields.duedate}\n`;
+    if (duedate) {
+      text += `Due Date: ${duedate}\n`;
+    }
+    if (timeestimate) {
+      text += `Time Estimate: ${timeestimate}\n`;
+    }
+    if (timespent) {
+      text += `Time Spent: ${timespent}\n`;
+    }
+    if (resolutiondate) {
+      text += `Resolution Date: ${resolutiondate}\n`;
+    }
+    if (description) {
+      text += `Description: ${adfToText(description)}\n`;
+    }
+    if (progress?.percent) {
+      text += `Progress: ${progress.percent}%\n`;
     }
 
-    if (issue.fields.timeestimate) {
-      text += `Time Estimate: ${issue.fields.timeestimate}\n`;
-    }
-
-    if (issue.fields.timespent) {
-      text += `Time Spent: ${issue.fields.timespent}\n`;
-    }
-
-    if (issue.fields.resolutiondate) {
-      text += `Resolution Date: ${issue.fields.resolutiondate}\n`;
-    }
-
-    if (issue.fields.description) {
-      text += `Description: ${issue.fields.description}\n`;
-    }
-
-    if (issue.fields.progress?.percent) {
-      text += `Progress: ${issue.fields.progress.percent}%\n`;
-    }
-
-    if (issue.fields.parent) {
+    if (parent) {
       text += `Parent Issue: ${this.formatMainIssueInfoText({
-        issue: issue.fields.parent,
+        issue: parent,
         host,
       })}\n`;
     }
 
-    if (issue.fields.subtasks?.length > 0) {
+    if (subtasks?.length) {
       text += `Subtasks:\n`;
-      issue.fields.subtasks.forEach((subtask) => {
+      subtasks.forEach((subtask) => {
         text += `  - ${this.formatMainIssueInfoText({
           issue: subtask,
           host,
@@ -259,9 +298,9 @@ export class JiraDocumentConverter {
       });
     }
 
-    if (issue.fields.issuelinks?.length > 0) {
+    if (issuelinks?.length) {
       text += `Issue Links:\n`;
-      issue.fields.issuelinks.forEach((link) => {
+      issuelinks.forEach((link) => {
         text += `  - ${link.type.name}\n`;
         if (link.inwardIssue) {
           text += `    - ${this.formatMainIssueInfoText({
@@ -321,10 +360,11 @@ export interface JiraProjectLoaderParams {
   personalAccessToken?: string;
   limitPerRequest?: number;
   createdAfter?: Date;
+  filterFn?: (issue: JiraIssue) => boolean;
 }
 
 const API_ENDPOINTS = {
-  SEARCH: "/rest/api/2/search",
+  SEARCH: "/rest/api/3/search/jql",
 };
 
 /**
@@ -343,6 +383,8 @@ export class JiraProjectLoader extends BaseDocumentLoader {
 
   private readonly createdAfter?: Date;
 
+  private readonly filterFn?: (issue: JiraIssue) => boolean;
+
   private readonly documentConverter: JiraDocumentConverter;
 
   private readonly personalAccessToken?: string;
@@ -355,6 +397,7 @@ export class JiraProjectLoader extends BaseDocumentLoader {
     limitPerRequest = 100,
     createdAfter,
     personalAccessToken,
+    filterFn,
   }: JiraProjectLoaderParams) {
     super();
     this.host = host;
@@ -365,6 +408,7 @@ export class JiraProjectLoader extends BaseDocumentLoader {
     this.createdAfter = createdAfter;
     this.documentConverter = new JiraDocumentConverter({ host, projectKey });
     this.personalAccessToken = personalAccessToken;
+    this.filterFn = filterFn;
   }
 
   private buildAuthorizationHeader(): string {
@@ -379,7 +423,13 @@ export class JiraProjectLoader extends BaseDocumentLoader {
   public async load(): Promise<Document[]> {
     try {
       const allJiraIssues = await this.loadAsIssues();
-      return this.documentConverter.convertToDocuments(allJiraIssues);
+      const filtered = allJiraIssues.filter((issue) => {
+        if (this.filterFn) {
+          return this.filterFn(issue);
+        }
+        return true;
+      });
+      return this.documentConverter.convertToDocuments(filtered);
     } catch (error) {
       console.error("Error:", error);
       return [];
@@ -416,12 +466,17 @@ export class JiraProjectLoader extends BaseDocumentLoader {
       try {
         const jqlProps = [
           `project=${this.projectKey}`,
-          ...(createdAfterAsString ? [`created>=${createdAfterAsString}`] : []),
+          ...(createdAfterAsString
+            ? [`created>= "${createdAfterAsString}"`]
+            : []),
         ];
+        const jql = `${jqlProps.join(" AND ")} ORDER BY created ASC, key ASC`;
+
         const params = new URLSearchParams({
-          jql: jqlProps.join(" AND "),
+          jql,
           startAt: `${startAt}`,
           maxResults: `${this.limitPerRequest}`,
+          fields: "*all",
         });
         const pageUrl = `${url}?${params}`;
 
@@ -438,11 +493,20 @@ export class JiraProjectLoader extends BaseDocumentLoader {
 
         if (!data.issues || data.issues.length === 0) break;
 
-        yield data.issues;
+        const allIssues = [];
+        for (const issue of data.issues) {
+          allIssues.push(issue);
+        }
+
+        if (allIssues.length > 0) yield allIssues;
+
         startAt += this.limitPerRequest;
+
+        if (data.issues.length < this.limitPerRequest) break;
       } catch (error) {
-        console.error(error);
+        console.error("Error fetching Jira issues:", error);
         yield [];
+        break;
       }
     }
   }
