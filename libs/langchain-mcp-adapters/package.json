@@ -1,6 +1,6 @@
 {
   "name": "@langchain/mcp-adapters",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "LangChain.js adapters for Model Context Protocol (MCP)",
   "author": "LangChain",
   "license": "MIT",
@@ -15,8 +15,8 @@
     "url": "https://github.com/langchain-ai/langchainjs/issues"
   },
   "scripts": {
-    "build": "run-s build:main build:examples",
-    "build:main": "pnpm --filter @langchain/build compile @langchain/mcp-adapters",
+    "build": "turbo build:compile build:examples --filter @langchain/core --output-logs new-only",
+    "build:compile": "tsdown",
     "build:examples": "tsc -p ./examples/tsconfig.json",
     "clean": "rm -rf dist/ dist-cjs/ .turbo/",
     "format": "prettier --config .prettierrc --write \"src/**/*.ts\" \"examples/**/*.ts\"",
@@ -87,18 +87,18 @@
   "directories": {
     "example": "examples"
   },
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "main": "./dist/index.cjs",
+  "types": "./dist/index.d.cts",
   "exports": {
     ".": {
       "input": "./src/index.ts",
-      "import": {
-        "types": "./dist/index.d.ts",
-        "default": "./dist/index.js"
-      },
       "require": {
         "types": "./dist/index.d.cts",
         "default": "./dist/index.cjs"
+      },
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
       }
     },
     "./package.json": "./package.json"
@@ -108,5 +108,6 @@
     "CHANGELOG.md",
     "README.md",
     "LICENSE"
-  ]
+  ],
+  "module": "./dist/index.js"
 }

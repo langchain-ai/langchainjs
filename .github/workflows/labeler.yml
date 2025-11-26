@@ -12,9 +12,14 @@ permissions:
 jobs:
   label:
     runs-on: ubuntu-latest
+    # Skip labeling for release PRs
+    if: |
+      !contains(github.event.pull_request.title, 'Version Packages') &&
+      !contains(github.event.pull_request.title, 'version packages') &&
+      !contains(github.event.pull_request.title, 'chore: version packages')
     steps:
       - name: Label PR based on file paths
-        uses: actions/labeler@v5
+        uses: actions/labeler@634933edcd8ababfe52f92936142cc22ac488b1b # v6.0.1
         with:
           repo-token: "${{ secrets.GITHUB_TOKEN }}"
           sync-labels: true # Remove labels when files no longer match

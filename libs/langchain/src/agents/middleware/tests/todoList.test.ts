@@ -41,7 +41,7 @@ describe("todoListMiddleware", () => {
     expect(result.todos).toEqual([]);
     const [messages] = (model.invoke as unknown as MockInstance).mock
       .calls[0][0];
-    expect(messages.content).toContain(
+    expect(messages.text).toContain(
       "You are a helpful assistant.\n\n## `write_todos`\n\nYou have "
     );
   });
@@ -137,7 +137,23 @@ describe("todoListMiddleware", () => {
       (msg: { role: string; content: string }) => msg.role === "system"
     );
     expect(systemMessage).toBeDefined();
-    expect(systemMessage.content).toContain("Custom system prompt");
+    expect(systemMessage).toMatchInlineSnapshot(`
+      {
+        "content": [
+          {
+            "text": "You are a helpful assistant.",
+            "type": "text",
+          },
+          {
+            "text": "
+
+      Custom system prompt",
+            "type": "text",
+          },
+        ],
+        "role": "system",
+      }
+    `);
     expect(requestBody.tools[0].function.description).toContain(
       "Custom tool description"
     );

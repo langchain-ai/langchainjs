@@ -2,10 +2,14 @@ import { DocumentInterface } from "@langchain/core/documents";
 import { BaseDocumentCompressor } from "@langchain/core/retrievers/document_compressors";
 import { WatsonXAI } from "@ibm-cloud/watsonx-ai";
 import { AsyncCaller } from "@langchain/core/utils/async_caller";
-import { WatsonxAuth, WatsonxParams } from "../types/ibm.js";
+import { TextRerankParams } from "@ibm-cloud/watsonx-ai/dist/watsonx-ai-ml/vml_v1.js";
+import { WatsonxAuth, WatsonxRerankBasicOptions } from "../types/ibm.js";
 import { authenticateAndSetInstance } from "../utils/ibm.js";
 
-export interface WatsonxInputRerank extends Omit<WatsonxParams, "idOrName"> {
+export interface WatsonxInputRerank
+  extends Omit<TextRerankParams, "modelId" | "inputs" | "query">,
+    WatsonxRerankBasicOptions {
+  model: string;
   truncateInputTokens?: number;
   returnOptions?: {
     topN?: number;

@@ -1,4 +1,5 @@
 import { z } from "zod/v3";
+import { z as z4 } from "zod/v4";
 import { v4 as uuid } from "uuid";
 import {
   BaseMessage,
@@ -9,11 +10,14 @@ import {
   trimMessages,
   HumanMessage,
 } from "@langchain/core/messages";
-import { BaseLanguageModel } from "@langchain/core/language_models/base";
 import {
-  interopParse,
-  InferInteropZodOutput,
+  BaseLanguageModel,
+  getModelContextSize,
+} from "@langchain/core/language_models/base";
+import {
+  interopSafeParse,
   InferInteropZodInput,
+  InferInteropZodOutput,
 } from "@langchain/core/utils/types";
 import { REMOVE_ALL_MESSAGES } from "@langchain/langgraph";
 import { createMiddleware } from "../middleware.js";
@@ -21,7 +25,7 @@ import { countTokensApproximately } from "./utils.js";
 import { hasToolCalls } from "../utils.js";
 import { initChatModel } from "../../chat_models/universal.js";
 
-const DEFAULT_SUMMARY_PROMPT = `<role>
+export const DEFAULT_SUMMARY_PROMPT = `<role>
 Context Extraction Assistant
 </role>
 
@@ -49,31 +53,174 @@ Messages to summarize:
 {messages}
 </messages>`;
 
-const SUMMARY_PREFIX = "## Previous conversation summary:";
-
 const DEFAULT_MESSAGES_TO_KEEP = 20;
 const DEFAULT_TRIM_TOKEN_LIMIT = 4000;
 const DEFAULT_FALLBACK_MESSAGE_COUNT = 15;
 const SEARCH_RANGE_FOR_TOOL_PAIRS = 5;
 
-type TokenCounter = (messages: BaseMessage[]) => number | Promise<number>;
+const tokenCounterSchema = z
+  .function()
+  .args(z.array(z.custom<BaseMessage>()))
+  .returns(z.union([z.number(), z.promise(z.number())]));
+export type TokenCounter = (
+  messages: BaseMessage[]
+) => number | Promise<number>;
+
+export const contextSizeSchema = z
+  .object({
+    /**
+     * Fraction of the model's context size to use as the trigger
+     */
+    fraction: z
+      .number()
+      .gt(0, "Fraction must be greater than 0")
+      .max(1, "Fraction must be less than or equal to 1")
+      .optional(),
+    /**
+     * Number of tokens to use as the trigger
+     */
+    tokens: z.number().positive("Tokens must be greater than 0").optional(),
+    /**
+     * Number of messages to use as the trigger
+     */
+    messages: z
+      .number()
+      .int("Messages must be an integer")
+      .positive("Messages must be greater than 0")
+      .optional(),
+  })
+  .refine(
+    (data) => {
+      const count = [data.fraction, data.tokens, data.messages].filter(
+        (v) => v !== undefined
+      ).length;
+      return count >= 1;
+    },
+    {
+      message: "At least one of fraction, tokens, or messages must be provided",
+    }
+  );
+export type ContextSize = z.infer<typeof contextSizeSchema>;
+
+export const keepSchema = z
+  .object({
+    /**
+     * Fraction of the model's context size to keep
+     */
+    fraction: z
+      .number()
+      .min(0, "Messages must be non-negative")
+      .max(1, "Fraction must be less than or equal to 1")
+      .optional(),
+    /**
+     * Number of tokens to keep
+     */
+    tokens: z
+      .number()
+      .min(0, "Tokens must be greater than or equal to 0")
+      .optional(),
+    messages: z
+      .number()
+      .int("Messages must be an integer")
+      .min(0, "Messages must be non-negative")
+      .optional(),
+  })
+  .refine(
+    (data) => {
+      const count = [data.fraction, data.tokens, data.messages].filter(
+        (v) => v !== undefined
+      ).length;
+      return count === 1;
+    },
+    {
+      message: "Exactly one of fraction, tokens, or messages must be provided",
+    }
+  );
+export type KeepSize = z.infer<typeof keepSchema>;
 
 const contextSchema = z.object({
+  /**
+   * Model to use for summarization
+   */
   model: z.custom<string | BaseLanguageModel>(),
-  maxTokensBeforeSummary: z.number().optional(),
-  messagesToKeep: z.number().default(DEFAULT_MESSAGES_TO_KEEP),
-  tokenCounter: z
-    .function()
-    .args(z.array(z.any()))
-    .returns(z.union([z.number(), z.promise(z.number())]))
-    .optional(),
+  /**
+   * Trigger conditions for summarization.
+   * Can be a single condition object (all properties must be met) or an array of conditions (any condition must be met).
+   *
+   * @example
+   * ```ts
+   * // Single condition: trigger if tokens >= 5000 AND messages >= 3
+   * trigger: { tokens: 5000, messages: 3 }
+   *
+   * // Multiple conditions: trigger if (tokens >= 5000 AND messages >= 3) OR (tokens >= 3000 AND messages >= 6)
+   * trigger: [
+   *   { tokens: 5000, messages: 3 },
+   *   { tokens: 3000, messages: 6 }
+   * ]
+   * ```
+   */
+  trigger: z.union([contextSizeSchema, z.array(contextSizeSchema)]).optional(),
+  /**
+   * Keep conditions for summarization
+   */
+  keep: keepSchema.optional(),
+  /**
+   * Token counter function to use for summarization
+   */
+  tokenCounter: tokenCounterSchema.optional(),
+  /**
+   * Summary prompt to use for summarization
+   * @default {@link DEFAULT_SUMMARY_PROMPT}
+   */
   summaryPrompt: z.string().default(DEFAULT_SUMMARY_PROMPT),
-  summaryPrefix: z.string().default(SUMMARY_PREFIX),
+  /**
+   * Number of tokens to trim to before summarizing
+   */
+  trimTokensToSummarize: z.number().optional(),
+  /**
+   * Prefix to add to the summary
+   */
+  summaryPrefix: z.string().optional(),
+  /**
+   * @deprecated Use `trigger: { tokens: value }` instead.
+   */
+  maxTokensBeforeSummary: z.number().optional(),
+  /**
+   * @deprecated Use `keep: { messages: value }` instead.
+   */
+  messagesToKeep: z.number().optional(),
 });
 
 export type SummarizationMiddlewareConfig = InferInteropZodInput<
   typeof contextSchema
 >;
+
+/**
+ * Get max input tokens from model profile or fallback to model name lookup
+ */
+export function getProfileLimits(input: BaseLanguageModel): number | undefined {
+  // Access maxInputTokens on the model profile directly if available
+  if (
+    "profile" in input &&
+    typeof input.profile === "object" &&
+    input.profile &&
+    "maxInputTokens" in input.profile &&
+    (typeof input.profile.maxInputTokens === "number" ||
+      input.profile.maxInputTokens == null)
+  ) {
+    return input.profile.maxInputTokens ?? undefined;
+  }
+
+  // Fallback to using model name if available
+  if ("model" in input && typeof input.model === "string") {
+    return getModelContextSize(input.model);
+  }
+  if ("modelName" in input && typeof input.modelName === "string") {
+    return getModelContextSize(input.modelName);
+  }
+
+  return undefined;
+}
 
 /**
  * Summarization middleware that automatically summarizes conversation history when token limits are approached.
@@ -90,14 +237,31 @@ export type SummarizationMiddlewareConfig = InferInteropZodInput<
  * import { summarizationMiddleware } from "langchain";
  * import { createAgent } from "langchain";
  *
- * const agent = createAgent({
+ * // Single condition: trigger if tokens >= 4000 AND messages >= 10
+ * const agent1 = createAgent({
  *   llm: model,
  *   tools: [getWeather],
  *   middleware: [
  *     summarizationMiddleware({
  *       model: new ChatOpenAI({ model: "gpt-4o" }),
- *       maxTokensBeforeSummary: 4000,
- *       messagesToKeep: 20,
+ *       trigger: { tokens: 4000, messages: 10 },
+ *       keep: { messages: 20 },
+ *     })
+ *   ],
+ * });
+ *
+ * // Multiple conditions: trigger if (tokens >= 5000 AND messages >= 3) OR (tokens >= 3000 AND messages >= 6)
+ * const agent2 = createAgent({
+ *   llm: model,
+ *   tools: [getWeather],
+ *   middleware: [
+ *     summarizationMiddleware({
+ *       model: new ChatOpenAI({ model: "gpt-4o" }),
+ *       trigger: [
+ *         { tokens: 5000, messages: 3 },
+ *         { tokens: 3000, messages: 6 },
+ *       ],
+ *       keep: { messages: 20 },
  *     })
  *   ],
  * });
@@ -107,6 +271,16 @@ export type SummarizationMiddlewareConfig = InferInteropZodInput<
 export function summarizationMiddleware(
   options: SummarizationMiddlewareConfig
 ) {
+  /**
+   * Parse user options to get their explicit values
+   */
+  const { data: userOptions, error } = interopSafeParse(contextSchema, options);
+  if (error) {
+    throw new Error(
+      `Invalid summarization middleware options: ${z4.prettifyError(error)}`
+    );
+  }
+
   return createMiddleware({
     name: "SummarizationMiddleware",
     contextSchema: contextSchema.extend({
@@ -117,64 +291,134 @@ export function summarizationMiddleware(
       model: z.custom<BaseLanguageModel>().optional(),
     }),
     beforeModel: async (state, runtime) => {
-      /**
-       * Parse user options to get their explicit values
-       */
-      const userOptions = interopParse(contextSchema, options);
+      let trigger: ContextSize | ContextSize[] | undefined =
+        userOptions.trigger;
+      let keep: ContextSize = userOptions.keep as InferInteropZodOutput<
+        typeof keepSchema
+      >;
 
       /**
-       * Merge context with user options, preferring user options when context has default values
+       * Handle deprecated parameters
        */
-      const config = {
-        model: userOptions.model,
-        maxTokensBeforeSummary:
-          runtime.context.maxTokensBeforeSummary !== undefined
-            ? runtime.context.maxTokensBeforeSummary
-            : userOptions.maxTokensBeforeSummary,
-        messagesToKeep:
-          runtime.context.messagesToKeep === DEFAULT_MESSAGES_TO_KEEP
-            ? userOptions.messagesToKeep
-            : runtime.context.messagesToKeep ?? userOptions.messagesToKeep,
-        tokenCounter:
-          runtime.context.tokenCounter !== undefined
-            ? runtime.context.tokenCounter
-            : userOptions.tokenCounter,
-        summaryPrompt:
-          runtime.context.summaryPrompt === DEFAULT_SUMMARY_PROMPT
-            ? userOptions.summaryPrompt
-            : runtime.context.summaryPrompt ?? userOptions.summaryPrompt,
-        summaryPrefix:
-          runtime.context.summaryPrefix === SUMMARY_PREFIX
-            ? userOptions.summaryPrefix
-            : runtime.context.summaryPrefix ?? userOptions.summaryPrefix,
-      } as InferInteropZodOutput<typeof contextSchema>;
-      const { messages } = state;
+      if (userOptions.maxTokensBeforeSummary !== undefined) {
+        console.warn(
+          "maxTokensBeforeSummary is deprecated. Use `trigger: { tokens: value }` instead."
+        );
+        if (trigger === undefined) {
+          trigger = { tokens: userOptions.maxTokensBeforeSummary };
+        }
+      }
+
+      /**
+       * Handle deprecated parameters
+       */
+      if (userOptions.messagesToKeep !== undefined) {
+        console.warn(
+          "messagesToKeep is deprecated. Use `keep: { messages: value }` instead."
+        );
+        if (
+          !keep ||
+          (keep &&
+            "messages" in keep &&
+            keep.messages === DEFAULT_MESSAGES_TO_KEEP)
+        ) {
+          keep = { messages: userOptions.messagesToKeep };
+        }
+      }
+
+      /**
+       * Merge context with user options
+       */
+      const resolvedTrigger =
+        runtime.context?.trigger !== undefined
+          ? runtime.context.trigger
+          : trigger;
+      const resolvedKeep =
+        runtime.context?.keep !== undefined
+          ? runtime.context.keep
+          : keep ?? { messages: DEFAULT_MESSAGES_TO_KEEP };
+
+      const validatedKeep = keepSchema.parse(resolvedKeep);
+
+      /**
+       * Validate trigger conditions
+       */
+      let triggerConditions: ContextSize[] = [];
+      if (resolvedTrigger === undefined) {
+        triggerConditions = [];
+      } else if (Array.isArray(resolvedTrigger)) {
+        /**
+         * It's an array of ContextSize objects
+         */
+        triggerConditions = (resolvedTrigger as ContextSize[]).map((t) =>
+          contextSizeSchema.parse(t)
+        );
+      } else {
+        /**
+         * Single ContextSize object - all properties must be satisfied (AND logic)
+         */
+        triggerConditions = [contextSizeSchema.parse(resolvedTrigger)];
+      }
+
+      /**
+       * Check if profile is required
+       */
+      const requiresProfile =
+        triggerConditions.some((c) => "fraction" in c) ||
+        "fraction" in validatedKeep;
 
       const model =
-        typeof config.model === "string"
-          ? await initChatModel(config.model)
-          : config.model;
+        typeof userOptions.model === "string"
+          ? await initChatModel(userOptions.model)
+          : userOptions.model;
+
+      if (requiresProfile && !getProfileLimits(model)) {
+        throw new Error(
+          "Model profile information is required to use fractional token limits. " +
+            "Use absolute token counts instead."
+        );
+      }
+
+      const summaryPrompt =
+        runtime.context?.summaryPrompt === DEFAULT_SUMMARY_PROMPT
+          ? userOptions.summaryPrompt ?? DEFAULT_SUMMARY_PROMPT
+          : runtime.context?.summaryPrompt ??
+            userOptions.summaryPrompt ??
+            DEFAULT_SUMMARY_PROMPT;
+      const trimTokensToSummarize =
+        runtime.context?.trimTokensToSummarize !== undefined
+          ? runtime.context.trimTokensToSummarize
+          : userOptions.trimTokensToSummarize ?? DEFAULT_TRIM_TOKEN_LIMIT;
 
       /**
        * Ensure all messages have IDs
        */
-      ensureMessageIds(messages);
+      ensureMessageIds(state.messages);
 
-      const tokenCounter = config.tokenCounter || countTokensApproximately;
-      const totalTokens = await tokenCounter(messages);
+      const tokenCounter =
+        runtime.context?.tokenCounter !== undefined
+          ? runtime.context.tokenCounter
+          : userOptions.tokenCounter ?? countTokensApproximately;
+      const totalTokens = await tokenCounter(state.messages);
+      const doSummarize = await shouldSummarize(
+        state.messages,
+        totalTokens,
+        triggerConditions,
+        model
+      );
 
-      if (
-        config.maxTokensBeforeSummary == null ||
-        totalTokens < config.maxTokensBeforeSummary
-      ) {
+      if (!doSummarize) {
         return;
       }
 
-      const { systemPrompt, conversationMessages } =
-        splitSystemMessage(messages);
-      const cutoffIndex = findSafeCutoff(
+      const { systemPrompt, conversationMessages } = splitSystemMessage(
+        state.messages
+      );
+      const cutoffIndex = await determineCutoffIndex(
         conversationMessages,
-        config.messagesToKeep
+        validatedKeep,
+        tokenCounter,
+        model
       );
 
       if (cutoffIndex <= 0) {
@@ -190,15 +434,15 @@ export function summarizationMiddleware(
       const summary = await createSummary(
         messagesToSummarize,
         model,
-        config.summaryPrompt,
-        tokenCounter
+        summaryPrompt,
+        tokenCounter,
+        trimTokensToSummarize
       );
 
-      const summaryMessage = buildSummaryMessage(
-        systemPrompt,
-        summary,
-        config.summaryPrefix
-      );
+      const summaryMessage = new HumanMessage({
+        content: `Here is a summary of the conversation to date:\n\n${summary}`,
+        id: uuid(),
+      });
 
       return {
         messages: [
@@ -226,7 +470,7 @@ function ensureMessageIds(messages: BaseMessage[]): void {
  * Separate system message from conversation messages
  */
 function splitSystemMessage(messages: BaseMessage[]): {
-  systemPrompt: SystemMessage | null;
+  systemPrompt?: SystemMessage;
   conversationMessages: BaseMessage[];
 } {
   if (messages.length > 0 && SystemMessage.isInstance(messages[0])) {
@@ -236,7 +480,6 @@ function splitSystemMessage(messages: BaseMessage[]): {
     };
   }
   return {
-    systemPrompt: null,
     conversationMessages: messages,
   };
 }
@@ -245,7 +488,7 @@ function splitSystemMessage(messages: BaseMessage[]): {
  * Partition messages into those to summarize and those to preserve
  */
 function partitionMessages(
-  systemPrompt: SystemMessage | null,
+  systemPrompt: SystemMessage | undefined,
   conversationMessages: BaseMessage[],
   cutoffIndex: number
 ): { messagesToSummarize: BaseMessage[]; preservedMessages: BaseMessage[] } {
@@ -261,29 +504,187 @@ function partitionMessages(
 }
 
 /**
- * Build summary message incorporating the summary
+ * Determine whether summarization should run for the current token usage
+ *
+ * @param messages - Current messages in the conversation
+ * @param totalTokens - Total token count for all messages
+ * @param triggerConditions - Array of trigger conditions. Returns true if ANY condition is satisfied (OR logic).
+ *                           Within each condition, ALL specified properties must be satisfied (AND logic).
+ * @param model - The language model being used
+ * @returns true if summarization should be triggered
  */
-function buildSummaryMessage(
-  originalSystemMessage: SystemMessage | null,
-  summary: string,
-  summaryPrefix: string
-): HumanMessage {
-  let originalContent = "";
-  if (originalSystemMessage) {
-    const { content } = originalSystemMessage;
-    if (typeof content === "string") {
-      originalContent = content.split(summaryPrefix)[0].trim();
+async function shouldSummarize(
+  messages: BaseMessage[],
+  totalTokens: number,
+  triggerConditions: ContextSize[],
+  model: BaseLanguageModel
+): Promise<boolean> {
+  if (triggerConditions.length === 0) {
+    return false;
+  }
+
+  /**
+   * Check each condition (OR logic between conditions)
+   */
+  for (const trigger of triggerConditions) {
+    /**
+     * Within a single condition, all specified properties must be satisfied (AND logic)
+     */
+    let conditionMet = true;
+    let hasAnyProperty = false;
+
+    if (trigger.messages !== undefined) {
+      hasAnyProperty = true;
+      if (messages.length < trigger.messages) {
+        conditionMet = false;
+      }
+    }
+
+    if (trigger.tokens !== undefined) {
+      hasAnyProperty = true;
+      if (totalTokens < trigger.tokens) {
+        conditionMet = false;
+      }
+    }
+
+    if (trigger.fraction !== undefined) {
+      hasAnyProperty = true;
+      const maxInputTokens = getProfileLimits(model);
+      if (typeof maxInputTokens === "number") {
+        const threshold = Math.floor(maxInputTokens * trigger.fraction);
+        if (totalTokens < threshold) {
+          conditionMet = false;
+        }
+      } else {
+        /**
+         * If fraction is specified but we can't get model limits, skip this condition
+         */
+        conditionMet = false;
+      }
+    }
+
+    /**
+     * If condition has at least one property and all properties are satisfied, trigger summarization
+     */
+    if (hasAnyProperty && conditionMet) {
+      return true;
     }
   }
 
-  const content = originalContent
-    ? `${originalContent}\n${summaryPrefix}\n${summary}`
-    : `${summaryPrefix}\n${summary}`;
+  return false;
+}
 
-  return new HumanMessage({
-    content,
-    id: originalSystemMessage?.id || uuid(),
-  });
+/**
+ * Determine cutoff index respecting retention configuration
+ */
+async function determineCutoffIndex(
+  messages: BaseMessage[],
+  keep: ContextSize,
+  tokenCounter: TokenCounter,
+  model: BaseLanguageModel
+): Promise<number> {
+  if ("tokens" in keep || "fraction" in keep) {
+    const tokenBasedCutoff = await findTokenBasedCutoff(
+      messages,
+      keep,
+      tokenCounter,
+      model
+    );
+    if (typeof tokenBasedCutoff === "number") {
+      return tokenBasedCutoff;
+    }
+    /**
+     * Fallback to message count if token-based fails
+     */
+    return findSafeCutoff(messages, DEFAULT_MESSAGES_TO_KEEP);
+  }
+  /**
+   * find cutoff index based on message count
+   */
+  return findSafeCutoff(messages, keep.messages ?? DEFAULT_MESSAGES_TO_KEEP);
+}
+
+/**
+ * Find cutoff index based on target token retention
+ */
+async function findTokenBasedCutoff(
+  messages: BaseMessage[],
+  keep: ContextSize,
+  tokenCounter: TokenCounter,
+  model: BaseLanguageModel
+): Promise<number | undefined> {
+  if (messages.length === 0) {
+    return 0;
+  }
+
+  let targetTokenCount: number;
+
+  if ("fraction" in keep && keep.fraction !== undefined) {
+    const maxInputTokens = getProfileLimits(model);
+    if (typeof maxInputTokens !== "number") {
+      return;
+    }
+    targetTokenCount = Math.floor(maxInputTokens * keep.fraction);
+  } else if ("tokens" in keep && keep.tokens !== undefined) {
+    targetTokenCount = Math.floor(keep.tokens);
+  } else {
+    return;
+  }
+
+  if (targetTokenCount <= 0) {
+    targetTokenCount = 1;
+  }
+
+  const totalTokens = await tokenCounter(messages);
+  if (totalTokens <= targetTokenCount) {
+    return 0;
+  }
+
+  /**
+   * Use binary search to identify the earliest message index that keeps the
+   * suffix within the token budget.
+   */
+  let left = 0;
+  let right = messages.length;
+  let cutoffCandidate = messages.length;
+  const maxIterations = Math.floor(Math.log2(messages.length)) + 1;
+
+  for (let i = 0; i < maxIterations; i++) {
+    if (left >= right) {
+      break;
+    }
+
+    const mid = Math.floor((left + right) / 2);
+    const suffixTokens = await tokenCounter(messages.slice(mid));
+    if (suffixTokens <= targetTokenCount) {
+      cutoffCandidate = mid;
+      right = mid;
+    } else {
+      left = mid + 1;
+    }
+  }
+
+  if (cutoffCandidate === messages.length) {
+    cutoffCandidate = left;
+  }
+
+  if (cutoffCandidate >= messages.length) {
+    if (messages.length === 1) {
+      return 0;
+    }
+    cutoffCandidate = messages.length - 1;
+  }
+
+  /**
+   * Find safe cutoff point that preserves tool pairs
+   */
+  for (let i = cutoffCandidate; i >= 0; i--) {
+    if (isSafeCutoffPoint(messages, i)) {
+      return i;
+    }
+  }
+
+  return 0;
 }
 
 /**
@@ -399,7 +800,8 @@ async function createSummary(
   messagesToSummarize: BaseMessage[],
   model: BaseLanguageModel,
   summaryPrompt: string,
-  tokenCounter: TokenCounter
+  tokenCounter: TokenCounter,
+  trimTokensToSummarize: number | undefined
 ): Promise<string> {
   if (!messagesToSummarize.length) {
     return "No previous conversation history.";
@@ -407,7 +809,8 @@ async function createSummary(
 
   const trimmedMessages = await trimMessagesForSummary(
     messagesToSummarize,
-    tokenCounter
+    tokenCounter,
+    trimTokensToSummarize
   );
 
   if (!trimmedMessages.length) {
@@ -420,10 +823,28 @@ async function createSummary(
       JSON.stringify(trimmedMessages, null, 2)
     );
     const response = await model.invoke(formattedPrompt);
-    const { content } = response;
-    return typeof content === "string"
-      ? content.trim()
-      : "Error generating summary: Invalid response format";
+    const content = response.content;
+    /**
+     * Handle both string content and MessageContent array
+     */
+    if (typeof content === "string") {
+      return content.trim();
+    } else if (Array.isArray(content)) {
+      /**
+       * Extract text from MessageContent array
+       */
+      const textContent = content
+        .map((item) => {
+          if (typeof item === "string") return item;
+          if (typeof item === "object" && item !== null && "text" in item) {
+            return (item as { text: string }).text;
+          }
+          return "";
+        })
+        .join("");
+      return textContent.trim();
+    }
+    return "Error generating summary: Invalid response format";
   } catch (e) {
     return `Error generating summary: ${e}`;
   }
@@ -434,12 +855,17 @@ async function createSummary(
  */
 async function trimMessagesForSummary(
   messages: BaseMessage[],
-  tokenCounter: TokenCounter
+  tokenCounter: TokenCounter,
+  trimTokensToSummarize: number | undefined
 ): Promise<BaseMessage[]> {
+  if (trimTokensToSummarize === undefined) {
+    return messages;
+  }
+
   try {
     return await trimMessages(messages, {
-      maxTokens: DEFAULT_TRIM_TOKEN_LIMIT,
-      tokenCounter: async (msgs) => Promise.resolve(tokenCounter(msgs)),
+      maxTokens: trimTokensToSummarize,
+      tokenCounter: async (msgs) => tokenCounter(msgs),
       strategy: "last",
       allowPartial: true,
       includeSystem: true,

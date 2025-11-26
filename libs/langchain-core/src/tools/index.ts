@@ -33,6 +33,7 @@ import {
   type InteropZodType,
   interopParseAsync,
   isSimpleStringZodSchema,
+  isInteropZodError,
   isInteropZodSchema,
   type ZodStringV3,
   type ZodStringV4,
@@ -230,8 +231,7 @@ export abstract class StructuredTool<
         if (this.verboseParsingErrors) {
           message = `${message}\nDetails: ${(e as Error).message}`;
         }
-        // eslint-disable-next-line no-instanceof/no-instanceof
-        if (e instanceof Error && e.constructor.name === "ZodError") {
+        if (isInteropZodError(e)) {
           message = `${message}\n\n${z4.prettifyError(e as ZodError)}`;
         }
         // Pass the original raw input arg to the exception
@@ -783,10 +783,19 @@ export function tool<
     schema,
     func: async (input, runManager, config) => {
       return new Promise<ToolOutputT>((resolve, reject) => {
+        let listener: (() => void) | undefined;
+        const cleanup = () => {
+          if (config?.signal && listener) {
+            config.signal.removeEventListener("abort", listener);
+          }
+        };
+
         if (config?.signal) {
-          config.signal.addEventListener("abort", () => {
-            return reject(getAbortSignalError(config.signal));
-          });
+          listener = () => {
+            cleanup();
+            reject(getAbortSignalError(config.signal));
+          };
+          config.signal.addEventListener("abort", listener);
         }
 
         const childConfig = patchConfig(config, {
@@ -805,11 +814,14 @@ export function tool<
                * as the promise is already rejected.
                */
               if (config?.signal?.aborted) {
+                cleanup();
                 return;
               }
 
+              cleanup();
               resolve(result);
             } catch (e) {
+              cleanup();
               reject(e);
             }
           }

@@ -1,12 +1,12 @@
+/**
+ * Core middleware
+ */
+export * from "./hitl.js";
 export {
   summarizationMiddleware,
   type SummarizationMiddlewareConfig,
+  type TokenCounter,
 } from "./summarization.js";
-export * from "./hitl.js";
-export {
-  anthropicPromptCachingMiddleware,
-  type PromptCachingMiddlewareConfig,
-} from "./promptCaching.js";
 export {
   dynamicSystemPromptMiddleware,
   type DynamicSystemPromptMiddlewareConfig,
@@ -15,6 +15,24 @@ export {
   llmToolSelectorMiddleware,
   type LLMToolSelectorConfig,
 } from "./llmToolSelector.js";
+export {
+  piiMiddleware,
+  type PIIMiddlewareConfig,
+  type PIIMatch,
+  type PIIStrategy,
+  type BuiltInPIIType,
+  type PIIDetector,
+  type RedactionRuleConfig,
+  type ResolvedRedactionRule,
+  PIIDetectionError,
+  detectEmail,
+  detectCreditCard,
+  detectIP,
+  detectMacAddress,
+  detectUrl,
+  applyStrategy,
+  resolveRedactionRule,
+} from "./pii.js";
 export {
   piiRedactionMiddleware,
   type PIIRedactionMiddlewareConfig,
@@ -25,7 +43,6 @@ export {
   type ContextEditingMiddlewareConfig,
   type ContextEdit,
   type ClearToolUsesEditConfig,
-  type TokenCounter,
 } from "./contextEditing.js";
 export {
   toolCallLimitMiddleware,
@@ -43,8 +60,32 @@ export {
 } from "./modelCallLimit.js";
 export { modelFallbackMiddleware } from "./modelFallback.js";
 export {
+  modelRetryMiddleware,
+  type ModelRetryMiddlewareConfig,
+} from "./modelRetry.js";
+export {
   toolRetryMiddleware,
   type ToolRetryMiddlewareConfig,
 } from "./toolRetry.js";
+export {
+  toolEmulatorMiddleware,
+  type ToolEmulatorOptions,
+} from "./toolEmulator.js";
+
+/**
+ * Provider specific middleware
+ */
+export {
+  openAIModerationMiddleware,
+  type OpenAIModerationMiddlewareOptions,
+} from "./provider/openai/moderation.js";
+export {
+  anthropicPromptCachingMiddleware,
+  type PromptCachingMiddlewareConfig,
+} from "./provider/anthropic/promptCaching.js";
+
+/**
+ * Types and utilities
+ */
 export { type AgentMiddleware } from "./types.js";
 export { countTokensApproximately } from "./utils.js";

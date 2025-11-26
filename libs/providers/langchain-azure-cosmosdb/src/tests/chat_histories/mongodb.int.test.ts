@@ -39,8 +39,10 @@ test("Test Azure Cosmos MongoDB history store", async () => {
   const blankResult = await chatHistory.getMessages();
   expect(blankResult).toStrictEqual([]);
 
-  await chatHistory.addUserMessage("Who is the best vocalist?");
-  await chatHistory.addAIChatMessage("Ozzy Osbourne");
+  await chatHistory.addMessages([
+    new HumanMessage("Who is the best vocalist?"),
+    new AIMessage("Ozzy Osbourne"),
+  ]);
 
   const expectedMessages = [
     new HumanMessage("Who is the best vocalist?"),
@@ -75,7 +77,7 @@ test("Test clear Azure Cosmos MongoDB history store", async () => {
   );
 
   await chatHistory.addUserMessage("Who is the best vocalist?");
-  await chatHistory.addAIChatMessage("Ozzy Osbourne");
+  await chatHistory.addAIMessage("Ozzy Osbourne");
 
   const expectedMessages = [
     new HumanMessage("Who is the best vocalist?"),
@@ -123,9 +125,9 @@ test("Test getAllSessions and clearAllSessions", async () => {
   );
 
   await chatHistory1.addUserMessage("What is AI?");
-  await chatHistory1.addAIChatMessage("AI stands for Artificial Intelligence.");
+  await chatHistory1.addAIMessage("AI stands for Artificial Intelligence.");
   await chatHistory2.addUserMessage("What is the best programming language?");
-  await chatHistory2.addAIChatMessage("It depends on the use case.");
+  await chatHistory2.addAIMessage("It depends on the use case.");
 
   const allSessions = await chatHistory1.getAllSessions();
   expect(allSessions.length).toBe(2);

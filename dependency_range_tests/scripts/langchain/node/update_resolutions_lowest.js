@@ -1,5 +1,4 @@
 const fs = require("fs");
-const semver = require("semver");
 
 const communityPackageJsonPath = "package.json";
 
@@ -10,37 +9,16 @@ const currentPackageJson = JSON.parse(
 );
 currentPackageJson.pnpm = { overrides: {} };
 
-if (
-  currentPackageJson.peerDependencies?.["@langchain/core"] &&
-  !currentPackageJson.peerDependencies["@langchain/core"].includes("rc")
-) {
-  const minVersion = semver.minVersion(
-    currentPackageJson.peerDependencies["@langchain/core"]
-  ).version;
-  currentPackageJson.peerDependencies = {
-    ...currentPackageJson.peerDependencies,
-    "@langchain/core": minVersion,
-  };
-}
-
 /**
  * Convert workspace dev dependencies to install latest as they are only used for testing
  */
 const workspaceDependencies = [
   ...Object.entries(currentPackageJson.devDependencies),
+  ...Object.entries(currentPackageJson.peerDependencies),
   ...Object.entries(currentPackageJson.dependencies),
 ].filter(([, depVersion]) => depVersion.includes("workspace:"));
 
 for (const [depName, depVersion] of workspaceDependencies) {
-  /**
-   * for the peer dependency @langchain/core, we want to make sure to install min version
-   * defined above
-   */
-  if (depName === "@langchain/core") {
-    delete currentPackageJson.devDependencies[depName];
-    continue;
-  }
-
   const libName = depName.split("/")[1];
 
   if (INTERNAL_PACKAGES.includes(depName)) {
