@@ -267,12 +267,12 @@ const MARKDOWN_STREAM_TEST_CASES = [
   {
     name: "Markdown with split code block",
     input: ['```json\n{"', 'countries": [{"n', 'ame": "China"}]}', "\n```"],
-    expected: [{ countries: [{ name: "China" }] }],
+    expected: [{}, { countries: [{}] }, { countries: [{ name: "China" }] }],
   },
   {
     name: "Markdown without json identifier, split",
     input: ['```\n{"', 'key": "val', '"}\n```'],
-    expected: [{ key: "val" }],
+    expected: [{}, { key: "val" }],
   },
   {
     name: "Ignores text after closing markdown backticks",
