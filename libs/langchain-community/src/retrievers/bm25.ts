@@ -47,28 +47,28 @@ export class BM25Retriever extends BaseRetriever {
 
   async _getRelevantDocuments(query: string) {
     const processedQuery = this.preprocessFunc(query);
-    const documents = this.docs.map((doc) => doc.pageContent);
-    const scores = BM25(documents, processedQuery) as number[];
-
-    const scoredDocs = this.docs.map((doc, index) => ({
-      document: doc,
-      score: scores[index],
-    }));
-
-    scoredDocs.sort((a, b) => b.score - a.score);
+    const scoredDocs = BM25<Document>(
+      this.docs.map((d) => ({
+        text: d.pageContent,
+        docs: d,
+      })),
+      processedQuery,
+      undefined,
+      (a, b) => b.score - a.score
+    );
 
     return scoredDocs.slice(0, this.k).map((item) => {
       if (this.includeScore) {
         return new Document({
-          ...(item.document.id && { id: item.document.id }),
-          pageContent: item.document.pageContent,
+          ...(item.docs.id && { id: item.docs.id }),
+          pageContent: item.docs.pageContent,
           metadata: {
             bm25Score: item.score,
-            ...item.document.metadata,
+            ...item.docs.metadata,
           },
         });
       } else {
-        return item.document;
+        return item.docs;
       }
     });
   }
