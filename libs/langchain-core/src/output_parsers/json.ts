@@ -44,11 +44,11 @@ export class JsonOutputParser<
   async parsePartialResult(
     generations: ChatGeneration[] | Generation[]
   ): Promise<T | undefined> {
-    return parseJsonMarkdown(generations[0].text);
+    return parseJsonMarkdown(generations[0].text) as T | undefined;
   }
 
   async parse(text: string): Promise<T> {
-    return parseJsonMarkdown(text, JSON.parse);
+    return parseJsonMarkdown(text, JSON.parse) as T;
   }
 
   getFormatInstructions(): string {
