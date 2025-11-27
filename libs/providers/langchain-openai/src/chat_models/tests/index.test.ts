@@ -640,4 +640,356 @@ describe("ChatOpenAI", () => {
       });
     });
   });
+
+  describe("moderateContent", () => {
+    it("should moderate a single text input", async () => {
+      const mockModerationResponse = {
+        id: "modr-123",
+        model: "omni-moderation-latest",
+        results: [
+          {
+            flagged: false,
+            categories: {
+              hate: false,
+              harassment: false,
+              "self-harm": false,
+              sexual: false,
+              violence: false,
+            },
+            category_scores: {
+              hate: 0.01,
+              harassment: 0.02,
+              "self-harm": 0.01,
+              sexual: 0.01,
+              violence: 0.01,
+            },
+            category_applied_input_types: {
+              hate: ["text"],
+              harassment: ["text"],
+              "self-harm": ["text"],
+              sexual: ["text"],
+              violence: ["text"],
+            },
+          },
+        ],
+      };
+
+      const mockFetch = vi.fn<(url: any, options?: any) => Promise<any>>();
+      mockFetch.mockImplementation((url, options) => {
+        // Verify it's calling the moderation endpoint
+        expect(url).toContain("/v1/moderations");
+        if (options && options.body) {
+          const body = JSON.parse(options.body);
+          expect(body.input).toBe("This is a test message");
+          expect(body.model).toBe("omni-moderation-latest");
+        }
+        return Promise.resolve(
+          new Response(JSON.stringify(mockModerationResponse), {
+            status: 200,
+            statusText: "OK",
+            headers: {
+              "Content-Type": "application/json",
+            },
+          })
+        );
+      });
+
+      const model = new ChatOpenAI({
+        model: "gpt-4o-mini",
+        apiKey: "test-key",
+        configuration: {
+          fetch: mockFetch,
+        },
+        maxRetries: 0,
+      });
+
+      const result = await model.moderateContent("This is a test message");
+      expect(mockFetch).toHaveBeenCalled();
+      expect(result).toEqual(mockModerationResponse);
+    });
+
+    it("should moderate multiple text inputs", async () => {
+      const mockModerationResponse = {
+        id: "modr-124",
+        model: "omni-moderation-latest",
+        results: [
+          {
+            flagged: false,
+            categories: {},
+            category_scores: {},
+            category_applied_input_types: {},
+          },
+          {
+            flagged: true,
+            categories: {
+              violence: true,
+            },
+            category_scores: {
+              violence: 0.8,
+            },
+            category_applied_input_types: {
+              violence: ["text"],
+            },
+          },
+        ],
+      };
+
+      const mockFetch = vi.fn<(url: any, options?: any) => Promise<any>>();
+      mockFetch.mockImplementation((_url, options) => {
+        if (options && options.body) {
+          const body = JSON.parse(options.body);
+          expect(Array.isArray(body.input)).toBe(true);
+          expect(body.input).toEqual([
+            "Hello, how are you?",
+            "This is inappropriate content",
+          ]);
+        }
+        return Promise.resolve(
+          new Response(JSON.stringify(mockModerationResponse), {
+            status: 200,
+            headers: {
+              "Content-Type": "application/json",
+            },
+          })
+        );
+      });
+
+      const model = new ChatOpenAI({
+        model: "gpt-4o-mini",
+        apiKey: "test-key",
+        configuration: {
+          fetch: mockFetch,
+        },
+        maxRetries: 0,
+      });
+
+      const result = await model.moderateContent([
+        "Hello, how are you?",
+        "This is inappropriate content",
+      ]);
+
+      expect(mockFetch).toHaveBeenCalled();
+      expect(result).toEqual(mockModerationResponse);
+    });
+
+    it("should use custom moderation model when provided", async () => {
+      const mockModerationResponse = {
+        id: "modr-125",
+        model: "text-moderation-stable",
+        results: [
+          {
+            flagged: false,
+            categories: {},
+            category_scores: {},
+            category_applied_input_types: {},
+          },
+        ],
+      };
+
+      const mockFetch = vi.fn<(url: any, options?: any) => Promise<any>>();
+      mockFetch.mockImplementation((_url, options) => {
+        if (options && options.body) {
+          const body = JSON.parse(options.body);
+          expect(body.model).toBe("text-moderation-stable");
+        }
+        return Promise.resolve(
+          new Response(JSON.stringify(mockModerationResponse), {
+            status: 200,
+            headers: {
+              "Content-Type": "application/json",
+            },
+          })
+        );
+      });
+
+      const model = new ChatOpenAI({
+        model: "gpt-4o-mini",
+        apiKey: "test-key",
+        configuration: {
+          fetch: mockFetch,
+        },
+        maxRetries: 0,
+      });
+
+      const result = await model.moderateContent("Test content", {
+        model: "text-moderation-stable",
+      });
+
+      expect(mockFetch).toHaveBeenCalled();
+      expect(result.model).toBe("text-moderation-stable");
+    });
+
+    it("should default to omni-moderation-latest when no model specified", async () => {
+      const mockModerationResponse = {
+        id: "modr-126",
+        model: "omni-moderation-latest",
+        results: [
+          {
+            flagged: false,
+            categories: {},
+            category_scores: {},
+            category_applied_input_types: {},
+          },
+        ],
+      };
+
+      const mockFetch = vi.fn<(url: any, options?: any) => Promise<any>>();
+      mockFetch.mockImplementation((_url, options) => {
+        if (options && options.body) {
+          const body = JSON.parse(options.body);
+          expect(body.model).toBe("omni-moderation-latest");
+        }
+        return Promise.resolve(
+          new Response(JSON.stringify(mockModerationResponse), {
+            status: 200,
+            headers: {
+              "Content-Type": "application/json",
+            },
+          })
+        );
+      });
+
+      const model = new ChatOpenAI({
+        model: "gpt-4o-mini",
+        apiKey: "test-key",
+        configuration: {
+          fetch: mockFetch,
+        },
+        maxRetries: 0,
+      });
+
+      const result = await model.moderateContent("Test content");
+
+      expect(mockFetch).toHaveBeenCalled();
+      expect(result.model).toBe("omni-moderation-latest");
+    });
+
+    it("should handle flagged content with multiple categories", async () => {
+      const mockModerationResponse = {
+        id: "modr-127",
+        model: "omni-moderation-latest",
+        results: [
+          {
+            flagged: true,
+            categories: {
+              "self-harm": true,
+              "self-harm/intent": true,
+              violence: true,
+            },
+            category_scores: {
+              "self-harm": 0.9765081883024809,
+              "self-harm/intent": 0.998813087895366,
+              violence: 0.4272401150888747,
+            },
+            category_applied_input_types: {
+              "self-harm": ["text"],
+              "self-harm/intent": ["text"],
+              violence: ["text"],
+            },
+          },
+        ],
+      };
+
+      const mockFetch = vi.fn<(url: any, options?: any) => Promise<any>>();
+      mockFetch.mockImplementation(() => {
+        return Promise.resolve(
+          new Response(JSON.stringify(mockModerationResponse), {
+            status: 200,
+            headers: {
+              "Content-Type": "application/json",
+            },
+          })
+        );
+      });
+
+      const model = new ChatOpenAI({
+        model: "gpt-4o-mini",
+        apiKey: "test-key",
+        configuration: {
+          fetch: mockFetch,
+        },
+        maxRetries: 0,
+      });
+
+      const result = await model.moderateContent("Harmful content");
+
+      expect(mockFetch).toHaveBeenCalled();
+      expect(result).toEqual(mockModerationResponse);
+    });
+
+    it("should pass through options to the underlying request", async () => {
+      const mockModerationResponse = {
+        id: "modr-128",
+        model: "omni-moderation-latest",
+        results: [
+          {
+            flagged: false,
+            categories: {},
+            category_scores: {},
+            category_applied_input_types: {},
+          },
+        ],
+      };
+
+      const mockFetch = vi.fn<(url: any, options?: any) => Promise<any>>();
+      mockFetch.mockImplementation((_url, options) => {
+        // Verify custom headers or options are passed through
+        expect(options).toBeDefined();
+        return Promise.resolve(
+          new Response(JSON.stringify(mockModerationResponse), {
+            status: 200,
+            headers: {
+              "Content-Type": "application/json",
+            },
+          })
+        );
+      });
+
+      const model = new ChatOpenAI({
+        model: "gpt-4o-mini",
+        apiKey: "test-key",
+        configuration: {
+          fetch: mockFetch,
+        },
+        maxRetries: 0,
+      });
+
+      await model.moderateContent("Test content", {
+        options: {
+          headers: { "Custom-Header": "value" },
+        },
+      });
+
+      expect(mockFetch).toHaveBeenCalled();
+    });
+
+    it("should handle API errors correctly", async () => {
+      const mockFetch = vi.fn<(url: any, options?: any) => Promise<any>>();
+      mockFetch.mockImplementation(() => {
+        return Promise.resolve({
+          ok: false,
+          status: 401,
+          statusText: "Unauthorized",
+          json: () =>
+            Promise.resolve({
+              error: {
+                message: "Invalid API key",
+                type: "invalid_request_error",
+              },
+            }),
+        });
+      });
+
+      const model = new ChatOpenAI({
+        model: "gpt-4o-mini",
+        apiKey: "invalid-key",
+        configuration: {
+          fetch: mockFetch,
+        },
+        maxRetries: 0,
+      });
+
+      await expect(model.moderateContent("Test content")).rejects.toThrow();
+    });
+  });
 });
