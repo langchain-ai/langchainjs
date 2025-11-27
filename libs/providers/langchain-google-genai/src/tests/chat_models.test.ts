@@ -15,6 +15,7 @@ import { removeAdditionalProperties } from "../utils/zod_to_genai_parameters.js"
 import {
   convertBaseMessagesToContent,
   convertMessageContentToParts,
+  mapGenerateContentResultToChatResult,
 } from "../utils/common.js";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -961,4 +962,21 @@ test("convertMessageContentToParts: correctly handles ToolMessage with array con
       },
     },
   ]);
+});
+
+test("mapGenerateContentResultToChatResult handles candidate with undefined content", () => {
+  const response = {
+    candidates: [
+      {
+        finishReason: "SAFETY",
+        safetyRatings: [],
+      },
+    ],
+    promptFeedback: {},
+  } as any;
+  
+  const result = mapGenerateContentResultToChatResult(response);
+  expect(result.generations).toHaveLength(1);
+  expect(result.generations[0].message.content).toEqual([]);
+  expect(result.generations[0].text).toBe("");
 });
