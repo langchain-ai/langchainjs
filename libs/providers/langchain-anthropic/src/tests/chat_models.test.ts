@@ -7,6 +7,7 @@ import {
 } from "@langchain/core/messages";
 import { z } from "zod";
 import { OutputParserException } from "@langchain/core/output_parsers";
+import { tool } from "@langchain/core/tools";
 import { ChatAnthropic } from "../chat_models.js";
 import { _convertMessagesToAnthropicPayload } from "../utils/message_inputs.js";
 
@@ -109,6 +110,32 @@ test("withStructuredOutput with proper output", async () => {
   expect(result).toEqual({
     alerts: [{ description: "test", severity: "LOW" }],
   });
+});
+
+test("formatStructuredToolToAnthropic forwards provider-specific tool definition", () => {
+  const model = new ChatAnthropic({
+    modelName: "claude-3-haiku-20240307",
+    temperature: 0,
+    anthropicApiKey: "testing",
+  });
+
+  const providerDefinition = {
+    type: "memory_20250818",
+    name: "memory",
+  };
+
+  const memoryTool = tool(
+    ({ content }: { content: string }) => content,
+    {
+      name: "memory",
+      schema: z.object({ content: z.string() }),
+      providerToolDefinition: providerDefinition,
+    }
+  );
+
+  const formattedTools = model.formatStructuredToolToAnthropic([memoryTool]);
+
+  expect(formattedTools).toEqual([providerDefinition]);
 });
 
 test("Can properly format anthropic messages when given two tool results", async () => {
