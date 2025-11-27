@@ -906,6 +906,25 @@ export interface BaseGoogleEmbeddingsParams<AuthOptions>
    * An alias for "dimensions"
    */
   outputDimensionality?: number;
+
+  /**
+   * The intended downstream application to help the model produce better quality embeddings.
+   * Available task types:
+   * - RETRIEVAL_QUERY: Specifies the given text is a query in a search/retrieval setting.
+   * - RETRIEVAL_DOCUMENT: Specifies the given text is a document in a search/retrieval setting.
+   * - SEMANTIC_SIMILARITY: Specifies the given text will be used for Semantic Textual Similarity (STS).
+   * - CLASSIFICATION: Specifies that the embeddings will be used for classification.
+   * - CLUSTERING: Specifies that the embeddings will be used for clustering.
+   * - QUESTION_ANSWERING: Specifies that the query embedding will be used for question answering.
+   * - FACT_VERIFICATION: Specifies that the query embedding will be used for fact verification.
+   * - CODE_RETRIEVAL_QUERY: Specifies that the query embedding will be used for code retrieval.
+   */
+  taskType?: GoogleEmbeddingsTaskType;
+
+  /**
+   * An optional title for the text. Only applicable when taskType is RETRIEVAL_DOCUMENT.
+   */
+  title?: string;
 }
 
 /**
