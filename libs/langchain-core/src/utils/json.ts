@@ -30,12 +30,9 @@ export function parseJsonMarkdown(s: string, parser = parsePartialJson) {
  * Recursive descent partial JSON parser.
  * @param s - The string to parse.
  * @returns The parsed value.
+ * @throws Error if the input is a malformed JSON string.
  */
-export function strictParsePartialJson(
-  s: string | undefined
-): unknown | undefined {
-  if (typeof s === "undefined") return undefined;
-
+export function strictParsePartialJson(s: string): unknown {
   try {
     return JSON.parse(s);
   } catch {
@@ -43,7 +40,7 @@ export function strictParsePartialJson(
   }
 
   const buffer = s.trim();
-  if (buffer.length === 0) return undefined;
+  if (buffer.length === 0) throw new Error("Unexpected end of JSON input");
 
   let pos = 0;
 
@@ -316,7 +313,8 @@ export function strictParsePartialJson(
 export function parsePartialJson(s: string): any | null {
   // Attempt to parse the modified string as JSON.
   try {
-    return strictParsePartialJson(s) ?? null;
+    if (typeof s === "undefined") return null;
+    return strictParsePartialJson(s);
   } catch {
     // If we still can't parse the string as JSON, return null to indicate failure.
     return null;

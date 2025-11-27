@@ -93,9 +93,7 @@ it("boolean values", () => {
 });
 
 it("whitespace", () => {
-  expectPartialJson(" \n\t\r").toBe(undefined);
   expectPartialJson(" \n\t\r123").toBe(123);
-
   expectPartialJson("123\n\t\r").toBe(123);
 });
 
