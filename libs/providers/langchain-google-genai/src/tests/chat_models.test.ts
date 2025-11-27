@@ -1,5 +1,9 @@
 import { test } from "@jest/globals";
-import type { HarmBlockThreshold, HarmCategory } from "@google/generative-ai";
+import type {
+  HarmBlockThreshold,
+  HarmCategory,
+  EnhancedGenerateContentResponse,
+} from "@google/generative-ai";
 import { z } from "zod/v3";
 import { toJsonSchema } from "@langchain/core/utils/json_schema";
 import {
@@ -965,16 +969,23 @@ test("convertMessageContentToParts: correctly handles ToolMessage with array con
 });
 
 test("mapGenerateContentResultToChatResult handles candidate with undefined content", () => {
-  const response = {
+  const response: EnhancedGenerateContentResponse = {
     candidates: [
       {
+        content: undefined,
         finishReason: "SAFETY",
         safetyRatings: [],
+        index: 0,
       },
     ],
-    promptFeedback: {},
-  } as any;
-  
+    promptFeedback: {
+      safetyRatings: [],
+    },
+    text: () => "",
+    functionCall: () => undefined,
+    functionCalls: () => [],
+  } as unknown as EnhancedGenerateContentResponse;
+
   const result = mapGenerateContentResultToChatResult(response);
   expect(result.generations).toHaveLength(1);
   expect(result.generations[0].message.content).toEqual([]);
