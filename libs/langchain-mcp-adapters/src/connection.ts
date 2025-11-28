@@ -545,11 +545,12 @@ export class ConnectionManager {
   #createStdioTransport(
     options: ResolvedStdioConnection
   ): StdioClientTransport {
-    const { command, args, env, stderr } = options;
+    const { command, args, env, stderr, cwd } = options;
     return new StdioClientTransport({
       command,
       args,
       stderr,
+      cwd,
       // eslint-disable-next-line no-process-env
       ...(env ? { env: { PATH: process.env.PATH!, ...env } } : {}),
     });
