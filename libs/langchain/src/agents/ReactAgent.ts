@@ -41,14 +41,13 @@ import {
 } from "./nodes/utils.js";
 import { StateManager } from "./state.js";
 
-import type { WithStateGraphNodes } from "./types.js";
-
 import type {
+  WithStateGraphNodes,
+  AgentTypeConfig,
   CreateAgentParams,
-  BuiltInState,
-  JumpTo,
-  UserInput,
 } from "./types.js";
+
+import type { BuiltInState, JumpTo, UserInput } from "./types.js";
 import type { InvokeConfiguration, StreamConfiguration } from "./runtime.js";
 import type {
   AgentMiddleware,
@@ -77,69 +76,81 @@ type BaseGraphDestination =
   | typeof END;
 
 // Helper type to get the state definition with middleware states
-type MergedAgentState<
-  StateSchema extends AnyAnnotationRoot | InteropZodObject | undefined,
-  StructuredResponseFormat extends
-    | Record<string, any>
-    | ResponseFormatUndefined,
-  TMiddleware extends readonly AgentMiddleware[]
-> = InferSchemaInput<StateSchema> &
-  (StructuredResponseFormat extends ResponseFormatUndefined
+type MergedAgentState<Types extends AgentTypeConfig> = InferSchemaInput<
+  Types["State"]
+> &
+  (Types["Response"] extends ResponseFormatUndefined
     ? Omit<BuiltInState, "jumpTo">
     : Omit<BuiltInState, "jumpTo"> & {
-        structuredResponse: StructuredResponseFormat;
+        structuredResponse: Types["Response"];
       }) &
-  InferMiddlewareStates<TMiddleware>;
+  InferMiddlewareStates<Types["Middleware"]>;
 
-type InvokeStateParameter<
-  StateSchema extends AnyAnnotationRoot | InteropZodObject | undefined,
-  TMiddleware extends readonly AgentMiddleware[]
-> =
-  | (UserInput<StateSchema> & InferMiddlewareInputStates<TMiddleware>)
+type InvokeStateParameter<Types extends AgentTypeConfig> =
+  | (UserInput<Types["State"]> &
+      InferMiddlewareInputStates<Types["Middleware"]>)
   | Command<any, any, any>
   | null;
 
-type AgentGraph<
-  StateSchema extends
-    | AnyAnnotationRoot
-    | InteropZodObject
-    | undefined = undefined,
-  StructuredResponseFormat extends
-    | Record<string, any>
-    | ResponseFormatUndefined = Record<string, any>,
-  ContextSchema extends
-    | AnyAnnotationRoot
-    | InteropZodObject = AnyAnnotationRoot,
-  TMiddleware extends readonly AgentMiddleware[] = []
-> = CompiledStateGraph<
+type AgentGraph<Types extends AgentTypeConfig> = CompiledStateGraph<
   any,
   any,
   any,
   any,
-  MergedAgentState<StateSchema, StructuredResponseFormat, TMiddleware>,
-  ToAnnotationRoot<ContextSchema>["spec"],
+  MergedAgentState<Types>,
+  ToAnnotationRoot<
+    Types["Context"] extends AnyAnnotationRoot | InteropZodObject
+      ? Types["Context"]
+      : AnyAnnotationRoot
+  >["spec"],
   unknown
 >;
 
+/**
+ * ReactAgent is a production-ready ReAct (Reasoning + Acting) agent that combines
+ * language models with tools and middleware.
+ *
+ * The agent is parameterized by a single type bag `Types` that encapsulates all
+ * type information:
+ *
+ * @typeParam Types - An {@link AgentTypeConfig} that bundles:
+ *   - `Response`: The structured response type
+ *   - `State`: The custom state schema type
+ *   - `Context`: The context schema type
+ *   - `Middleware`: The middleware array type
+ *   - `Tools`: The combined tools type from agent and middleware
+ *
+ * @example
+ * ```typescript
+ * // Using the type bag pattern
+ * type MyTypes = AgentTypeConfig<
+ *   { name: string },  // Response
+ *   typeof myState,    // State
+ *   typeof myContext,  // Context
+ *   typeof middleware, // Middleware
+ *   typeof tools       // Tools
+ * >;
+ *
+ * const agent: ReactAgent<MyTypes> = createAgent({ ... });
+ * ```
+ */
 export class ReactAgent<
-  StructuredResponseFormat extends
-    | Record<string, any>
-    | ResponseFormatUndefined = Record<string, any>,
-  StateSchema extends
-    | AnyAnnotationRoot
-    | InteropZodObject
-    | undefined = undefined,
-  ContextSchema extends
-    | AnyAnnotationRoot
-    | InteropZodObject = AnyAnnotationRoot,
-  TMiddleware extends readonly AgentMiddleware[] = readonly AgentMiddleware[]
+  Types extends AgentTypeConfig = AgentTypeConfig<
+    Record<string, any>,
+    undefined,
+    AnyAnnotationRoot,
+    readonly AgentMiddleware[],
+    readonly (ClientTool | ServerTool)[]
+  >
 > {
-  #graph: AgentGraph<
-    StateSchema,
-    StructuredResponseFormat,
-    ContextSchema,
-    TMiddleware
-  >;
+  /**
+   * Type marker for extracting the AgentTypeConfig from a ReactAgent instance.
+   * This is a phantom property used only for type inference.
+   * @internal
+   */
+  declare readonly __agentTypes: Types;
+
+  #graph: AgentGraph<Types>;
 
   #toolBehaviorVersion: "v1" | "v2" = "v2";
 
@@ -149,9 +160,9 @@ export class ReactAgent<
 
   constructor(
     public options: CreateAgentParams<
-      StructuredResponseFormat,
-      StateSchema,
-      ContextSchema
+      Types["Response"],
+      Types["State"],
+      Types["Context"]
     >
   ) {
     this.#toolBehaviorVersion = options.version ?? this.#toolBehaviorVersion;
@@ -194,12 +205,12 @@ export class ReactAgent<
      * Using Zod with withLangGraph ensures LangGraph Studio gets proper metadata
      */
     const { state, input, output } = createAgentAnnotationConditional<
-      StateSchema,
-      TMiddleware
+      Types["State"],
+      Types["Middleware"]
     >(
       this.options.responseFormat !== undefined,
-      this.options.stateSchema as StateSchema,
-      this.options.middleware as TMiddleware
+      this.options.stateSchema as Types["State"],
+      this.options.middleware as Types["Middleware"]
     );
 
     const workflow = new StateGraph(
@@ -615,23 +626,13 @@ export class ReactAgent<
       store: this.options.store,
       name: this.options.name,
       description: this.options.description,
-    }) as unknown as AgentGraph<
-      StateSchema,
-      StructuredResponseFormat,
-      ContextSchema,
-      TMiddleware
-    >;
+    }) as unknown as AgentGraph<Types>;
   }
 
   /**
    * Get the compiled {@link https://docs.langchain.com/oss/javascript/langgraph/use-graph-api | StateGraph}.
    */
-  get graph(): AgentGraph<
-    StateSchema,
-    StructuredResponseFormat,
-    ContextSchema,
-    TMiddleware
-  > {
+  get graph(): AgentGraph<Types> {
     return this.#graph;
   }
 
@@ -946,9 +947,9 @@ export class ReactAgent<
    * Initialize middleware states if not already present in the input state.
    */
   async #initializeMiddlewareStates(
-    state: InvokeStateParameter<StateSchema, TMiddleware>,
+    state: InvokeStateParameter<Types>,
     config: RunnableConfig
-  ): Promise<InvokeStateParameter<StateSchema, TMiddleware>> {
+  ): Promise<InvokeStateParameter<Types>> {
     if (
       !this.options.middleware ||
       this.options.middleware.length === 0 ||
@@ -968,7 +969,7 @@ export class ReactAgent<
     const updatedState = {
       ...threadState.values,
       ...state,
-    } as InvokeStateParameter<StateSchema, TMiddleware>;
+    } as InvokeStateParameter<Types>;
     if (!updatedState) {
       return updatedState;
     }
@@ -1027,17 +1028,17 @@ export class ReactAgent<
    * ```
    */
   async invoke(
-    state: InvokeStateParameter<StateSchema, TMiddleware>,
+    state: InvokeStateParameter<Types>,
     config?: InvokeConfiguration<
-      InferContextInput<ContextSchema> &
-        InferMiddlewareContextInputs<TMiddleware>
+      InferContextInput<
+        Types["Context"] extends AnyAnnotationRoot | InteropZodObject
+          ? Types["Context"]
+          : AnyAnnotationRoot
+      > &
+        InferMiddlewareContextInputs<Types["Middleware"]>
     >
   ) {
-    type FullState = MergedAgentState<
-      StateSchema,
-      StructuredResponseFormat,
-      TMiddleware
-    >;
+    type FullState = MergedAgentState<Types>;
     const initializedState = await this.#initializeMiddlewareStates(
       state,
       config as RunnableConfig
@@ -1045,8 +1046,12 @@ export class ReactAgent<
 
     return this.#graph.invoke(
       initializedState,
-      config as unknown as InferContextInput<ContextSchema> &
-        InferMiddlewareContextInputs<TMiddleware>
+      config as unknown as InferContextInput<
+        Types["Context"] extends AnyAnnotationRoot | InteropZodObject
+          ? Types["Context"]
+          : AnyAnnotationRoot
+      > &
+        InferMiddlewareContextInputs<Types["Middleware"]>
     ) as Promise<FullState>;
   }
 
@@ -1096,10 +1101,14 @@ export class ReactAgent<
     TStreamMode extends StreamMode | StreamMode[] | undefined,
     TEncoding extends "text/event-stream" | undefined
   >(
-    state: InvokeStateParameter<StateSchema, TMiddleware>,
+    state: InvokeStateParameter<Types>,
     config?: StreamConfiguration<
-      InferContextInput<ContextSchema> &
-        InferMiddlewareContextInputs<TMiddleware>,
+      InferContextInput<
+        Types["Context"] extends AnyAnnotationRoot | InteropZodObject
+          ? Types["Context"]
+          : AnyAnnotationRoot
+      > &
+        InferMiddlewareContextInputs<Types["Middleware"]>,
       TStreamMode,
       TEncoding
     >
@@ -1116,8 +1125,8 @@ export class ReactAgent<
         StreamOutputMap<
           TStreamMode,
           false,
-          MergedAgentState<StateSchema, StructuredResponseFormat, TMiddleware>,
-          MergedAgentState<StateSchema, StructuredResponseFormat, TMiddleware>,
+          MergedAgentState<Types>,
+          MergedAgentState<Types>,
           string,
           unknown,
           unknown,
@@ -1183,10 +1192,14 @@ export class ReactAgent<
    * @internal
    */
   streamEvents(
-    state: InvokeStateParameter<StateSchema, TMiddleware>,
+    state: InvokeStateParameter<Types>,
     config?: StreamConfiguration<
-      InferContextInput<ContextSchema> &
-        InferMiddlewareContextInputs<TMiddleware>,
+      InferContextInput<
+        Types["Context"] extends AnyAnnotationRoot | InteropZodObject
+          ? Types["Context"]
+          : AnyAnnotationRoot
+      > &
+        InferMiddlewareContextInputs<Types["Middleware"]>,
       StreamMode | StreamMode[] | undefined,
       "text/event-stream" | undefined
     > & { version?: "v1" | "v2" },
