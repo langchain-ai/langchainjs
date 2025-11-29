@@ -68,16 +68,77 @@ import type {
   GeminiTool,
 } from "./types.js";
 
+export type GooglePlatformType = "gai" | "gcp";
+
+export function getPlatformType(
+  platform: GooglePlatformType | undefined,
+  hasApiKey: boolean,
+): GooglePlatformType {
+  if (typeof platform !== "undefined") {
+    return platform;
+  } else if (hasApiKey) {
+    return "gai";
+  } else {
+    return "gcp";
+  }
+}
+
 export interface BaseChatGoogleParams
   extends BaseChatModelParams,
     ChatGoogleFields {
   model: string;
+
   apiClient?: ApiClient;
+
+  /**
+   * Hostname for the API call (if this is running on GCP)
+   * Usually this is computed based on location and platformType.
+   **/
+  endpoint?: string;
+
+  /**
+   * Region where the LLM is stored (if this is running on GCP)
+   * Defaults to "global"
+   **/
+  location?: string;
+
+  /**
+   * The version of the API functions. Part of the path.
+   * Usually this is computed based on platformType.
+   **/
+  apiVersion?: string;
+
+  /**
+   * What platform to run the service on.
+   * If not specified, the class should determine this from other
+   * means. Either way, the platform actually used will be in
+   * the "platform" getter.
+   */
+  platformType?: GooglePlatformType;
+
+  /**
+   * For compatibility with Google's libraries, should this use Vertex?
+   * The "platformType" parmeter takes precedence.
+   */
+  vertexai?: boolean;
 }
 
 export interface BaseChatGoogleCallOptions
   extends BaseChatModelCallOptions,
     ChatGoogleFields {}
+
+export function fieldPlatformType(params: BaseChatGoogleParams): GooglePlatformType | undefined {
+  if (typeof params === "undefined") {
+    return undefined;
+  }
+  if (typeof params.platformType !== "undefined") {
+    return params.platformType;
+  }
+  if (params.vertexai === true) {
+    return "gcp";
+  }
+  return undefined;
+}
 
 export abstract class BaseChatGoogle<
   CallOptions extends BaseChatGoogleCallOptions = BaseChatGoogleCallOptions
@@ -86,20 +147,115 @@ export abstract class BaseChatGoogle<
 
   streaming = false;
 
+  protected _platform?: GooglePlatformType;
+
+  protected _endpoint?: string;
+
+  protected _location?: string;
+
+  protected _apiVersion?: string;
+
   protected apiClient: ApiClient;
 
   constructor(protected params: BaseChatGoogleParams) {
     super(params);
+
     if (!params.apiClient) {
       throw new Error("BaseChatGoogle requires an apiClient");
     }
-    this.model = params.model;
     this.apiClient = params.apiClient;
+
+    this.model = params.model;
+    this._platform = fieldPlatformType(params);
+    this._endpoint = params.endpoint;
+    this._location = params.location;
+    this._apiVersion = params.apiVersion;
   }
 
-  abstract _llmType(): string;
+  _llmType(): string {
+    return "google";
+  }
 
-  abstract getBaseUrl(): URL;
+  get platformType(): GooglePlatformType | undefined {
+    return this._platform;
+  }
+
+  get platform(): GooglePlatformType {
+    return getPlatformType(this._platform, this.apiClient.hasApiKey());
+  }
+
+  get isVertexExpress(): boolean {
+    return this.platform === "gcp" && this.apiClient.hasApiKey();
+  }
+
+  get apiVersion(): string {
+    if (typeof this._apiVersion !== "undefined") {
+      return this._apiVersion;
+    } else if (this.platform === "gai") {
+      return "v1beta";
+    } else {
+      return "v1";
+    }
+  }
+
+  get location(): string {
+    return this._location || "global";
+  }
+
+  get endpoint(): string {
+    if (typeof this._endpoint !== "undefined") {
+      return this._endpoint;
+    } else if (this.platform === "gai") {
+      return "generativelanguage.googleapis.com";
+    } else if (this.isVertexExpress) {
+      return "aiplatform.googleapis.com";
+    } else if (this.location === "global") {
+      // See https://docs.cloud.google.com/vertex-ai/generative-ai/docs/learn/locations#use_the_global_endpoint
+      return "aiplatform.googleapis.com";
+    } else {
+      return `${this.location}-aiplatform.googleapis.com`;
+    }
+  }
+
+  get publisher(): string {
+    return "google";
+  }
+
+  get urlMethod(): string {
+    return this.streaming
+      ? "streamGenerateContent?alt=sse"
+      : "generateContent";
+  }
+
+  async buildUrlGenerativeLanguage(): Promise<string> {
+    return `https://${this.endpoint}/${this.apiVersion}/models/${this.model}:${this.urlMethod}`;
+  }
+
+  async buildUrlVertexExpress(): Promise<string> {
+    return `https://${this.endpoint}/${this.apiVersion}/publishers/${this.publisher}/models/${this.model}:${this.urlMethod}`;
+  }
+
+  async buildUrlVertexLocation(): Promise<string> {
+    const projectId = await this.apiClient.getProjectId();
+    return `https://${this.endpoint}/${this.apiVersion}/projects/${projectId}/locations/${this.location}/publishers/${this.publisher}/models/${this.model}:${this.urlMethod}`;
+  }
+
+  async buildUrlVertex(): Promise<string> {
+    if (this.isVertexExpress) {
+      return this.buildUrlVertexExpress();
+    } else {
+      return this.buildUrlVertexLocation();
+    }
+  }
+
+  async buildUrl(): Promise<string> {
+    switch (this.platform) {
+      case "gai":
+        return this.buildUrlGenerativeLanguage();
+      default:
+        return this.buildUrlVertex();
+    }
+  }
 
   override invocationParams(options: this["ParsedCallOptions"]) {
     const fields = combineGoogleChatModelFields(this.params, options);
@@ -168,7 +324,8 @@ export abstract class BaseChatGoogle<
 
   async _generate(
     messages: BaseMessage[],
-    options: this["ParsedCallOptions"]
+    options: this["ParsedCallOptions"],
+    runManager?: CallbackManagerForLLMRun
   ): Promise<ChatResult> {
     if (this.streaming) {
       const stream = await this._streamResponseChunks(messages, options);
@@ -181,15 +338,22 @@ export abstract class BaseChatGoogle<
       };
     }
 
+    const url = await this.buildUrl();
     const body: GenerateContentRequest = {
       ...this.invocationParams(options),
       systemInstruction: convertMessagesToGeminiSystemInstruction(messages),
       contents: convertMessagesToGeminiContents(messages),
     };
 
+    const moduleName = this.constructor.name;
+    await runManager?.handleCustomEvent(`google-request-${moduleName}`, {
+      url,
+      body,
+    });
+
     const response = await this.apiClient.fetch(
       new Request(
-        new URL(`./${this.model}:generateContent`, this.getBaseUrl()),
+        url,
         {
           method: "POST",
           headers: {
@@ -199,6 +363,10 @@ export abstract class BaseChatGoogle<
         }
       )
     );
+
+    await runManager?.handleCustomEvent(`google-response-${moduleName}`, {
+      response,
+    })
 
     if (!response.ok) throw await RequestError.fromResponse(response);
     const data: GenerateContentResponse = await response.json();
@@ -290,12 +458,10 @@ export abstract class BaseChatGoogle<
       contents: convertMessagesToGeminiContents(messages),
     };
 
+    const url = await this.buildUrl();
     const response = await this.apiClient.fetch(
       new Request(
-        new URL(
-          `./${this.model}:generateContentStream?alt=sse`,
-          this.getBaseUrl()
-        ),
+        url,
         {
           method: "POST",
           headers: {

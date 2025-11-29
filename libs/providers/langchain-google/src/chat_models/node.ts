@@ -1,11 +1,8 @@
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import {
-  type ChatGoogleVertexAIParams,
-  ChatGoogleVertexAI,
-  type ChatGoogleGenerativeAIParams,
-  ChatGoogleGenerativeAI,
+ ChatGoogleParams,
 } from "./index.js";
-import { getGoogleChatModelParams } from "./base.js";
+import { BaseChatGoogle, fieldPlatformType, getGoogleChatModelParams, getPlatformType } from "./base.js";
 import { GENERATIVE_AI_AUTH_SCOPES, VERTEX_AI_AUTH_SCOPES } from "../const.js";
 import {
   ensureAuthScopes,
@@ -13,57 +10,43 @@ import {
   NodeApiClientParams,
 } from "../clients/node.js";
 
-interface ChatGoogleGenerativeAINodeParams
+interface ChatGoogleNodeParams
   extends NodeApiClientParams,
-    ChatGoogleGenerativeAIParams {}
+    ChatGoogleParams {}
 
-class ChatGoogleGenerativeAINode extends ChatGoogleGenerativeAI {
-  constructor(
-    model: string,
-    params?: Omit<ChatGoogleGenerativeAINodeParams, "model">
-  );
-  constructor(params: ChatGoogleGenerativeAINodeParams);
-  constructor(
-    modelOrParams: string | ChatGoogleGenerativeAINodeParams,
-    paramsArg?: Omit<ChatGoogleGenerativeAINodeParams, "model">
-  ) {
-    const params = getGoogleChatModelParams(modelOrParams, paramsArg);
-    if (!params.googleAuthOptions) {
-      params.apiKey = params.apiKey ?? getEnvironmentVariable("GOOGLE_API_KEY");
-    }
-    if (params.googleAuthOptions) {
-      params.googleAuthOptions = ensureAuthScopes(
-        params.googleAuthOptions,
-        GENERATIVE_AI_AUTH_SCOPES
-      );
-    }
-    const apiClient = params?.apiClient ?? new NodeApiClient(params);
-    super({ ...params, apiClient });
+function getRequiredScopes(params: ChatGoogleNodeParams): string[] {
+  const hasApiKey = typeof params.apiKey !== "undefined";
+  const platformType = fieldPlatformType(params);
+  const platform = getPlatformType(platformType, hasApiKey);
+  switch (platform) {
+    case "gai":
+      return GENERATIVE_AI_AUTH_SCOPES;
+    case "gcp":
+      return VERTEX_AI_AUTH_SCOPES;
+    default:
+      return VERTEX_AI_AUTH_SCOPES;
   }
 }
 
-interface ChatGoogleVertexAINodeParams
-  extends NodeApiClientParams,
-    ChatGoogleVertexAIParams {}
-
-class ChatGoogleVertexAINode extends ChatGoogleVertexAI {
+class ChatGoogleNode extends BaseChatGoogle {
   constructor(
     model: string,
-    params?: Omit<ChatGoogleVertexAINodeParams, "model">
+    params?: Omit<ChatGoogleNodeParams, "model">
   );
-  constructor(params: ChatGoogleVertexAINodeParams);
+  constructor(params: ChatGoogleNodeParams);
   constructor(
-    modelOrParams: string | ChatGoogleVertexAINodeParams,
-    paramsArg?: Omit<ChatGoogleVertexAINodeParams, "model">
+    modelOrParams: string | ChatGoogleNodeParams,
+    paramsArg?: Omit<ChatGoogleNodeParams, "model">
   ) {
     const params = getGoogleChatModelParams(modelOrParams, paramsArg);
     if (!params.googleAuthOptions) {
       params.apiKey = params.apiKey ?? getEnvironmentVariable("GOOGLE_API_KEY");
     }
+    const requiredScopes: string[] = getRequiredScopes(params);
     if (params.googleAuthOptions) {
       params.googleAuthOptions = ensureAuthScopes(
         params.googleAuthOptions,
-        VERTEX_AI_AUTH_SCOPES
+        requiredScopes,
       );
     }
     const apiClient = params?.apiClient ?? new NodeApiClient(params);
@@ -72,8 +55,6 @@ class ChatGoogleVertexAINode extends ChatGoogleVertexAI {
 }
 
 export {
-  type ChatGoogleVertexAINodeParams as ChatGoogleVertexAIParams,
-  ChatGoogleVertexAINode as ChatGoogleVertexAI,
-  type ChatGoogleGenerativeAINodeParams as ChatGoogleGenerativeAIParams,
-  ChatGoogleGenerativeAINode as ChatGoogleGenerativeAI,
+  type ChatGoogleNodeParams as ChatGoogleParams,
+  ChatGoogleNode as ChatGoogle,
 };
