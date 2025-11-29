@@ -5,6 +5,7 @@ import { z } from "zod/v3";
 
 import { createAgent, toolStrategy, providerStrategy } from "../index.js";
 import type { JsonSchemaFormat } from "../responses.js";
+import type { InferAgentResponse } from "../types.js";
 import { FakeToolCallingChatModel } from "./utils.js";
 
 const prompt = {
@@ -133,6 +134,33 @@ describe("response format", () => {
       // The type should be inferred from the array of zod schemas
       expectTypeOf(res.structuredResponse).toEqualTypeOf<
         { capitalA: string } | { capitalB: string }
+      >();
+    });
+
+    it("should properly infer response format from agent type", () => {
+      const agent = createAgent({
+        model: new FakeToolCallingChatModel({}),
+        tools: [],
+        // Note: Using 'as const' is required for proper type inference
+        // of the union type from the array of schemas
+        responseFormat: [
+          z.object({
+            capitalA: z.string(),
+          }),
+          z.object({
+            capitalB: z.string(),
+          }),
+        ] as const,
+      });
+
+      type AgentResponse = InferAgentResponse<typeof agent>;
+      expectTypeOf<AgentResponse>().toEqualTypeOf<
+        | {
+            capitalA: string;
+          }
+        | {
+            capitalB: string;
+          }
       >();
     });
   });
