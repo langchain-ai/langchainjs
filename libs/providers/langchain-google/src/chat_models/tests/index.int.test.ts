@@ -28,6 +28,25 @@ type ModelInfo = {
 
 const testGoogleInfo: ModelInfo[] = [
   {
+    model: "gemini-2.0-flash-lite",
+    testConfig: {
+      useApiKey: true,
+    }
+  },
+  {
+    model: "gemini-2.0-flash-lite",
+    testConfig: {
+      node: true,
+    }
+  },
+  {
+    model: "gemini-2.0-flash-lite",
+    testConfig: {
+      node: true,
+      useApiKey: true,
+    }
+  },
+  {
     model: "gemini-2.0-flash",
     testConfig: {
       useApiKey: true,
@@ -37,6 +56,89 @@ const testGoogleInfo: ModelInfo[] = [
     model: "gemini-2.0-flash",
     testConfig: {
       node: true,
+    }
+  },
+  {
+    model: "gemini-2.0-flash",
+    testConfig: {
+      node: true,
+      useApiKey: true,
+    }
+  },
+  {
+    model: "gemini-2.5-flash-lite",
+    testConfig: {
+      useApiKey: true,
+    }
+  },
+  {
+    model: "gemini-2.5-flash-lite",
+    testConfig: {
+      node: true,
+    }
+  },
+  {
+    model: "gemini-2.5-flash-lite",
+    testConfig: {
+      node: true,
+      useApiKey: true,
+    }
+  },
+  {
+    model: "gemini-2.5-flash",
+    testConfig: {
+      useApiKey: true,
+    }
+  },
+  {
+    model: "gemini-2.5-flash",
+    testConfig: {
+      node: true,
+    }
+  },
+  {
+    model: "gemini-2.5-flash",
+    testConfig: {
+      node: true,
+      useApiKey: true,
+    }
+  },
+  {
+    model: "gemini-2.5-pro",
+    testConfig: {
+      useApiKey: true,
+    }
+  },
+  {
+    model: "gemini-2.5-pro",
+    testConfig: {
+      node: true,
+    }
+  },
+  {
+    model: "gemini-2.5-pro",
+    testConfig: {
+      node: true,
+      useApiKey: true,
+    }
+  },
+  {
+    model: "gemini-3-pro-preview",
+    testConfig: {
+      useApiKey: true,
+    }
+  },
+  {
+    model: "gemini-3-pro-preview",
+    testConfig: {
+      node: true,
+    }
+  },
+  {
+    model: "gemini-3-pro-preview",
+    testConfig: {
+      node: true,
+      useApiKey: true,
     }
   },
 ];
