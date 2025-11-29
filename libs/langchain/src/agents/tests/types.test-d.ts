@@ -6,8 +6,9 @@ import { z as zodMain } from "zod";
 import { tool } from "@langchain/core/tools";
 import type { BaseStore } from "@langchain/langgraph";
 
-import { createAgent } from "../index.js";
+import { createAgent, createMiddleware } from "../index.js";
 import type { Runtime, WithMaybeContext } from "../runtime.js";
+import type { InferAgentContext } from "../types.js";
 
 describe("WithMaybeContext", () => {
   it("should work with string prompt (zod/v3)", async () => {
@@ -105,5 +106,32 @@ describe("WithMaybeContext", () => {
 
     const a: WithMaybeContext<typeof contextSchema> = {};
     console.log(a);
+  });
+
+  it("should properly infer context from agent type", () => {
+    const contextSchema = z.object({
+      foobar: z.object({
+        baz: z.string(),
+      }),
+    });
+    const middleware = createMiddleware({
+      name: "middleware",
+      contextSchema: z.object({
+        middlewareContext: z.number(),
+      }),
+    });
+    const agent = createAgent({
+      model: "openai:gpt-4",
+      contextSchema,
+      middleware: [middleware],
+      tools: [],
+    });
+    type AgentContext = InferAgentContext<typeof agent>;
+    expectTypeOf<AgentContext>().toMatchObjectType<{
+      foobar: {
+        baz: string;
+      };
+      middlewareContext: number;
+    }>();
   });
 });
