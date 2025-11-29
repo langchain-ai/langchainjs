@@ -364,12 +364,22 @@ export abstract class BaseChatGoogle<
       )
     );
 
-    await runManager?.handleCustomEvent(`google-response-${moduleName}`, {
-      response,
-    })
+    if (!response.ok) {
+      const error = await RequestError.fromResponse(response);
+      await runManager?.handleCustomEvent(`google-response-${moduleName}`, {
+        error,
+      })
+      throw error;
+    }
 
-    if (!response.ok) throw await RequestError.fromResponse(response);
     const data: GenerateContentResponse = await response.json();
+    await runManager?.handleCustomEvent(`google-response-${moduleName}`, {
+      data,
+      url: response.url,
+      headers: response.headers,
+      status: response.status,
+      statusText: response.statusText,
+    })
 
     // Check for prompt feedback errors
     if (data.promptFeedback?.blockReason) {
