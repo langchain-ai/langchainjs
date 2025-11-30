@@ -1755,8 +1755,12 @@ describe("Mock ChatGoogle - Gemini", () => {
     expect(data.generationConfig.responseSchema).toBeDefined();
     expect(data.generationConfig.responseSchema.type).toBe("object");
     expect(data.generationConfig.responseSchema.properties).toBeDefined();
-    expect(data.generationConfig.responseSchema.properties.testName).toBeDefined();
-    expect(data.generationConfig.responseSchema.properties.testName.type).toBe("string");
+    expect(
+      data.generationConfig.responseSchema.properties.testName
+    ).toBeDefined();
+    expect(data.generationConfig.responseSchema.properties.testName.type).toBe(
+      "string"
+    );
     // Should set responseMimeType to application/json
     expect(data.generationConfig.responseMimeType).toBe("application/json");
   });
