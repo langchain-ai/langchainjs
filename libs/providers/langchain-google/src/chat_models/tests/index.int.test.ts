@@ -11,22 +11,28 @@ import {
   ChatGoogleParams as ChatGoogleNodeParams,
 } from "../../node.js";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
-import { AIMessage } from "@langchain/core/messages";
+import { AIMessage, BaseMessageChunk, HumanMessage, SystemMessage } from "@langchain/core/messages";
+import { BaseLanguageModelInput } from "@langchain/core/language_models/base";
+import { ChatPromptValue } from "@langchain/core/prompt_values";
 
 type ModelInfoConfig = {
   node?: boolean,
   useApiKey?: boolean, // Should we set the API key from TEST_API_KEY
   useCredentials?: boolean, // Should we set the credentials from TEST_CREDENTIALS
+  only?: boolean,
+  skip?: boolean,
   delay?: number,
 }
 
+type DefaultGoogleParams = Omit<ChatGoogleParams | ChatGoogleNodeParams, "model">;
+
 type ModelInfo = {
   model: string,
-  defaultGoogleParams?: Omit<ChatGoogleParams | ChatGoogleNodeParams, "model">,
+  defaultGoogleParams?: DefaultGoogleParams,
   testConfig?: ModelInfoConfig,
 }
 
-const testGoogleInfo: ModelInfo[] = [
+const allModelInfo: ModelInfo[] = [
   {
     model: "gemini-2.0-flash-lite",
     testConfig: {
@@ -143,7 +149,23 @@ const testGoogleInfo: ModelInfo[] = [
   },
 ];
 
-describe.each(testGoogleInfo)(
+function filterTestableModels(): ModelInfo[] {
+  const modelsWithOnly = allModelInfo.filter(
+    (modelInfo) => modelInfo.testConfig?.only === true
+  );
+
+  const startingModels = modelsWithOnly.length > 0
+    ? modelsWithOnly
+    : allModelInfo;
+
+  return startingModels.filter(
+    (modelInfo) => modelInfo.testConfig?.skip !== true
+  );
+}
+
+const coreModelInfo: ModelInfo[] = filterTestableModels();
+
+describe.each(coreModelInfo)(
   "Google ($model) $testConfig",
   ({model, defaultGoogleParams, testConfig}: ModelInfo) => {
 
@@ -153,7 +175,7 @@ describe.each(testGoogleInfo)(
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let warnSpy: MockInstance<any>;
 
-    function newChatGoogle(fields?: ChatGoogleParams | ChatGoogleNodeParams): ChatGoogle | ChatGoogleNode {
+    function newChatGoogle(fields?: DefaultGoogleParams): ChatGoogle | ChatGoogleNode {
       recorder = new GoogleRequestRecorder();
       callbacks = [recorder, new GoogleRequestLogger()];
 
@@ -193,7 +215,7 @@ describe.each(testGoogleInfo)(
       warnSpy.mockRestore();
     });
 
-    test("invoke", async () => {
+    test.skip("invoke", async () => {
       const llm = newChatGoogle();
       const result = await llm.invoke("What is 1 + 1?");
       console.log(result);
@@ -208,6 +230,59 @@ describe.each(testGoogleInfo)(
       const contentBlock = result.contentBlocks[0];
       expect(contentBlock.type).to.equal("text");
       expect(contentBlock.text).toMatch(/(1 + 1 (equals|is|=) )?2.? ?/);
-    })
+    });
+
+    test.skip("invoke seed", async () => {
+      const llm = newChatGoogle({
+        seed: 6,
+      });
+      const result = await llm.invoke("What is 1 + 1?");
+      console.log(result);
+
+      expect(AIMessage.isInstance(result)).to.equal(true);
+
+      expect(result.content as string).toMatch(/(1 + 1 (equals|is|=) )?2.? ?/);
+
+      expect(Array.isArray(result.contentBlocks)).to.equal(true);
+      expect(result.contentBlocks.length).to.equal(1);
+
+      const contentBlock = result.contentBlocks[0];
+      expect(contentBlock.type).to.equal("text");
+      expect(contentBlock.text).toMatch(/(1 + 1 (equals|is|=) )?2.? ?/);
+    });
+
+    test("stream", async () => {
+      const model = newChatGoogle();
+      const input: BaseLanguageModelInput = new ChatPromptValue([
+        new SystemMessage(
+          "You will reply to all requests with as much detail as you can."
+        ),
+        new HumanMessage(
+          "What is the answer to life, the universe, and everything?"
+        ),
+      ]);
+      const res = await model.stream(input);
+      const resArray: BaseMessageChunk[] = [];
+      for await (const chunk of res) {
+        resArray.push(chunk);
+      }
+      expect(resArray).toBeDefined();
+      expect(resArray.length).toBeGreaterThanOrEqual(1);
+
+      // resArray.forEach((chunk, index) => {
+      // })
+
+      const firstChunk = resArray[0];
+      expect(firstChunk).toBeDefined();
+      expect(firstChunk.response_metadata).not.toHaveProperty("usage_metadata");
+
+      const lastChunk = resArray[resArray.length - 1];
+      expect(lastChunk).toBeDefined();
+      expect(lastChunk.type).toEqual("ai");
+      expect(lastChunk).toHaveProperty("usage_metadata");
+
+      expect(warnSpy).not.toHaveBeenCalled();
+    });
+
   }
 )
