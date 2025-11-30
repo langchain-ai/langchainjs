@@ -1673,7 +1673,10 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
       frequencyPenalty: parameters.frequencyPenalty,
       maxOutputTokens: parameters.maxOutputTokens,
       stopSequences: parameters.stopSequences,
-      responseMimeType: parameters.responseMimeType,
+      responseMimeType: parameters.responseSchema
+        ? "application/json"
+        : parameters.responseMimeType,
+      responseSchema: parameters.responseSchema,
       responseModalities: parameters.responseModalities,
       speechConfig: normalizeSpeechConfig(parameters.speechConfig),
     };
