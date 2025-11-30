@@ -227,33 +227,33 @@ export abstract class BaseChatGoogle<
       : "generateContent";
   }
 
-  async buildUrlGenerativeLanguage(): Promise<string> {
-    return `https://${this.endpoint}/${this.apiVersion}/models/${this.model}:${this.urlMethod}`;
+  async buildUrlGenerativeLanguage(urlMethod?: string): Promise<string> {
+    return `https://${this.endpoint}/${this.apiVersion}/models/${this.model}:${urlMethod ?? this.urlMethod}`;
   }
 
-  async buildUrlVertexExpress(): Promise<string> {
-    return `https://${this.endpoint}/${this.apiVersion}/publishers/${this.publisher}/models/${this.model}:${this.urlMethod}`;
+  async buildUrlVertexExpress(urlMethod?: string): Promise<string> {
+    return `https://${this.endpoint}/${this.apiVersion}/publishers/${this.publisher}/models/${this.model}:${urlMethod ?? this.urlMethod}`;
   }
 
-  async buildUrlVertexLocation(): Promise<string> {
+  async buildUrlVertexLocation(urlMethod?: string): Promise<string> {
     const projectId = await this.apiClient.getProjectId();
-    return `https://${this.endpoint}/${this.apiVersion}/projects/${projectId}/locations/${this.location}/publishers/${this.publisher}/models/${this.model}:${this.urlMethod}`;
+    return `https://${this.endpoint}/${this.apiVersion}/projects/${projectId}/locations/${this.location}/publishers/${this.publisher}/models/${this.model}:${urlMethod ?? this.urlMethod}`;
   }
 
-  async buildUrlVertex(): Promise<string> {
+  async buildUrlVertex(urlMethod?: string): Promise<string> {
     if (this.isVertexExpress) {
-      return this.buildUrlVertexExpress();
+      return this.buildUrlVertexExpress(urlMethod);
     } else {
-      return this.buildUrlVertexLocation();
+      return this.buildUrlVertexLocation(urlMethod);
     }
   }
 
-  async buildUrl(): Promise<string> {
+  async buildUrl(urlMethod?: string): Promise<string> {
     switch (this.platform) {
       case "gai":
-        return this.buildUrlGenerativeLanguage();
+        return this.buildUrlGenerativeLanguage(urlMethod);
       default:
-        return this.buildUrlVertex();
+        return this.buildUrlVertex(urlMethod);
     }
   }
 
@@ -468,7 +468,13 @@ export abstract class BaseChatGoogle<
       contents: convertMessagesToGeminiContents(messages),
     };
 
-    const url = await this.buildUrl();
+    const url = await this.buildUrl("streamGenerateContent?alt=sse");
+    const moduleName = this.constructor.name;
+    await runManager?.handleCustomEvent(`google-request-${moduleName}`, {
+      url,
+      body,
+    });
+
     const response = await this.apiClient.fetch(
       new Request(
         url,
@@ -483,7 +489,20 @@ export abstract class BaseChatGoogle<
       )
     );
 
-    if (!response.ok) throw await RequestError.fromResponse(response);
+    await runManager?.handleCustomEvent(`google-response-${moduleName}`, {
+      url: response.url,
+      headers: response.headers,
+      status: response.status,
+      statusText: response.statusText,
+    })
+
+    if (!response.ok) {
+      const error = await RequestError.fromResponse(response);
+      await runManager?.handleCustomEvent(`google-response-${moduleName}`, {
+        error,
+      })
+      throw error;
+    }
 
     if (response.body) {
       const stream = response.body
@@ -493,6 +512,13 @@ export abstract class BaseChatGoogle<
         .pipeThrough(
           new TransformStream<GenerateContentResponse, ChatGenerationChunk>({
             transform(chunk, controller) {
+              // eslint-disable-next-line no-void
+              void runManager?.handleCustomEvent(
+                `google-chunk-${moduleName}`,
+                {
+                  chunk,
+                }
+              )
               if (chunk === null) {
                 controller.enqueue(
                   new ChatGenerationChunk({
