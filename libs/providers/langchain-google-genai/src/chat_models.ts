@@ -63,6 +63,7 @@ import {
 } from "./types.js";
 import { convertToolsToGenAI } from "./utils/tools.js";
 import PROFILES from "./profiles.js";
+import { cleanGeminiSchema } from "./cleanGeminiSchema";
 
 interface TokenUsage {
   completionTokens?: number;
@@ -1093,7 +1094,7 @@ export class ChatGoogleGenerativeAI
                 name: functionName,
                 description:
                   jsonSchema.description ?? "A function available to call.",
-                parameters: jsonSchema as GenerativeAIFunctionDeclarationSchema,
+                parameters: cleanGeminiSchema(jsonSchema) as GenerativeAIFunctionDeclarationSchema,
               },
             ],
           },

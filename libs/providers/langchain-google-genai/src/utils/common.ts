@@ -39,6 +39,7 @@ import { isLangChainTool } from "@langchain/core/utils/function_calling";
 import { isOpenAITool } from "@langchain/core/language_models/base";
 import { ToolCallChunk } from "@langchain/core/messages/tool";
 import { v4 as uuidv4 } from "uuid";
+import { cleanGeminiSchema } from "../cleanGeminiSchema.js";
 import {
   jsonSchemaToGeminiParameters,
   schemaToGenerativeAIParameters,
@@ -358,8 +359,8 @@ export function convertMessageContentToParts(
 
     const result = Array.isArray(message.content)
       ? (message.content
-          .map((c) => _convertLangChainContentToPart(c, isMultimodalModel))
-          .filter((p) => p !== undefined) as Part[])
+        .map((c) => _convertLangChainContentToPart(c, isMultimodalModel))
+        .filter((p) => p !== undefined) as Part[])
       : message.content;
 
     if (message.status === "error") {
@@ -799,7 +800,8 @@ export function convertToGenerativeAITools(
             return {
               name: tool.name,
               description: tool.description,
-              parameters: jsonSchema,
+              parameters: cleanGeminiSchema(jsonSchema),
+
             };
           }
           if (isOpenAITool(tool)) {
