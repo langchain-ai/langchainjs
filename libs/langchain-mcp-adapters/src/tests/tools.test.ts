@@ -251,6 +251,264 @@ describe("Simplified Tool Adapter Tests", () => {
       expect(tools[1].name).toBe("tool2");
     });
 
+    test("should handle JSON schemas with $defs references (Pydantic v2 style)", async () => {
+      // This schema is similar to what Pydantic v2 generates with nested models
+      const pydanticV2Schema = {
+        type: "object" as const,
+        properties: {
+          items: {
+            type: "array",
+            items: {
+              $ref: "#/$defs/DataItem",
+            },
+            description: "List of items",
+          },
+          metadata: {
+            $ref: "#/$defs/Metadata",
+            description: "Response metadata",
+          },
+        },
+        required: ["items", "metadata"],
+        $defs: {
+          DataItem: {
+            type: "object",
+            properties: {
+              id: { type: "string", description: "Item ID" },
+              name: { type: "string", description: "Item name" },
+              value: { type: "number", description: "Item value" },
+            },
+            required: ["id", "name", "value"],
+          },
+          Metadata: {
+            type: "object",
+            properties: {
+              total_count: { type: "integer", description: "Total count" },
+              timestamp: { type: "string", description: "Timestamp" },
+            },
+            required: ["total_count", "timestamp"],
+          },
+        },
+      };
+
+      mockClient.listTools.mockReturnValueOnce(
+        Promise.resolve({
+          tools: [
+            {
+              name: "query_data",
+              description: "Query tool that returns nested response",
+              inputSchema: pydanticV2Schema,
+            },
+          ],
+        })
+      );
+
+      mockClient.callTool.mockImplementation((params) => {
+        const args = params.arguments as {
+          items: Array<{ id: string; name: string; value: number }>;
+          metadata: { total_count: number; timestamp: string };
+        };
+        return Promise.resolve({
+          content: [
+            {
+              type: "text",
+              text: `Received ${args.items.length} items with total_count=${args.metadata.total_count}`,
+            },
+          ],
+        });
+      });
+
+      // Load tools - this should not throw even though schema has $defs
+      const tools = await loadMcpTools(
+        "mockServer(should handle $defs)",
+        mockClient as Client
+      );
+
+      expect(tools.length).toBe(1);
+      expect(tools[0].name).toBe("query_data");
+
+      // Invoke the tool with valid input matching the dereferenced schema
+      const result = await tools[0].invoke({
+        items: [{ id: "1", name: "Test", value: 100.0 }],
+        metadata: { total_count: 1, timestamp: "2024-01-01" },
+      });
+
+      expect(result).toBe("Received 1 items with total_count=1");
+      expect(mockClient.callTool).toHaveBeenCalledWith({
+        name: "query_data",
+        arguments: {
+          items: [{ id: "1", name: "Test", value: 100.0 }],
+          metadata: { total_count: 1, timestamp: "2024-01-01" },
+        },
+      });
+    });
+
+    test("should handle JSON schemas with definitions (older JSON Schema style)", async () => {
+      // Some tools use 'definitions' instead of '$defs'
+      const schemaWithDefinitions = {
+        type: "object" as const,
+        properties: {
+          user: {
+            $ref: "#/definitions/User",
+          },
+        },
+        required: ["user"],
+        definitions: {
+          User: {
+            type: "object",
+            properties: {
+              name: { type: "string" },
+              email: { type: "string" },
+            },
+            required: ["name", "email"],
+          },
+        },
+      };
+
+      mockClient.listTools.mockReturnValueOnce(
+        Promise.resolve({
+          tools: [
+            {
+              name: "create_user",
+              description: "Create a user",
+              inputSchema: schemaWithDefinitions,
+            },
+          ],
+        })
+      );
+
+      mockClient.callTool.mockImplementation((params) => {
+        const args = params.arguments as {
+          user: { name: string; email: string };
+        };
+        return Promise.resolve({
+          content: [
+            {
+              type: "text",
+              text: `Created user: ${args.user.name}`,
+            },
+          ],
+        });
+      });
+
+      const tools = await loadMcpTools(
+        "mockServer(should handle definitions)",
+        mockClient as Client
+      );
+
+      expect(tools.length).toBe(1);
+
+      const result = await tools[0].invoke({
+        user: { name: "John", email: "john@example.com" },
+      });
+
+      expect(result).toBe("Created user: John");
+    });
+
+    test("should handle deeply nested $ref references", async () => {
+      const deeplyNestedSchema = {
+        type: "object" as const,
+        properties: {
+          order: {
+            $ref: "#/$defs/Order",
+          },
+        },
+        required: ["order"],
+        $defs: {
+          Order: {
+            type: "object",
+            properties: {
+              id: { type: "string" },
+              customer: {
+                $ref: "#/$defs/Customer",
+              },
+              items: {
+                type: "array",
+                items: {
+                  $ref: "#/$defs/OrderItem",
+                },
+              },
+            },
+            required: ["id", "customer", "items"],
+          },
+          Customer: {
+            type: "object",
+            properties: {
+              name: { type: "string" },
+              address: {
+                $ref: "#/$defs/Address",
+              },
+            },
+            required: ["name", "address"],
+          },
+          Address: {
+            type: "object",
+            properties: {
+              street: { type: "string" },
+              city: { type: "string" },
+            },
+            required: ["street", "city"],
+          },
+          OrderItem: {
+            type: "object",
+            properties: {
+              product: { type: "string" },
+              quantity: { type: "integer" },
+            },
+            required: ["product", "quantity"],
+          },
+        },
+      };
+
+      mockClient.listTools.mockReturnValueOnce(
+        Promise.resolve({
+          tools: [
+            {
+              name: "create_order",
+              description: "Create an order",
+              inputSchema: deeplyNestedSchema,
+            },
+          ],
+        })
+      );
+
+      mockClient.callTool.mockImplementation(() => {
+        return Promise.resolve({
+          content: [
+            {
+              type: "text",
+              text: "Order created successfully",
+            },
+          ],
+        });
+      });
+
+      const tools = await loadMcpTools(
+        "mockServer(should handle deeply nested refs)",
+        mockClient as Client
+      );
+
+      expect(tools.length).toBe(1);
+
+      const result = await tools[0].invoke({
+        order: {
+          id: "order-123",
+          customer: {
+            name: "Jane Doe",
+            address: {
+              street: "123 Main St",
+              city: "Springfield",
+            },
+          },
+          items: [
+            { product: "Widget", quantity: 2 },
+            { product: "Gadget", quantity: 1 },
+          ],
+        },
+      });
+
+      expect(result).toBe("Order created successfully");
+    });
+
     test("should load tools with specified response format", async () => {
       // Set up mock response with input schema
       mockClient.listTools.mockReturnValueOnce(
