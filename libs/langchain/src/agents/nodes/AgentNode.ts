@@ -63,6 +63,23 @@ type InternalModelResponse<StructuredResponseFormat> =
   | ResponseHandlerResult<StructuredResponseFormat>;
 
 /**
+ * Check if the response is an internal model response.
+ * @param response - The response to check.
+ * @returns True if the response is an internal model response, false otherwise.
+ */
+function isInternalModelResponse<StructuredResponseFormat>(
+  response: unknown
+): response is InternalModelResponse<StructuredResponseFormat> {
+  return (
+    AIMessage.isInstance(response) ||
+    (typeof response === "object" &&
+      response !== null &&
+      "structuredResponse" in response &&
+      "messages" in response)
+  );
+}
+
+/**
  * The name of the agent node in the state graph.
  */
 export const AGENT_NODE_NAME = "model_request";
@@ -537,7 +554,7 @@ export class AgentNode<
             /**
              * Validate that this specific middleware returned a valid AIMessage
              */
-            if (!AIMessage.isInstance(middlewareResponse)) {
+            if (!isInternalModelResponse(middlewareResponse)) {
               throw new Error(
                 `Invalid response from "wrapModelCall" in middleware "${
                   currentMiddleware.name
