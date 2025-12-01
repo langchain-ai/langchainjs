@@ -22,6 +22,7 @@ import {
   interopZodObjectStrict,
   ZodObjectV4,
   interopZodTransformInputSchema,
+  isInteropZodError,
 } from "../zod.js";
 
 describe("Zod utility functions", () => {
@@ -1737,6 +1738,66 @@ describe("Zod utility functions", () => {
       expect(() => interopZodTransformInputSchema("string" as any)).toThrow();
       expect(() => interopZodTransformInputSchema(123 as any)).toThrow();
       expect(() => interopZodTransformInputSchema([] as any)).toThrow();
+    });
+  });
+
+  describe("isInteropZodError", () => {
+    it("should return true for ZodError from v3 schema validation", () => {
+      const schema = z3.string();
+      try {
+        schema.parse(123);
+        expect.fail("Expected error to be thrown");
+      } catch (e) {
+        expect(isInteropZodError(e)).toBe(true);
+      }
+    });
+
+    it("should return true for $ZodError from v4 schema validation", () => {
+      const schema = z4.string();
+      try {
+        schema.parse(123);
+        expect.fail("Expected error to be thrown");
+      } catch (e) {
+        expect(isInteropZodError(e)).toBe(true);
+      }
+    });
+
+    it("should return false for non-Zod errors", () => {
+      expect(isInteropZodError(new Error("Regular error"))).toBe(false);
+      expect(isInteropZodError(new TypeError("Type error"))).toBe(false);
+      expect(isInteropZodError(new ReferenceError("Reference error"))).toBe(
+        false
+      );
+      expect(isInteropZodError(new SyntaxError("Syntax error"))).toBe(false);
+    });
+
+    it("should return false for non-error values", () => {
+      expect(isInteropZodError(null)).toBe(false);
+      expect(isInteropZodError(undefined)).toBe(false);
+      expect(isInteropZodError("string")).toBe(false);
+      expect(isInteropZodError(123)).toBe(false);
+      expect(isInteropZodError({})).toBe(false);
+      expect(isInteropZodError([])).toBe(false);
+      expect(isInteropZodError(true)).toBe(false);
+      expect(isInteropZodError(false)).toBe(false);
+    });
+
+    it("should return false for error-like objects that are not Error instances", () => {
+      const errorLike = {
+        constructor: { name: "ZodError" },
+        message: "Some error",
+      };
+      expect(isInteropZodError(errorLike)).toBe(false);
+    });
+
+    it("should return false for custom Error subclasses", () => {
+      class CustomError extends Error {
+        constructor(message: string) {
+          super(message);
+          this.name = "CustomError";
+        }
+      }
+      expect(isInteropZodError(new CustomError("Custom error"))).toBe(false);
     });
   });
 });

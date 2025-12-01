@@ -10,7 +10,8 @@
   },
   "packageManager": "pnpm@10.14.0",
   "scripts": {
-    "build": "turbo build:compile --filter=\"!test-exports-*\" --filter=\"!@langchain/build\"",
+    "build": "turbo build:compile",
+    "watch": "turbo watch build:compile",
     "clean": "turbo clean",
     "dev": "pnpm --filter @langchain/build watch",
     "format": "turbo format --concurrency=50",
@@ -19,9 +20,10 @@
     "lint": "turbo lint --concurrency=50",
     "lint:fix": "turbo lint:fix --concurrency=50",
     "precommit": "turbo precommit",
-    "prerelease": "pnpm build",
+    "prerelease": "BUILD_MODE=prerelease pnpm build",
     "release": "changeset publish",
     "test": "pnpm test:unit && pnpm test:exports:docker",
+    "test:bench": "turbo test:bench",
     "test:unit": "turbo test --filter=\"!test-exports-*\" --filter=!examples --filter=!create-langchain-integration",
     "test:unit:ci": "turbo test:ci",
     "test:ranges:docker": "docker compose -f dependency_range_tests/docker-compose.yml up --force-recreate",
@@ -35,6 +37,7 @@
   "devDependencies": {
     "@changesets/changelog-github": "^0.5.1",
     "@changesets/cli": "^2.29.7",
+    "@langchain/build": "workspace:*",
     "@tsconfig/recommended": "^1.0.2",
     "@types/jest": "^29.5.3",
     "@types/semver": "^7",
@@ -43,6 +46,7 @@
     "lint-staged": "^13.1.1",
     "prettier": "^2.8.3",
     "semver": "^7.5.4",
+    "tsdown": "^0.15.12",
     "tsx": "^4.20.3",
     "turbo": "^2.5.4",
     "typescript": "^5.9.3"

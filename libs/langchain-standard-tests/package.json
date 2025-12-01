@@ -1,6 +1,6 @@
 {
   "name": "@langchain/standard-tests",
-  "version": "0.0.1",
+  "version": "0.0.3",
   "description": "Standard tests for LangChain.js",
   "author": "LangChain",
   "license": "MIT",
@@ -15,8 +15,8 @@
   },
   "homepage": "https://github.com/langchain-ai/langchainjs/tree/main/libs/langchain-standard-tests/",
   "scripts": {
-    "build": "turbo build:compile --filter @langchain/standard-tests",
-    "build:compile": "pnpm --filter @langchain/build compile @langchain/standard-tests",
+    "build": "turbo build:compile --filter @langchain/standard-tests --output-logs new-only",
+    "build:compile": "tsdown",
     "lint:eslint": "eslint --cache src/",
     "lint:dpdm": "dpdm --skip-dynamic-imports circular --exit-code circular:1 --no-warning --no-tree src/*.ts src/**/*.ts",
     "lint": "pnpm lint:eslint && pnpm lint:dpdm",
@@ -54,26 +54,42 @@
       "optional": true
     }
   },
-  "main": "./dist/index.js",
-  "types": "./dist/index.d.ts",
+  "main": "./dist/index.cjs",
+  "types": "./dist/index.d.cts",
   "exports": {
     ".": {
+      "input": "./src/index.ts",
+      "require": {
+        "types": "./dist/index.d.cts",
+        "default": "./dist/index.cjs"
+      },
       "import": {
         "types": "./dist/index.d.ts",
         "default": "./dist/index.js"
-      },
-      "input": "./src/index.ts"
+      }
     },
     "./vitest": {
+      "input": "./src/vitest.ts",
+      "require": {
+        "types": "./dist/vitest.d.cts",
+        "default": "./dist/vitest.cjs"
+      },
       "import": {
         "types": "./dist/vitest.d.ts",
         "default": "./dist/vitest.js"
-      },
-      "input": "./src/vitest.ts"
+      }
     },
     "./package.json": "./package.json"
   },
   "files": [
-    "dist/"
-  ]
+    "dist/",
+    "CHANGELOG.md",
+    "README.md",
+    "LICENSE",
+    "vitest.d.cts",
+    "vitest.cjs",
+    "vitest.d.ts",
+    "vitest.js"
+  ],
+  "module": "./dist/index.js"
 }

@@ -808,7 +808,7 @@ describe("Can be initialized without `modelProvider`", () => {
   });
 });
 
-describe.skip("Model name parsing with multiple colons preserves full model name", () => {
+describe("Model name parsing with multiple colons preserves full model name", () => {
   test.each([
     "ollama:qwen2.5:14b",
     "ollama:llama3:8b",

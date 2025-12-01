@@ -1,5 +1,28 @@
 # @langchain/google-gauth
 
+## 1.0.4
+
+### Patch Changes
+
+- [#9416](https://github.com/langchain-ai/langchainjs/pull/9416) [`0fe9beb`](https://github.com/langchain-ai/langchainjs/commit/0fe9bebee6710f719e47f913eec1ec4f638e4de4) Thanks [@hntrl](https://github.com/hntrl)! - fix 'moduleResultion: "node"' compatibility
+
+- Updated dependencies [[`0fe9beb`](https://github.com/langchain-ai/langchainjs/commit/0fe9bebee6710f719e47f913eec1ec4f638e4de4), [`21a8374`](https://github.com/langchain-ai/langchainjs/commit/21a83742af89e6a7f29d303f63729d0e31b59fdd)]:
+  - @langchain/google-common@2.0.0
+
+## 1.0.3
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @langchain/google-common@1.0.3
+
+## 1.0.2
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @langchain/google-common@1.0.2
+
 ## 1.0.1
 
 ### Patch Changes

@@ -933,3 +933,11 @@ export function interopZodObjectMakeFieldsOptional<T extends InteropZodObject>(
     "Schema must be an instance of z3.ZodObject or z4.$ZodObject"
   );
 }
+
+export function isInteropZodError(e: unknown) {
+  return (
+    // eslint-disable-next-line no-instanceof/no-instanceof
+    e instanceof Error &&
+    (e.constructor.name === "ZodError" || e.constructor.name === "$ZodError")
+  );
+}

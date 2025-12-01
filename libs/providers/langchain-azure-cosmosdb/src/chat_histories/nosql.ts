@@ -185,16 +185,20 @@ export class AzureCosmsosDBNoSQLChatMessageHistory extends BaseListChatMessageHi
   }
 
   async addMessage(message: BaseMessage): Promise<void> {
+    await this.addMessages([message]);
+  }
+
+  async addMessages(messages: BaseMessage[]): Promise<void> {
     await this.initializeContainer();
     this.messageList = await this.getMessages();
-    this.messageList.push(message);
-    const messages = mapChatMessagesToStoredMessages(this.messageList);
+    this.messageList.push(...messages);
+    const storedMessages = mapChatMessagesToStoredMessages(this.messageList);
     const context = await this.getContext();
     await this.container.items.upsert({
       id: this.sessionId,
       userId: this.userId,
       context,
-      messages,
+      messages: storedMessages,
     });
   }
 

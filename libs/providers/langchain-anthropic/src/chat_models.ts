@@ -1181,7 +1181,6 @@ export class ChatAnthropicMessages<
         return await this.streamingClient.messages.create(
           {
             ...rest,
-            betas,
             ...this.invocationKwargs,
             stream: true,
           } as AnthropicStreamingMessageCreateParams,

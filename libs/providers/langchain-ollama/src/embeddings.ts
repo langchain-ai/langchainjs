@@ -23,6 +23,11 @@ export interface OllamaEmbeddingsParams extends EmbeddingsParams {
   baseUrl?: string;
 
   /**
+   * The number of dimensions for the embeddings.
+   */
+  dimensions?: number;
+
+  /**
    * Defaults to "5m"
    */
   keepAlive?: string | number;
@@ -58,6 +63,8 @@ export class OllamaEmbeddings extends Embeddings {
 
   baseUrl = "http://localhost:11434";
 
+  dimensions?: number;
+
   keepAlive?: string | number;
 
   requestOptions?: Partial<OllamaOptions>;
@@ -77,6 +84,7 @@ export class OllamaEmbeddings extends Embeddings {
     this.baseUrl = fields?.baseUrl ?? this.baseUrl;
 
     this.model = fields?.model ?? this.model;
+    this.dimensions = fields?.dimensions;
     this.keepAlive = fields?.keepAlive;
     this.truncate = fields?.truncate ?? this.truncate;
     this.requestOptions = fields?.requestOptions
@@ -151,6 +159,7 @@ export class OllamaEmbeddings extends Embeddings {
       this.client.embed({
         model: this.model,
         input: texts,
+        dimensions: this.dimensions,
         keep_alive: this.keepAlive,
         options: this.requestOptions,
         truncate: this.truncate,
