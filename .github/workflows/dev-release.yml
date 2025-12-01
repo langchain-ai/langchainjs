@@ -1,0 +1,148 @@
+name: Dev Release
+on:
+  workflow_dispatch:
+    inputs:
+      package:
+        description: "Package to release"
+        required: true
+        type: choice
+        options:
+          - "langchain"
+          - "@langchain/core"
+          - "@langchain/classic"
+          - "@langchain/community"
+          - "@langchain/textsplitters"
+          - "@langchain/mcp-adapters"
+          - "@langchain/anthropic"
+          - "@langchain/aws"
+          - "@langchain/azure-cosmosdb"
+          - "@langchain/azure-dynamic-sessions"
+          - "@langchain/baidu-qianfan"
+          - "@langchain/cerebras"
+          - "@langchain/cloudflare"
+          - "@langchain/cohere"
+          - "@langchain/deepseek"
+          - "@langchain/exa"
+          - "@langchain/google-cloud-sql-pg"
+          - "@langchain/google-common"
+          - "@langchain/google-gauth"
+          - "@langchain/google-genai"
+          - "@langchain/google-vertexai"
+          - "@langchain/google-vertexai-web"
+          - "@langchain/google-webauth"
+          - "@langchain/groq"
+          - "@langchain/mistralai"
+          - "@langchain/mixedbread-ai"
+          - "@langchain/mongodb"
+          - "@langchain/nomic"
+          - "@langchain/ollama"
+          - "@langchain/openai"
+          - "@langchain/pinecone"
+          - "@langchain/qdrant"
+          - "@langchain/redis"
+          - "@langchain/tavily"
+          - "@langchain/weaviate"
+          - "@langchain/xai"
+          - "@langchain/yandex"
+      npm_tag:
+        description: "NPM tag for the release"
+        required: false
+        default: "dev"
+        type: string
+
+env:
+  CI: true
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}-${{ inputs.package }}
+  cancel-in-progress: true
+
+jobs:
+  release:
+    name: Dev Release ${{ inputs.package }}
+    if: github.repository == 'langchain-ai/langchainjs'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - name: ⬇️ Checkout repo
+        uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6
+        with:
+          fetch-depth: 0
+
+      - name: 📦 Setup pnpm
+        uses: pnpm/action-setup@41ff72655975bd51cab0327fa583b6e92b6d3061 # v4.2.0
+
+      - name: ⎔ Setup node
+        uses: actions/setup-node@2028fbc5c25fe9cf00d9f06a71cc4710d4507903 # v6
+        with:
+          node-version-file: ".nvmrc"
+          cache: "pnpm"
+
+      - name: 📥 Install deps
+        run: pnpm install --frozen-lockfile
+
+      - name: 🔍 Get package directory
+        id: package-dir
+        run: |
+          PACKAGE="${{ inputs.package }}"
+          # Map package name to directory
+          case "$PACKAGE" in
+            "@langchain/core")
+              DIR="libs/langchain-core"
+              ;;
+            "langchain")
+              DIR="libs/langchain"
+              ;;
+            "@langchain/community")
+              DIR="libs/langchain-community"
+              ;;
+            "@langchain/textsplitters")
+              DIR="libs/langchain-textsplitters"
+              ;;
+            "@langchain/mcp-adapters")
+              DIR="libs/langchain-mcp-adapters"
+              ;;
+            "@langchain/standard-tests")
+              DIR="libs/langchain-standard-tests"
+              ;;
+            "@langchain/classic")
+              DIR="libs/langchain-classic"
+              ;;
+            *)
+              # For provider packages, extract the package name without @langchain/
+              PKG_NAME="${PACKAGE#@langchain/}"
+              DIR="libs/providers/langchain-${PKG_NAME}"
+              ;;
+          esac
+          echo "dir=$DIR" >> $GITHUB_OUTPUT
+
+      - name: 🏷️ Get short SHA
+        id: sha
+        run: echo "short=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+
+      - name: 📝 Update package version
+        working-directory: ${{ steps.package-dir.outputs.dir }}
+        run: |
+          # Get current version from package.json
+          CURRENT_VERSION=$(node -p "require('./package.json').version")
+          # Create dev version with tag and short SHA
+          DEV_VERSION="${CURRENT_VERSION}-${{ inputs.npm_tag }}.${{ steps.sha.outputs.short }}"
+          echo "Publishing ${{ inputs.package }}@${DEV_VERSION}"
+          # Update version in package.json
+          npm version "$DEV_VERSION" --no-git-tag-version
+
+      - name: 🔨 Build package
+        run: pnpm run build --filter "${{ inputs.package }}"
+
+      - name: 🔐 Setup npm auth
+        run: |
+          echo "registry=https://registry.npmjs.org" >> ~/.npmrc
+          echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN }}" >> ~/.npmrc
+
+      - name: 🚀 Publish to npm
+        working-directory: ${{ steps.package-dir.outputs.dir }}
+        run: npm publish --tag ${{ inputs.npm_tag }} --access public
+        env:
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
