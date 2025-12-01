@@ -618,7 +618,13 @@ export function tool<
 >(
   func: RunnableFunc<SchemaOutputT, ToolOutputT, ToolRunnableConfig>,
   fields: ToolWrapperParams<SchemaT, NameT>
-): DynamicStructuredTool<SchemaT, SchemaOutputT, SchemaInputT, ToolOutputT, NameT>;
+): DynamicStructuredTool<
+  SchemaT,
+  SchemaOutputT,
+  SchemaInputT,
+  ToolOutputT,
+  NameT
+>;
 
 export function tool<
   SchemaT extends ZodObjectV4,
@@ -629,7 +635,13 @@ export function tool<
 >(
   func: RunnableFunc<SchemaOutputT, ToolOutputT, ToolRunnableConfig>,
   fields: ToolWrapperParams<SchemaT, NameT>
-): DynamicStructuredTool<SchemaT, SchemaOutputT, SchemaInputT, ToolOutputT, NameT>;
+): DynamicStructuredTool<
+  SchemaT,
+  SchemaOutputT,
+  SchemaInputT,
+  ToolOutputT,
+  NameT
+>;
 
 export function tool<
   SchemaT extends JSONSchema,
@@ -644,7 +656,13 @@ export function tool<
     ToolRunnableConfig
   >,
   fields: ToolWrapperParams<SchemaT, NameT>
-): DynamicStructuredTool<SchemaT, SchemaOutputT, SchemaInputT, ToolOutputT, NameT>;
+): DynamicStructuredTool<
+  SchemaT,
+  SchemaOutputT,
+  SchemaInputT,
+  ToolOutputT,
+  NameT
+>;
 
 export function tool<
   SchemaT extends
@@ -659,7 +677,13 @@ export function tool<
   func: RunnableFunc<SchemaOutputT, ToolOutputT, ToolRunnableConfig>,
   fields: ToolWrapperParams<SchemaT, NameT>
 ):
-  | DynamicStructuredTool<SchemaT, SchemaOutputT, SchemaInputT, ToolOutputT, NameT>
+  | DynamicStructuredTool<
+      SchemaT,
+      SchemaOutputT,
+      SchemaInputT,
+      ToolOutputT,
+      NameT
+    >
   | DynamicTool<ToolOutputT>;
 
 // Overloads with ToolRuntime as CallOptions
@@ -703,7 +727,13 @@ export function tool<
     runtime: ToolRuntime<TState, TContext>
   ) => ToolOutputT | Promise<ToolOutputT>,
   fields: ToolWrapperParams<SchemaT, NameT>
-): DynamicStructuredTool<SchemaT, SchemaOutputT, SchemaInputT, ToolOutputT, NameT>;
+): DynamicStructuredTool<
+  SchemaT,
+  SchemaOutputT,
+  SchemaInputT,
+  ToolOutputT,
+  NameT
+>;
 
 export function tool<
   SchemaT extends ZodObjectV4,
@@ -719,7 +749,13 @@ export function tool<
     runtime: ToolRuntime<TState, TContext>
   ) => ToolOutputT | Promise<ToolOutputT>,
   fields: ToolWrapperParams<SchemaT, NameT>
-): DynamicStructuredTool<SchemaT, SchemaOutputT, SchemaInputT, ToolOutputT, NameT>;
+): DynamicStructuredTool<
+  SchemaT,
+  SchemaOutputT,
+  SchemaInputT,
+  ToolOutputT,
+  NameT
+>;
 
 export function tool<
   SchemaT extends JSONSchema,
@@ -735,7 +771,13 @@ export function tool<
     runtime: ToolRuntime<TState, TContext>
   ) => ToolOutputT | Promise<ToolOutputT>,
   fields: ToolWrapperParams<SchemaT, NameT>
-): DynamicStructuredTool<SchemaT, SchemaOutputT, SchemaInputT, ToolOutputT, NameT>;
+): DynamicStructuredTool<
+  SchemaT,
+  SchemaOutputT,
+  SchemaInputT,
+  ToolOutputT,
+  NameT
+>;
 
 export function tool<
   SchemaT extends
@@ -755,7 +797,13 @@ export function tool<
   ) => ToolOutputT | Promise<ToolOutputT>,
   fields: ToolWrapperParams<SchemaT, NameT>
 ):
-  | DynamicStructuredTool<SchemaT, SchemaOutputT, SchemaInputT, ToolOutputT, NameT>
+  | DynamicStructuredTool<
+      SchemaT,
+      SchemaOutputT,
+      SchemaInputT,
+      ToolOutputT,
+      NameT
+    >
   | DynamicTool<ToolOutputT> {
   const isSimpleStringSchema = isSimpleStringZodSchema(fields.schema);
   const isStringJSONSchema = validatesOnlyStrings(fields.schema);
