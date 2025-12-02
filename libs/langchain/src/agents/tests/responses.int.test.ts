@@ -2,7 +2,7 @@
 import { describe, it, expect, vi } from "vitest";
 import { ChatAnthropic } from "@langchain/anthropic";
 import { tool } from "@langchain/core/tools";
-import { HumanMessage } from "@langchain/core/messages";
+import { HumanMessage, AIMessage } from "@langchain/core/messages";
 import z from "zod/v3";
 
 import { createAgent, toolStrategy } from "../index.js";
@@ -179,5 +179,32 @@ describe("structured output handling", () => {
         'Returning structured response: {"foo":"'
       );
     });
+  });
+});
+
+describe("Strategy Selection", () => {
+  it("should default to provider strategy for supported models", async () => {
+    const agent = createAgent({
+      model: "gpt-4o",
+      responseFormat: z.object({
+        answer: z.string(),
+      }),
+    });
+
+    const result = await agent.invoke({
+      messages: [new HumanMessage("What is 2+2?")],
+    });
+
+    // Verify structured response is present
+    expect(result.structuredResponse).toBeDefined();
+    expect(result.structuredResponse.answer).toBeDefined();
+
+    // Verify no tool calls with extract- prefix (which would indicate ToolStrategy)
+    const hasExtractToolCalls = result.messages.some(
+      (msg) =>
+        AIMessage.isInstance(msg) &&
+        msg.tool_calls?.some((tc) => tc.name.startsWith("extract-"))
+    );
+    expect(hasExtractToolCalls).toBe(false);
   });
 });

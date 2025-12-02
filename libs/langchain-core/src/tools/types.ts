@@ -88,6 +88,13 @@ export interface ToolParams extends BaseLangChainParams {
    * Metadata for the tool.
    */
   metadata?: Record<string, unknown>;
+  /**
+   * Optional provider-specific extra fields for the tool.
+   *
+   * This is used to pass provider-specific configuration that doesn't fit into
+   * standard tool fields.
+   */
+  extras?: Record<string, unknown>;
 }
 
 export type ToolRunnableConfig<
@@ -106,7 +113,7 @@ export type ToolRunnableConfig<
  * @version 0.2.19
  */
 export interface StructuredToolParams
-  extends Pick<StructuredToolInterface, "name" | "schema"> {
+  extends Pick<StructuredToolInterface, "name" | "schema" | "extras"> {
   /**
    * An optional description of the tool to pass to the model.
    */
@@ -268,6 +275,14 @@ export interface StructuredToolInterface<
    * an agent should stop looping.
    */
   returnDirect: boolean;
+
+  /**
+   * Optional provider-specific extra fields for the tool.
+   *
+   * This is used to pass provider-specific configuration that doesn't fit into
+   * standard tool fields.
+   */
+  extras?: Record<string, unknown>;
 }
 
 /**
