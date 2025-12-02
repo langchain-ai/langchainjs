@@ -8,7 +8,7 @@ import type { ClientTool, ServerTool } from "@langchain/core/tools";
 import type { ResponseFormatUndefined } from "./responses.js";
 import type {
   CreateAgentParams,
-  MakeAgentTypeConfig,
+  AgentTypeConfig,
   CombineTools,
 } from "./types.js";
 import type { AgentMiddleware, AnyAnnotationRoot } from "./middleware/types.js";
@@ -168,7 +168,7 @@ export function createAgent<
     tools?: TTools;
   }
 ): ReactAgent<
-  MakeAgentTypeConfig<
+  AgentTypeConfig<
     StructuredResponseFormat,
     StateSchema,
     ContextSchema,
@@ -206,7 +206,7 @@ export function createAgent<
     tools?: TTools;
   }
 ): ReactAgent<
-  MakeAgentTypeConfig<
+  AgentTypeConfig<
     ExtractZodArrayTypes<StructuredResponseFormat> extends Record<string, any>
       ? ExtractZodArrayTypes<StructuredResponseFormat>
       : Record<string, any>,
@@ -243,7 +243,7 @@ export function createAgent<
     tools?: TTools;
   }
 ): ReactAgent<
-  MakeAgentTypeConfig<
+  AgentTypeConfig<
     Record<string, unknown>,
     StateSchema,
     ContextSchema,
@@ -278,7 +278,7 @@ export function createAgent<
     tools?: TTools;
   }
 ): ReactAgent<
-  MakeAgentTypeConfig<
+  AgentTypeConfig<
     Record<string, unknown>,
     StateSchema,
     ContextSchema,
@@ -313,7 +313,7 @@ export function createAgent<
     tools?: TTools;
   }
 ): ReactAgent<
-  MakeAgentTypeConfig<
+  AgentTypeConfig<
     Record<string, unknown>,
     StateSchema,
     ContextSchema,
@@ -349,7 +349,7 @@ export function createAgent<
     tools?: TTools;
   }
 ): ReactAgent<
-  MakeAgentTypeConfig<
+  AgentTypeConfig<
     StructuredResponseFormat,
     StateSchema,
     ContextSchema,
@@ -385,7 +385,7 @@ export function createAgent<
     tools?: TTools;
   }
 ): ReactAgent<
-  MakeAgentTypeConfig<
+  AgentTypeConfig<
     StructuredResponseFormat,
     StateSchema,
     ContextSchema,
@@ -421,7 +421,7 @@ export function createAgent<
     tools?: TTools;
   }
 ): ReactAgent<
-  MakeAgentTypeConfig<
+  AgentTypeConfig<
     StructuredResponseFormat,
     StateSchema,
     ContextSchema,
@@ -455,7 +455,7 @@ export function createAgent<
     "responseFormat"
   > & { middleware?: TMiddleware; tools?: TTools }
 ): ReactAgent<
-  MakeAgentTypeConfig<
+  AgentTypeConfig<
     ResponseFormatUndefined,
     StateSchema,
     ContextSchema,
@@ -493,7 +493,7 @@ export function createAgent<
     tools?: TTools;
   }
 ): ReactAgent<
-  MakeAgentTypeConfig<
+  AgentTypeConfig<
     ResponseFormatUndefined,
     StateSchema,
     ContextSchema,
@@ -529,7 +529,7 @@ export function createAgent<
     tools?: TTools;
   }
 ): ReactAgent<
-  MakeAgentTypeConfig<
+  AgentTypeConfig<
     StructuredResponseFormat,
     StateSchema,
     ContextSchema,
@@ -556,7 +556,7 @@ export function createAgent<
     any
   >
 ): ReactAgent<
-  MakeAgentTypeConfig<
+  AgentTypeConfig<
     StructuredResponseFormat,
     StateSchema,
     ContextSchema,

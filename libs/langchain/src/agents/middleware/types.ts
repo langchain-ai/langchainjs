@@ -83,29 +83,7 @@ export interface MiddlewareTypeConfig<
  * Default type configuration for middleware.
  * Used when no explicit type parameters are provided.
  */
-export interface DefaultMiddlewareTypeConfig extends MiddlewareTypeConfig {
-  Schema: undefined;
-  ContextSchema: undefined;
-  FullContext: any;
-  Tools: readonly (ClientTool | ServerTool)[];
-}
-
-/**
- * Helper type to create a MiddlewareTypeConfig from individual type parameters.
- */
-export type MakeMiddlewareTypeConfig<
-  TSchema extends InteropZodObject | undefined = undefined,
-  TContextSchema extends
-    | InteropZodObject
-    | InteropZodDefault<InteropZodObject>
-    | InteropZodOptional<InteropZodObject>
-    | undefined = undefined,
-  TFullContext = any,
-  TTools extends readonly (ClientTool | ServerTool)[] = readonly (
-    | ClientTool
-    | ServerTool
-  )[]
-> = MiddlewareTypeConfig<TSchema, TContextSchema, TFullContext, TTools>;
+export type DefaultMiddlewareTypeConfig = MiddlewareTypeConfig;
 
 export type NormalizedSchemaInput<
   TSchema extends InteropZodObject | undefined | never = any
@@ -365,7 +343,7 @@ export interface AgentMiddleware<
    * This is a phantom property used only for type inference.
    * @internal
    */
-  readonly __middlewareTypes?: MiddlewareTypeConfig<
+  readonly "~middlewareTypes"?: MiddlewareTypeConfig<
     TSchema,
     TContextSchema,
     TFullContext,
@@ -547,7 +525,7 @@ type FilterPrivateProps<T> = {
  * - An AgentMiddleware instance (using `typeof middleware`)
  */
 export type ResolveMiddlewareTypeConfig<T> = T extends {
-  __middlewareTypes?: infer Types;
+  "~middlewareTypes"?: infer Types;
 }
   ? Types extends MiddlewareTypeConfig
     ? Types

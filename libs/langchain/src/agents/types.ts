@@ -149,24 +149,6 @@ export type CombineTools<
 > = readonly [...TAgentTools, ...InferMiddlewareToolsArray<TMiddleware>];
 
 /**
- * Helper type to create an AgentTypeConfig from individual type parameters.
- * This is the inverse of accessing properties from an AgentTypeConfig.
- */
-export type MakeAgentTypeConfig<
-  TResponse extends Record<string, any> | ResponseFormatUndefined = Record<
-    string,
-    any
-  >,
-  TState extends AnyAnnotationRoot | InteropZodObject | undefined = undefined,
-  TContext extends AnyAnnotationRoot | InteropZodObject = AnyAnnotationRoot,
-  TMiddleware extends readonly AgentMiddleware[] = readonly AgentMiddleware[],
-  TTools extends readonly (ClientTool | ServerTool)[] = readonly (
-    | ClientTool
-    | ServerTool
-  )[]
-> = AgentTypeConfig<TResponse, TState, TContext, TMiddleware, TTools>;
-
-/**
  * Helper type to resolve an AgentTypeConfig from either:
  * - An AgentTypeConfig directly
  * - A ReactAgent instance (using `typeof agent`)
@@ -179,11 +161,11 @@ export type MakeAgentTypeConfig<
  * type Types = ResolveAgentTypeConfig<typeof agent>;
  *
  * // From AgentTypeConfig directly
- * type Types2 = ResolveAgentTypeConfig<MakeAgentTypeConfig<...>>;
+ * type Types2 = ResolveAgentTypeConfig<AgentTypeConfig<...>>;
  * ```
  */
 export type ResolveAgentTypeConfig<T> = T extends {
-  __agentTypes: infer Types;
+  "~agentTypes": infer Types;
 }
   ? Types extends AgentTypeConfig
     ? Types
