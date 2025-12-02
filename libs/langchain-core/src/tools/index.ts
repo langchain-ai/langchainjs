@@ -107,6 +107,14 @@ export abstract class StructuredTool<
   abstract schema: SchemaT;
 
   /**
+   * Optional provider-specific extra fields for the tool.
+   *
+   * This is used to pass provider-specific configuration that doesn't fit into
+   * standard tool fields.
+   */
+  extras?: Record<string, unknown>;
+
+  /**
    * Whether to return the tool's output directly.
    *
    * Setting this to true means that after the tool is called,
@@ -144,6 +152,7 @@ export abstract class StructuredTool<
     this.responseFormat = fields?.responseFormat ?? this.responseFormat;
     this.defaultConfig = fields?.defaultConfig ?? this.defaultConfig;
     this.metadata = fields?.metadata ?? this.metadata;
+    this.extras = fields?.extras ?? this.extras;
   }
 
   protected abstract _call(
