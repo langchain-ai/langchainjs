@@ -7,6 +7,7 @@ import {
 } from "@langchain/build";
 
 export default getBuildConfig({
+  noExternal: ["p-retry", "p-queue", "ansi-styles", "camelcase", "decamelize"],
   entry: [
     "./src/index.ts",
     "./src/agents.ts",

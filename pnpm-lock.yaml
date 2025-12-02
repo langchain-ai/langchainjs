@@ -163,6 +163,9 @@ importers:
       '@langchain/langgraph':
         specifier: ^1.0.0
         version: 1.0.0(@langchain/core@libs+langchain-core)(react-dom@18.3.1(react@19.0.0))(react@19.0.0)(zod-to-json-schema@3.24.6(zod@3.25.76))(zod@3.25.76)
+      '@langchain/mcp-adapters':
+        specifier: workspace:*
+        version: link:../libs/langchain-mcp-adapters
       '@langchain/mistralai':
         specifier: workspace:*
         version: link:../libs/providers/langchain-mistralai
@@ -1584,14 +1587,14 @@ importers:
         specifier: ^4.0.2
         version: 4.1.1
       ansi-styles:
-        specifier: ^5.0.0
-        version: 5.2.0
+        specifier: ^6.2.3
+        version: 6.2.3
       camelcase:
-        specifier: '6'
-        version: 6.3.0
+        specifier: ^9.0.0
+        version: 9.0.0
       decamelize:
-        specifier: 1.2.0
-        version: 1.2.0
+        specifier: ^6.0.1
+        version: 6.0.1
       js-tiktoken:
         specifier: ^1.0.12
         version: 1.0.20
@@ -1602,8 +1605,8 @@ importers:
         specifier: ^4.2.0
         version: 4.2.0
       p-queue:
-        specifier: ^6.6.2
-        version: 6.6.2
+        specifier: ^9.0.1
+        version: 9.0.1
       p-retry:
         specifier: ^7.0.0
         version: 7.1.0
@@ -9034,6 +9037,10 @@ packages:
     resolution: {integrity: sha512-bN798gFfQX+viw3R7yrGWRqnrN2oRkEkUjjl4JNn4E8GxxbjtG3FbrEIIY3l8/hrwUwIeCZvi4QuOTP4MErVug==}
     engines: {node: '>=12'}
 
+  ansi-styles@6.2.3:
+    resolution: {integrity: sha512-4Dj6M28JB+oAH8kFkTLUo+a2jwOFkuqb3yucU0CANcRRUbxS0cP0nZYCGjcc3BNXwRIsUVmDGgzawme7zvJHvg==}
+    engines: {node: '>=12'}
+
   ansis@3.17.0:
     resolution: {integrity: sha512-0qWUglt9JEqLFr3w1I1pbrChn1grhaiAR2ocX1PP/flRmxgtwTzPFFFnfIlD6aMOLQZgSuCRlidD70lvx8yhzg==}
     engines: {node: '>=14'}
@@ -9563,6 +9570,10 @@ packages:
   camelcase@6.3.0:
     resolution: {integrity: sha512-Gmy6FhYlCY7uOElZUSbxo2UCDH8owEk996gkbrpsgGtrJLM3J7jGxl9Ic7Qwwj4ivOE5AWZWRMecDdF7hqGjFA==}
     engines: {node: '>=10'}
+
+  camelcase@9.0.0:
+    resolution: {integrity: sha512-TO9xmyXTZ9HUHI8M1OnvExxYB0eYVS/1e5s7IDMTAoIcwUd+aNcFODs6Xk83mobk0velyHFQgA1yIrvYc6wclw==}
+    engines: {node: '>=20'}
 
   caniuse-lite@1.0.30001731:
     resolution: {integrity: sha512-lDdp2/wrOmTRWuoB5DpfNkC0rJDU8DqRa6nYL6HK6sytw70QMopt/NIc/9SM7ylItlBWfACXk0tEn37UWM/+mg==}
@@ -10217,9 +10228,9 @@ packages:
       supports-color:
         optional: true
 
-  decamelize@1.2.0:
-    resolution: {integrity: sha512-z2S+W9X73hAUUki+N+9Za2lBlun89zigOyGrsax+KUQ6wKW4ZoWpEYBkGhQjwAjjDCkWxhY0VKEhk8wzY7F5cA==}
-    engines: {node: '>=0.10.0'}
+  decamelize@6.0.1:
+    resolution: {integrity: sha512-G7Cqgaelq68XHJNGlZ7lrNQyhZGsFqpwtGFexqUv4IQdjKoSYF7ipZ9UuTJZUSQXFj/XaoBLuEVIVqr8EJngEQ==}
+    engines: {node: ^12.20.0 || ^14.13.1 || >=16.0.0}
 
   decimal.js@10.6.0:
     resolution: {integrity: sha512-YpgQiITW3JXGntzdUmyUR1V812Hn8T1YVXhCu+wO3OpS4eU9l4YdD3qjyiKdV6mvV29zapkMeD390UVEf2lkUg==}
@@ -13638,6 +13649,10 @@ packages:
     resolution: {integrity: sha512-mxLDbbGIBEXTJL0zEx8JIylaj3xQ7Z/7eEVjcF9fJX4DBiH9oqe+oahYnlKKxm0Ci9TlWTyhSHgygxMxjIB2jw==}
     engines: {node: '>=18'}
 
+  p-queue@9.0.1:
+    resolution: {integrity: sha512-RhBdVhSwJb7Ocn3e8ULk4NMwBEuOxe+1zcgphUy9c2e5aR/xbEsdVXxHJ3lynw6Qiqu7OINEyHlZkiblEpaq7w==}
+    engines: {node: '>=20'}
+
   p-retry@4.6.2:
     resolution: {integrity: sha512-312Id396EbJdvRONlngUx0NydfrIQ5lsYu0znKVUzVvArzEIt08V1qhtyESbGVd1FGX7UKtiFp5uwKZdM8wIuQ==}
     engines: {node: '>=8'}
@@ -13657,6 +13672,10 @@ packages:
   p-timeout@6.1.4:
     resolution: {integrity: sha512-MyIV3ZA/PmyBN/ud8vV9XzwTrNtR4jFrObymZYnZqMmW0zA8Z17vnT0rBgFE/TlohB+YCHqXMgZzb3Csp49vqg==}
     engines: {node: '>=14.16'}
+
+  p-timeout@7.0.1:
+    resolution: {integrity: sha512-AxTM2wDGORHGEkPCt8yqxOTMgpfbEHqF51f/5fJCmwFC3C/zNcGT63SymH2ttOAaiIws2zVg4+izQCjrakcwHg==}
+    engines: {node: '>=20'}
 
   p-try@1.0.0:
     resolution: {integrity: sha512-U1etNYuMJoIz3ZXSrrySFjsXQTWOx2/jdi86L+2pRvph/qMKL6sbcCYdH23fqsbm8TH2Gn0OybpT4eSFlCVHww==}
@@ -23691,6 +23710,8 @@ snapshots:
 
   ansi-styles@6.2.1: {}
 
+  ansi-styles@6.2.3: {}
+
   ansis@3.17.0: {}
 
   ansis@4.2.0: {}
@@ -24461,6 +24482,8 @@ snapshots:
   camelcase@5.3.1: {}
 
   camelcase@6.3.0: {}
+
+  camelcase@9.0.0: {}
 
   caniuse-lite@1.0.30001731: {}
 
@@ -25242,7 +25265,7 @@ snapshots:
     optionalDependencies:
       supports-color: 8.1.1
 
-  decamelize@1.2.0: {}
+  decamelize@6.0.1: {}
 
   decimal.js@10.6.0: {}
 
@@ -29567,6 +29590,11 @@ snapshots:
       eventemitter3: 5.0.1
       p-timeout: 6.1.4
 
+  p-queue@9.0.1:
+    dependencies:
+      eventemitter3: 5.0.1
+      p-timeout: 7.0.1
+
   p-retry@4.6.2:
     dependencies:
       '@types/retry': 0.12.0
@@ -29583,6 +29611,8 @@ snapshots:
       p-finally: 1.0.0
 
   p-timeout@6.1.4: {}
+
+  p-timeout@7.0.1: {}
 
   p-try@1.0.0: {}
 
@@ -30854,12 +30884,12 @@ snapshots:
 
   slice-ansi@5.0.0:
     dependencies:
-      ansi-styles: 6.2.1
+      ansi-styles: 6.2.3
       is-fullwidth-code-point: 4.0.0
 
   slice-ansi@7.1.0:
     dependencies:
-      ansi-styles: 6.2.1
+      ansi-styles: 6.2.3
       is-fullwidth-code-point: 5.0.0
 
   smart-buffer@4.2.0: {}
@@ -30987,7 +31017,7 @@ snapshots:
   stdout-update@4.0.1:
     dependencies:
       ansi-escapes: 6.2.1
-      ansi-styles: 6.2.1
+      ansi-styles: 6.2.3
       string-width: 7.2.0
       strip-ansi: 7.1.0
 
@@ -32504,7 +32534,7 @@ snapshots:
 
   wrap-ansi@8.1.0:
     dependencies:
-      ansi-styles: 6.2.1
+      ansi-styles: 6.2.3
       string-width: 5.1.2
       strip-ansi: 7.1.0
 

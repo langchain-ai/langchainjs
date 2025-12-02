@@ -31,13 +31,13 @@
   "license": "MIT",
   "dependencies": {
     "@cfworker/json-schema": "^4.0.2",
-    "ansi-styles": "^5.0.0",
-    "camelcase": "6",
-    "decamelize": "1.2.0",
+    "ansi-styles": "^6.2.3",
+    "camelcase": "^9.0.0",
+    "decamelize": "^6.0.1",
     "js-tiktoken": "^1.0.12",
     "langsmith": "^0.3.64",
     "mustache": "^4.2.0",
-    "p-queue": "^6.6.2",
+    "p-queue": "^9.0.1",
     "p-retry": "^7.0.0",
     "uuid": "^10.0.0",
     "zod": "^3.25.76 || ^4"
