@@ -55,6 +55,11 @@ interface WebFetch20250910Options {
  *
  * const model = new ChatAnthropic({
  *   model: "claude-sonnet-4-5-20250929",
+ *   clientOptions: {
+ *     defaultHeaders: {
+ *       "anthropic-beta": "web-fetch-2025-09-10",
+ *     },
+ *   },
  * });
  *
  * // Basic usage - fetch content from a URL
