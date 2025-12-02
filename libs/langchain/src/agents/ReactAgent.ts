@@ -148,7 +148,7 @@ export class ReactAgent<
    * This is a phantom property used only for type inference.
    * @internal
    */
-  declare readonly __agentTypes: Types;
+  declare readonly "~agentTypes": Types;
 
   #graph: AgentGraph<Types>;
 
