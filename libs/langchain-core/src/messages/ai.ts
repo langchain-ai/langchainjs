@@ -318,7 +318,10 @@ export class AIMessageChunk<
       for (const chunks of groupedToolCallChunks) {
         let parsedArgs: Record<string, unknown> | null = null;
         const name = chunks[0]?.name ?? "";
-        const joinedArgs = chunks.map((c) => c.args || "").join("").trim();
+        const joinedArgs = chunks
+          .map((c) => c.args || "")
+          .join("")
+          .trim();
         const argsStr = joinedArgs.length ? joinedArgs : "{}";
         const id = chunks[0]?.id;
         try {
