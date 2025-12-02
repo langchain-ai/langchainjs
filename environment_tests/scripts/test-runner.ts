@@ -82,12 +82,14 @@ class EnvironmentTestRunner {
    * Copy a directory from src to dest, excluding files that match the excludePatterns
    * @param src - The source directory
    * @param dest - The destination directory
-   * @param excludePatterns - An array of file names to exclude from the copy
+   * @param excludePatterns - An array of file names to exclude from the copy (only at the top level)
+   * @param isTopLevel - Whether this is the top level call (used to only apply excludePatterns at root)
    */
   private async copyDirectory(
     src: string,
     dest: string,
-    excludePatterns: string[] = []
+    excludePatterns: string[] = [],
+    isTopLevel: boolean = true
   ): Promise<void> {
     await fs.mkdir(dest, { recursive: true });
 
@@ -98,13 +100,17 @@ class EnvironmentTestRunner {
         const srcPath = path.join(src, entry.name);
         const destPath = path.join(dest, entry.name);
 
-        // Skip excluded patterns
-        if (excludePatterns.some((pattern) => entry.name === pattern)) {
+        // Skip excluded patterns only at the top level
+        // This allows dist/node_modules (bundled dependencies) to be copied
+        if (
+          isTopLevel &&
+          excludePatterns.some((pattern) => entry.name === pattern)
+        ) {
           return;
         }
 
         if (entry.isDirectory()) {
-          await this.copyDirectory(srcPath, destPath, excludePatterns);
+          await this.copyDirectory(srcPath, destPath, excludePatterns, false);
         } else {
           await fs.copyFile(srcPath, destPath);
         }
@@ -227,12 +233,10 @@ class EnvironmentTestRunner {
           return;
         }
 
-        let destDirName: string;
-        if (pkg.name === "langchain") {
-          destDirName = "langchain";
-        } else {
-          destDirName = pkg.name.replace("@langchain/", "langchain-");
-        }
+        const destDirName: string =
+          pkg.name === "langchain"
+            ? "langchain"
+            : pkg.name.replace("@langchain/", "langchain-");
         const destDir = path.join(libsDir, destDirName);
         await fs.mkdir(destDir, { recursive: true });
 
