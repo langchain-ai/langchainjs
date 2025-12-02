@@ -1,5 +1,11 @@
 # @langchain/aws
 
+## 1.1.0
+
+### Minor Changes
+
+- [#9129](https://github.com/langchain-ai/langchainjs/pull/9129) [`6f8fa47`](https://github.com/langchain-ai/langchainjs/commit/6f8fa47388fd5c5d2bc8476e29349720d8fe7784) Thanks [@tinque](https://github.com/tinque)! - feat(aws): allow bedrock Application Inference Profile
+
 ## 1.0.3
 
 ### Patch Changes
