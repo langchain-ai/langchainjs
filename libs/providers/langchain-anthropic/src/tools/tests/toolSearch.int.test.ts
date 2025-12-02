@@ -61,13 +61,7 @@ const searchFilesTool = tool(() => "Found 3 files matching query", {
 
 describe("Anthropic Tool Search Tool Integration Tests", () => {
   it("should not find the tool if tool search tool is not present", async () => {
-    const llm = createModel({
-      clientOptions: {
-        defaultHeaders: {
-          "anthropic-beta": "advanced-tool-use-2025-11-20",
-        },
-      },
-    });
+    const llm = createModel();
     const llmWithToolSearch = llm.bindTools([
       getWeatherTool,
       searchFilesWithoutDeferLoading,
