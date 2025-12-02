@@ -2,27 +2,28 @@ import Anthropic from "@anthropic-ai/sdk";
 
 /**
  * Memory tool command types as defined by Anthropic's memory tool API.
+ * @beta
  * @see https://docs.anthropic.com/en/docs/agents-and-tools/tool-use/memory-tool
  */
-export type MemoryCommand =
-  | MemoryViewCommand
-  | MemoryCreateCommand
-  | MemoryStrReplaceCommand
-  | MemoryInsertCommand
-  | MemoryDeleteCommand
-  | MemoryRenameCommand;
+export type Memory20250818Command =
+  | Memory20250818ViewCommand
+  | Memory20250818CreateCommand
+  | Memory20250818StrReplaceCommand
+  | Memory20250818InsertCommand
+  | Memory20250818DeleteCommand
+  | Memory20250818RenameCommand;
 
-export type MemoryViewCommand =
+export type Memory20250818ViewCommand =
   Anthropic.Beta.BetaMemoryTool20250818ViewCommand;
-export type MemoryCreateCommand =
+export type Memory20250818CreateCommand =
   Anthropic.Beta.BetaMemoryTool20250818CreateCommand;
-export type MemoryStrReplaceCommand =
+export type Memory20250818StrReplaceCommand =
   Anthropic.Beta.BetaMemoryTool20250818StrReplaceCommand;
-export type MemoryInsertCommand =
+export type Memory20250818InsertCommand =
   Anthropic.Beta.BetaMemoryTool20250818InsertCommand;
-export type MemoryDeleteCommand =
+export type Memory20250818DeleteCommand =
   Anthropic.Beta.BetaMemoryTool20250818DeleteCommand;
-export type MemoryRenameCommand =
+export type Memory20250818RenameCommand =
   Anthropic.Beta.BetaMemoryTool20250818RenameCommand;
 
 /**
@@ -35,12 +36,10 @@ export interface MemoryTool20250818Options {
    * but this option is provided for compatibility with the AI SDK pattern.
    * Note: This option is currently unused but reserved for future use.
    */
-  execute?: (
-    action: Anthropic.Beta.BetaMemoryTool20250818Command
-  ) => Promise<string> | string;
+  execute: (action: Memory20250818Command) => Promise<string> | string;
 }
 
 /**
  * Memory tool type definition.
  */
-export type MemoryTool = Anthropic.Beta.BetaMemoryTool20250818;
+export type MemoryTool20250818 = Anthropic.Beta.BetaMemoryTool20250818;
