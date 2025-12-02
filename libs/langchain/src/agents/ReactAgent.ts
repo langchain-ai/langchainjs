@@ -21,7 +21,6 @@ import { IterableReadableStream } from "@langchain/core/utils/stream";
 import type { Runnable, RunnableConfig } from "@langchain/core/runnables";
 import type { StreamEvent } from "@langchain/core/tracers/log_stream";
 import type { ClientTool, ServerTool } from "@langchain/core/tools";
-
 import { createAgentAnnotationConditional } from "./annotation.js";
 import {
   isClientTool,
@@ -194,14 +193,21 @@ export class ReactAgent<
      * Create a schema that merges agent base schema with middleware state schemas
      * Using Zod with withLangGraph ensures LangGraph Studio gets proper metadata
      */
-    const schema = createAgentAnnotationConditional<StateSchema, TMiddleware>(
+    const { state, input, output } = createAgentAnnotationConditional<
+      StateSchema,
+      TMiddleware
+    >(
       this.options.responseFormat !== undefined,
       this.options.stateSchema as StateSchema,
       this.options.middleware as TMiddleware
     );
 
     const workflow = new StateGraph(
-      schema as unknown as AnyAnnotationRoot,
+      {
+        state,
+        input,
+        output,
+      },
       this.options.contextSchema
     );
 
@@ -609,7 +615,7 @@ export class ReactAgent<
       store: this.options.store,
       name: this.options.name,
       description: this.options.description,
-    }) as AgentGraph<
+    }) as unknown as AgentGraph<
       StateSchema,
       StructuredResponseFormat,
       ContextSchema,
@@ -660,8 +666,9 @@ export class ReactAgent<
     shouldReturnDirect: Set<string>,
     exitNode: string | typeof END
   ) {
-    return (state: BuiltInState) => {
-      const messages = state.messages;
+    return (state: Record<string, unknown>) => {
+      const builtInState = state as unknown as BuiltInState;
+      const messages = builtInState.messages;
       const lastMessage = messages[messages.length - 1];
 
       // Check if we just executed a returnDirect tool
@@ -688,8 +695,9 @@ export class ReactAgent<
     /**
      * determine if the agent should continue or not
      */
-    return (state: BuiltInState) => {
-      const messages = state.messages;
+    return (state: Record<string, unknown>) => {
+      const builtInState = state as unknown as BuiltInState;
+      const messages = builtInState.messages;
       const lastMessage = messages.at(-1);
 
       if (
@@ -757,10 +765,13 @@ export class ReactAgent<
   ) {
     const hasStructuredResponse = Boolean(this.options.responseFormat);
 
-    return (state: Omit<BuiltInState, "jumpTo"> & { jumpTo?: JumpTo }) => {
+    return (state: Record<string, unknown>) => {
+      const builtInState = state as unknown as Omit<BuiltInState, "jumpTo"> & {
+        jumpTo?: JumpTo;
+      };
       // First, check if we just processed a structured response
       // If so, ignore any existing jumpTo and go to exitNode
-      const messages = state.messages;
+      const messages = builtInState.messages;
       const lastMessage = messages.at(-1);
       if (
         AIMessage.isInstance(lastMessage) &&
@@ -770,11 +781,11 @@ export class ReactAgent<
       }
 
       // Check if jumpTo is set in the state and allowed
-      if (allowJump && state.jumpTo) {
-        if (state.jumpTo === END) {
+      if (allowJump && builtInState.jumpTo) {
+        if (builtInState.jumpTo === END) {
           return exitNode;
         }
-        if (state.jumpTo === TOOLS_NODE_NAME) {
+        if (builtInState.jumpTo === TOOLS_NODE_NAME) {
           // If trying to jump to tools but no tools are available, go to exitNode
           if (toolClasses.length === 0) {
             return exitNode;
@@ -853,9 +864,10 @@ export class ReactAgent<
     nextDefault: string
   ) {
     const allowedSet = new Set(allowed.map((t) => parseJumpToTarget(t)));
-    return (state: BuiltInState) => {
-      if (state.jumpTo) {
-        const dest = parseJumpToTarget(state.jumpTo);
+    return (state: Record<string, unknown>) => {
+      const builtInState = state as unknown as BuiltInState;
+      if (builtInState.jumpTo) {
+        const dest = parseJumpToTarget(builtInState.jumpTo);
         if (dest === END && allowedSet.has(END)) {
           return END;
         }
@@ -881,11 +893,12 @@ export class ReactAgent<
     nextDefault: string,
     exitNode: string | typeof END
   ) {
-    return (state: BuiltInState) => {
-      if (!state.jumpTo) {
+    return (state: Record<string, unknown>) => {
+      const builtInState = state as unknown as BuiltInState;
+      if (!builtInState.jumpTo) {
         return nextDefault;
       }
-      const destination = parseJumpToTarget(state.jumpTo);
+      const destination = parseJumpToTarget(builtInState.jumpTo);
       if (destination === END) {
         /**
          * When beforeAgent jumps to END, route to exitNode (first afterAgent node)
@@ -910,11 +923,12 @@ export class ReactAgent<
     toolClasses: (ClientTool | ServerTool)[],
     nextDefault: string
   ) {
-    return (state: BuiltInState) => {
-      if (!state.jumpTo) {
+    return (state: Record<string, unknown>) => {
+      const builtInState = state as unknown as BuiltInState;
+      if (!builtInState.jumpTo) {
         return nextDefault;
       }
-      const destination = parseJumpToTarget(state.jumpTo);
+      const destination = parseJumpToTarget(builtInState.jumpTo);
       if (destination === END) {
         return END;
       }
@@ -1235,5 +1249,12 @@ export class ReactAgent<
     asNode?: string
   ) {
     return this.#graph.updateState(inputConfig, values, asNode) as never;
+  }
+
+  /**
+   * @internal
+   */
+  get builder() {
+    return this.#graph.builder;
   }
 }
