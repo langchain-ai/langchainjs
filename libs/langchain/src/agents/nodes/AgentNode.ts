@@ -22,7 +22,6 @@ import type { ClientTool, ServerTool } from "@langchain/core/tools";
 import { initChatModel } from "../../chat_models/universal.js";
 import { MultipleStructuredOutputsError } from "../errors.js";
 import { RunnableCallable } from "../RunnableCallable.js";
-import { PreHookAnnotation } from "../annotation.js";
 import {
   bindTools,
   validateLLMHasNoBoundTools,
@@ -107,7 +106,7 @@ export class AgentNode<
   >,
   ContextSchema extends AnyAnnotationRoot | InteropZodObject = AnyAnnotationRoot
 > extends RunnableCallable<
-  InternalAgentState<StructuredResponseFormat> & PreHookAnnotation["State"],
+  InternalAgentState<StructuredResponseFormat>,
   | (
       | { messages: BaseMessage[] }
       | { structuredResponse: StructuredResponseFormat }
@@ -189,8 +188,7 @@ export class AgentNode<
   }
 
   async #run(
-    state: InternalAgentState<StructuredResponseFormat> &
-      PreHookAnnotation["State"],
+    state: InternalAgentState<StructuredResponseFormat>,
     config: RunnableConfig
   ) {
     /**
@@ -266,8 +264,7 @@ export class AgentNode<
   }
 
   async #invokeModel(
-    state: InternalAgentState<StructuredResponseFormat> &
-      PreHookAnnotation["State"],
+    state: InternalAgentState<StructuredResponseFormat>,
     config: RunnableConfig,
     options: {
       lastMessage?: string;
@@ -367,8 +364,7 @@ export class AgentNode<
     const wrapperMiddleware = this.#options.wrapModelCallHookMiddleware ?? [];
     let wrappedHandler: (
       request: ModelRequest<
-        InternalAgentState<StructuredResponseFormat> &
-          PreHookAnnotation["State"],
+        InternalAgentState<StructuredResponseFormat>,
         unknown
       >
     ) => Promise<InternalModelResponse<StructuredResponseFormat>> = baseHandler;
@@ -385,8 +381,7 @@ export class AgentNode<
 
         wrappedHandler = async (
           request: ModelRequest<
-            InternalAgentState<StructuredResponseFormat> &
-              PreHookAnnotation["State"],
+            InternalAgentState<StructuredResponseFormat>,
             unknown
           >
         ): Promise<InternalModelResponse<StructuredResponseFormat>> => {
@@ -414,8 +409,7 @@ export class AgentNode<
            * Create the request with state and runtime
            */
           const requestWithStateAndRuntime: ModelRequest<
-            InternalAgentState<StructuredResponseFormat> &
-              PreHookAnnotation["State"],
+            InternalAgentState<StructuredResponseFormat>,
             unknown
           > = {
             ...request,
@@ -428,8 +422,7 @@ export class AgentNode<
                 : {}),
               ...currentGetState(),
               messages: state.messages,
-            } as InternalAgentState<StructuredResponseFormat> &
-              PreHookAnnotation["State"],
+            } as InternalAgentState<StructuredResponseFormat>,
             runtime,
           };
 
@@ -438,8 +431,7 @@ export class AgentNode<
            */
           const handlerWithValidation = async (
             req: ModelRequest<
-              InternalAgentState<StructuredResponseFormat> &
-                PreHookAnnotation["State"],
+              InternalAgentState<StructuredResponseFormat>,
               unknown
             >
           ): Promise<InternalModelResponse<StructuredResponseFormat>> => {
@@ -569,7 +561,7 @@ export class AgentNode<
      */
     this.#currentSystemMessage = this.#systemMessage;
     const initialRequest: ModelRequest<
-      InternalAgentState<StructuredResponseFormat> & PreHookAnnotation["State"],
+      InternalAgentState<StructuredResponseFormat>,
       unknown
     > = {
       model,
@@ -777,8 +769,7 @@ export class AgentNode<
   }
 
   #areMoreStepsNeeded(
-    state: InternalAgentState<StructuredResponseFormat> &
-      PreHookAnnotation["State"],
+    state: InternalAgentState<StructuredResponseFormat>,
     response: BaseMessage
   ): boolean {
     const allToolsReturnDirect =
