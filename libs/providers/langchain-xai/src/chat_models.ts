@@ -10,24 +10,207 @@ import {
 } from "@langchain/core/language_models/chat_models";
 import { ModelProfile } from "@langchain/core/language_models/profile";
 import { Serialized } from "@langchain/core/load/serializable";
-import { AIMessageChunk, BaseMessage } from "@langchain/core/messages";
+import {
+  AIMessageChunk,
+  BaseMessage,
+  type UsageMetadata,
+} from "@langchain/core/messages";
 import { Runnable } from "@langchain/core/runnables";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import { InteropZodType } from "@langchain/core/utils/types";
 import {
   type OpenAICoreRequestOptions,
   type OpenAIClient,
-  OpenAIToolChoice,
   ChatOpenAICompletions,
 } from "@langchain/openai";
 import PROFILES from "./profiles.js";
 
-type ChatXAIToolType = BindToolsInput | OpenAIClient.ChatCompletionTool;
+export type OpenAIToolChoice =
+  | OpenAIClient.ChatCompletionToolChoiceOption
+  | "any"
+  | string;
+
+/**
+ * xAI's built-in live_search tool type.
+ * Enables the model to search the web for real-time information.
+ */
+export interface XAILiveSearchTool {
+  /**
+   * The type of the tool. Must be "live_search" for xAI's built-in search.
+   */
+  type: "live_search";
+}
+
+/**
+ * Union type for all xAI built-in server-side tools.
+ */
+export type XAIBuiltInTool = XAILiveSearchTool;
+
+/**
+ * Tool type that includes both standard tools and xAI built-in tools.
+ */
+type ChatXAIToolType =
+  | BindToolsInput
+  | OpenAIClient.ChatCompletionTool
+  | XAIBuiltInTool;
+
+/**
+ * Search parameters for xAI's Live Search API.
+ * Controls how the model searches for and retrieves real-time information.
+ *
+ * @note The Live Search API is being deprecated by xAI in favor of
+ * the agentic tool calling approach. Consider using `tools: [{ type: "live_search" }]`
+ * for future compatibility.
+ */
+export interface XAISearchParameters {
+  /**
+   * Controls when the model should perform a search.
+   * - "auto": Let the model decide when to search (default)
+   * - "on": Always search for every request
+   * - "off": Never search
+   */
+  mode?: "auto" | "on" | "off";
+  /**
+   * Maximum number of search results to return.
+   * @default 5
+   */
+  max_search_results?: number;
+  /**
+   * Filter search results to only include content from after this date.
+   * Format: ISO 8601 date string (e.g., "2024-01-01")
+   */
+  from_date?: string;
+  /**
+   * Filter search results to only include content from before this date.
+   * Format: ISO 8601 date string (e.g., "2024-12-31")
+   */
+  to_date?: string;
+  /**
+   * Whether to return citations/sources for the search results.
+   * @default true
+   */
+  return_citations?: boolean;
+  /**
+   * Specific domains to include in the search.
+   * Example: ["wikipedia.org", "arxiv.org"]
+   */
+  allowed_domains?: string[];
+  /**
+   * Specific domains to exclude from the search.
+   * Example: ["reddit.com"]
+   */
+  excluded_domains?: string[];
+}
+
+/**
+ * xAI-specific invocation parameters that extend the OpenAI completion params
+ * with xAI's search_parameters field.
+ */
+export type ChatXAICompletionsInvocationParams = Omit<
+  OpenAIClient.Chat.Completions.ChatCompletionCreateParams,
+  "messages"
+> & {
+  /**
+   * Search parameters for xAI's Live Search API.
+   * When present, enables the model to search the web for real-time information.
+   */
+  search_parameters?: {
+    mode: "auto" | "on" | "off";
+    max_search_results?: number;
+    from_date?: string;
+    to_date?: string;
+    return_citations?: boolean;
+    allowed_domains?: string[];
+    excluded_domains?: string[];
+  };
+};
+
+/**
+ * xAI-specific additional kwargs that may be present on AI messages.
+ * Includes xAI-specific fields like reasoning_content.
+ */
+export interface XAIAdditionalKwargs {
+  /**
+   * The reasoning content from xAI models that support chain-of-thought reasoning.
+   * This contains the model's internal reasoning process.
+   */
+  reasoning_content?: string;
+  /**
+   * Tool calls made by the model.
+   */
+  tool_calls?: OpenAIClient.ChatCompletionMessageToolCall[];
+  /**
+   * Additional properties that may be present.
+   */
+  [key: string]: unknown;
+}
+
+/**
+ * xAI-specific response metadata that may include usage information.
+ */
+export interface XAIResponseMetadata {
+  /**
+   * Token usage information.
+   */
+  usage?: UsageMetadata;
+  /**
+   * Additional metadata properties.
+   */
+  [key: string]: unknown;
+}
+
+/**
+ * Checks if a tool is an xAI built-in tool (like live_search).
+ * Built-in tools are executed server-side by the xAI API.
+ *
+ * @param tool - The tool to check
+ * @returns true if the tool is an xAI built-in tool
+ */
+export function isXAIBuiltInTool(
+  tool: ChatXAIToolType
+): tool is XAIBuiltInTool {
+  return (
+    typeof tool === "object" &&
+    tool !== null &&
+    "type" in tool &&
+    (tool as XAIBuiltInTool).type === "live_search"
+  );
+}
 
 export interface ChatXAICallOptions extends BaseChatModelCallOptions {
   headers?: Record<string, string>;
+  /**
+   * A list of tools the model may call.
+   * Can include standard function tools and xAI built-in tools like `{ type: "live_search" }`.
+   *
+   * @example
+   * ```typescript
+   * // Using built-in live_search tool
+   * const llm = new ChatXAI().bindTools([{ type: "live_search" }]);
+   * const result = await llm.invoke("What happened in tech news today?");
+   * ```
+   */
   tools?: ChatXAIToolType[];
   tool_choice?: OpenAIToolChoice | string | "auto" | "any";
+  /**
+   * Search parameters for xAI's Live Search API.
+   * Enables the model to search the web for real-time information.
+   *
+   * @note This is an alternative to using `tools: [{ type: "live_search" }]`.
+   * The Live Search API parameters approach may be deprecated in favor of
+   * the tool-based approach.
+   *
+   * @example
+   * ```typescript
+   * const result = await llm.invoke("What's the latest news?", {
+   *   searchParameters: {
+   *     mode: "auto",
+   *     max_search_results: 5,
+   *   }
+   * });
+   * ```
+   */
+  searchParameters?: XAISearchParameters;
 }
 
 export interface ChatXAIInput extends BaseChatModelParams {
@@ -66,6 +249,23 @@ export interface ChatXAIInput extends BaseChatModelParams {
    * This limits ensures computational efficiency and resource management.
    */
   maxTokens?: number;
+  /**
+   * Default search parameters for xAI's Live Search API.
+   * When set, these parameters will be applied to all requests unless
+   * overridden in the call options.
+   *
+   * @example
+   * ```typescript
+   * const llm = new ChatXAI({
+   *   model: "grok-beta",
+   *   searchParameters: {
+   *     mode: "auto",
+   *     max_search_results: 5,
+   *   }
+   * });
+   * ```
+   */
+  searchParameters?: XAISearchParameters;
 }
 
 /**
@@ -393,6 +593,55 @@ export interface ChatXAIInput extends BaseChatModelParams {
  * </details>
  *
  * <br />
+ *
+ * <details>
+ * <summary><strong>Server Tool Calling (Live Search)</strong></summary>
+ *
+ * xAI supports server-side tools that are executed by the API rather than
+ * requiring client-side execution. The `live_search` tool enables the model
+ * to search the web for real-time information.
+ *
+ * ```typescript
+ * // Method 1: Using the built-in live_search tool
+ * const llm = new ChatXAI({
+ *   model: "grok-beta",
+ *   temperature: 0,
+ * });
+ *
+ * const llmWithSearch = llm.bindTools([{ type: "live_search" }]);
+ * const result = await llmWithSearch.invoke("What happened in tech news today?");
+ * console.log(result.content);
+ * // The model will search the web and include real-time information in its response
+ * ```
+ *
+ * ```typescript
+ * // Method 2: Using searchParameters for more control
+ * const llm = new ChatXAI({
+ *   model: "grok-beta",
+ *   searchParameters: {
+ *     mode: "auto", // "auto" | "on" | "off"
+ *     max_search_results: 5,
+ *     from_date: "2024-01-01", // ISO date string
+ *     return_citations: true,
+ *   }
+ * });
+ *
+ * const result = await llm.invoke("What are the latest AI developments?");
+ * ```
+ *
+ * ```typescript
+ * // Method 3: Override search parameters per request
+ * const result = await llm.invoke("Find recent news about SpaceX", {
+ *   searchParameters: {
+ *     mode: "on",
+ *     max_search_results: 10,
+ *     allowed_domains: ["spacex.com", "nasa.gov"],
+ *   }
+ * });
+ * ```
+ * </details>
+ *
+ * <br />
  */
 export class ChatXAI extends ChatOpenAICompletions<ChatXAICallOptions> {
   static lc_name() {
@@ -413,6 +662,11 @@ export class ChatXAI extends ChatOpenAICompletions<ChatXAICallOptions> {
 
   lc_namespace = ["langchain", "chat_models", "xai"];
 
+  /**
+   * Default search parameters for the Live Search API.
+   */
+  searchParameters?: XAISearchParameters;
+
   constructor(fields?: Partial<ChatXAIInput>) {
     const apiKey = fields?.apiKey || getEnvironmentVariable("XAI_API_KEY");
     if (!apiKey) {
@@ -429,6 +683,8 @@ export class ChatXAI extends ChatOpenAICompletions<ChatXAICallOptions> {
         baseURL: "https://api.x.ai/v1",
       },
     });
+
+    this.searchParameters = fields?.searchParameters;
   }
 
   toJSON(): Serialized {
@@ -449,6 +705,86 @@ export class ChatXAI extends ChatOpenAICompletions<ChatXAICallOptions> {
   getLsParams(options: this["ParsedCallOptions"]): LangSmithParams {
     const params = super.getLsParams(options);
     params.ls_provider = "xai";
+    return params;
+  }
+
+  /**
+   * Get the effective search parameters, merging defaults with call options.
+   * @param options Call options that may contain search parameters
+   * @returns Merged search parameters or undefined if none are configured
+   */
+  protected _getEffectiveSearchParameters(
+    options?: this["ParsedCallOptions"]
+  ): XAISearchParameters | undefined {
+    const callSearchParams = options?.searchParameters;
+    if (!this.searchParameters && !callSearchParams) {
+      return undefined;
+    }
+    // Merge instance-level with call-level, call-level takes precedence
+    return {
+      ...this.searchParameters,
+      ...callSearchParams,
+    };
+  }
+
+  /**
+   * Check if any built-in tools (like live_search) are in the tools list.
+   * @param tools List of tools to check
+   * @returns true if any built-in tools are present
+   */
+  protected _hasBuiltInTools(tools?: ChatXAIToolType[]): boolean {
+    return tools?.some(isXAIBuiltInTool) ?? false;
+  }
+
+  /** @internal */
+  override invocationParams(
+    options?: this["ParsedCallOptions"],
+    extra?: { streaming?: boolean }
+  ): ChatXAICompletionsInvocationParams {
+    const baseParams = super.invocationParams(options, extra);
+
+    // Cast to xAI-specific params type
+    const params: ChatXAICompletionsInvocationParams = { ...baseParams };
+
+    // Get effective search parameters from instance and call options
+    const effectiveSearchParams = this._getEffectiveSearchParameters(options);
+
+    // Check if live_search tool is being used
+    const hasLiveSearchTool = this._hasBuiltInTools(
+      options?.tools as ChatXAIToolType[] | undefined
+    );
+
+    // Add search_parameters if needed
+    if (effectiveSearchParams || hasLiveSearchTool) {
+      const searchParams = hasLiveSearchTool
+        ? { mode: "auto" as const, ...effectiveSearchParams }
+        : effectiveSearchParams;
+
+      if (searchParams) {
+        params.search_parameters = {
+          mode: searchParams.mode ?? "auto",
+          ...(searchParams.max_search_results !== undefined && {
+            max_search_results: searchParams.max_search_results,
+          }),
+          ...(searchParams.from_date !== undefined && {
+            from_date: searchParams.from_date,
+          }),
+          ...(searchParams.to_date !== undefined && {
+            to_date: searchParams.to_date,
+          }),
+          ...(searchParams.return_citations !== undefined && {
+            return_citations: searchParams.return_citations,
+          }),
+          ...(searchParams.allowed_domains !== undefined && {
+            allowed_domains: searchParams.allowed_domains,
+          }),
+          ...(searchParams.excluded_domains !== undefined && {
+            excluded_domains: searchParams.excluded_domains,
+          }),
+        };
+      }
+    }
+
     return params;
   }
 
@@ -492,9 +828,22 @@ export class ChatXAI extends ChatOpenAICompletions<ChatXAICallOptions> {
       return msg;
     });
 
+    // Filter out xAI built-in tools from the standard tools array
+    // Built-in tools are handled via search_parameters (added in invocationParams)
+    let filteredTools: OpenAIClient.ChatCompletionTool[] | undefined;
+    if (request.tools) {
+      filteredTools = request.tools.filter(
+        (tool) => !isXAIBuiltInTool(tool)
+      ) as OpenAIClient.ChatCompletionTool[];
+      if (filteredTools.length === 0) {
+        filteredTools = undefined;
+      }
+    }
+
     const newRequest = {
       ...request,
       messages: newRequestMessages,
+      tools: filteredTools,
     };
 
     if (newRequest.stream === true) {
@@ -515,34 +864,43 @@ export class ChatXAI extends ChatOpenAICompletions<ChatXAICallOptions> {
       | "developer"
       | "assistant"
       | "tool"
-  ) {
-    const messageChunk: AIMessageChunk =
-      super._convertCompletionsDeltaToBaseMessageChunk(
-        delta,
-        rawResponse,
-        defaultRole
-      );
+  ): AIMessageChunk {
+    const messageChunk = super._convertCompletionsDeltaToBaseMessageChunk(
+      delta,
+      rawResponse,
+      defaultRole
+    ) as AIMessageChunk;
+
+    // Cast to xAI-specific types for proper typing
+    const responseMetadata =
+      messageChunk.response_metadata as XAIResponseMetadata;
+
     // Make concatenating chunks work without merge warning
     if (!rawResponse.choices[0]?.finish_reason) {
-      delete messageChunk.response_metadata.usage;
+      delete responseMetadata.usage;
       delete messageChunk.usage_metadata;
     } else {
-      messageChunk.usage_metadata = messageChunk.response_metadata.usage;
+      messageChunk.usage_metadata = responseMetadata.usage;
     }
     return messageChunk;
   }
 
   protected override _convertCompletionsMessageToBaseMessage(
-    message: OpenAIClient.ChatCompletionMessage,
+    message: OpenAIClient.ChatCompletionMessage & {
+      reasoning_content?: string;
+    },
     rawResponse: OpenAIClient.ChatCompletion
-  ) {
+  ): AIMessageChunk {
     const langChainMessage = super._convertCompletionsMessageToBaseMessage(
       message,
       rawResponse
-    );
-    langChainMessage.additional_kwargs.reasoning_content =
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (message as any).reasoning_content;
+    ) as AIMessageChunk;
+
+    // Cast additional_kwargs to xAI-specific type and add reasoning_content
+    const additionalKwargs =
+      langChainMessage.additional_kwargs as XAIAdditionalKwargs;
+    additionalKwargs.reasoning_content = message.reasoning_content;
+
     return langChainMessage;
   }
 
