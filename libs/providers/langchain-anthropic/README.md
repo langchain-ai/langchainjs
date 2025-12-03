@@ -250,8 +250,8 @@ There are two variants:
 - **`toolSearchBM25_20251119`** - Claude uses natural language queries to search for tools using the BM25 algorithm
 
 ```typescript
-import { ChatAnthropic, toolSearchRegex_20251119 } from "@langchain/anthropic";
-import { tool } from "@langchain/core/tools";
+import { ChatAnthropic, tools } from "@langchain/anthropic";
+import { tool } from "langchain";
 import { z } from "zod";
 
 const llm = new ChatAnthropic({
@@ -289,17 +289,17 @@ const getNews = tool(
 
 // Claude will search and discover tools as needed
 const response = await llm.invoke("What is the weather in San Francisco?", {
-  tools: [toolSearchRegex_20251119(), getWeather, getNews],
+  tools: [tools.toolSearchRegex_20251119(), getWeather, getNews],
 });
 ```
 
 Using the BM25 variant for natural language search:
 
 ```typescript
-import { toolSearchBM25_20251119 } from "@langchain/anthropic";
+import { tools } from "@langchain/anthropic";
 
 const response = await llm.invoke("What is the weather in San Francisco?", {
-  tools: [toolSearchBM25_20251119(), getWeather, getNews],
+  tools: [tools.toolSearchBM25_20251119(), getWeather, getNews],
 });
 ```
 
