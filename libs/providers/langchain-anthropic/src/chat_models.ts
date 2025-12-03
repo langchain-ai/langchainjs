@@ -57,6 +57,7 @@ import {
   AnthropicToolChoice,
   ChatAnthropicOutputFormat,
   ChatAnthropicToolType,
+  AnthropicMCPServerURLDefinition,
   Kwargs,
 } from "./types.js";
 import { wrapAnthropicClientError } from "./utils/errors.js";
@@ -115,6 +116,10 @@ export interface ChatAnthropicCallOptions
    * See https://docs.anthropic.com/en/api/versioning for available beta features.
    */
   betas?: AnthropicBeta[];
+  /**
+   * Array of MCP server URLs to use for the request.
+   */
+  mcp_servers?: AnthropicMCPServerURLDefinition[];
 }
 
 function _toolsInParams(

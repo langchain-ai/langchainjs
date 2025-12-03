@@ -51,6 +51,8 @@ export type AnthropicWebSearchResultBlockParam =
 export type AnthropicSearchResultBlockParam = Anthropic.SearchResultBlockParam;
 export type AnthropicContainerUploadBlockParam =
   Anthropic.Beta.BetaContainerUploadBlockParam;
+export type AnthropicMCPServerURLDefinition =
+  Anthropic.Beta.Messages.BetaRequestMCPServerURLDefinition;
 
 // Union of all possible content block types including server tool use
 export type ChatAnthropicContentBlock =
