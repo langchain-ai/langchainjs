@@ -139,7 +139,7 @@ For more information, see [Anthropic's Memory Tool documentation](https://docs.a
 The web search tool (`webSearch_20250305`) gives Claude direct access to real-time web content, allowing it to answer questions with up-to-date information beyond its knowledge cutoff. Claude automatically cites sources from search results as part of its answer.
 
 ```typescript
-import { ChatAnthropic, webSearch_20250305 } from "@langchain/anthropic";
+import { ChatAnthropic, tools } from "@langchain/anthropic";
 
 const llm = new ChatAnthropic({
   model: "claude-sonnet-4-5-20250929",
@@ -147,7 +147,7 @@ const llm = new ChatAnthropic({
 
 // Basic usage
 const response = await llm.invoke("What is the weather in NYC?", {
-  tools: [webSearch_20250305()],
+  tools: [tools.webSearch_20250305()],
 });
 ```
 
@@ -156,7 +156,7 @@ The web search tool supports several configuration options:
 ```typescript
 const response = await llm.invoke("Latest news about AI?", {
   tools: [
-    webSearch_20250305({
+    tools.webSearch_20250305({
       // Maximum number of times the tool can be used in the API request
       maxUses: 5,
       // Only include results from these domains
