@@ -399,14 +399,17 @@ Available actions:
 - `zoom` - View specific screen regions at full resolution (Claude Opus 4.5 only)
 
 ```typescript
-import { ChatAnthropic, computer_20250124 } from "@langchain/anthropic";
-import type { Computer20250124Action } from "@langchain/anthropic";
+import {
+  ChatAnthropic,
+  tools,
+  type Computer20250124Action,
+} from "@langchain/anthropic";
 
 const llm = new ChatAnthropic({
   model: "claude-sonnet-4-5-20250929",
 });
 
-const computer = computer_20250124({
+const computer = tools.computer_20250124({
   // Required: specify display dimensions
   displayWidthPx: 1024,
   displayHeightPx: 768,
@@ -435,9 +438,9 @@ const response = await llmWithComputer.invoke(
 For Claude Opus 4.5 with zoom support:
 
 ```typescript
-import { computer_20251124 } from "@langchain/anthropic";
+import { tools } from "@langchain/anthropic";
 
-const computer = computer_20251124({
+const computer = tools.computer_20251124({
   displayWidthPx: 1920,
   displayHeightPx: 1080,
   // Enable zoom for detailed screen region inspection
