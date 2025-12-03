@@ -5,7 +5,7 @@ import {
   toolSearchRegex_20251119,
   toolSearchBM25_20251119,
 } from "./toolSearch.js";
-import { textEditor_20250728, textEditor_20250124 } from "./textEditor.js";
+import { textEditor_20250728 } from "./textEditor.js";
 
 export const tools = {
   memory_20250818,
@@ -14,7 +14,6 @@ export const tools = {
   toolSearchRegex_20251119,
   toolSearchBM25_20251119,
   textEditor_20250728,
-  textEditor_20250124,
 };
 
 export type * from "./types.js";
