@@ -30,6 +30,10 @@ it("array", () => {
   expectPartialJson("[null,").toEqual([null]);
   expectPartialJson("[null,t").toEqual([null, true]);
   expectPartialJson("[null,{").toEqual([null, {}]);
+  expectPartialJson('[null,{"').toEqual([null, {}]);
+  expectPartialJson('[null,{"a').toEqual([null, { a: undefined }]);
+  expectPartialJson('[null,{"a"').toEqual([null, { a: undefined }]);
+  expectPartialJson('[null,{"a":').toEqual([null, { a: undefined }]);
   expectPartialJson('[null,{"a":1').toEqual([null, { a: 1 }]);
 
   expect(() => expectPartialJson("[n,")).toThrow();
@@ -41,13 +45,31 @@ it("strings", () => {
   expectPartialJson('"hello').toBe("hello");
   expectPartialJson('"hello"').toBe("hello");
 
-  expectPartialJson('"15\\n\t\r"').toBe("15\n\t\r");
+  expectPartialJson(String.raw`"15\n\t\r`).toBe("15\n\t\r");
 
-  expectPartialJson('"15\\u').toBe("15u");
-  expectPartialJson('"15\\u00').toBe("15u00");
-  expectPartialJson('"15\\u00f').toBe("15u00f");
-  expectPartialJson('"15\\u00f8').toBe("15\u00f8");
-  expectPartialJson('"15\\u00f8C').toBe("15\u00f8C");
+  expectPartialJson(`"15\\u`).toBe("15u");
+  expectPartialJson(`"15\\u00`).toBe("15u00");
+  expectPartialJson(`"15\\u00f`).toBe("15u00f");
+  expectPartialJson(String.raw`"15\u00f8`).toBe("15\u00f8");
+  expectPartialJson(String.raw`"15\u00f8C`).toBe("15\u00f8C");
+  expectPartialJson(String.raw`"15\u00f8C"`).toBe("15\u00f8C");
+
+  expectPartialJson(String.raw`"hello${"\\"}`).toBe("hello\\");
+  expectPartialJson(String.raw`"hello\"`).toBe('hello"');
+  expectPartialJson(String.raw`"hello\""`).toBe('hello"');
+
+  expectPartialJson(String.raw`"hello\\`).toBe("hello\\");
+
+  expectPartialJson(String.raw`"\t\n\r\b\f\/`).toBe("\t\n\r\b\f/");
+  expectPartialJson(String.raw`"\t\n\r\b\f\/"`).toBe("\t\n\r\b\f/");
+
+  expectPartialJson(String.raw`"foo\bar`).toBe("foo\bar");
+  expectPartialJson(String.raw`"foo\bar"`).toBe("foo\bar");
+
+  expectPartialJson(String.raw`"\u00f8${"\\"}`).toBe("\u00f8\\");
+
+  expect(() => expectPartialJson('"hello\\m"')).toThrow();
+  expect(() => expectPartialJson('"hello\\x"')).toThrow();
 });
 
 it("numbers", () => {

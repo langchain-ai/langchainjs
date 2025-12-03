@@ -73,6 +73,12 @@ export function strictParsePartialJson(s: string): unknown {
           result += "\\";
         } else if (char === '"') {
           result += '"';
+        } else if (char === "b") {
+          result += "\b";
+        } else if (char === "f") {
+          result += "\f";
+        } else if (char === "/") {
+          result += "/";
         } else if (char === "u") {
           const hex = buffer.substring(pos + 1, pos + 5);
           if (/^[0-9A-Fa-f]{0,4}$/.test(hex)) {
@@ -106,6 +112,7 @@ export function strictParsePartialJson(s: string): unknown {
       pos += 1;
     }
 
+    if (escaped) result += "\\";
     return result;
   }
 
