@@ -240,6 +240,71 @@ const response = await llm.invoke(
 
 For more information, see [Anthropic's Web Fetch Tool documentation](https://docs.anthropic.com/en/docs/build-with-claude/tool-use/web-fetch-tool).
 
+### Tool Search Tools
+
+The tool search tools enable Claude to work with hundreds or thousands of tools by dynamically discovering and loading them on-demand. This is useful when you have a large number of tools but don't want to load them all into the context window at once.
+
+There are two variants:
+
+- **`toolSearchRegex_20251119`** - Claude constructs regex patterns (using Python's `re.search()` syntax) to search for tools
+- **`toolSearchBM25_20251119`** - Claude uses natural language queries to search for tools using the BM25 algorithm
+
+```typescript
+import { ChatAnthropic, toolSearchRegex_20251119 } from "@langchain/anthropic";
+import { tool } from "@langchain/core/tools";
+import { z } from "zod";
+
+const llm = new ChatAnthropic({
+  model: "claude-sonnet-4-5-20250929",
+});
+
+// Create tools with defer_loading to make them discoverable via search
+const getWeather = tool(
+  async (input: { location: string }) => {
+    return `Weather in ${input.location}: Sunny, 72°F`;
+  },
+  {
+    name: "get_weather",
+    description: "Get the weather at a specific location",
+    schema: z.object({
+      location: z.string(),
+    }),
+    extras: { defer_loading: true },
+  }
+);
+
+const getNews = tool(
+  async (input: { topic: string }) => {
+    return `Latest news about ${input.topic}...`;
+  },
+  {
+    name: "get_news",
+    description: "Get the latest news about a topic",
+    schema: z.object({
+      topic: z.string(),
+    }),
+    extras: { defer_loading: true },
+  }
+);
+
+// Claude will search and discover tools as needed
+const response = await llm.invoke("What is the weather in San Francisco?", {
+  tools: [toolSearchRegex_20251119(), getWeather, getNews],
+});
+```
+
+Using the BM25 variant for natural language search:
+
+```typescript
+import { toolSearchBM25_20251119 } from "@langchain/anthropic";
+
+const response = await llm.invoke("What is the weather in San Francisco?", {
+  tools: [toolSearchBM25_20251119(), getWeather, getNews],
+});
+```
+
+For more information, see [Anthropic's Tool Search documentation](https://docs.anthropic.com/en/docs/build-with-claude/tool-use/tool-search-tool).
+
 ## Development
 
 To develop the Anthropic package, you'll need to follow these instructions:
