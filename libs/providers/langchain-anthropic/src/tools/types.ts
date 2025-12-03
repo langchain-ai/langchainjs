@@ -86,21 +86,7 @@ export interface TextEditor20250728InsertCommand {
  * @see https://docs.anthropic.com/en/docs/agents-and-tools/tool-use/computer-use
  */
 export type Computer20251124Action =
-  | ComputerScreenshotAction
-  | ComputerLeftClickAction
-  | ComputerRightClickAction
-  | ComputerMiddleClickAction
-  | ComputerDoubleClickAction
-  | ComputerTripleClickAction
-  | ComputerLeftClickDragAction
-  | ComputerLeftMouseDownAction
-  | ComputerLeftMouseUpAction
-  | ComputerScrollAction
-  | ComputerTypeAction
-  | ComputerKeyAction
-  | ComputerMouseMoveAction
-  | ComputerHoldKeyAction
-  | ComputerWaitAction
+  | Computer20250124Action
   | ComputerZoomAction;
 
 /**

@@ -7,6 +7,7 @@ import {
 } from "./toolSearch.js";
 import { textEditor_20250728 } from "./textEditor.js";
 import { computer_20251124, computer_20250124 } from "./computer.js";
+import { codeExecution_20250825 } from "./codeExecution.js";
 
 export const tools = {
   memory_20250818,
@@ -17,6 +18,7 @@ export const tools = {
   textEditor_20250728,
   computer_20251124,
   computer_20250124,
+  codeExecution_20250825,
 };
 
 export type * from "./types.js";
