@@ -187,4 +187,3 @@ describe("Anthropic Computer Use Tool Unit Tests", () => {
     });
   });
 });
-
