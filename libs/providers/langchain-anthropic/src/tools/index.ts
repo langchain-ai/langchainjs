@@ -8,6 +8,7 @@ import {
 import { textEditor_20250728 } from "./textEditor.js";
 import { computer_20251124, computer_20250124 } from "./computer.js";
 import { codeExecution_20250825 } from "./codeExecution.js";
+import { bash_20250124 } from "./bash.js";
 
 export const tools = {
   memory_20250818,
@@ -19,6 +20,7 @@ export const tools = {
   computer_20251124,
   computer_20250124,
   codeExecution_20250825,
+  bash_20250124,
 };
 
 export type * from "./types.js";

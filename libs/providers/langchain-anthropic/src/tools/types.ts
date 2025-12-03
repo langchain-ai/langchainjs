@@ -196,3 +196,29 @@ export interface ComputerZoomAction {
   /** Coordinates [x1, y1, x2, y2] defining top-left and bottom-right corners */
   region: [number, number, number, number];
 }
+
+/**
+ * Bash tool command types for Claude 4 models and Claude 3.7.
+ * @see https://docs.anthropic.com/en/docs/agents-and-tools/tool-use/bash-tool
+ */
+export type Bash20250124Command =
+  | Bash20250124ExecuteCommand
+  | Bash20250124RestartCommand;
+
+/**
+ * Execute a bash command.
+ */
+export interface Bash20250124ExecuteCommand {
+  /** The bash command to run */
+  command: string;
+  restart?: never;
+}
+
+/**
+ * Restart the bash session to reset state.
+ */
+export interface Bash20250124RestartCommand {
+  command?: never;
+  /** Set to true to restart the bash session */
+  restart: true;
+}

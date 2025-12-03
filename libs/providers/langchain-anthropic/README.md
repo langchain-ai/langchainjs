@@ -506,6 +506,67 @@ const response2 = await llm.invoke(
 
 For more information, see [Anthropic's Code Execution Tool documentation](https://docs.anthropic.com/en/docs/agents-and-tools/tool-use/code-execution-tool).
 
+### Bash Tool
+
+The bash tool (`bash_20250124`) enables shell command execution in a persistent bash session. Unlike the sandboxed code execution tool, this tool requires you to provide your own execution environment.
+
+> **⚠️ Security Warning:** The bash tool provides direct system access. Implement safety measures such as running in isolated environments (Docker/VM), command filtering, and resource limits.
+
+The bash tool provides:
+
+- **Persistent bash session** - Maintains state between commands
+- **Shell command execution** - Run any shell command
+- **Environment access** - Access to environment variables and working directory
+- **Command chaining** - Support for pipes, redirects, and scripting
+
+Available commands:
+
+- Execute a command: `{ command: "ls -la" }`
+- Restart the session: `{ restart: true }`
+
+```typescript
+import {
+  ChatAnthropic,
+  tools,
+  type Bash20250124Command,
+} from "@langchain/anthropic";
+import { execSync } from "child_process";
+
+const llm = new ChatAnthropic({
+  model: "claude-sonnet-4-5-20250929",
+});
+
+const bash = tools.bash_20250124({
+  execute: async (args: Bash20250124Command) => {
+    if (args.restart) {
+      // Reset session state
+      return "Bash session restarted";
+    }
+    try {
+      const output = execSync(args.command!, {
+        encoding: "utf-8",
+        timeout: 30000,
+      });
+      return output;
+    } catch (error) {
+      return `Error: ${(error as Error).message}`;
+    }
+  },
+});
+
+const llmWithBash = llm.bindTools([bash]);
+
+const response = await llmWithBash.invoke(
+  "List all Python files in the current directory"
+);
+
+// Process tool calls and execute commands
+console.log(response.tool_calls?.[0].name); // "bash"
+console.log(response.tool_calls?.[0].args.command); // "ls -la *.py"
+```
+
+For more information, see [Anthropic's Bash Tool documentation](https://docs.anthropic.com/en/docs/agents-and-tools/tool-use/bash-tool).
+
 ## Development
 
 To develop the Anthropic package, you'll need to follow these instructions:
