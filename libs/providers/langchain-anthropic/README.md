@@ -446,6 +446,58 @@ const computer = tools.computer_20251124({
 
 For more information, see [Anthropic's Computer Use documentation](https://docs.anthropic.com/en/docs/agents-and-tools/tool-use/computer-use).
 
+### Code Execution Tool
+
+The code execution tool (`codeExecution_20250825`) allows Claude to run Bash commands and manipulate files in a secure, sandboxed environment. Claude can analyze data, create visualizations, perform calculations, and process files.
+
+When this tool is provided, Claude automatically gains access to:
+
+- **Bash commands** - Execute shell commands for system operations
+- **File operations** - Create, view, and edit files directly
+
+```typescript
+import { ChatAnthropic, tools } from "@langchain/anthropic";
+
+const llm = new ChatAnthropic({
+  model: "claude-sonnet-4-5-20250929",
+});
+
+// Basic usage - calculations and data analysis
+const response = await llm.invoke(
+  "Calculate the mean and standard deviation of [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]",
+  { tools: [tools.codeExecution_20250825()] }
+);
+
+// File operations and visualization
+const response2 = await llm.invoke(
+  "Create a matplotlib visualization of sales data and save it as chart.png",
+  { tools: [tools.codeExecution_20250825()] }
+);
+```
+
+Container reuse for multi-step workflows:
+
+```typescript
+// First request - creates a container
+const response1 = await llm.invoke("Write a random number to /tmp/number.txt", {
+  tools: [tools.codeExecution_20250825()],
+});
+
+// Extract container ID from response for reuse
+const containerId = response1.response_metadata?.container?.id;
+
+// Second request - reuse container to access the file
+const response2 = await llm.invoke(
+  "Read /tmp/number.txt and calculate its square",
+  {
+    tools: [tools.codeExecution_20250825()],
+    container: containerId,
+  }
+);
+```
+
+For more information, see [Anthropic's Code Execution Tool documentation](https://docs.anthropic.com/en/docs/agents-and-tools/tool-use/code-execution-tool).
+
 ## Development
 
 To develop the Anthropic package, you'll need to follow these instructions:
