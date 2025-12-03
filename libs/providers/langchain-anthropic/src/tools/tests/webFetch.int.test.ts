@@ -13,11 +13,6 @@ const createModel = () =>
   new ChatAnthropic({
     model: "claude-sonnet-4-5",
     temperature: 0,
-    clientOptions: {
-      defaultHeaders: {
-        "anthropic-beta": "web-fetch-2025-09-10",
-      },
-    },
   });
 
 describe("Anthropic Web Fetch Tool Integration Tests", () => {
