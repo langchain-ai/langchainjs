@@ -54,11 +54,12 @@ it("strings", () => {
   expectPartialJson(String.raw`"15\u00f8C`).toBe("15\u00f8C");
   expectPartialJson(String.raw`"15\u00f8C"`).toBe("15\u00f8C");
 
+  expectPartialJson(String.raw`"hello\\`).toBe("hello\\");
+  expectPartialJson(String.raw`"hello\\"`).toBe("hello\\");
+
   expectPartialJson(String.raw`"hello${"\\"}`).toBe("hello\\");
   expectPartialJson(String.raw`"hello\"`).toBe('hello"');
   expectPartialJson(String.raw`"hello\""`).toBe('hello"');
-
-  expectPartialJson(String.raw`"hello\\`).toBe("hello\\");
 
   expectPartialJson(String.raw`"\t\n\r\b\f\/`).toBe("\t\n\r\b\f/");
   expectPartialJson(String.raw`"\t\n\r\b\f\/"`).toBe("\t\n\r\b\f/");
