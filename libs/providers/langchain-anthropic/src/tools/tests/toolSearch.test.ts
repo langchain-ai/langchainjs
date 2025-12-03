@@ -1,5 +1,8 @@
 import { expect, it, describe } from "vitest";
-import { toolSearchRegex_20251119, toolSearchBM25_20251119 } from "../toolSearch.js";
+import {
+  toolSearchRegex_20251119,
+  toolSearchBM25_20251119,
+} from "../toolSearch.js";
 
 describe("Anthropic Tool Search Tool Unit Tests", () => {
   describe("toolSearchRegex_20251119", () => {
@@ -58,4 +61,3 @@ describe("Anthropic Tool Search Tool Unit Tests", () => {
     });
   });
 });
-
