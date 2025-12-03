@@ -16,7 +16,11 @@ import {
   type PregelOptions,
 } from "@langchain/langgraph";
 import type { CheckpointListOptions } from "@langchain/langgraph-checkpoint";
-import { ToolMessage, AIMessage } from "@langchain/core/messages";
+import {
+  ToolMessage,
+  AIMessage,
+  MessageStructure,
+} from "@langchain/core/messages";
 import { IterableReadableStream } from "@langchain/core/utils/stream";
 import type { Runnable, RunnableConfig } from "@langchain/core/runnables";
 import type { StreamEvent } from "@langchain/core/tracers/log_stream";
@@ -45,6 +49,7 @@ import type {
   WithStateGraphNodes,
   AgentTypeConfig,
   CreateAgentParams,
+  ToolsToMessageToolSet,
 } from "./types.js";
 
 import type { BuiltInState, JumpTo, UserInput } from "./types.js";
@@ -80,8 +85,14 @@ type MergedAgentState<Types extends AgentTypeConfig> = InferSchemaInput<
   Types["State"]
 > &
   (Types["Response"] extends ResponseFormatUndefined
-    ? Omit<BuiltInState, "jumpTo">
-    : Omit<BuiltInState, "jumpTo"> & {
+    ? Omit<
+        BuiltInState<MessageStructure<ToolsToMessageToolSet<Types["Tools"]>>>,
+        "jumpTo"
+      >
+    : Omit<
+        BuiltInState<MessageStructure<ToolsToMessageToolSet<Types["Tools"]>>>,
+        "jumpTo"
+      > & {
         structuredResponse: Types["Response"];
       }) &
   InferMiddlewareStates<Types["Middleware"]>;

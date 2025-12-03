@@ -113,8 +113,25 @@ export class ToolMessage<TStructure extends MessageStructure = MessageStructure>
     this.metadata = toolMessageFields.metadata;
   }
 
-  static isInstance(message: unknown): message is ToolMessage {
-    return super.isInstance(message) && message.type === "tool";
+  /**
+   * Type guard to check if an object is a ToolMessage.
+   * Preserves the MessageStructure type parameter when called with a typed BaseMessage.
+   * @overload When called with a typed BaseMessage, preserves the TStructure type
+   */
+  static isInstance<T extends MessageStructure>(
+    message: BaseMessage<T>
+  ): message is ToolMessage<T>;
+  /**
+   * Type guard to check if an object is a ToolMessage.
+   * @overload When called with unknown, returns base ToolMessage type
+   */
+  static isInstance(message: unknown): message is ToolMessage;
+  static isInstance<T extends MessageStructure = MessageStructure>(
+    message: BaseMessage<T> | unknown
+  ): message is ToolMessage<T> {
+    return (
+      super.isInstance(message) && (message as { type: string }).type === "tool"
+    );
   }
 
   override get _printableFields(): Record<string, unknown> {
