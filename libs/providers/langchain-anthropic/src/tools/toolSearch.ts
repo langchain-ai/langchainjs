@@ -28,9 +28,6 @@ interface ToolSearchOptions {
  *
  * const model = new ChatAnthropic({
  *   model: "claude-sonnet-4-5-20250929",
- *   clientOptions: {
- *     defaultHeaders: { "anthropic-beta": "advanced-tool-use-2025-11-20" },
- *   },
  * });
  *
  * const getWeather = tool(

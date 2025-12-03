@@ -8,21 +8,17 @@ import { concat } from "@langchain/core/utils/stream";
 import { tool } from "@langchain/core/tools";
 import { z } from "zod";
 
-import { ChatAnthropic } from "../../chat_models.js";
+import { ChatAnthropic, type AnthropicInput } from "../../chat_models.js";
 import {
   toolSearchRegex_20251119,
   toolSearchBM25_20251119,
 } from "../toolSearch.js";
 
-const createModel = () =>
+const createModel = (args: AnthropicInput = {}) =>
   new ChatAnthropic({
     model: "claude-sonnet-4-5",
     temperature: 0,
-    clientOptions: {
-      defaultHeaders: {
-        "anthropic-beta": "advanced-tool-use-2025-11-20",
-      },
-    },
+    ...args,
   });
 
 const getWeatherTool = tool(() => "72°F and sunny", {
@@ -65,7 +61,13 @@ const searchFilesTool = tool(() => "Found 3 files matching query", {
 
 describe("Anthropic Tool Search Tool Integration Tests", () => {
   it("should not find the tool if tool search tool is not present", async () => {
-    const llm = createModel();
+    const llm = createModel({
+      clientOptions: {
+        defaultHeaders: {
+          "anthropic-beta": "advanced-tool-use-2025-11-20",
+        },
+      },
+    });
     const llmWithToolSearch = llm.bindTools([
       getWeatherTool,
       searchFilesWithoutDeferLoading,
