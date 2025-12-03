@@ -974,10 +974,9 @@ export class ChatAnthropicMessages<
       return undefined;
     }
     return tools.map((tool) => {
-      // @ts-expect-error - tool.metadata is not typed
-      if (isLangChainTool(tool) && tool.metadata?.providerToolDefinition) {
-        // @ts-expect-error - tool.metadata is not typed
-        return tool.metadata.providerToolDefinition;
+      if (isLangChainTool(tool) && tool.extras?.providerToolDefinition) {
+        return tool.extras
+          .providerToolDefinition as Anthropic.Messages.ToolUnion;
       }
       if (isBuiltinTool(tool)) {
         return tool;

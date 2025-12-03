@@ -43,3 +43,82 @@ export interface MemoryTool20250818Options {
  * Memory tool type definition.
  */
 export type MemoryTool20250818 = Anthropic.Beta.BetaMemoryTool20250818;
+
+/**
+ * Text editor tool command types for Claude 4.x models.
+ * @see https://docs.anthropic.com/en/docs/agents-and-tools/tool-use/text-editor-tool
+ */
+export type TextEditor20250728Command =
+  | TextEditor20250728ViewCommand
+  | TextEditor20250728StrReplaceCommand
+  | TextEditor20250728CreateCommand
+  | TextEditor20250728InsertCommand;
+
+export interface TextEditor20250728ViewCommand {
+  command: "view";
+  path: string;
+  view_range?: [number, number];
+}
+
+export interface TextEditor20250728StrReplaceCommand {
+  command: "str_replace";
+  path: string;
+  old_str: string;
+  new_str: string;
+}
+
+export interface TextEditor20250728CreateCommand {
+  command: "create";
+  path: string;
+  file_text: string;
+}
+
+export interface TextEditor20250728InsertCommand {
+  command: "insert";
+  path: string;
+  insert_line: number;
+  new_str: string;
+}
+
+/**
+ * Text editor tool command types for Claude 3.7 models.
+ * Includes undo_edit command which is not available in Claude 4.x.
+ * @see https://docs.anthropic.com/en/docs/agents-and-tools/tool-use/text-editor-tool
+ */
+export type TextEditor20250124Command =
+  | TextEditor20250124ViewCommand
+  | TextEditor20250124StrReplaceCommand
+  | TextEditor20250124CreateCommand
+  | TextEditor20250124InsertCommand
+  | TextEditor20250124UndoEditCommand;
+
+export interface TextEditor20250124ViewCommand {
+  command: "view";
+  path: string;
+  view_range?: [number, number];
+}
+
+export interface TextEditor20250124StrReplaceCommand {
+  command: "str_replace";
+  path: string;
+  old_str: string;
+  new_str: string;
+}
+
+export interface TextEditor20250124CreateCommand {
+  command: "create";
+  path: string;
+  file_text: string;
+}
+
+export interface TextEditor20250124InsertCommand {
+  command: "insert";
+  path: string;
+  insert_line: number;
+  new_str: string;
+}
+
+export interface TextEditor20250124UndoEditCommand {
+  command: "undo_edit";
+  path: string;
+}
