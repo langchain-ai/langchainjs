@@ -53,4 +53,5 @@ export const AnthropicToolExtrasSchema = z.object({
 export const ANTHROPIC_TOOL_BETAS: Record<string, string> = {
   tool_search_tool_regex_20251119: "advanced-tool-use-2025-11-20",
   tool_search_tool_bm25_20251119: "advanced-tool-use-2025-11-20",
+  memory_20250818: "context-management-2025-06-27",
 };

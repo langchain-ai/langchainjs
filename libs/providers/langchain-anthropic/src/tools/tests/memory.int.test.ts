@@ -168,11 +168,6 @@ class MockMemoryFileSystem {
 const createModel = () =>
   new ChatAnthropic({
     model: "claude-sonnet-4-5-20250929",
-    clientOptions: {
-      defaultHeaders: {
-        "anthropic-beta": "context-management-2025-06-27",
-      },
-    },
   });
 
 describe("Anthropic Memory Tool Integration Tests", () => {

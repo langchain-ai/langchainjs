@@ -16,12 +16,7 @@ import type { MemoryTool20250818Options } from "./types.js";
  * import { ChatAnthropic, memory_20250818 } from "@langchain/anthropic";
  *
  * const llm = new ChatAnthropic({
- *   model: "claude-sonnet-4-5-20250929",
- *   clientOptions: {
- *     defaultHeaders: {
- *       "anthropic-beta": "context-management-2025-06-27",
- *     },
- *   },
+ *   model: "claude-sonnet-4-5-20250929"
  * });
  *
  * const memory = memory_20250818({
