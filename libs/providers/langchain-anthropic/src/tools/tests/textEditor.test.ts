@@ -1,5 +1,5 @@
 import { expect, it, describe } from "vitest";
-import { textEditor_20250728, textEditor_20250124 } from "../textEditor.js";
+import { textEditor_20250728 } from "../textEditor.js";
 
 describe("Anthropic Text Editor Tool Unit Tests", () => {
   describe("textEditor_20250728 (Claude 4.x)", () => {
@@ -55,62 +55,6 @@ describe("Anthropic Text Editor Tool Unit Tests", () => {
                 "str_replace",
                 "create",
                 "insert",
-              ],
-              "type": "string",
-            },
-            "path": {
-              "type": "string",
-            },
-          },
-          "required": [
-            "command",
-            "path",
-          ],
-          "type": "object",
-        }
-      `);
-    });
-  });
-
-  describe("textEditor_20250124 (Claude 3.7)", () => {
-    it("creates a valid text editor tool with no options", () => {
-      const editor = textEditor_20250124();
-
-      expect(editor.name).toBe("str_replace_editor");
-      expect(editor.extras?.providerToolDefinition).toMatchInlineSnapshot(`
-        {
-          "name": "str_replace_editor",
-          "type": "text_editor_20250124",
-        }
-      `);
-    });
-
-    it("creates a valid text editor tool with execute function", async () => {
-      const mockExecute = async (args: { command: string; path: string }) => {
-        return `Executed ${args.command} on ${args.path}`;
-      };
-
-      const editor = textEditor_20250124({
-        execute: mockExecute,
-      });
-
-      expect(editor.name).toBe("str_replace_editor");
-      expect(editor.func).toBeDefined();
-    });
-
-    it("has correct schema for Claude 3.7 commands (includes undo_edit)", () => {
-      const editor = textEditor_20250124();
-
-      expect(editor.schema).toMatchInlineSnapshot(`
-        {
-          "properties": {
-            "command": {
-              "enum": [
-                "view",
-                "str_replace",
-                "create",
-                "insert",
-                "undo_edit",
               ],
               "type": "string",
             },

@@ -6,13 +6,14 @@ import {
   type BaseMessage,
 } from "@langchain/core/messages";
 
-import { ChatAnthropic } from "../../chat_models.js";
+import { ChatAnthropic, type AnthropicInput } from "../../chat_models.js";
 import { textEditor_20250728 } from "../textEditor.js";
 
-const createModel = () =>
+const createModel = (args: AnthropicInput = {}) =>
   new ChatAnthropic({
     model: "claude-sonnet-4-5",
     temperature: 0,
+    ...args,
   });
 
 // Mock file system for testing
@@ -90,7 +91,7 @@ function getFileContents(path: string): string {
 }
 
 describe("Anthropic Text Editor Tool Integration Tests", () => {
-  it.only("text editor tool can be bound to ChatAnthropic and triggers tool use for view", async () => {
+  it("text editor tool can be bound to ChatAnthropic and triggers tool use for view", async () => {
     const llm = createModel();
 
     const textEditor = textEditor_20250728({
@@ -115,7 +116,6 @@ describe("Anthropic Text Editor Tool Integration Tests", () => {
     while (true) {
       const viewResponse = await llmWithEditor.invoke(messages);
       const toolCall = viewResponse.tool_calls?.[0];
-      console.log(11, toolCall);
       messages.push(viewResponse);
       if (
         !toolCall ||
@@ -133,7 +133,6 @@ describe("Anthropic Text Editor Tool Integration Tests", () => {
       );
     }
 
-    console.log(22, messages);
     expect(AIMessage.isInstance(messages.at(-1))).toBe(true);
     expect((messages.at(-1) as AIMessage).tool_calls?.[0]).toEqual(
       expect.objectContaining({
@@ -149,17 +148,4 @@ describe("Anthropic Text Editor Tool Integration Tests", () => {
       })
     );
   }, 60000);
-
-  it("text editor tool with maxCharacters option is properly configured", async () => {
-    const textEditor = textEditor_20250728({
-      maxCharacters: 5000,
-      execute: async () => "test",
-    });
-
-    expect(textEditor.extras?.providerToolDefinition).toEqual({
-      type: "text_editor_20250728",
-      name: "str_replace_based_edit_tool",
-      max_characters: 5000,
-    });
-  });
 });
