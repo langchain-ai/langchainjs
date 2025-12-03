@@ -6,13 +6,23 @@ import type {
 import type { START, END, StateGraph } from "@langchain/langgraph";
 
 import type { LanguageModelLike } from "@langchain/core/language_models/base";
-import type { BaseMessage, SystemMessage } from "@langchain/core/messages";
+import type {
+  BaseMessage,
+  SystemMessage,
+  MessageStructure,
+  MessageToolDefinition,
+} from "@langchain/core/messages";
 import type {
   BaseCheckpointSaver,
   BaseStore,
 } from "@langchain/langgraph-checkpoint";
 import type { Messages } from "@langchain/langgraph/";
-import type { ClientTool, ServerTool } from "@langchain/core/tools";
+import type {
+  ClientTool,
+  ServerTool,
+  DynamicStructuredTool,
+  StructuredToolInterface,
+} from "@langchain/core/tools";
 
 import type {
   ResponseFormat,
@@ -147,6 +157,50 @@ export type CombineTools<
   TAgentTools extends readonly (ClientTool | ServerTool)[],
   TMiddleware extends readonly AgentMiddleware[],
 > = readonly [...TAgentTools, ...InferMiddlewareToolsArray<TMiddleware>];
+
+/**
+ * Helper type to extract the tool name, input type, and output type from a tool.
+ * Converts a single tool to a MessageToolDefinition entry.
+ */
+type ExtractToolDefinition<T> = T extends DynamicStructuredTool<
+  infer _SchemaT,
+  infer _SchemaOutputT,
+  infer SchemaInputT,
+  infer ToolOutputT,
+  infer _NameT
+>
+  ? MessageToolDefinition<SchemaInputT, ToolOutputT>
+  : T extends StructuredToolInterface<
+      infer _SchemaT,
+      infer SchemaInputT,
+      infer ToolOutputT
+    >
+  ? MessageToolDefinition<SchemaInputT, ToolOutputT>
+  : MessageToolDefinition;
+
+/**
+ * Helper type to convert an array of tools (ClientTool | ServerTool)[] to a MessageToolSet.
+ * This maps each tool's name (as a literal type) to its MessageToolDefinition containing
+ * the input and output types.
+ *
+ * @example
+ * ```typescript
+ * const myTool = tool(async (input: { a: number }) => 42, {
+ *   name: "myTool",
+ *   schema: z.object({ a: z.number() })
+ * });
+ *
+ * // Results in: { myTool: MessageToolDefinition<{ a: number }, number> }
+ * type ToolSet = ToolsToMessageToolSet<readonly [typeof myTool]>;
+ * ```
+ */
+export type ToolsToMessageToolSet<
+  T extends readonly (ClientTool | ServerTool)[]
+> = {
+  [K in T[number] as K extends { name: infer N extends string }
+    ? N
+    : never]: ExtractToolDefinition<K>;
+};
 
 /**
  * Helper type to resolve an AgentTypeConfig from either:
@@ -331,8 +385,10 @@ export interface Interrupt<TValue = unknown> {
   value: TValue;
 }
 
-export interface BuiltInState {
-  messages: BaseMessage[];
+export interface BuiltInState<
+  TMessageStructure extends MessageStructure = MessageStructure
+> {
+  messages: BaseMessage<TMessageStructure>[];
   __interrupt__?: Interrupt[];
   /**
    * Optional property to control routing after afterModel middleware execution.
