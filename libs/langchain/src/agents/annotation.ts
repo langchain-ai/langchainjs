@@ -1,16 +1,15 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { BaseMessage } from "@langchain/core/messages";
 import { z } from "zod/v3";
-import {
-  Messages,
-  AnnotationRoot,
-  MessagesZodMeta,
-  type BinaryOperatorAggregate,
-} from "@langchain/langgraph";
-import { withLangGraph, schemaMetaRegistry } from "@langchain/langgraph/zod";
+import { MessagesZodState } from "@langchain/langgraph";
+import { withLangGraph } from "@langchain/langgraph/zod";
 
 import type { AgentMiddleware, AnyAnnotationRoot } from "./middleware/types.js";
-import { InteropZodObject } from "@langchain/core/utils/types";
+import {
+  InteropZodObject,
+  isZodSchemaV4,
+  getInteropZodObjectShape,
+} from "@langchain/core/utils/types";
+import type { BaseMessage } from "@langchain/core/messages";
 
 export function createAgentAnnotationConditional<
   TStateSchema extends
@@ -28,7 +27,6 @@ export function createAgentAnnotationConditional<
    * metadata for LangGraph Studio using v3-compatible withLangGraph
    */
   const schemaShape: Record<string, any> = {
-    messages: withLangGraph(z.custom<BaseMessage[]>(), MessagesZodMeta),
     jumpTo: z
       .union([
         z.literal("model_request"),
@@ -39,9 +37,13 @@ export function createAgentAnnotationConditional<
       .optional(),
   };
 
-  const applySchema = (schema: { shape: Record<string, any> }) => {
-    const { shape } = schema;
-    for (const [key, schema] of Object.entries(shape)) {
+  const applySchema = (schema: InteropZodObject) => {
+    // Handle both Zod v3 and v4 schemas
+    const shape = isZodSchemaV4(schema)
+      ? getInteropZodObjectShape(schema)
+      : schema.shape;
+
+    for (const [key, fieldSchema] of Object.entries(shape)) {
       /**
        * Skip private state properties
        */
@@ -50,51 +52,55 @@ export function createAgentAnnotationConditional<
       }
 
       if (!(key in schemaShape)) {
-        schemaShape[key] = schema;
+        /**
+         * If the field schema is Zod v4, convert to v3-compatible z.any()
+         * This allows the shape to be merged while preserving the key structure
+         */
+        schemaShape[key] = isZodSchemaV4(fieldSchema) ? z.any() : fieldSchema;
       }
     }
   };
 
-  // Add state schema properties to the Zod schema
-  if (stateSchema && "shape" in stateSchema) {
-    applySchema(stateSchema);
+  /**
+   * Add state schema properties to the Zod schema
+   */
+  if (stateSchema && ("shape" in stateSchema || isZodSchemaV4(stateSchema))) {
+    applySchema(stateSchema as InteropZodObject);
   }
 
   for (const middleware of middlewareList) {
     if (middleware.stateSchema) {
-      applySchema(middleware.stateSchema);
+      applySchema(middleware.stateSchema as InteropZodObject);
     }
   }
 
   // Only include structuredResponse when responseFormat is defined
   if (hasStructuredResponse) {
-    schemaShape.structuredResponse = z.any().optional();
+    schemaShape.structuredResponse = z.string().optional();
   }
 
-  const zodSchema = z.object(schemaShape);
-  const stateDefinition = schemaMetaRegistry.getChannelsForSchema(zodSchema);
-  return stateDefinition;
+  // Create messages field with LangGraph UI metadata for input/output schemas
+  // Only use jsonSchemaExtra (no reducer) to avoid channel conflict - this creates
+  // a LastValue channel which is allowed to coexist with the state's messages channel
+  const messages = withLangGraph(z.custom<BaseMessage[]>(), {
+    jsonSchemaExtra: { langgraph_type: "messages" },
+  });
+
+  return {
+    state: MessagesZodState.extend(schemaShape),
+    input: z.object({
+      messages,
+      ...Object.fromEntries(
+        Object.entries(schemaShape).filter(
+          ([key]) => !["structuredResponse", "jumpTo"].includes(key)
+        )
+      ),
+    }),
+    output: z.object({
+      messages,
+      ...Object.fromEntries(
+        Object.entries(schemaShape).filter(([key]) => key !== "jumpTo")
+      ),
+    }),
+  };
 }
-
-export const PreHookAnnotation: AnnotationRoot<{
-  llmInputMessages: BinaryOperatorAggregate<BaseMessage[], Messages>;
-  messages: BinaryOperatorAggregate<BaseMessage[], Messages>;
-}> = z.object({
-  llmInputMessages: withLangGraph(z.custom<BaseMessage[]>(), {
-    reducer: {
-      fn: (_x: Messages, update: Messages) =>
-        MessagesZodMeta.reducer!.fn([], update),
-    },
-    default: () => [],
-  }),
-  /**
-   * Use MessagesZodMeta to preserve jsonSchemaExtra metadata
-   * for LangGraph Studio UI to render proper messages input field
-   */
-  messages: withLangGraph(z.custom<BaseMessage[]>(), MessagesZodMeta),
-}) as unknown as AnnotationRoot<{
-  llmInputMessages: BinaryOperatorAggregate<BaseMessage[], Messages>;
-  messages: BinaryOperatorAggregate<BaseMessage[], Messages>;
-}>;
-
-export type PreHookAnnotation = typeof PreHookAnnotation;
