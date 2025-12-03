@@ -134,6 +134,50 @@ const response = await llmWithMemory.invoke(
 
 For more information, see [Anthropic's Memory Tool documentation](https://docs.anthropic.com/en/docs/agents-and-tools/tool-use/memory-tool).
 
+### Web Search Tool
+
+The web search tool (`webSearch_20250305`) gives Claude direct access to real-time web content, allowing it to answer questions with up-to-date information beyond its knowledge cutoff. Claude automatically cites sources from search results as part of its answer.
+
+```typescript
+import { ChatAnthropic, webSearch_20250305 } from "@langchain/anthropic";
+
+const llm = new ChatAnthropic({
+  model: "claude-sonnet-4-5-20250929",
+});
+
+// Basic usage
+const response = await llm.invoke("What is the weather in NYC?", {
+  tools: [webSearch_20250305()],
+});
+```
+
+The web search tool supports several configuration options:
+
+```typescript
+const response = await llm.invoke("Latest news about AI?", {
+  tools: [
+    webSearch_20250305({
+      // Maximum number of times the tool can be used in the API request
+      maxUses: 5,
+      // Only include results from these domains
+      allowedDomains: ["reuters.com", "bbc.com"],
+      // Or block specific domains (cannot be used with allowedDomains)
+      // blockedDomains: ["example.com"],
+      // Provide user location for more relevant results
+      userLocation: {
+        type: "approximate",
+        city: "San Francisco",
+        region: "California",
+        country: "US",
+        timezone: "America/Los_Angeles",
+      },
+    }),
+  ],
+});
+```
+
+For more information, see [Anthropic's Web Search Tool documentation](https://docs.anthropic.com/en/docs/build-with-claude/tool-use/web-search-tool).
+
 ## Development
 
 To develop the Anthropic package, you'll need to follow these instructions:
