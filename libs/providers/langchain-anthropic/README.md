@@ -309,6 +309,66 @@ const response = await llm.invoke("What is the weather in San Francisco?", {
 
 For more information, see [Anthropic's Tool Search documentation](https://docs.anthropic.com/en/docs/build-with-claude/tool-use/tool-search-tool).
 
+### Text Editor Tool
+
+The text editor tool (`textEditor_20250728`) enables Claude to view and modify text files, helping debug, fix, and improve code or other text documents. Claude can directly interact with files, providing hands-on assistance rather than just suggesting changes.
+
+Available commands:
+
+- `view` - Examine file contents or list directory contents
+- `str_replace` - Replace specific text in a file
+- `create` - Create a new file with specified content
+- `insert` - Insert text at a specific line number
+
+```typescript
+import { ChatAnthropic, textEditor_20250728 } from "@langchain/anthropic";
+import type { TextEditor20250728Command } from "@langchain/anthropic";
+import * as fs from "fs";
+
+const llm = new ChatAnthropic({
+  model: "claude-sonnet-4-5-20250929",
+});
+
+const textEditor = textEditor_20250728({
+  execute: async (args: TextEditor20250728Command) => {
+    switch (args.command) {
+      case "view":
+        const content = fs.readFileSync(args.path, "utf-8");
+        // Return with line numbers for Claude to reference
+        return content
+          .split("\n")
+          .map((line, i) => `${i + 1}: ${line}`)
+          .join("\n");
+      case "str_replace":
+        let fileContent = fs.readFileSync(args.path, "utf-8");
+        fileContent = fileContent.replace(args.old_str, args.new_str);
+        fs.writeFileSync(args.path, fileContent);
+        return "Successfully replaced text.";
+      case "create":
+        fs.writeFileSync(args.path, args.file_text);
+        return `Successfully created file: ${args.path}`;
+      case "insert":
+        const lines = fs.readFileSync(args.path, "utf-8").split("\n");
+        lines.splice(args.insert_line, 0, args.new_str);
+        fs.writeFileSync(args.path, lines.join("\n"));
+        return `Successfully inserted text at line ${args.insert_line}`;
+      default:
+        return "Unknown command";
+    }
+  },
+  // Optional: limit file content length when viewing
+  maxCharacters: 10000,
+});
+
+const llmWithEditor = llm.bindTools([textEditor]);
+
+const response = await llmWithEditor.invoke(
+  "There's a syntax error in my primes.py file. Can you help me fix it?"
+);
+```
+
+For more information, see [Anthropic's Text Editor Tool documentation](https://docs.anthropic.com/en/docs/agents-and-tools/tool-use/text-editor-tool).
+
 ## Development
 
 To develop the Anthropic package, you'll need to follow these instructions:
