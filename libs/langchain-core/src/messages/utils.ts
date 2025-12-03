@@ -1,6 +1,7 @@
 import { addLangChainErrorFields } from "../errors/index.js";
 import { SerializedConstructor } from "../load/serializable.js";
 import { _isToolCall } from "../tools/utils.js";
+import { parsePartialJson } from "../utils/json.js";
 import { AIMessage, AIMessageChunk, AIMessageChunkFields } from "./ai.js";
 import {
   BaseMessageLike,
@@ -20,7 +21,13 @@ import {
 import { HumanMessage, HumanMessageChunk } from "./human.js";
 import { RemoveMessage } from "./modifier.js";
 import { SystemMessage, SystemMessageChunk } from "./system.js";
-import { ToolCall, ToolMessage, ToolMessageFields } from "./tool.js";
+import {
+  InvalidToolCall,
+  ToolCall,
+  ToolCallChunk,
+  ToolMessage,
+  ToolMessageFields,
+} from "./tool.js";
 
 export type $Expand<T> = T extends infer U ? { [K in keyof U]: U[K] } : never;
 
@@ -444,4 +451,108 @@ export function convertToChunk(message: BaseMessage) {
   } else {
     throw new Error("Unknown message type.");
   }
+}
+
+/**
+ * Collapses an array of tool call chunks into complete tool calls.
+ *
+ * This function groups tool call chunks by their id and/or index, then attempts to
+ * parse and validate the accumulated arguments for each group. Successfully parsed
+ * tool calls are returned as valid `ToolCall` objects, while malformed ones are
+ * returned as `InvalidToolCall` objects.
+ *
+ * @param chunks - An array of `ToolCallChunk` objects to collapse
+ * @returns An object containing:
+ *   - `tool_call_chunks`: The original input chunks
+ *   - `tool_calls`: An array of successfully parsed and validated tool calls
+ *   - `invalid_tool_calls`: An array of tool calls that failed parsing or validation
+ *
+ * @remarks
+ * Chunks are grouped using the following matching logic:
+ * - If a chunk has both an id and index, it matches chunks with the same id and index
+ * - If a chunk has only an id, it matches chunks with the same id
+ * - If a chunk has only an index, it matches chunks with the same index
+ *
+ * For each group, the function:
+ * 1. Concatenates all `args` strings from the chunks
+ * 2. Attempts to parse the concatenated string as JSON
+ * 3. Validates that the result is a non-null object with a valid id
+ * 4. Creates either a `ToolCall` (if valid) or `InvalidToolCall` (if invalid)
+ */
+export function collapseToolCallChunks(chunks: ToolCallChunk[]): {
+  tool_call_chunks: ToolCallChunk[];
+  tool_calls: ToolCall[];
+  invalid_tool_calls: InvalidToolCall[];
+} {
+  const groupedToolCallChunks = chunks.reduce((acc, chunk) => {
+    const matchedChunkIndex = acc.findIndex(([match]) => {
+      // If chunk has an id and index, match if both are present
+      if (
+        "id" in chunk &&
+        chunk.id &&
+        "index" in chunk &&
+        chunk.index !== undefined
+      ) {
+        return chunk.id === match.id && chunk.index === match.index;
+      }
+      // If chunk has an id, we match on id
+      if ("id" in chunk && chunk.id) {
+        return chunk.id === match.id;
+      }
+      // If chunk has an index, we match on index
+      if ("index" in chunk && chunk.index !== undefined) {
+        return chunk.index === match.index;
+      }
+      return false;
+    });
+    if (matchedChunkIndex !== -1) {
+      acc[matchedChunkIndex].push(chunk);
+    } else {
+      acc.push([chunk]);
+    }
+    return acc;
+  }, [] as ToolCallChunk[][]);
+
+  const toolCalls: ToolCall[] = [];
+  const invalidToolCalls: InvalidToolCall[] = [];
+  for (const chunks of groupedToolCallChunks) {
+    let parsedArgs: Record<string, unknown> | null = null;
+    const name = chunks[0]?.name ?? "";
+    const joinedArgs = chunks
+      .map((c) => c.args || "")
+      .join("")
+      .trim();
+    const argsStr = joinedArgs.length ? joinedArgs : "{}";
+    const id = chunks[0]?.id;
+    try {
+      parsedArgs = parsePartialJson(argsStr);
+      if (
+        !id ||
+        parsedArgs === null ||
+        typeof parsedArgs !== "object" ||
+        Array.isArray(parsedArgs)
+      ) {
+        throw new Error("Malformed tool call chunk args.");
+      }
+      toolCalls.push({
+        name,
+        args: parsedArgs,
+        id,
+        type: "tool_call",
+      });
+    } catch {
+      invalidToolCalls.push({
+        name,
+        args: argsStr,
+        id,
+        error: "Malformed args.",
+        type: "invalid_tool_call",
+      });
+    }
+  }
+  return {
+    tool_call_chunks: chunks,
+    tool_calls: toolCalls,
+    invalid_tool_calls: invalidToolCalls,
+  };
 }
