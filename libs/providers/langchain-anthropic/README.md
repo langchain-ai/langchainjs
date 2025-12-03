@@ -185,7 +185,7 @@ The web fetch tool (`webFetch_20250910`) allows Claude to retrieve full content 
 > **⚠️ Security Warning:** Enabling the web fetch tool in environments where Claude processes untrusted input alongside sensitive data poses data exfiltration risks. We recommend only using this tool in trusted environments or when handling non-sensitive data.
 
 ```typescript
-import { ChatAnthropic, webFetch_20250910 } from "@langchain/anthropic";
+import { ChatAnthropic, tools } from "@langchain/anthropic";
 
 const llm = new ChatAnthropic({
   model: "claude-sonnet-4-5-20250929",
@@ -194,7 +194,7 @@ const llm = new ChatAnthropic({
 // Basic usage - fetch content from a URL
 const response = await llm.invoke(
   "Please analyze the content at https://example.com/article",
-  { tools: [webFetch_20250910()] }
+  { tools: [tools.webFetch_20250910()] }
 );
 ```
 
@@ -205,7 +205,7 @@ const response = await llm.invoke(
   "Summarize this research paper: https://arxiv.org/abs/2024.12345",
   {
     tools: [
-      webFetch_20250910({
+      tools.webFetch_20250910({
         // Maximum number of times the tool can be used in the API request
         maxUses: 5,
         // Only fetch from these domains
@@ -225,14 +225,14 @@ const response = await llm.invoke(
 You can combine web fetch with web search for comprehensive information gathering:
 
 ```typescript
-import { webSearch_20250305, webFetch_20250910 } from "@langchain/anthropic";
+import { tools } from "@langchain/anthropic";
 
 const response = await llm.invoke(
   "Find recent articles about quantum computing and analyze the most relevant one",
   {
     tools: [
-      webSearch_20250305({ maxUses: 3 }),
-      webFetch_20250910({ maxUses: 5, citations: { enabled: true } }),
+      tools.webSearch_20250305({ maxUses: 3 }),
+      tools.webFetch_20250910({ maxUses: 5, citations: { enabled: true } }),
     ],
   }
 );
