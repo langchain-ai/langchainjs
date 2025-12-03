@@ -57,6 +57,7 @@ import {
   AnthropicToolChoice,
   ChatAnthropicOutputFormat,
   ChatAnthropicToolType,
+  AnthropicMCPServerURLDefinition,
   Kwargs,
 } from "./types.js";
 import { wrapAnthropicClientError } from "./utils/errors.js";
@@ -115,6 +116,10 @@ export interface ChatAnthropicCallOptions
    * See https://docs.anthropic.com/en/api/versioning for available beta features.
    */
   betas?: AnthropicBeta[];
+  /**
+   * Array of MCP server URLs to use for the request.
+   */
+  mcp_servers?: AnthropicMCPServerURLDefinition[];
 }
 
 function _toolsInParams(
@@ -168,12 +173,13 @@ function isBuiltinTool(tool: unknown): tool is AnthropicBuiltInToolUnion {
     "code_execution_",
     "memory_",
     "tool_search_",
+    "mcp_toolset",
   ];
   return (
     typeof tool === "object" &&
     tool !== null &&
     "type" in tool &&
-    "name" in tool &&
+    ("name" in tool || "mcp_server_name" in tool) &&
     typeof tool.type === "string" &&
     builtInToolPrefixes.some(
       (prefix) => typeof tool.type === "string" && tool.type.startsWith(prefix)
@@ -1062,6 +1068,7 @@ export class ChatAnthropicMessages<
       container: options?.container,
       betas: _combineBetas(this.betas, options?.betas, toolBetas ?? []),
       output_format: options?.output_format,
+      mcp_servers: options?.mcp_servers,
     };
 
     if (this.thinking.type === "enabled") {

@@ -525,11 +525,7 @@ Available commands:
 - Restart the session: `{ restart: true }`
 
 ```typescript
-import {
-  ChatAnthropic,
-  tools,
-  type Bash20250124Command,
-} from "@langchain/anthropic";
+import { ChatAnthropic, tools } from "@langchain/anthropic";
 import { execSync } from "child_process";
 
 const llm = new ChatAnthropic({
@@ -537,13 +533,13 @@ const llm = new ChatAnthropic({
 });
 
 const bash = tools.bash_20250124({
-  execute: async (args: Bash20250124Command) => {
+  execute: async (args) => {
     if (args.restart) {
       // Reset session state
       return "Bash session restarted";
     }
     try {
-      const output = execSync(args.command!, {
+      const output = execSync(args.command, {
         encoding: "utf-8",
         timeout: 30000,
       });
@@ -566,6 +562,143 @@ console.log(response.tool_calls?.[0].args.command); // "ls -la *.py"
 ```
 
 For more information, see [Anthropic's Bash Tool documentation](https://docs.anthropic.com/en/docs/agents-and-tools/tool-use/bash-tool).
+
+### MCP Toolset
+
+The MCP toolset (`mcpToolset_20251120`) enables Claude to connect to remote MCP (Model Context Protocol) servers directly from the Messages API without implementing a separate MCP client. This allows Claude to use tools provided by MCP servers.
+
+Key features:
+
+- **Direct API integration** - Connect to MCP servers without implementing an MCP client
+- **Tool calling support** - Access MCP tools through the Messages API
+- **Flexible tool configuration** - Enable all tools, allowlist specific tools, or denylist unwanted tools
+- **Per-tool configuration** - Configure individual tools with custom settings
+- **OAuth authentication** - Support for OAuth Bearer tokens for authenticated servers
+- **Multiple servers** - Connect to multiple MCP servers in a single request
+
+```typescript
+import { ChatAnthropic, tools } from "@langchain/anthropic";
+
+const llm = new ChatAnthropic({
+  model: "claude-sonnet-4-5-20250929",
+});
+
+// Basic usage - enable all tools from an MCP server
+const response = await llm.invoke("What tools do you have available?", {
+  mcp_servers: [
+    {
+      type: "url",
+      url: "https://example-server.modelcontextprotocol.io/sse",
+      name: "example-mcp",
+      authorization_token: "YOUR_TOKEN",
+    },
+  ],
+  tools: [tools.mcpToolset_20251120({ serverName: "example-mcp" })],
+});
+```
+
+**Allowlist pattern** - Enable only specific tools:
+
+```typescript
+const response = await llm.invoke("Search for events", {
+  mcp_servers: [
+    {
+      type: "url",
+      url: "https://calendar.example.com/sse",
+      name: "google-calendar-mcp",
+      authorization_token: "YOUR_TOKEN",
+    },
+  ],
+  tools: [
+    tools.mcpToolset_20251120({
+      serverName: "google-calendar-mcp",
+      // Disable all tools by default
+      defaultConfig: { enabled: false },
+      // Explicitly enable only these tools
+      configs: {
+        search_events: { enabled: true },
+        create_event: { enabled: true },
+      },
+    }),
+  ],
+});
+```
+
+**Denylist pattern** - Disable specific tools:
+
+```typescript
+const response = await llm.invoke("List my events", {
+  mcp_servers: [
+    {
+      type: "url",
+      url: "https://calendar.example.com/sse",
+      name: "google-calendar-mcp",
+      authorization_token: "YOUR_TOKEN",
+    },
+  ],
+  tools: [
+    tools.mcpToolset_20251120({
+      serverName: "google-calendar-mcp",
+      // All tools enabled by default, just disable dangerous ones
+      configs: {
+        delete_all_events: { enabled: false },
+        share_calendar_publicly: { enabled: false },
+      },
+    }),
+  ],
+});
+```
+
+**Multiple MCP servers**:
+
+```typescript
+const response = await llm.invoke("Use tools from both servers", {
+  mcp_servers: [
+    {
+      type: "url",
+      url: "https://mcp.example1.com/sse",
+      name: "mcp-server-1",
+      authorization_token: "TOKEN1",
+    },
+    {
+      type: "url",
+      url: "https://mcp.example2.com/sse",
+      name: "mcp-server-2",
+      authorization_token: "TOKEN2",
+    },
+  ],
+  tools: [
+    tools.mcpToolset_20251120({ serverName: "mcp-server-1" }),
+    tools.mcpToolset_20251120({
+      serverName: "mcp-server-2",
+      defaultConfig: { deferLoading: true },
+    }),
+  ],
+});
+```
+
+**With Tool Search** - Use deferred loading for on-demand tool discovery:
+
+```typescript
+const response = await llm.invoke("Find and use the right tool", {
+  mcp_servers: [
+    {
+      type: "url",
+      url: "https://example.com/sse",
+      name: "example-mcp",
+    },
+  ],
+  tools: [
+    tools.toolSearchRegex_20251119(),
+    tools.mcpToolset_20251120({
+      serverName: "example-mcp",
+      defaultConfig: { deferLoading: true },
+    }),
+  ],
+});
+```
+
+For more information, see [Anthropic's MCP Connector documentation](https://docs.anthropic.com/en/docs/agents-and-tools/mcp-connector).
 
 ## Development
 
