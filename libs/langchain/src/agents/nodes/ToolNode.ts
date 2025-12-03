@@ -18,7 +18,6 @@ import {
 } from "@langchain/langgraph";
 
 import { RunnableCallable } from "../RunnableCallable.js";
-import { PreHookAnnotation } from "../annotation.js";
 import { mergeAbortSignals } from "./utils.js";
 import { ToolInvocationError } from "../errors.js";
 import type {
@@ -193,8 +192,7 @@ export class ToolNode<
       tags,
       func: (state, config) =>
         this.run(
-          state as ToAnnotationRoot<StateSchema>["State"] &
-            PreHookAnnotation["State"],
+          state as ToAnnotationRoot<StateSchema>["State"] & AgentBuiltInState,
           config as RunnableConfig
         ),
     });
@@ -387,7 +385,7 @@ export class ToolNode<
   }
 
   protected async run(
-    state: ToAnnotationRoot<StateSchema>["State"] & PreHookAnnotation["State"],
+    state: ToAnnotationRoot<StateSchema>["State"] & AgentBuiltInState,
     config: RunnableConfig
   ): Promise<ContextSchema> {
     let outputs: (ToolMessage | Command)[];

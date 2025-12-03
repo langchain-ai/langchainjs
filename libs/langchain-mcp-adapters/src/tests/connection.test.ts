@@ -47,6 +47,27 @@ describe("ConnectionManager", () => {
       expect(SDKClient).toHaveBeenCalled();
     });
 
+    test("creates stdio client with cwd option passed correctly", async () => {
+      const mgr = new ConnectionManager();
+
+      const client = await mgr.createClient("stdio", "stdio-server", {
+        transport: "stdio",
+        command: "node",
+        args: ["./server.js"],
+        stderr: "inherit",
+        cwd: "/custom/working/directory",
+      });
+
+      expect(client).toBeDefined();
+      expect(StdioClientTransport).toHaveBeenCalledWith(
+        expect.objectContaining({
+          command: "node",
+          args: ["./server.js"],
+          cwd: "/custom/working/directory",
+        })
+      );
+    });
+
     test("creates HTTP client and maps reconnect options", async () => {
       const mgr = new ConnectionManager();
 

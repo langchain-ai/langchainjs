@@ -388,7 +388,11 @@ export async function bindTools(
   if (model) return model;
 
   if (isConfigurableModel(llm)) {
-    const model = _simpleBindTools(await llm._model(), toolClasses, options);
+    const model = _simpleBindTools(
+      await llm._getModelInstance(),
+      toolClasses,
+      options
+    );
     if (model) return model;
   }
 

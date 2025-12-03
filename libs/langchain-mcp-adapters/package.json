@@ -1,6 +1,6 @@
 {
   "name": "@langchain/mcp-adapters",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "LangChain.js adapters for Model Context Protocol (MCP)",
   "author": "LangChain",
   "license": "MIT",

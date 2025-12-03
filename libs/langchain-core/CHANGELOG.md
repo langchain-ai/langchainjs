@@ -1,5 +1,13 @@
 # @langchain/core
 
+## 1.1.1
+
+### Patch Changes
+
+- [#9495](https://github.com/langchain-ai/langchainjs/pull/9495) [`636b994`](https://github.com/langchain-ai/langchainjs/commit/636b99459bf843362298866211c63a7a15c2a319) Thanks [@gsriram24](https://github.com/gsriram24)! - fix: use dynamic import for p-retry to support CommonJS environments
+
+- [#9531](https://github.com/langchain-ai/langchainjs/pull/9531) [`38f0162`](https://github.com/langchain-ai/langchainjs/commit/38f0162b7b2db2be2c3a75ae468728adcb49fdfb) Thanks [@hntrl](https://github.com/hntrl)! - add `extras` to tools
+
 ## 1.1.0
 
 ### Minor Changes
