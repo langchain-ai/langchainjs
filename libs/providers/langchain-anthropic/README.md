@@ -84,13 +84,16 @@ This package provides LangChain-compatible wrappers for Anthropic's built-in too
 The memory tool (`memory_20250818`) enables Claude to store and retrieve information across conversations through a memory file directory. Claude can create, read, update, and delete files that persist between sessions, allowing it to build knowledge over time without keeping everything in the context window.
 
 ```typescript
-import { ChatAnthropic, memory_20250818 } from "@langchain/anthropic";
-import type { Memory20250818Command } from "@langchain/anthropic";
+import {
+  ChatAnthropic,
+  tools,
+  type Memory20250818Command,
+} from "@langchain/anthropic";
 
 // Create a simple in-memory file store (or use your own persistence layer)
 const files = new Map<string, string>();
 
-const memory = memory_20250818({
+const memory = tools.memory_20250818({
   execute: async (command: Memory20250818Command) => {
     switch (command.command) {
       case "view":
