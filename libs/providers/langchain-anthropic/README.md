@@ -317,15 +317,18 @@ Available commands:
 - `insert` - Insert text at a specific line number
 
 ```typescript
-import { ChatAnthropic, textEditor_20250728 } from "@langchain/anthropic";
-import type { TextEditor20250728Command } from "@langchain/anthropic";
-import * as fs from "fs";
+import {
+  ChatAnthropic,
+  tools,
+  type TextEditor20250728Command,
+} from "@langchain/anthropic";
+import fs from "fs";
 
 const llm = new ChatAnthropic({
   model: "claude-sonnet-4-5-20250929",
 });
 
-const textEditor = textEditor_20250728({
+const textEditor = tools.textEditor_20250728({
   execute: async (args: TextEditor20250728Command) => {
     switch (args.command) {
       case "view":
