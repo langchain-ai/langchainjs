@@ -6,7 +6,5 @@
   },
   "include": ["src/**/*"],
   "exclude": ["dist", "node_modules"],
-  "references": [
-    { "path": "../../langchain-core" }
-  ]
+  "references": [{ "path": "../../langchain-core" }]
 }
