@@ -292,6 +292,122 @@ Filter operators: `eq` (equals), `ne` (not equal), `gt` (greater than), `gte` (g
 
 For more information, see [OpenAI's File Search Documentation](https://platform.openai.com/docs/guides/tools-file-search).
 
+### Image Generation Tool
+
+The Image Generation tool allows models to generate or edit images using text prompts and optional image inputs. It leverages the GPT Image model and automatically optimizes text inputs for improved performance.
+
+Use Image Generation for:
+
+- **Creating images from text**: Generate images from detailed text descriptions
+- **Editing existing images**: Modify images based on text instructions
+- **Multi-turn image editing**: Iteratively refine images across conversation turns
+- **Various output formats**: Support for PNG, JPEG, and WebP formats
+
+```typescript
+import { ChatOpenAI, tools } from "@langchain/openai";
+
+const model = new ChatOpenAI({ model: "gpt-4o" });
+
+// Basic usage - generate an image
+const response = await model.invoke(
+  "Generate an image of a gray tabby cat hugging an otter with an orange scarf",
+  { tools: [tools.imageGeneration()] }
+);
+
+// Access the generated image (base64-encoded)
+const imageOutput = response.additional_kwargs.tool_outputs?.find(
+  (output) => output.type === "image_generation_call"
+);
+if (imageOutput?.result) {
+  const fs = await import("fs");
+  fs.writeFileSync("output.png", Buffer.from(imageOutput.result, "base64"));
+}
+```
+
+**Custom size and quality** - Configure output dimensions and quality:
+
+```typescript
+const response = await model.invoke("Draw a beautiful sunset over mountains", {
+  tools: [
+    tools.imageGeneration({
+      size: "1536x1024", // Landscape format (also: "1024x1024", "1024x1536", "auto")
+      quality: "high", // Quality level (also: "low", "medium", "auto")
+    }),
+  ],
+});
+```
+
+**Output format and compression** - Choose format and compression level:
+
+```typescript
+const response = await model.invoke("Create a product photo", {
+  tools: [
+    tools.imageGeneration({
+      outputFormat: "jpeg", // Format (also: "png", "webp")
+      outputCompression: 90, // Compression 0-100 (for JPEG/WebP)
+    }),
+  ],
+});
+```
+
+**Transparent background** - Generate images with transparency:
+
+```typescript
+const response = await model.invoke(
+  "Create a logo with transparent background",
+  {
+    tools: [
+      tools.imageGeneration({
+        background: "transparent", // Background type (also: "opaque", "auto")
+        outputFormat: "png",
+      }),
+    ],
+  }
+);
+```
+
+**Streaming with partial images** - Get visual feedback during generation:
+
+```typescript
+const response = await model.invoke("Draw a detailed fantasy castle", {
+  tools: [
+    tools.imageGeneration({
+      partialImages: 2, // Number of partial images (0-3)
+    }),
+  ],
+});
+```
+
+**Force image generation** - Ensure the model uses the image generation tool:
+
+```typescript
+const response = await model.invoke("A serene lake at dawn", {
+  tools: [tools.imageGeneration()],
+  tool_choice: { type: "image_generation" },
+});
+```
+
+**Multi-turn editing** - Refine images across conversation turns:
+
+```typescript
+// First turn: generate initial image
+const response1 = await model.invoke("Draw a red car", {
+  tools: [tools.imageGeneration()],
+});
+
+// Second turn: edit the image
+const response2 = await model.invoke(
+  [response1, new HumanMessage("Now change the car color to blue")],
+  { tools: [tools.imageGeneration()] }
+);
+```
+
+> **Prompting tips**: Use terms like "draw" or "edit" for best results. For combining images, say "edit the first image by adding this element" instead of "combine" or "merge".
+
+Supported models: `gpt-4o`, `gpt-4o-mini`, `gpt-4.1`, `gpt-4.1-mini`, `gpt-4.1-nano`, `o3`
+
+For more information, see [OpenAI's Image Generation Documentation](https://platform.openai.com/docs/guides/tools-image-generation).
+
 ## Embeddings
 
 This package also adds support for OpenAI's embeddings model.
