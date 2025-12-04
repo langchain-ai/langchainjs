@@ -1,4 +1,3 @@
-import { parsePartialJson } from "../utils/json.js";
 import {
   BaseMessage,
   BaseMessageChunk,
@@ -21,7 +20,7 @@ import {
   ToolCallChunk,
   defaultToolCallParser,
 } from "./tool.js";
-import { Constructor } from "./utils.js";
+import { collapseToolCallChunks, Constructor } from "./utils.js";
 
 export interface AIMessageFields<
   TStructure extends MessageStructure = MessageStructure
@@ -283,74 +282,9 @@ export class AIMessageChunk<
             : undefined,
       };
     } else {
-      const toolCallChunks = fields.tool_call_chunks ?? [];
-      const groupedToolCallChunks = toolCallChunks.reduce((acc, chunk) => {
-        const matchedChunkIndex = acc.findIndex(([match]) => {
-          // If chunk has an id and index, match if both are present
-          if (
-            "id" in chunk &&
-            chunk.id &&
-            "index" in chunk &&
-            chunk.index !== undefined
-          ) {
-            return chunk.id === match.id && chunk.index === match.index;
-          }
-          // If chunk has an id, we match on id
-          if ("id" in chunk && chunk.id) {
-            return chunk.id === match.id;
-          }
-          // If chunk has an index, we match on index
-          if ("index" in chunk && chunk.index !== undefined) {
-            return chunk.index === match.index;
-          }
-          return false;
-        });
-        if (matchedChunkIndex !== -1) {
-          acc[matchedChunkIndex].push(chunk);
-        } else {
-          acc.push([chunk]);
-        }
-        return acc;
-      }, [] as ToolCallChunk[][]);
-
-      const toolCalls: ToolCall[] = [];
-      const invalidToolCalls: InvalidToolCall[] = [];
-      for (const chunks of groupedToolCallChunks) {
-        let parsedArgs: Record<string, unknown> | null = null;
-        const name = chunks[0]?.name ?? "";
-        const joinedArgs = chunks.map((c) => c.args || "").join("");
-        const argsStr = joinedArgs.length ? joinedArgs : "{}";
-        const id = chunks[0]?.id;
-        try {
-          parsedArgs = parsePartialJson(argsStr);
-          if (
-            !id ||
-            parsedArgs === null ||
-            typeof parsedArgs !== "object" ||
-            Array.isArray(parsedArgs)
-          ) {
-            throw new Error("Malformed tool call chunk args.");
-          }
-          toolCalls.push({
-            name,
-            args: parsedArgs,
-            id,
-            type: "tool_call",
-          });
-        } catch {
-          invalidToolCalls.push({
-            name,
-            args: argsStr,
-            id,
-            error: "Malformed args.",
-            type: "invalid_tool_call",
-          });
-        }
-      }
       initParams = {
         ...fields,
-        tool_calls: toolCalls,
-        invalid_tool_calls: invalidToolCalls,
+        ...collapseToolCallChunks(fields.tool_call_chunks ?? []),
         usage_metadata:
           fields.usage_metadata !== undefined
             ? fields.usage_metadata

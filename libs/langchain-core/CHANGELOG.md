@@ -1,5 +1,11 @@
 # @langchain/core
 
+## 1.1.2
+
+### Patch Changes
+
+- [#9511](https://github.com/langchain-ai/langchainjs/pull/9511) [`833f578`](https://github.com/langchain-ai/langchainjs/commit/833f57834dc3aa64e4cfdd7499f865b2ab41462a) Thanks [@dqbd](https://github.com/dqbd)! - allow parsing more partial JSON
+
 ## 1.1.1
 
 ### Patch Changes
