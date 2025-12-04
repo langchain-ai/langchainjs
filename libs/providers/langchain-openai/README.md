@@ -144,6 +144,51 @@ const response = await model.invoke("Find information about OpenAI", {
 
 For more information, see [OpenAI's Web Search Documentation](https://platform.openai.com/docs/guides/tools-web-search).
 
+### MCP Tool (Model Context Protocol)
+
+The MCP tool allows OpenAI models to connect to remote MCP servers and OpenAI-maintained service connectors, giving models access to external tools and services.
+
+There are two ways to use MCP tools:
+
+1. **Remote MCP servers**: Connect to any public MCP server via URL
+2. **Connectors**: Use OpenAI-maintained wrappers for popular services like Google Workspace or Dropbox
+
+**Remote MCP server** - Connect to any MCP-compatible server:
+
+```typescript
+import { ChatOpenAI, tools } from "@langchain/openai";
+
+const model = new ChatOpenAI({ model: "gpt-4o" });
+
+const response = await model.invoke("Roll 2d4+1", {
+  tools: [
+    tools.mcp({
+      serverLabel: "dmcp",
+      serverDescription: "A D&D MCP server for dice rolling",
+      serverUrl: "https://dmcp-server.deno.dev/sse",
+      requireApproval: "never",
+    }),
+  ],
+});
+```
+
+**Service connectors** - Use OpenAI-maintained connectors for popular services:
+
+```typescript
+const response = await model.invoke("What's on my calendar today?", {
+  tools: [
+    tools.mcp({
+      serverLabel: "google_calendar",
+      connectorId: "connector_googlecalendar",
+      authorization: "<oauth-access-token>",
+      requireApproval: "never",
+    }),
+  ],
+});
+```
+
+For more information, see [OpenAI's MCP Documentation](https://platform.openai.com/docs/guides/tools-remote-mcp).
+
 ## Embeddings
 
 This package also adds support for OpenAI's embeddings model.

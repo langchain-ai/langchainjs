@@ -7,6 +7,17 @@ export type {
   WebSearchOptions,
 } from "./webSearch.js";
 
+import { mcp } from "./mcp.js";
+export type {
+  McpTool,
+  McpConnectorId,
+  McpToolFilter,
+  McpApprovalFilter,
+  McpRemoteServerOptions,
+  McpConnectorOptions,
+} from "./mcp.js";
+
 export const tools = {
   webSearch,
+  mcp,
 };
