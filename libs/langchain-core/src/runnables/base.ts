@@ -1,5 +1,4 @@
 import { z } from "zod/v3";
-import pRetry from "p-retry";
 import { v4 as uuidv4 } from "uuid";
 
 import {
@@ -66,6 +65,7 @@ import {
   InteropZodType,
   isSimpleStringZodSchema,
 } from "../utils/types/zod.js";
+import { getPRetry } from "../utils/p_retry.js";
 
 export { type RunnableInterface, RunnableBatchOptions };
 
@@ -1688,6 +1688,7 @@ export class RunnableRetry<
     config?: CallOptions,
     runManager?: CallbackManagerForChainRun
   ): Promise<RunOutput> {
+    const pRetry = await getPRetry();
     return pRetry(
       (attemptNumber: number) =>
         super.invoke(
@@ -1726,6 +1727,7 @@ export class RunnableRetry<
   ) {
     const resultsMap: Record<string, RunOutput | Error> = {};
     try {
+      const pRetry = await getPRetry();
       await pRetry(
         async (attemptNumber: number) => {
           const remainingIndexes = inputs
