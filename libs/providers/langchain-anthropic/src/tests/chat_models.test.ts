@@ -114,6 +114,32 @@ test("withStructuredOutput with proper output", async () => {
   });
 });
 
+test("formatStructuredToolToAnthropic forwards provider-specific tool definition", () => {
+  const model = new ChatAnthropic({
+    modelName: "claude-3-haiku-20240307",
+    temperature: 0,
+    anthropicApiKey: "testing",
+  });
+
+  const providerDefinition = {
+    type: "memory_20250818",
+    name: "memory",
+  };
+
+  const memoryTool = tool(
+    ({ content }: { content: string }) => content,
+    {
+      name: "memory",
+      schema: z.object({ content: z.string() }),
+      providerToolDefinition: providerDefinition,
+    }
+  );
+
+  const formattedTools = model.formatStructuredToolToAnthropic([memoryTool]);
+
+  expect(formattedTools).toEqual([providerDefinition]);
+});
+
 test("Can properly format anthropic messages when given two tool results", async () => {
   const messageHistory = [
     new HumanMessage("What is the weather in SF? Also, what is 2 + 2?"),
