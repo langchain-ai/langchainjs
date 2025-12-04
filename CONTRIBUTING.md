@@ -76,6 +76,36 @@ a developer and published to [npm](https://www.npmjs.com/package/langchain).
 If your contribution has made its way into a release, we will want to give you credit on Twitter (only if you want though)!
 If you have a Twitter account you would like us to mention, please let us know in the PR or in another manner.
 
+#### 🧪 Dev Releases
+
+For testing unreleased changes, maintainers can publish dev releases of individual packages. Dev releases are published to npm with a special tag and version format that includes the git commit SHA.
+
+**To create a dev release:**
+
+1. Go to [Actions → Dev Release](https://github.com/langchain-ai/langchainjs/actions/workflows/dev-release.yml)
+2. Click "Run workflow"
+3. Select the branch you want to release from (defaults to `main`, but you can choose your feature branch)
+5. Optionally change the npm tag (defaults to `dev`)
+6. Click "Run workflow"
+
+**Version format:** `x.y.z-<tag>.<short-sha>` (e.g., `1.1.0-dev.abc1234`)
+
+**To install a dev release:**
+
+```bash
+# Install the latest dev release
+npm install @langchain/core@dev
+
+# Install a specific dev version
+npm install @langchain/core@1.1.0-dev.abc1234
+```
+
+Dev releases are useful for:
+
+- Testing bug fixes before an official release
+- Validating new features in downstream projects
+- CI/CD pipelines that need to test against the latest changes
+
 ### 🛠️ Tooling
 
 This project uses the following tools, which are worth getting familiar
