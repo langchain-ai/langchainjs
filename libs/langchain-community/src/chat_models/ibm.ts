@@ -927,6 +927,7 @@ export class ChatWatsonx<
               {
                 ...scopeId,
                 messages: watsonxMessages,
+                signal: options?.signal,
               },
               watsonxCallbacks
             );
@@ -938,6 +939,7 @@ export class ChatWatsonx<
                 ...params,
                 ...scopeId,
                 messages: watsonxMessages,
+                signal: options?.signal,
               },
               watsonxCallbacks
             );
@@ -963,9 +965,6 @@ export class ChatWatsonx<
           generation.generationInfo = { finish_reason: part.finish_reason };
         }
         generations.push(generation);
-      }
-      if (options.signal?.aborted) {
-        throw new Error("AbortError");
       }
 
       return {
@@ -1001,6 +1000,7 @@ export class ChatWatsonx<
               ...scopeId,
               messages: watsonxMessages,
               returnObject: true,
+              signal: options?.signal,
             },
             watsonxCallbacks
           );
@@ -1011,6 +1011,7 @@ export class ChatWatsonx<
               ...scopeId,
               messages: watsonxMessages,
               returnObject: true,
+              signal: options?.signal,
             },
             watsonxCallbacks
           );
@@ -1029,9 +1030,6 @@ export class ChatWatsonx<
     let currentCompletion = 0;
     const counter = { value: -1 };
     for await (const chunk of stream) {
-      if (options.signal?.aborted) {
-        throw new Error("AbortError");
-      }
       if (chunk?.data?.usage) usage = chunk.data.usage;
       const { data } = chunk;
       const choice = data.choices[0] as TextChatResultChoice &
