@@ -849,6 +849,13 @@ export class AgentNode<
           type: "json_schema",
           json_schema: jsonSchemaParams,
         },
+        output_format: {
+          type: "json_schema",
+          schema: structuredResponseFormat.strategy.schema,
+        },
+        headers: {
+          "anthropic-beta": "structured-outputs-2025-11-13",
+        },
         ls_structured_output_format: {
           kwargs: { method: "json_schema" },
           schema: structuredResponseFormat.strategy.schema,
