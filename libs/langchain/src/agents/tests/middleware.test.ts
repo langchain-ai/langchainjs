@@ -1890,6 +1890,43 @@ describe("middleware", () => {
         "layer1_after",
       ]);
     });
+
+    it("supports setting responseFormat with wrapModelCall", async () => {
+      const model = new FakeToolCallingChatModel({
+        responses: [
+          new AIMessage(
+            JSON.stringify({ answer: "The weather in Tokyo is 25°C" })
+          ),
+        ],
+      });
+
+      const middleware = createMiddleware({
+        name: "DynamicPromptMiddleware",
+        wrapModelCall: async (request, handler) => {
+          const systemPrompt = "You are a helpful assistant.";
+          return handler({ ...request, systemPrompt });
+        },
+      });
+
+      const agent = createAgent({
+        model,
+        responseFormat: z.object({ answer: z.string() }),
+        middleware: [middleware],
+      });
+
+      // Throws: "expected AIMessage, got object"
+      const result = await agent.invoke({
+        messages: [{ role: "user", content: "Hello" }],
+      });
+      expect(result.structuredResponse).toEqual({
+        answer: "The weather in Tokyo is 25°C",
+      });
+      const [human, assistant] = result.messages;
+      expect(human.content).toBe("Hello");
+      expect(assistant.content).toBe(
+        JSON.stringify({ answer: "The weather in Tokyo is 25°C" })
+      );
+    });
   });
 
   describe("before/after agent hook", () => {

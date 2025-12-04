@@ -1,6 +1,6 @@
 {
   "name": "@langchain/anthropic",
-  "version": "1.1.3",
+  "version": "1.2.1",
   "description": "Anthropic integrations for LangChain.js",
   "author": "LangChain",
   "license": "MIT",
@@ -33,10 +33,11 @@
     "typegen:profiles": "pnpm --filter @langchain/model-profiles make --config profiles.toml"
   },
   "dependencies": {
-    "@anthropic-ai/sdk": "^0.71.0"
+    "@anthropic-ai/sdk": "^0.71.0",
+    "zod": "^3.25.76 || ^4"
   },
   "peerDependencies": {
-    "@langchain/core": "^1.0.0"
+    "@langchain/core": "workspace:*"
   },
   "devDependencies": {
     "@anthropic-ai/vertex-sdk": "^0.11.5",
@@ -53,8 +54,7 @@
     "rimraf": "^5.0.1",
     "typescript": "~5.8.3",
     "uuid": "^13.0.0",
-    "vitest": "^3.2.4",
-    "zod": "3.25.76"
+    "vitest": "^3.2.4"
   },
   "publishConfig": {
     "access": "public"

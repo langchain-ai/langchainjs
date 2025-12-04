@@ -35,7 +35,11 @@ import {
 
 import { isLangChainTool } from "@langchain/core/utils/function_calling";
 import { AnthropicToolsOutputParser } from "./output_parsers.js";
-import { handleToolChoice } from "./utils/tools.js";
+import {
+  ANTHROPIC_TOOL_BETAS,
+  AnthropicToolExtrasSchema,
+  handleToolChoice,
+} from "./utils/tools.js";
 import { _convertMessagesToAnthropicPayload } from "./utils/message_inputs.js";
 import {
   _makeMessageChunkFromAnthropicEvent,
@@ -44,6 +48,7 @@ import {
 import {
   AnthropicBuiltInToolUnion,
   AnthropicContextManagementConfigParam,
+  AnthropicInvocationParams,
   AnthropicMessageCreateParams,
   AnthropicMessageStreamEvent,
   AnthropicRequestOptions,
@@ -52,6 +57,7 @@ import {
   AnthropicToolChoice,
   ChatAnthropicOutputFormat,
   ChatAnthropicToolType,
+  Kwargs,
 } from "./types.js";
 import { wrapAnthropicClientError } from "./utils/errors.js";
 import PROFILES from "./profiles.js";
@@ -161,6 +167,7 @@ function isBuiltinTool(tool: unknown): tool is AnthropicBuiltInToolUnion {
     "str_replace_based_edit_tool_",
     "code_execution_",
     "memory_",
+    "tool_search_",
   ];
   return (
     typeof tool === "object" &&
@@ -175,10 +182,13 @@ function isBuiltinTool(tool: unknown): tool is AnthropicBuiltInToolUnion {
 }
 
 function _combineBetas(
-  a?: AnthropicBeta[],
-  b?: AnthropicBeta[]
+  a?: Iterable<AnthropicBeta>,
+  b?: Iterable<AnthropicBeta>,
+  ...rest: Iterable<AnthropicBeta>[]
 ): AnthropicBeta[] {
-  return Array.from(new Set([...(a ?? []), ...(b ?? [])]));
+  return Array.from(
+    new Set([...(a ?? []), ...(b ?? []), ...rest.flatMap((x) => Array.from(x))])
+  );
 }
 
 /**
@@ -283,13 +293,6 @@ export interface AnthropicInput {
    */
   betas?: AnthropicBeta[];
 }
-
-/**
- * A type representing additional parameters that can be passed to the
- * Anthropic API.
- */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-type Kwargs = Record<string, any>;
 
 function extractToken(chunk: AIMessageChunk): string | undefined {
   if (typeof chunk.content === "string") {
@@ -564,6 +567,92 @@ function extractToken(chunk: AIMessageChunk): string | undefined {
  *   }
  * ]
  * ```
+ * </details>
+ *
+ * <br />
+ *
+ * <details>
+ * <summary><strong>Tool Search</strong></summary>
+ *
+ * Tool search enables Claude to dynamically discover and load tools on-demand
+ * instead of loading all tool definitions upfront. This is useful when you have
+ * many tools but want to avoid the overhead of sending all definitions with every request.
+ *
+ * ```typescript
+ * import { ChatAnthropic } from "@langchain/anthropic";
+ *
+ * const model = new ChatAnthropic({
+ *   model: "claude-sonnet-4-5-20250929",
+ * });
+ *
+ * const tools = [
+ *   // Tool search server tool
+ *   {
+ *     type: "tool_search_tool_regex_20251119",
+ *     name: "tool_search_tool_regex",
+ *   },
+ *   // Tools with defer_loading are loaded on-demand
+ *   {
+ *     name: "get_weather",
+ *     description: "Get the current weather for a location",
+ *     input_schema: {
+ *       type: "object",
+ *       properties: {
+ *         location: { type: "string", description: "City name" },
+ *         unit: {
+ *           type: "string",
+ *           enum: ["celsius", "fahrenheit"],
+ *         },
+ *       },
+ *       required: ["location"],
+ *     },
+ *     defer_loading: true, // Tool is loaded on-demand
+ *   },
+ *   {
+ *     name: "search_files",
+ *     description: "Search through files in the workspace",
+ *     input_schema: {
+ *       type: "object",
+ *       properties: {
+ *         query: { type: "string" },
+ *       },
+ *       required: ["query"],
+ *     },
+ *     defer_loading: true, // Tool is loaded on-demand
+ *   },
+ * ];
+ *
+ * const modelWithTools = model.bindTools(tools);
+ * const response = await modelWithTools.invoke("What's the weather in San Francisco?");
+ * ```
+ *
+ * You can also use the `tool()` helper with the `extras` field:
+ *
+ * ```typescript
+ * import { tool } from "@langchain/core/tools";
+ * import { z } from "zod";
+ *
+ * const getWeather = tool(
+ *   async (input) => `Weather in ${input.location}`,
+ *   {
+ *     name: "get_weather",
+ *     description: "Get weather for a location",
+ *     schema: z.object({ location: z.string() }),
+ *     extras: { defer_loading: true },
+ *   }
+ * );
+ * ```
+ *
+ * **Note:** The required `advanced-tool-use-2025-11-20` beta header is automatically
+ * appended to the request when using tool search tools.
+ *
+ * **Best practices:**
+ * - Tools with `defer_loading: true` are only loaded when Claude discovers them via search
+ * - Keep your 3-5 most frequently used tools as non-deferred for optimal performance
+ * - Both regex and bm25 variants search tool names, descriptions, and argument info
+ *
+ * See the {@link https://platform.claude.com/docs/en/agents-and-tools/tool-use/tool-search-tool | Claude docs}
+ * for more information.
  * </details>
  *
  * <br />
@@ -906,6 +995,7 @@ export class ChatAnthropicMessages<
           input_schema: (isInteropZodSchema(tool.schema)
             ? toJsonSchema(tool.schema)
             : tool.schema) as Anthropic.Messages.Tool.InputSchema,
+          ...(tool.extras ? AnthropicToolExtrasSchema.parse(tool.extras) : {}),
         };
       }
       throw new Error(
@@ -933,17 +1023,42 @@ export class ChatAnthropicMessages<
    */
   override invocationParams(
     options?: this["ParsedCallOptions"]
-  ): Omit<
-    AnthropicMessageCreateParams | AnthropicStreamingMessageCreateParams,
-    "messages"
-  > &
-    Kwargs {
+  ): AnthropicInvocationParams {
     const tool_choice:
       | Anthropic.Messages.ToolChoiceAuto
       | Anthropic.Messages.ToolChoiceAny
       | Anthropic.Messages.ToolChoiceTool
       | Anthropic.Messages.ToolChoiceNone
       | undefined = handleToolChoice(options?.tool_choice);
+
+    const toolBetas = options?.tools?.reduce<AnthropicBeta[]>((acc, tool) => {
+      if (
+        typeof tool === "object" &&
+        "type" in tool &&
+        tool.type in ANTHROPIC_TOOL_BETAS
+      ) {
+        const beta = ANTHROPIC_TOOL_BETAS[tool.type];
+        if (!acc.includes(beta)) {
+          return [...acc, beta];
+        }
+      }
+      return acc;
+    }, []);
+
+    const output: AnthropicInvocationParams = {
+      model: this.model,
+      stop_sequences: options?.stop ?? this.stopSequences,
+      stream: this.streaming,
+      max_tokens: this.maxTokens,
+      tools: this.formatStructuredToolToAnthropic(options?.tools),
+      tool_choice,
+      thinking: this.thinking,
+      context_management: this.contextManagement,
+      ...this.invocationKwargs,
+      container: options?.container,
+      betas: _combineBetas(this.betas, options?.betas, toolBetas ?? []),
+      output_format: options?.output_format,
+    };
 
     if (this.thinking.type === "enabled") {
       if (this.topP !== undefined && this.topK !== -1) {
@@ -954,39 +1069,14 @@ export class ChatAnthropicMessages<
           "temperature is not supported when thinking is enabled"
         );
       }
-
-      return {
-        model: this.model,
-        stop_sequences: options?.stop ?? this.stopSequences,
-        stream: this.streaming,
-        max_tokens: this.maxTokens,
-        tools: this.formatStructuredToolToAnthropic(options?.tools),
-        tool_choice,
-        thinking: this.thinking,
-        context_management: this.contextManagement,
-        ...this.invocationKwargs,
-        container: options?.container,
-        betas: _combineBetas(this.betas, options?.betas),
-        output_format: options?.output_format,
-      };
+    } else {
+      // Only set temperature, top_k, and top_p if thinking is disabled
+      output.temperature = this.temperature;
+      output.top_k = this.topK;
+      output.top_p = this.topP;
     }
-    return {
-      model: this.model,
-      temperature: this.temperature,
-      top_k: this.topK,
-      top_p: this.topP,
-      stop_sequences: options?.stop ?? this.stopSequences,
-      stream: this.streaming,
-      max_tokens: this.maxTokens,
-      tools: this.formatStructuredToolToAnthropic(options?.tools),
-      tool_choice,
-      thinking: this.thinking,
-      context_management: this.contextManagement,
-      ...this.invocationKwargs,
-      container: options?.container,
-      betas: _combineBetas(this.betas, options?.betas),
-      output_format: options?.output_format,
-    };
+
+    return output;
   }
 
   /** @ignore */
