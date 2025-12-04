@@ -185,7 +185,6 @@ export function ensureConfig<CallOptions extends RunnableConfig>(
     } else {
       empty.signal = timeoutSignal;
     }
-    delete empty.timeout;
   }
   return empty as CallOptions;
 }
