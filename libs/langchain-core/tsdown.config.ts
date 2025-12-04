@@ -4,10 +4,11 @@ import {
   lcSecretsPlugin,
   importMapPlugin,
   importConstantsPlugin,
+  fixEventEmitter3Plugin,
 } from "@langchain/build";
 
 export default getBuildConfig({
-  noExternal: [`p-retry`, `p-queue`, `ansi-styles`, `camelcase`, `decamelize`],
+  noExternal: [`ansi-styles`, `camelcase`, `decamelize`, `p-retry`, `p-queue`],
   entry: [
     "./src/index.ts",
     "./src/agents.ts",
@@ -84,5 +85,6 @@ export default getBuildConfig({
       ],
     }),
     importConstantsPlugin(),
+    fixEventEmitter3Plugin(),
   ],
 });
