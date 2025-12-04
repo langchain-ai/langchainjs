@@ -199,6 +199,7 @@
     "typescript": "~5.8.3",
     "typesense": "^1.5.3",
     "usearch": "^2.17.1",
+    "valyu-js": "^2.2.3",
     "voy-search": "0.6.2",
     "weaviate-client": "^3.5.2",
     "word-extractor": "^1.0.4",
@@ -225,6 +226,7 @@
     "@getzep/zep-js": "^0.9.0",
     "@gomomento/sdk-core": "^1.51.1",
     "@google-cloud/storage": "^6.10.1 || ^7.7.0",
+    "valyu-js": "*",
     "@gradientai/nodejs-sdk": "^1.2.0",
     "@huggingface/inference": "^4.0.5",
     "@huggingface/transformers": "^3.5.2",
@@ -373,6 +375,9 @@
       "optional": true
     },
     "@getzep/zep-js": {
+      "optional": true
+    },
+    "valyu-js": {
       "optional": true
     },
     "@gomomento/sdk-core": {
