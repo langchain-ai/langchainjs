@@ -85,7 +85,6 @@ For testing unreleased changes, maintainers can publish dev releases of individu
 1. Go to [Actions → Dev Release](https://github.com/langchain-ai/langchainjs/actions/workflows/dev-release.yml)
 2. Click "Run workflow"
 3. Select the branch you want to release from (defaults to `main`, but you can choose your feature branch)
-4. Select the package you want to release from the dropdown
 5. Optionally change the npm tag (defaults to `dev`)
 6. Click "Run workflow"
 
