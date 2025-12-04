@@ -189,6 +189,74 @@ const response = await model.invoke("What's on my calendar today?", {
 
 For more information, see [OpenAI's MCP Documentation](https://platform.openai.com/docs/guides/tools-remote-mcp).
 
+### Code Interpreter Tool
+
+The Code Interpreter tool allows models to write and run Python code in a sandboxed environment to solve complex problems.
+
+Use Code Interpreter for:
+
+- **Data analysis**: Processing files with diverse data and formatting
+- **File generation**: Creating files with data and images of graphs
+- **Iterative coding**: Writing and running code iteratively to solve problems
+- **Visual intelligence**: Cropping, zooming, rotating, and transforming images
+
+```typescript
+import { ChatOpenAI, tools } from "@langchain/openai";
+
+const model = new ChatOpenAI({ model: "gpt-4.1" });
+
+// Basic usage with auto container (default 1GB memory)
+const response = await model.invoke("Solve the equation 3x + 11 = 14", {
+  tools: [tools.codeInterpreter()],
+});
+```
+
+**Memory configuration** - Choose from 1GB (default), 4GB, 16GB, or 64GB:
+
+```typescript
+const response = await model.invoke(
+  "Analyze this large dataset and create visualizations",
+  {
+    tools: [
+      tools.codeInterpreter({
+        container: { memoryLimit: "4g" },
+      }),
+    ],
+  }
+);
+```
+
+**With files** - Make uploaded files available to the code:
+
+```typescript
+const response = await model.invoke("Process the uploaded CSV file", {
+  tools: [
+    tools.codeInterpreter({
+      container: {
+        memoryLimit: "4g",
+        fileIds: ["file-abc123", "file-def456"],
+      },
+    }),
+  ],
+});
+```
+
+**Explicit container** - Use a pre-created container ID:
+
+```typescript
+const response = await model.invoke("Continue working with the data", {
+  tools: [
+    tools.codeInterpreter({
+      container: "cntr_abc123",
+    }),
+  ],
+});
+```
+
+> **Note**: Containers expire after 20 minutes of inactivity. While called "Code Interpreter", the model knows it as the "python tool" - for explicit prompting, ask for "the python tool" in your prompts.
+
+For more information, see [OpenAI's Code Interpreter Documentation](https://platform.openai.com/docs/guides/tools-code-interpreter).
+
 ## Embeddings
 
 This package also adds support for OpenAI's embeddings model.
