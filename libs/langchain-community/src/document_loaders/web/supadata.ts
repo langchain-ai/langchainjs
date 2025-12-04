@@ -125,7 +125,20 @@ export class SupadataLoader extends BaseDocumentLoader {
   }
 
   private async loadMetadata(client: any, url: string): Promise<Document> {
-    const isYoutube = url.includes("youtube.com") || url.includes("youtu.be");
+    let isYoutube = false;
+
+    try {
+      const hostname = new URL(url).hostname.toLowerCase();
+
+      isYoutube =
+        hostname === "youtube.com" ||
+        hostname === "www.youtube.com" ||
+        hostname.endsWith(".youtube.com") ||
+        hostname === "youtu.be";
+    } catch {
+      // If URL parsing fails, treat as non-YouTube
+      isYoutube = false;
+    }
 
     let result;
     if (isYoutube && client.youtube?.video) {
