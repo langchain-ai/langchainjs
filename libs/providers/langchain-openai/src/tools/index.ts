@@ -25,8 +25,21 @@ export type {
   CodeInterpreterMemoryLimit,
 } from "./codeInterpreter.js";
 
+import { fileSearch } from "./fileSearch.js";
+export type {
+  FileSearchTool,
+  FileSearchOptions,
+  FileSearchFilter,
+  FileSearchComparisonFilter,
+  FileSearchCompoundFilter,
+  FileSearchComparisonType,
+  FileSearchRankingOptions,
+  FileSearchHybridSearchWeights,
+} from "./fileSearch.js";
+
 export const tools = {
   webSearch,
   mcp,
   codeInterpreter,
+  fileSearch,
 };
