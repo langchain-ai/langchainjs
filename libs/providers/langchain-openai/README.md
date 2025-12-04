@@ -257,6 +257,41 @@ const response = await model.invoke("Continue working with the data", {
 
 For more information, see [OpenAI's Code Interpreter Documentation](https://platform.openai.com/docs/guides/tools-code-interpreter).
 
+### File Search Tool
+
+The File Search tool allows models to search your files for relevant information using semantic and keyword search. It enables retrieval from a knowledge base of previously uploaded files stored in vector stores.
+
+**Prerequisites**: Before using File Search, you must:
+
+1. Upload files to the File API with `purpose: "assistants"`
+2. Create a vector store
+3. Add files to the vector store
+
+```typescript
+import { ChatOpenAI, tools } from "@langchain/openai";
+
+const model = new ChatOpenAI({ model: "gpt-4.1" });
+
+const response = await model.invoke("What is deep research by OpenAI?", {
+  tools: [
+    tools.fileSearch({
+      vectorStoreIds: ["vs_abc123"],
+      // maxNumResults: 5, // Limit results for lower latency
+      // filters: { type: "eq", key: "category", value: "blog" }, // Metadata filtering
+      // filters: { type: "and", filters: [                       // Compound filters (AND/OR)
+      //   { type: "eq", key: "category", value: "technical" },
+      //   { type: "gte", key: "year", value: 2024 },
+      // ]},
+      // rankingOptions: { scoreThreshold: 0.8, ranker: "auto" }, // Customize scoring
+    }),
+  ],
+});
+```
+
+Filter operators: `eq` (equals), `ne` (not equal), `gt` (greater than), `gte` (greater than or equal), `lt` (less than), `lte` (less than or equal).
+
+For more information, see [OpenAI's File Search Documentation](https://platform.openai.com/docs/guides/tools-file-search).
+
 ## Embeddings
 
 This package also adds support for OpenAI's embeddings model.
