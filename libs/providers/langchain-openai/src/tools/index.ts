@@ -17,7 +17,16 @@ export type {
   McpConnectorOptions,
 } from "./mcp.js";
 
+import { codeInterpreter } from "./codeInterpreter.js";
+export type {
+  CodeInterpreterTool,
+  CodeInterpreterOptions,
+  CodeInterpreterAutoContainer,
+  CodeInterpreterMemoryLimit,
+} from "./codeInterpreter.js";
+
 export const tools = {
   webSearch,
   mcp,
+  codeInterpreter,
 };
