@@ -12,7 +12,7 @@ import { Document } from "@langchain/core/documents";
  * - Vector (semantic) search using embeddings
  * - BM25 (lexical) full-text search
  * - Reciprocal Rank Fusion (RRF) for result merging
- * 
+ *
  * Requirements:
  * - Elasticsearch 8.9+ (for RRF support)
  * - Run: docker-compose up -d --build (in elasticsearch directory)
@@ -52,23 +52,28 @@ export async function run() {
   // Add sample documents
   const docs = [
     new Document({
-      pageContent: "Running helps build cardiovascular endurance and strengthens leg muscles.",
+      pageContent:
+        "Running helps build cardiovascular endurance and strengthens leg muscles.",
       metadata: { category: "fitness", topic: "running" },
     }),
     new Document({
-      pageContent: "Marathon training requires consistent mileage and proper recovery.",
+      pageContent:
+        "Marathon training requires consistent mileage and proper recovery.",
       metadata: { category: "fitness", topic: "running" },
     }),
     new Document({
-      pageContent: "Muscle soreness after exercise is caused by microscopic damage to muscle fibers.",
+      pageContent:
+        "Muscle soreness after exercise is caused by microscopic damage to muscle fibers.",
       metadata: { category: "health", topic: "recovery" },
     }),
     new Document({
-      pageContent: "Stretching and foam rolling can help prevent post-workout muscle pain.",
+      pageContent:
+        "Stretching and foam rolling can help prevent post-workout muscle pain.",
       metadata: { category: "health", topic: "recovery" },
     }),
     new Document({
-      pageContent: "Python is a popular programming language for data science and machine learning.",
+      pageContent:
+        "Python is a popular programming language for data science and machine learning.",
       metadata: { category: "technology", topic: "programming" },
     }),
   ];
@@ -81,7 +86,7 @@ export async function run() {
   console.log("=== Example 1: Hybrid Search ===");
   const query1 = "How to avoid muscle soreness while running?";
   console.log(`Query: "${query1}"\n`);
-  
+
   const results1 = await vectorStore.similaritySearchWithScore(query1, 3);
   results1.forEach(([doc, score], i) => {
     console.log(`${i + 1}. [Score: ${score.toFixed(4)}] ${doc.pageContent}`);
@@ -92,7 +97,7 @@ export async function run() {
   console.log("\n=== Example 2: Semantic Query ===");
   const query2 = "tips for preventing pain after workouts";
   console.log(`Query: "${query2}"\n`);
-  
+
   const results2 = await vectorStore.similaritySearchWithScore(query2, 2);
   results2.forEach(([doc, score], i) => {
     console.log(`${i + 1}. [Score: ${score.toFixed(4)}] ${doc.pageContent}`);
@@ -104,12 +109,10 @@ export async function run() {
   const query3 = "fitness advice";
   console.log(`Query: "${query3}"`);
   console.log(`Filter: category = "fitness"\n`);
-  
-  const results3 = await vectorStore.similaritySearchWithScore(
-    query3,
-    3,
-    { category: "fitness" }
-  );
+
+  const results3 = await vectorStore.similaritySearchWithScore(query3, 3, {
+    category: "fitness",
+  });
   results3.forEach(([doc, score], i) => {
     console.log(`${i + 1}. [Score: ${score.toFixed(4)}] ${doc.pageContent}`);
     console.log(`   Metadata: ${JSON.stringify(doc.metadata)}\n`);
@@ -120,4 +123,3 @@ export async function run() {
   await vectorStore.deleteIfExists();
   console.log("Index deleted.");
 }
-

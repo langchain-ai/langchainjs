@@ -78,15 +78,15 @@ type ElasticMetadataTerms = {
 
 /**
  * Elasticsearch vector store supporting vector and hybrid search.
- * 
+ *
  * Hybrid search combines kNN vector search with BM25 full-text search
  * using RRF. Enable by passing a `HybridRetrievalStrategy` to the constructor.
- * 
+ *
  * @example
  * ```typescript
  * // Vector search (default)
  * const vectorStore = new ElasticVectorSearch(embeddings, { client, indexName });
- * 
+ *
  * // Hybrid search
  * const hybridStore = new ElasticVectorSearch(embeddings, {
  *   client,
@@ -265,9 +265,10 @@ export class ElasticVectorSearch extends VectorStore {
     filter?: ElasticFilter
   ): Promise<[Document, number][]> {
     const metadataTerms = this.buildMetadataTerms(filter);
-    const filterClauses = metadataTerms.must.length > 0 || metadataTerms.must_not.length > 0
-      ? { bool: metadataTerms }
-      : undefined;
+    const filterClauses =
+      metadataTerms.must.length > 0 || metadataTerms.must_not.length > 0
+        ? { bool: metadataTerms }
+        : undefined;
 
     const result = await this.client.search({
       index: this.indexName,

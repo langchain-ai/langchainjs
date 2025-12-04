@@ -2,7 +2,10 @@ import { test, expect } from "@jest/globals";
 import { Client, ClientOptions } from "@elastic/elasticsearch";
 import { OpenAIEmbeddings } from "@langchain/openai";
 import { Document } from "@langchain/core/documents";
-import { ElasticVectorSearch, HybridRetrievalStrategy } from "../elasticsearch.js";
+import {
+  ElasticVectorSearch,
+  HybridRetrievalStrategy,
+} from "../elasticsearch.js";
 
 describe("ElasticVectorSearch", () => {
   let store: ElasticVectorSearch;
@@ -208,9 +211,18 @@ describe("ElasticVectorSearch - Backward Compatibility", () => {
 
     const createdAt = new Date().getTime();
     await store.addDocuments([
-      new Document({ pageContent: "vector search", metadata: { a: createdAt } }),
-      new Document({ pageContent: "semantic search", metadata: { a: createdAt } }),
-      new Document({ pageContent: "keyword search", metadata: { a: createdAt + 1 } }),
+      new Document({
+        pageContent: "vector search",
+        metadata: { a: createdAt },
+      }),
+      new Document({
+        pageContent: "semantic search",
+        metadata: { a: createdAt },
+      }),
+      new Document({
+        pageContent: "keyword search",
+        metadata: { a: createdAt + 1 },
+      }),
     ]);
 
     const queryVector = await embeddings.embedQuery("vector");
@@ -231,7 +243,7 @@ describe("ElasticVectorSearch - Backward Compatibility", () => {
 
   test.skip("fromTexts static method works without strategy", async () => {
     const indexName = "test_backward_compat_fromtexts";
-    
+
     const store = await ElasticVectorSearch.fromTexts(
       ["first document", "second document", "third document"],
       [{ id: 1 }, { id: 2 }, { id: 3 }],
@@ -293,8 +305,12 @@ describe("ElasticVectorSearch - Hybrid Search", () => {
     await store.deleteIfExists();
 
     await store.addDocuments([
-      new Document({ pageContent: "The quick brown fox jumps over the lazy dog" }),
-      new Document({ pageContent: "Machine learning and artificial intelligence" }),
+      new Document({
+        pageContent: "The quick brown fox jumps over the lazy dog",
+      }),
+      new Document({
+        pageContent: "Machine learning and artificial intelligence",
+      }),
       new Document({ pageContent: "Elasticsearch vector search capabilities" }),
       new Document({ pageContent: "A fox in the forest during autumn" }),
     ]);
@@ -303,7 +319,7 @@ describe("ElasticVectorSearch - Hybrid Search", () => {
 
     expect(results).toHaveLength(2);
     expect(results[0]).toBeInstanceOf(Document);
-    expect(results.some(doc => doc.pageContent.includes("fox"))).toBe(true);
+    expect(results.some((doc) => doc.pageContent.includes("fox"))).toBe(true);
   });
 
   test.skip("Hybrid search with custom RRF parameters", async () => {
@@ -368,30 +384,34 @@ describe("ElasticVectorSearch - Hybrid Search", () => {
 
     const createdAt = new Date().getTime();
     await store.addDocuments([
-      new Document({ 
-        pageContent: "Technology article about AI", 
-        metadata: { category: "tech", date: createdAt } 
+      new Document({
+        pageContent: "Technology article about AI",
+        metadata: { category: "tech", date: createdAt },
       }),
-      new Document({ 
-        pageContent: "Sports article about football", 
-        metadata: { category: "sports", date: createdAt } 
+      new Document({
+        pageContent: "Sports article about football",
+        metadata: { category: "sports", date: createdAt },
       }),
-      new Document({ 
-        pageContent: "Technology article about ML", 
-        metadata: { category: "tech", date: createdAt } 
+      new Document({
+        pageContent: "Technology article about ML",
+        metadata: { category: "tech", date: createdAt },
       }),
-      new Document({ 
-        pageContent: "Sports article about basketball", 
-        metadata: { category: "sports", date: createdAt + 1 } 
+      new Document({
+        pageContent: "Sports article about basketball",
+        metadata: { category: "sports", date: createdAt + 1 },
       }),
     ]);
 
-    const results = await store.similaritySearch("article about technology", 5, {
-      category: "tech",
-    });
+    const results = await store.similaritySearch(
+      "article about technology",
+      5,
+      {
+        category: "tech",
+      }
+    );
 
     expect(results.length).toBeLessThanOrEqual(2);
-    results.forEach(doc => {
+    results.forEach((doc) => {
       expect(doc.metadata.category).toBe("tech");
     });
   });
