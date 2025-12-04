@@ -214,7 +214,7 @@ describe("structured output handling", () => {
       expect(result.structuredResponse.answer).toBe("Paris");
       expect(result.messages.length).toBe(4);
       expect(result.messages.at(-1)?.content).toContain('{"answer": "Paris"}');
-      expect(result.messages.at(-1)?.tool_calls.length).toBe(0);
+      expect((result.messages.at(-1) as AIMessage).tool_calls?.length).toBe(0);
     });
   });
 });
