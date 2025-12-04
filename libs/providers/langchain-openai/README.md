@@ -70,6 +70,80 @@ const model = new ChatOpenAI({
 const response = await model.stream(new HumanMessage("Hello world!"));
 ```
 
+## Tools
+
+This package provides LangChain-compatible wrappers for OpenAI's built-in tools for the Responses API.
+
+### Web Search Tool
+
+The web search tool allows OpenAI models to search the web for up-to-date information before generating a response. Web search supports three main types:
+
+1. **Non-reasoning web search**: Quick lookups where the model passes queries directly to the search tool
+2. **Agentic search with reasoning models**: The model actively manages the search process, analyzing results and deciding whether to keep searching
+3. **Deep research**: Extended investigations using models like `o3-deep-research` or `gpt-5` with high reasoning effort
+
+```typescript
+import { ChatOpenAI, tools } from "@langchain/openai";
+
+const model = new ChatOpenAI({
+  model: "gpt-4o",
+});
+
+// Basic usage
+const response = await model.invoke(
+  "What was a positive news story from today?",
+  {
+    tools: [tools.webSearch()],
+  }
+);
+```
+
+**Domain filtering** - Limit search results to specific domains (up to 100):
+
+```typescript
+const response = await model.invoke("Latest AI research news", {
+  tools: [
+    tools.webSearch({
+      filters: {
+        allowedDomains: ["arxiv.org", "nature.com", "science.org"],
+      },
+    }),
+  ],
+});
+```
+
+**User location** - Refine search results based on geography:
+
+```typescript
+const response = await model.invoke("What are the best restaurants near me?", {
+  tools: [
+    tools.webSearch({
+      userLocation: {
+        type: "approximate",
+        country: "US",
+        city: "San Francisco",
+        region: "California",
+        timezone: "America/Los_Angeles",
+      },
+    }),
+  ],
+});
+```
+
+**Cache-only mode** - Disable live internet access:
+
+```typescript
+const response = await model.invoke("Find information about OpenAI", {
+  tools: [
+    tools.webSearch({
+      externalWebAccess: false,
+    }),
+  ],
+});
+```
+
+For more information, see [OpenAI's Web Search Documentation](https://platform.openai.com/docs/guides/tools-web-search).
+
 ## Embeddings
 
 This package also adds support for OpenAI's embeddings model.
@@ -111,8 +185,8 @@ Test files should live within a `tests/` file in the `src/` folder. Unit tests s
 end in `.int.test.ts`:
 
 ```bash
-$ pnpm test
-$ pnpm test:int
+pnpm test
+pnpm test:int
 ```
 
 ### Lint & Format
