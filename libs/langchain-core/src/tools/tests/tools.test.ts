@@ -1,4 +1,4 @@
-import { test, expect, describe } from "vitest";
+import { test, it, expect, describe } from "vitest";
 import { z } from "zod/v3";
 import { z as z4 } from "zod/v4";
 
@@ -472,6 +472,27 @@ describe("DynamicTool", () => {
     expect(result).toBeInstanceOf(ToolMessage);
     expect(result.metadata).toEqual({
       foo: "bar",
+    });
+  });
+});
+
+describe("tool()", () => {
+  it("should propagate extras to the tool instance", () => {
+    const testTool = tool(
+      async (input) => {
+        const typedInput: string = input;
+        return `processed: ${typedInput}`;
+      },
+      {
+        name: "test_tool",
+        description: "A test tool",
+        extras: {
+          foo: "test",
+        },
+      }
+    );
+    expect(testTool.extras).toEqual({
+      foo: "test",
     });
   });
 });

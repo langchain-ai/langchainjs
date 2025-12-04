@@ -132,3 +132,16 @@ export type AnthropicBuiltInToolUnion = Exclude<
   Anthropic.Messages.ToolUnion,
   Anthropic.Messages.Tool
 >;
+
+/**
+ * A type representing additional parameters that can be passed to the
+ * Anthropic API.
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export type Kwargs = Record<string, any>;
+
+export type AnthropicInvocationParams = Omit<
+  AnthropicMessageCreateParams | AnthropicStreamingMessageCreateParams,
+  "messages"
+> &
+  Kwargs;
