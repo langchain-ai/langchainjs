@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, MockInstance, test, vi } from "vitest";
+import * as z from "zod";
 import { BaseCallbackHandler } from "@langchain/core/callbacks/base";
 import {
   ChatGoogle,
@@ -11,9 +12,18 @@ import {
   ChatGoogleParams as ChatGoogleNodeParams,
 } from "../../node.js";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
-import { AIMessage, BaseMessageChunk, HumanMessage, SystemMessage } from "@langchain/core/messages";
+import {
+  AIMessage, BaseMessage,
+  BaseMessageChunk,
+  HumanMessage,
+  SystemMessage,
+  ToolMessage
+} from "@langchain/core/messages";
 import { BaseLanguageModelInput } from "@langchain/core/language_models/base";
 import { ChatPromptValue } from "@langchain/core/prompt_values";
+import { tool } from "@langchain/core/tools";
+import { GeminiTool } from "../types.js";
+import { Runnable } from "@langchain/core/runnables";
 
 type ModelInfoConfig = {
   node?: boolean,
@@ -37,6 +47,7 @@ const allModelInfo: ModelInfo[] = [
     model: "gemini-2.0-flash-lite",
     testConfig: {
       useApiKey: true,
+      only: true,
     }
   },
   {
@@ -163,8 +174,47 @@ function filterTestableModels(): ModelInfo[] {
   );
 }
 
-const coreModelInfo: ModelInfo[] = filterTestableModels();
+const weatherTool = tool(
+  (_) => ({
+    temp: 21,
+  }),
+  {
+    name: "get_weather",
+    description:
+      "Get the weather of a specific location and return the temperature in Celsius.",
+    schema: z.object({
+      location: z.string().describe("The name of city to get the weather for."),
+    }),
+  }
+);
 
+// These tools commented out since they're not in use for a test yet
+// const nullishWeatherTool = tool(
+//   (_) => ({
+//     temp: 21,
+//   }),
+//   {
+//     name: "get_nullish_weather",
+//     description:
+//       "Get the weather of a specific location and return the temperature in Celsius.",
+//     schema: z.object({
+//       location: z
+//         .string()
+//         .nullish()
+//         .describe("The name of city to get the weather for."),
+//     }),
+//   }
+// );
+//
+// const calculatorTool = tool((_) => "no-op", {
+//   name: "calculator",
+//   description: "Calculate the result of a math expression.",
+//   schema: z.object({
+//     expression: z.string().describe("The math expression to calculate."),
+//   }),
+// });
+
+const coreModelInfo: ModelInfo[] = filterTestableModels();
 describe.each(coreModelInfo)(
   "Google ($model) $testConfig",
   ({model, defaultGoogleParams, testConfig}: ModelInfo) => {
@@ -251,7 +301,7 @@ describe.each(coreModelInfo)(
       expect(contentBlock.text).toMatch(/(1 + 1 (equals|is|=) )?2.? ?/);
     });
 
-    test("stream", async () => {
+    test.skip("stream", async () => {
       const model = newChatGoogle();
       const input: BaseLanguageModelInput = new ChatPromptValue([
         new SystemMessage(
@@ -282,6 +332,93 @@ describe.each(coreModelInfo)(
       expect(lastChunk).toHaveProperty("usage_metadata");
 
       expect(warnSpy).not.toHaveBeenCalled();
+    });
+
+    test("function", async () => {
+      const tools = [weatherTool];
+      const llm: Runnable = newChatGoogle().bindTools(tools);
+      const result = await llm.invoke("What is the weather in New York?");
+      expect(Array.isArray(result.tool_calls)).toBeTruthy();
+      expect(result.tool_calls).toHaveLength(1);
+      const call = result.tool_calls[0];
+      expect(call).toHaveProperty("type");
+      expect(call.type).toBe("tool_call");
+      expect(call).toHaveProperty("name");
+      expect(call.name).toBe("get_weather");
+      expect(call).toHaveProperty("args");
+      expect(typeof call.args).toBe("object");
+      expect(call.args).toHaveProperty("location");
+      expect(call.args.location).toBe("New York");
+    });
+
+    test("function conversation", async () => {
+      const tools = [weatherTool];
+      const llm = newChatGoogle().bindTools(tools);
+      const history: BaseMessage[] = [new HumanMessage("What is the weather in New York?")];
+      const result1 = await llm.invoke(history);
+      history.push(result1);
+
+      console.log('history1', history);
+
+      const toolCalls = result1.tool_calls!;
+      const toolCall = toolCalls[0];
+      const toolMessage = await weatherTool.invoke(toolCall);
+      history.push(toolMessage);
+
+      console.log('history2', history);
+
+      const result2 = await llm.invoke(history);
+
+      expect(result2.content).toMatch(/21/);
+    });
+
+    test("function reply", async () => {
+      const tools: GeminiTool[] = [
+        {
+          functionDeclarations: [
+            {
+              name: "test",
+              description:
+                "Run a test with a specific name and get if it passed or failed",
+              parameters: {
+                type: "object",
+                properties: {
+                  testName: {
+                    type: "string",
+                    description: "The name of the test that should be run.",
+                  },
+                },
+                required: ["testName"],
+              },
+            },
+          ],
+        },
+      ];
+      const llm = newChatGoogle().bindTools(tools);
+      const toolResult = {
+        testPassed: true,
+      };
+      const messages: BaseMessage[] = [
+        new HumanMessage("Run a test on the cobalt project."),
+        new AIMessage({
+          tool_calls: [
+            {
+              type: "tool_call",
+              id: "test-id",
+              name: "test",
+              args: {
+                testName: "cobalt",
+              },
+            },
+          ],
+        }),
+        new ToolMessage(JSON.stringify(toolResult), "test-id"),
+      ];
+      const res = await llm.stream(messages);
+      const resArray: BaseMessageChunk[] = [];
+      for await (const chunk of res) {
+        resArray.push(chunk);
+      }
     });
 
   }

@@ -47,6 +47,7 @@
     "prettier": "^2.8.3",
     "typescript": "~5.8.3",
     "vitest": "^3.2.4",
+    "zod": "^3.25.76 || ^4",
     "zod-to-json-schema": "^3.24.6"
   },
   "publishConfig": {
