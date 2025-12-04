@@ -344,6 +344,116 @@ function convertStandardContentMessageToGeminiContent(
   return { role, parts };
 }
 
+function convertLegacyContentMessageToGeminiContent(
+  message: BaseMessage,
+  messages: BaseMessage[],
+): GeminiContent | null {
+  // Skip system messages - they're handled separately
+  if (SystemMessage.isInstance(message)) {
+    return null;
+  }
+
+  const role: GeminiRole = iife(() => {
+    if (HumanMessage.isInstance(message)) {
+      return "user";
+    } else if (AIMessage.isInstance(message)) {
+      return "model";
+    } else if (ToolMessage.isInstance(message)) {
+      // Tool messages in Gemini are represented as function responses
+      return "function";
+    } else if (ChatMessage.isInstance(message)) {
+      // Map ChatMessage roles to Gemini roles
+      const msgRole = message.role.toLowerCase();
+      if (msgRole === "user" || msgRole === "human") {
+        return "user";
+      } else if (
+        msgRole === "assistant" ||
+        msgRole === "ai" ||
+        msgRole === "model"
+      ) {
+        return "model";
+      } else if (msgRole === "function" || msgRole === "tool") {
+        return "function";
+      } else {
+        // Default to user for unknown roles
+        return "user";
+      }
+    } else {
+      // Unknown message type - skip or default to user
+      return "user";
+    }
+  });
+
+  const parts: GeminiPart[] = [];
+
+  // Handle legacy content formats
+  if (typeof message.content === "string") {
+    // Simple string content
+    if (message.content.trim()) {
+      parts.push({ text: message.content });
+    }
+  } else if (Array.isArray(message.content)) {
+    // Array of content blocks (legacy format)
+    for (const item of message.content) {
+      if (typeof item === "string") {
+        parts.push({ text: item });
+      } else if (typeof item === "object" && item !== null) {
+        if (isDataContentBlock(item)) {
+          parts.push(
+            convertToProviderContentBlock(item, geminiContentBlockConverter)
+          );
+        } else if (item?.type === "functionCall") {
+          // Skip this - it will be added later
+        } else {
+          parts.push(item as GeminiPart);
+        }
+      }
+    }
+  }
+
+  // Handle tool calls by adding function call parts to the end of the parts array
+  if (AIMessage.isInstance(message) && message.tool_calls?.length) {
+    parts.push(
+      ...message.tool_calls.map((toolCall) => ({
+        functionCall: {
+          name: toolCall.name,
+          args: toolCall.args,
+        },
+      }))
+    );
+  }
+
+  // Handle tool messages as function responses
+  if (ToolMessage.isInstance(message) && message.tool_call_id) {
+    const responseContent =
+      typeof message.content === "string"
+        ? message.content
+        : JSON.stringify(message.content);
+    // Find the response name by checking previous messages for the tool call
+    const toolCall = messages
+      .filter(AIMessage.isInstance)
+      .find((msg) =>
+        msg.tool_calls?.find((tc) => tc.id === message.tool_call_id)
+      );
+    if (!toolCall) {
+      throw new ToolCallNotFoundError(message.tool_call_id);
+    }
+    parts.push({
+      functionResponse: {
+        name: toolCall?.name || "unknown",
+        response: { result: responseContent },
+      },
+    });
+  }
+
+  // Only add content if we have parts
+  if (parts.length > 0) {
+    return { role, parts };
+  }
+
+  return null;
+}
+
 /**
  * Converts an array of LangChain messages to Gemini API content format.
  *
@@ -386,116 +496,21 @@ export const convertMessagesToGeminiContents: Converter<
   const contents: GeminiContent[] = [];
 
   for (const message of messages) {
-    // Check if this is a v1 standard content message
-    if (
-      "output_version" in message.response_metadata &&
-      message.response_metadata?.output_version === "v1"
-    ) {
-      const content = convertStandardContentMessageToGeminiContent(message);
-      if (content) {
-        contents.push(content);
-      }
-      continue;
-    }
-
-    // Legacy format handling
-    // Skip system messages - they're handled separately
-    if (SystemMessage.isInstance(message)) continue;
-
-    const role: GeminiRole = iife(() => {
-      if (HumanMessage.isInstance(message)) {
-        return "user";
-      } else if (AIMessage.isInstance(message)) {
-        return "model";
-      } else if (ToolMessage.isInstance(message)) {
-        // Tool messages in Gemini are represented as function responses
-        return "function";
-      } else if (ChatMessage.isInstance(message)) {
-        // Map ChatMessage roles to Gemini roles
-        const msgRole = message.role.toLowerCase();
-        if (msgRole === "user" || msgRole === "human") {
-          return "user";
-        } else if (
-          msgRole === "assistant" ||
-          msgRole === "ai" ||
-          msgRole === "model"
-        ) {
-          return "model";
-        } else if (msgRole === "function" || msgRole === "tool") {
-          return "function";
-        } else {
-          // Default to user for unknown roles
-          return "user";
-        }
-      } else {
-        // Unknown message type - skip or default to user
-        return "user";
+    // const content: GeminiContent | null = convertContentMessageToGeminiContent(message, messages);
+    const content: GeminiContent | null = iife(() => {
+      const outputVersion = "output_version" in message.response_metadata
+        ? message.response_metadata?.output_version as string
+        : "v0";
+      switch (outputVersion) {
+        case "v1":
+          return convertStandardContentMessageToGeminiContent(message);
+        case "v0":
+        default:
+          return convertLegacyContentMessageToGeminiContent(message, messages);
       }
     });
-
-    const parts: GeminiPart[] = [];
-
-    // Handle legacy content formats
-    if (typeof message.content === "string") {
-      // Simple string content
-      if (message.content.trim()) {
-        parts.push({ text: message.content });
-      }
-    } else if (Array.isArray(message.content)) {
-      // Array of content blocks (legacy format)
-      for (const item of message.content) {
-        if (typeof item === "string") {
-          parts.push({ text: item });
-        } else if (typeof item === "object" && item !== null) {
-          if (isDataContentBlock(item)) {
-            parts.push(
-              convertToProviderContentBlock(item, geminiContentBlockConverter)
-            );
-          } else {
-            parts.push(item as GeminiPart);
-          }
-        }
-      }
-    }
-
-    // Handle tool calls by adding function call parts to the end of the parts array
-    if (AIMessage.isInstance(message) && message.tool_calls?.length) {
-      parts.push(
-        ...message.tool_calls.map((toolCall) => ({
-          functionCall: {
-            name: toolCall.name,
-            args: toolCall.args,
-          },
-        }))
-      );
-    }
-
-    // Handle tool messages as function responses
-    if (ToolMessage.isInstance(message) && message.tool_call_id) {
-      const responseContent =
-        typeof message.content === "string"
-          ? message.content
-          : JSON.stringify(message.content);
-      // Find the response name by checking previous messages for the tool call
-      const toolCall = messages
-        .filter(AIMessage.isInstance)
-        .find((msg) =>
-          msg.tool_calls?.find((tc) => tc.id === message.tool_call_id)
-        );
-      if (!toolCall) {
-        throw new ToolCallNotFoundError(message.tool_call_id);
-      }
-      parts.push({
-        functionResponse: {
-          name: toolCall?.name || "unknown",
-          response: { result: responseContent },
-        },
-      });
-    }
-
-    // Only add content if we have parts
-    if (parts.length > 0) {
-      contents.push({ role, parts });
+    if (content) {
+      contents.push(content);
     }
   }
 
