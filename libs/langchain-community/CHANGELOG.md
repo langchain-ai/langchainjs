@@ -1,5 +1,29 @@
 # @langchain/community
 
+## 1.0.7
+
+### Patch Changes
+
+- [#9436](https://github.com/langchain-ai/langchainjs/pull/9436) [`ca32dd7`](https://github.com/langchain-ai/langchainjs/commit/ca32dd76f3f77704da53e38ccb22215dd60aecd2) Thanks [@sinedied](https://github.com/sinedied)! - Fix possible race condition in FileSystemChatMessageHistory
+
+- [#8333](https://github.com/langchain-ai/langchainjs/pull/8333) [`dc396c4`](https://github.com/langchain-ai/langchainjs/commit/dc396c417a07dc1748099c5c71f47ff7e749796a) Thanks [@ejscribner](https://github.com/ejscribner)! - community[minor]: Create CouchbaseQueryVectorStore
+
+- Updated dependencies []:
+  - @langchain/classic@1.0.5
+  - @langchain/openai@1.1.3
+
+## 1.0.6
+
+### Patch Changes
+
+- [#9501](https://github.com/langchain-ai/langchainjs/pull/9501) [`8b9f66f`](https://github.com/langchain-ai/langchainjs/commit/8b9f66f7212f5fc1607566c130d247c2e17ca546) Thanks [@hntrl](https://github.com/hntrl)! - fix community exports (#9494)
+
+- [#9498](https://github.com/langchain-ai/langchainjs/pull/9498) [`31240d4`](https://github.com/langchain-ai/langchainjs/commit/31240d4314ec3bc776fa8aea7c33870c6ffa5a72) Thanks [@hntrl](https://github.com/hntrl)! - enable model gateway usage in IBM implementation
+
+- Updated dependencies []:
+  - @langchain/classic@1.0.5
+  - @langchain/openai@1.1.3
+
 ## 1.0.5
 
 ### Patch Changes

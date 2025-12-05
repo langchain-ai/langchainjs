@@ -1,5 +1,11 @@
 # @langchain/mongodb
 
+## 1.0.2
+
+### Patch Changes
+
+- [#9502](https://github.com/langchain-ai/langchainjs/pull/9502) [`fa8c36e`](https://github.com/langchain-ai/langchainjs/commit/fa8c36e4ba3ab19c30a1ed9fd2e6392fc6778a2c) Thanks [@hntrl](https://github.com/hntrl)! - bump mongodb dep
+
 ## 1.0.1
 
 ### Patch Changes

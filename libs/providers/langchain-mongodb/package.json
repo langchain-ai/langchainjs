@@ -1,6 +1,6 @@
 {
   "name": "@langchain/mongodb",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Sample integration for LangChain.js",
   "author": "LangChain",
   "license": "MIT",
@@ -22,7 +22,7 @@
     "lint:fix": "pnpm lint:eslint --fix && pnpm lint:dpdm",
     "clean": "rm -rf .turbo dist/",
     "test:watch": "vitest",
-    "test:int": "vitest run --mode int --testTimeout 10000 --maxWorkers=50%",
+    "test:int": "vitest run --mode int",
     "format": "prettier --config .prettierrc --write \"src\"",
     "format:check": "prettier --config .prettierrc --check \"src\""
   },

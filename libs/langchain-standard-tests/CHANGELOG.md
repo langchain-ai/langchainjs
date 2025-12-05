@@ -1,5 +1,26 @@
 # @langchain/standard-tests
 
+## 0.0.6
+
+### Patch Changes
+
+- Updated dependencies [[`bd2c46e`](https://github.com/langchain-ai/langchainjs/commit/bd2c46e09e661d9ac766c09e71bc6687d6fc811c), [`487378b`](https://github.com/langchain-ai/langchainjs/commit/487378bf14277659c8ca0ef06ea0f9836b818ff4), [`138e7fb`](https://github.com/langchain-ai/langchainjs/commit/138e7fb6280705457079863bedb238b16b322032)]:
+  - @langchain/core@1.1.3
+
+## 0.0.5
+
+### Patch Changes
+
+- Updated dependencies [[`833f578`](https://github.com/langchain-ai/langchainjs/commit/833f57834dc3aa64e4cfdd7499f865b2ab41462a)]:
+  - @langchain/core@1.1.2
+
+## 0.0.4
+
+### Patch Changes
+
+- Updated dependencies [[`636b994`](https://github.com/langchain-ai/langchainjs/commit/636b99459bf843362298866211c63a7a15c2a319), [`38f0162`](https://github.com/langchain-ai/langchainjs/commit/38f0162b7b2db2be2c3a75ae468728adcb49fdfb)]:
+  - @langchain/core@1.1.1
+
 ## 0.0.3
 
 ### Patch Changes
