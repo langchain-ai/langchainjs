@@ -28,8 +28,8 @@
     "test:standard:unit": "NODE_OPTIONS=--experimental-vm-modules jest --testPathPattern=\\.standard\\.test.ts --testTimeout 100000 --runInBand",
     "test:standard:int": "NODE_OPTIONS=--experimental-vm-modules jest --testPathPattern=\\.standard\\.int\\.test.ts --testTimeout 100000 --runInBand",
     "test:standard": "pnpm test:standard:unit && pnpm test:standard:int",
-    "format": "prettier --config .prettierrc --write \"src\"",
-    "format:check": "prettier --config .prettierrc --check \"src\""
+    "format": "prettier --write \"src\"",
+    "format:check": "prettier --check \"src\""
   },
   "dependencies": {
     "@langchain/classic": "workspace:*",

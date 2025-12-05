@@ -24,8 +24,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:int": "vitest run --mode int",
-    "format": "prettier --config .prettierrc --write \"src\"",
-    "format:check": "prettier --config .prettierrc --check \"src\""
+    "format": "prettier --write \"src\"",
+    "format:check": "prettier --check \"src\""
   },
   "dependencies": {
     "@qdrant/js-client-rest": "^1.15.0",

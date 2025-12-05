@@ -74,6 +74,7 @@ test("LangChainTracer payload snapshots for run create and update", async () => 
     session_name: expect.any(String),
     dotted_order: expect.any(String),
     end_time: expect.any(Number),
+    start_time: expect.any(String),
     events: expect.arrayContaining([
       expect.objectContaining({
         time: expect.any(String),
@@ -92,6 +93,7 @@ test("LangChainTracer payload snapshots for run create and update", async () => 
         time: expect.any(String),
       }),
     ]),
+    start_time: expect.any(String),
     trace_id: expect.any(String),
   });
 });

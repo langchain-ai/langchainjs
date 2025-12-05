@@ -23,8 +23,8 @@
     "test:watch": "NODE_OPTIONS=--experimental-vm-modules jest --watch --testPathIgnorePatterns=\\.int\\.test.ts",
     "test:single": "NODE_OPTIONS=--experimental-vm-modules pnpm run jest --config jest.config.cjs --testTimeout 100000",
     "test:int": "NODE_OPTIONS=--experimental-vm-modules jest --testPathPattern=\\.int\\.test.ts --testTimeout 100000 --maxWorkers=50%",
-    "format": "prettier --config .prettierrc --write \"src\"",
-    "format:check": "prettier --config .prettierrc --check \"src\"",
+    "format": "prettier --write \"src\"",
+    "format:check": "prettier --check \"src\"",
     "typegen": "pnpm run typegen:profiles",
     "typegen:profiles": "pnpm --filter @langchain/model-profiles make --config profiles.toml"
   },
@@ -122,7 +122,16 @@
     "dist/",
     "CHANGELOG.md",
     "README.md",
-    "LICENSE"
+    "LICENSE",
+    "types.d.cts",
+    "types.cjs",
+    "types.d.ts",
+    "types.js",
+    "experimental",
+    "utils.d.cts",
+    "utils.cjs",
+    "utils.d.ts",
+    "utils.js"
   ],
   "module": "./dist/index.js"
 }

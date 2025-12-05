@@ -60,9 +60,9 @@
   },
   "lint-staged": {
     "**/*.{ts,tsx}": [
-      "prettier --config .prettierrc --write --ignore-unknown",
+      "prettier --write --ignore-unknown",
       "eslint --cache --fix"
     ],
-    "*.md": "prettier --config .prettierrc --write"
+    "*.md": "prettier --write"
   }
 }
