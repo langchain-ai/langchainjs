@@ -656,7 +656,7 @@ export abstract class BaseChatGoogle<
 
     if (method === "jsonMode") {
       console.warn(
-        `"jsonMode" is not supported for Anthropic models. Falling back to "jsonSchema".`
+        `"jsonMode" is not supported for Google models. Falling back to "jsonSchema".`
       );
       method = "jsonSchema";
     }
