@@ -145,19 +145,33 @@ export class ProviderStrategy<T = unknown> {
   // @ts-expect-error - _schemaType is used only for type inference
   private _schemaType?: T;
 
-  private constructor(public readonly schema: Record<string, unknown>) {}
+  private constructor(
+    /**
+     * The schema to use for the provider strategy
+     */
+    public readonly schema: Record<string, unknown>,
+    /**
+     * Whether to use strict mode for the provider strategy
+     */
+    public readonly strict: boolean = false
+  ) {}
 
-  static fromSchema<T>(schema: InteropZodType<T>): ProviderStrategy<T>;
+  static fromSchema<T>(
+    schema: InteropZodType<T>,
+    strict?: boolean
+  ): ProviderStrategy<T>;
 
   static fromSchema(
-    schema: Record<string, unknown>
+    schema: Record<string, unknown>,
+    strict?: boolean
   ): ProviderStrategy<Record<string, unknown>>;
 
   static fromSchema<T = unknown>(
-    schema: InteropZodType<T> | Record<string, unknown>
+    schema: InteropZodType<T> | Record<string, unknown>,
+    strict: boolean = false
   ): ProviderStrategy<T> | ProviderStrategy<Record<string, unknown>> {
     const asJsonSchema = toJsonSchema(schema);
-    return new ProviderStrategy(asJsonSchema) as
+    return new ProviderStrategy(asJsonSchema, strict) as
       | ProviderStrategy<T>
       | ProviderStrategy<Record<string, unknown>>;
   }
@@ -393,12 +407,54 @@ export function toolStrategy(
 ): TypedToolStrategy<Record<string, unknown>>;
 
 /**
- * Define how to transform the response format from a tool call.
+ * Creates a tool strategy for structured output using function calling.
  *
- * @param responseFormat - The response format to transform
- * @param options - The options to use for the transformation
- * @param options.handleError - Whether to handle errors from the tool call
- * @returns The transformed response format
+ * This function configures structured output by converting schemas into function tools that
+ * the model calls. Unlike `providerStrategy`, which uses native JSON schema support,
+ * `toolStrategy` works with any model that supports function calling, making it more
+ * widely compatible across providers and model versions.
+ *
+ * The model will call a function with arguments matching your schema, and the agent will
+ * extract and validate the structured output from the tool call. This approach is automatically
+ * used when your model doesn't support native JSON schema output.
+ *
+ * @param responseFormat - The schema(s) to enforce. Can be a single Zod schema, an array of Zod schemas,
+ *   a JSON schema object, or an array of JSON schema objects.
+ * @param options - Optional configuration for the tool strategy
+ * @param options.handleError - How to handle errors when the model calls multiple structured output tools
+ *   or when the output doesn't match the schema. Defaults to `true` (auto-retry). Can be `false` (throw),
+ *   a `string` (retry with message), or a `function` (custom handler).
+ * @param options.toolMessageContent - Custom message content to include in conversation history
+ *   when structured output is generated via tool call
+ * @returns A `TypedToolStrategy` instance that can be used as the `responseFormat` in `createAgent`
+ *
+ * @example
+ * ```ts
+ * import { toolStrategy, createAgent } from "langchain";
+ * import { z } from "zod";
+ *
+ * const agent = createAgent({
+ *   model: "gpt-3.5-turbo",
+ *   responseFormat: toolStrategy(
+ *     z.object({
+ *       answer: z.string(),
+ *       confidence: z.number().min(0).max(1),
+ *     })
+ *   ),
+ * });
+ * ```
+ *
+ * @example
+ * ```ts
+ * // Multiple schemas - model can choose which one to use
+ * const agent = createAgent({
+ *   model: "gpt-3.5-turbo",
+ *   responseFormat: toolStrategy([
+ *     z.object({ name: z.string(), age: z.number() }),
+ *     z.object({ email: z.string(), phone: z.string() }),
+ *   ]),
+ * });
+ * ```
  */
 export function toolStrategy(
   responseFormat:
@@ -411,17 +467,71 @@ export function toolStrategy(
   return transformResponseFormat(responseFormat, options) as TypedToolStrategy;
 }
 
+/**
+ * Creates a provider strategy for structured output using native JSON schema support.
+ *
+ * This function is used to configure structured output for agents when the underlying model
+ * supports native JSON schema output (e.g., OpenAI's `gpt-4o`, `gpt-4o-mini`, and newer models).
+ * Unlike `toolStrategy`, which uses function calling to extract structured output, `providerStrategy`
+ * leverages the provider's native structured output capabilities, resulting in more efficient
+ * and reliable schema enforcement.
+ *
+ * When used with a model that supports JSON schema output, the model will return responses
+ * that directly conform to the provided schema without requiring tool calls. This is the
+ * recommended approach for structured output when your model supports it.
+ *
+ * @param responseFormat - The schema to enforce, either a Zod schema or a JSON schema object
+ * @param strict - Whether to request strict provider-side schema enforcement. When `true`,
+ *   the provider will strictly enforce the schema and reject responses that don't match.
+ *   Defaults to `false`.
+ * @returns A `ProviderStrategy` instance that can be used as the `responseFormat` in `createAgent`
+ *
+ * @example
+ * ```ts
+ * import { providerStrategy, createAgent } from "langchain";
+ * import { z } from "zod";
+ *
+ * const agent = createAgent({
+ *   model: "gpt-4o",
+ *   responseFormat: providerStrategy(
+ *     z.object({
+ *       answer: z.string().describe("The answer to the question"),
+ *       confidence: z.number().min(0).max(1),
+ *     })
+ *   ),
+ * });
+ * ```
+ *
+ * @example
+ * ```ts
+ * // Using strict mode for stricter schema enforcement
+ * const agent = createAgent({
+ *   model: "gpt-4o",
+ *   responseFormat: providerStrategy(
+ *     z.object({
+ *       name: z.string(),
+ *       age: z.number(),
+ *     }),
+ *     true // Enable strict mode
+ *   ),
+ * });
+ * ```
+ */
 export function providerStrategy<T extends InteropZodType<any>>(
-  responseFormat: T
+  responseFormat: T,
+  strict?: boolean
 ): ProviderStrategy<T extends InteropZodType<infer U> ? U : never>;
 export function providerStrategy(
-  responseFormat: JsonSchemaFormat
+  responseFormat: JsonSchemaFormat,
+  strict?: boolean
 ): ProviderStrategy<Record<string, unknown>>;
 export function providerStrategy(
-  responseFormat: InteropZodType<any> | JsonSchemaFormat
+  responseFormat: InteropZodType<any> | JsonSchemaFormat,
+  strict: boolean = false
 ): ProviderStrategy<any> {
   return ProviderStrategy.fromSchema(
-    responseFormat as any
+    responseFormat as any,
+    strict
   ) as ProviderStrategy<any>;
 }
 

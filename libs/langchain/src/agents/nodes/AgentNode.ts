@@ -841,7 +841,7 @@ export class AgentNode<
           structuredResponseFormat.strategy.schema
         ),
         schema: structuredResponseFormat.strategy.schema,
-        strict: true,
+        strict: structuredResponseFormat.strategy.strict,
       };
 
       Object.assign(options, {
