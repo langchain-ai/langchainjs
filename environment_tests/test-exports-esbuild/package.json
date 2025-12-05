@@ -24,7 +24,7 @@
     "@tsconfig/recommended": "^1.0.2",
     "@types/node": "^18.15.11",
     "cheerio": "^1.1.2",
-    "esbuild": "^0.17.18",
+    "esbuild": "^0.25.0",
     "langchain": "workspace:*",
     "typeorm": "^0.3.25",
     "typescript": "^5.0.0"
