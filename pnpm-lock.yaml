@@ -1632,9 +1632,6 @@ importers:
       eslint:
         specifier: ^9.34.0
         version: 9.39.1(jiti@2.6.1)
-      eventemitter3:
-        specifier: ^5.0.1
-        version: 5.0.1
       ml-matrix:
         specifier: ^6.10.4
         version: 6.12.1

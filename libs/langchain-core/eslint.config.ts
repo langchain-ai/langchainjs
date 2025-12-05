@@ -6,13 +6,7 @@ import { langchainConfig, type ConfigArray } from "@langchain/eslint";
  * They only need to be devDependencies, not runtime dependencies.
  * Listed here as core-modules so import/no-extraneous-dependencies ignores them.
  */
-const bundledPackages = [
-  "p-retry",
-  "p-queue",
-  "ansi-styles",
-  "camelcase",
-  "decamelize",
-];
+const bundledPackages = ["p-retry", "ansi-styles", "camelcase", "decamelize"];
 
 const config: ConfigArray = [
   ...langchainConfig,
