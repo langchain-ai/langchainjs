@@ -37,9 +37,17 @@ export type {
   FileSearchHybridSearchWeights,
 } from "./fileSearch.js";
 
+import { imageGeneration } from "./imageGeneration.js";
+export type {
+  ImageGenerationTool,
+  ImageGenerationOptions,
+  ImageGenerationInputMask,
+} from "./imageGeneration.js";
+
 export const tools = {
   webSearch,
   mcp,
   codeInterpreter,
   fileSearch,
+  imageGeneration,
 };
