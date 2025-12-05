@@ -13,6 +13,7 @@ const server = new McpServer(
 );
 
 // Add test tools that capture request metadata
+// @ts-expect-error - Type instantiation is excessively deep with zod/v3 generics
 server.tool(
   "test_tool",
   "A test tool that echoes input and metadata",
