@@ -13,12 +13,22 @@
       "@langchain/anthropic/*": ["../providers/langchain-anthropic/src/*"],
       "@langchain/aws": ["../providers/langchain-aws/src"],
       "@langchain/aws/*": ["../providers/langchain-aws/src/*"],
-      "@langchain/azure-cosmosdb": ["../providers/langchain-azure-cosmosdb/src"],
-      "@langchain/azure-cosmosdb/*": ["../providers/langchain-azure-cosmosdb/src/*"],
-      "@langchain/azure-dynamic-sessions": ["../providers/langchain-azure-dynamic-sessions/src"],
-      "@langchain/azure-dynamic-sessions/*": ["../providers/langchain-azure-dynamic-sessions/src/*"],
+      "@langchain/azure-cosmosdb": [
+        "../providers/langchain-azure-cosmosdb/src"
+      ],
+      "@langchain/azure-cosmosdb/*": [
+        "../providers/langchain-azure-cosmosdb/src/*"
+      ],
+      "@langchain/azure-dynamic-sessions": [
+        "../providers/langchain-azure-dynamic-sessions/src"
+      ],
+      "@langchain/azure-dynamic-sessions/*": [
+        "../providers/langchain-azure-dynamic-sessions/src/*"
+      ],
       "@langchain/baidu-qianfan": ["../providers/langchain-baidu-qianfan/src"],
-      "@langchain/baidu-qianfan/*": ["../providers/langchain-baidu-qianfan/src/*"],
+      "@langchain/baidu-qianfan/*": [
+        "../providers/langchain-baidu-qianfan/src/*"
+      ],
       "@langchain/cloudflare": ["../providers/langchain-cloudflare/src"],
       "@langchain/cloudflare/*": ["../providers/langchain-cloudflare/src/*"],
       "@langchain/cohere": ["../providers/langchain-cohere/src"],
@@ -27,16 +37,32 @@
       "@langchain/deepseek/*": ["../providers/langchain-deepseek/src/*"],
       "@langchain/exa": ["../providers/langchain-exa/src"],
       "@langchain/exa/*": ["../providers/langchain-exa/src/*"],
-      "@langchain/google-cloud-sql-pg": ["../providers/langchain-google-cloud-sql-pg/src"],
-      "@langchain/google-cloud-sql-pg/*": ["../providers/langchain-google-cloud-sql-pg/src/*"],
+      "@langchain/google-cloud-sql-pg": [
+        "../providers/langchain-google-cloud-sql-pg/src"
+      ],
+      "@langchain/google-cloud-sql-pg/*": [
+        "../providers/langchain-google-cloud-sql-pg/src/*"
+      ],
       "@langchain/google-common": ["../providers/langchain-google-common/src"],
-      "@langchain/google-common/*": ["../providers/langchain-google-common/src/*"],
+      "@langchain/google-common/*": [
+        "../providers/langchain-google-common/src/*"
+      ],
       "@langchain/google-genai": ["../providers/langchain-google-genai/src"],
-      "@langchain/google-genai/*": ["../providers/langchain-google-genai/src/*"],
-      "@langchain/google-vertexai": ["../providers/langchain-google-vertexai/src"],
-      "@langchain/google-vertexai/*": ["../providers/langchain-google-vertexai/src/*"],
-      "@langchain/google-vertexai-web": ["../providers/langchain-google-vertexai-web/src"],
-      "@langchain/google-vertexai-web/*": ["../providers/langchain-google-vertexai-web/src/*"],
+      "@langchain/google-genai/*": [
+        "../providers/langchain-google-genai/src/*"
+      ],
+      "@langchain/google-vertexai": [
+        "../providers/langchain-google-vertexai/src"
+      ],
+      "@langchain/google-vertexai/*": [
+        "../providers/langchain-google-vertexai/src/*"
+      ],
+      "@langchain/google-vertexai-web": [
+        "../providers/langchain-google-vertexai-web/src"
+      ],
+      "@langchain/google-vertexai-web/*": [
+        "../providers/langchain-google-vertexai-web/src/*"
+      ],
       "@langchain/groq": ["../providers/langchain-groq/src"],
       "@langchain/groq/*": ["../providers/langchain-groq/src/*"],
       "@langchain/mistralai": ["../providers/langchain-mistralai/src"],
