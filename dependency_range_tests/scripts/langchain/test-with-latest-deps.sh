@@ -13,6 +13,9 @@ shopt -s extglob
 # avoid copying build artifacts from the host
 cp -r ../langchain/!(node_modules|dist|dist-cjs|dist-esm|build|.next|.turbo) ./
 
+# Create mock tsconfig.json files without project references
+bash /scripts/create-mock-tsconfigs.sh . /app
+
 mkdir -p /updater_script
 cp -r /scripts/langchain/node/!(node_modules|dist|dist-cjs|dist-esm|build|.next|.turbo) /updater_script/
 

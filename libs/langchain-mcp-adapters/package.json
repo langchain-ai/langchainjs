@@ -62,6 +62,7 @@
     "@langchain/eslint": "workspace:*",
     "@langchain/langgraph": "^1.0.0",
     "@langchain/openai": "workspace:*",
+    "@langchain/tsconfig": "workspace:*",
     "@tsconfig/recommended": "^1.0.10",
     "@types/debug": "^4.1.12",
     "@types/express": "^5.0.3",

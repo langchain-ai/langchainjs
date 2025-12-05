@@ -58,6 +58,7 @@ export function getBuildConfig(options?: Partial<BuildOptions>): BuildOptions {
     dts: {
       parallel: true,
       tsgo: true,
+      build: true,
     },
     sourcemap: true,
     unbundle: true,
