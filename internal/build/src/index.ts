@@ -99,17 +99,17 @@ export function getBuildConfig(options?: Partial<BuildOptions>): BuildOptions {
         );
       },
     },
-    // attw: {
-    //   profile: "node16",
-    //   level: "error",
-    // },
-    // publint: {
-    //   level: "error",
-    //   strict: true,
-    // },
-    // unused: {
-    //   level: "error",
-    // },
+    attw: {
+      profile: "node16",
+      level: "error",
+    },
+    publint: {
+      level: "error",
+      strict: true,
+    },
+    unused: {
+      level: "error",
+    },
     ignoreWatch: [`.turbo`, `dist`, `node_modules`],
     ...options,
   };
