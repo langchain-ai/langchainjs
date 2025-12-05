@@ -29,9 +29,9 @@ import {
   BaseChatModelsTests,
   BaseChatModelsTestsFields,
   RecordStringAny,
-} from "../base.js";
-import { TestCallbackHandler } from "../utils.js";
-import { isContentBlock } from "../utils/types.js";
+} from "../base.ts";
+import { TestCallbackHandler } from "../utils.ts";
+import { isContentBlock } from "../utils/types.ts";
 
 // Placeholder data for content block tests
 const TEST_IMAGE_URL =
