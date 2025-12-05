@@ -4,6 +4,9 @@
   "description": "Shared TypeScript configuration for LangChain.js packages",
   "license": "MIT",
   "type": "module",
+  "scripts": {
+    "build": "exit 0"
+  },
   "exports": {
     "./base.json": "./base.json"
   },
