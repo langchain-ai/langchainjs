@@ -37,7 +37,7 @@
     "tools"
   ],
   "dependencies": {
-    "@modelcontextprotocol/sdk": "^1.18.2",
+    "@modelcontextprotocol/sdk": "~1.19.1",
     "debug": "^4.4.3",
     "zod": "^3.25.76 || ^4"
   },
