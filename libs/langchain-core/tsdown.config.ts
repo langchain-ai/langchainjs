@@ -7,6 +7,11 @@ import {
 } from "@langchain/build";
 
 export default getBuildConfig({
+  /**
+   * bundling these packages into the output for CJS compatibility
+   * they only need to be devDependencies, not runtime dependencies
+   */
+  noExternal: [`ansi-styles`, `camelcase`, `decamelize`, `p-retry`],
   entry: [
     "./src/index.ts",
     "./src/agents.ts",
