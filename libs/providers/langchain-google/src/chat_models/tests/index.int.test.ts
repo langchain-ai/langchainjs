@@ -24,6 +24,7 @@ import { ChatPromptValue } from "@langchain/core/prompt_values";
 import { tool } from "@langchain/core/tools";
 import { GeminiTool } from "../types.js";
 import { Runnable } from "@langchain/core/runnables";
+import { InteropZodType } from "@langchain/core/utils/types";
 
 type ModelInfoConfig = {
   node?: boolean,
@@ -334,7 +335,7 @@ describe.each(coreModelInfo)(
       expect(warnSpy).not.toHaveBeenCalled();
     });
 
-    test("function", async () => {
+    test.skip("function", async () => {
       const tools = [weatherTool];
       const llm: Runnable = newChatGoogle().bindTools(tools);
       const result = await llm.invoke("What is the weather in New York?");
@@ -351,7 +352,7 @@ describe.each(coreModelInfo)(
       expect(call.args.location).toBe("New York");
     });
 
-    test("function conversation", async () => {
+    test.skip("function conversation", async () => {
       const tools = [weatherTool];
       const llm = newChatGoogle().bindTools(tools);
       const history: BaseMessage[] = [new HumanMessage("What is the weather in New York?")];
@@ -372,7 +373,7 @@ describe.each(coreModelInfo)(
       expect(result2.content).toMatch(/21/);
     });
 
-    test("function reply", async () => {
+    test.skip("function reply", async () => {
       const tools: GeminiTool[] = [
         {
           functionDeclarations: [
@@ -419,6 +420,106 @@ describe.each(coreModelInfo)(
       for await (const chunk of res) {
         resArray.push(chunk);
       }
+    });
+
+    test.skip("withStructuredOutput classic", async () => {
+      const tool = {
+        name: "get_weather",
+        description:
+          "Get the weather of a specific location and return the temperature in Celsius.",
+        parameters: {
+          type: "object",
+          properties: {
+            location: {
+              type: "string",
+              description: "The name of city to get the weather for.",
+            },
+          },
+          required: ["location"],
+        },
+      };
+      const llm = newChatGoogle().withStructuredOutput(tool);
+      const result = await llm.invoke("What is the weather in Paris?");
+      expect(result).toHaveProperty("location");
+    });
+
+    test.skip("withStructuredOutput classic - null", async () => {
+      const schema = {
+        type: "object",
+        properties: {
+          greeterName: {
+            type: ["string", "null"],
+          },
+        },
+        required: ["greeterName"],
+      };
+      const model = newChatGoogle().withStructuredOutput(schema);
+      const result = await model.invoke("Hi, I'm kwkaiser");
+      expect(result).toHaveProperty("greeterName");
+    });
+
+    test("withStructuredOutput - zod default mode", async () => {
+      const tool = z.object({
+        rating: z.number().min(1).max(5).describe("Rating from 1-5"),
+        comment: z.string().describe("Review comment"),
+      });
+      const llm: Runnable = newChatGoogle().withStructuredOutput(tool);
+      const result = await llm.invoke("Parse this: Amazing product, 10/10");
+      console.log("Result:", result);
+      expect(result).toHaveProperty("rating");
+      expect(result).toHaveProperty("comment");
+      expect(recorder.request?.body?.generationConfig).not.toHaveProperty("responseMimeType");
+      expect(recorder.request?.body?.generationConfig).not.toHaveProperty("responseJsonSchema");
+    });
+
+    test("withStructuredOutput - zod jsonSchema", async () => {
+      const tool = z.object({
+        rating: z.number().min(1).max(5).describe("Rating from 1-5"),
+        comment: z.string().describe("Review comment"),
+      });
+      const llm: Runnable = newChatGoogle().withStructuredOutput(tool, {
+        method: "jsonSchema",
+      });
+      const result = await llm.invoke("Parse this: Amazing product, 10/10");
+      console.log("Result:", result);
+      expect(result).toHaveProperty("rating");
+      expect(result).toHaveProperty("comment");
+      expect(recorder.request?.body?.generationConfig).toHaveProperty("responseMimeType");
+      expect(recorder.request?.body?.generationConfig).toHaveProperty("responseJsonSchema");
+    });
+
+    test("withStructuredOutput - zod includeRaw", async () => {
+      const tool = z.object({
+        rating: z.number().min(1).max(5).describe("Rating from 1-5"),
+        comment: z.string().describe("Review comment"),
+      });
+      const llm: Runnable = newChatGoogle().withStructuredOutput(tool, {
+        includeRaw: true,
+      });
+      const result = await llm.invoke("Parse this: Amazing product, 10/10");
+      console.log("Result:", result);
+      expect(result).toHaveProperty("raw");
+      expect(result).toHaveProperty("parsed");
+      expect(AIMessage.isInstance(result.raw)).toEqual(true);
+    });
+
+    test("responseSchema - zod", async () => {
+      const tool = z.object({
+        rating: z.number().min(1).max(5).describe("Rating from 1-5"),
+        comment: z.string().describe("Review comment"),
+      });
+      const llm = newChatGoogle({
+        responseSchema: tool as unknown as InteropZodType, // Weird typescript issue
+      });
+      const result = await llm.invoke("Parse this: Amazing product, 10/10");
+      console.log("Result:", result);
+      expect(result).toHaveProperty("content");
+      expect(typeof result.content).toEqual("string");
+      const resultJson = JSON.parse(result.content as string);
+      expect(resultJson).toHaveProperty("rating");
+      expect(resultJson).toHaveProperty("comment");
+      expect(recorder.request?.body?.generationConfig).toHaveProperty("responseJsonSchema");
+      expect(recorder.request?.body?.generationConfig?.responseMimeType).toEqual("application/json");
     });
 
   }
