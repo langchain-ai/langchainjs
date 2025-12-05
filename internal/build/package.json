@@ -9,8 +9,8 @@
     "build": "exit 0",
     "lint": "eslint --cache src/",
     "lint:fix": "eslint --cache src/ --fix",
-    "format": "prettier --config .prettierrc --write \"src\"",
-    "format:check": "prettier --config .prettierrc --check \"src\""
+    "format": "prettier --write \"src\"",
+    "format:check": "prettier --check \"src\""
   },
   "dependencies": {
     "@arethetypeswrong/core": "^0.18.2",

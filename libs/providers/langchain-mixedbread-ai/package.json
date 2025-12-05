@@ -25,8 +25,8 @@
     "test:int": "vitest run --mode int",
     "test:standard:int": "vitest run --mode standard-int",
     "test:standard": "pnpm pnpm test:standard:int",
-    "format": "prettier --config .prettierrc --write \"src\"",
-    "format:check": "prettier --config .prettierrc --check \"src\""
+    "format": "prettier --write \"src\"",
+    "format:check": "prettier --check \"src\""
   },
   "dependencies": {
     "@mixedbread-ai/sdk": "^2.2.3"

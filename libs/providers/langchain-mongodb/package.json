@@ -23,8 +23,8 @@
     "clean": "rm -rf .turbo dist/",
     "test:watch": "vitest",
     "test:int": "vitest run --mode int",
-    "format": "prettier --config .prettierrc --write \"src\"",
-    "format:check": "prettier --config .prettierrc --check \"src\""
+    "format": "prettier --write \"src\"",
+    "format:check": "prettier --check \"src\""
   },
   "dependencies": {
     "mongodb": "^6.20.0"

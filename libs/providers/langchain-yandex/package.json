@@ -23,8 +23,8 @@
     "clean": "rm -rf .turbo dist/",
     "test:watch": "vitest --watch",
     "test:int": "vitest --mode int",
-    "format": "prettier --config .prettierrc --write \"src\"",
-    "format:check": "prettier --config .prettierrc --check \"src\""
+    "format": "prettier --write \"src\"",
+    "format:check": "prettier --check \"src\""
   },
   "peerDependencies": {
     "@langchain/core": "^1.0.0"

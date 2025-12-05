@@ -23,8 +23,8 @@
     "clean": "rm -rf .turbo dist/",
     "test": "vitest --run",
     "test:watch": "vitest --watch",
-    "format": "prettier --config .prettierrc --write \"src\"",
-    "format:check": "prettier --config .prettierrc --check \"src\""
+    "format": "prettier --write \"src\"",
+    "format:check": "prettier --check \"src\""
   },
   "dependencies": {
     "js-tiktoken": "^1.0.12"
