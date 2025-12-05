@@ -5,7 +5,7 @@ import { tool } from "@langchain/core/tools";
 import { HumanMessage, AIMessage } from "@langchain/core/messages";
 import z from "zod/v3";
 
-import { createAgent, toolStrategy } from "../index.js";
+import { createAgent, toolStrategy, providerStrategy } from "../index.js";
 import type { JsonSchemaFormat } from "../responses.js";
 
 import responsesSpec from "./specifications/responses.json";
@@ -178,6 +178,43 @@ describe("structured output handling", () => {
       expect(res2.messages.at(-1)?.content).toContain(
         'Returning structured response: {"foo":"'
       );
+    });
+  });
+
+  describe("providerStrategy", () => {
+    it("should support native structured output for newer Anthropic models", async () => {
+      const model = new ChatAnthropic({
+        model: "claude-sonnet-4-5-20250929",
+        temperature: 0, // Make it deterministic
+      });
+      const captialCatalogTool = tool(
+        () => {
+          return "Paris";
+        },
+        {
+          name: "capital_catalog",
+          description: "Get the capital of a country",
+          schema: z.object({
+            location: z.string(),
+          }),
+        }
+      );
+      const agent = createAgent({
+        model,
+        tools: [captialCatalogTool],
+        responseFormat: providerStrategy(
+          z.object({
+            answer: z.string().describe("The capital of the country in 1 word"),
+          })
+        ),
+      });
+      const result = await agent.invoke({
+        messages: [new HumanMessage("What is the capital of France?")],
+      });
+      expect(result.structuredResponse.answer).toBe("Paris");
+      expect(result.messages.length).toBe(4);
+      expect(result.messages.at(-1)?.content).toContain('{"answer": "Paris"}');
+      expect((result.messages.at(-1) as AIMessage).tool_calls?.length).toBe(0);
     });
   });
 });

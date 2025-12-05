@@ -34,6 +34,123 @@ import { getDebugLog } from "./logging.js";
 const debugLog = getDebugLog("tools");
 
 /**
+ * JSON Schema type definitions for dereferencing $defs.
+ */
+type JsonSchemaObject = {
+  type?: string;
+  properties?: Record<string, JsonSchemaObject>;
+  items?: JsonSchemaObject | JsonSchemaObject[];
+  additionalProperties?: boolean | JsonSchemaObject;
+  $ref?: string;
+  $defs?: Record<string, JsonSchemaObject>;
+  definitions?: Record<string, JsonSchemaObject>;
+  allOf?: JsonSchemaObject[];
+  anyOf?: JsonSchemaObject[];
+  oneOf?: JsonSchemaObject[];
+  not?: JsonSchemaObject;
+  if?: JsonSchemaObject;
+  then?: JsonSchemaObject;
+  else?: JsonSchemaObject;
+  required?: string[];
+  description?: string;
+  default?: unknown;
+  enum?: unknown[];
+  const?: unknown;
+  [key: string]: unknown;
+};
+
+/**
+ * Dereferences $ref pointers in a JSON Schema by inlining the definitions from $defs.
+ * This is necessary because some JSON Schema validators (like @cfworker/json-schema)
+ * don't automatically resolve $ref references to $defs.
+ *
+ * @param schema - The JSON Schema to dereference
+ * @returns A new schema with all $ref pointers resolved
+ */
+function dereferenceJsonSchema(schema: JsonSchemaObject): JsonSchemaObject {
+  const definitions = schema.$defs ?? schema.definitions ?? {};
+
+  /**
+   * Recursively resolve $ref pointers in the schema.
+   * Tracks visited refs to prevent infinite recursion with circular references.
+   */
+  function resolveRefs(
+    obj: JsonSchemaObject,
+    visitedRefs: Set<string> = new Set()
+  ): JsonSchemaObject {
+    if (typeof obj !== "object" || obj === null) {
+      return obj;
+    }
+
+    // Handle $ref
+    if (obj.$ref && typeof obj.$ref === "string") {
+      const refPath = obj.$ref;
+
+      // Only handle local references to $defs or definitions
+      const defsMatch = refPath.match(/^#\/\$defs\/(.+)$/);
+      const definitionsMatch = refPath.match(/^#\/definitions\/(.+)$/);
+      const match = defsMatch || definitionsMatch;
+
+      if (match) {
+        const defName = match[1];
+        const definition = definitions[defName];
+
+        if (definition) {
+          // Check for circular reference
+          if (visitedRefs.has(refPath)) {
+            // Return a placeholder for circular refs to avoid infinite loop
+            debugLog(
+              `WARNING: Circular reference detected for ${refPath}, using empty object`
+            );
+            return { type: "object" };
+          }
+
+          // Track this ref as visited
+          const newVisitedRefs = new Set(visitedRefs);
+          newVisitedRefs.add(refPath);
+
+          // Merge the resolved definition with any other properties from the original object
+          // (excluding $ref itself)
+          const { $ref: _, ...restOfObj } = obj;
+          const resolvedDef = resolveRefs(definition, newVisitedRefs);
+          return { ...resolvedDef, ...restOfObj };
+        } else {
+          debugLog(`WARNING: Could not resolve $ref: ${refPath}`);
+        }
+      }
+      // For non-local refs, return as-is
+      return obj;
+    }
+
+    // Recursively process all properties
+    const result: JsonSchemaObject = {};
+
+    for (const [key, value] of Object.entries(obj)) {
+      // Skip $defs and definitions as they're no longer needed after dereferencing
+      if (key === "$defs" || key === "definitions") {
+        continue;
+      }
+
+      if (Array.isArray(value)) {
+        result[key] = value.map((item) =>
+          typeof item === "object" && item !== null
+            ? resolveRefs(item as JsonSchemaObject, visitedRefs)
+            : item
+        );
+      } else if (typeof value === "object" && value !== null) {
+        result[key] = resolveRefs(value as JsonSchemaObject, visitedRefs);
+      } else {
+        result[key] = value;
+      }
+    }
+
+    return result;
+  }
+
+  return resolveRefs(schema);
+}
+
+/**
  * MCP instance is either a Client or a MCPClient.
  *
  * `MCPClient`: is the base instance from the `@modelcontextprotocol/sdk` package.
@@ -675,10 +792,16 @@ export async function loadMcpTools(
               tool.inputSchema.properties = {};
             }
 
+            // Dereference $defs/$ref in the schema to support Pydantic v2 schemas
+            // and other JSON schemas that use $defs for nested type definitions
+            const dereferencedSchema = dereferenceJsonSchema(
+              tool.inputSchema as JsonSchemaObject
+            );
+
             const dst = new DynamicStructuredTool({
               name: `${toolNamePrefix}${tool.name}`,
               description: tool.description || "",
-              schema: tool.inputSchema,
+              schema: dereferencedSchema,
               responseFormat: "content_and_artifact",
               metadata: { annotations: tool.annotations },
               defaultConfig: defaultToolTimeout

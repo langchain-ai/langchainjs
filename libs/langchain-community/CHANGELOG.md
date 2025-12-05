@@ -1,5 +1,17 @@
 # @langchain/community
 
+## 1.0.7
+
+### Patch Changes
+
+- [#9436](https://github.com/langchain-ai/langchainjs/pull/9436) [`ca32dd7`](https://github.com/langchain-ai/langchainjs/commit/ca32dd76f3f77704da53e38ccb22215dd60aecd2) Thanks [@sinedied](https://github.com/sinedied)! - Fix possible race condition in FileSystemChatMessageHistory
+
+- [#8333](https://github.com/langchain-ai/langchainjs/pull/8333) [`dc396c4`](https://github.com/langchain-ai/langchainjs/commit/dc396c417a07dc1748099c5c71f47ff7e749796a) Thanks [@ejscribner](https://github.com/ejscribner)! - community[minor]: Create CouchbaseQueryVectorStore
+
+- Updated dependencies []:
+  - @langchain/classic@1.0.5
+  - @langchain/openai@1.1.3
+
 ## 1.0.6
 
 ### Patch Changes
