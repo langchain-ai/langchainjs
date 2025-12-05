@@ -9,23 +9,20 @@
   "engines": {
     "node": ">=20"
   },
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
   "repository": {
     "type": "git",
     "url": "git@github.com:langchain-ai/langchainjs.git"
   },
   "homepage": "https://github.com/langchain-ai/langchainjs/tree/main/libs/langchain-standard-tests/",
   "scripts": {
-    "build": "turbo build:compile --filter @langchain/standard-tests --output-logs new-only",
-    "build:compile": "tsdown",
+    "build": "exit 0",
     "lint:eslint": "eslint --cache src/",
     "lint:dpdm": "dpdm --skip-dynamic-imports circular --exit-code circular:1 --no-warning --no-tree src/*.ts src/**/*.ts",
     "lint": "pnpm lint:eslint && pnpm lint:dpdm",
     "lint:fix": "pnpm lint:eslint --fix && pnpm lint:dpdm",
-    "clean": "rm -rf .turbo dist/",
-    "test": "NODE_OPTIONS=--experimental-vm-modules jest --testPathIgnorePatterns=\\.int\\.test.ts --testTimeout 30000 --maxWorkers=50%",
-    "test:watch": "NODE_OPTIONS=--experimental-vm-modules jest --watch --testPathIgnorePatterns=\\.int\\.test.ts",
-    "test:single": "NODE_OPTIONS=--experimental-vm-modules pnpm run jest --config jest.config.cjs --testTimeout 100000",
-    "test:int": "NODE_OPTIONS=--experimental-vm-modules jest --testPathPattern=\\.int\\.test.ts --testTimeout 100000 --maxWorkers=50%",
+    "clean": "rm -rf .turbo",
     "format": "prettier --write \"src\"",
     "format:check": "prettier --check \"src\""
   },
@@ -37,14 +34,10 @@
   "devDependencies": {
     "@langchain/eslint": "workspace:*",
     "@tsconfig/recommended": "^1.0.3",
-    "dotenv": "^16.3.1",
     "dpdm": "^3.14.0",
     "eslint": "^9.34.0",
-    "jest": "^29.5.0",
     "prettier": "^2.8.3",
-    "rollup": "^4.5.2",
-    "typescript": "~5.8.3",
-    "vitest": "^3.2.4"
+    "typescript": "~5.8.3"
   },
   "peerDependencies": {
     "vitest": "^3.2.4"
@@ -54,42 +47,21 @@
       "optional": true
     }
   },
-  "main": "./dist/index.cjs",
-  "types": "./dist/index.d.cts",
   "exports": {
     ".": {
-      "input": "./src/index.ts",
-      "require": {
-        "types": "./dist/index.d.cts",
-        "default": "./dist/index.cjs"
-      },
-      "import": {
-        "types": "./dist/index.d.ts",
-        "default": "./dist/index.js"
-      }
+      "types": "./src/index.ts",
+      "import": "./src/index.ts"
     },
     "./vitest": {
-      "input": "./src/vitest.ts",
-      "require": {
-        "types": "./dist/vitest.d.cts",
-        "default": "./dist/vitest.cjs"
-      },
-      "import": {
-        "types": "./dist/vitest.d.ts",
-        "default": "./dist/vitest.js"
-      }
+      "types": "./src/vitest.ts",
+      "import": "./src/vitest.ts"
     },
     "./package.json": "./package.json"
   },
   "files": [
-    "dist/",
+    "src/",
     "CHANGELOG.md",
     "README.md",
-    "LICENSE",
-    "vitest.d.cts",
-    "vitest.cjs",
-    "vitest.d.ts",
-    "vitest.js"
-  ],
-  "module": "./dist/index.js"
+    "LICENSE"
+  ]
 }
