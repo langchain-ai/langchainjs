@@ -22,9 +22,9 @@ importers:
       '@langchain/build':
         specifier: workspace:*
         version: link:internal/build
-      '@langchain/prettier-config':
+      '@langchain/tsconfig':
         specifier: workspace:*
-        version: link:internal/prettier
+        version: link:internal/tsconfig
       '@tsconfig/recommended':
         specifier: ^1.0.2
         version: 1.0.13
@@ -559,8 +559,6 @@ importers:
         specifier: ^1.0.0
         version: 1.6.1(@types/node@20.19.25)(jsdom@22.1.0(bufferutil@4.0.9))(terser@5.44.1)
 
-  internal/prettier: {}
-
   internal/test-helpers:
     dependencies:
       '@jest/globals':
@@ -576,6 +574,8 @@ importers:
       prettier:
         specifier: ^3.6.1
         version: 3.7.3
+
+  internal/tsconfig: {}
 
   libs/create-langchain-integration:
     devDependencies:

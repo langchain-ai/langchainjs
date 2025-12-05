@@ -1,24 +1,16 @@
 {
-  "extends": "@tsconfig/recommended",
+  "extends": "@langchain/tsconfig/base.json",
   "compilerOptions": {
+    "rootDir": "src",
     "outDir": "dist",
-    "rootDir": "./src",
-    "target": "ES2022",
-    "lib": ["ES2022", "ES2022.Object", "DOM"],
-    "module": "NodeNext",
-    "moduleResolution": "Node16",
-    "esModuleInterop": true,
-    "declaration": true,
-    "noImplicitReturns": true,
-    "noFallthroughCasesInSwitch": true,
-    "noUnusedLocals": true,
-    "noUnusedParameters": true,
-    "useDefineForClassFields": true,
-    "strictPropertyInitialization": false,
-    "resolveJsonModule": true,
-    "allowJs": true,
-    "strict": true
+    "baseUrl": ".",
+    "paths": {
+      "@langchain/core": ["../langchain-core/src"],
+      "@langchain/core/*": ["../langchain-core/src/*"],
+      "@langchain/openai": ["../providers/langchain-openai/src"],
+      "@langchain/openai/*": ["../providers/langchain-openai/src/*"]
+    }
   },
   "include": ["src/**/*"],
-  "exclude": ["node_modules", "dist", "docs"]
+  "exclude": ["dist", "node_modules"]
 }

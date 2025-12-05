@@ -98,7 +98,15 @@
     "dist/",
     "CHANGELOG.md",
     "README.md",
-    "LICENSE"
+    "LICENSE",
+    "utils.d.cts",
+    "utils.cjs",
+    "utils.d.ts",
+    "utils.js",
+    "types.d.cts",
+    "types.cjs",
+    "types.d.ts",
+    "types.js"
   ],
   "module": "./dist/index.js"
 }

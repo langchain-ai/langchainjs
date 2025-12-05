@@ -1,23 +1,14 @@
 {
-  "extends": "@tsconfig/recommended",
+  "extends": "@langchain/tsconfig/base.json",
   "compilerOptions": {
-    "target": "ES2021",
-    "lib": ["ES2021", "ES2022.Object", "DOM"],
-    "module": "nodenext",
-    "moduleResolution": "NodeNext",
-    "esModuleInterop": true,
-    "noImplicitReturns": true,
-    "noFallthroughCasesInSwitch": true,
-    "noUnusedLocals": true,
-    "noUnusedParameters": true,
-    "useDefineForClassFields": true,
-    "strictPropertyInitialization": false,
-    "allowJs": true,
-    "strict": true,
-    "skipLibCheck": true,
-    "noEmit": true,
-    "allowImportingTsExtensions": true
+    "rootDir": "src",
+    "outDir": "dist",
+    "baseUrl": ".",
+    "paths": {
+      "@langchain/core": ["../langchain-core/src"],
+      "@langchain/core/*": ["../langchain-core/src/*"]
+    }
   },
   "include": ["src/**/*"],
-  "exclude": ["node_modules"]
+  "exclude": ["dist", "node_modules"]
 }

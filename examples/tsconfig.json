@@ -1,21 +1,108 @@
 {
-  "extends": "@tsconfig/recommended",
+  "extends": "@langchain/tsconfig/base.json",
   "compilerOptions": {
+    "rootDir": "src",
     "outDir": "dist",
-    "lib": ["ES2022", "ES2022.Object", "DOM"],
-    "target": "ES2022",
-    "module": "ES2022",
-    "moduleResolution": "bundler",
-    "sourceMap": true,
-    "allowSyntheticDefaultImports": true,
-    "baseUrl": "./src",
-    "declaration": true,
-    "noImplicitReturns": true,
-    "noFallthroughCasesInSwitch": true,
-    "noUnusedParameters": true,
-    "useDefineForClassFields": true,
-    "strictPropertyInitialization": false
+    "baseUrl": ".",
+    "paths": {
+      "@langchain/core": ["../libs/langchain-core/src"],
+      "@langchain/core/*": ["../libs/langchain-core/src/*"],
+      "@langchain/community": ["../libs/langchain-community/src"],
+      "@langchain/community/*": ["../libs/langchain-community/src/*"],
+      "@langchain/classic": ["../libs/langchain-classic/src"],
+      "@langchain/classic/*": ["../libs/langchain-classic/src/*"],
+      "@langchain/textsplitters": ["../libs/langchain-textsplitters/src"],
+      "@langchain/textsplitters/*": ["../libs/langchain-textsplitters/src/*"],
+      "@langchain/anthropic": ["../libs/providers/langchain-anthropic/src"],
+      "@langchain/anthropic/*": ["../libs/providers/langchain-anthropic/src/*"],
+      "@langchain/aws": ["../libs/providers/langchain-aws/src"],
+      "@langchain/aws/*": ["../libs/providers/langchain-aws/src/*"],
+      "@langchain/azure-cosmosdb": [
+        "../libs/providers/langchain-azure-cosmosdb/src"
+      ],
+      "@langchain/azure-cosmosdb/*": [
+        "../libs/providers/langchain-azure-cosmosdb/src/*"
+      ],
+      "@langchain/azure-dynamic-sessions": [
+        "../libs/providers/langchain-azure-dynamic-sessions/src"
+      ],
+      "@langchain/azure-dynamic-sessions/*": [
+        "../libs/providers/langchain-azure-dynamic-sessions/src/*"
+      ],
+      "@langchain/baidu-qianfan": [
+        "../libs/providers/langchain-baidu-qianfan/src"
+      ],
+      "@langchain/baidu-qianfan/*": [
+        "../libs/providers/langchain-baidu-qianfan/src/*"
+      ],
+      "@langchain/cloudflare": ["../libs/providers/langchain-cloudflare/src"],
+      "@langchain/cloudflare/*": [
+        "../libs/providers/langchain-cloudflare/src/*"
+      ],
+      "@langchain/cohere": ["../libs/providers/langchain-cohere/src"],
+      "@langchain/cohere/*": ["../libs/providers/langchain-cohere/src/*"],
+      "@langchain/deepseek": ["../libs/providers/langchain-deepseek/src"],
+      "@langchain/deepseek/*": ["../libs/providers/langchain-deepseek/src/*"],
+      "@langchain/exa": ["../libs/providers/langchain-exa/src"],
+      "@langchain/exa/*": ["../libs/providers/langchain-exa/src/*"],
+      "@langchain/google-cloud-sql-pg": [
+        "../libs/providers/langchain-google-cloud-sql-pg/src"
+      ],
+      "@langchain/google-cloud-sql-pg/*": [
+        "../libs/providers/langchain-google-cloud-sql-pg/src/*"
+      ],
+      "@langchain/google-common": [
+        "../libs/providers/langchain-google-common/src"
+      ],
+      "@langchain/google-common/*": [
+        "../libs/providers/langchain-google-common/src/*"
+      ],
+      "@langchain/google-genai": [
+        "../libs/providers/langchain-google-genai/src"
+      ],
+      "@langchain/google-genai/*": [
+        "../libs/providers/langchain-google-genai/src/*"
+      ],
+      "@langchain/google-vertexai": [
+        "../libs/providers/langchain-google-vertexai/src"
+      ],
+      "@langchain/google-vertexai/*": [
+        "../libs/providers/langchain-google-vertexai/src/*"
+      ],
+      "@langchain/google-vertexai-web": [
+        "../libs/providers/langchain-google-vertexai-web/src"
+      ],
+      "@langchain/google-vertexai-web/*": [
+        "../libs/providers/langchain-google-vertexai-web/src/*"
+      ],
+      "@langchain/groq": ["../libs/providers/langchain-groq/src"],
+      "@langchain/groq/*": ["../libs/providers/langchain-groq/src/*"],
+      "@langchain/mistralai": ["../libs/providers/langchain-mistralai/src"],
+      "@langchain/mistralai/*": ["../libs/providers/langchain-mistralai/src/*"],
+      "@langchain/mongodb": ["../libs/providers/langchain-mongodb/src"],
+      "@langchain/mongodb/*": ["../libs/providers/langchain-mongodb/src/*"],
+      "@langchain/nomic": ["../libs/providers/langchain-nomic/src"],
+      "@langchain/nomic/*": ["../libs/providers/langchain-nomic/src/*"],
+      "@langchain/ollama": ["../libs/providers/langchain-ollama/src"],
+      "@langchain/ollama/*": ["../libs/providers/langchain-ollama/src/*"],
+      "@langchain/openai": ["../libs/providers/langchain-openai/src"],
+      "@langchain/openai/*": ["../libs/providers/langchain-openai/src/*"],
+      "@langchain/pinecone": ["../libs/providers/langchain-pinecone/src"],
+      "@langchain/pinecone/*": ["../libs/providers/langchain-pinecone/src/*"],
+      "@langchain/qdrant": ["../libs/providers/langchain-qdrant/src"],
+      "@langchain/qdrant/*": ["../libs/providers/langchain-qdrant/src/*"],
+      "@langchain/redis": ["../libs/providers/langchain-redis/src"],
+      "@langchain/redis/*": ["../libs/providers/langchain-redis/src/*"],
+      "@langchain/tavily": ["../libs/providers/langchain-tavily/src"],
+      "@langchain/tavily/*": ["../libs/providers/langchain-tavily/src/*"],
+      "@langchain/weaviate": ["../libs/providers/langchain-weaviate/src"],
+      "@langchain/weaviate/*": ["../libs/providers/langchain-weaviate/src/*"],
+      "@langchain/xai": ["../libs/providers/langchain-xai/src"],
+      "@langchain/xai/*": ["../libs/providers/langchain-xai/src/*"],
+      "@langchain/yandex": ["../libs/providers/langchain-yandex/src"],
+      "@langchain/yandex/*": ["../libs/providers/langchain-yandex/src/*"]
+    }
   },
-  "exclude": ["eslint.config.ts", "node_modules/", "dist/", "tests/"],
-  "include": ["./src"]
+  "include": ["src/**/*"],
+  "exclude": ["dist", "node_modules"]
 }
