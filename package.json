@@ -38,7 +38,6 @@
     "@changesets/changelog-github": "^0.5.1",
     "@changesets/cli": "^2.29.7",
     "@langchain/build": "workspace:*",
-    "@langchain/prettier-config": "workspace:*",
     "@tsconfig/recommended": "^1.0.2",
     "@types/jest": "^29.5.3",
     "@types/semver": "^7",
