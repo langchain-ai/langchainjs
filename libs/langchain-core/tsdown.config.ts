@@ -4,11 +4,14 @@ import {
   lcSecretsPlugin,
   importMapPlugin,
   importConstantsPlugin,
-  fixEventEmitter3Plugin,
 } from "@langchain/build";
 
 export default getBuildConfig({
-  noExternal: [`ansi-styles`, `camelcase`, `decamelize`, `p-retry`, `p-queue`],
+  /**
+   * bundling these packages into the output for CJS compatibility
+   * they only need to be devDependencies, not runtime dependencies
+   */
+  noExternal: [`ansi-styles`, `camelcase`, `decamelize`, `p-retry`],
   entry: [
     "./src/index.ts",
     "./src/agents.ts",
@@ -85,6 +88,5 @@ export default getBuildConfig({
       ],
     }),
     importConstantsPlugin(),
-    fixEventEmitter3Plugin(),
   ],
 });

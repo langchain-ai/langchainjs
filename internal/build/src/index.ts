@@ -18,7 +18,6 @@ export {
   type SecretPluginOptions,
   lcSecretsPlugin,
 } from "./plugins/lc-secrets.ts";
-export { fixEventEmitter3Plugin } from "./plugins/fix-eventemitter3.ts";
 
 /**
  * Creates a standardized tsdown build configuration for LangChain packages.
