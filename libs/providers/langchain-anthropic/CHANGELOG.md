@@ -1,5 +1,14 @@
 # @langchain/anthropic
 
+## 1.2.2
+
+### Patch Changes
+
+- [#9520](https://github.com/langchain-ai/langchainjs/pull/9520) [`cc022b0`](https://github.com/langchain-ai/langchainjs/commit/cc022b0aab2c3959a5036b8d1b9d6ce0b547200e) Thanks [@yukukotani](https://github.com/yukukotani)! - Includes cache creation/read tokens in input_tokens of usage metadata
+
+- Updated dependencies [[`bd2c46e`](https://github.com/langchain-ai/langchainjs/commit/bd2c46e09e661d9ac766c09e71bc6687d6fc811c), [`487378b`](https://github.com/langchain-ai/langchainjs/commit/487378bf14277659c8ca0ef06ea0f9836b818ff4), [`138e7fb`](https://github.com/langchain-ai/langchainjs/commit/138e7fb6280705457079863bedb238b16b322032)]:
+  - @langchain/core@1.1.3
+
 ## 1.2.1
 
 ### Patch Changes
