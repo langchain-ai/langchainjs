@@ -20,10 +20,16 @@ original_internal_dir="/internal"
 mkdir -p "$monorepo_internal_dir/tsconfig"
 cp -r "$original_internal_dir/tsconfig"/* "$monorepo_internal_dir/tsconfig/" 2>/dev/null || true
 
+# Also create it at /internal/tsconfig for langchain scripts that reference /internal/tsconfig directly
+if [ "$monorepo_dir" = "/app" ]; then
+  mkdir -p "/internal/tsconfig"
+  cp -r "$original_internal_dir/tsconfig"/* "/internal/tsconfig/" 2>/dev/null || true
+fi
+
 # Calculate relative path from package to internal/tsconfig
 if [ -z "$package_dir" ] || [ "$package_dir" = "." ]; then
-  # Langchain scripts copy to /app directly
-  package_extends_path="internal/tsconfig/base.json"
+  # Langchain scripts copy to /app directly, use absolute path since vite has issues with relative paths
+  package_extends_path="/app/internal/tsconfig/base.json"
 elif [[ "$package_dir" == *"providers"* ]]; then
   # Provider packages are at libs/providers/langchain-xxx, so go up 3 levels
   package_extends_path="../../../internal/tsconfig/base.json"
@@ -43,6 +49,13 @@ else
 fi
 
 if [ -d "$monorepo_package_dir" ]; then
+  # Check if this is the langchain package (needs JSON files included)
+  if [ -z "$package_dir" ] || [ "$package_dir" = "." ] || [ "$package_dir" = "libs/langchain" ]; then
+    include_pattern='["src/**/*", "src/**/*.json"]'
+  else
+    include_pattern='["src/**/*"]'
+  fi
+  
   cat > "$monorepo_package_dir/tsconfig.json" << EOF
 {
   "extends": "$package_extends_path",
@@ -50,13 +63,14 @@ if [ -d "$monorepo_package_dir" ]; then
     "rootDir": "src",
     "outDir": "dist"
   },
-  "include": ["src/**/*"],
+  "include": $include_pattern,
   "exclude": ["dist", "node_modules"]
 }
 EOF
 fi
 
 # Create mock tsconfig.json for langchain-standard-tests if it exists
+# Create it both in the monorepo location and at the original mounted location
 monorepo_standard_tests_dir="$monorepo_dir/libs/langchain-standard-tests"
 if [ -d "$monorepo_standard_tests_dir" ]; then
   cat > "$monorepo_standard_tests_dir/tsconfig.json" << 'EOF'
@@ -71,6 +85,20 @@ if [ -d "$monorepo_standard_tests_dir" ]; then
 }
 EOF
 fi
+
+# Also create it at the original mounted location since vite resolves relative to source files
+mkdir -p /libs/langchain-standard-tests
+cat > /libs/langchain-standard-tests/tsconfig.json << 'EOF'
+{
+  "extends": "../../internal/tsconfig/base.json",
+  "compilerOptions": {
+    "rootDir": "src",
+    "outDir": "dist"
+  },
+  "include": ["src/**/*"],
+  "exclude": ["dist", "node_modules"]
+}
+EOF
 
 # Create a mock tsconfig.json at the expected langchain-core location to prevent vite from looking for it
 # Create it both at the original mount location and in the monorepo if it's a monorepo setup
