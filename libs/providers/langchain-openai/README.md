@@ -464,6 +464,50 @@ const response = await llmWithComputer.invoke(
 
 For more information, see [OpenAI's Computer Use Documentation](https://platform.openai.com/docs/guides/tools-computer-use).
 
+### Local Shell Tool
+
+The Local Shell tool allows models to run shell commands locally on a machine you provide. Commands are executed inside your own runtime—the API only returns the instructions.
+
+> **Security Warning**: Running arbitrary shell commands can be dangerous. Always sandbox execution or add strict allow/deny-lists before forwarding commands to the system shell.
+> **Note**: This tool is designed to work with [Codex CLI](https://github.com/openai/codex) and the `codex-mini-latest` model.
+
+```typescript
+import { ChatOpenAI, tools } from "@langchain/openai";
+import { exec } from "child_process";
+import { promisify } from "util";
+
+const execAsync = promisify(exec);
+const model = new ChatOpenAI({ model: "codex-mini-latest" });
+
+// With execute callback for automatic command handling
+const shell = tools.localShell({
+  execute: async (action) => {
+    const { command, env, working_directory, timeout_ms } = action;
+    const result = await execAsync(command.join(" "), {
+      cwd: working_directory ?? process.cwd(),
+      env: { ...process.env, ...env },
+      timeout: timeout_ms ?? undefined,
+    });
+    return result.stdout + result.stderr;
+  },
+});
+
+const llmWithShell = model.bindTools([shell]);
+const response = await llmWithShell.invoke(
+  "List files in the current directory"
+);
+```
+
+**Action properties**: The model returns actions with these properties:
+
+- `command` - Array of argv tokens to execute
+- `env` - Environment variables to set
+- `working_directory` - Directory to run the command in
+- `timeout_ms` - Suggested timeout (enforce your own limits)
+- `user` - Optional user to run the command as
+
+For more information, see [OpenAI's Local Shell Documentation](https://platform.openai.com/docs/guides/tools-local-shell).
+
 ## Embeddings
 
 This package also adds support for OpenAI's embeddings model.
