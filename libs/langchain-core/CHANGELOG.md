@@ -1,5 +1,15 @@
 # @langchain/core
 
+## 1.1.3
+
+### Patch Changes
+
+- [#9534](https://github.com/langchain-ai/langchainjs/pull/9534) [`bd2c46e`](https://github.com/langchain-ai/langchainjs/commit/bd2c46e09e661d9ac766c09e71bc6687d6fc811c) Thanks [@christian-bromann](https://github.com/christian-bromann)! - fix(@langchain/core): update and bundle `p-retry`, `ansi-styles`, `camelcase` and `decamelize` dependencies
+
+- [#9544](https://github.com/langchain-ai/langchainjs/pull/9544) [`487378b`](https://github.com/langchain-ai/langchainjs/commit/487378bf14277659c8ca0ef06ea0f9836b818ff4) Thanks [@hntrl](https://github.com/hntrl)! - fix tool chunk concat behavior (#9450)
+
+- [#9505](https://github.com/langchain-ai/langchainjs/pull/9505) [`138e7fb`](https://github.com/langchain-ai/langchainjs/commit/138e7fb6280705457079863bedb238b16b322032) Thanks [@chosh-dev](https://github.com/chosh-dev)! - feat: replace btoa with toBase64Url for encoding in drawMermaidImage
+
 ## 1.1.2
 
 ### Patch Changes

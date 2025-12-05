@@ -1,5 +1,11 @@
 # @langchain/mcp-adapters
 
+## 1.0.3
+
+### Patch Changes
+
+- [#9525](https://github.com/langchain-ai/langchainjs/pull/9525) [`668d7aa`](https://github.com/langchain-ai/langchainjs/commit/668d7aaac0bf69781e7e6c1f42b73fef019ced44) Thanks [@christian-bromann](https://github.com/christian-bromann)! - fix(@langchain/mcp-adapters): resolve $defs/$ref in JSON schemas for Pydantic v2 compatibility
+
 ## 1.0.2
 
 ### Patch Changes
