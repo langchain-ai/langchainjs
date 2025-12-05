@@ -2,19 +2,14 @@
   "extends": "@langchain/tsconfig/base.json",
   "compilerOptions": {
     "rootDir": "src",
-    "outDir": "dist",
-    "baseUrl": ".",
-    "paths": {
-      "@langchain/core": ["../langchain-core/src"],
-      "@langchain/core/*": ["../langchain-core/src/*"],
-      "@langchain/anthropic": ["../providers/langchain-anthropic/src"],
-      "@langchain/anthropic/*": ["../providers/langchain-anthropic/src/*"],
-      "@langchain/cohere": ["../providers/langchain-cohere/src"],
-      "@langchain/cohere/*": ["../providers/langchain-cohere/src/*"],
-      "@langchain/openai": ["../providers/langchain-openai/src"],
-      "@langchain/openai/*": ["../providers/langchain-openai/src/*"]
-    }
+    "outDir": "dist"
   },
   "include": ["src/**/*"],
-  "exclude": ["dist", "node_modules"]
+  "exclude": ["dist", "node_modules"],
+  "references": [
+    { "path": "../langchain-core" },
+    { "path": "../providers/langchain-anthropic" },
+    { "path": "../providers/langchain-cohere" },
+    { "path": "../providers/langchain-openai" }
+  ]
 }

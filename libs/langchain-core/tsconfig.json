@@ -1,9 +1,9 @@
 {
   "extends": "@langchain/tsconfig/base.json",
   "compilerOptions": {
-    "rootDir": ".",
+    "rootDir": "src",
     "outDir": "dist"
   },
-  "include": ["src/**/*", "vitest.setup.ts"],
+  "include": ["src/**/*"],
   "exclude": ["dist", "node_modules"]
 }

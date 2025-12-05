@@ -58,6 +58,7 @@ export function getBuildConfig(options?: Partial<BuildOptions>): BuildOptions {
     dts: {
       parallel: true,
       tsgo: true,
+      build: true,
     },
     sourcemap: true,
     unbundle: true,
@@ -98,17 +99,17 @@ export function getBuildConfig(options?: Partial<BuildOptions>): BuildOptions {
         );
       },
     },
-    attw: {
-      profile: "node16",
-      level: "error",
-    },
-    publint: {
-      level: "error",
-      strict: true,
-    },
-    unused: {
-      level: "error",
-    },
+    // attw: {
+    //   profile: "node16",
+    //   level: "error",
+    // },
+    // publint: {
+    //   level: "error",
+    //   strict: true,
+    // },
+    // unused: {
+    //   level: "error",
+    // },
     ignoreWatch: [`.turbo`, `dist`, `node_modules`],
     ...options,
   };

@@ -2,15 +2,12 @@
   "extends": "@langchain/tsconfig/base.json",
   "compilerOptions": {
     "rootDir": "src",
-    "outDir": "dist",
-    "baseUrl": ".",
-    "paths": {
-      "@langchain/core": ["../../langchain-core/src"],
-      "@langchain/core/*": ["../../langchain-core/src/*"],
-      "@langchain/google-common": ["../langchain-google-common/src"],
-      "@langchain/google-common/*": ["../langchain-google-common/src/*"]
-    }
+    "outDir": "dist"
   },
   "include": ["src/**/*"],
-  "exclude": ["dist", "node_modules"]
+  "exclude": ["dist", "node_modules"],
+  "references": [
+    { "path": "../../langchain-core" },
+    { "path": "../langchain-google-common" }
+  ]
 }
