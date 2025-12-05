@@ -1,5 +1,12 @@
 # langchain
 
+## 1.1.5
+
+### Patch Changes
+
+- Updated dependencies [[`0bade90`](https://github.com/langchain-ai/langchainjs/commit/0bade90ed47c7988ed86f1e695a28273c7b3df50), [`6c40d00`](https://github.com/langchain-ai/langchainjs/commit/6c40d00e926f377d249c2919549381522eac8ed1)]:
+  - @langchain/core@1.1.4
+
 ## 1.1.4
 
 ### Patch Changes
