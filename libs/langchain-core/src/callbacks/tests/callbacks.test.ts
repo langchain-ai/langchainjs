@@ -242,10 +242,6 @@ test("CallbackManager Chat Message Handling", async () => {
       await llmCb.handleLLMEnd({ generations: [] });
     })
   );
-
-  // In case background mode is on while running this test
-  await awaitAllCallbacks();
-
   // Everything treated as llm in handler 1
   expect(handler1.llmStarts).toBe(1);
   expect(handler2.llmStarts).toBe(0);
