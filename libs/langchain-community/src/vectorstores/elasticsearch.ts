@@ -3,6 +3,7 @@ import { Client, estypes } from "@elastic/elasticsearch";
 import type { EmbeddingsInterface } from "@langchain/core/embeddings";
 import { VectorStore } from "@langchain/core/vectorstores";
 import { Document } from "@langchain/core/documents";
+import type { Callbacks } from "@langchain/core/callbacks/manager";
 /**
  * Type representing the k-nearest neighbors (k-NN) engine used in
  * Elasticsearch.
@@ -25,6 +26,30 @@ interface VectorSearchOptions {
 }
 
 /**
+ * Configuration options for hybrid retrieval strategy.
+ */
+export interface HybridRetrievalStrategyConfig {
+  rankWindowSize?: number;
+  rankConstant?: number;
+  textField?: string;
+}
+
+/**
+ * Hybrid search strategy combining vector and BM25 search using RRF.
+ */
+export class HybridRetrievalStrategy {
+  public readonly rankWindowSize: number;
+  public readonly rankConstant: number;
+  public readonly textField: string;
+
+  constructor(config: HybridRetrievalStrategyConfig = {}) {
+    this.rankWindowSize = config.rankWindowSize ?? 100;
+    this.rankConstant = config.rankConstant ?? 60;
+    this.textField = config.textField ?? "text";
+  }
+}
+
+/**
  * Interface defining the arguments required to create an Elasticsearch
  * client.
  */
@@ -32,6 +57,7 @@ export interface ElasticClientArgs {
   readonly client: Client;
   readonly indexName?: string;
   readonly vectorSearchOptions?: VectorSearchOptions;
+  readonly strategy?: HybridRetrievalStrategy;
 }
 
 /**
@@ -51,10 +77,23 @@ type ElasticMetadataTerms = {
 };
 
 /**
- * Class for interacting with an Elasticsearch database. It extends the
- * VectorStore base class and provides methods for adding documents and
- * vectors to the Elasticsearch database, performing similarity searches,
- * deleting documents, and more.
+ * Elasticsearch vector store supporting vector and hybrid search.
+ *
+ * Hybrid search combines kNN vector search with BM25 full-text search
+ * using RRF. Enable by passing a `HybridRetrievalStrategy` to the constructor.
+ *
+ * @example
+ * ```typescript
+ * // Vector search (default)
+ * const vectorStore = new ElasticVectorSearch(embeddings, { client, indexName });
+ *
+ * // Hybrid search
+ * const hybridStore = new ElasticVectorSearch(embeddings, {
+ *   client,
+ *   indexName,
+ *   strategy: new HybridRetrievalStrategy()
+ * });
+ * ```
  */
 export class ElasticVectorSearch extends VectorStore {
   declare FilterType: ElasticFilter;
@@ -73,6 +112,10 @@ export class ElasticVectorSearch extends VectorStore {
 
   private readonly candidates: number;
 
+  private readonly strategy?: HybridRetrievalStrategy;
+
+  private lastQueryText?: string;
+
   _vectorstoreType(): string {
     return "elasticsearch";
   }
@@ -85,9 +128,14 @@ export class ElasticVectorSearch extends VectorStore {
     this.m = args.vectorSearchOptions?.m ?? 16;
     this.efConstruction = args.vectorSearchOptions?.efConstruction ?? 100;
     this.candidates = args.vectorSearchOptions?.candidates ?? 200;
+    this.strategy = args.strategy;
+
+    const userAgent = this.strategy
+      ? "langchain-js-vs-hybrid/0.0.1"
+      : "langchain-js-vs/0.0.1";
 
     this.client = args.client.child({
-      headers: { "user-agent": "langchain-js-vs/0.0.1" },
+      headers: { "user-agent": userAgent },
     });
     this.indexName = args.indexName ?? "documents";
   }
@@ -155,6 +203,16 @@ export class ElasticVectorSearch extends VectorStore {
     return documentIds;
   }
 
+  async similaritySearch(
+    query: string,
+    k = 4,
+    filter?: ElasticFilter,
+    _callbacks?: Callbacks
+  ): Promise<Document[]> {
+    this.lastQueryText = query;
+    return super.similaritySearch(query, k, filter, _callbacks);
+  }
+
   /**
    * Method to perform a similarity search in the Elasticsearch database
    * using a vector. It returns the k most similar documents along with
@@ -169,6 +227,15 @@ export class ElasticVectorSearch extends VectorStore {
     k: number,
     filter?: ElasticFilter
   ): Promise<[Document, number][]> {
+    if (this.strategy && this.lastQueryText) {
+      return this.hybridSearchVectorWithScore(
+        this.lastQueryText,
+        query,
+        k,
+        filter
+      );
+    }
+
     const result = await this.client.search({
       index: this.indexName,
       size: k,
@@ -179,6 +246,59 @@ export class ElasticVectorSearch extends VectorStore {
         k,
         num_candidates: this.candidates,
       },
+    });
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return result.hits.hits.map((hit: any) => [
+      new Document({
+        pageContent: hit._source.text,
+        metadata: hit._source.metadata,
+      }),
+      hit._score,
+    ]);
+  }
+
+  private async hybridSearchVectorWithScore(
+    queryText: string,
+    queryVector: number[],
+    k: number,
+    filter?: ElasticFilter
+  ): Promise<[Document, number][]> {
+    const metadataTerms = this.buildMetadataTerms(filter);
+    const filterClauses =
+      metadataTerms.must.length > 0 || metadataTerms.must_not.length > 0
+        ? { bool: metadataTerms }
+        : undefined;
+
+    const result = await this.client.search({
+      index: this.indexName,
+      size: k,
+      retriever: {
+        rrf: {
+          retrievers: [
+            {
+              standard: {
+                query: {
+                  match: {
+                    [this.strategy!.textField]: queryText,
+                  },
+                },
+              },
+            },
+            {
+              knn: {
+                field: "embedding",
+                query_vector: queryVector,
+                k,
+                num_candidates: this.candidates,
+              },
+            },
+          ],
+          rank_window_size: this.strategy!.rankWindowSize,
+          rank_constant: this.strategy!.rankConstant,
+        },
+      },
+      ...(filterClauses && { query: filterClauses }),
     });
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
