@@ -25,6 +25,9 @@ importers:
       '@langchain/prettier-config':
         specifier: workspace:*
         version: link:internal/prettier
+      '@langchain/tsconfig':
+        specifier: workspace:*
+        version: link:internal/tsconfig
       '@tsconfig/recommended':
         specifier: ^1.0.2
         version: 1.0.13
