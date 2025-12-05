@@ -22,9 +22,6 @@ importers:
       '@langchain/build':
         specifier: workspace:*
         version: link:internal/build
-      '@langchain/prettier-config':
-        specifier: workspace:*
-        version: link:internal/prettier
       '@tsconfig/recommended':
         specifier: ^1.0.2
         version: 1.0.10
@@ -558,8 +555,6 @@ importers:
       vitest:
         specifier: ^1.0.0
         version: 1.6.1(@types/node@20.19.9)(jsdom@26.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.5))(terser@5.44.1)
-
-  internal/prettier: {}
 
   internal/test-helpers:
     dependencies:
