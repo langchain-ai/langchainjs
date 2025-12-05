@@ -44,10 +44,28 @@ export type {
   ImageGenerationInputMask,
 } from "./imageGeneration.js";
 
+import { computerUse } from "./computerUse.js";
+export type {
+  ComputerUseTool,
+  ComputerUseOptions,
+  ComputerUseEnvironment,
+  ComputerUseAction,
+  ComputerUseClickAction,
+  ComputerUseDoubleClickAction,
+  ComputerUseDragAction,
+  ComputerUseKeypressAction,
+  ComputerUseMoveAction,
+  ComputerUseScreenshotAction,
+  ComputerUseScrollAction,
+  ComputerUseTypeAction,
+  ComputerUseWaitAction,
+} from "./computerUse.js";
+
 export const tools = {
   webSearch,
   mcp,
   codeInterpreter,
   fileSearch,
   imageGeneration,
+  computerUse,
 };
