@@ -1,5 +1,5 @@
 {
-  "extends": "../../tsconfig.json",
+  "extends": "@tsconfig/recommended",
   "compilerOptions": {
     "rootDir": ".",
     "module": "ESNext",
