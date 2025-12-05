@@ -46,6 +46,7 @@
     "@langchain/core": "workspace:*",
     "@langchain/eslint": "workspace:*",
     "@langchain/standard-tests": "workspace:*",
+    "@langchain/tsconfig": "workspace:*",
     "@tsconfig/recommended": "^1.0.10",
     "@vitest/coverage-v8": "^3.2.4",
     "dotenv": "^17.2.1",

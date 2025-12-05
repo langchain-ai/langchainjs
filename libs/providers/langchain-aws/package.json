@@ -44,6 +44,7 @@
     "@langchain/eslint": "workspace:*",
     "@langchain/standard-tests": "workspace:*",
     "@smithy/types": "^3.2.0",
+    "@langchain/tsconfig": "workspace:*",
     "@tsconfig/recommended": "^1.0.3",
     "@vitest/coverage-v8": "^3.2.4",
     "dotenv": "^16.3.1",

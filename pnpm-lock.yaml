@@ -25,9 +25,6 @@ importers:
       '@langchain/prettier-config':
         specifier: workspace:*
         version: link:internal/prettier
-      '@langchain/tsconfig':
-        specifier: workspace:*
-        version: link:internal/tsconfig
       '@tsconfig/recommended':
         specifier: ^1.0.2
         version: 1.0.13
@@ -447,6 +444,9 @@ importers:
       '@langchain/eslint':
         specifier: workspace:*
         version: link:../eslint
+      '@langchain/tsconfig':
+        specifier: workspace:*
+        version: link:../tsconfig
       '@tsconfig/recommended':
         specifier: ^1.0.10
         version: 1.0.13
@@ -518,6 +518,9 @@ importers:
         specifier: ^8.40.0
         version: 8.48.1(eslint@9.39.1(jiti@2.6.1))(typescript@5.9.3)
     devDependencies:
+      '@langchain/tsconfig':
+        specifier: workspace:*
+        version: link:../tsconfig
       '@tsconfig/recommended':
         specifier: ^1.0.10
         version: 1.0.13
@@ -573,6 +576,9 @@ importers:
       '@langchain/eslint':
         specifier: workspace:*
         version: link:../eslint
+      '@langchain/tsconfig':
+        specifier: workspace:*
+        version: link:../tsconfig
       eslint:
         specifier: ^9.34.0
         version: 9.39.1(jiti@2.6.1)
@@ -587,6 +593,9 @@ importers:
       '@langchain/eslint':
         specifier: workspace:*
         version: link:../../internal/eslint
+      '@langchain/tsconfig':
+        specifier: workspace:*
+        version: link:../../internal/tsconfig
       '@types/prompts':
         specifier: ^2
         version: 2.4.9
@@ -663,6 +672,9 @@ importers:
       '@langchain/openai':
         specifier: workspace:*
         version: link:../providers/langchain-openai
+      '@langchain/tsconfig':
+        specifier: workspace:*
+        version: link:../../internal/tsconfig
       '@tsconfig/recommended':
         specifier: ^1.0.2
         version: 1.0.13
@@ -880,6 +892,9 @@ importers:
       '@langchain/tavily':
         specifier: workspace:*
         version: link:../providers/langchain-tavily
+      '@langchain/tsconfig':
+        specifier: workspace:*
+        version: link:../../internal/tsconfig
       '@langchain/weaviate':
         specifier: workspace:*
         version: link:../providers/langchain-weaviate
@@ -1206,6 +1221,9 @@ importers:
       '@langchain/standard-tests':
         specifier: workspace:*
         version: link:../langchain-standard-tests
+      '@langchain/tsconfig':
+        specifier: workspace:*
+        version: link:../../internal/tsconfig
       '@layerup/layerup-security':
         specifier: ^1.5.12
         version: 1.6.0(encoding@0.1.13)(ws@8.18.3(bufferutil@4.0.9))(zod@4.1.13)
@@ -1627,6 +1645,9 @@ importers:
       '@langchain/eslint':
         specifier: workspace:*
         version: link:../../internal/eslint
+      '@langchain/tsconfig':
+        specifier: workspace:*
+        version: link:../../internal/tsconfig
       '@types/decamelize':
         specifier: ^1.2.0
         version: 1.2.0
@@ -1691,6 +1712,9 @@ importers:
       '@langchain/openai':
         specifier: workspace:*
         version: link:../providers/langchain-openai
+      '@langchain/tsconfig':
+        specifier: workspace:*
+        version: link:../../internal/tsconfig
       '@tsconfig/recommended':
         specifier: ^1.0.10
         version: 1.0.13
@@ -1768,6 +1792,9 @@ importers:
       '@langchain/eslint':
         specifier: workspace:*
         version: link:../../internal/eslint
+      '@langchain/tsconfig':
+        specifier: workspace:*
+        version: link:../../internal/tsconfig
       '@tsconfig/recommended':
         specifier: ^1.0.3
         version: 1.0.13
@@ -1796,6 +1823,9 @@ importers:
       '@langchain/eslint':
         specifier: workspace:*
         version: link:../../internal/eslint
+      '@langchain/tsconfig':
+        specifier: workspace:*
+        version: link:../../internal/tsconfig
       '@tsconfig/recommended':
         specifier: ^1.0.3
         version: 1.0.13
@@ -1848,6 +1878,9 @@ importers:
       '@langchain/standard-tests':
         specifier: workspace:*
         version: link:../../langchain-standard-tests
+      '@langchain/tsconfig':
+        specifier: workspace:*
+        version: link:../../../internal/tsconfig
       '@tsconfig/recommended':
         specifier: ^1.0.10
         version: 1.0.13
@@ -1906,6 +1939,9 @@ importers:
       '@langchain/standard-tests':
         specifier: workspace:*
         version: link:../../langchain-standard-tests
+      '@langchain/tsconfig':
+        specifier: workspace:*
+        version: link:../../../internal/tsconfig
       '@smithy/types':
         specifier: ^3.2.0
         version: 3.7.2
@@ -1961,6 +1997,9 @@ importers:
       '@langchain/openai':
         specifier: workspace:^
         version: link:../langchain-openai
+      '@langchain/tsconfig':
+        specifier: workspace:*
+        version: link:../../../internal/tsconfig
       '@tsconfig/recommended':
         specifier: ^1.0.3
         version: 1.0.13
@@ -2004,6 +2043,9 @@ importers:
       '@langchain/eslint':
         specifier: workspace:*
         version: link:../../../internal/eslint
+      '@langchain/tsconfig':
+        specifier: workspace:*
+        version: link:../../../internal/tsconfig
       '@tsconfig/recommended':
         specifier: ^1.0.3
         version: 1.0.13
@@ -2050,6 +2092,9 @@ importers:
       '@langchain/openai':
         specifier: workspace:*
         version: link:../langchain-openai
+      '@langchain/tsconfig':
+        specifier: workspace:*
+        version: link:../../../internal/tsconfig
       '@tsconfig/recommended':
         specifier: ^1.0.3
         version: 1.0.13
@@ -2102,6 +2147,9 @@ importers:
       '@langchain/standard-tests':
         specifier: workspace:*
         version: link:../../langchain-standard-tests
+      '@langchain/tsconfig':
+        specifier: workspace:*
+        version: link:../../../internal/tsconfig
       '@swc/core':
         specifier: ^1.3.90
         version: 1.15.3(@swc/helpers@0.5.17)
@@ -2163,6 +2211,9 @@ importers:
       '@langchain/standard-tests':
         specifier: workspace:*
         version: link:../../langchain-standard-tests
+      '@langchain/tsconfig':
+        specifier: workspace:*
+        version: link:../../../internal/tsconfig
       '@tsconfig/recommended':
         specifier: ^1.0.3
         version: 1.0.13
@@ -2215,6 +2266,9 @@ importers:
       '@langchain/standard-tests':
         specifier: workspace:*
         version: link:../../langchain-standard-tests
+      '@langchain/tsconfig':
+        specifier: workspace:*
+        version: link:../../../internal/tsconfig
       '@tsconfig/recommended':
         specifier: ^1.0.3
         version: 1.0.13
@@ -2261,6 +2315,9 @@ importers:
       '@langchain/standard-tests':
         specifier: workspace:*
         version: link:../../langchain-standard-tests
+      '@langchain/tsconfig':
+        specifier: workspace:*
+        version: link:../../../internal/tsconfig
       '@tsconfig/recommended':
         specifier: ^1.0.3
         version: 1.0.13
@@ -2301,6 +2358,9 @@ importers:
       '@langchain/eslint':
         specifier: workspace:*
         version: link:../../../internal/eslint
+      '@langchain/tsconfig':
+        specifier: workspace:*
+        version: link:../../../internal/tsconfig
       '@tsconfig/recommended':
         specifier: ^1.0.3
         version: 1.0.13
@@ -2356,6 +2416,9 @@ importers:
       '@langchain/eslint':
         specifier: workspace:*
         version: link:../../../internal/eslint
+      '@langchain/tsconfig':
+        specifier: workspace:*
+        version: link:../../../internal/tsconfig
       '@swc/core':
         specifier: ^1.3.90
         version: 1.15.3(@swc/helpers@0.5.17)
@@ -2420,6 +2483,9 @@ importers:
       '@langchain/eslint':
         specifier: workspace:*
         version: link:../../../internal/eslint
+      '@langchain/tsconfig':
+        specifier: workspace:*
+        version: link:../../../internal/tsconfig
       '@swc/core':
         specifier: ^1.3.90
         version: 1.15.3(@swc/helpers@0.5.17)
@@ -2478,6 +2544,9 @@ importers:
       '@langchain/eslint':
         specifier: workspace:*
         version: link:../../../internal/eslint
+      '@langchain/tsconfig':
+        specifier: workspace:*
+        version: link:../../../internal/tsconfig
       '@swc/core':
         specifier: ^1.3.90
         version: 1.15.3(@swc/helpers@0.5.17)
@@ -2539,6 +2608,9 @@ importers:
       '@langchain/standard-tests':
         specifier: workspace:*
         version: link:../../langchain-standard-tests
+      '@langchain/tsconfig':
+        specifier: workspace:*
+        version: link:../../../internal/tsconfig
       '@swc/core':
         specifier: ^1.3.90
         version: 1.15.3(@swc/helpers@0.5.17)
@@ -2600,6 +2672,9 @@ importers:
       '@langchain/standard-tests':
         specifier: workspace:*
         version: link:../../langchain-standard-tests
+      '@langchain/tsconfig':
+        specifier: workspace:*
+        version: link:../../../internal/tsconfig
       '@swc/core':
         specifier: ^1.3.90
         version: 1.15.3(@swc/helpers@0.5.17)
@@ -2658,6 +2733,9 @@ importers:
       '@langchain/standard-tests':
         specifier: workspace:*
         version: link:../../langchain-standard-tests
+      '@langchain/tsconfig':
+        specifier: workspace:*
+        version: link:../../../internal/tsconfig
       '@swc/core':
         specifier: ^1.3.90
         version: 1.15.3(@swc/helpers@0.5.17)
@@ -2716,6 +2794,9 @@ importers:
       '@langchain/eslint':
         specifier: workspace:*
         version: link:../../../internal/eslint
+      '@langchain/tsconfig':
+        specifier: workspace:*
+        version: link:../../../internal/tsconfig
       '@swc/core':
         specifier: ^1.3.90
         version: 1.15.3(@swc/helpers@0.5.17)
@@ -2774,6 +2855,9 @@ importers:
       '@langchain/standard-tests':
         specifier: workspace:*
         version: link:../../langchain-standard-tests
+      '@langchain/tsconfig':
+        specifier: workspace:*
+        version: link:../../../internal/tsconfig
       '@tsconfig/recommended':
         specifier: ^1.0.3
         version: 1.0.13
@@ -2826,6 +2910,9 @@ importers:
       '@langchain/standard-tests':
         specifier: workspace:*
         version: link:../../langchain-standard-tests
+      '@langchain/tsconfig':
+        specifier: workspace:*
+        version: link:../../../internal/tsconfig
       '@tsconfig/recommended':
         specifier: ^1.0.3
         version: 1.0.13
@@ -2872,6 +2959,9 @@ importers:
       '@langchain/standard-tests':
         specifier: workspace:*
         version: link:../../langchain-standard-tests
+      '@langchain/tsconfig':
+        specifier: workspace:*
+        version: link:../../../internal/tsconfig
       '@tsconfig/recommended':
         specifier: ^1.0.3
         version: 1.0.13
@@ -2915,6 +3005,9 @@ importers:
       '@langchain/openai':
         specifier: workspace:*
         version: link:../langchain-openai
+      '@langchain/tsconfig':
+        specifier: workspace:*
+        version: link:../../../internal/tsconfig
       '@tsconfig/recommended':
         specifier: ^1.0.3
         version: 1.0.13
@@ -2973,6 +3066,9 @@ importers:
       '@langchain/openai':
         specifier: workspace:*
         version: link:../langchain-openai
+      '@langchain/tsconfig':
+        specifier: workspace:*
+        version: link:../../../internal/tsconfig
       '@tsconfig/recommended':
         specifier: ^1.0.3
         version: 1.0.13
@@ -3025,6 +3121,9 @@ importers:
       '@langchain/standard-tests':
         specifier: workspace:*
         version: link:../../langchain-standard-tests
+      '@langchain/tsconfig':
+        specifier: workspace:*
+        version: link:../../../internal/tsconfig
       '@tsconfig/recommended':
         specifier: ^1.0.3
         version: 1.0.13
@@ -3083,6 +3182,9 @@ importers:
       '@langchain/standard-tests':
         specifier: workspace:*
         version: link:../../langchain-standard-tests
+      '@langchain/tsconfig':
+        specifier: workspace:*
+        version: link:../../../internal/tsconfig
       '@tsconfig/recommended':
         specifier: ^1.0.10
         version: 1.0.13
@@ -3138,6 +3240,9 @@ importers:
       '@langchain/openai':
         specifier: workspace:*
         version: link:../langchain-openai
+      '@langchain/tsconfig':
+        specifier: workspace:*
+        version: link:../../../internal/tsconfig
       '@pinecone-database/pinecone':
         specifier: ^5.0.2
         version: 5.1.2
@@ -3193,6 +3298,9 @@ importers:
       '@langchain/eslint':
         specifier: workspace:*
         version: link:../../../internal/eslint
+      '@langchain/tsconfig':
+        specifier: workspace:*
+        version: link:../../../internal/tsconfig
       '@tsconfig/recommended':
         specifier: ^1.0.3
         version: 1.0.13
@@ -3239,6 +3347,9 @@ importers:
       '@langchain/eslint':
         specifier: workspace:*
         version: link:../../../internal/eslint
+      '@langchain/tsconfig':
+        specifier: workspace:*
+        version: link:../../../internal/tsconfig
       '@tsconfig/recommended':
         specifier: ^1.0.3
         version: 1.0.13
@@ -3282,6 +3393,9 @@ importers:
       '@langchain/eslint':
         specifier: workspace:*
         version: link:../../../internal/eslint
+      '@langchain/tsconfig':
+        specifier: workspace:*
+        version: link:../../../internal/tsconfig
       '@tsconfig/recommended':
         specifier: ^1.0.3
         version: 1.0.13
@@ -3325,6 +3439,9 @@ importers:
       '@langchain/openai':
         specifier: workspace:^
         version: link:../langchain-openai
+      '@langchain/tsconfig':
+        specifier: workspace:*
+        version: link:../../../internal/tsconfig
       '@tsconfig/recommended':
         specifier: ^1.0.3
         version: 1.0.13
@@ -3374,6 +3491,9 @@ importers:
       '@langchain/standard-tests':
         specifier: workspace:*
         version: link:../../langchain-standard-tests
+      '@langchain/tsconfig':
+        specifier: workspace:*
+        version: link:../../../internal/tsconfig
       '@tsconfig/recommended':
         specifier: ^1.0.3
         version: 1.0.13
@@ -3416,6 +3536,9 @@ importers:
       '@langchain/eslint':
         specifier: workspace:*
         version: link:../../../internal/eslint
+      '@langchain/tsconfig':
+        specifier: workspace:*
+        version: link:../../../internal/tsconfig
       '@tsconfig/recommended':
         specifier: ^1.0.3
         version: 1.0.13

@@ -101,6 +101,7 @@
     "@tensorflow/tfjs-backend-cpu": "^3",
     "@tensorflow/tfjs-core": "^3.6.0",
     "@testcontainers/mariadb": "^10.16.0",
+    "@langchain/tsconfig": "workspace:*",
     "@tsconfig/recommended": "^1.0.2",
     "@types/better-sqlite3": "^7.6.10",
     "@types/crypto-js": "^4.2.2",

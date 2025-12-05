@@ -41,6 +41,7 @@
     "@langchain/eslint": "workspace:*",
     "@langchain/openai": "workspace:*",
     "@pinecone-database/pinecone": "^5.0.2",
+    "@langchain/tsconfig": "workspace:*",
     "@tsconfig/recommended": "^1.0.3",
     "@types/flat": "^5.0.5",
     "@types/uuid": "^10.0.0",
