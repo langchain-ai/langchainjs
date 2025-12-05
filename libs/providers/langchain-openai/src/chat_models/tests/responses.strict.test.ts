@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { ChatOpenAIResponses } from "../responses";
+import { ChatOpenAIResponses } from "../responses.js";
 
 describe("strict tool-calling configuration", () => {
   it("falls back to supportsStrictToolCalling when strict is undefined", () => {
@@ -21,9 +21,15 @@ describe("strict tool-calling configuration", () => {
       ],
     });
 
-    expect((params as any).strict).toBeUndefined();
+  
+    expect(
+      (params as unknown as { strict?: boolean }).strict
+    ).toBeUndefined();
 
-    expect((params.tools as any)[0].strict).toBe(true);
+   
+    expect(
+      (params.tools as unknown as Array<{ strict?: boolean }>)[0].strict
+    ).toBe(true);
   });
 
   it("respects user-provided strict option", () => {
@@ -46,8 +52,14 @@ describe("strict tool-calling configuration", () => {
       ],
     });
 
-    expect((params as any).strict).toBeUndefined();
 
-    expect((params.tools as any)[0].strict).toBe(false);
+    expect(
+      (params as unknown as { strict?: boolean }).strict
+    ).toBeUndefined();
+
+
+    expect(
+      (params.tools as unknown as Array<{ strict?: boolean }>)[0].strict
+    ).toBe(false);
   });
 });

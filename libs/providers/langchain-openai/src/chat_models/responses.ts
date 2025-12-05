@@ -91,32 +91,32 @@ export class ChatOpenAIResponses<
       include: options?.include,
       tools: options?.tools?.length
         ? this._reduceChatOpenAITools(options.tools, {
-          stream: this.streaming,
-          strict,
-        })
+            stream: this.streaming,
+            strict,
+          })
         : undefined,
       tool_choice: isBuiltInToolChoice(options?.tool_choice)
         ? options?.tool_choice
         : (() => {
-          const formatted = formatToOpenAIToolChoice(options?.tool_choice);
-          if (typeof formatted === "object" && "type" in formatted) {
-            if (formatted.type === "function") {
-              return { type: "function", name: formatted.function.name };
-            } else if (formatted.type === "allowed_tools") {
-              return {
-                type: "allowed_tools",
-                mode: formatted.allowed_tools.mode,
-                tools: formatted.allowed_tools.tools,
-              };
-            } else if (formatted.type === "custom") {
-              return {
-                type: "custom",
-                name: formatted.custom.name,
-              };
+            const formatted = formatToOpenAIToolChoice(options?.tool_choice);
+            if (typeof formatted === "object" && "type" in formatted) {
+              if (formatted.type === "function") {
+                return { type: "function", name: formatted.function.name };
+              } else if (formatted.type === "allowed_tools") {
+                return {
+                  type: "allowed_tools",
+                  mode: formatted.allowed_tools.mode,
+                  tools: formatted.allowed_tools.tools,
+                };
+              } else if (formatted.type === "custom") {
+                return {
+                  type: "custom",
+                  name: formatted.custom.name,
+                };
+              }
             }
-          }
-          return undefined;
-        })(),
+            return undefined;
+          })(),
       text: (() => {
         if (options?.text) return options.text;
         const format = this._getResponseFormat(options?.response_format);
@@ -201,10 +201,10 @@ export class ChatOpenAIResponses<
           id: data.id,
           estimatedTokenUsage: data.usage
             ? {
-              promptTokens: data.usage.input_tokens,
-              completionTokens: data.usage.output_tokens,
-              totalTokens: data.usage.total_tokens,
-            }
+                promptTokens: data.usage.input_tokens,
+                completionTokens: data.usage.output_tokens,
+                totalTokens: data.usage.total_tokens,
+              }
             : undefined,
         },
       };
