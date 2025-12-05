@@ -1,7 +1,11 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { describe, it, expect } from "vitest";
 import { ChatCompletionMessage } from "openai/resources";
-import { convertCompletionsMessageToBaseMessage } from "../completions.js";
+import {
+  completionsApiContentBlockConverter,
+  convertCompletionsMessageToBaseMessage,
+  convertStandardContentBlockToCompletionsContentPart,
+} from "../completions.js";
 
 describe("convertCompletionsMessageToBaseMessage", () => {
   describe("OpenRouter image response handling", () => {
@@ -124,4 +128,152 @@ describe("convertCompletionsMessageToBaseMessage", () => {
       ]);
     });
   });
+
+  describe("convertStandardContentBlockToCompletionsContentPart", () => {
+    it("can convert image block with base64 data to image_url data URL", () => {
+      const block = {
+        type: "image",
+        data: "iVBORw0KGgoAAAANSUhEUgAAAAE",
+        mimeType: "image/png",
+      } as any;
+
+      const result = convertStandardContentBlockToCompletionsContentPart(block);
+      expect(result).toEqual({
+        type: "image_url",
+        image_url: {
+          url: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAE",
+        },
+      });
+    });
+
+    it("can convert image block with url to image_url", () => {
+      const block = {
+        type: "image",
+        url: "https://example.com/cat.png",
+      } as any;
+
+      const result = convertStandardContentBlockToCompletionsContentPart(block);
+      expect(result).toEqual({
+        type: "image_url",
+        image_url: {
+          url: "https://example.com/cat.png",
+        },
+      });
+    });
+
+    it("will throw an error when when no filename is providing to a base64 file block", () => {
+      const block = {
+        type: "file",
+        data: "iVBORw0KGgoAAAANSUhEUgAAAAE",
+        mimeType: "application/pdf",
+      } as any;
+
+      expect(() => convertStandardContentBlockToCompletionsContentPart(block)
+      ).toThrowError(
+        "a filename or name or title is needed via meta-data for OpenAI when working with multimodal blocks"
+      );
+
+    });
+
+    it("will convert a file block to an openai file payload when a filename is provided", () => {
+      const block = {
+        type: "file",
+        data: "iVBORw0KGgoAAAANSUhEUgAAAAE",
+        mimeType: "application/pdf",
+        metadata: { filename: "cat.pdf" },
+      } as any;
+
+      const result = convertStandardContentBlockToCompletionsContentPart(block);
+      expect(result).toEqual({
+        type: "file",
+        file: {
+          file_data: "data:application/pdf;base64,iVBORw0KGgoAAAANSUhEUgAAAAE",
+          filename: "cat.pdf",
+        },
+      });
+    });
+  });
+
+  describe("completionsApiContentBlockConverter.fromStandardFileBlock", () => {
+    it("throws when base64 file block is missing filename/name/title metadata", () => {
+      const block = {
+        source_type: "base64",
+        mime_type: "application/pdf",
+        data: "AAABBB",
+        // metadata intentionally missing
+      } as any;
+
+      expect(() =>
+        completionsApiContentBlockConverter.fromStandardFileBlock!(block)
+      ).toThrowError(
+        "a filename or name or title is needed via meta-data for OpenAI when working with multimodal blocks"
+      );
+    });
+
+    it("converts base64 file block to file with data URL and filename from metadata.filename", () => {
+      const block = {
+        source_type: "base64",
+        mime_type: "application/pdf",
+        data: "AAABBB",
+        metadata: { filename: "doc.pdf" },
+      } as any;
+
+      const result = completionsApiContentBlockConverter.fromStandardFileBlock!(block);
+      expect(result).toEqual({
+        type: "file",
+        file: {
+          file_data: "data:application/pdf;base64,AAABBB",
+          filename: "doc.pdf",
+        },
+      });
+    });
+
+    it("converts url data-url file block to file with file_data equal to url and includes filename from metadata.name", () => {
+      const dataUrl = "data:application/pdf;base64,AAABBB";
+      const block = {
+        source_type: "url",
+        url: dataUrl,
+        metadata: { name: "report.pdf" },
+      } as any;
+
+      const result = completionsApiContentBlockConverter.fromStandardFileBlock!(block);
+      expect(result).toEqual({
+        type: "file",
+        file: {
+          file_data: dataUrl,
+          filename: "report.pdf",
+        },
+      });
+    });
+
+    it("returns file_id for id source_type", () => {
+      const block = {
+        source_type: "id",
+        id: "file_123",
+      } as any;
+
+      const result = completionsApiContentBlockConverter.fromStandardFileBlock!(block);
+      expect(result).toEqual({
+        type: "file",
+        file: {
+          file_id: "file_123",
+        },
+      });
+    });
+
+    it("throws when url is not a data URL", () => {
+      const block = {
+        source_type: "url",
+        url: "https://example.com/file.pdf",
+        metadata: { filename: "file.pdf" },
+      } as any;
+
+      expect(() =>
+        completionsApiContentBlockConverter.fromStandardFileBlock!(block)
+      ).toThrowError(
+        `URL file blocks with source_type url must be formatted as a data URL for ChatOpenAI`
+      );
+    });
+  });
+
 });
