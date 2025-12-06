@@ -323,6 +323,12 @@ export interface GoogleAIModelParams extends GoogleModelParams {
   responseMimeType?: GoogleAIResponseMimeType;
 
   /**
+   * The schema that the model's output should conform to.
+   * When this is set, the model will output JSON that conforms to the schema.
+   */
+  responseSchema?: GeminiJsonSchema;
+
+  /**
    * Whether or not to stream.
    * @default false
    */
@@ -412,6 +418,12 @@ export interface GoogleAIModelRequestParams extends GoogleAIModelParams {
    * https://cloud.google.com/vertex-ai/generative-ai/docs/context-cache/context-cache-use
    */
   cachedContent?: string;
+
+  /**
+   * The schema that the model's output should conform to.
+   * When this is set, the model will output JSON that conforms to the schema.
+   */
+  responseSchema?: GeminiJsonSchema;
 }
 
 export interface GoogleAIBaseLLMInput<AuthOptions>
@@ -713,6 +725,7 @@ export interface GeminiGenerationConfig {
   responseModalities?: GoogleAIModelModality[];
   thinkingConfig?: GoogleThinkingConfig;
   speechConfig?: GoogleSpeechConfig;
+  responseSchema?: GeminiJsonSchema;
 }
 
 export interface GeminiRequest {
