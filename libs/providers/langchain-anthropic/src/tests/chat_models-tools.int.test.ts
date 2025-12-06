@@ -260,7 +260,7 @@ test("Can bind & stream AnthropicTools", async () => {
   if (!Array.isArray(finalMessage.content)) {
     throw new Error("Content is not an array");
   }
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
   const toolCall = finalMessage.tool_calls?.[0];
   if (toolCall === undefined) {
     throw new Error("No tool call found");
@@ -924,4 +924,97 @@ test("context management", async () => {
   }
   expect(full).toBeInstanceOf(AIMessageChunk);
   expect(full?.response_metadata.context_management).toBeDefined();
+});
+
+test("tool extras with defer_loading are merged into tool definitions", async () => {
+  const getWeather = tool(
+    async (input: { location: string; unit?: string }) => {
+      return `The weather in ${input.location} is sunny and 72°${(input.unit ??
+        "fahrenheit")[0].toUpperCase()}`;
+    },
+    {
+      name: "get_weather",
+      description: "Get the current weather for a location.",
+      schema: z.object({
+        location: z.string().describe("City name"),
+        unit: z
+          .string()
+          .optional()
+          .default("fahrenheit")
+          .describe("Temperature unit (celsius or fahrenheit)"),
+      }),
+      extras: { defer_loading: true },
+    }
+  );
+
+  const searchFiles = tool(
+    async (input: { query: string }) => {
+      return `Found 3 files matching '${input.query}'`;
+    },
+    {
+      name: "search_files",
+      description: "Search through files in the workspace.",
+      schema: z.object({
+        query: z.string().describe("Search query"),
+      }),
+      extras: { defer_loading: true },
+    }
+  );
+
+  const llm = new ChatAnthropic({
+    model: "claude-sonnet-4-5-20250929",
+  });
+
+  // Verify the payload includes extras fields using formatStructuredToolToAnthropic
+  const formattedTools = llm.formatStructuredToolToAnthropic([
+    getWeather,
+    searchFiles,
+  ]);
+
+  expect(formattedTools).toBeDefined();
+
+  // Check that defer_loading was merged for both LangChain tools
+  const weatherTool = formattedTools?.find(
+    (t) => "name" in t && t.name === "get_weather"
+  );
+  const searchTool = formattedTools?.find(
+    (t) => "name" in t && t.name === "search_files"
+  );
+
+  expect(weatherTool).toBeDefined();
+  expect(weatherTool).toHaveProperty("defer_loading", true);
+  expect(searchTool).toBeDefined();
+  expect(searchTool).toHaveProperty("defer_loading", true);
+
+  // Test with actual API call
+  const llmWithTools = llm.bindTools([
+    getWeather,
+    searchFiles,
+    { type: "tool_search_tool_regex_20251119", name: "tool_search_tool_regex" },
+  ]);
+  const inputMessage = {
+    role: "user",
+    content: "What's the weather in San Francisco?",
+  };
+  const response = await llmWithTools.invoke([inputMessage]);
+
+  // Verify response structure
+  expect(Array.isArray(response.content)).toBe(true);
+  expect(
+    (response.content as any[]).every(
+      (block) => typeof block === "string" || typeof block === "object"
+    )
+  ).toBe(true);
+
+  // Check for tool-related blocks
+  const blockTypes = new Set(
+    (response.content as any[])
+      .filter((block) => typeof block === "object" && "type" in block)
+      .map((block) => block.type)
+  );
+
+  // Should have either server_tool_use (tool search) or tool_use blocks
+  expect(blockTypes.has("server_tool_use") || blockTypes.has("tool_use")).toBe(
+    true
+  );
 });

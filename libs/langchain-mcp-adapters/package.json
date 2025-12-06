@@ -1,6 +1,6 @@
 {
   "name": "@langchain/mcp-adapters",
-  "version": "1.0.1",
+  "version": "1.0.3",
   "description": "LangChain.js adapters for Model Context Protocol (MCP)",
   "author": "LangChain",
   "license": "MIT",
@@ -19,8 +19,8 @@
     "build:compile": "tsdown",
     "build:examples": "tsc -p ./examples/tsconfig.json",
     "clean": "rm -rf dist/ dist-cjs/ .turbo/",
-    "format": "prettier --config .prettierrc --write \"src/**/*.ts\" \"examples/**/*.ts\"",
-    "format:check": "prettier --config .prettierrc --check \"src\" \"examples/**/*.ts\"",
+    "format": "prettier --write \"src/**/*.ts\" \"examples/**/*.ts\"",
+    "format:check": "prettier --check \"src\" \"examples/**/*.ts\"",
     "lint": "run-s lint:eslint lint:dpdm",
     "lint:dpdm": "dpdm --skip-dynamic-imports circular --exit-code circular:1 --no-warning --no-tree src/**/*.ts examples/**/*.ts",
     "lint:eslint": "eslint --cache src/ examples/",
@@ -37,7 +37,7 @@
     "tools"
   ],
   "dependencies": {
-    "@modelcontextprotocol/sdk": "^1.18.2",
+    "@modelcontextprotocol/sdk": "~1.19.1",
     "debug": "^4.4.3",
     "zod": "^3.25.76 || ^4"
   },
@@ -62,6 +62,7 @@
     "@langchain/eslint": "workspace:*",
     "@langchain/langgraph": "^1.0.0",
     "@langchain/openai": "workspace:*",
+    "@langchain/tsconfig": "workspace:*",
     "@tsconfig/recommended": "^1.0.10",
     "@types/debug": "^4.1.12",
     "@types/express": "^5.0.3",

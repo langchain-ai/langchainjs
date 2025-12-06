@@ -38,6 +38,7 @@
     "@changesets/changelog-github": "^0.5.1",
     "@changesets/cli": "^2.29.7",
     "@langchain/build": "workspace:*",
+    "@langchain/tsconfig": "workspace:*",
     "@tsconfig/recommended": "^1.0.2",
     "@types/jest": "^29.5.3",
     "@types/semver": "^7",
@@ -60,9 +61,9 @@
   },
   "lint-staged": {
     "**/*.{ts,tsx}": [
-      "prettier --config .prettierrc --write --ignore-unknown",
+      "prettier --write --ignore-unknown",
       "eslint --cache --fix"
     ],
-    "*.md": "prettier --config .prettierrc --write"
+    "*.md": "prettier --write"
   }
 }

@@ -17,8 +17,8 @@
     "lint": "pnpm lint:eslint",
     "lint:fix": "pnpm lint --fix",
     "precommit": "lint-staged",
-    "format": "prettier --config .prettierrc --write \"src\"",
-    "format:check": "prettier --config .prettierrc --check \"src\""
+    "format": "prettier --write \"src\"",
+    "format:check": "prettier --check \"src\""
   },
   "author": "LangChain",
   "license": "MIT",
@@ -151,7 +151,7 @@
     "reflect-metadata": "^0.2.2",
     "tsx": "^3.12.3",
     "typeorm": "^0.3.26",
-    "typescript": "~5.1.6",
+    "typescript": "~5.8.3",
     "zod": "^3.25.76"
   }
 }

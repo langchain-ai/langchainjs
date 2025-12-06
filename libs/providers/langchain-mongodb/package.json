@@ -1,6 +1,6 @@
 {
   "name": "@langchain/mongodb",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Sample integration for LangChain.js",
   "author": "LangChain",
   "license": "MIT",
@@ -22,12 +22,12 @@
     "lint:fix": "pnpm lint:eslint --fix && pnpm lint:dpdm",
     "clean": "rm -rf .turbo dist/",
     "test:watch": "vitest",
-    "test:int": "vitest run --mode int --testTimeout 10000 --maxWorkers=50%",
-    "format": "prettier --config .prettierrc --write \"src\"",
-    "format:check": "prettier --config .prettierrc --check \"src\""
+    "test:int": "vitest run --mode int",
+    "format": "prettier --write \"src\"",
+    "format:check": "prettier --check \"src\""
   },
   "dependencies": {
-    "mongodb": "^6.17.0"
+    "mongodb": "^6.20.0"
   },
   "peerDependencies": {
     "@langchain/core": "^1.0.0"
@@ -36,6 +36,7 @@
     "@langchain/core": "workspace:*",
     "@langchain/eslint": "workspace:*",
     "@langchain/openai": "workspace:*",
+    "@langchain/tsconfig": "workspace:*",
     "@tsconfig/recommended": "^1.0.3",
     "@types/uuid": "^9",
     "@vitest/coverage-v8": "^3.2.4",

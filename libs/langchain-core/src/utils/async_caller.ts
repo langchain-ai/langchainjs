@@ -1,7 +1,7 @@
-import pRetry from "p-retry";
 import PQueueMod from "p-queue";
 
 import { getAbortSignalError } from "./signal.js";
+import pRetry from "./p-retry/index.js";
 
 const STATUS_NO_RETRY = [
   400, // Bad Request
@@ -103,7 +103,7 @@ export class AsyncCaller {
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  call<A extends any[], T extends (...args: A) => Promise<any>>(
+  async call<A extends any[], T extends (...args: A) => Promise<any>>(
     callable: T,
     ...args: Parameters<T>
   ): Promise<Awaited<ReturnType<T>>> {

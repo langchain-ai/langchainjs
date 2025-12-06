@@ -384,6 +384,26 @@ describe("AIMessageChunk", () => {
       '{"ideas":["read about Angular 19 updates"]}'
     );
     expect(secondCall?.id).toBe("5abf542e-87f3-4899-87c6-8f7d9cb6a28d");
+
+    expect(merged.tool_calls).toHaveLength(2);
+    expect(merged.tool_calls).toEqual([
+      {
+        id: "9fb5c937-6944-4173-84be-ad1caee1cedd",
+        type: "tool_call",
+        name: "add_new_task",
+        args: {
+          tasks: ["buy tomatoes", "help child with math"],
+        },
+      },
+      {
+        id: "5abf542e-87f3-4899-87c6-8f7d9cb6a28d",
+        type: "tool_call",
+        name: "add_ideas",
+        args: {
+          ideas: ["read about Angular 19 updates"],
+        },
+      },
+    ]);
   });
 
   it("should properly merge tool call chunks that have matching indices and at least one id is blank", () => {
@@ -418,6 +438,75 @@ describe("AIMessageChunk", () => {
       '{"tasks":["buy tomatoes","help child with math"]}'
     );
     expect(firstCall?.id).toBe("9fb5c937-6944-4173-84be-ad1caee1cedd");
+
+    expect(merged.tool_calls).toHaveLength(1);
+    expect(merged.tool_calls).toEqual([
+      {
+        type: "tool_call",
+        name: "add_new_task",
+        args: {
+          tasks: ["buy tomatoes", "help child with math"],
+        },
+        id: "9fb5c937-6944-4173-84be-ad1caee1cedd",
+      },
+    ]);
+  });
+
+  // https://github.com/langchain-ai/langchainjs/issues/9450
+  it("should properly concat a string of old completions-style tool call chunks", () => {
+    const chunk1 = new AIMessageChunk({
+      tool_call_chunks: [
+        {
+          name: "get_weather",
+          args: "",
+          id: "call_7171a25538d44feea5155a",
+          index: 0,
+          type: "tool_call_chunk",
+        },
+      ],
+    });
+    const chunk2 = new AIMessageChunk({
+      tool_call_chunks: [
+        {
+          name: undefined,
+          args: '{"city": "',
+          id: "",
+          index: 0,
+          type: "tool_call_chunk",
+        },
+      ],
+    });
+    const chunk3 = new AIMessageChunk({
+      tool_call_chunks: [
+        {
+          name: undefined,
+          args: 'sf"}',
+          id: "",
+          index: 0,
+          type: "tool_call_chunk",
+        },
+      ],
+    });
+
+    const merged = chunk1.concat(chunk2).concat(chunk3);
+    expect(merged.tool_call_chunks).toHaveLength(1);
+
+    const firstCall = merged.tool_call_chunks?.[0];
+    expect(firstCall?.name).toBe("get_weather");
+    expect(firstCall?.args).toBe('{"city": "sf"}');
+    expect(firstCall?.id).toBe("call_7171a25538d44feea5155a");
+
+    expect(merged.tool_calls).toHaveLength(1);
+    expect(merged.tool_calls).toEqual([
+      {
+        type: "tool_call",
+        name: "get_weather",
+        args: {
+          city: "sf",
+        },
+        id: "call_7171a25538d44feea5155a",
+      },
+    ]);
   });
 
   it("should properly merge tool call chunks that have matching indices no IDs at all", () => {
