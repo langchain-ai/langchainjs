@@ -6,6 +6,7 @@ import {
 import {
   AIMessage,
   AIMessageChunk,
+  AIMessageChunkFields,
   BaseMessage,
   UsageMetadata,
 } from "@langchain/core/messages";
@@ -121,6 +122,14 @@ export interface BaseChatGoogleParams
    * The "platformType" parmeter takes precedence.
    */
   vertexai?: boolean;
+
+  /**
+   * Backwards compatibility.
+   * @deprecated in favor of using `disableStreaming` or `.stream()`
+   */
+  streaming?: boolean;
+
+  streamUsage?: boolean;
 }
 
 export interface BaseChatGoogleCallOptions
@@ -145,7 +154,11 @@ export abstract class BaseChatGoogle<
 > extends BaseChatModel<CallOptions, AIMessageChunk> {
   model: string;
 
-  streaming = false;
+  streaming: boolean;
+
+  disableStreaming: boolean;
+
+  streamUsage: boolean = true;
 
   protected _platform?: GooglePlatformType;
 
@@ -170,6 +183,17 @@ export abstract class BaseChatGoogle<
     this._endpoint = params.endpoint;
     this._location = params.location;
     this._apiVersion = params.apiVersion;
+
+    // Logic borrowed from OpenAI library
+    this.disableStreaming = params?.disableStreaming === true;
+    this.streaming = params?.streaming === true;
+    if (this.disableStreaming) this.streaming = false;
+    // disable streaming in BaseChatModel if explicitly disabled
+    if (params?.streaming === false) this.disableStreaming = true;
+
+    this.streamUsage = params?.streamUsage ?? this.streamUsage;
+    if (this.disableStreaming) this.streamUsage = false;
+
   }
 
   _llmType(): string {
@@ -328,7 +352,7 @@ export abstract class BaseChatGoogle<
     runManager?: CallbackManagerForLLMRun
   ): Promise<ChatResult> {
     if (this.streaming) {
-      const stream = await this._streamResponseChunks(messages, options);
+      const stream = await this._streamResponseChunks(messages, options, runManager);
       let finalChunk: ChatGenerationChunk | null = null;
       for await (const chunk of stream) {
         finalChunk = !finalChunk ? chunk : concat(finalChunk, chunk);
@@ -462,6 +486,8 @@ export abstract class BaseChatGoogle<
     options: this["ParsedCallOptions"],
     runManager?: CallbackManagerForLLMRun
   ): AsyncGenerator<ChatGenerationChunk> {
+    const streamUsage: boolean = this.streamUsage ?? true;
+
     const body: GenerateContentRequest = {
       ...this.invocationParams(options),
       systemInstruction: convertMessagesToGeminiSystemInstruction(messages),
@@ -549,15 +575,30 @@ export abstract class BaseChatGoogle<
 
               // Only emit if we have content
               if (textDelta || candidate.finishReason) {
-                const messageChunk = new AIMessageChunk({
+
+                // Include the textDelta always
+                const messageChunkParams: AIMessageChunkFields = {
                   content: textDelta,
-                  ...(candidate.finishReason && {
-                    additional_kwargs: {
-                      finishReason: candidate.finishReason,
-                      finishMessage: candidate.finishMessage,
-                    },
-                  }),
-                });
+                };
+
+                // Include the finish reason, if available
+                if (candidate.finishReason) {
+                  messageChunkParams.additional_kwargs = {
+                    finishReason: candidate.finishReason,
+                    finishMessage: candidate.finishMessage,
+                  }
+                }
+
+                // Include usageMetadata if there is any and we have
+                // enabled it with streamUsage on
+                if (chunk?.usageMetadata && streamUsage) {
+                  messageChunkParams.usage_metadata = {
+                    input_tokens: chunk.usageMetadata.promptTokenCount!,
+                    output_tokens: chunk.usageMetadata.candidatesTokenCount!,
+                    total_tokens: chunk.usageMetadata.totalTokenCount!,
+                  }
+                }
+                const messageChunk = new AIMessageChunk(messageChunkParams);
 
                 controller.enqueue(
                   new ChatGenerationChunk({
