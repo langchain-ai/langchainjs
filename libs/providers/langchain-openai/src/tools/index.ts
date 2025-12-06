@@ -68,6 +68,16 @@ export type {
   LocalShellAction,
 } from "./localShell.js";
 
+import { applyPatch } from "./applyPatch.js";
+export type {
+  ApplyPatchTool,
+  ApplyPatchOptions,
+  ApplyPatchOperation,
+  ApplyPatchCreateFileOperation,
+  ApplyPatchUpdateFileOperation,
+  ApplyPatchDeleteFileOperation,
+} from "./applyPatch.js";
+
 export const tools = {
   webSearch,
   mcp,
@@ -76,4 +86,5 @@ export const tools = {
   imageGeneration,
   computerUse,
   localShell,
+  applyPatch,
 };

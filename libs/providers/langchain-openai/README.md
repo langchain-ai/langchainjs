@@ -508,6 +508,70 @@ const response = await llmWithShell.invoke(
 
 For more information, see [OpenAI's Local Shell Documentation](https://platform.openai.com/docs/guides/tools-local-shell).
 
+### Apply Patch Tool
+
+The Apply Patch tool allows models to propose structured diffs that your integration applies. This enables iterative, multi-step code editing workflows where the model can create, update, and delete files in your codebase.
+
+**When to use**:
+
+- **Multi-file refactors** – Rename symbols, extract helpers, or reorganize modules
+- **Bug fixes** – Have the model both diagnose issues and emit precise patches
+- **Tests & docs generation** – Create new test files, fixtures, and documentation
+- **Migrations & mechanical edits** – Apply repetitive, structured updates
+
+> **Security Warning**: Applying patches can modify files in your codebase. Always validate paths, implement backups, and consider sandboxing.
+> **Note**: This tool is designed to work with `gpt-5.1` model.
+
+```typescript
+import { ChatOpenAI, tools } from "@langchain/openai";
+import { applyDiff } from "@openai/agents";
+import * as fs from "fs/promises";
+
+const model = new ChatOpenAI({ model: "gpt-5.1" });
+
+// With execute callback for automatic patch handling
+const patchTool = tools.applyPatch({
+  execute: async (operation) => {
+    if (operation.type === "create_file") {
+      const content = applyDiff("", operation.diff, "create");
+      await fs.writeFile(operation.path, content);
+      return `Created ${operation.path}`;
+    }
+    if (operation.type === "update_file") {
+      const current = await fs.readFile(operation.path, "utf-8");
+      const newContent = applyDiff(current, operation.diff);
+      await fs.writeFile(operation.path, newContent);
+      return `Updated ${operation.path}`;
+    }
+    if (operation.type === "delete_file") {
+      await fs.unlink(operation.path);
+      return `Deleted ${operation.path}`;
+    }
+    return "Unknown operation type";
+  },
+});
+
+const llmWithPatch = model.bindTools([patchTool]);
+const response = await llmWithPatch.invoke(
+  "Rename the fib() function to fibonacci() in lib/fib.py"
+);
+```
+
+**Operation types**: The model returns operations with these properties:
+
+- `create_file` – Create a new file at `path` with content from `diff`
+- `update_file` – Modify an existing file at `path` using V4A diff format in `diff`
+- `delete_file` – Remove a file at `path`
+
+**Best practices**:
+
+- **Path validation**: Prevent directory traversal and restrict edits to allowed directories
+- **Backups**: Consider backing up files before applying patches
+- **Error handling**: Return descriptive error messages so the model can recover
+- **Atomicity**: Decide whether you want "all-or-nothing" semantics (rollback if any patch fails)
+
+For more information, see [OpenAI's Apply Patch Documentation](https://platform.openai.com/docs/guides/tools-apply-patch).
+
 ## Embeddings
 
 This package also adds support for OpenAI's embeddings model.
