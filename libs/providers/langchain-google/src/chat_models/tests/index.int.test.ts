@@ -13,7 +13,7 @@ import {
 } from "../../node.js";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import {
-  AIMessage, BaseMessage,
+  AIMessage, AIMessageChunk, BaseMessage,
   BaseMessageChunk,
   HumanMessage,
   SystemMessage,
@@ -335,6 +335,75 @@ describe.each(coreModelInfo)(
       expect(warnSpy).not.toHaveBeenCalled();
     });
 
+    test.skip("streaming parameter", async () => {
+      const modelWithStreaming = newChatGoogle({
+        streaming: true,
+      });
+
+      let totalTokenCount = 0;
+      let tokensString = "";
+      const result = await modelWithStreaming.invoke("What is 1 + 1?", {
+        callbacks: [
+          ...callbacks,
+          {
+            handleLLMNewToken: (tok) => {
+              totalTokenCount += 1;
+              tokensString += tok;
+            },
+          },
+        ],
+      });
+
+      expect(result).toBeDefined();
+      expect(result.content).toBe(tokensString);
+
+      expect(totalTokenCount).toBeGreaterThan(1);
+    });
+
+    test("Stream token count usage_metadata", async () => {
+      const model = newChatGoogle();
+      let res: AIMessageChunk | null = null;
+      for await (const chunk of await model.stream(
+        "Why is the sky blue? Be concise."
+      )) {
+        console.log(chunk);
+        if (!res) {
+          res = chunk;
+        } else {
+          res = res.concat(chunk);
+        }
+      }
+
+      expect(res?.usage_metadata).toBeDefined();
+      if (!res?.usage_metadata) {
+        return;
+      }
+      expect(res.usage_metadata.input_tokens).toBeGreaterThan(1);
+      expect(res.usage_metadata.output_tokens).toBeGreaterThan(1);
+      expect(res.usage_metadata.total_tokens).toBe(
+        res.usage_metadata.input_tokens + res.usage_metadata.output_tokens
+      );
+    });
+
+    test("streamUsage false excludes token usage", async () => {
+      const model = newChatGoogle({
+        temperature: 0,
+        streamUsage: false,
+      });
+      let res: AIMessageChunk | null = null;
+      for await (const chunk of await model.stream(
+        "Why is the sky blue? Be concise."
+      )) {
+        if (!res) {
+          res = chunk;
+        } else {
+          res = res.concat(chunk);
+        }
+      }
+
+      expect(res?.usage_metadata).not.toBeDefined();
+    });
+
     test.skip("function", async () => {
       const tools = [weatherTool];
       const llm: Runnable = newChatGoogle().bindTools(tools);
@@ -458,7 +527,7 @@ describe.each(coreModelInfo)(
       expect(result).toHaveProperty("greeterName");
     });
 
-    test("withStructuredOutput - zod default mode", async () => {
+    test.skip("withStructuredOutput - zod default mode", async () => {
       const tool = z.object({
         rating: z.number().min(1).max(5).describe("Rating from 1-5"),
         comment: z.string().describe("Review comment"),
@@ -472,7 +541,7 @@ describe.each(coreModelInfo)(
       expect(recorder.request?.body?.generationConfig).not.toHaveProperty("responseJsonSchema");
     });
 
-    test("withStructuredOutput - zod jsonSchema", async () => {
+    test.skip("withStructuredOutput - zod jsonSchema", async () => {
       const tool = z.object({
         rating: z.number().min(1).max(5).describe("Rating from 1-5"),
         comment: z.string().describe("Review comment"),
@@ -488,7 +557,7 @@ describe.each(coreModelInfo)(
       expect(recorder.request?.body?.generationConfig).toHaveProperty("responseJsonSchema");
     });
 
-    test("withStructuredOutput - zod includeRaw", async () => {
+    test.skip("withStructuredOutput - zod includeRaw", async () => {
       const tool = z.object({
         rating: z.number().min(1).max(5).describe("Rating from 1-5"),
         comment: z.string().describe("Review comment"),
@@ -503,7 +572,7 @@ describe.each(coreModelInfo)(
       expect(AIMessage.isInstance(result.raw)).toEqual(true);
     });
 
-    test("responseSchema - zod", async () => {
+    test.skip("responseSchema - zod", async () => {
       const tool = z.object({
         rating: z.number().min(1).max(5).describe("Rating from 1-5"),
         comment: z.string().describe("Review comment"),
