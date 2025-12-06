@@ -1,10 +1,11 @@
-import { createReactAgent } from "@langchain/langgraph/prebuilt";
 import { ChatOpenAI } from "@langchain/openai";
 import { Calculator } from "@langchain/community/tools/calculator";
 import {
   GoogleCalendarCreateTool,
   GoogleCalendarViewTool,
+  GoogleCalendarDeleteTool,
 } from "@langchain/community/tools/google_calendar";
+import { createAgent } from "langchain";
 
 export async function run() {
   const model = new ChatOpenAI({
@@ -30,10 +31,11 @@ export async function run() {
     new Calculator(),
     new GoogleCalendarCreateTool(googleCalendarParams),
     new GoogleCalendarViewTool(googleCalendarParams),
+    new GoogleCalendarDeleteTool(googleCalendarParams),
   ];
 
-  const calendarAgent = createReactAgent({
-    llm: model,
+  const calendarAgent = createAgent({
+    model,
     tools,
   });
 
@@ -56,4 +58,14 @@ export async function run() {
   //     output: "You have no meetings this week between 8am and 8pm."
   //   }
   console.log("View Result", viewResult);
+
+  const deleteInput = `Delete the meeting with John Doe next Friday at 4pm`;
+
+  const deleteResult = await calendarAgent.invoke({
+    messages: [{ role: "user", content: deleteInput }],
+  });
+  //   Delete Result {
+  //     output: "The meeting with John Doe on 29th September at 4pm has been deleted."
+  //   }
+  console.log("Delete Result", deleteResult);
 }
