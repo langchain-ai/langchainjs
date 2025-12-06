@@ -857,7 +857,7 @@ function interopZodTransformInputSchemaImpl(
     if (recursive) {
       // Handle nested object schemas
       if (isZodObjectV4(outputSchema)) {
-        const outputShape: Mutable<z4.$ZodShape> = outputSchema._zod.def.shape;
+        const outputShape: Mutable<z4.$ZodShape> = {};
         for (const [key, keySchema] of Object.entries(
           outputSchema._zod.def.shape
         )) {
