@@ -408,6 +408,62 @@ Supported models: `gpt-4o`, `gpt-4o-mini`, `gpt-4.1`, `gpt-4.1-mini`, `gpt-4.1-n
 
 For more information, see [OpenAI's Image Generation Documentation](https://platform.openai.com/docs/guides/tools-image-generation).
 
+### Computer Use Tool
+
+The Computer Use tool allows models to control computer interfaces by simulating mouse clicks, keyboard input, scrolling, and more. It uses OpenAI's Computer-Using Agent (CUA) model to understand screenshots and suggest actions.
+
+> **Beta**: Computer use is in beta. Use in sandboxed environments only and do not use for high-stakes or authenticated tasks. Always implement human-in-the-loop for important decisions.
+
+**How it works**: The tool operates in a continuous loop:
+
+1. Model sends computer actions (click, type, scroll, etc.)
+2. Your code executes these actions in a controlled environment
+3. You capture a screenshot of the result
+4. Send the screenshot back to the model
+5. Repeat until the task is complete
+
+```typescript
+import { ChatOpenAI, tools } from "@langchain/openai";
+
+const model = new ChatOpenAI({ model: "computer-use-preview" });
+
+// With execute callback for automatic action handling
+const computer = tools.computerUse({
+  displayWidth: 1024,
+  displayHeight: 768,
+  environment: "browser",
+  execute: async (action) => {
+    if (action.type === "screenshot") {
+      return captureScreenshot();
+    }
+    if (action.type === "click") {
+      await page.mouse.click(action.x, action.y, { button: action.button });
+      return captureScreenshot();
+    }
+    if (action.type === "type") {
+      await page.keyboard.type(action.text);
+      return captureScreenshot();
+    }
+    if (action.type === "scroll") {
+      await page.mouse.move(action.x, action.y);
+      await page.evaluate(
+        `window.scrollBy(${action.scroll_x}, ${action.scroll_y})`
+      );
+      return captureScreenshot();
+    }
+    // Handle other actions...
+    return captureScreenshot();
+  },
+});
+
+const llmWithComputer = model.bindTools([computer]);
+const response = await llmWithComputer.invoke(
+  "Check the latest news on bing.com"
+);
+```
+
+For more information, see [OpenAI's Computer Use Documentation](https://platform.openai.com/docs/guides/tools-computer-use).
+
 ## Embeddings
 
 This package also adds support for OpenAI's embeddings model.

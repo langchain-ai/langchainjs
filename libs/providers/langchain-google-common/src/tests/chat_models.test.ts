@@ -1409,9 +1409,9 @@ describe("Mock ChatGoogle - Gemini", () => {
     const callbacks: CallbackHandlerMethods[] = [
       {
         handleChatModelStart(
-          llm: Serialized,
-          messages: BaseMessage[][],
-          runId: string,
+          _llm: Serialized,
+          _messages: BaseMessage[][],
+          _runId: string,
           _parentRunId?: string,
           _extraParams?: Record<string, unknown>,
           _tags?: string[],
@@ -1419,11 +1419,11 @@ describe("Mock ChatGoogle - Gemini", () => {
           _runName?: string
         ): any {},
         handleCustomEvent(
-          eventName: string,
-          data: any,
-          runId: string,
-          tags?: string[],
-          metadata?: Record<string, any>
+          _eventName: string,
+          _data: any,
+          _runId: string,
+          _tags?: string[],
+          _metadata?: Record<string, any>
         ): any {},
       },
     ];
@@ -1893,8 +1893,9 @@ describe("Mock ChatGoogle - Gemini", () => {
         tool_calls: [
           {
             id: "test",
-            type: "function",
-            function: {
+            type: "tool_call",
+            name: "test",
+            args: {
               name: "test",
               arguments: '{"testName":"cobalt"}',
             },
@@ -2209,7 +2210,7 @@ describe("Mock ChatGoogle - Gemini", () => {
     );
     expect(result.response_metadata).toHaveProperty("logprobs");
     expect(result.response_metadata.logprobs).toHaveProperty("content");
-    const logprobs = result.response_metadata.logprobs.content;
+    const logprobs = (result.response_metadata.logprobs as any).content;
     expect(Array.isArray(logprobs)).toBeTruthy();
     expect(logprobs).toHaveLength(303);
     const first = logprobs[0];
