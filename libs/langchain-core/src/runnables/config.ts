@@ -185,8 +185,8 @@ export function ensureConfig<CallOptions extends RunnableConfig>(
       empty.metadata = {};
     }
     // Do not overwrite if already set upstream.
-    if (empty.metadata.__lc_originalTimeoutMs === undefined) {
-      empty.metadata.__lc_originalTimeoutMs = originalTimeoutMs;
+    if (empty.metadata.timeoutMs === undefined) {
+      empty.metadata.timeoutMs = originalTimeoutMs;
     }
     if (empty.signal !== undefined) {
       if ("any" in AbortSignal) {
