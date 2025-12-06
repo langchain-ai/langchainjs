@@ -73,7 +73,8 @@ export class ChatOpenAIResponses<
     let strict: boolean | undefined;
     if (options?.strict !== undefined) {
       strict = options.strict;
-    } else if (this.supportsStrictToolCalling !== undefined) {
+    }
+    if (strict === undefined && this.supportsStrictToolCalling !== undefined) {
       strict = this.supportsStrictToolCalling;
     }
 
