@@ -1,5 +1,11 @@
-import { test, expect, beforeEach } from "vitest";
-import { ChatXAI } from "../chat_models.js";
+import { test, expect, beforeEach, describe } from "vitest";
+import {
+  ChatXAI,
+  isXAIBuiltInTool,
+  type XAILiveSearchTool,
+  type XAISearchParameters,
+  type ChatXAICompletionsInvocationParams,
+} from "../chat_models.js";
 
 beforeEach(() => {
   process.env.XAI_API_KEY = "foo";
@@ -21,4 +27,184 @@ test("Serialization with no params", () => {
   expect(JSON.stringify(model)).toEqual(
     `{"lc":1,"type":"constructor","id":["langchain","chat_models","xai","ChatXAI"],"kwargs":{"model":"grok-beta"}}`
   );
+});
+
+describe("Server Tool Calling", () => {
+  describe("isXAIBuiltInTool", () => {
+    test("should identify live_search as a built-in tool", () => {
+      const liveSearchTool: XAILiveSearchTool = { type: "live_search" };
+      expect(isXAIBuiltInTool(liveSearchTool)).toBe(true);
+    });
+
+    test("should not identify function tools as built-in", () => {
+      const functionTool = {
+        type: "function",
+        function: {
+          name: "get_weather",
+          description: "Get the weather",
+          parameters: { type: "object", properties: {} },
+        },
+      };
+      expect(isXAIBuiltInTool(functionTool)).toBe(false);
+    });
+
+    test("should not identify invalid objects as built-in", () => {
+      expect(isXAIBuiltInTool(null as unknown as XAILiveSearchTool)).toBe(
+        false
+      );
+      expect(isXAIBuiltInTool(undefined as unknown as XAILiveSearchTool)).toBe(
+        false
+      );
+      expect(isXAIBuiltInTool({} as unknown as XAILiveSearchTool)).toBe(false);
+      expect(
+        isXAIBuiltInTool({ type: "other" } as unknown as XAILiveSearchTool)
+      ).toBe(false);
+    });
+  });
+
+  describe("ChatXAI with searchParameters", () => {
+    test("should store searchParameters from constructor", () => {
+      const searchParams: XAISearchParameters = {
+        mode: "auto",
+        max_search_results: 5,
+      };
+      const model = new ChatXAI({
+        searchParameters: searchParams,
+      });
+      expect(model.searchParameters).toEqual(searchParams);
+    });
+
+    test("should have undefined searchParameters by default", () => {
+      const model = new ChatXAI();
+      expect(model.searchParameters).toBeUndefined();
+    });
+
+    test("should merge search parameters correctly", () => {
+      const model = new ChatXAI({
+        searchParameters: {
+          mode: "auto",
+          max_search_results: 5,
+        },
+      });
+
+      // Access protected method via any cast for testing
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const effectiveParams = (model as any)._getEffectiveSearchParameters({
+        searchParameters: {
+          max_search_results: 10,
+          from_date: "2024-01-01",
+        },
+      });
+
+      expect(effectiveParams).toEqual({
+        mode: "auto",
+        max_search_results: 10,
+        from_date: "2024-01-01",
+      });
+    });
+  });
+
+  describe("invocationParams with server tools", () => {
+    test("should add search_parameters when live_search tool is bound", () => {
+      const model = new ChatXAI();
+
+      const params: ChatXAICompletionsInvocationParams = model.invocationParams(
+        {
+          tools: [{ type: "live_search" }],
+        } as unknown as ChatXAI["ParsedCallOptions"]
+      );
+
+      expect(params.search_parameters).toBeDefined();
+      expect(params.search_parameters?.mode).toBe("auto");
+    });
+
+    test("should add search_parameters from call options", () => {
+      const model = new ChatXAI();
+
+      const params: ChatXAICompletionsInvocationParams = model.invocationParams(
+        {
+          searchParameters: {
+            mode: "on",
+            max_search_results: 10,
+            from_date: "2024-01-01",
+          },
+        } as unknown as ChatXAI["ParsedCallOptions"]
+      );
+
+      expect(params.search_parameters).toEqual({
+        mode: "on",
+        max_search_results: 10,
+        from_date: "2024-01-01",
+      });
+    });
+
+    test("should merge instance and call option search parameters", () => {
+      const model = new ChatXAI({
+        searchParameters: {
+          mode: "auto",
+          max_search_results: 5,
+          return_citations: true,
+        },
+      });
+
+      const params: ChatXAICompletionsInvocationParams = model.invocationParams(
+        {
+          searchParameters: {
+            max_search_results: 10,
+          },
+        } as unknown as ChatXAI["ParsedCallOptions"]
+      );
+
+      expect(params.search_parameters).toEqual({
+        mode: "auto",
+        max_search_results: 10,
+        return_citations: true,
+      });
+    });
+
+    test("should not add search_parameters when no search config is present", () => {
+      const model = new ChatXAI();
+
+      const params: ChatXAICompletionsInvocationParams = model.invocationParams(
+        {} as ChatXAI["ParsedCallOptions"]
+      );
+
+      expect(params.search_parameters).toBeUndefined();
+    });
+  });
+
+  describe("_hasBuiltInTools", () => {
+    test("should return true when live_search tool is present", () => {
+      const model = new ChatXAI();
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const result = (model as any)._hasBuiltInTools([
+        { type: "live_search" },
+        {
+          type: "function",
+          function: { name: "test", parameters: {} },
+        },
+      ]);
+      expect(result).toBe(true);
+    });
+
+    test("should return false when no built-in tools are present", () => {
+      const model = new ChatXAI();
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const result = (model as any)._hasBuiltInTools([
+        {
+          type: "function",
+          function: { name: "test", parameters: {} },
+        },
+      ]);
+      expect(result).toBe(false);
+    });
+
+    test("should return false for undefined or empty tools", () => {
+      const model = new ChatXAI();
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      expect((model as any)._hasBuiltInTools(undefined)).toBe(false);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      expect((model as any)._hasBuiltInTools([])).toBe(false);
+    });
+  });
 });
