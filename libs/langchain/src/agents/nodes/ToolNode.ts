@@ -18,16 +18,19 @@ import {
 } from "@langchain/langgraph";
 
 import { RunnableCallable } from "../RunnableCallable.js";
-import { PreHookAnnotation } from "../annotation.js";
 import { mergeAbortSignals } from "./utils.js";
 import { ToolInvocationError } from "../errors.js";
-import type { PrivateState } from "../runtime.js";
 import type {
-  AnyAnnotationRoot,
   WrapToolCallHook,
   ToolCallRequest,
   ToAnnotationRoot,
 } from "../middleware/types.js";
+import type { AgentBuiltInState } from "../runtime.js";
+
+/**
+ * The name of the tool node in the state graph.
+ */
+export const TOOLS_NODE_NAME = "tools";
 
 export interface ToolNodeOptions {
   /**
@@ -70,11 +73,6 @@ export interface ToolNodeOptions {
    * The wrapper receives the tool call request and a handler function to execute the tool.
    */
   wrapToolCall?: WrapToolCallHook;
-  /**
-   * Optional function to get the private state (threadLevelCallCount, runModelCallCount).
-   * Used to provide runtime metadata to wrapToolCall middleware.
-   */
-  getPrivateState?: () => PrivateState;
 }
 
 const isBaseMessageArray = (input: unknown): input is BaseMessage[] =>
@@ -167,8 +165,8 @@ function defaultHandleToolErrors(
  * ```
  */
 export class ToolNode<
-  StateSchema extends AnyAnnotationRoot | InteropZodObject = any,
-  ContextSchema extends AnyAnnotationRoot | InteropZodObject = any
+  StateSchema extends InteropZodObject = any,
+  ContextSchema extends InteropZodObject = any
 > extends RunnableCallable<StateSchema, ContextSchema> {
   tools: (StructuredToolInterface | DynamicTool | RunnableToolLike)[];
 
@@ -181,31 +179,27 @@ export class ToolNode<
     | ((error: unknown, toolCall: ToolCall) => ToolMessage | undefined) =
     defaultHandleToolErrors;
 
-  wrapToolCall?: WrapToolCallHook;
-
-  getPrivateState?: () => PrivateState;
+  wrapToolCall: WrapToolCallHook | undefined;
 
   constructor(
     tools: (StructuredToolInterface | DynamicTool | RunnableToolLike)[],
     public options?: ToolNodeOptions
   ) {
-    const { name, tags, handleToolErrors, wrapToolCall, getPrivateState } =
+    const { name, tags, handleToolErrors, signal, wrapToolCall } =
       options ?? {};
     super({
       name,
       tags,
       func: (state, config) =>
         this.run(
-          state as ToAnnotationRoot<StateSchema>["State"] &
-            PreHookAnnotation["State"],
+          state as ToAnnotationRoot<StateSchema>["State"] & AgentBuiltInState,
           config as RunnableConfig
         ),
     });
     this.tools = tools;
     this.handleToolErrors = handleToolErrors ?? this.handleToolErrors;
+    this.signal = signal;
     this.wrapToolCall = wrapToolCall;
-    this.getPrivateState = getPrivateState;
-    this.signal = options?.signal;
   }
 
   /**
@@ -281,7 +275,7 @@ export class ToolNode<
   protected async runTool(
     call: ToolCall,
     config: RunnableConfig,
-    state?: ToAnnotationRoot<StateSchema>["State"] & PreHookAnnotation["State"]
+    state: AgentBuiltInState
   ): Promise<ToolMessage | Command> {
     /**
      * Define the base handler that executes the tool.
@@ -303,6 +297,12 @@ export class ToolNode<
           { ...toolCall, type: "tool_call" },
           {
             ...config,
+            /**
+             * extend to match ToolRuntime
+             */
+            config,
+            toolCallId: toolCall.id!,
+            state: config.configurable?.__pregel_scratchpad?.currentTaskInput,
             signal: mergeAbortSignals(this.signal, config.signal),
           }
         );
@@ -335,22 +335,11 @@ export class ToolNode<
      * Build runtime from LangGraph config
      */
     const lgConfig = config as LangGraphRunnableConfig;
-
-    /**
-     * Get private state if available
-     */
-    const privateState = this.getPrivateState?.() || {
-      threadLevelCallCount: 0,
-      runModelCallCount: 0,
-    };
-
     const runtime = {
       context: lgConfig?.context,
       writer: lgConfig?.writer,
       interrupt: lgConfig?.interrupt,
       signal: lgConfig?.signal,
-      threadLevelCallCount: privateState.threadLevelCallCount,
-      runModelCallCount: privateState.runModelCallCount,
     };
 
     /**
@@ -364,14 +353,14 @@ export class ToolNode<
     const request = {
       toolCall: call,
       tool,
-      state: state || ({} as any),
+      state,
       runtime,
     };
 
     /**
      * If wrapToolCall is provided, use it to wrap the tool execution
      */
-    if (this.wrapToolCall && state) {
+    if (this.wrapToolCall) {
       try {
         return await this.wrapToolCall(request, baseHandler);
       } catch (e: unknown) {
@@ -396,13 +385,14 @@ export class ToolNode<
   }
 
   protected async run(
-    state: ToAnnotationRoot<StateSchema>["State"] & PreHookAnnotation["State"],
+    state: ToAnnotationRoot<StateSchema>["State"] & AgentBuiltInState,
     config: RunnableConfig
   ): Promise<ContextSchema> {
     let outputs: (ToolMessage | Command)[];
 
     if (isSendInput(state)) {
-      outputs = [await this.runTool(state.lg_tool_call, config, state)];
+      const { lg_tool_call, jumpTo, ...newState } = state;
+      outputs = [await this.runTool(state.lg_tool_call, config, newState)];
     } else {
       let messages: BaseMessage[];
       if (isBaseMessageArray(state)) {

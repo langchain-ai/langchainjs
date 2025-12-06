@@ -9,6 +9,7 @@ services:
     working_dir: /app
     volumes:
       - ../libs/langchain:/langchain
+      - ../libs/langchain-core:/libs/langchain-core
       - ../libs/langchain-textsplitters:/libs/langchain-textsplitters
       - ../libs/providers/langchain-openai:/libs/langchain-openai
       - ../libs/providers/langchain-anthropic:/libs/langchain-anthropic
@@ -120,22 +121,22 @@ services:
     command: bash /scripts/with_standard_tests/openai/test-with-lowest-deps.sh
 
   # Anthropic
-  anthropic-latest-deps:
-    image: node:20
-    environment:
-      PUPPETEER_SKIP_DOWNLOAD: "true"
-      PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: "true"
-      COHERE_API_KEY: ${COHERE_API_KEY}
-    working_dir: /app
-    volumes:
-      - ../pnpm-workspace.yaml:/pnpm-workspace.yaml
-      - ../turbo.json:/turbo.json
-      - ./scripts/with_standard_tests/anthropic/node/package.json:/package.json
-      - ../libs/langchain-standard-tests:/libs/langchain-standard-tests
-      - ../libs/providers/langchain-anthropic:/libs/providers/langchain-anthropic
-      - ../internal:/internal
-      - ./scripts:/scripts
-    command: bash /scripts/with_standard_tests/anthropic/test-with-latest-deps.sh
+  # anthropic-latest-deps:
+  #   image: node:20
+  #   environment:
+  #     PUPPETEER_SKIP_DOWNLOAD: "true"
+  #     PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: "true"
+  #     COHERE_API_KEY: ${COHERE_API_KEY}
+  #   working_dir: /app
+  #   volumes:
+  #     - ../pnpm-workspace.yaml:/pnpm-workspace.yaml
+  #     - ../turbo.json:/turbo.json
+  #     - ./scripts/with_standard_tests/anthropic/node/package.json:/package.json
+  #     - ../libs/langchain-standard-tests:/libs/langchain-standard-tests
+  #     - ../libs/providers/langchain-anthropic:/libs/providers/langchain-anthropic
+  #     - ../internal:/internal
+  #     - ./scripts:/scripts
+  #   command: bash /scripts/with_standard_tests/anthropic/test-with-latest-deps.sh
   # anthropic-lowest-deps:
   #   image: node:20
   #   environment:

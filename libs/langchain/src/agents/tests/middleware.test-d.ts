@@ -2,9 +2,10 @@ import { describe, it, expectTypeOf } from "vitest";
 import { z } from "zod/v3";
 import { HumanMessage, BaseMessage, AIMessage } from "@langchain/core/messages";
 import { tool } from "@langchain/core/tools";
+import type { ServerTool, ClientTool } from "@langchain/core/tools";
 
 import { createAgent, createMiddleware } from "../index.js";
-import type { ServerTool, ClientTool } from "../tools.js";
+import type { AgentBuiltInState } from "../runtime.js";
 
 describe("middleware types", () => {
   it("a middleware can define a state schema which is propagated to the result", async () => {
@@ -132,11 +133,9 @@ describe("middleware types", () => {
     it("doesn't require users to pass in a context if a middleware has optional context schema", async () => {
       const middleware = createMiddleware({
         name: "Middleware",
-        contextSchema: z
-          .object({
-            customOptionalContextProp: z.string().default("default value"),
-          })
-          .optional(),
+        contextSchema: z.object({
+          customOptionalContextProp: z.string().optional(),
+        }),
       });
 
       const agent = createAgent({
@@ -157,30 +156,42 @@ describe("middleware types", () => {
       );
     });
 
-    it("doesn't require users to pass in a context if a middleware has context schema with defaults", async () => {
+    it("doesn't require users to pass in a context if a middleware has context schema with defaults or optional", async () => {
       const middleware = createMiddleware({
         name: "Middleware",
-        contextSchema: z
-          .object({
-            customDefaultContextProp: z.string().default("default value"),
-            customOptionalContextProp: z.string().optional(),
-            customRequiredContextProp: z.string(),
-          })
-          .default({
-            customRequiredContextProp: "default value",
-          }),
-        beforeModel: async (_state, runtime) => {
+        contextSchema: z.object({
+          customDefaultContextProp: z.string().default("default value"),
+          customOptionalContextProp: z.string().optional(),
+        }),
+        stateSchema: z.object({
+          customDefaultStateProp: z.string().default("default value"),
+          customOptionalStateProp: z.string().optional(),
+          customRequiredStateProp: z.string(),
+        }),
+        beforeModel: async (state, runtime) => {
+          expectTypeOf(state).toEqualTypeOf<
+            {
+              customDefaultStateProp: string;
+              customOptionalStateProp?: string;
+              customRequiredStateProp: string;
+            } & AgentBuiltInState
+          >();
           expectTypeOf(runtime.context).toEqualTypeOf<{
             customDefaultContextProp: string;
             customOptionalContextProp?: string;
-            customRequiredContextProp: string;
           }>();
         },
-        afterModel: async (_state, runtime) => {
+        afterModel: async (state, runtime) => {
+          expectTypeOf(state).toEqualTypeOf<
+            {
+              customDefaultStateProp: string;
+              customOptionalStateProp?: string;
+              customRequiredStateProp: string;
+            } & AgentBuiltInState
+          >();
           expectTypeOf(runtime.context).toEqualTypeOf<{
             customDefaultContextProp: string;
             customOptionalContextProp?: string;
-            customRequiredContextProp: string;
           }>();
         },
         wrapModelCall: async (request, handler) => {
@@ -190,13 +201,34 @@ describe("middleware types", () => {
           expectTypeOf(request.runtime.context).toEqualTypeOf<{
             customDefaultContextProp: string;
             customOptionalContextProp?: string;
-            customRequiredContextProp: string;
           }>();
+          expectTypeOf(request.state).toEqualTypeOf<
+            {
+              customDefaultStateProp: string;
+              customOptionalStateProp?: string;
+              customRequiredStateProp: string;
+            } & AgentBuiltInState
+          >();
 
           return handler({
             ...request,
             tools: [tool(() => "result", { name: "toolA" })],
           });
+        },
+        wrapToolCall: async (request, handler) => {
+          expectTypeOf(request.runtime.context).toEqualTypeOf<{
+            customDefaultContextProp: string;
+            customOptionalContextProp?: string;
+          }>();
+          expectTypeOf(request.state).toEqualTypeOf<
+            {
+              customDefaultStateProp: string;
+              customOptionalStateProp?: string;
+              customRequiredStateProp: string;
+            } & AgentBuiltInState
+          >();
+
+          return handler(request);
         },
       });
 
@@ -209,6 +241,7 @@ describe("middleware types", () => {
       await agent.invoke(
         {
           messages: [new HumanMessage("Hello, world!")],
+          customRequiredStateProp: "default value",
         },
         {
           configurable: {
@@ -221,40 +254,23 @@ describe("middleware types", () => {
     it("doesn't require users to pass in a context if a middleware has context schema as optional", async () => {
       const middleware = createMiddleware({
         name: "Middleware",
-        contextSchema: z
-          .object({
-            customOptionalContextProp: z.string().default("default value"),
-          })
-          .optional(),
+        contextSchema: z.object({
+          customOptionalContextProp: z.string().default("default value"),
+        }),
         beforeModel: async (_state, runtime) => {
-          expectTypeOf(runtime.context).toEqualTypeOf<
-            Partial<
-              | {
-                  customOptionalContextProp: string;
-                }
-              | undefined
-            >
-          >();
+          expectTypeOf(runtime.context).toEqualTypeOf<{
+            customOptionalContextProp: string;
+          }>();
         },
         afterModel: async (_state, runtime) => {
-          expectTypeOf(runtime.context).toEqualTypeOf<
-            Partial<
-              | {
-                  customOptionalContextProp: string;
-                }
-              | undefined
-            >
-          >();
+          expectTypeOf(runtime.context).toEqualTypeOf<{
+            customOptionalContextProp: string;
+          }>();
         },
         wrapModelCall: async (request) => {
-          expectTypeOf(request.runtime.context).toEqualTypeOf<
-            Partial<
-              | {
-                  customOptionalContextProp: string;
-                }
-              | undefined
-            >
-          >();
+          expectTypeOf(request.runtime.context).toEqualTypeOf<{
+            customOptionalContextProp: string;
+          }>();
 
           return new AIMessage("foobar");
         },

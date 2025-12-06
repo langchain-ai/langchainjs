@@ -1,0 +1,19 @@
+provider = "openai"
+output = "src/chat_models/profiles.ts"
+
+# Overrides applicable to all OpenAI models
+[overrides]
+imageUrlInputs = true
+pdfInputs = true
+pdfToolMessage = true
+imageToolMessage = true
+toolChoice = true
+structuredOutput = true
+
+# Model-specific overrides for gpt-3.5-turbo
+[overrides."gpt-3.5-turbo"]
+imageUrlInputs = false
+pdfInputs = false
+pdfToolMessage = false
+imageToolMessage = false
+structuredOutput = false

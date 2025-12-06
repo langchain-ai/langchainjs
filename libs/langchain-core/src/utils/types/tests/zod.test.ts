@@ -22,6 +22,7 @@ import {
   interopZodObjectStrict,
   ZodObjectV4,
   interopZodTransformInputSchema,
+  isInteropZodError,
 } from "../zod.js";
 
 describe("Zod utility functions", () => {
@@ -1525,6 +1526,345 @@ describe("Zod utility functions", () => {
         expect(elementShape.name).toBeInstanceOf(z4.ZodString);
         expect(elementShape.age).toBeInstanceOf(z4.ZodNumber);
       });
+
+      it("should handle transforms in optional schemas", () => {
+        const inputSchema = z4.object({
+          name: z4
+            .string()
+            .transform((s) => s.toUpperCase())
+            .optional(),
+          age: z4.number().optional(),
+        });
+
+        const result = interopZodTransformInputSchema(inputSchema, true);
+
+        expect(result).toBeInstanceOf(z4.ZodObject);
+        const resultShape = getInteropZodObjectShape(result as any);
+        expect(Object.keys(resultShape)).toEqual(["name", "age"]);
+
+        // The name property should be optional string (transform removed)
+        expect(resultShape.name).toBeInstanceOf(z4.ZodOptional);
+        const nameInner = (resultShape.name as any)._zod.def.innerType;
+        expect(nameInner).toBeInstanceOf(z4.ZodString);
+
+        // The age property should remain optional number
+        expect(resultShape.age).toBeInstanceOf(z4.ZodOptional);
+        const ageInner = (resultShape.age as any)._zod.def.innerType;
+        expect(ageInner).toBeInstanceOf(z4.ZodNumber);
+      });
+
+      it("should handle transforms in nullable schemas", () => {
+        const inputSchema = z4.object({
+          name: z4
+            .string()
+            .transform((s) => s.toLowerCase())
+            .nullable(),
+          count: z4.number().nullable(),
+        });
+
+        const result = interopZodTransformInputSchema(inputSchema, true);
+
+        expect(result).toBeInstanceOf(z4.ZodObject);
+        const resultShape = getInteropZodObjectShape(result as any);
+        expect(Object.keys(resultShape)).toEqual(["name", "count"]);
+
+        // The name property should be nullable string (transform removed)
+        expect(resultShape.name).toBeInstanceOf(z4.ZodNullable);
+        const nameInner = (resultShape.name as any)._zod.def.innerType;
+        expect(nameInner).toBeInstanceOf(z4.ZodString);
+
+        // The count property should remain nullable number
+        expect(resultShape.count).toBeInstanceOf(z4.ZodNullable);
+        const countInner = (resultShape.count as any)._zod.def.innerType;
+        expect(countInner).toBeInstanceOf(z4.ZodNumber);
+      });
+
+      it("should handle transforms in nullish (optional + nullable) schemas", () => {
+        const inputSchema = z4.object({
+          name: z4
+            .string()
+            .transform((s) => s.trim())
+            .nullish(),
+          value: z4.number().nullish(),
+        });
+
+        const result = interopZodTransformInputSchema(inputSchema, true);
+
+        expect(result).toBeInstanceOf(z4.ZodObject);
+        const resultShape = getInteropZodObjectShape(result as any);
+        expect(Object.keys(resultShape)).toEqual(["name", "value"]);
+
+        // The name property should be optional(nullable(string)) with transform removed
+        expect(resultShape.name).toBeInstanceOf(z4.ZodOptional);
+        const nameOptionalInner = (resultShape.name as any)._zod.def.innerType;
+        expect(nameOptionalInner).toBeInstanceOf(z4.ZodNullable);
+        const nameNullableInner = (nameOptionalInner as any)._zod.def.innerType;
+        expect(nameNullableInner).toBeInstanceOf(z4.ZodString);
+
+        // The value property should remain nullish number
+        expect(resultShape.value).toBeInstanceOf(z4.ZodOptional);
+        const valueOptionalInner = (resultShape.value as any)._zod.def
+          .innerType;
+        expect(valueOptionalInner).toBeInstanceOf(z4.ZodNullable);
+        const valueNullableInner = (valueOptionalInner as any)._zod.def
+          .innerType;
+        expect(valueNullableInner).toBeInstanceOf(z4.ZodNumber);
+      });
+
+      it("should handle transforms in optional objects", () => {
+        const userSchema = z4.object({
+          name: z4.string().transform((s) => s.toUpperCase()),
+          age: z4.number(),
+        });
+
+        const inputSchema = z4.object({
+          user: userSchema.optional(),
+          metadata: z4.string(),
+        });
+
+        const result = interopZodTransformInputSchema(inputSchema, true);
+
+        expect(result).toBeInstanceOf(z4.ZodObject);
+        const resultShape = getInteropZodObjectShape(result as any);
+        expect(Object.keys(resultShape)).toEqual(["user", "metadata"]);
+
+        // The user property should be optional(object) with transform removed from inner properties
+        expect(resultShape.user).toBeInstanceOf(z4.ZodOptional);
+        const userInner = (resultShape.user as any)._zod.def.innerType;
+        expect(userInner).toBeInstanceOf(z4.ZodObject);
+
+        const userShape = getInteropZodObjectShape(userInner as any);
+        expect(Object.keys(userShape)).toEqual(["name", "age"]);
+        expect(userShape.name).toBeInstanceOf(z4.ZodString);
+        expect(userShape.age).toBeInstanceOf(z4.ZodNumber);
+      });
+
+      it("should handle transforms in arrays of optional schemas", () => {
+        const inputSchema = z4.object({
+          items: z4.array(
+            z4
+              .string()
+              .transform((s) => s.toUpperCase())
+              .optional()
+          ),
+        });
+
+        const result = interopZodTransformInputSchema(inputSchema, true);
+
+        expect(result).toBeInstanceOf(z4.ZodObject);
+        const resultShape = getInteropZodObjectShape(result as any);
+
+        // The items property should be an array of optional strings
+        expect(resultShape.items).toBeInstanceOf(z4.ZodArray);
+        const arrayElement = (resultShape.items as any)._zod.def.element;
+        expect(arrayElement).toBeInstanceOf(z4.ZodOptional);
+
+        const elementInner = (arrayElement as any)._zod.def.innerType;
+        expect(elementInner).toBeInstanceOf(z4.ZodString);
+      });
+
+      it("should cache and reuse sanitized sub-schemas when same schema is used in multiple properties", () => {
+        // Create a shared sub-schema that will be used in multiple places
+        const addressSchema = z4.object({
+          street: z4.string().transform((s) => s.toUpperCase()),
+          city: z4.string(),
+        });
+
+        const inputSchema = z4.object({
+          homeAddress: addressSchema,
+          workAddress: addressSchema,
+          billingAddress: addressSchema,
+        });
+
+        const result = interopZodTransformInputSchema(inputSchema, true);
+
+        expect(result).toBeInstanceOf(z4.ZodObject);
+        const resultShape = getInteropZodObjectShape(result as any);
+
+        // All three address properties should reference the exact same sanitized instance
+        expect(resultShape.homeAddress).toBe(resultShape.workAddress);
+        expect(resultShape.workAddress).toBe(resultShape.billingAddress);
+        expect(resultShape.homeAddress).toBe(resultShape.billingAddress);
+      });
+
+      it("should cache and reuse sanitized sub-schemas when same schema is used in array and as property", () => {
+        // Create a shared user schema
+        const userSchema = z4.object({
+          name: z4.string().transform((s) => s.toUpperCase()),
+          age: z4.number(),
+        });
+
+        const inputSchema = z4.object({
+          primaryUser: userSchema,
+          secondaryUser: userSchema,
+          allUsers: z4.array(userSchema),
+        });
+
+        const result = interopZodTransformInputSchema(inputSchema, true);
+
+        expect(result).toBeInstanceOf(z4.ZodObject);
+        const resultShape = getInteropZodObjectShape(result as any);
+
+        // Extract the array element schema
+        const arrayElement = (resultShape.allUsers as any)._zod.def.element;
+
+        // All user schema references should be the exact same instance
+        expect(resultShape.primaryUser).toBe(resultShape.secondaryUser);
+        expect(resultShape.primaryUser).toBe(arrayElement);
+        expect(resultShape.secondaryUser).toBe(arrayElement);
+      });
+
+      it("should cache and reuse deeply nested shared schemas", () => {
+        // Create a deeply nested shared schema
+        const tagSchema = z4.object({
+          name: z4.string().transform((s) => s.toLowerCase()),
+          color: z4.string(),
+        });
+
+        const postSchema = z4.object({
+          title: z4.string(),
+          tags: z4.array(tagSchema),
+          primaryTag: tagSchema,
+        });
+
+        const inputSchema = z4.object({
+          posts: z4.array(postSchema),
+          featuredPost: postSchema,
+        });
+
+        const result = interopZodTransformInputSchema(inputSchema, true);
+
+        expect(result).toBeInstanceOf(z4.ZodObject);
+        const resultShape = getInteropZodObjectShape(result as any);
+
+        // Extract the post schema from the array
+        const postsArrayElement = (resultShape.posts as any)._zod.def.element;
+
+        // The featuredPost and the array element should be the same instance
+        expect(resultShape.featuredPost).toBe(postsArrayElement);
+
+        // Extract tag schemas from both places
+        const featuredPostShape = getInteropZodObjectShape(
+          resultShape.featuredPost as any
+        );
+        const postsArrayElementShape = getInteropZodObjectShape(
+          postsArrayElement as any
+        );
+
+        // Tag schemas should also be reused
+        const featuredPostTagsArray = (featuredPostShape.tags as any)._zod.def
+          .element;
+        const postsArrayTagsArray = (postsArrayElementShape.tags as any)._zod
+          .def.element;
+
+        expect(featuredPostShape.primaryTag).toBe(featuredPostTagsArray);
+        expect(postsArrayElementShape.primaryTag).toBe(postsArrayTagsArray);
+        expect(featuredPostTagsArray).toBe(postsArrayTagsArray);
+      });
+
+      it("should handle caching when same schema appears at different nesting levels", () => {
+        // Create a schema that appears at different nesting levels
+        const metadataSchema = z4.object({
+          key: z4.string(),
+          value: z4.string().transform((s) => s.trim()),
+        });
+
+        const inputSchema = z4.object({
+          topLevelMetadata: metadataSchema,
+          nested: z4.object({
+            nestedMetadata: metadataSchema,
+            deepNested: z4.object({
+              deepMetadata: metadataSchema,
+            }),
+          }),
+          metadataList: z4.array(metadataSchema),
+        });
+
+        const result = interopZodTransformInputSchema(inputSchema, true);
+
+        expect(result).toBeInstanceOf(z4.ZodObject);
+        const resultShape = getInteropZodObjectShape(result as any);
+        const nestedShape = getInteropZodObjectShape(resultShape.nested as any);
+        const deepNestedShape = getInteropZodObjectShape(
+          nestedShape.deepNested as any
+        );
+        const metadataListElement = (resultShape.metadataList as any)._zod.def
+          .element;
+
+        // All metadata schemas should reference the same sanitized instance
+        expect(resultShape.topLevelMetadata).toBe(nestedShape.nestedMetadata);
+        expect(nestedShape.nestedMetadata).toBe(deepNestedShape.deepMetadata);
+        expect(deepNestedShape.deepMetadata).toBe(metadataListElement);
+        expect(resultShape.topLevelMetadata).toBe(metadataListElement);
+      });
+
+      it("should generate JSON schema with $ref for reused sub-schemas", () => {
+        // Create a shared address schema with transforms
+        const addressSchema = z4.object({
+          street: z4.string().transform((s) => s.toUpperCase()),
+          city: z4.string(),
+          zipCode: z4.string(),
+        });
+
+        const inputSchema = z4.object({
+          homeAddress: addressSchema,
+          workAddress: addressSchema,
+          billingAddress: addressSchema,
+          shippingAddresses: z4.array(addressSchema),
+        });
+
+        // Get the sanitized input schema with transforms removed
+        const sanitizedSchema = interopZodTransformInputSchema(
+          inputSchema,
+          true
+        );
+
+        // Generate JSON schema with refs for reused schemas
+        const jsonSchema = z4.toJSONSchema(sanitizedSchema as any, {
+          cycles: "ref",
+          reused: "ref",
+          override(ctx) {
+            ctx.jsonSchema.title = "TestSchema";
+          },
+        });
+
+        // Verify exact JSON schema structure with $ref for reused schemas
+        expect(jsonSchema).toEqual({
+          $schema: "https://json-schema.org/draft/2020-12/schema",
+          title: "TestSchema",
+          type: "object",
+          properties: {
+            homeAddress: { $ref: "#/$defs/__schema0" },
+            workAddress: { $ref: "#/$defs/__schema0" },
+            billingAddress: { $ref: "#/$defs/__schema0" },
+            shippingAddresses: {
+              title: "TestSchema",
+              type: "array",
+              items: { $ref: "#/$defs/__schema0" },
+            },
+          },
+          required: [
+            "homeAddress",
+            "workAddress",
+            "billingAddress",
+            "shippingAddresses",
+          ],
+          additionalProperties: false,
+          $defs: {
+            __schema0: {
+              title: "TestSchema",
+              type: "object",
+              properties: {
+                street: { title: "TestSchema", type: "string" },
+                city: { title: "TestSchema", type: "string" },
+                zipCode: { title: "TestSchema", type: "string" },
+              },
+              required: ["street", "city", "zipCode"],
+              additionalProperties: false,
+            },
+          },
+        });
+      });
     });
 
     it("should throw error for non-schema values", () => {
@@ -1534,6 +1874,66 @@ describe("Zod utility functions", () => {
       expect(() => interopZodTransformInputSchema("string" as any)).toThrow();
       expect(() => interopZodTransformInputSchema(123 as any)).toThrow();
       expect(() => interopZodTransformInputSchema([] as any)).toThrow();
+    });
+  });
+
+  describe("isInteropZodError", () => {
+    it("should return true for ZodError from v3 schema validation", () => {
+      const schema = z3.string();
+      try {
+        schema.parse(123);
+        expect.fail("Expected error to be thrown");
+      } catch (e) {
+        expect(isInteropZodError(e)).toBe(true);
+      }
+    });
+
+    it("should return true for $ZodError from v4 schema validation", () => {
+      const schema = z4.string();
+      try {
+        schema.parse(123);
+        expect.fail("Expected error to be thrown");
+      } catch (e) {
+        expect(isInteropZodError(e)).toBe(true);
+      }
+    });
+
+    it("should return false for non-Zod errors", () => {
+      expect(isInteropZodError(new Error("Regular error"))).toBe(false);
+      expect(isInteropZodError(new TypeError("Type error"))).toBe(false);
+      expect(isInteropZodError(new ReferenceError("Reference error"))).toBe(
+        false
+      );
+      expect(isInteropZodError(new SyntaxError("Syntax error"))).toBe(false);
+    });
+
+    it("should return false for non-error values", () => {
+      expect(isInteropZodError(null)).toBe(false);
+      expect(isInteropZodError(undefined)).toBe(false);
+      expect(isInteropZodError("string")).toBe(false);
+      expect(isInteropZodError(123)).toBe(false);
+      expect(isInteropZodError({})).toBe(false);
+      expect(isInteropZodError([])).toBe(false);
+      expect(isInteropZodError(true)).toBe(false);
+      expect(isInteropZodError(false)).toBe(false);
+    });
+
+    it("should return false for error-like objects that are not Error instances", () => {
+      const errorLike = {
+        constructor: { name: "ZodError" },
+        message: "Some error",
+      };
+      expect(isInteropZodError(errorLike)).toBe(false);
+    });
+
+    it("should return false for custom Error subclasses", () => {
+      class CustomError extends Error {
+        constructor(message: string) {
+          super(message);
+          this.name = "CustomError";
+        }
+      }
+      expect(isInteropZodError(new CustomError("Custom error"))).toBe(false);
     });
   });
 });

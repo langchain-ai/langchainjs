@@ -13,6 +13,7 @@ import {
   BaseLanguageModelInput,
   StructuredOutputMethodOptions,
 } from "@langchain/core/language_models/base";
+import { type ModelProfile } from "@langchain/core/language_models/profile";
 import {
   Runnable,
   RunnablePassthrough,
@@ -64,6 +65,7 @@ import {
   removeAdditionalProperties,
   schemaToGeminiParameters,
 } from "./utils/zod_to_gemini_parameters.js";
+import PROFILES from "./profiles.js";
 
 export class ChatConnection<AuthOptions> extends AbstractGoogleLLMConnection<
   BaseMessage[],
@@ -431,6 +433,19 @@ export abstract class ChatGoogleBase<AuthOptions>
   /** @ignore */
   _combineLLMOutput() {
     return [];
+  }
+
+  /**
+   * Return profiling information for the model.
+   *
+   * Provides information about the model's capabilities and constraints,
+   * including token limits, multimodal support, and advanced features like
+   * tool calling and structured output.
+   *
+   * @returns {ModelProfile} An object describing the model's capabilities and constraints
+   */
+  get profile(): ModelProfile {
+    return PROFILES[this.model] ?? {};
   }
 
   withStructuredOutput<

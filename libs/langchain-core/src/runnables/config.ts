@@ -246,16 +246,20 @@ export function patchConfig<CallOptions extends RunnableConfig>(
 export function pickRunnableConfigKeys<CallOptions extends Record<string, any>>(
   config?: CallOptions
 ): Partial<RunnableConfig> | undefined {
-  return config
-    ? {
-        configurable: config.configurable,
-        recursionLimit: config.recursionLimit,
-        callbacks: config.callbacks,
-        tags: config.tags,
-        metadata: config.metadata,
-        maxConcurrency: config.maxConcurrency,
-        timeout: config.timeout,
-        signal: config.signal,
-      }
-    : undefined;
+  if (!config) return undefined;
+
+  return {
+    configurable: config.configurable,
+    recursionLimit: config.recursionLimit,
+    callbacks: config.callbacks,
+    tags: config.tags,
+    metadata: config.metadata,
+    maxConcurrency: config.maxConcurrency,
+    timeout: config.timeout,
+    signal: config.signal,
+    // @ts-expect-error - Store is a LangGraph-specific property
+    // which wewant to pass through to all runnables.
+    // (eg. tools should have access to writing to the store)
+    store: config.store,
+  };
 }

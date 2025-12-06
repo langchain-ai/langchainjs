@@ -36,13 +36,13 @@ const dockerPackages: WorkspacePackage[] = [
     pkg: { name: "@langchain/standard-tests" },
     path: "/langchain-standard-tests",
   },
-  { pkg: { name: "@langchain/scripts" }, path: "/langchain-scripts" },
   {
     pkg: { name: "@langchain/textsplitters" },
     path: "/langchain-textsplitters",
   },
   { pkg: { name: "@langchain/build" }, path: "/langchain-build" },
   { pkg: { name: "@langchain/eslint" }, path: "/langchain-eslint" },
+  { pkg: { name: "@langchain/tsconfig" }, path: "/langchain-tsconfig" },
 ];
 
 class EnvironmentTestRunner {

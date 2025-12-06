@@ -867,10 +867,16 @@ test("system prompt caching", async () => {
     res.usage_metadata?.input_token_details?.cache_creation
   ).toBeGreaterThan(0);
   expect(res.usage_metadata?.input_token_details?.cache_read).toBe(0);
+  expect(res.usage_metadata?.input_tokens).toBeGreaterThan(
+    res.usage_metadata?.input_token_details?.cache_creation ?? 0
+  );
   const res2 = await model.invoke(messages);
   expect(res2.usage_metadata?.input_token_details?.cache_creation).toBe(0);
   expect(res2.usage_metadata?.input_token_details?.cache_read).toBeGreaterThan(
     0
+  );
+  expect(res2.usage_metadata?.input_tokens).toBeGreaterThan(
+    res2.usage_metadata?.input_token_details?.cache_read ?? 0
   );
   const stream = await model.stream(messages);
   let agg;
@@ -1518,6 +1524,30 @@ describe("Sonnet 4.5", () => {
 
     expect(response.content.length).toBeGreaterThan(0);
   });
+
+  // https://github.com/langchain-ai/langchainjs/issues/9258
+  it("works when passing topP arg", async () => {
+    const model = new ChatAnthropic({
+      model: "claude-sonnet-4-5-20250929",
+      topP: 0.99,
+    });
+    const response = await model.invoke(
+      "Please respond to this message simply with: Hello"
+    );
+    expect(response.content.length).toBeGreaterThan(0);
+  });
+});
+
+describe("Opus 4.5", () => {
+  it("works without passing any args", async () => {
+    const model = new ChatAnthropic({
+      model: "claude-opus-4-5",
+    });
+    const response = await model.invoke(
+      "Please respond to this message simply with: Hello"
+    );
+    expect(response.content.length).toBeGreaterThan(0);
+  });
 });
 
 it("won't modify structured output content if outputVersion is set", async () => {
@@ -1530,4 +1560,20 @@ it("won't modify structured output content if outputVersion is set", async () =>
     .withStructuredOutput(schema)
     .invoke("respond with the name 'John'");
   expect(response.name).toBeDefined();
+});
+
+describe("will work with native structured output", () => {
+  const schema = z.object({ name: z.string() });
+  test.each(["claude-opus-4-1", "claude-sonnet-4-5-20250929"])(
+    "works with %s",
+    async (modelName) => {
+      const model = new ChatAnthropic({
+        model: modelName,
+      });
+      const response = await model
+        .withStructuredOutput(schema, { method: "jsonSchema" })
+        .invoke("respond with the name 'John'");
+      expect(response.name).toBeDefined();
+    }
+  );
 });

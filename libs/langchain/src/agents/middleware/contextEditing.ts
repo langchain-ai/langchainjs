@@ -8,7 +8,7 @@
  */
 
 import type { BaseMessage } from "@langchain/core/messages";
-import type { LanguageModelLike } from "@langchain/core/language_models/base";
+import type { BaseLanguageModel } from "@langchain/core/language_models/base";
 import {
   AIMessage,
   ToolMessage,
@@ -17,15 +17,18 @@ import {
 
 import { countTokensApproximately } from "./utils.js";
 import { createMiddleware } from "../middleware.js";
+import {
+  getProfileLimits,
+  contextSizeSchema,
+  keepSchema,
+  type ContextSize,
+  type KeepSize,
+  type TokenCounter,
+} from "./summarization.js";
 
 const DEFAULT_TOOL_PLACEHOLDER = "[cleared]";
-
-/**
- * Function type for counting tokens in a sequence of messages.
- */
-export type TokenCounter = (
-  messages: BaseMessage[]
-) => number | Promise<number>;
+const DEFAULT_TRIGGER_TOKENS = 100_000;
+const DEFAULT_KEEP = 3;
 
 /**
  * Protocol describing a context editing strategy.
@@ -36,16 +39,32 @@ export type TokenCounter = (
  *
  * @example
  * ```ts
- * import { SystemMessage } from "langchain";
+ * import { HumanMessage, type ContextEdit, type BaseMessage  } from "langchain";
  *
- * class RemoveOldSystemMessages implements ContextEdit {
- *   async apply({ tokens, messages, countTokens }) {
- *     // Remove old system messages if over limit
+ * class RemoveOldHumanMessages implements ContextEdit {
+ *   constructor(private keepRecent: number = 10) {}
+ *
+ *   async apply({ messages, countTokens }) {
+ *     // Check current token count
+ *     const tokens = await countTokens(messages);
+ *
+ *     // Remove old human messages if over limit, keeping the most recent ones
  *     if (tokens > 50000) {
- *       messages = messages.filter(SystemMessage.isInstance);
- *       return await countTokens(messages);
+ *       const humanMessages: number[] = [];
+ *
+ *       // Find all human message indices
+ *       for (let i = 0; i < messages.length; i++) {
+ *         if (HumanMessage.isInstance(messages[i])) {
+ *           humanMessages.push(i);
+ *         }
+ *       }
+ *
+ *       // Remove old human messages (keep only the most recent N)
+ *       const toRemove = humanMessages.slice(0, -this.keepRecent);
+ *       for (let i = toRemove.length - 1; i >= 0; i--) {
+ *         messages.splice(toRemove[i]!, 1);
+ *       }
  *     }
- *     return tokens;
  *   }
  * }
  * ```
@@ -64,10 +83,6 @@ export interface ContextEdit {
    */
   apply(params: {
     /**
-     * Current token count of all messages
-     */
-    tokens: number;
-    /**
      * Array of messages to potentially edit (modify in-place)
      */
     messages: BaseMessage[];
@@ -75,7 +90,11 @@ export interface ContextEdit {
      * Function to count tokens in a message array
      */
     countTokens: TokenCounter;
-  }): number | Promise<number>;
+    /**
+     * Optional model instance for model profile information
+     */
+    model?: BaseLanguageModel;
+  }): void | Promise<void>;
 }
 
 /**
@@ -83,22 +102,43 @@ export interface ContextEdit {
  */
 export interface ClearToolUsesEditConfig {
   /**
-   * Token count that triggers the edit.
-   * @default 100000
+   * Trigger conditions for context editing.
+   * Can be a single condition object (all properties must be met) or an array of conditions (any condition must be met).
+   *
+   * @example
+   * ```ts
+   * // Single condition: trigger if tokens >= 100000 AND messages >= 50
+   * trigger: { tokens: 100000, messages: 50 }
+   *
+   * // Multiple conditions: trigger if (tokens >= 100000 AND messages >= 50) OR (tokens >= 50000 AND messages >= 100)
+   * trigger: [
+   *   { tokens: 100000, messages: 50 },
+   *   { tokens: 50000, messages: 100 }
+   * ]
+   *
+   * // Fractional trigger: trigger at 80% of model's max input tokens
+   * trigger: { fraction: 0.8 }
+   * ```
    */
-  triggerTokens?: number;
+  trigger?: ContextSize | ContextSize[];
 
   /**
-   * Minimum number of tokens to reclaim when the edit runs.
-   * @default 0
+   * Context retention policy applied after editing.
+   * Specify how many tool results to preserve using messages, tokens, or fraction.
+   *
+   * @example
+   * ```ts
+   * // Keep 3 most recent tool results
+   * keep: { messages: 3 }
+   *
+   * // Keep tool results that fit within 1000 tokens
+   * keep: { tokens: 1000 }
+   *
+   * // Keep tool results that fit within 30% of model's max input tokens
+   * keep: { fraction: 0.3 }
+   * ```
    */
-  clearAtLeast?: number;
-
-  /**
-   * Number of most recent tool results that must be preserved.
-   * @default 3
-   */
-  keep?: number;
+  keep?: KeepSize;
 
   /**
    * Whether to clear the originating tool call parameters on the AI message.
@@ -117,6 +157,22 @@ export interface ClearToolUsesEditConfig {
    * @default "[cleared]"
    */
   placeholder?: string;
+
+  /**
+   * @deprecated Use `trigger: { tokens: value }` instead.
+   */
+  triggerTokens?: number;
+
+  /**
+   * @deprecated Use `keep: { messages: value }` instead.
+   */
+  keepMessages?: number;
+
+  /**
+   * @deprecated This property is deprecated and will be removed in a future version.
+   * Use `keep: { tokens: value }` or `keep: { messages: value }` instead to control retention.
+   */
+  clearAtLeast?: number;
 }
 
 /**
@@ -132,47 +188,163 @@ export interface ClearToolUsesEditConfig {
  * import { ClearToolUsesEdit } from "langchain";
  *
  * const edit = new ClearToolUsesEdit({
- *   triggerTokens: 100000,       // Start clearing at 100K tokens
- *   clearAtLeast: 0,             // Clear as much as needed
- *   keep: 3,                     // Always keep 3 most recent results
- *   excludeTools: ["important"], // Never clear "important" tool
- *   clearToolInputs: false,      // Keep tool call arguments
- *   placeholder: "[cleared]",    // Replacement text
+ *   trigger: { tokens: 100000 },  // Start clearing at 100K tokens
+ *   keep: { messages: 3 },        // Keep 3 most recent tool results
+ *   excludeTools: ["important"],   // Never clear "important" tool
+ *   clearToolInputs: false,        // Keep tool call arguments
+ *   placeholder: "[cleared]",      // Replacement text
+ * });
+ *
+ * // Multiple trigger conditions
+ * const edit2 = new ClearToolUsesEdit({
+ *   trigger: [
+ *     { tokens: 100000, messages: 50 },
+ *     { tokens: 50000, messages: 100 }
+ *   ],
+ *   keep: { messages: 3 },
+ * });
+ *
+ * // Fractional trigger with model profile
+ * const edit3 = new ClearToolUsesEdit({
+ *   trigger: { fraction: 0.8 },  // Trigger at 80% of model's max tokens
+ *   keep: { fraction: 0.3 },     // Keep 30% of model's max tokens
  * });
  * ```
  */
 export class ClearToolUsesEdit implements ContextEdit {
-  triggerTokens: number;
-  clearAtLeast: number;
-  keep: number;
+  #triggerConditions: ContextSize[];
+
+  trigger: ContextSize | ContextSize[];
+  keep: KeepSize;
   clearToolInputs: boolean;
   excludeTools: Set<string>;
   placeholder: string;
+  model: BaseLanguageModel;
+  clearAtLeast: number;
 
   constructor(config: ClearToolUsesEditConfig = {}) {
-    this.triggerTokens = config.triggerTokens ?? 100000;
+    // Handle deprecated parameters
+    let trigger: ContextSize | ContextSize[] | undefined = config.trigger;
+    if (config.triggerTokens !== undefined) {
+      console.warn(
+        "triggerTokens is deprecated. Use `trigger: { tokens: value }` instead."
+      );
+      if (trigger === undefined) {
+        trigger = { tokens: config.triggerTokens };
+      }
+    }
+
+    let keep: KeepSize | undefined = config.keep;
+    if (config.keepMessages !== undefined) {
+      console.warn(
+        "keepMessages is deprecated. Use `keep: { messages: value }` instead."
+      );
+      if (keep === undefined) {
+        keep = { messages: config.keepMessages };
+      }
+    }
+
+    // Set defaults
+    if (trigger === undefined) {
+      trigger = { tokens: DEFAULT_TRIGGER_TOKENS };
+    }
+    if (keep === undefined) {
+      keep = { messages: DEFAULT_KEEP };
+    }
+
+    // Validate trigger conditions
+    if (Array.isArray(trigger)) {
+      this.#triggerConditions = trigger.map((t) => contextSizeSchema.parse(t));
+      this.trigger = this.#triggerConditions;
+    } else {
+      const validated = contextSizeSchema.parse(trigger);
+      this.#triggerConditions = [validated];
+      this.trigger = validated;
+    }
+
+    // Validate keep
+    const validatedKeep = keepSchema.parse(keep);
+    this.keep = validatedKeep;
+
+    // Handle deprecated clearAtLeast
+    if (config.clearAtLeast !== undefined) {
+      console.warn(
+        "clearAtLeast is deprecated and will be removed in a future version. " +
+          "It conflicts with the `keep` property. Use `keep: { tokens: value }` or " +
+          "`keep: { messages: value }` instead to control retention."
+      );
+    }
     this.clearAtLeast = config.clearAtLeast ?? 0;
-    this.keep = config.keep ?? 3;
+
     this.clearToolInputs = config.clearToolInputs ?? false;
     this.excludeTools = new Set(config.excludeTools ?? []);
     this.placeholder = config.placeholder ?? DEFAULT_TOOL_PLACEHOLDER;
   }
 
   async apply(params: {
-    tokens: number;
     messages: BaseMessage[];
+    model: BaseLanguageModel;
     countTokens: TokenCounter;
-  }): Promise<number> {
-    const { tokens, messages, countTokens } = params;
+  }): Promise<void> {
+    const { messages, model, countTokens } = params;
+    const tokens = await countTokens(messages);
 
-    if (tokens <= this.triggerTokens) {
-      return tokens;
+    /**
+     * Always remove orphaned tool messages (those without corresponding AI messages)
+     * regardless of whether editing is triggered
+     */
+    const orphanedIndices: number[] = [];
+    for (let i = 0; i < messages.length; i++) {
+      const msg = messages[i];
+      if (ToolMessage.isInstance(msg)) {
+        // Check if this tool message has a corresponding AI message
+        const aiMessage = this.#findAIMessageForToolCall(
+          messages.slice(0, i),
+          msg.tool_call_id
+        );
+
+        if (!aiMessage) {
+          // Orphaned tool message - mark for removal
+          orphanedIndices.push(i);
+        } else {
+          // Check if the AI message actually has this tool call
+          const toolCall = aiMessage.tool_calls?.find(
+            (call) => call.id === msg.tool_call_id
+          );
+          if (!toolCall) {
+            // Orphaned tool message - mark for removal
+            orphanedIndices.push(i);
+          }
+        }
+      }
+    }
+
+    /**
+     * Remove orphaned tool messages in reverse order to maintain indices
+     */
+    for (let i = orphanedIndices.length - 1; i >= 0; i--) {
+      messages.splice(orphanedIndices[i]!, 1);
+    }
+
+    /**
+     * Recalculate tokens after removing orphaned messages
+     */
+    let currentTokens = tokens;
+    if (orphanedIndices.length > 0) {
+      currentTokens = await countTokens(messages);
+    }
+
+    /**
+     * Check if editing should be triggered
+     */
+    if (!this.#shouldEdit(messages, currentTokens, model)) {
+      return;
     }
 
     /**
      * Find all tool message candidates with their actual indices in the messages array
      */
-    const candidates: Array<{ idx: number; msg: ToolMessage }> = [];
+    const candidates: { idx: number; msg: ToolMessage }[] = [];
     for (let i = 0; i < messages.length; i++) {
       const msg = messages[i];
       if (ToolMessage.isInstance(msg)) {
@@ -180,25 +352,37 @@ export class ClearToolUsesEdit implements ContextEdit {
       }
     }
 
+    if (candidates.length === 0) {
+      return;
+    }
+
     /**
-     * Keep the most recent tool messages
+     * Determine how many tool results to keep based on keep policy
+     */
+    const keepCount = await this.#determineKeepCount(
+      candidates,
+      countTokens,
+      model
+    );
+
+    /**
+     * Keep the most recent tool messages based on keep policy
      */
     const candidatesToClear =
-      this.keep >= candidates.length
+      keepCount >= candidates.length
         ? []
-        : this.keep > 0
-        ? candidates.slice(0, -this.keep)
+        : keepCount > 0
+        ? candidates.slice(0, -keepCount)
         : candidates;
 
+    /**
+     * If clearAtLeast is set, we may need to clear more messages to meet the token requirement
+     * This is a deprecated feature that conflicts with keep, but we support it for backwards compatibility
+     */
     let clearedTokens = 0;
-    for (const { idx, msg: toolMessage } of candidatesToClear) {
-      /**
-       * Stop if we've cleared enough tokens
-       */
-      if (this.clearAtLeast > 0 && clearedTokens >= this.clearAtLeast) {
-        break;
-      }
+    const initialCandidatesToClear = [...candidatesToClear];
 
+    for (const { idx, msg: toolMessage } of initialCandidatesToClear) {
       /**
        * Skip if already cleared
        */
@@ -274,10 +458,249 @@ export class ClearToolUsesEdit implements ContextEdit {
        * Recalculate tokens
        */
       const newTokenCount = await countTokens(messages);
-      clearedTokens = Math.max(0, tokens - newTokenCount);
+      clearedTokens = Math.max(0, currentTokens - newTokenCount);
     }
 
-    return tokens - clearedTokens;
+    /**
+     * If clearAtLeast is set and we haven't cleared enough tokens,
+     * continue clearing more messages (going backwards from keepCount)
+     * This is deprecated behavior but maintained for backwards compatibility
+     */
+    if (this.clearAtLeast > 0 && clearedTokens < this.clearAtLeast) {
+      /**
+       * Find remaining candidates that weren't cleared yet (those that were kept)
+       */
+      const remainingCandidates =
+        keepCount > 0 && keepCount < candidates.length
+          ? candidates.slice(-keepCount)
+          : [];
+
+      /**
+       * Clear additional messages until we've cleared at least clearAtLeast tokens
+       * Go backwards through the kept messages
+       */
+      for (let i = remainingCandidates.length - 1; i >= 0; i--) {
+        if (clearedTokens >= this.clearAtLeast) {
+          break;
+        }
+
+        const { idx, msg: toolMessage } = remainingCandidates[i]!;
+
+        /**
+         * Skip if already cleared
+         */
+        const contextEditing = toolMessage.response_metadata
+          ?.context_editing as { cleared?: boolean } | undefined;
+        if (contextEditing?.cleared) {
+          continue;
+        }
+
+        /**
+         * Find the corresponding AI message
+         */
+        const aiMessage = this.#findAIMessageForToolCall(
+          messages.slice(0, idx),
+          toolMessage.tool_call_id
+        );
+
+        if (!aiMessage) {
+          continue;
+        }
+
+        /**
+         * Find the corresponding tool call
+         */
+        const toolCall = aiMessage.tool_calls?.find(
+          (call) => call.id === toolMessage.tool_call_id
+        );
+
+        if (!toolCall) {
+          continue;
+        }
+
+        /**
+         * Skip if tool is excluded
+         */
+        const toolName = toolMessage.name || toolCall.name;
+        if (this.excludeTools.has(toolName)) {
+          continue;
+        }
+
+        /**
+         * Clear the tool message
+         */
+        messages[idx] = new ToolMessage({
+          tool_call_id: toolMessage.tool_call_id,
+          content: this.placeholder,
+          name: toolMessage.name,
+          artifact: undefined,
+          response_metadata: {
+            ...toolMessage.response_metadata,
+            context_editing: {
+              cleared: true,
+              strategy: "clear_tool_uses",
+            },
+          },
+        });
+
+        /**
+         * Optionally clear the tool inputs
+         */
+        if (this.clearToolInputs) {
+          const aiMsgIdx = messages.indexOf(aiMessage);
+          if (aiMsgIdx >= 0) {
+            messages[aiMsgIdx] = this.#buildClearedToolInputMessage(
+              aiMessage,
+              toolMessage.tool_call_id
+            );
+          }
+        }
+
+        /**
+         * Recalculate tokens
+         */
+        const newTokenCount = await countTokens(messages);
+        clearedTokens = Math.max(0, currentTokens - newTokenCount);
+      }
+    }
+  }
+
+  /**
+   * Determine whether editing should run for the current token usage
+   */
+  #shouldEdit(
+    messages: BaseMessage[],
+    totalTokens: number,
+    model: BaseLanguageModel
+  ): boolean {
+    /**
+     * Check each condition (OR logic between conditions)
+     */
+    for (const trigger of this.#triggerConditions) {
+      /**
+       * Within a single condition, all specified properties must be satisfied (AND logic)
+       */
+      let conditionMet = true;
+      let hasAnyProperty = false;
+
+      if (trigger.messages !== undefined) {
+        hasAnyProperty = true;
+        if (messages.length < trigger.messages) {
+          conditionMet = false;
+        }
+      }
+
+      if (trigger.tokens !== undefined) {
+        hasAnyProperty = true;
+        if (totalTokens < trigger.tokens) {
+          conditionMet = false;
+        }
+      }
+
+      if (trigger.fraction !== undefined) {
+        hasAnyProperty = true;
+        if (!model) {
+          continue;
+        }
+        const maxInputTokens = getProfileLimits(model);
+        if (typeof maxInputTokens === "number") {
+          const threshold = Math.floor(maxInputTokens * trigger.fraction);
+          if (threshold <= 0) {
+            continue;
+          }
+          if (totalTokens < threshold) {
+            conditionMet = false;
+          }
+        } else {
+          /**
+           * If fraction is specified but we can't get model limits, skip this condition
+           */
+          continue;
+        }
+      }
+
+      /**
+       * If condition has at least one property and all properties are satisfied, trigger editing
+       */
+      if (hasAnyProperty && conditionMet) {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+  /**
+   * Determine how many tool results to keep based on keep policy
+   */
+  async #determineKeepCount(
+    candidates: Array<{ idx: number; msg: ToolMessage }>,
+    countTokens: TokenCounter,
+    model: BaseLanguageModel
+  ): Promise<number> {
+    if ("messages" in this.keep && this.keep.messages !== undefined) {
+      return this.keep.messages;
+    }
+
+    if ("tokens" in this.keep && this.keep.tokens !== undefined) {
+      /**
+       * For token-based keep, count backwards from the end until we exceed the token limit
+       * This is a simplified implementation - keeping N most recent tool messages
+       * A more sophisticated implementation would count actual tokens
+       */
+      const targetTokens = this.keep.tokens;
+      let tokenCount = 0;
+      let keepCount = 0;
+
+      for (let i = candidates.length - 1; i >= 0; i--) {
+        const candidate = candidates[i];
+        /**
+         * Estimate tokens for this tool message (simplified - could be improved)
+         */
+        const msgTokens = await countTokens([candidate.msg]);
+        if (tokenCount + msgTokens <= targetTokens) {
+          tokenCount += msgTokens;
+          keepCount++;
+        } else {
+          break;
+        }
+      }
+
+      return keepCount;
+    }
+
+    if ("fraction" in this.keep && this.keep.fraction !== undefined) {
+      if (!model) {
+        return DEFAULT_KEEP;
+      }
+      const maxInputTokens = getProfileLimits(model);
+      if (typeof maxInputTokens === "number") {
+        const targetTokens = Math.floor(maxInputTokens * this.keep.fraction);
+        if (targetTokens <= 0) {
+          return DEFAULT_KEEP;
+        }
+        /**
+         * Use token-based logic with fractional target
+         */
+        let tokenCount = 0;
+        let keepCount = 0;
+
+        for (let i = candidates.length - 1; i >= 0; i--) {
+          const candidate = candidates[i];
+          const msgTokens = await countTokens([candidate.msg]);
+          if (tokenCount + msgTokens <= targetTokens) {
+            tokenCount += msgTokens;
+            keepCount++;
+          } else {
+            break;
+          }
+        }
+
+        return keepCount;
+      }
+    }
+
+    return DEFAULT_KEEP;
   }
 
   #findAIMessageForToolCall(
@@ -370,7 +793,7 @@ export interface ContextEditingMiddlewareConfig {
  * import { createAgent } from "langchain";
  *
  * const agent = createAgent({
- *   model: "anthropic:claude-3-5-sonnet",
+ *   model: "anthropic:claude-sonnet-4-5",
  *   tools: [searchTool, calculatorTool],
  *   middleware: [
  *     contextEditingMiddleware(),
@@ -392,21 +815,57 @@ export interface ContextEditingMiddlewareConfig {
  * ```ts
  * import { contextEditingMiddleware, ClearToolUsesEdit } from "langchain";
  *
- * const agent = createAgent({
- *   model: "anthropic:claude-3-5-sonnet",
+ * // Single condition: trigger if tokens >= 50000 AND messages >= 20
+ * const agent1 = createAgent({
+ *   model: "anthropic:claude-sonnet-4-5",
  *   tools: [searchTool, calculatorTool],
  *   middleware: [
  *     contextEditingMiddleware({
  *       edits: [
  *         new ClearToolUsesEdit({
- *           triggerTokens: 50000,      // Clear when exceeding 50K tokens
- *           clearAtLeast: 1000,         // Reclaim at least 1K tokens
- *           keep: 5,                    // Keep 5 most recent tool results
- *           excludeTools: ["search"],   // Never clear search results
- *           clearToolInputs: true,      // Also clear tool call arguments
+ *           trigger: { tokens: 50000, messages: 20 },
+ *           keep: { messages: 5 },
+ *           excludeTools: ["search"],
+ *           clearToolInputs: true,
  *         }),
  *       ],
- *       tokenCountMethod: "approx",     // Use approximate counting (or "model")
+ *       tokenCountMethod: "approx",
+ *     }),
+ *   ],
+ * });
+ *
+ * // Multiple conditions: trigger if (tokens >= 50000 AND messages >= 20) OR (tokens >= 30000 AND messages >= 50)
+ * const agent2 = createAgent({
+ *   model: "anthropic:claude-sonnet-4-5",
+ *   tools: [searchTool, calculatorTool],
+ *   middleware: [
+ *     contextEditingMiddleware({
+ *       edits: [
+ *         new ClearToolUsesEdit({
+ *           trigger: [
+ *             { tokens: 50000, messages: 20 },
+ *             { tokens: 30000, messages: 50 },
+ *           ],
+ *           keep: { messages: 5 },
+ *         }),
+ *       ],
+ *     }),
+ *   ],
+ * });
+ *
+ * // Fractional trigger with model profile
+ * const agent3 = createAgent({
+ *   model: chatModel,
+ *   tools: [searchTool, calculatorTool],
+ *   middleware: [
+ *     contextEditingMiddleware({
+ *       edits: [
+ *         new ClearToolUsesEdit({
+ *           trigger: { fraction: 0.8 },  // Trigger at 80% of model's max tokens
+ *           keep: { fraction: 0.3 },     // Keep 30% of model's max tokens
+ *           model: chatModel,
+ *         }),
+ *       ],
  *     }),
  *   ],
  * });
@@ -471,7 +930,7 @@ export function contextEditingMiddleware(
                */
               if ("getNumTokensFromMessages" in request.model) {
                 return (
-                  request.model as LanguageModelLike & {
+                  request.model as BaseLanguageModel & {
                     getNumTokensFromMessages: (
                       messages: BaseMessage[]
                     ) => Promise<{
@@ -489,15 +948,13 @@ export function contextEditingMiddleware(
               );
             };
 
-      let tokens = await countTokens(request.messages);
-
       /**
        * Apply each edit in sequence
        */
       for (const edit of edits) {
-        tokens = await edit.apply({
-          tokens,
+        await edit.apply({
           messages: request.messages,
+          model: request.model as BaseLanguageModel,
           countTokens,
         });
       }

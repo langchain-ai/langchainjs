@@ -60,18 +60,15 @@ describe("dynamicSystemPrompt", () => {
     const callArgs = (model.invoke as any).mock.calls[0];
     const [firstMessage] = callArgs[0];
     expect(firstMessage.type).toBe("system");
-    expect(firstMessage.content).toBe(
-      "You are a helpful assistant. Region: EU"
-    );
+    expect(firstMessage.text).toBe("You are a helpful assistant. Region: EU");
   });
 
-  it("should throw if the function does not return a string", async () => {
+  it("should support returning a SystemMessage", async () => {
     const model = createMockModel() as unknown as LanguageModelLike;
     const contextSchema = z.object({ region: z.string().optional() });
 
     const middleware = dynamicSystemPromptMiddleware<
       z.infer<typeof contextSchema>
-      // @ts-expect-error - we want to test the error case
     >((_state, runtime) => {
       const region = runtime.context.region ?? "n/a";
       return new SystemMessage(
@@ -87,6 +84,40 @@ describe("dynamicSystemPrompt", () => {
 
     const messages = [new HumanMessage("Hello"), new AIMessage("Hi there!")];
 
+    await agent.invoke(
+      { messages },
+      {
+        context: {
+          region: "EU",
+        },
+      }
+    );
+
+    expect(model.invoke).toHaveBeenCalled();
+    const callArgs = (model.invoke as any).mock.calls[0];
+    const [firstMessage] = callArgs[0];
+    expect(firstMessage.type).toBe("system");
+    expect(firstMessage.content).toBe(
+      "You are a helpful assistant. Region: EU"
+    );
+  });
+
+  it("should throw if the function does not return an expected type", async () => {
+    const model = createMockModel() as unknown as LanguageModelLike;
+    const contextSchema = z.object({ region: z.string().optional() });
+
+    const middleware = dynamicSystemPromptMiddleware<
+      z.infer<typeof contextSchema>
+      // @ts-expect-error - we want to test the error case
+    >((_state, runtime) => 123);
+
+    const agent = createAgent({
+      model,
+      middleware: [middleware],
+      contextSchema,
+    });
+
+    const messages = [new HumanMessage("Hello"), new AIMessage("Hi there!")];
     await expect(
       agent.invoke(
         { messages },
@@ -97,7 +128,7 @@ describe("dynamicSystemPrompt", () => {
         }
       )
     ).rejects.toThrow(
-      "dynamicSystemPromptMiddleware function must return a string"
+      "dynamicSystemPromptMiddleware function must return a string or SystemMessage"
     );
   });
 });

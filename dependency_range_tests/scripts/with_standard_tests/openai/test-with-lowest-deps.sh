@@ -11,7 +11,7 @@ monorepo_openai_dir="/app/monorepo/libs/providers/langchain-openai"
 updater_script_dir="/app/updater_script"
 original_updater_script_dir="/scripts/with_standard_tests/openai/node"
 
-# Run the shared script to copy all necessary folders/files
+# Run the shared script to copy all necessary folders/files and create mock tsconfig files
 bash /scripts/with_standard_tests/shared.sh providers/langchain-openai
 
 # Copy the updater script to the monorepo
@@ -38,5 +38,5 @@ cd "$monorepo_openai_dir"
 core_version=$(node -p "require('./package.json').peerDependencies?.['@langchain/core']")
 
 # Install @langchain/core at the specified version
-pnpm add @langchain/core@$core_version
+pnpm add @langchain/core@$core_version langsmith
 pnpm test

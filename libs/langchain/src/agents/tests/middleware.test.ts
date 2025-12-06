@@ -348,14 +348,14 @@ describe("middleware", () => {
         }),
         wrapModelCall: async (request, handler) => {
           executionOrder.push("auth:before");
-          systemPrompts.push(request.systemPrompt || "");
+          systemPrompts.push(request.systemMessage.text);
 
           // Modify request: add auth context to system prompt
           const modifiedRequest = {
             ...request,
-            systemPrompt: `${
-              request.systemPrompt || ""
-            }\n[AUTH: user authenticated]`,
+            systemMessage: request.systemMessage.concat(
+              "\n[AUTH: user authenticated]"
+            ),
           };
 
           // Call inner handler (retry middleware)
@@ -376,12 +376,12 @@ describe("middleware", () => {
         name: "RetryMiddleware",
         wrapModelCall: async (request, handler) => {
           executionOrder.push("retry:before");
-          systemPrompts.push(request.systemPrompt || "");
+          systemPrompts.push(request.systemMessage.text);
 
           // Modify request: add retry info to system prompt
           const modifiedRequest = {
             ...request,
-            systemPrompt: `${request.systemPrompt || ""}\n[RETRY: attempt 1]`,
+            systemMessage: request.systemMessage.concat("\n[RETRY: attempt 1]"),
           };
 
           // Call inner handler (cache middleware)
@@ -402,16 +402,16 @@ describe("middleware", () => {
         name: "CacheMiddleware",
         wrapModelCall: async (request, handler) => {
           executionOrder.push("cache:before");
-          systemPrompts.push(request.systemPrompt || "");
+          systemPrompts.push(request.systemMessage.text);
 
           // Modify request: add cache info to system prompt
           const modifiedRequest = {
             ...request,
-            systemPrompt: `${request.systemPrompt || ""}\n[CACHE: miss]`,
+            systemMessage: request.systemMessage.concat("\n[CACHE: miss]"),
           };
 
           // Capture what will actually be sent to the model
-          actualSystemPromptSentToModel = modifiedRequest.systemPrompt;
+          actualSystemPromptSentToModel = modifiedRequest.systemMessage.text;
 
           // Call inner handler (base model handler)
           const response = await handler(modifiedRequest);
@@ -488,7 +488,24 @@ describe("middleware", () => {
 
       // Model should receive system message + user message
       expect(systemMessage).toBeInstanceOf(SystemMessage);
-      expect(systemMessage.content).toBe(actualSystemPromptSentToModel);
+      expect(systemMessage.content).toEqual([
+        {
+          text: "You are helpful",
+          type: "text",
+        },
+        {
+          text: "\n[AUTH: user authenticated]",
+          type: "text",
+        },
+        {
+          text: "\n[RETRY: attempt 1]",
+          type: "text",
+        },
+        {
+          text: "\n[CACHE: miss]",
+          type: "text",
+        },
+      ]);
     });
 
     it("should allow middleware to access state and runtime", async () => {
@@ -515,8 +532,6 @@ describe("middleware", () => {
             middlewareContext: number;
           }>();
           expectTypeOf(request.systemPrompt!).toBeString();
-          expectTypeOf(request.runtime.runModelCallCount).toBeNumber();
-          expectTypeOf(request.runtime.threadLevelCallCount).toBeNumber();
 
           // Capture state and runtime
           capturedState = request.state;
@@ -563,19 +578,14 @@ describe("middleware", () => {
         "Test"
       );
 
-      const { context, threadLevelCallCount, runModelCallCount } =
-        capturedRuntime;
+      const { context } = capturedRuntime;
       expect({
         context,
-        threadLevelCallCount,
-        runModelCallCount,
       }).toMatchInlineSnapshot(`
       {
         "context": {
           "middlewareContext": 2,
         },
-        "runModelCallCount": 0,
-        "threadLevelCallCount": 0,
       }
     `);
     });
@@ -1017,8 +1027,6 @@ describe("middleware", () => {
           `);
           expect(request.runtime.context).toEqual({ foo: 123 });
           expect(request.state.bar).toBe(true);
-          expect(request.runtime.runModelCallCount).toBe(1);
-          expect(request.runtime.threadLevelCallCount).toBe(1);
 
           /**
            * Let's test if we can modify tool args
@@ -1882,6 +1890,43 @@ describe("middleware", () => {
         "layer1_after",
       ]);
     });
+
+    it("supports setting responseFormat with wrapModelCall", async () => {
+      const model = new FakeToolCallingChatModel({
+        responses: [
+          new AIMessage(
+            JSON.stringify({ answer: "The weather in Tokyo is 25°C" })
+          ),
+        ],
+      });
+
+      const middleware = createMiddleware({
+        name: "DynamicPromptMiddleware",
+        wrapModelCall: async (request, handler) => {
+          const systemPrompt = "You are a helpful assistant.";
+          return handler({ ...request, systemPrompt });
+        },
+      });
+
+      const agent = createAgent({
+        model,
+        responseFormat: z.object({ answer: z.string() }),
+        middleware: [middleware],
+      });
+
+      // Throws: "expected AIMessage, got object"
+      const result = await agent.invoke({
+        messages: [{ role: "user", content: "Hello" }],
+      });
+      expect(result.structuredResponse).toEqual({
+        answer: "The weather in Tokyo is 25°C",
+      });
+      const [human, assistant] = result.messages;
+      expect(human.content).toBe("Hello");
+      expect(assistant.content).toBe(
+        JSON.stringify({ answer: "The weather in Tokyo is 25°C" })
+      );
+    });
   });
 
   describe("before/after agent hook", () => {
@@ -2264,35 +2309,6 @@ describe("middleware", () => {
       );
       expect(messageContents).toContain("Added by before_agent");
       expect(messageContents).toContain("Original message");
-    });
-
-    it("should allow accessing runtime metadata in before_agent and after_agent", async () => {
-      const middleware = createMiddleware({
-        name: "RuntimeAccessMiddleware",
-        beforeAgent: async (_state, runtime) => {
-          expect(runtime.threadLevelCallCount).toBe(0);
-          expect(runtime.runModelCallCount).toBe(0);
-        },
-        afterAgent: async (_state, runtime) => {
-          // After the agent completes, counts should be updated
-          expect(runtime.threadLevelCallCount).toBe(1);
-          expect(runtime.runModelCallCount).toBe(1);
-        },
-      });
-
-      const model = new FakeToolCallingChatModel({
-        responses: [new AIMessage("Response")],
-      });
-
-      const agent = createAgent({
-        model,
-        tools: [],
-        middleware: [middleware],
-      });
-
-      await agent.invoke({
-        messages: [new HumanMessage("Test")],
-      });
     });
 
     it("should propagate state changes from before_agent through the entire agent execution", async () => {

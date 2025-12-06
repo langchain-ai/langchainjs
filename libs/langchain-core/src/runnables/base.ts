@@ -1,5 +1,4 @@
 import { z } from "zod/v3";
-import pRetry from "p-retry";
 import { v4 as uuidv4 } from "uuid";
 
 import {
@@ -27,6 +26,7 @@ import {
   isStreamEventsHandler,
 } from "../tracers/event_stream.js";
 import { Serializable } from "../load/serializable.js";
+import pRetry from "../utils/p-retry/index.js";
 import {
   IterableReadableStream,
   concat,
@@ -1696,7 +1696,8 @@ export class RunnableRetry<
         ),
       {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        onFailedAttempt: (error: any) => this.onFailedAttempt(error, input),
+        onFailedAttempt: ({ error }: { error: any }) =>
+          this.onFailedAttempt(error, input),
         retries: Math.max(this.maxAttemptNumber - 1, 0),
         randomize: true,
       }
@@ -1768,7 +1769,7 @@ export class RunnableRetry<
         },
         {
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          onFailedAttempt: (error: any) =>
+          onFailedAttempt: ({ error }: { error: any }) =>
             this.onFailedAttempt(error, error.input),
           retries: Math.max(this.maxAttemptNumber - 1, 0),
           randomize: true,

@@ -10,11 +10,16 @@ import {
 } from "@langchain/core/language_models/llms";
 import { chunkArray } from "@langchain/core/utils/chunk_array";
 import type {
+  OpenAIApiKey,
   OpenAICallOptions,
   OpenAICoreRequestOptions,
   OpenAIInput,
 } from "./types.js";
-import { OpenAIEndpointConfig, getEndpoint } from "./utils/azure.js";
+import {
+  OpenAIEndpointConfig,
+  getEndpoint,
+  getHeadersWithUserAgent,
+} from "./utils/azure.js";
 import { wrapOpenAIClientError } from "./utils/client.js";
 
 export type { OpenAICallOptions, OpenAIInput };
@@ -121,9 +126,9 @@ export class OpenAI<CallOptions extends OpenAICallOptions = OpenAICallOptions>
 
   streaming = false;
 
-  openAIApiKey?: string;
+  openAIApiKey?: OpenAIApiKey;
 
-  apiKey?: string;
+  apiKey?: OpenAIApiKey;
 
   organization?: string;
 
@@ -479,6 +484,8 @@ export class OpenAI<CallOptions extends OpenAICallOptions = OpenAICallOptions>
       if (!params.baseURL) {
         delete params.baseURL;
       }
+
+      params.defaultHeaders = getHeadersWithUserAgent(params.defaultHeaders);
 
       this.client = new OpenAIClient(params);
     }

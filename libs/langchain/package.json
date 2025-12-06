@@ -1,6 +1,6 @@
 {
   "name": "langchain",
-  "version": "1.0.1",
+  "version": "1.1.5",
   "description": "Typescript bindings for langchain",
   "author": "LangChain",
   "license": "MIT",
@@ -12,15 +12,28 @@
     "dist/",
     "CHANGELOG.md",
     "README.md",
-    "LICENSE"
+    "LICENSE",
+    "storage",
+    "load",
+    "load.d.cts",
+    "load.cjs",
+    "load.d.ts",
+    "load.js",
+    "hub",
+    "chat_models",
+    "hub.d.cts",
+    "hub.cjs",
+    "hub.d.ts",
+    "hub.js"
   ],
   "repository": {
     "type": "git",
     "url": "git+ssh://git@github.com/langchain-ai/langchainjs.git"
   },
-  "homepage": "https://github.com/langchain-ai/langchainjs/tree/main/langchain/",
+  "homepage": "https://github.com/langchain-ai/langchainjs/tree/main/libs/langchain/",
   "scripts": {
-    "build": "pnpm --filter @langchain/build compile langchain",
+    "build": "turbo build:compile --filter langchain --output-logs new-only",
+    "build:compile": "tsdown",
     "lint:eslint": "eslint --cache src/",
     "lint:dpdm": "dpdm --skip-dynamic-imports circular --exit-code circular:1 --no-warning --no-tree src/*.ts src/**/*.ts",
     "lint": "pnpm lint:eslint && pnpm lint:dpdm",
@@ -29,9 +42,10 @@
     "clean": "rm -rf .turbo dist/",
     "test": "vitest run",
     "test:watch": "vitest --watch",
+    "test:bench": "vitest --mode bench --run",
     "test:integration": "vitest --mode int",
-    "format": "prettier --config .prettierrc --write \"src\"",
-    "format:check": "prettier --config .prettierrc --check \"src\""
+    "format": "prettier --write \"src\"",
+    "format:check": "prettier --check \"src\""
   },
   "devDependencies": {
     "@langchain/anthropic": "workspace:*",
@@ -39,6 +53,7 @@
     "@langchain/core": "workspace:*",
     "@langchain/eslint": "workspace:*",
     "@langchain/openai": "workspace:*",
+    "@langchain/tsconfig": "workspace:*",
     "@tsconfig/recommended": "^1.0.2",
     "@types/js-yaml": "^4",
     "@types/jsdom": "^21.1.1",
@@ -49,29 +64,27 @@
     "dotenv": "^16.0.3",
     "dpdm": "^3.14.0",
     "eslint": "^9.34.0",
-    "langsmith": "^0.3.64",
     "openai": "^5.1.0",
     "peggy": "^3.0.2",
     "prettier": "^2.8.3",
     "reflect-metadata": "^0.2.2",
     "rimraf": "^5.0.1",
     "rollup": "^3.19.1",
-    "typeorm": "^0.3.20",
+    "tinybench": "^5.1.0",
+    "typeorm": "^0.3.26",
     "typescript": "~5.8.3",
     "vitest": "^3.2.4",
     "yaml": "^2.8.1"
   },
   "peerDependencies": {
-    "@langchain/core": "^1.0.0"
+    "@langchain/core": "workspace:*"
   },
   "dependencies": {
     "@langchain/langgraph": "^1.0.0",
     "@langchain/langgraph-checkpoint": "^1.0.0",
+    "langsmith": "~0.3.74",
     "uuid": "^10.0.0",
     "zod": "^3.25.76 || ^4"
-  },
-  "optionalDependencies": {
-    "langsmith": "^0.3.64"
   },
   "publishConfig": {
     "access": "public"
@@ -90,108 +103,109 @@
     "embeddings",
     "vectorstores"
   ],
-  "main": "./dist/index.js",
-  "types": "./dist/index.d.ts",
+  "main": "./dist/index.cjs",
+  "types": "./dist/index.d.cts",
   "exports": {
     ".": {
       "input": "./src/index.ts",
-      "import": {
-        "types": "./dist/index.d.ts",
-        "default": "./dist/index.js"
-      },
       "require": {
         "types": "./dist/index.d.cts",
         "default": "./dist/index.cjs"
+      },
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
       }
     },
     "./chat_models/universal": {
       "input": "./src/chat_models/universal.ts",
-      "import": {
-        "types": "./dist/chat_models/universal.d.ts",
-        "default": "./dist/chat_models/universal.js"
-      },
       "require": {
         "types": "./dist/chat_models/universal.d.cts",
         "default": "./dist/chat_models/universal.cjs"
+      },
+      "import": {
+        "types": "./dist/chat_models/universal.d.ts",
+        "default": "./dist/chat_models/universal.js"
       }
     },
     "./hub": {
       "input": "./src/hub/index.ts",
-      "import": {
-        "types": "./dist/hub/index.d.ts",
-        "default": "./dist/hub/index.js"
-      },
       "require": {
         "types": "./dist/hub/index.d.cts",
         "default": "./dist/hub/index.cjs"
+      },
+      "import": {
+        "types": "./dist/hub/index.d.ts",
+        "default": "./dist/hub/index.js"
       }
     },
     "./hub/node": {
       "input": "./src/hub/node.ts",
-      "import": {
-        "types": "./dist/hub/node.d.ts",
-        "default": "./dist/hub/node.js"
-      },
       "require": {
         "types": "./dist/hub/node.d.cts",
         "default": "./dist/hub/node.cjs"
+      },
+      "import": {
+        "types": "./dist/hub/node.d.ts",
+        "default": "./dist/hub/node.js"
       }
     },
     "./load": {
       "input": "./src/load/index.ts",
-      "import": {
-        "types": "./dist/load/index.d.ts",
-        "default": "./dist/load/index.js"
-      },
       "require": {
         "types": "./dist/load/index.d.cts",
         "default": "./dist/load/index.cjs"
+      },
+      "import": {
+        "types": "./dist/load/index.d.ts",
+        "default": "./dist/load/index.js"
       }
     },
     "./load/serializable": {
       "input": "./src/load/serializable.ts",
-      "import": {
-        "types": "./dist/load/serializable.d.ts",
-        "default": "./dist/load/serializable.js"
-      },
       "require": {
         "types": "./dist/load/serializable.d.cts",
         "default": "./dist/load/serializable.cjs"
+      },
+      "import": {
+        "types": "./dist/load/serializable.d.ts",
+        "default": "./dist/load/serializable.js"
       }
     },
     "./storage/encoder_backed": {
       "input": "./src/storage/encoder_backed.ts",
-      "import": {
-        "types": "./dist/storage/encoder_backed.d.ts",
-        "default": "./dist/storage/encoder_backed.js"
-      },
       "require": {
         "types": "./dist/storage/encoder_backed.d.cts",
         "default": "./dist/storage/encoder_backed.cjs"
-      }
-    },
-    "./storage/in_memory": {
-      "input": "./src/storage/in_memory.ts",
-      "import": {
-        "types": "./dist/storage/in_memory.d.ts",
-        "default": "./dist/storage/in_memory.js"
       },
-      "require": {
-        "types": "./dist/storage/in_memory.d.cts",
-        "default": "./dist/storage/in_memory.cjs"
+      "import": {
+        "types": "./dist/storage/encoder_backed.d.ts",
+        "default": "./dist/storage/encoder_backed.js"
       }
     },
     "./storage/file_system": {
       "input": "./src/storage/file_system.ts",
-      "import": {
-        "types": "./dist/storage/file_system.d.ts",
-        "default": "./dist/storage/file_system.js"
-      },
       "require": {
         "types": "./dist/storage/file_system.d.cts",
         "default": "./dist/storage/file_system.cjs"
+      },
+      "import": {
+        "types": "./dist/storage/file_system.d.ts",
+        "default": "./dist/storage/file_system.js"
+      }
+    },
+    "./storage/in_memory": {
+      "input": "./src/storage/in_memory.ts",
+      "require": {
+        "types": "./dist/storage/in_memory.d.cts",
+        "default": "./dist/storage/in_memory.cjs"
+      },
+      "import": {
+        "types": "./dist/storage/in_memory.d.ts",
+        "default": "./dist/storage/in_memory.js"
       }
     },
     "./package.json": "./package.json"
-  }
+  },
+  "module": "./dist/index.js"
 }

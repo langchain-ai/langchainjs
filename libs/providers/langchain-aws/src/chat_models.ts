@@ -99,6 +99,15 @@ export interface ChatBedrockConverseInput
   model?: string;
 
   /**
+   * Application Inference Profile ARN to use for the model.
+   * For example, "arn:aws:bedrock:eu-west-1:123456789102:application-inference-profile/fm16bt65tzgx", will override this.model in final /invoke URL call.
+   * Must still provide `model` as normal modelId to benefit from all the metadata.
+   * See the below link for more details on creating and using application inference profiles.
+   * @link https://docs.aws.amazon.com/bedrock/latest/userguide/inference-profiles-create.html
+   */
+  applicationInferenceProfile?: string;
+
+  /**
    * The AWS region e.g. `us-west-2`.
    * Fallback to AWS_DEFAULT_REGION env variable or region specified in ~/.aws/config
    * in case it is not provided here.
@@ -659,10 +668,14 @@ export class ChatBedrockConverse
   get lc_aliases(): { [key: string]: string } | undefined {
     return {
       apiKey: "API_KEY_NAME",
+      model: "model_id",
+      region: "region_name",
     };
   }
 
   model = "anthropic.claude-3-haiku-20240307-v1:0";
+
+  applicationInferenceProfile?: string;
 
   streaming = false;
 
@@ -745,6 +758,7 @@ export class ChatBedrockConverse
 
     this.region = region;
     this.model = rest?.model ?? this.model;
+    this.applicationInferenceProfile = rest?.applicationInferenceProfile;
     this.streaming = rest?.streaming ?? this.streaming;
     this.temperature = rest?.temperature;
     this.maxTokens = rest?.maxTokens;
@@ -812,13 +826,26 @@ export class ChatBedrockConverse
           : undefined,
       };
     }
+    const candidateInferenceConfig: NonNullable<
+      ConverseCommandParams["inferenceConfig"]
+    > = {
+      maxTokens: this.maxTokens,
+      temperature: this.temperature,
+      topP: this.topP,
+      stopSequences: options?.stop,
+    };
+
+    const hasInferenceValues =
+      candidateInferenceConfig.maxTokens !== undefined ||
+      candidateInferenceConfig.temperature !== undefined ||
+      candidateInferenceConfig.topP !== undefined ||
+      (Array.isArray(candidateInferenceConfig.stopSequences) &&
+        candidateInferenceConfig.stopSequences.length > 0);
+
     return {
-      inferenceConfig: {
-        maxTokens: this.maxTokens,
-        temperature: this.temperature,
-        topP: this.topP,
-        stopSequences: options?.stop,
-      },
+      inferenceConfig: hasInferenceValues
+        ? candidateInferenceConfig
+        : undefined,
       toolConfig,
       additionalModelRequestFields:
         this.additionalModelRequestFields ??
@@ -866,9 +893,11 @@ export class ChatBedrockConverse
     const params = this.invocationParams(options);
 
     const command = new ConverseCommand({
-      modelId: this.model,
+      modelId: this.applicationInferenceProfile ?? this.model,
       messages: converseMessages,
-      system: converseSystem,
+      ...(Array.isArray(converseSystem) && converseSystem.length > 0
+        ? { system: converseSystem }
+        : {}),
       requestMetadata: options.requestMetadata,
       ...params,
     });
@@ -907,9 +936,11 @@ export class ChatBedrockConverse
       streamUsage = options.streamUsage;
     }
     const command = new ConverseStreamCommand({
-      modelId: this.model,
+      modelId: this.applicationInferenceProfile ?? this.model,
       messages: converseMessages,
-      system: converseSystem,
+      ...(Array.isArray(converseSystem) && converseSystem.length > 0
+        ? { system: converseSystem }
+        : {}),
       requestMetadata: options.requestMetadata,
       ...params,
     });

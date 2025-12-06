@@ -1,6 +1,6 @@
 {
   "name": "@langchain/standard-tests",
-  "version": "0.0.0",
+  "version": "0.0.7",
   "description": "Standard tests for LangChain.js",
   "author": "LangChain",
   "license": "MIT",
@@ -9,24 +9,22 @@
   "engines": {
     "node": ">=20"
   },
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
   "repository": {
     "type": "git",
     "url": "git@github.com:langchain-ai/langchainjs.git"
   },
   "homepage": "https://github.com/langchain-ai/langchainjs/tree/main/libs/langchain-standard-tests/",
   "scripts": {
-    "build": "pnpm --filter @langchain/build compile @langchain/standard-tests",
+    "build": "exit 0",
     "lint:eslint": "eslint --cache src/",
     "lint:dpdm": "dpdm --skip-dynamic-imports circular --exit-code circular:1 --no-warning --no-tree src/*.ts src/**/*.ts",
     "lint": "pnpm lint:eslint && pnpm lint:dpdm",
     "lint:fix": "pnpm lint:eslint --fix && pnpm lint:dpdm",
-    "clean": "rm -rf .turbo dist/",
-    "test": "NODE_OPTIONS=--experimental-vm-modules jest --testPathIgnorePatterns=\\.int\\.test.ts --testTimeout 30000 --maxWorkers=50%",
-    "test:watch": "NODE_OPTIONS=--experimental-vm-modules jest --watch --testPathIgnorePatterns=\\.int\\.test.ts",
-    "test:single": "NODE_OPTIONS=--experimental-vm-modules pnpm run jest --config jest.config.cjs --testTimeout 100000",
-    "test:int": "NODE_OPTIONS=--experimental-vm-modules jest --testPathPattern=\\.int\\.test.ts --testTimeout 100000 --maxWorkers=50%",
-    "format": "prettier --config .prettierrc --write \"src\"",
-    "format:check": "prettier --config .prettierrc --check \"src\""
+    "clean": "rm -rf .turbo",
+    "format": "prettier --write \"src\"",
+    "format:check": "prettier --check \"src\""
   },
   "dependencies": {
     "@jest/globals": "^29.5.0",
@@ -35,15 +33,12 @@
   },
   "devDependencies": {
     "@langchain/eslint": "workspace:*",
+    "@langchain/tsconfig": "workspace:*",
     "@tsconfig/recommended": "^1.0.3",
-    "dotenv": "^16.3.1",
     "dpdm": "^3.14.0",
     "eslint": "^9.34.0",
-    "jest": "^29.5.0",
     "prettier": "^2.8.3",
-    "rollup": "^4.5.2",
-    "typescript": "~5.8.3",
-    "vitest": "^3.2.4"
+    "typescript": "~5.8.3"
   },
   "peerDependencies": {
     "vitest": "^3.2.4"
@@ -53,26 +48,21 @@
       "optional": true
     }
   },
-  "main": "./dist/index.js",
-  "types": "./dist/index.d.ts",
   "exports": {
     ".": {
-      "import": {
-        "types": "./dist/index.d.ts",
-        "default": "./dist/index.js"
-      },
-      "input": "./src/index.ts"
+      "types": "./src/index.ts",
+      "import": "./src/index.ts"
     },
     "./vitest": {
-      "import": {
-        "types": "./dist/vitest.d.ts",
-        "default": "./dist/vitest.js"
-      },
-      "input": "./src/vitest.ts"
+      "types": "./src/vitest.ts",
+      "import": "./src/vitest.ts"
     },
     "./package.json": "./package.json"
   },
   "files": [
-    "dist/"
+    "src/",
+    "CHANGELOG.md",
+    "README.md",
+    "LICENSE"
   ]
 }

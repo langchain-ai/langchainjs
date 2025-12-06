@@ -71,6 +71,33 @@ const model = new ChatBedrockConverse({
 const response = await model.invoke(new HumanMessage("Hello world!"));
 ```
 
+### Using Application Inference Profiles
+
+AWS Bedrock [Application Inference Profiles](https://docs.aws.amazon.com/bedrock/latest/userguide/inference-profiles-create.html) allow you to define custom endpoints that can route requests across regions or manage traffic for your models.
+
+You can use an inference profile ARN by passing it to the `applicationInferenceProfile` parameter. When provided, this ARN will be used for the actual inference calls instead of the model ID:
+
+```typescript
+import { ChatBedrockConverse } from "@langchain/aws";
+
+const model = new ChatBedrockConverse({
+  region: process.env.BEDROCK_AWS_REGION ?? "us-east-1",
+  model: "anthropic.claude-3-haiku-20240307-v1:0",
+  applicationInferenceProfile:
+    "arn:aws:bedrock:eu-west-1:123456789102:application-inference-profile/fm16bt65tzgx",
+  credentials: {
+    secretAccessKey: process.env.BEDROCK_AWS_SECRET_ACCESS_KEY,
+    accessKeyId: process.env.BEDROCK_AWS_ACCESS_KEY_ID,
+  },
+});
+
+const response = await model.invoke(new HumanMessage("Hello world!"));
+```
+
+**Important:** You must still provide the `model` parameter with the actual model ID (e.g., `"anthropic.claude-3-haiku-20240307-v1:0"`), even when using an inference profile. This ensures proper metadata tracking in tools like LangSmith, including accurate cost and latency measurements per model. The `applicationInferenceProfile` ARN will override the model ID only for the actual inference API calls.
+
+> **Note:** AWS does not currently provide an API to programmatically retrieve the underlying model from an inference profile ARN, so it's the user's responsibility to ensure the `model` parameter matches the model configured in the inference profile.
+
 ### Streaming
 
 ```typescript

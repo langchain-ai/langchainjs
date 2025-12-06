@@ -24,6 +24,7 @@ services:
       - ../libs/langchain-textsplitters:/langchain-textsplitters
       - ../internal/build:/langchain-build
       - ../internal/eslint:/langchain-eslint
+      - ../internal/tsconfig:/langchain-tsconfig
     command: bash /scripts/docker-entrypoint.sh
   test-exports-esm:
     image: node:20
@@ -50,6 +51,7 @@ services:
       - ../libs/langchain-textsplitters:/langchain-textsplitters
       - ../internal/build:/langchain-build
       - ../internal/eslint:/langchain-eslint
+      - ../internal/tsconfig:/langchain-tsconfig
     command: bash /scripts/docker-entrypoint.sh
   test-exports-tsc:
     image: node:20
@@ -76,6 +78,7 @@ services:
       - ../libs/langchain-textsplitters:/langchain-textsplitters
       - ../internal/build:/langchain-build
       - ../internal/eslint:/langchain-eslint
+      - ../internal/tsconfig:/langchain-tsconfig
     command: bash /scripts/docker-entrypoint.sh
   test-exports-cjs:
     image: node:20
@@ -102,6 +105,7 @@ services:
       - ../libs/langchain-textsplitters:/langchain-textsplitters
       - ../internal/build:/langchain-build
       - ../internal/eslint:/langchain-eslint
+      - ../internal/tsconfig:/langchain-tsconfig
     command: bash /scripts/docker-entrypoint.sh
   test-exports-cf:
     image: node:20
@@ -128,6 +132,7 @@ services:
       - ../libs/langchain-textsplitters:/langchain-textsplitters
       - ../internal/build:/langchain-build
       - ../internal/eslint:/langchain-eslint
+      - ../internal/tsconfig:/langchain-tsconfig
     command: bash /scripts/docker-entrypoint.sh
   test-exports-vercel:
     image: node:20
@@ -154,6 +159,7 @@ services:
       - ../libs/langchain-textsplitters:/langchain-textsplitters
       - ../internal/build:/langchain-build
       - ../internal/eslint:/langchain-eslint
+      - ../internal/tsconfig:/langchain-tsconfig
     command: bash /scripts/docker-entrypoint.sh
   test-exports-vite:
     image: node:20
@@ -180,6 +186,7 @@ services:
       - ../libs/langchain-textsplitters:/langchain-textsplitters
       - ../internal/build:/langchain-build
       - ../internal/eslint:/langchain-eslint
+      - ../internal/tsconfig:/langchain-tsconfig
     command: bash /scripts/docker-entrypoint.sh
   test-exports-bun:
     image: oven/bun
@@ -203,7 +210,35 @@ services:
       - ../libs/langchain-textsplitters:/langchain-textsplitters
       - ../internal/build:/langchain-build
       - ../internal/eslint:/langchain-eslint
+      - ../internal/tsconfig:/langchain-tsconfig
     command: bash /scripts/docker-bun-entrypoint.sh
+  test-exports-node-classic:
+    image: node:20
+    environment:
+      PUPPETEER_SKIP_DOWNLOAD: "true"
+      PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: "true"
+    working_dir: /app
+    volumes:
+      - ../pnpm-workspace.yaml:/pnpm-workspace.yaml
+      - ../turbo.json:/turbo.json
+      - ../environment_tests/test-exports-node-classic:/package
+      - ../environment_tests/scripts:/scripts
+      - ../libs/langchain:/langchain
+      - ../libs/langchain-core:/langchain-core
+      - ../libs/langchain-classic:/langchain-classic
+      - ../libs/langchain-community:/langchain-community
+      - ../libs/providers/langchain-anthropic:/langchain-anthropic
+      - ../libs/providers/langchain-openai:/langchain-openai
+      - ../libs/providers/langchain-cohere:/langchain-cohere
+      - ../libs/providers/langchain-ollama:/langchain-ollama
+      - ../libs/providers/langchain-google-gauth:/langchain-google-gauth
+      - ../libs/langchain-standard-tests:/langchain-standard-tests
+      - ../libs/langchain-scripts:/langchain-scripts
+      - ../libs/langchain-textsplitters:/langchain-textsplitters
+      - ../internal/build:/langchain-build
+      - ../internal/eslint:/langchain-eslint
+      - ../internal/tsconfig:/langchain-tsconfig
+    command: bash /scripts/docker-entrypoint.sh
   success:
     image: alpine:3.14
     command: echo "Success"
@@ -223,4 +258,6 @@ services:
       test-exports-vite:
         condition: service_completed_successfully
       test-exports-bun:
+        condition: service_completed_successfully
+      test-exports-node-classic:
         condition: service_completed_successfully

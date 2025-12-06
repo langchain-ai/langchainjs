@@ -6,35 +6,18 @@ const currentPackageJson = JSON.parse(
 );
 currentPackageJson.pnpm = { overrides: {} };
 
-const INTERNAL_PACKAGES = ["@langchain/eslint"];
-
-if (
-  currentPackageJson.peerDependencies?.["@langchain/core"] &&
-  !currentPackageJson.peerDependencies["@langchain/core"].includes("rc")
-) {
-  currentPackageJson.peerDependencies = {
-    ...currentPackageJson.peerDependencies,
-  };
-}
+const INTERNAL_PACKAGES = ["@langchain/eslint", "@langchain/tsconfig"];
 
 /**
  * Link workspace dependencies via file path
  */
 const workspaceDependencies = [
   ...Object.entries(currentPackageJson.devDependencies),
+  ...Object.entries(currentPackageJson.peerDependencies),
   ...Object.entries(currentPackageJson.dependencies),
 ].filter(([, depVersion]) => depVersion.includes("workspace:"));
 
 for (const [depName, depVersion] of workspaceDependencies) {
-  /**
-   * for the peer dependency @langchain/core, we want to make sure to install max version
-   * defined above
-   */
-  if (depName === "@langchain/core") {
-    delete currentPackageJson.devDependencies[depName];
-    continue;
-  }
-
   const libName = depName.split("/")[1];
 
   if (INTERNAL_PACKAGES.includes(depName)) {

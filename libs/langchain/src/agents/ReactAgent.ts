@@ -3,7 +3,6 @@
 import { InteropZodObject } from "@langchain/core/utils/types";
 
 import {
-  AnnotationRoot,
   StateGraph,
   END,
   START,
@@ -12,22 +11,26 @@ import {
   CompiledStateGraph,
   type GetStateOptions,
   type LangGraphRunnableConfig,
+  type StreamMode,
+  type StreamOutputMap,
+  type PregelOptions,
 } from "@langchain/langgraph";
 import type { CheckpointListOptions } from "@langchain/langgraph-checkpoint";
 import { ToolMessage, AIMessage } from "@langchain/core/messages";
 import { IterableReadableStream } from "@langchain/core/utils/stream";
 import type { Runnable, RunnableConfig } from "@langchain/core/runnables";
 import type { StreamEvent } from "@langchain/core/tracers/log_stream";
-
+import type { ClientTool, ServerTool } from "@langchain/core/tools";
 import { createAgentAnnotationConditional } from "./annotation.js";
 import {
   isClientTool,
   validateLLMHasNoBoundTools,
   wrapToolCall,
+  normalizeSystemPrompt,
 } from "./utils.js";
 
-import { AgentNode } from "./nodes/AgentNode.js";
-import { ToolNode } from "./nodes/ToolNode.js";
+import { AgentNode, AGENT_NODE_NAME } from "./nodes/AgentNode.js";
+import { ToolNode, TOOLS_NODE_NAME } from "./nodes/ToolNode.js";
 import { BeforeAgentNode } from "./nodes/BeforeAgentNode.js";
 import { BeforeModelNode } from "./nodes/BeforeModelNode.js";
 import { AfterModelNode } from "./nodes/AfterModelNode.js";
@@ -36,9 +39,9 @@ import {
   initializeMiddlewareStates,
   parseJumpToTarget,
 } from "./nodes/utils.js";
+import { StateManager } from "./state.js";
 
 import type { WithStateGraphNodes } from "./types.js";
-import type { ClientTool, ServerTool } from "./tools.js";
 
 import type {
   CreateAgentParams,
@@ -46,11 +49,7 @@ import type {
   JumpTo,
   UserInput,
 } from "./types.js";
-import type {
-  PrivateState,
-  InvokeConfiguration,
-  StreamConfiguration,
-} from "./runtime.js";
+import type { InvokeConfiguration, StreamConfiguration } from "./runtime.js";
 import type {
   AgentMiddleware,
   InferMiddlewareContextInputs,
@@ -63,6 +62,19 @@ import type {
 } from "./middleware/types.js";
 import { type ResponseFormatUndefined } from "./responses.js";
 import { getHookConstraint } from "./middleware/utils.js";
+
+/**
+ * In the ReAct pattern we have three main nodes:
+ * - model_request: The node that makes the model call.
+ * - tools: The node that calls the tools.
+ * - END: The end of the graph.
+ *
+ * These are the only nodes that can be jumped to from other nodes.
+ */
+type BaseGraphDestination =
+  | typeof TOOLS_NODE_NAME
+  | typeof AGENT_NODE_NAME
+  | typeof END;
 
 // Helper type to get the state definition with middleware states
 type MergedAgentState<
@@ -133,6 +145,8 @@ export class ReactAgent<
 
   #agentNode: AgentNode<any, AnyAnnotationRoot>;
 
+  #stateManager = new StateManager();
+
   constructor(
     public options: CreateAgentParams<
       StructuredResponseFormat,
@@ -179,19 +193,26 @@ export class ReactAgent<
      * Create a schema that merges agent base schema with middleware state schemas
      * Using Zod with withLangGraph ensures LangGraph Studio gets proper metadata
      */
-    const schema = createAgentAnnotationConditional<StateSchema, TMiddleware>(
+    const { state, input, output } = createAgentAnnotationConditional<
+      StateSchema,
+      TMiddleware
+    >(
       this.options.responseFormat !== undefined,
       this.options.stateSchema as StateSchema,
       this.options.middleware as TMiddleware
     );
 
     const workflow = new StateGraph(
-      schema as unknown as AnnotationRoot<any>,
+      {
+        state,
+        input,
+        output,
+      },
       this.options.contextSchema
     );
 
     const allNodeWorkflows = workflow as WithStateGraphNodes<
-      "tools" | "model_request" | string,
+      typeof TOOLS_NODE_NAME | typeof AGENT_NODE_NAME | string,
       typeof workflow
     >;
 
@@ -226,7 +247,7 @@ export class ReactAgent<
 
     this.#agentNode = new AgentNode({
       model: this.options.model,
-      systemPrompt: this.options.systemPrompt,
+      systemMessage: normalizeSystemPrompt(this.options.systemPrompt),
       includeAgentName: this.options.includeAgentName,
       name: this.options.name,
       responseFormat: this.options.responseFormat,
@@ -252,8 +273,9 @@ export class ReactAgent<
       middlewareNames.add(m.name);
       if (m.beforeAgent) {
         beforeAgentNode = new BeforeAgentNode(m, {
-          getPrivateState: () => this.#agentNode.getState()._privateState,
+          getState: () => this.#stateManager.getState(m.name),
         });
+        this.#stateManager.addNode(m, beforeAgentNode);
         const name = `${m.name}.before_agent`;
         beforeAgentNodes.push({
           index: i,
@@ -268,8 +290,9 @@ export class ReactAgent<
       }
       if (m.beforeModel) {
         beforeModelNode = new BeforeModelNode(m, {
-          getPrivateState: () => this.#agentNode.getState()._privateState,
+          getState: () => this.#stateManager.getState(m.name),
         });
+        this.#stateManager.addNode(m, beforeModelNode);
         const name = `${m.name}.before_model`;
         beforeModelNodes.push({
           index: i,
@@ -284,8 +307,9 @@ export class ReactAgent<
       }
       if (m.afterModel) {
         afterModelNode = new AfterModelNode(m, {
-          getPrivateState: () => this.#agentNode.getState()._privateState,
+          getState: () => this.#stateManager.getState(m.name),
         });
+        this.#stateManager.addNode(m, afterModelNode);
         const name = `${m.name}.after_model`;
         afterModelNodes.push({
           index: i,
@@ -300,8 +324,9 @@ export class ReactAgent<
       }
       if (m.afterAgent) {
         afterAgentNode = new AfterAgentNode(m, {
-          getPrivateState: () => this.#agentNode.getState()._privateState,
+          getState: () => this.#stateManager.getState(m.name),
         });
+        this.#stateManager.addNode(m, afterAgentNode);
         const name = `${m.name}.after_agent`;
         afterAgentNodes.push({
           index: i,
@@ -318,12 +343,7 @@ export class ReactAgent<
       if (m.wrapModelCall) {
         wrapModelCallHookMiddleware.push([
           m,
-          () => ({
-            ...beforeAgentNode?.getState(),
-            ...beforeModelNode?.getState(),
-            ...afterModelNode?.getState(),
-            ...afterAgentNode?.getState(),
-          }),
+          () => this.#stateManager.getState(m.name),
         ]);
       }
     }
@@ -331,17 +351,7 @@ export class ReactAgent<
     /**
      * Add Nodes
      */
-    allNodeWorkflows.addNode(
-      "model_request",
-      this.#agentNode,
-      AgentNode.nodeOptions
-    );
-
-    /**
-     * Collect and compose wrapToolCall handlers from middleware
-     * Wrap each handler with error handling and validation
-     */
-    const wrapToolCallHandler = wrapToolCall(middleware);
+    allNodeWorkflows.addNode(AGENT_NODE_NAME, this.#agentNode);
 
     /**
      * add single tool node for all tools
@@ -349,10 +359,9 @@ export class ReactAgent<
     if (toolClasses.filter(isClientTool).length > 0) {
       const toolNode = new ToolNode(toolClasses.filter(isClientTool), {
         signal: this.options.signal,
-        wrapToolCall: wrapToolCallHandler,
-        getPrivateState: () => this.#agentNode.getState()._privateState,
+        wrapToolCall: wrapToolCall(middleware),
       });
-      allNodeWorkflows.addNode("tools", toolNode);
+      allNodeWorkflows.addNode(TOOLS_NODE_NAME, toolNode);
     }
 
     /**
@@ -365,13 +374,13 @@ export class ReactAgent<
     } else if (beforeModelNodes.length > 0) {
       entryNode = beforeModelNodes[0].name;
     } else {
-      entryNode = "model_request";
+      entryNode = AGENT_NODE_NAME;
     }
 
     // Determine the loop entry node (beginning of agent loop, excludes before_agent)
     // This is where tools will loop back to for the next iteration
     const loopEntryNode =
-      beforeModelNodes.length > 0 ? beforeModelNodes[0].name : "model_request";
+      beforeModelNodes.length > 0 ? beforeModelNodes[0].name : AGENT_NODE_NAME;
 
     // Determine the exit node (runs once at end): after_agent or END
     const exitNode =
@@ -380,6 +389,7 @@ export class ReactAgent<
         : END;
 
     allNodeWorkflows.addEdge(START, entryNode);
+    const clientTools = toolClasses.filter(isClientTool);
 
     // Connect beforeAgent nodes (run once at start)
     for (let i = 0; i < beforeAgentNodes.length; i++) {
@@ -389,25 +399,21 @@ export class ReactAgent<
       const nextDefault = isLast ? loopEntryNode : beforeAgentNodes[i + 1].name;
 
       if (node.allowed && node.allowed.length > 0) {
-        const hasTools = toolClasses.filter(isClientTool).length > 0;
+        const hasTools = clientTools.length > 0;
         const allowedMapped = node.allowed
           .map((t) => parseJumpToTarget(t))
-          .filter((dest) => dest !== "tools" || hasTools);
+          .filter((dest) => dest !== TOOLS_NODE_NAME || hasTools);
         // Replace END with exitNode (which could be an afterAgent node)
         const destinations = Array.from(
           new Set([
             nextDefault,
             ...allowedMapped.map((dest) => (dest === END ? exitNode : dest)),
           ])
-        ) as ("tools" | "model_request" | typeof END)[];
+        ) as BaseGraphDestination[];
 
         allNodeWorkflows.addConditionalEdges(
           current,
-          this.#createBeforeAgentRouter(
-            toolClasses.filter(isClientTool),
-            nextDefault,
-            exitNode
-          ),
+          this.#createBeforeAgentRouter(clientTools, nextDefault, exitNode),
           destinations
         );
       } else {
@@ -421,24 +427,21 @@ export class ReactAgent<
       const current = node.name;
       const isLast = i === beforeModelNodes.length - 1;
       const nextDefault = isLast
-        ? "model_request"
+        ? AGENT_NODE_NAME
         : beforeModelNodes[i + 1].name;
 
       if (node.allowed && node.allowed.length > 0) {
-        const hasTools = toolClasses.filter(isClientTool).length > 0;
+        const hasTools = clientTools.length > 0;
         const allowedMapped = node.allowed
           .map((t) => parseJumpToTarget(t))
-          .filter((dest) => dest !== "tools" || hasTools);
+          .filter((dest) => dest !== TOOLS_NODE_NAME || hasTools);
         const destinations = Array.from(
           new Set([nextDefault, ...allowedMapped])
-        ) as ("tools" | "model_request" | typeof END)[];
+        ) as BaseGraphDestination[];
 
         allNodeWorkflows.addConditionalEdges(
           current,
-          this.#createBeforeModelRouter(
-            toolClasses.filter(isClientTool),
-            nextDefault
-          ),
+          this.#createBeforeModelRouter(clientTools, nextDefault),
           destinations
         );
       } else {
@@ -449,19 +452,19 @@ export class ReactAgent<
     // Connect agent to last afterModel node (for reverse order execution)
     const lastAfterModelNode = afterModelNodes.at(-1);
     if (afterModelNodes.length > 0 && lastAfterModelNode) {
-      allNodeWorkflows.addEdge("model_request", lastAfterModelNode.name);
+      allNodeWorkflows.addEdge(AGENT_NODE_NAME, lastAfterModelNode.name);
     } else {
       // If no afterModel nodes, connect model_request directly to model paths
-      const modelPaths = this.#getModelPaths(toolClasses.filter(isClientTool));
+      const modelPaths = this.#getModelPaths(clientTools);
       // Replace END with exitNode in destinations, since exitNode might be an afterAgent node
       const destinations = modelPaths.map((p) =>
         p === END ? exitNode : p
-      ) as ("tools" | "model_request" | typeof END)[];
+      ) as BaseGraphDestination[];
       if (destinations.length === 1) {
-        allNodeWorkflows.addEdge("model_request", destinations[0]);
+        allNodeWorkflows.addEdge(AGENT_NODE_NAME, destinations[0]);
       } else {
         allNodeWorkflows.addConditionalEdges(
-          "model_request",
+          AGENT_NODE_NAME,
           this.#createModelRouter(exitNode),
           destinations
         );
@@ -475,18 +478,18 @@ export class ReactAgent<
       const nextDefault = afterModelNodes[i - 1].name;
 
       if (node.allowed && node.allowed.length > 0) {
-        const hasTools = toolClasses.filter(isClientTool).length > 0;
+        const hasTools = clientTools.length > 0;
         const allowedMapped = node.allowed
           .map((t) => parseJumpToTarget(t))
-          .filter((dest) => dest !== "tools" || hasTools);
+          .filter((dest) => dest !== TOOLS_NODE_NAME || hasTools);
         const destinations = Array.from(
           new Set([nextDefault, ...allowedMapped])
-        ) as ("tools" | "model_request" | typeof END)[];
+        ) as BaseGraphDestination[];
 
         allNodeWorkflows.addConditionalEdges(
           current,
           this.#createAfterModelSequenceRouter(
-            toolClasses.filter(isClientTool),
+            clientTools,
             node.allowed,
             nextDefault
           ),
@@ -503,11 +506,9 @@ export class ReactAgent<
       const firstAfterModelNode = firstAfterModel.name;
 
       // Include exitNode in the paths since afterModel should be able to route to after_agent or END
-      const modelPaths = this.#getModelPaths(
-        toolClasses.filter(isClientTool),
-        true
-      ).filter(
-        (p) => p !== "tools" || toolClasses.filter(isClientTool).length > 0
+      const modelPaths = this.#getModelPaths(clientTools, true).filter(
+        (p) =>
+          p !== TOOLS_NODE_NAME || toolClasses.filter(isClientTool).length > 0
       );
 
       const allowJump = Boolean(
@@ -517,15 +518,11 @@ export class ReactAgent<
       // Replace END with exitNode in destinations, since exitNode might be an afterAgent node
       const destinations = modelPaths.map((p) =>
         p === END ? exitNode : p
-      ) as ("tools" | "model_request" | typeof END)[];
+      ) as BaseGraphDestination[];
 
       allNodeWorkflows.addConditionalEdges(
         firstAfterModelNode,
-        this.#createAfterModelRouter(
-          toolClasses.filter(isClientTool),
-          allowJump,
-          exitNode
-        ),
+        this.#createAfterModelRouter(clientTools, allowJump, exitNode),
         destinations
       );
     }
@@ -537,18 +534,18 @@ export class ReactAgent<
       const nextDefault = afterAgentNodes[i - 1].name;
 
       if (node.allowed && node.allowed.length > 0) {
-        const hasTools = toolClasses.filter(isClientTool).length > 0;
+        const hasTools = clientTools.length > 0;
         const allowedMapped = node.allowed
           .map((t) => parseJumpToTarget(t))
-          .filter((dest) => dest !== "tools" || hasTools);
+          .filter((dest) => dest !== TOOLS_NODE_NAME || hasTools);
         const destinations = Array.from(
           new Set([nextDefault, ...allowedMapped])
-        ) as ("tools" | "model_request" | typeof END)[];
+        ) as BaseGraphDestination[];
 
         allNodeWorkflows.addConditionalEdges(
           current,
           this.#createAfterModelSequenceRouter(
-            toolClasses.filter(isClientTool),
+            clientTools,
             node.allowed,
             nextDefault
           ),
@@ -565,25 +562,23 @@ export class ReactAgent<
       const firstAfterAgentNode = firstAfterAgent.name;
 
       if (firstAfterAgent.allowed && firstAfterAgent.allowed.length > 0) {
-        const hasTools = toolClasses.filter(isClientTool).length > 0;
+        const hasTools = clientTools.length > 0;
         const allowedMapped = firstAfterAgent.allowed
           .map((t) => parseJumpToTarget(t))
-          .filter((dest) => dest !== "tools" || hasTools);
+          .filter((dest) => dest !== TOOLS_NODE_NAME || hasTools);
 
         /**
          * For after_agent, only use explicitly allowed destinations (don't add loopEntryNode)
          * The default destination (when no jump occurs) should be END
          */
-        const destinations = Array.from(new Set([END, ...allowedMapped])) as (
-          | "tools"
-          | "model_request"
-          | typeof END
-        )[];
+        const destinations = Array.from(
+          new Set([END, ...allowedMapped])
+        ) as BaseGraphDestination[];
 
         allNodeWorkflows.addConditionalEdges(
           firstAfterAgentNode,
           this.#createAfterModelSequenceRouter(
-            toolClasses.filter(isClientTool),
+            clientTools,
             firstAfterAgent.allowed,
             END as string
           ),
@@ -597,18 +592,18 @@ export class ReactAgent<
     /**
      * add edges for tools node
      */
-    if (toolClasses.filter(isClientTool).length > 0) {
+    if (clientTools.length > 0) {
       // Tools should return to loop entry node (not including before_agent)
       const toolReturnTarget = loopEntryNode;
 
       if (shouldReturnDirect.size > 0) {
         allNodeWorkflows.addConditionalEdges(
-          "tools",
+          TOOLS_NODE_NAME,
           this.#createToolsRouter(shouldReturnDirect, exitNode),
           [toolReturnTarget, exitNode as string]
         );
       } else {
-        allNodeWorkflows.addEdge("tools", toolReturnTarget);
+        allNodeWorkflows.addEdge(TOOLS_NODE_NAME, toolReturnTarget);
       }
     }
 
@@ -620,7 +615,7 @@ export class ReactAgent<
       store: this.options.store,
       name: this.options.name,
       description: this.options.description,
-    }) as AgentGraph<
+    }) as unknown as AgentGraph<
       StateSchema,
       StructuredResponseFormat,
       ContextSchema,
@@ -649,14 +644,14 @@ export class ReactAgent<
   #getModelPaths(
     toolClasses: (ClientTool | ServerTool)[],
     includeModelRequest: boolean = false
-  ): ("tools" | "model_request" | typeof END)[] {
-    const paths: ("tools" | "model_request" | typeof END)[] = [];
+  ): BaseGraphDestination[] {
+    const paths: BaseGraphDestination[] = [];
     if (toolClasses.length > 0) {
-      paths.push("tools");
+      paths.push(TOOLS_NODE_NAME);
     }
 
     if (includeModelRequest) {
-      paths.push("model_request");
+      paths.push(AGENT_NODE_NAME);
     }
 
     paths.push(END);
@@ -671,11 +666,9 @@ export class ReactAgent<
     shouldReturnDirect: Set<string>,
     exitNode: string | typeof END
   ) {
-    /**
-     * ToDo: fix type
-     */
-    return (state: any) => {
-      const messages = state.messages;
+    return (state: Record<string, unknown>) => {
+      const builtInState = state as unknown as BuiltInState;
+      const messages = builtInState.messages;
       const lastMessage = messages[messages.length - 1];
 
       // Check if we just executed a returnDirect tool
@@ -686,11 +679,11 @@ export class ReactAgent<
       ) {
         // If we have a response format, route to agent to generate structured response
         // Otherwise, return directly to exit node (could be after_agent or END)
-        return this.options.responseFormat ? "model_request" : exitNode;
+        return this.options.responseFormat ? AGENT_NODE_NAME : exitNode;
       }
 
       // For non-returnDirect tools, always route back to agent
-      return "model_request";
+      return AGENT_NODE_NAME;
     };
   }
 
@@ -702,8 +695,9 @@ export class ReactAgent<
     /**
      * determine if the agent should continue or not
      */
-    return (state: BuiltInState) => {
-      const messages = state.messages;
+    return (state: Record<string, unknown>) => {
+      const builtInState = state as unknown as BuiltInState;
+      const messages = builtInState.messages;
       const lastMessage = messages.at(-1);
 
       if (
@@ -729,7 +723,7 @@ export class ReactAgent<
        * The tool node processes a single message.
        */
       if (this.#toolBehaviorVersion === "v1") {
-        return "tools";
+        return TOOLS_NODE_NAME;
       }
 
       /**
@@ -744,7 +738,8 @@ export class ReactAgent<
       }
 
       return regularToolCalls.map(
-        (toolCall) => new Send("tools", { ...state, lg_tool_call: toolCall })
+        (toolCall) =>
+          new Send(TOOLS_NODE_NAME, { ...state, lg_tool_call: toolCall })
       );
     };
   }
@@ -770,10 +765,13 @@ export class ReactAgent<
   ) {
     const hasStructuredResponse = Boolean(this.options.responseFormat);
 
-    return (state: Omit<BuiltInState, "jumpTo"> & { jumpTo?: JumpTo }) => {
+    return (state: Record<string, unknown>) => {
+      const builtInState = state as unknown as Omit<BuiltInState, "jumpTo"> & {
+        jumpTo?: JumpTo;
+      };
       // First, check if we just processed a structured response
       // If so, ignore any existing jumpTo and go to exitNode
-      const messages = state.messages;
+      const messages = builtInState.messages;
       const lastMessage = messages.at(-1);
       if (
         AIMessage.isInstance(lastMessage) &&
@@ -783,19 +781,19 @@ export class ReactAgent<
       }
 
       // Check if jumpTo is set in the state and allowed
-      if (allowJump && state.jumpTo) {
-        if (state.jumpTo === END) {
+      if (allowJump && builtInState.jumpTo) {
+        if (builtInState.jumpTo === END) {
           return exitNode;
         }
-        if (state.jumpTo === "tools") {
+        if (builtInState.jumpTo === TOOLS_NODE_NAME) {
           // If trying to jump to tools but no tools are available, go to exitNode
           if (toolClasses.length === 0) {
             return exitNode;
           }
-          return new Send("tools", { ...state, jumpTo: undefined });
+          return new Send(TOOLS_NODE_NAME, { ...state, jumpTo: undefined });
         }
         // destination === "model_request"
-        return new Send("model_request", { ...state, jumpTo: undefined });
+        return new Send(AGENT_NODE_NAME, { ...state, jumpTo: undefined });
       }
 
       // check if there are pending tool calls
@@ -806,7 +804,8 @@ export class ReactAgent<
       );
       if (pendingToolCalls && pendingToolCalls.length > 0) {
         return pendingToolCalls.map(
-          (toolCall) => new Send("tools", { ...state, lg_tool_call: toolCall })
+          (toolCall) =>
+            new Send(TOOLS_NODE_NAME, { ...state, lg_tool_call: toolCall })
         );
       }
 
@@ -822,7 +821,7 @@ export class ReactAgent<
         !hasStructuredResponseCalls &&
         hasStructuredResponse
       ) {
-        return "model_request";
+        return AGENT_NODE_NAME;
       }
 
       if (
@@ -851,7 +850,7 @@ export class ReactAgent<
        * For routing from afterModel nodes, always use simple string paths
        * The Send API is handled at the model_request node level
        */
-      return "tools";
+      return TOOLS_NODE_NAME;
     };
   }
 
@@ -865,21 +864,22 @@ export class ReactAgent<
     nextDefault: string
   ) {
     const allowedSet = new Set(allowed.map((t) => parseJumpToTarget(t)));
-    return (state: BuiltInState) => {
-      if (state.jumpTo) {
-        const dest = parseJumpToTarget(state.jumpTo);
+    return (state: Record<string, unknown>) => {
+      const builtInState = state as unknown as BuiltInState;
+      if (builtInState.jumpTo) {
+        const dest = parseJumpToTarget(builtInState.jumpTo);
         if (dest === END && allowedSet.has(END)) {
           return END;
         }
-        if (dest === "tools" && allowedSet.has("tools")) {
+        if (dest === TOOLS_NODE_NAME && allowedSet.has(TOOLS_NODE_NAME)) {
           if (toolClasses.length === 0) return END;
-          return new Send("tools", { ...state, jumpTo: undefined });
+          return new Send(TOOLS_NODE_NAME, { ...state, jumpTo: undefined });
         }
-        if (dest === "model_request" && allowedSet.has("model_request")) {
-          return new Send("model_request", { ...state, jumpTo: undefined });
+        if (dest === AGENT_NODE_NAME && allowedSet.has(AGENT_NODE_NAME)) {
+          return new Send(AGENT_NODE_NAME, { ...state, jumpTo: undefined });
         }
       }
-      return nextDefault as any;
+      return nextDefault;
     };
   }
 
@@ -893,23 +893,25 @@ export class ReactAgent<
     nextDefault: string,
     exitNode: string | typeof END
   ) {
-    return (state: BuiltInState) => {
-      if (!state.jumpTo) {
+    return (state: Record<string, unknown>) => {
+      const builtInState = state as unknown as BuiltInState;
+      if (!builtInState.jumpTo) {
         return nextDefault;
       }
-      const destination = parseJumpToTarget(state.jumpTo);
+      const destination = parseJumpToTarget(builtInState.jumpTo);
       if (destination === END) {
-        // When beforeAgent jumps to END, route to exitNode (first afterAgent node)
+        /**
+         * When beforeAgent jumps to END, route to exitNode (first afterAgent node)
+         */
         return exitNode;
       }
-      if (destination === "tools") {
+      if (destination === TOOLS_NODE_NAME) {
         if (toolClasses.length === 0) {
           return exitNode;
         }
-        return new Send("tools", { ...state, jumpTo: undefined });
+        return new Send(TOOLS_NODE_NAME, { ...state, jumpTo: undefined });
       }
-      // destination === "model_request"
-      return new Send("model_request", { ...state, jumpTo: undefined });
+      return new Send(AGENT_NODE_NAME, { ...state, jumpTo: undefined });
     };
   }
 
@@ -921,22 +923,22 @@ export class ReactAgent<
     toolClasses: (ClientTool | ServerTool)[],
     nextDefault: string
   ) {
-    return (state: BuiltInState) => {
-      if (!state.jumpTo) {
+    return (state: Record<string, unknown>) => {
+      const builtInState = state as unknown as BuiltInState;
+      if (!builtInState.jumpTo) {
         return nextDefault;
       }
-      const destination = parseJumpToTarget(state.jumpTo);
+      const destination = parseJumpToTarget(builtInState.jumpTo);
       if (destination === END) {
         return END;
       }
-      if (destination === "tools") {
+      if (destination === TOOLS_NODE_NAME) {
         if (toolClasses.length === 0) {
           return END;
         }
-        return new Send("tools", { ...state, jumpTo: undefined });
+        return new Send(TOOLS_NODE_NAME, { ...state, jumpTo: undefined });
       }
-      // destination === "model_request"
-      return new Send("model_request", { ...state, jumpTo: undefined });
+      return new Send(AGENT_NODE_NAME, { ...state, jumpTo: undefined });
     };
   }
 
@@ -944,7 +946,8 @@ export class ReactAgent<
    * Initialize middleware states if not already present in the input state.
    */
   async #initializeMiddlewareStates(
-    state: InvokeStateParameter<StateSchema, TMiddleware>
+    state: InvokeStateParameter<StateSchema, TMiddleware>,
+    config: RunnableConfig
   ): Promise<InvokeStateParameter<StateSchema, TMiddleware>> {
     if (
       !this.options.middleware ||
@@ -959,10 +962,13 @@ export class ReactAgent<
       this.options.middleware,
       state
     );
-    const updatedState = { ...state } as InvokeStateParameter<
-      StateSchema,
-      TMiddleware
-    >;
+    const threadState = await this.#graph
+      .getState(config)
+      .catch(() => ({ values: {} }));
+    const updatedState = {
+      ...threadState.values,
+      ...state,
+    } as InvokeStateParameter<StateSchema, TMiddleware>;
     if (!updatedState) {
       return updatedState;
     }
@@ -975,35 +981,6 @@ export class ReactAgent<
     }
 
     return updatedState;
-  }
-
-  /**
-   * Populate the private state of the agent node from the previous state.
-   */
-  async #populatePrivateState(config?: RunnableConfig) {
-    /**
-     * not needed if thread_id is not provided
-     */
-    if (!config?.configurable?.thread_id) {
-      return;
-    }
-    const prevState = (await this.#graph.getState(config as any)) as {
-      values: {
-        _privateState: PrivateState;
-      };
-    };
-
-    /**
-     * not need if state is empty
-     */
-    if (!prevState.values._privateState) {
-      return;
-    }
-
-    this.#agentNode.setState({
-      structuredResponse: undefined,
-      _privateState: prevState.values._privateState,
-    });
   }
 
   /**
@@ -1061,8 +1038,10 @@ export class ReactAgent<
       StructuredResponseFormat,
       TMiddleware
     >;
-    const initializedState = await this.#initializeMiddlewareStates(state);
-    await this.#populatePrivateState(config);
+    const initializedState = await this.#initializeMiddlewareStates(
+      state,
+      config as RunnableConfig
+    );
 
     return this.#graph.invoke(
       initializedState,
@@ -1113,15 +1092,39 @@ export class ReactAgent<
    * }
    * ```
    */
-  async stream(
+  async stream<
+    TStreamMode extends StreamMode | StreamMode[] | undefined,
+    TEncoding extends "text/event-stream" | undefined
+  >(
     state: InvokeStateParameter<StateSchema, TMiddleware>,
     config?: StreamConfiguration<
       InferContextInput<ContextSchema> &
-        InferMiddlewareContextInputs<TMiddleware>
+        InferMiddlewareContextInputs<TMiddleware>,
+      TStreamMode,
+      TEncoding
     >
-  ): Promise<IterableReadableStream<any>> {
-    const initializedState = await this.#initializeMiddlewareStates(state);
-    return this.#graph.stream(initializedState, config as Record<string, any>);
+  ) {
+    const initializedState = await this.#initializeMiddlewareStates(
+      state,
+      config as RunnableConfig
+    );
+    return this.#graph.stream(
+      initializedState,
+      config as Record<string, any>
+    ) as Promise<
+      IterableReadableStream<
+        StreamOutputMap<
+          TStreamMode,
+          false,
+          MergedAgentState<StateSchema, StructuredResponseFormat, TMiddleware>,
+          MergedAgentState<StateSchema, StructuredResponseFormat, TMiddleware>,
+          string,
+          unknown,
+          unknown,
+          TEncoding
+        >
+      >
+    >;
   }
 
   /**
@@ -1183,14 +1186,25 @@ export class ReactAgent<
     state: InvokeStateParameter<StateSchema, TMiddleware>,
     config?: StreamConfiguration<
       InferContextInput<ContextSchema> &
-        InferMiddlewareContextInputs<TMiddleware>
+        InferMiddlewareContextInputs<TMiddleware>,
+      StreamMode | StreamMode[] | undefined,
+      "text/event-stream" | undefined
     > & { version?: "v1" | "v2" },
     streamOptions?: Parameters<Runnable["streamEvents"]>[2]
   ): IterableReadableStream<StreamEvent> {
     return this.#graph.streamEvents(
       state,
       {
-        ...(config as any),
+        ...(config as Partial<
+          PregelOptions<
+            any,
+            any,
+            any,
+            StreamMode | StreamMode[] | undefined,
+            boolean,
+            "text/event-stream"
+          >
+        >),
         version: config?.version ?? "v2",
       },
       streamOptions
@@ -1235,5 +1249,12 @@ export class ReactAgent<
     asNode?: string
   ) {
     return this.#graph.updateState(inputConfig, values, asNode) as never;
+  }
+
+  /**
+   * @internal
+   */
+  get builder() {
+    return this.#graph.builder;
   }
 }

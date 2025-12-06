@@ -23,6 +23,7 @@ const config: ConfigArray = tseslint.config(
       "**/.eslintrc.cjs",
       "**/eslint.config.js",
       "**/eslint.config.ts",
+      "**/tsdown.config.ts",
       "**/vitest.config.ts",
       // Vendor directories with different coding standards
       "**/src/utils/@cfworker/**",

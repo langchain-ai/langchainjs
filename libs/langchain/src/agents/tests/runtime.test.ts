@@ -10,7 +10,8 @@ describe("runtime", () => {
     const middleware = createMiddleware({
       name: "middleware",
       beforeModel: async (_, runtime) => {
-        runtime.runModelCallCount = 123;
+        // @ts-expect-error context is typed as readonly
+        runtime.context = 123;
       },
     });
 
@@ -31,7 +32,8 @@ describe("runtime", () => {
     const middleware = createMiddleware({
       name: "middleware",
       afterModel: async (_, runtime) => {
-        runtime.runModelCallCount = 123;
+        // @ts-expect-error context is typed as readonly
+        runtime.context = 123;
       },
     });
 
@@ -52,7 +54,8 @@ describe("runtime", () => {
     const middleware = createMiddleware({
       name: "middleware",
       wrapModelCall: async (request, handler) => {
-        request.runtime.runModelCallCount = 123;
+        // @ts-expect-error context is typed as readonly
+        request.runtime.context = 123;
         return handler(request);
       },
     });
