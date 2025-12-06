@@ -61,6 +61,13 @@ export type {
   ComputerUseWaitAction,
 } from "./computerUse.js";
 
+import { localShell } from "./localShell.js";
+export type {
+  LocalShellTool,
+  LocalShellOptions,
+  LocalShellAction,
+} from "./localShell.js";
+
 export const tools = {
   webSearch,
   mcp,
@@ -68,4 +75,5 @@ export const tools = {
   fileSearch,
   imageGeneration,
   computerUse,
+  localShell,
 };
