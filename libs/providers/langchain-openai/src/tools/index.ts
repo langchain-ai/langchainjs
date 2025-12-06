@@ -68,6 +68,16 @@ export type {
   LocalShellAction,
 } from "./localShell.js";
 
+import { shell } from "./shell.js";
+export type {
+  ShellTool,
+  ShellOptions,
+  ShellAction,
+  ShellResult,
+  ShellCommandOutput,
+  ShellCallOutcome,
+} from "./shell.js";
+
 import { applyPatch } from "./applyPatch.js";
 export type {
   ApplyPatchTool,
@@ -86,5 +96,6 @@ export const tools = {
   imageGeneration,
   computerUse,
   localShell,
+  shell,
   applyPatch,
 };
