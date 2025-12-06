@@ -1247,6 +1247,43 @@ describe("MultiServerMCPClient Integration Tests", () => {
   });
 
   describe("Timeout Configuration", () => {
+    it("http smoke test: should honor timeout when shorter than sleepMsec", async () => {
+      const { baseUrl } = await testServers.createHTTPServer(
+        "timeout-smoke-test",
+        {
+          disableStreamableHttp: false,
+          supportSSEFallback: false,
+        }
+      );
+
+      const client = new MultiServerMCPClient({
+        "timeout-server": {
+          transport: "http",
+          url: `${baseUrl}/mcp`,
+        },
+      });
+
+      try {
+        const tools = await client.getTools();
+        const testTool = tools.find((t) => t.name.includes("sleep_tool"));
+        expect(testTool).toBeDefined();
+
+        // Set a timeout that is lower than the sleep duration and ensure it is honored.
+        await expect(
+          testTool!.invoke(
+            { sleepMsec: 500 },
+            {
+              timeout: 10,
+            }
+          )
+        ).rejects.toThrowError(
+          /TimeoutError: The operation was aborted due to timeout/
+        );
+      } finally {
+        await client.close();
+      }
+    });
+
     it.each(["http", "sse"] as const)(
       "%s should respect RunnableConfig timeout for tool calls",
       async (transport: "http" | "sse") => {
