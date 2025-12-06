@@ -168,11 +168,11 @@ describe("convertCompletionsMessageToBaseMessage", () => {
         mimeType: "application/pdf",
       } as any;
 
-      expect(() => convertStandardContentBlockToCompletionsContentPart(block)
+      expect(() =>
+        convertStandardContentBlockToCompletionsContentPart(block)
       ).toThrowError(
         "a filename or name or title is needed via meta-data for OpenAI when working with multimodal blocks"
       );
-
     });
 
     it("will convert a file block to an openai file payload when a filename is provided", () => {
@@ -218,7 +218,8 @@ describe("convertCompletionsMessageToBaseMessage", () => {
         metadata: { filename: "doc.pdf" },
       } as any;
 
-      const result = completionsApiContentBlockConverter.fromStandardFileBlock!(block);
+      const result =
+        completionsApiContentBlockConverter.fromStandardFileBlock!(block);
       expect(result).toEqual({
         type: "file",
         file: {
@@ -236,7 +237,8 @@ describe("convertCompletionsMessageToBaseMessage", () => {
         metadata: { name: "report.pdf" },
       } as any;
 
-      const result = completionsApiContentBlockConverter.fromStandardFileBlock!(block);
+      const result =
+        completionsApiContentBlockConverter.fromStandardFileBlock!(block);
       expect(result).toEqual({
         type: "file",
         file: {
@@ -252,7 +254,8 @@ describe("convertCompletionsMessageToBaseMessage", () => {
         id: "file_123",
       } as any;
 
-      const result = completionsApiContentBlockConverter.fromStandardFileBlock!(block);
+      const result =
+        completionsApiContentBlockConverter.fromStandardFileBlock!(block);
       expect(result).toEqual({
         type: "file",
         file: {
@@ -275,5 +278,4 @@ describe("convertCompletionsMessageToBaseMessage", () => {
       );
     });
   });
-
 });

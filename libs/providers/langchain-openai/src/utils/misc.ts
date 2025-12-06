@@ -1,5 +1,10 @@
 import type { OpenAI as OpenAIClient } from "openai";
-import {BaseMessage, ChatMessage, ContentBlock, Data} from "@langchain/core/messages";
+import {
+  BaseMessage,
+  ChatMessage,
+  ContentBlock,
+  Data,
+} from "@langchain/core/messages";
 
 export const iife = <T>(fn: () => T) => fn();
 
@@ -25,18 +30,23 @@ export function extractGenericMessageCustomRole(message: ChatMessage) {
   return message.role as OpenAIClient.ChatCompletionRole;
 }
 
-export function getRequiredFilenameFromMetadata(block: ContentBlock.Multimodal.File | ContentBlock.Multimodal.Video | Data.StandardFileBlock): string {
-    const filename =
-        (block.metadata?.filename ??
-        block.metadata?.name ??
-        block.metadata?.title) as string;
+export function getRequiredFilenameFromMetadata(
+  block:
+    | ContentBlock.Multimodal.File
+    | ContentBlock.Multimodal.Video
+    | Data.StandardFileBlock
+): string {
+  const filename = (block.metadata?.filename ??
+    block.metadata?.name ??
+    block.metadata?.title) as string;
 
-    if (!filename) {
-        throw new Error("a filename or name or title is needed via meta-data for OpenAI when working with multimodal blocks");
-    }
+  if (!filename) {
+    throw new Error(
+      "a filename or name or title is needed via meta-data for OpenAI when working with multimodal blocks"
+    );
+  }
 
-    return filename;
-
+  return filename;
 }
 export function messageToOpenAIRole(
   message: BaseMessage

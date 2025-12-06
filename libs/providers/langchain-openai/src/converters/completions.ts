@@ -35,9 +35,9 @@ import type {
 import { OpenAI as OpenAIClient } from "openai";
 import { handleMultiModalOutput } from "../utils/output.js";
 import {
-    getRequiredFilenameFromMetadata,
-    isReasoningModel,
-    messageToOpenAIRole
+  getRequiredFilenameFromMetadata,
+  isReasoningModel,
+  messageToOpenAIRole,
 } from "../utils/misc.js";
 
 /**
@@ -176,7 +176,7 @@ export const completionsApiContentBlockConverter: StandardContentBlockConverter<
           file_data: block.url, // formatted as base64 data URL
           ...(block.metadata?.filename || block.metadata?.name
             ? {
-                filename
+                filename,
               }
             : {}),
         },
@@ -184,7 +184,7 @@ export const completionsApiContentBlockConverter: StandardContentBlockConverter<
     }
 
     if (block.source_type === "base64") {
-        const filename = getRequiredFilenameFromMetadata(block);
+      const filename = getRequiredFilenameFromMetadata(block);
 
       return {
         type: "file",
@@ -556,7 +556,6 @@ export const convertStandardContentBlockToCompletionsContentPart: Converter<
   }
   if (block.type === "file") {
     if (block.data) {
-
       const filename = getRequiredFilenameFromMetadata(block);
 
       return {

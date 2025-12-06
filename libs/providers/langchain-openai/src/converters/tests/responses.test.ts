@@ -312,30 +312,35 @@ describe("convertStandardContentMessageToResponsesInput", () => {
     expect(result).toEqual([{ type: "custom", payload: "data" }]);
   });
 
-    it("converts file payloads when filename is provided", () => {
-        const message = new HumanMessage({
-            contentBlocks: [
-                {
-                    type: "file",
-                    mimeType: "application/pdf",
-                    data: "iVBORw0KGgoAAAANSUhEUgAAAAE",
-                    metadata: { filename: "sample.pdf" },
-                },
-            ],
-        });
-
-        const result = convertStandardContentMessageToResponsesInput(message);
-
-        expect(result).toEqual([{
-          role: "user",
-          type: "message",
-          content: [{
-            type: "input_file",
-            file_data: "data:application/pdf;base64,iVBORw0KGgoAAAANSUhEUgAAAAE",
-            filename: "sample.pdf"
-            }]
-        }]);
+  it("converts file payloads when filename is provided", () => {
+    const message = new HumanMessage({
+      contentBlocks: [
+        {
+          type: "file",
+          mimeType: "application/pdf",
+          data: "iVBORw0KGgoAAAANSUhEUgAAAAE",
+          metadata: { filename: "sample.pdf" },
+        },
+      ],
     });
+
+    const result = convertStandardContentMessageToResponsesInput(message);
+
+    expect(result).toEqual([
+      {
+        role: "user",
+        type: "message",
+        content: [
+          {
+            type: "input_file",
+            file_data:
+              "data:application/pdf;base64,iVBORw0KGgoAAAANSUhEUgAAAAE",
+            filename: "sample.pdf",
+          },
+        ],
+      },
+    ]);
+  });
 
   it("throws error when file payload does not contain filename", () => {
     const message = new HumanMessage({
@@ -353,7 +358,5 @@ describe("convertStandardContentMessageToResponsesInput", () => {
     ).toThrowError(
       `a filename or name or title is needed via meta-data for OpenAI when working with multimodal blocks`
     );
-
   });
-
 });
