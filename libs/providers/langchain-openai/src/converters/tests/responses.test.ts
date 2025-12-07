@@ -11,7 +11,6 @@ import {
   convertResponsesUsageToUsageMetadata,
   convertStandardContentMessageToResponsesInput,
 } from "../responses.js";
-import { completionsApiContentBlockConverter } from "../completions";
 
 describe("convertResponsesUsageToUsageMetadata", () => {
   it("should convert OpenAI Responses usage to LangChain format with cached tokens", () => {
