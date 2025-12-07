@@ -15,6 +15,7 @@ import { removeAdditionalProperties } from "../utils/zod_to_genai_parameters.js"
 import {
   convertBaseMessagesToContent,
   convertMessageContentToParts,
+  getMessageAuthor,
 } from "../utils/common.js";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -961,4 +962,48 @@ test("convertMessageContentToParts: correctly handles ToolMessage with array con
       },
     },
   ]);
+});
+
+test("getMessageAuthor should return message type, not custom names", () => {
+  // Test that AIMessage with a custom name returns "ai" as the author
+  const aiMessageWithName = new AIMessage({
+    content: "Hello",
+    name: "math_expert",
+  });
+  expect(getMessageAuthor(aiMessageWithName)).toBe("ai");
+
+  // Test that regular AIMessage returns "ai"
+  const aiMessage = new AIMessage({
+    content: "Hello",
+  });
+  expect(getMessageAuthor(aiMessage)).toBe("ai");
+
+  // Test that HumanMessage returns "human"
+  const humanMessage = new HumanMessage({
+    content: "Hello",
+  });
+  expect(getMessageAuthor(humanMessage)).toBe("human");
+
+  // Test that ToolMessage returns "tool"
+  const toolMessage = new ToolMessage({
+    content: "Result",
+    tool_call_id: "123",
+  });
+  expect(getMessageAuthor(toolMessage)).toBe("tool");
+});
+
+test("convertBaseMessagesToContent should handle AIMessages with custom names", () => {
+  // Test that messages with custom agent names work correctly
+  const messages = [
+    new HumanMessage({ content: "What is 2+2?" }),
+    new AIMessage({ content: "4", name: "math_expert" }),
+  ];
+
+  // This should not throw an error
+  expect(() => convertBaseMessagesToContent(messages, true)).not.toThrow();
+
+  const result = convertBaseMessagesToContent(messages, true);
+  expect(result.content).toHaveLength(2);
+  expect(result.content[0].role).toBe("user");
+  expect(result.content[1].role).toBe("model");
 });

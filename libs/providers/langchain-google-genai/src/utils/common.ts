@@ -57,10 +57,10 @@ export function getMessageAuthor(message: BaseMessage) {
   if (ChatMessage.isInstance(message)) {
     return message.role;
   }
-  if (type === "tool") {
-    return type;
-  }
-  return message.name ?? type;
+  // Always return the message type, not custom names
+  // Custom names (e.g., agent names) are not supported by Google GenAI API
+  // which only supports standard roles: "model", "user", "function", "system"
+  return type;
 }
 
 /**
@@ -79,7 +79,7 @@ export function convertAuthorToRole(
      * */
     case "supervisor":
     case "ai":
-    case "model": // getMessageAuthor returns message.name. code ex.: return message.name ?? type;
+    case "model":
       return "model";
     case "system":
       return "system";
