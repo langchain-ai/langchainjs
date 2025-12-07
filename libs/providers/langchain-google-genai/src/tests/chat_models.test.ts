@@ -981,7 +981,6 @@ test("getMessageAuthor should return message type, not custom names", () => {
   });
   expect(getMessageAuthor(humanMessage)).toBe("human");
 
-
   const toolMessage = new ToolMessage({
     content: "Result",
     tool_call_id: "123",
