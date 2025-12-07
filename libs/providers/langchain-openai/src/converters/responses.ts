@@ -25,7 +25,12 @@ import type {
 import { ResponseInputMessageContentList } from "openai/resources/responses/responses.js";
 import { ChatOpenAIReasoningSummary } from "../types.js";
 import { isCustomToolCall, parseCustomToolCall } from "../utils/tools.js";
-import { iife, isReasoningModel, messageToOpenAIRole } from "../utils/misc.js";
+import {
+  getRequiredFilenameFromMetadata,
+  iife,
+  isReasoningModel,
+  messageToOpenAIRole,
+} from "../utils/misc.js";
 import { Converter } from "@langchain/core/utils/format";
 import { completionsApiContentBlockConverter } from "./completions.js";
 
@@ -755,10 +760,8 @@ export const convertStandardContentMessageToResponsesInput: Converter<
     const resolveFileItem = (
       block: ContentBlock.Multimodal.File | ContentBlock.Multimodal.Video
     ): OpenAIClient.Responses.ResponseInputFile | undefined => {
-      const filename =
-        block.metadata?.filename ??
-        block.metadata?.name ??
-        block.metadata?.title;
+      const filename = getRequiredFilenameFromMetadata(block);
+
       if (block.fileId && typeof filename === "string") {
         return {
           type: "input_file",
