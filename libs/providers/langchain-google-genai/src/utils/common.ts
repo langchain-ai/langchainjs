@@ -53,12 +53,10 @@ const DUMMY_SIGNATURE =
 const iife = (fn: () => string) => fn();
 
 export function getMessageAuthor(message: BaseMessage) {
-  const type = message._getType();
   if (ChatMessage.isInstance(message)) {
     return message.role;
   }
-  // Return message type only - Google GenAI doesn't support custom names
-  return type;
+  return message.type;
 }
 
 /**
@@ -77,7 +75,7 @@ export function convertAuthorToRole(
      * */
     case "supervisor":
     case "ai":
-    case "model": // getMessageAuthor returns message.name. code ex.: return message.name ?? type;
+    case "model":
       return "model";
     case "system":
       return "system";

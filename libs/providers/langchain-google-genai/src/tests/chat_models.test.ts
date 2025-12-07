@@ -994,10 +994,12 @@ test("convertBaseMessagesToContent should handle AIMessages with custom names", 
     new AIMessage({ content: "4", name: "math_expert" }),
   ];
 
-  expect(() => convertBaseMessagesToContent(messages, true)).not.toThrow();
+  expect(() =>
+    convertBaseMessagesToContent(messages, true, false, "model")
+  ).not.toThrow();
 
-  const result = convertBaseMessagesToContent(messages, true);
-  expect(result.content).toHaveLength(2);
-  expect(result.content[0].role).toBe("user");
-  expect(result.content[1].role).toBe("model");
+  const result = convertBaseMessagesToContent(messages, true, false, "model");
+  expect(result).toHaveLength(2);
+  expect(result[0].role).toBe("user");
+  expect(result[1].role).toBe("model");
 });
