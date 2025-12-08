@@ -8,7 +8,6 @@ import {
   AIMessageChunk,
   AIMessageChunkFields,
   BaseMessage,
-  UsageMetadata,
 } from "@langchain/core/messages";
 import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
 import { concat } from "@langchain/core/utils/stream";
@@ -48,6 +47,7 @@ import {
 import { SafeJsonEventParserStream } from "../utils/stream.js";
 import {
   convertGeminiCandidateToAIMessage,
+  convertGeminiGenerateContentResponseToUsageMetadata,
   convertMessagesToGeminiContents,
   convertMessagesToGeminiSystemInstruction,
 } from "../converters/messages.js";
@@ -436,27 +436,8 @@ export abstract class BaseChatGoogle<
             .join("")
         : "";
 
-    // FIXME: this should just be hoisted to its own function
-    const inputTokenCount = data.usageMetadata?.promptTokenCount ?? 0;
-    const candidatesTokenCount = data.usageMetadata?.candidatesTokenCount ?? 0;
-    const thoughtsTokenCount = data.usageMetadata?.thoughtsTokenCount ?? 0;
-    const outputTokenCount = candidatesTokenCount + thoughtsTokenCount;
-    const totalTokens =
-      data.usageMetadata?.totalTokenCount ?? inputTokenCount + outputTokenCount;
-
-    const usageMetadata: UsageMetadata = {
-      input_tokens: inputTokenCount,
-      output_tokens: outputTokenCount,
-      total_tokens: totalTokens,
-      input_token_details: {
-        // FIXME: include modality details
-        cache_read: data.usageMetadata?.cachedContentTokenCount ?? 0,
-      },
-      output_token_details: {
-        // FIXME: include modality details
-        reasoning: thoughtsTokenCount,
-      },
-    };
+    const usageMetadata = convertGeminiGenerateContentResponseToUsageMetadata(data);
+    message.usage_metadata = usageMetadata;
 
     return {
       generations: [

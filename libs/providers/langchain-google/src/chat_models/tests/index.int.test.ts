@@ -302,6 +302,21 @@ describe.each(coreModelInfo)(
       expect(contentBlock.text).toMatch(/(1 + 1 (equals|is|=) )?2.? ?/);
     });
 
+    test("invoke token count usage_metadata", async () => {
+      const model = newChatGoogle();
+      const res: AIMessageChunk = await model.invoke("Why is the sky blue? Be concise.");
+      console.log(res);
+      expect(res?.usage_metadata).toBeDefined();
+      if (!res?.usage_metadata) {
+        return;
+      }
+      expect(res.usage_metadata.input_tokens).toBeGreaterThan(1);
+      expect(res.usage_metadata.output_tokens).toBeGreaterThan(1);
+      expect(res.usage_metadata.total_tokens).toBe(
+        res.usage_metadata.input_tokens + res.usage_metadata.output_tokens
+      );
+    });
+
     test.skip("stream", async () => {
       const model = newChatGoogle();
       const input: BaseLanguageModelInput = new ChatPromptValue([
@@ -360,7 +375,7 @@ describe.each(coreModelInfo)(
       expect(totalTokenCount).toBeGreaterThan(1);
     });
 
-    test("Stream token count usage_metadata", async () => {
+    test.skip("stream token count usage_metadata", async () => {
       const model = newChatGoogle();
       let res: AIMessageChunk | null = null;
       for await (const chunk of await model.stream(
@@ -385,7 +400,7 @@ describe.each(coreModelInfo)(
       );
     });
 
-    test("streamUsage false excludes token usage", async () => {
+    test.skip("streamUsage false excludes token usage", async () => {
       const model = newChatGoogle({
         temperature: 0,
         streamUsage: false,

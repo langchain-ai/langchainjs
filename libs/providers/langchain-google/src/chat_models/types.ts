@@ -418,6 +418,19 @@ export interface GeminiCandidate {
   index?: number;
 }
 
+export type GeminiModalityEnum =
+  | "TEXT"
+  | "IMAGE"
+  | "VIDEO"
+  | "AUDIO"
+  | "DOCUMENT"
+  | string;
+
+export interface GeminiModalityTokenCount {
+  modality: GeminiModalityEnum;
+  tokenCount: number
+}
+
 export interface GeminiUsageMetadata {
   promptTokenCount?: number;
   cachedContentTokenCount?: number;
@@ -425,6 +438,13 @@ export interface GeminiUsageMetadata {
   toolUsePromptTokenCount?: number;
   thoughtsTokenCount?: number;
   totalTokenCount?: number;
+
+  promptTokensDetails: GeminiModalityTokenCount[];
+  toolUsePromptTokensDetails: GeminiModalityTokenCount[];
+  cacheTokensDetails: GeminiModalityTokenCount[];
+  candidatesTokensDetails: GeminiModalityTokenCount[];
+
+  [key: string]: unknown;
 }
 
 export interface GeminiPromptFeedback {

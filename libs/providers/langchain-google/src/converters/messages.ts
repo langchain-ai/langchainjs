@@ -10,7 +10,7 @@ import {
   ChatMessage,
   StandardContentBlockConverter,
   convertToProviderContentBlock,
-  type Data,
+  type Data, UsageMetadata, InputTokenDetails, OutputTokenDetails, ModalitiesTokenDetails,
 } from "@langchain/core/messages";
 import { Converter } from "@langchain/core/utils/format";
 import {
@@ -18,7 +18,7 @@ import {
   GeminiContent,
   GeminiPart,
   GeminiCandidate,
-  GeminiRole,
+  GeminiRole, GenerateContentResponse, GeminiUsageMetadata, GeminiModalityTokenCount,
 } from "../chat_models/types.js";
 import { iife } from "../utils/misc.js";
 import { ToolCallNotFoundError } from "../utils/errors.js";
@@ -711,3 +711,49 @@ export const convertGeminiCandidateToAIMessage: Converter<
     response_metadata,
   });
 };
+
+function addModalityCounts(
+  modalityTokenCounts: GeminiModalityTokenCount[] | undefined,
+  details: InputTokenDetails | OutputTokenDetails
+): void {
+  modalityTokenCounts?.forEach((modalityTokenCount) => {
+    const { modality, tokenCount } = modalityTokenCount;
+    const modalityLc: keyof ModalitiesTokenDetails =
+      modality.toLowerCase() as keyof ModalitiesTokenDetails;
+    const currentCount = details[modalityLc] ?? 0;
+    details[modalityLc] = currentCount + tokenCount;
+  });
+}
+
+export const convertGeminiGenerateContentResponseToUsageMetadata: Converter<
+  GenerateContentResponse,
+  UsageMetadata
+> = (data: GenerateContentResponse): UsageMetadata => {
+  const usageMetadata: GeminiUsageMetadata | undefined = data.usageMetadata;
+
+  const inputTokenCount = usageMetadata?.promptTokenCount ?? 0;
+  const candidatesTokenCount = usageMetadata?.candidatesTokenCount ?? 0;
+  const thoughtsTokenCount = usageMetadata?.thoughtsTokenCount ?? 0;
+  const outputTokenCount = candidatesTokenCount + thoughtsTokenCount;
+  const totalTokens =
+    usageMetadata?.totalTokenCount ?? inputTokenCount + outputTokenCount;
+
+  const input_token_details: InputTokenDetails = {};
+  addModalityCounts(usageMetadata?.promptTokensDetails, input_token_details);
+  input_token_details.cache_read = usageMetadata?.cachedContentTokenCount ?? 0;
+
+  const output_token_details: OutputTokenDetails = {};
+  addModalityCounts(
+    usageMetadata?.candidatesTokensDetails,
+    output_token_details
+  );
+  output_token_details.reasoning = usageMetadata?.thoughtsTokenCount ?? 0;
+
+  return {
+    input_tokens: inputTokenCount,
+    output_tokens: outputTokenCount,
+    total_tokens: totalTokens,
+    input_token_details,
+    output_token_details,
+  };
+}
