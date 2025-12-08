@@ -290,8 +290,7 @@ export interface FakeChatInput extends BaseChatModelParams {
    * This gets merged into response_metadata by the base chat model.
    * Useful for testing response_metadata propagation (e.g., finish_reason).
    */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  generationInfo?: Record<string, any>;
+  generationInfo?: Record<string, unknown>;
 }
 
 export interface FakeListChatModelCallOptions extends BaseChatModelCallOptions {
