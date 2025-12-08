@@ -332,8 +332,7 @@ export class FakeListChatModel extends BaseChatModel<FakeListChatModelCallOption
 
   emitCustomEvent = false;
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  generationInfo?: Record<string, any>;
+  generationInfo?: Record<string, unknown>;
 
   constructor(params: FakeChatInput) {
     super(params);
