@@ -94,7 +94,7 @@ jobs:
       - name: 📋 Get published packages
         if: steps.version.outputs.success == '1'
         id: published
-        uses: actions/github-script@v7
+        uses: actions/github-script@v8
         with:
           script: |
             const fs = require('fs');
@@ -163,7 +163,7 @@ jobs:
 
       - name: 💬 Comment on PR
         if: steps.version.outputs.success == '1' && steps.published.outputs.count != '0'
-        uses: actions/github-script@v7
+        uses: actions/github-script@v8
         with:
           script: |
             // Get the current branch name
