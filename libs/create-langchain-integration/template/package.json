@@ -69,6 +69,7 @@
   },
   "files": [
     "dist/",
+    "!dist/node_modules/",
     "index.cjs",
     "index.js",
     "index.d.ts",

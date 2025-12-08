@@ -92,6 +92,7 @@
   },
   "files": [
     "dist/",
+    "!dist/node_modules/",
     "CHANGELOG.md",
     "README.md",
     "LICENSE"
