@@ -100,6 +100,7 @@ export class ChatOpenAICompletions<
         : {}),
       ...this.modelKwargs,
       prompt_cache_key: options?.promptCacheKey ?? this.promptCacheKey,
+      prompt_cache_retention : options?.promptCacheRetention ?? this.promptCacheRetention,
       verbosity: options?.verbosity ?? this.verbosity,
     };
     if (options?.prediction !== undefined) {
