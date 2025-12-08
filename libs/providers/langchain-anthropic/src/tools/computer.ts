@@ -26,7 +26,7 @@ const BASE_COMMANDS = [
 ];
 
 /**
- * Options for the computer use tool (Claude Opus 4.5 version).
+ * Options for the computer use tool (Claude Opus 4.5 only version).
  */
 export interface Computer20251124Options {
   /**
@@ -56,30 +56,6 @@ export interface Computer20251124Options {
 }
 
 /**
- * Options for the computer use tool (Claude 4 and Claude 3.7 version).
- */
-export interface Computer20250124Options {
-  /**
-   * The width of the display in pixels.
-   */
-  displayWidthPx: number;
-  /**
-   * The height of the display in pixels.
-   */
-  displayHeightPx: number;
-  /**
-   * Optional display number for X11 environments.
-   */
-  displayNumber?: number;
-  /**
-   * Optional execute function that handles computer action execution.
-   * This function receives the action input and should return the result
-   * (typically a base64-encoded screenshot or action confirmation).
-   */
-  execute?: (args: Computer20250124Action) => string | Promise<string>;
-}
-
-/**
  * Creates an Anthropic computer use tool for Claude Opus 4.5 that provides
  * screenshot capabilities and mouse/keyboard control for autonomous desktop interaction.
  *
@@ -92,9 +68,7 @@ export interface Computer20250124Options {
  * @warning Computer use is a beta feature with unique risks. Use a dedicated virtual machine
  * or container with minimal privileges. Avoid giving access to sensitive data.
  *
- * @note This tool requires the beta header `computer-use-2025-11-24` in API requests.
- *
- * @see {@link https://docs.anthropic.com/en/docs/agents-and-tools/tool-use/computer-use | Anthropic Computer Use Documentation}
+ * @see {@link https://platform.claude.com/docs/en/agents-and-tools/tool-use/computer-use-tool | Anthropic Computer Use Documentation}
  *
  * @example
  * ```typescript
@@ -181,8 +155,36 @@ export function computer_20251124(
 }
 
 /**
- * Creates an Anthropic computer use tool for Claude 4 models and Claude 3.7 that provides
- * screenshot capabilities and mouse/keyboard control for autonomous desktop interaction.
+ * Options for the computer use tool.
+ *
+ * Supported models: Claude Sonnet 4.5, Haiku 4.5, Opus 4.1, Sonnet 4, Opus 4, and Sonnet 3.7 versions.
+ */
+export interface Computer20250124Options {
+  /**
+   * The width of the display in pixels.
+   */
+  displayWidthPx: number;
+  /**
+   * The height of the display in pixels.
+   */
+  displayHeightPx: number;
+  /**
+   * Optional display number for X11 environments.
+   */
+  displayNumber?: number;
+  /**
+   * Optional execute function that handles computer action execution.
+   * This function receives the action input and should return the result
+   * (typically a base64-encoded screenshot or action confirmation).
+   */
+  execute?: (args: Computer20250124Action) => string | Promise<string>;
+}
+
+/**
+ * Creates an Anthropic computer use tool that provides screenshot capabilities and mouse/keyboard control
+ * for autonomous desktop interaction.
+ *
+ * Supported models: Claude Sonnet 4.5, Haiku 4.5, Opus 4.1, Sonnet 4, Opus 4, and Sonnet 3.7 versions.
  *
  * The computer use tool enables Claude to interact with desktop environments through:
  * - **Screenshot capture**: See what's currently displayed on screen
@@ -192,9 +194,7 @@ export function computer_20251124(
  * @warning Computer use is a beta feature with unique risks. Use a dedicated virtual machine
  * or container with minimal privileges. Avoid giving access to sensitive data.
  *
- * @note This tool requires the beta header `computer-use-2025-01-24` in API requests.
- *
- * @see {@link https://docs.anthropic.com/en/docs/agents-and-tools/tool-use/computer-use | Anthropic Computer Use Documentation}
+ * @see {@link https://platform.claude.com/docs/en/agents-and-tools/tool-use/computer-use-tool | Anthropic Computer Use Documentation}
  *
  * @example
  * ```typescript

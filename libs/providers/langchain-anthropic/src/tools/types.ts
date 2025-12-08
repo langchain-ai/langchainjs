@@ -83,15 +83,15 @@ export interface TextEditor20250728InsertCommand {
 /**
  * Computer use tool action types for Claude Opus 4.5.
  * Includes zoom action which is not available in earlier versions.
- * @see https://docs.anthropic.com/en/docs/agents-and-tools/tool-use/computer-use
+ * @see https://platform.claude.com/docs/en/agents-and-tools/tool-use/computer-use-tool
  */
 export type Computer20251124Action =
   | Computer20250124Action
   | ComputerZoomAction;
 
 /**
- * Computer use tool action types for Claude 4 models and Claude 3.7.
- * @see https://docs.anthropic.com/en/docs/agents-and-tools/tool-use/computer-use
+ * Computer use tool action types for Claude Sonnet 4.5, Haiku 4.5, Opus 4.1, Sonnet 4, Opus 4, and Sonnet 3.7 versions.
+ * @see https://platform.claude.com/docs/en/agents-and-tools/tool-use/computer-use-tool
  */
 export type Computer20250124Action =
   | ComputerScreenshotAction
