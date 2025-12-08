@@ -294,6 +294,11 @@ export interface AnthropicInput {
   betas?: AnthropicBeta[];
 }
 
+/**
+ * Input to ChatAnthropic class.
+ */
+export type ChatAnthropicInput = AnthropicInput & BaseChatModelParams;
+
 function extractToken(chunk: AIMessageChunk): string | undefined {
   if (typeof chunk.content === "string") {
     return chunk.content;
@@ -904,7 +909,7 @@ export class ChatAnthropicMessages<
    */
   createClient: (options: ClientOptions) => Anthropic;
 
-  constructor(fields?: AnthropicInput & BaseChatModelParams) {
+  constructor(fields?: ChatAnthropicInput) {
     super(fields ?? {});
 
     this.anthropicApiKey =
