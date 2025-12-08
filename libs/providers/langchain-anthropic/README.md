@@ -77,24 +77,20 @@ const response = await model.stream({
 
 ## Tools
 
-This package provides LangChain-compatible wrappers for Anthropic's built-in tools. These tools can be bound to `ChatAnthropic` using `bindTools()`.
+This package provides LangChain-compatible wrappers for Anthropic's built-in tools. These tools can be bound to `ChatAnthropic` using `bindTools()` or any [`ReactAgent`](https://docs.langchain.com/oss/javascript/langchain/agents).
 
 ### Memory Tool
 
 The memory tool (`memory_20250818`) enables Claude to store and retrieve information across conversations through a memory file directory. Claude can create, read, update, and delete files that persist between sessions, allowing it to build knowledge over time without keeping everything in the context window.
 
 ```typescript
-import {
-  ChatAnthropic,
-  tools,
-  type Memory20250818Command,
-} from "@langchain/anthropic";
+import { ChatAnthropic, tools } from "@langchain/anthropic";
 
 // Create a simple in-memory file store (or use your own persistence layer)
 const files = new Map<string, string>();
 
 const memory = tools.memory_20250818({
-  execute: async (command: Memory20250818Command) => {
+  execute: async (command) => {
     switch (command.command) {
       case "view":
         if (!command.path || command.path === "/") {
