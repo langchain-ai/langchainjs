@@ -45,8 +45,6 @@ interface WebFetch20250910Options {
  * input alongside sensitive data poses data exfiltration risks. We recommend only using
  * this tool in trusted environments or when handling non-sensitive data.
  *
- * @note This tool requires the beta header `web-fetch-2025-09-10` in API requests.
- *
  * @see {@link https://docs.anthropic.com/en/docs/build-with-claude/tool-use/web-fetch-tool | Anthropic Web Fetch Documentation}
  * @param options - Configuration options for the web fetch tool
  * @returns A web fetch tool definition to be passed to the Anthropic API
