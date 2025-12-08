@@ -178,6 +178,68 @@ const response = await llm.invoke("Latest news about AI?", {
 
 For more information, see [Anthropic's Web Search Tool documentation](https://docs.anthropic.com/en/docs/build-with-claude/tool-use/web-search-tool).
 
+### Web Fetch Tool
+
+The web fetch tool (`webFetch_20250910`) allows Claude to retrieve full content from specified web pages and PDF documents. Claude can only fetch URLs that have been explicitly provided by the user or that come from previous web search or web fetch results.
+
+> **⚠️ Security Warning:** Enabling the web fetch tool in environments where Claude processes untrusted input alongside sensitive data poses data exfiltration risks. We recommend only using this tool in trusted environments or when handling non-sensitive data.
+
+```typescript
+import { ChatAnthropic, tools } from "@langchain/anthropic";
+
+const llm = new ChatAnthropic({
+  model: "claude-sonnet-4-5-20250929",
+});
+
+// Basic usage - fetch content from a URL
+const response = await llm.invoke(
+  "Please analyze the content at https://example.com/article",
+  { tools: [tools.webFetch_20250910()] }
+);
+```
+
+The web fetch tool supports several configuration options:
+
+```typescript
+const response = await llm.invoke(
+  "Summarize this research paper: https://arxiv.org/abs/2024.12345",
+  {
+    tools: [
+      tools.webFetch_20250910({
+        // Maximum number of times the tool can be used in the API request
+        maxUses: 5,
+        // Only fetch from these domains
+        allowedDomains: ["arxiv.org", "example.com"],
+        // Or block specific domains (cannot be used with allowedDomains)
+        // blockedDomains: ["example.com"],
+        // Enable citations for fetched content (optional, unlike web search)
+        citations: { enabled: true },
+        // Maximum content length in tokens (helps control token usage)
+        maxContentTokens: 50000,
+      }),
+    ],
+  }
+);
+```
+
+You can combine web fetch with web search for comprehensive information gathering:
+
+```typescript
+import { tools } from "@langchain/anthropic";
+
+const response = await llm.invoke(
+  "Find recent articles about quantum computing and analyze the most relevant one",
+  {
+    tools: [
+      tools.webSearch_20250305({ maxUses: 3 }),
+      tools.webFetch_20250910({ maxUses: 5, citations: { enabled: true } }),
+    ],
+  }
+);
+```
+
+For more information, see [Anthropic's Web Fetch Tool documentation](https://docs.anthropic.com/en/docs/build-with-claude/tool-use/web-fetch-tool).
+
 ## Development
 
 To develop the Anthropic package, you'll need to follow these instructions:
