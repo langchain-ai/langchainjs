@@ -9,7 +9,7 @@ const fakeAuthProp = {
   watsonxAIApikey: "fake_key",
 };
 
-const model = "ibm/slate-125m-english-rtrvr";
+const model = "ibm/slate-125m-english-rtrvr-v2";
 const projectId = process.env.WATSONX_AI_PROJECT_ID || "testString";
 const serviceUrl = process.env.WATSONX_AI_SERVICE_URL as string;
 
