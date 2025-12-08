@@ -478,12 +478,12 @@ describe("structured output handling", () => {
         );
         expect(strategyDefault.strict).toBe(false);
 
-        const strategyStrict = providerStrategy(
-          z.object({
+        const strategyStrict = providerStrategy({
+          schema: z.object({
             foo: z.string(),
           }),
-          true
-        );
+          strict: true,
+        });
         expect(strategyStrict.strict).toBe(true);
       });
     });

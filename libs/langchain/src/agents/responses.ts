@@ -480,10 +480,7 @@ export function toolStrategy(
  * that directly conform to the provided schema without requiring tool calls. This is the
  * recommended approach for structured output when your model supports it.
  *
- * @param responseFormat - The schema to enforce, either a Zod schema or a JSON schema object
- * @param strict - Whether to request strict provider-side schema enforcement. When `true`,
- *   the provider will strictly enforce the schema and reject responses that don't match.
- *   Defaults to `false`.
+ * @param responseFormat - The schema to enforce, either a Zod schema, a JSON schema object, or an options object with `schema` and optional `strict` flag
  * @returns A `ProviderStrategy` instance that can be used as the `responseFormat` in `createAgent`
  *
  * @example
@@ -507,32 +504,57 @@ export function toolStrategy(
  * // Using strict mode for stricter schema enforcement
  * const agent = createAgent({
  *   model: "gpt-4o",
- *   responseFormat: providerStrategy(
- *     z.object({
+ *   responseFormat: providerStrategy({
+ *     schema: z.object({
  *       name: z.string(),
  *       age: z.number(),
  *     }),
- *     true // Enable strict mode
- *   ),
+ *     strict: true
+ *   }),
  * });
  * ```
  */
-export function providerStrategy<T extends InteropZodType<any>>(
-  responseFormat: T,
-  strict?: boolean
+export function providerStrategy<T extends InteropZodType<unknown>>(
+  responseFormat: T | { schema: T; strict?: boolean }
 ): ProviderStrategy<T extends InteropZodType<infer U> ? U : never>;
 export function providerStrategy(
-  responseFormat: JsonSchemaFormat,
-  strict?: boolean
+  responseFormat:
+    | JsonSchemaFormat
+    | { schema: JsonSchemaFormat; strict?: boolean }
 ): ProviderStrategy<Record<string, unknown>>;
 export function providerStrategy(
-  responseFormat: InteropZodType<any> | JsonSchemaFormat,
-  strict: boolean = false
-): ProviderStrategy<any> {
+  responseFormat:
+    | InteropZodType<unknown>
+    | JsonSchemaFormat
+    | { schema: InteropZodType<unknown> | JsonSchemaFormat; strict?: boolean }
+): ProviderStrategy<unknown> {
+  /**
+   * Handle options object format
+   */
+  if (
+    typeof responseFormat === "object" &&
+    responseFormat !== null &&
+    "schema" in responseFormat &&
+    !isInteropZodSchema(responseFormat) &&
+    !("type" in responseFormat)
+  ) {
+    const { schema, strict: strictFlag } = responseFormat as {
+      schema: InteropZodType<unknown> | JsonSchemaFormat;
+      strict?: boolean;
+    };
+    return ProviderStrategy.fromSchema(
+      schema as InteropZodType<unknown>,
+      strictFlag ?? false
+    ) as ProviderStrategy<unknown>;
+  }
+
+  /**
+   * Handle direct schema format
+   */
   return ProviderStrategy.fromSchema(
-    responseFormat as any,
-    strict
-  ) as ProviderStrategy<any>;
+    responseFormat as InteropZodType<unknown>,
+    false
+  ) as ProviderStrategy<unknown>;
 }
 
 /**
