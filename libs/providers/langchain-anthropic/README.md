@@ -329,7 +329,7 @@ const llm = new ChatAnthropic({
 });
 
 const textEditor = tools.textEditor_20250728({
-  execute: async (args: TextEditor20250728Command) => {
+  async execute(args) {
     switch (args.command) {
       case "view":
         const content = fs.readFileSync(args.path, "utf-8");
