@@ -1119,13 +1119,13 @@ export const convertMessagesToResponsesInput: Converter<
         }
 
         // ai content
-        let { content } = lcMsg;
+        let { content } = lcMsg as { content: ContentBlock[] };
         if (additional_kwargs?.refusal) {
           if (typeof content === "string") {
             content = [{ type: "output_text", text: content, annotations: [] }];
           }
           content = [
-            ...content,
+            ...(content as ContentBlock[]),
             { type: "refusal", refusal: additional_kwargs.refusal },
           ];
         }
@@ -1227,7 +1227,7 @@ export const convertMessagesToResponsesInput: Converter<
         }
 
         const messages: ResponsesInputItem[] = [];
-        const content = lcMsg.content.flatMap((item) => {
+        const content = (lcMsg.content as ContentBlock[]).flatMap((item) => {
           if (item.type === "mcp_approval_response") {
             messages.push({
               type: "mcp_approval_response",

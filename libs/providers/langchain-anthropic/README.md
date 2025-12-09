@@ -317,12 +317,8 @@ Available commands:
 - `insert` - Insert text at a specific line number
 
 ```typescript
-import {
-  ChatAnthropic,
-  tools,
-  type TextEditor20250728Command,
-} from "@langchain/anthropic";
-import fs from "fs";
+import fs from "node:fs";
+import { ChatAnthropic, tools } from "@langchain/anthropic";
 
 const llm = new ChatAnthropic({
   model: "claude-sonnet-4-5-20250929",
@@ -367,6 +363,334 @@ const response = await llmWithEditor.invoke(
 ```
 
 For more information, see [Anthropic's Text Editor Tool documentation](https://docs.anthropic.com/en/docs/agents-and-tools/tool-use/text-editor-tool).
+
+### Computer Use Tool
+
+The computer use tools enable Claude to interact with desktop environments through screenshot capture, mouse control, and keyboard input for autonomous desktop interaction.
+
+> **⚠️ Security Warning:** Computer use is a beta feature with unique risks. Use a dedicated virtual machine or container with minimal privileges. Avoid giving access to sensitive data.
+
+There are two variants:
+
+- **`computer_20251124`** - For Claude Opus 4.5 (includes zoom capability)
+- **`computer_20250124`** - For Claude 4 and Claude 3.7 models
+
+Available actions:
+
+- `screenshot` - Capture the current screen
+- `left_click`, `right_click`, `middle_click` - Mouse clicks at coordinates
+- `double_click`, `triple_click` - Multi-click actions
+- `left_click_drag` - Click and drag operations
+- `left_mouse_down`, `left_mouse_up` - Granular mouse control
+- `scroll` - Scroll the screen
+- `type` - Type text
+- `key` - Press keyboard keys/shortcuts
+- `mouse_move` - Move the cursor
+- `hold_key` - Hold a key while performing other actions
+- `wait` - Wait for a specified duration
+- `zoom` - View specific screen regions at full resolution (Claude Opus 4.5 only)
+
+```typescript
+import {
+  ChatAnthropic,
+  tools,
+  type Computer20250124Action,
+} from "@langchain/anthropic";
+
+const llm = new ChatAnthropic({
+  model: "claude-sonnet-4-5-20250929",
+});
+
+const computer = tools.computer_20250124({
+  // Required: specify display dimensions
+  displayWidthPx: 1024,
+  displayHeightPx: 768,
+  // Optional: X11 display number
+  displayNumber: 1,
+  execute: async (action: Computer20250124Action) => {
+    switch (action.action) {
+      case "screenshot":
+      // Capture and return base64-encoded screenshot
+      // ...
+      case "left_click":
+      // Click at the specified coordinates
+      // ...
+      // ...
+    }
+  },
+});
+
+const llmWithComputer = llm.bindTools([computer]);
+
+const response = await llmWithComputer.invoke(
+  "Save a picture of a cat to my desktop."
+);
+```
+
+For Claude Opus 4.5 with zoom support:
+
+```typescript
+import { tools } from "@langchain/anthropic";
+
+const computer = tools.computer_20251124({
+  displayWidthPx: 1920,
+  displayHeightPx: 1080,
+  // Enable zoom for detailed screen region inspection
+  enableZoom: true,
+  execute: async (action) => {
+    // Handle actions including "zoom" for Claude Opus 4.5
+    // ...
+  },
+});
+```
+
+For more information, see [Anthropic's Computer Use documentation](https://docs.anthropic.com/en/docs/agents-and-tools/tool-use/computer-use).
+
+### Code Execution Tool
+
+The code execution tool (`codeExecution_20250825`) allows Claude to run Bash commands and manipulate files in a secure, sandboxed environment. Claude can analyze data, create visualizations, perform calculations, and process files.
+
+When this tool is provided, Claude automatically gains access to:
+
+- **Bash commands** - Execute shell commands for system operations
+- **File operations** - Create, view, and edit files directly
+
+```typescript
+import { ChatAnthropic, tools } from "@langchain/anthropic";
+
+const llm = new ChatAnthropic({
+  model: "claude-sonnet-4-5-20250929",
+});
+
+// Basic usage - calculations and data analysis
+const response = await llm.invoke(
+  "Calculate the mean and standard deviation of [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]",
+  { tools: [tools.codeExecution_20250825()] }
+);
+
+// File operations and visualization
+const response2 = await llm.invoke(
+  "Create a matplotlib visualization of sales data and save it as chart.png",
+  { tools: [tools.codeExecution_20250825()] }
+);
+```
+
+Container reuse for multi-step workflows:
+
+```typescript
+// First request - creates a container
+const response1 = await llm.invoke("Write a random number to /tmp/number.txt", {
+  tools: [tools.codeExecution_20250825()],
+});
+
+// Extract container ID from response for reuse
+const containerId = response1.response_metadata?.container?.id;
+
+// Second request - reuse container to access the file
+const response2 = await llm.invoke(
+  "Read /tmp/number.txt and calculate its square",
+  {
+    tools: [tools.codeExecution_20250825()],
+    container: containerId,
+  }
+);
+```
+
+For more information, see [Anthropic's Code Execution Tool documentation](https://docs.anthropic.com/en/docs/agents-and-tools/tool-use/code-execution-tool).
+
+### Bash Tool
+
+The bash tool (`bash_20250124`) enables shell command execution in a persistent bash session. Unlike the sandboxed code execution tool, this tool requires you to provide your own execution environment.
+
+> **⚠️ Security Warning:** The bash tool provides direct system access. Implement safety measures such as running in isolated environments (Docker/VM), command filtering, and resource limits.
+
+The bash tool provides:
+
+- **Persistent bash session** - Maintains state between commands
+- **Shell command execution** - Run any shell command
+- **Environment access** - Access to environment variables and working directory
+- **Command chaining** - Support for pipes, redirects, and scripting
+
+Available commands:
+
+- Execute a command: `{ command: "ls -la" }`
+- Restart the session: `{ restart: true }`
+
+```typescript
+import { ChatAnthropic, tools } from "@langchain/anthropic";
+import { execSync } from "child_process";
+
+const llm = new ChatAnthropic({
+  model: "claude-sonnet-4-5-20250929",
+});
+
+const bash = tools.bash_20250124({
+  execute: async (args) => {
+    if (args.restart) {
+      // Reset session state
+      return "Bash session restarted";
+    }
+    try {
+      const output = execSync(args.command, {
+        encoding: "utf-8",
+        timeout: 30000,
+      });
+      return output;
+    } catch (error) {
+      return `Error: ${(error as Error).message}`;
+    }
+  },
+});
+
+const llmWithBash = llm.bindTools([bash]);
+
+const response = await llmWithBash.invoke(
+  "List all Python files in the current directory"
+);
+
+// Process tool calls and execute commands
+console.log(response.tool_calls?.[0].name); // "bash"
+console.log(response.tool_calls?.[0].args.command); // "ls -la *.py"
+```
+
+For more information, see [Anthropic's Bash Tool documentation](https://docs.anthropic.com/en/docs/agents-and-tools/tool-use/bash-tool).
+
+### MCP Toolset
+
+The MCP toolset (`mcpToolset_20251120`) enables Claude to connect to remote MCP (Model Context Protocol) servers directly from the Messages API without implementing a separate MCP client. This allows Claude to use tools provided by MCP servers.
+
+Key features:
+
+- **Direct API integration** - Connect to MCP servers without implementing an MCP client
+- **Tool calling support** - Access MCP tools through the Messages API
+- **Flexible tool configuration** - Enable all tools, allowlist specific tools, or denylist unwanted tools
+- **Per-tool configuration** - Configure individual tools with custom settings
+- **OAuth authentication** - Support for OAuth Bearer tokens for authenticated servers
+- **Multiple servers** - Connect to multiple MCP servers in a single request
+
+```typescript
+import { ChatAnthropic, tools } from "@langchain/anthropic";
+
+const llm = new ChatAnthropic({
+  model: "claude-sonnet-4-5-20250929",
+});
+
+// Basic usage - enable all tools from an MCP server
+const response = await llm.invoke("What tools do you have available?", {
+  mcp_servers: [
+    {
+      type: "url",
+      url: "https://example-server.modelcontextprotocol.io/sse",
+      name: "example-mcp",
+      authorization_token: "YOUR_TOKEN",
+    },
+  ],
+  tools: [tools.mcpToolset_20251120({ serverName: "example-mcp" })],
+});
+```
+
+**Allowlist pattern** - Enable only specific tools:
+
+```typescript
+const response = await llm.invoke("Search for events", {
+  mcp_servers: [
+    {
+      type: "url",
+      url: "https://calendar.example.com/sse",
+      name: "google-calendar-mcp",
+      authorization_token: "YOUR_TOKEN",
+    },
+  ],
+  tools: [
+    tools.mcpToolset_20251120({
+      serverName: "google-calendar-mcp",
+      // Disable all tools by default
+      defaultConfig: { enabled: false },
+      // Explicitly enable only these tools
+      configs: {
+        search_events: { enabled: true },
+        create_event: { enabled: true },
+      },
+    }),
+  ],
+});
+```
+
+**Denylist pattern** - Disable specific tools:
+
+```typescript
+const response = await llm.invoke("List my events", {
+  mcp_servers: [
+    {
+      type: "url",
+      url: "https://calendar.example.com/sse",
+      name: "google-calendar-mcp",
+      authorization_token: "YOUR_TOKEN",
+    },
+  ],
+  tools: [
+    tools.mcpToolset_20251120({
+      serverName: "google-calendar-mcp",
+      // All tools enabled by default, just disable dangerous ones
+      configs: {
+        delete_all_events: { enabled: false },
+        share_calendar_publicly: { enabled: false },
+      },
+    }),
+  ],
+});
+```
+
+**Multiple MCP servers**:
+
+```typescript
+const response = await llm.invoke("Use tools from both servers", {
+  mcp_servers: [
+    {
+      type: "url",
+      url: "https://mcp.example1.com/sse",
+      name: "mcp-server-1",
+      authorization_token: "TOKEN1",
+    },
+    {
+      type: "url",
+      url: "https://mcp.example2.com/sse",
+      name: "mcp-server-2",
+      authorization_token: "TOKEN2",
+    },
+  ],
+  tools: [
+    tools.mcpToolset_20251120({ serverName: "mcp-server-1" }),
+    tools.mcpToolset_20251120({
+      serverName: "mcp-server-2",
+      defaultConfig: { deferLoading: true },
+    }),
+  ],
+});
+```
+
+**With Tool Search** - Use deferred loading for on-demand tool discovery:
+
+```typescript
+const response = await llm.invoke("Find and use the right tool", {
+  mcp_servers: [
+    {
+      type: "url",
+      url: "https://example.com/sse",
+      name: "example-mcp",
+    },
+  ],
+  tools: [
+    tools.toolSearchRegex_20251119(),
+    tools.mcpToolset_20251120({
+      serverName: "example-mcp",
+      defaultConfig: { deferLoading: true },
+    }),
+  ],
+});
+```
+
+For more information, see [Anthropic's MCP Connector documentation](https://docs.anthropic.com/en/docs/agents-and-tools/mcp-connector).
 
 ## Development
 
