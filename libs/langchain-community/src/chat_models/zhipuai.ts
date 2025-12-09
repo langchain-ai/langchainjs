@@ -421,16 +421,6 @@ export class ChatZhipuAI
     const { toolCalls, invalidToolCalls } = parseRawToolCalls(
       rawToolCalls ?? []
     );
-    // const toolCalls = [];
-    // const invalidToolCalls = [];
-    // for (const rawToolCall of rawToolCalls ?? []) {
-    //   try {
-    //     toolCalls.push(parseToolCall(rawToolCall, { returnId: true }));
-    //     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    //   } catch (e: any) {
-    //     invalidToolCalls.push(makeInvalidToolCall(rawToolCall, e.message));
-    //   }
-    // }
 
     return {
       generations: [
