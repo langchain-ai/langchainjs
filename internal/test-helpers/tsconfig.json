@@ -1,21 +1,9 @@
 {
-  "extends": "@tsconfig/recommended",
+  "extends": "@langchain/tsconfig/base.json",
   "compilerOptions": {
-    "target": "ES2021",
-    "lib": ["ES2021", "ES2022.Object", "DOM"],
-    "module": "ES2020",
-    "moduleResolution": "bundler",
-    "esModuleInterop": true,
-    "declaration": true,
-    "noImplicitReturns": true,
-    "noFallthroughCasesInSwitch": true,
-    "noUnusedLocals": true,
-    "noUnusedParameters": true,
-    "useDefineForClassFields": true,
-    "strictPropertyInitialization": false,
-    "allowJs": true,
-    "strict": true
+    "rootDir": "src",
+    "outDir": "dist"
   },
-  "include": ["src/*", "src/**/*"],
-  "exclude": ["__tests__", "node_modules"]
+  "include": ["src/**/*"],
+  "exclude": ["dist", "node_modules"]
 }

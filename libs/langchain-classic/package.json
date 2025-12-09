@@ -106,8 +106,8 @@
     "test": "vitest run",
     "test:watch": "vitest --watch",
     "test:integration": "vitest --mode int",
-    "format": "prettier --config .prettierrc --write \"src\"",
-    "format:check": "prettier --config .prettierrc --check \"src\""
+    "format": "prettier --write \"src\"",
+    "format:check": "prettier --check \"src\""
   },
   "devDependencies": {
     "@aws-sdk/dsql-signer": "^3.858.0",
@@ -163,6 +163,7 @@
     "@rockset/client": "^0.9.1",
     "@supabase/supabase-js": "^2.53.0",
     "@tensorflow/tfjs-backend-cpu": "^4.4.0",
+    "@langchain/tsconfig": "workspace:*",
     "@tsconfig/recommended": "^1.0.2",
     "@types/js-yaml": "^4",
     "@types/jsdom": "^21.1.1",

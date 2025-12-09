@@ -302,9 +302,12 @@ export function parseCustomToolCall(
 }
 
 export function isCustomToolCall(
-  toolCall: ToolCall
+  toolCall: unknown
 ): toolCall is CustomToolCall {
   return (
+    typeof toolCall === "object" &&
+    toolCall !== null &&
+    "type" in toolCall &&
     toolCall.type === "tool_call" &&
     "isCustomTool" in toolCall &&
     toolCall.isCustomTool === true

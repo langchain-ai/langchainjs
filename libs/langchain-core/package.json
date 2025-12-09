@@ -1,6 +1,6 @@
 {
   "name": "@langchain/core",
-  "version": "1.1.0",
+  "version": "1.1.4",
   "description": "Core LangChain.js abstractions and schemas",
   "type": "module",
   "engines": {
@@ -24,8 +24,8 @@
     "test": "vitest run",
     "test:watch": "vitest watch",
     "test:int": "vitest run --mode int",
-    "format": "prettier --config .prettierrc --write \"src\"",
-    "format:check": "prettier --config .prettierrc --check \"src\""
+    "format": "prettier --write \"src\"",
+    "format:check": "prettier --check \"src\""
   },
   "author": "LangChain",
   "license": "MIT",
@@ -38,12 +38,12 @@
     "langsmith": "^0.3.64",
     "mustache": "^4.2.0",
     "p-queue": "^6.6.2",
-    "p-retry": "^7.0.0",
     "uuid": "^10.0.0",
     "zod": "^3.25.76 || ^4"
   },
   "devDependencies": {
     "@langchain/eslint": "workspace:*",
+    "@langchain/tsconfig": "workspace:*",
     "@types/decamelize": "^1.2.0",
     "@types/mustache": "^4",
     "@types/uuid": "^10.0.0",

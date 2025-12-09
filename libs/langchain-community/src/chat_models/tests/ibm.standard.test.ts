@@ -1,21 +1,17 @@
-import { test, expect } from "@jest/globals";
-import { ChatModelUnitTests } from "@langchain/standard-tests";
 import { AIMessageChunk } from "@langchain/core/messages";
 import { LangSmithParams } from "@langchain/core/language_models/chat_models";
+import { ChatModelUnitTests } from "@langchain/standard-tests";
 import {
   ChatWatsonx,
-  ChatWatsonxInput,
+  ChatWatsonxConstructorInput,
   WatsonxCallOptionsChat,
-  WatsonxCallParams,
 } from "../ibm.js";
-import { WatsonxAuth } from "../../types/ibm.js";
 
 class ChatWatsonxStandardTests extends ChatModelUnitTests<
   WatsonxCallOptionsChat,
   AIMessageChunk,
-  ChatWatsonxInput &
-    WatsonxAuth &
-    Partial<Omit<WatsonxCallParams, "tool_choice">>
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  ChatWatsonxConstructorInput & Record<string, any>
 > {
   constructor() {
     super({
@@ -23,7 +19,7 @@ class ChatWatsonxStandardTests extends ChatModelUnitTests<
       chatModelHasToolCalling: true,
       chatModelHasStructuredOutput: true,
       constructorArgs: {
-        model: "mistralai/mistral-large",
+        model: "mistralai/mistral-medium-2505",
         watsonxAIApikey: "testString",
         version: "2024-05-31",
         serviceUrl: process.env.WATSONX_AI_SERVICE_URL ?? "testString",
@@ -44,6 +40,15 @@ class ChatWatsonxStandardTests extends ChatModelUnitTests<
       ls_temperature: 0,
       ls_max_tokens: 0,
     };
+  }
+
+  testChatModelInitApiKey() {
+    this.skipTestMessage(
+      "testChatModelInitApiKey",
+      "ChatWatsonx",
+      "Watsonx does not support init with apiKey parameter" +
+        "Watsonx only supports watsonxApiKey."
+    );
   }
 }
 

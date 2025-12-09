@@ -176,7 +176,18 @@ export function ensureConfig<CallOptions extends RunnableConfig>(
     if (empty.timeout <= 0) {
       throw new Error("Timeout must be a positive number");
     }
-    const timeoutSignal = AbortSignal.timeout(empty.timeout);
+    const originalTimeoutMs = empty.timeout;
+    const timeoutSignal = AbortSignal.timeout(originalTimeoutMs);
+    // Preserve the numeric timeout for downstream consumers that need to pass
+    // an explicit timeout value to underlying SDKs in addition to an AbortSignal.
+    // We store it in metadata to avoid changing the public config shape.
+    if (!empty.metadata) {
+      empty.metadata = {};
+    }
+    // Do not overwrite if already set upstream.
+    if (empty.metadata.timeoutMs === undefined) {
+      empty.metadata.timeoutMs = originalTimeoutMs;
+    }
     if (empty.signal !== undefined) {
       if ("any" in AbortSignal) {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any

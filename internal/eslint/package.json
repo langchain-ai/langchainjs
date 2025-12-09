@@ -29,6 +29,8 @@
     "typescript-eslint": "^8.40.0"
   },
   "devDependencies": {
+    "@langchain/tsconfig": "workspace:*",
+    "@tsconfig/recommended": "^1.0.10",
     "eslint": "^9.34.0",
     "typescript": "^5.9.2"
   },

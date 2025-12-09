@@ -24,6 +24,7 @@ services:
       - ../libs/langchain-textsplitters:/langchain-textsplitters
       - ../internal/build:/langchain-build
       - ../internal/eslint:/langchain-eslint
+      - ../internal/tsconfig:/langchain-tsconfig
     command: bash /scripts/docker-entrypoint.sh
   test-exports-esm:
     image: node:20
@@ -50,6 +51,7 @@ services:
       - ../libs/langchain-textsplitters:/langchain-textsplitters
       - ../internal/build:/langchain-build
       - ../internal/eslint:/langchain-eslint
+      - ../internal/tsconfig:/langchain-tsconfig
     command: bash /scripts/docker-entrypoint.sh
   test-exports-tsc:
     image: node:20
@@ -76,6 +78,7 @@ services:
       - ../libs/langchain-textsplitters:/langchain-textsplitters
       - ../internal/build:/langchain-build
       - ../internal/eslint:/langchain-eslint
+      - ../internal/tsconfig:/langchain-tsconfig
     command: bash /scripts/docker-entrypoint.sh
   test-exports-cjs:
     image: node:20
@@ -102,6 +105,7 @@ services:
       - ../libs/langchain-textsplitters:/langchain-textsplitters
       - ../internal/build:/langchain-build
       - ../internal/eslint:/langchain-eslint
+      - ../internal/tsconfig:/langchain-tsconfig
     command: bash /scripts/docker-entrypoint.sh
   test-exports-cf:
     image: node:20
@@ -128,6 +132,7 @@ services:
       - ../libs/langchain-textsplitters:/langchain-textsplitters
       - ../internal/build:/langchain-build
       - ../internal/eslint:/langchain-eslint
+      - ../internal/tsconfig:/langchain-tsconfig
     command: bash /scripts/docker-entrypoint.sh
   test-exports-vercel:
     image: node:20
@@ -154,6 +159,7 @@ services:
       - ../libs/langchain-textsplitters:/langchain-textsplitters
       - ../internal/build:/langchain-build
       - ../internal/eslint:/langchain-eslint
+      - ../internal/tsconfig:/langchain-tsconfig
     command: bash /scripts/docker-entrypoint.sh
   test-exports-vite:
     image: node:20
@@ -180,6 +186,7 @@ services:
       - ../libs/langchain-textsplitters:/langchain-textsplitters
       - ../internal/build:/langchain-build
       - ../internal/eslint:/langchain-eslint
+      - ../internal/tsconfig:/langchain-tsconfig
     command: bash /scripts/docker-entrypoint.sh
   test-exports-bun:
     image: oven/bun
@@ -203,6 +210,7 @@ services:
       - ../libs/langchain-textsplitters:/langchain-textsplitters
       - ../internal/build:/langchain-build
       - ../internal/eslint:/langchain-eslint
+      - ../internal/tsconfig:/langchain-tsconfig
     command: bash /scripts/docker-bun-entrypoint.sh
   test-exports-node-classic:
     image: node:20
@@ -229,6 +237,7 @@ services:
       - ../libs/langchain-textsplitters:/langchain-textsplitters
       - ../internal/build:/langchain-build
       - ../internal/eslint:/langchain-eslint
+      - ../internal/tsconfig:/langchain-tsconfig
     command: bash /scripts/docker-entrypoint.sh
   success:
     image: alpine:3.14

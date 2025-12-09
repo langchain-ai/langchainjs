@@ -51,6 +51,8 @@ export type AnthropicWebSearchResultBlockParam =
 export type AnthropicSearchResultBlockParam = Anthropic.SearchResultBlockParam;
 export type AnthropicContainerUploadBlockParam =
   Anthropic.Beta.BetaContainerUploadBlockParam;
+export type AnthropicMCPServerURLDefinition =
+  Anthropic.Beta.Messages.BetaRequestMCPServerURLDefinition;
 
 // Union of all possible content block types including server tool use
 export type ChatAnthropicContentBlock =
@@ -132,3 +134,16 @@ export type AnthropicBuiltInToolUnion = Exclude<
   Anthropic.Messages.ToolUnion,
   Anthropic.Messages.Tool
 >;
+
+/**
+ * A type representing additional parameters that can be passed to the
+ * Anthropic API.
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export type Kwargs = Record<string, any>;
+
+export type AnthropicInvocationParams = Omit<
+  AnthropicMessageCreateParams | AnthropicStreamingMessageCreateParams,
+  "messages"
+> &
+  Kwargs;
