@@ -1,6 +1,7 @@
 import type { BaseLanguageModelCallOptions } from "@langchain/core/language_models/base";
 import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
 import { GenerationChunk } from "@langchain/core/outputs";
+import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import type { StringWithAutocomplete } from "@langchain/core/utils/types";
 import { LLM, type BaseLLMParams } from "@langchain/core/language_models/llms";
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
@@ -22,6 +23,7 @@ export interface OllamaInput extends BaseLLMParams, OllamaCamelCaseOptions {
    * Optionally override the base URL to make request to.
    * This should only be set if your Ollama instance is being
    * server from a non-standard location.
+   * Defaults to `OLLAMA_BASE_URL` if set.
    * @default "http://localhost:11434"
    */
   baseUrl?: string;
@@ -139,9 +141,11 @@ export class Ollama extends LLM<OllamaCallOptions> implements OllamaInput {
   constructor(fields?: OllamaInput & BaseLLMParams) {
     super(fields ?? {});
     this.model = fields?.model ?? this.model;
-    this.baseUrl = fields?.baseUrl?.endsWith("/")
-      ? fields?.baseUrl.slice(0, -1)
-      : fields?.baseUrl ?? this.baseUrl;
+    this.baseUrl = fields?.baseUrl
+      ? fields?.baseUrl.endsWith("/")
+        ? fields?.baseUrl.slice(0, -1)
+        : fields?.baseUrl
+      : getEnvironmentVariable("OLLAMA_BASE_URL") ?? this.baseUrl;
     this.client = new OllamaClient({
       fetch: fields?.fetch,
       host: this.baseUrl,
