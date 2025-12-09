@@ -20,7 +20,9 @@ class TestTavilyResearchAPIWrapper extends TavilyResearchAPIWrapper {
   // Mock the raw results method to return what we want
   async rawResults(
     params: TavilyResearchParams
-  ): Promise<TavilyResearchQueueResponse | AsyncGenerator<Buffer, void, unknown>> {
+  ): Promise<
+    TavilyResearchQueueResponse | AsyncGenerator<Buffer, void, unknown>
+  > {
     // This is overridden by mockImplementation in each test
     return {
       request_id: "test-request-id",
@@ -41,7 +43,12 @@ describe("TavilyResearch", () => {
       name: "custom_research",
       description: "Custom description",
       model: "pro",
-      outputSchema: { type: "object", properties: { company: { type: "string", description: "The name of the company" } } },
+      outputSchema: {
+        type: "object",
+        properties: {
+          company: { type: "string", description: "The name of the company" },
+        },
+      },
       stream: true,
       citationFormat: "apa",
     });
@@ -49,7 +56,12 @@ describe("TavilyResearch", () => {
     expect(tool.name).toBe("custom_research");
     expect(tool.description).toBe("Custom description");
     expect(tool.model).toBe("pro");
-    expect(tool.outputSchema).toEqual({ type: "object", properties: { company: { type: "string", description: "The name of the company" } } });
+    expect(tool.outputSchema).toEqual({
+      type: "object",
+      properties: {
+        company: { type: "string", description: "The name of the company" },
+      },
+    });
     expect(tool.enableStream).toBe(true);
     expect(tool.citationFormat).toBe("apa");
   });
@@ -60,7 +72,8 @@ describe("TavilyResearch", () => {
 
     // Using a type assertion to access the private property
     expect(
-      (tool as unknown as { apiWrapper: TestTavilyResearchAPIWrapper }).apiWrapper
+      (tool as unknown as { apiWrapper: TestTavilyResearchAPIWrapper })
+        .apiWrapper
     ).toBe(mockWrapper);
   });
 
@@ -138,7 +151,11 @@ describe("TavilyResearch", () => {
 
     // Verify it returns an async generator
     expect(result).toBeDefined();
-    expect(typeof (result as AsyncGenerator<Buffer, void, unknown>)[Symbol.asyncIterator]).toBe("function");
+    expect(
+      typeof (result as AsyncGenerator<Buffer, void, unknown>)[
+        Symbol.asyncIterator
+      ]
+    ).toBe("function");
 
     // Consume the stream and verify chunks
     const chunks: Buffer[] = [];
@@ -170,7 +187,12 @@ describe("TavilyResearch", () => {
     await tool.invoke({
       input: "Test research question",
       model: "pro",
-      outputSchema: { type: "object", properties: { company: { type: "string", description: "The name of the company" } } },
+      outputSchema: {
+        type: "object",
+        properties: {
+          company: { type: "string", description: "The name of the company" },
+        },
+      },
       citationFormat: "mla",
     });
 
@@ -254,7 +276,9 @@ describe("TavilyResearch", () => {
     mockWrapper.rawResults = vi
       .fn()
       .mockImplementation(() =>
-        Promise.resolve({ invalid: "response" } as unknown as TavilyResearchQueueResponse)
+        Promise.resolve({
+          invalid: "response",
+        } as unknown as TavilyResearchQueueResponse)
       ) as typeof mockWrapper.rawResults;
 
     const tool = new TavilyResearch({ apiWrapper: mockWrapper });
@@ -309,7 +333,9 @@ describe("TavilyResearch", () => {
 
     try {
       // Create a wrapper with test API key
-      const wrapper = new TavilyResearchAPIWrapper({ tavilyApiKey: "test-key" });
+      const wrapper = new TavilyResearchAPIWrapper({
+        tavilyApiKey: "test-key",
+      });
 
       // Call with camelCase parameters
       await wrapper.rawResults({

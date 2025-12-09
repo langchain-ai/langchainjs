@@ -642,7 +642,10 @@ export type TavilyGetResearchResponse = {
   response_time: number;
 } & Record<string, unknown>;
 
-export type TavilyGetIncompleteResearchResponse = Pick<TavilyGetResearchResponse, "request_id" | "status" | "response_time">;
+export type TavilyGetIncompleteResearchResponse = Pick<
+  TavilyGetResearchResponse,
+  "request_id" | "status" | "response_time"
+>;
 
 /**
  * Base wrapper class with shared functionality for Tavily API wrappers.
@@ -839,7 +842,6 @@ export class TavilyMapAPIWrapper extends BaseTavilyAPIWrapper {
   }
 }
 
-
 /**
  * A wrapper that encapsulates access to the Tavily Research API. Primarily used for testing.
  */
@@ -851,7 +853,9 @@ export class TavilyResearchAPIWrapper extends BaseTavilyAPIWrapper {
    */
   async rawResults(
     params: TavilyResearchParams
-  ): Promise<TavilyResearchQueueResponse | AsyncGenerator<Buffer, void, unknown>> {
+  ): Promise<
+    TavilyResearchQueueResponse | AsyncGenerator<Buffer, void, unknown>
+  > {
     const headers = {
       Authorization: `Bearer ${this.tavilyApiKey}`,
       "Content-Type": "application/json",
@@ -877,7 +881,7 @@ export class TavilyResearchAPIWrapper extends BaseTavilyAPIWrapper {
         if (!response.body) {
           throw new Error("Response body is null");
         }
-        
+
         const reader = response.body.getReader();
         try {
           while (true) {

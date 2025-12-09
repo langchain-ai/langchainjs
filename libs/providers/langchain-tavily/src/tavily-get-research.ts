@@ -54,11 +54,7 @@ export type TavilyGetResearchAPIRetrieverFields = ToolParams & {
 };
 
 const inputSchema = z.object({
-  requestId: z
-    .string()
-    .describe(
-      "The unique identifier of the research task."
-    ),
+  requestId: z.string().describe("The unique identifier of the research task."),
 });
 
 /**
@@ -128,13 +124,18 @@ export class TavilyGetResearch extends StructuredTool<typeof inputSchema> {
   async _call(
     input: InferInteropZodOutput<typeof inputSchema>,
     _runManager?: CallbackManagerForToolRun
-  ): Promise<TavilyGetResearchResponse | TavilyGetIncompleteResearchResponse | { error: string }> {
+  ): Promise<
+    | TavilyGetResearchResponse
+    | TavilyGetIncompleteResearchResponse
+    | { error: string }
+  > {
     try {
       const { requestId } = input;
 
-      const result: TavilyGetResearchResponse | TavilyGetIncompleteResearchResponse = await this.apiWrapper.getResearch(
-        requestId
-      );
+      const result:
+        | TavilyGetResearchResponse
+        | TavilyGetIncompleteResearchResponse =
+        await this.apiWrapper.getResearch(requestId);
 
       if (
         !result ||

@@ -65,7 +65,7 @@ export type TavilyResearchAPIRetrieverFields = ToolParams & {
   outputSchema?: Record<string, unknown>;
 
   /**
-   * Whether to stream the research results as they are generated. 
+   * Whether to stream the research results as they are generated.
    * When 'true', returns a Server-Sent Events (SSE) stream
    *
    * @default false
@@ -74,7 +74,7 @@ export type TavilyResearchAPIRetrieverFields = ToolParams & {
 
   /**
    * The format for citations in the research report.
-   * 
+   *
    * @default "numbered"
    */
   citationFormat?: CitationFormat;
@@ -114,32 +114,25 @@ export type TavilyResearchAPIRetrieverFields = ToolParams & {
 };
 
 const outputSchemaPropertySchema: z.ZodTypeAny = z.lazy(() =>
-  z
-    .object({
-      type: z
-        .enum(["object", "string", "integer", "number", "array"])
-        .optional(),
-      description: z.string().optional(),
-      properties: z
-        .record(
-          // Recursive definition: nested properties use the same schema shape
-          outputSchemaPropertySchema
-        )
-        .optional(),
-      items: z
-        .object({
-          type: z.enum(["object", "string", "integer", "number", "array"]),
-        })
-        .optional(),
-    })
+  z.object({
+    type: z.enum(["object", "string", "integer", "number", "array"]).optional(),
+    description: z.string().optional(),
+    properties: z
+      .record(
+        // Recursive definition: nested properties use the same schema shape
+        outputSchemaPropertySchema
+      )
+      .optional(),
+    items: z
+      .object({
+        type: z.enum(["object", "string", "integer", "number", "array"]),
+      })
+      .optional(),
+  })
 );
 
 const inputSchema = z.object({
-  input: z
-    .string()
-    .describe(
-      "The research task or question to investigate."
-    ),
+  input: z.string().describe("The research task or question to investigate."),
   model: z
     .enum(["mini", "pro", "auto"])
     .optional()
@@ -264,7 +257,11 @@ export class TavilyResearch extends StructuredTool<typeof inputSchema> {
   async _call(
     input: InferInteropZodOutput<typeof inputSchema>,
     _runManager?: CallbackManagerForToolRun
-  ): Promise<TavilyResearchQueueResponse | AsyncGenerator<Buffer, void, unknown> | { error: string }> {
+  ): Promise<
+    | TavilyResearchQueueResponse
+    | AsyncGenerator<Buffer, void, unknown>
+    | { error: string }
+  > {
     try {
       const {
         input: inputValue,
@@ -277,7 +274,8 @@ export class TavilyResearch extends StructuredTool<typeof inputSchema> {
       const effectiveModel = this.model ?? model ?? "auto";
       const effectiveOutputSchema = this.outputSchema ?? outputSchema;
       const effectiveStream = this.enableStream ?? stream ?? false;
-      const effectiveCitationFormat = this.citationFormat ?? citationFormat ?? "numbered";
+      const effectiveCitationFormat =
+        this.citationFormat ?? citationFormat ?? "numbered";
 
       const result = await this.apiWrapper.rawResults({
         input: inputValue,

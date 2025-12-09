@@ -31,9 +31,7 @@ export type {
 
 export { TavilyResearch } from "./tavily-research.js";
 
-export type {
-  TavilyGetResearchAPIRetrieverFields,
-} from "./tavily-get-research.js";
+export type { TavilyGetResearchAPIRetrieverFields } from "./tavily-get-research.js";
 
 export { TavilyGetResearch } from "./tavily-get-research.js";
 

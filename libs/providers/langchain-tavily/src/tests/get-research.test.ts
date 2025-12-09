@@ -52,7 +52,8 @@ describe("TavilyGetResearch", () => {
 
     // Using a type assertion to access the private property
     expect(
-      (tool as unknown as { apiWrapper: TestTavilyResearchAPIWrapper }).apiWrapper
+      (tool as unknown as { apiWrapper: TestTavilyResearchAPIWrapper })
+        .apiWrapper
     ).toBe(mockWrapper);
   });
 
