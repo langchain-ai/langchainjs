@@ -5,25 +5,12 @@ import type {
   Computer20251124Action,
   Computer20250124Action,
 } from "./types.js";
+import {
+  Computer20251124ActionSchema,
+  Computer20250124ActionSchema,
+} from "./types.js";
 
 const TOOL_NAME = "computer";
-const BASE_COMMANDS = [
-  "screenshot",
-  "left_click",
-  "right_click",
-  "middle_click",
-  "double_click",
-  "triple_click",
-  "left_click_drag",
-  "left_mouse_down",
-  "left_mouse_up",
-  "scroll",
-  "type",
-  "key",
-  "mouse_move",
-  "hold_key",
-  "wait",
-];
 
 /**
  * Options for the computer use tool (Claude Opus 4.5 only version).
@@ -122,16 +109,7 @@ export function computer_20251124(
     ) => string | Promise<string>,
     {
       name,
-      schema: {
-        type: "object",
-        properties: {
-          action: {
-            type: "string",
-            enum: [...BASE_COMMANDS, "zoom"],
-          },
-        },
-        required: ["action"],
-      },
+      schema: Computer20251124ActionSchema,
     }
   );
 
@@ -247,16 +225,7 @@ export function computer_20250124(
     ) => string | Promise<string>,
     {
       name,
-      schema: {
-        type: "object",
-        properties: {
-          action: {
-            type: "string",
-            enum: BASE_COMMANDS,
-          },
-        },
-        required: ["action"],
-      },
+      schema: Computer20250124ActionSchema,
     }
   );
 

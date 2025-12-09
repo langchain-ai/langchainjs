@@ -1,5 +1,6 @@
 import { OpenAI as OpenAIClient } from "openai";
 import { tool } from "@langchain/core/tools";
+import { z } from "zod/v3";
 
 /**
  * The type of computer environment to control.
@@ -38,6 +39,105 @@ export type ComputerUseWaitAction =
  */
 export type ComputerUseAction =
   OpenAIClient.Responses.ResponseComputerToolCall["action"];
+
+// Zod schemas for computer use actions
+const ComputerUseScreenshotActionSchema = z.object({
+  type: z.literal("screenshot"),
+});
+
+const ComputerUseClickActionSchema = z.object({
+  type: z.literal("click"),
+  x: z.number(),
+  y: z.number(),
+  button: z.enum(["left", "right", "middle"]).optional(),
+});
+
+const ComputerUseDoubleClickActionSchema = z.object({
+  type: z.literal("double_click"),
+  x: z.number(),
+  y: z.number(),
+  button: z.enum(["left", "right", "middle"]).optional(),
+});
+
+const ComputerUseDragActionSchema = z.object({
+  type: z.literal("drag"),
+  start_x: z.number(),
+  start_y: z.number(),
+  end_x: z.number(),
+  end_y: z.number(),
+  button: z.enum(["left", "right", "middle"]).optional(),
+});
+
+const ComputerUseKeypressActionSchema = z.object({
+  type: z.literal("keypress"),
+  key: z.string(),
+});
+
+const ComputerUseMoveActionSchema = z.object({
+  type: z.literal("move"),
+  x: z.number(),
+  y: z.number(),
+});
+
+const ComputerUseScrollActionSchema = z.object({
+  type: z.literal("scroll"),
+  x: z.number(),
+  y: z.number(),
+  direction: z.enum(["up", "down", "left", "right"]),
+  amount: z.number(),
+});
+
+const ComputerUseTypeActionSchema = z.object({
+  type: z.literal("type"),
+  text: z.string(),
+});
+
+const ComputerUseWaitActionSchema = z.object({
+  type: z.literal("wait"),
+  duration: z.number().optional(),
+});
+
+// Discriminated union schema for all computer use actions
+export const ComputerUseActionSchema = z.discriminatedUnion("type", [
+  ComputerUseScreenshotActionSchema,
+  ComputerUseClickActionSchema,
+  ComputerUseDoubleClickActionSchema,
+  ComputerUseDragActionSchema,
+  ComputerUseKeypressActionSchema,
+  ComputerUseMoveActionSchema,
+  ComputerUseScrollActionSchema,
+  ComputerUseTypeActionSchema,
+  ComputerUseWaitActionSchema,
+]);
+
+// TypeScript types derived from Zod schemas
+export type ComputerUseScreenshotActionType = z.infer<
+  typeof ComputerUseScreenshotActionSchema
+>;
+export type ComputerUseClickActionType = z.infer<
+  typeof ComputerUseClickActionSchema
+>;
+export type ComputerUseDoubleClickActionType = z.infer<
+  typeof ComputerUseDoubleClickActionSchema
+>;
+export type ComputerUseDragActionType = z.infer<
+  typeof ComputerUseDragActionSchema
+>;
+export type ComputerUseKeypressActionType = z.infer<
+  typeof ComputerUseKeypressActionSchema
+>;
+export type ComputerUseMoveActionType = z.infer<
+  typeof ComputerUseMoveActionSchema
+>;
+export type ComputerUseScrollActionType = z.infer<
+  typeof ComputerUseScrollActionSchema
+>;
+export type ComputerUseTypeActionType = z.infer<
+  typeof ComputerUseTypeActionSchema
+>;
+export type ComputerUseWaitActionType = z.infer<
+  typeof ComputerUseWaitActionSchema
+>;
 
 /**
  * Options for the Computer Use tool.
@@ -198,26 +298,7 @@ export function computerUse(options: ComputerUseOptions) {
     name: TOOL_NAME,
     description:
       "Control a computer interface by executing mouse clicks, keyboard input, scrolling, and other actions.",
-    schema: {
-      type: "object",
-      properties: {
-        action: {
-          type: "string",
-          enum: [
-            "click",
-            "double_click",
-            "drag",
-            "keypress",
-            "move",
-            "screenshot",
-            "scroll",
-            "type",
-            "wait",
-          ],
-        },
-      },
-      required: ["action"],
-    },
+    schema: ComputerUseActionSchema,
   });
 
   computerTool.extras = {

@@ -1,4 +1,5 @@
 import Anthropic from "@anthropic-ai/sdk";
+import { z } from "zod/v3";
 
 /**
  * Memory tool command types as defined by Anthropic's memory tool API.
@@ -110,92 +111,181 @@ export type Computer20250124Action =
   | ComputerHoldKeyAction
   | ComputerWaitAction;
 
-export interface ComputerScreenshotAction {
-  action: "screenshot";
-}
+// Zod schemas for computer actions
+const coordinateSchema = z.tuple([z.number(), z.number()]);
 
-export interface ComputerLeftClickAction {
-  action: "left_click";
-  coordinate: [number, number];
-}
+export const ComputerScreenshotActionSchema = z.object({
+  action: z.literal("screenshot"),
+});
 
-export interface ComputerRightClickAction {
-  action: "right_click";
-  coordinate: [number, number];
-}
+export const ComputerLeftClickActionSchema = z.object({
+  action: z.literal("left_click"),
+  coordinate: coordinateSchema,
+});
 
-export interface ComputerMiddleClickAction {
-  action: "middle_click";
-  coordinate: [number, number];
-}
+export const ComputerRightClickActionSchema = z.object({
+  action: z.literal("right_click"),
+  coordinate: coordinateSchema,
+});
 
-export interface ComputerDoubleClickAction {
-  action: "double_click";
-  coordinate: [number, number];
-}
+export const ComputerMiddleClickActionSchema = z.object({
+  action: z.literal("middle_click"),
+  coordinate: coordinateSchema,
+});
 
-export interface ComputerTripleClickAction {
-  action: "triple_click";
-  coordinate: [number, number];
-}
+export const ComputerDoubleClickActionSchema = z.object({
+  action: z.literal("double_click"),
+  coordinate: coordinateSchema,
+});
 
-export interface ComputerLeftClickDragAction {
-  action: "left_click_drag";
-  start_coordinate: [number, number];
-  end_coordinate: [number, number];
-}
+export const ComputerTripleClickActionSchema = z.object({
+  action: z.literal("triple_click"),
+  coordinate: coordinateSchema,
+});
 
-export interface ComputerLeftMouseDownAction {
-  action: "left_mouse_down";
-  coordinate: [number, number];
-}
+export const ComputerLeftClickDragActionSchema = z.object({
+  action: z.literal("left_click_drag"),
+  start_coordinate: coordinateSchema,
+  end_coordinate: coordinateSchema,
+});
 
-export interface ComputerLeftMouseUpAction {
-  action: "left_mouse_up";
-  coordinate: [number, number];
-}
+export const ComputerLeftMouseDownActionSchema = z.object({
+  action: z.literal("left_mouse_down"),
+  coordinate: coordinateSchema,
+});
 
-export interface ComputerScrollAction {
-  action: "scroll";
-  coordinate: [number, number];
-  scroll_direction: "up" | "down" | "left" | "right";
-  scroll_amount: number;
-}
+export const ComputerLeftMouseUpActionSchema = z.object({
+  action: z.literal("left_mouse_up"),
+  coordinate: coordinateSchema,
+});
 
-export interface ComputerTypeAction {
-  action: "type";
-  text: string;
-}
+export const ComputerScrollActionSchema = z.object({
+  action: z.literal("scroll"),
+  coordinate: coordinateSchema,
+  scroll_direction: z.enum(["up", "down", "left", "right"]),
+  scroll_amount: z.number(),
+});
 
-export interface ComputerKeyAction {
-  action: "key";
-  key: string;
-}
+export const ComputerTypeActionSchema = z.object({
+  action: z.literal("type"),
+  text: z.string(),
+});
 
-export interface ComputerMouseMoveAction {
-  action: "mouse_move";
-  coordinate: [number, number];
-}
+export const ComputerKeyActionSchema = z.object({
+  action: z.literal("key"),
+  key: z.string(),
+});
 
-export interface ComputerHoldKeyAction {
-  action: "hold_key";
-  key: string;
-}
+export const ComputerMouseMoveActionSchema = z.object({
+  action: z.literal("mouse_move"),
+  coordinate: coordinateSchema,
+});
 
-export interface ComputerWaitAction {
-  action: "wait";
-  duration?: number;
-}
+export const ComputerHoldKeyActionSchema = z.object({
+  action: z.literal("hold_key"),
+  key: z.string(),
+});
 
-/**
- * Zoom action for Claude Opus 4.5 only.
- * Allows viewing a specific region of the screen at full resolution.
- */
-export interface ComputerZoomAction {
-  action: "zoom";
-  /** Coordinates [x1, y1, x2, y2] defining top-left and bottom-right corners */
-  region: [number, number, number, number];
-}
+export const ComputerWaitActionSchema = z.object({
+  action: z.literal("wait"),
+  duration: z.number().optional(),
+});
+
+export const ComputerZoomActionSchema = z.object({
+  action: z.literal("zoom"),
+  region: z.tuple([z.number(), z.number(), z.number(), z.number()]),
+});
+
+// Discriminated union schemas
+export const Computer20250124ActionSchema = z.discriminatedUnion("action", [
+  ComputerScreenshotActionSchema,
+  ComputerLeftClickActionSchema,
+  ComputerRightClickActionSchema,
+  ComputerMiddleClickActionSchema,
+  ComputerDoubleClickActionSchema,
+  ComputerTripleClickActionSchema,
+  ComputerLeftClickDragActionSchema,
+  ComputerLeftMouseDownActionSchema,
+  ComputerLeftMouseUpActionSchema,
+  ComputerScrollActionSchema,
+  ComputerTypeActionSchema,
+  ComputerKeyActionSchema,
+  ComputerMouseMoveActionSchema,
+  ComputerHoldKeyActionSchema,
+  ComputerWaitActionSchema,
+]);
+
+export const Computer20251124ActionSchema = z.discriminatedUnion("action", [
+  ComputerScreenshotActionSchema,
+  ComputerLeftClickActionSchema,
+  ComputerRightClickActionSchema,
+  ComputerMiddleClickActionSchema,
+  ComputerDoubleClickActionSchema,
+  ComputerTripleClickActionSchema,
+  ComputerLeftClickDragActionSchema,
+  ComputerLeftMouseDownActionSchema,
+  ComputerLeftMouseUpActionSchema,
+  ComputerScrollActionSchema,
+  ComputerTypeActionSchema,
+  ComputerKeyActionSchema,
+  ComputerMouseMoveActionSchema,
+  ComputerHoldKeyActionSchema,
+  ComputerWaitActionSchema,
+  ComputerZoomActionSchema,
+]);
+
+// TypeScript types derived from Zod schemas
+export type ComputerScreenshotAction = z.infer<
+  typeof ComputerScreenshotActionSchema
+>;
+
+export type ComputerLeftClickAction = z.infer<
+  typeof ComputerLeftClickActionSchema
+>;
+
+export type ComputerRightClickAction = z.infer<
+  typeof ComputerRightClickActionSchema
+>;
+
+export type ComputerMiddleClickAction = z.infer<
+  typeof ComputerMiddleClickActionSchema
+>;
+
+export type ComputerDoubleClickAction = z.infer<
+  typeof ComputerDoubleClickActionSchema
+>;
+
+export type ComputerTripleClickAction = z.infer<
+  typeof ComputerTripleClickActionSchema
+>;
+
+export type ComputerLeftClickDragAction = z.infer<
+  typeof ComputerLeftClickDragActionSchema
+>;
+
+export type ComputerLeftMouseDownAction = z.infer<
+  typeof ComputerLeftMouseDownActionSchema
+>;
+
+export type ComputerLeftMouseUpAction = z.infer<
+  typeof ComputerLeftMouseUpActionSchema
+>;
+
+export type ComputerScrollAction = z.infer<typeof ComputerScrollActionSchema>;
+
+export type ComputerTypeAction = z.infer<typeof ComputerTypeActionSchema>;
+
+export type ComputerKeyAction = z.infer<typeof ComputerKeyActionSchema>;
+
+export type ComputerMouseMoveAction = z.infer<
+  typeof ComputerMouseMoveActionSchema
+>;
+
+export type ComputerHoldKeyAction = z.infer<typeof ComputerHoldKeyActionSchema>;
+
+export type ComputerWaitAction = z.infer<typeof ComputerWaitActionSchema>;
+
+export type ComputerZoomAction = z.infer<typeof ComputerZoomActionSchema>;
 
 /**
  * Bash tool command types for Claude 4 models and Claude 3.7.
