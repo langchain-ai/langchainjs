@@ -1,7 +1,12 @@
+import { z } from "zod/v4";
+import Anthropic from "@anthropic-ai/sdk";
 import { tool } from "@langchain/core/tools";
 import type { DynamicStructuredTool, ToolRuntime } from "@langchain/core/tools";
 
-import type { MemoryTool20250818Options } from "./types.js";
+import {
+  Memory20250818CommandSchema,
+  type MemoryTool20250818Options,
+} from "./types.js";
 
 /**
  * Creates an Anthropic memory tool that can be used with ChatAnthropic.
@@ -46,23 +51,7 @@ export function memory_20250818(
     ) => string | Promise<string>,
     {
       name: "memory",
-      schema: {
-        type: "object",
-        properties: {
-          command: {
-            type: "string",
-            enum: [
-              "view",
-              "create",
-              "str_replace",
-              "insert",
-              "delete",
-              "rename",
-            ],
-          },
-        },
-        required: ["command"],
-      },
+      schema: z.toJSONSchema(Memory20250818CommandSchema),
     }
   );
 
@@ -71,7 +60,7 @@ export function memory_20250818(
     providerToolDefinition: {
       type: "memory_20250818",
       name: "memory",
-    },
+    } satisfies Anthropic.Beta.BetaMemoryTool20250818,
   };
 
   return memoryTool;

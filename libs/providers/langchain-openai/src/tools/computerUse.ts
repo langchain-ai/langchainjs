@@ -1,6 +1,6 @@
+import { z } from "zod/v4";
 import { OpenAI as OpenAIClient } from "openai";
 import { tool } from "@langchain/core/tools";
-import { z } from "zod/v3";
 
 /**
  * The type of computer environment to control.
@@ -298,7 +298,7 @@ export function computerUse(options: ComputerUseOptions) {
     name: TOOL_NAME,
     description:
       "Control a computer interface by executing mouse clicks, keyboard input, scrolling, and other actions.",
-    schema: ComputerUseActionSchema,
+    schema: z.toJSONSchema(ComputerUseActionSchema),
   });
 
   computerTool.extras = {
@@ -308,7 +308,7 @@ export function computerUse(options: ComputerUseOptions) {
       display_width: options.displayWidth,
       display_height: options.displayHeight,
       environment: options.environment,
-    } as ComputerUseTool,
+    } satisfies ComputerUseTool,
   };
 
   return computerTool;

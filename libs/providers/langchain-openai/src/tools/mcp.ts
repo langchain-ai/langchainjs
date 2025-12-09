@@ -246,11 +246,11 @@ export function mcp(
     return {
       ...baseConfig,
       server_url: options.serverUrl,
-    };
+    } satisfies McpTool;
   }
 
   return {
     ...baseConfig,
     connector_id: options.connectorId,
-  };
+  } satisfies McpTool;
 }

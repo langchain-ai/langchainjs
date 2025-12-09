@@ -1,31 +1,80 @@
 import Anthropic from "@anthropic-ai/sdk";
-import { z } from "zod/v3";
+import { z } from "zod/v4";
 
 /**
  * Memory tool command types as defined by Anthropic's memory tool API.
  * @beta
  * @see https://docs.anthropic.com/en/docs/agents-and-tools/tool-use/memory-tool
  */
-export type Memory20250818Command =
-  | Memory20250818ViewCommand
-  | Memory20250818CreateCommand
-  | Memory20250818StrReplaceCommand
-  | Memory20250818InsertCommand
-  | Memory20250818DeleteCommand
-  | Memory20250818RenameCommand;
 
-export type Memory20250818ViewCommand =
-  Anthropic.Beta.BetaMemoryTool20250818ViewCommand;
-export type Memory20250818CreateCommand =
-  Anthropic.Beta.BetaMemoryTool20250818CreateCommand;
-export type Memory20250818StrReplaceCommand =
-  Anthropic.Beta.BetaMemoryTool20250818StrReplaceCommand;
-export type Memory20250818InsertCommand =
-  Anthropic.Beta.BetaMemoryTool20250818InsertCommand;
-export type Memory20250818DeleteCommand =
-  Anthropic.Beta.BetaMemoryTool20250818DeleteCommand;
-export type Memory20250818RenameCommand =
-  Anthropic.Beta.BetaMemoryTool20250818RenameCommand;
+// Zod schemas for memory commands
+export const Memory20250818ViewCommandSchema = z.object({
+  command: z.literal("view"),
+  path: z.string(),
+});
+
+export const Memory20250818CreateCommandSchema = z.object({
+  command: z.literal("create"),
+  path: z.string(),
+  file_text: z.string(),
+});
+
+export const Memory20250818StrReplaceCommandSchema = z.object({
+  command: z.literal("str_replace"),
+  path: z.string(),
+  old_str: z.string(),
+  new_str: z.string(),
+});
+
+export const Memory20250818InsertCommandSchema = z.object({
+  command: z.literal("insert"),
+  path: z.string(),
+  insert_line: z.number(),
+  insert_text: z.string(),
+});
+
+export const Memory20250818DeleteCommandSchema = z.object({
+  command: z.literal("delete"),
+  path: z.string(),
+});
+
+export const Memory20250818RenameCommandSchema = z.object({
+  command: z.literal("rename"),
+  old_path: z.string(),
+  new_path: z.string(),
+});
+
+// Discriminated union schema for all memory commands
+export const Memory20250818CommandSchema = z.discriminatedUnion("command", [
+  Memory20250818ViewCommandSchema,
+  Memory20250818CreateCommandSchema,
+  Memory20250818StrReplaceCommandSchema,
+  Memory20250818InsertCommandSchema,
+  Memory20250818DeleteCommandSchema,
+  Memory20250818RenameCommandSchema,
+]);
+
+// TypeScript types derived from Zod schemas
+export type Memory20250818ViewCommand = z.infer<
+  typeof Memory20250818ViewCommandSchema
+>;
+export type Memory20250818CreateCommand = z.infer<
+  typeof Memory20250818CreateCommandSchema
+>;
+export type Memory20250818StrReplaceCommand = z.infer<
+  typeof Memory20250818StrReplaceCommandSchema
+>;
+export type Memory20250818InsertCommand = z.infer<
+  typeof Memory20250818InsertCommandSchema
+>;
+export type Memory20250818DeleteCommand = z.infer<
+  typeof Memory20250818DeleteCommandSchema
+>;
+export type Memory20250818RenameCommand = z.infer<
+  typeof Memory20250818RenameCommandSchema
+>;
+
+export type Memory20250818Command = z.infer<typeof Memory20250818CommandSchema>;
 
 /**
  * Options for creating a memory tool.
@@ -49,37 +98,58 @@ export type MemoryTool20250818 = Anthropic.Beta.BetaMemoryTool20250818;
  * Text editor tool command types for Claude 4.x models.
  * @see https://docs.anthropic.com/en/docs/agents-and-tools/tool-use/text-editor-tool
  */
-export type TextEditor20250728Command =
-  | TextEditor20250728ViewCommand
-  | TextEditor20250728StrReplaceCommand
-  | TextEditor20250728CreateCommand
-  | TextEditor20250728InsertCommand;
 
-export interface TextEditor20250728ViewCommand {
-  command: "view";
-  path: string;
-  view_range?: [number, number];
-}
+// Zod schemas for text editor commands
+export const TextEditor20250728ViewCommandSchema = z.object({
+  command: z.literal("view"),
+  path: z.string(),
+  view_range: z.tuple([z.number(), z.number()]).optional(),
+});
 
-export interface TextEditor20250728StrReplaceCommand {
-  command: "str_replace";
-  path: string;
-  old_str: string;
-  new_str: string;
-}
+export const TextEditor20250728StrReplaceCommandSchema = z.object({
+  command: z.literal("str_replace"),
+  path: z.string(),
+  old_str: z.string(),
+  new_str: z.string(),
+});
 
-export interface TextEditor20250728CreateCommand {
-  command: "create";
-  path: string;
-  file_text: string;
-}
+export const TextEditor20250728CreateCommandSchema = z.object({
+  command: z.literal("create"),
+  path: z.string(),
+  file_text: z.string(),
+});
 
-export interface TextEditor20250728InsertCommand {
-  command: "insert";
-  path: string;
-  insert_line: number;
-  new_str: string;
-}
+export const TextEditor20250728InsertCommandSchema = z.object({
+  command: z.literal("insert"),
+  path: z.string(),
+  insert_line: z.number(),
+  new_str: z.string(),
+});
+
+// Discriminated union schema for all text editor commands
+export const TextEditor20250728CommandSchema = z.discriminatedUnion("command", [
+  TextEditor20250728ViewCommandSchema,
+  TextEditor20250728StrReplaceCommandSchema,
+  TextEditor20250728CreateCommandSchema,
+  TextEditor20250728InsertCommandSchema,
+]);
+
+// TypeScript types derived from Zod schemas
+export type TextEditor20250728ViewCommand = z.infer<
+  typeof TextEditor20250728ViewCommandSchema
+>;
+export type TextEditor20250728StrReplaceCommand = z.infer<
+  typeof TextEditor20250728StrReplaceCommandSchema
+>;
+export type TextEditor20250728CreateCommand = z.infer<
+  typeof TextEditor20250728CreateCommandSchema
+>;
+export type TextEditor20250728InsertCommand = z.infer<
+  typeof TextEditor20250728InsertCommandSchema
+>;
+export type TextEditor20250728Command = z.infer<
+  typeof TextEditor20250728CommandSchema
+>;
 
 /**
  * Computer use tool action types for Claude Opus 4.5.
@@ -291,24 +361,27 @@ export type ComputerZoomAction = z.infer<typeof ComputerZoomActionSchema>;
  * Bash tool command types for Claude 4 models and Claude 3.7.
  * @see https://docs.anthropic.com/en/docs/agents-and-tools/tool-use/bash-tool
  */
-export type Bash20250124Command =
-  | Bash20250124ExecuteCommand
-  | Bash20250124RestartCommand;
 
-/**
- * Execute a bash command.
- */
-export interface Bash20250124ExecuteCommand {
-  /** The bash command to run */
-  command: string;
-  restart?: never;
-}
+// Zod schemas for bash commands
+export const Bash20250124ExecuteCommandSchema = z.object({
+  command: z.string().describe("The bash command to run"),
+});
 
-/**
- * Restart the bash session to reset state.
- */
-export interface Bash20250124RestartCommand {
-  command?: never;
-  /** Set to true to restart the bash session */
-  restart: true;
-}
+export const Bash20250124RestartCommandSchema = z.object({
+  restart: z.literal(true).describe("Set to true to restart the bash session"),
+});
+
+// Union schema for all bash commands
+export const Bash20250124CommandSchema = z.union([
+  Bash20250124ExecuteCommandSchema,
+  Bash20250124RestartCommandSchema,
+]);
+
+// TypeScript types derived from Zod schemas
+export type Bash20250124ExecuteCommand = z.infer<
+  typeof Bash20250124ExecuteCommandSchema
+>;
+export type Bash20250124RestartCommand = z.infer<
+  typeof Bash20250124RestartCommandSchema
+>;
+export type Bash20250124Command = z.infer<typeof Bash20250124CommandSchema>;

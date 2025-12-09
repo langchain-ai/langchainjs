@@ -133,5 +133,5 @@ export function webSearch(options?: WebSearchOptions): WebSearchTool {
       : undefined,
     user_location: options?.userLocation,
     search_context_size: options?.search_context_size,
-  };
+  } satisfies WebSearchTool;
 }

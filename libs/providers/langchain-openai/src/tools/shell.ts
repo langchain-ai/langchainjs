@@ -1,3 +1,4 @@
+import { z } from "zod/v4";
 import { OpenAI as OpenAIClient } from "openai";
 import { tool } from "@langchain/core/tools";
 
@@ -7,6 +8,21 @@ import { tool } from "@langchain/core/tools";
  */
 export type ShellAction =
   OpenAIClient.Responses.ResponseFunctionShellToolCall.Action;
+
+// Zod schema for shell action
+export const ShellActionSchema = z.object({
+  commands: z.array(z.string()).describe("Array of shell commands to execute"),
+  timeout_ms: z
+    .number()
+    .optional()
+    .describe("Optional timeout in milliseconds for the commands"),
+  max_output_length: z
+    .number()
+    .optional()
+    .describe(
+      "Optional maximum number of characters to return from each command"
+    ),
+});
 
 /**
  * Result of a single shell command execution.
@@ -233,33 +249,14 @@ export function shell(options: ShellOptions) {
     name: TOOL_NAME,
     description:
       "Execute shell commands in a managed environment. Commands can be run concurrently.",
-    schema: {
-      type: "object",
-      properties: {
-        commands: {
-          type: "array",
-          items: { type: "string" },
-          description: "Array of shell commands to execute",
-        },
-        timeout_ms: {
-          type: "number",
-          description: "Optional timeout in milliseconds for the commands",
-        },
-        max_output_length: {
-          type: "number",
-          description:
-            "Optional maximum number of characters to return from each command",
-        },
-      },
-      required: ["commands"],
-    },
+    schema: z.toJSONSchema(ShellActionSchema),
   });
 
   shellTool.extras = {
     ...(shellTool.extras ?? {}),
     providerToolDefinition: {
       type: "shell",
-    } as ShellTool,
+    } satisfies ShellTool,
   };
 
   return shellTool;

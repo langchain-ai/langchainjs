@@ -1,3 +1,4 @@
+import { z } from "zod/v4";
 import { OpenAI as OpenAIClient } from "openai";
 import { tool } from "@langchain/core/tools";
 
@@ -8,6 +9,21 @@ import { tool } from "@langchain/core/tools";
  */
 export type LocalShellAction =
   OpenAIClient.Responses.ResponseOutputItem.LocalShellCall.Action;
+
+// Zod schema for local shell exec action
+export const LocalShellExecActionSchema = z.object({
+  type: z.literal("exec"),
+  command: z.array(z.string()),
+  env: z.record(z.string(), z.string()).optional(),
+  working_directory: z.string().optional(),
+  timeout_ms: z.number().optional(),
+  user: z.string().optional(),
+});
+
+// Schema for all local shell actions (currently only exec)
+export const LocalShellActionSchema = z.discriminatedUnion("type", [
+  LocalShellExecActionSchema,
+]);
 
 /**
  * Options for the Local Shell tool.
@@ -162,23 +178,14 @@ export function localShell(options: LocalShellOptions) {
     name: TOOL_NAME,
     description:
       "Execute shell commands locally on the machine. Commands are provided as argv tokens.",
-    schema: {
-      type: "object",
-      properties: {
-        action: {
-          type: "string",
-          enum: ["exec"],
-        },
-      },
-      required: ["action"],
-    },
+    schema: z.toJSONSchema(LocalShellActionSchema),
   });
 
   shellTool.extras = {
     ...(shellTool.extras ?? {}),
     providerToolDefinition: {
       type: "local_shell",
-    } as LocalShellTool,
+    } satisfies LocalShellTool,
   };
 
   return shellTool;

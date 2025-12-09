@@ -1,3 +1,5 @@
+import { z } from "zod/v4";
+import Anthropic from "@anthropic-ai/sdk";
 import { tool } from "@langchain/core/tools";
 import type { DynamicStructuredTool, ToolRuntime } from "@langchain/core/tools";
 
@@ -126,7 +128,7 @@ export function computer_20251124(
       ...(options.enableZoom !== undefined && {
         enable_zoom: options.enableZoom,
       }),
-    },
+    } satisfies Anthropic.Beta.BetaToolComputerUse20251124,
   };
 
   return computerTool;
@@ -225,7 +227,8 @@ export function computer_20250124(
     ) => string | Promise<string>,
     {
       name,
-      schema: Computer20250124ActionSchema,
+      description: "A tool for interacting with the computer",
+      schema: z.toJSONSchema(Computer20250124ActionSchema),
     }
   );
 
@@ -239,7 +242,7 @@ export function computer_20250124(
       ...(options.displayNumber !== undefined && {
         display_number: options.displayNumber,
       }),
-    },
+    } satisfies Anthropic.Beta.BetaToolComputerUse20250124,
   };
 
   return computerTool;

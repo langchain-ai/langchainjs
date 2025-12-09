@@ -1,7 +1,12 @@
+import { z } from "zod/v4";
+import Anthropic from "@anthropic-ai/sdk";
 import { tool } from "@langchain/core/tools";
-import type { DynamicStructuredTool, ToolRuntime } from "@langchain/core/tools";
+import type { ToolRuntime } from "@langchain/core/tools";
 
-import type { Bash20250124Command } from "./types.js";
+import {
+  Bash20250124CommandSchema,
+  type Bash20250124Command,
+} from "./types.js";
 
 /**
  * Options for the bash tool.
@@ -85,9 +90,7 @@ export interface Bash20250124Options {
  *
  * @see https://docs.anthropic.com/en/docs/agents-and-tools/tool-use/bash-tool
  */
-export function bash_20250124(
-  options?: Bash20250124Options
-): DynamicStructuredTool {
+export function bash_20250124(options?: Bash20250124Options) {
   const name = "bash";
   const bashTool = tool(
     options?.execute as (
@@ -96,19 +99,8 @@ export function bash_20250124(
     ) => string | Promise<string>,
     {
       name,
-      schema: {
-        type: "object",
-        properties: {
-          command: {
-            type: "string",
-            description: "The bash command to run",
-          },
-          restart: {
-            type: "boolean",
-            description: "Set to true to restart the bash session",
-          },
-        },
-      },
+      description: "A tool for executing bash commands",
+      schema: z.toJSONSchema(Bash20250124CommandSchema),
     }
   );
 
@@ -117,7 +109,7 @@ export function bash_20250124(
     providerToolDefinition: {
       type: "bash_20250124",
       name,
-    },
+    } satisfies Anthropic.Beta.BetaToolBash20250124,
   };
 
   return bashTool;

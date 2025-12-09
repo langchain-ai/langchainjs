@@ -230,5 +230,5 @@ export function imageGeneration(
     partial_images: options?.partialImages,
     quality: options?.quality,
     size: options?.size,
-  };
+  } satisfies ImageGenerationTool;
 }

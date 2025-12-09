@@ -257,5 +257,5 @@ export function fileSearch(options: FileSearchOptions): FileSearchTool {
     max_num_results: options.maxNumResults,
     filters: options.filters as FileSearchTool["filters"],
     ranking_options: convertRankingOptions(options.rankingOptions),
-  };
+  } satisfies FileSearchTool;
 }

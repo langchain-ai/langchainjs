@@ -147,5 +147,5 @@ export function codeInterpreter(
   return {
     type: "code_interpreter",
     container: convertContainer(options?.container),
-  };
+  } satisfies CodeInterpreterTool;
 }

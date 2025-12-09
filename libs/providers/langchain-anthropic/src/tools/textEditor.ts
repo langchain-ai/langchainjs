@@ -1,7 +1,12 @@
+import { z } from "zod/v4";
+import Anthropic from "@anthropic-ai/sdk";
 import { tool } from "@langchain/core/tools";
 import type { DynamicStructuredTool, ToolRuntime } from "@langchain/core/tools";
 
-import type { TextEditor20250728Command } from "./types.js";
+import {
+  TextEditor20250728CommandSchema,
+  type TextEditor20250728Command,
+} from "./types.js";
 
 /**
  * Options for the text editor tool (Claude 4.x version).
@@ -83,19 +88,8 @@ export function textEditor_20250728(
     ) => string | Promise<string>,
     {
       name,
-      schema: {
-        type: "object",
-        properties: {
-          command: {
-            type: "string",
-            enum: ["view", "str_replace", "create", "insert"],
-          },
-          path: {
-            type: "string",
-          },
-        },
-        required: ["command", "path"],
-      },
+      description: "A tool for editing text files",
+      schema: z.toJSONSchema(TextEditor20250728CommandSchema),
     }
   );
 
@@ -107,7 +101,7 @@ export function textEditor_20250728(
       ...(options?.maxCharacters !== undefined && {
         max_characters: options.maxCharacters,
       }),
-    },
+    } satisfies Anthropic.Beta.Messages.BetaToolTextEditor20250728,
   };
 
   return textEditorTool;

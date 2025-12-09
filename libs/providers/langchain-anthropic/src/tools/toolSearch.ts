@@ -1,9 +1,10 @@
 import Anthropic from "@anthropic-ai/sdk";
+import { type ServerTool } from "@langchain/core/tools";
 
 /**
  * Options for the tool search tool.
  */
-interface ToolSearchOptions {
+export interface ToolSearchOptions {
   /**
    * Create a cache control breakpoint at this content block.
    */
@@ -55,12 +56,12 @@ interface ToolSearchOptions {
  */
 export function toolSearchRegex_20251119(
   options?: ToolSearchOptions
-): Anthropic.Beta.Messages.BetaToolSearchToolRegex20251119 {
+): ServerTool {
   return {
     type: "tool_search_tool_regex_20251119",
     name: "tool_search_tool_regex",
     cache_control: options?.cacheControl,
-  };
+  } satisfies Anthropic.Beta.Messages.BetaToolSearchToolRegex20251119;
 }
 
 /**
@@ -111,10 +112,10 @@ export function toolSearchRegex_20251119(
  */
 export function toolSearchBM25_20251119(
   options?: ToolSearchOptions
-): Anthropic.Beta.Messages.BetaToolSearchToolBm25_20251119 {
+): ServerTool {
   return {
     type: "tool_search_tool_bm25_20251119",
     name: "tool_search_tool_bm25",
     cache_control: options?.cacheControl,
-  };
+  } satisfies Anthropic.Beta.Messages.BetaToolSearchToolBm25_20251119;
 }

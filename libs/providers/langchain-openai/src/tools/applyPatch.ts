@@ -1,3 +1,4 @@
+import { z } from "zod/v4";
 import { OpenAI as OpenAIClient } from "openai";
 import { tool } from "@langchain/core/tools";
 
@@ -17,6 +18,31 @@ export type ApplyPatchDeleteFileOperation =
 export type ApplyPatchOperation = NonNullable<
   OpenAIClient.Responses.ResponseApplyPatchToolCall["operation"]
 >;
+
+// Zod schemas for apply patch operations
+export const ApplyPatchCreateFileOperationSchema = z.object({
+  type: z.literal("create_file"),
+  path: z.string(),
+  diff: z.string(),
+});
+
+export const ApplyPatchUpdateFileOperationSchema = z.object({
+  type: z.literal("update_file"),
+  path: z.string(),
+  diff: z.string(),
+});
+
+export const ApplyPatchDeleteFileOperationSchema = z.object({
+  type: z.literal("delete_file"),
+  path: z.string(),
+});
+
+// Discriminated union schema for all apply patch operations
+export const ApplyPatchOperationSchema = z.discriminatedUnion("type", [
+  ApplyPatchCreateFileOperationSchema,
+  ApplyPatchUpdateFileOperationSchema,
+  ApplyPatchDeleteFileOperationSchema,
+]);
 
 /**
  * Options for the Apply Patch tool.
@@ -144,23 +170,14 @@ export function applyPatch(options: ApplyPatchOptions) {
     name: TOOL_NAME,
     description:
       "Apply structured diffs to create, update, or delete files in the codebase.",
-    schema: {
-      type: "object",
-      properties: {
-        operation: {
-          type: "string",
-          enum: ["create_file", "update_file", "delete_file"],
-        },
-      },
-      required: ["operation"],
-    },
+    schema: z.toJSONSchema(ApplyPatchOperationSchema),
   });
 
   patchTool.extras = {
     ...(patchTool.extras ?? {}),
     providerToolDefinition: {
       type: "apply_patch",
-    } as ApplyPatchTool,
+    } satisfies ApplyPatchTool,
   };
 
   return patchTool;
