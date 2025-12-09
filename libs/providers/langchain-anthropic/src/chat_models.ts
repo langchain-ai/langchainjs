@@ -974,6 +974,10 @@ export class ChatAnthropicMessages<
       return undefined;
     }
     return tools.map((tool) => {
+      if (isLangChainTool(tool) && tool.extras?.providerToolDefinition) {
+        return tool.extras
+          .providerToolDefinition as Anthropic.Messages.ToolUnion;
+      }
       if (isBuiltinTool(tool)) {
         return tool;
       }
