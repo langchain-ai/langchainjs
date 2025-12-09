@@ -508,6 +508,85 @@ const response = await llmWithShell.invoke(
 
 For more information, see [OpenAI's Local Shell Documentation](https://platform.openai.com/docs/guides/tools-local-shell).
 
+### Shell Tool
+
+The Shell tool allows models to run shell commands through your integration. Unlike Local Shell, this tool supports executing multiple commands concurrently and is designed for `gpt-5.1`.
+
+> **Security Warning**: Running arbitrary shell commands can be dangerous. Always sandbox execution or add strict allow/deny-lists before forwarding commands to the system shell.
+
+**Use cases**:
+
+- **Automating filesystem or process diagnostics** – e.g., "find the largest PDF under ~/Documents"
+- **Extending model capabilities** – Using built-in UNIX utilities, Python runtime, and other CLIs
+- **Running multi-step build and test flows** – Chaining commands like `pip install` and `pytest`
+- **Complex agentic coding workflows** – Using with `apply_patch` for file operations
+
+```typescript
+import { ChatOpenAI, tools } from "@langchain/openai";
+import { exec } from "node:child_process/promises";
+
+const model = new ChatOpenAI({ model: "gpt-5.1" });
+
+// With execute callback for automatic command handling
+const shellTool = tools.shell({
+  execute: async (action) => {
+    const outputs = await Promise.all(
+      action.commands.map(async (cmd) => {
+        try {
+          const { stdout, stderr } = await exec(cmd, {
+            timeout: action.timeout_ms ?? undefined,
+          });
+          return {
+            stdout,
+            stderr,
+            outcome: { type: "exit" as const, exit_code: 0 },
+          };
+        } catch (error) {
+          const timedOut = error.killed && error.signal === "SIGTERM";
+          return {
+            stdout: error.stdout ?? "",
+            stderr: error.stderr ?? String(error),
+            outcome: timedOut
+              ? { type: "timeout" as const }
+              : { type: "exit" as const, exit_code: error.code ?? 1 },
+          };
+        }
+      })
+    );
+    return {
+      output: outputs,
+      maxOutputLength: action.max_output_length,
+    };
+  },
+});
+
+const llmWithShell = model.bindTools([shellTool]);
+const response = await llmWithShell.invoke(
+  "Find the largest PDF file in ~/Documents"
+);
+```
+
+**Action properties**: The model returns actions with these properties:
+
+- `commands` - Array of shell commands to execute (can run concurrently)
+- `timeout_ms` - Optional timeout in milliseconds (enforce your own limits)
+- `max_output_length` - Optional maximum characters to return per command
+
+**Return format**: Your execute function should return a `ShellResult`:
+
+```typescript
+interface ShellResult {
+  output: Array<{
+    stdout: string;
+    stderr: string;
+    outcome: { type: "exit"; exit_code: number } | { type: "timeout" };
+  }>;
+  maxOutputLength?: number | null; // Pass back from action if provided
+}
+```
+
+For more information, see [OpenAI's Shell Documentation](https://platform.openai.com/docs/guides/tools-shell).
+
 ### Apply Patch Tool
 
 The Apply Patch tool allows models to propose structured diffs that your integration applies. This enables iterative, multi-step code editing workflows where the model can create, update, and delete files in your codebase.
