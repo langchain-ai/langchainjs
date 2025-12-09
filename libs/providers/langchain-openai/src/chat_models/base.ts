@@ -194,7 +194,7 @@ export interface BaseChatOpenAICallOptions
    * [Learn more](https://platform.openai.com/docs/guides/prompt-caching).
    */
   promptCacheKey?: string;
-  
+
   /**
    * Used by OpenAI to set cache retention time
    */
@@ -395,7 +395,7 @@ export abstract class BaseChatOpenAI<
       "zdrEnabled",
       "reasoning",
       "promptCacheKey",
-      "promptCacheRetention", 
+      "promptCacheRetention",
       "verbosity",
     ];
   }
@@ -470,7 +470,8 @@ export abstract class BaseChatOpenAI<
     this.reasoning = fields?.reasoning;
     this.maxTokens = fields?.maxCompletionTokens ?? fields?.maxTokens;
     this.promptCacheKey = fields?.promptCacheKey ?? this.promptCacheKey;
-    this.promptCacheRetention = fields?.promptCacheRetention ?? this.promptCacheRetention;
+    this.promptCacheRetention =
+      fields?.promptCacheRetention ?? this.promptCacheRetention;
     this.verbosity = fields?.verbosity ?? this.verbosity;
 
     this.disableStreaming = fields?.disableStreaming === true;
