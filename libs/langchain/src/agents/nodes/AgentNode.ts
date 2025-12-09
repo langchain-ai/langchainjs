@@ -841,7 +841,7 @@ export class AgentNode<
           structuredResponseFormat.strategy.schema
         ),
         schema: structuredResponseFormat.strategy.schema,
-        strict: true,
+        strict: preparedOptions?.modelSettings?.strict,
       };
 
       Object.assign(options, {
@@ -860,7 +860,7 @@ export class AgentNode<
           kwargs: { method: "json_schema" },
           schema: structuredResponseFormat.strategy.schema,
         },
-        strict: true,
+        strict: preparedOptions?.modelSettings?.strict,
       });
     }
 

@@ -21,15 +21,9 @@ describe("strict tool-calling configuration", () => {
       ],
     });
 
-  
-    expect(
-      (params as unknown as { strict?: boolean }).strict
-    ).toBeUndefined();
+    expect("strict" in params).toBe(false);
 
-   
-    expect(
-      (params.tools as unknown as Array<{ strict?: boolean }>)[0].strict
-    ).toBe(true);
+    expect((params.tools as Array<{ strict?: boolean }>)[0].strict).toBe(true);
   });
 
   it("respects user-provided strict option", () => {
@@ -52,14 +46,8 @@ describe("strict tool-calling configuration", () => {
       ],
     });
 
+    expect("strict" in params).toBe(false);
 
-    expect(
-      (params as unknown as { strict?: boolean }).strict
-    ).toBeUndefined();
-
-
-    expect(
-      (params.tools as unknown as Array<{ strict?: boolean }>)[0].strict
-    ).toBe(false);
+    expect((params.tools as Array<{ strict?: boolean }>)[0].strict).toBe(false);
   });
 });
