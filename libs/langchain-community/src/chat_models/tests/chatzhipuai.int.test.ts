@@ -1,6 +1,8 @@
 import { test, expect } from "@jest/globals";
 import { SystemMessage, HumanMessage } from "@langchain/core/messages";
 import { ChatZhipuAI } from "../zhipuai.js";
+import { tool } from "@langchain/core/tools";
+import * as z from "zod";
 
 interface TestConfig {
   modelName: string | undefined;
@@ -20,6 +22,14 @@ interface TestConfig {
   shouldThrow?: boolean;
 }
 
+const getWeather = tool((input) => `It's sunny in ${input.location}.`, {
+  name: "get_weather",
+  description: "Get the weather at a location.",
+  schema: z.object({
+    location: z.string().describe("The location to get the weather for"),
+  }),
+});
+
 test.skip("Test chat.stream work fine", async () => {
   const chat = new ChatZhipuAI({
     modelName: "glm-3-turbo",
@@ -33,6 +43,38 @@ test.skip("Test chat.stream work fine", async () => {
   }
   // console.log(chunks);
   expect(chunks.length).toBeGreaterThan(0);
+});
+
+test.skip("Test tool calling should work within chat.invoke", async () => {
+  const chat = new ChatZhipuAI({ modelName: "glm-4" }).bindTools([getWeather]);
+  const response = await chat.invoke([
+    new HumanMessage("How is the weather in New York"),
+  ]);
+  expect(response.tool_calls?.length).toBeGreaterThanOrEqual(1);
+  expect(
+    response.tool_calls &&
+      response.tool_calls.some((toolCall) => toolCall.name == "get_weather")
+  ).toBe(true);
+});
+
+test.skip("Test tool calling should work within chat.stream", async () => {
+  const chat = new ChatZhipuAI({ modelName: "glm-4" }).bindTools([getWeather]);
+  const stream = await chat.stream([
+    new HumanMessage("How is the weather in New York"),
+  ]);
+  const chunks = [];
+  for await (const chunk of stream) {
+    chunks.push(chunk);
+  }
+  expect(chunks.length).toBeGreaterThanOrEqual(1);
+  expect(
+    // one of the chunks should be a tool-calling message
+    chunks.some(
+      (chunk) =>
+        chunk.tool_calls &&
+        chunk.tool_calls.some((toolCall) => toolCall.name == "get_weather")
+    )
+  ).toBe(true);
 });
 
 const runTest = async ({
@@ -109,7 +151,7 @@ const testConfigs: TestConfig[] = [
     modelName: "glm-3-turbo",
     config: {
       description: "illegal input should throw an error",
-      temperature: 0,
+      temperature: -1,
     },
     shouldThrow: true,
   },
@@ -118,7 +160,7 @@ const testConfigs: TestConfig[] = [
     config: {
       description: "illegal input in streaming mode should throw an error",
       streaming: true,
-      temperature: 0,
+      temperature: -1,
     },
     shouldThrow: true,
   },
