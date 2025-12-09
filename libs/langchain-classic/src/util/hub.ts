@@ -1,5 +1,4 @@
-import pRetry from "p-retry";
-
+import pRetry from "@langchain/core/utils/p-retry";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import { FileLoader, LoadValues } from "./load.js";
 import { extname } from "./extname.js";
