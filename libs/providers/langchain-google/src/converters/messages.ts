@@ -384,7 +384,7 @@ function convertLegacyContentMessageToGeminiContent(
     }
   });
 
-  const parts: GeminiPart[] = [];
+  let parts: GeminiPart[] = [];
 
   // Handle legacy content formats
   if (typeof message.content === "string") {
@@ -444,6 +444,11 @@ function convertLegacyContentMessageToGeminiContent(
         response: { result: responseContent },
       },
     });
+  }
+
+  // Remove non-functionResponse parts if this is a tool response
+  if (role === "function") {
+    parts = parts.filter((part) => "functionResponse" in part);
   }
 
   // Only add content if we have parts

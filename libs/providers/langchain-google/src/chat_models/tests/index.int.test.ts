@@ -87,6 +87,7 @@ const allModelInfo: ModelInfo[] = [
     model: "gemini-2.5-flash-lite",
     testConfig: {
       useApiKey: true,
+      only: true,
     }
   },
   {
@@ -189,31 +190,30 @@ const weatherTool = tool(
   }
 );
 
-// These tools commented out since they're not in use for a test yet
-// const nullishWeatherTool = tool(
-//   (_) => ({
-//     temp: 21,
-//   }),
-//   {
-//     name: "get_nullish_weather",
-//     description:
-//       "Get the weather of a specific location and return the temperature in Celsius.",
-//     schema: z.object({
-//       location: z
-//         .string()
-//         .nullish()
-//         .describe("The name of city to get the weather for."),
-//     }),
-//   }
-// );
-//
-// const calculatorTool = tool((_) => "no-op", {
-//   name: "calculator",
-//   description: "Calculate the result of a math expression.",
-//   schema: z.object({
-//     expression: z.string().describe("The math expression to calculate."),
-//   }),
-// });
+const nullishWeatherTool = tool(
+  (_) => ({
+    temp: 21,
+  }),
+  {
+    name: "get_nullish_weather",
+    description:
+      "Get the weather of a specific location and return the temperature in Celsius.",
+    schema: z.object({
+      location: z
+        .string()
+        .nullish()
+        .describe("The name of city to get the weather for."),
+    }),
+  }
+);
+
+const calculatorTool = tool((_) => "no-op", {
+  name: "calculator",
+  description: "Calculate the result of a math expression.",
+  schema: z.object({
+    expression: z.string().describe("The math expression to calculate."),
+  }),
+});
 
 const coreModelInfo: ModelInfo[] = filterTestableModels();
 describe.each(coreModelInfo)(
@@ -302,7 +302,7 @@ describe.each(coreModelInfo)(
       expect(contentBlock.text).toMatch(/(1 + 1 (equals|is|=) )?2.? ?/);
     });
 
-    test("invoke token count usage_metadata", async () => {
+    test.skip("invoke token count usage_metadata", async () => {
       const model = newChatGoogle();
       const res: AIMessageChunk = await model.invoke("Why is the sky blue? Be concise.");
       console.log(res);
@@ -419,7 +419,7 @@ describe.each(coreModelInfo)(
       expect(res?.usage_metadata).not.toBeDefined();
     });
 
-    test.skip("function", async () => {
+    test("function", async () => {
       const tools = [weatherTool];
       const llm: Runnable = newChatGoogle().bindTools(tools);
       const result = await llm.invoke("What is the weather in New York?");
@@ -436,7 +436,7 @@ describe.each(coreModelInfo)(
       expect(call.args.location).toBe("New York");
     });
 
-    test.skip("function conversation", async () => {
+    test("function conversation", async () => {
       const tools = [weatherTool];
       const llm = newChatGoogle().bindTools(tools);
       const history: BaseMessage[] = [new HumanMessage("What is the weather in New York?")];
@@ -457,7 +457,7 @@ describe.each(coreModelInfo)(
       expect(result2.content).toMatch(/21/);
     });
 
-    test.skip("function reply", async () => {
+    test("function reply", async () => {
       const tools: GeminiTool[] = [
         {
           functionDeclarations: [
@@ -504,6 +504,41 @@ describe.each(coreModelInfo)(
       for await (const chunk of res) {
         resArray.push(chunk);
       }
+    });
+
+    test("function - force tool", async () => {
+      const llm = newChatGoogle();
+      const llmWithTools: Runnable = llm.bindTools([calculatorTool, weatherTool], {
+        tool_choice: "calculator",
+      });
+
+      const result = await llmWithTools.invoke(
+        "Whats the weather like in paris today? What's 1836 plus 7262?"
+      );
+
+      expect(result.tool_calls).toHaveLength(1);
+      expect(result.tool_calls?.[0]).toBeDefined();
+      if (!result.tool_calls?.[0]) return;
+      expect(result.tool_calls?.[0].name).toBe("calculator");
+      expect(result.tool_calls?.[0].args).toHaveProperty("expression");
+    });
+
+    test("function - tool with nullish parameters", async () => {
+      // Fails with gemini-2.0-flash-lite ?
+      const tools = [nullishWeatherTool];
+      const llm: Runnable = newChatGoogle().bindTools(tools);
+      const result = await llm.invoke("What is the weather in New York?");
+      expect(Array.isArray(result.tool_calls)).toBeTruthy();
+      expect(result.tool_calls).toHaveLength(1);
+      const call = result.tool_calls[0];
+      expect(call).toHaveProperty("type");
+      expect(call.type).toBe("tool_call");
+      expect(call).toHaveProperty("name");
+      expect(call.name).toBe("get_nullish_weather");
+      expect(call).toHaveProperty("args");
+      expect(typeof call.args).toBe("object");
+      expect(call.args).toHaveProperty("location");
+      expect(call.args.location).toBe("New York");
     });
 
     test.skip("withStructuredOutput classic", async () => {

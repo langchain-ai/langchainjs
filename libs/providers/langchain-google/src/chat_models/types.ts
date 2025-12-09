@@ -361,14 +361,32 @@ export interface GeminiTool {
   googleSearchRetrieval?: Record<string, unknown>;
 }
 
+export type GeminiFunctionCallingConfigMode =
+  "AUTO" |
+  "ANY" |
+  "NONE" |
+  "VALIDATED" |
+  string;
+
+export interface GeminiFunctionCallingConfig {
+  allowedFunctionNames?: string[];
+  mode?: GeminiFunctionCallingConfigMode;
+}
+
+export interface GeminiRetrievalConfig {
+  languageCode?: string;
+  latLgn?: string;
+}
+
+export interface GeminiToolConfig {
+  functionCallingConfig?: GeminiFunctionCallingConfig;
+  retrievalConfig?: GeminiRetrievalConfig;
+}
+
 export interface GenerateContentRequest {
   contents: GeminiContent[];
   tools?: GeminiTool[];
-  toolConfig?: {
-    functionCallingConfig?: {
-      mode?: "AUTO" | "ANY" | "NONE";
-    };
-  };
+  toolConfig?: GeminiToolConfig;
   safetySettings?: GoogleSafetySetting[];
   systemInstruction?: GeminiSystemInstruction;
   generationConfig?: GeminiGenerationConfig;
