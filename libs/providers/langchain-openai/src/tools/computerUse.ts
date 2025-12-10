@@ -186,6 +186,7 @@ export interface ComputerUseOptions {
    */
   execute: (
     action: ComputerUseAction,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     runtime: ToolRuntime<any, any>
   ) => string | Promise<string> | ToolMessage | Promise<ToolMessage>;
 }
@@ -379,7 +380,8 @@ export function computerUse(options: ComputerUseOptions) {
   return computerTool as DynamicStructuredTool<
     typeof ComputerUseActionSchema,
     ComputerUseInput,
-    any,
+    unknown,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     ToolMessage<any>
   >;
 }

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import Anthropic from "@anthropic-ai/sdk";
 import { tool } from "@langchain/core/tools";
 import { ToolMessage } from "@langchain/core/messages";
@@ -13,6 +14,12 @@ import {
 } from "./types.js";
 
 const TOOL_NAME = "computer";
+
+type ComputerUseReturnType =
+  | string
+  | Promise<string>
+  | ToolMessage<any>
+  | Promise<ToolMessage<any>>;
 
 /**
  * Options for the computer use tool (Claude Opus 4.5 only version).
@@ -47,7 +54,7 @@ export interface Computer20251124Options<TState = any, TContext = any> {
   execute?: (
     args: Computer20251124Action,
     runtime: ToolRuntime<TState, TContext>
-  ) => string | Promise<string> | ToolMessage<any> | Promise<ToolMessage<any>>;
+  ) => ComputerUseReturnType;
 }
 
 /**
@@ -112,11 +119,7 @@ export function computer_20251124(options: Computer20251124Options) {
     options.execute as (
       input: unknown,
       runtime: ToolRuntime<unknown, unknown>
-    ) =>
-      | string
-      | Promise<string>
-      | ToolMessage<any>
-      | Promise<ToolMessage<any>>,
+    ) => ComputerUseReturnType,
     {
       name,
       schema: Computer20251124ActionSchema,
@@ -173,7 +176,7 @@ export interface Computer20250124Options<TState = any, TContext = any> {
   execute?: (
     args: Computer20250124Action,
     runtime: ToolRuntime<TState, TContext>
-  ) => string | Promise<string> | ToolMessage<any> | Promise<ToolMessage<any>>;
+  ) => ComputerUseReturnType;
 }
 
 /**
@@ -238,11 +241,7 @@ export function computer_20250124(options: Computer20250124Options) {
     options.execute as (
       input: unknown,
       runtime: ToolRuntime<unknown, unknown>
-    ) =>
-      | string
-      | Promise<string>
-      | ToolMessage<any>
-      | Promise<ToolMessage<any>>,
+    ) => ComputerUseReturnType,
     {
       name,
       description: "A tool for interacting with the computer",

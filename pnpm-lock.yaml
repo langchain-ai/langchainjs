@@ -658,9 +658,6 @@ importers:
       '@langchain/anthropic':
         specifier: workspace:*
         version: link:../providers/langchain-anthropic
-      '@langchain/cohere':
-        specifier: workspace:*
-        version: link:../providers/langchain-cohere
       '@langchain/core':
         specifier: workspace:*
         version: link:../langchain-core
