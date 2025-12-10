@@ -1,6 +1,6 @@
 import { z } from "zod/v4";
 import { OpenAI as OpenAIClient } from "openai";
-import { tool } from "@langchain/core/tools";
+import { tool, type DynamicStructuredTool } from "@langchain/core/tools";
 
 /**
  * Re-export operation types from OpenAI SDK for convenience.
@@ -170,7 +170,7 @@ export function applyPatch(options: ApplyPatchOptions) {
     name: TOOL_NAME,
     description:
       "Apply structured diffs to create, update, or delete files in the codebase.",
-    schema: z.toJSONSchema(ApplyPatchOperationSchema),
+    schema: ApplyPatchOperationSchema,
   });
 
   patchTool.extras = {
@@ -180,5 +180,10 @@ export function applyPatch(options: ApplyPatchOptions) {
     } satisfies ApplyPatchTool,
   };
 
-  return patchTool;
+  return patchTool as DynamicStructuredTool<
+    typeof ApplyPatchOperationSchema,
+    ApplyPatchOperation,
+    unknown,
+    string
+  >;
 }

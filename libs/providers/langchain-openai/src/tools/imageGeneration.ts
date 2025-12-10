@@ -1,4 +1,5 @@
 import { OpenAI as OpenAIClient } from "openai";
+import type { ServerTool } from "@langchain/core/tools";
 
 /**
  * Optional mask for inpainting. Allows you to specify areas of the image
@@ -215,9 +216,7 @@ function convertInputImageMask(
  * - Access the revised prompt via `revised_prompt` field in the output
  * - Multi-turn editing is supported by passing previous response messages
  */
-export function imageGeneration(
-  options?: ImageGenerationOptions
-): ImageGenerationTool {
+export function imageGeneration(options?: ImageGenerationOptions): ServerTool {
   return {
     type: "image_generation",
     background: options?.background,

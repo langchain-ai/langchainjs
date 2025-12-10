@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { z } from "zod/v4";
 import { OpenAI as OpenAIClient } from "openai";
 import { tool, type DynamicStructuredTool } from "@langchain/core/tools";
@@ -155,6 +156,12 @@ export interface ComputerUseInput {
   action: ComputerUseAction;
 }
 
+export type ComputerUseReturnType =
+  | string
+  | Promise<string>
+  | ToolMessage<any>
+  | Promise<ToolMessage<any>>;
+
 /**
  * Options for the Computer Use tool.
  */
@@ -186,9 +193,8 @@ export interface ComputerUseOptions {
    */
   execute: (
     action: ComputerUseAction,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     runtime: ToolRuntime<any, any>
-  ) => string | Promise<string> | ToolMessage | Promise<ToolMessage>;
+  ) => ComputerUseReturnType;
 }
 
 /**
@@ -381,7 +387,6 @@ export function computerUse(options: ComputerUseOptions) {
     typeof ComputerUseActionSchema,
     ComputerUseInput,
     unknown,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    ToolMessage<any>
+    ComputerUseReturnType
   >;
 }

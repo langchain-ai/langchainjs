@@ -1,4 +1,5 @@
 import { OpenAI as OpenAIClient } from "openai";
+import type { ServerTool } from "@langchain/core/tools";
 
 /**
  * Available connector IDs for OpenAI's built-in service connectors.
@@ -227,11 +228,11 @@ function convertRequireApproval(
  * });
  * ```
  */
-export function mcp(options: McpRemoteServerOptions): McpTool;
-export function mcp(options: McpConnectorOptions): McpTool;
+export function mcp(options: McpRemoteServerOptions): ServerTool;
+export function mcp(options: McpConnectorOptions): ServerTool;
 export function mcp(
   options: McpRemoteServerOptions | McpConnectorOptions
-): McpTool {
+): ServerTool {
   const baseConfig: McpTool = {
     type: "mcp",
     server_label: options.serverLabel,

@@ -1,6 +1,6 @@
 import { z } from "zod/v4";
 import { OpenAI as OpenAIClient } from "openai";
-import { tool } from "@langchain/core/tools";
+import { tool, type DynamicStructuredTool } from "@langchain/core/tools";
 
 /**
  * Re-export action type from OpenAI SDK for convenience.
@@ -249,7 +249,7 @@ export function shell(options: ShellOptions) {
     name: TOOL_NAME,
     description:
       "Execute shell commands in a managed environment. Commands can be run concurrently.",
-    schema: z.toJSONSchema(ShellActionSchema),
+    schema: ShellActionSchema,
   });
 
   shellTool.extras = {
@@ -259,5 +259,10 @@ export function shell(options: ShellOptions) {
     } satisfies ShellTool,
   };
 
-  return shellTool;
+  return shellTool as DynamicStructuredTool<
+    typeof ShellActionSchema,
+    ShellAction,
+    unknown,
+    string
+  >;
 }

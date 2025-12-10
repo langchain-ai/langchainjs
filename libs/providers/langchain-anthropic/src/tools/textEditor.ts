@@ -1,4 +1,3 @@
-import { z } from "zod/v4";
 import Anthropic from "@anthropic-ai/sdk";
 import { tool } from "@langchain/core/tools";
 import type { DynamicStructuredTool, ToolRuntime } from "@langchain/core/tools";
@@ -77,9 +76,7 @@ export interface TextEditor20250728Options {
  *
  * @see https://docs.anthropic.com/en/docs/agents-and-tools/tool-use/text-editor-tool
  */
-export function textEditor_20250728(
-  options?: TextEditor20250728Options
-): DynamicStructuredTool {
+export function textEditor_20250728(options?: TextEditor20250728Options) {
   const name = "str_replace_based_edit_tool";
   const textEditorTool = tool(
     options?.execute as (
@@ -89,7 +86,7 @@ export function textEditor_20250728(
     {
       name,
       description: "A tool for editing text files",
-      schema: z.toJSONSchema(TextEditor20250728CommandSchema),
+      schema: TextEditor20250728CommandSchema,
     }
   );
 
@@ -104,5 +101,10 @@ export function textEditor_20250728(
     } satisfies Anthropic.Beta.Messages.BetaToolTextEditor20250728,
   };
 
-  return textEditorTool;
+  return textEditorTool as DynamicStructuredTool<
+    typeof TextEditor20250728CommandSchema,
+    TextEditor20250728Command,
+    unknown,
+    string | Promise<string>
+  >;
 }

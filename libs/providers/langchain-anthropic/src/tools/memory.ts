@@ -1,4 +1,3 @@
-import { z } from "zod/v4";
 import Anthropic from "@anthropic-ai/sdk";
 import { tool } from "@langchain/core/tools";
 import type { DynamicStructuredTool, ToolRuntime } from "@langchain/core/tools";
@@ -6,6 +5,7 @@ import type { DynamicStructuredTool, ToolRuntime } from "@langchain/core/tools";
 import {
   Memory20250818CommandSchema,
   type MemoryTool20250818Options,
+  type Memory20250818Command,
 } from "./types.js";
 
 /**
@@ -51,7 +51,7 @@ export function memory_20250818(
     ) => string | Promise<string>,
     {
       name: "memory",
-      schema: z.toJSONSchema(Memory20250818CommandSchema),
+      schema: Memory20250818CommandSchema,
     }
   );
 
@@ -63,5 +63,10 @@ export function memory_20250818(
     } satisfies Anthropic.Beta.BetaMemoryTool20250818,
   };
 
-  return memoryTool;
+  return memoryTool as DynamicStructuredTool<
+    typeof Memory20250818CommandSchema,
+    Memory20250818Command,
+    unknown,
+    string | Promise<string>
+  >;
 }

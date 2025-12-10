@@ -1,6 +1,6 @@
 import { z } from "zod/v4";
 import { OpenAI as OpenAIClient } from "openai";
-import { tool } from "@langchain/core/tools";
+import { tool, type DynamicStructuredTool } from "@langchain/core/tools";
 
 /**
  * Re-export action type from OpenAI SDK for convenience.
@@ -178,7 +178,7 @@ export function localShell(options: LocalShellOptions) {
     name: TOOL_NAME,
     description:
       "Execute shell commands locally on the machine. Commands are provided as argv tokens.",
-    schema: z.toJSONSchema(LocalShellActionSchema),
+    schema: LocalShellActionSchema,
   });
 
   shellTool.extras = {
@@ -188,5 +188,10 @@ export function localShell(options: LocalShellOptions) {
     } satisfies LocalShellTool,
   };
 
-  return shellTool;
+  return shellTool as DynamicStructuredTool<
+    typeof LocalShellActionSchema,
+    LocalShellAction,
+    unknown,
+    string
+  >;
 }

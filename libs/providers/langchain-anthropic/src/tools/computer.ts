@@ -15,7 +15,7 @@ import {
 
 const TOOL_NAME = "computer";
 
-type ComputerUseReturnType =
+export type ComputerUseReturnType =
   | string
   | Promise<string>
   | ToolMessage<any>
@@ -266,6 +266,6 @@ export function computer_20250124(options: Computer20250124Options) {
     typeof Computer20250124ActionSchema,
     Computer20250124Action,
     any,
-    ToolMessage<any>
+    ComputerUseReturnType
   >;
 }

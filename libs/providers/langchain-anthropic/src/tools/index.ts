@@ -18,6 +18,7 @@ import {
   computer_20250124,
   type Computer20251124Options,
   type Computer20250124Options,
+  type ComputerUseReturnType,
 } from "./computer.js";
 import {
   codeExecution_20250825,
@@ -45,6 +46,7 @@ export type {
   Bash20250124Options,
   Computer20251124Options,
   Computer20250124Options,
+  ComputerUseReturnType,
   CodeExecution20250825Options,
   TextEditor20250728Options,
   ToolSearchOptions,

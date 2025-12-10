@@ -1,7 +1,6 @@
-import { z } from "zod/v4";
 import Anthropic from "@anthropic-ai/sdk";
 import { tool } from "@langchain/core/tools";
-import type { ToolRuntime } from "@langchain/core/tools";
+import type { DynamicStructuredTool, ToolRuntime } from "@langchain/core/tools";
 
 import {
   Bash20250124CommandSchema,
@@ -100,7 +99,7 @@ export function bash_20250124(options?: Bash20250124Options) {
     {
       name,
       description: "A tool for executing bash commands",
-      schema: z.toJSONSchema(Bash20250124CommandSchema),
+      schema: Bash20250124CommandSchema,
     }
   );
 
@@ -112,5 +111,10 @@ export function bash_20250124(options?: Bash20250124Options) {
     } satisfies Anthropic.Beta.BetaToolBash20250124,
   };
 
-  return bashTool;
+  return bashTool as DynamicStructuredTool<
+    typeof Bash20250124CommandSchema,
+    Bash20250124Command,
+    unknown,
+    string
+  >;
 }
