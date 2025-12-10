@@ -724,17 +724,6 @@
         "default": "./dist/utils/types/index.js"
       }
     },
-    "./utils/p-retry": {
-      "input": "./src/utils/p-retry/index.js",
-      "require": {
-        "types": "./dist/utils/p-retry/index.d.cts",
-        "default": "./dist/utils/p-retry/index.cjs"
-      },
-      "import": {
-        "types": "./dist/utils/p-retry/index.d.ts",
-        "default": "./dist/utils/p-retry/index.js"
-      }
-    },
     "./vectorstores": {
       "input": "./src/vectorstores.ts",
       "require": {
