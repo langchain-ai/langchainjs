@@ -223,6 +223,7 @@ test("sturctured output with tools", async () => {
 
   const llmWithStructuredOutput = ollama.withStructuredOutput(schemaForWSO, {
     name: "get_current_weather",
+    method: "functionCalling",
   });
 
   const resultFromWSO = await llmWithStructuredOutput.invoke(
