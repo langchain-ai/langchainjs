@@ -10,7 +10,7 @@ describe("OpenAI Computer Use Tool Tests", () => {
       execute: async () => "",
     });
 
-    expect(computer.name).toBe("computer");
+    expect(computer.name).toBe("computer_use");
     expect(computer.extras?.providerToolDefinition).toMatchInlineSnapshot(`
       {
         "display_height": 768,

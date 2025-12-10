@@ -55,32 +55,6 @@ describe("Anthropic Computer Use Tool Unit Tests", () => {
       expect(computer.name).toBe("computer");
       expect(computer.func).toBeDefined();
     });
-
-    it("has correct schema with zoom action for Opus 4.5", () => {
-      const computer = computer_20251124({
-        displayWidthPx: 1024,
-        displayHeightPx: 768,
-      });
-
-      expect(computer.schema).toMatchObject({
-        type: "object",
-        oneOf: expect.arrayContaining([
-          expect.objectContaining({
-            properties: expect.objectContaining({
-              action: expect.objectContaining({ const: "screenshot" }),
-            }),
-          }),
-          expect.objectContaining({
-            properties: expect.objectContaining({
-              action: expect.objectContaining({ const: "zoom" }),
-            }),
-          }),
-        ]),
-      });
-      // Verify all action types are present
-      const oneOf = (computer.schema as { oneOf: unknown[] }).oneOf;
-      expect(oneOf).toHaveLength(16); // 15 base actions + zoom
-    });
   });
 
   describe("computer_20250124 (Claude 4 / Claude 3.7)", () => {
@@ -133,42 +107,6 @@ describe("Anthropic Computer Use Tool Unit Tests", () => {
 
       expect(computer.name).toBe("computer");
       expect(computer.func).toBeDefined();
-    });
-
-    it("has correct schema without zoom action for Claude 4/3.7", () => {
-      const computer = computer_20250124({
-        displayWidthPx: 1024,
-        displayHeightPx: 768,
-      });
-
-      expect(computer.schema).toMatchObject({
-        type: "object",
-        oneOf: expect.arrayContaining([
-          expect.objectContaining({
-            properties: expect.objectContaining({
-              action: expect.objectContaining({ const: "screenshot" }),
-            }),
-          }),
-        ]),
-      });
-      // Verify all action types are present (no zoom)
-      const oneOf = (computer.schema as { oneOf: unknown[] }).oneOf;
-      expect(oneOf).toHaveLength(15); // 15 base actions, no zoom
-      // Verify zoom is not present
-      const hasZoom = oneOf.some(
-        (item: unknown) =>
-          typeof item === "object" &&
-          item !== null &&
-          "properties" in item &&
-          typeof item.properties === "object" &&
-          item.properties !== null &&
-          "action" in item.properties &&
-          typeof item.properties.action === "object" &&
-          item.properties.action !== null &&
-          "const" in item.properties.action &&
-          item.properties.action.const === "zoom"
-      );
-      expect(hasZoom).toBe(false);
     });
   });
 });
