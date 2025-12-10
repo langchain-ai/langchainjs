@@ -448,8 +448,10 @@ export function _mergeDicts(
       } else if (
         ["id", "name", "output_version", "model_provider"].includes(key)
       ) {
-        // Keep the incoming value for these fields
-        merged[key] = value;
+        // Keep the incoming value for these fields if its defined
+        if (value) {
+          merged[key] = value;
+        }
       } else {
         merged[key] += value;
       }

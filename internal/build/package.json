@@ -9,22 +9,23 @@
     "build": "exit 0",
     "lint": "eslint --cache src/",
     "lint:fix": "eslint --cache src/ --fix",
-    "format": "prettier --config .prettierrc --write \"src\"",
-    "format:check": "prettier --config .prettierrc --check \"src\""
+    "format": "prettier --write \"src\"",
+    "format:check": "prettier --check \"src\""
   },
   "dependencies": {
     "@arethetypeswrong/core": "^0.18.2",
-    "@typescript/native-preview": "^7.0.0-dev.20250730.1",
+    "@typescript/native-preview": "^7.0.0-dev.20251205.1",
     "prettier": "^3.6.2",
-    "publint": "^0.3.12",
-    "rolldown": "1.0.0-beta.30",
-    "tsdown": "^0.15.12",
-    "type-fest": "^4.41.0",
+    "publint": "^0.3.15",
+    "rolldown": "^1.0.0-beta.53",
+    "tsdown": "^0.17.0",
+    "type-fest": "^5.3.0",
     "typescript": "^5.9.3",
-    "unplugin-unused": "^0.5.1"
+    "unplugin-unused": "^0.5.6"
   },
   "devDependencies": {
     "@langchain/eslint": "workspace:*",
+    "@langchain/tsconfig": "workspace:*",
     "@tsconfig/recommended": "^1.0.10",
     "eslint": "^9.39.1"
   },

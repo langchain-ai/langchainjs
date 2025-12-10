@@ -1,19 +1,9 @@
 {
-  "extends": "../../tsconfig.json",
+  "extends": "@langchain/tsconfig/base.json",
   "compilerOptions": {
-    "rootDir": ".",
-    "module": "ESNext",
-    "target": "ES2022",
-    "moduleResolution": "bundler",
-    "declaration": true,
-    "declarationMap": true,
-    "sourceMap": true,
-    "resolveJsonModule": true,
-    "esModuleInterop": true,
-    "skipLibCheck": true,
-    "strict": true,
-    "noImplicitAny": false
+    "rootDir": "src",
+    "outDir": "dist"
   },
-  "include": ["src/**/*.ts", "eslint.config.ts", "index.ts"],
-  "exclude": ["node_modules", "dist"]
+  "include": ["src/**/*"],
+  "exclude": ["dist", "node_modules"]
 }

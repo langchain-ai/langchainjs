@@ -4,7 +4,8 @@
   "tasks": {
     "build:compile": {
       "dependsOn": ["^build:compile"],
-      "env": ["BUILD_MODE"]
+      "env": ["BUILD_MODE"],
+      "outputs": ["dist/**"]
     },
     "build:examples": {
       "dependsOn": ["^build:examples"]
@@ -23,10 +24,7 @@
     },
     "test": {
       "cache": false,
-      "dependsOn": [
-        "^build:compile",
-        "build:compile"
-      ]
+      "dependsOn": ["^build:compile", "build:compile"]
     },
     "test:ci": {
       "outputs": [],

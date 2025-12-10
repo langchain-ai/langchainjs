@@ -10,14 +10,15 @@
   "scripts": {
     "dev": "ncc build ./index.ts -w -o dist/",
     "build": "ncc build ./index.ts -o ./dist/ --minify --no-cache --no-source-map-register && cp ./template/.env.example ./template/.eslintrc.cjs ./template/.prettierrc ./template/.release-it.json ./dist/template",
-    "format": "prettier --config .prettierrc --write \"./helpers\"",
-    "format:check": "prettier --config .prettierrc --check \"./helpers\"",
+    "format": "prettier --write \"./helpers\"",
+    "format:check": "prettier --check \"./helpers\"",
     "lint:eslint": "eslint --cache  ./helpers",
     "lint": "eslint --cache  ./helpers",
     "lint:fix": "eslint --cache --fix --ext .ts,.js ./helpers"
   },
   "devDependencies": {
     "@langchain/eslint": "workspace:*",
+    "@langchain/tsconfig": "workspace:*",
     "@types/prompts": "^2",
     "@types/validate-npm-package-name": "3.0.0",
     "@vercel/ncc": "^0.34.0",

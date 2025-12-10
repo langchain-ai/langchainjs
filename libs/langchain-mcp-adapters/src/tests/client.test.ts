@@ -1247,6 +1247,43 @@ describe("MultiServerMCPClient Integration Tests", () => {
   });
 
   describe("Timeout Configuration", () => {
+    it("http smoke test: should honor timeout when shorter than sleepMsec", async () => {
+      const { baseUrl } = await testServers.createHTTPServer(
+        "timeout-smoke-test",
+        {
+          disableStreamableHttp: false,
+          supportSSEFallback: false,
+        }
+      );
+
+      const client = new MultiServerMCPClient({
+        "timeout-server": {
+          transport: "http",
+          url: `${baseUrl}/mcp`,
+        },
+      });
+
+      try {
+        const tools = await client.getTools();
+        const testTool = tools.find((t) => t.name.includes("sleep_tool"));
+        expect(testTool).toBeDefined();
+
+        // Set a timeout that is lower than the sleep duration and ensure it is honored.
+        await expect(
+          testTool!.invoke(
+            { sleepMsec: 500 },
+            {
+              timeout: 10,
+            }
+          )
+        ).rejects.toThrowError(
+          /TimeoutError: The operation was aborted due to timeout/
+        );
+      } finally {
+        await client.close();
+      }
+    });
+
     it.each(["http", "sse"] as const)(
       "%s should respect RunnableConfig timeout for tool calls",
       async (transport: "http" | "sse") => {
@@ -1372,6 +1409,39 @@ describe("MultiServerMCPClient Integration Tests", () => {
           ).rejects.toThrowError(
             /TimeoutError: The operation was aborted due to timeout/
           );
+        } finally {
+          await client.close();
+        }
+      }
+    );
+
+    it.each(["http", "sse"] as const)(
+      "%s should pass explicit per-call timeout through RunnableConfig",
+      async (transport) => {
+        const { baseUrl } = await testServers.createHTTPServer("timeout-test", {
+          disableStreamableHttp: transport === "sse",
+          supportSSEFallback: transport === "sse",
+        });
+
+        const client = new MultiServerMCPClient({
+          "timeout-server": {
+            transport,
+            url: `${baseUrl}/${transport === "http" ? "mcp" : "sse"}`,
+          },
+        });
+
+        try {
+          const tools = await client.getTools();
+          const testTool = tools.find((t) => t.name.includes("sleep_tool"));
+          expect(testTool).toBeDefined();
+
+          // Set a per-call timeout longer than the server default to ensure it is honored
+          // The server sleep is 1500ms; we set timeout to 2000ms so it should succeed
+          const result = await testTool!.invoke(
+            { sleepMsec: 1500 },
+            { timeout: 2000 }
+          );
+          expect(result).toContain("done");
         } finally {
           await client.close();
         }

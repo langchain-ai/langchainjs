@@ -1,4 +1,5 @@
 import { Edge, Node } from "./types.js";
+import { toBase64Url } from "./utils.js";
 
 function _escapeNodeLabel(nodeLabel: string): string {
   // Escapes the node label for Mermaid syntax.
@@ -201,8 +202,8 @@ export async function drawMermaidImage(
   let backgroundColor = config?.backgroundColor ?? "white";
   const imageType = config?.imageType ?? "png";
 
-  // Use btoa for compatibility, assume ASCII
-  const mermaidSyntaxEncoded = btoa(mermaidSyntax);
+  const mermaidSyntaxEncoded = toBase64Url(mermaidSyntax);
+
   // Check if the background color is a hexadecimal color code using regex
   if (backgroundColor !== undefined) {
     const hexColorPattern = /^#(?:[0-9a-fA-F]{3}){1,2}$/;

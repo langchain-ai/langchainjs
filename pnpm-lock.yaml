@@ -22,6 +22,9 @@ importers:
       '@langchain/build':
         specifier: workspace:*
         version: link:internal/build
+      '@langchain/tsconfig':
+        specifier: workspace:*
+        version: link:internal/tsconfig
       '@tsconfig/recommended':
         specifier: ^1.0.2
         version: 1.0.10
@@ -48,7 +51,7 @@ importers:
         version: 7.7.2
       tsdown:
         specifier: ^0.15.12
-        version: 0.15.12(@arethetypeswrong/core@0.18.2)(@typescript/native-preview@7.0.0-dev.20250801.1)(ms@2.1.3)(publint@0.3.12)(typescript@5.9.3)(unplugin-unused@0.5.1)
+        version: 0.15.12(@arethetypeswrong/core@0.18.2)(@typescript/native-preview@7.0.0-dev.20251208.1)(ms@2.1.3)(publint@0.3.15)(typescript@5.9.3)(unplugin-unused@0.5.6)(unrun@0.2.19(synckit@0.11.11))
       tsx:
         specifier: ^4.20.3
         version: 4.20.3
@@ -414,33 +417,36 @@ importers:
         specifier: ^0.18.2
         version: 0.18.2
       '@typescript/native-preview':
-        specifier: ^7.0.0-dev.20250730.1
-        version: 7.0.0-dev.20250801.1
+        specifier: ^7.0.0-dev.20251205.1
+        version: 7.0.0-dev.20251208.1
       prettier:
         specifier: ^3.6.2
         version: 3.6.2
       publint:
-        specifier: ^0.3.12
-        version: 0.3.12
+        specifier: ^0.3.15
+        version: 0.3.15
       rolldown:
         specifier: 1.0.0-beta.30
         version: 1.0.0-beta.30
       tsdown:
-        specifier: ^0.15.12
-        version: 0.15.12(@arethetypeswrong/core@0.18.2)(@typescript/native-preview@7.0.0-dev.20250801.1)(ms@2.1.3)(publint@0.3.12)(typescript@5.9.3)(unplugin-unused@0.5.1)
+        specifier: ^0.17.0
+        version: 0.17.2(@arethetypeswrong/core@0.18.2)(@typescript/native-preview@7.0.0-dev.20251208.1)(publint@0.3.15)(synckit@0.11.11)(typescript@5.9.3)(unplugin-unused@0.5.6)
       type-fest:
-        specifier: ^4.41.0
-        version: 4.41.0
+        specifier: ^5.3.0
+        version: 5.3.1
       typescript:
         specifier: ^5.9.3
         version: 5.9.3
       unplugin-unused:
-        specifier: ^0.5.1
-        version: 0.5.1
+        specifier: ^0.5.6
+        version: 0.5.6
     devDependencies:
       '@langchain/eslint':
         specifier: workspace:*
         version: link:../eslint
+      '@langchain/tsconfig':
+        specifier: workspace:*
+        version: link:../tsconfig
       '@tsconfig/recommended':
         specifier: ^1.0.10
         version: 1.0.10
@@ -453,31 +459,31 @@ importers:
         version: 0.25.8
       '@rolldown/binding-darwin-arm64':
         specifier: '*'
-        version: 1.0.0-beta.52
+        version: 1.0.0-beta.53
       '@rolldown/binding-darwin-x64':
         specifier: '*'
-        version: 1.0.0-beta.52
+        version: 1.0.0-beta.53
       '@rolldown/binding-linux-arm64-gnu':
         specifier: '*'
-        version: 1.0.0-beta.52
+        version: 1.0.0-beta.53
       '@rolldown/binding-linux-arm64-musl':
         specifier: '*'
-        version: 1.0.0-beta.52
+        version: 1.0.0-beta.53
       '@rolldown/binding-linux-x64-gnu':
         specifier: '*'
-        version: 1.0.0-beta.52
+        version: 1.0.0-beta.53
       '@rolldown/binding-linux-x64-musl':
         specifier: '*'
-        version: 1.0.0-beta.52
+        version: 1.0.0-beta.53
       '@rolldown/binding-win32-arm64-msvc':
         specifier: '*'
-        version: 1.0.0-beta.52
+        version: 1.0.0-beta.53
       '@rolldown/binding-win32-ia32-msvc':
         specifier: '*'
         version: 1.0.0-beta.52
       '@rolldown/binding-win32-x64-msvc':
         specifier: '*'
-        version: 1.0.0-beta.52
+        version: 1.0.0-beta.53
       '@swc/core-win32-x64-msvc':
         specifier: '*'
         version: 1.13.3
@@ -512,6 +518,12 @@ importers:
         specifier: ^8.40.0
         version: 8.45.0(eslint@9.36.0(jiti@2.6.1))(typescript@5.9.3)
     devDependencies:
+      '@langchain/tsconfig':
+        specifier: workspace:*
+        version: link:../tsconfig
+      '@tsconfig/recommended':
+        specifier: ^1.0.10
+        version: 1.0.10
       eslint:
         specifier: ^9.34.0
         version: 9.36.0(jiti@2.6.1)
@@ -562,6 +574,9 @@ importers:
       '@langchain/eslint':
         specifier: workspace:*
         version: link:../eslint
+      '@langchain/tsconfig':
+        specifier: workspace:*
+        version: link:../tsconfig
       eslint:
         specifier: ^9.34.0
         version: 9.36.0(jiti@2.6.1)
@@ -569,11 +584,16 @@ importers:
         specifier: ^3.6.1
         version: 3.6.2
 
+  internal/tsconfig: {}
+
   libs/create-langchain-integration:
     devDependencies:
       '@langchain/eslint':
         specifier: workspace:*
         version: link:../../internal/eslint
+      '@langchain/tsconfig':
+        specifier: workspace:*
+        version: link:../../internal/tsconfig
       '@types/prompts':
         specifier: ^2
         version: 2.4.9
@@ -650,6 +670,9 @@ importers:
       '@langchain/openai':
         specifier: workspace:*
         version: link:../providers/langchain-openai
+      '@langchain/tsconfig':
+        specifier: workspace:*
+        version: link:../../internal/tsconfig
       '@tsconfig/recommended':
         specifier: ^1.0.2
         version: 1.0.10
@@ -734,9 +757,6 @@ importers:
       openapi-types:
         specifier: ^12.1.3
         version: 12.1.3
-      p-retry:
-        specifier: ^7.0.0
-        version: 7.1.0
       uuid:
         specifier: ^10.0.0
         version: 10.0.0
@@ -867,6 +887,9 @@ importers:
       '@langchain/tavily':
         specifier: workspace:*
         version: link:../providers/langchain-tavily
+      '@langchain/tsconfig':
+        specifier: workspace:*
+        version: link:../../internal/tsconfig
       '@langchain/weaviate':
         specifier: workspace:*
         version: link:../providers/langchain-weaviate
@@ -1156,7 +1179,7 @@ importers:
         version: 4.0.6
       '@getzep/zep-cloud':
         specifier: ^1.0.6
-        version: 1.0.12(@langchain/core@libs+langchain-core)(encoding@0.1.13)(langchain@0.3.30(f37b9f982f31945d9f803b2b9b56c938))
+        version: 1.0.12(@langchain/core@libs+langchain-core)(encoding@0.1.13)(langchain@0.3.30(d6bce83ff16b7507c3f5d40493beac7c))
       '@getzep/zep-js':
         specifier: ^0.9.0
         version: 0.9.0
@@ -1193,6 +1216,9 @@ importers:
       '@langchain/standard-tests':
         specifier: workspace:*
         version: link:../langchain-standard-tests
+      '@langchain/tsconfig':
+        specifier: workspace:*
+        version: link:../../internal/tsconfig
       '@layerup/layerup-security':
         specifier: ^1.5.12
         version: 1.6.0(encoding@0.1.13)(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.5))(zod@3.25.76)
@@ -1596,17 +1622,14 @@ importers:
         specifier: ^1.0.12
         version: 1.0.20
       langsmith:
-        specifier: ^0.3.64
-        version: 0.3.74(@opentelemetry/api@1.9.0)(openai@6.9.0(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.5))(zod@3.25.76))
+        specifier: ^0.3.82
+        version: 0.3.82(@opentelemetry/api@1.9.0)(openai@6.9.0(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.5))(zod@3.25.76))
       mustache:
         specifier: ^4.2.0
         version: 4.2.0
       p-queue:
         specifier: ^6.6.2
         version: 6.6.2
-      p-retry:
-        specifier: ^7.0.0
-        version: 7.1.0
       uuid:
         specifier: ^10.0.0
         version: 10.0.0
@@ -1617,6 +1640,9 @@ importers:
       '@langchain/eslint':
         specifier: workspace:*
         version: link:../../internal/eslint
+      '@langchain/tsconfig':
+        specifier: workspace:*
+        version: link:../../internal/tsconfig
       '@types/decamelize':
         specifier: ^1.2.0
         version: 1.2.0
@@ -1657,7 +1683,7 @@ importers:
   libs/langchain-mcp-adapters:
     dependencies:
       '@modelcontextprotocol/sdk':
-        specifier: ^1.18.2
+        specifier: ~1.19.1
         version: 1.19.1
       debug:
         specifier: ^4.4.3
@@ -1681,6 +1707,9 @@ importers:
       '@langchain/openai':
         specifier: workspace:*
         version: link:../providers/langchain-openai
+      '@langchain/tsconfig':
+        specifier: workspace:*
+        version: link:../../internal/tsconfig
       '@tsconfig/recommended':
         specifier: ^1.0.10
         version: 1.0.10
@@ -1748,6 +1777,9 @@ importers:
       '@langchain/core':
         specifier: workspace:*
         version: link:../langchain-core
+      vitest:
+        specifier: ^3.2.4
+        version: 3.2.4(@types/debug@4.1.12)(@types/node@24.10.1)(jiti@2.6.1)(jsdom@26.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.5))(terser@5.44.1)(tsx@4.20.3)(yaml@2.8.1)
       zod:
         specifier: ^3.25.76 || ^4
         version: 3.25.76
@@ -1755,33 +1787,24 @@ importers:
       '@langchain/eslint':
         specifier: workspace:*
         version: link:../../internal/eslint
+      '@langchain/tsconfig':
+        specifier: workspace:*
+        version: link:../../internal/tsconfig
       '@tsconfig/recommended':
         specifier: ^1.0.3
         version: 1.0.10
-      dotenv:
-        specifier: ^16.3.1
-        version: 16.6.1
       dpdm:
         specifier: ^3.14.0
         version: 3.14.0
       eslint:
         specifier: ^9.34.0
         version: 9.36.0(jiti@2.6.1)
-      jest:
-        specifier: ^29.5.0
-        version: 29.7.0(@types/node@24.10.1)(ts-node@10.9.2(@swc/core@1.13.3(@swc/helpers@0.5.17))(@types/node@24.10.1)(typescript@5.8.3))
       prettier:
         specifier: ^2.8.3
         version: 2.8.8
-      rollup:
-        specifier: ^4.5.2
-        version: 4.52.4
       typescript:
         specifier: ~5.8.3
         version: 5.8.3
-      vitest:
-        specifier: ^3.2.4
-        version: 3.2.4(@types/debug@4.1.12)(@types/node@24.10.1)(jiti@2.6.1)(jsdom@26.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.5))(terser@5.44.1)(tsx@4.20.3)(yaml@2.8.1)
 
   libs/langchain-textsplitters:
     dependencies:
@@ -1795,6 +1818,9 @@ importers:
       '@langchain/eslint':
         specifier: workspace:*
         version: link:../../internal/eslint
+      '@langchain/tsconfig':
+        specifier: workspace:*
+        version: link:../../internal/tsconfig
       '@tsconfig/recommended':
         specifier: ^1.0.3
         version: 1.0.10
@@ -1847,6 +1873,9 @@ importers:
       '@langchain/standard-tests':
         specifier: workspace:*
         version: link:../../langchain-standard-tests
+      '@langchain/tsconfig':
+        specifier: workspace:*
+        version: link:../../../internal/tsconfig
       '@tsconfig/recommended':
         specifier: ^1.0.10
         version: 1.0.10
@@ -1905,6 +1934,9 @@ importers:
       '@langchain/standard-tests':
         specifier: workspace:*
         version: link:../../langchain-standard-tests
+      '@langchain/tsconfig':
+        specifier: workspace:*
+        version: link:../../../internal/tsconfig
       '@smithy/types':
         specifier: ^3.2.0
         version: 3.7.2
@@ -1960,6 +1992,9 @@ importers:
       '@langchain/openai':
         specifier: workspace:^
         version: link:../langchain-openai
+      '@langchain/tsconfig':
+        specifier: workspace:*
+        version: link:../../../internal/tsconfig
       '@tsconfig/recommended':
         specifier: ^1.0.3
         version: 1.0.10
@@ -2003,6 +2038,9 @@ importers:
       '@langchain/eslint':
         specifier: workspace:*
         version: link:../../../internal/eslint
+      '@langchain/tsconfig':
+        specifier: workspace:*
+        version: link:../../../internal/tsconfig
       '@tsconfig/recommended':
         specifier: ^1.0.3
         version: 1.0.10
@@ -2049,6 +2087,9 @@ importers:
       '@langchain/openai':
         specifier: workspace:*
         version: link:../langchain-openai
+      '@langchain/tsconfig':
+        specifier: workspace:*
+        version: link:../../../internal/tsconfig
       '@tsconfig/recommended':
         specifier: ^1.0.3
         version: 1.0.10
@@ -2101,6 +2142,9 @@ importers:
       '@langchain/standard-tests':
         specifier: workspace:*
         version: link:../../langchain-standard-tests
+      '@langchain/tsconfig':
+        specifier: workspace:*
+        version: link:../../../internal/tsconfig
       '@swc/core':
         specifier: ^1.3.90
         version: 1.13.3(@swc/helpers@0.5.17)
@@ -2162,6 +2206,9 @@ importers:
       '@langchain/standard-tests':
         specifier: workspace:*
         version: link:../../langchain-standard-tests
+      '@langchain/tsconfig':
+        specifier: workspace:*
+        version: link:../../../internal/tsconfig
       '@tsconfig/recommended':
         specifier: ^1.0.3
         version: 1.0.10
@@ -2214,6 +2261,9 @@ importers:
       '@langchain/standard-tests':
         specifier: workspace:*
         version: link:../../langchain-standard-tests
+      '@langchain/tsconfig':
+        specifier: workspace:*
+        version: link:../../../internal/tsconfig
       '@tsconfig/recommended':
         specifier: ^1.0.3
         version: 1.0.10
@@ -2260,6 +2310,9 @@ importers:
       '@langchain/standard-tests':
         specifier: workspace:*
         version: link:../../langchain-standard-tests
+      '@langchain/tsconfig':
+        specifier: workspace:*
+        version: link:../../../internal/tsconfig
       '@tsconfig/recommended':
         specifier: ^1.0.3
         version: 1.0.10
@@ -2300,6 +2353,9 @@ importers:
       '@langchain/eslint':
         specifier: workspace:*
         version: link:../../../internal/eslint
+      '@langchain/tsconfig':
+        specifier: workspace:*
+        version: link:../../../internal/tsconfig
       '@tsconfig/recommended':
         specifier: ^1.0.3
         version: 1.0.10
@@ -2355,6 +2411,9 @@ importers:
       '@langchain/eslint':
         specifier: workspace:*
         version: link:../../../internal/eslint
+      '@langchain/tsconfig':
+        specifier: workspace:*
+        version: link:../../../internal/tsconfig
       '@swc/core':
         specifier: ^1.3.90
         version: 1.13.3(@swc/helpers@0.5.17)
@@ -2419,6 +2478,9 @@ importers:
       '@langchain/eslint':
         specifier: workspace:*
         version: link:../../../internal/eslint
+      '@langchain/tsconfig':
+        specifier: workspace:*
+        version: link:../../../internal/tsconfig
       '@swc/core':
         specifier: ^1.3.90
         version: 1.13.3(@swc/helpers@0.5.17)
@@ -2477,6 +2539,9 @@ importers:
       '@langchain/eslint':
         specifier: workspace:*
         version: link:../../../internal/eslint
+      '@langchain/tsconfig':
+        specifier: workspace:*
+        version: link:../../../internal/tsconfig
       '@swc/core':
         specifier: ^1.3.90
         version: 1.13.3(@swc/helpers@0.5.17)
@@ -2538,6 +2603,9 @@ importers:
       '@langchain/standard-tests':
         specifier: workspace:*
         version: link:../../langchain-standard-tests
+      '@langchain/tsconfig':
+        specifier: workspace:*
+        version: link:../../../internal/tsconfig
       '@swc/core':
         specifier: ^1.3.90
         version: 1.13.3(@swc/helpers@0.5.17)
@@ -2599,6 +2667,9 @@ importers:
       '@langchain/standard-tests':
         specifier: workspace:*
         version: link:../../langchain-standard-tests
+      '@langchain/tsconfig':
+        specifier: workspace:*
+        version: link:../../../internal/tsconfig
       '@swc/core':
         specifier: ^1.3.90
         version: 1.13.3(@swc/helpers@0.5.17)
@@ -2657,6 +2728,9 @@ importers:
       '@langchain/standard-tests':
         specifier: workspace:*
         version: link:../../langchain-standard-tests
+      '@langchain/tsconfig':
+        specifier: workspace:*
+        version: link:../../../internal/tsconfig
       '@swc/core':
         specifier: ^1.3.90
         version: 1.13.3(@swc/helpers@0.5.17)
@@ -2715,6 +2789,9 @@ importers:
       '@langchain/eslint':
         specifier: workspace:*
         version: link:../../../internal/eslint
+      '@langchain/tsconfig':
+        specifier: workspace:*
+        version: link:../../../internal/tsconfig
       '@swc/core':
         specifier: ^1.3.90
         version: 1.13.3(@swc/helpers@0.5.17)
@@ -2773,6 +2850,9 @@ importers:
       '@langchain/standard-tests':
         specifier: workspace:*
         version: link:../../langchain-standard-tests
+      '@langchain/tsconfig':
+        specifier: workspace:*
+        version: link:../../../internal/tsconfig
       '@tsconfig/recommended':
         specifier: ^1.0.3
         version: 1.0.10
@@ -2825,6 +2905,9 @@ importers:
       '@langchain/standard-tests':
         specifier: workspace:*
         version: link:../../langchain-standard-tests
+      '@langchain/tsconfig':
+        specifier: workspace:*
+        version: link:../../../internal/tsconfig
       '@tsconfig/recommended':
         specifier: ^1.0.3
         version: 1.0.10
@@ -2871,6 +2954,9 @@ importers:
       '@langchain/standard-tests':
         specifier: workspace:*
         version: link:../../langchain-standard-tests
+      '@langchain/tsconfig':
+        specifier: workspace:*
+        version: link:../../../internal/tsconfig
       '@tsconfig/recommended':
         specifier: ^1.0.3
         version: 1.0.10
@@ -2914,6 +3000,9 @@ importers:
       '@langchain/openai':
         specifier: workspace:*
         version: link:../langchain-openai
+      '@langchain/tsconfig':
+        specifier: workspace:*
+        version: link:../../../internal/tsconfig
       '@tsconfig/recommended':
         specifier: ^1.0.3
         version: 1.0.10
@@ -2972,6 +3061,9 @@ importers:
       '@langchain/openai':
         specifier: workspace:*
         version: link:../langchain-openai
+      '@langchain/tsconfig':
+        specifier: workspace:*
+        version: link:../../../internal/tsconfig
       '@tsconfig/recommended':
         specifier: ^1.0.3
         version: 1.0.10
@@ -3024,6 +3116,9 @@ importers:
       '@langchain/standard-tests':
         specifier: workspace:*
         version: link:../../langchain-standard-tests
+      '@langchain/tsconfig':
+        specifier: workspace:*
+        version: link:../../../internal/tsconfig
       '@tsconfig/recommended':
         specifier: ^1.0.3
         version: 1.0.10
@@ -3082,9 +3177,15 @@ importers:
       '@langchain/standard-tests':
         specifier: workspace:*
         version: link:../../langchain-standard-tests
+      '@langchain/tsconfig':
+        specifier: workspace:*
+        version: link:../../../internal/tsconfig
       '@tsconfig/recommended':
         specifier: ^1.0.10
         version: 1.0.10
+      '@types/node':
+        specifier: ^24.10.1
+        version: 24.10.1
       '@vitest/coverage-v8':
         specifier: ^3.2.4
         version: 3.2.4(vitest@3.2.4(@types/debug@4.1.12)(@types/node@24.10.1)(jiti@2.6.1)(jsdom@26.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.5))(terser@5.44.1)(tsx@4.20.3)(yaml@2.8.1))
@@ -3137,6 +3238,9 @@ importers:
       '@langchain/openai':
         specifier: workspace:*
         version: link:../langchain-openai
+      '@langchain/tsconfig':
+        specifier: workspace:*
+        version: link:../../../internal/tsconfig
       '@pinecone-database/pinecone':
         specifier: ^5.0.2
         version: 5.1.2
@@ -3192,6 +3296,9 @@ importers:
       '@langchain/eslint':
         specifier: workspace:*
         version: link:../../../internal/eslint
+      '@langchain/tsconfig':
+        specifier: workspace:*
+        version: link:../../../internal/tsconfig
       '@tsconfig/recommended':
         specifier: ^1.0.3
         version: 1.0.10
@@ -3238,6 +3345,9 @@ importers:
       '@langchain/eslint':
         specifier: workspace:*
         version: link:../../../internal/eslint
+      '@langchain/tsconfig':
+        specifier: workspace:*
+        version: link:../../../internal/tsconfig
       '@tsconfig/recommended':
         specifier: ^1.0.3
         version: 1.0.10
@@ -3281,6 +3391,9 @@ importers:
       '@langchain/eslint':
         specifier: workspace:*
         version: link:../../../internal/eslint
+      '@langchain/tsconfig':
+        specifier: workspace:*
+        version: link:../../../internal/tsconfig
       '@tsconfig/recommended':
         specifier: ^1.0.3
         version: 1.0.10
@@ -3324,6 +3437,9 @@ importers:
       '@langchain/openai':
         specifier: workspace:^
         version: link:../langchain-openai
+      '@langchain/tsconfig':
+        specifier: workspace:*
+        version: link:../../../internal/tsconfig
       '@tsconfig/recommended':
         specifier: ^1.0.3
         version: 1.0.10
@@ -3373,6 +3489,9 @@ importers:
       '@langchain/standard-tests':
         specifier: workspace:*
         version: link:../../langchain-standard-tests
+      '@langchain/tsconfig':
+        specifier: workspace:*
+        version: link:../../../internal/tsconfig
       '@tsconfig/recommended':
         specifier: ^1.0.3
         version: 1.0.10
@@ -3415,6 +3534,9 @@ importers:
       '@langchain/eslint':
         specifier: workspace:*
         version: link:../../../internal/eslint
+      '@langchain/tsconfig':
+        specifier: workspace:*
+        version: link:../../../internal/tsconfig
       '@tsconfig/recommended':
         specifier: ^1.0.3
         version: 1.0.10
@@ -6361,6 +6483,9 @@ packages:
   '@jridgewell/gen-mapping@0.3.13':
     resolution: {integrity: sha512-2kkt/7niJ6MgEPxF0bYdQ6etZaA+fQvDcLKckhy1yIQOzaoKjBBjSj63/aLVjYE3qhRt5dvM+uUyfCg6UKCBbA==}
 
+  '@jridgewell/remapping@2.3.5':
+    resolution: {integrity: sha512-LI9u/+laYG4Ds1TDKSJW2YPrIlcVYOwi2fUC6xB43lueCjgxV4lffOCZCtYFiH6TNOX+tQKXx97T4IKHbhyHEQ==}
+
   '@jridgewell/resolve-uri@3.1.2':
     resolution: {integrity: sha512-bRISgCIjP20/tbWSPWMEi54QVPRZExkuD9lJL+UIxUKtwVJA8wW1Trb1jMs1RFXo1CBTNZ/5hpC9QvmKWdopKw==}
     engines: {node: '>=6.0.0'}
@@ -6442,14 +6567,14 @@ packages:
     peerDependencies:
       apache-arrow: '>=15.0.0 <=18.1.0'
 
-  '@langchain/anthropic@1.1.3':
-    resolution: {integrity: sha512-vJN7Rfl+8lDO+aVFfccDUFxIMwGtf8xHSWvqmeytOB5UBzGxNMRW2Zdu6Gv8vWrKlS6Ca7/8oB1suw1SN0FKGA==}
+  '@langchain/anthropic@1.2.3':
+    resolution: {integrity: sha512-l+Md6gBhCVhaEto+PjrepgSA5kSm2kCXl+yxcLXKfNx+SKRU6u3kEg2c6vLNjtwIGuLDS1xcJXzMPkne8AbW4w==}
     engines: {node: '>=20'}
     peerDependencies:
       '@langchain/core': workspace:*
 
-  '@langchain/aws@1.0.3':
-    resolution: {integrity: sha512-oMGyKaEhR0J6JhyiW8UCiVbPndQ05t3uMmrh/VDoO+s0yq9/ZWF1dNj9Dc2PgRPxZSzafw/L6Z/DHy0KURnt4g==}
+  '@langchain/aws@1.1.0':
+    resolution: {integrity: sha512-xYmbNE+CdhdYQkULS8sKzaG7LMhp9NEQ3LkWzBkpAePyFh9YTnDHdMl3TYqqEbeeMnSHLW49Xm9pnbPP+fLAQA==}
     engines: {node: '>=20'}
     peerDependencies:
       '@langchain/core': workspace:*
@@ -6466,32 +6591,32 @@ packages:
     peerDependencies:
       '@langchain/core': workspace:*
 
-  '@langchain/google-common@1.0.4':
-    resolution: {integrity: sha512-FLh/FsLr1kunbKizvVL3mHALQq4mcic8HDI+SaMo7MX61zHhuDQG5O1bZFqlaKT3q/5hP4wcIqSZN2DM6Yd42Q==}
+  '@langchain/google-common@2.0.4':
+    resolution: {integrity: sha512-wKM8Qe2HF8f9TLjjwqQjR5XZQ7A6TMPr3a6QiUR4xz7rhtECg0jCsWqqohz5JwJzJ/f6Wlw+2dxbcMaMebphBQ==}
     engines: {node: '>=20'}
     peerDependencies:
       '@langchain/core': workspace:*
 
-  '@langchain/google-gauth@1.0.4':
-    resolution: {integrity: sha512-BB0J+2P0umDTY6B6otwny3ucWc+pO35X+GFOM/F331oCaqqjNKWUm6FHIK84Y3kpac3sbi9E6DAwoRSUg2nncg==}
+  '@langchain/google-gauth@2.0.4':
+    resolution: {integrity: sha512-omEIv/3EWm7ua7Y4xFS92XLMTorAZJXT2DDdOizv0X65Z1CkAPjS80v/B6I5oI7hEDa8HRvJ1vFS6V81/6SZXA==}
     engines: {node: '>=20'}
 
-  '@langchain/google-genai@2.0.0':
-    resolution: {integrity: sha512-PaAWkogQdF+Y2bhhXWXUrC2nO7sTgWLtobBbZl/0V8Aa1F/KG2wrMECie3S17bAdFu/6VmQOuFFrlgSMwQC5KA==}
+  '@langchain/google-genai@2.0.4':
+    resolution: {integrity: sha512-ZtybhINhdWdGYE1YHnJ5rXrfcg8RS1PaVjpaACcie0wnFsdGQGX9BM2VNQSRfKNFem7B4j7J7q9+1tnDlAoHxQ==}
     engines: {node: '>=20'}
     peerDependencies:
       '@langchain/core': workspace:*
 
-  '@langchain/google-vertexai-web@1.0.4':
-    resolution: {integrity: sha512-9HCN7Swag0AfkyBlbbon0+iK9Pc5ISMtHLCumbUrQscm1qPzaFD7ZqIXgOh2jCjVrMwnaAYP1ByaXVgkJ3BXRA==}
+  '@langchain/google-vertexai-web@2.0.4':
+    resolution: {integrity: sha512-U24LOuHB1LHbh20zJ5qM1qZWmtcPfEyDrLcQ+PtIFj3qGrfUamWMfK8oqQ6Modm6F8LDEhBja9cAKl7rqnVE/w==}
     engines: {node: '>=20'}
 
-  '@langchain/google-vertexai@1.0.4':
-    resolution: {integrity: sha512-Uegx8e5dCDc6Oxym8Qo/RIKGnLUxSqqDXSajoQq5KceS9Y7K/Eagx/LAAoV+/1cFxiPbYFFyZ47h82PZZrnArQ==}
+  '@langchain/google-vertexai@2.0.4':
+    resolution: {integrity: sha512-M86Ub51Ux78CLJQ0n5pCq/X0ZFbCOgheYE+rVRCWKegzmPehj2O+owA/PfWuGxuVdql+m05C2MquGQ5stIUlfQ==}
     engines: {node: '>=20'}
 
-  '@langchain/google-webauth@1.0.4':
-    resolution: {integrity: sha512-SGQc9ueebueKzCfCFvN9A8U2MJtdxuYmnYeXhqdCzMqYg6cojVXFem+aCQ+bDdnD4BphTYZD1jL7XbGobUvRAQ==}
+  '@langchain/google-webauth@2.0.4':
+    resolution: {integrity: sha512-0es15qDPOtdo/DiktQNUgoV7vfLmST1YsQMgdGx21wheDHlFPyrSX1fL692klopQKBkgyWdV+wdvoHqZBZAmHA==}
     engines: {node: '>=20'}
     peerDependencies:
       '@langchain/core': workspace:*
@@ -6570,8 +6695,8 @@ packages:
     peerDependencies:
       '@langchain/core': workspace:*
 
-  '@langchain/ollama@1.0.2':
-    resolution: {integrity: sha512-0YZZAbrYnmIKcy4Y7npa0OSMq2c5c3s2UwQ/KAoGR/FE0XLF4gGE7spJwqsXG2liQLid++nc/K4xZb76BWM+YA==}
+  '@langchain/ollama@1.0.3':
+    resolution: {integrity: sha512-tG9DqIVzWE6xTzqI4519QdLn5NWvs3EnU2gSttwTlnCM+OEdkGxpgRFSs2pgtyV4Hn2tPOj32JbtXE1qsthHHA==}
     engines: {node: '>=20'}
     peerDependencies:
       '@langchain/core': workspace:*
@@ -7291,6 +7416,9 @@ packages:
   '@quansync/fs@0.1.5':
     resolution: {integrity: sha512-lNS9hL2aS2NZgNW7BBj+6EBl4rOf8l+tQ0eRY6JWCI8jI2kc53gSoqbjojU0OnAWhzoXiOjFyGsHcDGePB3lhA==}
 
+  '@quansync/fs@1.0.0':
+    resolution: {integrity: sha512-4TJ3DFtlf1L5LDMaM6CanJ/0lckGNtJcMjQ1NAV6zDmA0tEHKZtxNKin8EgPaVX1YzljbxckyT2tJrpQKAtngQ==}
+
   '@raycast/api@1.102.3':
     resolution: {integrity: sha512-hIOXK/pcdtCx1bGrQJEyGrCxCATwABrwpF46NwmBVqoGHthEQm5dTEJlqwFxtccugM7DQ5xGriaN2VQC8a1ukQ==}
     engines: {node: '>=22.14.0'}
@@ -7401,8 +7529,8 @@ packages:
     cpu: [arm64]
     os: [darwin]
 
-  '@rolldown/binding-darwin-arm64@1.0.0-beta.52':
-    resolution: {integrity: sha512-MmKeoLnKu1d9j6r19K8B+prJnIZ7u+zQ+zGQ3YHXGnr41rzE3eqQLovlkvoZnRoxDGPA4ps0pGiwXy6YE3lJyg==}
+  '@rolldown/binding-darwin-arm64@1.0.0-beta.53':
+    resolution: {integrity: sha512-yIsKqMz0CtRnVa6x3Pa+mzTihr4Ty+Z6HfPbZ7RVbk1Uxnco4+CUn7Qbm/5SBol1JD/7nvY8rphAgyAi7Lj6Vg==}
     engines: {node: ^20.19.0 || >=22.12.0}
     cpu: [arm64]
     os: [darwin]
@@ -7412,8 +7540,8 @@ packages:
     cpu: [x64]
     os: [darwin]
 
-  '@rolldown/binding-darwin-x64@1.0.0-beta.52':
-    resolution: {integrity: sha512-qpHedvQBmIjT8zdnjN3nWPR2qjQyJttbXniCEKKdHeAbZG9HyNPBUzQF7AZZGwmS9coQKL+hWg9FhWzh2dZ2IA==}
+  '@rolldown/binding-darwin-x64@1.0.0-beta.53':
+    resolution: {integrity: sha512-GTXe+mxsCGUnJOFMhfGWmefP7Q9TpYUseHvhAhr21nCTgdS8jPsvirb0tJwM3lN0/u/cg7bpFNa16fQrjKrCjQ==}
     engines: {node: ^20.19.0 || >=22.12.0}
     cpu: [x64]
     os: [darwin]
@@ -7433,8 +7561,8 @@ packages:
     cpu: [arm64]
     os: [linux]
 
-  '@rolldown/binding-linux-arm64-gnu@1.0.0-beta.52':
-    resolution: {integrity: sha512-V48oDR84feRU2KRuzpALp594Uqlx27+zFsT6+BgTcXOtu7dWy350J1G28ydoCwKB+oxwsRPx2e7aeQnmd3YJbQ==}
+  '@rolldown/binding-linux-arm64-gnu@1.0.0-beta.53':
+    resolution: {integrity: sha512-bpIGX+ov9PhJYV+wHNXl9rzq4F0QvILiURn0y0oepbQx+7stmQsKA0DhPGwmhfvF856wq+gbM8L92SAa/CBcLg==}
     engines: {node: ^20.19.0 || >=22.12.0}
     cpu: [arm64]
     os: [linux]
@@ -7444,8 +7572,8 @@ packages:
     cpu: [arm64]
     os: [linux]
 
-  '@rolldown/binding-linux-arm64-musl@1.0.0-beta.52':
-    resolution: {integrity: sha512-ENLmSQCWqSA/+YN45V2FqTIemg7QspaiTjlm327eUAMeOLdqmSOVVyrQexJGNTQ5M8sDYCgVAig2Kk01Ggmqaw==}
+  '@rolldown/binding-linux-arm64-musl@1.0.0-beta.53':
+    resolution: {integrity: sha512-bGe5EBB8FVjHBR1mOLOPEFg1Lp3//7geqWkU5NIhxe+yH0W8FVrQ6WRYOap4SUTKdklD/dC4qPLREkMMQ855FA==}
     engines: {node: ^20.19.0 || >=22.12.0}
     cpu: [arm64]
     os: [linux]
@@ -7460,8 +7588,8 @@ packages:
     cpu: [x64]
     os: [linux]
 
-  '@rolldown/binding-linux-x64-gnu@1.0.0-beta.52':
-    resolution: {integrity: sha512-klahlb2EIFltSUubn/VLjuc3qxp1E7th8ukayPfdkcKvvYcQ5rJztgx8JsJSuAKVzKtNTqUGOhy4On71BuyV8g==}
+  '@rolldown/binding-linux-x64-gnu@1.0.0-beta.53':
+    resolution: {integrity: sha512-qL+63WKVQs1CMvFedlPt0U9PiEKJOAL/bsHMKUDS6Vp2Q+YAv/QLPu8rcvkfIMvQ0FPU2WL0aX4eWwF6e/GAnA==}
     engines: {node: ^20.19.0 || >=22.12.0}
     cpu: [x64]
     os: [linux]
@@ -7471,8 +7599,8 @@ packages:
     cpu: [x64]
     os: [linux]
 
-  '@rolldown/binding-linux-x64-musl@1.0.0-beta.52':
-    resolution: {integrity: sha512-UuA+JqQIgqtkgGN2c/AQ5wi8M6mJHrahz/wciENPTeI6zEIbbLGoth5XN+sQe2pJDejEVofN9aOAp0kaazwnVg==}
+  '@rolldown/binding-linux-x64-musl@1.0.0-beta.53':
+    resolution: {integrity: sha512-VGl9JIGjoJh3H8Mb+7xnVqODajBmrdOOb9lxWXdcmxyI+zjB2sux69br0hZJDTyLJfvBoYm439zPACYbCjGRmw==}
     engines: {node: ^20.19.0 || >=22.12.0}
     cpu: [x64]
     os: [linux]
@@ -7487,8 +7615,8 @@ packages:
     cpu: [arm64]
     os: [win32]
 
-  '@rolldown/binding-win32-arm64-msvc@1.0.0-beta.52':
-    resolution: {integrity: sha512-a4EkXBtnYYsKipjS7QOhEBM4bU5IlR9N1hU+JcVEVeuTiaslIyhWVKsvf7K2YkQHyVAJ+7/A9BtrGqORFcTgng==}
+  '@rolldown/binding-win32-arm64-msvc@1.0.0-beta.53':
+    resolution: {integrity: sha512-s27uU7tpCWSjHBnxyVXHt3rMrQdJq5MHNv3BzsewCIroIw3DJFjMH1dzCPPMUFxnh1r52Nf9IJ/eWp6LDoyGcw==}
     engines: {node: ^20.19.0 || >=22.12.0}
     cpu: [arm64]
     os: [win32]
@@ -7509,8 +7637,8 @@ packages:
     cpu: [x64]
     os: [win32]
 
-  '@rolldown/binding-win32-x64-msvc@1.0.0-beta.52':
-    resolution: {integrity: sha512-tzpnRQXJrSzb8Z9sm97UD3cY0toKOImx+xRKsDLX4zHaAlRXWh7jbaKBePJXEN7gNw7Nm03PBNwphdtA8KSUYQ==}
+  '@rolldown/binding-win32-x64-msvc@1.0.0-beta.53':
+    resolution: {integrity: sha512-cjWL/USPJ1g0en2htb4ssMjIycc36RvdQAx1WlXnS6DpULswiUTVXPDesTifSKYSyvx24E0YqQkEm0K/M2Z/AA==}
     engines: {node: ^20.19.0 || >=22.12.0}
     cpu: [x64]
     os: [win32]
@@ -8683,51 +8811,43 @@ packages:
     resolution: {integrity: sha512-qsaFBA3e09MIDAGFUrTk+dzqtfv1XPVz8t8d1f0ybTzrCY7BKiMC5cjrl1O/P7UmHsNyW90EYSkU/ZWpmXelag==}
     engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
 
-  '@typescript/native-preview-darwin-arm64@7.0.0-dev.20250801.1':
-    resolution: {integrity: sha512-7/qpMwgcqYNNXpH5j+qX6itquTI/vd+ltRdALmTLBgO36bx09E53zAk2nrAoD1jPEvyJ8N07JpzqTlj6DWOuUQ==}
-    engines: {node: '>=20.6.0'}
+  '@typescript/native-preview-darwin-arm64@7.0.0-dev.20251208.1':
+    resolution: {integrity: sha512-4+Gry3Ee1VjtbTaVDr5f1KntNw6c0lBqu7kUx/WaUImYWCBlLsAqAU4kaPT8rkwqGcyCiCbCFaP5Ic12Raxl3w==}
     cpu: [arm64]
     os: [darwin]
 
-  '@typescript/native-preview-darwin-x64@7.0.0-dev.20250801.1':
-    resolution: {integrity: sha512-noNDBOjQ3tAdEeW3KEeckk67uiJ868CxZmnzysP3A23B6olZC/hoWZpdcTjLtOR9l1tvcAxeHCYaHTk5lW5OyQ==}
-    engines: {node: '>=20.6.0'}
+  '@typescript/native-preview-darwin-x64@7.0.0-dev.20251208.1':
+    resolution: {integrity: sha512-t5vaE0AymwjAMTzSjS3wtrvtjitqH6eCsi31PKtV+iEUxshMAAhCDbjklOTB1+91Hb/Y+QUiytrdYSySkzZy8w==}
     cpu: [x64]
     os: [darwin]
 
-  '@typescript/native-preview-linux-arm64@7.0.0-dev.20250801.1':
-    resolution: {integrity: sha512-khr24vveYsHFE1ieVPhcrbe6PggV8qiQifF9vnRk65Xfn+GyBs63lVK838KkjVZMj9MXs3QYLsaK405j+S3NZw==}
-    engines: {node: '>=20.6.0'}
+  '@typescript/native-preview-linux-arm64@7.0.0-dev.20251208.1':
+    resolution: {integrity: sha512-3vxtDBjMPfO1NGZL28JCSxXLKCNIWVi4JqSiOOj4pxUd8t0LtDq8QZq+8exe+8B+8pvBG+z1VekiG5WS0PnxhA==}
     cpu: [arm64]
     os: [linux]
 
-  '@typescript/native-preview-linux-arm@7.0.0-dev.20250801.1':
-    resolution: {integrity: sha512-uzhaqEsQmNODNUEwpliLcN2hiBbxnsxVNIwToGNsYhKB8gbtFFHExImmNBuU0LZcDYZWKc/kEYqYS3W+a/5wtQ==}
-    engines: {node: '>=20.6.0'}
+  '@typescript/native-preview-linux-arm@7.0.0-dev.20251208.1':
+    resolution: {integrity: sha512-ZLxpdfjNVHmtfz7e2iui2xHCAFAS8FZlE5OPovZ7GtsGNqBBeeDk8OIpn2j9fqQWarcHdMQCA7VlfSuMcz1SYA==}
     cpu: [arm]
     os: [linux]
 
-  '@typescript/native-preview-linux-x64@7.0.0-dev.20250801.1':
-    resolution: {integrity: sha512-VPeMlnahbxQIAk97PNjJqBWlOMRULwhM0RqCfrEsacTH+FjDmheYIH4bBaF7urCjb2n/NlLv/cfK+Xpl1lKvog==}
-    engines: {node: '>=20.6.0'}
+  '@typescript/native-preview-linux-x64@7.0.0-dev.20251208.1':
+    resolution: {integrity: sha512-VQdTESWNTBKdBZhvHVEpg9vcHzSLwA4eJuVkns8Nd9oOjMZyGpZ0IkJBydTlfwQ4FGiSINQcSDarYKL3Dc1hhA==}
     cpu: [x64]
     os: [linux]
 
-  '@typescript/native-preview-win32-arm64@7.0.0-dev.20250801.1':
-    resolution: {integrity: sha512-TmX2Prf3L+UaCYoixczGiF9Dbc7LFndys2GD5o508lra2Dp+sE5msdaxr4djpv9HTtm8qJIoq2hSZ74aCQDlWA==}
-    engines: {node: '>=20.6.0'}
+  '@typescript/native-preview-win32-arm64@7.0.0-dev.20251208.1':
+    resolution: {integrity: sha512-54kEiHT7CRx61DrlXynTs4VRCL8U+u+hM/J1vXhFdUrFaYldHv+pK4LnxUwR59GwDpxkAjBhI8FSSKF11YNqbg==}
     cpu: [arm64]
     os: [win32]
 
-  '@typescript/native-preview-win32-x64@7.0.0-dev.20250801.1':
-    resolution: {integrity: sha512-ou7svsHuCBj5i5qa0jg7RxxBEXIXiNd3Ws2VzPMLuRnszvuj6ngHy3J4ukw+pP3XKrqAPe28GJhLFj4WtCJ3tw==}
-    engines: {node: '>=20.6.0'}
+  '@typescript/native-preview-win32-x64@7.0.0-dev.20251208.1':
+    resolution: {integrity: sha512-l/pgh2zFZB4idhOZ/t+X1AVbYAUjKE78NMrj0llMYrt1O6cK9jwFocscjJVQcSGqEKdkmkyQhSQuq9kqqypfbw==}
     cpu: [x64]
     os: [win32]
 
-  '@typescript/native-preview@7.0.0-dev.20250801.1':
-    resolution: {integrity: sha512-yIfAEMeRXKB0YAAZIMkpWThfs861vbvZnTPgOyx63iYfEDqiWW5ZxjAaAT3JmijIawTtMxXOUaMoMFNpmFL8nA==}
-    engines: {node: '>=20.6.0'}
+  '@typescript/native-preview@7.0.0-dev.20251208.1':
+    resolution: {integrity: sha512-HkTh7dTDL6F2m6mBvCYIWKBZ+M2vaqBylarvtRvP128BhVeT8naS2UDcYUe7BGOCSxv70Zzfg/Sim1IWk2uKkQ==}
     hasBin: true
 
   '@typespec/ts-http-runtime@0.3.0':
@@ -9351,6 +9471,9 @@ packages:
 
   birpc@2.8.0:
     resolution: {integrity: sha512-Bz2a4qD/5GRhiHSwj30c/8kC8QGj12nNDwz3D4ErQ4Xhy35dsSDvF+RA/tWpjyU0pdGtSDiEk6B5fBGE1qNVhw==}
+
+  birpc@3.0.0:
+    resolution: {integrity: sha512-by+04pHuxpCEQcucAXqzopqfhyI8TLK5Qg5MST0cB6MP+JhHna9ollrtK9moVh27aq6Q6MEJgebD0cVm//yBkg==}
 
   bl@1.2.3:
     resolution: {integrity: sha512-pvcNpa0UU69UT341rO6AYy4FVAIkUHuZXRIWbq+zHnsVcRzDDjIAhGuuYoi0d//cwIwtt4pkpKycWEfjdV+vww==}
@@ -10654,6 +10777,10 @@ packages:
     resolution: {integrity: sha512-TtpcNJ3XAzx3Gq8sWRzJaVajRs0uVxA2YAkdb1jm2YkPz4G6egUFAyA3n5vtEIZefPk5Wa4UXbKuS5fKkJWdgA==}
     engines: {node: '>=10'}
 
+  escape-string-regexp@5.0.0:
+    resolution: {integrity: sha512-/veY75JbMK4j1yjvuUxuVsiS/hr/4iHs9FTT6cgTexxdE0Ly/glccBAkloH/DofkjRbZU3bnoj38mOmhkZ0lHw==}
+    engines: {node: '>=12'}
+
   escodegen@1.14.3:
     resolution: {integrity: sha512-qFcX0XJkdg+PB3xjZZG/wKSuT1PnQWx57+TVSjIMmILd2yC/6ByYElPwJnslDsuWuSAp4AwJGumarAAmJch5Kw==}
     engines: {node: '>=4.0'}
@@ -11655,6 +11782,10 @@ packages:
     engines: {node: '>=8'}
     hasBin: true
 
+  import-without-cache@0.2.2:
+    resolution: {integrity: sha512-4TTuRrZ0jBULXzac3EoX9ZviOs8Wn9iAbNhJEyLhTpAGF9eNmYSruaMMN/Tec/yqaO7H6yS2kALfQDJ5FxfatA==}
+    engines: {node: '>=20.19.0'}
+
   imurmurhash@0.1.4:
     resolution: {integrity: sha512-JmXMZ6wuvDmLiHEml9ykzqO6lwFbof0GG4IkcGaENdCRDDmMVnny7s5HsIgHCbaq0w2MyPhDqkhTUgS2LU2PHA==}
     engines: {node: '>=0.8.19'}
@@ -11850,10 +11981,6 @@ packages:
   is-negative-zero@2.0.3:
     resolution: {integrity: sha512-5KoIu2Ngpyek75jXodFvnafB6DJgr3u8uuK0LEZJjrU19DrMD3EVERaR8sjz8CCGgpZvxPl9SuE1GMVPFHx1mw==}
     engines: {node: '>= 0.4'}
-
-  is-network-error@1.3.0:
-    resolution: {integrity: sha512-6oIwpsgRfnDiyEDLMay/GqCl3HoAtH5+RUKW29gYkL0QA+ipzpDLA16yQs7/RHCSu+BwgbJaOUqa4A99qNVQVw==}
-    engines: {node: '>=16'}
 
   is-number-object@1.1.1:
     resolution: {integrity: sha512-lZhclumE1G6VYD8VHe35wFaIif+CTy5SJIi5+3y4psDgWu4wPDoBhF8NxUOinEc7pHgiTsT6MaBb92rKhhD+Xw==}
@@ -12525,8 +12652,8 @@ packages:
       openai:
         optional: true
 
-  langsmith@0.3.79:
-    resolution: {integrity: sha512-j5uiAsyy90zxlxaMuGjb7EdcL51Yx61SpKfDOI1nMPBbemGju+lf47he4e59Hp5K63CY8XWgFP42WeZ+zuIU4Q==}
+  langsmith@0.3.82:
+    resolution: {integrity: sha512-RTcxtRm0zp2lV+pMesMW7EZSsIlqN7OmR2F6sZ/sOFQwmcLVl+VErMPV4VkX4Sycs4/EIAFT5hpr36EqiHoikQ==}
     peerDependencies:
       '@opentelemetry/api': '*'
       '@opentelemetry/exporter-trace-otlp-proto': '*'
@@ -13417,6 +13544,9 @@ packages:
       ms:
         optional: true
 
+  obug@2.1.1:
+    resolution: {integrity: sha512-uTqF9MuPraAQ+IsnPf366RG4cP9RtUi7MLO1N3KEc+wb0a6yKpeL0lmk2IB1jY5KHPAlTc6T/JRdC/YqxHNwkQ==}
+
   octokit@4.1.4:
     resolution: {integrity: sha512-cRvxRte6FU3vAHRC9+PMSY3D+mRAs2Rd9emMoqp70UGRvJRM3sbAoim2IXRZNNsf8wVfn4sGxVBHRAP+JBVX/g==}
     engines: {node: '>= 18'}
@@ -13641,10 +13771,6 @@ packages:
   p-retry@4.6.2:
     resolution: {integrity: sha512-312Id396EbJdvRONlngUx0NydfrIQ5lsYu0znKVUzVvArzEIt08V1qhtyESbGVd1FGX7UKtiFp5uwKZdM8wIuQ==}
     engines: {node: '>=8'}
-
-  p-retry@7.1.0:
-    resolution: {integrity: sha512-xL4PiFRQa/f9L9ZvR4/gUCRNus4N8YX80ku8kv9Jqz+ZokkiZLM0bcvX0gm1F3PDi9SPRsww1BDsTWgE6Y1GLQ==}
-    engines: {node: '>=20'}
 
   p-throttle@7.0.0:
     resolution: {integrity: sha512-aio0v+S0QVkH1O+9x4dHtD4dgCExACcL+3EtNaGqC01GBudS9ijMuUsmN8OVScyV4OOp0jqdLShZFuSlbL/AsA==}
@@ -14133,8 +14259,8 @@ packages:
   public-encrypt@4.0.3:
     resolution: {integrity: sha512-zVpa8oKZSz5bTMTFClc1fQOnyyEzpl5ozpi1B5YcvBrdohMjH2rfsBtyXcuNuwjsDIXmBYlF2N5FlJYhR29t8Q==}
 
-  publint@0.3.12:
-    resolution: {integrity: sha512-1w3MMtL9iotBjm1mmXtG3Nk06wnq9UhGNRpQ2j6n1Zq7YAD6gnxMMZMIxlRPAydVjVbjSm+n0lhwqsD1m4LD5w==}
+  publint@0.3.15:
+    resolution: {integrity: sha512-xPbRAPW+vqdiaKy5sVVY0uFAu3LaviaPO3pZ9FaRx59l9+U/RKR1OEbLhkug87cwiVKxPXyB4txsv5cad67u+A==}
     engines: {node: '>=18'}
     hasBin: true
 
@@ -14185,6 +14311,9 @@ packages:
 
   quansync@0.2.11:
     resolution: {integrity: sha512-AifT7QEbW9Nri4tAwR5M/uzpBuqfZf+zwaEM/QkzEjj7NBuFD2rBuy0K3dE+8wltbezDV7JMA0WfnCPYRSYbXA==}
+
+  quansync@1.0.0:
+    resolution: {integrity: sha512-5xZacEEufv3HSTPQuchrvV6soaiACMFnq1H8wkVioctoH3TRha9Sz66lOxRwPK/qZj7HPiSveih9yAyh98gvqA==}
 
   querystringify@2.2.0:
     resolution: {integrity: sha512-FIqgj2EUvTa7R50u0rGsyTftzjYmv/a3hO345bZNrqabNqjtgiDMgmo4mkUjd+nzU5oF3dClKqFIPUKybUyqoQ==}
@@ -14454,6 +14583,25 @@ packages:
   rolldown-plugin-dts@0.17.7:
     resolution: {integrity: sha512-ZGgXMhzCItmznNzbJlTcC/KdM6bIwcZoYUykJ2q14HOGvnMhnl2RXU+XrIrdjA2Hyzq3nWqDH7qWaM5a4uCVnw==}
     engines: {node: '>=20.18.0'}
+    peerDependencies:
+      '@ts-macro/tsc': ^0.3.6
+      '@typescript/native-preview': '>=7.0.0-dev.20250601.1'
+      rolldown: 1.0.0-beta.30
+      typescript: ^5.0.0
+      vue-tsc: ~3.1.0
+    peerDependenciesMeta:
+      '@ts-macro/tsc':
+        optional: true
+      '@typescript/native-preview':
+        optional: true
+      typescript:
+        optional: true
+      vue-tsc:
+        optional: true
+
+  rolldown-plugin-dts@0.18.3:
+    resolution: {integrity: sha512-rd1LZ0Awwfyn89UndUF/HoFF4oH9a5j+2ZeuKSJYM80vmeN/p0gslYMnHTQHBEXPhUlvAlqGA3tVgXB/1qFNDg==}
+    engines: {node: '>=20.19.0'}
     peerDependencies:
       '@ts-macro/tsc': ^0.3.6
       '@typescript/native-preview': '>=7.0.0-dev.20250601.1'
@@ -15009,6 +15157,10 @@ packages:
     resolution: {integrity: sha512-iK5/YhZxq5GO5z8wb0bY1317uDF3Zjpha0QFFLA8/trAoiLbQD0HUbMesEaxyzUgDxi2QlcbM8IvqOlEjgoXBA==}
     engines: {node: '>=12.17'}
 
+  tagged-tag@1.0.0:
+    resolution: {integrity: sha512-yEFYrVhod+hdNyx7g5Bnkkb0G6si8HJurOoOEgC8B/O0uXLHlaey/65KRv6cuWBNhBgHKAROVpc7QyYqE5gFng==}
+    engines: {node: '>=20'}
+
   tapable@2.2.2:
     resolution: {integrity: sha512-Re10+NauLTMCudc7T5WLFLAwDhQ0JWdrMK+9B2M8zR5hRExKmsRDCBA7/aV/pNJFltmBFO5BAMlQFi/vq3nKOg==}
     engines: {node: '>=6'}
@@ -15125,6 +15277,10 @@ packages:
 
   tinyexec@1.0.1:
     resolution: {integrity: sha512-5uC6DDlmeqiOwCPmK9jMSdOuZTh8bU39Ys6yidB+UTt5hfZUPGAypSgFRiEp+jbi9qH40BLDvy85jIU88wKSqw==}
+
+  tinyexec@1.0.2:
+    resolution: {integrity: sha512-W/KYk+NFhkmsYpuHq5JykngiOCnxeVL8v8dFnqxSD8qEEdRfXk1SDM6JzNqcERbcGYj9tMrDQBYV9cjgnunFIg==}
+    engines: {node: '>=18'}
 
   tinyglobby@0.2.14:
     resolution: {integrity: sha512-tX5e7OM1HnYr2+a2C/4V0htOcSQcoSTH9KgJnVvNm5zm/cyEWKJ7j7YutsH9CxMdtOkkLFy2AHrMci9IM8IPZQ==}
@@ -15318,6 +15474,31 @@ packages:
       unrun:
         optional: true
 
+  tsdown@0.17.2:
+    resolution: {integrity: sha512-SuU+0CWm/95KfXqojHTVuwcouIsdn7HpYcwDyOdKktJi285NxKwysjFUaxYLxpCNqqPvcFvokXLO4dZThRwzkw==}
+    engines: {node: '>=20.19.0'}
+    hasBin: true
+    peerDependencies:
+      '@arethetypeswrong/core': ^0.18.1
+      '@vitejs/devtools': ^0.0.0-alpha.19
+      publint: ^0.3.0
+      typescript: ^5.0.0
+      unplugin-lightningcss: ^0.4.0
+      unplugin-unused: ^0.5.0
+    peerDependenciesMeta:
+      '@arethetypeswrong/core':
+        optional: true
+      '@vitejs/devtools':
+        optional: true
+      publint:
+        optional: true
+      typescript:
+        optional: true
+      unplugin-lightningcss:
+        optional: true
+      unplugin-unused:
+        optional: true
+
   tslib@1.14.1:
     resolution: {integrity: sha512-Xni35NKzjgMrwevysHTCArtLDpPvye8zV/0E4EyYn43P7/7qvQwPh9BGkHewbMulVntbigmcT7rdX3BNo9wRJg==}
 
@@ -15408,6 +15589,10 @@ packages:
   type-fest@4.41.0:
     resolution: {integrity: sha512-TeTSQ6H5YHvpqVwBRcnLDCBnDOHWYu7IvGbHT6N8AOymcr9PJGjc1GTtiWZTYg0NCgYwvnYWEkVChQAr9bjfwA==}
     engines: {node: '>=16'}
+
+  type-fest@5.3.1:
+    resolution: {integrity: sha512-VCn+LMHbd4t6sF3wfU/+HKT63C9OoyrSIf4b+vtWHpt2U7/4InZG467YDNMFMR70DdHjAdpPWmw2lzRdg0Xqqg==}
+    engines: {node: '>=20'}
 
   type-is@1.6.18:
     resolution: {integrity: sha512-TkRKr9sUTxEH8MdfuCSP7VizJyzRNMjj2J2do2Jr3Kym598JVdEksuzPQCnlFPW4ky9Q+iA+ma9BGm06XQBy8g==}
@@ -15569,6 +15754,9 @@ packages:
   unconfig-core@7.4.1:
     resolution: {integrity: sha512-Bp/bPZjV2Vl/fofoA2OYLSnw1Z0MOhCX7zHnVCYrazpfZvseBbGhwcNQMxsg185Mqh7VZQqK3C8hFG/Dyng+yA==}
 
+  unconfig-core@7.4.2:
+    resolution: {integrity: sha512-VgPCvLWugINbXvMQDf8Jh0mlbvNjNC6eSUziHsBCMpxR05OPrNrvDnyatdMjRgcHaaNsCqz+wjNXxNw1kRLHUg==}
+
   unconfig@7.4.1:
     resolution: {integrity: sha512-uyQ7LElcGizrOGZyIq9KU+xkuEjcRf9IpmDTkCSYv5mEeZzrXSj6rb51C0L+WTedsmAoVxW9WKrLWhSwebIM9Q==}
 
@@ -15659,13 +15847,27 @@ packages:
     resolution: {integrity: sha512-pjy2bYhSsufwWlKwPc+l3cN7+wuJlK6uz0YdJEOlQDbl6jo/YlPi4mb8agUkVC8BF7V8NuzeyPNqRksA3hztKQ==}
     engines: {node: '>= 0.8'}
 
-  unplugin-unused@0.5.1:
-    resolution: {integrity: sha512-USnsy4XsInQFcIb/kSt5HbTkwIIYfW1ujGN0jPanq76IvG7RsqHPk4kJqDoZSqCgDkTjolr72a/f7K1Hr2XmWg==}
-    engines: {node: '>=20.18.0'}
+  unplugin-unused@0.5.6:
+    resolution: {integrity: sha512-nuMhConeGhmYRFVvO3ZEJtAo6GrM09UqTJrOjKnTSkyr9zRjjkqN1M+mPZhYMN19+WHBR+JuNmq/gLo/ZajfdQ==}
+    engines: {node: '>=20.19.0'}
+
+  unplugin@2.3.11:
+    resolution: {integrity: sha512-5uKD0nqiYVzlmCRs01Fhs2BdkEgBS3SAVP6ndrBsuK42iC2+JHyxM05Rm9G8+5mkmRtzMZGY8Ct5+mliZxU/Ww==}
+    engines: {node: '>=18.12.0'}
 
   unplugin@2.3.5:
     resolution: {integrity: sha512-RyWSb5AHmGtjjNQ6gIlA67sHOsWpsbWpwDokLwTcejVdOjEkJZh7QKu14J00gDDVSh8kGH4KYC/TNBceXFZhtw==}
     engines: {node: '>=18.12.0'}
+
+  unrun@0.2.19:
+    resolution: {integrity: sha512-DbwbJ9BvPEb3BeZnIpP9S5tGLO/JIgPQ3JrpMRFIfZMZfMG19f26OlLbC2ml8RRdrI2ZA7z2t+at5tsIHbh6Qw==}
+    engines: {node: '>=20.19.0'}
+    hasBin: true
+    peerDependencies:
+      synckit: ^0.11.11
+    peerDependenciesMeta:
+      synckit:
+        optional: true
 
   update-browserslist-db@1.1.3:
     resolution: {integrity: sha512-UxhIZQ+QInVdunkDAaiazvvT/+fXL5Osr0JZlJulepYu6Jd7qJtDZjlur0emRlT71EN3ScPoE7gvsuIKKNavKw==}
@@ -19818,7 +20020,7 @@ snapshots:
     transitivePeerDependencies:
       - debug
 
-  '@getzep/zep-cloud@1.0.12(@langchain/core@libs+langchain-core)(encoding@0.1.13)(langchain@0.3.30(f37b9f982f31945d9f803b2b9b56c938))':
+  '@getzep/zep-cloud@1.0.12(@langchain/core@libs+langchain-core)(encoding@0.1.13)(langchain@0.3.30(d6bce83ff16b7507c3f5d40493beac7c))':
     dependencies:
       form-data: 4.0.0
       node-fetch: 2.7.0(encoding@0.1.13)
@@ -19827,7 +20029,7 @@ snapshots:
       zod: 3.25.76
     optionalDependencies:
       '@langchain/core': link:libs/langchain-core
-      langchain: 0.3.30(f37b9f982f31945d9f803b2b9b56c938)
+      langchain: 0.3.30(d6bce83ff16b7507c3f5d40493beac7c)
     transitivePeerDependencies:
       - encoding
 
@@ -20521,6 +20723,11 @@ snapshots:
       '@jridgewell/sourcemap-codec': 1.5.5
       '@jridgewell/trace-mapping': 0.3.31
 
+  '@jridgewell/remapping@2.3.5':
+    dependencies:
+      '@jridgewell/gen-mapping': 0.3.13
+      '@jridgewell/trace-mapping': 0.3.31
+
   '@jridgewell/resolve-uri@3.1.2': {}
 
   '@jridgewell/source-map@0.3.11':
@@ -20588,15 +20795,14 @@ snapshots:
       '@lancedb/lancedb-win32-arm64-msvc': 0.19.1
       '@lancedb/lancedb-win32-x64-msvc': 0.19.1
 
-  '@langchain/anthropic@1.1.3(@langchain/core@libs+langchain-core)(zod@3.25.76)':
+  '@langchain/anthropic@1.2.3(@langchain/core@libs+langchain-core)':
     dependencies:
-      '@anthropic-ai/sdk': 0.71.0(zod@3.25.76)
+      '@anthropic-ai/sdk': 0.71.0(zod@4.1.12)
       '@langchain/core': link:libs/langchain-core
-    transitivePeerDependencies:
-      - zod
+      zod: 4.1.12
     optional: true
 
-  '@langchain/aws@1.0.3(@langchain/core@libs+langchain-core)':
+  '@langchain/aws@1.1.0(@langchain/core@libs+langchain-core)':
     dependencies:
       '@aws-sdk/client-bedrock-agent-runtime': 3.858.0
       '@aws-sdk/client-bedrock-runtime': 3.858.0
@@ -20625,47 +20831,47 @@ snapshots:
       - ws
     optional: true
 
-  '@langchain/google-common@1.0.4(@langchain/core@libs+langchain-core)':
+  '@langchain/google-common@2.0.4(@langchain/core@libs+langchain-core)':
     dependencies:
       '@langchain/core': link:libs/langchain-core
       uuid: 10.0.0
     optional: true
 
-  '@langchain/google-gauth@1.0.4(@langchain/core@libs+langchain-core)':
+  '@langchain/google-gauth@2.0.4(@langchain/core@libs+langchain-core)':
     dependencies:
-      '@langchain/google-common': 1.0.4(@langchain/core@libs+langchain-core)
+      '@langchain/google-common': 2.0.4(@langchain/core@libs+langchain-core)
       google-auth-library: 10.2.0
     transitivePeerDependencies:
       - '@langchain/core'
       - supports-color
     optional: true
 
-  '@langchain/google-genai@2.0.0(@langchain/core@libs+langchain-core)':
+  '@langchain/google-genai@2.0.4(@langchain/core@libs+langchain-core)':
     dependencies:
       '@google/generative-ai': 0.24.1
       '@langchain/core': link:libs/langchain-core
       uuid: 11.1.0
     optional: true
 
-  '@langchain/google-vertexai-web@1.0.4(@langchain/core@libs+langchain-core)':
+  '@langchain/google-vertexai-web@2.0.4(@langchain/core@libs+langchain-core)':
     dependencies:
-      '@langchain/google-webauth': 1.0.4(@langchain/core@libs+langchain-core)
+      '@langchain/google-webauth': 2.0.4(@langchain/core@libs+langchain-core)
     transitivePeerDependencies:
       - '@langchain/core'
     optional: true
 
-  '@langchain/google-vertexai@1.0.4(@langchain/core@libs+langchain-core)':
+  '@langchain/google-vertexai@2.0.4(@langchain/core@libs+langchain-core)':
     dependencies:
-      '@langchain/google-gauth': 1.0.4(@langchain/core@libs+langchain-core)
+      '@langchain/google-gauth': 2.0.4(@langchain/core@libs+langchain-core)
     transitivePeerDependencies:
       - '@langchain/core'
       - supports-color
     optional: true
 
-  '@langchain/google-webauth@1.0.4(@langchain/core@libs+langchain-core)':
+  '@langchain/google-webauth@2.0.4(@langchain/core@libs+langchain-core)':
     dependencies:
       '@langchain/core': link:libs/langchain-core
-      '@langchain/google-common': 1.0.4(@langchain/core@libs+langchain-core)
+      '@langchain/google-common': 2.0.4(@langchain/core@libs+langchain-core)
       web-auth-library: 1.0.3
     optional: true
 
@@ -20741,7 +20947,7 @@ snapshots:
       uuid: 10.0.0
     optional: true
 
-  '@langchain/ollama@1.0.2(@langchain/core@libs+langchain-core)':
+  '@langchain/ollama@1.0.3(@langchain/core@libs+langchain-core)':
     dependencies:
       '@langchain/core': link:libs/langchain-core
       ollama: 0.6.3
@@ -21502,7 +21708,7 @@ snapshots:
       extract-zip: 2.0.1
       progress: 2.0.3
       proxy-agent: 6.5.0
-      semver: 7.7.2
+      semver: 7.7.3
       tar-fs: 3.1.0
       unbzip2-stream: 1.4.3
       yargs: 17.7.2
@@ -21522,6 +21728,10 @@ snapshots:
   '@quansync/fs@0.1.5':
     dependencies:
       quansync: 0.2.11
+
+  '@quansync/fs@1.0.0':
+    dependencies:
+      quansync: 1.0.0
 
   '@raycast/api@1.102.3(@types/node@24.10.1)':
     dependencies:
@@ -21613,13 +21823,13 @@ snapshots:
   '@rolldown/binding-darwin-arm64@1.0.0-beta.30':
     optional: true
 
-  '@rolldown/binding-darwin-arm64@1.0.0-beta.52':
+  '@rolldown/binding-darwin-arm64@1.0.0-beta.53':
     optional: true
 
   '@rolldown/binding-darwin-x64@1.0.0-beta.30':
     optional: true
 
-  '@rolldown/binding-darwin-x64@1.0.0-beta.52':
+  '@rolldown/binding-darwin-x64@1.0.0-beta.53':
     optional: true
 
   '@rolldown/binding-freebsd-x64@1.0.0-beta.30':
@@ -21631,13 +21841,13 @@ snapshots:
   '@rolldown/binding-linux-arm64-gnu@1.0.0-beta.30':
     optional: true
 
-  '@rolldown/binding-linux-arm64-gnu@1.0.0-beta.52':
+  '@rolldown/binding-linux-arm64-gnu@1.0.0-beta.53':
     optional: true
 
   '@rolldown/binding-linux-arm64-musl@1.0.0-beta.30':
     optional: true
 
-  '@rolldown/binding-linux-arm64-musl@1.0.0-beta.52':
+  '@rolldown/binding-linux-arm64-musl@1.0.0-beta.53':
     optional: true
 
   '@rolldown/binding-linux-arm64-ohos@1.0.0-beta.30':
@@ -21646,13 +21856,13 @@ snapshots:
   '@rolldown/binding-linux-x64-gnu@1.0.0-beta.30':
     optional: true
 
-  '@rolldown/binding-linux-x64-gnu@1.0.0-beta.52':
+  '@rolldown/binding-linux-x64-gnu@1.0.0-beta.53':
     optional: true
 
   '@rolldown/binding-linux-x64-musl@1.0.0-beta.30':
     optional: true
 
-  '@rolldown/binding-linux-x64-musl@1.0.0-beta.52':
+  '@rolldown/binding-linux-x64-musl@1.0.0-beta.53':
     optional: true
 
   '@rolldown/binding-wasm32-wasi@1.0.0-beta.30':
@@ -21663,7 +21873,7 @@ snapshots:
   '@rolldown/binding-win32-arm64-msvc@1.0.0-beta.30':
     optional: true
 
-  '@rolldown/binding-win32-arm64-msvc@1.0.0-beta.52':
+  '@rolldown/binding-win32-arm64-msvc@1.0.0-beta.53':
     optional: true
 
   '@rolldown/binding-win32-ia32-msvc@1.0.0-beta.30':
@@ -21675,7 +21885,7 @@ snapshots:
   '@rolldown/binding-win32-x64-msvc@1.0.0-beta.30':
     optional: true
 
-  '@rolldown/binding-win32-x64-msvc@1.0.0-beta.52':
+  '@rolldown/binding-win32-x64-msvc@1.0.0-beta.53':
     optional: true
 
   '@rolldown/pluginutils@1.0.0-beta.30': {}
@@ -23238,36 +23448,36 @@ snapshots:
       '@typescript-eslint/types': 8.45.0
       eslint-visitor-keys: 4.2.1
 
-  '@typescript/native-preview-darwin-arm64@7.0.0-dev.20250801.1':
+  '@typescript/native-preview-darwin-arm64@7.0.0-dev.20251208.1':
     optional: true
 
-  '@typescript/native-preview-darwin-x64@7.0.0-dev.20250801.1':
+  '@typescript/native-preview-darwin-x64@7.0.0-dev.20251208.1':
     optional: true
 
-  '@typescript/native-preview-linux-arm64@7.0.0-dev.20250801.1':
+  '@typescript/native-preview-linux-arm64@7.0.0-dev.20251208.1':
     optional: true
 
-  '@typescript/native-preview-linux-arm@7.0.0-dev.20250801.1':
+  '@typescript/native-preview-linux-arm@7.0.0-dev.20251208.1':
     optional: true
 
-  '@typescript/native-preview-linux-x64@7.0.0-dev.20250801.1':
+  '@typescript/native-preview-linux-x64@7.0.0-dev.20251208.1':
     optional: true
 
-  '@typescript/native-preview-win32-arm64@7.0.0-dev.20250801.1':
+  '@typescript/native-preview-win32-arm64@7.0.0-dev.20251208.1':
     optional: true
 
-  '@typescript/native-preview-win32-x64@7.0.0-dev.20250801.1':
+  '@typescript/native-preview-win32-x64@7.0.0-dev.20251208.1':
     optional: true
 
-  '@typescript/native-preview@7.0.0-dev.20250801.1':
+  '@typescript/native-preview@7.0.0-dev.20251208.1':
     optionalDependencies:
-      '@typescript/native-preview-darwin-arm64': 7.0.0-dev.20250801.1
-      '@typescript/native-preview-darwin-x64': 7.0.0-dev.20250801.1
-      '@typescript/native-preview-linux-arm': 7.0.0-dev.20250801.1
-      '@typescript/native-preview-linux-arm64': 7.0.0-dev.20250801.1
-      '@typescript/native-preview-linux-x64': 7.0.0-dev.20250801.1
-      '@typescript/native-preview-win32-arm64': 7.0.0-dev.20250801.1
-      '@typescript/native-preview-win32-x64': 7.0.0-dev.20250801.1
+      '@typescript/native-preview-darwin-arm64': 7.0.0-dev.20251208.1
+      '@typescript/native-preview-darwin-x64': 7.0.0-dev.20251208.1
+      '@typescript/native-preview-linux-arm': 7.0.0-dev.20251208.1
+      '@typescript/native-preview-linux-arm64': 7.0.0-dev.20251208.1
+      '@typescript/native-preview-linux-x64': 7.0.0-dev.20251208.1
+      '@typescript/native-preview-win32-arm64': 7.0.0-dev.20251208.1
+      '@typescript/native-preview-win32-x64': 7.0.0-dev.20251208.1
 
   '@typespec/ts-http-runtime@0.3.0':
     dependencies:
@@ -24156,6 +24366,8 @@ snapshots:
 
   birpc@2.8.0: {}
 
+  birpc@3.0.0: {}
+
   bl@1.2.3:
     dependencies:
       readable-stream: 2.3.8
@@ -24779,7 +24991,7 @@ snapshots:
       node-api-headers: 1.5.0
       npmlog: 6.0.2
       rc: 1.2.8
-      semver: 7.7.2
+      semver: 7.7.3
       tar: 6.2.1
       url-join: 4.0.1
       which: 2.0.2
@@ -24939,7 +25151,6 @@ snapshots:
   console-table-printer@2.15.0:
     dependencies:
       simple-wcswidth: 1.1.2
-    optional: true
 
   content-disposition@0.5.4:
     dependencies:
@@ -25844,6 +26055,8 @@ snapshots:
   escape-string-regexp@2.0.0: {}
 
   escape-string-regexp@4.0.0: {}
+
+  escape-string-regexp@5.0.0: {}
 
   escodegen@1.14.3:
     dependencies:
@@ -27208,6 +27421,8 @@ snapshots:
       pkg-dir: 4.2.0
       resolve-cwd: 3.0.0
 
+  import-without-cache@0.2.2: {}
+
   imurmurhash@0.1.4: {}
 
   indent-string@4.0.0: {}
@@ -27411,8 +27626,6 @@ snapshots:
   is-natural-number@4.0.1: {}
 
   is-negative-zero@2.0.3: {}
-
-  is-network-error@1.3.0: {}
 
   is-number-object@1.1.1:
     dependencies:
@@ -28291,7 +28504,7 @@ snapshots:
 
   kuler@2.0.0: {}
 
-  langchain@0.3.30(f37b9f982f31945d9f803b2b9b56c938):
+  langchain@0.3.30(d6bce83ff16b7507c3f5d40493beac7c):
     dependencies:
       '@langchain/core': link:libs/langchain-core
       '@langchain/openai': 0.6.16(@langchain/core@libs+langchain-core)(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.5))
@@ -28299,23 +28512,23 @@ snapshots:
       js-tiktoken: 1.0.21
       js-yaml: 4.1.1
       jsonpointer: 5.0.1
-      langsmith: 0.3.79(@opentelemetry/api@1.9.0)(openai@5.12.2(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.5))(zod@3.25.76))
+      langsmith: 0.3.82(@opentelemetry/api@1.9.0)(openai@5.12.2(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.5))(zod@3.25.76))
       openapi-types: 12.1.3
       p-retry: 4.6.2
       uuid: 10.0.0
       yaml: 2.8.1
       zod: 3.25.76
     optionalDependencies:
-      '@langchain/anthropic': 1.1.3(@langchain/core@libs+langchain-core)(zod@3.25.76)
-      '@langchain/aws': 1.0.3(@langchain/core@libs+langchain-core)
+      '@langchain/anthropic': 1.2.3(@langchain/core@libs+langchain-core)
+      '@langchain/aws': 1.1.0(@langchain/core@libs+langchain-core)
       '@langchain/cohere': 1.0.1(@langchain/core@libs+langchain-core)(encoding@0.1.13)
       '@langchain/deepseek': 1.0.2(@langchain/core@libs+langchain-core)(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.5))
-      '@langchain/google-genai': 2.0.0(@langchain/core@libs+langchain-core)
-      '@langchain/google-vertexai': 1.0.4(@langchain/core@libs+langchain-core)
-      '@langchain/google-vertexai-web': 1.0.4(@langchain/core@libs+langchain-core)
+      '@langchain/google-genai': 2.0.4(@langchain/core@libs+langchain-core)
+      '@langchain/google-vertexai': 2.0.4(@langchain/core@libs+langchain-core)
+      '@langchain/google-vertexai-web': 2.0.4(@langchain/core@libs+langchain-core)
       '@langchain/groq': 1.0.2(@langchain/core@libs+langchain-core)(encoding@0.1.13)
       '@langchain/mistralai': 1.0.1(@langchain/core@libs+langchain-core)
-      '@langchain/ollama': 1.0.2(@langchain/core@libs+langchain-core)
+      '@langchain/ollama': 1.0.3(@langchain/core@libs+langchain-core)
       '@langchain/xai': 1.0.2(@langchain/core@libs+langchain-core)(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.5))
       axios: 1.13.2(debug@4.4.3)
       cheerio: 1.0.0-rc.12
@@ -28343,32 +28556,30 @@ snapshots:
       '@opentelemetry/api': 1.9.0
       openai: 5.12.2(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.5))(zod@3.25.76)
 
-  langsmith@0.3.74(@opentelemetry/api@1.9.0)(openai@6.9.0(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.5))(zod@3.25.76)):
-    dependencies:
-      '@types/uuid': 10.0.0
-      chalk: 4.1.2
-      console-table-printer: 2.14.6
-      p-queue: 6.6.2
-      p-retry: 4.6.2
-      semver: 7.7.2
-      uuid: 10.0.0
-    optionalDependencies:
-      '@opentelemetry/api': 1.9.0
-      openai: 6.9.0(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.5))(zod@3.25.76)
-
-  langsmith@0.3.79(@opentelemetry/api@1.9.0)(openai@5.12.2(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.5))(zod@3.25.76)):
+  langsmith@0.3.82(@opentelemetry/api@1.9.0)(openai@5.12.2(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.5))(zod@3.25.76)):
     dependencies:
       '@types/uuid': 10.0.0
       chalk: 4.1.2
       console-table-printer: 2.15.0
       p-queue: 6.6.2
-      p-retry: 4.6.2
       semver: 7.7.3
       uuid: 10.0.0
     optionalDependencies:
       '@opentelemetry/api': 1.9.0
       openai: 5.12.2(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.5))(zod@3.25.76)
     optional: true
+
+  langsmith@0.3.82(@opentelemetry/api@1.9.0)(openai@6.9.0(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.5))(zod@3.25.76)):
+    dependencies:
+      '@types/uuid': 10.0.0
+      chalk: 4.1.2
+      console-table-printer: 2.15.0
+      p-queue: 6.6.2
+      semver: 7.7.3
+      uuid: 10.0.0
+    optionalDependencies:
+      '@opentelemetry/api': 1.9.0
+      openai: 6.9.0(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.5))(zod@3.25.76)
 
   lazystream@1.0.1:
     dependencies:
@@ -29276,6 +29487,8 @@ snapshots:
     optionalDependencies:
       ms: 2.1.3
 
+  obug@2.1.1: {}
+
   octokit@4.1.4:
     dependencies:
       '@octokit/app': 15.1.6
@@ -29571,10 +29784,6 @@ snapshots:
     dependencies:
       '@types/retry': 0.12.0
       retry: 0.13.1
-
-  p-retry@7.1.0:
-    dependencies:
-      is-network-error: 1.3.0
 
   p-throttle@7.0.0: {}
 
@@ -30046,7 +30255,7 @@ snapshots:
       randombytes: 2.1.0
       safe-buffer: 5.2.1
 
-  publint@0.3.12:
+  publint@0.3.15:
     dependencies:
       '@publint/pack': 0.1.2
       package-manager-detector: 1.3.0
@@ -30121,6 +30330,8 @@ snapshots:
       side-channel: 1.1.0
 
   quansync@0.2.11: {}
+
+  quansync@1.0.0: {}
 
   querystringify@2.2.0: {}
 
@@ -30457,7 +30668,7 @@ snapshots:
       semver-compare: 1.0.0
       sprintf-js: 1.1.3
 
-  rolldown-plugin-dts@0.17.7(@typescript/native-preview@7.0.0-dev.20250801.1)(ms@2.1.3)(rolldown@1.0.0-beta.30)(typescript@5.9.3):
+  rolldown-plugin-dts@0.17.7(@typescript/native-preview@7.0.0-dev.20251208.1)(ms@2.1.3)(rolldown@1.0.0-beta.30)(typescript@5.9.3):
     dependencies:
       '@babel/generator': 7.28.5
       '@babel/parser': 7.28.5
@@ -30470,10 +30681,28 @@ snapshots:
       obug: 1.0.0(ms@2.1.3)
       rolldown: 1.0.0-beta.30
     optionalDependencies:
-      '@typescript/native-preview': 7.0.0-dev.20250801.1
+      '@typescript/native-preview': 7.0.0-dev.20251208.1
       typescript: 5.9.3
     transitivePeerDependencies:
       - ms
+      - oxc-resolver
+
+  rolldown-plugin-dts@0.18.3(@typescript/native-preview@7.0.0-dev.20251208.1)(rolldown@1.0.0-beta.30)(typescript@5.9.3):
+    dependencies:
+      '@babel/generator': 7.28.5
+      '@babel/parser': 7.28.5
+      '@babel/types': 7.28.5
+      ast-kit: 2.2.0
+      birpc: 3.0.0
+      dts-resolver: 2.1.3
+      get-tsconfig: 4.13.0
+      magic-string: 0.30.21
+      obug: 2.1.1
+      rolldown: 1.0.0-beta.30
+    optionalDependencies:
+      '@typescript/native-preview': 7.0.0-dev.20251208.1
+      typescript: 5.9.3
+    transitivePeerDependencies:
       - oxc-resolver
 
   rolldown@1.0.0-beta.30:
@@ -30740,7 +30969,7 @@ snapshots:
       detect-libc: 2.0.4
       node-addon-api: 6.1.0
       prebuild-install: 7.1.3
-      semver: 7.7.2
+      semver: 7.7.3
       simple-get: 4.0.1
       tar-fs: 3.1.0
       tunnel-agent: 0.6.0
@@ -31162,6 +31391,8 @@ snapshots:
       array-back: 6.2.2
       wordwrapjs: 5.1.0
 
+  tagged-tag@1.0.0: {}
+
   tapable@2.2.2: {}
 
   tar-fs@2.1.3:
@@ -31329,6 +31560,8 @@ snapshots:
   tinyexec@0.3.2: {}
 
   tinyexec@1.0.1: {}
+
+  tinyexec@1.0.2: {}
 
   tinyglobby@0.2.14:
     dependencies:
@@ -31506,7 +31739,7 @@ snapshots:
       minimist: 1.2.8
       strip-bom: 3.0.0
 
-  tsdown@0.15.12(@arethetypeswrong/core@0.18.2)(@typescript/native-preview@7.0.0-dev.20250801.1)(ms@2.1.3)(publint@0.3.12)(typescript@5.9.3)(unplugin-unused@0.5.1):
+  tsdown@0.15.12(@arethetypeswrong/core@0.18.2)(@typescript/native-preview@7.0.0-dev.20251208.1)(ms@2.1.3)(publint@0.3.15)(typescript@5.9.3)(unplugin-unused@0.5.6)(unrun@0.2.19(synckit@0.11.11)):
     dependencies:
       ansis: 4.2.0
       cac: 6.7.14
@@ -31516,7 +31749,7 @@ snapshots:
       empathic: 2.0.0
       hookable: 5.5.3
       rolldown: 1.0.0-beta.30
-      rolldown-plugin-dts: 0.17.7(@typescript/native-preview@7.0.0-dev.20250801.1)(ms@2.1.3)(rolldown@1.0.0-beta.30)(typescript@5.9.3)
+      rolldown-plugin-dts: 0.17.7(@typescript/native-preview@7.0.0-dev.20251208.1)(ms@2.1.3)(rolldown@1.0.0-beta.30)(typescript@5.9.3)
       semver: 7.7.3
       tinyexec: 1.0.1
       tinyglobby: 0.2.15
@@ -31524,15 +31757,44 @@ snapshots:
       unconfig: 7.4.1
     optionalDependencies:
       '@arethetypeswrong/core': 0.18.2
-      publint: 0.3.12
+      publint: 0.3.15
       typescript: 5.9.3
-      unplugin-unused: 0.5.1
+      unplugin-unused: 0.5.6
+      unrun: 0.2.19(synckit@0.11.11)
     transitivePeerDependencies:
       - '@ts-macro/tsc'
       - '@typescript/native-preview'
       - ms
       - oxc-resolver
       - supports-color
+      - vue-tsc
+
+  tsdown@0.17.2(@arethetypeswrong/core@0.18.2)(@typescript/native-preview@7.0.0-dev.20251208.1)(publint@0.3.15)(synckit@0.11.11)(typescript@5.9.3)(unplugin-unused@0.5.6):
+    dependencies:
+      ansis: 4.2.0
+      cac: 6.7.14
+      empathic: 2.0.0
+      hookable: 5.5.3
+      import-without-cache: 0.2.2
+      obug: 2.1.1
+      rolldown: 1.0.0-beta.30
+      rolldown-plugin-dts: 0.18.3(@typescript/native-preview@7.0.0-dev.20251208.1)(rolldown@1.0.0-beta.30)(typescript@5.9.3)
+      semver: 7.7.3
+      tinyexec: 1.0.2
+      tinyglobby: 0.2.15
+      tree-kill: 1.2.2
+      unconfig-core: 7.4.2
+      unrun: 0.2.19(synckit@0.11.11)
+    optionalDependencies:
+      '@arethetypeswrong/core': 0.18.2
+      publint: 0.3.15
+      typescript: 5.9.3
+      unplugin-unused: 0.5.6
+    transitivePeerDependencies:
+      - '@ts-macro/tsc'
+      - '@typescript/native-preview'
+      - oxc-resolver
+      - synckit
       - vue-tsc
 
   tslib@1.14.1: {}
@@ -31608,6 +31870,10 @@ snapshots:
   type-fest@2.19.0: {}
 
   type-fest@4.41.0: {}
+
+  type-fest@5.3.1:
+    dependencies:
+      tagged-tag: 1.0.0
 
   type-is@1.6.18:
     dependencies:
@@ -31770,6 +32036,11 @@ snapshots:
       '@quansync/fs': 0.1.5
       quansync: 0.2.11
 
+  unconfig-core@7.4.2:
+    dependencies:
+      '@quansync/fs': 1.0.0
+      quansync: 1.0.0
+
   unconfig@7.4.1:
     dependencies:
       '@quansync/fs': 0.1.5
@@ -31850,18 +32121,31 @@ snapshots:
 
   unpipe@1.0.0: {}
 
-  unplugin-unused@0.5.1:
+  unplugin-unused@0.5.6:
     dependencies:
+      empathic: 2.0.0
+      escape-string-regexp: 5.0.0
       js-tokens: 9.0.1
-      picocolors: 1.1.1
-      pkg-types: 2.2.0
-      unplugin: 2.3.5
+      unplugin: 2.3.11
+
+  unplugin@2.3.11:
+    dependencies:
+      '@jridgewell/remapping': 2.3.5
+      acorn: 8.15.0
+      picomatch: 4.0.3
+      webpack-virtual-modules: 0.6.2
 
   unplugin@2.3.5:
     dependencies:
       acorn: 8.15.0
       picomatch: 4.0.3
       webpack-virtual-modules: 0.6.2
+
+  unrun@0.2.19(synckit@0.11.11):
+    dependencies:
+      rolldown: 1.0.0-beta.30
+    optionalDependencies:
+      synckit: 0.11.11
 
   update-browserslist-db@1.1.3(browserslist@4.25.1):
     dependencies:
