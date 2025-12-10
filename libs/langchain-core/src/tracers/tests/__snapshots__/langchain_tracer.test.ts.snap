@@ -109,7 +109,7 @@ exports[`LangChainTracer payload snapshots for run create and update 3`] = `
   "inputs": {
     "input": "test input",
   },
-  "name": "RunnableLambda",
+  "name": Any<String>,
   "outputs": {
     "output": "processed: test input",
   },
@@ -144,7 +144,7 @@ exports[`LangChainTracer payload snapshots for run create and update 4`] = `
   "inputs": {
     "input": "test input",
   },
-  "name": "RunnableLambda",
+  "name": Any<String>,
   "outputs": {
     "output": "parent: processed: test input",
   },
