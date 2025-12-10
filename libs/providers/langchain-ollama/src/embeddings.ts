@@ -1,4 +1,5 @@
 import { Embeddings, EmbeddingsParams } from "@langchain/core/embeddings";
+import { getEnvironmentVariable } from "@langchain/core/utils/env";
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore CJS type resolution workaround
 import { Ollama } from "ollama/browser";
@@ -17,7 +18,8 @@ export interface OllamaEmbeddingsParams extends EmbeddingsParams {
   model?: string;
 
   /**
-   * Base URL of the Ollama server
+   * Base URL of the Ollama server.
+   * Defaults to `OLLAMA_BASE_URL` if set.
    * @default "http://localhost:11434"
    */
   baseUrl?: string;
@@ -76,12 +78,15 @@ export class OllamaEmbeddings extends Embeddings {
   constructor(fields?: OllamaEmbeddingsParams) {
     super({ maxConcurrency: 1, ...fields });
 
+    this.baseUrl =
+      fields?.baseUrl ??
+      getEnvironmentVariable("OLLAMA_BASE_URL") ??
+      this.baseUrl;
     this.client = new Ollama({
       fetch: fields?.fetch,
-      host: fields?.baseUrl,
+      host: this.baseUrl,
       headers: fields?.headers ? new Headers(fields.headers) : undefined,
     });
-    this.baseUrl = fields?.baseUrl ?? this.baseUrl;
 
     this.model = fields?.model ?? this.model;
     this.dimensions = fields?.dimensions;

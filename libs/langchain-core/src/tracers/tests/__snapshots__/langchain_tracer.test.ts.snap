@@ -109,12 +109,15 @@ exports[`LangChainTracer payload snapshots for run create and update 3`] = `
   "inputs": {
     "input": "test input",
   },
+  "name": Any<String>,
   "outputs": {
     "output": "processed: test input",
   },
   "parent_run_id": Any<String>,
   "reference_example_id": undefined,
+  "run_type": "chain",
   "session_name": Any<String>,
+  "start_time": Any<String>,
   "tags": [],
   "trace_id": Any<String>,
 }
@@ -141,12 +144,15 @@ exports[`LangChainTracer payload snapshots for run create and update 4`] = `
   "inputs": {
     "input": "test input",
   },
+  "name": Any<String>,
   "outputs": {
     "output": "parent: processed: test input",
   },
   "parent_run_id": undefined,
   "reference_example_id": undefined,
+  "run_type": "chain",
   "session_name": Any<String>,
+  "start_time": Any<String>,
   "tags": [],
   "trace_id": Any<String>,
 }
