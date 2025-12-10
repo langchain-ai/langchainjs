@@ -725,23 +725,24 @@ export const convertGeminiCandidateToAIMessage: Converter<
   });
 };
 
-function addModalityCounts(
-  modalityTokenCounts: GeminiModalityTokenCount[] | undefined,
-  details: InputTokenDetails | OutputTokenDetails
-): void {
-  modalityTokenCounts?.forEach((modalityTokenCount) => {
-    const { modality, tokenCount } = modalityTokenCount;
-    const modalityLc: keyof ModalitiesTokenDetails =
-      modality.toLowerCase() as keyof ModalitiesTokenDetails;
-    const currentCount = details[modalityLc] ?? 0;
-    details[modalityLc] = currentCount + tokenCount;
-  });
-}
-
 export const convertGeminiGenerateContentResponseToUsageMetadata: Converter<
   GenerateContentResponse,
   UsageMetadata
 > = (data: GenerateContentResponse): UsageMetadata => {
+
+  function addModalityCounts(
+    modalityTokenCounts: GeminiModalityTokenCount[] | undefined,
+    details: InputTokenDetails | OutputTokenDetails
+  ): void {
+    modalityTokenCounts?.forEach((modalityTokenCount) => {
+      const { modality, tokenCount } = modalityTokenCount;
+      const modalityLc: keyof ModalitiesTokenDetails =
+        modality.toLowerCase() as keyof ModalitiesTokenDetails;
+      const currentCount = details[modalityLc] ?? 0;
+      details[modalityLc] = currentCount + tokenCount;
+    });
+  }
+
   const usageMetadata: GeminiUsageMetadata | undefined = data.usageMetadata;
 
   const inputTokenCount = usageMetadata?.promptTokenCount ?? 0;
