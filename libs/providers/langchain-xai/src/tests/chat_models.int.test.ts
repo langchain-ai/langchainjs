@@ -288,6 +288,35 @@ describe("Server Tool Calling (Live Search)", () => {
     expect((res.content as string).length).toBeGreaterThan(50);
   });
 
+  test("invoke with searchParameters sources in call options", async () => {
+    const chat = new ChatXAI({
+      maxRetries: 0,
+      model: "grok-2-1212",
+    });
+
+    const message = new HumanMessage(
+      "What are the latest updates from xAI and related news?"
+    );
+    const res = await chat.invoke([message], {
+      searchParameters: {
+        mode: "on",
+        sources: [
+          {
+            type: "web",
+            allowed_websites: ["x.ai"],
+          },
+          {
+            type: "news",
+            excluded_websites: ["bbc.co.uk"],
+          },
+        ],
+      },
+    });
+
+    expect(res.content).toBeDefined();
+    expect((res.content as string).length).toBeGreaterThan(50);
+  });
+
   test("stream with live_search tool", async () => {
     const chat = new ChatXAI({
       maxRetries: 0,

@@ -138,6 +138,80 @@ describe("Server Tool Calling", () => {
       });
     });
 
+    test("should include sources in search_parameters when provided", () => {
+      const model = new ChatXAI();
+
+      const params: ChatXAICompletionsInvocationParams = model.invocationParams(
+        {
+          searchParameters: {
+            mode: "on",
+            sources: [
+              {
+                type: "web",
+                allowed_websites: ["x.ai"],
+              },
+              {
+                type: "news",
+                excluded_websites: ["bbc.co.uk"],
+              },
+              {
+                type: "x",
+                included_x_handles: ["xai"],
+              },
+              {
+                type: "rss",
+                links: ["https://example.com/feed.rss"],
+              },
+            ],
+          },
+        } as unknown as ChatXAI["ParsedCallOptions"]
+      );
+
+      expect(params.search_parameters).toBeDefined();
+      expect(params.search_parameters?.sources).toEqual([
+        {
+          type: "web",
+          allowed_websites: ["x.ai"],
+        },
+        {
+          type: "news",
+          excluded_websites: ["bbc.co.uk"],
+        },
+        {
+          type: "x",
+          included_x_handles: ["xai"],
+        },
+        {
+          type: "rss",
+          links: ["https://example.com/feed.rss"],
+        },
+      ]);
+    });
+
+    test("should omit sources field when none are configured", () => {
+      const model = new ChatXAI();
+
+      const params: ChatXAICompletionsInvocationParams = model.invocationParams(
+        {
+          searchParameters: {
+            mode: "auto",
+          },
+        } as unknown as ChatXAI["ParsedCallOptions"]
+      );
+
+      expect(params.search_parameters).toEqual({
+        mode: "auto",
+      });
+      expect(
+        Object.prototype.hasOwnProperty.call(
+          params.search_parameters as NonNullable<
+            ChatXAICompletionsInvocationParams["search_parameters"]
+          >,
+          "sources"
+        )
+      ).toBe(false);
+    });
+
     test("should merge instance and call option search parameters", () => {
       const model = new ChatXAI({
         searchParameters: {

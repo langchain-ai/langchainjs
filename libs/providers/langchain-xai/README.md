@@ -79,10 +79,76 @@ const result = await model.invoke("Find recent news about SpaceX", {
   searchParameters: {
     mode: "on",
     max_search_results: 10,
-    allowed_domains: ["spacex.com", "nasa.gov"],
+    sources: [
+      {
+        type: "web",
+        allowed_websites: ["spacex.com", "nasa.gov"],
+      },
+    ],
   },
 });
 ```
+
+### Configuring data sources with `sources`
+
+You can configure which data sources Live Search should use via the `sources` field
+in `searchParameters`. Each entry corresponds to one of the sources described in the
+official xAI Live Search docs (`web`, `news`, `x`, `rss`).
+
+```typescript
+const result = await model.invoke(
+  "What are the latest updates from xAI and related news?",
+  {
+    searchParameters: {
+      mode: "on",
+      sources: [
+        {
+          type: "web",
+          // Only search on these websites
+          allowed_websites: ["x.ai"],
+        },
+        {
+          type: "news",
+          // Exclude specific news websites
+          excluded_websites: ["bbc.co.uk"],
+        },
+        {
+          type: "x",
+          // Focus on specific X handles
+          included_x_handles: ["xai"],
+        },
+      ],
+    },
+  }
+);
+```
+
+You can also use RSS feeds as a data source:
+
+```typescript
+const result = await model.invoke("Summarize the latest posts from this feed", {
+  searchParameters: {
+    mode: "on",
+    sources: [
+      {
+        type: "rss",
+        links: ["https://example.com/feed.rss"],
+      },
+    ],
+  },
+});
+```
+
+> Notes:
+>
+> - The previous `allowed_domains` / `excluded_domains` fields are not
+>   supported in this provider. Use `sources` with `allowed_websites` and
+>   `excluded_websites` instead.
+> - In TypeScript, the `XAISearchParameters` and `sources` types use the same
+>   `snake_case` field names as the underlying JSON API (for example
+>   `allowed_websites`, `excluded_websites`, `included_x_handles`). There are no
+>   separate camelCase aliases (`allowedWebsites`, etc.), which keeps the
+>   provider aligned with the official xAI documentation.
 
 ### Combining live_search with custom tools
 
