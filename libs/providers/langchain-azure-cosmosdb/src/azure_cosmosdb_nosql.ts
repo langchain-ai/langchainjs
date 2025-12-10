@@ -88,8 +88,6 @@ export type AzureCosmosDBNoSQLFilterType = {
   projectionMapping?: ProjectionMapping;
   /** Offset and limit clause for pagination. */
   offsetLimit?: string;
-  /** WHERE clause for additional filtering. */
-  where?: string;
   /** Weights for hybrid search RRF ranking. */
   weights?: number[];
   /** Minimum relevance threshold for score filtering. */
@@ -438,57 +436,27 @@ export class AzureCosmosDBNoSQLVectorStore extends VectorStore {
   ): Promise<[Document, number][]> {
     await this.initialize();
 
-    let filterClause = "";
-    let filterClauseParams: SqlParameter[] = [];
-    if (filter?.filterClause) {
-      if (typeof filter.filterClause === "string") {
-        filterClause = `${filter.filterClause} `;
-      } else {
-        filterClause = `${filter.filterClause.query} `;
-        filterClauseParams = filter.filterClause.parameters ?? [];
+    const { query, parameters } = this.constructQuery(
+      k,
+      AzureCosmosDBNoSQLSearchType.Vector,
+      {
+        embeddings: queryVector,
+        filterClause: filter?.filterClause,
+        offsetLimit: filter?.offsetLimit,
+        projectionMapping: filter?.projectionMapping,
+        withEmbedding: filter?.includeEmbeddings,
       }
-    }
-
-    const embeddings = filter?.includeEmbeddings
-      ? `${this.tableAlias}[@embeddingKey] AS vector, `
-      : "";
-    const query = `SELECT TOP @k ${this.tableAlias}.id, ${embeddings}${this.tableAlias}[@textKey] AS text, ${this.tableAlias}[@metadataKey] AS metadata, VectorDistance(${this.tableAlias}[@embeddingKey], @vector) AS similarityScore FROM ${this.tableAlias} ${filterClause}ORDER BY VectorDistance(${this.tableAlias}[@embeddingKey], @vector)`;
-
-    const { resources: items } = await this.container.items
-      .query(
-        {
-          query,
-          parameters: [
-            ...filterClauseParams,
-            { name: "@k", value: k },
-            { name: "@textKey", value: this.textKey },
-            { name: "@metadataKey", value: this.metadataKey },
-            { name: "@embeddingKey", value: this.embeddingKey },
-            { name: "@vector", value: queryVector },
-          ],
-        },
-        { maxItemCount: k }
-      )
-      .fetchAll();
-
-    const docsAndScores = items.map(
-      (item) =>
-        [
-          new Document({
-            id: item.id,
-            pageContent: item.text,
-            metadata: {
-              ...(item.metadata ?? {}),
-              ...(filter?.includeEmbeddings
-                ? { [this.embeddingKey]: item.vector }
-                : {}),
-            },
-          }),
-          item.similarityScore,
-        ] as [Document, number]
     );
 
-    return docsAndScores;
+    return this.executeQuery(
+      query,
+      AzureCosmosDBNoSQLSearchType.Vector,
+      parameters,
+      {
+        withEmbedding: filter?.includeEmbeddings,
+        projectionMapping: filter?.projectionMapping,
+      }
+    );
   }
 
   /**
@@ -509,16 +477,11 @@ export class AzureCosmosDBNoSQLVectorStore extends VectorStore {
     options: MaxMarginalRelevanceSearchOptions<this["FilterType"]>
   ): Promise<Document[]> {
     const { k, fetchK = 20, lambda = 0.5 } = options;
-    const includeEmbeddingsFlag = options.filter?.includeEmbeddings || false;
-
     const queryEmbedding = await this.embeddings.embedQuery(query);
-    const docs = await this.similaritySearchVectorWithScore(
+    const docs = await this.similaritySearchWithScoreInternal(
       queryEmbedding,
       fetchK,
-      {
-        ...options.filter,
-        includeEmbeddings: true,
-      }
+      options.filter
     );
     const embeddingList = docs.map((doc) => doc[0].metadata[this.embeddingKey]);
 
@@ -533,6 +496,7 @@ export class AzureCosmosDBNoSQLVectorStore extends VectorStore {
     return mmrIndexes.map((index) => {
       const doc = docs[index][0];
 
+      const includeEmbeddingsFlag = options.filter?.includeEmbeddings || false;
       // Remove embeddings if they were not requested originally
       if (!includeEmbeddingsFlag) {
         delete doc.metadata[this.embeddingKey];
@@ -589,7 +553,7 @@ export class AzureCosmosDBNoSQLVectorStore extends VectorStore {
    * This method routes to the appropriate search implementation based on the search type
    * specified in the filter or the default search type configured for the vector store.
    * Supports vector, hybrid, full-text, and threshold-based search types.
-   * 
+   
    * @param query - The text query to search for similar documents.
    * @param k - The number of nearest neighbor documents to return. Defaults to 4.
    * @param filter - Optional filter configuration including search type, threshold, full-text filters, and other options.
@@ -601,20 +565,29 @@ export class AzureCosmosDBNoSQLVectorStore extends VectorStore {
     filter: this["FilterType"] | undefined = undefined
   ): Promise<[Document, number][]> {
     const queryEmbedding = await this.embeddings.embedQuery(query);
-    const searchType = filter?.searchType ?? this.searchType;
+    return this.similaritySearchWithScoreInternal(queryEmbedding, k, filter);
+  }
+
+  private async similaritySearchWithScoreInternal(
+    queryEmbedding: number[],
+    k = 4,
+    filter: this["FilterType"] | undefined = undefined
+  ): Promise<[Document, number][]> {
+    const searchType =
+      filter?.searchType ?? AzureCosmosDBNoSQLSearchType.Vector;
 
     if (searchType === AzureCosmosDBNoSQLSearchType.Vector) {
       return this.similaritySearchVectorWithScore(queryEmbedding, k, filter);
-    }
-    else if (searchType === AzureCosmosDBNoSQLSearchType.VectorScoreThreshold) {
+    } else if (
+      searchType === AzureCosmosDBNoSQLSearchType.VectorScoreThreshold
+    ) {
       return this.vectorSearchWithScoreThreshold(
         queryEmbedding,
         k,
         filter,
         filter?.threshold
       );
-    }
-    else if (searchType === AzureCosmosDBNoSQLSearchType.Hybrid) {
+    } else if (searchType === AzureCosmosDBNoSQLSearchType.Hybrid) {
       if (!filter?.fullTextRankFilter) {
         throw new Error(
           `fullTextRankFilter is required for ${searchType} search type`
@@ -624,10 +597,11 @@ export class AzureCosmosDBNoSQLVectorStore extends VectorStore {
         queryEmbedding,
         k,
         filter,
-        filter.fullTextRankFilter,
+        filter.fullTextRankFilter
       );
-    }
-    else if (searchType === AzureCosmosDBNoSQLSearchType.HybridScoreThreshold) {
+    } else if (
+      searchType === AzureCosmosDBNoSQLSearchType.HybridScoreThreshold
+    ) {
       if (!filter?.fullTextRankFilter) {
         throw new Error(
           `fullTextRankFilter is required for ${searchType} search type`
@@ -638,35 +612,24 @@ export class AzureCosmosDBNoSQLVectorStore extends VectorStore {
         k,
         filter,
         filter.fullTextRankFilter,
-        filter?.threshold,
+        filter?.threshold
       );
-    }
-    else if (searchType === AzureCosmosDBNoSQLSearchType.FullTextSearch) {
-      return this.fullTextSearch(
-        k,
-        filter
-      );
-    }
-    else if (searchType === AzureCosmosDBNoSQLSearchType.FullTextRanking) {
+    } else if (searchType === AzureCosmosDBNoSQLSearchType.FullTextSearch) {
+      return this.fullTextSearch(k, filter);
+    } else if (searchType === AzureCosmosDBNoSQLSearchType.FullTextRanking) {
       if (!filter?.fullTextRankFilter) {
         throw new Error(
           `fullTextRankFilter is required for ${searchType} search type`
         );
       }
-      return this.fullTextRanking(
-        k,
-        filter,
-        filter.fullTextRankFilter
-      );
+      return this.fullTextRanking(k, filter, filter.fullTextRankFilter);
     }
     throw new Error(`Unrecognized search type '${searchType}'`);
   }
 
   /**
-   * Performs a hybrid search combining vector similarity and full-text search using Reciprocal Rank Fusion (RRF).
-   * This internal method merges vector-based semantic search with keyword-based full-text search to provide
-   * more relevant results by leveraging both search paradigms.
-   * 
+   * Performs hybrid search combining vector similarity and full-text search using RRF.
+   *
    * @param embeddings - The query embedding vector for similarity comparison.
    * @param k - The number of documents to return. Defaults to 4.
    * @param filter - Optional filter configuration for WHERE clauses, pagination, projection mapping, and embeddings.
@@ -677,36 +640,41 @@ export class AzureCosmosDBNoSQLVectorStore extends VectorStore {
     embeddings: number[],
     k = 4,
     filter: this["FilterType"] | undefined = undefined,
-    fullTextRankFilter: FullTextRankFilter,
+    fullTextRankFilter: FullTextRankFilter
   ): Promise<[Document, number][]> {
+    const { query, parameters } = this.constructQuery(
+      k,
+      AzureCosmosDBNoSQLSearchType.Hybrid,
+      {
+        embeddings,
+        fullTextRankFilter,
+        offsetLimit: filter?.offsetLimit,
+        projectionMapping: filter?.projectionMapping,
+        withEmbedding: filter?.includeEmbeddings,
+        filterClause: filter?.filterClause,
+        weights: filter?.weights,
+      }
+    );
 
-    const { query, parameters } = this.constructQuery(k, AzureCosmosDBNoSQLSearchType.Hybrid, {
-      embeddings,
-      fullTextRankFilter,
-      offsetLimit: filter?.offsetLimit,
-      projectionMapping: filter?.projectionMapping,
-      withEmbedding: filter?.includeEmbeddings,
-      where: filter?.where,
-      weights: filter?.weights,
-    });
-
-    return this.executeQuery(query, AzureCosmosDBNoSQLSearchType.Hybrid, parameters, {
-      withEmbedding: filter?.includeEmbeddings,
-      projectionMapping: filter?.projectionMapping,
-    });
+    return this.executeQuery(
+      query,
+      AzureCosmosDBNoSQLSearchType.Hybrid,
+      parameters,
+      {
+        withEmbedding: filter?.includeEmbeddings,
+        projectionMapping: filter?.projectionMapping,
+      }
+    );
   }
 
   /**
-   * Performs a hybrid search with score threshold filtering.
-   * Similar to hybridSearchWithScore but filters out results below the specified similarity threshold.
-   * This is useful for ensuring only highly relevant results are returned from the combined
-   * vector and full-text search.
-   * 
+   * Performs hybrid search with score threshold filtering.
+   *
    * @param embeddings - The query embedding vector for similarity comparison.
    * @param k - The number of documents to return. Defaults to 4.
    * @param filter - Optional filter configuration for WHERE clauses, pagination, projection mapping, and embeddings.
    * @param fullTextRankFilter - Configuration for full-text search fields and search terms.
-   * @param threshold - The minimum similarity score threshold. Documents with scores below this value are excluded. Defaults to 0.5.
+   * @param threshold - The minimum similarity score threshold. Defaults to 0.5.
    * @returns A promise that resolves to an array of tuples containing Documents and their similarity scores.
    */
   private async hybridSearchWithScoreThreshold(
@@ -716,47 +684,53 @@ export class AzureCosmosDBNoSQLVectorStore extends VectorStore {
     fullTextRankFilter: FullTextRankFilter,
     threshold: number = 0.5
   ): Promise<[Document, number][]> {
+    const { query, parameters } = this.constructQuery(
+      k,
+      AzureCosmosDBNoSQLSearchType.HybridScoreThreshold,
+      {
+        embeddings,
+        fullTextRankFilter,
+        offsetLimit: filter?.offsetLimit,
+        projectionMapping: filter?.projectionMapping,
+        withEmbedding: filter?.includeEmbeddings,
+        filterClause: filter?.filterClause,
+        weights: filter?.weights,
+      }
+    );
 
-    const { query, parameters } = this.constructQuery(k, AzureCosmosDBNoSQLSearchType.HybridScoreThreshold, {
-      embeddings,
-      fullTextRankFilter,
-      offsetLimit: filter?.offsetLimit,
-      projectionMapping: filter?.projectionMapping,
-      withEmbedding: filter?.includeEmbeddings,
-      where: filter?.where,
-      weights: filter?.weights,
-    });
-
-    return this.executeQuery(query, AzureCosmosDBNoSQLSearchType.HybridScoreThreshold, parameters, {
-      withEmbedding: filter?.includeEmbeddings,
-      projectionMapping: filter?.projectionMapping,
-      threshold: threshold,
-    });
+    return this.executeQuery(
+      query,
+      AzureCosmosDBNoSQLSearchType.HybridScoreThreshold,
+      parameters,
+      {
+        withEmbedding: filter?.includeEmbeddings,
+        projectionMapping: filter?.projectionMapping,
+        threshold: threshold,
+      }
+    );
   }
 
   /**
-   * Performs a vector similarity search with score threshold filtering.
-   * Only returns documents whose similarity scores meet or exceed the specified threshold value.
-   * This helps filter out less relevant results and focus on high-quality matches.
-   * 
+   * Performs vector similarity search with score threshold filtering.
+   *
    * @param embeddings - The query embedding vector for similarity comparison.
    * @param k - The number of documents to return. Defaults to 4.
    * @param filter - Optional filter configuration for WHERE clauses, pagination, projection mapping, and embeddings.
-   * @param threshold - The minimum similarity score threshold. Documents with scores below this value are excluded. Defaults to 0.5.
+   * @param threshold - The minimum similarity score threshold. Defaults to 0.5.
    * @returns A promise that resolves to an array of tuples containing Documents and their similarity scores.
    */
   private async vectorSearchWithScoreThreshold(
     embeddings: number[],
     k = 4,
     filter: this["FilterType"] | undefined = undefined,
-    threshold: number= 0.5,
+    threshold: number = 0.5
   ): Promise<[Document, number][]> {
     const { query, parameters } = this.constructQuery(
       k,
       AzureCosmosDBNoSQLSearchType.VectorScoreThreshold,
       {
         embeddings: embeddings,
-        where: filter?.where,
+        filterClause: filter?.filterClause,
         offsetLimit: filter?.offsetLimit,
         projectionMapping: filter?.projectionMapping,
         withEmbedding: filter?.includeEmbeddings,
@@ -776,11 +750,8 @@ export class AzureCosmosDBNoSQLVectorStore extends VectorStore {
   }
 
   /**
-   * Performs a full-text search with ranking based on text relevance scores.
-   * Uses Cosmos DB's full-text indexing and scoring capabilities to rank documents
-   * by their relevance to the search terms. Supports multiple search fields with
-   * Reciprocal Rank Fusion (RRF) for combining scores across fields.
-   * 
+   * Performs full-text search with ranking using RRF.
+   *
    * @param k - The number of documents to return. Defaults to 4.
    * @param filter - Optional filter configuration for WHERE clauses, pagination, and projection mapping.
    * @param fullTextRankFilter - Configuration specifying which fields to search and the search terms.
@@ -789,7 +760,7 @@ export class AzureCosmosDBNoSQLVectorStore extends VectorStore {
   private async fullTextRanking(
     k = 4,
     filter: this["FilterType"] | undefined = undefined,
-    fullTextRankFilter: FullTextRankFilter,
+    fullTextRankFilter: FullTextRankFilter
   ): Promise<[Document, number][]> {
     const { query, parameters } = this.constructQuery(
       k,
@@ -798,7 +769,7 @@ export class AzureCosmosDBNoSQLVectorStore extends VectorStore {
         offsetLimit: filter?.offsetLimit,
         projectionMapping: filter?.projectionMapping,
         fullTextRankFilter: fullTextRankFilter,
-        where: filter?.where,
+        filterClause: filter?.filterClause,
       }
     );
 
@@ -814,10 +785,8 @@ export class AzureCosmosDBNoSQLVectorStore extends VectorStore {
   }
 
   /**
-   * Performs a basic full-text search across indexed text fields.
-   * This method uses Cosmos DB's full-text search capabilities to find documents
-   * matching the search criteria without vector similarity comparison.
-   * 
+   * Performs basic full-text search without vector similarity.
+   *
    * @param k - The number of documents to return. Defaults to 4.
    * @param filter - Optional filter configuration for WHERE clauses, pagination, and projection mapping.
    * @returns A promise that resolves to an array of tuples containing Documents and their scores (0 for full-text only).
@@ -826,14 +795,13 @@ export class AzureCosmosDBNoSQLVectorStore extends VectorStore {
     k = 4,
     filter: this["FilterType"] | undefined = undefined
   ): Promise<[Document, number][]> {
-
     const { query, parameters } = this.constructQuery(
       k,
       AzureCosmosDBNoSQLSearchType.FullTextSearch,
       {
         offsetLimit: filter?.offsetLimit,
         projectionMapping: filter?.projectionMapping,
-        where: filter?.where,
+        filterClause: filter?.filterClause,
       }
     );
 
@@ -852,7 +820,7 @@ export class AzureCosmosDBNoSQLVectorStore extends VectorStore {
    * Constructs a Cosmos DB SQL query string and parameters based on the search type and options.
    * This method builds the complete SQL query including SELECT clause, projections, FROM clause,
    * WHERE conditions, ORDER BY clauses (with RRF for hybrid/full-text), and pagination.
-   * 
+   *
    * @param k - The maximum number of results to return.
    * @param searchType - The type of search to perform (vector, hybrid, full-text, etc.).
    * @param options - Configuration options including embeddings, filters, projections, and search-specific parameters.
@@ -867,36 +835,36 @@ export class AzureCosmosDBNoSQLVectorStore extends VectorStore {
       offsetLimit?: string;
       projectionMapping?: ProjectionMapping;
       withEmbedding?: boolean;
-      where?: string;
+      filterClause?: AzureCosmosDBNoSQLQueryFilter;
       weights?: number[];
     }
   ): { query: string; parameters: SqlParameter[] } {
     const table = this.tableAlias;
 
-     let query = `SELECT ${!options.offsetLimit ? "TOP @limit " : ""}`;
-  
-  // Add projection fields
-  query += this.generateProjectionFields(
-    searchType,
-    options.projectionMapping,
-    options.fullTextRankFilter,
-    options.withEmbedding
-  );
-  
-  // Add FROM clause
-  query += ` FROM ${table}`;
+    let query = `SELECT ${!options.offsetLimit ? "TOP @limit " : ""}`;
 
-  // Add WHERE clause if provided
-  if (options.where) {
-    query += ` WHERE ${options.where}`;
-  }
+    // Add projection fields
+    query += this.generateProjectionFields(
+      searchType,
+      options.projectionMapping,
+      options.fullTextRankFilter,
+      options.withEmbedding
+    );
+
+    // Add FROM clause
+    query += ` FROM ${table}`;
+
+    // Add filterClause (WHERE clause) if provided
+    if (options.filterClause) {
+      if (typeof options.filterClause === "string") {
+        query += ` ${options.filterClause}`;
+      } else {
+        query += ` ${options.filterClause.query}`;
+      }
+    }
 
     // Add ORDER BY clause based on search type
-    if (
-      // searchType === AzureCosmosDBNoSQLSearchType.FullTextSearch ||
-      searchType === AzureCosmosDBNoSQLSearchType.FullTextRanking
-    ) {
-
+    if (searchType === AzureCosmosDBNoSQLSearchType.FullTextRanking) {
       if (options?.fullTextRankFilter?.length === 1) {
         const item = options.fullTextRankFilter[0];
         const terms = item.searchText
@@ -923,7 +891,6 @@ export class AzureCosmosDBNoSQLVectorStore extends VectorStore {
       searchType === AzureCosmosDBNoSQLSearchType.Hybrid ||
       searchType === AzureCosmosDBNoSQLSearchType.HybridScoreThreshold
     ) {
-
       const rankComponents = options?.fullTextRankFilter?.map((item) => {
         const terms = item.searchText
           .split(" ")
@@ -932,7 +899,9 @@ export class AzureCosmosDBNoSQLVectorStore extends VectorStore {
         return `FullTextScore(${table}[@${item.searchField}], ${terms})`;
       });
 
-      query += ` ORDER BY RANK RRF(${rankComponents?.join(", ")}, VectorDistance(${table}[@embeddingKey], @embeddings)`;
+      query += ` ORDER BY RANK RRF(${rankComponents?.join(
+        ", "
+      )}, VectorDistance(${table}[@embeddingKey], @embeddings)`;
       if (options.weights) {
         query += ", @weights)";
       } else {
@@ -951,7 +920,8 @@ export class AzureCosmosDBNoSQLVectorStore extends VectorStore {
       options.embeddings,
       options.projectionMapping,
       options.fullTextRankFilter,
-      options.weights
+      options.weights,
+      options.filterClause
     );
 
     return { query, parameters };
@@ -961,7 +931,7 @@ export class AzureCosmosDBNoSQLVectorStore extends VectorStore {
    * Generates the SELECT clause projection fields for the SQL query.
    * Determines which fields to return based on search type, custom projection mappings,
    * full-text filters, and whether embeddings should be included in results.
-   * 
+   *
    * @param searchType - The type of search being performed, which affects what fields are projected.
    * @param projectionMapping - Optional custom mapping of field names to aliases.
    * @param fullTextRankFilter - Optional full-text search configuration that determines text fields to project.
@@ -1023,7 +993,7 @@ export class AzureCosmosDBNoSQLVectorStore extends VectorStore {
    * Builds the parameter array for the SQL query.
    * Creates parameter objects for all dynamic values used in the query, including
    * result limits, field names, embeddings, weights, and full-text search terms.
-   * 
+   *
    * @param k - The maximum number of results (used for @limit parameter).
    * @param searchType - The type of search, which determines which parameters are needed.
    * @param embeddings - Optional embedding vector for vector-based searches.
@@ -1038,9 +1008,17 @@ export class AzureCosmosDBNoSQLVectorStore extends VectorStore {
     embeddings?: number[],
     projectionMapping?: ProjectionMapping,
     fullTextRankFilter?: FullTextRankFilter,
-    weights?: number[]
+    weights?: number[],
+    filterClause?: AzureCosmosDBNoSQLQueryFilter
   ): SqlParameter[] {
     const parameters: SqlParameter[] = [{ name: "@limit", value: k }];
+
+    // Add filterClause parameters if it's a SqlQuerySpec
+    if (filterClause && typeof filterClause !== "string") {
+      if (filterClause.parameters) {
+        parameters.push(...filterClause.parameters);
+      }
+    }
 
     if (projectionMapping) {
       Object.keys(projectionMapping).forEach((key) => {
@@ -1094,7 +1072,7 @@ export class AzureCosmosDBNoSQLVectorStore extends VectorStore {
    * Executes a Cosmos DB SQL query and transforms the results into Documents with scores.
    * This method runs the query against the container, processes the returned items,
    * applies threshold filtering if specified, and constructs Document objects with metadata.
-   * 
+   *
    * @param query - The SQL query string to execute.
    * @param searchType - The type of search being performed, which affects result processing.
    * @param parameters - The query parameters to bind to the SQL query.
@@ -1151,15 +1129,16 @@ export class AzureCosmosDBNoSQLVectorStore extends VectorStore {
           options.projectionMapping &&
           this.textKey in options.projectionMapping
         ) {
-          const textKey =
-            options.projectionMapping[this.textKey];
+          const textKey = options.projectionMapping[this.textKey];
           text = item[textKey];
         } else {
           text = item[this.textKey];
         }
 
         if (options.projectionMapping) {
-          for (const [key, alias] of Object.entries(options.projectionMapping)) {
+          for (const [key, alias] of Object.entries(
+            options.projectionMapping
+          )) {
             if (key === this.textKey) {
               continue;
             }
@@ -1174,15 +1153,16 @@ export class AzureCosmosDBNoSQLVectorStore extends VectorStore {
           options.projectionMapping &&
           this.textKey in options.projectionMapping
         ) {
-          const textKey =
-            options.projectionMapping[this.textKey];
+          const textKey = options.projectionMapping[this.textKey];
           text = item[textKey];
         } else {
           text = item[this.textKey];
         }
 
         if (options.projectionMapping) {
-          for (const [key, alias] of Object.entries(options.projectionMapping)) {
+          for (const [key, alias] of Object.entries(
+            options.projectionMapping
+          )) {
             if (key === this.textKey) {
               continue;
             }
