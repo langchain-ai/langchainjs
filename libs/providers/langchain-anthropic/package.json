@@ -75,6 +75,7 @@
     "vectorstores"
   ],
   "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
   "types": "./dist/index.d.cts",
   "exports": {
     ".": {
@@ -95,6 +96,5 @@
     "CHANGELOG.md",
     "README.md",
     "LICENSE"
-  ],
-  "module": "./dist/index.js"
+  ]
 }

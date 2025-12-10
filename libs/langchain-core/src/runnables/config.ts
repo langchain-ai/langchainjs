@@ -176,7 +176,18 @@ export function ensureConfig<CallOptions extends RunnableConfig>(
     if (empty.timeout <= 0) {
       throw new Error("Timeout must be a positive number");
     }
-    const timeoutSignal = AbortSignal.timeout(empty.timeout);
+    const originalTimeoutMs = empty.timeout;
+    const timeoutSignal = AbortSignal.timeout(originalTimeoutMs);
+    // Preserve the numeric timeout for downstream consumers that need to pass
+    // an explicit timeout value to underlying SDKs in addition to an AbortSignal.
+    // We store it in metadata to avoid changing the public config shape.
+    if (!empty.metadata) {
+      empty.metadata = {};
+    }
+    // Do not overwrite if already set upstream.
+    if (empty.metadata.timeoutMs === undefined) {
+      empty.metadata.timeoutMs = originalTimeoutMs;
+    }
     if (empty.signal !== undefined) {
       if ("any" in AbortSignal) {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -185,6 +196,18 @@ export function ensureConfig<CallOptions extends RunnableConfig>(
     } else {
       empty.signal = timeoutSignal;
     }
+
+    /**
+     * We are deleting the timeout key for the following reasons:
+     * - Idempotent normalization: ensureConfig may be called multiple times down the stack. If timeout remains,
+     *   each call would synthesize new timeout signals and combine them, changing the effective timeout unpredictably.
+     * - Single enforcement path: downstream code relies on signal to enforce cancellation. Leaving timeout means two
+     *   competing mechanisms (numeric timeout and signal) can be applied, sometimes with different semantics.
+     * - Propagation to children: pickRunnableConfigKeys would keep forwarding timeout to nested runnables, causing
+     *   repeated re-normalization and stacked timeouts.
+     * - Backward compatibility: a lot of components and tests assume ensureConfig removes timeout post-normalization;
+     *   changing that would be a breaking change.
+     */
     delete empty.timeout;
   }
   return empty as CallOptions;

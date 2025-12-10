@@ -19,7 +19,7 @@ import { concat } from "@langchain/core/utils/stream";
 import { ChatWatsonx } from "../ibm.js";
 
 const models = ["ibm/granite-3-2-8b-instruct"];
-const modelAlias = "ibm/granite-3-2-8b-instruct";
+const modelAlias = "langchain-nodejs-ibm/granite-3-2-8b-instruct";
 const projectId = process.env.WATSONX_AI_PROJECT_ID;
 const version = "2024-05-31";
 const serviceUrl = process.env.WATSONX_AI_SERVICE_URL as string;
