@@ -38,14 +38,20 @@ xAI supports server-side tools that are executed by the API rather than requirin
 ### Using the built-in live_search tool
 
 ```typescript
-import { ChatXAI } from "@langchain/xai";
+import { ChatXAI, xaiLiveSearch } from "@langchain/xai";
 
 const model = new ChatXAI({
   model: "grok-2-1212",
 });
 
-// Bind the live_search tool
-const modelWithSearch = model.bindTools([{ type: "live_search" }]);
+// Create the built-in live_search tool with optional parameters
+const searchTool = xaiLiveSearch({
+  max_search_results: 5,
+  return_citations: true,
+});
+
+// Bind the live_search tool to the model
+const modelWithSearch = model.bindTools([searchTool]);
 
 // The model will search the web for real-time information
 const result = await modelWithSearch.invoke(
