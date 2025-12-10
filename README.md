@@ -58,4 +58,4 @@ As an open-source project in a rapidly developing field, we are extremely open t
 
 For detailed information on how to contribute, see [`CONTRIBUTING.md`](https://github.com/langchain-ai/langchainjs/blob/main/CONTRIBUTING.md).
 
-Please report any security issues or concerns following our [security guidelines](https://github.com/langchain-ai/langchainjs/blob/main/SECURITY.md).
+Please report any security issues or concerns following our [security guidelines](https://github.com/langchain-ai/.github/blob/main/SECURITY.md).

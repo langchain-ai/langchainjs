@@ -2,13 +2,13 @@ import {
   BaseChatModel,
   BaseChatModelCallOptions,
 } from "@langchain/core/language_models/chat_models";
-import { BaseMessageChunk } from "@langchain/core/messages";
+import { AIMessageChunk } from "@langchain/core/messages";
 
 export type RecordStringAny = Record<string, unknown>;
 
 export type BaseChatModelConstructor<
   CallOptions extends BaseChatModelCallOptions = BaseChatModelCallOptions,
-  OutputMessageType extends BaseMessageChunk = BaseMessageChunk,
+  OutputMessageType extends AIMessageChunk = AIMessageChunk,
   ConstructorArgs extends RecordStringAny = RecordStringAny
 > = new (args: ConstructorArgs) => BaseChatModel<
   CallOptions,
@@ -17,7 +17,7 @@ export type BaseChatModelConstructor<
 
 export type BaseChatModelsTestsFields<
   CallOptions extends BaseChatModelCallOptions = BaseChatModelCallOptions,
-  OutputMessageType extends BaseMessageChunk = BaseMessageChunk,
+  OutputMessageType extends AIMessageChunk = AIMessageChunk,
   ConstructorArgs extends RecordStringAny = RecordStringAny
 > = {
   Cls: BaseChatModelConstructor<
@@ -38,7 +38,7 @@ export type BaseChatModelsTestsFields<
 
 export class BaseChatModelsTests<
   CallOptions extends BaseChatModelCallOptions = BaseChatModelCallOptions,
-  OutputMessageType extends BaseMessageChunk = BaseMessageChunk,
+  OutputMessageType extends AIMessageChunk = AIMessageChunk,
   ConstructorArgs extends RecordStringAny = RecordStringAny
 > implements
     BaseChatModelsTestsFields<CallOptions, OutputMessageType, ConstructorArgs>
