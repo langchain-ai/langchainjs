@@ -590,6 +590,73 @@ export const convertMessagesToGeminiSystemInstruction: Converter<
 };
 
 /**
+ * Converts an array of Gemini API parts into an array of LangChain tool calls.
+ *
+ * This function iterates through a given array of `GeminiPart` objects,
+ * identifies parts that represent a function call, and transforms them into
+ * LangChain's standardized `ToolCall` format. Each resulting tool call is
+ * assigned a unique, sequential ID.
+ *
+ * @param parts - An array of `GeminiPart` objects, which may or may not
+ *   contain function calls.
+ * @returns An array of `ContentBlock.Tools.ToolCall` objects. If no function
+ *   call parts are found, an empty array is returned.
+ *
+ * @remarks
+ * The `id` for each tool call is generated sequentially in the format `call_0`,
+ * `call_1`, and so on, based on its order of appearance in the input array.
+ *
+ * @example
+ * ```typescript
+ * const geminiParts: GeminiPart[] = [
+ *   { text: "Thinking about what to do..." },
+ *   {
+ *     functionCall: {
+ *       name: "search_web",
+ *       args: { query: "latest AI news" }
+ *     }
+ *   },
+ *   {
+ *     functionCall: {
+ *       name: "calculator",
+ *       args: { expression: "2 + 2" }
+ *     }
+ *   }
+ * ];
+ *
+ * const toolCalls = convertGeminiPartsToToolCalls(geminiParts);
+ * // toolCalls will be:
+ * // [
+ * //   { type: "tool_call", id: "call_0", name: "search_web", args: { query: "latest AI news" } },
+ * //   { type: "tool_call", id: "call_1", name: "calculator", args: { expression: "2 + 2" } }
+ * // ]
+ * ```
+ */
+export const convertGeminiPartsToToolCalls: Converter<
+  GeminiPart[],
+  ContentBlock.Tools.ToolCall<string,Record<string, unknown>>[]
+> = (parts: GeminiPart[]): ContentBlock.Tools.ToolCall<string,Record<string, unknown>>[] => {
+  const toolCalls: ContentBlock.Tools.ToolCall<
+    string,
+    Record<string, unknown>
+  >[] = [];
+
+  for (let i = 0; i < parts.length; i++) {
+    const part = parts[i];
+    if (part.functionCall) {
+      toolCalls.push({
+        type: "tool_call",
+        id: `call_${toolCalls.length}`,
+        name: part.functionCall.name,
+        args: part.functionCall.args,
+      });
+    }
+  }
+
+  return toolCalls;
+}
+
+/**
  * Converts a Gemini API candidate response to a LangChain AIMessage.
  *
  * This converter transforms the response from Google's Gemini API into a standardized
@@ -631,22 +698,7 @@ export const convertGeminiCandidateToAIMessage: Converter<
   const parts = candidate.content?.parts || [];
 
   // Extract tool calls from function call parts
-  const toolCalls: ContentBlock.Tools.ToolCall<
-    string,
-    Record<string, unknown>
-  >[] = [];
-
-  for (let i = 0; i < parts.length; i++) {
-    const part = parts[i];
-    if (part.functionCall) {
-      toolCalls.push({
-        type: "tool_call",
-        id: `call_${toolCalls.length}`,
-        name: part.functionCall.name,
-        args: part.functionCall.args,
-      });
-    }
-  }
+  const toolCalls = convertGeminiPartsToToolCalls(parts);
 
   // Convert parts to content format that the translator understands
   // Format: array of objects with type field matching the part type

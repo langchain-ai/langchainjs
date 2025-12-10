@@ -47,7 +47,7 @@ import {
 import { SafeJsonEventParserStream } from "../utils/stream.js";
 import {
   convertGeminiCandidateToAIMessage,
-  convertGeminiGenerateContentResponseToUsageMetadata,
+  convertGeminiGenerateContentResponseToUsageMetadata, convertGeminiPartsToToolCalls,
   convertMessagesToGeminiContents,
   convertMessagesToGeminiSystemInstruction,
 } from "../converters/messages.js";
@@ -552,14 +552,17 @@ export abstract class BaseChatGoogle<
                 }
               }
 
+              const toolCalls = convertGeminiPartsToToolCalls(parts);
+
               const textDelta = textDeltas.join("");
 
               // Only emit if we have content
-              if (textDelta || candidate.finishReason) {
+              if (textDelta || toolCalls?.length > 0 || candidate.finishReason) {
 
                 // Include the textDelta always
                 const messageChunkParams: AIMessageChunkFields = {
                   content: textDelta,
+                  tool_calls: toolCalls,
                 };
 
                 // Include the finish reason, if available

@@ -25,6 +25,7 @@ import { tool } from "@langchain/core/tools";
 import { GeminiTool } from "../types.js";
 import { Runnable } from "@langchain/core/runnables";
 import { InteropZodType } from "@langchain/core/utils/types";
+import { concat } from "@langchain/core/utils/stream";
 
 type ModelInfoConfig = {
   node?: boolean,
@@ -48,7 +49,6 @@ const allModelInfo: ModelInfo[] = [
     model: "gemini-2.0-flash-lite",
     testConfig: {
       useApiKey: true,
-      only: true,
     }
   },
   {
@@ -317,7 +317,7 @@ describe.each(coreModelInfo)(
       );
     });
 
-    test.skip("stream", async () => {
+    test("stream", async () => {
       const model = newChatGoogle();
       const input: BaseLanguageModelInput = new ChatPromptValue([
         new SystemMessage(
@@ -350,7 +350,7 @@ describe.each(coreModelInfo)(
       expect(warnSpy).not.toHaveBeenCalled();
     });
 
-    test.skip("streaming parameter", async () => {
+    test("streaming parameter", async () => {
       const modelWithStreaming = newChatGoogle({
         streaming: true,
       });
@@ -375,7 +375,7 @@ describe.each(coreModelInfo)(
       expect(totalTokenCount).toBeGreaterThan(1);
     });
 
-    test.skip("stream token count usage_metadata", async () => {
+    test("stream token count usage_metadata", async () => {
       const model = newChatGoogle();
       let res: AIMessageChunk | null = null;
       for await (const chunk of await model.stream(
@@ -400,7 +400,7 @@ describe.each(coreModelInfo)(
       );
     });
 
-    test.skip("streamUsage false excludes token usage", async () => {
+    test("streamUsage false excludes token usage", async () => {
       const model = newChatGoogle({
         temperature: 0,
         streamUsage: false,
@@ -539,6 +539,44 @@ describe.each(coreModelInfo)(
       expect(typeof call.args).toBe("object");
       expect(call.args).toHaveProperty("location");
       expect(call.args.location).toBe("New York");
+    });
+
+    test(`function - stream tools`, async () => {
+      const model = newChatGoogle();
+
+      const weatherTool = tool(
+        (_) => "The weather in San Francisco today is 18 degrees and sunny.",
+        {
+          name: "current_weather_tool",
+          description: "Get the current weather for a given location.",
+          schema: z.object({
+            location: z
+              .string()
+              .describe("The location to get the weather for."),
+          }),
+        }
+      );
+
+      const modelWithTools: Runnable = model.bindTools([weatherTool]);
+      const stream = await modelWithTools.stream(
+        "Whats the weather like today in San Francisco?"
+      );
+      let finalChunk: AIMessageChunk | undefined;
+      for await (const chunk of stream) {
+        finalChunk = !finalChunk ? chunk : concat(finalChunk, chunk);
+      }
+
+      expect(finalChunk).toBeDefined();
+      if (!finalChunk) return;
+
+      const toolCalls = finalChunk.tool_calls;
+      expect(toolCalls).toBeDefined();
+      if (!toolCalls) {
+        throw new Error("tool_calls not in response");
+      }
+      expect(toolCalls.length).toBe(1);
+      expect(toolCalls[0].name).toBe("current_weather_tool");
+      expect(toolCalls[0].args).toHaveProperty("location");
     });
 
     test.skip("withStructuredOutput classic", async () => {
