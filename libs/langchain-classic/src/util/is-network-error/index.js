@@ -45,4 +45,3 @@ export default function isNetworkError(error) {
   // Standard network error messages
   return errorMessages.has(message);
 }
-

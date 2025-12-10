@@ -255,4 +255,3 @@ export function makeRetriable<Arguments extends readonly unknown[], Result>(
   function_: (...arguments_: Arguments) => PromiseLike<Result> | Result,
   options?: Options
 ): (...arguments_: Arguments) => Promise<Result>;
-
