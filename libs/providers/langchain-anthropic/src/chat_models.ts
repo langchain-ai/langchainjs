@@ -1,6 +1,6 @@
 import { Anthropic, type ClientOptions } from "@anthropic-ai/sdk";
 import type { Stream } from "@anthropic-ai/sdk/streaming";
-import { transformJSONSchema } from "@anthropic-ai/sdk/lib/transform-json-schema.js";
+import { transformJSONSchema } from "@anthropic-ai/sdk/lib/transform-json-schema";
 
 import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
 import { AIMessageChunk, type BaseMessage } from "@langchain/core/messages";
