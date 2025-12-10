@@ -214,6 +214,7 @@ test("test max tokens (numPredict)", async () => {
 
 test("sturctured output with tools", async () => {
   const ollama = new ChatOllama({
+    model: "mistral",
     maxRetries: 1,
   });
 

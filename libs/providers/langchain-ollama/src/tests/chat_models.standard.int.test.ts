@@ -30,7 +30,7 @@ class ChatOllamaStandardIntegrationTests extends ChatModelIntegrationTests<
       chatModelHasToolCalling: true,
       chatModelHasStructuredOutput: true,
       constructorArgs: {
-        model: "llama3-groq-tool-use",
+        model: "mistral",
       },
     });
   }
