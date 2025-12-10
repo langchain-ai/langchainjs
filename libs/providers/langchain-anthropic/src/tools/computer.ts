@@ -1,6 +1,6 @@
-import { z } from "zod/v4";
 import Anthropic from "@anthropic-ai/sdk";
 import { tool } from "@langchain/core/tools";
+import { ToolMessage } from "@langchain/core/messages";
 import type { DynamicStructuredTool, ToolRuntime } from "@langchain/core/tools";
 
 import type {
@@ -16,8 +16,11 @@ const TOOL_NAME = "computer";
 
 /**
  * Options for the computer use tool (Claude Opus 4.5 only version).
+ *
+ * @template TState - The type of the state schema (when used with `ReactAgent`)
+ * @template TContext - The type of the context schema (when used with `ReactAgent`)
  */
-export interface Computer20251124Options {
+export interface Computer20251124Options<TState = any, TContext = any> {
   /**
    * The width of the display in pixels.
    */
@@ -41,7 +44,10 @@ export interface Computer20251124Options {
    * This function receives the action input and should return the result
    * (typically a base64-encoded screenshot or action confirmation).
    */
-  execute?: (args: Computer20251124Action) => string | Promise<string>;
+  execute?: (
+    args: Computer20251124Action,
+    runtime: ToolRuntime<TState, TContext>
+  ) => string | Promise<string> | ToolMessage<any> | Promise<ToolMessage<any>>;
 }
 
 /**
@@ -100,15 +106,17 @@ export interface Computer20251124Options {
  * @param options - Configuration options for the computer use tool
  * @returns The computer use tool object that can be passed to `bindTools`
  */
-export function computer_20251124(
-  options: Computer20251124Options
-): DynamicStructuredTool {
+export function computer_20251124(options: Computer20251124Options) {
   const name = TOOL_NAME;
   const computerTool = tool(
     options.execute as (
       input: unknown,
       runtime: ToolRuntime<unknown, unknown>
-    ) => string | Promise<string>,
+    ) =>
+      | string
+      | Promise<string>
+      | ToolMessage<any>
+      | Promise<ToolMessage<any>>,
     {
       name,
       schema: Computer20251124ActionSchema,
@@ -131,7 +139,12 @@ export function computer_20251124(
     } satisfies Anthropic.Beta.BetaToolComputerUse20251124,
   };
 
-  return computerTool;
+  return computerTool as DynamicStructuredTool<
+    typeof Computer20251124ActionSchema,
+    Computer20251124Action,
+    any,
+    ToolMessage<any>
+  >;
 }
 
 /**
@@ -139,7 +152,7 @@ export function computer_20251124(
  *
  * Supported models: Claude Sonnet 4.5, Haiku 4.5, Opus 4.1, Sonnet 4, Opus 4, and Sonnet 3.7 versions.
  */
-export interface Computer20250124Options {
+export interface Computer20250124Options<TState = any, TContext = any> {
   /**
    * The width of the display in pixels.
    */
@@ -157,7 +170,10 @@ export interface Computer20250124Options {
    * This function receives the action input and should return the result
    * (typically a base64-encoded screenshot or action confirmation).
    */
-  execute?: (args: Computer20250124Action) => string | Promise<string>;
+  execute?: (
+    args: Computer20250124Action,
+    runtime: ToolRuntime<TState, TContext>
+  ) => string | Promise<string> | ToolMessage<any> | Promise<ToolMessage<any>>;
 }
 
 /**
@@ -216,19 +232,21 @@ export interface Computer20250124Options {
  * @param options - Configuration options for the computer use tool
  * @returns The computer use tool object that can be passed to `bindTools`
  */
-export function computer_20250124(
-  options: Computer20250124Options
-): DynamicStructuredTool {
+export function computer_20250124(options: Computer20250124Options) {
   const name = TOOL_NAME;
   const computerTool = tool(
     options.execute as (
       input: unknown,
       runtime: ToolRuntime<unknown, unknown>
-    ) => string | Promise<string>,
+    ) =>
+      | string
+      | Promise<string>
+      | ToolMessage<any>
+      | Promise<ToolMessage<any>>,
     {
       name,
       description: "A tool for interacting with the computer",
-      schema: z.toJSONSchema(Computer20250124ActionSchema),
+      schema: Computer20250124ActionSchema,
     }
   );
 
@@ -245,5 +263,10 @@ export function computer_20250124(
     } satisfies Anthropic.Beta.BetaToolComputerUse20250124,
   };
 
-  return computerTool;
+  return computerTool as DynamicStructuredTool<
+    typeof Computer20250124ActionSchema,
+    Computer20250124Action,
+    any,
+    ToolMessage<any>
+  >;
 }
