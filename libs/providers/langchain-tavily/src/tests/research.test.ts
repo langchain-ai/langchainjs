@@ -273,13 +273,11 @@ describe("TavilyResearch", () => {
   test("handles invalid response (non-streaming)", async () => {
     const mockWrapper = new TestTavilyResearchAPIWrapper();
     // Override the rawResults method to return invalid response
-    mockWrapper.rawResults = vi
-      .fn()
-      .mockImplementation(() =>
-        Promise.resolve({
-          invalid: "response",
-        } as unknown as TavilyResearchQueueResponse)
-      ) as typeof mockWrapper.rawResults;
+    mockWrapper.rawResults = vi.fn().mockImplementation(() =>
+      Promise.resolve({
+        invalid: "response",
+      } as unknown as TavilyResearchQueueResponse)
+    ) as typeof mockWrapper.rawResults;
 
     const tool = new TavilyResearch({ apiWrapper: mockWrapper });
     const result = await tool.invoke({
