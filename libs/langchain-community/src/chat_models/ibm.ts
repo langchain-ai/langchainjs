@@ -880,6 +880,7 @@ export class ChatWatsonx<
           else tokenUsages[completion] = message.usage_metadata;
         }
         chunk.message.response_metadata = {
+          model: this.model,
           ...chunk.generationInfo,
           ...chunk.message.response_metadata,
         };
@@ -973,6 +974,7 @@ export class ChatWatsonx<
         llmOutput: {
           tokenUsage: result?.usage,
           model_name: this.model,
+          model: this.model,
         },
       };
     }
@@ -1095,6 +1097,7 @@ export class ChatWatsonx<
       message: new AIMessageChunk({
         content: "",
         response_metadata: {
+          model: this.model,
           usage,
         },
         usage_metadata: {
