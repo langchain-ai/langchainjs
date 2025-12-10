@@ -273,6 +273,8 @@ export const geminiContentBlockConverter: StandardContentBlockConverter<{
 /**
  * Converts a single LangChain message with standard content blocks (v1 format) to Gemini Content.
  * This handles messages that have `response_metadata.output_version === "v1"`.
+ *
+ * This is intended to be called from `convertMessagesToGeminiContent`
  */
 function convertStandardContentMessageToGeminiContent(
   message: BaseMessage
@@ -344,6 +346,12 @@ function convertStandardContentMessageToGeminiContent(
   return { role, parts };
 }
 
+/**
+ * Converts a single LangChain message with legacy content blocks (v0 format) to Gemini Content.
+ * This handles messages that have `response_metadata.output_version === "v0"`.
+ *
+ * This is intended to be called from `convertMessagesToGeminiContent`
+ */
 function convertLegacyContentMessageToGeminiContent(
   message: BaseMessage,
   messages: BaseMessage[],
