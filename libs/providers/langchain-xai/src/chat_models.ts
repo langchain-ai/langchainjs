@@ -35,22 +35,12 @@ import {
   type XAISearchParametersPayload,
 } from "./live_search.js";
 import PROFILES from "./profiles.js";
+import { XAILiveSearchTool } from "./tools/live_search.js";
 
 export type OpenAIToolChoice =
   | OpenAIClient.ChatCompletionToolChoiceOption
   | "any"
   | string;
-
-/**
- * xAI's built-in live_search tool type.
- * Enables the model to search the web for real-time information.
- */
-export interface XAILiveSearchTool extends XAISearchParameters {
-  /**
-   * The type of the tool. Must be "live_search" for xAI's built-in search.
-   */
-  type: "live_search";
-}
 
 /**
  * Union type for all xAI built-in server-side tools.

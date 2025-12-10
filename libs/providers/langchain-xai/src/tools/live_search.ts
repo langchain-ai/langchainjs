@@ -3,6 +3,17 @@ import type { DynamicStructuredTool, ToolRuntime } from "@langchain/core/tools";
 import type { XAISearchParameters } from "../live_search.js";
 
 /**
+ * xAI's built-in live_search tool type.
+ * Enables the model to search the web for real-time information.
+ */
+export interface XAILiveSearchTool extends XAISearchParameters {
+  /**
+   * The type of the tool. Must be "live_search" for xAI's built-in search.
+   */
+  type: "live_search";
+}
+
+/**
  * Options for the xAI live search tool.
  * Controls how the model searches for and retrieves real-time information.
  */

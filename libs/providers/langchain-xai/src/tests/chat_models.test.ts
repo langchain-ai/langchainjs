@@ -2,10 +2,10 @@ import { test, expect, beforeEach, describe } from "vitest";
 import {
   ChatXAI,
   isXAIBuiltInTool,
-  type XAILiveSearchTool,
-  type XAISearchParameters,
   type ChatXAICompletionsInvocationParams,
 } from "../chat_models.js";
+import { XAISearchParameters } from "../live_search.js";
+import { XAILiveSearchTool } from "../tools/live_search.js";
 
 beforeEach(() => {
   process.env.XAI_API_KEY = "foo";
