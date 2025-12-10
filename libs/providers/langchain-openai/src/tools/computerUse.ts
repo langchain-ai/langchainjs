@@ -1,6 +1,12 @@
 import { z } from "zod/v4";
 import { OpenAI as OpenAIClient } from "openai";
-import { tool } from "@langchain/core/tools";
+import { tool, type DynamicStructuredTool } from "@langchain/core/tools";
+import { type ToolRuntime } from "@langchain/core/tools";
+import {
+  ToolMessage,
+  type AIMessage,
+  type BaseMessage,
+} from "@langchain/core/messages";
 
 /**
  * The type of computer environment to control.
@@ -49,28 +55,24 @@ const ComputerUseClickActionSchema = z.object({
   type: z.literal("click"),
   x: z.number(),
   y: z.number(),
-  button: z.enum(["left", "right", "middle"]).optional(),
+  button: z.enum(["left", "right", "wheel", "back", "forward"]).default("left"),
 });
 
 const ComputerUseDoubleClickActionSchema = z.object({
   type: z.literal("double_click"),
   x: z.number(),
   y: z.number(),
-  button: z.enum(["left", "right", "middle"]).optional(),
+  button: z.enum(["left", "right", "wheel", "back", "forward"]).default("left"),
 });
 
 const ComputerUseDragActionSchema = z.object({
   type: z.literal("drag"),
-  start_x: z.number(),
-  start_y: z.number(),
-  end_x: z.number(),
-  end_y: z.number(),
-  button: z.enum(["left", "right", "middle"]).optional(),
+  path: z.array(z.object({ x: z.number(), y: z.number() })),
 });
 
 const ComputerUseKeypressActionSchema = z.object({
   type: z.literal("keypress"),
-  key: z.string(),
+  keys: z.array(z.string()),
 });
 
 const ComputerUseMoveActionSchema = z.object({
@@ -83,8 +85,8 @@ const ComputerUseScrollActionSchema = z.object({
   type: z.literal("scroll"),
   x: z.number(),
   y: z.number(),
-  direction: z.enum(["up", "down", "left", "right"]),
-  amount: z.number(),
+  scroll_x: z.number(),
+  scroll_y: z.number(),
 });
 
 const ComputerUseTypeActionSchema = z.object({
@@ -97,8 +99,8 @@ const ComputerUseWaitActionSchema = z.object({
   duration: z.number().optional(),
 });
 
-// Discriminated union schema for all computer use actions
-export const ComputerUseActionSchema = z.discriminatedUnion("type", [
+// Discriminated union schema for individual action types
+const ComputerUseActionUnionSchema = z.discriminatedUnion("type", [
   ComputerUseScreenshotActionSchema,
   ComputerUseClickActionSchema,
   ComputerUseDoubleClickActionSchema,
@@ -109,6 +111,12 @@ export const ComputerUseActionSchema = z.discriminatedUnion("type", [
   ComputerUseTypeActionSchema,
   ComputerUseWaitActionSchema,
 ]);
+
+// Schema for the input structure received from parseComputerCall
+// The action is wrapped in an `action` property: { action: { type: 'screenshot' } }
+export const ComputerUseActionSchema = z.object({
+  action: ComputerUseActionUnionSchema,
+});
 
 // TypeScript types derived from Zod schemas
 export type ComputerUseScreenshotActionType = z.infer<
@@ -140,6 +148,14 @@ export type ComputerUseWaitActionType = z.infer<
 >;
 
 /**
+ * Input structure for the Computer Use tool.
+ * The action is wrapped in an `action` property.
+ */
+export interface ComputerUseInput {
+  action: ComputerUseAction;
+}
+
+/**
  * Options for the Computer Use tool.
  */
 export interface ComputerUseOptions {
@@ -164,14 +180,14 @@ export interface ComputerUseOptions {
   environment: ComputerUseEnvironment;
 
   /**
-   * Optional execute function that handles computer action execution.
+   * Execute function that handles computer action execution.
    * This function receives the action input and should return a base64-encoded
    * screenshot of the result.
-   *
-   * If not provided, you'll need to handle action execution manually by
-   * checking `computer_call` outputs in the response.
    */
-  execute: (action: ComputerUseAction) => string | Promise<string>;
+  execute: (
+    action: ComputerUseAction,
+    runtime: ToolRuntime<any, any>
+  ) => string | Promise<string> | ToolMessage | Promise<ToolMessage>;
 }
 
 /**
@@ -179,7 +195,7 @@ export interface ComputerUseOptions {
  */
 export type ComputerUseTool = OpenAIClient.Responses.ComputerTool;
 
-const TOOL_NAME = "computer";
+const TOOL_NAME = "computer_use";
 
 /**
  * Creates a Computer Use tool that allows models to control computer interfaces
@@ -294,12 +310,57 @@ const TOOL_NAME = "computer";
  * - Recommended to use with `reasoning.summary` for debugging
  */
 export function computerUse(options: ComputerUseOptions) {
-  const computerTool = tool(options.execute, {
-    name: TOOL_NAME,
-    description:
-      "Control a computer interface by executing mouse clicks, keyboard input, scrolling, and other actions.",
-    schema: z.toJSONSchema(ComputerUseActionSchema),
-  });
+  const computerTool = tool(
+    async (
+      input: ComputerUseInput,
+      runtime: ToolRuntime<{ messages: BaseMessage[] }>
+    ) => {
+      /**
+       * get computer_use call id from runtime
+       */
+      const aiMessage = runtime.state?.messages.at(-1) as AIMessage | undefined;
+      const computerToolCall = aiMessage?.tool_calls?.find(
+        (tc) => tc.name === "computer_use"
+      );
+      const computerToolCallId = computerToolCall?.id;
+      if (!computerToolCallId) {
+        throw new Error("Computer use call id not found");
+      }
+
+      const result = await options.execute(input.action, runtime);
+
+      /**
+       * make sure {@link ToolMessage} is returned with the correct additional kwargs
+       */
+      if (typeof result === "string") {
+        return new ToolMessage({
+          content: result,
+          tool_call_id: computerToolCallId,
+          additional_kwargs: {
+            type: "computer_call_output",
+          },
+        });
+      }
+
+      /**
+       * make sure {@link ToolMessage} is returned with the correct additional kwargs
+       */
+      return new ToolMessage({
+        ...result,
+        tool_call_id: computerToolCallId,
+        additional_kwargs: {
+          type: "computer_call_output",
+          ...result.additional_kwargs,
+        },
+      });
+    },
+    {
+      name: TOOL_NAME,
+      description:
+        "Control a computer interface by executing mouse clicks, keyboard input, scrolling, and other actions.",
+      schema: ComputerUseActionSchema,
+    }
+  );
 
   computerTool.extras = {
     ...(computerTool.extras ?? {}),
@@ -311,5 +372,14 @@ export function computerUse(options: ComputerUseOptions) {
     } satisfies ComputerUseTool,
   };
 
-  return computerTool;
+  /**
+   * return as typed {@link DynamicStructuredTool} so we don't get any type
+   * errors like "can't export tool without reference"
+   */
+  return computerTool as DynamicStructuredTool<
+    typeof ComputerUseActionSchema,
+    ComputerUseInput,
+    any,
+    ToolMessage<any>
+  >;
 }
