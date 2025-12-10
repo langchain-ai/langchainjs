@@ -58,7 +58,8 @@ jobs:
       - name: 🧹 Prepare for snapshot release
         run: |
           # Disable changelog generation for snapshot releases
-          pnpm dlx json -I -f .changeset/config.json -e "this.changelog = false"
+          # Enable useCalculatedVersion to preserve current version (e.g., 1.2.0-dev-xxx instead of 0.0.0-dev-xxx)
+          pnpm dlx json -I -f .changeset/config.json -e "this.changelog = false; this.snapshot = { useCalculatedVersion: true, prereleaseTemplate: '{tag}-{timestamp}' }"
 
       - name: 📦 Version packages (snapshot)
         id: version
@@ -90,6 +91,8 @@ jobs:
         run: pnpm changeset publish --tag ${{ inputs.npm_tag }} --no-git-tag
         env:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+          # Enable npm provenance for OIDC-based publishing (bypasses OTP requirement)
+          NPM_CONFIG_PROVENANCE: true
 
       - name: 📋 Get published packages
         if: steps.version.outputs.success == '1'
