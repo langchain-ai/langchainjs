@@ -42,9 +42,11 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: 🔐 Setup npm auth
+        env:
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
           echo "registry=https://registry.npmjs.org" >> ~/.npmrc
-          echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN }}" >> ~/.npmrc
+          echo "//registry.npmjs.org/:_authToken=$NPM_TOKEN" >> ~/.npmrc
 
         # This action has two responsibilities. The first time the workflow runs
         # it will create a new branch and then open a PR with the related changes
