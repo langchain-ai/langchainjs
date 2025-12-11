@@ -41,6 +41,7 @@ import {
   ResponseFormatConfiguration,
   OpenAIVerbosityParam,
   type OpenAIApiKey,
+  OpenAICacheRetentionParam,
 } from "../types.js";
 import {
   type OpenAIEndpointConfig,
@@ -196,6 +197,11 @@ export interface BaseChatOpenAICallOptions
   promptCacheKey?: string;
 
   /**
+   * Used by OpenAI to set cache retention time
+   */
+  promptCacheRetention?: OpenAICacheRetentionParam;
+
+  /**
    * The verbosity of the model's response.
    */
   verbosity?: OpenAIVerbosityParam;
@@ -302,6 +308,11 @@ export abstract class BaseChatOpenAI<
   promptCacheKey: string;
 
   /**
+   * Used by OpenAI to set cache retention time
+   */
+  promptCacheRetention?: OpenAICacheRetentionParam;
+
+  /**
    * The verbosity of the model's response.
    */
   verbosity?: OpenAIVerbosityParam;
@@ -385,6 +396,7 @@ export abstract class BaseChatOpenAI<
       "zdrEnabled",
       "reasoning",
       "promptCacheKey",
+      "promptCacheRetention",
       "verbosity",
     ];
   }
@@ -459,6 +471,8 @@ export abstract class BaseChatOpenAI<
     this.reasoning = fields?.reasoning;
     this.maxTokens = fields?.maxCompletionTokens ?? fields?.maxTokens;
     this.promptCacheKey = fields?.promptCacheKey ?? this.promptCacheKey;
+    this.promptCacheRetention =
+      fields?.promptCacheRetention ?? this.promptCacheRetention;
     this.verbosity = fields?.verbosity ?? this.verbosity;
 
     this.disableStreaming = fields?.disableStreaming === true;
