@@ -10,10 +10,9 @@ describe("xaiLiveSearch tool", () => {
       returnCitations: true,
     });
 
-    expect(tool.name).toBe("live_search");
-    expect(tool.extras).toBeDefined();
-    expect(tool.extras?.providerToolDefinition).toEqual({
+    expect(tool).toEqual({
       type: "live_search",
+      name: "live_search",
       max_search_results: 10,
       from_date: "2024-01-01",
       return_citations: true,
@@ -22,9 +21,9 @@ describe("xaiLiveSearch tool", () => {
 
   test("creates a tool with default options", async () => {
     const tool = xaiLiveSearch();
-    expect(tool.name).toBe("live_search");
-    expect(tool.extras?.providerToolDefinition).toEqual({
+    expect(tool).toEqual({
       type: "live_search",
+      name: "live_search",
     });
   });
 
@@ -33,18 +32,18 @@ describe("xaiLiveSearch tool", () => {
       sources: [
         {
           type: "web",
-          excluded_websites: ["wikipedia.org"],
+          excludedWebsites: ["wikipedia.org"],
         },
         {
           type: "news",
-          excluded_websites: ["bbc.co.uk"],
+          excludedWebsites: ["bbc.co.uk"],
         },
       ],
     });
 
-    expect(tool.name).toBe("live_search");
-    expect(tool.extras?.providerToolDefinition).toEqual({
+    expect(tool).toEqual({
       type: "live_search",
+      name: "live_search",
       sources: [
         {
           type: "web",
@@ -67,7 +66,7 @@ describe("ChatXAI with xaiLiveSearch tool", () => {
       sources: [
         {
           type: "web",
-          allowed_websites: ["example.com"],
+          allowedWebsites: ["example.com"],
         },
       ],
     });
@@ -82,6 +81,7 @@ describe("ChatXAI with xaiLiveSearch tool", () => {
     expect(formattedTools[0]).toEqual({
       type: "live_search",
       max_search_results: 8,
+      name: "live_search",
       sources: [
         {
           type: "web",

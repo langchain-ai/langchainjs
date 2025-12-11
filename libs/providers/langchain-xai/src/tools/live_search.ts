@@ -1,5 +1,4 @@
-import { tool } from "@langchain/core/tools";
-import type { DynamicStructuredTool, ToolRuntime } from "@langchain/core/tools";
+import { type ServerTool } from "@langchain/core/tools";
 import type { XAISearchParameters, XAISearchSource } from "../live_search.js";
 
 /**
@@ -8,10 +7,67 @@ import type { XAISearchParameters, XAISearchSource } from "../live_search.js";
  */
 export interface XAILiveSearchTool extends XAISearchParameters {
   /**
-   * The type of the tool. Must be "live_search" for xAI's built-in search.
+   * The name of the tool. Must be "live_search" for xAI's built-in search.
    */
-  type: "live_search";
+  name: "live_search";
+  /**
+   * The type of the tool. This uses a deprecated Live Search API shape:
+   * the advanced agentic search capabilities powering grok.com are generally
+   * available in the new agentic tool calling API, and the Live Search API
+   * will be deprecated by December 15, 2025.
+   */
+  type: "live_search_deprecated_20251215";
 }
+
+/**
+ * Web search source configuration for the xAI live search tool (camelCase).
+ * This is converted to the snake_case `XAIWebSource` internally.
+ */
+export interface XAIWebSearchToolSource {
+  type: "web";
+  country?: string;
+  excludedWebsites?: string[];
+  allowedWebsites?: string[];
+  safeSearch?: boolean;
+}
+
+/**
+ * News search source configuration for the xAI live search tool (camelCase).
+ * This is converted to the snake_case `XAINewsSource` internally.
+ */
+export interface XAINewsSearchToolSource {
+  type: "news";
+  country?: string;
+  excludedWebsites?: string[];
+  safeSearch?: boolean;
+}
+
+/**
+ * X (formerly Twitter) search source configuration for the xAI live search tool (camelCase).
+ * This is converted to the snake_case `XAIXSource` internally.
+ */
+export interface XAIXSearchToolSource {
+  type: "x";
+  includedXHandles?: string[];
+  excludedXHandles?: string[];
+  postFavoriteCount?: number;
+  postViewCount?: number;
+}
+
+/**
+ * RSS feed search source configuration for the xAI live search tool.
+ * The structure matches `XAIRssSource` (only `links`).
+ */
+export interface XAIRssSearchToolSource {
+  type: "rss";
+  links: string[];
+}
+
+export type XAISearchToolSource =
+  | XAIWebSearchToolSource
+  | XAINewsSearchToolSource
+  | XAIXSearchToolSource
+  | XAIRssSearchToolSource;
 
 /**
  * Options for the xAI live search tool (camelCase).
@@ -47,10 +103,67 @@ export interface XAILiveSearchToolOptions {
   returnCitations?: boolean;
   /**
    * Specific web/news/X/RSS sources that can be used for the search.
-   * These use the same structure as `XAISearchSource` (snake_case fields)
-   * since they are passed directly to the JSON API.
+   * These are converted to the snake_case `XAISearchSource` structures
+   * used by the underlying xAI Live Search API.
    */
-  sources?: XAISearchSource[];
+  sources?: XAISearchToolSource[];
+}
+
+function mapToolSourceToSearchSource(
+  source: XAISearchToolSource
+): XAISearchSource {
+  switch (source.type) {
+    case "web":
+      return {
+        type: "web",
+        ...(source.country !== undefined && { country: source.country }),
+        ...(source.allowedWebsites !== undefined && {
+          allowed_websites: source.allowedWebsites,
+        }),
+        ...(source.excludedWebsites !== undefined && {
+          excluded_websites: source.excludedWebsites,
+        }),
+        ...(source.safeSearch !== undefined && {
+          safe_search: source.safeSearch,
+        }),
+      };
+    case "news":
+      return {
+        type: "news",
+        ...(source.country !== undefined && { country: source.country }),
+        ...(source.excludedWebsites !== undefined && {
+          excluded_websites: source.excludedWebsites,
+        }),
+        ...(source.safeSearch !== undefined && {
+          safe_search: source.safeSearch,
+        }),
+      };
+    case "x":
+      return {
+        type: "x",
+        ...(source.includedXHandles !== undefined && {
+          included_x_handles: source.includedXHandles,
+        }),
+        ...(source.excludedXHandles !== undefined && {
+          excluded_x_handles: source.excludedXHandles,
+        }),
+        ...(source.postFavoriteCount !== undefined && {
+          post_favorite_count: source.postFavoriteCount,
+        }),
+        ...(source.postViewCount !== undefined && {
+          post_view_count: source.postViewCount,
+        }),
+      };
+    case "rss":
+      return {
+        type: "rss",
+        links: source.links,
+      };
+    default: {
+      const _exhaustive: never = source;
+      return _exhaustive;
+    }
+  }
 }
 
 /**
@@ -79,9 +192,7 @@ export interface XAILiveSearchToolOptions {
  */
 export function xaiLiveSearch(
   options: XAILiveSearchToolOptions = {}
-): DynamicStructuredTool {
-  const name = "live_search";
-
+): XAILiveSearchTool & ServerTool {
   const searchParams: XAISearchParameters = {
     ...(options.mode !== undefined && { mode: options.mode }),
     ...(options.maxSearchResults !== undefined && {
@@ -92,35 +203,14 @@ export function xaiLiveSearch(
     ...(options.returnCitations !== undefined && {
       return_citations: options.returnCitations,
     }),
-    ...(options.sources !== undefined && { sources: options.sources }),
+    ...(options.sources !== undefined && {
+      sources: options.sources.map(mapToolSourceToSearchSource),
+    }),
   };
 
-  const searchTool = tool(
-    (async () => {
-      // This is a server-side tool; the actual search is executed by xAI
-      // based on the `search_parameters` we send via the ChatXAI provider.
-      return "This tool is executed server-side by xAI.";
-    }) as (
-      input: unknown,
-      runtime: ToolRuntime<unknown, unknown>
-    ) => string | Promise<string>,
-    {
-      name,
-      description: "Search the web for real-time information.",
-      schema: {
-        type: "object",
-        properties: {},
-      },
-    }
-  );
-
-  searchTool.extras = {
-    ...(searchTool.extras ?? {}),
-    providerToolDefinition: {
-      type: "live_search",
-      ...searchParams,
-    },
-  };
-
-  return searchTool;
+  return {
+    type: "live_search_deprecated_20251215",
+    name: "live_search",
+    ...searchParams,
+  } satisfies XAILiveSearchTool & ServerTool;
 }
