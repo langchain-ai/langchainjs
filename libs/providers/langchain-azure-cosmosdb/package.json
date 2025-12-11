@@ -30,7 +30,7 @@
     "format:check": "prettier --check \"src\""
   },
   "dependencies": {
-    "@azure/cosmos": "^4.2.0",
+    "@azure/cosmos": "^4.8.0",
     "@azure/identity": "^4.5.0",
     "mongodb": "^6.17.0"
   },
