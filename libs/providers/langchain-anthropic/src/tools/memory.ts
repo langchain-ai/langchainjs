@@ -1,7 +1,12 @@
+import Anthropic from "@anthropic-ai/sdk";
 import { tool } from "@langchain/core/tools";
 import type { DynamicStructuredTool, ToolRuntime } from "@langchain/core/tools";
 
-import type { MemoryTool20250818Options } from "./types.js";
+import {
+  Memory20250818CommandSchema,
+  type MemoryTool20250818Options,
+  type Memory20250818Command,
+} from "./types.js";
 
 /**
  * Creates an Anthropic memory tool that can be used with ChatAnthropic.
@@ -36,9 +41,7 @@ import type { MemoryTool20250818Options } from "./types.js";
  *
  * @see https://docs.anthropic.com/en/docs/agents-and-tools/tool-use/memory-tool
  */
-export function memory_20250818(
-  options?: MemoryTool20250818Options
-): DynamicStructuredTool {
+export function memory_20250818(options?: MemoryTool20250818Options) {
   const memoryTool = tool(
     options?.execute as (
       input: unknown,
@@ -46,23 +49,7 @@ export function memory_20250818(
     ) => string | Promise<string>,
     {
       name: "memory",
-      schema: {
-        type: "object",
-        properties: {
-          command: {
-            type: "string",
-            enum: [
-              "view",
-              "create",
-              "str_replace",
-              "insert",
-              "delete",
-              "rename",
-            ],
-          },
-        },
-        required: ["command"],
-      },
+      schema: Memory20250818CommandSchema,
     }
   );
 
@@ -71,8 +58,13 @@ export function memory_20250818(
     providerToolDefinition: {
       type: "memory_20250818",
       name: "memory",
-    },
+    } satisfies Anthropic.Beta.BetaMemoryTool20250818,
   };
 
-  return memoryTool;
+  return memoryTool as DynamicStructuredTool<
+    typeof Memory20250818CommandSchema,
+    Memory20250818Command,
+    unknown,
+    string | Promise<string>
+  >;
 }

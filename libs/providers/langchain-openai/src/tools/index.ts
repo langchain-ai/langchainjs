@@ -47,6 +47,7 @@ export type {
 import { computerUse } from "./computerUse.js";
 export type {
   ComputerUseTool,
+  ComputerUseInput,
   ComputerUseOptions,
   ComputerUseEnvironment,
   ComputerUseAction,

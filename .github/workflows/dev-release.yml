@@ -1,6 +1,8 @@
 name: Dev Release
+
+# Called by publish.yml (the npm Trusted Publisher entry point)
 on:
-  workflow_dispatch:
+  workflow_call:
     inputs:
       npm_tag:
         description: "NPM tag for the release"
@@ -10,10 +12,6 @@ on:
 
 env:
   CI: true
-
-concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
 
 jobs:
   release:
@@ -95,17 +93,17 @@ jobs:
           NPM_CONFIG_PROVENANCE: true
 
       - name: 📋 Get published packages
-        if: steps.version.outputs.success == '1'
+        if: steps.version.outputs.success == '1' && github.ref != 'refs/heads/main'
         id: published
         uses: actions/github-script@v8
         with:
           script: |
             const fs = require('fs');
             const path = require('path');
-            const glob = require('@actions/glob');
+            const actionsGlob = require('@actions/glob');
 
             // Find all package.json files in libs directory
-            const globber = await glob.create('libs/**/package.json', {
+            const globber = await actionsGlob.create('libs/**/package.json', {
               followSymbolicLinks: false
             });
             const files = await globber.glob();
@@ -165,7 +163,7 @@ jobs:
             await summary.write();
 
       - name: 💬 Comment on PR
-        if: steps.version.outputs.success == '1' && steps.published.outputs.count != '0'
+        if: steps.version.outputs.success == '1' && steps.published.outputs.count != '0' && github.ref != 'refs/heads/main'
         uses: actions/github-script@v8
         with:
           script: |
