@@ -11,43 +11,26 @@ export interface DecartImageGenerationParams extends ToolParams {
   apiKey?: string;
   /**
    * Base URL for Decart API. Optional.
+   * @default "https://api.decart.ai"
    */
   baseUrl?: string;
   /**
-   * Default resolution for generated images.
-   * @default "720p"
-   */
-  resolution?: "480p" | "720p";
-  /**
-   * Default orientation for generated images.
+   * Orientation for generated images.
+   * @default "landscape"
    */
   orientation?: "landscape" | "portrait";
-  /**
-   * Whether to enhance prompts by default.
-   * @default true
-   */
-  enhancePrompt?: boolean;
 }
 
-async function importDecartSDK() {
-  try {
-    const { createDecartClient, models } = await import("@decartai/sdk");
-    return { createDecartClient, models };
-  } catch (e) {
-    throw new Error(
-      "Failed to load @decartai/sdk. Please install it with: npm install @decartai/sdk"
-    );
-  }
-}
+const DEFAULT_BASE_URL = "https://api.decart.ai";
 
 /**
  * Decart AI image generation tool.
  *
  * Setup:
- * Install `@langchain/community` and `@decartai/sdk`.
+ * Install `@langchain/community`.
  *
  * ```bash
- * npm install @langchain/community @decartai/sdk
+ * npm install @langchain/community
  * ```
  *
  * Set your API key:
@@ -96,13 +79,9 @@ export class DecartImageGeneration extends Tool {
 
   private apiKey: string;
 
-  private baseUrl?: string;
+  private baseUrl: string;
 
-  private resolution: "480p" | "720p";
-
-  private orientation?: "landscape" | "portrait";
-
-  private enhancePrompt: boolean;
+  private orientation: "landscape" | "portrait";
 
   name = "decart_image_generation";
 
@@ -119,33 +98,37 @@ export class DecartImageGeneration extends Tool {
       );
     }
     this.apiKey = apiKey;
-    this.baseUrl = params?.baseUrl;
-    this.resolution = params?.resolution ?? "720p";
-    this.orientation = params?.orientation;
-    this.enhancePrompt = params?.enhancePrompt ?? true;
+    this.baseUrl = params?.baseUrl ?? DEFAULT_BASE_URL;
+    this.orientation = params?.orientation ?? "landscape";
   }
 
   async _call(input: string): Promise<string> {
-    const { createDecartClient, models } = await importDecartSDK();
+    const url = `${this.baseUrl}/v1/generate/lucy-pro-t2i`;
 
-    const client = createDecartClient({
-      apiKey: this.apiKey,
-      ...(this.baseUrl && { baseUrl: this.baseUrl }),
+    const formData = new FormData();
+    formData.append("prompt", input);
+    formData.append("orientation", this.orientation);
+
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        "X-API-KEY": this.apiKey,
+      },
+      body: formData,
     });
 
-    const result = await client.process({
-      model: models.image("lucy-pro-t2i"),
-      prompt: input,
-      resolution: this.resolution,
-      ...(this.orientation && { orientation: this.orientation }),
-      enhance_prompt: this.enhancePrompt,
-    });
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(
+        `Decart API error (${response.status}): ${errorText}`
+      );
+    }
 
-    // Convert Blob to base64 data URL
-    const arrayBuffer = await result.arrayBuffer();
+    // Response is binary image data
+    const arrayBuffer = await response.arrayBuffer();
     const base64 = Buffer.from(arrayBuffer).toString("base64");
-    const mimeType = result.type || "image/png";
+    const contentType = response.headers.get("content-type") || "image/png";
 
-    return `data:${mimeType};base64,${base64}`;
+    return `data:${contentType};base64,${base64}`;
   }
 }

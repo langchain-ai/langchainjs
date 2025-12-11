@@ -23,9 +23,8 @@ test("DecartImageGeneration throws without API key", () => {
 test("DecartImageGeneration accepts custom configuration", () => {
   const tool = new DecartImageGeneration({
     apiKey: "test-key",
-    resolution: "480p",
-    orientation: "landscape",
-    enhancePrompt: false,
+    orientation: "portrait",
+    baseUrl: "https://custom.api.com",
   });
   expect(tool.name).toBe("decart_image_generation");
 });

@@ -272,7 +272,6 @@ export default getBuildConfig({
       entrypoints: [
         "tools/aws_lambda",
         "tools/aws_sfn",
-        "tools/decart_image",
         "tools/duckduckgo_search",
         "tools/discord",
         "tools/gmail",
