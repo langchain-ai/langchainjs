@@ -164,10 +164,7 @@ import { ChatXAI, tools } from "@langchain/xai";
 const model = new ChatXAI({ model: "grok-2-1212" });
 
 const modelWithTools = model.bindTools([
-  tools.xaiLiveSearch({
-    maxSearchResults: 5,
-    returnCitations: true,
-  }), // Built-in server tool
+  tools.xaiLiveSearch(), // Built-in server tool
   {
     // Custom function tool
     type: "function",
