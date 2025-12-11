@@ -41,9 +41,7 @@ import {
  *
  * @see https://docs.anthropic.com/en/docs/agents-and-tools/tool-use/memory-tool
  */
-export function memory_20250818(
-  options?: MemoryTool20250818Options
-): DynamicStructuredTool {
+export function memory_20250818(options?: MemoryTool20250818Options) {
   const memoryTool = tool(
     options?.execute as (
       input: unknown,
