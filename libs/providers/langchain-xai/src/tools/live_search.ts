@@ -1,4 +1,3 @@
-import { type ServerTool } from "@langchain/core/tools";
 import type { XAISearchParameters, XAISearchSource } from "../live_search.js";
 
 /**
@@ -192,25 +191,15 @@ function mapToolSourceToSearchSource(
  */
 export function xaiLiveSearch(
   options: XAILiveSearchToolOptions = {}
-): XAILiveSearchTool & ServerTool {
-  const searchParams: XAISearchParameters = {
-    ...(options.mode !== undefined && { mode: options.mode }),
-    ...(options.maxSearchResults !== undefined && {
-      max_search_results: options.maxSearchResults,
-    }),
-    ...(options.fromDate !== undefined && { from_date: options.fromDate }),
-    ...(options.toDate !== undefined && { to_date: options.toDate }),
-    ...(options.returnCitations !== undefined && {
-      return_citations: options.returnCitations,
-    }),
-    ...(options.sources !== undefined && {
-      sources: options.sources.map(mapToolSourceToSearchSource),
-    }),
-  };
-
+): XAILiveSearchTool {
   return {
     type: "live_search_deprecated_20251215",
     name: "live_search",
-    ...searchParams,
-  } satisfies XAILiveSearchTool & ServerTool;
+    mode: options?.mode,
+    max_search_results: options?.maxSearchResults,
+    from_date: options?.fromDate,
+    to_date: options?.toDate,
+    return_citations: options?.returnCitations,
+    sources: options?.sources?.map(mapToolSourceToSearchSource),
+  } satisfies XAILiveSearchTool;
 }

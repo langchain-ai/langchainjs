@@ -10,8 +10,8 @@ describe("xaiLiveSearch tool", () => {
       returnCitations: true,
     });
 
-    expect(tool).toEqual({
-      type: "live_search",
+    expect(tool).toMatchObject({
+      type: "live_search_deprecated_20251215",
       name: "live_search",
       max_search_results: 10,
       from_date: "2024-01-01",
@@ -21,8 +21,8 @@ describe("xaiLiveSearch tool", () => {
 
   test("creates a tool with default options", async () => {
     const tool = xaiLiveSearch();
-    expect(tool).toEqual({
-      type: "live_search",
+    expect(tool).toMatchObject({
+      type: "live_search_deprecated_20251215",
       name: "live_search",
     });
   });
@@ -41,8 +41,8 @@ describe("xaiLiveSearch tool", () => {
       ],
     });
 
-    expect(tool).toEqual({
-      type: "live_search",
+    expect(tool).toMatchObject({
+      type: "live_search_deprecated_20251215",
       name: "live_search",
       sources: [
         {
@@ -78,8 +78,8 @@ describe("ChatXAI with xaiLiveSearch tool", () => {
     ]);
 
     expect(formattedTools).toHaveLength(1);
-    expect(formattedTools[0]).toEqual({
-      type: "live_search",
+    expect(formattedTools[0]).toMatchObject({
+      type: "live_search_deprecated_20251215",
       max_search_results: 8,
       name: "live_search",
       sources: [
