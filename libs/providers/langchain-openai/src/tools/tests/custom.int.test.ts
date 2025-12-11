@@ -1,4 +1,4 @@
-import { describe, test, expect } from "vitest";
+import { describe, test, expect, vi } from "vitest";
 import {
   AIMessage,
   BaseMessage,
@@ -7,7 +7,7 @@ import {
 } from "@langchain/core/messages";
 import { ToolCall } from "@langchain/core/messages/tool";
 import { customTool } from "../custom.js";
-import { ChatOpenAI } from "../../chat_models.js";
+import { ChatOpenAI } from "../../chat_models/index.js";
 
 describe("customTool", () => {
   test("invoking a custom tool will keep tool metadata", async () => {
@@ -32,7 +32,7 @@ describe("customTool", () => {
   });
 
   test("responding with a tool message from a custom tool will be used correctly", async () => {
-    const fn = jest.fn(async (input: string) => input);
+    const fn = vi.fn(async (input: string) => input);
     const tool = customTool(fn, {
       name: "text_tool",
       description: "A tool that returns the input",

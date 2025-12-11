@@ -6,7 +6,7 @@ import {
   type BaseMessage,
   isAIMessage,
   type UsageMetadata,
-  type BaseMessageFields,
+  type AIMessageFields,
   BaseMessageChunk,
 } from "@langchain/core/messages";
 import {
@@ -275,7 +275,7 @@ export class ChatOpenAICompletions<
             Object.entries(generation.message).filter(
               ([key]) => !key.startsWith("lc_")
             )
-          ) as BaseMessageFields
+          ) as AIMessageFields
         );
         generations.push(generation);
       }

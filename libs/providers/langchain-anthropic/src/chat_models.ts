@@ -1,6 +1,6 @@
 import { Anthropic, type ClientOptions } from "@anthropic-ai/sdk";
 import type { Stream } from "@anthropic-ai/sdk/streaming";
-import { transformJSONSchema } from "@anthropic-ai/sdk/lib/transform-json-schema.js";
+import { transformJSONSchema } from "@anthropic-ai/sdk/lib/transform-json-schema";
 
 import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
 import { AIMessageChunk, type BaseMessage } from "@langchain/core/messages";
@@ -57,6 +57,7 @@ import {
   AnthropicToolChoice,
   ChatAnthropicOutputFormat,
   ChatAnthropicToolType,
+  AnthropicMCPServerURLDefinition,
   Kwargs,
 } from "./types.js";
 import { wrapAnthropicClientError } from "./utils/errors.js";
@@ -115,6 +116,10 @@ export interface ChatAnthropicCallOptions
    * See https://docs.anthropic.com/en/api/versioning for available beta features.
    */
   betas?: AnthropicBeta[];
+  /**
+   * Array of MCP server URLs to use for the request.
+   */
+  mcp_servers?: AnthropicMCPServerURLDefinition[];
 }
 
 function _toolsInParams(
@@ -168,12 +173,13 @@ function isBuiltinTool(tool: unknown): tool is AnthropicBuiltInToolUnion {
     "code_execution_",
     "memory_",
     "tool_search_",
+    "mcp_toolset",
   ];
   return (
     typeof tool === "object" &&
     tool !== null &&
     "type" in tool &&
-    "name" in tool &&
+    ("name" in tool || "mcp_server_name" in tool) &&
     typeof tool.type === "string" &&
     builtInToolPrefixes.some(
       (prefix) => typeof tool.type === "string" && tool.type.startsWith(prefix)
@@ -293,6 +299,11 @@ export interface AnthropicInput {
    */
   betas?: AnthropicBeta[];
 }
+
+/**
+ * Input to ChatAnthropic class.
+ */
+export type ChatAnthropicInput = AnthropicInput & BaseChatModelParams;
 
 function extractToken(chunk: AIMessageChunk): string | undefined {
   if (typeof chunk.content === "string") {
@@ -904,7 +915,7 @@ export class ChatAnthropicMessages<
    */
   createClient: (options: ClientOptions) => Anthropic;
 
-  constructor(fields?: AnthropicInput & BaseChatModelParams) {
+  constructor(fields?: ChatAnthropicInput) {
     super(fields ?? {});
 
     this.anthropicApiKey =
@@ -974,6 +985,10 @@ export class ChatAnthropicMessages<
       return undefined;
     }
     return tools.map((tool) => {
+      if (isLangChainTool(tool) && tool.extras?.providerToolDefinition) {
+        return tool.extras
+          .providerToolDefinition as Anthropic.Messages.ToolUnion;
+      }
       if (isBuiltinTool(tool)) {
         return tool;
       }
@@ -1058,6 +1073,7 @@ export class ChatAnthropicMessages<
       container: options?.container,
       betas: _combineBetas(this.betas, options?.betas, toolBetas ?? []),
       output_format: options?.output_format,
+      mcp_servers: options?.mcp_servers,
     };
 
     if (this.thinking.type === "enabled") {

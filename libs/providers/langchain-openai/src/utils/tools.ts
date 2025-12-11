@@ -234,6 +234,39 @@ export function isBuiltInTool(tool: ChatOpenAIToolType): tool is ResponsesTool {
   return "type" in tool && tool.type !== "function";
 }
 
+/**
+ * Type for LangChain tools that have a provider-specific tool definition
+ * stored in extras.providerToolDefinition.
+ */
+type LangchainToolWithProviderDefinition = StructuredToolInterface & {
+  extras: {
+    providerToolDefinition: ResponsesTool;
+  };
+};
+
+/**
+ * Checks if a tool has a provider-specific tool definition in extras.providerToolDefinition.
+ * This is used for tools like localShell, shell, computerUse, and applyPatch
+ * that need to be sent as built-in tool types to the OpenAI API.
+ */
+export function hasProviderToolDefinition(
+  tool: unknown
+): tool is LangchainToolWithProviderDefinition {
+  return (
+    typeof tool === "object" &&
+    tool !== null &&
+    "extras" in tool &&
+    typeof (tool as LangchainToolWithProviderDefinition).extras === "object" &&
+    (tool as LangchainToolWithProviderDefinition).extras !== null &&
+    "providerToolDefinition" in
+      (tool as LangchainToolWithProviderDefinition).extras &&
+    typeof (tool as LangchainToolWithProviderDefinition).extras
+      .providerToolDefinition === "object" &&
+    (tool as LangchainToolWithProviderDefinition).extras
+      .providerToolDefinition !== null
+  );
+}
+
 export function isBuiltInToolChoice(
   tool_choice: OpenAIToolChoice | ResponsesToolChoice | undefined
 ): tool_choice is ResponsesToolChoice {
@@ -301,10 +334,66 @@ export function parseCustomToolCall(
   };
 }
 
+export type ComputerToolCall = ToolCall & {
+  call_id: string;
+  /**
+   * marker to indicate that the tool call is a computer tool call
+   */
+  isComputerTool: true;
+};
+
+/**
+ * Parses a computer_call output item from the OpenAI Responses API
+ * into a ToolCall format that can be processed by the ToolNode.
+ *
+ * @param rawToolCall - The raw computer_call output item from the API
+ * @returns A ComputerToolCall object if valid, undefined otherwise
+ */
+export function parseComputerCall(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  rawToolCall: Record<string, any>
+): ComputerToolCall | undefined {
+  if (rawToolCall.type !== "computer_call") {
+    return undefined;
+  }
+  return {
+    ...rawToolCall,
+    type: "tool_call",
+    call_id: rawToolCall.id,
+    id: rawToolCall.call_id,
+    name: "computer_use",
+    isComputerTool: true,
+    args: {
+      action: rawToolCall.action,
+    },
+  };
+}
+
+/**
+ * Checks if a tool call is a computer tool call.
+ * @param toolCall - The tool call to check.
+ * @returns True if the tool call is a computer tool call, false otherwise.
+ */
+export function isComputerToolCall(
+  toolCall: unknown
+): toolCall is ComputerToolCall {
+  return (
+    typeof toolCall === "object" &&
+    toolCall !== null &&
+    "type" in toolCall &&
+    toolCall.type === "tool_call" &&
+    "isComputerTool" in toolCall &&
+    toolCall.isComputerTool === true
+  );
+}
+
 export function isCustomToolCall(
-  toolCall: ToolCall
+  toolCall: unknown
 ): toolCall is CustomToolCall {
   return (
+    typeof toolCall === "object" &&
+    toolCall !== null &&
+    "type" in toolCall &&
     toolCall.type === "tool_call" &&
     "isCustomTool" in toolCall &&
     toolCall.isCustomTool === true
