@@ -1,6 +1,8 @@
 name: Dev Release
+
+# Called by publish.yml (the npm Trusted Publisher entry point)
 on:
-  workflow_dispatch:
+  workflow_call:
     inputs:
       npm_tag:
         description: "NPM tag for the release"
