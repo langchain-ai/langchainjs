@@ -46,8 +46,8 @@ const model = new ChatXAI({
 
 // Create the built-in live_search tool with optional parameters
 const searchTool = tools.xaiLiveSearch({
-  max_search_results: 5,
-  return_citations: true,
+  maxSearchResults: 5,
+  returnCitations: true,
 });
 
 // Bind the live_search tool to the model
@@ -159,12 +159,15 @@ const result = await model.invoke("Summarize the latest posts from this feed", {
 ### Combining live_search with custom tools
 
 ```typescript
-import { ChatXAI } from "@langchain/xai";
+import { ChatXAI, tools } from "@langchain/xai";
 
 const model = new ChatXAI({ model: "grok-2-1212" });
 
 const modelWithTools = model.bindTools([
-  { type: "live_search" }, // Built-in server tool
+  tools.xaiLiveSearch({
+    maxSearchResults: 5,
+    returnCitations: true,
+  }), // Built-in server tool
   {
     // Custom function tool
     type: "function",
