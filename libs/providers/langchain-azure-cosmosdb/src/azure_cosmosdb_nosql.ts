@@ -174,8 +174,6 @@ export class AzureCosmosDBNoSQLVectorStore extends VectorStore {
 
   private embeddingKey: string;
 
-  private readonly searchType: AzureCosmosDBNoSQLSearchType;
-
   private readonly fullTextSearchEnabled: boolean;
 
   private readonly tableAlias: string;
