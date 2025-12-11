@@ -47,9 +47,9 @@ import {
 
 type ResponseHandlerResult<StructuredResponseFormat> =
   | {
-      structuredResponse: StructuredResponseFormat;
-      messages: BaseMessage[];
-    }
+    structuredResponse: StructuredResponseFormat;
+    messages: BaseMessage[];
+  }
   | Promise<Command>;
 
 /**
@@ -91,9 +91,9 @@ export interface AgentNodeOptions<
   StateSchema extends AnyAnnotationRoot | InteropZodObject = AnyAnnotationRoot,
   ContextSchema extends AnyAnnotationRoot | InteropZodObject = AnyAnnotationRoot
 > extends Pick<
-    CreateAgentParams<StructuredResponseFormat, StateSchema, ContextSchema>,
-    "model" | "includeAgentName" | "name" | "responseFormat" | "middleware"
-  > {
+  CreateAgentParams<StructuredResponseFormat, StateSchema, ContextSchema>,
+  "model" | "includeAgentName" | "name" | "responseFormat" | "middleware"
+> {
   toolClasses: (ClientTool | ServerTool)[];
   shouldReturnDirect: Set<string>;
   signal?: AbortSignal;
@@ -125,9 +125,9 @@ export class AgentNode<
 > extends RunnableCallable<
   InternalAgentState<StructuredResponseFormat>,
   | (
-      | { messages: BaseMessage[] }
-      | { structuredResponse: StructuredResponseFormat }
-    )
+    | { messages: BaseMessage[] }
+    | { structuredResponse: StructuredResponseFormat }
+  )
   | Command
 > {
   #options: AgentNodeOptions<StructuredResponseFormat, ContextSchema>;
@@ -407,9 +407,9 @@ export class AgentNode<
            */
           const context = currentMiddleware.contextSchema
             ? interopParse(
-                currentMiddleware.contextSchema,
-                lgConfig?.context || {}
-              )
+              currentMiddleware.contextSchema,
+              lgConfig?.context || {}
+            )
             : lgConfig?.context;
 
           /**
@@ -433,9 +433,9 @@ export class AgentNode<
             state: {
               ...(middleware.stateSchema
                 ? interopParse(
-                    interopZodObjectPartial(middleware.stateSchema),
-                    state
-                  )
+                  interopZodObjectPartial(middleware.stateSchema),
+                  state
+                )
                 : {}),
               ...currentGetState(),
               messages: state.messages,
@@ -464,8 +464,7 @@ export class AgentNode<
             );
             if (newTools.length > 0) {
               throw new Error(
-                `You have added a new tool in "wrapModelCall" hook of middleware "${
-                  currentMiddleware.name
+                `You have added a new tool in "wrapModelCall" hook of middleware "${currentMiddleware.name
                 }": ${newTools
                   .map((tool) => tool.name)
                   .join(", ")}. This is not supported.`
@@ -483,8 +482,7 @@ export class AgentNode<
             );
             if (invalidTools.length > 0) {
               throw new Error(
-                `You have modified a tool in "wrapModelCall" hook of middleware "${
-                  currentMiddleware.name
+                `You have modified a tool in "wrapModelCall" hook of middleware "${currentMiddleware.name
                 }": ${invalidTools
                   .map((tool) => tool.name)
                   .join(", ")}. This is not supported.`
@@ -548,8 +546,7 @@ export class AgentNode<
              */
             if (!isInternalModelResponse(middlewareResponse)) {
               throw new Error(
-                `Invalid response from "wrapModelCall" in middleware "${
-                  currentMiddleware.name
+                `Invalid response from "wrapModelCall" in middleware "${currentMiddleware.name
                 }": expected AIMessage, got ${typeof middlewareResponse}`
               );
             }
@@ -650,9 +647,9 @@ export class AgentNode<
           }),
           new AIMessage(
             lastMessage ??
-              `Returning structured response: ${JSON.stringify(
-                structuredResponse
-              )}`
+            `Returning structured response: ${JSON.stringify(
+              structuredResponse
+            )}`
           ),
         ],
       };
@@ -798,8 +795,8 @@ export class AgentNode<
       "remainingSteps" in state ? (state.remainingSteps as number) : undefined;
     return Boolean(
       remainingSteps &&
-        ((remainingSteps < 1 && allToolsReturnDirect) ||
-          (remainingSteps < 2 && hasToolCalls(state.messages.at(-1))))
+      ((remainingSteps < 1 && allToolsReturnDirect) ||
+        (remainingSteps < 2 && hasToolCalls(state.messages.at(-1))))
     );
   }
 
@@ -835,13 +832,18 @@ export class AgentNode<
      * check if the user requests a native schema output
      */
     if (structuredResponseFormat?.type === "native") {
+      const resolvedStrict =
+        preparedOptions?.modelSettings?.strict ??
+        structuredResponseFormat?.strategy?.strict ??
+        true;
+
       const jsonSchemaParams = {
         name: structuredResponseFormat.strategy.schema?.name ?? "extract",
         description: getSchemaDescription(
           structuredResponseFormat.strategy.schema
         ),
         schema: structuredResponseFormat.strategy.schema,
-        strict: preparedOptions?.modelSettings?.strict,
+        strict: resolvedStrict,
       };
 
       Object.assign(options, {
@@ -860,8 +862,9 @@ export class AgentNode<
           kwargs: { method: "json_schema" },
           schema: structuredResponseFormat.strategy.schema,
         },
-        strict: preparedOptions?.modelSettings?.strict,
+        strict: resolvedStrict,
       });
+
     }
 
     /**
