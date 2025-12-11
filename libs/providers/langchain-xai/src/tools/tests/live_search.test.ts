@@ -1,5 +1,5 @@
 import { test, expect, describe } from "vitest";
-import { xaiLiveSearch } from "../live_search.js";
+import { xaiLiveSearch, XAILiveSearchTool } from "../live_search.js";
 import { ChatXAI } from "../../chat_models.js";
 
 describe("xaiLiveSearch tool", () => {
@@ -16,7 +16,7 @@ describe("xaiLiveSearch tool", () => {
       max_search_results: 10,
       from_date: "2024-01-01",
       return_citations: true,
-    });
+    } satisfies XAILiveSearchTool);
   });
 
   test("creates a tool with default options", async () => {
@@ -24,7 +24,7 @@ describe("xaiLiveSearch tool", () => {
     expect(tool).toMatchObject({
       type: "live_search_deprecated_20251215",
       name: "live_search",
-    });
+    } satisfies XAILiveSearchTool);
   });
 
   test("creates a tool with web and news sources using excluded_websites", async () => {
@@ -54,7 +54,7 @@ describe("xaiLiveSearch tool", () => {
           excluded_websites: ["bbc.co.uk"],
         },
       ],
-    });
+    } satisfies XAILiveSearchTool);
   });
 });
 
@@ -72,32 +72,30 @@ describe("ChatXAI with xaiLiveSearch tool", () => {
     });
 
     // Access protected method for testing
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const formattedTools = (model as any).formatStructuredToolToXAI([
-      searchTool,
-    ]);
+    const formattedTools = model.formatStructuredToolToXAI([searchTool]);
 
     expect(formattedTools).toHaveLength(1);
-    expect(formattedTools[0]).toMatchObject({
+    expect(formattedTools![0]).toMatchObject({
       type: "live_search_deprecated_20251215",
-      max_search_results: 8,
       name: "live_search",
+      max_search_results: 8,
       sources: [
         {
           type: "web",
           allowed_websites: ["example.com"],
         },
       ],
-    });
+    } satisfies XAILiveSearchTool);
   });
 
   test("invocationParams extracts parameters from formatted tools", () => {
     const model = new ChatXAI({ apiKey: "foo" });
 
     // Simulate the tools being passed in options (as they would be after bindTools -> withConfig -> invoke)
-    const tools = [
+    const tools: [XAILiveSearchTool] = [
       {
-        type: "live_search",
+        type: "live_search_deprecated_20251215",
+        name: "live_search",
         max_search_results: 8,
         sources: [
           {
@@ -110,8 +108,8 @@ describe("ChatXAI with xaiLiveSearch tool", () => {
 
     // Access protected method for testing
     const params = model.invocationParams({
-      tools: tools as never,
-    } as never);
+      tools: tools,
+    });
 
     expect(params.search_parameters).toEqual({
       mode: "auto",
@@ -134,17 +132,18 @@ describe("ChatXAI with xaiLiveSearch tool", () => {
       },
     });
 
-    const tools = [
+    const tools: [XAILiveSearchTool] = [
       {
-        type: "live_search",
+        type: "live_search_deprecated_20251215",
+        name: "live_search",
         max_search_results: 10,
         from_date: "2024-01-01",
       },
     ];
 
     const params = model.invocationParams({
-      tools: tools as never,
-    } as never);
+      tools: tools,
+    });
 
     expect(params.search_parameters).toEqual({
       mode: "on",

@@ -32,7 +32,10 @@ test("Serialization with no params", () => {
 describe("Server Tool Calling", () => {
   describe("isXAIBuiltInTool", () => {
     test("should identify live_search as a built-in tool", () => {
-      const liveSearchTool: XAILiveSearchTool = { type: "live_search" };
+      const liveSearchTool: XAILiveSearchTool = {
+        name: "live_search",
+        type: "live_search_deprecated_20251215",
+      };
       expect(isXAIBuiltInTool(liveSearchTool)).toBe(true);
     });
 
@@ -88,8 +91,8 @@ describe("Server Tool Calling", () => {
       });
 
       // Access protected method via any cast for testing
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const effectiveParams = (model as any)._getEffectiveSearchParameters({
+      // eslint-disable-next-line dot-notation
+      const effectiveParams = model["_getEffectiveSearchParameters"]({
         searchParameters: {
           max_search_results: 10,
           from_date: "2024-01-01",
@@ -110,7 +113,9 @@ describe("Server Tool Calling", () => {
 
       const params: ChatXAICompletionsInvocationParams = model.invocationParams(
         {
-          tools: [{ type: "live_search" }],
+          tools: [
+            { type: "live_search_deprecated_20251215", name: "live_search" },
+          ] satisfies [XAILiveSearchTool],
         } as unknown as ChatXAI["ParsedCallOptions"]
       );
 
@@ -250,9 +255,12 @@ describe("Server Tool Calling", () => {
   describe("_hasBuiltInTools", () => {
     test("should return true when live_search tool is present", () => {
       const model = new ChatXAI();
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const result = (model as any)._hasBuiltInTools([
-        { type: "live_search" },
+      // eslint-disable-next-line dot-notation
+      const result = model["_hasBuiltInTools"]([
+        {
+          type: "live_search_deprecated_20251215",
+          name: "live_search",
+        } satisfies XAILiveSearchTool,
         {
           type: "function",
           function: { name: "test", parameters: {} },
@@ -263,8 +271,8 @@ describe("Server Tool Calling", () => {
 
     test("should return false when no built-in tools are present", () => {
       const model = new ChatXAI();
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const result = (model as any)._hasBuiltInTools([
+      // eslint-disable-next-line dot-notation
+      const result = model["_hasBuiltInTools"]([
         {
           type: "function",
           function: { name: "test", parameters: {} },
@@ -275,10 +283,10 @@ describe("Server Tool Calling", () => {
 
     test("should return false for undefined or empty tools", () => {
       const model = new ChatXAI();
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      expect((model as any)._hasBuiltInTools(undefined)).toBe(false);
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      expect((model as any)._hasBuiltInTools([])).toBe(false);
+      // eslint-disable-next-line dot-notation
+      expect(model["_hasBuiltInTools"](undefined)).toBe(false);
+      // eslint-disable-next-line dot-notation
+      expect(model["_hasBuiltInTools"]([])).toBe(false);
     });
   });
 });

@@ -52,7 +52,9 @@ export type XAIBuiltInTool = XAILiveSearchTool;
  * This allows us to easily extend support for future built-in tools
  * without changing the core detection logic.
  */
-const XAI_BUILT_IN_TOOL_TYPES = new Set<string>(["live_search"]);
+const XAI_BUILT_IN_TOOL_TYPES = new Set<XAILiveSearchTool["type"] | string>([
+  "live_search_deprecated_20251215",
+]);
 
 /**
  * Tool type that includes both standard tools and xAI built-in tools.

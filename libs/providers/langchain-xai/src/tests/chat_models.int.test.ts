@@ -238,7 +238,10 @@ describe("Server Tool Calling (Live Search)", () => {
       model: "grok-2-1212",
     });
 
-    const liveSearchTool: XAILiveSearchTool = { type: "live_search" };
+    const liveSearchTool: XAILiveSearchTool = {
+      name: "live_search",
+      type: "live_search_deprecated_20251215",
+    };
     const chatWithSearch = chat.bindTools([liveSearchTool]);
 
     // Ask about recent events to trigger search
@@ -324,7 +327,10 @@ describe("Server Tool Calling (Live Search)", () => {
       model: "grok-2-1212",
     });
 
-    const liveSearchTool: XAILiveSearchTool = { type: "live_search" };
+    const liveSearchTool: XAILiveSearchTool = {
+      name: "live_search",
+      type: "live_search_deprecated_20251215",
+    };
     const chatWithSearch = chat.bindTools([liveSearchTool]);
 
     const message = new HumanMessage("What are the top tech news stories?");
@@ -345,7 +351,10 @@ describe("Server Tool Calling (Live Search)", () => {
       model: "grok-2-1212",
     });
 
-    const liveSearchTool: XAILiveSearchTool = { type: "live_search" };
+    const liveSearchTool: XAILiveSearchTool = {
+      type: "live_search_deprecated_20251215",
+      name: "live_search",
+    };
     const customTool = {
       type: "function" as const,
       function: {
