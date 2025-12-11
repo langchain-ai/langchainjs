@@ -16,6 +16,7 @@ export default getBuildConfig({
     "./src/tools/aws_sfn.ts",
     "./src/tools/bingserpapi.ts",
     "./src/tools/brave_search.ts",
+    "./src/tools/decart_image.ts",
     "./src/tools/duckduckgo_search.ts",
     "./src/tools/calculator.ts",
     "./src/tools/connery.ts",
