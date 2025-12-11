@@ -122,7 +122,7 @@ export type JiraIssue = {
   fields: {
     assignee?: JiraUser;
     created: string;
-    description: string;
+    description: ADFNode;
     issuelinks: JiraIssueLink[];
     issuetype: JiraIssueType;
     labels?: string[];
@@ -150,6 +150,28 @@ export type JiraAPIResponse = {
   total: number;
   issues: JiraIssue[];
 };
+
+export interface ADFNode {
+  type: string;
+  text?: string;
+  content?: ADFNode[];
+}
+
+export interface ADFDocument extends ADFNode {
+  type: "doc";
+  version: number;
+  content: ADFNode[];
+}
+
+export function adfToText(adf: ADFNode | null | undefined): string {
+  if (!adf || !adf.content) return "";
+  const recur = (node: ADFNode): string => {
+    if (node.text) return node.text;
+    if (node.content) return node.content.map(recur).join("");
+    return "";
+  };
+  return recur(adf).trim();
+}
 
 /**
  * Interface representing the parameters for configuring the
@@ -321,10 +343,11 @@ export interface JiraProjectLoaderParams {
   personalAccessToken?: string;
   limitPerRequest?: number;
   createdAfter?: Date;
+  filterFn?: (issue: JiraIssue) => boolean;
 }
 
 const API_ENDPOINTS = {
-  SEARCH: "/rest/api/2/search",
+  SEARCH: "/rest/api/3/search/jql",
 };
 
 /**
@@ -343,6 +366,8 @@ export class JiraProjectLoader extends BaseDocumentLoader {
 
   private readonly createdAfter?: Date;
 
+  private readonly filterFn?: (issue: JiraIssue) => boolean;
+
   private readonly documentConverter: JiraDocumentConverter;
 
   private readonly personalAccessToken?: string;
@@ -355,6 +380,7 @@ export class JiraProjectLoader extends BaseDocumentLoader {
     limitPerRequest = 100,
     createdAfter,
     personalAccessToken,
+    filterFn,
   }: JiraProjectLoaderParams) {
     super();
     this.host = host;
@@ -365,6 +391,7 @@ export class JiraProjectLoader extends BaseDocumentLoader {
     this.createdAfter = createdAfter;
     this.documentConverter = new JiraDocumentConverter({ host, projectKey });
     this.personalAccessToken = personalAccessToken;
+    this.filterFn = filterFn;
   }
 
   private buildAuthorizationHeader(): string {
@@ -379,7 +406,13 @@ export class JiraProjectLoader extends BaseDocumentLoader {
   public async load(): Promise<Document[]> {
     try {
       const allJiraIssues = await this.loadAsIssues();
-      return this.documentConverter.convertToDocuments(allJiraIssues);
+      const filtered = allJiraIssues.filter((issue) => {
+        if (this.filterFn) {
+          return this.filterFn(issue);
+        }
+        return true;
+      });
+      return this.documentConverter.convertToDocuments(filtered);
     } catch (error) {
       console.error("Error:", error);
       return [];
@@ -416,12 +449,17 @@ export class JiraProjectLoader extends BaseDocumentLoader {
       try {
         const jqlProps = [
           `project=${this.projectKey}`,
-          ...(createdAfterAsString ? [`created>=${createdAfterAsString}`] : []),
+          ...(createdAfterAsString
+            ? [`created>= "${createdAfterAsString}"`]
+            : []),
         ];
+        const jql = `${jqlProps.join(" AND ")} ORDER BY created ASC, key ASC`;
+
         const params = new URLSearchParams({
-          jql: jqlProps.join(" AND "),
+          jql,
           startAt: `${startAt}`,
           maxResults: `${this.limitPerRequest}`,
+          fields: "*all",
         });
         const pageUrl = `${url}?${params}`;
 
@@ -438,11 +476,20 @@ export class JiraProjectLoader extends BaseDocumentLoader {
 
         if (!data.issues || data.issues.length === 0) break;
 
-        yield data.issues;
+        const allIssues = [];
+        for (const issue of data.issues) {
+          allIssues.push(issue);
+        }
+
+        if (allIssues.length > 0) yield allIssues;
+
         startAt += this.limitPerRequest;
+
+        if (data.issues.length < this.limitPerRequest) break;
       } catch (error) {
-        console.error(error);
+        console.error("Error fetching Jira issues:", error);
         yield [];
+        break;
       }
     }
   }
