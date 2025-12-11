@@ -10,7 +10,8 @@ import {
 import { tool } from "@langchain/core/tools";
 import { concat } from "@langchain/core/utils/stream";
 
-import { ChatXAI, type XAILiveSearchTool } from "../chat_models.js";
+import { ChatXAI } from "../chat_models.js";
+import { type XAILiveSearchTool } from "../tools/live_search.js";
 
 test("invoke", async () => {
   const chat = new ChatXAI({

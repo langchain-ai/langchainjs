@@ -5,9 +5,9 @@ import { ChatXAI } from "../../chat_models.js";
 describe("xaiLiveSearch tool", () => {
   test("creates a tool with correct provider definition", async () => {
     const tool = xaiLiveSearch({
-      max_search_results: 10,
-      from_date: "2024-01-01",
-      return_citations: true,
+      maxSearchResults: 10,
+      fromDate: "2024-01-01",
+      returnCitations: true,
     });
 
     expect(tool.name).toBe("live_search");
@@ -63,7 +63,7 @@ describe("ChatXAI with xaiLiveSearch tool", () => {
   test("formatStructuredToolToXAI preserves provider definition", () => {
     const model = new ChatXAI({ apiKey: "foo" });
     const searchTool = xaiLiveSearch({
-      max_search_results: 8,
+      maxSearchResults: 8,
       sources: [
         {
           type: "web",
