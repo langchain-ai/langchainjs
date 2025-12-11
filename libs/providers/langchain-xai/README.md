@@ -147,14 +147,12 @@ const result = await model.invoke("Summarize the latest posts from this feed", {
 
 > Notes:
 >
-> - The previous `allowed_domains` / `excluded_domains` fields are not
->   supported in this provider. Use `sources` with `allowed_websites` and
->   `excluded_websites` instead.
-> - In TypeScript, the `XAISearchParameters` and `sources` types use the same
->   `snake_case` field names as the underlying JSON API (for example
->   `allowed_websites`, `excluded_websites`, `included_x_handles`). There are no
->   separate camelCase aliases (`allowedWebsites`, etc.), which keeps the
->   provider aligned with the official xAI documentation.
+> - The `xaiLiveSearch` tool options use **camelCase** field names in TypeScript
+>   (for example `maxSearchResults`, `fromDate`, `returnCitations`,
+>   `allowedWebsites`, `excludedWebsites`, `includedXHandles`). These are
+>   automatically mapped to the underlying JSON API's `search_parameters`
+>   object, which uses `snake_case` field names as documented in the official
+>   xAI Live Search docs.
 
 ### Combining live_search with custom tools
 

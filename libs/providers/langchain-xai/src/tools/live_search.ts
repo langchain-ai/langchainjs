@@ -70,7 +70,9 @@ export type XAISearchToolSource =
 
 /**
  * Options for the xAI live search tool (camelCase).
- * These are converted to the snake_case `XAISearchParameters` used internally.
+ * All fields are camel-cased for the TypeScript API and are mapped to the
+ * corresponding snake_case fields in the underlying `XAISearchParameters`
+ * object that is sent to xAI's deprecated Live Search API.
  */
 export interface XAILiveSearchToolOptions {
   /**
