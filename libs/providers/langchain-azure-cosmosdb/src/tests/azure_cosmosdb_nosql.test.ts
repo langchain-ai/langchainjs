@@ -1,33 +1,254 @@
-import { describe, test, expect, beforeEach } from "vitest";
+import { describe, test, expect, beforeEach, vi } from "vitest";
 
 import {
   AzureCosmosDBNoSQLVectorStore,
   AzureCosmosDBNoSQLSearchType,
 } from "../azure_cosmosdb_nosql.js";
 import { FakeEmbeddings } from "@langchain/core/utils/testing";
+import { Document } from "@langchain/core/documents";
 import {
   VectorEmbeddingDataType,
   VectorEmbeddingDistanceFunction,
   VectorIndexType,
 } from "@azure/cosmos";
 
+const embedMock = vi.spyOn(FakeEmbeddings.prototype, "embedDocuments");
+
+const createMockClient = () => {
+  let id = 0;
+  const client = {
+    databases: {
+      createIfNotExists: vi.fn().mockReturnThis(),
+      get database() {
+        return this;
+      },
+      containers: {
+        createIfNotExists: vi.fn().mockReturnThis(),
+        get container() {
+          return this;
+        },
+        items: {
+          create: vi.fn().mockImplementation((doc: any) => ({
+            resource: { id: doc.id ?? `${id++}` },
+          })),
+          query: vi.fn().mockReturnThis(),
+          fetchAll: vi.fn().mockImplementation(() => ({
+            resources: Array(id)
+              .fill(0)
+              .map((_, i) => ({ id: i })),
+          })),
+        },
+        item: vi.fn().mockReturnThis(),
+        delete: vi.fn(),
+      },
+    },
+  };
+  return client;
+};
+
+const createDocuments = (n: number) => {
+  const documents = [];
+  for (let i = 0; i < n; i += 1) {
+    documents.push({
+      pageContent: `hello ${i}`,
+      metadata: {
+        source: `doc-${i}`,
+        attributes: [],
+      },
+    });
+  }
+  return documents;
+};
+describe("AzureCosmosDBNoSQLVectorStore", () => {
+  beforeEach(() => {
+    embedMock.mockClear();
+  });
+
+  test("AzureCosmosDBNoSQLVectorStore addVectors should store documents", async () => {
+    const embeddings = new FakeEmbeddings();
+    const client = createMockClient();
+    const store = new AzureCosmosDBNoSQLVectorStore(embeddings, {
+      client: client as any,
+    });
+
+    expect(store).toBeDefined();
+
+    const documents = createDocuments(1500);
+    const vectors: number[][] = [];
+
+    for (const doc of documents) {
+      vectors.push(await embeddings.embedQuery(doc.pageContent));
+    }
+
+    await store.addVectors(vectors, documents);
+
+    expect(client.databases.containers.items.create).toHaveBeenCalledTimes(
+      1500
+    );
+  });
+
+  test("AzureCosmosDBNoSQLVectorStore addDocuments should embed and store documents", async () => {
+    const embeddings = new FakeEmbeddings();
+    const client = createMockClient();
+    const store = new AzureCosmosDBNoSQLVectorStore(embeddings, {
+      client: client as any,
+    });
+
+    expect(store).toBeDefined();
+
+    const documents = createDocuments(1500);
+    await store.addDocuments(documents);
+
+    expect(embedMock).toHaveBeenCalledTimes(1);
+    expect(client.databases.containers.items.create).toHaveBeenCalledTimes(
+      1500
+    );
+  });
+
+  test("AzureCosmosDBNoSQLVectorStore addDocuments should use specified IDs", async () => {
+    const embeddings = new FakeEmbeddings();
+    const client = createMockClient();
+    const store = new AzureCosmosDBNoSQLVectorStore(embeddings, {
+      client: client as any,
+    });
+
+    expect(store).toBeDefined();
+
+    const result = await store.addDocuments([
+      {
+        pageContent: "hello",
+        metadata: {
+          source: "test",
+          attributes: [],
+        },
+        id: "id1",
+      },
+      {
+        pageContent: "hello2",
+        metadata: {
+          source: "test",
+          attributes: [],
+        },
+        id: "id2",
+      },
+    ]);
+
+    expect(client.databases.containers.items.create).toHaveBeenCalledTimes(2);
+    expect(result).toEqual(["id1", "id2"]);
+  });
+
+  test("AzureCosmosDBNoSQLVectorStore deletes documents", async () => {
+    const embeddings = new FakeEmbeddings();
+    const client = createMockClient();
+    const store = new AzureCosmosDBNoSQLVectorStore(embeddings, {
+      client: client as any,
+    });
+
+    const documents = createDocuments(10);
+    await store.addDocuments(documents);
+
+    await store.delete();
+
+    expect(client.databases.containers.delete).toHaveBeenCalledTimes(10);
+
+    await store.delete({ ids: ["0", "1"] });
+
+    expect(client.databases.containers.delete).toHaveBeenCalledTimes(12);
+
+    await store.delete({ filter: "SELECT * FROM c" });
+
+    expect(client.databases.containers.delete).toHaveBeenCalledTimes(22);
+  });
+
+  test("AzureCosmosDBNoSQLVectorStore initializes from texts", async () => {
+    const embeddings = new FakeEmbeddings();
+    const client = createMockClient();
+    const store = await AzureCosmosDBNoSQLVectorStore.fromTexts(
+      ["test", "hello", "world"],
+      {},
+      embeddings,
+      { client: client as any }
+    );
+
+    expect(store).toBeDefined();
+
+    expect(client.databases.containers.items.create).toHaveBeenCalledTimes(3);
+    expect(client.databases.containers.items.create.mock.calls).toEqual([
+      [
+        {
+          text: "test",
+          vector: [0.1, 0.2, 0.3, 0.4],
+          metadata: {},
+        },
+      ],
+      [
+        {
+          text: "hello",
+          vector: [0.1, 0.2, 0.3, 0.4],
+          metadata: {},
+        },
+      ],
+      [
+        {
+          text: "world",
+          vector: [0.1, 0.2, 0.3, 0.4],
+          metadata: {},
+        },
+      ],
+    ]);
+    expect(embedMock).toHaveBeenCalledTimes(1);
+  });
+
+  test("AzureCosmosDBNoSQLVectorStore initializes from documents", async () => {
+    const embeddings = new FakeEmbeddings();
+    const client = createMockClient();
+    const store = await AzureCosmosDBNoSQLVectorStore.fromDocuments(
+      [
+        new Document({ pageContent: "house" }),
+        new Document({ pageContent: "pool" }),
+      ],
+      embeddings,
+      { client: client as any }
+    );
+
+    expect(store).toBeDefined();
+
+    expect(client.databases.containers.items.create).toHaveBeenCalledTimes(2);
+    expect(client.databases.containers.items.create.mock.calls).toEqual([
+      [
+        {
+          text: "house",
+          vector: [0.1, 0.2, 0.3, 0.4],
+          metadata: {},
+        },
+      ],
+      [
+        {
+          text: "pool",
+          vector: [0.1, 0.2, 0.3, 0.4],
+          metadata: {},
+        },
+      ],
+    ]);
+    expect(embedMock).toHaveBeenCalledTimes(1);
+  });
+});
 /**
  * Comprehensive test suite for Azure Cosmos DB NoSQL query building functionality.
  * This test file covers all query types, search scenarios, and edge cases.
  */
-describe("AzureCosmosDBNoSQLVectorStore - Comprehensive Query Building Tests", () => {
+describe("Query Building Tests", () => {
   let vectorStore: AzureCosmosDBNoSQLVectorStore;
   //let mockContainer: any;
 
   beforeEach(() => {
     const fakeEmbeddings = new FakeEmbeddings();
-
     vectorStore = new AzureCosmosDBNoSQLVectorStore(fakeEmbeddings, {
       connectionString:
         "AccountEndpoint=https://test.documents.azure.com:443/;AccountKey=testKey123==;",
       databaseName: "testDB",
       containerName: "testContainer",
-      textKey: "content",
+      textKey: "text",
       metadataKey: "metadata",
       tableAlias: "c",
       vectorEmbeddingPolicy: {
@@ -66,14 +287,16 @@ describe("AzureCosmosDBNoSQLVectorStore - Comprehensive Query Building Tests", (
         AzureCosmosDBNoSQLSearchType.Vector,
         { embeddings }
       );
-      console.log(result);
 
       expect(result.query).toMatch(/SELECT TOP @limit/);
       expect(result.query).toMatch(/FROM c/);
       expect(result.query).toMatch(
         /ORDER BY VectorDistance\(c\[@embeddingKey\], @embeddings\)/
       );
-      expect(result.parameters).toContainEqual({ name: "@limit", value: k });
+      expect(result.parameters).toContainEqual({
+        name: "@limit",
+        value: k,
+      });
       expect(result.parameters).toContainEqual({
         name: "@embeddings",
         value: embeddings,
@@ -90,8 +313,6 @@ describe("AzureCosmosDBNoSQLVectorStore - Comprehensive Query Building Tests", (
         AzureCosmosDBNoSQLSearchType.Vector,
         { embeddings, filterClause }
       );
-
-      console.log(result);
 
       expect(result.query).toContain(filterClause);
       expect(result.query.indexOf("WHERE")).toBeLessThan(
@@ -114,9 +335,6 @@ describe("AzureCosmosDBNoSQLVectorStore - Comprehensive Query Building Tests", (
         AzureCosmosDBNoSQLSearchType.Vector,
         { embeddings, filterClause }
       );
-
-      console.log(result);
-
       expect(result.query).toContain(filterClause.query);
       expect(result.parameters).toContainEqual({
         name: "@category",
@@ -139,8 +357,6 @@ describe("AzureCosmosDBNoSQLVectorStore - Comprehensive Query Building Tests", (
         AzureCosmosDBNoSQLSearchType.Vector,
         { embeddings, withEmbedding: true }
       );
-      console.log(result);
-
       expect(result.query).toContain("c[@embeddingKey] as embedding");
       expect(result.query).toContain(
         "VectorDistance(c[@embeddingKey], @embeddings) as SimilarityScore"
@@ -172,8 +388,6 @@ describe("AzureCosmosDBNoSQLVectorStore - Comprehensive Query Building Tests", (
         { embeddings, offsetLimit }
       );
 
-      console.log(result);
-
       expect(result.query).not.toContain("TOP @limit");
       expect(result.query).toContain(offsetLimit);
     });
@@ -191,8 +405,6 @@ describe("AzureCosmosDBNoSQLVectorStore - Comprehensive Query Building Tests", (
         AzureCosmosDBNoSQLSearchType.Vector,
         { embeddings, projectionMapping }
       );
-
-      console.log(result);
 
       expect(result.query).toContain("c[@title] as productTitle");
       expect(result.query).toContain("c[@price] as productPrice");
@@ -217,8 +429,6 @@ describe("AzureCosmosDBNoSQLVectorStore - Comprehensive Query Building Tests", (
         }
       );
 
-      console.log(result);
-
       expect(result.query).toContain(`${filterClause}`);
       expect(result.query).toContain(offsetLimit);
       expect(result.query).toContain("c[@title] as name");
@@ -238,13 +448,14 @@ describe("AzureCosmosDBNoSQLVectorStore - Comprehensive Query Building Tests", (
         { embeddings }
       );
 
-      console.log(result);
-
       expect(result.query).toContain("SELECT TOP @limit");
       expect(result.query).toContain(
         "ORDER BY VectorDistance(c[@embeddingKey], @embeddings)"
       );
-      expect(result.parameters).toContainEqual({ name: "@limit", value: k });
+      expect(result.parameters).toContainEqual({
+        name: "@limit",
+        value: k,
+      });
       expect(result.parameters).toContainEqual({
         name: "@embeddings",
         value: embeddings,
@@ -262,8 +473,6 @@ describe("AzureCosmosDBNoSQLVectorStore - Comprehensive Query Building Tests", (
         { embeddings, filterClause, offsetLimit }
       );
 
-      console.log(result);
-
       expect(result.query).toContain(filterClause);
       expect(result.query).toContain(offsetLimit);
       expect(result.query).not.toContain("TOP @limit");
@@ -272,23 +481,23 @@ describe("AzureCosmosDBNoSQLVectorStore - Comprehensive Query Building Tests", (
     describe("Query Type: Full-Text Search", () => {
       test("should construct full-text search query without ranking", () => {
         const k = 5;
-
+        const filterClause = "WHERE FullTextContains(c.text, 'red', 'bicycle')";
         const result = (vectorStore as any).constructQuery(
           k,
           AzureCosmosDBNoSQLSearchType.FullTextSearch,
-          {}
+          { filterClause }
         );
-
-        console.log(result);
 
         expect(result.query).toContain("SELECT TOP @limit");
         expect(result.query).toContain("FROM c");
+        expect(result.query).toContain(`${filterClause}`);
         expect(result.query).not.toContain("VectorDistance");
         expect(result.query).not.toContain("ORDER BY");
       });
 
       test("should apply filterClause to full-text search", () => {
-        const filterClause = "WHERE c.published = true AND c.language = 'en'";
+        const filterClause =
+          "WHERE c.published = true AND c.language = 'en' AND FullTextContains(c.text, 'azure', 'cloud computing')";
 
         const result = (vectorStore as any).constructQuery(
           10,
@@ -296,12 +505,11 @@ describe("AzureCosmosDBNoSQLVectorStore - Comprehensive Query Building Tests", (
           { filterClause }
         );
 
-        console.log(result);
-
         expect(result.query).toContain(`${filterClause}`);
       });
 
       test("should use projection mapping for full-text search", () => {
+        const filterClause = "WHERE FullTextContains(c.text, 'red', 'bicycle')";
         const projectionMapping = {
           title: "articleTitle",
           author: "writer",
@@ -310,27 +518,25 @@ describe("AzureCosmosDBNoSQLVectorStore - Comprehensive Query Building Tests", (
         const result = (vectorStore as any).constructQuery(
           5,
           AzureCosmosDBNoSQLSearchType.FullTextSearch,
-          { projectionMapping }
+          { projectionMapping, filterClause }
         );
 
-        console.log(result);
-
+        expect(result.query).toContain(`${filterClause}`);
         expect(result.query).toContain("c[@title] as articleTitle");
         expect(result.query).toContain("c[@author] as writer");
       });
 
       test("should apply pagination to full-text search", () => {
         const offsetLimit = "OFFSET 20 LIMIT 10";
-
+        const filterClause = "WHERE FullTextContains(c.text, 'red', 'bicycle')";
         const result = (vectorStore as any).constructQuery(
           10,
           AzureCosmosDBNoSQLSearchType.FullTextSearch,
-          { offsetLimit }
+          { offsetLimit, filterClause }
         );
 
-        console.log(result);
-
         expect(result.query).toContain(offsetLimit);
+        expect(result.query).toContain(`${filterClause}`);
         expect(result.query).not.toContain("TOP @limit");
       });
     });
@@ -349,8 +555,6 @@ describe("AzureCosmosDBNoSQLVectorStore - Comprehensive Query Building Tests", (
           AzureCosmosDBNoSQLSearchType.FullTextRanking,
           { fullTextRankFilter }
         );
-
-        console.log(result);
 
         expect(result.query).toContain(
           "ORDER BY RANK FullTextScore(c[@description]"
@@ -395,8 +599,6 @@ describe("AzureCosmosDBNoSQLVectorStore - Comprehensive Query Building Tests", (
           { fullTextRankFilter }
         );
 
-        console.log(result);
-
         expect(result.query).toContain("ORDER BY RANK RRF(");
         expect(result.query).toContain("FullTextScore(c[@title]");
         expect(result.query).toContain("FullTextScore(c[@description]");
@@ -433,8 +635,6 @@ describe("AzureCosmosDBNoSQLVectorStore - Comprehensive Query Building Tests", (
           { fullTextRankFilter }
         );
 
-        console.log(result);
-
         expect(result.query).toContain("c[@title] as title");
         expect(result.query).toContain("c[@body] as body");
       });
@@ -453,8 +653,6 @@ describe("AzureCosmosDBNoSQLVectorStore - Comprehensive Query Building Tests", (
           AzureCosmosDBNoSQLSearchType.FullTextRanking,
           { fullTextRankFilter, filterClause }
         );
-
-        console.log(result);
 
         expect(result.query).toContain(`${filterClause}`);
         expect(result.query).toContain("ORDER BY RANK");
@@ -479,8 +677,6 @@ describe("AzureCosmosDBNoSQLVectorStore - Comprehensive Query Building Tests", (
           { fullTextRankFilter, projectionMapping }
         );
 
-        console.log(result);
-
         expect(result.query).toContain("c[@content] as text");
         expect(result.query).toContain("c[@author] as creator");
         expect(result.query).toContain("c[@timestamp] as date");
@@ -502,8 +698,6 @@ describe("AzureCosmosDBNoSQLVectorStore - Comprehensive Query Building Tests", (
           AzureCosmosDBNoSQLSearchType.Hybrid,
           { embeddings, fullTextRankFilter }
         );
-
-        console.log(result);
 
         expect(result.query).toContain("ORDER BY RANK RRF(");
         expect(result.query).toContain("FullTextScore(c[@description]");
@@ -536,8 +730,6 @@ describe("AzureCosmosDBNoSQLVectorStore - Comprehensive Query Building Tests", (
           { embeddings, fullTextRankFilter }
         );
 
-        console.log(result);
-
         expect(result.query).toContain("ORDER BY RANK RRF(");
         expect(result.query).toContain("FullTextScore(c[@title]");
         expect(result.query).toContain("FullTextScore(c[@description]");
@@ -563,8 +755,6 @@ describe("AzureCosmosDBNoSQLVectorStore - Comprehensive Query Building Tests", (
           { embeddings, fullTextRankFilter, weights }
         );
 
-        console.log(result);
-
         expect(result.query).toContain(", @weights)");
         expect(result.parameters).toContainEqual({
           name: "@weights",
@@ -587,8 +777,6 @@ describe("AzureCosmosDBNoSQLVectorStore - Comprehensive Query Building Tests", (
           { embeddings, fullTextRankFilter }
         );
 
-        console.log(result);
-
         expect(result.query).not.toContain("@weights");
         expect(result.query).toMatch(/\)$/);
       });
@@ -608,7 +796,6 @@ describe("AzureCosmosDBNoSQLVectorStore - Comprehensive Query Building Tests", (
           { embeddings, fullTextRankFilter, withEmbedding: true }
         );
 
-        console.log(result);
         expect(result.query).toContain("c[@embeddingKey] as embedding");
         expect(result.query).toContain(
           "VectorDistance(c[@embeddingKey], @embeddings) as SimilarityScore"
@@ -619,8 +806,8 @@ describe("AzureCosmosDBNoSQLVectorStore - Comprehensive Query Building Tests", (
         const embeddings = [0.1, 0.2, 0.3];
         const fullTextRankFilter = [
           {
-            searchField: "title",
-            searchText: "product",
+            searchField: "quantity",
+            searchText: "10",
           },
           {
             searchField: "description",
@@ -644,7 +831,6 @@ describe("AzureCosmosDBNoSQLVectorStore - Comprehensive Query Building Tests", (
           }
         );
 
-        console.log(result);
         expect(result.query).toContain(`${filterClause}`);
         expect(result.query).toContain(offsetLimit);
         expect(result.query).toContain("@weights");
@@ -669,7 +855,6 @@ describe("AzureCosmosDBNoSQLVectorStore - Comprehensive Query Building Tests", (
           { embeddings, fullTextRankFilter }
         );
 
-        console.log(result);
         expect(result.query).toContain("ORDER BY RANK RRF(");
         expect(result.query).toContain("FullTextScore");
         expect(result.query).toContain("VectorDistance");
@@ -691,7 +876,6 @@ describe("AzureCosmosDBNoSQLVectorStore - Comprehensive Query Building Tests", (
           { embeddings, fullTextRankFilter, weights }
         );
 
-        console.log(result);
         expect(result.query).toContain(", @weights)");
         expect(result.parameters).toContainEqual({
           name: "@weights",
@@ -723,8 +907,6 @@ describe("AzureCosmosDBNoSQLVectorStore - Comprehensive Query Building Tests", (
           }
         );
 
-        console.log(result);
-
         expect(result.query).toContain("c[@title] as name");
         expect(result.query).toContain("c[@price] as cost");
       });
@@ -741,11 +923,13 @@ describe("AzureCosmosDBNoSQLVectorStore - Comprehensive Query Building Tests", (
           { embeddings }
         );
 
-        console.log(result);
-        expect(result.parameters).toContainEqual({ name: "@limit", value: k });
+        expect(result.parameters).toContainEqual({
+          name: "@limit",
+          value: k,
+        });
         expect(result.parameters).toContainEqual({
           name: "@textKey",
-          value: "content",
+          value: "text",
         });
         expect(result.parameters).toContainEqual({
           name: "@metadataKey",
@@ -775,7 +959,6 @@ describe("AzureCosmosDBNoSQLVectorStore - Comprehensive Query Building Tests", (
           { embeddings, projectionMapping }
         );
 
-        console.log(result);
         expect(result.parameters).toContainEqual({
           name: "@field1",
           value: "field1",
@@ -793,7 +976,7 @@ describe("AzureCosmosDBNoSQLVectorStore - Comprehensive Query Building Tests", (
         );
       });
 
-      test("should build parameters for full-text search with complex text", () => {
+      test("should build parameters for full-text rank with complex text", () => {
         const fullTextRankFilter = [
           {
             searchField: "title",
@@ -807,7 +990,6 @@ describe("AzureCosmosDBNoSQLVectorStore - Comprehensive Query Building Tests", (
           { fullTextRankFilter }
         );
 
-        console.log(result);
         expect(result.parameters).toContainEqual({
           name: "@title",
           value: "title",
@@ -856,7 +1038,6 @@ describe("AzureCosmosDBNoSQLVectorStore - Comprehensive Query Building Tests", (
           { fullTextRankFilter }
         );
 
-        console.log(result);
         expect(result.parameters).toContainEqual({
           name: "@title_term_0",
           value: "first",
@@ -895,7 +1076,6 @@ describe("AzureCosmosDBNoSQLVectorStore - Comprehensive Query Building Tests", (
           { embeddings, fullTextRankFilter, weights }
         );
 
-        console.log(result);
         expect(result.parameters).toContainEqual({
           name: "@weights",
           value: weights,
@@ -917,7 +1097,6 @@ describe("AzureCosmosDBNoSQLVectorStore - Comprehensive Query Building Tests", (
           { embeddings, fullTextRankFilter }
         );
 
-        console.log(result);
         const paramNames = result.parameters.map((p: any) => p.name);
         expect(paramNames).not.toContain("@weights");
       });
@@ -931,9 +1110,8 @@ describe("AzureCosmosDBNoSQLVectorStore - Comprehensive Query Building Tests", (
           undefined,
           false
         );
-        console.log(projection);
         expect(projection).toContain("c.id");
-        expect(projection).toContain("c[@textKey] as content");
+        expect(projection).toContain("c[@textKey] as text");
         expect(projection).toContain("c[@metadataKey] as metadata");
         expect(projection).toContain(
           "VectorDistance(c[@embeddingKey], @embeddings) as SimilarityScore"
@@ -948,7 +1126,6 @@ describe("AzureCosmosDBNoSQLVectorStore - Comprehensive Query Building Tests", (
           undefined,
           true
         );
-        console.log(projection);
         expect(projection).toContain("c[@embeddingKey] as embedding");
         expect(projection).toContain(
           "VectorDistance(c[@embeddingKey], @embeddings) as SimilarityScore"
@@ -969,7 +1146,6 @@ describe("AzureCosmosDBNoSQLVectorStore - Comprehensive Query Building Tests", (
           undefined,
           false
         );
-        console.log(projection);
         expect(projection).toContain("c[@productId] as id");
         expect(projection).toContain("c[@productName] as name");
         expect(projection).toContain("c[@productPrice] as price");
@@ -998,7 +1174,6 @@ describe("AzureCosmosDBNoSQLVectorStore - Comprehensive Query Building Tests", (
           fullTextRankFilter,
           false
         );
-        console.log(projection);
         expect(projection).toContain("c.id");
         expect(projection).toContain("c[@title] as title");
         expect(projection).toContain("c[@description] as description");
@@ -1019,7 +1194,6 @@ describe("AzureCosmosDBNoSQLVectorStore - Comprehensive Query Building Tests", (
           fullTextRankFilter,
           false
         );
-        console.log(projection);
         expect(projection).not.toContain("VectorDistance");
         expect(projection).not.toContain("SimilarityScore");
       });
@@ -1038,423 +1212,9 @@ describe("AzureCosmosDBNoSQLVectorStore - Comprehensive Query Building Tests", (
           fullTextRankFilter,
           false
         );
-        console.log(projection);
         expect(projection).toContain(
           "VectorDistance(c[@embeddingKey], @embeddings) as SimilarityScore"
         );
-      });
-    });
-
-    describe("Edge Cases and Boundary Conditions", () => {
-      test("should handle empty search text", () => {
-        const fullTextRankFilter = [
-          {
-            searchField: "content",
-            searchText: "",
-          },
-        ];
-
-        const result = (vectorStore as any).constructQuery(
-          5,
-          AzureCosmosDBNoSQLSearchType.FullTextRanking,
-          { fullTextRankFilter }
-        );
-        console.log(result);
-        expect(result.query).toContain("ORDER BY RANK");
-        expect(
-          result.parameters.some((p: any) =>
-            p.name.startsWith("@content_term_")
-          )
-        ).toBe(true);
-      });
-
-      test("should handle single word search", () => {
-        const fullTextRankFilter = [
-          {
-            searchField: "title",
-            searchText: "database",
-          },
-        ];
-
-        const result = (vectorStore as any).constructQuery(
-          5,
-          AzureCosmosDBNoSQLSearchType.FullTextRanking,
-          { fullTextRankFilter }
-        );
-        console.log(result);
-        expect(result.parameters).toContainEqual({
-          name: "@title_term_0",
-          value: "database",
-        });
-        const termParams = result.parameters.filter((p: any) =>
-          p.name.startsWith("@title_term_")
-        );
-        expect(termParams.length).toBe(1);
-      });
-
-      test("should handle multiple consecutive spaces in search text", () => {
-        const fullTextRankFilter = [
-          {
-            searchField: "content",
-            searchText: "word1    word2     word3",
-          },
-        ];
-
-        const result = (vectorStore as any).constructQuery(
-          5,
-          AzureCosmosDBNoSQLSearchType.FullTextRanking,
-          { fullTextRankFilter }
-        );
-
-        console.log(result);
-        const termParams = result.parameters.filter((p: any) =>
-          p.name.startsWith("@content_term_")
-        );
-        expect(termParams.length).toBeGreaterThan(0);
-      });
-
-      test("should handle k=1", () => {
-        const embeddings = [0.1, 0.2, 0.3];
-
-        const result = (vectorStore as any).constructQuery(
-          1,
-          AzureCosmosDBNoSQLSearchType.Vector,
-          { embeddings }
-        );
-
-        console.log(result);
-        expect(result.parameters).toContainEqual({ name: "@limit", value: 1 });
-        expect(result.query).toContain("TOP @limit");
-      });
-
-      test("should handle large k value", () => {
-        const embeddings = [0.1, 0.2, 0.3];
-
-        const result = (vectorStore as any).constructQuery(
-          10000,
-          AzureCosmosDBNoSQLSearchType.Vector,
-          { embeddings }
-        );
-
-        console.log(result);
-        expect(result.parameters).toContainEqual({
-          name: "@limit",
-          value: 10000,
-        });
-      });
-
-      test("should handle empty projection mapping", () => {
-        const embeddings = [0.1, 0.2, 0.3];
-        const projectionMapping = {};
-
-        const result = (vectorStore as any).constructQuery(
-          5,
-          AzureCosmosDBNoSQLSearchType.Vector,
-          { embeddings, projectionMapping }
-        );
-
-        console.log(result);
-        expect(result.query).toBeDefined();
-        expect(result.parameters).toBeDefined();
-      });
-
-      test("should handle very long filterClause", () => {
-        const embeddings = [0.1, 0.2, 0.3];
-        const filterClause =
-          "c.field1 = 'value1' AND c.field2 = 'value2' AND c.field3 = 'value3' AND c.field4 > 100 AND c.field5 < 200";
-
-        const result = (vectorStore as any).constructQuery(
-          5,
-          AzureCosmosDBNoSQLSearchType.Vector,
-          { embeddings, filterClause }
-        );
-
-        console.log(result);
-        expect(result.query).toContain(filterClause);
-      });
-
-      test("should handle special characters in search text", () => {
-        const fullTextRankFilter = [
-          {
-            searchField: "content",
-            searchText: "C++ programming & data-structures",
-          },
-        ];
-
-        const result = (vectorStore as any).constructQuery(
-          5,
-          AzureCosmosDBNoSQLSearchType.FullTextRanking,
-          { fullTextRankFilter }
-        );
-
-        console.log(result);
-        expect(result.parameters).toContainEqual({
-          name: "@content_term_0",
-          value: "C++",
-        });
-        expect(result.parameters).toContainEqual({
-          name: "@content_term_2",
-          value: "&",
-        });
-        expect(result.parameters).toContainEqual({
-          name: "@content_term_3",
-          value: "data-structures",
-        });
-      });
-
-      test("should handle zero-dimension embeddings", () => {
-        const embeddings: number[] = [];
-
-        const result = (vectorStore as any).constructQuery(
-          5,
-          AzureCosmosDBNoSQLSearchType.Vector,
-          { embeddings }
-        );
-
-        console.log(result);
-        expect(result.parameters).toContainEqual({
-          name: "@embeddings",
-          value: embeddings,
-        });
-      });
-
-      test("should handle large dimension embeddings", () => {
-        const embeddings = Array(4096)
-          .fill(0)
-          .map((_, i) => i / 4096);
-
-        const result = (vectorStore as any).constructQuery(
-          5,
-          AzureCosmosDBNoSQLSearchType.Vector,
-          { embeddings }
-        );
-
-        console.log(result);
-        expect(result.parameters).toContainEqual({
-          name: "@embeddings",
-          value: embeddings,
-        });
-      });
-
-      test("should handle maximum number of weights", () => {
-        const embeddings = [0.1, 0.2, 0.3];
-        const fullTextRankFilter = Array(10)
-          .fill(null)
-          .map((_, i) => ({
-            searchField: `field${i}`,
-            searchText: `text${i}`,
-          }));
-        const weights = Array(11).fill(1 / 11);
-
-        const result = (vectorStore as any).constructQuery(
-          5,
-          AzureCosmosDBNoSQLSearchType.Hybrid,
-          { embeddings, fullTextRankFilter, weights }
-        );
-
-        console.log(result);
-        expect(result.parameters).toContainEqual({
-          name: "@weights",
-          value: weights,
-        });
-      });
-    });
-
-    describe("Complex filterClause Scenarios", () => {
-      test("should handle complex AND/OR conditions", () => {
-        const embeddings = [0.1, 0.2, 0.3];
-        const filterClause =
-          "WHERE (c.category = 'tech' OR c.category = 'science') AND c.published = true AND c.views > 1000";
-
-        const result = (vectorStore as any).constructQuery(
-          5,
-          AzureCosmosDBNoSQLSearchType.Vector,
-          { embeddings, filterClause }
-        );
-
-        console.log(result);
-        expect(result.query).toContain(`${filterClause}`);
-      });
-
-      test("should handle filterClause with nested conditions", () => {
-        const embeddings = [0.1, 0.2, 0.3];
-        const filterClause =
-          "WHERE c.metadata.nested.field = 'value' AND (c.price BETWEEN 100 AND 500)";
-
-        const result = (vectorStore as any).constructQuery(
-          5,
-          AzureCosmosDBNoSQLSearchType.Vector,
-          { embeddings, filterClause }
-        );
-
-        console.log(result);
-        expect(result.query).toContain(`${filterClause}`);
-      });
-
-      test("should handle filterClause with IN operator", () => {
-        const embeddings = [0.1, 0.2, 0.3];
-        const filterClause =
-          "WHERE c.category IN ('tech', 'science', 'engineering')";
-
-        const result = (vectorStore as any).constructQuery(
-          5,
-          AzureCosmosDBNoSQLSearchType.Vector,
-          { embeddings, filterClause }
-        );
-
-        console.log(result);
-        expect(result.query).toContain(`${filterClause}`);
-      });
-
-      test("should handle filterClause with date comparisons", () => {
-        const embeddings = [0.1, 0.2, 0.3];
-        const filterClause =
-          "WHERE c.createdAt >= '2024-01-01' AND c.updatedAt <= '2024-12-31'";
-
-        const result = (vectorStore as any).constructQuery(
-          5,
-          AzureCosmosDBNoSQLSearchType.Vector,
-          { embeddings, filterClause }
-        );
-
-        console.log(result);
-        expect(result.query).toContain(`${filterClause}`);
-      });
-    });
-
-    describe("Pagination Scenarios", () => {
-      test("should handle pagination with offset 0", () => {
-        const embeddings = [0.1, 0.2, 0.3];
-        const offsetLimit = "OFFSET 0 LIMIT 10";
-
-        const result = (vectorStore as any).constructQuery(
-          10,
-          AzureCosmosDBNoSQLSearchType.Vector,
-          { embeddings, offsetLimit }
-        );
-
-        console.log(result);
-        expect(result.query).toContain(offsetLimit);
-        expect(result.query).not.toContain("TOP @limit");
-      });
-
-      test("should handle pagination with large offset", () => {
-        const embeddings = [0.1, 0.2, 0.3];
-        const offsetLimit = "OFFSET 1000 LIMIT 50";
-
-        const result = (vectorStore as any).constructQuery(
-          50,
-          AzureCosmosDBNoSQLSearchType.Vector,
-          { embeddings, offsetLimit }
-        );
-        console.log(result);
-        expect(result.query).toContain(offsetLimit);
-      });
-
-      test("should use TOP when offsetLimit is not provided", () => {
-        const embeddings = [0.1, 0.2, 0.3];
-
-        const result = (vectorStore as any).constructQuery(
-          25,
-          AzureCosmosDBNoSQLSearchType.Vector,
-          { embeddings }
-        );
-        console.log(result);
-        expect(result.query).toContain("TOP @limit");
-        expect(result.query).not.toContain("OFFSET");
-      });
-    });
-
-    describe("Multiple Full-Text Fields Combinations", () => {
-      test("should handle 5 full-text fields in ranking", () => {
-        const fullTextRankFilter = [
-          { searchField: "title", searchText: "azure" },
-          { searchField: "description", searchText: "cosmos" },
-          { searchField: "tags", searchText: "nosql" },
-          { searchField: "category", searchText: "database" },
-          { searchField: "content", searchText: "vector" },
-        ];
-
-        const result = (vectorStore as any).constructQuery(
-          5,
-          AzureCosmosDBNoSQLSearchType.FullTextRanking,
-          { fullTextRankFilter }
-        );
-        console.log(result);
-        expect(result.query).toContain("ORDER BY RANK RRF(");
-        expect(result.query).toContain("FullTextScore(c[@title]");
-        expect(result.query).toContain("FullTextScore(c[@description]");
-        expect(result.query).toContain("FullTextScore(c[@tags]");
-        expect(result.query).toContain("FullTextScore(c[@category]");
-        expect(result.query).toContain("FullTextScore(c[@content]");
-      });
-
-      test("should handle full-text fields with varying term counts", () => {
-        const fullTextRankFilter = [
-          { searchField: "title", searchText: "one" },
-          { searchField: "description", searchText: "one two three four five" },
-          { searchField: "tags", searchText: "a b" },
-        ];
-
-        const result = (vectorStore as any).constructQuery(
-          5,
-          AzureCosmosDBNoSQLSearchType.FullTextRanking,
-          { fullTextRankFilter }
-        );
-        console.log(result);
-        expect(result.parameters).toContainEqual({
-          name: "@title_term_0",
-          value: "one",
-        });
-        expect(result.parameters).toContainEqual({
-          name: "@description_term_4",
-          value: "five",
-        });
-        expect(result.parameters).toContainEqual({
-          name: "@tags_term_1",
-          value: "b",
-        });
-      });
-    });
-
-    describe("Weight Distribution Scenarios", () => {
-      test("should handle equal weights distribution", () => {
-        const embeddings = [0.1, 0.2, 0.3];
-        const fullTextRankFilter = [
-          { searchField: "field1", searchText: "text1" },
-          { searchField: "field2", searchText: "text2" },
-        ];
-        const weights = [0.333, 0.333, 0.334];
-
-        const result = (vectorStore as any).constructQuery(
-          5,
-          AzureCosmosDBNoSQLSearchType.Hybrid,
-          { embeddings, fullTextRankFilter, weights }
-        );
-        console.log(result);
-        expect(result.parameters).toContainEqual({
-          name: "@weights",
-          value: weights,
-        });
-      });
-
-      test("should handle skewed weights distribution", () => {
-        const embeddings = [0.1, 0.2, 0.3];
-        const fullTextRankFilter = [
-          { searchField: "field1", searchText: "text1" },
-        ];
-        const weights = [0.9, 0.1];
-
-        const result = (vectorStore as any).constructQuery(
-          5,
-          AzureCosmosDBNoSQLSearchType.Hybrid,
-          { embeddings, fullTextRankFilter, weights }
-        );
-        console.log(result);
-        expect(result.parameters).toContainEqual({
-          name: "@weights",
-          value: weights,
-        });
       });
     });
   });
