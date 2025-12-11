@@ -1,4 +1,4 @@
-import { test, expect } from "@jest/globals";
+import { test, expect } from "vitest";
 import { HumanMessage } from "@langchain/core/messages";
 import { ChatOllama } from "../chat_models.js";
 

@@ -56,6 +56,7 @@ import {
   convertResponsesCustomTool,
   isBuiltInTool,
   isCustomTool,
+  hasProviderToolDefinition,
   ResponsesToolChoice,
 } from "../utils/tools.js";
 import {
@@ -617,11 +618,19 @@ export abstract class BaseChatOpenAI<
       strict = this.supportsStrictToolCalling;
     }
     return this.withConfig({
-      tools: tools.map((tool) =>
-        isBuiltInTool(tool) || isCustomTool(tool)
-          ? tool
-          : this._convertChatOpenAIToolToCompletionsTool(tool, { strict })
-      ),
+      tools: tools.map((tool) => {
+        // Built-in tools and custom tools pass through as-is
+        if (isBuiltInTool(tool) || isCustomTool(tool)) {
+          return tool;
+        }
+        // Tools with providerToolDefinition (e.g., localShell, shell, computerUse, applyPatch)
+        // should use their provider-specific definition
+        if (hasProviderToolDefinition(tool)) {
+          return tool.extras.providerToolDefinition;
+        }
+        // Regular tools get converted to OpenAI function format
+        return this._convertChatOpenAIToolToCompletionsTool(tool, { strict });
+      }),
       ...kwargs,
     } as Partial<CallOptions>);
   }

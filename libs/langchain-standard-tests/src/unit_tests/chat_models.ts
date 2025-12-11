@@ -4,7 +4,7 @@ import {
   BaseChatModelCallOptions,
   LangSmithParams,
 } from "@langchain/core/language_models/chat_models";
-import { BaseMessageChunk } from "@langchain/core/messages";
+import { AIMessageChunk } from "@langchain/core/messages";
 import { z } from "zod/v3";
 import { InferInteropZodOutput } from "@langchain/core/utils/types";
 import { StructuredTool } from "@langchain/core/tools";
@@ -35,7 +35,7 @@ class PersonTool extends StructuredTool {
 
 export abstract class ChatModelUnitTests<
   CallOptions extends BaseChatModelCallOptions = BaseChatModelCallOptions,
-  OutputMessageType extends BaseMessageChunk = BaseMessageChunk,
+  OutputMessageType extends AIMessageChunk = AIMessageChunk,
   ConstructorArgs extends RecordStringAny = RecordStringAny
 > extends BaseChatModelsTests<CallOptions, OutputMessageType, ConstructorArgs> {
   expect: typeof JestExpect | typeof VitestExpect;

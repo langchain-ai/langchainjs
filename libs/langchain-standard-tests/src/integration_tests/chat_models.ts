@@ -6,7 +6,7 @@ import { BaseChatModelCallOptions } from "@langchain/core/language_models/chat_m
 import {
   AIMessage,
   AIMessageChunk,
-  BaseMessageChunk,
+  BaseMessage,
   HumanMessage,
   SystemMessage,
   ToolMessage,
@@ -89,7 +89,7 @@ const MATH_ADDITION_PROMPT = /* #__PURE__ */ ChatPromptTemplate.fromMessages([
 
 export interface ChatModelIntegrationTestsFields<
   CallOptions extends BaseChatModelCallOptions = BaseChatModelCallOptions,
-  OutputMessageType extends BaseMessageChunk = BaseMessageChunk,
+  OutputMessageType extends AIMessageChunk = AIMessageChunk,
   ConstructorArgs extends RecordStringAny = RecordStringAny
 > extends BaseChatModelsTestsFields<
     CallOptions,
@@ -117,7 +117,7 @@ export interface ChatModelIntegrationTestsFields<
 
 export abstract class ChatModelIntegrationTests<
   CallOptions extends BaseChatModelCallOptions = BaseChatModelCallOptions,
-  OutputMessageType extends BaseMessageChunk = BaseMessageChunk,
+  OutputMessageType extends AIMessageChunk = AIMessageChunk,
   ConstructorArgs extends RecordStringAny = RecordStringAny
 > extends BaseChatModelsTests<CallOptions, OutputMessageType, ConstructorArgs> {
   functionId = "abc123";
@@ -1510,7 +1510,7 @@ export abstract class ChatModelIntegrationTests<
     const modelWithTools = model.bindTools([weatherTool]);
 
     // Initialize the conversation with a weather query
-    const messages = [
+    const messages: BaseMessage[] = [
       new HumanMessage(
         "What's the weather like in San Francisco right now? Use the 'get_current_weather' tool to find the answer."
       ),
@@ -1602,7 +1602,7 @@ export abstract class ChatModelIntegrationTests<
     const modelWithTools = model.bindTools([weatherTool]);
 
     // Initialize the conversation with a weather query
-    const messages = [
+    const messages: BaseMessage[] = [
       new HumanMessage(
         "What's the weather like in San Francisco right now? Use the 'get_current_weather' tool to find the answer."
       ),

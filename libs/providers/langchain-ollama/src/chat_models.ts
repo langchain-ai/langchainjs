@@ -38,6 +38,7 @@ import {
   JsonOutputParser,
   StructuredOutputParser,
 } from "@langchain/core/output_parsers";
+import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import {
   InteropZodType,
   isInteropZodSchema,
@@ -91,6 +92,7 @@ export interface ChatOllamaInput
   model?: string;
   /**
    * The host URL of the Ollama server.
+   * Defaults to `OLLAMA_BASE_URL` if set.
    * @default "http://127.0.0.1:11434"
    */
   baseUrl?: string;
@@ -124,6 +126,7 @@ export interface ChatOllamaInput
  *
  * ```bash
  * npm install @langchain/ollama
+ * export OLLAMA_BASE_URL="http://127.0.0.1:11434" # Optional; defaults to http://127.0.0.1:11434 if not set
  * ```
  *
  * ## [Constructor args](https://api.js.langchain.com/classes/_langchain_ollama.ChatOllama.html#constructor)
@@ -499,12 +502,16 @@ export class ChatOllama
   constructor(fields?: ChatOllamaInput) {
     super(fields ?? {});
 
+    this.baseUrl =
+      fields?.baseUrl ??
+      getEnvironmentVariable("OLLAMA_BASE_URL") ??
+      this.baseUrl;
+
     this.client = new Ollama({
       fetch: fields?.fetch,
-      host: fields?.baseUrl,
+      host: this.baseUrl,
       headers: fields?.headers,
     });
-    this.baseUrl = fields?.baseUrl ?? this.baseUrl;
 
     this.model = fields?.model ?? this.model;
     this.numa = fields?.numa;

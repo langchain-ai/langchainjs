@@ -136,6 +136,42 @@ test("Runnable streamEvents method on a chat model", async () => {
   ]);
 });
 
+test("Runnable streamEvents should preserve response_metadata from generationInfo", async () => {
+  // Test for issue #8470: streamEvents doesn't return response_metadata
+  // This verifies that generationInfo (which contains finish_reason, usage, etc.)
+  // is properly merged into response_metadata and surfaced in stream events
+  const model = new FakeListChatModel({
+    responses: ["abc"],
+    generationInfo: {
+      finish_reason: "stop",
+      model_name: "test-model",
+      usage: { prompt_tokens: 10, completion_tokens: 5 },
+    },
+  });
+
+  const events = [];
+  const eventStream = await model.streamEvents("hello", { version: "v2" });
+  for await (const event of eventStream) {
+    events.push(event);
+  }
+
+  // Find the on_chat_model_end event
+  const endEvent = events.find(
+    (e: { event: string }) => e.event === "on_chat_model_end"
+  );
+  expect(endEvent).toBeDefined();
+
+  // Verify response_metadata contains the generationInfo data
+  const output = (endEvent as { data: { output: AIMessageChunk } }).data.output;
+  expect(output.response_metadata).toBeDefined();
+  expect(output.response_metadata.finish_reason).toBe("stop");
+  expect(output.response_metadata.model_name).toBe("test-model");
+  expect(output.response_metadata.usage).toEqual({
+    prompt_tokens: 10,
+    completion_tokens: 5,
+  });
+});
+
 test("Runnable streamEvents call nested in another runnable + passed callbacks should still work", async () => {
   AsyncLocalStorageProviderSingleton.initializeGlobalInstance(
     new AsyncLocalStorage()

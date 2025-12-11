@@ -13,7 +13,6 @@ import { IterableReadableStream } from "@langchain/core/utils/stream";
 import {
   ChatWatsonx,
   ChatWatsonxConstructor,
-  ChatWatsonxGatewayInput,
   ChatWatsonxInput,
   WatsonxCallParams,
 } from "../ibm.js";
@@ -340,7 +339,7 @@ describe("Chat unit tests", () => {
     });
 
     test("Test properties after init", async () => {
-      const testProps: ChatWatsonxGatewayInput = {
+      const testProps = {
         version: "2024-05-31",
         serviceUrl,
         model: "ibm/granite-13b-chat-v2",
@@ -363,7 +362,7 @@ describe("Chat unit tests", () => {
     });
 
     test("Test override properties with invocationParams", async () => {
-      const testProps: ChatWatsonxGatewayInput = {
+      const testProps = {
         version: "2024-05-31",
         serviceUrl,
         model,

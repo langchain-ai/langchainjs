@@ -1,5 +1,32 @@
 # langchain
 
+## 1.1.5
+
+### Patch Changes
+
+- Updated dependencies [[`0bade90`](https://github.com/langchain-ai/langchainjs/commit/0bade90ed47c7988ed86f1e695a28273c7b3df50), [`6c40d00`](https://github.com/langchain-ai/langchainjs/commit/6c40d00e926f377d249c2919549381522eac8ed1)]:
+  - @langchain/core@1.1.4
+
+## 1.1.4
+
+### Patch Changes
+
+- Updated dependencies [[`bd2c46e`](https://github.com/langchain-ai/langchainjs/commit/bd2c46e09e661d9ac766c09e71bc6687d6fc811c), [`487378b`](https://github.com/langchain-ai/langchainjs/commit/487378bf14277659c8ca0ef06ea0f9836b818ff4), [`138e7fb`](https://github.com/langchain-ai/langchainjs/commit/138e7fb6280705457079863bedb238b16b322032)]:
+  - @langchain/core@1.1.3
+
+## 1.1.3
+
+### Patch Changes
+
+- [#9532](https://github.com/langchain-ai/langchainjs/pull/9532) [`3424293`](https://github.com/langchain-ai/langchainjs/commit/34242933ade61304481d055605af06ec54c8f5e4) Thanks [@christian-bromann](https://github.com/christian-bromann)! - fix(langchain): improve state rendering in LangSmith studio
+
+- [#9529](https://github.com/langchain-ai/langchainjs/pull/9529) [`0d2f74a`](https://github.com/langchain-ai/langchainjs/commit/0d2f74aeef2c05ddcf74dc6286bfa8eabf785ed2) Thanks [@christian-bromann](https://github.com/christian-bromann)! - fix(langchain): better detect invoke response in agent node
+
+- [#9523](https://github.com/langchain-ai/langchainjs/pull/9523) [`95a8f78`](https://github.com/langchain-ai/langchainjs/commit/95a8f78179b38b69419079c7b9315844f49aab0c) Thanks [@LiteracyFanatic](https://github.com/LiteracyFanatic)! - Fix detection of models with native support for structured output
+
+- Updated dependencies [[`833f578`](https://github.com/langchain-ai/langchainjs/commit/833f57834dc3aa64e4cfdd7499f865b2ab41462a)]:
+  - @langchain/core@1.1.2
+
 ## 1.1.2
 
 ### Patch Changes

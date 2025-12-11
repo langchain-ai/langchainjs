@@ -10,6 +10,7 @@ export default defineConfig((env) => {
       environment: "node",
       hideSkippedTests: true,
       testTimeout: 30_000,
+      hookTimeout: 100_000,
       maxWorkers: 0.5,
       exclude: ["**/*.int.test.ts", ...configDefaults.exclude],
       setupFiles: ["dotenv/config"],

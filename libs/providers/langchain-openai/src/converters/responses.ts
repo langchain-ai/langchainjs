@@ -24,8 +24,18 @@ import type {
 } from "@langchain/core/messages/tool";
 import { ResponseInputMessageContentList } from "openai/resources/responses/responses.js";
 import { ChatOpenAIReasoningSummary } from "../types.js";
-import { isCustomToolCall, parseCustomToolCall } from "../utils/tools.js";
-import { iife, isReasoningModel, messageToOpenAIRole } from "../utils/misc.js";
+import {
+  isComputerToolCall,
+  isCustomToolCall,
+  parseComputerCall,
+  parseCustomToolCall,
+} from "../utils/tools.js";
+import {
+  getRequiredFilenameFromMetadata,
+  iife,
+  isReasoningModel,
+  messageToOpenAIRole,
+} from "../utils/misc.js";
 import { Converter } from "@langchain/core/utils/format";
 import { completionsApiContentBlockConverter } from "./completions.js";
 
@@ -266,6 +276,15 @@ export const convertResponsesMessageToAIMessage: Converter<
           makeInvalidToolCall(item, "Malformed custom tool call")
         );
       }
+    } else if (item.type === "computer_call") {
+      const parsed = parseComputerCall(item);
+      if (parsed) {
+        tool_calls.push(parsed);
+      } else {
+        invalid_tool_calls.push(
+          makeInvalidToolCall(item, "Malformed computer call")
+        );
+      }
     } else {
       additional_kwargs.tool_outputs ??= [];
       additional_kwargs.tool_outputs.push(item);
@@ -480,10 +499,23 @@ export const convertResponsesDeltaToChatGenerationChunk: Converter<
     };
   } else if (
     event.type === "response.output_item.done" &&
+    event.item.type === "computer_call"
+  ) {
+    // Handle computer_call as a tool call so ToolNode can process it
+    tool_call_chunks.push({
+      type: "tool_call_chunk",
+      name: "computer_use",
+      args: JSON.stringify({ action: event.item.action }),
+      id: event.item.call_id,
+      index: event.output_index,
+    });
+    // Also store the raw item for additional context (pending_safety_checks, etc.)
+    additional_kwargs.tool_outputs = [event.item];
+  } else if (
+    event.type === "response.output_item.done" &&
     [
       "web_search_call",
       "file_search_call",
-      "computer_call",
       "code_interpreter_call",
       "mcp_call",
       "mcp_list_tools",
@@ -755,10 +787,8 @@ export const convertStandardContentMessageToResponsesInput: Converter<
     const resolveFileItem = (
       block: ContentBlock.Multimodal.File | ContentBlock.Multimodal.Video
     ): OpenAIClient.Responses.ResponseInputFile | undefined => {
-      const filename =
-        block.metadata?.filename ??
-        block.metadata?.name ??
-        block.metadata?.title;
+      const filename = getRequiredFilenameFromMetadata(block);
+
       if (block.fileId && typeof filename === "string") {
         return {
           type: "input_file",
@@ -1034,25 +1064,42 @@ export const convertMessagesToResponsesInput: Converter<
           const output = (() => {
             if (typeof toolMessage.content === "string") {
               return {
-                type: "computer_screenshot" as const,
+                type: "input_image" as const,
                 image_url: toolMessage.content,
               };
             }
 
             if (Array.isArray(toolMessage.content)) {
+              /**
+               * Check for input_image type first (computer-use-preview format)
+               */
+              const inputImage = toolMessage.content.find(
+                (i) => i.type === "input_image"
+              ) as { type: "input_image"; image_url: string } | undefined;
+
+              if (inputImage) return inputImage;
+
+              /**
+               * Check for computer_screenshot type (legacy format)
+               */
               const oaiScreenshot = toolMessage.content.find(
                 (i) => i.type === "computer_screenshot"
-              ) as { type: "computer_screenshot"; image_url: string };
+              ) as
+                | { type: "computer_screenshot"; image_url: string }
+                | undefined;
 
               if (oaiScreenshot) return oaiScreenshot;
 
+              /**
+               * Convert image_url content block to input_image format
+               */
               const lcImage = toolMessage.content.find(
                 (i) => i.type === "image_url"
               ) as MessageContentImageUrl;
 
               if (lcImage) {
                 return {
-                  type: "computer_screenshot" as const,
+                  type: "input_image" as const,
                   image_url:
                     typeof lcImage.image_url === "string"
                       ? lcImage.image_url
@@ -1064,11 +1111,15 @@ export const convertMessagesToResponsesInput: Converter<
             throw new Error("Invalid computer call output");
           })();
 
+          /**
+           * Cast needed because OpenAI SDK types don't yet include input_image
+           * for computer-use-preview model output format
+           */
           return {
             type: "computer_call_output",
             output,
             call_id: toolMessage.tool_call_id,
-          };
+          } as ResponsesInputItem;
         }
 
         // Handle custom tool output
@@ -1116,13 +1167,13 @@ export const convertMessagesToResponsesInput: Converter<
         }
 
         // ai content
-        let { content } = lcMsg;
+        let { content } = lcMsg as { content: ContentBlock[] };
         if (additional_kwargs?.refusal) {
           if (typeof content === "string") {
             content = [{ type: "output_text", text: content, annotations: [] }];
           }
           content = [
-            ...content,
+            ...(content as ContentBlock[]),
             { type: "refusal", refusal: additional_kwargs.refusal },
           ];
         }
@@ -1170,6 +1221,14 @@ export const convertMessagesToResponsesInput: Converter<
                   input: toolCall.args.input,
                   name: toolCall.name,
                 };
+              }
+              if (isComputerToolCall(toolCall)) {
+                return {
+                  type: "computer_call",
+                  id: toolCall.call_id,
+                  call_id: toolCall.id ?? "",
+                  action: toolCall.args.action,
+                } as ResponsesInputItem;
               }
               return {
                 type: "function_call",
@@ -1224,7 +1283,7 @@ export const convertMessagesToResponsesInput: Converter<
         }
 
         const messages: ResponsesInputItem[] = [];
-        const content = lcMsg.content.flatMap((item) => {
+        const content = (lcMsg.content as ContentBlock[]).flatMap((item) => {
           if (item.type === "mcp_approval_response") {
             messages.push({
               type: "mcp_approval_response",

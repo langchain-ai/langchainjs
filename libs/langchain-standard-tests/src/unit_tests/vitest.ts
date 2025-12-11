@@ -1,12 +1,12 @@
 import { expect, describe, test } from "vitest";
 import { BaseChatModelCallOptions } from "@langchain/core/language_models/chat_models";
-import { BaseMessageChunk } from "@langchain/core/messages";
+import { AIMessageChunk } from "@langchain/core/messages";
 import { BaseChatModelsTestsFields, RecordStringAny } from "../base.js";
 import { ChatModelUnitTests as BaseChatModelUnitTests } from "./chat_models.js";
 
 export abstract class ChatModelUnitTests<
   CallOptions extends BaseChatModelCallOptions = BaseChatModelCallOptions,
-  OutputMessageType extends BaseMessageChunk = BaseMessageChunk,
+  OutputMessageType extends AIMessageChunk = AIMessageChunk,
   ConstructorArgs extends RecordStringAny = RecordStringAny
 > extends BaseChatModelUnitTests<
   CallOptions,
