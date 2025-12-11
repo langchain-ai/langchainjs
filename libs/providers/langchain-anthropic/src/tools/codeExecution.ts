@@ -1,9 +1,10 @@
 import Anthropic from "@anthropic-ai/sdk";
+import { type ServerTool } from "@langchain/core/tools";
 
 /**
  * Options for the code execution tool.
  */
-interface CodeExecution20250825Options {
+export interface CodeExecution20250825Options {
   /**
    * Create a cache control breakpoint at this content block.
    */
@@ -69,10 +70,10 @@ interface CodeExecution20250825Options {
  */
 export function codeExecution_20250825(
   options?: CodeExecution20250825Options
-): Anthropic.Beta.BetaCodeExecutionTool20250825 {
+): ServerTool {
   return {
     type: "code_execution_20250825",
     name: "code_execution",
     cache_control: options?.cacheControl,
-  };
+  } satisfies Anthropic.Beta.BetaCodeExecutionTool20250825;
 }

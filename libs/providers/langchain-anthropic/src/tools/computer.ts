@@ -1,34 +1,33 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import Anthropic from "@anthropic-ai/sdk";
 import { tool } from "@langchain/core/tools";
+import { ToolMessage } from "@langchain/core/messages";
 import type { DynamicStructuredTool, ToolRuntime } from "@langchain/core/tools";
 
 import type {
   Computer20251124Action,
   Computer20250124Action,
 } from "./types.js";
+import {
+  Computer20251124ActionSchema,
+  Computer20250124ActionSchema,
+} from "./types.js";
 
 const TOOL_NAME = "computer";
-const BASE_COMMANDS = [
-  "screenshot",
-  "left_click",
-  "right_click",
-  "middle_click",
-  "double_click",
-  "triple_click",
-  "left_click_drag",
-  "left_mouse_down",
-  "left_mouse_up",
-  "scroll",
-  "type",
-  "key",
-  "mouse_move",
-  "hold_key",
-  "wait",
-];
+
+export type ComputerUseReturnType =
+  | string
+  | Promise<string>
+  | ToolMessage<any>
+  | Promise<ToolMessage<any>>;
 
 /**
  * Options for the computer use tool (Claude Opus 4.5 only version).
+ *
+ * @template TState - The type of the state schema (when used with `ReactAgent`)
+ * @template TContext - The type of the context schema (when used with `ReactAgent`)
  */
-export interface Computer20251124Options {
+export interface Computer20251124Options<TState = any, TContext = any> {
   /**
    * The width of the display in pixels.
    */
@@ -52,7 +51,10 @@ export interface Computer20251124Options {
    * This function receives the action input and should return the result
    * (typically a base64-encoded screenshot or action confirmation).
    */
-  execute?: (args: Computer20251124Action) => string | Promise<string>;
+  execute?: (
+    args: Computer20251124Action,
+    runtime: ToolRuntime<TState, TContext>
+  ) => ComputerUseReturnType;
 }
 
 /**
@@ -111,27 +113,16 @@ export interface Computer20251124Options {
  * @param options - Configuration options for the computer use tool
  * @returns The computer use tool object that can be passed to `bindTools`
  */
-export function computer_20251124(
-  options: Computer20251124Options
-): DynamicStructuredTool {
+export function computer_20251124(options: Computer20251124Options) {
   const name = TOOL_NAME;
   const computerTool = tool(
     options.execute as (
       input: unknown,
       runtime: ToolRuntime<unknown, unknown>
-    ) => string | Promise<string>,
+    ) => ComputerUseReturnType,
     {
       name,
-      schema: {
-        type: "object",
-        properties: {
-          action: {
-            type: "string",
-            enum: [...BASE_COMMANDS, "zoom"],
-          },
-        },
-        required: ["action"],
-      },
+      schema: Computer20251124ActionSchema,
     }
   );
 
@@ -148,10 +139,15 @@ export function computer_20251124(
       ...(options.enableZoom !== undefined && {
         enable_zoom: options.enableZoom,
       }),
-    },
+    } satisfies Anthropic.Beta.BetaToolComputerUse20251124,
   };
 
-  return computerTool;
+  return computerTool as DynamicStructuredTool<
+    typeof Computer20251124ActionSchema,
+    Computer20251124Action,
+    any,
+    ToolMessage<any>
+  >;
 }
 
 /**
@@ -159,7 +155,7 @@ export function computer_20251124(
  *
  * Supported models: Claude Sonnet 4.5, Haiku 4.5, Opus 4.1, Sonnet 4, Opus 4, and Sonnet 3.7 versions.
  */
-export interface Computer20250124Options {
+export interface Computer20250124Options<TState = any, TContext = any> {
   /**
    * The width of the display in pixels.
    */
@@ -177,7 +173,10 @@ export interface Computer20250124Options {
    * This function receives the action input and should return the result
    * (typically a base64-encoded screenshot or action confirmation).
    */
-  execute?: (args: Computer20250124Action) => string | Promise<string>;
+  execute?: (
+    args: Computer20250124Action,
+    runtime: ToolRuntime<TState, TContext>
+  ) => ComputerUseReturnType;
 }
 
 /**
@@ -236,27 +235,17 @@ export interface Computer20250124Options {
  * @param options - Configuration options for the computer use tool
  * @returns The computer use tool object that can be passed to `bindTools`
  */
-export function computer_20250124(
-  options: Computer20250124Options
-): DynamicStructuredTool {
+export function computer_20250124(options: Computer20250124Options) {
   const name = TOOL_NAME;
   const computerTool = tool(
     options.execute as (
       input: unknown,
       runtime: ToolRuntime<unknown, unknown>
-    ) => string | Promise<string>,
+    ) => ComputerUseReturnType,
     {
       name,
-      schema: {
-        type: "object",
-        properties: {
-          action: {
-            type: "string",
-            enum: BASE_COMMANDS,
-          },
-        },
-        required: ["action"],
-      },
+      description: "A tool for interacting with the computer",
+      schema: Computer20250124ActionSchema,
     }
   );
 
@@ -270,8 +259,13 @@ export function computer_20250124(
       ...(options.displayNumber !== undefined && {
         display_number: options.displayNumber,
       }),
-    },
+    } satisfies Anthropic.Beta.BetaToolComputerUse20250124,
   };
 
-  return computerTool;
+  return computerTool as DynamicStructuredTool<
+    typeof Computer20250124ActionSchema,
+    Computer20250124Action,
+    any,
+    ComputerUseReturnType
+  >;
 }

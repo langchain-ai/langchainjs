@@ -56,5 +56,7 @@ export const ANTHROPIC_TOOL_BETAS: Record<string, string> = {
   memory_20250818: "context-management-2025-06-27",
   web_fetch_20250910: "web-fetch-2025-09-10",
   code_execution_20250825: "code-execution-2025-08-25",
+  computer_20251124: "computer-use-2025-11-24",
+  computer_20250124: "computer-use-2025-01-24",
   mcp_toolset: "mcp-client-2025-11-20",
 };

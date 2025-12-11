@@ -34,32 +34,12 @@ describe("Anthropic Bash Tool Unit Tests", () => {
       expect(bash.func).toBeDefined();
     });
 
-    it("has correct schema for bash commands", () => {
-      const bash = bash_20250124();
-
-      expect(bash.schema).toMatchInlineSnapshot(`
-        {
-          "properties": {
-            "command": {
-              "description": "The bash command to run",
-              "type": "string",
-            },
-            "restart": {
-              "description": "Set to true to restart the bash session",
-              "type": "boolean",
-            },
-          },
-          "type": "object",
-        }
-      `);
-    });
-
     it("can execute a command", async () => {
       let executedCommand: string | undefined;
 
       const bash = bash_20250124({
         execute: async (args) => {
-          if (args.command) {
+          if ("command" in args) {
             executedCommand = args.command;
             return "command output";
           }
@@ -78,7 +58,7 @@ describe("Anthropic Bash Tool Unit Tests", () => {
 
       const bash = bash_20250124({
         execute: async (args) => {
-          if (args.restart) {
+          if ("restart" in args) {
             wasRestarted = true;
             return "Bash session restarted";
           }

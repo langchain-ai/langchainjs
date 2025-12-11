@@ -1,9 +1,10 @@
 import Anthropic from "@anthropic-ai/sdk";
+import { type ServerTool } from "@langchain/core/tools";
 
 /**
  * Options for the web fetch tool.
  */
-interface WebFetch20250910Options {
+export interface WebFetch20250910Options {
   /**
    * Maximum number of times the tool can be used in the API request.
    */
@@ -90,7 +91,7 @@ interface WebFetch20250910Options {
  */
 export function webFetch_20250910(
   options?: WebFetch20250910Options
-): Anthropic.Beta.BetaWebFetchTool20250910 {
+): ServerTool {
   return {
     type: "web_fetch_20250910",
     name: "web_fetch",
@@ -100,5 +101,5 @@ export function webFetch_20250910(
     cache_control: options?.cacheControl,
     citations: options?.citations,
     max_content_tokens: options?.maxContentTokens,
-  };
+  } satisfies Anthropic.Beta.BetaWebFetchTool20250910;
 }
