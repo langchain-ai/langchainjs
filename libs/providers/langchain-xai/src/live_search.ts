@@ -217,12 +217,12 @@ export function buildSearchParametersPayload(
 export function filterXAIBuiltInTools<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   T extends { [key: string]: any }
->(tools?: T[]): T[] | undefined {
-  if (!tools) {
+>(payload?: { tools?: T[]; excludedTypes?: string[] }): T[] | undefined {
+  if (!payload?.tools) {
     return undefined;
   }
 
-  const filtered = tools.filter((tool) => {
+  const filtered = payload.tools.filter((tool) => {
     if (tool == null || typeof tool !== "object") {
       return true;
     }
@@ -231,7 +231,11 @@ export function filterXAIBuiltInTools<
       return true;
     }
 
-    return (tool as { type?: unknown }).type !== "live_search";
+    if (!payload?.excludedTypes?.length) {
+      return true;
+    }
+
+    return !payload.excludedTypes.includes(tool.type);
   });
 
   return filtered.length > 0 ? filtered : undefined;

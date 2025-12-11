@@ -5,7 +5,11 @@ import {
   type ChatXAICompletionsInvocationParams,
 } from "../chat_models.js";
 import { XAISearchParameters } from "../live_search.js";
-import { XAILiveSearchTool } from "../tools/live_search.js";
+import {
+  XAI_LIVE_SEARCH_TOOL_NAME,
+  XAI_LIVE_SEARCH_TOOL_TYPE,
+  XAILiveSearchTool,
+} from "../tools/live_search.js";
 
 beforeEach(() => {
   process.env.XAI_API_KEY = "foo";
@@ -33,8 +37,8 @@ describe("Server Tool Calling", () => {
   describe("isXAIBuiltInTool", () => {
     test("should identify live_search as a built-in tool", () => {
       const liveSearchTool: XAILiveSearchTool = {
-        name: "live_search",
-        type: "live_search_deprecated_20251215",
+        name: XAI_LIVE_SEARCH_TOOL_NAME,
+        type: XAI_LIVE_SEARCH_TOOL_TYPE,
       };
       expect(isXAIBuiltInTool(liveSearchTool)).toBe(true);
     });
@@ -114,7 +118,10 @@ describe("Server Tool Calling", () => {
       const params: ChatXAICompletionsInvocationParams = model.invocationParams(
         {
           tools: [
-            { type: "live_search_deprecated_20251215", name: "live_search" },
+            {
+              type: XAI_LIVE_SEARCH_TOOL_TYPE,
+              name: XAI_LIVE_SEARCH_TOOL_NAME,
+            },
           ] satisfies [XAILiveSearchTool],
         } as unknown as ChatXAI["ParsedCallOptions"]
       );
@@ -258,8 +265,8 @@ describe("Server Tool Calling", () => {
       // eslint-disable-next-line dot-notation
       const result = model["_hasBuiltInTools"]([
         {
-          type: "live_search_deprecated_20251215",
-          name: "live_search",
+          type: XAI_LIVE_SEARCH_TOOL_TYPE,
+          name: XAI_LIVE_SEARCH_TOOL_NAME,
         } satisfies XAILiveSearchTool,
         {
           type: "function",

@@ -1,5 +1,10 @@
 import { test, expect, describe } from "vitest";
-import { xaiLiveSearch, XAILiveSearchTool } from "../live_search.js";
+import {
+  XAI_LIVE_SEARCH_TOOL_NAME,
+  XAI_LIVE_SEARCH_TOOL_TYPE,
+  xaiLiveSearch,
+  XAILiveSearchTool,
+} from "../live_search.js";
 import { ChatXAI } from "../../chat_models.js";
 
 describe("xaiLiveSearch tool", () => {
@@ -11,8 +16,8 @@ describe("xaiLiveSearch tool", () => {
     });
 
     expect(tool).toMatchObject({
-      type: "live_search_deprecated_20251215",
-      name: "live_search",
+      type: XAI_LIVE_SEARCH_TOOL_TYPE,
+      name: XAI_LIVE_SEARCH_TOOL_NAME,
       max_search_results: 10,
       from_date: "2024-01-01",
       return_citations: true,
@@ -22,8 +27,8 @@ describe("xaiLiveSearch tool", () => {
   test("creates a tool with default options", async () => {
     const tool = xaiLiveSearch();
     expect(tool).toMatchObject({
-      type: "live_search_deprecated_20251215",
-      name: "live_search",
+      type: XAI_LIVE_SEARCH_TOOL_TYPE,
+      name: XAI_LIVE_SEARCH_TOOL_NAME,
     } satisfies XAILiveSearchTool);
   });
 
@@ -42,8 +47,8 @@ describe("xaiLiveSearch tool", () => {
     });
 
     expect(tool).toMatchObject({
-      type: "live_search_deprecated_20251215",
-      name: "live_search",
+      type: XAI_LIVE_SEARCH_TOOL_TYPE,
+      name: XAI_LIVE_SEARCH_TOOL_NAME,
       sources: [
         {
           type: "web",
@@ -76,8 +81,8 @@ describe("ChatXAI with xaiLiveSearch tool", () => {
 
     expect(formattedTools).toHaveLength(1);
     expect(formattedTools![0]).toMatchObject({
-      type: "live_search_deprecated_20251215",
-      name: "live_search",
+      type: XAI_LIVE_SEARCH_TOOL_TYPE,
+      name: XAI_LIVE_SEARCH_TOOL_NAME,
       max_search_results: 8,
       sources: [
         {
@@ -94,8 +99,8 @@ describe("ChatXAI with xaiLiveSearch tool", () => {
     // Simulate the tools being passed in options (as they would be after bindTools -> withConfig -> invoke)
     const tools: [XAILiveSearchTool] = [
       {
-        type: "live_search_deprecated_20251215",
-        name: "live_search",
+        type: XAI_LIVE_SEARCH_TOOL_TYPE,
+        name: XAI_LIVE_SEARCH_TOOL_NAME,
         max_search_results: 8,
         sources: [
           {
@@ -134,8 +139,8 @@ describe("ChatXAI with xaiLiveSearch tool", () => {
 
     const tools: [XAILiveSearchTool] = [
       {
-        type: "live_search_deprecated_20251215",
-        name: "live_search",
+        type: XAI_LIVE_SEARCH_TOOL_TYPE,
+        name: XAI_LIVE_SEARCH_TOOL_NAME,
         max_search_results: 10,
         from_date: "2024-01-01",
       },

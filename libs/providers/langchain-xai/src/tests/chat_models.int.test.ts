@@ -11,7 +11,11 @@ import { tool } from "@langchain/core/tools";
 import { concat } from "@langchain/core/utils/stream";
 
 import { ChatXAI } from "../chat_models.js";
-import { type XAILiveSearchTool } from "../tools/live_search.js";
+import {
+  XAI_LIVE_SEARCH_TOOL_NAME,
+  XAI_LIVE_SEARCH_TOOL_TYPE,
+  type XAILiveSearchTool,
+} from "../tools/live_search.js";
 
 test("invoke", async () => {
   const chat = new ChatXAI({
@@ -239,8 +243,8 @@ describe("Server Tool Calling (Live Search)", () => {
     });
 
     const liveSearchTool: XAILiveSearchTool = {
-      name: "live_search",
-      type: "live_search_deprecated_20251215",
+      name: XAI_LIVE_SEARCH_TOOL_NAME,
+      type: XAI_LIVE_SEARCH_TOOL_TYPE,
     };
     const chatWithSearch = chat.bindTools([liveSearchTool]);
 
@@ -328,8 +332,8 @@ describe("Server Tool Calling (Live Search)", () => {
     });
 
     const liveSearchTool: XAILiveSearchTool = {
-      name: "live_search",
-      type: "live_search_deprecated_20251215",
+      name: XAI_LIVE_SEARCH_TOOL_NAME,
+      type: XAI_LIVE_SEARCH_TOOL_TYPE,
     };
     const chatWithSearch = chat.bindTools([liveSearchTool]);
 
@@ -352,8 +356,8 @@ describe("Server Tool Calling (Live Search)", () => {
     });
 
     const liveSearchTool: XAILiveSearchTool = {
-      type: "live_search_deprecated_20251215",
-      name: "live_search",
+      type: XAI_LIVE_SEARCH_TOOL_TYPE,
+      name: XAI_LIVE_SEARCH_TOOL_NAME,
     };
     const customTool = {
       type: "function" as const,

@@ -1,6 +1,12 @@
 import type { XAISearchParameters, XAISearchSource } from "../live_search.js";
 
 /**
+ * xAI's deprecated live_search tool type.
+ */
+export const XAI_LIVE_SEARCH_TOOL_TYPE = "live_search_deprecated_20251215";
+export const XAI_LIVE_SEARCH_TOOL_NAME = "live_search";
+
+/**
  * xAI's built-in live_search tool type.
  * Enables the model to search the web for real-time information.
  */
@@ -8,14 +14,14 @@ export interface XAILiveSearchTool extends XAISearchParameters {
   /**
    * The name of the tool. Must be "live_search" for xAI's built-in search.
    */
-  name: "live_search";
+  name: typeof XAI_LIVE_SEARCH_TOOL_NAME;
   /**
    * The type of the tool. This uses a deprecated Live Search API shape:
    * the advanced agentic search capabilities powering grok.com are generally
    * available in the new agentic tool calling API, and the Live Search API
    * will be deprecated by December 15, 2025.
    */
-  type: "live_search_deprecated_20251215";
+  type: typeof XAI_LIVE_SEARCH_TOOL_TYPE;
 }
 
 /**
@@ -195,8 +201,8 @@ export function xaiLiveSearch(
   options: XAILiveSearchToolOptions = {}
 ): XAILiveSearchTool {
   return {
-    type: "live_search_deprecated_20251215",
-    name: "live_search",
+    type: XAI_LIVE_SEARCH_TOOL_TYPE,
+    name: XAI_LIVE_SEARCH_TOOL_NAME,
     mode: options?.mode,
     max_search_results: options?.maxSearchResults,
     from_date: options?.fromDate,

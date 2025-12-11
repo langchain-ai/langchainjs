@@ -35,7 +35,10 @@ import {
   type XAISearchParametersPayload,
 } from "./live_search.js";
 import PROFILES from "./profiles.js";
-import { XAILiveSearchTool } from "./tools/live_search.js";
+import {
+  XAI_LIVE_SEARCH_TOOL_TYPE,
+  XAILiveSearchTool,
+} from "./tools/live_search.js";
 
 export type OpenAIToolChoice =
   | OpenAIClient.ChatCompletionToolChoiceOption
@@ -53,7 +56,7 @@ export type XAIBuiltInTool = XAILiveSearchTool;
  * without changing the core detection logic.
  */
 const XAI_BUILT_IN_TOOL_TYPES = new Set<XAILiveSearchTool["type"] | string>([
-  "live_search_deprecated_20251215",
+  XAI_LIVE_SEARCH_TOOL_TYPE,
 ]);
 
 /**
@@ -794,9 +797,10 @@ export class ChatXAI extends ChatOpenAICompletions<ChatXAICallOptions> {
 
     let filteredTools: OpenAIClient.ChatCompletionTool[] | undefined;
     if (request.tools) {
-      filteredTools = filterXAIBuiltInTools(request.tools) as
-        | OpenAIClient.ChatCompletionTool[]
-        | undefined;
+      filteredTools = filterXAIBuiltInTools({
+        tools: request.tools,
+        excludedTypes: [XAI_LIVE_SEARCH_TOOL_TYPE],
+      }) as OpenAIClient.ChatCompletionTool[] | undefined;
     }
 
     const newRequest = {
