@@ -165,19 +165,45 @@ export class ProviderStrategy<T = unknown> {
   /**
    * Parse tool arguments according to the schema. If the response is not valid, return undefined.
    *
-   * @param toolArgs - The arguments from the tool call
+   * @param response - The AI message response to parse
    * @returns The parsed response according to the schema type
    */
   parse(response: AIMessage) {
     /**
-     * return if the response doesn't contain valid content
+     * Extract text content from the response.
+     * Handles both string content and array content (e.g., from thinking models).
      */
-    if (typeof response.content !== "string" || response.content === "") {
+    let textContent: string | undefined;
+
+    if (typeof response.content === "string") {
+      textContent = response.content;
+    } else if (Array.isArray(response.content)) {
+      /**
+       * For thinking models, content is an array with thinking blocks and text blocks.
+       * Extract the text from text blocks.
+       */
+      for (const block of response.content) {
+        if (
+          typeof block === "object" &&
+          block !== null &&
+          "type" in block &&
+          block.type === "text" &&
+          "text" in block &&
+          typeof block.text === "string"
+        ) {
+          textContent = block.text;
+          break; // Use the first text block found
+        }
+      }
+    }
+
+    // Return if no valid text content found
+    if (!textContent || textContent === "") {
       return;
     }
 
     try {
-      const content = JSON.parse(response.content);
+      const content = JSON.parse(textContent);
       const validator = new Validator(this.schema);
       const result = validator.validate(content);
       if (!result.valid) {
