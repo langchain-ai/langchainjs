@@ -8,19 +8,16 @@ This library provides a lightweight wrapper that makes [Anthropic Model Context 
 ## Features
 
 - 🔌 **Transport Options**
-
   - Connect to MCP servers via stdio (local) or Streamable HTTP (remote)
     - Streamable HTTP automatically falls back to SSE for compatibility with legacy MCP server implementations
   - Support for custom headers in SSE connections for authentication
   - Configurable reconnection strategies for both transport types
 
 - 🔄 **Multi-Server Management**
-
   - Connect to multiple MCP servers simultaneously
   - Auto-organize tools by server or access them as a flattened collection
 
 - 🧩 **Agent Integration**
-
   - Compatible with LangChain.js and LangGraph.js
   - Optimized for OpenAI, Anthropic, and Google models
   - Supports rich content responses including text, images, and embedded resources
@@ -57,6 +54,9 @@ const client = new MultiServerMCPClient({
 
   // Use standardized content block format in tool outputs
   useStandardContentBlocks: true,
+
+  // Behavior when a server fails to connect: "throw" (default) or "ignore"
+  onConnectionError: "ignore",
 
   // Server configuration
   mcpServers: {
@@ -339,6 +339,7 @@ When loading MCP tools either directly through `loadMcpTools` or via `MultiServe
 | `useStandardContentBlocks`     | `boolean`                              | `false`                                               | See [Tool Output Mapping](#tool-output-mapping); set true for new applications       |
 | `outputHandling`               | `"content"`, `"artifact"`, or `object` | `resource` -> `"artifact"`, all others -> `"content"` | See [Tool Output Mapping](#tool-output-mapping)                                      |
 | `defaultToolTimeout`           | `number`                               | `0`                                                   | Default timeout for all tools (overridable on a per-tool basis)                      |
+| `onConnectionError`            | `"throw"` \| `"ignore"`                | `"throw"`                                             | Behavior when a server fails to connect                                              |
 
 ## Tool Output Mapping
 
@@ -698,6 +699,45 @@ Example Zod error for an invalid SSE URL:
   ],
   "name": "ZodError"
 }
+```
+
+### Connection Error Handling
+
+By default, the `MultiServerMCPClient` will throw an error if any server fails to connect (`onConnectionError: "throw"`). You can change this behavior by setting `onConnectionError: "ignore"` to skip failed servers:
+
+- `"throw"` (default): Throw an error immediately if any server fails to connect
+- `"ignore"`: Skip failed servers and continue with successfully connected ones
+
+When set to `"ignore"`:
+
+- Servers that fail to connect are skipped and logged as warnings
+- The client continues to work with only the servers that successfully connected
+- Failed servers are removed from the connection list and won't be retried
+- If no servers successfully connect, a warning is logged but no error is thrown
+
+```ts
+const client = new MultiServerMCPClient({
+  mcpServers: {
+    "working-server": {
+      transport: "stdio",
+      command: "npx",
+      args: ["-y", "@modelcontextprotocol/server-math"],
+    },
+    "broken-server": {
+      transport: "http",
+      url: "http://localhost:9999/mcp", // This server doesn't exist
+    },
+  },
+  onConnectionError: "ignore", // Skip failed connections
+  useStandardContentBlocks: true,
+});
+
+// This won't throw even though "broken-server" fails to connect
+const tools = await client.getTools(); // Only tools from "working-server"
+
+// You can check which servers are actually connected
+const workingClient = await client.getClient("working-server"); // Returns client
+const brokenClient = await client.getClient("broken-server"); // Returns undefined
 ```
 
 ### Debug Logging

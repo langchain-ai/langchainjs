@@ -147,6 +147,11 @@ export class MultiServerMCPClient {
   #config: ResolvedClientConfig;
 
   /**
+   * Behavior when a server fails to connect
+   */
+  #onConnectionError: "throw" | "ignore";
+
+  /**
    * Returns clone of server config for inspection purposes.
    *
    * Client does not support config modifications.
@@ -212,6 +217,7 @@ export class MultiServerMCPClient {
     this.#config = parsedServerConfig;
     this.#mcpServers = parsedServerConfig.mcpServers;
     this.#clientConnections = new ConnectionManager(parsedServerConfig);
+    this.#onConnectionError = parsedServerConfig.onConnectionError;
   }
 
   /**
@@ -219,8 +225,11 @@ export class MultiServerMCPClient {
    * methods requiring an active connection (like {@link getTools} or {@link getClient}) are called,
    * but you can call it directly to ensure all connections are established before using the tools.
    *
+   * When a server fails to connect, the client will throw an error if `onConnectionError` is "throw",
+   * otherwise it will skip the server and continue with the remaining servers.
+   *
    * @returns A map of server names to arrays of tools
-   * @throws {MCPClientError} If initialization fails
+   * @throws {MCPClientError} If initialization fails and `onConnectionError` is "throw" (default)
    */
   async initializeConnections(
     customTransportOptions?: CustomHTTPTransportOptions
@@ -230,57 +239,31 @@ export class MultiServerMCPClient {
     }
 
     for (const [serverName, connection] of Object.entries(this.#mcpServers)) {
-      if (isResolvedStdioConnection(connection)) {
-        debugLog(
-          `INFO: Initializing stdio connection to server "${serverName}"...`
-        );
-
-        /**
-         * check if we already initialized this stdio connection
-         */
-        if (this.#clientConnections.has(serverName)) {
-          continue;
-        }
-
-        await this._initializeStdioConnection(serverName, connection);
-      } else if (isResolvedStreamableHTTPConnection(connection)) {
-        /**
-         * Users may want to use different connection options for tool calls or tool discovery.
-         */
-        const { authProvider, headers } = customTransportOptions ?? {};
-        const updatedConnection = {
-          ...connection,
-          authProvider: authProvider ?? connection.authProvider,
-          headers: { ...headers, ...connection.headers },
-        };
-
-        /**
-         * check if we already initialized this streamable HTTP connection
-         */
-        const key = {
+      try {
+        await this._initializeConnection(
           serverName,
-          headers: updatedConnection.headers,
-          authProvider: updatedConnection.authProvider,
-        };
-        if (this.#clientConnections.has(key)) {
-          continue;
-        }
-
-        if (connection.type === "sse" || connection.transport === "sse") {
-          await this._initializeSSEConnection(serverName, updatedConnection);
-        } else {
-          await this._initializeStreamableHTTPConnection(
-            serverName,
-            updatedConnection
-          );
-        }
-      } else {
-        // This should never happen due to the validation in the constructor
-        throw new MCPClientError(
-          `Unsupported transport type for server "${serverName}"`,
-          serverName
+          connection,
+          customTransportOptions
         );
+      } catch (error) {
+        if (this.#onConnectionError === "throw") {
+          throw error;
+        }
+        debugLog(
+          `WARN: Failed to initialize connection to server "${serverName}": ${String(error)}`
+        );
+        continue;
       }
+    }
+
+    // Warn if no servers successfully connected when using "ignore" mode
+    if (
+      this.#onConnectionError === "ignore" &&
+      Object.keys(this.#serverNameToTools).length === 0
+    ) {
+      debugLog(
+        `WARN: No servers successfully connected. All connection attempts failed.`
+      );
     }
 
     return this.#serverNameToTools;
@@ -607,6 +590,67 @@ export class MultiServerMCPClient {
     this.#serverNameToTools = {};
     await this.#clientConnections.delete();
     debugLog(`INFO: All MCP connections closed`);
+  }
+
+  /**
+   * Initialize a connection to a specific server
+   */
+  private async _initializeConnection(
+    serverName: string,
+    connection: ResolvedConnection,
+    customTransportOptions?: CustomHTTPTransportOptions
+  ): Promise<void> {
+    if (isResolvedStdioConnection(connection)) {
+      debugLog(
+        `INFO: Initializing stdio connection to server "${serverName}"...`
+      );
+
+      /**
+       * check if we already initialized this stdio connection
+       */
+      if (this.#clientConnections.has(serverName)) {
+        return;
+      }
+
+      await this._initializeStdioConnection(serverName, connection);
+    } else if (isResolvedStreamableHTTPConnection(connection)) {
+      /**
+       * Users may want to use different connection options for tool calls or tool discovery.
+       */
+      const { authProvider, headers } = customTransportOptions ?? {};
+      const updatedConnection = {
+        ...connection,
+        authProvider: authProvider ?? connection.authProvider,
+        headers: { ...headers, ...connection.headers },
+      };
+
+      /**
+       * check if we already initialized this streamable HTTP connection
+       */
+      const key = {
+        serverName,
+        headers: updatedConnection.headers,
+        authProvider: updatedConnection.authProvider,
+      };
+      if (this.#clientConnections.has(key)) {
+        return;
+      }
+
+      if (connection.type === "sse" || connection.transport === "sse") {
+        await this._initializeSSEConnection(serverName, updatedConnection);
+      } else {
+        await this._initializeStreamableHTTPConnection(
+          serverName,
+          updatedConnection
+        );
+      }
+    } else {
+      // This should never happen due to the validation in the constructor
+      throw new MCPClientError(
+        `Unsupported transport type for server "${serverName}"`,
+        serverName
+      );
+    }
   }
 
   /**

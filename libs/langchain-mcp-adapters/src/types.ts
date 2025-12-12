@@ -735,6 +735,20 @@ export const clientConfigSchema = z
       )
       .optional()
       .default(false),
+    /**
+     * Behavior when a server fails to connect.
+     * - "throw": Throw an error immediately if any server fails to connect (default)
+     * - "ignore": Skip failed servers and continue with successfully connected ones
+     *
+     * @default "throw"
+     */
+    onConnectionError: z
+      .enum(["throw", "ignore"])
+      .describe(
+        "Behavior when a server fails to connect: 'throw' to error immediately, 'ignore' to skip failed servers"
+      )
+      .optional()
+      .default("throw"),
   })
   .and(baseConfigSchema)
   .and(toolHooksSchema)
