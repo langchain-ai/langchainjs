@@ -19,14 +19,6 @@ jest.mock("@langchain/core/utils/env", () => ({
   getEnvironmentVariable: () => "key",
 }));
 
-// jest.mock("../google_calendar/commands/run-create-events.js", () => ({
-//   runCreateEvent: jest.fn(),
-// }));
-
-// jest.mock("../google_calendar/commands/run-view-events.js", () => ({
-//   runViewEvents: jest.fn(),
-// }));
-
 class FakeLLM extends BaseChatModel {
   _llmType() {
     return "fake";
@@ -198,5 +190,4 @@ describe("GoogleCalendarDeleteTool", () => {
       "Missing llm instance to interact with Google Calendar"
     );
   });
-
 });

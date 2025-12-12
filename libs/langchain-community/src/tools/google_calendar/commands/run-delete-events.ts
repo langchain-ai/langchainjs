@@ -99,7 +99,9 @@ const runDeleteEvent = async (
         const eventsList = items
           .map(
             (event) =>
-              `- ${event.summary} (${event.start?.dateTime || event.start?.date})`
+              `- ${event.summary} (${
+                event.start?.dateTime || event.start?.date
+              })`
           )
           .join("\n");
         return `Multiple events found. Please be more specific:\n${eventsList}`;
