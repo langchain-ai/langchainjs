@@ -138,6 +138,13 @@ export class PrismaVectorStore<
 
   protected columnTypes?: ColumnTypeConfig;
 
+  /**
+   * When true, addDocuments uses INSERT statements to create new records.
+   * When false (default), addDocuments uses UPDATE statements to update existing records by ID.
+   * Set to true when using with ParentDocumentRetriever or when documents don't pre-exist in the database.
+   */
+  protected useInsert: boolean;
+
   static IdColumn: typeof IdColumnSymbol = IdColumnSymbol;
 
   static ContentColumn: typeof ContentColumnSymbol = ContentColumnSymbol;
@@ -160,6 +167,12 @@ export class PrismaVectorStore<
       columns: TSelectModel;
       filter?: TFilterModel;
       columnTypes?: ColumnTypeConfig;
+      /**
+       * When true, addDocuments uses INSERT statements to create new records.
+       * When false (default), addDocuments uses UPDATE statements to update existing records by ID.
+       * Set to true when using with ParentDocumentRetriever or when documents don't pre-exist in the database.
+       */
+      useInsert?: boolean;
     }
   ) {
     super(embeddings, {});
@@ -182,6 +195,7 @@ export class PrismaVectorStore<
     this.tableName = config.tableName;
     this.vectorColumnName = config.vectorColumnName;
     this.columnTypes = config.columnTypes;
+    this.useInsert = config.useInsert ?? false;
 
     this.selectColumns = entries
       .map(([key, alias]) => (alias && key) || null)
@@ -211,6 +225,7 @@ export class PrismaVectorStore<
         columns: TColumns;
         filter?: TFilters;
         columnTypes?: ColumnTypeConfig;
+        useInsert?: boolean;
       }
     ) {
       type ModelName = keyof TPrisma["ModelName"] & string;
@@ -233,6 +248,7 @@ export class PrismaVectorStore<
         vectorColumnName: string;
         columns: TColumns;
         columnTypes?: ColumnTypeConfig;
+        useInsert?: boolean;
       }
     ) {
       const docs: Document[] = [];
@@ -264,6 +280,7 @@ export class PrismaVectorStore<
         vectorColumnName: string;
         columns: TColumns;
         columnTypes?: ColumnTypeConfig;
+        useInsert?: boolean;
       }
     ) {
       type ModelName = keyof TPrisma["ModelName"] & string;
@@ -303,10 +320,12 @@ export class PrismaVectorStore<
    */
   async addDocuments(documents: Document<TModel>[]) {
     const texts = documents.map(({ pageContent }) => pageContent);
-    return this.addVectors(
-      await this.embeddings.embedDocuments(texts),
-      documents
-    );
+    const vectors = await this.embeddings.embedDocuments(texts);
+
+    if (this.useInsert) {
+      return this.addDocumentsWithVectors(vectors, documents);
+    }
+    return this.addVectors(vectors, documents);
   }
 
   /**
@@ -344,6 +363,58 @@ export class PrismaVectorStore<
           this.Prisma.sql`UPDATE ${tableNameRaw}
             SET ${vectorColumnRaw} = ${`[${vector.join(",")}]`}::vector
             WHERE ${whereClause}
+          `
+        );
+      })
+    );
+  }
+
+  /**
+   * Adds documents with their corresponding vectors to the store using INSERT statements.
+   * This method ensures documents are created if they don't exist, making it compatible
+   * with ParentDocumentRetriever which creates new child documents.
+   * @param vectors The vectors to add.
+   * @param documents The documents associated with the vectors.
+   * @returns A promise that resolves when the documents have been added.
+   */
+  async addDocumentsWithVectors(
+    vectors: number[][],
+    documents: Document<TModel>[]
+  ) {
+    // table name, column name cannot be parametrised
+    // these fields are thus not escaped by Prisma and can be dangerous if user input is used
+    const tableNameRaw = this.Prisma.raw(`"${this.tableName}"`);
+    const vectorColumnRaw = this.Prisma.raw(`"${this.vectorColumnName}"`);
+
+    // Build column names for INSERT statement
+    const columnNames = this.selectColumns.map((col) =>
+      this.Prisma.raw(`"${col}"`)
+    );
+    const allColumns = [...columnNames, vectorColumnRaw];
+
+    await this.db.$transaction(
+      vectors.map((vector, idx) => {
+        const document = documents[idx];
+        const vectorString = `[${vector.join(",")}]`;
+
+        // Build values for each column
+        const columnValues = this.selectColumns.map((col) => {
+          if (col === this.contentColumn) {
+            return document.pageContent;
+          }
+          return document.metadata[col];
+        });
+
+        // Add vector as the last value
+        const allValues = [
+          ...columnValues,
+          this.Prisma.sql`${vectorString}::vector`,
+        ];
+
+        return this.db.$executeRaw(
+          this.Prisma.sql`
+            INSERT INTO ${tableNameRaw} (${this.Prisma.join(allColumns, ", ")})
+            VALUES (${this.Prisma.join(allValues, ", ")})
           `
         );
       })
@@ -572,6 +643,7 @@ export class PrismaVectorStore<
       vectorColumnName: string;
       columns: ModelColumns<Record<string, unknown>>;
       columnTypes?: ColumnTypeConfig;
+      useInsert?: boolean;
     }
   ): Promise<DefaultPrismaVectorStore> {
     const docs: Document[] = [];
@@ -604,6 +676,7 @@ export class PrismaVectorStore<
       vectorColumnName: string;
       columns: ModelColumns<Record<string, unknown>>;
       columnTypes?: ColumnTypeConfig;
+      useInsert?: boolean;
     }
   ): Promise<DefaultPrismaVectorStore> {
     const instance = new PrismaVectorStore(embeddings, dbConfig);
