@@ -53,6 +53,8 @@ export default defineConfig((env) => {
         include: ["**/*.int.test.ts"],
         name: "int",
         environment: "node",
+        globalSetup: ["./src/tests/setup.ts"],
+        globalTeardown: ["./src/tests/teardown.ts"],
       },
     };
   }
