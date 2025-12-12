@@ -1,0 +1,53 @@
+name: 📦 Publish
+
+# Single entry point for npm trusted publishing (OIDC)
+# npm only allows one workflow as Trusted Publisher, so this file acts as
+# the entry point and calls the appropriate publishing workflow.
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+    inputs:
+      npm_tag:
+        description: "NPM tag for the dev release"
+        required: false
+        default: "dev"
+        type: string
+
+env:
+  CI: true
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+# OIDC permissions for trusted publishing - these must be in the entry point workflow
+permissions:
+  id-token: write
+  contents: write
+  pull-requests: write
+
+jobs:
+  # Production release - triggered by push to main
+  release:
+    if: github.event_name == 'push'
+    uses: ./.github/workflows/publish.yml
+    permissions:
+      id-token: write
+      contents: write
+      pull-requests: write
+    secrets: inherit
+
+  # Dev release - triggered by workflow_dispatch
+  dev-release:
+    if: github.event_name == 'workflow_dispatch'
+    uses: ./.github/workflows/dev-release.yml
+    permissions:
+      id-token: write
+      contents: read
+      pull-requests: write
+    with:
+      npm_tag: ${{ inputs.npm_tag }}
+    secrets: inherit

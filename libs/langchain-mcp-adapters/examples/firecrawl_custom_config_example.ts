@@ -5,11 +5,9 @@
  * And getting tools from the Firecrawl server with automatic initialization
  */
 
-/* eslint-disable no-console */
 import { ChatOpenAI } from "@langchain/openai";
-import { HumanMessage } from "@langchain/core/messages";
+import { HumanMessage, createAgent } from "langchain";
 import dotenv from "dotenv";
-import { createReactAgent } from "@langchain/langgraph/prebuilt";
 
 // MCP client imports
 import { type ClientConfig, MultiServerMCPClient } from "../src/index.js";
@@ -66,8 +64,8 @@ async function runExample() {
     });
 
     // Create a React agent using LangGraph's createReactAgent
-    const agent = createReactAgent({
-      llm: model,
+    const agent = createAgent({
+      model,
       tools: firecrawlTools,
     });
 

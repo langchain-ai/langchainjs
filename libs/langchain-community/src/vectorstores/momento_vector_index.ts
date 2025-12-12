@@ -208,7 +208,6 @@ export class MomentoVectorIndex extends VectorStore {
         this.prepareItemBatch(batchVectors, batchDocuments, batchDocumentIds)
       );
       if (response instanceof VectorUpsertItemBatch.Success) {
-        // eslint-disable-next-line no-continue
         continue;
       } else if (response instanceof VectorUpsertItemBatch.Error) {
         throw new Error(response.toString());
@@ -371,7 +370,6 @@ export class MomentoVectorIndex extends VectorStore {
 
     const docs: Document[] = [];
     for (let i = 0; i < texts.length; i += 1) {
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
       const metadata: object = Array.isArray(metadatas)
         ? metadatas[i]
         : metadatas;

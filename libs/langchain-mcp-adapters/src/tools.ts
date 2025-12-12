@@ -1,4 +1,10 @@
-import { Client } from "@modelcontextprotocol/sdk/client/index.js";
+import { z, ZodError as ZodErrorV4 } from "zod/v4";
+import { ZodError as ZodErrorV3 } from "zod/v3";
+import {
+  type CallToolResult,
+  type ContentBlock as MCPContentBlock,
+} from "@modelcontextprotocol/sdk/types.js";
+import type { Client as MCPClient } from "@modelcontextprotocol/sdk/client/index.js";
 import type {
   EmbeddedResource,
   ReadResourceResult,
@@ -7,45 +13,179 @@ import type {
 } from "@modelcontextprotocol/sdk/types.js";
 import type { RequestOptions } from "@modelcontextprotocol/sdk/shared/protocol.js";
 import { DynamicStructuredTool } from "@langchain/core/tools";
-import {
-  Base64ContentBlock,
-  DataContentBlock,
-  MessageContentComplex,
-  MessageContentImageUrl,
-  MessageContentText,
-  PlainTextContentBlock,
-  StandardAudioBlock,
-  StandardFileBlock,
-  StandardImageBlock,
-} from "@langchain/core/messages";
+import type { ContentBlock } from "@langchain/core/messages";
 import { RunnableConfig } from "@langchain/core/runnables";
 import type { CallbackManagerForToolRun } from "@langchain/core/callbacks/manager";
-import debug from "debug";
+import { ToolMessage } from "@langchain/core/messages";
+import { Command, getCurrentTaskInput } from "@langchain/langgraph";
+
+import type { Notifications } from "./types.js";
+
 import {
   _resolveDetailedOutputHandling,
-  type CallToolResult,
-  type CallToolResultContent,
   type CallToolResultContentType,
   type LoadMcpToolsOptions,
   type OutputHandling,
 } from "./types.js";
+import type { ToolHooks, State } from "./hooks.js";
+import type { Client } from "./connection.js";
+import { getDebugLog } from "./logging.js";
 
-// Replace direct initialization with lazy initialization
-let debugLog: debug.Debugger;
-function getDebugLog() {
-  if (!debugLog) {
-    debugLog = debug("@langchain/mcp-adapters:tools");
+const debugLog = getDebugLog("tools");
+
+/**
+ * JSON Schema type definitions for dereferencing $defs.
+ */
+type JsonSchemaObject = {
+  type?: string;
+  properties?: Record<string, JsonSchemaObject>;
+  items?: JsonSchemaObject | JsonSchemaObject[];
+  additionalProperties?: boolean | JsonSchemaObject;
+  $ref?: string;
+  $defs?: Record<string, JsonSchemaObject>;
+  definitions?: Record<string, JsonSchemaObject>;
+  allOf?: JsonSchemaObject[];
+  anyOf?: JsonSchemaObject[];
+  oneOf?: JsonSchemaObject[];
+  not?: JsonSchemaObject;
+  if?: JsonSchemaObject;
+  then?: JsonSchemaObject;
+  else?: JsonSchemaObject;
+  required?: string[];
+  description?: string;
+  default?: unknown;
+  enum?: unknown[];
+  const?: unknown;
+  [key: string]: unknown;
+};
+
+/**
+ * Dereferences $ref pointers in a JSON Schema by inlining the definitions from $defs.
+ * This is necessary because some JSON Schema validators (like @cfworker/json-schema)
+ * don't automatically resolve $ref references to $defs.
+ *
+ * @param schema - The JSON Schema to dereference
+ * @returns A new schema with all $ref pointers resolved
+ */
+function dereferenceJsonSchema(schema: JsonSchemaObject): JsonSchemaObject {
+  const definitions = schema.$defs ?? schema.definitions ?? {};
+
+  /**
+   * Recursively resolve $ref pointers in the schema.
+   * Tracks visited refs to prevent infinite recursion with circular references.
+   */
+  function resolveRefs(
+    obj: JsonSchemaObject,
+    visitedRefs: Set<string> = new Set()
+  ): JsonSchemaObject {
+    if (typeof obj !== "object" || obj === null) {
+      return obj;
+    }
+
+    // Handle $ref
+    if (obj.$ref && typeof obj.$ref === "string") {
+      const refPath = obj.$ref;
+
+      // Only handle local references to $defs or definitions
+      const defsMatch = refPath.match(/^#\/\$defs\/(.+)$/);
+      const definitionsMatch = refPath.match(/^#\/definitions\/(.+)$/);
+      const match = defsMatch || definitionsMatch;
+
+      if (match) {
+        const defName = match[1];
+        const definition = definitions[defName];
+
+        if (definition) {
+          // Check for circular reference
+          if (visitedRefs.has(refPath)) {
+            // Return a placeholder for circular refs to avoid infinite loop
+            debugLog(
+              `WARNING: Circular reference detected for ${refPath}, using empty object`
+            );
+            return { type: "object" };
+          }
+
+          // Track this ref as visited
+          const newVisitedRefs = new Set(visitedRefs);
+          newVisitedRefs.add(refPath);
+
+          // Merge the resolved definition with any other properties from the original object
+          // (excluding $ref itself)
+          const { $ref: _, ...restOfObj } = obj;
+          const resolvedDef = resolveRefs(definition, newVisitedRefs);
+          return { ...resolvedDef, ...restOfObj };
+        } else {
+          debugLog(`WARNING: Could not resolve $ref: ${refPath}`);
+        }
+      }
+      // For non-local refs, return as-is
+      return obj;
+    }
+
+    // Recursively process all properties
+    const result: JsonSchemaObject = {};
+
+    for (const [key, value] of Object.entries(obj)) {
+      // Skip $defs and definitions as they're no longer needed after dereferencing
+      if (key === "$defs" || key === "definitions") {
+        continue;
+      }
+
+      if (Array.isArray(value)) {
+        result[key] = value.map((item) =>
+          typeof item === "object" && item !== null
+            ? resolveRefs(item as JsonSchemaObject, visitedRefs)
+            : item
+        );
+      } else if (typeof value === "object" && value !== null) {
+        result[key] = resolveRefs(value as JsonSchemaObject, visitedRefs);
+      } else {
+        result[key] = value;
+      }
+    }
+
+    return result;
   }
-  return debugLog;
+
+  return resolveRefs(schema);
 }
+
+/**
+ * MCP instance is either a Client or a MCPClient.
+ *
+ * `MCPClient`: is the base instance from the `@modelcontextprotocol/sdk` package.
+ * `Client`: is an extension of the `MCPClient` that adds the `fork` method to easier create a new client with different headers.
+ *
+ * This distinction is necessary to keep the interface of the `getTools` method simple.
+ */
+type MCPInstance = Client | MCPClient;
 
 /**
  * Custom error class for tool exceptions
  */
 export class ToolException extends Error {
-  constructor(message: string) {
+  constructor(message: string, cause?: Error) {
     super(message);
     this.name = "ToolException";
+
+    /**
+     * don't display the large ZodError stack trace
+     */
+    if (
+      cause &&
+      // eslint-disable-next-line no-instanceof/no-instanceof
+      (cause instanceof ZodErrorV4 || cause instanceof ZodErrorV3)
+    ) {
+      const minifiedZodError = new Error(z.prettifyError(cause));
+      const stackByLine = cause.stack?.split("\n") || [];
+      minifiedZodError.stack = cause.stack
+        ?.split("\n")
+        .slice(stackByLine.findIndex((l) => l.includes("    at")))
+        .join("\n");
+      this.cause = minifiedZodError;
+    } else if (cause) {
+      this.cause = cause;
+    }
   }
 }
 
@@ -76,10 +216,11 @@ async function* _embeddedResourceToStandardFileBlocks(
   resource:
     | EmbeddedResource["resource"]
     | ReadResourceResult["contents"][number],
-  client: Client
+  client: MCPInstance
 ): AsyncGenerator<
-  | (StandardFileBlock & Base64ContentBlock)
-  | (StandardFileBlock & PlainTextContentBlock)
+  | (ContentBlock.Data.StandardFileBlock & ContentBlock.Data.Base64ContentBlock)
+  | (ContentBlock.Data.StandardFileBlock &
+      ContentBlock.Data.PlainTextContentBlock)
 > {
   if (isResourceReference(resource)) {
     const response: ReadResourceResult = await client.readResource({
@@ -98,7 +239,8 @@ async function* _embeddedResourceToStandardFileBlocks(
       data: resource.blob,
       mime_type: resource.mimeType,
       ...(resource.uri != null ? { metadata: { uri: resource.uri } } : {}),
-    } as StandardFileBlock & Base64ContentBlock;
+    } as ContentBlock.Data.StandardFileBlock &
+      ContentBlock.Data.Base64ContentBlock;
   }
   if (resource.text != null) {
     yield {
@@ -107,39 +249,40 @@ async function* _embeddedResourceToStandardFileBlocks(
       mime_type: resource.mimeType,
       text: resource.text,
       ...(resource.uri != null ? { metadata: { uri: resource.uri } } : {}),
-    } as StandardFileBlock & PlainTextContentBlock;
+    } as ContentBlock.Data.StandardFileBlock &
+      ContentBlock.Data.PlainTextContentBlock;
   }
 }
 
 async function _toolOutputToContentBlocks(
-  content: CallToolResultContent,
+  content: MCPContentBlock,
   useStandardContentBlocks: true,
-  client: Client,
+  client: MCPInstance,
   toolName: string,
   serverName: string
-): Promise<DataContentBlock[]>;
+): Promise<ContentBlock.Multimodal.Standard[]>;
 async function _toolOutputToContentBlocks(
-  content: CallToolResultContent,
+  content: MCPContentBlock,
   useStandardContentBlocks: false | undefined,
-  client: Client,
+  client: MCPInstance,
   toolName: string,
   serverName: string
-): Promise<MessageContentComplex[]>;
+): Promise<ContentBlock[]>;
 async function _toolOutputToContentBlocks(
-  content: CallToolResultContent,
+  content: MCPContentBlock,
   useStandardContentBlocks: boolean | undefined,
-  client: Client,
+  client: MCPInstance,
   toolName: string,
   serverName: string
-): Promise<(MessageContentComplex | DataContentBlock)[]>;
+): Promise<(ContentBlock | ContentBlock.Multimodal.Standard)[]>;
 async function _toolOutputToContentBlocks(
-  content: CallToolResultContent,
+  content: MCPContentBlock,
   useStandardContentBlocks: boolean | undefined,
-  client: Client,
+  client: MCPInstance,
   toolName: string,
   serverName: string
-): Promise<(MessageContentComplex | DataContentBlock)[]> {
-  const blocks: StandardFileBlock[] = [];
+): Promise<(ContentBlock | ContentBlock.Multimodal.Standard)[]> {
+  const blocks: ContentBlock.Data.StandardFileBlock[] = [];
   switch (content.type) {
     case "text":
       return [
@@ -151,7 +294,7 @@ async function _toolOutputToContentBlocks(
               }
             : {}),
           text: content.text,
-        } as MessageContentText,
+        } as ContentBlock.Text,
       ];
     case "image":
       if (useStandardContentBlocks) {
@@ -161,7 +304,7 @@ async function _toolOutputToContentBlocks(
             source_type: "base64",
             data: content.data,
             mime_type: content.mimeType,
-          } as StandardImageBlock,
+          } as ContentBlock.Data.StandardImageBlock,
         ];
       }
       return [
@@ -170,7 +313,7 @@ async function _toolOutputToContentBlocks(
           image_url: {
             url: `data:${content.mimeType};base64,${content.data}`,
           },
-        } as MessageContentImageUrl,
+        } as ContentBlock,
       ];
     case "audio":
       // We don't check `useStandardContentBlocks` here because we only support audio via
@@ -181,7 +324,7 @@ async function _toolOutputToContentBlocks(
           source_type: "base64",
           data: content.data,
           mime_type: content.mimeType,
-        } as StandardAudioBlock,
+        } as ContentBlock.Data.StandardAudioBlock,
       ];
     case "resource":
       for await (const block of _embeddedResourceToStandardFileBlocks(
@@ -203,10 +346,10 @@ async function _toolOutputToContentBlocks(
 async function _embeddedResourceToArtifact(
   resource: EmbeddedResource,
   useStandardContentBlocks: boolean | undefined,
-  client: Client,
+  client: MCPInstance,
   toolName: string,
   serverName: string
-): Promise<(EmbeddedResource | DataContentBlock)[]> {
+): Promise<(EmbeddedResource | ContentBlock.Multimodal.Standard)[]> {
   if (useStandardContentBlocks) {
     return _toolOutputToContentBlocks(
       resource,
@@ -235,6 +378,46 @@ async function _embeddedResourceToArtifact(
 }
 
 /**
+ * Special artifact type for structured content from MCP tool results
+ * @internal
+ */
+type MCPStructuredContentArtifact = {
+  type: "mcp_structured_content";
+  data: NonNullable<CallToolResult["structuredContent"]>;
+};
+
+/**
+ * Special artifact type for meta information from MCP tool results
+ * @internal
+ */
+type MCPMetaArtifact = {
+  type: "mcp_meta";
+  data: NonNullable<CallToolResult["_meta"]>;
+};
+
+/**
+ * Extended artifact type that includes MCP-specific artifacts
+ * @internal
+ */
+type ExtendedArtifact =
+  | EmbeddedResource
+  | ContentBlock.Multimodal.Standard
+  | MCPStructuredContentArtifact
+  | MCPMetaArtifact;
+
+/**
+ * Content type that may include structuredContent and meta
+ * @internal
+ */
+type ExtendedContent =
+  | (ContentBlock | ContentBlock.Multimodal.Standard)[]
+  | (ContentBlock.Text & {
+      structuredContent?: NonNullable<CallToolResult["structuredContent"]>;
+      meta?: NonNullable<CallToolResult["_meta"]>;
+    })
+  | string;
+
+/**
  * @internal
  */
 type ConvertCallToolResultArgs = {
@@ -253,7 +436,7 @@ type ConvertCallToolResultArgs = {
   /**
    * The MCP client that was used to call the tool
    */
-  client: Client;
+  client: Client | MCPClient;
   /**
    * If true, the tool will use LangChain's standard multimodal content blocks for tools that output
    * image or audio content. This option has no effect on handling of embedded resource tool output.
@@ -297,12 +480,7 @@ async function _convertCallToolResult({
   client,
   useStandardContentBlocks,
   outputHandling,
-}: ConvertCallToolResultArgs): Promise<
-  [
-    (MessageContentComplex | DataContentBlock)[],
-    (EmbeddedResource | DataContentBlock)[]
-  ]
-> {
+}: ConvertCallToolResultArgs): Promise<[ExtendedContent, ExtendedArtifact[]]> {
   if (!result) {
     throw new ToolException(
       `MCP tool '${toolName}' on server '${serverName}' returned an invalid result - tool call response was undefined`
@@ -318,37 +496,38 @@ async function _convertCallToolResult({
   if (result.isError) {
     throw new ToolException(
       `MCP tool '${toolName}' on server '${serverName}' returned an error: ${result.content
-        .map((content: CallToolResultContent) => content.text)
+        .map((content: MCPContentBlock) => content.text)
         .join("\n")}`
     );
   }
 
-  const convertedContent: (MessageContentComplex | DataContentBlock)[] = (
-    await Promise.all(
-      result.content
-        .filter(
-          (content: CallToolResultContent) =>
-            _getOutputTypeForContentType(content.type, outputHandling) ===
-            "content"
-        )
-        .map((content: CallToolResultContent) =>
-          _toolOutputToContentBlocks(
-            content,
-            useStandardContentBlocks,
-            client,
-            toolName,
-            serverName
+  const convertedContent: (ContentBlock | ContentBlock.Multimodal.Standard)[] =
+    (
+      await Promise.all(
+        result.content
+          .filter(
+            (content: MCPContentBlock) =>
+              _getOutputTypeForContentType(content.type, outputHandling) ===
+              "content"
           )
-        )
-    )
-  ).flat();
+          .map((content: MCPContentBlock) =>
+            _toolOutputToContentBlocks(
+              content,
+              useStandardContentBlocks,
+              client,
+              toolName,
+              serverName
+            )
+          )
+      )
+    ).flat();
 
   // Create the text content output
   const artifacts = (
     await Promise.all(
       (
         result.content.filter(
-          (content: CallToolResultContent) =>
+          (content: MCPContentBlock) =>
             _getOutputTypeForContentType(content.type, outputHandling) ===
             "artifact"
         ) as EmbeddedResource[]
@@ -364,11 +543,47 @@ async function _convertCallToolResult({
     )
   ).flat();
 
-  if (convertedContent.length === 1 && convertedContent[0].type === "text") {
-    return [convertedContent[0].text, artifacts];
+  // Extract structuredContent and _meta from result
+  // These are optional fields that are part of the CallToolResult type
+  const structuredContent = result.structuredContent;
+  const meta = result._meta;
+
+  // Add structuredContent and meta as special artifacts
+  const enhancedArtifacts: ExtendedArtifact[] = [...artifacts];
+  if (structuredContent) {
+    enhancedArtifacts.push({
+      type: "mcp_structured_content",
+      data: structuredContent,
+    });
+  }
+  if (meta) {
+    enhancedArtifacts.push({
+      type: "mcp_meta",
+      data: meta,
+    });
   }
 
-  return [convertedContent, artifacts];
+  // If we have structuredContent or meta, create an enhanced content that includes all info
+  if (convertedContent.length === 1 && convertedContent[0].type === "text") {
+    const textBlock = convertedContent[0] as ContentBlock.Text;
+    const textContent = textBlock.text;
+
+    // If we have structuredContent or meta, wrap the content with additional info
+    if (structuredContent || meta) {
+      return [
+        {
+          ...textBlock,
+          ...(structuredContent ? { structuredContent } : {}),
+          ...(meta ? { meta } : {}),
+        } as ExtendedContent,
+        enhancedArtifacts,
+      ];
+    }
+
+    return [textContent as ExtendedContent, enhancedArtifacts];
+  }
+
+  return [convertedContent as ExtendedContent, enhancedArtifacts];
 }
 
 /**
@@ -386,7 +601,7 @@ type CallToolArgs = {
   /**
    * The MCP client to call the tool on
    */
-  client: Client;
+  client: Client | MCPClient;
   /**
    * The arguments to pass to the tool - must conform to the tool's input schema
    */
@@ -404,7 +619,26 @@ type CallToolArgs = {
    * Defines where to place each tool output type in the LangChain ToolMessage.
    */
   outputHandling?: OutputHandling;
+
+  /**
+   * `onProgress` callbacks used for tool calls.
+   */
+  onProgress?: Notifications["onProgress"];
+
+  /**
+   * `beforeToolCall` callbacks used for tool calls.
+   */
+  beforeToolCall?: ToolHooks["beforeToolCall"];
+
+  /**
+   * `afterToolCall` callbacks used for tool calls.
+   */
+  afterToolCall?: ToolHooks["afterToolCall"];
 };
+
+type ContentBlocksWithArtifacts =
+  | [ExtendedContent, ExtendedArtifact[]]
+  | Command;
 
 /**
  * Call an MCP tool.
@@ -423,25 +657,78 @@ async function _callTool({
   config,
   useStandardContentBlocks,
   outputHandling,
-}: CallToolArgs): Promise<
-  [
-    (MessageContentComplex | DataContentBlock)[],
-    (EmbeddedResource | DataContentBlock)[]
-  ]
-> {
+  onProgress,
+  beforeToolCall,
+  afterToolCall,
+}: CallToolArgs): Promise<ContentBlocksWithArtifacts> {
   try {
-    getDebugLog()(`INFO: Calling tool ${toolName}(${JSON.stringify(args)})`);
+    debugLog(`INFO: Calling tool ${toolName}(${JSON.stringify(args)})`);
 
     // Extract timeout from RunnableConfig and pass to MCP SDK
+    // Note: ensureConfig() converts timeout into an AbortSignal and deletes the timeout field.
+    // To preserve the numeric timeout for SDKs that accept an explicit timeout value, we read
+    // it from metadata.timeoutMs if present, falling back to any direct timeout.
+    const numericTimeout =
+      (config?.metadata?.timeoutMs as number | undefined) ?? config?.timeout;
     const requestOptions: RequestOptions = {
-      ...(config?.timeout ? { timeout: config.timeout } : {}),
+      ...(numericTimeout ? { timeout: numericTimeout } : {}),
       ...(config?.signal ? { signal: config.signal } : {}),
+      ...(onProgress
+        ? {
+            onprogress: (progress) => {
+              // eslint-disable-next-line @typescript-eslint/no-floating-promises
+              onProgress?.(progress, {
+                type: "tool",
+                name: toolName,
+                args,
+                server: serverName,
+              });
+            },
+          }
+        : {}),
     };
 
-    const callToolArgs: Parameters<typeof client.callTool> = [
+    let state: State = {};
+    try {
+      state = getCurrentTaskInput(config) as State;
+    } catch (error) {
+      debugLog(
+        `State can't be derrived as LangGraph is not used: ${String(error)}`
+      );
+    }
+
+    const beforeToolCallInterception = await beforeToolCall?.(
       {
         name: toolName,
-        arguments: args,
+        args,
+        serverName,
+      },
+      state,
+      config ?? {}
+    );
+
+    const finalArgs = Object.assign(
+      args,
+      beforeToolCallInterception?.args || {}
+    );
+
+    const headers = beforeToolCallInterception?.headers || {};
+    const hasHeaderChanges = Object.entries(headers).length > 0;
+    if (hasHeaderChanges && typeof (client as Client).fork !== "function") {
+      throw new ToolException(
+        `MCP client for server "${serverName}" does not support header changes`
+      );
+    }
+
+    const finalClient =
+      hasHeaderChanges && typeof (client as Client).fork === "function"
+        ? await (client as Client).fork(headers)
+        : client;
+
+    const callToolArgs: Parameters<typeof finalClient.callTool> = [
+      {
+        name: toolName,
+        arguments: finalArgs,
       },
     ];
 
@@ -450,17 +737,94 @@ async function _callTool({
       callToolArgs.push(requestOptions);
     }
 
-    const result = await client.callTool(...callToolArgs);
-    return _convertCallToolResult({
+    const result = (await finalClient.callTool(
+      ...callToolArgs
+    )) as CallToolResult;
+    const [content, artifacts] = await _convertCallToolResult({
       serverName,
       toolName,
-      result: result as CallToolResult,
-      client,
+      result,
+      client: finalClient,
       useStandardContentBlocks,
       outputHandling,
     });
+
+    // Convert ExtendedContent to the format expected by afterToolCall
+    // afterToolCall expects: string | (ContentBlock | ContentBlock.Data.DataContentBlock)[]
+    // ExtendedContent can be: string | ContentBlock[] | (ContentBlock.Text & {...})
+    const normalizedContent:
+      | string
+      | (ContentBlock | ContentBlock.Data.DataContentBlock)[] =
+      typeof content === "string"
+        ? content
+        : Array.isArray(content)
+          ? (content as (ContentBlock | ContentBlock.Data.DataContentBlock)[])
+          : ([content] as (
+              | ContentBlock
+              | ContentBlock.Data.DataContentBlock
+            )[]);
+
+    // Filter artifacts to only include types expected by afterToolCall
+    // afterToolCall expects: (EmbeddedResource | ContentBlock.Multimodal.Standard)[]
+    // ExtendedArtifact includes additional types (MCPStructuredContentArtifact, MCPMetaArtifact)
+    // which need to be filtered out
+    const normalizedArtifacts: (
+      | EmbeddedResource
+      | ContentBlock.Multimodal.Standard
+    )[] = artifacts.filter(
+      (
+        artifact
+      ): artifact is EmbeddedResource | ContentBlock.Multimodal.Standard =>
+        artifact.type === "resource" ||
+        (artifact.type !== "mcp_structured_content" &&
+          artifact.type !== "mcp_meta" &&
+          typeof artifact === "object" &&
+          artifact !== null &&
+          "source_type" in artifact)
+    ) as (EmbeddedResource | ContentBlock.Multimodal.Standard)[];
+
+    const interceptedResult = await afterToolCall?.(
+      {
+        name: toolName,
+        args: finalArgs,
+        result: [normalizedContent, normalizedArtifacts],
+        serverName,
+      },
+      state,
+      config ?? {}
+    );
+
+    if (!interceptedResult) {
+      return [content, artifacts];
+    }
+
+    if (typeof interceptedResult.result === "string") {
+      return [interceptedResult.result, []];
+    }
+
+    if (Array.isArray(interceptedResult.result)) {
+      return interceptedResult.result as ContentBlocksWithArtifacts;
+    }
+
+    if (ToolMessage.isInstance(interceptedResult.result)) {
+      return [interceptedResult.result.contentBlocks, []];
+    }
+
+    // eslint-disable-next-line no-instanceof/no-instanceof
+    if (interceptedResult?.result instanceof Command) {
+      return interceptedResult.result;
+    }
+
+    throw new Error(
+      `Unexpected result value type from afterToolCall: expected either a Command, a ToolMessage or a tuple of ContentBlock and Artifact, but got ${interceptedResult.result}`
+    );
   } catch (error) {
-    getDebugLog()(`Error calling tool ${toolName}: ${String(error)}`);
+    // eslint-disable-next-line no-instanceof/no-instanceof
+    if (error instanceof ZodErrorV4 || error instanceof ZodErrorV3) {
+      throw new ToolException(z.prettifyError(error), error);
+    }
+
+    debugLog(`Error calling tool ${toolName}: ${String(error)}`);
     if (isToolException(error)) {
       throw error;
     }
@@ -484,7 +848,7 @@ const defaultLoadMcpToolsOptions: LoadMcpToolsOptions = {
  */
 export async function loadMcpTools(
   serverName: string,
-  client: Client,
+  client: MCPInstance,
   options?: LoadMcpToolsOptions
 ): Promise<DynamicStructuredTool[]> {
   const {
@@ -512,7 +876,7 @@ export async function loadMcpTools(
     mcpTools.push(...(toolsResponse.tools || []));
   } while (toolsResponse.nextCursor);
 
-  getDebugLog()(`INFO: Found ${mcpTools.length} MCP tools`);
+  debugLog(`INFO: Found ${mcpTools.length} MCP tools`);
 
   const initialPrefix = additionalToolNamePrefix
     ? `${additionalToolNamePrefix}__`
@@ -529,14 +893,19 @@ export async function loadMcpTools(
           try {
             if (!tool.inputSchema.properties) {
               // Workaround for MCP SDK not consistently providing properties
-              // eslint-disable-next-line no-param-reassign
               tool.inputSchema.properties = {};
             }
+
+            // Dereference $defs/$ref in the schema to support Pydantic v2 schemas
+            // and other JSON schemas that use $defs for nested type definitions
+            const dereferencedSchema = dereferenceJsonSchema(
+              tool.inputSchema as JsonSchemaObject
+            );
 
             const dst = new DynamicStructuredTool({
               name: `${toolNamePrefix}${tool.name}`,
               description: tool.description || "",
-              schema: tool.inputSchema,
+              schema: dereferencedSchema,
               responseFormat: "content_and_artifact",
               metadata: { annotations: tool.annotations },
               defaultConfig: defaultToolTimeout
@@ -555,13 +924,16 @@ export async function loadMcpTools(
                   config,
                   useStandardContentBlocks,
                   outputHandling,
+                  onProgress: options?.onProgress,
+                  beforeToolCall: options?.beforeToolCall,
+                  afterToolCall: options?.afterToolCall,
                 });
               },
             });
-            getDebugLog()(`INFO: Successfully loaded tool: ${dst.name}`);
+            debugLog(`INFO: Successfully loaded tool: ${dst.name}`);
             return dst;
           } catch (error) {
-            getDebugLog()(`ERROR: Failed to load tool "${tool.name}":`, error);
+            debugLog(`ERROR: Failed to load tool "${tool.name}":`, error);
             if (throwOnLoadError) {
               throw error;
             }

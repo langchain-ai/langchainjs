@@ -16,8 +16,6 @@ ci:
           - dependency_range_tests/**/*
           - environment_tests/**
           - environment_tests/**/*
-          - libs/langchain-scripts/**
-          - libs/langchain-scripts/**/*
           - libs/langchain-standard-tests/**
           - libs/langchain-standard-tests/**/*
 
@@ -27,116 +25,254 @@ examples:
           - examples/**
           - examples/**/*
 
-langchain:
+pkg:langchain:
   - changed-files:
       - any-glob-to-any-file:
-          - langchain/**
-          - langchain/**/*
+          - libs/langchain/**
+          - libs/langchain/**/*
 
-core:
+pkg:@langchain/classic:
+  - changed-files:
+      - any-glob-to-any-file:
+          - libs/langchain-classic/**
+          - libs/langchain-classic/**/*
+
+pkg:@langchain/community:
+  - changed-files:
+      - any-glob-to-any-file:
+          - libs/langchain-community/**
+          - libs/langchain-community/**/*
+
+pkg:@langchain/core:
   - changed-flies:
       - any-glob-to-any-file:
           - langchain-core/**
           - langchain-core/**/*
 
-textsplitters:
+pkg:@langchain/mcp-adapters:
+  - changed-files:
+      - any-glob-to-any-file:
+          - libs/langchain-mcp-adapters/**
+          - libs/langchain-mcp-adapters/**/*
+
+pkg:@langchain/textsplitters:
   - changed-files:
       - any-glob-to-any-file:
           - libs/langchain-textsplitters/**
           - libs/langchain-textsplitters/**/*
 
-provider/anthropic:
+pkg:@langchain/anthropic:
   - changed-files:
       - any-glob-to-any-file:
-          - libs/langchain-anthropic/**
-          - libs/langchain-anthropic/**/*
+          - libs/providers/langchain-anthropic/**
+          - libs/providers/langchain-anthropic/**/*
 
-provider/aws:
+pkg:@langchain/aws:
   - changed-files:
       - any-glob-to-any-file:
-          - libs/langchain-aws/**
-          - libs/langchain-aws/**/*
+          - libs/providers/langchain-aws/**
+          - libs/providers/langchain-aws/**/*
 
-provider/azure:
-  - changed-files:
-      - any-glob-to-any-file:
-          - libs/langchain-*azure*/**
-          - libs/langchain-*azure*/**/*
+# pkg:@langchain/azure-cosmosdb:
+#   - changed-files:
+#       - any-glob-to-any-file:
+#           - libs/providers/langchain-azure-cosmosdb/**
+#           - libs/providers/langchain-azure-cosmosdb/**/*
 
-provider/ollama:
-  - changed-files:
-      - any-glob-to-any-file:
-          - libs/langchain-ollama/**
-          - libs/langchain-ollama/**/*
+# pkg:@langchain/azure-dynamic-sessions:
+#   - changed-files:
+#       - any-glob-to-any-file:
+#           - libs/providers/langchain-azure-dynamic-sessions/**
+#           - libs/providers/langchain-azure-dynamic-sessions/**/*
 
-provider/openai:
-  - changed-files:
-      - any-glob-to-any-file:
-          - libs/langchain-openai/**
-          - libs/langchain-openai/**/*
+# pkg:@langchain/baidu-qianfan:
+#   - changed-files:
+#       - any-glob-to-any-file:
+#           - libs/providers/langchain-baidu-qianfan/**
+#           - libs/providers/langchain-baidu-qianfan/**/*
 
-provider/google:
-  - changed-files:
-      - any-glob-to-any-file:
-          - libs/langchain-*google*/**
-          - libs/langchain-*google*/**/*
+# pkg:@langchain/cerebras:
+#   - changed-files:
+#       - any-glob-to-any-file:
+#           - libs/providers/langchain-cerebras/**
+#           - libs/providers/langchain-cerebras/**/*
 
-provider/groq:
-  - changed-files:
-      - any-glob-to-any-file:
-          - libs/langchain-groq/**
-          - libs/langchain-groq/**/*
+# pkg:@langchain/cloudflare:
+#   - changed-files:
+#       - any-glob-to-any-file:
+#           - libs/providers/langchain-cloudflare/**
+#           - libs/providers/langchain-cloudflare/**/*
 
-provider/mistralai:
-  - changed-files:
-      - any-glob-to-any-file:
-          - libs/langchain-mistralai/**
-          - libs/langchain-mistralai/**/*
+# pkg:@langchain/cohere:
+#   - changed-files:
+#       - any-glob-to-any-file:
+#           - libs/providers/langchain-cohere/**
+#           - libs/providers/langchain-cohere/**/*
 
-provider/mongodb:
+pkg:@langchain/deepseek:
   - changed-files:
       - any-glob-to-any-file:
-          - libs/langchain-mongodb/**
-          - libs/langchain-mongodb/**/*
+          - libs/providers/langchain-deepseek/**
+          - libs/providers/langchain-deepseek/**/*
 
-provider/redis:
-  - changed-files:
-      - any-glob-to-any-file:
-          - libs/langchain-redis/**
-          - libs/langchain-redis/**/*
+# pkg:@langchain/exa:
+#   - changed-files:
+#       - any-glob-to-any-file:
+#           - libs/providers/langchain-exa/**
+#           - libs/providers/langchain-exa/**/*
 
-provider/xai:
+# pkg:@langchain/google-cloud-sql-pg:
+#   - changed-files:
+#       - any-glob-to-any-file:
+#           - libs/providers/langchain-google-cloud-sql-pg/**
+#           - libs/providers/langchain-google-cloud-sql-pg/**/*
+
+pkg:@langchain/google-common:
   - changed-files:
       - any-glob-to-any-file:
-          - libs/langchain-xai/**
-          - libs/langchain-xai/**/*
+          - libs/providers/langchain-google-common/**
+          - libs/providers/langchain-google-common/**/*
+
+pkg:@langchain/google-gauth:
+  - changed-files:
+      - any-glob-to-any-file:
+          - libs/providers/langchain-google-gauth/**
+          - libs/providers/langchain-google-gauth/**/*
+
+pkg:@langchain/google-genai:
+  - changed-files:
+      - any-glob-to-any-file:
+          - libs/providers/langchain-google-genai/**
+          - libs/providers/langchain-google-genai/**/*
+
+pkg:@langchain/google-vertexai:
+  - changed-files:
+      - any-glob-to-any-file:
+          - libs/providers/langchain-google-vertexai/**
+          - libs/providers/langchain-google-vertexai/**/*
+
+pkg:@langchain/google-vertexai-web:
+  - changed-files:
+      - any-glob-to-any-file:
+          - libs/providers/langchain-google-vertexai-web/**
+          - libs/providers/langchain-google-vertexai-web/**/*
+
+pkg:@langchain/google-webauth:
+  - changed-files:
+      - any-glob-to-any-file:
+          - libs/providers/langchain-google-webauth/**
+          - libs/providers/langchain-google-webauth/**/*
+
+pkg:@langchain/groq:
+  - changed-files:
+      - any-glob-to-any-file:
+          - libs/providers/langchain-groq/**
+          - libs/providers/langchain-groq/**/*
+
+pkg:@langchain/mistralai:
+  - changed-files:
+      - any-glob-to-any-file:
+          - libs/providers/langchain-mistralai/**
+          - libs/providers/langchain-mistralai/**/*
+
+# pkg:@langchain/mixedbread-ai:
+#   - changed-files:
+#       - any-glob-to-any-file:
+#           - libs/providers/langchain-mixedbread-ai/**
+#           - libs/providers/langchain-mixedbread-ai/**/*
+
+pkg:@langchain/mongodb:
+  - changed-files:
+      - any-glob-to-any-file:
+          - libs/providers/langchain-mongodb/**
+          - libs/providers/langchain-mongodb/**/*
+
+# pkg:@langchain/nomic:
+#   - changed-files:
+#       - any-glob-to-any-file:
+#           - libs/providers/langchain-nomic/**
+#           - libs/providers/langchain-nomic/**/*
+
+pkg:@langchain/ollama:
+  - changed-files:
+      - any-glob-to-any-file:
+          - libs/providers/langchain-ollama/**
+          - libs/providers/langchain-ollama/**/*
+
+pkg:@langchain/openai:
+  - changed-files:
+      - any-glob-to-any-file:
+          - libs/providers/langchain-openai/**
+          - libs/providers/langchain-openai/**/*
+
+pkg:@langchain/pinecone:
+  - changed-files:
+      - any-glob-to-any-file:
+          - libs/providers/langchain-pinecone/**
+          - libs/providers/langchain-pinecone/**/*
+
+pkg:@langchain/qdrant:
+  - changed-files:
+      - any-glob-to-any-file:
+          - libs/providers/langchain-qdrant/**
+          - libs/providers/langchain-qdrant/**/*
+
+pkg:@langchain/redis:
+  - changed-files:
+      - any-glob-to-any-file:
+          - libs/providers/langchain-redis/**
+          - libs/providers/langchain-redis/**/*
+
+pkg:@langchain/tavily:
+  - changed-files:
+      - any-glob-to-any-file:
+          - libs/providers/langchain-tavily/**
+          - libs/providers/langchain-tavily/**/*
+
+pkg:@langchain/weaviate:
+  - changed-files:
+      - any-glob-to-any-file:
+          - libs/providers/langchain-weaviate/**
+          - libs/providers/langchain-weaviate/**/*
+
+pkg:@langchain/xai:
+  - changed-files:
+      - any-glob-to-any-file:
+          - libs/providers/langchain-xai/**
+          - libs/providers/langchain-xai/**/*
+
+pkg:@langchain/yandex:
+  - changed-files:
+      - any-glob-to-any-file:
+          - libs/providers/langchain-yandex/**
+          - libs/providers/langchain-yandex/**/*
 
 community:
   - changed-files:
       - any-glob-to-any-file:
           - libs/langchain-community/**
           - libs/langchain-community/**/*
-          - libs/langchain-baidu-qianfan/**
-          - libs/langchain-baidu-qianfan/**/*
-          - libs/langchain-cerebras/**
-          - libs/langchain-cerebras/**/*
-          - libs/langchain-cloudflare/**
-          - libs/langchain-cloudflare/**/*
-          - libs/langchain-cohere/**
-          - libs/langchain-cohere/**/*
-          - libs/langchain-exa/**
-          - libs/langchain-exa/**/*
-          - libs/langchain-mixedbread-ai/**
-          - libs/langchain-mixedbread-ai/**/*
-          - libs/langchain-nomic/**
-          - libs/langchain-nomic/**/*
-          - libs/langchain-pinecone/**
-          - libs/langchain-pinecone/**/*
-          - libs/langchain-qdrant/**
-          - libs/langchain-qdrant/**/*
-          - libs/langchain-tavily/**
-          - libs/langchain-tavily/**/*
-          - libs/langchain-weaviate/**
-          - libs/langchain-weaviate/**/*
-          - libs/langchain-yandex/**
-          - libs/langchain-yandex/**/*
+          - libs/providers/langchain-baidu-qianfan/**
+          - libs/providers/langchain-baidu-qianfan/**/*
+          - libs/providers/langchain-cerebras/**
+          - libs/providers/langchain-cerebras/**/*
+          - libs/providers/langchain-cloudflare/**
+          - libs/providers/langchain-cloudflare/**/*
+          - libs/providers/langchain-cohere/**
+          - libs/providers/langchain-cohere/**/*
+          - libs/providers/langchain-exa/**
+          - libs/providers/langchain-exa/**/*
+          - libs/providers/langchain-mixedbread-ai/**
+          - libs/providers/langchain-mixedbread-ai/**/*
+          - libs/providers/langchain-nomic/**
+          - libs/providers/langchain-nomic/**/*
+          - libs/providers/langchain-pinecone/**
+          - libs/providers/langchain-pinecone/**/*
+          - libs/providers/langchain-qdrant/**
+          - libs/providers/langchain-qdrant/**/*
+          - libs/providers/langchain-tavily/**
+          - libs/providers/langchain-tavily/**/*
+          - libs/providers/langchain-weaviate/**
+          - libs/providers/langchain-weaviate/**/*
+          - libs/providers/langchain-yandex/**
+          - libs/providers/langchain-yandex/**/*

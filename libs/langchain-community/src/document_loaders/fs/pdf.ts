@@ -1,5 +1,5 @@
 import { Document } from "@langchain/core/documents";
-import { BufferLoader } from "langchain/document_loaders/fs/buffer";
+import { BufferLoader } from "@langchain/classic/document_loaders/fs/buffer";
 
 /**
  * A class that extends the `BufferLoader` class. It represents a document
@@ -83,7 +83,6 @@ export class PDFLoader extends BufferLoader {
           } else {
             textItems.push(`\n${item.str}`);
           }
-          // eslint-disable-next-line prefer-destructuring
           lastY = item.transform[5];
         }
       }
@@ -144,7 +143,7 @@ async function PDFLoaderImports() {
   } catch (e) {
     console.error(e);
     throw new Error(
-      "Failed to load pdf-parse. Please install it with eg. `npm install pdf-parse`."
+      "Failed to load pdf-parse. This loader currently supports pdf-parse v1 only. Please install v1, e.g. `npm install pdf-parse@^1` (v2 is not yet supported)."
     );
   }
 }

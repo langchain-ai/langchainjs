@@ -1,4 +1,3 @@
-version: "3"
 services:
   # LangChain
   langchain-latest-deps:
@@ -9,7 +8,14 @@ services:
       COHERE_API_KEY: ${COHERE_API_KEY}
     working_dir: /app
     volumes:
-      - ../langchain:/langchain
+      - ../libs/langchain:/langchain
+      - ../libs/langchain-core:/libs/langchain-core
+      - ../libs/langchain-textsplitters:/libs/langchain-textsplitters
+      - ../libs/providers/langchain-openai:/libs/langchain-openai
+      - ../libs/providers/langchain-anthropic:/libs/langchain-anthropic
+      - ../libs/providers/langchain-cohere:/libs/langchain-cohere
+      - ../libs/providers/langchain-xai:/libs/langchain-xai
+      - ../internal:/internal
       - ./scripts:/scripts
     command: bash /scripts/langchain/test-with-latest-deps.sh
   langchain-lowest-deps:
@@ -20,7 +26,14 @@ services:
       COHERE_API_KEY: ${COHERE_API_KEY}
     working_dir: /app
     volumes:
-      - ../langchain:/langchain
+      - ../libs/langchain:/langchain
+      - ../libs/langchain-core:/libs/langchain-core
+      - ../libs/langchain-textsplitters:/libs/langchain-textsplitters
+      - ../libs/providers/langchain-openai:/libs/langchain-openai
+      - ../libs/providers/langchain-anthropic:/libs/langchain-anthropic
+      - ../libs/providers/langchain-cohere:/libs/langchain-cohere
+      - ../libs/providers/langchain-xai:/libs/langchain-xai
+      - ../internal:/internal
       - ./scripts:/scripts
     command: bash /scripts/langchain/test-with-lowest-deps.sh
 
@@ -33,10 +46,12 @@ services:
       COHERE_API_KEY: ${COHERE_API_KEY}
     working_dir: /app
     volumes:
+      - ../pnpm-workspace.yaml:/pnpm-workspace.yaml
       - ../turbo.json:/turbo.json
       - ./scripts/with_standard_tests/community/node/package.json:/package.json
       - ../libs/langchain-standard-tests:/libs/langchain-standard-tests
       - ../libs/langchain-community:/libs/langchain-community
+      - ../internal:/internal
       - ./scripts:/scripts
     command: bash /scripts/with_standard_tests/community/test-with-latest-deps.sh
   community-lowest-deps:
@@ -47,10 +62,12 @@ services:
       COHERE_API_KEY: ${COHERE_API_KEY}
     working_dir: /app
     volumes:
+      - ../pnpm-workspace.yaml:/pnpm-workspace.yaml
       - ../turbo.json:/turbo.json
       - ./scripts/with_standard_tests/community/node/package.json:/package.json
       - ../libs/langchain-standard-tests:/libs/langchain-standard-tests
       - ../libs/langchain-community:/libs/langchain-community
+      - ../internal:/internal
       - ./scripts:/scripts
     command: bash /scripts/with_standard_tests/community/test-with-lowest-deps.sh
   community-npm-install:
@@ -60,10 +77,12 @@ services:
       PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: "true"
     working_dir: /app
     volumes:
+      - ../pnpm-workspace.yaml:/pnpm-workspace.yaml
       - ../turbo.json:/turbo.json
       - ./scripts/with_standard_tests/community/node/package.json:/package.json
       - ../libs/langchain-standard-tests:/libs/langchain-standard-tests
       - ../libs/langchain-community:/libs/langchain-community
+      - ../internal:/internal
       - ./scripts:/scripts
     command: bash /scripts/with_standard_tests/community/npm-install.sh
 
@@ -76,10 +95,12 @@ services:
       COHERE_API_KEY: ${COHERE_API_KEY}
     working_dir: /app
     volumes:
+      - ../pnpm-workspace.yaml:/pnpm-workspace.yaml
       - ../turbo.json:/turbo.json
       - ./scripts/with_standard_tests/openai/node/package.json:/package.json
       - ../libs/langchain-standard-tests:/libs/langchain-standard-tests
-      - ../libs/langchain-openai:/libs/langchain-openai
+      - ../libs/providers/langchain-openai:/libs/providers/langchain-openai
+      - ../internal:/internal
       - ./scripts:/scripts
     command: bash /scripts/with_standard_tests/openai/test-with-latest-deps.sh
   openai-lowest-deps:
@@ -90,42 +111,48 @@ services:
       COHERE_API_KEY: ${COHERE_API_KEY}
     working_dir: /app
     volumes:
+      - ../pnpm-workspace.yaml:/pnpm-workspace.yaml
       - ../turbo.json:/turbo.json
       - ./scripts/with_standard_tests/openai/node/package.json:/package.json
       - ../libs/langchain-standard-tests:/libs/langchain-standard-tests
-      - ../libs/langchain-openai:/libs/langchain-openai
+      - ../libs/providers/langchain-openai:/libs/providers/langchain-openai
+      - ../internal:/internal
       - ./scripts:/scripts
     command: bash /scripts/with_standard_tests/openai/test-with-lowest-deps.sh
 
   # Anthropic
-  anthropic-latest-deps:
-    image: node:20
-    environment:
-      PUPPETEER_SKIP_DOWNLOAD: "true"
-      PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: "true"
-      COHERE_API_KEY: ${COHERE_API_KEY}
-    working_dir: /app
-    volumes:
-      - ../turbo.json:/turbo.json
-      - ./scripts/with_standard_tests/anthropic/node/package.json:/package.json
-      - ../libs/langchain-standard-tests:/libs/langchain-standard-tests
-      - ../libs/langchain-anthropic:/libs/langchain-anthropic
-      - ./scripts:/scripts
-    command: bash /scripts/with_standard_tests/anthropic/test-with-latest-deps.sh
-  anthropic-lowest-deps:
-    image: node:20
-    environment:
-      PUPPETEER_SKIP_DOWNLOAD: "true"
-      PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: "true"
-      COHERE_API_KEY: ${COHERE_API_KEY}
-    working_dir: /app
-    volumes:
-      - ../turbo.json:/turbo.json
-      - ./scripts/with_standard_tests/anthropic/node/package.json:/package.json
-      - ../libs/langchain-standard-tests:/libs/langchain-standard-tests
-      - ../libs/langchain-anthropic:/libs/langchain-anthropic
-      - ./scripts:/scripts
-    command: bash /scripts/with_standard_tests/anthropic/test-with-lowest-deps.sh
+  # anthropic-latest-deps:
+  #   image: node:20
+  #   environment:
+  #     PUPPETEER_SKIP_DOWNLOAD: "true"
+  #     PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: "true"
+  #     COHERE_API_KEY: ${COHERE_API_KEY}
+  #   working_dir: /app
+  #   volumes:
+  #     - ../pnpm-workspace.yaml:/pnpm-workspace.yaml
+  #     - ../turbo.json:/turbo.json
+  #     - ./scripts/with_standard_tests/anthropic/node/package.json:/package.json
+  #     - ../libs/langchain-standard-tests:/libs/langchain-standard-tests
+  #     - ../libs/providers/langchain-anthropic:/libs/providers/langchain-anthropic
+  #     - ../internal:/internal
+  #     - ./scripts:/scripts
+  #   command: bash /scripts/with_standard_tests/anthropic/test-with-latest-deps.sh
+  # anthropic-lowest-deps:
+  #   image: node:20
+  #   environment:
+  #     PUPPETEER_SKIP_DOWNLOAD: "true"
+  #     PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: "true"
+  #     COHERE_API_KEY: ${COHERE_API_KEY}
+  #   working_dir: /app
+  #   volumes:
+  #     - ../pnpm-workspace.yaml:/pnpm-workspace.yaml
+  #     - ../turbo.json:/turbo.json
+  #     - ./scripts/with_standard_tests/anthropic/node/package.json:/package.json
+  #     - ../libs/langchain-standard-tests:/libs/langchain-standard-tests
+  #     - ../libs/providers/langchain-anthropic:/libs/providers/langchain-anthropic
+  #     - ../internal:/internal
+  #     - ./scripts:/scripts
+  #   command: bash /scripts/with_standard_tests/anthropic/test-with-lowest-deps.sh
 
   # Google VertexAI
   google-vertexai-latest-deps:
@@ -136,10 +163,12 @@ services:
       COHERE_API_KEY: ${COHERE_API_KEY}
     working_dir: /app
     volumes:
+      - ../pnpm-workspace.yaml:/pnpm-workspace.yaml
       - ../turbo.json:/turbo.json
       - ./scripts/with_standard_tests/google-vertexai/node/package.json:/package.json
       - ../libs/langchain-standard-tests:/libs/langchain-standard-tests
-      - ../libs/langchain-google-vertexai:/libs/langchain-google-vertexai
+      - ../libs/providers/langchain-google-vertexai:/libs/providers/langchain-google-vertexai
+      - ../internal:/internal
       - ./scripts:/scripts
     command: bash /scripts/with_standard_tests/google-vertexai/test-with-latest-deps.sh
   google-vertexai-lowest-deps:
@@ -150,10 +179,12 @@ services:
       COHERE_API_KEY: ${COHERE_API_KEY}
     working_dir: /app
     volumes:
+      - ../pnpm-workspace.yaml:/pnpm-workspace.yaml
       - ../turbo.json:/turbo.json
       - ./scripts/with_standard_tests/google-vertexai/node/package.json:/package.json
       - ../libs/langchain-standard-tests:/libs/langchain-standard-tests
-      - ../libs/langchain-google-vertexai:/libs/langchain-google-vertexai
+      - ../libs/providers/langchain-google-vertexai:/libs/providers/langchain-google-vertexai
+      - ../internal:/internal
       - ./scripts:/scripts
     command: bash /scripts/with_standard_tests/google-vertexai/test-with-lowest-deps.sh
 
@@ -166,23 +197,27 @@ services:
       COHERE_API_KEY: ${COHERE_API_KEY}
     working_dir: /app
     volumes:
+      - ../pnpm-workspace.yaml:/pnpm-workspace.yaml
       - ../turbo.json:/turbo.json
       - ./scripts/with_standard_tests/cohere/node/package.json:/package.json
       - ../libs/langchain-standard-tests:/libs/langchain-standard-tests
-      - ../libs/langchain-cohere:/libs/langchain-cohere
+      - ../libs/providers/langchain-cohere:/libs/providers/langchain-cohere
+      - ../internal:/internal
       - ./scripts:/scripts
     command: bash /scripts/with_standard_tests/cohere/test-with-latest-deps.sh
-  cohere-lowest-deps:
-    image: node:20
-    environment:
-      PUPPETEER_SKIP_DOWNLOAD: "true"
-      PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: "true"
-      COHERE_API_KEY: ${COHERE_API_KEY}
-    working_dir: /app
-    volumes:
-      - ../turbo.json:/turbo.json
-      - ./scripts/with_standard_tests/cohere/node/package.json:/package.json
-      - ../libs/langchain-standard-tests:/libs/langchain-standard-tests
-      - ../libs/langchain-cohere:/libs/langchain-cohere
-      - ./scripts:/scripts
-    command: bash /scripts/with_standard_tests/cohere/test-with-lowest-deps.sh
+  # cohere-lowest-deps:
+  #   image: node:20
+  #   environment:
+  #     PUPPETEER_SKIP_DOWNLOAD: "true"
+  #     PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: "true"
+  #     COHERE_API_KEY: ${COHERE_API_KEY}
+  #   working_dir: /app
+  #   volumes:
+  #     - ../pnpm-workspace.yaml:/pnpm-workspace.yaml
+  #     - ../turbo.json:/turbo.json
+  #     - ./scripts/with_standard_tests/cohere/node/package.json:/package.json
+  #     - ../libs/langchain-standard-tests:/libs/langchain-standard-tests
+  #     - ../libs/providers/langchain-cohere:/libs/providers/langchain-cohere
+  #     - ../internal:/internal
+  #     - ./scripts:/scripts
+  #   command: bash /scripts/with_standard_tests/cohere/test-with-lowest-deps.sh

@@ -7,19 +7,6 @@ import { BaseDocumentLoader } from "@langchain/core/document_loaders/base";
 import { UnstructuredLoader as UnstructuredLoaderDefault } from "../fs/unstructured.js";
 
 /**
- * Represents the configuration options for the S3 client. It extends the
- * S3ClientConfig interface from the "@aws-sdk/client-s3" package and
- * includes additional deprecated properties for access key ID and secret
- * access key.
- */
-export type S3Config = S3ClientConfig & {
-  /** @deprecated Use the credentials object instead */
-  accessKeyId?: string;
-  /** @deprecated Use the credentials object instead */
-  secretAccessKey?: string;
-};
-
-/**
  * Represents the parameters for the S3Loader class. It includes
  * properties such as the S3 bucket, key, unstructured API URL,
  * unstructured API key, S3 configuration, file system module, and
@@ -30,12 +17,7 @@ export interface S3LoaderParams {
   key: string;
   unstructuredAPIURL: string;
   unstructuredAPIKey: string;
-  s3Config?: S3Config & {
-    /** @deprecated Use the credentials object instead */
-    accessKeyId?: string;
-    /** @deprecated Use the credentials object instead */
-    secretAccessKey?: string;
-  };
+  s3Config?: S3ClientConfig;
   fs?: typeof fsDefault;
   UnstructuredLoader?: typeof UnstructuredLoaderDefault;
 }
@@ -70,12 +52,7 @@ export class S3Loader extends BaseDocumentLoader {
 
   private unstructuredAPIKey: string;
 
-  private s3Config: S3Config & {
-    /** @deprecated Use the credentials object instead */
-    accessKeyId?: string;
-    /** @deprecated Use the credentials object instead */
-    secretAccessKey?: string;
-  };
+  private s3Config: S3ClientConfig;
 
   private _fs: typeof fsDefault;
 

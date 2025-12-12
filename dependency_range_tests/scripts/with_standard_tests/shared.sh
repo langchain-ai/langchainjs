@@ -1,19 +1,50 @@
 #!/usr/bin/env bash
 
 # Extract the package name from the first argument
-package_name=$1
+package_path=$1
+
+# Check if this is a provider package or a regular package
+if [[ "$package_path" == providers/* ]]; then
+  # For provider packages, use the full path as-is
+  package_dir="$package_path"
+  # Extract just the package name for monorepo directory structure
+  package_name=$(basename "$package_path")
+else
+  # For regular packages, apply the mapping
+  package_name="$package_path"
+  case "$package_name" in
+    "community")
+      package_dir="langchain-community"
+      ;;
+    "openai")
+      package_dir="langchain-openai"
+      ;;
+    "anthropic")
+      package_dir="langchain-anthropic"
+      ;;
+    "cohere")
+      package_dir="langchain-cohere"
+      ;;
+    "google-vertexai")
+      package_dir="langchain-google-vertexai"
+      ;;
+    *)
+      package_dir="langchain-$package_name"
+      ;;
+  esac
+fi
 
 # New monorepo directory paths
 monorepo_dir="/app/monorepo"
 monorepo_libs_dir="$monorepo_dir/libs"
-monorepo_package_dir="$monorepo_libs_dir/langchain-$package_name"
+monorepo_package_dir="$monorepo_libs_dir/$package_dir"
 monorepo_standard_tests_dir="$monorepo_libs_dir/langchain-standard-tests"
 
 # Updater script will not live inside the monorepo
 standard_tests_updater_script_dir="/app/with_standard_script"
 
 # Original directory paths
-original_package_dir="/libs/langchain-$package_name"
+original_package_dir="/libs/$package_dir"
 original_standard_tests_dir="/libs/langchain-standard-tests"
 original_package_json_dir="/package.json"
 original_turbo_json_dir="/turbo.json"
@@ -45,6 +76,9 @@ cp "$original_standard_tests_updater_script_dir"/* "$standard_tests_updater_scri
 cd "$standard_tests_updater_script_dir"
 # Run the updater script
 node "update_workspace_dependencies.js"
+
+# Create mock tsconfig.json files without project references since we're testing against NPM packages
+bash /scripts/create-mock-tsconfigs.sh "$package_dir" "$monorepo_dir"
 
 # Navigate back to root
 cd "/app"

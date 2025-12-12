@@ -1,0 +1,51 @@
+import { test, expect } from "vitest";
+import { HumanMessage, AIMessage } from "@langchain/core/messages";
+import { ChatAnthropic } from "../chat_models.js";
+
+const model = new ChatAnthropic({
+  model: "claude-sonnet-4-5-20250929",
+  temperature: 0,
+}).bindTools([
+  {
+    type: "web_search_20250305",
+    name: "web_search",
+    max_uses: 1,
+  },
+]);
+
+test("Web search single turn", async () => {
+  const result = await model.invoke([
+    new HumanMessage("What is Claude Shannon's birth date?"),
+  ]);
+
+  const content = Array.isArray(result.content) ? result.content : [];
+  expect(result).toBeInstanceOf(AIMessage);
+  expect(content.some((block) => block.type === "server_tool_use")).toBe(true);
+  expect(content.some((block) => block.type === "web_search_tool_result")).toBe(
+    true
+  );
+}, 30000);
+
+test("Web search multi-turn conversation", async () => {
+  const firstResponse = await model.invoke([
+    new HumanMessage("What is Claude Shannon's birth date?"),
+  ]);
+
+  const secondResponse = await model.invoke([
+    new HumanMessage("What is Claude Shannon's birth date?"),
+    firstResponse,
+    new HumanMessage("What year did he die?"),
+  ]);
+
+  expect(firstResponse).toBeInstanceOf(AIMessage);
+  expect(secondResponse).toBeInstanceOf(AIMessage);
+}, 45000);
+
+test("Web search with unusual query", async () => {
+  const result = await model.invoke([
+    new HumanMessage("What is the population of Mars?"),
+  ]);
+
+  expect(result).toBeInstanceOf(AIMessage);
+  expect(result.content).toBeDefined();
+}, 30000);

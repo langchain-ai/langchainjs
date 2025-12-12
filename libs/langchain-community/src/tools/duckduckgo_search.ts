@@ -1,9 +1,9 @@
 import { Tool, ToolParams } from "@langchain/core/tools";
-import { search, SearchOptions } from "duck-duck-scrape";
+import { search, type SearchOptions } from "duck-duck-scrape";
 
 export {
   SafeSearchType,
-  SearchOptions,
+  type SearchOptions,
   SearchTimeType,
 } from "duck-duck-scrape";
 

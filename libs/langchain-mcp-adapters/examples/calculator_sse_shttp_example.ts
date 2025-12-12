@@ -10,7 +10,6 @@
  * 3. Structured handling of complex multi-tool operations
  */
 
-/* eslint-disable no-console */
 import { ChatOpenAI } from "@langchain/openai";
 import {
   StateGraph,
@@ -23,7 +22,6 @@ import {
   HumanMessage,
   AIMessage,
   SystemMessage,
-  isHumanMessage,
 } from "@langchain/core/messages";
 import dotenv from "dotenv";
 
@@ -41,6 +39,7 @@ export async function runExample(client?: MultiServerMCPClient) {
   try {
     console.log("Initializing MCP client...");
 
+    // eslint-disable-next-line no-void
     void calculatorServerMain();
 
     // Wait for the server to start
@@ -102,7 +101,7 @@ these tools to answer the user's questions.`;
 
       // Add system message if it's the first call
       let { messages } = state;
-      if (messages.length === 1 && isHumanMessage(messages[0])) {
+      if (messages.length === 1 && HumanMessage.isInstance(messages[0])) {
         messages = [new SystemMessage(systemMessage), ...messages];
       }
 

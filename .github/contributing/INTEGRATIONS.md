@@ -122,13 +122,9 @@ Above, we have a document loader that we're sure will always require a specific 
 
 We highly appreciate documentation and integration tests showing how to set up and use your integration. Providing this will make it much easier for reviewers to verify that your integration works and will streamline the review process.
 
-New docs pages should be added as the appropriate template from here:
-
-https://github.com/langchain-ai/langchainjs/tree/main/libs/langchain-scripts/src/cli/docs/templates
-
 ### Linting and formatting
 
-As with all contributions, make sure you run `yarn lint` and `yarn format` so that everything conforms to our established style.
+As with all contributions, make sure you run `pnpm lint` and `pnpm format` so that everything conforms to our established style.
 
 ### Separate integration packages
 

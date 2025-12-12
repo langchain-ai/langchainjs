@@ -12,7 +12,7 @@
     "test:cjs": "bun src/require.cjs",
     "test:cjs:import": "bun src/import.cjs",
     "test:entrypoints": "bun src/entrypoints.js",
-    "test:ts": "bun dist/index.js"
+    "test:ts": "bun src/index.ts"
   },
   "author": "LangChain",
   "license": "MIT",
@@ -20,10 +20,12 @@
     "@langchain/anthropic": "workspace:*",
     "@langchain/community": "workspace:*",
     "@langchain/core": "workspace:*",
+    "@langchain/classic": "workspace:*",
     "@langchain/openai": "workspace:*",
     "d3-dsv": "2",
     "hnswlib-node": "^3.0.0",
-    "langchain": "workspace:*"
+    "langchain": "workspace:*",
+    "zod": "^3.25.76 || ^4"
   },
   "devDependencies": {
     "@tsconfig/recommended": "^1.0.2",

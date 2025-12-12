@@ -2,9 +2,13 @@
   "$schema": "https://turbo.build/schema.json",
   "globalDependencies": ["**/.env"],
   "tasks": {
-    "build": {
-      "dependsOn": ["^build"],
-      "outputs": ["dist/**", ".next/**", "!.next/cache/**"]
+    "build:compile": {
+      "dependsOn": ["^build:compile"],
+      "env": ["BUILD_MODE"],
+      "outputs": ["dist/**"]
+    },
+    "build:examples": {
+      "dependsOn": ["^build:examples"]
     },
     "lint": {
       "dependsOn": ["^lint"]
@@ -20,7 +24,7 @@
     },
     "test": {
       "cache": false,
-      "dependsOn": ["^build", "build"]
+      "dependsOn": ["^build:compile", "build:compile"]
     },
     "test:ci": {
       "outputs": [],
@@ -47,11 +51,12 @@
       "outputs": [],
       "dependsOn": ["^build"]
     },
+    "test:bench": {
+      "outputs": [],
+      "dependsOn": ["^build"]
+    },
     "clean": {
       "dependsOn": ["^clean"]
-    },
-    "build:internal": {
-      "dependsOn": ["^build:internal"]
     }
   }
 }

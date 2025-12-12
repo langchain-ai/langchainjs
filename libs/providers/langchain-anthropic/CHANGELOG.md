@@ -1,0 +1,107 @@
+# @langchain/anthropic
+
+## 1.2.3
+
+### Patch Changes
+
+- Updated dependencies [[`0bade90`](https://github.com/langchain-ai/langchainjs/commit/0bade90ed47c7988ed86f1e695a28273c7b3df50), [`6c40d00`](https://github.com/langchain-ai/langchainjs/commit/6c40d00e926f377d249c2919549381522eac8ed1)]:
+  - @langchain/core@1.1.4
+
+## 1.2.2
+
+### Patch Changes
+
+- [#9520](https://github.com/langchain-ai/langchainjs/pull/9520) [`cc022b0`](https://github.com/langchain-ai/langchainjs/commit/cc022b0aab2c3959a5036b8d1b9d6ce0b547200e) Thanks [@yukukotani](https://github.com/yukukotani)! - Includes cache creation/read tokens in input_tokens of usage metadata
+
+- Updated dependencies [[`bd2c46e`](https://github.com/langchain-ai/langchainjs/commit/bd2c46e09e661d9ac766c09e71bc6687d6fc811c), [`487378b`](https://github.com/langchain-ai/langchainjs/commit/487378bf14277659c8ca0ef06ea0f9836b818ff4), [`138e7fb`](https://github.com/langchain-ai/langchainjs/commit/138e7fb6280705457079863bedb238b16b322032)]:
+  - @langchain/core@1.1.3
+
+## 1.2.1
+
+### Patch Changes
+
+- Updated dependencies [[`833f578`](https://github.com/langchain-ai/langchainjs/commit/833f57834dc3aa64e4cfdd7499f865b2ab41462a)]:
+  - @langchain/core@1.1.2
+
+## 1.2.0
+
+### Minor Changes
+
+- [#9531](https://github.com/langchain-ai/langchainjs/pull/9531) [`38f0162`](https://github.com/langchain-ai/langchainjs/commit/38f0162b7b2db2be2c3a75ae468728adcb49fdfb) Thanks [@hntrl](https://github.com/hntrl)! - support advanced tool use
+
+### Patch Changes
+
+- Updated dependencies [[`636b994`](https://github.com/langchain-ai/langchainjs/commit/636b99459bf843362298866211c63a7a15c2a319), [`38f0162`](https://github.com/langchain-ai/langchainjs/commit/38f0162b7b2db2be2c3a75ae468728adcb49fdfb)]:
+  - @langchain/core@1.1.1
+
+## 1.1.3
+
+### Patch Changes
+
+- [#9488](https://github.com/langchain-ai/langchainjs/pull/9488) [`cfee39a`](https://github.com/langchain-ai/langchainjs/commit/cfee39a0b867e8cd4ae7bda3d64bba4124be4e10) Thanks [@hntrl](https://github.com/hntrl)! - add opus-4.5 to model strings
+
+## 1.1.2
+
+### Patch Changes
+
+- [#9416](https://github.com/langchain-ai/langchainjs/pull/9416) [`0fe9beb`](https://github.com/langchain-ai/langchainjs/commit/0fe9bebee6710f719e47f913eec1ec4f638e4de4) Thanks [@hntrl](https://github.com/hntrl)! - fix 'moduleResultion: "node"' compatibility
+
+## 1.1.1
+
+### Patch Changes
+
+- [#9451](https://github.com/langchain-ai/langchainjs/pull/9451) [`b1deda2`](https://github.com/langchain-ai/langchainjs/commit/b1deda21363b5a1a3f2b7bd77dc1d74764304666) Thanks [@hntrl](https://github.com/hntrl)! - fix betas being passed to client when streaming
+
+## 1.1.0
+
+### Minor Changes
+
+- [#9424](https://github.com/langchain-ai/langchainjs/pull/9424) [`f17b2c9`](https://github.com/langchain-ai/langchainjs/commit/f17b2c9db047fab2d1db2d9aa791ec220cc9dd0a) Thanks [@hntrl](https://github.com/hntrl)! - add support for `betas` param
+
+- [#9424](https://github.com/langchain-ai/langchainjs/pull/9424) [`f17b2c9`](https://github.com/langchain-ai/langchainjs/commit/f17b2c9db047fab2d1db2d9aa791ec220cc9dd0a) Thanks [@hntrl](https://github.com/hntrl)! - add support for native structured output
+
+### Patch Changes
+
+- [#9424](https://github.com/langchain-ai/langchainjs/pull/9424) [`f17b2c9`](https://github.com/langchain-ai/langchainjs/commit/f17b2c9db047fab2d1db2d9aa791ec220cc9dd0a) Thanks [@hntrl](https://github.com/hntrl)! - bump sdk version
+
+## 1.0.1
+
+### Patch Changes
+
+- [#9387](https://github.com/langchain-ai/langchainjs/pull/9387) [`ac0d4fe`](https://github.com/langchain-ai/langchainjs/commit/ac0d4fe3807e05eb2185ae8a36da69498e6163d4) Thanks [@hntrl](https://github.com/hntrl)! - Add `ModelProfile` and `.profile` properties to ChatModel
+
+## 1.0.0
+
+This release updates the package for compatibility with LangChain v1.0. See the v1.0 [release notes](https://docs.langchain.com/oss/javascript/releases/langchain-v1) for details on what's new.
+
+## 0.3.31
+
+### Patch Changes
+
+- 51f638e: fix content management param
+
+## 0.3.30
+
+### Patch Changes
+
+- 6c7eb84: fix sonnet-4.5 thinking
+
+## 0.3.29
+
+### Patch Changes
+
+- 93493ee: add support for context management
+- 93493ee: add support for memory server tools
+- 93493ee: add default init options for sonnet-4.5
+
+## 0.3.28
+
+### Patch Changes
+
+- 9ed7dfa: fix unhandled tool choice 'none'
+
+## 0.3.27
+
+### Patch Changes
+
+- 49c242c: fix opus 4.1 topP error when streaming

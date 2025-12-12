@@ -1,0 +1,17 @@
+{
+  "name": "@langchain/tsconfig",
+  "private": true,
+  "version": "0.0.1",
+  "description": "Shared TypeScript configuration for LangChain.js packages",
+  "license": "MIT",
+  "type": "module",
+  "scripts": {
+    "build": "exit 0"
+  },
+  "exports": {
+    "./base.json": "./base.json"
+  },
+  "files": [
+    "base.json"
+  ]
+}

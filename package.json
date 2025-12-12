@@ -1,52 +1,44 @@
 {
   "name": "langchainjs",
+  "author": "LangChain",
+  "license": "MIT",
   "private": true,
-  "engines": {
-    "node": ">=18"
-  },
   "homepage": "https://github.com/langchain-ai/langchainjs/tree/main/",
-  "workspaces": [
-    "langchain",
-    "langchain-core",
-    "libs/*",
-    "examples",
-    "docs/*",
-    "internal/*"
-  ],
   "repository": {
     "type": "git",
     "url": "https://github.com/langchain-ai/langchainjs.git"
   },
-  "packageManager": "yarn@3.5.1",
+  "packageManager": "pnpm@10.14.0",
   "scripts": {
-    "build": "turbo build --filter=\"!test-exports-*\"",
-    "turbo:command": "turbo",
+    "build": "turbo build:compile",
+    "watch": "turbo watch build:compile",
     "clean": "turbo clean",
+    "dev": "pnpm --filter @langchain/build watch",
     "format": "turbo format --concurrency=50",
     "format:check": "turbo format:check --concurrency=50",
+    "format:check:fix": "turbo format:check --concurrency=50 -- --write",
     "lint": "turbo lint --concurrency=50",
     "lint:fix": "turbo lint:fix --concurrency=50",
-    "test": "yarn test:unit && yarn test:exports:docker",
-    "test:unit": "turbo test --filter=\"!test-exports-*\" --filter=!examples --filter=!api_refs --filter=!core_docs --filter=!create-langchain-integration",
+    "precommit": "turbo precommit",
+    "prerelease": "BUILD_MODE=prerelease pnpm build",
+    "release": "changeset publish",
+    "test": "pnpm test:unit && pnpm test:exports:docker",
+    "test:bench": "turbo test:bench",
+    "test:unit": "turbo test --filter=\"!test-exports-*\" --filter=!examples --filter=!create-langchain-integration",
     "test:unit:ci": "turbo test:ci",
-    "test:int": "yarn run test:int:deps && turbo test:integration ; yarn run test:int:deps:down",
-    "test:int:deps": "docker compose -f test-int-deps-docker-compose.yml up -d",
-    "test:int:deps:down": "docker compose -f test-int-deps-docker-compose.yml down",
     "test:ranges:docker": "docker compose -f dependency_range_tests/docker-compose.yml up --force-recreate",
     "test:exports:docker": "docker compose -f environment_tests/docker-compose.yml up --force-recreate",
     "test:standard:unit": "turbo test:standard:unit",
     "test:standard:int": "turbo test:standard:int",
-    "test:standard": "yarn test:standard:unit && yarn test:standard:int",
-    "example": "yarn workspace examples start",
-    "precommit": "turbo precommit",
-    "docs": "yarn workspace core_docs start",
-    "docs:api_refs": "yarn workspace api_refs start",
-    "release": "node release_workspace.js --workspace"
+    "test:standard": "pnpm test:standard:unit && pnpm test:standard:int",
+    "changeset": "changeset",
+    "changeset:version": "changeset version"
   },
-  "author": "LangChain",
-  "license": "MIT",
   "devDependencies": {
-    "@changesets/cli": "^2.29.6",
+    "@changesets/changelog-github": "^0.5.1",
+    "@changesets/cli": "^2.29.7",
+    "@langchain/build": "workspace:*",
+    "@langchain/tsconfig": "workspace:*",
     "@tsconfig/recommended": "^1.0.2",
     "@types/jest": "^29.5.3",
     "@types/semver": "^7",
@@ -54,24 +46,24 @@
     "dotenv": "^16.0.3",
     "lint-staged": "^13.1.1",
     "prettier": "^2.8.3",
-    "reflect-metadata": "^0.2.2",
     "semver": "^7.5.4",
+    "tsdown": "^0.15.12",
+    "tsx": "^4.20.3",
     "turbo": "^2.5.4",
-    "typeorm": "^0.3.20",
-    "typescript": "~5.8.3"
+    "typescript": "^5.9.3"
   },
-  "resolutions": {
-    "dpdm@^3.12.0": "patch:dpdm@npm%3A3.12.0#./.yarn/patches/dpdm-npm-3.12.0-0dfdd8e3b8.patch",
-    "typedoc-plugin-markdown@next": "patch:typedoc-plugin-markdown@npm%3A4.0.0-next.6#./.yarn/patches/typedoc-plugin-markdown-npm-4.0.0-next.6-96b4b47746.patch",
-    "voy-search@0.6.2": "patch:voy-search@npm%3A0.6.2#./.yarn/patches/voy-search-npm-0.6.2-d4aca30a0e.patch",
-    "protobufjs": "^7.2.5",
-    "zod": "^3.25.32"
+  "pnpm": {
+    "overrides": {
+      "@langchain/core": "workspace:*",
+      "protobufjs": "^7.2.5",
+      "rolldown": "1.0.0-beta.30"
+    }
   },
   "lint-staged": {
     "**/*.{ts,tsx}": [
-      "prettier --config .prettierrc --write --ignore-unknown",
+      "prettier --write --ignore-unknown",
       "eslint --cache --fix"
     ],
-    "*.md": "prettier --config .prettierrc --write"
+    "*.md": "prettier --write"
   }
 }

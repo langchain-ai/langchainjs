@@ -41,9 +41,9 @@ npm install @langchain/mcp-adapters
 The library allows you to connect to one or more MCP servers and load tools from them, without needing to manage your own MCP client instances.
 
 ```ts
-import { MultiServerMCPClient } from "@langchain/mcp-adapters";
+import { createAgent } from "langchain";
 import { ChatOpenAI } from "@langchain/openai";
-import { createReactAgent } from "@langchain/langgraph/prebuilt";
+import { MultiServerMCPClient } from "@langchain/mcp-adapters";
 
 // Create client and connect to server
 const client = new MultiServerMCPClient({
@@ -129,7 +129,7 @@ const model = new ChatOpenAI({
 });
 
 // Create the React agent
-const agent = createReactAgent({
+const agent = createAgent({
   llm: model,
   tools,
 });
@@ -166,8 +166,9 @@ export OPENAI_API_KEY=<your_api_key>
 ```ts
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
+
+import { createAgent } from "langchain";
 import { ChatOpenAI } from "@langchain/openai";
-import { createReactAgent } from "@langchain/langgraph/prebuilt";
 import { loadMcpTools } from "@langchain/mcp-adapters";
 
 // Initialize the ChatOpenAI model
@@ -202,7 +203,7 @@ try {
   });
 
   // Create and run the agent
-  const agent = createReactAgent({ llm: model, tools });
+  const agent = createAgent({ llm: model, tools });
   const agentResponse = await agent.invoke({
     messages: [{ role: "user", content: "what's (3 + 5) x 12?" }],
   });
@@ -216,6 +217,112 @@ try {
 ```
 
 For more detailed examples, see the [examples](./examples) directory.
+
+## Notifications and Progress
+
+You can subscribe to server notifications and tool progress events directly on the `MultiServerMCPClient` via top‑level callbacks.
+
+```ts
+import { MultiServerMCPClient } from "@langchain/mcp-adapters";
+
+const client = new MultiServerMCPClient({
+  mcpServers: {
+    everything: {
+      transport: "stdio",
+      command: "npx",
+      args: ["-y", "@modelcontextprotocol/server-everything"],
+    },
+  },
+
+  // Receive log/notification messages from the server
+  onMessage: (log, source) => {
+    console.log(`[${source.server}] ${log.data}`);
+  },
+
+  // Receive progress updates (e.g. from long‑running tool calls)
+  onProgress: (progress, source) => {
+    const pct =
+      progress.percentage ??
+      (progress.progress != null && progress.total
+        ? Math.round((progress.progress / progress.total) * 100)
+        : undefined);
+    if (pct != null) {
+      const origin =
+        source.type === "tool" ? `${source.server}/${source.name}` : "unknown";
+      console.log(`[progress:${origin}] ${pct}%`);
+    }
+  },
+
+  // Optional: react to server-side list changes
+  onToolsListChanged: (evt, source) => {
+    console.log(`[${source.server}] tools changed (${evt.tools?.length ?? 0})`);
+  },
+});
+
+const tools = await client.getTools();
+// ... invoke tools as usual ...
+await client.close();
+```
+
+Available notification callbacks you can register:
+
+- **onMessage**: server log/diagnostic messages
+- **onProgress**: progress events (includes `percentage` or `progress`/`total`) with `source` describing origin (e.g., tool name/server)
+- **onInitialized**, **onCancelled**
+- **onPromptsListChanged**, **onResourcesListChanged**, **onResourcesUpdated**, **onRootsListChanged**, **onToolsListChanged**
+
+## Tool Hooks (modify args/results)
+
+Use hooks to customize tool calls:
+
+```ts
+import { MultiServerMCPClient } from "@langchain/mcp-adapters";
+
+const client = new MultiServerMCPClient({
+  mcpServers: {
+    math: {
+      transport: "stdio",
+      command: "npx",
+      args: ["-y", "@modelcontextprotocol/server-math"],
+    },
+  },
+
+  // Change args/headers before the tool call
+  beforeToolCall: ({ serverName, name, args }) => {
+    // Add/override an argument
+    const nextArgs = { ...(args as Record<string, unknown>), injected: true };
+    // For HTTP/SSE transports, you may also add per-call headers
+    return {
+      args: nextArgs,
+      headers: { "X-Request-ID": crypto.randomUUID() },
+    };
+  },
+
+  // Change the tool result after execution
+  afterToolCall: (res) => {
+    // Option A: return a 2‑tuple [content, artifact]
+    if (res.name === "someTool") return { result: ["modified-output", []] };
+
+    // Option B: return a LangChain ToolMessage
+    // return { result: new ToolMessage({ content: "overridden", tool_call_id: "id" }) };
+
+    // Option C: return a LangGraph Command instance
+    // return { result: new Command(...) }
+
+    // Or pass-through (no change)
+    return { result: res.result };
+  },
+});
+
+const tools = await client.getTools();
+const t = tools.find((tool) => tool.name.includes("add"));
+const out = await t?.invoke({ a: 1, b: 2 });
+```
+
+Notes:
+
+- **beforeToolCall** can return `{ args?, headers? }`. Headers are supported for HTTP/SSE. Stdio connections do not support custom headers.
+- **afterToolCall** may return either a 2‑tuple `[content, artifact]`, a `ToolMessage`, a `Command` instance, or nothing (to keep the original result).
 
 ## Tool Configuration Options
 

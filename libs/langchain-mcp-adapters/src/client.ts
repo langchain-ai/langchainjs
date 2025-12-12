@@ -1,21 +1,20 @@
-import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
 import {
   SSEClientTransport,
-  type SSEClientTransportOptions,
   type SseError,
 } from "@modelcontextprotocol/sdk/client/sse.js";
 import {
   StreamableHTTPClientTransport,
-  type StreamableHTTPClientTransportOptions,
   type StreamableHTTPError,
-  type StreamableHTTPReconnectionOptions,
 } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
 import type { OAuthClientProvider } from "@modelcontextprotocol/sdk/client/auth.js";
 import type { DynamicStructuredTool } from "@langchain/core/tools";
-import debug from "debug";
-import { z } from "zod";
+import type { LoggingLevel } from "@modelcontextprotocol/sdk/types.js";
+
+import { z } from "zod/v3";
 import { loadMcpTools } from "./tools.js";
+import { ConnectionManager, type Client } from "./connection.js";
+import { getDebugLog } from "./logging.js";
 import {
   type ClientConfig,
   type Connection,
@@ -23,31 +22,36 @@ import {
   type ResolvedConnection,
   type ResolvedStdioConnection,
   type ResolvedStreamableHTTPConnection,
+  type CustomHTTPTransportOptions,
+  type MCPResource,
+  type MCPResourceTemplate,
+  type MCPResourceContent,
   clientConfigSchema,
   connectionSchema,
   type LoadMcpToolsOptions,
   _resolveAndApplyOverrideHandlingOverrides,
 } from "./types.js";
 
-// Read package name from package.json
-let debugLog: debug.Debugger;
-function getDebugLog() {
-  if (!debugLog) {
-    debugLog = debug("@langchain/mcp-adapters:client");
-  }
-  return debugLog;
-}
+const debugLog = getDebugLog();
 
 /**
  * Error class for MCP client operations
  */
 export class MCPClientError extends Error {
-  constructor(message: string, public readonly serverName?: string) {
+  constructor(
+    message: string,
+    public readonly serverName?: string
+  ) {
     super(message);
     this.name = "MCPClientError";
   }
 }
 
+/**
+ * Checks if the connection configuration is for a stdio transport
+ * @param connection - The connection configuration
+ * @returns True if the connection configuration is for a stdio transport
+ */
 function isResolvedStdioConnection(
   connection: unknown
 ): connection is ResolvedStdioConnection {
@@ -74,6 +78,11 @@ function isResolvedStdioConnection(
   return false;
 }
 
+/**
+ * Checks if the connection configuration is for a streamable HTTP transport
+ * @param connection - The connection configuration
+ * @returns True if the connection configuration is for a streamable HTTP transport
+ */
 function isResolvedStreamableHTTPConnection(
   connection: unknown
 ): connection is ResolvedStreamableHTTPConnection {
@@ -98,10 +107,9 @@ function isResolvedStreamableHTTPConnection(
 
   if ("url" in connection && typeof connection.url === "string") {
     try {
-      // eslint-disable-next-line no-new
       new URL(connection.url);
       return true;
-    } catch (error) {
+    } catch {
       return false;
     }
   }
@@ -113,22 +121,30 @@ function isResolvedStreamableHTTPConnection(
  * Client for connecting to multiple MCP servers and loading LangChain-compatible tools.
  */
 export class MultiServerMCPClient {
-  private _clients: Record<string, Client> = {};
+  /**
+   * Cached map of server names to tools
+   */
+  #serverNameToTools: Record<string, DynamicStructuredTool[]> = {};
 
-  private _serverNameToTools: Record<string, DynamicStructuredTool[]> = {};
+  /**
+   * Configured MCP servers
+   */
+  #mcpServers?: Record<string, ResolvedConnection>;
 
-  private _connections?: Record<string, ResolvedConnection>;
+  /**
+   * Cached map of server names to load tools options
+   */
+  #loadToolsOptions: Record<string, LoadMcpToolsOptions> = {};
 
-  private _loadToolsOptions: Record<string, LoadMcpToolsOptions> = {};
+  /**
+   * Connection manager
+   */
+  #clientConnections: ConnectionManager;
 
-  private _cleanupFunctions: Array<() => Promise<void>> = [];
-
-  private _transportInstances: Record<
-    string,
-    StdioClientTransport | SSEClientTransport | StreamableHTTPClientTransport
-  > = {};
-
-  private _config: ResolvedClientConfig;
+  /**
+   * Resolved client config
+   */
+  #config: ResolvedClientConfig;
 
   /**
    * Returns clone of server config for inspection purposes.
@@ -137,7 +153,7 @@ export class MultiServerMCPClient {
    */
   get config(): ClientConfig {
     // clone config so it can't be mutated
-    return JSON.parse(JSON.stringify(this._config));
+    return JSON.parse(JSON.stringify(this.#config));
   }
 
   /**
@@ -174,7 +190,7 @@ export class MultiServerMCPClient {
         parsedServerConfig.defaultToolTimeout ??
         serverConfig.defaultToolTimeout;
 
-      this._loadToolsOptions[serverName] = {
+      this.#loadToolsOptions[serverName] = {
         throwOnLoadError: parsedServerConfig.throwOnLoadError,
         prefixToolNameWithServerName:
           parsedServerConfig.prefixToolNameWithServerName,
@@ -182,11 +198,20 @@ export class MultiServerMCPClient {
         useStandardContentBlocks: parsedServerConfig.useStandardContentBlocks,
         ...(Object.keys(outputHandling).length > 0 ? { outputHandling } : {}),
         ...(defaultToolTimeout ? { defaultToolTimeout } : {}),
+        onProgress: parsedServerConfig.onProgress,
+        /**
+         * make sure to place global hooks (e.g. parsedServerConfig) first before
+         * server-specific hooks (e.g. serverConfig) so they can override tool call
+         * configuration.
+         */
+        beforeToolCall: parsedServerConfig.beforeToolCall,
+        afterToolCall: parsedServerConfig.afterToolCall,
       };
     }
 
-    this._config = parsedServerConfig;
-    this._connections = parsedServerConfig.mcpServers;
+    this.#config = parsedServerConfig;
+    this.#mcpServers = parsedServerConfig.mcpServers;
+    this.#clientConnections = new ConnectionManager(parsedServerConfig);
   }
 
   /**
@@ -197,33 +222,56 @@ export class MultiServerMCPClient {
    * @returns A map of server names to arrays of tools
    * @throws {MCPClientError} If initialization fails
    */
-  async initializeConnections(): Promise<
-    Record<string, DynamicStructuredTool[]>
-  > {
-    if (!this._connections || Object.keys(this._connections).length === 0) {
+  async initializeConnections(
+    customTransportOptions?: CustomHTTPTransportOptions
+  ): Promise<Record<string, DynamicStructuredTool[]>> {
+    if (!this.#mcpServers || Object.keys(this.#mcpServers).length === 0) {
       throw new MCPClientError("No connections to initialize");
     }
 
-    const connectionsToInit: [string, ResolvedConnection][] = Array.from(
-      Object.entries(this._connections).filter(
-        ([serverName]) => this._clients[serverName] === undefined
-      )
-    );
-
-    for (const [serverName, connection] of connectionsToInit) {
-      getDebugLog()(
-        `INFO: Initializing connection to server "${serverName}"...`
-      );
-
+    for (const [serverName, connection] of Object.entries(this.#mcpServers)) {
       if (isResolvedStdioConnection(connection)) {
+        debugLog(
+          `INFO: Initializing stdio connection to server "${serverName}"...`
+        );
+
+        /**
+         * check if we already initialized this stdio connection
+         */
+        if (this.#clientConnections.has(serverName)) {
+          continue;
+        }
+
         await this._initializeStdioConnection(serverName, connection);
       } else if (isResolvedStreamableHTTPConnection(connection)) {
+        /**
+         * Users may want to use different connection options for tool calls or tool discovery.
+         */
+        const { authProvider, headers } = customTransportOptions ?? {};
+        const updatedConnection = {
+          ...connection,
+          authProvider: authProvider ?? connection.authProvider,
+          headers: { ...headers, ...connection.headers },
+        };
+
+        /**
+         * check if we already initialized this streamable HTTP connection
+         */
+        const key = {
+          serverName,
+          headers: updatedConnection.headers,
+          authProvider: updatedConnection.authProvider,
+        };
+        if (this.#clientConnections.has(key)) {
+          continue;
+        }
+
         if (connection.type === "sse" || connection.transport === "sse") {
-          await this._initializeSSEConnection(serverName, connection);
+          await this._initializeSSEConnection(serverName, updatedConnection);
         } else {
           await this._initializeStreamableHTTPConnection(
             serverName,
-            connection
+            updatedConnection
           );
         }
       } else {
@@ -235,7 +283,7 @@ export class MultiServerMCPClient {
       }
     }
 
-    return this._serverNameToTools;
+    return this.#serverNameToTools;
   }
 
   /**
@@ -243,14 +291,89 @@ export class MultiServerMCPClient {
    *
    * @param servers - Optional array of server names to filter tools by.
    *                 If not provided, returns tools from all servers.
+   * @param options - Optional connection options for the tool calls, e.g. custom auth provider or headers.
    * @returns A flattened array of tools from the specified servers (or all servers)
+   *
+   * @example
+   * ```ts
+   * // Get tools from all servers
+   * const tools = await client.getTools();
+   * ```
+   *
+   * @example
+   * ```ts
+   * // Get tools from specific servers
+   * const tools = await client.getTools("server1", "server2");
+   * ```
+   *
+   * @example
+   * ```ts
+   * // Get tools from specific servers with custom connection options
+   * const tools = await client.getTools(["server1", "server2"], {
+   *   authProvider: new OAuthClientProvider(),
+   *   headers: { "X-Custom-Header": "value" },
+   * });
+   * ```
    */
-  async getTools(...servers: string[]): Promise<DynamicStructuredTool[]> {
-    await this.initializeConnections();
-    if (servers.length === 0) {
-      return this._getAllToolsAsFlatArray();
+  async getTools(...servers: string[]): Promise<DynamicStructuredTool[]>;
+  async getTools(
+    servers: string[],
+    options?: CustomHTTPTransportOptions
+  ): Promise<DynamicStructuredTool[]>;
+  async getTools(...args: unknown[]): Promise<DynamicStructuredTool[]> {
+    if (args.length === 0 || args.every((arg) => typeof arg === "string")) {
+      await this.initializeConnections();
+
+      const servers = args as string[];
+      return servers.length === 0
+        ? this._getAllToolsAsFlatArray()
+        : this._getToolsFromServers(servers);
     }
-    return this._getToolsFromServers(servers);
+
+    const [servers, options] = args as [
+      string[],
+      CustomHTTPTransportOptions | undefined,
+    ];
+    await this.initializeConnections(options);
+    return servers.length === 0
+      ? this._getAllToolsAsFlatArray()
+      : this._getToolsFromServers(servers);
+  }
+
+  /**
+   * Set the logging level for all servers
+   * @param level - The logging level
+   *
+   * @example
+   * ```ts
+   * await client.setLoggingLevel("debug");
+   * ```
+   */
+  async setLoggingLevel(level: LoggingLevel): Promise<void>;
+  /**
+   * Set the logging level for a specific server
+   * @param serverName - The name of the server
+   * @param level - The logging level
+   *
+   * @example
+   * ```ts
+   * await client.setLoggingLevel("server1", "debug");
+   * ```
+   */
+  async setLoggingLevel(serverName: string, level: LoggingLevel): Promise<void>;
+  async setLoggingLevel(...args: unknown[]): Promise<void> {
+    if (args.length === 1 && typeof args[0] === "string") {
+      const level = args[0] as LoggingLevel;
+      await Promise.all(
+        this.#clientConnections
+          .getAllClients()
+          .map((client) => client.setLoggingLevel(level))
+      );
+      return;
+    }
+
+    const [serverName, level] = args as [string, LoggingLevel];
+    await this.#clientConnections.get(serverName)?.setLoggingLevel(level);
   }
 
   /**
@@ -259,31 +382,231 @@ export class MultiServerMCPClient {
    * @param serverName - The name of the server
    * @returns The client for the server, or undefined if the server is not connected
    */
-  async getClient(serverName: string): Promise<Client | undefined> {
-    await this.initializeConnections();
-    return this._clients[serverName];
+  async getClient(
+    serverName: string,
+    options?: CustomHTTPTransportOptions
+  ): Promise<Client | undefined> {
+    await this.initializeConnections(options);
+    return this.#clientConnections.get({
+      serverName,
+      headers: options?.headers,
+      authProvider: options?.authProvider,
+    });
+  }
+
+  /**
+   * List resources from specified servers.
+   *
+   * @param servers - Optional array of server names to filter resources by.
+   *                 If not provided, returns resources from all servers.
+   * @param options - Optional connection options for the resource listing, e.g. custom auth provider or headers.
+   * @returns A map of server names to their resources
+   *
+   * @example
+   * ```ts
+   * // List resources from all servers
+   * const resources = await client.listResources();
+   * ```
+   *
+   * @example
+   * ```ts
+   * // List resources from specific servers
+   * const resources = await client.listResources("server1", "server2");
+   * ```
+   */
+  async listResources(
+    ...servers: string[]
+  ): Promise<Record<string, MCPResource[]>>;
+  async listResources(
+    servers: string[],
+    options?: CustomHTTPTransportOptions
+  ): Promise<Record<string, MCPResource[]>>;
+  async listResources(
+    ...args: unknown[]
+  ): Promise<Record<string, MCPResource[]>> {
+    let servers: string[];
+    let options: CustomHTTPTransportOptions | undefined;
+
+    if (args.length === 0 || args.every((arg) => typeof arg === "string")) {
+      servers = args as string[];
+      await this.initializeConnections();
+    } else {
+      [servers, options] = args as [
+        string[],
+        CustomHTTPTransportOptions | undefined,
+      ];
+      await this.initializeConnections(options);
+    }
+
+    const targetServers =
+      servers.length > 0 ? servers : Object.keys(this.#config.mcpServers);
+
+    const result: Record<string, MCPResource[]> = {};
+
+    for (const serverName of targetServers) {
+      const client = await this.getClient(serverName, options);
+      if (!client) {
+        debugLog(`WARN: Server "${serverName}" not found or not connected`);
+        continue;
+      }
+
+      try {
+        const resourcesList = await client.listResources();
+        result[serverName] = resourcesList.resources.map((resource) => ({
+          uri: resource.uri,
+          name: resource.title ?? resource.name,
+          description: resource.description,
+          mimeType: resource.mimeType,
+        }));
+        debugLog(
+          `INFO: Listed ${result[serverName].length} resources from server "${serverName}"`
+        );
+      } catch (error) {
+        debugLog(
+          `ERROR: Failed to list resources from server "${serverName}": ${error}`
+        );
+        result[serverName] = [];
+      }
+    }
+
+    return result;
+  }
+
+  /**
+   * List resource templates from specified servers.
+   *
+   * Resource templates are used for dynamic resources with parameterized URIs.
+   *
+   * @param servers - Optional array of server names to filter resource templates by.
+   *                 If not provided, returns resource templates from all servers.
+   * @param options - Optional connection options for the resource template listing, e.g. custom auth provider or headers.
+   * @returns A map of server names to their resource templates
+   *
+   * @example
+   * ```ts
+   * // List resource templates from all servers
+   * const templates = await client.listResourceTemplates();
+   * ```
+   *
+   * @example
+   * ```ts
+   * // List resource templates from specific servers
+   * const templates = await client.listResourceTemplates("server1", "server2");
+   * ```
+   */
+  async listResourceTemplates(
+    ...servers: string[]
+  ): Promise<Record<string, MCPResourceTemplate[]>>;
+  async listResourceTemplates(
+    servers: string[],
+    options?: CustomHTTPTransportOptions
+  ): Promise<Record<string, MCPResourceTemplate[]>>;
+  async listResourceTemplates(
+    ...args: unknown[]
+  ): Promise<Record<string, MCPResourceTemplate[]>> {
+    let servers: string[];
+    let options: CustomHTTPTransportOptions | undefined;
+
+    if (args.length === 0 || args.every((arg) => typeof arg === "string")) {
+      servers = args as string[];
+      await this.initializeConnections();
+    } else {
+      [servers, options] = args as [
+        string[],
+        CustomHTTPTransportOptions | undefined,
+      ];
+      await this.initializeConnections(options);
+    }
+
+    const targetServers =
+      servers.length > 0 ? servers : Object.keys(this.#config.mcpServers);
+
+    const result: Record<string, MCPResourceTemplate[]> = {};
+
+    for (const serverName of targetServers) {
+      const client = await this.getClient(serverName, options);
+      if (!client) {
+        debugLog(`WARN: Server "${serverName}" not found or not connected`);
+        continue;
+      }
+
+      try {
+        const templatesList = await client.listResourceTemplates();
+        result[serverName] = templatesList.resourceTemplates.map(
+          (template) => ({
+            uriTemplate: template.uriTemplate,
+            name: template.title ?? template.name,
+            description: template.description,
+            mimeType: template.mimeType,
+          })
+        );
+        debugLog(
+          `INFO: Listed ${result[serverName].length} resource templates from server "${serverName}"`
+        );
+      } catch (error) {
+        debugLog(
+          `ERROR: Failed to list resource templates from server "${serverName}": ${error}`
+        );
+        result[serverName] = [];
+      }
+    }
+
+    return result;
+  }
+
+  /**
+   * Read a resource from a specific server.
+   *
+   * @param serverName - The name of the server to read the resource from
+   * @param uri - The URI of the resource to read
+   * @param options - Optional connection options for reading the resource, e.g. custom auth provider or headers.
+   * @returns The resource contents
+   *
+   * @example
+   * ```ts
+   * const content = await client.readResource("server1", "file://path/to/resource");
+   * ```
+   */
+  async readResource(
+    serverName: string,
+    uri: string,
+    options?: CustomHTTPTransportOptions
+  ): Promise<MCPResourceContent[]> {
+    await this.initializeConnections(options);
+
+    const client = await this.getClient(serverName, options);
+    if (!client) {
+      throw new MCPClientError(
+        `Server "${serverName}" not found or not connected`,
+        serverName
+      );
+    }
+
+    try {
+      debugLog(`INFO: Reading resource "${uri}" from server "${serverName}"`);
+      const result = await client.readResource({ uri });
+      return result.contents.map((content) => ({
+        uri: content.uri,
+        mimeType: content.mimeType,
+        text: content.text as string | undefined,
+        blob: content.blob as string | undefined,
+      }));
+    } catch (error) {
+      throw new MCPClientError(
+        `Failed to read resource "${uri}" from server "${serverName}": ${error}`,
+        serverName
+      );
+    }
   }
 
   /**
    * Close all connections.
    */
   async close(): Promise<void> {
-    getDebugLog()(`INFO: Closing all MCP connections...`);
-
-    for (const cleanup of this._cleanupFunctions) {
-      try {
-        await cleanup();
-      } catch (error) {
-        getDebugLog()(`ERROR: Error during cleanup: ${error}`);
-      }
-    }
-
-    this._cleanupFunctions = [];
-    this._clients = {};
-    this._serverNameToTools = {};
-    this._transportInstances = {};
-
-    getDebugLog()(`INFO: All MCP connections closed`);
+    debugLog(`INFO: Closing all MCP connections...`);
+    this.#serverNameToTools = {};
+    await this.#clientConnections.delete();
+    debugLog(`INFO: All MCP connections closed`);
   }
 
   /**
@@ -293,55 +616,37 @@ export class MultiServerMCPClient {
     serverName: string,
     connection: ResolvedStdioConnection
   ): Promise<void> {
-    const { command, args, env, restart, stderr } = connection;
+    const { command, args, restart } = connection;
 
-    getDebugLog()(
+    debugLog(
       `DEBUG: Creating stdio transport for server "${serverName}" with command: ${command} ${args.join(
         " "
       )}`
     );
 
-    const transport = new StdioClientTransport({
-      command,
-      args,
-      stderr,
-      ...(env ? { env: { PATH: process.env.PATH!, ...env } } : {}),
-    });
-
-    this._transportInstances[serverName] = transport;
-
-    const client = new Client({
-      name: "langchain-mcp-adapter",
-      version: "0.1.0",
-    });
-
     try {
-      await client.connect(transport);
+      const client = await this.#clientConnections.createClient(
+        "stdio",
+        serverName,
+        connection
+      );
+      const transport = this.#clientConnections.getTransport({
+        serverName,
+      }) as StdioClientTransport;
 
       // Set up auto-restart if configured
       if (restart?.enabled) {
         this._setupStdioRestart(serverName, transport, connection, restart);
       }
+
+      // Load tools for this server
+      await this._loadToolsForServer(serverName, client);
     } catch (error) {
       throw new MCPClientError(
         `Failed to connect to stdio server "${serverName}": ${error}`,
         serverName
       );
     }
-
-    this._clients[serverName] = client;
-
-    const cleanup = async () => {
-      getDebugLog()(
-        `DEBUG: Closing stdio transport for server "${serverName}"`
-      );
-      await transport.close();
-    };
-
-    this._cleanupFunctions.push(cleanup);
-
-    // Load tools for this server
-    await this._loadToolsForServer(serverName, client);
   }
 
   /**
@@ -354,15 +659,15 @@ export class MultiServerMCPClient {
     restart: NonNullable<ResolvedStdioConnection["restart"]>
   ): void {
     const originalOnClose = transport.onclose;
-    // eslint-disable-next-line no-param-reassign, @typescript-eslint/no-misused-promises
+    // eslint-disable-next-line @typescript-eslint/no-misused-promises
     transport.onclose = async () => {
       if (originalOnClose) {
         await originalOnClose();
       }
 
       // Only attempt restart if we haven't cleaned up
-      if (this._clients[serverName]) {
-        getDebugLog()(
+      if (this.#clientConnections.get(serverName)) {
+        debugLog(
           `INFO: Process for server "${serverName}" exited, attempting to restart...`
         );
         await this._attemptReconnect(
@@ -419,53 +724,22 @@ export class MultiServerMCPClient {
     serverName: string,
     connection: ResolvedStreamableHTTPConnection
   ): Promise<void> {
-    const {
-      url,
-      headers,
-      reconnect,
-      type: typeField,
-      transport: transportField,
-      authProvider,
-    } = connection;
-
+    const { url, type: typeField, transport: transportField } = connection;
     const automaticSSEFallback = connection.automaticSSEFallback ?? true;
-
     const transportType = typeField || transportField;
 
-    getDebugLog()(
+    debugLog(
       `DEBUG: Creating Streamable HTTP transport for server "${serverName}" with URL: ${url}`
     );
 
     if (transportType === "http" || transportType == null) {
-      const transport = await this._createStreamableHTTPTransport(
-        serverName,
-        url,
-        headers,
-        reconnect,
-        authProvider
-      );
-      this._transportInstances[serverName] = transport;
-
-      const client = new Client({
-        name: "langchain-mcp-adapter",
-        version: "0.1.0",
-      });
-
       try {
-        await client.connect(transport);
+        const client = await this.#clientConnections.createClient(
+          "http",
+          serverName,
+          connection
+        );
 
-        this._clients[serverName] = client;
-
-        const cleanup = async () => {
-          getDebugLog()(
-            `DEBUG: Closing streamable HTTP transport for server "${serverName}"`
-          );
-          await transport.close();
-        };
-
-        this._cleanupFunctions.push(cleanup);
-
-        // Load tools for this server
         await this._loadToolsForServer(serverName, client);
       } catch (error) {
         const code = this._getHttpErrorCode(error);
@@ -548,6 +822,9 @@ export class MultiServerMCPClient {
    * Don't call this directly unless SSE transport is explicitly requested. Otherwise,
    * use _initializeStreamableHTTPConnection and it'll fall back to SSE if needed for
    * backwards compatibility.
+   *
+   * @param serverName - The name of the server
+   * @param connection - The connection configuration
    */
   private async _initializeSSEConnection(
     serverName: string,
@@ -556,197 +833,50 @@ export class MultiServerMCPClient {
     const { url, headers, reconnect, authProvider } = connection;
 
     try {
-      const transport = await this._createSSETransport(
+      const client = await this.#clientConnections.createClient(
+        "sse",
         serverName,
-        url,
-        headers,
-        authProvider
+        connection
       );
-      this._transportInstances[serverName] = transport;
+      const transport = this.#clientConnections.getTransport({
+        serverName,
+        headers,
+        authProvider,
+      }) as SSEClientTransport;
 
-      const client = new Client({
-        name: "langchain-mcp-adapter",
-        version: "0.1.0",
-      });
-
-      try {
-        await client.connect(transport);
-
-        // Set up auto-reconnect if configured
-        if (reconnect?.enabled) {
-          this._setupSSEReconnect(serverName, transport, connection, reconnect);
-        }
-      } catch (error) {
-        // Check if this is already a wrapped error that should be re-thrown
-        if (error && (error as Error).name === "MCPClientError") {
-          throw error;
-        }
-
-        // Check if this is an authentication error that needs better messaging
-        const isAuthError = error && this._getHttpErrorCode(error) === 401;
-
-        if (isAuthError) {
-          throw new MCPClientError(
-            this._createAuthenticationErrorMessage(
-              serverName,
-              url,
-              "SSE",
-              `${error}`
-            ),
-            serverName
-          );
-        }
-
-        throw new MCPClientError(
-          `Failed to create SSE transport for server "${serverName}, url: ${url}": ${error}`,
-          serverName
-        );
+      // Set up auto-reconnect if configured
+      if (reconnect?.enabled) {
+        this._setupSSEReconnect(serverName, transport, connection, reconnect);
       }
-
-      this._clients[serverName] = client;
-
-      const cleanup = async () => {
-        getDebugLog()(
-          `DEBUG: Closing SSE transport for server "${serverName}"`
-        );
-        await transport.close();
-      };
-
-      this._cleanupFunctions.push(cleanup);
 
       // Load tools for this server
       await this._loadToolsForServer(serverName, client);
     } catch (error) {
+      // Check if this is already a wrapped error that should be re-thrown
+      if (error && (error as Error).name === "MCPClientError") {
+        throw error;
+      }
+
+      // Check if this is an authentication error that needs better messaging
+      const isAuthError = error && this._getHttpErrorCode(error) === 401;
+
+      if (isAuthError) {
+        throw new MCPClientError(
+          this._createAuthenticationErrorMessage(
+            serverName,
+            url,
+            "SSE",
+            `${error}`
+          ),
+          serverName
+        );
+      }
+
       throw new MCPClientError(
         `Failed to create SSE transport for server "${serverName}, url: ${url}": ${error}`,
         serverName
       );
     }
-  }
-
-  /**
-   * Create an SSE transport with appropriate EventSource implementation
-   *
-   * @param serverName - The name of the server
-   * @param url - The URL of the server
-   * @param headers - The headers to send with the request
-   * @param authProvider - The OAuth client provider to use for authentication
-   * @returns The SSE transport
-   */
-  private async _createSSETransport(
-    serverName: string,
-    url: string,
-    headers?: Record<string, string>,
-    authProvider?: OAuthClientProvider
-  ): Promise<SSEClientTransport> {
-    const options: SSEClientTransportOptions = {};
-
-    if (authProvider) {
-      options.authProvider = authProvider;
-      getDebugLog()(
-        `DEBUG: Using OAuth authentication for SSE transport to server "${serverName}"`
-      );
-    }
-
-    if (headers) {
-      // For SSE, we need to pass headers via eventSourceInit.fetch for the initial connection
-      // and also via requestInit.headers for subsequent POST requests
-      options.eventSourceInit = {
-        fetch: async (url, init) => {
-          const requestHeaders = new Headers(init?.headers);
-
-          // Add OAuth token if authProvider is available
-          // This is necessary because setting eventSourceInit.fetch prevents automatic Authorization header
-          if (authProvider) {
-            const tokens = await authProvider.tokens();
-            if (tokens) {
-              requestHeaders.set(
-                "Authorization",
-                `Bearer ${tokens.access_token}`
-              );
-            }
-          }
-
-          // Add our custom headers
-          Object.entries(headers).forEach(([key, value]) => {
-            requestHeaders.set(key, value);
-          });
-          // Always include Accept header for SSE
-          requestHeaders.set("Accept", "text/event-stream");
-
-          return fetch(url, {
-            ...init,
-            headers: requestHeaders,
-          });
-        },
-      };
-
-      // Also include headers for POST requests
-      options.requestInit = { headers };
-
-      getDebugLog()(
-        `DEBUG: Using custom headers for SSE transport to server "${serverName}"`
-      );
-    }
-
-    return new SSEClientTransport(new URL(url), options);
-  }
-
-  private async _createStreamableHTTPTransport(
-    serverName: string,
-    url: string,
-    headers?: Record<string, string>,
-    reconnect?: ResolvedStreamableHTTPConnection["reconnect"],
-    authProvider?: OAuthClientProvider
-  ): Promise<StreamableHTTPClientTransport> {
-    const options: StreamableHTTPClientTransportOptions = {
-      ...(authProvider ? { authProvider } : {}),
-      ...(headers ? { requestInit: { headers } } : {}),
-    };
-
-    if (reconnect != null) {
-      const reconnectionOptions: StreamableHTTPReconnectionOptions = {
-        initialReconnectionDelay: reconnect?.delayMs ?? 1000, // MCP default
-        maxReconnectionDelay: reconnect?.delayMs ?? 30000, // MCP default
-        maxRetries: reconnect?.maxAttempts ?? 2, // MCP default
-        reconnectionDelayGrowFactor: 1.5, // MCP default
-      };
-
-      if (reconnect.enabled === false) {
-        reconnectionOptions.maxRetries = 0;
-      }
-
-      options.reconnectionOptions = reconnectionOptions;
-    }
-
-    if (options.requestInit?.headers) {
-      getDebugLog()(
-        `DEBUG: Using custom headers for SSE transport to server "${serverName}"`
-      );
-    }
-
-    if (options.authProvider) {
-      getDebugLog()(
-        `DEBUG: Using OAuth authentication for Streamable HTTP transport to server "${serverName}"`
-      );
-    }
-
-    if (options.reconnectionOptions) {
-      if (options.reconnectionOptions.maxRetries === 0) {
-        getDebugLog()(
-          `DEBUG: Disabling reconnection for Streamable HTTP transport to server "${serverName}"`
-        );
-      } else {
-        getDebugLog()(
-          `DEBUG: Using custom reconnection options for Streamable HTTP transport to server "${serverName}"`
-        );
-      }
-    }
-
-    // Only pass options if there are any, otherwise use default constructor
-    return Object.keys(options).length > 0
-      ? new StreamableHTTPClientTransport(new URL(url), options)
-      : new StreamableHTTPClientTransport(new URL(url));
   }
 
   /**
@@ -759,15 +889,21 @@ export class MultiServerMCPClient {
     reconnect: NonNullable<ResolvedStreamableHTTPConnection["reconnect"]>
   ): void {
     const originalOnClose = transport.onclose;
-    // eslint-disable-next-line @typescript-eslint/no-misused-promises, no-param-reassign
+    // eslint-disable-next-line @typescript-eslint/no-misused-promises
     transport.onclose = async () => {
       if (originalOnClose) {
         await originalOnClose();
       }
 
       // Only attempt reconnect if we haven't cleaned up
-      if (this._clients[serverName]) {
-        getDebugLog()(
+      if (
+        this.#clientConnections.get({
+          serverName,
+          headers: connection.headers,
+          authProvider: connection.authProvider,
+        })
+      ) {
+        debugLog(
           `INFO: HTTP connection for server "${serverName}" closed, attempting to reconnect...`
         );
         await this._attemptReconnect(
@@ -788,14 +924,14 @@ export class MultiServerMCPClient {
     client: Client
   ): Promise<void> {
     try {
-      getDebugLog()(`DEBUG: Loading tools for server "${serverName}"...`);
+      debugLog(`DEBUG: Loading tools for server "${serverName}"...`);
       const tools = await loadMcpTools(
         serverName,
         client,
-        this._loadToolsOptions[serverName]
+        this.#loadToolsOptions[serverName]
       );
-      this._serverNameToTools[serverName] = tools;
-      getDebugLog()(
+      this.#serverNameToTools[serverName] = tools;
+      debugLog(
         `INFO: Successfully loaded ${tools.length} tools from server "${serverName}"`
       );
     } catch (error) {
@@ -824,14 +960,19 @@ export class MultiServerMCPClient {
     let attempts = 0;
 
     // Clean up previous connection resources
-    this._cleanupServerResources(serverName);
+    if ("headers" in connection || "authProvider" in connection) {
+      const { headers, authProvider } = connection;
+      await this.#cleanupServerResources({ serverName, authProvider, headers });
+    } else {
+      await this.#cleanupServerResources({ serverName });
+    }
 
     while (
       !connected &&
       (maxAttempts === undefined || attempts < maxAttempts)
     ) {
       attempts += 1;
-      getDebugLog()(
+      debugLog(
         `INFO: Reconnection attempt ${attempts}${
           maxAttempts ? `/${maxAttempts}` : ""
         } for server "${serverName}"`
@@ -860,21 +1001,27 @@ export class MultiServerMCPClient {
         }
 
         // Check if connected
-        if (this._clients[serverName]) {
+        const key =
+          "headers" in connection
+            ? {
+                serverName,
+                headers: connection.headers,
+                authProvider: connection.authProvider,
+              }
+            : { serverName };
+        if (this.#clientConnections.has(key)) {
           connected = true;
-          getDebugLog()(
-            `INFO: Successfully reconnected to server "${serverName}"`
-          );
+          debugLog(`INFO: Successfully reconnected to server "${serverName}"`);
         }
       } catch (error) {
-        getDebugLog()(
+        debugLog(
           `ERROR: Failed to reconnect to server "${serverName}" (attempt ${attempts}): ${error}`
         );
       }
     }
 
     if (!connected) {
-      getDebugLog()(
+      debugLog(
         `ERROR: Failed to reconnect to server "${serverName}" after ${attempts} attempts`
       );
     }
@@ -883,10 +1030,14 @@ export class MultiServerMCPClient {
   /**
    * Clean up resources for a specific server
    */
-  private _cleanupServerResources(serverName: string): void {
-    delete this._clients[serverName];
-    delete this._serverNameToTools[serverName];
-    delete this._transportInstances[serverName];
+  async #cleanupServerResources(transportOptions: {
+    serverName: string;
+    authProvider?: OAuthClientProvider;
+    headers?: Record<string, string>;
+  }): Promise<void> {
+    const { serverName, authProvider, headers } = transportOptions;
+    delete this.#serverNameToTools[serverName];
+    await this.#clientConnections.delete({ serverName, authProvider, headers });
   }
 
   /**
@@ -896,7 +1047,7 @@ export class MultiServerMCPClient {
    */
   private _getAllToolsAsFlatArray(): DynamicStructuredTool[] {
     const allTools: DynamicStructuredTool[] = [];
-    for (const tools of Object.values(this._serverNameToTools)) {
+    for (const tools of Object.values(this.#serverNameToTools)) {
       allTools.push(...tools);
     }
     return allTools;
@@ -911,7 +1062,7 @@ export class MultiServerMCPClient {
   private _getToolsFromServers(serverNames: string[]): DynamicStructuredTool[] {
     const allTools: DynamicStructuredTool[] = [];
     for (const serverName of serverNames) {
-      const tools = this._serverNameToTools[serverName];
+      const tools = this.#serverNameToTools[serverName];
       if (tools) {
         allTools.push(...tools);
       }

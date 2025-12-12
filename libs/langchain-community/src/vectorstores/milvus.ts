@@ -254,7 +254,6 @@ export class Milvus extends VectorStore {
     const documentIds = options?.ids ?? [];
 
     const insertDatas: InsertRow[] = [];
-    // eslint-disable-next-line no-plusplus
     for (let index = 0; index < vectors.length; index++) {
       const vec = vectors[index];
       const doc = documents[index];
@@ -574,9 +573,17 @@ export class Milvus extends VectorStore {
     });
     desc.schema.fields.forEach((field) => {
       this.fields.push(field.name);
-      // Only remove autoID fields from this.fields if we're using autoId mode
+      // Remove autoID fields from this.fields if we're using autoId mode
       // When autoId is false, we need to include the primary field for upsert operations
       if (field.autoID && this.autoId) {
+        const index = this.fields.indexOf(field.name);
+        if (index !== -1) {
+          this.fields.splice(index, 1);
+        }
+      }
+      // Remove isFunctionOutput fields from this.fields if this field is calculated on server side
+      // When isFunctionOutput is false, we need to include this field for upsert operations
+      if (field.is_function_output) {
         const index = this.fields.indexOf(field.name);
         if (index !== -1) {
           this.fields.splice(index, 1);
@@ -781,7 +788,7 @@ function createFieldTypeForMetadata(
             max_length: jsonFieldMaxLength.toString(),
           },
         });
-      } catch (e) {
+      } catch {
         throw new Error("Failed to parse metadata field as JSON");
       }
     }
@@ -796,7 +803,6 @@ function genCollectionName(): string {
 function getTextFieldMaxLength(documents: Document[]) {
   let textMaxLength = 0;
   const textEncoder = new TextEncoder();
-  // eslint-disable-next-line no-plusplus
   for (let i = 0; i < documents.length; i++) {
     const text = documents[i].pageContent;
     const textLengthInBytes = textEncoder.encode(text).length;
@@ -819,7 +825,7 @@ function checkJsonString(value: string): { isJson: boolean; obj: any } {
   try {
     const result = JSON.parse(value);
     return { isJson: true, obj: result };
-  } catch (e) {
+  } catch {
     return { isJson: false, obj: null };
   }
 }

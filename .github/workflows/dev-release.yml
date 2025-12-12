@@ -1,0 +1,219 @@
+name: Dev Release
+
+# Called by publish.yml (the npm Trusted Publisher entry point)
+on:
+  workflow_call:
+    inputs:
+      npm_tag:
+        description: "NPM tag for the release"
+        required: false
+        default: "dev"
+        type: string
+
+env:
+  CI: true
+
+jobs:
+  release:
+    name: Dev Release
+    if: github.repository == 'langchain-ai/langchainjs'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+      pull-requests: write
+    steps:
+      - name: ⬇️ Checkout repo
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
+        with:
+          fetch-depth: 0
+
+      - name: 📦 Setup pnpm
+        uses: pnpm/action-setup@41ff72655975bd51cab0327fa583b6e92b6d3061 # v4.2.0
+
+      - name: ⎔ Setup node
+        uses: actions/setup-node@395ad3262231945c25e8478fd5baf05154b1d79f # v6.1.0
+        with:
+          node-version-file: ".nvmrc"
+          cache: "pnpm"
+
+      - name: 📥 Install deps
+        run: pnpm install --frozen-lockfile
+
+      - name: 🔍 Check for changesets
+        id: changesets
+        run: |
+          # Check if there are any changeset files (excluding README.md)
+          CHANGESET_COUNT=$(find .changeset -name "*.md" ! -name "README.md" | wc -l | tr -d ' ')
+          echo "count=$CHANGESET_COUNT" >> $GITHUB_OUTPUT
+          if [ "$CHANGESET_COUNT" -eq 0 ]; then
+            echo "::error::No changesets found. Please add a changeset before running a dev release."
+            echo "::error::Run 'pnpm changeset' to create a changeset for your changes."
+            exit 1
+          fi
+          echo "Found $CHANGESET_COUNT changeset(s)"
+
+      - name: 🧹 Prepare for snapshot release
+        run: |
+          # Disable changelog generation for snapshot releases
+          # Enable useCalculatedVersion to preserve current version (e.g., 1.2.0-dev-xxx instead of 0.0.0-dev-xxx)
+          pnpm dlx json -I -f .changeset/config.json -e "this.changelog = false; this.snapshot = { useCalculatedVersion: true, prereleaseTemplate: '{tag}-{timestamp}' }"
+
+      - name: 📦 Version packages (snapshot)
+        id: version
+        run: |
+          # Version all packages with changesets using snapshot mode
+          # This will also update internal dependencies automatically
+          OUTPUT=$(pnpm changeset version --snapshot ${{ inputs.npm_tag }} 2>&1) || true
+          echo "$OUTPUT"
+          if echo "$OUTPUT" | grep -q "No unreleased changesets found"; then
+            echo "success=0" >> $GITHUB_OUTPUT
+          else
+            echo "success=1" >> $GITHUB_OUTPUT
+          fi
+
+      - name: 🔨 Build packages
+        if: steps.version.outputs.success == '1'
+        run: |
+          # Build all packages (turbo will handle dependency order)
+          pnpm run build
+
+      - name: 🔐 Setup npm auth
+        if: steps.version.outputs.success == '1'
+        run: |
+          echo "registry=https://registry.npmjs.org" >> ~/.npmrc
+          echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN }}" >> ~/.npmrc
+
+      - name: 🚀 Publish to npm
+        if: steps.version.outputs.success == '1'
+        run: pnpm changeset publish --tag ${{ inputs.npm_tag }} --no-git-tag
+        env:
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+          # Enable npm provenance for OIDC-based publishing (bypasses OTP requirement)
+          NPM_CONFIG_PROVENANCE: true
+
+      - name: 📋 Get published packages
+        if: steps.version.outputs.success == '1' && github.ref != 'refs/heads/main'
+        id: published
+        uses: actions/github-script@v8
+        with:
+          script: |
+            const fs = require('fs');
+            const path = require('path');
+            const actionsGlob = require('@actions/glob');
+
+            // Find all package.json files in libs directory
+            const globber = await actionsGlob.create('libs/**/package.json', {
+              followSymbolicLinks: false
+            });
+            const files = await globber.glob();
+
+            const tag = '${{ inputs.npm_tag }}';
+            const packages = [];
+
+            for (const file of files) {
+              // Skip node_modules
+              if (file.includes('node_modules')) continue;
+
+              try {
+                const content = fs.readFileSync(file, 'utf8');
+                const pkg = JSON.parse(content);
+
+                // Check if this package has a snapshot version
+                if (pkg.version && pkg.version.includes(`-${tag}`)) {
+                  packages.push({
+                    name: pkg.name,
+                    version: pkg.version
+                  });
+                }
+              } catch (e) {
+                // Skip files that can't be parsed
+              }
+            }
+
+            if (packages.length === 0) {
+              console.log('No packages with snapshot versions found');
+              core.setOutput('packages', '[]');
+              core.setOutput('count', '0');
+              return;
+            }
+
+            // Sort packages alphabetically
+            packages.sort((a, b) => a.name.localeCompare(b.name));
+
+            console.log(`Found ${packages.length} published package(s):`);
+            packages.forEach(p => console.log(`  - ${p.name}@${p.version}`));
+
+            core.setOutput('packages', JSON.stringify(packages));
+            core.setOutput('count', packages.length.toString());
+
+            // Write to step summary
+            const summary = core.summary
+              .addHeading('📦 Published Packages', 3)
+              .addTable([
+                [{data: 'Package', header: true}, {data: 'Version', header: true}],
+                ...packages.map(p => [p.name, `\`${p.version}\``])
+              ])
+              .addHeading('Install', 4)
+              .addCodeBlock(
+                packages.map(p => `npm i ${p.name}@${p.version} --save-exact`).join('\n'),
+                'sh'
+              );
+
+            await summary.write();
+
+      - name: 💬 Comment on PR
+        if: steps.version.outputs.success == '1' && steps.published.outputs.count != '0' && github.ref != 'refs/heads/main'
+        uses: actions/github-script@v8
+        with:
+          script: |
+            // Get the current branch name
+            const branch = context.ref.replace('refs/heads/', '');
+
+            // Find open PRs where this branch is the head
+            const { data: prs } = await github.rest.pulls.list({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open',
+              head: `${context.repo.owner}:${branch}`
+            });
+
+            if (prs.length === 0) {
+              console.log(`No open PRs found for branch: ${branch}`);
+              return;
+            }
+
+            const packages = JSON.parse('${{ steps.published.outputs.packages }}');
+            const run_url = `${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}`;
+
+            // Build the package table
+            const tableRows = packages.map(p => `| ${p.name} | \`${p.version}\` |`).join('\n');
+
+            // Build install commands
+            const packageVersions = packages.map(p => `${p.name}@${p.version}`).join(' ');
+
+            const body = `## 📦 Dev Release Published
+
+            A dev release has been published for this PR!
+
+            | Package | Version |
+            | --- | --- |
+            ${tableRows}
+
+            **Install:**
+            \`\`\`sh
+            npm i ${packageVersions} --save-exact
+            \`\`\`
+
+            [View workflow run](${run_url})`;
+
+            // Comment on each PR
+            for (const pr of prs) {
+              console.log(`Commenting on PR #${pr.number}`);
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: pr.number,
+                body: body.split('\n').map(line => line.trim()).join('\n')
+              });
+            }

@@ -2,21 +2,18 @@ node_modules/
 dist/
 dist-cjs/
 lib/
+.yarn
 .turbo
 .eslintcache
 .env
 .env.local
+npm-debug.log*
+yarn-debug.log*
 yarn-error.log
-docs/_dist/
+.pnpm-debug.log*
 
-.yarn/*
-!.yarn/patches
-!.yarn/plugins
-!.yarn/releases
-!.yarn/sdks
-!.yarn/versions
-
-langchain/docs/
+package-lock.json
+yarn.lock
 
 .idea/
 
@@ -38,15 +35,21 @@ tmp/
 **/convex/.gitignore
 **/convex/tsconfig.json
 
-langchain/api_refs_docs_build/dist/**/*
-
-.docusaurus/
-docs/build/
-docs/api_refs/typedoc.json
-
 .tool-versions
 credentials.json
-**/typedoc.json
-.vercel
 
 bun.lock
+coverage/
+
+**/*.cjs
+**/*.js
+**/*.d.ts
+**/*.d.cts
+!**/src/**/*.cjs
+!**/src/**/*.js
+!**/src/**/*.d.ts
+!**/src/**/*.d.cts
+
+examples/src/createAgent/*.png
+# LangGraph API
+.langgraph_api

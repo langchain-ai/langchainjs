@@ -1,10 +1,9 @@
-// eslint-disable-next-line import/no-extraneous-dependencies
 import Database, { Database as DatabaseType, Statement } from "better-sqlite3";
 import {
   ListKeyOptions,
   RecordManagerInterface,
   UpdateOptions,
-} from "./base.js";
+} from "@langchain/core/indexing";
 
 interface TimeRow {
   epoch: number;
