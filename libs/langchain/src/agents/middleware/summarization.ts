@@ -53,7 +53,7 @@ Messages to summarize:
 {messages}
 </messages>`;
 
-const DEFAULT_SUMMARY_PREFIX = "Here is a summary of the conversation to date:"
+const DEFAULT_SUMMARY_PREFIX = "Here is a summary of the conversation to date:";
 const DEFAULT_MESSAGES_TO_KEEP = 20;
 const DEFAULT_TRIM_TOKEN_LIMIT = 4000;
 const DEFAULT_FALLBACK_MESSAGE_COUNT = 15;
@@ -386,7 +386,10 @@ export function summarizationMiddleware(
           : runtime.context?.summaryPrompt ??
             userOptions.summaryPrompt ??
             DEFAULT_SUMMARY_PROMPT;
-      const summaryPrefix = runtime.context.summaryPrefix ?? DEFAULT_SUMMARY_PREFIX;
+      const summaryPrefix =
+        runtime.context.summaryPrefix ??
+        userOptions.summaryPrefix ??
+        DEFAULT_SUMMARY_PREFIX;
       const trimTokensToSummarize =
         runtime.context?.trimTokensToSummarize !== undefined
           ? runtime.context.trimTokensToSummarize
