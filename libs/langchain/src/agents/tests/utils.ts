@@ -282,12 +282,13 @@ export class MemorySaverAssertImmutable extends MemorySaver {
     if (saved) {
       const savedId = saved.id;
       if (this.storageForCopies[thread_id][savedId]) {
-        const loaded = await this.serde.loadsTyped(
-          "json",
-          this.storageForCopies[thread_id][savedId]
-        );
+        const [, serializedSaved] = await this.serde.dumpsTyped(saved);
+        const serializedCopy = this.storageForCopies[thread_id][savedId];
 
-        if (saved !== loaded) {
+        // Compare Uint8Array contents by converting to string
+        const savedStr = new TextDecoder().decode(serializedSaved);
+        const copyStr = new TextDecoder().decode(serializedCopy);
+        if (savedStr !== copyStr) {
           throw new Error(
             `Checkpoint [${savedId}] has been modified since last written`
           );
