@@ -1,6 +1,4 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable import/no-extraneous-dependencies */
-import { expect } from "vitest";
 import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
 import {
   BaseChatModel,
@@ -289,10 +287,11 @@ export class MemorySaverAssertImmutable extends MemorySaver {
           this.storageForCopies[thread_id][savedId]
         );
 
-        expect(
-          saved,
-          `Checkpoint [${savedId}] has been modified since last written`
-        ).toEqual(loaded);
+        if (saved !== loaded) {
+          throw new Error(
+            `Checkpoint [${savedId}] has been modified since last written`
+          );
+        }
       }
     }
     const [, serializedCheckpoint] = await this.serde.dumpsTyped(checkpoint);

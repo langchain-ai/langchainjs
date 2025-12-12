@@ -5,14 +5,15 @@ import type {
 } from "@langchain/core/utils/types";
 import type { ClientTool, ServerTool } from "@langchain/core/tools";
 
-import type {
-  AgentMiddleware,
-  WrapToolCallHook,
-  WrapModelCallHook,
-  BeforeAgentHook,
-  BeforeModelHook,
-  AfterModelHook,
-  AfterAgentHook,
+import {
+  MIDDLEWARE_BRAND,
+  type AgentMiddleware,
+  type WrapToolCallHook,
+  type WrapModelCallHook,
+  type BeforeAgentHook,
+  type BeforeModelHook,
+  type AfterModelHook,
+  type AfterAgentHook,
 } from "./middleware/types.js";
 
 /**
@@ -210,6 +211,7 @@ export function createMiddleware<
   afterAgent?: AfterAgentHook<TSchema, NormalizeContextSchema<TContextSchema>>;
 }): AgentMiddleware<TSchema, TContextSchema, any> {
   const middleware: AgentMiddleware<TSchema, TContextSchema, any> = {
+    [MIDDLEWARE_BRAND]: true as const,
     name: config.name,
     stateSchema: config.stateSchema,
     contextSchema: config.contextSchema,

@@ -249,6 +249,13 @@ export type AfterAgentHook<
     };
 
 /**
+ * Unique symbol used to brand middleware instances.
+ * This prevents functions from being accidentally assignable to AgentMiddleware
+ * since functions have a 'name' property that would otherwise make them structurally compatible.
+ */
+export const MIDDLEWARE_BRAND: unique symbol = Symbol("AgentMiddleware");
+
+/**
  * Base middleware interface.
  */
 export interface AgentMiddleware<
@@ -260,6 +267,12 @@ export interface AgentMiddleware<
     | undefined = any,
   TFullContext = any
 > {
+  /**
+   * Brand property to distinguish middleware instances from plain objects or functions.
+   * This is required and prevents accidental assignment of functions to middleware arrays.
+   */
+  readonly [MIDDLEWARE_BRAND]: true;
+
   /**
    * The name of the middleware.
    */
