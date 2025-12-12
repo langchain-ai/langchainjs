@@ -1,4 +1,4 @@
-import { test, expect } from "vitest";
+import { test, expect, describe } from "vitest";
 import { z } from "zod/v3";
 
 import {
@@ -11,6 +11,11 @@ import { tool } from "@langchain/core/tools";
 import { concat } from "@langchain/core/utils/stream";
 
 import { ChatXAI } from "../chat_models.js";
+import {
+  XAI_LIVE_SEARCH_TOOL_NAME,
+  XAI_LIVE_SEARCH_TOOL_TYPE,
+  type XAILiveSearchTool,
+} from "../tools/live_search.js";
 
 test("invoke", async () => {
   const chat = new ChatXAI({
@@ -227,4 +232,161 @@ test("xAI can stream tool calls", async () => {
   expect(finalMessage.tool_calls?.[0].name).toBe("get_current_weather");
   expect(finalMessage.tool_calls?.[0].args).toHaveProperty("location");
   expect(finalMessage.tool_calls?.[0].id).toBeDefined();
+});
+
+// Server Tool Calling (Live Search) Integration Tests
+describe("Server Tool Calling (Live Search)", () => {
+  test("invoke with live_search built-in tool", async () => {
+    const chat = new ChatXAI({
+      maxRetries: 0,
+      model: "grok-2-1212",
+    });
+
+    const liveSearchTool: XAILiveSearchTool = {
+      name: XAI_LIVE_SEARCH_TOOL_NAME,
+      type: XAI_LIVE_SEARCH_TOOL_TYPE,
+    };
+    const chatWithSearch = chat.bindTools([liveSearchTool]);
+
+    // Ask about recent events to trigger search
+    const message = new HumanMessage(
+      "What are the latest developments in AI as of today?"
+    );
+    const res = await chatWithSearch.invoke([message]);
+
+    // The response should contain information (live search results are incorporated)
+    expect(res.content).toBeDefined();
+    expect((res.content as string).length).toBeGreaterThan(50);
+  });
+
+  test("invoke with searchParameters in constructor", async () => {
+    const chat = new ChatXAI({
+      maxRetries: 0,
+      model: "grok-2-1212",
+      searchParameters: {
+        mode: "auto",
+        max_search_results: 5,
+      },
+    });
+
+    const message = new HumanMessage("What happened in the news today?");
+    const res = await chat.invoke([message]);
+
+    expect(res.content).toBeDefined();
+    expect((res.content as string).length).toBeGreaterThan(50);
+  });
+
+  test("invoke with searchParameters in call options", async () => {
+    const chat = new ChatXAI({
+      maxRetries: 0,
+      model: "grok-2-1212",
+    });
+
+    const message = new HumanMessage(
+      "What is the current status of SpaceX launches?"
+    );
+    const res = await chat.invoke([message], {
+      searchParameters: {
+        mode: "on",
+        max_search_results: 3,
+      },
+    });
+
+    expect(res.content).toBeDefined();
+    expect((res.content as string).length).toBeGreaterThan(50);
+  });
+
+  test("invoke with searchParameters sources in call options", async () => {
+    const chat = new ChatXAI({
+      maxRetries: 0,
+      model: "grok-2-1212",
+    });
+
+    const message = new HumanMessage(
+      "What are the latest updates from xAI and related news?"
+    );
+    const res = await chat.invoke([message], {
+      searchParameters: {
+        mode: "on",
+        sources: [
+          {
+            type: "web",
+            allowed_websites: ["x.ai"],
+          },
+          {
+            type: "news",
+            excluded_websites: ["bbc.co.uk"],
+          },
+        ],
+      },
+    });
+
+    expect(res.content).toBeDefined();
+    expect((res.content as string).length).toBeGreaterThan(50);
+  });
+
+  test("stream with live_search tool", async () => {
+    const chat = new ChatXAI({
+      maxRetries: 0,
+      model: "grok-2-1212",
+    });
+
+    const liveSearchTool: XAILiveSearchTool = {
+      name: XAI_LIVE_SEARCH_TOOL_NAME,
+      type: XAI_LIVE_SEARCH_TOOL_TYPE,
+    };
+    const chatWithSearch = chat.bindTools([liveSearchTool]);
+
+    const message = new HumanMessage("What are the top tech news stories?");
+    const stream = await chatWithSearch.stream([message]);
+
+    let finalMessage: AIMessageChunk | undefined;
+    for await (const chunk of stream) {
+      finalMessage = !finalMessage ? chunk : concat(finalMessage, chunk);
+    }
+
+    expect(finalMessage).toBeDefined();
+    expect(finalMessage?.content).toBeDefined();
+  });
+
+  test("combine live_search with function tools", async () => {
+    const chat = new ChatXAI({
+      maxRetries: 0,
+      model: "grok-2-1212",
+    });
+
+    const liveSearchTool: XAILiveSearchTool = {
+      type: XAI_LIVE_SEARCH_TOOL_TYPE,
+      name: XAI_LIVE_SEARCH_TOOL_NAME,
+    };
+    const customTool = {
+      type: "function" as const,
+      function: {
+        name: "get_stock_price",
+        description: "Get the current stock price for a given symbol",
+        parameters: {
+          type: "object",
+          properties: {
+            symbol: {
+              type: "string",
+              description: "The stock symbol, e.g. AAPL",
+            },
+          },
+          required: ["symbol"],
+        },
+      },
+    };
+
+    const chatWithTools = chat.bindTools([liveSearchTool, customTool]);
+
+    // Ask something that might trigger either tool
+    const message = new HumanMessage(
+      "What is Apple's current stock price and what are the latest news about the company?"
+    );
+    const res = await chatWithTools.invoke([message]);
+
+    expect(res.content).toBeDefined();
+    // The response might have tool calls for the custom tool
+    // or might answer directly with live search data
+  });
 });
