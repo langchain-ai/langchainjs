@@ -7,8 +7,9 @@ import {
   afterEach,
   type MockedFunction,
 } from "vitest";
-import { drawMermaidImage } from "../graph_mermaid.js";
+import { drawMermaid, drawMermaidImage } from "../graph_mermaid.js";
 import { toBase64Url } from "../utils.js";
+import { Edge, Node, RunnableInterface } from "../types.js";
 
 // Mock global fetch
 const mockFetch = vi.fn() as MockedFunction<typeof fetch>;
