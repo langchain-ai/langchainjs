@@ -916,3 +916,70 @@ export interface CustomHTTPTransportOptions {
   authProvider?: OAuthClientProvider;
   headers?: Record<string, string>;
 }
+
+/**
+ * Represents a resource provided by an MCP server.
+ */
+export type MCPResource = {
+  /**
+   * The URI of the resource
+   */
+  uri: string;
+  /**
+   * Human-readable name of the resource
+   */
+  name: string;
+  /**
+   * Optional description of what the resource represents
+   */
+  description?: string;
+  /**
+   * Optional MIME type of the resource content
+   */
+  mimeType?: string;
+};
+
+/**
+ * Represents a resource template provided by an MCP server.
+ * Resource templates are used for dynamic resources with parameterized URIs.
+ */
+export type MCPResourceTemplate = {
+  /**
+   * The URI template with parameter placeholders (e.g., "users://{userId}/profile")
+   */
+  uriTemplate: string;
+  /**
+   * Human-readable name of the resource template
+   */
+  name: string;
+  /**
+   * Optional description of what the resource template represents
+   */
+  description?: string;
+  /**
+   * Optional MIME type of the resource content
+   */
+  mimeType?: string;
+};
+
+/**
+ * Represents the content of a resource retrieved from an MCP server.
+ */
+export type MCPResourceContent = {
+  /**
+   * The URI of the resource
+   */
+  uri: string;
+  /**
+   * Optional MIME type of the content
+   */
+  mimeType?: string;
+  /**
+   * Optional text content of the resource
+   */
+  text?: string;
+  /**
+   * Optional base64-encoded binary content of the resource
+   */
+  blob?: string;
+};
