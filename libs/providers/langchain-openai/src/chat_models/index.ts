@@ -10,6 +10,7 @@ import {
   isCustomTool,
   isOpenAICustomTool,
 } from "../utils/tools.js";
+import { _modelPrefersResponsesAPI } from "../utils/misc.js";
 import { _convertOpenAIResponsesUsageToLangChainUsage } from "../utils/output.js";
 import {
   ChatOpenAICompletions,
@@ -629,7 +630,8 @@ export class ChatOpenAI<
       this.useResponsesApi ||
       usesBuiltInTools ||
       hasResponsesOnlyKwargs ||
-      hasCustomTools
+      hasCustomTools ||
+      _modelPrefersResponsesAPI(this.model)
     );
   }
 

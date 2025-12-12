@@ -1271,3 +1271,17 @@ describe("structured output works with different schema types", () => {
     expect(result.billingAddress).toBeDefined();
   });
 });
+
+test("will call responses api for gpt-5.2-pro", async () => {
+  const model = new ChatOpenAI({
+    model: "gpt-5.2-pro",
+  });
+
+  // @ts-expect-error - responses is protected
+  const generateSpy = vi.spyOn(model.responses, "_generate");
+
+  const response = await model.invoke("what is the weather in Tokyo?");
+
+  expect(response).toBeDefined();
+  expect(generateSpy).toHaveBeenCalled();
+});
