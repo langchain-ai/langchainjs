@@ -4,10 +4,11 @@ import {
   isZodSchemaV3,
   isZodSchemaV4,
 } from "@langchain/core/utils/types";
-import { toJSONSchema as toJSONSchemaV4, parse as parseV4 } from "zod/v4/core";
+import { parse as parseV4 } from "zod/v4/core";
 import { ResponseFormatJSONSchema } from "openai/resources";
 import { zodResponseFormat } from "openai/helpers/zod";
 import { ContentBlock, UsageMetadata } from "@langchain/core/messages";
+import { toJsonSchema } from "@langchain/core/utils/json_schema";
 
 const SUPPORTED_METHODS = [
   "jsonSchema",
@@ -104,7 +105,7 @@ export function interopZodResponseFormat(
           ...props,
           name,
           strict: true,
-          schema: toJSONSchemaV4(zodSchema, {
+          schema: toJsonSchema(zodSchema, {
             cycles: "ref", // equivalent to nameStrategy: 'duplicate-ref'
             reused: "ref", // equivalent to $refStrategy: 'extract-to-root'
             override(ctx) {

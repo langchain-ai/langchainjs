@@ -1,5 +1,4 @@
 import { z } from "zod/v3";
-import pRetry from "p-retry";
 import { v4 as uuidv4 } from "uuid";
 
 import {
@@ -27,6 +26,7 @@ import {
   isStreamEventsHandler,
 } from "../tracers/event_stream.js";
 import { Serializable } from "../load/serializable.js";
+import pRetry from "../utils/p-retry/index.js";
 import {
   IterableReadableStream,
   concat,

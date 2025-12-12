@@ -2,7 +2,7 @@ const fs = require("fs");
 
 const communityPackageJsonPath = "package.json";
 
-const INTERNAL_PACKAGES = ["@langchain/eslint"];
+const INTERNAL_PACKAGES = ["@langchain/eslint", "@langchain/tsconfig"];
 
 const currentPackageJson = JSON.parse(
   fs.readFileSync(communityPackageJsonPath)

@@ -1,7 +1,7 @@
 import { CallbackManagerForToolRun } from "@langchain/core/callbacks/manager";
 import { StructuredTool, ToolParams } from "@langchain/core/tools";
 import { z } from "zod/v3";
-import { InferInteropZodOutput } from "@langchain/core/dist/utils/types/zod.js";
+import { InferInteropZodOutput } from "@langchain/core/utils/types";
 import {
   TavilyMapAPIWrapper,
   type TavilyMapResponse,

@@ -21,22 +21,13 @@ class ChatWatsonxStandardIntegrationTests extends ChatModelIntegrationTests<
       chatModelHasToolCalling: true,
       chatModelHasStructuredOutput: true,
       constructorArgs: {
-        model: "meta-llama/llama-3-3-70b-instruct",
+        model: "ibm/granite-3-2-8b-instruct",
         version: "2024-05-31",
         serviceUrl: process.env.WATSONX_AI_SERVICE_URL ?? "testString",
         projectId: process.env.WATSONX_AI_PROJECT_ID ?? "testString",
         temperature: 0,
       },
     });
-  }
-
-  async testInvokeMoreComplexTools() {
-    this.skipTestMessage(
-      "testInvokeMoreComplexTools",
-      "ChatWatsonx",
-      "Watsonx does not support tool schemas which contain object with unknown/any parameters." +
-        "Watsonx only supports objects in schemas when the parameters are defined."
-    );
   }
 
   async testWithStructuredOutput() {

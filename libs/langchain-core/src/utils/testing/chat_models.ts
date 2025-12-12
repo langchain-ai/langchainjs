@@ -284,6 +284,13 @@ export interface FakeChatInput extends BaseChatModelParams {
   sleep?: number;
 
   emitCustomEvent?: boolean;
+
+  /**
+   * Generation info to include on the last chunk during streaming.
+   * This gets merged into response_metadata by the base chat model.
+   * Useful for testing response_metadata propagation (e.g., finish_reason).
+   */
+  generationInfo?: Record<string, unknown>;
 }
 
 export interface FakeListChatModelCallOptions extends BaseChatModelCallOptions {
@@ -325,12 +332,15 @@ export class FakeListChatModel extends BaseChatModel<FakeListChatModelCallOption
 
   emitCustomEvent = false;
 
+  generationInfo?: Record<string, unknown>;
+
   constructor(params: FakeChatInput) {
     super(params);
-    const { responses, sleep, emitCustomEvent } = params;
+    const { responses, sleep, emitCustomEvent, generationInfo } = params;
     this.responses = responses;
     this.sleep = sleep;
     this.emitCustomEvent = emitCustomEvent ?? this.emitCustomEvent;
+    this.generationInfo = generationInfo;
   }
 
   _combineLLMOutput() {
@@ -391,12 +401,20 @@ export class FakeListChatModel extends BaseChatModel<FakeListChatModelCallOption
       });
     }
 
-    for await (const text of response) {
+    const responseChars = [...response];
+    for (let i = 0; i < responseChars.length; i++) {
+      const text = responseChars[i];
+      const isLastChunk = i === responseChars.length - 1;
       await this._sleepIfRequested();
       if (options?.thrownErrorString) {
         throw new Error(options.thrownErrorString);
       }
-      const chunk = this._createResponseChunk(text);
+      // Include generationInfo on the last chunk (like real providers do)
+      // This gets merged into response_metadata by the base chat model
+      const chunk = this._createResponseChunk(
+        text,
+        isLastChunk ? this.generationInfo : undefined
+      );
       yield chunk;
       // eslint-disable-next-line no-void
       void runManager?.handleLLMNewToken(text);
@@ -415,10 +433,15 @@ export class FakeListChatModel extends BaseChatModel<FakeListChatModelCallOption
     });
   }
 
-  _createResponseChunk(text: string): ChatGenerationChunk {
+  _createResponseChunk(
+    text: string,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    generationInfo?: Record<string, any>
+  ): ChatGenerationChunk {
     return new ChatGenerationChunk({
       message: new AIMessageChunk({ content: text }),
       text,
+      generationInfo,
     });
   }
 

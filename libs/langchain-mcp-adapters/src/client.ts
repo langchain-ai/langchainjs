@@ -23,6 +23,9 @@ import {
   type ResolvedStdioConnection,
   type ResolvedStreamableHTTPConnection,
   type CustomHTTPTransportOptions,
+  type MCPResource,
+  type MCPResourceTemplate,
+  type MCPResourceContent,
   clientConfigSchema,
   connectionSchema,
   type LoadMcpToolsOptions,
@@ -389,6 +392,211 @@ export class MultiServerMCPClient {
       headers: options?.headers,
       authProvider: options?.authProvider,
     });
+  }
+
+  /**
+   * List resources from specified servers.
+   *
+   * @param servers - Optional array of server names to filter resources by.
+   *                 If not provided, returns resources from all servers.
+   * @param options - Optional connection options for the resource listing, e.g. custom auth provider or headers.
+   * @returns A map of server names to their resources
+   *
+   * @example
+   * ```ts
+   * // List resources from all servers
+   * const resources = await client.listResources();
+   * ```
+   *
+   * @example
+   * ```ts
+   * // List resources from specific servers
+   * const resources = await client.listResources("server1", "server2");
+   * ```
+   */
+  async listResources(
+    ...servers: string[]
+  ): Promise<Record<string, MCPResource[]>>;
+  async listResources(
+    servers: string[],
+    options?: CustomHTTPTransportOptions
+  ): Promise<Record<string, MCPResource[]>>;
+  async listResources(
+    ...args: unknown[]
+  ): Promise<Record<string, MCPResource[]>> {
+    let servers: string[];
+    let options: CustomHTTPTransportOptions | undefined;
+
+    if (args.length === 0 || args.every((arg) => typeof arg === "string")) {
+      servers = args as string[];
+      await this.initializeConnections();
+    } else {
+      [servers, options] = args as [
+        string[],
+        CustomHTTPTransportOptions | undefined,
+      ];
+      await this.initializeConnections(options);
+    }
+
+    const targetServers =
+      servers.length > 0 ? servers : Object.keys(this.#config.mcpServers);
+
+    const result: Record<string, MCPResource[]> = {};
+
+    for (const serverName of targetServers) {
+      const client = await this.getClient(serverName, options);
+      if (!client) {
+        debugLog(`WARN: Server "${serverName}" not found or not connected`);
+        continue;
+      }
+
+      try {
+        const resourcesList = await client.listResources();
+        result[serverName] = resourcesList.resources.map((resource) => ({
+          uri: resource.uri,
+          name: resource.title ?? resource.name,
+          description: resource.description,
+          mimeType: resource.mimeType,
+        }));
+        debugLog(
+          `INFO: Listed ${result[serverName].length} resources from server "${serverName}"`
+        );
+      } catch (error) {
+        debugLog(
+          `ERROR: Failed to list resources from server "${serverName}": ${error}`
+        );
+        result[serverName] = [];
+      }
+    }
+
+    return result;
+  }
+
+  /**
+   * List resource templates from specified servers.
+   *
+   * Resource templates are used for dynamic resources with parameterized URIs.
+   *
+   * @param servers - Optional array of server names to filter resource templates by.
+   *                 If not provided, returns resource templates from all servers.
+   * @param options - Optional connection options for the resource template listing, e.g. custom auth provider or headers.
+   * @returns A map of server names to their resource templates
+   *
+   * @example
+   * ```ts
+   * // List resource templates from all servers
+   * const templates = await client.listResourceTemplates();
+   * ```
+   *
+   * @example
+   * ```ts
+   * // List resource templates from specific servers
+   * const templates = await client.listResourceTemplates("server1", "server2");
+   * ```
+   */
+  async listResourceTemplates(
+    ...servers: string[]
+  ): Promise<Record<string, MCPResourceTemplate[]>>;
+  async listResourceTemplates(
+    servers: string[],
+    options?: CustomHTTPTransportOptions
+  ): Promise<Record<string, MCPResourceTemplate[]>>;
+  async listResourceTemplates(
+    ...args: unknown[]
+  ): Promise<Record<string, MCPResourceTemplate[]>> {
+    let servers: string[];
+    let options: CustomHTTPTransportOptions | undefined;
+
+    if (args.length === 0 || args.every((arg) => typeof arg === "string")) {
+      servers = args as string[];
+      await this.initializeConnections();
+    } else {
+      [servers, options] = args as [
+        string[],
+        CustomHTTPTransportOptions | undefined,
+      ];
+      await this.initializeConnections(options);
+    }
+
+    const targetServers =
+      servers.length > 0 ? servers : Object.keys(this.#config.mcpServers);
+
+    const result: Record<string, MCPResourceTemplate[]> = {};
+
+    for (const serverName of targetServers) {
+      const client = await this.getClient(serverName, options);
+      if (!client) {
+        debugLog(`WARN: Server "${serverName}" not found or not connected`);
+        continue;
+      }
+
+      try {
+        const templatesList = await client.listResourceTemplates();
+        result[serverName] = templatesList.resourceTemplates.map(
+          (template) => ({
+            uriTemplate: template.uriTemplate,
+            name: template.title ?? template.name,
+            description: template.description,
+            mimeType: template.mimeType,
+          })
+        );
+        debugLog(
+          `INFO: Listed ${result[serverName].length} resource templates from server "${serverName}"`
+        );
+      } catch (error) {
+        debugLog(
+          `ERROR: Failed to list resource templates from server "${serverName}": ${error}`
+        );
+        result[serverName] = [];
+      }
+    }
+
+    return result;
+  }
+
+  /**
+   * Read a resource from a specific server.
+   *
+   * @param serverName - The name of the server to read the resource from
+   * @param uri - The URI of the resource to read
+   * @param options - Optional connection options for reading the resource, e.g. custom auth provider or headers.
+   * @returns The resource contents
+   *
+   * @example
+   * ```ts
+   * const content = await client.readResource("server1", "file://path/to/resource");
+   * ```
+   */
+  async readResource(
+    serverName: string,
+    uri: string,
+    options?: CustomHTTPTransportOptions
+  ): Promise<MCPResourceContent[]> {
+    await this.initializeConnections(options);
+
+    const client = await this.getClient(serverName, options);
+    if (!client) {
+      throw new MCPClientError(
+        `Server "${serverName}" not found or not connected`,
+        serverName
+      );
+    }
+
+    try {
+      debugLog(`INFO: Reading resource "${uri}" from server "${serverName}"`);
+      const result = await client.readResource({ uri });
+      return result.contents.map((content) => ({
+        uri: content.uri,
+        mimeType: content.mimeType,
+        text: content.text as string | undefined,
+        blob: content.blob as string | undefined,
+      }));
+    } catch (error) {
+      throw new MCPClientError(
+        `Failed to read resource "${uri}" from server "${serverName}": ${error}`,
+        serverName
+      );
+    }
   }
 
   /**

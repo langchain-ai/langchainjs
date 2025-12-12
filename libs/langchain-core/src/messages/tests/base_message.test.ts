@@ -811,6 +811,30 @@ describe("toFormattedString", () => {
       expect(output).toContain("unit: celsius");
     });
 
+    it("formats an AI message with nested objects in tool call args", () => {
+      const message = new AIMessage({
+        content: "Here is the result.",
+        tool_calls: [
+          {
+            id: "call_123",
+            name: "someTool",
+            args: { stringArg: "someFile", objectArg: { key: "someValue" } },
+            type: "tool_call",
+          },
+        ],
+      });
+
+      const output = message.toFormattedString();
+      expect(output).toContain("Ai Message");
+      expect(output).toContain("Tool Calls:");
+      expect(output).toContain("someTool (call_123)");
+      expect(output).toContain("stringArg: someFile");
+
+      // This should show the object, not [object Object]
+      expect(output).toContain('"key":"someValue"');
+      expect(output).not.toContain("[object Object]");
+    });
+
     it("formats an AI message with multiple tool calls", () => {
       const message = new AIMessage({
         content: "",

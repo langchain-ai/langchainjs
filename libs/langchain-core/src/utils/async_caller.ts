@@ -1,7 +1,7 @@
 import PQueueMod from "p-queue";
-import pRetry from "p-retry";
 
 import { getAbortSignalError } from "./signal.js";
+import pRetry from "./p-retry/index.js";
 
 const STATUS_NO_RETRY = [
   400, // Bad Request

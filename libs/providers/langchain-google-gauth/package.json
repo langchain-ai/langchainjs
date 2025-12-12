@@ -1,6 +1,6 @@
 {
   "name": "@langchain/google-gauth",
-  "version": "2.0.3",
+  "version": "2.0.4",
   "description": "Google auth based authentication support for Google services",
   "author": "LangChain",
   "license": "MIT",
@@ -28,8 +28,8 @@
     "test:standard:unit": "NODE_OPTIONS=--experimental-vm-modules jest --testPathPattern=\\.standard\\.test.ts --testTimeout 100000 --maxWorkers=50%",
     "test:standard:int": "NODE_OPTIONS=--experimental-vm-modules jest --testPathPattern=\\.standard\\.int\\.test.ts --testTimeout 100000 --maxWorkers=50%",
     "test:standard": "pnpm test:standard:unit && pnpm test:standard:int",
-    "format": "prettier --config .prettierrc --write \"src\"",
-    "format:check": "prettier --config .prettierrc --check \"src\""
+    "format": "prettier --write \"src\"",
+    "format:check": "prettier --check \"src\""
   },
   "dependencies": {
     "@langchain/google-common": "workspace:*",
@@ -40,6 +40,7 @@
     "@langchain/eslint": "workspace:*",
     "@swc/core": "^1.3.90",
     "@swc/jest": "^0.2.29",
+    "@langchain/tsconfig": "workspace:*",
     "@tsconfig/recommended": "^1.0.3",
     "dotenv": "^16.3.1",
     "dpdm": "^3.14.0",

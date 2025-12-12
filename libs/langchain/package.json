@@ -1,6 +1,6 @@
 {
   "name": "langchain",
-  "version": "1.1.4",
+  "version": "1.1.5",
   "description": "Typescript bindings for langchain",
   "author": "LangChain",
   "license": "MIT",
@@ -44,8 +44,8 @@
     "test:watch": "vitest --watch",
     "test:bench": "vitest --mode bench --run",
     "test:integration": "vitest --mode int",
-    "format": "prettier --config .prettierrc --write \"src\"",
-    "format:check": "prettier --config .prettierrc --check \"src\""
+    "format": "prettier --write \"src\"",
+    "format:check": "prettier --check \"src\""
   },
   "devDependencies": {
     "@langchain/anthropic": "workspace:*",
@@ -53,6 +53,7 @@
     "@langchain/core": "workspace:*",
     "@langchain/eslint": "workspace:*",
     "@langchain/openai": "workspace:*",
+    "@langchain/tsconfig": "workspace:*",
     "@tsconfig/recommended": "^1.0.2",
     "@types/js-yaml": "^4",
     "@types/jsdom": "^21.1.1",

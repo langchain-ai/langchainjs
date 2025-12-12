@@ -7,6 +7,7 @@ import {
 import {
   BaseLanguageModelInput,
   StructuredOutputMethodOptions,
+  FunctionDefinition,
 } from "@langchain/core/language_models/base";
 import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
 import {
@@ -28,7 +29,6 @@ import type {
 } from "ollama";
 import {
   Runnable,
-  RunnableLambda,
   RunnablePassthrough,
   RunnableSequence,
 } from "@langchain/core/runnables";
@@ -38,10 +38,11 @@ import {
   JsonOutputParser,
   StructuredOutputParser,
 } from "@langchain/core/output_parsers";
+import { JsonOutputKeyToolsParser } from "@langchain/core/output_parsers/openai_tools";
+import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import {
   InteropZodType,
   isInteropZodSchema,
-  interopParseAsync,
 } from "@langchain/core/utils/types";
 import { toJsonSchema } from "@langchain/core/utils/json_schema";
 import {
@@ -91,6 +92,7 @@ export interface ChatOllamaInput
   model?: string;
   /**
    * The host URL of the Ollama server.
+   * Defaults to `OLLAMA_BASE_URL` if set.
    * @default "http://127.0.0.1:11434"
    */
   baseUrl?: string;
@@ -124,6 +126,7 @@ export interface ChatOllamaInput
  *
  * ```bash
  * npm install @langchain/ollama
+ * export OLLAMA_BASE_URL="http://127.0.0.1:11434" # Optional; defaults to http://127.0.0.1:11434 if not set
  * ```
  *
  * ## [Constructor args](https://api.js.langchain.com/classes/_langchain_ollama.ChatOllama.html#constructor)
@@ -499,12 +502,16 @@ export class ChatOllama
   constructor(fields?: ChatOllamaInput) {
     super(fields ?? {});
 
+    this.baseUrl =
+      fields?.baseUrl ??
+      getEnvironmentVariable("OLLAMA_BASE_URL") ??
+      this.baseUrl;
+
     this.client = new Ollama({
       fetch: fields?.fetch,
-      host: fields?.baseUrl,
+      host: this.baseUrl,
       headers: fields?.headers,
     });
-    this.baseUrl = fields?.baseUrl ?? this.baseUrl;
 
     this.model = fields?.model ?? this.model;
     this.numa = fields?.numa;
@@ -834,121 +841,127 @@ export class ChatOllama
           parsed: RunOutput;
         }
       > {
-    if (config?.method === undefined || config?.method === "jsonSchema") {
-      const outputSchemaIsZod = isInteropZodSchema(outputSchema);
-      const jsonSchema = outputSchemaIsZod
-        ? toJsonSchema(outputSchema)
-        : outputSchema;
-      const functionName = config?.name ?? "extract";
-      const llm = this.bindTools([
-        {
-          type: "function" as const,
-          function: {
-            name: functionName,
-            description: jsonSchema.description,
-            parameters: jsonSchema,
+    let llm: Runnable<BaseLanguageModelInput>;
+    let outputParser: Runnable<AIMessageChunk, RunOutput>;
+
+    const { schema, name, includeRaw } = {
+      ...config,
+      schema: outputSchema,
+    };
+    const method = config?.method ?? "jsonSchema";
+
+    if (method === "functionCalling") {
+      let functionName = name ?? "extract";
+      if (isInteropZodSchema(schema)) {
+        const jsonSchema = toJsonSchema(schema);
+        llm = this.bindTools([
+          {
+            type: "function",
+            function: {
+              name: functionName,
+              description: jsonSchema.description,
+              parameters: jsonSchema,
+            },
           },
-        },
-      ]).withConfig({
+        ]).withConfig({
+          ls_structured_output_format: {
+            kwargs: { method },
+            schema: jsonSchema,
+          },
+        } as Partial<ChatOllamaCallOptions>);
+        outputParser = new JsonOutputKeyToolsParser({
+          returnSingle: true,
+          keyName: functionName,
+          zodSchema: schema,
+        });
+      } else {
+        let openAIFunctionDefinition: FunctionDefinition;
+        if (
+          typeof schema.name === "string" &&
+          typeof schema.parameters === "object" &&
+          schema.parameters != null
+        ) {
+          openAIFunctionDefinition = schema as FunctionDefinition;
+          functionName = schema.name;
+        } else {
+          openAIFunctionDefinition = {
+            name: functionName,
+            description: schema.description ?? "",
+            parameters: schema,
+          };
+        }
+        llm = this.bindTools([
+          {
+            type: "function",
+            function: openAIFunctionDefinition,
+          },
+        ]).withConfig({
+          ls_structured_output_format: {
+            kwargs: { method },
+            schema,
+          },
+        } as Partial<ChatOllamaCallOptions>);
+        outputParser = new JsonOutputKeyToolsParser<RunOutput>({
+          returnSingle: true,
+          keyName: functionName,
+        });
+      }
+    } else if (method === "jsonMode") {
+      outputParser = isInteropZodSchema(schema)
+        ? StructuredOutputParser.fromZodSchema(schema)
+        : new JsonOutputParser<RunOutput>();
+      const jsonSchema = toJsonSchema(schema);
+      llm = this.withConfig({
         format: "json",
         ls_structured_output_format: {
-          kwargs: { method: "jsonSchema" },
-          schema: toJsonSchema(outputSchema),
+          kwargs: { method },
+          schema: jsonSchema,
         },
-      });
-
-      /**
-       * Create a parser that handles both tool calls and JSON content
-       */
-      const outputParser = RunnableLambda.from<BaseMessage, RunOutput>(
-        async (input: BaseMessage): Promise<RunOutput> => {
-          /**
-           * Ensure input is an AI message (either AIMessage or AIMessageChunk)
-           */
-          if (
-            !AIMessage.isInstance(input) &&
-            !AIMessageChunk.isInstance(input)
-          ) {
-            throw new Error("Input is not an AIMessage or AIMessageChunk.");
-          }
-
-          /**
-           * First, check if there are tool calls - extract args from the tool call
-           */
-          if (input.tool_calls && input.tool_calls.length > 0) {
-            const toolCall = input.tool_calls.find(
-              (tc) => tc.name === functionName
-            );
-            if (toolCall && toolCall.args) {
-              /**
-               * Validate with schema if Zod schema is provided
-               */
-              if (outputSchemaIsZod) {
-                return await interopParseAsync(
-                  outputSchema as InteropZodType<RunOutput>,
-                  toolCall.args
-                );
-              }
-              return toolCall.args as RunOutput;
-            }
-          }
-
-          /**
-           * Fallback: parse content as JSON (when format: "json" is set)
-           */
-          const content =
-            typeof input.content === "string" ? input.content : "";
-          if (!content) {
-            throw new Error(
-              "No tool calls found and content is empty. Cannot parse structured output."
-            );
-          }
-
-          /**
-           * Use the appropriate parser based on schema type
-           */
-          if (outputSchemaIsZod) {
-            const zodParser = StructuredOutputParser.fromZodSchema(
-              outputSchema as InteropZodType<RunOutput>
-            );
-            return await zodParser.parse(content);
-          } else {
-            const jsonParser = new JsonOutputParser<RunOutput>();
-            return await jsonParser.parse(content);
-          }
-        }
-      );
-
-      if (!config?.includeRaw) {
-        return llm.pipe(outputParser) as Runnable<
-          BaseLanguageModelInput,
-          RunOutput
-        >;
-      }
-
-      const parserAssign = RunnablePassthrough.assign({
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        parsed: (input: any, config) => outputParser.invoke(input.raw, config),
-      });
-      const parserNone = RunnablePassthrough.assign({
-        parsed: () => null,
-      });
-      const parsedWithFallback = parserAssign.withFallbacks({
-        fallbacks: [parserNone],
-      });
-      return RunnableSequence.from<
-        BaseLanguageModelInput,
-        { raw: BaseMessage; parsed: RunOutput }
-      >([
-        {
-          raw: llm,
+      } as Partial<ChatOllamaCallOptions>);
+    } else if (method === "jsonSchema") {
+      outputParser = isInteropZodSchema(schema)
+        ? StructuredOutputParser.fromZodSchema(schema)
+        : new JsonOutputParser<RunOutput>();
+      const jsonSchema = toJsonSchema(schema);
+      llm = this.withConfig({
+        format: jsonSchema,
+        ls_structured_output_format: {
+          kwargs: { method },
+          schema: jsonSchema,
         },
-        parsedWithFallback,
-      ]);
+      } as Partial<ChatOllamaCallOptions>);
     } else {
-      // TODO: Fix this type in core
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      return super.withStructuredOutput<RunOutput>(outputSchema, config as any);
+      throw new TypeError(
+        `Unrecognized structured output method '${method}'. Expected one of 'functionCalling', 'jsonMode', or 'jsonSchema'`
+      );
     }
+
+    if (!includeRaw) {
+      return llm.pipe(outputParser).withConfig({
+        runName: "ChatOllamaStructuredOutput",
+      }) as Runnable<BaseLanguageModelInput, RunOutput>;
+    }
+
+    const parserAssign = RunnablePassthrough.assign({
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      parsed: (input: any, config) => outputParser.invoke(input.raw, config),
+    });
+    const parserNone = RunnablePassthrough.assign({
+      parsed: () => null,
+    });
+    const parsedWithFallback = parserAssign.withFallbacks({
+      fallbacks: [parserNone],
+    });
+    return RunnableSequence.from<
+      BaseLanguageModelInput,
+      { raw: BaseMessage; parsed: RunOutput }
+    >([
+      {
+        raw: llm,
+      },
+      parsedWithFallback,
+    ]).withConfig({
+      runName: "StructuredOutputRunnable",
+    });
   }
 }

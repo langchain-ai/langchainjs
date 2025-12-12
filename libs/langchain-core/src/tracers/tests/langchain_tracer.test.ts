@@ -80,6 +80,7 @@ test("LangChainTracer payload snapshots for run create and update", async () => 
         time: expect.any(String),
       }),
     ]),
+    name: expect.any(String),
     trace_id: expect.any(String),
     parent_run_id: expect.any(String),
   });
@@ -94,6 +95,7 @@ test("LangChainTracer payload snapshots for run create and update", async () => 
         time: expect.any(String),
       }),
     ]),
+    name: expect.any(String),
     trace_id: expect.any(String),
   });
 });

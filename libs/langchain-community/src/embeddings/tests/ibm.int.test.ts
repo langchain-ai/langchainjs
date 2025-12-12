@@ -5,8 +5,8 @@ const projectId = process.env.WATSONX_AI_PROJECT_ID;
 const version = "2024-05-31";
 const serviceUrl = process.env.WATSONX_AI_SERVICE_URL as string;
 const serviceUrlGateway = process.env.WATSONX_AI_SERVICE_URL_GATEWAY as string;
-const model = "ibm/slate-125m-english-rtrvr";
-const modelAlias = "ibm/granite-embedding-107m-multilingual";
+const model = "ibm/slate-125m-english-rtrvr-v2";
+const modelAlias = "langchain-nodejs-ibm/slate-125m-english-rtrvr-v2";
 const parameters = [
   {
     name: "projectId",
@@ -25,7 +25,6 @@ describe.each(parameters)("Test embeddings for $name", ({ params }) => {
   test("embedQuery method", async () => {
     const embeddings = new WatsonxEmbeddings({
       version,
-      serviceUrl,
       ...params,
     });
     const res = await embeddings.embedQuery("Hello world");

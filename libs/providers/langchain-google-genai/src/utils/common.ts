@@ -53,14 +53,10 @@ const DUMMY_SIGNATURE =
 const iife = (fn: () => string) => fn();
 
 export function getMessageAuthor(message: BaseMessage) {
-  const type = message._getType();
   if (ChatMessage.isInstance(message)) {
     return message.role;
   }
-  if (type === "tool") {
-    return type;
-  }
-  return message.name ?? type;
+  return message.type;
 }
 
 /**
@@ -79,7 +75,7 @@ export function convertAuthorToRole(
      * */
     case "supervisor":
     case "ai":
-    case "model": // getMessageAuthor returns message.name. code ex.: return message.name ?? type;
+    case "model":
       return "model";
     case "system":
       return "system";
@@ -527,7 +523,7 @@ export function mapGenerateContentResultToChatResult(
   }
   const [candidate] = response.candidates;
   const { content: candidateContent, ...generationInfo } = candidate;
-  const functionCalls = candidateContent.parts.reduce((acc, p) => {
+  const functionCalls = candidateContent.parts?.reduce((acc, p) => {
     if ("functionCall" in p && p.functionCall) {
       acc.push({
         ...p,
@@ -655,7 +651,7 @@ export function convertResponseContentToChatGenerationChunk(
   }
   const [candidate] = response.candidates;
   const { content: candidateContent, ...generationInfo } = candidate;
-  const functionCalls = candidateContent.parts.reduce((acc, p) => {
+  const functionCalls = candidateContent.parts?.reduce((acc, p) => {
     if ("functionCall" in p && p.functionCall) {
       acc.push({
         ...p,

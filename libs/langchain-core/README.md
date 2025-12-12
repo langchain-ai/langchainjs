@@ -109,4 +109,4 @@ Because `@langchain/core` is a low-level package whose abstractions will change 
 Bugfixes or suggestions should be made using the same guidelines as the main package.
 See [here](https://github.com/langchain-ai/langchainjs/tree/main/CONTRIBUTING.md) for detailed information.
 
-Please report any security issues or concerns following our [security guidelines](https://github.com/langchain-ai/langchainjs/tree/main/SECURITY.md).
+Please report any security issues or concerns following our [security guidelines](https://github.com/langchain-ai/.github/blob/main/SECURITY.md).

@@ -1,5 +1,13 @@
 # @langchain/core
 
+## 1.1.4
+
+### Patch Changes
+
+- [#9575](https://github.com/langchain-ai/langchainjs/pull/9575) [`0bade90`](https://github.com/langchain-ai/langchainjs/commit/0bade90ed47c7988ed86f1e695a28273c7b3df50) Thanks [@hntrl](https://github.com/hntrl)! - bin p-retry
+
+- [#9574](https://github.com/langchain-ai/langchainjs/pull/9574) [`6c40d00`](https://github.com/langchain-ai/langchainjs/commit/6c40d00e926f377d249c2919549381522eac8ed1) Thanks [@hntrl](https://github.com/hntrl)! - Revert "fix(@langchain/core): update and bundle dependencies (#9534)"
+
 ## 1.1.3
 
 ### Patch Changes

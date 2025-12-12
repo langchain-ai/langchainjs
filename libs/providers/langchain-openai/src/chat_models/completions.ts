@@ -6,7 +6,7 @@ import {
   type BaseMessage,
   isAIMessage,
   type UsageMetadata,
-  type BaseMessageFields,
+  type AIMessageFields,
   BaseMessageChunk,
 } from "@langchain/core/messages";
 import {
@@ -100,6 +100,8 @@ export class ChatOpenAICompletions<
         : {}),
       ...this.modelKwargs,
       prompt_cache_key: options?.promptCacheKey ?? this.promptCacheKey,
+      prompt_cache_retention:
+        options?.promptCacheRetention ?? this.promptCacheRetention,
       verbosity: options?.verbosity ?? this.verbosity,
     };
     if (options?.prediction !== undefined) {
@@ -273,7 +275,7 @@ export class ChatOpenAICompletions<
             Object.entries(generation.message).filter(
               ([key]) => !key.startsWith("lc_")
             )
-          ) as BaseMessageFields
+          ) as AIMessageFields
         );
         generations.push(generation);
       }

@@ -77,5 +77,8 @@ cd "$standard_tests_updater_script_dir"
 # Run the updater script
 node "update_workspace_dependencies.js"
 
+# Create mock tsconfig.json files without project references since we're testing against NPM packages
+bash /scripts/create-mock-tsconfigs.sh "$package_dir" "$monorepo_dir"
+
 # Navigate back to root
 cd "/app"

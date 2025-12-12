@@ -1,0 +1,61 @@
+name: 🦋 Changesets Release
+
+# Called by publish.yml (the npm Trusted Publisher entry point)
+on:
+  workflow_call:
+
+env:
+  CI: true
+
+jobs:
+  release:
+    name: 🦋 Changesets Release
+    if: github.repository == 'langchain-ai/langchainjs'
+    runs-on: ubuntu-latest
+    outputs:
+      published_packages: ${{ steps.changesets.outputs.publishedPackages }}
+      published: ${{ steps.changesets.outputs.published }}
+    permissions:
+      contents: write # enable pushing changes to the origin
+      id-token: write # enable generation of an ID token for publishing
+      pull-requests: write # enable opening a PR for the release
+    steps:
+      - name: ⬇️ Checkout repo
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
+        with:
+          fetch-depth: 0
+
+      - name: 📦 Setup pnpm
+        uses: pnpm/action-setup@41ff72655975bd51cab0327fa583b6e92b6d3061 # v4.2.0
+
+      - name: ⎔ Setup node
+        uses: actions/setup-node@395ad3262231945c25e8478fd5baf05154b1d79f # v6.1.0
+        with:
+          node-version-file: ".nvmrc"
+          cache: "pnpm"
+
+      - name: 📥 Install deps
+        run: pnpm install --frozen-lockfile
+
+      - name: 🔐 Setup npm auth
+        env:
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          echo "registry=https://registry.npmjs.org" >> ~/.npmrc
+          echo "//registry.npmjs.org/:_authToken=$NPM_TOKEN" >> ~/.npmrc
+
+        # This action has two responsibilities. The first time the workflow runs
+        # it will create a new branch and then open a PR with the related changes
+        # for the new version. After the PR is merged, the workflow will run again
+        # and this action will build + publish to npm.
+      - name: 🚀 PR / Publish
+        id: changesets
+        uses: changesets/action@e0145edc7d9d8679003495b11f87bd8ef63c0cba
+        with:
+          version: pnpm run changeset:version
+          commit: "chore: version packages"
+          title: "chore: version packages"
+          publish: pnpm run release
+        env:
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -1247,6 +1247,43 @@ describe("MultiServerMCPClient Integration Tests", () => {
   });
 
   describe("Timeout Configuration", () => {
+    it("http smoke test: should honor timeout when shorter than sleepMsec", async () => {
+      const { baseUrl } = await testServers.createHTTPServer(
+        "timeout-smoke-test",
+        {
+          disableStreamableHttp: false,
+          supportSSEFallback: false,
+        }
+      );
+
+      const client = new MultiServerMCPClient({
+        "timeout-server": {
+          transport: "http",
+          url: `${baseUrl}/mcp`,
+        },
+      });
+
+      try {
+        const tools = await client.getTools();
+        const testTool = tools.find((t) => t.name.includes("sleep_tool"));
+        expect(testTool).toBeDefined();
+
+        // Set a timeout that is lower than the sleep duration and ensure it is honored.
+        await expect(
+          testTool!.invoke(
+            { sleepMsec: 500 },
+            {
+              timeout: 10,
+            }
+          )
+        ).rejects.toThrowError(
+          /TimeoutError: The operation was aborted due to timeout/
+        );
+      } finally {
+        await client.close();
+      }
+    });
+
     it.each(["http", "sse"] as const)(
       "%s should respect RunnableConfig timeout for tool calls",
       async (transport: "http" | "sse") => {
@@ -1372,6 +1409,39 @@ describe("MultiServerMCPClient Integration Tests", () => {
           ).rejects.toThrowError(
             /TimeoutError: The operation was aborted due to timeout/
           );
+        } finally {
+          await client.close();
+        }
+      }
+    );
+
+    it.each(["http", "sse"] as const)(
+      "%s should pass explicit per-call timeout through RunnableConfig",
+      async (transport) => {
+        const { baseUrl } = await testServers.createHTTPServer("timeout-test", {
+          disableStreamableHttp: transport === "sse",
+          supportSSEFallback: transport === "sse",
+        });
+
+        const client = new MultiServerMCPClient({
+          "timeout-server": {
+            transport,
+            url: `${baseUrl}/${transport === "http" ? "mcp" : "sse"}`,
+          },
+        });
+
+        try {
+          const tools = await client.getTools();
+          const testTool = tools.find((t) => t.name.includes("sleep_tool"));
+          expect(testTool).toBeDefined();
+
+          // Set a per-call timeout longer than the server default to ensure it is honored
+          // The server sleep is 1500ms; we set timeout to 2000ms so it should succeed
+          const result = await testTool!.invoke(
+            { sleepMsec: 1500 },
+            { timeout: 2000 }
+          );
+          expect(result).toContain("done");
         } finally {
           await client.close();
         }
@@ -2136,6 +2206,183 @@ describe("MultiServerMCPClient Integration Tests", () => {
               metadata: { uri: "mem://test.txt" },
             })
           );
+        } finally {
+          await client.close();
+        }
+      }
+    );
+  });
+
+  describe("Resource Management", () => {
+    it.each(["http", "sse"] as const)(
+      "should list resources from server (%s)",
+      async (transport) => {
+        const serverName = `resource-test-${transport}`;
+        const { baseUrl } = await testServers.createHTTPServer(serverName, {
+          disableStreamableHttp: transport === "sse",
+          supportSSEFallback: transport === "sse",
+        });
+        const client = new MultiServerMCPClient({
+          mcpServers: {
+            [serverName]: {
+              transport: transport as "http" | "sse",
+              url: `${baseUrl}/${transport === "http" ? "mcp" : "sse"}`,
+            },
+          },
+        });
+
+        try {
+          const resources = await client.listResources();
+          expect(resources[serverName]).toBeDefined();
+          expect(Array.isArray(resources[serverName])).toBe(true);
+          expect(resources[serverName].length).toBeGreaterThan(0);
+
+          const testResource = resources[serverName].find(
+            (r: { uri: string }) => r.uri === "mem://test.txt"
+          );
+          expect(testResource).toBeDefined();
+          expect(testResource?.name).toBe("Test Resource");
+          expect(testResource?.description).toContain("test resource");
+          expect(testResource?.mimeType).toBe("text/plain");
+        } finally {
+          await client.close();
+        }
+      }
+    );
+
+    it.each(["http", "sse"] as const)(
+      "should list resource templates from server (%s)",
+      async (transport) => {
+        const serverName = `resource-template-test-${transport}`;
+        const { baseUrl } = await testServers.createHTTPServer(serverName, {
+          disableStreamableHttp: transport === "sse",
+          supportSSEFallback: transport === "sse",
+        });
+        const client = new MultiServerMCPClient({
+          mcpServers: {
+            [serverName]: {
+              transport: transport as "http" | "sse",
+              url: `${baseUrl}/${transport === "http" ? "mcp" : "sse"}`,
+            },
+          },
+        });
+
+        try {
+          const templates = await client.listResourceTemplates();
+          expect(templates[serverName]).toBeDefined();
+          expect(Array.isArray(templates[serverName])).toBe(true);
+          expect(templates[serverName].length).toBeGreaterThan(0);
+
+          const profileTemplate = templates[serverName].find(
+            (t: { uriTemplate: string }) =>
+              t.uriTemplate === "mem://user/{userId}/profile"
+          );
+          expect(profileTemplate).toBeDefined();
+          expect(profileTemplate?.name).toBe("User Profile Template");
+          expect(profileTemplate?.description).toContain("user profile");
+        } finally {
+          await client.close();
+        }
+      }
+    );
+
+    it.each(["http", "sse"] as const)(
+      "should read resource from server (%s)",
+      async (transport) => {
+        const serverName = `read-resource-test-${transport}`;
+        const { baseUrl } = await testServers.createHTTPServer(serverName, {
+          disableStreamableHttp: transport === "sse",
+          supportSSEFallback: transport === "sse",
+        });
+        const client = new MultiServerMCPClient({
+          mcpServers: {
+            [serverName]: {
+              transport: transport as "http" | "sse",
+              url: `${baseUrl}/${transport === "http" ? "mcp" : "sse"}`,
+            },
+          },
+        });
+
+        try {
+          const content = await client.readResource(
+            serverName,
+            "mem://test.txt"
+          );
+          expect(Array.isArray(content)).toBe(true);
+          expect(content.length).toBeGreaterThan(0);
+          expect(content[0].uri).toBe("mem://test.txt");
+          expect(content[0].mimeType).toBe("text/plain");
+          expect(content[0].text).toBe("This is a test resource content.");
+        } finally {
+          await client.close();
+        }
+      }
+    );
+
+    it.each(["http", "sse"] as const)(
+      "should handle reading non-existent resource (%s)",
+      async (transport) => {
+        const serverName = `read-resource-error-test-${transport}`;
+        const { baseUrl } = await testServers.createHTTPServer(serverName, {
+          disableStreamableHttp: transport === "sse",
+          supportSSEFallback: transport === "sse",
+        });
+        const client = new MultiServerMCPClient({
+          mcpServers: {
+            [serverName]: {
+              transport: transport as "http" | "sse",
+              url: `${baseUrl}/${transport === "http" ? "mcp" : "sse"}`,
+            },
+          },
+        });
+
+        try {
+          await expect(
+            client.readResource(serverName, "mem://nonexistent.txt")
+          ).rejects.toThrow();
+        } finally {
+          await client.close();
+        }
+      }
+    );
+  });
+
+  describe("Structured Content and Meta", () => {
+    it.each(["http", "sse"] as const)(
+      "should parse structuredContent and _meta from tool result (%s)",
+      async (transport) => {
+        const serverName = `structured-test-${transport}`;
+        const { baseUrl } = await testServers.createHTTPServer(serverName, {
+          disableStreamableHttp: transport === "sse",
+          supportSSEFallback: transport === "sse",
+        });
+        const client = new MultiServerMCPClient({
+          mcpServers: {
+            [serverName]: {
+              transport: transport as "http" | "sse",
+              url: `${baseUrl}/${transport === "http" ? "mcp" : "sse"}`,
+            },
+          },
+        });
+
+        try {
+          const tools = await client.getTools();
+          const structuredTool = tools.find((t: { name: string }) =>
+            t.name.includes("structured_tool")
+          );
+          expect(structuredTool).toBeDefined();
+
+          const result = await structuredTool!.invoke({ input: "test input" });
+          expect(result).toBeDefined();
+
+          // Check if structuredContent and meta are accessible
+          // The result should be a string or content blocks
+          if (typeof result === "string") {
+            expect(result).toContain("test input");
+          } else if (Array.isArray(result)) {
+            // If it's an array, check for structured content in artifacts
+            expect(result.length).toBeGreaterThan(0);
+          }
         } finally {
           await client.close();
         }
