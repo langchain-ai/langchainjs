@@ -152,6 +152,11 @@ export class MultiServerMCPClient {
   #onConnectionError: "throw" | "ignore";
 
   /**
+   * Set of server names that have failed to connect (when onConnectionError is "ignore")
+   */
+  #failedServers: Set<string> = new Set();
+
+  /**
    * Returns clone of server config for inspection purposes.
    *
    * Client does not support config modifications.
@@ -239,16 +244,28 @@ export class MultiServerMCPClient {
     }
 
     for (const [serverName, connection] of Object.entries(this.#mcpServers)) {
+      // Skip servers that have already failed (when onConnectionError is "ignore")
+      if (
+        this.#onConnectionError === "ignore" &&
+        this.#failedServers.has(serverName)
+      ) {
+        continue;
+      }
+
       try {
         await this._initializeConnection(
           serverName,
           connection,
           customTransportOptions
         );
+        // If we successfully initialized, remove from failed set (in case it was there before)
+        this.#failedServers.delete(serverName);
       } catch (error) {
         if (this.#onConnectionError === "throw") {
           throw error;
         }
+        // Mark this server as failed so we don't try again
+        this.#failedServers.add(serverName);
         debugLog(
           `WARN: Failed to initialize connection to server "${serverName}": ${String(error)}`
         );
@@ -588,6 +605,7 @@ export class MultiServerMCPClient {
   async close(): Promise<void> {
     debugLog(`INFO: Closing all MCP connections...`);
     this.#serverNameToTools = {};
+    this.#failedServers.clear();
     await this.#clientConnections.delete();
     debugLog(`INFO: All MCP connections closed`);
   }

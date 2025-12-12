@@ -627,7 +627,7 @@ describe("MultiServerMCPClient", () => {
         mcpServers: {
           "failing-server": {
             transport: "http",
-            url: "http://localhost:8000/mcp",
+            url: "http://localhost:8123/mcp",
           },
           "working-server": {
             transport: "http",
