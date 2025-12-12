@@ -101,6 +101,15 @@ export interface RunnableConfig<
   timeout?: number;
 
   /**
+   * Streaming inactivity timeout in milliseconds.
+   * If no new chunk is received within this time period during streaming,
+   * the stream will be aborted. Unlike `timeout` which applies to the total
+   * request time, `streamTimeout` only triggers if the stream becomes inactive.
+   * The timer resets each time a new chunk is received.
+   */
+  streamTimeout?: number;
+
+  /**
    * Abort signal for this call.
    * If provided, the call will be aborted when the signal is aborted.
    * @see https://developer.mozilla.org/en-US/docs/Web/API/AbortSignal

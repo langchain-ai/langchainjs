@@ -199,6 +199,28 @@ export class AsyncGeneratorWithSetup<
 
   private firstResultUsed = false;
 
+  /**
+   * Streaming inactivity timeout in milliseconds.
+   * If set, the stream will be aborted if no new chunk is received within this time period.
+   */
+  private streamTimeoutMs?: number;
+
+  /**
+   * AbortController for the stream timeout.
+   * This is used to abort the stream when the inactivity timeout expires.
+   */
+  private streamTimeoutController?: AbortController;
+
+  /**
+   * Current timeout ID for the stream inactivity timeout.
+   */
+  private streamTimeoutId?: ReturnType<typeof setTimeout>;
+
+  /**
+   * Combined signal that includes both the original signal and the stream timeout signal.
+   */
+  private combinedSignal?: AbortSignal;
+
   constructor(params: {
     generator: AsyncGenerator<T>;
     startSetup?: () => Promise<S>;
@@ -209,6 +231,37 @@ export class AsyncGeneratorWithSetup<
     this.config = params.config;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     this.signal = params.signal ?? (this.config as any)?.signal;
+
+    // Extract streamTimeoutMs from config metadata
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const configAny = this.config as any;
+    this.streamTimeoutMs = configAny?.metadata?.streamTimeoutMs;
+
+    // If streamTimeout is set, create an AbortController for it
+    if (this.streamTimeoutMs !== undefined && this.streamTimeoutMs > 0) {
+      this.streamTimeoutController = new AbortController();
+      // Combine with existing signal if present
+      if (this.signal) {
+        if ("any" in AbortSignal) {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          this.combinedSignal = (AbortSignal as any).any([
+            this.signal,
+            this.streamTimeoutController.signal,
+          ]);
+        } else {
+          // Fallback for older Node versions - just use stream timeout signal
+          // and manually check original signal
+          this.combinedSignal = this.streamTimeoutController.signal;
+        }
+      } else {
+        this.combinedSignal = this.streamTimeoutController.signal;
+      }
+      // Start the initial timeout
+      this._resetStreamTimeout();
+    } else {
+      this.combinedSignal = this.signal;
+    }
+
     // setup is a promise that resolves only after the first iterator value
     // is available. this is useful when setup of several piped generators
     // needs to happen in logical order, ie. in the order in which input to
@@ -232,36 +285,97 @@ export class AsyncGeneratorWithSetup<
     });
   }
 
+  /**
+   * Reset the stream inactivity timeout.
+   * This should be called each time a new chunk is received.
+   */
+  private _resetStreamTimeout(): void {
+    if (this.streamTimeoutMs === undefined || !this.streamTimeoutController) {
+      return;
+    }
+    // Clear existing timeout
+    if (this.streamTimeoutId !== undefined) {
+      clearTimeout(this.streamTimeoutId);
+    }
+    // Set new timeout
+    this.streamTimeoutId = setTimeout(() => {
+      this.streamTimeoutController?.abort(
+        new Error(
+          `Stream timeout: No chunks received for ${this.streamTimeoutMs}ms`
+        )
+      );
+    }, this.streamTimeoutMs);
+  }
+
+  /**
+   * Clear the stream inactivity timeout.
+   * This should be called when the stream completes or is aborted.
+   */
+  private _clearStreamTimeout(): void {
+    if (this.streamTimeoutId !== undefined) {
+      clearTimeout(this.streamTimeoutId);
+      this.streamTimeoutId = undefined;
+    }
+  }
+
   async next(...args: [] | [TNext]): Promise<IteratorResult<T>> {
+    // Check the combined signal (includes stream timeout)
+    this.combinedSignal?.throwIfAborted();
+    // Also check original signal for fallback in older Node versions
     this.signal?.throwIfAborted();
 
     if (!this.firstResultUsed) {
       this.firstResultUsed = true;
-      return this.firstResult;
+      const result = await this.firstResult;
+      if (!result.done) {
+        // Reset the stream timeout on successful chunk
+        this._resetStreamTimeout();
+      } else {
+        // Clear timeout when stream is done
+        this._clearStreamTimeout();
+      }
+      return result;
     }
 
-    return AsyncLocalStorageProviderSingleton.runWithConfig(
+    const effectiveSignal = this.combinedSignal ?? this.signal;
+
+    const result = await AsyncLocalStorageProviderSingleton.runWithConfig(
       pickRunnableConfigKeys(
         this.config as Record<string, unknown> | undefined
       ),
-      this.signal
+      effectiveSignal
         ? async () => {
-            return raceWithSignal(this.generator.next(...args), this.signal);
+            return raceWithSignal(
+              this.generator.next(...args),
+              effectiveSignal
+            );
           }
         : async () => {
             return this.generator.next(...args);
           },
       true
     );
+
+    if (!result.done) {
+      // Reset the stream timeout on successful chunk
+      this._resetStreamTimeout();
+    } else {
+      // Clear timeout when stream is done
+      this._clearStreamTimeout();
+    }
+
+    return result;
   }
 
   async return(
     value?: TReturn | PromiseLike<TReturn>
   ): Promise<IteratorResult<T>> {
+    this._clearStreamTimeout();
     return this.generator.return(value);
   }
 
   async throw(e: Error): Promise<IteratorResult<T>> {
+    this._clearStreamTimeout();
     return this.generator.throw(e);
   }
 
