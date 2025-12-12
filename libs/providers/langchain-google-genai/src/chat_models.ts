@@ -185,6 +185,11 @@ export interface GoogleGenerativeAIChatInput
    */
   baseUrl?: string;
 
+  /**
+   * Google API custom headers to use
+   */
+  customHeaders?: Record<string, string>;
+
   /** Whether to stream the results or not */
   streaming?: boolean;
 
@@ -727,6 +732,7 @@ export class ChatGoogleGenerativeAI
       {
         apiVersion: fields.apiVersion,
         baseUrl: fields.baseUrl,
+        customHeaders: fields.customHeaders,
       }
     );
     this.streamUsage = fields.streamUsage ?? this.streamUsage;
