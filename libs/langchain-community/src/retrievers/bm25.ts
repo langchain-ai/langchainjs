@@ -50,7 +50,7 @@ export class BM25Retriever extends BaseRetriever {
     const scoredDocs = BM25<Document>(
       this.docs.map((d) => ({
         text: d.pageContent,
-        docs: d,
+        document: d,
       })),
       processedQuery,
       undefined,
@@ -60,15 +60,15 @@ export class BM25Retriever extends BaseRetriever {
     return scoredDocs.slice(0, this.k).map((item) => {
       if (this.includeScore) {
         return new Document({
-          ...(item.docs.id && { id: item.docs.id }),
-          pageContent: item.docs.pageContent,
+          ...(item.document.id && { id: item.document.id }),
+          pageContent: item.document.pageContent,
           metadata: {
             bm25Score: item.score,
-            ...item.docs.metadata,
+            ...item.document.metadata,
           },
         });
       } else {
-        return item.docs;
+        return item.document;
       }
     });
   }
