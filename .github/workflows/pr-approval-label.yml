@@ -11,8 +11,12 @@ permissions:
 jobs:
   add-ready-label:
     runs-on: ubuntu-latest
-    # Only run when an org member approves
-    if: github.event.review.state == 'approved' && github.event.review.author_association == 'MEMBER'
+    # Only run when an org member approves and PR is not from a fork
+    # (fork PRs don't have write permissions to add labels)
+    if: |
+      github.event.review.state == 'approved' &&
+      github.event.review.author_association == 'MEMBER' &&
+      github.event.pull_request.head.repo.full_name == github.repository
     steps:
       - name: Add ready label
         uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
