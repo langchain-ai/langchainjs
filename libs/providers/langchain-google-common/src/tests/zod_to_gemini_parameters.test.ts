@@ -42,7 +42,10 @@ describe("schemaToGeminiParameters - edge cases", () => {
     // Check that it's converted to number type with minimum constraint
     expect(result.properties?.amount?.type).toBe("number");
     // Check that exclusiveMinimum: 0 is converted to minimum: 0.01
+    // TODO: infer proper types for GeminiFunctionSchema
+    // @ts-expect-error GeminiFunctionSchema is poorly typed
     expect(result.properties?.amount?.minimum).toBe(0.01);
+    // @ts-expect-error GeminiFunctionSchema is poorly typed
     expect(result.properties?.amount?.exclusiveMinimum).toBeUndefined();
   });
 
