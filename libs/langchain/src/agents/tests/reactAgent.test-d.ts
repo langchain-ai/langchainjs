@@ -14,13 +14,11 @@ describe("reactAgent", () => {
         name: "fake",
       });
     };
-    expect(() =>
-      createAgent({
-        model: "openai:gpt-4",
-        // @ts-expect-error fakeMiddleware is a function -> should be an instance of AgentMiddleware
-        middleware: [fakeMiddleware],
-      })
-    ).toThrow("Middleware must be an instance of AgentMiddleware");
+    createAgent({
+      model: "openai:gpt-4",
+      // @ts-expect-error fakeMiddleware is a function -> should be an instance of AgentMiddleware
+      middleware: [fakeMiddleware],
+    });
   });
 
   it("should require model as only required property", async () => {

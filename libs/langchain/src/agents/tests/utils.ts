@@ -33,6 +33,24 @@ import {
 import { LanguageModelLike } from "@langchain/core/language_models/base";
 import { z } from "zod/v3";
 
+/**
+ * Custom asymmetric matcher that matches any string value.
+ * Works with both Jest and Vitest's toEqual() assertions.
+ */
+class AnyString {
+  asymmetricMatch(other: unknown): boolean {
+    return typeof other === "string";
+  }
+
+  toString(): string {
+    return "Any<String>";
+  }
+
+  toAsymmetricMatcher(): string {
+    return "Any<String>";
+  }
+}
+
 export class _AnyIdAIMessage extends AIMessage {
   get lc_id() {
     return ["langchain_core", "messages", "AIMessage"];
@@ -40,7 +58,7 @@ export class _AnyIdAIMessage extends AIMessage {
 
   constructor(fields: AIMessageFields | string) {
     let fieldsWithJestMatcher: Partial<AIMessageFields> = {
-      id: expect.any(String) as unknown as string,
+      id: new AnyString() as unknown as string,
     };
     if (typeof fields === "string") {
       fieldsWithJestMatcher = {
@@ -64,7 +82,7 @@ export class _AnyIdHumanMessage extends HumanMessage {
 
   constructor(fields: BaseMessageFields | string) {
     let fieldsWithJestMatcher: Partial<BaseMessageFields> = {
-      id: expect.any(String) as unknown as string,
+      id: new AnyString() as unknown as string,
     };
     if (typeof fields === "string") {
       fieldsWithJestMatcher = {
@@ -88,7 +106,7 @@ export class _AnyIdToolMessage extends ToolMessage {
 
   constructor(fields: ToolMessageFields) {
     const fieldsWithJestMatcher: Partial<ToolMessageFields> = {
-      id: expect.any(String) as unknown as string,
+      id: new AnyString() as unknown as string,
       ...fields,
     };
     super(fieldsWithJestMatcher as ToolMessageFields);
