@@ -312,7 +312,7 @@ describe("Prisma", () => {
     expect($executeRaw).toHaveBeenCalledTimes(2);
   });
 
-  test("addDocuments uses addDocumentsWithVectors instead of addVectors", async () => {
+  test("addDocuments uses addVectors by default (backward compatibility)", async () => {
     const embeddings = new FakeEmbeddings();
     const store = new PrismaVectorStore(embeddings, {
       db: mockPrismaClient,
@@ -320,6 +320,38 @@ describe("Prisma", () => {
       tableName: "test",
       vectorColumnName: "vector",
       columns: mockColumns,
+    });
+
+    const documents = [
+      new Document({
+        pageContent: "test content",
+        metadata: { id: "doc1" },
+      }),
+    ];
+
+    // Spy on both methods
+    const addDocumentsWithVectorsSpy = jest
+      .spyOn(store, "addDocumentsWithVectors")
+      .mockResolvedValue();
+    const addVectorsSpy = jest.spyOn(store, "addVectors").mockResolvedValue();
+
+    await store.addDocuments(documents);
+
+    // Verify addVectors was called (default behavior)
+    expect(addVectorsSpy).toHaveBeenCalledTimes(1);
+    // Verify addDocumentsWithVectors was NOT called
+    expect(addDocumentsWithVectorsSpy).not.toHaveBeenCalled();
+  });
+
+  test("addDocuments uses addDocumentsWithVectors when useInsert is true", async () => {
+    const embeddings = new FakeEmbeddings();
+    const store = new PrismaVectorStore(embeddings, {
+      db: mockPrismaClient,
+      prisma: mockPrismaNamespace,
+      tableName: "test",
+      vectorColumnName: "vector",
+      columns: mockColumns,
+      useInsert: true,
     });
 
     const documents = [

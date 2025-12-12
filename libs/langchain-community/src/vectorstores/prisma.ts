@@ -138,6 +138,13 @@ export class PrismaVectorStore<
 
   protected columnTypes?: ColumnTypeConfig;
 
+  /**
+   * When true, addDocuments uses INSERT statements to create new records.
+   * When false (default), addDocuments uses UPDATE statements to update existing records by ID.
+   * Set to true when using with ParentDocumentRetriever or when documents don't pre-exist in the database.
+   */
+  protected useInsert: boolean;
+
   static IdColumn: typeof IdColumnSymbol = IdColumnSymbol;
 
   static ContentColumn: typeof ContentColumnSymbol = ContentColumnSymbol;
@@ -160,6 +167,12 @@ export class PrismaVectorStore<
       columns: TSelectModel;
       filter?: TFilterModel;
       columnTypes?: ColumnTypeConfig;
+      /**
+       * When true, addDocuments uses INSERT statements to create new records.
+       * When false (default), addDocuments uses UPDATE statements to update existing records by ID.
+       * Set to true when using with ParentDocumentRetriever or when documents don't pre-exist in the database.
+       */
+      useInsert?: boolean;
     }
   ) {
     super(embeddings, {});
@@ -182,6 +195,7 @@ export class PrismaVectorStore<
     this.tableName = config.tableName;
     this.vectorColumnName = config.vectorColumnName;
     this.columnTypes = config.columnTypes;
+    this.useInsert = config.useInsert ?? false;
 
     this.selectColumns = entries
       .map(([key, alias]) => (alias && key) || null)
@@ -211,6 +225,7 @@ export class PrismaVectorStore<
         columns: TColumns;
         filter?: TFilters;
         columnTypes?: ColumnTypeConfig;
+        useInsert?: boolean;
       }
     ) {
       type ModelName = keyof TPrisma["ModelName"] & string;
@@ -233,6 +248,7 @@ export class PrismaVectorStore<
         vectorColumnName: string;
         columns: TColumns;
         columnTypes?: ColumnTypeConfig;
+        useInsert?: boolean;
       }
     ) {
       const docs: Document[] = [];
@@ -264,6 +280,7 @@ export class PrismaVectorStore<
         vectorColumnName: string;
         columns: TColumns;
         columnTypes?: ColumnTypeConfig;
+        useInsert?: boolean;
       }
     ) {
       type ModelName = keyof TPrisma["ModelName"] & string;
@@ -303,10 +320,12 @@ export class PrismaVectorStore<
    */
   async addDocuments(documents: Document<TModel>[]) {
     const texts = documents.map(({ pageContent }) => pageContent);
-    return this.addDocumentsWithVectors(
-      await this.embeddings.embedDocuments(texts),
-      documents
-    );
+    const vectors = await this.embeddings.embedDocuments(texts);
+
+    if (this.useInsert) {
+      return this.addDocumentsWithVectors(vectors, documents);
+    }
+    return this.addVectors(vectors, documents);
   }
 
   /**
@@ -624,6 +643,7 @@ export class PrismaVectorStore<
       vectorColumnName: string;
       columns: ModelColumns<Record<string, unknown>>;
       columnTypes?: ColumnTypeConfig;
+      useInsert?: boolean;
     }
   ): Promise<DefaultPrismaVectorStore> {
     const docs: Document[] = [];
@@ -656,6 +676,7 @@ export class PrismaVectorStore<
       vectorColumnName: string;
       columns: ModelColumns<Record<string, unknown>>;
       columnTypes?: ColumnTypeConfig;
+      useInsert?: boolean;
     }
   ): Promise<DefaultPrismaVectorStore> {
     const instance = new PrismaVectorStore(embeddings, dbConfig);
