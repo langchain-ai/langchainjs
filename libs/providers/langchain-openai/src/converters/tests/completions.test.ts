@@ -1,9 +1,11 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { describe, it, expect } from "vitest";
 import { ChatCompletionMessage } from "openai/resources";
+import { AIMessage } from "@langchain/core/messages";
 import {
   completionsApiContentBlockConverter,
   convertCompletionsMessageToBaseMessage,
+  convertMessagesToCompletionsMessageParams,
   convertStandardContentBlockToCompletionsContentPart,
 } from "../completions.js";
 
@@ -189,6 +191,102 @@ describe("convertCompletionsMessageToBaseMessage", () => {
         file: {
           file_data: "data:application/pdf;base64,iVBORw0KGgoAAAANSUhEUgAAAAE",
           filename: "cat.pdf",
+        },
+      });
+    });
+  });
+
+  describe("convertMessagesToCompletionsMessageParams", () => {
+    it("should preserve AIMessage content when tool_calls are present", () => {
+      const message = new AIMessage({
+        content:
+          "I'll check the status of item 730 for identifier X1110 to find out why it's not active.",
+        tool_calls: [
+          {
+            id: "call_zGKlzVl2Ee3Lyob4AsyqfGXb",
+            name: "getStatus",
+            args: { identifier: "X1110", itemId: "730" },
+          },
+        ],
+      });
+
+      const result = convertMessagesToCompletionsMessageParams({
+        messages: [message],
+      });
+
+      expect(result).toHaveLength(1);
+      expect(result[0]).toEqual({
+        role: "assistant",
+        content:
+          "I'll check the status of item 730 for identifier X1110 to find out why it's not active.",
+        tool_calls: [
+          {
+            id: "call_zGKlzVl2Ee3Lyob4AsyqfGXb",
+            type: "function",
+            function: {
+              name: "getStatus",
+              arguments: '{"identifier":"X1110","itemId":"730"}',
+            },
+          },
+        ],
+      });
+    });
+
+    it("should handle AIMessage with empty content and tool_calls", () => {
+      const message = new AIMessage({
+        content: "",
+        tool_calls: [
+          {
+            id: "call_123",
+            name: "someFunction",
+            args: { key: "value" },
+          },
+        ],
+      });
+
+      const result = convertMessagesToCompletionsMessageParams({
+        messages: [message],
+      });
+
+      expect(result).toHaveLength(1);
+      expect(result[0]).toEqual({
+        role: "assistant",
+        content: "",
+        tool_calls: [
+          {
+            id: "call_123",
+            type: "function",
+            function: {
+              name: "someFunction",
+              arguments: '{"key":"value"}',
+            },
+          },
+        ],
+      });
+    });
+
+    it("should preserve content with function_call in additional_kwargs", () => {
+      const message = new AIMessage({
+        content: "Let me call a function for you.",
+        additional_kwargs: {
+          function_call: {
+            name: "myFunction",
+            arguments: '{"arg":"value"}',
+          },
+        },
+      });
+
+      const result = convertMessagesToCompletionsMessageParams({
+        messages: [message],
+      });
+
+      expect(result).toHaveLength(1);
+      expect(result[0]).toEqual({
+        role: "assistant",
+        content: "Let me call a function for you.",
+        function_call: {
+          name: "myFunction",
+          arguments: '{"arg":"value"}',
         },
       });
     });
