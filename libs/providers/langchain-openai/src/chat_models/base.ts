@@ -1,4 +1,4 @@
-import { type ClientOptions, OpenAI as OpenAIClient } from "openai";
+import OpenAI, { type ClientOptions, OpenAI as OpenAIClient } from "openai";
 import { AIMessageChunk, type BaseMessage } from "@langchain/core/messages";
 import { type ChatGeneration } from "@langchain/core/outputs";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
@@ -66,6 +66,7 @@ import {
   _convertOpenAIResponsesUsageToLangChainUsage,
 } from "../utils/output.js";
 import { isReasoningModel, messageToOpenAIRole } from "../utils/misc.js";
+import { wrapOpenAIClientError } from "../utils/client.js";
 import PROFILES from "./profiles.js";
 
 interface OpenAILLMOutput {
@@ -812,6 +813,72 @@ export abstract class BaseChatOpenAI<
     }
 
     return tokens;
+  }
+
+  /**
+   * Moderate content using OpenAI's Moderation API.
+   *
+   * This method checks whether content violates OpenAI's content policy by
+   * analyzing text for categories such as hate, harassment, self-harm,
+   * sexual content, violence, and more.
+   *
+   * @param input - The text or array of texts to moderate
+   * @param params - Optional parameters for the moderation request
+   * @param params.model - The moderation model to use. Defaults to "omni-moderation-latest".
+   * @param params.options - Additional options to pass to the underlying request
+   * @returns A promise that resolves to the moderation response containing results for each input
+   *
+   * @example
+   * ```typescript
+   * const model = new ChatOpenAI({ model: "gpt-4o-mini" });
+   *
+   * // Moderate a single text
+   * const result = await model.moderateContent("This is a test message");
+   * console.log(result.results[0].flagged); // false
+   * console.log(result.results[0].categories); // { hate: false, harassment: false, ... }
+   *
+   * // Moderate multiple texts
+   * const results = await model.moderateContent([
+   *   "Hello, how are you?",
+   *   "This is inappropriate content"
+   * ]);
+   * results.results.forEach((result, index) => {
+   *   console.log(`Text ${index + 1} flagged:`, result.flagged);
+   * });
+   *
+   * // Use a specific moderation model
+   * const stableResult = await model.moderateContent(
+   *   "Test content",
+   *   { model: "omni-moderation-latest" }
+   * );
+   * ```
+   */
+  async moderateContent(
+    input: string | string[],
+    params?: {
+      model?: OpenAI.ModerationModel;
+      options?: OpenAICoreRequestOptions;
+    }
+  ): Promise<OpenAIClient.ModerationCreateResponse> {
+    const clientOptions = this._getClientOptions(params?.options);
+    const moderationModel = params?.model ?? "omni-moderation-latest";
+    const moderationRequest: OpenAIClient.ModerationCreateParams = {
+      input,
+      model: moderationModel,
+    };
+
+    return this.caller.call(async () => {
+      try {
+        const response = await this.client.moderations.create(
+          moderationRequest,
+          clientOptions
+        );
+        return response;
+      } catch (e) {
+        const error = wrapOpenAIClientError(e);
+        throw error;
+      }
+    });
   }
 
   /**
