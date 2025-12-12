@@ -4,6 +4,7 @@ import { ChatResult } from "@langchain/core/outputs";
 import {
   GoogleCalendarCreateTool,
   GoogleCalendarViewTool,
+  GoogleCalendarDeleteTool,
 } from "../google_calendar/index.js";
 
 jest.mock("googleapis", () => ({
@@ -17,14 +18,6 @@ jest.mock("googleapis", () => ({
 jest.mock("@langchain/core/utils/env", () => ({
   getEnvironmentVariable: () => "key",
 }));
-
-// jest.mock("../google_calendar/commands/run-create-events.js", () => ({
-//   runCreateEvent: jest.fn(),
-// }));
-
-// jest.mock("../google_calendar/commands/run-view-events.js", () => ({
-//   runViewEvents: jest.fn(),
-// }));
 
 class FakeLLM extends BaseChatModel {
   _llmType() {
@@ -144,6 +137,56 @@ describe("GoogleCalendarViewTool", () => {
       },
     };
     expect(() => new GoogleCalendarViewTool(params)).toThrow(
+      "Missing llm instance to interact with Google Calendar"
+    );
+  });
+});
+
+describe("GoogleCalendarDeleteTool", () => {
+  it("should be setup with correct parameters", async () => {
+    const params = {
+      credentials: {
+        clientEmail: "test@email.com",
+        privateKey: "privateKey",
+        calendarId: "calendarId",
+      },
+      model: new FakeLLM({}),
+    };
+
+    const instance = new GoogleCalendarDeleteTool(params);
+    expect(instance.name).toBe("google_calendar_delete");
+  });
+
+  it("should be setup with accessToken", async () => {
+    const params = {
+      credentials: {
+        accessToken: "accessToken",
+        calendarId: "calendarId",
+      },
+      model: new FakeLLM({}),
+    };
+
+    const instance = new GoogleCalendarDeleteTool(params);
+    expect(instance.name).toBe("google_calendar_delete");
+  });
+
+  it("should throw an error if missing credentials", async () => {
+    const params = {
+      credentials: {},
+      model: new FakeLLM({}),
+    };
+    expect(() => new GoogleCalendarDeleteTool(params)).toThrow(
+      "Missing GOOGLE_CALENDAR_CLIENT_EMAIL to interact with Google Calendar"
+    );
+  });
+
+  it("should throw an error if missing model", async () => {
+    const params = {
+      credentials: {
+        clientEmail: "test",
+      },
+    };
+    expect(() => new GoogleCalendarDeleteTool(params)).toThrow(
       "Missing llm instance to interact with Google Calendar"
     );
   });
