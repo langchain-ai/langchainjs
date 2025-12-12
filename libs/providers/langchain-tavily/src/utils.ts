@@ -542,6 +542,112 @@ export type TavilySearchResponse =
   | TavilySearchResponseWithSimpleImages;
 
 /**
+ * The parameters for the Tavily Research API.
+ */
+export type TavilyResearchParams = {
+  /**
+   * The research task or question to investigate.
+   */
+  input: string;
+  /**
+   * The research model to use. `mini` provides a quick overview,
+   * `pro` conducts comprehensive research with multiple searches, and `auto`
+   * automatically determines the appropriate model based on the task.
+   *
+   * @default "auto"
+   */
+  model?: "mini" | "pro" | "auto";
+  /**
+   * A JSON Schema object that defines the structure of the research output.
+   * When provided, the response will be structured according to this schema.
+   */
+  outputSchema?: Record<string, unknown>;
+  /**
+   * Whether to stream the research results as they are generated.
+   * When `true`, returns a Server-Sent Events (SSE) stream.
+   *
+   * @default false
+   */
+  stream?: boolean;
+  /**
+   * Citation style for the research results.
+   *
+   * @default "numbered"
+   */
+  citationFormat?: "numbered" | "mla" | "apa" | "chicago";
+};
+
+/**
+ * The queued response from creating a research task (POST /research).
+ */
+export type TavilyResearchQueueResponse = {
+  /**
+   * Unique identifier for the research request.
+   */
+  request_id: string;
+  /**
+   * Timestamp when the research request was created.
+   */
+  created_at: string;
+  /**
+   * Status of the research request (initially "pending").
+   */
+  status: "pending" | "in_progress";
+  /**
+   * The research task input.
+   */
+  input: string;
+  /**
+   * The research model used.
+   */
+  model: string;
+  /**
+   * Response time for the queue operation.
+   */
+  response_time?: number;
+} & Record<string, unknown>;
+
+/**
+ * The response from the Tavily Research API (GET /research/{request_id}).
+ */
+export type TavilyGetResearchResponse = {
+  /**
+   * Unique identifier for the research request.
+   */
+  request_id: string;
+  /**
+   * Timestamp when the research request was created.
+   */
+  created_at: string;
+  /**
+   * Timestamp when the research was completed.
+   */
+  completed_at: string;
+  /**
+   * Status of the research request.
+   */
+  status: "completed" | "pending" | "in_progress" | "failed";
+  /**
+   * The research content. Can be a string (for text responses) or a dict (for structured output).
+   */
+  content: string | Record<string, unknown>;
+  /**
+   * List of sources used in the research.
+   */
+  sources: Array<Record<string, unknown>>;
+
+  /**
+   * The response time of the research request.
+   */
+  response_time: number;
+} & Record<string, unknown>;
+
+export type TavilyGetIncompleteResearchResponse = Pick<
+  TavilyGetResearchResponse,
+  "request_id" | "status" | "response_time"
+>;
+
+/**
  * Base wrapper class with shared functionality for Tavily API wrappers.
  */
 abstract class BaseTavilyAPIWrapper {
@@ -724,6 +830,105 @@ export class TavilyMapAPIWrapper extends BaseTavilyAPIWrapper {
       method: "POST",
       headers,
       body: JSON.stringify(apiParams),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      const errorMessage = errorData.detail?.error || "Unknown error";
+      throw new Error(`Error ${response.status}: ${errorMessage}`);
+    }
+
+    return response.json();
+  }
+}
+
+/**
+ * A wrapper that encapsulates access to the Tavily Research API. Primarily used for testing.
+ */
+export class TavilyResearchAPIWrapper extends BaseTavilyAPIWrapper {
+  /**
+   * Creates a research task using the Tavily Research API.
+   * @param params The parameters for the research.
+   * @returns The queued response with request_id, or an async generator if streaming.
+   */
+  async rawResults(
+    params: TavilyResearchParams
+  ): Promise<
+    TavilyResearchQueueResponse | AsyncGenerator<Buffer, void, unknown>
+  > {
+    const headers = {
+      Authorization: `Bearer ${this.tavilyApiKey}`,
+      "Content-Type": "application/json",
+    };
+
+    const apiParams = this.convertCamelToSnakeCase(params);
+
+    if (params.stream) {
+      const response = await fetch(`${this.apiBaseUrl}/research`, {
+        method: "POST",
+        headers,
+        body: JSON.stringify(apiParams),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        const errorMessage = errorData.detail?.error || "Unknown error";
+        throw new Error(`Error ${response.status}: ${errorMessage}`);
+      }
+
+      // Return async generator for streaming
+      async function* streamGenerator(): AsyncGenerator<Buffer, void, unknown> {
+        if (!response.body) {
+          throw new Error("Response body is null");
+        }
+
+        const reader = response.body.getReader();
+        try {
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done) {
+              break;
+            }
+            if (value) {
+              yield Buffer.from(value);
+            }
+          }
+        } finally {
+          reader.releaseLock();
+        }
+      }
+
+      return streamGenerator();
+    } else {
+      const response = await fetch(`${this.apiBaseUrl}/research`, {
+        method: "POST",
+        headers,
+        body: JSON.stringify(apiParams),
+      });
+      if (!response.ok) {
+        const errorData = await response.json();
+        const errorMessage = errorData.detail?.error || "Unknown error";
+        throw new Error(`Error ${response.status}: ${errorMessage}`);
+      }
+
+      return response.json();
+    }
+  }
+
+  /**
+   * Gets research results by request_id.
+   * @param requestId The request ID from the queued research task.
+   * @returns The research results.
+   */
+  async getResearch(requestId: string): Promise<TavilyGetResearchResponse> {
+    const headers = {
+      Authorization: `Bearer ${this.tavilyApiKey}`,
+      "Content-Type": "application/json",
+    };
+
+    const response = await fetch(`${this.apiBaseUrl}/research/${requestId}`, {
+      method: "GET",
+      headers,
     });
 
     if (!response.ok) {
