@@ -259,7 +259,7 @@ export class WatsonxLLM<
       "stopSequence",
       "topK",
       "repetitionPenalty",
-      "truncateInpuTokens",
+      "truncateInputTokens",
       "returnOptions",
       "includeStopSequence",
     ];
@@ -307,7 +307,7 @@ export class WatsonxLLM<
     this.timeLimit = fields.timeLimit;
     this.topK = fields.topK;
     this.repetitionPenalty = fields.repetitionPenalty;
-    this.truncateInpuTokens = fields.truncateInpuTokens;
+    this.truncateInputTokens = fields.truncateInputTokens;
     this.returnOptions = fields.returnOptions;
     this.includeStopSequence = fields.includeStopSequence;
 
