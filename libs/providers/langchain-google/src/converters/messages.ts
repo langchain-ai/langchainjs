@@ -10,7 +10,7 @@ import {
   ChatMessage,
   StandardContentBlockConverter,
   convertToProviderContentBlock,
-  type Data,
+  type Data, UsageMetadata, InputTokenDetails, OutputTokenDetails, ModalitiesTokenDetails,
 } from "@langchain/core/messages";
 import { Converter } from "@langchain/core/utils/format";
 import {
@@ -19,6 +19,11 @@ import {
   GeminiPart,
   GeminiCandidate,
   GeminiRole,
+  GenerateContentResponse,
+  GeminiUsageMetadata,
+  GeminiModalityTokenCount,
+  GeminiGroundingSupport,
+  GeminiPartFunctionCall,
 } from "../chat_models/types.js";
 import { iife } from "../utils/misc.js";
 import { ToolCallNotFoundError } from "../utils/errors.js";
@@ -273,6 +278,8 @@ export const geminiContentBlockConverter: StandardContentBlockConverter<{
 /**
  * Converts a single LangChain message with standard content blocks (v1 format) to Gemini Content.
  * This handles messages that have `response_metadata.output_version === "v1"`.
+ *
+ * This is intended to be called from `convertMessagesToGeminiContent`
  */
 function convertStandardContentMessageToGeminiContent(
   message: BaseMessage
@@ -345,6 +352,127 @@ function convertStandardContentMessageToGeminiContent(
 }
 
 /**
+ * Converts a single LangChain message with legacy content blocks (v0 format) to Gemini Content.
+ * This handles messages that have `response_metadata.output_version === "v0"`.
+ *
+ * This is intended to be called from `convertMessagesToGeminiContent`
+ */
+function convertLegacyContentMessageToGeminiContent(
+  message: BaseMessage,
+  messages: BaseMessage[],
+): GeminiContent | null {
+  // Skip system messages - they're handled separately
+  if (SystemMessage.isInstance(message)) {
+    return null;
+  }
+
+  const role: GeminiRole = iife(() => {
+    if (HumanMessage.isInstance(message)) {
+      return "user";
+    } else if (AIMessage.isInstance(message)) {
+      return "model";
+    } else if (ToolMessage.isInstance(message)) {
+      // Tool messages in Gemini are represented as function responses
+      return "function";
+    } else if (ChatMessage.isInstance(message)) {
+      // Map ChatMessage roles to Gemini roles
+      const msgRole = message.role.toLowerCase();
+      if (msgRole === "user" || msgRole === "human") {
+        return "user";
+      } else if (
+        msgRole === "assistant" ||
+        msgRole === "ai" ||
+        msgRole === "model"
+      ) {
+        return "model";
+      } else if (msgRole === "function" || msgRole === "tool") {
+        return "function";
+      } else {
+        // Default to user for unknown roles
+        return "user";
+      }
+    } else {
+      // Unknown message type - skip or default to user
+      return "user";
+    }
+  });
+
+  let parts: GeminiPart[] = [];
+
+  // Handle legacy content formats
+  if (typeof message.content === "string") {
+    // Simple string content
+    if (message.content.trim()) {
+      parts.push({ text: message.content });
+    }
+  } else if (Array.isArray(message.content)) {
+    // Array of content blocks (legacy format)
+    for (const item of message.content) {
+      if (typeof item === "string") {
+        parts.push({ text: item });
+      } else if (typeof item === "object" && item !== null) {
+        if (isDataContentBlock(item)) {
+          parts.push(
+            convertToProviderContentBlock(item, geminiContentBlockConverter)
+          );
+        } else if (item?.type === "functionCall") {
+          // Skip this - it will be added later
+        } else {
+          parts.push(item as GeminiPart);
+        }
+      }
+    }
+  }
+
+  // Handle tool calls by adding function call parts to the end of the parts array
+  if (AIMessage.isInstance(message) && message.tool_calls?.length) {
+    parts.push(
+      ...message.tool_calls.map((toolCall) => ({
+        functionCall: {
+          name: toolCall.name,
+          args: toolCall.args,
+        },
+      }))
+    );
+  }
+
+  // Handle tool messages as function responses
+  if (ToolMessage.isInstance(message) && message.tool_call_id) {
+    const responseContent =
+      typeof message.content === "string"
+        ? message.content
+        : JSON.stringify(message.content);
+    // Find the response name by checking previous messages for the tool call
+    const toolCall = messages
+      .filter(AIMessage.isInstance)
+      .find((msg) =>
+        msg.tool_calls?.find((tc) => tc.id === message.tool_call_id)
+      );
+    if (!toolCall) {
+      throw new ToolCallNotFoundError(message.tool_call_id);
+    }
+    parts.push({
+      functionResponse: {
+        name: toolCall?.name || "unknown",
+        response: { result: responseContent },
+      },
+    });
+  }
+
+  // Remove non-functionResponse parts if this is a tool response
+  if (role === "function") {
+    parts = parts.filter((part) => "functionResponse" in part);
+  }
+
+  // Only add content if we have parts
+  if (parts.length > 0) {
+    return { role, parts };
+  }
+
+  return null;
+}
+
+/**
  * Converts an array of LangChain messages to Gemini API content format.
  *
  * This converter transforms LangChain's message types into the content structure
@@ -386,116 +514,21 @@ export const convertMessagesToGeminiContents: Converter<
   const contents: GeminiContent[] = [];
 
   for (const message of messages) {
-    // Check if this is a v1 standard content message
-    if (
-      "output_version" in message.response_metadata &&
-      message.response_metadata?.output_version === "v1"
-    ) {
-      const content = convertStandardContentMessageToGeminiContent(message);
-      if (content) {
-        contents.push(content);
-      }
-      continue;
-    }
-
-    // Legacy format handling
-    // Skip system messages - they're handled separately
-    if (SystemMessage.isInstance(message)) continue;
-
-    const role: GeminiRole = iife(() => {
-      if (HumanMessage.isInstance(message)) {
-        return "user";
-      } else if (AIMessage.isInstance(message)) {
-        return "model";
-      } else if (ToolMessage.isInstance(message)) {
-        // Tool messages in Gemini are represented as function responses
-        return "function";
-      } else if (ChatMessage.isInstance(message)) {
-        // Map ChatMessage roles to Gemini roles
-        const msgRole = message.role.toLowerCase();
-        if (msgRole === "user" || msgRole === "human") {
-          return "user";
-        } else if (
-          msgRole === "assistant" ||
-          msgRole === "ai" ||
-          msgRole === "model"
-        ) {
-          return "model";
-        } else if (msgRole === "function" || msgRole === "tool") {
-          return "function";
-        } else {
-          // Default to user for unknown roles
-          return "user";
-        }
-      } else {
-        // Unknown message type - skip or default to user
-        return "user";
+    // const content: GeminiContent | null = convertContentMessageToGeminiContent(message, messages);
+    const content: GeminiContent | null = iife(() => {
+      const outputVersion = "output_version" in message.response_metadata
+        ? message.response_metadata?.output_version as string
+        : "v0";
+      switch (outputVersion) {
+        case "v1":
+          return convertStandardContentMessageToGeminiContent(message);
+        case "v0":
+        default:
+          return convertLegacyContentMessageToGeminiContent(message, messages);
       }
     });
-
-    const parts: GeminiPart[] = [];
-
-    // Handle legacy content formats
-    if (typeof message.content === "string") {
-      // Simple string content
-      if (message.content.trim()) {
-        parts.push({ text: message.content });
-      }
-    } else if (Array.isArray(message.content)) {
-      // Array of content blocks (legacy format)
-      for (const item of message.content) {
-        if (typeof item === "string") {
-          parts.push({ text: item });
-        } else if (typeof item === "object" && item !== null) {
-          if (isDataContentBlock(item)) {
-            parts.push(
-              convertToProviderContentBlock(item, geminiContentBlockConverter)
-            );
-          } else {
-            parts.push(item as GeminiPart);
-          }
-        }
-      }
-    }
-
-    // Handle tool calls by adding function call parts to the end of the parts array
-    if (AIMessage.isInstance(message) && message.tool_calls?.length) {
-      parts.push(
-        ...message.tool_calls.map((toolCall) => ({
-          functionCall: {
-            name: toolCall.name,
-            args: toolCall.args,
-          },
-        }))
-      );
-    }
-
-    // Handle tool messages as function responses
-    if (ToolMessage.isInstance(message) && message.tool_call_id) {
-      const responseContent =
-        typeof message.content === "string"
-          ? message.content
-          : JSON.stringify(message.content);
-      // Find the response name by checking previous messages for the tool call
-      const toolCall = messages
-        .filter(AIMessage.isInstance)
-        .find((msg) =>
-          msg.tool_calls?.find((tc) => tc.id === message.tool_call_id)
-        );
-      if (!toolCall) {
-        throw new ToolCallNotFoundError(message.tool_call_id);
-      }
-      parts.push({
-        functionResponse: {
-          name: toolCall?.name || "unknown",
-          response: { result: responseContent },
-        },
-      });
-    }
-
-    // Only add content if we have parts
-    if (parts.length > 0) {
-      contents.push({ role, parts });
+    if (content) {
+      contents.push(content);
     }
   }
 
@@ -562,6 +595,118 @@ export const convertMessagesToGeminiSystemInstruction: Converter<
 };
 
 /**
+ * Converts an array of Gemini API parts into an array of LangChain tool calls.
+ *
+ * This function iterates through a given array of `GeminiPart` objects,
+ * identifies parts that represent a function call, and transforms them into
+ * LangChain's standardized `ToolCall` format. Each resulting tool call is
+ * assigned a unique, sequential ID.
+ *
+ * @param parts - An array of `GeminiPart` objects, which may or may not
+ *   contain function calls.
+ * @returns An array of `ContentBlock.Tools.ToolCall` objects. If no function
+ *   call parts are found, an empty array is returned.
+ *
+ * @remarks
+ * The `id` for each tool call is generated sequentially in the format `call_0`,
+ * `call_1`, and so on, based on its order of appearance in the input array.
+ *
+ * @example
+ * ```typescript
+ * const geminiParts: GeminiPart[] = [
+ *   { text: "Thinking about what to do..." },
+ *   {
+ *     functionCall: {
+ *       name: "search_web",
+ *       args: { query: "latest AI news" }
+ *     }
+ *   },
+ *   {
+ *     functionCall: {
+ *       name: "calculator",
+ *       args: { expression: "2 + 2" }
+ *     }
+ *   }
+ * ];
+ *
+ * const toolCalls = convertGeminiPartsToToolCalls(geminiParts);
+ * // toolCalls will be:
+ * // [
+ * //   { type: "tool_call", id: "call_0", name: "search_web", args: { query: "latest AI news" } },
+ * //   { type: "tool_call", id: "call_1", name: "calculator", args: { expression: "2 + 2" } }
+ * // ]
+ * ```
+ */
+export const convertGeminiPartsToToolCalls: Converter<
+  GeminiPart[],
+  ContentBlock.Tools.ToolCall<string,Record<string, unknown>>[]
+> = (parts: GeminiPart[]): ContentBlock.Tools.ToolCall<string,Record<string, unknown>>[] => {
+  const toolCalls: ContentBlock.Tools.ToolCall<
+    string,
+    Record<string, unknown>
+  >[] = [];
+
+  for (let i = 0; i < parts.length; i++) {
+    const part = parts[i];
+    if ("functionCall" in part) {
+      const functionCallPart: GeminiPartFunctionCall = part;
+      toolCalls.push({
+        type: "tool_call",
+        id: `call_${toolCalls.length}`,
+        name: functionCallPart.functionCall.name,
+        args: functionCallPart.functionCall.args ?? {},
+      });
+    }
+  }
+
+  return toolCalls;
+}
+
+export const convertGeminiPartToContentBlock: Converter<
+  GeminiPart, 
+  ContentBlock
+> = (part: GeminiPart): ContentBlock => {
+  if ("text" in part && part.text) {
+    return {
+      type: "text",
+      text: part.text,
+    };
+  } else if ("inlineData" in part && part.inlineData) {
+    return {
+      type: "inlineData",
+      inlineData: part.inlineData,
+    };
+  } else if ("fileData" in part && part.fileData) {
+    return {
+      type: "fileData",
+      fileData: part.fileData,
+    };
+  } else if ("functionCall" in part && part.functionCall) {
+    return {
+      type: "functionCall",
+      functionCall: part.functionCall,
+    };
+  } else if ("functionResponse" in part && part.functionResponse) {
+    return {
+      type: "functionResponse",
+      functionResponse: part.functionResponse,
+    };
+  } else if ("executableCode" in part && part.executableCode) {
+    return {
+      type: "executableCode",
+      executableCode: part.executableCode,
+    };
+  } else if ("codeExecutionResult" in part && part.codeExecutionResult) {
+    return {
+      type: "codeExecutionResult",
+      codeExecutionResult: part.codeExecutionResult,
+    };
+  }
+  return part as unknown as ContentBlock;
+  
+} 
+
+/**
  * Converts a Gemini API candidate response to a LangChain AIMessage.
  *
  * This converter transforms the response from Google's Gemini API into a standardized
@@ -600,94 +745,136 @@ export const convertGeminiCandidateToAIMessage: Converter<
   GeminiCandidate,
   AIMessage
 > = (candidate) => {
+
+  function groundingSupportByPart(
+    groundingSupports?: GeminiGroundingSupport[]
+  ): GeminiGroundingSupport[][] {
+    const ret: GeminiGroundingSupport[][] = [];
+
+    if (!groundingSupports || groundingSupports.length === 0) {
+      return [];
+    }
+
+    groundingSupports?.forEach((groundingSupport) => {
+      const segment = groundingSupport?.segment;
+      const partIndex = segment?.partIndex ?? 0;
+      if (ret[partIndex]) {
+        ret[partIndex].push(groundingSupport);
+      } else {
+        ret[partIndex] = [groundingSupport];
+      }
+    });
+
+    return ret;
+  }
+
   const parts = candidate.content?.parts || [];
 
   // Extract tool calls from function call parts
-  const toolCalls: ContentBlock.Tools.ToolCall<
-    string,
-    Record<string, unknown>
-  >[] = [];
-
-  for (let i = 0; i < parts.length; i++) {
-    const part = parts[i];
-    if (part.functionCall) {
-      toolCalls.push({
-        type: "tool_call",
-        id: `call_${toolCalls.length}`,
-        name: part.functionCall.name,
-        args: part.functionCall.args,
-      });
-    }
-  }
+  const toolCalls = convertGeminiPartsToToolCalls(parts);
 
   // Convert parts to content format that the translator understands
   // Format: array of objects with type field matching the part type
   let content: string | ContentBlock[];
 
+  const groundingMetadata = candidate?.groundingMetadata;
+  const citationMetadata = candidate?.citationMetadata;
+  const groundingParts = groundingSupportByPart(
+    groundingMetadata?.groundingSupports
+  );
+
   if (parts.length === 0) {
     content = "";
-  } else if (parts.length === 1 && parts[0].text) {
-    // Single text part - store as string for simplicity
+  } else if (
+    parts.length === 1 &&
+    "text" in parts[0] &&
+    parts[0].text &&
+    !("thought" in parts[0])
+  ) {
+    console.log('parts text');
+    // Single text part that is not a thought - store as string for simplicity
     content = parts[0].text;
   } else {
     // Multiple parts - convert to array format with type fields
-    content = parts.map((p) => {
-      if ("text" in p && p.text) {
-        return {
-          type: "text",
-          text: p.text,
-        };
-      } else if ("inlineData" in p && p.inlineData) {
-        return {
-          type: "inlineData",
-          inlineData: p.inlineData,
-        };
-      } else if ("fileData" in p && p.fileData) {
-        return {
-          type: "fileData",
-          fileData: p.fileData,
-        };
-      } else if ("functionCall" in p && p.functionCall) {
-        return {
-          type: "functionCall",
-          functionCall: p.functionCall,
-        };
-      } else if ("functionResponse" in p && p.functionResponse) {
-        return {
-          type: "functionResponse",
-          functionResponse: p.functionResponse,
-        };
-      } else if ("executableCode" in p && p.executableCode) {
-        return {
-          type: "executableCode",
-          executableCode: p.executableCode,
-        };
-      } else if ("codeExecutionResult" in p && p.codeExecutionResult) {
-        return {
-          type: "codeExecutionResult",
-          codeExecutionResult: p.codeExecutionResult,
-        };
+    content = parts.map((p: GeminiPart) => {
+      const block: ContentBlock = {
+        thought: p.thought,
+        thoughtSignature: p.thoughtSignature,
+        partMetadata: p.partMetadata,
+        ...convertGeminiPartToContentBlock(p),
+      };
+
+      for (const attribute in block) {
+        if (block[attribute] === undefined) {
+          delete block[attribute];
+        }
       }
-      return p as ContentBlock;
+
+      return block;
     });
   }
+
+  // const chatGenerations = parts.map((part, index) => {
+  //   const gen = partToChatGeneration( part );
+  //   if (!gen.generationInfo) {
+  //     gen.generationInfo = {};
+  //   }
+  //   if (groundingMetadata) {
+  //     gen.generationInfo.groundingMetadata = groundingMetadata;
+  //     const groundingPart = groundingParts[index];
+  //     if (groundingPart) {
+  //       gen.generationInfo.groundingSupport = groundingPart;
+  //     }
+  //   }
+  //   if (citationMetadata) {
+  //     gen.generationInfo.citationMetadata = citationMetadata;
+  //   }
+  //   return gen;
+  // });
 
   const additional_kwargs: Record<string, unknown> = {
     finishReason: candidate.finishReason,
     finishMessage: candidate.finishMessage,
     safetyRatings: candidate.safetyRatings,
-    citationMetadata: candidate.citationMetadata,
     tokenCount: candidate.tokenCount,
+    citationMetadata: candidate.citationMetadata,
+    groundingMetadata: candidate.groundingMetadata,
+    groundingAttributions: candidate.groundingAttributions,
+    urlRetrievalMetadata: candidate.urlRetrievalMetadata,
+    urlContextMetadata: candidate.urlContextMetadata,
+    avgLogprobs: candidate.avgLogprobs,
+    logprobsResult: candidate.logprobsResult,
   };
 
   const response_metadata: Record<string, unknown> = {
     model_provider: "google",
     finish_reason: candidate.finishReason,
-    ...(candidate.safetyRatings && { safety_ratings: candidate.safetyRatings }),
-    ...(candidate.citationMetadata && {
-      citation_metadata: candidate.citationMetadata,
-    }),
+    safety_ratings: candidate.safetyRatings,
+    citation_metadata: candidate.citationMetadata,
+    grounding_metadata: candidate.groundingMetadata,
+    grounding_attributions: candidate.groundingAttributions,
+    url_retrieval_metadata: candidate.urlRetrievalMetadata,
+    url_context_metadata: candidate.urlContextMetadata,
+    avg_logprobs: candidate.avgLogprobs,
+    logprobs_result: candidate.logprobsResult,
+
+    // Backwards compatibility
+    citationMetadata,
+    groundingMetadata,
+    groundingSupport: groundingParts[0],
   };
+  // Remove any undefined properties, so we don't include them
+  for (const attribute in additional_kwargs) {
+    if (additional_kwargs[attribute] === undefined) {
+      delete additional_kwargs[attribute];
+    }
+  }
+  for (const attribute in response_metadata) {
+    if (response_metadata[attribute] === undefined) {
+      delete response_metadata[attribute];
+    }
+  }
+
 
   return new AIMessage({
     content,
@@ -696,3 +883,50 @@ export const convertGeminiCandidateToAIMessage: Converter<
     response_metadata,
   });
 };
+
+export const convertGeminiGenerateContentResponseToUsageMetadata: Converter<
+  GenerateContentResponse,
+  UsageMetadata
+> = (data: GenerateContentResponse): UsageMetadata => {
+
+  function addModalityCounts(
+    modalityTokenCounts: GeminiModalityTokenCount[] | undefined,
+    details: InputTokenDetails | OutputTokenDetails
+  ): void {
+    modalityTokenCounts?.forEach((modalityTokenCount) => {
+      const { modality, tokenCount } = modalityTokenCount;
+      const modalityLc: keyof ModalitiesTokenDetails =
+        modality.toLowerCase() as keyof ModalitiesTokenDetails;
+      const currentCount = details[modalityLc] ?? 0;
+      details[modalityLc] = currentCount + tokenCount;
+    });
+  }
+
+  const usageMetadata: GeminiUsageMetadata | undefined = data.usageMetadata;
+
+  const inputTokenCount = usageMetadata?.promptTokenCount ?? 0;
+  const candidatesTokenCount = usageMetadata?.candidatesTokenCount ?? 0;
+  const thoughtsTokenCount = usageMetadata?.thoughtsTokenCount ?? 0;
+  const outputTokenCount = candidatesTokenCount + thoughtsTokenCount;
+  const totalTokens =
+    usageMetadata?.totalTokenCount ?? inputTokenCount + outputTokenCount;
+
+  const input_token_details: InputTokenDetails = {};
+  addModalityCounts(usageMetadata?.promptTokensDetails, input_token_details);
+  input_token_details.cache_read = usageMetadata?.cachedContentTokenCount ?? 0;
+
+  const output_token_details: OutputTokenDetails = {};
+  addModalityCounts(
+    usageMetadata?.candidatesTokensDetails,
+    output_token_details
+  );
+  output_token_details.reasoning = usageMetadata?.thoughtsTokenCount ?? 0;
+
+  return {
+    input_tokens: inputTokenCount,
+    output_tokens: outputTokenCount,
+    total_tokens: totalTokens,
+    input_token_details,
+    output_token_details,
+  };
+}

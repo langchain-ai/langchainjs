@@ -6,8 +6,8 @@ import {
 import {
   AIMessage,
   AIMessageChunk,
+  AIMessageChunkFields,
   BaseMessage,
-  UsageMetadata,
 } from "@langchain/core/messages";
 import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
 import { concat } from "@langchain/core/utils/stream";
@@ -47,6 +47,7 @@ import {
 import { SafeJsonEventParserStream } from "../utils/stream.js";
 import {
   convertGeminiCandidateToAIMessage,
+  convertGeminiGenerateContentResponseToUsageMetadata, convertGeminiPartsToToolCalls,
   convertMessagesToGeminiContents,
   convertMessagesToGeminiSystemInstruction,
 } from "../converters/messages.js";
@@ -68,38 +69,217 @@ import type {
   GeminiTool,
 } from "./types.js";
 
+export type GooglePlatformType = "gai" | "gcp";
+
+export function getPlatformType(
+  platform: GooglePlatformType | undefined,
+  hasApiKey: boolean,
+): GooglePlatformType {
+  if (typeof platform !== "undefined") {
+    return platform;
+  } else if (hasApiKey) {
+    return "gai";
+  } else {
+    return "gcp";
+  }
+}
+
 export interface BaseChatGoogleParams
   extends BaseChatModelParams,
     ChatGoogleFields {
   model: string;
+
   apiClient?: ApiClient;
+
+  /**
+   * Hostname for the API call (if this is running on GCP)
+   * Usually this is computed based on location and platformType.
+   **/
+  endpoint?: string;
+
+  /**
+   * Region where the LLM is stored (if this is running on GCP)
+   * Defaults to "global"
+   **/
+  location?: string;
+
+  /**
+   * The version of the API functions. Part of the path.
+   * Usually this is computed based on platformType.
+   **/
+  apiVersion?: string;
+
+  /**
+   * What platform to run the service on.
+   * If not specified, the class should determine this from other
+   * means. Either way, the platform actually used will be in
+   * the "platform" getter.
+   */
+  platformType?: GooglePlatformType;
+
+  /**
+   * For compatibility with Google's libraries, should this use Vertex?
+   * The "platformType" parmeter takes precedence.
+   */
+  vertexai?: boolean;
+
+  /**
+   * Backwards compatibility.
+   * @deprecated in favor of using `disableStreaming` or `.stream()`
+   */
+  streaming?: boolean;
+
+  streamUsage?: boolean;
 }
 
 export interface BaseChatGoogleCallOptions
   extends BaseChatModelCallOptions,
     ChatGoogleFields {}
 
+export function fieldPlatformType(params: BaseChatGoogleParams): GooglePlatformType | undefined {
+  if (typeof params === "undefined") {
+    return undefined;
+  }
+  if (typeof params.platformType !== "undefined") {
+    return params.platformType;
+  }
+  if (params.vertexai === true) {
+    return "gcp";
+  }
+  return undefined;
+}
+
 export abstract class BaseChatGoogle<
   CallOptions extends BaseChatGoogleCallOptions = BaseChatGoogleCallOptions
 > extends BaseChatModel<CallOptions, AIMessageChunk> {
   model: string;
 
-  streaming = false;
+  streaming: boolean;
+
+  disableStreaming: boolean;
+
+  streamUsage: boolean = true;
+
+  protected _platform?: GooglePlatformType;
+
+  protected _endpoint?: string;
+
+  protected _location?: string;
+
+  protected _apiVersion?: string;
 
   protected apiClient: ApiClient;
 
   constructor(protected params: BaseChatGoogleParams) {
     super(params);
+
     if (!params.apiClient) {
       throw new Error("BaseChatGoogle requires an apiClient");
     }
-    this.model = params.model;
     this.apiClient = params.apiClient;
+
+    this.model = params.model;
+    this._platform = fieldPlatformType(params);
+    this._endpoint = params.endpoint;
+    this._location = params.location;
+    this._apiVersion = params.apiVersion;
+
+    // Logic borrowed from OpenAI library
+    this.disableStreaming = params?.disableStreaming === true;
+    this.streaming = params?.streaming === true;
+    if (this.disableStreaming) this.streaming = false;
+    // disable streaming in BaseChatModel if explicitly disabled
+    if (params?.streaming === false) this.disableStreaming = true;
+
+    this.streamUsage = params?.streamUsage ?? this.streamUsage;
+    if (this.disableStreaming) this.streamUsage = false;
+
   }
 
-  abstract _llmType(): string;
+  _llmType(): string {
+    return "google";
+  }
 
-  abstract getBaseUrl(): URL;
+  get platformType(): GooglePlatformType | undefined {
+    return this._platform;
+  }
+
+  get platform(): GooglePlatformType {
+    return getPlatformType(this._platform, this.apiClient.hasApiKey());
+  }
+
+  get isVertexExpress(): boolean {
+    return this.platform === "gcp" && this.apiClient.hasApiKey();
+  }
+
+  get apiVersion(): string {
+    if (typeof this._apiVersion !== "undefined") {
+      return this._apiVersion;
+    } else if (this.platform === "gai") {
+      return "v1beta";
+    } else {
+      return "v1";
+    }
+  }
+
+  get location(): string {
+    return this._location || "global";
+  }
+
+  get endpoint(): string {
+    if (typeof this._endpoint !== "undefined") {
+      return this._endpoint;
+    } else if (this.platform === "gai") {
+      return "generativelanguage.googleapis.com";
+    } else if (this.isVertexExpress) {
+      return "aiplatform.googleapis.com";
+    } else if (this.location === "global") {
+      // See https://docs.cloud.google.com/vertex-ai/generative-ai/docs/learn/locations#use_the_global_endpoint
+      return "aiplatform.googleapis.com";
+    } else {
+      return `${this.location}-aiplatform.googleapis.com`;
+    }
+  }
+
+  get publisher(): string {
+    return "google";
+  }
+
+  get urlMethod(): string {
+    return this.streaming
+      ? "streamGenerateContent?alt=sse"
+      : "generateContent";
+  }
+
+  async buildUrlGenerativeLanguage(urlMethod?: string): Promise<string> {
+    return `https://${this.endpoint}/${this.apiVersion}/models/${this.model}:${urlMethod ?? this.urlMethod}`;
+  }
+
+  async buildUrlVertexExpress(urlMethod?: string): Promise<string> {
+    return `https://${this.endpoint}/${this.apiVersion}/publishers/${this.publisher}/models/${this.model}:${urlMethod ?? this.urlMethod}`;
+  }
+
+  async buildUrlVertexLocation(urlMethod?: string): Promise<string> {
+    const projectId = await this.apiClient.getProjectId();
+    return `https://${this.endpoint}/${this.apiVersion}/projects/${projectId}/locations/${this.location}/publishers/${this.publisher}/models/${this.model}:${urlMethod ?? this.urlMethod}`;
+  }
+
+  async buildUrlVertex(urlMethod?: string): Promise<string> {
+    if (this.isVertexExpress) {
+      return this.buildUrlVertexExpress(urlMethod);
+    } else {
+      return this.buildUrlVertexLocation(urlMethod);
+    }
+  }
+
+  async buildUrl(urlMethod?: string): Promise<string> {
+    switch (this.platform) {
+      case "gai":
+        return this.buildUrlGenerativeLanguage(urlMethod);
+      default:
+        return this.buildUrlVertex(urlMethod);
+    }
+  }
 
   override invocationParams(options: this["ParsedCallOptions"]) {
     const fields = combineGoogleChatModelFields(this.params, options);
@@ -168,10 +348,11 @@ export abstract class BaseChatGoogle<
 
   async _generate(
     messages: BaseMessage[],
-    options: this["ParsedCallOptions"]
+    options: this["ParsedCallOptions"],
+    runManager?: CallbackManagerForLLMRun
   ): Promise<ChatResult> {
     if (this.streaming) {
-      const stream = await this._streamResponseChunks(messages, options);
+      const stream = await this._streamResponseChunks(messages, options, runManager);
       let finalChunk: ChatGenerationChunk | null = null;
       for await (const chunk of stream) {
         finalChunk = !finalChunk ? chunk : concat(finalChunk, chunk);
@@ -181,15 +362,22 @@ export abstract class BaseChatGoogle<
       };
     }
 
+    const url = await this.buildUrl();
     const body: GenerateContentRequest = {
       ...this.invocationParams(options),
       systemInstruction: convertMessagesToGeminiSystemInstruction(messages),
       contents: convertMessagesToGeminiContents(messages),
     };
 
+    const moduleName = this.constructor.name;
+    await runManager?.handleCustomEvent(`google-request-${moduleName}`, {
+      url,
+      body,
+    });
+
     const response = await this.apiClient.fetch(
       new Request(
-        new URL(`./${this.model}:generateContent`, this.getBaseUrl()),
+        url,
         {
           method: "POST",
           headers: {
@@ -200,8 +388,22 @@ export abstract class BaseChatGoogle<
       )
     );
 
-    if (!response.ok) throw await RequestError.fromResponse(response);
+    if (!response.ok) {
+      const error = await RequestError.fromResponse(response);
+      await runManager?.handleCustomEvent(`google-response-${moduleName}`, {
+        error,
+      })
+      throw error;
+    }
+
     const data: GenerateContentResponse = await response.json();
+    await runManager?.handleCustomEvent(`google-response-${moduleName}`, {
+      data,
+      url: response.url,
+      headers: response.headers,
+      status: response.status,
+      statusText: response.statusText,
+    })
 
     // Check for prompt feedback errors
     if (data.promptFeedback?.blockReason) {
@@ -234,27 +436,8 @@ export abstract class BaseChatGoogle<
             .join("")
         : "";
 
-    // FIXME: this should just be hoisted to its own function
-    const inputTokenCount = data.usageMetadata?.promptTokenCount ?? 0;
-    const candidatesTokenCount = data.usageMetadata?.candidatesTokenCount ?? 0;
-    const thoughtsTokenCount = data.usageMetadata?.thoughtsTokenCount ?? 0;
-    const outputTokenCount = candidatesTokenCount + thoughtsTokenCount;
-    const totalTokens =
-      data.usageMetadata?.totalTokenCount ?? inputTokenCount + outputTokenCount;
-
-    const usageMetadata: UsageMetadata = {
-      input_tokens: inputTokenCount,
-      output_tokens: outputTokenCount,
-      total_tokens: totalTokens,
-      input_token_details: {
-        // FIXME: include modality details
-        cache_read: data.usageMetadata?.cachedContentTokenCount ?? 0,
-      },
-      output_token_details: {
-        // FIXME: include modality details
-        reasoning: thoughtsTokenCount,
-      },
-    };
+    const usageMetadata = convertGeminiGenerateContentResponseToUsageMetadata(data);
+    message.usage_metadata = usageMetadata;
 
     return {
       generations: [
@@ -284,18 +467,24 @@ export abstract class BaseChatGoogle<
     options: this["ParsedCallOptions"],
     runManager?: CallbackManagerForLLMRun
   ): AsyncGenerator<ChatGenerationChunk> {
+    const streamUsage: boolean = this.streamUsage ?? true;
+
     const body: GenerateContentRequest = {
       ...this.invocationParams(options),
       systemInstruction: convertMessagesToGeminiSystemInstruction(messages),
       contents: convertMessagesToGeminiContents(messages),
     };
 
+    const url = await this.buildUrl("streamGenerateContent?alt=sse");
+    const moduleName = this.constructor.name;
+    await runManager?.handleCustomEvent(`google-request-${moduleName}`, {
+      url,
+      body,
+    });
+
     const response = await this.apiClient.fetch(
       new Request(
-        new URL(
-          `./${this.model}:generateContentStream?alt=sse`,
-          this.getBaseUrl()
-        ),
+        url,
         {
           method: "POST",
           headers: {
@@ -307,7 +496,20 @@ export abstract class BaseChatGoogle<
       )
     );
 
-    if (!response.ok) throw await RequestError.fromResponse(response);
+    await runManager?.handleCustomEvent(`google-response-${moduleName}`, {
+      url: response.url,
+      headers: response.headers,
+      status: response.status,
+      statusText: response.statusText,
+    })
+
+    if (!response.ok) {
+      const error = await RequestError.fromResponse(response);
+      await runManager?.handleCustomEvent(`google-response-${moduleName}`, {
+        error,
+      })
+      throw error;
+    }
 
     if (response.body) {
       const stream = response.body
@@ -317,6 +519,13 @@ export abstract class BaseChatGoogle<
         .pipeThrough(
           new TransformStream<GenerateContentResponse, ChatGenerationChunk>({
             transform(chunk, controller) {
+              // eslint-disable-next-line no-void
+              void runManager?.handleCustomEvent(
+                `google-chunk-${moduleName}`,
+                {
+                  chunk,
+                }
+              )
               if (chunk === null) {
                 controller.enqueue(
                   new ChatGenerationChunk({
@@ -343,19 +552,37 @@ export abstract class BaseChatGoogle<
                 }
               }
 
+              const toolCalls = convertGeminiPartsToToolCalls(parts);
+
               const textDelta = textDeltas.join("");
 
               // Only emit if we have content
-              if (textDelta || candidate.finishReason) {
-                const messageChunk = new AIMessageChunk({
+              if (textDelta || toolCalls?.length > 0 || candidate.finishReason) {
+
+                // Include the textDelta always
+                const messageChunkParams: AIMessageChunkFields = {
                   content: textDelta,
-                  ...(candidate.finishReason && {
-                    additional_kwargs: {
-                      finishReason: candidate.finishReason,
-                      finishMessage: candidate.finishMessage,
-                    },
-                  }),
-                });
+                  tool_calls: toolCalls,
+                };
+
+                // Include the finish reason, if available
+                if (candidate.finishReason) {
+                  messageChunkParams.additional_kwargs = {
+                    finishReason: candidate.finishReason,
+                    finishMessage: candidate.finishMessage,
+                  }
+                }
+
+                // Include usageMetadata if there is any and we have
+                // enabled it with streamUsage on
+                if (chunk?.usageMetadata && streamUsage) {
+                  messageChunkParams.usage_metadata = {
+                    input_tokens: chunk.usageMetadata.promptTokenCount!,
+                    output_tokens: chunk.usageMetadata.candidatesTokenCount!,
+                    total_tokens: chunk.usageMetadata.totalTokenCount!,
+                  }
+                }
+                const messageChunk = new AIMessageChunk(messageChunkParams);
 
                 controller.enqueue(
                   new ChatGenerationChunk({
@@ -454,7 +681,7 @@ export abstract class BaseChatGoogle<
 
     if (method === "jsonMode") {
       console.warn(
-        `"jsonMode" is not supported for Anthropic models. Falling back to "jsonSchema".`
+        `"jsonMode" is not supported for Google models. Falling back to "jsonSchema".`
       );
       method = "jsonSchema";
     }
