@@ -111,11 +111,11 @@ export function convertToGeminiTools(tools: GoogleAIToolType[]): GeminiTool[] {
           });
         } catch (error) {
           const errorMessage =
-            error instanceof Error ? error.message : String(error);
+            error && typeof error === "object" && "message" in error
+              ? String(error.message)
+              : String(error);
           throw new Error(
-            `Failed to convert tool '${tool.name}' schema for Gemini: ${errorMessage}. ` +
-              `Common issues: discriminatedUnion, .positive() refinements, union types. ` +
-              `Consider simplifying your schema structure.`
+            `Failed to convert tool '${tool.name}' schema for Gemini: ${errorMessage}. `
           );
         }
       } else if (isOpenAITool(tool)) {
