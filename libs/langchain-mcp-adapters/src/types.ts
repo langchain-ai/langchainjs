@@ -739,13 +739,26 @@ export const clientConfigSchema = z
      * Behavior when a server fails to connect.
      * - "throw": Throw an error immediately if any server fails to connect (default)
      * - "ignore": Skip failed servers and continue with successfully connected ones
+     * - Function: Custom error handler. If the function throws, the error is bubbled through.
+     *   If it returns normally, the server is treated as ignored and skipped.
      *
      * @default "throw"
      */
     onConnectionError: z
-      .enum(["throw", "ignore"])
+      .union([
+        z.enum(["throw", "ignore"]),
+        z
+          .function()
+          .args(
+            z.object({
+              serverName: z.string(),
+              error: z.unknown(),
+            })
+          )
+          .returns(z.void()),
+      ])
       .describe(
-        "Behavior when a server fails to connect: 'throw' to error immediately, 'ignore' to skip failed servers"
+        "Behavior when a server fails to connect: 'throw' to error immediately, 'ignore' to skip failed servers, or a function for custom error handling"
       )
       .optional()
       .default("throw"),
@@ -798,6 +811,20 @@ export type ResolvedConnection = z.output<typeof connectionSchema>;
  * Type for {@link MultiServerMCPClient} configuration, with default values applied.
  */
 export type ResolvedClientConfig = z.output<typeof clientConfigSchema>;
+
+/**
+ * Custom error handler function for connection errors.
+ * If the function throws, the error is bubbled through.
+ * If it returns normally, the server is treated as ignored and skipped.
+ *
+ * @param params - Error handler parameters
+ * @param params.serverName - The name of the server that failed to connect
+ * @param params.error - The error that occurred during connection
+ */
+export type ConnectionErrorHandler = (params: {
+  serverName: string;
+  error: unknown;
+}) => void;
 
 export type LoadMcpToolsOptions = {
   /**

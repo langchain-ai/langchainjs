@@ -26,6 +26,7 @@ import {
   type MCPResource,
   type MCPResourceTemplate,
   type MCPResourceContent,
+  type ConnectionErrorHandler,
   clientConfigSchema,
   connectionSchema,
   type LoadMcpToolsOptions,
@@ -149,7 +150,7 @@ export class MultiServerMCPClient {
   /**
    * Behavior when a server fails to connect
    */
-  #onConnectionError: "throw" | "ignore";
+  #onConnectionError: "throw" | "ignore" | ConnectionErrorHandler;
 
   /**
    * Set of server names that have failed to connect (when onConnectionError is "ignore")
@@ -246,7 +247,8 @@ export class MultiServerMCPClient {
     for (const [serverName, connection] of Object.entries(this.#mcpServers)) {
       // Skip servers that have already failed (when onConnectionError is "ignore")
       if (
-        this.#onConnectionError === "ignore" &&
+        (this.#onConnectionError === "ignore" ||
+          typeof this.#onConnectionError === "function") &&
         this.#failedServers.has(serverName)
       ) {
         continue;
@@ -264,6 +266,19 @@ export class MultiServerMCPClient {
         if (this.#onConnectionError === "throw") {
           throw error;
         }
+
+        // Handle custom error handler function
+        if (typeof this.#onConnectionError === "function") {
+          this.#onConnectionError({ serverName, error });
+          // If we get here, the handler didn't throw, so treat as ignored
+          this.#failedServers.add(serverName);
+          debugLog(
+            `WARN: Failed to initialize connection to server "${serverName}": ${String(error)}`
+          );
+          continue;
+        }
+
+        // Default "ignore" behavior
         // Mark this server as failed so we don't try again
         this.#failedServers.add(serverName);
         debugLog(

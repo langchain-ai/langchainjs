@@ -331,15 +331,15 @@ Notes:
 
 When loading MCP tools either directly through `loadMcpTools` or via `MultiServerMCPClient`, you can configure the following options:
 
-| Option                         | Type                                   | Default                                               | Description                                                                          |
-| ------------------------------ | -------------------------------------- | ----------------------------------------------------- | ------------------------------------------------------------------------------------ |
-| `throwOnLoadError`             | `boolean`                              | `true`                                                | Whether to throw an error if a tool fails to load                                    |
-| `prefixToolNameWithServerName` | `boolean`                              | `false`                                               | If true, prefixes all tool names with the server name (e.g., `serverName__toolName`) |
-| `additionalToolNamePrefix`     | `string`                               | `""`                                                  | Additional prefix to add to tool names (e.g., `prefix__serverName__toolName`)        |
-| `useStandardContentBlocks`     | `boolean`                              | `false`                                               | See [Tool Output Mapping](#tool-output-mapping); set true for new applications       |
-| `outputHandling`               | `"content"`, `"artifact"`, or `object` | `resource` -> `"artifact"`, all others -> `"content"` | See [Tool Output Mapping](#tool-output-mapping)                                      |
-| `defaultToolTimeout`           | `number`                               | `0`                                                   | Default timeout for all tools (overridable on a per-tool basis)                      |
-| `onConnectionError`            | `"throw"` \| `"ignore"`                | `"throw"`                                             | Behavior when a server fails to connect                                              |
+| Option                         | Type                                   | Default                                               | Description                                                                                          |
+| ------------------------------ | -------------------------------------- | ----------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
+| `throwOnLoadError`             | `boolean`                              | `true`                                                | Whether to throw an error if a tool fails to load                                                    |
+| `prefixToolNameWithServerName` | `boolean`                              | `false`                                               | If true, prefixes all tool names with the server name (e.g., `serverName__toolName`)                 |
+| `additionalToolNamePrefix`     | `string`                               | `""`                                                  | Additional prefix to add to tool names (e.g., `prefix__serverName__toolName`)                        |
+| `useStandardContentBlocks`     | `boolean`                              | `false`                                               | See [Tool Output Mapping](#tool-output-mapping); set true for new applications                       |
+| `outputHandling`               | `"content"`, `"artifact"`, or `object` | `resource` -> `"artifact"`, all others -> `"content"` | See [Tool Output Mapping](#tool-output-mapping)                                                      |
+| `defaultToolTimeout`           | `number`                               | `0`                                                   | Default timeout for all tools (overridable on a per-tool basis)                                      |
+| `onConnectionError`            | `"throw"` \| `"ignore"` \| `Function`  | `"throw"`                                             | Behavior when a server fails to connect. See [Connection Error Handling](#connection-error-handling) |
 
 ## Tool Output Mapping
 
@@ -703,12 +703,13 @@ Example Zod error for an invalid SSE URL:
 
 ### Connection Error Handling
 
-By default, the `MultiServerMCPClient` will throw an error if any server fails to connect (`onConnectionError: "throw"`). You can change this behavior by setting `onConnectionError: "ignore"` to skip failed servers:
+By default, the `MultiServerMCPClient` will throw an error if any server fails to connect (`onConnectionError: "throw"`). You can change this behavior by setting `onConnectionError: "ignore"` to skip failed servers, or provide a custom error handler function:
 
 - `"throw"` (default): Throw an error immediately if any server fails to connect
 - `"ignore"`: Skip failed servers and continue with successfully connected ones
+- `Function`: Custom error handler that receives the server name and error. If the handler throws, the error is bubbled through. If it returns normally, the server is treated as ignored.
 
-When set to `"ignore"`:
+When set to `"ignore"` or a custom handler that doesn't throw:
 
 - Servers that fail to connect are skipped and logged as warnings
 - The client continues to work with only the servers that successfully connected
@@ -739,6 +740,37 @@ const tools = await client.getTools(); // Only tools from "working-server"
 const workingClient = await client.getClient("working-server"); // Returns client
 const brokenClient = await client.getClient("broken-server"); // Returns undefined
 ```
+
+You can also provide a custom error handler function for more control:
+
+```ts
+const client = new MultiServerMCPClient({
+  mcpServers: {
+    "critical-server": {
+      transport: "http",
+      url: "http://localhost:8000/mcp",
+    },
+    "optional-server": {
+      transport: "http",
+      url: "http://localhost:8001/mcp",
+    },
+  },
+  onConnectionError: ({ serverName, error }) => {
+    // Throw for critical servers, ignore for optional ones
+    if (serverName === "critical-server") {
+      throw new Error(`Critical server ${serverName} failed: ${error}`);
+    }
+    // For optional servers, just log and continue
+    console.warn(`Optional server ${serverName} failed, continuing...`);
+  },
+  useStandardContentBlocks: true,
+});
+```
+
+In this example:
+
+- If `critical-server` fails, the error handler throws and the error is bubbled through
+- If `optional-server` fails, the error handler logs a warning and returns normally, so the server is ignored
 
 ### Debug Logging
 
