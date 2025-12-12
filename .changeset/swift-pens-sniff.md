@@ -2,4 +2,4 @@
 "@langchain/mcp-adapters": minor
 ---
 
-Added optional param handleConnectionErrorsGracefully to MultiServerMCPClient to skip connecting to MCPs that don't initially connect
+Added `onConnectionError` option to MultiServerMCPClient to control behavior when servers fail to connect ("throw" or "ignore")

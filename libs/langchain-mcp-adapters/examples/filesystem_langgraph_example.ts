@@ -69,8 +69,8 @@ export async function runExample(client?: MultiServerMCPClient) {
           },
         },
         useStandardContentBlocks: true,
-        // Handle connection errors gracefully - continue with available servers
-        handleConnectionErrorsGracefully: true,
+        // Ignore connection errors - continue with available servers
+        onConnectionError: "ignore",
       });
 
     console.log("Connected to servers");

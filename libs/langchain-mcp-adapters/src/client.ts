@@ -42,7 +42,10 @@ function getDebugLog() {
  * Error class for MCP client operations
  */
 export class MCPClientError extends Error {
-  constructor(message: string, public readonly serverName?: string) {
+  constructor(
+    message: string,
+    public readonly serverName?: string
+  ) {
     super(message);
     this.name = "MCPClientError";
   }
@@ -130,7 +133,7 @@ export class MultiServerMCPClient {
 
   private _config: ResolvedClientConfig;
 
-  private _handleConnectionErrorsGracefully: boolean;
+  private _onConnectionError: "throw" | "ignore";
 
   /**
    * Returns clone of server config for inspection purposes.
@@ -143,10 +146,10 @@ export class MultiServerMCPClient {
   }
 
   /**
-   * Returns whether connection errors should be handled gracefully.
+   * Returns the behavior when a server fails to connect.
    */
-  get handleConnectionErrorsGracefully(): boolean {
-    return this._handleConnectionErrorsGracefully;
+  get onConnectionError(): "throw" | "ignore" {
+    return this._onConnectionError;
   }
 
   /**
@@ -189,8 +192,6 @@ export class MultiServerMCPClient {
           parsedServerConfig.prefixToolNameWithServerName,
         additionalToolNamePrefix: parsedServerConfig.additionalToolNamePrefix,
         useStandardContentBlocks: parsedServerConfig.useStandardContentBlocks,
-        handleConnectionErrorsGracefully:
-          parsedServerConfig.handleConnectionErrorsGracefully,
         ...(Object.keys(outputHandling).length > 0 ? { outputHandling } : {}),
         ...(defaultToolTimeout ? { defaultToolTimeout } : {}),
       };
@@ -198,8 +199,7 @@ export class MultiServerMCPClient {
 
     this._config = parsedServerConfig;
     this._connections = parsedServerConfig.mcpServers;
-    this._handleConnectionErrorsGracefully =
-      parsedServerConfig.handleConnectionErrorsGracefully;
+    this._onConnectionError = parsedServerConfig.onConnectionError;
   }
 
   /**
@@ -226,8 +226,8 @@ export class MultiServerMCPClient {
       )
     );
 
-    if (this._handleConnectionErrorsGracefully) {
-      const successfulConnections: [string, ResolvedConnection][] = [];
+    if (this._onConnectionError === "ignore") {
+      let successfulConnectionCount = 0;
 
       for (const [serverName, connection] of connectionsToInit) {
         try {
@@ -236,7 +236,7 @@ export class MultiServerMCPClient {
           );
 
           await this._testAndInitializeConnection(serverName, connection);
-          successfulConnections.push([serverName, connection]);
+          successfulConnectionCount += 1;
 
           getDebugLog()(
             `INFO: Successfully connected to server "${serverName}"`
@@ -252,7 +252,7 @@ export class MultiServerMCPClient {
       }
 
       // If no connections succeeded and we had connections to try, log a warning
-      if (successfulConnections.length === 0 && connectionsToInit.length > 0) {
+      if (successfulConnectionCount === 0 && connectionsToInit.length > 0) {
         getDebugLog()(
           `WARN: Failed to connect to any of the ${connectionsToInit.length} configured servers`
         );

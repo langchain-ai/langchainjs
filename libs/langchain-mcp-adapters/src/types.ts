@@ -481,17 +481,19 @@ export const clientConfigSchema = z
       .optional()
       .default(false),
     /**
-     * Whether to handle connection errors gracefully without throwing exceptions
+     * Behavior when a server fails to connect.
+     * - "throw": Throw an error immediately if any server fails to connect (default)
+     * - "ignore": Skip failed servers and continue with successfully connected ones
      *
-     * @default false
+     * @default "throw"
      */
-    handleConnectionErrorsGracefully: z
-      .boolean()
+    onConnectionError: z
+      .enum(["throw", "ignore"])
       .describe(
-        "Whether to handle connection errors gracefully without throwing exceptions"
+        "Behavior when a server fails to connect: 'throw' to error immediately, 'ignore' to skip failed servers"
       )
       .optional()
-      .default(false),
+      .default("throw"),
   })
   .and(baseConfigSchema)
   .describe("Configuration for the MCP client");
@@ -599,13 +601,6 @@ export type LoadMcpToolsOptions = {
    * If not specified, tools will use their own configured timeout values.
    */
   defaultToolTimeout?: number;
-
-  /**
-   * Whether to handle connection errors gracefully without throwing exceptions
-   *
-   * @default false
-   */
-  handleConnectionErrorsGracefully?: boolean;
 };
 
 /**

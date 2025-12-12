@@ -548,7 +548,7 @@ describe("MultiServerMCPClient", () => {
       expect(closeMock).toHaveBeenCalledOnce();
     });
 
-    test("should handle connection errors gracefully when handleConnectionErrorsGracefully is true", async () => {
+    test("should ignore connection errors when onConnectionError is 'ignore'", async () => {
       // Mock one successful and one failing connection
       let clientCallCount = 0;
       (Client as Mock).mockImplementation(() => {
@@ -581,7 +581,7 @@ describe("MultiServerMCPClient", () => {
             url: "http://localhost:8001/mcp",
           },
         },
-        handleConnectionErrorsGracefully: true,
+        onConnectionError: "ignore",
       });
 
       // Should not throw, even though one server fails
@@ -599,7 +599,7 @@ describe("MultiServerMCPClient", () => {
       expect(failingClient).toBeUndefined();
     });
 
-    test("should throw on connection failure when handleConnectionErrorsGracefully is false", async () => {
+    test("should throw on connection failure when onConnectionError is 'throw'", async () => {
       (Client as Mock).mockImplementationOnce(() => ({
         connect: vi
           .fn()
@@ -614,13 +614,46 @@ describe("MultiServerMCPClient", () => {
             url: "http://localhost:8000/mcp",
           },
         },
-        handleConnectionErrorsGracefully: false,
+        onConnectionError: "throw",
       });
 
-      // Should throw when handleConnectionErrorsGracefully is false (default behavior)
+      // Should throw when onConnectionError is 'throw' (default behavior)
       await expect(() => client.initializeConnections()).rejects.toThrow(
         MCPClientError
       );
+    });
+
+    test("should not throw when all servers fail and onConnectionError is 'ignore'", async () => {
+      (Client as Mock).mockImplementation(() => ({
+        connect: vi
+          .fn()
+          .mockReturnValue(Promise.reject(new Error("Connection failed"))),
+        listTools: vi.fn().mockReturnValue(Promise.resolve({ tools: [] })),
+      }));
+
+      const client = new MultiServerMCPClient({
+        mcpServers: {
+          "server-1": {
+            transport: "http",
+            url: "http://localhost:8000/mcp",
+          },
+          "server-2": {
+            transport: "http",
+            url: "http://localhost:8001/mcp",
+          },
+        },
+        onConnectionError: "ignore",
+      });
+
+      // Should not throw, even though all servers fail
+      const tools = await client.getTools();
+      expect(tools).toEqual([]);
+
+      // Both servers should be inaccessible
+      const client1 = await client.getClient("server-1");
+      const client2 = await client.getClient("server-2");
+      expect(client1).toBeUndefined();
+      expect(client2).toBeUndefined();
     });
   });
 });
