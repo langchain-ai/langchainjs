@@ -279,33 +279,83 @@ export interface GoogleImageConfig {
 
 export type GeminiRole = "user" | "model" | "function";
 
-export interface GeminiPart {
-  text?: string;
-  inlineData?: {
+export interface GeminiPartBase {
+  thought?: boolean; // Output only
+  thoughtSignature?: string;
+  partMetadata?: Record<string,unknown>;
+}
+
+export interface GeminiVideoMetadata {
+  fps?: number; // Double in range (0.0, 24.0]
+  startOffset?: string;
+  endOffset?: string;
+}
+
+export interface GeminiPartBaseFile extends GeminiPartBase {
+  videoMetadata?: GeminiVideoMetadata;
+}
+
+export interface GeminiPartText extends GeminiPartBase {
+  text: string;
+}
+
+export interface GeminiPartInlineData extends GeminiPartBaseFile {
+  inlineData: {
     mimeType: string;
-    data: string; // base64 encoded
+    data: string;
   };
-  fileData?: {
+}
+
+export interface GeminiPartFileData extends GeminiPartBaseFile {
+  fileData: {
     mimeType: string;
     fileUri: string;
   };
-  functionCall?: {
+}
+
+// AI Studio only?
+export interface GeminiPartFunctionCall extends GeminiPartBase {
+  functionCall: {
     name: string;
-    args: Record<string, unknown>;
-  };
-  functionResponse?: {
-    name: string;
-    response: Record<string, unknown>;
-  };
-  executableCode?: {
-    language: string;
-    code: string;
-  };
-  codeExecutionResult?: {
-    outcome: string;
-    output: string;
+    args?: Record<string,unknown>;
   };
 }
+
+// AI Studio Only?
+export interface GeminiPartFunctionResponse extends GeminiPartBase {
+  functionResponse: {
+    name: string;
+    response: Record<string,unknown>;
+  };
+}
+
+export type GeminiCodeExecutionResultOutcome =
+  "OUTCOME_OK" |
+  "OUTCOME_FAILED" |
+  "OUTCOME_DEADLINE_EXCEEDED" ;
+
+export interface GeminiCodeExecutionResult extends GeminiPartBase {
+  codeExecutionResult: {
+    output?: string;
+    outcome: GeminiCodeExecutionResultOutcome;
+  }
+}
+
+export interface GeminiExecutableCode extends GeminiPartBase {
+  executableCode: {
+    code: string;
+    language: string;
+  }
+}
+
+export type GeminiPart =
+  | GeminiPartText
+  | GeminiPartInlineData
+  | GeminiPartFileData
+  | GeminiPartFunctionCall
+  | GeminiPartFunctionResponse
+  | GeminiCodeExecutionResult
+  | GeminiExecutableCode;
 
 export interface GeminiContent {
   role: GeminiRole;
@@ -355,11 +405,22 @@ export interface GeminiFunctionSchema {
   [key: string]: unknown;
 }
 
-export interface GeminiTool {
-  functionDeclarations?: GeminiFunctionDeclaration[];
-  codeExecution?: Record<string, unknown>;
-  googleSearchRetrieval?: Record<string, unknown>;
+export interface GeminiFunctionDeclarationTool {
+  functionDeclarations: GeminiFunctionDeclaration[];
 }
+
+export interface GeminiCodeExecutionTool {
+  codeExecution: Record<string, unknown>;
+}
+
+export interface GeminiGoogleSearchTool {
+  googleSearch: Record<string, unknown>;
+}
+
+export type GeminiTool =
+  GeminiFunctionDeclarationTool |
+  GeminiCodeExecutionTool |
+  GeminiGoogleSearchTool;
 
 export type GeminiFunctionCallingConfigMode =
   "AUTO" |
@@ -411,7 +472,8 @@ export type GeminiFinishReason =
   | "NO_IMAGE"
   | "IMAGE_RECITATION"
   | "UNEXPECTED_TOOL_CALL"
-  | "TOO_MANY_TOOL_CALLS";
+  | "TOO_MANY_TOOL_CALLS"
+  | "MISSING_THOUGHT_SIGNATURE";
 
 export interface GeminiSafetyRating {
   category: GoogleHarmCategory;
@@ -419,21 +481,139 @@ export interface GeminiSafetyRating {
   blocked?: boolean;
 }
 
+export interface GeminiCitationMetadata {
+  citations: GeminiCitation[];
+}
+
+export interface GeminiCitation {
+  startIndex: number;
+  endIndex: number;
+  uri: string;
+  title: string;
+  license: string;
+  publicationDate: GoogleTypeDate;
+}
+
+export interface GoogleTypeDate {
+  year: number; // 1-9999 or 0 to specify a date without a year
+  month: number; // 1-12 or 0 to specify a year without a month and day
+  day: number; // Must be from 1 to 31 and valid for the year and month, or 0 to specify a year by itself or a year and month where the day isn't significant
+}
+
+export interface GeminiGroundingMetadata {
+  webSearchQueries?: string[];
+  searchEntryPoint?: GeminiSearchEntryPoint;
+  groundingChunks: GeminiGroundingChunk[];
+  groundingSupports?: GeminiGroundingSupport[];
+  retrievalMetadata?: GeminiRetrievalMetadata;
+}
+
+export interface GeminiSearchEntryPoint {
+  renderedContent?: string;
+  sdkBlob?: string; // Base64 encoded JSON representing array of tuple.
+}
+
+export interface GeminiGroundingChunk {
+  web: GeminiGroundingChunkWeb;
+  retrievedContext: GeminiGroundingChunkRetrievedContext;
+}
+
+export interface GeminiGroundingChunkWeb {
+  uri: string;
+  title: string;
+}
+
+export interface GeminiGroundingChunkRetrievedContext {
+  uri: string;
+  title: string;
+  text: string;
+}
+
+export interface GeminiGroundingSupport {
+  segment: GeminiSegment;
+  groundingChunkIndices: number[];
+  confidenceScores: number[];
+}
+
+export interface GeminiSegment {
+  partIndex: number;
+  startIndex: number;
+  endIndex: number;
+  text: string;
+}
+
+export interface GeminiRetrievalMetadata {
+  googleSearchDynamicRetrievalScore: number;
+}
+
+export interface GeminiGroundingPassageId {
+  passageId: string;
+  partIndex: number;
+}
+
+export interface GeminiSemanticRetrieverChunk {
+  source: string;
+  chunk: string;
+}
+
+export interface GeminiAttributionSourceId {
+  groundingPassage: GeminiGroundingPassageId;
+  semanticRetrieverChunk: GeminiSemanticRetrieverChunk;
+}
+
+export interface GeminiGroundingAttribution {
+  sourceId: GeminiAttributionSourceId;
+  content: GeminiContent;
+}
+
+export type GeminiUrlRetrievalStatus =
+  | "URL_RETRIEVAL_STATUS_SUCCESS"
+  | "URL_RETRIEVAL_STATUS_ERROR";
+
+export interface GeminiUrlRetrievalContext {
+  retrievedUrl: string;
+  urlRetrievalStatus: GeminiUrlRetrievalStatus;
+}
+
+export interface GeminiUrlRetrievalMetadata {
+  urlRetrievalContexts: GeminiUrlRetrievalContext[];
+}
+
+export type GeminiUrlMetadata = GeminiUrlRetrievalContext;
+
+export interface GeminiUrlContextMetadata {
+  urlMetadata: GeminiUrlMetadata[];
+}
+
+export interface GeminiLogprobsResult {
+  topCandidates: GeminiLogprobsTopCandidate[];
+  chosenCandidates: GeminiLogprobsResultCandidate[];
+}
+
+export interface GeminiLogprobsTopCandidate {
+  candidates: GeminiLogprobsResultCandidate[];
+}
+
+export interface GeminiLogprobsResultCandidate {
+  token: string;
+  tokenId: number;
+  logProbability: number;
+}
+
 export interface GeminiCandidate {
   content: GeminiContent;
   finishReason?: GeminiFinishReason;
   finishMessage?: string;
   safetyRatings?: GeminiSafetyRating[];
-  citationMetadata?: {
-    citationSources?: Array<{
-      startIndex?: number;
-      endIndex?: number;
-      uri?: string;
-      license?: string;
-    }>;
-  };
   tokenCount?: number;
   index?: number;
+  citationMetadata?: GeminiCitationMetadata;
+  groundingMetadata?: GeminiGroundingMetadata;
+  groundingAttributions?: GeminiGroundingAttribution;
+  urlRetrievalMetadata?: GeminiUrlRetrievalMetadata;
+  urlContextMetadata?: GeminiUrlContextMetadata;
+  avgLogprobs?: number;
+  logprobsResult: GeminiLogprobsResult;
 }
 
 export type GeminiModalityEnum =

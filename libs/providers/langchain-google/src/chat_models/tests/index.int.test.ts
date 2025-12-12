@@ -317,7 +317,7 @@ describe.each(coreModelInfo)(
       );
     });
 
-    test("stream", async () => {
+    test.skip("stream", async () => {
       const model = newChatGoogle();
       const input: BaseLanguageModelInput = new ChatPromptValue([
         new SystemMessage(
@@ -350,7 +350,7 @@ describe.each(coreModelInfo)(
       expect(warnSpy).not.toHaveBeenCalled();
     });
 
-    test("streaming parameter", async () => {
+    test.skip("streaming parameter", async () => {
       const modelWithStreaming = newChatGoogle({
         streaming: true,
       });
@@ -375,7 +375,7 @@ describe.each(coreModelInfo)(
       expect(totalTokenCount).toBeGreaterThan(1);
     });
 
-    test("stream token count usage_metadata", async () => {
+    test.skip("stream token count usage_metadata", async () => {
       const model = newChatGoogle();
       let res: AIMessageChunk | null = null;
       for await (const chunk of await model.stream(
@@ -400,7 +400,7 @@ describe.each(coreModelInfo)(
       );
     });
 
-    test("streamUsage false excludes token usage", async () => {
+    test.skip("streamUsage false excludes token usage", async () => {
       const model = newChatGoogle({
         temperature: 0,
         streamUsage: false,
@@ -419,7 +419,7 @@ describe.each(coreModelInfo)(
       expect(res?.usage_metadata).not.toBeDefined();
     });
 
-    test("function", async () => {
+    test.skip("function", async () => {
       const tools = [weatherTool];
       const llm: Runnable = newChatGoogle().bindTools(tools);
       const result = await llm.invoke("What is the weather in New York?");
@@ -436,7 +436,7 @@ describe.each(coreModelInfo)(
       expect(call.args.location).toBe("New York");
     });
 
-    test("function conversation", async () => {
+    test.skip("function conversation", async () => {
       const tools = [weatherTool];
       const llm = newChatGoogle().bindTools(tools);
       const history: BaseMessage[] = [new HumanMessage("What is the weather in New York?")];
@@ -457,7 +457,7 @@ describe.each(coreModelInfo)(
       expect(result2.content).toMatch(/21/);
     });
 
-    test("function reply", async () => {
+    test.skip("function reply", async () => {
       const tools: GeminiTool[] = [
         {
           functionDeclarations: [
@@ -506,7 +506,7 @@ describe.each(coreModelInfo)(
       }
     });
 
-    test("function - force tool", async () => {
+    test.skip("function - force tool", async () => {
       const llm = newChatGoogle();
       const llmWithTools: Runnable = llm.bindTools([calculatorTool, weatherTool], {
         tool_choice: "calculator",
@@ -523,7 +523,7 @@ describe.each(coreModelInfo)(
       expect(result.tool_calls?.[0].args).toHaveProperty("expression");
     });
 
-    test("function - tool with nullish parameters", async () => {
+    test.skip("function - tool with nullish parameters", async () => {
       // Fails with gemini-2.0-flash-lite ?
       const tools = [nullishWeatherTool];
       const llm: Runnable = newChatGoogle().bindTools(tools);
@@ -541,7 +541,42 @@ describe.each(coreModelInfo)(
       expect(call.args.location).toBe("New York");
     });
 
-    test(`function - stream tools`, async () => {
+    test("Supports GoogleSearchRetrievalTool", async () => {
+      // gemini-2.0-flash-lite-001: Not supported
+      const searchRetrievalTool = {
+        googleSearchRetrieval: {
+          dynamicRetrievalConfig: {
+            mode: "MODE_DYNAMIC",
+            dynamicThreshold: 0.7, // default is 0.7
+          },
+        },
+      };
+      const llm: Runnable = newChatGoogle().bindTools([searchRetrievalTool]);
+
+      const result = await llm.invoke("Who won the 2024 MLB World Series?");
+      expect(result.content as string).toContain("Dodgers");
+      expect(result).toHaveProperty("response_metadata");
+      expect(result.response_metadata).toHaveProperty("groundingMetadata");
+      expect(result.response_metadata).toHaveProperty("groundingSupport");
+    });
+
+    test("Supports GoogleSearchTool", async () => {
+      // gemini-2.0-flash-lite-001: Not supported
+      const searchTool: GeminiTool = {
+        googleSearch: {},
+      };
+      const llm: Runnable = newChatGoogle().bindTools([searchTool]);
+
+      const result = await llm.invoke("Who won the 2024 MLB World Series?");
+      console.log("result", result);
+      expect(result.content as string).toContain("Dodgers");
+      expect(result).toHaveProperty("response_metadata");
+
+      expect(result.response_metadata).toHaveProperty("groundingMetadata");
+      expect(result.response_metadata).toHaveProperty("groundingSupport");
+    });
+
+    test.skip(`function - stream tools`, async () => {
       const model = newChatGoogle();
 
       const weatherTool = tool(

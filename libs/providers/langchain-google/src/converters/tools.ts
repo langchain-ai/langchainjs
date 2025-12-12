@@ -18,6 +18,7 @@ import type {
   GeminiFunctionCallingConfigMode,
   GeminiFunctionDeclaration,
   GeminiFunctionSchema,
+  GeminiGoogleSearchTool,
   GeminiTool,
   GeminiToolConfig,
 } from "../chat_models/types.js";
@@ -163,7 +164,7 @@ function jsonSchemaToGeminiParameters(
  * Gemini tools can be:
  * - Function declarations (`functionDeclarations`)
  * - Code execution tools (`codeExecution`)
- * - Google Search retrieval tools (`googleSearchRetrieval`)
+ * - Google Search retrieval tools (`googleSearchRetrieval` or `googleSearch`)
  *
  * @param tool - The tool to check
  * @returns `true` if the tool is already in Gemini format, `false` otherwise
@@ -176,7 +177,7 @@ function isGeminiTool(tool: BindToolsInput): tool is GeminiTool {
     tool !== null &&
     ("functionDeclarations" in tool ||
       "codeExecution" in tool ||
-      "googleSearchRetrieval" in tool)
+      "googleSearch" in tool)
   );
 }
 
@@ -362,9 +363,15 @@ export const convertToolsToGeminiTools: Converter<
         // Already a Gemini tool with function declarations
         geminiTools.push(tool);
       } else {
-        // Non-function Gemini tool (codeExecution, googleSearchRetrieval, etc.)
+        // Non-function Gemini tool (codeExecution, googleSearch, etc.)
         geminiTools.push(tool);
       }
+    } else if ("googleSearchRetrieval" in tool) {
+      // Convert the obsolete search into the modern one
+      const searchTool: GeminiGoogleSearchTool = {
+        googleSearch: {},
+      }
+      geminiTools.push( searchTool );
     } else {
       // Convert to function declaration
       const funcDecls = convertToolsToGeminiFunctionDeclarations([tool]);

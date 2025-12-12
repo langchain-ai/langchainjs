@@ -18,7 +18,12 @@ import {
   GeminiContent,
   GeminiPart,
   GeminiCandidate,
-  GeminiRole, GenerateContentResponse, GeminiUsageMetadata, GeminiModalityTokenCount,
+  GeminiRole,
+  GenerateContentResponse,
+  GeminiUsageMetadata,
+  GeminiModalityTokenCount,
+  GeminiGroundingSupport,
+  GeminiPartFunctionCall,
 } from "../chat_models/types.js";
 import { iife } from "../utils/misc.js";
 import { ToolCallNotFoundError } from "../utils/errors.js";
@@ -643,18 +648,63 @@ export const convertGeminiPartsToToolCalls: Converter<
 
   for (let i = 0; i < parts.length; i++) {
     const part = parts[i];
-    if (part.functionCall) {
+    if ("functionCall" in part) {
+      const functionCallPart: GeminiPartFunctionCall = part;
       toolCalls.push({
         type: "tool_call",
         id: `call_${toolCalls.length}`,
-        name: part.functionCall.name,
-        args: part.functionCall.args,
+        name: functionCallPart.functionCall.name,
+        args: functionCallPart.functionCall.args ?? {},
       });
     }
   }
 
   return toolCalls;
 }
+
+export const convertGeminiPartToContentBlock: Converter<
+  GeminiPart, 
+  ContentBlock
+> = (part: GeminiPart): ContentBlock => {
+  if ("text" in part && part.text) {
+    return {
+      type: "text",
+      text: part.text,
+    };
+  } else if ("inlineData" in part && part.inlineData) {
+    return {
+      type: "inlineData",
+      inlineData: part.inlineData,
+    };
+  } else if ("fileData" in part && part.fileData) {
+    return {
+      type: "fileData",
+      fileData: part.fileData,
+    };
+  } else if ("functionCall" in part && part.functionCall) {
+    return {
+      type: "functionCall",
+      functionCall: part.functionCall,
+    };
+  } else if ("functionResponse" in part && part.functionResponse) {
+    return {
+      type: "functionResponse",
+      functionResponse: part.functionResponse,
+    };
+  } else if ("executableCode" in part && part.executableCode) {
+    return {
+      type: "executableCode",
+      executableCode: part.executableCode,
+    };
+  } else if ("codeExecutionResult" in part && part.codeExecutionResult) {
+    return {
+      type: "codeExecutionResult",
+      codeExecutionResult: part.codeExecutionResult,
+    };
+  }
+  return part as unknown as ContentBlock;
+  
+} 
 
 /**
  * Converts a Gemini API candidate response to a LangChain AIMessage.
@@ -695,6 +745,29 @@ export const convertGeminiCandidateToAIMessage: Converter<
   GeminiCandidate,
   AIMessage
 > = (candidate) => {
+
+  function groundingSupportByPart(
+    groundingSupports?: GeminiGroundingSupport[]
+  ): GeminiGroundingSupport[][] {
+    const ret: GeminiGroundingSupport[][] = [];
+
+    if (!groundingSupports || groundingSupports.length === 0) {
+      return [];
+    }
+
+    groundingSupports?.forEach((groundingSupport) => {
+      const segment = groundingSupport?.segment;
+      const partIndex = segment?.partIndex ?? 0;
+      if (ret[partIndex]) {
+        ret[partIndex].push(groundingSupport);
+      } else {
+        ret[partIndex] = [groundingSupport];
+      }
+    });
+
+    return ret;
+  }
+
   const parts = candidate.content?.parts || [];
 
   // Extract tool calls from function call parts
@@ -704,70 +777,104 @@ export const convertGeminiCandidateToAIMessage: Converter<
   // Format: array of objects with type field matching the part type
   let content: string | ContentBlock[];
 
+  const groundingMetadata = candidate?.groundingMetadata;
+  const citationMetadata = candidate?.citationMetadata;
+  const groundingParts = groundingSupportByPart(
+    groundingMetadata?.groundingSupports
+  );
+
   if (parts.length === 0) {
     content = "";
-  } else if (parts.length === 1 && parts[0].text) {
-    // Single text part - store as string for simplicity
+  } else if (
+    parts.length === 1 &&
+    "text" in parts[0] &&
+    parts[0].text &&
+    !("thought" in parts[0])
+  ) {
+    console.log('parts text');
+    // Single text part that is not a thought - store as string for simplicity
     content = parts[0].text;
   } else {
     // Multiple parts - convert to array format with type fields
-    content = parts.map((p) => {
-      if ("text" in p && p.text) {
-        return {
-          type: "text",
-          text: p.text,
-        };
-      } else if ("inlineData" in p && p.inlineData) {
-        return {
-          type: "inlineData",
-          inlineData: p.inlineData,
-        };
-      } else if ("fileData" in p && p.fileData) {
-        return {
-          type: "fileData",
-          fileData: p.fileData,
-        };
-      } else if ("functionCall" in p && p.functionCall) {
-        return {
-          type: "functionCall",
-          functionCall: p.functionCall,
-        };
-      } else if ("functionResponse" in p && p.functionResponse) {
-        return {
-          type: "functionResponse",
-          functionResponse: p.functionResponse,
-        };
-      } else if ("executableCode" in p && p.executableCode) {
-        return {
-          type: "executableCode",
-          executableCode: p.executableCode,
-        };
-      } else if ("codeExecutionResult" in p && p.codeExecutionResult) {
-        return {
-          type: "codeExecutionResult",
-          codeExecutionResult: p.codeExecutionResult,
-        };
+    content = parts.map((p: GeminiPart) => {
+      const block: ContentBlock = {
+        thought: p.thought,
+        thoughtSignature: p.thoughtSignature,
+        partMetadata: p.partMetadata,
+        ...convertGeminiPartToContentBlock(p),
+      };
+
+      for (const attribute in block) {
+        if (block[attribute] === undefined) {
+          delete block[attribute];
+        }
       }
-      return p as ContentBlock;
+
+      return block;
     });
   }
+
+  // const chatGenerations = parts.map((part, index) => {
+  //   const gen = partToChatGeneration( part );
+  //   if (!gen.generationInfo) {
+  //     gen.generationInfo = {};
+  //   }
+  //   if (groundingMetadata) {
+  //     gen.generationInfo.groundingMetadata = groundingMetadata;
+  //     const groundingPart = groundingParts[index];
+  //     if (groundingPart) {
+  //       gen.generationInfo.groundingSupport = groundingPart;
+  //     }
+  //   }
+  //   if (citationMetadata) {
+  //     gen.generationInfo.citationMetadata = citationMetadata;
+  //   }
+  //   return gen;
+  // });
 
   const additional_kwargs: Record<string, unknown> = {
     finishReason: candidate.finishReason,
     finishMessage: candidate.finishMessage,
     safetyRatings: candidate.safetyRatings,
-    citationMetadata: candidate.citationMetadata,
     tokenCount: candidate.tokenCount,
+    citationMetadata: candidate.citationMetadata,
+    groundingMetadata: candidate.groundingMetadata,
+    groundingAttributions: candidate.groundingAttributions,
+    urlRetrievalMetadata: candidate.urlRetrievalMetadata,
+    urlContextMetadata: candidate.urlContextMetadata,
+    avgLogprobs: candidate.avgLogprobs,
+    logprobsResult: candidate.logprobsResult,
   };
 
   const response_metadata: Record<string, unknown> = {
     model_provider: "google",
     finish_reason: candidate.finishReason,
-    ...(candidate.safetyRatings && { safety_ratings: candidate.safetyRatings }),
-    ...(candidate.citationMetadata && {
-      citation_metadata: candidate.citationMetadata,
-    }),
+    safety_ratings: candidate.safetyRatings,
+    citation_metadata: candidate.citationMetadata,
+    grounding_metadata: candidate.groundingMetadata,
+    grounding_attributions: candidate.groundingAttributions,
+    url_retrieval_metadata: candidate.urlRetrievalMetadata,
+    url_context_metadata: candidate.urlContextMetadata,
+    avg_logprobs: candidate.avgLogprobs,
+    logprobs_result: candidate.logprobsResult,
+
+    // Backwards compatibility
+    citationMetadata,
+    groundingMetadata,
+    groundingSupport: groundingParts[0],
   };
+  // Remove any undefined properties, so we don't include them
+  for (const attribute in additional_kwargs) {
+    if (additional_kwargs[attribute] === undefined) {
+      delete additional_kwargs[attribute];
+    }
+  }
+  for (const attribute in response_metadata) {
+    if (response_metadata[attribute] === undefined) {
+      delete response_metadata[attribute];
+    }
+  }
+
 
   return new AIMessage({
     content,
