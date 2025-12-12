@@ -589,4 +589,126 @@ describe("Chat unit tests", () => {
       ).toThrow(/Unexpected properties: notExisting, notExObj./);
     });
   });
+
+  describe("AbortSignal parameter passing", () => {
+    test("Signal passed to textChat() with projectId", async () => {
+      const testProps = {
+        model: "ibm/granite-3-8b-instruct",
+        version: "2025-01-17",
+        serviceUrl: "https://test.watsonx.ai",
+        projectId: "test-project-id",
+      };
+      const instance = new ChatWatsonx({ ...testProps, ...fakeAuthProp });
+
+      const mockResponse = {
+        choices: [{ message: { role: "assistant", content: "" } }],
+      };
+      const spy = jest
+        .spyOn(instance.service, "textChat")
+        .mockResolvedValue({ result: mockResponse } as any);
+
+      const controller = new AbortController();
+      await instance.invoke("test", { signal: controller.signal });
+
+      expect(spy).toHaveBeenCalledWith(
+        expect.objectContaining({ signal: controller.signal }),
+        undefined
+      );
+
+      spy.mockRestore();
+    });
+
+    test("Signal passed to deploymentsTextChat() with idOrName", async () => {
+      const testProps = {
+        version: "2025-01-17",
+        serviceUrl: "https://test.watsonx.ai",
+        idOrName: "test-deployment",
+      };
+      const instance = new ChatWatsonx({ ...testProps, ...fakeAuthProp });
+
+      const mockResponse = {
+        choices: [{ message: { role: "assistant", content: "" } }],
+      };
+      const spy = jest
+        .spyOn(instance.service, "deploymentsTextChat")
+        .mockResolvedValue({ result: mockResponse } as any);
+
+      const controller = new AbortController();
+      await instance.invoke("test", { signal: controller.signal });
+
+      expect(spy).toHaveBeenCalledWith(
+        expect.objectContaining({ signal: controller.signal }),
+        undefined
+      );
+
+      spy.mockRestore();
+    });
+
+    test("Signal passed to textChatStream() with projectId", async () => {
+      const testProps = {
+        model: "ibm/granite-3-8b-instruct",
+        version: "2025-01-17",
+        serviceUrl: "https://test.watsonx.ai",
+        projectId: "test-project-id",
+      };
+      const instance = new ChatWatsonx({ ...testProps, ...fakeAuthProp });
+
+      async function* mockStream() {
+        yield { data: { choices: [{ delta: {} }] } };
+      }
+
+      const spy = jest
+        .spyOn(instance.service, "textChatStream")
+        .mockResolvedValue(mockStream() as any);
+
+      const controller = new AbortController();
+      const stream = await instance.stream("test", {
+        signal: controller.signal,
+      });
+
+      for await (const _chunk of stream) {
+        /* consume stream */
+      }
+
+      expect(spy).toHaveBeenCalledWith(
+        expect.objectContaining({ signal: controller.signal }),
+        undefined
+      );
+
+      spy.mockRestore();
+    });
+
+    test("Signal passed to deploymentsTextChatStream() with idOrName", async () => {
+      const testProps = {
+        version: "2025-01-17",
+        serviceUrl: "https://test.watsonx.ai",
+        idOrName: "test-deployment",
+      };
+      const instance = new ChatWatsonx({ ...testProps, ...fakeAuthProp });
+
+      async function* mockStream() {
+        yield { data: { choices: [{ delta: {} }] } };
+      }
+
+      const spy = jest
+        .spyOn(instance.service, "deploymentsTextChatStream")
+        .mockResolvedValue(mockStream() as any);
+
+      const controller = new AbortController();
+      const stream = await instance.stream("test", {
+        signal: controller.signal,
+      });
+
+      for await (const _chunk of stream) {
+        /* consume stream */
+      }
+
+      expect(spy).toHaveBeenCalledWith(
+        expect.objectContaining({ signal: controller.signal }),
+        undefined
+      );
+
+      spy.mockRestore();
+    });
+  });
 });
