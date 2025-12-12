@@ -55,7 +55,7 @@ export interface WatsonxLLMParams {
   topK?: number;
   topP?: number;
   repetitionPenalty?: number;
-  truncateInpuTokens?: number;
+  truncateInputTokens?: number;
   returnOptions?: ReturnOptionProperties;
   includeStopSequence?: boolean;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -177,7 +177,7 @@ export class WatsonxLLM<
 
   repetitionPenalty?: number;
 
-  truncateInpuTokens?: number;
+  truncateInputTokens?: number;
 
   returnOptions?: ReturnOptionProperties;
 
@@ -259,7 +259,7 @@ export class WatsonxLLM<
       "stopSequence",
       "topK",
       "repetitionPenalty",
-      "truncateInpuTokens",
+      "truncateInputTokens",
       "returnOptions",
       "includeStopSequence",
     ];
@@ -307,7 +307,7 @@ export class WatsonxLLM<
     this.timeLimit = fields.timeLimit;
     this.topK = fields.topK;
     this.repetitionPenalty = fields.repetitionPenalty;
-    this.truncateInpuTokens = fields.truncateInpuTokens;
+    this.truncateInputTokens = fields.truncateInputTokens;
     this.returnOptions = fields.returnOptions;
     this.includeStopSequence = fields.includeStopSequence;
 
@@ -425,7 +425,7 @@ export class WatsonxLLM<
       repetition_penalty:
         parameters?.repetitionPenalty ?? this.repetitionPenalty,
       truncate_input_tokens:
-        parameters?.truncateInpuTokens ?? this.truncateInpuTokens,
+        parameters?.truncateInputTokens ?? this.truncateInputTokens,
       return_options: parameters?.returnOptions ?? this.returnOptions,
       include_stop_sequence:
         parameters?.includeStopSequence ?? this.includeStopSequence,

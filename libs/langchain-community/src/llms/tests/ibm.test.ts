@@ -136,7 +136,7 @@ describe("LLM unit tests", () => {
         topK: 1,
         topP: 1,
         repetitionPenalty: 1,
-        truncateInpuTokens: 1,
+        truncateInputTokens: 1,
         returnOptions: {
           input_text: true,
           generated_tokens: true,
