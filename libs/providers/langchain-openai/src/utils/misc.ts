@@ -72,3 +72,7 @@ export function messageToOpenAIRole(
       throw new Error(`Unknown message type: ${type}`);
   }
 }
+
+export function _modelPrefersResponsesAPI(model: string): boolean {
+  return model.includes("gpt-5.2-pro");
+}
