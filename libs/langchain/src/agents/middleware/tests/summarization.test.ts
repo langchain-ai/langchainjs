@@ -830,4 +830,78 @@ describe("summarizationMiddleware", () => {
       !(AIMessage.isInstance(firstPreserved) && hasToolCalls(firstPreserved))
     ).toBe(true);
   });
+
+  it("should use default summaryPrefix when not provided", async () => {
+    const summarizationModel = createMockSummarizationModel();
+    const model = createMockMainModel();
+
+    const middleware = summarizationMiddleware({
+      model: summarizationModel as any,
+      trigger: { tokens: 50 },
+      keep: { messages: 2 },
+    });
+
+    const agent = createAgent({
+      model,
+      middleware: [middleware],
+    });
+
+    const messages = [
+      new HumanMessage(`Message 1: ${"x".repeat(200)}`),
+      new AIMessage(`Response 1: ${"x".repeat(200)}`),
+      new HumanMessage(`Message 2: ${"x".repeat(200)}`),
+      new AIMessage(`Response 2: ${"x".repeat(200)}`),
+      new HumanMessage("Final question"),
+    ];
+
+    const result = await agent.invoke({ messages });
+
+    // Verify summarization was triggered
+    expect(summarizationModel.invoke).toHaveBeenCalled();
+
+    // Verify the default prefix is used
+    const summaryMessage = result.messages[0] as HumanMessage;
+    expect(summaryMessage.content).toContain(
+      "Here is a summary of the conversation to date:"
+    );
+  });
+
+  it("should use custom summaryPrefix when provided", async () => {
+    const summarizationModel = createMockSummarizationModel();
+    const model = createMockMainModel();
+
+    const customPrefix = "Custom summary prefix for testing:";
+
+    const middleware = summarizationMiddleware({
+      model: summarizationModel as any,
+      trigger: { tokens: 50 },
+      keep: { messages: 2 },
+      summaryPrefix: customPrefix,
+    });
+
+    const agent = createAgent({
+      model,
+      middleware: [middleware],
+    });
+
+    const messages = [
+      new HumanMessage(`Message 1: ${"x".repeat(200)}`),
+      new AIMessage(`Response 1: ${"x".repeat(200)}`),
+      new HumanMessage(`Message 2: ${"x".repeat(200)}`),
+      new AIMessage(`Response 2: ${"x".repeat(200)}`),
+      new HumanMessage("Final question"),
+    ];
+
+    const result = await agent.invoke({ messages });
+
+    // Verify summarization was triggered
+    expect(summarizationModel.invoke).toHaveBeenCalled();
+
+    // Verify the custom prefix is used
+    const summaryMessage = result.messages[0] as HumanMessage;
+    expect(summaryMessage.content).toContain(customPrefix);
+    expect(summaryMessage.content).not.toContain(
+      "Here is a summary of the conversation to date:"
+    );
+  });
 });
