@@ -38,12 +38,13 @@ Use LangChain for:
 
 LangChain.js is written in TypeScript and can be used in:
 
-- Node.js (ESM and CommonJS) - 18.x, 19.x, 20.x, 22.x
+- Node.js (ESM and CommonJS) - 20.x, 22.x, 24.x
 - Cloudflare Workers
 - Vercel / Next.js (Browser, Serverless and Edge functions)
 - Supabase Edge Functions
 - Browser
 - Deno
+- Bun
 
 ## 📖 Additional Resources
 
