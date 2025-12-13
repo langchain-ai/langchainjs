@@ -1,5 +1,11 @@
 # langchain
 
+## 1.2.0
+
+### Minor Changes
+
+- [#9651](https://github.com/langchain-ai/langchainjs/pull/9651) [`348c37c`](https://github.com/langchain-ai/langchainjs/commit/348c37c01a048c815fea1827c084878744e20742) Thanks [@christian-bromann](https://github.com/christian-bromann)! - feat(langchain): allow to set strict tag manually in providerStrategy #9578
+
 ## 1.1.6
 
 ### Patch Changes
