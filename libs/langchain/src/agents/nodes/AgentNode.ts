@@ -835,13 +835,18 @@ export class AgentNode<
      * check if the user requests a native schema output
      */
     if (structuredResponseFormat?.type === "native") {
+      const resolvedStrict =
+        preparedOptions?.modelSettings?.strict ??
+        structuredResponseFormat?.strategy?.strict ??
+        true;
+
       const jsonSchemaParams = {
         name: structuredResponseFormat.strategy.schema?.name ?? "extract",
         description: getSchemaDescription(
           structuredResponseFormat.strategy.schema
         ),
         schema: structuredResponseFormat.strategy.schema,
-        strict: true,
+        strict: resolvedStrict,
       };
 
       Object.assign(options, {
@@ -860,7 +865,7 @@ export class AgentNode<
           kwargs: { method: "json_schema" },
           schema: structuredResponseFormat.strategy.schema,
         },
-        strict: true,
+        strict: resolvedStrict,
       });
     }
 

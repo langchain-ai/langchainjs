@@ -7,7 +7,10 @@ import { AIMessage } from "@langchain/core/messages";
 
 import { createAgent, toolStrategy, providerStrategy } from "../index.js";
 import { FakeToolCallingModel, FakeToolCallingChatModel } from "./utils.js";
-import { hasSupportForJsonSchemaOutput } from "../responses.js";
+import {
+  hasSupportForJsonSchemaOutput,
+  ProviderStrategy,
+} from "../responses.js";
 
 describe("structured output handling", () => {
   describe("toolStrategy", () => {
@@ -434,6 +437,54 @@ describe("structured output handling", () => {
             messages: [{ role: "user", content: "hi" }],
           })
         ).resolves.not.toThrowError();
+      });
+    });
+
+    describe("strict flag", () => {
+      it("should default to false when strict is not provided", () => {
+        const strategy = ProviderStrategy.fromSchema(
+          z.object({
+            foo: z.string(),
+          })
+        );
+        expect(strategy.strict).toBe(false);
+      });
+
+      it("should set strict to true when explicitly provided", () => {
+        const strategy = ProviderStrategy.fromSchema(
+          z.object({
+            foo: z.string(),
+          }),
+          true
+        );
+        expect(strategy.strict).toBe(true);
+      });
+
+      it("should set strict to false when explicitly provided as false", () => {
+        const strategy = ProviderStrategy.fromSchema(
+          z.object({
+            foo: z.string(),
+          }),
+          false
+        );
+        expect(strategy.strict).toBe(false);
+      });
+
+      it("should work with providerStrategy helper function", () => {
+        const strategyDefault = providerStrategy(
+          z.object({
+            foo: z.string(),
+          })
+        );
+        expect(strategyDefault.strict).toBe(false);
+
+        const strategyStrict = providerStrategy({
+          schema: z.object({
+            foo: z.string(),
+          }),
+          strict: true,
+        });
+        expect(strategyStrict.strict).toBe(true);
       });
     });
   });
