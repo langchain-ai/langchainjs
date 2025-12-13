@@ -95,6 +95,33 @@ export class LanceDB extends VectorStore {
   }
 
   /**
+   * Performs a similarity search in the database and returns
+   * the documents.
+   * @param query The query string.
+   * @param k The number of results to return.
+   * @returns A Promise that resolves with an array, each containing a Document.
+   */
+  async similaritySearch(query: string, k: number): Promise<Document[]> {
+    const results = await this.similaritySearchWithScore(query, k);
+    return results.map((result) => result[0]);
+  }
+
+  /**
+   * Performs a similarity search in the database and returns
+   * the documents and their scores.
+   * @param query The query string.
+   * @param k The number of results to return.
+   * @returns A Promise that resolves with an array of tuples, each containing a Document and its score.
+   */
+  async similaritySearchWithScore(
+    query: string,
+    k: number
+  ): Promise<[Document, number][]> {
+    const queryEmbedding = await this.embeddings.embedQuery(query);
+    return this.similaritySearchVectorWithScore(queryEmbedding, k);
+  }
+
+  /**
    * Performs a similarity search on the vectors in the database and returns
    * the documents and their scores.
    * @param query The query vector.
