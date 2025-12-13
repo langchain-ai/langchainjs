@@ -361,14 +361,10 @@ async function _embeddedResourceToArtifact(
     );
   }
 
-  if (
-    (!("blob" in resource) || resource.blob == null) &&
-    (!("text" in resource) || resource.text == null) &&
-    "uri" in resource &&
-    typeof resource.uri === "string"
-  ) {
+  // Type-safe check: isResourceReference enforces we check resource.resource, not resource directly
+  if (isResourceReference(resource.resource)) {
     const response: ReadResourceResult = await client.readResource({
-      uri: resource.uri,
+      uri: resource.resource.uri,
     });
 
     return response.contents.map(
@@ -509,37 +505,57 @@ async function _convertCallToolResult({
     );
   }
 
+  // Separate content blocks: those that should be content vs artifacts
+  const contentBlocks: MCPContentBlock[] = [];
+  const artifactBlocks: EmbeddedResource[] = [];
+
+  for (const content of result.content) {
+    const outputType = _getOutputTypeForContentType(content.type, outputHandling);
+    
+    // Special handling: if an EmbeddedResource has text, ALWAYS extract it as text content.
+    // The embedded text IS content and should be accessible to the LLM, regardless of
+    // outputHandling settings. The outputHandling controls where the resource STRUCTURE
+    // goes, not whether embedded text is accessible.
+    if (
+      content.type === "resource" &&
+      "resource" in content &&
+      content.resource &&
+      "text" in content.resource &&
+      content.resource.text != null
+    ) {
+      contentBlocks.push({
+        type: "text",
+        text: content.resource.text,
+      } as MCPContentBlock);
+    }
+    
+    // Handle the resource structure (or other content) based on outputHandling
+    if (outputType === "content") {
+      contentBlocks.push(content);
+    } else {
+      artifactBlocks.push(content as EmbeddedResource);
+    }
+  }
+
   const convertedContent: (ContentBlock | ContentBlock.Multimodal.Standard)[] =
     (
       await Promise.all(
-        result.content
-          .filter(
-            (content: MCPContentBlock) =>
-              _getOutputTypeForContentType(content.type, outputHandling) ===
-              "content"
+        contentBlocks.map((content: MCPContentBlock) =>
+          _toolOutputToContentBlocks(
+            content,
+            useStandardContentBlocks,
+            client,
+            toolName,
+            serverName
           )
-          .map((content: MCPContentBlock) =>
-            _toolOutputToContentBlocks(
-              content,
-              useStandardContentBlocks,
-              client,
-              toolName,
-              serverName
-            )
-          )
+        )
       )
     ).flat();
 
   // Create the text content output
   const artifacts = (
     await Promise.all(
-      (
-        result.content.filter(
-          (content: MCPContentBlock) =>
-            _getOutputTypeForContentType(content.type, outputHandling) ===
-            "artifact"
-        ) as EmbeddedResource[]
-      ).map((content: EmbeddedResource) => {
+      artifactBlocks.map((content: EmbeddedResource) => {
         return _embeddedResourceToArtifact(
           content,
           useStandardContentBlocks,

@@ -556,7 +556,7 @@ describe("Simplified Tool Adapter Tests", () => {
       const mockEmbeddedResourceContent: EmbeddedResource = {
         type: "resource",
         resource: {
-          text: "Here is your image",
+          text: "Embedded resource content",
           uri: "test-data://test-artifact",
           mimeType: "text/plain",
         },
@@ -579,13 +579,17 @@ describe("Simplified Tool Adapter Tests", () => {
             url: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==",
           },
         },
+        {
+          type: "text",
+          text: "Embedded resource content",
+        },
       ];
 
       const expectedArtifacts = [
         {
           type: "resource",
           resource: {
-            text: "Here is your image",
+            text: "Embedded resource content",
             uri: "test-data://test-artifact",
             mimeType: "text/plain",
           },
@@ -617,6 +621,110 @@ describe("Simplified Tool Adapter Tests", () => {
       expect(toolMessageResult.tool_call_id).toBe(toolCall.id);
       expect(toolMessageResult.content).toEqual(expectedContentBlocks);
       expect(toolMessageResult.artifact).toEqual(expectedArtifacts);
+    });
+
+    test("should not extract text from EmbeddedResource without text property", async () => {
+      mockClient.listTools.mockReturnValueOnce(
+        Promise.resolve({
+          tools: [
+            {
+              name: "resource_no_text",
+              description: "Tool that returns resource without text",
+              inputSchema: { type: "object", properties: {}, required: [] },
+            },
+          ],
+        })
+      );
+
+      const tools = await loadMcpTools("mockServer(resource_no_text)", mockClient as Client);
+
+      mockClient.callTool.mockReturnValue(
+        Promise.resolve({
+          content: [
+            {
+              type: "resource",
+              resource: {
+                uri: "test-data://no-text-resource",
+                mimeType: "application/json",
+                blob: "dummy-blob-data", // Add blob so it's not treated as a reference
+              },
+            },
+          ],
+        })
+      );
+
+      const toolCall: NonNullable<AIMessage["tool_calls"]>[number] = {
+        args: {},
+        name: "mcp__mockServer(resource_no_text)__resource_no_text",
+        id: "tool_call_id_no_text",
+        type: "tool_call",
+      };
+
+      const toolMessageResult: ToolMessage = await tools[0].invoke(toolCall);
+      const contentArray = toolMessageResult.content as MessageContentComplex[];
+      
+      // Should not extract text when resource has no text property
+      const extractedTexts = contentArray.filter(c => c.type === "text");
+      expect(extractedTexts.length).toBe(0);
+    });
+
+    test("should extract text from multiple EmbeddedResources", async () => {
+      mockClient.listTools.mockReturnValueOnce(
+        Promise.resolve({
+          tools: [
+            {
+              name: "multiple_resources",
+              description: "Tool that returns multiple embedded resources",
+              inputSchema: { type: "object", properties: {}, required: [] },
+            },
+          ],
+        })
+      );
+
+      const tools = await loadMcpTools("mockServer(multiple_resources)", mockClient as Client);
+
+      mockClient.callTool.mockReturnValue(
+        Promise.resolve({
+          content: [
+            {
+              type: "resource",
+              resource: {
+                text: "First resource text",
+                uri: "test-data://resource1",
+                mimeType: "text/plain",
+              },
+            },
+            {
+              type: "resource",
+              resource: {
+                text: "Second resource text",
+                uri: "test-data://resource2",
+                mimeType: "text/plain",
+              },
+            },
+          ],
+        })
+      );
+
+      const toolCall: NonNullable<AIMessage["tool_calls"]>[number] = {
+        args: {},
+        name: "mcp__mockServer(multiple_resources)__multiple_resources",
+        id: "tool_call_id_multiple",
+        type: "tool_call",
+      };
+
+      const toolMessageResult: ToolMessage = await tools[0].invoke(toolCall);
+      const contentArray = toolMessageResult.content as MessageContentComplex[];
+      const textBlocks = contentArray.filter(
+        (c): c is MessageContentComplex & { type: "text"; text: string } => c.type === "text"
+      );
+
+      // Both embedded texts should be extracted to content
+      expect(textBlocks.some(t => t.text === "First resource text")).toBe(true);
+      expect(textBlocks.some(t => t.text === "Second resource text")).toBe(true);
+
+      // Both resource structures should be in artifacts
+      expect(toolMessageResult.artifact).toHaveLength(2);
     });
   });
 });
