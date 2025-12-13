@@ -602,4 +602,4 @@ export type InferSchemaInput<
   ? ToAnnotationRoot<A>["State"]
   : {};
 
-export {AgentBuiltInState};
+export { AgentBuiltInState };
