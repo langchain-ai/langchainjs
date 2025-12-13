@@ -495,3 +495,11 @@ export type WithStateGraphNodes<
 >
   ? StateGraph<SD, S, U, N | K, I, O, C>
   : never;
+
+export interface AgentState<
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  StructuredResponseType extends Record<string, any> = Record<string, any>
+> {
+  messages: BaseMessage[];
+  structuredResponse: StructuredResponseType;
+}

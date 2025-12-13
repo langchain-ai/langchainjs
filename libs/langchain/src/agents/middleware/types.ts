@@ -601,3 +601,5 @@ export type InferSchemaInput<
 > = A extends AnyAnnotationRoot | InteropZodObject
   ? ToAnnotationRoot<A>["State"]
   : {};
+
+export {AgentBuiltInState};
