@@ -1,5 +1,17 @@
 # @langchain/ollama
 
+## 1.1.0
+
+### Minor Changes
+
+- [#9580](https://github.com/langchain-ai/langchainjs/pull/9580) [`c1f6dcf`](https://github.com/langchain-ai/langchainjs/commit/c1f6dcf381a8a11d91ecc3c586df0b140853c243) Thanks [@jonghwanhyeon](https://github.com/jonghwanhyeon)! - feat(ollama): add support for native structured outputs
+
+### Patch Changes
+
+- [#9611](https://github.com/langchain-ai/langchainjs/pull/9611) [`7948fd2`](https://github.com/langchain-ai/langchainjs/commit/7948fd269533179c94841f908741abeb5db94163) Thanks [@jonghwanhyeon](https://github.com/jonghwanhyeon)! - fix(ollama): switch default test model to mistral and fix standard tests
+
+- [#9607](https://github.com/langchain-ai/langchainjs/pull/9607) [`bd990d5`](https://github.com/langchain-ai/langchainjs/commit/bd990d5cf918308b74f4dd99322ae5602a405fd6) Thanks [@jonghwanhyeon](https://github.com/jonghwanhyeon)! - feat(ollama): add support for custom baseUrl
+
 ## 1.0.3
 
 ### Patch Changes

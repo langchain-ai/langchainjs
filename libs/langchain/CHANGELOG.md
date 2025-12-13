@@ -1,5 +1,26 @@
 # langchain
 
+## 1.1.6
+
+### Patch Changes
+
+- [#9586](https://github.com/langchain-ai/langchainjs/pull/9586) [`bc8e90f`](https://github.com/langchain-ai/langchainjs/commit/bc8e90f4f77d71f739c8faf3e6c22ab7e54ffc3c) Thanks [@hntrl](https://github.com/hntrl)! - patch prompts created from runs fix
+
+- [#9623](https://github.com/langchain-ai/langchainjs/pull/9623) [`ade8b8a`](https://github.com/langchain-ai/langchainjs/commit/ade8b8af0b32a9afd5c5a0bf6c4543d3cb7fd848) Thanks [@christian-bromann](https://github.com/christian-bromann)! - fix(langchain): properly retrieve structured output from thinking block
+
+- [#9637](https://github.com/langchain-ai/langchainjs/pull/9637) [`88bb788`](https://github.com/langchain-ai/langchainjs/commit/88bb7882fadf185bad927277810c682c2eee8d01) Thanks [@christian-bromann](https://github.com/christian-bromann)! - fix(langchain): Prevent functions from being accidentally assignable to AgentMiddleware
+
+- [#8964](https://github.com/langchain-ai/langchainjs/pull/8964) [`38ff1b5`](https://github.com/langchain-ai/langchainjs/commit/38ff1b55d353196b8af7f64f7b854b8f643e3de9) Thanks [@jnjacobson](https://github.com/jnjacobson)! - add support for anyOf, allOf, oneOf in openapi conversion
+
+- [#9640](https://github.com/langchain-ai/langchainjs/pull/9640) [`aa8c4f8`](https://github.com/langchain-ai/langchainjs/commit/aa8c4f867abe79b1c6de09a7b51a69163d0972aa) Thanks [@christian-bromann](https://github.com/christian-bromann)! - fix(langchain): prevent summarization middleware from leaking streaming events
+
+- [#9648](https://github.com/langchain-ai/langchainjs/pull/9648) [`29a8480`](https://github.com/langchain-ai/langchainjs/commit/29a8480799d4c3534892a29cef4a135c437deb9b) Thanks [@christian-bromann](https://github.com/christian-bromann)! - fix(langchain): allow to set strict tag manually in providerStrategy #9578
+
+- [#9630](https://github.com/langchain-ai/langchainjs/pull/9630) [`a2df2d4`](https://github.com/langchain-ai/langchainjs/commit/a2df2d422e040485da61120bbbda6ced543e578b) Thanks [@nephix](https://github.com/nephix)! - fix(summary-middleware): use summaryPrefix or fall back to default prefix
+
+- Updated dependencies [[`005c729`](https://github.com/langchain-ai/langchainjs/commit/005c72903bcdf090e0f4c58960c8c243481f9874), [`ab78246`](https://github.com/langchain-ai/langchainjs/commit/ab782462753e6c3ae5d55c0c251f795af32929d5), [`8cc81c7`](https://github.com/langchain-ai/langchainjs/commit/8cc81c7cee69530f7a6296c69123edbe227b2fce), [`f32e499`](https://github.com/langchain-ai/langchainjs/commit/f32e4991d0e707324e3f6af287a1ee87ab833b7e), [`a28d83d`](https://github.com/langchain-ai/langchainjs/commit/a28d83d49dd1fd31e67b52a44abc70f2cc2a2026), [`2e5ad70`](https://github.com/langchain-ai/langchainjs/commit/2e5ad70d16c1f13eaaea95336bbe2ec4a4a4954a), [`e456c66`](https://github.com/langchain-ai/langchainjs/commit/e456c661aa1ab8f1ed4a98c40616f5a13270e88e), [`1cfe603`](https://github.com/langchain-ai/langchainjs/commit/1cfe603e97d8711343ae5f1f5a75648e7bd2a16e)]:
+  - @langchain/core@1.1.5
+
 ## 1.1.5
 
 ### Patch Changes

@@ -1,5 +1,37 @@
 # @langchain/community
 
+## 1.1.0
+
+### Minor Changes
+
+- [#9509](https://github.com/langchain-ai/langchainjs/pull/9509) [`0221458`](https://github.com/langchain-ai/langchainjs/commit/02214588187dc6c036a9334904a6dc000dab4991) Thanks [@phong-phuong](https://github.com/phong-phuong)! - Update Jira document loader with updated v3 API jql endpoint
+
+### Patch Changes
+
+- [#9582](https://github.com/langchain-ai/langchainjs/pull/9582) [`739e2ce`](https://github.com/langchain-ai/langchainjs/commit/739e2ce39bc53aeb2b99faa7a89012ab8657d06e) Thanks [@bitporo](https://github.com/bitporo)! - feat(community): add similaritySearch() and similaritySearchWithScore() support for lancedb
+
+- [#9385](https://github.com/langchain-ai/langchainjs/pull/9385) [`163614e`](https://github.com/langchain-ai/langchainjs/commit/163614e3c11be85e2b06622bc0aa6a5d3bcaaebe) Thanks [@margaretjgu](https://github.com/margaretjgu)! - add elasticsearch hybrid search
+
+- [#9641](https://github.com/langchain-ai/langchainjs/pull/9641) [`005c729`](https://github.com/langchain-ai/langchainjs/commit/005c72903bcdf090e0f4c58960c8c243481f9874) Thanks [@christian-bromann](https://github.com/christian-bromann)! - fix(community/core): various security fixes
+
+- [#9473](https://github.com/langchain-ai/langchainjs/pull/9473) [`bc758ec`](https://github.com/langchain-ai/langchainjs/commit/bc758ec44c083a43d9c1719b0c2e243763d85171) Thanks [@gbrmaia](https://github.com/gbrmaia)! - add GoogleCalendarDeleteTool
+
+- [#9639](https://github.com/langchain-ai/langchainjs/pull/9639) [`454a93d`](https://github.com/langchain-ai/langchainjs/commit/454a93d5545152adf4a1d35111732b43cc2de5dc) Thanks [@christian-bromann](https://github.com/christian-bromann)! - fix(community): LlamaCppEmbeddings now returns embeddings instead of token IDs
+
+- [#9214](https://github.com/langchain-ai/langchainjs/pull/9214) [`5e0b88e`](https://github.com/langchain-ai/langchainjs/commit/5e0b88e70152ccdda649a5c9cd07c09932ee311c) Thanks [@mattfoxvog](https://github.com/mattfoxvog)! - fix typo in IBM WatsonxLLM parameter truncateInpuTokens->truncateInputTokens
+
+- [#8948](https://github.com/langchain-ai/langchainjs/pull/8948) [`6af735d`](https://github.com/langchain-ai/langchainjs/commit/6af735d008f7ffadd4336820b954716efa334fa8) Thanks [@christian-bromann](https://github.com/christian-bromann)! - fix(community): Add INSERT support to PrismaVectorStore for ParentDocumentRetriever compatibility (#8833)
+
+- [#8427](https://github.com/langchain-ai/langchainjs/pull/8427) [`b5aa0bc`](https://github.com/langchain-ai/langchainjs/commit/b5aa0bcfcfd42ec428f50f8b085843fd81677f63) Thanks [@AllenFang](https://github.com/AllenFang)! - improve bm25 sorting function
+
+- [#9225](https://github.com/langchain-ai/langchainjs/pull/9225) [`dc4e3f8`](https://github.com/langchain-ai/langchainjs/commit/dc4e3f8b679b4d77f722379bf4f5cef44c8159c9) Thanks [@noobgramming](https://github.com/noobgramming)! - fix(community): IBM WatsonX ChatWatsonx does not cancel requests on AbortSignal
+
+- [#9590](https://github.com/langchain-ai/langchainjs/pull/9590) [`0dc141d`](https://github.com/langchain-ai/langchainjs/commit/0dc141dac4e851efd858e972bc40835bc42e6c8b) Thanks [@FilipZmijewski](https://github.com/FilipZmijewski)! - fix(community): IBM tests, add missing metadata properties
+
+- Updated dependencies [[`5a01b5b`](https://github.com/langchain-ai/langchainjs/commit/5a01b5b705f6933958f61318b22f00b5f4763be8), [`eab88a5`](https://github.com/langchain-ai/langchainjs/commit/eab88a5ab7610f5b63212f753ebcbeee2f393622), [`5f79bc5`](https://github.com/langchain-ai/langchainjs/commit/5f79bc50aebc093c90b6716c0aebf5c4813d0171), [`316392e`](https://github.com/langchain-ai/langchainjs/commit/316392ea5666008873ab88971f599469ea7a2765), [`7b301c0`](https://github.com/langchain-ai/langchainjs/commit/7b301c00ac851c286a13c2a908757cb40180c768), [`bb2f422`](https://github.com/langchain-ai/langchainjs/commit/bb2f422cd8e0d709d82baca44565980abb57120f), [`2a5ba50`](https://github.com/langchain-ai/langchainjs/commit/2a5ba50d240e7d6181546facf088142fbb7b4977), [`47edf3f`](https://github.com/langchain-ai/langchainjs/commit/47edf3fc673eb0627ec585a3a5c2b9381e234527), [`41b26a4`](https://github.com/langchain-ai/langchainjs/commit/41b26a499625f5f6cd817433832a8d2c2639d2fb), [`2e563e3`](https://github.com/langchain-ai/langchainjs/commit/2e563e332772aa0468f610c334cbedd7f3513ce8), [`72795fe`](https://github.com/langchain-ai/langchainjs/commit/72795fe76b515d9edc7d78fb28db59df844ce0c3), [`f97b488`](https://github.com/langchain-ai/langchainjs/commit/f97b488200b34c485b15a743277984ecacc62160), [`29a8480`](https://github.com/langchain-ai/langchainjs/commit/29a8480799d4c3534892a29cef4a135c437deb9b), [`3ecc1e7`](https://github.com/langchain-ai/langchainjs/commit/3ecc1e716704a032e941e670d1d9fbf5370d57aa), [`6baa851`](https://github.com/langchain-ai/langchainjs/commit/6baa851176b5dde5da19891df114a4645dfe7481), [`a552cad`](https://github.com/langchain-ai/langchainjs/commit/a552cad1a463239a0d1d1b5da7798978722738cf), [`69a1045`](https://github.com/langchain-ai/langchainjs/commit/69a1045e1e14aed9273a1a4085ac35e601a1ecc7)]:
+  - @langchain/openai@1.2.0
+  - @langchain/classic@1.0.6
+
 ## 1.0.7
 
 ### Patch Changes
