@@ -432,6 +432,7 @@ export {
   type ResponseFormatUndefined,
 } from "./responses.js";
 export { createMiddleware } from "./middleware.js";
+export { MIDDLEWARE_BRAND } from "./middleware/types.js";
 export type * from "./middleware/types.js";
 export { FakeToolCallingModel } from "./tests/utils.js";
 export type { ReactAgent } from "./ReactAgent.js";

@@ -4,10 +4,23 @@ import { LanguageModelLike } from "@langchain/core/language_models/base";
 import { describe, it, expectTypeOf } from "vitest";
 import type { IterableReadableStream } from "@langchain/core/utils/stream";
 
-import { type BuiltInState, createAgent } from "../index.js";
+import { type BuiltInState, createAgent, createMiddleware } from "../index.js";
 import type { StreamOutputMap } from "@langchain/langgraph";
 
 describe("reactAgent", () => {
+  it("should throw an error if you try to pass in a function as a middleware", () => {
+    const fakeMiddleware = function createFakeMiddleware() {
+      return createMiddleware({
+        name: "fake",
+      });
+    };
+    createAgent({
+      model: "openai:gpt-4",
+      // @ts-expect-error fakeMiddleware is a function -> should be an instance of AgentMiddleware
+      middleware: [fakeMiddleware],
+    });
+  });
+
   it("should require model as only required property", async () => {
     // Verify that passing only model is valid
     createAgent({ model: "openai:gpt-4" });
