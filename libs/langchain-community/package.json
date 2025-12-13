@@ -160,7 +160,7 @@
     "hdb": "0.19.8",
     "hnswlib-node": "^3.0.0",
     "html-to-text": "^9.0.5",
-    "ibm-cloud-sdk-core": "^5.0.2",
+    "ibm-cloud-sdk-core": "^5.4.5",
     "ignore": "^5.2.0",
     "interface-datastore": "^8.2.11",
     "ioredis": "^5.3.2",
