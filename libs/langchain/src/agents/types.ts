@@ -501,5 +501,5 @@ export interface AgentState<
   StructuredResponseType extends Record<string, any> = Record<string, any>
 > {
   messages: BaseMessage[];
-  structuredResponse: StructuredResponseType;
+  structuredResponse?: StructuredResponseType;
 }
