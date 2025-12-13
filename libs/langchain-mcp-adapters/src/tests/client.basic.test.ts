@@ -751,7 +751,7 @@ describe("MultiServerMCPClient", () => {
       });
 
       // Should not throw, even though one server fails
-      const tools = await client.initializeConnections();
+      await client.initializeConnections();
 
       // Error handler should have been called
       expect(errorHandler).toHaveBeenCalledTimes(1);
