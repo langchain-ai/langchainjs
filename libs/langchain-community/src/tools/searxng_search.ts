@@ -246,13 +246,8 @@ export class SearxngSearch extends Tool {
     } else if (res.infoboxes.length) {
       // Apply HTML tag stripping repeatedly until no more replacements occur
       // to prevent incomplete sanitization from crafted inputs like "<scr<script>ipt>"
-      let content = res.infoboxes[0]?.content ?? "";
-      let previous: string;
-      do {
-        previous = content;
-        content = content.replace(/<[^>]+>/gi, "");
-      } while (content !== previous);
-      return content;
+      const content = res.infoboxes[0]?.content?.replaceAll(/<[^>]+>/gi, "")
+      return content ?? "";
     } else if (res.suggestions.length) {
       let suggestions = "Suggestions: ";
       res.suggestions.forEach((s) => {
