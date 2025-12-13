@@ -339,6 +339,7 @@ export abstract class Runnable<
         maxConcurrency: options.maxConcurrency,
         runId: options.runId,
         timeout: options.timeout,
+        streamTimeout: options.streamTimeout,
         signal: options.signal,
       });
     }
@@ -352,6 +353,7 @@ export abstract class Runnable<
     delete callOptions.maxConcurrency;
     delete callOptions.runId;
     delete callOptions.timeout;
+    delete callOptions.streamTimeout;
     delete callOptions.signal;
     return [runnableConfig, callOptions];
   }
