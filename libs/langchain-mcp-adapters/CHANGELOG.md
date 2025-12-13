@@ -1,5 +1,15 @@
 # @langchain/mcp-adapters
 
+## 1.1.0
+
+### Minor Changes
+
+- [#9649](https://github.com/langchain-ai/langchainjs/pull/9649) [`66c1822`](https://github.com/langchain-ai/langchainjs/commit/66c1822370989a13a7b60fa409811ab2256ed682) Thanks [@hntrl](https://github.com/hntrl)! - add `onConnectionError` option
+
+### Patch Changes
+
+- [#9165](https://github.com/langchain-ai/langchainjs/pull/9165) [`2e5ad70`](https://github.com/langchain-ai/langchainjs/commit/2e5ad70d16c1f13eaaea95336bbe2ec4a4a4954a) Thanks [@pawel-twardziak](https://github.com/pawel-twardziak)! - fix(mcp-adapters): preserve timeout from RunnableConfig in MCP tool calls
+
 ## 1.0.3
 
 ### Patch Changes

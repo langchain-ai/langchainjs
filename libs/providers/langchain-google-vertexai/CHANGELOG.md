@@ -1,5 +1,14 @@
 # @langchain/google-vertexai
 
+## 2.1.0
+
+### Patch Changes
+
+- [#8951](https://github.com/langchain-ai/langchainjs/pull/8951) [`a2a0088`](https://github.com/langchain-ai/langchainjs/commit/a2a00880b80119eb926de05e9c556a44fd56632e) Thanks [@christian-bromann](https://github.com/christian-bromann)! - fix(google-common): handle unsupported Zod schema features for Gemini tools
+
+- Updated dependencies []:
+  - @langchain/google-gauth@2.1.0
+
 ## 2.0.4
 
 ### Patch Changes

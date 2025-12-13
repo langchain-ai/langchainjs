@@ -1,5 +1,11 @@
 # @langchain/mistralai
 
+## 1.0.2
+
+### Patch Changes
+
+- [#9646](https://github.com/langchain-ai/langchainjs/pull/9646) [`86b651a`](https://github.com/langchain-ai/langchainjs/commit/86b651a4d3616b0c93b6892b76a1d6154b0aae9e) Thanks [@christian-bromann](https://github.com/christian-bromann)! - fix(mistralai): add useFim option to toggle between FIM and chat APIs
+
 ## 1.0.1
 
 ### Patch Changes

@@ -1,5 +1,25 @@
 # @langchain/core
 
+## 1.1.5
+
+### Patch Changes
+
+- [#9641](https://github.com/langchain-ai/langchainjs/pull/9641) [`005c729`](https://github.com/langchain-ai/langchainjs/commit/005c72903bcdf090e0f4c58960c8c243481f9874) Thanks [@christian-bromann](https://github.com/christian-bromann)! - fix(community/core): various security fixes
+
+- [#7907](https://github.com/langchain-ai/langchainjs/pull/7907) [`ab78246`](https://github.com/langchain-ai/langchainjs/commit/ab782462753e6c3ae5d55c0c251f795af32929d5) Thanks [@jasonphillips](https://github.com/jasonphillips)! - fix(core): handle subgraph nesting better in graph_mermaid
+
+- [#9589](https://github.com/langchain-ai/langchainjs/pull/9589) [`8cc81c7`](https://github.com/langchain-ai/langchainjs/commit/8cc81c7cee69530f7a6296c69123edbe227b2fce) Thanks [@nathannewyen](https://github.com/nathannewyen)! - test(core): add test for response_metadata in streamEvents
+
+- [#9644](https://github.com/langchain-ai/langchainjs/pull/9644) [`f32e499`](https://github.com/langchain-ai/langchainjs/commit/f32e4991d0e707324e3f6af287a1ee87ab833b7e) Thanks [@hntrl](https://github.com/hntrl)! - add bindTools to FakeListChatModel
+
+- [#9508](https://github.com/langchain-ai/langchainjs/pull/9508) [`a28d83d`](https://github.com/langchain-ai/langchainjs/commit/a28d83d49dd1fd31e67b52a44abc70f2cc2a2026) Thanks [@shubham-021](https://github.com/shubham-021)! - Fix toFormattedString() to properly display nested objects in tool call arguments instead of [object Object]
+
+- [#9165](https://github.com/langchain-ai/langchainjs/pull/9165) [`2e5ad70`](https://github.com/langchain-ai/langchainjs/commit/2e5ad70d16c1f13eaaea95336bbe2ec4a4a4954a) Thanks [@pawel-twardziak](https://github.com/pawel-twardziak)! - fix(mcp-adapters): preserve timeout from RunnableConfig in MCP tool calls
+
+- [#9647](https://github.com/langchain-ai/langchainjs/pull/9647) [`e456c66`](https://github.com/langchain-ai/langchainjs/commit/e456c661aa1ab8f1ed4a98c40616f5a13270e88e) Thanks [@hntrl](https://github.com/hntrl)! - handle missing parent runs in tracer to prevent LangSmith 400 errors
+
+- [#9597](https://github.com/langchain-ai/langchainjs/pull/9597) [`1cfe603`](https://github.com/langchain-ai/langchainjs/commit/1cfe603e97d8711343ae5f1f5a75648e7bd2a16e) Thanks [@hntrl](https://github.com/hntrl)! - use uuid7 for run ids
+
 ## 1.1.4
 
 ### Patch Changes
