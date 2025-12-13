@@ -59,16 +59,6 @@ New integrations **must** be published as standalone packages. Here's how to con
 2. **Publish the package to npm** (e.g., `@yourname/langchain-yourservice` or `langchain-yourservice`)
 3. **Let us know** by opening an issue or discussion so we can add it to the list of recommended integrations
 
-To make creating standalone packages easier, we offer the [`create-langchain-integration`](https://github.com/langchain-ai/langchainjs/blob/main/libs/create-langchain-integration/) utility:
-
-```bash
-npx create-langchain-integration
-```
-
-This will scaffold a new package with support for both ESM and CJS entrypoints, proper TypeScript configuration, and the correct peer dependency on `@langchain/core`.
-
-> **Note**: LangChain maintains a small subset of first-party and high-usage integrations (like OpenAI, Anthropic, and Google) in the main repository. If you have any questions about the process or need help getting started, please reach out!
-
 ## 📁 Project Structure
 
 This is a monorepo managed with [pnpm workspaces](https://pnpm.io/workspaces) and [Turborepo](https://turbo.build/). Here's an overview of the main packages:
@@ -106,7 +96,7 @@ When submitting a pull request:
 
 - **[LangChain Forum](https://forum.langchain.com)**: Connect with the community for technical questions, ideas, and feedback
 - **[GitHub Issues](https://github.com/langchain-ai/langchainjs/issues)**: Bug reports and feature requests
-- **[GitHub Discussions](https://github.com/langchain-ai/langchainjs/discussions)**: General questions and community discussions
+- **[Slack](https://www.langchain.com/join-community)**: LangChain Community Slack
 
 ## 🙋 Getting Help
 
@@ -236,16 +226,6 @@ pnpm --filter langchain test
 pnpm --filter @langchain/core test
 ```
 
-#### Running a Single Test
-
-To run a single test:
-
-```bash
-pnpm --filter langchain test:single /path/to/yourtest.test.ts
-```
-
-This is useful for developing individual features.
-
 **Integration tests** cover logic that requires making calls to outside APIs (often integration with other services).
 
 If you add support for a new external API, please add a new integration test. Integration tests should be called `*.int.test.ts`.
@@ -279,6 +259,8 @@ To run type tests along with unit tests:
 ```bash
 pnpm --filter langchain test
 ```
+
+Find more information on writing type tests in the [Vitest docs](https://vitest.dev/guide/testing-types.html).
 
 ### Building
 
