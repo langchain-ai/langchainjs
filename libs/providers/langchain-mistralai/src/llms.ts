@@ -5,6 +5,9 @@ import { GenerationChunk, LLMResult } from "@langchain/core/outputs";
 import { FIMCompletionRequest as MistralAIFIMCompletionRequest } from "@mistralai/mistralai/models/components/fimcompletionrequest.js";
 import { FIMCompletionStreamRequest as MistralAIFIMCompletionStreamRequest } from "@mistralai/mistralai/models/components/fimcompletionstreamrequest.js";
 import { FIMCompletionResponse as MistralAIFIMCompletionResponse } from "@mistralai/mistralai/models/components/fimcompletionresponse.js";
+import { ChatCompletionRequest as MistralAIChatCompletionRequest } from "@mistralai/mistralai/models/components/chatcompletionrequest.js";
+import { ChatCompletionStreamRequest as MistralAIChatCompletionStreamRequest } from "@mistralai/mistralai/models/components/chatcompletionstreamrequest.js";
+import { ChatCompletionResponse as MistralAIChatCompletionResponse } from "@mistralai/mistralai/models/components/chatcompletionresponse.js";
 import { ChatCompletionChoice as MistralAIChatCompletionChoice } from "@mistralai/mistralai/models/components/chatcompletionchoice.js";
 import { CompletionEvent as MistralAIChatCompletionEvent } from "@mistralai/mistralai/models/components/completionevent.js";
 import { CompletionChunk as MistralAICompetionChunk } from "@mistralai/mistralai/models/components/completionchunk.js";
@@ -100,6 +103,27 @@ export interface MistralAIInput extends BaseLLMParams {
    * Allows users to add custom fetch implementations, hooks, as well as error and response processing.
    */
   httpClient?: MistralAIHTTPClient;
+  /**
+   * Whether to use the Fill-In-Middle (FIM) API for code completion.
+   * When true, uses `client.fim.complete()` / `client.fim.stream()`.
+   * When false, uses `client.chat.complete()` / `client.chat.stream()` with the prompt wrapped as a user message.
+   *
+   * FIM is only supported for code models like `codestral-latest`.
+   * For general-purpose models like `mistral-large-latest`, set this to `false`.
+   *
+   * @default true for codestral models, false for other models
+   */
+  useFim?: boolean;
+}
+
+/**
+ * Helper function to determine if a model is a codestral (FIM-compatible) model.
+ * @param model The model name to check.
+ * @returns True if the model is a codestral model, false otherwise.
+ */
+function isCodestralModel(model: string): boolean {
+  const lowerModel = model.toLowerCase();
+  return lowerModel.includes("codestral");
 }
 
 /**
@@ -152,6 +176,8 @@ export class MistralAI
 
   httpClient?: MistralAIHTTPClient;
 
+  useFim: boolean;
+
   constructor(fields?: MistralAIInput) {
     super(fields ?? {});
 
@@ -171,6 +197,8 @@ export class MistralAI
       fields?.requestErrorHooks ?? this.requestErrorHooks;
     this.responseHooks = fields?.responseHooks ?? this.responseHooks;
     this.httpClient = fields?.httpClient ?? this.httpClient;
+    // Default useFim based on model - true for codestral models, false for others
+    this.useFim = fields?.useFim ?? isCodestralModel(this.model);
 
     const apiKey = fields?.apiKey ?? getEnvironmentVariable("MISTRAL_API_KEY");
     if (!apiKey) {
@@ -374,7 +402,7 @@ Either provide one via the "apiKey" field in the constructor, or set the "MISTRA
     request: MistralAIFIMCompletionRequest,
     options: this["ParsedCallOptions"],
     stream: false
-  ): Promise<MistralAIFIMCompletionResponse>;
+  ): Promise<MistralAIFIMCompletionResponse | MistralAIChatCompletionResponse>;
 
   async completionWithRetry(
     request: MistralAIFIMCompletionStreamRequest,
@@ -389,7 +417,9 @@ Either provide one via the "apiKey" field in the constructor, or set the "MISTRA
     options: this["ParsedCallOptions"],
     stream: boolean
   ): Promise<
-    MistralAIFIMCompletionResponse | AsyncIterable<MistralAIChatCompletionEvent>
+    | MistralAIFIMCompletionResponse
+    | MistralAIChatCompletionResponse
+    | AsyncIterable<MistralAIChatCompletionEvent>
   > {
     const { Mistral } = await this.imports();
     const caller = new AsyncCaller({
@@ -411,11 +441,35 @@ Either provide one via the "apiKey" field in the constructor, or set the "MISTRA
         try {
           let res:
             | MistralAIFIMCompletionResponse
+            | MistralAIChatCompletionResponse
             | AsyncIterable<MistralAIChatCompletionEvent>;
-          if (stream) {
-            res = await client.fim.stream(request);
+
+          if (this.useFim) {
+            // Use FIM API for code completion models like codestral
+            if (stream) {
+              res = await client.fim.stream(request);
+            } else {
+              res = await client.fim.complete(request);
+            }
           } else {
-            res = await client.fim.complete(request);
+            // Use Chat API for general-purpose models
+            // Convert the prompt to a chat message format
+            const chatRequest:
+              | MistralAIChatCompletionRequest
+              | MistralAIChatCompletionStreamRequest = {
+              model: request.model,
+              messages: [{ role: "user", content: request.prompt }],
+              temperature: request.temperature,
+              maxTokens: request.maxTokens,
+              topP: request.topP,
+              randomSeed: request.randomSeed,
+              stop: request.stop,
+            };
+            if (stream) {
+              res = await client.chat.stream(chatRequest);
+            } else {
+              res = await client.chat.complete(chatRequest);
+            }
           }
           return res;
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
