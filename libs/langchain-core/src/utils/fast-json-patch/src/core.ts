@@ -97,7 +97,7 @@ export interface PatchResult<T> extends Array<OperationResult<T>> {
  * This provides defense-in-depth alongside the check in applyOperation.
  */
 function isDangerousKey(key: string | number): boolean {
-  return key === "__proto__" || key === "constructor" || key === "prototype";
+  return Object.getOwnPropertyNames(Object.prototype).includes(key);
 }
 
 /* The operations applicable to an object */
