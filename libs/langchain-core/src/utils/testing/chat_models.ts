@@ -334,6 +334,10 @@ export class FakeListChatModel extends BaseChatModel<FakeListChatModelCallOption
 
   generationInfo?: Record<string, unknown>;
 
+  private tools: (StructuredTool | ToolSpec)[] = [];
+
+  toolStyle: "openai" | "anthropic" | "bedrock" | "google" = "openai";
+
   constructor(params: FakeChatInput) {
     super(params);
     const { responses, sleep, emitCustomEvent, generationInfo } = params;
@@ -455,6 +459,63 @@ export class FakeListChatModel extends BaseChatModel<FakeListChatModelCallOption
     } else {
       this.i = 0;
     }
+  }
+
+  bindTools(tools: (StructuredTool | ToolSpec)[]) {
+    const merged = [...this.tools, ...tools];
+
+    const toolDicts = merged.map((t) => {
+      switch (this.toolStyle) {
+        case "openai":
+          return {
+            type: "function",
+            function: {
+              name: t.name,
+              description: t.description,
+              parameters: toJsonSchema(t.schema),
+            },
+          };
+        case "anthropic":
+          return {
+            name: t.name,
+            description: t.description,
+            input_schema: toJsonSchema(t.schema),
+          };
+        case "bedrock":
+          return {
+            toolSpec: {
+              name: t.name,
+              description: t.description,
+              inputSchema: toJsonSchema(t.schema),
+            },
+          };
+        case "google":
+          return {
+            name: t.name,
+            description: t.description,
+            parameters: toJsonSchema(t.schema),
+          };
+        default:
+          throw new Error(`Unsupported tool style: ${this.toolStyle}`);
+      }
+    });
+
+    const wrapped =
+      this.toolStyle === "google"
+        ? [{ functionDeclarations: toolDicts }]
+        : toolDicts;
+
+    const next = new FakeListChatModel({
+      responses: this.responses,
+      sleep: this.sleep,
+      emitCustomEvent: this.emitCustomEvent,
+      generationInfo: this.generationInfo,
+    });
+    next.tools = merged;
+    next.toolStyle = this.toolStyle;
+    next.i = this.i;
+
+    return next.withConfig({ tools: wrapped } as BaseChatModelCallOptions);
   }
 
   withStructuredOutput<
