@@ -827,7 +827,13 @@ async function createSummary(
       "{messages}",
       JSON.stringify(trimmedMessages, null, 2)
     );
-    const response = await model.invoke(formattedPrompt);
+    /**
+     * Invoke the model with an empty callbacks array to prevent the internal
+     * summarization call from being streamed to the UI. This ensures the
+     * summarization is an internal housekeeping step that doesn't leak
+     * assistant messages or streaming events.
+     */
+    const response = await model.invoke(formattedPrompt, { callbacks: [] });
     const content = response.content;
     /**
      * Handle both string content and MessageContent array
