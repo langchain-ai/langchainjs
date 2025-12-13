@@ -462,7 +462,7 @@ export function toolStrategy(
  * import { z } from "zod";
  *
  * const agent = createAgent({
- *   model: "gpt-3.5-turbo",
+ *   model: "claude-haiku-4-5",
  *   responseFormat: toolStrategy(
  *     z.object({
  *       answer: z.string(),
@@ -476,7 +476,7 @@ export function toolStrategy(
  * ```ts
  * // Multiple schemas - model can choose which one to use
  * const agent = createAgent({
- *   model: "gpt-3.5-turbo",
+ *   model: "claude-haiku-4-5",
  *   responseFormat: toolStrategy([
  *     z.object({ name: z.string(), age: z.number() }),
  *     z.object({ email: z.string(), phone: z.string() }),
@@ -517,7 +517,7 @@ export function toolStrategy(
  * import { z } from "zod";
  *
  * const agent = createAgent({
- *   model: "gpt-4o",
+ *   model: "claude-haiku-4-5",
  *   responseFormat: providerStrategy(
  *     z.object({
  *       answer: z.string().describe("The answer to the question"),
@@ -531,7 +531,7 @@ export function toolStrategy(
  * ```ts
  * // Using strict mode for stricter schema enforcement
  * const agent = createAgent({
- *   model: "gpt-4o",
+ *   model: "claude-haiku-4-5",
  *   responseFormat: providerStrategy({
  *     schema: z.object({
  *       name: z.string(),
