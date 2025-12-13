@@ -20,7 +20,10 @@ import {
   RunnableSequence,
 } from "@langchain/core/runnables";
 import { JsonOutputKeyToolsParser } from "@langchain/core/output_parsers/openai_tools";
-import { BaseLLMOutputParser } from "@langchain/core/output_parsers";
+import {
+  BaseLLMOutputParser,
+  JsonOutputParser,
+} from "@langchain/core/output_parsers";
 import { AsyncCaller } from "@langchain/core/utils/async_caller";
 import { concat } from "@langchain/core/utils/stream";
 import {
@@ -492,60 +495,73 @@ export abstract class ChatGoogleBase<AuthOptions>
     const method = config?.method;
     const includeRaw = config?.includeRaw;
     if (method === "jsonMode") {
-      throw new Error(`Google only supports "functionCalling" as a method.`);
+      throw new Error(
+        `Google only supports "jsonSchema" or "functionCalling" as a method.`
+      );
     }
 
-    let functionName = name ?? "extract";
+    let llm;
     let outputParser: BaseLLMOutputParser<RunOutput>;
-    let tools: GeminiTool[];
-    if (isInteropZodSchema(schema)) {
-      const jsonSchema = schemaToGeminiParameters(schema);
-      tools = [
-        {
-          functionDeclarations: [
-            {
-              name: functionName,
-              description:
-                jsonSchema.description ?? "A function available to call.",
-              parameters: jsonSchema as GeminiFunctionSchema,
-            },
-          ],
-        },
-      ];
-      outputParser = new JsonOutputKeyToolsParser({
-        returnSingle: true,
-        keyName: functionName,
-        zodSchema: schema,
-      });
-    } else {
-      let geminiFunctionDefinition: GeminiFunctionDeclaration;
-      if (
-        typeof schema.name === "string" &&
-        typeof schema.parameters === "object" &&
-        schema.parameters != null
-      ) {
-        geminiFunctionDefinition = schema as GeminiFunctionDeclaration;
-        functionName = schema.name;
+    if (method === "functionCalling") {
+      let functionName = name ?? "extract";
+      let tools: GeminiTool[];
+      if (isInteropZodSchema(schema)) {
+        const jsonSchema = schemaToGeminiParameters(schema);
+        tools = [
+          {
+            functionDeclarations: [
+              {
+                name: functionName,
+                description:
+                  jsonSchema.description ?? "A function available to call.",
+                parameters: jsonSchema as GeminiFunctionSchema,
+              },
+            ],
+          },
+        ];
+        outputParser = new JsonOutputKeyToolsParser({
+          returnSingle: true,
+          keyName: functionName,
+          zodSchema: schema,
+        });
       } else {
-        // We are providing the schema for *just* the parameters, probably
-        const parameters: GeminiJsonSchema = removeAdditionalProperties(schema);
-        geminiFunctionDefinition = {
-          name: functionName,
-          description: schema.description ?? "",
-          parameters,
-        };
+        let geminiFunctionDefinition: GeminiFunctionDeclaration;
+        if (
+          typeof schema.name === "string" &&
+          typeof schema.parameters === "object" &&
+          schema.parameters != null
+        ) {
+          geminiFunctionDefinition = schema as GeminiFunctionDeclaration;
+          functionName = schema.name;
+        } else {
+          // We are providing the schema for *just* the parameters, probably
+          const parameters: GeminiJsonSchema =
+            removeAdditionalProperties(schema);
+          geminiFunctionDefinition = {
+            name: functionName,
+            description: schema.description ?? "",
+            parameters,
+          };
+        }
+        tools = [
+          {
+            functionDeclarations: [geminiFunctionDefinition],
+          },
+        ];
+        outputParser = new JsonOutputKeyToolsParser<RunOutput>({
+          returnSingle: true,
+          keyName: functionName,
+        });
       }
-      tools = [
-        {
-          functionDeclarations: [geminiFunctionDefinition],
-        },
-      ];
-      outputParser = new JsonOutputKeyToolsParser<RunOutput>({
-        returnSingle: true,
-        keyName: functionName,
+      llm = this.bindTools(tools).withConfig({ tool_choice: functionName });
+    } else {
+      // Default to jsonSchema method
+      const jsonSchema = schemaToGeminiParameters(schema);
+      llm = this.withConfig({
+        responseSchema: jsonSchema as GeminiJsonSchema,
       });
+      outputParser = new JsonOutputParser();
     }
-    const llm = this.bindTools(tools).withConfig({ tool_choice: functionName });
 
     if (!includeRaw) {
       return llm.pipe(outputParser).withConfig({

@@ -207,6 +207,8 @@ export function copyAIModelParamsInto(
     options?.responseMimeType ??
     params?.responseMimeType ??
     target?.responseMimeType;
+  ret.responseSchema =
+    options?.responseSchema ?? params?.responseSchema ?? target?.responseSchema;
   ret.responseModalities =
     options?.responseModalities ??
     params?.responseModalities ??
