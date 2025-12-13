@@ -145,16 +145,44 @@ export class ProviderStrategy<T = unknown> {
   // @ts-expect-error - _schemaType is used only for type inference
   private _schemaType?: T;
 
+  /**
+   * The schema to use for the provider strategy
+   */
+  public readonly schema: Record<string, unknown>;
+
+  /**
+   * Whether to use strict mode for the provider strategy
+   */
+  public readonly strict: boolean;
+
+  private constructor(options: {
+    schema: Record<string, unknown>;
+    strict?: boolean;
+  });
+  private constructor(schema: Record<string, unknown>, strict?: boolean);
   private constructor(
-    /**
-     * The schema to use for the provider strategy
-     */
-    public readonly schema: Record<string, unknown>,
-    /**
-     * Whether to use strict mode for the provider strategy
-     */
-    public readonly strict: boolean = false
-  ) {}
+    schemaOrOptions:
+      | Record<string, unknown>
+      | { schema: Record<string, unknown>; strict?: boolean },
+    strict?: boolean
+  ) {
+    if (
+      "schema" in schemaOrOptions &&
+      typeof schemaOrOptions.schema === "object" &&
+      schemaOrOptions.schema !== null &&
+      !("type" in schemaOrOptions)
+    ) {
+      const options = schemaOrOptions as {
+        schema: Record<string, unknown>;
+        strict?: boolean;
+      };
+      this.schema = options.schema;
+      this.strict = options.strict ?? false;
+    } else {
+      this.schema = schemaOrOptions as Record<string, unknown>;
+      this.strict = strict ?? false;
+    }
+  }
 
   static fromSchema<T>(
     schema: InteropZodType<T>,
