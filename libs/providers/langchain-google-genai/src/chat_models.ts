@@ -218,6 +218,8 @@ export interface GoogleGenerativeAIChatInput
 
 /**
  * Google Generative AI chat model integration.
+ * 
+ * Supports JSON mode, structured output, function calling, and multimodal inputs.
  *
  * Setup:
  * Install `@langchain/google-genai` and set an environment variable named `GOOGLE_API_KEY`.
@@ -470,6 +472,29 @@ export interface GoogleGenerativeAIChatInput
  * </details>
  *
  * <br />
+ *
+ * <details>
+ * <summary><strong>JSON Mode</strong></summary>
+ *
+ * ```typescript
+ * const jsonLlm = llm.withConfig({ 
+ *   responseMimeType: "application/json" 
+ * });
+ * const jsonResponse = await jsonLlm.invoke(
+ *   "Return a JSON object with key 'randomInts' and a value of 10 random integers between 0-99"
+ * );
+ * console.log(jsonResponse.content);
+ * ```
+ *
+ * ```txt
+ * {
+ *   "randomInts": [23, 87, 45, 12, 78, 34, 56, 90, 11, 67]
+ * }
+ * ```
+ * </details>
+ *
+ * <br />
+ *
  *
  * <details>
  * <summary><strong>Multimodal</strong></summary>
