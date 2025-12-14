@@ -2252,18 +2252,6 @@ describe("MultiServerMCPClient Integration Tests", () => {
                 }),
               ])
             );
-          } else if (Array.isArray(resContent)) {
-            // Embedded text is extracted as content
-            const resContentArray = resContent as ContentBlock[];
-            expect(resContentArray.length).toBeGreaterThanOrEqual(1);
-            expect(resContentArray).toEqual(
-              expect.arrayContaining([
-                expect.objectContaining({
-                  type: "text",
-                  text: "This is a test resource.",
-                }),
-              ])
-            );
           }
           expect(resArtifact).toHaveLength(1);
           expect(resArtifact[0]).toEqual(

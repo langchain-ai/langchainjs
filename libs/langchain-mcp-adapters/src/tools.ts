@@ -510,8 +510,11 @@ async function _convertCallToolResult({
   const artifactBlocks: EmbeddedResource[] = [];
 
   for (const content of result.content) {
-    const outputType = _getOutputTypeForContentType(content.type, outputHandling);
-    
+    const outputType = _getOutputTypeForContentType(
+      content.type,
+      outputHandling
+    );
+
     // Special handling: if an EmbeddedResource has text, ALWAYS extract it as text content.
     // The embedded text IS content and should be accessible to the LLM, regardless of
     // outputHandling settings. The outputHandling controls where the resource STRUCTURE
@@ -528,7 +531,7 @@ async function _convertCallToolResult({
         text: content.resource.text,
       } as MCPContentBlock);
     }
-    
+
     // Handle the resource structure (or other content) based on outputHandling
     if (outputType === "content") {
       contentBlocks.push(content);

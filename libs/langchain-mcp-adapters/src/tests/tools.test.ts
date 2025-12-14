@@ -636,7 +636,10 @@ describe("Simplified Tool Adapter Tests", () => {
         })
       );
 
-      const tools = await loadMcpTools("mockServer(resource_no_text)", mockClient as Client);
+      const tools = await loadMcpTools(
+        "mockServer(resource_no_text)",
+        mockClient as Client
+      );
 
       mockClient.callTool.mockReturnValue(
         Promise.resolve({
@@ -662,9 +665,9 @@ describe("Simplified Tool Adapter Tests", () => {
 
       const toolMessageResult: ToolMessage = await tools[0].invoke(toolCall);
       const contentArray = toolMessageResult.content as MessageContentComplex[];
-      
+
       // Should not extract text when resource has no text property
-      const extractedTexts = contentArray.filter(c => c.type === "text");
+      const extractedTexts = contentArray.filter((c) => c.type === "text");
       expect(extractedTexts.length).toBe(0);
     });
 
@@ -681,7 +684,10 @@ describe("Simplified Tool Adapter Tests", () => {
         })
       );
 
-      const tools = await loadMcpTools("mockServer(multiple_resources)", mockClient as Client);
+      const tools = await loadMcpTools(
+        "mockServer(multiple_resources)",
+        mockClient as Client
+      );
 
       mockClient.callTool.mockReturnValue(
         Promise.resolve({
@@ -716,12 +722,17 @@ describe("Simplified Tool Adapter Tests", () => {
       const toolMessageResult: ToolMessage = await tools[0].invoke(toolCall);
       const contentArray = toolMessageResult.content as MessageContentComplex[];
       const textBlocks = contentArray.filter(
-        (c): c is MessageContentComplex & { type: "text"; text: string } => c.type === "text"
+        (c): c is MessageContentComplex & { type: "text"; text: string } =>
+          c.type === "text"
       );
 
       // Both embedded texts should be extracted to content
-      expect(textBlocks.some(t => t.text === "First resource text")).toBe(true);
-      expect(textBlocks.some(t => t.text === "Second resource text")).toBe(true);
+      expect(textBlocks.some((t) => t.text === "First resource text")).toBe(
+        true
+      );
+      expect(textBlocks.some((t) => t.text === "Second resource text")).toBe(
+        true
+      );
 
       // Both resource structures should be in artifacts
       expect(toolMessageResult.artifact).toHaveLength(2);
