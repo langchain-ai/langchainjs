@@ -752,7 +752,7 @@ export const convertGeminiCandidateToAIMessage: Converter<
     const ret: GeminiGroundingSupport[][] = [];
 
     if (!groundingSupports || groundingSupports.length === 0) {
-      return [];
+      return [[]];
     }
 
     groundingSupports?.forEach((groundingSupport) => {

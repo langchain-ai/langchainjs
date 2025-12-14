@@ -414,13 +414,49 @@ export interface GeminiCodeExecutionTool {
 }
 
 export interface GeminiGoogleSearchTool {
+  // TODO - Implement timeRangeFilter attribute?
   googleSearch: Record<string, unknown>;
 }
 
+export interface GeminiUrlContextTool {
+  // No properties defined
+  urlContext: {};
+}
+
+export interface GeminiGoogleMapsTool {
+  googleMaps: {
+    enableWidget?: boolean;
+  }
+}
+
+export interface GeminiFileSearchTool {
+  fileSearch: {
+    metadataFilter?: string;
+    topK?: number;
+    fileSearchStoreNames?: string[];
+  }
+}
+
+export type GeminiComputerUseToolEnvironment =
+  "ENVIRONMENT_UNSPECIFIED" |
+  "ENVIRONMENT_BROWSER" ;
+
+export interface GeminiComputerUseTool {
+  computerUse: {
+    environment: GeminiComputerUseToolEnvironment;
+    excludedPredefinedFunctions?: string[];
+  }
+}
+
+// **Important**: Adding tools here should also be added to `isGeminiTool()`
 export type GeminiTool =
   GeminiFunctionDeclarationTool |
   GeminiCodeExecutionTool |
-  GeminiGoogleSearchTool;
+  GeminiGoogleSearchTool |
+  GeminiUrlContextTool |
+  GeminiGoogleMapsTool |
+  GeminiFileSearchTool |
+  GeminiComputerUseTool ;
 
 export type GeminiFunctionCallingConfigMode =
   "AUTO" |

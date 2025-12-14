@@ -166,19 +166,30 @@ function jsonSchemaToGeminiParameters(
  * - Code execution tools (`codeExecution`)
  * - Google Search retrieval tools (`googleSearchRetrieval` or `googleSearch`)
  *
+ * The full list of tool types are those defined by the `GeminiTool` type.
+ * Updating that list requires a change to the `geminiToolAttributes` below.
+ *
  * @param tool - The tool to check
  * @returns `true` if the tool is already in Gemini format, `false` otherwise
  *
  * @internal
  */
 function isGeminiTool(tool: BindToolsInput): tool is GeminiTool {
-  return (
-    typeof tool === "object" &&
-    tool !== null &&
-    ("functionDeclarations" in tool ||
-      "codeExecution" in tool ||
-      "googleSearch" in tool)
-  );
+  if (typeof tool !== "object" || tool === null) {
+    return false;
+  }
+
+  const geminiToolAttributes = [
+    "functionDeclarations",
+    "codeExecution",
+    "googleSearch",
+    "urlContext",
+    "googleMaps",
+    "fileSearch",
+    "computerUser",
+  ];
+
+  return geminiToolAttributes.some((attr) => attr in tool);
 }
 
 /**

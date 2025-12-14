@@ -547,7 +547,7 @@ export abstract class BaseChatGoogle<
               const textDeltas: string[] = [];
 
               for (const part of parts) {
-                if (part.text) {
+                if ("text" in part && part.text) {
                   textDeltas.push(part.text);
                 }
               }

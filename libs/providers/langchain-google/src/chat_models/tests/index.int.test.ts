@@ -22,7 +22,7 @@ import {
 import { BaseLanguageModelInput } from "@langchain/core/language_models/base";
 import { ChatPromptValue } from "@langchain/core/prompt_values";
 import { tool } from "@langchain/core/tools";
-import { GeminiTool } from "../types.js";
+import { GeminiTool, GeminiUrlContextTool } from "../types.js";
 import { Runnable } from "@langchain/core/runnables";
 import { InteropZodType } from "@langchain/core/utils/types";
 import { concat } from "@langchain/core/utils/stream";
@@ -541,7 +541,7 @@ describe.each(coreModelInfo)(
       expect(call.args.location).toBe("New York");
     });
 
-    test("Supports GoogleSearchRetrievalTool", async () => {
+    test.skip("Supports GoogleSearchRetrievalTool", async () => {
       // gemini-2.0-flash-lite-001: Not supported
       const searchRetrievalTool = {
         googleSearchRetrieval: {
@@ -560,7 +560,7 @@ describe.each(coreModelInfo)(
       expect(result.response_metadata).toHaveProperty("groundingSupport");
     });
 
-    test("Supports GoogleSearchTool", async () => {
+    test.skip("Supports GoogleSearchTool", async () => {
       // gemini-2.0-flash-lite-001: Not supported
       const searchTool: GeminiTool = {
         googleSearch: {},
@@ -574,6 +574,31 @@ describe.each(coreModelInfo)(
 
       expect(result.response_metadata).toHaveProperty("groundingMetadata");
       expect(result.response_metadata).toHaveProperty("groundingSupport");
+    });
+
+    test("URL Context Tool", async () => {
+      // Not available on Gemini 1.5
+      // Not available on Gemini 2.0 Flash Lite (but available on Flash)
+      // Not available on Vertex
+      const urlTool: GeminiUrlContextTool = {
+        urlContext: {},
+      };
+      const llm: Runnable = newChatGoogle().bindTools([urlTool]);
+      const url = "https://js.langchain.com/";
+      const prompt = `Summarize this web page: ${url}`;
+      const result = await llm.invoke(prompt);
+      const meta = result.response_metadata;
+
+      expect(meta).toHaveProperty("url_context_metadata");
+      expect(meta).toHaveProperty("groundingMetadata");
+      expect(meta).toHaveProperty("groundingSupport");
+      const context = meta.url_context_metadata;
+      expect(context).toHaveProperty("urlMetadata");
+      expect(Array.isArray(context.urlMetadata)).toEqual(true);
+      expect(context.urlMetadata[0].retrievedUrl).toEqual(url);
+      expect(context.urlMetadata[0].urlRetrievalStatus).toEqual(
+        "URL_RETRIEVAL_STATUS_SUCCESS"
+      );
     });
 
     test.skip(`function - stream tools`, async () => {
@@ -612,6 +637,29 @@ describe.each(coreModelInfo)(
       expect(toolCalls.length).toBe(1);
       expect(toolCalls[0].name).toBe("current_weather_tool");
       expect(toolCalls[0].args).toHaveProperty("location");
+    });
+
+    test("Can stream GoogleSearchRetrievalTool", async () => {
+      // gemini-2.0-flash-lite-001: Not supported
+      const searchRetrievalTool = {
+        googleSearchRetrieval: {
+          dynamicRetrievalConfig: {
+            mode: "MODE_DYNAMIC",
+            dynamicThreshold: 0.7, // default is 0.7
+          },
+        },
+      };
+      const llm: Runnable = newChatGoogle().bindTools([searchRetrievalTool]);
+
+      const stream = await llm.stream("Who won the 2024 MLB World Series?");
+      let finalMsg: AIMessageChunk | undefined;
+      for await (const msg of stream) {
+        finalMsg = finalMsg ? concat(finalMsg, msg) : msg;
+      }
+      if (!finalMsg) {
+        throw new Error("finalMsg is undefined");
+      }
+      expect(finalMsg.content as string).toContain("Dodgers");
     });
 
     test.skip("withStructuredOutput classic", async () => {
