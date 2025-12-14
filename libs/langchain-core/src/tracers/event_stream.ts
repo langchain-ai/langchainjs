@@ -173,6 +173,8 @@ export class EventStreamCallbackHandler
 
   public receiveStream: IterableReadableStream<StreamEvent>;
 
+  private readableStreamClosed = false;
+
   name = "event_stream_tracer";
 
   lc_prefer_streaming = true;
@@ -186,7 +188,11 @@ export class EventStreamCallbackHandler
     this.excludeNames = fields?.excludeNames;
     this.excludeTypes = fields?.excludeTypes;
     this.excludeTags = fields?.excludeTags;
-    this.transformStream = new TransformStream();
+    this.transformStream = new TransformStream({
+      flush: () => {
+        this.readableStreamClosed = true;
+      },
+    });
     this.writer = this.transformStream.writable.getWriter();
     this.receiveStream = IterableReadableStream.fromReadableStream(
       this.transformStream.readable
@@ -312,6 +318,7 @@ export class EventStreamCallbackHandler
   }
 
   async send(payload: StreamEvent, run: RunInfo) {
+    if (this.readableStreamClosed) return;
     if (this._includeRun(run)) {
       await this.writer.write(payload);
     }
