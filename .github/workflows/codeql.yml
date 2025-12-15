@@ -41,7 +41,7 @@ jobs:
 
       - name: Store sarif file as artifact
         if: github.event_name != 'pull_request'
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         with:
           name: codeql-results-${{matrix.language}}
           path: results-${{matrix.language}}
