@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable dot-notation */
 import { Gateway } from "@ibm-cloud/watsonx-ai/gateway";
-import { jest } from "@jest/globals";
+import { afterAll, jest } from "@jest/globals";
 import { AIMessageChunk } from "@langchain/core/messages";
 import {
   transformStreamToObjectStream,
@@ -453,6 +453,111 @@ describe("LLM unit tests", () => {
             ...fakeAuthProp,
           })
       ).toThrow(/Unexpected properties: notExisting, notExObj./);
+    });
+  });
+  describe("AbortSignal parameter passing", () => {
+    const testProps = {
+      model: "ibm/granite-3-8b-instruct",
+      version: "2025-01-17",
+      serviceUrl: "https://test.watsonx.ai",
+      projectId: "test-project-id",
+    };
+    const instance = new WatsonxLLM({ ...testProps, ...fakeAuthProp });
+    test("Signal passed to textChat() with projectId", async () => {
+      const mockResponse = {
+        results: [
+          {
+            generated_text: "",
+          },
+        ],
+      };
+      const spy = jest
+        .spyOn(instance["service"], "generateText")
+        .mockResolvedValue({ result: mockResponse } as any);
+
+      const controller = new AbortController();
+      await instance.invoke("test", { signal: controller.signal });
+
+      expect(spy).toHaveBeenCalledWith(
+        expect.objectContaining({ signal: controller.signal }),
+        undefined
+      );
+
+      spy.mockRestore();
+    });
+
+    test("Signal passed to deploymentsTextChat() with idOrName", async () => {
+      const mockResponse = {
+        results: [
+          {
+            generated_text: "",
+          },
+        ],
+      };
+      const spy = jest
+        .spyOn(instance["service"], "generateText")
+        .mockResolvedValue({ result: mockResponse } as any);
+      const controller = new AbortController();
+      await instance.invoke("test", { signal: controller.signal });
+
+      expect(spy).toHaveBeenCalledWith(
+        expect.objectContaining({ signal: controller.signal }),
+        undefined
+      );
+
+      spy.mockRestore();
+    });
+
+    test("Signal passed to textChatStream() with projectId", async () => {
+      async function* mockStream() {
+        yield { data: { results: [{ generated_text: "" }], model_id: "" } };
+      }
+
+      const spy = jest
+        .spyOn(instance["service"], "generateTextStream")
+        .mockResolvedValue(mockStream() as any);
+
+      const controller = new AbortController();
+      const stream = await instance.stream("test", {
+        signal: controller.signal,
+      });
+
+      for await (const _chunk of stream) {
+        /* consume stream */
+      }
+
+      expect(spy).toHaveBeenCalledWith(
+        expect.objectContaining({ signal: controller.signal }),
+        undefined
+      );
+
+      spy.mockRestore();
+    });
+
+    test("Signal passed to deploymentsTextChatStream() with idOrName", async () => {
+      async function* mockStream() {
+        yield { data: { results: [{ generated_text: "" }], model_id: "" } };
+      }
+
+      const spy = jest
+        .spyOn(instance["service"], "generateTextStream")
+        .mockResolvedValue(mockStream() as any);
+
+      const controller = new AbortController();
+      const stream = await instance.stream("test", {
+        signal: controller.signal,
+      });
+
+      for await (const _chunk of stream) {
+        /* consume stream */
+      }
+
+      expect(spy).toHaveBeenCalledWith(
+        expect.objectContaining({ signal: controller.signal }),
+        undefined
+      );
+
+      spy.mockRestore();
     });
   });
 });

@@ -499,6 +499,7 @@ export class ChatWatsonx<
         "tool_choice",
         "promptIndex",
         "ls_structured_output_format",
+        "watsonxCallbacks",
       ],
 
       AUTH: [
@@ -514,7 +515,6 @@ export class ChatWatsonx<
 
       SHARED: [
         "maxRetries",
-        "watsonxCallbacks",
         "authenticator",
         "serviceUrl",
         "version",
@@ -529,7 +529,6 @@ export class ChatWatsonx<
         "verbose",
         "tags",
         "headers",
-        "signal",
         "disableStreaming",
         "timeout",
         "stopSequences",
@@ -834,6 +833,7 @@ export class ChatWatsonx<
     scopeId: ReturnType<ChatWatsonx["scopeId"]>,
     params: ReturnType<ChatWatsonx["invocationParams"]>,
     messages: ChatsMessage[],
+    signal?: AbortSignal,
     stream: S = false as S
   ): Promise<
     S extends true ? Stream<ChatObjectStream> : Response<ChatsResponse>
@@ -843,6 +843,7 @@ export class ChatWatsonx<
         return this.gateway.chat.completion.create({
           ...params,
           ...scopeId,
+          signal,
           stream,
           returnObject: stream ? true : undefined, // this is redudant but with current tsconfig it is expected
           messages,
@@ -920,6 +921,7 @@ export class ChatWatsonx<
             scopeId,
             params,
             watsonxMessages,
+            options.signal,
             false
           );
         }
@@ -993,9 +995,16 @@ export class ChatWatsonx<
       this.model
     );
     const watsonxCallbacks = this.invocationCallbacks(options);
+    const { signal } = options;
     const callback = () => {
       if (this.modelGateway) {
-        return this._chatModelGateway(scopeId, params, watsonxMessages, true);
+        return this._chatModelGateway(
+          scopeId,
+          params,
+          watsonxMessages,
+          signal,
+          true
+        );
       }
       if (this.service) {
         if ("idOrName" in scopeId)
@@ -1004,7 +1013,7 @@ export class ChatWatsonx<
               ...scopeId,
               messages: watsonxMessages,
               returnObject: true,
-              signal: options?.signal,
+              signal,
             },
             watsonxCallbacks
           );
@@ -1015,7 +1024,7 @@ export class ChatWatsonx<
               ...scopeId,
               messages: watsonxMessages,
               returnObject: true,
-              signal: options?.signal,
+              signal,
             },
             watsonxCallbacks
           );
