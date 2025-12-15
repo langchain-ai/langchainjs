@@ -79,13 +79,19 @@ export class LangChainTracer
   }
 
   async onRunCreate(run: Run): Promise<void> {
-    const runTree = this.getRunTreeWithTracingConfig(run.id);
-    await runTree?.postRun();
+    if (!run.extra?.lc_defers_inputs) {
+      const runTree = this.getRunTreeWithTracingConfig(run.id);
+      await runTree?.postRun();
+    }
   }
 
   async onRunUpdate(run: Run): Promise<void> {
     const runTree = this.getRunTreeWithTracingConfig(run.id);
-    await runTree?.patchRun();
+    if (run.extra?.lc_defers_inputs) {
+      await runTree?.postRun();
+    } else {
+      await runTree?.patchRun();
+    }
   }
 
   getRun(id: string): Run | undefined {

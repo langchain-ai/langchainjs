@@ -521,7 +521,8 @@ export abstract class Runnable<
             config.runType,
             undefined,
             undefined,
-            config.runName ?? this.getName()
+            config.runName ?? this.getName(),
+            { lc_defers_inputs: true }
           ),
         options?.signal,
         config

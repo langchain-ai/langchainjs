@@ -142,7 +142,8 @@ abstract class BaseCallbackHandlerMethodsClass {
     tags?: string[],
     metadata?: Record<string, unknown>,
     runType?: string,
-    runName?: string
+    runName?: string,
+    extra?: Record<string, unknown>
   ): // eslint-disable-next-line @typescript-eslint/no-explicit-any
   Promise<any> | any;
 

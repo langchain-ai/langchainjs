@@ -413,7 +413,8 @@ export abstract class BaseTracer extends BaseCallbackHandler {
     tags?: string[],
     metadata?: KVMap,
     runType?: string,
-    name?: string
+    name?: string,
+    extra?: Record<string, unknown>
   ) {
     const execution_order = this._getExecutionOrder(parentRunId);
     const start_time = Date.now();
@@ -434,7 +435,7 @@ export abstract class BaseTracer extends BaseCallbackHandler {
       child_execution_order: execution_order,
       run_type: runType ?? "chain",
       child_runs: [],
-      extra: metadata ? { metadata } : {},
+      extra: metadata ? { ...extra, metadata } : { ...extra },
       tags: tags || [],
     };
     return this._addRunToRunMap(run);
