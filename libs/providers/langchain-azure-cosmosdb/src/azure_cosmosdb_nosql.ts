@@ -213,13 +213,8 @@ export class AzureCosmosDBNoSQLVectorStore extends VectorStore {
 
     if (!dbConfig.client) {
       if (connectionString) {
-        let [endpoint, key] = connectionString!.split(";");
-        [, endpoint] = endpoint.split("=");
-        [, key] = key.split("=");
-
         this.client = new CosmosClient({
-          endpoint,
-          key,
+          connectionString,
           userAgentSuffix: USER_AGENT_SUFFIX,
         });
       } else {
@@ -586,7 +581,10 @@ export class AzureCosmosDBNoSQLVectorStore extends VectorStore {
         filter?.threshold
       );
     } else if (searchType === AzureCosmosDBNoSQLSearchType.Hybrid) {
-      if (!filter?.fullTextRankFilter) {
+      if (
+        !filter?.fullTextRankFilter ||
+        filter.fullTextRankFilter.length === 0
+      ) {
         throw new Error(
           `fullTextRankFilter is required for ${searchType} search type`
         );
@@ -600,7 +598,10 @@ export class AzureCosmosDBNoSQLVectorStore extends VectorStore {
     } else if (
       searchType === AzureCosmosDBNoSQLSearchType.HybridScoreThreshold
     ) {
-      if (!filter?.fullTextRankFilter) {
+      if (
+        !filter?.fullTextRankFilter ||
+        filter.fullTextRankFilter.length === 0
+      ) {
         throw new Error(
           `fullTextRankFilter is required for ${searchType} search type`
         );
@@ -867,17 +868,22 @@ export class AzureCosmosDBNoSQLVectorStore extends VectorStore {
         const item = options.fullTextRankFilter[0];
         const terms = item.searchText
           .split(" ")
-          .map((_, i) => `@${item.searchField}_term_${i}`)
+          .map((_, termIndex) => `@${item.searchField}_0_term_${termIndex}`)
           .join(", ");
         query += ` ORDER BY RANK FullTextScore(${table}[@${item.searchField}], ${terms})`;
       } else {
-        const rankComponents = options?.fullTextRankFilter?.map((item) => {
-          const terms = item.searchText
-            .split(" ")
-            .map((_, i) => `@${item.searchField}_term_${i}`)
-            .join(", ");
-          return `FullTextScore(${table}[@${item.searchField}], ${terms})`;
-        });
+        const rankComponents = options?.fullTextRankFilter?.map(
+          (item, filterIndex) => {
+            const terms = item.searchText
+              .split(" ")
+              .map(
+                (_, termIndex) =>
+                  `@${item.searchField}_${filterIndex}_term_${termIndex}`
+              )
+              .join(", ");
+            return `FullTextScore(${table}[@${item.searchField}], ${terms})`;
+          }
+        );
         query += ` ORDER BY RANK RRF(${rankComponents?.join(", ")})`;
       }
     } else if (
@@ -889,13 +895,18 @@ export class AzureCosmosDBNoSQLVectorStore extends VectorStore {
       searchType === AzureCosmosDBNoSQLSearchType.Hybrid ||
       searchType === AzureCosmosDBNoSQLSearchType.HybridScoreThreshold
     ) {
-      const rankComponents = options?.fullTextRankFilter?.map((item) => {
-        const terms = item.searchText
-          .split(" ")
-          .map((_, i) => `@${item.searchField}_term_${i}`)
-          .join(", ");
-        return `FullTextScore(${table}[@${item.searchField}], ${terms})`;
-      });
+      const rankComponents = options?.fullTextRankFilter?.map(
+        (item, filterIndex) => {
+          const terms = item.searchText
+            .split(" ")
+            .map(
+              (_, termIndex) =>
+                `@${item.searchField}_${filterIndex}_term_${termIndex}`
+            )
+            .join(", ");
+          return `FullTextScore(${table}[@${item.searchField}], ${terms})`;
+        }
+      );
 
       query += ` ORDER BY RANK RRF(${rankComponents?.join(
         ", "
@@ -943,48 +954,58 @@ export class AzureCosmosDBNoSQLVectorStore extends VectorStore {
     withEmbedding?: boolean
   ): string {
     const table = this.tableAlias;
-
+    let projection = "";
+    let isDefaultProjectionRequired = true;
     if (projectionMapping) {
-      return Object.entries(projectionMapping)
-        .map(([key, alias]) => `${table}[@${key}] as ${alias}`)
-        .join(", ");
-    } else if (fullTextRankFilter) {
-      const fields = [`${table}.id`];
-      fullTextRankFilter.forEach((item) => {
-        fields.push(`${table}[@${item.searchField}] as ${item.searchField}`);
-      });
-      let projection = fields.join(", ");
+      const fields = Object.entries(projectionMapping).map(
+        ([key, alias]) => `${table}[@${key}] as ${alias}`
+      );
 
-      if (
-        searchType === AzureCosmosDBNoSQLSearchType.Vector ||
-        searchType === AzureCosmosDBNoSQLSearchType.VectorScoreThreshold ||
-        searchType === AzureCosmosDBNoSQLSearchType.Hybrid ||
-        searchType === AzureCosmosDBNoSQLSearchType.HybridScoreThreshold
-      ) {
-        if (withEmbedding) {
-          projection += `, ${table}[@embeddingKey] as embedding`;
-        }
-        projection += `, VectorDistance(${table}[@embeddingKey], @embeddings) as SimilarityScore`;
+      if (fields.length > 0) {
+        projection += fields.join(", ");
+        isDefaultProjectionRequired = false;
       }
-
-      return projection;
-    } else {
-      let projection = `${table}.id, ${table}[@textKey] as ${this.textKey}, ${table}[@metadataKey] as metadata`;
-
-      if (
-        searchType === AzureCosmosDBNoSQLSearchType.Vector ||
-        searchType === AzureCosmosDBNoSQLSearchType.VectorScoreThreshold ||
-        searchType === AzureCosmosDBNoSQLSearchType.Hybrid ||
-        searchType === AzureCosmosDBNoSQLSearchType.HybridScoreThreshold
-      ) {
-        if (withEmbedding) {
-          projection += `, ${table}[@embeddingKey] as ${this.embeddingKey}`;
-        }
-        projection += `, VectorDistance(${table}[@embeddingKey], @embeddings) as SimilarityScore`;
-      }
-
-      return projection;
     }
+    if (fullTextRankFilter) {
+      const fields: string[] = [];
+      const addedSearchFields = new Set<string>();
+      fullTextRankFilter.forEach((item) => {
+        if (
+          !projectionMapping ||
+          !Object.keys(projectionMapping).includes(item.searchField)
+        ) {
+          if (!addedSearchFields.has(item.searchField)) {
+            fields.push(
+              `${table}[@${item.searchField}] as ${item.searchField}`
+            );
+            addedSearchFields.add(item.searchField);
+          }
+        }
+      });
+      if (fields.length > 0) {
+        if (!isDefaultProjectionRequired) {
+          projection += ", ";
+        } else {
+          isDefaultProjectionRequired = false;
+        }
+        projection += fields.join(", ");
+      }
+    }
+    if (isDefaultProjectionRequired) {
+      projection = `${table}.id, ${table}[@textKey] as ${this.textKey}, ${table}[@metadataKey] as metadata`;
+    }
+    if (
+      searchType === AzureCosmosDBNoSQLSearchType.Vector ||
+      searchType === AzureCosmosDBNoSQLSearchType.VectorScoreThreshold ||
+      searchType === AzureCosmosDBNoSQLSearchType.Hybrid ||
+      searchType === AzureCosmosDBNoSQLSearchType.HybridScoreThreshold
+    ) {
+      if (withEmbedding) {
+        projection += `, ${table}[@embeddingKey] as embedding`;
+      }
+      projection += `, VectorDistance(${table}[@embeddingKey], @embeddings) as SimilarityScore`;
+    }
+    return projection;
   }
 
   /**
@@ -1010,6 +1031,7 @@ export class AzureCosmosDBNoSQLVectorStore extends VectorStore {
     filterClause?: AzureCosmosDBNoSQLQueryFilter
   ): SqlParameter[] {
     const parameters: SqlParameter[] = [{ name: "@limit", value: k }];
+    let isDefaultParamRequired = true;
 
     // Add filterClause parameters if it's a SqlQuerySpec
     if (filterClause && typeof filterClause !== "string") {
@@ -1018,16 +1040,16 @@ export class AzureCosmosDBNoSQLVectorStore extends VectorStore {
       }
     }
 
+    const addedFieldParams = new Set<string>();
+
     if (projectionMapping) {
+      isDefaultParamRequired = false;
       Object.keys(projectionMapping).forEach((key) => {
-        parameters.push({ name: `@${key}`, value: key });
+        if (!addedFieldParams.has(key)) {
+          parameters.push({ name: `@${key}`, value: key });
+          addedFieldParams.add(key);
+        }
       });
-    } else {
-      parameters.push({
-        name: "@textKey",
-        value: this.textKey,
-      });
-      parameters.push({ name: "@metadataKey", value: this.metadataKey });
     }
 
     if (
@@ -1049,20 +1071,31 @@ export class AzureCosmosDBNoSQLVectorStore extends VectorStore {
     }
 
     if (fullTextRankFilter) {
-      fullTextRankFilter.forEach((item) => {
-        parameters.push({
-          name: `@${item.searchField}`,
-          value: item.searchField,
-        });
-        item.searchText.split(" ").forEach((term, i) => {
+      isDefaultParamRequired = false;
+      fullTextRankFilter.forEach((item, filterIndex) => {
+        if (!addedFieldParams.has(item.searchField)) {
           parameters.push({
-            name: `@${item.searchField}_term_${i}`,
+            name: `@${item.searchField}`,
+            value: item.searchField,
+          });
+          addedFieldParams.add(item.searchField);
+        }
+        item.searchText.split(" ").forEach((term, termIndex) => {
+          parameters.push({
+            name: `@${item.searchField}_${filterIndex}_term_${termIndex}`,
             value: term,
           });
         });
       });
     }
 
+    if (isDefaultParamRequired) {
+      parameters.push({
+        name: "@textKey",
+        value: this.textKey,
+      });
+      parameters.push({ name: "@metadataKey", value: this.metadataKey });
+    }
     return parameters;
   }
 
@@ -1090,10 +1123,13 @@ export class AzureCosmosDBNoSQLVectorStore extends VectorStore {
     await this.initialize();
 
     const { resources: items } = await this.container.items
-      .query({
-        query,
-        parameters,
-      })
+      .query(
+        {
+          query,
+          parameters,
+        },
+        { forceQueryPlan: true }
+      )
       .fetchAll();
 
     const docsAndScores: [Document, number][] = [];
