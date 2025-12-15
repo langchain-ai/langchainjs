@@ -531,6 +531,7 @@ export class WatsonxLLM<
           prompt: input,
           stream: true,
           signal,
+          returnObject: true,
         });
       }
     } else {
@@ -765,11 +766,10 @@ export class WatsonxLLM<
       }
 
       const results =
-        "model_id" in chunk.data
-          ? chunk.data.results.entries()
-          : chunk.data.choices.entries();
+        "model_id" in chunk.data ? chunk.data.results : chunk.data.choices;
+
       const usage = "usage" in chunk.data ? chunk.data.usage : {};
-      for (const [index, item] of results) {
+      for (const [index, item] of results.entries()) {
         const params =
           "generated_text" in item
             ? {

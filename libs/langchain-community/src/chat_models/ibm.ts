@@ -844,6 +844,7 @@ export class ChatWatsonx<
           ...params,
           ...scopeId,
           stream,
+          returnObject: stream ? true : undefined, // this is redudant but with current tsconfig it is expected
           messages,
         });
       }
@@ -872,12 +873,13 @@ export class ChatWatsonx<
       const tokenUsages: UsageMetadata[] = [];
       for await (const chunk of stream) {
         const message = chunk.message as AIMessageChunk;
-        if (message?.usage_metadata) {
+        const usageMetadata = message?.usage_metadata as UsageMetadata;
+        if (usageMetadata) {
           const completion = chunk.generationInfo?.completion;
           if (tokenUsages[completion])
             tokenUsages[completion].output_tokens =
-              message.usage_metadata.output_tokens;
-          else tokenUsages[completion] = message.usage_metadata;
+              usageMetadata?.output_tokens;
+          else tokenUsages[completion] = usageMetadata;
         }
         chunk.message.response_metadata = {
           model: this.model,
