@@ -217,7 +217,7 @@ export class FakeStreamingChatModel extends BaseChatModel<FakeStreamingChatModel
 
   async *_streamResponseChunks(
     _messages: BaseMessage[],
-    _options: this["ParsedCallOptions"],
+    options: this["ParsedCallOptions"],
     runManager?: CallbackManagerForLLMRun
   ): AsyncGenerator<ChatGenerationChunk> {
     if (this.thrownErrorString) {
@@ -234,6 +234,7 @@ export class FakeStreamingChatModel extends BaseChatModel<FakeStreamingChatModel
           text: msgChunk.content?.toString() ?? "",
         });
 
+        if (options.signal?.aborted) break;
         yield cg;
         await runManager?.handleLLMNewToken(
           msgChunk.content as string,
@@ -260,6 +261,7 @@ export class FakeStreamingChatModel extends BaseChatModel<FakeStreamingChatModel
         message: new AIMessageChunk({ content: ch }),
         text: ch,
       });
+      if (options.signal?.aborted) break;
       yield cg;
       await runManager?.handleLLMNewToken(
         ch,
@@ -419,6 +421,7 @@ export class FakeListChatModel extends BaseChatModel<FakeListChatModelCallOption
         text,
         isLastChunk ? this.generationInfo : undefined
       );
+      if (options.signal?.aborted) break;
       yield chunk;
       // eslint-disable-next-line no-void
       void runManager?.handleLLMNewToken(text);
