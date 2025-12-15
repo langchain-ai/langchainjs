@@ -836,11 +836,11 @@ export class CallbackManager
     chain: Serialized,
     inputs: ChainValues,
     runId = uuidv7(),
-    _parentRunId: string | undefined = undefined,
+    runType: string | undefined = undefined,
     _tags: string[] | undefined = undefined,
     _metadata: Record<string, unknown> | undefined = undefined,
-    runType?: string,
     runName: string | undefined = undefined,
+    _parentRunId: string | undefined = undefined,
     extra: Record<string, unknown> | undefined = undefined
   ): Promise<CallbackManagerForChainRun> {
     await Promise.all(
