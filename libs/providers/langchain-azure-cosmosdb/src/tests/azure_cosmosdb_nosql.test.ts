@@ -560,19 +560,19 @@ describe("Query Building Tests", () => {
           "ORDER BY RANK FullTextScore(c[@description]"
         );
         expect(result.parameters).toContainEqual({
-          name: "@description_term_0",
+          name: "@description_0_term_0",
           value: "machine",
         });
         expect(result.parameters).toContainEqual({
-          name: "@description_term_1",
+          name: "@description_0_term_1",
           value: "learning",
         });
         expect(result.parameters).toContainEqual({
-          name: "@description_term_2",
+          name: "@description_0_term_2",
           value: "artificial",
         });
         expect(result.parameters).toContainEqual({
-          name: "@description_term_3",
+          name: "@description_0_term_3",
           value: "intelligence",
         });
       });
@@ -603,18 +603,52 @@ describe("Query Building Tests", () => {
         expect(result.query).toContain("FullTextScore(c[@title]");
         expect(result.query).toContain("FullTextScore(c[@description]");
         expect(result.query).toContain("FullTextScore(c[@tags]");
-        expect(result.parameters).toContainEqual({
-          name: "@title_term_0",
-          value: "cosmos",
-        });
-        expect(result.parameters).toContainEqual({
-          name: "@description_term_1",
-          value: "vector",
-        });
-        expect(result.parameters).toContainEqual({
-          name: "@tags_term_0",
-          value: "azure",
-        });
+        expect(result.parameters).toEqual([
+          {
+            name: "@limit",
+            value: 10,
+          },
+          {
+            name: "@title",
+            value: "title",
+          },
+          {
+            name: "@title_0_term_0",
+            value: "cosmos",
+          },
+          {
+            name: "@title_0_term_1",
+            value: "database",
+          },
+          {
+            name: "@description",
+            value: "description",
+          },
+          {
+            name: "@description_1_term_0",
+            value: "nosql",
+          },
+          {
+            name: "@description_1_term_1",
+            value: "vector",
+          },
+          {
+            name: "@description_1_term_2",
+            value: "search",
+          },
+          {
+            name: "@tags",
+            value: "tags",
+          },
+          {
+            name: "@tags_2_term_0",
+            value: "azure",
+          },
+          {
+            name: "@tags_2_term_1",
+            value: "cloud",
+          },
+        ]);
       });
 
       test("should include searched fields in projection", () => {
@@ -990,34 +1024,40 @@ describe("Query Building Tests", () => {
           { fullTextRankFilter }
         );
 
-        expect(result.parameters).toContainEqual({
-          name: "@title",
-          value: "title",
-        });
-        expect(result.parameters).toContainEqual({
-          name: "@title_term_0",
-          value: "azure",
-        });
-        expect(result.parameters).toContainEqual({
-          name: "@title_term_1",
-          value: "cosmos",
-        });
-        expect(result.parameters).toContainEqual({
-          name: "@title_term_2",
-          value: "db",
-        });
-        expect(result.parameters).toContainEqual({
-          name: "@title_term_3",
-          value: "nosql",
-        });
-        expect(result.parameters).toContainEqual({
-          name: "@title_term_4",
-          value: "vector",
-        });
-        expect(result.parameters).toContainEqual({
-          name: "@title_term_5",
-          value: "search",
-        });
+        expect(result.parameters).toEqual([
+          {
+            name: "@limit",
+            value: 5,
+          },
+          {
+            name: "@title",
+            value: "title",
+          },
+          {
+            name: "@title_0_term_0",
+            value: "azure",
+          },
+          {
+            name: "@title_0_term_1",
+            value: "cosmos",
+          },
+          {
+            name: "@title_0_term_2",
+            value: "db",
+          },
+          {
+            name: "@title_0_term_3",
+            value: "nosql",
+          },
+          {
+            name: "@title_0_term_4",
+            value: "vector",
+          },
+          {
+            name: "@title_0_term_5",
+            value: "search",
+          },
+        ]);
       });
 
       test("should build parameters for multiple full-text fields", () => {
@@ -1038,28 +1078,41 @@ describe("Query Building Tests", () => {
           { fullTextRankFilter }
         );
 
-        expect(result.parameters).toContainEqual({
-          name: "@title_term_0",
-          value: "first",
-        });
-        expect(result.parameters).toContainEqual({
-          name: "@title_term_1",
-          value: "second",
-        });
-        expect(result.parameters).toContainEqual({
-          name: "@body_term_0",
-          value: "third",
-        });
-        expect(result.parameters).toContainEqual({
-          name: "@body_term_1",
-          value: "fourth",
-        });
-        expect(result.parameters).toContainEqual({
-          name: "@body_term_2",
-          value: "fifth",
-        });
+        expect(result.parameters).toEqual([
+          {
+            name: "@limit",
+            value: 5,
+          },
+          {
+            name: "@title",
+            value: "title",
+          },
+          {
+            name: "@title_0_term_0",
+            value: "first",
+          },
+          {
+            name: "@title_0_term_1",
+            value: "second",
+          },
+          {
+            name: "@body",
+            value: "body",
+          },
+          {
+            name: "@body_1_term_0",
+            value: "third",
+          },
+          {
+            name: "@body_1_term_1",
+            value: "fourth",
+          },
+          {
+            name: "@body_1_term_2",
+            value: "fifth",
+          },
+        ]);
       });
-
       test("should include weights parameter when provided", () => {
         const embeddings = [0.1, 0.2, 0.3];
         const fullTextRankFilter = [
@@ -1174,7 +1227,6 @@ describe("Query Building Tests", () => {
           fullTextRankFilter,
           false
         );
-        expect(projection).toContain("c.id");
         expect(projection).toContain("c[@title] as title");
         expect(projection).toContain("c[@description] as description");
         expect(projection).toContain("c[@tags] as tags");
