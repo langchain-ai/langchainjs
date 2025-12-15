@@ -328,21 +328,6 @@ test.each(["true", "false"])(
     const thirdCallParams = JSON.parse(
       decoder.decode((relevantCalls[2][1] as any).body)
     );
-    // expect(firstCallParams).toMatchObject({
-    //   id: firstCallParams.id,
-    //   name: "RunnableLambda",
-    //   start_time: expect.any(String),
-
-    //   events: [{ name: "start", time: expect.any(String) }],
-    //   inputs: {
-    //     input: "",
-    //   },
-    //   run_type: "chain",
-    //   extra: expect.any(Object),
-    //   tags: [],
-    //   trace_id: firstCallParams.id,
-    //   dotted_order: expect.any(String),
-    // });
     expect(firstCallParams).toMatchObject({
       id: expect.any(String),
       name: "aiGreet",
