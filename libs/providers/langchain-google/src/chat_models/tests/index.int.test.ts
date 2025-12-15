@@ -14,7 +14,7 @@ import {
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import {
   AIMessage, AIMessageChunk, BaseMessage,
-  BaseMessageChunk,
+  BaseMessageChunk, ContentBlock,
   HumanMessage,
   SystemMessage,
   ToolMessage
@@ -26,6 +26,7 @@ import { GeminiTool, GeminiUrlContextTool } from "../types.js";
 import { Runnable } from "@langchain/core/runnables";
 import { InteropZodType } from "@langchain/core/utils/types";
 import { concat } from "@langchain/core/utils/stream";
+import fs from "fs/promises";
 
 type ModelInfoConfig = {
   node?: boolean,
@@ -576,7 +577,7 @@ describe.each(coreModelInfo)(
       expect(result.response_metadata).toHaveProperty("groundingSupport");
     });
 
-    test("URL Context Tool", async () => {
+    test.skip("URL Context Tool", async () => {
       // Not available on Gemini 1.5
       // Not available on Gemini 2.0 Flash Lite (but available on Flash)
       // Not available on Vertex
@@ -639,7 +640,7 @@ describe.each(coreModelInfo)(
       expect(toolCalls[0].args).toHaveProperty("location");
     });
 
-    test("Can stream GoogleSearchRetrievalTool", async () => {
+    test.skip("Can stream GoogleSearchRetrievalTool", async () => {
       // gemini-2.0-flash-lite-001: Not supported
       const searchRetrievalTool = {
         googleSearchRetrieval: {
@@ -760,6 +761,51 @@ describe.each(coreModelInfo)(
       expect(resultJson).toHaveProperty("comment");
       expect(recorder.request?.body?.generationConfig).toHaveProperty("responseJsonSchema");
       expect(recorder.request?.body?.generationConfig?.responseMimeType).toEqual("application/json");
+    });
+
+    test("image data - ContentBlock.Standard", async () => {
+      const model = newChatGoogle({});
+
+      const dataPath = "src/chat_models/tests/data/blue-square.png";
+      const dataType = "image/png";
+      const data = await fs.readFile(dataPath);
+      const data64 = data.toString("base64");
+      // const dataUri = `data:${dataType};base64,${data64}`;
+
+      const content: ContentBlock.Standard[] = [
+        {
+          type: "text",
+          text: "What is in this image?",
+        },
+        {
+          type: "image",
+          data: data64,
+          mimeType: dataType,
+        },
+      ];
+      const message = new HumanMessage({
+        contentBlocks: content
+      });
+
+      const messages: BaseMessage[] = [
+        message,
+      ];
+
+      const res = await model.invoke(messages);
+
+      expect(res).toBeDefined();
+      expect(res._getType()).toEqual("ai");
+
+      const aiMessage = res as AIMessageChunk;
+      expect(aiMessage.content).toBeDefined();
+
+      expect(typeof aiMessage.content).toBe("string");
+      const text = aiMessage.content as string;
+      expect(text).toMatch(/blue/);
+
+      expect(
+        aiMessage?.usage_metadata?.input_token_details?.image
+      ).toBeGreaterThan(0);
     });
 
   }

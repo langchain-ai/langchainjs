@@ -24,6 +24,7 @@ import {
   GeminiModalityTokenCount,
   GeminiGroundingSupport,
   GeminiPartFunctionCall,
+  GeminiPartBaseFile,
 } from "../chat_models/types.js";
 import { iife } from "../utils/misc.js";
 import { ToolCallNotFoundError } from "../utils/errors.js";
@@ -44,10 +45,12 @@ export const geminiContentBlockConverter: StandardContentBlockConverter<{
   providerName: "ChatGoogle",
 
   fromStandardTextBlock(block: Data.StandardTextBlock): GeminiPart {
+    console.log('fromStandardTextBlock', block);
     return { text: block.text };
   },
 
   fromStandardImageBlock(block: Data.StandardImageBlock): GeminiPart {
+    console.log('fromStandardImageBlock', block);
     if (isDataContentBlock(block)) {
       if (block.source_type === "base64") {
         if (!block.mime_type) {
@@ -275,6 +278,99 @@ export const geminiContentBlockConverter: StandardContentBlockConverter<{
   },
 };
 
+function convertStandardDataContentBlockToGeminiPart(
+  block: ContentBlock.Multimodal.Data
+): GeminiPart | null {
+
+  function uint8arrayToString(data: Uint8Array): string {
+    return btoa(
+      Array.from(data as Uint8Array)
+        .map((byte) => String.fromCharCode(byte))
+        .join("")
+    )
+  }
+
+  function extractMimeType(
+    str: string
+  ): { mimeType: string | null; data: string | null } {
+    if (str.startsWith("data:")) {
+      return {
+        mimeType: str.split(":")[1].split(";")[0],
+        data: str.split(",")[1],
+      };
+    }
+    return {
+      mimeType: null,
+      data: null,
+    }
+  }
+
+  if ("mimeType" in block && "data" in block) {
+    const mimeType = block.mimeType!;
+    const data: string = typeof block.data === "string" ? block.data : uint8arrayToString(block.data!)
+    return {
+      inlineData: {
+        mimeType,
+        data,
+      },
+    };
+  } else if ("mimeType" in block && "url" in block) {
+    const mimeType = block.mimeType!;
+    const fileUri = block.url!;
+    return {
+      fileData: {
+        mimeType,
+        fileUri,
+      }
+    }
+  } else if ("url" in block && block.url?.startsWith("data://")) {
+    const {mimeType, data} = extractMimeType(block.url!);
+    if (mimeType && data) {
+      return {
+        inlineData: {
+          mimeType,
+          data,
+        }
+      }
+    }
+  }
+  // FIXME - report this somehow?
+  return null;
+}
+
+function convertStandardVideoContentBlockToGeminiPart(
+  block: ContentBlock.Multimodal.Video
+): GeminiPart | null {
+  const ret: GeminiPart | null = convertStandardDataContentBlockToGeminiPart(block);
+  if (ret && block.metadata && "videoMetadata" in block.metadata) {
+    (ret as GeminiPartBaseFile).videoMetadata = block.metadata;
+  }
+  return ret;
+
+}
+
+/**
+ * Converts a single LangChain standard content block (v1 format)
+ * into a GeminiPart.
+ *
+ * This is intended to be called from `convertStandardContentMessageToGeminiContent`
+ */
+function convertStandardContentBlockToGeminiPart(
+  block: ContentBlock.Standard
+): GeminiPart | null {
+  switch (block.type) {
+    case "text":
+      return {text: block.text};
+    case "image":
+    case "audio":
+      return convertStandardDataContentBlockToGeminiPart(block);
+    case "video":
+      return convertStandardVideoContentBlockToGeminiPart(block);
+    default:
+      return null;
+  }
+}
+
 /**
  * Converts a single LangChain message with standard content blocks (v1 format) to Gemini Content.
  * This handles messages that have `response_metadata.output_version === "v1"`.
@@ -323,8 +419,9 @@ function convertStandardContentMessageToGeminiContent(
 
   // Process standard content blocks
   for (const block of message.contentBlocks) {
-    if (block.type === "text") {
-      parts.push({ text: block.text });
+    const part = convertStandardContentBlockToGeminiPart(block);
+    if (part) {
+      parts.push(part);
     }
   }
 
