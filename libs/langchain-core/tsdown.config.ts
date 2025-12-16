@@ -55,6 +55,7 @@ export default getBuildConfig({
     "./src/types/stream.ts",
     "./src/utils/async_caller.ts",
     "./src/utils/chunk_array.ts",
+    "./src/utils/context.ts",
     "./src/utils/env.ts",
     "./src/utils/event_source_parse.ts",
     "./src/utils/format.ts",
