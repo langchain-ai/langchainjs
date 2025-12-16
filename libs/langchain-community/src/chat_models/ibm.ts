@@ -845,7 +845,7 @@ export class ChatWatsonx<
           ...scopeId,
           signal,
           stream,
-          returnObject: stream ? true : undefined, // this is redudant but with current tsconfig it is expected
+          ...(stream ? { returnObject: true } : {}),
           messages,
         });
       }
