@@ -376,6 +376,7 @@ export class TavilyCrawl extends StructuredTool<typeof inputSchema> {
       const effectiveExcludeDomains = this.excludeDomains ?? excludeDomains;
       const effectiveAllowExternal = this.allowExternal ?? allowExternal;
       const effectiveIncludeFavicon = this.includeFavicon;
+      const effectiveIncludeUsage = this.includeUsage;
       // Remove duplicates from categories and convert to array
       let effectiveCategories: CrawlCategory[] | undefined;
       if (this.categories) {
@@ -402,7 +403,7 @@ export class TavilyCrawl extends StructuredTool<typeof inputSchema> {
         allowExternal: effectiveAllowExternal,
         categories: effectiveCategories,
         includeFavicon: effectiveIncludeFavicon,
-        includeUsage: this.includeUsage,
+        includeUsage: effectiveIncludeUsage,
         chunksPerSource: 3,
       });
 

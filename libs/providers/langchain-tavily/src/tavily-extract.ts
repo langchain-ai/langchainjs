@@ -254,6 +254,7 @@ export class TavilyExtract extends StructuredTool<typeof inputSchema> {
           includeImages: effectiveIncludeImages,
           format: this.format,
           includeFavicon: this.includeFavicon,
+          includeUsage: this.includeUsage,
         };
         const suggestions = generateSuggestions(searchParams);
 

@@ -76,6 +76,12 @@ export type TavilySearchParamsBase = {
    * @default false
    */
   include_favicon?: boolean;
+  /**
+   * Whether to include usage information (credits) in the response.
+   *
+   * @default false
+   */
+  include_usage?: boolean;
 } & Record<string, unknown>;
 
 export type TavilySearchParamsWithSimpleImages = TavilySearchParamsBase & {
