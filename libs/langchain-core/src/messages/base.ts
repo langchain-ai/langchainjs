@@ -546,12 +546,7 @@ export function _mergeObj<T = any>(
     return (left + right) as T;
   } else if (Array.isArray(left) && Array.isArray(right)) {
     return _mergeLists(left, right) as T;
-  } else if (
-    typeof left === "object" &&
-    typeof right === "object" &&
-    left !== null &&
-    right !== null
-  ) {
+  } else if (typeof left === "object" && typeof right === "object") {
     return _mergeDicts(
       left as Record<string, unknown>,
       right as Record<string, unknown>
