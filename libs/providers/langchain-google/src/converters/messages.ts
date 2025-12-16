@@ -24,7 +24,7 @@ import {
   GeminiModalityTokenCount,
   GeminiGroundingSupport,
   GeminiPartFunctionCall,
-  GeminiPartBaseFile,
+  GeminiPartBaseFile, GeminiVideoMetadata,
 } from "../chat_models/types.js";
 import { iife } from "../utils/misc.js";
 import { ToolCallNotFoundError } from "../utils/errors.js";
@@ -323,7 +323,7 @@ function convertStandardDataContentBlockToGeminiPart(
         fileUri,
       }
     }
-  } else if ("url" in block && block.url?.startsWith("data://")) {
+  } else if ("url" in block && block.url?.startsWith("data:")) {
     const {mimeType, data} = extractMimeType(block.url!);
     if (mimeType && data) {
       return {
@@ -343,7 +343,7 @@ function convertStandardVideoContentBlockToGeminiPart(
 ): GeminiPart | null {
   const ret: GeminiPart | null = convertStandardDataContentBlockToGeminiPart(block);
   if (ret && block.metadata && "videoMetadata" in block.metadata) {
-    (ret as GeminiPartBaseFile).videoMetadata = block.metadata;
+    (ret as GeminiPartBaseFile).videoMetadata = block.metadata.videoMetadata!;
   }
   return ret;
 
