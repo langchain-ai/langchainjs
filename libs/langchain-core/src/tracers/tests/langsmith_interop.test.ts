@@ -678,6 +678,8 @@ test.each(["true", "false"])(
       // Just consume iterator
     }
 
+    await client.awaitPendingTraceBatches();
+
     const relevantCalls = fetchMock.mock.calls.filter((call: any) => {
       return call[0].startsWith("https://api.smith.langchain.com/runs");
     });
@@ -1284,15 +1286,15 @@ test("LangChain V2 tracer creates and updates runs with replicas", async () => {
   });
   expect(relevantCalls[5][1].method).toEqual("PATCH");
   expect(sixthCallParams).toMatchObject({
-    session_name: "replica2",
-    parent_run_id: secondCallParams.id,
-  });
-  expect(sixthCallParams.reference_example_id).toEqual(undefined);
-  expect(relevantCalls[6][1].method).toEqual("PATCH");
-  expect(seventhCallParams).toMatchObject({
     session_name: "replica1",
     reference_example_id: referenceExampleId,
   });
+  expect(relevantCalls[6][1].method).toEqual("PATCH");
+  expect(seventhCallParams).toMatchObject({
+    session_name: "replica2",
+    parent_run_id: secondCallParams.id,
+  });
+  expect(seventhCallParams.reference_example_id).toEqual(undefined);
   expect(relevantCalls[7][1].method).toEqual("PATCH");
   expect(eighthCallParams).toMatchObject({
     session_name: "replica2",
