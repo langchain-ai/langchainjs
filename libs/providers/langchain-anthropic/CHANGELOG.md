@@ -1,5 +1,14 @@
 # @langchain/anthropic
 
+## 1.3.1
+
+### Patch Changes
+
+- [#9669](https://github.com/langchain-ai/langchainjs/pull/9669) [`5068787`](https://github.com/langchain-ai/langchainjs/commit/50687872ad9f8cf83f42ca6130dd603527ec5402) Thanks [@hntrl](https://github.com/hntrl)! - set empty tool array in invocation params
+
+- Updated dependencies [[`a7b2a7d`](https://github.com/langchain-ai/langchainjs/commit/a7b2a7db5ef57df3731ae6c9931f4b663e909505), [`a496c5f`](https://github.com/langchain-ai/langchainjs/commit/a496c5fc64d94cc0809216325b0f1bfde3f92c45), [`1da1325`](https://github.com/langchain-ai/langchainjs/commit/1da1325aea044fb37af54a9de1f4ae0b9f47d4a2)]:
+  - @langchain/core@1.1.6
+
 ## 1.3.0
 
 ### Minor Changes

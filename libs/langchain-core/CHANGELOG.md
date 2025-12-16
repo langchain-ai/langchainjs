@@ -1,5 +1,15 @@
 # @langchain/core
 
+## 1.1.6
+
+### Patch Changes
+
+- [#9668](https://github.com/langchain-ai/langchainjs/pull/9668) [`a7b2a7d`](https://github.com/langchain-ai/langchainjs/commit/a7b2a7db5ef57df3731ae6c9931f4b663e909505) Thanks [@bracesproul](https://github.com/bracesproul)! - fix: Cannot merge two undefined objects error
+
+- [#9657](https://github.com/langchain-ai/langchainjs/pull/9657) [`a496c5f`](https://github.com/langchain-ai/langchainjs/commit/a496c5fc64d94cc0809216325b0f1bfde3f92c45) Thanks [@dqbd](https://github.com/dqbd)! - fix(core): avoid writing to TransformStream in EventStreamCallbackHandler when underlying ReadableStream is closed
+
+- [#9658](https://github.com/langchain-ai/langchainjs/pull/9658) [`1da1325`](https://github.com/langchain-ai/langchainjs/commit/1da1325aea044fb37af54a9de1f4ae0b9f47d4a2) Thanks [@dqbd](https://github.com/dqbd)! - fix(core): ensure streaming test chat models respect AbortSignal
+
 ## 1.1.5
 
 ### Patch Changes

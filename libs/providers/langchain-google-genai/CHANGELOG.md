@@ -1,5 +1,12 @@
 # @langchain/google-genai
 
+## 2.1.1
+
+### Patch Changes
+
+- Updated dependencies [[`a7b2a7d`](https://github.com/langchain-ai/langchainjs/commit/a7b2a7db5ef57df3731ae6c9931f4b663e909505), [`a496c5f`](https://github.com/langchain-ai/langchainjs/commit/a496c5fc64d94cc0809216325b0f1bfde3f92c45), [`1da1325`](https://github.com/langchain-ai/langchainjs/commit/1da1325aea044fb37af54a9de1f4ae0b9f47d4a2)]:
+  - @langchain/core@1.1.6
+
 ## 2.1.0
 
 ### Patch Changes
