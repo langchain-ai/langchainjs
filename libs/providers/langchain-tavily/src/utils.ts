@@ -151,6 +151,18 @@ export type TavilyExtractParams = {
    * @default "markdown"
    */
   format?: "markdown" | "text";
+
+  /**
+   * Whether to include usage information (credits) in the response.
+   *
+   * @default false
+   */
+  includeUsage?: boolean;
+
+  /**
+   * User intent query for reranking extracted content chunks.
+   */
+  query?: string;
 } & Record<string, unknown>;
 
 /**
@@ -284,6 +296,20 @@ export type TavilyCrawlParams = {
    * @default false
    */
   include_favicon?: boolean;
+
+  /**
+   * Whether to include usage information (credits) in the response.
+   *
+   * @default false
+   */
+  includeUsage?: boolean;
+
+  /**
+   * The number of content chunks to retrieve from each source.
+   *
+   * @default 3
+   */
+  chunksPerSource?: number;
 } & Record<string, unknown>;
 
 /**
@@ -520,6 +546,13 @@ export type TavilyMapParams = {
    * @default undefined
    */
   allowExternal?: boolean;
+
+  /**
+   * Whether to include usage information (credits) in the response.
+   *
+   * @default false
+   */
+  includeUsage?: boolean;
 } & Record<string, unknown>;
 
 export type TavilyMapResponse = {

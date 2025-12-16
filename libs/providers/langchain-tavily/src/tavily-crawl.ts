@@ -121,6 +121,13 @@ export type TavilyCrawlAPIRetrieverFields = ToolParams & {
   includeFavicon?: boolean;
 
   /**
+   * Whether to include usage information (credits) in the response.
+   *
+   * @default false
+   */
+  includeUsage?: boolean;
+
+  /**
    * The name of the tool.
    *
    * @default "tavily_crawl"
@@ -293,6 +300,8 @@ export class TavilyCrawl extends StructuredTool<typeof inputSchema> {
 
   includeFavicon?: boolean;
 
+  includeUsage?: boolean;
+
   private apiWrapper: TavilyCrawlAPIWrapper;
 
   constructor(params: TavilyCrawlAPIRetrieverFields = {}) {
@@ -334,6 +343,7 @@ export class TavilyCrawl extends StructuredTool<typeof inputSchema> {
     this.allowExternal = params.allowExternal;
     this.categories = params.categories;
     this.includeFavicon = params.includeFavicon;
+    this.includeUsage = params.includeUsage;
   }
 
   async _call(
@@ -392,6 +402,8 @@ export class TavilyCrawl extends StructuredTool<typeof inputSchema> {
         allowExternal: effectiveAllowExternal,
         categories: effectiveCategories,
         includeFavicon: effectiveIncludeFavicon,
+        includeUsage: this.includeUsage,
+        chunksPerSource: 3,
       });
 
       if (
