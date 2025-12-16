@@ -394,7 +394,6 @@ describe.each(parameters)(
         for await (const chunk of res) {
           chunks.push(chunk);
         }
-        console.log(chunks);
         expect(chunks.length).toBeGreaterThan(1);
         expect(chunks.join("").length).toBeGreaterThan(1);
       });
