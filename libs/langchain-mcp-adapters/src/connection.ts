@@ -58,9 +58,9 @@ type ClientKeyObject = Omit<TransportOptions, "headers"> & {
 
 export interface Connection {
   transport:
-  | StreamableHTTPClientTransport
-  | SSEClientTransport
-  | StdioClientTransport;
+    | StreamableHTTPClientTransport
+    | SSEClientTransport
+    | StdioClientTransport;
   client: Client;
   transportOptions: ResolvedStdioConnection | ResolvedStreamableHTTPConnection;
   closeCallback: () => Promise<void>;
@@ -173,11 +173,9 @@ export class ConnectionManager {
               /* ignore hook errors */
             });
           }
-
         }
       );
     }
-
 
     if (this.#hooks.onPromptsListChanged) {
       mcpClient.setNotificationHandler(
@@ -234,10 +232,10 @@ export class ConnectionManager {
       type === "stdio"
         ? { serverName }
         : {
-          serverName,
-          headers: serializeHeaders(options.headers),
-          authProvider: options.authProvider,
-        };
+            serverName,
+            headers: serializeHeaders(options.headers),
+            authProvider: options.authProvider,
+          };
 
     const forkClient = (headers: Record<string, string>): Promise<Client> => {
       return this.#forkClient(key, headers);

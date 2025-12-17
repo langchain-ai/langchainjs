@@ -605,7 +605,6 @@ export class MultiServerMCPClient {
         mimeType: content.mimeType,
         text: "text" in content ? content.text : undefined,
         blob: "blob" in content ? content.blob : undefined,
-
       }));
     } catch (error) {
       throw new MCPClientError(
@@ -1051,7 +1050,8 @@ export class MultiServerMCPClient {
     ) {
       attempts += 1;
       debugLog(
-        `INFO: Reconnection attempt ${attempts}${maxAttempts ? `/${maxAttempts}` : ""
+        `INFO: Reconnection attempt ${attempts}${
+          maxAttempts ? `/${maxAttempts}` : ""
         } for server "${serverName}"`
       );
 
@@ -1081,10 +1081,10 @@ export class MultiServerMCPClient {
         const key =
           "headers" in connection
             ? {
-              serverName,
-              headers: connection.headers,
-              authProvider: connection.authProvider,
-            }
+                serverName,
+                headers: connection.headers,
+                authProvider: connection.authProvider,
+              }
             : { serverName };
         if (this.#clientConnections.has(key)) {
           connected = true;
