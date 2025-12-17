@@ -166,7 +166,11 @@ export type $InferToolCalls<TStructure extends MessageStructure> =
                   readonly type?: "tool_call";
                   id?: string;
                   name: K;
-                  args: TTools[K]["input"];
+                  // Fallback to Record<string, any> when input is unknown
+                  args: [unknown] extends [TTools[K]["input"]]
+                    ? // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                      Record<string, any>
+                    : TTools[K]["input"];
                 }
               : never
             : never;
@@ -602,9 +606,10 @@ export type $InferMessageContent<
     $InferToolOutputs<TStructure> extends infer TOutput
     ? [TOutput] extends [never]
       ? string | Array<ContentBlock | ContentBlock.Text>
-      : TOutput extends unknown
-        ? TOutput | string | Array<ContentBlock | ContentBlock.Text>
-        : string | Array<ContentBlock | ContentBlock.Text>
+      : [unknown] extends [TOutput]
+        ? // Fallback to default when TOutput is unknown (no specific tools defined)
+          string | Array<ContentBlock | ContentBlock.Text>
+        : TOutput | string | Array<ContentBlock | ContentBlock.Text>
     : string | Array<ContentBlock | ContentBlock.Text>
   : TStructure["outputVersion"] extends "v1"
     ? Array<$InferMessageContentBlocks<TStructure, TRole>>
