@@ -100,21 +100,18 @@ jobs:
           script: |
             const fs = require('fs');
             const path = require('path');
-            const actionsGlob = require('@actions/glob');
 
-            // Find all package.json files in libs directory
-            const globber = await actionsGlob.create('libs/**/package.json', {
-              followSymbolicLinks: false
-            });
-            const files = await globber.glob();
+            // Find all package.json files in libs directory using built-in fs
+            const libsDir = path.join(process.cwd(), 'libs');
+            const allFiles = fs.readdirSync(libsDir, { recursive: true });
+            const files = allFiles
+              .filter(f => f.endsWith('package.json') && !f.includes('node_modules'))
+              .map(f => path.join(libsDir, f));
 
             const tag = '${{ inputs.npm_tag }}';
             const packages = [];
 
             for (const file of files) {
-              // Skip node_modules
-              if (file.includes('node_modules')) continue;
-
               try {
                 const content = fs.readFileSync(file, 'utf8');
                 const pkg = JSON.parse(content);
