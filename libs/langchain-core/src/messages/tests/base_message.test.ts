@@ -9,6 +9,7 @@ import {
   AIMessageChunk,
   coerceMessageLikeToMessage,
   SystemMessage,
+  _mergeObj,
 } from "../index.js";
 import { load } from "../../load/index.js";
 import { concat } from "../../utils/stream.js";
@@ -198,6 +199,51 @@ test("Can concat artifact (object) of ToolMessageChunk", () => {
     foo: "bar",
     bar: "baz",
   });
+});
+
+test("Can concat ToolMessageChunk when both artifacts are undefined", () => {
+  const chunk1 = new ToolMessageChunk({
+    content: "Hello",
+    tool_call_id: "1",
+  });
+  const chunk2 = new ToolMessageChunk({
+    content: " world",
+    tool_call_id: "1",
+  });
+
+  const concated = chunk1.concat(chunk2);
+  expect(concated.artifact).toBeUndefined();
+  expect(concated.content).toBe("Hello world");
+});
+
+test("Can concat ToolMessageChunk when only first artifact is undefined", () => {
+  const chunk1 = new ToolMessageChunk({
+    content: "Hello",
+    tool_call_id: "1",
+  });
+  const chunk2 = new ToolMessageChunk({
+    content: " world",
+    tool_call_id: "1",
+    artifact: { data: "test" },
+  });
+
+  const concated = chunk1.concat(chunk2);
+  expect(concated.artifact).toEqual({ data: "test" });
+});
+
+test("Can concat ToolMessageChunk when only second artifact is undefined", () => {
+  const chunk1 = new ToolMessageChunk({
+    content: "Hello",
+    tool_call_id: "1",
+    artifact: "some-artifact",
+  });
+  const chunk2 = new ToolMessageChunk({
+    content: " world",
+    tool_call_id: "1",
+  });
+
+  const concated = chunk1.concat(chunk2);
+  expect(concated.artifact).toBe("some-artifact");
 });
 
 describe("Complex AIMessageChunk concat", () => {
@@ -940,5 +986,58 @@ describe("toFormattedString", () => {
       // Should have: title, Tool Calls:, tool info, blank line, content
       expect(lines).toContain("");
     });
+  });
+});
+
+describe("_mergeObj", () => {
+  it("returns undefined when both values are undefined", () => {
+    expect(_mergeObj(undefined, undefined)).toBeUndefined();
+  });
+
+  it("returns right value when left is undefined", () => {
+    expect(_mergeObj(undefined, "hello")).toBe("hello");
+    expect(_mergeObj(undefined, { foo: "bar" })).toEqual({ foo: "bar" });
+    expect(_mergeObj(undefined, [1, 2, 3])).toEqual([1, 2, 3]);
+  });
+
+  it("returns left value when right is undefined", () => {
+    expect(_mergeObj("hello", undefined)).toBe("hello");
+    expect(_mergeObj({ foo: "bar" }, undefined)).toEqual({ foo: "bar" });
+    expect(_mergeObj([1, 2, 3], undefined)).toEqual([1, 2, 3]);
+  });
+
+  it("concatenates strings", () => {
+    expect(_mergeObj("hello", " world")).toBe("hello world");
+  });
+
+  it("merges arrays", () => {
+    expect(_mergeObj([1, 2], [3, 4])).toEqual([1, 2, 3, 4]);
+  });
+
+  it("merges objects", () => {
+    expect(_mergeObj({ a: 1 }, { b: 2 })).toEqual({ a: 1, b: 2 });
+  });
+
+  it("returns same value when both are equal primitives", () => {
+    expect(_mergeObj(42, 42)).toBe(42);
+    expect(_mergeObj(true, true)).toBe(true);
+  });
+
+  it("throws error when merging different types", () => {
+    expect(() =>
+      _mergeObj<unknown>("string", { obj: true } as unknown)
+    ).toThrow("Cannot merge objects of different types");
+    expect(() => _mergeObj<unknown>(123, "string" as unknown)).toThrow(
+      "Cannot merge objects of different types"
+    );
+  });
+
+  it("throws error when merging different primitive values", () => {
+    expect(() => _mergeObj<unknown>(1, 2 as unknown)).toThrow(
+      "Can not merge objects"
+    );
+    expect(() => _mergeObj<unknown>(true, false as unknown)).toThrow(
+      "Can not merge objects"
+    );
   });
 });

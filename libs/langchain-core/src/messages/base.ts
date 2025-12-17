@@ -532,12 +532,12 @@ export function _mergeLists<Content extends ContentBlock>(
 export function _mergeObj<T = any>(
   left: T | undefined,
   right: T | undefined
-): T {
-  if (!left && !right) {
-    throw new Error("Cannot merge two undefined objects.");
+): T | undefined {
+  if (left === undefined && right === undefined) {
+    return undefined;
   }
-  if (!left || !right) {
-    return left || (right as T);
+  if (left === undefined || right === undefined) {
+    return left ?? right;
   } else if (typeof left !== typeof right) {
     throw new Error(
       `Cannot merge objects of different types.\nLeft ${typeof left}\nRight ${typeof right}`
@@ -547,7 +547,10 @@ export function _mergeObj<T = any>(
   } else if (Array.isArray(left) && Array.isArray(right)) {
     return _mergeLists(left, right) as T;
   } else if (typeof left === "object" && typeof right === "object") {
-    return _mergeDicts(left, right) as T;
+    return _mergeDicts(
+      left as Record<string, unknown>,
+      right as Record<string, unknown>
+    ) as T;
   } else if (left === right) {
     return left;
   } else {
