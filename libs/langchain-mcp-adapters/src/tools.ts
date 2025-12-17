@@ -202,15 +202,17 @@ function isResourceReference(
   resource:
     | EmbeddedResource["resource"]
     | ReadResourceResult["contents"][number]
-) {
+): boolean {
   return (
     typeof resource === "object" &&
     resource !== null &&
-    resource.uri != null &&
-    resource.blob == null &&
-    resource.text == null
+    "uri" in resource &&
+    typeof (resource as { uri?: unknown }).uri === "string" &&
+    (!("blob" in resource) || resource.blob == null) &&
+    (!("text" in resource) || resource.text == null)
   );
 }
+
 
 async function* _embeddedResourceToStandardFileBlocks(
   resource:
@@ -220,7 +222,7 @@ async function* _embeddedResourceToStandardFileBlocks(
 ): AsyncGenerator<
   | (ContentBlock.Data.StandardFileBlock & ContentBlock.Data.Base64ContentBlock)
   | (ContentBlock.Data.StandardFileBlock &
-      ContentBlock.Data.PlainTextContentBlock)
+    ContentBlock.Data.PlainTextContentBlock)
 > {
   if (isResourceReference(resource)) {
     const response: ReadResourceResult = await client.readResource({
@@ -232,7 +234,8 @@ async function* _embeddedResourceToStandardFileBlocks(
     return;
   }
 
-  if (resource.blob != null) {
+  if ("blob" in resource && resource.blob != null) {
+
     yield {
       type: "file",
       source_type: "base64",
@@ -242,7 +245,8 @@ async function* _embeddedResourceToStandardFileBlocks(
     } as ContentBlock.Data.StandardFileBlock &
       ContentBlock.Data.Base64ContentBlock;
   }
-  if (resource.text != null) {
+  if ("text" in resource && resource.text != null) {
+
     yield {
       type: "file",
       source_type: "text",
@@ -290,8 +294,8 @@ async function _toolOutputToContentBlocks(
           type: "text",
           ...(useStandardContentBlocks
             ? {
-                source_type: "text",
-              }
+              source_type: "text",
+            }
             : {}),
           text: content.text,
         } as ContentBlock.Text,
@@ -336,8 +340,7 @@ async function _toolOutputToContentBlocks(
       return blocks;
     default:
       throw new ToolException(
-        `MCP tool '${toolName}' on server '${serverName}' returned a content block with unexpected type "${
-          (content as { type: string }).type
+        `MCP tool '${toolName}' on server '${serverName}' returned a content block with unexpected type "${(content as { type: string }).type
         }." Expected one of "text", "image", or "audio".`
       );
   }
@@ -360,10 +363,17 @@ async function _embeddedResourceToArtifact(
     );
   }
 
-  if (!resource.blob && !resource.text && resource.uri) {
+  if (
+    (!("blob" in resource) || resource.blob == null) &&
+    (!("text" in resource) || resource.text == null) &&
+    "uri" in resource &&
+    typeof resource.uri === "string"
+
+  ) {
     const response: ReadResourceResult = await client.readResource({
-      uri: resource.resource.uri,
+      uri: resource.uri,
     });
+
 
     return response.contents.map(
       (content: ReadResourceResult["contents"][number]) => ({
@@ -412,9 +422,9 @@ type ExtendedArtifact =
 type ExtendedContent =
   | (ContentBlock | ContentBlock.Multimodal.Standard)[]
   | (ContentBlock.Text & {
-      structuredContent?: NonNullable<CallToolResult["structuredContent"]>;
-      meta?: NonNullable<CallToolResult["_meta"]>;
-    })
+    structuredContent?: NonNullable<CallToolResult["structuredContent"]>;
+    meta?: NonNullable<CallToolResult["_meta"]>;
+  })
   | string;
 
 /**
@@ -496,7 +506,8 @@ async function _convertCallToolResult({
   if (result.isError) {
     throw new ToolException(
       `MCP tool '${toolName}' on server '${serverName}' returned an error: ${result.content
-        .map((content: MCPContentBlock) => content.text)
+        .map((content: MCPContentBlock) =>
+          content.type === "text" ? content.text : "")
         .join("\n")}`
     );
   }
@@ -675,16 +686,16 @@ async function _callTool({
       ...(config?.signal ? { signal: config.signal } : {}),
       ...(onProgress
         ? {
-            onprogress: (progress) => {
-              // eslint-disable-next-line @typescript-eslint/no-floating-promises
-              onProgress?.(progress, {
-                type: "tool",
-                name: toolName,
-                args,
-                server: serverName,
-              });
-            },
-          }
+          onprogress: (progress) => {
+            // eslint-disable-next-line @typescript-eslint/no-floating-promises
+            onProgress?.(progress, {
+              type: "tool",
+              name: toolName,
+              args,
+              server: serverName,
+            });
+          },
+        }
         : {}),
     };
 
@@ -760,9 +771,9 @@ async function _callTool({
         : Array.isArray(content)
           ? (content as (ContentBlock | ContentBlock.Data.DataContentBlock)[])
           : ([content] as (
-              | ContentBlock
-              | ContentBlock.Data.DataContentBlock
-            )[]);
+            | ContentBlock
+            | ContentBlock.Data.DataContentBlock
+          )[]);
 
     // Filter artifacts to only include types expected by afterToolCall
     // afterToolCall expects: (EmbeddedResource | ContentBlock.Multimodal.Standard)[]
