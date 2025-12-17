@@ -447,7 +447,11 @@ export class DynamicTool<
  * Schema can be passed as Zod or JSON schema. The tool will not validate
  * input if JSON schema is passed.
  *
- * @template NameT The literal type of the tool name (for discriminated union support)
+ * @template SchemaT The input schema type for the tool (Zod schema or JSON schema). Defaults to `ToolInputSchemaBase`.
+ * @template SchemaOutputT The output type derived from the schema after parsing/validation. Defaults to `ToolInputSchemaOutputType<SchemaT>`.
+ * @template SchemaInputT The input type derived from the schema before parsing. Defaults to `ToolInputSchemaInputType<SchemaT>`.
+ * @template ToolOutputT The return type of the tool's function. Defaults to `ToolOutputType`.
+ * @template NameT The literal type of the tool name (for discriminated union support). Defaults to `string`.
  */
 export class DynamicStructuredTool<
   SchemaT = ToolInputSchemaBase,
