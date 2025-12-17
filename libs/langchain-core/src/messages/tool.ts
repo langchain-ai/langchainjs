@@ -104,7 +104,11 @@ export class ToolMessage<TStructure extends MessageStructure = MessageStructure>
   ) {
     const toolMessageFields: ToolMessageFields<TStructure> =
       typeof fields === "string" || Array.isArray(fields)
-        ? { content: fields, name, tool_call_id: tool_call_id! }
+        ? ({
+            content: fields,
+            name,
+            tool_call_id: tool_call_id!,
+          } as ToolMessageFields<TStructure>)
         : fields;
     super(toolMessageFields);
     this.tool_call_id = toolMessageFields.tool_call_id;
