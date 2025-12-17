@@ -23,4 +23,5 @@ export type GoogleGenerativeAIThinkingConfig = {
 export type GoogleGenerativeAIThinkingLevel =
   | "THINKING_LEVEL_UNSPECIFIED"
   | "LOW"
+  | "MEDIUM"
   | "HIGH";
