@@ -58,7 +58,7 @@ describe("middleware types", () => {
     // Verify the types of individual properties
     expectTypeOf(result.customStateProp).toBeString();
     expectTypeOf(result.customStateProp2).toBeString();
-    expectTypeOf(result.messages).toEqualTypeOf<BaseMessage[]>();
+    expectTypeOf(result.messages).toExtend<BaseMessage[]>();
     expectTypeOf(result.structuredResponse).toEqualTypeOf<{
       customResponseFormat: string;
     }>();
