@@ -214,7 +214,7 @@ export class AIMessage<TStructure extends MessageStructure = MessageStructure>
    */
   static isInstance<T extends MessageStructure>(
     obj: BaseMessage<T>
-  ): obj is AIMessage<T>;
+  ): obj is BaseMessage<T> & AIMessage<T>;
   /**
    * Type guard to check if an object is an AIMessage.
    * @overload When called with unknown, returns base AIMessage type
@@ -436,7 +436,7 @@ export class AIMessageChunk<
    */
   static isInstance<T extends MessageStructure>(
     obj: BaseMessage<T>
-  ): obj is AIMessageChunk<T>;
+  ): obj is BaseMessage<T> & AIMessageChunk<T>;
   /**
    * Type guard to check if an object is an AIMessageChunk.
    * @overload When called with unknown, returns base AIMessageChunk type

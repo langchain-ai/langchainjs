@@ -124,7 +124,7 @@ export class ToolMessage<TStructure extends MessageStructure = MessageStructure>
    */
   static isInstance<T extends MessageStructure>(
     message: BaseMessage<T>
-  ): message is ToolMessage<T>;
+  ): message is BaseMessage<T> & ToolMessage<T>;
   /**
    * Type guard to check if an object is a ToolMessage.
    * @overload When called with unknown, returns base ToolMessage type
