@@ -1,8 +1,10 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { describe, it, expect } from "vitest";
+import { OpenAI as OpenAIClient } from "openai";
 import {
   AIMessage,
   AIMessageChunk,
+  ContentBlock,
   HumanMessage,
   ToolCallChunk,
   ToolMessage,
@@ -13,6 +15,7 @@ import {
   convertResponsesMessageToAIMessage,
   convertResponsesUsageToUsageMetadata,
   convertStandardContentMessageToResponsesInput,
+  ResponsesCreateInvoke,
 } from "../responses.js";
 
 describe("convertResponsesUsageToUsageMetadata", () => {
@@ -877,5 +880,274 @@ describe("convertMessagesToResponsesInput", () => {
         },
       ]);
     });
+  });
+});
+
+describe("convertResponsesMessageToAIMessage", () => {
+  it("should convert image_generation_call to image content block", () => {
+    const imageResult =
+      "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==";
+    const mockResponse: ResponsesCreateInvoke = {
+      id: "resp_123",
+      model: "gpt-4",
+      created_at: 1234567890,
+      status: "completed",
+      object: "response",
+      output_text: "",
+      error: null,
+      incomplete_details: null,
+      instructions: null,
+      metadata: {},
+      temperature: 1,
+      top_p: 1,
+      max_output_tokens: null,
+      truncation: "disabled",
+      tool_choice: "auto",
+      parallel_tool_calls: true,
+      tools: [],
+      output: [
+        {
+          type: "image_generation_call",
+          id: "ig_abc123",
+          status: "completed",
+          result: imageResult,
+        },
+      ],
+      usage: {
+        input_tokens: 10,
+        output_tokens: 5,
+        total_tokens: 15,
+        input_tokens_details: { cached_tokens: 0 },
+        output_tokens_details: { reasoning_tokens: 0 },
+      },
+    };
+
+    const result = convertResponsesMessageToAIMessage(mockResponse);
+
+    // Should have image content block
+    expect(Array.isArray(result.content)).toBe(true);
+    expect(result.content).toHaveLength(1);
+
+    const imageBlock = (result.content as ContentBlock[])[0];
+    expect(imageBlock.type).toBe("image");
+    expect((imageBlock as ContentBlock.Multimodal.Image).mimeType).toBe(
+      "image/png"
+    );
+    expect((imageBlock as ContentBlock.Multimodal.Image).data).toBe(
+      imageResult
+    );
+    expect((imageBlock as ContentBlock.Multimodal.Image).id).toBe("ig_abc123");
+    expect((imageBlock as ContentBlock.Multimodal.Image).metadata).toEqual({
+      status: "completed",
+    });
+
+    // Should also have tool_outputs for backwards compatibility
+    expect(result.additional_kwargs.tool_outputs).toBeDefined();
+    expect(result.additional_kwargs.tool_outputs).toHaveLength(1);
+    expect((result.additional_kwargs.tool_outputs as any[])[0].type).toBe(
+      "image_generation_call"
+    );
+  });
+
+  it("should not add image content block when result is null", () => {
+    const mockResponse: ResponsesCreateInvoke = {
+      id: "resp_123",
+      model: "gpt-4",
+      created_at: 1234567890,
+      status: "in_progress",
+      object: "response",
+      output_text: "",
+      error: null,
+      incomplete_details: null,
+      instructions: null,
+      metadata: {},
+      temperature: 1,
+      top_p: 1,
+      max_output_tokens: null,
+      truncation: "disabled",
+      tool_choice: "auto",
+      parallel_tool_calls: true,
+      tools: [],
+      output: [
+        {
+          type: "image_generation_call",
+          id: "ig_abc123",
+          status: "in_progress",
+          result: null,
+        },
+      ],
+      usage: {
+        input_tokens: 10,
+        output_tokens: 5,
+        total_tokens: 15,
+        input_tokens_details: { cached_tokens: 0 },
+        output_tokens_details: { reasoning_tokens: 0 },
+      },
+    };
+
+    const result = convertResponsesMessageToAIMessage(mockResponse);
+
+    // Should not have image content block when result is null
+    expect(Array.isArray(result.content)).toBe(true);
+    expect(result.content).toHaveLength(0);
+
+    // Should still have tool_outputs for backwards compatibility
+    expect(result.additional_kwargs.tool_outputs).toBeDefined();
+    expect(result.additional_kwargs.tool_outputs).toHaveLength(1);
+  });
+
+  it("should handle multiple output items including image_generation_call", () => {
+    const mockResponse: ResponsesCreateInvoke = {
+      id: "resp_123",
+      model: "gpt-4",
+      created_at: 1234567890,
+      status: "completed",
+      object: "response",
+      output_text: "Here is the image you requested:",
+      error: null,
+      incomplete_details: null,
+      instructions: null,
+      metadata: {},
+      temperature: 1,
+      top_p: 1,
+      max_output_tokens: null,
+      truncation: "disabled",
+      tool_choice: "auto",
+      parallel_tool_calls: true,
+      tools: [],
+      output: [
+        {
+          type: "message",
+          id: "msg_456",
+          role: "assistant",
+          status: "completed",
+          content: [
+            {
+              type: "output_text",
+              text: "Here is the image you requested:",
+              annotations: [],
+            },
+          ],
+        },
+        {
+          type: "image_generation_call",
+          id: "ig_abc123",
+          status: "completed",
+          result: "base64ImageData",
+        },
+      ],
+      usage: {
+        input_tokens: 10,
+        output_tokens: 5,
+        total_tokens: 15,
+        input_tokens_details: { cached_tokens: 0 },
+        output_tokens_details: { reasoning_tokens: 0 },
+      },
+    };
+
+    const result = convertResponsesMessageToAIMessage(mockResponse);
+
+    // Should have both text and image content blocks
+    expect(Array.isArray(result.content)).toBe(true);
+    expect(result.content).toHaveLength(2);
+
+    const textBlock = (result.content as ContentBlock[])[0];
+    expect(textBlock.type).toBe("text");
+    expect((textBlock as ContentBlock.Text).text).toBe(
+      "Here is the image you requested:"
+    );
+
+    const imageBlock = (result.content as ContentBlock[])[1];
+    expect(imageBlock.type).toBe("image");
+    expect((imageBlock as ContentBlock.Multimodal.Image).data).toBe(
+      "base64ImageData"
+    );
+  });
+});
+
+describe("convertResponsesDeltaToChatGenerationChunk - image generation", () => {
+  it("should convert image_generation_call streaming event to image content block", () => {
+    const streamEvent: OpenAIClient.Responses.ResponseStreamEvent = {
+      type: "response.output_item.done",
+      sequence_number: 1,
+      output_index: 0,
+      item: {
+        type: "image_generation_call",
+        id: "ig_stream_123",
+        status: "completed",
+        result: "streamedBase64ImageData",
+      },
+    };
+
+    const result = convertResponsesDeltaToChatGenerationChunk(streamEvent);
+
+    expect(result).not.toBeNull();
+    const message = result!.message as AIMessageChunk;
+
+    // Should have image content block
+    expect(Array.isArray(message.content)).toBe(true);
+    expect(message.content).toHaveLength(1);
+
+    const imageBlock = (message.content as ContentBlock[])[0];
+    expect(imageBlock.type).toBe("image");
+    expect((imageBlock as ContentBlock.Multimodal.Image).mimeType).toBe(
+      "image/png"
+    );
+    expect((imageBlock as ContentBlock.Multimodal.Image).data).toBe(
+      "streamedBase64ImageData"
+    );
+    expect((imageBlock as ContentBlock.Multimodal.Image).id).toBe(
+      "ig_stream_123"
+    );
+    expect((imageBlock as ContentBlock.Multimodal.Image).metadata).toEqual({
+      status: "completed",
+    });
+
+    // Should also have tool_outputs for backwards compatibility
+    expect(message.additional_kwargs.tool_outputs).toBeDefined();
+    expect(message.additional_kwargs.tool_outputs).toHaveLength(1);
+  });
+
+  it("should not add image content block for streaming event when result is null", () => {
+    const streamEvent: OpenAIClient.Responses.ResponseStreamEvent = {
+      type: "response.output_item.done",
+      sequence_number: 1,
+      output_index: 0,
+      item: {
+        type: "image_generation_call",
+        id: "ig_stream_123",
+        status: "in_progress",
+        result: null,
+      },
+    };
+
+    const result = convertResponsesDeltaToChatGenerationChunk(streamEvent);
+
+    expect(result).not.toBeNull();
+    const message = result!.message as AIMessageChunk;
+
+    // Should not have image content block when result is null
+    expect(Array.isArray(message.content)).toBe(true);
+    expect(message.content).toHaveLength(0);
+
+    // Should still have tool_outputs
+    expect(message.additional_kwargs.tool_outputs).toBeDefined();
+  });
+
+  it("should return null for partial image events", () => {
+    const partialImageEvent: OpenAIClient.Responses.ResponseStreamEvent = {
+      type: "response.image_generation_call.partial_image",
+      sequence_number: 1,
+      item_id: "ig_partial_123",
+      output_index: 0,
+      partial_image_index: 0,
+      partial_image_b64: "partialImageData",
+    };
+
+    const result =
+      convertResponsesDeltaToChatGenerationChunk(partialImageEvent);
+
+    // Partial images should be ignored
+    expect(result).toBeNull();
   });
 });

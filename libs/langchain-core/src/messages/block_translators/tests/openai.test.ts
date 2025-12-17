@@ -221,5 +221,81 @@ describe("openaiTranslator", () => {
       ];
       expect(full.contentBlocks).toEqual(expectedFull);
     });
+
+    it("should translate image_generation_call to image content block", () => {
+      const message = new AIMessage({
+        content: [{ type: "text", text: "Here is your image:" }],
+        additional_kwargs: {
+          tool_outputs: [
+            {
+              type: "image_generation_call",
+              id: "ig_abc123",
+              status: "completed",
+              result: "base64ImageData",
+              revised_prompt: "A beautiful sunset over the ocean",
+            },
+          ],
+        },
+        response_metadata: { model_provider: "openai" },
+      });
+
+      const expected: Array<ContentBlock.Standard> = [
+        { type: "text", text: "Here is your image:" },
+        {
+          type: "image",
+          mimeType: "image/png",
+          data: "base64ImageData",
+          id: "ig_abc123",
+          metadata: {
+            status: "completed",
+          },
+        },
+        {
+          type: "non_standard",
+          value: {
+            type: "image_generation_call",
+            id: "ig_abc123",
+            status: "completed",
+            result: "base64ImageData",
+            revised_prompt: "A beautiful sunset over the ocean",
+          },
+        },
+      ];
+
+      expect(message.contentBlocks).toEqual(expected);
+    });
+
+    it("should not add image block when image_generation_call has no result", () => {
+      const message = new AIMessage({
+        content: [{ type: "text", text: "Generating..." }],
+        additional_kwargs: {
+          tool_outputs: [
+            {
+              type: "image_generation_call",
+              id: "ig_abc123",
+              status: "in_progress",
+              result: null,
+            },
+          ],
+        },
+        response_metadata: { model_provider: "openai" },
+      });
+
+      const expected: Array<ContentBlock.Standard> = [
+        { type: "text", text: "Generating..." },
+        // Only non_standard block, no image block since result is null
+        {
+          type: "non_standard",
+          value: {
+            type: "image_generation_call",
+            id: "ig_abc123",
+            status: "in_progress",
+            result: null,
+          },
+        },
+      ];
+
+      expect(message.contentBlocks).toEqual(expected);
+    });
   });
 });

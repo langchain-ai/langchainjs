@@ -228,8 +228,9 @@ export const convertResponsesMessageToAIMessage: Converter<
             return {
               type: "text",
               text: part.text,
-              annotations: part.annotations,
-            };
+              annotations:
+                part.annotations as unknown as ContentBlock.Citation[],
+            } satisfies ContentBlock.Text;
           }
 
           if (part.type === "refusal") {
@@ -296,6 +297,22 @@ export const convertResponsesMessageToAIMessage: Converter<
           makeInvalidToolCall(item, "Malformed computer call")
         );
       }
+    } else if (item.type === "image_generation_call") {
+      // Add image as proper content block if result is available
+      if (item.result) {
+        content.push({
+          type: "image",
+          mimeType: "image/png",
+          data: item.result,
+          id: item.id,
+          metadata: {
+            status: item.status,
+          },
+        } satisfies ContentBlock.Multimodal.Image);
+      }
+      // Also store in tool_outputs for backwards compatibility and multi-turn editing (needs id)
+      additional_kwargs.tool_outputs ??= [];
+      additional_kwargs.tool_outputs.push(item);
     } else {
       additional_kwargs.tool_outputs ??= [];
       additional_kwargs.tool_outputs.push(item);
@@ -462,7 +479,7 @@ export const convertResponsesDeltaToChatGenerationChunk: Converter<
   OpenAIClient.Responses.ResponseStreamEvent,
   ChatGenerationChunk | null
 > = (event) => {
-  const content: Record<string, unknown>[] = [];
+  const content: ContentBlock[] = [];
   let generationInfo: Record<string, unknown> = {};
   let usage_metadata: UsageMetadata | undefined;
   const tool_call_chunks: ToolCallChunk[] = [];
@@ -480,14 +497,14 @@ export const convertResponsesDeltaToChatGenerationChunk: Converter<
       type: "text",
       text: event.delta,
       index: event.content_index,
-    });
+    } satisfies ContentBlock.Text);
   } else if (event.type === "response.output_text.annotation.added") {
     content.push({
       type: "text",
       text: "",
-      annotations: [event.annotation],
+      annotations: [event.annotation as ContentBlock.Citation],
       index: event.content_index,
-    });
+    } satisfies ContentBlock.Text);
   } else if (
     event.type === "response.output_item.added" &&
     event.item.type === "message"
@@ -524,6 +541,24 @@ export const convertResponsesDeltaToChatGenerationChunk: Converter<
     additional_kwargs.tool_outputs = [event.item];
   } else if (
     event.type === "response.output_item.done" &&
+    event.item.type === "image_generation_call"
+  ) {
+    // Add image as proper content block if result is available
+    if (event.item.result) {
+      content.push({
+        type: "image",
+        mimeType: "image/png",
+        data: event.item.result,
+        id: event.item.id,
+        metadata: {
+          status: event.item.status,
+        },
+      } satisfies ContentBlock.Multimodal.Image);
+    }
+    // Also store in tool_outputs for backwards compatibility and multi-turn editing (needs id)
+    additional_kwargs.tool_outputs = [event.item];
+  } else if (
+    event.type === "response.output_item.done" &&
     [
       "web_search_call",
       "file_search_call",
@@ -531,7 +566,6 @@ export const convertResponsesDeltaToChatGenerationChunk: Converter<
       "mcp_call",
       "mcp_list_tools",
       "mcp_approval_request",
-      "image_generation_call",
       "custom_tool_call",
     ].includes(event.item.type)
   ) {
@@ -651,7 +685,7 @@ export const convertResponsesDeltaToChatGenerationChunk: Converter<
     text: content.map((part) => part.text).join(""),
     message: new AIMessageChunk({
       id,
-      content: content as MessageContent,
+      content,
       tool_call_chunks,
       usage_metadata,
       additional_kwargs,
