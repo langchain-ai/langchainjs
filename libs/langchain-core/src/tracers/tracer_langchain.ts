@@ -12,9 +12,12 @@ import {
   RunUpdate as BaseRunUpdate,
   KVMap,
 } from "langsmith/schemas";
-import { BaseTracer } from "./base.js";
+import { BaseTracer, Run as BaseTracerRun } from "./base.js";
 import { BaseCallbackHandlerInput } from "../callbacks/base.js";
 import { getDefaultLangChainClientSingleton } from "../singletons/tracer.js";
+import { ChatGeneration } from "../outputs.js";
+import { AIMessage } from "../messages/ai.js";
+import { mergeUsageMetadata, UsageMetadata } from "../messages/metadata.js";
 
 export interface Run extends BaseRun {
   id: string;
@@ -41,6 +44,29 @@ export interface LangChainTracerFields extends BaseCallbackHandlerInput {
   projectName?: string;
   client?: LangSmithTracingClientInterface;
   replicas?: RunTreeConfig["replicas"];
+}
+
+/**
+ * Extract usage_metadata from chat generations.
+ *
+ * Iterates through generations to find and aggregates all usage_metadata
+ * found in chat messages. This is typically present in chat model outputs.
+ */
+function _getUsageMetadataFromGenerations(
+  generations: ChatGeneration[][]
+): UsageMetadata | undefined {
+  let output: UsageMetadata | undefined = undefined;
+  for (const generationBatch of generations) {
+    for (const generation of generationBatch) {
+      if (
+        AIMessage.isInstance(generation.message) &&
+        generation.message.usage_metadata !== undefined
+      ) {
+        output = mergeUsageMetadata(output, generation.message.usage_metadata);
+      }
+    }
+  }
+  return output;
 }
 
 export class LangChainTracer
@@ -91,6 +117,25 @@ export class LangChainTracer
       await runTree?.postRun();
     } else {
       await runTree?.patchRun();
+    }
+  }
+
+  onLLMEnd(run: BaseTracerRun): void {
+    // Extract usage_metadata from outputs and store in extra.metadata
+    const outputs = run.outputs as
+      | { generations?: ChatGeneration[][] }
+      | undefined;
+    if (outputs?.generations) {
+      const usageMetadata = _getUsageMetadataFromGenerations(
+        outputs.generations
+      );
+      if (usageMetadata !== undefined) {
+        run.extra = run.extra ?? {};
+        const metadata =
+          (run.extra.metadata as Record<string, unknown> | undefined) ?? {};
+        metadata.usage_metadata = usageMetadata;
+        run.extra.metadata = metadata;
+      }
     }
   }
 
