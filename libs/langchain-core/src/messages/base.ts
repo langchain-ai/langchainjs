@@ -69,9 +69,7 @@ export interface FunctionCall {
 export type BaseMessageFields<
   TStructure extends MessageStructure = MessageStructure,
   TRole extends MessageType = MessageType
-> = {
-  id?: string;
-  name?: string;
+> = Pick<Message, "id" | "name"> & {
   content?: $InferMessageContent<TStructure, TRole>;
   contentBlocks?: Array<ContentBlock.Standard>;
   /** @deprecated */
@@ -222,6 +220,7 @@ export abstract class BaseMessage<
 
   id?: string;
 
+  /** @inheritdoc */
   name?: string;
 
   content: $InferMessageContent<TStructure, TRole>;
