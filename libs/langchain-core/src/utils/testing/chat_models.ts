@@ -573,3 +573,89 @@ export class FakeListChatModel extends BaseChatModel<FakeListChatModelCallOption
     }) as Runnable;
   }
 }
+
+/**
+ * A fake chat model that returns usage_metadata in both streaming and non-streaming modes.
+ * Used for testing that usage_metadata is properly passed to callbacks.
+ */
+export class FakeChatModelWithUsage extends BaseChatModel<BaseChatModelCallOptions> {
+  responses: string[];
+
+  usageMetadata: {
+    input_tokens: number;
+    output_tokens: number;
+    total_tokens: number;
+  };
+
+  i = 0;
+
+  constructor(
+    params: BaseChatModelParams & {
+      responses: string[];
+      usageMetadata?: {
+        input_tokens: number;
+        output_tokens: number;
+        total_tokens: number;
+      };
+    }
+  ) {
+    super(params);
+    this.responses = params.responses;
+    this.usageMetadata = params.usageMetadata ?? {
+      input_tokens: 10,
+      output_tokens: 20,
+      total_tokens: 30,
+    };
+  }
+
+  _llmType(): string {
+    return "fake-usage";
+  }
+
+  async _generate(
+    _messages: BaseMessage[],
+    _options: this["ParsedCallOptions"],
+    _runManager?: CallbackManagerForLLMRun
+  ): Promise<ChatResult> {
+    const response = this.responses[this.i];
+    if (this.i < this.responses.length - 1) {
+      this.i += 1;
+    }
+    return {
+      generations: [
+        {
+          message: new AIMessage({
+            content: response,
+            usage_metadata: this.usageMetadata,
+          }),
+          text: response,
+        },
+      ],
+    };
+  }
+
+  async *_streamResponseChunks(
+    _messages: BaseMessage[],
+    _options: this["ParsedCallOptions"],
+    _runManager?: CallbackManagerForLLMRun
+  ): AsyncGenerator<ChatGenerationChunk> {
+    const response = this.responses[this.i];
+    if (this.i < this.responses.length - 1) {
+      this.i += 1;
+    }
+
+    // Emit chars one by one, with usage_metadata on the last chunk
+    const chars = [...response];
+    for (let i = 0; i < chars.length; i++) {
+      const isLast = i === chars.length - 1;
+      const chunk = new ChatGenerationChunk({
+        message: new AIMessageChunk({
+          content: chars[i],
+          usage_metadata: isLast ? this.usageMetadata : undefined,
+        }),
+        text: chars[i],
+      });
+      yield chunk;
+    }
+  }
+}

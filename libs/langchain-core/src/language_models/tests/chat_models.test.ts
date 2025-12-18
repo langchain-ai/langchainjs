@@ -1,12 +1,16 @@
-import { test, expect } from "vitest";
+import { test, expect, describe } from "vitest";
 import { z } from "zod/v3";
 import { z as z4 } from "zod/v4";
 import { zodToJsonSchema } from "../../utils/zod-to-json-schema/index.js";
-import { FakeChatModel, FakeListChatModel } from "../../utils/testing/index.js";
+import {
+  FakeChatModel,
+  FakeChatModelWithUsage,
+  FakeListChatModel,
+} from "../../utils/testing/index.js";
 import { HumanMessage } from "../../messages/human.js";
 import { getBufferString } from "../../messages/utils.js";
-import { AIMessage } from "../../messages/ai.js";
 import { RunCollectorCallbackHandler } from "../../tracers/run_collector.js";
+import { AIMessage } from "../../messages/ai.js";
 
 test("Test ChatModel accepts array shorthand for messages", async () => {
   const model = new FakeChatModel({});
@@ -389,4 +393,147 @@ test(`Test ChatModel should not serialize a passed "cache" parameter`, async () 
   expect(JSON.stringify(model)).toEqual(
     `{"lc":1,"type":"constructor","id":["langchain","chat_models","fake-list","FakeListChatModel"],"kwargs":{"responses":["hi"],"emit_custom_event":true}}`
   );
+});
+
+describe("handleLLMEnd extraParams with usage_metadata", () => {
+  test("passes usage_metadata in extraParams during streaming via stream()", async () => {
+    const model = new FakeChatModelWithUsage({
+      responses: ["Hello!"],
+      usageMetadata: {
+        input_tokens: 5,
+        output_tokens: 10,
+        total_tokens: 15,
+      },
+    });
+
+    const runCollector = new RunCollectorCallbackHandler();
+
+    const stream = await model.stream("Hi", {
+      callbacks: [runCollector],
+    });
+
+    // Consume the stream
+    const chunks = [];
+    for await (const chunk of stream) {
+      chunks.push(chunk);
+    }
+
+    expect(chunks.length).toBeGreaterThan(0);
+    expect(runCollector.tracedRuns.length).toBe(1);
+
+    const run = runCollector.tracedRuns[0];
+    expect(run.extra?.metadata).toBeDefined();
+    expect(run.extra?.metadata?.usage_metadata).toEqual({
+      input_tokens: 5,
+      output_tokens: 10,
+      total_tokens: 15,
+    });
+  });
+
+  test("passes usage_metadata in extraParams during invoke()", async () => {
+    const model = new FakeChatModelWithUsage({
+      responses: ["Hello!"],
+      usageMetadata: {
+        input_tokens: 100,
+        output_tokens: 200,
+        total_tokens: 300,
+      },
+    });
+
+    const runCollector = new RunCollectorCallbackHandler();
+
+    await model.invoke("Hi", {
+      callbacks: [runCollector],
+    });
+
+    expect(runCollector.tracedRuns.length).toBe(1);
+
+    const run = runCollector.tracedRuns[0];
+    expect(run.extra?.metadata).toBeDefined();
+    expect(run.extra?.metadata?.usage_metadata).toEqual({
+      input_tokens: 100,
+      output_tokens: 200,
+      total_tokens: 300,
+    });
+  });
+
+  test("passes usage_metadata in extraParams during streamEvents()", async () => {
+    const model = new FakeChatModelWithUsage({
+      responses: ["Hello!"],
+      usageMetadata: {
+        input_tokens: 7,
+        output_tokens: 14,
+        total_tokens: 21,
+      },
+    });
+
+    const runCollector = new RunCollectorCallbackHandler();
+
+    const eventStream = model.streamEvents("Hi", {
+      version: "v2",
+      callbacks: [runCollector],
+    });
+
+    // Consume the event stream
+    const events = [];
+    for await (const event of eventStream) {
+      events.push(event);
+    }
+
+    expect(events.length).toBeGreaterThan(0);
+    expect(runCollector.tracedRuns.length).toBe(1);
+
+    const run = runCollector.tracedRuns[0];
+    expect(run.extra?.metadata).toBeDefined();
+    expect(run.extra?.metadata?.usage_metadata).toEqual({
+      input_tokens: 7,
+      output_tokens: 14,
+      total_tokens: 21,
+    });
+  });
+
+  test("passes cache flag and usage_metadata for cached results", async () => {
+    const model = new FakeChatModelWithUsage({
+      responses: ["Hello!"],
+      usageMetadata: {
+        input_tokens: 50,
+        output_tokens: 100,
+        total_tokens: 150,
+      },
+      cache: true,
+    });
+
+    // First call - not cached
+    const runCollector1 = new RunCollectorCallbackHandler();
+    await model.invoke("Cache test message", {
+      callbacks: [runCollector1],
+    });
+
+    expect(runCollector1.tracedRuns.length).toBe(1);
+    const firstRun = runCollector1.tracedRuns[0];
+    // First run should have usage_metadata but not cache flag
+    expect(firstRun.extra?.metadata?.usage_metadata).toEqual({
+      input_tokens: 50,
+      output_tokens: 100,
+      total_tokens: 150,
+    });
+    expect(firstRun.extra?.cached).toBeUndefined();
+
+    // Second call - should be cached
+    const runCollector2 = new RunCollectorCallbackHandler();
+    await model.invoke("Cache test message", {
+      callbacks: [runCollector2],
+    });
+
+    expect(runCollector2.tracedRuns.length).toBe(1);
+    const secondRun = runCollector2.tracedRuns[0];
+    // Second run should have cache flag set to true
+    expect(secondRun.extra?.cached).toBe(true);
+    // Cached results have usage_metadata with all zeros
+    expect(secondRun.extra?.metadata?.usage_metadata).toEqual({
+      input_tokens: 0,
+      output_tokens: 0,
+      total_tokens: 0,
+    });
+  });
 });

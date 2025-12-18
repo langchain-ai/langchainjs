@@ -343,6 +343,7 @@ export abstract class BaseChatModel<
       let generationChunk: ChatGenerationChunk | undefined;
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       let llmOutput: Record<string, any> | undefined;
+      const extraParams: Record<string, unknown> = {};
       try {
         for await (const chunk of this._streamResponseChunks(
           messages,
@@ -373,6 +374,9 @@ export abstract class BaseChatModel<
             isAIMessageChunk(chunk.message) &&
             chunk.message.usage_metadata !== undefined
           ) {
+            extraParams.metadata = {
+              usage_metadata: chunk.message.usage_metadata,
+            };
             llmOutput = {
               tokenUsage: {
                 promptTokens: chunk.message.usage_metadata.input_tokens,
@@ -392,11 +396,17 @@ export abstract class BaseChatModel<
       }
       await Promise.all(
         (runManagers ?? []).map((runManager) =>
-          runManager?.handleLLMEnd({
-            // TODO: Remove cast after figuring out inheritance
-            generations: [[generationChunk as ChatGeneration]],
-            llmOutput,
-          })
+          runManager?.handleLLMEnd(
+            {
+              // TODO: Remove cast after figuring out inheritance
+              generations: [[generationChunk as ChatGeneration]],
+              llmOutput,
+            },
+            undefined,
+            undefined,
+            undefined,
+            extraParams
+          )
         )
       );
     }
@@ -487,6 +497,7 @@ export abstract class BaseChatModel<
         let aggregated;
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         let llmOutput: Record<string, any> | undefined;
+        const extraParams: Record<string, unknown> = {};
         for await (const chunk of stream) {
           if (chunk.message.id == null) {
             const runId = runManagers?.at(0)?.runId;
@@ -501,6 +512,9 @@ export abstract class BaseChatModel<
             isAIMessageChunk(chunk.message) &&
             chunk.message.usage_metadata !== undefined
           ) {
+            extraParams.metadata = {
+              usage_metadata: chunk.message.usage_metadata,
+            };
             llmOutput = {
               tokenUsage: {
                 promptTokens: chunk.message.usage_metadata.input_tokens,
@@ -514,10 +528,16 @@ export abstract class BaseChatModel<
           throw new Error("Received empty response from chat model call.");
         }
         generations.push([aggregated]);
-        await runManagers?.[0].handleLLMEnd({
-          generations,
-          llmOutput,
-        });
+        await runManagers?.[0].handleLLMEnd(
+          {
+            generations,
+            llmOutput,
+          },
+          undefined,
+          undefined,
+          undefined,
+          extraParams
+        );
       } catch (e) {
         await runManagers?.[0].handleLLMError(e);
         throw e;
@@ -564,10 +584,24 @@ export abstract class BaseChatModel<
             }
             generations[i] = result.generations;
             llmOutputs[i] = result.llmOutput;
-            return runManagers?.[i]?.handleLLMEnd({
-              generations: [result.generations],
-              llmOutput: result.llmOutput,
+            const extraParams: Record<string, unknown> = {};
+            result.generations.forEach((g) => {
+              if (AIMessage.isInstance(g.message) && g.message.usage_metadata) {
+                extraParams.metadata = {
+                  usage_metadata: g.message.usage_metadata,
+                };
+              }
             });
+            return runManagers?.[i]?.handleLLMEnd(
+              {
+                generations: [result.generations],
+                llmOutput: result.llmOutput,
+              },
+              undefined,
+              undefined,
+              undefined,
+              extraParams
+            );
           } else {
             // status === "rejected"
             await runManagers?.[i]?.handleLLMError(pResult.reason);
@@ -679,6 +713,9 @@ export abstract class BaseChatModel<
       cachedResults.map(async ({ result: promiseResult, runManager }, i) => {
         if (promiseResult.status === "fulfilled") {
           const result = promiseResult.value as Generation[];
+          const extraParams: Record<string, unknown> = {
+            cached: true,
+          };
           generations[i] = result.map((result) => {
             if (
               "message" in result &&
@@ -689,6 +726,12 @@ export abstract class BaseChatModel<
                 input_tokens: 0,
                 output_tokens: 0,
                 total_tokens: 0,
+              };
+              // We eagerly reassign usage_metadata here since there
+              // is typically only one generation here, and we want
+              // to include some kind of usage metadata in the callback
+              extraParams.metadata = {
+                usage_metadata: result.message.usage_metadata,
               };
               if (outputVersion === "v1") {
                 result.message = castStandardMessageContent(result.message);
@@ -710,9 +753,7 @@ export abstract class BaseChatModel<
             undefined,
             undefined,
             undefined,
-            {
-              cached: true,
-            }
+            extraParams
           );
         } else {
           // status === "rejected"
