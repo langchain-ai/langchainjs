@@ -592,6 +592,17 @@
         "default": "./dist/utils/chunk_array.js"
       }
     },
+    "./utils/context": {
+      "input": "./src/utils/context.ts",
+      "require": {
+        "types": "./dist/utils/context.d.cts",
+        "default": "./dist/utils/context.cjs"
+      },
+      "import": {
+        "types": "./dist/utils/context.d.ts",
+        "default": "./dist/utils/context.js"
+      }
+    },
     "./utils/env": {
       "input": "./src/utils/env.ts",
       "require": {

@@ -35,6 +35,11 @@ export {
 } from "@langchain/core/tools";
 
 /**
+ * LangChain utilities
+ */
+export { context } from "@langchain/core/utils/context";
+
+/**
  * LangChain Agents
  */
 export * from "./agents/index.js";
