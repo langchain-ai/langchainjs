@@ -24,7 +24,7 @@ import {
   GeminiModalityTokenCount,
   GeminiGroundingSupport,
   GeminiPartFunctionCall,
-  GeminiPartBaseFile, GeminiVideoMetadata,
+  GeminiPartBaseFile,
 } from "../chat_models/types.js";
 import { iife } from "../utils/misc.js";
 import { ToolCallNotFoundError } from "../utils/errors.js";
