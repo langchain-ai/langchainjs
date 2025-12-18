@@ -36,6 +36,7 @@ type ModelInfoConfig = {
   only?: boolean,
   skip?: boolean,
   delay?: number,
+  isThinking?: boolean, // Is this a thinking model?
 }
 
 type DefaultGoogleParams = Omit<ChatGoogleParams | ChatGoogleNodeParams, "model">;
@@ -49,133 +50,120 @@ type ModelInfo = {
 const allModelInfo: ModelInfo[] = [
   {
     model: "gemini-2.0-flash-lite",
-    testConfig: {
-      useApiKey: true,
-    }
-  },
-  {
-    model: "gemini-2.0-flash-lite",
-    testConfig: {
-      node: true,
-    }
-  },
-  {
-    model: "gemini-2.0-flash-lite",
-    testConfig: {
-      node: true,
-      useApiKey: true,
-    }
   },
   {
     model: "gemini-2.0-flash",
-    testConfig: {
-      useApiKey: true,
-    }
-  },
-  {
-    model: "gemini-2.0-flash",
-    testConfig: {
-      node: true,
-    }
-  },
-  {
-    model: "gemini-2.0-flash",
-    testConfig: {
-      node: true,
-      useApiKey: true,
-    }
   },
   {
     model: "gemini-2.5-flash-lite",
+  },
+  {
+    model: "gemini-2.5-flash",
     testConfig: {
-      useApiKey: true,
+    },
+  },
+  {
+    model: "gemini-2.5-pro",
+  },
+  {
+    model: "gemini-3-pro-preview",
+    testConfig: {
+      isThinking: true,
+    },
+  },
+  {
+    model: "gemini-3-flash-preview",
+    testConfig: {
+      isThinking: true,
       only: true,
-    }
-  },
-  {
-    model: "gemini-2.5-flash-lite",
-    testConfig: {
-      node: true,
-    }
-  },
-  {
-    model: "gemini-2.5-flash-lite",
-    testConfig: {
-      node: true,
-      useApiKey: true,
-    }
-  },
-  {
-    model: "gemini-2.5-flash",
-    testConfig: {
-      useApiKey: true,
-    }
-  },
-  {
-    model: "gemini-2.5-flash",
-    testConfig: {
-      node: true,
-    }
-  },
-  {
-    model: "gemini-2.5-flash",
-    testConfig: {
-      node: true,
-      useApiKey: true,
-    }
-  },
-  {
-    model: "gemini-2.5-pro",
-    testConfig: {
-      useApiKey: true,
-    }
-  },
-  {
-    model: "gemini-2.5-pro",
-    testConfig: {
-      node: true,
-    }
-  },
-  {
-    model: "gemini-2.5-pro",
-    testConfig: {
-      node: true,
-      useApiKey: true,
-    }
-  },
-  {
-    model: "gemini-3-pro-preview",
-    testConfig: {
-      useApiKey: true,
-    }
-  },
-  {
-    model: "gemini-3-pro-preview",
-    testConfig: {
-      node: true,
-    }
-  },
-  {
-    model: "gemini-3-pro-preview",
-    testConfig: {
-      node: true,
-      useApiKey: true,
     }
   },
 ];
 
-function filterTestableModels(): ModelInfo[] {
-  const modelsWithOnly = allModelInfo.filter(
+type ModelInfoTest = (modelInfo: ModelInfo) => boolean;
+
+function filterTestableModels(filters?: ModelInfoTest | ModelInfoTest[] ): ModelInfo[] {
+  // Add all the explansion info to every model
+  const expandedModelInfo = expandAllModelInfo();
+
+  // If any of them have "only: true", then we use just those
+  const modelsWithOnly = expandedModelInfo.filter(
     (modelInfo) => modelInfo.testConfig?.only === true
   );
 
   const startingModels = modelsWithOnly.length > 0
     ? modelsWithOnly
-    : allModelInfo;
+    : expandedModelInfo;
 
-  return startingModels.filter(
+  // If anything has "skip: true" set, remove those
+  const skippedModels = startingModels.filter(
     (modelInfo) => modelInfo.testConfig?.skip !== true
   );
+
+  // Apply any specific models.
+  let filteredModels = skippedModels;
+  if (filters) {
+    const allFilters = Array.isArray(filters) ? filters : [filters];
+    allFilters.forEach( (filter: ModelInfoTest) => {
+      filteredModels = filteredModels.filter(filter);
+    })
+  }
+
+  console.error('filteredModels', filteredModels);
+
+  return filteredModels;
+}
+
+// These are added to every element in `allModelInfo`
+const expansionInfo: Partial<ModelInfo>[] = [
+  {
+    testConfig: {
+      useApiKey: true,
+    }
+  },
+  {
+    testConfig: {
+      node: true,
+      skip: true,
+    }
+  },
+  {
+    testConfig: {
+      useApiKey: true,
+      node: true,
+      skip: true,
+    }
+  }
+]
+
+function expandAllModelInfo(): ModelInfo[] {
+  const ret: ModelInfo[] = [];
+
+  allModelInfo.forEach( (modelInfo: ModelInfo) => {
+    expansionInfo.forEach( (addl: Partial<ModelInfo>) => {
+      const newInfo: ModelInfo = {
+        model: modelInfo.model,
+        defaultGoogleParams: modelInfo.defaultGoogleParams,
+        testConfig: modelInfo.testConfig ?? {},
+      };
+
+      if (addl.defaultGoogleParams) {
+        newInfo.defaultGoogleParams = {
+          ...addl.defaultGoogleParams,
+          ...newInfo.defaultGoogleParams,
+        };
+      }
+      if (addl.testConfig) {
+        newInfo.testConfig = {
+          ...addl.testConfig,
+          ...newInfo.testConfig,
+        };
+      }
+      ret.push(newInfo);
+    });
+  })
+
+  return ret;
 }
 
 function propSum(o: Record<string, number>): number {
@@ -228,7 +216,7 @@ const calculatorTool = tool((_) => "no-op", {
 
 const coreModelInfo: ModelInfo[] = filterTestableModels();
 describe.each(coreModelInfo)(
-  "Google ($model) $testConfig",
+  "Google Core ($model) $testConfig",
   ({model, defaultGoogleParams, testConfig}: ModelInfo) => {
 
     let recorder: GoogleRequestRecorder;
@@ -277,7 +265,7 @@ describe.each(coreModelInfo)(
       warnSpy.mockRestore();
     });
 
-    test.skip("invoke", async () => {
+    test("invoke", async () => {
       const llm = newChatGoogle();
       const result = await llm.invoke("What is 1 + 1?");
       console.log(result);
@@ -294,7 +282,7 @@ describe.each(coreModelInfo)(
       expect(contentBlock.text).toMatch(/(1 + 1 (equals|is|=) )?2.? ?/);
     });
 
-    test.skip("invoke seed", async () => {
+    test("invoke seed", async () => {
       const llm = newChatGoogle({
         seed: 6,
       });
@@ -313,7 +301,7 @@ describe.each(coreModelInfo)(
       expect(contentBlock.text).toMatch(/(1 + 1 (equals|is|=) )?2.? ?/);
     });
 
-    test.skip("invoke token count usage_metadata", async () => {
+    test("invoke token count usage_metadata", async () => {
       const model = newChatGoogle();
       const res: AIMessageChunk = await model.invoke("Why is the sky blue? Be concise.");
       console.log(res);
@@ -328,7 +316,7 @@ describe.each(coreModelInfo)(
       );
     });
 
-    test.skip("stream", async () => {
+    test("stream", async () => {
       const model = newChatGoogle();
       const input: BaseLanguageModelInput = new ChatPromptValue([
         new SystemMessage(
@@ -361,7 +349,7 @@ describe.each(coreModelInfo)(
       expect(warnSpy).not.toHaveBeenCalled();
     });
 
-    test.skip("streaming parameter", async () => {
+    test("streaming parameter", async () => {
       const modelWithStreaming = newChatGoogle({
         streaming: true,
       });
@@ -386,7 +374,7 @@ describe.each(coreModelInfo)(
       expect(totalTokenCount).toBeGreaterThan(1);
     });
 
-    test.skip("stream token count usage_metadata", async () => {
+    test("stream token count usage_metadata", async () => {
       const model = newChatGoogle();
       let res: AIMessageChunk | null = null;
       for await (const chunk of await model.stream(
@@ -411,7 +399,7 @@ describe.each(coreModelInfo)(
       );
     });
 
-    test.skip("streamUsage false excludes token usage", async () => {
+    test("streamUsage false excludes token usage", async () => {
       const model = newChatGoogle({
         temperature: 0,
         streamUsage: false,
@@ -430,7 +418,7 @@ describe.each(coreModelInfo)(
       expect(res?.usage_metadata).not.toBeDefined();
     });
 
-    test.skip("function", async () => {
+    test("function", async () => {
       const tools = [weatherTool];
       const llm: Runnable = newChatGoogle().bindTools(tools);
       const result = await llm.invoke("What is the weather in New York?");
@@ -447,7 +435,7 @@ describe.each(coreModelInfo)(
       expect(call.args.location).toBe("New York");
     });
 
-    test.skip("function conversation", async () => {
+    test("function conversation", async () => {
       const tools = [weatherTool];
       const llm = newChatGoogle().bindTools(tools);
       const history: BaseMessage[] = [new HumanMessage("What is the weather in New York?")];
@@ -468,7 +456,7 @@ describe.each(coreModelInfo)(
       expect(result2.content).toMatch(/21/);
     });
 
-    test.skip("function reply", async () => {
+    test("function reply", async () => {
       const tools: GeminiTool[] = [
         {
           functionDeclarations: [
@@ -517,7 +505,7 @@ describe.each(coreModelInfo)(
       }
     });
 
-    test.skip("function - force tool", async () => {
+    test("function - force tool", async () => {
       const llm = newChatGoogle();
       const llmWithTools: Runnable = llm.bindTools([calculatorTool, weatherTool], {
         tool_choice: "calculator",
@@ -534,7 +522,7 @@ describe.each(coreModelInfo)(
       expect(result.tool_calls?.[0].args).toHaveProperty("expression");
     });
 
-    test.skip("function - tool with nullish parameters", async () => {
+    test("function - tool with nullish parameters", async () => {
       // Fails with gemini-2.0-flash-lite ?
       const tools = [nullishWeatherTool];
       const llm: Runnable = newChatGoogle().bindTools(tools);
@@ -552,7 +540,7 @@ describe.each(coreModelInfo)(
       expect(call.args.location).toBe("New York");
     });
 
-    test.skip("Supports GoogleSearchRetrievalTool", async () => {
+    test("Supports GoogleSearchRetrievalTool", async () => {
       // gemini-2.0-flash-lite-001: Not supported
       const searchRetrievalTool = {
         googleSearchRetrieval: {
@@ -571,7 +559,7 @@ describe.each(coreModelInfo)(
       expect(result.response_metadata).toHaveProperty("groundingSupport");
     });
 
-    test.skip("Supports GoogleSearchTool", async () => {
+    test("Supports GoogleSearchTool", async () => {
       // gemini-2.0-flash-lite-001: Not supported
       const searchTool: GeminiTool = {
         googleSearch: {},
@@ -587,7 +575,7 @@ describe.each(coreModelInfo)(
       expect(result.response_metadata).toHaveProperty("groundingSupport");
     });
 
-    test.skip("URL Context Tool", async () => {
+    test("URL Context Tool", async () => {
       // Not available on Gemini 1.5
       // Not available on Gemini 2.0 Flash Lite (but available on Flash)
       // Not available on Vertex
@@ -612,7 +600,7 @@ describe.each(coreModelInfo)(
       );
     });
 
-    test.skip(`function - stream tools`, async () => {
+    test(`function - stream tools`, async () => {
       const model = newChatGoogle();
 
       const weatherTool = tool(
@@ -650,7 +638,7 @@ describe.each(coreModelInfo)(
       expect(toolCalls[0].args).toHaveProperty("location");
     });
 
-    test.skip("Can stream GoogleSearchRetrievalTool", async () => {
+    test("Can stream GoogleSearchRetrievalTool", async () => {
       // gemini-2.0-flash-lite-001: Not supported
       const searchRetrievalTool = {
         googleSearchRetrieval: {
@@ -673,7 +661,7 @@ describe.each(coreModelInfo)(
       expect(finalMsg.content as string).toContain("Dodgers");
     });
 
-    test.skip("withStructuredOutput classic", async () => {
+    test("withStructuredOutput classic", async () => {
       const tool = {
         name: "get_weather",
         description:
@@ -694,7 +682,7 @@ describe.each(coreModelInfo)(
       expect(result).toHaveProperty("location");
     });
 
-    test.skip("withStructuredOutput classic - null", async () => {
+    test("withStructuredOutput classic - null", async () => {
       const schema = {
         type: "object",
         properties: {
@@ -709,7 +697,7 @@ describe.each(coreModelInfo)(
       expect(result).toHaveProperty("greeterName");
     });
 
-    test.skip("withStructuredOutput - zod default mode", async () => {
+    test("withStructuredOutput - zod default mode", async () => {
       const tool = z.object({
         rating: z.number().min(1).max(5).describe("Rating from 1-5"),
         comment: z.string().describe("Review comment"),
@@ -723,7 +711,7 @@ describe.each(coreModelInfo)(
       expect(recorder.request?.body?.generationConfig).not.toHaveProperty("responseJsonSchema");
     });
 
-    test.skip("withStructuredOutput - zod jsonSchema", async () => {
+    test("withStructuredOutput - zod jsonSchema", async () => {
       const tool = z.object({
         rating: z.number().min(1).max(5).describe("Rating from 1-5"),
         comment: z.string().describe("Review comment"),
@@ -739,7 +727,7 @@ describe.each(coreModelInfo)(
       expect(recorder.request?.body?.generationConfig).toHaveProperty("responseJsonSchema");
     });
 
-    test.skip("withStructuredOutput - zod includeRaw", async () => {
+    test("withStructuredOutput - zod includeRaw", async () => {
       const tool = z.object({
         rating: z.number().min(1).max(5).describe("Rating from 1-5"),
         comment: z.string().describe("Review comment"),
@@ -754,7 +742,7 @@ describe.each(coreModelInfo)(
       expect(AIMessage.isInstance(result.raw)).toEqual(true);
     });
 
-    test.skip("responseSchema - zod", async () => {
+    test("responseSchema - zod", async () => {
       const tool = z.object({
         rating: z.number().min(1).max(5).describe("Rating from 1-5"),
         comment: z.string().describe("Review comment"),
@@ -987,3 +975,68 @@ describe.each(coreModelInfo)(
 
   }
 )
+
+const thinkingModelInfo: ModelInfo[] = filterTestableModels([
+  (modelInfo: ModelInfo) => modelInfo.testConfig?.isThinking === true
+]);
+describe.each(thinkingModelInfo)(
+  "Google Thinking ($model) $testConfig",
+  ({model, defaultGoogleParams, testConfig}: ModelInfo) => {
+
+    let recorder: GoogleRequestRecorder;
+    let callbacks: BaseCallbackHandler[];
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let warnSpy: MockInstance<any>;
+
+    function newChatGoogle( fields?: DefaultGoogleParams ): ChatGoogle | ChatGoogleNode {
+      recorder = new GoogleRequestRecorder();
+      callbacks = [recorder, new GoogleRequestLogger()];
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const configParams: ChatGoogleParams | ChatGoogleNodeParams | Record<string, any> = {};
+      const useNode = testConfig?.node ?? false;
+      const useApiKey = testConfig?.useApiKey ?? !useNode;
+      if( useApiKey ){
+        configParams.apiKey = getEnvironmentVariable( "TEST_API_KEY" );
+      }
+
+      const params = {
+        model,
+        callbacks,
+        ...configParams,
+        ...(defaultGoogleParams ?? {}),
+        ...(fields ?? {}),
+      };
+      if( useNode ){
+        return new ChatGoogleNode( params );
+
+      } else {
+        return new ChatGoogle( params );
+      }
+
+    }
+
+    beforeEach( async () => {
+      warnSpy = vi.spyOn( global.console, "warn" );
+      const delay = testConfig?.delay ?? 0;
+      if (delay) {
+        await new Promise( ( resolve ) => setTimeout( resolve, delay ) );
+      }
+    } );
+
+    afterEach( () => {
+      warnSpy.mockRestore();
+    } );
+
+    test("thought signature", async () => {
+      const llm = newChatGoogle();
+      const result = await llm.invoke("What is 1 + 1?");
+      console.log(result);
+      console.log(result.contentBlocks);
+      console.log(result.text);
+      console.log(result.content);
+    });
+
+  }
+);
