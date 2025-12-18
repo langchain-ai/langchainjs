@@ -15,7 +15,7 @@ import {
 import { BaseTracer, Run as BaseTracerRun } from "./base.js";
 import { BaseCallbackHandlerInput } from "../callbacks/base.js";
 import { getDefaultLangChainClientSingleton } from "../singletons/tracer.js";
-import { Generation } from "../outputs.js";
+import { ChatGeneration } from "../outputs.js";
 import { AIMessage } from "../messages/ai.js";
 import { mergeUsageMetadata, UsageMetadata } from "../messages/metadata.js";
 
@@ -47,25 +47,22 @@ export interface LangChainTracerFields extends BaseCallbackHandlerInput {
 }
 
 /**
- * Extract usage_metadata from generations.
+ * Extract usage_metadata from chat generations.
  *
  * Iterates through generations to find and aggregates all usage_metadata
- * found in messages. This is typically present in chat model outputs.
+ * found in chat messages. This is typically present in chat model outputs.
  */
 function _getUsageMetadataFromGenerations(
-  generations: Generation[][]
+  generations: ChatGeneration[][]
 ): UsageMetadata | undefined {
   let output: UsageMetadata | undefined = undefined;
   for (const generationBatch of generations) {
     for (const generation of generationBatch) {
-      if ("message" in generation) {
-        const { message } = generation as { message: unknown };
-        if (
-          AIMessage.isInstance(message) &&
-          message.usage_metadata !== undefined
-        ) {
-          output = mergeUsageMetadata(output, message.usage_metadata);
-        }
+      if (
+        AIMessage.isInstance(generation.message) &&
+        generation.message.usage_metadata !== undefined
+      ) {
+        output = mergeUsageMetadata(output, generation.message.usage_metadata);
       }
     }
   }
@@ -119,7 +116,9 @@ export class LangChainTracer
 
   onLLMEnd(run: BaseTracerRun): void {
     // Extract usage_metadata from outputs and store in extra.metadata
-    const outputs = run.outputs as { generations?: Generation[][] } | undefined;
+    const outputs = run.outputs as
+      | { generations?: ChatGeneration[][] }
+      | undefined;
     if (outputs?.generations) {
       const usageMetadata = _getUsageMetadataFromGenerations(
         outputs.generations
@@ -132,12 +131,13 @@ export class LangChainTracer
         run.extra.metadata = metadata;
       }
 
-      // Flatten outputs if there's only a single generation
+      // Flatten outputs if there's only a single chat generation
       if (
         outputs.generations.length === 1 &&
-        outputs.generations[0].length === 1
+        outputs.generations[0].length === 1 &&
+        AIMessage.isInstance(outputs.generations[0][0].message)
       ) {
-        run.outputs = outputs.generations[0][0];
+        run.outputs = outputs.generations[0][0].message;
       }
     }
   }

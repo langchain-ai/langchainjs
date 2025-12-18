@@ -316,8 +316,8 @@ describe("LangChainTracer output flattening", () => {
 
     const updateCall = mockClient.updateRun.mock.calls[0];
     const updatedRun = updateCall[1];
-    // Should be flattened to just the generation object
-    expect(updatedRun.outputs).toEqual(generation);
+    // Should be flattened to just the message
+    expect(updatedRun.outputs).toEqual(message);
   });
 
   test("onLLMEnd does not flatten outputs when there are multiple generations in a batch", async () => {
