@@ -1,5 +1,19 @@
 # @langchain/community
 
+## 1.1.1
+
+### Patch Changes
+
+- [#9671](https://github.com/langchain-ai/langchainjs/pull/9671) [`7f8685b`](https://github.com/langchain-ai/langchainjs/commit/7f8685b062d0fe61f9947e2811d46f8fd0365167) Thanks [@FilipZmijewski](https://github.com/FilipZmijewski)! - support aborting for Model Gateway and WatsonxLLM for IBM
+
+- [#9681](https://github.com/langchain-ai/langchainjs/pull/9681) [`9bdd109`](https://github.com/langchain-ai/langchainjs/commit/9bdd109b2078828ddf55e7665caa9891f108f69c) Thanks [@robertmaybin](https://github.com/robertmaybin)! - Add @langchain/turbopuffer package for turbopuffer vector database integration
+
+  Deprecate @langchain/community/vectorstores/turbopuffer in favor of @langchain/turbopuffer
+
+- Updated dependencies [[`af664be`](https://github.com/langchain-ai/langchainjs/commit/af664becc0245b2315ea2f784c9a6c1d7622dbb4)]:
+  - @langchain/classic@1.0.7
+  - @langchain/openai@1.2.0
+
 ## 1.1.0
 
 ### Minor Changes
