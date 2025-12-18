@@ -69,43 +69,7 @@ export interface FunctionCall {
 export type BaseMessageFields<
   TStructure extends MessageStructure = MessageStructure,
   TRole extends MessageType = MessageType
-> = {
-  id?: string;
-  /**
-   * An optional name for the message participant.
-   *
-   * This property is primarily used to:
-   *
-   * 1. **Identify agent roles in multi-agent systems**: When multiple agents
-   *    collaborate, setting `name` helps distinguish which agent produced a
-   *    message, preventing confusion about who said what.
-   *
-   * 2. **Pass participant names to model providers**: Some providers (notably
-   *    OpenAI, e.g. see {@link https://platform.openai.com/docs/api-reference/chat/create | OpenAI Chat Completions API})
-   *    use this field to differentiate between participants with the
-   *    same role. For example, when using OpenAI's Chat Completions API, the
-   *    `name` is included in the message payload sent to the model.
-   *
-   * @example
-   * ```typescript
-   * // Setting name on an AIMessage to identify the agent
-   * const message = new AIMessage({
-   *   content: "I'll handle the calendar scheduling.",
-   *   name: "calendar_agent"
-   * });
-   *
-   * // In a multi-agent system, this helps track message origins
-   * const researcherMessage = new AIMessage({
-   *   content: "Here are the findings...",
-   *   name: "researcher"
-   * });
-   * const writerMessage = new AIMessage({
-   *   content: "I've drafted the report.",
-   *   name: "writer"
-   * });
-   * ```
-   */
-  name?: string;
+> = Pick<Message, "id" | "name"> & {
   content?: $InferMessageContent<TStructure, TRole>;
   contentBlocks?: Array<ContentBlock.Standard>;
   /** @deprecated */
@@ -256,47 +220,7 @@ export abstract class BaseMessage<
 
   id?: string;
 
-  /**
-   * An optional name for the message participant.
-   *
-   * This property is primarily used to:
-   *
-   * 1. **Identify agent roles in multi-agent systems**: When multiple agents
-   *    collaborate, setting `name` helps distinguish which agent produced a
-   *    message, preventing confusion about who said what.
-   *
-   * 2. **Pass participant names to model providers**: Some providers (notably
-   *    OpenAI) use this field to differentiate between participants with the
-   *    same role. For example, when using OpenAI's Chat Completions API, the
-   *    `name` is included in the message payload sent to the model.
-   *
-   * **Model Provider Support**:
-   * - **OpenAI**: Actively uses `name` to distinguish between speakers.
-   * - **Other providers**: May ignore this field. For providers that don't
-   *   support `name` natively (e.g., Anthropic), consider using context
-   *   injection or XML tags as alternative approaches.
-   *
-   * @example
-   * ```typescript
-   * // Setting name on an AIMessage to identify the agent
-   * const message = new AIMessage({
-   *   content: "I'll handle the calendar scheduling.",
-   *   name: "calendar_agent"
-   * });
-   *
-   * // In a multi-agent system, this helps track message origins
-   * const researcherMessage = new AIMessage({
-   *   content: "Here are the findings...",
-   *   name: "researcher"
-   * });
-   * const writerMessage = new AIMessage({
-   *   content: "I've drafted the report.",
-   *   name: "writer"
-   * });
-   * ```
-   *
-   * @see {@link https://platform.openai.com/docs/api-reference/chat/create | OpenAI Chat Completions API}
-   */
+  /** @inheritdoc */
   name?: string;
 
   content: $InferMessageContent<TStructure, TRole>;
