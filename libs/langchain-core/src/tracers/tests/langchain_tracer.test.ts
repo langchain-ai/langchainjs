@@ -288,3 +288,178 @@ describe("LangChainTracer usage_metadata extraction", () => {
     });
   });
 });
+
+describe("LangChainTracer output flattening", () => {
+  test("onLLMEnd flattens outputs when generations is a 1x1 matrix", async () => {
+    const mockClient = {
+      createRun: vi.fn(),
+      updateRun: vi.fn(),
+    } as any;
+
+    const tracer = new LangChainTracer({ client: mockClient });
+    const runId = uuid.v4();
+
+    await tracer.handleLLMStart(serialized, ["test prompt"], runId);
+
+    const message = new AIMessage({ content: "Hello!" });
+    const generation: ChatGeneration = {
+      text: "Hello!",
+      message,
+    };
+
+    await tracer.handleLLMEnd(
+      {
+        generations: [[generation]],
+      },
+      runId
+    );
+
+    const updateCall = mockClient.updateRun.mock.calls[0];
+    const updatedRun = updateCall[1];
+    // Should be flattened to just the message
+    expect(updatedRun.outputs).toEqual(message);
+  });
+
+  test("onLLMEnd does not flatten outputs when there are multiple generations in a batch", async () => {
+    const mockClient = {
+      createRun: vi.fn(),
+      updateRun: vi.fn(),
+    } as any;
+
+    const tracer = new LangChainTracer({ client: mockClient });
+    const runId = uuid.v4();
+
+    await tracer.handleLLMStart(serialized, ["test prompt"], runId);
+
+    const generation1: ChatGeneration = {
+      text: "Hello!",
+      message: new AIMessage({ content: "Hello!" }),
+    };
+    const generation2: ChatGeneration = {
+      text: "Hi there!",
+      message: new AIMessage({ content: "Hi there!" }),
+    };
+
+    await tracer.handleLLMEnd(
+      {
+        generations: [[generation1, generation2]],
+      },
+      runId
+    );
+
+    const updateCall = mockClient.updateRun.mock.calls[0];
+    const updatedRun = updateCall[1];
+    // Should NOT be flattened - keep original structure
+    expect(updatedRun.outputs).toEqual({
+      generations: [[generation1, generation2]],
+    });
+  });
+
+  test("onLLMEnd does not flatten outputs when there are multiple batches", async () => {
+    const mockClient = {
+      createRun: vi.fn(),
+      updateRun: vi.fn(),
+    } as any;
+
+    const tracer = new LangChainTracer({ client: mockClient });
+    const runId = uuid.v4();
+
+    await tracer.handleLLMStart(serialized, ["prompt1", "prompt2"], runId);
+
+    const generation1: ChatGeneration = {
+      text: "Response 1",
+      message: new AIMessage({ content: "Response 1" }),
+    };
+    const generation2: ChatGeneration = {
+      text: "Response 2",
+      message: new AIMessage({ content: "Response 2" }),
+    };
+
+    await tracer.handleLLMEnd(
+      {
+        generations: [[generation1], [generation2]],
+      },
+      runId
+    );
+
+    const updateCall = mockClient.updateRun.mock.calls[0];
+    const updatedRun = updateCall[1];
+    // Should NOT be flattened - keep original structure
+    expect(updatedRun.outputs).toEqual({
+      generations: [[generation1], [generation2]],
+    });
+  });
+
+  test("onLLMEnd does not flatten outputs when there are multiple batches with multiple generations", async () => {
+    const mockClient = {
+      createRun: vi.fn(),
+      updateRun: vi.fn(),
+    } as any;
+
+    const tracer = new LangChainTracer({ client: mockClient });
+    const runId = uuid.v4();
+
+    await tracer.handleLLMStart(serialized, ["prompt1", "prompt2"], runId);
+
+    const gen1a: ChatGeneration = {
+      text: "1a",
+      message: new AIMessage({ content: "1a" }),
+    };
+    const gen1b: ChatGeneration = {
+      text: "1b",
+      message: new AIMessage({ content: "1b" }),
+    };
+    const gen2a: ChatGeneration = {
+      text: "2a",
+      message: new AIMessage({ content: "2a" }),
+    };
+    const gen2b: ChatGeneration = {
+      text: "2b",
+      message: new AIMessage({ content: "2b" }),
+    };
+
+    await tracer.handleLLMEnd(
+      {
+        generations: [
+          [gen1a, gen1b],
+          [gen2a, gen2b],
+        ],
+      },
+      runId
+    );
+
+    const updateCall = mockClient.updateRun.mock.calls[0];
+    const updatedRun = updateCall[1];
+    // Should NOT be flattened - keep original structure
+    expect(updatedRun.outputs).toEqual({
+      generations: [
+        [gen1a, gen1b],
+        [gen2a, gen2b],
+      ],
+    });
+  });
+
+  test("onLLMEnd handles empty generations without error", async () => {
+    const mockClient = {
+      createRun: vi.fn(),
+      updateRun: vi.fn(),
+    } as any;
+
+    const tracer = new LangChainTracer({ client: mockClient });
+    const runId = uuid.v4();
+
+    await tracer.handleLLMStart(serialized, ["test prompt"], runId);
+
+    await tracer.handleLLMEnd(
+      {
+        generations: [],
+      },
+      runId
+    );
+
+    const updateCall = mockClient.updateRun.mock.calls[0];
+    const updatedRun = updateCall[1];
+    // Should keep original structure when empty
+    expect(updatedRun.outputs).toEqual({ generations: [] });
+  });
+});

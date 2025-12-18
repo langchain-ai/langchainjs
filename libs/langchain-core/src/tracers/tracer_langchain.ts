@@ -130,6 +130,15 @@ export class LangChainTracer
         metadata.usage_metadata = usageMetadata;
         run.extra.metadata = metadata;
       }
+
+      // Flatten outputs if there's only a single chat generation
+      if (
+        outputs.generations.length === 1 &&
+        outputs.generations[0].length === 1 &&
+        AIMessage.isInstance(outputs.generations[0][0].message)
+      ) {
+        run.outputs = outputs.generations[0][0].message;
+      }
     }
   }
 
