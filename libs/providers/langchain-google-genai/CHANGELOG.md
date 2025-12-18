@@ -1,5 +1,14 @@
 # @langchain/google-genai
 
+## 2.1.2
+
+### Patch Changes
+
+- [#9680](https://github.com/langchain-ai/langchainjs/pull/9680) [`cbd2a96`](https://github.com/langchain-ai/langchainjs/commit/cbd2a96b55e2b772cf54abaea081ba8199df5c8b) Thanks [@christian-bromann](https://github.com/christian-bromann)! - fix(google-genai): add 'medium' as option for thinkingLevel
+
+- Updated dependencies [[`df9c42b`](https://github.com/langchain-ai/langchainjs/commit/df9c42b3ab61b85309ab47256e1d93c3188435ee), [`8d2982b`](https://github.com/langchain-ai/langchainjs/commit/8d2982bb94c0f4e4314ace3cc98a1ae87571b1ed), [`af664be`](https://github.com/langchain-ai/langchainjs/commit/af664becc0245b2315ea2f784c9a6c1d7622dbb4), [`ffb2402`](https://github.com/langchain-ai/langchainjs/commit/ffb24026cd93e58219519ee24c6e23ea57cb5bde)]:
+  - @langchain/core@1.1.7
+
 ## 2.1.1
 
 ### Patch Changes
