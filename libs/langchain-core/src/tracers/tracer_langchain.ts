@@ -16,8 +16,8 @@ import { BaseTracer, Run as BaseTracerRun } from "./base.js";
 import { BaseCallbackHandlerInput } from "../callbacks/base.js";
 import { getDefaultLangChainClientSingleton } from "../singletons/tracer.js";
 import { Generation } from "../outputs.js";
-import { isAIMessage } from "../messages/ai.js";
-import { isBaseMessage } from "../messages/base.js";
+import { AIMessage } from "../messages/ai.js";
+import { _mergeDicts } from "../messages/base.js";
 import { UsageMetadata } from "../messages/metadata.js";
 
 export interface Run extends BaseRun {
@@ -56,16 +56,19 @@ export interface LangChainTracerFields extends BaseCallbackHandlerInput {
 function _getUsageMetadataFromGenerations(
   generations: Generation[][]
 ): UsageMetadata | undefined {
+  let output: UsageMetadata | undefined = undefined;
   for (const generationBatch of generations) {
     for (const generation of generationBatch) {
       if ("message" in generation) {
         const { message } = generation as { message: unknown };
         if (
-          isBaseMessage(message) &&
-          isAIMessage(message) &&
+          AIMessage.isInstance(message) &&
           message.usage_metadata !== undefined
         ) {
-          return message.usage_metadata;
+          output = _mergeDicts(
+            output ?? {},
+            message.usage_metadata
+          ) as UsageMetadata;
         }
       }
     }
