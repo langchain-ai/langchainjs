@@ -17,8 +17,7 @@ import { BaseCallbackHandlerInput } from "../callbacks/base.js";
 import { getDefaultLangChainClientSingleton } from "../singletons/tracer.js";
 import { Generation } from "../outputs.js";
 import { AIMessage } from "../messages/ai.js";
-import { _mergeDicts } from "../messages/base.js";
-import { UsageMetadata } from "../messages/metadata.js";
+import { mergeUsageMetadata, UsageMetadata } from "../messages/metadata.js";
 
 export interface Run extends BaseRun {
   id: string;
@@ -50,8 +49,8 @@ export interface LangChainTracerFields extends BaseCallbackHandlerInput {
 /**
  * Extract usage_metadata from generations.
  *
- * Iterates through generations to find and return the first usage_metadata
- * found in a message. This is typically present in chat model outputs.
+ * Iterates through generations to find and aggregates all usage_metadata
+ * found in messages. This is typically present in chat model outputs.
  */
 function _getUsageMetadataFromGenerations(
   generations: Generation[][]
@@ -65,15 +64,12 @@ function _getUsageMetadataFromGenerations(
           AIMessage.isInstance(message) &&
           message.usage_metadata !== undefined
         ) {
-          output = _mergeDicts(
-            output ?? {},
-            message.usage_metadata
-          ) as UsageMetadata;
+          output = mergeUsageMetadata(output, message.usage_metadata);
         }
       }
     }
   }
-  return undefined;
+  return output;
 }
 
 export class LangChainTracer

@@ -11,6 +11,7 @@ import { AsyncLocalStorageProviderSingleton } from "../../singletons/async_local
 import { AIMessage } from "../../messages/ai.js";
 import { Serialized } from "../../load/serializable.js";
 import { ChatGeneration } from "../../outputs.js";
+import { UsageMetadata } from "../../messages/metadata.js";
 
 test("LangChainTracer payload snapshots for run create and update", async () => {
   AsyncLocalStorageProviderSingleton.initializeGlobalInstance(
@@ -129,6 +130,8 @@ describe("LangChainTracer usage_metadata extraction", () => {
       input_tokens: 100,
       output_tokens: 200,
       total_tokens: 300,
+      input_token_details: {},
+      output_token_details: {},
     };
 
     const message = new AIMessage({
@@ -201,10 +204,12 @@ describe("LangChainTracer usage_metadata extraction", () => {
       { existing_key: "existing_value" }
     );
 
-    const usageMetadata = {
+    const usageMetadata: UsageMetadata = {
       input_tokens: 10,
       output_tokens: 20,
       total_tokens: 30,
+      input_token_details: {},
+      output_token_details: {},
     };
 
     const message = new AIMessage({
@@ -229,7 +234,7 @@ describe("LangChainTracer usage_metadata extraction", () => {
     expect(updatedRun.extra?.metadata?.existing_key).toEqual("existing_value");
   });
 
-  test("onLLMEnd extracts usage_metadata from first generation with it", async () => {
+  test("onLLMEnd aggregates usage_metadata across multiple generations", async () => {
     const mockClient = {
       createRun: vi.fn(),
       updateRun: vi.fn(),
@@ -273,8 +278,14 @@ describe("LangChainTracer usage_metadata extraction", () => {
 
     const updateCall = mockClient.updateRun.mock.calls[0];
     const updatedRun = updateCall[1];
-    // Should have the first usage_metadata
-    expect(updatedRun.extra?.metadata?.usage_metadata).toEqual(firstUsage);
+    // Should have aggregated usage_metadata from all generations
+    expect(updatedRun.extra?.metadata?.usage_metadata).toEqual({
+      input_tokens: 55,
+      output_tokens: 110,
+      total_tokens: 165,
+      input_token_details: {},
+      output_token_details: {},
+    });
   });
 });
 
