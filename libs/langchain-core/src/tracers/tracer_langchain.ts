@@ -12,9 +12,13 @@ import {
   RunUpdate as BaseRunUpdate,
   KVMap,
 } from "langsmith/schemas";
-import { BaseTracer } from "./base.js";
+import { BaseTracer, Run as BaseTracerRun } from "./base.js";
 import { BaseCallbackHandlerInput } from "../callbacks/base.js";
 import { getDefaultLangChainClientSingleton } from "../singletons/tracer.js";
+import { Generation } from "../outputs.js";
+import { isAIMessage } from "../messages/ai.js";
+import { isBaseMessage } from "../messages/base.js";
+import { UsageMetadata } from "../messages/metadata.js";
 
 export interface Run extends BaseRun {
   id: string;
@@ -41,6 +45,32 @@ export interface LangChainTracerFields extends BaseCallbackHandlerInput {
   projectName?: string;
   client?: LangSmithTracingClientInterface;
   replicas?: RunTreeConfig["replicas"];
+}
+
+/**
+ * Extract usage_metadata from generations.
+ *
+ * Iterates through generations to find and return the first usage_metadata
+ * found in a message. This is typically present in chat model outputs.
+ */
+function _getUsageMetadataFromGenerations(
+  generations: Generation[][]
+): UsageMetadata | undefined {
+  for (const generationBatch of generations) {
+    for (const generation of generationBatch) {
+      if ("message" in generation) {
+        const { message } = generation as { message: unknown };
+        if (
+          isBaseMessage(message) &&
+          isAIMessage(message) &&
+          message.usage_metadata !== undefined
+        ) {
+          return message.usage_metadata;
+        }
+      }
+    }
+  }
+  return undefined;
 }
 
 export class LangChainTracer
@@ -86,6 +116,23 @@ export class LangChainTracer
   async onRunUpdate(run: Run): Promise<void> {
     const runTree = this.getRunTreeWithTracingConfig(run.id);
     await runTree?.patchRun();
+  }
+
+  onLLMEnd(run: BaseTracerRun): void {
+    // Extract usage_metadata from outputs and store in extra.metadata
+    const outputs = run.outputs as { generations?: Generation[][] } | undefined;
+    if (outputs?.generations) {
+      const usageMetadata = _getUsageMetadataFromGenerations(
+        outputs.generations
+      );
+      if (usageMetadata !== undefined) {
+        run.extra = run.extra ?? {};
+        const metadata =
+          (run.extra.metadata as Record<string, unknown> | undefined) ?? {};
+        metadata.usage_metadata = usageMetadata;
+        run.extra.metadata = metadata;
+      }
+    }
   }
 
   getRun(id: string): Run | undefined {
