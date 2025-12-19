@@ -41,6 +41,74 @@ import { completionsApiContentBlockConverter } from "./completions.js";
 
 const _FUNCTION_CALL_IDS_MAP_KEY = "__openai_function_call_ids__";
 
+type OpenAIAnnotation =
+  OpenAIClient.Responses.ResponseOutputText["annotations"][number];
+
+/**
+ * Converts an OpenAI annotation to a LangChain Citation or BaseContentBlock.
+ *
+ * OpenAI has several annotation types:
+ * - `url_citation`: Web citations with url, title, start_index, end_index
+ * - `file_citation`: File citations with file_id, filename, index
+ * - `container_file_citation`: Container file citations with container_id, file_id, filename, start_index, end_index
+ * - `file_path`: File paths with file_id, index
+ *
+ * This function maps them to LangChain's Citation format or preserves them as non-standard blocks.
+ */
+function convertOpenAIAnnotationToLangChain(
+  annotation: OpenAIAnnotation
+): ContentBlock.Citation | ContentBlock.NonStandard {
+  if (annotation.type === "url_citation") {
+    return {
+      type: "citation",
+      source: "url_citation",
+      url: annotation.url,
+      title: annotation.title,
+      startIndex: annotation.start_index,
+      endIndex: annotation.end_index,
+    } satisfies ContentBlock.Citation;
+  }
+
+  if (annotation.type === "file_citation") {
+    return {
+      type: "citation",
+      source: "file_citation",
+      title: annotation.filename,
+      startIndex: annotation.index,
+      // Store file_id in a way that can be retrieved
+      file_id: annotation.file_id,
+    } as ContentBlock.Citation;
+  }
+
+  if (annotation.type === "container_file_citation") {
+    return {
+      type: "citation",
+      source: "container_file_citation",
+      title: annotation.filename,
+      startIndex: annotation.start_index,
+      endIndex: annotation.end_index,
+      // Store additional IDs
+      file_id: annotation.file_id,
+      container_id: annotation.container_id,
+    } as ContentBlock.Citation;
+  }
+
+  if (annotation.type === "file_path") {
+    return {
+      type: "citation",
+      source: "file_path",
+      startIndex: annotation.index,
+      file_id: annotation.file_id,
+    } as ContentBlock.Citation;
+  }
+
+  // For unknown annotation types, preserve them as non-standard blocks
+  return {
+    type: "non_standard",
+    value: annotation as unknown as Record<string, unknown>,
+  } satisfies ContentBlock.NonStandard;
+}
+
 type ExcludeController<T> = T extends { controller: unknown } ? never : T;
 
 export type ResponsesCreate = OpenAIClient.Responses["create"];
@@ -228,8 +296,9 @@ export const convertResponsesMessageToAIMessage: Converter<
             return {
               type: "text",
               text: part.text,
-              annotations:
-                part.annotations as unknown as ContentBlock.Citation[],
+              annotations: part.annotations.map(
+                convertOpenAIAnnotationToLangChain
+              ),
             } satisfies ContentBlock.Text;
           }
 
@@ -502,7 +571,11 @@ export const convertResponsesDeltaToChatGenerationChunk: Converter<
     content.push({
       type: "text",
       text: "",
-      annotations: [event.annotation as ContentBlock.Citation],
+      annotations: [
+        convertOpenAIAnnotationToLangChain(
+          event.annotation as OpenAIAnnotation
+        ),
+      ],
       index: event.content_index,
     } satisfies ContentBlock.Text);
   } else if (
