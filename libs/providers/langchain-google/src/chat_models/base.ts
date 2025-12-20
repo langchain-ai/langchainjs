@@ -576,11 +576,7 @@ export abstract class BaseChatGoogle<
                 // Include usageMetadata if there is any and we have
                 // enabled it with streamUsage on
                 if (chunk?.usageMetadata && streamUsage) {
-                  messageChunkParams.usage_metadata = {
-                    input_tokens: chunk.usageMetadata.promptTokenCount!,
-                    output_tokens: chunk.usageMetadata.candidatesTokenCount!,
-                    total_tokens: chunk.usageMetadata.totalTokenCount!,
-                  }
+                  messageChunkParams.usage_metadata = convertGeminiGenerateContentResponseToUsageMetadata(chunk);
                 }
                 const messageChunk = new AIMessageChunk(messageChunkParams);
 

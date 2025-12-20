@@ -10,7 +10,11 @@ import {
   ChatMessage,
   StandardContentBlockConverter,
   convertToProviderContentBlock,
-  type Data, UsageMetadata, InputTokenDetails, OutputTokenDetails, ModalitiesTokenDetails,
+  type Data,
+  UsageMetadata,
+  InputTokenDetails,
+  OutputTokenDetails,
+  ModalitiesTokenDetails,
 } from "@langchain/core/messages";
 import { Converter } from "@langchain/core/utils/format";
 import {
@@ -418,12 +422,13 @@ function convertStandardContentMessageToGeminiContent(
   const parts: GeminiPart[] = [];
 
   // Process standard content blocks
-  for (const block of message.contentBlocks) {
-    const part = convertStandardContentBlockToGeminiPart(block);
+  message.contentBlocks.forEach((block: ContentBlock.Standard) => {
+    const contentBlock = message.additional_kwargs.originalTextContentBlock as ContentBlock.Standard || block;
+    const part: GeminiPart | null = convertStandardContentBlockToGeminiPart(contentBlock);
     if (part) {
       parts.push(part);
     }
-  }
+  })
 
   // Handle tool messages as function responses
   if (ToolMessage.isInstance(message) && message.tool_call_id) {
@@ -513,24 +518,16 @@ function convertLegacyContentMessageToGeminiContent(
             convertToProviderContentBlock(item, geminiContentBlockConverter)
           );
         } else if (item?.type === "functionCall") {
-          // Skip this - it will be added later
+          const {type, functionCall, ...etc} = item;
+          parts.push({
+            ...etc,
+            functionCall,
+          } as GeminiPartFunctionCall);
         } else {
           parts.push(item as GeminiPart);
         }
       }
     }
-  }
-
-  // Handle tool calls by adding function call parts to the end of the parts array
-  if (AIMessage.isInstance(message) && message.tool_calls?.length) {
-    parts.push(
-      ...message.tool_calls.map((toolCall) => ({
-        functionCall: {
-          name: toolCall.name,
-          args: toolCall.args,
-        },
-      }))
-    );
   }
 
   // Handle tool messages as function responses
@@ -752,6 +749,7 @@ export const convertGeminiPartsToToolCalls: Converter<
         id: `call_${toolCalls.length}`,
         name: functionCallPart.functionCall.name,
         args: functionCallPart.functionCall.args ?? {},
+        thoughtSignature: functionCallPart.thoughtSignature,
       });
     }
   }
@@ -763,45 +761,59 @@ export const convertGeminiPartToContentBlock: Converter<
   GeminiPart, 
   ContentBlock
 > = (part: GeminiPart): ContentBlock => {
-  if ("text" in part && part.text) {
-    return {
-      type: "text",
-      text: part.text,
-    };
-  } else if ("inlineData" in part && part.inlineData) {
-    return {
-      type: "inlineData",
-      inlineData: part.inlineData,
-    };
-  } else if ("fileData" in part && part.fileData) {
-    return {
-      type: "fileData",
-      fileData: part.fileData,
-    };
-  } else if ("functionCall" in part && part.functionCall) {
-    return {
-      type: "functionCall",
-      functionCall: part.functionCall,
-    };
-  } else if ("functionResponse" in part && part.functionResponse) {
-    return {
-      type: "functionResponse",
-      functionResponse: part.functionResponse,
-    };
-  } else if ("executableCode" in part && part.executableCode) {
-    return {
-      type: "executableCode",
-      executableCode: part.executableCode,
-    };
-  } else if ("codeExecutionResult" in part && part.codeExecutionResult) {
-    return {
-      type: "codeExecutionResult",
-      codeExecutionResult: part.codeExecutionResult,
-    };
+  const block: ContentBlock = iife(() => {
+    if ("text" in part && part.text) {
+      return {
+        type: "text",
+        text: part.text,
+      };
+    } else if ("inlineData" in part && part.inlineData) {
+      return {
+        type: "inlineData",
+        inlineData: part.inlineData,
+      };
+    } else if ("fileData" in part && part.fileData) {
+      return {
+        type: "fileData",
+        fileData: part.fileData,
+      };
+    } else if ("functionCall" in part && part.functionCall) {
+      return {
+        type: "functionCall",
+        functionCall: part.functionCall,
+      };
+    } else if ("functionResponse" in part && part.functionResponse) {
+      return {
+        type: "functionResponse",
+        functionResponse: part.functionResponse,
+      };
+    } else if ("executableCode" in part && part.executableCode) {
+      return {
+        type: "executableCode",
+        executableCode: part.executableCode,
+      };
+    } else if ("codeExecutionResult" in part && part.codeExecutionResult){
+      return {
+        type: "codeExecutionResult",
+        codeExecutionResult: part.codeExecutionResult,
+      };
+    }
+    return part as unknown as ContentBlock;
+  });
+  const ret: ContentBlock = {
+    thought: part.thought,
+    thoughtSignature: part.thoughtSignature,
+    partMetadata: part.partMetadata,
+    ...block,
   }
-  return part as unknown as ContentBlock;
-  
-} 
+  for (const attribute in ret) {
+    if (ret[attribute] === undefined) {
+      delete ret[attribute];
+    }
+  }
+
+  return ret;
+}
 
 /**
  * Converts a Gemini API candidate response to a LangChain AIMessage.
@@ -873,6 +885,7 @@ export const convertGeminiCandidateToAIMessage: Converter<
   // Convert parts to content format that the translator understands
   // Format: array of objects with type field matching the part type
   let content: string | ContentBlock[];
+  let originalTextContentBlock: ContentBlock | undefined = undefined;
 
   const groundingMetadata = candidate?.groundingMetadata;
   const citationMetadata = candidate?.citationMetadata;
@@ -889,26 +902,13 @@ export const convertGeminiCandidateToAIMessage: Converter<
     !("thought" in parts[0])
   ) {
     console.log('parts text');
-    // Single text part that is not a thought - store as string for simplicity
+    // Single text part - store as string for simplicity and backwards compatibility
     content = parts[0].text;
+    // But retain all the metadata
+    originalTextContentBlock = convertGeminiPartToContentBlock(parts[0]);
   } else {
     // Multiple parts - convert to array format with type fields
-    content = parts.map((p: GeminiPart) => {
-      const block: ContentBlock = {
-        thought: p.thought,
-        thoughtSignature: p.thoughtSignature,
-        partMetadata: p.partMetadata,
-        ...convertGeminiPartToContentBlock(p),
-      };
-
-      for (const attribute in block) {
-        if (block[attribute] === undefined) {
-          delete block[attribute];
-        }
-      }
-
-      return block;
-    });
+    content = parts.map((p: GeminiPart) => convertGeminiPartToContentBlock(p));
   }
 
   // const chatGenerations = parts.map((part, index) => {
@@ -941,6 +941,7 @@ export const convertGeminiCandidateToAIMessage: Converter<
     urlContextMetadata: candidate.urlContextMetadata,
     avgLogprobs: candidate.avgLogprobs,
     logprobsResult: candidate.logprobsResult,
+    originalTextContentBlock,
   };
 
   const response_metadata: Record<string, unknown> = {
