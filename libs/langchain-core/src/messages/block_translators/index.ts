@@ -6,6 +6,7 @@ import { ChatBedrockConverseTranslator } from "./bedrock_converse.js";
 import { ChatGoogleGenAITranslator } from "./google_genai.js";
 import { ChatVertexTranslator } from "./google_vertexai.js";
 import { ChatOpenAITranslator } from "./openai.js";
+import { ChatGoogleTranslator } from "./google";
 
 export interface StandardContentBlockTranslator {
   translateContent(message: AIMessage): Array<ContentBlock.Standard>;
@@ -21,6 +22,7 @@ declare global {
 globalThis.lc_block_translators_registry ??= new Map([
   ["anthropic", ChatAnthropicTranslator],
   ["bedrock-converse", ChatBedrockConverseTranslator],
+  ["google", ChatGoogleTranslator],
   ["google-genai", ChatGoogleGenAITranslator],
   ["google-vertexai", ChatVertexTranslator],
   ["openai", ChatOpenAITranslator],
