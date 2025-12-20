@@ -28,7 +28,7 @@
     "format:check": "prettier --check \"src\""
   },
   "dependencies": {
-    "@zkstash/sdk": "^0.3.2"
+    "@zkstash/sdk": "^0.4.0"
   },
   "peerDependencies": {
     "@langchain/core": "^1.0.0"

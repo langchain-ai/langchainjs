@@ -73,18 +73,21 @@ export class ZkStashStore extends BaseStore<string, any> {
   /**
    * Stores structured data in zkStash by triggering extraction into a specific Schema (Key).
    */
+  /**
+   * Stores structured data in zkStash directly using the new Direct Memory API.
+   * Maps 'key' to Schema Name (Kind) and 'value' to Data.
+   */
   async mset(keyValuePairs: [string, any][]): Promise<void> {
-    await Promise.all(keyValuePairs.map(async ([key, value]) => {
-      await this.client.createMemory({
-        agentId: this.agentId,
-        threadId: this.threadId,
-        schemas: [key], // Map the Key to the Schema
-        conversation: [
-          { role: "user", content: `The following information about ${key} is true: ${JSON.stringify(value)}` },
-          { role: "assistant", content: `I will remember that information for ${key}.` }
-        ]
-      });
+    const directMemories = keyValuePairs.map(([key, value]) => ({
+      kind: key,
+      data: value,
     }));
+
+    if (directMemories.length > 0) {
+      await this.client.storeMemories(this.agentId, directMemories, {
+        threadId: this.threadId,
+      });
+    }
   }
 
   async mdelete(_keys: string[]): Promise<void> {
