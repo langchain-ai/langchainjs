@@ -168,13 +168,11 @@ describe.each(parameters)(
           ...basicParams,
         });
         const controller = new AbortController();
-        await expect(() => {
-          const res = service.invoke("Print hello world", {
-            signal: controller.signal,
-          });
-          controller.abort();
-          return res;
-        }).rejects.toThrow();
+        const request = service.invoke("Print hello world", {
+          signal: controller.signal,
+        });
+        controller.abort();
+        await expect(request).rejects.toThrow();
       });
     });
 

@@ -233,6 +233,30 @@ test("invocationParams includes container with thinking enabled", () => {
   expect(params.thinking).toEqual({ type: "enabled", budget_tokens: 1000 });
 });
 
+test("invocationParams returns undefined tools when tools is undefined", () => {
+  const model = new ChatAnthropic({
+    modelName: "claude-3-haiku",
+    temperature: 0,
+    apiKey: "testing",
+  });
+
+  const params = model.invocationParams({});
+
+  expect(params.tools).toBeUndefined();
+});
+
+test("invocationParams returns empty array when tools is empty array", () => {
+  const model = new ChatAnthropic({
+    modelName: "claude-3-haiku",
+    temperature: 0,
+    apiKey: "testing",
+  });
+
+  const params = model.invocationParams({ tools: [] });
+
+  expect(params.tools).toEqual([]);
+});
+
 test("Can properly format messages with container_upload blocks", async () => {
   const messageHistory = [
     new HumanMessage({
@@ -548,6 +572,30 @@ describe("Tool extras validation", () => {
     expect(() => {
       AnthropicToolExtrasSchema.parse({ input_examples: "not a list" });
     }).toThrow(z4.ZodError);
+  });
+});
+
+describe("formatStructuredToolToAnthropic", () => {
+  test("returns undefined when tools is undefined", () => {
+    const model = new ChatAnthropic({
+      modelName: "claude-3-haiku-20240307",
+      anthropicApiKey: "testing",
+    });
+
+    const result = model.formatStructuredToolToAnthropic(undefined);
+
+    expect(result).toBeUndefined();
+  });
+
+  test("returns empty array when tools is empty array", () => {
+    const model = new ChatAnthropic({
+      modelName: "claude-3-haiku-20240307",
+      anthropicApiKey: "testing",
+    });
+
+    const result = model.formatStructuredToolToAnthropic([]);
+
+    expect(result).toEqual([]);
   });
 });
 

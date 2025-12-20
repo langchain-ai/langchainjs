@@ -124,7 +124,7 @@
     "cheerio": "1.0.0-rc.12",
     "dpdm": "^3.14.0",
     "eslint": "^9.36.0",
-    "langsmith": "^0.3.64",
+    "langsmith": ">=0.4.0 <1.0.0",
     "openai": "^5.1.0",
     "peggy": "^3.0.2",
     "prettier": "^2.8.3",

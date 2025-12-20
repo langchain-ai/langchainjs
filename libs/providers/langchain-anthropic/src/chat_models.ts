@@ -981,7 +981,7 @@ export class ChatAnthropicMessages<
   formatStructuredToolToAnthropic(
     tools: ChatAnthropicCallOptions["tools"]
   ): Anthropic.Messages.ToolUnion[] | undefined {
-    if (!tools || !tools.length) {
+    if (!tools) {
       return undefined;
     }
     return tools.map((tool) => {

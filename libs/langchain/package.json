@@ -1,6 +1,6 @@
 {
   "name": "langchain",
-  "version": "1.2.0",
+  "version": "1.2.2",
   "description": "Typescript bindings for langchain",
   "author": "LangChain",
   "license": "MIT",
@@ -82,7 +82,7 @@
   "dependencies": {
     "@langchain/langgraph": "^1.0.0",
     "@langchain/langgraph-checkpoint": "^1.0.0",
-    "langsmith": "~0.3.74",
+    "langsmith": ">=0.4.0 <1.0.0",
     "uuid": "^10.0.0",
     "zod": "^3.25.76 || ^4"
   },

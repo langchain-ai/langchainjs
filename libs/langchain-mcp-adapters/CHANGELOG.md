@@ -1,5 +1,11 @@
 # @langchain/mcp-adapters
 
+## 1.1.1
+
+### Patch Changes
+
+- [#9674](https://github.com/langchain-ai/langchainjs/pull/9674) [`2b36431`](https://github.com/langchain-ai/langchainjs/commit/2b36431babf0a4e4bc659c50659777c5228d3ac0) Thanks [@Nitinref](https://github.com/Nitinref)! - bump @modelcontextprotocol/sdk to address CVE-2025-66414
+
 ## 1.1.0
 
 ### Minor Changes

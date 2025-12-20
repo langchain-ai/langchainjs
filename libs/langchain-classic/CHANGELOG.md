@@ -1,5 +1,15 @@
 # @langchain/classic
 
+## 1.0.7
+
+### Patch Changes
+
+- [#9675](https://github.com/langchain-ai/langchainjs/pull/9675) [`af664be`](https://github.com/langchain-ai/langchainjs/commit/af664becc0245b2315ea2f784c9a6c1d7622dbb4) Thanks [@jacoblee93](https://github.com/jacoblee93)! - Bump LangSmith dep to 0.4.0
+
+- Updated dependencies []:
+  - @langchain/textsplitters@1.0.1
+  - @langchain/openai@1.2.0
+
 ## 1.0.6
 
 ### Patch Changes
