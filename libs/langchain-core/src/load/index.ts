@@ -205,7 +205,7 @@ async function reviver(this: ReviverContext, value: unknown): Promise<unknown> {
   }
 
   // If not an object, return as-is
-  if (typeof value !== "object" || value === null) {
+  if (typeof value !== "object" || value == null) {
     return value;
   }
 

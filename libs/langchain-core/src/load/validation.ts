@@ -197,6 +197,11 @@ export function serializeLcObject(obj: SerializableLike): {
  */
 export function escapeIfNeeded(value: unknown): unknown {
   if (value !== null && typeof value === "object" && !Array.isArray(value)) {
+    // Preserve Serializable objects - they have their own toJSON() that will be
+    // called by JSON.stringify. We don't want to convert them to plain objects.
+    if (isSerializableLike(value)) {
+      return value;
+    }
     const record = value as Record<string, unknown>;
     // Check if object needs escaping BEFORE recursing into values.
     // If it needs escaping, wrap it as-is - the contents are user data that

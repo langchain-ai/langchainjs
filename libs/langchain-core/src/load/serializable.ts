@@ -245,7 +245,9 @@ export abstract class Serializable implements SerializableInterface {
 
     // Escape any user data that contains 'lc' keys to prevent injection attacks
     // Skip secret fields since they've been replaced with secret markers
-    const secretFields = new Set(Object.keys(secrets));
+    const secretFields = new Set(
+      Object.keys(secrets).map((key) => keyToJson(key, aliases))
+    );
     const escapedKwargs: SerializedFields = {};
     for (const [key, value] of Object.entries(processedKwargs)) {
       if (secretFields.has(key)) {
