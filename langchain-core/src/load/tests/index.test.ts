@@ -1,4 +1,11 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import {
+  describe,
+  it,
+  expect,
+  jest,
+  beforeEach,
+  afterEach,
+} from "@jest/globals";
 import { load } from "../index.js";
 import { HumanMessage, AIMessage } from "../../messages/index.js";
 
@@ -33,11 +40,13 @@ async function assertNoSecretLeak(payload: unknown): Promise<void> {
 describe("`load()`", () => {
   describe("secret injection prevention", () => {
     beforeEach(() => {
-      vi.stubEnv(SENTINEL_ENV_VAR, SENTINEL_VALUE);
+      // eslint-disable-next-line no-process-env
+      process.env[SENTINEL_ENV_VAR] = SENTINEL_VALUE;
     });
 
     afterEach(() => {
-      vi.unstubAllEnvs();
+      // eslint-disable-next-line no-process-env
+      delete process.env[SENTINEL_ENV_VAR];
     });
 
     describe("Serializable top-level objects", () => {
@@ -110,7 +119,7 @@ describe("`load()`", () => {
       // Note: Plain objects without Serializable objects don't get
       // escaping because JSON.stringify doesn't call toJSON on plain objects.
       // The `secretsFromEnv: false` default protects against these cases by
-      // throwing an error when a secret is not found. This is fail-safe behavior.
+      // throwing an error when a secret is not found. This is fail-safe behajestor.
       it("plain object with secret throws with `secretsFromEnv: false`", async () => {
         const payload = { data: MALICIOUS_SECRET_DICT };
         const serialized = JSON.stringify(payload);
@@ -298,7 +307,7 @@ describe("`load()`", () => {
       });
     });
 
-    describe("secretsFromEnv behavior", () => {
+    describe("secretsFromEnv behajestor", () => {
       it("`secretsFromEnv: false` throws for missing secrets", async () => {
         const secretPayload = JSON.stringify({
           lc: 1,
@@ -339,19 +348,19 @@ describe("`load()`", () => {
         expect(result).toBe(mapValue);
       });
 
-      it("default behavior throws for missing secrets", async () => {
+      it("default behajestor throws for missing secrets", async () => {
         const secretPayload = JSON.stringify({
           lc: 1,
           type: "secret",
           id: [SENTINEL_ENV_VAR],
         });
 
-        // Default behavior should throw for missing secrets
+        // Default behajestor should throw for missing secrets
         await expect(load(secretPayload)).rejects.toThrow(/Missing secret/);
       });
     });
   });
-  describe("DoS protection via recursion depth limit", () => {
+  describe("DoS protection jesta recursion depth limit", () => {
     /**
      * Create a deeply nested object structure.
      */
