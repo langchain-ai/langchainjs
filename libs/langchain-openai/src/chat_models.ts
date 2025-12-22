@@ -799,9 +799,10 @@ export abstract class BaseChatOpenAI<
     this.audio = fields?.audio;
     this.modalities = fields?.modalities;
     this.reasoning =
-      fields?.reasoning ?? fields?.reasoningEffort
+      fields?.reasoning ??
+      (fields?.reasoningEffort
         ? { effort: fields.reasoningEffort }
-        : undefined;
+        : undefined);
     this.maxTokens = fields?.maxCompletionTokens ?? fields?.maxTokens;
     this.disableStreaming = fields?.disableStreaming === true;
     this.streaming = fields?.streaming === true;

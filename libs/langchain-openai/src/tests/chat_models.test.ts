@@ -574,13 +574,60 @@ describe("ChatOpenAI", () => {
     });
   });
 
-  test("can be constructed with reasoningEffort", async () => {
-    const model = new ChatOpenAI({
-      model: "gpt-4o-2024-08-06",
-      reasoningEffort: "low",
+  describe("reasoning field initialization", () => {
+    it("can be constructed with reasoningEffort", async () => {
+      const model = new ChatOpenAI({
+        model: "gpt-4o-2024-08-06",
+        reasoningEffort: "low",
+      });
+
+      expect(model.reasoning).toEqual({ effort: "low" });
     });
 
-    expect(model.reasoning).toEqual({ effort: "low" });
+    it("can be constructed with explicit reasoning object", async () => {
+      const model = new ChatOpenAI({
+        model: "gpt-5.2-2025-12-11",
+        reasoning: { effort: "medium" },
+      });
+
+      expect(model.reasoning).toEqual({ effort: "medium" });
+    });
+
+    it("reasoning takes precedence over reasoningEffort", async () => {
+      const model = new ChatOpenAI({
+        model: "gpt-5.2-2025-12-11",
+        reasoning: { effort: "high" },
+        reasoningEffort: "low",
+      });
+
+      expect(model.reasoning).toEqual({ effort: "high" });
+    });
+
+    it("reasoning is undefined when neither field is provided", async () => {
+      const model = new ChatOpenAI({
+        model: "gpt-5.2-2025-12-11",
+      });
+
+      expect(model.reasoning).toBeUndefined();
+    });
+
+    it("reasoning is undefined when reasoningEffort is undefined", async () => {
+      const model = new ChatOpenAI({
+        model: "gpt-5.2-2025-12-11",
+        reasoningEffort: undefined,
+      });
+
+      expect(model.reasoning).toBeUndefined();
+    });
+
+    it("reasoning is undefined when reasoningEffort is null", async () => {
+      const model = new ChatOpenAI({
+        model: "gpt-5.2-2025-12-11",
+        reasoningEffort: null as any,
+      });
+
+      expect(model.reasoning).toBeUndefined();
+    });
   });
 
   test("specifying streaming=false disables streaming", async () => {
