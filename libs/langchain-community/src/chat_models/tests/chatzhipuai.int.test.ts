@@ -30,7 +30,7 @@ const getWeather = tool((input) => `It's sunny in ${input.location}.`, {
   }),
 });
 
-test.skip("Test chat.stream work fine", async () => {
+test("Test chat.stream work fine", async () => {
   const chat = new ChatZhipuAI({
     modelName: "glm-3-turbo",
   });
@@ -45,7 +45,7 @@ test.skip("Test chat.stream work fine", async () => {
   expect(chunks.length).toBeGreaterThan(0);
 });
 
-test.skip("Test tool calling should work within chat.invoke", async () => {
+test("Test tool calling should work within chat.invoke", async () => {
   const chat = new ChatZhipuAI({ modelName: "glm-4" }).bindTools([getWeather]);
   const response = await chat.invoke([
     new HumanMessage("How is the weather in New York"),
@@ -57,7 +57,7 @@ test.skip("Test tool calling should work within chat.invoke", async () => {
   ).toBe(true);
 });
 
-test.skip("Test tool calling should work within chat.stream", async () => {
+test("Test tool calling should work within chat.stream", async () => {
   const chat = new ChatZhipuAI({ modelName: "glm-4" }).bindTools([getWeather]);
   const stream = await chat.stream([
     new HumanMessage("How is the weather in New York"),
@@ -100,7 +100,7 @@ const runTest = async ({
       },
     ];
   }
-  test.skip(description, async () => {
+  test(description, async () => {
     const chat = new ChatZhipuAI({
       modelName,
       ...config,
