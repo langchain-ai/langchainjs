@@ -236,32 +236,24 @@ export abstract class Serializable implements SerializableInterface {
       }
     });
 
-    // Process kwargs with secret replacement and key mapping
-    const processedKwargs = mapKeys(
-      Object.keys(secrets).length ? replaceSecrets(kwargs, secrets) : kwargs,
-      keyToJson,
-      aliases
-    );
-
-    // Escape any user data that contains 'lc' keys to prevent injection attacks
-    // Skip secret fields since they've been replaced with secret markers
-    const secretFields = new Set(
-      Object.keys(secrets).map((key) => keyToJson(key, aliases))
-    );
     const escapedKwargs: SerializedFields = {};
-    for (const [key, value] of Object.entries(processedKwargs)) {
-      if (secretFields.has(key)) {
-        escapedKwargs[key] = value;
-      } else {
-        escapedKwargs[key] = escapeIfNeeded(value);
-      }
+    for (const [key, value] of Object.entries(kwargs)) {
+      escapedKwargs[key] = escapeIfNeeded(value);
     }
+
+    // Now add secret markers - these are added AFTER escaping so they won't be escaped
+    const kwargsWithSecrets = Object.keys(secrets).length
+      ? replaceSecrets(escapedKwargs, secrets)
+      : escapedKwargs;
+
+    // Finally transform keys to JSON format
+    const processedKwargs = mapKeys(kwargsWithSecrets, keyToJson, aliases);
 
     return {
       lc: 1,
       type: "constructor",
       id: this.lc_id,
-      kwargs: escapedKwargs,
+      kwargs: processedKwargs,
     };
   }
 
