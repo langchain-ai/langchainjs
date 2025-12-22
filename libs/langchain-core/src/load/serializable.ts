@@ -1,4 +1,5 @@
 import { type SerializedFields, keyToJson, mapKeys } from "./map_keys.js";
+import { escapeIfNeeded } from "./validation.js";
 
 export interface BaseSerialized<T extends string> {
   lc: number;
@@ -73,6 +74,21 @@ export function get_lc_unique_name(
   } else {
     return serializableClass.name;
   }
+}
+
+/**
+ * Interface for objects that can be serialized.
+ * This is a duck-typed interface to avoid circular imports.
+ */
+export interface SerializableLike {
+  lc_serializable: boolean;
+  lc_secrets?: Record<string, string>;
+  toJSON(): {
+    lc: number;
+    type: string;
+    id: string[];
+    kwargs?: Record<string, unknown>;
+  };
 }
 
 export interface SerializableInterface {
@@ -220,15 +236,30 @@ export abstract class Serializable implements SerializableInterface {
       }
     });
 
+    // Process kwargs with secret replacement and key mapping
+    const processedKwargs = mapKeys(
+      Object.keys(secrets).length ? replaceSecrets(kwargs, secrets) : kwargs,
+      keyToJson,
+      aliases
+    );
+
+    // Escape any user data that contains 'lc' keys to prevent injection attacks
+    // Skip secret fields since they've been replaced with secret markers
+    const secretFields = new Set(Object.keys(secrets));
+    const escapedKwargs: SerializedFields = {};
+    for (const [key, value] of Object.entries(processedKwargs)) {
+      if (secretFields.has(key)) {
+        escapedKwargs[key] = value;
+      } else {
+        escapedKwargs[key] = escapeIfNeeded(value);
+      }
+    }
+
     return {
       lc: 1,
       type: "constructor",
       id: this.lc_id,
-      kwargs: mapKeys(
-        Object.keys(secrets).length ? replaceSecrets(kwargs, secrets) : kwargs,
-        keyToJson,
-        aliases
-      ),
+      kwargs: escapedKwargs,
     };
   }
 
