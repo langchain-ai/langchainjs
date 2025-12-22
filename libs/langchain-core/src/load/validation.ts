@@ -27,7 +27,7 @@ export function needsEscaping(obj: Record<string, unknown>): boolean {
  * {"key": "value"}  // becomes {"__lc_escaped__": {"key": "value"}}
  * ```
  */
-export function escapeDict(
+export function escapeObject(
   obj: Record<string, unknown>
 ): Record<string, unknown> {
   return { [LC_ESCAPED_KEY]: obj };
@@ -41,7 +41,7 @@ export function escapeDict(
  * {"__lc_escaped__": {...}}  // is an escaped object
  * ```
  */
-export function isEscapedDict(obj: Record<string, unknown>): boolean {
+export function isEscapedObject(obj: Record<string, unknown>): boolean {
   return Object.keys(obj).length === 1 && LC_ESCAPED_KEY in obj;
 }
 
@@ -119,7 +119,7 @@ export function serializeValue(obj: unknown): unknown {
     // will be returned as-is during deserialization (no instantiation).
     // This prevents re-escaping of already-escaped nested content.
     if (needsEscaping(record)) {
-      return escapeDict(record);
+      return escapeObject(record);
     }
     // Safe object (no 'lc' key) - recurse into values
     const result: Record<string, unknown> = {};
@@ -207,7 +207,7 @@ export function escapeIfNeeded(value: unknown): unknown {
     // If it needs escaping, wrap it as-is - the contents are user data that
     // will be returned as-is during deserialization (no instantiation).
     if (needsEscaping(record)) {
-      return escapeDict(record);
+      return escapeObject(record);
     }
     // Safe object (no 'lc' key) - recurse into values
     const result: Record<string, unknown> = {};
@@ -239,7 +239,7 @@ export function escapeIfNeeded(value: unknown): unknown {
 export function unescapeValue(obj: unknown): unknown {
   if (obj !== null && typeof obj === "object" && !Array.isArray(obj)) {
     const record = obj as Record<string, unknown>;
-    if (isEscapedDict(record)) {
+    if (isEscapedObject(record)) {
       // Unwrap and return the user data as-is (no further unescaping).
       // The contents are user data that may contain more escape keys,
       // but those are part of the user's actual data.

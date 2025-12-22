@@ -109,21 +109,19 @@ describe("`load()`", () => {
 
       // Note: Plain objects without Serializable objects don't get
       // escaping because JSON.stringify doesn't call toJSON on plain objects.
-      // The `secretsFromEnv: false` default protects against these cases by not loading
-      // secrets from env at all. These tests verify that `secretsFromEnv: false` is safe.
-      it("plain object with secret is safe with `secretsFromEnv: false`", async () => {
+      // The `secretsFromEnv: false` default protects against these cases by
+      // throwing an error when a secret is not found. This is fail-safe behavior.
+      it("plain object with secret throws with `secretsFromEnv: false`", async () => {
         const payload = { data: MALICIOUS_SECRET_DICT };
         const serialized = JSON.stringify(payload);
 
-        // With `secretsFromEnv: false` (default), the secret marker is NOT resolved
-        const deserialized = await load<{ data: unknown }>(serialized);
-        // The secret object is processed but returns null (not the secret value)
-        expect(deserialized.data).toBeNull();
+        // With `secretsFromEnv: false` (default), missing secrets throw
+        await expect(load(serialized)).rejects.toThrow(/Missing secret/);
       });
 
-      it("object mimicking lc constructor is safe with `secretsFromEnv: false`", async () => {
+      it("object mimicking lc constructor throws for missing secrets", async () => {
         // Even a malicious payload that looks like an LC constructor
-        // is safe because secretsFromEnv defaults to false
+        // is safe because missing secrets throw an error
         const payload = {
           lc: 1,
           type: "constructor",
@@ -135,11 +133,8 @@ describe("`load()`", () => {
         };
         const serialized = JSON.stringify(payload);
 
-        // This will instantiate the AIMessage (it's a valid LC constructor)
-        // but the nested secret won't leak because `secretsFromEnv: false`
-        const deserialized = await load<AIMessage>(serialized);
-        // The nested secret marker returns null, not the actual secret
-        expect(deserialized.additional_kwargs.secret).toBeNull();
+        // Missing secrets throw an error, preventing instantiation
+        await expect(load(serialized)).rejects.toThrow(/Missing secret/);
       });
     });
 
@@ -304,16 +299,17 @@ describe("`load()`", () => {
     });
 
     describe("secretsFromEnv behavior", () => {
-      it("`secretsFromEnv: false` returns null for missing secrets", async () => {
+      it("`secretsFromEnv: false` throws for missing secrets", async () => {
         const secretPayload = JSON.stringify({
           lc: 1,
           type: "secret",
           id: [SENTINEL_ENV_VAR],
         });
 
-        // With `secretsFromEnv: false` (default), should return null
-        const result = await load(secretPayload, { secretsFromEnv: false });
-        expect(result).toBeNull();
+        // With `secretsFromEnv: false` (default), should throw
+        await expect(
+          load(secretPayload, { secretsFromEnv: false })
+        ).rejects.toThrow(/Missing secret/);
       });
 
       it("`secretsFromEnv: true` loads from env when not in map", async () => {
@@ -343,16 +339,15 @@ describe("`load()`", () => {
         expect(result).toBe(mapValue);
       });
 
-      it("default behavior does not load from env", async () => {
+      it("default behavior throws for missing secrets", async () => {
         const secretPayload = JSON.stringify({
           lc: 1,
           type: "secret",
           id: [SENTINEL_ENV_VAR],
         });
 
-        // Default behavior should not load from env
-        const result = await load(secretPayload);
-        expect(result).toBeNull();
+        // Default behavior should throw for missing secrets
+        await expect(load(secretPayload)).rejects.toThrow(/Missing secret/);
       });
     });
   });

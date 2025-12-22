@@ -46,7 +46,7 @@ import * as coreImportMap from "./import_map.js";
 import type { OptionalImportMap, SecretMap } from "./import_type.js";
 import { type SerializedFields, keyFromJson, mapKeys } from "./map_keys.js";
 import { getEnvironmentVariable } from "../utils/env.js";
-import { isEscapedDict, unescapeValue } from "./validation.js";
+import { isEscapedObject, unescapeValue } from "./validation.js";
 
 /**
  * Options for loading serialized LangChain objects.
@@ -73,9 +73,9 @@ export interface LoadOptions {
   /**
    * A map of secrets to load. Keys are secret identifiers, values are the secret values.
    *
-   * If a secret is not found in this map and `secretsFromEnv` is `false`, `null` is
-   * returned for that secret. If `secretsFromEnv` is `true`, the secret will be loaded
-   * from environment variables.
+   * If a secret is not found in this map and `secretsFromEnv` is `false`, an error is
+   * thrown. If `secretsFromEnv` is `true`, the secret will be loaded from environment
+   * variables (if not found there either, an error is thrown).
    */
   secretsMap?: SecretMap;
 
@@ -220,8 +220,8 @@ async function reviver(this: ReviverContext, value: unknown): Promise<unknown> {
 
   // It's an object - check for escape marker FIRST
   const record = value as Record<string, unknown>;
-  if (isEscapedDict(record)) {
-    // This is an escaped user dict - unwrap and return as-is (no LC processing)
+  if (isEscapedObject(record)) {
+    // This is an escaped user object - unwrap and return as-is (no LC processing)
     return unescapeValue(record);
   }
 
@@ -243,8 +243,7 @@ async function reviver(this: ReviverContext, value: unknown): Promise<unknown> {
         return secretValueInEnv;
       }
     }
-    // Secret not found in map and not loading from env (or not in env)
-    return null;
+    throw new Error(`Missing secret "${key}" at ${pathStr}`);
   }
 
   // Check for LC not_implemented object
