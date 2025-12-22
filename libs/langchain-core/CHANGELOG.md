@@ -1,5 +1,13 @@
 # @langchain/core
 
+## 1.1.8
+
+### Patch Changes
+
+- [#9707](https://github.com/langchain-ai/langchainjs/pull/9707) [`e5063f9`](https://github.com/langchain-ai/langchainjs/commit/e5063f9c6e9989ea067dfdff39262b9e7b6aba62) Thanks [@hntrl](https://github.com/hntrl)! - add security hardening for `load`
+
+- [#9684](https://github.com/langchain-ai/langchainjs/pull/9684) [`8996647`](https://github.com/langchain-ai/langchainjs/commit/89966470e8c0b112ce4f9a326004af6a4173f9e6) Thanks [@christian-bromann](https://github.com/christian-bromann)! - fix(core): document purpose of name in base message
+
 ## 1.1.7
 
 ### Patch Changes
