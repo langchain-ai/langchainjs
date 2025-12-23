@@ -1,6 +1,6 @@
 # @langchain/community
 
-## 0.3.58
+## 0.3.59
 
 ### Patch Changes
 
