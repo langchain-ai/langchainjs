@@ -18,6 +18,9 @@ const LANGCHAIN_PKG_DIST = join(LANGCHAIN_ROOT, "langchain", "dist");
 const LANGCHAIN_CORE_PKG_DIST = join(LANGCHAIN_ROOT, "langchain-core", "dist");
 const TYPESCRIPT_VERSION = process.env.TSC_BENCH_TS_VERSION ?? "^5.9.3";
 
+// Directory to store TypeScript trace output for performance analysis
+const TRACE_OUTPUT_DIR = join(LANGCHAIN_ROOT, "..", "tsc-traces");
+
 /**
  * TypeScript Compilation Benchmark Tests
  *
@@ -43,7 +46,28 @@ interface ProjectConfig {
   sourceFiles: Record<string, string>;
 }
 
-function runTsc(projectDir: string, timeout = 120_000): TscResult {
+interface TscOptions {
+  timeout?: number;
+  generateTrace?: boolean;
+  traceName?: string;
+}
+
+function runTsc(projectDir: string, options: TscOptions = {}): TscResult {
+  const { timeout = 120_000, generateTrace = false, traceName } = options;
+
+  // Create trace output directory if generating trace
+  let traceDir: string | undefined;
+  if (generateTrace && traceName) {
+    traceDir = join(TRACE_OUTPUT_DIR, traceName);
+    if (!existsSync(TRACE_OUTPUT_DIR)) {
+      mkdirSync(TRACE_OUTPUT_DIR, { recursive: true });
+    }
+    if (existsSync(traceDir)) {
+      rmSync(traceDir, { recursive: true, force: true });
+    }
+    mkdirSync(traceDir, { recursive: true });
+  }
+
   const execOptions: ExecSyncOptions = {
     cwd: projectDir,
     encoding: "utf-8",
@@ -56,13 +80,19 @@ function runTsc(projectDir: string, timeout = 120_000): TscResult {
     },
   };
 
+  // Build tsc command with optional trace generation
+  let tscCommand = "npx tsc --noEmit";
+  if (traceDir) {
+    tscCommand += ` --generateTrace "${traceDir}"`;
+  }
+
   const startTime = performance.now();
   let stdout = "";
   let stderr = "";
   let exitCode: number | null = 0;
 
   try {
-    stdout = execSync("npx tsc --noEmit", execOptions) as string;
+    stdout = execSync(tscCommand, execOptions) as string;
   } catch (error) {
     const execError = error as {
       stdout?: string;
@@ -86,6 +116,15 @@ function runTsc(projectDir: string, timeout = 120_000): TscResult {
   // Check if there are actual TypeScript errors
   const hasTypeScriptErrors =
     stdout.includes("error TS") || filteredStderr.includes("error TS");
+
+  // Log trace location if generated
+  if (traceDir) {
+    console.log(`\n📁 TypeScript trace saved to: ${traceDir}`);
+    console.log("   Files: trace.json, types.json");
+    console.log(
+      "   View in: https://ui.perfetto.dev/ or Chrome DevTools Performance tab"
+    );
+  }
 
   return {
     success: exitCode === 0 && !hasTypeScriptErrors,
@@ -486,7 +525,10 @@ describe("TypeScript Compilation Benchmarks", () => {
     }, 300_000);
 
     it("should compile createAgent with explicit input types", () => {
-      const result = runTsc(projectDir);
+      const result = runTsc(projectDir, {
+        generateTrace: true,
+        traceName: "commonjs-explicit",
+      });
       const errorCount = countErrors(result);
       const ts2589 = hasTS2589Error(result);
 
@@ -537,7 +579,10 @@ describe("TypeScript Compilation Benchmarks", () => {
     }, 300_000);
 
     it("should compile createAgent with implicit input types (TS2589 regression test)", () => {
-      const result = runTsc(projectDir);
+      const result = runTsc(projectDir, {
+        generateTrace: true,
+        traceName: "commonjs-implicit",
+      });
       const errorCount = countErrors(result);
       const ts2589 = hasTS2589Error(result);
 
@@ -590,7 +635,10 @@ describe("TypeScript Compilation Benchmarks", () => {
     }, 300_000);
 
     it("should compile createAgent with tool and responseFormat", () => {
-      const result = runTsc(projectDir);
+      const result = runTsc(projectDir, {
+        generateTrace: true,
+        traceName: "esm",
+      });
 
       console.log("\n📊 ESM Compilation Result:");
       console.log(`   Duration: ${result.durationMs.toFixed(2)}ms`);
@@ -630,7 +678,10 @@ describe("TypeScript Compilation Benchmarks", () => {
         });
         projectDirs.push(dir);
         installDependencies(dir);
-        results[config.name] = runTsc(dir);
+        results[config.name] = runTsc(dir, {
+          generateTrace: true,
+          traceName: `comparison-${config.name}`,
+        });
       }
     }, 600_000);
 
