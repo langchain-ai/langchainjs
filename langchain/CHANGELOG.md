@@ -1,5 +1,13 @@
 # langchain
 
+## 0.3.37
+
+### Patch Changes
+
+- 19853ce: add security hardening for `load`
+- Updated dependencies [7cdcac0]
+  - @langchain/openai@0.6.17
+
 ## 0.3.36
 
 ### Patch Changes

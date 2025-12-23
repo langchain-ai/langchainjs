@@ -1,5 +1,11 @@
 # @langchain/openai
 
+## 0.6.17
+
+### Patch Changes
+
+- 7cdcac0: fix operator precedence in reasoning initialization
+
 ## 0.6.16
 
 ### Patch Changes

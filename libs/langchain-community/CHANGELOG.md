@@ -1,5 +1,15 @@
 # @langchain/community
 
+## 0.3.58
+
+### Patch Changes
+
+- 68e6f49: swap problematic eval package
+- Updated dependencies [19853ce]
+- Updated dependencies [7cdcac0]
+  - langchain@0.3.37
+  - @langchain/openai@0.6.17
+
 ## 0.3.57
 
 ### Patch Changes

@@ -1,5 +1,11 @@
 # @langchain/core
 
+## 0.3.80
+
+### Patch Changes
+
+- 19853ce: add security hardening for `load`
+
 ## 0.3.79
 
 ### Patch Changes

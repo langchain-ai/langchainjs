@@ -1,5 +1,11 @@
 # @langchain/anthropic
 
+## 0.3.34
+
+### Patch Changes
+
+- df3399f: fix default temperature option
+
 ## 0.3.33
 
 ### Patch Changes
