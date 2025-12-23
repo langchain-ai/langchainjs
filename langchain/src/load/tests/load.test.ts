@@ -153,11 +153,6 @@ test("serialize + deserialize llm", async () => {
   });
   expect(llm2).toBeInstanceOf(OpenAI);
   expect(JSON.stringify(llm2, null, 2)).toBe(str);
-  // Accept secret as env var
-  const llm3 = await load<OpenAI>(str);
-  expect(llm3).toBeInstanceOf(OpenAI);
-  expect(llm.openAIApiKey).toBe(llm3.openAIApiKey);
-  expect(JSON.stringify(llm3, null, 2)).toBe(str);
 });
 
 test("serialize + deserialize llm chain string prompt", async () => {
@@ -224,9 +219,13 @@ test("serialize + deserialize runnable sequence with new and old ids", async () 
     ...JSON.parse(strWithNewId),
     id: ["langchain", "schema", "runnable", "RunnableSequence"],
   });
-  const runnable2 = await load<RunnableSequence>(strWithOldId);
+  const runnable2 = await load<RunnableSequence>(strWithOldId, {
+    OPENAI_API_KEY: "test-key",
+  });
   expect(runnable2).toBeInstanceOf(RunnableSequence);
-  const runnable3 = await load<RunnableSequence>(strWithNewId);
+  const runnable3 = await load<RunnableSequence>(strWithNewId, {
+    OPENAI_API_KEY: "test-key",
+  });
   expect(runnable3).toBeInstanceOf(RunnableSequence);
 });
 
@@ -251,7 +250,9 @@ test("serialize + deserialize llm chain chat prompt", async () => {
   const chain = new LLMChain({ llm, prompt });
   const str = JSON.stringify(chain, null, 2);
   expect(stringify(JSON.parse(str))).toMatchSnapshot();
-  const chain2 = await load<LLMChain>(str);
+  const chain2 = await load<LLMChain>(str, {
+    OPENAI_API_KEY: "test-key",
+  });
   expect(chain2).toBeInstanceOf(LLMChain);
   expect(JSON.stringify(chain2, null, 2)).toBe(str);
 });
@@ -482,7 +483,7 @@ test("Should load traces even if the constructor name changes (minified environm
 
   const llm2 = await load<OpenAI>(
     str,
-    { COHERE_API_KEY: "cohere-key" },
+    { OPENAI_API_KEY: "openai-key" },
     { "langchain/llms/openai": { OpenAI } }
   );
   // console.log(JSON.stringify(llm2, null, 2));
