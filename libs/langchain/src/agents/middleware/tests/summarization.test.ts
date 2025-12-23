@@ -30,7 +30,6 @@ function createMockSummarizationModel() {
     getName: () => "mock-summarizer",
     _modelType: "mock",
     lc_runnable: true,
-    profile: {},
   };
 }
 
@@ -337,11 +336,11 @@ describe("summarizationMiddleware", () => {
     expect((result.messages[3] as AIMessage).content).toContain("Response");
   });
 
-  /**
-   * This test is skipped because it requires a model profile, which is not available yet.
-   */
-  it.skip("should handle fraction-based trigger and keep with model profile", async () => {
+  it("should handle fraction-based trigger and keep with model profile", async () => {
     const summarizationModel = createMockSummarizationModel();
+    (summarizationModel as any).profile = {
+      maxInputTokens: 8192,
+    };
 
     // Create a mock model with profile that implements bindTools
     const modelWithProfile = new FakeToolCallingChatModel({
@@ -350,13 +349,6 @@ describe("summarizationMiddleware", () => {
     // Set both model and modelName properties for getProfileLimits to work
     (modelWithProfile as any).model = "gpt-5";
     (modelWithProfile as any).modelName = "gpt-5";
-    // Set profile directly on the model instance
-    Object.defineProperty(modelWithProfile, "profile", {
-      value: { maxInputTokens: 8192 },
-      writable: true,
-      enumerable: true,
-      configurable: true,
-    });
 
     const middleware = summarizationMiddleware({
       model: summarizationModel as any,
