@@ -2448,5 +2448,59 @@ describe("middleware", () => {
       expect(result.messages).toHaveLength(1);
       expect(result.messages[0].content).toBe("Test");
     });
+
+    it('should terminate when afterModel jumps to end (skips tools)', async () => {
+      const executionLog: string[] = [];
+
+      const toolFn = vi.fn(async ({query}: {query: string}) => {
+        executionLog.push("tool_execution");
+        return `${query}`;
+      });
+
+      const sampleTool = tool(toolFn, {
+        name: "sample_tool",
+        description: "Sample tool",
+        schema: z.object({
+          query: z.string(),
+        }),
+      });
+
+      const middleware = createMiddleware({
+        name: "Middleware",
+        afterModel: {
+          hook: async () => {
+            executionLog.push("after_model");
+            return {
+              jumpTo: "end",
+            };
+          },
+          canJumpTo: ["end"],
+        },
+      });
+
+      const model = new FakeToolCallingModel({
+        toolCalls: [[{ name: "sample_tool", args: { query: "Test" }, id: "test_id" }]]
+      });
+
+      const agent = createAgent({
+        model,
+        tools: [sampleTool],
+        middleware: [middleware],
+      });
+
+      const result = await agent.invoke({
+        messages: [new HumanMessage("Test")],
+      });
+
+      expect(executionLog).toEqual([
+        "after_model",
+      ]);
+      expect(toolFn).not.toHaveBeenCalled();
+      expect(result.messages).toHaveLength(2);
+      expect(result.messages[0].content).toBe("Test");
+      expect(AIMessage.isInstance(result.messages[1])).toBe(true);
+      expect((result.messages[1] as AIMessage).tool_calls?.length).toBe(1);
+      expect(result.messages.some(m => ToolMessage.isInstance(m))).toBe(false);
+    })
   });
 });
