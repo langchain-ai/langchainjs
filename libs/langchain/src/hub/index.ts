@@ -42,7 +42,7 @@ export async function pull<T extends Runnable>(
     includeModel?: boolean;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     modelClass?: new (...args: any[]) => BaseLanguageModel;
-    secretsMap?: Record<string, string>;
+    secrets?: Record<string, string>;
     secretsFromEnv?: boolean;
   }
 ) {
@@ -50,7 +50,7 @@ export async function pull<T extends Runnable>(
   try {
     const loadedPrompt = await load<T>(
       JSON.stringify(promptObject.manifest),
-      options?.secretsMap,
+      options?.secrets,
       generateOptionalImportMap(options?.modelClass),
       generateModelImportMap(options?.modelClass),
       options?.secretsFromEnv

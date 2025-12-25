@@ -49,7 +49,7 @@ export async function pull<T extends Runnable>(
     apiKey?: string;
     apiUrl?: string;
     includeModel?: boolean;
-    secretsMap?: Record<string, string>;
+    secrets?: Record<string, string>;
     secretsFromEnv?: boolean;
   }
 ) {
@@ -77,7 +77,7 @@ export async function pull<T extends Runnable>(
   }
   const loadedPrompt = await load<T>(
     JSON.stringify(promptObject.manifest),
-    options?.secretsMap,
+    options?.secrets,
     generateOptionalImportMap(modelClass),
     generateModelImportMap(modelClass),
     options?.secretsFromEnv
