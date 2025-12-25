@@ -41,10 +41,6 @@ function isRunnableBinding(a: string[]): boolean {
  * @param options.includeModel Whether to also instantiate and attach a model instance to the prompt,
  *   if the prompt has associated model metadata. If set to true, invoking the resulting pulled prompt will
  *   also invoke the instantiated model. You must have the appropriate LangChain integration package installed.
- * @param options.modelClass If includeModel is true, the class of the model to instantiate. Required
- *   for non-OpenAI models. If you are running in Node or another environment that supports dynamic imports,
- *   you may instead import this function from "langchain/hub/node" and pass "includeModel: true" instead
- *   of specifying this parameter.
  * @param options.secrets A map of secrets to use when loading, e.g.
  *   {'OPENAI_API_KEY': 'sk-...'}`.
  *   If a secret is not found in the map, it will be loaded from the
