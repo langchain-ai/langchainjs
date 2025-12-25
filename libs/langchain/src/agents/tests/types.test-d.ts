@@ -1,5 +1,8 @@
 import { describe, it, expectTypeOf } from "vitest";
 import { z } from "zod/v3";
+import { z as z4 } from "zod/v4";
+// Test with direct "zod" import (how users typically import it)
+import { z as zodMain } from "zod";
 import { tool } from "@langchain/core/tools";
 import type { BaseStore } from "@langchain/langgraph";
 
@@ -7,10 +10,50 @@ import { createAgent } from "../index.js";
 import type { Runtime, WithMaybeContext } from "../runtime.js";
 
 describe("WithMaybeContext", () => {
-  it("should work with string prompt", async () => {
+  it("should work with string prompt (zod/v3)", async () => {
     const contextSchema = z.object({
       foobar: z.object({
         baz: z.string(),
+      }),
+    });
+
+    // eslint-disable-next-line no-void
+    void createAgent({
+      model: "openai:gpt-4",
+      contextSchema,
+      tools: [],
+    });
+  });
+
+  it("should work with nested objects and records (zod/v4)", async () => {
+    const contextSchema = z4.object({
+      citationTracking: z4.object({
+        citationIdToDocumentId: z4.record(z4.number(), z4.string()),
+        documentIdToCitationId: z4.record(z4.string(), z4.number().optional()),
+        nextCitationId: z4.number(),
+      }),
+    });
+
+    // eslint-disable-next-line no-void
+    void createAgent({
+      model: "openai:gpt-4",
+      contextSchema,
+      tools: [],
+    });
+  });
+
+  it("should work with direct zod import", async () => {
+    const contextSchema = zodMain.object({
+      citationTracking: zodMain.object({
+        citationIdToDocumentId: zodMain.record(
+          zodMain.number(),
+          zodMain.string()
+        ),
+        documentIdToCitationId: zodMain.record(
+          zodMain.string(),
+          zodMain.number().optional()
+        ),
+        nextCitationId: zodMain.number(),
       }),
     });
 
