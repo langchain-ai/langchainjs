@@ -25,7 +25,7 @@ export { basePush as push };
  *   for non-OpenAI models. If you are running in Node or another environment that supports dynamic imports,
  *   you may instead import this function from "langchain/hub/node" and pass "includeModel: true" instead
  *   of specifying this parameter.
- * @param options.secretsMap A map of secrets to use when loading, e.g.
+ * @param options.secrets A map of secrets to use when loading, e.g.
  *   {'OPENAI_API_KEY': 'sk-...'}`.
  *   If a secret is not found in the map, it will be loaded from the
  *   environment if `secrets_from_env` is `True`. Should only be needed when
