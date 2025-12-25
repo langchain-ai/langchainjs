@@ -50,6 +50,8 @@ function isRunnableBinding(a: string[]): boolean {
  *   If a secret is not found in the map, it will be loaded from the
  *   environment if `secrets_from_env` is `True`. Should only be needed when
  *   `includeModel` is `true`.
+ * @param options.secretsFromEnv Whether to load secrets from environment variables.
+ *   Use with caution and only with trusted prompts.
  * @returns
  */
 export async function pull<T extends Runnable>(
