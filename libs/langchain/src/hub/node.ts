@@ -49,6 +49,8 @@ export async function pull<T extends Runnable>(
     apiKey?: string;
     apiUrl?: string;
     includeModel?: boolean;
+    secretsMap?: Record<string, string>;
+    secretsFromEnv?: boolean;
   }
 ) {
   const promptObject = await basePull(ownerRepoCommit, options);
@@ -75,9 +77,10 @@ export async function pull<T extends Runnable>(
   }
   const loadedPrompt = await load<T>(
     JSON.stringify(promptObject.manifest),
-    undefined,
+    options?.secretsMap,
     generateOptionalImportMap(modelClass),
-    generateModelImportMap(modelClass)
+    generateModelImportMap(modelClass),
+    options?.secretsFromEnv
   );
   return bindOutputSchema(loadedPrompt);
 }

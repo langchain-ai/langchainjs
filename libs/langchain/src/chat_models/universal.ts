@@ -161,10 +161,14 @@ export async function getChatModelByClassName(className: string) {
     if (
       "code" in err &&
       err.code?.toString().includes("ERR_MODULE_NOT_FOUND") &&
-      "message" in err
+      "message" in err &&
+      typeof err.message === "string"
     ) {
-      const attemptedPackage = err.message
-        .split("Error: Cannot find package '")[1]
+      const msg = err.message.startsWith("Error: ")
+        ? err.message.slice("Error: ".length)
+        : err.message;
+      const attemptedPackage = msg
+        .split("Cannot find package '")[1]
         .split("'")[0];
       throw new Error(
         `Unable to import ${attemptedPackage}. Please install with ` +

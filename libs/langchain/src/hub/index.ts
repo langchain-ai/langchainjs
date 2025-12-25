@@ -25,6 +25,13 @@ export { basePush as push };
  *   for non-OpenAI models. If you are running in Node or another environment that supports dynamic imports,
  *   you may instead import this function from "langchain/hub/node" and pass "includeModel: true" instead
  *   of specifying this parameter.
+ * @param options.secretsMap A map of secrets to use when loading, e.g.
+ *   {'OPENAI_API_KEY': 'sk-...'}`.
+ *   If a secret is not found in the map, it will be loaded from the
+ *   environment if `secrets_from_env` is `True`. Should only be needed when
+ *   `includeModel` is `true`.
+ * @param options.secretsFromEnv Whether to load secrets from environment variables.
+ *   Use with caution and only with trusted prompts.
  * @returns
  */
 export async function pull<T extends Runnable>(
@@ -35,15 +42,18 @@ export async function pull<T extends Runnable>(
     includeModel?: boolean;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     modelClass?: new (...args: any[]) => BaseLanguageModel;
+    secretsMap?: Record<string, string>;
+    secretsFromEnv?: boolean;
   }
 ) {
   const promptObject = await basePull(ownerRepoCommit, options);
   try {
     const loadedPrompt = await load<T>(
       JSON.stringify(promptObject.manifest),
-      undefined,
+      options?.secretsMap,
       generateOptionalImportMap(options?.modelClass),
-      generateModelImportMap(options?.modelClass)
+      generateModelImportMap(options?.modelClass),
+      options?.secretsFromEnv
     );
     return bindOutputSchema(loadedPrompt);
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
