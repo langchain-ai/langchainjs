@@ -9,5 +9,5 @@
 export {
   browserTool,
   type BrowserTool,
-  type BrowserToolParams,
+  type BrowserToolFields,
 } from "./browser.js";

@@ -40,7 +40,7 @@ export {
 export {
   browserTool,
   type BrowserTool,
-  type BrowserToolParams,
+  type BrowserToolFields,
 } from "./tools/browser.js";
 
 /**
