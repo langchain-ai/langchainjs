@@ -603,8 +603,8 @@ export function tool<SchemaT extends ZodStringV4, ToolOutputT = ToolOutputType>(
 
 export function tool<
   SchemaT extends ZodObjectV3,
-  SchemaOutputT = InferInteropZodOutput<SchemaT>,
-  SchemaInputT = InferInteropZodInput<SchemaT>,
+  SchemaOutputT = NoInfer<InferInteropZodOutput<SchemaT>>,
+  SchemaInputT = NoInfer<InferInteropZodInput<SchemaT>>,
   ToolOutputT = ToolOutputType
 >(
   func: RunnableFunc<SchemaOutputT, ToolOutputT, ToolRunnableConfig>,
@@ -613,8 +613,8 @@ export function tool<
 
 export function tool<
   SchemaT extends ZodObjectV4,
-  SchemaOutputT = InferInteropZodOutput<SchemaT>,
-  SchemaInputT = InferInteropZodInput<SchemaT>,
+  SchemaOutputT = NoInfer<InferInteropZodOutput<SchemaT>>,
+  SchemaInputT = NoInfer<InferInteropZodInput<SchemaT>>,
   ToolOutputT = ToolOutputType
 >(
   func: RunnableFunc<SchemaOutputT, ToolOutputT, ToolRunnableConfig>,
@@ -623,8 +623,8 @@ export function tool<
 
 export function tool<
   SchemaT extends JSONSchema,
-  SchemaOutputT = ToolInputSchemaOutputType<SchemaT>,
-  SchemaInputT = ToolInputSchemaInputType<SchemaT>,
+  SchemaOutputT = NoInfer<ToolInputSchemaOutputType<SchemaT>>,
+  SchemaInputT = NoInfer<ToolInputSchemaInputType<SchemaT>>,
   ToolOutputT = ToolOutputType
 >(
   func: RunnableFunc<
@@ -640,8 +640,8 @@ export function tool<
     | InteropZodObject
     | InteropZodType<string>
     | JSONSchema = InteropZodObject,
-  SchemaOutputT = ToolInputSchemaOutputType<SchemaT>,
-  SchemaInputT = ToolInputSchemaInputType<SchemaT>,
+  SchemaOutputT = NoInfer<ToolInputSchemaOutputType<SchemaT>>,
+  SchemaInputT = NoInfer<ToolInputSchemaInputType<SchemaT>>,
   ToolOutputT = ToolOutputType
 >(
   func: RunnableFunc<SchemaOutputT, ToolOutputT, ToolRunnableConfig>,
@@ -679,8 +679,8 @@ export function tool<
 
 export function tool<
   SchemaT extends ZodObjectV3,
-  SchemaOutputT = InferInteropZodOutput<SchemaT>,
-  SchemaInputT = InferInteropZodInput<SchemaT>,
+  SchemaOutputT = NoInfer<InferInteropZodOutput<SchemaT>>,
+  SchemaInputT = NoInfer<InferInteropZodInput<SchemaT>>,
   ToolOutputT = ToolOutputType,
   TState = unknown,
   TContext = unknown
@@ -694,8 +694,8 @@ export function tool<
 
 export function tool<
   SchemaT extends ZodObjectV4,
-  SchemaOutputT = InferInteropZodOutput<SchemaT>,
-  SchemaInputT = InferInteropZodInput<SchemaT>,
+  SchemaOutputT = NoInfer<InferInteropZodOutput<SchemaT>>,
+  SchemaInputT = NoInfer<InferInteropZodInput<SchemaT>>,
   ToolOutputT = ToolOutputType,
   TState = unknown,
   TContext = unknown
@@ -709,8 +709,8 @@ export function tool<
 
 export function tool<
   SchemaT extends JSONSchema,
-  SchemaOutputT = ToolInputSchemaOutputType<SchemaT>,
-  SchemaInputT = ToolInputSchemaInputType<SchemaT>,
+  SchemaOutputT = NoInfer<ToolInputSchemaOutputType<SchemaT>>,
+  SchemaInputT = NoInfer<ToolInputSchemaInputType<SchemaT>>,
   ToolOutputT = ToolOutputType,
   TState = unknown,
   TContext = unknown
@@ -727,8 +727,8 @@ export function tool<
     | InteropZodObject
     | InteropZodType<string>
     | JSONSchema = InteropZodObject,
-  SchemaOutputT = ToolInputSchemaOutputType<SchemaT>,
-  SchemaInputT = ToolInputSchemaInputType<SchemaT>,
+  SchemaOutputT = NoInfer<ToolInputSchemaOutputType<SchemaT>>,
+  SchemaInputT = NoInfer<ToolInputSchemaInputType<SchemaT>>,
   ToolOutputT = ToolOutputType,
   TState = unknown,
   TContext = unknown
