@@ -6,8 +6,8 @@ import {
   mergeSearchParams,
   type XAISearchParameters,
   type XAISearchSource,
-} from "../live_search.js";
-import { XAI_LIVE_SEARCH_TOOL_TYPE } from "../tools/live_search.js";
+} from "../../live_search.js";
+import { XAI_LIVE_SEARCH_TOOL_TYPE } from "../../tools/live_search.js";
 
 describe("mergeSearchParams", () => {
   test("returns undefined when no params are provided", () => {

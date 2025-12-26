@@ -33,12 +33,12 @@ import {
   mergeSearchParams,
   type XAISearchParameters,
   type XAISearchParametersPayload,
-} from "./live_search.js";
-import PROFILES from "./profiles.js";
+} from "../live_search.js";
+import PROFILES from "../profiles.js";
 import {
   XAI_LIVE_SEARCH_TOOL_TYPE,
   XAILiveSearchTool,
-} from "./tools/live_search.js";
+} from "../tools/live_search.js";
 
 export type OpenAIToolChoice =
   | OpenAIClient.ChatCompletionToolChoiceOption

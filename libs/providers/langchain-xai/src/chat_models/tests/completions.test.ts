@@ -3,13 +3,13 @@ import {
   ChatXAI,
   isXAIBuiltInTool,
   type ChatXAICompletionsInvocationParams,
-} from "../chat_models.js";
-import { XAISearchParameters } from "../live_search.js";
+} from "../index.js";
+import { XAISearchParameters } from "../../live_search.js";
 import {
   XAI_LIVE_SEARCH_TOOL_NAME,
   XAI_LIVE_SEARCH_TOOL_TYPE,
   XAILiveSearchTool,
-} from "../tools/live_search.js";
+} from "../../tools/live_search.js";
 
 beforeEach(() => {
   process.env.XAI_API_KEY = "foo";
