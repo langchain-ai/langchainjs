@@ -529,7 +529,7 @@ export abstract class BaseToolkit {
  * Both schema types will be validated.
  * @template {ToolInputSchemaBase} RunInput The input schema for the tool.
  */
-interface ToolWrapperParams<RunInput = ToolInputSchemaBase | undefined>
+export interface ToolWrapperParams<RunInput = ToolInputSchemaBase | undefined>
   extends ToolParams {
   /**
    * The name of the tool. If using with an LLM, this

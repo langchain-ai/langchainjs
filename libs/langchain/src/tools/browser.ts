@@ -11,6 +11,7 @@ import {
   tool as coreTool,
   DynamicStructuredTool,
   type ToolRunnableConfig,
+  type ToolWrapperParams,
 } from "@langchain/core/tools";
 import type {
   InteropZodObject,
@@ -27,37 +28,11 @@ const isBrowserEnvironment = (): boolean =>
   typeof document !== "undefined";
 
 /**
- * Parameters for creating a browser tool.
+ * Configuration fields for creating a browser tool.
  */
-export interface BrowserToolParams<
-  SchemaT extends InteropZodObject,
-  OutputT = unknown
-> {
-  /**
-   * The name of the tool. Must be unique across all tools.
-   */
-  name: string;
-
-  /**
-   * A description of what the tool does. This is shown to the LLM
-   * to help it decide when to use the tool.
-   */
-  description: string;
-
-  /**
-   * The Zod schema defining the input parameters for the tool.
-   */
-  schema: SchemaT;
-
-  /**
-   * The function that executes the tool in the browser.
-   * This function only runs in browser environments.
-   *
-   * @param args - The parsed input arguments matching the schema
-   * @returns The tool output
-   */
-  execute: (args: InferInteropZodOutput<SchemaT>) => Promise<OutputT>;
-}
+export type BrowserToolFields<SchemaT extends InteropZodObject> =
+  ToolWrapperParams<SchemaT> &
+    Required<Pick<ToolWrapperParams<SchemaT>, "description" | "schema">>;
 
 /**
  * A browser tool that can be used in both server and client environments.
@@ -88,13 +63,8 @@ export type BrowserTool<
  * import { browserTool } from "langchain/tools/browser";
  * import { z } from "zod";
  *
- * export const getLocation = browserTool({
- *   name: "get_location",
- *   description: "Get the user's current GPS location",
- *   schema: z.object({
- *     highAccuracy: z.boolean().optional().describe("Request high accuracy GPS"),
- *   }),
- *   execute: async ({ highAccuracy }) => {
+ * export const getLocation = browserTool(
+ *   async ({ highAccuracy }) => {
  *     return new Promise((resolve, reject) => {
  *       navigator.geolocation.getCurrentPosition(
  *         (pos) => resolve({
@@ -106,7 +76,14 @@ export type BrowserTool<
  *       );
  *     });
  *   },
- * });
+ *   {
+ *     name: "get_location",
+ *     description: "Get the user's current GPS location",
+ *     schema: z.object({
+ *       highAccuracy: z.boolean().optional().describe("Request high accuracy GPS"),
+ *     }),
+ *   }
+ * );
  *
  * // Use in createAgent (server)
  * const agent = createAgent({
@@ -121,14 +98,18 @@ export type BrowserTool<
  * });
  * ```
  *
- * @param params - The browser tool configuration
+ * @param execute - The function that executes the tool in the browser
+ * @param fields - The tool configuration (name, description, schema)
  * @returns A browser tool that can be used in both environments
  */
 export function browserTool<
   SchemaT extends InteropZodObject,
   OutputT = unknown
->(params: BrowserToolParams<SchemaT, OutputT>): BrowserTool<SchemaT, OutputT> {
-  const { execute, name, description, schema } = params;
+>(
+  execute: (args: InferInteropZodOutput<SchemaT>) => Promise<OutputT>,
+  fields: BrowserToolFields<SchemaT>
+): BrowserTool<SchemaT, OutputT> {
+  const { name, description, schema } = fields;
 
   // Create the underlying tool using @langchain/core's tool function
   const wrappedTool = coreTool(
