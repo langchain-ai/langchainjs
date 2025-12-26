@@ -142,14 +142,14 @@ export class ChatXAIResponses<
     return "xai-responses";
   }
 
-  override getLsParams(_options: this["ParsedCallOptions"]): LangSmithParams {
-    return {
-      ls_provider: "xai",
-      ls_model_name: this.model,
-      ls_model_type: "chat",
-      ls_temperature: this.temperature,
-      ls_max_tokens: this.maxOutputTokens,
-    };
+  override getLsParams(options: this["ParsedCallOptions"]): LangSmithParams {
+    const params = super.getLsParams(options);
+    params.ls_provider = "xai";
+    params.ls_model_name = this.model;
+    params.ls_model_type = "chat";
+    params.ls_temperature = this.temperature;
+    params.ls_max_tokens = this.maxOutputTokens;
+    return params;
   }
 
   override toJSON(): Serialized {
