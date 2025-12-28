@@ -901,7 +901,6 @@ export const convertGeminiCandidateToAIMessage: Converter<
     parts[0].text &&
     !("thought" in parts[0])
   ) {
-    console.log('parts text');
     // Single text part - store as string for simplicity and backwards compatibility
     content = parts[0].text;
     // But retain all the metadata
