@@ -262,7 +262,9 @@ export abstract class BaseMessage<
       | BaseMessageFields<TStructure, TRole>
   ) {
     const fields: BaseMessageFields<TStructure, TRole> =
-      typeof arg === "string" || Array.isArray(arg) ? { content: arg } : arg;
+      typeof arg === "string" || Array.isArray(arg)
+        ? ({ content: arg } as BaseMessageFields<TStructure, TRole>)
+        : arg;
     if (!fields.additional_kwargs) {
       fields.additional_kwargs = {};
     }
