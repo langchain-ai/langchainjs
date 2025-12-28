@@ -265,7 +265,7 @@ describe.each(coreModelInfo)(
       warnSpy.mockRestore();
     });
 
-    test("invoke", async () => {
+    test.only("invoke", async () => {
       const llm = newChatGoogle();
       const result = await llm.invoke("What is 1 + 1?");
       console.log(result);
@@ -1049,7 +1049,8 @@ describe.each(thinkingModelInfo)(
       const tools = [weatherTool];
       const llm: Runnable = newChatGoogle().bindTools(tools);
       const result = await llm.invoke("What is the weather in New York?");
-      console.log(result.content);
+      expect(result.content[0]).toHaveProperty("thoughtSignature");
+      expect(result.contentBlocks[0]).toHaveProperty("thoughtSignature");
     });
 
   }

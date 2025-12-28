@@ -43,6 +43,8 @@ import {
   ChatGoogleFields,
   GenerateContentRequest,
   GenerateContentResponse,
+  GoogleThinkingConfig,
+  GoogleThinkingLevel,
 } from "./types.js";
 import { SafeJsonEventParserStream } from "../utils/stream.js";
 import {
@@ -81,6 +83,76 @@ export function getPlatformType(
     return "gai";
   } else {
     return "gcp";
+  }
+}
+
+/**
+ * See https://ai.google.dev/gemini-api/docs/openai#thinking
+ * @param model
+ * @param reasoningTokens
+ */
+function reasoningEffortToReasoningTokens(
+  modelName?: string,
+  effort?: string
+): number | undefined {
+  if (effort === undefined) {
+    return undefined;
+  }
+
+  // gemini-2.5-flash and -flash-lite can be disabled. Others can't.
+  // https://ai.google.dev/gemini-api/docs/thinking#thinking-levels
+  const minTokens: number = modelName?.startsWith("gemini-2.5-flash") ? 0 : 128;
+  const maxTokens: number = modelName?.startsWith("gemini-2.5-flash") ? 24*1024 : 32*1024;
+
+  switch (effort) {
+    case "none":
+    case "minimal":
+      return minTokens;
+    case "low":
+      // Defined as 1k by https://ai.google.dev/gemini-api/docs/openai#thinking
+      return 1024;
+    case "medium":
+      // Defined as 8k by https://ai.google.dev/gemini-api/docs/openai#thinking
+      return 8 * 1024;
+    case "high":
+      // Defined as 24k by https://ai.google.dev/gemini-api/docs/openai#thinking
+      return maxTokens;
+    default:
+      return undefined;
+  }
+}
+
+/**
+ * See https://ai.google.dev/gemini-api/docs/openai#thinking
+ * @param model
+ * @param reasoningTokens
+ */
+function reasoningTokensToReasoningEffort(
+  model?: string,
+  reasoningTokens?: number,
+): Lowercase<GoogleThinkingLevel> | undefined {
+  if (typeof reasoningTokens === "undefined") {
+    return undefined;
+  } else if (reasoningTokens === -1 ){
+    // https://ai.google.dev/gemini-api/docs/thinking#thinking-levels
+    // says that high is "Default, dynamic" which is what -1 represented.
+    return "high";
+  } else if (reasoningTokens === 0) {
+    if (model?.startsWith("gemini-3-pro")) {
+      return "low";
+    } else {
+      return "minimal";
+    }
+  } else if (reasoningTokens <= 1024) {
+    return "low";
+  } else if (reasoningTokens <= 8192) {
+    if (model?.startsWith("gemini-3-pro")) {
+      return "low";
+    } else {
+      return "medium";
+    }
+  } else {
+    return "high";
   }
 }
 
@@ -130,6 +202,29 @@ export interface BaseChatGoogleParams
   streaming?: boolean;
 
   streamUsage?: boolean;
+
+  /**
+   * The number of reasoning tokens that the model should generate.
+   * If explicitly set, then the reasoning blocks will be returned.
+   */
+  maxReasoningTokens?: number;
+
+  /**
+   * An alias for `maxReasoningTokens` for compatibility.
+   */
+  thinkingBudget?: number;
+
+  /**
+   * An alias for `maxReasoningTokens` under Gemini 2.5 or
+   * the primary thinking/reasoning setting for Gemini 3.
+   * If explicitly set, then the reasoning blocks will be returned.
+   */
+  reasoningEffort?: GoogleThinkingLevel | Lowercase<GoogleThinkingLevel> | string;
+
+  /**
+   * An alias for `reasoningEffort` for compatibility.
+   */
+  thinkingLevel?: GoogleThinkingLevel | Lowercase<GoogleThinkingLevel> | string;
 }
 
 export interface BaseChatGoogleCallOptions
@@ -281,6 +376,60 @@ export abstract class BaseChatGoogle<
     }
   }
 
+  thinkingConfig(fields: CombinableFields): {thinkingConfig: GoogleThinkingConfig} | {} {
+    // Thinking / reasoning
+    let includeThoughts = true;
+
+    let thinkingBudget=
+      fields?.maxReasoningTokens ??
+      fields?.thinkingBudget ??
+      reasoningEffortToReasoningTokens(this.model, fields?.reasoningEffort ?? fields?.thinkingLevel);
+    if (thinkingBudget === 0 || (this.model.includes("pro") && thinkingBudget === 128)) {
+      includeThoughts = false;
+    }
+    if (this.model.startsWith("gemini-2.5-pro") && typeof thinkingBudget !== "undefined") {
+      // Can't turn off Gemini 2.5 Pro thinking completely
+      if (thinkingBudget >= 0 && thinkingBudget < 128) {
+        thinkingBudget = 128;
+      }
+    }
+
+    const thinkingLevelRaw =
+      fields?.reasoningEffort ??
+      fields?.thinkingLevel ??
+      reasoningTokensToReasoningEffort(this.model, fields?.maxReasoningTokens ?? fields?.thinkingBudget);
+    let thinkingLevel = thinkingLevelRaw?.toUpperCase();
+    if (thinkingLevel === "MINIMAL") {
+      includeThoughts = false;
+    }
+    if (this.model.startsWith("gemini-3-pro")) {
+      // Gemini 3 Pro has only low and high.
+      if (thinkingLevel === "MINIMAL") {
+        thinkingLevel = "LOW";
+      } else if (thinkingLevel === "MEDIUM") {
+        thinkingLevel = "HIGH";
+      }
+    }
+
+    if (typeof thinkingBudget === "undefined" || typeof thinkingLevel === "undefined") {
+      return {};
+    } else if (this.model.startsWith("gemini-2.5")) {
+      return {
+        thinkingConfig: {
+          includeThoughts,
+          thinkingBudget,
+        }
+      }
+    } else {
+      return {
+        thinkingConfig: {
+          includeThoughts,
+          thinkingLevel,
+        }
+      }
+    }
+  }
+
   override invocationParams(options: this["ParsedCallOptions"]) {
     const fields = combineGoogleChatModelFields(this.params, options);
 
@@ -336,7 +485,7 @@ export abstract class BaseChatGoogle<
         ...(fields.enableEnhancedCivicAnswers !== undefined
           ? { enableEnhancedCivicAnswers: fields.enableEnhancedCivicAnswers }
           : {}),
-        thinkingConfig: fields.thinkingConfig,
+        ...this.thinkingConfig(fields),
         ...(fields.speechConfig ? { speechConfig: fields.speechConfig } : {}),
         ...(fields.imageConfig ? { imageConfig: fields.imageConfig } : {}),
         ...(fields.mediaResolution
@@ -814,12 +963,14 @@ export abstract class BaseChatGoogle<
   }
 }
 
+type CombinableFields = Omit<BaseChatGoogleParams, "model">;
+
 export function combineGoogleChatModelFields(
-  a: ChatGoogleFields,
-  b: ChatGoogleFields,
-  ...rest: ChatGoogleFields[]
-): ChatGoogleFields {
-  const combined: ChatGoogleFields = {
+  a: CombinableFields,
+  b: CombinableFields,
+  ...rest: CombinableFields[]
+): CombinableFields {
+  const combined: CombinableFields = {
     temperature: b.temperature ?? a.temperature,
     topP: b.topP ?? a.topP,
     topK: b.topK ?? a.topK,
@@ -831,7 +982,6 @@ export function combineGoogleChatModelFields(
     responseLogprobs: b.responseLogprobs ?? a.responseLogprobs,
     logprobs: b.logprobs ?? a.logprobs,
     safetySettings: b.safetySettings ?? a.safetySettings,
-    thinkingConfig: b.thinkingConfig ?? a.thinkingConfig,
     responseSchema: b.responseSchema ?? a.responseSchema,
     tools: b.tools ?? a.tools,
     responseModalities: b.responseModalities ?? a.responseModalities,
@@ -840,6 +990,10 @@ export function combineGoogleChatModelFields(
     speechConfig: b.speechConfig ?? a.speechConfig,
     imageConfig: b.imageConfig ?? a.imageConfig,
     mediaResolution: b.mediaResolution ?? a.mediaResolution,
+    maxReasoningTokens: b.maxReasoningTokens ?? a.maxReasoningTokens,
+    thinkingBudget: b.thinkingBudget ?? a.thinkingBudget,
+    reasoningEffort: b.reasoningEffort ?? a.reasoningEffort,
+    thinkingLevel: b.thinkingLevel ?? a.thinkingLevel,
   };
   if (rest.length > 0) {
     return combineGoogleChatModelFields(combined, rest[0], ...rest.slice(1));

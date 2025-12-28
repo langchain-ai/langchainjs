@@ -184,13 +184,31 @@ export type GoogleHarmBlockMethod =
   | "SEVERITY"
   | "PROBABILITY";
 
+export type GoogleThinkingLevel =
+  | "MINIMAL"
+  | "LOW"
+  | "MEDIUM"
+  | "HIGH";
+
 /** Configuration for the model's thinking process */
 export interface GoogleThinkingConfig {
+  /**
+   * Indicates whether to include thoughts in the response.
+   * If true, thoughts are returned only when available.
+   */
+  includeThoughts?: boolean;
   /**
    * The maximum number of tokens that can be used for the
    * thinking/reasoning stages.
    */
   thinkingBudget?: number;
+  /**
+   * Controls the maximum depth of the model's internal reasoning process
+   * before it produces a response. If not specified, the default is HIGH.
+   * Recommended for Gemini 3 or later models.
+   * Use with earlier models results in an error.
+   */
+  thinkingLevel?: GoogleThinkingLevel;
 }
 
 /** Modality types for response generation */
