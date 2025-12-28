@@ -1,3 +1,39 @@
+/**
+ * Load LangChain objects from JSON strings or objects.
+ *
+ * ## How it works
+ *
+ * Each `Serializable` LangChain object has a unique identifier (its "class path"),
+ * which is a list of strings representing the module path and class name. For example:
+ *
+ * - `AIMessage` -> `["langchain_core", "messages", "ai", "AIMessage"]`
+ * - `ChatPromptTemplate` -> `["langchain_core", "prompts", "chat", "ChatPromptTemplate"]`
+ *
+ * When deserializing, the class path is validated against supported namespaces.
+ *
+ * ## Security model
+ *
+ * The `secretsFromEnv` parameter controls whether secrets can be loaded from environment
+ * variables:
+ *
+ * - `false` (default): Secrets must be provided in `secretsMap`. If a secret is not
+ *   found, `null` is returned instead of loading from environment variables.
+ * - `true`: If a secret is not found in `secretsMap`, it will be loaded from
+ *   environment variables. Use this only in trusted environments.
+ *
+ * ### Injection protection (escape-based)
+ *
+ * During serialization, plain objects that contain an `'lc'` key are escaped by wrapping
+ * them: `{"__lc_escaped__": {...}}`. During deserialization, escaped objects are unwrapped
+ * and returned as plain objects, NOT instantiated as LC objects.
+ *
+ * This is an allowlist approach: only objects explicitly produced by
+ * `Serializable.toJSON()` (which are NOT escaped) are treated as LC objects;
+ * everything else is user data.
+ *
+ * @module
+ */
+
 import {
   Serializable,
   SerializedConstructor,
@@ -10,6 +46,107 @@ import * as coreImportMap from "./import_map.js";
 import type { OptionalImportMap, SecretMap } from "./import_type.js";
 import { type SerializedFields, keyFromJson, mapKeys } from "./map_keys.js";
 import { getEnvironmentVariable } from "../utils/env.js";
+import { isEscapedObject, unescapeValue } from "./validation.js";
+
+/**
+ * Options for loading serialized LangChain objects.
+ *
+ * @remarks
+ * **Security considerations:**
+ *
+ * Deserialization can instantiate arbitrary classes from the allowed namespaces.
+ * When loading untrusted data, be aware that:
+ *
+ * 1. **`secretsFromEnv`**: Defaults to `false`. Setting to `true` allows the
+ *    deserializer to read environment variables, which could leak secrets if
+ *    the serialized data contains malicious secret references.
+ *
+ * 2. **`importMap` / `optionalImportsMap`**: These allow extending which classes
+ *    can be instantiated. Never populate these from user input. Only include
+ *    modules you explicitly trust.
+ *
+ * 3. **Class instantiation**: Allowed classes will have their constructors called
+ *    with the deserialized kwargs. If a class performs side effects in its
+ *    constructor (network calls, file I/O, etc.), those will execute.
+ */
+export interface LoadOptions {
+  /**
+   * A map of secrets to load. Keys are secret identifiers, values are the secret values.
+   *
+   * If a secret is not found in this map and `secretsFromEnv` is `false`, an error is
+   * thrown. If `secretsFromEnv` is `true`, the secret will be loaded from environment
+   * variables (if not found there either, an error is thrown).
+   */
+  secretsMap?: SecretMap;
+
+  /**
+   * Whether to load secrets from environment variables when not found in `secretsMap`.
+   *
+   * @default false
+   *
+   * @remarks
+   * **Security warning:** Setting this to `true` allows the deserializer to read
+   * environment variables, which could be a security risk if the serialized data
+   * is not trusted. Only set this to `true` when deserializing data from trusted
+   * sources (e.g., your own database, not user input).
+   */
+  secretsFromEnv?: boolean;
+
+  /**
+   * A map of optional imports. Keys are namespace paths (e.g., "langchain_community/llms"),
+   * values are the imported modules.
+   *
+   * @remarks
+   * **Security warning:** This extends which classes can be instantiated during
+   * deserialization. Never populate this map with values derived from user input.
+   * Only include modules that you explicitly trust and have reviewed.
+   *
+   * Classes in these modules can be instantiated with attacker-controlled kwargs
+   * if the serialized data is untrusted.
+   */
+  optionalImportsMap?: OptionalImportMap;
+
+  /**
+   * Additional optional import entrypoints to allow beyond the defaults.
+   *
+   * @remarks
+   * **Security warning:** This extends which namespace paths are considered valid
+   * for deserialization. Never populate this array with values derived from user
+   * input. Each entrypoint you add expands the attack surface for deserialization.
+   */
+  optionalImportEntrypoints?: string[];
+
+  /**
+   * Additional import map for the "langchain" namespace.
+   *
+   * @remarks
+   * **Security warning:** This extends which classes can be instantiated during
+   * deserialization. Never populate this map with values derived from user input.
+   * Only include modules that you explicitly trust and have reviewed.
+   *
+   * Any class exposed through this map can be instantiated with attacker-controlled
+   * kwargs if the serialized data is untrusted.
+   */
+  importMap?: Record<string, unknown>;
+
+  /**
+   * Maximum recursion depth allowed during deserialization.
+   *
+   * @default 50
+   *
+   * @remarks
+   * This limit protects against denial-of-service attacks using deeply nested
+   * JSON structures that could cause stack overflow. If your legitimate data
+   * requires deeper nesting, you can increase this limit.
+   */
+  maxDepth?: number;
+}
+
+/**
+ * Default maximum recursion depth for deserialization.
+ * This provides protection against DoS attacks via deeply nested structures.
+ */
+const DEFAULT_MAX_DEPTH = 50;
 
 function combineAliasesAndInvert(constructor: typeof Serializable) {
   const aliases: { [key: string]: string } = {};
@@ -26,74 +163,114 @@ function combineAliasesAndInvert(constructor: typeof Serializable) {
   }, {} as Record<string, string>);
 }
 
-async function reviver(
-  this: {
-    optionalImportsMap?: OptionalImportMap;
-    optionalImportEntrypoints?: string[];
-    secretsMap?: SecretMap;
-    importMap?: Record<string, unknown>;
-    path?: string[];
-  },
-  value: unknown
-): Promise<unknown> {
+interface ReviverContext {
+  optionalImportsMap: OptionalImportMap;
+  optionalImportEntrypoints: string[];
+  secretsMap: SecretMap;
+  secretsFromEnv: boolean;
+  importMap: Record<string, unknown>;
+  path: string[];
+  depth: number;
+  maxDepth: number;
+}
+
+/**
+ * Recursively revive a value, handling escape markers and LC objects.
+ *
+ * This function handles:
+ * 1. Escaped dicts - unwrapped and returned as plain objects
+ * 2. LC secret objects - resolved from secretsMap or env
+ * 3. LC constructor objects - instantiated
+ * 4. Regular objects/arrays - recursed into
+ */
+async function reviver(this: ReviverContext, value: unknown): Promise<unknown> {
   const {
-    optionalImportsMap = {},
-    optionalImportEntrypoints = [],
-    importMap = {},
-    secretsMap = {},
-    path = ["$"],
+    optionalImportsMap,
+    optionalImportEntrypoints,
+    importMap,
+    secretsMap,
+    secretsFromEnv,
+    path,
+    depth,
+    maxDepth,
   } = this;
   const pathStr = path.join(".");
+
+  // Check recursion depth to prevent DoS via deeply nested structures
+  if (depth > maxDepth) {
+    throw new Error(
+      `Maximum recursion depth (${maxDepth}) exceeded during deserialization. ` +
+        `This may indicate a malicious payload or you may need to increase maxDepth.`
+    );
+  }
+
+  // If not an object, return as-is
+  if (typeof value !== "object" || value == null) {
+    return value;
+  }
+
+  // Handle arrays - recurse into elements
+  if (Array.isArray(value)) {
+    return Promise.all(
+      value.map((v, i) =>
+        reviver.call({ ...this, path: [...path, `${i}`], depth: depth + 1 }, v)
+      )
+    );
+  }
+
+  // It's an object - check for escape marker FIRST
+  const record = value as Record<string, unknown>;
+  if (isEscapedObject(record)) {
+    // This is an escaped user object - unwrap and return as-is (no LC processing)
+    return unescapeValue(record);
+  }
+
+  // Check for LC secret object
   if (
-    typeof value === "object" &&
-    value !== null &&
-    !Array.isArray(value) &&
-    "lc" in value &&
-    "type" in value &&
-    "id" in value &&
-    value.lc === 1 &&
-    value.type === "secret"
+    "lc" in record &&
+    "type" in record &&
+    "id" in record &&
+    record.lc === 1 &&
+    record.type === "secret"
   ) {
-    const serialized = value as SerializedSecret;
+    const serialized = record as unknown as SerializedSecret;
     const [key] = serialized.id;
     if (key in secretsMap) {
       return secretsMap[key as keyof SecretMap];
-    } else {
+    } else if (secretsFromEnv) {
       const secretValueInEnv = getEnvironmentVariable(key);
       if (secretValueInEnv) {
         return secretValueInEnv;
-      } else {
-        throw new Error(
-          `Missing key "${key}" for ${pathStr} in load(secretsMap={})`
-        );
       }
     }
-  } else if (
-    typeof value === "object" &&
-    value !== null &&
-    !Array.isArray(value) &&
-    "lc" in value &&
-    "type" in value &&
-    "id" in value &&
-    value.lc === 1 &&
-    value.type === "not_implemented"
+    throw new Error(`Missing secret "${key}" at ${pathStr}`);
+  }
+
+  // Check for LC not_implemented object
+  if (
+    "lc" in record &&
+    "type" in record &&
+    "id" in record &&
+    record.lc === 1 &&
+    record.type === "not_implemented"
   ) {
-    const serialized = value as SerializedNotImplemented;
+    const serialized = record as unknown as SerializedNotImplemented;
     const str = JSON.stringify(serialized);
     throw new Error(
       `Trying to load an object that doesn't implement serialization: ${pathStr} -> ${str}`
     );
-  } else if (
-    typeof value === "object" &&
-    value !== null &&
-    !Array.isArray(value) &&
-    "lc" in value &&
-    "type" in value &&
-    "id" in value &&
-    "kwargs" in value &&
-    value.lc === 1
+  }
+
+  // Check for LC constructor object
+  if (
+    "lc" in record &&
+    "type" in record &&
+    "id" in record &&
+    "kwargs" in record &&
+    record.lc === 1 &&
+    record.type === "constructor"
   ) {
-    const serialized = value as SerializedConstructor;
+    const serialized = record as unknown as SerializedConstructor;
     const str = JSON.stringify(serialized);
     const [name, ...namespaceReverse] = serialized.id.slice().reverse();
     const namespace = namespaceReverse.reverse();
@@ -186,60 +363,78 @@ async function reviver(
 
     // Recurse on the arguments, which may be serialized objects themselves
     const kwargs = await reviver.call(
-      { ...this, path: [...path, "kwargs"] },
+      { ...this, path: [...path, "kwargs"], depth: depth + 1 },
       serialized.kwargs
     );
 
     // Construct the object
-    if (serialized.type === "constructor") {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const instance = new (builder as any)(
-        mapKeys(
-          kwargs as SerializedFields,
-          keyFromJson,
-          combineAliasesAndInvert(builder)
-        )
-      );
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const instance = new (builder as any)(
+      mapKeys(
+        kwargs as SerializedFields,
+        keyFromJson,
+        combineAliasesAndInvert(builder)
+      )
+    );
 
-      // Minification in severless/edge runtimes will mange the
-      // name of classes presented in traces. As the names in import map
-      // are present as-is even with minification, use these names instead
-      Object.defineProperty(instance.constructor, "name", { value: name });
+    // Minification in severless/edge runtimes will mange the
+    // name of classes presented in traces. As the names in import map
+    // are present as-is even with minification, use these names instead
+    Object.defineProperty(instance.constructor, "name", { value: name });
 
-      return instance;
-    } else {
-      throw new Error(`Invalid type: ${pathStr} -> ${str}`);
-    }
-  } else if (typeof value === "object" && value !== null) {
-    if (Array.isArray(value)) {
-      return Promise.all(
-        value.map((v, i) =>
-          reviver.call({ ...this, path: [...path, `${i}`] }, v)
-        )
-      );
-    } else {
-      return Object.fromEntries(
-        await Promise.all(
-          Object.entries(value).map(async ([key, value]) => [
-            key,
-            await reviver.call({ ...this, path: [...path, key] }, value),
-          ])
-        )
-      );
-    }
+    return instance;
   }
-  return value;
+
+  // Regular object - recurse into values
+  const result: Record<string, unknown> = {};
+  for (const [key, val] of Object.entries(record)) {
+    result[key] = await reviver.call(
+      { ...this, path: [...path, key], depth: depth + 1 },
+      val
+    );
+  }
+  return result;
 }
 
-export async function load<T>(
-  text: string,
-  mappings?: {
-    secretsMap?: SecretMap;
-    optionalImportsMap?: OptionalImportMap;
-    optionalImportEntrypoints?: string[];
-    importMap?: Record<string, unknown>;
-  }
-): Promise<T> {
+/**
+ * Load a LangChain object from a JSON string.
+ *
+ * @param text - The JSON string to parse and load.
+ * @param options - Options for loading.
+ * @returns The loaded LangChain object.
+ *
+ * @example
+ * ```typescript
+ * import { load } from "@langchain/core/load";
+ * import { AIMessage } from "@langchain/core/messages";
+ *
+ * // Basic usage - secrets must be provided explicitly
+ * const msg = await load<AIMessage>(jsonString);
+ *
+ * // With secrets from a map
+ * const msg = await load<AIMessage>(jsonString, {
+ *   secretsMap: { OPENAI_API_KEY: "sk-..." }
+ * });
+ *
+ * // Allow loading secrets from environment (use with caution)
+ * const msg = await load<AIMessage>(jsonString, {
+ *   secretsFromEnv: true
+ * });
+ * ```
+ */
+export async function load<T>(text: string, options?: LoadOptions): Promise<T> {
   const json = JSON.parse(text);
-  return reviver.call({ ...mappings }, json) as Promise<T>;
+
+  const context: ReviverContext = {
+    optionalImportsMap: options?.optionalImportsMap ?? {},
+    optionalImportEntrypoints: options?.optionalImportEntrypoints ?? [],
+    secretsMap: options?.secretsMap ?? {},
+    secretsFromEnv: options?.secretsFromEnv ?? false,
+    importMap: options?.importMap ?? {},
+    path: ["$"],
+    depth: 0,
+    maxDepth: options?.maxDepth ?? DEFAULT_MAX_DEPTH,
+  };
+
+  return reviver.call(context, json) as Promise<T>;
 }
