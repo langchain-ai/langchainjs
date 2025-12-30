@@ -8,6 +8,7 @@ import {
   ClientConfig,
   InsertReq,
   keyValueObj,
+  Properties,
 } from "@zilliz/milvus2-sdk-node";
 
 import type { EmbeddingsInterface } from "@langchain/core/embeddings";
@@ -332,13 +333,9 @@ export class Milvus extends VectorStore {
     k: number,
     filter?: string
   ): Promise<[Document, number][]> {
-    const hasColResp = await this.client.hasCollection({
-      collection_name: this.collectionName,
-    });
-    if (hasColResp.status.error_code !== ErrorCode.SUCCESS) {
-      throw new Error(`Error checking collection: ${hasColResp}`);
-    }
-    if (hasColResp.value === false) {
+    const hasCol = await this.hasCollection();
+
+    if (hasCol === false) {
       throw new Error(
         `Collection not found: ${this.collectionName}, please create collection before search.`
       );
@@ -408,16 +405,9 @@ export class Milvus extends VectorStore {
    * @returns Promise resolving to void.
    */
   async ensureCollection(vectors?: number[][], documents?: Document[]) {
-    const hasColResp = await this.client.hasCollection({
-      collection_name: this.collectionName,
-    });
-    if (hasColResp.status.error_code !== ErrorCode.SUCCESS) {
-      throw new Error(
-        `Error checking collection: ${JSON.stringify(hasColResp, null, 2)}`
-      );
-    }
+    const hasCol = await this.hasCollection();
 
-    if (hasColResp.value === false) {
+    if (hasCol === false) {
       if (vectors === undefined || documents === undefined) {
         throw new Error(
           `Collection not found: ${this.collectionName}, please provide vectors and documents to create collection.`
@@ -463,7 +453,8 @@ export class Milvus extends VectorStore {
    */
   async createCollection(
     vectors: number[][],
-    documents: Document[]
+    documents: Document[],
+    properties?: Properties
   ): Promise<void> {
     const fieldList: FieldType[] = [];
 
@@ -535,6 +526,7 @@ export class Milvus extends VectorStore {
     const createRes = await this.client.createCollection({
       collection_name: this.collectionName,
       fields: fieldList,
+      properties,
     });
 
     if (createRes.error_code !== ErrorCode.SUCCESS) {
@@ -600,6 +592,49 @@ export class Milvus extends VectorStore {
       if (dtype === DataType.VarChar && field.name === MILVUS_TEXT_FIELD_NAME) {
         this.textField = field.name;
       }
+    });
+  }
+
+  async hasCollection(): Promise<boolean> {
+    const hasColResp = await this.client.hasCollection({
+      collection_name: this.collectionName,
+    });
+
+    if (hasColResp.status.error_code !== ErrorCode.SUCCESS) {
+      throw new Error(
+        `Error checking collection: ${JSON.stringify(hasColResp, null, 2)}`
+      );
+    }
+
+    return hasColResp.value === true;
+  }
+
+  /**
+   * Sets properties for the current milvus collection.
+   * @param properties Properties to be set. Setting to null will delete properties
+   * @returns Promise resolving to void.
+   */
+  async setProperties(properties: {
+    [K in keyof Properties]: Properties[K] | null;
+  }): Promise<void> {
+    const hasCol = await this.hasCollection();
+
+    if (hasCol === false) {
+      throw new Error(`Collection ${this.collectionName} does not exist.`);
+    }
+
+    const nullKeys = Object.keys(properties).filter(
+      (key) => properties[key] === null
+    );
+
+    const nonNullProperties = Object.fromEntries(
+      Object.entries(properties).filter(([, value]) => value !== null)
+    ) as Properties;
+
+    await this.client.alterCollectionProperties({
+      collection_name: this.collectionName,
+      properties: nonNullProperties,
+      delete_keys: nullKeys,
     });
   }
 
@@ -673,13 +708,9 @@ export class Milvus extends VectorStore {
    * @returns Promise resolving to void.
    */
   async delete(params: { filter?: string; ids?: string[] }): Promise<void> {
-    const hasColResp = await this.client.hasCollection({
-      collection_name: this.collectionName,
-    });
-    if (hasColResp.status.error_code !== ErrorCode.SUCCESS) {
-      throw new Error(`Error checking collection: ${hasColResp}`);
-    }
-    if (hasColResp.value === false) {
+    const hasCol = await this.hasCollection();
+
+    if (hasCol === false) {
       throw new Error(
         `Collection not found: ${this.collectionName}, please create collection before search.`
       );
