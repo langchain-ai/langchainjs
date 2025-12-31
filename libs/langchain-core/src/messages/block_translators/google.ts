@@ -26,7 +26,17 @@ function convertToV1FromChatGoogleMessage(
     for (const block of content) {
       const contentBlock: ContentBlock.Standard = iife(() => {
         if (_isContentBlock(block, "text") && _isString(block.text)) {
-          return { type: "text", text: block.text };
+          if ("thought" in block && block.thought) {
+            return {
+              type: "reasoning",
+              reasoning: block.text,
+            }
+          } else {
+            return {
+              type: "text",
+              text: block.text,
+            };
+          }
         } else if (
           _isContentBlock(block, "inlineData") &&
           _isObject(block.inlineData) &&
