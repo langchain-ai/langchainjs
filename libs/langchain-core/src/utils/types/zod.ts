@@ -1,5 +1,9 @@
 import type * as z3 from "zod/v3";
 import type * as z4 from "zod/v4/core";
+import type * as z4Classic from "zod/v4";
+// Import from main "zod" package to get the types users would get with `import { z } from "zod"`
+// This is important for zod v4.x where the main package uses the classic/compat API
+import type * as zodMain from "zod";
 import {
   parse,
   parseAsync,
@@ -17,10 +21,23 @@ export type ZodStringV3 = z3.ZodString;
 
 export type ZodStringV4 = z4.$ZodType<string, unknown>;
 
+// ZodObject in zod v3 and zod v4's v3 compat layer has 5 type parameters:
+// T (shape), UnknownKeys, Catchall, Output, Input
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export type ZodObjectV3 = z3.ZodObject<any, any, any, any>;
+export type ZodObjectV3 = z3.ZodObject<any, any, any, any, any>;
 
+// Core $ZodObject type from "zod/v4/core"
 export type ZodObjectV4 = z4.$ZodObject;
+
+// Classic ZodObject type from "zod/v4" (the classic/compat API)
+// This is what users get when using `import { z } from "zod"` with zod v4.x
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export type ZodObjectV4Classic = z4Classic.ZodObject<any, any>;
+
+// Main "zod" package ZodObject - the type users get with `import { z } from "zod"`
+// In zod v4.x, this uses the v4 classic API with 2 type params (Shape, Config)
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export type ZodObjectMain = zodMain.ZodObject<any, any>;
 
 export type ZodDefaultV3<T extends z3.ZodTypeAny> = z3.ZodDefault<T>;
 export type ZodDefaultV4<T extends z4.SomeType> = z4.$ZodDefault<T>;
@@ -33,7 +50,11 @@ export type InteropZodType<Output = any, Input = Output> =
   | z3.ZodType<Output, z3.ZodTypeDef, Input>
   | z4.$ZodType<Output, Input>;
 
-export type InteropZodObject = ZodObjectV3 | ZodObjectV4;
+export type InteropZodObject =
+  | ZodObjectV3
+  | ZodObjectV4
+  | ZodObjectV4Classic
+  | ZodObjectMain;
 export type InteropZodDefault<T = InteropZodObjectShape> =
   T extends z3.ZodTypeAny
     ? ZodDefaultV3<T>
@@ -52,6 +73,10 @@ export type InteropZodObjectShape<
 > = T extends z3.ZodObject<infer Shape>
   ? { [K in keyof Shape]: Shape[K] }
   : T extends z4.$ZodObject<infer Shape>
+  ? { [K in keyof Shape]: Shape[K] }
+  : T extends z4Classic.ZodObject<infer Shape>
+  ? { [K in keyof Shape]: Shape[K] }
+  : T extends zodMain.ZodObject<infer Shape>
   ? { [K in keyof Shape]: Shape[K] }
   : never;
 
