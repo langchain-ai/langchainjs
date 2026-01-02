@@ -496,8 +496,9 @@ export class ChatDeepSeek extends ChatOpenAICompletions<ChatDeepSeekCallOptions>
       // Check for <think> start tag
       if (!isThinking && tokensBuffer.includes("<think>")) {
         isThinking = true;
-        // If there was content before <think>, yield it (stripped of <think>)
-        const [beforeThink, afterThink] = tokensBuffer.split("<think>");
+        const thinkIndex = tokensBuffer.indexOf("<think>");
+        const beforeThink = tokensBuffer.substring(0, thinkIndex);
+        const afterThink = tokensBuffer.substring(thinkIndex + "<think>".length);
 
         // We consumed up to <think>, so buffer becomes what's after
         tokensBuffer = afterThink || ""; // might be empty or part of thought
@@ -505,11 +506,17 @@ export class ChatDeepSeek extends ChatOpenAICompletions<ChatDeepSeekCallOptions>
         if (beforeThink) {
           // Send the content before the tag
           const newChunk = new ChatGenerationChunk({
-            message: chunk.message, // shallow copy, we'll mutate content? No, create new?
+            message: new AIMessageChunk({
+              content: beforeThink,
+              additional_kwargs: chunk.message.additional_kwargs,
+              response_metadata: chunk.message.response_metadata,
+              tool_calls: chunk.message.tool_calls,
+              tool_call_chunks: chunk.message.tool_call_chunks,
+              id: chunk.message.id,
+            }),
             text: beforeThink,
             generationInfo: chunk.generationInfo,
           });
-          newChunk.message.content = beforeThink;
           yield newChunk;
         }
       }
@@ -517,16 +524,26 @@ export class ChatDeepSeek extends ChatOpenAICompletions<ChatDeepSeekCallOptions>
       // Check for </think> end tag
       if (isThinking && tokensBuffer.includes("</think>")) {
         isThinking = false;
-        const [thoughtContent, afterThink] = tokensBuffer.split("</think>");
+        const thinkEndIndex = tokensBuffer.indexOf("</think>");
+        const thoughtContent = tokensBuffer.substring(0, thinkEndIndex);
+        const afterThink = tokensBuffer.substring(thinkEndIndex + "</think>".length);
 
         // Yield the reasoning content
         const reasoningChunk = new ChatGenerationChunk({
-          message: chunk.message,
+          message: new AIMessageChunk({
+            content: "",
+            additional_kwargs: {
+              ...chunk.message.additional_kwargs,
+              reasoning_content: thoughtContent,
+            },
+            response_metadata: chunk.message.response_metadata,
+            tool_calls: chunk.message.tool_calls,
+            tool_call_chunks: chunk.message.tool_call_chunks,
+            id: chunk.message.id,
+          }),
           text: "",
           generationInfo: chunk.generationInfo,
         });
-        reasoningChunk.message.content = "";
-        reasoningChunk.message.additional_kwargs.reasoning_content = thoughtContent;
         yield reasoningChunk;
 
         // Reset buffer to what's after </think>
@@ -535,49 +552,28 @@ export class ChatDeepSeek extends ChatOpenAICompletions<ChatDeepSeekCallOptions>
         // Yield the rest as normal content if any
         if (tokensBuffer) {
           const contentChunk = new ChatGenerationChunk({
-            message: chunk.message,
+            message: new AIMessageChunk({
+              content: tokensBuffer,
+              additional_kwargs: chunk.message.additional_kwargs,
+              response_metadata: chunk.message.response_metadata,
+              tool_calls: chunk.message.tool_calls,
+              tool_call_chunks: chunk.message.tool_call_chunks,
+              id: chunk.message.id,
+            }),
             text: tokensBuffer,
             generationInfo: chunk.generationInfo,
           });
-          contentChunk.message.content = tokensBuffer;
           yield contentChunk;
           tokensBuffer = ""; /// consumed
         }
       } else if (isThinking) {
         // We are inside thinking block.
-        // We should yield this as reasoning_content.
-        // BEWARE: We appended to tokensBuffer. If we yield now, we empty buffer?
-        // Yes, but we must ensure we don't break a future </think> tag.
-        // e.g. "</th" -> "ink>"
-
-        // Logic: if buffer ends with partial "</think>", keep that part.
-        // Simplify: Just buffer EVERYTHING inside thinking?
-        // No, streaming reasoning is better.
-
-        // Safe streaming:
-        // Yield tokensBuffer EXCEPT for suffix that matches partial end tag.
-
-        // Simple logic for now: Yield buffer and clear it.
-        // Warning: This breaks if </think> is split.
-        // To handle split tags robustly is hard without proper KMP or regex stream.
-        // Given complexity, buffering `isThinking` content until `</think>` might be acceptable? 
-        // OR: just assume tags come in reasonably.
-
-        // Robust approach:
-        // If isThinking:
-        //   Yield buffer as reasoning_content.
-        //   BUT: checking for `</think>` was done above on `tokensBuffer`.
-        //   So `tokensBuffer` here does NOT contain `</think>`.
-        //   Does it contain partial `</th`?
-        //   If yes, keep partial.
-        //   If no, yield all.
-
-        // Let's implement partial check.
+        // Check partial </think> match
         const possibleEndTag = "</think>";
         let splitIndex = -1;
 
-        // Check if buffer ends with a prefix of </think>
-        for (let i = 1; i < possibleEndTag.length; i++) {
+        // Check if buffer ends with a prefix of </think> - Greedy check (longest first)
+        for (let i = possibleEndTag.length - 1; i >= 1; i--) {
           if (tokensBuffer.endsWith(possibleEndTag.substring(0, i))) {
             splitIndex = tokensBuffer.length - i;
             break;
@@ -588,12 +584,20 @@ export class ChatDeepSeek extends ChatOpenAICompletions<ChatDeepSeekCallOptions>
           const safeToYield = tokensBuffer.substring(0, splitIndex);
           if (safeToYield) {
             const reasoningChunk = new ChatGenerationChunk({
-              message: chunk.message,
+              message: new AIMessageChunk({
+                content: "",
+                additional_kwargs: {
+                  ...chunk.message.additional_kwargs,
+                  reasoning_content: safeToYield,
+                },
+                response_metadata: chunk.message.response_metadata,
+                tool_calls: chunk.message.tool_calls,
+                tool_call_chunks: chunk.message.tool_call_chunks,
+                id: chunk.message.id,
+              }),
               text: "",
               generationInfo: chunk.generationInfo,
             });
-            reasoningChunk.message.content = "";
-            reasoningChunk.message.additional_kwargs.reasoning_content = safeToYield;
             yield reasoningChunk;
           }
           tokensBuffer = tokensBuffer.substring(splitIndex); // keep partial tag
@@ -601,22 +605,30 @@ export class ChatDeepSeek extends ChatOpenAICompletions<ChatDeepSeekCallOptions>
           // content is safe to yield as reasoning
           if (tokensBuffer) {
             const reasoningChunk = new ChatGenerationChunk({
-              message: chunk.message,
+              message: new AIMessageChunk({
+                content: "",
+                additional_kwargs: {
+                  ...chunk.message.additional_kwargs,
+                  reasoning_content: tokensBuffer,
+                },
+                response_metadata: chunk.message.response_metadata,
+                tool_calls: chunk.message.tool_calls,
+                tool_call_chunks: chunk.message.tool_call_chunks,
+                id: chunk.message.id,
+              }),
               text: "",
               generationInfo: chunk.generationInfo,
             });
-            reasoningChunk.message.content = "";
-            reasoningChunk.message.additional_kwargs.reasoning_content = tokensBuffer;
             yield reasoningChunk;
             tokensBuffer = "";
           }
         }
       } else {
         // NOT thinking.
-        // Check partial start tag "<th"
+        // Check partial start tag "<think>" - Greedy check (longest first)
         const possibleStartTag = "<think>";
         let splitIndex = -1;
-        for (let i = 1; i < possibleStartTag.length; i++) {
+        for (let i = possibleStartTag.length - 1; i >= 1; i--) {
           if (tokensBuffer.endsWith(possibleStartTag.substring(0, i))) {
             splitIndex = tokensBuffer.length - i;
             break;
@@ -628,11 +640,17 @@ export class ChatDeepSeek extends ChatOpenAICompletions<ChatDeepSeekCallOptions>
           const safeToYield = tokensBuffer.substring(0, splitIndex);
           if (safeToYield) {
             const contentChunk = new ChatGenerationChunk({
-              message: chunk.message,
+              message: new AIMessageChunk({
+                content: safeToYield,
+                additional_kwargs: chunk.message.additional_kwargs,
+                response_metadata: chunk.message.response_metadata,
+                tool_calls: chunk.message.tool_calls,
+                tool_call_chunks: chunk.message.tool_call_chunks,
+                id: chunk.message.id,
+              }),
               text: safeToYield,
               generationInfo: chunk.generationInfo,
             });
-            contentChunk.message.content = safeToYield;
             yield contentChunk;
           }
           tokensBuffer = tokensBuffer.substring(splitIndex); // keep partial tag
@@ -640,11 +658,17 @@ export class ChatDeepSeek extends ChatOpenAICompletions<ChatDeepSeekCallOptions>
           // Yield all
           if (tokensBuffer) {
             const contentChunk = new ChatGenerationChunk({
-              message: chunk.message,
+              message: new AIMessageChunk({
+                content: tokensBuffer,
+                additional_kwargs: chunk.message.additional_kwargs,
+                response_metadata: chunk.message.response_metadata,
+                tool_calls: chunk.message.tool_calls,
+                tool_call_chunks: chunk.message.tool_call_chunks,
+                id: chunk.message.id,
+              }),
               text: tokensBuffer,
               generationInfo: chunk.generationInfo,
             });
-            contentChunk.message.content = tokensBuffer;
             yield contentChunk;
             tokensBuffer = "";
           }
