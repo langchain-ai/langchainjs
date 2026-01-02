@@ -3,7 +3,7 @@ import {
   StructuredOutputMethodOptions,
 } from "@langchain/core/language_models/base";
 import { ModelProfile } from "@langchain/core/language_models/profile";
-import { BaseMessage } from "@langchain/core/messages";
+import { BaseMessage, AIMessageChunk } from "@langchain/core/messages";
 import { Runnable } from "@langchain/core/runnables";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import { InteropZodType } from "@langchain/core/utils/types";
@@ -11,8 +11,11 @@ import {
   ChatOpenAICallOptions,
   ChatOpenAICompletions,
   ChatOpenAIFields,
+  ChatOpenAIFields,
   OpenAIClient,
 } from "@langchain/openai";
+import { ChatGenerationChunk } from "@langchain/core/outputs";
+import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
 import PROFILES from "./profiles.js";
 
 export interface ChatDeepSeekCallOptions extends ChatOpenAICallOptions {
@@ -463,6 +466,214 @@ export class ChatDeepSeek extends ChatOpenAICompletions<ChatDeepSeekCallOptions>
     return messageChunk;
   }
 
+  async *_streamResponseChunks(
+    messages: BaseMessage[],
+    options: this["ParsedCallOptions"],
+    runManager?: CallbackManagerForLLMRun
+  ): AsyncGenerator<ChatGenerationChunk> {
+    const stream = super._streamResponseChunks(messages, options, runManager);
+
+    // State for parsing <think> tags
+    let tokensBuffer = "";
+    let isThinking = false;
+
+    for await (const chunk of stream) {
+      // If the model already provided reasoning_content natively, just yield it
+      if (chunk.message.additional_kwargs.reasoning_content) {
+        yield chunk;
+        continue;
+      }
+
+      const text = chunk.text;
+      if (!text) {
+        yield chunk;
+        continue;
+      }
+
+      // Append text to buffer to handle split tags
+      tokensBuffer += text;
+
+      // Check for <think> start tag
+      if (!isThinking && tokensBuffer.includes("<think>")) {
+        isThinking = true;
+        // If there was content before <think>, yield it (stripped of <think>)
+        const [beforeThink, afterThink] = tokensBuffer.split("<think>");
+
+        // We consumed up to <think>, so buffer becomes what's after
+        tokensBuffer = afterThink || ""; // might be empty or part of thought
+
+        if (beforeThink) {
+          // Send the content before the tag
+          const newChunk = new ChatGenerationChunk({
+            message: chunk.message, // shallow copy, we'll mutate content? No, create new?
+            text: beforeThink,
+            generationInfo: chunk.generationInfo,
+          });
+          newChunk.message.content = beforeThink;
+          yield newChunk;
+        }
+      }
+
+      // Check for </think> end tag
+      if (isThinking && tokensBuffer.includes("</think>")) {
+        isThinking = false;
+        const [thoughtContent, afterThink] = tokensBuffer.split("</think>");
+
+        // Yield the reasoning content
+        const reasoningChunk = new ChatGenerationChunk({
+          message: chunk.message,
+          text: "",
+          generationInfo: chunk.generationInfo,
+        });
+        reasoningChunk.message.content = "";
+        reasoningChunk.message.additional_kwargs.reasoning_content = thoughtContent;
+        yield reasoningChunk;
+
+        // Reset buffer to what's after </think>
+        tokensBuffer = afterThink || "";
+
+        // Yield the rest as normal content if any
+        if (tokensBuffer) {
+          const contentChunk = new ChatGenerationChunk({
+            message: chunk.message,
+            text: tokensBuffer,
+            generationInfo: chunk.generationInfo,
+          });
+          contentChunk.message.content = tokensBuffer;
+          yield contentChunk;
+          tokensBuffer = ""; /// consumed
+        }
+      } else if (isThinking) {
+        // We are inside thinking block.
+        // We should yield this as reasoning_content.
+        // BEWARE: We appended to tokensBuffer. If we yield now, we empty buffer?
+        // Yes, but we must ensure we don't break a future </think> tag.
+        // e.g. "</th" -> "ink>"
+
+        // Logic: if buffer ends with partial "</think>", keep that part.
+        // Simplify: Just buffer EVERYTHING inside thinking?
+        // No, streaming reasoning is better.
+
+        // Safe streaming:
+        // Yield tokensBuffer EXCEPT for suffix that matches partial end tag.
+
+        // Simple logic for now: Yield buffer and clear it.
+        // Warning: This breaks if </think> is split.
+        // To handle split tags robustly is hard without proper KMP or regex stream.
+        // Given complexity, buffering `isThinking` content until `</think>` might be acceptable? 
+        // OR: just assume tags come in reasonably.
+
+        // Robust approach:
+        // If isThinking:
+        //   Yield buffer as reasoning_content.
+        //   BUT: checking for `</think>` was done above on `tokensBuffer`.
+        //   So `tokensBuffer` here does NOT contain `</think>`.
+        //   Does it contain partial `</th`?
+        //   If yes, keep partial.
+        //   If no, yield all.
+
+        // Let's implement partial check.
+        const possibleEndTag = "</think>";
+        let splitIndex = -1;
+
+        // Check if buffer ends with a prefix of </think>
+        for (let i = 1; i < possibleEndTag.length; i++) {
+          if (tokensBuffer.endsWith(possibleEndTag.substring(0, i))) {
+            splitIndex = tokensBuffer.length - i;
+            break;
+          }
+        }
+
+        if (splitIndex !== -1) {
+          const safeToYield = tokensBuffer.substring(0, splitIndex);
+          if (safeToYield) {
+            const reasoningChunk = new ChatGenerationChunk({
+              message: chunk.message,
+              text: "",
+              generationInfo: chunk.generationInfo,
+            });
+            reasoningChunk.message.content = "";
+            reasoningChunk.message.additional_kwargs.reasoning_content = safeToYield;
+            yield reasoningChunk;
+          }
+          tokensBuffer = tokensBuffer.substring(splitIndex); // keep partial tag
+        } else {
+          // content is safe to yield as reasoning
+          if (tokensBuffer) {
+            const reasoningChunk = new ChatGenerationChunk({
+              message: chunk.message,
+              text: "",
+              generationInfo: chunk.generationInfo,
+            });
+            reasoningChunk.message.content = "";
+            reasoningChunk.message.additional_kwargs.reasoning_content = tokensBuffer;
+            yield reasoningChunk;
+            tokensBuffer = "";
+          }
+        }
+      } else {
+        // NOT thinking.
+        // Check partial start tag "<th"
+        const possibleStartTag = "<think>";
+        let splitIndex = -1;
+        for (let i = 1; i < possibleStartTag.length; i++) {
+          if (tokensBuffer.endsWith(possibleStartTag.substring(0, i))) {
+            splitIndex = tokensBuffer.length - i;
+            break;
+          }
+        }
+
+        if (splitIndex !== -1) {
+          // Yield safe content
+          const safeToYield = tokensBuffer.substring(0, splitIndex);
+          if (safeToYield) {
+            const contentChunk = new ChatGenerationChunk({
+              message: chunk.message,
+              text: safeToYield,
+              generationInfo: chunk.generationInfo,
+            });
+            contentChunk.message.content = safeToYield;
+            yield contentChunk;
+          }
+          tokensBuffer = tokensBuffer.substring(splitIndex); // keep partial tag
+        } else {
+          // Yield all
+          if (tokensBuffer) {
+            const contentChunk = new ChatGenerationChunk({
+              message: chunk.message,
+              text: tokensBuffer,
+              generationInfo: chunk.generationInfo,
+            });
+            contentChunk.message.content = tokensBuffer;
+            yield contentChunk;
+            tokensBuffer = "";
+          }
+        }
+      }
+    }
+
+    // Flush remaining buffer at end of stream
+    if (tokensBuffer) {
+      // If we were thinking, it's unclosed thought.
+      if (isThinking) {
+        const reasoningChunk = new ChatGenerationChunk({
+          message: new AIMessageChunk(""), // placeholder
+          text: "",
+        });
+        reasoningChunk.message.content = "";
+        reasoningChunk.message.additional_kwargs.reasoning_content = tokensBuffer;
+        yield reasoningChunk;
+      } else {
+        const contentChunk = new ChatGenerationChunk({
+          message: new AIMessageChunk(""),
+          text: tokensBuffer,
+        });
+        contentChunk.message.content = tokensBuffer;
+        yield contentChunk;
+      }
+    }
+  }
+
   protected override _convertCompletionsMessageToBaseMessage(
     message: OpenAIClient.ChatCompletionMessage,
     rawResponse: OpenAIClient.ChatCompletion
@@ -545,9 +756,9 @@ export class ChatDeepSeek extends ChatOpenAICompletions<ChatDeepSeekCallOptions>
   ):
     | Runnable<BaseLanguageModelInput, RunOutput>
     | Runnable<
-        BaseLanguageModelInput,
-        { raw: BaseMessage; parsed: RunOutput }
-      > {
+      BaseLanguageModelInput,
+      { raw: BaseMessage; parsed: RunOutput }
+    > {
     const ensuredConfig = { ...config };
     // Deepseek does not support json schema yet
     if (ensuredConfig?.method === undefined) {
