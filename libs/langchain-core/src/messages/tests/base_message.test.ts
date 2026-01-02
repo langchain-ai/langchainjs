@@ -390,16 +390,17 @@ describe("Complex AIMessageChunk concat", () => {
     expect(
       new AIMessageChunk({
         content: [{ index: 0, type: "text", text: "I am" }],
+        response_metadata: { usage: { prompt_tokens: 5 } },
       }).concat(
         new AIMessageChunk({
           content: [{ type: "text", text: "" }],
-          response_metadata: { extra: "value" },
+          response_metadata: { usage: { prompt_tokens: 3 }, extra: "value" },
         })
       )
     ).toEqual(
       new AIMessageChunk({
         content: [{ index: 0, type: "text", text: "I am" }],
-        response_metadata: { extra: "value" },
+        response_metadata: { usage: { prompt_tokens: 8 }, extra: "value" },
       })
     );
   });
