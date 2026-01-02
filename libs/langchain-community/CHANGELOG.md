@@ -1,5 +1,15 @@
 # @langchain/community
 
+## 1.1.2
+
+### Patch Changes
+
+- [#9601](https://github.com/langchain-ai/langchainjs/pull/9601) [`d79d2ff`](https://github.com/langchain-ai/langchainjs/commit/d79d2ff99b43f60c49f35ba6173bc916352ef0cd) Thanks [@Orenoid](https://github.com/Orenoid)! - feat(zhipuai): support tool calling in ChatZhipuAI
+
+- Updated dependencies [[`cc502e1`](https://github.com/langchain-ai/langchainjs/commit/cc502e1b67dbadcd123a7ea2964c791c2bbad581)]:
+  - @langchain/classic@1.0.8
+  - @langchain/openai@1.2.0
+
 ## 1.1.1
 
 ### Patch Changes
