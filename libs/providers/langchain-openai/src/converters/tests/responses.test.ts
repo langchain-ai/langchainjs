@@ -5,8 +5,10 @@ import {
   AIMessageChunk,
   HumanMessage,
   ToolCallChunk,
+  ToolMessage,
 } from "@langchain/core/messages";
 import {
+  convertMessagesToResponsesInput,
   convertResponsesDeltaToChatGenerationChunk,
   convertResponsesUsageToUsageMetadata,
   convertStandardContentMessageToResponsesInput,
@@ -357,5 +359,198 @@ describe("convertStandardContentMessageToResponsesInput", () => {
     ).toThrowError(
       `a filename or name or title is needed via meta-data for OpenAI when working with multimodal blocks`
     );
+  });
+});
+
+describe("convertMessagesToResponsesInput", () => {
+  describe("ToolMessage conversion", () => {
+    it("passes through provider-native input_file content without stringification", () => {
+      const toolMessage = new ToolMessage({
+        tool_call_id: "call_123",
+        content: [
+          {
+            type: "input_file",
+            file_data: "data:application/pdf;base64,JVBERi0xLjQKJeLjz9M=",
+            filename: "test.pdf",
+          },
+        ],
+      });
+
+      const result = convertMessagesToResponsesInput({
+        messages: [toolMessage],
+        zdrEnabled: false,
+        model: "gpt-4o",
+      });
+
+      expect(result).toEqual([
+        {
+          type: "function_call_output",
+          call_id: "call_123",
+          id: undefined,
+          output: [
+            {
+              type: "input_file",
+              file_data: "data:application/pdf;base64,JVBERi0xLjQKJeLjz9M=",
+              filename: "test.pdf",
+            },
+          ],
+        },
+      ]);
+    });
+
+    it("passes through provider-native input_image content without stringification", () => {
+      const toolMessage = new ToolMessage({
+        tool_call_id: "call_456",
+        content: [
+          {
+            type: "input_image",
+            image_url: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUg==",
+          },
+        ],
+      });
+
+      const result = convertMessagesToResponsesInput({
+        messages: [toolMessage],
+        zdrEnabled: false,
+        model: "gpt-4o",
+      });
+
+      expect(result).toEqual([
+        {
+          type: "function_call_output",
+          call_id: "call_456",
+          id: undefined,
+          output: [
+            {
+              type: "input_image",
+              image_url: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUg==",
+            },
+          ],
+        },
+      ]);
+    });
+
+    it("passes through provider-native input_text content without stringification", () => {
+      const toolMessage = new ToolMessage({
+        tool_call_id: "call_789",
+        content: [
+          {
+            type: "input_text",
+            text: "Some text result",
+          },
+        ],
+      });
+
+      const result = convertMessagesToResponsesInput({
+        messages: [toolMessage],
+        zdrEnabled: false,
+        model: "gpt-4o",
+      });
+
+      expect(result).toEqual([
+        {
+          type: "function_call_output",
+          call_id: "call_789",
+          id: undefined,
+          output: [
+            {
+              type: "input_text",
+              text: "Some text result",
+            },
+          ],
+        },
+      ]);
+    });
+
+    it("passes through mixed provider-native content types without stringification", () => {
+      const toolMessage = new ToolMessage({
+        tool_call_id: "call_mixed",
+        content: [
+          {
+            type: "input_file",
+            file_data: "data:application/pdf;base64,JVBERi0xLjQ=",
+            filename: "doc.pdf",
+          },
+          {
+            type: "input_text",
+            text: "File description",
+          },
+        ],
+      });
+
+      const result = convertMessagesToResponsesInput({
+        messages: [toolMessage],
+        zdrEnabled: false,
+        model: "gpt-4o",
+      });
+
+      expect(result).toEqual([
+        {
+          type: "function_call_output",
+          call_id: "call_mixed",
+          id: undefined,
+          output: [
+            {
+              type: "input_file",
+              file_data: "data:application/pdf;base64,JVBERi0xLjQ=",
+              filename: "doc.pdf",
+            },
+            {
+              type: "input_text",
+              text: "File description",
+            },
+          ],
+        },
+      ]);
+    });
+
+    it("stringifies non-native array content", () => {
+      const toolMessage = new ToolMessage({
+        tool_call_id: "call_obj",
+        content: [
+          {
+            type: "text",
+            text: "Result from tool",
+          },
+        ],
+      });
+
+      const result = convertMessagesToResponsesInput({
+        messages: [toolMessage],
+        zdrEnabled: false,
+        model: "gpt-4o",
+      });
+
+      expect(result).toEqual([
+        {
+          type: "function_call_output",
+          call_id: "call_obj",
+          id: undefined,
+          output: '[{"type":"text","text":"Result from tool"}]',
+        },
+      ]);
+    });
+
+    it("keeps string content as-is", () => {
+      const toolMessage = new ToolMessage({
+        tool_call_id: "call_str",
+        content: "Simple string result",
+      });
+
+      const result = convertMessagesToResponsesInput({
+        messages: [toolMessage],
+        zdrEnabled: false,
+        model: "gpt-4o",
+      });
+
+      expect(result).toEqual([
+        {
+          type: "function_call_output",
+          call_id: "call_str",
+          id: undefined,
+          output: "Simple string result",
+        },
+      ]);
+    });
   });
 });
