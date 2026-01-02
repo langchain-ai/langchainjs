@@ -11,7 +11,6 @@ import {
   ChatOpenAICallOptions,
   ChatOpenAICompletions,
   ChatOpenAIFields,
-  ChatOpenAIFields,
   OpenAIClient,
 } from "@langchain/openai";
 import { ChatGenerationChunk } from "@langchain/core/outputs";
@@ -564,7 +563,7 @@ export class ChatDeepSeek extends ChatOpenAICompletions<ChatDeepSeekCallOptions>
             generationInfo: chunk.generationInfo,
           });
           yield contentChunk;
-          tokensBuffer = ""; /// consumed
+          tokensBuffer = ""; // consumed
         }
       } else if (isThinking) {
         // We are inside thinking block.
@@ -681,18 +680,20 @@ export class ChatDeepSeek extends ChatOpenAICompletions<ChatDeepSeekCallOptions>
       // If we were thinking, it's unclosed thought.
       if (isThinking) {
         const reasoningChunk = new ChatGenerationChunk({
-          message: new AIMessageChunk(""), // placeholder
+          message: new AIMessageChunk({
+            content: "",
+            additional_kwargs: { reasoning_content: tokensBuffer },
+          }),
           text: "",
         });
-        reasoningChunk.message.content = "";
-        reasoningChunk.message.additional_kwargs.reasoning_content = tokensBuffer;
         yield reasoningChunk;
       } else {
         const contentChunk = new ChatGenerationChunk({
-          message: new AIMessageChunk(""),
+          message: new AIMessageChunk({
+            content: tokensBuffer,
+          }),
           text: tokensBuffer,
         });
-        contentChunk.message.content = tokensBuffer;
         yield contentChunk;
       }
     }
