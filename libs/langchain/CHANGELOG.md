@@ -1,5 +1,21 @@
 # langchain
 
+## 1.2.4
+
+### Patch Changes
+
+- [#9715](https://github.com/langchain-ai/langchainjs/pull/9715) [`cc502e1`](https://github.com/langchain-ai/langchainjs/commit/cc502e1b67dbadcd123a7ea2964c791c2bbad581) Thanks [@jacoblee93](https://github.com/jacoblee93)! - fix(langchain): Add secretsFromEnv and secrets for prompt pulling
+  fix(@langchain/classic): Add secretsFromEnv and secrets for prompt pulling
+
+- [#9703](https://github.com/langchain-ai/langchainjs/pull/9703) [`5d1b874`](https://github.com/langchain-ai/langchainjs/commit/5d1b874e1bb0a038f23576d5ff6d8335b755bce1) Thanks [@christian-bromann](https://github.com/christian-bromann)! - fix(langchain): properly pass on schema title
+
+- [#9702](https://github.com/langchain-ai/langchainjs/pull/9702) [`bfcb87d`](https://github.com/langchain-ai/langchainjs/commit/bfcb87d23c580c7881f650960a448fe2e54a30b3) Thanks [@christian-bromann](https://github.com/christian-bromann)! - fix(core): improve interop with Zod
+
+- [#9714](https://github.com/langchain-ai/langchainjs/pull/9714) [`42b138f`](https://github.com/langchain-ai/langchainjs/commit/42b138fe20a8d711938058a69669e1c29b18bd50) Thanks [@r77wu](https://github.com/r77wu)! - use parseJumpToTarget in 'afterModel' Router
+
+- Updated dependencies [[`56600b9`](https://github.com/langchain-ai/langchainjs/commit/56600b94f8e185f44d4288b7a9b66c55778938dd), [`bfcb87d`](https://github.com/langchain-ai/langchainjs/commit/bfcb87d23c580c7881f650960a448fe2e54a30b3)]:
+  - @langchain/core@1.1.9
+
 ## 1.2.3
 
 ### Patch Changes

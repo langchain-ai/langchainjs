@@ -1,5 +1,13 @@
 # @langchain/core
 
+## 1.1.9
+
+### Patch Changes
+
+- [#9725](https://github.com/langchain-ai/langchainjs/pull/9725) [`56600b9`](https://github.com/langchain-ai/langchainjs/commit/56600b94f8e185f44d4288b7a9b66c55778938dd) Thanks [@Orenoid](https://github.com/Orenoid)! - fix(langchain): update merge logic for numeric values in `mergeDicts`
+
+- [#9702](https://github.com/langchain-ai/langchainjs/pull/9702) [`bfcb87d`](https://github.com/langchain-ai/langchainjs/commit/bfcb87d23c580c7881f650960a448fe2e54a30b3) Thanks [@christian-bromann](https://github.com/christian-bromann)! - fix(core): improve interop with Zod
+
 ## 1.1.8
 
 ### Patch Changes
