@@ -117,7 +117,8 @@ type CreateAgentPregelOptions =
   | "signal"
   | "recursionLimit"
   | "maxConcurrency"
-  | "timeout";
+  | "timeout"
+  | "callbacks";
 
 /**
  * Pregel stream options that are propagated to the agent

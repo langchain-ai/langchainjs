@@ -318,4 +318,43 @@ describe("reactAgent", () => {
       }
     );
   });
+
+  it("should support passing `callbacks` as an array of callbacks", async () => {
+    const agent = createAgent({
+      model: "openai:gpt-4",
+    });
+    await agent.invoke(
+      {
+        messages: [new HumanMessage("Hello, world!")],
+      },
+      {
+        callbacks: [
+          {
+            handleLLMStart: (input) => {
+              expectTypeOf({ id: input.id }).toMatchObjectType<{
+                id: string[];
+              }>();
+            },
+          },
+        ],
+      }
+    );
+    await agent.stream(
+      {
+        messages: [new HumanMessage("Hello, world!")],
+      },
+      {
+        streamMode: ["values", "updates", "messages"],
+        callbacks: [
+          {
+            handleLLMStart: (input) => {
+              expectTypeOf({ id: input.id }).toMatchObjectType<{
+                id: string[];
+              }>();
+            },
+          },
+        ],
+      }
+    );
+  });
 });
