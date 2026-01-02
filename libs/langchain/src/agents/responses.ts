@@ -88,7 +88,7 @@ export class ToolStrategy<_T = unknown> {
       const tool = {
         type: "function" as const,
         function: {
-          name: getFunctionName(),
+          name: getFunctionName(asJsonSchema.title),
           strict: false,
           description:
             asJsonSchema.description ??
