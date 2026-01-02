@@ -187,3 +187,108 @@ test("ChatDeepSeek should handle split tags across chunks", async () => {
     expect(fullReasoning).toBe("Thought");
 });
 
+test("ChatDeepSeek should handle empty think blocks", async () => {
+    const stream = new ReadableStream({
+        start(controller) {
+            const encoder = new TextEncoder();
+            const chunks = [
+                { choices: [{ delta: { content: "Before " } }] },
+                { choices: [{ delta: { content: "<think>" } }] },
+                { choices: [{ delta: { content: "</think>" } }] }, // Empty block
+                { choices: [{ delta: { content: " After" } }] },
+                { choices: [{ finish_reason: "stop" }] }
+            ];
+
+            for (const chunk of chunks) {
+                const str = `data: ${JSON.stringify({ ...chunk, model: "deepseek-chat" })}\n\n`;
+                controller.enqueue(encoder.encode(str));
+            }
+            controller.enqueue(encoder.encode("data: [DONE]\n\n"));
+            controller.close();
+        },
+    });
+
+    const mockFetch = async () => new Response(stream, { headers: { "Content-Type": "text/event-stream" } });
+    const model = new ChatDeepSeek({ apiKey: "test", configuration: { fetch: mockFetch as any } });
+
+    const chunks: AIMessageChunk[] = [];
+    for await (const chunk of await model.stream("hi")) { chunks.push(chunk); }
+
+    const fullContent = chunks.map((c) => c.content).join("");
+    const fullReasoning = chunks.map((c) => c.additional_kwargs.reasoning_content || "").join("");
+
+    expect(fullContent).toBe("Before  After");
+    expect(fullReasoning).toBe("");
+});
+
+test("ChatDeepSeek should handle nested think tags (treat inner as content)", async () => {
+    const stream = new ReadableStream({
+        start(controller) {
+            const encoder = new TextEncoder();
+            // Nested <think> inside another - inner one should be treated as text
+            const chunks = [
+                { choices: [{ delta: { content: "<think>" } }] },
+                { choices: [{ delta: { content: "Outer " } }] },
+                { choices: [{ delta: { content: "<think>" } }] }, // Nested - treated as text
+                { choices: [{ delta: { content: "Inner" } }] },
+                { choices: [{ delta: { content: "</think>" } }] }, // Closes outer
+                { choices: [{ delta: { content: " Content" } }] },
+                { choices: [{ finish_reason: "stop" }] }
+            ];
+
+            for (const chunk of chunks) {
+                const str = `data: ${JSON.stringify({ ...chunk, model: "deepseek-chat" })}\n\n`;
+                controller.enqueue(encoder.encode(str));
+            }
+            controller.enqueue(encoder.encode("data: [DONE]\n\n"));
+            controller.close();
+        },
+    });
+
+    const mockFetch = async () => new Response(stream, { headers: { "Content-Type": "text/event-stream" } });
+    const model = new ChatDeepSeek({ apiKey: "test", configuration: { fetch: mockFetch as any } });
+
+    const chunks: AIMessageChunk[] = [];
+    for await (const chunk of await model.stream("hi")) { chunks.push(chunk); }
+
+    const fullContent = chunks.map((c) => c.content).join("");
+    const fullReasoning = chunks.map((c) => c.additional_kwargs.reasoning_content || "").join("");
+
+    // The first </think> closes the outer block, remaining " Content" goes to content
+    expect(fullContent).toBe(" Content");
+    expect(fullReasoning).toBe("Outer <think>Inner");
+});
+
+test("ChatDeepSeek should handle malformed tags gracefully", async () => {
+    const stream = new ReadableStream({
+        start(controller) {
+            const encoder = new TextEncoder();
+            // Malformed: </think> without opening, <think without closing >
+            const chunks = [
+                { choices: [{ delta: { content: "</think>" } }] }, // Orphan close - should go to content
+                { choices: [{ delta: { content: "Text " } }] },
+                { choices: [{ delta: { content: "<think" } }] }, // Incomplete tag (no >)
+                { choices: [{ delta: { content: " more" } }] },
+                { choices: [{ finish_reason: "stop" }] }
+            ];
+
+            for (const chunk of chunks) {
+                const str = `data: ${JSON.stringify({ ...chunk, model: "deepseek-chat" })}\n\n`;
+                controller.enqueue(encoder.encode(str));
+            }
+            controller.enqueue(encoder.encode("data: [DONE]\n\n"));
+            controller.close();
+        },
+    });
+
+    const mockFetch = async () => new Response(stream, { headers: { "Content-Type": "text/event-stream" } });
+    const model = new ChatDeepSeek({ apiKey: "test", configuration: { fetch: mockFetch as any } });
+
+    const chunks: AIMessageChunk[] = [];
+    for await (const chunk of await model.stream("hi")) { chunks.push(chunk); }
+
+    const fullContent = chunks.map((c) => c.content).join("");
+
+    // Orphan </think> and incomplete <think should just be treated as content
+    expect(fullContent).toContain("Text");
+});
