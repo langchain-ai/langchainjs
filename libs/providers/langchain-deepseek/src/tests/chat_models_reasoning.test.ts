@@ -85,3 +85,105 @@ test("ChatDeepSeek should separate <think> tags into reasoning_content", async (
     expect(fullContent).toBe("Hello world");
     expect(fullReasoning).toBe("thinking process...");
 });
+
+test("ChatDeepSeek should handle multiple think blocks and content before/after", async () => {
+    const stream = new ReadableStream({
+        start(controller) {
+            const encoder = new TextEncoder();
+            const chunks = [
+                { choices: [{ delta: { content: "Start " } }] },
+                { choices: [{ delta: { content: "<think>" } }] },
+                { choices: [{ delta: { content: "Reason 1" } }] },
+                { choices: [{ delta: { content: "</think>" } }] },
+                { choices: [{ delta: { content: " Middle " } }] },
+                { choices: [{ delta: { content: "<think>" } }] },
+                { choices: [{ delta: { content: "Reason 2" } }] },
+                { choices: [{ delta: { content: "</think>" } }] },
+                { choices: [{ delta: { content: " End" } }] },
+                { choices: [{ finish_reason: "stop" }] }
+            ];
+
+            for (const chunk of chunks) {
+                const str = `data: ${JSON.stringify({ ...chunk, model: "deepseek-chat" })}\n\n`;
+                controller.enqueue(encoder.encode(str));
+            }
+            controller.enqueue(encoder.encode("data: [DONE]\n\n"));
+            controller.close();
+        },
+    });
+
+    const mockFetch = async () => new Response(stream, { headers: { "Content-Type": "text/event-stream" } });
+    const model = new ChatDeepSeek({ apiKey: "test", configuration: { fetch: mockFetch as any } });
+
+    const chunks: AIMessageChunk[] = [];
+    for await (const chunk of await model.stream("hi")) { chunks.push(chunk); }
+
+    const fullContent = chunks.map((c) => c.content).join("");
+    const fullReasoning = chunks.map((c) => c.additional_kwargs.reasoning_content || "").join("");
+
+    expect(fullContent).toBe("Start  Middle  End");
+    expect(fullReasoning).toBe("Reason 1Reason 2");
+});
+
+test("ChatDeepSeek should handle unclosed think tags (flush at end)", async () => {
+    const stream = new ReadableStream({
+        start(controller) {
+            const encoder = new TextEncoder();
+            const chunks = [
+                { choices: [{ delta: { content: "Start " } }] },
+                { choices: [{ delta: { content: "<think>" } }] },
+                { choices: [{ delta: { content: "Unclosed thought" } }] },
+                // No closing tag
+                { choices: [{ finish_reason: "stop" }] }
+            ];
+
+            for (const chunk of chunks) {
+                const str = `data: ${JSON.stringify({ ...chunk, model: "deepseek-chat" })}\n\n`;
+                controller.enqueue(encoder.encode(str));
+            }
+            controller.enqueue(encoder.encode("data: [DONE]\n\n"));
+            controller.close();
+        },
+    });
+
+    const mockFetch = async () => new Response(stream, { headers: { "Content-Type": "text/event-stream" } });
+    const model = new ChatDeepSeek({ apiKey: "test", configuration: { fetch: mockFetch as any } });
+
+    const chunks: AIMessageChunk[] = [];
+    for await (const chunk of await model.stream("hi")) { chunks.push(chunk); }
+
+    const fullReasoning = chunks.map((c) => c.additional_kwargs.reasoning_content || "").join("");
+    expect(fullReasoning).toBe("Unclosed thought");
+});
+
+test("ChatDeepSeek should handle split tags across chunks", async () => {
+    const stream = new ReadableStream({
+        start(controller) {
+            const encoder = new TextEncoder();
+            const chunks = [
+                { choices: [{ delta: { content: "<th" } }] }, // Partial start
+                { choices: [{ delta: { content: "ink>Thought" } }] },
+                { choices: [{ delta: { content: "</th" } }] }, // Partial end
+                { choices: [{ delta: { content: "ink>" } }] },
+                { choices: [{ finish_reason: "stop" }] }
+            ];
+
+            for (const chunk of chunks) {
+                const str = `data: ${JSON.stringify({ ...chunk, model: "deepseek-chat" })}\n\n`;
+                controller.enqueue(encoder.encode(str));
+            }
+            controller.enqueue(encoder.encode("data: [DONE]\n\n"));
+            controller.close();
+        },
+    });
+
+    const mockFetch = async () => new Response(stream, { headers: { "Content-Type": "text/event-stream" } });
+    const model = new ChatDeepSeek({ apiKey: "test", configuration: { fetch: mockFetch as any } });
+
+    const chunks: AIMessageChunk[] = [];
+    for await (const chunk of await model.stream("hi")) { chunks.push(chunk); }
+
+    const fullReasoning = chunks.map((c) => c.additional_kwargs.reasoning_content || "").join("");
+    expect(fullReasoning).toBe("Thought");
+});
+
