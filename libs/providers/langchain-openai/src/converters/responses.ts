@@ -1131,14 +1131,29 @@ export const convertMessagesToResponsesInput: Converter<
           };
         }
 
+        // Check if content contains provider-native OpenAI content blocks
+        // that should be passed through without stringification
+        const isProviderNativeContent =
+          Array.isArray(toolMessage.content) &&
+          toolMessage.content.every(
+            (item) =>
+              typeof item === "object" &&
+              item !== null &&
+              "type" in item &&
+              (item.type === "input_file" ||
+                item.type === "input_image" ||
+                item.type === "input_text")
+          );
+
         return {
           type: "function_call_output",
           call_id: toolMessage.tool_call_id,
           id: toolMessage.id?.startsWith("fc_") ? toolMessage.id : undefined,
-          output:
-            typeof toolMessage.content !== "string"
-              ? JSON.stringify(toolMessage.content)
-              : toolMessage.content,
+          output: isProviderNativeContent
+            ? (toolMessage.content as OpenAIClient.Responses.ResponseFunctionCallOutputItemList)
+            : typeof toolMessage.content !== "string"
+            ? JSON.stringify(toolMessage.content)
+            : toolMessage.content,
         };
       }
 
