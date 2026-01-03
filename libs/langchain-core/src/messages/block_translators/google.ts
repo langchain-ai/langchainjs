@@ -6,9 +6,7 @@ import { iife, _isContentBlock, _isObject, _isString } from "./utils.js";
 function convertToV1FromChatGoogleMessage(
   message: AIMessage
 ): Array<ContentBlock.Standard> {
-  console.log('*** convert message', message);
   function* iterateContent(): Iterable<ContentBlock.Standard> {
-    console.log('*** convert', message.content, typeof message.content);
     const content = iife(() => {
       if (typeof message.content === "string") {
         if (message.additional_kwargs.originalTextContentBlock) {

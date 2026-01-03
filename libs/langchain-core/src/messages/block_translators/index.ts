@@ -6,7 +6,7 @@ import { ChatBedrockConverseTranslator } from "./bedrock_converse.js";
 import { ChatGoogleGenAITranslator } from "./google_genai.js";
 import { ChatVertexTranslator } from "./google_vertexai.js";
 import { ChatOpenAITranslator } from "./openai.js";
-import { ChatGoogleTranslator } from "./google";
+import { ChatGoogleTranslator } from "./google.js";
 
 export interface StandardContentBlockTranslator {
   translateContent(message: AIMessage): Array<ContentBlock.Standard>;
