@@ -981,6 +981,28 @@ export const convertGeminiCandidateToAIMessage: Converter<
   });
 };
 
+export const convertAIMessageToText: Converter<
+  AIMessage,
+  string
+> = (message: AIMessage): string => {
+  if (typeof message.content === "string") {
+    return message.content;
+  } else if (Array.isArray(message.content)) {
+    return message.content
+      .filter(
+        (c) =>
+          typeof c === "string" ||
+          (c as { type?: string }).type === "text"
+      )
+      .map((c) =>
+        typeof c === "string" ? c : (c as { text?: string }).text || ""
+      )
+      .join("")
+  } else {
+    return "";
+  }
+}
+
 export const convertGeminiGenerateContentResponseToUsageMetadata: Converter<
   GenerateContentResponse,
   UsageMetadata

@@ -27,6 +27,9 @@ import { Runnable } from "@langchain/core/runnables";
 import { InteropZodType } from "@langchain/core/utils/types";
 import { concat } from "@langchain/core/utils/stream";
 import fs from "fs/promises";
+import * as os from "node:os";
+import * as path from "node:path";
+import { exec } from "node:child_process";
 import { ChatPromptTemplate, MessagesPlaceholder } from "@langchain/core/prompts";
 
 type ModelInfoConfig = {
@@ -37,6 +40,7 @@ type ModelInfoConfig = {
   skip?: boolean,
   delay?: number,
   isThinking?: boolean, // Is this a thinking model?
+  isImage?: boolean, // Is this an image generation model?
 }
 
 type DefaultGoogleParams = Omit<ChatGoogleParams | ChatGoogleNodeParams, "model">;
@@ -77,6 +81,19 @@ const allModelInfo: ModelInfo[] = [
       isThinking: true,
       only: true,
     }
+  },
+  {
+    model: "gemini-2.5-flash-image",
+    testConfig: {
+      isImage: true,
+    },
+  },
+  {
+    model: "gemini-3-pro-image-preview",
+    testConfig: {
+      isImage: true,
+      only: true,
+    },
   },
 ];
 
@@ -214,7 +231,9 @@ const calculatorTool = tool((_) => "no-op", {
   }),
 });
 
-const coreModelInfo: ModelInfo[] = filterTestableModels();
+const coreModelInfo: ModelInfo[] = filterTestableModels([
+  (modelInfo: ModelInfo) => !modelInfo.testConfig?.isImage
+]);
 describe.each(coreModelInfo)(
   "Google Core ($model) $testConfig",
   ({model, defaultGoogleParams, testConfig}: ModelInfo) => {
@@ -1068,5 +1087,142 @@ describe.each(thinkingModelInfo)(
       // expect(textStepsText).toEqual(result.text);
     });
 
+  }
+);
+
+const imageModelInfo: ModelInfo[] = filterTestableModels([
+  (modelInfo: ModelInfo) => modelInfo.testConfig?.isImage === true
+]);
+describe.each(imageModelInfo)(
+  "Google Image ($model) $testConfig",
+  ({model, defaultGoogleParams, testConfig}: ModelInfo) => {
+
+    let recorder: GoogleRequestRecorder;
+    let callbacks: BaseCallbackHandler[];
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let warnSpy: MockInstance<any>;
+
+    let testSeq = 0;
+    let imageSeq = 0;
+
+    function newChatGoogle( fields?: DefaultGoogleParams ): ChatGoogle | ChatGoogleNode {
+      recorder = new GoogleRequestRecorder();
+      callbacks = [recorder, new GoogleRequestLogger()];
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const configParams: ChatGoogleParams | ChatGoogleNodeParams | Record<string, any> = {};
+      const useNode = testConfig?.node ?? false;
+      const useApiKey = testConfig?.useApiKey ?? !useNode;
+      if (useApiKey) {
+        configParams.apiKey = getEnvironmentVariable( "TEST_API_KEY" );
+      }
+
+      const params = {
+        model,
+        callbacks,
+        ...configParams,
+        ...(defaultGoogleParams ?? {}),
+        ...(fields ?? {}),
+      };
+      if (useNode) {
+        return new ChatGoogleNode( params );
+
+      } else {
+        return new ChatGoogle( params );
+      }
+
+    }
+
+    beforeEach( async () => {
+      imageSeq = 0;
+      warnSpy = vi.spyOn( global.console, "warn" );
+      const delay = testConfig?.delay ?? 0;
+      if (delay) {
+        await new Promise( ( resolve ) => setTimeout( resolve, delay ) );
+      }
+    } );
+
+    afterEach( () => {
+      testSeq++;
+      warnSpy.mockRestore();
+    } );
+
+    async function openFile(block: ContentBlock.Multimodal.File) {
+      if (!block.data) {
+        return;
+      }
+      const buffer = Buffer.from(block.data as string, "base64");
+      let ext = "bin";
+      if (block.mimeType) {
+        const parts = block.mimeType.split("/");
+        if (parts.length === 2) {
+          ext = parts[1];
+        }
+      }
+
+      const filePath = path.join(os.tmpdir(), `langchain-gemini-test-${Date.now()}-${testSeq}-${imageSeq++}.${ext}`);
+      await fs.writeFile(filePath, buffer);
+      console.log(`Saved output to: ${filePath}`);
+      exec(`open "${filePath}"`);
+    }
+
+    async function handleResult(blocks: ContentBlock.Standard[]) {
+      for (const block of blocks) {
+        console.log("Block Type:", block.type);
+        if (block.type === "file") {
+          await openFile(block as ContentBlock.Multimodal.File);
+        } else if (block.type === "text") {
+          console.log(block.text);
+        } else {
+          console.log('Unexpected block type', block.type);
+        }
+      }
+
+    }
+
+    test("draw - invoke", async () => {
+      const llm = newChatGoogle({
+        responseModalities: [
+          "IMAGE",
+          "TEXT",
+        ]
+      });
+      const prompt = "I would like to see a drawing of a house with the sun shining overhead. Drawn in crayon.";
+      const result: AIMessage = await llm.invoke(prompt);
+      await handleResult(result.contentBlocks);
+    });
+
+    test("draw - stream", async () => {
+      const llm = newChatGoogle( {
+        responseModalities: [
+          "IMAGE",
+          "TEXT",
+        ]
+      } );
+      const input = "I would like to see a drawing of a house with the sun shining overhead. Drawn in crayon.";
+      const res = await llm.stream( input );
+      const resArray: AIMessageChunk[] = [];
+      for await ( const chunk of res ){
+        resArray.push( chunk );
+      }
+
+      const typeBlock: Record<string,ContentBlock.Standard[]> = {};
+      for (const chunk of resArray) {
+        const modelProvider = chunk.response_metadata?.model_provider;
+        expect(modelProvider).toEqual("google");
+        const contentBlocks = chunk.contentBlocks;
+        contentBlocks.forEach((block) => {
+          const type = block.type;
+          const currentTypeBlock = typeBlock[type] ?? [];
+          currentTypeBlock.push(block);
+          typeBlock[type] = currentTypeBlock;
+        });
+        await handleResult(contentBlocks);
+      };
+
+      console.log('typeCount', typeBlock);
+      expect(typeBlock.file?.length).toBeGreaterThanOrEqual(1);
+    })
   }
 );

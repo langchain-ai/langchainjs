@@ -48,6 +48,7 @@ import {
 } from "./types.js";
 import { SafeJsonEventParserStream } from "../utils/stream.js";
 import {
+  convertAIMessageToText,
   convertGeminiCandidateToAIMessage,
   convertGeminiGenerateContentResponseToUsageMetadata, convertGeminiPartsToToolCalls,
   convertMessagesToGeminiContents,
@@ -569,21 +570,7 @@ export abstract class BaseChatGoogle<
     const message = convertGeminiCandidateToAIMessage(candidate);
 
     // Extract text content from the message
-    const text =
-      typeof message.content === "string"
-        ? message.content
-        : Array.isArray(message.content)
-        ? message.content
-            .filter(
-              (c) =>
-                typeof c === "string" ||
-                (c as { type?: string }).type === "text"
-            )
-            .map((c) =>
-              typeof c === "string" ? c : (c as { text?: string }).text || ""
-            )
-            .join("")
-        : "";
+    const text = convertAIMessageToText(message);
 
     const usageMetadata = convertGeminiGenerateContentResponseToUsageMetadata(data);
     message.usage_metadata = usageMetadata;
@@ -692,26 +679,21 @@ export abstract class BaseChatGoogle<
                 return;
               }
 
-              const parts = candidate.content?.parts || [];
-              const textDeltas: string[] = [];
+              const message = convertGeminiCandidateToAIMessage(candidate);
+              const text = convertAIMessageToText(message);
 
-              for (const part of parts) {
-                if ("text" in part && part.text) {
-                  textDeltas.push(part.text);
-                }
-              }
-
+              const parts = candidate.content?.parts ?? [];
               const toolCalls = convertGeminiPartsToToolCalls(parts);
 
-              const textDelta = textDeltas.join("");
-
               // Only emit if we have content
-              if (textDelta || toolCalls?.length > 0 || candidate.finishReason) {
+              if (parts.length > 0 || candidate.finishReason) {
 
-                // Include the textDelta always
                 const messageChunkParams: AIMessageChunkFields = {
-                  content: textDelta,
+                  content: message.content,
                   tool_calls: toolCalls,
+                  response_metadata: {
+                    model_provider: "google",
+                  }
                 };
 
                 // Include the finish reason, if available
@@ -731,7 +713,7 @@ export abstract class BaseChatGoogle<
 
                 controller.enqueue(
                   new ChatGenerationChunk({
-                    text: textDelta,
+                    text: text,
                     message: messageChunk,
                     generationInfo: {
                       ...(candidate.finishReason && {
