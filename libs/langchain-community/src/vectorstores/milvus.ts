@@ -530,7 +530,9 @@ export class Milvus extends VectorStore {
     });
 
     if (createRes.error_code !== ErrorCode.SUCCESS) {
-      throw new Error(`Failed to create collection: ${createRes}`);
+      throw new Error(
+        `Failed to create collection: ${JSON.stringify(createRes)}`
+      );
     }
 
     const extraParams = {

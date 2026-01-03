@@ -2,9 +2,7 @@
 import { jest, test, expect, beforeEach } from "@jest/globals";
 import { FakeEmbeddings } from "@langchain/core/utils/testing";
 import { Document } from "@langchain/core/documents";
-import { ErrorCode } from "@zilliz/milvus2-sdk-node";
-
-import { Milvus } from "../milvus.js";
+import { DataType, DataTypeMap, ErrorCode } from "@zilliz/milvus2-sdk-node";
 
 const fields = [
   {
@@ -44,55 +42,55 @@ const fields = [
   },
 ];
 
+// Mock the Milvus client
+const mockSchema = {
+  schema: {
+    fields,
+  },
+};
+
 // Mock successful responses
 const mockSuccessResponse = {
   status: { error_code: ErrorCode.SUCCESS },
 };
 
-// Mock the Milvus client
+const mockCreateSuccessResponse = {
+  error_code: ErrorCode.SUCCESS,
+};
+
 const mockMilvusClient = {
-  describeCollection: jest.fn(),
-  insert: jest.fn(),
-  upsert: jest.fn(),
-  flushSync: jest.fn(),
-  createCollection: jest.fn(),
-  hasCollection: jest.fn(),
-  loadCollection: jest.fn(),
-  createPartition: jest.fn(),
-  hasPartition: jest.fn(),
-  loadPartition: jest.fn(),
+  describeCollection: jest.fn(() => Promise.resolve(mockSchema)),
+  insert: jest.fn(() => Promise.resolve(mockSuccessResponse)),
+  upsert: jest.fn(() => Promise.resolve(mockSuccessResponse)),
+  flushSync: jest.fn(() => Promise.resolve(mockSuccessResponse)),
+  createCollection: jest.fn(() => Promise.resolve(mockCreateSuccessResponse)),
+  hasCollection: jest.fn(() => Promise.resolve(mockSuccessResponse)),
+  loadCollection: jest.fn(() => Promise.resolve(mockSuccessResponse)),
+  createPartition: jest.fn(() => Promise.resolve(mockSuccessResponse)),
+  hasPartition: jest.fn(() => Promise.resolve(mockSuccessResponse)),
+  loadPartition: jest.fn(() => Promise.resolve(mockSuccessResponse)),
+  createIndex: jest.fn(() => Promise.resolve(mockCreateSuccessResponse)),
 } as any;
 
-jest.mock("@zilliz/milvus2-sdk-node", () => ({
-  MilvusClient: jest.fn().mockImplementation(() => mockMilvusClient),
-}));
-
-beforeEach(() => {
-  jest.resetAllMocks();
-  mockMilvusClient.describeCollection.mockResolvedValue({});
-  mockMilvusClient.insert.mockResolvedValue(mockSuccessResponse);
-  mockMilvusClient.upsert.mockResolvedValue(mockSuccessResponse);
-  mockMilvusClient.flushSync.mockResolvedValue(mockSuccessResponse);
-  mockMilvusClient.hasCollection.mockResolvedValue(mockSuccessResponse);
-  mockMilvusClient.loadCollection.mockResolvedValue(mockSuccessResponse);
-  mockMilvusClient.createCollection.mockResolvedValue(mockSuccessResponse);
-  mockMilvusClient.createPartition.mockResolvedValue(mockSuccessResponse);
-  mockMilvusClient.hasPartition.mockResolvedValue(mockSuccessResponse);
-  mockMilvusClient.loadPartition.mockResolvedValue(mockSuccessResponse);
+jest.mock("@zilliz/milvus2-sdk-node", () => {
+  return {
+    MilvusClient: jest.fn().mockImplementation(() => mockMilvusClient),
+    DataType,
+    DataTypeMap,
+    ErrorCode,
+  };
 });
 
-// FIXME(hntrl): figure out why milvus client isn't being mocked
-// (this is causing latent network issues in community tests)
-describe.skip("Milvus", () => {
-  test("Milvus upsert with autoId: false includes primary field from metadata", async () => {
-    // Mock collection schema with autoID primary field
-    const mockSchema = {
-      schema: {
-        fields,
-      },
-    };
+beforeEach(async () => {
+  jest.clearAllMocks();
+});
 
-    mockMilvusClient.describeCollection.mockResolvedValue(mockSchema);
+// Milvus is dynamically imported because ES modules are evaluated before
+// Jest mocks are applied. Static imports won't observe the mocking behaviour.
+
+describe("Milvus", () => {
+  test("Milvus upsert with autoId: false includes primary field from metadata", async () => {
+    const { Milvus } = await import("../milvus.js");
 
     const embeddings = new FakeEmbeddings();
     const milvus = new Milvus(embeddings, {
@@ -105,9 +103,6 @@ describe.skip("Milvus", () => {
         address: "localhost:19530",
       },
     });
-
-    // Replace the client with our mock after construction
-    (milvus as any).client = mockMilvusClient;
 
     // Test document with primary field in metadata
     const documents = [
@@ -139,14 +134,7 @@ describe.skip("Milvus", () => {
   });
 
   test("Milvus upsert with autoId: false throws error when primary field missing from metadata", async () => {
-    // Mock collection schema
-    const mockSchema = {
-      schema: {
-        fields,
-      },
-    };
-
-    mockMilvusClient.describeCollection.mockResolvedValue(mockSchema);
+    const { Milvus } = await import("../milvus.js");
 
     const embeddings = new FakeEmbeddings();
     const milvus = new Milvus(embeddings, {
@@ -159,9 +147,6 @@ describe.skip("Milvus", () => {
         address: "localhost:19530",
       },
     });
-
-    // Replace the client with our mock after construction
-    (milvus as any).client = mockMilvusClient;
 
     // Test document WITHOUT primary field in metadata
     const documents = [
@@ -180,14 +165,7 @@ describe.skip("Milvus", () => {
   });
 
   test("Milvus insert with autoId: true excludes primary field from data", async () => {
-    // Mock collection schema
-    const mockSchema = {
-      schema: {
-        fields,
-      },
-    };
-
-    mockMilvusClient.describeCollection.mockResolvedValue(mockSchema);
+    const { Milvus } = await import("../milvus.js");
 
     const embeddings = new FakeEmbeddings();
     const milvus = new Milvus(embeddings, {
@@ -200,9 +178,6 @@ describe.skip("Milvus", () => {
         address: "localhost:19530",
       },
     });
-
-    // Replace the client with our mock after construction
-    (milvus as any).client = mockMilvusClient;
 
     const documents = [
       new Document({
@@ -229,14 +204,7 @@ describe.skip("Milvus", () => {
   });
 
   test("Milvus upsert with provided IDs uses those IDs instead of metadata", async () => {
-    // Mock collection schema
-    const mockSchema = {
-      schema: {
-        fields,
-      },
-    };
-
-    mockMilvusClient.describeCollection.mockResolvedValue(mockSchema);
+    const { Milvus } = await import("../milvus.js");
 
     const embeddings = new FakeEmbeddings();
     const milvus = new Milvus(embeddings, {
@@ -249,9 +217,6 @@ describe.skip("Milvus", () => {
         address: "localhost:19530",
       },
     });
-
-    // Replace the client with our mock after construction
-    (milvus as any).client = mockMilvusClient;
 
     const documents = [
       new Document({
