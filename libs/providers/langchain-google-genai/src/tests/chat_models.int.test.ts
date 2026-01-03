@@ -486,6 +486,9 @@ test("Stream token count usage_metadata", async () => {
   expect(res.usage_metadata.total_tokens).toBe(
     res.usage_metadata.input_tokens + res.usage_metadata.output_tokens
   );
+  // cache_read (if present) must be <= input_tokens after summing deltas across chunks
+  const cacheRead = res.usage_metadata.input_token_details?.cache_read ?? 0;
+  expect(cacheRead).toBeLessThanOrEqual(res.usage_metadata.input_tokens);
 });
 
 describe("ChatGoogleGenerativeAI should count tokens correctly", () => {

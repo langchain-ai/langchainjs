@@ -941,6 +941,7 @@ export class ChatGoogleGenerativeAI
     let prevPromptTokenCount = 0;
     let prevCandidatesTokenCount = 0;
     let prevTotalTokenCount = 0;
+    let prevCachedContentTokenCount = 0;
     let index = 0;
     for await (const response of stream) {
       if (
@@ -963,6 +964,16 @@ export class ChatGoogleGenerativeAI
           newPromptTokenCount - prevPromptTokenCount
         );
         prevPromptTokenCount = newPromptTokenCount;
+
+        // Convert cache_read to delta as well (it's set as cumulative by convertUsageMetadata)
+        if (usageMetadata.input_token_details?.cache_read !== undefined) {
+          const newCacheRead = usageMetadata.input_token_details.cache_read;
+          usageMetadata.input_token_details.cache_read = Math.max(
+            0,
+            newCacheRead - prevCachedContentTokenCount
+          );
+          prevCachedContentTokenCount = newCacheRead;
+        }
 
         const newCandidatesTokenCount =
           response.usageMetadata.candidatesTokenCount ?? 0;
