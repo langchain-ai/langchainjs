@@ -64,12 +64,20 @@ const mockMilvusClient = {
   upsert: jest.fn(() => Promise.resolve(mockSuccessResponse)),
   flushSync: jest.fn(() => Promise.resolve(mockSuccessResponse)),
   createCollection: jest.fn(() => Promise.resolve(mockCreateSuccessResponse)),
-  hasCollection: jest.fn(() => Promise.resolve(mockSuccessResponse)),
+  hasCollection: jest.fn(() =>
+    Promise.resolve({
+      ...mockSuccessResponse,
+      value: true,
+    })
+  ),
   loadCollection: jest.fn(() => Promise.resolve(mockSuccessResponse)),
   createPartition: jest.fn(() => Promise.resolve(mockSuccessResponse)),
   hasPartition: jest.fn(() => Promise.resolve(mockSuccessResponse)),
   loadPartition: jest.fn(() => Promise.resolve(mockSuccessResponse)),
   createIndex: jest.fn(() => Promise.resolve(mockCreateSuccessResponse)),
+  alterCollectionProperties: jest.fn(() =>
+    Promise.resolve(mockSuccessResponse)
+  ),
 } as any;
 
 jest.mock("@zilliz/milvus2-sdk-node", () => {
@@ -235,5 +243,77 @@ describe("Milvus", () => {
     const upsertCall = mockMilvusClient.upsert.mock.calls[0][0];
     const upsertData = upsertCall.fields_data[0];
     expect(upsertData.id).toBe("explicit_id"); // Should use explicit ID, not metadata ID
+  });
+
+  test("Milvus setProperties calls client.alterCollectionProperties", async () => {
+    const { Milvus } = await import("../milvus.js");
+
+    const embeddings = new FakeEmbeddings();
+    const milvus = new Milvus(embeddings, {
+      collectionName: "test_collection",
+      autoId: false, // User wants to provide their own IDs for upsert
+      primaryField: "id",
+      textField: "text",
+      vectorField: "vector",
+      clientConfig: {
+        address: "localhost:19530",
+      },
+    });
+
+    const propertiesToSet = {
+      "collections.ttl.seconds": 24 * 60 * 60,
+      "test-property-1": "test-value",
+    };
+    await milvus.setProperties({
+      ...propertiesToSet,
+      "test-property-2": null,
+    });
+
+    expect(mockMilvusClient.alterCollectionProperties).toHaveBeenCalledTimes(1);
+    const alterCall =
+      mockMilvusClient.alterCollectionProperties.mock.calls[0][0];
+
+    expect(alterCall.properties).toEqual(propertiesToSet);
+    expect(alterCall.delete_keys).toEqual(["test-property-2"]);
+  });
+
+  test("Milvus createCollection properties as passed down to the client", async () => {
+    const { Milvus } = await import("../milvus.js");
+
+    const embeddings = new FakeEmbeddings();
+    const milvus = new Milvus(embeddings, {
+      collectionName: "test_collection",
+      autoId: false, // User wants to provide their own IDs for upsert
+      primaryField: "id",
+      textField: "text",
+      vectorField: "vector",
+      clientConfig: {
+        address: "localhost:19530",
+      },
+    });
+
+    // Test document with primary field in metadata
+    const documents = [
+      new Document({
+        pageContent: "Test content for upsert",
+        metadata: {
+          id: "test_id_123",
+          custom_field: "custom_value",
+        },
+      }),
+    ];
+    const vectors = await embeddings.embedDocuments(
+      documents.map(({ pageContent }) => pageContent)
+    );
+    const properties = {
+      "collections.ttl.seconds": 24 * 60 * 60,
+      "test-property-1": "test-value",
+    };
+
+    await milvus.createCollection(vectors, documents, properties);
+    const createCollectionCall =
+      mockMilvusClient.createCollection.mock.calls[0][0];
+
+    expect(createCollectionCall.properties).toEqual(properties);
   });
 });
