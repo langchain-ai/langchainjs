@@ -454,6 +454,8 @@ export function _mergeDicts(
       } else {
         merged[key] += value;
       }
+    } else if (typeof merged[key] === "number") {
+      merged[key] = merged[key] + value;
     } else if (typeof merged[key] === "object" && !Array.isArray(merged[key])) {
       merged[key] = _mergeDicts(merged[key], value);
     } else if (Array.isArray(merged[key])) {
