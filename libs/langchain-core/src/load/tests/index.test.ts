@@ -470,7 +470,9 @@ describe("`load()`", () => {
         content: "Hello",
       });
       // Add the message to its own kwargs (circular reference)
-      (msg as { additional_kwargs: Record<string, unknown> }).additional_kwargs = {
+      (
+        msg as { additional_kwargs: Record<string, unknown> }
+      ).additional_kwargs = {
         self: msg,
       };
 
