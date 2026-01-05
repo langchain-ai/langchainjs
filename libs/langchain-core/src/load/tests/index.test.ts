@@ -428,5 +428,56 @@ describe("`load()`", () => {
 
       await expect(load(serialized)).rejects.toThrow(/Maximum recursion depth/);
     });
+
+    // https://github.com/langchain-ai/langchainjs/issues/9727
+    it("handles circular references in serialization without stack overflow", () => {
+      // Create an object with circular reference
+      const obj: Record<string, unknown> = { name: "test" };
+      obj.self = obj;
+
+      const msg = new HumanMessage({
+        content: "Hello",
+        additional_kwargs: { circular: obj },
+      });
+
+      // Should not throw stack overflow error
+      expect(() => JSON.stringify(msg)).not.toThrow();
+      const serialized = JSON.stringify(msg);
+      expect(serialized).toBeDefined();
+      expect(serialized).toContain("not_implemented");
+    });
+
+    it("handles complex circular references in nested structures", () => {
+      // Create a more complex circular structure
+      const parent: Record<string, unknown> = { name: "parent" };
+      const child: Record<string, unknown> = { name: "child", parent };
+      parent.child = child;
+
+      const msg = new AIMessage({
+        content: "Response",
+        response_metadata: { data: parent },
+      });
+
+      // Should not throw stack overflow error
+      expect(() => JSON.stringify(msg)).not.toThrow();
+      const serialized = JSON.stringify(msg);
+      expect(serialized).toBeDefined();
+    });
+
+    it("handles serializable object in its own kwargs", () => {
+      // Create a message that appears in its own additional_kwargs
+      const msg = new HumanMessage({
+        content: "Hello",
+      });
+      // Add the message to its own kwargs (circular reference)
+      (msg as { additional_kwargs: Record<string, unknown> }).additional_kwargs = {
+        self: msg,
+      };
+
+      // Should not throw stack overflow error
+      expect(() => JSON.stringify(msg)).not.toThrow();
+      const serialized = JSON.stringify(msg);
+      expect(serialized).toBeDefined();
+    });
   });
 });
