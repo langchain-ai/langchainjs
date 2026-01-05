@@ -49,7 +49,7 @@ export interface ImageGenerationOptions {
    * The image generation model to use.
    * @default "gpt-image-1"
    */
-  model?: "gpt-image-1" | "gpt-image-1-mini";
+  model?: "gpt-image-1" | "gpt-image-1-mini" | "gpt-image-1.5";
 
   /**
    * Moderation level for the generated image.
@@ -219,15 +219,15 @@ function convertInputImageMask(
 export function imageGeneration(options?: ImageGenerationOptions): ServerTool {
   return {
     type: "image_generation",
-    background: options?.background,
-    input_fidelity: options?.inputFidelity,
+    background: options?.background ?? "auto",
+    input_fidelity: options?.inputFidelity ?? "low",
     input_image_mask: convertInputImageMask(options?.inputImageMask),
-    model: options?.model,
-    moderation: options?.moderation,
-    output_compression: options?.outputCompression,
-    output_format: options?.outputFormat,
-    partial_images: options?.partialImages,
-    quality: options?.quality,
-    size: options?.size,
+    model: options?.model ?? "gpt-image-1",
+    moderation: options?.moderation ?? "auto",
+    output_compression: options?.outputCompression ?? 100,
+    output_format: options?.outputFormat ?? "png",
+    partial_images: options?.partialImages ?? 0,
+    quality: options?.quality ?? "auto",
+    size: options?.size ?? "auto",
   } satisfies ImageGenerationTool;
 }
