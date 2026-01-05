@@ -188,10 +188,10 @@ export class ProviderStrategy<T = unknown> {
         strict?: boolean;
       };
       this.schema = options.schema;
-      this.strict = options.strict ?? false;
+      this.strict = options.strict ?? PROVIDER_STRATEGY_DEFAULT_STRICT;
     } else {
       this.schema = schemaOrOptions as Record<string, unknown>;
-      this.strict = strict ?? false;
+      this.strict = strict ?? PROVIDER_STRATEGY_DEFAULT_STRICT;
     }
   }
 
@@ -207,7 +207,7 @@ export class ProviderStrategy<T = unknown> {
 
   static fromSchema<T = unknown>(
     schema: InteropZodType<T> | Record<string, unknown>,
-    strict: boolean = false
+    strict?: boolean
   ): ProviderStrategy<T> | ProviderStrategy<Record<string, unknown>> {
     const asJsonSchema = toJsonSchema(schema);
     return new ProviderStrategy(asJsonSchema, strict) as
@@ -583,7 +583,7 @@ export function providerStrategy(
     };
     return ProviderStrategy.fromSchema(
       schema as InteropZodType<unknown>,
-      strictFlag ?? PROVIDER_STRATEGY_DEFAULT_STRICT
+      strictFlag
     ) as ProviderStrategy<unknown>;
   }
 
@@ -591,8 +591,7 @@ export function providerStrategy(
    * Handle direct schema format
    */
   return ProviderStrategy.fromSchema(
-    responseFormat as InteropZodType<unknown>,
-    PROVIDER_STRATEGY_DEFAULT_STRICT
+    responseFormat as InteropZodType<unknown>
   ) as ProviderStrategy<unknown>;
 }
 
