@@ -507,21 +507,11 @@ describe("structured output handling", () => {
     });
 
     describe("strict flag", () => {
-      it("should default to false when strict is not provided", () => {
+      it("should default to true when strict is not provided", () => {
         const strategy = ProviderStrategy.fromSchema(
           z.object({
             foo: z.string(),
           })
-        );
-        expect(strategy.strict).toBe(false);
-      });
-
-      it("should set strict to true when explicitly provided", () => {
-        const strategy = ProviderStrategy.fromSchema(
-          z.object({
-            foo: z.string(),
-          }),
-          true
         );
         expect(strategy.strict).toBe(true);
       });
