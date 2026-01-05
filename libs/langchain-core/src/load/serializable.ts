@@ -237,8 +237,10 @@ export abstract class Serializable implements SerializableInterface {
     });
 
     const escapedKwargs: SerializedFields = {};
+    const visited = new WeakSet<object>();
+    visited.add(this);
     for (const [key, value] of Object.entries(kwargs)) {
-      escapedKwargs[key] = escapeIfNeeded(value);
+      escapedKwargs[key] = escapeIfNeeded(value, visited);
     }
 
     // Now add secret markers - these are added AFTER escaping so they won't be escaped
