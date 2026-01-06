@@ -553,4 +553,35 @@ describe("convertMessagesToResponsesInput", () => {
       ]);
     });
   });
+
+  describe("assistant reasoning conversion", () => {
+    it("includes reasoning items in ZDR mode when encrypted content is present", () => {
+      const message = new AIMessage({
+        content: [],
+        additional_kwargs: {
+          reasoning: {
+            id: "reasoning_123",
+            type: "reasoning",
+            summary: [{ type: "summary_text", text: "Encrypted summary" }],
+            encrypted_content: "encrypted_payload",
+          },
+        },
+      });
+
+      const result = convertMessagesToResponsesInput({
+        messages: [message],
+        zdrEnabled: true,
+        model: "gpt-4o",
+      });
+
+      expect(result).toEqual([
+        {
+          id: "reasoning_123",
+          type: "reasoning",
+          summary: [{ type: "summary_text", text: "Encrypted summary" }],
+          encrypted_content: "encrypted_payload",
+        },
+      ]);
+    });
+  });
 });
