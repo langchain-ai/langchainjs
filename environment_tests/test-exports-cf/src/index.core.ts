@@ -10,9 +10,8 @@ import {
   AIMessage,
   SystemMessage,
   ToolMessage,
-  BaseMessage,
 } from "@langchain/core/messages";
-import { StructuredTool, tool } from "@langchain/core/tools";
+import { tool } from "@langchain/core/tools";
 import { Document } from "@langchain/core/documents";
 import { InMemoryStore } from "@langchain/core/stores";
 import { RunnableLambda, RunnableSequence } from "@langchain/core/runnables";
@@ -285,4 +284,3 @@ export default {
     );
   },
 };
-

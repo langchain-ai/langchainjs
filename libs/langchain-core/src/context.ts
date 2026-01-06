@@ -23,6 +23,7 @@ import {
 // Use dynamic import inside an IIFE to gracefully handle environments
 // without node:async_hooks (e.g., Cloudflare Workers, browsers).
 // The IIFE pattern avoids top-level await, which isn't supported in CJS.
+// eslint-disable-next-line @typescript-eslint/no-floating-promises
 (async () => {
   try {
     const { AsyncLocalStorage } = await import("node:async_hooks");
