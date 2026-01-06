@@ -492,13 +492,10 @@ describe("summarizationMiddleware", () => {
     expect(summarizationModel.invoke).toHaveBeenCalledTimes(1);
     const summaryPrompt = summarizationModel.invoke.mock.calls[0][0];
     expect(summaryPrompt).toContain("Messages to summarize:");
-    expect(summaryPrompt).not.toContain(
-      '"content": "Message 1: xxxxxxxxxxxxxxx'
-    );
-    expect(summaryPrompt).toContain('"content": "Response 2: xxxxxxxxxxxxxxx');
-    expect(summaryPrompt).not.toContain(
-      '"content": "Message 3: xxxxxxxxxxxxxxx'
-    );
+    // Uses getBufferString format (Human:, AI:) instead of JSON format
+    expect(summaryPrompt).not.toContain("Human: Message 1: xxxxxxxxxxxxxxx");
+    expect(summaryPrompt).toContain("AI: Response 2: xxxxxxxxxxxxxxx");
+    expect(summaryPrompt).not.toContain("Human: Message 3: xxxxxxxxxxxxxxx");
 
     // Should trigger summarization
     expect(result.messages.length).toBe(5);
@@ -558,12 +555,11 @@ describe("summarizationMiddleware", () => {
     expect(summarizationModel.invoke).toHaveBeenCalledTimes(1);
     const summaryPrompt = summarizationModel.invoke.mock.calls[0][0];
     expect(summaryPrompt).toContain("Messages to summarize:");
-    expect(summaryPrompt).toContain('"content": "Message 1: xxxxxxxxxxxxxxx');
-    expect(summaryPrompt).toContain('"content": "Response 2: xxxxxxxxxxxxxxx');
-    expect(summaryPrompt).toContain('"content": "Message 3: xxxxxxxxxxxxxxx');
-    expect(summaryPrompt).not.toContain(
-      '"content": "Response 3: xxxxxxxxxxxxxxx'
-    );
+    // Uses getBufferString format (Human:, AI:) instead of JSON format
+    expect(summaryPrompt).toContain("Human: Message 1: xxxxxxxxxxxxxxx");
+    expect(summaryPrompt).toContain("AI: Response 2: xxxxxxxxxxxxxxx");
+    expect(summaryPrompt).toContain("Human: Message 3: xxxxxxxxxxxxxxx");
+    expect(summaryPrompt).not.toContain("AI: Response 3: xxxxxxxxxxxxxxx");
 
     // Should trigger summarization
     expect(result.messages.length).toBe(4);
