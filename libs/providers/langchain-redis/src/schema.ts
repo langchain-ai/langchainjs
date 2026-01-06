@@ -17,6 +17,39 @@ import type { Document } from "@langchain/core/documents";
  */
 export const DEFAULT_TAG_SEPARATOR = ",";
 
+/**
+ * @deprecated Use MetadataFieldSchema instead. This interface is kept for backward compatibility.
+ * Will be removed in the next major version.
+ *
+ * Legacy interface for custom schema field definitions.
+ * This format used field names as object keys with configuration as values.
+ *
+ * @example
+ * ```typescript
+ * // Old format (deprecated)
+ * const customSchema: Record<string, CustomSchemaField> = {
+ *   userId: { type: SchemaFieldTypes.TAG, required: true },
+ *   price: { type: SchemaFieldTypes.NUMERIC, SORTABLE: true }
+ * };
+ *
+ * // New format (recommended)
+ * const customSchema: MetadataFieldSchema[] = [
+ *   { name: "userId", type: "tag" },
+ *   { name: "price", type: "numeric", options: { sortable: true } }
+ * ];
+ * ```
+ */
+export interface CustomSchemaField {
+  type: SchemaFieldTypes;
+  required?: boolean;
+  SORTABLE?: boolean | "UNF";
+  NOINDEX?: boolean;
+  SEPARATOR?: string; // For TAG fields
+  CASESENSITIVE?: true; // For TAG fields (Redis expects true, not boolean)
+  NOSTEM?: true; // For TEXT fields (Redis expects true, not boolean)
+  WEIGHT?: number; // For TEXT fields
+}
+
 // Adapted from internal redis types which aren't exported
 /**
  * Type for creating a schema vector field. It includes the algorithm,
@@ -620,4 +653,96 @@ function isNumberOrDate(value: unknown): boolean {
       "getTime" in value &&
       typeof (value as Date).getTime === "function")
   );
+}
+
+/**
+ * Converts legacy CustomSchemaField format to new MetadataFieldSchema format.
+ *
+ * This function provides backward compatibility by converting the old Record-based
+ * schema format to the new array-based format. It also emits a deprecation warning.
+ *
+ * @param legacySchema - The legacy schema in Record<string, CustomSchemaField> format
+ * @returns The converted schema in MetadataFieldSchema[] format
+ *
+ * @example
+ * ```typescript
+ * const legacySchema = {
+ *   userId: { type: SchemaFieldTypes.TAG, SEPARATOR: "|" },
+ *   price: { type: SchemaFieldTypes.NUMERIC, SORTABLE: true }
+ * };
+ *
+ * const newSchema = convertLegacySchema(legacySchema);
+ * // Returns: [
+ * //   { name: "userId", type: "tag", options: { separator: "|" } },
+ * //   { name: "price", type: "numeric", options: { sortable: true } }
+ * // ]
+ * ```
+ */
+export function convertLegacySchema(
+  legacySchema: Record<string, CustomSchemaField>
+): MetadataFieldSchema[] {
+  console.warn(
+    "DEPRECATION WARNING: The Record<string, CustomSchemaField> format for customSchema is deprecated. " +
+      "Please migrate to the new MetadataFieldSchema[] format. " +
+      "See https://js.langchain.com/docs/integrations/vectorstores/redis for migration guide. " +
+      "This legacy format will be removed in the next major version."
+  );
+
+  const convertedSchema: MetadataFieldSchema[] = [];
+
+  for (const [fieldName, fieldConfig] of Object.entries(legacySchema)) {
+    // Map SchemaFieldTypes to simplified type strings
+    let type: "tag" | "text" | "numeric" | "geo";
+    switch (fieldConfig.type) {
+      case SchemaFieldTypes.TAG:
+        type = "tag";
+        break;
+      case SchemaFieldTypes.TEXT:
+        type = "text";
+        break;
+      case SchemaFieldTypes.NUMERIC:
+        type = "numeric";
+        break;
+      case SchemaFieldTypes.GEO:
+        type = "geo";
+        break;
+      default:
+        // Default to text for unknown types
+        type = "text";
+        console.warn(
+          `Unknown field type ${fieldConfig.type} for field ${fieldName}, defaulting to "text"`
+        );
+    }
+
+    // Build options object from legacy properties
+    const options: MetadataFieldSchema["options"] = {};
+
+    if (fieldConfig.SEPARATOR !== undefined) {
+      options.separator = fieldConfig.SEPARATOR;
+    }
+    if (fieldConfig.CASESENSITIVE !== undefined) {
+      options.caseSensitive = fieldConfig.CASESENSITIVE;
+    }
+    if (fieldConfig.WEIGHT !== undefined) {
+      options.weight = fieldConfig.WEIGHT;
+    }
+    if (fieldConfig.NOSTEM !== undefined) {
+      options.noStem = fieldConfig.NOSTEM;
+    }
+    if (fieldConfig.SORTABLE !== undefined) {
+      // Convert SORTABLE to boolean (ignore "UNF" value for simplicity)
+      options.sortable = fieldConfig.SORTABLE === true || fieldConfig.SORTABLE === "UNF";
+    }
+    if (fieldConfig.NOINDEX !== undefined) {
+      options.noindex = fieldConfig.NOINDEX;
+    }
+
+    convertedSchema.push({
+      name: fieldName,
+      type,
+      ...(Object.keys(options).length > 0 ? { options } : {}),
+    });
+  }
+
+  return convertedSchema;
 }

@@ -6,16 +6,8 @@ import { SchemaFieldTypes } from "redis";
 
 import {
   RedisVectorStore,
-  TagFilter,
-  NumericFilter,
-  TextFilter,
-  GeoFilter,
-  TimestampFilter,
   Tag,
   Num,
-  Text,
-  Geo,
-  Timestamp,
 } from "../vectorstores.js";
 
 const createRedisClientMockup = () => {
@@ -608,5 +600,115 @@ describe("Metadata Schema Tests", () => {
     // Should NOT include inferred fields (legacy mode)
     expect(schemaArg.category).toBeUndefined();
     expect(schemaArg.price).toBeUndefined();
+  });
+});
+
+describe("RedisVectorStore backward compatibility", () => {
+  test("accepts legacy customSchema format and converts it", async () => {
+    const client = createRedisClientMockup();
+    (client.ft.info as any).mockRejectedValue(new Error("Unknown Index name"));
+
+    const embeddings = new FakeEmbeddings();
+
+    // Use legacy format
+    const store = new RedisVectorStore(embeddings, {
+      redisClient: client as any,
+      indexName: "test-legacy-schema",
+      customSchema: {
+        category: { type: SchemaFieldTypes.TAG, SEPARATOR: "|" },
+        price: { type: SchemaFieldTypes.NUMERIC, SORTABLE: true },
+        description: { type: SchemaFieldTypes.TEXT, WEIGHT: 2.0 },
+      },
+    });
+
+    // Verify that customSchema was converted to new format
+    expect(store.customSchema).toBeDefined();
+    expect(Array.isArray(store.customSchema)).toBe(true);
+    expect(store.customSchema).toHaveLength(3);
+
+    // Check that fields were converted correctly
+    const categoryField = store.customSchema?.find((f) => f.name === "category");
+    expect(categoryField).toEqual({
+      name: "category",
+      type: "tag",
+      options: { separator: "|" },
+    });
+
+    const priceField = store.customSchema?.find((f) => f.name === "price");
+    expect(priceField).toEqual({
+      name: "price",
+      type: "numeric",
+      options: { sortable: true },
+    });
+
+    const descriptionField = store.customSchema?.find(
+      (f) => f.name === "description"
+    );
+    expect(descriptionField).toEqual({
+      name: "description",
+      type: "text",
+      options: { weight: 2.0 },
+    });
+  });
+
+  test("accepts new customSchema format without conversion", async () => {
+    const client = createRedisClientMockup();
+    (client.ft.info as any).mockRejectedValue(new Error("Unknown Index name"));
+
+    const embeddings = new FakeEmbeddings();
+
+    // Use new format
+    const store = new RedisVectorStore(embeddings, {
+      redisClient: client as any,
+      indexName: "test-new-schema",
+      customSchema: [
+        { name: "category", type: "tag", options: { separator: "|" } },
+        { name: "price", type: "numeric", options: { sortable: true } },
+      ],
+    });
+
+    // Verify that customSchema is used as-is
+    expect(store.customSchema).toBeDefined();
+    expect(Array.isArray(store.customSchema)).toBe(true);
+    expect(store.customSchema).toHaveLength(2);
+    expect(store.customSchema).toEqual([
+      { name: "category", type: "tag", options: { separator: "|" } },
+      { name: "price", type: "numeric", options: { sortable: true } },
+    ]);
+  });
+
+  test("legacy format creates correct Redis schema", async () => {
+    const client = createRedisClientMockup();
+    (client.ft.info as any).mockRejectedValue(new Error("Unknown Index name"));
+
+    const embeddings = new FakeEmbeddings();
+
+    const store = new RedisVectorStore(embeddings, {
+      redisClient: client as any,
+      indexName: "test-legacy-redis-schema",
+      customSchema: {
+        userId: { type: SchemaFieldTypes.TAG },
+        score: { type: SchemaFieldTypes.NUMERIC, SORTABLE: true },
+      },
+    });
+
+    const documents = [
+      new Document({
+        pageContent: "test",
+        metadata: { userId: "user1", score: 100 },
+      }),
+    ];
+
+    await store.createIndex(documents, 1536);
+
+    const schemaArg = (client.ft.create as any).mock.calls[0][1];
+
+    // Should include converted fields
+    expect(schemaArg.userId).toBeDefined();
+    expect(schemaArg.userId.type).toBe(SchemaFieldTypes.TAG);
+
+    expect(schemaArg.score).toBeDefined();
+    expect(schemaArg.score.type).toBe(SchemaFieldTypes.NUMERIC);
+    expect(schemaArg.score.SORTABLE).toBe(true);
   });
 });

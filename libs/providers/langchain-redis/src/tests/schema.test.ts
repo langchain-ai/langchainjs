@@ -10,6 +10,8 @@ import {
   checkForSchemaMismatch,
   MetadataFieldSchema,
   DEFAULT_TAG_SEPARATOR,
+  convertLegacySchema,
+  CustomSchemaField,
 } from "../schema.js";
 
 describe("buildMetadataSchema", () => {
@@ -828,5 +830,168 @@ describe("checkForSchemaMismatch", () => {
 
     const result = checkForSchemaMismatch(customSchema, inferredSchema);
     expect(result).toBe(false);
+  });
+});
+
+describe("convertLegacySchema", () => {
+  test("converts legacy TAG field to new format", () => {
+    const legacySchema: Record<string, CustomSchemaField> = {
+      category: { type: SchemaFieldTypes.TAG },
+    };
+
+    const result = convertLegacySchema(legacySchema);
+
+    expect(result).toEqual([{ name: "category", type: "tag" }]);
+  });
+
+  test("converts legacy TAG field with separator", () => {
+    const legacySchema: Record<string, CustomSchemaField> = {
+      tags: { type: SchemaFieldTypes.TAG, SEPARATOR: "|" },
+    };
+
+    const result = convertLegacySchema(legacySchema);
+
+    expect(result).toEqual([
+      { name: "tags", type: "tag", options: { separator: "|" } },
+    ]);
+  });
+
+  test("converts legacy TAG field with case sensitive option", () => {
+    const legacySchema: Record<string, CustomSchemaField> = {
+      category: { type: SchemaFieldTypes.TAG, CASESENSITIVE: true },
+    };
+
+    const result = convertLegacySchema(legacySchema);
+
+    expect(result).toEqual([
+      { name: "category", type: "tag", options: { caseSensitive: true } },
+    ]);
+  });
+
+  test("converts legacy TEXT field to new format", () => {
+    const legacySchema: Record<string, CustomSchemaField> = {
+      description: { type: SchemaFieldTypes.TEXT },
+    };
+
+    const result = convertLegacySchema(legacySchema);
+
+    expect(result).toEqual([{ name: "description", type: "text" }]);
+  });
+
+  test("converts legacy TEXT field with weight and nostem", () => {
+    const legacySchema: Record<string, CustomSchemaField> = {
+      description: { type: SchemaFieldTypes.TEXT, WEIGHT: 2.0, NOSTEM: true },
+    };
+
+    const result = convertLegacySchema(legacySchema);
+
+    expect(result).toEqual([
+      {
+        name: "description",
+        type: "text",
+        options: { weight: 2.0, noStem: true },
+      },
+    ]);
+  });
+
+  test("converts legacy NUMERIC field to new format", () => {
+    const legacySchema: Record<string, CustomSchemaField> = {
+      price: { type: SchemaFieldTypes.NUMERIC },
+    };
+
+    const result = convertLegacySchema(legacySchema);
+
+    expect(result).toEqual([{ name: "price", type: "numeric" }]);
+  });
+
+  test("converts legacy NUMERIC field with sortable option", () => {
+    const legacySchema: Record<string, CustomSchemaField> = {
+      price: { type: SchemaFieldTypes.NUMERIC, SORTABLE: true },
+    };
+
+    const result = convertLegacySchema(legacySchema);
+
+    expect(result).toEqual([
+      { name: "price", type: "numeric", options: { sortable: true } },
+    ]);
+  });
+
+  test("converts legacy NUMERIC field with UNF sortable option", () => {
+    const legacySchema: Record<string, CustomSchemaField> = {
+      price: { type: SchemaFieldTypes.NUMERIC, SORTABLE: "UNF" },
+    };
+
+    const result = convertLegacySchema(legacySchema);
+
+    expect(result).toEqual([
+      { name: "price", type: "numeric", options: { sortable: true } },
+    ]);
+  });
+
+  test("converts legacy GEO field to new format", () => {
+    const legacySchema: Record<string, CustomSchemaField> = {
+      location: { type: SchemaFieldTypes.GEO },
+    };
+
+    const result = convertLegacySchema(legacySchema);
+
+    expect(result).toEqual([{ name: "location", type: "geo" }]);
+  });
+
+  test("converts legacy field with NOINDEX option", () => {
+    const legacySchema: Record<string, CustomSchemaField> = {
+      internal: { type: SchemaFieldTypes.TEXT, NOINDEX: true },
+    };
+
+    const result = convertLegacySchema(legacySchema);
+
+    expect(result).toEqual([
+      { name: "internal", type: "text", options: { noindex: true } },
+    ]);
+  });
+
+  test("converts multiple legacy fields", () => {
+    const legacySchema: Record<string, CustomSchemaField> = {
+      category: { type: SchemaFieldTypes.TAG, SEPARATOR: "|" },
+      price: { type: SchemaFieldTypes.NUMERIC, SORTABLE: true },
+      description: { type: SchemaFieldTypes.TEXT, WEIGHT: 2.0 },
+      location: { type: SchemaFieldTypes.GEO },
+    };
+
+    const result = convertLegacySchema(legacySchema);
+
+    expect(result).toHaveLength(4);
+    expect(result).toContainEqual({
+      name: "category",
+      type: "tag",
+      options: { separator: "|" },
+    });
+    expect(result).toContainEqual({
+      name: "price",
+      type: "numeric",
+      options: { sortable: true },
+    });
+    expect(result).toContainEqual({
+      name: "description",
+      type: "text",
+      options: { weight: 2.0 },
+    });
+    expect(result).toContainEqual({ name: "location", type: "geo" });
+  });
+
+  test("handles fields with no options", () => {
+    const legacySchema: Record<string, CustomSchemaField> = {
+      simpleTag: { type: SchemaFieldTypes.TAG },
+      simpleText: { type: SchemaFieldTypes.TEXT },
+      simpleNumeric: { type: SchemaFieldTypes.NUMERIC },
+    };
+
+    const result = convertLegacySchema(legacySchema);
+
+    expect(result).toEqual([
+      { name: "simpleTag", type: "tag" },
+      { name: "simpleText", type: "text" },
+      { name: "simpleNumeric", type: "numeric" },
+    ]);
   });
 });
