@@ -2,8 +2,8 @@ import { Document } from "@langchain/core/documents";
 import type { EmbeddingsInterface } from "@langchain/core/embeddings";
 import { VectorStore } from "@langchain/core/vectorstores";
 import type {
-  createCluster,
   createClient,
+  createCluster,
   RediSearchSchema,
   SearchOptions,
 } from "redis";
@@ -34,6 +34,7 @@ import type {
   RedisSearchLanguages,
   RedisVectorStoreIndexOptions,
   MetadataFieldSchema,
+  CustomSchemaField,
 } from "./schema.js";
 import {
   buildMetadataSchema,
@@ -41,6 +42,7 @@ import {
   deserializeMetadataField,
   inferMetadataSchema,
   checkForSchemaMismatch,
+  convertLegacySchema,
 } from "./schema.js";
 
 // Re-export filter classes and functions for backward compatibility
@@ -71,7 +73,10 @@ export type {
   RedisSearchLanguages,
   RedisVectorStoreIndexOptions,
   MetadataFieldSchema,
+  CustomSchemaField,
 };
+
+export { convertLegacySchema };
 
 /**
  * Interface for the configuration of the RedisVectorStore. It includes
@@ -91,7 +96,27 @@ export interface RedisVectorStoreConfig {
   vectorKey?: string;
   filter?: RedisVectorStoreFilterType;
   ttl?: number; // ttl in second
-  customSchema?: MetadataFieldSchema[];
+  /**
+   * Custom schema for metadata fields.
+   * Supports both new array format (recommended) and legacy object format (deprecated).
+   *
+   * @example New format (recommended):
+   * ```typescript
+   * customSchema: [
+   *   { name: "category", type: "tag" },
+   *   { name: "price", type: "numeric", options: { sortable: true } }
+   * ]
+   * ```
+   *
+   * @example Legacy format (deprecated):
+   * ```typescript
+   * customSchema: {
+   *   category: { type: SchemaFieldTypes.TAG },
+   *   price: { type: SchemaFieldTypes.NUMERIC, SORTABLE: true }
+   * }
+   * ```
+   */
+  customSchema?: MetadataFieldSchema[] | Record<string, CustomSchemaField>;
 }
 
 /**
@@ -165,7 +190,18 @@ export class RedisVectorStore extends VectorStore {
     this.vectorKey = _dbConfig.vectorKey ?? "content_vector";
     this.filter = _dbConfig.filter;
     this.ttl = _dbConfig.ttl;
-    this.customSchema = _dbConfig.customSchema;
+
+    // Handle both legacy and new customSchema formats
+    if (_dbConfig.customSchema) {
+      if (Array.isArray(_dbConfig.customSchema)) {
+        // New format - use as-is
+        this.customSchema = _dbConfig.customSchema;
+      } else {
+        // Legacy format - convert to new format with deprecation warning
+        this.customSchema = convertLegacySchema(_dbConfig.customSchema);
+      }
+    }
+
     this.createIndexOptions = {
       ON: "HASH",
       PREFIX: this.keyPrefix,
