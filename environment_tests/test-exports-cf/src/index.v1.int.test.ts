@@ -8,7 +8,8 @@ import { describe, expect, it, beforeAll, afterAll } from "vitest";
  * These tests require API keys and make actual API calls to test
  * end-to-end functionality of LangChain v1 in Cloudflare Workers.
  *
- * IMPORTANT: LangChain v1 requires the `nodejs_compat` compatibility flag.
+ * LangChain v1 uses dynamic imports to gracefully handle environments
+ * without node:async_hooks, so no nodejs_compat flag is required.
  */
 describe("LangChain v1 Worker Integration", () => {
   let worker: UnstableDevWorker;
@@ -36,4 +37,3 @@ describe("LangChain v1 Worker Integration", () => {
     }
   }, 60000);
 });
-

@@ -9,10 +9,9 @@ import { describe, expect, it, beforeAll, afterAll } from "vitest";
  * 1. The worker can start successfully with all v1 imports
  * 2. Core v1 functionality works in the CF Workers environment
  *
- * IMPORTANT: LangChain v1 requires the `nodejs_compat` compatibility flag
- * in wrangler.toml because it uses:
- * - node:async_hooks (from @langchain/langgraph)
- * - node:fs/promises and node:path (from langchain/storage/file_system)
+ * LangChain v1 uses dynamic imports with top-level await to gracefully
+ * handle environments without node:async_hooks. This means it can run
+ * in Cloudflare Workers WITHOUT the nodejs_compat flag.
  */
 describe("LangChain v1 Worker", () => {
   let worker: UnstableDevWorker;

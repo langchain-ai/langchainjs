@@ -21,12 +21,15 @@
   "scripts": {
     "start": "wrangler dev",
     "start:v1": "wrangler dev --config wrangler.v1.toml",
+    "start:core": "wrangler dev --config wrangler.core.toml",
     "deploy": "wrangler deploy",
     "build": "wrangler deploy --dry-run --outdir=dist",
     "build:v1": "wrangler deploy --config wrangler.v1.toml --dry-run --outdir=dist-v1",
+    "build:core": "wrangler deploy --config wrangler.core.toml --dry-run --outdir=dist-core",
     "test": "vitest run **/*.unit.test.ts",
     "test:classic": "vitest run src/index.unit.test.ts",
     "test:v1": "vitest run src/index.v1.unit.test.ts",
+    "test:core": "vitest run src/index.core.unit.test.ts",
     "test:integration": "vitest run **/*.int.test.ts",
     "test:integration:classic": "vitest run src/index.int.test.ts",
     "test:integration:v1": "vitest run src/index.v1.int.test.ts"
