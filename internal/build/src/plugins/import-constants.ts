@@ -150,12 +150,13 @@ export function importConstantsPlugin(
     async buildStart() {
       if (!options.enabled) return;
 
-      const packageJson: PackageJson = await import(
+      const packageJsonModule = await import(
         pathToFileURL(packageJsonPath).href,
         {
           with: { type: "json" },
         }
       );
+      const packageJson: PackageJson = packageJsonModule.default;
       const packageSuffix = packageJson.name?.replace("@langchain/", "");
       await this.fs.mkdir(path.dirname(outputPath), { recursive: true });
 
