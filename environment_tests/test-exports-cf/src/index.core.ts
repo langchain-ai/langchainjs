@@ -173,7 +173,8 @@ async function runTests(): Promise<TestResult[]> {
     results.push({
       name: "Output parser",
       passed: result === "Hello",
-      error: result === "Hello" ? undefined : `Expected "Hello", got "${result}"`,
+      error:
+        result === "Hello" ? undefined : `Expected "Hello", got "${result}"`,
     });
   } catch (e) {
     results.push({
@@ -203,7 +204,9 @@ export default {
           {
             success: allPassed,
             results,
-            summary: `${results.filter((r) => r.passed).length}/${results.length} tests passed`,
+            summary: `${results.filter((r) => r.passed).length}/${
+              results.length
+            } tests passed`,
           },
           null,
           2
@@ -220,7 +223,11 @@ export default {
         const humanMsg = new HumanMessage("Hello");
         const aiMsg = new AIMessage("Hi there!");
         return new Response(
-          JSON.stringify({ success: true, human: humanMsg.content, ai: aiMsg.content }),
+          JSON.stringify({
+            success: true,
+            human: humanMsg.content,
+            ai: aiMsg.content,
+          }),
           { headers: { "Content-Type": "application/json" } }
         );
       } catch (e) {
@@ -243,12 +250,11 @@ export default {
           }
         );
         const result = await addTool.invoke({ a: 2, b: 3 });
-        return new Response(
-          JSON.stringify({ success: true, result }),
-          { headers: { "Content-Type": "application/json" } }
-        );
-        console.error("Error handling /test/tools request", e);
+        return new Response(JSON.stringify({ success: true, result }), {
+          headers: { "Content-Type": "application/json" },
+        });
       } catch (e) {
+        console.error("Error handling /test/tools request", e);
         return new Response(
           JSON.stringify({ success: false, error: "Internal server error" }),
           { status: 500, headers: { "Content-Type": "application/json" } }
@@ -262,12 +268,11 @@ export default {
         const double = RunnableLambda.from((x: number) => x * 2);
         const chain = RunnableSequence.from([addOne, double]);
         const result = await chain.invoke(5);
-        return new Response(
-          JSON.stringify({ success: true, result }),
-          { headers: { "Content-Type": "application/json" } }
-        console.error("Error handling /test/runnables request", e);
-        );
+        return new Response(JSON.stringify({ success: true, result }), {
+          headers: { "Content-Type": "application/json" },
+        });
       } catch (e) {
+        console.error("Error handling /test/runnables request", e);
         return new Response(
           JSON.stringify({ success: false, error: "Internal server error" }),
           { status: 500, headers: { "Content-Type": "application/json" } }
@@ -278,7 +283,12 @@ export default {
     return new Response(
       JSON.stringify({
         message: "@langchain/core v1 Cloudflare Worker (no nodejs_compat)",
-        endpoints: ["/test", "/test/messages", "/test/tools", "/test/runnables"],
+        endpoints: [
+          "/test",
+          "/test/messages",
+          "/test/tools",
+          "/test/runnables",
+        ],
       }),
       { headers: { "Content-Type": "application/json" } }
     );
