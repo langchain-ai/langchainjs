@@ -9,6 +9,7 @@ import {
   RemoveMessage,
   trimMessages,
   HumanMessage,
+  getBufferString,
 } from "@langchain/core/messages";
 import {
   BaseLanguageModel,
@@ -905,10 +906,22 @@ async function createSummary(
     return "Previous conversation was too long to summarize.";
   }
 
+  /**
+   * Format messages using getBufferString to avoid token inflation from metadata
+   * when str() / JSON.stringify is called on message objects.
+   * This produces compact output like:
+   * ```
+   * Human: What's the weather?
+   * AI: Let me check...[tool_calls]
+   * Tool: 72°F and sunny
+   * ```
+   */
+  const formattedMessages = getBufferString(trimmedMessages);
+
   try {
     const formattedPrompt = summaryPrompt.replace(
       "{messages}",
-      JSON.stringify(trimmedMessages, null, 2)
+      formattedMessages
     );
     /**
      * Invoke the model with an empty callbacks array to prevent the internal

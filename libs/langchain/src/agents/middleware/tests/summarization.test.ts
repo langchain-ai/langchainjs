@@ -492,13 +492,10 @@ describe("summarizationMiddleware", () => {
     expect(summarizationModel.invoke).toHaveBeenCalledTimes(1);
     const summaryPrompt = summarizationModel.invoke.mock.calls[0][0];
     expect(summaryPrompt).toContain("Messages to summarize:");
-    expect(summaryPrompt).not.toContain(
-      '"content": "Message 1: xxxxxxxxxxxxxxx'
-    );
-    expect(summaryPrompt).toContain('"content": "Response 2: xxxxxxxxxxxxxxx');
-    expect(summaryPrompt).not.toContain(
-      '"content": "Message 3: xxxxxxxxxxxxxxx'
-    );
+    // Uses getBufferString format (Human:, AI:) instead of JSON format
+    expect(summaryPrompt).not.toContain("Human: Message 1: xxxxxxxxxxxxxxx");
+    expect(summaryPrompt).toContain("AI: Response 2: xxxxxxxxxxxxxxx");
+    expect(summaryPrompt).not.toContain("Human: Message 3: xxxxxxxxxxxxxxx");
 
     // Should trigger summarization
     expect(result.messages.length).toBe(5);
@@ -558,12 +555,11 @@ describe("summarizationMiddleware", () => {
     expect(summarizationModel.invoke).toHaveBeenCalledTimes(1);
     const summaryPrompt = summarizationModel.invoke.mock.calls[0][0];
     expect(summaryPrompt).toContain("Messages to summarize:");
-    expect(summaryPrompt).toContain('"content": "Message 1: xxxxxxxxxxxxxxx');
-    expect(summaryPrompt).toContain('"content": "Response 2: xxxxxxxxxxxxxxx');
-    expect(summaryPrompt).toContain('"content": "Message 3: xxxxxxxxxxxxxxx');
-    expect(summaryPrompt).not.toContain(
-      '"content": "Response 3: xxxxxxxxxxxxxxx'
-    );
+    // Uses getBufferString format (Human:, AI:) instead of JSON format
+    expect(summaryPrompt).toContain("Human: Message 1: xxxxxxxxxxxxxxx");
+    expect(summaryPrompt).toContain("AI: Response 2: xxxxxxxxxxxxxxx");
+    expect(summaryPrompt).toContain("Human: Message 3: xxxxxxxxxxxxxxx");
+    expect(summaryPrompt).not.toContain("AI: Response 3: xxxxxxxxxxxxxxx");
 
     // Should trigger summarization
     expect(result.messages.length).toBe(4);
@@ -1186,5 +1182,75 @@ describe("summarizationMiddleware", () => {
       // All matching tool messages should be preserved
       expect(matchingToolMessages.length).toBe(preservedAI.tool_calls?.length);
     }
+  });
+
+  it("should use getBufferString format to avoid token inflation from message metadata", async () => {
+    // Track the actual prompt sent to the summarization model
+    let capturedPrompt = "";
+    const summarizationModel = {
+      invoke: vi.fn().mockImplementation(async (prompt: string) => {
+        capturedPrompt = prompt;
+        return { content: "Summary of the conversation." };
+      }),
+      getName: () => "mock-summarizer",
+      _modelType: "mock",
+      lc_runnable: true,
+      profile: {},
+    };
+
+    const model = createMockMainModel();
+
+    const middleware = summarizationMiddleware({
+      model: summarizationModel as any,
+      trigger: { tokens: 50 },
+      keep: { messages: 1 },
+    });
+
+    const agent = createAgent({
+      model,
+      middleware: [middleware],
+    });
+
+    // Create messages with metadata that would inflate JSON.stringify representation
+    const inputMessages = [
+      new HumanMessage("What is the weather in NYC?"),
+      new AIMessage({
+        content: "Let me check the weather for you.",
+        tool_calls: [
+          { name: "get_weather", args: { city: "NYC" }, id: "call_123" },
+        ],
+      }),
+      new ToolMessage({
+        content: "72F and sunny",
+        tool_call_id: "call_123",
+        name: "get_weather",
+      }),
+      new AIMessage({
+        content: `It is 72F and sunny in NYC! ${"x".repeat(200)}`, // Add enough chars to trigger summarization
+      }),
+      new HumanMessage("Thanks!"),
+    ];
+
+    await agent.invoke({ messages: inputMessages });
+
+    // Verify summarization was triggered
+    expect(summarizationModel.invoke).toHaveBeenCalled();
+
+    // Verify the prompt uses getBufferString format (compact) instead of JSON.stringify
+    // The prompt should contain role prefixes like "Human:", "AI:", "Tool:" instead of
+    // full JSON with all metadata fields
+    expect(capturedPrompt).toContain("Human:");
+    expect(capturedPrompt).toContain("AI:");
+    expect(capturedPrompt).toContain("Tool:");
+
+    // Verify the prompt does NOT contain verbose metadata that would be in JSON.stringify
+    // These fields would appear if we used JSON.stringify(messages, null, 2)
+    expect(capturedPrompt).not.toContain('"type": "human"');
+    expect(capturedPrompt).not.toContain('"type": "ai"');
+    expect(capturedPrompt).not.toContain('"additional_kwargs"');
+    expect(capturedPrompt).not.toContain('"response_metadata"');
+
+    // The tool calls should still be included (as JSON appended to the AI message)
+    expect(capturedPrompt).toContain("get_weather");
   });
 });

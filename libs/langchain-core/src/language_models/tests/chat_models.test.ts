@@ -268,6 +268,10 @@ test("Test ChatModel can cache complex messages", async () => {
   });
 
   const prompt = getBufferString([humanMessage]);
+  // getBufferString now uses the `text` property which extracts only text content
+  // from content blocks, producing compact output to avoid token inflation
+  expect(prompt).toBe("Human: Hello there!");
+
   const llmKey = model._getSerializedCacheKeyParametersForCall({});
 
   // Invoke model to trigger cache update
@@ -277,12 +281,14 @@ test("Test ChatModel can cache complex messages", async () => {
   expect(value).toBeDefined();
   if (!value) return;
 
-  expect(value[0].text).toEqual(JSON.stringify(contentToCache, null, 2));
+  // FakeChatModel returns m.text for text content (extracts text from blocks)
+  // This is consistent with using the text property for compact representation
+  expect(value[0].text).toEqual("Hello there!");
 
   expect("message" in value[0]).toBeTruthy();
   if (!("message" in value[0])) return;
   const cachedMsg = value[0].message as AIMessage;
-  expect(cachedMsg.content).toEqual(JSON.stringify(contentToCache, null, 2));
+  expect(cachedMsg.content).toEqual("Hello there!");
 });
 
 test("Test ChatModel with cache does not start multiple chat model runs", async () => {
