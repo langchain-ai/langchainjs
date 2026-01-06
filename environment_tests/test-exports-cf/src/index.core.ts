@@ -225,8 +225,9 @@ export default {
           { headers: { "Content-Type": "application/json" } }
         );
       } catch (e) {
+        console.error("Error handling /test/messages request", e);
         return new Response(
-          JSON.stringify({ success: false, error: String(e) }),
+          JSON.stringify({ success: false, error: "Internal server error" }),
           { status: 500, headers: { "Content-Type": "application/json" } }
         );
       }
@@ -247,9 +248,10 @@ export default {
           JSON.stringify({ success: true, result }),
           { headers: { "Content-Type": "application/json" } }
         );
+        console.error("Error handling /test/tools request", e);
       } catch (e) {
         return new Response(
-          JSON.stringify({ success: false, error: String(e) }),
+          JSON.stringify({ success: false, error: "Internal server error" }),
           { status: 500, headers: { "Content-Type": "application/json" } }
         );
       }
@@ -264,10 +266,11 @@ export default {
         return new Response(
           JSON.stringify({ success: true, result }),
           { headers: { "Content-Type": "application/json" } }
+        console.error("Error handling /test/runnables request", e);
         );
       } catch (e) {
         return new Response(
-          JSON.stringify({ success: false, error: String(e) }),
+          JSON.stringify({ success: false, error: "Internal server error" }),
           { status: 500, headers: { "Content-Type": "application/json" } }
         );
       }
