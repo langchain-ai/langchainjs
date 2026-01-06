@@ -1072,9 +1072,9 @@ describe("_mergeDicts", () => {
   });
 
   it("recursively merges nested objects", () => {
-    expect(
-      _mergeDicts({ nested: { a: 1 } }, { nested: { b: 2 } })
-    ).toEqual({ nested: { a: 1, b: 2 } });
+    expect(_mergeDicts({ nested: { a: 1 } }, { nested: { b: 2 } })).toEqual({
+      nested: { a: 1, b: 2 },
+    });
   });
 
   it("handles null values in right dict by skipping them", () => {
