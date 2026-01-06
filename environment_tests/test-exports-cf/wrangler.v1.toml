@@ -1,0 +1,14 @@
+# Wrangler configuration for LangChain v1 Cloudflare Workers tests
+#
+# LangChain v1 requires the nodejs_compat compatibility flag because:
+# - @langchain/langgraph uses node:async_hooks
+# - langchain/storage/file_system uses node:fs/promises and node:path
+#
+# Users must enable this flag in their wrangler.toml to use LangChain v1
+# in Cloudflare Workers.
+
+name = "test-exports-cf-v1"
+main = "src/index.v1.ts"
+compatibility_date = "2024-09-23"
+compatibility_flags = ["nodejs_compat"]
+

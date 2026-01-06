@@ -1,10 +1,8 @@
 {
   "name": "test-exports-cf",
   "version": "0.0.0",
-  "devDependencies": {
-    "@cloudflare/workers-types": "^4.20230321.0"
-  },
   "dependencies": {
+    "@cloudflare/workers-types": "^4.20230321.0",
     "@langchain/anthropic": "workspace:*",
     "@langchain/core": "workspace:*",
     "@langchain/classic": "workspace:*",
@@ -16,14 +14,21 @@
     "vitest": "0.34.3",
     "typeorm": "^0.3.25",
     "reflect-metadata": "^0.1.13",
-    "typescript": "^5.0.3"
+    "typescript": "^5.0.3",
+    "zod": "^3.25.76"
   },
   "private": true,
   "scripts": {
     "start": "wrangler dev",
+    "start:v1": "wrangler dev --config wrangler.v1.toml",
     "deploy": "wrangler deploy",
     "build": "wrangler deploy --dry-run --outdir=dist",
+    "build:v1": "wrangler deploy --config wrangler.v1.toml --dry-run --outdir=dist-v1",
     "test": "vitest run **/*.unit.test.ts",
-    "test:integration": "vitest run **/*.int.test.ts"
+    "test:classic": "vitest run src/index.unit.test.ts",
+    "test:v1": "vitest run src/index.v1.unit.test.ts",
+    "test:integration": "vitest run **/*.int.test.ts",
+    "test:integration:classic": "vitest run src/index.int.test.ts",
+    "test:integration:v1": "vitest run src/index.v1.int.test.ts"
   }
 }
