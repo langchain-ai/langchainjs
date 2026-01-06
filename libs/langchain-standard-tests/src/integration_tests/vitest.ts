@@ -10,7 +10,7 @@ import {
 export abstract class ChatModelIntegrationTests<
   CallOptions extends BaseChatModelCallOptions = BaseChatModelCallOptions,
   OutputMessageType extends AIMessageChunk = AIMessageChunk,
-  ConstructorArgs extends RecordStringAny = RecordStringAny
+  ConstructorArgs extends RecordStringAny = RecordStringAny,
 > extends BaseChatModelIntegrationTests<
   CallOptions,
   OutputMessageType,

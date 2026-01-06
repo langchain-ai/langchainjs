@@ -65,7 +65,8 @@ export type ChatResponsesInvocationParams = Omit<
  * @internal
  */
 export class ChatOpenAIResponses<
-  CallOptions extends ChatOpenAIResponsesCallOptions = ChatOpenAIResponsesCallOptions
+  CallOptions extends
+    ChatOpenAIResponsesCallOptions = ChatOpenAIResponsesCallOptions,
 > extends BaseChatOpenAI<CallOptions> {
   override invocationParams(
     options?: this["ParsedCallOptions"]

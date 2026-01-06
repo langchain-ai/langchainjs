@@ -877,8 +877,8 @@ export const convertStandardContentMessageToResponsesInput: Converter<
         block.status === "success"
           ? "completed"
           : block.status === "error"
-          ? "incomplete"
-          : undefined;
+            ? "incomplete"
+            : undefined;
       return {
         type: "function_call_output",
         call_id: block.toolCallId ?? "",
@@ -1041,13 +1041,13 @@ export const convertMessagesToResponsesInput: Converter<
         return convertStandardContentMessageToResponsesInput(lcMsg);
       }
 
-      const additional_kwargs = lcMsg.additional_kwargs as
-        | BaseMessageFields["additional_kwargs"] & {
-            [_FUNCTION_CALL_IDS_MAP_KEY]?: Record<string, string>;
-            reasoning?: OpenAIClient.Responses.ResponseReasoningItem;
-            type?: string;
-            refusal?: string;
-          };
+      const additional_kwargs =
+        lcMsg.additional_kwargs as BaseMessageFields["additional_kwargs"] & {
+          [_FUNCTION_CALL_IDS_MAP_KEY]?: Record<string, string>;
+          reasoning?: OpenAIClient.Responses.ResponseReasoningItem;
+          type?: string;
+          refusal?: string;
+        };
 
       let role = messageToOpenAIRole(lcMsg);
       if (role === "system" && isReasoningModel(model)) role = "developer";
@@ -1152,8 +1152,8 @@ export const convertMessagesToResponsesInput: Converter<
           output: isProviderNativeContent
             ? (toolMessage.content as OpenAIClient.Responses.ResponseFunctionCallOutputItemList)
             : typeof toolMessage.content !== "string"
-            ? JSON.stringify(toolMessage.content)
-            : toolMessage.content,
+              ? JSON.stringify(toolMessage.content)
+              : toolMessage.content,
         };
       }
 

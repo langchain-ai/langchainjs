@@ -41,10 +41,10 @@ type $KnownKeys<T> = {
   [K in keyof T]: string extends K
     ? never
     : number extends K
-    ? never
-    : symbol extends K
-    ? never
-    : K;
+      ? never
+      : symbol extends K
+        ? never
+        : K;
 }[keyof T];
 
 /**
@@ -56,10 +56,10 @@ type $KnownKeys<T> = {
 type $HasIndexSignature<T> = string extends keyof T
   ? true
   : number extends keyof T
-  ? true
-  : symbol extends keyof T
-  ? true
-  : false;
+    ? true
+    : symbol extends keyof T
+      ? true
+      : false;
 
 /**
  * Detects if T has an index signature and no known keys.
@@ -67,11 +67,12 @@ type $HasIndexSignature<T> = string extends keyof T
  * @template T - The type to check for index signatures and no known keys
  * @returns True if T has an index signature and no known keys, false otherwise
  */
-type $OnlyIndexSignatures<T> = $HasIndexSignature<T> extends true
-  ? [$KnownKeys<T>] extends [never]
-    ? true
-    : false
-  : false;
+type $OnlyIndexSignatures<T> =
+  $HasIndexSignature<T> extends true
+    ? [$KnownKeys<T>] extends [never]
+      ? true
+      : false
+    : false;
 
 /**
  * Recursively merges two object types T and U, with U taking precedence over T.
@@ -111,21 +112,21 @@ export type $MergeObjects<T, U> =
   $OnlyIndexSignatures<U> extends true
     ? U
     : // If T is purely index-signature based, prefer U as a whole (prevents leaking broad index signatures)
-    $OnlyIndexSignatures<T> extends true
-    ? U
-    : {
-        [K in keyof T | keyof U]: K extends keyof T
-          ? K extends keyof U
-            ? T[K] extends Record<string, unknown>
-              ? U[K] extends Record<string, unknown>
-                ? $MergeObjects<T[K], U[K]>
+      $OnlyIndexSignatures<T> extends true
+      ? U
+      : {
+          [K in keyof T | keyof U]: K extends keyof T
+            ? K extends keyof U
+              ? T[K] extends Record<string, unknown>
+                ? U[K] extends Record<string, unknown>
+                  ? $MergeObjects<T[K], U[K]>
+                  : U[K]
                 : U[K]
-              : U[K]
-            : T[K]
-          : K extends keyof U
-          ? U[K]
-          : never;
-      };
+              : T[K]
+            : K extends keyof U
+              ? U[K]
+              : never;
+        };
 
 /**
  * Merges two discriminated unions A and B based on a discriminator key (defaults to "type").
@@ -141,16 +142,16 @@ export type $MergeObjects<T, U> =
 export type $MergeDiscriminatedUnion<
   A extends Record<Key, PropertyKey>,
   B extends Record<Key, PropertyKey>,
-  Key extends PropertyKey = "type"
+  Key extends PropertyKey = "type",
 > = {
   // Create a mapped type over all possible discriminator values from both A and B
   [T in A[Key] | B[Key]]: [Extract<B, Record<Key, T>>] extends [never] // Check if B has a member with this discriminator value
     ? // If B doesn't have this discriminator value, use A's member
       Extract<A, Record<Key, T>>
     : // If B does have this discriminator value, merge A's and B's members (B takes precedence)
-    [Extract<A, Record<Key, T>>] extends [never]
-    ? Extract<B, Record<Key, T>>
-    : $MergeObjects<Extract<A, Record<Key, T>>, Extract<B, Record<Key, T>>>;
+      [Extract<A, Record<Key, T>>] extends [never]
+      ? Extract<B, Record<Key, T>>
+      : $MergeObjects<Extract<A, Record<Key, T>>, Extract<B, Record<Key, T>>>;
   // Index into the mapped type with all possible discriminator values
   // This converts the mapped type back into a union
 }[A[Key] | B[Key]];

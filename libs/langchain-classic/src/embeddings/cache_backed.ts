@@ -115,9 +115,8 @@ export class CacheBackedEmbeddings extends Embeddings {
       }
     }
     if (missingDocuments.length) {
-      const missingVectors = await this.underlyingEmbeddings.embedDocuments(
-        missingDocuments
-      );
+      const missingVectors =
+        await this.underlyingEmbeddings.embedDocuments(missingDocuments);
       const keyValuePairs: [string, number[]][] = missingDocuments.map(
         (document, i) => [document, missingVectors[i]]
       );

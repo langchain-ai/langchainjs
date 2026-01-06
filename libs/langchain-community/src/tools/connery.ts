@@ -83,7 +83,10 @@ export class ConneryAction extends StructuredTool {
    * @param _service The ConneryService instance.
    * @returns A ConneryAction instance.
    */
-  constructor(protected _action: Action, protected _service: ConneryService) {
+  constructor(
+    protected _action: Action,
+    protected _service: ConneryService
+  ) {
     super();
 
     this.name = this._action.id;

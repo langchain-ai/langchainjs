@@ -26,14 +26,14 @@ type PromiseOrValue<T> = T | Promise<T>;
 export type AnyAnnotationRoot = AnnotationRoot<any>;
 
 export type NormalizedSchemaInput<
-  TSchema extends InteropZodObject | undefined | never = any
+  TSchema extends InteropZodObject | undefined | never = any,
 > = [TSchema] extends [never]
   ? AgentBuiltInState
   : TSchema extends InteropZodObject
-  ? InferInteropZodOutput<TSchema> & AgentBuiltInState
-  : TSchema extends Record<string, unknown>
-  ? TSchema & AgentBuiltInState
-  : AgentBuiltInState;
+    ? InferInteropZodOutput<TSchema> & AgentBuiltInState
+    : TSchema extends Record<string, unknown>
+      ? TSchema & AgentBuiltInState
+      : AgentBuiltInState;
 
 /**
  * Result type for middleware functions.
@@ -50,7 +50,7 @@ export type MiddlewareResult<TState> =
  */
 export interface ToolCallRequest<
   TState extends Record<string, unknown> = Record<string, unknown>,
-  TContext = unknown
+  TContext = unknown,
 > {
   /**
    * The tool call to be executed
@@ -77,7 +77,7 @@ export interface ToolCallRequest<
  */
 export type ToolCallHandler<
   TSchema extends Record<string, unknown> = AgentBuiltInState,
-  TContext = unknown
+  TContext = unknown,
 > = (
   request: ToolCallRequest<TSchema, TContext>
 ) => PromiseOrValue<ToolMessage | Command>;
@@ -88,7 +88,7 @@ export type ToolCallHandler<
  */
 export type WrapToolCallHook<
   TSchema extends InteropZodObject | undefined = undefined,
-  TContext = unknown
+  TContext = unknown,
 > = (
   request: ToolCallRequest<NormalizedSchemaInput<TSchema>, TContext>,
   handler: ToolCallHandler<NormalizedSchemaInput<TSchema>, TContext>
@@ -103,7 +103,7 @@ export type WrapToolCallHook<
  */
 export type WrapModelCallHandler<
   TSchema extends InteropZodObject | undefined = undefined,
-  TContext = unknown
+  TContext = unknown,
 > = (
   request: Omit<
     ModelRequest<NormalizedSchemaInput<TSchema>, TContext>,
@@ -129,7 +129,7 @@ export type WrapModelCallHandler<
  */
 export type WrapModelCallHook<
   TSchema extends InteropZodObject | undefined = undefined,
-  TContext = unknown
+  TContext = unknown,
 > = (
   request: ModelRequest<NormalizedSchemaInput<TSchema>, TContext>,
   handler: WrapModelCallHandler<TSchema, TContext>
@@ -155,7 +155,7 @@ type BeforeAgentHandler<TSchema, TContext> = (
  */
 export type BeforeAgentHook<
   TSchema extends InteropZodObject | undefined = undefined,
-  TContext = unknown
+  TContext = unknown,
 > =
   | BeforeAgentHandler<NormalizedSchemaInput<TSchema>, TContext>
   | {
@@ -183,7 +183,7 @@ type BeforeModelHandler<TSchema, TContext> = (
  */
 export type BeforeModelHook<
   TSchema extends InteropZodObject | undefined = undefined,
-  TContext = unknown
+  TContext = unknown,
 > =
   | BeforeModelHandler<NormalizedSchemaInput<TSchema>, TContext>
   | {
@@ -212,7 +212,7 @@ type AfterModelHandler<TSchema, TContext> = (
  */
 export type AfterModelHook<
   TSchema extends InteropZodObject | undefined = undefined,
-  TContext = unknown
+  TContext = unknown,
 > =
   | AfterModelHandler<NormalizedSchemaInput<TSchema>, TContext>
   | {
@@ -240,7 +240,7 @@ type AfterAgentHandler<TSchema, TContext> = (
  */
 export type AfterAgentHook<
   TSchema extends InteropZodObject | undefined = undefined,
-  TContext = unknown
+  TContext = unknown,
 > =
   | AfterAgentHandler<NormalizedSchemaInput<TSchema>, TContext>
   | {
@@ -265,7 +265,7 @@ export interface AgentMiddleware<
     | InteropZodDefault<InteropZodObject>
     | InteropZodOptional<InteropZodObject>
     | undefined = any,
-  TFullContext = any
+  TFullContext = any,
 > {
   /**
    * Brand property to distinguish middleware instances from plain objects or functions.
@@ -446,8 +446,8 @@ export type InferChannelType<T extends AnyAnnotationRoot | InteropZodObject> =
   T extends AnyAnnotationRoot
     ? ToAnnotationRoot<T>["State"]
     : T extends InteropZodObject
-    ? InferInteropZodInput<T>
-    : {};
+      ? InferInteropZodInput<T>
+      : {};
 
 /**
  * Helper type to infer the state schema type from a middleware
@@ -477,12 +477,12 @@ export type InferMiddlewareInputState<T extends AgentMiddleware> =
 export type InferMiddlewareStates<T = AgentMiddleware[]> = T extends readonly []
   ? {}
   : T extends readonly [infer First, ...infer Rest]
-  ? First extends AgentMiddleware
-    ? Rest extends readonly AgentMiddleware[]
-      ? InferMiddlewareState<First> & InferMiddlewareStates<Rest>
-      : InferMiddlewareState<First>
-    : {}
-  : {};
+    ? First extends AgentMiddleware
+      ? Rest extends readonly AgentMiddleware[]
+        ? InferMiddlewareState<First> & InferMiddlewareStates<Rest>
+        : InferMiddlewareState<First>
+      : {}
+    : {};
 
 /**
  * Helper type to infer merged input state from an array of middleware (with optional defaults)
@@ -491,12 +491,12 @@ export type InferMiddlewareInputStates<T extends readonly AgentMiddleware[]> =
   T extends readonly []
     ? {}
     : T extends readonly [infer First, ...infer Rest]
-    ? First extends AgentMiddleware
-      ? Rest extends readonly AgentMiddleware[]
-        ? InferMiddlewareInputState<First> & InferMiddlewareInputStates<Rest>
-        : InferMiddlewareInputState<First>
-      : {}
-    : {};
+      ? First extends AgentMiddleware
+        ? Rest extends readonly AgentMiddleware[]
+          ? InferMiddlewareInputState<First> & InferMiddlewareInputStates<Rest>
+          : InferMiddlewareInputState<First>
+        : {}
+      : {};
 
 /**
  * Helper type to infer merged state from an array of middleware (includes built-in state)
@@ -528,8 +528,8 @@ export type InferMiddlewareContextInput<T extends AgentMiddleware> =
     ? C extends InteropZodOptional<infer Inner>
       ? InferInteropZodInput<Inner> | undefined
       : C extends InteropZodObject
-      ? InferInteropZodInput<C>
-      : {}
+        ? InferInteropZodInput<C>
+        : {}
     : {};
 
 /**
@@ -539,12 +539,12 @@ export type InferMiddlewareContexts<T extends readonly AgentMiddleware[]> =
   T extends readonly []
     ? {}
     : T extends readonly [infer First, ...infer Rest]
-    ? First extends AgentMiddleware
-      ? Rest extends readonly AgentMiddleware[]
-        ? InferMiddlewareContext<First> & InferMiddlewareContexts<Rest>
-        : InferMiddlewareContext<First>
-      : {}
-    : {};
+      ? First extends AgentMiddleware
+        ? Rest extends readonly AgentMiddleware[]
+          ? InferMiddlewareContext<First> & InferMiddlewareContexts<Rest>
+          : InferMiddlewareContext<First>
+        : {}
+      : {};
 
 /**
  * Helper to merge two context types, preserving undefined unions
@@ -554,12 +554,12 @@ type MergeContextTypes<A, B> = [A] extends [undefined]
     ? undefined
     : B | undefined
   : [B] extends [undefined]
-  ? A | undefined
-  : [A] extends [B]
-  ? A
-  : [B] extends [A]
-  ? B
-  : A & B;
+    ? A | undefined
+    : [A] extends [B]
+      ? A
+      : [B] extends [A]
+        ? B
+        : A & B;
 
 /**
  * Helper type to infer merged input context from an array of middleware (with optional defaults)
@@ -568,36 +568,36 @@ export type InferMiddlewareContextInputs<T extends readonly AgentMiddleware[]> =
   T extends readonly []
     ? {}
     : T extends readonly [infer First, ...infer Rest]
-    ? First extends AgentMiddleware
-      ? Rest extends readonly AgentMiddleware[]
-        ? MergeContextTypes<
-            InferMiddlewareContextInput<First>,
-            InferMiddlewareContextInputs<Rest>
-          >
-        : InferMiddlewareContextInput<First>
-      : {}
-    : {};
+      ? First extends AgentMiddleware
+        ? Rest extends readonly AgentMiddleware[]
+          ? MergeContextTypes<
+              InferMiddlewareContextInput<First>,
+              InferMiddlewareContextInputs<Rest>
+            >
+          : InferMiddlewareContextInput<First>
+        : {}
+      : {};
 
 /**
  * Helper type to extract input type from context schema (with optional defaults)
  */
 export type InferContextInput<
-  ContextSchema extends AnyAnnotationRoot | InteropZodObject
+  ContextSchema extends AnyAnnotationRoot | InteropZodObject,
 > = ContextSchema extends InteropZodObject
   ? InferInteropZodInput<ContextSchema>
   : ContextSchema extends AnyAnnotationRoot
-  ? ToAnnotationRoot<ContextSchema>["State"]
-  : {};
+    ? ToAnnotationRoot<ContextSchema>["State"]
+    : {};
 
 export type ToAnnotationRoot<A extends AnyAnnotationRoot | InteropZodObject> =
   A extends AnyAnnotationRoot
     ? A
     : A extends InteropZodObject
-    ? AnnotationRoot<InteropZodToStateDefinition<A>>
-    : never;
+      ? AnnotationRoot<InteropZodToStateDefinition<A>>
+      : never;
 
 export type InferSchemaInput<
-  A extends AnyAnnotationRoot | InteropZodObject | undefined
+  A extends AnyAnnotationRoot | InteropZodObject | undefined,
 > = A extends AnyAnnotationRoot | InteropZodObject
   ? ToAnnotationRoot<A>["State"]
   : {};

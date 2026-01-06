@@ -40,7 +40,7 @@ function createToolSelectionResponse(tools: StructuredToolInterface[]) {
     toolLiterals as [
       z.ZodLiteral<string>,
       z.ZodLiteral<string>,
-      ...z.ZodLiteral<string>[]
+      ...z.ZodLiteral<string>[],
     ]
   );
 
@@ -176,7 +176,7 @@ export function llmToolSelectorMiddleware(
  */
 async function prepareSelectionRequest<
   TState extends Record<string, unknown> = Record<string, unknown>,
-  TContext = unknown
+  TContext = unknown,
 >(
   request: ModelRequest<TState, TContext>,
   options: LLMToolSelectorConfig,
@@ -270,8 +270,8 @@ async function prepareSelectionRequest<
   const modelInstance = !model
     ? (request.model as BaseLanguageModel)
     : typeof model === "string"
-    ? await initChatModel(model)
-    : model;
+      ? await initChatModel(model)
+      : model;
 
   const validToolNames = availableTools.map((tool) => tool.name);
 
@@ -296,7 +296,7 @@ async function prepareSelectionRequest<
  */
 function processSelectionResponse<
   TState extends Record<string, unknown> = Record<string, unknown>,
-  TContext = unknown
+  TContext = unknown,
 >(
   response: { tools: string[] },
   availableTools: StructuredToolInterface[],

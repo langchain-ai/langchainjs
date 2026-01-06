@@ -145,7 +145,7 @@ export class Ollama extends LLM<OllamaCallOptions> implements OllamaInput {
       ? fields?.baseUrl.endsWith("/")
         ? fields?.baseUrl.slice(0, -1)
         : fields?.baseUrl
-      : getEnvironmentVariable("OLLAMA_BASE_URL") ?? this.baseUrl;
+      : (getEnvironmentVariable("OLLAMA_BASE_URL") ?? this.baseUrl);
     this.client = new OllamaClient({
       fetch: fields?.fetch,
       host: this.baseUrl,

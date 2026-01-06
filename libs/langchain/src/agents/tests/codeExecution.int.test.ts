@@ -50,7 +50,7 @@ describe("Code Execution Tool", () => {
 
     // The response should contain content blocks
     const content = Array.isArray(aiResponse?.content)
-      ? aiResponse?.content ?? []
+      ? (aiResponse?.content ?? [])
       : [];
     expect(content.length).toBeGreaterThan(0);
 
