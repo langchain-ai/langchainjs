@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { test, expect } from "vitest";
 import { ChatDeepSeek } from "../chat_models.js";
 import { AIMessageChunk } from "@langchain/core/messages";
