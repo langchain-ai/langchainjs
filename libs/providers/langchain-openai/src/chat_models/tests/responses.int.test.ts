@@ -935,6 +935,38 @@ test("useResponsesApi=true should emit handleLLMNewToken events during streaming
   expect(endEvents.length).toBeGreaterThan(0);
 });
 
+// https://github.com/langchain-ai/langchainjs/issues/9733
+test("useResponsesApi=true should emit handleLLMNewToken events when using invoke with callbacks", async () => {
+  let nrNewTokens = 0;
+  let streamedCompletion = "";
+
+  const model = new ChatOpenAI({
+    model: "gpt-4o-mini",
+    useResponsesApi: true,
+    streaming: true,
+    maxTokens: 50,
+    callbacks: [
+      {
+        async handleLLMNewToken(token: string) {
+          nrNewTokens += 1;
+          streamedCompletion += token;
+        },
+      },
+    ],
+  });
+
+  const message = new HumanMessage("Say 'Hello world' in 3 words.");
+  const result = await model.invoke([message]);
+
+  // Verify that handleLLMNewToken was called multiple times
+  expect(nrNewTokens).toBeGreaterThan(0);
+  // Verify that we accumulated tokens
+  expect(streamedCompletion.length).toBeGreaterThan(0);
+  // Verify the result is defined
+  expect(result).toBeDefined();
+  expect(result.content).toBeDefined();
+});
+
 describe("gpt-5", () => {
   const storyPrompt = new HumanMessage(
     "Write a short story about a robot who discovers they can dream. Include themes of consciousness, identity, and what it means to be alive. The story should be approximately 200 words and have a hopeful ending."
