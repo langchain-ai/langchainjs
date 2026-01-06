@@ -422,11 +422,17 @@ export function isOpenAIToolCallArray(
 
 export function _mergeDicts(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  left: Record<string, any> = {},
+  left: Record<string, any> | undefined,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  right: Record<string, any> = {}
+  right: Record<string, any> | undefined
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-): Record<string, any> {
+): Record<string, any> | undefined {
+  if (left === undefined && right === undefined) {
+    return undefined;
+  }
+  if (left === undefined || right === undefined) {
+    return left ?? right;
+  }
   const merged = { ...left };
   for (const [key, value] of Object.entries(right)) {
     if (merged[key] == null) {
