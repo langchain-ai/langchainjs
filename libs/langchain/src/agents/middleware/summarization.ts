@@ -681,7 +681,21 @@ async function findTokenBasedCutoff(
   }
 
   /**
-   * Find safe cutoff point that preserves tool pairs
+   * Find safe cutoff point that preserves AI/Tool pairs.
+   * If cutoff lands on ToolMessage, move backward to include the AIMessage.
+   */
+  const safeCutoff = findSafeCutoffPoint(messages, cutoffCandidate);
+
+  /**
+   * If findSafeCutoffPoint moved forward (fallback case), verify it's safe.
+   * If it moved backward, we already have a safe point.
+   */
+  if (safeCutoff <= cutoffCandidate) {
+    return safeCutoff;
+  }
+
+  /**
+   * Fallback: iterate backward to find a safe cutoff
    */
   for (let i = cutoffCandidate; i >= 0; i--) {
     if (isSafeCutoffPoint(messages, i)) {
@@ -705,6 +719,23 @@ function findSafeCutoff(
 
   const targetCutoff = messages.length - messagesToKeep;
 
+  /**
+   * First, try to find a safe cutoff point using findSafeCutoffPoint.
+   * This handles the case where cutoff lands on a ToolMessage by moving
+   * backward to include the corresponding AIMessage.
+   */
+  const safeCutoff = findSafeCutoffPoint(messages, targetCutoff);
+
+  /**
+   * If findSafeCutoffPoint moved backward (found matching AIMessage), use it.
+   */
+  if (safeCutoff <= targetCutoff) {
+    return safeCutoff;
+  }
+
+  /**
+   * Fallback: iterate backward to find a safe cutoff
+   */
   for (let i = targetCutoff; i >= 0; i--) {
     if (isSafeCutoffPoint(messages, i)) {
       return i;
@@ -771,6 +802,58 @@ function extractToolCallIds(aiMessage: AIMessage): Set<string> {
     }
   }
   return toolCallIds;
+}
+
+/**
+ * Find a safe cutoff point that doesn't split AI/Tool message pairs.
+ *
+ * If the message at `cutoffIndex` is a `ToolMessage`, search backward for the
+ * `AIMessage` containing the corresponding `tool_calls` and adjust the cutoff to
+ * include it. This ensures tool call requests and responses stay together.
+ *
+ * Falls back to advancing forward past `ToolMessage` objects only if no matching
+ * `AIMessage` is found (edge case).
+ */
+function findSafeCutoffPoint(
+  messages: BaseMessage[],
+  cutoffIndex: number
+): number {
+  if (
+    cutoffIndex >= messages.length ||
+    !ToolMessage.isInstance(messages[cutoffIndex])
+  ) {
+    return cutoffIndex;
+  }
+
+  // Collect tool_call_ids from consecutive ToolMessages at/after cutoff
+  const toolCallIds = new Set<string>();
+  let idx = cutoffIndex;
+  while (idx < messages.length && ToolMessage.isInstance(messages[idx])) {
+    const toolMsg = messages[idx] as ToolMessage;
+    if (toolMsg.tool_call_id) {
+      toolCallIds.add(toolMsg.tool_call_id);
+    }
+    idx++;
+  }
+
+  // Search backward for AIMessage with matching tool_calls
+  for (let i = cutoffIndex - 1; i >= 0; i--) {
+    const msg = messages[i];
+    if (AIMessage.isInstance(msg) && hasToolCalls(msg)) {
+      const aiToolCallIds = extractToolCallIds(msg as AIMessage);
+      // Check if there's any overlap between the tool_call_ids
+      for (const id of toolCallIds) {
+        if (aiToolCallIds.has(id)) {
+          // Found the AIMessage - move cutoff to include it
+          return i;
+        }
+      }
+    }
+  }
+
+  // Fallback: no matching AIMessage found, advance past ToolMessages to avoid
+  // orphaned tool responses
+  return idx;
 }
 
 /**
