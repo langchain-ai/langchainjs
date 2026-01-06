@@ -10,6 +10,7 @@ import {
   coerceMessageLikeToMessage,
   SystemMessage,
   _mergeObj,
+  _mergeDicts,
 } from "../index.js";
 import { load } from "../../load/index.js";
 import { concat } from "../../utils/stream.js";
@@ -1040,5 +1041,73 @@ describe("_mergeObj", () => {
     expect(() => _mergeObj<unknown>(true, false as unknown)).toThrow(
       "Can not merge objects"
     );
+  });
+});
+
+describe("_mergeDicts", () => {
+  it("returns undefined when both values are undefined", () => {
+    expect(_mergeDicts(undefined, undefined)).toBeUndefined();
+  });
+
+  it("returns right value when left is undefined", () => {
+    expect(_mergeDicts(undefined, { foo: "bar" })).toEqual({ foo: "bar" });
+  });
+
+  it("returns left value when right is undefined", () => {
+    expect(_mergeDicts({ foo: "bar" }, undefined)).toEqual({ foo: "bar" });
+  });
+
+  it("merges two objects", () => {
+    expect(_mergeDicts({ a: 1 }, { b: 2 })).toEqual({ a: 1, b: 2 });
+  });
+
+  it("concatenates string values for the same key", () => {
+    expect(_mergeDicts({ a: "hello" }, { a: " world" })).toEqual({
+      a: "hello world",
+    });
+  });
+
+  it("adds numeric values for the same key", () => {
+    expect(_mergeDicts({ count: 5 }, { count: 3 })).toEqual({ count: 8 });
+  });
+
+  it("recursively merges nested objects", () => {
+    expect(
+      _mergeDicts({ nested: { a: 1 } }, { nested: { b: 2 } })
+    ).toEqual({ nested: { a: 1, b: 2 } });
+  });
+
+  it("handles null values in right dict by skipping them", () => {
+    expect(_mergeDicts({ a: "value" }, { a: null })).toEqual({ a: "value" });
+  });
+
+  it("handles null values in left dict by using right value", () => {
+    expect(_mergeDicts({ a: null }, { a: "value" })).toEqual({ a: "value" });
+  });
+
+  it("does not merge 'type' field (keeps original)", () => {
+    expect(_mergeDicts({ type: "text" }, { type: "delta" })).toEqual({
+      type: "text",
+    });
+  });
+
+  it("replaces 'id' field with incoming value if defined", () => {
+    expect(_mergeDicts({ id: "old" }, { id: "new" })).toEqual({ id: "new" });
+  });
+
+  it("keeps 'id' field if incoming is empty", () => {
+    expect(_mergeDicts({ id: "old" }, { id: "" })).toEqual({ id: "old" });
+  });
+
+  it("throws error when merging different types for same key", () => {
+    expect(() => _mergeDicts({ a: "string" }, { a: 123 })).toThrow(
+      "field[a] already exists in the message chunk, but with a different type"
+    );
+  });
+
+  it("handles empty objects", () => {
+    expect(_mergeDicts({}, {})).toEqual({});
+    expect(_mergeDicts({ a: 1 }, {})).toEqual({ a: 1 });
+    expect(_mergeDicts({}, { b: 2 })).toEqual({ b: 2 });
   });
 });
