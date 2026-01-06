@@ -66,7 +66,7 @@ export type UserInput<
   TStateSchema extends
     | AnyAnnotationRoot
     | InteropZodObject
-    | undefined = undefined
+    | undefined = undefined,
 > = InferSchemaInput<TStateSchema> & {
   messages: Messages;
 };
@@ -160,7 +160,7 @@ export type CreateAgentParams<
     | TypedToolStrategy<StructuredResponseType>
     | ToolStrategy<StructuredResponseType>
     | ProviderStrategy<StructuredResponseType>
-    | ResponseFormatUndefined
+    | ResponseFormatUndefined,
 > = {
   /**
    * Defines a model to use for the agent. You can either pass in an instance of a LangChain chat model
@@ -481,17 +481,15 @@ export type ExtractZodArrayTypes<T extends readonly InteropZodType<any>[]> =
       : A
     : never;
 
-export type WithStateGraphNodes<
-  K extends string,
-  Graph
-> = Graph extends StateGraph<
-  infer SD,
-  infer S,
-  infer U,
-  infer N,
-  infer I,
-  infer O,
-  infer C
->
-  ? StateGraph<SD, S, U, N | K, I, O, C>
-  : never;
+export type WithStateGraphNodes<K extends string, Graph> =
+  Graph extends StateGraph<
+    infer SD,
+    infer S,
+    infer U,
+    infer N,
+    infer I,
+    infer O,
+    infer C
+  >
+    ? StateGraph<SD, S, U, N | K, I, O, C>
+    : never;

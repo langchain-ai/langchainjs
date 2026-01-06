@@ -157,10 +157,13 @@ function combineAliasesAndInvert(constructor: typeof Serializable) {
   ) {
     Object.assign(aliases, Reflect.get(current.prototype, "lc_aliases"));
   }
-  return Object.entries(aliases).reduce((acc, [key, value]) => {
-    acc[value] = key;
-    return acc;
-  }, {} as Record<string, string>);
+  return Object.entries(aliases).reduce(
+    (acc, [key, value]) => {
+      acc[value] = key;
+      return acc;
+    },
+    {} as Record<string, string>
+  );
 }
 
 interface ReviverContext {
@@ -298,9 +301,10 @@ async function reviver(this: ReviverContext, value: unknown): Promise<unknown> {
       matchingNamespaceAlias
     ) {
       if (matchingNamespaceAlias !== undefined) {
-        module = await optionalImportsMap[
-          matchingNamespaceAlias as keyof typeof optionalImportsMap
-        ];
+        module =
+          await optionalImportsMap[
+            matchingNamespaceAlias as keyof typeof optionalImportsMap
+          ];
       } else {
         throw new Error(
           `Missing key "${namespace.join(

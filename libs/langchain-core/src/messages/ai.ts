@@ -23,7 +23,7 @@ import {
 import { collapseToolCallChunks, Constructor } from "./utils.js";
 
 export interface AIMessageFields<
-  TStructure extends MessageStructure = MessageStructure
+  TStructure extends MessageStructure = MessageStructure,
 > extends BaseMessageFields<TStructure, "ai"> {
   tool_calls?: ToolCall[];
   invalid_tool_calls?: InvalidToolCall[];
@@ -229,7 +229,7 @@ export function isAIMessageChunk<TStructure extends MessageStructure>(
 }
 
 export type AIMessageChunkFields<
-  TStructure extends MessageStructure = MessageStructure
+  TStructure extends MessageStructure = MessageStructure,
 > = AIMessageFields<TStructure> & {
   tool_call_chunks?: ToolCallChunk[];
 };
@@ -239,7 +239,7 @@ export type AIMessageChunkFields<
  * other AI message chunks.
  */
 export class AIMessageChunk<
-    TStructure extends MessageStructure = MessageStructure
+    TStructure extends MessageStructure = MessageStructure,
   >
   extends BaseMessageChunk<TStructure, "ai">
   implements AIMessage<TStructure>, AIMessageChunkFields<TStructure>

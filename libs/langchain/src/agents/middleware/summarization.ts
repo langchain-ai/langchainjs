@@ -338,7 +338,7 @@ export function summarizationMiddleware(
       const resolvedKeep =
         runtime.context?.keep !== undefined
           ? runtime.context.keep
-          : keep ?? { messages: DEFAULT_MESSAGES_TO_KEEP };
+          : (keep ?? { messages: DEFAULT_MESSAGES_TO_KEEP });
 
       const validatedKeep = keepSchema.parse(resolvedKeep);
 
@@ -383,10 +383,10 @@ export function summarizationMiddleware(
 
       const summaryPrompt =
         runtime.context?.summaryPrompt === DEFAULT_SUMMARY_PROMPT
-          ? userOptions.summaryPrompt ?? DEFAULT_SUMMARY_PROMPT
-          : runtime.context?.summaryPrompt ??
+          ? (userOptions.summaryPrompt ?? DEFAULT_SUMMARY_PROMPT)
+          : (runtime.context?.summaryPrompt ??
             userOptions.summaryPrompt ??
-            DEFAULT_SUMMARY_PROMPT;
+            DEFAULT_SUMMARY_PROMPT);
       const summaryPrefix =
         runtime.context.summaryPrefix ??
         userOptions.summaryPrefix ??
@@ -394,7 +394,7 @@ export function summarizationMiddleware(
       const trimTokensToSummarize =
         runtime.context?.trimTokensToSummarize !== undefined
           ? runtime.context.trimTokensToSummarize
-          : userOptions.trimTokensToSummarize ?? DEFAULT_TRIM_TOKEN_LIMIT;
+          : (userOptions.trimTokensToSummarize ?? DEFAULT_TRIM_TOKEN_LIMIT);
 
       /**
        * Ensure all messages have IDs
@@ -404,7 +404,7 @@ export function summarizationMiddleware(
       const tokenCounter =
         runtime.context?.tokenCounter !== undefined
           ? runtime.context.tokenCounter
-          : userOptions.tokenCounter ?? countTokensApproximately;
+          : (userOptions.tokenCounter ?? countTokensApproximately);
       const totalTokens = await tokenCounter(state.messages);
       const doSummarize = await shouldSummarize(
         state.messages,
