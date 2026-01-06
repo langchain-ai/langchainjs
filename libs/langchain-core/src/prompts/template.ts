@@ -195,17 +195,11 @@ export const checkValidTemplate = (
                          should be one of ${validFormats}`);
   }
   try {
-    const dummyInputs: InputValues = inputVariables.reduce((acc, v) => {
-      // Use Object.defineProperty to safely set properties without
-      // risking prototype pollution from __proto__ or similar keys
-      Object.defineProperty(acc, v, {
-        value: "foo",
-        writable: true,
-        enumerable: true,
-        configurable: true,
-      });
-      return acc;
-    }, Object.create(null) as Record<string, string>);
+    // Build dummy inputs using Object.fromEntries to avoid prototype pollution
+    // from dynamic property assignment with user-provided keys
+    const dummyInputs: InputValues = Object.fromEntries(
+      inputVariables.map((v) => [v, "foo"])
+    );
     if (Array.isArray(template)) {
       template.forEach((message) => {
         if (
