@@ -737,5 +737,29 @@ describe("Simplified Tool Adapter Tests", () => {
       // Both resource structures should be in artifacts
       expect(toolMessageResult.artifact).toHaveLength(2);
     });
+
+    test("should handle resource reference correctly (regression: old approach checked resource.uri directly)", async () => {
+      mockClient.listTools.mockReturnValueOnce(
+        Promise.resolve({
+          tools: [{ name: "ref_tool", description: "", inputSchema: { type: "object", properties: {}, required: [] } }],
+        })
+      );
+      const tools = await loadMcpTools("mockServer", mockClient as Client);
+
+      // Resource reference: URI only, no blob/text
+      mockClient.callTool.mockReturnValue(
+        Promise.resolve({
+          content: [{ type: "resource", resource: { uri: "test://ref", mimeType: "text/plain" } }],
+        })
+      );
+      mockClient.readResource = vi.fn().mockResolvedValue({
+        contents: [{ uri: "test://ref", text: "fetched", mimeType: "text/plain" }],
+      });
+
+      await tools[0].invoke({ args: {}, name: "mcp__mockServer__ref_tool", id: "id", type: "tool_call" });
+
+      // Proves isResourceReference(resource.resource) works; old approach checking resource.uri would fail
+      expect(mockClient.readResource).toHaveBeenCalledWith({ uri: "test://ref" });
+    });
   });
 });
