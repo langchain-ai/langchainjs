@@ -33,7 +33,6 @@ Use LangChain for:
 - **Vibrant community and ecosystem**. Leverage a rich ecosystem of integrations, templates, and community-contributed components. Benefit from continuous improvements and stay up-to-date with the latest AI developments through an active open-source community.
 - **Flexible abstraction layers**. Work at the level of abstraction that suits your needs - from high-level chains for quick starts to low-level components for fine-grained control. LangChain grows with your application's complexity.
 
-
 ## 📦 LangChain's ecosystem
 
 - [LangSmith](https://www.langchain.com/langsmith) - Unified developer platform for building, testing, and monitoring LLM applications. With LangSmith, you can debug poor-performing LLM app runs, evaluate agent trajectories, gain visibility in production, and deploy agents with confidence.
