@@ -1,5 +1,11 @@
 # @langchain/core
 
+## 1.1.10
+
+### Patch Changes
+
+- [#9746](https://github.com/langchain-ai/langchainjs/pull/9746) [`817fc9a`](https://github.com/langchain-ai/langchainjs/commit/817fc9a56d4699f3563a6e153b13eadf7bcc661b) Thanks [@bracesproul](https://github.com/bracesproul)! - fix: `_mergeDicts` error when merging undefined values
+
 ## 1.1.9
 
 ### Patch Changes
