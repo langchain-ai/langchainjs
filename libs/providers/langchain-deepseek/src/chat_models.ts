@@ -497,7 +497,9 @@ export class ChatDeepSeek extends ChatOpenAICompletions<ChatDeepSeekCallOptions>
         isThinking = true;
         const thinkIndex = tokensBuffer.indexOf("<think>");
         const beforeThink = tokensBuffer.substring(0, thinkIndex);
-        const afterThink = tokensBuffer.substring(thinkIndex + "<think>".length);
+        const afterThink = tokensBuffer.substring(
+          thinkIndex + "<think>".length
+        );
 
         // We consumed up to <think>, so buffer becomes what's after
         tokensBuffer = afterThink || ""; // might be empty or part of thought
@@ -525,7 +527,9 @@ export class ChatDeepSeek extends ChatOpenAICompletions<ChatDeepSeekCallOptions>
         isThinking = false;
         const thinkEndIndex = tokensBuffer.indexOf("</think>");
         const thoughtContent = tokensBuffer.substring(0, thinkEndIndex);
-        const afterThink = tokensBuffer.substring(thinkEndIndex + "</think>".length);
+        const afterThink = tokensBuffer.substring(
+          thinkEndIndex + "</think>".length
+        );
 
         // Yield the reasoning content
         const reasoningChunk = new ChatGenerationChunk({
@@ -781,9 +785,9 @@ export class ChatDeepSeek extends ChatOpenAICompletions<ChatDeepSeekCallOptions>
   ):
     | Runnable<BaseLanguageModelInput, RunOutput>
     | Runnable<
-      BaseLanguageModelInput,
-      { raw: BaseMessage; parsed: RunOutput }
-    > {
+        BaseLanguageModelInput,
+        { raw: BaseMessage; parsed: RunOutput }
+      > {
     const ensuredConfig = { ...config };
     // Deepseek does not support json schema yet
     if (ensuredConfig?.method === undefined) {
