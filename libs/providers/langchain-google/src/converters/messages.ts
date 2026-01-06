@@ -898,7 +898,6 @@ export const convertGeminiCandidateToAIMessage: Converter<
   } else if (
     parts.length === 1 &&
     "text" in parts[0] &&
-    parts[0].text &&
     !("thought" in parts[0])
   ) {
     // Single text part - store as string for simplicity and backwards compatibility

@@ -1053,18 +1053,32 @@ describe.each(thinkingModelInfo)(
       warnSpy.mockRestore();
     } );
 
-    test.skip("thought signature - text", async () => {
+    test("thought signature - text", async () => {
       const llm = newChatGoogle();
       const result = await llm.invoke("What is 1 + 1?");
       console.log(result);
 
       expect(result.text as string).toMatch(/(1 + 1 (equals|is|=) )?2.? ?/);
-      expect(typeof result.content[0]).toEqual("string");
+      expect(typeof result.content).toEqual("string");
       expect(result.contentBlocks[0]).toHaveProperty('thoughtSignature');
       expect(result.additional_kwargs.originalTextContentBlock).toHaveProperty("thoughtSignature");
     });
 
-    test.skip("thought signature - function", async () => {
+    test("thought signature - stream", async () => {
+      const llm = newChatGoogle({
+        streaming: true,
+      });
+      const msg = "Why is the sky blue? Be verbose.";
+      const result = await llm.invoke(msg);
+      console.log(result);
+
+      expect(result.text as string).toMatch(/(1 + 1 (equals|is|=) )?2.? ?/);
+      expect(typeof result.content).toEqual("string");
+      expect(result.contentBlocks[0]).toHaveProperty('thoughtSignature');
+      expect(result.additional_kwargs.originalTextContentBlock).toHaveProperty("thoughtSignature");
+    });
+
+    test("thought signature - function", async () => {
       const tools = [weatherTool];
       const llm: Runnable = newChatGoogle().bindTools(tools);
       const result = await llm.invoke("What is the weather in New York?");

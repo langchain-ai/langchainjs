@@ -507,6 +507,14 @@ export abstract class BaseChatGoogle<
       for await (const chunk of stream) {
         finalChunk = !finalChunk ? chunk : concat(finalChunk, chunk);
       }
+      if (
+        typeof finalChunk?.message?.content === "string" &&
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        typeof (finalChunk?.message?.additional_kwargs?.originalTextContentBlock as any)?.text === "string"
+      ){
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (finalChunk.message.additional_kwargs.originalTextContentBlock as any).text = finalChunk.message.content
+      }
       return {
         generations: finalChunk ? [finalChunk] : [],
       };
@@ -701,6 +709,7 @@ export abstract class BaseChatGoogle<
                   messageChunkParams.additional_kwargs = {
                     finishReason: candidate.finishReason,
                     finishMessage: candidate.finishMessage,
+                    originalTextContentBlock: message.additional_kwargs.originalTextContentBlock,
                   }
                 }
 
