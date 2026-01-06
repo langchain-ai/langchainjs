@@ -307,6 +307,15 @@ export function coerceMessageLikeToMessage(
 /**
  * This function is used by memory classes to get a string representation
  * of the chat message history, based on the message content and role.
+ *
+ * Produces compact output like:
+ * ```
+ * Human: What's the weather?
+ * AI: Let me check...[tool_calls]
+ * Tool: 72°F and sunny
+ * ```
+ *
+ * This avoids token inflation from metadata when stringifying message objects directly.
  */
 export function getBufferString(
   messages: BaseMessage[],
@@ -316,25 +325,42 @@ export function getBufferString(
   const string_messages: string[] = [];
   for (const m of messages) {
     let role: string;
-    if (m._getType() === "human") {
+    if (m.type === "human") {
       role = humanPrefix;
-    } else if (m._getType() === "ai") {
+    } else if (m.type === "ai") {
       role = aiPrefix;
-    } else if (m._getType() === "system") {
+    } else if (m.type === "system") {
       role = "System";
-    } else if (m._getType() === "tool") {
+    } else if (m.type === "tool") {
       role = "Tool";
-    } else if (m._getType() === "generic") {
+    } else if (m.type === "generic") {
       role = (m as ChatMessage).role;
     } else {
-      throw new Error(`Got unsupported message type: ${m._getType()}`);
+      throw new Error(`Got unsupported message type: ${m.type}`);
     }
     const nameStr = m.name ? `${m.name}, ` : "";
-    const readableContent =
-      typeof m.content === "string"
-        ? m.content
-        : JSON.stringify(m.content, null, 2);
-    string_messages.push(`${role}: ${nameStr}${readableContent}`);
+
+    // Use m.text property which extracts only text content, avoiding metadata
+    // For non-string content (e.g., content blocks), m.text extracts only text blocks
+    const readableContent = m.text;
+
+    let message = `${role}: ${nameStr}${readableContent}`;
+
+    // Include tool calls for AI messages (matching Python's get_buffer_string behavior)
+    if (m.type === "ai") {
+      const aiMessage = m as AIMessage;
+      if (aiMessage.tool_calls && aiMessage.tool_calls.length > 0) {
+        message += JSON.stringify(aiMessage.tool_calls);
+      } else if (
+        aiMessage.additional_kwargs &&
+        "function_call" in aiMessage.additional_kwargs
+      ) {
+        // Legacy behavior assumes only one function call per message
+        message += JSON.stringify(aiMessage.additional_kwargs.function_call);
+      }
+    }
+
+    string_messages.push(message);
   }
   return string_messages.join("\n");
 }

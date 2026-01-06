@@ -782,10 +782,11 @@ export class ReactAgent<
 
       // Check if jumpTo is set in the state and allowed
       if (allowJump && builtInState.jumpTo) {
-        if (builtInState.jumpTo === END) {
+        const destination = parseJumpToTarget(builtInState.jumpTo);
+        if (destination === END) {
           return exitNode;
         }
-        if (builtInState.jumpTo === TOOLS_NODE_NAME) {
+        if (destination === TOOLS_NODE_NAME) {
           // If trying to jump to tools but no tools are available, go to exitNode
           if (toolClasses.length === 0) {
             return exitNode;
