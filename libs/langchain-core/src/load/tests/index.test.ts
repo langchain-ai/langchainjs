@@ -581,8 +581,12 @@ describe("`load()`", () => {
       const parsed = JSON.parse(serialized);
 
       // All references should be serialized correctly
-      expect(parsed.kwargs.additional_kwargs.items[0]).toEqual({ key: "value" });
-      expect(parsed.kwargs.additional_kwargs.items[1]).toEqual({ key: "value" });
+      expect(parsed.kwargs.additional_kwargs.items[0]).toEqual({
+        key: "value",
+      });
+      expect(parsed.kwargs.additional_kwargs.items[1]).toEqual({
+        key: "value",
+      });
       expect(parsed.kwargs.additional_kwargs.items[2].nested).toEqual({
         key: "value",
       });
@@ -625,7 +629,9 @@ describe("`load()`", () => {
       const parsed = JSON.parse(serialized);
 
       // All instances should be wrapped in __lc_escaped__
-      expect(parsed.kwargs.additional_kwargs.first.__lc_escaped__).toBeDefined();
+      expect(
+        parsed.kwargs.additional_kwargs.first.__lc_escaped__
+      ).toBeDefined();
       expect(
         parsed.kwargs.additional_kwargs.second.__lc_escaped__
       ).toBeDefined();
@@ -661,13 +667,17 @@ describe("`load()`", () => {
       expect(typeof deserialized.additional_kwargs.second).toBe("object");
 
       // The constructor-like object should be preserved as plain data
-      expect(deserialized.additional_kwargs.first).toEqual(maliciousConstructor);
+      expect(deserialized.additional_kwargs.first).toEqual(
+        maliciousConstructor
+      );
       expect(deserialized.additional_kwargs.second).toEqual(
         maliciousConstructor
       );
 
       // Verify neither is an AIMessage instance
-      expect(deserialized.additional_kwargs.first).not.toBeInstanceOf(AIMessage);
+      expect(deserialized.additional_kwargs.first).not.toBeInstanceOf(
+        AIMessage
+      );
       expect(deserialized.additional_kwargs.second).not.toBeInstanceOf(
         AIMessage
       );
