@@ -182,6 +182,54 @@ describe("structured output handling", () => {
   });
 
   describe("providerStrategy", () => {
+    it("should work with providerStrategy and tools", async () => {
+      const { tool: weatherTool, mock: weatherMock } = makeTool(
+        ({ location }: { location: string }) =>
+          `The weather in ${location} is sunny with a high of 75°F.`,
+        {
+          name: "get_weather",
+          description: "Get the current weather for a location",
+          schema: z.object({
+            location: z
+              .string()
+              .describe("The city and state, e.g. San Francisco, CA"),
+          }),
+        }
+      );
+
+      const ResponseSchema = z.object({
+        answer: z.string().describe("The final answer to the user's question"),
+        confidence: z
+          .number()
+          .min(0)
+          .max(1)
+          .describe("Confidence level from 0 to 1"),
+      });
+
+      const agent = createAgent({
+        model: "openai:gpt-4o",
+        systemPrompt:
+          "You are a helpful assistant. Use the available tools to answer questions.",
+        tools: [weatherTool],
+        responseFormat: providerStrategy(ResponseSchema),
+      });
+
+      const result = await agent.invoke({
+        messages: [
+          new HumanMessage("What's the weather like in San Francisco?"),
+        ],
+      });
+
+      // Verify tool was called
+      expect(weatherMock).toHaveBeenCalledTimes(1);
+
+      // Verify structured response is present and correctly parsed
+      expect(result.structuredResponse).toBeDefined();
+      expect(result.structuredResponse.answer).toBeDefined();
+      expect(typeof result.structuredResponse.answer).toBe("string");
+      expect(typeof result.structuredResponse.confidence).toBe("number");
+    });
+
     it("should support native structured output for newer Anthropic models", async () => {
       const model = new ChatAnthropic({
         model: "claude-sonnet-4-5-20250929",

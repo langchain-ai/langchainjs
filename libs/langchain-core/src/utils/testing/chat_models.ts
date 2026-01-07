@@ -523,7 +523,7 @@ export class FakeListChatModel extends BaseChatModel<FakeListChatModelCallOption
 
   withStructuredOutput<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    RunOutput extends Record<string, any> = Record<string, any>
+    RunOutput extends Record<string, any> = Record<string, any>,
   >(
     _params:
       | StructuredOutputMethodParams<RunOutput, false>
@@ -535,7 +535,7 @@ export class FakeListChatModel extends BaseChatModel<FakeListChatModelCallOption
 
   withStructuredOutput<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    RunOutput extends Record<string, any> = Record<string, any>
+    RunOutput extends Record<string, any> = Record<string, any>,
   >(
     _params:
       | StructuredOutputMethodParams<RunOutput, true>
@@ -547,7 +547,7 @@ export class FakeListChatModel extends BaseChatModel<FakeListChatModelCallOption
 
   withStructuredOutput<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    RunOutput extends Record<string, any> = Record<string, any>
+    RunOutput extends Record<string, any> = Record<string, any>,
   >(
     _params:
       | StructuredOutputMethodParams<RunOutput, boolean>

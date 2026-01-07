@@ -261,10 +261,10 @@ export type $MergeOutputVersion<T, U> =
       ? [TV, UV] extends [undefined, undefined]
         ? "v0"
         : [TV] extends [undefined]
-        ? Exclude<UV, undefined>
-        : [UV] extends [undefined]
-        ? Exclude<TV, undefined>
-        : UV
+          ? Exclude<UV, undefined>
+          : [UV] extends [undefined]
+            ? Exclude<TV, undefined>
+            : UV
       : never
     : never;
 
@@ -320,8 +320,8 @@ export type $MergeContentDefinition<T, U> = {
         >
       : Extract<T[K], ContentBlock>
     : K extends keyof U
-    ? Extract<U[K], ContentBlock>
-    : never;
+      ? Extract<U[K], ContentBlock>
+      : never;
 };
 
 /**
@@ -361,7 +361,7 @@ export type $MergeContentDefinition<T, U> = {
  */
 export type $MergeMessageStructure<
   T extends MessageStructure,
-  U extends MessageStructure
+  U extends MessageStructure,
 > = {
   outputVersion: $MergeOutputVersion<T["outputVersion"], U["outputVersion"]>;
   tools: $MergeObjects<T["tools"], U["tools"]>;
@@ -452,24 +452,25 @@ export type $NormalizedMessageStructure<T extends MessageStructure> =
  */
 export type $InferMessageContentBlocks<
   TStructure extends MessageStructure,
-  TRole extends MessageType
-> = $NormalizedMessageStructure<TStructure> extends infer S
-  ? S extends MessageStructure
-    ? S["content"] extends infer C
-      ? C extends Record<PropertyKey, ContentBlock>
-        ? TRole extends keyof C
-          ? [$MessageToolCallBlock<TStructure>] extends [never]
-            ? C[TRole]
-            : $MergeDiscriminatedUnion<
-                NonNullable<C[TRole]>,
-                $MessageToolCallBlock<TStructure>,
-                "type"
-              >
+  TRole extends MessageType,
+> =
+  $NormalizedMessageStructure<TStructure> extends infer S
+    ? S extends MessageStructure
+      ? S["content"] extends infer C
+        ? C extends Record<PropertyKey, ContentBlock>
+          ? TRole extends keyof C
+            ? [$MessageToolCallBlock<TStructure>] extends [never]
+              ? C[TRole]
+              : $MergeDiscriminatedUnion<
+                  NonNullable<C[TRole]>,
+                  $MessageToolCallBlock<TStructure>,
+                  "type"
+                >
+            : never
           : never
         : never
       : never
-    : never
-  : never;
+    : never;
 
 /**
  * Infers the content type for a specific message type from a message structure.
@@ -512,7 +513,7 @@ export type $InferMessageContentBlocks<
  */
 export type $InferMessageContent<
   TStructure extends MessageStructure,
-  TRole extends MessageType
+  TRole extends MessageType,
 > = TStructure["outputVersion"] extends "v1"
   ? Array<$InferMessageContentBlocks<TStructure, TRole>>
   : string | Array<ContentBlock | ContentBlock.Text>;
@@ -557,18 +558,19 @@ export type $InferMessageContent<
  */
 export type $InferMessageProperties<
   TStructure extends MessageStructure,
-  TRole extends MessageType
-> = $NormalizedMessageStructure<TStructure> extends infer S
-  ? S extends MessageStructure
-    ? S["properties"] extends infer P | undefined
-      ? P extends Record<PropertyKey, unknown>
-        ? TRole extends keyof P
-          ? Omit<P[TRole], "content" | "type">
+  TRole extends MessageType,
+> =
+  $NormalizedMessageStructure<TStructure> extends infer S
+    ? S extends MessageStructure
+      ? S["properties"] extends infer P | undefined
+        ? P extends Record<PropertyKey, unknown>
+          ? TRole extends keyof P
+            ? Omit<P[TRole], "content" | "type">
+            : Record<string, unknown>
           : Record<string, unknown>
         : Record<string, unknown>
-      : Record<string, unknown>
-    : never
-  : never;
+      : never
+    : never;
 
 /**
  * Infers the type of a specific property for a message type from a message structure.
@@ -610,7 +612,7 @@ export type $InferMessageProperties<
 export type $InferMessageProperty<
   TStructure extends MessageStructure,
   TRole extends MessageType,
-  K extends string
+  K extends string,
 > = K extends keyof $InferMessageProperties<TStructure, TRole>
   ? $InferMessageProperties<TStructure, TRole>[K]
   : never;
@@ -644,16 +646,13 @@ export type $InferMessageProperty<
  */
 export type $InferResponseMetadata<
   TStructure extends MessageStructure,
-  TRole extends MessageType
-> = $InferMessageProperty<
-  TStructure,
-  TRole,
-  "response_metadata"
-> extends infer P
-  ? [P] extends [never]
-    ? Record<string, unknown>
-    : P
-  : never;
+  TRole extends MessageType,
+> =
+  $InferMessageProperty<TStructure, TRole, "response_metadata"> extends infer P
+    ? [P] extends [never]
+      ? Record<string, unknown>
+      : P
+    : never;
 
 /**
  * Represents a message object that organizes context for an LLM.
@@ -699,13 +698,46 @@ export type $InferResponseMetadata<
  */
 export interface Message<
   TStructure extends MessageStructure = StandardMessageStructure,
-  TRole extends MessageType = MessageType
+  TRole extends MessageType = MessageType,
 > {
   /** The message type/role */
   readonly type: TRole;
   /** Unique identifier for this message */
   id?: string;
-  /** Optional name/identifier for the entity that created this message */
+  /**
+   * An optional name for the message participant.
+   *
+   * This property is primarily used to:
+   *
+   * 1. **Identify agent roles in multi-agent systems**: When multiple agents
+   *    collaborate, setting `name` helps distinguish which agent produced a
+   *    message, preventing confusion about who said what.
+   *
+   * 2. **Pass participant names to model providers**: Some providers (notably
+   *    OpenAI, e.g. see {@link https://platform.openai.com/docs/api-reference/chat/create | OpenAI Chat Completions API})
+   *    use this field to differentiate between participants with the
+   *    same role. For example, when using OpenAI's Chat Completions API, the
+   *    `name` is included in the message payload sent to the model.
+   *
+   * @example
+   * ```typescript
+   * // Setting name on an AIMessage to identify the agent
+   * const message = new AIMessage({
+   *   content: "I'll handle the calendar scheduling.",
+   *   name: "calendar_agent"
+   * });
+   *
+   * // In a multi-agent system, this helps track message origins
+   * const researcherMessage = new AIMessage({
+   *   content: "Here are the findings...",
+   *   name: "researcher"
+   * });
+   * const writerMessage = new AIMessage({
+   *   content: "I've drafted the report.",
+   *   name: "writer"
+   * });
+   * ```
+   */
   name?: string;
   /** Array of content blocks that make up the message content */
   content: $InferMessageContent<TStructure, TRole>;

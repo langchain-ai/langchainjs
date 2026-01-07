@@ -133,9 +133,16 @@ export type GoogleAIResponseMimeType = "text/plain" | "application/json";
 
 export type GoogleAIModelModality = "TEXT" | "IMAGE" | "AUDIO" | string;
 
+export type GoogleThinkingLevel =
+  | "THINKING_LEVEL_UNSPECIFIED"
+  | "LOW"
+  | "MEDIUM"
+  | "HIGH";
+
 export interface GoogleThinkingConfig {
   thinkingBudget?: number;
   includeThoughts?: boolean;
+  thinkingLevel?: GoogleThinkingLevel;
 }
 
 export type GooglePrebuiltVoiceName = string;
@@ -247,6 +254,17 @@ export interface GoogleAIModelParams extends GoogleModelParams {
    * An OpenAI compatible parameter that will map to "maxReasoningTokens"
    */
   reasoningEffort?: "low" | "medium" | "high";
+
+  /**
+   * Optional. The level of thoughts tokens that the model should generate.
+   * Can be specified directly or via reasoningLevel for OpenAI compatibility.
+   */
+  thinkingLevel?: GoogleThinkingLevel;
+
+  /**
+   * An OpenAI compatible parameter that will map to "thinkingLevel"
+   */
+  reasoningLevel?: "low" | "medium" | "high";
 
   /**
    * Top-p changes how the model selects tokens for output.

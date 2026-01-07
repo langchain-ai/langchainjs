@@ -92,7 +92,7 @@ export abstract class StructuredTool<
     SchemaT = ToolInputSchemaBase,
     SchemaOutputT = ToolInputSchemaOutputType<SchemaT>,
     SchemaInputT = ToolInputSchemaInputType<SchemaT>,
-    ToolOutputT = ToolOutputType
+    ToolOutputT = ToolOutputType,
   >
   extends BaseLangChain<
     StructuredToolCallInput<SchemaT, SchemaInputT>,
@@ -169,7 +169,7 @@ export abstract class StructuredTool<
    */
   async invoke<
     TInput extends StructuredToolCallInput<SchemaT, SchemaInputT>,
-    TConfig extends ToolRunnableConfig | undefined
+    TConfig extends ToolRunnableConfig | undefined,
   >(
     input: TInput,
     config?: TConfig
@@ -216,7 +216,7 @@ export abstract class StructuredTool<
    */
   async call<
     TArg extends StructuredToolCallInput<SchemaT, SchemaInputT>,
-    TConfig extends ToolRunnableConfig | undefined
+    TConfig extends ToolRunnableConfig | undefined,
   >(
     arg: TArg,
     configArg?: TConfig,
@@ -370,7 +370,7 @@ export abstract class Tool<ToolOutputT = ToolOutputType>
   // Match the base class signature including the generics and conditional return type
   call<
     TArg extends string | undefined | z.input<this["schema"]> | ToolCall,
-    TConfig extends ToolRunnableConfig | undefined
+    TConfig extends ToolRunnableConfig | undefined,
   >(
     arg: TArg,
     callbacks?: TConfig
@@ -389,7 +389,7 @@ export abstract class Tool<ToolOutputT = ToolOutputType>
  * A tool that can be created dynamically from a function, name, and description.
  */
 export class DynamicTool<
-  ToolOutputT = ToolOutputType
+  ToolOutputT = ToolOutputType,
 > extends Tool<ToolOutputT> {
   static lc_name() {
     return "DynamicTool";
@@ -414,7 +414,7 @@ export class DynamicTool<
    */
   async call<
     TArg extends string | undefined | z.input<this["schema"]> | ToolCall,
-    TConfig extends ToolRunnableConfig | undefined
+    TConfig extends ToolRunnableConfig | undefined,
   >(
     arg: TArg,
     configArg?: TConfig
@@ -451,7 +451,7 @@ export class DynamicStructuredTool<
   SchemaT = ToolInputSchemaBase,
   SchemaOutputT = ToolInputSchemaOutputType<SchemaT>,
   SchemaInputT = ToolInputSchemaInputType<SchemaT>,
-  ToolOutputT = ToolOutputType
+  ToolOutputT = ToolOutputType,
 > extends StructuredTool<SchemaT, SchemaOutputT, SchemaInputT, ToolOutputT> {
   static lc_name() {
     return "DynamicStructuredTool";
@@ -482,7 +482,7 @@ export class DynamicStructuredTool<
   // Match the base class signature
   async call<
     TArg extends StructuredToolCallInput<SchemaT, SchemaInputT>,
-    TConfig extends ToolRunnableConfig | undefined
+    TConfig extends ToolRunnableConfig | undefined,
   >(
     arg: TArg,
     configArg?: TConfig,
@@ -605,7 +605,7 @@ export function tool<
   SchemaT extends ZodObjectV3,
   SchemaOutputT = InferInteropZodOutput<SchemaT>,
   SchemaInputT = InferInteropZodInput<SchemaT>,
-  ToolOutputT = ToolOutputType
+  ToolOutputT = ToolOutputType,
 >(
   func: RunnableFunc<SchemaOutputT, ToolOutputT, ToolRunnableConfig>,
   fields: ToolWrapperParams<SchemaT>
@@ -615,7 +615,7 @@ export function tool<
   SchemaT extends ZodObjectV4,
   SchemaOutputT = InferInteropZodOutput<SchemaT>,
   SchemaInputT = InferInteropZodInput<SchemaT>,
-  ToolOutputT = ToolOutputType
+  ToolOutputT = ToolOutputType,
 >(
   func: RunnableFunc<SchemaOutputT, ToolOutputT, ToolRunnableConfig>,
   fields: ToolWrapperParams<SchemaT>
@@ -625,7 +625,7 @@ export function tool<
   SchemaT extends JSONSchema,
   SchemaOutputT = ToolInputSchemaOutputType<SchemaT>,
   SchemaInputT = ToolInputSchemaInputType<SchemaT>,
-  ToolOutputT = ToolOutputType
+  ToolOutputT = ToolOutputType,
 >(
   func: RunnableFunc<
     Parameters<DynamicStructuredToolInput<SchemaT>["func"]>[0],
@@ -642,7 +642,7 @@ export function tool<
     | JSONSchema = InteropZodObject,
   SchemaOutputT = ToolInputSchemaOutputType<SchemaT>,
   SchemaInputT = ToolInputSchemaInputType<SchemaT>,
-  ToolOutputT = ToolOutputType
+  ToolOutputT = ToolOutputType,
 >(
   func: RunnableFunc<SchemaOutputT, ToolOutputT, ToolRunnableConfig>,
   fields: ToolWrapperParams<SchemaT>
@@ -655,7 +655,7 @@ export function tool<
   SchemaT extends ZodStringV3,
   ToolOutputT = ToolOutputType,
   TState = unknown,
-  TContext = unknown
+  TContext = unknown,
 >(
   func: (
     input: InferInteropZodOutput<SchemaT>,
@@ -668,7 +668,7 @@ export function tool<
   SchemaT extends ZodStringV4,
   ToolOutputT = ToolOutputType,
   TState = unknown,
-  TContext = unknown
+  TContext = unknown,
 >(
   func: (
     input: InferInteropZodOutput<SchemaT>,
@@ -683,7 +683,7 @@ export function tool<
   SchemaInputT = InferInteropZodInput<SchemaT>,
   ToolOutputT = ToolOutputType,
   TState = unknown,
-  TContext = unknown
+  TContext = unknown,
 >(
   func: (
     input: SchemaOutputT,
@@ -698,7 +698,7 @@ export function tool<
   SchemaInputT = InferInteropZodInput<SchemaT>,
   ToolOutputT = ToolOutputType,
   TState = unknown,
-  TContext = unknown
+  TContext = unknown,
 >(
   func: (
     input: SchemaOutputT,
@@ -713,7 +713,7 @@ export function tool<
   SchemaInputT = ToolInputSchemaInputType<SchemaT>,
   ToolOutputT = ToolOutputType,
   TState = unknown,
-  TContext = unknown
+  TContext = unknown,
 >(
   func: (
     input: Parameters<DynamicStructuredToolInput<SchemaT>["func"]>[0],
@@ -731,7 +731,7 @@ export function tool<
   SchemaInputT = ToolInputSchemaInputType<SchemaT>,
   ToolOutputT = ToolOutputType,
   TState = unknown,
-  TContext = unknown
+  TContext = unknown,
 >(
   func: (
     input: SchemaOutputT,

@@ -81,7 +81,7 @@ const chatMemoryColumns: Schemas.Column[] = [
  * ```
  */
 export class XataChatMessageHistory<
-  XataClient extends BaseClient
+  XataClient extends BaseClient,
 > extends BaseListChatMessageHistory {
   lc_namespace = ["langchain", "stores", "message", "xata"];
 

@@ -1,5 +1,63 @@
 # langchain
 
+## 1.2.6
+
+### Patch Changes
+
+- Updated dependencies [[`a46a249`](https://github.com/langchain-ai/langchainjs/commit/a46a24983fd0fea649d950725a2673b3c435275f)]:
+  - @langchain/core@1.1.11
+
+## 1.2.5
+
+### Patch Changes
+
+- Updated dependencies [[`817fc9a`](https://github.com/langchain-ai/langchainjs/commit/817fc9a56d4699f3563a6e153b13eadf7bcc661b)]:
+  - @langchain/core@1.1.10
+
+## 1.2.4
+
+### Patch Changes
+
+- [#9739](https://github.com/langchain-ai/langchainjs/pull/9739) [`c28d24a`](https://github.com/langchain-ai/langchainjs/commit/c28d24a8770f6d0e543cde116b0e38b3baf21301) Thanks [@christian-bromann](https://github.com/christian-bromann)! - fix(core): use getBufferString for message summarization
+
+- [#9729](https://github.com/langchain-ai/langchainjs/pull/9729) [`536c7dd`](https://github.com/langchain-ai/langchainjs/commit/536c7ddacd6c7f80d2edf18ab9caeeab71827ccd) Thanks [@christian-bromann](https://github.com/christian-bromann)! - fix(langchain): default strict to true in providerStrategy for OpenAI compatibility
+
+- [#9728](https://github.com/langchain-ai/langchainjs/pull/9728) [`5cfbedf`](https://github.com/langchain-ai/langchainjs/commit/5cfbedf064ffdc960cb2e5a97e37d7a5900560de) Thanks [@christian-bromann](https://github.com/christian-bromann)! - fix(langchain): support callbacks property in stream
+
+- [#9715](https://github.com/langchain-ai/langchainjs/pull/9715) [`cc502e1`](https://github.com/langchain-ai/langchainjs/commit/cc502e1b67dbadcd123a7ea2964c791c2bbad581) Thanks [@jacoblee93](https://github.com/jacoblee93)! - fix(langchain): Add secretsFromEnv and secrets for prompt pulling
+  fix(@langchain/classic): Add secretsFromEnv and secrets for prompt pulling
+
+- [#9703](https://github.com/langchain-ai/langchainjs/pull/9703) [`5d1b874`](https://github.com/langchain-ai/langchainjs/commit/5d1b874e1bb0a038f23576d5ff6d8335b755bce1) Thanks [@christian-bromann](https://github.com/christian-bromann)! - fix(langchain): properly pass on schema title
+
+- [#9702](https://github.com/langchain-ai/langchainjs/pull/9702) [`bfcb87d`](https://github.com/langchain-ai/langchainjs/commit/bfcb87d23c580c7881f650960a448fe2e54a30b3) Thanks [@christian-bromann](https://github.com/christian-bromann)! - fix(core): improve interop with Zod
+
+- [#9714](https://github.com/langchain-ai/langchainjs/pull/9714) [`42b138f`](https://github.com/langchain-ai/langchainjs/commit/42b138fe20a8d711938058a69669e1c29b18bd50) Thanks [@r77wu](https://github.com/r77wu)! - use parseJumpToTarget in 'afterModel' Router
+
+- [#9740](https://github.com/langchain-ai/langchainjs/pull/9740) [`f697451`](https://github.com/langchain-ai/langchainjs/commit/f6974516b041ed12befd26e1a4cbe457865a2780) Thanks [@christian-bromann](https://github.com/christian-bromann)! - fix(langchain): keep tool call / AIMessage pairings when summarizing
+
+- Updated dependencies [[`56600b9`](https://github.com/langchain-ai/langchainjs/commit/56600b94f8e185f44d4288b7a9b66c55778938dd), [`dc5c2ac`](https://github.com/langchain-ai/langchainjs/commit/dc5c2ac00f86dd2feeba9843d708926a5f38202e), [`c28d24a`](https://github.com/langchain-ai/langchainjs/commit/c28d24a8770f6d0e543cde116b0e38b3baf21301), [`bfcb87d`](https://github.com/langchain-ai/langchainjs/commit/bfcb87d23c580c7881f650960a448fe2e54a30b3)]:
+  - @langchain/core@1.1.9
+
+## 1.2.3
+
+### Patch Changes
+
+- [#9707](https://github.com/langchain-ai/langchainjs/pull/9707) [`e5063f9`](https://github.com/langchain-ai/langchainjs/commit/e5063f9c6e9989ea067dfdff39262b9e7b6aba62) Thanks [@hntrl](https://github.com/hntrl)! - add security hardening for `load`
+
+- Updated dependencies [[`e5063f9`](https://github.com/langchain-ai/langchainjs/commit/e5063f9c6e9989ea067dfdff39262b9e7b6aba62), [`8996647`](https://github.com/langchain-ai/langchainjs/commit/89966470e8c0b112ce4f9a326004af6a4173f9e6)]:
+  - @langchain/core@1.1.8
+
+## 1.2.2
+
+### Patch Changes
+
+- [#9675](https://github.com/langchain-ai/langchainjs/pull/9675) [`af664be`](https://github.com/langchain-ai/langchainjs/commit/af664becc0245b2315ea2f784c9a6c1d7622dbb4) Thanks [@jacoblee93](https://github.com/jacoblee93)! - Bump LangSmith dep to 0.4.0
+
+- [#9673](https://github.com/langchain-ai/langchainjs/pull/9673) [`ffb2402`](https://github.com/langchain-ai/langchainjs/commit/ffb24026cd93e58219519ee24c6e23ea57cb5bde) Thanks [@hntrl](https://github.com/hntrl)! - add `context` utility
+
+- Updated dependencies [[`df9c42b`](https://github.com/langchain-ai/langchainjs/commit/df9c42b3ab61b85309ab47256e1d93c3188435ee), [`8d2982b`](https://github.com/langchain-ai/langchainjs/commit/8d2982bb94c0f4e4314ace3cc98a1ae87571b1ed), [`af664be`](https://github.com/langchain-ai/langchainjs/commit/af664becc0245b2315ea2f784c9a6c1d7622dbb4), [`ffb2402`](https://github.com/langchain-ai/langchainjs/commit/ffb24026cd93e58219519ee24c6e23ea57cb5bde)]:
+  - @langchain/core@1.1.7
+
 ## 1.2.1
 
 ### Patch Changes

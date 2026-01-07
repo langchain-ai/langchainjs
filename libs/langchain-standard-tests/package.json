@@ -1,6 +1,6 @@
 {
   "name": "@langchain/standard-tests",
-  "version": "0.0.9",
+  "version": "0.0.14",
   "description": "Standard tests for LangChain.js",
   "author": "LangChain",
   "license": "MIT",
@@ -37,7 +37,7 @@
     "@tsconfig/recommended": "^1.0.3",
     "dpdm": "^3.14.0",
     "eslint": "^9.34.0",
-    "prettier": "^2.8.3",
+    "prettier": "^3.5.0",
     "typescript": "~5.8.3"
   },
   "peerDependencies": {

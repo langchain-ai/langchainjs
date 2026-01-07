@@ -1,5 +1,49 @@
 # @langchain/core
 
+## 1.1.11
+
+### Patch Changes
+
+- [#9753](https://github.com/langchain-ai/langchainjs/pull/9753) [`a46a249`](https://github.com/langchain-ai/langchainjs/commit/a46a24983fd0fea649d950725a2673b3c435275f) Thanks [@christian-bromann](https://github.com/christian-bromann)! - fix(core): allow shared object references in serialization
+
+## 1.1.10
+
+### Patch Changes
+
+- [#9746](https://github.com/langchain-ai/langchainjs/pull/9746) [`817fc9a`](https://github.com/langchain-ai/langchainjs/commit/817fc9a56d4699f3563a6e153b13eadf7bcc661b) Thanks [@bracesproul](https://github.com/bracesproul)! - fix: `_mergeDicts` error when merging undefined values
+
+## 1.1.9
+
+### Patch Changes
+
+- [#9725](https://github.com/langchain-ai/langchainjs/pull/9725) [`56600b9`](https://github.com/langchain-ai/langchainjs/commit/56600b94f8e185f44d4288b7a9b66c55778938dd) Thanks [@Orenoid](https://github.com/Orenoid)! - fix(langchain): update merge logic for numeric values in `mergeDicts`
+
+- [#9736](https://github.com/langchain-ai/langchainjs/pull/9736) [`dc5c2ac`](https://github.com/langchain-ai/langchainjs/commit/dc5c2ac00f86dd2feeba9843d708926a5f38202e) Thanks [@hntrl](https://github.com/hntrl)! - fix(core): handle circular references in `load`
+
+- [#9739](https://github.com/langchain-ai/langchainjs/pull/9739) [`c28d24a`](https://github.com/langchain-ai/langchainjs/commit/c28d24a8770f6d0e543cde116b0e38b3baf21301) Thanks [@christian-bromann](https://github.com/christian-bromann)! - fix(core): use getBufferString for message summarization
+
+- [#9702](https://github.com/langchain-ai/langchainjs/pull/9702) [`bfcb87d`](https://github.com/langchain-ai/langchainjs/commit/bfcb87d23c580c7881f650960a448fe2e54a30b3) Thanks [@christian-bromann](https://github.com/christian-bromann)! - fix(core): improve interop with Zod
+
+## 1.1.8
+
+### Patch Changes
+
+- [#9707](https://github.com/langchain-ai/langchainjs/pull/9707) [`e5063f9`](https://github.com/langchain-ai/langchainjs/commit/e5063f9c6e9989ea067dfdff39262b9e7b6aba62) Thanks [@hntrl](https://github.com/hntrl)! - add security hardening for `load`
+
+- [#9684](https://github.com/langchain-ai/langchainjs/pull/9684) [`8996647`](https://github.com/langchain-ai/langchainjs/commit/89966470e8c0b112ce4f9a326004af6a4173f9e6) Thanks [@christian-bromann](https://github.com/christian-bromann)! - fix(core): document purpose of name in base message
+
+## 1.1.7
+
+### Patch Changes
+
+- [#9686](https://github.com/langchain-ai/langchainjs/pull/9686) [`df9c42b`](https://github.com/langchain-ai/langchainjs/commit/df9c42b3ab61b85309ab47256e1d93c3188435ee) Thanks [@hntrl](https://github.com/hntrl)! - add usage_metadata to metadata in LangChainTracer
+
+- [#9665](https://github.com/langchain-ai/langchainjs/pull/9665) [`8d2982b`](https://github.com/langchain-ai/langchainjs/commit/8d2982bb94c0f4e4314ace3cc98a1ae87571b1ed) Thanks [@jacoblee93](https://github.com/jacoblee93)! - feat(core): Make runnable transform trace in a single payload in LangChainTracer
+
+- [#9675](https://github.com/langchain-ai/langchainjs/pull/9675) [`af664be`](https://github.com/langchain-ai/langchainjs/commit/af664becc0245b2315ea2f784c9a6c1d7622dbb4) Thanks [@jacoblee93](https://github.com/jacoblee93)! - Bump LangSmith dep to 0.4.0
+
+- [#9673](https://github.com/langchain-ai/langchainjs/pull/9673) [`ffb2402`](https://github.com/langchain-ai/langchainjs/commit/ffb24026cd93e58219519ee24c6e23ea57cb5bde) Thanks [@hntrl](https://github.com/hntrl)! - add `context` utility
+
 ## 1.1.6
 
 ### Patch Changes

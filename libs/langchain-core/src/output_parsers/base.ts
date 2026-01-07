@@ -103,7 +103,7 @@ export abstract class BaseLLMOutputParser<T = unknown> extends Runnable<
  * Class to parse the output of an LLM call.
  */
 export abstract class BaseOutputParser<
-  T = unknown
+  T = unknown,
 > extends BaseLLMOutputParser<T> {
   parseResult(
     generations: Generation[] | ChatGeneration[],

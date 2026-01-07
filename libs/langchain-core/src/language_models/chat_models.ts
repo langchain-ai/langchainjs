@@ -206,7 +206,7 @@ export type BindToolsInput =
 export abstract class BaseChatModel<
   CallOptions extends BaseChatModelCallOptions = BaseChatModelCallOptions,
   // TODO: Fix the parameter order on the next minor version.
-  OutputMessageType extends BaseMessageChunk = AIMessageChunk
+  OutputMessageType extends BaseMessageChunk = AIMessageChunk,
 > extends BaseLanguageModel<OutputMessageType, CallOptions> {
   // Backwards compatibility since fields have been moved to RunnableConfig
   declare ParsedCallOptions: Omit<
@@ -862,7 +862,7 @@ export abstract class BaseChatModel<
 
   withStructuredOutput<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    RunOutput extends Record<string, any> = Record<string, any>
+    RunOutput extends Record<string, any> = Record<string, any>,
   >(
     outputSchema:
       | ZodTypeV4<RunOutput>
@@ -873,7 +873,7 @@ export abstract class BaseChatModel<
 
   withStructuredOutput<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    RunOutput extends Record<string, any> = Record<string, any>
+    RunOutput extends Record<string, any> = Record<string, any>,
   >(
     outputSchema:
       | ZodTypeV4<RunOutput>
@@ -884,7 +884,7 @@ export abstract class BaseChatModel<
 
   withStructuredOutput<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    RunOutput extends Record<string, any> = Record<string, any>
+    RunOutput extends Record<string, any> = Record<string, any>,
   >(
     outputSchema:
       | ZodTypeV3<RunOutput>
@@ -895,7 +895,7 @@ export abstract class BaseChatModel<
 
   withStructuredOutput<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    RunOutput extends Record<string, any> = Record<string, any>
+    RunOutput extends Record<string, any> = Record<string, any>,
   >(
     outputSchema:
       | ZodTypeV3<RunOutput>
@@ -906,7 +906,7 @@ export abstract class BaseChatModel<
 
   withStructuredOutput<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    RunOutput extends Record<string, any> = Record<string, any>
+    RunOutput extends Record<string, any> = Record<string, any>,
   >(
     outputSchema:
       | InteropZodType<RunOutput>
@@ -1029,7 +1029,7 @@ export abstract class BaseChatModel<
  * implementation of _generate.
  */
 export abstract class SimpleChatModel<
-  CallOptions extends BaseChatModelCallOptions = BaseChatModelCallOptions
+  CallOptions extends BaseChatModelCallOptions = BaseChatModelCallOptions,
 > extends BaseChatModel<CallOptions> {
   abstract _call(
     messages: BaseMessage[],

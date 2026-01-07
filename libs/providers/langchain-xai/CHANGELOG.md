@@ -1,5 +1,12 @@
 # @langchain/xai
 
+## 1.1.1
+
+### Patch Changes
+
+- Updated dependencies [[`13c9d5b`](https://github.com/langchain-ai/langchainjs/commit/13c9d5bfa3acac7ffb37642e9a50d84dc9004e88), [`75b3b90`](https://github.com/langchain-ai/langchainjs/commit/75b3b90c5fa62cbbfa678dfb01f031caed4488ef)]:
+  - @langchain/openai@1.2.1
+
 ## 1.1.0
 
 ### Minor Changes

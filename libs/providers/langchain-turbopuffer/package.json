@@ -1,0 +1,79 @@
+{
+  "name": "@langchain/turbopuffer",
+  "version": "0.1.0",
+  "description": "LangChain.js integration for the turbopuffer vector database",
+  "author": "LangChain",
+  "license": "MIT",
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:langchain-ai/langchainjs.git"
+  },
+  "homepage": "https://github.com/langchain-ai/langchainjs/tree/main/libs/providers/langchain-turbopuffer",
+  "scripts": {
+    "build": "turbo build:compile --filter @langchain/turbopuffer --output-logs new-only",
+    "build:compile": "tsdown",
+    "lint:eslint": "eslint --cache src/",
+    "lint:dpdm": "dpdm --skip-dynamic-imports circular --exit-code circular:1 --no-warning --no-tree src/*.ts src/**/*.ts",
+    "lint": "pnpm lint:eslint && pnpm lint:dpdm",
+    "lint:fix": "pnpm lint:eslint --fix && pnpm lint:dpdm",
+    "clean": "rm -rf .turbo dist/",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:int": "vitest run --mode int",
+    "format": "prettier --write \"src\"",
+    "format:check": "prettier --check \"src\""
+  },
+  "dependencies": {
+    "uuid": "^10.0.0"
+  },
+  "peerDependencies": {
+    "@langchain/core": "^1.0.0",
+    "@turbopuffer/turbopuffer": "^1.0.0"
+  },
+  "devDependencies": {
+    "@faker-js/faker": "^8.4.1",
+    "@langchain/core": "workspace:*",
+    "@langchain/eslint": "workspace:*",
+    "@langchain/tsconfig": "workspace:*",
+    "@tsconfig/recommended": "^1.0.3",
+    "@turbopuffer/turbopuffer": "^1.0.0",
+    "@types/uuid": "^10.0.0",
+    "@vitest/coverage-v8": "^3.2.4",
+    "dotenv": "^16.3.1",
+    "dpdm": "^3.14.0",
+    "eslint": "^9.34.0",
+    "prettier": "^3.5.0",
+    "typescript": "~5.8.3",
+    "vitest": "^3.2.4"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "main": "./dist/index.cjs",
+  "types": "./dist/index.d.cts",
+  "exports": {
+    ".": {
+      "input": "./src/index.ts",
+      "require": {
+        "types": "./dist/index.d.cts",
+        "default": "./dist/index.cjs"
+      },
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      }
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist/",
+    "CHANGELOG.md",
+    "README.md",
+    "LICENSE"
+  ],
+  "module": "./dist/index.js"
+}

@@ -26,7 +26,7 @@ export interface LibSQLVectorStoreArgs {
  * A vector store using LibSQL/Turso for storage and retrieval.
  */
 export class LibSQLVectorStore<
-  Metadata extends MetadataDefault = MetadataDefault
+  Metadata extends MetadataDefault = MetadataDefault,
 > extends VectorStore {
   declare FilterType: string | InStatement | WhereCondition<Metadata>;
 
@@ -230,7 +230,7 @@ export class LibSQLVectorStore<
    * @returns {Promise<LibSQLVectorStore>} A new LibSQLVectorStore instance.
    */
   static async fromDocuments<
-    Metadata extends MetadataDefault = MetadataDefault
+    Metadata extends MetadataDefault = MetadataDefault,
   >(
     docs: Document<Metadata>[],
     embeddings: EmbeddingsInterface,

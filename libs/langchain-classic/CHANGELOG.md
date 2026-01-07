@@ -1,5 +1,25 @@
 # @langchain/classic
 
+## 1.0.8
+
+### Patch Changes
+
+- [#9715](https://github.com/langchain-ai/langchainjs/pull/9715) [`cc502e1`](https://github.com/langchain-ai/langchainjs/commit/cc502e1b67dbadcd123a7ea2964c791c2bbad581) Thanks [@jacoblee93](https://github.com/jacoblee93)! - fix(langchain): Add secretsFromEnv and secrets for prompt pulling
+  fix(@langchain/classic): Add secretsFromEnv and secrets for prompt pulling
+- Updated dependencies [[`13c9d5b`](https://github.com/langchain-ai/langchainjs/commit/13c9d5bfa3acac7ffb37642e9a50d84dc9004e88), [`75b3b90`](https://github.com/langchain-ai/langchainjs/commit/75b3b90c5fa62cbbfa678dfb01f031caed4488ef)]:
+  - @langchain/openai@1.2.1
+  - @langchain/textsplitters@1.0.1
+
+## 1.0.7
+
+### Patch Changes
+
+- [#9675](https://github.com/langchain-ai/langchainjs/pull/9675) [`af664be`](https://github.com/langchain-ai/langchainjs/commit/af664becc0245b2315ea2f784c9a6c1d7622dbb4) Thanks [@jacoblee93](https://github.com/jacoblee93)! - Bump LangSmith dep to 0.4.0
+
+- Updated dependencies []:
+  - @langchain/textsplitters@1.0.1
+  - @langchain/openai@1.2.0
+
 ## 1.0.6
 
 ### Patch Changes

@@ -68,10 +68,8 @@ export interface FunctionCall {
 
 export type BaseMessageFields<
   TStructure extends MessageStructure = MessageStructure,
-  TRole extends MessageType = MessageType
-> = {
-  id?: string;
-  name?: string;
+  TRole extends MessageType = MessageType,
+> = Pick<Message, "id" | "name"> & {
   content?: $InferMessageContent<TStructure, TRole>;
   contentBlocks?: Array<ContentBlock.Standard>;
   /** @deprecated */
@@ -199,7 +197,7 @@ function stringifyWithDepthLimit(obj: any, depthLimit: number): string {
  */
 export abstract class BaseMessage<
     TStructure extends MessageStructure = MessageStructure,
-    TRole extends MessageType = MessageType
+    TRole extends MessageType = MessageType,
   >
   extends Serializable
   implements Message<TStructure, TRole>
@@ -222,6 +220,7 @@ export abstract class BaseMessage<
 
   id?: string;
 
+  /** @inheritdoc */
   name?: string;
 
   content: $InferMessageContent<TStructure, TRole>;
@@ -423,11 +422,17 @@ export function isOpenAIToolCallArray(
 
 export function _mergeDicts(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  left: Record<string, any> = {},
+  left: Record<string, any> | undefined,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  right: Record<string, any> = {}
+  right: Record<string, any> | undefined
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-): Record<string, any> {
+): Record<string, any> | undefined {
+  if (left === undefined && right === undefined) {
+    return undefined;
+  }
+  if (left === undefined || right === undefined) {
+    return left ?? right;
+  }
   const merged = { ...left };
   for (const [key, value] of Object.entries(right)) {
     if (merged[key] == null) {
@@ -455,6 +460,8 @@ export function _mergeDicts(
       } else {
         merged[key] += value;
       }
+    } else if (typeof merged[key] === "number") {
+      merged[key] = merged[key] + value;
     } else if (typeof merged[key] === "object" && !Array.isArray(merged[key])) {
       merged[key] = _mergeDicts(merged[key], value);
     } else if (Array.isArray(merged[key])) {
@@ -569,7 +576,7 @@ export function _mergeObj<T = any>(
  */
 export abstract class BaseMessageChunk<
   TStructure extends MessageStructure = MessageStructure,
-  TRole extends MessageType = MessageType
+  TRole extends MessageType = MessageType,
 > extends BaseMessage<TStructure, TRole> {
   abstract concat(chunk: BaseMessageChunk): BaseMessageChunk<TStructure, TRole>;
 
