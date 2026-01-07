@@ -272,6 +272,7 @@
     "closevector-node": "0.1.6",
     "closevector-web": "0.1.6",
     "convex": "^1.3.1",
+    "couchbase": "^4.4.6",
     "crypto-js": "^4.2.0",
     "d3-dsv": "^2.0.0",
     "discord.js": "^14.14.1",
@@ -524,6 +525,9 @@
       "optional": true
     },
     "convex": {
+      "optional": true
+    },
+    "couchbase": {
       "optional": true
     },
     "crypto-js": {
@@ -3076,6 +3080,17 @@
       "import": {
         "types": "./dist/vectorstores/convex.d.ts",
         "default": "./dist/vectorstores/convex.js"
+      }
+    },
+    "./vectorstores/couchbase_query": {
+      "input": "./src/vectorstores/couchbase_query.ts",
+      "require": {
+        "types": "./dist/vectorstores/couchbase_query.d.cts",
+        "default": "./dist/vectorstores/couchbase_query.cjs"
+      },
+      "import": {
+        "types": "./dist/vectorstores/couchbase_query.d.ts",
+        "default": "./dist/vectorstores/couchbase_query.js"
       }
     },
     "./vectorstores/couchbase_search": {
