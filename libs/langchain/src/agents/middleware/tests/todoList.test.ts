@@ -207,11 +207,11 @@ describe("todoListMiddleware", () => {
       // Should return error messages
       expect(result).toBeDefined();
       expect(result!.messages).toHaveLength(2);
-      expect(result!.messages[0]).toBeInstanceOf(ToolMessage);
-      expect(result!.messages[1]).toBeInstanceOf(ToolMessage);
+      expect(result!.messages?.[0]).toBeInstanceOf(ToolMessage);
+      expect(result!.messages?.[1]).toBeInstanceOf(ToolMessage);
 
-      const msg1 = result!.messages[0] as ToolMessage;
-      const msg2 = result!.messages[1] as ToolMessage;
+      const msg1 = result!.messages?.[0] as ToolMessage;
+      const msg2 = result!.messages?.[1] as ToolMessage;
 
       expect(msg1.tool_call_id).toBe("call_1");
       expect(msg1.status).toBe("error");
