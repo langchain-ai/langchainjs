@@ -1,16 +1,16 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { expect } from "@jest/globals";
 import { BaseChatModelCallOptions } from "@langchain/core/language_models/chat_models";
-import { BaseMessageChunk } from "@langchain/core/messages";
-import { RecordStringAny } from "../base.js";
+import { AIMessageChunk } from "@langchain/core/messages";
+import { RecordStringAny } from "../base.ts";
 import {
   ChatModelIntegrationTestsFields,
   ChatModelIntegrationTests as BaseChatModelIntegrationTests,
-} from "./chat_models.js";
+} from "./chat_models.ts";
 
 export abstract class ChatModelIntegrationTests<
   CallOptions extends BaseChatModelCallOptions = BaseChatModelCallOptions,
-  OutputMessageType extends BaseMessageChunk = BaseMessageChunk,
+  OutputMessageType extends AIMessageChunk = AIMessageChunk,
   ConstructorArgs extends RecordStringAny = RecordStringAny,
 > extends BaseChatModelIntegrationTests<
   CallOptions,
