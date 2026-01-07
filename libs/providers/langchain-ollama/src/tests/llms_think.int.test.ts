@@ -1,68 +1,51 @@
 import { test, expect } from "vitest";
 import { Ollama } from "../llms.js";
 
-test("test deep seek model with think=false", async () => {
-  const ollama = new Ollama({
+
+test("test deep seek model with think=true vs think=false vs think=undefined", async () => {
+  const prompt = "Explain the process of photosynthesis briefly.";
+
+  const ollamaWithoutThinking = new Ollama({
     model: "deepseek-r1:32b",
-    think: false, // Ensure the "think" field is explicitly set to false
+    think: false,
     maxRetries: 1,
   });
 
-  const res = await ollama.invoke(
-    "Explain the process of photosynthesis briefly."
-  );
+  const resWithoutThinking = await ollamaWithoutThinking.invoke(prompt);
 
-  // Ensure the response is defined
-  expect(res).toBeDefined();
-  expect(typeof res).toBe("string");
-
-  // Validate that the response does not include any thinking content
-  // When think=false, the response should only contain the final answer
-  expect(res).toMatch(/photosynthesis/i); // Check it includes the topic
-  expect(res.length).toBeGreaterThan(1);
-});
-
-test("test deep seek model with think=true", async () => {
-  const ollama = new Ollama({
+  const ollamaWithThinking = new Ollama({
     model: "deepseek-r1:32b",
     think: true,
     maxRetries: 1,
   });
 
-  const res = await ollama.invoke(
-    "Explain the process of photosynthesis briefly."
-  );
+  const resWithThinking = await ollamaWithThinking.invoke(prompt);
 
-  // Ensure the response is defined
-  expect(res).toBeDefined();
-  expect(typeof res).toBe("string");
-
-  // When think=true, the response should include the thinking content
-  // The LLM class returns thinking + final answer as a concatenated string
-  expect(res).toMatch(/photosynthesis/i); // Check it includes the topic
-  console.log(res);
-  expect(res.length).toBeGreaterThan(10);
-
-  // The thinking content should be included in the response
-  // Note: Unlike chat models, LLM returns everything in a single string
-}, 120_000);
-
-test("test deep seek model with think undefined (default)", async () => {
-  const ollama = new Ollama({
+  const ollamaDefaultThinking = new Ollama({
     model: "deepseek-r1:32b",
     maxRetries: 1,
   });
 
-  const res = await ollama.invoke(
-    "Explain the process of photosynthesis briefly."
-  );
+  const resDefaultThinking = await ollamaDefaultThinking.invoke(prompt);
 
-  // Ensure the response is defined
-  expect(res).toBeDefined();
-  expect(typeof res).toBe("string");
+  // Both responses should be defined
+  expect(resWithoutThinking).toBeDefined();
+  expect(typeof resWithoutThinking).toBe("string");
+  expect(resWithThinking).toBeDefined();
+  expect(typeof resWithThinking).toBe("string");
+  expect(resDefaultThinking).toBeDefined();
+  expect(typeof resDefaultThinking).toBe("string");
 
-  // When think is undefined, it should default to not using thinking mode
-  // (or whatever the Ollama API default is - typically false)
-  expect(res).toMatch(/photosynthesis/i); // Check it includes the topic
-  expect(res.length).toBeGreaterThan(1);
+  // Both should contain relevant content
+  expect(resWithoutThinking).toMatch(/photosynthesis/i);
+  expect(resWithThinking).toMatch(/photosynthesis/i);
+  expect(resDefaultThinking).toMatch(/photosynthesis/i);
+
+  // The response with thinking should be significantly longer
+  // because it includes the reasoning process before the final answer
+  expect(resWithThinking.length).toBeGreaterThan(resWithoutThinking.length * 2);
+  expect(resDefaultThinking.length).toBeGreaterThan(resWithoutThinking.length * 2);
+
+  // The responses with thinking enabled should be similar in length
+  expect(Math.abs(resWithThinking.length - resDefaultThinking.length)).toBeLessThan(100);
 }, 120_000);
