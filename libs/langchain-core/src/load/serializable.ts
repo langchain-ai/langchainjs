@@ -237,8 +237,12 @@ export abstract class Serializable implements SerializableInterface {
     });
 
     const escapedKwargs: SerializedFields = {};
+    // Track current path to detect circular references (but not shared references)
+    // The Serializable object itself stays in the path to detect self-references in kwargs
+    const pathSet = new WeakSet<object>();
+    pathSet.add(this);
     for (const [key, value] of Object.entries(kwargs)) {
-      escapedKwargs[key] = escapeIfNeeded(value);
+      escapedKwargs[key] = escapeIfNeeded(value, pathSet);
     }
 
     // Now add secret markers - these are added AFTER escaping so they won't be escaped

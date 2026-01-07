@@ -16,7 +16,7 @@ export function createAgentAnnotationConditional<
     | AnyAnnotationRoot
     | InteropZodObject
     | undefined = undefined,
-  TMiddleware extends readonly AgentMiddleware<any, any, any>[] = []
+  TMiddleware extends readonly AgentMiddleware<any, any, any>[] = [],
 >(
   hasStructuredResponse = true,
   stateSchema: TStateSchema,

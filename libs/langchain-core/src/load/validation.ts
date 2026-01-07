@@ -104,33 +104,52 @@ function createNotImplemented(obj: unknown): {
  * confused with LC objects.
  *
  * @param obj - The value to serialize.
+ * @param pathSet - WeakSet to track ancestor objects in the current path to detect circular references.
+ *                  Objects are removed after processing to allow shared references (same object in
+ *                  multiple places) while still detecting true circular references (ancestor in descendant).
  * @returns The serialized value with user objects escaped as needed.
  */
-export function serializeValue(obj: unknown): unknown {
-  if (isSerializableLike(obj)) {
-    // This is an LC object - serialize it properly (not escaped)
-    return serializeLcObject(obj);
-  }
-
+export function serializeValue(
+  obj: unknown,
+  pathSet: WeakSet<object> = new WeakSet()
+): unknown {
   if (obj !== null && typeof obj === "object" && !Array.isArray(obj)) {
+    // Check for circular reference - only if this object is an ancestor in the current path
+    if (pathSet.has(obj)) {
+      return createNotImplemented(obj);
+    }
+
+    if (isSerializableLike(obj)) {
+      // This is an LC object - serialize it properly (not escaped)
+      return serializeLcObject(obj, pathSet);
+    }
+
+    // Add to path before processing children
+    pathSet.add(obj);
+
     const record = obj as Record<string, unknown>;
     // Check if object needs escaping BEFORE recursing into values.
     // If it needs escaping, wrap it as-is - the contents are user data that
     // will be returned as-is during deserialization (no instantiation).
     // This prevents re-escaping of already-escaped nested content.
     if (needsEscaping(record)) {
+      // Remove from path before returning (to allow shared references)
+      pathSet.delete(obj);
       return escapeObject(record);
     }
     // Safe object (no 'lc' key) - recurse into values
     const result: Record<string, unknown> = {};
     for (const [key, value] of Object.entries(record)) {
-      result[key] = serializeValue(value);
+      result[key] = serializeValue(value, pathSet);
     }
+    // Remove from path after processing (to allow shared references in other branches)
+    pathSet.delete(obj);
     return result;
   }
 
   if (Array.isArray(obj)) {
-    return obj.map((item) => serializeValue(item));
+    // Arrays don't need circular reference tracking since they're handled by object tracking
+    return obj.map((item) => serializeValue(item, pathSet));
   }
 
   if (
@@ -150,6 +169,8 @@ export function serializeValue(obj: unknown): unknown {
  * Serialize a `Serializable` object with escaping of user data in kwargs.
  *
  * @param obj - The `Serializable` object to serialize.
+ * @param pathSet - WeakSet to track ancestor objects in the current path to detect circular references.
+ *                  The Serializable object is kept in the path set to detect if it appears in its own kwargs.
  * @returns The serialized object with user data in kwargs escaped as needed.
  *
  * @remarks
@@ -157,12 +178,20 @@ export function serializeValue(obj: unknown): unknown {
  * metadata) that contains `'lc'` keys. Secret fields (from `lc_secrets`) are
  * skipped because `toJSON()` replaces their values with secret markers.
  */
-export function serializeLcObject(obj: SerializableLike): {
+export function serializeLcObject(
+  obj: SerializableLike,
+  pathSet: WeakSet<object> = new WeakSet()
+): {
   lc: number;
   type: string;
   id: string[];
   kwargs?: Record<string, unknown>;
 } {
+  // Add object to path set to detect if it appears in its own kwargs (circular reference)
+  // Note: We intentionally don't remove this after processing because a Serializable
+  // appearing in its own kwargs is always a circular reference that should be detected.
+  pathSet.add(obj);
+
   // Secret fields are handled by toJSON() - it replaces values with secret markers
   const secretFields = new Set(Object.keys(obj.lc_secrets ?? {}));
 
@@ -176,7 +205,7 @@ export function serializeLcObject(obj: SerializableLike): {
       if (secretFields.has(key)) {
         newKwargs[key] = value;
       } else {
-        newKwargs[key] = serializeValue(value);
+        newKwargs[key] = serializeValue(value, pathSet);
       }
     }
     serialized.kwargs = newKwargs;
@@ -193,32 +222,52 @@ export function serializeLcObject(obj: SerializableLike): {
  * processed by `toJSON()`.
  *
  * @param value - The value to potentially escape.
+ * @param pathSet - WeakSet to track ancestor objects in the current path to detect circular references.
+ *                  Objects are removed after processing to allow shared references (same object in
+ *                  multiple places) while still detecting true circular references (ancestor in descendant).
  * @returns The value with any `lc`-containing objects wrapped in escape markers.
  */
-export function escapeIfNeeded(value: unknown): unknown {
+export function escapeIfNeeded(
+  value: unknown,
+  pathSet: WeakSet<object> = new WeakSet()
+): unknown {
   if (value !== null && typeof value === "object" && !Array.isArray(value)) {
+    // Check for circular reference - only if this object is an ancestor in the current path
+    if (pathSet.has(value)) {
+      // Replace circular reference with a not_implemented marker
+      return createNotImplemented(value);
+    }
+
     // Preserve Serializable objects - they have their own toJSON() that will be
     // called by JSON.stringify. We don't want to convert them to plain objects.
     if (isSerializableLike(value)) {
       return value;
     }
+
+    // Add to path before processing children
+    pathSet.add(value);
+
     const record = value as Record<string, unknown>;
     // Check if object needs escaping BEFORE recursing into values.
     // If it needs escaping, wrap it as-is - the contents are user data that
     // will be returned as-is during deserialization (no instantiation).
     if (needsEscaping(record)) {
+      // Remove from path before returning (to allow shared references)
+      pathSet.delete(value);
       return escapeObject(record);
     }
     // Safe object (no 'lc' key) - recurse into values
     const result: Record<string, unknown> = {};
     for (const [key, val] of Object.entries(record)) {
-      result[key] = escapeIfNeeded(val);
+      result[key] = escapeIfNeeded(val, pathSet);
     }
+    // Remove from path after processing (to allow shared references in other branches)
+    pathSet.delete(value);
     return result;
   }
 
   if (Array.isArray(value)) {
-    return value.map((item) => escapeIfNeeded(item));
+    return value.map((item) => escapeIfNeeded(item, pathSet));
   }
 
   return value;

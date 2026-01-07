@@ -9,16 +9,15 @@ export type RecordStringAny = Record<string, unknown>;
 export type BaseChatModelConstructor<
   CallOptions extends BaseChatModelCallOptions = BaseChatModelCallOptions,
   OutputMessageType extends AIMessageChunk = AIMessageChunk,
-  ConstructorArgs extends RecordStringAny = RecordStringAny
-> = new (args: ConstructorArgs) => BaseChatModel<
-  CallOptions,
-  OutputMessageType
->;
+  ConstructorArgs extends RecordStringAny = RecordStringAny,
+> = new (
+  args: ConstructorArgs
+) => BaseChatModel<CallOptions, OutputMessageType>;
 
 export type BaseChatModelsTestsFields<
   CallOptions extends BaseChatModelCallOptions = BaseChatModelCallOptions,
   OutputMessageType extends AIMessageChunk = AIMessageChunk,
-  ConstructorArgs extends RecordStringAny = RecordStringAny
+  ConstructorArgs extends RecordStringAny = RecordStringAny,
 > = {
   Cls: BaseChatModelConstructor<
     CallOptions,
@@ -39,7 +38,7 @@ export type BaseChatModelsTestsFields<
 export class BaseChatModelsTests<
   CallOptions extends BaseChatModelCallOptions = BaseChatModelCallOptions,
   OutputMessageType extends AIMessageChunk = AIMessageChunk,
-  ConstructorArgs extends RecordStringAny = RecordStringAny
+  ConstructorArgs extends RecordStringAny = RecordStringAny,
 > implements
     BaseChatModelsTestsFields<CallOptions, OutputMessageType, ConstructorArgs>
 {

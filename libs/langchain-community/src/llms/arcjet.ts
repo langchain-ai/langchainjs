@@ -12,8 +12,8 @@ type ValidEntities<Detect> = Array<
   undefined extends Detect
     ? ArcjetSensitiveInfoType
     : Detect extends DetectSensitiveInfoEntities<infer CustomEntities>
-    ? ArcjetSensitiveInfoType | CustomEntities
-    : never
+      ? ArcjetSensitiveInfoType | CustomEntities
+      : never
 >;
 
 export type { ArcjetSensitiveInfoType, RedactOptions };
@@ -28,7 +28,7 @@ export interface ArcjetRedactOptions<Detect> extends BaseLLMCallOptions {
 
 export class ArcjetRedact<
   Detect extends DetectSensitiveInfoEntities<CustomEntities> | undefined,
-  CustomEntities extends string
+  CustomEntities extends string,
 > extends LLM {
   static lc_name() {
     return "ArcjetRedact";

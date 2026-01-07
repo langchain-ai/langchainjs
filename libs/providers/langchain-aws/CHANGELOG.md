@@ -1,5 +1,11 @@
 # @langchain/aws
 
+## 1.1.1
+
+### Patch Changes
+
+- [#9701](https://github.com/langchain-ai/langchainjs/pull/9701) [`9ac29de`](https://github.com/langchain-ai/langchainjs/commit/9ac29de3d3f70c75933913d94ad9a47c6ce39c1d) Thanks [@christian-bromann](https://github.com/christian-bromann)! - fix(langchain-aws): add support for Amazon Nova embedding models
+
 ## 1.1.0
 
 ### Minor Changes

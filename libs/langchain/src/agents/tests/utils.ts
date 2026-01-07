@@ -259,7 +259,7 @@ export class FakeToolCallingChatModel extends BaseChatModel {
   }
 
   withStructuredOutput<
-    RunOutput extends Record<string, any> = Record<string, any>
+    RunOutput extends Record<string, any> = Record<string, any>,
   >(_: unknown): Runnable<any> {
     if (!this.structuredResponse) {
       throw new Error("No structured response provided");

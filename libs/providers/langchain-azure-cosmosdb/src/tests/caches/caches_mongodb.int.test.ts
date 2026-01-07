@@ -26,8 +26,8 @@ async function initializeCache(
       distanceFunction === "cosine"
         ? AzureCosmosDBMongoDBSimilarityType.COS
         : distanceFunction === "euclidean"
-        ? AzureCosmosDBMongoDBSimilarityType.L2
-        : AzureCosmosDBMongoDBSimilarityType.IP,
+          ? AzureCosmosDBMongoDBSimilarityType.L2
+          : AzureCosmosDBMongoDBSimilarityType.IP,
     dimensions: dimension,
   };
 

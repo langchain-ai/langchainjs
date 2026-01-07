@@ -44,8 +44,8 @@ importers:
         specifier: ^13.1.1
         version: 13.3.0(enquirer@2.4.1)
       prettier:
-        specifier: ^2.8.3
-        version: 2.8.8
+        specifier: ^3.5.0
+        version: 3.6.2
       semver:
         specifier: ^7.5.4
         version: 7.7.2
@@ -350,8 +350,8 @@ importers:
         specifier: ^0.2.1
         version: 0.2.1
       prettier:
-        specifier: ^2.8.3
-        version: 2.8.8
+        specifier: ^3.5.0
+        version: 3.6.2
       prisma:
         specifier: ^4.11.0
         version: 4.16.2
@@ -373,9 +373,6 @@ importers:
       rimraf:
         specifier: ^5.0.1
         version: 5.0.10
-      rollup:
-        specifier: ^3.19.1
-        version: 3.29.5
       sqlite3:
         specifier: ^5.1.4
         version: 5.1.7
@@ -459,31 +456,31 @@ importers:
         version: 0.25.8
       '@rolldown/binding-darwin-arm64':
         specifier: '*'
-        version: 1.0.0-beta.55
+        version: 1.0.0-beta.58
       '@rolldown/binding-darwin-x64':
         specifier: '*'
-        version: 1.0.0-beta.55
+        version: 1.0.0-beta.58
       '@rolldown/binding-linux-arm64-gnu':
         specifier: '*'
-        version: 1.0.0-beta.55
+        version: 1.0.0-beta.58
       '@rolldown/binding-linux-arm64-musl':
         specifier: '*'
-        version: 1.0.0-beta.55
+        version: 1.0.0-beta.58
       '@rolldown/binding-linux-x64-gnu':
         specifier: '*'
-        version: 1.0.0-beta.55
+        version: 1.0.0-beta.58
       '@rolldown/binding-linux-x64-musl':
         specifier: '*'
-        version: 1.0.0-beta.55
+        version: 1.0.0-beta.58
       '@rolldown/binding-win32-arm64-msvc':
         specifier: '*'
-        version: 1.0.0-beta.55
+        version: 1.0.0-beta.58
       '@rolldown/binding-win32-ia32-msvc':
         specifier: '*'
         version: 1.0.0-beta.52
       '@rolldown/binding-win32-x64-msvc':
         specifier: '*'
-        version: 1.0.0-beta.55
+        version: 1.0.0-beta.58
       '@swc/core-win32-x64-msvc':
         specifier: '*'
         version: 1.13.3
@@ -543,8 +540,8 @@ importers:
         specifier: ^11.1.0
         version: 11.1.0
       prettier:
-        specifier: ^2.8.3
-        version: 2.8.8
+        specifier: ^3.5.0
+        version: 3.6.2
       typescript:
         specifier: ^5.9.3
         version: 5.9.3
@@ -622,8 +619,8 @@ importers:
         specifier: ^1.0.0
         version: 1.1.1
       prettier:
-        specifier: ^2.8.3
-        version: 2.8.8
+        specifier: ^3.5.0
+        version: 3.6.2
       prompts:
         specifier: ^2.4.2
         version: 2.4.2
@@ -710,17 +707,14 @@ importers:
         specifier: ^3.0.2
         version: 3.0.2
       prettier:
-        specifier: ^2.8.3
-        version: 2.8.8
+        specifier: ^3.5.0
+        version: 3.6.2
       reflect-metadata:
         specifier: ^0.2.2
         version: 0.2.2
       rimraf:
         specifier: ^5.0.1
         version: 5.0.10
-      rollup:
-        specifier: ^3.19.1
-        version: 3.29.5
       tinybench:
         specifier: ^5.1.0
         version: 5.1.0
@@ -1038,8 +1032,8 @@ importers:
         specifier: ^0.2.1
         version: 0.2.1
       prettier:
-        specifier: ^2.8.3
-        version: 2.8.8
+        specifier: ^3.5.0
+        version: 3.6.2
       prisma:
         specifier: ^4.16.2
         version: 4.16.2
@@ -1055,9 +1049,6 @@ importers:
       rimraf:
         specifier: ^5.0.1
         version: 5.0.10
-      rollup:
-        specifier: ^3.19.1
-        version: 3.29.5
       sqlite3:
         specifier: ^5.1.4
         version: 5.1.7
@@ -1179,7 +1170,7 @@ importers:
         version: 4.0.6
       '@getzep/zep-cloud':
         specifier: ^1.0.6
-        version: 1.0.12(@langchain/core@libs+langchain-core)(encoding@0.1.13)(langchain@0.3.30(18d6d7b8aaf0ddc137c35c2ef001f336))
+        version: 1.0.12(@langchain/core@libs+langchain-core)(encoding@0.1.13)(langchain@0.3.30(a409b07ae415e3e3f2735092ee61582b))
       '@getzep/zep-js':
         specifier: ^0.9.0
         version: 0.9.0
@@ -1553,8 +1544,8 @@ importers:
         specifier: ^0.1.11
         version: 0.1.16
       prettier:
-        specifier: ^2.8.3
-        version: 2.8.8
+        specifier: ^3.5.0
+        version: 3.6.2
       puppeteer:
         specifier: ^22.0.0
         version: 22.15.0(bufferutil@4.0.9)(typescript@5.8.3)(utf-8-validate@6.0.5)
@@ -1567,9 +1558,6 @@ importers:
       replicate:
         specifier: ^1.0.1
         version: 1.0.1
-      rollup:
-        specifier: ^3.19.1
-        version: 3.29.5
       sonix-speech-recognition:
         specifier: ^2.1.1
         version: 2.1.1
@@ -1665,8 +1653,8 @@ importers:
         specifier: ^6.10.4
         version: 6.12.1
       prettier:
-        specifier: ^2.8.3
-        version: 2.8.8
+        specifier: ^3.5.0
+        version: 3.6.2
       rimraf:
         specifier: ^5.0.1
         version: 5.0.10
@@ -1749,9 +1737,6 @@ importers:
       prettier:
         specifier: ^3.6.2
         version: 3.6.2
-      rollup:
-        specifier: ^4.52.3
-        version: 4.52.4
       ts-node:
         specifier: ^10.9.2
         version: 10.9.2(@swc/core@1.13.3(@swc/helpers@0.5.17))(@types/node@22.18.8)(typescript@5.8.3)
@@ -1800,8 +1785,8 @@ importers:
         specifier: ^9.34.0
         version: 9.36.0(jiti@2.6.1)
       prettier:
-        specifier: ^2.8.3
-        version: 2.8.8
+        specifier: ^3.5.0
+        version: 3.6.2
       typescript:
         specifier: ~5.8.3
         version: 5.8.3
@@ -1837,11 +1822,8 @@ importers:
         specifier: ^9.34.0
         version: 9.36.0(jiti@2.6.1)
       prettier:
-        specifier: ^2.8.3
-        version: 2.8.8
-      rollup:
-        specifier: ^4.5.2
-        version: 4.52.4
+        specifier: ^3.5.0
+        version: 3.6.2
       typescript:
         specifier: ~5.8.3
         version: 5.8.3
@@ -1892,8 +1874,8 @@ importers:
         specifier: ^9.34.0
         version: 9.36.0(jiti@2.6.1)
       prettier:
-        specifier: ^2.8.3
-        version: 2.8.8
+        specifier: ^3.5.0
+        version: 3.6.2
       rimraf:
         specifier: ^5.0.1
         version: 5.0.10
@@ -1956,11 +1938,8 @@ importers:
         specifier: ^9.34.0
         version: 9.36.0(jiti@2.6.1)
       prettier:
-        specifier: ^2.8.3
-        version: 2.8.8
-      rollup:
-        specifier: ^4.5.2
-        version: 4.52.4
+        specifier: ^3.5.0
+        version: 3.6.2
       typescript:
         specifier: ~5.8.3
         version: 5.8.3
@@ -2011,11 +1990,8 @@ importers:
         specifier: ^9.34.0
         version: 9.36.0(jiti@2.6.1)
       prettier:
-        specifier: ^2.8.3
-        version: 2.8.8
-      rollup:
-        specifier: ^4.5.2
-        version: 4.52.4
+        specifier: ^3.5.0
+        version: 3.6.2
       typescript:
         specifier: ~5.8.3
         version: 5.8.3
@@ -2060,11 +2036,8 @@ importers:
         specifier: ^9.34.0
         version: 9.36.0(jiti@2.6.1)
       prettier:
-        specifier: ^2.8.3
-        version: 2.8.8
-      rollup:
-        specifier: ^4.5.2
-        version: 4.52.4
+        specifier: ^3.5.0
+        version: 3.6.2
       typescript:
         specifier: ~5.8.3
         version: 5.8.3
@@ -2109,11 +2082,8 @@ importers:
         specifier: ^9.34.0
         version: 9.36.0(jiti@2.6.1)
       prettier:
-        specifier: ^2.8.3
-        version: 2.8.8
-      rollup:
-        specifier: ^4.5.2
-        version: 4.52.4
+        specifier: ^3.5.0
+        version: 3.6.2
       typescript:
         specifier: ~5.8.3
         version: 5.8.3
@@ -2173,11 +2143,8 @@ importers:
         specifier: ^29.6.4
         version: 29.7.0
       prettier:
-        specifier: ^2.8.3
-        version: 2.8.8
-      rollup:
-        specifier: ^4.5.2
-        version: 4.52.4
+        specifier: ^3.5.0
+        version: 3.6.2
       ts-jest:
         specifier: ^29.1.0
         version: 29.4.0(@babel/core@7.28.0)(@jest/transform@30.0.5)(@jest/types@30.0.5)(babel-jest@29.7.0(@babel/core@7.28.0))(jest-util@30.0.5)(jest@29.7.0(@types/node@24.10.1)(ts-node@10.9.2(@swc/core@1.13.3(@swc/helpers@0.5.17))(@types/node@24.10.1)(typescript@5.8.3)))(typescript@5.8.3)
@@ -2228,11 +2195,8 @@ importers:
         specifier: ^9.34.0
         version: 9.36.0(jiti@2.6.1)
       prettier:
-        specifier: ^2.8.3
-        version: 2.8.8
-      rollup:
-        specifier: ^4.5.2
-        version: 4.52.4
+        specifier: ^3.5.0
+        version: 3.6.2
       typescript:
         specifier: ~5.8.3
         version: 5.8.3
@@ -2280,11 +2244,8 @@ importers:
         specifier: ^9.34.0
         version: 9.36.0(jiti@2.6.1)
       prettier:
-        specifier: ^2.8.3
-        version: 2.8.8
-      rollup:
-        specifier: ^4.5.2
-        version: 4.52.4
+        specifier: ^3.5.0
+        version: 3.6.2
       typescript:
         specifier: ~5.8.3
         version: 5.8.3
@@ -2329,11 +2290,8 @@ importers:
         specifier: ^9.34.0
         version: 9.36.0(jiti@2.6.1)
       prettier:
-        specifier: ^2.8.3
-        version: 2.8.8
-      rollup:
-        specifier: ^4.5.2
-        version: 4.52.4
+        specifier: ^3.5.0
+        version: 3.6.2
       typescript:
         specifier: ~5.8.3
         version: 5.8.3
@@ -2375,11 +2333,8 @@ importers:
         specifier: ^9.34.0
         version: 9.36.0(jiti@2.6.1)
       prettier:
-        specifier: ^2.8.3
-        version: 2.8.8
-      rollup:
-        specifier: ^4.5.2
-        version: 4.52.4
+        specifier: ^3.5.0
+        version: 3.6.2
       typescript:
         specifier: ~5.8.3
         version: 5.8.3
@@ -2448,11 +2403,8 @@ importers:
         specifier: ^8.14.1
         version: 8.16.3
       prettier:
-        specifier: ^2.8.3
-        version: 2.8.8
-      rollup:
-        specifier: ^4.5.2
-        version: 4.52.4
+        specifier: ^3.5.0
+        version: 3.6.2
       testcontainers:
         specifier: ^10.23.0
         version: 10.28.0
@@ -2509,11 +2461,8 @@ importers:
         specifier: ^29.6.4
         version: 29.7.0
       prettier:
-        specifier: ^2.8.3
-        version: 2.8.8
-      rollup:
-        specifier: ^4.5.2
-        version: 4.52.4
+        specifier: ^3.5.0
+        version: 3.6.2
       ts-jest:
         specifier: ^29.1.0
         version: 29.4.0(@babel/core@7.28.0)(@jest/transform@30.0.5)(@jest/types@30.0.5)(babel-jest@29.7.0(@babel/core@7.28.0))(jest-util@30.0.5)(jest@29.7.0(@types/node@24.10.1)(ts-node@10.9.2(@swc/core@1.13.3(@swc/helpers@0.5.17))(@types/node@24.10.1)(typescript@5.8.3)))(typescript@5.8.3)
@@ -2567,11 +2516,8 @@ importers:
         specifier: ^29.6.4
         version: 29.7.0
       prettier:
-        specifier: ^2.8.3
-        version: 2.8.8
-      rollup:
-        specifier: ^4.5.2
-        version: 4.52.4
+        specifier: ^3.5.0
+        version: 3.6.2
       ts-jest:
         specifier: ^29.1.0
         version: 29.4.0(@babel/core@7.28.0)(@jest/transform@30.0.5)(@jest/types@30.0.5)(babel-jest@29.7.0(@babel/core@7.28.0))(jest-util@30.0.5)(jest@29.7.0(@types/node@24.10.1)(ts-node@10.9.2(@swc/core@1.13.3(@swc/helpers@0.5.17))(@types/node@24.10.1)(typescript@5.8.3)))(typescript@5.8.3)
@@ -2634,11 +2580,8 @@ importers:
         specifier: ^29.6.4
         version: 29.7.0
       prettier:
-        specifier: ^2.8.3
-        version: 2.8.8
-      rollup:
-        specifier: ^4.5.2
-        version: 4.52.4
+        specifier: ^3.5.0
+        version: 3.6.2
       ts-jest:
         specifier: ^29.1.0
         version: 29.4.0(@babel/core@7.28.0)(@jest/transform@30.0.5)(@jest/types@30.0.5)(babel-jest@29.7.0(@babel/core@7.28.0))(jest-util@30.0.5)(jest@29.7.0(@types/node@24.10.1)(ts-node@10.9.2(@swc/core@1.13.3(@swc/helpers@0.5.17))(@types/node@24.10.1)(typescript@5.8.3)))(typescript@5.8.3)
@@ -2695,11 +2638,8 @@ importers:
         specifier: ^29.6.4
         version: 29.7.0
       prettier:
-        specifier: ^2.8.3
-        version: 2.8.8
-      rollup:
-        specifier: ^4.5.2
-        version: 4.52.4
+        specifier: ^3.5.0
+        version: 3.6.2
       ts-jest:
         specifier: ^29.1.0
         version: 29.4.0(@babel/core@7.28.0)(@jest/transform@30.0.5)(@jest/types@30.0.5)(babel-jest@29.7.0(@babel/core@7.28.0))(jest-util@30.0.5)(jest@29.7.0(@types/node@24.10.1)(ts-node@10.9.2(@swc/core@1.13.3(@swc/helpers@0.5.17))(@types/node@24.10.1)(typescript@5.8.3)))(typescript@5.8.3)
@@ -2756,11 +2696,8 @@ importers:
         specifier: ^29.6.4
         version: 29.7.0
       prettier:
-        specifier: ^2.8.3
-        version: 2.8.8
-      rollup:
-        specifier: ^4.5.2
-        version: 4.52.4
+        specifier: ^3.5.0
+        version: 3.6.2
       ts-jest:
         specifier: ^29.1.0
         version: 29.4.0(@babel/core@7.28.0)(@jest/transform@30.0.5)(@jest/types@30.0.5)(babel-jest@29.7.0(@babel/core@7.28.0))(jest-util@30.0.5)(jest@29.7.0(@types/node@24.10.1)(ts-node@10.9.2(@swc/core@1.13.3(@swc/helpers@0.5.17))(@types/node@24.10.1)(typescript@5.8.3)))(typescript@5.8.3)
@@ -2817,11 +2754,8 @@ importers:
         specifier: ^29.6.4
         version: 29.7.0
       prettier:
-        specifier: ^2.8.3
-        version: 2.8.8
-      rollup:
-        specifier: ^4.5.2
-        version: 4.52.4
+        specifier: ^3.5.0
+        version: 3.6.2
       ts-jest:
         specifier: ^29.1.0
         version: 29.4.0(@babel/core@7.28.0)(@jest/transform@30.0.5)(@jest/types@30.0.5)(babel-jest@29.7.0(@babel/core@7.28.0))(jest-util@30.0.5)(jest@29.7.0(@types/node@24.10.1)(ts-node@10.9.2(@swc/core@1.13.3(@swc/helpers@0.5.17))(@types/node@24.10.1)(typescript@5.8.3)))(typescript@5.8.3)
@@ -2872,11 +2806,8 @@ importers:
         specifier: ^9.34.0
         version: 9.36.0(jiti@2.6.1)
       prettier:
-        specifier: ^2.8.3
-        version: 2.8.8
-      rollup:
-        specifier: ^4.5.2
-        version: 4.52.4
+        specifier: ^3.5.0
+        version: 3.6.2
       typescript:
         specifier: ~5.8.3
         version: 5.8.3
@@ -2924,11 +2855,8 @@ importers:
         specifier: ^9.34.0
         version: 9.36.0(jiti@2.6.1)
       prettier:
-        specifier: ^2.8.3
-        version: 2.8.8
-      rollup:
-        specifier: ^4.5.2
-        version: 4.52.4
+        specifier: ^3.5.0
+        version: 3.6.2
       typescript:
         specifier: ~5.8.3
         version: 5.8.3
@@ -2973,11 +2901,8 @@ importers:
         specifier: ^9.34.0
         version: 9.36.0(jiti@2.6.1)
       prettier:
-        specifier: ^2.8.3
-        version: 2.8.8
-      rollup:
-        specifier: ^4.5.2
-        version: 4.52.4
+        specifier: ^3.5.0
+        version: 3.6.2
       typescript:
         specifier: ~5.8.3
         version: 5.8.3
@@ -3025,11 +2950,8 @@ importers:
         specifier: ^9.34.0
         version: 9.36.0(jiti@2.6.1)
       prettier:
-        specifier: ^2.8.3
-        version: 2.8.8
-      rollup:
-        specifier: ^4.5.2
-        version: 4.52.4
+        specifier: ^3.5.0
+        version: 3.6.2
       testcontainers:
         specifier: ^10.25.0
         version: 10.28.0
@@ -3083,11 +3005,8 @@ importers:
         specifier: ^9.34.0
         version: 9.36.0(jiti@2.6.1)
       prettier:
-        specifier: ^2.8.3
-        version: 2.8.8
-      rollup:
-        specifier: ^4.5.2
-        version: 4.52.4
+        specifier: ^3.5.0
+        version: 3.6.2
       typescript:
         specifier: ~5.8.3
         version: 5.8.3
@@ -3135,11 +3054,8 @@ importers:
         specifier: ^9.34.0
         version: 9.36.0(jiti@2.6.1)
       prettier:
-        specifier: ^2.8.3
-        version: 2.8.8
-      rollup:
-        specifier: ^4.5.2
-        version: 4.52.4
+        specifier: ^3.5.0
+        version: 3.6.2
       typescript:
         specifier: ~5.8.3
         version: 5.8.3
@@ -3199,8 +3115,8 @@ importers:
         specifier: ^9.34.0
         version: 9.36.0(jiti@2.6.1)
       prettier:
-        specifier: ^2.8.3
-        version: 2.8.8
+        specifier: ^3.5.0
+        version: 3.6.2
       rimraf:
         specifier: ^5.0.1
         version: 5.0.10
@@ -3269,8 +3185,8 @@ importers:
         specifier: workspace:*
         version: link:../../langchain
       prettier:
-        specifier: ^2.8.3
-        version: 2.8.8
+        specifier: ^3.5.0
+        version: 3.6.2
       typescript:
         specifier: ~5.8.3
         version: 5.8.3
@@ -3318,11 +3234,8 @@ importers:
         specifier: ^9.34.0
         version: 9.36.0(jiti@2.6.1)
       prettier:
-        specifier: ^2.8.3
-        version: 2.8.8
-      rollup:
-        specifier: ^4.5.2
-        version: 4.52.4
+        specifier: ^3.5.0
+        version: 3.6.2
       typescript:
         specifier: ~5.8.3
         version: 5.8.3
@@ -3367,8 +3280,8 @@ importers:
         specifier: ^9.34.0
         version: 9.36.0(jiti@2.6.1)
       prettier:
-        specifier: ^2.8.3
-        version: 2.8.8
+        specifier: ^3.5.0
+        version: 3.6.2
       typescript:
         specifier: ~5.8.3
         version: 5.8.3
@@ -3410,8 +3323,8 @@ importers:
         specifier: ^9.34.0
         version: 9.36.0(jiti@2.6.1)
       prettier:
-        specifier: ^2.8.3
-        version: 2.8.8
+        specifier: ^3.5.0
+        version: 3.6.2
       typescript:
         specifier: ~5.8.3
         version: 5.8.3
@@ -3459,8 +3372,8 @@ importers:
         specifier: ^9.34.0
         version: 9.39.1(jiti@2.6.1)
       prettier:
-        specifier: ^2.8.3
-        version: 2.8.8
+        specifier: ^3.5.0
+        version: 3.6.2
       typescript:
         specifier: ~5.8.3
         version: 5.8.3
@@ -3511,11 +3424,8 @@ importers:
         specifier: workspace:*
         version: link:../../langchain
       prettier:
-        specifier: ^2.8.3
-        version: 2.8.8
-      rollup:
-        specifier: ^4.5.2
-        version: 4.52.4
+        specifier: ^3.5.0
+        version: 3.6.2
       typescript:
         specifier: ~5.8.3
         version: 5.8.3
@@ -3560,11 +3470,8 @@ importers:
         specifier: ^9.34.0
         version: 9.36.0(jiti@2.6.1)
       prettier:
-        specifier: ^2.8.3
-        version: 2.8.8
-      rollup:
-        specifier: ^4.5.2
-        version: 4.52.4
+        specifier: ^3.5.0
+        version: 3.6.2
       typescript:
         specifier: ~5.8.3
         version: 5.8.3
@@ -3602,11 +3509,8 @@ importers:
         specifier: ^9.34.0
         version: 9.36.0(jiti@2.6.1)
       prettier:
-        specifier: ^2.8.3
-        version: 2.8.8
-      rollup:
-        specifier: ^4.5.2
-        version: 4.52.4
+        specifier: ^3.5.0
+        version: 3.6.2
       typescript:
         specifier: ~5.8.3
         version: 5.8.3
@@ -6613,14 +6517,14 @@ packages:
     peerDependencies:
       apache-arrow: '>=15.0.0 <=18.1.0'
 
-  '@langchain/anthropic@1.3.1':
-    resolution: {integrity: sha512-FiFhGc/lRnvA5G4UD2/Rn1I0OQPXf6QXEr4S4ECUeT3WgbevM5HBR3tklsMugRwFIALoCPcw/pbobmLuqV9AhA==}
+  '@langchain/anthropic@1.3.4':
+    resolution: {integrity: sha512-CV2WxpgO8DvSeRk0CXB6ukr37qe7IrDT2O+KeWio7CILDrZlZuhlQcAPMCL4XeBoz9sOkIhExutH6X9f72Cbdw==}
     engines: {node: '>=20'}
     peerDependencies:
       '@langchain/core': workspace:*
 
-  '@langchain/aws@1.1.0':
-    resolution: {integrity: sha512-xYmbNE+CdhdYQkULS8sKzaG7LMhp9NEQ3LkWzBkpAePyFh9YTnDHdMl3TYqqEbeeMnSHLW49Xm9pnbPP+fLAQA==}
+  '@langchain/aws@1.1.1':
+    resolution: {integrity: sha512-ml3SzPzDcRjhlsGqf3+7HwDSUc39RcKuUwHVYvlqP/vHF7LQ2A6/WFwPj0QKICpEdLVmsdCoQBhKHAeiV22dcA==}
     engines: {node: '>=20'}
     peerDependencies:
       '@langchain/core': workspace:*
@@ -6631,38 +6535,38 @@ packages:
     peerDependencies:
       '@langchain/core': workspace:*
 
-  '@langchain/deepseek@1.0.3':
-    resolution: {integrity: sha512-IWKjQHJRc8k3gSCH6pTbRaAGSD63A5YzCNFq58L912Xvd5D2gXpws9oeCYdBIEa3EUlfuMpCaaRkrq4TapDitg==}
+  '@langchain/deepseek@1.0.4':
+    resolution: {integrity: sha512-+uHdfPQoIjb3MQtYxF1nFqeCC9cgLlscD/1ZNJ0KSACyV66fVX3L3lbscu7Ll2fvJuiRtdQDUpLLgq+0GHfU0g==}
     engines: {node: '>=20'}
     peerDependencies:
       '@langchain/core': workspace:*
 
-  '@langchain/google-common@2.1.1':
-    resolution: {integrity: sha512-AOuTW9BIFXsOzvR1NIyaktWQW2i0p8QxOMlx0dWysVqVIDauk8imfhl5+VJrwYZ4NTc1sDd27MiSTTXICvACKw==}
+  '@langchain/google-common@2.1.4':
+    resolution: {integrity: sha512-mLH4Zm+TbrzBfzcxWlCKrS/WTQDHukbpGNYUEWG9f5eai3rWC0CjC6DJThg4JQ/P5vxE//fkb8BQml49AZVgMg==}
     engines: {node: '>=20'}
     peerDependencies:
       '@langchain/core': workspace:*
 
-  '@langchain/google-gauth@2.1.1':
-    resolution: {integrity: sha512-B5Ng85FMnWpE4dHttAkHc18J9esPXj0OuoigfeEIKUhIQ3GdK1y6MBha+/SBF2QGyXUApz+lsszyG8qsdPFYIw==}
+  '@langchain/google-gauth@2.1.4':
+    resolution: {integrity: sha512-ZsTCcDbLMhiDtsTDpz1PSqbcaomCe3402wvy3sq1fSXIjXixeBR+OfVNUO4LsRZiq/5HIW4XoIkn7avJy3Bgww==}
     engines: {node: '>=20'}
 
-  '@langchain/google-genai@2.1.1':
-    resolution: {integrity: sha512-RLhVaL/Z+dqv1B/ItQ5hcis3AQyc2c/rt4qJbfjGxAneIzdaWVhNRWSKPNOx9n/SoC6tOe7M7JIE2aZKH2e4Xw==}
+  '@langchain/google-genai@2.1.4':
+    resolution: {integrity: sha512-kiizkpAibOj5SQDuxvGsIglTIO8xoWpQtv7XAapSrdPjigpDYMlHHQBj5aPVcFuV0/uCt5QKTgyCmaPmqQ8Olg==}
     engines: {node: '>=20'}
     peerDependencies:
       '@langchain/core': workspace:*
 
-  '@langchain/google-vertexai-web@2.1.1':
-    resolution: {integrity: sha512-wwFmhedRMicxcUyP/e30ptUcQrjLT8zsXPBJLuI/HfqRhiUCbdyfMpmI0c7mAjef8koVeaWOIDCWYafTFn47MQ==}
+  '@langchain/google-vertexai-web@2.1.4':
+    resolution: {integrity: sha512-W2jTDnDGXD3tTQzCZrE8ZU0Wa1vxQJGNR24SRMNJkQsKrVU0XzUcovsgdSM4X0Ff1HG/VX0f/e+2RVEqQdRvuw==}
     engines: {node: '>=20'}
 
-  '@langchain/google-vertexai@2.1.1':
-    resolution: {integrity: sha512-O9SM/38A6fGOtKW9gXvxT9Bm3/eZwNNRoJT2FtacsDpZCGnpmgZKcarszeyLUNprPFgUybjOyiLh87WZnHsSyg==}
+  '@langchain/google-vertexai@2.1.4':
+    resolution: {integrity: sha512-9z1XRT1ZHNZWgJ6zyi4/kRa62t7C+tknXLdM/KqPmyxHM62njlzAo3BhAvuCrGRYDENqURLCgZ59UUgdv5UsGA==}
     engines: {node: '>=20'}
 
-  '@langchain/google-webauth@2.1.1':
-    resolution: {integrity: sha512-RLmgxKlxrqVLPsw/KyvkrJkZs46eUF8nV8Zymp6JEETVjoKRlUMsOvUq9Yz4ueXp9EmO4VHVJCaOddRkjAsWkg==}
+  '@langchain/google-webauth@2.1.4':
+    resolution: {integrity: sha512-sCgX5VBuQUNn5aX+Z3vNsMk8ys7TgoLN/l3P4c+1kWEpIRKwNPl45P/beAyxf/RvmATC53Dmnx9fKj5pLVwzhw==}
     engines: {node: '>=20'}
     peerDependencies:
       '@langchain/core': workspace:*
@@ -6753,8 +6657,8 @@ packages:
     peerDependencies:
       '@langchain/core': workspace:*
 
-  '@langchain/openai@1.2.0':
-    resolution: {integrity: sha512-r2g5Be3Sygw7VTJ89WVM/M94RzYToNTwXf8me1v+kgKxzdHbd/8XPYDFxpXEp3REyPgUrtJs+Oplba9pkTH5ug==}
+  '@langchain/openai@1.2.1':
+    resolution: {integrity: sha512-eZYPhvXIwz0/8iCjj2LWqeaznQ7DZ6tBdvF+Ebv4sQW2UqJWZqRC8QIdKZgTbs8ffMWPHkSSOidYqu4XfWCNYg==}
     engines: {node: '>=20'}
     peerDependencies:
       '@langchain/core': workspace:*
@@ -6765,8 +6669,8 @@ packages:
     peerDependencies:
       '@langchain/core': workspace:*
 
-  '@langchain/xai@1.1.0':
-    resolution: {integrity: sha512-sPOVYIWrb9LqjfFou2W0qGHJ3IQKxQJPRX0YXxNMqkOrtq0tuSAaaTMMzfk503gVLg91HAp0MJsZN8bq/xMBow==}
+  '@langchain/xai@1.1.1':
+    resolution: {integrity: sha512-3n5InTtP2BZaMW0TpXJJpmBmswgmghl4AyZ+MEx9LalQZoBGgSnvFZwTJRsIqVB77mVaOPe7ya9K4rzFp0yy8A==}
     engines: {node: '>=20'}
     peerDependencies:
       '@langchain/core': workspace:*
@@ -7581,8 +7485,8 @@ packages:
     cpu: [arm64]
     os: [darwin]
 
-  '@rolldown/binding-darwin-arm64@1.0.0-beta.55':
-    resolution: {integrity: sha512-l0887CGU2SXZr0UJmeEcXSvtDCOhDTTYXuoWbhrEJ58YQhQk24EVhDhHMTyjJb1PBRniUgNc1G0T51eF8z+TWw==}
+  '@rolldown/binding-darwin-arm64@1.0.0-beta.58':
+    resolution: {integrity: sha512-wFxUymI/5R8bH8qZFYDfAxAN9CyISEIYke+95oZPiv6EWo88aa5rskjVcCpKA532R+klFmdqjbbaD56GNmTF4Q==}
     engines: {node: ^20.19.0 || >=22.12.0}
     cpu: [arm64]
     os: [darwin]
@@ -7592,8 +7496,8 @@ packages:
     cpu: [x64]
     os: [darwin]
 
-  '@rolldown/binding-darwin-x64@1.0.0-beta.55':
-    resolution: {integrity: sha512-d7qP2AVYzN0tYIP4vJ7nmr26xvmlwdkLD/jWIc9Z9dqh5y0UGPigO3m5eHoHq9BNazmwdD9WzDHbQZyXFZjgtA==}
+  '@rolldown/binding-darwin-x64@1.0.0-beta.58':
+    resolution: {integrity: sha512-ybp3MkPj23VDV9PhtRwdU5qrGhlViWRV5BjKwO6epaSlUD5lW0WyY+roN3ZAzbma/9RrMTgZ/a/gtQq8YXOcqw==}
     engines: {node: ^20.19.0 || >=22.12.0}
     cpu: [x64]
     os: [darwin]
@@ -7613,8 +7517,8 @@ packages:
     cpu: [arm64]
     os: [linux]
 
-  '@rolldown/binding-linux-arm64-gnu@1.0.0-beta.55':
-    resolution: {integrity: sha512-2x6ffiVLZrQv7Xii9+JdtyT1U3bQhKj59K3eRnYlrXsKyjkjfmiDUVx2n+zSyijisUqD62fcegmx2oLLfeTkCA==}
+  '@rolldown/binding-linux-arm64-gnu@1.0.0-beta.58':
+    resolution: {integrity: sha512-N78vmZzP6zG967Ohr+MasCjmKtis0geZ1SOVmxrA0/bklTQSzH5kHEjW5Qn+i1taFno6GEre1E40v0wuWsNOQw==}
     engines: {node: ^20.19.0 || >=22.12.0}
     cpu: [arm64]
     os: [linux]
@@ -7624,8 +7528,8 @@ packages:
     cpu: [arm64]
     os: [linux]
 
-  '@rolldown/binding-linux-arm64-musl@1.0.0-beta.55':
-    resolution: {integrity: sha512-QbNncvqAXziya5wleI+OJvmceEE15vE4yn4qfbI/hwT/+8ZcqxyfRZOOh62KjisXxp4D0h3JZspycXYejxAU3w==}
+  '@rolldown/binding-linux-arm64-musl@1.0.0-beta.58':
+    resolution: {integrity: sha512-l+p4QVtG72C7wI2SIkNQw/KQtSjuYwS3rV6AKcWrRBF62ClsFUcif5vLaZIEbPrCXu5OFRXigXFJnxYsVVZqdQ==}
     engines: {node: ^20.19.0 || >=22.12.0}
     cpu: [arm64]
     os: [linux]
@@ -7640,8 +7544,8 @@ packages:
     cpu: [x64]
     os: [linux]
 
-  '@rolldown/binding-linux-x64-gnu@1.0.0-beta.55':
-    resolution: {integrity: sha512-YZCTZZM+rujxwVc6A+QZaNMJXVtmabmFYLG2VGQTKaBfYGvBKUgtbMEttnp/oZ88BMi2DzadBVhOmfQV8SuHhw==}
+  '@rolldown/binding-linux-x64-gnu@1.0.0-beta.58':
+    resolution: {integrity: sha512-urzJX0HrXxIh0FfxwWRjfPCMeInU9qsImLQxHBgLp5ivji1EEUnOfux8KxPPnRQthJyneBrN2LeqUix9DYrNaQ==}
     engines: {node: ^20.19.0 || >=22.12.0}
     cpu: [x64]
     os: [linux]
@@ -7651,8 +7555,8 @@ packages:
     cpu: [x64]
     os: [linux]
 
-  '@rolldown/binding-linux-x64-musl@1.0.0-beta.55':
-    resolution: {integrity: sha512-28q9OQ/DDpFh2keS4BVAlc3N65/wiqKbk5K1pgLdu/uWbKa8hgUJofhXxqO+a+Ya2HVTUuYHneWsI2u+eu3N5Q==}
+  '@rolldown/binding-linux-x64-musl@1.0.0-beta.58':
+    resolution: {integrity: sha512-7ijfVK3GISnXIwq/1FZo+KyAUJjL3kWPJ7rViAL6MWeEBhEgRzJ0yEd9I8N9aut8Y8ab+EKFJyRNMWZuUBwQ0A==}
     engines: {node: ^20.19.0 || >=22.12.0}
     cpu: [x64]
     os: [linux]
@@ -7667,8 +7571,8 @@ packages:
     cpu: [arm64]
     os: [win32]
 
-  '@rolldown/binding-win32-arm64-msvc@1.0.0-beta.55':
-    resolution: {integrity: sha512-TFVVfLfhL1G+pWspYAgPK/FSqjiBtRKYX9hixfs508QVEZPQlubYAepHPA7kEa6lZXYj5ntzF87KC6RNhxo+ew==}
+  '@rolldown/binding-win32-arm64-msvc@1.0.0-beta.58':
+    resolution: {integrity: sha512-sFqfYPnBZ6xBhMkadB7UD0yjEDRvs7ipR3nCggblN+N4ODCXY6qhg/bKL39+W+dgQybL7ErD4EGERVbW9DAWvg==}
     engines: {node: ^20.19.0 || >=22.12.0}
     cpu: [arm64]
     os: [win32]
@@ -7689,8 +7593,8 @@ packages:
     cpu: [x64]
     os: [win32]
 
-  '@rolldown/binding-win32-x64-msvc@1.0.0-beta.55':
-    resolution: {integrity: sha512-j1WBlk0p+ISgLzMIgl0xHp1aBGXenoK2+qWYc/wil2Vse7kVOdFq9aeQ8ahK6/oxX2teQ5+eDvgjdywqTL+daA==}
+  '@rolldown/binding-win32-x64-msvc@1.0.0-beta.58':
+    resolution: {integrity: sha512-AnFWJdAqB8+IDPcGrATYs67Kik/6tnndNJV2jGRmwlbeNiQQ8GhRJU8ETRlINfII0pqi9k4WWLnb00p1QCxw/Q==}
     engines: {node: ^20.19.0 || >=22.12.0}
     cpu: [x64]
     os: [win32]
@@ -16261,6 +16165,7 @@ packages:
   whatwg-encoding@3.1.1:
     resolution: {integrity: sha512-6qN4hJdMwfYBtE3YBTTHhoeuUrDBPZmbQaxWAqSALV/MeEnR5z1xd8UKud2RAkFoPkmB+hli1TZSnyi84xz1vQ==}
     engines: {node: '>=18'}
+    deprecated: Use @exodus/bytes instead for a more spec-conformant and faster implementation
 
   whatwg-fetch@3.6.20:
     resolution: {integrity: sha512-EqhiFU6daOA8kpjOWTL0olhVOF3i7OrFzSYiGsEMB8GcXS+RrzauAERX65xMeNWVqxA6HXH2m69Z9LaKKdisfg==}
@@ -20096,7 +20001,7 @@ snapshots:
     transitivePeerDependencies:
       - debug
 
-  '@getzep/zep-cloud@1.0.12(@langchain/core@libs+langchain-core)(encoding@0.1.13)(langchain@0.3.30(18d6d7b8aaf0ddc137c35c2ef001f336))':
+  '@getzep/zep-cloud@1.0.12(@langchain/core@libs+langchain-core)(encoding@0.1.13)(langchain@0.3.30(a409b07ae415e3e3f2735092ee61582b))':
     dependencies:
       form-data: 4.0.0
       node-fetch: 2.7.0(encoding@0.1.13)
@@ -20105,7 +20010,7 @@ snapshots:
       zod: 3.25.76
     optionalDependencies:
       '@langchain/core': link:libs/langchain-core
-      langchain: 0.3.30(18d6d7b8aaf0ddc137c35c2ef001f336)
+      langchain: 0.3.30(a409b07ae415e3e3f2735092ee61582b)
     transitivePeerDependencies:
       - encoding
 
@@ -20875,14 +20780,14 @@ snapshots:
       '@lancedb/lancedb-win32-arm64-msvc': 0.19.1
       '@lancedb/lancedb-win32-x64-msvc': 0.19.1
 
-  '@langchain/anthropic@1.3.1(@langchain/core@libs+langchain-core)':
+  '@langchain/anthropic@1.3.4(@langchain/core@libs+langchain-core)':
     dependencies:
       '@anthropic-ai/sdk': 0.71.0(zod@4.1.12)
       '@langchain/core': link:libs/langchain-core
       zod: 4.1.12
     optional: true
 
-  '@langchain/aws@1.1.0(@langchain/core@libs+langchain-core)':
+  '@langchain/aws@1.1.1(@langchain/core@libs+langchain-core)':
     dependencies:
       '@aws-sdk/client-bedrock-agent-runtime': 3.858.0
       '@aws-sdk/client-bedrock-runtime': 3.858.0
@@ -20903,55 +20808,55 @@ snapshots:
       - encoding
     optional: true
 
-  '@langchain/deepseek@1.0.3(@langchain/core@libs+langchain-core)(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.5))':
+  '@langchain/deepseek@1.0.4(@langchain/core@libs+langchain-core)(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.5))':
     dependencies:
       '@langchain/core': link:libs/langchain-core
-      '@langchain/openai': 1.2.0(@langchain/core@libs+langchain-core)(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.5))
+      '@langchain/openai': 1.2.1(@langchain/core@libs+langchain-core)(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.5))
     transitivePeerDependencies:
       - ws
     optional: true
 
-  '@langchain/google-common@2.1.1(@langchain/core@libs+langchain-core)':
+  '@langchain/google-common@2.1.4(@langchain/core@libs+langchain-core)':
     dependencies:
       '@langchain/core': link:libs/langchain-core
       uuid: 10.0.0
     optional: true
 
-  '@langchain/google-gauth@2.1.1(@langchain/core@libs+langchain-core)':
+  '@langchain/google-gauth@2.1.4(@langchain/core@libs+langchain-core)':
     dependencies:
-      '@langchain/google-common': 2.1.1(@langchain/core@libs+langchain-core)
+      '@langchain/google-common': 2.1.4(@langchain/core@libs+langchain-core)
       google-auth-library: 10.2.0
     transitivePeerDependencies:
       - '@langchain/core'
       - supports-color
     optional: true
 
-  '@langchain/google-genai@2.1.1(@langchain/core@libs+langchain-core)':
+  '@langchain/google-genai@2.1.4(@langchain/core@libs+langchain-core)':
     dependencies:
       '@google/generative-ai': 0.24.1
       '@langchain/core': link:libs/langchain-core
       uuid: 11.1.0
     optional: true
 
-  '@langchain/google-vertexai-web@2.1.1(@langchain/core@libs+langchain-core)':
+  '@langchain/google-vertexai-web@2.1.4(@langchain/core@libs+langchain-core)':
     dependencies:
-      '@langchain/google-webauth': 2.1.1(@langchain/core@libs+langchain-core)
+      '@langchain/google-webauth': 2.1.4(@langchain/core@libs+langchain-core)
     transitivePeerDependencies:
       - '@langchain/core'
     optional: true
 
-  '@langchain/google-vertexai@2.1.1(@langchain/core@libs+langchain-core)':
+  '@langchain/google-vertexai@2.1.4(@langchain/core@libs+langchain-core)':
     dependencies:
-      '@langchain/google-gauth': 2.1.1(@langchain/core@libs+langchain-core)
+      '@langchain/google-gauth': 2.1.4(@langchain/core@libs+langchain-core)
     transitivePeerDependencies:
       - '@langchain/core'
       - supports-color
     optional: true
 
-  '@langchain/google-webauth@2.1.1(@langchain/core@libs+langchain-core)':
+  '@langchain/google-webauth@2.1.4(@langchain/core@libs+langchain-core)':
     dependencies:
       '@langchain/core': link:libs/langchain-core
-      '@langchain/google-common': 2.1.1(@langchain/core@libs+langchain-core)
+      '@langchain/google-common': 2.1.4(@langchain/core@libs+langchain-core)
       web-auth-library: 1.0.3
     optional: true
 
@@ -21057,7 +20962,7 @@ snapshots:
       - ws
     optional: true
 
-  '@langchain/openai@1.2.0(@langchain/core@libs+langchain-core)(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.5))':
+  '@langchain/openai@1.2.1(@langchain/core@libs+langchain-core)(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.5))':
     dependencies:
       '@langchain/core': link:libs/langchain-core
       js-tiktoken: 1.0.21
@@ -21073,10 +20978,10 @@ snapshots:
       js-tiktoken: 1.0.21
     optional: true
 
-  '@langchain/xai@1.1.0(@langchain/core@libs+langchain-core)(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.5))':
+  '@langchain/xai@1.1.1(@langchain/core@libs+langchain-core)(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.5))':
     dependencies:
       '@langchain/core': link:libs/langchain-core
-      '@langchain/openai': 1.2.0(@langchain/core@libs+langchain-core)(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.5))
+      '@langchain/openai': 1.2.1(@langchain/core@libs+langchain-core)(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.5))
     transitivePeerDependencies:
       - ws
     optional: true
@@ -21213,7 +21118,7 @@ snapshots:
   '@mistralai/mistralai@1.10.0':
     dependencies:
       zod: 3.25.76
-      zod-to-json-schema: 3.24.6(zod@3.25.76)
+      zod-to-json-schema: 3.25.0(zod@3.25.76)
 
   '@mistralai/mistralai@1.7.5(zod@3.25.76)':
     dependencies:
@@ -21923,13 +21828,13 @@ snapshots:
   '@rolldown/binding-darwin-arm64@1.0.0-beta.30':
     optional: true
 
-  '@rolldown/binding-darwin-arm64@1.0.0-beta.55':
+  '@rolldown/binding-darwin-arm64@1.0.0-beta.58':
     optional: true
 
   '@rolldown/binding-darwin-x64@1.0.0-beta.30':
     optional: true
 
-  '@rolldown/binding-darwin-x64@1.0.0-beta.55':
+  '@rolldown/binding-darwin-x64@1.0.0-beta.58':
     optional: true
 
   '@rolldown/binding-freebsd-x64@1.0.0-beta.30':
@@ -21941,13 +21846,13 @@ snapshots:
   '@rolldown/binding-linux-arm64-gnu@1.0.0-beta.30':
     optional: true
 
-  '@rolldown/binding-linux-arm64-gnu@1.0.0-beta.55':
+  '@rolldown/binding-linux-arm64-gnu@1.0.0-beta.58':
     optional: true
 
   '@rolldown/binding-linux-arm64-musl@1.0.0-beta.30':
     optional: true
 
-  '@rolldown/binding-linux-arm64-musl@1.0.0-beta.55':
+  '@rolldown/binding-linux-arm64-musl@1.0.0-beta.58':
     optional: true
 
   '@rolldown/binding-linux-arm64-ohos@1.0.0-beta.30':
@@ -21956,13 +21861,13 @@ snapshots:
   '@rolldown/binding-linux-x64-gnu@1.0.0-beta.30':
     optional: true
 
-  '@rolldown/binding-linux-x64-gnu@1.0.0-beta.55':
+  '@rolldown/binding-linux-x64-gnu@1.0.0-beta.58':
     optional: true
 
   '@rolldown/binding-linux-x64-musl@1.0.0-beta.30':
     optional: true
 
-  '@rolldown/binding-linux-x64-musl@1.0.0-beta.55':
+  '@rolldown/binding-linux-x64-musl@1.0.0-beta.58':
     optional: true
 
   '@rolldown/binding-wasm32-wasi@1.0.0-beta.30':
@@ -21973,7 +21878,7 @@ snapshots:
   '@rolldown/binding-win32-arm64-msvc@1.0.0-beta.30':
     optional: true
 
-  '@rolldown/binding-win32-arm64-msvc@1.0.0-beta.55':
+  '@rolldown/binding-win32-arm64-msvc@1.0.0-beta.58':
     optional: true
 
   '@rolldown/binding-win32-ia32-msvc@1.0.0-beta.30':
@@ -21985,7 +21890,7 @@ snapshots:
   '@rolldown/binding-win32-x64-msvc@1.0.0-beta.30':
     optional: true
 
-  '@rolldown/binding-win32-x64-msvc@1.0.0-beta.55':
+  '@rolldown/binding-win32-x64-msvc@1.0.0-beta.58':
     optional: true
 
   '@rolldown/pluginutils@1.0.0-beta.30': {}
@@ -28613,7 +28518,7 @@ snapshots:
 
   kuler@2.0.0: {}
 
-  langchain@0.3.30(18d6d7b8aaf0ddc137c35c2ef001f336):
+  langchain@0.3.30(a409b07ae415e3e3f2735092ee61582b):
     dependencies:
       '@langchain/core': link:libs/langchain-core
       '@langchain/openai': 0.6.16(@langchain/core@libs+langchain-core)(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.5))
@@ -28628,17 +28533,17 @@ snapshots:
       yaml: 2.8.1
       zod: 3.25.76
     optionalDependencies:
-      '@langchain/anthropic': 1.3.1(@langchain/core@libs+langchain-core)
-      '@langchain/aws': 1.1.0(@langchain/core@libs+langchain-core)
+      '@langchain/anthropic': 1.3.4(@langchain/core@libs+langchain-core)
+      '@langchain/aws': 1.1.1(@langchain/core@libs+langchain-core)
       '@langchain/cohere': 1.0.1(@langchain/core@libs+langchain-core)(encoding@0.1.13)
-      '@langchain/deepseek': 1.0.3(@langchain/core@libs+langchain-core)(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.5))
-      '@langchain/google-genai': 2.1.1(@langchain/core@libs+langchain-core)
-      '@langchain/google-vertexai': 2.1.1(@langchain/core@libs+langchain-core)
-      '@langchain/google-vertexai-web': 2.1.1(@langchain/core@libs+langchain-core)
+      '@langchain/deepseek': 1.0.4(@langchain/core@libs+langchain-core)(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.5))
+      '@langchain/google-genai': 2.1.4(@langchain/core@libs+langchain-core)
+      '@langchain/google-vertexai': 2.1.4(@langchain/core@libs+langchain-core)
+      '@langchain/google-vertexai-web': 2.1.4(@langchain/core@libs+langchain-core)
       '@langchain/groq': 1.0.2(@langchain/core@libs+langchain-core)(encoding@0.1.13)
       '@langchain/mistralai': 1.0.2(@langchain/core@libs+langchain-core)
       '@langchain/ollama': 1.1.0(@langchain/core@libs+langchain-core)
-      '@langchain/xai': 1.1.0(@langchain/core@libs+langchain-core)(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.5))
+      '@langchain/xai': 1.1.1(@langchain/core@libs+langchain-core)(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.5))
       axios: 1.13.2(debug@4.4.3)
       cheerio: 1.0.0-rc.12
       handlebars: 4.7.8

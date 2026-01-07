@@ -186,7 +186,11 @@ export function cjsCompatPlugin(param: CjsCompatPluginOptions = {}): Plugin {
           ];
           await fs.writeFile(
             packageJsonPath,
-            JSON.stringify(packageJson, null, 2)
+            /**
+             * set new line at the end of the file
+             * see .editorconfig
+             */
+            `${JSON.stringify(packageJson, null, 2)}\n`
           );
         }
       },

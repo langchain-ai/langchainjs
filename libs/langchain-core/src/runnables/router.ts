@@ -38,7 +38,7 @@ export type RouterInput = {
 export class RouterRunnable<
   RunInput extends RouterInput,
   RunnableInput,
-  RunOutput
+  RunOutput,
 > extends Runnable<RunInput, RunOutput> {
   static lc_name() {
     return "RouterRunnable";

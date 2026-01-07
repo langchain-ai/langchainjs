@@ -156,7 +156,7 @@ export function handleMultiModalOutput(
           ({
             type: "image",
             url: image.image_url.url as string,
-          } as const)
+          }) as const
       );
     return [{ type: "text", text: content }, ...images];
   }
