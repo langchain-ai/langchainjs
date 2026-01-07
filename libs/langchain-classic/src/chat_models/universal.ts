@@ -35,7 +35,7 @@ import { ChatResult } from "@langchain/core/outputs";
 
 // TODO: remove once `EventStreamCallbackHandlerInput` is exposed in core
 interface EventStreamCallbackHandlerInput
-  extends Omit<LogStreamCallbackHandlerInput, "_schemaFormat"> {}
+  extends Omit<LogStreamCallbackHandlerInput, "_schemaFormat"> { }
 
 export interface ConfigurableChatModelCallOptions
   extends BaseChatModelCallOptions {
@@ -167,7 +167,7 @@ export async function getChatModelByClassName(className: string) {
         .split("'")[0];
       throw new Error(
         `Unable to import ${attemptedPackage}. Please install with ` +
-          `\`npm install ${attemptedPackage}\` or \`pnpm install ${attemptedPackage}\``
+        `\`npm install ${attemptedPackage}\` or \`pnpm install ${attemptedPackage}\``
       );
     }
     throw e;
@@ -198,8 +198,27 @@ async function _initChatModelHelper(
   }
 
   const { modelProvider: _unused, ...passedParams } = params;
-  const ProviderClass = await getChatModelByClassName(config.className);
-  return new ProviderClass({ model, ...passedParams });
+  // Import directly from the config package to avoid className collision
+  // (e.g., google-vertexai and google-vertexai-web both use "ChatVertexAI")
+  try {
+    const module = await import(config.package);
+    const ProviderClass = module[config.className];
+    return new ProviderClass({ model, ...passedParams });
+  } catch (e: unknown) {
+    const err = e as Error;
+    if (
+      "code" in err &&
+      err.code?.toString().includes("ERR_MODULE_NOT_FOUND") &&
+      "message" in err &&
+      typeof err.message === "string"
+    ) {
+      throw new Error(
+        `Unable to import ${config.package}. Please install with ` +
+        `\`npm install ${config.package}\` or \`pnpm install ${config.package}\``
+      );
+    }
+    throw e;
+  }
 }
 
 /**
@@ -269,7 +288,7 @@ interface ConfigurableModelFields extends BaseChatModelParams {
 export class ConfigurableModel<
   RunInput extends BaseLanguageModelInput = BaseLanguageModelInput,
   CallOptions extends
-    ConfigurableChatModelCallOptions = ConfigurableChatModelCallOptions,
+  ConfigurableChatModelCallOptions = ConfigurableChatModelCallOptions,
 > extends BaseChatModel<CallOptions, AIMessageChunk> {
   _llmType(): string {
     return "chat_model";
@@ -590,7 +609,7 @@ export type ConfigurableFields = "any" | string[];
 export async function initChatModel<
   RunInput extends BaseLanguageModelInput = BaseLanguageModelInput,
   CallOptions extends
-    ConfigurableChatModelCallOptions = ConfigurableChatModelCallOptions,
+  ConfigurableChatModelCallOptions = ConfigurableChatModelCallOptions,
 >(
   model: string,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -604,7 +623,7 @@ export async function initChatModel<
 export async function initChatModel<
   RunInput extends BaseLanguageModelInput = BaseLanguageModelInput,
   CallOptions extends
-    ConfigurableChatModelCallOptions = ConfigurableChatModelCallOptions,
+  ConfigurableChatModelCallOptions = ConfigurableChatModelCallOptions,
 >(
   model: never,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -618,7 +637,7 @@ export async function initChatModel<
 export async function initChatModel<
   RunInput extends BaseLanguageModelInput = BaseLanguageModelInput,
   CallOptions extends
-    ConfigurableChatModelCallOptions = ConfigurableChatModelCallOptions,
+  ConfigurableChatModelCallOptions = ConfigurableChatModelCallOptions,
 >(
   model?: string,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -846,7 +865,7 @@ export async function initChatModel<
 export async function initChatModel<
   RunInput extends BaseLanguageModelInput = BaseLanguageModelInput,
   CallOptions extends
-    ConfigurableChatModelCallOptions = ConfigurableChatModelCallOptions,
+  ConfigurableChatModelCallOptions = ConfigurableChatModelCallOptions,
 >(
   model?: string,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -878,8 +897,8 @@ export async function initChatModel<
   if (configPrefix && configurableFieldsCopy === undefined) {
     console.warn(
       `{ configPrefix: ${configPrefix} } has been set but no fields are configurable. Set ` +
-        `{ configurableFields: [...] } to specify the model params that are ` +
-        `configurable.`
+      `{ configurableFields: [...] } to specify the model params that are ` +
+      `configurable.`
     );
   }
 
