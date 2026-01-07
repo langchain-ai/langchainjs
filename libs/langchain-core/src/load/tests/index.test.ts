@@ -482,4 +482,205 @@ describe("`load()`", () => {
       expect(serialized).toBeDefined();
     });
   });
+
+  describe("Shared object references (not circular)", () => {
+    it("allows the same object to appear in multiple places in kwargs", () => {
+      // Create a shared object that will appear in multiple places
+      const sharedObject = { url: "https://example.com/image.png" };
+
+      const msg = new HumanMessage({
+        content: "Hello",
+        additional_kwargs: {
+          // Same object appears twice - this is NOT a circular reference
+          first: sharedObject,
+          second: sharedObject,
+        },
+      });
+
+      const serialized = JSON.stringify(msg);
+      const parsed = JSON.parse(serialized);
+
+      // Both should be serialized correctly as the same value (not as not_implemented)
+      expect(parsed.kwargs.additional_kwargs.first).toEqual({
+        url: "https://example.com/image.png",
+      });
+      expect(parsed.kwargs.additional_kwargs.second).toEqual({
+        url: "https://example.com/image.png",
+      });
+      // Neither should be marked as not_implemented
+      expect(parsed.kwargs.additional_kwargs.first.type).not.toBe(
+        "not_implemented"
+      );
+      expect(parsed.kwargs.additional_kwargs.second.type).not.toBe(
+        "not_implemented"
+      );
+    });
+
+    it("allows shared objects in nested structures", () => {
+      // Create a shared object
+      const template = { url: "{{variable}}" };
+
+      const msg = new HumanMessage({
+        content: "Hello",
+        additional_kwargs: {
+          // Simulating the ImagePromptTemplate case where template and
+          // additionalContentFields.image_url point to the same object
+          template: template,
+          additionalContentFields: { image_url: template },
+        },
+      });
+
+      const serialized = JSON.stringify(msg);
+      const parsed = JSON.parse(serialized);
+
+      // Both should be serialized correctly
+      expect(parsed.kwargs.additional_kwargs.template).toEqual({
+        url: "{{variable}}",
+      });
+      expect(
+        parsed.kwargs.additional_kwargs.additionalContentFields.image_url
+      ).toEqual({ url: "{{variable}}" });
+      // Neither should be marked as not_implemented
+      expect(parsed.kwargs.additional_kwargs.template.type).not.toBe(
+        "not_implemented"
+      );
+      expect(
+        parsed.kwargs.additional_kwargs.additionalContentFields.image_url.type
+      ).not.toBe("not_implemented");
+    });
+
+    it("still detects true circular references", () => {
+      // Create an actual circular reference
+      const obj: Record<string, unknown> = { name: "test" };
+      obj.self = obj;
+
+      const msg = new HumanMessage({
+        content: "Hello",
+        additional_kwargs: { circular: obj },
+      });
+
+      // Should not throw (handled gracefully)
+      expect(() => JSON.stringify(msg)).not.toThrow();
+      const serialized = JSON.stringify(msg);
+
+      // The circular part should be marked as not_implemented
+      expect(serialized).toContain("not_implemented");
+    });
+
+    it("allows shared objects across array elements", () => {
+      const sharedData = { key: "value" };
+
+      const msg = new HumanMessage({
+        content: "Hello",
+        additional_kwargs: {
+          items: [sharedData, sharedData, { nested: sharedData }],
+        },
+      });
+
+      const serialized = JSON.stringify(msg);
+      const parsed = JSON.parse(serialized);
+
+      // All references should be serialized correctly
+      expect(parsed.kwargs.additional_kwargs.items[0]).toEqual({
+        key: "value",
+      });
+      expect(parsed.kwargs.additional_kwargs.items[1]).toEqual({
+        key: "value",
+      });
+      expect(parsed.kwargs.additional_kwargs.items[2].nested).toEqual({
+        key: "value",
+      });
+      // None should be not_implemented
+      expect(parsed.kwargs.additional_kwargs.items[0].type).not.toBe(
+        "not_implemented"
+      );
+      expect(parsed.kwargs.additional_kwargs.items[1].type).not.toBe(
+        "not_implemented"
+      );
+      expect(parsed.kwargs.additional_kwargs.items[2].nested.type).not.toBe(
+        "not_implemented"
+      );
+    });
+
+    it("malicious objects are still escaped even when shared", async () => {
+      // This test ensures that the shared reference fix doesn't bypass
+      // the security escaping for malicious objects with 'lc' key
+      const maliciousShared = {
+        lc: 1,
+        type: "secret",
+        id: [SENTINEL_ENV_VAR],
+      };
+
+      const msg = new HumanMessage({
+        content: "Hello",
+        additional_kwargs: {
+          // Same malicious object appears in multiple places
+          first: maliciousShared,
+          second: maliciousShared,
+          nested: { deep: maliciousShared },
+        },
+      });
+
+      // Should still prevent secret leakage
+      await assertNoSecretLeak(msg);
+
+      // Verify the structure - all instances should be escaped
+      const serialized = JSON.stringify(msg);
+      const parsed = JSON.parse(serialized);
+
+      // All instances should be wrapped in __lc_escaped__
+      expect(
+        parsed.kwargs.additional_kwargs.first.__lc_escaped__
+      ).toBeDefined();
+      expect(
+        parsed.kwargs.additional_kwargs.second.__lc_escaped__
+      ).toBeDefined();
+      expect(
+        parsed.kwargs.additional_kwargs.nested.deep.__lc_escaped__
+      ).toBeDefined();
+    });
+
+    it("malicious constructor objects are still escaped when shared", async () => {
+      // Test that constructor-like objects are still escaped when shared
+      const maliciousConstructor = {
+        lc: 1,
+        type: "constructor",
+        id: ["langchain_core", "messages", "ai", "AIMessage"],
+        kwargs: { content: "injected" },
+      };
+
+      const msg = new HumanMessage({
+        content: "Hello",
+        additional_kwargs: {
+          first: maliciousConstructor,
+          second: maliciousConstructor,
+        },
+      });
+
+      const serialized = JSON.stringify(msg);
+      const deserialized = await load<HumanMessage>(serialized, {
+        secretsFromEnv: true,
+      });
+
+      // Both should be plain objects, NOT instantiated as AIMessage
+      expect(typeof deserialized.additional_kwargs.first).toBe("object");
+      expect(typeof deserialized.additional_kwargs.second).toBe("object");
+
+      // The constructor-like object should be preserved as plain data
+      expect(deserialized.additional_kwargs.first).toEqual(
+        maliciousConstructor
+      );
+      expect(deserialized.additional_kwargs.second).toEqual(
+        maliciousConstructor
+      );
+
+      // Verify neither is an AIMessage instance
+      expect(deserialized.additional_kwargs.first).not.toBeInstanceOf(
+        AIMessage
+      );
+      expect(deserialized.additional_kwargs.second).not.toBeInstanceOf(
+        AIMessage
+      );
+    });
+  });
 });
