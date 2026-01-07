@@ -137,31 +137,111 @@ describe("response format", () => {
       >();
     });
 
-    it("should properly infer response format from agent type", () => {
-      const agent = createAgent({
-        model: new FakeToolCallingChatModel({}),
-        tools: [],
-        // Note: Using 'as const' is required for proper type inference
-        // of the union type from the array of schemas
-        responseFormat: [
-          z.object({
-            capitalA: z.string(),
-          }),
-          z.object({
-            capitalB: z.string(),
-          }),
-        ] as const,
+    describe("should properly infer response format from agent type", () => {
+      it("via schema list", () => {
+        const agent = createAgent({
+          model: new FakeToolCallingChatModel({}),
+          tools: [],
+          // Note: Using 'as const' is required for proper type inference
+          // of the union type from the array of schemas
+          responseFormat: [
+            z.object({
+              capitalA: z.string(),
+            }),
+            z.object({
+              capitalB: z.string(),
+            }),
+          ] as const,
+        });
+
+        type AgentResponse = InferAgentResponse<typeof agent>;
+        expectTypeOf<AgentResponse>().toEqualTypeOf<
+          | {
+              capitalA: string;
+            }
+          | {
+              capitalB: string;
+            }
+        >();
       });
 
-      type AgentResponse = InferAgentResponse<typeof agent>;
-      expectTypeOf<AgentResponse>().toEqualTypeOf<
-        | {
-            capitalA: string;
-          }
-        | {
-            capitalB: string;
-          }
-      >();
+      it("via single schema", () => {
+        const agent = createAgent({
+          model: new FakeToolCallingChatModel({}),
+          tools: [],
+          // Note: Using 'as const' is required for proper type inference
+          // of the union type from the array of schemas
+          responseFormat: z.object({
+            capitalA: z.string(),
+          }),
+        });
+
+        type AgentResponse = InferAgentResponse<typeof agent>;
+        expectTypeOf<AgentResponse>().toEqualTypeOf<{
+          capitalA: string;
+        }>();
+      });
+
+      it("via use if providerStrategy", () => {
+        const agent = createAgent({
+          model: new FakeToolCallingChatModel({}),
+          tools: [],
+          // Note: Using 'as const' is required for proper type inference
+          // of the union type from the array of schemas
+          responseFormat: providerStrategy(
+            z.object({
+              capitalB: z.string(),
+            })
+          ),
+        });
+
+        type AgentResponse = InferAgentResponse<typeof agent>;
+        expectTypeOf<AgentResponse>().toEqualTypeOf<{
+          capitalB: string;
+        }>();
+      });
+
+      it("via use if toolStrategy", () => {
+        const agent = createAgent({
+          model: new FakeToolCallingChatModel({}),
+          tools: [],
+          // Note: Using 'as const' is required for proper type inference
+          // of the union type from the array of schemas
+          responseFormat: toolStrategy(
+            z.object({
+              capitalC: z.string(),
+            })
+          ),
+        });
+
+        type AgentResponse = InferAgentResponse<typeof agent>;
+        expectTypeOf<AgentResponse>().toEqualTypeOf<{
+          capitalC: string;
+        }>();
+
+        const agent2 = createAgent({
+          model: new FakeToolCallingChatModel({}),
+          // Note: Using 'as const' is required for proper type inference
+          // of the union type from the array of schemas
+          responseFormat: toolStrategy([
+            z.object({
+              capitalD: z.string(),
+            }),
+            z.object({
+              capitalE: z.string(),
+            }),
+          ]),
+        });
+        type AgentResponse2 = InferAgentResponse<typeof agent2>;
+        expectTypeOf<AgentResponse2>().toEqualTypeOf<
+          | {
+              capitalD: string;
+            }
+          | {
+              capitalE: string;
+            }
+        >();
+      });
     });
   });
 
