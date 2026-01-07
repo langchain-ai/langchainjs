@@ -1,5 +1,5 @@
 ---
-"@langchain/core": minor
+"@langchain/core": patch
 ---
 
-feat(@langchain/core): add literal name type inference to tool()
+fix(@langchain/core): add literal name type inference to tool()
