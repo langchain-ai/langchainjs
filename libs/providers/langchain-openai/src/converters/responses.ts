@@ -1174,10 +1174,16 @@ export const convertMessagesToResponsesInput: Converter<
         const input: ResponsesInputItem[] = [];
 
         // reasoning items
-        if (additional_kwargs?.reasoning && !zdrEnabled) {
-          const reasoningItem = convertReasoningSummaryToResponsesReasoningItem(
-            additional_kwargs.reasoning
-          );
+        const reasoning = additional_kwargs?.reasoning;
+        const hasEncryptedContent = !!reasoning?.encrypted_content;
+        /**
+         * With ZDR enabled, OpenAI does not retain reasoning items, so we only send
+         * them when encrypted content is available (via include: ["reasoning.encrypted_content"]).
+         * With ZDR disabled, we include reasoning item ids so OpenAI can reference them, as it's storing them.
+         */
+        if (reasoning && (!zdrEnabled || hasEncryptedContent)) {
+          const reasoningItem =
+            convertReasoningSummaryToResponsesReasoningItem(reasoning);
           input.push(reasoningItem);
         }
 
