@@ -13,9 +13,13 @@ import {
 } from "../../node.js";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import {
-  AIMessage, AIMessageChunk, BaseMessage,
-  BaseMessageChunk, ContentBlock,
-  HumanMessage, HumanMessageChunk,
+  AIMessage,
+  AIMessageChunk,
+  BaseMessage,
+  BaseMessageChunk,
+  ContentBlock,
+  HumanMessage,
+  HumanMessageChunk,
   SystemMessage,
   ToolMessage
 } from "@langchain/core/messages";
@@ -786,18 +790,17 @@ describe.each(coreModelInfo)(
       expect(recorder.request?.body?.generationConfig?.responseMimeType).toEqual("application/json");
     });
 
-    test("image - ContentBlock.Standard", async () => {
+    test("image - legacy", async () => {
       const model = newChatGoogle({});
 
       const dataPath = "src/chat_models/tests/data/blue-square.png";
       const dataType = "image/png";
       const data = await fs.readFile(dataPath);
       const data64 = data.toString("base64");
-      // const dataUri = `data:${dataType};base64,${data64}`;
+      const dataUri = `data:${dataType};base64,${data64}`;
 
-      /*
-      // Old format
-      const message: MessageContentComplex[] = [
+      // Old format - MessageContentComplex[]
+      const content = [
         {
           type: "text",
           text: "What is in this image?",
@@ -807,7 +810,38 @@ describe.each(coreModelInfo)(
           image_url: dataUri,
         },
       ];
-      */
+      const message = new HumanMessage({
+        content,
+      });
+
+      const messages: BaseMessage[] = [
+        message,
+      ];
+
+      const res = await model.invoke(messages);
+
+      expect(res).toBeDefined();
+      expect(res._getType()).toEqual("ai");
+
+      const aiMessage = res as AIMessageChunk;
+      expect(aiMessage.content).toBeDefined();
+
+      expect(typeof aiMessage.content).toBe("string");
+      const text = aiMessage.content as string;
+      expect(text).toMatch(/blue/);
+
+      expect(
+        aiMessage?.usage_metadata?.input_token_details?.image
+      ).toBeGreaterThan(0);
+    });
+
+    test("image - ContentBlock.Standard", async () => {
+      const model = newChatGoogle({});
+
+      const dataPath = "src/chat_models/tests/data/blue-square.png";
+      const dataType = "image/png";
+      const data = await fs.readFile(dataPath);
+      const data64 = data.toString("base64");
 
       const content: ContentBlock.Standard[] = [
         {
@@ -831,7 +865,7 @@ describe.each(coreModelInfo)(
       const res = await model.invoke(messages);
 
       expect(res).toBeDefined();
-      expect(res._getType()).toEqual("ai");
+      expect(AIMessage.isInstance(res)).toEqual(true);
 
       const aiMessage = res as AIMessageChunk;
       expect(aiMessage.content).toBeDefined();
@@ -844,6 +878,81 @@ describe.each(coreModelInfo)(
         aiMessage?.usage_metadata?.input_token_details?.image
       ).toBeGreaterThan(0);
     });
+
+    test("video - legacy", async () => {
+      const model = newChatGoogle({});
+
+      const dataPath = "src/chat_models/tests/data/rainbow.mp4";
+      const dataType = "video/mp4";
+      const data = await fs.readFile(dataPath);
+      const data64 = data.toString("base64");
+      const dataUri = `data:${dataType};base64,${data64}`;
+
+      // Old format - MessageContentComplex[]
+      const message1 = [
+        {
+          type: "text",
+          text: "Describe this video in detail.",
+        },
+        {
+          type: "image_url",
+          image_url: dataUri,
+        },
+      ];
+
+      const messages1: BaseMessage[] = [
+        new HumanMessageChunk({ content: message1 }),
+      ];
+
+      const res1 = await model.invoke(messages1);
+
+      expect(res1).toBeDefined();
+      expect(res1._getType()).toEqual("ai");
+
+      const aiMessage1 = res1 as AIMessageChunk;
+      expect(aiMessage1.content).toBeDefined();
+
+      expect(typeof aiMessage1.content).toBe("string");
+      const text = aiMessage1.content as string;
+      expect(text).toMatch(/rainbow/);
+
+      const videoTokens1 = aiMessage1?.usage_metadata?.input_token_details
+        ?.video as number;
+      expect(typeof videoTokens1).toEqual("number");
+      expect(videoTokens1).toBeGreaterThan(712);
+      expect(
+        aiMessage1?.usage_metadata?.input_token_details?.video ?? 0
+      ).toBeGreaterThan(0);
+
+      // Now run it again, but this time sample two frames / second
+
+      // Old format - MessageContentComplex[]
+      const message2 = [
+        {
+          type: "text",
+          text: "Describe this video in detail.",
+        },
+        {
+          type: "image_url",
+          image_url: dataUri,
+          videoMetadata: {
+            fps: 2.0,
+          },
+        },
+      ];
+
+      const messages2: BaseMessage[] = [
+        new HumanMessageChunk({ content: message2 }),
+      ];
+
+      const res2 = await model.invoke(messages2);
+      const aiMessage2 = res2 as AIMessageChunk;
+
+      const videoTokens2 =
+        aiMessage2?.usage_metadata?.input_token_details?.video;
+      expect(typeof videoTokens2).toEqual("number");
+      expect(videoTokens2).toBeGreaterThan(videoTokens1);
+    }, 90000);
 
     test("video - ContentBlock.Standard", async () => {
       const model = newChatGoogle({});
@@ -951,6 +1060,51 @@ describe.each(coreModelInfo)(
       expect(typeof videoTokens2).toEqual("number");
       expect(videoTokens2).toBeGreaterThan(videoTokens1);
     }, 90000);
+
+    test("audio - legacy", async () => {
+      // Update this with the correct path to an audio file on your machine.
+      const audioPath = "src/chat_models/tests/data/gettysburg10.wav";
+      const audioMimeType = "audio/wav";
+      const audio = await fs.readFile(audioPath);
+      const audioBase64 = audio.toString("base64");
+
+      const model = newChatGoogle();
+
+      const prompt = ChatPromptTemplate.fromMessages([
+        new MessagesPlaceholder("audio"),
+      ]);
+
+      const chain = prompt.pipe(model);
+      const response = await chain.invoke({
+        audio: new HumanMessage({
+          content: [
+            {
+              type: "media",
+              mimeType: audioMimeType,
+              data: audioBase64,
+            },
+            {
+              type: "text",
+              text: "Summarize the content in this audio. ALso, what is the speaker's tone?",
+            },
+          ],
+        }),
+      });
+
+      expect(typeof response.content).toBe("string");
+      expect((response.content as string).length).toBeGreaterThan(15);
+
+      const usage = response.usage_metadata!;
+
+      // Although LangChainJS doesn't require that the details sum to the
+      // available tokens, this should be the case for how we're doing Gemini.
+      expect(propSum(usage.input_token_details!)).toEqual(usage.input_tokens);
+      if (usage.output_token_details?.text) {
+        // Some models don't report the text tokens in the details
+        expect(propSum(usage.output_token_details!)).toEqual(usage.output_tokens);
+      }
+      expect(usage.input_token_details).toHaveProperty("audio");
+    });
 
     test("audio - ContentBlock.Standard", async () => {
       // Update this with the correct path to an audio file on your machine.

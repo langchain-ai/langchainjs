@@ -15,6 +15,9 @@ import {
   InputTokenDetails,
   OutputTokenDetails,
   ModalitiesTokenDetails,
+  MessageContentImageUrl,
+  MessageContentComplex,
+  MessageContentText,
 } from "@langchain/core/messages";
 import { Converter } from "@langchain/core/utils/format";
 import {
@@ -29,6 +32,8 @@ import {
   GeminiGroundingSupport,
   GeminiPartFunctionCall,
   GeminiPartBaseFile,
+  GeminiPartInlineData,
+  GeminiPartFileData,
 } from "../chat_models/types.js";
 import { iife } from "../utils/misc.js";
 import { ToolCallNotFoundError } from "../utils/errors.js";
@@ -468,6 +473,172 @@ function convertLegacyContentMessageToGeminiContent(
     return null;
   }
 
+  /**
+   * @deprecated - This is for use by `convertLegacyContentMessageToGeminiContent` only
+   */
+  function isMessageContentText(
+    content: object
+  ): content is MessageContentText {
+    return (
+      typeof content === "object" &&
+      content !== null &&
+      "text" in content
+    );
+  }
+
+  /**
+   * @deprecated - This is for use by `convertLegacyContentMessageToGeminiContent` only
+   */
+  function isMessageContentImageUrl(
+    content: object
+  ): content is MessageContentImageUrl {
+    return (
+      typeof content === "object" &&
+      content !== null &&
+      "image_url" in content
+    );
+  }
+
+  /**
+   * @deprecated - This is for use by `convertLegacyContentMessageToGeminiContent` only
+   */
+  function isMessageContentMedia(
+    content: object
+  ): content is MessageContentComplex {
+    return (
+      typeof content === "object" &&
+      content !== null &&
+      "type" in content &&
+      content.type === "media"
+    );
+  }
+
+  /**
+   * Infers the MIME type from a URL based on its file extension.
+   * This is used as a fallback when the MIME type is not provided.
+   *
+   * @param url - The URL to infer the MIME type from
+   * @returns The inferred MIME type or a generic type if it cannot be determined
+   */
+  function inferMimeTypeFromUrl(url: string): string {
+    const mimeTypeMap: Record<string, string> = {
+      jpg: "image/jpeg",
+      jpeg: "image/jpeg",
+      png: "image/png",
+      gif: "image/gif",
+      webp: "image/webp",
+      bmp: "image/bmp",
+      svg: "image/svg+xml",
+      ico: "image/x-icon",
+      tiff: "image/tiff",
+      tif: "image/tiff",
+    };
+
+    try {
+      // Extract the pathname from the URL
+      const pathname = new URL(url).pathname;
+      // Get the file extension (handle query params and fragments)
+      const extension = pathname.split(".").pop()?.toLowerCase().split(/[?#]/)[0];
+      return extension ? mimeTypeMap[extension] : "application/octet-stream";
+    } catch {
+      // If URL parsing fails, try a simple extension extraction
+      const match = url.match(/\.([a-zA-Z0-9]+)(?:[?#]|$)/);
+      if (match) {
+        const extension = match[1].toLowerCase();
+        return mimeTypeMap[extension];
+      }
+      return "application/octet-stream";
+    }
+  }
+
+  function messageContentImageUrlData(
+    content: MessageContentImageUrl
+  ): GeminiPartInlineData | GeminiPartFileData {
+    const url: string =
+      typeof content.image_url === "string"
+        ? content.image_url
+        : content.image_url.url;
+    if (!url) {
+      throw new Error("Missing Image URL");
+    }
+
+    const dataUrl = parseBase64DataUrl({dataUrl: url});
+    if (dataUrl?.data && dataUrl?.mime_type) {
+      return {
+        inlineData: {
+          data: dataUrl.data,
+          mimeType: dataUrl.mime_type,
+        },
+      };
+    } else {
+      // Infer MIME type from URL extension
+      const mimeType = inferMimeTypeFromUrl(url) || "image/png";
+      return {
+        fileData: {
+          mimeType,
+          fileUri: url,
+        },
+      };
+    }
+  }
+
+  function messageContentImageUrl(
+    content: MessageContentImageUrl
+  ): GeminiPartInlineData | GeminiPartFileData {
+    const ret = messageContentImageUrlData(content);
+    supplementVideoMetadata(content, ret);
+    return ret;
+  }
+
+  function messageContentMediaData(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    content: Record<string, any>
+  ): GeminiPartInlineData | GeminiPartFileData {
+    if ("mimeType" in content && "data" in content) {
+      return {
+        inlineData: {
+          mimeType: content.mimeType,
+          data: content.data,
+        },
+      };
+    } else if ("mimeType" in content && "fileUri" in content) {
+      return {
+        fileData: {
+          mimeType: content.mimeType,
+          fileUri: content.fileUri,
+        },
+      };
+    } else {
+      // The old version would attempt to read the URL, but we're
+      // not in an async function, so we can't do that.
+    }
+
+    throw new Error(
+      `Invalid media content: ${JSON.stringify(content, null, 1)}`
+    );
+  }
+
+  function supplementVideoMetadata(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    content: MessageContentImageUrl | Record<string, any>,
+    ret: GeminiPartInlineData | GeminiPartFileData
+  ): GeminiPartInlineData | GeminiPartFileData {
+    // Add videoMetadata if defined
+    if ("videoMetadata" in content && typeof ret === "object") {
+      ret.videoMetadata = content.videoMetadata;
+    }
+    return ret;
+  }
+
+  function messageContentMedia(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    content: Record<string, any>
+  ): GeminiPartInlineData | GeminiPartFileData {
+    const ret = messageContentMediaData(content);
+    supplementVideoMetadata(content, ret);
+    return ret;
+  }
+
   const role: GeminiRole = iife(() => {
     if (HumanMessage.isInstance(message)) {
       return "user";
@@ -510,10 +681,12 @@ function convertLegacyContentMessageToGeminiContent(
   } else if (Array.isArray(message.content)) {
     // Array of content blocks (legacy format)
     for (const item of message.content) {
-      if (typeof item === "string") {
-        parts.push({ text: item });
+      if (typeof item === "string"){
+        parts.push( {text: item} );
       } else if (typeof item === "object" && item !== null) {
-        if (isDataContentBlock(item)) {
+        if (isMessageContentText(item)) {
+          parts.push({ text: item.text });
+        } else if (isDataContentBlock(item)) {
           parts.push(
             convertToProviderContentBlock(item, geminiContentBlockConverter)
           );
@@ -523,6 +696,14 @@ function convertLegacyContentMessageToGeminiContent(
             ...etc,
             functionCall,
           } as GeminiPartFunctionCall);
+        } else if (isMessageContentImageUrl(item)) {
+          parts.push(
+            messageContentImageUrl(item)
+          );
+        } else if (isMessageContentMedia(item)) {
+          parts.push(
+            messageContentMedia(item)
+          );
         } else {
           parts.push(item as GeminiPart);
         }
