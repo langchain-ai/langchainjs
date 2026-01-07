@@ -36,7 +36,7 @@ class PersonTool extends StructuredTool {
 export abstract class ChatModelUnitTests<
   CallOptions extends BaseChatModelCallOptions = BaseChatModelCallOptions,
   OutputMessageType extends AIMessageChunk = AIMessageChunk,
-  ConstructorArgs extends RecordStringAny = RecordStringAny
+  ConstructorArgs extends RecordStringAny = RecordStringAny,
 > extends BaseChatModelsTests<CallOptions, OutputMessageType, ConstructorArgs> {
   expect: typeof JestExpect | typeof VitestExpect;
 

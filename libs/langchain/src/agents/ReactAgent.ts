@@ -82,7 +82,7 @@ type MergedAgentState<
   StructuredResponseFormat extends
     | Record<string, any>
     | ResponseFormatUndefined,
-  TMiddleware extends readonly AgentMiddleware[]
+  TMiddleware extends readonly AgentMiddleware[],
 > = InferSchemaInput<StateSchema> &
   (StructuredResponseFormat extends ResponseFormatUndefined
     ? Omit<BuiltInState, "jumpTo">
@@ -93,7 +93,7 @@ type MergedAgentState<
 
 type InvokeStateParameter<
   StateSchema extends AnyAnnotationRoot | InteropZodObject | undefined,
-  TMiddleware extends readonly AgentMiddleware[]
+  TMiddleware extends readonly AgentMiddleware[],
 > =
   | (UserInput<StateSchema> & InferMiddlewareInputStates<TMiddleware>)
   | Command<any, any, any>
@@ -110,7 +110,7 @@ type AgentGraph<
   ContextSchema extends
     | AnyAnnotationRoot
     | InteropZodObject = AnyAnnotationRoot,
-  TMiddleware extends readonly AgentMiddleware[] = []
+  TMiddleware extends readonly AgentMiddleware[] = [],
 > = CompiledStateGraph<
   any,
   any,
@@ -132,7 +132,7 @@ export class ReactAgent<
   ContextSchema extends
     | AnyAnnotationRoot
     | InteropZodObject = AnyAnnotationRoot,
-  TMiddleware extends readonly AgentMiddleware[] = readonly AgentMiddleware[]
+  TMiddleware extends readonly AgentMiddleware[] = readonly AgentMiddleware[],
 > {
   #graph: AgentGraph<
     StateSchema,
@@ -242,7 +242,7 @@ export class ReactAgent<
       /**
        * ToDo: better type to get the state of middleware
        */
-      () => any
+      () => any,
     ][] = [];
 
     this.#agentNode = new AgentNode({
@@ -1095,7 +1095,7 @@ export class ReactAgent<
    */
   async stream<
     TStreamMode extends StreamMode | StreamMode[] | undefined,
-    TEncoding extends "text/event-stream" | undefined
+    TEncoding extends "text/event-stream" | undefined,
   >(
     state: InvokeStateParameter<StateSchema, TMiddleware>,
     config?: StreamConfiguration<

@@ -43,7 +43,8 @@ type ChatCompletionsInvocationParams = Omit<
  * @internal
  */
 export class ChatOpenAICompletions<
-  CallOptions extends ChatOpenAICompletionsCallOptions = ChatOpenAICompletionsCallOptions
+  CallOptions extends
+    ChatOpenAICompletionsCallOptions = ChatOpenAICompletionsCallOptions,
 > extends BaseChatOpenAI<CallOptions> {
   /** @internal */
   override invocationParams(
@@ -170,9 +171,8 @@ export class ChatOpenAICompletions<
         functions,
         function_call
       );
-      const completionTokenUsage = await this._getNumTokensFromGenerations(
-        generations
-      );
+      const completionTokenUsage =
+        await this._getNumTokensFromGenerations(generations);
 
       usageMetadata.input_tokens = promptTokenUsage;
       usageMetadata.output_tokens = completionTokenUsage;

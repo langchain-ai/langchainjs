@@ -7,7 +7,7 @@ import { ChatModelUnitTests as BaseChatModelUnitTests } from "./chat_models.js";
 export abstract class ChatModelUnitTests<
   CallOptions extends BaseChatModelCallOptions = BaseChatModelCallOptions,
   OutputMessageType extends AIMessageChunk = AIMessageChunk,
-  ConstructorArgs extends RecordStringAny = RecordStringAny
+  ConstructorArgs extends RecordStringAny = RecordStringAny,
 > extends BaseChatModelUnitTests<
   CallOptions,
   OutputMessageType,

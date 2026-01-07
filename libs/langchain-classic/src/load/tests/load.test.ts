@@ -154,14 +154,15 @@ test("serialize + deserialize llm", async () => {
   );
   expect(llm2).toBeInstanceOf(OpenAI);
   expect(JSON.stringify(llm2, null, 2)).toBe(str);
-  // Accept secret as env var
+  // Accept secret as env var (requires secretsFromEnv: true)
   const llm3 = await load<OpenAI>(
     str,
     {},
     {},
     {
       llms__openai: { OpenAI },
-    }
+    },
+    true // secretsFromEnv
   );
   expect(llm3).toBeInstanceOf(OpenAI);
   expect(llm.openAIApiKey).toBe(llm3.openAIApiKey);
@@ -204,11 +205,11 @@ test("serialize + deserialize llm chain string prompt", async () => {
 });
 
 test("serialize + deserialize llm chain chat prompt", async () => {
-  process.env.OPENAI_API_KEY = undefined;
   const llm = new ChatOpenAI({
     temperature: 0.5,
     model: "gpt-4",
     streaming: true,
+    apiKey: "openai-key",
     prefixMessages: [
       {
         role: "system",
@@ -225,7 +226,7 @@ test("serialize + deserialize llm chain chat prompt", async () => {
   expect(stringify(JSON.parse(str))).toMatchSnapshot();
   const chain2 = await load<LLMChain>(
     str,
-    {},
+    { OPENAI_API_KEY: "openai-key" },
     {},
     {
       chat_models__openai: { ChatOpenAI },
@@ -472,7 +473,7 @@ test("Should load traces even if the constructor name changes (minified environm
 
   const llm2 = await load<OpenAI>(
     str,
-    { COHERE_API_KEY: "cohere-key" },
+    { OPENAI_API_KEY: "openai-key" },
     { "langchain/llms/openai": { OpenAI } }
   );
   // console.log(JSON.stringify(llm2, null, 2));

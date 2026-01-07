@@ -1,6 +1,6 @@
 {
   "name": "@langchain/core",
-  "version": "1.1.8",
+  "version": "1.1.11",
   "description": "Core LangChain.js abstractions and schemas",
   "type": "module",
   "engines": {
@@ -51,7 +51,7 @@
     "dpdm": "^3.14.0",
     "eslint": "^9.34.0",
     "ml-matrix": "^6.10.4",
-    "prettier": "^2.8.3",
+    "prettier": "^3.5.0",
     "rimraf": "^5.0.1",
     "typescript": "~5.8.3",
     "vitest": "^3.2.4",

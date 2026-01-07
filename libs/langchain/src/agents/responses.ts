@@ -26,6 +26,17 @@ export type ResponseFormatUndefined = {
 };
 
 /**
+ * Default value for strict mode in providerStrategy.
+ *
+ * When using providerStrategy with json_schema response format, OpenAI's parse() method
+ * requires all function tools to have strict: true. This ensures the model's output
+ * exactly matches the provided JSON schema.
+ *
+ * @see https://platform.openai.com/docs/guides/structured-outputs
+ */
+const PROVIDER_STRATEGY_DEFAULT_STRICT = true;
+
+/**
  * This is a global counter for generating unique names for tools.
  */
 let bindingIdentifier = 0;
@@ -177,10 +188,10 @@ export class ProviderStrategy<T = unknown> {
         strict?: boolean;
       };
       this.schema = options.schema;
-      this.strict = options.strict ?? false;
+      this.strict = options.strict ?? PROVIDER_STRATEGY_DEFAULT_STRICT;
     } else {
       this.schema = schemaOrOptions as Record<string, unknown>;
-      this.strict = strict ?? false;
+      this.strict = strict ?? PROVIDER_STRATEGY_DEFAULT_STRICT;
     }
   }
 
@@ -196,7 +207,7 @@ export class ProviderStrategy<T = unknown> {
 
   static fromSchema<T = unknown>(
     schema: InteropZodType<T> | Record<string, unknown>,
-    strict: boolean = false
+    strict?: boolean
   ): ProviderStrategy<T> | ProviderStrategy<Record<string, unknown>> {
     const asJsonSchema = toJsonSchema(schema);
     return new ProviderStrategy(asJsonSchema, strict) as
@@ -572,7 +583,7 @@ export function providerStrategy(
     };
     return ProviderStrategy.fromSchema(
       schema as InteropZodType<unknown>,
-      strictFlag ?? false
+      strictFlag
     ) as ProviderStrategy<unknown>;
   }
 
@@ -580,8 +591,7 @@ export function providerStrategy(
    * Handle direct schema format
    */
   return ProviderStrategy.fromSchema(
-    responseFormat as InteropZodType<unknown>,
-    false
+    responseFormat as InteropZodType<unknown>
   ) as ProviderStrategy<unknown>;
 }
 

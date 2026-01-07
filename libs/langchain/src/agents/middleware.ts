@@ -51,7 +51,7 @@ import {
  */
 export function createMiddleware<
   TSchema extends InteropZodObject | undefined = undefined,
-  TContextSchema extends InteropZodObject | undefined = undefined
+  TContextSchema extends InteropZodObject | undefined = undefined,
 >(config: {
   /**
    * The name of the middleware
@@ -228,7 +228,7 @@ export function createMiddleware<
 }
 
 type NormalizeContextSchema<
-  TContextSchema extends InteropZodObject | undefined = undefined
+  TContextSchema extends InteropZodObject | undefined = undefined,
 > = TContextSchema extends InteropZodObject
   ? InferInteropZodOutput<TContextSchema>
   : never;

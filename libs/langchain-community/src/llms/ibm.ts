@@ -123,7 +123,7 @@ export type WatsonxLLMConstructor = XOR<
  * Integration with an LLM.
  */
 export class WatsonxLLM<
-    CallOptions extends WatsonxCallOptionsLLM = WatsonxCallOptionsLLM
+    CallOptions extends WatsonxCallOptionsLLM = WatsonxCallOptionsLLM,
   >
   extends BaseLLM<CallOptions>
   implements BaseLLMParams
@@ -788,7 +788,7 @@ export class WatsonxLLM<
         if (!this.streaming)
           // eslint-disable-next-line no-void
           void runManager?.handleLLMNewToken(
-            "generated_text" in item ? item.generated_text : item.text ?? ""
+            "generated_text" in item ? item.generated_text : (item.text ?? "")
           );
       }
       Object.assign(responseChunk, { id: 0, event: "", data: {} });

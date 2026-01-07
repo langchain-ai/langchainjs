@@ -36,7 +36,7 @@ export const testProperties = (
 ) => {
   const checkProperty = <
     T extends { [key: string]: any },
-    K extends { [key: string]: any }
+    K extends { [key: string]: any },
   >(
     testProps: T,
     instance: K,

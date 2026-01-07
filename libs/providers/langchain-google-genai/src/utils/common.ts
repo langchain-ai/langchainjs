@@ -523,18 +523,21 @@ export function mapGenerateContentResultToChatResult(
   }
   const [candidate] = response.candidates;
   const { content: candidateContent, ...generationInfo } = candidate;
-  const functionCalls = candidateContent.parts?.reduce((acc, p) => {
-    if ("functionCall" in p && p.functionCall) {
-      acc.push({
-        ...p,
-        id:
-          "id" in p.functionCall && typeof p.functionCall.id === "string"
-            ? p.functionCall.id
-            : uuidv4(),
-      });
-    }
-    return acc;
-  }, [] as (FunctionCallPart & { id: string })[]);
+  const functionCalls = candidateContent.parts?.reduce(
+    (acc, p) => {
+      if ("functionCall" in p && p.functionCall) {
+        acc.push({
+          ...p,
+          id:
+            "id" in p.functionCall && typeof p.functionCall.id === "string"
+              ? p.functionCall.id
+              : uuidv4(),
+        });
+      }
+      return acc;
+    },
+    [] as (FunctionCallPart & { id: string })[]
+  );
   let content: MessageContent | undefined;
 
   if (
@@ -591,12 +594,15 @@ export function mapGenerateContentResultToChatResult(
     content = [];
   }
 
-  const functionThoughtSignatures = functionCalls?.reduce((acc, fc) => {
-    if ("thoughtSignature" in fc && typeof fc.thoughtSignature === "string") {
-      acc[fc.id] = fc.thoughtSignature;
-    }
-    return acc;
-  }, {} as Record<string, string>);
+  const functionThoughtSignatures = functionCalls?.reduce(
+    (acc, fc) => {
+      if ("thoughtSignature" in fc && typeof fc.thoughtSignature === "string") {
+        acc[fc.id] = fc.thoughtSignature;
+      }
+      return acc;
+    },
+    {} as Record<string, string>
+  );
 
   let text = "";
   if (typeof content === "string") {
@@ -651,18 +657,21 @@ export function convertResponseContentToChatGenerationChunk(
   }
   const [candidate] = response.candidates;
   const { content: candidateContent, ...generationInfo } = candidate;
-  const functionCalls = candidateContent.parts?.reduce((acc, p) => {
-    if ("functionCall" in p && p.functionCall) {
-      acc.push({
-        ...p,
-        id:
-          "id" in p.functionCall && typeof p.functionCall.id === "string"
-            ? p.functionCall.id
-            : uuidv4(),
-      });
-    }
-    return acc;
-  }, [] as (FunctionCallPart & { id: string })[]);
+  const functionCalls = candidateContent.parts?.reduce(
+    (acc, p) => {
+      if ("functionCall" in p && p.functionCall) {
+        acc.push({
+          ...p,
+          id:
+            "id" in p.functionCall && typeof p.functionCall.id === "string"
+              ? p.functionCall.id
+              : uuidv4(),
+        });
+      }
+      return acc;
+    },
+    [] as (FunctionCallPart & { id: string })[]
+  );
   let content: MessageContent | undefined;
   // Checks if some parts do not have text. If false, it means that the content is a string.
   if (
@@ -737,12 +746,15 @@ export function convertResponseContentToChatGenerationChunk(
     );
   }
 
-  const functionThoughtSignatures = functionCalls?.reduce((acc, fc) => {
-    if ("thoughtSignature" in fc && typeof fc.thoughtSignature === "string") {
-      acc[fc.id] = fc.thoughtSignature;
-    }
-    return acc;
-  }, {} as Record<string, string>);
+  const functionThoughtSignatures = functionCalls?.reduce(
+    (acc, fc) => {
+      if ("thoughtSignature" in fc && typeof fc.thoughtSignature === "string") {
+        acc[fc.id] = fc.thoughtSignature;
+      }
+      return acc;
+    },
+    {} as Record<string, string>
+  );
 
   return new ChatGenerationChunk({
     text,
