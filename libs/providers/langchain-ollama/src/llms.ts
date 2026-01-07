@@ -251,7 +251,7 @@ export class Ollama extends LLM<OllamaCallOptions> implements OllamaInput {
 
       if (!chunk.done) {
         // when think is enabled, try thinking first
-        const token = this.think
+        const token = ( this.think || this.think === undefined )
           ? (chunk.thinking ?? chunk.response ?? "")
           : (chunk.response ?? "");
 

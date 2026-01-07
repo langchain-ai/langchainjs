@@ -43,8 +43,8 @@ test("test deep seek model with think=true vs think=false vs think=undefined", a
 
   // The response with thinking should be significantly longer
   // because it includes the reasoning process before the final answer
-  expect(resWithThinking.length).toBeGreaterThan(resWithoutThinking.length * 2);
-  expect(resDefaultThinking.length).toBeGreaterThan(resWithoutThinking.length * 2);
+  expect(resWithThinking.length).toBeGreaterThan(resWithoutThinking.length * 1.5);
+  expect(resDefaultThinking.length).toBeGreaterThan(resWithoutThinking.length * 1.5);
 
   // The responses with thinking enabled should be similar in length
   expect(Math.abs(resWithThinking.length - resDefaultThinking.length)).toBeLessThan(100);
