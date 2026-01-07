@@ -500,6 +500,8 @@ export class ChatWatsonx<
         "promptIndex",
         "ls_structured_output_format",
         "watsonxCallbacks",
+        "writer",
+        "interrupt",
       ],
 
       AUTH: [
