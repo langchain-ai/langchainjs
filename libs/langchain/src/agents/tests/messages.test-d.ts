@@ -17,7 +17,7 @@ describe("type safe messages in createAgent", () => {
       async () =>
         ({
           foo: "bar",
-        } as const),
+        }) as const,
       {
         name: "t1",
         description: "test",
@@ -31,7 +31,7 @@ describe("type safe messages in createAgent", () => {
       async () =>
         ({
           bar: "foo",
-        } as const),
+        }) as const,
       {
         name: "t2",
         description: "test",

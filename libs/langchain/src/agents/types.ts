@@ -162,21 +162,22 @@ export type CombineTools<
  * Helper type to extract the tool name, input type, and output type from a tool.
  * Converts a single tool to a MessageToolDefinition entry.
  */
-type ExtractToolDefinition<T> = T extends DynamicStructuredTool<
-  infer _SchemaT,
-  infer _SchemaOutputT,
-  infer SchemaInputT,
-  infer ToolOutputT,
-  infer _NameT
->
-  ? MessageToolDefinition<SchemaInputT, ToolOutputT>
-  : T extends StructuredToolInterface<
-      infer _SchemaT,
-      infer SchemaInputT,
-      infer ToolOutputT
-    >
-  ? MessageToolDefinition<SchemaInputT, ToolOutputT>
-  : MessageToolDefinition;
+type ExtractToolDefinition<T> =
+  T extends DynamicStructuredTool<
+    infer _SchemaT,
+    infer _SchemaOutputT,
+    infer SchemaInputT,
+    infer ToolOutputT,
+    infer _NameT
+  >
+    ? MessageToolDefinition<SchemaInputT, ToolOutputT>
+    : T extends StructuredToolInterface<
+          infer _SchemaT,
+          infer SchemaInputT,
+          infer ToolOutputT
+        >
+      ? MessageToolDefinition<SchemaInputT, ToolOutputT>
+      : MessageToolDefinition;
 
 /**
  * Helper type to convert an array of tools (ClientTool | ServerTool)[] to a MessageToolSet.
@@ -195,7 +196,7 @@ type ExtractToolDefinition<T> = T extends DynamicStructuredTool<
  * ```
  */
 export type ToolsToMessageToolSet<
-  T extends readonly (ClientTool | ServerTool)[]
+  T extends readonly (ClientTool | ServerTool)[],
 > = {
   [K in T[number] as K extends { name: infer N extends string }
     ? N
@@ -386,7 +387,7 @@ export interface Interrupt<TValue = unknown> {
 }
 
 export interface BuiltInState<
-  TMessageStructure extends MessageStructure = MessageStructure
+  TMessageStructure extends MessageStructure = MessageStructure,
 > {
   messages: BaseMessage<TMessageStructure>[];
   __interrupt__?: Interrupt[];
