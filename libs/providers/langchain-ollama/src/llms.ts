@@ -40,7 +40,6 @@ export interface OllamaInput extends BaseLLMParams, OllamaCamelCaseOptions {
    * @default fetch
    */
   fetch?: typeof fetch;
-  think?: boolean;
 }
 
 /**
@@ -76,8 +75,6 @@ export class Ollama extends LLM<OllamaCallOptions> implements OllamaInput {
   model = "llama3";
 
   baseUrl = "http://localhost:11434";
-
-  think?: boolean;
 
   keepAlive?: string | number;
 
@@ -155,7 +152,6 @@ export class Ollama extends LLM<OllamaCallOptions> implements OllamaInput {
       headers: fields?.headers,
     });
     this.keepAlive = fields?.keepAlive;
-    this.think = fields?.think;
 
     this.embeddingOnly = fields?.embeddingOnly;
     this.f16KV = fields?.f16Kv;
@@ -197,7 +193,6 @@ export class Ollama extends LLM<OllamaCallOptions> implements OllamaInput {
       model: this.model,
       format: this.format,
       keep_alive: this.keepAlive,
-      think: this.think,
       images: options?.images,
       options: {
         embedding_only: this.embeddingOnly,
@@ -250,19 +245,14 @@ export class Ollama extends LLM<OllamaCallOptions> implements OllamaInput {
       }
 
       if (!chunk.done) {
-        // when think is enabled, try thinking first
-        const token = this.think
-          ? (chunk.thinking ?? chunk.response ?? "")
-          : (chunk.response ?? "");
-
         yield new GenerationChunk({
-          text: token,
+          text: chunk.response,
           generationInfo: {
             ...chunk,
             response: undefined,
           },
         });
-        await runManager?.handleLLMNewToken(token);
+        await runManager?.handleLLMNewToken(chunk.response ?? "");
       } else {
         yield new GenerationChunk({
           text: "",
