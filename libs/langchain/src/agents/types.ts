@@ -6,13 +6,23 @@ import type {
 import type { START, END, StateGraph } from "@langchain/langgraph";
 
 import type { LanguageModelLike } from "@langchain/core/language_models/base";
-import type { BaseMessage, SystemMessage } from "@langchain/core/messages";
+import type {
+  BaseMessage,
+  SystemMessage,
+  MessageStructure,
+  MessageToolDefinition,
+} from "@langchain/core/messages";
 import type {
   BaseCheckpointSaver,
   BaseStore,
 } from "@langchain/langgraph-checkpoint";
 import type { Messages } from "@langchain/langgraph/";
-import type { ClientTool, ServerTool } from "@langchain/core/tools";
+import type {
+  ClientTool,
+  ServerTool,
+  DynamicStructuredTool,
+  StructuredToolInterface,
+} from "@langchain/core/tools";
 
 import type {
   ResponseFormat,
@@ -26,8 +36,339 @@ import type {
   AgentMiddleware,
   AnyAnnotationRoot,
   InferSchemaInput,
+  InferMiddlewareStates,
+  InferMiddlewareContexts,
 } from "./middleware/types.js";
 import type { JumpToTarget } from "./constants.js";
+
+/**
+ * Type bag that encapsulates all agent type parameters.
+ *
+ * This interface bundles all the generic type parameters used throughout the agent system
+ * into a single configuration object. This pattern simplifies type signatures and makes
+ * it easier to add new type parameters without changing multiple function signatures.
+ *
+ * @typeParam TResponse - The structured response type when using `responseFormat`.
+ *   Defaults to `Record<string, any>`. Set to `ResponseFormatUndefined` when no
+ *   response format is configured.
+ *
+ * @typeParam TState - The custom state schema type. Can be an `AnnotationRoot`,
+ *   `InteropZodObject`, or `undefined`. The state persists across agent invocations
+ *   when using a checkpointer.
+ *
+ * @typeParam TContext - The context schema type. Context is read-only and not
+ *   persisted between invocations. Defaults to `AnyAnnotationRoot`.
+ *
+ * @typeParam TMiddleware - The middleware array type. Must be a readonly array
+ *   of `AgentMiddleware` instances.
+ *
+ * @typeParam TTools - The combined tools type from both `createAgent` tools parameter
+ *   and middleware tools. This is a readonly array of `ClientTool | ServerTool`.
+ *
+ * @example
+ * ```typescript
+ * // Define a type configuration
+ * type MyAgentTypes = AgentTypeConfig<
+ *   { name: string; email: string },  // Response type
+ *   typeof MyStateSchema,              // State schema
+ *   typeof MyContextSchema,            // Context schema
+ *   typeof myMiddleware,               // Middleware array
+ *   typeof myTools                     // Tools array
+ * >;
+ *
+ * // Use with ReactAgent
+ * const agent: ReactAgent<MyAgentTypes> = createAgent({ ... });
+ * ```
+ */
+export interface AgentTypeConfig<
+  TResponse extends Record<string, any> | ResponseFormatUndefined =
+    | Record<string, any>
+    | ResponseFormatUndefined,
+  TState extends AnyAnnotationRoot | InteropZodObject | undefined =
+    | AnyAnnotationRoot
+    | InteropZodObject
+    | undefined,
+  TContext extends AnyAnnotationRoot | InteropZodObject =
+    | AnyAnnotationRoot
+    | InteropZodObject,
+  TMiddleware extends readonly AgentMiddleware[] = readonly AgentMiddleware[],
+  TTools extends readonly (ClientTool | ServerTool)[] = readonly (
+    | ClientTool
+    | ServerTool
+  )[],
+> {
+  /** The structured response type when using `responseFormat` */
+  Response: TResponse;
+  /** The custom state schema type */
+  State: TState;
+  /** The context schema type */
+  Context: TContext;
+  /** The middleware array type */
+  Middleware: TMiddleware;
+  /** The combined tools type from agent and middleware */
+  Tools: TTools;
+}
+
+/**
+ * Default type configuration for agents.
+ * Used when no explicit type parameters are provided.
+ */
+export interface DefaultAgentTypeConfig extends AgentTypeConfig {
+  Response: Record<string, any>;
+  State: undefined;
+  Context: AnyAnnotationRoot;
+  Middleware: readonly AgentMiddleware[];
+  Tools: readonly (ClientTool | ServerTool)[];
+}
+
+/**
+ * Helper type to infer tools from a single middleware instance.
+ * Extracts the TTools type parameter from AgentMiddleware.
+ */
+export type InferMiddlewareTools<T extends AgentMiddleware> =
+  T extends AgentMiddleware<any, any, any, infer TTools>
+    ? TTools extends readonly (ClientTool | ServerTool)[]
+      ? TTools
+      : readonly []
+    : readonly [];
+
+/**
+ * Helper type to infer and merge tools from an array of middleware.
+ * Recursively extracts tools from each middleware and combines them into a single tuple.
+ */
+export type InferMiddlewareToolsArray<T extends readonly AgentMiddleware[]> =
+  T extends readonly []
+    ? readonly []
+    : T extends readonly [infer First, ...infer Rest]
+      ? First extends AgentMiddleware
+        ? Rest extends readonly AgentMiddleware[]
+          ? readonly [
+              ...InferMiddlewareTools<First>,
+              ...InferMiddlewareToolsArray<Rest>,
+            ]
+          : InferMiddlewareTools<First>
+        : readonly []
+      : readonly [];
+
+/**
+ * Helper type to combine agent tools with middleware tools into a single readonly array.
+ */
+export type CombineTools<
+  TAgentTools extends readonly (ClientTool | ServerTool)[],
+  TMiddleware extends readonly AgentMiddleware[],
+> = readonly [...TAgentTools, ...InferMiddlewareToolsArray<TMiddleware>];
+
+/**
+ * Helper type to extract the tool name, input type, and output type from a tool.
+ * Converts a single tool to a MessageToolDefinition entry.
+ */
+type ExtractToolDefinition<T> =
+  T extends DynamicStructuredTool<
+    infer _SchemaT,
+    infer _SchemaOutputT,
+    infer SchemaInputT,
+    infer ToolOutputT,
+    infer _NameT
+  >
+    ? MessageToolDefinition<SchemaInputT, ToolOutputT>
+    : T extends StructuredToolInterface<
+          infer _SchemaT,
+          infer SchemaInputT,
+          infer ToolOutputT
+        >
+      ? MessageToolDefinition<SchemaInputT, ToolOutputT>
+      : MessageToolDefinition;
+
+/**
+ * Helper type to convert an array of tools (ClientTool | ServerTool)[] to a MessageToolSet.
+ * This maps each tool's name (as a literal type) to its MessageToolDefinition containing
+ * the input and output types.
+ *
+ * @example
+ * ```typescript
+ * const myTool = tool(async (input: { a: number }) => 42, {
+ *   name: "myTool",
+ *   schema: z.object({ a: z.number() })
+ * });
+ *
+ * // Results in: { myTool: MessageToolDefinition<{ a: number }, number> }
+ * type ToolSet = ToolsToMessageToolSet<readonly [typeof myTool]>;
+ * ```
+ */
+export type ToolsToMessageToolSet<
+  T extends readonly (ClientTool | ServerTool)[],
+> = {
+  [K in T[number] as K extends { name: infer N extends string }
+    ? N
+    : never]: ExtractToolDefinition<K>;
+};
+
+/**
+ * Helper type to resolve an AgentTypeConfig from either:
+ * - An AgentTypeConfig directly
+ * - A ReactAgent instance (using `typeof agent`)
+ *
+ * @example
+ * ```typescript
+ * const agent = createAgent({ ... });
+ *
+ * // From ReactAgent instance
+ * type Types = ResolveAgentTypeConfig<typeof agent>;
+ *
+ * // From AgentTypeConfig directly
+ * type Types2 = ResolveAgentTypeConfig<AgentTypeConfig<...>>;
+ * ```
+ */
+export type ResolveAgentTypeConfig<T> = T extends {
+  "~agentTypes": infer Types;
+}
+  ? Types extends AgentTypeConfig
+    ? Types
+    : never
+  : T extends AgentTypeConfig
+    ? T
+    : never;
+
+/**
+ * Helper type to extract any property from an AgentTypeConfig or ReactAgent.
+ *
+ * @typeParam T - The AgentTypeConfig or ReactAgent to extract from
+ * @typeParam K - The property key to extract ("Response" | "State" | "Context" | "Middleware" | "Tools")
+ *
+ * @example
+ * ```typescript
+ * const agent = createAgent({ tools: [myTool], ... });
+ *
+ * // Extract from agent instance
+ * type Tools = InferAgentType<typeof agent, "Tools">;
+ *
+ * // Extract from type config
+ * type Response = InferAgentType<MyTypeConfig, "Response">;
+ * ```
+ */
+export type InferAgentType<
+  T,
+  K extends keyof AgentTypeConfig,
+> = ResolveAgentTypeConfig<T>[K];
+
+/**
+ * Shorthand helper to extract the Response type from an AgentTypeConfig or ReactAgent.
+ *
+ * @example
+ * ```typescript
+ * const agent = createAgent({ responseFormat: z.object({ name: z.string() }), ... });
+ * type Response = InferAgentResponse<typeof agent>;  // { name: string }
+ * ```
+ */
+export type InferAgentResponse<T> = InferAgentType<T, "Response">;
+
+/**
+ * Shorthand helper to extract the raw State schema type from an AgentTypeConfig or ReactAgent.
+ * This returns just the `stateSchema` type passed to `createAgent`, not merged with middleware.
+ *
+ * For the complete merged state (what `invoke` returns), use {@link InferAgentState}.
+ *
+ * @example
+ * ```typescript
+ * const agent = createAgent({ stateSchema: mySchema, ... });
+ * type Schema = InferAgentStateSchema<typeof agent>;
+ * ```
+ */
+export type InferAgentStateSchema<T> = InferAgentType<T, "State">;
+
+/**
+ * Helper type to infer the full merged state from an agent, including:
+ * - The agent's own state schema (if provided via `stateSchema`)
+ * - All middleware states
+ *
+ * This matches the state type returned by `invoke` and used throughout the agent.
+ *
+ * @example
+ * ```typescript
+ * const middleware = createMiddleware({
+ *   name: "counter",
+ *   stateSchema: z.object({ count: z.number() }),
+ * });
+ *
+ * const agent = createAgent({
+ *   model: "gpt-4",
+ *   tools: [],
+ *   stateSchema: z.object({ userId: z.string() }),
+ *   middleware: [middleware],
+ * });
+ *
+ * type State = InferAgentState<typeof agent>;
+ * // { userId: string; count: number }
+ * ```
+ */
+export type InferAgentState<T> = InferSchemaInput<InferAgentType<T, "State">> &
+  InferMiddlewareStates<InferAgentType<T, "Middleware">>;
+
+/**
+ * Shorthand helper to extract the raw Context schema type from an AgentTypeConfig or ReactAgent.
+ * This returns just the `contextSchema` type passed to `createAgent`, not merged with middleware.
+ *
+ * For the complete merged context (agent context + middleware contexts), use {@link InferAgentContext}.
+ *
+ * @example
+ * ```typescript
+ * const agent = createAgent({ contextSchema: myContextSchema, ... });
+ * type Schema = InferAgentContextSchema<typeof agent>;
+ * ```
+ */
+export type InferAgentContextSchema<T> = InferAgentType<T, "Context">;
+
+/**
+ * Helper type to infer the full merged context from an agent, including:
+ * - The agent's own context schema (if provided via `contextSchema`)
+ * - All middleware context schemas
+ *
+ * This matches the context type available throughout the agent runtime.
+ *
+ * @example
+ * ```typescript
+ * const middleware = createMiddleware({
+ *   name: "auth",
+ *   contextSchema: z.object({ userId: z.string() }),
+ * });
+ *
+ * const agent = createAgent({
+ *   model: "gpt-4",
+ *   tools: [],
+ *   contextSchema: z.object({ sessionId: z.string() }),
+ *   middleware: [middleware],
+ * });
+ *
+ * type Context = InferAgentContext<typeof agent>;
+ * // { sessionId: string; userId: string }
+ * ```
+ */
+export type InferAgentContext<T> = InferSchemaInput<
+  InferAgentType<T, "Context">
+> &
+  InferMiddlewareContexts<InferAgentType<T, "Middleware">>;
+
+/**
+ * Shorthand helper to extract the Middleware type from an AgentTypeConfig or ReactAgent.
+ *
+ * @example
+ * ```typescript
+ * const agent = createAgent({ middleware: [authMiddleware, loggingMiddleware], ... });
+ * type Middleware = InferAgentMiddleware<typeof agent>;
+ * ```
+ */
+export type InferAgentMiddleware<T> = InferAgentType<T, "Middleware">;
+
+/**
+ * Shorthand helper to extract the Tools type from an AgentTypeConfig or ReactAgent.
+ *
+ * @example
+ * ```typescript
+ * const agent = createAgent({ tools: [searchTool, calculatorTool], ... });
+ * type Tools = InferAgentTools<typeof agent>;  // readonly [typeof searchTool, typeof calculatorTool]
+ * ```
+ */
+export type InferAgentTools<T> = InferAgentType<T, "Tools">;
 
 export type N = typeof START | "model_request" | "tools";
 
@@ -45,8 +386,10 @@ export interface Interrupt<TValue = unknown> {
   value: TValue;
 }
 
-export interface BuiltInState {
-  messages: BaseMessage[];
+export interface BuiltInState<
+  TMessageStructure extends MessageStructure = MessageStructure,
+> {
+  messages: BaseMessage<TMessageStructure>[];
   __interrupt__?: Interrupt[];
   /**
    * Optional property to control routing after afterModel middleware execution.
@@ -431,7 +774,7 @@ export type CreateAgentParams<
    *
    * @see {@link https://docs.langchain.com/oss/javascript/langchain/middleware | Middleware}
    */
-  middleware?: readonly AgentMiddleware<any, any, any>[];
+  middleware?: readonly AgentMiddleware[];
 
   /**
    * An optional name for the agent.

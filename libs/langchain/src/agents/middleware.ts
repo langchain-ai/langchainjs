@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import type {
   InteropZodObject,
   InferInteropZodOutput,
@@ -52,6 +51,10 @@ import {
 export function createMiddleware<
   TSchema extends InteropZodObject | undefined = undefined,
   TContextSchema extends InteropZodObject | undefined = undefined,
+  const TTools extends readonly (ClientTool | ServerTool)[] = readonly (
+    | ClientTool
+    | ServerTool
+  )[],
 >(config: {
   /**
    * The name of the middleware
@@ -76,7 +79,7 @@ export function createMiddleware<
   /**
    * Additional tools registered by the middleware.
    */
-  tools?: (ClientTool | ServerTool)[];
+  tools?: TTools;
   /**
    * Wraps tool execution with custom logic. This allows you to:
    * - Modify tool call parameters before execution
@@ -209,8 +212,18 @@ export function createMiddleware<
    * @returns The modified middleware state or undefined to pass through
    */
   afterAgent?: AfterAgentHook<TSchema, NormalizeContextSchema<TContextSchema>>;
-}): AgentMiddleware<TSchema, TContextSchema, any> {
-  const middleware: AgentMiddleware<TSchema, TContextSchema, any> = {
+}): AgentMiddleware<
+  TSchema,
+  TContextSchema,
+  NormalizeContextSchema<TContextSchema>,
+  TTools
+> {
+  const middleware: AgentMiddleware<
+    TSchema,
+    TContextSchema,
+    NormalizeContextSchema<TContextSchema>,
+    TTools
+  > = {
     [MIDDLEWARE_BRAND]: true as const,
     name: config.name,
     stateSchema: config.stateSchema,
@@ -221,7 +234,7 @@ export function createMiddleware<
     beforeModel: config.beforeModel,
     afterModel: config.afterModel,
     afterAgent: config.afterAgent,
-    tools: config.tools ?? [],
+    tools: config.tools,
   };
 
   return middleware;
@@ -231,4 +244,4 @@ type NormalizeContextSchema<
   TContextSchema extends InteropZodObject | undefined = undefined,
 > = TContextSchema extends InteropZodObject
   ? InferInteropZodOutput<TContextSchema>
-  : never;
+  : unknown;
