@@ -206,12 +206,12 @@ describe("todoListMiddleware", () => {
 
       // Should return error messages
       expect(result).toBeDefined();
-      expect(result?.messages).toHaveLength(2);
-      expect(result?.messages[0]).toBeInstanceOf(ToolMessage);
-      expect(result?.messages[1]).toBeInstanceOf(ToolMessage);
+      expect(result!.messages).toHaveLength(2);
+      expect(result!.messages[0]).toBeInstanceOf(ToolMessage);
+      expect(result!.messages[1]).toBeInstanceOf(ToolMessage);
 
-      const msg1 = result?.messages[0] as ToolMessage;
-      const msg2 = result?.messages[1] as ToolMessage;
+      const msg1 = result!.messages[0] as ToolMessage;
+      const msg2 = result!.messages[1] as ToolMessage;
 
       expect(msg1.tool_call_id).toBe("call_1");
       expect(msg1.status).toBe("error");
@@ -272,10 +272,10 @@ describe("todoListMiddleware", () => {
 
       // Should return error messages for write_todos calls only
       expect(result).toBeDefined();
-      expect(result?.messages).toHaveLength(2);
+      expect(result!.messages).toHaveLength(2);
 
-      const toolCallIds = result?.messages.map(
-        (m: ToolMessage) => m.tool_call_id
+      const toolCallIds = (result!.messages as ToolMessage[]).map(
+        (m) => m.tool_call_id
       );
       expect(toolCallIds).toContain("call_1");
       expect(toolCallIds).toContain("call_2");
