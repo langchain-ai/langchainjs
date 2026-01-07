@@ -1,5 +1,11 @@
 # @langchain/core
 
+## 1.1.11
+
+### Patch Changes
+
+- [#9753](https://github.com/langchain-ai/langchainjs/pull/9753) [`a46a249`](https://github.com/langchain-ai/langchainjs/commit/a46a24983fd0fea649d950725a2673b3c435275f) Thanks [@christian-bromann](https://github.com/christian-bromann)! - fix(core): allow shared object references in serialization
+
 ## 1.1.10
 
 ### Patch Changes
