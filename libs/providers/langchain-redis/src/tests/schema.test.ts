@@ -839,9 +839,9 @@ describe("convertLegacySchema", () => {
       category: { type: SchemaFieldTypes.TAG },
     };
 
-    const result = convertLegacySchema(legacySchema);
+    const result = convertLegacySchema("metadata", legacySchema);
 
-    expect(result).toEqual([{ name: "category", type: "tag" }]);
+    expect(result).toEqual([{ name: "metadata.category", type: "tag" }]);
   });
 
   test("converts legacy TAG field with separator", () => {
@@ -849,10 +849,10 @@ describe("convertLegacySchema", () => {
       tags: { type: SchemaFieldTypes.TAG, SEPARATOR: "|" },
     };
 
-    const result = convertLegacySchema(legacySchema);
+    const result = convertLegacySchema("metadata", legacySchema);
 
     expect(result).toEqual([
-      { name: "tags", type: "tag", options: { separator: "|" } },
+      { name: "metadata.tags", type: "tag", options: { separator: "|" } },
     ]);
   });
 
@@ -861,10 +861,10 @@ describe("convertLegacySchema", () => {
       category: { type: SchemaFieldTypes.TAG, CASESENSITIVE: true },
     };
 
-    const result = convertLegacySchema(legacySchema);
+    const result = convertLegacySchema("metadata", legacySchema);
 
     expect(result).toEqual([
-      { name: "category", type: "tag", options: { caseSensitive: true } },
+      { name: "metadata.category", type: "tag", options: { caseSensitive: true } },
     ]);
   });
 
@@ -873,9 +873,9 @@ describe("convertLegacySchema", () => {
       description: { type: SchemaFieldTypes.TEXT },
     };
 
-    const result = convertLegacySchema(legacySchema);
+    const result = convertLegacySchema("metadata", legacySchema);
 
-    expect(result).toEqual([{ name: "description", type: "text" }]);
+    expect(result).toEqual([{ name: "metadata.description", type: "text" }]);
   });
 
   test("converts legacy TEXT field with weight and nostem", () => {
@@ -883,11 +883,11 @@ describe("convertLegacySchema", () => {
       description: { type: SchemaFieldTypes.TEXT, WEIGHT: 2.0, NOSTEM: true },
     };
 
-    const result = convertLegacySchema(legacySchema);
+    const result = convertLegacySchema("metadata", legacySchema);
 
     expect(result).toEqual([
       {
-        name: "description",
+        name: "metadata.description",
         type: "text",
         options: { weight: 2.0, noStem: true },
       },
@@ -899,9 +899,9 @@ describe("convertLegacySchema", () => {
       price: { type: SchemaFieldTypes.NUMERIC },
     };
 
-    const result = convertLegacySchema(legacySchema);
+    const result = convertLegacySchema("metadata", legacySchema);
 
-    expect(result).toEqual([{ name: "price", type: "numeric" }]);
+    expect(result).toEqual([{ name: "metadata.price", type: "numeric" }]);
   });
 
   test("converts legacy NUMERIC field with sortable option", () => {
@@ -909,10 +909,10 @@ describe("convertLegacySchema", () => {
       price: { type: SchemaFieldTypes.NUMERIC, SORTABLE: true },
     };
 
-    const result = convertLegacySchema(legacySchema);
+    const result = convertLegacySchema("metadata", legacySchema);
 
     expect(result).toEqual([
-      { name: "price", type: "numeric", options: { sortable: true } },
+      { name: "metadata.price", type: "numeric", options: { sortable: true } },
     ]);
   });
 
@@ -921,10 +921,10 @@ describe("convertLegacySchema", () => {
       price: { type: SchemaFieldTypes.NUMERIC, SORTABLE: "UNF" },
     };
 
-    const result = convertLegacySchema(legacySchema);
+    const result = convertLegacySchema("metadata", legacySchema);
 
     expect(result).toEqual([
-      { name: "price", type: "numeric", options: { sortable: true } },
+      { name: "metadata.price", type: "numeric", options: { sortable: true } },
     ]);
   });
 
@@ -933,9 +933,9 @@ describe("convertLegacySchema", () => {
       location: { type: SchemaFieldTypes.GEO },
     };
 
-    const result = convertLegacySchema(legacySchema);
+    const result = convertLegacySchema("metadata", legacySchema);
 
-    expect(result).toEqual([{ name: "location", type: "geo" }]);
+    expect(result).toEqual([{ name: "metadata.location", type: "geo" }]);
   });
 
   test("converts legacy field with NOINDEX option", () => {
@@ -943,10 +943,10 @@ describe("convertLegacySchema", () => {
       internal: { type: SchemaFieldTypes.TEXT, NOINDEX: true },
     };
 
-    const result = convertLegacySchema(legacySchema);
+    const result = convertLegacySchema("metadata", legacySchema);
 
     expect(result).toEqual([
-      { name: "internal", type: "text", options: { noindex: true } },
+      { name: "metadata.internal", type: "text", options: { noindex: true } },
     ]);
   });
 
@@ -958,25 +958,25 @@ describe("convertLegacySchema", () => {
       location: { type: SchemaFieldTypes.GEO },
     };
 
-    const result = convertLegacySchema(legacySchema);
+    const result = convertLegacySchema("metadata", legacySchema);
 
     expect(result).toHaveLength(4);
     expect(result).toContainEqual({
-      name: "category",
+      name: "metadata.category",
       type: "tag",
       options: { separator: "|" },
     });
     expect(result).toContainEqual({
-      name: "price",
+      name: "metadata.price",
       type: "numeric",
       options: { sortable: true },
     });
     expect(result).toContainEqual({
-      name: "description",
+      name: "metadata.description",
       type: "text",
       options: { weight: 2.0 },
     });
-    expect(result).toContainEqual({ name: "location", type: "geo" });
+    expect(result).toContainEqual({ name: "metadata.location", type: "geo" });
   });
 
   test("handles fields with no options", () => {
@@ -986,12 +986,12 @@ describe("convertLegacySchema", () => {
       simpleNumeric: { type: SchemaFieldTypes.NUMERIC },
     };
 
-    const result = convertLegacySchema(legacySchema);
+    const result = convertLegacySchema("metadata", legacySchema);
 
     expect(result).toEqual([
-      { name: "simpleTag", type: "tag" },
-      { name: "simpleText", type: "text" },
-      { name: "simpleNumeric", type: "numeric" },
+      { name: "metadata.simpleTag", type: "tag" },
+      { name: "metadata.simpleText", type: "text" },
+      { name: "metadata.simpleNumeric", type: "numeric" },
     ]);
   });
 });
