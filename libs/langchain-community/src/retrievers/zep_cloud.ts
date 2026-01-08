@@ -12,13 +12,14 @@ import { Document } from "@langchain/core/documents";
  * Configuration interface for the ZepRetriever class. Extends the
  * BaseRetrieverInput interface.
  *
- * @argument {string} sessionId - The ID of the Zep session.
- * @argument {string} [apiKey] - The Zep Cloud Project Key.
- * @argument {number} [topK] - The number of results to return.
- * @argument [searchScope] [searchScope] - The scope of the search: "messages" or "summary".
- * @argument [searchType] [searchType] - The type of search to perform: "similarity" or "mmr".
- * @argument {number} [mmrLambda] - The lambda value for the MMR search.
- * @argument {Record<string, unknown>} [filter] - The metadata filter to apply to the search.
+ * Fields:
+ * - `sessionId`: The ID of the Zep session
+ * - `apiKey`: The Zep Cloud Project Key
+ * - `topK` (optional): The number of results to return
+ * - `searchScope` (optional): The scope of the search ("messages" or "summary")
+ * - `searchType` (optional): The type of search ("similarity" or "mmr")
+ * - `mmrLambda` (optional): The lambda value for the MMR search
+ * - `filter` (optional): The metadata filter to apply to the search
  */
 export interface ZepCloudRetrieverConfig extends BaseRetrieverInput {
   sessionId: string;

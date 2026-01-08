@@ -42,8 +42,7 @@ export interface FromLLMInput {
  * const res = await chain.invoke("Who played in Pulp Fiction?");
  * ```
  *
- * @security
- * This chain will execute Cypher statements against the provided database.
+ * **Security note**: This chain will execute Cypher statements against the provided database.
  * Make sure that the database connection uses credentials
  * that are narrowly-scoped to only include necessary permissions.
  * Failure to do so may result in data corruption or loss, since the calling code
@@ -52,7 +51,7 @@ export interface FromLLMInput {
  * The best way to guard against such negative outcomes is to (as appropriate) limit the
  * permissions granted to the credentials used with this tool.
  *
- * See https://js.langchain.com/docs/security for more information.
+ * @see https://js.langchain.com/docs/security
  */
 export class GraphCypherQAChain extends BaseChain {
   private graph: Neo4jGraph;

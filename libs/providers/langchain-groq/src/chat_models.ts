@@ -600,7 +600,7 @@ function _oldConvertDeltaToMessageChunk(
  *
  * The Groq API is compatible to the OpenAI API with some limitations. View the
  * full API ref at:
- * @link {https://docs.api.groq.com/md/openai.oas.html}
+ * @see https://docs.api.groq.com/md/openai.oas.html
  *
  * Setup:
  * Install `@langchain/groq` and set an environment variable named `GROQ_API_KEY`.

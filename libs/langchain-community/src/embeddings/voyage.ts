@@ -46,15 +46,12 @@ export interface VoyageEmbeddingsParams extends EmbeddingsParams {
  */
 export interface CreateVoyageEmbeddingRequest {
   /**
-   * @type {string}
-   * @memberof CreateVoyageEmbeddingRequest
+   * Model name to use.
    */
   model: string;
 
   /**
    *  Text to generate vector expectation
-   * @type {CreateEmbeddingRequestInput}
-   * @memberof CreateVoyageEmbeddingRequest
    */
   input: string | string[];
 

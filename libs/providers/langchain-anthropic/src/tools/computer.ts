@@ -67,7 +67,7 @@ export interface Computer20251124Options<TState = any, TContext = any> {
  * - **Keyboard input**: Type text and use keyboard shortcuts
  * - **Zoom**: View specific screen regions at full resolution (when enabled)
  *
- * @warning Computer use is a beta feature with unique risks. Use a dedicated virtual machine
+ * **Warning**: Computer use is a beta feature with unique risks. Use a dedicated virtual machine
  * or container with minimal privileges. Avoid giving access to sensitive data.
  *
  * @see {@link https://platform.claude.com/docs/en/agents-and-tools/tool-use/computer-use-tool | Anthropic Computer Use Documentation}
@@ -190,7 +190,7 @@ export interface Computer20250124Options<TState = any, TContext = any> {
  * - **Mouse control**: Click, drag, and move the cursor
  * - **Keyboard input**: Type text and use keyboard shortcuts
  *
- * @warning Computer use is a beta feature with unique risks. Use a dedicated virtual machine
+ * **Warning**: Computer use is a beta feature with unique risks. Use a dedicated virtual machine
  * or container with minimal privileges. Avoid giving access to sensitive data.
  *
  * @see {@link https://platform.claude.com/docs/en/agents-and-tools/tool-use/computer-use-tool | Anthropic Computer Use Documentation}

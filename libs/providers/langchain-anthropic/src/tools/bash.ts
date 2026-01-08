@@ -33,9 +33,8 @@ export interface Bash20250124Options {
  * - Execute a command: `{ command: "ls -la" }`
  * - Restart the session: `{ restart: true }`
  *
- * @warning The bash tool provides direct system access. Implement safety measures
- * such as running in isolated environments (Docker/VM), command filtering,
- * and resource limits.
+ * **Warning**: The bash tool provides direct system access. Implement safety measures
+ * such as running in isolated environments (Docker/VM), command filtering, and resource limits.
  *
  * @example
  * ```typescript

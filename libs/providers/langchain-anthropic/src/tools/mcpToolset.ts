@@ -52,7 +52,7 @@ export interface MCPToolsetOptions {
  * Creates an MCP toolset that connects to a remote MCP server to access its tools.
  * This enables Claude to use tools from MCP servers without implementing a separate MCP client.
  *
- * @note This tool requires the beta header `mcp-client-2025-11-20` in API requests.
+ * **Note**: This tool requires the beta header `mcp-client-2025-11-20` in API requests.
  * The header is automatically added when using this tool.
  *
  * @see {@link https://docs.anthropic.com/en/docs/agents-and-tools/mcp-connector | Anthropic MCP Connector Documentation}

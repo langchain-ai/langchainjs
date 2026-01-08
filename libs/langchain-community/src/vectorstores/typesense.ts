@@ -284,7 +284,8 @@ export class Typesense extends VectorStore {
    * @param embeddings embeddings
    * @param config Typesense configuration
    * @returns Typesense vector store
-   * @warning You can omit this method, and only use the constructor and addDocuments.
+   *
+   * **Note**: You can omit this method, and only use the constructor and `addDocuments`.
    */
   static async fromDocuments(
     docs: Document[],

@@ -1208,7 +1208,7 @@ export type RunnableBindingArgs<
   CallOptions extends RunnableConfig = RunnableConfig,
 > = {
   bound: Runnable<RunInput, RunOutput, CallOptions>;
-  /** @deprecated Use {@link config} instead. */
+  /** @deprecated Use the `config` field instead. */
   kwargs?: Partial<CallOptions>;
   config: RunnableConfig;
   configFactories?: Array<

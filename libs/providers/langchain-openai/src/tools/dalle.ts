@@ -29,14 +29,14 @@ export interface DallEAPIWrapperParams extends ToolParams {
   /**
    * The model to use.
    * Alias for `model`
-   * @params "dall-e-2" | "dall-e-3"
+   * Supported values include `"dall-e-2"` and `"dall-e-3"`.
    * @default "dall-e-3"
    * @deprecated Use `model` instead.
    */
   modelName?: OpenAIImageModelId;
   /**
    * The model to use.
-   * @params "dall-e-2" | "dall-e-3"
+   * Supported values include `"dall-e-2"` and `"dall-e-3"`.
    * @default "dall-e-3"
    */
   model?: OpenAIImageModelId;

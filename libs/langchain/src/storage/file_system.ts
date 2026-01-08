@@ -27,10 +27,9 @@ import { BaseStore } from "@langchain/core/stores";
  * }
  * ```
  *
- * @security **Security Notice** This file store
- * can alter any text file in the provided directory and any subfolders.
- * Make sure that the path you specify when initializing the store is free
- * of other files.
+ * **Security notice**: This file store can alter any text file in the provided
+ * directory and any subfolders. Make sure that the path you specify when
+ * initializing the store is free of other files.
  */
 export class LocalFileStore extends BaseStore<string, Uint8Array> {
   lc_namespace = ["langchain", "storage"];

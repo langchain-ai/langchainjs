@@ -2,56 +2,43 @@ import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import { Tool } from "@langchain/core/tools";
 
 /**
- * @interface DataForSeoApiConfig
- * @description Represents the configuration object used to set up a DataForSeoAPISearch instance.
+ * Represents the configuration object used to set up a DataForSeoAPISearch instance.
  */
 export interface DataForSeoApiConfig {
   /**
-   * @property apiLogin
-   * @type {string}
-   * @description The API login credential for DataForSEO. If not provided, it will be fetched from environment variables.
+   * The API login credential for DataForSEO. If not provided, it will be fetched
+   * from environment variables.
    */
   apiLogin?: string;
 
   /**
-   * @property apiPassword
-   * @type {string}
-   * @description The API password credential for DataForSEO. If not provided, it will be fetched from environment variables.
+   * The API password credential for DataForSEO. If not provided, it will be fetched
+   * from environment variables.
    */
   apiPassword?: string;
 
   /**
-   * @property params
-   * @type {Record<string, string | number | boolean>}
-   * @description Additional parameters to customize the API request.
+   * Additional parameters to customize the API request.
    */
   params?: Record<string, string | number | boolean>;
 
   /**
-   * @property useJsonOutput
-   * @type {boolean}
-   * @description Determines if the output should be in JSON format.
+   * Determines if the output should be in JSON format.
    */
   useJsonOutput?: boolean;
 
   /**
-   * @property jsonResultTypes
-   * @type {Array<string>}
-   * @description Specifies the types of results to include in the output.
+   * Specifies the types of results to include in the output.
    */
   jsonResultTypes?: Array<string>;
 
   /**
-   * @property jsonResultFields
-   * @type {Array<string>}
-   * @description Specifies the fields to include in each result object.
+   * Specifies the fields to include in each result object.
    */
   jsonResultFields?: Array<string>;
 
   /**
-   * @property topCount
-   * @type {number}
-   * @description Specifies the maximum number of results to return.
+   * Specifies the maximum number of results to return.
    */
   topCount?: number;
 }
@@ -92,9 +79,7 @@ type ApiResponse = {
 };
 
 /**
- * @class DataForSeoAPISearch
- * @extends {Tool}
- * @description Represents a wrapper class to work with DataForSEO SERP API.
+ * Represents a wrapper class to work with DataForSEO SERP API.
  */
 export class DataForSeoAPISearch extends Tool {
   static lc_name() {
@@ -111,9 +96,7 @@ export class DataForSeoAPISearch extends Tool {
   protected apiPassword: string;
 
   /**
-   * @property defaultParams
-   * @type {Record<string, string | number | boolean>}
-   * @description These are the default parameters to be used when making an API request.
+   * These are the default parameters to be used when making an API request.
    */
   protected defaultParams: Record<string, string | number | boolean> = {
     location_name: "United States",
@@ -134,9 +117,8 @@ export class DataForSeoAPISearch extends Tool {
   protected useJsonOutput = false;
 
   /**
-   * @constructor
-   * @param {DataForSeoApiConfig} config
-   * @description Sets up the class, throws an error if the API login/password isn't provided.
+   * Sets up the class, throws an error if the API login/password isn't provided.
+   * @param config - Tool configuration.
    */
   constructor(config: DataForSeoApiConfig = {}) {
     super();
@@ -160,10 +142,8 @@ export class DataForSeoAPISearch extends Tool {
   }
 
   /**
-   * @method _call
-   * @param {string} keyword
-   * @returns {Promise<string>}
-   * @description Initiates a call to the API and processes the response.
+   * Initiates a call to the API and processes the response.
+   * @param keyword - Search keyword.
    */
   async _call(keyword: string): Promise<string> {
     return this.useJsonOutput
@@ -172,10 +152,8 @@ export class DataForSeoAPISearch extends Tool {
   }
 
   /**
-   * @method results
-   * @param {string} keyword
-   * @returns {Promise<Array<any>>}
-   * @description Fetches the results from the API for the given keyword.
+   * Fetches the results from the API for the given keyword.
+   * @param keyword - Search keyword.
    */
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   async results(keyword: string): Promise<Array<any>> {
@@ -184,10 +162,8 @@ export class DataForSeoAPISearch extends Tool {
   }
 
   /**
-   * @method prepareRequest
-   * @param {string} keyword
-   * @returns {{url: string; headers: HeadersInit; data: BodyInit}}
-   * @description Prepares the request details for the API call.
+   * Prepares the request details for the API call.
+   * @param keyword - Search keyword.
    */
   protected prepareRequest(keyword: string): {
     url: string;
@@ -219,10 +195,8 @@ export class DataForSeoAPISearch extends Tool {
   }
 
   /**
-   * @method getResponseJson
-   * @param {string} keyword
-   * @returns {Promise<ApiResponse>}
-   * @description Executes a POST request to the provided URL and returns a parsed JSON response.
+   * Executes a POST request to the provided URL and returns a parsed JSON response.
+   * @param keyword - Search keyword.
    */
   protected async getResponseJson(keyword: string): Promise<ApiResponse> {
     const requestDetails = this.prepareRequest(keyword);
@@ -243,10 +217,8 @@ export class DataForSeoAPISearch extends Tool {
   }
 
   /**
-   * @method checkResponse
-   * @param {ApiResponse} response
-   * @returns {ApiResponse}
-   * @description Checks the response status code.
+   * Checks the response status code.
+   * @param response - API response.
    */
   private checkResponse(response: ApiResponse): ApiResponse {
     if (response.status_code !== 20000) {
@@ -266,11 +238,9 @@ export class DataForSeoAPISearch extends Tool {
 
   /* eslint-disable @typescript-eslint/no-explicit-any */
   /**
-   * @method filterResults
-   * @param {ApiResponse} res
-   * @param {Array<string> | undefined} types
-   * @returns {Array<any>}
-   * @description Filters the results based on the specified result types.
+   * Filters the results based on the specified result types.
+   * @param res - API response.
+   * @param types - Allowed result types.
    */
   private filterResults(
     res: ApiResponse,
@@ -301,9 +271,8 @@ export class DataForSeoAPISearch extends Tool {
 
   /* eslint-disable @typescript-eslint/no-explicit-any */
   /**
-   * @method cleanupUnnecessaryItems
-   * @param {any} d
-   * @description Removes unnecessary items from the response.
+   * Removes unnecessary items from the response.
+   * @param d - Item to clean up.
    */
   private cleanupUnnecessaryItems(d: any): any {
     if (Array.isArray(d)) {
@@ -332,10 +301,8 @@ export class DataForSeoAPISearch extends Tool {
   }
 
   /**
-   * @method processResponse
-   * @param {ApiResponse} res
-   * @returns {string}
-   * @description Processes the response to extract meaningful data.
+   * Processes the response to extract meaningful data.
+   * @param res - API response.
    */
   protected processResponse(res: ApiResponse): string {
     let returnValue = "No good search result found";
