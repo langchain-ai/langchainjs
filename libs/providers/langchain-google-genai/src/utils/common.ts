@@ -683,15 +683,25 @@ export function convertResponseContentToChatGenerationChunk(
     [] as (FunctionCallPart & { id: string })[]
   );
   let content: MessageContent | undefined;
-  // Checks if some parts do not have text. If false, it means that the content is a string.
+  const streamParts = candidateContent?.parts as
+    | GoogleGenerativeAIPart[]
+    | undefined;
+
+  // Checks if all parts are plain text (no thought flags). If so, join as string.
   if (
-    Array.isArray(candidateContent?.parts) &&
-    candidateContent.parts.every((p) => "text" in p)
+    Array.isArray(streamParts) &&
+    streamParts.every((p) => "text" in p && !p.thought)
   ) {
-    content = candidateContent.parts.map((p) => p.text).join("");
-  } else if (Array.isArray(candidateContent?.parts)) {
-    content = candidateContent.parts.map((p) => {
-      if ("text" in p) {
+    content = streamParts.map((p) => p.text).join("");
+  } else if (Array.isArray(streamParts)) {
+    content = streamParts.map((p) => {
+      if (p.thought && "text" in p && p.text) {
+        return {
+          type: "thinking",
+          thinking: p.text,
+          ...(p.thoughtSignature ? { signature: p.thoughtSignature } : {}),
+        };
+      } else if ("text" in p) {
         return {
           type: "text",
           text: p.text,
