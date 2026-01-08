@@ -59,7 +59,7 @@ export type {
  * ```
  */
 export class ChatXAIResponses<
-  CallOptions extends ChatXAIResponsesCallOptions = ChatXAIResponsesCallOptions
+  CallOptions extends ChatXAIResponsesCallOptions = ChatXAIResponsesCallOptions,
 > extends BaseChatModel<CallOptions> {
   static lc_name() {
     return "ChatXAIResponses";
