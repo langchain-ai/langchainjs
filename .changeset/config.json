@@ -23,7 +23,12 @@
   "updateInternalDependencies": "patch",
   "ignore": [
     "examples",
-    "@langchain/model-profiles"
+    "@langchain/build",
+    "@langchain/eslint",
+    "@langchain/model-profiles",
+    "@langchain/standard-tests",
+    "@langchain/test-helpers",
+    "@langchain/tsconfig"
   ],
   "___experimentalUnsafeOptions_WILL_CHANGE_IN_PATCH": {
     "onlyUpdatePeerDependentsWhenOutOfRange": true

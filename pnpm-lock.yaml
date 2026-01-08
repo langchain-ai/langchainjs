@@ -562,6 +562,43 @@ importers:
         specifier: ^1.0.0
         version: 1.6.1(@types/node@20.19.9)(jsdom@26.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.5))(terser@5.44.1)
 
+  internal/standard-tests:
+    dependencies:
+      '@jest/globals':
+        specifier: ^29.5.0
+        version: 29.7.0
+      '@langchain/core':
+        specifier: workspace:*
+        version: link:../../libs/langchain-core
+      vitest:
+        specifier: ^3.2.4
+        version: 3.2.4(@types/debug@4.1.12)(@types/node@24.10.1)(jiti@2.6.1)(jsdom@26.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.5))(terser@5.44.1)(tsx@4.20.3)(yaml@2.8.1)
+      zod:
+        specifier: ^3.25.76 || ^4
+        version: 4.1.12
+    devDependencies:
+      '@langchain/eslint':
+        specifier: workspace:*
+        version: link:../eslint
+      '@langchain/tsconfig':
+        specifier: workspace:*
+        version: link:../tsconfig
+      '@tsconfig/recommended':
+        specifier: ^1.0.3
+        version: 1.0.10
+      dpdm:
+        specifier: ^3.14.0
+        version: 3.14.0
+      eslint:
+        specifier: ^9.34.0
+        version: 9.39.1(jiti@2.6.1)
+      prettier:
+        specifier: ^3.5.0
+        version: 3.6.2
+      typescript:
+        specifier: ~5.8.3
+        version: 5.8.3
+
   internal/test-helpers:
     dependencies:
       '@jest/globals':
@@ -1170,7 +1207,7 @@ importers:
         version: 4.0.6
       '@getzep/zep-cloud':
         specifier: ^1.0.6
-        version: 1.0.12(@langchain/core@libs+langchain-core)(encoding@0.1.13)(langchain@0.3.30(a409b07ae415e3e3f2735092ee61582b))
+        version: 1.0.12(@langchain/core@libs+langchain-core)(encoding@0.1.13)(langchain@0.3.30(232f6e55ce0a378fc2d3133cadeb4011))
       '@getzep/zep-js':
         specifier: ^0.9.0
         version: 0.9.0
@@ -1206,7 +1243,7 @@ importers:
         version: link:../../internal/eslint
       '@langchain/standard-tests':
         specifier: workspace:*
-        version: link:../langchain-standard-tests
+        version: link:../../internal/standard-tests
       '@langchain/tsconfig':
         specifier: workspace:*
         version: link:../../internal/tsconfig
@@ -1754,43 +1791,6 @@ importers:
         specifier: ^1.7.0
         version: 1.7.0
 
-  libs/langchain-standard-tests:
-    dependencies:
-      '@jest/globals':
-        specifier: ^29.5.0
-        version: 29.7.0
-      '@langchain/core':
-        specifier: workspace:*
-        version: link:../langchain-core
-      vitest:
-        specifier: ^3.2.4
-        version: 3.2.4(@types/debug@4.1.12)(@types/node@24.10.1)(jiti@2.6.1)(jsdom@26.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.5))(terser@5.44.1)(tsx@4.20.3)(yaml@2.8.1)
-      zod:
-        specifier: ^3.25.76 || ^4
-        version: 3.25.76
-    devDependencies:
-      '@langchain/eslint':
-        specifier: workspace:*
-        version: link:../../internal/eslint
-      '@langchain/tsconfig':
-        specifier: workspace:*
-        version: link:../../internal/tsconfig
-      '@tsconfig/recommended':
-        specifier: ^1.0.3
-        version: 1.0.10
-      dpdm:
-        specifier: ^3.14.0
-        version: 3.14.0
-      eslint:
-        specifier: ^9.34.0
-        version: 9.36.0(jiti@2.6.1)
-      prettier:
-        specifier: ^3.5.0
-        version: 3.6.2
-      typescript:
-        specifier: ~5.8.3
-        version: 5.8.3
-
   libs/langchain-textsplitters:
     dependencies:
       js-tiktoken:
@@ -1854,7 +1854,7 @@ importers:
         version: link:../../../internal/eslint
       '@langchain/standard-tests':
         specifier: workspace:*
-        version: link:../../langchain-standard-tests
+        version: link:../../../internal/standard-tests
       '@langchain/tsconfig':
         specifier: workspace:*
         version: link:../../../internal/tsconfig
@@ -1915,7 +1915,7 @@ importers:
         version: link:../../../internal/eslint
       '@langchain/standard-tests':
         specifier: workspace:*
-        version: link:../../langchain-standard-tests
+        version: link:../../../internal/standard-tests
       '@langchain/tsconfig':
         specifier: workspace:*
         version: link:../../../internal/tsconfig
@@ -2111,7 +2111,7 @@ importers:
         version: link:../../../internal/eslint
       '@langchain/standard-tests':
         specifier: workspace:*
-        version: link:../../langchain-standard-tests
+        version: link:../../../internal/standard-tests
       '@langchain/tsconfig':
         specifier: workspace:*
         version: link:../../../internal/tsconfig
@@ -2172,7 +2172,7 @@ importers:
         version: link:../../../internal/eslint
       '@langchain/standard-tests':
         specifier: workspace:*
-        version: link:../../langchain-standard-tests
+        version: link:../../../internal/standard-tests
       '@langchain/tsconfig':
         specifier: workspace:*
         version: link:../../../internal/tsconfig
@@ -2224,7 +2224,7 @@ importers:
         version: link:../../../internal/eslint
       '@langchain/standard-tests':
         specifier: workspace:*
-        version: link:../../langchain-standard-tests
+        version: link:../../../internal/standard-tests
       '@langchain/tsconfig':
         specifier: workspace:*
         version: link:../../../internal/tsconfig
@@ -2270,7 +2270,7 @@ importers:
         version: link:../../../internal/eslint
       '@langchain/standard-tests':
         specifier: workspace:*
-        version: link:../../langchain-standard-tests
+        version: link:../../../internal/standard-tests
       '@langchain/tsconfig':
         specifier: workspace:*
         version: link:../../../internal/tsconfig
@@ -2548,7 +2548,7 @@ importers:
         version: link:../../../internal/eslint
       '@langchain/standard-tests':
         specifier: workspace:*
-        version: link:../../langchain-standard-tests
+        version: link:../../../internal/standard-tests
       '@langchain/tsconfig':
         specifier: workspace:*
         version: link:../../../internal/tsconfig
@@ -2609,7 +2609,7 @@ importers:
         version: link:../langchain-google-common
       '@langchain/standard-tests':
         specifier: workspace:*
-        version: link:../../langchain-standard-tests
+        version: link:../../../internal/standard-tests
       '@langchain/tsconfig':
         specifier: workspace:*
         version: link:../../../internal/tsconfig
@@ -2667,7 +2667,7 @@ importers:
         version: link:../langchain-google-common
       '@langchain/standard-tests':
         specifier: workspace:*
-        version: link:../../langchain-standard-tests
+        version: link:../../../internal/standard-tests
       '@langchain/tsconfig':
         specifier: workspace:*
         version: link:../../../internal/tsconfig
@@ -2783,7 +2783,7 @@ importers:
         version: link:../langchain-openai
       '@langchain/standard-tests':
         specifier: workspace:*
-        version: link:../../langchain-standard-tests
+        version: link:../../../internal/standard-tests
       '@langchain/tsconfig':
         specifier: workspace:*
         version: link:../../../internal/tsconfig
@@ -2835,7 +2835,7 @@ importers:
         version: link:../../../internal/eslint
       '@langchain/standard-tests':
         specifier: workspace:*
-        version: link:../../langchain-standard-tests
+        version: link:../../../internal/standard-tests
       '@langchain/tsconfig':
         specifier: workspace:*
         version: link:../../../internal/tsconfig
@@ -2881,7 +2881,7 @@ importers:
         version: link:../../../internal/eslint
       '@langchain/standard-tests':
         specifier: workspace:*
-        version: link:../../langchain-standard-tests
+        version: link:../../../internal/standard-tests
       '@langchain/tsconfig':
         specifier: workspace:*
         version: link:../../../internal/tsconfig
@@ -3034,7 +3034,7 @@ importers:
         version: link:../../../internal/eslint
       '@langchain/standard-tests':
         specifier: workspace:*
-        version: link:../../langchain-standard-tests
+        version: link:../../../internal/standard-tests
       '@langchain/tsconfig':
         specifier: workspace:*
         version: link:../../../internal/tsconfig
@@ -3092,7 +3092,7 @@ importers:
         version: link:../../../internal/eslint
       '@langchain/standard-tests':
         specifier: workspace:*
-        version: link:../../langchain-standard-tests
+        version: link:../../../internal/standard-tests
       '@langchain/tsconfig':
         specifier: workspace:*
         version: link:../../../internal/tsconfig
@@ -3447,7 +3447,7 @@ importers:
         version: link:../../../internal/eslint
       '@langchain/standard-tests':
         specifier: workspace:*
-        version: link:../../langchain-standard-tests
+        version: link:../../../internal/standard-tests
       '@langchain/tsconfig':
         specifier: workspace:*
         version: link:../../../internal/tsconfig
@@ -6517,8 +6517,8 @@ packages:
     peerDependencies:
       apache-arrow: '>=15.0.0 <=18.1.0'
 
-  '@langchain/anthropic@1.3.4':
-    resolution: {integrity: sha512-CV2WxpgO8DvSeRk0CXB6ukr37qe7IrDT2O+KeWio7CILDrZlZuhlQcAPMCL4XeBoz9sOkIhExutH6X9f72Cbdw==}
+  '@langchain/anthropic@1.3.5':
+    resolution: {integrity: sha512-oB+sfcBujxW/E3cRhGfR5K23+TwZKPPZPjatEadQOZllyPoen0xefIuNoi0oLWfobz3/LPwoNixGU4si3oyGBQ==}
     engines: {node: '>=20'}
     peerDependencies:
       '@langchain/core': workspace:*
@@ -6541,32 +6541,32 @@ packages:
     peerDependencies:
       '@langchain/core': workspace:*
 
-  '@langchain/google-common@2.1.4':
-    resolution: {integrity: sha512-mLH4Zm+TbrzBfzcxWlCKrS/WTQDHukbpGNYUEWG9f5eai3rWC0CjC6DJThg4JQ/P5vxE//fkb8BQml49AZVgMg==}
+  '@langchain/google-common@2.1.5':
+    resolution: {integrity: sha512-eXleG+pYtHPl87sV5+3jkC55W8dRHxvD9lxThP1QfrZqa4tPLPH6Uqa1YRzgDZoEVkoxVrB7U7jkMK59/nkqBw==}
     engines: {node: '>=20'}
     peerDependencies:
       '@langchain/core': workspace:*
 
-  '@langchain/google-gauth@2.1.4':
-    resolution: {integrity: sha512-ZsTCcDbLMhiDtsTDpz1PSqbcaomCe3402wvy3sq1fSXIjXixeBR+OfVNUO4LsRZiq/5HIW4XoIkn7avJy3Bgww==}
+  '@langchain/google-gauth@2.1.5':
+    resolution: {integrity: sha512-sVf23zzvTEHQPy3pFKjarrNftwz2bHfZdRcWUukG8zBl35MfmaIzqUSPHKw3p52LiTkofTqCFDac7apT7SUXwA==}
     engines: {node: '>=20'}
 
-  '@langchain/google-genai@2.1.4':
-    resolution: {integrity: sha512-kiizkpAibOj5SQDuxvGsIglTIO8xoWpQtv7XAapSrdPjigpDYMlHHQBj5aPVcFuV0/uCt5QKTgyCmaPmqQ8Olg==}
+  '@langchain/google-genai@2.1.5':
+    resolution: {integrity: sha512-QvEm5gP9l0Zj/oUuXQiGrSgLGOEstK4mahfNd+u7cJT3Ka5BKSlCynGhFStgO54EyG3q6Al+Ahlg1d2m/ARlEQ==}
     engines: {node: '>=20'}
     peerDependencies:
       '@langchain/core': workspace:*
 
-  '@langchain/google-vertexai-web@2.1.4':
-    resolution: {integrity: sha512-W2jTDnDGXD3tTQzCZrE8ZU0Wa1vxQJGNR24SRMNJkQsKrVU0XzUcovsgdSM4X0Ff1HG/VX0f/e+2RVEqQdRvuw==}
+  '@langchain/google-vertexai-web@2.1.5':
+    resolution: {integrity: sha512-KW6nZMGpUU5SRTl18J9IJmVPVLgmV0ncGCfvTKlNWwJJObJ3YZ9OwodqV7xLQSyBcrprdRra9U3DmyR3y/vFAQ==}
     engines: {node: '>=20'}
 
-  '@langchain/google-vertexai@2.1.4':
-    resolution: {integrity: sha512-9z1XRT1ZHNZWgJ6zyi4/kRa62t7C+tknXLdM/KqPmyxHM62njlzAo3BhAvuCrGRYDENqURLCgZ59UUgdv5UsGA==}
+  '@langchain/google-vertexai@2.1.5':
+    resolution: {integrity: sha512-sHEupypAlrsp4o0Snqxq+Lobdlx4g4BSLsaw0tvc5UiHxTWF/tJfINMtVTqxSSFLvhyf0hRIJcyZoegbN6IfMQ==}
     engines: {node: '>=20'}
 
-  '@langchain/google-webauth@2.1.4':
-    resolution: {integrity: sha512-sCgX5VBuQUNn5aX+Z3vNsMk8ys7TgoLN/l3P4c+1kWEpIRKwNPl45P/beAyxf/RvmATC53Dmnx9fKj5pLVwzhw==}
+  '@langchain/google-webauth@2.1.5':
+    resolution: {integrity: sha512-kbwj0ZL14kVf2Lzw7t7v0rwiixXTJirx+YtLlJ5i5/nogE0/zc4DOmPU40x6yByz+B2jl4Gvd3YyOZ/hklXgiQ==}
     engines: {node: '>=20'}
     peerDependencies:
       '@langchain/core': workspace:*
@@ -20001,7 +20001,7 @@ snapshots:
     transitivePeerDependencies:
       - debug
 
-  '@getzep/zep-cloud@1.0.12(@langchain/core@libs+langchain-core)(encoding@0.1.13)(langchain@0.3.30(a409b07ae415e3e3f2735092ee61582b))':
+  '@getzep/zep-cloud@1.0.12(@langchain/core@libs+langchain-core)(encoding@0.1.13)(langchain@0.3.30(232f6e55ce0a378fc2d3133cadeb4011))':
     dependencies:
       form-data: 4.0.0
       node-fetch: 2.7.0(encoding@0.1.13)
@@ -20010,7 +20010,7 @@ snapshots:
       zod: 3.25.76
     optionalDependencies:
       '@langchain/core': link:libs/langchain-core
-      langchain: 0.3.30(a409b07ae415e3e3f2735092ee61582b)
+      langchain: 0.3.30(232f6e55ce0a378fc2d3133cadeb4011)
     transitivePeerDependencies:
       - encoding
 
@@ -20780,7 +20780,7 @@ snapshots:
       '@lancedb/lancedb-win32-arm64-msvc': 0.19.1
       '@lancedb/lancedb-win32-x64-msvc': 0.19.1
 
-  '@langchain/anthropic@1.3.4(@langchain/core@libs+langchain-core)':
+  '@langchain/anthropic@1.3.5(@langchain/core@libs+langchain-core)':
     dependencies:
       '@anthropic-ai/sdk': 0.71.0(zod@4.1.12)
       '@langchain/core': link:libs/langchain-core
@@ -20816,47 +20816,47 @@ snapshots:
       - ws
     optional: true
 
-  '@langchain/google-common@2.1.4(@langchain/core@libs+langchain-core)':
+  '@langchain/google-common@2.1.5(@langchain/core@libs+langchain-core)':
     dependencies:
       '@langchain/core': link:libs/langchain-core
       uuid: 10.0.0
     optional: true
 
-  '@langchain/google-gauth@2.1.4(@langchain/core@libs+langchain-core)':
+  '@langchain/google-gauth@2.1.5(@langchain/core@libs+langchain-core)':
     dependencies:
-      '@langchain/google-common': 2.1.4(@langchain/core@libs+langchain-core)
+      '@langchain/google-common': 2.1.5(@langchain/core@libs+langchain-core)
       google-auth-library: 10.2.0
     transitivePeerDependencies:
       - '@langchain/core'
       - supports-color
     optional: true
 
-  '@langchain/google-genai@2.1.4(@langchain/core@libs+langchain-core)':
+  '@langchain/google-genai@2.1.5(@langchain/core@libs+langchain-core)':
     dependencies:
       '@google/generative-ai': 0.24.1
       '@langchain/core': link:libs/langchain-core
       uuid: 11.1.0
     optional: true
 
-  '@langchain/google-vertexai-web@2.1.4(@langchain/core@libs+langchain-core)':
+  '@langchain/google-vertexai-web@2.1.5(@langchain/core@libs+langchain-core)':
     dependencies:
-      '@langchain/google-webauth': 2.1.4(@langchain/core@libs+langchain-core)
+      '@langchain/google-webauth': 2.1.5(@langchain/core@libs+langchain-core)
     transitivePeerDependencies:
       - '@langchain/core'
     optional: true
 
-  '@langchain/google-vertexai@2.1.4(@langchain/core@libs+langchain-core)':
+  '@langchain/google-vertexai@2.1.5(@langchain/core@libs+langchain-core)':
     dependencies:
-      '@langchain/google-gauth': 2.1.4(@langchain/core@libs+langchain-core)
+      '@langchain/google-gauth': 2.1.5(@langchain/core@libs+langchain-core)
     transitivePeerDependencies:
       - '@langchain/core'
       - supports-color
     optional: true
 
-  '@langchain/google-webauth@2.1.4(@langchain/core@libs+langchain-core)':
+  '@langchain/google-webauth@2.1.5(@langchain/core@libs+langchain-core)':
     dependencies:
       '@langchain/core': link:libs/langchain-core
-      '@langchain/google-common': 2.1.4(@langchain/core@libs+langchain-core)
+      '@langchain/google-common': 2.1.5(@langchain/core@libs+langchain-core)
       web-auth-library: 1.0.3
     optional: true
 
@@ -21374,7 +21374,7 @@ snapshots:
       semver: 7.7.2
       string-width: 4.2.3
       supports-color: 8.1.1
-      tinyglobby: 0.2.14
+      tinyglobby: 0.2.15
       widest-line: 3.1.0
       wordwrap: 1.0.0
       wrap-ansi: 7.0.0
@@ -28518,7 +28518,7 @@ snapshots:
 
   kuler@2.0.0: {}
 
-  langchain@0.3.30(a409b07ae415e3e3f2735092ee61582b):
+  langchain@0.3.30(232f6e55ce0a378fc2d3133cadeb4011):
     dependencies:
       '@langchain/core': link:libs/langchain-core
       '@langchain/openai': 0.6.16(@langchain/core@libs+langchain-core)(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.5))
@@ -28533,13 +28533,13 @@ snapshots:
       yaml: 2.8.1
       zod: 3.25.76
     optionalDependencies:
-      '@langchain/anthropic': 1.3.4(@langchain/core@libs+langchain-core)
+      '@langchain/anthropic': 1.3.5(@langchain/core@libs+langchain-core)
       '@langchain/aws': 1.1.1(@langchain/core@libs+langchain-core)
       '@langchain/cohere': 1.0.1(@langchain/core@libs+langchain-core)(encoding@0.1.13)
       '@langchain/deepseek': 1.0.4(@langchain/core@libs+langchain-core)(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.5))
-      '@langchain/google-genai': 2.1.4(@langchain/core@libs+langchain-core)
-      '@langchain/google-vertexai': 2.1.4(@langchain/core@libs+langchain-core)
-      '@langchain/google-vertexai-web': 2.1.4(@langchain/core@libs+langchain-core)
+      '@langchain/google-genai': 2.1.5(@langchain/core@libs+langchain-core)
+      '@langchain/google-vertexai': 2.1.5(@langchain/core@libs+langchain-core)
+      '@langchain/google-vertexai-web': 2.1.5(@langchain/core@libs+langchain-core)
       '@langchain/groq': 1.0.2(@langchain/core@libs+langchain-core)(encoding@0.1.13)
       '@langchain/mistralai': 1.0.2(@langchain/core@libs+langchain-core)
       '@langchain/ollama': 1.1.0(@langchain/core@libs+langchain-core)
