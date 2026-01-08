@@ -45,6 +45,7 @@ type ModelInfoConfig = {
   delay?: number,
   isThinking?: boolean, // Is this a thinking model?
   isImage?: boolean, // Is this an image generation model?
+  isTts?: boolean, // Is this a TTS model?
 }
 
 type DefaultGoogleParams = Omit<ChatGoogleParams | ChatGoogleNodeParams, "model">;
@@ -83,7 +84,6 @@ const allModelInfo: ModelInfo[] = [
     model: "gemini-3-flash-preview",
     testConfig: {
       isThinking: true,
-      only: true,
     }
   },
   {
@@ -96,8 +96,20 @@ const allModelInfo: ModelInfo[] = [
     model: "gemini-3-pro-image-preview",
     testConfig: {
       isImage: true,
-      only: true,
     },
+  },
+  {
+    model: "gemini-2.5-flash-preview-tts",
+    testConfig: {
+      isTts: true,
+    }
+  },
+  {
+    model: "gemini-2.5-pro-preview-tts",
+    testConfig: {
+      isTts: true,
+      skip: true,
+    }
   },
 ];
 
@@ -236,7 +248,8 @@ const calculatorTool = tool((_) => "no-op", {
 });
 
 const coreModelInfo: ModelInfo[] = filterTestableModels([
-  (modelInfo: ModelInfo) => !modelInfo.testConfig?.isImage
+  (modelInfo: ModelInfo) => !modelInfo.testConfig?.isImage,
+  (modelInfo: ModelInfo) => !modelInfo.testConfig?.isTts,
 ]);
 describe.each(coreModelInfo)(
   "Google Core ($model) $testConfig",
@@ -1392,5 +1405,233 @@ describe.each(imageModelInfo)(
       console.log('typeCount', typeBlock);
       expect(typeBlock.file?.length).toBeGreaterThanOrEqual(1);
     })
+  }
+);
+
+const ttsModelInfo: ModelInfo[] = filterTestableModels([
+  (modelInfo: ModelInfo) => modelInfo.testConfig?.isTts === true
+]);
+
+describe.sequential.each(ttsModelInfo)(
+  "Google TTS ($model) $testConfig",
+  ({model, defaultGoogleParams, testConfig}: ModelInfo) => {
+
+    let recorder: GoogleRequestRecorder;
+    let callbacks: BaseCallbackHandler[];
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let warnSpy: MockInstance<any>;
+
+    let testSeq = 0;
+    let imageSeq = 0;
+
+    function newChatGoogle( fields?: DefaultGoogleParams ): ChatGoogle | ChatGoogleNode {
+      recorder = new GoogleRequestRecorder();
+      callbacks = [recorder, new GoogleRequestLogger()];
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const configParams: ChatGoogleParams | ChatGoogleNodeParams | Record<string, any> = {
+        responseModalities: ["AUDIO"],
+      };
+      const useNode = testConfig?.node ?? false;
+      const useApiKey = testConfig?.useApiKey ?? !useNode;
+      if (useApiKey) {
+        configParams.apiKey = getEnvironmentVariable( "TEST_API_KEY" );
+      }
+
+      const params = {
+        model,
+        callbacks,
+        ...configParams,
+        ...(defaultGoogleParams ?? {}),
+        ...(fields ?? {}),
+      };
+      if (useNode) {
+        return new ChatGoogleNode( params );
+
+      } else {
+        return new ChatGoogle( params );
+      }
+
+    }
+
+    beforeEach( async () => {
+      imageSeq = 0;
+      warnSpy = vi.spyOn( global.console, "warn" );
+      const delay = testConfig?.delay ?? 0;
+      if (delay) {
+        await new Promise( ( resolve ) => setTimeout( resolve, delay ) );
+      }
+    } );
+
+    afterEach( () => {
+      testSeq++;
+      warnSpy.mockRestore();
+    } );
+
+    async function openFile(block: ContentBlock.Multimodal.File) {
+      if (!block.data) {
+        return;
+      }
+      const buffer = Buffer.from(block.data as string, "base64");
+      const basename = `langchain-gemini-test-${Date.now()}-${testSeq}-${imageSeq++}`;
+      const wavFile = path.join(os.tmpdir(), `${basename}.wav`);
+
+      // WAV Header Construction
+      const numChannels = 1;
+      const sampleRate = 24000;
+      const bitsPerSample = 16;
+      const byteRate = (sampleRate * numChannels * bitsPerSample) / 8;
+      const blockAlign = (numChannels * bitsPerSample) / 8;
+      const dataSize = buffer.length;
+      const headerSize = 44;
+      const totalSize = headerSize + dataSize - 8;
+
+      const header = Buffer.alloc(headerSize);
+      let offset = 0;
+
+      // RIFF chunk
+      header.write("RIFF", offset);
+      offset += 4;
+      header.writeUInt32LE(totalSize, offset);
+      offset += 4;
+      header.write("WAVE", offset);
+      offset += 4;
+
+      // fmt sub-chunk
+      header.write("fmt ", offset);
+      offset += 4;
+      header.writeUInt32LE(16, offset); // Subchunk1Size (16 for PCM)
+      offset += 4;
+      header.writeUInt16LE(1, offset); // AudioFormat (1 for PCM)
+      offset += 2;
+      header.writeUInt16LE(numChannels, offset);
+      offset += 2;
+      header.writeUInt32LE(sampleRate, offset);
+      offset += 4;
+      header.writeUInt32LE(byteRate, offset);
+      offset += 4;
+      header.writeUInt16LE(blockAlign, offset);
+      offset += 2;
+      header.writeUInt16LE(bitsPerSample, offset);
+      offset += 2;
+
+      // data sub-chunk
+      header.write("data", offset);
+      offset += 4;
+      header.writeUInt32LE(dataSize, offset);
+      offset += 4;
+
+      const wavBuffer = Buffer.concat([header, buffer]);
+
+      await fs.writeFile(wavFile, wavBuffer);
+      console.log(`Saved output to: ${wavFile}`);
+      exec(`afplay "${wavFile}"`);
+    }
+
+    async function handleResult( blocks: ContentBlock.Standard[] ) {
+      for (const block of blocks) {
+        console.log( "Block Type:", block.type );
+        if (block.type === "file") {
+          await openFile( block as ContentBlock.Multimodal.File );
+        } else if (block.type === "text") {
+          console.log( block.text );
+        } else {
+          console.log( 'Unexpected block type', block.type );
+        }
+      }
+    }
+
+    test.only("single", async () => {
+      const model = newChatGoogle({
+        speechConfig: "Zubenelgenubi",
+      });
+      const prompt = "Say cheerfully: Have a wonderful day!";
+      const res = await model.invoke(prompt);
+      const content = res?.contentBlocks;
+      await handleResult(content);
+    });
+
+    test.only("multiple", async () => {
+      const model = newChatGoogle({
+        speechConfig: [
+          {
+            speaker: "Joe",
+            name: "Kore",
+          },
+          {
+            speaker: "Jane",
+            name: "Puck",
+          },
+        ],
+      });
+      const prompt = `
+        TTS the following conversation between Joe and Jane:
+        Joe: Hows it going today, Jane?
+        Jane: Not too bad, how about you?
+      `;
+      const res = await model.invoke(prompt);
+      const content = res?.contentBlocks;
+      await handleResult(content);
+    });
+
+    test.only("multiple, with instructions", async () => {
+      const model = newChatGoogle({
+        speechConfig: [
+          {
+            speaker: "Joe",
+            name: "Kore",
+          },
+          {
+            speaker: "Jane",
+            name: "Puck",
+          },
+        ],
+      });
+      const prompt = `
+        TTS the following conversation between Joe and Jane.
+        Pay attention to instructions about how each each person speaks,
+        and other sounds they may make.  
+        Joe: Hows it going today, Jane?
+        Jane: Not too bad, how about you?
+        Joe: [Sighs and sounds tired] It has been a rough day. 
+        Joe: [Perks up] But the week should improve!
+      `;
+      const res = await model.invoke(prompt);
+      const content = res?.contentBlocks;
+      await handleResult(content);
+    });
+
+    test.only("stream multiple", async () => {
+      const model = newChatGoogle({
+        speechConfig: [
+          {
+            speaker: "Joe",
+            name: "Kore",
+          },
+          {
+            speaker: "Jane",
+            name: "Puck",
+          },
+        ],
+      });
+      const prompt = `
+        TTS the following conversation between Joe and Jane:
+        Joe: Hows it going today, Jane?
+        Jane: Not too bad, how about you?
+        Joe: I think things are absolutely wonderful.
+        Jane: Do you, now? Are you sure about that? Are you absolutely sure?
+        Joe: Well, let's consider. (1) You and I are having this conversation,
+          which is pretty remarkable. (2) I think I feel fine. Don't I?
+        Jane: Well, I guess we should see about the outcome of this test, then.
+        Joe: Wait, this is a test?
+      `;
+      const res = await model.stream(prompt);
+      for await (const chunk of res) {
+        const content = chunk?.contentBlocks;
+        await handleResult(content);
+      }
+    }, 60000);
+
   }
 );

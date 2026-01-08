@@ -123,9 +123,12 @@ export interface ChatGoogleFields {
   enableEnhancedCivicAnswers?: boolean;
 
   /**
-   * Configuration for speech generation.
+   * Speech generation configuration.
+   * You can use either Google's definition of the speech configuration,
+   * or a simplified version we've defined (which can be as simple
+   * as the name of a pre-defined voice).
    */
-  speechConfig?: GoogleSpeechConfig;
+  speechConfig?: GoogleSpeechConfig | GoogleSpeechConfigSimplified;
 
   /**
    * Configuration for image generation.
@@ -226,13 +229,20 @@ export type GoogleMediaResolution =
   | "MEDIA_RESOLUTION_HIGH";
 
 /** Configuration for speech generation */
-export interface GoogleSpeechConfig {
+export interface GoogleSpeechConfigSingle {
   /**
    * The configuration for single-voice output.
    * Mutually exclusive with multiSpeakerVoiceConfig.
    */
   voiceConfig?: GoogleVoiceConfig;
 
+  /**
+   * Language code (in BCP 47 format, e.g. "en-US") for speech synthesis.
+   */
+  languageCode?: string;
+}
+
+export interface GoogleSpeechConfigMulti {
   /**
    * The configuration for multi-speaker setup.
    * Mutually exclusive with voiceConfig.
@@ -245,6 +255,10 @@ export interface GoogleSpeechConfig {
   languageCode?: string;
 }
 
+export type GoogleSpeechConfig =
+  | GoogleSpeechConfigSingle
+  | GoogleSpeechConfigMulti;
+
 /** Configuration for a voice to use */
 export interface GoogleVoiceConfig {
   /**
@@ -253,12 +267,14 @@ export interface GoogleVoiceConfig {
   prebuiltVoiceConfig?: GooglePrebuiltVoiceConfig;
 }
 
+export type GooglePrebuiltVoiceName = string;
+
 /** Configuration for a prebuilt voice */
 export interface GooglePrebuiltVoiceConfig {
   /**
    * The name of the preset voice to use.
    */
-  voiceName?: string;
+  voiceName?: GooglePrebuiltVoiceName;
 }
 
 /** Configuration for multi-speaker voice setup */
@@ -281,6 +297,46 @@ export interface GoogleSpeakerVoiceConfig {
    */
   voiceConfig: GoogleVoiceConfig;
 }
+
+/**
+ * A simplified version of the GoogleSpeakerVoiceConfig
+ */
+export interface GoogleSpeechSpeakerName {
+  speaker: string;
+  name: GooglePrebuiltVoiceName;
+}
+
+export type GoogleSpeechVoice =
+  | GooglePrebuiltVoiceName
+  | GoogleSpeechSpeakerName
+  | GoogleSpeechSpeakerName[];
+
+export interface GoogleSpeechVoiceLanguage {
+  voice: GoogleSpeechVoice;
+  languageCode: string;
+}
+
+export interface GoogleSpeechVoicesLanguage {
+  voices: GoogleSpeechVoice;
+  languageCode: string;
+}
+
+/**
+ * A simplified way to represent the voice (or voices) and language code.
+ * "voice" and "voices" are semantically the same, we're not enforcing
+ * that one is an array and one isn't.
+ */
+export type GoogleSpeechSimplifiedLanguage =
+  | GoogleSpeechVoiceLanguage
+  | GoogleSpeechVoicesLanguage;
+
+/**
+ * A simplified way to represent the voices.
+ * It can either be the voice (or voices), or the voice or voices with language configuration
+ */
+export type GoogleSpeechConfigSimplified =
+  | GoogleSpeechVoice
+  | GoogleSpeechSimplifiedLanguage;
 
 /** Configuration for image generation */
 export interface GoogleImageConfig {
