@@ -11,12 +11,12 @@ import { ContentBlock } from "./content/index.js";
 import {
   $InferMessageContent,
   $InferMessageProperty,
+  $InferToolCalls,
   MessageStructure,
 } from "./message.js";
 import { mergeResponseMetadata, mergeUsageMetadata } from "./metadata.js";
 import {
   InvalidToolCall,
-  ToolCall,
   ToolCallChunk,
   defaultToolCallParser,
 } from "./tool.js";
@@ -25,7 +25,7 @@ import { collapseToolCallChunks, Constructor } from "./utils.js";
 export interface AIMessageFields<
   TStructure extends MessageStructure = MessageStructure,
 > extends BaseMessageFields<TStructure, "ai"> {
-  tool_calls?: ToolCall[];
+  tool_calls?: $InferToolCalls<TStructure>[];
   invalid_tool_calls?: InvalidToolCall[];
   usage_metadata?: $InferMessageProperty<TStructure, "ai", "usage_metadata">;
 }
@@ -36,7 +36,7 @@ export class AIMessage<TStructure extends MessageStructure = MessageStructure>
 {
   readonly type = "ai" as const;
 
-  tool_calls?: ToolCall[] = [];
+  tool_calls?: $InferToolCalls<TStructure>[] = [];
 
   invalid_tool_calls?: InvalidToolCall[] = [];
 
@@ -82,9 +82,10 @@ export class AIMessage<TStructure extends MessageStructure = MessageStructure>
       }
       try {
         if (!(rawToolCalls == null) && toolCalls === undefined) {
-          const [toolCalls, invalidToolCalls] =
+          const [parsedToolCalls, invalidToolCalls] =
             defaultToolCallParser(rawToolCalls);
-          initParams.tool_calls = toolCalls ?? [];
+          initParams.tool_calls =
+            (parsedToolCalls as $InferToolCalls<TStructure>[]) ?? [];
           initParams.invalid_tool_calls = invalidToolCalls ?? [];
         } else {
           initParams.tool_calls = initParams.tool_calls ?? [];
@@ -92,7 +93,7 @@ export class AIMessage<TStructure extends MessageStructure = MessageStructure>
         }
       } catch {
         // Do nothing if parsing fails
-        initParams.tool_calls = [];
+        initParams.tool_calls = [] as $InferToolCalls<TStructure>[];
         initParams.invalid_tool_calls = [];
       }
 
@@ -109,14 +110,16 @@ export class AIMessage<TStructure extends MessageStructure = MessageStructure>
 
       if (initParams.contentBlocks !== undefined) {
         // Add constructor tool calls as content blocks
-        initParams.contentBlocks.push(
-          ...initParams.tool_calls.map((toolCall) => ({
-            type: "tool_call" as const,
-            id: toolCall.id,
-            name: toolCall.name,
-            args: toolCall.args,
-          }))
-        );
+        if (initParams.tool_calls) {
+          initParams.contentBlocks.push(
+            ...initParams.tool_calls.map((toolCall) => ({
+              type: "tool_call" as const,
+              id: toolCall.id,
+              name: toolCall.name,
+              args: toolCall.args,
+            }))
+          );
+        }
         // Add content block tool calls that aren't in the constructor tool calls
         const missingToolCalls = initParams.contentBlocks
           .filter<ContentBlock.Tools.ToolCall>(
@@ -136,7 +139,7 @@ export class AIMessage<TStructure extends MessageStructure = MessageStructure>
             id: block.id!,
             name: block.name,
             args: block.args as Record<string, unknown>,
-          }));
+          })) as $InferToolCalls<TStructure>[];
         }
       }
     }
@@ -171,7 +174,7 @@ export class AIMessage<TStructure extends MessageStructure = MessageStructure>
     ) {
       const translator = getTranslator(this.response_metadata.model_provider);
       if (translator) {
-        return translator.translateContent(this);
+        return translator.translateContent(this as AIMessage);
       }
     }
 
@@ -183,13 +186,12 @@ export class AIMessage<TStructure extends MessageStructure = MessageStructure>
           !blocks.some((b) => b.id === block.id && b.name === block.name)
       );
       blocks.push(
-        ...missingToolCalls.map((block) => ({
-          ...block,
+        ...(missingToolCalls.map((block) => ({
           type: "tool_call" as const,
           id: block.id,
           name: block.name,
           args: block.args,
-        }))
+        })) as ContentBlock.Tools.ToolCall[])
       );
     }
 
@@ -205,8 +207,23 @@ export class AIMessage<TStructure extends MessageStructure = MessageStructure>
     };
   }
 
-  static isInstance(obj: unknown): obj is AIMessage {
-    return super.isInstance(obj) && obj.type === "ai";
+  /**
+   * Type guard to check if an object is an AIMessage.
+   * Preserves the MessageStructure type parameter when called with a typed BaseMessage.
+   * @overload When called with a typed BaseMessage, preserves the TStructure type
+   */
+  static isInstance<T extends MessageStructure>(
+    obj: BaseMessage<T>
+  ): obj is BaseMessage<T> & AIMessage<T>;
+  /**
+   * Type guard to check if an object is an AIMessage.
+   * @overload When called with unknown, returns base AIMessage type
+   */
+  static isInstance(obj: unknown): obj is AIMessage;
+  static isInstance<T extends MessageStructure = MessageStructure>(
+    obj: BaseMessage<T> | unknown
+  ): obj is AIMessage<T> {
+    return super.isInstance(obj) && (obj as { type: string }).type === "ai";
   }
 }
 
@@ -246,7 +263,7 @@ export class AIMessageChunk<
 {
   readonly type = "ai" as const;
 
-  tool_calls?: ToolCall[] = [];
+  tool_calls?: $InferToolCalls<TStructure>[] = [];
 
   invalid_tool_calls?: InvalidToolCall[] = [];
 
@@ -282,9 +299,12 @@ export class AIMessageChunk<
             : undefined,
       };
     } else {
+      const collapsed = collapseToolCallChunks(fields.tool_call_chunks ?? []);
       initParams = {
         ...fields,
-        ...collapseToolCallChunks(fields.tool_call_chunks ?? []),
+        tool_call_chunks: collapsed.tool_call_chunks,
+        tool_calls: collapsed.tool_calls as $InferToolCalls<TStructure>[],
+        invalid_tool_calls: collapsed.invalid_tool_calls,
         usage_metadata:
           fields.usage_metadata !== undefined
             ? fields.usage_metadata
@@ -332,7 +352,7 @@ export class AIMessageChunk<
     ) {
       const translator = getTranslator(this.response_metadata.model_provider);
       if (translator) {
-        return translator.translateContent(this);
+        return translator.translateContent(this as AIMessage);
       }
     }
 
@@ -409,7 +429,22 @@ export class AIMessageChunk<
     return new Cls(combinedFields);
   }
 
-  static isInstance(obj: unknown): obj is AIMessageChunk {
-    return super.isInstance(obj) && obj.type === "ai";
+  /**
+   * Type guard to check if an object is an AIMessageChunk.
+   * Preserves the MessageStructure type parameter when called with a typed BaseMessage.
+   * @overload When called with a typed BaseMessage, preserves the TStructure type
+   */
+  static isInstance<T extends MessageStructure>(
+    obj: BaseMessage<T>
+  ): obj is BaseMessage<T> & AIMessageChunk<T>;
+  /**
+   * Type guard to check if an object is an AIMessageChunk.
+   * @overload When called with unknown, returns base AIMessageChunk type
+   */
+  static isInstance(obj: unknown): obj is AIMessageChunk;
+  static isInstance<T extends MessageStructure = MessageStructure>(
+    obj: BaseMessage<T> | unknown
+  ): obj is AIMessageChunk<T> {
+    return super.isInstance(obj) && (obj as { type: string }).type === "ai";
   }
 }

@@ -133,6 +133,91 @@ export type $MessageToolCallBlock<TStructure extends MessageStructure> =
     : never;
 
 /**
+ * Helper type to infer a union of ToolCall types from the tools defined in a MessageStructure.
+ * This is used to type the `tool_calls` array in AIMessage based on the available tools.
+ *
+ * @template TStructure - A message structure type that may contain tool definitions
+ *
+ * @example
+ * ```ts
+ * // Given a message structure with tools:
+ * interface MyStructure extends MessageStructure {
+ *   tools: {
+ *     calculator: MessageToolDefinition<{ a: number, b: number }, number>;
+ *     search: MessageToolDefinition<{ query: string }, string[]>;
+ *   }
+ * }
+ *
+ * // The inferred tool calls would be:
+ * type ToolCalls = $InferToolCalls<MyStructure>;
+ * // Resolves to:
+ * // | { type?: "tool_call"; id?: string; name: "calculator"; args: { a: number, b: number } }
+ * // | { type?: "tool_call"; id?: string; name: "search"; args: { query: string } }
+ * ```
+ */
+export type $InferToolCalls<TStructure extends MessageStructure> =
+  NonNullable<TStructure["tools"]> extends MessageToolSet
+    ? NonNullable<TStructure["tools"]> extends infer TTools extends
+        MessageToolSet
+      ? {
+          [K in keyof TTools]: K extends string
+            ? TTools[K] extends MessageToolDefinition
+              ? {
+                  readonly type?: "tool_call";
+                  id?: string;
+                  name: K;
+                  // Fallback to Record<string, any> when input is unknown
+                  args: [unknown] extends [TTools[K]["input"]]
+                    ? // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                      Record<string, any>
+                    : TTools[K]["input"];
+                }
+              : never
+            : never;
+        }[keyof TTools]
+      : never
+    : {
+        readonly type?: "tool_call";
+        id?: string;
+        name: string;
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        args: Record<string, any>;
+      };
+
+/**
+ * Helper type to infer a union of tool output types from the tools defined in a MessageStructure.
+ * This is used to type the `content` of ToolMessage based on the available tool outputs.
+ *
+ * @template TStructure - A message structure type that may contain tool definitions
+ *
+ * @example
+ * ```ts
+ * // Given a message structure with tools:
+ * interface MyStructure extends MessageStructure {
+ *   tools: {
+ *     calculator: MessageToolDefinition<{ a: number, b: number }, number>;
+ *     search: MessageToolDefinition<{ query: string }, string[]>;
+ *   }
+ * }
+ *
+ * // The inferred tool outputs would be:
+ * type ToolOutputs = $InferToolOutputs<MyStructure>;
+ * // Resolves to: number | string[]
+ * ```
+ */
+export type $InferToolOutputs<TStructure extends MessageStructure> =
+  NonNullable<TStructure["tools"]> extends MessageToolSet
+    ? NonNullable<TStructure["tools"]> extends infer TTools extends
+        MessageToolSet
+      ? {
+          [K in keyof TTools]: TTools[K] extends MessageToolDefinition
+            ? TTools[K]["output"]
+            : never;
+        }[keyof TTools]
+      : unknown
+    : unknown;
+
+/**
  * Core interface that defines the structure of messages.
  *
  * @example
@@ -193,7 +278,9 @@ export type $MessageToolCallBlock<TStructure extends MessageStructure> =
  * };
  * ```
  */
-export interface MessageStructure {
+export interface MessageStructure<
+  TTools extends MessageToolSet = MessageToolSet,
+> {
   /**
    * Optional output version for the message structure.
    * If not provided, defaults to "v0".
@@ -203,7 +290,7 @@ export interface MessageStructure {
    * Optional set of tool definitions that can be used in messages.
    * Each tool is defined with input/output types and can be referenced in tool messages.
    */
-  readonly tools?: MessageToolSet;
+  readonly tools?: TTools;
   /**
    * Optional mapping of message types to their allowed content blocks.
    * Each message type can specify what content block types it supports (text, images, etc).
@@ -514,9 +601,19 @@ export type $InferMessageContentBlocks<
 export type $InferMessageContent<
   TStructure extends MessageStructure,
   TRole extends MessageType,
-> = TStructure["outputVersion"] extends "v1"
-  ? Array<$InferMessageContentBlocks<TStructure, TRole>>
-  : string | Array<ContentBlock | ContentBlock.Text>;
+> = TRole extends "tool"
+  ? // For tool messages, infer content from tool output types if available
+    $InferToolOutputs<TStructure> extends infer TOutput
+    ? [TOutput] extends [never]
+      ? string | Array<ContentBlock | ContentBlock.Text>
+      : [unknown] extends [TOutput]
+        ? // Fallback to default when TOutput is unknown (no specific tools defined)
+          string | Array<ContentBlock | ContentBlock.Text>
+        : TOutput | string | Array<ContentBlock | ContentBlock.Text>
+    : string | Array<ContentBlock | ContentBlock.Text>
+  : TStructure["outputVersion"] extends "v1"
+    ? Array<$InferMessageContentBlocks<TStructure, TRole>>
+    : string | Array<ContentBlock | ContentBlock.Text>;
 
 /**
  * Infers the properties for a specific message type from a message structure.

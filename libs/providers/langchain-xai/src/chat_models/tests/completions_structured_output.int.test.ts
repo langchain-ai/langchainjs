@@ -4,7 +4,7 @@ import { toJsonSchema } from "@langchain/core/utils/json_schema";
 import { ChatPromptTemplate } from "@langchain/core/prompts";
 import { AIMessage } from "@langchain/core/messages";
 
-import { ChatXAI } from "../chat_models.js";
+import { ChatXAI } from "../index.js";
 
 test("withStructuredOutput zod schema function calling", async () => {
   const model = new ChatXAI({

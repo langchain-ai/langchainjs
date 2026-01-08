@@ -468,7 +468,7 @@ describe("Works with all model providers", () => {
     }
   });
 
-  it.skip("Can invoke ollama", async () => {
+  it("Can invoke ollama", async () => {
     const ollama = await initChatModel(undefined, {
       modelProvider: "ollama",
       temperature: 0,
@@ -577,11 +577,8 @@ describe("Works with all model providers", () => {
   });
 });
 
-/**
- * @skip new agent doesn't support Runnable prompts.
- */
-test.skip("Is compatible with agents", async () => {
-  const gpt4 = await initChatModel(undefined, {
+test("Is compatible with agents", async () => {
+  const model = await initChatModel(undefined, {
     modelProvider: "openai",
     temperature: 0.25, // Funky temperature to verify it's being set properly.
     apiKey: openAIApiKey,
@@ -602,7 +599,7 @@ test.skip("Is compatible with agents", async () => {
   // const systemPrompt = await pull<PromptTemplate>("hwchase17/react");
 
   const agent = await createAgent({
-    model: gpt4,
+    model,
     tools: [weatherTool],
     // systemPrompt, // new createAgent only supports strings here
   });

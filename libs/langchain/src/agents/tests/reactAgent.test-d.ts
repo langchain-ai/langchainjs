@@ -128,11 +128,11 @@ describe("reactAgent", () => {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         expectTypeOf(value).toEqualTypeOf<[BaseMessage, Record<string, any>]>();
       } else if (mode === "updates") {
-        expectTypeOf(value).toEqualTypeOf<
+        expectTypeOf(value).toExtend<
           Record<string, Omit<BuiltInState, "jumpTo">>
         >();
       } else {
-        expectTypeOf(value.messages).toEqualTypeOf<BaseMessage[]>();
+        expectTypeOf(value.messages).toExtend<BaseMessage[]>();
       }
     }
 
