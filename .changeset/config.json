@@ -21,15 +21,7 @@
   "access": "public",
   "baseBranch": "main",
   "updateInternalDependencies": "patch",
-  "ignore": [
-    "examples",
-    "@langchain/build",
-    "@langchain/eslint",
-    "@langchain/model-profiles",
-    "@langchain/standard-tests",
-    "@langchain/test-helpers",
-    "@langchain/tsconfig"
-  ],
+  "ignore": ["examples"],
   "___experimentalUnsafeOptions_WILL_CHANGE_IN_PATCH": {
     "onlyUpdatePeerDependentsWhenOutOfRange": true
   }
