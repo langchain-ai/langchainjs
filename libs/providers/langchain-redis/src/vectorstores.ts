@@ -198,7 +198,7 @@ export class RedisVectorStore extends VectorStore {
         this.customSchema = _dbConfig.customSchema;
       } else {
         // Legacy format - convert to new format with deprecation warning
-        this.customSchema = convertLegacySchema(_dbConfig.customSchema);
+        this.customSchema = convertLegacySchema(this.metadataKey, _dbConfig.customSchema);
       }
     }
 
@@ -358,7 +358,90 @@ export class RedisVectorStore extends VectorStore {
               );
               // Merge with schema-based metadata, giving priority to schema fields
               metadata = { ...jsonMetadata, ...metadata };
-            } catch (error) {
+            } catch (_error) {
+              // If JSON parsing fails, use only schema-based metadata
+              if (!this.customSchema || this.customSchema.length === 0) {
+                metadata = {};
+              }
+            }
+
+            result.push([
+              new Document({
+                pageContent: (document[this.contentKey] ?? "") as string,
+                metadata,
+              }),
+              Number(document.vector_score),
+            ]);
+          }
+        }
+      }
+    }
+
+    return result;
+  }
+
+  /**
+   * @deprecated Use `similaritySearchVectorWithScore` instead.
+   * This method is kept for backward compatibility and will be removed in the next major version.
+   *
+   * Method for performing a similarity search with custom metadata filtering.
+   * Uses the custom schema fields for efficient filtering.
+   * @param query The query vector.
+   * @param k The number of nearest neighbors to return.
+   * @param metadataFilter Object with metadata field filters using custom schema.
+   * @returns A promise that resolves to an array of documents and their scores.
+   */
+  async similaritySearchVectorWithScoreAndMetadata(
+    query: number[],
+    k: number,
+    metadataFilter?: Record<string, unknown>
+  ): Promise<[Document, number][]> {
+    const results = await this.redisClient.ft.search(
+      this.indexName,
+      ...this.buildCustomQuery(query, k, metadataFilter)
+    );
+    const result: [Document, number][] = [];
+
+    if (results.total) {
+      for (const res of results.documents) {
+        if (res.value) {
+          const document = res.value;
+          if (document.vector_score) {
+            // Reconstruct metadata from both the JSON field and individual fields
+            let metadata: Record<string, unknown> = {};
+
+            if (this.customSchema && this.customSchema.length > 0) {
+              // Build metadata from individual schema fields
+              for (const fieldSchema of this.customSchema) {
+                // Skip the metadata JSON field itself
+                if (fieldSchema.name === this.metadataKey) {
+                  continue;
+                }
+                const fieldValue = document[fieldSchema.name];
+                if (fieldValue !== undefined && fieldValue !== null) {
+                  const prefix = `${this.metadataKey}.`;
+                  const fieldKey = fieldSchema.name.startsWith(prefix)
+                    ? fieldSchema.name.slice(prefix.length)
+                    : fieldSchema.name;
+
+                  metadata[fieldKey] = deserializeMetadataField(
+                    fieldSchema,
+                    fieldValue
+                  );
+                }
+              }
+            }
+
+            // Also try to parse the JSON metadata field for any additional fields
+            try {
+              const jsonMetadata = JSON.parse(
+                this.unEscapeSpecialChars(
+                  (document[this.metadataKey] ?? "{}") as string
+                )
+              );
+              // Merge with schema-based metadata, giving priority to schema fields
+              metadata = { ...jsonMetadata, ...metadata };
+            } catch (_error) {
               // If JSON parsing fails, use only schema-based metadata
               if (!this.customSchema || this.customSchema.length === 0) {
                 metadata = {};
@@ -628,6 +711,147 @@ export class RedisVectorStore extends VectorStore {
     };
 
     return [baseQuery, options];
+  }
+
+  /**
+   * @deprecated Use `buildQuery` instead.
+   * This method is kept for backward compatibility and will be removed in the next major version.
+   *
+   * Builds a query with custom metadata field filtering
+   * @param query The query vector
+   * @param k Number of results to return
+   * @param metadataFilter Object with metadata field filters
+   * @returns Query string and search options
+   */
+  buildCustomQuery(
+    query: number[],
+    k: number,
+    metadataFilter?: Record<string, unknown>
+  ): [string, SearchOptions] {
+    // For backward compatibility, we just use buildQuery without the filter
+    // The metadataFilter parameter is ignored as the new API uses FilterExpression
+    return this.buildQuery(query, k, this.buildCustomQueryFilter(metadataFilter));
+  }
+
+  /**
+   * Converts a metadata filter object to a RedisVectorStoreFilterType.
+   * This is used for backward compatibility with the deprecated similaritySearchVectorWithScoreAndMetadata method.
+   *
+   * @param metadataFilter Optional metadata filter object with field-value pairs.
+   * @returns A RedisVectorStoreFilterType that can be used with buildQuery, or undefined if no filter is provided.
+   */
+  private buildCustomQueryFilter(
+    metadataFilter?: Record<string, unknown>
+  ): RedisVectorStoreFilterType | undefined {
+    if (!metadataFilter || Object.keys(metadataFilter).length === 0) {
+      return undefined;
+    }
+
+    // Check if we're in legacy mode where metadata is stored as JSON in a single field
+    const isLegacyMode =
+      this.customSchema &&
+      this.customSchema.length > 0 &&
+      this.customSchema[0].name === this.metadataKey;
+
+    if (isLegacyMode) {
+      // In legacy mode, we can't filter on individual metadata fields
+      // The entire metadata is stored as JSON in the metadataKey field
+      // Return undefined to indicate no filtering is possible
+      return undefined;
+    }
+
+    // Build a filter expression from the metadata filter object
+    // For each field in the metadata filter, create a filter condition
+    const filterConditions: FilterExpression[] = [];
+
+    for (const [fieldName, fieldValue] of Object.entries(metadataFilter)) {
+      // Skip the metadataKey field itself - it's used for legacy JSON storage
+      if (fieldName === this.metadataKey) {
+        continue;
+      }
+
+      // Prepend metadataKey to field name for nested field reference (e.g., "metadata.category")
+      const fullFieldName = `${this.metadataKey}.${fieldName}`;
+
+      // Find the field schema to determine the field type
+      const fieldSchema = this.customSchema?.find(
+        (schema) => schema.name === fullFieldName
+      );
+
+      if (!fieldSchema) {
+        // If no schema found, skip this field
+        continue;
+      }
+
+      // Create a filter based on the field type
+      if (fieldSchema.type === "tag") {
+        // For tag fields, use Tag filter with eq
+        if (Array.isArray(fieldValue)) {
+          // If value is an array, create OR conditions for each value
+          let tagFilter = Tag(fullFieldName).eq(String(fieldValue[0]));
+          for (let i = 1; i < fieldValue.length; i++) {
+            tagFilter = tagFilter.or(
+              Tag(fullFieldName).eq(String(fieldValue[i]))
+            );
+          }
+          filterConditions.push(tagFilter);
+        } else {
+          filterConditions.push(Tag(fullFieldName).eq(String(fieldValue)));
+        }
+      } else if (fieldSchema.type === "numeric") {
+        // For numeric fields, check if it's a range filter or equality
+        if (
+          typeof fieldValue === "object" &&
+          fieldValue !== null &&
+          !Array.isArray(fieldValue)
+        ) {
+          const rangeFilter = fieldValue as Record<string, unknown>;
+          if ("min" in rangeFilter || "max" in rangeFilter) {
+            // Range filter with min/max
+            const min =
+              rangeFilter.min !== undefined
+                ? Number(rangeFilter.min)
+                : -Infinity;
+            const max =
+              rangeFilter.max !== undefined
+                ? Number(rangeFilter.max)
+                : Infinity;
+            filterConditions.push(Num(fullFieldName).between(min, max));
+          } else {
+            // Assume equality check
+            filterConditions.push(Num(fullFieldName).eq(Number(fieldValue)));
+          }
+        } else {
+          // Equality check
+          filterConditions.push(Num(fullFieldName).eq(Number(fieldValue)));
+        }
+      } else if (fieldSchema.type === "text") {
+        // For text fields, use text match
+        filterConditions.push(Text(fullFieldName).match(String(fieldValue)));
+      } else if (fieldSchema.type === "geo") {
+        // For geo fields, we can't easily convert from metadata, skip
+        continue;
+      } else if (fieldSchema.type === "timestamp") {
+        // For timestamp fields, assume equality check
+        const timestamp =
+          fieldValue instanceof Date
+            ? Math.floor(fieldValue.getTime() / 1000)
+            : Number(fieldValue);
+        filterConditions.push(Timestamp(fullFieldName).eq(timestamp));
+      }
+    }
+
+    // Combine all filter conditions with AND
+    if (filterConditions.length === 0) {
+      return undefined;
+    }
+
+    let combinedFilter = filterConditions[0];
+    for (let i = 1; i < filterConditions.length; i++) {
+      combinedFilter = combinedFilter.and(filterConditions[i]);
+    }
+
+    return combinedFilter;
   }
 
   private prepareFilter(filter: RedisVectorStoreFilterType): string {

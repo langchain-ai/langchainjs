@@ -263,6 +263,9 @@ export function buildMetadataSchema(
         if (fieldSchema.options?.noindex) {
           textOptions.NOINDEX = true;
         }
+        if (fieldSchema.options?.sortable) {
+          textOptions.SORTABLE = true;
+        }
         updatedSchema[fieldSchema.name] = textOptions;
         break;
       }
@@ -661,6 +664,7 @@ function isNumberOrDate(value: unknown): boolean {
  * This function provides backward compatibility by converting the old Record-based
  * schema format to the new array-based format. It also emits a deprecation warning.
  *
+ * @param metadataKey the custom metadata key prefix
  * @param legacySchema - The legacy schema in Record<string, CustomSchemaField> format
  * @returns The converted schema in MetadataFieldSchema[] format
  *
@@ -679,6 +683,7 @@ function isNumberOrDate(value: unknown): boolean {
  * ```
  */
 export function convertLegacySchema(
+  metadataKey: string,
   legacySchema: Record<string, CustomSchemaField>
 ): MetadataFieldSchema[] {
   console.warn(
@@ -738,7 +743,7 @@ export function convertLegacySchema(
     }
 
     convertedSchema.push({
-      name: fieldName,
+      name: metadataKey + "." + fieldName,
       type,
       ...(Object.keys(options).length > 0 ? { options } : {}),
     });
