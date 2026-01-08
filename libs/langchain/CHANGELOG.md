@@ -1,5 +1,16 @@
 # langchain
 
+## 1.2.7
+
+### Patch Changes
+
+- [#9517](https://github.com/langchain-ai/langchainjs/pull/9517) [`23be5af`](https://github.com/langchain-ai/langchainjs/commit/23be5afd59b5f4806edef11937ce5e2ba300f7ee) Thanks [@christian-bromann](https://github.com/christian-bromann)! - fix(langchain): Refactored agent generics to use type bag pattern (AgentTypeConfig, MiddlewareTypeConfig) with new helper types for type extraction.
+
+- [#9761](https://github.com/langchain-ai/langchainjs/pull/9761) [`e0360d9`](https://github.com/langchain-ai/langchainjs/commit/e0360d9bdc0e7725d59625902bcfc98c39931e2a) Thanks [@christian-bromann](https://github.com/christian-bromann)! - fix(langchain): ensure models only make on write_todo call at a time
+
+- Updated dependencies [[`23be5af`](https://github.com/langchain-ai/langchainjs/commit/23be5afd59b5f4806edef11937ce5e2ba300f7ee)]:
+  - @langchain/core@1.1.12
+
 ## 1.2.6
 
 ### Patch Changes

@@ -1,5 +1,11 @@
 # @langchain/core
 
+## 1.1.12
+
+### Patch Changes
+
+- [#9517](https://github.com/langchain-ai/langchainjs/pull/9517) [`23be5af`](https://github.com/langchain-ai/langchainjs/commit/23be5afd59b5f4806edef11937ce5e2ba300f7ee) Thanks [@christian-bromann](https://github.com/christian-bromann)! - fix(@langchain/core): add literal name type inference to tool()
+
 ## 1.1.11
 
 ### Patch Changes
