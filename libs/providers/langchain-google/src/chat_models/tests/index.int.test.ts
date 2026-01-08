@@ -1542,7 +1542,7 @@ describe.sequential.each(ttsModelInfo)(
       }
     }
 
-    test.only("single", async () => {
+    test("single", async () => {
       const model = newChatGoogle({
         speechConfig: "Zubenelgenubi",
       });
@@ -1552,7 +1552,7 @@ describe.sequential.each(ttsModelInfo)(
       await handleResult(content);
     });
 
-    test.only("multiple", async () => {
+    test("multiple", async () => {
       const model = newChatGoogle({
         speechConfig: [
           {
@@ -1575,7 +1575,7 @@ describe.sequential.each(ttsModelInfo)(
       await handleResult(content);
     });
 
-    test.only("multiple, with instructions", async () => {
+    test("multiple, with instructions", async () => {
       const model = newChatGoogle({
         speechConfig: [
           {
@@ -1602,7 +1602,7 @@ describe.sequential.each(ttsModelInfo)(
       await handleResult(content);
     });
 
-    test.only("stream multiple", async () => {
+    test("stream multiple", async () => {
       const model = newChatGoogle({
         speechConfig: [
           {
