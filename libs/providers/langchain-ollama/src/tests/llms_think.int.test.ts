@@ -1,7 +1,6 @@
 import { test, expect } from "vitest";
 import { Ollama } from "../llms.js";
 
-
 test("test deep seek model with think=true vs think=false vs think=undefined", async () => {
   const prompt = "Explain the process of photosynthesis briefly.";
 
@@ -43,9 +42,15 @@ test("test deep seek model with think=true vs think=false vs think=undefined", a
 
   // The response with thinking should be significantly longer
   // because it includes the reasoning process before the final answer
-  expect(resWithThinking.length).toBeGreaterThan(resWithoutThinking.length * 1.5);
-  expect(resDefaultThinking.length).toBeGreaterThan(resWithoutThinking.length * 1.5);
+  expect(resWithThinking.length).toBeGreaterThan(
+    resWithoutThinking.length * 1.5
+  );
+  expect(resDefaultThinking.length).toBeGreaterThan(
+    resWithoutThinking.length * 1.5
+  );
 
   // The responses with thinking enabled should be similar in length
-  expect(Math.abs(resWithThinking.length - resDefaultThinking.length)).toBeLessThan(100);
+  expect(
+    Math.abs(resWithThinking.length - resDefaultThinking.length)
+  ).toBeLessThan(100);
 }, 120_000);
