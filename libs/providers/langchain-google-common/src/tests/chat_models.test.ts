@@ -1010,6 +1010,90 @@ describe("Mock ChatGoogle - Gemini", () => {
     expect(thinkingConfig.thinkingBudget).toEqual(1024);
   });
 
+  test("1. Reasoning - thinkingLevel direct", async () => {
+    const record: Record<string, any> = {};
+    const projectId = mockId();
+    const authOptions: MockClientAuthInfo = {
+      record,
+      projectId,
+      resultFile: "chat-1-mock.json",
+    };
+    const model = new ChatGoogle({
+      authOptions,
+      thinkingLevel: "HIGH",
+    });
+    await model.invoke(
+      "You roll two dice. What's the probability they add up to 7?"
+    );
+
+    expect(record.opts).toBeDefined();
+    expect(record.opts.data).toBeDefined();
+    const { data } = record.opts;
+
+    expect(data).toHaveProperty("generationConfig");
+    expect(data.generationConfig).toHaveProperty("thinkingConfig");
+    const { thinkingConfig } = data.generationConfig;
+    expect(thinkingConfig).toHaveProperty("thinkingLevel");
+    expect(thinkingConfig.thinkingLevel).toEqual("HIGH");
+  });
+
+  test("1. Reasoning - reasoningLevel mapping", async () => {
+    const record: Record<string, any> = {};
+    const projectId = mockId();
+    const authOptions: MockClientAuthInfo = {
+      record,
+      projectId,
+      resultFile: "chat-1-mock.json",
+    };
+    const model = new ChatGoogle({
+      authOptions,
+      reasoningLevel: "medium",
+    });
+    await model.invoke(
+      "You roll two dice. What's the probability they add up to 7?"
+    );
+
+    expect(record.opts).toBeDefined();
+    expect(record.opts.data).toBeDefined();
+    const { data } = record.opts;
+
+    expect(data).toHaveProperty("generationConfig");
+    expect(data.generationConfig).toHaveProperty("thinkingConfig");
+    const { thinkingConfig } = data.generationConfig;
+    expect(thinkingConfig).toHaveProperty("thinkingLevel");
+    expect(thinkingConfig.thinkingLevel).toEqual("MEDIUM");
+  });
+
+  test("1. Reasoning - combined thinkingLevel and thinkingBudget", async () => {
+    const record: Record<string, any> = {};
+    const projectId = mockId();
+    const authOptions: MockClientAuthInfo = {
+      record,
+      projectId,
+      resultFile: "chat-1-mock.json",
+    };
+    const model = new ChatGoogle({
+      authOptions,
+      maxReasoningTokens: 100,
+      thinkingLevel: "LOW",
+    });
+    await model.invoke(
+      "You roll two dice. What's the probability they add up to 7?"
+    );
+
+    expect(record.opts).toBeDefined();
+    expect(record.opts.data).toBeDefined();
+    const { data } = record.opts;
+
+    expect(data).toHaveProperty("generationConfig");
+    expect(data.generationConfig).toHaveProperty("thinkingConfig");
+    const { thinkingConfig } = data.generationConfig;
+    expect(thinkingConfig).toHaveProperty("thinkingBudget");
+    expect(thinkingConfig.thinkingBudget).toEqual(100);
+    expect(thinkingConfig).toHaveProperty("thinkingLevel");
+    expect(thinkingConfig.thinkingLevel).toEqual("LOW");
+  });
+
   test("2. Safety - settings", async () => {
     const record: Record<string, any> = {};
     const projectId = mockId();

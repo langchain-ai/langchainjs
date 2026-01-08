@@ -26,7 +26,7 @@ export interface MiddlewareNodeOptions {
 
 export abstract class MiddlewareNode<
   TStateSchema extends Record<string, any>,
-  TContextSchema extends Record<string, any>
+  TContextSchema extends Record<string, any>,
 > extends RunnableCallable<TStateSchema, NodeOutput<TStateSchema>> {
   #options: MiddlewareNodeOptions;
 
@@ -153,8 +153,8 @@ export abstract class MiddlewareNode<
         jumpToConstraint && jumpToConstraint.length > 0
           ? `must be one of: ${jumpToConstraint?.join(", ")}.`
           : constraint
-          ? `no ${constraint} defined in middleware ${this.middleware.name}`
-          : "";
+            ? `no ${constraint} defined in middleware ${this.middleware.name}`
+            : "";
       throw new Error(`Invalid jump target: ${result.jumpTo}, ${suggestion}.`);
     }
 

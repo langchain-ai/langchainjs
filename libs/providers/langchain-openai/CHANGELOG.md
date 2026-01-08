@@ -1,5 +1,13 @@
 # @langchain/openai
 
+## 1.2.1
+
+### Patch Changes
+
+- [#9730](https://github.com/langchain-ai/langchainjs/pull/9730) [`13c9d5b`](https://github.com/langchain-ai/langchainjs/commit/13c9d5bfa3acac7ffb37642e9a50d84dc9004e88) Thanks [@christian-bromann](https://github.com/christian-bromann)! - fix(openai): pass through provider-native content in ToolMessage without stringification
+
+- [#9737](https://github.com/langchain-ai/langchainjs/pull/9737) [`75b3b90`](https://github.com/langchain-ai/langchainjs/commit/75b3b90c5fa62cbbfa678dfb01f031caed4488ef) Thanks [@hntrl](https://github.com/hntrl)! - fix(openai): pass runManager to \_streamResponseChunks in responses API
+
 ## 1.2.0
 
 ### Minor Changes

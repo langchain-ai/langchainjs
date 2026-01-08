@@ -65,7 +65,8 @@ export type ChatResponsesInvocationParams = Omit<
  * @internal
  */
 export class ChatOpenAIResponses<
-  CallOptions extends ChatOpenAIResponsesCallOptions = ChatOpenAIResponsesCallOptions
+  CallOptions extends
+    ChatOpenAIResponsesCallOptions = ChatOpenAIResponsesCallOptions,
 > extends BaseChatOpenAI<CallOptions> {
   override invocationParams(
     options?: this["ParsedCallOptions"]
@@ -157,11 +158,12 @@ export class ChatOpenAIResponses<
 
   async _generate(
     messages: BaseMessage[],
-    options: this["ParsedCallOptions"]
+    options: this["ParsedCallOptions"],
+    runManager?: CallbackManagerForLLMRun
   ): Promise<ChatResult> {
     const invocationParams = this.invocationParams(options);
     if (invocationParams.stream) {
-      const stream = this._streamResponseChunks(messages, options);
+      const stream = this._streamResponseChunks(messages, options, runManager);
       let finalChunk: ChatGenerationChunk | undefined;
       for await (const chunk of stream) {
         chunk.message.response_metadata = {

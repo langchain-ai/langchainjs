@@ -142,7 +142,10 @@ export class Milvus extends VectorStore {
 
   indexSearchParams: keyValueObj;
 
-  constructor(public embeddings: EmbeddingsInterface, args: MilvusLibArgs) {
+  constructor(
+    public embeddings: EmbeddingsInterface,
+    args: MilvusLibArgs
+  ) {
     super(embeddings, args);
     this.collectionName = args.collectionName ?? genCollectionName();
     this.partitionName = args.partitionName;

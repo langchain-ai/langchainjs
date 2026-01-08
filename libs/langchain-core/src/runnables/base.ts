@@ -72,7 +72,7 @@ export { type RunnableInterface, RunnableBatchOptions };
 export type RunnableFunc<
   RunInput,
   RunOutput,
-  CallOptions extends RunnableConfig = RunnableConfig
+  CallOptions extends RunnableConfig = RunnableConfig,
 > = (
   input: RunInput,
   options:
@@ -92,7 +92,7 @@ export type RunnableLike<
   RunInput = any,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   RunOutput = any,
-  CallOptions extends RunnableConfig = RunnableConfig
+  CallOptions extends RunnableConfig = RunnableConfig,
 > =
   | RunnableInterface<RunInput, RunOutput, CallOptions>
   | RunnableFunc<RunInput, RunOutput, CallOptions>
@@ -126,7 +126,7 @@ export abstract class Runnable<
     RunInput = any,
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     RunOutput = any,
-    CallOptions extends RunnableConfig = RunnableConfig
+    CallOptions extends RunnableConfig = RunnableConfig,
   >
   extends Serializable
   implements RunnableInterface<RunInput, RunOutput, CallOptions>
@@ -468,7 +468,7 @@ export abstract class Runnable<
    */
   protected async *_transformStreamWithConfig<
     I extends RunInput,
-    O extends RunOutput
+    O extends RunOutput,
   >(
     inputGenerator: AsyncGenerator<I>,
     transformer: (
@@ -1205,7 +1205,7 @@ export abstract class Runnable<
 export type RunnableBindingArgs<
   RunInput,
   RunOutput,
-  CallOptions extends RunnableConfig = RunnableConfig
+  CallOptions extends RunnableConfig = RunnableConfig,
 > = {
   bound: Runnable<RunInput, RunOutput, CallOptions>;
   /** @deprecated Use {@link config} instead. */
@@ -1260,7 +1260,7 @@ export type RunnableBindingArgs<
 export class RunnableBinding<
   RunInput,
   RunOutput,
-  CallOptions extends RunnableConfig = RunnableConfig
+  CallOptions extends RunnableConfig = RunnableConfig,
 > extends Runnable<RunInput, RunOutput, CallOptions> {
   static lc_name() {
     return "RunnableBinding";
@@ -1527,7 +1527,7 @@ export class RunnableBinding<
 export class RunnableEach<
   RunInputItem,
   RunOutputItem,
-  CallOptions extends RunnableConfig
+  CallOptions extends RunnableConfig,
 > extends Runnable<RunInputItem[], RunOutputItem[], CallOptions> {
   static lc_name() {
     return "RunnableEach";
@@ -1651,7 +1651,7 @@ export class RunnableRetry<
   RunInput = any,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   RunOutput = any,
-  CallOptions extends RunnableConfig = RunnableConfig
+  CallOptions extends RunnableConfig = RunnableConfig,
 > extends RunnableBinding<RunInput, RunOutput, CallOptions> {
   static lc_name() {
     return "RunnableRetry";
@@ -1845,7 +1845,7 @@ export class RunnableSequence<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   RunInput = any,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  RunOutput = any
+  RunOutput = any,
 > extends Runnable<RunInput, RunOutput> {
   static lc_name() {
     return "RunnableSequence";
@@ -2137,7 +2137,7 @@ export class RunnableSequence<
       RunnableLike<RunInput>,
       ...RunnableLike[],
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      RunnableLike<any, RunOutput>
+      RunnableLike<any, RunOutput>,
     ],
     nameOrFields?:
       | string
@@ -2181,7 +2181,7 @@ export class RunnableMap<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   RunInput = any,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  RunOutput extends Record<string, any> = Record<string, any>
+  RunOutput extends Record<string, any> = Record<string, any>,
 > extends Runnable<RunInput, RunOutput> {
   static lc_name() {
     return "RunnableMap";
@@ -2208,7 +2208,7 @@ export class RunnableMap<
   static from<
     RunInput,
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    RunOutput extends Record<string, any> = Record<string, any>
+    RunOutput extends Record<string, any> = Record<string, any>,
   >(
     steps: RunnableMapLike<RunInput, RunOutput>
   ): RunnableMap<RunInput, RunOutput> {
@@ -2399,7 +2399,7 @@ export class RunnableTraceable<RunInput, RunOutput> extends Runnable<
 function assertNonTraceableFunction<
   RunInput,
   RunOutput,
-  CallOptions extends RunnableConfig = RunnableConfig
+  CallOptions extends RunnableConfig = RunnableConfig,
 >(
   func:
     | RunnableFunc<
@@ -2455,7 +2455,7 @@ function assertNonTraceableFunction<
 export class RunnableLambda<
   RunInput,
   RunOutput,
-  CallOptions extends RunnableConfig = RunnableConfig
+  CallOptions extends RunnableConfig = RunnableConfig,
 > extends Runnable<RunInput, RunOutput, CallOptions> {
   static lc_name() {
     return "RunnableLambda";
@@ -2502,7 +2502,7 @@ export class RunnableLambda<
   static from<
     RunInput,
     RunOutput,
-    CallOptions extends RunnableConfig = RunnableConfig
+    CallOptions extends RunnableConfig = RunnableConfig,
   >(
     func: RunnableFunc<
       RunInput,
@@ -2514,7 +2514,7 @@ export class RunnableLambda<
   static from<
     RunInput,
     RunOutput,
-    CallOptions extends RunnableConfig = RunnableConfig
+    CallOptions extends RunnableConfig = RunnableConfig,
   >(
     func: TraceableFunction<
       RunnableFunc<
@@ -2528,7 +2528,7 @@ export class RunnableLambda<
   static from<
     RunInput,
     RunOutput,
-    CallOptions extends RunnableConfig = RunnableConfig
+    CallOptions extends RunnableConfig = RunnableConfig,
   >(
     func:
       | RunnableFunc<
@@ -3060,7 +3060,7 @@ export class RunnableWithFallbacks<RunInput, RunOutput> extends Runnable<
 export function _coerceToRunnable<
   RunInput,
   RunOutput,
-  CallOptions extends RunnableConfig = RunnableConfig
+  CallOptions extends RunnableConfig = RunnableConfig,
 >(
   coerceable: RunnableLike<RunInput, RunOutput, CallOptions>
 ): Runnable<RunInput, Exclude<RunOutput, Error>, CallOptions> {
@@ -3131,7 +3131,7 @@ export class RunnableAssign<
     RunInput extends Record<string, any> = Record<string, any>,
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     RunOutput extends Record<string, any> = Record<string, any>,
-    CallOptions extends RunnableConfig = RunnableConfig
+    CallOptions extends RunnableConfig = RunnableConfig,
   >
   extends Runnable<RunInput, RunOutput>
   implements RunnableAssignFields<RunInput>
@@ -3266,7 +3266,7 @@ export class RunnablePick<
     RunInput extends Record<string, any> = Record<string, any>,
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     RunOutput extends Record<string, any> | any = Record<string, any> | any,
-    CallOptions extends RunnableConfig = RunnableConfig
+    CallOptions extends RunnableConfig = RunnableConfig,
   >
   extends Runnable<RunInput, RunOutput>
   implements RunnablePickFields
@@ -3351,7 +3351,7 @@ export class RunnablePick<
 
 export interface RunnableToolLikeArgs<
   RunInput extends InteropZodType = InteropZodType,
-  RunOutput = unknown
+  RunOutput = unknown,
 > extends Omit<
     RunnableBindingArgs<InferInteropZodOutput<RunInput>, RunOutput>,
     "config"
@@ -3367,7 +3367,7 @@ export interface RunnableToolLikeArgs<
 
 export class RunnableToolLike<
   RunInput extends InteropZodType = InteropZodType,
-  RunOutput = unknown
+  RunOutput = unknown,
 > extends RunnableBinding<InferInteropZodOutput<RunInput>, RunOutput> {
   name: string;
 

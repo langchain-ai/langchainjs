@@ -92,7 +92,7 @@ export abstract class StructuredTool<
     SchemaT = ToolInputSchemaBase,
     SchemaOutputT = ToolInputSchemaOutputType<SchemaT>,
     SchemaInputT = ToolInputSchemaInputType<SchemaT>,
-    ToolOutputT = ToolOutputType
+    ToolOutputT = ToolOutputType,
   >
   extends BaseLangChain<
     StructuredToolCallInput<SchemaT, SchemaInputT>,
@@ -169,7 +169,7 @@ export abstract class StructuredTool<
    */
   async invoke<
     TInput extends StructuredToolCallInput<SchemaT, SchemaInputT>,
-    TConfig extends ToolRunnableConfig | undefined
+    TConfig extends ToolRunnableConfig | undefined,
   >(
     input: TInput,
     config?: TConfig
@@ -216,7 +216,7 @@ export abstract class StructuredTool<
    */
   async call<
     TArg extends StructuredToolCallInput<SchemaT, SchemaInputT>,
-    TConfig extends ToolRunnableConfig | undefined
+    TConfig extends ToolRunnableConfig | undefined,
   >(
     arg: TArg,
     configArg?: TConfig,
@@ -370,7 +370,7 @@ export abstract class Tool<ToolOutputT = ToolOutputType>
   // Match the base class signature including the generics and conditional return type
   call<
     TArg extends string | undefined | z.input<this["schema"]> | ToolCall,
-    TConfig extends ToolRunnableConfig | undefined
+    TConfig extends ToolRunnableConfig | undefined,
   >(
     arg: TArg,
     callbacks?: TConfig
@@ -389,7 +389,7 @@ export abstract class Tool<ToolOutputT = ToolOutputType>
  * A tool that can be created dynamically from a function, name, and description.
  */
 export class DynamicTool<
-  ToolOutputT = ToolOutputType
+  ToolOutputT = ToolOutputType,
 > extends Tool<ToolOutputT> {
   static lc_name() {
     return "DynamicTool";
@@ -414,7 +414,7 @@ export class DynamicTool<
    */
   async call<
     TArg extends string | undefined | z.input<this["schema"]> | ToolCall,
-    TConfig extends ToolRunnableConfig | undefined
+    TConfig extends ToolRunnableConfig | undefined,
   >(
     arg: TArg,
     configArg?: TConfig
@@ -446,18 +446,25 @@ export class DynamicTool<
  *
  * Schema can be passed as Zod or JSON schema. The tool will not validate
  * input if JSON schema is passed.
+ *
+ * @template SchemaT The input schema type for the tool (Zod schema or JSON schema). Defaults to `ToolInputSchemaBase`.
+ * @template SchemaOutputT The output type derived from the schema after parsing/validation. Defaults to `ToolInputSchemaOutputType<SchemaT>`.
+ * @template SchemaInputT The input type derived from the schema before parsing. Defaults to `ToolInputSchemaInputType<SchemaT>`.
+ * @template ToolOutputT The return type of the tool's function. Defaults to `ToolOutputType`.
+ * @template NameT The literal type of the tool name (for discriminated union support). Defaults to `string`.
  */
 export class DynamicStructuredTool<
   SchemaT = ToolInputSchemaBase,
   SchemaOutputT = ToolInputSchemaOutputType<SchemaT>,
   SchemaInputT = ToolInputSchemaInputType<SchemaT>,
-  ToolOutputT = ToolOutputType
+  ToolOutputT = ToolOutputType,
+  NameT extends string = string,
 > extends StructuredTool<SchemaT, SchemaOutputT, SchemaInputT, ToolOutputT> {
   static lc_name() {
     return "DynamicStructuredTool";
   }
 
-  name: string;
+  declare name: NameT;
 
   description: string;
 
@@ -466,7 +473,9 @@ export class DynamicStructuredTool<
   schema: SchemaT;
 
   constructor(
-    fields: DynamicStructuredToolInput<SchemaT, SchemaOutputT, ToolOutputT>
+    fields: DynamicStructuredToolInput<SchemaT, SchemaOutputT, ToolOutputT> & {
+      name: NameT;
+    }
   ) {
     super(fields);
     this.name = fields.name;
@@ -482,7 +491,7 @@ export class DynamicStructuredTool<
   // Match the base class signature
   async call<
     TArg extends StructuredToolCallInput<SchemaT, SchemaInputT>,
-    TConfig extends ToolRunnableConfig | undefined
+    TConfig extends ToolRunnableConfig | undefined,
   >(
     arg: TArg,
     configArg?: TConfig,
@@ -528,14 +537,17 @@ export abstract class BaseToolkit {
  * Schema can be provided as Zod or JSON schema.
  * Both schema types will be validated.
  * @template {ToolInputSchemaBase} RunInput The input schema for the tool.
+ * @template {string} NameT The literal name type for discriminated union support.
  */
-interface ToolWrapperParams<RunInput = ToolInputSchemaBase | undefined>
-  extends ToolParams {
+interface ToolWrapperParams<
+  RunInput = ToolInputSchemaBase | undefined,
+  NameT extends string = string,
+> extends ToolParams {
   /**
    * The name of the tool. If using with an LLM, this
    * will be passed as the tool name.
    */
-  name: string;
+  name: NameT;
   /**
    * The description of the tool.
    * @default `${fields.name} tool`
@@ -603,51 +615,79 @@ export function tool<SchemaT extends ZodStringV4, ToolOutputT = ToolOutputType>(
 
 export function tool<
   SchemaT extends ZodObjectV3,
+  NameT extends string,
   SchemaOutputT = InferInteropZodOutput<SchemaT>,
   SchemaInputT = InferInteropZodInput<SchemaT>,
-  ToolOutputT = ToolOutputType
+  ToolOutputT = ToolOutputType,
 >(
   func: RunnableFunc<SchemaOutputT, ToolOutputT, ToolRunnableConfig>,
-  fields: ToolWrapperParams<SchemaT>
-): DynamicStructuredTool<SchemaT, SchemaOutputT, SchemaInputT, ToolOutputT>;
+  fields: ToolWrapperParams<SchemaT, NameT>
+): DynamicStructuredTool<
+  SchemaT,
+  SchemaOutputT,
+  SchemaInputT,
+  ToolOutputT,
+  NameT
+>;
 
 export function tool<
   SchemaT extends ZodObjectV4,
+  NameT extends string,
   SchemaOutputT = InferInteropZodOutput<SchemaT>,
   SchemaInputT = InferInteropZodInput<SchemaT>,
-  ToolOutputT = ToolOutputType
+  ToolOutputT = ToolOutputType,
 >(
   func: RunnableFunc<SchemaOutputT, ToolOutputT, ToolRunnableConfig>,
-  fields: ToolWrapperParams<SchemaT>
-): DynamicStructuredTool<SchemaT, SchemaOutputT, SchemaInputT, ToolOutputT>;
+  fields: ToolWrapperParams<SchemaT, NameT>
+): DynamicStructuredTool<
+  SchemaT,
+  SchemaOutputT,
+  SchemaInputT,
+  ToolOutputT,
+  NameT
+>;
 
 export function tool<
   SchemaT extends JSONSchema,
+  NameT extends string,
   SchemaOutputT = ToolInputSchemaOutputType<SchemaT>,
   SchemaInputT = ToolInputSchemaInputType<SchemaT>,
-  ToolOutputT = ToolOutputType
+  ToolOutputT = ToolOutputType,
 >(
   func: RunnableFunc<
     Parameters<DynamicStructuredToolInput<SchemaT>["func"]>[0],
     ToolOutputT,
     ToolRunnableConfig
   >,
-  fields: ToolWrapperParams<SchemaT>
-): DynamicStructuredTool<SchemaT, SchemaOutputT, SchemaInputT, ToolOutputT>;
+  fields: ToolWrapperParams<SchemaT, NameT>
+): DynamicStructuredTool<
+  SchemaT,
+  SchemaOutputT,
+  SchemaInputT,
+  ToolOutputT,
+  NameT
+>;
 
 export function tool<
   SchemaT extends
     | InteropZodObject
     | InteropZodType<string>
     | JSONSchema = InteropZodObject,
+  NameT extends string = string,
   SchemaOutputT = ToolInputSchemaOutputType<SchemaT>,
   SchemaInputT = ToolInputSchemaInputType<SchemaT>,
-  ToolOutputT = ToolOutputType
+  ToolOutputT = ToolOutputType,
 >(
   func: RunnableFunc<SchemaOutputT, ToolOutputT, ToolRunnableConfig>,
-  fields: ToolWrapperParams<SchemaT>
+  fields: ToolWrapperParams<SchemaT, NameT>
 ):
-  | DynamicStructuredTool<SchemaT, SchemaOutputT, SchemaInputT, ToolOutputT>
+  | DynamicStructuredTool<
+      SchemaT,
+      SchemaOutputT,
+      SchemaInputT,
+      ToolOutputT,
+      NameT
+    >
   | DynamicTool<ToolOutputT>;
 
 // Overloads with ToolRuntime as CallOptions
@@ -655,7 +695,7 @@ export function tool<
   SchemaT extends ZodStringV3,
   ToolOutputT = ToolOutputType,
   TState = unknown,
-  TContext = unknown
+  TContext = unknown,
 >(
   func: (
     input: InferInteropZodOutput<SchemaT>,
@@ -668,7 +708,7 @@ export function tool<
   SchemaT extends ZodStringV4,
   ToolOutputT = ToolOutputType,
   TState = unknown,
-  TContext = unknown
+  TContext = unknown,
 >(
   func: (
     input: InferInteropZodOutput<SchemaT>,
@@ -679,67 +719,95 @@ export function tool<
 
 export function tool<
   SchemaT extends ZodObjectV3,
+  NameT extends string,
   SchemaOutputT = InferInteropZodOutput<SchemaT>,
   SchemaInputT = InferInteropZodInput<SchemaT>,
   ToolOutputT = ToolOutputType,
   TState = unknown,
-  TContext = unknown
+  TContext = unknown,
 >(
   func: (
     input: SchemaOutputT,
     runtime: ToolRuntime<TState, TContext>
   ) => ToolOutputT | Promise<ToolOutputT>,
-  fields: ToolWrapperParams<SchemaT>
-): DynamicStructuredTool<SchemaT, SchemaOutputT, SchemaInputT, ToolOutputT>;
+  fields: ToolWrapperParams<SchemaT, NameT>
+): DynamicStructuredTool<
+  SchemaT,
+  SchemaOutputT,
+  SchemaInputT,
+  ToolOutputT,
+  NameT
+>;
 
 export function tool<
   SchemaT extends ZodObjectV4,
+  NameT extends string,
   SchemaOutputT = InferInteropZodOutput<SchemaT>,
   SchemaInputT = InferInteropZodInput<SchemaT>,
   ToolOutputT = ToolOutputType,
   TState = unknown,
-  TContext = unknown
+  TContext = unknown,
 >(
   func: (
     input: SchemaOutputT,
     runtime: ToolRuntime<TState, TContext>
   ) => ToolOutputT | Promise<ToolOutputT>,
-  fields: ToolWrapperParams<SchemaT>
-): DynamicStructuredTool<SchemaT, SchemaOutputT, SchemaInputT, ToolOutputT>;
+  fields: ToolWrapperParams<SchemaT, NameT>
+): DynamicStructuredTool<
+  SchemaT,
+  SchemaOutputT,
+  SchemaInputT,
+  ToolOutputT,
+  NameT
+>;
 
 export function tool<
   SchemaT extends JSONSchema,
+  NameT extends string,
   SchemaOutputT = ToolInputSchemaOutputType<SchemaT>,
   SchemaInputT = ToolInputSchemaInputType<SchemaT>,
   ToolOutputT = ToolOutputType,
   TState = unknown,
-  TContext = unknown
+  TContext = unknown,
 >(
   func: (
     input: Parameters<DynamicStructuredToolInput<SchemaT>["func"]>[0],
     runtime: ToolRuntime<TState, TContext>
   ) => ToolOutputT | Promise<ToolOutputT>,
-  fields: ToolWrapperParams<SchemaT>
-): DynamicStructuredTool<SchemaT, SchemaOutputT, SchemaInputT, ToolOutputT>;
+  fields: ToolWrapperParams<SchemaT, NameT>
+): DynamicStructuredTool<
+  SchemaT,
+  SchemaOutputT,
+  SchemaInputT,
+  ToolOutputT,
+  NameT
+>;
 
 export function tool<
   SchemaT extends
     | InteropZodObject
     | InteropZodType<string>
     | JSONSchema = InteropZodObject,
+  NameT extends string = string,
   SchemaOutputT = ToolInputSchemaOutputType<SchemaT>,
   SchemaInputT = ToolInputSchemaInputType<SchemaT>,
   ToolOutputT = ToolOutputType,
   TState = unknown,
-  TContext = unknown
+  TContext = unknown,
 >(
   func: (
     input: SchemaOutputT,
     runtime: ToolRuntime<TState, TContext>
   ) => ToolOutputT | Promise<ToolOutputT>,
-  fields: ToolWrapperParams<SchemaT>
+  fields: ToolWrapperParams<SchemaT, NameT>
 ):
-  | DynamicStructuredTool<SchemaT, SchemaOutputT, SchemaInputT, ToolOutputT>
+  | DynamicStructuredTool<
+      SchemaT,
+      SchemaOutputT,
+      SchemaInputT,
+      ToolOutputT,
+      NameT
+    >
   | DynamicTool<ToolOutputT> {
   const isSimpleStringSchema = isSimpleStringZodSchema(fields.schema);
   const isStringJSONSchema = validatesOnlyStrings(fields.schema);
@@ -785,7 +853,8 @@ export function tool<
     typeof schema,
     SchemaOutputT,
     SchemaInputT,
-    ToolOutputT
+    ToolOutputT,
+    NameT
   >({
     ...fields,
     description,
@@ -841,7 +910,8 @@ export function tool<
     SchemaT,
     SchemaOutputT,
     SchemaInputT,
-    ToolOutputT
+    ToolOutputT,
+    NameT
   >;
 }
 

@@ -877,8 +877,8 @@ export const convertStandardContentMessageToResponsesInput: Converter<
         block.status === "success"
           ? "completed"
           : block.status === "error"
-          ? "incomplete"
-          : undefined;
+            ? "incomplete"
+            : undefined;
       return {
         type: "function_call_output",
         call_id: block.toolCallId ?? "",
@@ -1041,13 +1041,13 @@ export const convertMessagesToResponsesInput: Converter<
         return convertStandardContentMessageToResponsesInput(lcMsg);
       }
 
-      const additional_kwargs = lcMsg.additional_kwargs as
-        | BaseMessageFields["additional_kwargs"] & {
-            [_FUNCTION_CALL_IDS_MAP_KEY]?: Record<string, string>;
-            reasoning?: OpenAIClient.Responses.ResponseReasoningItem;
-            type?: string;
-            refusal?: string;
-          };
+      const additional_kwargs =
+        lcMsg.additional_kwargs as BaseMessageFields["additional_kwargs"] & {
+          [_FUNCTION_CALL_IDS_MAP_KEY]?: Record<string, string>;
+          reasoning?: OpenAIClient.Responses.ResponseReasoningItem;
+          type?: string;
+          refusal?: string;
+        };
 
       let role = messageToOpenAIRole(lcMsg);
       if (role === "system" && isReasoningModel(model)) role = "developer";
@@ -1131,12 +1131,27 @@ export const convertMessagesToResponsesInput: Converter<
           };
         }
 
+        // Check if content contains provider-native OpenAI content blocks
+        // that should be passed through without stringification
+        const isProviderNativeContent =
+          Array.isArray(toolMessage.content) &&
+          toolMessage.content.every(
+            (item) =>
+              typeof item === "object" &&
+              item !== null &&
+              "type" in item &&
+              (item.type === "input_file" ||
+                item.type === "input_image" ||
+                item.type === "input_text")
+          );
+
         return {
           type: "function_call_output",
           call_id: toolMessage.tool_call_id,
           id: toolMessage.id?.startsWith("fc_") ? toolMessage.id : undefined,
-          output:
-            typeof toolMessage.content !== "string"
+          output: isProviderNativeContent
+            ? (toolMessage.content as OpenAIClient.Responses.ResponseFunctionCallOutputItemList)
+            : typeof toolMessage.content !== "string"
               ? JSON.stringify(toolMessage.content)
               : toolMessage.content,
         };

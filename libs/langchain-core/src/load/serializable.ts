@@ -1,4 +1,5 @@
 import { type SerializedFields, keyToJson, mapKeys } from "./map_keys.js";
+import { escapeIfNeeded } from "./validation.js";
 
 export interface BaseSerialized<T extends string> {
   lc: number;
@@ -73,6 +74,21 @@ export function get_lc_unique_name(
   } else {
     return serializableClass.name;
   }
+}
+
+/**
+ * Interface for objects that can be serialized.
+ * This is a duck-typed interface to avoid circular imports.
+ */
+export interface SerializableLike {
+  lc_serializable: boolean;
+  lc_secrets?: Record<string, string>;
+  toJSON(): {
+    lc: number;
+    type: string;
+    id: string[];
+    kwargs?: Record<string, unknown>;
+  };
 }
 
 export interface SerializableInterface {
@@ -220,15 +236,28 @@ export abstract class Serializable implements SerializableInterface {
       }
     });
 
+    const escapedKwargs: SerializedFields = {};
+    // Track current path to detect circular references (but not shared references)
+    // The Serializable object itself stays in the path to detect self-references in kwargs
+    const pathSet = new WeakSet<object>();
+    pathSet.add(this);
+    for (const [key, value] of Object.entries(kwargs)) {
+      escapedKwargs[key] = escapeIfNeeded(value, pathSet);
+    }
+
+    // Now add secret markers - these are added AFTER escaping so they won't be escaped
+    const kwargsWithSecrets = Object.keys(secrets).length
+      ? replaceSecrets(escapedKwargs, secrets)
+      : escapedKwargs;
+
+    // Finally transform keys to JSON format
+    const processedKwargs = mapKeys(kwargsWithSecrets, keyToJson, aliases);
+
     return {
       lc: 1,
       type: "constructor",
       id: this.lc_id,
-      kwargs: mapKeys(
-        Object.keys(secrets).length ? replaceSecrets(kwargs, secrets) : kwargs,
-        keyToJson,
-        aliases
-      ),
+      kwargs: processedKwargs,
     };
   }
 

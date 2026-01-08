@@ -89,7 +89,9 @@ export interface AgentNodeOptions<
     unknown
   >,
   StateSchema extends AnyAnnotationRoot | InteropZodObject = AnyAnnotationRoot,
-  ContextSchema extends AnyAnnotationRoot | InteropZodObject = AnyAnnotationRoot
+  ContextSchema extends
+    | AnyAnnotationRoot
+    | InteropZodObject = AnyAnnotationRoot,
 > extends Pick<
     CreateAgentParams<StructuredResponseFormat, StateSchema, ContextSchema>,
     "model" | "includeAgentName" | "name" | "responseFormat" | "middleware"
@@ -100,7 +102,7 @@ export interface AgentNodeOptions<
   systemMessage: SystemMessage;
   wrapModelCallHookMiddleware?: [
     AgentMiddleware,
-    () => Record<string, unknown>
+    () => Record<string, unknown>,
   ][];
 }
 
@@ -121,7 +123,9 @@ export class AgentNode<
     string,
     unknown
   >,
-  ContextSchema extends AnyAnnotationRoot | InteropZodObject = AnyAnnotationRoot
+  ContextSchema extends
+    | AnyAnnotationRoot
+    | InteropZodObject = AnyAnnotationRoot,
 > extends RunnableCallable<
   InternalAgentState<StructuredResponseFormat>,
   | (
@@ -188,10 +192,13 @@ export class AgentNode<
           strategies.filter(
             (format) => format instanceof ToolStrategy
           ) as ToolStrategy[]
-        ).reduce((acc, format) => {
-          acc[format.name] = format;
-          return acc;
-        }, {} as Record<string, ToolStrategy>),
+        ).reduce(
+          (acc, format) => {
+            acc[format.name] = format;
+            return acc;
+          },
+          {} as Record<string, ToolStrategy>
+        ),
       };
     }
 

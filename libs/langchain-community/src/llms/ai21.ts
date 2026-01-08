@@ -160,7 +160,7 @@ export class AI21 extends LLM implements AI21Input {
     stop = this.stop ?? stop ?? [];
 
     const baseUrl =
-      this.baseUrl ?? this.model === "j1-grande-instruct"
+      (this.baseUrl ?? this.model === "j1-grande-instruct")
         ? "https://api.ai21.com/studio/v1/experimental"
         : "https://api.ai21.com/studio/v1";
 

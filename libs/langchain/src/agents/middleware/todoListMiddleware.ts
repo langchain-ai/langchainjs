@@ -1,7 +1,7 @@
 import { z } from "zod/v3";
 import { Command } from "@langchain/langgraph";
 import { tool } from "@langchain/core/tools";
-import { ToolMessage } from "@langchain/core/messages";
+import { AIMessage, ToolMessage } from "@langchain/core/messages";
 
 import { createMiddleware } from "../index.js";
 
@@ -271,7 +271,9 @@ export interface TodoListMiddlewareOptions {
  * into task completion status.
  *
  * The middleware automatically injects system prompts that guide the agent on when
- * and how to use the todo functionality effectively.
+ * and how to use the todo functionality effectively. It also enforces that the
+ * `write_todos` tool is called at most once per model turn, since the tool replaces
+ * the entire todo list and parallel calls would create ambiguity about precedence.
  *
  * @example
  * ```typescript
@@ -333,5 +335,66 @@ export function todoListMiddleware(options?: TodoListMiddlewareOptions) {
           `\n\n${options?.systemPrompt ?? TODO_LIST_MIDDLEWARE_SYSTEM_PROMPT}`
         ),
       }),
+    afterModel: (state) => {
+      /**
+       * Check for parallel write_todos tool calls and return errors if detected.
+       *
+       * The todo list is designed to be updated at most once per model turn. Since
+       * the `write_todos` tool replaces the entire todo list with each call, making
+       * multiple parallel calls would create ambiguity about which update should take
+       * precedence. This method prevents such conflicts by rejecting any response that
+       * contains multiple write_todos tool calls.
+       */
+      const messages = state.messages;
+      if (!messages || messages.length === 0) {
+        return undefined;
+      }
+
+      /**
+       * Find the last AI message
+       */
+      const lastAiMsg = [...messages]
+        .reverse()
+        .find((msg) => AIMessage.isInstance(msg));
+      if (
+        !lastAiMsg ||
+        !lastAiMsg.tool_calls ||
+        lastAiMsg.tool_calls.length === 0
+      ) {
+        return undefined;
+      }
+
+      /**
+       * Count write_todos tool calls
+       */
+      const writeTodosCalls = lastAiMsg.tool_calls.filter(
+        (tc) => tc.name === writeTodos.name
+      );
+
+      if (writeTodosCalls.length > 1) {
+        /**
+         * Create error tool messages for all write_todos calls
+         */
+        const errorMessages = writeTodosCalls.map(
+          (tc) =>
+            new ToolMessage({
+              content:
+                "Error: The `write_todos` tool should never be called multiple times " +
+                "in parallel. Please call it only once per model invocation to update " +
+                "the todo list.",
+              tool_call_id: tc.id as string,
+              status: "error",
+            })
+        );
+
+        /**
+         * Keep the tool calls in the AI message but return error messages
+         * This follows the same pattern as HumanInTheLoopMiddleware
+         */
+        return { messages: errorMessages };
+      }
+
+      return undefined;
+    },
   });
 }

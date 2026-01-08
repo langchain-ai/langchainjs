@@ -166,7 +166,7 @@ function defaultHandleToolErrors(
  */
 export class ToolNode<
   StateSchema extends InteropZodObject = any,
-  ContextSchema extends InteropZodObject = any
+  ContextSchema extends InteropZodObject = any,
 > extends RunnableCallable<StateSchema, ContextSchema> {
   tools: (StructuredToolInterface | DynamicTool | RunnableToolLike)[];
 

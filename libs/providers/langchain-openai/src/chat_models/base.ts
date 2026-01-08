@@ -219,7 +219,7 @@ export interface BaseChatOpenAIFields
 
 /** @internal */
 export abstract class BaseChatOpenAI<
-    CallOptions extends BaseChatOpenAICallOptions
+    CallOptions extends BaseChatOpenAICallOptions,
   >
   extends BaseChatModel<CallOptions, AIMessageChunk>
   implements Partial<OpenAIChatInput>
@@ -925,7 +925,7 @@ export abstract class BaseChatOpenAI<
 
   withStructuredOutput<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    RunOutput extends Record<string, any> = Record<string, any>
+    RunOutput extends Record<string, any> = Record<string, any>,
   >(
     outputSchema:
       | InteropZodType<RunOutput>
@@ -936,7 +936,7 @@ export abstract class BaseChatOpenAI<
 
   withStructuredOutput<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    RunOutput extends Record<string, any> = Record<string, any>
+    RunOutput extends Record<string, any> = Record<string, any>,
   >(
     outputSchema:
       | InteropZodType<RunOutput>
@@ -947,7 +947,7 @@ export abstract class BaseChatOpenAI<
 
   withStructuredOutput<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    RunOutput extends Record<string, any> = Record<string, any>
+    RunOutput extends Record<string, any> = Record<string, any>,
   >(
     outputSchema:
       | InteropZodType<RunOutput>
@@ -978,7 +978,7 @@ export abstract class BaseChatOpenAI<
    * @returns The model with structured output.
    */
   withStructuredOutput<
-    RunOutput extends Record<string, unknown> = Record<string, unknown>
+    RunOutput extends Record<string, unknown> = Record<string, unknown>,
   >(
     outputSchema: InteropZodType<RunOutput> | Record<string, unknown>,
     config?: StructuredOutputMethodOptions<boolean>

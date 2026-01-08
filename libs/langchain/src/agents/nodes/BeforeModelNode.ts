@@ -10,7 +10,7 @@ import { getHookFunction } from "../middleware/utils.js";
  */
 export class BeforeModelNode<
   TStateSchema extends Record<string, unknown> = Record<string, unknown>,
-  TContextSchema extends Record<string, unknown> = Record<string, unknown>
+  TContextSchema extends Record<string, unknown> = Record<string, unknown>,
 > extends MiddlewareNode<TStateSchema, TContextSchema> {
   lc_namespace = ["langchain", "agents", "beforeModelNodes"];
 
