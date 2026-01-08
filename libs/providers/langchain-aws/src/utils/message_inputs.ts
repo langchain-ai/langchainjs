@@ -362,7 +362,7 @@ function convertSystemMessageToConverseMessage(
 }
 
 function convertAIMessageToConverseMessage(msg: AIMessage): Bedrock.Message {
-  if (msg.response_metadata.response_format === "v1") {
+  if (msg.response_metadata?.output_version === "v1") {
     return {
       role: "assistant",
       content: convertFromV1ToChatBedrockConverseMessage(msg),
