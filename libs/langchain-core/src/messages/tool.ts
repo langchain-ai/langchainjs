@@ -69,7 +69,6 @@ export class ToolMessage<TStructure extends MessageStructure = MessageStructure>
 
   /**
    * Status of the tool invocation.
-   * @version 0.2.19
    */
   status?: "success" | "error";
 
@@ -160,7 +159,6 @@ export class ToolMessageChunk<
 
   /**
    * Status of the tool invocation.
-   * @version 0.2.19
    */
   status?: "success" | "error";
 

@@ -64,14 +64,15 @@ import { ReactAgent } from "./ReactAgent.js";
  * - **Memory**: Extend the state schema to remember information across interactions
  * - **Streaming**: Get real-time updates as the agent processes
  *
- * @param options - Configuration options for the agent
- * @param options.llm - The language model as an instance of a chat model
- * @param options.model - The language model as a string identifier, see more in {@link https://docs.langchain.com/oss/javascript/langchain/models#basic-usage | Models}.
- * @param options.tools - Array of tools or configured ToolNode
- * @param options.prompt - System instructions (string, SystemMessage, or function)
- * @param options.responseFormat - Zod schema for structured output
- * @param options.stateSchema - Custom state schema for memory
- * @param options.middleware - Array of middleware for extending agent behavior, see more in {@link https://docs.langchain.com/oss/javascript/langchain/middleware | Middleware}.
+ * @param params - Configuration options for the agent.
+ *
+ * Common fields:
+ * - `model`: Model identifier or model instance (see {@link https://docs.langchain.com/oss/javascript/langchain/models#basic-usage | Models})
+ * - `tools`: Array of tools or configured `ToolNode`
+ * - `prompt`: System instructions (string, `SystemMessage`, or function)
+ * - `responseFormat`: Zod schema for structured output
+ * - `stateSchema`: Custom state schema for memory
+ * - `middleware`: Agent middleware (see {@link https://docs.langchain.com/oss/javascript/langchain/middleware | Middleware})
  *
  * @returns A ReactAgent instance with `invoke` and `stream` methods
  *

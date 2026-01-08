@@ -102,7 +102,8 @@ export class GradientEmbeddings
 
   /**
    * Method to set the model to use for generating embeddings.
-   * @sets the class' `model` value to that of the retrieved Embeddings Model.
+   *
+   * Sets the class' `model` value to that of the retrieved embeddings model.
    */
   async setModel() {
     if (this.model) return;

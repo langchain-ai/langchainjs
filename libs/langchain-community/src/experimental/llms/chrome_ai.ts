@@ -104,7 +104,7 @@ export interface ChromeAICallOptions extends BaseLanguageModelCallOptions {}
 /**
  * To use this model you need to have the `Built-in AI Early Preview Program`
  * for Chrome. You can find more information about the program here:
- * @link https://developer.chrome.com/docs/ai/built-in
+ * @see https://developer.chrome.com/docs/ai/built-in
  *
  * @example
  * ```typescript

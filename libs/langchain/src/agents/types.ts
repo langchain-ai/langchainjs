@@ -510,7 +510,7 @@ export type CreateAgentParams<
    * or a string. If a string is provided the agent initializes a ChatModel based on the provided model name and provider.
    * It supports various model providers and allows for runtime configuration of model parameters.
    *
-   * @uses {@link initChatModel}
+   * @see {@link initChatModel}
    * @example
    * ```ts
    * const agent = createAgent({

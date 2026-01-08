@@ -20,7 +20,7 @@ export interface CodeExecution20250825Options {
  * - **Bash commands**: Execute shell commands for system operations
  * - **File operations**: Create, view, and edit files directly
  *
- * @note This tool requires the beta header `code-execution-2025-08-25` in API requests.
+ * **Note**: This tool requires the beta header `code-execution-2025-08-25` in API requests.
  *
  * @see {@link https://docs.anthropic.com/en/docs/agents-and-tools/tool-use/code-execution-tool | Anthropic Code Execution Documentation}
  * @param options - Configuration options for the code execution tool

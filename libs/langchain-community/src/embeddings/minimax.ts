@@ -59,15 +59,12 @@ export interface MinimaxEmbeddingsParams extends EmbeddingsParams {
 
 export interface CreateMinimaxEmbeddingRequest {
   /**
-   * @type {string}
-   * @memberof CreateMinimaxEmbeddingRequest
+   * Model name to use.
    */
   model: string;
 
   /**
    *  Text to generate vector expectation
-   * @type {CreateEmbeddingRequestInput}
-   * @memberof CreateMinimaxEmbeddingRequest
    */
   texts: string[];
 
@@ -78,8 +75,6 @@ export interface CreateMinimaxEmbeddingRequest {
    *  Note: For the parameter of the algorithm, we use the algorithm scheme of query and db separation,
    *  so a text, if it is to be retrieved as a text, should use the db,
    *  if it is used as a retrieval text, should use the query.
-   * @type {string}
-   * @memberof CreateMinimaxEmbeddingRequest
    */
   type: "db" | "query";
 }
