@@ -1246,4 +1246,257 @@ describe("RedisVectorStore", () => {
       await client.quit();
     }
   });
+
+  test("backward compatibility - old API surface is preserved", async () => {
+    const client = createClient({ url: process.env.REDIS_URL });
+    await client.connect();
+
+    const indexName = "test-backward-compat-index";
+    const keyPrefix = "test-backward-compat:";
+
+    try {
+      // Test 1: Verify RedisVectorStoreConfig interface still accepts all old properties
+      const config = {
+        redisClient: client as RedisClientType,
+        indexName,
+        keyPrefix,
+        contentKey: "content",
+        metadataKey: "metadata",
+        vectorKey: "content_vector",
+        filter: ["test"],
+        ttl: 3600,
+      };
+
+      const vectorStore = new RedisVectorStore(new SyntheticEmbeddings(), config);
+
+      // Verify all properties are accessible
+      expect(vectorStore.indexName).toBe(indexName);
+      expect(vectorStore.keyPrefix).toBe(keyPrefix);
+      expect(vectorStore.contentKey).toBe("content");
+      expect(vectorStore.metadataKey).toBe("metadata");
+      expect(vectorStore.vectorKey).toBe("content_vector");
+      expect(vectorStore.filter).toEqual(["test"]);
+      expect(vectorStore.ttl).toBe(3600);
+
+      // Test 2: Verify old filter types still work (string array)
+      const pageContent = faker.lorem.sentence(5);
+      const vectorStoreWithArrayFilter = new RedisVectorStore(
+        new SyntheticEmbeddings(),
+        {
+          redisClient: client as RedisClientType,
+          indexName: `${indexName}-array-filter`,
+          keyPrefix: `${keyPrefix}array:`,
+          filter: ["test-value"],
+        }
+      );
+
+      await vectorStoreWithArrayFilter.addDocuments([
+        { pageContent, metadata: { foo: "test-value" } },
+        { pageContent, metadata: { foo: "other-value" } },
+      ]);
+
+      const arrayFilterResults = await vectorStoreWithArrayFilter.similaritySearch(
+        pageContent,
+        2
+      );
+      expect(arrayFilterResults.length).toBeGreaterThan(0);
+
+      // Test 3: Verify old filter types still work (string)
+      const vectorStoreWithStringFilter = new RedisVectorStore(
+        new SyntheticEmbeddings(),
+        {
+          redisClient: client as RedisClientType,
+          indexName: `${indexName}-string-filter`,
+          keyPrefix: `${keyPrefix}string:`,
+          filter: "test-value",
+        }
+      );
+
+      await vectorStoreWithStringFilter.addDocuments([
+        { pageContent, metadata: { foo: "test-value" } },
+        { pageContent, metadata: { foo: "other-value" } },
+      ]);
+
+      const stringFilterResults = await vectorStoreWithStringFilter.similaritySearch(
+        pageContent,
+        2
+      );
+      expect(stringFilterResults.length).toBeGreaterThan(0);
+
+      // Test 4: Verify fromTexts static method still works
+      const texts = [faker.lorem.sentence(5), faker.lorem.sentence(5)];
+      const metadatas = [{ id: "1" }, { id: "2" }];
+
+      const fromTextsStore = await RedisVectorStore.fromTexts(
+        texts,
+        metadatas,
+        new SyntheticEmbeddings(),
+        {
+          redisClient: client as RedisClientType,
+          indexName: `${indexName}-from-texts`,
+          keyPrefix: `${keyPrefix}from-texts:`,
+        }
+      );
+
+      const fromTextsResults = await fromTextsStore.similaritySearch(texts[0], 2);
+      expect(fromTextsResults.length).toBeGreaterThan(0);
+
+      // Test 5: Verify fromDocuments static method still works
+      const docs = [
+        new Document({ pageContent: faker.lorem.sentence(5), metadata: { id: "1" } }),
+        new Document({ pageContent: faker.lorem.sentence(5), metadata: { id: "2" } }),
+      ];
+
+      const fromDocsStore = await RedisVectorStore.fromDocuments(
+        docs,
+        new SyntheticEmbeddings(),
+        {
+          redisClient: client as RedisClientType,
+          indexName: `${indexName}-from-docs`,
+          keyPrefix: `${keyPrefix}from-docs:`,
+        }
+      );
+
+      const fromDocsResults = await fromDocsStore.similaritySearch(docs[0].pageContent, 2);
+      expect(fromDocsResults.length).toBeGreaterThan(0);
+
+      // Test 6: Verify addDocuments method signature is unchanged
+      const addDocsStore = new RedisVectorStore(new SyntheticEmbeddings(), {
+        redisClient: client as RedisClientType,
+        indexName: `${indexName}-add-docs`,
+        keyPrefix: `${keyPrefix}add-docs:`,
+      });
+
+      const docsToAdd = [
+        new Document({ pageContent: faker.lorem.sentence(5), metadata: { id: "1" } }),
+      ];
+
+      // Should accept documents and optional RedisAddOptions
+      await addDocsStore.addDocuments(docsToAdd, { batchSize: 100 });
+      const addDocsResults = await addDocsStore.similaritySearch(docsToAdd[0].pageContent, 1);
+      expect(addDocsResults.length).toBe(1);
+
+      // Test 7: Verify addVectors method signature is unchanged
+      const addVectorsStore = new RedisVectorStore(new SyntheticEmbeddings(), {
+        redisClient: client as RedisClientType,
+        indexName: `${indexName}-add-vectors`,
+        keyPrefix: `${keyPrefix}add-vectors:`,
+      });
+
+      const vectors = [[0.1, 0.2, 0.3]];
+      const vectorDocs = [new Document({ pageContent: "test", metadata: {} })];
+
+      await addVectorsStore.addVectors(vectorDocs, vectors, { batchSize: 100 });
+      const addVectorsResults = await addVectorsStore.similaritySearch("test", 1);
+      expect(addVectorsResults.length).toBe(1);
+
+      // Test 8: Verify delete method still works with both signatures
+      const deleteStore = new RedisVectorStore(new SyntheticEmbeddings(), {
+        redisClient: client as RedisClientType,
+        indexName: `${indexName}-delete`,
+        keyPrefix: `${keyPrefix}delete:`,
+      });
+
+      await deleteStore.addDocuments([
+        new Document({ pageContent: "test1", metadata: {} }),
+        new Document({ pageContent: "test2", metadata: {} }),
+      ]);
+
+      // Delete by IDs
+      await deleteStore.delete({ ids: ["test-id"] });
+
+      // Delete all
+      await deleteStore.delete({ deleteAll: true });
+
+      // Test 9: Verify dropIndex method still works
+      const dropIndexStore = new RedisVectorStore(new SyntheticEmbeddings(), {
+        redisClient: client as RedisClientType,
+        indexName: `${indexName}-drop`,
+        keyPrefix: `${keyPrefix}drop:`,
+      });
+
+      await dropIndexStore.addDocuments([
+        new Document({ pageContent: "test", metadata: {} }),
+      ]);
+
+      const dropResult = await dropIndexStore.dropIndex(true);
+      expect(typeof dropResult).toBe("boolean");
+
+      // Test 10: Verify similaritySearchVectorWithScore method still works
+      const scoreStore = new RedisVectorStore(new SyntheticEmbeddings(), {
+        redisClient: client as RedisClientType,
+        indexName: `${indexName}-score`,
+        keyPrefix: `${keyPrefix}score:`,
+      });
+
+      const testDoc = new Document({ pageContent: "test content", metadata: {} });
+      await scoreStore.addDocuments([testDoc]);
+
+      const embeddings = new SyntheticEmbeddings();
+      const queryVector = await embeddings.embedQuery("test content");
+      const scoreResults = await scoreStore.similaritySearchVectorWithScore(queryVector, 1);
+
+      expect(scoreResults.length).toBe(1);
+      expect(scoreResults[0]).toHaveLength(2); // [Document, score]
+      expect(scoreResults[0][0]).toBeInstanceOf(Document);
+      expect(typeof scoreResults[0][1]).toBe("number");
+
+      // Test 11: Verify deprecated similaritySearchVectorWithScoreAndMetadata method still works
+      const deprecatedStore = new RedisVectorStore(new SyntheticEmbeddings(), {
+        redisClient: client as RedisClientType,
+        indexName: `${indexName}-deprecated`,
+        keyPrefix: `${keyPrefix}deprecated:`,
+      });
+
+      const deprecatedDoc = new Document({
+        pageContent: "deprecated test",
+        metadata: { category: "test" },
+      });
+      await deprecatedStore.addDocuments([deprecatedDoc]);
+
+      const deprecatedQueryVector = await embeddings.embedQuery("deprecated test");
+      // Call the deprecated method - it should still work
+      const deprecatedResults = await deprecatedStore.similaritySearchVectorWithScoreAndMetadata(
+        deprecatedQueryVector,
+        1
+      );
+
+      expect(deprecatedResults.length).toBe(1);
+      expect(deprecatedResults[0]).toHaveLength(2); // [Document, score]
+      expect(deprecatedResults[0][0]).toBeInstanceOf(Document);
+      expect(typeof deprecatedResults[0][1]).toBe("number");
+      // Verify metadata is preserved
+      expect(deprecatedResults[0][0].metadata.category).toBe("test");
+    } finally {
+      // Clean up all test indices
+      const indices = [
+        indexName,
+        `${indexName}-array-filter`,
+        `${indexName}-string-filter`,
+        `${indexName}-from-texts`,
+        `${indexName}-from-docs`,
+        `${indexName}-add-docs`,
+        `${indexName}-add-vectors`,
+        `${indexName}-delete`,
+        `${indexName}-drop`,
+        `${indexName}-score`,
+        `${indexName}-deprecated`,
+      ];
+
+      for (const idx of indices) {
+        try {
+          const cleanupStore = new RedisVectorStore(new SyntheticEmbeddings(), {
+            redisClient: client as RedisClientType,
+            indexName: idx,
+            keyPrefix: `${keyPrefix}`,
+          });
+          await cleanupStore.delete({ deleteAll: true });
+        } catch {
+          // Ignore cleanup errors
+        }
+      }
+
+      await client.quit();
+    }
+  });
 });
