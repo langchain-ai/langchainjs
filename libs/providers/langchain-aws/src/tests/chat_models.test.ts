@@ -400,6 +400,140 @@ describe("convertToConverseMessages", () => {
         ],
       },
     },
+    {
+      name: "standard v1 format with tool_call blocks (e.g., from Anthropic provider)",
+      input: [
+        new SystemMessage("You're an advanced AI assistant."),
+        new HumanMessage("What's the weather in SF?"),
+        new AIMessage({
+          content: [
+            { type: "text", text: "Let me check the weather for you." },
+            {
+              type: "tool_call",
+              id: "call_123",
+              name: "get_weather",
+              args: { location: "San Francisco" },
+            },
+          ],
+          response_metadata: {
+            output_version: "v1",
+            model_provider: "anthropic",
+          },
+        }),
+        new ToolMessage({
+          tool_call_id: "call_123",
+          content: "72°F and sunny",
+        }),
+      ],
+      output: {
+        converseSystem: [
+          {
+            text: "You're an advanced AI assistant.",
+          },
+        ],
+        converseMessages: [
+          {
+            role: BedrockConversationRole.USER,
+            content: [
+              {
+                text: "What's the weather in SF?",
+              },
+            ],
+          },
+          {
+            role: BedrockConversationRole.ASSISTANT,
+            content: [
+              {
+                text: "Let me check the weather for you.",
+              },
+              {
+                toolUse: {
+                  toolUseId: "call_123",
+                  name: "get_weather",
+                  input: { location: "San Francisco" },
+                },
+              },
+            ],
+          },
+          {
+            role: BedrockConversationRole.USER,
+            content: [
+              {
+                toolResult: {
+                  toolUseId: "call_123",
+                  content: [
+                    {
+                      text: "72°F and sunny",
+                    },
+                  ],
+                },
+              },
+            ],
+          },
+        ],
+      },
+    },
+    {
+      name: "standard v1 format with reasoning blocks (e.g., from Anthropic provider)",
+      input: [
+        new SystemMessage("You're an advanced AI assistant."),
+        new HumanMessage("What is 2+2?"),
+        new AIMessage({
+          content: [
+            {
+              type: "reasoning",
+              reasoning: "I need to add 2 and 2 together.",
+            },
+            { type: "text", text: "The answer is 4." },
+          ],
+          response_metadata: {
+            output_version: "v1",
+            model_provider: "anthropic",
+          },
+        }),
+        new HumanMessage("Thanks! What about 3+3?"),
+      ],
+      output: {
+        converseSystem: [
+          {
+            text: "You're an advanced AI assistant.",
+          },
+        ],
+        converseMessages: [
+          {
+            role: BedrockConversationRole.USER,
+            content: [
+              {
+                text: "What is 2+2?",
+              },
+            ],
+          },
+          {
+            role: BedrockConversationRole.ASSISTANT,
+            content: [
+              {
+                reasoningContent: {
+                  reasoningText: {
+                    text: "I need to add 2 and 2 together.",
+                  },
+                },
+              },
+              {
+                text: "The answer is 4.",
+              },
+            ],
+          },
+          {
+            role: BedrockConversationRole.USER,
+            content: [
+              {
+                text: "Thanks! What about 3+3?",
+              },
+            ],
+          },
+        ],
+      },
+    },
   ];
 
   it.each(testCases.map((tc) => [tc.name, tc]))(
