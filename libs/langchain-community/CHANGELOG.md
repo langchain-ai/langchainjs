@@ -1,5 +1,15 @@
 # @langchain/community
 
+## 1.1.3
+
+### Patch Changes
+
+- [#9757](https://github.com/langchain-ai/langchainjs/pull/9757) [`8619adb`](https://github.com/langchain-ai/langchainjs/commit/8619adb81f16977b3ab8d4607ad5c30f79c41e3d) Thanks [@FilipZmijewski](https://github.com/FilipZmijewski)! - fix: add properties to check valid props
+
+- Updated dependencies []:
+  - @langchain/classic@1.0.8
+  - @langchain/openai@1.2.1
+
 ## 1.1.2
 
 ### Patch Changes

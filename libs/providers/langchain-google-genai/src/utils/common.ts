@@ -43,7 +43,10 @@ import {
   jsonSchemaToGeminiParameters,
   schemaToGenerativeAIParameters,
 } from "./zod_to_genai_parameters.js";
-import { GoogleGenerativeAIToolType } from "../types.js";
+import {
+  GoogleGenerativeAIPart,
+  GoogleGenerativeAIToolType,
+} from "../types.js";
 
 export const _FUNCTION_CALL_THOUGHT_SIGNATURES_MAP_KEY =
   "__gemini_function_call_thought_signatures__";
@@ -540,18 +543,25 @@ export function mapGenerateContentResultToChatResult(
   );
   let content: MessageContent | undefined;
 
+  const parts = candidateContent?.parts as GoogleGenerativeAIPart[] | undefined;
+
   if (
-    Array.isArray(candidateContent?.parts) &&
-    candidateContent.parts.length === 1 &&
-    candidateContent.parts[0].text
+    Array.isArray(parts) &&
+    parts.length === 1 &&
+    "text" in parts[0] &&
+    parts[0].text &&
+    !parts[0].thought
   ) {
-    content = candidateContent.parts[0].text;
-  } else if (
-    Array.isArray(candidateContent?.parts) &&
-    candidateContent.parts.length > 0
-  ) {
-    content = candidateContent.parts.map((p) => {
-      if ("text" in p) {
+    content = parts[0].text;
+  } else if (Array.isArray(parts) && parts.length > 0) {
+    content = parts.map((p) => {
+      if (p.thought && "text" in p && p.text) {
+        return {
+          type: "thinking",
+          thinking: p.text,
+          ...(p.thoughtSignature ? { signature: p.thoughtSignature } : {}),
+        };
+      } else if ("text" in p) {
         return {
           type: "text",
           text: p.text,
@@ -673,15 +683,25 @@ export function convertResponseContentToChatGenerationChunk(
     [] as (FunctionCallPart & { id: string })[]
   );
   let content: MessageContent | undefined;
-  // Checks if some parts do not have text. If false, it means that the content is a string.
+  const streamParts = candidateContent?.parts as
+    | GoogleGenerativeAIPart[]
+    | undefined;
+
+  // Checks if all parts are plain text (no thought flags). If so, join as string.
   if (
-    Array.isArray(candidateContent?.parts) &&
-    candidateContent.parts.every((p) => "text" in p)
+    Array.isArray(streamParts) &&
+    streamParts.every((p) => "text" in p && !p.thought)
   ) {
-    content = candidateContent.parts.map((p) => p.text).join("");
-  } else if (Array.isArray(candidateContent?.parts)) {
-    content = candidateContent.parts.map((p) => {
-      if ("text" in p) {
+    content = streamParts.map((p) => p.text).join("");
+  } else if (Array.isArray(streamParts)) {
+    content = streamParts.map((p) => {
+      if (p.thought && "text" in p && p.text) {
+        return {
+          type: "thinking",
+          thinking: p.text,
+          ...(p.thoughtSignature ? { signature: p.thoughtSignature } : {}),
+        };
+      } else if ("text" in p) {
         return {
           type: "text",
           text: p.text,

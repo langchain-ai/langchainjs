@@ -1,5 +1,16 @@
 # @langchain/xai
 
+## 1.2.0
+
+### Minor Changes
+
+- [#9718](https://github.com/langchain-ai/langchainjs/pull/9718) [`739d4e8`](https://github.com/langchain-ai/langchainjs/commit/739d4e88cc78b8f578ab019b526c97d63d9c2144) Thanks [@pawel-twardziak](https://github.com/pawel-twardziak)! - feat(xai): responses implementation
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @langchain/openai@1.2.1
+
 ## 1.1.1
 
 ### Patch Changes
