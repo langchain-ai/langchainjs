@@ -463,7 +463,7 @@ export function isLangChainTool(tool?: unknown): tool is StructuredToolParams {
  *
  * @example
  * ```typescript
- * import { tool, ToolRuntime } from "@langchain/core/tools";
+ * import { tool, type ToolRuntime } from "@langchain/core/tools";
  * import { z } from "zod";
  *
  * const stateSchema = z.object({
@@ -472,7 +472,7 @@ export function isLangChainTool(tool?: unknown): tool is StructuredToolParams {
  * });
  *
  * const greet = tool(
- *   async ({ name }, runtime) => {
+ *   async ({ name }, runtime: ToolRuntime<typeof stateSchema>) => {
  *     // Access state
  *     const messages = runtime.state.messages;
  *
@@ -500,6 +500,13 @@ export function isLangChainTool(tool?: unknown): tool is StructuredToolParams {
  *     stateSchema,
  *   }
  * );
+ *
+ * const agent = createAgent({
+ *   model,
+ *   tools: [greet],
+ *   stateSchema,
+ *   contextSchema,
+ * });
  * ```
  *
  * @template StateT - The type of the state schema (inferred from stateSchema)
