@@ -731,6 +731,7 @@ export class ChatAnthropicMessages<
 
     if (
       this.model.includes("opus-4-1") ||
+      this.model.includes("opus-4-5") ||
       this.model.includes("sonnet-4-5") ||
       this.model.includes("haiku-4-5")
     ) {
@@ -855,6 +856,7 @@ export class ChatAnthropicMessages<
       }
       if (
         this.model.includes("opus-4-1") ||
+        this.model.includes("opus-4-5") ||
         this.model.includes("sonnet-4-5") ||
         this.model.includes("haiku-4-5")
           ? this.topP !== undefined

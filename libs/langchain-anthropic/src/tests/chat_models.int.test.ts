@@ -1532,3 +1532,43 @@ describe("Sonnet 4.5", () => {
     expect(response.content.length).toBeGreaterThan(0);
   });
 });
+
+describe("Opus 4.5", () => {
+  it("works without passing any args", async () => {
+    const model = new ChatAnthropic({
+      model: "claude-opus-4-5-20251101",
+    });
+    const response = await model.invoke(
+      "Please respond to this message simply with: Hello"
+    );
+    expect(response.content.length).toBeGreaterThan(0);
+  });
+
+  it("works with streaming and thinking", async () => {
+    const model = new ChatAnthropic({
+      model: "claude-opus-4-5-20251101",
+      thinking: {
+        type: "enabled",
+        budget_tokens: 1024,
+      },
+    });
+
+    const response = await model.invoke(
+      "Please respond to this message simply with: Hello"
+    );
+
+    expect(response.content.length).toBeGreaterThan(0);
+  });
+
+  // https://github.com/langchain-ai/langchainjs/issues/9258
+  it("works when passing topP arg", async () => {
+    const model = new ChatAnthropic({
+      model: "claude-opus-4-5-20251101",
+      topP: 0.99,
+    });
+    const response = await model.invoke(
+      "Please respond to this message simply with: Hello"
+    );
+    expect(response.content.length).toBeGreaterThan(0);
+  });
+});
