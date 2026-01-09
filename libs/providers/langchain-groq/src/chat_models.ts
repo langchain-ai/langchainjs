@@ -379,6 +379,8 @@ function groqResponseToChatMessage(
   const rawToolCalls: OpenAIToolCall[] | undefined = message.tool_calls as
     | OpenAIToolCall[]
     | undefined;
+  // Add model_provider for block translator lookup
+  const enrichedMetadata = { ...responseMetadata, model_provider: "groq" };
   switch (message.role) {
     case "assistant": {
       const toolCalls = [];
@@ -397,7 +399,7 @@ function groqResponseToChatMessage(
         tool_calls: toolCalls,
         invalid_tool_calls: invalidToolCalls,
         usage_metadata: usageMetadata,
-        response_metadata: responseMetadata,
+        response_metadata: enrichedMetadata,
       });
     }
     default:
@@ -456,7 +458,7 @@ function _convertDeltaToMessageChunk(
     groqMessageId = xGroq.id;
   }
 
-  const response_metadata = { usage, timing };
+  const response_metadata = { usage, timing, model_provider: "groq" };
   if (role === "user") {
     return new HumanMessageChunk({ content, response_metadata });
   } else if (role === "assistant") {

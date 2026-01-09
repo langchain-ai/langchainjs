@@ -776,7 +776,10 @@ export class ChatOllama
       text: "",
       message: new AIMessageChunk({
         content: "",
-        response_metadata: lastMetadata,
+        response_metadata: {
+          ...lastMetadata,
+          model_provider: "ollama",
+        },
         usage_metadata: usageMetadata,
       }),
     });

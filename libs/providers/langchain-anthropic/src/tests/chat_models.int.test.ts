@@ -1577,3 +1577,47 @@ describe("will work with native structured output", () => {
     }
   );
 });
+
+describe("Anthropic Reasoning with contentBlocks", () => {
+  test("invoke returns thinking as reasoning in contentBlocks", async () => {
+    const model = new ChatAnthropic({
+      model: extendedThinkingModelName,
+      maxTokens: 5000,
+      thinking: { type: "enabled", budget_tokens: 2000 },
+    });
+
+    const result = await model.invoke("What is 2 + 2?");
+
+    // Verify contentBlocks contains reasoning
+    const blocks = result.contentBlocks;
+    expect(blocks.length).toBeGreaterThan(0);
+
+    const reasoningBlocks = blocks.filter((b) => b.type === "reasoning");
+    expect(reasoningBlocks.length).toBeGreaterThan(0);
+    expect((reasoningBlocks[0] as any).reasoning.length).toBeGreaterThan(10);
+
+    const textBlocks = blocks.filter((b) => b.type === "text");
+    expect(textBlocks.length).toBeGreaterThan(0);
+  });
+
+  test("stream returns thinking as reasoning in contentBlocks", async () => {
+    const model = new ChatAnthropic({
+      model: extendedThinkingModelName,
+      maxTokens: 5000,
+      thinking: { type: "enabled", budget_tokens: 2000 },
+    });
+
+    let fullMessage: AIMessageChunk | null = null;
+    for await (const chunk of await model.stream("What is 3 + 3?")) {
+      fullMessage = fullMessage ? concat(fullMessage, chunk) : chunk;
+    }
+
+    expect(fullMessage).toBeDefined();
+    const blocks = fullMessage!.contentBlocks;
+    expect(blocks.length).toBeGreaterThan(0);
+
+    const reasoningBlocks = blocks.filter((b) => b.type === "reasoning");
+    expect(reasoningBlocks.length).toBeGreaterThan(0);
+    expect((reasoningBlocks[0] as any).reasoning.length).toBeGreaterThan(10);
+  }, 60000);
+});

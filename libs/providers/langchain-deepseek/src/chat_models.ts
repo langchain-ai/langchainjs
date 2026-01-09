@@ -460,6 +460,11 @@ export class ChatDeepSeek extends ChatOpenAICompletions<ChatDeepSeekCallOptions>
       defaultRole
     );
     messageChunk.additional_kwargs.reasoning_content = delta.reasoning_content;
+    // Override model_provider for DeepSeek-specific block translation
+    messageChunk.response_metadata = {
+      ...messageChunk.response_metadata,
+      model_provider: "deepseek",
+    };
     return messageChunk;
   }
 
@@ -474,6 +479,11 @@ export class ChatDeepSeek extends ChatOpenAICompletions<ChatDeepSeekCallOptions>
     langChainMessage.additional_kwargs.reasoning_content =
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (message as any).reasoning_content;
+    // Override model_provider for DeepSeek-specific block translation
+    langChainMessage.response_metadata = {
+      ...langChainMessage.response_metadata,
+      model_provider: "deepseek",
+    };
     return langChainMessage;
   }
 

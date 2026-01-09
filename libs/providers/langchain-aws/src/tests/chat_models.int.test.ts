@@ -1,4 +1,4 @@
-import { test, expect } from "vitest";
+import { test, expect, describe } from "vitest";
 import { z } from "zod/v3";
 import {
   AIMessage,
@@ -520,4 +520,56 @@ test("Test ChatBedrockConverse can respond to tool invocations with thinking ena
 
   const result2 = await modelWithTools.invoke(messages);
   expect(result2.content).toBeDefined();
+});
+
+describe("AWS Bedrock Reasoning with contentBlocks", () => {
+  test("invoke returns reasoning_content as reasoning in contentBlocks", async () => {
+    const model = new ChatBedrockConverse({
+      ...baseConstructorArgs,
+      model: "us.anthropic.claude-3-7-sonnet-20250219-v1:0",
+      maxTokens: 5000,
+      additionalModelRequestFields: {
+        thinking: { type: "enabled", budget_tokens: 2000 },
+      },
+    });
+
+    const result = await model.invoke("What is 2 + 2?");
+
+    // Verify contentBlocks contains reasoning
+    const blocks = result.contentBlocks;
+    expect(blocks.length).toBeGreaterThan(0);
+
+    const reasoningBlocks = blocks.filter((b) => b.type === "reasoning");
+    expect(reasoningBlocks.length).toBeGreaterThan(0);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    expect((reasoningBlocks[0] as any).reasoning.length).toBeGreaterThan(10);
+
+    const textBlocks = blocks.filter((b) => b.type === "text");
+    expect(textBlocks.length).toBeGreaterThan(0);
+  });
+
+  test("stream returns reasoning_content as reasoning in contentBlocks", async () => {
+    const model = new ChatBedrockConverse({
+      ...baseConstructorArgs,
+      model: "us.anthropic.claude-3-7-sonnet-20250219-v1:0",
+      maxTokens: 5000,
+      additionalModelRequestFields: {
+        thinking: { type: "enabled", budget_tokens: 2000 },
+      },
+    });
+
+    let fullMessage: AIMessageChunk | null = null;
+    for await (const chunk of await model.stream("What is 3 + 3?")) {
+      fullMessage = fullMessage ? concat(fullMessage, chunk) : chunk;
+    }
+
+    expect(fullMessage).toBeDefined();
+    const blocks = fullMessage!.contentBlocks;
+    expect(blocks.length).toBeGreaterThan(0);
+
+    const reasoningBlocks = blocks.filter((b) => b.type === "reasoning");
+    expect(reasoningBlocks.length).toBeGreaterThan(0);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    expect((reasoningBlocks[0] as any).reasoning.length).toBeGreaterThan(10);
+  }, 60000);
 });
