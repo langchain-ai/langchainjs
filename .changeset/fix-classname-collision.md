@@ -5,4 +5,4 @@
 
 fix(langchain): resolve className collision in MODEL_PROVIDER_CONFIG
 
-Fixed a bug where `initChatModel` with `modelProvider: "google-vertexai-web"` incorrectly resolved to `@langchain/google-vertexai` instead of `@langchain/google-vertexai-web`. Both providers share `className: "ChatVertexAI"`, causing `.find()` to return the first match. The fix imports directly from `config.package` since the correct provider mapping is already available.
+Refactored `getChatModelByClassName` to accept an optional `modelProvider` parameter for direct lookup, avoiding the className collision issue where multiple providers share the same className (e.g., `google-vertexai` and `google-vertexai-web` both use `"ChatVertexAI"`). When `modelProvider` is provided, the function uses direct config lookup instead of searching by className. Backward compatibility is maintained for existing callers that only pass `className`. This eliminates the duplicated import logic that was previously in `_initChatModelHelper`.
