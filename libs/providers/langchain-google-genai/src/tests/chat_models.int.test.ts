@@ -5,6 +5,7 @@ import * as path from "node:path";
 import {
   AIMessage,
   AIMessageChunk,
+  ContentBlock,
   HumanMessage,
   SystemMessage,
   ToolMessage,
@@ -104,17 +105,15 @@ test("Test Google AI handleLLMNewToken callback", async () => {
   try {
     const model = new ChatGoogleGenerativeAI({ model: "gemini-2.0-flash" });
     let tokens = "";
-    const res = await model.call(
-      [new HumanMessage("what is 1 + 1?")],
-      undefined,
-      [
+    const res = await model.invoke([new HumanMessage("what is 1 + 1?")], {
+      callbacks: [
         {
           handleLLMNewToken(token: string) {
             tokens += token;
           },
         },
-      ]
-    );
+      ],
+    });
     const responseContent = typeof res.content === "string" ? res.content : "";
     expect(tokens).toBe(responseContent);
   } finally {
@@ -884,6 +883,39 @@ test("works with thinking config", async () => {
       thinkingBudget: 100,
     },
   });
-  const result = await model.invoke("What is the current weather in SF?");
+  const result = await model.invoke("What is 2+2?");
   expect(result.content).toBeDefined();
+
+  // Verify that content is an array with separate thinking and text blocks
+  if (Array.isArray(result.content)) {
+    const thinkingBlocks = result.content.filter(
+      (block): block is ContentBlock =>
+        typeof block === "object" &&
+        block !== null &&
+        "type" in block &&
+        block.type === "thinking"
+    );
+    const textBlocks = result.content.filter(
+      (block): block is ContentBlock =>
+        typeof block === "object" &&
+        block !== null &&
+        "type" in block &&
+        block.type === "text"
+    );
+
+    // Should have at least one thinking block when includeThoughts is true
+    expect(thinkingBlocks.length).toBeGreaterThan(0);
+
+    // Thinking blocks should have the 'thinking' field, not concatenated with text
+    thinkingBlocks.forEach((block) => {
+      expect(block).toHaveProperty("thinking");
+      expect(typeof block.thinking).toBe("string");
+    });
+
+    // Text blocks should be separate
+    textBlocks.forEach((block) => {
+      expect(block).toHaveProperty("text");
+      expect(typeof block.text).toBe("string");
+    });
+  }
 });
