@@ -1,5 +1,11 @@
 # @langchain/aws
 
+## 1.1.2
+
+### Patch Changes
+
+- [#9766](https://github.com/langchain-ai/langchainjs/pull/9766) [`5ef217e`](https://github.com/langchain-ai/langchainjs/commit/5ef217e6dc2039588d345b15210c835ec8e75ae5) Thanks [@hntrl](https://github.com/hntrl)! - target standard content trigger appropriately
+
 ## 1.1.1
 
 ### Patch Changes

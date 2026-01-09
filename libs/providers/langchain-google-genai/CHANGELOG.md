@@ -1,5 +1,11 @@
 # @langchain/google-genai
 
+## 2.1.8
+
+### Patch Changes
+
+- [#9769](https://github.com/langchain-ai/langchainjs/pull/9769) [`6de8ce3`](https://github.com/langchain-ai/langchainjs/commit/6de8ce37ba1fc01552c2d538c5c8bf489abd53b3) Thanks [@hntrl](https://github.com/hntrl)! - separate thinking and text content blocks when includeThoughts is enabled
+
 ## 2.1.7
 
 ### Patch Changes
