@@ -1,5 +1,6 @@
-import { test, expect } from "vitest";
-import { HumanMessage } from "@langchain/core/messages";
+import { test, expect, describe } from "vitest";
+import { AIMessageChunk, HumanMessage } from "@langchain/core/messages";
+import { concat } from "@langchain/core/utils/stream";
 import { ChatOllama } from "../chat_models.js";
 
 test("test deep seek model with think=false", async () => {
@@ -31,6 +32,12 @@ test("test deep seek model with think=false", async () => {
   // Ensure the response is concise and directly answers the question
   expect(responseContent).toMatch(/photosynthesis/i); // Check it includes the topic
   expect(responseContent.length).toBeGreaterThan(1);
+
+  // Verify contentBlocks does not contain reasoning
+  const reasoningBlocks = res.contentBlocks.filter(
+    (b) => b.type === "reasoning"
+  );
+  expect(reasoningBlocks.length).toBe(0);
 });
 
 test("test deep seek model with think=true (default)", async () => {
@@ -64,4 +71,35 @@ test("test deep seek model with think=true (default)", async () => {
   );
   // And ensure content does not contain raw <think> tags
   expect(responseContent).not.toMatch(/<think>.*?<\/think>/is);
+
+  // Verify contentBlocks contains reasoning
+  const reasoningBlocks = res.contentBlocks.filter(
+    (b) => b.type === "reasoning"
+  );
+  expect(reasoningBlocks.length).toBeGreaterThan(0);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  expect((reasoningBlocks[0] as any).reasoning.length).toBeGreaterThan(10);
 }, 120_000);
+
+describe("Ollama Reasoning with contentBlocks", () => {
+  test("stream returns reasoning in contentBlocks", async () => {
+    const ollama = new ChatOllama({
+      model: "deepseek-r1:32b",
+      maxRetries: 1,
+    });
+
+    let fullMessage: AIMessageChunk | null = null;
+    for await (const chunk of await ollama.stream("What is 2 + 2?")) {
+      fullMessage = fullMessage ? concat(fullMessage, chunk) : chunk;
+    }
+
+    expect(fullMessage).toBeDefined();
+    const blocks = fullMessage!.contentBlocks;
+    expect(blocks.length).toBeGreaterThan(0);
+
+    const reasoningBlocks = blocks.filter((b) => b.type === "reasoning");
+    expect(reasoningBlocks.length).toBeGreaterThan(0);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    expect((reasoningBlocks[0] as any).reasoning.length).toBeGreaterThan(10);
+  }, 120_000);
+});
