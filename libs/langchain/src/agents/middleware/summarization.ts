@@ -448,6 +448,7 @@ export function summarizationMiddleware(
       const summaryMessage = new HumanMessage({
         content: `${summaryPrefix}\n\n${summary}`,
         id: uuid(),
+        additional_kwargs: { lc_source: "summarization" },
       });
 
       return {

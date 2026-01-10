@@ -101,6 +101,9 @@ describe("summarizationMiddleware", () => {
       "Here is a summary of the conversation to date"
     );
     expect(summaryMessage.content).toContain("Previous conversation covered:");
+    expect(summaryMessage.additional_kwargs).toStrictEqual({
+      lc_source: "summarization",
+    });
 
     // Verify only recent messages are kept (plus the new response)
     expect(result.messages.length).toBeLessThanOrEqual(4); // summary + kept messages + new response
@@ -151,6 +154,9 @@ describe("summarizationMiddleware", () => {
     expect(summaryMessage.content).toContain(
       "Here is a summary of the conversation to date"
     );
+    expect(summaryMessage.additional_kwargs).toStrictEqual({
+      lc_source: "summarization",
+    });
 
     // Verify only recent messages are kept (plus the new response)
     expect(result.messages.length).toBeLessThanOrEqual(4);
@@ -223,6 +229,11 @@ describe("summarizationMiddleware", () => {
     expect((result.messages[0] as HumanMessage).content).toContain(
       "Here is a summary of the conversation to date"
     );
+    expect(
+      (result.messages[0] as HumanMessage).additional_kwargs
+    ).toStrictEqual({
+      lc_source: "summarization",
+    });
   });
 
   it("should preserve AI/Tool message pairs together", async () => {
@@ -324,6 +335,11 @@ describe("summarizationMiddleware", () => {
     expect((result.messages[0] as HumanMessage).content).toContain(
       "Here is a summary of the conversation to date"
     );
+    expect(
+      (result.messages[0] as HumanMessage).additional_kwargs
+    ).toStrictEqual({
+      lc_source: "summarization",
+    });
     expect(result.messages[1]).toBeInstanceOf(AIMessage);
     expect((result.messages[1] as AIMessage).content).toContain(
       "Response 3: xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
@@ -409,6 +425,11 @@ describe("summarizationMiddleware", () => {
     expect((result.messages[0] as HumanMessage).content).toContain(
       "Here is a summary of the conversation to date"
     );
+    expect(
+      (result.messages[0] as HumanMessage).additional_kwargs
+    ).toStrictEqual({
+      lc_source: "summarization",
+    });
     expect(result.messages[1]).toBeInstanceOf(AIMessage);
     expect((result.messages[1] as AIMessage).content).toContain(
       "Response 98: xxxxxxxxxx"
@@ -495,6 +516,11 @@ describe("summarizationMiddleware", () => {
     expect((result.messages[0] as HumanMessage).content).toContain(
       "Here is a summary of the conversation to date"
     );
+    expect(
+      (result.messages[0] as HumanMessage).additional_kwargs
+    ).toStrictEqual({
+      lc_source: "summarization",
+    });
     expect(result.messages[1]).toBeInstanceOf(HumanMessage);
     expect((result.messages[1] as HumanMessage).content).toContain(
       "Message 3: xxxxxxxxxx"
@@ -559,6 +585,11 @@ describe("summarizationMiddleware", () => {
     expect((result.messages[0] as HumanMessage).content).toContain(
       "Here is a summary of the conversation to date"
     );
+    expect(
+      (result.messages[0] as HumanMessage).additional_kwargs
+    ).toStrictEqual({
+      lc_source: "summarization",
+    });
     expect(result.messages[1]).toBeInstanceOf(AIMessage);
     expect((result.messages[1] as AIMessage).content).toContain(
       "Response 3: xxxxxxxxxxx"
@@ -806,6 +837,9 @@ describe("summarizationMiddleware", () => {
     expect(summaryMessage.content).toContain(
       "Here is a summary of the conversation to date"
     );
+    expect(summaryMessage.additional_kwargs).toStrictEqual({
+      lc_source: "summarization",
+    });
 
     // Verify preserved messages don't start with AI(tool calls)
     // The preserved messages should start with a HumanMessage before the tool call pair
@@ -852,6 +886,9 @@ describe("summarizationMiddleware", () => {
     expect(summaryMessage.content).toContain(
       "Here is a summary of the conversation to date:"
     );
+    expect(summaryMessage.additional_kwargs).toStrictEqual({
+      lc_source: "summarization",
+    });
   });
 
   it("should use custom summaryPrefix when provided", async () => {
@@ -891,6 +928,9 @@ describe("summarizationMiddleware", () => {
     expect(summaryMessage.content).not.toContain(
       "Here is a summary of the conversation to date:"
     );
+    expect(summaryMessage.additional_kwargs).toStrictEqual({
+      lc_source: "summarization",
+    });
   });
 
   it("should not leak summarization model streaming chunks when using streamMode messages", async () => {
