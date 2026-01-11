@@ -1099,6 +1099,10 @@ describe("_mergeDicts", () => {
     expect(_mergeDicts({ id: "old" }, { id: "" })).toEqual({ id: "old" });
   });
 
+  it("preserves 'index' field (does not add)", () => {
+    expect(_mergeDicts({ index: 1 }, { index: 1 })).toEqual({ index: 1 });
+  });
+
   it("throws error when merging different types for same key", () => {
     expect(() => _mergeDicts({ a: "string" }, { a: 123 })).toThrow(
       "field[a] already exists in the message chunk, but with a different type"

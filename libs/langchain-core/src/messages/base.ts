@@ -463,6 +463,10 @@ export function _mergeDicts(
         merged[key] += value;
       }
     } else if (typeof merged[key] === "number") {
+      if (key === "index") {
+        // Preserve index field, don't add - index is used for matching content blocks
+        continue;
+      }
       merged[key] = merged[key] + value;
     } else if (typeof merged[key] === "object" && !Array.isArray(merged[key])) {
       merged[key] = _mergeDicts(merged[key], value);
