@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { z } from "zod/v3";
 import { MessagesZodState } from "@langchain/langgraph";
-import { withLangGraph } from "@langchain/langgraph/zod";
+import { withLangGraph, schemaMetaRegistry } from "@langchain/langgraph/zod";
 
 import type { AgentMiddleware, AnyAnnotationRoot } from "./middleware/types.js";
 import {
@@ -36,6 +36,8 @@ export function createAgentAnnotationConditional<
       ])
       .optional(),
   };
+  // Separate shape for input/output without reducer metadata (to avoid channel conflicts)
+  const ioSchemaShape: Record<string, any> = {};
 
   const applySchema = (schema: InteropZodObject) => {
     // Handle both Zod v3 and v4 schemas
@@ -55,8 +57,24 @@ export function createAgentAnnotationConditional<
         /**
          * If the field schema is Zod v4, convert to v3-compatible z.any()
          * This allows the shape to be merged while preserving the key structure
+         * Also transfer any registry metadata (reducers, defaults) to the new schema
+         * using withLangGraph which properly registers the metadata
          */
-        schemaShape[key] = isZodSchemaV4(fieldSchema) ? z.any() : fieldSchema;
+        if (isZodSchemaV4(fieldSchema)) {
+          const meta = schemaMetaRegistry.get(fieldSchema);
+          if (meta) {
+            // For state: include reducer metadata
+            schemaShape[key] = withLangGraph(z.any(), meta);
+            // For input/output: plain z.any() without reducer (avoids channel conflicts)
+            ioSchemaShape[key] = z.any();
+          } else {
+            schemaShape[key] = z.any();
+            ioSchemaShape[key] = z.any();
+          }
+        } else {
+          schemaShape[key] = fieldSchema;
+          ioSchemaShape[key] = fieldSchema;
+        }
       }
     }
   };
@@ -77,6 +95,7 @@ export function createAgentAnnotationConditional<
   // Only include structuredResponse when responseFormat is defined
   if (hasStructuredResponse) {
     schemaShape.structuredResponse = z.string().optional();
+    ioSchemaShape.structuredResponse = z.string().optional();
   }
 
   // Create messages field with LangGraph UI metadata for input/output schemas
@@ -91,7 +110,7 @@ export function createAgentAnnotationConditional<
     input: z.object({
       messages,
       ...Object.fromEntries(
-        Object.entries(schemaShape).filter(
+        Object.entries(ioSchemaShape).filter(
           ([key]) => !["structuredResponse", "jumpTo"].includes(key)
         )
       ),
@@ -99,7 +118,7 @@ export function createAgentAnnotationConditional<
     output: z.object({
       messages,
       ...Object.fromEntries(
-        Object.entries(schemaShape).filter(([key]) => key !== "jumpTo")
+        Object.entries(ioSchemaShape).filter(([key]) => key !== "jumpTo")
       ),
     }),
   };
