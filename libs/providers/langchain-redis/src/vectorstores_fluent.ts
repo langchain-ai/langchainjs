@@ -27,11 +27,9 @@ import {
   Timestamp,
 } from "./filters.js";
 import type {
-  CreateSchemaVectorField,
   CreateSchemaFlatVectorField,
   CreateSchemaHNSWVectorField,
   CreateIndexOptions,
-  RedisSearchLanguages,
   RedisVectorStoreIndexOptions,
   MetadataFieldSchema,
 } from "./schema.js";
@@ -42,6 +40,7 @@ import {
   inferMetadataSchema,
   checkForSchemaMismatch,
 } from "./schema.js";
+import type { RedisAddOptions } from "./vectorstores.js";
 
 // Re-export filter classes and functions
 export {
@@ -62,25 +61,17 @@ export {
   CustomFilter,
 };
 
-// Re-export schema types and utilities
-export type {
-  CreateSchemaVectorField,
-  CreateSchemaFlatVectorField,
-  CreateSchemaHNSWVectorField,
-  CreateIndexOptions,
-  RedisSearchLanguages,
-  RedisVectorStoreIndexOptions,
-  MetadataFieldSchema,
-};
+// Re-export MetadataFieldSchema from schema (not exported from vectorstores.ts)
+export type { MetadataFieldSchema };
 
 /**
- * Interface for the configuration of the RedisVectorStoreAdvanced.
+ * Interface for the configuration of the FluentRedisVectorStore.
  * This advanced version requires explicit metadata schema definition
  * and only supports FilterExpression for filtering.
  *
  * For basic filtering with string[] or string filters, use RedisVectorStore instead.
  */
-export interface RedisVectorStoreConfig {
+export interface FluentRedisVectorStoreConfig {
   redisClient:
     | ReturnType<typeof createClient>
     | ReturnType<typeof createCluster>;
@@ -91,7 +82,7 @@ export interface RedisVectorStoreConfig {
   contentKey?: string;
   metadataKey?: string;
   vectorKey?: string;
-  filter?: RedisVectorStoreFilterType;
+  filter?: FluentRedisVectorStoreFilterType;
   ttl?: number; // ttl in second
   /**
    * Custom schema for metadata fields (required for advanced filtering).
@@ -111,21 +102,12 @@ export interface RedisVectorStoreConfig {
 }
 
 /**
- * Interface for the options when adding documents to the
- * RedisVectorStore. It includes keys and batch size.
- */
-export interface RedisAddOptions {
-  keys?: string[];
-  batchSize?: number;
-}
-
-/**
- * Type for the filter used in the RedisVectorStoreAdvanced.
+ * Type for the filter used in the FluentRedisVectorStore.
  * Only supports FilterExpression for advanced filtering.
  *
  * For legacy string[] | string filters, use the basic RedisVectorStore instead.
  */
-export type RedisVectorStoreFilterType = FilterExpression;
+export type FluentRedisVectorStoreFilterType = FilterExpression;
 
 /**
  * Advanced Redis Vector Store with structured metadata filtering.
@@ -142,7 +124,7 @@ export type RedisVectorStoreFilterType = FilterExpression;
  *
  * @example
  * ```typescript
- * const vectorStore = await RedisVectorStoreAdvanced.fromDocuments(
+ * const vectorStore = await FluentRedisVectorStore.fromDocuments(
  *   docs,
  *   embeddings,
  *   {
@@ -163,8 +145,8 @@ export type RedisVectorStoreFilterType = FilterExpression;
  * );
  * ```
  */
-export class RedisVectorStoreAdvanced extends VectorStore {
-  declare FilterType: RedisVectorStoreFilterType;
+export class FluentRedisVectorStore extends VectorStore {
+  declare FilterType: FluentRedisVectorStoreFilterType;
 
   private redisClient:
     | ReturnType<typeof createClient>
@@ -184,21 +166,21 @@ export class RedisVectorStoreAdvanced extends VectorStore {
 
   vectorKey: string;
 
-  filter?: RedisVectorStoreFilterType;
+  filter?: FilterExpression;
 
   ttl?: number;
 
   customSchema?: MetadataFieldSchema[];
 
   _vectorstoreType(): string {
-    return "redis_advanced";
+    return "redis_fluent";
   }
 
   constructor(
     embeddings: EmbeddingsInterface,
-    _dbConfig: RedisVectorStoreConfig
+    _dbConfig: FluentRedisVectorStoreConfig
   ) {
-    super(embeddings, _dbConfig);
+    super(embeddings, _dbConfig as any);
 
     this.redisClient = _dbConfig.redisClient;
     this.indexName = _dbConfig.indexName;
@@ -238,7 +220,7 @@ export class RedisVectorStoreAdvanced extends VectorStore {
   }
 
   /**
-   * Method for adding vectors to the RedisVectorStoreAdvanced. It checks if the
+   * Method for adding vectors to the FluentRedisVectorStore. It checks if the
    * index exists and creates it if it doesn't, then adds the vectors in batches.
    * @param vectors The vectors to add.
    * @param documents The documents associated with the vectors.
@@ -305,7 +287,7 @@ export class RedisVectorStoreAdvanced extends VectorStore {
   }
 
   /**
-   * Method for performing a similarity search in the RedisVectorStoreAdvanced.
+   * Method for performing a similarity search in the FluentRedisVectorStore.
    * Returns documents and their similarity scores.
    * @param query The query vector.
    * @param k The number of nearest neighbors to return.
@@ -315,7 +297,7 @@ export class RedisVectorStoreAdvanced extends VectorStore {
   async similaritySearchVectorWithScore(
     query: number[],
     k: number,
-    filter?: RedisVectorStoreFilterType
+    filter?: FilterExpression
   ): Promise<[Document, number][]> {
     if (filter && this.filter) {
       throw new Error("cannot provide both `filter` and `this.filter`");
@@ -364,26 +346,24 @@ export class RedisVectorStoreAdvanced extends VectorStore {
     return result;
   }
 
-
-
   /**
-   * Static method for creating a new instance of RedisVectorStoreAdvanced from
+   * Static method for creating a new instance of FluentRedisVectorStore from
    * texts. It creates documents from the texts and metadata, then adds them
-   * to the RedisVectorStoreAdvanced.
+   * to the FluentRedisVectorStore.
    * @param texts The texts to add.
    * @param metadatas The metadata associated with the texts.
    * @param embeddings The embeddings to use.
-   * @param dbConfig The configuration for the RedisVectorStoreAdvanced.
+   * @param dbConfig The configuration for the FluentRedisVectorStore.
    * @param docsOptions The document options to use.
-   * @returns A promise that resolves to a new instance of RedisVectorStoreAdvanced.
+   * @returns A promise that resolves to a new instance of FluentRedisVectorStore.
    */
   static fromTexts(
     texts: string[],
     metadatas: object[] | object,
     embeddings: EmbeddingsInterface,
-    dbConfig: RedisVectorStoreConfig,
+    dbConfig: FluentRedisVectorStoreConfig,
     docsOptions?: RedisAddOptions
-  ): Promise<RedisVectorStoreAdvanced> {
+  ): Promise<FluentRedisVectorStore> {
     const docs: Document[] = [];
     for (let i = 0; i < texts.length; i += 1) {
       const metadata = Array.isArray(metadatas) ? metadatas[i] : metadatas;
@@ -393,7 +373,7 @@ export class RedisVectorStoreAdvanced extends VectorStore {
       });
       docs.push(newDoc);
     }
-    return RedisVectorStoreAdvanced.fromDocuments(
+    return FluentRedisVectorStore.fromDocuments(
       docs,
       embeddings,
       dbConfig,
@@ -402,20 +382,20 @@ export class RedisVectorStoreAdvanced extends VectorStore {
   }
 
   /**
-   * Static method for creating a new instance of RedisVectorStoreAdvanced from
-   * documents. It adds the documents to the RedisVectorStoreAdvanced.
+   * Static method for creating a new instance of FluentRedisVectorStore from
+   * documents. It adds the documents to the FluentRedisVectorStore.
    * @param docs The documents to add.
    * @param embeddings The embeddings to use.
-   * @param dbConfig The configuration for the RedisVectorStoreAdvanced.
+   * @param dbConfig The configuration for the FluentRedisVectorStore.
    * @param docsOptions The document options to use.
-   * @returns A promise that resolves to a new instance of RedisVectorStoreAdvanced.
+   * @returns A promise that resolves to a new instance of FluentRedisVectorStore.
    */
   static async fromDocuments(
     docs: Document[],
     embeddings: EmbeddingsInterface,
-    dbConfig: RedisVectorStoreConfig,
+    dbConfig: FluentRedisVectorStoreConfig,
     docsOptions?: RedisAddOptions
-  ): Promise<RedisVectorStoreAdvanced> {
+  ): Promise<FluentRedisVectorStore> {
     const instance = new this(embeddings, dbConfig);
     await instance.addDocuments(docs, docsOptions);
     return instance;
@@ -446,7 +426,7 @@ export class RedisVectorStoreAdvanced extends VectorStore {
   }
 
   /**
-   * Method for creating an index in the RedisVectorStoreAdvanced.
+   * Method for creating an index in the FluentRedisVectorStore.
    * Requires a customSchema to be defined for proper metadata indexing.
    * If the index already exists, it does nothing.
    *
@@ -458,7 +438,7 @@ export class RedisVectorStoreAdvanced extends VectorStore {
   async createIndex(documents?: Document[], dimensions = 1536): Promise<void> {
     if (!this.customSchema || this.customSchema.length === 0) {
       throw new Error(
-        "RedisVectorStoreAdvanced requires a customSchema to be defined. " +
+        "FluentRedisVectorStore requires a customSchema to be defined. " +
           "Please provide a customSchema with MetadataFieldSchema definitions in the configuration."
       );
     }
@@ -558,7 +538,7 @@ export class RedisVectorStoreAdvanced extends VectorStore {
   private buildQuery(
     query: number[],
     k: number,
-    filter?: RedisVectorStoreFilterType
+    filter?: FilterExpression
   ): [string, SearchOptions] {
     const vectorScoreField = "vector_score";
 
@@ -594,9 +574,7 @@ export class RedisVectorStoreAdvanced extends VectorStore {
     return [baseQuery, options];
   }
 
-
-
-  private prepareFilter(filter?: RedisVectorStoreFilterType): string {
+  private prepareFilter(filter?: FilterExpression): string {
     if (!filter) {
       return "*";
     }
@@ -613,7 +591,7 @@ export class RedisVectorStoreAdvanced extends VectorStore {
 
     // If we get here, the filter is not a valid FilterExpression
     throw new Error(
-      "RedisVectorStoreAdvanced only supports FilterExpression filters. " +
+      "FluentRedisVectorStore only supports FilterExpression filters. " +
         "Use Tag(), Num(), Text(), Geo(), or Timestamp() to create filters. " +
         "For simple string[] or string filters, use the basic RedisVectorStore instead."
     );
@@ -630,3 +608,9 @@ export class RedisVectorStoreAdvanced extends VectorStore {
     return Buffer.from(new Float32Array(vector).buffer);
   }
 }
+
+/**
+ * @deprecated Use {@link FluentRedisVectorStore} instead.
+ * This is an alias for backward compatibility.
+ */
+export const RedisVectorStoreAdvanced = FluentRedisVectorStore;
