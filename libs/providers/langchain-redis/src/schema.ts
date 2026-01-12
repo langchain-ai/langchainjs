@@ -736,14 +736,15 @@ export function convertLegacySchema(
     }
     if (fieldConfig.SORTABLE !== undefined) {
       // Convert SORTABLE to boolean (ignore "UNF" value for simplicity)
-      options.sortable = fieldConfig.SORTABLE === true || fieldConfig.SORTABLE === "UNF";
+      options.sortable =
+        fieldConfig.SORTABLE === true || fieldConfig.SORTABLE === "UNF";
     }
     if (fieldConfig.NOINDEX !== undefined) {
       options.noindex = fieldConfig.NOINDEX;
     }
 
     convertedSchema.push({
-      name: metadataKey + "." + fieldName,
+      name: `${metadataKey}.${fieldName}`,
       type,
       ...(Object.keys(options).length > 0 ? { options } : {}),
     });
