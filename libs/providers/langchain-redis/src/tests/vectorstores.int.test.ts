@@ -7,6 +7,7 @@ import { Document } from "@langchain/core/documents";
 import { SyntheticEmbeddings } from "@langchain/core/utils/testing";
 
 import { RedisVectorStore } from "../vectorstores.js";
+import { FluentRedisVectorStore } from "../vectorstores_fluent.js";
 import { Geo, Tag, Num, Text, Timestamp } from "../filters.js";
 
 describe("RedisVectorStore", () => {
@@ -65,7 +66,7 @@ describe("RedisVectorStore", () => {
     }
   });
 
-  test("(legacy) metadata filtering", async () => {
+  test("metadata filtering", async () => {
     const client = createClient({ url: process.env.REDIS_URL });
     await client.connect();
 
@@ -142,21 +143,26 @@ describe("RedisVectorStore", () => {
       await client.quit();
     }
   });
+});
 
+describe("FluentRedisVectorStore", () => {
   test("geo metadata filtering with vector search", async () => {
     const geoClient = createClient({ url: process.env.REDIS_URL });
     await geoClient.connect();
 
-    const geoVectorStore = new RedisVectorStore(new SyntheticEmbeddings(), {
-      redisClient: geoClient as RedisClientType,
-      indexName: "test-geo-index",
-      keyPrefix: "test-geo:",
-      customSchema: [
-        { name: "location", type: "geo" },
-        { name: "name", type: "text" },
-        { name: "category", type: "tag" },
-      ],
-    });
+    const geoVectorStore = new FluentRedisVectorStore(
+      new SyntheticEmbeddings(),
+      {
+        redisClient: geoClient as RedisClientType,
+        indexName: "test-geo-index",
+        keyPrefix: "test-geo:",
+        customSchema: [
+          { name: "location", type: "geo" },
+          { name: "name", type: "text" },
+          { name: "category", type: "tag" },
+        ],
+      }
+    );
 
     try {
       const pageContent = "A great restaurant with amazing food";
@@ -301,15 +307,18 @@ describe("RedisVectorStore", () => {
     const tagClient = createClient({ url: process.env.REDIS_URL });
     await tagClient.connect();
 
-    const tagVectorStore = new RedisVectorStore(new SyntheticEmbeddings(), {
-      redisClient: tagClient as RedisClientType,
-      indexName: "test-tag-index",
-      keyPrefix: "test-tag:",
-      customSchema: [
-        { name: "category", type: "tag" },
-        { name: "brand", type: "tag" },
-      ],
-    });
+    const tagVectorStore = new FluentRedisVectorStore(
+      new SyntheticEmbeddings(),
+      {
+        redisClient: tagClient as RedisClientType,
+        indexName: "test-tag-index",
+        keyPrefix: "test-tag:",
+        customSchema: [
+          { name: "category", type: "tag" },
+          { name: "brand", type: "tag" },
+        ],
+      }
+    );
 
     try {
       const pageContent = "Product description";
@@ -346,12 +355,15 @@ describe("RedisVectorStore", () => {
     const tagClient = createClient({ url: process.env.REDIS_URL });
     await tagClient.connect();
 
-    const tagVectorStore = new RedisVectorStore(new SyntheticEmbeddings(), {
-      redisClient: tagClient as RedisClientType,
-      indexName: "test-tag-multi-index",
-      keyPrefix: "test-tag-multi:",
-      customSchema: [{ name: "category", type: "tag" }],
-    });
+    const tagVectorStore = new FluentRedisVectorStore(
+      new SyntheticEmbeddings(),
+      {
+        redisClient: tagClient as RedisClientType,
+        indexName: "test-tag-multi-index",
+        keyPrefix: "test-tag-multi:",
+        customSchema: [{ name: "category", type: "tag" }],
+      }
+    );
 
     try {
       const pageContent = "Product description";
@@ -389,12 +401,15 @@ describe("RedisVectorStore", () => {
     const tagClient = createClient({ url: process.env.REDIS_URL });
     await tagClient.connect();
 
-    const tagVectorStore = new RedisVectorStore(new SyntheticEmbeddings(), {
-      redisClient: tagClient as RedisClientType,
-      indexName: "test-tag-ne-index",
-      keyPrefix: "test-tag-ne:",
-      customSchema: [{ name: "category", type: "tag" }],
-    });
+    const tagVectorStore = new FluentRedisVectorStore(
+      new SyntheticEmbeddings(),
+      {
+        redisClient: tagClient as RedisClientType,
+        indexName: "test-tag-ne-index",
+        keyPrefix: "test-tag-ne:",
+        customSchema: [{ name: "category", type: "tag" }],
+      }
+    );
 
     try {
       const pageContent = "Product description";
@@ -423,19 +438,68 @@ describe("RedisVectorStore", () => {
     }
   });
 
+  test("tag filter - Set values", async () => {
+    const tagClient = createClient({ url: process.env.REDIS_URL });
+    await tagClient.connect();
+
+    const tagVectorStore = new FluentRedisVectorStore(
+      new SyntheticEmbeddings(),
+      {
+        redisClient: tagClient as RedisClientType,
+        indexName: "test-tag-set-index",
+        keyPrefix: "test-tag-set:",
+        customSchema: [{ name: "category", type: "tag" }],
+      }
+    );
+
+    try {
+      const pageContent = "Product description";
+
+      await tagVectorStore.addDocuments([
+        { pageContent, metadata: { category: "electronics" } },
+        { pageContent, metadata: { category: "books" } },
+        { pageContent, metadata: { category: "clothing" } },
+        { pageContent, metadata: { category: "sports" } },
+      ]);
+
+      // Test with Set values
+      const filter = Tag("category").eq(new Set(["electronics", "books"]));
+      const results = await tagVectorStore.similaritySearch(
+        pageContent,
+        10,
+        filter
+      );
+
+      expect(results.length).toBe(2);
+      expect(
+        results.every(
+          (r) =>
+            r.metadata.category === "electronics" ||
+            r.metadata.category === "books"
+        )
+      ).toBe(true);
+    } finally {
+      await tagVectorStore.delete({ deleteAll: true });
+      await tagClient.quit();
+    }
+  });
+
   test("numeric filter - eq, gt, gte, lt, lte", async () => {
     const numClient = createClient({ url: process.env.REDIS_URL });
     await numClient.connect();
 
-    const numVectorStore = new RedisVectorStore(new SyntheticEmbeddings(), {
-      redisClient: numClient as RedisClientType,
-      indexName: "test-num-index",
-      keyPrefix: "test-num:",
-      customSchema: [
-        { name: "price", type: "numeric" },
-        { name: "rating", type: "numeric" },
-      ],
-    });
+    const numVectorStore = new FluentRedisVectorStore(
+      new SyntheticEmbeddings(),
+      {
+        redisClient: numClient as RedisClientType,
+        indexName: "test-num-index",
+        keyPrefix: "test-num:",
+        customSchema: [
+          { name: "price", type: "numeric" },
+          { name: "rating", type: "numeric" },
+        ],
+      }
+    );
 
     try {
       const pageContent = "Product description";
@@ -506,12 +570,15 @@ describe("RedisVectorStore", () => {
     const numClient = createClient({ url: process.env.REDIS_URL });
     await numClient.connect();
 
-    const numVectorStore = new RedisVectorStore(new SyntheticEmbeddings(), {
-      redisClient: numClient as RedisClientType,
-      indexName: "test-num-between-index",
-      keyPrefix: "test-num-between:",
-      customSchema: [{ name: "price", type: "numeric" }],
-    });
+    const numVectorStore = new FluentRedisVectorStore(
+      new SyntheticEmbeddings(),
+      {
+        redisClient: numClient as RedisClientType,
+        indexName: "test-num-between-index",
+        keyPrefix: "test-num-between:",
+        customSchema: [{ name: "price", type: "numeric" }],
+      }
+    );
 
     try {
       const pageContent = "Product description";
@@ -556,15 +623,18 @@ describe("RedisVectorStore", () => {
     const textClient = createClient({ url: process.env.REDIS_URL });
     await textClient.connect();
 
-    const textVectorStore = new RedisVectorStore(new SyntheticEmbeddings(), {
-      redisClient: textClient as RedisClientType,
-      indexName: "test-text-index",
-      keyPrefix: "test-text:",
-      customSchema: [
-        { name: "title", type: "text" },
-        { name: "description", type: "text" },
-      ],
-    });
+    const textVectorStore = new FluentRedisVectorStore(
+      new SyntheticEmbeddings(),
+      {
+        redisClient: textClient as RedisClientType,
+        indexName: "test-text-index",
+        keyPrefix: "test-text:",
+        customSchema: [
+          { name: "title", type: "text" },
+          { name: "description", type: "text" },
+        ],
+      }
+    );
 
     try {
       const pageContent = "Product description";
@@ -606,12 +676,15 @@ describe("RedisVectorStore", () => {
     const textClient = createClient({ url: process.env.REDIS_URL });
     await textClient.connect();
 
-    const textVectorStore = new RedisVectorStore(new SyntheticEmbeddings(), {
-      redisClient: textClient as RedisClientType,
-      indexName: "test-text-wildcard-index",
-      keyPrefix: "test-text-wildcard:",
-      customSchema: [{ name: "title", type: "text" }],
-    });
+    const textVectorStore = new FluentRedisVectorStore(
+      new SyntheticEmbeddings(),
+      {
+        redisClient: textClient as RedisClientType,
+        indexName: "test-text-wildcard-index",
+        keyPrefix: "test-text-wildcard:",
+        customSchema: [{ name: "title", type: "text" }],
+      }
+    );
 
     try {
       const pageContent = "Product description";
@@ -656,12 +729,15 @@ describe("RedisVectorStore", () => {
     const textClient = createClient({ url: process.env.REDIS_URL });
     await textClient.connect();
 
-    const textVectorStore = new RedisVectorStore(new SyntheticEmbeddings(), {
-      redisClient: textClient as RedisClientType,
-      indexName: "test-text-fuzzy-index",
-      keyPrefix: "test-text-fuzzy:",
-      customSchema: [{ name: "title", type: "text" }],
-    });
+    const textVectorStore = new FluentRedisVectorStore(
+      new SyntheticEmbeddings(),
+      {
+        redisClient: textClient as RedisClientType,
+        indexName: "test-text-fuzzy-index",
+        keyPrefix: "test-text-fuzzy:",
+        customSchema: [{ name: "title", type: "text" }],
+      }
+    );
 
     try {
       const pageContent = "Product description";
@@ -706,15 +782,18 @@ describe("RedisVectorStore", () => {
     const tsClient = createClient({ url: process.env.REDIS_URL });
     await tsClient.connect();
 
-    const tsVectorStore = new RedisVectorStore(new SyntheticEmbeddings(), {
-      redisClient: tsClient as RedisClientType,
-      indexName: "test-timestamp-index",
-      keyPrefix: "test-timestamp:",
-      customSchema: [
-        { name: "created_at", type: "numeric" },
-        { name: "updated_at", type: "numeric" },
-      ],
-    });
+    const tsVectorStore = new FluentRedisVectorStore(
+      new SyntheticEmbeddings(),
+      {
+        redisClient: tsClient as RedisClientType,
+        indexName: "test-timestamp-index",
+        keyPrefix: "test-timestamp:",
+        customSchema: [
+          { name: "created_at", type: "numeric" },
+          { name: "updated_at", type: "numeric" },
+        ],
+      }
+    );
 
     try {
       const pageContent = "Document content";
@@ -804,12 +883,15 @@ describe("RedisVectorStore", () => {
     const tsClient = createClient({ url: process.env.REDIS_URL });
     await tsClient.connect();
 
-    const tsVectorStore = new RedisVectorStore(new SyntheticEmbeddings(), {
-      redisClient: tsClient as RedisClientType,
-      indexName: "test-timestamp-epoch-index",
-      keyPrefix: "test-timestamp-epoch:",
-      customSchema: [{ name: "created_at", type: "numeric" }],
-    });
+    const tsVectorStore = new FluentRedisVectorStore(
+      new SyntheticEmbeddings(),
+      {
+        redisClient: tsClient as RedisClientType,
+        indexName: "test-timestamp-epoch-index",
+        keyPrefix: "test-timestamp-epoch:",
+        customSchema: [{ name: "created_at", type: "numeric" }],
+      }
+    );
 
     try {
       const pageContent = "Document content";
@@ -854,7 +936,7 @@ describe("RedisVectorStore", () => {
     const combinedClient = createClient({ url: process.env.REDIS_URL });
     await combinedClient.connect();
 
-    const combinedVectorStore = new RedisVectorStore(
+    const combinedVectorStore = new FluentRedisVectorStore(
       new SyntheticEmbeddings(),
       {
         redisClient: combinedClient as RedisClientType,
@@ -926,7 +1008,7 @@ describe("RedisVectorStore", () => {
     const combinedClient = createClient({ url: process.env.REDIS_URL });
     await combinedClient.connect();
 
-    const combinedVectorStore = new RedisVectorStore(
+    const combinedVectorStore = new FluentRedisVectorStore(
       new SyntheticEmbeddings(),
       {
         redisClient: combinedClient as RedisClientType,
@@ -971,7 +1053,7 @@ describe("RedisVectorStore", () => {
     const combinedClient = createClient({ url: process.env.REDIS_URL });
     await combinedClient.connect();
 
-    const combinedVectorStore = new RedisVectorStore(
+    const combinedVectorStore = new FluentRedisVectorStore(
       new SyntheticEmbeddings(),
       {
         redisClient: combinedClient as RedisClientType,
@@ -1033,17 +1115,20 @@ describe("RedisVectorStore", () => {
     const mixedClient = createClient({ url: process.env.REDIS_URL });
     await mixedClient.connect();
 
-    const mixedVectorStore = new RedisVectorStore(new SyntheticEmbeddings(), {
-      redisClient: mixedClient as RedisClientType,
-      indexName: "test-mixed-filters-index",
-      keyPrefix: "test-mixed-filters:",
-      customSchema: [
-        { name: "category", type: "tag" },
-        { name: "title", type: "text" },
-        { name: "price", type: "numeric" },
-        { name: "created_at", type: "numeric" },
-      ],
-    });
+    const mixedVectorStore = new FluentRedisVectorStore(
+      new SyntheticEmbeddings(),
+      {
+        redisClient: mixedClient as RedisClientType,
+        indexName: "test-mixed-filters-index",
+        keyPrefix: "test-mixed-filters:",
+        customSchema: [
+          { name: "category", type: "tag" },
+          { name: "title", type: "text" },
+          { name: "price", type: "numeric" },
+          { name: "created_at", type: "numeric" },
+        ],
+      }
+    );
 
     try {
       const pageContent = "Product description";
@@ -1101,402 +1186,6 @@ describe("RedisVectorStore", () => {
     } finally {
       await mixedVectorStore.delete({ deleteAll: true });
       await mixedClient.quit();
-    }
-  });
-
-  test("tag filter - Set values", async () => {
-    const tagClient = createClient({ url: process.env.REDIS_URL });
-    await tagClient.connect();
-
-    const tagVectorStore = new RedisVectorStore(new SyntheticEmbeddings(), {
-      redisClient: tagClient as RedisClientType,
-      indexName: "test-tag-set-index",
-      keyPrefix: "test-tag-set:",
-      customSchema: [{ name: "category", type: "tag" }],
-    });
-
-    try {
-      const pageContent = "Product description";
-
-      await tagVectorStore.addDocuments([
-        { pageContent, metadata: { category: "electronics" } },
-        { pageContent, metadata: { category: "books" } },
-        { pageContent, metadata: { category: "clothing" } },
-        { pageContent, metadata: { category: "sports" } },
-      ]);
-
-      // Test with Set values
-      const filter = Tag("category").eq(new Set(["electronics", "books"]));
-      const results = await tagVectorStore.similaritySearch(
-        pageContent,
-        10,
-        filter
-      );
-
-      expect(results.length).toBe(2);
-      expect(
-        results.every(
-          (r) =>
-            r.metadata.category === "electronics" ||
-            r.metadata.category === "books"
-        )
-      ).toBe(true);
-    } finally {
-      await tagVectorStore.delete({ deleteAll: true });
-      await tagClient.quit();
-    }
-  });
-
-  test("legacy metadata format detection and compatibility", async () => {
-    const client = createClient({ url: process.env.REDIS_URL });
-    await client.connect();
-
-    const indexName = "test-legacy-metadata-index";
-    const keyPrefix = "test-legacy:";
-
-    try {
-      // Step 1: Create a vector store with legacy metadata format (single TEXT field for metadata)
-      // This simulates an old index created before the new metadata schema feature
-      const legacyVectorStore = new RedisVectorStore(
-        new SyntheticEmbeddings(),
-        {
-          redisClient: client as RedisClientType,
-          indexName,
-          keyPrefix,
-          customSchema: [{ name: "metadata", type: "text" }],
-        }
-      );
-
-      const pageContent = faker.lorem.sentence(5);
-
-      // Add documents with metadata stored as JSON in a single field
-      await legacyVectorStore.addDocuments([
-        { pageContent, metadata: { category: "electronics", price: 99 } },
-        { pageContent, metadata: { category: "books", price: 15 } },
-        { pageContent, metadata: { category: "electronics", price: 149 } },
-      ]);
-
-      // Verify data was added
-      const legacyResults = await legacyVectorStore.similaritySearch(
-        pageContent,
-        3
-      );
-      expect(legacyResults.length).toBe(3);
-      expect(legacyResults[0].metadata.category).toBeDefined();
-      expect(legacyResults[0].metadata.price).toBeDefined();
-
-      // Step 2: Create a new vector store instance accessing the same index
-      // This simulates opening an existing legacy index with the latest version
-      const newVectorStore = new RedisVectorStore(new SyntheticEmbeddings(), {
-        redisClient: client as RedisClientType,
-        indexName,
-        keyPrefix,
-        // No customSchema provided - should detect legacy format
-      });
-
-      // Step 3: Verify the index state is detected as "legacy"
-      const indexState = await newVectorStore.checkIndexState();
-      expect(indexState).toBe("legacy");
-
-      // Ensure the schema is set up by calling createIndex (this happens automatically on addDocuments)
-      // but we need to call it explicitly here since we're not adding documents yet
-      await newVectorStore.createIndex([], 1536);
-
-      // Step 4: Verify we can still read the data correctly
-      const newResults = await newVectorStore.similaritySearch(pageContent, 3);
-      expect(newResults.length).toBe(3);
-
-      // Metadata should be correctly deserialized from the JSON field
-      expect(newResults[0].metadata.category).toBeDefined();
-      expect(newResults[0].metadata.price).toBeDefined();
-      expect(typeof newResults[0].metadata.category).toBe("string");
-      expect(typeof newResults[0].metadata.price).toBe("number");
-
-      // Step 5: Verify we can add new documents to the legacy index
-      await newVectorStore.addDocuments([
-        { pageContent, metadata: { category: "clothing", price: 49 } },
-      ]);
-
-      const updatedResults = await newVectorStore.similaritySearch(
-        pageContent,
-        4
-      );
-      expect(updatedResults.length).toBe(4);
-
-      // Step 6: Verify legacy filter still works
-      const filteredResults = await newVectorStore.similaritySearch(
-        pageContent,
-        3,
-        "electronics"
-      );
-      expect(filteredResults.length).toBeGreaterThan(0);
-      expect(
-        filteredResults.every((r) =>
-          JSON.stringify(r.metadata).includes("electronics")
-        )
-      ).toBe(true);
-    } finally {
-      // Clean up
-      const cleanupStore = new RedisVectorStore(new SyntheticEmbeddings(), {
-        redisClient: client as RedisClientType,
-        indexName,
-        keyPrefix,
-      });
-      await cleanupStore.delete({ deleteAll: true });
-      await client.quit();
-    }
-  });
-
-  test("backward compatibility - old API surface is preserved", async () => {
-    const client = createClient({ url: process.env.REDIS_URL });
-    await client.connect();
-
-    const indexName = "test-backward-compat-index";
-    const keyPrefix = "test-backward-compat:";
-
-    try {
-      // Test 1: Verify RedisVectorStoreConfig interface still accepts all old properties
-      const config = {
-        redisClient: client as RedisClientType,
-        indexName,
-        keyPrefix,
-        contentKey: "content",
-        metadataKey: "metadata",
-        vectorKey: "content_vector",
-        filter: ["test"],
-        ttl: 3600,
-      };
-
-      const vectorStore = new RedisVectorStore(new SyntheticEmbeddings(), config);
-
-      // Verify all properties are accessible
-      expect(vectorStore.indexName).toBe(indexName);
-      expect(vectorStore.keyPrefix).toBe(keyPrefix);
-      expect(vectorStore.contentKey).toBe("content");
-      expect(vectorStore.metadataKey).toBe("metadata");
-      expect(vectorStore.vectorKey).toBe("content_vector");
-      expect(vectorStore.filter).toEqual(["test"]);
-      expect(vectorStore.ttl).toBe(3600);
-
-      // Test 2: Verify old filter types still work (string array)
-      const pageContent = faker.lorem.sentence(5);
-      const vectorStoreWithArrayFilter = new RedisVectorStore(
-        new SyntheticEmbeddings(),
-        {
-          redisClient: client as RedisClientType,
-          indexName: `${indexName}-array-filter`,
-          keyPrefix: `${keyPrefix}array:`,
-          filter: ["test-value"],
-        }
-      );
-
-      await vectorStoreWithArrayFilter.addDocuments([
-        { pageContent, metadata: { foo: "test-value" } },
-        { pageContent, metadata: { foo: "other-value" } },
-      ]);
-
-      const arrayFilterResults = await vectorStoreWithArrayFilter.similaritySearch(
-        pageContent,
-        2
-      );
-      expect(arrayFilterResults.length).toBeGreaterThan(0);
-
-      // Test 3: Verify old filter types still work (string)
-      const vectorStoreWithStringFilter = new RedisVectorStore(
-        new SyntheticEmbeddings(),
-        {
-          redisClient: client as RedisClientType,
-          indexName: `${indexName}-string-filter`,
-          keyPrefix: `${keyPrefix}string:`,
-          filter: "test-value",
-        }
-      );
-
-      await vectorStoreWithStringFilter.addDocuments([
-        { pageContent, metadata: { foo: "test-value" } },
-        { pageContent, metadata: { foo: "other-value" } },
-      ]);
-
-      const stringFilterResults = await vectorStoreWithStringFilter.similaritySearch(
-        pageContent,
-        2
-      );
-      expect(stringFilterResults.length).toBeGreaterThan(0);
-
-      // Test 4: Verify fromTexts static method still works
-      const texts = [faker.lorem.sentence(5), faker.lorem.sentence(5)];
-      const metadatas = [{ id: "1" }, { id: "2" }];
-
-      const fromTextsStore = await RedisVectorStore.fromTexts(
-        texts,
-        metadatas,
-        new SyntheticEmbeddings(),
-        {
-          redisClient: client as RedisClientType,
-          indexName: `${indexName}-from-texts`,
-          keyPrefix: `${keyPrefix}from-texts:`,
-        }
-      );
-
-      const fromTextsResults = await fromTextsStore.similaritySearch(texts[0], 2);
-      expect(fromTextsResults.length).toBeGreaterThan(0);
-
-      // Test 5: Verify fromDocuments static method still works
-      const docs = [
-        new Document({ pageContent: faker.lorem.sentence(5), metadata: { id: "1" } }),
-        new Document({ pageContent: faker.lorem.sentence(5), metadata: { id: "2" } }),
-      ];
-
-      const fromDocsStore = await RedisVectorStore.fromDocuments(
-        docs,
-        new SyntheticEmbeddings(),
-        {
-          redisClient: client as RedisClientType,
-          indexName: `${indexName}-from-docs`,
-          keyPrefix: `${keyPrefix}from-docs:`,
-        }
-      );
-
-      const fromDocsResults = await fromDocsStore.similaritySearch(docs[0].pageContent, 2);
-      expect(fromDocsResults.length).toBeGreaterThan(0);
-
-      // Test 6: Verify addDocuments method signature is unchanged
-      const addDocsStore = new RedisVectorStore(new SyntheticEmbeddings(), {
-        redisClient: client as RedisClientType,
-        indexName: `${indexName}-add-docs`,
-        keyPrefix: `${keyPrefix}add-docs:`,
-      });
-
-      const docsToAdd = [
-        new Document({ pageContent: faker.lorem.sentence(5), metadata: { id: "1" } }),
-      ];
-
-      // Should accept documents and optional RedisAddOptions
-      await addDocsStore.addDocuments(docsToAdd, { batchSize: 100 });
-      const addDocsResults = await addDocsStore.similaritySearch(docsToAdd[0].pageContent, 1);
-      expect(addDocsResults.length).toBe(1);
-
-      // Test 7: Verify addVectors method signature is unchanged
-      const addVectorsStore = new RedisVectorStore(new SyntheticEmbeddings(), {
-        redisClient: client as RedisClientType,
-        indexName: `${indexName}-add-vectors`,
-        keyPrefix: `${keyPrefix}add-vectors:`,
-      });
-
-      const vectors = [[0.1, 0.2, 0.3]];
-      const vectorDocs = [new Document({ pageContent: "test", metadata: {} })];
-
-      await addVectorsStore.addVectors(vectorDocs, vectors, { batchSize: 100 });
-      const addVectorsResults = await addVectorsStore.similaritySearch("test", 1);
-      expect(addVectorsResults.length).toBe(1);
-
-      // Test 8: Verify delete method still works with both signatures
-      const deleteStore = new RedisVectorStore(new SyntheticEmbeddings(), {
-        redisClient: client as RedisClientType,
-        indexName: `${indexName}-delete`,
-        keyPrefix: `${keyPrefix}delete:`,
-      });
-
-      await deleteStore.addDocuments([
-        new Document({ pageContent: "test1", metadata: {} }),
-        new Document({ pageContent: "test2", metadata: {} }),
-      ]);
-
-      // Delete by IDs
-      await deleteStore.delete({ ids: ["test-id"] });
-
-      // Delete all
-      await deleteStore.delete({ deleteAll: true });
-
-      // Test 9: Verify dropIndex method still works
-      const dropIndexStore = new RedisVectorStore(new SyntheticEmbeddings(), {
-        redisClient: client as RedisClientType,
-        indexName: `${indexName}-drop`,
-        keyPrefix: `${keyPrefix}drop:`,
-      });
-
-      await dropIndexStore.addDocuments([
-        new Document({ pageContent: "test", metadata: {} }),
-      ]);
-
-      const dropResult = await dropIndexStore.dropIndex(true);
-      expect(typeof dropResult).toBe("boolean");
-
-      // Test 10: Verify similaritySearchVectorWithScore method still works
-      const scoreStore = new RedisVectorStore(new SyntheticEmbeddings(), {
-        redisClient: client as RedisClientType,
-        indexName: `${indexName}-score`,
-        keyPrefix: `${keyPrefix}score:`,
-      });
-
-      const testDoc = new Document({ pageContent: "test content", metadata: {} });
-      await scoreStore.addDocuments([testDoc]);
-
-      const embeddings = new SyntheticEmbeddings();
-      const queryVector = await embeddings.embedQuery("test content");
-      const scoreResults = await scoreStore.similaritySearchVectorWithScore(queryVector, 1);
-
-      expect(scoreResults.length).toBe(1);
-      expect(scoreResults[0]).toHaveLength(2); // [Document, score]
-      expect(scoreResults[0][0]).toBeInstanceOf(Document);
-      expect(typeof scoreResults[0][1]).toBe("number");
-
-      // Test 11: Verify deprecated similaritySearchVectorWithScoreAndMetadata method still works
-      const deprecatedStore = new RedisVectorStore(new SyntheticEmbeddings(), {
-        redisClient: client as RedisClientType,
-        indexName: `${indexName}-deprecated`,
-        keyPrefix: `${keyPrefix}deprecated:`,
-      });
-
-      const deprecatedDoc = new Document({
-        pageContent: "deprecated test",
-        metadata: { category: "test" },
-      });
-      await deprecatedStore.addDocuments([deprecatedDoc]);
-
-      const deprecatedQueryVector = await embeddings.embedQuery("deprecated test");
-      // Call the deprecated method - it should still work
-      const deprecatedResults = await deprecatedStore.similaritySearchVectorWithScoreAndMetadata(
-        deprecatedQueryVector,
-        1
-      );
-
-      expect(deprecatedResults.length).toBe(1);
-      expect(deprecatedResults[0]).toHaveLength(2); // [Document, score]
-      expect(deprecatedResults[0][0]).toBeInstanceOf(Document);
-      expect(typeof deprecatedResults[0][1]).toBe("number");
-      // Verify metadata is preserved
-      expect(deprecatedResults[0][0].metadata.category).toBe("test");
-    } finally {
-      // Clean up all test indices
-      const indices = [
-        indexName,
-        `${indexName}-array-filter`,
-        `${indexName}-string-filter`,
-        `${indexName}-from-texts`,
-        `${indexName}-from-docs`,
-        `${indexName}-add-docs`,
-        `${indexName}-add-vectors`,
-        `${indexName}-delete`,
-        `${indexName}-drop`,
-        `${indexName}-score`,
-        `${indexName}-deprecated`,
-      ];
-
-      for (const idx of indices) {
-        try {
-          const cleanupStore = new RedisVectorStore(new SyntheticEmbeddings(), {
-            redisClient: client as RedisClientType,
-            indexName: idx,
-            keyPrefix: `${keyPrefix}`,
-          });
-          await cleanupStore.delete({ deleteAll: true });
-        } catch {
-          // Ignore cleanup errors
-        }
-      }
-
-      await client.quit();
     }
   });
 });

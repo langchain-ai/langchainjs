@@ -7,73 +7,28 @@ import type {
   RediSearchSchema,
   SearchOptions,
 } from "redis";
-import { SchemaFieldTypes, VectorAlgorithms } from "redis";
+import { VectorAlgorithms, SchemaFieldTypes } from "redis";
 
-// Adapated from internal redis types which aren't exported
-/**
- * Type for creating a schema vector field. It includes the algorithm,
- * distance metric, and initial capacity.
- */
-export type CreateSchemaVectorField<
-  T extends VectorAlgorithms,
-  A extends Record<string, unknown>
-> = {
-  ALGORITHM: T;
-  DISTANCE_METRIC: "L2" | "IP" | "COSINE";
-  INITIAL_CAP?: number;
-} & A;
-/**
- * Type for creating a flat schema vector field. It extends
- * CreateSchemaVectorField with a block size property.
- */
-export type CreateSchemaFlatVectorField = CreateSchemaVectorField<
-  VectorAlgorithms.FLAT,
-  {
-    BLOCK_SIZE?: number;
-  }
->;
-/**
- * Type for creating a HNSW schema vector field. It extends
- * CreateSchemaVectorField with M, EF_CONSTRUCTION, and EF_RUNTIME
- * properties.
- */
-export type CreateSchemaHNSWVectorField = CreateSchemaVectorField<
-  VectorAlgorithms.HNSW,
-  {
-    M?: number;
-    EF_CONSTRUCTION?: number;
-    EF_RUNTIME?: number;
-  }
->;
-
-type CreateIndexOptions = NonNullable<
-  Parameters<ReturnType<typeof createClient>["ft"]["create"]>[3]
->;
-
-export type RedisSearchLanguages = `${NonNullable<
-  CreateIndexOptions["LANGUAGE"]
->}`;
-
-export type RedisVectorStoreIndexOptions = Omit<
+// Import schema types from schema.ts to avoid duplication
+import type {
+  CreateSchemaVectorField,
+  CreateSchemaFlatVectorField,
+  CreateSchemaHNSWVectorField,
   CreateIndexOptions,
-  "LANGUAGE"
-> & {
-  LANGUAGE?: RedisSearchLanguages;
-};
+  RedisSearchLanguages,
+  RedisVectorStoreIndexOptions,
+  CustomSchemaField,
+} from "./schema.js";
 
-/**
- * Interface for custom schema field definitions
- */
-export interface CustomSchemaField {
-  type: SchemaFieldTypes;
-  required?: boolean;
-  SORTABLE?: boolean | "UNF";
-  NOINDEX?: boolean;
-  SEPARATOR?: string; // For TAG fields
-  CASESENSITIVE?: true; // For TAG fields (Redis expects true, not boolean)
-  NOSTEM?: true; // For TEXT fields (Redis expects true, not boolean)
-  WEIGHT?: number; // For TEXT fields
-}
+// Re-export schema types for backward compatibility
+export type {
+  CreateSchemaVectorField,
+  CreateSchemaFlatVectorField,
+  CreateSchemaHNSWVectorField,
+  RedisSearchLanguages,
+  RedisVectorStoreIndexOptions,
+  CustomSchemaField,
+};
 
 /**
  * Interface for the configuration of the RedisVectorStore. It includes
@@ -112,9 +67,9 @@ export interface RedisAddOptions {
  * allows custom filters to be passed.
  *
  * @deprecated This filter type is limited to simple string-based filtering.
- * For advanced filtering capabilities including tag filters, numeric ranges,
+ * For fluent filtering capabilities including tag filters, numeric ranges,
  * text search, geographic queries, and complex filter combinations, please use
- * {@link RedisVectorStoreAdvanced} instead, which provides a more powerful and
+ * {@link FluentRedisVectorStore} instead, which provides a more powerful and
  * type-safe filtering API through FilterExpression and MetadataFieldSchema.
  */
 export type RedisVectorStoreFilterType = string[] | string;
@@ -125,12 +80,12 @@ export type RedisVectorStoreFilterType = string[] | string;
  * similarity searches, managing the index, and more.
  *
  * @deprecated This class uses a basic filtering approach limited to string arrays
- * or raw Redis query strings. For advanced filtering with structured metadata schemas,
+ * or raw Redis query strings. For fluent filtering with structured metadata schemas,
  * type-safe filter expressions, and support for tag, numeric, text, and geographic
- * filters, please migrate to {@link RedisVectorStoreAdvanced}.
+ * filters, please migrate to {@link FluentRedisVectorStore}.
  *
  * The RedisVectorStore will continue to be maintained for backward compatibility,
- * but new projects should use RedisVectorStoreAdvanced for better functionality
+ * but new projects should use FluentRedisVectorStore for better functionality
  * and maintainability.
  */
 export class RedisVectorStore extends VectorStore {
@@ -218,7 +173,7 @@ export class RedisVectorStore extends VectorStore {
   }
 
   /**
-   * @deprecated Use {@link RedisVectorStoreAdvanced} instead for advanced filtering
+   * @deprecated Use {@link FluentRedisVectorStore} instead for fluent filtering
    * capabilities and better type safety with MetadataFieldSchema.
    */
   constructor(
