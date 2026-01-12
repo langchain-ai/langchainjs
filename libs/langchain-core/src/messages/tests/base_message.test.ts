@@ -11,6 +11,7 @@ import {
   SystemMessage,
   _mergeObj,
   _mergeDicts,
+  DEFAULT_MERGE_IGNORE_KEYS,
 } from "../index.js";
 import { load } from "../../load/index.js";
 import { concat } from "../../utils/stream.js";
@@ -1189,5 +1190,55 @@ describe("_mergeDicts", () => {
       id: "0",
       fn: { name: "add", args: '{"a": 2,' },
     });
+  });
+
+  it("supports custom ignoreKeys option to preserve additional fields", () => {
+    // Without custom ignoreKeys, 'role' would be concatenated
+    expect(_mergeDicts({ role: "assistant" }, { role: "assistant" })).toEqual({
+      role: "assistantassistant",
+    });
+
+    // With custom ignoreKeys, 'role' is preserved
+    expect(
+      _mergeDicts(
+        { role: "assistant" },
+        { role: "assistant" },
+        { ignoreKeys: [...DEFAULT_MERGE_IGNORE_KEYS, "role"] }
+      )
+    ).toEqual({ role: "assistant" });
+  });
+
+  it("supports custom ignoreKeys for numeric fields", () => {
+    // Custom numeric field without ignoreKeys - gets summed
+    expect(_mergeDicts({ customId: 100 }, { customId: 100 })).toEqual({
+      customId: 200,
+    });
+
+    // Custom numeric field with ignoreKeys - preserved
+    expect(
+      _mergeDicts(
+        { customId: 100 },
+        { customId: 100 },
+        { ignoreKeys: [...DEFAULT_MERGE_IGNORE_KEYS, "customId"] }
+      )
+    ).toEqual({ customId: 100 });
+  });
+
+  it("passes ignoreKeys through nested objects", () => {
+    expect(
+      _mergeDicts(
+        { nested: { customField: "a", index: 0 } },
+        { nested: { customField: "b", index: 0 } },
+        { ignoreKeys: [...DEFAULT_MERGE_IGNORE_KEYS, "customField"] }
+      )
+    ).toEqual({
+      nested: { customField: "a", index: 0 },
+    });
+  });
+
+  it("DEFAULT_MERGE_IGNORE_KEYS includes expected fields", () => {
+    expect(DEFAULT_MERGE_IGNORE_KEYS).toContain("index");
+    expect(DEFAULT_MERGE_IGNORE_KEYS).toContain("created");
+    expect(DEFAULT_MERGE_IGNORE_KEYS).toContain("timestamp");
   });
 });
