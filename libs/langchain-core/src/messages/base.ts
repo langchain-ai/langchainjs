@@ -463,6 +463,13 @@ export function _mergeDicts(
         merged[key] += value;
       }
     } else if (typeof merged[key] === "number") {
+      if (key === "index") {
+        // Preserve the original index - it's used for identification, not accumulation
+        continue;
+      } else if (["created", "timestamp"].includes(key)) {
+        // Preserve the original value for timestamp-like fields
+        continue;
+      }
       merged[key] = merged[key] + value;
     } else if (typeof merged[key] === "object" && !Array.isArray(merged[key])) {
       merged[key] = _mergeDicts(merged[key], value);

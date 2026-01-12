@@ -631,6 +631,56 @@ describe("Complex AIMessageChunk concat", () => {
       },
     ]);
   });
+
+  it("Should correctly preserve index when concatenating multiple tool calls in additional_kwargs", () => {
+    // Reproducer for issue #9774 - index was being summed instead of preserved
+    type CustomToolCall = {
+      index: number;
+      id?: string;
+      fn: { name?: string; args: string };
+    };
+    const chunks: Array<{ tool_calls: CustomToolCall[] }> = [
+      // add tool call
+      {
+        tool_calls: [{ index: 0, id: "0", fn: { name: "add", args: "" } }],
+      },
+      { tool_calls: [{ index: 0, fn: { args: '{"a": 2,' } }] },
+      { tool_calls: [{ index: 0, fn: { args: ' "b": 3}' } }] },
+      // multiply tool call
+      {
+        tool_calls: [{ index: 1, id: "1", fn: { name: "mul", args: "" } }],
+      },
+      { tool_calls: [{ index: 1, fn: { args: '{"a": 2,' } }] },
+      { tool_calls: [{ index: 1, fn: { args: ' "b": 3}' } }] },
+    ];
+
+    const stream = chunks.map(
+      (chunk) =>
+        new AIMessageChunk({
+          content: "",
+          additional_kwargs: chunk as unknown as Record<string, unknown>,
+        })
+    );
+
+    let merged: AIMessageChunk | undefined;
+    for (const chunk of stream) {
+      merged = merged ? merged.concat(chunk) : chunk;
+    }
+
+    // The indices should be preserved, not summed
+    const toolCalls = (
+      merged?.additional_kwargs as unknown as { tool_calls: CustomToolCall[] }
+    ).tool_calls;
+    expect(toolCalls).toHaveLength(2);
+    expect(toolCalls[0].index).toBe(0);
+    expect(toolCalls[0].id).toBe("0");
+    expect(toolCalls[0].fn.name).toBe("add");
+    expect(toolCalls[0].fn.args).toBe('{"a": 2, "b": 3}');
+    expect(toolCalls[1].index).toBe(1);
+    expect(toolCalls[1].id).toBe("1");
+    expect(toolCalls[1].fn.name).toBe("mul");
+    expect(toolCalls[1].fn.args).toBe('{"a": 2, "b": 3}');
+  });
 });
 
 describe("Message like coercion", () => {
@@ -1109,5 +1159,35 @@ describe("_mergeDicts", () => {
     expect(_mergeDicts({}, {})).toEqual({});
     expect(_mergeDicts({ a: 1 }, {})).toEqual({ a: 1 });
     expect(_mergeDicts({}, { b: 2 })).toEqual({ b: 2 });
+  });
+
+  it("preserves 'index' field instead of summing", () => {
+    expect(_mergeDicts({ index: 0 }, { index: 0 })).toEqual({ index: 0 });
+    expect(_mergeDicts({ index: 1 }, { index: 1 })).toEqual({ index: 1 });
+  });
+
+  it("preserves 'created' timestamp field instead of summing", () => {
+    expect(
+      _mergeDicts({ created: 1734524005 }, { created: 1734524005 })
+    ).toEqual({ created: 1734524005 });
+  });
+
+  it("preserves 'timestamp' field instead of summing", () => {
+    expect(
+      _mergeDicts({ timestamp: 1734524005 }, { timestamp: 1734524005 })
+    ).toEqual({ timestamp: 1734524005 });
+  });
+
+  it("correctly merges nested objects with index field", () => {
+    expect(
+      _mergeDicts(
+        { index: 0, id: "0", fn: { name: "add", args: "" } },
+        { index: 0, fn: { args: '{"a": 2,' } }
+      )
+    ).toEqual({
+      index: 0,
+      id: "0",
+      fn: { name: "add", args: '{"a": 2,' },
+    });
   });
 });
