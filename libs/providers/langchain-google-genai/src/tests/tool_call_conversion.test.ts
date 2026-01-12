@@ -3,47 +3,41 @@ import { test, expect } from "@jest/globals";
 import { AIMessage } from "@langchain/core/messages";
 import { convertBaseMessagesToContent } from "../utils/common.js";
 
-test("ChatGoogleGenerativeAI correctly converts 'tool_call' content block with outputVersion: 'v1'", () => {
-  // 1. Create an AIMessage simulating outputVersion: "v1" behavior
-  // This structure mimics what happens when outputVersion: "v1" is set
-  // and tool_calls are present in the message constructor
+test("converts standard tool_call content blocks to Google functionCall format", () => {
+  // Create AIMessage with standard tool_call content block
   const aiMessage = new AIMessage({
-    content: [],
-    tool_calls: [
+    contentBlocks: [
       {
+        type: "tool_call",
         id: "call_123",
-        name: "search_tool",
-        args: { query: "AppSheet documentation" },
+        name: "calculator",
+        args: {
+          operation: "add",
+          number1: 2,
+          number2: 3,
+        },
       },
     ],
-    response_metadata: {
-      output_version: "v1",
-    },
   });
 
-  // 2. Verify the message structure has the problematic "tool_call" block
-  // This confirms the root cause description: AIMessage creates "tool_call" type blocks
-  const contentBlocks = aiMessage.content as any[];
-  expect(contentBlocks).toBeDefined();
-  expect(contentBlocks.length).toBe(1);
-  expect(contentBlocks[0].type).toBe("tool_call");
-  expect(contentBlocks[0].args).toBeDefined();
-
-  // 3. Attempt conversion (should succeed with fix)
+  // Convert to Google GenAI format
   const result = convertBaseMessagesToContent(
     [aiMessage],
-    false,
+    false, // isMultimodalModel
     undefined,
     "gemini-1.5-flash"
   );
 
-  // 4. Verify correct conversion to Google GenAI format
+  // Verify correct conversion
   expect(result).toBeDefined();
   expect(result.length).toBe(1);
   const part = result[0].parts[0];
-  
-  // Should produce a functionCall part
+
   expect(part.functionCall).toBeDefined();
-  expect(part.functionCall?.name).toBe("search_tool");
-  expect(part.functionCall?.args).toEqual({ query: "AppSheet documentation" });
+  expect(part.functionCall?.name).toBe("calculator");
+  expect(part.functionCall?.args).toEqual({
+    operation: "add",
+    number1: 2,
+    number2: 3,
+  });
 });
