@@ -864,7 +864,11 @@ describe("convertLegacySchema", () => {
     const result = convertLegacySchema("metadata", legacySchema);
 
     expect(result).toEqual([
-      { name: "metadata.category", type: "tag", options: { caseSensitive: true } },
+      {
+        name: "metadata.category",
+        type: "tag",
+        options: { caseSensitive: true },
+      },
     ]);
   });
 

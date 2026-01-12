@@ -180,7 +180,8 @@ export class FluentRedisVectorStore extends VectorStore {
     embeddings: EmbeddingsInterface,
     _dbConfig: FluentRedisVectorStoreConfig
   ) {
-    super(embeddings, _dbConfig as any);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    super(embeddings, _dbConfig as Record<string, any>);
 
     this.redisClient = _dbConfig.redisClient;
     this.indexName = _dbConfig.indexName;
