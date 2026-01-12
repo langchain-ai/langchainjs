@@ -54,3 +54,14 @@ examples/src/createAgent/*.png
 libs/langchain/graph-matrix.mermaid.md
 # LangGraph API
 .langgraph_api
+
+# Devenv
+.devenv*
+devenv.local.nix
+devenv.local.yaml
+
+# direnv
+.direnv
+
+# pre-commit
+.pre-commit-config.yaml
