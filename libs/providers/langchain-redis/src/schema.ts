@@ -59,7 +59,7 @@ export interface CustomSchemaField {
  */
 export type CreateSchemaVectorField<
   T extends VectorAlgorithms,
-  A extends Record<string, unknown>
+  A extends Record<string, unknown>,
 > = {
   /** The vector indexing algorithm to use */
   ALGORITHM: T;
