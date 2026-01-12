@@ -14,6 +14,7 @@ import {
   isAIMessage,
   isAIMessageChunk,
 } from "@langchain/core/messages";
+import { concat } from "@langchain/core/utils/stream";
 import { tool } from "@langchain/core/tools";
 import { BaseLanguageModelInput } from "@langchain/core/language_models/base";
 import { ChatOpenAI } from "../index.js";
@@ -298,6 +299,52 @@ test("Test reasoning", async () => {
   const response3 = await llmWithEffort.invoke(["Hello", response2]);
   expect(response3).toBeInstanceOf(AIMessage);
   expect(response3.additional_kwargs.reasoning).toBeDefined();
+});
+
+describe("OpenAI Reasoning with contentBlocks", () => {
+  test("invoke returns reasoning in contentBlocks", async () => {
+    const llm = new ChatOpenAI({
+      model: "o3-mini",
+      reasoning: { effort: "low", summary: "auto" },
+      useResponsesApi: true,
+    });
+
+    const result = await llm.invoke("What is 2 + 2?");
+
+    // Verify contentBlocks contains reasoning
+    const blocks = result.contentBlocks;
+    expect(blocks.length).toBeGreaterThan(0);
+
+    const reasoningBlocks = blocks.filter((b) => b.type === "reasoning");
+    expect(reasoningBlocks.length).toBeGreaterThan(0);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    expect((reasoningBlocks[0] as any).reasoning.length).toBeGreaterThan(0);
+
+    const textBlocks = blocks.filter((b) => b.type === "text");
+    expect(textBlocks.length).toBeGreaterThan(0);
+  });
+
+  test("stream returns reasoning in contentBlocks", async () => {
+    const llm = new ChatOpenAI({
+      model: "o3-mini",
+      reasoning: { effort: "low", summary: "auto" },
+      useResponsesApi: true,
+    });
+
+    let fullMessage: AIMessageChunk | null = null;
+    for await (const chunk of await llm.stream("What is 3 + 3?")) {
+      fullMessage = fullMessage ? concat(fullMessage, chunk) : chunk;
+    }
+
+    expect(fullMessage).toBeDefined();
+    const blocks = fullMessage!.contentBlocks;
+    expect(blocks.length).toBeGreaterThan(0);
+
+    const reasoningBlocks = blocks.filter((b) => b.type === "reasoning");
+    expect(reasoningBlocks.length).toBeGreaterThan(0);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    expect((reasoningBlocks[0] as any).reasoning.length).toBeGreaterThan(0);
+  }, 60000);
 });
 
 test("Test stateful API", async () => {

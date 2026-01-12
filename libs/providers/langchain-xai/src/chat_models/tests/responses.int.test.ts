@@ -248,3 +248,56 @@ describe("Error Handling", () => {
     await expect(chat.invoke([message])).rejects.toThrow();
   });
 });
+
+// Reasoning contentBlocks tests
+describe("xAI Reasoning with contentBlocks", () => {
+  test("invoke returns reasoning in contentBlocks", async () => {
+    const chat = new ChatXAIResponses({
+      model: "grok-3-mini-fast",
+      maxRetries: 0,
+      reasoning: {
+        effort: "low",
+        summary: "auto",
+      },
+    });
+
+    const result = await chat.invoke("What is 2 + 2?");
+
+    // Verify contentBlocks contains reasoning
+    const blocks = result.contentBlocks;
+    expect(blocks.length).toBeGreaterThan(0);
+
+    const reasoningBlocks = blocks.filter((b) => b.type === "reasoning");
+    expect(reasoningBlocks.length).toBeGreaterThan(0);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    expect((reasoningBlocks[0] as any).reasoning.length).toBeGreaterThan(0);
+
+    const textBlocks = blocks.filter((b) => b.type === "text");
+    expect(textBlocks.length).toBeGreaterThan(0);
+  });
+
+  test("stream returns reasoning in contentBlocks", async () => {
+    const chat = new ChatXAIResponses({
+      model: "grok-3-mini-fast",
+      maxRetries: 0,
+      reasoning: {
+        effort: "low",
+        summary: "auto",
+      },
+    });
+
+    let fullMessage: AIMessageChunk | undefined;
+    for await (const chunk of await chat.stream("What is 3 + 3?")) {
+      fullMessage = !fullMessage ? chunk : concat(fullMessage, chunk);
+    }
+
+    expect(fullMessage).toBeDefined();
+    const blocks = fullMessage!.contentBlocks;
+    expect(blocks.length).toBeGreaterThan(0);
+
+    const reasoningBlocks = blocks.filter((b) => b.type === "reasoning");
+    expect(reasoningBlocks.length).toBeGreaterThan(0);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    expect((reasoningBlocks[0] as any).reasoning.length).toBeGreaterThan(0);
+  }, 60000);
+});
