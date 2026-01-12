@@ -314,6 +314,13 @@ function _convertLangChainContentToPart(
         args: content.input,
       },
     };
+  } else if (content.type === "tool_call") {
+    return {
+      functionCall: {
+        name: content.name,
+        args: content.args,
+      },
+    };
   } else if (
     content.type?.includes("/") &&
     // Ensure it's a single slash.
