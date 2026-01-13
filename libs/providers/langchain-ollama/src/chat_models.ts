@@ -764,11 +764,12 @@ export class ChatOllama
         ? (responseMessage.thinking ?? responseMessage.content ?? "")
         : (responseMessage.content ?? "");
 
-      yield new ChatGenerationChunk({
+      const cg = new ChatGenerationChunk({
         text: token,
         message: convertOllamaMessagesToLangChain(responseMessage),
       });
-      await runManager?.handleLLMNewToken(token);
+      yield cg;
+      await runManager?.handleLLMNewToken(token, undefined, undefined, undefined, undefined, { chunk: cg });
     }
 
     // Yield the `response_metadata` as the final chunk.
