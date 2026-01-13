@@ -1,5 +1,11 @@
 # @langchain/core
 
+## 1.1.14
+
+### Patch Changes
+
+- [#9797](https://github.com/langchain-ai/langchainjs/pull/9797) [`bd1ab45`](https://github.com/langchain-ai/langchainjs/commit/bd1ab45364391f69ce93ecba36a4a15dafca2b76) Thanks [@christian-bromann](https://github.com/christian-bromann)! - handle undefined error objects in async-caller
+
 ## 1.1.13
 
 ### Patch Changes
