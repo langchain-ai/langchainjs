@@ -17,10 +17,12 @@ const STATUS_NO_RETRY = [
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const defaultFailedAttemptHandler = (error: any) => {
+  const errorMessage =
+    typeof error?.message === "string" ? error.message : "";
   if (
-    error.message.startsWith("Cancel") ||
-    error.message.startsWith("AbortError") ||
-    error.name === "AbortError"
+    errorMessage.startsWith("Cancel") ||
+    errorMessage.startsWith("AbortError") ||
+    error?.name === "AbortError"
   ) {
     throw error;
   }
