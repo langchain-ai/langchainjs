@@ -4,13 +4,13 @@ import type { StandardContentBlockTranslator } from "./index.js";
 import { _isString } from "./utils.js";
 
 /**
- * Converts an Ollama AI message to an array of v1 standard content blocks.
+ * Converts a DeepSeek AI message to an array of v1 standard content blocks.
  *
- * This function processes an AI message from Ollama's API format
+ * This function processes an AI message from DeepSeek's API format
  * and converts it to the standardized v1 content block format. It handles
- * the reasoning_content in additional_kwargs (populated when think mode is enabled).
+ * both string content and the reasoning_content in additional_kwargs.
  *
- * @param message - The AI message containing Ollama-formatted content
+ * @param message - The AI message containing DeepSeek-formatted content
  * @returns Array of content blocks in v1 standard format
  *
  * @example
@@ -19,7 +19,7 @@ import { _isString } from "./utils.js";
  *   content: "The answer is 42",
  *   additional_kwargs: { reasoning_content: "Let me think about this..." }
  * });
- * const standardBlocks = convertToV1FromOllamaMessage(message);
+ * const standardBlocks = convertToV1FromDeepSeekMessage(message);
  * // Returns:
  * // [
  * //   { type: "reasoning", reasoning: "Let me think about this..." },
@@ -27,7 +27,7 @@ import { _isString } from "./utils.js";
  * // ]
  * ```
  */
-export function convertToV1FromOllamaMessage(
+export function convertToV1FromDeepSeekMessage(
   message: AIMessage
 ): Array<ContentBlock.Standard> {
   const blocks: Array<ContentBlock.Standard> = [];
@@ -79,7 +79,7 @@ export function convertToV1FromOllamaMessage(
   return blocks;
 }
 
-export const ChatOllamaTranslator: StandardContentBlockTranslator = {
-  translateContent: convertToV1FromOllamaMessage,
-  translateContentChunk: convertToV1FromOllamaMessage,
+export const ChatDeepSeekTranslator: StandardContentBlockTranslator = {
+  translateContent: convertToV1FromDeepSeekMessage,
+  translateContentChunk: convertToV1FromDeepSeekMessage,
 };
