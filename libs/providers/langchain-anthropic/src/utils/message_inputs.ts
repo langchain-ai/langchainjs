@@ -247,15 +247,39 @@ function* _formatContentBlocks(
       } as Anthropic.Messages.TextBlockParam;
     } else if (toolTypes.find((t) => t === contentPart.type)) {
       const contentPartCopy = { ...contentPart };
-      if ("index" in contentPartCopy) {
-        // Anthropic does not support passing the index field here, so we remove it.
-        delete contentPartCopy.index;
+
+      if (
+        contentPartCopy.type === "tool_use" &&
+        typeof contentPartCopy.input === "string"
+      ) {
+        // `tool_use` content part may be followed by `input_json_delta` content parts
+        // which are chunks of a stringified JSON input, so we need to collect them
+        // and merge their inputs.
+        const inputDeltas = content.filter(
+          (nestedContentPart) =>
+            nestedContentPart.index === contentPartCopy.index &&
+            nestedContentPart.type === "input_json_delta" &&
+            typeof nestedContentPart.input === "string"
+        );
+        // If no `input_json_delta` parts are found, this line will just
+        // return `contentPartCopy.input`, so no additional check is needed
+        contentPartCopy.input = inputDeltas.reduce(
+          (accumulator, nestedContentPart) =>
+            accumulator + nestedContentPart.input,
+          contentPartCopy.input
+        );
       }
 
       if (contentPartCopy.type === "input_json_delta") {
         // `input_json_delta` type only represents yielding partial tool inputs
-        // and is not a valid type for Anthropic messages.
-        contentPartCopy.type = "tool_use";
+        // and is not a valid type for Anthropic messages,
+        // and since we collect these inputs for a relevant `tool_use`, we can skip it.
+        continue;
+      }
+
+      if ("index" in contentPartCopy) {
+        // Anthropic does not support passing the index field here, so we remove it.
+        delete contentPartCopy.index;
       }
 
       if ("input" in contentPartCopy) {
