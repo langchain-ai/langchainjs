@@ -1,5 +1,16 @@
 # @langchain/google-genai
 
+## 2.1.8
+
+### Patch Changes
+
+- [#9777](https://github.com/langchain-ai/langchainjs/pull/9777) [`3efe79c`](https://github.com/langchain-ai/langchainjs/commit/3efe79c62ff2ffe0ada562f7eecd85be074b649a) Thanks [@christian-bromann](https://github.com/christian-bromann)! - fix(core): properly elevate reasoning tokens
+
+- [#9769](https://github.com/langchain-ai/langchainjs/pull/9769) [`6de8ce3`](https://github.com/langchain-ai/langchainjs/commit/6de8ce37ba1fc01552c2d538c5c8bf489abd53b3) Thanks [@hntrl](https://github.com/hntrl)! - separate thinking and text content blocks when includeThoughts is enabled
+
+- Updated dependencies [[`3efe79c`](https://github.com/langchain-ai/langchainjs/commit/3efe79c62ff2ffe0ada562f7eecd85be074b649a), [`b8561c1`](https://github.com/langchain-ai/langchainjs/commit/b8561c17556bdf7a3ff8d70bc307422642a9172e)]:
+  - @langchain/core@1.1.13
+
 ## 2.1.7
 
 ### Patch Changes

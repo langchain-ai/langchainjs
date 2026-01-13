@@ -1,5 +1,16 @@
 # langchain
 
+## 1.2.8
+
+### Patch Changes
+
+- [#9779](https://github.com/langchain-ai/langchainjs/pull/9779) [`bb80067`](https://github.com/langchain-ai/langchainjs/commit/bb80067874af359d7347b07b75f5caa0ee246aea) Thanks [@hntrl](https://github.com/hntrl)! - add lc_source tag to summarization middleware messages
+
+- [#9784](https://github.com/langchain-ai/langchainjs/pull/9784) [`9a68b93`](https://github.com/langchain-ai/langchainjs/commit/9a68b933c13be556376244e83b18f61f051e6a5c) Thanks [@weiliddat](https://github.com/weiliddat)! - preserve reducer metadata in createAgent state schema
+
+- Updated dependencies [[`3efe79c`](https://github.com/langchain-ai/langchainjs/commit/3efe79c62ff2ffe0ada562f7eecd85be074b649a), [`b8561c1`](https://github.com/langchain-ai/langchainjs/commit/b8561c17556bdf7a3ff8d70bc307422642a9172e)]:
+  - @langchain/core@1.1.13
+
 ## 1.2.7
 
 ### Patch Changes
