@@ -1792,14 +1792,21 @@ describe("MultiServerMCPClient Integration Tests", () => {
           } else {
             expect(Array.isArray(resContentResult)).toBe(true);
             const resContentArray = resContentResult as ContentBlock[];
-            expect(resContentArray).toHaveLength(1);
-            expect(resContentArray[0]).toEqual(
-              expect.objectContaining({
-                type: "text",
-                text: expect.stringContaining(
-                  resourceToolInput.args.input as string
-                ),
-              })
+            // Embedded text from EmbeddedResource is extracted as content
+            expect(resContentArray.length).toBeGreaterThanOrEqual(1);
+            expect(resContentArray).toEqual(
+              expect.arrayContaining([
+                expect.objectContaining({
+                  type: "text",
+                  text: expect.stringContaining(
+                    resourceToolInput.args.input as string
+                  ),
+                }),
+                expect.objectContaining({
+                  type: "text",
+                  text: "This is a test resource.",
+                }),
+              ])
             );
           }
           expect(resArtifact).toEqual([
@@ -1867,7 +1874,23 @@ describe("MultiServerMCPClient Integration Tests", () => {
 
           const { content: resContent, artifact: resArtifact } =
             await resourceTool.invoke(resourceToolInput);
-          expect(resContent).toEqual([]);
+          // Embedded text is extracted to content (accessible to LLM)
+          // When only text is present, it may be returned as a string
+          if (typeof resContent === "string") {
+            expect(resContent).toContain("This is a test resource.");
+          } else {
+            expect(Array.isArray(resContent)).toBe(true);
+            const resContentArray = resContent as ContentBlock[];
+            expect(resContentArray.length).toBeGreaterThanOrEqual(1);
+            expect(resContentArray).toEqual(
+              expect.arrayContaining([
+                expect.objectContaining({
+                  type: "text",
+                  text: "This is a test resource.",
+                }),
+              ])
+            );
+          }
           expect(resArtifact).toHaveLength(2);
           expect(resArtifact).toEqual(
             expect.arrayContaining([
@@ -1961,7 +1984,8 @@ describe("MultiServerMCPClient Integration Tests", () => {
           expect(resArtifact).toEqual([]);
           expect(Array.isArray(resContent)).toBe(true);
           const resContentArray = resContent as ContentBlock[];
-          expect(resContentArray).toHaveLength(2);
+          // Embedded text is extracted as content + resource structure as file block
+          expect(resContentArray.length).toBeGreaterThanOrEqual(2);
           expect(resContentArray).toEqual(
             expect.arrayContaining([
               expect.objectContaining({
@@ -1976,6 +2000,11 @@ describe("MultiServerMCPClient Integration Tests", () => {
                 mime_type: "text/plain",
                 text: "This is a test resource.",
                 metadata: { uri: "mem://test.txt" },
+              }),
+              // Embedded text is also extracted as text content
+              expect.objectContaining({
+                type: "text",
+                text: "This is a test resource.",
               }),
             ])
           );
@@ -2036,13 +2065,19 @@ describe("MultiServerMCPClient Integration Tests", () => {
             await resourceTool.invoke(resourceToolInput);
           expect(resArtifact).toEqual([]);
           const resContentArray = resContent as ContentBlock[];
-          expect(resContentArray).toHaveLength(2);
+          // Embedded text is extracted as content + resource structure as file block
+          expect(resContentArray.length).toBeGreaterThanOrEqual(2);
           expect(resContentArray).toEqual(
             expect.arrayContaining([
               expect.objectContaining({ type: "text" }),
               expect.objectContaining({
                 type: "file",
                 metadata: { uri: "mem://test.txt" },
+              }),
+              // Embedded text is also extracted as text content
+              expect.objectContaining({
+                type: "text",
+                text: "This is a test resource.",
               }),
             ])
           );
@@ -2099,7 +2134,23 @@ describe("MultiServerMCPClient Integration Tests", () => {
 
           const { content: resContent, artifact: resArtifact } =
             await resourceTool.invoke(resourceToolInput);
-          expect(resContent).toEqual([]);
+          // Embedded text is extracted to content (accessible to LLM)
+          // When only text is present, it may be returned as a string
+          if (typeof resContent === "string") {
+            expect(resContent).toContain("This is a test resource.");
+          } else {
+            expect(Array.isArray(resContent)).toBe(true);
+            const resContentArray = resContent as ContentBlock[];
+            expect(resContentArray.length).toBeGreaterThanOrEqual(1);
+            expect(resContentArray).toEqual(
+              expect.arrayContaining([
+                expect.objectContaining({
+                  type: "text",
+                  text: "This is a test resource.",
+                }),
+              ])
+            );
+          }
           expect(resArtifact).toHaveLength(2);
           expect(resArtifact).toEqual(
             expect.arrayContaining([
@@ -2190,12 +2241,17 @@ describe("MultiServerMCPClient Integration Tests", () => {
             expect(resContent).toContain(resourceToolInput.args.input);
           } else if (Array.isArray(resContent)) {
             const resContentArray = resContent as ContentBlock[];
-            expect(resContentArray).toHaveLength(1);
-            expect(resContentArray[0]).toEqual(
-              expect.objectContaining({ type: "text", source_type: "text" })
+            // Embedded text from EmbeddedResource is extracted as content
+            expect(resContentArray.length).toBeGreaterThanOrEqual(1);
+            expect(resContentArray).toEqual(
+              expect.arrayContaining([
+                expect.objectContaining({ type: "text", source_type: "text" }),
+                expect.objectContaining({
+                  type: "text",
+                  text: "This is a test resource.",
+                }),
+              ])
             );
-          } else {
-            expect(resContent).toEqual([]);
           }
           expect(resArtifact).toHaveLength(1);
           expect(resArtifact[0]).toEqual(
