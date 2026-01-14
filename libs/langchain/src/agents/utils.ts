@@ -30,7 +30,7 @@ import {
 import type { ClientTool, ServerTool } from "@langchain/core/tools";
 
 import { isBaseChatModel, isConfigurableModel } from "./model.js";
-import { MultipleToolsBoundError } from "./errors.js";
+import { MultipleToolsBoundError, MiddlewareError } from "./errors.js";
 import type { AgentBuiltInState } from "./runtime.js";
 import type {
   ToolCallHandler,
@@ -551,17 +551,7 @@ export function wrapToolCall(
 
           return result;
         } catch (error) {
-          /**
-           * Add middleware context to error if not already added
-           */
-          if (
-            // eslint-disable-next-line no-instanceof/no-instanceof
-            error instanceof Error &&
-            !error.message.includes(`middleware "${m.name}"`)
-          ) {
-            error.message = `Error in middleware "${m.name}": ${error.message}`;
-          }
-          throw error;
+          throw new MiddlewareError(error, m.name);
         }
       };
       return wrappedHandler;

@@ -20,7 +20,7 @@ import type { ToolCall } from "@langchain/core/messages/tool";
 import type { ClientTool, ServerTool } from "@langchain/core/tools";
 
 import { initChatModel } from "../../chat_models/universal.js";
-import { MultipleStructuredOutputsError } from "../errors.js";
+import { MultipleStructuredOutputsError, MiddlewareError } from "../errors.js";
 import { RunnableCallable } from "../RunnableCallable.js";
 import {
   bindTools,
@@ -563,16 +563,7 @@ export class AgentNode<
 
             return middlewareResponse;
           } catch (error) {
-            /**
-             * Add middleware context to error if not already added
-             */
-            if (
-              error instanceof Error &&
-              !error.message.includes(`middleware "${currentMiddleware.name}"`)
-            ) {
-              error.message = `Error in middleware "${currentMiddleware.name}": ${error.message}`;
-            }
-            throw error;
+            throw new MiddlewareError(error, currentMiddleware.name);
           }
         };
       }
