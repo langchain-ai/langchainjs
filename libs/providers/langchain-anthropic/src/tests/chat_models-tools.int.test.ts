@@ -1018,3 +1018,39 @@ test("tool extras with defer_loading are merged into tool definitions", async ()
     true
   );
 });
+
+test("partial tool input is correctly merged before calling Anthropic API", async () => {
+  const messages = [
+    new HumanMessage("What's the weather in Seattle tomorrow?"),
+    new AIMessage({
+      response_metadata: { output_version: "v2" },
+      contentBlocks: [
+        { index: 1, type: "text", text: "I need to call the get_weather tool" },
+        {
+          index: 2,
+          type: "tool_use",
+          name: "get_weather",
+          id: "tool_call_id",
+          input: "",
+        },
+        { index: 2, type: "input_json_delta", input: '{"city": "' },
+        { index: 2, type: "input_json_delta", input: 'Seattle", "da' },
+        { index: 2, type: "input_json_delta", input: 'te": "to' },
+        { index: 2, type: "input_json_delta", input: 'morrow"}' },
+      ],
+    }),
+  ];
+
+  const {
+    messages: [, aiMessagePayload],
+  } = _convertMessagesToAnthropicPayload(messages);
+  expect(aiMessagePayload.content).toHaveLength(2);
+
+  const [, toolCall] = aiMessagePayload.content;
+  expect(toolCall).toStrictEqual({
+    type: "tool_use",
+    name: "get_weather",
+    id: "tool_call_id",
+    input: { city: "Seattle", date: "tomorrow" },
+  });
+});
