@@ -422,13 +422,56 @@ export function isOpenAIToolCallArray(
   );
 }
 
+/**
+ * Default keys that should be preserved (not merged) when concatenating message chunks.
+ * These are identification and timestamp fields that shouldn't be summed or concatenated.
+ */
+export const DEFAULT_MERGE_IGNORE_KEYS: readonly string[] = [
+  "index", // Used for identification in tool calls, not accumulation
+  "created", // Timestamp field
+  "timestamp", // Timestamp field
+] as const;
+
+/**
+ * Options for controlling merge behavior in `_mergeDicts`.
+ */
+export interface MergeDictsOptions {
+  /**
+   * Keys to ignore during merging. When a key is in this list:
+   * - For numeric values: the original value is preserved (not summed)
+   * - For string values: the original value is preserved (not concatenated)
+   *
+   * Defaults to `DEFAULT_MERGE_IGNORE_KEYS` which includes 'index', 'created', 'timestamp'.
+   *
+   * @example
+   * // Extend defaults with custom keys
+   * { ignoreKeys: [...DEFAULT_MERGE_IGNORE_KEYS, 'role', 'customField'] }
+   */
+  ignoreKeys?: readonly string[];
+}
+
 export function _mergeDicts(
+  /**
+   * The left dictionary to merge.
+   */
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   left: Record<string, any> | undefined,
+  /**
+   * The right dictionary to merge.
+   * @type {Record<string, any>}
+   */
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  right: Record<string, any> | undefined
+  right: Record<string, any> | undefined,
+  /**
+   * The options for the merge.
+   */
+  options?: MergeDictsOptions
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
 ): Record<string, any> | undefined {
+  /**
+   * The keys to ignore during merging.
+   */
+  const ignoreKeys = options?.ignoreKeys ?? DEFAULT_MERGE_IGNORE_KEYS;
   if (left === undefined && right === undefined) {
     return undefined;
   }
@@ -459,15 +502,22 @@ export function _mergeDicts(
         if (value) {
           merged[key] = value;
         }
+      } else if (ignoreKeys.includes(key)) {
+        // Preserve the original value for ignored keys
+        continue;
       } else {
         merged[key] += value;
       }
     } else if (typeof merged[key] === "number") {
+      if (ignoreKeys.includes(key)) {
+        // Preserve the original value for ignored keys
+        continue;
+      }
       merged[key] = merged[key] + value;
     } else if (typeof merged[key] === "object" && !Array.isArray(merged[key])) {
-      merged[key] = _mergeDicts(merged[key], value);
+      merged[key] = _mergeDicts(merged[key], value, options);
     } else if (Array.isArray(merged[key])) {
-      merged[key] = _mergeLists(merged[key], value);
+      merged[key] = _mergeLists(merged[key], value, options);
     } else if (merged[key] === value) {
       continue;
     } else {
@@ -481,7 +531,8 @@ export function _mergeDicts(
 
 export function _mergeLists<Content extends ContentBlock>(
   left?: Content[],
-  right?: Content[]
+  right?: Content[],
+  options?: MergeDictsOptions
 ): Content[] | undefined {
   if (left === undefined && right === undefined) {
     return undefined;
@@ -516,7 +567,8 @@ export function _mergeLists<Content extends ContentBlock>(
         ) {
           merged[toMerge] = _mergeDicts(
             merged[toMerge] as Record<string, unknown>,
-            item as Record<string, unknown>
+            item as Record<string, unknown>,
+            options
           ) as Content;
         } else {
           merged.push(item);
@@ -540,7 +592,8 @@ export function _mergeLists<Content extends ContentBlock>(
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function _mergeObj<T = any>(
   left: T | undefined,
-  right: T | undefined
+  right: T | undefined,
+  options?: MergeDictsOptions
 ): T | undefined {
   if (left === undefined && right === undefined) {
     return undefined;
@@ -554,11 +607,12 @@ export function _mergeObj<T = any>(
   } else if (typeof left === "string" && typeof right === "string") {
     return (left + right) as T;
   } else if (Array.isArray(left) && Array.isArray(right)) {
-    return _mergeLists(left, right) as T;
+    return _mergeLists(left, right, options) as T;
   } else if (typeof left === "object" && typeof right === "object") {
     return _mergeDicts(
       left as Record<string, unknown>,
-      right as Record<string, unknown>
+      right as Record<string, unknown>,
+      options
     ) as T;
   } else if (left === right) {
     return left;
