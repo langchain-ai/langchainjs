@@ -1,5 +1,11 @@
 # @langchain/core
 
+## 1.1.15
+
+### Patch Changes
+
+- [#9781](https://github.com/langchain-ai/langchainjs/pull/9781) [`230462d`](https://github.com/langchain-ai/langchainjs/commit/230462d28c3a8b5ccadf433ea2f523eb6e658de6) Thanks [@christian-bromann](https://github.com/christian-bromann)! - fix(core): preserve index and timestamp fields in \_mergeDicts
+
 ## 1.1.14
 
 ### Patch Changes
