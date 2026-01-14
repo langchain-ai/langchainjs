@@ -1,5 +1,12 @@
 # @langchain/google-common
 
+## 2.1.9
+
+### Patch Changes
+
+- Updated dependencies [[`bd1ab45`](https://github.com/langchain-ai/langchainjs/commit/bd1ab45364391f69ce93ecba36a4a15dafca2b76)]:
+  - @langchain/core@1.1.14
+
 ## 2.1.8
 
 ### Patch Changes
