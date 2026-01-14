@@ -1,6 +1,6 @@
 {
   "name": "@langchain/xai",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "xAI integration for LangChain.js",
   "author": "LangChain",
   "license": "MIT",
