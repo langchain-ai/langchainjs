@@ -57,7 +57,8 @@ jobs:
         run: |
           # Disable changelog generation for snapshot releases
           # Enable useCalculatedVersion to preserve current version (e.g., 1.2.0-dev-xxx instead of 0.0.0-dev-xxx)
-          pnpm dlx json -I -f .changeset/config.json -e "this.changelog = false; this.snapshot = { useCalculatedVersion: true, prereleaseTemplate: '{tag}-{timestamp}' }"
+          # Disable updateInternalDependencies to prevent dependent packages from getting regular version bumps
+          pnpm dlx json -I -f .changeset/config.json -e "this.changelog = false; this.updateInternalDependencies = 'none'; this.snapshot = { useCalculatedVersion: true, prereleaseTemplate: '{tag}-{timestamp}' }"
 
       - name: 📦 Version packages (snapshot)
         id: version
@@ -93,10 +94,23 @@ jobs:
 
       - name: 🚀 Publish to npm
         if: steps.version.outputs.success == '1'
-        run: pnpm changeset publish --tag ${{ inputs.npm_tag }} --no-git-tag
+        run: |
+          # Only publish packages with snapshot versions (ignore pending regular releases)
+          for pkg_json in $(find libs -name "package.json" -not -path "*/node_modules/*"); do
+            version=$(jq -r '.version' "$pkg_json")
+            name=$(jq -r '.name' "$pkg_json")
+            private=$(jq -r '.private // false' "$pkg_json")
+
+            [[ "$private" == "true" ]] && continue
+
+            if [[ "$version" == *"-${{ inputs.npm_tag }}-"* ]]; then
+              echo "📦 Publishing $name@$version"
+              dir=$(dirname "$pkg_json")
+              (cd "$dir" && pnpm publish --tag ${{ inputs.npm_tag }} --no-git-checks --access public)
+            fi
+          done
         env:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
-          # Enable npm provenance for OIDC-based publishing (bypasses OTP requirement)
           NPM_CONFIG_PROVENANCE: true
 
       - name: 📋 Get published packages
