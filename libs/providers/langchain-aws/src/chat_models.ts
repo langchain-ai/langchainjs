@@ -17,6 +17,7 @@ import type {
   GuardrailConfiguration,
   PerformanceConfiguration,
   ConverseRequest,
+  ServiceTierType,
 } from "@aws-sdk/client-bedrock-runtime";
 import {
   BedrockRuntimeClient,
@@ -172,6 +173,24 @@ export interface ChatBedrockConverseInput
   performanceConfig?: PerformanceConfiguration;
 
   /**
+   * Service tier for model invocation.
+   *
+   * Specifies the processing tier type used for serving the request. Supported values are
+   * 'priority', 'default', 'flex', and 'reserved'.
+   *
+   * - 'priority': Prioritized processing for lower latency
+   * - 'default': Standard processing tier
+   * - 'flex': Flexible processing tier with lower cost
+   * - 'reserved': Reserved capacity for consistent performance
+   *
+   * If not provided, AWS uses the default tier.
+   *
+   * For more information, see:
+   * https://docs.aws.amazon.com/bedrock/latest/userguide/service-tiers-inference.html
+   */
+  serviceTier?: ServiceTierType;
+
+  /**
    * Which types of `tool_choice` values the model supports.
    *
    * Inferred if not specified. Inferred as ['auto', 'any', 'tool'] if a 'claude-3'
@@ -188,6 +207,7 @@ export interface ChatBedrockConverseCallOptions
       | "streamUsage"
       | "guardrailConfig"
       | "performanceConfig"
+      | "serviceTier"
     > {
   /**
    * A list of stop sequences. A stop sequence is a sequence of characters that causes
@@ -697,6 +717,8 @@ export class ChatBedrockConverse
 
   performanceConfig?: PerformanceConfiguration;
 
+  serviceTier?: ServiceTierType | undefined = undefined;
+
   client: BedrockRuntimeClient;
 
   clientOptions?: BedrockRuntimeClientConfig;
@@ -768,6 +790,7 @@ export class ChatBedrockConverse
     this.streamUsage = rest?.streamUsage ?? this.streamUsage;
     this.guardrailConfig = rest?.guardrailConfig;
     this.performanceConfig = rest?.performanceConfig;
+    this.serviceTier = rest?.serviceTier;
     this.clientOptions = rest?.clientOptions;
 
     if (rest?.supportsToolChoiceValues === undefined) {
@@ -842,6 +865,8 @@ export class ChatBedrockConverse
       (Array.isArray(candidateInferenceConfig.stopSequences) &&
         candidateInferenceConfig.stopSequences.length > 0);
 
+    const serviceTierType = options?.serviceTier ?? this.serviceTier;
+
     return {
       inferenceConfig: hasInferenceValues
         ? candidateInferenceConfig
@@ -852,6 +877,11 @@ export class ChatBedrockConverse
         options?.additionalModelRequestFields,
       guardrailConfig: this.guardrailConfig ?? options?.guardrailConfig,
       performanceConfig: options?.performanceConfig,
+      serviceTier: serviceTierType
+        ? {
+            type: serviceTierType,
+          }
+        : undefined,
     };
   }
 

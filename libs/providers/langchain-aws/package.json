@@ -1,6 +1,6 @@
 {
   "name": "@langchain/aws",
-  "version": "1.1.1",
+  "version": "1.2.0",
   "description": "LangChain AWS integration",
   "author": "LangChain",
   "license": "MIT",
@@ -31,7 +31,7 @@
   },
   "dependencies": {
     "@aws-sdk/client-bedrock-agent-runtime": "^3.755.0",
-    "@aws-sdk/client-bedrock-runtime": "^3.840.0",
+    "@aws-sdk/client-bedrock-runtime": "^3.966.0",
     "@aws-sdk/client-kendra": "^3.750.0",
     "@aws-sdk/credential-provider-node": "^3.750.0"
   },

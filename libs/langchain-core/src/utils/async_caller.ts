@@ -15,28 +15,60 @@ const STATUS_NO_RETRY = [
   409, // Conflict
 ];
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const defaultFailedAttemptHandler = (error: any) => {
+/**
+ * The default failed attempt handler for the AsyncCaller.
+ * @param error - The error to handle.
+ * @returns void
+ */
+const defaultFailedAttemptHandler = (error: unknown) => {
+  if (typeof error !== "object" || error === null) {
+    return;
+  }
+
   if (
-    error.message.startsWith("Cancel") ||
-    error.message.startsWith("AbortError") ||
-    error.name === "AbortError"
+    ("message" in error &&
+      typeof error.message === "string" &&
+      (error.message.startsWith("Cancel") ||
+        error.message.startsWith("AbortError"))) ||
+    ("name" in error &&
+      typeof error.name === "string" &&
+      error.name === "AbortError")
   ) {
     throw error;
   }
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  if ((error as any)?.code === "ECONNABORTED") {
+  if (
+    "code" in error &&
+    typeof error.code === "string" &&
+    error.code === "ECONNABORTED"
+  ) {
     throw error;
   }
   const status =
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (error as any)?.response?.status ?? (error as any)?.status;
+    "response" in error &&
+    typeof error.response === "object" &&
+    error.response !== null &&
+    "status" in error.response &&
+    typeof error.response.status === "number"
+      ? error.response.status
+      : undefined;
   if (status && STATUS_NO_RETRY.includes(+status)) {
     throw error;
   }
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  if ((error as any)?.error?.code === "insufficient_quota") {
-    const err = new Error(error?.message);
+
+  const code =
+    "error" in error &&
+    typeof error.error === "object" &&
+    error.error !== null &&
+    "code" in error.error &&
+    typeof error.error.code === "string"
+      ? error.error.code
+      : undefined;
+  if (code === "insufficient_quota") {
+    const err = new Error(
+      "message" in error && typeof error.message === "string"
+        ? error.message
+        : "Insufficient quota"
+    );
     err.name = "InsufficientQuotaError";
     throw err;
   }
