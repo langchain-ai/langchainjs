@@ -72,6 +72,13 @@ jobs:
             echo "success=1" >> $GITHUB_OUTPUT
           fi
 
+      - name: 📥 Reinstall deps after versioning
+        if: steps.version.outputs.success == '1'
+        run: |
+          # Re-run install to update workspace links after changeset version modified package.json files
+          # This ensures pnpm pack can resolve workspace:* protocols correctly during build validation
+          pnpm install --no-frozen-lockfile
+
       - name: 🔨 Build packages
         if: steps.version.outputs.success == '1'
         run: |
