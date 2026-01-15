@@ -3,7 +3,7 @@ import {
   StructuredOutputMethodOptions,
 } from "@langchain/core/language_models/base";
 import { ModelProfile } from "@langchain/core/language_models/profile";
-import { BaseMessage } from "@langchain/core/messages";
+import { BaseMessage, AIMessageChunk } from "@langchain/core/messages";
 import { Runnable } from "@langchain/core/runnables";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import { InteropZodType } from "@langchain/core/utils/types";
@@ -13,6 +13,8 @@ import {
   ChatOpenAIFields,
   OpenAIClient,
 } from "@langchain/openai";
+import { ChatGenerationChunk } from "@langchain/core/outputs";
+import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
 import PROFILES from "./profiles.js";
 
 export interface ChatDeepSeekCallOptions extends ChatOpenAICallOptions {
@@ -466,6 +468,244 @@ export class ChatDeepSeek extends ChatOpenAICompletions<ChatDeepSeekCallOptions>
       model_provider: "deepseek",
     };
     return messageChunk;
+  }
+
+  async *_streamResponseChunks(
+    messages: BaseMessage[],
+    options: this["ParsedCallOptions"],
+    runManager?: CallbackManagerForLLMRun
+  ): AsyncGenerator<ChatGenerationChunk> {
+    const stream = super._streamResponseChunks(messages, options, runManager);
+
+    // State for parsing <think> tags
+    let tokensBuffer = "";
+    let isThinking = false;
+
+    for await (const chunk of stream) {
+      // If the model already provided reasoning_content natively, just yield it
+      if (chunk.message.additional_kwargs.reasoning_content) {
+        yield chunk;
+        continue;
+      }
+
+      const text = chunk.text;
+      if (!text) {
+        yield chunk;
+        continue;
+      }
+
+      // Append text to buffer to handle split tags
+      tokensBuffer += text;
+
+      // Check for <think> start tag
+      if (!isThinking && tokensBuffer.includes("<think>")) {
+        isThinking = true;
+        const thinkIndex = tokensBuffer.indexOf("<think>");
+        const beforeThink = tokensBuffer.substring(0, thinkIndex);
+        const afterThink = tokensBuffer.substring(
+          thinkIndex + "<think>".length
+        );
+
+        // We consumed up to <think>, so buffer becomes what's after
+        tokensBuffer = afterThink || ""; // might be empty or part of thought
+
+        if (beforeThink) {
+          // Send the content before the tag
+          const newChunk = new ChatGenerationChunk({
+            message: new AIMessageChunk({
+              content: beforeThink,
+              additional_kwargs: chunk.message.additional_kwargs,
+              response_metadata: chunk.message.response_metadata,
+              tool_calls: chunk.message.tool_calls,
+              tool_call_chunks: chunk.message.tool_call_chunks,
+              id: chunk.message.id,
+            }),
+            text: beforeThink,
+            generationInfo: chunk.generationInfo,
+          });
+          yield newChunk;
+        }
+      }
+
+      // Check for </think> end tag
+      if (isThinking && tokensBuffer.includes("</think>")) {
+        isThinking = false;
+        const thinkEndIndex = tokensBuffer.indexOf("</think>");
+        const thoughtContent = tokensBuffer.substring(0, thinkEndIndex);
+        const afterThink = tokensBuffer.substring(
+          thinkEndIndex + "</think>".length
+        );
+
+        // Yield the reasoning content
+        const reasoningChunk = new ChatGenerationChunk({
+          message: new AIMessageChunk({
+            content: "",
+            additional_kwargs: {
+              ...chunk.message.additional_kwargs,
+              reasoning_content: thoughtContent,
+            },
+            response_metadata: chunk.message.response_metadata,
+            tool_calls: chunk.message.tool_calls,
+            tool_call_chunks: chunk.message.tool_call_chunks,
+            id: chunk.message.id,
+          }),
+          text: "",
+          generationInfo: chunk.generationInfo,
+        });
+        yield reasoningChunk;
+
+        // Reset buffer to what's after </think>
+        tokensBuffer = afterThink || "";
+
+        // Yield the rest as normal content if any
+        if (tokensBuffer) {
+          const contentChunk = new ChatGenerationChunk({
+            message: new AIMessageChunk({
+              content: tokensBuffer,
+              additional_kwargs: chunk.message.additional_kwargs,
+              response_metadata: chunk.message.response_metadata,
+              tool_calls: chunk.message.tool_calls,
+              tool_call_chunks: chunk.message.tool_call_chunks,
+              id: chunk.message.id,
+            }),
+            text: tokensBuffer,
+            generationInfo: chunk.generationInfo,
+          });
+          yield contentChunk;
+          tokensBuffer = ""; // consumed
+        }
+      } else if (isThinking) {
+        // We are inside thinking block.
+        // Check partial </think> match
+        const possibleEndTag = "</think>";
+        let splitIndex = -1;
+
+        // Check if buffer ends with a prefix of </think> - Greedy check (longest first)
+        for (let i = possibleEndTag.length - 1; i >= 1; i--) {
+          if (tokensBuffer.endsWith(possibleEndTag.substring(0, i))) {
+            splitIndex = tokensBuffer.length - i;
+            break;
+          }
+        }
+
+        if (splitIndex !== -1) {
+          const safeToYield = tokensBuffer.substring(0, splitIndex);
+          if (safeToYield) {
+            const reasoningChunk = new ChatGenerationChunk({
+              message: new AIMessageChunk({
+                content: "",
+                additional_kwargs: {
+                  ...chunk.message.additional_kwargs,
+                  reasoning_content: safeToYield,
+                },
+                response_metadata: chunk.message.response_metadata,
+                tool_calls: chunk.message.tool_calls,
+                tool_call_chunks: chunk.message.tool_call_chunks,
+                id: chunk.message.id,
+              }),
+              text: "",
+              generationInfo: chunk.generationInfo,
+            });
+            yield reasoningChunk;
+          }
+          tokensBuffer = tokensBuffer.substring(splitIndex); // keep partial tag
+        } else {
+          // content is safe to yield as reasoning
+          if (tokensBuffer) {
+            const reasoningChunk = new ChatGenerationChunk({
+              message: new AIMessageChunk({
+                content: "",
+                additional_kwargs: {
+                  ...chunk.message.additional_kwargs,
+                  reasoning_content: tokensBuffer,
+                },
+                response_metadata: chunk.message.response_metadata,
+                tool_calls: chunk.message.tool_calls,
+                tool_call_chunks: chunk.message.tool_call_chunks,
+                id: chunk.message.id,
+              }),
+              text: "",
+              generationInfo: chunk.generationInfo,
+            });
+            yield reasoningChunk;
+            tokensBuffer = "";
+          }
+        }
+      } else {
+        // NOT thinking.
+        // Check partial start tag "<think>" - Greedy check (longest first)
+        const possibleStartTag = "<think>";
+        let splitIndex = -1;
+        for (let i = possibleStartTag.length - 1; i >= 1; i--) {
+          if (tokensBuffer.endsWith(possibleStartTag.substring(0, i))) {
+            splitIndex = tokensBuffer.length - i;
+            break;
+          }
+        }
+
+        if (splitIndex !== -1) {
+          // Yield safe content
+          const safeToYield = tokensBuffer.substring(0, splitIndex);
+          if (safeToYield) {
+            const contentChunk = new ChatGenerationChunk({
+              message: new AIMessageChunk({
+                content: safeToYield,
+                additional_kwargs: chunk.message.additional_kwargs,
+                response_metadata: chunk.message.response_metadata,
+                tool_calls: chunk.message.tool_calls,
+                tool_call_chunks: chunk.message.tool_call_chunks,
+                id: chunk.message.id,
+              }),
+              text: safeToYield,
+              generationInfo: chunk.generationInfo,
+            });
+            yield contentChunk;
+          }
+          tokensBuffer = tokensBuffer.substring(splitIndex); // keep partial tag
+        } else {
+          // Yield all
+          if (tokensBuffer) {
+            const contentChunk = new ChatGenerationChunk({
+              message: new AIMessageChunk({
+                content: tokensBuffer,
+                additional_kwargs: chunk.message.additional_kwargs,
+                response_metadata: chunk.message.response_metadata,
+                tool_calls: chunk.message.tool_calls,
+                tool_call_chunks: chunk.message.tool_call_chunks,
+                id: chunk.message.id,
+              }),
+              text: tokensBuffer,
+              generationInfo: chunk.generationInfo,
+            });
+            yield contentChunk;
+            tokensBuffer = "";
+          }
+        }
+      }
+    }
+
+    // Flush remaining buffer at end of stream
+    if (tokensBuffer) {
+      // If we were thinking, it's unclosed thought.
+      if (isThinking) {
+        const reasoningChunk = new ChatGenerationChunk({
+          message: new AIMessageChunk({
+            content: "",
+            additional_kwargs: { reasoning_content: tokensBuffer },
+          }),
+          text: "",
+        });
+        yield reasoningChunk;
+      } else {
+        const contentChunk = new ChatGenerationChunk({
+          message: new AIMessageChunk({
+            content: tokensBuffer,
+          }),
+          text: tokensBuffer,
+        });
+        yield contentChunk;
+      }
+    }
   }
 
   protected override _convertCompletionsMessageToBaseMessage(
