@@ -3,7 +3,7 @@ import * as fs from "node:fs";
 import * as path from "node:path";
 import { generateModelProfiles } from "../generator.js";
 import type { ProviderMap } from "../api-schema.js";
-import { findMonorepoRoot } from "../path-utils.js";
+import { findMonorepoRoot } from "../config.js";
 
 // Mock prettier
 vi.mock("prettier", () => ({
