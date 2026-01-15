@@ -1,5 +1,14 @@
 # langchain
 
+## 1.2.10
+
+### Patch Changes
+
+- [#9806](https://github.com/langchain-ai/langchainjs/pull/9806) [`cf56fc9`](https://github.com/langchain-ai/langchainjs/commit/cf56fc98aebf55a798e80cbd5c30259ffaf8ca47) Thanks [@christian-bromann](https://github.com/christian-bromann)! - fix(langchain): don't concatenate middleware error, instead use cause
+
+- Updated dependencies [[`230462d`](https://github.com/langchain-ai/langchainjs/commit/230462d28c3a8b5ccadf433ea2f523eb6e658de6)]:
+  - @langchain/core@1.1.15
+
 ## 1.2.9
 
 ### Patch Changes

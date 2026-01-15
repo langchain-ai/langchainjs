@@ -14,6 +14,7 @@ import { Command } from "@langchain/langgraph";
 
 import { createAgent, createMiddleware, toolStrategy } from "../index.js";
 import { FakeToolCallingChatModel, FakeToolCallingModel } from "./utils.js";
+import { MiddlewareError } from "../errors.js";
 
 describe("middleware", () => {
   it("should propagate state schema to middleware hooks and result", async () => {
@@ -740,9 +741,7 @@ describe("middleware", () => {
         agent.invoke({
           messages: [{ role: "user", content: "Hi" }],
         })
-      ).rejects.toThrow(
-        'Invalid response from "wrapModelCall" in middleware "ModifyingMiddleware": expected AIMessage, got undefined'
-      );
+      ).rejects.toThrow("expected AIMessage, got undefined");
     });
 
     it("should propagate the middleware name in the error", async () => {
@@ -766,7 +765,73 @@ describe("middleware", () => {
         agent.invoke({
           messages: [{ role: "user", content: "Hi" }],
         })
-      ).rejects.toThrow('Error in middleware "ModifyingMiddleware": foobar');
+      ).rejects.toThrow("foobar");
+    });
+
+    it("should not nest middleware error prefixes when middleware re-throws errors", async () => {
+      const innerMiddleware = createMiddleware({
+        name: "InnerMiddleware",
+        wrapModelCall: () => {
+          throw new Error("original error");
+        },
+      });
+
+      const innerModel = new FakeToolCallingChatModel({
+        responses: [new AIMessage("Inner response")],
+      });
+
+      const innerAgent = createAgent({
+        model: innerModel,
+        systemPrompt: "You are an inner agent",
+        middleware: [innerMiddleware],
+      });
+
+      const subAgentTool = tool(
+        async () => {
+          await innerAgent.invoke({
+            messages: [{ role: "user", content: "Hi" }],
+          });
+          return "success";
+        },
+        {
+          name: "subAgentTool",
+          description: "A tool that spawns a sub-agent",
+          schema: z.object({}),
+        }
+      );
+
+      // Outer model that calls the subAgentTool
+      const outerModel = new FakeToolCallingModel({
+        toolCalls: [[{ name: "subAgentTool", args: {}, id: "1" }]],
+      });
+
+      // Outer middleware that wraps tool calls and invokes the inner agent
+      const outerMiddleware = createMiddleware({
+        name: "OuterMiddleware",
+        wrapToolCall: async (request, handler) => {
+          return handler(request);
+        },
+      });
+
+      const agent = createAgent({
+        model: outerModel,
+        tools: [subAgentTool],
+        systemPrompt: "You are an outer agent",
+        middleware: [outerMiddleware],
+      });
+
+      // Should only show the innermost middleware prefix, not nested prefixes
+      const error = await agent
+        .invoke({
+          messages: [{ role: "user", content: "Hi" }],
+        })
+        .catch((err) => err);
+
+      expect(error).toBeInstanceOf(MiddlewareError);
+      expect(error.name).toBe("Error");
+      expect(error.message).toBe("original error");
+      expect(error.cause).toBeInstanceOf(MiddlewareError);
+      expect(error.cause?.cause).toBeInstanceOf(Error);
     });
 
     it("should allow middleware to modify tool calls in response", async () => {
@@ -1251,45 +1316,6 @@ describe("middleware", () => {
       expect(capturedState.messages).toBeDefined();
     });
 
-    it("should include middleware name in error messages", async () => {
-      /**
-       * Test that errors thrown in wrapToolCall include the middleware name
-       * With the default error handler (matching Python), errors from middleware bubble up
-       */
-      const errorTool = tool(async () => "Success", {
-        name: "error_tool",
-        description: "A tool for testing errors",
-        schema: z.object({}),
-      });
-
-      // Middleware that throws an error
-      const errorMiddleware = createMiddleware({
-        name: "ErrorThrowingMiddleware",
-        wrapToolCall: async () => {
-          throw new Error("Something went wrong in middleware");
-        },
-      });
-
-      const model = new FakeToolCallingModel({
-        toolCalls: [[{ name: "error_tool", args: {}, id: "1" }]],
-      });
-
-      const agent = createAgent({
-        model,
-        tools: [errorTool],
-        middleware: [errorMiddleware],
-      });
-
-      // With default error handling (matches Python), errors from middleware bubble up
-      await expect(
-        agent.invoke({
-          messages: [new HumanMessage("Call the error tool")],
-        })
-      ).rejects.toThrow(
-        'Error in middleware "ErrorThrowingMiddleware": Something went wrong in middleware'
-      );
-    });
-
     it("should validate that wrapToolCall returns ToolMessage or Command", async () => {
       /**
        * Test that wrapToolCall must return ToolMessage or Command
@@ -1575,7 +1601,7 @@ describe("middleware", () => {
 
       const slowTool = tool(
         async () => {
-          await new Promise((resolve) => setTimeout(resolve, 10));
+          await new Promise((resolve) => setTimeout(resolve, 15));
           return "Slow result";
         },
         {
