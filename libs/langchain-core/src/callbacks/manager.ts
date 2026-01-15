@@ -1224,7 +1224,7 @@ export class CallbackManager
       options?.verbose;
 
     const tracingV2Enabled =
-      LangChainTracer.getTraceableRunTree()?.tracingEnabled ||
+      LangChainTracer.getTraceableRunTree()?.tracingEnabled ??
       isTracingEnabled();
 
     const tracingEnabled =
