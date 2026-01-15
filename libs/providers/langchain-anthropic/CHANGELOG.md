@@ -1,5 +1,30 @@
 # @langchain/anthropic
 
+## 1.3.10
+
+### Patch Changes
+
+- [#9792](https://github.com/langchain-ai/langchainjs/pull/9792) [`7169eba`](https://github.com/langchain-ai/langchainjs/commit/7169ebac71574daf370d7c2f5b3e8bbfe4e25df7) Thanks [@xkcm](https://github.com/xkcm)! - Fixed converting partial tool inputs
+
+- Updated dependencies [[`230462d`](https://github.com/langchain-ai/langchainjs/commit/230462d28c3a8b5ccadf433ea2f523eb6e658de6)]:
+  - @langchain/core@1.1.15
+
+## 1.3.9
+
+### Patch Changes
+
+- Updated dependencies [[`bd1ab45`](https://github.com/langchain-ai/langchainjs/commit/bd1ab45364391f69ce93ecba36a4a15dafca2b76)]:
+  - @langchain/core@1.1.14
+
+## 1.3.8
+
+### Patch Changes
+
+- [#9777](https://github.com/langchain-ai/langchainjs/pull/9777) [`3efe79c`](https://github.com/langchain-ai/langchainjs/commit/3efe79c62ff2ffe0ada562f7eecd85be074b649a) Thanks [@christian-bromann](https://github.com/christian-bromann)! - fix(core): properly elevate reasoning tokens
+
+- Updated dependencies [[`3efe79c`](https://github.com/langchain-ai/langchainjs/commit/3efe79c62ff2ffe0ada562f7eecd85be074b649a), [`b8561c1`](https://github.com/langchain-ai/langchainjs/commit/b8561c17556bdf7a3ff8d70bc307422642a9172e)]:
+  - @langchain/core@1.1.13
+
 ## 1.3.7
 
 ### Patch Changes

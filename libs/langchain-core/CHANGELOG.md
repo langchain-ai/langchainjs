@@ -1,5 +1,25 @@
 # @langchain/core
 
+## 1.1.15
+
+### Patch Changes
+
+- [#9781](https://github.com/langchain-ai/langchainjs/pull/9781) [`230462d`](https://github.com/langchain-ai/langchainjs/commit/230462d28c3a8b5ccadf433ea2f523eb6e658de6) Thanks [@christian-bromann](https://github.com/christian-bromann)! - fix(core): preserve index and timestamp fields in \_mergeDicts
+
+## 1.1.14
+
+### Patch Changes
+
+- [#9797](https://github.com/langchain-ai/langchainjs/pull/9797) [`bd1ab45`](https://github.com/langchain-ai/langchainjs/commit/bd1ab45364391f69ce93ecba36a4a15dafca2b76) Thanks [@christian-bromann](https://github.com/christian-bromann)! - handle undefined error objects in async-caller
+
+## 1.1.13
+
+### Patch Changes
+
+- [#9777](https://github.com/langchain-ai/langchainjs/pull/9777) [`3efe79c`](https://github.com/langchain-ai/langchainjs/commit/3efe79c62ff2ffe0ada562f7eecd85be074b649a) Thanks [@christian-bromann](https://github.com/christian-bromann)! - fix(core): properly elevate reasoning tokens
+
+- [#9789](https://github.com/langchain-ai/langchainjs/pull/9789) [`b8561c1`](https://github.com/langchain-ai/langchainjs/commit/b8561c17556bdf7a3ff8d70bc307422642a9172e) Thanks [@hntrl](https://github.com/hntrl)! - source JsonOutputParser content from text accessor
+
 ## 1.1.12
 
 ### Patch Changes
