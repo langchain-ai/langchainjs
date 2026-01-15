@@ -98,9 +98,7 @@ describe("convertResponsesMessageToAIMessage", () => {
           type: "message",
           id: "msg_123",
           role: "assistant",
-          content: [
-            { type: "output_text", text: "Hello!", annotations: [] },
-          ],
+          content: [{ type: "output_text", text: "Hello!", annotations: [] }],
         },
       ],
       usage: {
@@ -125,8 +123,13 @@ describe("convertResponsesMessageToAIMessage", () => {
 
     // Verify reasoning is elevated to content array
     expect(Array.isArray(result.content)).toBe(true);
-    const contentArray = result.content as Array<{ type: string; [key: string]: unknown }>;
-    const reasoningBlocks = contentArray.filter((block) => block.type === "reasoning");
+    const contentArray = result.content as Array<{
+      type: string;
+      [key: string]: unknown;
+    }>;
+    const reasoningBlocks = contentArray.filter(
+      (block) => block.type === "reasoning"
+    );
     expect(reasoningBlocks.length).toBe(1);
     expect(reasoningBlocks[0]).toEqual({
       type: "reasoning",
@@ -156,9 +159,7 @@ describe("convertResponsesMessageToAIMessage", () => {
           type: "message",
           id: "msg_123",
           role: "assistant",
-          content: [
-            { type: "output_text", text: "Hello!", annotations: [] },
-          ],
+          content: [{ type: "output_text", text: "Hello!", annotations: [] }],
         },
       ],
       usage: {
@@ -175,8 +176,13 @@ describe("convertResponsesMessageToAIMessage", () => {
 
     // Verify no reasoning block is added to content when summary is empty
     expect(Array.isArray(result.content)).toBe(true);
-    const contentArray = result.content as Array<{ type: string; [key: string]: unknown }>;
-    const reasoningBlocks = contentArray.filter((block) => block.type === "reasoning");
+    const contentArray = result.content as Array<{
+      type: string;
+      [key: string]: unknown;
+    }>;
+    const reasoningBlocks = contentArray.filter(
+      (block) => block.type === "reasoning"
+    );
     expect(reasoningBlocks.length).toBe(0);
   });
 
@@ -192,9 +198,7 @@ describe("convertResponsesMessageToAIMessage", () => {
           type: "message",
           id: "msg_123",
           role: "assistant",
-          content: [
-            { type: "output_text", text: "Hello!", annotations: [] },
-          ],
+          content: [{ type: "output_text", text: "Hello!", annotations: [] }],
         },
       ],
       usage: {
@@ -211,8 +215,13 @@ describe("convertResponsesMessageToAIMessage", () => {
 
     // Verify no reasoning block in content
     expect(Array.isArray(result.content)).toBe(true);
-    const contentArray = result.content as Array<{ type: string; [key: string]: unknown }>;
-    const reasoningBlocks = contentArray.filter((block) => block.type === "reasoning");
+    const contentArray = result.content as Array<{
+      type: string;
+      [key: string]: unknown;
+    }>;
+    const reasoningBlocks = contentArray.filter(
+      (block) => block.type === "reasoning"
+    );
     expect(reasoningBlocks.length).toBe(0);
   });
 });
@@ -300,8 +309,13 @@ describe("convertResponsesDeltaToChatGenerationChunk", () => {
 
       // Verify reasoning is elevated to content
       expect(Array.isArray(aiMessageChunk.content)).toBe(true);
-      const contentArray = aiMessageChunk.content as Array<{ type: string; [key: string]: unknown }>;
-      const reasoningBlocks = contentArray.filter((block) => block.type === "reasoning");
+      const contentArray = aiMessageChunk.content as Array<{
+        type: string;
+        [key: string]: unknown;
+      }>;
+      const reasoningBlocks = contentArray.filter(
+        (block) => block.type === "reasoning"
+      );
       expect(reasoningBlocks.length).toBe(1);
       expect(reasoningBlocks[0]).toEqual({
         type: "reasoning",
@@ -328,13 +342,20 @@ describe("convertResponsesDeltaToChatGenerationChunk", () => {
       expect(aiMessageChunk.additional_kwargs.reasoning).toBeDefined();
       expect(aiMessageChunk.additional_kwargs.reasoning).toMatchObject({
         type: "reasoning",
-        summary: [{ type: "summary_text", text: "Initial reasoning step", index: 0 }],
+        summary: [
+          { type: "summary_text", text: "Initial reasoning step", index: 0 },
+        ],
       });
 
       // Verify reasoning is elevated to content
       expect(Array.isArray(aiMessageChunk.content)).toBe(true);
-      const contentArray = aiMessageChunk.content as Array<{ type: string; [key: string]: unknown }>;
-      const reasoningBlocks = contentArray.filter((block) => block.type === "reasoning");
+      const contentArray = aiMessageChunk.content as Array<{
+        type: string;
+        [key: string]: unknown;
+      }>;
+      const reasoningBlocks = contentArray.filter(
+        (block) => block.type === "reasoning"
+      );
       expect(reasoningBlocks.length).toBe(1);
       expect(reasoningBlocks[0]).toEqual({
         type: "reasoning",
@@ -358,13 +379,20 @@ describe("convertResponsesDeltaToChatGenerationChunk", () => {
       expect(aiMessageChunk.additional_kwargs.reasoning).toBeDefined();
       expect(aiMessageChunk.additional_kwargs.reasoning).toMatchObject({
         type: "reasoning",
-        summary: [{ type: "summary_text", text: "more reasoning text", index: 0 }],
+        summary: [
+          { type: "summary_text", text: "more reasoning text", index: 0 },
+        ],
       });
 
       // Verify reasoning is elevated to content
       expect(Array.isArray(aiMessageChunk.content)).toBe(true);
-      const contentArray = aiMessageChunk.content as Array<{ type: string; [key: string]: unknown }>;
-      const reasoningBlocks = contentArray.filter((block) => block.type === "reasoning");
+      const contentArray = aiMessageChunk.content as Array<{
+        type: string;
+        [key: string]: unknown;
+      }>;
+      const reasoningBlocks = contentArray.filter(
+        (block) => block.type === "reasoning"
+      );
       expect(reasoningBlocks.length).toBe(1);
       expect(reasoningBlocks[0]).toEqual({
         type: "reasoning",
@@ -391,8 +419,13 @@ describe("convertResponsesDeltaToChatGenerationChunk", () => {
 
       // Verify no reasoning block is added to content when summary is empty
       expect(Array.isArray(aiMessageChunk.content)).toBe(true);
-      const contentArray = aiMessageChunk.content as Array<{ type: string; [key: string]: unknown }>;
-      const reasoningBlocks = contentArray.filter((block) => block.type === "reasoning");
+      const contentArray = aiMessageChunk.content as Array<{
+        type: string;
+        [key: string]: unknown;
+      }>;
+      const reasoningBlocks = contentArray.filter(
+        (block) => block.type === "reasoning"
+      );
       expect(reasoningBlocks.length).toBe(0);
     });
 
@@ -413,8 +446,13 @@ describe("convertResponsesDeltaToChatGenerationChunk", () => {
 
       // Verify no reasoning block is added to content when delta is empty
       expect(Array.isArray(aiMessageChunk.content)).toBe(true);
-      const contentArray = aiMessageChunk.content as Array<{ type: string; [key: string]: unknown }>;
-      const reasoningBlocks = contentArray.filter((block) => block.type === "reasoning");
+      const contentArray = aiMessageChunk.content as Array<{
+        type: string;
+        [key: string]: unknown;
+      }>;
+      const reasoningBlocks = contentArray.filter(
+        (block) => block.type === "reasoning"
+      );
       expect(reasoningBlocks.length).toBe(0);
     });
   });
