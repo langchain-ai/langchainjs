@@ -57,8 +57,7 @@ jobs:
         run: |
           # Disable changelog generation for snapshot releases
           # Enable useCalculatedVersion to preserve current version (e.g., 1.2.0-dev-xxx instead of 0.0.0-dev-xxx)
-          # Disable updateInternalDependencies to prevent dependent packages from getting regular version bumps
-          pnpm dlx json -I -f .changeset/config.json -e "this.changelog = false; this.updateInternalDependencies = 'none'; this.snapshot = { useCalculatedVersion: true, prereleaseTemplate: '{tag}-{timestamp}' }"
+          pnpm dlx json -I -f .changeset/config.json -e "this.changelog = false; this.snapshot = { useCalculatedVersion: true, prereleaseTemplate: '{tag}-{timestamp}' }"
 
       - name: 📦 Version packages (snapshot)
         id: version
