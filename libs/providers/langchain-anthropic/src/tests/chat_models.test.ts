@@ -723,7 +723,8 @@ describe("Streaming tool call consolidation (input_json_delta handling)", () => 
       }),
     ];
 
-    const formattedMessages = _convertMessagesToAnthropicPayload(messageHistory);
+    const formattedMessages =
+      _convertMessagesToAnthropicPayload(messageHistory);
 
     // The AI message content should have 2 blocks: text and tool_use (no input_json_delta)
     expect(formattedMessages.messages[1].content).toHaveLength(2);
@@ -745,7 +746,13 @@ describe("Streaming tool call consolidation (input_json_delta handling)", () => 
       new AIMessage({
         content: [
           { type: "text", text: "I'll use the tool..." },
-          { type: "tool_use", id: "toolu_01Xyz", name: "my_tool", input: "", index: 2 },
+          {
+            type: "tool_use",
+            id: "toolu_01Xyz",
+            name: "my_tool",
+            input: "",
+            index: 2,
+          },
           { type: "input_json_delta", index: 2, input: '{"prompt": "hel' },
           { type: "input_json_delta", index: 2, input: 'lo"}' },
         ],
@@ -754,7 +761,8 @@ describe("Streaming tool call consolidation (input_json_delta handling)", () => 
       }),
     ];
 
-    const formattedMessages = _convertMessagesToAnthropicPayload(messageHistory);
+    const formattedMessages =
+      _convertMessagesToAnthropicPayload(messageHistory);
 
     expect(formattedMessages.messages[1].content).toHaveLength(2);
 
@@ -774,7 +782,12 @@ describe("Streaming tool call consolidation (input_json_delta handling)", () => 
       new AIMessage({
         content: [
           { type: "text", text: "Let me help with both tasks" },
-          { type: "tool_use", id: "toolu_weather", name: "get_weather", input: "" },
+          {
+            type: "tool_use",
+            id: "toolu_weather",
+            name: "get_weather",
+            input: "",
+          },
           { type: "input_json_delta", index: 1, input: '{"location": "SF' },
           { type: "input_json_delta", index: 1, input: '"}' },
           { type: "tool_use", id: "toolu_calc", name: "calculator", input: "" },
@@ -782,18 +795,24 @@ describe("Streaming tool call consolidation (input_json_delta handling)", () => 
           { type: "input_json_delta", index: 2, input: '"}' },
         ],
         tool_calls: [
-          { id: "toolu_weather", name: "get_weather", args: { location: "SF" } },
+          {
+            id: "toolu_weather",
+            name: "get_weather",
+            args: { location: "SF" },
+          },
           { id: "toolu_calc", name: "calculator", args: { expr: "2+2" } },
         ],
       }),
     ];
 
-    const formattedMessages = _convertMessagesToAnthropicPayload(messageHistory);
+    const formattedMessages =
+      _convertMessagesToAnthropicPayload(messageHistory);
 
     // Should have 3 blocks: text, 2 tool_use (no input_json_delta blocks)
     expect(formattedMessages.messages[1].content).toHaveLength(3);
 
-    const [textBlock, weatherTool, calcTool] = formattedMessages.messages[1].content;
+    const [textBlock, weatherTool, calcTool] =
+      formattedMessages.messages[1].content;
     expect(textBlock).toEqual({
       type: "text",
       text: "Let me help with both tasks",
@@ -835,7 +854,8 @@ describe("Streaming tool call consolidation (input_json_delta handling)", () => 
       }),
     ];
 
-    const formattedMessages = _convertMessagesToAnthropicPayload(messageHistory);
+    const formattedMessages =
+      _convertMessagesToAnthropicPayload(messageHistory);
 
     // Should have 2 blocks: text and tool_use (input_json_delta filtered out)
     expect(formattedMessages.messages[1].content).toHaveLength(2);
