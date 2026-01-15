@@ -10,6 +10,7 @@ import {
 import {
   convertMessagesToResponsesInput,
   convertResponsesDeltaToChatGenerationChunk,
+  convertResponsesMessageToAIMessage,
   convertResponsesUsageToUsageMetadata,
   convertStandardContentMessageToResponsesInput,
 } from "../responses.js";
@@ -76,6 +77,146 @@ describe("convertResponsesUsageToUsageMetadata", () => {
   });
 });
 
+describe("convertResponsesMessageToAIMessage", () => {
+  it("should elevate reasoning to content array", () => {
+    const response = {
+      id: "resp_123",
+      model: "o3-mini",
+      created_at: 1234567890,
+      object: "response",
+      status: "completed",
+      output: [
+        {
+          type: "reasoning",
+          id: "rs_abc123",
+          summary: [
+            { type: "summary_text", text: "First reasoning step" },
+            { type: "summary_text", text: "Second reasoning step" },
+          ],
+        },
+        {
+          type: "message",
+          id: "msg_123",
+          role: "assistant",
+          content: [
+            { type: "output_text", text: "Hello!", annotations: [] },
+          ],
+        },
+      ],
+      usage: {
+        input_tokens: 10,
+        output_tokens: 20,
+        total_tokens: 30,
+      },
+    };
+
+    const result = convertResponsesMessageToAIMessage(response as any);
+
+    // Verify reasoning is in additional_kwargs
+    expect(result.additional_kwargs.reasoning).toBeDefined();
+    expect(result.additional_kwargs.reasoning).toEqual({
+      type: "reasoning",
+      id: "rs_abc123",
+      summary: [
+        { type: "summary_text", text: "First reasoning step" },
+        { type: "summary_text", text: "Second reasoning step" },
+      ],
+    });
+
+    // Verify reasoning is elevated to content array
+    expect(Array.isArray(result.content)).toBe(true);
+    const contentArray = result.content as Array<{ type: string; [key: string]: unknown }>;
+    const reasoningBlocks = contentArray.filter((block) => block.type === "reasoning");
+    expect(reasoningBlocks.length).toBe(1);
+    expect(reasoningBlocks[0]).toEqual({
+      type: "reasoning",
+      reasoning: "First reasoning stepSecond reasoning step",
+    });
+
+    // Verify text content is also present
+    const textBlocks = contentArray.filter((block) => block.type === "text");
+    expect(textBlocks.length).toBe(1);
+    expect(textBlocks[0]).toMatchObject({ type: "text", text: "Hello!" });
+  });
+
+  it("should handle reasoning with empty summary", () => {
+    const response = {
+      id: "resp_123",
+      model: "o3-mini",
+      created_at: 1234567890,
+      object: "response",
+      status: "completed",
+      output: [
+        {
+          type: "reasoning",
+          id: "rs_abc123",
+          summary: [],
+        },
+        {
+          type: "message",
+          id: "msg_123",
+          role: "assistant",
+          content: [
+            { type: "output_text", text: "Hello!", annotations: [] },
+          ],
+        },
+      ],
+      usage: {
+        input_tokens: 10,
+        output_tokens: 20,
+        total_tokens: 30,
+      },
+    };
+
+    const result = convertResponsesMessageToAIMessage(response as any);
+
+    // Verify reasoning is in additional_kwargs
+    expect(result.additional_kwargs.reasoning).toBeDefined();
+
+    // Verify no reasoning block is added to content when summary is empty
+    expect(Array.isArray(result.content)).toBe(true);
+    const contentArray = result.content as Array<{ type: string; [key: string]: unknown }>;
+    const reasoningBlocks = contentArray.filter((block) => block.type === "reasoning");
+    expect(reasoningBlocks.length).toBe(0);
+  });
+
+  it("should handle response without reasoning", () => {
+    const response = {
+      id: "resp_123",
+      model: "gpt-4o",
+      created_at: 1234567890,
+      object: "response",
+      status: "completed",
+      output: [
+        {
+          type: "message",
+          id: "msg_123",
+          role: "assistant",
+          content: [
+            { type: "output_text", text: "Hello!", annotations: [] },
+          ],
+        },
+      ],
+      usage: {
+        input_tokens: 10,
+        output_tokens: 20,
+        total_tokens: 30,
+      },
+    };
+
+    const result = convertResponsesMessageToAIMessage(response as any);
+
+    // Verify no reasoning in additional_kwargs
+    expect(result.additional_kwargs.reasoning).toBeUndefined();
+
+    // Verify no reasoning block in content
+    expect(Array.isArray(result.content)).toBe(true);
+    const contentArray = result.content as Array<{ type: string; [key: string]: unknown }>;
+    const reasoningBlocks = contentArray.filter((block) => block.type === "reasoning");
+    expect(reasoningBlocks.length).toBe(0);
+  });
+});
+
 describe("convertResponsesDeltaToChatGenerationChunk", () => {
   describe("custom tool streaming delta handling", () => {
     it("should handle response.custom_tool_call_input.delta events", () => {
@@ -129,6 +270,152 @@ describe("convertResponsesDeltaToChatGenerationChunk", () => {
       expect(functionResultMessage.tool_call_chunks).toEqual(
         customResultMessage.tool_call_chunks
       );
+    });
+  });
+
+  describe("reasoning streaming elevation", () => {
+    it("should elevate reasoning to content on response.output_item.added with reasoning", () => {
+      const event = {
+        type: "response.output_item.added",
+        output_index: 0,
+        item: {
+          type: "reasoning",
+          id: "rs_abc123",
+          summary: [
+            { type: "summary_text", text: "Thinking about this..." },
+            { type: "summary_text", text: "Let me reason through." },
+          ],
+        },
+      };
+
+      const result = convertResponsesDeltaToChatGenerationChunk(event as any);
+      const aiMessageChunk = result?.message as AIMessageChunk;
+
+      // Verify reasoning is in additional_kwargs
+      expect(aiMessageChunk.additional_kwargs.reasoning).toBeDefined();
+      expect(aiMessageChunk.additional_kwargs.reasoning).toMatchObject({
+        id: "rs_abc123",
+        type: "reasoning",
+      });
+
+      // Verify reasoning is elevated to content
+      expect(Array.isArray(aiMessageChunk.content)).toBe(true);
+      const contentArray = aiMessageChunk.content as Array<{ type: string; [key: string]: unknown }>;
+      const reasoningBlocks = contentArray.filter((block) => block.type === "reasoning");
+      expect(reasoningBlocks.length).toBe(1);
+      expect(reasoningBlocks[0]).toEqual({
+        type: "reasoning",
+        reasoning: "Thinking about this...Let me reason through.",
+      });
+    });
+
+    it("should elevate reasoning to content on response.reasoning_summary_part.added", () => {
+      const event = {
+        type: "response.reasoning_summary_part.added",
+        item_id: "rs_abc123",
+        output_index: 0,
+        summary_index: 0,
+        part: {
+          type: "summary_text",
+          text: "Initial reasoning step",
+        },
+      };
+
+      const result = convertResponsesDeltaToChatGenerationChunk(event as any);
+      const aiMessageChunk = result?.message as AIMessageChunk;
+
+      // Verify reasoning is in additional_kwargs
+      expect(aiMessageChunk.additional_kwargs.reasoning).toBeDefined();
+      expect(aiMessageChunk.additional_kwargs.reasoning).toMatchObject({
+        type: "reasoning",
+        summary: [{ type: "summary_text", text: "Initial reasoning step", index: 0 }],
+      });
+
+      // Verify reasoning is elevated to content
+      expect(Array.isArray(aiMessageChunk.content)).toBe(true);
+      const contentArray = aiMessageChunk.content as Array<{ type: string; [key: string]: unknown }>;
+      const reasoningBlocks = contentArray.filter((block) => block.type === "reasoning");
+      expect(reasoningBlocks.length).toBe(1);
+      expect(reasoningBlocks[0]).toEqual({
+        type: "reasoning",
+        reasoning: "Initial reasoning step",
+      });
+    });
+
+    it("should elevate reasoning to content on response.reasoning_summary_text.delta", () => {
+      const event = {
+        type: "response.reasoning_summary_text.delta",
+        item_id: "rs_abc123",
+        output_index: 0,
+        summary_index: 0,
+        delta: "more reasoning text",
+      };
+
+      const result = convertResponsesDeltaToChatGenerationChunk(event as any);
+      const aiMessageChunk = result?.message as AIMessageChunk;
+
+      // Verify reasoning is in additional_kwargs
+      expect(aiMessageChunk.additional_kwargs.reasoning).toBeDefined();
+      expect(aiMessageChunk.additional_kwargs.reasoning).toMatchObject({
+        type: "reasoning",
+        summary: [{ type: "summary_text", text: "more reasoning text", index: 0 }],
+      });
+
+      // Verify reasoning is elevated to content
+      expect(Array.isArray(aiMessageChunk.content)).toBe(true);
+      const contentArray = aiMessageChunk.content as Array<{ type: string; [key: string]: unknown }>;
+      const reasoningBlocks = contentArray.filter((block) => block.type === "reasoning");
+      expect(reasoningBlocks.length).toBe(1);
+      expect(reasoningBlocks[0]).toEqual({
+        type: "reasoning",
+        reasoning: "more reasoning text",
+      });
+    });
+
+    it("should not add reasoning to content when summary is empty on response.output_item.added", () => {
+      const event = {
+        type: "response.output_item.added",
+        output_index: 0,
+        item: {
+          type: "reasoning",
+          id: "rs_abc123",
+          summary: [],
+        },
+      };
+
+      const result = convertResponsesDeltaToChatGenerationChunk(event as any);
+      const aiMessageChunk = result?.message as AIMessageChunk;
+
+      // Verify reasoning is in additional_kwargs
+      expect(aiMessageChunk.additional_kwargs.reasoning).toBeDefined();
+
+      // Verify no reasoning block is added to content when summary is empty
+      expect(Array.isArray(aiMessageChunk.content)).toBe(true);
+      const contentArray = aiMessageChunk.content as Array<{ type: string; [key: string]: unknown }>;
+      const reasoningBlocks = contentArray.filter((block) => block.type === "reasoning");
+      expect(reasoningBlocks.length).toBe(0);
+    });
+
+    it("should not add reasoning to content when delta is empty on response.reasoning_summary_text.delta", () => {
+      const event = {
+        type: "response.reasoning_summary_text.delta",
+        item_id: "rs_abc123",
+        output_index: 0,
+        summary_index: 0,
+        delta: "",
+      };
+
+      const result = convertResponsesDeltaToChatGenerationChunk(event as any);
+      const aiMessageChunk = result?.message as AIMessageChunk;
+
+      // Verify reasoning is in additional_kwargs
+      expect(aiMessageChunk.additional_kwargs.reasoning).toBeDefined();
+
+      // Verify no reasoning block is added to content when delta is empty
+      expect(Array.isArray(aiMessageChunk.content)).toBe(true);
+      const contentArray = aiMessageChunk.content as Array<{ type: string; [key: string]: unknown }>;
+      const reasoningBlocks = contentArray.filter((block) => block.type === "reasoning");
+      expect(reasoningBlocks.length).toBe(0);
     });
   });
 });
