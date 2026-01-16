@@ -769,7 +769,14 @@ export class ChatOllama
         message: convertOllamaMessagesToLangChain(responseMessage),
       });
       yield cg;
-      await runManager?.handleLLMNewToken(token, undefined, undefined, undefined, undefined, { chunk: cg });
+      await runManager?.handleLLMNewToken(
+        token,
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        { chunk: cg }
+      );
     }
 
     // Yield the `response_metadata` as the final chunk.
