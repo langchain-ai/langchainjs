@@ -267,6 +267,17 @@ export const convertResponsesMessageToAIMessage: Converter<
       }
     } else if (item.type === "reasoning") {
       additional_kwargs.reasoning = item;
+      // Also elevate reasoning to content for UI rendering
+      const reasoningText = item.summary
+        ?.map((s) => s.text)
+        .filter(Boolean)
+        .join("");
+      if (reasoningText) {
+        content.push({
+          type: "reasoning",
+          reasoning: reasoningText,
+        });
+      }
     } else if (item.type === "custom_tool_call") {
       const parsed = parseCustomToolCall(item);
       if (parsed) {
@@ -583,11 +594,31 @@ export const convertResponsesDeltaToChatGenerationChunk: Converter<
       type: event.item.type,
       ...(summary ? { summary } : {}),
     };
+
+    // Also elevate reasoning to content for UI rendering
+    const reasoningText = event.item.summary
+      ?.map((s) => s.text)
+      .filter(Boolean)
+      .join("");
+    if (reasoningText) {
+      content.push({
+        type: "reasoning",
+        reasoning: reasoningText,
+      });
+    }
   } else if (event.type === "response.reasoning_summary_part.added") {
     additional_kwargs.reasoning = {
       type: "reasoning",
       summary: [{ ...event.part, index: event.summary_index }],
     };
+
+    // Also elevate reasoning to content for UI rendering
+    if (event.part.text) {
+      content.push({
+        type: "reasoning",
+        reasoning: event.part.text,
+      });
+    }
   } else if (event.type === "response.reasoning_summary_text.delta") {
     additional_kwargs.reasoning = {
       type: "reasoning",
@@ -599,6 +630,14 @@ export const convertResponsesDeltaToChatGenerationChunk: Converter<
         },
       ],
     };
+
+    // Also elevate reasoning to content for UI rendering
+    if (event.delta) {
+      content.push({
+        type: "reasoning",
+        reasoning: event.delta,
+      });
+    }
   } else if (event.type === "response.image_generation_call.partial_image") {
     // noop/fixme: retaining partial images in a message chunk means that _all_
     // partial images get kept in history, so we don't do anything here.
