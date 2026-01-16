@@ -11,7 +11,7 @@ import {
   convertToProviderContentBlock,
   parseBase64DataUrl,
   ContentBlock,
-  isAIMessage,
+  AIMessage,
 } from "@langchain/core/messages";
 import { ToolCall } from "@langchain/core/messages/tool";
 import {
@@ -152,7 +152,8 @@ export function _convertLangChainToolCallToAnthropic(
 }
 
 function* _formatContentBlocks(
-  content: ContentBlock[]
+  content: ContentBlock[],
+  toolCalls?: ToolCall[]
 ): Generator<Anthropic.Beta.BetaContentBlockParam> {
   const toolTypes = [
     "bash_code_execution_tool_result",
@@ -248,33 +249,44 @@ function* _formatContentBlocks(
     } else if (toolTypes.find((t) => t === contentPart.type)) {
       const contentPartCopy = { ...contentPart };
 
+      if (contentPartCopy.type === "input_json_delta") {
+        // `input_json_delta` type only represents yielding partial tool inputs
+        // and is not a valid type for Anthropic messages.
+        // These blocks appear in streaming responses and should be skipped
+        // as their input data is already captured in tool_calls.
+        continue;
+      }
+
       if (
         contentPartCopy.type === "tool_use" &&
         typeof contentPartCopy.input === "string"
       ) {
-        // `tool_use` content part may be followed by `input_json_delta` content parts
-        // which are chunks of a stringified JSON input, so we need to collect them
-        // and merge their inputs.
-        const inputDeltas = content.filter(
-          (nestedContentPart) =>
-            nestedContentPart.index === contentPartCopy.index &&
-            nestedContentPart.type === "input_json_delta" &&
-            typeof nestedContentPart.input === "string"
+        // First, try to get the input from the corresponding tool_call.
+        // This is the most reliable source since tool_calls are properly
+        // consolidated from tool_call_chunks during streaming.
+        const matchingToolCall = toolCalls?.find(
+          (tc) => tc.id === contentPartCopy.id
         );
-        // If no `input_json_delta` parts are found, this line will just
-        // return `contentPartCopy.input`, so no additional check is needed
-        contentPartCopy.input = inputDeltas.reduce(
-          (accumulator, nestedContentPart) =>
-            accumulator + nestedContentPart.input,
-          contentPartCopy.input
-        );
-      }
-
-      if (contentPartCopy.type === "input_json_delta") {
-        // `input_json_delta` type only represents yielding partial tool inputs
-        // and is not a valid type for Anthropic messages,
-        // and since we collect these inputs for a relevant `tool_use`, we can skip it.
-        continue;
+        if (matchingToolCall) {
+          contentPartCopy.input = matchingToolCall.args;
+        } else {
+          // Fallback: `tool_use` content part may be followed by `input_json_delta`
+          // content parts which are chunks of a stringified JSON input,
+          // so we need to collect them and merge their inputs.
+          const inputDeltas = content.filter(
+            (nestedContentPart) =>
+              nestedContentPart.index === contentPartCopy.index &&
+              nestedContentPart.type === "input_json_delta" &&
+              typeof nestedContentPart.input === "string"
+          );
+          // If no `input_json_delta` parts are found, this line will just
+          // return `contentPartCopy.input`, so no additional check is needed
+          contentPartCopy.input = inputDeltas.reduce(
+            (accumulator, nestedContentPart) =>
+              accumulator + nestedContentPart.input,
+            contentPartCopy.input
+          );
+        }
       }
 
       if ("index" in contentPartCopy) {
@@ -313,13 +325,13 @@ function* _formatContentBlocks(
   }
 }
 
-function _formatContent(message: BaseMessage) {
+function _formatContent(message: BaseMessage, toolCalls?: ToolCall[]) {
   const { content } = message;
 
   if (typeof content === "string") {
     return content;
   } else {
-    return Array.from(_formatContentBlocks(content));
+    return Array.from(_formatContentBlocks(content, toolCalls));
   }
 }
 
@@ -355,7 +367,7 @@ export function _convertMessagesToAnthropicPayload(
       throw new Error(`Message type "${message.type}" is not supported.`);
     }
     if (
-      isAIMessage(message) &&
+      AIMessage.isInstance(message) &&
       message.response_metadata?.output_version === "v1"
     ) {
       return {
@@ -363,7 +375,7 @@ export function _convertMessagesToAnthropicPayload(
         content: _formatStandardContent(message),
       };
     }
-    if (isAIMessage(message) && !!message.tool_calls?.length) {
+    if (AIMessage.isInstance(message) && !!message.tool_calls?.length) {
       if (typeof message.content === "string") {
         if (message.content === "") {
           return {
@@ -399,13 +411,16 @@ export function _convertMessagesToAnthropicPayload(
         }
         return {
           role,
-          content: _formatContent(message),
+          content: _formatContent(message, message.tool_calls),
         };
       }
     } else {
       return {
         role,
-        content: _formatContent(message),
+        content: _formatContent(
+          message,
+          AIMessage.isInstance(message) ? message.tool_calls : undefined
+        ),
       };
     }
   });
