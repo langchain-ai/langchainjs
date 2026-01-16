@@ -1,5 +1,11 @@
 # @langchain/core
 
+## 1.1.16
+
+### Patch Changes
+
+- [#9815](https://github.com/langchain-ai/langchainjs/pull/9815) [`17e30bd`](https://github.com/langchain-ai/langchainjs/commit/17e30bd7f4c7bdf87c9c30304b3b9e121cc1fbbc) Thanks [@hntrl](https://github.com/hntrl)! - fix(core): respect tracingEnabled=false from RunTree when env tracing is enabled
+
 ## 1.1.15
 
 ### Patch Changes
