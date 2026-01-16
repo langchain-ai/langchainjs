@@ -67,3 +67,36 @@ export class ToolInvocationError extends Error {
     this.toolError = error;
   }
 }
+
+/**
+ * Error thrown when a middleware fails.
+ */
+export class MiddlewareError extends Error {
+  static readonly "~brand" = "MiddlewareError";
+
+  constructor(error: unknown, middlewareName: string) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    super(errorMessage);
+    this.name =
+      error instanceof Error
+        ? error.name
+        : `${middlewareName[0].toUpperCase() + middlewareName.slice(1)}Error`;
+
+    if (error instanceof Error) {
+      this.cause = error;
+    }
+  }
+
+  /**
+   * Check if the error is a MiddlewareError.
+   * @param error - The error to check
+   * @returns Whether the error is a MiddlewareError
+   */
+  isInstance(error: unknown): error is MiddlewareError {
+    return (
+      error instanceof Error &&
+      "~brand" in error &&
+      error["~brand"] === "MiddlewareError"
+    );
+  }
+}

@@ -57,7 +57,8 @@ jobs:
         run: |
           # Disable changelog generation for snapshot releases
           # Enable useCalculatedVersion to preserve current version (e.g., 1.2.0-dev-xxx instead of 0.0.0-dev-xxx)
-          pnpm dlx json -I -f .changeset/config.json -e "this.changelog = false; this.snapshot = { useCalculatedVersion: true, prereleaseTemplate: '{tag}-{timestamp}' }"
+          # Disable updateInternalDependencies to prevent dependent packages from getting regular version bumps
+          pnpm dlx json -I -f .changeset/config.json -e "this.changelog = false; this.updateInternalDependencies = 'none'; this.snapshot = { useCalculatedVersion: true, prereleaseTemplate: '{tag}-{timestamp}' }"
 
       - name: 📦 Version packages (snapshot)
         id: version
@@ -71,6 +72,13 @@ jobs:
           else
             echo "success=1" >> $GITHUB_OUTPUT
           fi
+
+      - name: 📥 Reinstall deps after versioning
+        if: steps.version.outputs.success == '1'
+        run: |
+          # Re-run install to update workspace links after changeset version modified package.json files
+          # This ensures pnpm pack can resolve workspace:* protocols correctly during build validation
+          pnpm install --no-frozen-lockfile
 
       - name: 🔨 Build packages
         if: steps.version.outputs.success == '1'
@@ -86,10 +94,44 @@ jobs:
 
       - name: 🚀 Publish to npm
         if: steps.version.outputs.success == '1'
-        run: pnpm changeset publish --tag ${{ inputs.npm_tag }} --no-git-tag
+        run: |
+          # Only publish packages with snapshot versions (ignore pending regular releases)
+          echo "🔍 Searching for packages to publish..."
+          echo "📋 Looking for versions containing: -${{ inputs.npm_tag }}-"
+          
+          PUBLISHED_COUNT=0
+          SKIPPED_COUNT=0
+          
+          for pkg_json in $(find libs -name "package.json" -not -path "*/node_modules/*"); do
+            version=$(jq -r '.version' "$pkg_json")
+            name=$(jq -r '.name' "$pkg_json")
+            private=$(jq -r '.private // false' "$pkg_json")
+
+            if [[ "$private" == "true" ]]; then
+              echo "⏭️  Skipping $name (private package)"
+              continue
+            fi
+
+            if [[ "$version" == *"-${{ inputs.npm_tag }}-"* ]]; then
+              echo "📦 Publishing $name@$version"
+              dir=$(dirname "$pkg_json")
+              (cd "$dir" && pnpm publish --tag ${{ inputs.npm_tag }} --no-git-checks --access public)
+              PUBLISHED_COUNT=$((PUBLISHED_COUNT + 1))
+            else
+              echo "⏭️  Skipping $name@$version (no snapshot suffix)"
+              SKIPPED_COUNT=$((SKIPPED_COUNT + 1))
+            fi
+          done
+          
+          echo ""
+          echo "✅ Published: $PUBLISHED_COUNT packages"
+          echo "⏭️  Skipped: $SKIPPED_COUNT packages"
+          
+          if [[ "$PUBLISHED_COUNT" -eq 0 ]]; then
+            echo "::warning::No packages with snapshot versions were found to publish"
+          fi
         env:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
-          # Enable npm provenance for OIDC-based publishing (bypasses OTP requirement)
           NPM_CONFIG_PROVENANCE: true
 
       - name: 📋 Get published packages

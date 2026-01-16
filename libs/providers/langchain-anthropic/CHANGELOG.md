@@ -1,5 +1,14 @@
 # @langchain/anthropic
 
+## 1.3.10
+
+### Patch Changes
+
+- [#9792](https://github.com/langchain-ai/langchainjs/pull/9792) [`7169eba`](https://github.com/langchain-ai/langchainjs/commit/7169ebac71574daf370d7c2f5b3e8bbfe4e25df7) Thanks [@xkcm](https://github.com/xkcm)! - Fixed converting partial tool inputs
+
+- Updated dependencies [[`230462d`](https://github.com/langchain-ai/langchainjs/commit/230462d28c3a8b5ccadf433ea2f523eb6e658de6)]:
+  - @langchain/core@1.1.15
+
 ## 1.3.9
 
 ### Patch Changes
