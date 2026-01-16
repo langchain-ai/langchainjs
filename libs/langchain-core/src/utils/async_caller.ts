@@ -43,7 +43,7 @@ const defaultFailedAttemptHandler = (error: unknown) => {
   ) {
     throw error;
   }
-  const status =
+  const responseStatus =
     "response" in error &&
     typeof error.response === "object" &&
     error.response !== null &&
@@ -51,6 +51,14 @@ const defaultFailedAttemptHandler = (error: unknown) => {
     typeof error.response.status === "number"
       ? error.response.status
       : undefined;
+
+  // OpenAI SDK errors expose status directly on the error object
+  const directStatus =
+    "status" in error && typeof error.status === "number"
+      ? error.status
+      : undefined;
+
+  const status = responseStatus ?? directStatus;
   if (status && STATUS_NO_RETRY.includes(+status)) {
     throw error;
   }

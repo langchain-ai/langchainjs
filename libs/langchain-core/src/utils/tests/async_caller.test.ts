@@ -100,4 +100,59 @@ describe("AsyncCaller", () => {
     await expect(() => caller.call(callable)).rejects.toThrow("Bad Request");
     expect(callable).toHaveBeenCalledTimes(1);
   });
+
+  test("defaultFailedAttemptHandler treats OpenAI-style errors with direct status as non-retryable", async () => {
+    const caller = new AsyncCaller({ maxRetries: 2 });
+
+    // OpenAI SDK errors have a direct `status` property, not `response.status`
+    const err = Object.assign(new Error("Bad Request"), { status: 400 });
+    const callable = vi.fn(async () => Promise.reject(err));
+
+    await expect(() => caller.call(callable)).rejects.toThrow("Bad Request");
+    expect(callable).toHaveBeenCalledTimes(1);
+  });
+
+  test("defaultFailedAttemptHandler retries on 5xx errors with direct status", async () => {
+    const caller = new AsyncCaller({ maxRetries: 2 });
+
+    // 5xx errors should be retried
+    const callable = vi
+      .fn<() => Promise<void>>()
+      .mockRejectedValueOnce(
+        Object.assign(new Error("Internal Server Error"), { status: 500 })
+      )
+      .mockResolvedValueOnce();
+
+    await expect(caller.call(callable)).resolves.toBeUndefined();
+    expect(callable).toHaveBeenCalledTimes(2);
+  });
+
+  test("defaultFailedAttemptHandler prioritizes response.status over direct status", async () => {
+    const caller = new AsyncCaller({ maxRetries: 2 });
+
+    // If both exist, response.status should take precedence
+    const err = Object.assign(new Error("Conflict"), {
+      status: 500, // Would retry
+      response: { status: 409 }, // Should not retry
+    });
+    const callable = vi.fn(async () => Promise.reject(err));
+
+    await expect(() => caller.call(callable)).rejects.toThrow("Conflict");
+    expect(callable).toHaveBeenCalledTimes(1);
+  });
+
+  test("defaultFailedAttemptHandler retries on 429 rate limit errors with direct status", async () => {
+    const caller = new AsyncCaller({ maxRetries: 2 });
+
+    // 429 rate limit errors should be retried (not in STATUS_NO_RETRY)
+    const callable = vi
+      .fn<() => Promise<void>>()
+      .mockRejectedValueOnce(
+        Object.assign(new Error("Too Many Requests"), { status: 429 })
+      )
+      .mockResolvedValueOnce();
+
+    await expect(caller.call(callable)).resolves.toBeUndefined();
+    expect(callable).toHaveBeenCalledTimes(2);
+  });
 });
