@@ -2,4 +2,4 @@
 "@langchain/core": patch
 ---
 
-Tool call response returns compacted json
+Tool call content returns compacted json
