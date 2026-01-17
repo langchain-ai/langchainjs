@@ -1003,3 +1003,41 @@ test("convertBaseMessagesToContent should handle AIMessages with custom names", 
   expect(result[0].role).toBe("user");
   expect(result[1].role).toBe("model");
 });
+
+test("Google AI - labels can be set in the constructor", async () => {
+  const labels = {
+    project: "test-project",
+    environment: "development",
+  };
+
+  const model = new ChatGoogleGenerativeAI({
+    model: "gemini-2.0-flash",
+    labels,
+    apiKey: "test-api-key",
+  });
+
+  expect(model.labels).toEqual(labels);
+});
+
+test("Google AI - labels defaults to undefined", async () => {
+  const model = new ChatGoogleGenerativeAI({
+    model: "gemini-2.0-flash",
+    apiKey: "test-api-key",
+  });
+
+  expect(model.labels).toBeUndefined();
+});
+
+test("Google AI - labels is an optional parameter", async () => {
+  expect(
+    () =>
+      new ChatGoogleGenerativeAI({
+        model: "gemini-2.0-flash",
+        labels: {
+          team: "ai",
+          version: "1.0",
+        },
+        apiKey: "test-api-key",
+      })
+  ).not.toThrow();
+});

@@ -109,6 +109,8 @@ export interface GoogleGenerativeAIChatInput
    */
   model: string;
 
+  labels?: Record<string, string>;
+
   /**
    * Controls the randomness of the output.
    *
@@ -616,6 +618,8 @@ export class ChatGoogleGenerativeAI
   }
 
   model: string;
+  
+  labels?: Record<string, string>;
 
   temperature?: number; // default value chosen based on model
 
@@ -658,6 +662,8 @@ export class ChatGoogleGenerativeAI
     super(fields);
 
     this.model = fields.model.replace(/^models\//, "");
+
+    this.labels = fields.labels;
 
     this.maxOutputTokens = fields.maxOutputTokens ?? this.maxOutputTokens;
 
