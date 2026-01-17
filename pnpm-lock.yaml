@@ -3248,6 +3248,9 @@ importers:
       redis:
         specifier: ^4.6.13
         version: 4.7.1
+      uuid:
+        specifier: ^10.0.0
+        version: 10.0.0
     devDependencies:
       '@faker-js/faker':
         specifier: ^8.4.0
@@ -3285,9 +3288,6 @@ importers:
       typescript:
         specifier: ~5.8.3
         version: 5.8.3
-      uuid:
-        specifier: ^10.0.0
-        version: 10.0.0
       vitest:
         specifier: ^3.2.4
         version: 3.2.4(@types/debug@4.1.12)(@types/node@24.10.1)(jiti@2.6.1)(jsdom@26.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.5))(terser@5.44.1)(tsx@4.20.3)(yaml@2.8.1)
