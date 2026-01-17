@@ -96,9 +96,19 @@ export abstract class GoogleRequestCallbackHandler extends BaseCallbackHandler {
 export class GoogleRequestLogger extends GoogleRequestCallbackHandler {
   name: string = "GoogleRequestLogger";
 
+  shortenStringLength = 40;
+
   log(eventName: string, data: any, tags?: string[]): undefined {
+    const splitLen = this.shortenStringLength;
+    const half = splitLen / 2;
+    const replacer = (_key: string, value: any) => {
+      if (typeof value === "string" && splitLen > 0 && value.length > splitLen) {
+        return `${value.substring(0, half)}...${value.substring(value.length - half)}`;
+      }
+      return value;
+    };
     const tagStr = tags ? `[${tags}]` : "[]";
-    console.log(`${eventName} ${tagStr} ${JSON.stringify(data, null, 1)}`);
+    console.log(`${eventName} ${tagStr} ${JSON.stringify(data, replacer, 1)}`);
   }
 
   handleCustomRequestEvent(
