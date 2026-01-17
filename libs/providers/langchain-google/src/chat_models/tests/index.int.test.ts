@@ -45,6 +45,7 @@ type ModelInfoConfig = {
   delay?: number,
   isThinking?: boolean, // Is this a thinking model?
   isImage?: boolean, // Is this an image generation model?
+  hasImageThoughts?: boolean, // Is this an image model that has thinking output?
   isTts?: boolean, // Is this a TTS model?
 }
 
@@ -96,6 +97,7 @@ const allModelInfo: ModelInfo[] = [
     model: "gemini-3-pro-image-preview",
     testConfig: {
       isImage: true,
+      hasImageThoughts: true,
     },
   },
   {
@@ -1348,18 +1350,26 @@ describe.each(imageModelInfo)(
       exec(`open "${filePath}"`);
     }
 
-    async function handleResult(blocks: ContentBlock.Standard[]) {
+    async function handleResult(blocks: ContentBlock.Standard[]): Promise<Record<string,number>> {
+      const ret: Record<string,number> = {
+        unknown: 0,
+      };
+
       for (const block of blocks) {
-        console.log("Block Type:", block.type);
-        if (block.type === "file") {
+        const type: string = block.type;
+        console.log("Block Type:", type);
+        ret[type] = (ret[type] ?? 0)+1
+        if (type === "file") {
           await openFile(block as ContentBlock.Multimodal.File);
-        } else if (block.type === "text") {
+        } else if (type === "text" || type === "reasoning") {
           console.log(block.text);
         } else {
-          console.log('Unexpected block type', block.type);
+          console.log('Unexpected block type', type);
+          ret.unknown = ret.unknown + 1;
         }
       }
 
+      return ret;
     }
 
     test("draw - invoke", async () => {
@@ -1405,6 +1415,30 @@ describe.each(imageModelInfo)(
       console.log('typeCount', typeBlock);
       expect(typeBlock.file?.length).toBeGreaterThanOrEqual(1);
     })
+
+    test("draw - thinking", async () => {
+      const llm = newChatGoogle({
+        responseModalities: [
+          "IMAGE",
+          "TEXT",
+        ],
+        maxReasoningTokens: -1,
+      });
+      const prompt = "I would like to see a drawing of a house with the sun shining overhead. Drawn in crayon.";
+      const result: AIMessage = await llm.invoke(prompt);
+      console.log('recorder', recorder.response?.data?.candidates?.[0]?.content?.parts);
+      console.log('result info', result.content.length, result.contentBlocks.length);
+      const types = await handleResult(result.contentBlocks);
+      expect(types.unknown).toEqual(0);
+      if (testConfig?.hasImageThoughts) {
+        expect(types.file ?? 0).toEqual(1);
+        expect(types.text ?? 0).toEqual(0);
+        expect(types.reasoning ?? 0).toEqual(3); // Two text and one image reasoning
+      } else {
+        expect(types.file ?? 0).toEqual(1);
+      }
+    });
+
   }
 );
 

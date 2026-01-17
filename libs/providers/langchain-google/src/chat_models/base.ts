@@ -345,6 +345,35 @@ export abstract class BaseChatGoogle<
     return "google";
   }
 
+  get modelFamily(): string {
+    const parts = this.model.split('-');
+    return parts[0];
+  }
+
+  get modelVersion(): string {
+    const parts = this.model.split('-');
+    return parts[1];
+  }
+
+  get modelLevel(): string {
+    const parts = this.model.split('-');
+    let ret = parts[2];
+    if (ret === 'flash' && parts[3] === 'lite') {
+      ret = 'flash-lite';
+    }
+    return ret;
+  }
+
+  get modelSpecialty(): string {
+    if (this.model.includes("image")) {
+      return "image";
+    } else if (this.model.includes("tts")) {
+      return "tts";
+    } else {
+      return "";
+    }
+  }
+
   get urlMethod(): string {
     return this.streaming
       ? "streamGenerateContent?alt=sse"
@@ -416,23 +445,28 @@ export abstract class BaseChatGoogle<
       }
     }
 
-    if (typeof thinkingBudget === "undefined" || typeof thinkingLevel === "undefined") {
+    // If we are using a model that doesn't support thinking at all (gemini 2.5 imaging)
+    // or we haven't explicitly tried to set a thinking budget/level, then bail out.
+    const thoughtsNotSupported = this.modelVersion === "2.5" && this.modelSpecialty === "image";
+    if (thoughtsNotSupported || typeof thinkingBudget === "undefined" || typeof thinkingLevel === "undefined") {
       return {};
-    } else if (this.model.startsWith("gemini-2.5")) {
-      return {
-        thinkingConfig: {
-          includeThoughts,
-          thinkingBudget,
-        }
-      }
-    } else {
-      return {
-        thinkingConfig: {
-          includeThoughts,
-          thinkingLevel,
-        }
+    }
+
+    // If we have gotten this far, then we want to explicitly set if we include thoughts or not.
+    const thinkingConfig: GoogleThinkingConfig = {
+      includeThoughts,
+    }
+
+    // Explicitly setting the budget/level is only valid (currently) for text models.
+    if (this.modelSpecialty === "") {
+      if (this.model.startsWith("gemini-2.5")) {
+        thinkingConfig.thinkingBudget = thinkingBudget;
+      } else {
+        thinkingConfig.thinkingLevel = thinkingLevel as GoogleThinkingLevel;
       }
     }
+
+    return {thinkingConfig};
   }
 
   speechConfig(fields: CombinableFields): {speechConfig: GoogleSpeechConfig} | {} {
