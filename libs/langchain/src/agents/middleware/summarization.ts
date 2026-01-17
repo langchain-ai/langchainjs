@@ -20,8 +20,14 @@ import {
   InferInteropZodInput,
   InferInteropZodOutput,
 } from "@langchain/core/utils/types";
+import {
+  mergeConfigs,
+  pickRunnableConfigKeys,
+  type RunnableConfig,
+} from "@langchain/core/runnables";
 import { REMOVE_ALL_MESSAGES } from "@langchain/langgraph";
 import { createMiddleware } from "../middleware.js";
+import type { Runtime } from "../runtime.js";
 import { countTokensApproximately } from "./utils.js";
 import { hasToolCalls } from "../utils.js";
 import { initChatModel } from "../../chat_models/universal.js";
@@ -442,7 +448,8 @@ export function summarizationMiddleware(
         model,
         summaryPrompt,
         tokenCounter,
-        trimTokensToSummarize
+        trimTokensToSummarize,
+        runtime
       );
 
       const summaryMessage = new HumanMessage({
@@ -891,7 +898,8 @@ async function createSummary(
   model: BaseLanguageModel,
   summaryPrompt: string,
   tokenCounter: TokenCounter,
-  trimTokensToSummarize: number | undefined
+  trimTokensToSummarize: number | undefined,
+  runtime: Runtime<unknown>
 ): Promise<string> {
   if (!messagesToSummarize.length) {
     return "No previous conversation history.";
@@ -925,12 +933,15 @@ async function createSummary(
       formattedMessages
     );
     /**
-     * Invoke the model with an empty callbacks array to prevent the internal
-     * summarization call from being streamed to the UI. This ensures the
-     * summarization is an internal housekeeping step that doesn't leak
-     * assistant messages or streaming events.
+     * Merge parent runnable config with summarization metadata so LangGraph's
+     * stream handlers (and other callback-based consumers) can properly track
+     * and tag the summarization model call.
      */
-    const response = await model.invoke(formattedPrompt, { callbacks: [] });
+    const baseConfig: RunnableConfig = pickRunnableConfigKeys(runtime) ?? {};
+    const config = mergeConfigs(baseConfig, {
+      metadata: { lc_source: "summarization" },
+    });
+    const response = await model.invoke(formattedPrompt, config);
     const content = response.content;
     /**
      * Handle both string content and MessageContent array
