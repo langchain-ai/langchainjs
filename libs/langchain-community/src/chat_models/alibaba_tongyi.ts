@@ -119,12 +119,12 @@ interface AlibabaTongyiChatInput {
 
   /**
    * Region for the Alibaba Tongyi API endpoint.
-   * 
+   *
    * Available regions:
    * - 'china' (default): https://dashscope.aliyuncs.com/compatible-mode/v1
    * - 'singapore': https://dashscope-intl.aliyuncs.com/compatible-mode/v1
    * - 'us': https://dashscope-us.aliyuncs.com/compatible-mode/v1
-   * 
+   *
    * @default "china"
    */
   region?: "china" | "singapore" | "us";
@@ -275,7 +275,7 @@ export class ChatAlibabaTongyi
 
   /**
    * Get the API URL based on the specified region.
-   * 
+   *
    * @param region - The region to get the URL for ('china', 'singapore', or 'us')
    * @returns The base URL for the specified region
    */
@@ -303,8 +303,7 @@ export class ChatAlibabaTongyi
     this.region = fields.region ?? "china";
 
     // Set API URL based on region
-    this.apiUrl =
-      `${this.getRegionBaseUrl(this.region)}api/v1/services/aigc/text-generation/generation`;
+    this.apiUrl = `${this.getRegionBaseUrl(this.region)}api/v1/services/aigc/text-generation/generation`;
 
     this.lc_serializable = true;
     this.streaming = fields.streaming ?? false;
