@@ -34,26 +34,26 @@ interface TongyiMessage {
  */
 interface ChatCompletionRequest {
   model:
-    | (string & NonNullable<unknown>)
-    | "qwen-turbo"
-    | "qwen-plus"
-    | "qwen-max"
-    | "qwen-max-1201"
-    | "qwen-max-longcontext"
-    // 通义千问开源系列
-    | "qwen-7b-chat"
-    | "qwen-14b-chat"
-    | "qwen-72b-chat"
-    // LLAMA2
-    | "llama2-7b-chat-v2"
-    | "llama2-13b-chat-v2"
-    // 百川
-    | "baichuan-7b-v1"
-    | "baichuan2-13b-chat-v1"
-    | "baichuan2-7b-chat-v1"
-    // ChatGLM
-    | "chatglm3-6b"
-    | "chatglm-6b-v2";
+  | (string & NonNullable<unknown>)
+  | "qwen-turbo"
+  | "qwen-plus"
+  | "qwen-max"
+  | "qwen-max-1201"
+  | "qwen-max-longcontext"
+  // 通义千问开源系列
+  | "qwen-7b-chat"
+  | "qwen-14b-chat"
+  | "qwen-72b-chat"
+  // LLAMA2
+  | "llama2-7b-chat-v2"
+  | "llama2-13b-chat-v2"
+  // 百川
+  | "baichuan-7b-v1"
+  | "baichuan2-13b-chat-v1"
+  | "baichuan2-7b-chat-v1"
+  // ChatGLM
+  | "chatglm3-6b"
+  | "chatglm-6b-v2";
   input: {
     messages: TongyiMessage[];
   };
@@ -116,6 +116,18 @@ interface AlibabaTongyiChatInput {
    * `ALIBABA_API_KEY` environment variable.
    */
   alibabaApiKey?: string;
+
+  /**
+   * Region for the Alibaba Tongyi API endpoint.
+   * 
+   * Available regions:
+   * - 'china' (default): https://dashscope.aliyuncs.com/compatible-mode/v1
+   * - 'singapore': https://dashscope-intl.aliyuncs.com/compatible-mode/v1
+   * - 'us': https://dashscope-us.aliyuncs.com/compatible-mode/v1
+   * 
+   * @default "china"
+   */
+  region?: "china" | "singapore" | "us";
 
   /** Amount of randomness injected into the response. Ranges
    * from 0 to 1 (0 is not included). Use temp closer to 0 for analytical /
@@ -192,13 +204,16 @@ function messageToTongyiRole(message: BaseMessage): TongyiMessageRole {
  * @augments AlibabaTongyiInput
  * @example
  * ```typescript
+ * // Default - uses China region
  * const qwen = new ChatAlibabaTongyi({
  *   alibabaApiKey: "YOUR-API-KEY",
  * });
  *
+ * // Specify region explicitly
  * const qwen = new ChatAlibabaTongyi({
  *   model: "qwen-turbo",
  *   temperature: 1,
+ *   region: "singapore", // or "us" or "china"
  *   alibabaApiKey: "YOUR-API-KEY",
  * });
  *
@@ -209,8 +224,7 @@ function messageToTongyiRole(message: BaseMessage): TongyiMessageRole {
  */
 export class ChatAlibabaTongyi
   extends BaseChatModel
-  implements AlibabaTongyiChatInput
-{
+  implements AlibabaTongyiChatInput {
   static lc_name() {
     return "ChatAlibabaTongyi";
   }
@@ -257,6 +271,23 @@ export class ChatAlibabaTongyi
 
   enableSearch?: boolean | undefined;
 
+  region: "china" | "singapore" | "us";
+
+  /**
+   * Get the API URL based on the specified region.
+   * 
+   * @param region - The region to get the URL for ('china', 'singapore', or 'us')
+   * @returns The base URL for the specified region
+   */
+  private getRegionBaseUrl(region: "china" | "singapore" | "us"): string {
+    const regionUrls = {
+      china: "https://dashscope.aliyuncs.com/",
+      singapore: "https://dashscope-intl.aliyuncs.com/",
+      us: "https://dashscope-us.aliyuncs.com/",
+    };
+    return regionUrls[region];
+  }
+
   constructor(
     fields: Partial<AlibabaTongyiChatInput> & BaseChatModelParams = {}
   ) {
@@ -268,8 +299,13 @@ export class ChatAlibabaTongyi
       throw new Error("Ali API key not found");
     }
 
+    // Set region (default to china)
+    this.region = fields.region ?? "china";
+
+    // Set API URL based on region
     this.apiUrl =
-      "https://dashscope.aliyuncs.com/api/v1/services/aigc/text-generation/generation";
+      `${this.getRegionBaseUrl(this.region)}api/v1/services/aigc/text-generation/generation`;
+
     this.lc_serializable = true;
     this.streaming = fields.streaming ?? false;
     this.prefixMessages = fields.prefixMessages ?? [];
@@ -334,58 +370,10 @@ export class ChatAlibabaTongyi
 
     const data = parameters.stream
       ? await new Promise<ChatCompletionResponse>((resolve, reject) => {
-          let response: ChatCompletionResponse;
-          let rejected = false;
-          let resolved = false;
-          this.completionWithRetry(
-            {
-              model: this.model,
-              parameters,
-              input: {
-                messages: messagesMapped,
-              },
-            },
-            true,
-            options?.signal,
-            (event) => {
-              const data: ChatCompletionResponse = JSON.parse(event.data);
-              if (data?.code) {
-                if (rejected) {
-                  return;
-                }
-                rejected = true;
-                reject(new Error(data?.message));
-                return;
-              }
-
-              const { text, finish_reason } = data.output;
-
-              if (!response) {
-                response = data;
-              } else {
-                response.output.text += text;
-                response.output.finish_reason = finish_reason;
-                response.usage = data.usage;
-              }
-
-              // eslint-disable-next-line no-void
-              void runManager?.handleLLMNewToken(text ?? "");
-              if (finish_reason && finish_reason !== "null") {
-                if (resolved || rejected) {
-                  return;
-                }
-                resolved = true;
-                resolve(response);
-              }
-            }
-          ).catch((error) => {
-            if (!rejected) {
-              rejected = true;
-              reject(error);
-            }
-          });
-        })
-      : await this.completionWithRetry(
+        let response: ChatCompletionResponse;
+        let rejected = false;
+        let resolved = false;
+        this.completionWithRetry(
           {
             model: this.model,
             parameters,
@@ -393,15 +381,63 @@ export class ChatAlibabaTongyi
               messages: messagesMapped,
             },
           },
-          false,
-          options?.signal
-        ).then<ChatCompletionResponse>((data) => {
-          if (data?.code) {
-            throw new Error(data?.message);
-          }
+          true,
+          options?.signal,
+          (event) => {
+            const data: ChatCompletionResponse = JSON.parse(event.data);
+            if (data?.code) {
+              if (rejected) {
+                return;
+              }
+              rejected = true;
+              reject(new Error(data?.message));
+              return;
+            }
 
-          return data;
+            const { text, finish_reason } = data.output;
+
+            if (!response) {
+              response = data;
+            } else {
+              response.output.text += text;
+              response.output.finish_reason = finish_reason;
+              response.usage = data.usage;
+            }
+
+            // eslint-disable-next-line no-void
+            void runManager?.handleLLMNewToken(text ?? "");
+            if (finish_reason && finish_reason !== "null") {
+              if (resolved || rejected) {
+                return;
+              }
+              resolved = true;
+              resolve(response);
+            }
+          }
+        ).catch((error) => {
+          if (!rejected) {
+            rejected = true;
+            reject(error);
+          }
         });
+      })
+      : await this.completionWithRetry(
+        {
+          model: this.model,
+          parameters,
+          input: {
+            messages: messagesMapped,
+          },
+        },
+        false,
+        options?.signal
+      ).then<ChatCompletionResponse>((data) => {
+        if (data?.code) {
+          throw new Error(data?.message);
+        }
+
+        return data;
+      });
 
     const {
       input_tokens = 0,
@@ -544,10 +580,10 @@ export class ChatAlibabaTongyi
         generationInfo:
           finish_reason === "stop"
             ? {
-                finish_reason,
-                request_id: chunk.request_id,
-                usage: chunk.usage,
-              }
+              finish_reason,
+              request_id: chunk.request_id,
+              usage: chunk.usage,
+            }
             : undefined,
       });
       await runManager?.handleLLMNewToken(text);
