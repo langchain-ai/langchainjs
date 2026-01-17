@@ -31,6 +31,19 @@ import { iife } from "../utils/misc.js";
  */
 export abstract class ApiClient {
   /**
+   * Has an API Key been set for this client?
+   */
+  abstract hasApiKey(): boolean;
+
+  /**
+   * For some credential methods, we know what the project ID is.
+   * This is necessary for OAuth-based access to Vertex
+   */
+  async getProjectId(): Promise<string> {
+    return "unknown-project-id";
+  }
+
+  /**
    * Executes an HTTP request with appropriate authentication.
    *
    * Implementations should add necessary authentication headers to the request
@@ -149,6 +162,19 @@ export interface WebApiClientParams {
  * @see {@link GCPCredentials} for service account credential structure
  */
 export class WebApiClient extends ApiClient {
+
+  hasApiKey(): boolean {
+    return typeof this.apiKey === "string" && this.apiKey !== "";
+  }
+
+  async getProjectId(): Promise<string> {
+    if (typeof this.credentials !== "undefined") {
+      return this.credentials.project_id;
+    } else {
+      return super.getProjectId();
+    }
+  }
+
   /**
    * The Google API key used for authentication, if provided.
    *

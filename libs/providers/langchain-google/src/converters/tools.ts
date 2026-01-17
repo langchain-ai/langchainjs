@@ -14,10 +14,13 @@ import type {
   ToolChoice,
 } from "@langchain/core/language_models/chat_models";
 import type {
+  GeminiFunctionCallingConfig,
+  GeminiFunctionCallingConfigMode,
   GeminiFunctionDeclaration,
   GeminiFunctionSchema,
+  GeminiGoogleSearchTool,
   GeminiTool,
-  GenerateContentRequest,
+  GeminiToolConfig,
 } from "../chat_models/types.js";
 import { InvalidToolError } from "../utils/errors.js";
 
@@ -161,7 +164,10 @@ function jsonSchemaToGeminiParameters(
  * Gemini tools can be:
  * - Function declarations (`functionDeclarations`)
  * - Code execution tools (`codeExecution`)
- * - Google Search retrieval tools (`googleSearchRetrieval`)
+ * - Google Search retrieval tools (`googleSearchRetrieval` or `googleSearch`)
+ *
+ * The full list of tool types are those defined by the `GeminiTool` type.
+ * Updating that list requires a change to the `geminiToolAttributes` below.
  *
  * @param tool - The tool to check
  * @returns `true` if the tool is already in Gemini format, `false` otherwise
@@ -169,13 +175,21 @@ function jsonSchemaToGeminiParameters(
  * @internal
  */
 function isGeminiTool(tool: BindToolsInput): tool is GeminiTool {
-  return (
-    typeof tool === "object" &&
-    tool !== null &&
-    ("functionDeclarations" in tool ||
-      "codeExecution" in tool ||
-      "googleSearchRetrieval" in tool)
-  );
+  if (typeof tool !== "object" || tool === null) {
+    return false;
+  }
+
+  const geminiToolAttributes = [
+    "functionDeclarations",
+    "codeExecution",
+    "googleSearch",
+    "urlContext",
+    "googleMaps",
+    "fileSearch",
+    "computerUser",
+  ];
+
+  return geminiToolAttributes.some((attr) => attr in tool);
 }
 
 /**
@@ -360,9 +374,15 @@ export const convertToolsToGeminiTools: Converter<
         // Already a Gemini tool with function declarations
         geminiTools.push(tool);
       } else {
-        // Non-function Gemini tool (codeExecution, googleSearchRetrieval, etc.)
+        // Non-function Gemini tool (codeExecution, googleSearch, etc.)
         geminiTools.push(tool);
       }
+    } else if ("googleSearchRetrieval" in tool) {
+      // Convert the obsolete search into the modern one
+      const searchTool: GeminiGoogleSearchTool = {
+        googleSearch: {},
+      }
+      geminiTools.push( searchTool );
     } else {
       // Convert to function declaration
       const funcDecls = convertToolsToGeminiFunctionDeclarations([tool]);
@@ -434,48 +454,54 @@ export const convertToolsToGeminiTools: Converter<
 export function convertToolChoiceToGeminiConfig(
   toolChoice: ToolChoice | undefined,
   hasTools: boolean
-): GenerateContentRequest["toolConfig"] | undefined {
+): GeminiToolConfig | undefined {
   // Only create config if tools are present
   if (!hasTools) {
     return undefined;
   }
 
   // Convert tool_choice to Gemini function calling config mode
-  let toolChoiceMode: "AUTO" | "ANY" | "NONE" | undefined;
+  let mode: GeminiFunctionCallingConfigMode | undefined;
+  let allowedFunctionNames: string[] | undefined;
 
-  if (toolChoice) {
-    if (typeof toolChoice === "string") {
-      if (toolChoice === "auto") {
-        toolChoiceMode = "AUTO";
-      } else if (toolChoice === "any" || toolChoice === "required") {
-        toolChoiceMode = "ANY";
-      } else if (toolChoice === "none") {
-        toolChoiceMode = "NONE";
-      } else {
-        // If it's a function name, return ANY to force tool use
-        toolChoiceMode = "ANY";
-      }
-    } else if (typeof toolChoice === "object" && toolChoice !== null) {
-      if ("mode" in toolChoice && typeof toolChoice.mode === "string") {
-        const mode = toolChoice.mode;
-        if (mode === "auto") {
-          toolChoiceMode = "AUTO";
-        } else if (mode === "any" || mode === "required") {
-          toolChoiceMode = "ANY";
-        } else if (mode === "none") {
-          toolChoiceMode = "NONE";
-        }
-      } else if ("function" in toolChoice) {
-        // Specific function requested - use ANY mode
-        toolChoiceMode = "ANY";
-      }
+  let toolChoiceMode: string | undefined;
+  let toolChoiceFunction: string | string[] | undefined;
+  if (typeof toolChoice === "object") {
+    toolChoiceMode = toolChoice.mode;
+    toolChoiceFunction = toolChoice.function?.name;
+  } else {
+    toolChoiceMode = toolChoice;
+  }
+
+  if (toolChoiceMode === "auto") {
+    mode = "AUTO";
+  } else if (toolChoiceMode === "any" || toolChoiceMode === "required") {
+    mode = "ANY";
+  } else if (toolChoiceMode === "none") {
+    mode = "NONE";
+  } else if (typeof toolChoiceMode === "string") {
+    // A function name, which is deprecated, but supported
+    mode = "ANY";
+    toolChoiceFunction = toolChoiceMode;
+  }
+
+  if (toolChoiceFunction) {
+    if (Array.isArray(toolChoiceFunction)) {
+      allowedFunctionNames = toolChoiceFunction;
+    } else {
+      allowedFunctionNames = [toolChoiceFunction];
     }
   }
 
   // Build toolConfig: use explicit mode if provided, otherwise default to AUTO
+  const functionCallingConfig: GeminiFunctionCallingConfig = {};
+  if (allowedFunctionNames?.length) {
+    functionCallingConfig.allowedFunctionNames = allowedFunctionNames;
+  }
+  if (mode) {
+    functionCallingConfig.mode = mode;
+  }
   return {
-    functionCallingConfig: {
-      mode: toolChoiceMode ?? "AUTO",
-    },
+    functionCallingConfig,
   };
 }
