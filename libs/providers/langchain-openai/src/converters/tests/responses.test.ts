@@ -100,15 +100,15 @@ describe("convertResponsesDeltaToChatGenerationChunk", () => {
       } as ToolCallChunk);
     });
 
-    it("should handle both function and custom tool delta events equally", () => {
-      // Test function call delta
+    it("should skip function_call_arguments.delta events but handle custom tool delta events", () => {
+      // Test function call delta - should return null since we skip these events
       const functionDelta = {
         type: "response.function_call_arguments.delta",
         delta: '{"location": "NYC"}',
         output_index: 0,
       };
 
-      // Test custom tool delta
+      // Test custom tool delta - should still work
       const customDelta = {
         type: "response.custom_tool_call_input.delta",
         delta: '{"location": "NYC"}',
@@ -122,13 +122,17 @@ describe("convertResponsesDeltaToChatGenerationChunk", () => {
         customDelta as any
       );
 
-      const functionResultMessage = functionResult?.message as AIMessageChunk;
-      const customResultMessage = customResult?.message as AIMessageChunk;
+      // function_call_arguments.delta should return null (skipped)
+      expect(functionResult).toBeNull();
 
-      // Both should produce identical tool_call_chunks
-      expect(functionResultMessage.tool_call_chunks).toEqual(
-        customResultMessage.tool_call_chunks
-      );
+      // custom_tool_call_input.delta should still produce tool_call_chunks
+      const customResultMessage = customResult?.message as AIMessageChunk;
+      expect(customResultMessage.tool_call_chunks).toHaveLength(1);
+      expect(customResultMessage.tool_call_chunks?.[0]).toEqual({
+        type: "tool_call_chunk",
+        args: '{"location": "NYC"}',
+        index: 0,
+      } as ToolCallChunk);
     });
   });
 });

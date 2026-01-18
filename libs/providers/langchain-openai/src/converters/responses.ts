@@ -483,7 +483,7 @@ export const convertResponsesDeltaToChatGenerationChunk: Converter<
   ) {
     id = event.item.id;
   } else if (
-    event.type === "response.output_item.added" &&
+    event.type === "response.output_item.done" &&
     event.item.type === "function_call"
   ) {
     tool_call_chunks.push({
@@ -540,10 +540,7 @@ export const convertResponsesDeltaToChatGenerationChunk: Converter<
     for (const [key, value] of Object.entries(event.response)) {
       if (key !== "id") response_metadata[key] = value;
     }
-  } else if (
-    event.type === "response.function_call_arguments.delta" ||
-    event.type === "response.custom_tool_call_input.delta"
-  ) {
+  } else if (event.type === "response.custom_tool_call_input.delta") {
     tool_call_chunks.push({
       type: "tool_call_chunk",
       args: event.delta,
