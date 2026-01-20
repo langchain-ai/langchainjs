@@ -37,7 +37,7 @@ describe("OpenAI Image Generation Tool Integration Tests", () => {
      */
     const expectedContent = response.content as [
       ContentBlock.Multimodal.Image,
-      ContentBlock.Text // expected empty text block
+      ContentBlock.Text, // expected empty text block
     ];
     expect(expectedContent.length).toBe(2);
     expect(expectedContent[0].type).toBe("image");
