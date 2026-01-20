@@ -371,6 +371,21 @@ export function convertToV1FromResponses(
           yield { type: "non_standard", value: toolOutput };
           continue;
         } else if (_isContentBlock(toolOutput, "image_generation_call")) {
+          // Convert image_generation_call to proper image content block if result is available
+          if (_isString(toolOutput.result)) {
+            yield {
+              type: "image",
+              mimeType: "image/png",
+              data: toolOutput.result,
+              id: _isString(toolOutput.id) ? toolOutput.id : undefined,
+              metadata: {
+                status: _isString(toolOutput.status)
+                  ? toolOutput.status
+                  : undefined,
+              },
+            };
+          }
+          // Also yield as non_standard for backwards compatibility
           yield { type: "non_standard", value: toolOutput };
           continue;
         }
