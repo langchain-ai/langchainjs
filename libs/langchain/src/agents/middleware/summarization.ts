@@ -27,10 +27,10 @@ import {
 } from "@langchain/core/runnables";
 import { REMOVE_ALL_MESSAGES } from "@langchain/langgraph";
 import { createMiddleware } from "../middleware.js";
-import type { Runtime } from "../runtime.js";
 import { countTokensApproximately } from "./utils.js";
 import { hasToolCalls } from "../utils.js";
 import { initChatModel } from "../../chat_models/universal.js";
+import type { Runtime } from "../runtime.js";
 
 export const DEFAULT_SUMMARY_PROMPT = `<role>
 Context Extraction Assistant
@@ -891,7 +891,15 @@ function cutoffSeparatesToolPair(
 }
 
 /**
- * Generate summary for the given messages
+ * Generate summary for the given messages.
+ *
+ * @param messagesToSummarize - Messages to summarize.
+ * @param model - The language model to use for summarization.
+ * @param summaryPrompt - The prompt template for summarization.
+ * @param tokenCounter - Function to count tokens.
+ * @param trimTokensToSummarize - Optional token limit for trimming messages.
+ * @param runtime - The runtime environment, used to inherit config so that
+ *   LangGraph's handlers can properly track and tag the summarization model call.
  */
 async function createSummary(
   messagesToSummarize: BaseMessage[],
