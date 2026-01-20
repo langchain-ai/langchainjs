@@ -748,11 +748,11 @@ export class ChatOllama
 
     let lastMetadata: Omit<OllamaChatResponse, "message"> | undefined;
 
-    for await (const chunk of stream) {
+    for await (const streamChunk of stream) {
       if (options.signal?.aborted) {
         this.client.abort();
       }
-      const { message: responseMessage, ...rest } = chunk;
+      const { message: responseMessage, ...rest } = streamChunk;
       usageMetadata.input_tokens += rest.prompt_eval_count ?? 0;
       usageMetadata.output_tokens += rest.eval_count ?? 0;
       usageMetadata.total_tokens =
