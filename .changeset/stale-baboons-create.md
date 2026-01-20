@@ -1,5 +1,5 @@
 ---
-"@langchain/community": minor
+"@langchain/community": patch
 ---
 
 Add multi-region support for Alibaba Tongyi chat models. Users can now specify their region (China, Singapore, or US) when initializing ChatAlibabaTongyi. This enables proper API endpoint routing for users with region-specific API keys.
