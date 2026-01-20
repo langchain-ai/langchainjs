@@ -775,7 +775,7 @@ export class ChatOllama
         undefined,
         undefined,
         undefined,
-        { chunk: cg }
+        { chunk }
       );
     }
 
