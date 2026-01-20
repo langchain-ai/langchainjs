@@ -1,6 +1,6 @@
 {
   "name": "@langchain/google-genai",
-  "version": "2.1.10",
+  "version": "2.1.11",
   "description": "Google Generative AI integration for LangChain.js",
   "author": "LangChain",
   "license": "MIT",
