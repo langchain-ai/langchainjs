@@ -860,7 +860,7 @@ export class ChatGoogleGenerativeAI
     if (this.streaming) {
       const tokenUsage: TokenUsage = {};
       const stream = this._streamResponseChunks(messages, options, runManager);
-      const finalChunks: Record<number, ChatGenerationChunk> = {};
+      const finalChunks: ChatGenerationChunk[] = [];
 
       for await (const chunk of stream) {
         const index =
@@ -871,9 +871,9 @@ export class ChatGoogleGenerativeAI
           finalChunks[index] = finalChunks[index].concat(chunk);
         }
       }
-      const generations = Object.entries(finalChunks)
-        .sort(([aKey], [bKey]) => parseInt(aKey, 10) - parseInt(bKey, 10))
-        .map(([_, value]) => value);
+      const generations = finalChunks.filter(
+        (c): c is ChatGenerationChunk => c !== undefined
+      );
 
       return { generations, llmOutput: { estimatedTokenUsage: tokenUsage } };
     }
