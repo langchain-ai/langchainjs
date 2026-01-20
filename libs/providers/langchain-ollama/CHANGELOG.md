@@ -1,5 +1,11 @@
 # @langchain/ollama
 
+## 1.2.1
+
+### Patch Changes
+
+- [#9793](https://github.com/langchain-ai/langchainjs/pull/9793) [`82d7df7`](https://github.com/langchain-ai/langchainjs/commit/82d7df7435165d1d53103f3d009011e9268be14e) Thanks [@bao-tran-iohub](https://github.com/bao-tran-iohub)! - Set additional_kwargs.reasoning_content when streamEvents via createAgent
+
 ## 1.2.0
 
 ### Minor Changes
