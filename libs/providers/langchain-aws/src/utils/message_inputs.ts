@@ -505,7 +505,9 @@ function convertToolMessageToConverseMessage(
       } else {
         // All other content goes into the toolResult
         if (converted !== c) {
-          toolResultContentBlocks.push(converted as Bedrock.ToolResultContentBlock);
+          toolResultContentBlocks.push(
+            converted as Bedrock.ToolResultContentBlock
+          );
         } else {
           toolResultContentBlocks.push({
             json: c,

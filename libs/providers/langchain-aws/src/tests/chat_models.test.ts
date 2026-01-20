@@ -177,7 +177,7 @@ describe("convertToConverseMessages", () => {
             },
           ],
           tool_call_id: "long_content_tool",
-        })
+        }),
       ],
       output: {
         converseMessages: [
@@ -232,7 +232,7 @@ describe("convertToConverseMessages", () => {
                 },
               },
             ],
-          }
+          },
         ],
         converseSystem: [
           {
