@@ -219,15 +219,16 @@ function convertInputImageMask(
 export function imageGeneration(options?: ImageGenerationOptions): ServerTool {
   return {
     type: "image_generation",
-    background: options?.background ?? "auto",
-    input_fidelity: options?.inputFidelity ?? "low",
+    background: options?.background,
+    input_fidelity: options?.inputFidelity,
     input_image_mask: convertInputImageMask(options?.inputImageMask),
-    model: options?.model ?? "gpt-image-1",
-    moderation: options?.moderation ?? "auto",
-    output_compression: options?.outputCompression ?? 100,
-    output_format: options?.outputFormat ?? "png",
-    partial_images: options?.partialImages ?? 0,
-    quality: options?.quality ?? "auto",
-    size: options?.size ?? "auto",
+    // @ts-expect-error - type issue with openai not supporting gpt-image-1.5
+    model: options?.model,
+    moderation: options?.moderation,
+    output_compression: options?.outputCompression,
+    output_format: options?.outputFormat,
+    partial_images: options?.partialImages,
+    quality: options?.quality,
+    size: options?.size,
   } satisfies ImageGenerationTool;
 }
