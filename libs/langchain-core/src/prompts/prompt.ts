@@ -25,7 +25,7 @@ export interface PromptTemplateInput<
   RunInput extends InputValues = any,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   PartialVariableName extends string = any,
-  Format extends TemplateFormat = TemplateFormat,
+  Format extends TemplateFormat = TemplateFormat
 > extends BasePromptTemplateInput<RunInput, PartialVariableName> {
   /**
    * The prompt template
@@ -73,7 +73,7 @@ type NonAlphanumeric =
  */
 type ExtractTemplateParamsRecursive<
   T extends string,
-  Result extends string[] = [],
+  Result extends string[] = []
 > = T extends `${string}{${infer Param}}${infer Rest}`
   ? Param extends `${NonAlphanumeric}${string}`
     ? ExtractTemplateParamsRecursive<Rest, Result> // for non-template variables that look like template variables e.g. see https://github.com/langchain-ai/langchainjs/blob/main/langchain/src/chains/query_constructor/prompt.ts
@@ -89,7 +89,7 @@ export type ParamsFromFString<T extends string> = {
 
 export type ExtractedFStringParams<
   T extends string,
-  RunInput extends InputValues = Symbol,
+  RunInput extends InputValues = Symbol
 > = RunInput extends Symbol ? ParamsFromFString<T> : RunInput;
 
 /**
@@ -111,7 +111,7 @@ export class PromptTemplate<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     RunInput extends InputValues = any,
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    PartialVariableName extends string = any,
+    PartialVariableName extends string = any
   >
   extends BaseStringPromptTemplate<RunInput, PartialVariableName>
   implements PromptTemplateInput<RunInput, PartialVariableName>
@@ -212,7 +212,7 @@ export class PromptTemplate<
    */
   static fromTemplate<
     RunInput extends InputValues = Symbol,
-    T extends string = string,
+    T extends string = string
   >(
     template: T,
     options?: Omit<
@@ -223,7 +223,7 @@ export class PromptTemplate<
 
   static fromTemplate<
     RunInput extends InputValues = Symbol,
-    T extends string = string,
+    T extends string = string
   >(
     template: T,
     options?: Omit<
@@ -234,7 +234,7 @@ export class PromptTemplate<
 
   static fromTemplate<
     RunInput extends InputValues = Symbol,
-    T extends string = string,
+    T extends string = string
   >(
     template: T,
     options?: Omit<
@@ -245,7 +245,7 @@ export class PromptTemplate<
 
   static fromTemplate<
     RunInput extends InputValues = Symbol,
-    T extends string = string,
+    T extends string = string
   >(
     template: T,
     options?: Omit<

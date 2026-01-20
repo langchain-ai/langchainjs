@@ -68,7 +68,7 @@ export interface FunctionCall {
 
 export type BaseMessageFields<
   TStructure extends MessageStructure = MessageStructure,
-  TRole extends MessageType = MessageType,
+  TRole extends MessageType = MessageType
 > = Pick<Message, "id" | "name"> & {
   content?: $InferMessageContent<TStructure, TRole>;
   contentBlocks?: Array<ContentBlock.Standard>;
@@ -197,7 +197,7 @@ function stringifyWithDepthLimit(obj: any, depthLimit: number): string {
  */
 export abstract class BaseMessage<
     TStructure extends MessageStructure = MessageStructure,
-    TRole extends MessageType = MessageType,
+    TRole extends MessageType = MessageType
   >
   extends Serializable
   implements Message<TStructure, TRole>
@@ -472,10 +472,10 @@ export function _mergeDicts(
    * The keys to ignore during merging.
    */
   const ignoreKeys = options?.ignoreKeys ?? DEFAULT_MERGE_IGNORE_KEYS;
-  if (left === undefined && right === undefined) {
+  if (left == null && right == null) {
     return undefined;
   }
-  if (left === undefined || right === undefined) {
+  if (left == null || right == null) {
     return left ?? right;
   }
   const merged = { ...left };
@@ -534,9 +534,9 @@ export function _mergeLists<Content extends ContentBlock>(
   right?: Content[],
   options?: MergeDictsOptions
 ): Content[] | undefined {
-  if (left === undefined && right === undefined) {
+  if (left == null && right == null) {
     return undefined;
-  } else if (left === undefined || right === undefined) {
+  } else if (left == null || right == null) {
     return left || right;
   } else {
     const merged = [...left];
@@ -595,10 +595,10 @@ export function _mergeObj<T = any>(
   right: T | undefined,
   options?: MergeDictsOptions
 ): T | undefined {
-  if (left === undefined && right === undefined) {
+  if (left == null && right == null) {
     return undefined;
   }
-  if (left === undefined || right === undefined) {
+  if (left == null || right == null) {
     return left ?? right;
   } else if (typeof left !== typeof right) {
     throw new Error(
@@ -632,7 +632,7 @@ export function _mergeObj<T = any>(
  */
 export abstract class BaseMessageChunk<
   TStructure extends MessageStructure = MessageStructure,
-  TRole extends MessageType = MessageType,
+  TRole extends MessageType = MessageType
 > extends BaseMessage<TStructure, TRole> {
   abstract concat(chunk: BaseMessageChunk): BaseMessageChunk<TStructure, TRole>;
 

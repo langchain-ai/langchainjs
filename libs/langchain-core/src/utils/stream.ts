@@ -147,7 +147,7 @@ export function atee<T>(
 
 export function concat<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  T extends Array<any> | string | number | Record<string, any> | any,
+  T extends Array<any> | string | number | Record<string, any> | any
 >(first: T, second: T): T {
   if (Array.isArray(first) && Array.isArray(second)) {
     return first.concat(second) as T;
@@ -184,7 +184,7 @@ export class AsyncGeneratorWithSetup<
   S = unknown,
   T = unknown,
   TReturn = unknown,
-  TNext = unknown,
+  TNext = unknown
 > implements AsyncGenerator<T, TReturn, TNext>
 {
   private generator: AsyncGenerator<T>;
@@ -284,7 +284,7 @@ export async function pipeGeneratorWithSetup<
   TNext,
   U,
   UReturn,
-  UNext,
+  UNext
 >(
   to: (
     g: AsyncGenerator<T, TReturn, TNext>,

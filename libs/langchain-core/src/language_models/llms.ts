@@ -36,7 +36,7 @@ export interface BaseLLMCallOptions extends BaseLanguageModelCallOptions {}
  * LLM Wrapper. Takes in a prompt (or prompts) and returns a string.
  */
 export abstract class BaseLLM<
-  CallOptions extends BaseLLMCallOptions = BaseLLMCallOptions,
+  CallOptions extends BaseLLMCallOptions = BaseLLMCallOptions
 > extends BaseLanguageModel<string, CallOptions> {
   // Backwards compatibility since fields have been moved to RunnableConfig
   declare ParsedCallOptions: Omit<
@@ -546,7 +546,7 @@ export abstract class BaseLLM<
  * @augments BaseLLM
  */
 export abstract class LLM<
-  CallOptions extends BaseLLMCallOptions = BaseLLMCallOptions,
+  CallOptions extends BaseLLMCallOptions = BaseLLMCallOptions
 > extends BaseLLM<CallOptions> {
   /**
    * Run the LLM on the given prompt and input.

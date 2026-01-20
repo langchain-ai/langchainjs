@@ -80,7 +80,7 @@ export class OutputFunctionsParser extends BaseLLMOutputParser<string> {
  */
 export class JsonOutputFunctionsParser<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  Output extends Record<string, any> = Record<string, any>,
+  Output extends Record<string, any> = Record<string, any>
 > extends BaseCumulativeTransformOutputParser<Output> {
   static lc_name() {
     return "JsonOutputFunctionsParser";
@@ -175,7 +175,7 @@ export class JsonOutputFunctionsParser<
  */
 export class JsonKeyOutputFunctionsParser<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  T extends Record<string, any> = Record<string, any>,
+  T extends Record<string, any> = Record<string, any>
 > extends BaseLLMOutputParser<T> {
   static lc_name() {
     return "JsonKeyOutputFunctionsParser";

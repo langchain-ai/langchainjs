@@ -92,7 +92,7 @@ export declare namespace Tools {
 
   export interface ServerToolCall<
     TName extends string = string,
-    TArgs = unknown,
+    TArgs = unknown
   > extends BaseContentBlock {
     /**
      * Type of the content block

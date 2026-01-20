@@ -9,7 +9,7 @@ import type { BaseMessage } from "../messages/index.js";
  */
 export class JsonOutputParser<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  T extends Record<string, any> = Record<string, any>,
+  T extends Record<string, any> = Record<string, any>
 > extends BaseCumulativeTransformOutputParser<T> {
   static lc_name() {
     return "JsonOutputParser";

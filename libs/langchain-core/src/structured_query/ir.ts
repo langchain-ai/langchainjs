@@ -168,10 +168,7 @@ export class Comparison<ValueTypes = string | number> extends FilterDirective {
 export class Operation extends FilterDirective {
   exprName = "Operation" as const;
 
-  constructor(
-    public operator: Operator,
-    public args?: FilterDirective[]
-  ) {
+  constructor(public operator: Operator, public args?: FilterDirective[]) {
     super();
   }
 }
@@ -183,10 +180,7 @@ export class Operation extends FilterDirective {
 export class StructuredQuery extends Expression {
   exprName = "StructuredQuery" as const;
 
-  constructor(
-    public query: string,
-    public filter?: FilterDirective
-  ) {
+  constructor(public query: string, public filter?: FilterDirective) {
     super();
   }
 }

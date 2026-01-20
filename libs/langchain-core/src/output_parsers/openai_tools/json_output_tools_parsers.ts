@@ -121,7 +121,7 @@ export function makeInvalidToolCall(
  * Class for parsing the output of a tool-calling LLM into a JSON object.
  */
 export class JsonOutputToolsParser<
-  T,
+  T
 > extends BaseCumulativeTransformOutputParser<T> {
   static lc_name() {
     return "JsonOutputToolsParser";
@@ -208,23 +208,23 @@ type JsonOutputKeyToolsParserParamsBase = {
 
 type JsonOutputKeyToolsParserParamsV3<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  T extends Record<string, any> = Record<string, any>,
+  T extends Record<string, any> = Record<string, any>
 > = { zodSchema?: z3.ZodType<T> } & JsonOutputKeyToolsParserParamsBase;
 
 type JsonOutputKeyToolsParserParamsV4<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  T extends Record<string, any> = Record<string, any>,
+  T extends Record<string, any> = Record<string, any>
 > = { zodSchema?: z4.$ZodType<T, T> } & JsonOutputKeyToolsParserParamsBase;
 
 export type JsonOutputKeyToolsParserParamsInterop<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  T extends Record<string, any> = Record<string, any>,
+  T extends Record<string, any> = Record<string, any>
 > = { zodSchema?: InteropZodType<T> } & JsonOutputKeyToolsParserParamsBase;
 
 // Use Zod 3 for backwards compatibility
 export type JsonOutputKeyToolsParserParams<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  T extends Record<string, any> = Record<string, any>,
+  T extends Record<string, any> = Record<string, any>
 > = JsonOutputKeyToolsParserParamsV3<T>;
 
 /**
@@ -233,7 +233,7 @@ export type JsonOutputKeyToolsParserParams<
  */
 export class JsonOutputKeyToolsParser<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  T extends Record<string, any> = Record<string, any>,
+  T extends Record<string, any> = Record<string, any>
 > extends JsonOutputToolsParser<T> {
   static lc_name() {
     return "JsonOutputKeyToolsParser";

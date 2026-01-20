@@ -30,7 +30,7 @@ export type TranslatorOpts = {
  * mergeFilters.
  */
 export abstract class BaseTranslator<
-  T extends VectorStore = VectorStore,
+  T extends VectorStore = VectorStore
 > extends Visitor<T> {
   /**
    * Formats a given function (either an operator or a comparator) into a
@@ -65,7 +65,7 @@ export abstract class BaseTranslator<
  * respectively.
  */
 export class BasicTranslator<
-  T extends VectorStore = VectorStore,
+  T extends VectorStore = VectorStore
 > extends BaseTranslator<T> {
   declare VisitOperationOutput: VisitorOperationResult;
 

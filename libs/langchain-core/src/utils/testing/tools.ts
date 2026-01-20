@@ -11,7 +11,7 @@ export interface FakeToolParams<T extends InteropZodObject = InteropZodObject>
 }
 
 export class FakeTool<
-  T extends InteropZodObject = InteropZodObject,
+  T extends InteropZodObject = InteropZodObject
 > extends StructuredTool<T> {
   name: string;
 

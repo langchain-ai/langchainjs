@@ -1093,6 +1093,26 @@ describe("_mergeObj", () => {
       "Can not merge objects"
     );
   });
+
+  it("handles null as left argument", () => {
+    expect(_mergeObj(null as unknown as undefined, "hello")).toBe("hello");
+    expect(_mergeObj(null as unknown as undefined, { foo: "bar" })).toEqual({
+      foo: "bar",
+    });
+  });
+
+  it("handles null as right argument", () => {
+    expect(_mergeObj("hello", null as unknown as undefined)).toBe("hello");
+    expect(_mergeObj({ foo: "bar" }, null as unknown as undefined)).toEqual({
+      foo: "bar",
+    });
+  });
+
+  it("handles null for both arguments", () => {
+    expect(
+      _mergeObj(null as unknown as undefined, null as unknown as undefined)
+    ).toBeUndefined();
+  });
 });
 
 describe("_mergeDicts", () => {
@@ -1240,5 +1260,41 @@ describe("_mergeDicts", () => {
     expect(DEFAULT_MERGE_IGNORE_KEYS).toContain("index");
     expect(DEFAULT_MERGE_IGNORE_KEYS).toContain("created");
     expect(DEFAULT_MERGE_IGNORE_KEYS).toContain("timestamp");
+  });
+
+  it("handles null as left argument", () => {
+    expect(_mergeDicts(null as unknown as undefined, { foo: "bar" })).toEqual({
+      foo: "bar",
+    });
+  });
+
+  it("handles null as right argument", () => {
+    expect(_mergeDicts({ foo: "bar" }, null as unknown as undefined)).toEqual({
+      foo: "bar",
+    });
+  });
+
+  it("handles null for both arguments", () => {
+    expect(
+      _mergeDicts(null as unknown as undefined, null as unknown as undefined)
+    ).toBeUndefined();
+  });
+
+  it("handles nested null values in objects", () => {
+    expect(
+      _mergeDicts(
+        { nested: null as unknown as undefined },
+        { nested: { foo: "bar" } }
+      )
+    ).toEqual({ nested: { foo: "bar" } });
+  });
+
+  it("handles nested null values in right object", () => {
+    expect(
+      _mergeDicts(
+        { nested: { foo: "bar" } },
+        { nested: null as unknown as undefined }
+      )
+    ).toEqual({ nested: { foo: "bar" } });
   });
 });

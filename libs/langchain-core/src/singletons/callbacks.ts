@@ -4,7 +4,7 @@ import PQueueMod from "p-queue";
 import { getGlobalAsyncLocalStorageInstance } from "./async_local_storage/globals.js";
 import { getDefaultLangChainClientSingleton } from "./tracer.js";
 
-let queue: (typeof import("p-queue"))["default"]["prototype"];
+let queue: typeof import("p-queue")["default"]["prototype"];
 
 /**
  * Creates a queue using the p-queue library. The queue is configured to

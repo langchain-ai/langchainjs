@@ -49,7 +49,7 @@ export class ConditionalPromptSelector extends BasePromptSelector {
   conditionals: Array<
     [
       condition: (llm: BaseLanguageModelInterface) => boolean,
-      prompt: BasePromptTemplate,
+      prompt: BasePromptTemplate
     ]
   >;
 
@@ -58,7 +58,7 @@ export class ConditionalPromptSelector extends BasePromptSelector {
     conditionals: Array<
       [
         condition: (llm: BaseLanguageModelInterface) => boolean,
-        prompt: BasePromptTemplate,
+        prompt: BasePromptTemplate
       ]
     > = []
   ) {

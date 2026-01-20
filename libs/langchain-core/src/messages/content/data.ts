@@ -395,7 +395,7 @@ export type ProviderFormatTypes<
   ImageFormat = unknown,
   AudioFormat = unknown,
   FileFormat = unknown,
-  VideoFormat = unknown,
+  VideoFormat = unknown
 > = {
   text: TextFormat;
   image: ImageFormat;
@@ -414,7 +414,7 @@ export type ProviderFormatTypes<
  * @deprecated Don't use data content blocks. Use {@link ContentBlock.Multimodal.Data} instead.
  */
 export interface StandardContentBlockConverter<
-  Formats extends Partial<ProviderFormatTypes>,
+  Formats extends Partial<ProviderFormatTypes>
 > {
   /**
    * The name of the provider type that corresponds to the provider-specific content block types
@@ -464,7 +464,7 @@ export interface StandardContentBlockConverter<
  * @deprecated Don't use data content blocks. Use {@link ContentBlock.Multimodal.Data} instead.
  */
 export function convertToProviderContentBlock<
-  Formats extends Partial<ProviderFormatTypes>,
+  Formats extends Partial<ProviderFormatTypes>
 >(
   block: Data.DataContentBlock,
   converter: StandardContentBlockConverter<Formats>
