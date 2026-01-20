@@ -1,4 +1,3 @@
-
 import { test, expect } from "@jest/globals";
 import { AIMessage } from "@langchain/core/messages";
 import { convertBaseMessagesToContent } from "../utils/common.js";
