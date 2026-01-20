@@ -904,6 +904,14 @@ export abstract class BaseChatModel<
     config?: StructuredOutputMethodOptions<true>
   ): Runnable<BaseLanguageModelInput, { raw: BaseMessage; parsed: RunOutput }>;
 
+  /**
+   * Returns the tools that have been bound to this model instance, if any.
+   * Subclasses that implement bindTools should override this method to
+   * return the bound tools for debugging and validation purposes.
+   * @returns An array of bound tools, or undefined if no tools are bound.
+   */
+  getBoundTools?(): BindToolsInput[] | undefined;
+
   withStructuredOutput<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     RunOutput extends Record<string, any> = Record<string, any>,
@@ -925,6 +933,18 @@ export abstract class BaseChatModel<
     if (typeof this.bindTools !== "function") {
       throw new Error(
         `Chat model must implement ".bindTools()" to use withStructuredOutput.`
+      );
+    }
+    // Check if tools are already bound to this model instance.
+    // withStructuredOutput internally uses bindTools, so using both together
+    // would cause the original tools to be overwritten.
+    const boundTools = this.getBoundTools?.();
+    if (boundTools && boundTools.length > 0) {
+      throw new Error(
+        `Cannot use "withStructuredOutput" on a model that already has tools bound via "bindTools". ` +
+          `These methods are mutually exclusive because "withStructuredOutput" internally uses tool calling ` +
+          `to generate structured output. Either use "bindTools" for tool calling, or "withStructuredOutput" ` +
+          `for structured output extraction, but not both on the same model instance.`
       );
     }
     if (config?.strict) {

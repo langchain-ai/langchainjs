@@ -132,6 +132,14 @@ export class FakeStreamingChatModel extends BaseChatModel<FakeStreamingChatModel
     return "fake";
   }
 
+  /**
+   * Returns the tools that have been bound to this model instance.
+   * Useful for debugging and for the base withStructuredOutput validation.
+   */
+  getBoundTools(): (StructuredTool | ToolSpec)[] {
+    return this.tools;
+  }
+
   bindTools(tools: (StructuredTool | ToolSpec)[]) {
     const merged = [...this.tools, ...tools];
 
