@@ -143,6 +143,8 @@ export type JiraIssue = {
   };
 };
 
+export type JiraDescriptionFormatter = (content: any, issue?: JiraIssue) => any;
+
 export type JiraAPIResponse = {
   expand: string;
   startAt: number;
@@ -155,6 +157,7 @@ export interface ADFNode {
   type: string;
   text?: string;
   content?: ADFNode[];
+  attrs?: Record<string, any>;
 }
 
 export interface ADFDocument extends ADFNode {
@@ -180,6 +183,7 @@ export function adfToText(adf: ADFNode | null | undefined): string {
 export interface JiraDocumentConverterParams {
   host: string;
   projectKey: string;
+  formatter?: JiraDescriptionFormatter;
 }
 
 /**
@@ -190,9 +194,12 @@ export class JiraDocumentConverter {
 
   public readonly projectKey: string;
 
-  constructor({ host, projectKey }: JiraDocumentConverterParams) {
+  private readonly formatter: JiraDescriptionFormatter;
+
+  constructor({ host, projectKey, formatter }: JiraDocumentConverterParams) {
     this.host = host;
     this.projectKey = projectKey;
+    this.formatter = formatter ?? formatJiraDescriptionAsText;
   }
 
   public convertToDocuments(issues: JiraIssue[]): Document[] {
@@ -201,14 +208,12 @@ export class JiraDocumentConverter {
 
   private documentFromIssue(issue: JiraIssue): Document {
     return new Document({
-      pageContent: this.formatIssueInfo({
-        issue,
-        host: this.host,
-      }),
+      pageContent: this.formatIssueInfo({ issue, host: this.host }),
       metadata: {
         id: issue.id,
         host: this.host,
         projectKey: this.projectKey,
+        created: issue.fields.created,
       },
     });
   }
@@ -257,7 +262,16 @@ export class JiraDocumentConverter {
     }
 
     if (issue.fields.description) {
-      text += `Description: ${issue.fields.description}\n`;
+      const formattedDescription = this.formatter(
+        issue.fields.description,
+        issue
+      );
+      const descText =
+        typeof formattedDescription === "string"
+          ? formattedDescription
+          : JSON.stringify(formattedDescription, null, 2);
+
+      text += `Description: ${descText}\n`;
     }
 
     if (issue.fields.progress?.percent) {
@@ -344,6 +358,7 @@ export interface JiraProjectLoaderParams {
   limitPerRequest?: number;
   createdAfter?: Date;
   filterFn?: (issue: JiraIssue) => boolean;
+  descriptionFormatter?: JiraDescriptionFormatter;
 }
 
 const API_ENDPOINTS = {
@@ -381,6 +396,7 @@ export class JiraProjectLoader extends BaseDocumentLoader {
     createdAfter,
     personalAccessToken,
     filterFn,
+    descriptionFormatter: formatter,
   }: JiraProjectLoaderParams) {
     super();
     this.host = host;
@@ -389,7 +405,11 @@ export class JiraProjectLoader extends BaseDocumentLoader {
     this.accessToken = accessToken;
     this.limitPerRequest = limitPerRequest;
     this.createdAfter = createdAfter;
-    this.documentConverter = new JiraDocumentConverter({ host, projectKey });
+    this.documentConverter = new JiraDocumentConverter({
+      host,
+      projectKey,
+      formatter,
+    });
     this.personalAccessToken = personalAccessToken;
     this.filterFn = filterFn;
   }
@@ -439,58 +459,88 @@ export class JiraProjectLoader extends BaseDocumentLoader {
     return `${year}-${month}-${dayOfMonth}`;
   }
 
+  protected toJiraDateTimeString(date: Date | undefined): string | undefined {
+    if (!date) return undefined;
+    return date.toISOString();
+  }
+
   protected async *fetchIssues(): AsyncIterable<JiraIssue[]> {
     const authorizationHeader = this.buildAuthorizationHeader();
-    const url = `${this.host}${API_ENDPOINTS.SEARCH}`;
-    const createdAfterAsString = this.toJiraDateString(this.createdAfter);
-    let startAt = 0;
+    const url = `${this.host}/rest/api/3/search/jql`;
+    const createdAfterAsString = this.toJiraDateTimeString(this.createdAfter);
+
+    let nextPageToken: string | undefined;
 
     while (true) {
-      try {
-        const jqlProps = [
-          `project=${this.projectKey}`,
-          ...(createdAfterAsString
-            ? [`created>= "${createdAfterAsString}"`]
-            : []),
-        ];
-        const jql = `${jqlProps.join(" AND ")} ORDER BY created ASC, key ASC`;
+      const jqlParts = [
+        `project = ${this.projectKey}`,
+        ...(createdAfterAsString
+          ? [`created >= "${createdAfterAsString}"`]
+          : []),
+      ];
 
-        const params = new URLSearchParams({
-          jql,
-          startAt: `${startAt}`,
-          maxResults: `${this.limitPerRequest}`,
-          fields: "*all",
-        });
-        const pageUrl = `${url}?${params}`;
+      const params = new URLSearchParams({
+        jql: `${jqlParts.join(" AND ")} ORDER BY created ASC, key ASC`,
+        maxResults: `${this.limitPerRequest}`,
+        fields: "*all",
+      });
 
-        const options = {
-          method: "GET",
-          headers: {
-            Authorization: authorizationHeader,
-            Accept: "application/json",
-          },
-        };
-
-        const response = await fetch(pageUrl, options);
-        const data: JiraAPIResponse = await response.json();
-
-        if (!data.issues || data.issues.length === 0) break;
-
-        const allIssues = [];
-        for (const issue of data.issues) {
-          allIssues.push(issue);
-        }
-
-        if (allIssues.length > 0) yield allIssues;
-
-        startAt += this.limitPerRequest;
-
-        if (data.issues.length < this.limitPerRequest) break;
-      } catch (error) {
-        console.error("Error fetching Jira issues:", error);
-        yield [];
-        break;
+      if (nextPageToken) {
+        params.set("nextPageToken", nextPageToken);
       }
+
+      const response = await fetch(`${url}?${params}`, {
+        headers: {
+          Authorization: authorizationHeader,
+          Accept: "application/json",
+        },
+      });
+
+      const data = await response.json();
+
+      if (data.issues?.length) {
+        yield data.issues;
+      }
+
+      if (data.isLast === true) break;
+
+      if (!data.nextPageToken) {
+        throw new Error("Expected nextPageToken but none returned");
+      }
+
+      nextPageToken = data.nextPageToken;
     }
   }
 }
+
+export const formatJiraDescriptionAsJSON: JiraDescriptionFormatter = (
+  adfContent: ADFNode | null | undefined
+): any => {
+  if (!adfContent) return null;
+
+  const traverseNode = (node: ADFNode): any => {
+    if (typeof node === "string") return { type: "text", text: node };
+
+    const result: any = { type: node.type || "unknown" };
+    if (node.text) result.text = node.text;
+    if (node.attrs) result.attrs = node.attrs;
+    if (node.content) result.content = node.content.map(traverseNode);
+    return result;
+  };
+
+  return traverseNode(adfContent);
+};
+
+export const formatJiraDescriptionAsText: JiraDescriptionFormatter = (
+  adfContent: ADFNode | null | undefined
+): string => {
+  if (!adfContent) return "";
+
+  const traverseNode = (node: ADFNode): string => {
+    if (node.text) return node.text;
+    if (node.content) return node.content.map(traverseNode).join("");
+    return "";
+  };
+
+  return traverseNode(adfContent).trim();
+};
