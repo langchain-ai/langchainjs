@@ -768,7 +768,7 @@ export class ChatOllama
         text: token,
         message: convertOllamaMessagesToLangChain(responseMessage),
       });
-      yield cg;
+      yield chunk;
       await runManager?.handleLLMNewToken(
         token,
         undefined,
