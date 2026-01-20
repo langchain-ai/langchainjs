@@ -117,6 +117,18 @@ interface AlibabaTongyiChatInput {
    */
   alibabaApiKey?: string;
 
+  /**
+   * Region for the Alibaba Tongyi API endpoint.
+   *
+   * Available regions:
+   * - 'china' (default): https://dashscope.aliyuncs.com/compatible-mode/v1
+   * - 'singapore': https://dashscope-intl.aliyuncs.com/compatible-mode/v1
+   * - 'us': https://dashscope-us.aliyuncs.com/compatible-mode/v1
+   *
+   * @default "china"
+   */
+  region?: "china" | "singapore" | "us";
+
   /** Amount of randomness injected into the response. Ranges
    * from 0 to 1 (0 is not included). Use temp closer to 0 for analytical /
    * multiple choice, and temp closer to 1 for creative
@@ -192,13 +204,16 @@ function messageToTongyiRole(message: BaseMessage): TongyiMessageRole {
  * @augments AlibabaTongyiInput
  * @example
  * ```typescript
+ * // Default - uses China region
  * const qwen = new ChatAlibabaTongyi({
  *   alibabaApiKey: "YOUR-API-KEY",
  * });
  *
+ * // Specify region explicitly
  * const qwen = new ChatAlibabaTongyi({
  *   model: "qwen-turbo",
  *   temperature: 1,
+ *   region: "singapore", // or "us" or "china"
  *   alibabaApiKey: "YOUR-API-KEY",
  * });
  *
@@ -257,6 +272,23 @@ export class ChatAlibabaTongyi
 
   enableSearch?: boolean | undefined;
 
+  region: "china" | "singapore" | "us";
+
+  /**
+   * Get the API URL based on the specified region.
+   *
+   * @param region - The region to get the URL for ('china', 'singapore', or 'us')
+   * @returns The base URL for the specified region
+   */
+  private getRegionBaseUrl(region: "china" | "singapore" | "us"): string {
+    const regionUrls = {
+      china: "https://dashscope.aliyuncs.com/",
+      singapore: "https://dashscope-intl.aliyuncs.com/",
+      us: "https://dashscope-us.aliyuncs.com/",
+    };
+    return regionUrls[region];
+  }
+
   constructor(
     fields: Partial<AlibabaTongyiChatInput> & BaseChatModelParams = {}
   ) {
@@ -268,8 +300,12 @@ export class ChatAlibabaTongyi
       throw new Error("Ali API key not found");
     }
 
-    this.apiUrl =
-      "https://dashscope.aliyuncs.com/api/v1/services/aigc/text-generation/generation";
+    // Set region (default to china)
+    this.region = fields.region ?? "china";
+
+    // Set API URL based on region
+    this.apiUrl = `${this.getRegionBaseUrl(this.region)}api/v1/services/aigc/text-generation/generation`;
+
     this.lc_serializable = true;
     this.streaming = fields.streaming ?? false;
     this.prefixMessages = fields.prefixMessages ?? [];
