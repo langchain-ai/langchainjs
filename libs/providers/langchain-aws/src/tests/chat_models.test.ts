@@ -163,6 +163,21 @@ describe("convertToConverseMessages", () => {
             },
           ],
         }),
+        new ToolMessage({
+          content: [
+            {
+              type: "text",
+              text: "long text...",
+            },
+            {
+              type: "cache_point",
+              cachePoint: {
+                type: "default",
+              },
+            },
+          ],
+          tool_call_id: "long_content_tool",
+        }),
       ],
       output: {
         converseMessages: [
@@ -195,6 +210,26 @@ describe("convertToConverseMessages", () => {
               },
               {
                 text: "The capital of Germany is Berlin.",
+              },
+            ],
+          },
+          {
+            role: BedrockConversationRole.USER,
+            content: [
+              {
+                toolResult: {
+                  toolUseId: "long_content_tool",
+                  content: [
+                    {
+                      text: "long text...",
+                    },
+                  ],
+                },
+              },
+              {
+                cachePoint: {
+                  type: "default",
+                },
               },
             ],
           },
