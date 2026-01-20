@@ -155,34 +155,34 @@ export type $MessageToolCallBlock<TStructure extends MessageStructure> =
  * // | { type?: "tool_call"; id?: string; name: "search"; args: { query: string } }
  * ```
  */
-export type $InferToolCalls<TStructure extends MessageStructure> = NonNullable<
-  TStructure["tools"]
-> extends MessageToolSet
-  ? NonNullable<TStructure["tools"]> extends infer TTools extends MessageToolSet
-    ? {
-        [K in keyof TTools]: K extends string
-          ? TTools[K] extends MessageToolDefinition
-            ? {
-                readonly type?: "tool_call";
-                id?: string;
-                name: K;
-                // Fallback to Record<string, any> when input is unknown
-                args: [unknown] extends [TTools[K]["input"]]
-                  ? // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                    Record<string, any>
-                  : TTools[K]["input"];
-              }
-            : never
-          : never;
-      }[keyof TTools]
-    : never
-  : {
-      readonly type?: "tool_call";
-      id?: string;
-      name: string;
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      args: Record<string, any>;
-    };
+export type $InferToolCalls<TStructure extends MessageStructure> =
+  NonNullable<TStructure["tools"]> extends MessageToolSet
+    ? NonNullable<TStructure["tools"]> extends infer TTools extends
+        MessageToolSet
+      ? {
+          [K in keyof TTools]: K extends string
+            ? TTools[K] extends MessageToolDefinition
+              ? {
+                  readonly type?: "tool_call";
+                  id?: string;
+                  name: K;
+                  // Fallback to Record<string, any> when input is unknown
+                  args: [unknown] extends [TTools[K]["input"]]
+                    ? // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                      Record<string, any>
+                    : TTools[K]["input"];
+                }
+              : never
+            : never;
+        }[keyof TTools]
+      : never
+    : {
+        readonly type?: "tool_call";
+        id?: string;
+        name: string;
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        args: Record<string, any>;
+      };
 
 /**
  * Helper type to infer a union of tool output types from the tools defined in a MessageStructure.
@@ -207,9 +207,8 @@ export type $InferToolCalls<TStructure extends MessageStructure> = NonNullable<
  */
 export type $InferToolOutputs<TStructure extends MessageStructure> =
   NonNullable<TStructure["tools"]> extends MessageToolSet
-    ? NonNullable<
-        TStructure["tools"]
-      > extends infer TTools extends MessageToolSet
+    ? NonNullable<TStructure["tools"]> extends infer TTools extends
+        MessageToolSet
       ? {
           [K in keyof TTools]: TTools[K] extends MessageToolDefinition
             ? TTools[K]["output"]
@@ -280,7 +279,7 @@ export type $InferToolOutputs<TStructure extends MessageStructure> =
  * ```
  */
 export interface MessageStructure<
-  TTools extends MessageToolSet = MessageToolSet
+  TTools extends MessageToolSet = MessageToolSet,
 > {
   /**
    * Optional output version for the message structure.
@@ -349,10 +348,10 @@ export type $MergeOutputVersion<T, U> =
       ? [TV, UV] extends [undefined, undefined]
         ? "v0"
         : [TV] extends [undefined]
-        ? Exclude<UV, undefined>
-        : [UV] extends [undefined]
-        ? Exclude<TV, undefined>
-        : UV
+          ? Exclude<UV, undefined>
+          : [UV] extends [undefined]
+            ? Exclude<TV, undefined>
+            : UV
       : never
     : never;
 
@@ -408,8 +407,8 @@ export type $MergeContentDefinition<T, U> = {
         >
       : Extract<T[K], ContentBlock>
     : K extends keyof U
-    ? Extract<U[K], ContentBlock>
-    : never;
+      ? Extract<U[K], ContentBlock>
+      : never;
 };
 
 /**
@@ -449,7 +448,7 @@ export type $MergeContentDefinition<T, U> = {
  */
 export type $MergeMessageStructure<
   T extends MessageStructure,
-  U extends MessageStructure
+  U extends MessageStructure,
 > = {
   outputVersion: $MergeOutputVersion<T["outputVersion"], U["outputVersion"]>;
   tools: $MergeObjects<T["tools"], U["tools"]>;
@@ -540,24 +539,25 @@ export type $NormalizedMessageStructure<T extends MessageStructure> =
  */
 export type $InferMessageContentBlocks<
   TStructure extends MessageStructure,
-  TRole extends MessageType
-> = $NormalizedMessageStructure<TStructure> extends infer S
-  ? S extends MessageStructure
-    ? S["content"] extends infer C
-      ? C extends Record<PropertyKey, ContentBlock>
-        ? TRole extends keyof C
-          ? [$MessageToolCallBlock<TStructure>] extends [never]
-            ? C[TRole]
-            : $MergeDiscriminatedUnion<
-                NonNullable<C[TRole]>,
-                $MessageToolCallBlock<TStructure>,
-                "type"
-              >
+  TRole extends MessageType,
+> =
+  $NormalizedMessageStructure<TStructure> extends infer S
+    ? S extends MessageStructure
+      ? S["content"] extends infer C
+        ? C extends Record<PropertyKey, ContentBlock>
+          ? TRole extends keyof C
+            ? [$MessageToolCallBlock<TStructure>] extends [never]
+              ? C[TRole]
+              : $MergeDiscriminatedUnion<
+                  NonNullable<C[TRole]>,
+                  $MessageToolCallBlock<TStructure>,
+                  "type"
+                >
+            : never
           : never
         : never
       : never
-    : never
-  : never;
+    : never;
 
 /**
  * Infers the content type for a specific message type from a message structure.
@@ -600,20 +600,20 @@ export type $InferMessageContentBlocks<
  */
 export type $InferMessageContent<
   TStructure extends MessageStructure,
-  TRole extends MessageType
+  TRole extends MessageType,
 > = TRole extends "tool"
   ? // For tool messages, infer content from tool output types if available
     $InferToolOutputs<TStructure> extends infer TOutput
     ? [TOutput] extends [never]
       ? string | Array<ContentBlock | ContentBlock.Text>
       : [unknown] extends [TOutput]
-      ? // Fallback to default when TOutput is unknown (no specific tools defined)
-        string | Array<ContentBlock | ContentBlock.Text>
-      : TOutput | string | Array<ContentBlock | ContentBlock.Text>
+        ? // Fallback to default when TOutput is unknown (no specific tools defined)
+          string | Array<ContentBlock | ContentBlock.Text>
+        : TOutput | string | Array<ContentBlock | ContentBlock.Text>
     : string | Array<ContentBlock | ContentBlock.Text>
   : TStructure["outputVersion"] extends "v1"
-  ? Array<$InferMessageContentBlocks<TStructure, TRole>>
-  : string | Array<ContentBlock | ContentBlock.Text>;
+    ? Array<$InferMessageContentBlocks<TStructure, TRole>>
+    : string | Array<ContentBlock | ContentBlock.Text>;
 
 /**
  * Infers the properties for a specific message type from a message structure.
@@ -655,18 +655,19 @@ export type $InferMessageContent<
  */
 export type $InferMessageProperties<
   TStructure extends MessageStructure,
-  TRole extends MessageType
-> = $NormalizedMessageStructure<TStructure> extends infer S
-  ? S extends MessageStructure
-    ? S["properties"] extends infer P | undefined
-      ? P extends Record<PropertyKey, unknown>
-        ? TRole extends keyof P
-          ? Omit<P[TRole], "content" | "type">
+  TRole extends MessageType,
+> =
+  $NormalizedMessageStructure<TStructure> extends infer S
+    ? S extends MessageStructure
+      ? S["properties"] extends infer P | undefined
+        ? P extends Record<PropertyKey, unknown>
+          ? TRole extends keyof P
+            ? Omit<P[TRole], "content" | "type">
+            : Record<string, unknown>
           : Record<string, unknown>
         : Record<string, unknown>
-      : Record<string, unknown>
-    : never
-  : never;
+      : never
+    : never;
 
 /**
  * Infers the type of a specific property for a message type from a message structure.
@@ -708,7 +709,7 @@ export type $InferMessageProperties<
 export type $InferMessageProperty<
   TStructure extends MessageStructure,
   TRole extends MessageType,
-  K extends string
+  K extends string,
 > = K extends keyof $InferMessageProperties<TStructure, TRole>
   ? $InferMessageProperties<TStructure, TRole>[K]
   : never;
@@ -742,16 +743,13 @@ export type $InferMessageProperty<
  */
 export type $InferResponseMetadata<
   TStructure extends MessageStructure,
-  TRole extends MessageType
-> = $InferMessageProperty<
-  TStructure,
-  TRole,
-  "response_metadata"
-> extends infer P
-  ? [P] extends [never]
-    ? Record<string, unknown>
-    : P
-  : never;
+  TRole extends MessageType,
+> =
+  $InferMessageProperty<TStructure, TRole, "response_metadata"> extends infer P
+    ? [P] extends [never]
+      ? Record<string, unknown>
+      : P
+    : never;
 
 /**
  * Represents a message object that organizes context for an LLM.
@@ -797,7 +795,7 @@ export type $InferResponseMetadata<
  */
 export interface Message<
   TStructure extends MessageStructure = StandardMessageStructure,
-  TRole extends MessageType = MessageType
+  TRole extends MessageType = MessageType,
 > {
   /** The message type/role */
   readonly type: TRole;

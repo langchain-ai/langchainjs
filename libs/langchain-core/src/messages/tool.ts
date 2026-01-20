@@ -11,7 +11,7 @@ import { $InferMessageContent, MessageStructure } from "./message.js";
 import { Constructor } from "./utils.js";
 
 export interface ToolMessageFields<
-  TStructure extends MessageStructure = MessageStructure
+  TStructure extends MessageStructure = MessageStructure,
 > extends BaseMessageFields<TStructure, "tool"> {
   /**
    * Artifact of the Tool execution which is not meant to be sent to the model.
@@ -152,7 +152,7 @@ export class ToolMessage<TStructure extends MessageStructure = MessageStructure>
  * with other tool message chunks.
  */
 export class ToolMessageChunk<
-  TStructure extends MessageStructure = MessageStructure
+  TStructure extends MessageStructure = MessageStructure,
 > extends BaseMessageChunk<TStructure, "tool"> {
   readonly type = "tool" as const;
 
@@ -216,7 +216,7 @@ export class ToolMessageChunk<
 export interface ToolCall<
   TName extends string = string,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  TArgs extends Record<string, any> = Record<string, any>
+  TArgs extends Record<string, any> = Record<string, any>,
 > {
   readonly type?: "tool_call";
   /**

@@ -50,7 +50,7 @@ import { DictPromptTemplate } from "./dict.js";
 export abstract class BaseMessagePromptTemplate<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   RunInput extends InputValues = any,
-  RunOutput extends BaseMessage[] = BaseMessage[]
+  RunOutput extends BaseMessage[] = BaseMessage[],
 > extends Runnable<RunInput, RunOutput> {
   lc_namespace = ["langchain_core", "prompts", "chat"];
 
@@ -100,7 +100,7 @@ export interface MessagesPlaceholderFields<T extends string> {
  */
 export class MessagesPlaceholder<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    RunInput extends InputValues = any
+    RunInput extends InputValues = any,
   >
   extends BaseMessagePromptTemplate<RunInput>
   implements MessagesPlaceholderFields<Extract<keyof RunInput, string>>
@@ -184,7 +184,7 @@ export class MessagesPlaceholder<
  */
 export interface MessageStringPromptTemplateFields<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  T extends InputValues = any
+  T extends InputValues = any,
 > {
   prompt: BaseStringPromptTemplate<T, string>;
 }
@@ -195,7 +195,7 @@ export interface MessageStringPromptTemplateFields<
  */
 export abstract class BaseMessageStringPromptTemplate<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  RunInput extends InputValues = any
+  RunInput extends InputValues = any,
 > extends BaseMessagePromptTemplate<RunInput> {
   prompt: BaseStringPromptTemplate<
     InputValues<Extract<keyof RunInput, string>>,
@@ -255,7 +255,7 @@ export abstract class BaseChatPromptTemplate<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   RunInput extends InputValues = any,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  PartialVariableName extends string = any
+  PartialVariableName extends string = any,
 > extends BasePromptTemplate<
   RunInput,
   ChatPromptValueInterface,
@@ -296,7 +296,7 @@ export interface ChatMessagePromptTemplateFields<T extends InputValues = any>
  */
 export class ChatMessagePromptTemplate<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  RunInput extends InputValues = any
+  RunInput extends InputValues = any,
 > extends BaseMessageStringPromptTemplate<RunInput> {
   static lc_name() {
     return "ChatMessagePromptTemplate";
@@ -339,7 +339,7 @@ export class ChatMessagePromptTemplate<
 
   static fromTemplate<
     RunInput extends InputValues = Symbol,
-    T extends string = string
+    T extends string = string,
   >(template: T, role: string, options?: { templateFormat?: TemplateFormat }) {
     return new this(
       PromptTemplate.fromTemplate<RunInput, T>(template, {
@@ -393,7 +393,7 @@ type MessageClass =
 type ChatMessageClass = typeof ChatMessage;
 
 interface _StringImageMessagePromptTemplateOptions<
-  Format extends TemplateFormat = TemplateFormat
+  Format extends TemplateFormat = TemplateFormat,
 > extends Record<string, unknown> {
   templateFormat?: Format;
 }
@@ -401,7 +401,7 @@ interface _StringImageMessagePromptTemplateOptions<
 class _StringImageMessagePromptTemplate<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   RunInput extends InputValues = any,
-  RunOutput extends BaseMessage[] = BaseMessage[]
+  RunOutput extends BaseMessage[] = BaseMessage[],
 > extends BaseMessagePromptTemplate<RunInput, RunOutput> {
   lc_namespace = ["langchain_core", "prompts", "chat"];
 
@@ -705,7 +705,7 @@ class _StringImageMessagePromptTemplate<
  */
 export class HumanMessagePromptTemplate<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  RunInput extends InputValues = any
+  RunInput extends InputValues = any,
 > extends _StringImageMessagePromptTemplate<RunInput> {
   static _messageClass(): typeof HumanMessage {
     return HumanMessage;
@@ -722,7 +722,7 @@ export class HumanMessagePromptTemplate<
  */
 export class AIMessagePromptTemplate<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  RunInput extends InputValues = any
+  RunInput extends InputValues = any,
 > extends _StringImageMessagePromptTemplate<RunInput> {
   static _messageClass(): typeof AIMessage {
     return AIMessage;
@@ -749,7 +749,7 @@ export class AIMessagePromptTemplate<
  */
 export class SystemMessagePromptTemplate<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  RunInput extends InputValues = any
+  RunInput extends InputValues = any,
 > extends _StringImageMessagePromptTemplate<RunInput> {
   static _messageClass(): typeof SystemMessage {
     return SystemMessage;
@@ -767,7 +767,7 @@ export interface ChatPromptTemplateInput<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   RunInput extends InputValues = any,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  PartialVariableName extends string = any
+  PartialVariableName extends string = any,
 > extends BasePromptTemplateInput<RunInput, PartialVariableName> {
   /**
    * The prompt messages
@@ -810,7 +810,7 @@ function _coerceMessagePromptTemplateLike<
   > = Omit<
     ChatPromptTemplateInput<RunInput>,
     "inputVariables" | "promptMessages" | "partialVariables"
-  >
+  >,
 >(
   messagePromptTemplateLike: BaseMessagePromptTemplateLike,
   extra?: Extra
@@ -924,7 +924,7 @@ export class ChatPromptTemplate<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     RunInput extends InputValues = any,
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    PartialVariableName extends string = any
+    PartialVariableName extends string = any,
   >
   extends BaseChatPromptTemplate<RunInput, PartialVariableName>
   implements ChatPromptTemplateInput<RunInput, PartialVariableName>
@@ -1036,9 +1036,8 @@ export class ChatPromptTemplate<
             templateFormat: this.templateFormat,
           }
         );
-        const formattedUrl = await promptTemplatePlaceholder.format(
-          inputValues
-        );
+        const formattedUrl =
+          await promptTemplatePlaceholder.format(inputValues);
 
         if (
           typeof item.image_url === "object" &&
@@ -1133,7 +1132,7 @@ export class ChatPromptTemplate<
    */
   static fromTemplate<
     RunInput extends InputValues = Symbol,
-    T extends string = string
+    T extends string = string,
   >(
     template: T,
     options?: Omit<
@@ -1144,7 +1143,7 @@ export class ChatPromptTemplate<
 
   static fromTemplate<
     RunInput extends InputValues = Symbol,
-    T extends string = string
+    T extends string = string,
   >(
     template: T,
     options?: Omit<
@@ -1155,7 +1154,7 @@ export class ChatPromptTemplate<
 
   static fromTemplate<
     RunInput extends InputValues = Symbol,
-    T extends string = string
+    T extends string = string,
   >(
     template: T,
     options?: Omit<
@@ -1166,7 +1165,7 @@ export class ChatPromptTemplate<
 
   static fromTemplate<
     RunInput extends InputValues = Symbol,
-    T extends string = string
+    T extends string = string,
   >(
     template: T,
     options?: Omit<
@@ -1190,7 +1189,8 @@ export class ChatPromptTemplate<
   static fromMessages<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     RunInput extends InputValues = any,
-    Extra extends ChatPromptTemplateInput<RunInput> = ChatPromptTemplateInput<RunInput>
+    Extra extends
+      ChatPromptTemplateInput<RunInput> = ChatPromptTemplateInput<RunInput>,
   >(
     promptMessages: (
       | ChatPromptTemplate<InputValues, string>

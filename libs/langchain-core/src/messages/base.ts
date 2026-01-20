@@ -68,7 +68,7 @@ export interface FunctionCall {
 
 export type BaseMessageFields<
   TStructure extends MessageStructure = MessageStructure,
-  TRole extends MessageType = MessageType
+  TRole extends MessageType = MessageType,
 > = Pick<Message, "id" | "name"> & {
   content?: $InferMessageContent<TStructure, TRole>;
   contentBlocks?: Array<ContentBlock.Standard>;
@@ -197,7 +197,7 @@ function stringifyWithDepthLimit(obj: any, depthLimit: number): string {
  */
 export abstract class BaseMessage<
     TStructure extends MessageStructure = MessageStructure,
-    TRole extends MessageType = MessageType
+    TRole extends MessageType = MessageType,
   >
   extends Serializable
   implements Message<TStructure, TRole>
@@ -632,7 +632,7 @@ export function _mergeObj<T = any>(
  */
 export abstract class BaseMessageChunk<
   TStructure extends MessageStructure = MessageStructure,
-  TRole extends MessageType = MessageType
+  TRole extends MessageType = MessageType,
 > extends BaseMessage<TStructure, TRole> {
   abstract concat(chunk: BaseMessageChunk): BaseMessageChunk<TStructure, TRole>;
 
