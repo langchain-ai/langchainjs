@@ -871,7 +871,6 @@ export class ChatGoogleGenerativeAI
           finalChunks[index] = finalChunks[index].concat(chunk);
         }
       }
-      // 10x faster if the array is sparse
       const generations = Object.values(finalChunks) as ChatGenerationChunk[];
 
       return { generations, llmOutput: { estimatedTokenUsage: tokenUsage } };
