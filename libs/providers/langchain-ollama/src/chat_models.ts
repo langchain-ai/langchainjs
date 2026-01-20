@@ -764,7 +764,7 @@ export class ChatOllama
         ? (responseMessage.thinking ?? responseMessage.content ?? "")
         : (responseMessage.content ?? "");
 
-      const cg = new ChatGenerationChunk({
+      const chunk = new ChatGenerationChunk({
         text: token,
         message: convertOllamaMessagesToLangChain(responseMessage),
       });
