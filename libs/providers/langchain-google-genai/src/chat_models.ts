@@ -871,7 +871,7 @@ export class ChatGoogleGenerativeAI
           finalChunks[index] = finalChunks[index].concat(chunk);
         }
       }
-      const generations = Object.values(finalChunks) as ChatGenerationChunk[];
+      const generations = finalChunks.filter((c): c is ChatGenerationChunk => c !== undefined)
 
       return { generations, llmOutput: { estimatedTokenUsage: tokenUsage } };
     }
