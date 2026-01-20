@@ -489,32 +489,48 @@ function convertToolMessageToConverseMessage(
       ],
     };
   } else {
+    // Separate cache points from other content blocks
+    const toolResultContentBlocks: Bedrock.ToolResultContentBlock[] = [];
+    const cacheContentBlocks: Bedrock.ContentBlock[] = [];
+
+    for (const c of msg.content) {
+      const converted = convertLangChainContentBlockToConverseContentBlock({
+        block: c,
+        onUnknown: "returnUnmodified",
+      });
+
+      // Check if this is a cache point - those should be at message level
+      if (isDefaultCachePoint(c)) {
+        cacheContentBlocks.push(converted as Bedrock.ContentBlock);
+      } else {
+        // All other content goes into the toolResult
+        if (converted !== c) {
+          toolResultContentBlocks.push(
+            converted as Bedrock.ToolResultContentBlock
+          );
+        } else {
+          toolResultContentBlocks.push({
+            json: c,
+          } as Bedrock.ToolResultContentBlock.JsonMember);
+        }
+      }
+    }
+
+    // Build the content array with toolResult first, then cache points
+    const messageContent: Bedrock.ContentBlock[] = [
+      {
+        toolResult: {
+          toolUseId: castMsg.tool_call_id,
+          content: toolResultContentBlocks,
+        },
+      },
+      ...cacheContentBlocks,
+    ];
+
     return {
       // Tool use messages are always from the user
       role: "user" as const,
-      content: [
-        {
-          toolResult: {
-            toolUseId: castMsg.tool_call_id,
-            content: (
-              msg.content as (
-                | MessageContentComplex
-                | ContentBlock.Data.DataContentBlock
-              )[]
-            ).map((c) => {
-              const converted =
-                convertLangChainContentBlockToConverseContentBlock({
-                  block: c,
-                  onUnknown: "returnUnmodified",
-                });
-              if (converted !== c) {
-                return converted as Bedrock.ToolResultContentBlock;
-              }
-              return { json: c } as Bedrock.ToolResultContentBlock.JsonMember;
-            }),
-          },
-        },
-      ],
+      content: messageContent,
     };
   }
 }
