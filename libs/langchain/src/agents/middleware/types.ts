@@ -7,7 +7,11 @@ import type {
   InferInteropZodOutput,
 } from "@langchain/core/utils/types";
 import type { InteropZodToStateDefinition } from "@langchain/langgraph/zod";
-import type { AnnotationRoot } from "@langchain/langgraph";
+import type {
+  AnnotationRoot,
+  StateSchema,
+  InferStateSchemaValue,
+} from "@langchain/langgraph";
 import type {
   AIMessage,
   SystemMessage,
@@ -747,15 +751,22 @@ export type InferContextInput<
     ? ToAnnotationRoot<ContextSchema>["State"]
     : {};
 
-export type ToAnnotationRoot<A extends AnyAnnotationRoot | InteropZodObject> =
-  A extends AnyAnnotationRoot
+export type ToAnnotationRoot<
+  A extends AnyAnnotationRoot | InteropZodObject | StateSchema<any>,
+> =
+  A extends StateSchema<any>
     ? A
-    : A extends InteropZodObject
-      ? AnnotationRoot<InteropZodToStateDefinition<A>>
-      : never;
+    : A extends AnyAnnotationRoot
+      ? A
+      : A extends InteropZodObject
+        ? AnnotationRoot<InteropZodToStateDefinition<A>>
+        : never;
 
 export type InferSchemaInput<
-  A extends AnyAnnotationRoot | InteropZodObject | undefined,
-> = A extends AnyAnnotationRoot | InteropZodObject
-  ? ToAnnotationRoot<A>["State"]
-  : {};
+  A extends AnyAnnotationRoot | InteropZodObject | StateSchema<any> | undefined,
+> =
+  A extends StateSchema<infer TFields>
+    ? InferStateSchemaValue<TFields>
+    : A extends AnyAnnotationRoot | InteropZodObject
+      ? ToAnnotationRoot<A>["State"]
+      : {};

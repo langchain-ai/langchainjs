@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { z } from "zod/v3";
-import { MessagesZodState } from "@langchain/langgraph";
+import { MessagesZodState, StateSchema } from "@langchain/langgraph";
+
 import { withLangGraph, schemaMetaRegistry } from "@langchain/langgraph/zod";
 
 import type { AgentMiddleware, AnyAnnotationRoot } from "./middleware/types.js";
@@ -15,6 +16,7 @@ export function createAgentAnnotationConditional<
   TStateSchema extends
     | AnyAnnotationRoot
     | InteropZodObject
+    | StateSchema<any>
     | undefined = undefined,
   TMiddleware extends readonly AgentMiddleware<any, any, any>[] = [],
 >(
@@ -39,7 +41,23 @@ export function createAgentAnnotationConditional<
   // Separate shape for input/output without reducer metadata (to avoid channel conflicts)
   const ioSchemaShape: Record<string, any> = {};
 
-  const applySchema = (schema: InteropZodObject) => {
+  const isStateSchema = (schema: unknown): schema is StateSchema<any> =>
+    StateSchema.isInstance(schema);
+
+  const applySchema = (schema: InteropZodObject | StateSchema<any>) => {
+    // Handle StateSchema
+    if (isStateSchema(schema)) {
+      // Extract field keys from StateSchema.fields
+      for (const key of Object.keys(schema.fields)) {
+        if (key.startsWith("_")) continue;
+        if (!(key in schemaShape)) {
+          schemaShape[key] = z.any();
+          ioSchemaShape[key] = z.any();
+        }
+      }
+      return;
+    }
+
     // Handle both Zod v3 and v4 schemas
     const shape = isZodSchemaV4(schema)
       ? getInteropZodObjectShape(schema)
@@ -82,8 +100,12 @@ export function createAgentAnnotationConditional<
   /**
    * Add state schema properties to the Zod schema
    */
-  if (stateSchema && ("shape" in stateSchema || isZodSchemaV4(stateSchema))) {
-    applySchema(stateSchema as InteropZodObject);
+  if (stateSchema) {
+    if (isStateSchema(stateSchema)) {
+      applySchema(stateSchema);
+    } else if ("shape" in stateSchema || isZodSchemaV4(stateSchema)) {
+      applySchema(stateSchema as InteropZodObject);
+    }
   }
 
   for (const middleware of middlewareList) {
