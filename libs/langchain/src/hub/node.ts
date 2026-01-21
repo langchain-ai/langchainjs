@@ -34,6 +34,46 @@ function isRunnableBinding(a: string[]): boolean {
 }
 
 /**
+ * Infer modelProvider from the id namespace to avoid className collisions.
+ * e.g., ["langchain", "chat_models", "vertexai", "ChatVertexAI"] -> "google-vertexai"
+ * @param idArray The full id array from the manifest
+ * @returns The inferred modelProvider key or undefined
+ */
+function _inferModelProviderFromNamespace(
+  idArray: string[]
+): string | undefined {
+  if (!Array.isArray(idArray) || idArray.length < 2) {
+    return undefined;
+  }
+
+  // Check namespace parts (excluding the className at the end)
+  const namespace = idArray.slice(0, -1);
+  const providerHint = namespace.find(
+    (part) =>
+      part.includes("vertexai") ||
+      part.includes("genai") ||
+      part.includes("openai") ||
+      part.includes("anthropic")
+  );
+
+  if (!providerHint) {
+    return undefined;
+  }
+
+  // Map namespace hints to MODEL_PROVIDER_CONFIG keys
+  if (providerHint.includes("vertexai_web")) {
+    return "google-vertexai-web";
+  } else if (providerHint.includes("vertexai")) {
+    return "google-vertexai";
+  } else if (providerHint.includes("genai")) {
+    return "google-genai";
+  }
+
+  // Add more mappings as needed for other providers
+  return undefined;
+}
+
+/**
  * Pull a prompt from the hub.
  * @param ownerRepoCommit The name of the repo containing the prompt, as well as an optional commit hash separated by a slash.
  * @param options.apiKey LangSmith API key to use when pulling the prompt
@@ -73,7 +113,10 @@ export async function pull<T extends Runnable>(
       const modelName = chatModelObject?.id.at(-1);
 
       if (modelName) {
-        modelClass = await getChatModelByClassName(modelName);
+        const modelProvider = _inferModelProviderFromNamespace(
+          chatModelObject.id
+        );
+        modelClass = await getChatModelByClassName(modelName, modelProvider);
         if (!modelClass) {
           console.warn(
             `Received unknown model name from prompt hub: "${modelName}"`
