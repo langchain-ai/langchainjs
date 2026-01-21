@@ -704,8 +704,10 @@ export abstract class BaseChatOpenAI<
 
     const countPerMessage = await Promise.all(
       messages.map(async (message) => {
-        const textCount = await this.getNumTokens(message.content);
-        const roleCount = await this.getNumTokens(messageToOpenAIRole(message));
+        const [textCount, roleCount] = await Promise.all([
+          this.getNumTokens(message.content),
+          this.getNumTokens(messageToOpenAIRole(message)),
+        ]);
         const nameCount =
           message.name !== undefined
             ? tokensPerName + (await this.getNumTokens(message.name))

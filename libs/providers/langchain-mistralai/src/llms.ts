@@ -447,7 +447,9 @@ Either provide one via the "apiKey" field in the constructor, or set the "MISTRA
           if (this.useFim) {
             // Use FIM API for code completion models like codestral
             if (stream) {
-              res = await client.fim.stream(request);
+              // The Mistral SDK requires `stream: true` to be explicitly set
+              // in the request body for streaming to work properly
+              res = await client.fim.stream({ ...request, stream: true });
             } else {
               res = await client.fim.complete(request);
             }
@@ -466,7 +468,9 @@ Either provide one via the "apiKey" field in the constructor, or set the "MISTRA
               stop: request.stop,
             };
             if (stream) {
-              res = await client.chat.stream(chatRequest);
+              // The Mistral SDK requires `stream: true` to be explicitly set
+              // in the request body for streaming to work properly
+              res = await client.chat.stream({ ...chatRequest, stream: true });
             } else {
               res = await client.chat.complete(chatRequest);
             }
