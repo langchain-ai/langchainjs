@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { describe, it, expect, expectTypeOf } from "vitest";
 import { z } from "zod";
+import { z as z4 } from "zod/v4";
 import { HumanMessage, ToolMessage, BaseMessage } from "@langchain/core/messages";
 import { tool } from "@langchain/core/tools";
 import { StateSchema, ReducedValue, Command } from "@langchain/langgraph";
@@ -111,18 +112,18 @@ describe("StateSchema support", () => {
 
       const result = await agent.invoke({
         messages: [new HumanMessage("Add an entry")],
-        history: [],
+        history: "initial",
       });
 
       // Verify reducer was actually called
       expect(reducerCalls.length).toBeGreaterThan(0);
       expect(reducerCalls).toContainEqual({
-        current: [],
+        current: ["initial"],
         next: "first_entry",
       });
 
       // Verify final state
-      expect(result.history).toEqual(["first_entry"]);
+      expect(result.history).toEqual(["initial", "first_entry"]);
     });
 
     it("should invoke reducer multiple times for multiple tool calls", async () => {
@@ -178,7 +179,7 @@ describe("StateSchema support", () => {
 
       const result = await agent.invoke({
         messages: [new HumanMessage("Add two tasks")],
-        tasks: ["Initial Task"],
+        tasks: "Initial Task",
       });
 
       // Verify reducer was called for each task
@@ -230,7 +231,7 @@ describe("StateSchema support", () => {
 
       const result = await agent.invoke({
         messages: [new HumanMessage("Test middleware")],
-        history: ["initial"],
+        history: "initial",
       });
 
       // Verify reducer was called from middleware hooks
@@ -301,18 +302,18 @@ describe("StateSchema support", () => {
 
       const result = await agent.invoke({
         messages: [new HumanMessage("Test wrapToolCall Command")],
-        auditLog: [],
+        auditLog: "initial",
       });
 
       // Verify reducer was called from wrapToolCall Command
       expect(reducerCalls.length).toBeGreaterThan(0);
       expect(reducerCalls).toContainEqual({
-        current: [],
+        current: ["initial"],
         next: "tool_called:dummy_tool",
       });
 
       // Verify final state
-      expect(result.auditLog).toEqual(["tool_called:dummy_tool"]);
+      expect(result.auditLog).toEqual(["initial", "tool_called:dummy_tool"]);
     });
 
     it("should work with middleware that has its own stateSchema alongside agent StateSchema", async () => {
@@ -359,8 +360,8 @@ describe("StateSchema support", () => {
 
       const result = await agent.invoke({
         messages: [new HumanMessage("Test combined schemas")],
-        events: [],
         requestCount: 0,
+        events: "initial",
       });
 
       // Verify agent's reducer was called
@@ -467,7 +468,7 @@ describe("StateSchema support", () => {
 
       const result = await agent.invoke({
         messages: [new HumanMessage("test")],
-        history: [],
+        history: "initial",
       });
 
       // Verify history is an array at runtime
@@ -533,17 +534,27 @@ describe("StateSchema support", () => {
         customField: z.string(),
       });
 
+      const responseFormat = z.object({
+        answer: z.string(),
+        confidence: z.number(),
+      });
+
       const agent = createAgent({
         model: new FakeToolCallingModel({
-          toolCalls: [],
+          toolCalls: [
+            [
+              {
+                name: "extract-1",
+                args: { answer: "test", confidence: 0.9 },
+                id: "extract",
+              },
+            ],
+          ],
           structuredResponse: { answer: "test", confidence: 0.9 },
         }),
         tools: [],
         stateSchema: AgentState,
-        responseFormat: z.object({
-          answer: z.string(),
-          confidence: z.number(),
-        }),
+        responseFormat,
       });
 
       const result = await agent.invoke({

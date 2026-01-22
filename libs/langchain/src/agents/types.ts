@@ -3,7 +3,7 @@ import type {
   InteropZodObject,
   InteropZodType,
 } from "@langchain/core/utils/types";
-import type { START, END, StateGraph, StateSchema } from "@langchain/langgraph";
+import type { START, END, StateGraph, StateDefinitionInit } from "@langchain/langgraph";
 
 import type { LanguageModelLike } from "@langchain/core/language_models/base";
 import type {
@@ -404,11 +404,7 @@ export interface BuiltInState<
  * Base input type for `.invoke` and `.stream` methods.
  */
 export type UserInput<
-  TStateSchema extends
-    | AnyAnnotationRoot
-    | InteropZodObject
-    | StateSchema<any>
-    | undefined = undefined,
+  TStateSchema extends StateDefinitionInit | undefined = undefined,
 > = InferSchemaInput<TStateSchema> & {
   messages: Messages;
 };

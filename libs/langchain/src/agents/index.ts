@@ -4,7 +4,7 @@ import type {
   InteropZodType,
 } from "@langchain/core/utils/types";
 import type { ClientTool, ServerTool } from "@langchain/core/tools";
-import type { StateDefinitionInit } from "@langchain/langgraph/graph/types";
+import type { StateDefinitionInit } from "@langchain/langgraph";
 
 import type { ResponseFormatUndefined } from "./responses.js";
 import type { 
