@@ -11,6 +11,7 @@ import type {
   AnnotationRoot,
   StateSchema,
   InferStateSchemaValue,
+  StateDefinitionInit,
 } from "@langchain/langgraph";
 import type {
   AIMessage,
@@ -36,7 +37,8 @@ export type AnyAnnotationRoot = AnnotationRoot<any>;
  * into a single configuration object. This pattern simplifies type signatures and makes
  * it easier to add new type parameters without changing multiple function signatures.
  *
- * @typeParam TSchema - The middleware state schema type. Can be an `InteropZodObject` or `undefined`.
+ * @typeParam TSchema - The middleware state schema type. Can be a `StateDefinitionInit`
+ *   (including `InteropZodObject`, `StateSchema`, or `AnnotationRoot`) or `undefined`.
  *
  * @typeParam TContextSchema - The middleware context schema type. Can be an `InteropZodObject`,
  *   `InteropZodDefault`, `InteropZodOptional`, or `undefined`.
@@ -57,7 +59,7 @@ export type AnyAnnotationRoot = AnnotationRoot<any>;
  * ```
  */
 export interface MiddlewareTypeConfig<
-  TSchema extends InteropZodObject | undefined = InteropZodObject | undefined,
+  TSchema extends StateDefinitionInit | undefined = StateDefinitionInit | undefined,
   TContextSchema extends
     | InteropZodObject
     | InteropZodDefault<InteropZodObject>
@@ -90,13 +92,13 @@ export interface MiddlewareTypeConfig<
 export type DefaultMiddlewareTypeConfig = MiddlewareTypeConfig;
 
 export type NormalizedSchemaInput<
-  TSchema extends InteropZodObject | undefined | never = any,
+  TSchema extends StateDefinitionInit | undefined | never = any,
 > = [TSchema] extends [never]
   ? AgentBuiltInState
   : TSchema extends InteropZodObject
     ? InferInteropZodOutput<TSchema> & AgentBuiltInState
-    : TSchema extends Record<string, unknown>
-      ? TSchema & AgentBuiltInState
+    : TSchema extends StateDefinitionInit
+      ? InferSchemaInput<TSchema> & AgentBuiltInState
       : AgentBuiltInState;
 
 /**
@@ -167,7 +169,7 @@ export type ToolCallHandler<
  * Allows middleware to intercept and modify tool execution.
  */
 export type WrapToolCallHook<
-  TSchema extends InteropZodObject | undefined = undefined,
+  TSchema extends StateDefinitionInit | undefined = undefined,
   TContext = unknown,
 > = (
   request: ToolCallRequest<NormalizedSchemaInput<TSchema>, TContext>,
@@ -182,7 +184,7 @@ export type WrapToolCallHook<
  * @returns The AI message response from the model
  */
 export type WrapModelCallHandler<
-  TSchema extends InteropZodObject | undefined = undefined,
+  TSchema extends StateDefinitionInit | undefined = undefined,
   TContext = unknown,
 > = (
   request: Omit<
@@ -208,7 +210,7 @@ export type WrapModelCallHandler<
  * @returns The AI message response from the model (or a modified version)
  */
 export type WrapModelCallHook<
-  TSchema extends InteropZodObject | undefined = undefined,
+  TSchema extends StateDefinitionInit | undefined = undefined,
   TContext = unknown,
 > = (
   request: ModelRequest<NormalizedSchemaInput<TSchema>, TContext>,
@@ -234,7 +236,7 @@ type BeforeAgentHandler<TSchema, TContext> = (
  * This hook is called once at the start of the agent invocation.
  */
 export type BeforeAgentHook<
-  TSchema extends InteropZodObject | undefined = undefined,
+  TSchema extends StateDefinitionInit | undefined = undefined,
   TContext = unknown,
 > =
   | BeforeAgentHandler<NormalizedSchemaInput<TSchema>, TContext>
@@ -262,7 +264,7 @@ type BeforeModelHandler<TSchema, TContext> = (
  * This hook is called before each model invocation.
  */
 export type BeforeModelHook<
-  TSchema extends InteropZodObject | undefined = undefined,
+  TSchema extends StateDefinitionInit | undefined = undefined,
   TContext = unknown,
 > =
   | BeforeModelHandler<NormalizedSchemaInput<TSchema>, TContext>
@@ -291,7 +293,7 @@ type AfterModelHandler<TSchema, TContext> = (
  * This hook is called after each model invocation.
  */
 export type AfterModelHook<
-  TSchema extends InteropZodObject | undefined = undefined,
+  TSchema extends StateDefinitionInit | undefined = undefined,
   TContext = unknown,
 > =
   | AfterModelHandler<NormalizedSchemaInput<TSchema>, TContext>
@@ -319,7 +321,7 @@ type AfterAgentHandler<TSchema, TContext> = (
  * This hook is called once at the end of the agent invocation.
  */
 export type AfterAgentHook<
-  TSchema extends InteropZodObject | undefined = undefined,
+  TSchema extends StateDefinitionInit | undefined = undefined,
   TContext = unknown,
 > =
   | AfterAgentHandler<NormalizedSchemaInput<TSchema>, TContext>
@@ -353,7 +355,7 @@ export const MIDDLEWARE_BRAND: unique symbol = Symbol("AgentMiddleware");
  * ```
  */
 export interface AgentMiddleware<
-  TSchema extends InteropZodObject | undefined = any,
+  TSchema extends StateDefinitionInit | undefined = any,
   TContextSchema extends
     | InteropZodObject
     | InteropZodDefault<InteropZodObject>
@@ -390,9 +392,9 @@ export interface AgentMiddleware<
 
   /**
    * The schema of the middleware state. Middleware state is persisted between multiple invocations. It can be either:
-   * - A Zod object
-   * - A Zod optional object
-   * - A Zod default object
+   * - A Zod object (InteropZodObject)
+   * - A StateSchema from LangGraph (supports ReducedValue, UntrackedValue)
+   * - An AnnotationRoot
    * - Undefined
    */
   stateSchema?: TSchema;
@@ -614,29 +616,35 @@ export type InferChannelType<T extends AnyAnnotationRoot | InteropZodObject> =
 /**
  * Helper type to infer the state schema type from a middleware
  * This filters out private properties (those starting with underscore)
+ * Supports both Zod schemas (InteropZodObject) and StateSchema from LangGraph
  */
 export type InferMiddlewareState<T extends AgentMiddleware> =
   T extends AgentMiddleware<infer TSchema, any, any, any>
     ? TSchema extends InteropZodObject
       ? FilterPrivateProps<InferInteropZodOutput<TSchema>>
-      : {}
+      : TSchema extends StateDefinitionInit
+        ? FilterPrivateProps<InferSchemaInput<TSchema>>
+        : {}
     : {};
 
 /**
  * Helper type to infer the input state schema type from a middleware (all properties optional)
  * This filters out private properties (those starting with underscore)
+ * Supports both Zod schemas (InteropZodObject) and StateSchema from LangGraph
  */
 export type InferMiddlewareInputState<T extends AgentMiddleware> =
   T extends AgentMiddleware<infer TSchema, any, any, any>
     ? TSchema extends InteropZodObject
       ? FilterPrivateProps<InferInteropZodInput<TSchema>>
-      : {}
+      : TSchema extends StateDefinitionInit
+        ? FilterPrivateProps<InferSchemaInput<TSchema>>
+        : {}
     : {};
 
 /**
  * Helper type to infer merged state from an array of middleware (just the middleware states)
  */
-export type InferMiddlewareStates<T = AgentMiddleware[]> = T extends readonly []
+export type InferMiddlewareStates<T extends readonly AgentMiddleware[]> = T extends readonly []
   ? {}
   : T extends readonly [infer First, ...infer Rest]
     ? First extends AgentMiddleware
@@ -763,7 +771,7 @@ export type ToAnnotationRoot<
         : never;
 
 export type InferSchemaInput<
-  A extends AnyAnnotationRoot | InteropZodObject | StateSchema<any> | undefined,
+  A extends StateDefinitionInit | undefined,
 > =
   A extends StateSchema<infer TFields>
     ? InferStateSchemaValue<TFields>

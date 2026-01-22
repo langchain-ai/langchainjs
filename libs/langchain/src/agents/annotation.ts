@@ -4,6 +4,7 @@ import {
   MessagesValue,
   UntrackedValue,
   ReducedValue,
+  type StateDefinitionInit,
 } from "@langchain/langgraph";
 import { schemaMetaRegistry } from "@langchain/langgraph/zod";
 
@@ -40,8 +41,9 @@ export function createAgentAnnotationConditional<
     jumpTo: new UntrackedValue<JumpToTarget>(),
   };
 
-  // Separate shape for input/output without reducer metadata (to avoid channel conflicts)
-  const ioFields: Record<string, any> = {};
+  // Separate shapes for input/output without reducer metadata (to avoid channel conflicts)
+  const inputFields: Record<string, any> = {};
+  const outputFields: Record<string, any> = {};
 
   const applySchema = (schema: InteropZodObject | StateSchema<any>) => {
     // Handle StateSchema: extract from .fields
@@ -53,8 +55,17 @@ export function createAgentAnnotationConditional<
         if (!(key in stateFields)) {
           // Add to stateFields to preserve ReducedValue/UntrackedValue behavior
           stateFields[key] = field;
-          // Also add to ioFields for input/output schema
-          ioFields[key] = field;
+          
+          // For ioFields, extract the appropriate schema from ReducedValue
+          if (ReducedValue.isInstance(field)) {
+            // For input, use inputSchema if available, otherwise use the value schema
+            inputFields[key] = field.inputSchema || field.valueSchema;
+            outputFields[key] = field.valueSchema;
+          } else {
+            // For non-ReducedValue fields, use the field as-is
+            inputFields[key] = field;
+            outputFields[key] = field;
+          }
         }
       }
       return;
@@ -78,19 +89,25 @@ export function createAgentAnnotationConditional<
                 inputSchema: meta.reducer.schema,
                 reducer: meta.reducer.fn,
               });
+              // For input, use the inputSchema
+              inputFields[key] = meta.reducer.schema;
+              outputFields[key] = fieldSchema;
             } else {
               stateFields[key] = new ReducedValue(fieldSchema, {
                 reducer: meta.reducer.fn,
               });
+              // No inputSchema, use the value schema
+              inputFields[key] = fieldSchema;
+              outputFields[key] = fieldSchema;
             }
-            ioFields[key] = fieldSchema;
             continue;
           }
         }
 
         // No reducer - use schema directly
         stateFields[key] = fieldSchema;
-        ioFields[key] = fieldSchema;
+        inputFields[key] = fieldSchema;
+        outputFields[key] = fieldSchema;
       }
     }
   };
@@ -123,8 +140,7 @@ export function createAgentAnnotationConditional<
 
   // Only include structuredResponse when responseFormat is defined
   if (hasStructuredResponse) {
-    stateFields.structuredResponse = new UntrackedValue<string | undefined>();
-    ioFields.structuredResponse = new UntrackedValue<string | undefined>();
+    outputFields.structuredResponse = new UntrackedValue<any>();
   }
 
   /**
@@ -138,17 +154,11 @@ export function createAgentAnnotationConditional<
     }),
     input: new StateSchema({
       messages: MessagesValue,
-      ...Object.fromEntries(
-        Object.entries(ioFields).filter(
-          ([key]) => !["structuredResponse", "jumpTo"].includes(key)
-        )
-      ),
+      ...inputFields,
     }),
     output: new StateSchema({
       messages: MessagesValue,
-      ...Object.fromEntries(
-        Object.entries(ioFields).filter(([key]) => key !== "jumpTo")
-      ),
+      ...outputFields,
     }),
   };
 }
