@@ -41,6 +41,12 @@ export type StreamEventData = {
    */
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   chunk?: any;
+
+  /**
+   * Error message if the runnable that generated the event failed.
+   * This field will only be present if the runnable failed.
+   */
+  error?: string;
 };
 
 /**
@@ -599,6 +605,7 @@ export class EventStreamCallbackHandler
         event: "on_tool_error",
         data: {
           input: runInfo.inputs,
+          error: run.error,
         },
         run_id: run.id,
         name: runInfo.name,
