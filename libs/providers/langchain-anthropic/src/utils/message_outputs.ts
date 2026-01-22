@@ -281,15 +281,14 @@ function buildUsageMetadata(
 ): UsageMetadata {
   const cacheCreationInputTokens = usage.cache_creation_input_tokens ?? 0;
   const cacheReadInputTokens = usage.cache_read_input_tokens ?? 0;
-  const outputTokens = usage.output_tokens ?? 0;
   // Total input tokens in a Claude API request is the summation of `input_tokens`, `cache_creation_input_tokens`, and `cache_read_input_tokens`.
   // ref: https://platform.claude.com/docs/en/api/messages
   const totalInputTokens =
     usage.input_tokens + cacheCreationInputTokens + cacheReadInputTokens;
   return {
     input_tokens: totalInputTokens,
-    output_tokens: outputTokens,
-    total_tokens: totalInputTokens + outputTokens,
+    output_tokens: usage.output_tokens,
+    total_tokens: totalInputTokens + usage.output_tokens,
     input_token_details: {
       cache_creation: cacheCreationInputTokens,
       cache_read: cacheReadInputTokens,
