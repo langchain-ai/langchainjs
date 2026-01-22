@@ -1,146 +1,153 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { z } from "zod/v3";
-import { MessagesZodState, StateSchema } from "@langchain/langgraph";
-
-import { withLangGraph, schemaMetaRegistry } from "@langchain/langgraph/zod";
-
-import type { AgentMiddleware, AnyAnnotationRoot } from "./middleware/types.js";
 import {
-  InteropZodObject,
+  StateSchema,
+  MessagesValue,
+  UntrackedValue,
+  ReducedValue,
+} from "@langchain/langgraph";
+import { schemaMetaRegistry } from "@langchain/langgraph/zod";
+
+import type { AgentMiddleware } from "./middleware/types.js";
+import {
+  type InteropZodObject,
   isZodSchemaV4,
   getInteropZodObjectShape,
+  isInteropZodObject,
 } from "@langchain/core/utils/types";
-import type { BaseMessage } from "@langchain/core/messages";
+
+/**
+ * Type for jumpTo navigation targets
+ */
+type JumpToTarget = "model_request" | "tools" | "end" | undefined;
 
 export function createAgentAnnotationConditional<
   TStateSchema extends
-    | AnyAnnotationRoot
-    | InteropZodObject
-    | StateSchema<any>
-    | undefined = undefined,
+  StateDefinitionInit | undefined = undefined,
   TMiddleware extends readonly AgentMiddleware<any, any, any>[] = [],
 >(
   hasStructuredResponse = true,
   stateSchema: TStateSchema,
   middlewareList: TMiddleware = [] as unknown as TMiddleware
 ) {
-  /**
-   * Create Zod schema object to preserve jsonSchemaExtra
-   * metadata for LangGraph Studio using v3-compatible withLangGraph
-   */
-  const schemaShape: Record<string, any> = {
-    jumpTo: z
-      .union([
-        z.literal("model_request"),
-        z.literal("tools"),
-        z.literal("end"),
-        z.undefined(),
-      ])
-      .optional(),
-  };
-  // Separate shape for input/output without reducer metadata (to avoid channel conflicts)
-  const ioSchemaShape: Record<string, any> = {};
-
   const isStateSchema = (schema: unknown): schema is StateSchema<any> =>
     StateSchema.isInstance(schema);
 
+  /**
+   * Collect fields from state schemas
+   */
+  const stateFields: Record<string, any> = {
+    // jumpTo is used for internal navigation control
+    jumpTo: new UntrackedValue<JumpToTarget>(),
+  };
+
+  // Separate shape for input/output without reducer metadata (to avoid channel conflicts)
+  const ioFields: Record<string, any> = {};
+
   const applySchema = (schema: InteropZodObject | StateSchema<any>) => {
-    // Handle StateSchema
-    if (isStateSchema(schema)) {
-      // Extract field keys from StateSchema.fields
-      for (const key of Object.keys(schema.fields)) {
-        if (key.startsWith("_")) continue;
-        if (!(key in schemaShape)) {
-          schemaShape[key] = z.any();
-          ioSchemaShape[key] = z.any();
+    // Handle StateSchema: extract from .fields
+    if (StateSchema.isInstance(schema)) {
+      for (const [key, field] of Object.entries(schema.fields)) {
+        if (key.startsWith("_")) {
+          continue;
+        }
+        if (!(key in stateFields)) {
+          // Add to stateFields to preserve ReducedValue/UntrackedValue behavior
+          stateFields[key] = field;
+          // Also add to ioFields for input/output schema
+          ioFields[key] = field;
         }
       }
       return;
     }
 
-    // Handle both Zod v3 and v4 schemas
-    const shape = isZodSchemaV4(schema)
-      ? getInteropZodObjectShape(schema)
-      : schema.shape;
-
+    // Handle Zod v3/v4: extract shape using interop utilities
+    const shape = getInteropZodObjectShape(schema);
     for (const [key, fieldSchema] of Object.entries(shape)) {
-      /**
-       * Skip private state properties
-       */
+      // Skip private state properties (prefixed with underscore)
       if (key.startsWith("_")) {
         continue;
       }
-
-      if (!(key in schemaShape)) {
-        /**
-         * If the field schema is Zod v4, convert to v3-compatible z.any()
-         * This allows the shape to be merged while preserving the key structure
-         * Also transfer any registry metadata (reducers, defaults) to the new schema
-         * using withLangGraph which properly registers the metadata
-         */
+      if (!(key in stateFields)) {
+        // Check for reducer metadata (Zod v4 only supports schemaMetaRegistry)
         if (isZodSchemaV4(fieldSchema)) {
           const meta = schemaMetaRegistry.get(fieldSchema);
-          if (meta) {
-            // For state: include reducer metadata
-            schemaShape[key] = withLangGraph(z.any(), meta);
-            // For input/output: plain z.any() without reducer (avoids channel conflicts)
-            ioSchemaShape[key] = z.any();
-          } else {
-            schemaShape[key] = z.any();
-            ioSchemaShape[key] = z.any();
+          if (meta?.reducer) {
+            // Wrap with ReducedValue to preserve reducer behavior
+            if (meta.reducer.schema) {
+              stateFields[key] = new ReducedValue(fieldSchema, {
+                inputSchema: meta.reducer.schema,
+                reducer: meta.reducer.fn,
+              });
+            } else {
+              stateFields[key] = new ReducedValue(fieldSchema, {
+                reducer: meta.reducer.fn,
+              });
+            }
+            ioFields[key] = fieldSchema;
+            continue;
           }
-        } else {
-          schemaShape[key] = fieldSchema;
-          ioSchemaShape[key] = fieldSchema;
         }
+
+        // No reducer - use schema directly
+        stateFields[key] = fieldSchema;
+        ioFields[key] = fieldSchema;
       }
     }
   };
 
   /**
-   * Add state schema properties to the Zod schema
+   * Add state schema properties from user-provided schema.
+   * Supports both StateSchema and Zod v3/v4 objects.
    */
   if (stateSchema) {
     if (isStateSchema(stateSchema)) {
       applySchema(stateSchema);
-    } else if ("shape" in stateSchema || isZodSchemaV4(stateSchema)) {
-      applySchema(stateSchema as InteropZodObject);
+    } else if (isInteropZodObject(stateSchema)) {
+      applySchema(stateSchema);
     }
   }
 
+  /**
+   * Add state schema properties from middleware.
+   * Supports both StateSchema and Zod v3/v4 objects.
+   */
   for (const middleware of middlewareList) {
     if (middleware.stateSchema) {
-      applySchema(middleware.stateSchema as InteropZodObject);
+      if (isStateSchema(middleware.stateSchema)) {
+        applySchema(middleware.stateSchema);
+      } else if (isInteropZodObject(middleware.stateSchema)) {
+        applySchema(middleware.stateSchema as InteropZodObject);
+      }
     }
   }
 
   // Only include structuredResponse when responseFormat is defined
   if (hasStructuredResponse) {
-    schemaShape.structuredResponse = z.string().optional();
-    ioSchemaShape.structuredResponse = z.string().optional();
+    stateFields.structuredResponse = new UntrackedValue<string | undefined>();
+    ioFields.structuredResponse = new UntrackedValue<string | undefined>();
   }
 
-  // Create messages field with LangGraph UI metadata for input/output schemas
-  // Only use jsonSchemaExtra (no reducer) to avoid channel conflict - this creates
-  // a LastValue channel which is allowed to coexist with the state's messages channel
-  const messages = withLangGraph(z.custom<BaseMessage[]>(), {
-    jsonSchemaExtra: { langgraph_type: "messages" },
-  });
-
+  /**
+   * Create StateSchema instances for state, input, and output.
+   * Using MessagesValue provides the proper message reducer behavior.
+   */
   return {
-    state: MessagesZodState.extend(schemaShape),
-    input: z.object({
-      messages,
+    state: new StateSchema({
+      messages: MessagesValue,
+      ...stateFields,
+    }),
+    input: new StateSchema({
+      messages: MessagesValue,
       ...Object.fromEntries(
-        Object.entries(ioSchemaShape).filter(
+        Object.entries(ioFields).filter(
           ([key]) => !["structuredResponse", "jumpTo"].includes(key)
         )
       ),
     }),
-    output: z.object({
-      messages,
+    output: new StateSchema({
+      messages: MessagesValue,
       ...Object.fromEntries(
-        Object.entries(ioSchemaShape).filter(([key]) => key !== "jumpTo")
+        Object.entries(ioFields).filter(([key]) => key !== "jumpTo")
       ),
     }),
   };

@@ -84,15 +84,8 @@ export interface AgentTypeConfig<
   TResponse extends Record<string, any> | ResponseFormatUndefined =
     | Record<string, any>
     | ResponseFormatUndefined,
-  TState extends
-    | AnyAnnotationRoot
-    | InteropZodObject
-    | StateSchema<any>
-    | undefined =
-    | AnyAnnotationRoot
-    | InteropZodObject
-    | StateSchema<any>
-    | undefined,
+  TState extends StateDefinitionInit
+    | undefined = StateDefinitionInit | undefined,
   TContext extends AnyAnnotationRoot | InteropZodObject =
     | AnyAnnotationRoot
     | InteropZodObject,
@@ -494,9 +487,7 @@ export interface ExecutedToolCall {
 export type CreateAgentParams<
   StructuredResponseType extends Record<string, any> = Record<string, any>,
   TStateSchema extends
-    | AnyAnnotationRoot
-    | InteropZodObject
-    | StateSchema<any>
+    StateDefinitionInit
     | undefined = undefined,
   ContextSchema extends
     | AnyAnnotationRoot
