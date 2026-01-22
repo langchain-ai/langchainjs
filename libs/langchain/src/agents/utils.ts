@@ -551,7 +551,7 @@ export function wrapToolCall(
 
           return result;
         } catch (error) {
-          throw new MiddlewareError(error, m.name);
+          throw MiddlewareError.wrap(error, m.name);
         }
       };
       return wrappedHandler;

@@ -1,5 +1,6 @@
 /* eslint-disable no-instanceof/no-instanceof */
 import type { ToolCall } from "@langchain/core/messages/tool";
+import { isGraphBubbleUp } from "@langchain/langgraph";
 
 export class MultipleToolsBoundError extends Error {
   constructor() {
@@ -85,6 +86,19 @@ export class MiddlewareError extends Error {
     if (error instanceof Error) {
       this.cause = error;
     }
+  }
+
+  /**
+   * Wrap an error in a MiddlewareError, unless it's a GraphBubbleUp error
+   * (like GraphInterrupt) which should propagate unchanged.
+   */
+  static wrap(error: unknown, middlewareName: string): Error {
+    // Don't wrap GraphBubbleUp errors (GraphInterrupt, NodeInterrupt, etc.)
+    // These are control flow mechanisms that need to bubble up unchanged
+    if (isGraphBubbleUp(error)) {
+      return error;
+    }
+    return new MiddlewareError(error, middlewareName);
   }
 
   /**
