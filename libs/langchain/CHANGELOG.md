@@ -1,5 +1,11 @@
 # langchain
 
+## 1.2.12
+
+### Patch Changes
+
+- [#9848](https://github.com/langchain-ai/langchainjs/pull/9848) [`3d26f58`](https://github.com/langchain-ai/langchainjs/commit/3d26f58e5b705f7c81104a6f1145c64e791d238b) Thanks [@christian-bromann](https://github.com/christian-bromann)! - fix(langchain): bubble up graph interrupt errors as is
+
 ## 1.2.11
 
 ### Patch Changes
