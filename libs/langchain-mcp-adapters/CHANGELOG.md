@@ -1,5 +1,11 @@
 # @langchain/mcp-adapters
 
+## 1.1.2
+
+### Patch Changes
+
+- [#9805](https://github.com/langchain-ai/langchainjs/pull/9805) [`6c8a335`](https://github.com/langchain-ai/langchainjs/commit/6c8a335ec6e14d27c99a0a49de6be3ac332e33b3) Thanks [@christian-bromann](https://github.com/christian-bromann)! - fix(mcp-adapters): simplify complex JSON schemas for LLM compatibility (#9804)
+
 ## 1.1.1
 
 ### Patch Changes
