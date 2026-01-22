@@ -582,6 +582,33 @@ export class EventStreamCallbackHandler
     );
   }
 
+  async onToolError(run: Run): Promise<void> {
+    const runInfo = this.runInfoMap.get(run.id);
+    this.runInfoMap.delete(run.id);
+    if (runInfo === undefined) {
+      throw new Error(`onToolEnd: Run ID ${run.id} not found in run map.`);
+    }
+    if (runInfo.inputs === undefined) {
+      throw new Error(
+        `onToolEnd: Run ID ${run.id} is a tool call, and is expected to have traced inputs.`
+      );
+    }
+
+    await this.sendEndEvent(
+      {
+        event: "on_tool_error",
+        data: {
+          input: runInfo.inputs,
+        },
+        run_id: run.id,
+        name: runInfo.name,
+        tags: runInfo.tags,
+        metadata: runInfo.metadata,
+      },
+      runInfo
+    );
+  }
+
   async onRetrieverStart(run: Run): Promise<void> {
     const runName = assignName(run);
     const runType = "retriever";
