@@ -32,7 +32,7 @@ jobs:
         uses: pnpm/action-setup@41ff72655975bd51cab0327fa583b6e92b6d3061 # v4.2.0
 
       - name: ⎔ Setup node
-        uses: actions/setup-node@395ad3262231945c25e8478fd5baf05154b1d79f # v6.1.0
+        uses: actions/setup-node@6044e13b5dc448c55e2357c09f80417699197238 # v6.2.0
         with:
           node-version-file: ".nvmrc"
           cache: "pnpm"
@@ -57,8 +57,7 @@ jobs:
         run: |
           # Disable changelog generation for snapshot releases
           # Enable useCalculatedVersion to preserve current version (e.g., 1.2.0-dev-xxx instead of 0.0.0-dev-xxx)
-          # Disable updateInternalDependencies to prevent dependent packages from getting regular version bumps
-          pnpm dlx json -I -f .changeset/config.json -e "this.changelog = false; this.updateInternalDependencies = 'none'; this.snapshot = { useCalculatedVersion: true, prereleaseTemplate: '{tag}-{timestamp}' }"
+          pnpm dlx json -I -f .changeset/config.json -e "this.changelog = false; this.snapshot = { useCalculatedVersion: true, prereleaseTemplate: '{tag}-{timestamp}' }"
 
       - name: 📦 Version packages (snapshot)
         id: version
@@ -98,10 +97,10 @@ jobs:
           # Only publish packages with snapshot versions (ignore pending regular releases)
           echo "🔍 Searching for packages to publish..."
           echo "📋 Looking for versions containing: -${{ inputs.npm_tag }}-"
-          
+
           PUBLISHED_COUNT=0
           SKIPPED_COUNT=0
-          
+
           for pkg_json in $(find libs -name "package.json" -not -path "*/node_modules/*"); do
             version=$(jq -r '.version' "$pkg_json")
             name=$(jq -r '.name' "$pkg_json")
@@ -122,11 +121,11 @@ jobs:
               SKIPPED_COUNT=$((SKIPPED_COUNT + 1))
             fi
           done
-          
+
           echo ""
           echo "✅ Published: $PUBLISHED_COUNT packages"
           echo "⏭️  Skipped: $SKIPPED_COUNT packages"
-          
+
           if [[ "$PUBLISHED_COUNT" -eq 0 ]]; then
             echo "::warning::No packages with snapshot versions were found to publish"
           fi

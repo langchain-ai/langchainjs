@@ -1,5 +1,14 @@
 # langchain
 
+## 1.2.11
+
+### Patch Changes
+
+- [#9812](https://github.com/langchain-ai/langchainjs/pull/9812) [`b8e3da6`](https://github.com/langchain-ai/langchainjs/commit/b8e3da6618ca27e86d384a3ce6d01520861916af) Thanks [@christian-bromann](https://github.com/christian-bromann)! - fix(langchain): tag summarization model calls with lc_source metadata
+
+- Updated dependencies [[`70387a1`](https://github.com/langchain-ai/langchainjs/commit/70387a144464539d65a546c8130cf51dfad025a1), [`a7c6ec5`](https://github.com/langchain-ai/langchainjs/commit/a7c6ec51ab9baa186ab5ebf815599c08f5c7e8ab), [`5e04543`](https://github.com/langchain-ai/langchainjs/commit/5e045435a783fdae44bc9a43e01a8e5eb7100db2), [`40b4467`](https://github.com/langchain-ai/langchainjs/commit/40b446762445575844610ee528abc77c247b2c43), [`17e30bd`](https://github.com/langchain-ai/langchainjs/commit/17e30bd7f4c7bdf87c9c30304b3b9e121cc1fbbc)]:
+  - @langchain/core@1.1.16
+
 ## 1.2.10
 
 ### Patch Changes

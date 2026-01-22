@@ -618,5 +618,434 @@ describe("Simplified Tool Adapter Tests", () => {
       expect(toolMessageResult.content).toEqual(expectedContentBlocks);
       expect(toolMessageResult.artifact).toEqual(expectedArtifacts);
     });
+
+    test("should simplify schemas with allOf at top level for OpenAI compatibility", async () => {
+      // Schema with allOf containing if/then/else (like the bug report)
+      const schemaWithAllOf = {
+        $schema: "https://json-schema.org/draft/2020-12/schema",
+        type: "object" as const,
+        additionalProperties: false,
+        allOf: [
+          {
+            if: {
+              properties: {
+                allDay: { const: true },
+              },
+              required: ["allDay"],
+            },
+            then: {
+              properties: {
+                endDate: {
+                  description: "End date (format yyyy-mm-dd)",
+                  type: "string",
+                },
+                startDate: {
+                  description: "Start date (format yyyy-mm-dd)",
+                  type: "string",
+                },
+              },
+            },
+            else: {
+              properties: {
+                endDate: {
+                  description: "End date & time (RFC3339)",
+                  type: "string",
+                },
+                startDate: {
+                  description: "Start date & time (RFC3339)",
+                  type: "string",
+                },
+              },
+            },
+          },
+        ],
+        properties: {
+          allDay: {
+            default: false,
+            description: "All day event",
+            type: "boolean",
+          },
+          summary: {
+            description: "Title of the event",
+            type: "string",
+          },
+        },
+        required: ["summary"],
+        unevaluatedProperties: false,
+      };
+
+      mockClient.listTools.mockReturnValueOnce(
+        Promise.resolve({
+          tools: [
+            {
+              name: "create_event",
+              description: "Create calendar event",
+              inputSchema: schemaWithAllOf,
+            },
+          ],
+        })
+      );
+
+      mockClient.callTool.mockImplementation(() => {
+        return Promise.resolve({
+          content: [{ type: "text", text: "Event created" }],
+        });
+      });
+
+      // This should not throw - the schema should be simplified
+      const tools = await loadMcpTools(
+        "mockServer(allOf simplification)",
+        mockClient as Client
+      );
+
+      expect(tools.length).toBe(1);
+      expect(tools[0].name).toBe("create_event");
+
+      // Verify the tool works with valid input
+      const result = await tools[0].invoke({
+        summary: "Test Event",
+        allDay: true,
+      });
+
+      expect(result).toBe("Event created");
+    });
+
+    test("should simplify schemas with anyOf at top level", async () => {
+      // Test anyOf at the TOP level (where OpenAI restriction applies)
+      // Note: type: "object" is added to the anyOf items, and the final schema
+      // should have type: "object" at the top level after simplification
+      const schemaWithAnyOf = {
+        type: "object" as const,
+        anyOf: [
+          {
+            type: "object",
+            properties: {
+              mode: { type: "string" },
+              value: { type: "string" },
+            },
+          },
+          {
+            type: "object",
+            properties: {
+              mode: { type: "string" },
+              options: { type: "array", items: { type: "string" } },
+            },
+          },
+        ],
+      };
+
+      mockClient.listTools.mockReturnValueOnce(
+        Promise.resolve({
+          tools: [
+            {
+              name: "configure",
+              description: "Configure something",
+              inputSchema: schemaWithAnyOf,
+            },
+          ],
+        })
+      );
+
+      mockClient.callTool.mockImplementation(() => {
+        return Promise.resolve({
+          content: [{ type: "text", text: "Configured" }],
+        });
+      });
+
+      const tools = await loadMcpTools(
+        "mockServer(anyOf simplification)",
+        mockClient as Client
+      );
+
+      expect(tools.length).toBe(1);
+
+      // The tool should work with merged properties from all variants
+      const result = await tools[0].invoke({
+        mode: "simple",
+        value: "test",
+      });
+
+      expect(result).toBe("Configured");
+    });
+
+    test("should simplify schemas with oneOf at top level by merging object schemas", async () => {
+      // Test oneOf at the TOP level (where OpenAI restriction applies)
+      const schemaWithOneOf = {
+        type: "object" as const,
+        oneOf: [
+          {
+            type: "object",
+            properties: {
+              paymentType: { type: "string" },
+              cardNumber: { type: "string" },
+            },
+          },
+          {
+            type: "object",
+            properties: {
+              paymentType: { type: "string" },
+              accountNumber: { type: "string" },
+            },
+          },
+        ],
+      };
+
+      mockClient.listTools.mockReturnValueOnce(
+        Promise.resolve({
+          tools: [
+            {
+              name: "process_payment",
+              description: "Process a payment",
+              inputSchema: schemaWithOneOf,
+            },
+          ],
+        })
+      );
+
+      mockClient.callTool.mockImplementation(() => {
+        return Promise.resolve({
+          content: [{ type: "text", text: "Payment processed" }],
+        });
+      });
+
+      const tools = await loadMcpTools(
+        "mockServer(oneOf simplification)",
+        mockClient as Client
+      );
+
+      expect(tools.length).toBe(1);
+
+      // The merged schema should allow properties from any variant
+      const result = await tools[0].invoke({
+        paymentType: "credit_card",
+        cardNumber: "1234-5678-9012-3456",
+      });
+
+      expect(result).toBe("Payment processed");
+    });
+
+    test("should remove $schema and unevaluatedProperties from schemas", async () => {
+      const schemaWithMetadata = {
+        $schema: "https://json-schema.org/draft/2020-12/schema",
+        type: "object" as const,
+        properties: {
+          name: { type: "string" },
+        },
+        required: ["name"],
+        unevaluatedProperties: false,
+      };
+
+      mockClient.listTools.mockReturnValueOnce(
+        Promise.resolve({
+          tools: [
+            {
+              name: "greet",
+              description: "Greet someone",
+              inputSchema: schemaWithMetadata,
+            },
+          ],
+        })
+      );
+
+      mockClient.callTool.mockImplementation(() => {
+        return Promise.resolve({
+          content: [{ type: "text", text: "Hello!" }],
+        });
+      });
+
+      const tools = await loadMcpTools(
+        "mockServer(metadata removal)",
+        mockClient as Client
+      );
+
+      expect(tools.length).toBe(1);
+
+      const result = await tools[0].invoke({ name: "World" });
+      expect(result).toBe("Hello!");
+    });
+
+    test("should handle complex real-world schema from bug report #9804", async () => {
+      // This is a simplified version of the actual schema from the bug report
+      const googleCalendarSchema = {
+        $schema: "https://json-schema.org/draft/2020-12/schema",
+        additionalProperties: false,
+        allOf: [
+          {
+            else: {
+              properties: {
+                endDate: {
+                  description: "End time (RFC3339 format)",
+                  title: "End date & time",
+                  type: "string",
+                },
+                startDate: {
+                  description: "Start time (RFC3339 format)",
+                  title: "Start date & time",
+                  type: "string",
+                },
+              },
+            },
+            if: {
+              properties: {
+                allDay: { const: true },
+              },
+              required: ["allDay"],
+            },
+            then: {
+              properties: {
+                endDate: {
+                  description: "End date (yyyy-mm-dd format)",
+                  title: "End date",
+                  type: "string",
+                },
+                startDate: {
+                  description: "Start date (yyyy-mm-dd format)",
+                  title: "Start date",
+                  type: "string",
+                },
+              },
+            },
+          },
+        ],
+        properties: {
+          allDay: {
+            default: false,
+            description: "All day event",
+            title: "All day",
+            type: "boolean",
+          },
+          attendees: {
+            description: "The attendees of the event",
+            items: {
+              additionalProperties: false,
+              properties: {
+                email: { type: "string" },
+                displayName: { type: "string" },
+              },
+              type: "object",
+            },
+            type: "array",
+          },
+          calendarId: {
+            description: "The calendar ID",
+            type: "string",
+          },
+          summary: {
+            description: "Title of the event",
+            type: "string",
+          },
+          status: {
+            description: "Status of the event",
+            enum: ["confirmed", "tentative", "cancelled"],
+            type: "string",
+          },
+        },
+        required: ["calendarId", "summary", "startDate", "endDate"],
+        type: "object" as const,
+        unevaluatedProperties: false,
+      };
+
+      mockClient.listTools.mockReturnValueOnce(
+        Promise.resolve({
+          tools: [
+            {
+              name: "createEvent",
+              description: "Create calendar event",
+              inputSchema: googleCalendarSchema,
+            },
+          ],
+        })
+      );
+
+      mockClient.callTool.mockImplementation(() => {
+        return Promise.resolve({
+          content: [{ type: "text", text: "Event created successfully" }],
+        });
+      });
+
+      // This should NOT throw - previously it would fail with OpenAI
+      const tools = await loadMcpTools(
+        "mockServer(google calendar)",
+        mockClient as Client
+      );
+
+      expect(tools.length).toBe(1);
+      expect(tools[0].name).toBe("createEvent");
+
+      const result = await tools[0].invoke({
+        calendarId: "primary",
+        summary: "Team Meeting",
+        startDate: "2024-01-15T10:00:00Z",
+        endDate: "2024-01-15T11:00:00Z",
+        allDay: false,
+        attendees: [{ email: "test@example.com", displayName: "Test User" }],
+        status: "confirmed",
+      });
+
+      expect(result).toBe("Event created successfully");
+    });
+
+    test("should handle allOf with multiple schemas to merge", async () => {
+      const schemaWithMultipleAllOf = {
+        type: "object" as const,
+        allOf: [
+          {
+            properties: {
+              firstName: { type: "string" },
+            },
+            required: ["firstName"],
+          },
+          {
+            properties: {
+              lastName: { type: "string" },
+            },
+            required: ["lastName"],
+          },
+          {
+            properties: {
+              email: { type: "string" },
+            },
+          },
+        ],
+        properties: {
+          id: { type: "string" },
+        },
+      };
+
+      mockClient.listTools.mockReturnValueOnce(
+        Promise.resolve({
+          tools: [
+            {
+              name: "create_user",
+              description: "Create a user",
+              inputSchema: schemaWithMultipleAllOf,
+            },
+          ],
+        })
+      );
+
+      mockClient.callTool.mockImplementation(() => {
+        return Promise.resolve({
+          content: [{ type: "text", text: "User created" }],
+        });
+      });
+
+      const tools = await loadMcpTools(
+        "mockServer(multiple allOf)",
+        mockClient as Client
+      );
+
+      expect(tools.length).toBe(1);
+
+      // All properties from allOf should be available
+      const result = await tools[0].invoke({
+        id: "123",
+        firstName: "John",
+        lastName: "Doe",
+        email: "john@example.com",
+      });
+
+      expect(result).toBe("User created");
+    });
   });
 });

@@ -1,5 +1,19 @@
 # @langchain/core
 
+## 1.1.16
+
+### Patch Changes
+
+- [#9830](https://github.com/langchain-ai/langchainjs/pull/9830) [`70387a1`](https://github.com/langchain-ai/langchainjs/commit/70387a144464539d65a546c8130cf51dfad025a1) Thanks [@bracesproul](https://github.com/bracesproul)! - fix: More undefined null errors and tests
+
+- [#9679](https://github.com/langchain-ai/langchainjs/pull/9679) [`a7c6ec5`](https://github.com/langchain-ai/langchainjs/commit/a7c6ec51ab9baa186ab5ebf815599c08f5c7e8ab) Thanks [@christian-bromann](https://github.com/christian-bromann)! - feat(openai): elevate OpenAI image generation outputs to proper image content blocks
+
+- [#9817](https://github.com/langchain-ai/langchainjs/pull/9817) [`5e04543`](https://github.com/langchain-ai/langchainjs/commit/5e045435a783fdae44bc9a43e01a8e5eb7100db2) Thanks [@Ashx098](https://github.com/Ashx098)! - read error.status when response.status is absent to avoid retrying OpenAI SDK 4xx
+
+- [#9819](https://github.com/langchain-ai/langchainjs/pull/9819) [`40b4467`](https://github.com/langchain-ai/langchainjs/commit/40b446762445575844610ee528abc77c247b2c43) Thanks [@MrDockal](https://github.com/MrDockal)! - Tool call content returns compacted json
+
+- [#9815](https://github.com/langchain-ai/langchainjs/pull/9815) [`17e30bd`](https://github.com/langchain-ai/langchainjs/commit/17e30bd7f4c7bdf87c9c30304b3b9e121cc1fbbc) Thanks [@hntrl](https://github.com/hntrl)! - fix(core): respect tracingEnabled=false from RunTree when env tracing is enabled
+
 ## 1.1.15
 
 ### Patch Changes

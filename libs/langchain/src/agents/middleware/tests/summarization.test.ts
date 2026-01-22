@@ -14,16 +14,18 @@ vi.mock(
 
 // Mock summarization model
 function createMockSummarizationModel() {
-  const invokeCallback = vi.fn().mockImplementation(async (prompt: string) => {
-    // Extract messages from prompt to create a realistic summary
-    if (prompt.includes("Context Extraction Assistant")) {
-      return {
-        content:
-          "Previous conversation covered: project architecture discussion, challenges with scalability, and recommendations for improvement. Key decisions: use microservices, implement caching, optimize database queries.",
-      };
-    }
-    return { content: "Summary of previous conversation." };
-  });
+  const invokeCallback = vi
+    .fn()
+    .mockImplementation(async (prompt: string, _config?: unknown) => {
+      // Extract messages from prompt to create a realistic summary
+      if (prompt.includes("Context Extraction Assistant")) {
+        return {
+          content:
+            "Previous conversation covered: project architecture discussion, challenges with scalability, and recommendations for improvement. Key decisions: use microservices, implement caching, optimize database queries.",
+        };
+      }
+      return { content: "Summary of previous conversation." };
+    });
 
   return {
     invoke: invokeCallback,
@@ -55,6 +57,101 @@ function createMockMainModel() {
 }
 
 describe("summarizationMiddleware", () => {
+  it("should tag the summarization model invocation with lc_source metadata", async () => {
+    const summarizationModel = createMockSummarizationModel();
+    const middleware = summarizationMiddleware({
+      model: summarizationModel as any,
+      trigger: { tokens: 50 }, // Lower threshold to trigger easily
+      keep: { messages: 2 },
+    });
+
+    const messages = [
+      new HumanMessage(
+        `I'm working on a complex software project. ${"x".repeat(200)}`
+      ),
+      new AIMessage(
+        `I understand your project. Let me help. ${"x".repeat(200)}`
+      ),
+      new HumanMessage(
+        `Here are more details about the architecture. ${"x".repeat(200)}`
+      ),
+      new AIMessage(`That's interesting. Tell me more. ${"x".repeat(200)}`),
+      new HumanMessage(`More information here. ${"x".repeat(200)}`),
+      new AIMessage(`Got it. ${"x".repeat(200)}`),
+      new HumanMessage("What do you recommend?"),
+    ];
+
+    const beforeModelHook = middleware.beforeModel;
+    if (typeof beforeModelHook === "function") {
+      await beforeModelHook({ messages } as any, { context: {} } as any);
+    } else {
+      await beforeModelHook?.hook({ messages } as any, { context: {} } as any);
+    }
+
+    expect(summarizationModel.invoke).toHaveBeenCalledTimes(1);
+    const [, config] = (summarizationModel.invoke as any).mock.calls[0] as [
+      string,
+      any,
+    ];
+    expect(config).toMatchObject({
+      metadata: {
+        lc_source: "summarization",
+      },
+    });
+  });
+
+  it("should merge lc_source metadata with parent runnable config from runtime", async () => {
+    const summarizationModel = createMockSummarizationModel();
+    const middleware = summarizationMiddleware({
+      model: summarizationModel as any,
+      trigger: { tokens: 50 }, // Lower threshold to trigger easily
+      keep: { messages: 2 },
+    });
+
+    const messages = [
+      new HumanMessage(
+        `I'm working on a complex software project. ${"x".repeat(200)}`
+      ),
+      new AIMessage(
+        `I understand your project. Let me help. ${"x".repeat(200)}`
+      ),
+      new HumanMessage(
+        `Here are more details about the architecture. ${"x".repeat(200)}`
+      ),
+      new AIMessage(`That's interesting. Tell me more. ${"x".repeat(200)}`),
+      new HumanMessage(`More information here. ${"x".repeat(200)}`),
+      new AIMessage(`Got it. ${"x".repeat(200)}`),
+      new HumanMessage("What do you recommend?"),
+    ];
+
+    // Pass metadata and tags via the runtime object
+    const runtime = {
+      context: {},
+      metadata: { test_parent: "metadata" },
+      tags: ["test_parent_tag"],
+    };
+
+    const beforeModelHook = middleware.beforeModel;
+    if (typeof beforeModelHook === "function") {
+      await beforeModelHook({ messages } as any, runtime as any);
+    } else {
+      await beforeModelHook?.hook({ messages } as any, runtime as any);
+    }
+
+    expect(summarizationModel.invoke).toHaveBeenCalledTimes(1);
+    const [, config] = (summarizationModel.invoke as any).mock.calls[0] as [
+      string,
+      any,
+    ];
+    expect(config).toMatchObject({
+      metadata: {
+        test_parent: "metadata",
+        lc_source: "summarization",
+      },
+    });
+    expect(config.tags).toContain("test_parent_tag");
+  });
+
   it("should trigger summarization when token count exceeds threshold", async () => {
     const summarizationModel = createMockSummarizationModel();
     const model = createMockMainModel();

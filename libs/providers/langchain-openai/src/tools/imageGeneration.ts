@@ -49,7 +49,7 @@ export interface ImageGenerationOptions {
    * The image generation model to use.
    * @default "gpt-image-1"
    */
-  model?: "gpt-image-1" | "gpt-image-1-mini";
+  model?: "gpt-image-1" | "gpt-image-1-mini" | "gpt-image-1.5";
 
   /**
    * Moderation level for the generated image.
@@ -222,6 +222,7 @@ export function imageGeneration(options?: ImageGenerationOptions): ServerTool {
     background: options?.background,
     input_fidelity: options?.inputFidelity,
     input_image_mask: convertInputImageMask(options?.inputImageMask),
+    // @ts-expect-error - type issue with openai not supporting gpt-image-1.5
     model: options?.model,
     moderation: options?.moderation,
     output_compression: options?.outputCompression,

@@ -748,11 +748,11 @@ export class ChatOllama
 
     let lastMetadata: Omit<OllamaChatResponse, "message"> | undefined;
 
-    for await (const chunk of stream) {
+    for await (const streamChunk of stream) {
       if (options.signal?.aborted) {
         this.client.abort();
       }
-      const { message: responseMessage, ...rest } = chunk;
+      const { message: responseMessage, ...rest } = streamChunk;
       usageMetadata.input_tokens += rest.prompt_eval_count ?? 0;
       usageMetadata.output_tokens += rest.eval_count ?? 0;
       usageMetadata.total_tokens =
@@ -764,11 +764,19 @@ export class ChatOllama
         ? (responseMessage.thinking ?? responseMessage.content ?? "")
         : (responseMessage.content ?? "");
 
-      yield new ChatGenerationChunk({
+      const chunk = new ChatGenerationChunk({
         text: token,
         message: convertOllamaMessagesToLangChain(responseMessage),
       });
-      await runManager?.handleLLMNewToken(token);
+      yield chunk;
+      await runManager?.handleLLMNewToken(
+        token,
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        { chunk }
+      );
     }
 
     // Yield the `response_metadata` as the final chunk.

@@ -1,5 +1,11 @@
 # @langchain/mistralai
 
+## 1.0.3
+
+### Patch Changes
+
+- [#9807](https://github.com/langchain-ai/langchainjs/pull/9807) [`35df8fb`](https://github.com/langchain-ai/langchainjs/commit/35df8fb592c69d482520ee3ae1a60b05dd48bbb0) Thanks [@christian-bromann](https://github.com/christian-bromann)! - fix(mistralai): fix type compatibility and streaming issues
+
 ## 1.0.2
 
 ### Patch Changes

@@ -30,7 +30,6 @@ import {
   ToolMessageChunk,
   ChatMessageChunk,
   FunctionMessageChunk,
-  isAIMessage,
 } from "@langchain/core/messages";
 import type {
   BaseLanguageModelInput,
@@ -312,7 +311,7 @@ export function convertMessagesToMistralMessages(
   };
 
   const getTools = (message: BaseMessage): MistralAIToolCall[] | undefined => {
-    if (isAIMessage(message) && !!message.tool_calls?.length) {
+    if (AIMessage.isInstance(message) && !!message.tool_calls?.length) {
       return message.tool_calls
         .map((toolCall) => ({
           ...toolCall,
@@ -349,7 +348,7 @@ export function convertMessagesToMistralMessages(
         } as MistralAIMessage,
       ];
       // Mistral "assistant" role can only support either content or tool calls but not both
-    } else if (isAIMessage(message)) {
+    } else if (AIMessage.isInstance(message)) {
       if (toolCalls === undefined) {
         return [
           {
@@ -439,9 +438,9 @@ function mistralAIResponseToChatMessage(
         additional_kwargs: {},
         usage_metadata: usage
           ? {
-              input_tokens: usage.promptTokens,
-              output_tokens: usage.completionTokens,
-              total_tokens: usage.totalTokens,
+              input_tokens: usage.promptTokens ?? 0,
+              output_tokens: usage.completionTokens ?? 0,
+              total_tokens: usage.totalTokens ?? 0,
             }
           : undefined,
       });
@@ -465,9 +464,9 @@ function _convertDeltaToMessageChunk(
         content: "",
         usage_metadata: usage
           ? {
-              input_tokens: usage.promptTokens,
-              output_tokens: usage.completionTokens,
-              total_tokens: usage.totalTokens,
+              input_tokens: usage.promptTokens ?? 0,
+              output_tokens: usage.completionTokens ?? 0,
+              total_tokens: usage.totalTokens ?? 0,
             }
           : undefined,
       });
@@ -524,9 +523,9 @@ function _convertDeltaToMessageChunk(
       additional_kwargs,
       usage_metadata: usage
         ? {
-            input_tokens: usage.promptTokens,
-            output_tokens: usage.completionTokens,
-            total_tokens: usage.totalTokens,
+            input_tokens: usage.promptTokens ?? 0,
+            output_tokens: usage.completionTokens ?? 0,
+            total_tokens: usage.totalTokens ?? 0,
           }
         : undefined,
     });
@@ -1116,7 +1115,9 @@ export class ChatMistralAI<
           | MistralAIChatCompletionResponse
           | AsyncIterable<MistralAIChatCompletionEvent>;
         if (streaming) {
-          res = await client.chat.stream(input);
+          // The Mistral SDK requires `stream: true` to be explicitly set
+          // in the request body for streaming to work properly
+          res = await client.chat.stream({ ...input, stream: true });
         } else {
           res = await client.chat.complete(input);
         }
