@@ -32,7 +32,7 @@ import type { AgentBuiltInState } from "../runtime.js";
  * This happens when middleware modifies tools in wrapModelCall but doesn't provide
  * a wrapToolCall handler to execute them.
  */
-const INVALID_TOOL_ERROR = (
+const getInvalidToolError = (
   toolName: string,
   availableTools: string[]
 ): string =>
@@ -334,7 +334,7 @@ export class ToolNode<
          */
         const availableTools = this.tools.map((t) => t.name);
         return new ToolMessage({
-          content: INVALID_TOOL_ERROR(toolCall.name, availableTools),
+          content: getInvalidToolError(toolCall.name, availableTools),
           tool_call_id: toolCall.id!,
           name: toolCall.name,
           status: "error",
@@ -422,7 +422,7 @@ export class ToolNode<
     if (!registeredTool) {
       const availableTools = this.tools.map((t) => t.name);
       return new ToolMessage({
-        content: INVALID_TOOL_ERROR(call.name, availableTools),
+        content: getInvalidToolError(call.name, availableTools),
         tool_call_id: call.id!,
         name: call.name,
         status: "error",
