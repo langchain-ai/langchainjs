@@ -35,7 +35,9 @@ export async function initializeMiddlewareStates(
     let zodSchema = middleware.stateSchema;
     if (StateSchema.isInstance(middleware.stateSchema)) {
       const zodShape: Record<string, any> = {};
-      for (const [key, field] of Object.entries(middleware.stateSchema.fields)) {
+      for (const [key, field] of Object.entries(
+        middleware.stateSchema.fields
+      )) {
         if (ReducedValue.isInstance(field)) {
           // For ReducedValue, use inputSchema if available, otherwise valueSchema
           zodShape[key] = field.inputSchema || field.valueSchema;

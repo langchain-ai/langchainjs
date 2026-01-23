@@ -11,7 +11,7 @@ import type {
   AnnotationRoot,
   StateSchema,
   InferStateSchemaUpdate,
-  StateDefinitionInit,  
+  StateDefinitionInit,
 } from "@langchain/langgraph";
 import type {
   AIMessage,
@@ -59,7 +59,9 @@ export type AnyAnnotationRoot = AnnotationRoot<any>;
  * ```
  */
 export interface MiddlewareTypeConfig<
-  TSchema extends StateDefinitionInit | undefined = StateDefinitionInit | undefined,
+  TSchema extends StateDefinitionInit | undefined =
+    | StateDefinitionInit
+    | undefined,
   TContextSchema extends
     | InteropZodObject
     | InteropZodDefault<InteropZodObject>
@@ -644,15 +646,16 @@ export type InferMiddlewareInputState<T extends AgentMiddleware> =
 /**
  * Helper type to infer merged state from an array of middleware (just the middleware states)
  */
-export type InferMiddlewareStates<T extends readonly AgentMiddleware[]> = T extends readonly []
-  ? {}
-  : T extends readonly [infer First, ...infer Rest]
-    ? First extends AgentMiddleware
-      ? Rest extends readonly AgentMiddleware[]
-        ? InferMiddlewareState<First> & InferMiddlewareStates<Rest>
-        : InferMiddlewareState<First>
-      : {}
-    : {};
+export type InferMiddlewareStates<T extends readonly AgentMiddleware[]> =
+  T extends readonly []
+    ? {}
+    : T extends readonly [infer First, ...infer Rest]
+      ? First extends AgentMiddleware
+        ? Rest extends readonly AgentMiddleware[]
+          ? InferMiddlewareState<First> & InferMiddlewareStates<Rest>
+          : InferMiddlewareState<First>
+        : {}
+      : {};
 
 /**
  * Helper type to infer merged input state from an array of middleware (with optional defaults)
@@ -759,18 +762,14 @@ export type InferContextInput<
     ? ToAnnotationRoot<ContextSchema>["State"]
     : {};
 
-export type ToAnnotationRoot<
-  A extends StateDefinitionInit,
-> =
-  A extends AnyAnnotationRoot 
+export type ToAnnotationRoot<A extends StateDefinitionInit> =
+  A extends AnyAnnotationRoot
     ? A
     : A extends InteropZodObject
       ? InteropZodToStateDefinition<A>
       : never;
 
-export type InferSchemaInput<
-  A extends StateDefinitionInit | undefined,
-> =
+export type InferSchemaInput<A extends StateDefinitionInit | undefined> =
   A extends StateSchema<infer TFields>
     ? InferStateSchemaUpdate<TFields>
     : A extends InteropZodObject
