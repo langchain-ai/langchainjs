@@ -82,15 +82,15 @@ export function createAgentState<
           if (meta?.reducer) {
             // Wrap with ReducedValue to preserve reducer behavior
             if (meta.reducer.schema) {
-              stateFields[key] = new ReducedValue(fieldSchema, {
-                inputSchema: meta.reducer.schema,
+              stateFields[key] = new ReducedValue(fieldSchema as any, {
+                inputSchema: meta.reducer.schema as any,
                 reducer: meta.reducer.fn,
               });
               // For input, use the inputSchema
               inputFields[key] = meta.reducer.schema;
               outputFields[key] = fieldSchema;
             } else {
-              stateFields[key] = new ReducedValue(fieldSchema, {
+              stateFields[key] = new ReducedValue(fieldSchema as any, {
                 reducer: meta.reducer.fn,
               });
               // No inputSchema, use the value schema

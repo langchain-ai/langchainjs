@@ -30,10 +30,12 @@ describe("StateSchema support", () => {
 
     it("should accept StateSchema with ReducedValue fields", () => {
       const AgentState = new StateSchema({
-        history: new ReducedValue(z.array(z.string()).default(() => []), {
-          inputSchema: z.string(),
-          reducer: (current, next) => [...current, next],
-        }),
+        history: new ReducedValue(z.array(z.string()).default(() => []),
+          {
+            inputSchema: z.string(),
+            reducer: (current, next) => [...current, next],
+          }
+        ),
       });
 
       const agent = createAgent({
@@ -608,7 +610,7 @@ describe("StateSchema support", () => {
     it("should handle middleware with StateSchema containing ReducedValue", async () => {
       const MiddlewareState = new StateSchema({
         history: new ReducedValue(z.array(z.string()).default(() => []), {
-          inputSchema: z.string(),
+          inputSchema: z.string(),  
           reducer: (current, next) => [...current, next],
         }),
       });

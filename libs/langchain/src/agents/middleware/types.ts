@@ -10,7 +10,7 @@ import type { InteropZodToStateDefinition } from "@langchain/langgraph/zod";
 import type {
   AnnotationRoot,
   StateSchema,
-  InferStateSchemaValue,
+  InferStateSchemaUpdate,
   StateDefinitionInit,  
 } from "@langchain/langgraph";
 import type {
@@ -772,7 +772,7 @@ export type InferSchemaInput<
   A extends StateDefinitionInit | undefined,
 > =
   A extends StateSchema<infer TFields>
-    ? InferStateSchemaValue<TFields>
+    ? InferStateSchemaUpdate<TFields>
     : A extends InteropZodObject
       ? InferInteropZodOutput<A>
       : A extends AnyAnnotationRoot
