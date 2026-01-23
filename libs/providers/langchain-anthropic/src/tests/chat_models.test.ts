@@ -870,3 +870,73 @@ describe("Streaming tool call consolidation (input_json_delta handling)", () => 
     });
   });
 });
+
+describe("ContentBlock.Multimodal.Image format support", () => {
+  test("handles new image format with URL", () => {
+    const messageHistory = [
+      new HumanMessage({
+        contentBlocks: [
+          {
+            type: "image",
+            url: "https://upload.wikimedia.org/wikipedia/commons/thumb/3/30/RedDisc.svg/24px-RedDisc.svg.png",
+          },
+          { type: "text", text: "Describe this image." },
+        ],
+      }),
+    ];
+
+    const formattedMessages =
+      _convertMessagesToAnthropicPayload(messageHistory);
+
+    expect(formattedMessages.messages[0].content).toHaveLength(2);
+    const [imageBlock, textBlock] = formattedMessages.messages[0].content;
+    
+    expect(imageBlock).toEqual({
+      type: "image",
+      source: {
+        type: "url",
+        url: "https://upload.wikimedia.org/wikipedia/commons/thumb/3/30/RedDisc.svg/24px-RedDisc.svg.png",
+      },
+    });
+    expect(textBlock).toEqual({
+      type: "text",
+      text: "Describe this image.",
+    });
+  });
+
+  test("handles new image format with base64 data", () => {
+    const base64Data = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=";
+    
+    const messageHistory = [
+      new HumanMessage({
+        contentBlocks: [
+          {
+            type: "image",
+            data: base64Data,
+            mimeType: "image/png",
+          },
+          { type: "text", text: "What is this?" },
+        ],
+      }),
+    ];
+
+    const formattedMessages =
+      _convertMessagesToAnthropicPayload(messageHistory);
+
+    expect(formattedMessages.messages[0].content).toHaveLength(2);
+    const [imageBlock, textBlock] = formattedMessages.messages[0].content;
+    
+    expect(imageBlock).toEqual({
+      type: "image",
+      source: {
+        type: "base64",
+        media_type: "image/png",
+        data: base64Data,
+      },
+    });
+    expect(textBlock).toEqual({
+      type: "text",
+      text: "What is this?",
+    });
+  });
+});
