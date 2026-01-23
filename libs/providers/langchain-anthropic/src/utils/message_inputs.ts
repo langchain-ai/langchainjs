@@ -196,8 +196,58 @@ function* _formatContentBlocks(
           ...(cacheControl ? { cache_control: cacheControl } : {}),
         } as Anthropic.Messages.ImageBlockParam;
       }
+    } else if (contentPart.type === "image") {
+      // Handle new ContentBlock.Multimodal.Image format
+      let source;
+      
+      if ("url" in contentPart && typeof contentPart.url === "string") {
+        // URL-based image
+        source = _formatImage(contentPart.url);
+      } else if (
+        "data" in contentPart &&
+        (typeof contentPart.data === "string" ||
+          contentPart.data instanceof Uint8Array)
+      ) {
+        // Base64-based image
+        const mimeType =
+          "mimeType" in contentPart && typeof contentPart.mimeType === "string"
+            ? contentPart.mimeType
+            : "image/jpeg";
+        const data =
+          typeof contentPart.data === "string"
+            ? contentPart.data
+            : Buffer.from(contentPart.data).toString("base64");
+        source = {
+          type: "base64" as const,
+          media_type: mimeType as
+            | "image/jpeg"
+            | "image/png"
+            | "image/gif"
+            | "image/webp",
+          data,
+        };
+      } else if (
+        "fileId" in contentPart &&
+        typeof contentPart.fileId === "string"
+      ) {
+        // File ID-based image 
+        // Note: Anthropic supports file IDs for images that have been uploaded
+        // to their servers via the Files API
+        source = {
+          type: "file" as const,
+          file_id: contentPart.fileId,
+        };
+      }
+
+      if (source) {
+        yield {
+          type: "image" as const,
+          source,
+          ...(cacheControl ? { cache_control: cacheControl } : {}),
+        } as Anthropic.Messages.ImageBlockParam;
+      }
     } else if (_isAnthropicImageBlockParam(contentPart)) {
-      return contentPart;
+      yield contentPart;
     } else if (contentPart.type === "document") {
       // PDF
       yield {
