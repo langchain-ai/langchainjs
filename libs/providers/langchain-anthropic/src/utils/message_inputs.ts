@@ -208,6 +208,7 @@ function* _formatContentBlocks(
       } else if (
         "data" in contentPart &&
         (typeof contentPart.data === "string" ||
+          // eslint-disable-next-line no-instanceof/no-instanceof
           contentPart.data instanceof Uint8Array)
       ) {
         // Base64-based image

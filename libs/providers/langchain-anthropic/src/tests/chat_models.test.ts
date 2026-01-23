@@ -940,4 +940,135 @@ describe("ContentBlock.Multimodal.Image format support", () => {
       text: "What is this?",
     });
   });
+
+  test("handles new image format with fileId", () => {
+    const messageHistory = [
+      new HumanMessage({
+        contentBlocks: [
+          {
+            type: "image",
+            fileId: "file_abc123",
+          },
+          { type: "text", text: "Describe this image." },
+        ],
+      }),
+    ];
+
+    const formattedMessages =
+      _convertMessagesToAnthropicPayload(messageHistory);
+
+    expect(formattedMessages.messages[0].content).toHaveLength(2);
+    const [imageBlock, textBlock] = formattedMessages.messages[0].content;
+
+    expect(imageBlock).toEqual({
+      type: "image",
+      source: {
+        type: "file",
+        file_id: "file_abc123",
+      },
+    });
+    expect(textBlock).toEqual({
+      type: "text",
+      text: "Describe this image.",
+    });
+  });
+
+  test("handles new image format with Uint8Array data", () => {
+    const binaryData = new Uint8Array([137, 80, 78, 71, 13, 10, 26, 10]); // PNG header bytes
+    const expectedBase64 = Buffer.from(binaryData).toString("base64");
+
+    const messageHistory = [
+      new HumanMessage({
+        contentBlocks: [
+          {
+            type: "image",
+            data: binaryData,
+            mimeType: "image/png",
+          },
+          { type: "text", text: "What is this?" },
+        ],
+      }),
+    ];
+
+    const formattedMessages =
+      _convertMessagesToAnthropicPayload(messageHistory);
+
+    expect(formattedMessages.messages[0].content).toHaveLength(2);
+    const [imageBlock, textBlock] = formattedMessages.messages[0].content;
+
+    expect(imageBlock).toEqual({
+      type: "image",
+      source: {
+        type: "base64",
+        media_type: "image/png",
+        data: expectedBase64,
+      },
+    });
+    expect(textBlock).toEqual({
+      type: "text",
+      text: "What is this?",
+    });
+  });
+
+  test("defaults to image/jpeg when mimeType is not provided", () => {
+    const base64Data =
+      "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=";
+
+    const messageHistory = [
+      new HumanMessage({
+        contentBlocks: [
+          {
+            type: "image",
+            data: base64Data,
+            // mimeType intentionally omitted
+          },
+          { type: "text", text: "What is this?" },
+        ],
+      }),
+    ];
+
+    const formattedMessages =
+      _convertMessagesToAnthropicPayload(messageHistory);
+
+    expect(formattedMessages.messages[0].content).toHaveLength(2);
+    const [imageBlock] = formattedMessages.messages[0].content;
+
+    expect(imageBlock).toEqual({
+      type: "image",
+      source: {
+        type: "base64",
+        media_type: "image/jpeg",
+        data: base64Data,
+      },
+    });
+  });
+
+  test("preserves cache_control on new image format", () => {
+    const messageHistory = [
+      new HumanMessage({
+        contentBlocks: [
+          {
+            type: "image",
+            url: "https://example.com/image.png",
+            cache_control: { type: "ephemeral" },
+          },
+        ],
+      }),
+    ];
+
+    const formattedMessages =
+      _convertMessagesToAnthropicPayload(messageHistory);
+
+    expect(formattedMessages.messages[0].content).toHaveLength(1);
+    const [imageBlock] = formattedMessages.messages[0].content;
+
+    expect(imageBlock).toEqual({
+      type: "image",
+      source: {
+        type: "url",
+        url: "https://example.com/image.png",
+      },
+      cache_control: { type: "ephemeral" },
+    });
+  });
 });

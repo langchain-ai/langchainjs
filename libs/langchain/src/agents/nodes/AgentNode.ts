@@ -872,7 +872,7 @@ export class AgentNode<
      */
     const modelWithTools = await bindTools(model, allTools, {
       ...options,
-      ...(preparedOptions?.modelSettings ?? {}),
+      ...preparedOptions?.modelSettings,
       tool_choice: toolChoice,
     });
 

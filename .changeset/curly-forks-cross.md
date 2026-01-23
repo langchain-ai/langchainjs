@@ -2,4 +2,4 @@
 "@langchain/anthropic": patch
 ---
 
-Fix/issue 9851 anthropic image contentblock
+Fix image content blocks being silently dropped when using ContentBlock.Multimodal.Image format with url, data, or fileId properties
