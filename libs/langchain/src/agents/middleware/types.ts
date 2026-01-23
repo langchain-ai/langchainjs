@@ -11,7 +11,7 @@ import type {
   AnnotationRoot,
   StateSchema,
   InferStateSchemaValue,
-  StateDefinitionInit,
+  StateDefinitionInit,  
 } from "@langchain/langgraph";
 import type {
   AIMessage,
@@ -760,21 +760,21 @@ export type InferContextInput<
     : {};
 
 export type ToAnnotationRoot<
-  A extends AnyAnnotationRoot | InteropZodObject | StateSchema<any>,
+  A extends StateDefinitionInit,
 > =
-  A extends StateSchema<any>
+  A extends AnyAnnotationRoot 
     ? A
-    : A extends AnyAnnotationRoot
-      ? A
-      : A extends InteropZodObject
-        ? AnnotationRoot<InteropZodToStateDefinition<A>>
-        : never;
+    : A extends InteropZodObject
+      ? InteropZodToStateDefinition<A>
+      : never;
 
 export type InferSchemaInput<
   A extends StateDefinitionInit | undefined,
 > =
   A extends StateSchema<infer TFields>
     ? InferStateSchemaValue<TFields>
-    : A extends AnyAnnotationRoot | InteropZodObject
-      ? ToAnnotationRoot<A>["State"]
-      : {};
+    : A extends InteropZodObject
+      ? InferInteropZodOutput<A>
+      : A extends AnyAnnotationRoot
+        ? A["State"]
+        : {};

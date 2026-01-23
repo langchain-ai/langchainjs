@@ -206,15 +206,18 @@ describe("StateSchema support", () => {
 
       const middleware = createMiddleware({
         name: "HistoryMiddleware",
+        stateSchema: z.object({
+          history: z.string(),
+        }),
         beforeModel: async () => {
           return {
             history: "from_beforeModel",
-          } as any;
+          };
         },
         afterModel: async () => {
           return {
             history: "from_afterModel",
-          } as any;
+          };
         },
       });
 
@@ -333,17 +336,18 @@ describe("StateSchema support", () => {
         name: "TrackerMiddleware",
         stateSchema: z.object({
           requestCount: z.number().default(0),
+          events: z.string(),
         }),
         beforeModel: async (state) => {
           return {
             events: "model_request_started",
             requestCount: (state.requestCount ?? 0) + 1,
-          } as any;
+          };
         },
         afterModel: async () => {
           return {
             events: "model_request_completed",
-          } as any;
+          };
         },
       });
 
@@ -482,7 +486,7 @@ describe("StateSchema support", () => {
 
       const middleware = createMiddleware({
         name: "TestMiddleware",
-        stateSchema: z.object({
+        stateSchema: new StateSchema({
           middlewareField: z.number().default(0),
         }),
       });
@@ -565,6 +569,190 @@ describe("StateSchema support", () => {
       // Verify both custom state and structured response
       expect(result.customField).toBe("value");
       expect(result).toHaveProperty("structuredResponse");
+    });
+  });
+
+  describe("middleware with StateSchema stateSchema", () => {
+    it("should accept middleware with StateSchema stateSchema", async () => {
+      const MiddlewareState = new StateSchema({
+        userId: z.string(),
+        count: z.number().default(0),
+      });
+
+      const middleware = createMiddleware({
+        name: "StateSchemaMiddleware",
+        stateSchema: MiddlewareState,
+        beforeModel: async (state) => {
+          expect(state.userId).toBe("test-user");
+          expect(state.count).toBe(0);
+          return { count: ((state.count as number) ?? 0) + 1 };
+        },
+      });
+
+      const agent = createAgent({
+        model: new FakeToolCallingModel({ toolCalls: [] }),
+        tools: [],
+        middleware: [middleware],
+      });
+
+      const result = await agent.invoke({
+        messages: [new HumanMessage("Test")],
+        userId: "test-user",
+        count: 0,
+      });
+
+      expect(result.userId).toBe("test-user");
+      expect(result.count).toBe(1);
+    });
+
+    it("should handle middleware with StateSchema containing ReducedValue", async () => {
+      const MiddlewareState = new StateSchema({
+        history: new ReducedValue(z.array(z.string()).default(() => []), {
+          inputSchema: z.string(),
+          reducer: (current, next) => [...current, next],
+        }),
+      });
+
+      const middleware = createMiddleware({
+        name: "HistoryMiddleware",
+        stateSchema: MiddlewareState,
+        beforeModel: async () => {
+          return { history: "middleware-entry" };
+        },
+      });
+
+      const agent = createAgent({
+        model: new FakeToolCallingModel({ toolCalls: [] }),
+        tools: [],
+        middleware: [middleware],
+      });
+
+      const result = await agent.invoke({
+        messages: [new HumanMessage("Test")],
+        history: "initial",
+      });
+
+      expect(result.history).toContain("initial");
+      expect(result.history).toContain("middleware-entry");
+    });
+
+    it("should handle private fields in StateSchema middleware", async () => {
+      const MiddlewareState = new StateSchema({
+        publicField: z.string(),
+        _privateField: z.string(),
+      });
+
+      const middleware = createMiddleware({
+        name: "PrivateFieldMiddleware",
+        stateSchema: MiddlewareState,
+        beforeModel: async (state) => {
+          expect(state.publicField).toBe("public-value");
+          // Private field should be accessible internally
+          return { _privateField: "private-value" };
+        },
+      });
+
+      const agent = createAgent({
+        model: new FakeToolCallingModel({ toolCalls: [] }),
+        tools: [],
+        middleware: [middleware],
+      });
+
+      // Should work without providing private field
+      const result = await agent.invoke({
+        messages: [new HumanMessage("Test")],
+        publicField: "public-value",
+      });
+
+      expect(result.publicField).toBe("public-value");
+    });
+
+    it("should throw error for missing required fields in StateSchema middleware", async () => {
+      const MiddlewareState = new StateSchema({
+        requiredField: z.string(),
+        optionalField: z.string().optional(),
+      });
+
+      const middleware = createMiddleware({
+        name: "RequiredFieldMiddleware",
+        stateSchema: MiddlewareState,
+      });
+
+      const agent = createAgent({
+        model: new FakeToolCallingModel({ toolCalls: [] }),
+        tools: [],
+        middleware: [middleware],
+      });
+
+      await expect(
+        agent.invoke({
+          messages: [new HumanMessage("Test")],
+          optionalField: "optional-value",
+          // Missing requiredField - use type assertion to bypass TS checks
+        } as any)
+      ).rejects.toThrow(/requiredField.*Required/);
+    });
+
+    it("should work with default values in StateSchema middleware", async () => {
+      const MiddlewareState = new StateSchema({
+        withDefault: z.string().default("default-value"),
+        withoutDefault: z.string().optional(),
+      });
+
+      const middleware = createMiddleware({
+        name: "DefaultValueMiddleware",
+        stateSchema: MiddlewareState,
+        beforeModel: async (state) => {
+          expect(state.withDefault).toBe("default-value");
+          return {};
+        },
+      });
+
+      const agent = createAgent({
+        model: new FakeToolCallingModel({ toolCalls: [] }),
+        tools: [],
+        middleware: [middleware],
+      });
+
+      const result = await agent.invoke({
+        messages: [new HumanMessage("Test")],
+        withDefault: "default-value",
+      } as any);
+
+      expect(result.withDefault).toBe("default-value");
+    });
+
+    it("should handle mixed Zod and StateSchema middleware", async () => {
+      const StateSchemaMiddleware = new StateSchema({
+        stateSchemaField: z.string().default("from-state-schema"),
+      });
+
+      const middleware1 = createMiddleware({
+        name: "StateSchemaMiddleware",
+        stateSchema: StateSchemaMiddleware,
+      });
+
+      const middleware2 = createMiddleware({
+        name: "ZodMiddleware",
+        stateSchema: z.object({
+          zodField: z.string().default("from-zod"),
+        }),
+      });
+
+      const agent = createAgent({
+        model: new FakeToolCallingModel({ toolCalls: [] }),
+        tools: [],
+        middleware: [middleware1, middleware2],
+      });
+
+      const result = await agent.invoke({
+        messages: [new HumanMessage("Test")],
+        stateSchemaField: "from-state-schema",
+        zodField: "from-zod",
+      } as any);
+
+      expect(result.stateSchemaField).toBe("from-state-schema");
+      expect(result.zodField).toBe("from-zod");
     });
   });
 });
