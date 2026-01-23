@@ -196,6 +196,8 @@ function* _formatContentBlocks(
           ...(cacheControl ? { cache_control: cacheControl } : {}),
         } as Anthropic.Messages.ImageBlockParam;
       }
+    } else if (_isAnthropicImageBlockParam(contentPart)) {
+      yield contentPart;
     } else if (contentPart.type === "image") {
       // Handle new ContentBlock.Multimodal.Image format
       let source;
@@ -246,8 +248,6 @@ function* _formatContentBlocks(
           ...(cacheControl ? { cache_control: cacheControl } : {}),
         } as Anthropic.Messages.ImageBlockParam;
       }
-    } else if (_isAnthropicImageBlockParam(contentPart)) {
-      yield contentPart;
     } else if (contentPart.type === "document") {
       // PDF
       yield {
