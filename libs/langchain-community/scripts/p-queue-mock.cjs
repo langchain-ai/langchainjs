@@ -9,6 +9,10 @@ class PQueue {
     // no-op
     return this;
   }
+  onIdle() {
+    // returns a promise that resolves immediately
+    return Promise.resolve();
+  }
 }
 
 module.exports = PQueue;
