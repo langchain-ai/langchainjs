@@ -149,12 +149,7 @@ describe("Dynamic Tool Registration via Middleware", () => {
       });
 
       const model = new FakeToolCallingModel({
-        toolCalls: [
-          [
-            { name: "nonexistent_tool", args: {}, id: "call_1" },
-          ],
-          [],
-        ],
+        toolCalls: [[{ name: "nonexistent_tool", args: {}, id: "call_1" }], []],
       });
 
       const agent = createAgent({
@@ -402,10 +397,7 @@ describe("Dynamic Tool Registration via Middleware", () => {
       });
 
       const model = new FakeToolCallingModel({
-        toolCalls: [
-          [{ name: "error_tool", args: {}, id: "call_1" }],
-          [],
-        ],
+        toolCalls: [[{ name: "error_tool", args: {}, id: "call_1" }], []],
       });
 
       const agent = createAgent({
@@ -456,10 +448,7 @@ describe("Dynamic Tool Registration via Middleware", () => {
       });
 
       const model = new FakeToolCallingModel({
-        toolCalls: [
-          [{ name: "error_tool", args: {}, id: "call_1" }],
-          [],
-        ],
+        toolCalls: [[{ name: "error_tool", args: {}, id: "call_1" }], []],
       });
 
       const agent = createAgent({

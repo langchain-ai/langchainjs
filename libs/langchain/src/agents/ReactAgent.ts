@@ -496,7 +496,11 @@ export class ReactAgent<
       allNodeWorkflows.addEdge(AGENT_NODE_NAME, lastAfterModelNode.name);
     } else {
       // If no afterModel nodes, connect model_request directly to model paths
-      const modelPaths = this.#getModelPaths(clientTools, false, hasToolsAvailable);
+      const modelPaths = this.#getModelPaths(
+        clientTools,
+        false,
+        hasToolsAvailable
+      );
       // Replace END with exitNode in destinations, since exitNode might be an afterAgent node
       const destinations = modelPaths.map((p) =>
         p === END ? exitNode : p
