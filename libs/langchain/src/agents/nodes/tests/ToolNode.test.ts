@@ -1021,7 +1021,9 @@ describe("ToolNode error handling", () => {
     expect(result.messages[0]).toBeInstanceOf(ToolMessage);
 
     const toolMessage = result.messages[0] as ToolMessage;
-    expect(toolMessage.content).toContain("nonexistent_tool is not a valid tool");
+    expect(toolMessage.content).toContain(
+      "nonexistent_tool is not a valid tool"
+    );
     expect(toolMessage.content).toContain("get_weather");
     expect(toolMessage.tool_call_id).toBe("call_123");
     expect(toolMessage.name).toBe("nonexistent_tool");
@@ -1068,7 +1070,9 @@ describe("ToolNode error handling", () => {
 
     expect(result.messages).toHaveLength(1);
     const toolMessage = result.messages[0] as ToolMessage;
-    expect(toolMessage.content).toContain("nonexistent_tool is not a valid tool");
+    expect(toolMessage.content).toContain(
+      "nonexistent_tool is not a valid tool"
+    );
     expect(toolMessage.status).toBe("error");
   });
 
