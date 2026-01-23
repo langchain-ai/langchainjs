@@ -347,7 +347,11 @@ export class ToolNode<
      */
     const tool = this.tools.find((t) => t.name === call.name);
     if (!tool) {
-      throw new Error(`Tool "${call.name}" not found.`);
+      return this.#handleError(
+        new Error(`Tool "${call.name}" not found.`),
+        call,
+        false
+      );
     }
 
     const request = {
