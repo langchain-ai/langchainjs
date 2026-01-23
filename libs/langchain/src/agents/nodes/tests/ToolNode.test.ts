@@ -1021,13 +1021,21 @@ describe("ToolNode error handling", () => {
     expect(result.messages[0]).toBeInstanceOf(ToolMessage);
 
     const toolMessage = result.messages[0] as ToolMessage;
-    expect(toolMessage.content).toContain('Tool "nonexistent_tool" not found');
-    expect(toolMessage.content).toContain("Please fix your mistakes");
+    expect(toolMessage.content).toContain(
+      "nonexistent_tool is not a valid tool"
+    );
+    expect(toolMessage.content).toContain("get_weather");
     expect(toolMessage.tool_call_id).toBe("call_123");
     expect(toolMessage.name).toBe("nonexistent_tool");
+    expect(toolMessage.status).toBe("error");
   });
 
-  it("should throw error for missing tool when handleToolErrors is false", async () => {
+  it("should return graceful error for missing tool even when handleToolErrors is false", async () => {
+    /**
+     * Missing tools always return a graceful error message (not thrown) to allow
+     * the LLM to see the error and potentially retry with a valid tool name.
+     * The handleToolErrors option only affects errors during tool execution.
+     */
     const getWeatherTool = tool(
       ({ location }) => `Weather in ${location}: sunny`,
       {
@@ -1055,14 +1063,24 @@ describe("ToolNode error handling", () => {
       ],
     });
 
-    await expect(
-      toolNode.invoke({
-        messages: [messageWithInvalidTool],
-      })
-    ).rejects.toThrow('Tool "nonexistent_tool" not found');
+    // Missing tools return a graceful error message instead of throwing
+    const result = await toolNode.invoke({
+      messages: [messageWithInvalidTool],
+    });
+
+    expect(result.messages).toHaveLength(1);
+    const toolMessage = result.messages[0] as ToolMessage;
+    expect(toolMessage.content).toContain(
+      "nonexistent_tool is not a valid tool"
+    );
+    expect(toolMessage.status).toBe("error");
   });
 
-  it("should handle missing tool with custom error handler", async () => {
+  it("should return graceful error for missing tool regardless of custom error handler", async () => {
+    /**
+     * Missing tools are handled before the custom error handler is invoked.
+     * Custom error handlers are for tool execution errors, not missing tools.
+     */
     const getWeatherTool = tool(
       ({ location }) => `Weather in ${location}: sunny`,
       {
@@ -1102,10 +1120,12 @@ describe("ToolNode error handling", () => {
       messages: [messageWithInvalidTool],
     });
 
+    // Missing tools get a standard error message, not passed to custom handler
     expect(result.messages).toHaveLength(1);
     const toolMessage = result.messages[0] as ToolMessage;
-    expect(toolMessage.content).toContain("Custom error:");
-    expect(toolMessage.content).toContain('Tool "missing_tool" not found');
+    expect(toolMessage.content).toContain("missing_tool is not a valid tool");
+    expect(toolMessage.content).toContain("get_weather");
     expect(toolMessage.tool_call_id).toBe("call_custom");
+    expect(toolMessage.status).toBe("error");
   });
 });

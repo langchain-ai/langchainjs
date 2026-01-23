@@ -373,10 +373,19 @@ export class ReactAgent<
     allNodeWorkflows.addNode(AGENT_NODE_NAME, this.#agentNode);
 
     /**
-     * add single tool node for all tools
+     * Check if any middleware has wrapToolCall defined.
+     * If so, we need to create a ToolNode even without pre-registered tools
+     * to allow middleware to handle dynamically registered tools.
      */
-    if (toolClasses.filter(isClientTool).length > 0) {
-      const toolNode = new ToolNode(toolClasses.filter(isClientTool), {
+    const hasWrapToolCallMiddleware = middleware.some((m) => m.wrapToolCall);
+    const clientTools = toolClasses.filter(isClientTool);
+
+    /**
+     * Create ToolNode if we have client-side tools OR if middleware defines wrapToolCall
+     * (which may handle dynamically registered tools)
+     */
+    if (clientTools.length > 0 || hasWrapToolCallMiddleware) {
+      const toolNode = new ToolNode(clientTools, {
         signal: this.options.signal,
         wrapToolCall: wrapToolCall(middleware),
       });
@@ -408,7 +417,13 @@ export class ReactAgent<
         : END;
 
     allNodeWorkflows.addEdge(START, entryNode);
-    const clientTools = toolClasses.filter(isClientTool);
+
+    /**
+     * Determine if we have tools available for routing.
+     * This includes both registered client tools AND dynamic tools via middleware.
+     */
+    const hasToolsAvailable =
+      clientTools.length > 0 || hasWrapToolCallMiddleware;
 
     // Connect beforeAgent nodes (run once at start)
     for (let i = 0; i < beforeAgentNodes.length; i++) {
@@ -418,10 +433,9 @@ export class ReactAgent<
       const nextDefault = isLast ? loopEntryNode : beforeAgentNodes[i + 1].name;
 
       if (node.allowed && node.allowed.length > 0) {
-        const hasTools = clientTools.length > 0;
         const allowedMapped = node.allowed
           .map((t) => parseJumpToTarget(t))
-          .filter((dest) => dest !== TOOLS_NODE_NAME || hasTools);
+          .filter((dest) => dest !== TOOLS_NODE_NAME || hasToolsAvailable);
         // Replace END with exitNode (which could be an afterAgent node)
         const destinations = Array.from(
           new Set([
@@ -432,7 +446,12 @@ export class ReactAgent<
 
         allNodeWorkflows.addConditionalEdges(
           current,
-          this.#createBeforeAgentRouter(clientTools, nextDefault, exitNode),
+          this.#createBeforeAgentRouter(
+            clientTools,
+            nextDefault,
+            exitNode,
+            hasToolsAvailable
+          ),
           destinations
         );
       } else {
@@ -450,17 +469,20 @@ export class ReactAgent<
         : beforeModelNodes[i + 1].name;
 
       if (node.allowed && node.allowed.length > 0) {
-        const hasTools = clientTools.length > 0;
         const allowedMapped = node.allowed
           .map((t) => parseJumpToTarget(t))
-          .filter((dest) => dest !== TOOLS_NODE_NAME || hasTools);
+          .filter((dest) => dest !== TOOLS_NODE_NAME || hasToolsAvailable);
         const destinations = Array.from(
           new Set([nextDefault, ...allowedMapped])
         ) as BaseGraphDestination[];
 
         allNodeWorkflows.addConditionalEdges(
           current,
-          this.#createBeforeModelRouter(clientTools, nextDefault),
+          this.#createBeforeModelRouter(
+            clientTools,
+            nextDefault,
+            hasToolsAvailable
+          ),
           destinations
         );
       } else {
@@ -474,7 +496,11 @@ export class ReactAgent<
       allNodeWorkflows.addEdge(AGENT_NODE_NAME, lastAfterModelNode.name);
     } else {
       // If no afterModel nodes, connect model_request directly to model paths
-      const modelPaths = this.#getModelPaths(clientTools);
+      const modelPaths = this.#getModelPaths(
+        clientTools,
+        false,
+        hasToolsAvailable
+      );
       // Replace END with exitNode in destinations, since exitNode might be an afterAgent node
       const destinations = modelPaths.map((p) =>
         p === END ? exitNode : p
@@ -497,10 +523,9 @@ export class ReactAgent<
       const nextDefault = afterModelNodes[i - 1].name;
 
       if (node.allowed && node.allowed.length > 0) {
-        const hasTools = clientTools.length > 0;
         const allowedMapped = node.allowed
           .map((t) => parseJumpToTarget(t))
-          .filter((dest) => dest !== TOOLS_NODE_NAME || hasTools);
+          .filter((dest) => dest !== TOOLS_NODE_NAME || hasToolsAvailable);
         const destinations = Array.from(
           new Set([nextDefault, ...allowedMapped])
         ) as BaseGraphDestination[];
@@ -510,7 +535,8 @@ export class ReactAgent<
           this.#createAfterModelSequenceRouter(
             clientTools,
             node.allowed,
-            nextDefault
+            nextDefault,
+            hasToolsAvailable
           ),
           destinations
         );
@@ -525,10 +551,11 @@ export class ReactAgent<
       const firstAfterModelNode = firstAfterModel.name;
 
       // Include exitNode in the paths since afterModel should be able to route to after_agent or END
-      const modelPaths = this.#getModelPaths(clientTools, true).filter(
-        (p) =>
-          p !== TOOLS_NODE_NAME || toolClasses.filter(isClientTool).length > 0
-      );
+      const modelPaths = this.#getModelPaths(
+        clientTools,
+        true,
+        hasToolsAvailable
+      ).filter((p) => p !== TOOLS_NODE_NAME || hasToolsAvailable);
 
       const allowJump = Boolean(
         firstAfterModel.allowed && firstAfterModel.allowed.length > 0
@@ -541,7 +568,12 @@ export class ReactAgent<
 
       allNodeWorkflows.addConditionalEdges(
         firstAfterModelNode,
-        this.#createAfterModelRouter(clientTools, allowJump, exitNode),
+        this.#createAfterModelRouter(
+          clientTools,
+          allowJump,
+          exitNode,
+          hasToolsAvailable
+        ),
         destinations
       );
     }
@@ -553,10 +585,9 @@ export class ReactAgent<
       const nextDefault = afterAgentNodes[i - 1].name;
 
       if (node.allowed && node.allowed.length > 0) {
-        const hasTools = clientTools.length > 0;
         const allowedMapped = node.allowed
           .map((t) => parseJumpToTarget(t))
-          .filter((dest) => dest !== TOOLS_NODE_NAME || hasTools);
+          .filter((dest) => dest !== TOOLS_NODE_NAME || hasToolsAvailable);
         const destinations = Array.from(
           new Set([nextDefault, ...allowedMapped])
         ) as BaseGraphDestination[];
@@ -566,7 +597,8 @@ export class ReactAgent<
           this.#createAfterModelSequenceRouter(
             clientTools,
             node.allowed,
-            nextDefault
+            nextDefault,
+            hasToolsAvailable
           ),
           destinations
         );
@@ -581,10 +613,9 @@ export class ReactAgent<
       const firstAfterAgentNode = firstAfterAgent.name;
 
       if (firstAfterAgent.allowed && firstAfterAgent.allowed.length > 0) {
-        const hasTools = clientTools.length > 0;
         const allowedMapped = firstAfterAgent.allowed
           .map((t) => parseJumpToTarget(t))
-          .filter((dest) => dest !== TOOLS_NODE_NAME || hasTools);
+          .filter((dest) => dest !== TOOLS_NODE_NAME || hasToolsAvailable);
 
         /**
          * For after_agent, only use explicitly allowed destinations (don't add loopEntryNode)
@@ -599,7 +630,8 @@ export class ReactAgent<
           this.#createAfterModelSequenceRouter(
             clientTools,
             firstAfterAgent.allowed,
-            END as string
+            END as string,
+            hasToolsAvailable
           ),
           destinations
         );
@@ -609,9 +641,9 @@ export class ReactAgent<
     }
 
     /**
-     * add edges for tools node
+     * add edges for tools node (includes both registered tools and dynamic tools via middleware)
      */
-    if (clientTools.length > 0) {
+    if (hasToolsAvailable) {
       // Tools should return to loop entry node (not including before_agent)
       const toolReturnTarget = loopEntryNode;
 
@@ -648,14 +680,16 @@ export class ReactAgent<
    * Get possible edge destinations from model node.
    * @param toolClasses names of tools to call
    * @param includeModelRequest whether to include "model_request" as a valid path (for jumpTo routing)
+   * @param hasToolsAvailable whether tools are available (includes dynamic tools via middleware)
    * @returns list of possible edge destinations
    */
   #getModelPaths(
     toolClasses: (ClientTool | ServerTool)[],
-    includeModelRequest: boolean = false
+    includeModelRequest: boolean = false,
+    hasToolsAvailable: boolean = toolClasses.length > 0
   ): BaseGraphDestination[] {
     const paths: BaseGraphDestination[] = [];
-    if (toolClasses.length > 0) {
+    if (hasToolsAvailable) {
       paths.push(TOOLS_NODE_NAME);
     }
 
@@ -765,12 +799,14 @@ export class ReactAgent<
    * @param toolClasses - Available tool classes for validation
    * @param allowJump - Whether jumping is allowed
    * @param exitNode - The exit node to route to (could be after_agent or END)
+   * @param hasToolsAvailable - Whether tools are available (includes dynamic tools via middleware)
    * @returns Router function that handles jumpTo logic and normal routing
    */
   #createAfterModelRouter(
     toolClasses: (ClientTool | ServerTool)[],
     allowJump: boolean,
-    exitNode: string | typeof END
+    exitNode: string | typeof END,
+    hasToolsAvailable: boolean = toolClasses.length > 0
   ) {
     const hasStructuredResponse = Boolean(this.options.responseFormat);
 
@@ -797,7 +833,7 @@ export class ReactAgent<
         }
         if (destination === TOOLS_NODE_NAME) {
           // If trying to jump to tools but no tools are available, go to exitNode
-          if (toolClasses.length === 0) {
+          if (!hasToolsAvailable) {
             return exitNode;
           }
           return new Send(TOOLS_NODE_NAME, { ...state, jumpTo: undefined });
@@ -867,11 +903,16 @@ export class ReactAgent<
   /**
    * Router for afterModel sequence nodes (connecting later middlewares to earlier ones),
    * honoring allowed jump targets and defaulting to the next node.
+   * @param toolClasses - Available tool classes for validation
+   * @param allowed - List of allowed jump targets
+   * @param nextDefault - Default node to route to
+   * @param hasToolsAvailable - Whether tools are available (includes dynamic tools via middleware)
    */
   #createAfterModelSequenceRouter(
     toolClasses: (ClientTool | ServerTool)[],
     allowed: string[],
-    nextDefault: string
+    nextDefault: string,
+    hasToolsAvailable: boolean = toolClasses.length > 0
   ) {
     const allowedSet = new Set(allowed.map((t) => parseJumpToTarget(t)));
     return (state: Record<string, unknown>) => {
@@ -882,7 +923,7 @@ export class ReactAgent<
           return END;
         }
         if (dest === TOOLS_NODE_NAME && allowedSet.has(TOOLS_NODE_NAME)) {
-          if (toolClasses.length === 0) return END;
+          if (!hasToolsAvailable) return END;
           return new Send(TOOLS_NODE_NAME, { ...state, jumpTo: undefined });
         }
         if (dest === AGENT_NODE_NAME && allowedSet.has(AGENT_NODE_NAME)) {
@@ -897,11 +938,16 @@ export class ReactAgent<
    * Create routing function for jumpTo functionality after beforeAgent hooks.
    * Falls back to the default next node if no jumpTo is present.
    * When jumping to END, routes to exitNode (which could be an afterAgent node).
+   * @param toolClasses - Available tool classes for validation
+   * @param nextDefault - Default node to route to
+   * @param exitNode - Exit node to route to (could be after_agent or END)
+   * @param hasToolsAvailable - Whether tools are available (includes dynamic tools via middleware)
    */
   #createBeforeAgentRouter(
     toolClasses: (ClientTool | ServerTool)[],
     nextDefault: string,
-    exitNode: string | typeof END
+    exitNode: string | typeof END,
+    hasToolsAvailable: boolean = toolClasses.length > 0
   ) {
     return (state: Record<string, unknown>) => {
       const builtInState = state as unknown as BuiltInState;
@@ -916,7 +962,7 @@ export class ReactAgent<
         return exitNode;
       }
       if (destination === TOOLS_NODE_NAME) {
-        if (toolClasses.length === 0) {
+        if (!hasToolsAvailable) {
           return exitNode;
         }
         return new Send(TOOLS_NODE_NAME, { ...state, jumpTo: undefined });
@@ -928,10 +974,14 @@ export class ReactAgent<
   /**
    * Create routing function for jumpTo functionality after beforeModel hooks.
    * Falls back to the default next node if no jumpTo is present.
+   * @param toolClasses - Available tool classes for validation
+   * @param nextDefault - Default node to route to
+   * @param hasToolsAvailable - Whether tools are available (includes dynamic tools via middleware)
    */
   #createBeforeModelRouter(
     toolClasses: (ClientTool | ServerTool)[],
-    nextDefault: string
+    nextDefault: string,
+    hasToolsAvailable: boolean = toolClasses.length > 0
   ) {
     return (state: Record<string, unknown>) => {
       const builtInState = state as unknown as BuiltInState;
@@ -943,7 +993,7 @@ export class ReactAgent<
         return END;
       }
       if (destination === TOOLS_NODE_NAME) {
-        if (toolClasses.length === 0) {
+        if (!hasToolsAvailable) {
           return END;
         }
         return new Send(TOOLS_NODE_NAME, { ...state, jumpTo: undefined });
