@@ -3,7 +3,12 @@ import type {
   InteropZodObject,
   InteropZodType,
 } from "@langchain/core/utils/types";
-import type { START, END, StateGraph, StateDefinitionInit } from "@langchain/langgraph";
+import type {
+  START,
+  END,
+  StateGraph,
+  StateDefinitionInit,
+} from "@langchain/langgraph";
 
 import type { LanguageModelLike } from "@langchain/core/language_models/base";
 import type {
@@ -84,8 +89,9 @@ export interface AgentTypeConfig<
   TResponse extends Record<string, any> | ResponseFormatUndefined =
     | Record<string, any>
     | ResponseFormatUndefined,
-  TState extends StateDefinitionInit
-    | undefined = StateDefinitionInit | undefined,
+  TState extends StateDefinitionInit | undefined =
+    | StateDefinitionInit
+    | undefined,
   TContext extends AnyAnnotationRoot | InteropZodObject =
     | AnyAnnotationRoot
     | InteropZodObject,
@@ -482,9 +488,7 @@ export interface ExecutedToolCall {
 
 export type CreateAgentParams<
   StructuredResponseType extends Record<string, any> = Record<string, any>,
-  TStateSchema extends
-    StateDefinitionInit
-    | undefined = undefined,
+  TStateSchema extends StateDefinitionInit | undefined = undefined,
   ContextSchema extends
     | AnyAnnotationRoot
     | InteropZodObject = AnyAnnotationRoot,

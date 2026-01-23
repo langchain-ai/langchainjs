@@ -21,7 +21,7 @@ import {
  *
  * @param config - Middleware configuration
  * @param config.name - The name of the middleware
- * @param config.stateSchema - The schema of the middleware state 
+ * @param config.stateSchema - The schema of the middleware state
  * @param config.contextSchema - The schema of the middleware context
  * @param config.wrapModelCall - The function to wrap model invocation
  * @param config.wrapToolCall - The function to wrap tool invocation
@@ -49,7 +49,7 @@ import {
  * });
  * ```
  *
- * @example Using StateSchema 
+ * @example Using StateSchema
  * ```ts
  * import { StateSchema, ReducedValue } from "@langchain/langgraph";
  *

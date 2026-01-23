@@ -7,7 +7,7 @@ import type { ClientTool, ServerTool } from "@langchain/core/tools";
 import type { StateDefinitionInit } from "@langchain/langgraph";
 
 import type { ResponseFormatUndefined } from "./responses.js";
-import type { 
+import type {
   CreateAgentParams,
   AgentTypeConfig,
   CombineTools,
@@ -142,7 +142,7 @@ import { ReactAgent } from "./ReactAgent.js";
  * }
  * ```
  *
- * @example With StateSchema 
+ * @example With StateSchema
  * ```ts
  * import { createAgent } from "langchain";
  * import { StateSchema, ReducedValue } from "@langchain/langgraph";
@@ -167,8 +167,7 @@ import { ReactAgent } from "./ReactAgent.js";
 // Overload 1: With responseFormat as single InteropZodType
 export function createAgent<
   StructuredResponseFormat extends Record<string, any> = Record<string, any>,
-  TStateSchema extends StateDefinitionInit
-    | undefined = undefined,
+  TStateSchema extends StateDefinitionInit | undefined = undefined,
   ContextSchema extends
     | AnyAnnotationRoot
     | InteropZodObject = AnyAnnotationRoot,

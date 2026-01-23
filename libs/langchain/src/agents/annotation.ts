@@ -22,8 +22,7 @@ import {
 type JumpToTarget = "model_request" | "tools" | "end" | undefined;
 
 export function createAgentState<
-  TStateSchema extends
-  StateDefinitionInit | undefined = undefined,
+  TStateSchema extends StateDefinitionInit | undefined = undefined,
   TMiddleware extends readonly AgentMiddleware<any, any, any>[] = [],
 >(
   hasStructuredResponse = true,
@@ -52,7 +51,7 @@ export function createAgentState<
         if (!(key in stateFields)) {
           // Add to stateFields to preserve ReducedValue/UntrackedValue behavior
           stateFields[key] = field;
-          
+
           // For ioFields, extract the appropriate schema from ReducedValue
           if (ReducedValue.isInstance(field)) {
             // For input, use inputSchema if available, otherwise use the value schema
@@ -113,7 +112,10 @@ export function createAgentState<
    * Add state schema properties from user-provided schema.
    * Supports both StateSchema and Zod v3/v4 objects.
    */
-  if (stateSchema && (StateSchema.isInstance(stateSchema) || isInteropZodObject(stateSchema))) {
+  if (
+    stateSchema &&
+    (StateSchema.isInstance(stateSchema) || isInteropZodObject(stateSchema))
+  ) {
     applySchema(stateSchema);
   }
 
@@ -122,7 +124,11 @@ export function createAgentState<
    * Supports both StateSchema and Zod v3/v4 objects.
    */
   for (const middleware of middlewareList) {
-    if (middleware.stateSchema && (StateSchema.isInstance(middleware.stateSchema) || isInteropZodObject(middleware.stateSchema))) {
+    if (
+      middleware.stateSchema &&
+      (StateSchema.isInstance(middleware.stateSchema) ||
+        isInteropZodObject(middleware.stateSchema))
+    ) {
       applySchema(middleware.stateSchema);
     }
   }

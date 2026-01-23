@@ -2,7 +2,11 @@
 import { describe, it, expect, expectTypeOf } from "vitest";
 import { z } from "zod";
 import { z as z4 } from "zod/v4";
-import { HumanMessage, ToolMessage, BaseMessage } from "@langchain/core/messages";
+import {
+  HumanMessage,
+  ToolMessage,
+  BaseMessage,
+} from "@langchain/core/messages";
 import { tool } from "@langchain/core/tools";
 import { StateSchema, ReducedValue, Command } from "@langchain/langgraph";
 
@@ -30,7 +34,8 @@ describe("StateSchema support", () => {
 
     it("should accept StateSchema with ReducedValue fields", () => {
       const AgentState = new StateSchema({
-        history: new ReducedValue(z.array(z.string()).default(() => []),
+        history: new ReducedValue(
+          z.array(z.string()).default(() => []),
           {
             inputSchema: z.string(),
             reducer: (current, next) => [...current, next],
@@ -68,13 +73,16 @@ describe("StateSchema support", () => {
       const reducerCalls: Array<{ current: string[]; next: string }> = [];
 
       const AgentState = new StateSchema({
-        history: new ReducedValue(z.array(z.string()).default(() => []), {
-          inputSchema: z.string(),
-          reducer: (current, next) => {
-            reducerCalls.push({ current: [...current], next });
-            return [...current, next];
-          },
-        }),
+        history: new ReducedValue(
+          z.array(z.string()).default(() => []),
+          {
+            inputSchema: z.string(),
+            reducer: (current, next) => {
+              reducerCalls.push({ current: [...current], next });
+              return [...current, next];
+            },
+          }
+        ),
       });
 
       const addHistoryTool = tool(
@@ -132,13 +140,16 @@ describe("StateSchema support", () => {
       const reducerCalls: Array<{ current: string[]; next: string }> = [];
 
       const AgentState = new StateSchema({
-        tasks: new ReducedValue(z.array(z.string()).default(() => []), {
-          inputSchema: z.string(),
-          reducer: (current, next) => {
-            reducerCalls.push({ current: [...current], next });
-            return [...current, next];
-          },
-        }),
+        tasks: new ReducedValue(
+          z.array(z.string()).default(() => []),
+          {
+            inputSchema: z.string(),
+            reducer: (current, next) => {
+              reducerCalls.push({ current: [...current], next });
+              return [...current, next];
+            },
+          }
+        ),
       });
 
       const addTaskTool = tool(
@@ -197,13 +208,16 @@ describe("StateSchema support", () => {
       const reducerCalls: Array<{ current: string[]; next: string }> = [];
 
       const AgentState = new StateSchema({
-        history: new ReducedValue(z.array(z.string()).default(() => []), {
-          inputSchema: z.string(),
-          reducer: (current, next) => {
-            reducerCalls.push({ current: [...current], next });
-            return [...current, next];
-          },
-        }),
+        history: new ReducedValue(
+          z.array(z.string()).default(() => []),
+          {
+            inputSchema: z.string(),
+            reducer: (current, next) => {
+              reducerCalls.push({ current: [...current], next });
+              return [...current, next];
+            },
+          }
+        ),
       });
 
       const middleware = createMiddleware({
@@ -262,13 +276,16 @@ describe("StateSchema support", () => {
       const reducerCalls: Array<{ current: string[]; next: string }> = [];
 
       const AgentState = new StateSchema({
-        auditLog: new ReducedValue(z.array(z.string()).default(() => []), {
-          inputSchema: z.string(),
-          reducer: (current, next) => {
-            reducerCalls.push({ current: [...current], next });
-            return [...current, next];
-          },
-        }),
+        auditLog: new ReducedValue(
+          z.array(z.string()).default(() => []),
+          {
+            inputSchema: z.string(),
+            reducer: (current, next) => {
+              reducerCalls.push({ current: [...current], next });
+              return [...current, next];
+            },
+          }
+        ),
       });
 
       const dummyTool = tool(async () => "tool executed", {
@@ -325,13 +342,16 @@ describe("StateSchema support", () => {
       const agentReducerCalls: Array<{ current: string[]; next: string }> = [];
 
       const AgentState = new StateSchema({
-        events: new ReducedValue(z.array(z.string()).default(() => []), {
-          inputSchema: z.string(),
-          reducer: (current, next) => {
-            agentReducerCalls.push({ current: [...current], next });
-            return [...current, next];
-          },
-        }),
+        events: new ReducedValue(
+          z.array(z.string()).default(() => []),
+          {
+            inputSchema: z.string(),
+            reducer: (current, next) => {
+              agentReducerCalls.push({ current: [...current], next });
+              return [...current, next];
+            },
+          }
+        ),
       });
 
       const middleware = createMiddleware({
@@ -460,10 +480,13 @@ describe("StateSchema support", () => {
 
     it("should have proper result structure with ReducedValue", async () => {
       const AgentState = new StateSchema({
-        history: new ReducedValue(z.array(z.string()).default(() => []), {
-          inputSchema: z.string(),
-          reducer: (current, next) => [...current, next],
-        }),
+        history: new ReducedValue(
+          z.array(z.string()).default(() => []),
+          {
+            inputSchema: z.string(),
+            reducer: (current, next) => [...current, next],
+          }
+        ),
       });
 
       const agent = createAgent({
@@ -609,10 +632,13 @@ describe("StateSchema support", () => {
 
     it("should handle middleware with StateSchema containing ReducedValue", async () => {
       const MiddlewareState = new StateSchema({
-        history: new ReducedValue(z.array(z.string()).default(() => []), {
-          inputSchema: z.string(),  
-          reducer: (current, next) => [...current, next],
-        }),
+        history: new ReducedValue(
+          z.array(z.string()).default(() => []),
+          {
+            inputSchema: z.string(),
+            reducer: (current, next) => [...current, next],
+          }
+        ),
       });
 
       const middleware = createMiddleware({

@@ -206,7 +206,8 @@ export class ToolNode<
       tags,
       func: (state, config) =>
         this.run(
-          state as any as ToAnnotationRoot<StateDefinitionInit>["State"] & AgentBuiltInState,
+          state as any as ToAnnotationRoot<StateDefinitionInit>["State"] &
+            AgentBuiltInState,
           config as RunnableConfig
         ),
     });
