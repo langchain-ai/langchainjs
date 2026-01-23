@@ -6,8 +6,8 @@ import {
 import {
   AIMessage,
   AIMessageChunk,
+  AIMessageChunkFields,
   BaseMessage,
-  UsageMetadata,
 } from "@langchain/core/messages";
 import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
 import { concat } from "@langchain/core/utils/stream";
@@ -42,11 +42,19 @@ import { ApiClient } from "../clients/index.js";
 import {
   ChatGoogleFields,
   GenerateContentRequest,
-  GenerateContentResponse,
+  GenerateContentResponse, GoogleSpeakerVoiceConfig,
+  GoogleSpeechConfig,
+  GoogleSpeechConfigSimplified,
+  GoogleSpeechSimplifiedLanguage, GoogleSpeechSpeakerName, GoogleSpeechVoice,
+  GoogleSpeechVoiceLanguage,
+  GoogleThinkingConfig,
+  GoogleThinkingLevel,
 } from "./types.js";
 import { SafeJsonEventParserStream } from "../utils/stream.js";
 import {
+  convertAIMessageToText,
   convertGeminiCandidateToAIMessage,
+  convertGeminiGenerateContentResponseToUsageMetadata, convertGeminiPartsToToolCalls,
   convertMessagesToGeminiContents,
   convertMessagesToGeminiSystemInstruction,
 } from "../converters/messages.js";
@@ -68,38 +76,484 @@ import type {
   GeminiTool,
 } from "./types.js";
 
+export type GooglePlatformType = "gai" | "gcp";
+
+export function getPlatformType(
+  platform: GooglePlatformType | undefined,
+  hasApiKey: boolean,
+): GooglePlatformType {
+  if (typeof platform !== "undefined") {
+    return platform;
+  } else if (hasApiKey) {
+    return "gai";
+  } else {
+    return "gcp";
+  }
+}
+
+/**
+ * See https://ai.google.dev/gemini-api/docs/openai#thinking
+ * @param model
+ * @param reasoningTokens
+ */
+function reasoningEffortToReasoningTokens(
+  modelName?: string,
+  effort?: string
+): number | undefined {
+  if (effort === undefined) {
+    return undefined;
+  }
+
+  // gemini-2.5-flash and -flash-lite can be disabled. Others can't.
+  // https://ai.google.dev/gemini-api/docs/thinking#thinking-levels
+  const minTokens: number = modelName?.startsWith("gemini-2.5-flash") ? 0 : 128;
+  const maxTokens: number = modelName?.startsWith("gemini-2.5-flash") ? 24*1024 : 32*1024;
+
+  switch (effort) {
+    case "none":
+    case "minimal":
+      return minTokens;
+    case "low":
+      // Defined as 1k by https://ai.google.dev/gemini-api/docs/openai#thinking
+      return 1024;
+    case "medium":
+      // Defined as 8k by https://ai.google.dev/gemini-api/docs/openai#thinking
+      return 8 * 1024;
+    case "high":
+      // Defined as 24k by https://ai.google.dev/gemini-api/docs/openai#thinking
+      return maxTokens;
+    default:
+      return undefined;
+  }
+}
+
+/**
+ * See https://ai.google.dev/gemini-api/docs/openai#thinking
+ * @param model
+ * @param reasoningTokens
+ */
+function reasoningTokensToReasoningEffort(
+  model?: string,
+  reasoningTokens?: number,
+): Lowercase<GoogleThinkingLevel> | undefined {
+  if (typeof reasoningTokens === "undefined") {
+    return undefined;
+  } else if (reasoningTokens === -1 ){
+    // https://ai.google.dev/gemini-api/docs/thinking#thinking-levels
+    // says that high is "Default, dynamic" which is what -1 represented.
+    return "high";
+  } else if (reasoningTokens === 0) {
+    if (model?.startsWith("gemini-3-pro")) {
+      return "low";
+    } else {
+      return "minimal";
+    }
+  } else if (reasoningTokens <= 1024) {
+    return "low";
+  } else if (reasoningTokens <= 8192) {
+    if (model?.startsWith("gemini-3-pro")) {
+      return "low";
+    } else {
+      return "medium";
+    }
+  } else {
+    return "high";
+  }
+}
+
 export interface BaseChatGoogleParams
   extends BaseChatModelParams,
     ChatGoogleFields {
   model: string;
+
   apiClient?: ApiClient;
+
+  /**
+   * Hostname for the API call (if this is running on GCP)
+   * Usually this is computed based on location and platformType.
+   **/
+  endpoint?: string;
+
+  /**
+   * Region where the LLM is stored (if this is running on GCP)
+   * Defaults to "global"
+   **/
+  location?: string;
+
+  /**
+   * The version of the API functions. Part of the path.
+   * Usually this is computed based on platformType.
+   **/
+  apiVersion?: string;
+
+  /**
+   * What platform to run the service on.
+   * If not specified, the class should determine this from other
+   * means. Either way, the platform actually used will be in
+   * the "platform" getter.
+   */
+  platformType?: GooglePlatformType;
+
+  /**
+   * For compatibility with Google's libraries, should this use Vertex?
+   * The "platformType" parmeter takes precedence.
+   */
+  vertexai?: boolean;
+
+  /**
+   * Backwards compatibility.
+   * @deprecated in favor of using `disableStreaming` or `.stream()`
+   */
+  streaming?: boolean;
+
+  streamUsage?: boolean;
+
+  /**
+   * The number of reasoning tokens that the model should generate.
+   * If explicitly set, then the reasoning blocks will be returned.
+   */
+  maxReasoningTokens?: number;
+
+  /**
+   * An alias for `maxReasoningTokens` for compatibility.
+   */
+  thinkingBudget?: number;
+
+  /**
+   * An alias for `maxReasoningTokens` under Gemini 2.5 or
+   * the primary thinking/reasoning setting for Gemini 3.
+   * If explicitly set, then the reasoning blocks will be returned.
+   */
+  reasoningEffort?: GoogleThinkingLevel | Lowercase<GoogleThinkingLevel> | string;
+
+  /**
+   * An alias for `reasoningEffort` for compatibility.
+   */
+  thinkingLevel?: GoogleThinkingLevel | Lowercase<GoogleThinkingLevel> | string;
 }
 
 export interface BaseChatGoogleCallOptions
   extends BaseChatModelCallOptions,
     ChatGoogleFields {}
 
+export function fieldPlatformType(params: BaseChatGoogleParams): GooglePlatformType | undefined {
+  if (typeof params === "undefined") {
+    return undefined;
+  }
+  if (typeof params.platformType !== "undefined") {
+    return params.platformType;
+  }
+  if (params.vertexai === true) {
+    return "gcp";
+  }
+  return undefined;
+}
+
 export abstract class BaseChatGoogle<
   CallOptions extends BaseChatGoogleCallOptions = BaseChatGoogleCallOptions
 > extends BaseChatModel<CallOptions, AIMessageChunk> {
   model: string;
 
-  streaming = false;
+  streaming: boolean;
+
+  disableStreaming: boolean;
+
+  streamUsage: boolean = true;
+
+  protected _platform?: GooglePlatformType;
+
+  protected _endpoint?: string;
+
+  protected _location?: string;
+
+  protected _apiVersion?: string;
 
   protected apiClient: ApiClient;
 
   constructor(protected params: BaseChatGoogleParams) {
     super(params);
+
     if (!params.apiClient) {
       throw new Error("BaseChatGoogle requires an apiClient");
     }
-    this.model = params.model;
     this.apiClient = params.apiClient;
+
+    this.model = params.model;
+    this._platform = fieldPlatformType(params);
+    this._endpoint = params.endpoint;
+    this._location = params.location;
+    this._apiVersion = params.apiVersion;
+
+    // Logic borrowed from OpenAI library
+    this.disableStreaming = params?.disableStreaming === true;
+    this.streaming = params?.streaming === true;
+    if (this.disableStreaming) this.streaming = false;
+    // disable streaming in BaseChatModel if explicitly disabled
+    if (params?.streaming === false) this.disableStreaming = true;
+
+    this.streamUsage = params?.streamUsage ?? this.streamUsage;
+    if (this.disableStreaming) this.streamUsage = false;
+
   }
 
-  abstract _llmType(): string;
+  _llmType(): string {
+    return "google";
+  }
 
-  abstract getBaseUrl(): URL;
+  get platformType(): GooglePlatformType | undefined {
+    return this._platform;
+  }
+
+  get platform(): GooglePlatformType {
+    return getPlatformType(this._platform, this.apiClient.hasApiKey());
+  }
+
+  get isVertexExpress(): boolean {
+    return this.platform === "gcp" && this.apiClient.hasApiKey();
+  }
+
+  get apiVersion(): string {
+    if (typeof this._apiVersion !== "undefined") {
+      return this._apiVersion;
+    } else if (this.platform === "gai") {
+      return "v1beta";
+    } else {
+      return "v1";
+    }
+  }
+
+  get location(): string {
+    return this._location || "global";
+  }
+
+  get endpoint(): string {
+    if (typeof this._endpoint !== "undefined") {
+      return this._endpoint;
+    } else if (this.platform === "gai") {
+      return "generativelanguage.googleapis.com";
+    } else if (this.isVertexExpress) {
+      return "aiplatform.googleapis.com";
+    } else if (this.location === "global") {
+      // See https://docs.cloud.google.com/vertex-ai/generative-ai/docs/learn/locations#use_the_global_endpoint
+      return "aiplatform.googleapis.com";
+    } else {
+      return `${this.location}-aiplatform.googleapis.com`;
+    }
+  }
+
+  get publisher(): string {
+    return "google";
+  }
+
+  get modelFamily(): string {
+    const parts = this.model.split('-');
+    return parts[0];
+  }
+
+  get modelVersion(): string {
+    const parts = this.model.split('-');
+    return parts[1];
+  }
+
+  get modelLevel(): string {
+    const parts = this.model.split('-');
+    let ret = parts[2];
+    if (ret === 'flash' && parts[3] === 'lite') {
+      ret = 'flash-lite';
+    }
+    return ret;
+  }
+
+  get modelSpecialty(): string {
+    if (this.model.includes("image")) {
+      return "image";
+    } else if (this.model.includes("tts")) {
+      return "tts";
+    } else {
+      return "";
+    }
+  }
+
+  get urlMethod(): string {
+    return this.streaming
+      ? "streamGenerateContent?alt=sse"
+      : "generateContent";
+  }
+
+  async buildUrlGenerativeLanguage(urlMethod?: string): Promise<string> {
+    return `https://${this.endpoint}/${this.apiVersion}/models/${this.model}:${urlMethod ?? this.urlMethod}`;
+  }
+
+  async buildUrlVertexExpress(urlMethod?: string): Promise<string> {
+    return `https://${this.endpoint}/${this.apiVersion}/publishers/${this.publisher}/models/${this.model}:${urlMethod ?? this.urlMethod}`;
+  }
+
+  async buildUrlVertexLocation(urlMethod?: string): Promise<string> {
+    const projectId = await this.apiClient.getProjectId();
+    return `https://${this.endpoint}/${this.apiVersion}/projects/${projectId}/locations/${this.location}/publishers/${this.publisher}/models/${this.model}:${urlMethod ?? this.urlMethod}`;
+  }
+
+  async buildUrlVertex(urlMethod?: string): Promise<string> {
+    if (this.isVertexExpress) {
+      return this.buildUrlVertexExpress(urlMethod);
+    } else {
+      return this.buildUrlVertexLocation(urlMethod);
+    }
+  }
+
+  async buildUrl(urlMethod?: string): Promise<string> {
+    switch (this.platform) {
+      case "gai":
+        return this.buildUrlGenerativeLanguage(urlMethod);
+      default:
+        return this.buildUrlVertex(urlMethod);
+    }
+  }
+
+  thinkingConfig(fields: CombinableFields): {thinkingConfig: GoogleThinkingConfig} | {} {
+    // Thinking / reasoning
+    let includeThoughts = true;
+
+    let thinkingBudget=
+      fields?.maxReasoningTokens ??
+      fields?.thinkingBudget ??
+      reasoningEffortToReasoningTokens(this.model, fields?.reasoningEffort ?? fields?.thinkingLevel);
+    if (thinkingBudget === 0 || (this.model.includes("pro") && thinkingBudget === 128)) {
+      includeThoughts = false;
+    }
+    if (this.model.startsWith("gemini-2.5-pro") && typeof thinkingBudget !== "undefined") {
+      // Can't turn off Gemini 2.5 Pro thinking completely
+      if (thinkingBudget >= 0 && thinkingBudget < 128) {
+        thinkingBudget = 128;
+      }
+    }
+
+    const thinkingLevelRaw =
+      fields?.reasoningEffort ??
+      fields?.thinkingLevel ??
+      reasoningTokensToReasoningEffort(this.model, fields?.maxReasoningTokens ?? fields?.thinkingBudget);
+    let thinkingLevel = thinkingLevelRaw?.toUpperCase();
+    if (thinkingLevel === "MINIMAL") {
+      includeThoughts = false;
+    }
+    if (this.model.startsWith("gemini-3-pro")) {
+      // Gemini 3 Pro has only low and high.
+      if (thinkingLevel === "MINIMAL") {
+        thinkingLevel = "LOW";
+      } else if (thinkingLevel === "MEDIUM") {
+        thinkingLevel = "HIGH";
+      }
+    }
+
+    // If we are using a model that doesn't support thinking at all (gemini 2.5 imaging)
+    // or we haven't explicitly tried to set a thinking budget/level, then bail out.
+    const thoughtsNotSupported = this.modelVersion === "2.5" && this.modelSpecialty === "image";
+    if (thoughtsNotSupported || typeof thinkingBudget === "undefined" || typeof thinkingLevel === "undefined") {
+      return {};
+    }
+
+    // If we have gotten this far, then we want to explicitly set if we include thoughts or not.
+    const thinkingConfig: GoogleThinkingConfig = {
+      includeThoughts,
+    }
+
+    // Explicitly setting the budget/level is only valid (currently) for text models.
+    if (this.modelSpecialty === "") {
+      if (this.model.startsWith("gemini-2.5")) {
+        thinkingConfig.thinkingBudget = thinkingBudget;
+      } else {
+        thinkingConfig.thinkingLevel = thinkingLevel as GoogleThinkingLevel;
+      }
+    }
+
+    return {thinkingConfig};
+  }
+
+  speechConfig(fields: CombinableFields): {speechConfig: GoogleSpeechConfig} | {} {
+    const config : GoogleSpeechConfig | GoogleSpeechConfigSimplified | undefined = fields.speechConfig;
+    if (typeof config === "undefined") {
+      return {};
+    }
+
+    function isSpeechConfig(
+      config: GoogleSpeechConfig | GoogleSpeechConfigSimplified
+    ): config is GoogleSpeechConfig {
+      return (
+        typeof config === "object" &&
+        (Object.hasOwn(config, "voiceConfig") ||
+          Object.hasOwn(config, "multiSpeakerVoiceConfig"))
+      );
+    }
+
+    function hasLanguage(
+      config: GoogleSpeechConfigSimplified
+    ): config is GoogleSpeechSimplifiedLanguage {
+      return typeof config === "object" && Object.hasOwn(config, "languageCode");
+    }
+
+    function hasVoice(
+      config: GoogleSpeechSimplifiedLanguage
+    ): config is GoogleSpeechVoiceLanguage {
+      return Object.hasOwn(config, "voice");
+    }
+
+    // If this is already a GoogleSpeechConfig, just return it
+    if (isSpeechConfig(config)) {
+      return {speechConfig: config};
+    }
+
+    let languageCode: string | undefined;
+    let voice: GoogleSpeechVoice;
+    if (hasLanguage(config)) {
+      languageCode = config.languageCode;
+      voice = hasVoice(config) ? config.voice : config.voices;
+    } else {
+      languageCode = undefined;
+      voice = config;
+    }
+
+    let ret: GoogleSpeechConfig;
+
+    if (typeof voice === "string") {
+      // They just provided the prebuilt voice configuration name. Use it.
+      ret = {
+        voiceConfig: {
+          prebuiltVoiceConfig: {
+            voiceName: voice,
+          },
+        },
+      };
+    } else {
+      // This is multi-speaker, so we have speaker/name pairs
+      // If we have just one (why?), turn it into an array for the moment
+      const voices: GoogleSpeechSpeakerName[] = Array.isArray(voice)
+        ? voice
+        : [voice];
+      // Go through all the speaker/name pairs and turn this into the voice config array
+      const speakerVoiceConfigs: GoogleSpeakerVoiceConfig[] = voices.map(
+        (v: GoogleSpeechSpeakerName): GoogleSpeakerVoiceConfig => ({
+          speaker: v.speaker,
+          voiceConfig: {
+            prebuiltVoiceConfig: {
+              voiceName: v.name,
+            },
+          },
+        })
+      );
+      // Create the multi-speaker voice configuration
+      ret = {
+        multiSpeakerVoiceConfig: {
+          speakerVoiceConfigs,
+        },
+      };
+    }
+
+    if (languageCode) {
+      ret.languageCode = languageCode;
+    }
+
+    return {speechConfig: ret};
+  }
 
   override invocationParams(options: this["ParsedCallOptions"]) {
     const fields = combineGoogleChatModelFields(this.params, options);
@@ -156,8 +610,8 @@ export abstract class BaseChatGoogle<
         ...(fields.enableEnhancedCivicAnswers !== undefined
           ? { enableEnhancedCivicAnswers: fields.enableEnhancedCivicAnswers }
           : {}),
-        thinkingConfig: fields.thinkingConfig,
-        ...(fields.speechConfig ? { speechConfig: fields.speechConfig } : {}),
+        ...this.thinkingConfig(fields),
+        ...this.speechConfig(fields),
         ...(fields.imageConfig ? { imageConfig: fields.imageConfig } : {}),
         ...(fields.mediaResolution
           ? { mediaResolution: fields.mediaResolution }
@@ -168,28 +622,44 @@ export abstract class BaseChatGoogle<
 
   async _generate(
     messages: BaseMessage[],
-    options: this["ParsedCallOptions"]
+    options: this["ParsedCallOptions"],
+    runManager?: CallbackManagerForLLMRun
   ): Promise<ChatResult> {
     if (this.streaming) {
-      const stream = await this._streamResponseChunks(messages, options);
+      const stream = await this._streamResponseChunks(messages, options, runManager);
       let finalChunk: ChatGenerationChunk | null = null;
       for await (const chunk of stream) {
         finalChunk = !finalChunk ? chunk : concat(finalChunk, chunk);
+      }
+      if (
+        typeof finalChunk?.message?.content === "string" &&
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        typeof (finalChunk?.message?.additional_kwargs?.originalTextContentBlock as any)?.text === "string"
+      ){
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (finalChunk.message.additional_kwargs.originalTextContentBlock as any).text = finalChunk.message.content
       }
       return {
         generations: finalChunk ? [finalChunk] : [],
       };
     }
 
+    const url = await this.buildUrl();
     const body: GenerateContentRequest = {
       ...this.invocationParams(options),
       systemInstruction: convertMessagesToGeminiSystemInstruction(messages),
       contents: convertMessagesToGeminiContents(messages),
     };
 
+    const moduleName = this.constructor.name;
+    await runManager?.handleCustomEvent(`google-request-${moduleName}`, {
+      url,
+      body,
+    });
+
     const response = await this.apiClient.fetch(
       new Request(
-        new URL(`./${this.model}:generateContent`, this.getBaseUrl()),
+        url,
         {
           method: "POST",
           headers: {
@@ -200,8 +670,22 @@ export abstract class BaseChatGoogle<
       )
     );
 
-    if (!response.ok) throw await RequestError.fromResponse(response);
+    if (!response.ok) {
+      const error = await RequestError.fromResponse(response);
+      await runManager?.handleCustomEvent(`google-response-${moduleName}`, {
+        error,
+      })
+      throw error;
+    }
+
     const data: GenerateContentResponse = await response.json();
+    await runManager?.handleCustomEvent(`google-response-${moduleName}`, {
+      data,
+      url: response.url,
+      headers: response.headers,
+      status: response.status,
+      statusText: response.statusText,
+    })
 
     // Check for prompt feedback errors
     if (data.promptFeedback?.blockReason) {
@@ -218,43 +702,10 @@ export abstract class BaseChatGoogle<
     const message = convertGeminiCandidateToAIMessage(candidate);
 
     // Extract text content from the message
-    const text =
-      typeof message.content === "string"
-        ? message.content
-        : Array.isArray(message.content)
-        ? message.content
-            .filter(
-              (c) =>
-                typeof c === "string" ||
-                (c as { type?: string }).type === "text"
-            )
-            .map((c) =>
-              typeof c === "string" ? c : (c as { text?: string }).text || ""
-            )
-            .join("")
-        : "";
+    const text = convertAIMessageToText(message);
 
-    // FIXME: this should just be hoisted to its own function
-    const inputTokenCount = data.usageMetadata?.promptTokenCount ?? 0;
-    const candidatesTokenCount = data.usageMetadata?.candidatesTokenCount ?? 0;
-    const thoughtsTokenCount = data.usageMetadata?.thoughtsTokenCount ?? 0;
-    const outputTokenCount = candidatesTokenCount + thoughtsTokenCount;
-    const totalTokens =
-      data.usageMetadata?.totalTokenCount ?? inputTokenCount + outputTokenCount;
-
-    const usageMetadata: UsageMetadata = {
-      input_tokens: inputTokenCount,
-      output_tokens: outputTokenCount,
-      total_tokens: totalTokens,
-      input_token_details: {
-        // FIXME: include modality details
-        cache_read: data.usageMetadata?.cachedContentTokenCount ?? 0,
-      },
-      output_token_details: {
-        // FIXME: include modality details
-        reasoning: thoughtsTokenCount,
-      },
-    };
+    const usageMetadata = convertGeminiGenerateContentResponseToUsageMetadata(data);
+    message.usage_metadata = usageMetadata;
 
     return {
       generations: [
@@ -284,18 +735,24 @@ export abstract class BaseChatGoogle<
     options: this["ParsedCallOptions"],
     runManager?: CallbackManagerForLLMRun
   ): AsyncGenerator<ChatGenerationChunk> {
+    const streamUsage: boolean = this.streamUsage ?? true;
+
     const body: GenerateContentRequest = {
       ...this.invocationParams(options),
       systemInstruction: convertMessagesToGeminiSystemInstruction(messages),
       contents: convertMessagesToGeminiContents(messages),
     };
 
+    const url = await this.buildUrl("streamGenerateContent?alt=sse");
+    const moduleName = this.constructor.name;
+    await runManager?.handleCustomEvent(`google-request-${moduleName}`, {
+      url,
+      body,
+    });
+
     const response = await this.apiClient.fetch(
       new Request(
-        new URL(
-          `./${this.model}:generateContentStream?alt=sse`,
-          this.getBaseUrl()
-        ),
+        url,
         {
           method: "POST",
           headers: {
@@ -307,7 +764,20 @@ export abstract class BaseChatGoogle<
       )
     );
 
-    if (!response.ok) throw await RequestError.fromResponse(response);
+    await runManager?.handleCustomEvent(`google-response-${moduleName}`, {
+      url: response.url,
+      headers: response.headers,
+      status: response.status,
+      statusText: response.statusText,
+    })
+
+    if (!response.ok) {
+      const error = await RequestError.fromResponse(response);
+      await runManager?.handleCustomEvent(`google-response-${moduleName}`, {
+        error,
+      })
+      throw error;
+    }
 
     if (response.body) {
       const stream = response.body
@@ -317,6 +787,13 @@ export abstract class BaseChatGoogle<
         .pipeThrough(
           new TransformStream<GenerateContentResponse, ChatGenerationChunk>({
             transform(chunk, controller) {
+              // eslint-disable-next-line no-void
+              void runManager?.handleCustomEvent(
+                `google-chunk-${moduleName}`,
+                {
+                  chunk,
+                }
+              )
               if (chunk === null) {
                 controller.enqueue(
                   new ChatGenerationChunk({
@@ -334,32 +811,42 @@ export abstract class BaseChatGoogle<
                 return;
               }
 
-              const parts = candidate.content?.parts || [];
-              const textDeltas: string[] = [];
+              const message = convertGeminiCandidateToAIMessage(candidate);
+              const text = convertAIMessageToText(message);
 
-              for (const part of parts) {
-                if (part.text) {
-                  textDeltas.push(part.text);
-                }
-              }
-
-              const textDelta = textDeltas.join("");
+              const parts = candidate.content?.parts ?? [];
+              const toolCalls = convertGeminiPartsToToolCalls(parts);
 
               // Only emit if we have content
-              if (textDelta || candidate.finishReason) {
-                const messageChunk = new AIMessageChunk({
-                  content: textDelta,
-                  ...(candidate.finishReason && {
-                    additional_kwargs: {
-                      finishReason: candidate.finishReason,
-                      finishMessage: candidate.finishMessage,
-                    },
-                  }),
-                });
+              if (parts.length > 0 || candidate.finishReason) {
+
+                const messageChunkParams: AIMessageChunkFields = {
+                  content: message.content,
+                  tool_calls: toolCalls,
+                  response_metadata: {
+                    model_provider: "google",
+                  }
+                };
+
+                // Include the finish reason, if available
+                if (candidate.finishReason) {
+                  messageChunkParams.additional_kwargs = {
+                    finishReason: candidate.finishReason,
+                    finishMessage: candidate.finishMessage,
+                    originalTextContentBlock: message.additional_kwargs.originalTextContentBlock,
+                  }
+                }
+
+                // Include usageMetadata if there is any and we have
+                // enabled it with streamUsage on
+                if (chunk?.usageMetadata && streamUsage) {
+                  messageChunkParams.usage_metadata = convertGeminiGenerateContentResponseToUsageMetadata(chunk);
+                }
+                const messageChunk = new AIMessageChunk(messageChunkParams);
 
                 controller.enqueue(
                   new ChatGenerationChunk({
-                    text: textDelta,
+                    text: text,
                     message: messageChunk,
                     generationInfo: {
                       ...(candidate.finishReason && {
@@ -454,7 +941,7 @@ export abstract class BaseChatGoogle<
 
     if (method === "jsonMode") {
       console.warn(
-        `"jsonMode" is not supported for Anthropic models. Falling back to "jsonSchema".`
+        `"jsonMode" is not supported for Google models. Falling back to "jsonSchema".`
       );
       method = "jsonSchema";
     }
@@ -591,12 +1078,14 @@ export abstract class BaseChatGoogle<
   }
 }
 
+type CombinableFields = Omit<BaseChatGoogleParams, "model">;
+
 export function combineGoogleChatModelFields(
-  a: ChatGoogleFields,
-  b: ChatGoogleFields,
-  ...rest: ChatGoogleFields[]
-): ChatGoogleFields {
-  const combined: ChatGoogleFields = {
+  a: CombinableFields,
+  b: CombinableFields,
+  ...rest: CombinableFields[]
+): CombinableFields {
+  const combined: CombinableFields = {
     temperature: b.temperature ?? a.temperature,
     topP: b.topP ?? a.topP,
     topK: b.topK ?? a.topK,
@@ -608,7 +1097,6 @@ export function combineGoogleChatModelFields(
     responseLogprobs: b.responseLogprobs ?? a.responseLogprobs,
     logprobs: b.logprobs ?? a.logprobs,
     safetySettings: b.safetySettings ?? a.safetySettings,
-    thinkingConfig: b.thinkingConfig ?? a.thinkingConfig,
     responseSchema: b.responseSchema ?? a.responseSchema,
     tools: b.tools ?? a.tools,
     responseModalities: b.responseModalities ?? a.responseModalities,
@@ -617,6 +1105,10 @@ export function combineGoogleChatModelFields(
     speechConfig: b.speechConfig ?? a.speechConfig,
     imageConfig: b.imageConfig ?? a.imageConfig,
     mediaResolution: b.mediaResolution ?? a.mediaResolution,
+    maxReasoningTokens: b.maxReasoningTokens ?? a.maxReasoningTokens,
+    thinkingBudget: b.thinkingBudget ?? a.thinkingBudget,
+    reasoningEffort: b.reasoningEffort ?? a.reasoningEffort,
+    thinkingLevel: b.thinkingLevel ?? a.thinkingLevel,
   };
   if (rest.length > 0) {
     return combineGoogleChatModelFields(combined, rest[0], ...rest.slice(1));

@@ -144,6 +144,21 @@ export interface NodeApiClientParams {
  * @see {@link GoogleAuthOptions} for advanced authentication configuration
  */
 export class NodeApiClient extends ApiClient {
+
+  hasApiKey(): boolean {
+    return typeof this.apiKey === "string" && this.apiKey !== "";
+  }
+
+  async getProjectId(): Promise<string> {
+    if (typeof this.credentials !== "undefined") {
+      return this.credentials.project_id;
+    } else if (typeof this.googleAuth !== "undefined") {
+      return this.googleAuth.getProjectId();
+    } else {
+      return super.getProjectId();
+    }
+  }
+
   /**
    * The Google API key used for authentication, if provided.
    *
