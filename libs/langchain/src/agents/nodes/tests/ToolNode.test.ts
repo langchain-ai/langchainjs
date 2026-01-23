@@ -985,4 +985,128 @@ describe("ToolNode error handling", () => {
       );
     });
   }
+
+  //joel
+
+  it("should handle missing tool name with default error handler", async () => {
+    const getWeatherTool = tool(
+      ({ location }) => `Weather in ${location}: sunny`,
+      {
+        name: "get_weather",
+        description: "Get weather for a location",
+        schema: z.object({
+          location: z.string(),
+        }),
+      }
+    );
+
+    const toolNode = new ToolNode([getWeatherTool]);
+
+    const messageWithInvalidTool = new AIMessage({
+      content: "",
+      tool_calls: [
+        {
+          name: "nonexistent_tool",
+          args: { foo: "bar" },
+          id: "call_123",
+          type: "tool_call",
+        },
+      ],
+    });
+
+    const result = await toolNode.invoke({
+      messages: [messageWithInvalidTool],
+    });
+
+    expect(result.messages).toHaveLength(1);
+    expect(result.messages[0]).toBeInstanceOf(ToolMessage);
+
+    const toolMessage = result.messages[0] as ToolMessage;
+    expect(toolMessage.content).toContain('Tool "nonexistent_tool" not found');
+    expect(toolMessage.content).toContain("Please fix your mistakes");
+    expect(toolMessage.tool_call_id).toBe("call_123");
+    expect(toolMessage.name).toBe("nonexistent_tool");
+  });
+
+  it("should throw error for missing tool when handleToolErrors is false", async () => {
+    const getWeatherTool = tool(
+      ({ location }) => `Weather in ${location}: sunny`,
+      {
+        name: "get_weather",
+        description: "Get weather for a location",
+        schema: z.object({
+          location: z.string(),
+        }),
+      }
+    );
+
+    const toolNode = new ToolNode([getWeatherTool], {
+      handleToolErrors: false,
+    });
+
+    const messageWithInvalidTool = new AIMessage({
+      content: "",
+      tool_calls: [
+        {
+          name: "nonexistent_tool",
+          args: { foo: "bar" },
+          id: "call_789",
+          type: "tool_call",
+        },
+      ],
+    });
+
+    await expect(
+      toolNode.invoke({
+        messages: [messageWithInvalidTool],
+      })
+    ).rejects.toThrow('Tool "nonexistent_tool" not found');
+  });
+
+  it("should handle missing tool with custom error handler", async () => {
+    const getWeatherTool = tool(
+      ({ location }) => `Weather in ${location}: sunny`,
+      {
+        name: "get_weather",
+        description: "Get weather for a location",
+        schema: z.object({
+          location: z.string(),
+        }),
+      }
+    );
+
+    const customErrorHandler = (error: unknown, toolCall: any) => {
+      return new ToolMessage({
+        content: `Custom error: ${error}`,
+        tool_call_id: toolCall.id!,
+        name: toolCall.name,
+      });
+    };
+
+    const toolNode = new ToolNode([getWeatherTool], {
+      handleToolErrors: customErrorHandler,
+    });
+
+    const messageWithInvalidTool = new AIMessage({
+      content: "",
+      tool_calls: [
+        {
+          name: "missing_tool",
+          args: { x: "y" },
+          id: "call_custom",
+          type: "tool_call",
+        },
+      ],
+    });
+
+    const result = await toolNode.invoke({
+      messages: [messageWithInvalidTool],
+    });
+
+    expect(result.messages).toHaveLength(1);
+    const toolMessage = result.messages[0] as ToolMessage;
+    expect(toolMessage.content).toContain("Custom error:");
+    expect(toolMessage.content).toContain('Tool "missing_tool" not found');
+    expect(toolMessage.tool_call_id).toBe("call_custom");
+  });
 });
