@@ -81,7 +81,7 @@
     "@mendable/firecrawl-js": "^1.4.3",
     "@mlc-ai/web-llm": ">=0.2.62 <0.3.0",
     "@mozilla/readability": "^0.6.0",
-    "@neondatabase/serverless": "^0.9.1",
+    "@neondatabase/serverless": "^1.0.0",
     "@notionhq/client": "^2.2.10",
     "@opensearch-project/opensearch": "^2.2.0",
     "@planetscale/database": "^1.8.0",
