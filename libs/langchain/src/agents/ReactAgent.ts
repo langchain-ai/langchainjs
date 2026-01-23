@@ -224,14 +224,11 @@ export class ReactAgent<
       this.options.middleware as Types["Middleware"]
     );
 
-    const workflow = new StateGraph(
-      {
-        state,
-        input,
-        output,
-      },
-      this.options.contextSchema
-    );
+    const workflow = new StateGraph(state, {
+      input,
+      output,
+      context: this.options.contextSchema,
+    });
 
     const allNodeWorkflows = workflow as WithStateGraphNodes<
       typeof TOOLS_NODE_NAME | typeof AGENT_NODE_NAME | string,
