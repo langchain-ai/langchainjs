@@ -890,7 +890,7 @@ describe("ContentBlock.Multimodal.Image format support", () => {
 
     expect(formattedMessages.messages[0].content).toHaveLength(2);
     const [imageBlock, textBlock] = formattedMessages.messages[0].content;
-    
+
     expect(imageBlock).toEqual({
       type: "image",
       source: {
@@ -905,8 +905,9 @@ describe("ContentBlock.Multimodal.Image format support", () => {
   });
 
   test("handles new image format with base64 data", () => {
-    const base64Data = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=";
-    
+    const base64Data =
+      "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=";
+
     const messageHistory = [
       new HumanMessage({
         contentBlocks: [
@@ -925,7 +926,7 @@ describe("ContentBlock.Multimodal.Image format support", () => {
 
     expect(formattedMessages.messages[0].content).toHaveLength(2);
     const [imageBlock, textBlock] = formattedMessages.messages[0].content;
-    
+
     expect(imageBlock).toEqual({
       type: "image",
       source: {

@@ -201,7 +201,7 @@ function* _formatContentBlocks(
     } else if (contentPart.type === "image") {
       // Handle new ContentBlock.Multimodal.Image format
       let source;
-      
+
       if ("url" in contentPart && typeof contentPart.url === "string") {
         // URL-based image
         source = _formatImage(contentPart.url);
@@ -232,7 +232,7 @@ function* _formatContentBlocks(
         "fileId" in contentPart &&
         typeof contentPart.fileId === "string"
       ) {
-        // File ID-based image 
+        // File ID-based image
         // Note: Anthropic supports file IDs for images that have been uploaded
         // to their servers via the Files API
         source = {
