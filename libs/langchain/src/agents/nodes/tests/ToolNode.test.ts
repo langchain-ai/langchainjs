@@ -986,8 +986,6 @@ describe("ToolNode error handling", () => {
     });
   }
 
-  //joel
-
   it("should handle missing tool name with default error handler", async () => {
     const getWeatherTool = tool(
       ({ location }) => `Weather in ${location}: sunny`,
