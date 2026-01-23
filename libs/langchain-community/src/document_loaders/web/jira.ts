@@ -143,7 +143,10 @@ export type JiraIssue = {
   };
 };
 
-export type JiraDescriptionFormatter = (content: any, issue?: JiraIssue) => any;
+export type JiraDescriptionFormatter = (
+  content: ADFNode | null | undefined,
+  issue?: JiraIssue
+) => string | ADFNode | null;
 
 export type JiraAPIResponse = {
   expand: string;
@@ -157,7 +160,7 @@ export interface ADFNode {
   type: string;
   text?: string;
   content?: ADFNode[];
-  attrs?: Record<string, any>;
+  attrs?: Record<string, unknown>;
 }
 
 export interface ADFDocument extends ADFNode {
@@ -175,6 +178,38 @@ export function adfToText(adf: ADFNode | null | undefined): string {
   };
   return recur(adf).trim();
 }
+
+export const formatJiraDescriptionAsJSON: JiraDescriptionFormatter = (
+  adfContent: ADFNode | null | undefined
+): ADFNode | null => {
+  if (!adfContent) return null;
+
+  const traverseNode = (node: ADFNode): ADFNode => {
+    if (typeof node === "string") return { type: "text", text: node };
+
+    const result: ADFNode = { type: node.type || "unknown" };
+    if (node.text) result.text = node.text;
+    if (node.attrs) result.attrs = node.attrs;
+    if (node.content) result.content = node.content.map(traverseNode);
+    return result;
+  };
+
+  return traverseNode(adfContent);
+};
+
+export const formatJiraDescriptionAsText: JiraDescriptionFormatter = (
+  adfContent: ADFNode | null | undefined
+): string => {
+  if (!adfContent) return "";
+
+  const traverseNode = (node: ADFNode): string => {
+    if (node.text) return node.text;
+    if (node.content) return node.content.map(traverseNode).join("");
+    return "";
+  };
+
+  return traverseNode(adfContent).trim();
+};
 
 /**
  * Interface representing the parameters for configuring the
@@ -361,10 +396,6 @@ export interface JiraProjectLoaderParams {
   descriptionFormatter?: JiraDescriptionFormatter;
 }
 
-const API_ENDPOINTS = {
-  SEARCH: "/rest/api/3/search/jql",
-};
-
 /**
  * Class representing a document loader for loading pages from Confluence.
  */
@@ -512,35 +543,3 @@ export class JiraProjectLoader extends BaseDocumentLoader {
     }
   }
 }
-
-export const formatJiraDescriptionAsJSON: JiraDescriptionFormatter = (
-  adfContent: ADFNode | null | undefined
-): any => {
-  if (!adfContent) return null;
-
-  const traverseNode = (node: ADFNode): any => {
-    if (typeof node === "string") return { type: "text", text: node };
-
-    const result: any = { type: node.type || "unknown" };
-    if (node.text) result.text = node.text;
-    if (node.attrs) result.attrs = node.attrs;
-    if (node.content) result.content = node.content.map(traverseNode);
-    return result;
-  };
-
-  return traverseNode(adfContent);
-};
-
-export const formatJiraDescriptionAsText: JiraDescriptionFormatter = (
-  adfContent: ADFNode | null | undefined
-): string => {
-  if (!adfContent) return "";
-
-  const traverseNode = (node: ADFNode): string => {
-    if (node.text) return node.text;
-    if (node.content) return node.content.map(traverseNode).join("");
-    return "";
-  };
-
-  return traverseNode(adfContent).trim();
-};

@@ -117,28 +117,34 @@ describe("JiraProjectLoader Integration Tests", () => {
     TIMEOUT_MS
   );
 
-  test("should apply filterFn to issues", async () => {
-    // Filter function: only include issues whose summary includes "Bug"
-    const filterFn = (issue: JiraIssue) =>
-      issue.fields.summary.toLowerCase().includes("bug");
+  test(
+    "should apply filterFn to issues",
+    async () => {
+      // Filter function: only include issues whose summary includes "Bug"
+      const filterFn = (issue: JiraIssue) =>
+        issue.fields.summary.toLowerCase().includes("bug");
 
-    const loader = new JiraProjectLoader({
-      ...jiraConf,
-      filterFn,
-    });
+      const loader = new JiraProjectLoader({
+        ...jiraConf,
+        filterFn,
+      });
 
-    const docs = await loader.load();
+      const docs = await loader.load();
 
-    // Skip if no issues match (project may not have any "Bug" issues)
-    if (docs.length === 0) return;
+      // Skip if no issues match (project may not have any "Bug" issues)
+      if (docs.length === 0) return;
 
-    // Ensure all returned issues pass the filterFn
-    docs.forEach((doc) => {
-      const line = doc.pageContent.split("\n").find((l) => /^Issue: /.test(l));
-      expect(line).toBeDefined();
-      expect(line!.toLowerCase()).toContain("bug");
-    });
-  }, 30000);
+      // Ensure all returned issues pass the filterFn
+      docs.forEach((doc) => {
+        const line = doc.pageContent
+          .split("\n")
+          .find((l) => /^Issue: /.test(l));
+        expect(line).toBeDefined();
+        expect(line!.toLowerCase()).toContain("bug");
+      });
+    },
+    TIMEOUT_MS
+  );
 
   test("should handle invalid credentials", async () => {
     const loader = new JiraProjectLoader({
