@@ -15,6 +15,7 @@ import {
   Send,
   isGraphInterrupt,
   type LangGraphRunnableConfig,
+  StateDefinitionInit,
 } from "@langchain/langgraph";
 
 import { RunnableCallable } from "../RunnableCallable.js";
@@ -97,7 +98,9 @@ const isMessagesState = (
   "messages" in input &&
   isBaseMessageArray(input.messages);
 
-const isSendInput = (input: unknown): input is { lg_tool_call: ToolCall } =>
+const isSendInput = (
+  input: unknown
+): input is { lg_tool_call: ToolCall; jumpTo?: string } =>
   typeof input === "object" && input != null && "lg_tool_call" in input;
 
 /**
@@ -176,7 +179,7 @@ function defaultHandleToolErrors(
  * ```
  */
 export class ToolNode<
-  StateSchema extends InteropZodObject = any,
+  StateSchema extends StateDefinitionInit = any,
   ContextSchema extends InteropZodObject = any,
 > extends RunnableCallable<StateSchema, ContextSchema> {
   tools: (StructuredToolInterface | DynamicTool | RunnableToolLike)[];
@@ -203,7 +206,7 @@ export class ToolNode<
       tags,
       func: (state, config) =>
         this.run(
-          state as ToAnnotationRoot<StateSchema>["State"] & AgentBuiltInState,
+          state as any as ToAnnotationRoot<StateDefinitionInit>["State"] & AgentBuiltInState,
           config as RunnableConfig
         ),
     });

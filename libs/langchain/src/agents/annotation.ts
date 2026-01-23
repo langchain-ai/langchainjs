@@ -21,7 +21,7 @@ import {
  */
 type JumpToTarget = "model_request" | "tools" | "end" | undefined;
 
-export function createAgentAnnotationConditional<
+export function createAgentState<
   TStateSchema extends
   StateDefinitionInit | undefined = undefined,
   TMiddleware extends readonly AgentMiddleware<any, any, any>[] = [],
@@ -30,9 +30,6 @@ export function createAgentAnnotationConditional<
   stateSchema: TStateSchema,
   middlewareList: TMiddleware = [] as unknown as TMiddleware
 ) {
-  const isStateSchema = (schema: unknown): schema is StateSchema<any> =>
-    StateSchema.isInstance(schema);
-
   /**
    * Collect fields from state schemas
    */
@@ -116,12 +113,8 @@ export function createAgentAnnotationConditional<
    * Add state schema properties from user-provided schema.
    * Supports both StateSchema and Zod v3/v4 objects.
    */
-  if (stateSchema) {
-    if (isStateSchema(stateSchema)) {
-      applySchema(stateSchema);
-    } else if (isInteropZodObject(stateSchema)) {
-      applySchema(stateSchema);
-    }
+  if (stateSchema && (StateSchema.isInstance(stateSchema) || isInteropZodObject(stateSchema))) {
+    applySchema(stateSchema);
   }
 
   /**
@@ -129,12 +122,8 @@ export function createAgentAnnotationConditional<
    * Supports both StateSchema and Zod v3/v4 objects.
    */
   for (const middleware of middlewareList) {
-    if (middleware.stateSchema) {
-      if (isStateSchema(middleware.stateSchema)) {
-        applySchema(middleware.stateSchema);
-      } else if (isInteropZodObject(middleware.stateSchema)) {
-        applySchema(middleware.stateSchema as InteropZodObject);
-      }
+    if (middleware.stateSchema && (StateSchema.isInstance(middleware.stateSchema) || isInteropZodObject(middleware.stateSchema))) {
+      applySchema(middleware.stateSchema);
     }
   }
 

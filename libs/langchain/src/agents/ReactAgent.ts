@@ -25,7 +25,7 @@ import { IterableReadableStream } from "@langchain/core/utils/stream";
 import type { Runnable, RunnableConfig } from "@langchain/core/runnables";
 import type { StreamEvent } from "@langchain/core/tracers/log_stream";
 import type { ClientTool, ServerTool } from "@langchain/core/tools";
-import { createAgentAnnotationConditional } from "./annotation.js";
+import { createAgentState } from "./annotation.js";
 import {
   isClientTool,
   validateLLMHasNoBoundTools,
@@ -215,7 +215,7 @@ export class ReactAgent<
      * Create a schema that merges agent base schema with middleware state schemas
      * Using Zod with withLangGraph ensures LangGraph Studio gets proper metadata
      */
-    const { state, input, output } = createAgentAnnotationConditional<
+    const { state, input, output } = createAgentState<
       Types["State"],
       Types["Middleware"]
     >(
