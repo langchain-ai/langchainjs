@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import { StructuredTool, tool } from "@langchain/core/tools";
+import type { ToolCall } from "@langchain/core/messages/tool";
 
 import {
   AIMessage,
@@ -1073,7 +1074,7 @@ describe("ToolNode error handling", () => {
       }
     );
 
-    const customErrorHandler = (error: unknown, toolCall: any) => {
+    const customErrorHandler = (error: unknown, toolCall: ToolCall) => {
       return new ToolMessage({
         content: `Custom error: ${error}`,
         tool_call_id: toolCall.id!,
