@@ -119,8 +119,24 @@ export interface ToolCallRequest<
   /**
    * The BaseTool instance being invoked.
    * Provides access to tool metadata like name, description, schema, etc.
+   *
+   * This will be `undefined` for dynamically registered tools that aren't
+   * declared upfront when creating the agent. In such cases, middleware
+   * should provide the tool implementation by spreading the request with
+   * the tool property.
+   *
+   * @example Dynamic tool handling
+   * ```ts
+   * wrapToolCall: async (request, handler) => {
+   *   if (request.toolCall.name === "dynamic_tool" && !request.tool) {
+   *     // Provide the tool implementation for dynamically registered tools
+   *     return handler({ ...request, tool: myDynamicTool });
+   *   }
+   *   return handler(request);
+   * }
+   * ```
    */
-  tool: ClientTool | ServerTool;
+  tool: ClientTool | ServerTool | undefined;
   /**
    * The current agent state (includes both middleware state and built-in state).
    */
