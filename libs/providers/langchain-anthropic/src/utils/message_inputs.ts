@@ -197,7 +197,58 @@ function* _formatContentBlocks(
         } as Anthropic.Messages.ImageBlockParam;
       }
     } else if (_isAnthropicImageBlockParam(contentPart)) {
-      return contentPart;
+      yield contentPart;
+    } else if (contentPart.type === "image") {
+      // Handle new ContentBlock.Multimodal.Image format
+      let source;
+
+      if ("url" in contentPart && typeof contentPart.url === "string") {
+        // URL-based image
+        source = _formatImage(contentPart.url);
+      } else if (
+        "data" in contentPart &&
+        (typeof contentPart.data === "string" ||
+          // eslint-disable-next-line no-instanceof/no-instanceof
+          contentPart.data instanceof Uint8Array)
+      ) {
+        // Base64-based image
+        const mimeType =
+          "mimeType" in contentPart && typeof contentPart.mimeType === "string"
+            ? contentPart.mimeType
+            : "image/jpeg";
+        const data =
+          typeof contentPart.data === "string"
+            ? contentPart.data
+            : Buffer.from(contentPart.data).toString("base64");
+        source = {
+          type: "base64" as const,
+          media_type: mimeType as
+            | "image/jpeg"
+            | "image/png"
+            | "image/gif"
+            | "image/webp",
+          data,
+        };
+      } else if (
+        "fileId" in contentPart &&
+        typeof contentPart.fileId === "string"
+      ) {
+        // File ID-based image
+        // Note: Anthropic supports file IDs for images that have been uploaded
+        // to their servers via the Files API
+        source = {
+          type: "file" as const,
+          file_id: contentPart.fileId,
+        };
+      }
+
+      if (source) {
+        yield {
+          type: "image" as const,
+          source,
+          ...(cacheControl ? { cache_control: cacheControl } : {}),
+        } as Anthropic.Messages.ImageBlockParam;
+      }
     } else if (contentPart.type === "document") {
       // PDF
       yield {
@@ -430,6 +481,80 @@ export function _convertMessagesToAnthropicPayload(
     ),
     system,
   } as AnthropicMessageCreateParams;
+}
+
+/**
+ * Cache control configuration for Anthropic prompt caching.
+ */
+interface CacheControl {
+  type: "ephemeral";
+  ttl?: "5m" | "1h";
+}
+
+/**
+ * Applies cache_control to the last content block of the last message in the payload.
+ * This is the recommended approach for prompt caching as it applies the cache_control
+ * at the final formatting layer, after all message processing is complete.
+ *
+ * This matches the Python langchain-anthropic implementation where cache_control
+ * is applied via model_settings rather than modifying message content blocks directly.
+ *
+ * @param payload - The formatted Anthropic message payload
+ * @param cacheControl - The cache control configuration to apply
+ * @returns The payload with cache_control applied to the last content block
+ */
+export function applyCacheControlToPayload(
+  payload: AnthropicMessageCreateParams,
+  cacheControl: CacheControl
+): AnthropicMessageCreateParams {
+  if (!payload.messages || payload.messages.length === 0) {
+    return payload;
+  }
+
+  const messages = [...payload.messages];
+  const lastMessageIndex = messages.length - 1;
+  const lastMessage = messages[lastMessageIndex];
+
+  if (!lastMessage) {
+    return payload;
+  }
+
+  // Handle string content - convert to text block with cache_control
+  if (typeof lastMessage.content === "string") {
+    messages[lastMessageIndex] = {
+      ...lastMessage,
+      content: [
+        {
+          type: "text",
+          text: lastMessage.content,
+          cache_control: cacheControl,
+        },
+      ],
+    };
+    return { ...payload, messages };
+  }
+
+  // Handle array content - add cache_control to the last block
+  if (Array.isArray(lastMessage.content) && lastMessage.content.length > 0) {
+    const content = [...lastMessage.content];
+    const lastBlockIndex = content.length - 1;
+    const lastBlock = content[lastBlockIndex];
+
+    // Add cache_control to the last block
+    content[lastBlockIndex] = {
+      ...lastBlock,
+      cache_control: cacheControl,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } as any;
+
+    messages[lastMessageIndex] = {
+      ...lastMessage,
+      content,
+    };
+    return { ...payload, messages };
+  }
+
+  return payload;
 }
 
 function mergeMessages(messages: AnthropicMessageCreateParams["messages"]) {
