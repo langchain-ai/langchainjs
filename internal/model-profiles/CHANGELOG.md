@@ -1,5 +1,12 @@
 # @langchain/model-profiles
 
+## 0.0.7
+
+### Patch Changes
+
+- Updated dependencies [[`05a9733`](https://github.com/langchain-ai/langchainjs/commit/05a9733448a10764c0bfd070af859c33e623b998)]:
+  - @langchain/core@1.1.17
+
 ## 0.0.6
 
 ### Patch Changes

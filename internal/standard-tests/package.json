@@ -1,6 +1,6 @@
 {
   "name": "@langchain/standard-tests",
-  "version": "0.0.19",
+  "version": "0.0.20",
   "description": "Standard tests for LangChain.js",
   "author": "LangChain",
   "license": "MIT",
