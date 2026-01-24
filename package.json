@@ -56,8 +56,7 @@
     "overrides": {
       "@langchain/core": "workspace:*",
       "protobufjs": "^7.2.5",
-      "rolldown": "1.0.0-beta.30",
-      "zod": "4.2"
+      "rolldown": "1.0.0-beta.30"
     }
   },
   "lint-staged": {
