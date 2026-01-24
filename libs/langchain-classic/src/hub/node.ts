@@ -41,7 +41,7 @@ function isRunnableBinding(a: string[]): boolean {
  * @param idArray The full id array from the manifest
  * @returns The inferred modelProvider key or undefined
  */
-function inferModelProviderFromNamespace(
+export function inferModelProviderFromNamespace(
   idArray: string[]
 ): string | undefined {
   if (!Array.isArray(idArray) || idArray.length < 2) {
