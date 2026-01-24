@@ -185,9 +185,7 @@ export abstract class MiddlewareNode<
 
   get nodeOptions() {
     return {
-      input: derivePrivateState(
-        this.middleware.stateSchema
-      )
+      input: derivePrivateState(this.middleware.stateSchema),
     };
   }
 }
