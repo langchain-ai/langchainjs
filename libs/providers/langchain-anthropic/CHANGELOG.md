@@ -1,5 +1,18 @@
 # @langchain/anthropic
 
+## 1.3.12
+
+### Patch Changes
+
+- [#9854](https://github.com/langchain-ai/langchainjs/pull/9854) [`160b5bf`](https://github.com/langchain-ai/langchainjs/commit/160b5bfe49f31190d28ec10a95075ef845c49fa3) Thanks [@christian-bromann](https://github.com/christian-bromann)! - fix(anthropic): apply cache_control at final formatting layer
+
+- [#9852](https://github.com/langchain-ai/langchainjs/pull/9852) [`35c7723`](https://github.com/langchain-ai/langchainjs/commit/35c7723b9953cc417cedb362e697632936d50820) Thanks [@marvikomo](https://github.com/marvikomo)! - Fix image content blocks being silently dropped when using ContentBlock.Multimodal.Image format with url, data, or fileId properties
+
+- [#9841](https://github.com/langchain-ai/langchainjs/pull/9841) [`54dfdce`](https://github.com/langchain-ai/langchainjs/commit/54dfdce99b1d1c16e1024c136ca86e7d78d76d80) Thanks [@yukukotani](https://github.com/yukukotani)! - Fix input_tokens calculation in usage metadata
+
+- Updated dependencies [[`05a9733`](https://github.com/langchain-ai/langchainjs/commit/05a9733448a10764c0bfd070af859c33e623b998)]:
+  - @langchain/core@1.1.17
+
 ## 1.3.11
 
 ### Patch Changes

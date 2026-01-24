@@ -1,5 +1,14 @@
 # @langchain/deepseek
 
+## 1.0.7
+
+### Patch Changes
+
+- [#9726](https://github.com/langchain-ai/langchainjs/pull/9726) [`1877454`](https://github.com/langchain-ai/langchainjs/commit/1877454e6a501eba7bf36fc088335eaea149c8ce) Thanks [@murataslan1](https://github.com/murataslan1)! - fix(deepseek): parse <think> tags in content stream
+
+- Updated dependencies []:
+  - @langchain/openai@1.2.3
+
 ## 1.0.6
 
 ### Patch Changes

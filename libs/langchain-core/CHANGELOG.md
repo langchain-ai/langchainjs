@@ -1,5 +1,11 @@
 # @langchain/core
 
+## 1.1.17
+
+### Patch Changes
+
+- [#9842](https://github.com/langchain-ai/langchainjs/pull/9842) [`05a9733`](https://github.com/langchain-ai/langchainjs/commit/05a9733448a10764c0bfd070af859c33e623b998) Thanks [@encodedz](https://github.com/encodedz)! - Adding `on_tool_error` event into EventStreamCallbackHandler
+
 ## 1.1.16
 
 ### Patch Changes
