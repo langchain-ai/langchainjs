@@ -1,5 +1,11 @@
 # @langchain/aws
 
+## 1.2.1
+
+### Patch Changes
+
+- [#9828](https://github.com/langchain-ai/langchainjs/pull/9828) [`85f16ac`](https://github.com/langchain-ai/langchainjs/commit/85f16ace27e1af568be2e779de966f63f8791602) Thanks [@Oscar-Umana](https://github.com/Oscar-Umana)! - fix: map cache points in ToolMessage outside of tool result content block
+
 ## 1.2.0
 
 ### Minor Changes

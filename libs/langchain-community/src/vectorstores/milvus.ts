@@ -722,6 +722,7 @@ function createFieldTypeForMetadata(
   const sampleMetadata = documents[0].metadata;
   let textFieldMaxLength = 0;
   let jsonFieldMaxLength = 0;
+  const textEncoder = new TextEncoder();
   documents.forEach(({ metadata }) => {
     // check all keys name and count in metadata is same as sampleMetadata
     Object.keys(metadata).forEach((key) => {
@@ -736,13 +737,15 @@ function createFieldTypeForMetadata(
 
       // find max length of string field and json field, cache json string value
       if (typeof metadata[key] === "string") {
-        if (metadata[key].length > textFieldMaxLength) {
-          textFieldMaxLength = metadata[key].length;
+        const textLengthInBytes = textEncoder.encode(metadata[key]).length;
+        if (textLengthInBytes > textFieldMaxLength) {
+          textFieldMaxLength = textLengthInBytes;
         }
       } else if (typeof metadata[key] === "object") {
         const json = JSON.stringify(metadata[key]);
-        if (json.length > jsonFieldMaxLength) {
-          jsonFieldMaxLength = json.length;
+        const jsonLengthInBytes = textEncoder.encode(json).length;
+        if (jsonLengthInBytes > jsonFieldMaxLength) {
+          jsonFieldMaxLength = jsonLengthInBytes;
         }
       }
     });

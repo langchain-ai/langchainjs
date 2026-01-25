@@ -1,5 +1,37 @@
 # @langchain/community
 
+## 1.1.7
+
+### Patch Changes
+
+- [#9832](https://github.com/langchain-ai/langchainjs/pull/9832) [`305291f`](https://github.com/langchain-ai/langchainjs/commit/305291fc287d30de575b931b34382e115c3bf20f) Thanks [@phong-phuong](https://github.com/phong-phuong)! - Update Jira Document Loader's issue.fields.description from plain string to ADFNode
+
+- Updated dependencies []:
+  - @langchain/classic@1.0.10
+  - @langchain/openai@1.2.3
+
+## 1.1.6
+
+### Patch Changes
+
+- [#9835](https://github.com/langchain-ai/langchainjs/pull/9835) [`adb3625`](https://github.com/langchain-ai/langchainjs/commit/adb36253e79babc38e75b1fcf10308aee04f67e2) Thanks [@maahir30](https://github.com/maahir30)! - Use UTF-8 byte length for metadata fields
+
+- Updated dependencies []:
+  - @langchain/classic@1.0.10
+
+## 1.1.5
+
+### Patch Changes
+
+- [#9822](https://github.com/langchain-ai/langchainjs/pull/9822) [`ff69e1e`](https://github.com/langchain-ai/langchainjs/commit/ff69e1e9769768d2d066a0f3f351e63e2b897db5) Thanks [@HarshVz](https://github.com/HarshVz)! - Add multi-region support for Alibaba Tongyi chat models. Users can now specify their region (China, Singapore, or US) when initializing ChatAlibabaTongyi. This enables proper API endpoint routing for users with region-specific API keys.
+  - Added `region` parameter to ChatAlibabaTongyi constructor
+  - Supported regions: `"china"` (default), `"singapore"`, `"us"`
+  - Maintains backward compatibility by defaulting to China region
+
+- Updated dependencies [[`a7c6ec5`](https://github.com/langchain-ai/langchainjs/commit/a7c6ec51ab9baa186ab5ebf815599c08f5c7e8ab), [`04923f9`](https://github.com/langchain-ai/langchainjs/commit/04923f9835e5b3677c180b601ae8f3e7d8be0236), [`e16c218`](https://github.com/langchain-ai/langchainjs/commit/e16c218b81980a1c576af5192342019975bb95b9)]:
+  - @langchain/openai@1.2.3
+  - @langchain/classic@1.0.10
+
 ## 1.1.4
 
 ### Patch Changes

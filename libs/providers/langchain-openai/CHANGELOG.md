@@ -1,5 +1,15 @@
 # @langchain/openai
 
+## 1.2.3
+
+### Patch Changes
+
+- [#9679](https://github.com/langchain-ai/langchainjs/pull/9679) [`a7c6ec5`](https://github.com/langchain-ai/langchainjs/commit/a7c6ec51ab9baa186ab5ebf815599c08f5c7e8ab) Thanks [@christian-bromann](https://github.com/christian-bromann)! - feat(openai): elevate OpenAI image generation outputs to proper image content blocks
+
+- [#9810](https://github.com/langchain-ai/langchainjs/pull/9810) [`04923f9`](https://github.com/langchain-ai/langchainjs/commit/04923f9835e5b3677c180b601ae8f3e7d8be0236) Thanks [@christian-bromann](https://github.com/christian-bromann)! - Cb/OpenAI reasoning fix
+
+- [#9827](https://github.com/langchain-ai/langchainjs/pull/9827) [`e16c218`](https://github.com/langchain-ai/langchainjs/commit/e16c218b81980a1c576af5192342019975bb95b9) Thanks [@sanjaiyan-dev](https://github.com/sanjaiyan-dev)! - optimize stream chunk aggregation and remove redundant sorting
+
 ## 1.2.2
 
 ### Patch Changes

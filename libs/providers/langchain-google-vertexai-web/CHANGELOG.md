@@ -1,5 +1,26 @@
 # @langchain/google-vertexai-web
 
+## 2.1.13
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @langchain/google-webauth@2.1.13
+
+## 2.1.12
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @langchain/google-webauth@2.1.12
+
+## 2.1.11
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @langchain/google-webauth@2.1.11
+
 ## 2.1.10
 
 ### Patch Changes
