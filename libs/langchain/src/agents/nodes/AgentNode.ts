@@ -563,7 +563,7 @@ export class AgentNode<
 
             return middlewareResponse;
           } catch (error) {
-            throw new MiddlewareError(error, currentMiddleware.name);
+            throw MiddlewareError.wrap(error, currentMiddleware.name);
           }
         };
       }
@@ -872,7 +872,7 @@ export class AgentNode<
      */
     const modelWithTools = await bindTools(model, allTools, {
       ...options,
-      ...(preparedOptions?.modelSettings ?? {}),
+      ...preparedOptions?.modelSettings,
       tool_choice: toolChoice,
     });
 

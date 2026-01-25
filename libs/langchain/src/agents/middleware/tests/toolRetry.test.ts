@@ -928,9 +928,9 @@ describe("toolRetryMiddleware", () => {
       const loggingMiddleware = createMiddleware({
         name: "loggingMiddleware",
         wrapToolCall: async (request, handler) => {
-          callLog.push(`before_${request.tool.name}`);
+          callLog.push(`before_${request.tool?.name}`);
           const response = await handler(request);
-          callLog.push(`after_${request.tool.name}`);
+          callLog.push(`after_${request.tool?.name}`);
           return response;
         },
       });

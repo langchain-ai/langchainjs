@@ -1,5 +1,33 @@
 # langchain
 
+## 1.2.13
+
+### Patch Changes
+
+- [#9854](https://github.com/langchain-ai/langchainjs/pull/9854) [`160b5bf`](https://github.com/langchain-ai/langchainjs/commit/160b5bfe49f31190d28ec10a95075ef845c49fa3) Thanks [@christian-bromann](https://github.com/christian-bromann)! - fix(anthropic): apply cache_control at final formatting layer
+
+- [#9850](https://github.com/langchain-ai/langchainjs/pull/9850) [`b56bf9e`](https://github.com/langchain-ai/langchainjs/commit/b56bf9e05a3190be58835e336ffb775c5d585fca) Thanks [@joeljohn159](https://github.com/joeljohn159)! - Fix `ToolNode` to route missing tool errors through `handleToolErrors` instead of throwing, allowing agents to recover when LLMs hallucinate tool names.
+
+- [#9847](https://github.com/langchain-ai/langchainjs/pull/9847) [`9cd35ae`](https://github.com/langchain-ai/langchainjs/commit/9cd35ae6ed878be88d3e68371df92cebc8d880ee) Thanks [@christian-bromann](https://github.com/christian-bromann)! - feat(langchain): add dynamic tool registration via middleware
+
+- [#9839](https://github.com/langchain-ai/langchainjs/pull/9839) [`134121a`](https://github.com/langchain-ai/langchainjs/commit/134121a6fc7e0ad1653bb5ce2ec347c61638c4df) Thanks [@maahir30](https://github.com/maahir30)! - ## Add state schema support to agents
+  - Introduce `createAgentState` function replacing `createAgentAnnotationConditional`
+  - Migrate from Zod-based schemas to LangGraph's native `StateSchema`, `ReducedValue`, and `UntrackedValue` primitives
+  - Support both `StateSchema` and Zod v3/v4 objects as input schemas
+  - Automatically merge state fields from user-provided schemas and middleware
+  - Properly handle reducer metadata extraction from Zod v4 schemas via `schemaMetaRegistry`
+  - Generate separate input/output schemas to avoid channel conflicts with reducers
+  - Add comprehensive test coverage for state schema functionality
+
+- Updated dependencies [[`05a9733`](https://github.com/langchain-ai/langchainjs/commit/05a9733448a10764c0bfd070af859c33e623b998)]:
+  - @langchain/core@1.1.17
+
+## 1.2.12
+
+### Patch Changes
+
+- [#9848](https://github.com/langchain-ai/langchainjs/pull/9848) [`3d26f58`](https://github.com/langchain-ai/langchainjs/commit/3d26f58e5b705f7c81104a6f1145c64e791d238b) Thanks [@christian-bromann](https://github.com/christian-bromann)! - fix(langchain): bubble up graph interrupt errors as is
+
 ## 1.2.11
 
 ### Patch Changes

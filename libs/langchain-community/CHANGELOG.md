@@ -1,5 +1,24 @@
 # @langchain/community
 
+## 1.1.7
+
+### Patch Changes
+
+- [#9832](https://github.com/langchain-ai/langchainjs/pull/9832) [`305291f`](https://github.com/langchain-ai/langchainjs/commit/305291fc287d30de575b931b34382e115c3bf20f) Thanks [@phong-phuong](https://github.com/phong-phuong)! - Update Jira Document Loader's issue.fields.description from plain string to ADFNode
+
+- Updated dependencies []:
+  - @langchain/classic@1.0.10
+  - @langchain/openai@1.2.3
+
+## 1.1.6
+
+### Patch Changes
+
+- [#9835](https://github.com/langchain-ai/langchainjs/pull/9835) [`adb3625`](https://github.com/langchain-ai/langchainjs/commit/adb36253e79babc38e75b1fcf10308aee04f67e2) Thanks [@maahir30](https://github.com/maahir30)! - Use UTF-8 byte length for metadata fields
+
+- Updated dependencies []:
+  - @langchain/classic@1.0.10
+
 ## 1.1.5
 
 ### Patch Changes
