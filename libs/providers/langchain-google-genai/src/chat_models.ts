@@ -734,7 +734,9 @@ export class ChatGoogleGenerativeAI
             ? { thinkingConfig: this.thinkingConfig }
             : {}),
         },
-      },
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        labels: this.labels as any,
+      } as ModelParams,
       {
         apiVersion: fields.apiVersion,
         baseUrl: fields.baseUrl,
