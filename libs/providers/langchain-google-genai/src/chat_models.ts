@@ -109,6 +109,10 @@ export interface GoogleGenerativeAIChatInput
    */
   model: string;
 
+  /**
+   *  labels to be added to the model for cost tracking and telemetry
+   */
+
   labels?: Record<string, string>;
 
   /**
