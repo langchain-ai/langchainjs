@@ -15,6 +15,7 @@ import {
   Send,
   isGraphInterrupt,
   type LangGraphRunnableConfig,
+  StateDefinitionInit,
 } from "@langchain/langgraph";
 
 import { RunnableCallable } from "../RunnableCallable.js";
@@ -26,6 +27,17 @@ import type {
   ToAnnotationRoot,
 } from "../middleware/types.js";
 import type { AgentBuiltInState } from "../runtime.js";
+
+/**
+ * Error message template for when middleware adds tools that can't be executed.
+ * This happens when middleware modifies tools in wrapModelCall but doesn't provide
+ * a wrapToolCall handler to execute them.
+ */
+const getInvalidToolError = (
+  toolName: string,
+  availableTools: string[]
+): string =>
+  `Error: ${toolName} is not a valid tool, try one of [${availableTools.join(", ")}].`;
 
 /**
  * The name of the tool node in the state graph.
@@ -86,7 +98,9 @@ const isMessagesState = (
   "messages" in input &&
   isBaseMessageArray(input.messages);
 
-const isSendInput = (input: unknown): input is { lg_tool_call: ToolCall } =>
+const isSendInput = (
+  input: unknown
+): input is { lg_tool_call: ToolCall; jumpTo?: string } =>
   typeof input === "object" && input != null && "lg_tool_call" in input;
 
 /**
@@ -165,7 +179,7 @@ function defaultHandleToolErrors(
  * ```
  */
 export class ToolNode<
-  StateSchema extends InteropZodObject = any,
+  StateSchema extends StateDefinitionInit = any,
   ContextSchema extends InteropZodObject = any,
 > extends RunnableCallable<StateSchema, ContextSchema> {
   tools: (StructuredToolInterface | DynamicTool | RunnableToolLike)[];
@@ -192,7 +206,8 @@ export class ToolNode<
       tags,
       func: (state, config) =>
         this.run(
-          state as ToAnnotationRoot<StateSchema>["State"] & AgentBuiltInState,
+          state as ToAnnotationRoot<StateDefinitionInit>["State"] &
+            AgentBuiltInState,
           config as RunnableConfig
         ),
     });
@@ -278,22 +293,70 @@ export class ToolNode<
     state: AgentBuiltInState
   ): Promise<ToolMessage | Command> {
     /**
+     * Build runtime from LangGraph config
+     */
+    const lgConfig = config as LangGraphRunnableConfig;
+    const runtime = {
+      context: lgConfig?.context,
+      writer: lgConfig?.writer,
+      interrupt: lgConfig?.interrupt,
+      signal: lgConfig?.signal,
+    };
+
+    /**
+     * Find the tool instance to include in the request.
+     * For dynamically registered tools, this may be undefined.
+     */
+    const registeredTool = this.tools.find((t) => t.name === call.name);
+
+    /**
      * Define the base handler that executes the tool.
      * When wrapToolCall middleware is present, this handler does NOT catch errors
      * so the middleware can handle them.
      * When no middleware, errors are caught and handled here.
+     *
+     * The handler now accepts an overridden tool from the request, allowing
+     * middleware to provide tool implementations for dynamically registered tools.
      */
     const baseHandler = async (
       request: ToolCallRequest
     ): Promise<ToolMessage | Command> => {
-      const { toolCall } = request;
-      const tool = this.tools.find((tool) => tool.name === toolCall.name);
+      const { toolCall, tool: requestTool } = request;
+
+      /**
+       * Use the tool from the request (which may be overridden via spread syntax)
+       * or fall back to finding it in registered tools.
+       * This allows middleware to provide dynamic tool implementations.
+       */
+      const tool =
+        requestTool ?? this.tools.find((t) => t.name === toolCall.name);
+
       if (tool === undefined) {
-        throw new Error(`Tool "${toolCall.name}" not found.`);
+        /**
+         * Tool not found - return a graceful error message rather than throwing.
+         * This allows the LLM to see the error and potentially retry.
+         */
+        const availableTools = this.tools.map((t) => t.name);
+        return new ToolMessage({
+          content: getInvalidToolError(toolCall.name, availableTools),
+          tool_call_id: toolCall.id!,
+          name: toolCall.name,
+          status: "error",
+        });
       }
 
+      /**
+       * Cast tool to a common invokable type.
+       * The tool can be from registered tools (StructuredToolInterface | DynamicTool | RunnableToolLike)
+       * or from middleware override (ClientTool | ServerTool).
+       */
+      const invokableTool = tool as
+        | StructuredToolInterface
+        | DynamicTool
+        | RunnableToolLike;
+
       try {
-        const output = await tool.invoke(
+        const output = await invokableTool.invoke(
           { ...toolCall, type: "tool_call" },
           {
             ...config,
@@ -312,7 +375,7 @@ export class ToolNode<
         }
 
         return new ToolMessage({
-          name: tool.name,
+          name: invokableTool.name,
           content: typeof output === "string" ? output : JSON.stringify(output),
           tool_call_id: toolCall.id!,
         });
@@ -332,27 +395,13 @@ export class ToolNode<
     };
 
     /**
-     * Build runtime from LangGraph config
+     * Create request object for middleware
+     * Cast to ToolCallRequest<AgentBuiltInState> to satisfy type constraints
+     * of wrapToolCall which expects AgentBuiltInState
      */
-    const lgConfig = config as LangGraphRunnableConfig;
-    const runtime = {
-      context: lgConfig?.context,
-      writer: lgConfig?.writer,
-      interrupt: lgConfig?.interrupt,
-      signal: lgConfig?.signal,
-    };
-
-    /**
-     * Find the tool instance to include in the request
-     */
-    const tool = this.tools.find((t) => t.name === call.name);
-    if (!tool) {
-      throw new Error(`Tool "${call.name}" not found.`);
-    }
-
-    const request = {
+    const request: ToolCallRequest<AgentBuiltInState> = {
       toolCall: call,
-      tool,
+      tool: registeredTool,
       state,
       runtime,
     };
@@ -369,6 +418,19 @@ export class ToolNode<
          */
         return this.#handleError(e, call, true);
       }
+    }
+
+    /**
+     * No wrapToolCall - if tool wasn't found, return graceful error
+     */
+    if (!registeredTool) {
+      const availableTools = this.tools.map((t) => t.name);
+      return new ToolMessage({
+        content: getInvalidToolError(call.name, availableTools),
+        tool_call_id: call.id!,
+        name: call.name,
+        status: "error",
+      });
     }
 
     /**
@@ -391,7 +453,7 @@ export class ToolNode<
     let outputs: (ToolMessage | Command)[];
 
     if (isSendInput(state)) {
-      const { lg_tool_call, jumpTo, ...newState } = state;
+      const { lg_tool_call: _, jumpTo: __, ...newState } = state;
       outputs = [await this.runTool(state.lg_tool_call, config, newState)];
     } else {
       let messages: BaseMessage[];

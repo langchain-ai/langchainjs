@@ -2,6 +2,7 @@ import type {
   InteropZodObject,
   InferInteropZodOutput,
 } from "@langchain/core/utils/types";
+import type { StateDefinitionInit } from "@langchain/langgraph";
 import type { ClientTool, ServerTool } from "@langchain/core/tools";
 
 import {
@@ -30,7 +31,7 @@ import {
  * @param config.afterAgent - The function to run after the agent execution completes
  * @returns A middleware instance
  *
- * @example
+ * @example Using Zod schema
  * ```ts
  * const authMiddleware = createMiddleware({
  *   name: "AuthMiddleware",
@@ -47,9 +48,28 @@ import {
  *   },
  * });
  * ```
+ *
+ * @example Using StateSchema
+ * ```ts
+ * import { StateSchema, ReducedValue } from "@langchain/langgraph";
+ *
+ * const historyMiddleware = createMiddleware({
+ *   name: "HistoryMiddleware",
+ *   stateSchema: new StateSchema({
+ *     count: z.number().default(0),
+ *     history: new ReducedValue(
+ *       z.array(z.string()).default(() => []),
+ *       { inputSchema: z.string(), reducer: (current, next) => [...current, next] }
+ *     ),
+ *   }),
+ *   beforeModel: async (state, runtime) => {
+ *     return { count: state.count + 1 };
+ *   },
+ * });
+ * ```
  */
 export function createMiddleware<
-  TSchema extends InteropZodObject | undefined = undefined,
+  TSchema extends StateDefinitionInit | undefined = undefined,
   TContextSchema extends InteropZodObject | undefined = undefined,
   const TTools extends readonly (ClientTool | ServerTool)[] = readonly (
     | ClientTool
@@ -62,9 +82,9 @@ export function createMiddleware<
   name: string;
   /**
    * The schema of the middleware state. Middleware state is persisted between multiple invocations. It can be either:
-   * - A Zod object
-   * - A Zod optional object
-   * - A Zod default object
+   * - A Zod object (InteropZodObject)
+   * - A StateSchema from LangGraph (supports ReducedValue, UntrackedValue)
+   * - An AnnotationRoot
    * - Undefined
    */
   stateSchema?: TSchema;

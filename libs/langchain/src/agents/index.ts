@@ -4,6 +4,7 @@ import type {
   InteropZodType,
 } from "@langchain/core/utils/types";
 import type { ClientTool, ServerTool } from "@langchain/core/tools";
+import type { StateDefinitionInit } from "@langchain/langgraph";
 
 import type { ResponseFormatUndefined } from "./responses.js";
 import type {
@@ -140,14 +141,33 @@ import { ReactAgent } from "./ReactAgent.js";
  *   // ...
  * }
  * ```
+ *
+ * @example With StateSchema
+ * ```ts
+ * import { createAgent } from "langchain";
+ * import { StateSchema, ReducedValue } from "@langchain/langgraph";
+ * import { z } from "zod";
+ *
+ * const AgentState = new StateSchema({
+ *   userId: z.string(),
+ *   count: z.number().default(0),
+ *   history: new ReducedValue(
+ *     z.array(z.string()).default(() => []),
+ *     { inputSchema: z.string(), reducer: (c, n) => [...c, n] }
+ *   ),
+ * });
+ *
+ * const agent = createAgent({
+ *   model: "openai:gpt-4o",
+ *   tools: [searchTool],
+ *   stateSchema: AgentState,
+ * });
+ * ```
  */
 // Overload 1: With responseFormat as single InteropZodType
 export function createAgent<
   StructuredResponseFormat extends Record<string, any> = Record<string, any>,
-  StateSchema extends
-    | AnyAnnotationRoot
-    | InteropZodObject
-    | undefined = undefined,
+  TStateSchema extends StateDefinitionInit | undefined = undefined,
   ContextSchema extends
     | AnyAnnotationRoot
     | InteropZodObject = AnyAnnotationRoot,
@@ -160,7 +180,7 @@ export function createAgent<
 >(
   params: CreateAgentParams<
     StructuredResponseFormat,
-    StateSchema,
+    TStateSchema,
     ContextSchema,
     InteropZodType<StructuredResponseFormat>
   > & {
@@ -171,7 +191,7 @@ export function createAgent<
 ): ReactAgent<
   AgentTypeConfig<
     StructuredResponseFormat,
-    StateSchema,
+    TStateSchema,
     ContextSchema,
     TMiddleware,
     CombineTools<TTools, TMiddleware>
@@ -181,10 +201,7 @@ export function createAgent<
 // Overload 2: With responseFormat as array of InteropZodTypes (infers union type)
 export function createAgent<
   StructuredResponseFormat extends readonly InteropZodType<any>[],
-  StateSchema extends
-    | AnyAnnotationRoot
-    | InteropZodObject
-    | undefined = undefined,
+  TStateSchema extends StateDefinitionInit | undefined = undefined,
   ContextSchema extends
     | AnyAnnotationRoot
     | InteropZodObject = AnyAnnotationRoot,
@@ -199,7 +216,7 @@ export function createAgent<
     ExtractZodArrayTypes<StructuredResponseFormat> extends Record<string, any>
       ? ExtractZodArrayTypes<StructuredResponseFormat>
       : Record<string, any>,
-    StateSchema,
+    TStateSchema,
     ContextSchema,
     StructuredResponseFormat
   > & {
@@ -212,7 +229,7 @@ export function createAgent<
     ExtractZodArrayTypes<StructuredResponseFormat> extends Record<string, any>
       ? ExtractZodArrayTypes<StructuredResponseFormat>
       : Record<string, any>,
-    StateSchema,
+    TStateSchema,
     ContextSchema,
     TMiddleware,
     CombineTools<TTools, TMiddleware>
@@ -221,10 +238,7 @@ export function createAgent<
 
 // Overload 3: With responseFormat as JsonSchemaFormat (JSON schema object)
 export function createAgent<
-  StateSchema extends
-    | AnyAnnotationRoot
-    | InteropZodObject
-    | undefined = undefined,
+  TStateSchema extends StateDefinitionInit | undefined = undefined,
   ContextSchema extends
     | AnyAnnotationRoot
     | InteropZodObject = AnyAnnotationRoot,
@@ -237,7 +251,7 @@ export function createAgent<
 >(
   params: CreateAgentParams<
     Record<string, unknown>,
-    StateSchema,
+    TStateSchema,
     ContextSchema,
     JsonSchemaFormat
   > & {
@@ -248,7 +262,7 @@ export function createAgent<
 ): ReactAgent<
   AgentTypeConfig<
     Record<string, unknown>,
-    StateSchema,
+    TStateSchema,
     ContextSchema,
     TMiddleware,
     CombineTools<TTools, TMiddleware>
@@ -257,10 +271,7 @@ export function createAgent<
 
 // Overload 4: With responseFormat as array of JsonSchemaFormat (JSON schema objects)
 export function createAgent<
-  StateSchema extends
-    | AnyAnnotationRoot
-    | InteropZodObject
-    | undefined = undefined,
+  TStateSchema extends StateDefinitionInit | undefined = undefined,
   ContextSchema extends
     | AnyAnnotationRoot
     | InteropZodObject = AnyAnnotationRoot,
@@ -273,7 +284,7 @@ export function createAgent<
 >(
   params: CreateAgentParams<
     Record<string, unknown>,
-    StateSchema,
+    TStateSchema,
     ContextSchema,
     JsonSchemaFormat[]
   > & {
@@ -284,7 +295,7 @@ export function createAgent<
 ): ReactAgent<
   AgentTypeConfig<
     Record<string, unknown>,
-    StateSchema,
+    TStateSchema,
     ContextSchema,
     TMiddleware,
     CombineTools<TTools, TMiddleware>
@@ -293,10 +304,7 @@ export function createAgent<
 
 // Overload 4.5: With responseFormat as union of JsonSchemaFormat | JsonSchemaFormat[]
 export function createAgent<
-  StateSchema extends
-    | AnyAnnotationRoot
-    | InteropZodObject
-    | undefined = undefined,
+  TStateSchema extends StateDefinitionInit | undefined = undefined,
   ContextSchema extends
     | AnyAnnotationRoot
     | InteropZodObject = AnyAnnotationRoot,
@@ -309,7 +317,7 @@ export function createAgent<
 >(
   params: CreateAgentParams<
     Record<string, unknown>,
-    StateSchema,
+    TStateSchema,
     ContextSchema,
     JsonSchemaFormat | JsonSchemaFormat[]
   > & {
@@ -320,7 +328,7 @@ export function createAgent<
 ): ReactAgent<
   AgentTypeConfig<
     Record<string, unknown>,
-    StateSchema,
+    TStateSchema,
     ContextSchema,
     TMiddleware,
     CombineTools<TTools, TMiddleware>
@@ -330,10 +338,7 @@ export function createAgent<
 // Overload 5: With responseFormat as TypedToolStrategy (for union types from toolStrategy)
 export function createAgent<
   StructuredResponseFormat extends Record<string, any> = Record<string, any>,
-  StateSchema extends
-    | AnyAnnotationRoot
-    | InteropZodObject
-    | undefined = undefined,
+  TStateSchema extends StateDefinitionInit | undefined = undefined,
   ContextSchema extends
     | AnyAnnotationRoot
     | InteropZodObject = AnyAnnotationRoot,
@@ -346,7 +351,7 @@ export function createAgent<
 >(
   params: CreateAgentParams<
     StructuredResponseFormat,
-    StateSchema,
+    TStateSchema,
     ContextSchema,
     TypedToolStrategy<StructuredResponseFormat>
   > & {
@@ -357,7 +362,7 @@ export function createAgent<
 ): ReactAgent<
   AgentTypeConfig<
     StructuredResponseFormat,
-    StateSchema,
+    TStateSchema,
     ContextSchema,
     TMiddleware,
     CombineTools<TTools, TMiddleware>
@@ -367,10 +372,7 @@ export function createAgent<
 // Overload 6: With responseFormat as single ToolStrategy instance
 export function createAgent<
   StructuredResponseFormat extends Record<string, any> = Record<string, any>,
-  StateSchema extends
-    | AnyAnnotationRoot
-    | InteropZodObject
-    | undefined = undefined,
+  TStateSchema extends StateDefinitionInit | undefined = undefined,
   ContextSchema extends
     | AnyAnnotationRoot
     | InteropZodObject = AnyAnnotationRoot,
@@ -383,7 +385,7 @@ export function createAgent<
 >(
   params: CreateAgentParams<
     StructuredResponseFormat,
-    StateSchema,
+    TStateSchema,
     ContextSchema,
     ToolStrategy<StructuredResponseFormat>
   > & {
@@ -394,7 +396,7 @@ export function createAgent<
 ): ReactAgent<
   AgentTypeConfig<
     StructuredResponseFormat,
-    StateSchema,
+    TStateSchema,
     ContextSchema,
     TMiddleware,
     CombineTools<TTools, TMiddleware>
@@ -404,10 +406,7 @@ export function createAgent<
 // Overload 7: With responseFormat as ProviderStrategy
 export function createAgent<
   StructuredResponseFormat extends Record<string, any> = Record<string, any>,
-  StateSchema extends
-    | AnyAnnotationRoot
-    | InteropZodObject
-    | undefined = undefined,
+  TStateSchema extends StateDefinitionInit | undefined = undefined,
   ContextSchema extends
     | AnyAnnotationRoot
     | InteropZodObject = AnyAnnotationRoot,
@@ -420,7 +419,7 @@ export function createAgent<
 >(
   params: CreateAgentParams<
     StructuredResponseFormat,
-    StateSchema,
+    TStateSchema,
     ContextSchema,
     ProviderStrategy<StructuredResponseFormat>
   > & {
@@ -431,7 +430,7 @@ export function createAgent<
 ): ReactAgent<
   AgentTypeConfig<
     StructuredResponseFormat,
-    StateSchema,
+    TStateSchema,
     ContextSchema,
     TMiddleware,
     CombineTools<TTools, TMiddleware>
@@ -440,10 +439,7 @@ export function createAgent<
 
 // Overload 8: Without responseFormat property at all - with proper middleware state typing
 export function createAgent<
-  StateSchema extends
-    | AnyAnnotationRoot
-    | InteropZodObject
-    | undefined = undefined,
+  TStateSchema extends StateDefinitionInit | undefined = undefined,
   ContextSchema extends
     | AnyAnnotationRoot
     | InteropZodObject = AnyAnnotationRoot,
@@ -457,7 +453,7 @@ export function createAgent<
   params: Omit<
     CreateAgentParams<
       ResponseFormatUndefined,
-      StateSchema,
+      TStateSchema,
       ContextSchema,
       never
     >,
@@ -466,7 +462,7 @@ export function createAgent<
 ): ReactAgent<
   AgentTypeConfig<
     ResponseFormatUndefined,
-    StateSchema,
+    TStateSchema,
     ContextSchema,
     TMiddleware,
     CombineTools<TTools, TMiddleware>
@@ -475,10 +471,7 @@ export function createAgent<
 
 // Overload 9: With responseFormat explicitly undefined
 export function createAgent<
-  StateSchema extends
-    | AnyAnnotationRoot
-    | InteropZodObject
-    | undefined = undefined,
+  TStateSchema extends StateDefinitionInit | undefined = undefined,
   ContextSchema extends
     | AnyAnnotationRoot
     | InteropZodObject = AnyAnnotationRoot,
@@ -492,7 +485,7 @@ export function createAgent<
   params: Omit<
     CreateAgentParams<
       ResponseFormatUndefined,
-      StateSchema,
+      TStateSchema,
       ContextSchema,
       never
     >,
@@ -505,7 +498,7 @@ export function createAgent<
 ): ReactAgent<
   AgentTypeConfig<
     ResponseFormatUndefined,
-    StateSchema,
+    TStateSchema,
     ContextSchema,
     TMiddleware,
     CombineTools<TTools, TMiddleware>
@@ -515,10 +508,7 @@ export function createAgent<
 // Overload 10: For other ResponseFormat values (failsafe)
 export function createAgent<
   StructuredResponseFormat extends Record<string, any> = Record<string, any>,
-  StateSchema extends
-    | AnyAnnotationRoot
-    | InteropZodObject
-    | undefined = undefined,
+  TStateSchema extends StateDefinitionInit | undefined = undefined,
   ContextSchema extends
     | AnyAnnotationRoot
     | InteropZodObject = AnyAnnotationRoot,
@@ -531,7 +521,7 @@ export function createAgent<
 >(
   params: CreateAgentParams<
     StructuredResponseFormat,
-    StateSchema,
+    TStateSchema,
     ContextSchema,
     ResponseFormat
   > & {
@@ -542,7 +532,7 @@ export function createAgent<
 ): ReactAgent<
   AgentTypeConfig<
     StructuredResponseFormat,
-    StateSchema,
+    TStateSchema,
     ContextSchema,
     TMiddleware,
     CombineTools<TTools, TMiddleware>
@@ -552,7 +542,7 @@ export function createAgent<
 // Implementation
 export function createAgent<
   StructuredResponseFormat extends Record<string, any>,
-  StateSchema extends AnyAnnotationRoot | InteropZodObject,
+  TStateSchema extends StateDefinitionInit,
   ContextSchema extends AnyAnnotationRoot | InteropZodObject,
   TMiddleware extends readonly AgentMiddleware[] = readonly AgentMiddleware[],
   TTools extends readonly (ClientTool | ServerTool)[] = readonly (
@@ -562,14 +552,14 @@ export function createAgent<
 >(
   params: CreateAgentParams<
     StructuredResponseFormat,
-    StateSchema,
+    TStateSchema,
     ContextSchema,
     any
   >
 ): ReactAgent<
   AgentTypeConfig<
     StructuredResponseFormat,
-    StateSchema,
+    TStateSchema,
     ContextSchema,
     TMiddleware,
     CombineTools<TTools, TMiddleware>

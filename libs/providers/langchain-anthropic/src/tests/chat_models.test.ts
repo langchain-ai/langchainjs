@@ -10,7 +10,10 @@ import { z as z4 } from "zod/v4";
 import { OutputParserException } from "@langchain/core/output_parsers";
 import { tool } from "@langchain/core/tools";
 import { ChatAnthropic } from "../chat_models.js";
-import { _convertMessagesToAnthropicPayload } from "../utils/message_inputs.js";
+import {
+  _convertMessagesToAnthropicPayload,
+  applyCacheControlToPayload,
+} from "../utils/message_inputs.js";
 import { AnthropicToolExtrasSchema } from "../utils/tools.js";
 
 test("withStructuredOutput with output validation", async () => {
@@ -868,5 +871,325 @@ describe("Streaming tool call consolidation (input_json_delta handling)", () => 
       name: "my_tool",
       input: { prompt: "hello" },
     });
+  });
+});
+
+describe("ContentBlock.Multimodal.Image format support", () => {
+  test("handles new image format with URL", () => {
+    const messageHistory = [
+      new HumanMessage({
+        contentBlocks: [
+          {
+            type: "image",
+            url: "https://upload.wikimedia.org/wikipedia/commons/thumb/3/30/RedDisc.svg/24px-RedDisc.svg.png",
+          },
+          { type: "text", text: "Describe this image." },
+        ],
+      }),
+    ];
+
+    const formattedMessages =
+      _convertMessagesToAnthropicPayload(messageHistory);
+
+    expect(formattedMessages.messages[0].content).toHaveLength(2);
+    const [imageBlock, textBlock] = formattedMessages.messages[0].content;
+
+    expect(imageBlock).toEqual({
+      type: "image",
+      source: {
+        type: "url",
+        url: "https://upload.wikimedia.org/wikipedia/commons/thumb/3/30/RedDisc.svg/24px-RedDisc.svg.png",
+      },
+    });
+    expect(textBlock).toEqual({
+      type: "text",
+      text: "Describe this image.",
+    });
+  });
+
+  test("handles new image format with base64 data", () => {
+    const base64Data =
+      "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=";
+
+    const messageHistory = [
+      new HumanMessage({
+        contentBlocks: [
+          {
+            type: "image",
+            data: base64Data,
+            mimeType: "image/png",
+          },
+          { type: "text", text: "What is this?" },
+        ],
+      }),
+    ];
+
+    const formattedMessages =
+      _convertMessagesToAnthropicPayload(messageHistory);
+
+    expect(formattedMessages.messages[0].content).toHaveLength(2);
+    const [imageBlock, textBlock] = formattedMessages.messages[0].content;
+
+    expect(imageBlock).toEqual({
+      type: "image",
+      source: {
+        type: "base64",
+        media_type: "image/png",
+        data: base64Data,
+      },
+    });
+    expect(textBlock).toEqual({
+      type: "text",
+      text: "What is this?",
+    });
+  });
+
+  test("handles new image format with fileId", () => {
+    const messageHistory = [
+      new HumanMessage({
+        contentBlocks: [
+          {
+            type: "image",
+            fileId: "file_abc123",
+          },
+          { type: "text", text: "Describe this image." },
+        ],
+      }),
+    ];
+
+    const formattedMessages =
+      _convertMessagesToAnthropicPayload(messageHistory);
+
+    expect(formattedMessages.messages[0].content).toHaveLength(2);
+    const [imageBlock, textBlock] = formattedMessages.messages[0].content;
+
+    expect(imageBlock).toEqual({
+      type: "image",
+      source: {
+        type: "file",
+        file_id: "file_abc123",
+      },
+    });
+    expect(textBlock).toEqual({
+      type: "text",
+      text: "Describe this image.",
+    });
+  });
+
+  test("handles new image format with Uint8Array data", () => {
+    const binaryData = new Uint8Array([137, 80, 78, 71, 13, 10, 26, 10]); // PNG header bytes
+    const expectedBase64 = Buffer.from(binaryData).toString("base64");
+
+    const messageHistory = [
+      new HumanMessage({
+        contentBlocks: [
+          {
+            type: "image",
+            data: binaryData,
+            mimeType: "image/png",
+          },
+          { type: "text", text: "What is this?" },
+        ],
+      }),
+    ];
+
+    const formattedMessages =
+      _convertMessagesToAnthropicPayload(messageHistory);
+
+    expect(formattedMessages.messages[0].content).toHaveLength(2);
+    const [imageBlock, textBlock] = formattedMessages.messages[0].content;
+
+    expect(imageBlock).toEqual({
+      type: "image",
+      source: {
+        type: "base64",
+        media_type: "image/png",
+        data: expectedBase64,
+      },
+    });
+    expect(textBlock).toEqual({
+      type: "text",
+      text: "What is this?",
+    });
+  });
+
+  test("defaults to image/jpeg when mimeType is not provided", () => {
+    const base64Data =
+      "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=";
+
+    const messageHistory = [
+      new HumanMessage({
+        contentBlocks: [
+          {
+            type: "image",
+            data: base64Data,
+            // mimeType intentionally omitted
+          },
+          { type: "text", text: "What is this?" },
+        ],
+      }),
+    ];
+
+    const formattedMessages =
+      _convertMessagesToAnthropicPayload(messageHistory);
+
+    expect(formattedMessages.messages[0].content).toHaveLength(2);
+    const [imageBlock] = formattedMessages.messages[0].content;
+
+    expect(imageBlock).toEqual({
+      type: "image",
+      source: {
+        type: "base64",
+        media_type: "image/jpeg",
+        data: base64Data,
+      },
+    });
+  });
+
+  test("preserves cache_control on new image format", () => {
+    const messageHistory = [
+      new HumanMessage({
+        contentBlocks: [
+          {
+            type: "image",
+            url: "https://example.com/image.png",
+            cache_control: { type: "ephemeral" },
+          },
+        ],
+      }),
+    ];
+
+    const formattedMessages =
+      _convertMessagesToAnthropicPayload(messageHistory);
+
+    expect(formattedMessages.messages[0].content).toHaveLength(1);
+    const [imageBlock] = formattedMessages.messages[0].content;
+
+    expect(imageBlock).toEqual({
+      type: "image",
+      source: {
+        type: "url",
+        url: "https://example.com/image.png",
+      },
+      cache_control: { type: "ephemeral" },
+    });
+  });
+});
+
+describe("applyCacheControlToPayload", () => {
+  const cacheControl = { type: "ephemeral" as const, ttl: "5m" as const };
+
+  test("applies cache_control to the last content block of string content", () => {
+    const payload = {
+      messages: [
+        { role: "user" as const, content: "Hello" },
+        { role: "assistant" as const, content: "Hi there!" },
+        { role: "user" as const, content: "How are you?" },
+      ],
+    };
+
+    const result = applyCacheControlToPayload(payload, cacheControl);
+
+    expect(result.messages[2].content).toEqual([
+      {
+        type: "text",
+        text: "How are you?",
+        cache_control: cacheControl,
+      },
+    ]);
+    // Other messages should be unchanged
+    expect(result.messages[0].content).toBe("Hello");
+    expect(result.messages[1].content).toBe("Hi there!");
+  });
+
+  test("applies cache_control to the last content block of array content", () => {
+    const payload = {
+      messages: [
+        { role: "user" as const, content: "Hello" },
+        {
+          role: "assistant" as const,
+          content: [
+            { type: "text" as const, text: "First block" },
+            { type: "text" as const, text: "Second block" },
+          ],
+        },
+      ],
+    };
+
+    const result = applyCacheControlToPayload(payload, cacheControl);
+
+    const lastMessage = result.messages[1];
+    expect(Array.isArray(lastMessage.content)).toBe(true);
+    if (Array.isArray(lastMessage.content)) {
+      expect(lastMessage.content[0]).toEqual({
+        type: "text",
+        text: "First block",
+      });
+      expect(lastMessage.content[1]).toEqual({
+        type: "text",
+        text: "Second block",
+        cache_control: cacheControl,
+      });
+    }
+  });
+
+  test("applies cache_control to tool_use blocks without corruption", () => {
+    const payload = {
+      messages: [
+        { role: "user" as const, content: "Hello" },
+        {
+          role: "assistant" as const,
+          content: [
+            { type: "text" as const, text: "I'll help with that" },
+            {
+              type: "tool_use" as const,
+              id: "tool_123",
+              name: "get_weather",
+              input: { location: "San Francisco" },
+            },
+          ],
+        },
+      ],
+    };
+
+    const result = applyCacheControlToPayload(payload, cacheControl);
+
+    const lastMessage = result.messages[1];
+    if (Array.isArray(lastMessage.content)) {
+      const toolUseBlock = lastMessage.content[1];
+      // Verify all original fields are preserved
+      expect(toolUseBlock).toHaveProperty("type", "tool_use");
+      expect(toolUseBlock).toHaveProperty("id", "tool_123");
+      expect(toolUseBlock).toHaveProperty("name", "get_weather");
+      expect(toolUseBlock).toHaveProperty("input", {
+        location: "San Francisco",
+      });
+      // And cache_control is added
+      expect(toolUseBlock).toHaveProperty("cache_control", cacheControl);
+    }
+  });
+
+  test("returns unchanged payload when messages array is empty", () => {
+    const payload = { messages: [] };
+
+    const result = applyCacheControlToPayload(payload, cacheControl);
+
+    expect(result).toEqual(payload);
+  });
+
+  test("handles 1h TTL", () => {
+    const payload = {
+      messages: [{ role: "user" as const, content: "Hello" }],
+    };
+    const hourCacheControl = { type: "ephemeral" as const, ttl: "1h" as const };
+
+    const result = applyCacheControlToPayload(payload, hourCacheControl);
+
+    if (Array.isArray(result.messages[0].content)) {
+      expect(result.messages[0].content[0]).toHaveProperty(
+        "cache_control",
+        hourCacheControl
+      );
+    }
   });
 });

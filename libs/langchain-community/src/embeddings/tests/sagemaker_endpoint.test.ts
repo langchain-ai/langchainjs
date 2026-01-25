@@ -1,5 +1,4 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable no-new */
 import { test, expect, describe, jest, beforeEach } from "@jest/globals";
 import { SageMakerEndpointEmbeddings } from "../sagemaker_endpoint.js";
 

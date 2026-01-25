@@ -1,12 +1,11 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { z } from "zod/v3";
+import { z } from "zod/v4";
 import { type BaseMessage } from "@langchain/core/messages";
 import {
   interopSafeParseAsync,
   interopZodObjectMakeFieldsOptional,
 } from "@langchain/core/utils/types";
-import { type ZodIssue } from "zod/v3";
-import { END } from "@langchain/langgraph";
+import { END, StateSchema, ReducedValue } from "@langchain/langgraph";
 
 import type { JumpTo } from "../types.js";
 import type { AgentMiddleware } from "../middleware/types.js";
@@ -32,9 +31,26 @@ export async function initializeMiddlewareStates(
       continue;
     }
 
+    // Convert StateSchema to Zod object if needed
+    let zodSchema = middleware.stateSchema;
+    if (StateSchema.isInstance(middleware.stateSchema)) {
+      const zodShape: Record<string, any> = {};
+      for (const [key, field] of Object.entries(
+        middleware.stateSchema.fields
+      )) {
+        if (ReducedValue.isInstance(field)) {
+          // For ReducedValue, use inputSchema if available, otherwise valueSchema
+          zodShape[key] = field.inputSchema || field.valueSchema;
+        } else {
+          zodShape[key] = field;
+        }
+      }
+      zodSchema = z.object(zodShape);
+    }
+
     // Create a modified schema where private properties are optional
     const modifiedSchema = interopZodObjectMakeFieldsOptional(
-      middleware.stateSchema,
+      zodSchema,
       (key) => key.startsWith("_")
     );
 
@@ -46,14 +62,12 @@ export async function initializeMiddlewareStates(
     }
 
     /**
-     * If safeParse fails, there are required public fields missing
+     * If safeParse fails, there are required public fields missing.
+     * Note: Zod v3 uses message "Required", Zod v4 uses "Invalid input: expected X, received undefined"
      */
     const requiredFields = parseResult.error.issues
-      .filter(
-        (issue: ZodIssue) =>
-          issue.code === "invalid_type" && issue.message === "Required"
-      )
-      .map((issue: ZodIssue) => `  - ${issue.path.join(".")}: ${issue.message}`)
+      .filter((issue) => issue.code === "invalid_type")
+      .map((issue) => `  - ${issue.path.join(".")}: Required`)
       .join("\n");
 
     throw new Error(
@@ -86,7 +100,7 @@ export async function initializeMiddlewareStates(
  * @returns A new schema containing only the private properties (underscore-prefixed), all made optional
  */
 export function derivePrivateState(
-  stateSchema?: z.ZodObject<z.ZodRawShape>
+  stateSchema?: z.ZodObject<z.ZodRawShape> | StateSchema<any>
 ): z.ZodObject<z.ZodRawShape> {
   const builtInStateSchema = {
     messages: z.custom<BaseMessage[]>(() => []),
@@ -98,7 +112,23 @@ export function derivePrivateState(
     return z.object(builtInStateSchema);
   }
 
-  const { shape } = stateSchema;
+  // Extract shape from either StateSchema or Zod object
+  let shape: Record<string, any>;
+  if (StateSchema.isInstance(stateSchema)) {
+    // For StateSchema, extract Zod schemas from fields
+    shape = {};
+    for (const [key, field] of Object.entries(stateSchema.fields)) {
+      if (ReducedValue.isInstance(field)) {
+        // For ReducedValue, use inputSchema if available, otherwise valueSchema
+        shape[key] = field.inputSchema || field.valueSchema;
+      } else {
+        shape[key] = field;
+      }
+    }
+  } else {
+    shape = stateSchema.shape;
+  }
+
   const privateShape: Record<string, any> = { ...builtInStateSchema };
 
   // Filter properties that start with underscore and make them optional

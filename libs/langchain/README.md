@@ -18,7 +18,13 @@ To help you ship LangChain apps to production faster, check out [LangSmith](http
 
 You can use npm, pnpm, or yarn to install LangChain.js
 
-`npm install -S langchain` or `pnpm install langchain` or `yarn add langchain`
+```sh
+npm install -S langchain
+# or
+pnpm install langchain
+# or
+yarn add langchain
+```
 
 ## 🚀 Why use LangChain?
 
@@ -33,6 +39,7 @@ Use LangChain for:
 
 - [LangSmith](https://www.langchain.com/langsmith) - Unified developer platform for building, testing, and monitoring LLM applications. With LangSmith, you can debug poor-performing LLM app runs, evaluate agent trajectories, gain visibility in production, and deploy agents with confidence.
 - [LangGraph](https://docs.langchain.com/oss/javascript/langgraph/overview) - Build agents that can reliably handle complex tasks with LangGraph, our low-level agent orchestration framework. LangGraph offers customizable architecture, long-term memory, and human-in-the-loop workflows — and is trusted in production by companies like LinkedIn, Uber, Klarna, and GitLab.
+- [Deep Agents](https://docs.langchain.com/oss/javascript/deepagents/overview) - Build sophisticated "deep" agents that go beyond simple tool-calling loops. Deep Agents combines planning tools, sub-agent spawning, file system access, and detailed prompts to handle complex, multi-step tasks — inspired by applications like Claude Code and Deep Research.
 
 ## 🌐 Supported Environments
 
