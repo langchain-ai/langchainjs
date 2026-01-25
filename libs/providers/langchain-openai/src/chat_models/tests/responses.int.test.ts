@@ -11,7 +11,7 @@ import {
   HumanMessage,
   SystemMessage,
   ToolMessage,
-  isAIMessage,
+  ContentBlock,
   isAIMessageChunk,
 } from "@langchain/core/messages";
 import { concat } from "@langchain/core/utils/stream";
@@ -35,7 +35,8 @@ async function concatStream(stream: Promise<AsyncIterable<AIMessageChunk>>) {
 
 function assertResponse(message: BaseMessage | BaseMessageChunk | undefined) {
   if (message == null) throw new Error("`message` is null");
-  if (!isAIMessage(message)) throw new Error("Message is not an AIMessage");
+  if (!AIMessage.isInstance(message))
+    throw new Error("Message is not an AIMessage");
   expect(Array.isArray(message.content)).toBe(true);
 
   for (const block of message.content) {
@@ -345,6 +346,114 @@ describe("OpenAI Reasoning with contentBlocks", () => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     expect((reasoningBlocks[0] as any).reasoning.length).toBeGreaterThan(0);
   }, 60000);
+});
+
+describe("OpenAI Reasoning elevation to message.content", () => {
+  test("invoke elevates reasoning to message.content array", async () => {
+    const llm = new ChatOpenAI({
+      model: "o3-mini",
+      reasoning: { effort: "low", summary: "auto" },
+      useResponsesApi: true,
+    });
+
+    const result = await llm.invoke("What is 5 + 5?");
+
+    // Verify reasoning is in additional_kwargs
+    expect(result.additional_kwargs.reasoning).toBeDefined();
+
+    // Verify reasoning is elevated to content array
+    expect(Array.isArray(result.content)).toBe(true);
+    const contentArray = result.content as ContentBlock[];
+
+    // Find reasoning blocks in content
+    const reasoningBlocks = contentArray.filter(
+      (block) => block.type === "reasoning"
+    );
+    expect(reasoningBlocks.length).toBeGreaterThan(0);
+
+    // Verify reasoning block has the expected structure
+    const reasoningBlock = reasoningBlocks[0] as {
+      type: string;
+      reasoning: string;
+    };
+    expect(reasoningBlock.type).toBe("reasoning");
+    expect(typeof reasoningBlock.reasoning).toBe("string");
+    expect(reasoningBlock.reasoning.length).toBeGreaterThan(0);
+
+    // Verify text content is also present
+    const textBlocks = contentArray.filter((block) => block.type === "text");
+    expect(textBlocks.length).toBeGreaterThan(0);
+  });
+
+  test("stream elevates reasoning to message.content array", async () => {
+    const llm = new ChatOpenAI({
+      model: "o3-mini",
+      reasoning: { effort: "low", summary: "auto" },
+      useResponsesApi: true,
+    });
+
+    let fullMessage: AIMessageChunk | null = null;
+    for await (const chunk of await llm.stream("What is 6 + 6?")) {
+      fullMessage = fullMessage ? concat(fullMessage, chunk) : chunk;
+    }
+
+    expect(fullMessage).toBeDefined();
+
+    // Verify reasoning is in additional_kwargs
+    expect(fullMessage!.additional_kwargs.reasoning).toBeDefined();
+
+    // Verify reasoning is elevated to content array
+    expect(Array.isArray(fullMessage!.content)).toBe(true);
+    const contentArray = fullMessage!.content as Array<{
+      type: string;
+      [key: string]: unknown;
+    }>;
+
+    // Find reasoning blocks in content
+    const reasoningBlocks = contentArray.filter(
+      (block) => block.type === "reasoning"
+    );
+    expect(reasoningBlocks.length).toBeGreaterThan(0);
+
+    // Verify reasoning block has the expected structure
+    const reasoningBlock = reasoningBlocks[0] as {
+      type: string;
+      reasoning: string;
+    };
+    expect(reasoningBlock.type).toBe("reasoning");
+    expect(typeof reasoningBlock.reasoning).toBe("string");
+    expect(reasoningBlock.reasoning.length).toBeGreaterThan(0);
+
+    // Verify text content is also present
+    const textBlocks = contentArray.filter((block) => block.type === "text");
+    expect(textBlocks.length).toBeGreaterThan(0);
+  }, 60000);
+
+  test("reasoning content can be found by looking for type 'reasoning' with 'reasoning' field", async () => {
+    // This test verifies the fix works for UI rendering use cases
+    // where code looks for { type: "reasoning", reasoning: "..." } in message.content
+    const llm = new ChatOpenAI({
+      model: "o3-mini",
+      reasoning: { effort: "low", summary: "auto" },
+      useResponsesApi: true,
+    });
+
+    const result = await llm.invoke("What is 7 + 7?");
+
+    expect(Array.isArray(result.content)).toBe(true);
+    const contentArray = result.content as Array<Record<string, unknown>>;
+
+    // Simulate what a UI component might do to find reasoning
+    const reasoningContent = contentArray.find(
+      (block) =>
+        block.type === "reasoning" && typeof block.reasoning === "string"
+    );
+
+    expect(reasoningContent).toBeDefined();
+    expect(reasoningContent?.type).toBe("reasoning");
+    expect(typeof reasoningContent?.reasoning).toBe("string");
+    expect((reasoningContent?.reasoning as string).length).toBeGreaterThan(0);
+  });
 });
 
 test("Test stateful API", async () => {
@@ -838,7 +947,7 @@ describe("reasoning summaries", () => {
       let response: BaseMessage = await model.invoke(messages, {});
 
       // Verify response is an AIMessage
-      expect(isAIMessage(response)).toBe(true);
+      expect(AIMessage.isInstance(response)).toBe(true);
       const aiResponse = response as AIMessage;
 
       // Verify tool calls were made
@@ -884,7 +993,7 @@ describe("reasoning summaries", () => {
       // Second invocation - should use tool results to provide final answer
       // This verifies that reasoning summaries are properly paired with function calls
       response = await model.invoke(messages, {});
-      expect(isAIMessage(response)).toBe(true);
+      expect(AIMessage.isInstance(response)).toBe(true);
       expect(response).toBeDefined();
 
       // Verify reasoning summaries are properly paired throughout the flow

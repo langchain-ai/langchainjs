@@ -1078,8 +1078,8 @@ describe("middleware", () => {
         }),
         wrapToolCall: async (request, handler) => {
           toolExecutions.push(`before:${request.toolCall.name}`);
-          expect(request.tool.name).toBe("get_weather");
-          expect(request.tool.description).toBe("Get weather for a location");
+          expect(request.tool?.name).toBe("get_weather");
+          expect(request.tool?.description).toBe("Get weather for a location");
           expect(request.toolCall).toMatchInlineSnapshot(`
             {
               "args": {
@@ -1426,7 +1426,7 @@ describe("middleware", () => {
       const trackingMiddleware = createMiddleware({
         name: "TrackingMiddleware",
         wrapToolCall: async (request, handler) => {
-          toolCalls.push(request.tool.name as string);
+          toolCalls.push(request.tool?.name as string);
           return handler(request);
         },
       });
@@ -1552,7 +1552,7 @@ describe("middleware", () => {
         }),
         wrapToolCall: async (request, handler) => {
           // Check if user is admin
-          if (request.tool.name === "admin_action" && !request.state.isAdmin) {
+          if (request.tool?.name === "admin_action" && !request.state.isAdmin) {
             return new ToolMessage({
               content: "Access denied: admin privileges required",
               tool_call_id: request.toolCall.id!,
@@ -1619,7 +1619,7 @@ describe("middleware", () => {
           const duration = Date.now() - startTime;
 
           metrics.push({
-            tool: request.tool.name as string,
+            tool: request.tool?.name as string,
             duration,
           });
 
@@ -1730,7 +1730,7 @@ describe("middleware", () => {
       const cacheMiddleware = createMiddleware({
         name: "CacheMiddleware",
         wrapToolCall: async (request, handler) => {
-          const cacheKey = `${request.tool.name}:${JSON.stringify(
+          const cacheKey = `${request.tool?.name}:${JSON.stringify(
             request.toolCall.args
           )}`;
 
@@ -1805,7 +1805,7 @@ describe("middleware", () => {
           const result = (await handler(request)) as ToolMessage;
 
           // Redact private tool results
-          if ((request.tool.name as string).includes("private")) {
+          if ((request.tool?.name as string).includes("private")) {
             return new ToolMessage({
               content: "[REDACTED]",
               tool_call_id: result.tool_call_id,

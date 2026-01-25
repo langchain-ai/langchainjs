@@ -1,5 +1,27 @@
 # @langchain/anthropic
 
+## 1.3.12
+
+### Patch Changes
+
+- [#9854](https://github.com/langchain-ai/langchainjs/pull/9854) [`160b5bf`](https://github.com/langchain-ai/langchainjs/commit/160b5bfe49f31190d28ec10a95075ef845c49fa3) Thanks [@christian-bromann](https://github.com/christian-bromann)! - fix(anthropic): apply cache_control at final formatting layer
+
+- [#9852](https://github.com/langchain-ai/langchainjs/pull/9852) [`35c7723`](https://github.com/langchain-ai/langchainjs/commit/35c7723b9953cc417cedb362e697632936d50820) Thanks [@marvikomo](https://github.com/marvikomo)! - Fix image content blocks being silently dropped when using ContentBlock.Multimodal.Image format with url, data, or fileId properties
+
+- [#9841](https://github.com/langchain-ai/langchainjs/pull/9841) [`54dfdce`](https://github.com/langchain-ai/langchainjs/commit/54dfdce99b1d1c16e1024c136ca86e7d78d76d80) Thanks [@yukukotani](https://github.com/yukukotani)! - Fix input_tokens calculation in usage metadata
+
+- Updated dependencies [[`05a9733`](https://github.com/langchain-ai/langchainjs/commit/05a9733448a10764c0bfd070af859c33e623b998)]:
+  - @langchain/core@1.1.17
+
+## 1.3.11
+
+### Patch Changes
+
+- [#9809](https://github.com/langchain-ai/langchainjs/pull/9809) [`aeb63b7`](https://github.com/langchain-ai/langchainjs/commit/aeb63b729a575775b19d988a1e14ae17f66a8373) Thanks [@christian-bromann](https://github.com/christian-bromann)! - fix(anthropic): consolidate input_json_delta blocks in streaming toolcalls
+
+- Updated dependencies [[`70387a1`](https://github.com/langchain-ai/langchainjs/commit/70387a144464539d65a546c8130cf51dfad025a1), [`a7c6ec5`](https://github.com/langchain-ai/langchainjs/commit/a7c6ec51ab9baa186ab5ebf815599c08f5c7e8ab), [`5e04543`](https://github.com/langchain-ai/langchainjs/commit/5e045435a783fdae44bc9a43e01a8e5eb7100db2), [`40b4467`](https://github.com/langchain-ai/langchainjs/commit/40b446762445575844610ee528abc77c247b2c43), [`17e30bd`](https://github.com/langchain-ai/langchainjs/commit/17e30bd7f4c7bdf87c9c30304b3b9e121cc1fbbc)]:
+  - @langchain/core@1.1.16
+
 ## 1.3.10
 
 ### Patch Changes

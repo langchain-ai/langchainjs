@@ -475,14 +475,19 @@ function chainToolCallHandlers(
   }
 
   // Compose two handlers where outer wraps inner
+  // The key is to properly propagate request modifications through the chain
   function composeTwo(
     outer: WrapToolCallHook,
     inner: WrapToolCallHook
   ): WrapToolCallHook {
     return async (request, handler) => {
       // Create a wrapper that calls inner with the base handler
-      const innerHandler: ToolCallHandler = async () =>
-        inner(request, async () => handler(request));
+      // The innerHandler receives the (possibly modified) request from outer
+      // and passes it to inner, which then calls the base handler
+      const innerHandler: ToolCallHandler = async (passedRequest) => {
+        // inner receives the request passed by outer (which may be modified)
+        return inner(passedRequest, handler);
+      };
 
       // Call outer with the wrapped inner as its handler
       return outer(request, innerHandler);
@@ -522,6 +527,34 @@ export function wrapToolCall(
        * Wrap with error handling and validation
        */
       const wrappedHandler: WrapToolCallHook = async (request, handler) => {
+        /**
+         * Capture the original state for this middleware's schema parsing.
+         * This is important because the request may be modified (via override)
+         * as it passes through the middleware chain, but each middleware
+         * should always see the full original state for its schema parsing.
+         */
+        const originalState = request.state;
+
+        /**
+         * Create a handler that preserves state parsing for this middleware
+         * while allowing tool/toolCall/state modifications from inner middleware
+         */
+        const wrappedInnerHandler: ToolCallHandler = async (passedRequest) => {
+          /**
+           * Merge the passed request with the original state for parsing.
+           * This ensures middleware can override tool/toolCall while
+           * maintaining proper state parsing for each middleware in the chain.
+           */
+          const mergedState = {
+            ...originalState,
+            ...passedRequest.state,
+          };
+          return handler({
+            ...passedRequest,
+            state: mergedState,
+          });
+        };
+
         try {
           const result = await originalHandler(
             {
@@ -530,13 +563,13 @@ export function wrapToolCall(
                * override state with the state from the specific middleware
                */
               state: {
-                messages: request.state.messages,
+                messages: originalState.messages,
                 ...(m.stateSchema
-                  ? interopParse(m.stateSchema, { ...request.state })
+                  ? interopParse(m.stateSchema, { ...originalState })
                   : {}),
               },
             } as ToolCallRequest<AgentBuiltInState, unknown>,
-            handler
+            wrappedInnerHandler
           );
 
           /**
@@ -551,7 +584,7 @@ export function wrapToolCall(
 
           return result;
         } catch (error) {
-          throw new MiddlewareError(error, m.name);
+          throw MiddlewareError.wrap(error, m.name);
         }
       };
       return wrappedHandler;

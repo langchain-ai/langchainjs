@@ -3,7 +3,12 @@ import type {
   InteropZodObject,
   InteropZodType,
 } from "@langchain/core/utils/types";
-import type { START, END, StateGraph } from "@langchain/langgraph";
+import type {
+  START,
+  END,
+  StateGraph,
+  StateDefinitionInit,
+} from "@langchain/langgraph";
 
 import type { LanguageModelLike } from "@langchain/core/language_models/base";
 import type {
@@ -84,9 +89,8 @@ export interface AgentTypeConfig<
   TResponse extends Record<string, any> | ResponseFormatUndefined =
     | Record<string, any>
     | ResponseFormatUndefined,
-  TState extends AnyAnnotationRoot | InteropZodObject | undefined =
-    | AnyAnnotationRoot
-    | InteropZodObject
+  TState extends StateDefinitionInit | undefined =
+    | StateDefinitionInit
     | undefined,
   TContext extends AnyAnnotationRoot | InteropZodObject =
     | AnyAnnotationRoot
@@ -406,10 +410,7 @@ export interface BuiltInState<
  * Base input type for `.invoke` and `.stream` methods.
  */
 export type UserInput<
-  TStateSchema extends
-    | AnyAnnotationRoot
-    | InteropZodObject
-    | undefined = undefined,
+  TStateSchema extends StateDefinitionInit | undefined = undefined,
 > = InferSchemaInput<TStateSchema> & {
   messages: Messages;
 };
@@ -487,10 +488,7 @@ export interface ExecutedToolCall {
 
 export type CreateAgentParams<
   StructuredResponseType extends Record<string, any> = Record<string, any>,
-  StateSchema extends
-    | AnyAnnotationRoot
-    | InteropZodObject
-    | undefined = undefined,
+  TStateSchema extends StateDefinitionInit | undefined = undefined,
   ContextSchema extends
     | AnyAnnotationRoot
     | InteropZodObject = AnyAnnotationRoot,
@@ -668,7 +666,7 @@ export type CreateAgentParams<
    * });
    * ```
    */
-  stateSchema?: StateSchema;
+  stateSchema?: TStateSchema;
   /**
    * An optional schema for the context. It allows to pass in a typed context object into the agent
    * invocation and allows to access it in hooks such as `prompt` and middleware.

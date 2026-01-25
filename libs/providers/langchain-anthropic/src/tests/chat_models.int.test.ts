@@ -852,6 +852,11 @@ test("system prompt caching", async () => {
     new SystemMessage({
       content: [
         {
+          // Add dynamic prefix to prevent caching between executions
+          type: "text",
+          text: `${new Date().toISOString()} (Now)`,
+        },
+        {
           type: "text",
           text: `You are a pirate. Always respond in pirate dialect.\nUse the following as context when answering questions: ${CACHED_TEXT}`,
           cache_control: { type: "ephemeral" },
@@ -959,6 +964,11 @@ test("human message caching", async () => {
     new SystemMessage({
       content: [
         {
+          // Add dynamic prefix to prevent caching between executions
+          type: "text",
+          text: `${new Date().toISOString()} (Now)`,
+        },
+        {
           type: "text",
           text: `You are a pirate. Always respond in pirate dialect.\nUse the following as context when answering questions: ${CACHED_TEXT}`,
         },
@@ -980,10 +990,16 @@ test("human message caching", async () => {
     res.usage_metadata?.input_token_details?.cache_creation
   ).toBeGreaterThan(0);
   expect(res.usage_metadata?.input_token_details?.cache_read).toBe(0);
+  expect(res.usage_metadata?.input_tokens).toBeGreaterThan(
+    res.usage_metadata?.input_token_details?.cache_creation ?? 0
+  );
   const res2 = await model.invoke(messages);
   expect(res2.usage_metadata?.input_token_details?.cache_creation).toBe(0);
   expect(res2.usage_metadata?.input_token_details?.cache_read).toBeGreaterThan(
     0
+  );
+  expect(res2.usage_metadata?.input_tokens).toBeGreaterThan(
+    res2.usage_metadata?.input_token_details?.cache_read ?? 0
   );
 });
 

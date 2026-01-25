@@ -11,7 +11,7 @@ import {
   convertToProviderContentBlock,
   parseBase64DataUrl,
   ContentBlock,
-  isAIMessage,
+  AIMessage,
 } from "@langchain/core/messages";
 import { ToolCall } from "@langchain/core/messages/tool";
 import {
@@ -152,7 +152,8 @@ export function _convertLangChainToolCallToAnthropic(
 }
 
 function* _formatContentBlocks(
-  content: ContentBlock[]
+  content: ContentBlock[],
+  toolCalls?: ToolCall[]
 ): Generator<Anthropic.Beta.BetaContentBlockParam> {
   const toolTypes = [
     "bash_code_execution_tool_result",
@@ -196,7 +197,58 @@ function* _formatContentBlocks(
         } as Anthropic.Messages.ImageBlockParam;
       }
     } else if (_isAnthropicImageBlockParam(contentPart)) {
-      return contentPart;
+      yield contentPart;
+    } else if (contentPart.type === "image") {
+      // Handle new ContentBlock.Multimodal.Image format
+      let source;
+
+      if ("url" in contentPart && typeof contentPart.url === "string") {
+        // URL-based image
+        source = _formatImage(contentPart.url);
+      } else if (
+        "data" in contentPart &&
+        (typeof contentPart.data === "string" ||
+          // eslint-disable-next-line no-instanceof/no-instanceof
+          contentPart.data instanceof Uint8Array)
+      ) {
+        // Base64-based image
+        const mimeType =
+          "mimeType" in contentPart && typeof contentPart.mimeType === "string"
+            ? contentPart.mimeType
+            : "image/jpeg";
+        const data =
+          typeof contentPart.data === "string"
+            ? contentPart.data
+            : Buffer.from(contentPart.data).toString("base64");
+        source = {
+          type: "base64" as const,
+          media_type: mimeType as
+            | "image/jpeg"
+            | "image/png"
+            | "image/gif"
+            | "image/webp",
+          data,
+        };
+      } else if (
+        "fileId" in contentPart &&
+        typeof contentPart.fileId === "string"
+      ) {
+        // File ID-based image
+        // Note: Anthropic supports file IDs for images that have been uploaded
+        // to their servers via the Files API
+        source = {
+          type: "file" as const,
+          file_id: contentPart.fileId,
+        };
+      }
+
+      if (source) {
+        yield {
+          type: "image" as const,
+          source,
+          ...(cacheControl ? { cache_control: cacheControl } : {}),
+        } as Anthropic.Messages.ImageBlockParam;
+      }
     } else if (contentPart.type === "document") {
       // PDF
       yield {
@@ -248,33 +300,44 @@ function* _formatContentBlocks(
     } else if (toolTypes.find((t) => t === contentPart.type)) {
       const contentPartCopy = { ...contentPart };
 
+      if (contentPartCopy.type === "input_json_delta") {
+        // `input_json_delta` type only represents yielding partial tool inputs
+        // and is not a valid type for Anthropic messages.
+        // These blocks appear in streaming responses and should be skipped
+        // as their input data is already captured in tool_calls.
+        continue;
+      }
+
       if (
         contentPartCopy.type === "tool_use" &&
         typeof contentPartCopy.input === "string"
       ) {
-        // `tool_use` content part may be followed by `input_json_delta` content parts
-        // which are chunks of a stringified JSON input, so we need to collect them
-        // and merge their inputs.
-        const inputDeltas = content.filter(
-          (nestedContentPart) =>
-            nestedContentPart.index === contentPartCopy.index &&
-            nestedContentPart.type === "input_json_delta" &&
-            typeof nestedContentPart.input === "string"
+        // First, try to get the input from the corresponding tool_call.
+        // This is the most reliable source since tool_calls are properly
+        // consolidated from tool_call_chunks during streaming.
+        const matchingToolCall = toolCalls?.find(
+          (tc) => tc.id === contentPartCopy.id
         );
-        // If no `input_json_delta` parts are found, this line will just
-        // return `contentPartCopy.input`, so no additional check is needed
-        contentPartCopy.input = inputDeltas.reduce(
-          (accumulator, nestedContentPart) =>
-            accumulator + nestedContentPart.input,
-          contentPartCopy.input
-        );
-      }
-
-      if (contentPartCopy.type === "input_json_delta") {
-        // `input_json_delta` type only represents yielding partial tool inputs
-        // and is not a valid type for Anthropic messages,
-        // and since we collect these inputs for a relevant `tool_use`, we can skip it.
-        continue;
+        if (matchingToolCall) {
+          contentPartCopy.input = matchingToolCall.args;
+        } else {
+          // Fallback: `tool_use` content part may be followed by `input_json_delta`
+          // content parts which are chunks of a stringified JSON input,
+          // so we need to collect them and merge their inputs.
+          const inputDeltas = content.filter(
+            (nestedContentPart) =>
+              nestedContentPart.index === contentPartCopy.index &&
+              nestedContentPart.type === "input_json_delta" &&
+              typeof nestedContentPart.input === "string"
+          );
+          // If no `input_json_delta` parts are found, this line will just
+          // return `contentPartCopy.input`, so no additional check is needed
+          contentPartCopy.input = inputDeltas.reduce(
+            (accumulator, nestedContentPart) =>
+              accumulator + nestedContentPart.input,
+            contentPartCopy.input
+          );
+        }
       }
 
       if ("index" in contentPartCopy) {
@@ -313,13 +376,13 @@ function* _formatContentBlocks(
   }
 }
 
-function _formatContent(message: BaseMessage) {
+function _formatContent(message: BaseMessage, toolCalls?: ToolCall[]) {
   const { content } = message;
 
   if (typeof content === "string") {
     return content;
   } else {
-    return Array.from(_formatContentBlocks(content));
+    return Array.from(_formatContentBlocks(content, toolCalls));
   }
 }
 
@@ -355,7 +418,7 @@ export function _convertMessagesToAnthropicPayload(
       throw new Error(`Message type "${message.type}" is not supported.`);
     }
     if (
-      isAIMessage(message) &&
+      AIMessage.isInstance(message) &&
       message.response_metadata?.output_version === "v1"
     ) {
       return {
@@ -363,7 +426,7 @@ export function _convertMessagesToAnthropicPayload(
         content: _formatStandardContent(message),
       };
     }
-    if (isAIMessage(message) && !!message.tool_calls?.length) {
+    if (AIMessage.isInstance(message) && !!message.tool_calls?.length) {
       if (typeof message.content === "string") {
         if (message.content === "") {
           return {
@@ -399,13 +462,16 @@ export function _convertMessagesToAnthropicPayload(
         }
         return {
           role,
-          content: _formatContent(message),
+          content: _formatContent(message, message.tool_calls),
         };
       }
     } else {
       return {
         role,
-        content: _formatContent(message),
+        content: _formatContent(
+          message,
+          AIMessage.isInstance(message) ? message.tool_calls : undefined
+        ),
       };
     }
   });
@@ -415,6 +481,80 @@ export function _convertMessagesToAnthropicPayload(
     ),
     system,
   } as AnthropicMessageCreateParams;
+}
+
+/**
+ * Cache control configuration for Anthropic prompt caching.
+ */
+interface CacheControl {
+  type: "ephemeral";
+  ttl?: "5m" | "1h";
+}
+
+/**
+ * Applies cache_control to the last content block of the last message in the payload.
+ * This is the recommended approach for prompt caching as it applies the cache_control
+ * at the final formatting layer, after all message processing is complete.
+ *
+ * This matches the Python langchain-anthropic implementation where cache_control
+ * is applied via model_settings rather than modifying message content blocks directly.
+ *
+ * @param payload - The formatted Anthropic message payload
+ * @param cacheControl - The cache control configuration to apply
+ * @returns The payload with cache_control applied to the last content block
+ */
+export function applyCacheControlToPayload(
+  payload: AnthropicMessageCreateParams,
+  cacheControl: CacheControl
+): AnthropicMessageCreateParams {
+  if (!payload.messages || payload.messages.length === 0) {
+    return payload;
+  }
+
+  const messages = [...payload.messages];
+  const lastMessageIndex = messages.length - 1;
+  const lastMessage = messages[lastMessageIndex];
+
+  if (!lastMessage) {
+    return payload;
+  }
+
+  // Handle string content - convert to text block with cache_control
+  if (typeof lastMessage.content === "string") {
+    messages[lastMessageIndex] = {
+      ...lastMessage,
+      content: [
+        {
+          type: "text",
+          text: lastMessage.content,
+          cache_control: cacheControl,
+        },
+      ],
+    };
+    return { ...payload, messages };
+  }
+
+  // Handle array content - add cache_control to the last block
+  if (Array.isArray(lastMessage.content) && lastMessage.content.length > 0) {
+    const content = [...lastMessage.content];
+    const lastBlockIndex = content.length - 1;
+    const lastBlock = content[lastBlockIndex];
+
+    // Add cache_control to the last block
+    content[lastBlockIndex] = {
+      ...lastBlock,
+      cache_control: cacheControl,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } as any;
+
+    messages[lastMessageIndex] = {
+      ...lastMessage,
+      content,
+    };
+    return { ...payload, messages };
+  }
+
+  return payload;
 }
 
 function mergeMessages(messages: AnthropicMessageCreateParams["messages"]) {

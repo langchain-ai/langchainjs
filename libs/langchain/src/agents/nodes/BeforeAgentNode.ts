@@ -1,4 +1,4 @@
-import { z } from "zod/v3";
+import { z } from "zod/v4";
 import { RunnableConfig } from "@langchain/core/runnables";
 import { MiddlewareNode, type MiddlewareNodeOptions } from "./middleware.js";
 import type { AgentMiddleware, MiddlewareResult } from "../middleware/types.js";

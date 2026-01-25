@@ -17,6 +17,6 @@
     "@langchain/openai": "workspace:*",
     "langchain": "workspace:*",
     "typescript": "^5.0.0",
-    "vite": "^4.2.0"
+    "vite": "^6.4.1"
   }
 }
