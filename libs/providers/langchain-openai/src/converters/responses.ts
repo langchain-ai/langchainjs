@@ -565,12 +565,6 @@ export type ResponsesStreamState = {
  * - Usage metadata is only available in `response.completed` events
  * - Partial images are intentionally ignored to prevent memory bloat in conversation history
  */
-
-export const convertResponsesDeltaToChatGenerationChunk: Converter<
-  OpenAIClient.Responses.ResponseStreamEvent,
-  ChatGenerationChunk | null
-> = (event) => convertResponsesDeltaToChatGenerationChunkWithState(event);
-
 export const convertResponsesDeltaToChatGenerationChunkWithState = (
   event: OpenAIClient.Responses.ResponseStreamEvent,
   state?: ResponsesStreamState
@@ -805,6 +799,22 @@ export const convertResponsesDeltaToChatGenerationChunkWithState = (
     generationInfo,
   });
 };
+
+/**
+ * Converts OpenAI Responses API stream events to LangChain ChatGenerationChunk objects.
+ *
+ * This is a convenience wrapper around `convertResponsesDeltaToChatGenerationChunkWithState`
+ * that doesn't require state management. For proper tool call ID tracking when using reasoning
+ * models or when function call arguments arrive as delta events, use
+ * `convertResponsesDeltaToChatGenerationChunkWithState` with a state object instead.
+ *
+ * @param event - A streaming event from OpenAI's Responses API
+ * @returns A ChatGenerationChunk or null
+ */
+export const convertResponsesDeltaToChatGenerationChunk: Converter<
+  OpenAIClient.Responses.ResponseStreamEvent,
+  ChatGenerationChunk | null
+> = (event) => convertResponsesDeltaToChatGenerationChunkWithState(event);
 
 /**
  * Converts a single LangChain BaseMessage to OpenAI Responses API input format.

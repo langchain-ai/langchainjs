@@ -348,12 +348,12 @@ describe("convertResponsesDeltaToChatGenerationChunk", () => {
     const merged = chunks.reduce((acc, chunk) => acc.concat(chunk));
 
     expect(merged.tool_call_chunks).toHaveLength(2);
-    expect(merged.tool_call_chunks?.some((chunk) => chunk.id === "call_1")).toBe(
-      true
-    );
-    expect(merged.tool_call_chunks?.some((chunk) => chunk.id === "call_2")).toBe(
-      true
-    );
+    expect(
+      merged.tool_call_chunks?.some((chunk) => chunk.id === "call_1")
+    ).toBe(true);
+    expect(
+      merged.tool_call_chunks?.some((chunk) => chunk.id === "call_2")
+    ).toBe(true);
     const firstCall = merged.tool_call_chunks?.find(
       (chunk) => chunk.index === 1
     );
