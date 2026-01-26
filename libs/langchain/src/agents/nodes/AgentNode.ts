@@ -13,7 +13,6 @@ import {
   InteropZodObject,
   getSchemaDescription,
   interopParse,
-  interopZodObjectPartial,
 } from "@langchain/core/utils/types";
 import { raceWithSignal } from "@langchain/core/runnables";
 import type { ToolCall } from "@langchain/core/messages/tool";
@@ -28,7 +27,7 @@ import {
   hasToolCalls,
   isClientTool,
 } from "../utils.js";
-import { mergeAbortSignals } from "../nodes/utils.js";
+import { mergeAbortSignals, toPartialZodObject } from "../nodes/utils.js";
 import { CreateAgentParams } from "../types.js";
 import type { InternalAgentState, Runtime } from "../runtime.js";
 import type {
@@ -440,7 +439,7 @@ export class AgentNode<
             state: {
               ...(middleware.stateSchema
                 ? interopParse(
-                    interopZodObjectPartial(middleware.stateSchema),
+                    toPartialZodObject(middleware.stateSchema),
                     state
                   )
                 : {}),
