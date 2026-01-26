@@ -1,6 +1,7 @@
 import { expect, test, describe } from "@jest/globals";
 import { z } from "zod";
 import { schemaToGeminiParameters } from "../utils/zod_to_gemini_parameters.js";
+import { extendInteropZodObject } from "@langchain/core/utils/types";
 
 describe("schemaToGeminiParameters - edge cases", () => {
   test("should throw error for discriminatedUnion", () => {
@@ -59,31 +60,55 @@ describe("schemaToGeminiParameters - edge cases", () => {
     expect(result.properties?.amount?.type).toBe("number");
   });
 
-  test("should handle nullable union type", () => {
+  test("should handle required fields", () => {
     const zodSchema = z.object({
-      optionalField: z.string().nullable(),
+      requiredField: z.string(),
     });
 
     const result = schemaToGeminiParameters(zodSchema);
+    expect(result.required).toEqual(["requiredField"]);
+    expect(result.properties?.requiredField?.type).toBe("string");
+    expect(result.properties?.requiredField?.nullable).toBeUndefined();
+  });
+
+  test("should handle nullable union type", () => {
+    const zodSchema = z.object({
+      nullableField: z.string().nullable(),
+    });
+
+    const result = schemaToGeminiParameters(zodSchema);
+    expect(result.required).toEqual(["nullableField"]);
+    expect(result.properties?.nullableField?.type).toBe("string");
+    expect(result.properties?.nullableField?.nullable).toBe(true);
+  });
+
+  test("should handle optional union type", () => {
+    const zodSchema = z.object({
+      optionalField: z.string().optional(),
+    });
+
+    const result = schemaToGeminiParameters(zodSchema);
+    expect(result.required).toBeUndefined();
     expect(result.properties?.optionalField?.type).toBe("string");
-    expect(result.properties?.optionalField?.nullable).toBe(true);
+    expect(result.properties?.optionalField?.nullable).toBeUndefined();
   });
 
   test("should handle nullish (nullable and optional)", () => {
     const zodSchema = z.object({
-      optionalField: z.string().nullish(),
+      nullishField: z.string().nullish(),
     });
 
     const result = schemaToGeminiParameters(zodSchema);
-    expect(result.properties?.optionalField?.type).toBe("string");
-    expect(result.properties?.optionalField?.nullable).toBe(true);
+    expect(result.required).toBeUndefined();
+    expect(result.properties?.nullishField?.type).toBe("string");
+    expect(result.properties?.nullishField?.nullable).toBe(true);
   });
 
   test("should handle nullable object type", () => {
     // nullable object type will use oneOf like:
-    // { required: ["color"], properties: { color: { anyOf: [{ type: "object", ... }, { type: "null" }] } } }
+    // { required: ["nullableField"], properties: { nullableField: { anyOf: [{ type: "object", ... }, { type: "null" }] } } }
     const zodSchema = z.object({
-      color: z
+      nullableField: z
         .object({
           name: z.string(),
         })
@@ -92,13 +117,30 @@ describe("schemaToGeminiParameters - edge cases", () => {
 
     const result = schemaToGeminiParameters(zodSchema);
     expect(result).toBeDefined();
-    expect(result.properties?.color?.type).toBe("object");
-    expect(result.properties?.color?.nullable).toBe(true);
+    expect(result.required).toEqual(["nullableField"]);
+    expect(result.properties?.nullableField?.type).toBe("object");
+    expect(result.properties?.nullableField?.nullable).toBe(true);
+  });
+
+  test("should handle optional object type", () => {
+    const zodSchema = z.object({
+      optionalField: z
+        .object({
+          name: z.string(),
+        })
+        .optional(),
+    });
+
+    const result = schemaToGeminiParameters(zodSchema);
+    expect(result).toBeDefined();
+    expect(result.required).toBeUndefined();
+    expect(result.properties?.optionalField?.type).toBe("object");
+    expect(result.properties?.optionalField?.nullable).toBeUndefined();
   });
 
   test("should handle nullish object type", () => {
     const zodSchema = z.object({
-      color: z
+      nullishField: z
         .object({
           name: z.string(),
         })
@@ -107,8 +149,9 @@ describe("schemaToGeminiParameters - edge cases", () => {
 
     const result = schemaToGeminiParameters(zodSchema);
     expect(result).toBeDefined();
-    expect(result.properties?.color?.type).toBe("object");
-    expect(result.properties?.color?.nullable).toBe(true);
+    expect(result.required).toBeUndefined();
+    expect(result.properties?.nullishField?.type).toBe("object");
+    expect(result.properties?.nullishField?.nullable).toBe(true);
   });
 
   test("should provide helpful error message for discriminatedUnion", () => {
