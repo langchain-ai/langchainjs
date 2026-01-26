@@ -5,31 +5,35 @@ export function assertNoEmptyStringEnums(
 ): void {
   if (schema == null || typeof schema !== "object") return;
   const obj = schema as Record<string, unknown>;
-  
+
   if (Array.isArray(obj.enum)) {
     if (obj.enum.some((v) => v === "")) {
       const pathStr = path.length ? ` at path "${path.join(".")}"` : "";
       const toolStr = toolName ? ` in tool "${toolName}"` : "";
       throw new Error(
         `Invalid enum: empty string not allowed${toolStr}${pathStr}. ` +
-        "Gemini API rejects empty strings in enums."
+          "Gemini API rejects empty strings in enums."
       );
     }
   }
-  
+
   // Descend into common JSON Schema nests
-  if (obj.type === "object" && obj.properties && typeof obj.properties === "object") {
+  if (
+    obj.type === "object" &&
+    obj.properties &&
+    typeof obj.properties === "object"
+  ) {
     for (const [prop, child] of Object.entries(
       obj.properties as Record<string, unknown>
     )) {
       assertNoEmptyStringEnums(child, toolName, [...path, prop]);
     }
   }
-  
+
   if (obj.items) {
     assertNoEmptyStringEnums(obj.items, toolName, [...path, "[]"]);
   }
-  
+
   for (const k of ["anyOf", "oneOf", "allOf"]) {
     const arr = obj[k];
     if (Array.isArray(arr)) {
@@ -38,8 +42,11 @@ export function assertNoEmptyStringEnums(
       );
     }
   }
-  
-  if (obj.additionalProperties && typeof obj.additionalProperties === "object") {
+
+  if (
+    obj.additionalProperties &&
+    typeof obj.additionalProperties === "object"
+  ) {
     assertNoEmptyStringEnums(obj.additionalProperties, toolName, [
       ...path,
       "additionalProperties",
