@@ -1,5 +1,14 @@
 # @langchain/community
 
+## 1.1.8
+
+### Patch Changes
+
+- [#9759](https://github.com/langchain-ai/langchainjs/pull/9759) [`82c51e4`](https://github.com/langchain-ai/langchainjs/commit/82c51e4125594c83b5578680e5a3d899f6268caa) Thanks [@ejscribner](https://github.com/ejscribner)! - Fix(couchbase): Add Couchbase peer dependency and add `CouchbaseQueryVectorStore` and `CouchbaseSearchVectorStore` to tsdown bundle
+
+- Updated dependencies [[`a496cc0`](https://github.com/langchain-ai/langchainjs/commit/a496cc09d2b4d28a8eb0c4b96bd3555ab1cc47dc)]:
+  - @langchain/classic@1.0.11
+
 ## 1.1.7
 
 ### Patch Changes
