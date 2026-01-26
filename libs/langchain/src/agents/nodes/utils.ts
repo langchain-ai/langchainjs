@@ -4,7 +4,11 @@ import { type BaseMessage } from "@langchain/core/messages";
 import {
   interopSafeParseAsync,
   interopZodObjectMakeFieldsOptional,
+  interopZodObjectPartial,
+  isInteropZodObject,
+  type InteropZodObject,
 } from "@langchain/core/utils/types";
+import type { StateDefinitionInit } from "@langchain/langgraph";
 import { END, StateSchema, ReducedValue } from "@langchain/langgraph";
 
 import type { JumpTo } from "../types.js";
@@ -143,6 +147,46 @@ export function derivePrivateState(
 
   // Return a new schema with only private properties (all optional)
   return z.object(privateShape);
+}
+
+/**
+ * Converts any supported schema type (ZodObject, StateSchema, AnnotationRoot) to a partial Zod object.
+ * This is useful for parsing state loosely where all fields are optional.
+ *
+ * @param schema - The schema to convert (InteropZodObject, StateSchema, or AnnotationRoot)
+ * @returns A partial Zod object schema where all fields are optional
+ */
+export function toPartialZodObject(
+  schema: StateDefinitionInit
+): InteropZodObject {
+  // Handle ZodObject directly
+  if (isInteropZodObject(schema)) {
+    return interopZodObjectPartial(schema);
+  }
+
+  // Handle StateSchema: convert fields to Zod shape, then make partial
+  if (StateSchema.isInstance(schema)) {
+    // First extract Zod schemas from StateSchema fields
+    const shape: Record<string, any> = {};
+    for (const [key, field] of Object.entries(schema.fields)) {
+      if (ReducedValue.isInstance(field)) {
+        // For ReducedValue, use inputSchema if available, otherwise valueSchema
+        shape[key] = field.inputSchema || field.valueSchema;
+      } else {
+        shape[key] = field;
+      }
+    }
+
+    // Then make all fields optional
+    const partialShape: Record<string, any> = {};
+    for (const [key, value] of Object.entries(shape)) {
+      partialShape[key] = value.optional();
+    }
+    return z.object(partialShape);
+  }
+
+  // Fallback: return empty object schema
+  return z.object({});
 }
 
 /**
