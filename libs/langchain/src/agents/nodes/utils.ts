@@ -179,7 +179,7 @@ export function toPartialZodObject(
       // Only call .optional() on Zod v4 schemas, otherwise use z.any()
       partialShape[key] = isZodSchemaV4(fieldSchema)
         ? (fieldSchema as any).optional()
-        : z.any();
+        : z.any().optional();
     }
     return z.object(partialShape);
   }
