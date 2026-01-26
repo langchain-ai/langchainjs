@@ -6,6 +6,7 @@ import {
   interopZodObjectMakeFieldsOptional,
   interopZodObjectPartial,
   isInteropZodObject,
+  isZodSchemaV4,
   type InteropZodObject,
 } from "@langchain/core/utils/types";
 import type { StateDefinitionInit } from "@langchain/langgraph";
@@ -166,21 +167,19 @@ export function toPartialZodObject(
 
   // Handle StateSchema: convert fields to Zod shape, then make partial
   if (StateSchema.isInstance(schema)) {
-    // First extract Zod schemas from StateSchema fields
-    const shape: Record<string, any> = {};
+    const partialShape: Record<string, any> = {};
     for (const [key, field] of Object.entries(schema.fields)) {
+      let fieldSchema: unknown;
       if (ReducedValue.isInstance(field)) {
         // For ReducedValue, use inputSchema if available, otherwise valueSchema
-        shape[key] = field.inputSchema || field.valueSchema;
+        fieldSchema = field.inputSchema || field.valueSchema;
       } else {
-        shape[key] = field;
+        fieldSchema = field;
       }
-    }
-
-    // Then make all fields optional
-    const partialShape: Record<string, any> = {};
-    for (const [key, value] of Object.entries(shape)) {
-      partialShape[key] = value.optional();
+      // Only call .optional() on Zod v4 schemas, otherwise use z.any()
+      partialShape[key] = isZodSchemaV4(fieldSchema)
+        ? (fieldSchema as any).optional()
+        : z.any();
     }
     return z.object(partialShape);
   }
