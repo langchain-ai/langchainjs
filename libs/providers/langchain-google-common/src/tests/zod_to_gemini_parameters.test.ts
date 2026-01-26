@@ -1,7 +1,6 @@
 import { expect, test, describe } from "@jest/globals";
 import { z } from "zod";
 import { schemaToGeminiParameters } from "../utils/zod_to_gemini_parameters.js";
-import { extendInteropZodObject } from "@langchain/core/utils/types";
 
 describe("schemaToGeminiParameters - edge cases", () => {
   test("should throw error for discriminatedUnion", () => {
