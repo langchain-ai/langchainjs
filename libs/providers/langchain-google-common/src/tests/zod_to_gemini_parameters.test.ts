@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { expect, test, describe } from "@jest/globals";
 import { z } from "zod";
 import { schemaToGeminiParameters } from "../utils/zod_to_gemini_parameters.js";
@@ -78,6 +77,38 @@ describe("schemaToGeminiParameters - edge cases", () => {
     const result = schemaToGeminiParameters(zodSchema);
     expect(result.properties?.optionalField?.type).toBe("string");
     expect(result.properties?.optionalField?.nullable).toBe(true);
+  });
+
+  test("should handle nullable object type", () => {
+    // nullable object type will use oneOf like:
+    // { required: ["color"], properties: { color: { anyOf: [{ type: "object", ... }, { type: "null" }] } } }
+    const zodSchema = z.object({
+      color: z
+        .object({
+          name: z.string(),
+        })
+        .nullable(),
+    });
+
+    const result = schemaToGeminiParameters(zodSchema);
+    expect(result).toBeDefined();
+    expect(result.properties?.color?.type).toBe("object");
+    expect(result.properties?.color?.nullable).toBe(true);
+  });
+
+  test("should handle nullish object type", () => {
+    const zodSchema = z.object({
+      color: z
+        .object({
+          name: z.string(),
+        })
+        .nullish(),
+    });
+
+    const result = schemaToGeminiParameters(zodSchema);
+    expect(result).toBeDefined();
+    expect(result.properties?.color?.type).toBe("object");
+    expect(result.properties?.color?.nullable).toBe(true);
   });
 
   test("should provide helpful error message for discriminatedUnion", () => {
