@@ -44,56 +44,50 @@ test("converts standard tool_call content blocks to Google functionCall format",
   });
 });
 
-describe('Gemini Tool Schema Validation - Empty String in Enum', () => {
-  test('should throw descriptive error for empty string in z.enum', () => { 
-    const model = new ChatGoogleGenerativeAI({ 
-      model: "gemini-2.0-flash-exp" 
+describe("Gemini Tool Schema Validation - Empty String in Enum", () => {
+  test("should throw descriptive error for empty string in z.enum", () => {
+    const model = new ChatGoogleGenerativeAI({
+      model: "gemini-2.0-flash-exp",
     });
 
     const schema = z.object({
-      status: z.enum(["", "active", "inactive"]).describe("Status value")
+      status: z.enum(["", "active", "inactive"]).describe("Status value"),
     });
 
-    const crashTool = tool(
-      async (_input: z.infer<typeof schema>) => "ok",
-      {
-        name: "crash_tool",
-        description: "This tool will crash Gemini SDK",
-        schema: schema
-      }
+    const crashTool = tool(async (_input: z.infer<typeof schema>) => "ok", {
+      name: "crash_tool",
+      description: "This tool will crash Gemini SDK",
+      schema: schema,
+    });
+
+    expect(() => model.bindTools([crashTool])).toThrow(
+      /Invalid enum: empty string not allowed/
     );
+  });
 
-    // ← Test at bindTools, not invoke
-    expect(() => model.bindTools([crashTool]))
-      .toThrow(/Invalid enum: empty string not allowed/);
-  }); // ← Remove timeout, it's synchronous now
-
-  test('should throw descriptive error for empty string in z.nativeEnum', () => {  
+  test("should throw descriptive error for empty string in z.nativeEnum", () => {
     enum TestEnum {
       A = "",
       B = "active",
-      C = "inactive"
+      C = "inactive",
     }
 
-    const model = new ChatGoogleGenerativeAI({ 
-      model: "gemini-2.0-flash-exp" 
+    const model = new ChatGoogleGenerativeAI({
+      model: "gemini-2.0-flash-exp",
     });
 
     const schema = z.object({
-      status: z.nativeEnum(TestEnum).describe("Status value")
+      status: z.nativeEnum(TestEnum).describe("Status value"),
     });
 
-    const crashTool = tool(
-      async (_input: z.infer<typeof schema>) => "ok",
-      {
-        name: "crash_tool",
-        description: "This tool will crash Gemini SDK",
-        schema: schema
-      }
-    );
+    const crashTool = tool(async (_input: z.infer<typeof schema>) => "ok", {
+      name: "crash_tool",
+      description: "This tool will crash Gemini SDK",
+      schema: schema,
+    });
 
-    // ← Test at bindTools, not invoke
-    expect(() => model.bindTools([crashTool]))
-      .toThrow(/Invalid enum: empty string not allowed/);
-  }); // ← Remove timeout
+    expect(() => model.bindTools([crashTool])).toThrow(
+      /Invalid enum: empty string not allowed/
+    );
+  });
 });

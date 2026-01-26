@@ -840,7 +840,9 @@ export function convertToGenerativeAITools(
             };
           }
           if (isOpenAITool(tool)) {
-            const params = jsonSchemaToGeminiParameters(tool.function.parameters);
+            const params = jsonSchemaToGeminiParameters(
+              tool.function.parameters
+            );
             assertNoEmptyStringEnums(params, tool.function.name);
             return {
               name: tool.function.name,
