@@ -17,7 +17,7 @@ import {
 import { BaseChatOpenAI, BaseChatOpenAICallOptions } from "./base.js";
 import {
   convertMessagesToResponsesInput,
-  convertResponsesDeltaToChatGenerationChunk,
+  convertResponsesDeltaToChatGenerationChunkWithState,
   convertResponsesMessageToAIMessage,
 } from "../converters/responses.js";
 import { OpenAIVerbosityParam } from "../types.js";
@@ -220,6 +220,7 @@ export class ChatOpenAIResponses<
     options: this["ParsedCallOptions"],
     runManager?: CallbackManagerForLLMRun
   ): AsyncGenerator<ChatGenerationChunk> {
+    const toolCallIdsByOutputIndex = new Map<number, string>();
     const streamIterable = await this.completionWithRetry(
       {
         ...this.invocationParams(options),
@@ -234,7 +235,9 @@ export class ChatOpenAIResponses<
     );
 
     for await (const data of streamIterable) {
-      const chunk = convertResponsesDeltaToChatGenerationChunk(data);
+      const chunk = convertResponsesDeltaToChatGenerationChunkWithState(data, {
+        toolCallIdsByOutputIndex,
+      });
       if (chunk == null) continue;
       yield chunk;
       await runManager?.handleLLMNewToken(

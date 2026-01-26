@@ -490,6 +490,17 @@ export const convertReasoningSummaryToResponsesReasoningItem: Converter<
 };
 
 /**
+ * State object for tracking tool call IDs across streaming events.
+ *
+ * This state is used to maintain tool call ID mappings by output index,
+ * ensuring that tool call chunks maintain their IDs even when function call
+ * arguments arrive as delta events after the initial function call is added.
+ */
+export type ResponsesStreamState = {
+  toolCallIdsByOutputIndex: Map<number, string>;
+};
+
+/**
  * Converts OpenAI Responses API stream events to LangChain ChatGenerationChunk objects.
  *
  * This converter processes streaming events from OpenAI's Responses API and transforms them
@@ -497,6 +508,9 @@ export const convertReasoningSummaryToResponsesReasoningItem: Converter<
  * It handles various event types including text deltas, tool calls, reasoning, and metadata updates.
  *
  * @param event - A streaming event from OpenAI's Responses API
+ * @param state - Optional state object for tracking tool call IDs across events. When provided,
+ *   ensures that tool call chunks maintain their IDs even when function call arguments arrive
+ *   as delta events. The state is automatically cleared on `response.created` events.
  *
  * @returns A ChatGenerationChunk containing:
  *   - `text`: Concatenated text content from all text parts in the event
@@ -536,6 +550,13 @@ export const convertReasoningSummaryToResponsesReasoningItem: Converter<
  * ```
  *
  * @remarks
+ * - When `state` is provided, tool call IDs are tracked by output index. This ensures that
+ *   `response.function_call_arguments.delta` and `response.custom_tool_call_input.delta` events
+ *   maintain the correct tool call ID, even when they arrive after reasoning events. The state
+ *   is automatically cleared on `response.created` events.
+ * - For proper tool call ID tracking when using reasoning models or when function call arguments
+ *   arrive as delta events, always pass a `state` object. Without state, tool call chunks from
+ *   delta events may not have IDs, which can cause issues when concatenating chunks from multiple events.
  * - Text content is accumulated in an array with index tracking for proper ordering
  * - Tool call chunks include incremental arguments that need to be concatenated by the consumer
  * - Reasoning summaries are built incrementally across multiple events
@@ -544,10 +565,18 @@ export const convertReasoningSummaryToResponsesReasoningItem: Converter<
  * - Usage metadata is only available in `response.completed` events
  * - Partial images are intentionally ignored to prevent memory bloat in conversation history
  */
+
 export const convertResponsesDeltaToChatGenerationChunk: Converter<
   OpenAIClient.Responses.ResponseStreamEvent,
   ChatGenerationChunk | null
-> = (event) => {
+> = (event) => convertResponsesDeltaToChatGenerationChunkWithState(event);
+
+export const convertResponsesDeltaToChatGenerationChunkWithState = (
+  event: OpenAIClient.Responses.ResponseStreamEvent,
+  state?: ResponsesStreamState
+): ChatGenerationChunk | null => {
+  const toolCallIdsByOutputIndex =
+    state?.toolCallIdsByOutputIndex ?? new Map<number, string>();
   const content: ContentBlock[] = [];
   let generationInfo: Record<string, unknown> = {};
   let usage_metadata: UsageMetadata | undefined;
@@ -587,10 +616,13 @@ export const convertResponsesDeltaToChatGenerationChunk: Converter<
     event.type === "response.output_item.added" &&
     event.item.type === "function_call"
   ) {
+    if (typeof event.output_index === "number") {
+      toolCallIdsByOutputIndex.set(event.output_index, event.item.call_id);
+    }
     tool_call_chunks.push({
       type: "tool_call_chunk",
       name: event.item.name,
-      args: event.item.arguments,
+      args: event.item.arguments ?? "",
       id: event.item.call_id,
       index: event.output_index,
     });
@@ -644,6 +676,7 @@ export const convertResponsesDeltaToChatGenerationChunk: Converter<
   ) {
     additional_kwargs.tool_outputs = [event.item];
   } else if (event.type === "response.created") {
+    toolCallIdsByOutputIndex.clear();
     response_metadata.id = event.response.id;
     response_metadata.model_name = event.response.model;
     response_metadata.model = event.response.model;
@@ -662,9 +695,14 @@ export const convertResponsesDeltaToChatGenerationChunk: Converter<
     event.type === "response.function_call_arguments.delta" ||
     event.type === "response.custom_tool_call_input.delta"
   ) {
+    const toolCallId =
+      typeof event.output_index === "number"
+        ? toolCallIdsByOutputIndex.get(event.output_index)
+        : undefined;
     tool_call_chunks.push({
       type: "tool_call_chunk",
       args: event.delta,
+      ...(toolCallId ? { id: toolCallId } : {}),
       index: event.output_index,
     });
   } else if (

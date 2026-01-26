@@ -9,9 +9,11 @@ import {
   ToolCallChunk,
   ToolMessage,
 } from "@langchain/core/messages";
+import { ChatGenerationChunk } from "@langchain/core/outputs";
 import {
   convertMessagesToResponsesInput,
   convertResponsesDeltaToChatGenerationChunk,
+  convertResponsesDeltaToChatGenerationChunkWithState,
   convertResponsesMessageToAIMessage,
   convertResponsesUsageToUsageMetadata,
   convertStandardContentMessageToResponsesInput,
@@ -283,6 +285,79 @@ describe("convertResponsesDeltaToChatGenerationChunk", () => {
         customResultMessage.tool_call_chunks
       );
     });
+  });
+
+  it("keeps tool call chunks after concatenating reasoning and function deltas", () => {
+    const state = {
+      toolCallIdsByOutputIndex: new Map<number, string>(),
+    };
+    const events = [
+      {
+        type: "response.output_item.added",
+        output_index: 0,
+        item: {
+          type: "reasoning",
+          id: "rs_123",
+          summary: [{ type: "summary_text", text: "Thinking..." }],
+        },
+      },
+      {
+        type: "response.output_item.added",
+        output_index: 1,
+        item: {
+          type: "function_call",
+          id: "fc_123",
+          call_id: "call_1",
+          name: "lookup",
+        },
+      },
+      {
+        type: "response.function_call_arguments.delta",
+        output_index: 1,
+        delta: '{"query":',
+      },
+      {
+        type: "response.function_call_arguments.delta",
+        output_index: 1,
+        delta: '"langchain"}',
+      },
+      {
+        type: "response.output_item.added",
+        output_index: 2,
+        item: {
+          type: "function_call",
+          id: "fc_456",
+          call_id: "call_2",
+          name: "summarize",
+        },
+      },
+      {
+        type: "response.function_call_arguments.delta",
+        output_index: 2,
+        delta: '{"id":2}',
+      },
+    ];
+
+    const chunks = events
+      .map((event) =>
+        convertResponsesDeltaToChatGenerationChunkWithState(event as any, state)
+      )
+      .filter(Boolean)
+      .map((chunk) => (chunk as ChatGenerationChunk).message as AIMessageChunk);
+
+    const merged = chunks.reduce((acc, chunk) => acc.concat(chunk));
+
+    expect(merged.tool_call_chunks).toHaveLength(2);
+    expect(merged.tool_call_chunks?.some((chunk) => chunk.id === "call_1")).toBe(
+      true
+    );
+    expect(merged.tool_call_chunks?.some((chunk) => chunk.id === "call_2")).toBe(
+      true
+    );
+    const firstCall = merged.tool_call_chunks?.find(
+      (chunk) => chunk.index === 1
+    );
+    expect(firstCall?.args).toBe('{"query":"langchain"}');
   });
 
   describe("reasoning streaming elevation", () => {
