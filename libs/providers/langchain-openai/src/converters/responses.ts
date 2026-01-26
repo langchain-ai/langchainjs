@@ -592,7 +592,7 @@ export const convertResponsesDeltaToChatGenerationChunk: Converter<
       name: event.item.name,
       args: event.item.arguments,
       id: event.item.call_id,
-      index: event.output_index,
+      index: event.output_index ?? 0,
     });
 
     additional_kwargs[_FUNCTION_CALL_IDS_MAP_KEY] = {
@@ -608,7 +608,7 @@ export const convertResponsesDeltaToChatGenerationChunk: Converter<
       name: "computer_use",
       args: JSON.stringify({ action: event.item.action }),
       id: event.item.call_id,
-      index: event.output_index,
+      index: event.output_index ?? 0,
     });
     // Also store the raw item for additional context (pending_safety_checks, etc.)
     additional_kwargs.tool_outputs = [event.item];
@@ -665,7 +665,7 @@ export const convertResponsesDeltaToChatGenerationChunk: Converter<
     tool_call_chunks.push({
       type: "tool_call_chunk",
       args: event.delta,
-      index: event.output_index,
+      index: event.output_index ?? 0,
     });
   } else if (
     event.type === "response.web_search_call.completed" ||

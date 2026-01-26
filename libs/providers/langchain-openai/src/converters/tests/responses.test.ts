@@ -283,6 +283,46 @@ describe("convertResponsesDeltaToChatGenerationChunk", () => {
         customResultMessage.tool_call_chunks
       );
     });
+
+    it("should handle events with undefined output_index by defaulting to 0", () => {
+      // Test function call with undefined output_index
+      const functionCallEvent = {
+        type: "response.output_item.added",
+        item: {
+          type: "function_call",
+          id: "fc_123",
+          call_id: "call_1",
+          name: "test_tool",
+          arguments: '{"param": "value"}',
+        },
+        // output_index is intentionally undefined
+      };
+
+      const result = convertResponsesDeltaToChatGenerationChunk(
+        functionCallEvent as any
+      );
+      const aiMessageChunk = result?.message as AIMessageChunk;
+
+      expect(aiMessageChunk.tool_call_chunks).toBeDefined();
+      expect(aiMessageChunk.tool_call_chunks).toHaveLength(1);
+      expect(aiMessageChunk.tool_call_chunks?.[0]?.index).toBe(0);
+
+      // Test delta event with undefined output_index
+      const deltaEvent = {
+        type: "response.function_call_arguments.delta",
+        delta: '{"key": "value"}',
+        // output_index is intentionally undefined
+      };
+
+      const deltaResult = convertResponsesDeltaToChatGenerationChunk(
+        deltaEvent as any
+      );
+      const deltaMessageChunk = deltaResult?.message as AIMessageChunk;
+
+      expect(deltaMessageChunk.tool_call_chunks).toBeDefined();
+      expect(deltaMessageChunk.tool_call_chunks).toHaveLength(1);
+      expect(deltaMessageChunk.tool_call_chunks?.[0]?.index).toBe(0);
+    });
   });
 
   describe("reasoning streaming elevation", () => {
