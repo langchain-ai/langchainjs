@@ -34,7 +34,7 @@ jobs:
       changed_files: ${{ steps.get_changes.outputs.changed_files }}
     steps:
       - name: Checkout
-        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
         with:
           fetch-depth: 2
       - name: Get changes
@@ -50,7 +50,7 @@ jobs:
     needs: get-changed-files
     if: (contains(needs.get-changed-files.outputs.changed_files, 'dependency_range_tests/scripts/langchain/') || contains(needs.get-changed-files.outputs.changed_files, 'libs/langchain/') || contains(needs.get-changed-files.outputs.changed_files, 'libs/langchain-core/') || contains(needs.get-changed-files.outputs.changed_files, 'libs/providers/langchain-openai/') || contains(needs.get-changed-files.outputs.changed_files, 'libs/langchain-textsplitters/'))
     steps:
-      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
       - name: Setup pnpm
         uses: pnpm/action-setup@41ff72655975bd51cab0327fa583b6e92b6d3061 # v4.2.0
       - name: Use Node.js ${{ env.NODE_VERSION }}
@@ -69,7 +69,7 @@ jobs:
     needs: get-changed-files
     if: (contains(needs.get-changed-files.outputs.changed_files, 'dependency_range_tests/scripts/langchain/') || contains(needs.get-changed-files.outputs.changed_files, 'libs/langchain/'))
     steps:
-      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
       - name: Setup pnpm
         uses: pnpm/action-setup@41ff72655975bd51cab0327fa583b6e92b6d3061 # v4.2.0
       - name: Use Node.js ${{ env.NODE_VERSION }}
@@ -89,7 +89,7 @@ jobs:
   #   needs: get-changed-files
   #   if: (contains(needs.get-changed-files.outputs.changed_files, 'dependency_range_tests/scripts/with_standard_tests/community/') || contains(needs.get-changed-files.outputs.changed_files, 'libs/langchain-core/') || contains(needs.get-changed-files.outputs.changed_files, 'libs/providers/langchain-openai/') || contains(needs.get-changed-files.outputs.changed_files, 'libs/langchain-community/'))
   #   steps:
-  #     - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
+  #     - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
   #     - name: Use Node.js ${{ env.NODE_VERSION }}
   #       uses: actions/setup-node@v3
   #       with:
@@ -107,7 +107,7 @@ jobs:
   #   needs: get-changed-files
   #   if: (contains(needs.get-changed-files.outputs.changed_files, 'dependency_range_tests/scripts/with_standard_tests/community/') || contains(needs.get-changed-files.outputs.changed_files, 'libs/langchain-community/'))
   #   steps:
-  #     - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
+  #     - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
   #     - name: Use Node.js ${{ env.NODE_VERSION }}
   #       uses: actions/setup-node@v3
   #       with:
@@ -123,7 +123,7 @@ jobs:
   community-npm-install:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
       - name: Setup pnpm
         uses: pnpm/action-setup@41ff72655975bd51cab0327fa583b6e92b6d3061 # v4.2.0
       - name: Use Node.js ${{ env.NODE_VERSION }}
@@ -144,7 +144,7 @@ jobs:
     needs: get-changed-files
     if: (contains(needs.get-changed-files.outputs.changed_files, 'dependency_range_tests/scripts/with_standard_tests/openai/') || contains(needs.get-changed-files.outputs.changed_files, 'libs/langchain-core/') || contains(needs.get-changed-files.outputs.changed_files, 'libs/providers/langchain-openai/'))
     steps:
-      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
       - name: Setup pnpm
         uses: pnpm/action-setup@41ff72655975bd51cab0327fa583b6e92b6d3061 # v4.2.0
       - name: Use Node.js ${{ env.NODE_VERSION }}
@@ -164,7 +164,7 @@ jobs:
     needs: get-changed-files
     if: (contains(needs.get-changed-files.outputs.changed_files, 'dependency_range_tests/scripts/with_standard_tests/openai/') || contains(needs.get-changed-files.outputs.changed_files, 'libs/providers/langchain-openai/'))
     steps:
-      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
       - name: Setup pnpm
         uses: pnpm/action-setup@41ff72655975bd51cab0327fa583b6e92b6d3061 # v4.2.0
       - name: Use Node.js ${{ env.NODE_VERSION }}
@@ -185,7 +185,7 @@ jobs:
   #   needs: get-changed-files
   #   if: (contains(needs.get-changed-files.outputs.changed_files, 'dependency_range_tests/scripts/with_standard_tests/anthropic/') || contains(needs.get-changed-files.outputs.changed_files, 'libs/langchain-core/') || contains(needs.get-changed-files.outputs.changed_files, 'libs/langchain-anthropic/'))
   #   steps:
-  #     - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
+  #     - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
   #     - name: Setup pnpm
   #       uses: pnpm/action-setup@41ff72655975bd51cab0327fa583b6e92b6d3061 # v4.2.0
   #     - name: Use Node.js ${{ env.NODE_VERSION }}
@@ -205,7 +205,7 @@ jobs:
   #   needs: get-changed-files
   #   if: (contains(needs.get-changed-files.outputs.changed_files, 'dependency_range_tests/scripts/with_standard_tests/anthropic/') || contains(needs.get-changed-files.outputs.changed_files, 'libs/langchain-anthropic/'))
   #   steps:
-  #     - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
+  #     - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
   #     - name: Setup pnpm
   #       uses: pnpm/action-setup@41ff72655975bd51cab0327fa583b6e92b6d3061 # v4.2.0
   #     - name: Use Node.js ${{ env.NODE_VERSION }}
@@ -226,7 +226,7 @@ jobs:
   #   needs: get-changed-files
   #   if: (contains(needs.get-changed-files.outputs.changed_files, 'dependency_range_tests/scripts/with_standard_tests/google-vertexai/') || contains(needs.get-changed-files.outputs.changed_files, 'libs/langchain-core/') || contains(needs.get-changed-files.outputs.changed_files, 'libs/providers/langchain-google-vertexai/') || contains(needs.get-changed-files.outputs.changed_files, 'libs/providers/langchain-google-gauth/') || contains(needs.get-changed-files.outputs.changed_files, 'libs/providers/langchain-google-common/'))
   #   steps:
-  #     - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
+  #     - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
   #     - name: Setup pnpm
   #       uses: pnpm/action-setup@41ff72655975bd51cab0327fa583b6e92b6d3061 # v4.2.0
   #     - name: Use Node.js ${{ env.NODE_VERSION }}
@@ -246,7 +246,7 @@ jobs:
   #   needs: get-changed-files
   #   if: (contains(needs.get-changed-files.outputs.changed_files, 'dependency_range_tests/scripts/with_standard_tests/google-vertexai/') || contains(needs.get-changed-files.outputs.changed_files, 'libs/providers/langchain-google-vertexai/'))
   #   steps:
-  #     - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
+  #     - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
   #     - name: Setup pnpm
   #       uses: pnpm/action-setup@41ff72655975bd51cab0327fa583b6e92b6d3061 # v4.2.0
   #     - name: Use Node.js ${{ env.NODE_VERSION }}
@@ -267,7 +267,7 @@ jobs:
     needs: get-changed-files
     if: (contains(needs.get-changed-files.outputs.changed_files, 'dependency_range_tests/scripts/with_standard_tests/cohere/') || contains(needs.get-changed-files.outputs.changed_files, 'libs/langchain-core/') || contains(needs.get-changed-files.outputs.changed_files, 'libs/providers/langchain-cohere/'))
     steps:
-      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
       - name: Setup pnpm
         uses: pnpm/action-setup@41ff72655975bd51cab0327fa583b6e92b6d3061 # v4.2.0
       - name: Use Node.js ${{ env.NODE_VERSION }}
@@ -287,7 +287,7 @@ jobs:
   #   needs: get-changed-files
   #   if: (contains(needs.get-changed-files.outputs.changed_files, 'dependency_range_tests/scripts/with_standard_tests/cohere/') || contains(needs.get-changed-files.outputs.changed_files, 'libs/providers/langchain-cohere/'))
   #   steps:
-  #     - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
+  #     - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
   #     - name: Setup pnpm
   #       uses: pnpm/action-setup@41ff72655975bd51cab0327fa583b6e92b6d3061 # v4.2.0
   #     - name: Use Node.js ${{ env.NODE_VERSION }}
