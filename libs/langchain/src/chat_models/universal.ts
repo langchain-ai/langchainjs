@@ -348,8 +348,13 @@ export class ConfigurableModel<
   ): Promise<
     BaseChatModel<BaseChatModelCallOptions, AIMessageChunk<MessageStructure>>
   > {
+    const replacer = (key: string, value: any) => {
+       if (key.startsWith("__pregel")) return undefined;
+       return value;
+     };
+
     // Check cache first
-    const cacheKey = JSON.stringify(config ?? {});
+    const cacheKey = JSON.stringify(config ?? {}, replacer);
     const cachedModel = this._modelInstanceCache.get(cacheKey);
     if (cachedModel) {
       return cachedModel;
@@ -977,3 +982,5 @@ export async function initChatModel<
   await configurableModel._getModelInstance();
   return configurableModel;
 }
+
+    
