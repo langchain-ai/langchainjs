@@ -1193,3 +1193,114 @@ describe("applyCacheControlToPayload", () => {
     }
   });
 });
+
+describe("File ContentBlock handling", () => {
+  test("converts file ContentBlock with URL to document block", () => {
+    const message = new HumanMessage({
+      content: [
+        { type: "text", text: "Summarize this document" },
+        {
+          type: "file",
+          url: "https://example.com/document.pdf",
+          mimeType: "application/pdf",
+        },
+      ],
+    });
+
+    const payload = _convertMessagesToAnthropicPayload([message], "claude-3-5-sonnet-20241022");
+
+    expect(payload.messages).toHaveLength(1);
+    expect(payload.messages[0].role).toBe("user");
+    expect(Array.isArray(payload.messages[0].content)).toBe(true);
+    
+    const content = payload.messages[0].content as any[];
+    expect(content).toHaveLength(2);
+    expect(content[0]).toEqual({ type: "text", text: "Summarize this document" });
+    expect(content[1]).toEqual({
+      type: "document",
+      source: {
+        type: "url",
+        url: "https://example.com/document.pdf",
+      },
+    });
+  });
+
+  test("converts file ContentBlock with base64 data to document block", () => {
+    const base64Data = "JVBERi0xLjQKJeLjz9M=";
+    const message = new HumanMessage({
+      content: [
+        { type: "text", text: "What's in this file?" },
+        {
+          type: "file",
+          data: base64Data,
+          mimeType: "application/pdf",
+        },
+      ],
+    });
+
+    const payload = _convertMessagesToAnthropicPayload([message], "claude-3-5-sonnet-20241022");
+
+    expect(payload.messages).toHaveLength(1);
+    const content = payload.messages[0].content as any[];
+    expect(content).toHaveLength(2);
+    expect(content[0]).toEqual({ type: "text", text: "What's in this file?" });
+    expect(content[1]).toEqual({
+      type: "document",
+      source: {
+        type: "base64",
+        media_type: "application/pdf",
+        data: base64Data,
+      },
+    });
+  });
+
+  test("converts file ContentBlock with Uint8Array data to document block", () => {
+    const uint8Data = new Uint8Array([0x25, 0x50, 0x44, 0x46]);
+    const message = new HumanMessage({
+      content: [
+        { type: "text", text: "Read this file" },
+        {
+          type: "file",
+          data: uint8Data,
+          mimeType: "application/pdf",
+        },
+      ],
+    });
+
+    const payload = _convertMessagesToAnthropicPayload([message], "claude-3-5-sonnet-20241022");
+
+    expect(payload.messages).toHaveLength(1);
+    const content = payload.messages[0].content as any[];
+    expect(content).toHaveLength(2);
+    expect(content[0]).toEqual({ type: "text", text: "Read this file" });
+    expect(content[1].type).toBe("document");
+    expect(content[1].source.type).toBe("base64");
+    expect(content[1].source.media_type).toBe("application/pdf");
+    expect(content[1].source.data).toBeTruthy();
+  });
+
+  test("preserves cache_control when converting file ContentBlock", () => {
+    const message = new HumanMessage({
+      content: [
+        {
+          type: "file",
+          url: "https://example.com/doc.pdf",
+          mimeType: "application/pdf",
+          cache_control: { type: "ephemeral" },
+        },
+      ],
+    });
+
+    const payload = _convertMessagesToAnthropicPayload([message], "claude-3-5-sonnet-20241022");
+
+    const content = payload.messages[0].content as any[];
+    expect(content[0]).toEqual({
+      type: "document",
+      source: {
+        type: "url",
+        url: "https://example.com/doc.pdf",
+      },
+      cache_control: { type: "ephemeral" },
+    });
+  });
+});
