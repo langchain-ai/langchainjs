@@ -1008,4 +1008,52 @@ describe("createAgent", () => {
     // Verify messages were processed correctly
     expect(result.messages.length).toBeGreaterThan(0);
   });
+
+  it("supports StateSchema in middleware stateSchema", async () => {
+    const { StateSchema } = await import("@langchain/langgraph");
+
+    // Create middleware with StateSchema instead of Zod object
+    const middleware = createMiddleware({
+      name: "stateSchemaMiddleware",
+      stateSchema: new StateSchema({
+        middlewareValue: z4.string().default("default"),
+      }),
+      contextSchema: z4.object({
+        middlewareContext: z4.number(),
+      }),
+      beforeModel: (_state, { context }) => {
+        expect(context.middlewareContext).toBe(42);
+        return {
+          middlewareValue: "modified",
+        };
+      },
+    });
+
+    const model = new FakeToolCallingChatModel({
+      responses: [new AIMessage("Done")],
+    });
+
+    const agent = createAgent({
+      model,
+      tools: [],
+      middleware: [middleware],
+    });
+
+    const result = await agent.invoke(
+      {
+        messages: [new HumanMessage("Test StateSchema middleware")],
+      },
+      {
+        context: {
+          middlewareContext: 42,
+        },
+      }
+    );
+
+    // Verify middleware state (StateSchema)
+    expect(result.middlewareValue).toBe("modified");
+
+    // Verify messages were processed correctly
+    expect(result.messages.length).toBeGreaterThan(0);
+  });
 });
