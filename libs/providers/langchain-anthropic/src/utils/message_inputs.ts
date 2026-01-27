@@ -249,6 +249,49 @@ function* _formatContentBlocks(
           ...(cacheControl ? { cache_control: cacheControl } : {}),
         } as Anthropic.Messages.ImageBlockParam;
       }
+    } else if (contentPart.type === "file") {
+      // Handle new ContentBlock.Multimodal.File format
+      let source:
+        | { type: "url"; url: string }
+        | { type: "base64"; media_type: string; data: string }
+        | undefined;
+
+      if ("url" in contentPart && typeof contentPart.url === "string") {
+        // File with URL
+        source = {
+          type: "url" as const,
+          url: contentPart.url,
+        };
+      } else if (
+        "data" in contentPart &&
+        (typeof contentPart.data === "string" ||
+          // eslint-disable-next-line no-instanceof/no-instanceof
+          contentPart.data instanceof Uint8Array)
+      ) {
+        // File with base64 data (string or Uint8Array)
+        const media_type =
+          "mimeType" in contentPart && typeof contentPart.mimeType === "string"
+            ? contentPart.mimeType
+            : "application/pdf";
+        const data =
+          typeof contentPart.data === "string"
+            ? contentPart.data
+            : Buffer.from(contentPart.data).toString("base64");
+
+        source = {
+          type: "base64" as const,
+          media_type,
+          data,
+        };
+      }
+
+      if (source) {
+        yield {
+          type: "document" as const,
+          source,
+          ...(cacheControl ? { cache_control: cacheControl } : {}),
+        } as Anthropic.Messages.DocumentBlockParam;
+      }
     } else if (contentPart.type === "document") {
       // PDF
       yield {
