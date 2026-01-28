@@ -63,11 +63,11 @@ export function removeAdditionalProperties(
     // natively via the `nullable` field.
     if ("anyOf" in newObj || "oneOf" in newObj) {
       const variants = newObj.anyOf || newObj.oneOf;
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const nullVariants = variants.filter((v: any) => v && v.type === "null");
+      const nullVariants = variants.filter(
+        (v: Record<string, unknown>) => v && v.type === "null"
+      );
       const nonNullVariants = variants.filter(
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        (v: any) => !v || v.type !== "null"
+        (v: Record<string, unknown>) => !v || v.type !== "null"
       );
       if (nullVariants.length === 1 && nonNullVariants.length === 1) {
         // Nullable type: flatten to { ...realType, nullable: true }
