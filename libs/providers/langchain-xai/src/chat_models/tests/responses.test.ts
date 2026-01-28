@@ -3,6 +3,13 @@ import {
   ChatXAIResponses,
   type ChatXAIResponsesInvocationParams,
 } from "../index.js";
+import {
+  tools,
+  XAI_WEB_SEARCH_TOOL_TYPE,
+  XAI_X_SEARCH_TOOL_TYPE,
+  XAI_CODE_EXECUTION_TOOL_TYPE,
+  XAI_COLLECTIONS_SEARCH_TOOL_TYPE,
+} from "../../tools/index.js";
 
 beforeEach(() => {
   process.env.XAI_API_KEY = "foo";
@@ -311,6 +318,95 @@ describe("invocationParams", () => {
     } as ChatXAIResponses["ParsedCallOptions"]);
     expect(params.parallel_tool_calls).toBe(false);
   });
+
+  test("should include tools from call options", () => {
+    const model = new ChatXAIResponses();
+    const tools = [
+      { type: "web_search" as const },
+      { type: "x_search" as const },
+    ];
+    const params = model.invocationParams({
+      tools,
+    } as ChatXAIResponses["ParsedCallOptions"]);
+    expect(params.tools).toEqual(tools);
+  });
+
+  test("should use constructor tools when call options tools not provided", () => {
+    const constructorTools = [{ type: "code_interpreter" as const }];
+    const model = new ChatXAIResponses({
+      tools: constructorTools,
+    });
+    const params = model.invocationParams({});
+    expect(params.tools).toEqual(constructorTools);
+  });
+
+  test("should override constructor tools with call options tools", () => {
+    const constructorTools = [{ type: "code_interpreter" as const }];
+    const callTools = [{ type: "web_search" as const }];
+    const model = new ChatXAIResponses({
+      tools: constructorTools,
+    });
+    const params = model.invocationParams({
+      tools: callTools,
+    } as ChatXAIResponses["ParsedCallOptions"]);
+    expect(params.tools).toEqual(callTools);
+  });
+});
+
+describe("ChatXAIResponses with tools", () => {
+  test("should store tools from constructor", () => {
+    const tools = [
+      { type: "web_search" as const },
+      { type: "x_search" as const, allowed_x_handles: ["elonmusk"] },
+      { type: "code_interpreter" as const },
+      { type: "file_search" as const, vector_store_ids: ["coll_123"] },
+    ];
+    const model = new ChatXAIResponses({ tools });
+    expect(model.tools).toEqual(tools);
+  });
+
+  test("should have undefined tools by default", () => {
+    const model = new ChatXAIResponses();
+    expect(model.tools).toBeUndefined();
+  });
+
+  test("should support web_search tool with options", () => {
+    const model = new ChatXAIResponses({
+      tools: [
+        {
+          type: "web_search",
+          allowed_domains: ["wikipedia.org"],
+          enable_image_understanding: true,
+        },
+      ],
+    });
+    expect(model.tools?.[0]).toEqual({
+      type: "web_search",
+      allowed_domains: ["wikipedia.org"],
+      enable_image_understanding: true,
+    });
+  });
+
+  test("should support x_search tool with options", () => {
+    const model = new ChatXAIResponses({
+      tools: [
+        {
+          type: "x_search",
+          allowed_x_handles: ["elonmusk", "xai"],
+          from_date: "2024-01-01",
+          to_date: "2024-12-31",
+          enable_video_understanding: true,
+        },
+      ],
+    });
+    expect(model.tools?.[0]).toEqual({
+      type: "x_search",
+      allowed_x_handles: ["elonmusk", "xai"],
+      from_date: "2024-01-01",
+      to_date: "2024-12-31",
+      enable_video_understanding: true,
+    });
+  });
 });
 
 describe("Metadata Methods", () => {
@@ -364,5 +460,147 @@ describe("lc_secrets and lc_aliases", () => {
     expect(model.lc_aliases).toEqual({
       apiKey: "xai_api_key",
     });
+  });
+});
+
+describe("ChatXAIResponses with tool factory utilities", () => {
+  test("should work with xaiWebSearch factory", () => {
+    const webSearch = tools.xaiWebSearch({
+      allowedDomains: ["wikipedia.org", "github.com"],
+      enableImageUnderstanding: true,
+    });
+
+    const model = new ChatXAIResponses({
+      tools: [webSearch],
+    });
+
+    expect(model.tools).toHaveLength(1);
+    expect(model.tools?.[0]).toEqual({
+      type: XAI_WEB_SEARCH_TOOL_TYPE,
+      allowed_domains: ["wikipedia.org", "github.com"],
+      enable_image_understanding: true,
+    });
+  });
+
+  test("should work with xaiXSearch factory", () => {
+    const xSearch = tools.xaiXSearch({
+      allowedXHandles: ["elonmusk", "xai"],
+      fromDate: "2024-01-01",
+      toDate: "2024-12-31",
+      enableVideoUnderstanding: true,
+    });
+
+    const model = new ChatXAIResponses({
+      tools: [xSearch],
+    });
+
+    expect(model.tools).toHaveLength(1);
+    expect(model.tools?.[0]).toEqual({
+      type: XAI_X_SEARCH_TOOL_TYPE,
+      allowed_x_handles: ["elonmusk", "xai"],
+      from_date: "2024-01-01",
+      to_date: "2024-12-31",
+      enable_video_understanding: true,
+    });
+  });
+
+  test("should work with xaiCodeExecution factory", () => {
+    const codeExecution = tools.xaiCodeExecution();
+
+    const model = new ChatXAIResponses({
+      tools: [codeExecution],
+    });
+
+    expect(model.tools).toHaveLength(1);
+    expect(model.tools?.[0]).toEqual({
+      type: XAI_CODE_EXECUTION_TOOL_TYPE,
+    });
+  });
+
+  test("should work with xaiCollectionsSearch factory", () => {
+    const collectionsSearch = tools.xaiCollectionsSearch({
+      vectorStoreIds: ["collection_abc123", "collection_def456"],
+    });
+
+    const model = new ChatXAIResponses({
+      tools: [collectionsSearch],
+    });
+
+    expect(model.tools).toHaveLength(1);
+    expect(model.tools?.[0]).toEqual({
+      type: XAI_COLLECTIONS_SEARCH_TOOL_TYPE,
+      vector_store_ids: ["collection_abc123", "collection_def456"],
+    });
+  });
+
+  test("should work with multiple tool factories combined", () => {
+    const webSearch = tools.xaiWebSearch({ allowedDomains: ["example.com"] });
+    const xSearch = tools.xaiXSearch({ allowedXHandles: ["xai"] });
+    const codeExecution = tools.xaiCodeExecution();
+    const collectionsSearch = tools.xaiCollectionsSearch({
+      vectorStoreIds: ["coll_1"],
+    });
+
+    const model = new ChatXAIResponses({
+      tools: [webSearch, xSearch, codeExecution, collectionsSearch],
+    });
+
+    expect(model.tools).toHaveLength(4);
+    expect(model.tools?.[0].type).toBe(XAI_WEB_SEARCH_TOOL_TYPE);
+    expect(model.tools?.[1].type).toBe(XAI_X_SEARCH_TOOL_TYPE);
+    expect(model.tools?.[2].type).toBe(XAI_CODE_EXECUTION_TOOL_TYPE);
+    expect(model.tools?.[3].type).toBe(XAI_COLLECTIONS_SEARCH_TOOL_TYPE);
+  });
+
+  test("invocationParams should include tools from factory", () => {
+    const webSearch = tools.xaiWebSearch({
+      excludedDomains: ["spam.com"],
+    });
+
+    const model = new ChatXAIResponses({
+      tools: [webSearch],
+    });
+
+    const params = model.invocationParams({});
+    expect(params.tools).toHaveLength(1);
+    expect(params.tools?.[0]).toEqual({
+      type: XAI_WEB_SEARCH_TOOL_TYPE,
+      excluded_domains: ["spam.com"],
+    });
+  });
+
+  test("call options tools should override constructor tools from factories", () => {
+    const constructorTool = tools.xaiWebSearch();
+    const callOptionTool = tools.xaiXSearch({
+      allowedXHandles: ["elonmusk"],
+    });
+
+    const model = new ChatXAIResponses({
+      tools: [constructorTool],
+    });
+
+    const params = model.invocationParams({
+      tools: [callOptionTool],
+    } as ChatXAIResponses["ParsedCallOptions"]);
+
+    expect(params.tools).toHaveLength(1);
+    expect(params.tools?.[0].type).toBe(XAI_X_SEARCH_TOOL_TYPE);
+    expect((params.tools?.[0] as { allowed_x_handles?: string[] }).allowed_x_handles).toEqual(["elonmusk"]);
+  });
+
+  test("should work with empty options for factories", () => {
+    const webSearch = tools.xaiWebSearch();
+    const xSearch = tools.xaiXSearch();
+    const collectionsSearch = tools.xaiCollectionsSearch();
+
+    const model = new ChatXAIResponses({
+      tools: [webSearch, xSearch, collectionsSearch],
+    });
+
+    expect(model.tools).toHaveLength(3);
+    // Empty options should only have the type field
+    expect(model.tools?.[0]).toEqual({ type: XAI_WEB_SEARCH_TOOL_TYPE });
+    expect(model.tools?.[1]).toEqual({ type: XAI_X_SEARCH_TOOL_TYPE });
+    expect(model.tools?.[2]).toEqual({ type: XAI_COLLECTIONS_SEARCH_TOOL_TYPE });
   });
 });
