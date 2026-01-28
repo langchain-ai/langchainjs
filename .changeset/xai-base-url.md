@@ -1,5 +1,5 @@
 ---
-"@langchain/xai": minor
+"@langchain/xai": patch
 ---
 
 feat(xai): add baseURL option to ChatXAI
