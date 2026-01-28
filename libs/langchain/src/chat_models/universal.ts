@@ -349,7 +349,7 @@ export class ConfigurableModel<
     BaseChatModel<BaseChatModelCallOptions, AIMessageChunk<MessageStructure>>
   > {
     // Check cache first
-    const cacheKey = JSON.stringify(config ?? {});
+    const cacheKey = this._getCacheKey(config);
     const cachedModel = this._modelInstanceCache.get(cacheKey);
     if (cachedModel) {
       return cachedModel;
@@ -612,9 +612,25 @@ export class ConfigurableModel<
     if (this._profile) {
       return this._profile;
     }
-    const cacheKey = JSON.stringify({});
+    const cacheKey = this._getCacheKey({});
     const instance = this._modelInstanceCache.get(cacheKey);
     return instance?.profile ?? {};
+  }
+
+  /** @internal */
+  _getCacheKey(config?: RunnableConfig): string {
+    let toStringify = config ?? {};
+    if (toStringify.configurable) {
+      const { configurable } = toStringify;
+      const filtered: Record<string, unknown> = {};
+      for (const [k, v] of Object.entries(configurable)) {
+        if (!k.startsWith("__pregel_")) {
+          filtered[k] = v;
+        }
+      }
+      toStringify = { ...toStringify, configurable: filtered };
+    }
+    return JSON.stringify(toStringify);
   }
 }
 
