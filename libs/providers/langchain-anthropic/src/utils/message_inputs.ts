@@ -254,6 +254,7 @@ function* _formatContentBlocks(
       let source:
         | { type: "url"; url: string }
         | { type: "base64"; media_type: string; data: string }
+        | { type: "file"; file_id: string }
         | undefined;
 
       if ("url" in contentPart && typeof contentPart.url === "string") {
@@ -282,6 +283,16 @@ function* _formatContentBlocks(
           type: "base64" as const,
           media_type,
           data,
+        };
+      } else if (
+        "fileId" in contentPart &&
+        typeof contentPart.fileId === "string"
+      ) {
+        // File ID from Anthropic Files API
+        // https://platform.claude.com/docs/en/build-with-claude/pdf-support#option-3-files-api
+        source = {
+          type: "file" as const,
+          file_id: contentPart.fileId,
         };
       }
 

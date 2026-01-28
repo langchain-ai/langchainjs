@@ -1279,6 +1279,33 @@ describe("File ContentBlock handling", () => {
     expect(content[1].source.data).toBeTruthy();
   });
 
+  test("converts file ContentBlock with fileId to document block", () => {
+    const message = new HumanMessage({
+      content: [
+        { type: "text", text: "Analyze this file" },
+        {
+          type: "file",
+          fileId: "file-abc123xyz",
+          mimeType: "application/pdf",
+        },
+      ],
+    });
+
+    const payload = _convertMessagesToAnthropicPayload([message], "claude-3-5-sonnet-20241022");
+
+    expect(payload.messages).toHaveLength(1);
+    const content = payload.messages[0].content as any[];
+    expect(content).toHaveLength(2);
+    expect(content[0]).toEqual({ type: "text", text: "Analyze this file" });
+    expect(content[1]).toEqual({
+      type: "document",
+      source: {
+        type: "file",
+        file_id: "file-abc123xyz",
+      },
+    });
+  });
+
   test("preserves cache_control when converting file ContentBlock", () => {
     const message = new HumanMessage({
       content: [
