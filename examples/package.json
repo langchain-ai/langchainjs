@@ -17,8 +17,8 @@
     "lint": "pnpm lint:eslint",
     "lint:fix": "pnpm lint --fix",
     "precommit": "lint-staged",
-    "format": "prettier --config .prettierrc --write \"src\"",
-    "format:check": "prettier --config .prettierrc --check \"src\""
+    "format": "prettier --write \"src\"",
+    "format:check": "prettier --check \"src\""
   },
   "author": "LangChain",
   "license": "MIT",
@@ -81,7 +81,7 @@
     "@vercel/kv": "^3.0.0",
     "@xata.io/client": "^0.28.0",
     "@zilliz/milvus2-sdk-node": "^2.3.5",
-    "axios": "^0.30.2",
+    "axios": "^1.12.0",
     "chromadb": "^1.5.3",
     "cohere-ai": "^7.14.0",
     "convex": "^1.3.1",
@@ -124,15 +124,14 @@
     "cheerio": "1.0.0-rc.12",
     "dpdm": "^3.14.0",
     "eslint": "^9.36.0",
-    "langsmith": "^0.3.64",
+    "langsmith": ">=0.4.0 <1.0.0",
     "openai": "^5.1.0",
     "peggy": "^3.0.2",
-    "prettier": "^2.8.3",
+    "prettier": "^3.5.0",
     "reflect-metadata": "^0.2.2",
     "release-it": "^19.0.4",
     "release-it-pnpm": "^4.6.6",
     "rimraf": "^5.0.1",
-    "rollup": "^3.19.1",
     "typescript": "~5.8.3",
     "vitest": "^3.2.4"
   },
@@ -147,11 +146,11 @@
     "@types/js-yaml": "^4",
     "@types/uuid": "^9",
     "eslint": "^9.34.0",
-    "prettier": "^2.8.3",
+    "prettier": "^3.5.0",
     "reflect-metadata": "^0.2.2",
     "tsx": "^3.12.3",
     "typeorm": "^0.3.26",
-    "typescript": "~5.1.6",
+    "typescript": "~5.8.3",
     "zod": "^3.25.76"
   }
 }

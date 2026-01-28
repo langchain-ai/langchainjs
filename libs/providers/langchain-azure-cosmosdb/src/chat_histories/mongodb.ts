@@ -142,14 +142,25 @@ export class AzureCosmosDBMongoChatMessageHistory extends BaseListChatMessageHis
    * @returns A promise that resolves when the message has been added to the history.
    */
   async addMessage(message: BaseMessage): Promise<void> {
+    await this.addMessages([message]);
+  }
+
+  /**
+   * Adds multiple messages to the history.
+   * @param messages The messages to add to the history.
+   * @returns A promise that resolves when the messages have been added to the history.
+   */
+  async addMessages(messages: BaseMessage[]): Promise<void> {
     await this.initialize();
 
-    const messages = mapChatMessagesToStoredMessages([message]);
+    const storedMessages = mapChatMessagesToStoredMessages(messages);
     const context = await this.getContext();
     await this.collection.updateOne(
       { [ID_KEY]: this.sessionId, [ID_USER]: this.userId },
       {
-        $push: { messages: { $each: messages } } as PushOperator<Document>,
+        $push: {
+          messages: { $each: storedMessages },
+        } as PushOperator<Document>,
         $set: { context },
       },
       { upsert: true }

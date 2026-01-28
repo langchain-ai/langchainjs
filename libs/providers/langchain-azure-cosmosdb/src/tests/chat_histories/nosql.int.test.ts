@@ -61,8 +61,10 @@ test("Test CosmosDB History Store", async () => {
   const blankResult = await chatHistory.getMessages();
   expect(blankResult).toStrictEqual([]);
 
-  await chatHistory.addUserMessage("Who is the best vocalist?");
-  await chatHistory.addAIMessage("Ozzy Osbourne");
+  await chatHistory.addMessages([
+    new HumanMessage("Who is the best vocalist?"),
+    new AIMessage("Ozzy Osbourne"),
+  ]);
 
   const expectedMessages = [
     new HumanMessage("Who is the best vocalist?"),

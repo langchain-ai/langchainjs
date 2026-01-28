@@ -23,7 +23,11 @@ export function convertOllamaMessagesToLangChain(
   }
 ): AIMessageChunk {
   return new AIMessageChunk({
-    content: messages.thinking ?? messages.content ?? "",
+    content: messages.content ?? "",
+    additional_kwargs:
+      messages.thinking && messages.thinking !== ""
+        ? { reasoning_content: messages.thinking }
+        : {},
     tool_call_chunks: messages.tool_calls?.map((tc) => ({
       name: tc.function.name,
       args: JSON.stringify(tc.function.arguments),
@@ -31,7 +35,10 @@ export function convertOllamaMessagesToLangChain(
       index: 0,
       id: uuidv4(),
     })),
-    response_metadata: extra?.responseMetadata,
+    response_metadata: {
+      ...extra?.responseMetadata,
+      model_provider: "ollama",
+    },
     usage_metadata: extra?.usageMetadata,
   });
 }

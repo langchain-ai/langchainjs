@@ -4,11 +4,8 @@ import { z } from "zod/v3";
 import { toJsonSchema } from "@langchain/core/utils/json_schema";
 import {
   AIMessage,
+  ContentBlock,
   HumanMessage,
-  StandardAudioBlock,
-  StandardFileBlock,
-  StandardImageBlock,
-  StandardTextBlock,
   SystemMessage,
   ToolMessage,
   type MessageContentComplex,
@@ -18,6 +15,7 @@ import { removeAdditionalProperties } from "../utils/zod_to_genai_parameters.js"
 import {
   convertBaseMessagesToContent,
   convertMessageContentToParts,
+  getMessageAuthor,
 } from "../utils/common.js";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -202,14 +200,14 @@ test("convertMessageContentToParts correctly handles message types", () => {
   expect(messagesAsGoogleParts).toEqual([
     { text: "You are a helpful assistant" },
     { text: "What's the weather like in new york?" },
-    {
+    expect.objectContaining({
       functionCall: {
         name: "get_current_weather",
         args: {
           location: "New York",
         },
       },
-    },
+    }),
     {
       functionResponse: {
         name: "get_current_weather",
@@ -221,7 +219,7 @@ test("convertMessageContentToParts correctly handles message types", () => {
 
 test("convertMessageContentToParts: correctly handles standard text content block", () => {
   const isMultimodalModel = true;
-  const content: [StandardTextBlock] = [
+  const content: [ContentBlock.Data.StandardTextBlock] = [
     {
       text: "This is a test message",
       type: "text",
@@ -235,7 +233,7 @@ test("convertMessageContentToParts: correctly handles standard text content bloc
 
 test("convertMessageContentToParts: correctly handles http url standard image block", () => {
   const isMultimodalModel = true;
-  const content: [StandardImageBlock] = [
+  const content: [ContentBlock.Data.StandardImageBlock] = [
     {
       type: "image",
       source_type: "url",
@@ -260,7 +258,7 @@ test("convertMessageContentToParts: correctly handles http url standard image bl
 
 test("convertMessageContentToParts: correctly handles base64 standard image block", () => {
   const isMultimodalModel = true;
-  const content: [StandardImageBlock] = [
+  const content: [ContentBlock.Data.StandardImageBlock] = [
     {
       type: "image",
       source_type: "base64",
@@ -285,7 +283,7 @@ test("convertMessageContentToParts: correctly handles base64 standard image bloc
 
 test("convertMessageContentToParts: correctly handles base64 data url standard image block", () => {
   const isMultimodalModel = true;
-  const content: [StandardImageBlock] = [
+  const content: [ContentBlock.Data.StandardImageBlock] = [
     {
       type: "image",
       source_type: "url",
@@ -309,7 +307,7 @@ test("convertMessageContentToParts: correctly handles base64 data url standard i
 
 test("convertMessageContentToParts: correctly handles base64 standard audio block", () => {
   const isMultimodalModel = true;
-  const content: [StandardAudioBlock] = [
+  const content: [ContentBlock.Data.StandardAudioBlock] = [
     {
       type: "audio",
       source_type: "base64",
@@ -331,7 +329,7 @@ test("convertMessageContentToParts: correctly handles base64 standard audio bloc
 
 test("convertMessageContentToParts: correctly handles base64 data url standard audio block", () => {
   const isMultimodalModel = true;
-  const content: [StandardAudioBlock] = [
+  const content: [ContentBlock.Data.StandardAudioBlock] = [
     {
       type: "audio",
       source_type: "url",
@@ -355,7 +353,7 @@ test("convertMessageContentToParts: correctly handles base64 data url standard a
 
 test("convertMessageContentToParts: correctly handles http url standard audio block", () => {
   const isMultimodalModel = true;
-  const content: [StandardAudioBlock] = [
+  const content: [ContentBlock.Data.StandardAudioBlock] = [
     {
       type: "audio",
       source_type: "url",
@@ -380,7 +378,7 @@ test("convertMessageContentToParts: correctly handles http url standard audio bl
 
 test("convertMessageContentToParts: correctly handles base64 standard file block", () => {
   const isMultimodalModel = true;
-  const content: [StandardFileBlock] = [
+  const content: [ContentBlock.Data.StandardFileBlock] = [
     {
       type: "file",
       source_type: "base64",
@@ -405,7 +403,7 @@ test("convertMessageContentToParts: correctly handles base64 standard file block
 
 test("convertMessageContentToParts: correctly handles http url standard file block", () => {
   const isMultimodalModel = true;
-  const content: [StandardFileBlock] = [
+  const content: [ContentBlock.Data.StandardFileBlock] = [
     {
       type: "file",
       source_type: "url",
@@ -430,7 +428,7 @@ test("convertMessageContentToParts: correctly handles http url standard file blo
 
 test("convertMessageContentToParts: correctly handles base64 data url standard file block", () => {
   const isMultimodalModel = true;
-  const content: [StandardFileBlock] = [
+  const content: [ContentBlock.Data.StandardFileBlock] = [
     {
       type: "file",
       source_type: "url",
@@ -454,7 +452,7 @@ test("convertMessageContentToParts: correctly handles base64 data url standard f
 
 test("convertMessageContentToParts: correctly handles text standard file block", () => {
   const isMultimodalModel = true;
-  const content: [StandardFileBlock] = [
+  const content: [ContentBlock.Data.StandardFileBlock] = [
     {
       type: "file",
       source_type: "text",
@@ -514,12 +512,12 @@ test("convertBaseMessagesToContent correctly creates properly formatted content"
     {
       role: "model",
       parts: [
-        {
+        expect.objectContaining({
           functionCall: {
             name: toolName,
             args: toolArgs,
           },
-        },
+        }),
       ],
     },
     {
@@ -727,7 +725,9 @@ test("convertMessageContentToParts: should handle AIMessage with mixed content a
   });
   const expectedPartsAiString = [
     { text: "This is the AI text response." },
-    { functionCall: { name: "get_weather", args: { location: "London" } } },
+    expect.objectContaining({
+      functionCall: { name: "get_weather", args: { location: "London" } },
+    }),
   ];
   expect(
     convertMessageContentToParts(aiMessageWithString, isMultimodalModel, [])
@@ -746,7 +746,9 @@ test("convertMessageContentToParts: should handle AIMessage with mixed content a
   const expectedPartsAiArray = [
     { text: "AI sees this image:" },
     { inlineData: { mimeType: "image/png", data: base64ImageData } },
-    { functionCall: { name: "describe_image", args: {} } },
+    expect.objectContaining({
+      functionCall: { name: "describe_image", args: {} },
+    }),
   ];
   expect(
     convertMessageContentToParts(aiMessageWithArray, isMultimodalModel, [])
@@ -825,7 +827,9 @@ test("convertMessageContentToParts: should handle AIMessage with tool_calls only
     content: "",
     tool_calls: [{ name: "get_time", args: {}, id: "tool_abc" }],
   });
-  const expectedParts = [{ functionCall: { name: "get_time", args: {} } }];
+  const expectedParts = [
+    expect.objectContaining({ functionCall: { name: "get_time", args: {} } }),
+  ];
   expect(
     convertMessageContentToParts(messageWithEmptyString, isMultimodalModel, [])
   ).toEqual(expectedParts);
@@ -958,4 +962,44 @@ test("convertMessageContentToParts: correctly handles ToolMessage with array con
       },
     },
   ]);
+});
+
+test("getMessageAuthor should return message type, not custom names", () => {
+  const aiMessageWithName = new AIMessage({
+    content: "Hello",
+    name: "math_expert",
+  });
+  expect(getMessageAuthor(aiMessageWithName)).toBe("ai");
+
+  const aiMessage = new AIMessage({
+    content: "Hello",
+  });
+  expect(getMessageAuthor(aiMessage)).toBe("ai");
+
+  const humanMessage = new HumanMessage({
+    content: "Hello",
+  });
+  expect(getMessageAuthor(humanMessage)).toBe("human");
+
+  const toolMessage = new ToolMessage({
+    content: "Result",
+    tool_call_id: "123",
+  });
+  expect(getMessageAuthor(toolMessage)).toBe("tool");
+});
+
+test("convertBaseMessagesToContent should handle AIMessages with custom names", () => {
+  const messages = [
+    new HumanMessage({ content: "What is 2+2?" }),
+    new AIMessage({ content: "4", name: "math_expert" }),
+  ];
+
+  expect(() =>
+    convertBaseMessagesToContent(messages, true, false, "model")
+  ).not.toThrow();
+
+  const result = convertBaseMessagesToContent(messages, true, false, "model");
+  expect(result).toHaveLength(2);
+  expect(result[0].role).toBe("user");
+  expect(result[1].role).toBe("model");
 });

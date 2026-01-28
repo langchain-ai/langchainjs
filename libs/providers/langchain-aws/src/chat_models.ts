@@ -17,6 +17,7 @@ import type {
   GuardrailConfiguration,
   PerformanceConfiguration,
   ConverseRequest,
+  ServiceTierType,
 } from "@aws-sdk/client-bedrock-runtime";
 import {
   BedrockRuntimeClient,
@@ -99,6 +100,15 @@ export interface ChatBedrockConverseInput
   model?: string;
 
   /**
+   * Application Inference Profile ARN to use for the model.
+   * For example, "arn:aws:bedrock:eu-west-1:123456789102:application-inference-profile/fm16bt65tzgx", will override this.model in final /invoke URL call.
+   * Must still provide `model` as normal modelId to benefit from all the metadata.
+   * See the below link for more details on creating and using application inference profiles.
+   * @link https://docs.aws.amazon.com/bedrock/latest/userguide/inference-profiles-create.html
+   */
+  applicationInferenceProfile?: string;
+
+  /**
    * The AWS region e.g. `us-west-2`.
    * Fallback to AWS_DEFAULT_REGION env variable or region specified in ~/.aws/config
    * in case it is not provided here.
@@ -163,6 +173,24 @@ export interface ChatBedrockConverseInput
   performanceConfig?: PerformanceConfiguration;
 
   /**
+   * Service tier for model invocation.
+   *
+   * Specifies the processing tier type used for serving the request. Supported values are
+   * 'priority', 'default', 'flex', and 'reserved'.
+   *
+   * - 'priority': Prioritized processing for lower latency
+   * - 'default': Standard processing tier
+   * - 'flex': Flexible processing tier with lower cost
+   * - 'reserved': Reserved capacity for consistent performance
+   *
+   * If not provided, AWS uses the default tier.
+   *
+   * For more information, see:
+   * https://docs.aws.amazon.com/bedrock/latest/userguide/service-tiers-inference.html
+   */
+  serviceTier?: ServiceTierType;
+
+  /**
    * Which types of `tool_choice` values the model supports.
    *
    * Inferred if not specified. Inferred as ['auto', 'any', 'tool'] if a 'claude-3'
@@ -179,6 +207,7 @@ export interface ChatBedrockConverseCallOptions
       | "streamUsage"
       | "guardrailConfig"
       | "performanceConfig"
+      | "serviceTier"
     > {
   /**
    * A list of stop sequences. A stop sequence is a sequence of characters that causes
@@ -666,6 +695,8 @@ export class ChatBedrockConverse
 
   model = "anthropic.claude-3-haiku-20240307-v1:0";
 
+  applicationInferenceProfile?: string;
+
   streaming = false;
 
   region: string;
@@ -685,6 +716,8 @@ export class ChatBedrockConverse
   guardrailConfig?: GuardrailConfiguration;
 
   performanceConfig?: PerformanceConfiguration;
+
+  serviceTier?: ServiceTierType | undefined = undefined;
 
   client: BedrockRuntimeClient;
 
@@ -747,6 +780,7 @@ export class ChatBedrockConverse
 
     this.region = region;
     this.model = rest?.model ?? this.model;
+    this.applicationInferenceProfile = rest?.applicationInferenceProfile;
     this.streaming = rest?.streaming ?? this.streaming;
     this.temperature = rest?.temperature;
     this.maxTokens = rest?.maxTokens;
@@ -756,6 +790,7 @@ export class ChatBedrockConverse
     this.streamUsage = rest?.streamUsage ?? this.streamUsage;
     this.guardrailConfig = rest?.guardrailConfig;
     this.performanceConfig = rest?.performanceConfig;
+    this.serviceTier = rest?.serviceTier;
     this.clientOptions = rest?.clientOptions;
 
     if (rest?.supportsToolChoiceValues === undefined) {
@@ -830,6 +865,8 @@ export class ChatBedrockConverse
       (Array.isArray(candidateInferenceConfig.stopSequences) &&
         candidateInferenceConfig.stopSequences.length > 0);
 
+    const serviceTierType = options?.serviceTier ?? this.serviceTier;
+
     return {
       inferenceConfig: hasInferenceValues
         ? candidateInferenceConfig
@@ -840,6 +877,11 @@ export class ChatBedrockConverse
         options?.additionalModelRequestFields,
       guardrailConfig: this.guardrailConfig ?? options?.guardrailConfig,
       performanceConfig: options?.performanceConfig,
+      serviceTier: serviceTierType
+        ? {
+            type: serviceTierType,
+          }
+        : undefined,
     };
   }
 
@@ -881,7 +923,7 @@ export class ChatBedrockConverse
     const params = this.invocationParams(options);
 
     const command = new ConverseCommand({
-      modelId: this.model,
+      modelId: this.applicationInferenceProfile ?? this.model,
       messages: converseMessages,
       ...(Array.isArray(converseSystem) && converseSystem.length > 0
         ? { system: converseSystem }
@@ -924,7 +966,7 @@ export class ChatBedrockConverse
       streamUsage = options.streamUsage;
     }
     const command = new ConverseStreamCommand({
-      modelId: this.model,
+      modelId: this.applicationInferenceProfile ?? this.model,
       messages: converseMessages,
       ...(Array.isArray(converseSystem) && converseSystem.length > 0
         ? { system: converseSystem }
@@ -973,7 +1015,7 @@ export class ChatBedrockConverse
 
   withStructuredOutput<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    RunOutput extends Record<string, any> = Record<string, any>
+    RunOutput extends Record<string, any> = Record<string, any>,
   >(
     outputSchema:
       | InteropZodType<RunOutput>
@@ -984,7 +1026,7 @@ export class ChatBedrockConverse
 
   withStructuredOutput<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    RunOutput extends Record<string, any> = Record<string, any>
+    RunOutput extends Record<string, any> = Record<string, any>,
   >(
     outputSchema:
       | InteropZodType<RunOutput>
@@ -995,7 +1037,7 @@ export class ChatBedrockConverse
 
   withStructuredOutput<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    RunOutput extends Record<string, any> = Record<string, any>
+    RunOutput extends Record<string, any> = Record<string, any>,
   >(
     outputSchema:
       | InteropZodType<RunOutput>

@@ -1,6 +1,11 @@
 /* eslint-disable no-instanceof/no-instanceof */
 import { Runnable, RunnableConfig } from "@langchain/core/runnables";
-import { BaseMessage, AIMessage, ToolMessage } from "@langchain/core/messages";
+import {
+  BaseMessage,
+  AIMessage,
+  ToolMessage,
+  SystemMessage,
+} from "@langchain/core/messages";
 import { Command, type LangGraphRunnableConfig } from "@langchain/langgraph";
 import { type LanguageModelLike } from "@langchain/core/language_models/base";
 import { type BaseChatModelCallOptions } from "@langchain/core/language_models/chat_models";
@@ -8,23 +13,21 @@ import {
   InteropZodObject,
   getSchemaDescription,
   interopParse,
-  interopZodObjectPartial,
 } from "@langchain/core/utils/types";
+import { raceWithSignal } from "@langchain/core/runnables";
 import type { ToolCall } from "@langchain/core/messages/tool";
 import type { ClientTool, ServerTool } from "@langchain/core/tools";
 
 import { initChatModel } from "../../chat_models/universal.js";
-import { MultipleStructuredOutputsError } from "../errors.js";
+import { MultipleStructuredOutputsError, MiddlewareError } from "../errors.js";
 import { RunnableCallable } from "../RunnableCallable.js";
-import { PreHookAnnotation } from "../annotation.js";
 import {
   bindTools,
-  getPromptRunnable,
   validateLLMHasNoBoundTools,
   hasToolCalls,
   isClientTool,
 } from "../utils.js";
-import { mergeAbortSignals } from "../nodes/utils.js";
+import { mergeAbortSignals, toPartialZodObject } from "../nodes/utils.js";
 import { CreateAgentParams } from "../types.js";
 import type { InternalAgentState, Runtime } from "../runtime.js";
 import type {
@@ -57,28 +60,48 @@ type InternalModelResponse<StructuredResponseFormat> =
   | AIMessage
   | ResponseHandlerResult<StructuredResponseFormat>;
 
+/**
+ * Check if the response is an internal model response.
+ * @param response - The response to check.
+ * @returns True if the response is an internal model response, false otherwise.
+ */
+function isInternalModelResponse<StructuredResponseFormat>(
+  response: unknown
+): response is InternalModelResponse<StructuredResponseFormat> {
+  return (
+    AIMessage.isInstance(response) ||
+    (typeof response === "object" &&
+      response !== null &&
+      "structuredResponse" in response &&
+      "messages" in response)
+  );
+}
+
+/**
+ * The name of the agent node in the state graph.
+ */
+export const AGENT_NODE_NAME = "model_request";
+
 export interface AgentNodeOptions<
   StructuredResponseFormat extends Record<string, unknown> = Record<
     string,
     unknown
   >,
   StateSchema extends AnyAnnotationRoot | InteropZodObject = AnyAnnotationRoot,
-  ContextSchema extends AnyAnnotationRoot | InteropZodObject = AnyAnnotationRoot
+  ContextSchema extends
+    | AnyAnnotationRoot
+    | InteropZodObject = AnyAnnotationRoot,
 > extends Pick<
     CreateAgentParams<StructuredResponseFormat, StateSchema, ContextSchema>,
-    | "model"
-    | "systemPrompt"
-    | "includeAgentName"
-    | "name"
-    | "responseFormat"
-    | "middleware"
+    "model" | "includeAgentName" | "name" | "responseFormat" | "middleware"
   > {
   toolClasses: (ClientTool | ServerTool)[];
   shouldReturnDirect: Set<string>;
   signal?: AbortSignal;
+  systemMessage: SystemMessage;
   wrapModelCallHookMiddleware?: [
     AgentMiddleware,
-    () => Record<string, unknown>
+    () => Record<string, unknown>,
   ][];
 }
 
@@ -99,9 +122,11 @@ export class AgentNode<
     string,
     unknown
   >,
-  ContextSchema extends AnyAnnotationRoot | InteropZodObject = AnyAnnotationRoot
+  ContextSchema extends
+    | AnyAnnotationRoot
+    | InteropZodObject = AnyAnnotationRoot,
 > extends RunnableCallable<
-  InternalAgentState<StructuredResponseFormat> & PreHookAnnotation["State"],
+  InternalAgentState<StructuredResponseFormat>,
   | (
       | { messages: BaseMessage[] }
       | { structuredResponse: StructuredResponseFormat }
@@ -109,6 +134,8 @@ export class AgentNode<
   | Command
 > {
   #options: AgentNodeOptions<StructuredResponseFormat, ContextSchema>;
+  #systemMessage: SystemMessage;
+  #currentSystemMessage: SystemMessage;
 
   constructor(
     options: AgentNodeOptions<StructuredResponseFormat, ContextSchema>
@@ -119,12 +146,13 @@ export class AgentNode<
     });
 
     this.#options = options;
+    this.#systemMessage = options.systemMessage;
   }
 
   /**
    * Returns response format primtivies based on given model and response format provided by the user.
    *
-   * If the the user selects a tool output:
+   * If the user selects a tool output:
    * - return a record of tools to extract structured output from the model's response
    *
    * if the the user selects a native schema output or if the model supports JSON schema output:
@@ -163,10 +191,13 @@ export class AgentNode<
           strategies.filter(
             (format) => format instanceof ToolStrategy
           ) as ToolStrategy[]
-        ).reduce((acc, format) => {
-          acc[format.name] = format;
-          return acc;
-        }, {} as Record<string, ToolStrategy>),
+        ).reduce(
+          (acc, format) => {
+            acc[format.name] = format;
+            return acc;
+          },
+          {} as Record<string, ToolStrategy>
+        ),
       };
     }
 
@@ -180,8 +211,7 @@ export class AgentNode<
   }
 
   async #run(
-    state: InternalAgentState<StructuredResponseFormat> &
-      PreHookAnnotation["State"],
+    state: InternalAgentState<StructuredResponseFormat>,
     config: RunnableConfig
   ) {
     /**
@@ -257,8 +287,7 @@ export class AgentNode<
   }
 
   async #invokeModel(
-    state: InternalAgentState<StructuredResponseFormat> &
-      PreHookAnnotation["State"],
+    state: InternalAgentState<StructuredResponseFormat>,
     config: RunnableConfig,
     options: {
       lastMessage?: string;
@@ -285,14 +314,23 @@ export class AgentNode<
         structuredResponseFormat
       );
 
-      let modelInput = this.#getModelInputState(state);
-      modelInput = { ...modelInput, messages: request.messages };
+      /**
+       * prepend the system message to the messages if it is not empty
+       */
+      const messages = [
+        ...(this.#currentSystemMessage.text === ""
+          ? []
+          : [this.#currentSystemMessage]),
+        ...request.messages,
+      ];
 
       const signal = mergeAbortSignals(this.#options.signal, config.signal);
-      const invokeConfig = { ...config, signal };
-      const response = (await modelWithTools.invoke(
-        modelInput,
-        invokeConfig
+      const response = (await raceWithSignal(
+        modelWithTools.invoke(messages, {
+          ...config,
+          signal,
+        }),
+        signal
       )) as AIMessage;
 
       /**
@@ -349,8 +387,7 @@ export class AgentNode<
     const wrapperMiddleware = this.#options.wrapModelCallHookMiddleware ?? [];
     let wrappedHandler: (
       request: ModelRequest<
-        InternalAgentState<StructuredResponseFormat> &
-          PreHookAnnotation["State"],
+        InternalAgentState<StructuredResponseFormat>,
         unknown
       >
     ) => Promise<InternalModelResponse<StructuredResponseFormat>> = baseHandler;
@@ -367,8 +404,7 @@ export class AgentNode<
 
         wrappedHandler = async (
           request: ModelRequest<
-            InternalAgentState<StructuredResponseFormat> &
-              PreHookAnnotation["State"],
+            InternalAgentState<StructuredResponseFormat>,
             unknown
           >
         ): Promise<InternalModelResponse<StructuredResponseFormat>> => {
@@ -396,22 +432,20 @@ export class AgentNode<
            * Create the request with state and runtime
            */
           const requestWithStateAndRuntime: ModelRequest<
-            InternalAgentState<StructuredResponseFormat> &
-              PreHookAnnotation["State"],
+            InternalAgentState<StructuredResponseFormat>,
             unknown
           > = {
             ...request,
             state: {
               ...(middleware.stateSchema
                 ? interopParse(
-                    interopZodObjectPartial(middleware.stateSchema),
+                    toPartialZodObject(middleware.stateSchema),
                     state
                   )
                 : {}),
               ...currentGetState(),
               messages: state.messages,
-            } as InternalAgentState<StructuredResponseFormat> &
-              PreHookAnnotation["State"],
+            } as InternalAgentState<StructuredResponseFormat>,
             runtime,
           };
 
@@ -420,8 +454,7 @@ export class AgentNode<
            */
           const handlerWithValidation = async (
             req: ModelRequest<
-              InternalAgentState<StructuredResponseFormat> &
-                PreHookAnnotation["State"],
+              InternalAgentState<StructuredResponseFormat>,
               unknown
             >
           ): Promise<InternalModelResponse<StructuredResponseFormat>> => {
@@ -464,7 +497,45 @@ export class AgentNode<
               );
             }
 
-            return innerHandler(req);
+            let normalizedReq = req;
+            const hasSystemPromptChanged =
+              req.systemPrompt !== this.#currentSystemMessage.text;
+            const hasSystemMessageChanged =
+              req.systemMessage !== this.#currentSystemMessage;
+            if (hasSystemPromptChanged && hasSystemMessageChanged) {
+              throw new Error(
+                "Cannot change both systemPrompt and systemMessage in the same request."
+              );
+            }
+
+            /**
+             * Check if systemPrompt is a string was changed, if so create a new SystemMessage
+             */
+            if (hasSystemPromptChanged) {
+              this.#currentSystemMessage = new SystemMessage({
+                content: [{ type: "text", text: req.systemPrompt }],
+              });
+              normalizedReq = {
+                ...req,
+                systemPrompt: this.#currentSystemMessage.text,
+                systemMessage: this.#currentSystemMessage,
+              };
+            }
+            /**
+             * If the systemMessage was changed, update the current system message
+             */
+            if (hasSystemMessageChanged) {
+              this.#currentSystemMessage = new SystemMessage({
+                ...req.systemMessage,
+              });
+              normalizedReq = {
+                ...req,
+                systemPrompt: this.#currentSystemMessage.text,
+                systemMessage: this.#currentSystemMessage,
+              };
+            }
+
+            return innerHandler(normalizedReq);
           };
 
           // Call middleware's wrapModelCall with the validation handler
@@ -481,7 +552,7 @@ export class AgentNode<
             /**
              * Validate that this specific middleware returned a valid AIMessage
              */
-            if (!AIMessage.isInstance(middlewareResponse)) {
+            if (!isInternalModelResponse(middlewareResponse)) {
               throw new Error(
                 `Invalid response from "wrapModelCall" in middleware "${
                   currentMiddleware.name
@@ -491,14 +562,7 @@ export class AgentNode<
 
             return middlewareResponse;
           } catch (error) {
-            // Add middleware context to error if not already added
-            if (
-              error instanceof Error &&
-              !error.message.includes(`middleware "${currentMiddleware.name}"`)
-            ) {
-              error.message = `Error in middleware "${currentMiddleware.name}": ${error.message}`;
-            }
-            throw error;
+            throw MiddlewareError.wrap(error, currentMiddleware.name);
           }
         };
       }
@@ -506,13 +570,17 @@ export class AgentNode<
 
     /**
      * Execute the wrapped handler with the initial request
+     * Reset current system prompt to initial state and convert to string using .text getter
+     * for backwards compatibility with ModelRequest
      */
+    this.#currentSystemMessage = this.#systemMessage;
     const initialRequest: ModelRequest<
-      InternalAgentState<StructuredResponseFormat> & PreHookAnnotation["State"],
+      InternalAgentState<StructuredResponseFormat>,
       unknown
     > = {
       model,
-      systemPrompt: this.#options.systemPrompt,
+      systemPrompt: this.#currentSystemMessage?.text,
+      systemMessage: this.#currentSystemMessage,
       messages: state.messages,
       tools: this.#options.toolClasses,
       state,
@@ -619,13 +687,22 @@ export class AgentNode<
     }
 
     /**
+     * Default behavior: retry if `errorHandler` is undefined or truthy.
+     * Only throw if explicitly set to `false`.
+     */
+    if (errorHandler === false) {
+      throw error;
+    }
+
+    /**
      * retry if:
      */
     if (
       /**
-       * if the user has provided `true` as the `errorHandler` option, return a new AIMessage
+       * if the user has provided truthy value as the `errorHandler`, return a new AIMessage
        * with the error message and retry the tool call.
        */
+      errorHandler === undefined ||
       (typeof errorHandler === "boolean" && errorHandler) ||
       /**
        * if `errorHandler` is an array and contains MultipleStructuredOutputsError
@@ -643,7 +720,7 @@ export class AgentNode<
             }),
           ],
         },
-        goto: "model",
+        goto: AGENT_NODE_NAME,
       });
     }
 
@@ -661,7 +738,7 @@ export class AgentNode<
             }),
           ],
         },
-        goto: "model",
+        goto: AGENT_NODE_NAME,
       });
     }
 
@@ -684,19 +761,29 @@ export class AgentNode<
             }),
           ],
         },
-        goto: "model",
+        goto: AGENT_NODE_NAME,
       });
     }
 
     /**
-     * throw otherwise, e.g. if `errorHandler` is not defined or set to `false`
+     * Default: retry if we reach here
      */
-    throw error;
+    return new Command({
+      update: {
+        messages: [
+          response,
+          new ToolMessage({
+            content: error.message,
+            tool_call_id: toolCallId,
+          }),
+        ],
+      },
+      goto: AGENT_NODE_NAME,
+    });
   }
 
   #areMoreStepsNeeded(
-    state: InternalAgentState<StructuredResponseFormat> &
-      PreHookAnnotation["State"],
+    state: InternalAgentState<StructuredResponseFormat>,
     response: BaseMessage
   ): boolean {
     const allToolsReturnDirect =
@@ -711,23 +798,6 @@ export class AgentNode<
         ((remainingSteps < 1 && allToolsReturnDirect) ||
           (remainingSteps < 2 && hasToolCalls(state.messages.at(-1))))
     );
-  }
-
-  #getModelInputState(
-    state: InternalAgentState<StructuredResponseFormat> &
-      PreHookAnnotation["State"]
-  ): Omit<InternalAgentState<StructuredResponseFormat>, "llmInputMessages"> {
-    const { messages, llmInputMessages, ...rest } = state;
-    if (llmInputMessages && llmInputMessages.length > 0) {
-      return { messages: llmInputMessages, ...rest } as Omit<
-        InternalAgentState<StructuredResponseFormat>,
-        "llmInputMessages"
-      >;
-    }
-    return { messages, ...rest } as Omit<
-      InternalAgentState<StructuredResponseFormat>,
-      "llmInputMessages"
-    >;
   }
 
   async #bindTools(
@@ -762,13 +832,18 @@ export class AgentNode<
      * check if the user requests a native schema output
      */
     if (structuredResponseFormat?.type === "native") {
+      const resolvedStrict =
+        preparedOptions?.modelSettings?.strict ??
+        structuredResponseFormat?.strategy?.strict ??
+        true;
+
       const jsonSchemaParams = {
         name: structuredResponseFormat.strategy.schema?.name ?? "extract",
         description: getSchemaDescription(
           structuredResponseFormat.strategy.schema
         ),
         schema: structuredResponseFormat.strategy.schema,
-        strict: true,
+        strict: resolvedStrict,
       };
 
       Object.assign(options, {
@@ -776,11 +851,18 @@ export class AgentNode<
           type: "json_schema",
           json_schema: jsonSchemaParams,
         },
+        output_format: {
+          type: "json_schema",
+          schema: structuredResponseFormat.strategy.schema,
+        },
+        headers: {
+          "anthropic-beta": "structured-outputs-2025-11-13",
+        },
         ls_structured_output_format: {
           kwargs: { method: "json_schema" },
           schema: structuredResponseFormat.strategy.schema,
         },
-        strict: true,
+        strict: resolvedStrict,
       });
     }
 
@@ -789,20 +871,18 @@ export class AgentNode<
      */
     const modelWithTools = await bindTools(model, allTools, {
       ...options,
-      ...(preparedOptions?.modelSettings ?? {}),
+      ...preparedOptions?.modelSettings,
       tool_choice: toolChoice,
     });
 
     /**
      * Create a model runnable with the prompt and agent name
+     * Use current SystemMessage state (which may have been modified by middleware)
      */
-    const modelRunnable = getPromptRunnable(
-      preparedOptions?.systemPrompt ?? this.#options.systemPrompt
-    ).pipe(
+    const modelRunnable =
       this.#options.includeAgentName === "inline"
         ? withAgentName(modelWithTools, this.#options.includeAgentName)
-        : modelWithTools
-    );
+        : modelWithTools;
 
     return modelRunnable;
   }

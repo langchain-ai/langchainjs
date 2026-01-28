@@ -26,6 +26,17 @@ export type ResponseFormatUndefined = {
 };
 
 /**
+ * Default value for strict mode in providerStrategy.
+ *
+ * When using providerStrategy with json_schema response format, OpenAI's parse() method
+ * requires all function tools to have strict: true. This ensures the model's output
+ * exactly matches the provided JSON schema.
+ *
+ * @see https://platform.openai.com/docs/guides/structured-outputs
+ */
+const PROVIDER_STRATEGY_DEFAULT_STRICT = true;
+
+/**
  * This is a global counter for generating unique names for tools.
  */
 let bindingIdentifier = 0;
@@ -88,7 +99,7 @@ export class ToolStrategy<_T = unknown> {
       const tool = {
         type: "function" as const,
         function: {
-          name: getFunctionName(),
+          name: getFunctionName(asJsonSchema.title),
           strict: false,
           description:
             asJsonSchema.description ??
@@ -145,19 +156,61 @@ export class ProviderStrategy<T = unknown> {
   // @ts-expect-error - _schemaType is used only for type inference
   private _schemaType?: T;
 
-  private constructor(public readonly schema: Record<string, unknown>) {}
+  /**
+   * The schema to use for the provider strategy
+   */
+  public readonly schema: Record<string, unknown>;
 
-  static fromSchema<T>(schema: InteropZodType<T>): ProviderStrategy<T>;
+  /**
+   * Whether to use strict mode for the provider strategy
+   */
+  public readonly strict: boolean;
+
+  private constructor(options: {
+    schema: Record<string, unknown>;
+    strict?: boolean;
+  });
+  private constructor(schema: Record<string, unknown>, strict?: boolean);
+  private constructor(
+    schemaOrOptions:
+      | Record<string, unknown>
+      | { schema: Record<string, unknown>; strict?: boolean },
+    strict?: boolean
+  ) {
+    if (
+      "schema" in schemaOrOptions &&
+      typeof schemaOrOptions.schema === "object" &&
+      schemaOrOptions.schema !== null &&
+      !("type" in schemaOrOptions)
+    ) {
+      const options = schemaOrOptions as {
+        schema: Record<string, unknown>;
+        strict?: boolean;
+      };
+      this.schema = options.schema;
+      this.strict = options.strict ?? PROVIDER_STRATEGY_DEFAULT_STRICT;
+    } else {
+      this.schema = schemaOrOptions as Record<string, unknown>;
+      this.strict = strict ?? PROVIDER_STRATEGY_DEFAULT_STRICT;
+    }
+  }
+
+  static fromSchema<T>(
+    schema: InteropZodType<T>,
+    strict?: boolean
+  ): ProviderStrategy<T>;
 
   static fromSchema(
-    schema: Record<string, unknown>
+    schema: Record<string, unknown>,
+    strict?: boolean
   ): ProviderStrategy<Record<string, unknown>>;
 
   static fromSchema<T = unknown>(
-    schema: InteropZodType<T> | Record<string, unknown>
+    schema: InteropZodType<T> | Record<string, unknown>,
+    strict?: boolean
   ): ProviderStrategy<T> | ProviderStrategy<Record<string, unknown>> {
     const asJsonSchema = toJsonSchema(schema);
-    return new ProviderStrategy(asJsonSchema) as
+    return new ProviderStrategy(asJsonSchema, strict) as
       | ProviderStrategy<T>
       | ProviderStrategy<Record<string, unknown>>;
   }
@@ -165,19 +218,45 @@ export class ProviderStrategy<T = unknown> {
   /**
    * Parse tool arguments according to the schema. If the response is not valid, return undefined.
    *
-   * @param toolArgs - The arguments from the tool call
+   * @param response - The AI message response to parse
    * @returns The parsed response according to the schema type
    */
   parse(response: AIMessage) {
     /**
-     * return if the response doesn't contain valid content
+     * Extract text content from the response.
+     * Handles both string content and array content (e.g., from thinking models).
      */
-    if (typeof response.content !== "string" || response.content === "") {
+    let textContent: string | undefined;
+
+    if (typeof response.content === "string") {
+      textContent = response.content;
+    } else if (Array.isArray(response.content)) {
+      /**
+       * For thinking models, content is an array with thinking blocks and text blocks.
+       * Extract the text from text blocks.
+       */
+      for (const block of response.content) {
+        if (
+          typeof block === "object" &&
+          block !== null &&
+          "type" in block &&
+          block.type === "text" &&
+          "text" in block &&
+          typeof block.text === "string"
+        ) {
+          textContent = block.text;
+          break; // Use the first text block found
+        }
+      }
+    }
+
+    // Return if no valid text content found
+    if (!textContent || textContent === "") {
       return;
     }
 
     try {
-      const content = JSON.parse(response.content);
+      const content = JSON.parse(textContent);
       const validator = new Validator(this.schema);
       const result = validator.validate(content);
       if (!result.valid) {
@@ -338,6 +417,8 @@ export interface ToolStrategyOptions {
    * - `false` - throw an error
    * - `string` - retry the tool call with the provided message
    * - `(error: ToolStrategyError) => Promise<string> | string` - retry with the provided message or throw the error
+   *
+   * @default true
    */
   handleError?:
     | boolean
@@ -365,12 +446,54 @@ export function toolStrategy(
 ): TypedToolStrategy<Record<string, unknown>>;
 
 /**
- * Define how to transform the response format from a tool call.
+ * Creates a tool strategy for structured output using function calling.
  *
- * @param responseFormat - The response format to transform
- * @param options - The options to use for the transformation
- * @param options.handleError - Whether to handle errors from the tool call
- * @returns The transformed response format
+ * This function configures structured output by converting schemas into function tools that
+ * the model calls. Unlike `providerStrategy`, which uses native JSON schema support,
+ * `toolStrategy` works with any model that supports function calling, making it more
+ * widely compatible across providers and model versions.
+ *
+ * The model will call a function with arguments matching your schema, and the agent will
+ * extract and validate the structured output from the tool call. This approach is automatically
+ * used when your model doesn't support native JSON schema output.
+ *
+ * @param responseFormat - The schema(s) to enforce. Can be a single Zod schema, an array of Zod schemas,
+ *   a JSON schema object, or an array of JSON schema objects.
+ * @param options - Optional configuration for the tool strategy
+ * @param options.handleError - How to handle errors when the model calls multiple structured output tools
+ *   or when the output doesn't match the schema. Defaults to `true` (auto-retry). Can be `false` (throw),
+ *   a `string` (retry with message), or a `function` (custom handler).
+ * @param options.toolMessageContent - Custom message content to include in conversation history
+ *   when structured output is generated via tool call
+ * @returns A `TypedToolStrategy` instance that can be used as the `responseFormat` in `createAgent`
+ *
+ * @example
+ * ```ts
+ * import { toolStrategy, createAgent } from "langchain";
+ * import { z } from "zod";
+ *
+ * const agent = createAgent({
+ *   model: "claude-haiku-4-5",
+ *   responseFormat: toolStrategy(
+ *     z.object({
+ *       answer: z.string(),
+ *       confidence: z.number().min(0).max(1),
+ *     })
+ *   ),
+ * });
+ * ```
+ *
+ * @example
+ * ```ts
+ * // Multiple schemas - model can choose which one to use
+ * const agent = createAgent({
+ *   model: "claude-haiku-4-5",
+ *   responseFormat: toolStrategy([
+ *     z.object({ name: z.string(), age: z.number() }),
+ *     z.object({ email: z.string(), phone: z.string() }),
+ *   ]),
+ * });
+ * ```
  */
 export function toolStrategy(
   responseFormat:
@@ -383,18 +506,93 @@ export function toolStrategy(
   return transformResponseFormat(responseFormat, options) as TypedToolStrategy;
 }
 
-export function providerStrategy<T extends InteropZodType<any>>(
-  responseFormat: T
+/**
+ * Creates a provider strategy for structured output using native JSON schema support.
+ *
+ * This function is used to configure structured output for agents when the underlying model
+ * supports native JSON schema output (e.g., OpenAI's `gpt-4o`, `gpt-4o-mini`, and newer models).
+ * Unlike `toolStrategy`, which uses function calling to extract structured output, `providerStrategy`
+ * leverages the provider's native structured output capabilities, resulting in more efficient
+ * and reliable schema enforcement.
+ *
+ * When used with a model that supports JSON schema output, the model will return responses
+ * that directly conform to the provided schema without requiring tool calls. This is the
+ * recommended approach for structured output when your model supports it.
+ *
+ * @param responseFormat - The schema to enforce, either a Zod schema, a JSON schema object, or an options object with `schema` and optional `strict` flag
+ * @returns A `ProviderStrategy` instance that can be used as the `responseFormat` in `createAgent`
+ *
+ * @example
+ * ```ts
+ * import { providerStrategy, createAgent } from "langchain";
+ * import { z } from "zod";
+ *
+ * const agent = createAgent({
+ *   model: "claude-haiku-4-5",
+ *   responseFormat: providerStrategy(
+ *     z.object({
+ *       answer: z.string().describe("The answer to the question"),
+ *       confidence: z.number().min(0).max(1),
+ *     })
+ *   ),
+ * });
+ * ```
+ *
+ * @example
+ * ```ts
+ * // Using strict mode for stricter schema enforcement
+ * const agent = createAgent({
+ *   model: "claude-haiku-4-5",
+ *   responseFormat: providerStrategy({
+ *     schema: z.object({
+ *       name: z.string(),
+ *       age: z.number(),
+ *     }),
+ *     strict: true
+ *   }),
+ * });
+ * ```
+ */
+export function providerStrategy<T extends InteropZodType<unknown>>(
+  responseFormat: T | { schema: T; strict?: boolean }
 ): ProviderStrategy<T extends InteropZodType<infer U> ? U : never>;
 export function providerStrategy(
-  responseFormat: JsonSchemaFormat
+  responseFormat:
+    | JsonSchemaFormat
+    | { schema: JsonSchemaFormat; strict?: boolean }
 ): ProviderStrategy<Record<string, unknown>>;
 export function providerStrategy(
-  responseFormat: InteropZodType<any> | JsonSchemaFormat
-): ProviderStrategy<any> {
+  responseFormat:
+    | InteropZodType<unknown>
+    | JsonSchemaFormat
+    | { schema: InteropZodType<unknown> | JsonSchemaFormat; strict?: boolean }
+): ProviderStrategy<unknown> {
+  /**
+   * Handle options object format
+   */
+  if (
+    typeof responseFormat === "object" &&
+    responseFormat !== null &&
+    "schema" in responseFormat &&
+    !isInteropZodSchema(responseFormat) &&
+    !("type" in responseFormat)
+  ) {
+    const { schema, strict: strictFlag } = responseFormat as {
+      schema: InteropZodType<unknown> | JsonSchemaFormat;
+      strict?: boolean;
+    };
+    return ProviderStrategy.fromSchema(
+      schema as InteropZodType<unknown>,
+      strictFlag
+    ) as ProviderStrategy<unknown>;
+  }
+
+  /**
+   * Handle direct schema format
+   */
   return ProviderStrategy.fromSchema(
-    responseFormat as any
-  ) as ProviderStrategy<any>;
+    responseFormat as InteropZodType<unknown>
+  ) as ProviderStrategy<unknown>;
 }
 
 /**

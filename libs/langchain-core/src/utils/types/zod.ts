@@ -1,5 +1,9 @@
 import type * as z3 from "zod/v3";
 import type * as z4 from "zod/v4/core";
+import type * as z4Classic from "zod/v4";
+// Import from main "zod" package to get the types users would get with `import { z } from "zod"`
+// This is important for zod v4.x where the main package uses the classic/compat API
+import type * as zodMain from "zod";
 import {
   parse,
   parseAsync,
@@ -17,69 +21,86 @@ export type ZodStringV3 = z3.ZodString;
 
 export type ZodStringV4 = z4.$ZodType<string, unknown>;
 
+// ZodObject in zod v3 and zod v4's v3 compat layer has 5 type parameters:
+// T (shape), UnknownKeys, Catchall, Output, Input
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export type ZodObjectV3 = z3.ZodObject<any, any, any, any>;
+export type ZodObjectV3 = z3.ZodObject<any, any, any, any, any>;
 
+// Core $ZodObject type from "zod/v4/core"
 export type ZodObjectV4 = z4.$ZodObject;
+
+// Classic ZodObject type from "zod/v4" (the classic/compat API)
+// This is what users get when using `import { z } from "zod"` with zod v4.x
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export type ZodObjectV4Classic = z4Classic.ZodObject<any, any>;
+
+// Main "zod" package ZodObject - the type users get with `import { z } from "zod"`
+// In zod v4.x, this uses the v4 classic API with 2 type params (Shape, Config)
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export type ZodObjectMain = zodMain.ZodObject<any, any>;
 
 export type ZodDefaultV3<T extends z3.ZodTypeAny> = z3.ZodDefault<T>;
 export type ZodDefaultV4<T extends z4.SomeType> = z4.$ZodDefault<T>;
 export type ZodOptionalV3<T extends z3.ZodTypeAny> = z3.ZodOptional<T>;
 export type ZodOptionalV4<T extends z4.SomeType> = z4.$ZodOptional<T>;
+export type ZodNullableV4<T extends z4.SomeType> = z4.$ZodNullable<T>;
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type InteropZodType<Output = any, Input = Output> =
   | z3.ZodType<Output, z3.ZodTypeDef, Input>
   | z4.$ZodType<Output, Input>;
 
-export type InteropZodObject = ZodObjectV3 | ZodObjectV4;
+export type InteropZodObject =
+  | ZodObjectV3
+  | ZodObjectV4
+  | ZodObjectV4Classic
+  | ZodObjectMain;
 export type InteropZodDefault<T = InteropZodObjectShape> =
   T extends z3.ZodTypeAny
     ? ZodDefaultV3<T>
     : T extends z4.SomeType
-    ? ZodDefaultV4<T>
-    : never;
+      ? ZodDefaultV4<T>
+      : never;
 export type InteropZodOptional<T = InteropZodObjectShape> =
   T extends z3.ZodTypeAny
     ? ZodOptionalV3<T>
     : T extends z4.SomeType
-    ? ZodOptionalV4<T>
-    : never;
+      ? ZodOptionalV4<T>
+      : never;
 
 export type InteropZodObjectShape<
-  T extends InteropZodObject = InteropZodObject
-> = T extends z3.ZodObject<infer Shape>
-  ? { [K in keyof Shape]: Shape[K] }
-  : T extends z4.$ZodObject<infer Shape>
-  ? { [K in keyof Shape]: Shape[K] }
-  : never;
+  T extends InteropZodObject = InteropZodObject,
+> =
+  T extends z3.ZodObject<infer Shape>
+    ? { [K in keyof Shape]: Shape[K] }
+    : T extends z4.$ZodObject<infer Shape>
+      ? { [K in keyof Shape]: Shape[K] }
+      : T extends z4Classic.ZodObject<infer Shape>
+        ? { [K in keyof Shape]: Shape[K] }
+        : T extends zodMain.ZodObject<infer Shape>
+          ? { [K in keyof Shape]: Shape[K] }
+          : never;
 
 export type InteropZodIssue = z3.ZodIssue | z4.$ZodIssue;
 
 // Simplified type inference to avoid circular dependencies
-export type InferInteropZodInput<T> = T extends z3.ZodType<
-  unknown,
-  z3.ZodTypeDef,
-  infer Input
->
-  ? Input
-  : T extends z4.$ZodType<unknown, infer Input>
-  ? Input
-  : T extends { _zod: { input: infer Input } }
-  ? Input
-  : never;
+export type InferInteropZodInput<T> =
+  T extends z3.ZodType<unknown, z3.ZodTypeDef, infer Input>
+    ? Input
+    : T extends z4.$ZodType<unknown, infer Input>
+      ? Input
+      : T extends { _zod: { input: infer Input } }
+        ? Input
+        : never;
 
-export type InferInteropZodOutput<T> = T extends z3.ZodType<
-  infer Output,
-  z3.ZodTypeDef,
-  unknown
->
-  ? Output
-  : T extends z4.$ZodType<infer Output, unknown>
-  ? Output
-  : T extends { _zod: { output: infer Output } }
-  ? Output
-  : never;
+export type InferInteropZodOutput<T> =
+  T extends z3.ZodType<infer Output, z3.ZodTypeDef, unknown>
+    ? Output
+    : T extends z4.$ZodType<infer Output, unknown>
+      ? Output
+      : T extends { _zod: { output: infer Output } }
+        ? Output
+        : never;
 
 export type Mutable<T> = {
   -readonly [P in keyof T]: T[P];
@@ -127,7 +148,7 @@ export function isZodSchemaV3(
 
 /** Backward compatible isZodSchema for Zod 3 */
 export function isZodSchema<
-  RunOutput extends Record<string, unknown> = Record<string, unknown>
+  RunOutput extends Record<string, unknown> = Record<string, unknown>,
 >(
   schema: z3.ZodType<RunOutput> | Record<string, unknown>
 ): schema is z3.ZodType<RunOutput> {
@@ -513,6 +534,46 @@ export function isZodArrayV4(obj: unknown): obj is z4.$ZodArray {
   return false;
 }
 
+export function isZodOptionalV4(obj: unknown): obj is z4.$ZodOptional {
+  if (!isZodSchemaV4(obj)) return false;
+  // Zod v4 optional schemas have _zod.def.type === "optional"
+  if (
+    typeof obj === "object" &&
+    obj !== null &&
+    "_zod" in obj &&
+    typeof obj._zod === "object" &&
+    obj._zod !== null &&
+    "def" in obj._zod &&
+    typeof obj._zod.def === "object" &&
+    obj._zod.def !== null &&
+    "type" in obj._zod.def &&
+    obj._zod.def.type === "optional"
+  ) {
+    return true;
+  }
+  return false;
+}
+
+export function isZodNullableV4(obj: unknown): obj is z4.$ZodNullable {
+  if (!isZodSchemaV4(obj)) return false;
+  // Zod v4 nullable schemas have _zod.def.type === "nullable"
+  if (
+    typeof obj === "object" &&
+    obj !== null &&
+    "_zod" in obj &&
+    typeof obj._zod === "object" &&
+    obj._zod !== null &&
+    "def" in obj._zod &&
+    typeof obj._zod.def === "object" &&
+    obj._zod.def !== null &&
+    "type" in obj._zod.def &&
+    obj._zod.def.type === "nullable"
+  ) {
+    return true;
+  }
+  return false;
+}
+
 /**
  * Determines if the provided value is an InteropZodObject (Zod v3 or v4 object schema).
  *
@@ -816,7 +877,7 @@ function interopZodTransformInputSchemaImpl(
     if (recursive) {
       // Handle nested object schemas
       if (isZodObjectV4(outputSchema)) {
-        const outputShape: Mutable<z4.$ZodShape> = outputSchema._zod.def.shape;
+        const outputShape: Mutable<z4.$ZodShape> = {};
         for (const [key, keySchema] of Object.entries(
           outputSchema._zod.def.shape
         )) {
@@ -841,6 +902,30 @@ function interopZodTransformInputSchemaImpl(
         outputSchema = clone<z4.$ZodArray>(outputSchema, {
           ...outputSchema._zod.def,
           element: elementSchema as z4.$ZodType,
+        });
+      }
+      // Handle optional schemas
+      else if (isZodOptionalV4(outputSchema)) {
+        const innerSchema = interopZodTransformInputSchemaImpl(
+          outputSchema._zod.def.innerType as InteropZodType,
+          recursive,
+          cache
+        );
+        outputSchema = clone<z4.$ZodOptional>(outputSchema, {
+          ...outputSchema._zod.def,
+          innerType: innerSchema as z4.$ZodType,
+        });
+      }
+      // Handle nullable schemas
+      else if (isZodNullableV4(outputSchema)) {
+        const innerSchema = interopZodTransformInputSchemaImpl(
+          outputSchema._zod.def.innerType as InteropZodType,
+          recursive,
+          cache
+        );
+        outputSchema = clone<z4.$ZodNullable>(outputSchema, {
+          ...outputSchema._zod.def,
+          innerType: innerSchema as z4.$ZodType,
         });
       }
     }
@@ -931,5 +1016,13 @@ export function interopZodObjectMakeFieldsOptional<T extends InteropZodObject>(
 
   throw new Error(
     "Schema must be an instance of z3.ZodObject or z4.$ZodObject"
+  );
+}
+
+export function isInteropZodError(e: unknown) {
+  return (
+    // eslint-disable-next-line no-instanceof/no-instanceof
+    e instanceof Error &&
+    (e.constructor.name === "ZodError" || e.constructor.name === "$ZodError")
   );
 }

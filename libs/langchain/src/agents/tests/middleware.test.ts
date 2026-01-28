@@ -14,6 +14,7 @@ import { Command } from "@langchain/langgraph";
 
 import { createAgent, createMiddleware, toolStrategy } from "../index.js";
 import { FakeToolCallingChatModel, FakeToolCallingModel } from "./utils.js";
+import { MiddlewareError } from "../errors.js";
 
 describe("middleware", () => {
   it("should propagate state schema to middleware hooks and result", async () => {
@@ -348,14 +349,14 @@ describe("middleware", () => {
         }),
         wrapModelCall: async (request, handler) => {
           executionOrder.push("auth:before");
-          systemPrompts.push(request.systemPrompt || "");
+          systemPrompts.push(request.systemMessage.text);
 
           // Modify request: add auth context to system prompt
           const modifiedRequest = {
             ...request,
-            systemPrompt: `${
-              request.systemPrompt || ""
-            }\n[AUTH: user authenticated]`,
+            systemMessage: request.systemMessage.concat(
+              "\n[AUTH: user authenticated]"
+            ),
           };
 
           // Call inner handler (retry middleware)
@@ -376,12 +377,12 @@ describe("middleware", () => {
         name: "RetryMiddleware",
         wrapModelCall: async (request, handler) => {
           executionOrder.push("retry:before");
-          systemPrompts.push(request.systemPrompt || "");
+          systemPrompts.push(request.systemMessage.text);
 
           // Modify request: add retry info to system prompt
           const modifiedRequest = {
             ...request,
-            systemPrompt: `${request.systemPrompt || ""}\n[RETRY: attempt 1]`,
+            systemMessage: request.systemMessage.concat("\n[RETRY: attempt 1]"),
           };
 
           // Call inner handler (cache middleware)
@@ -402,16 +403,16 @@ describe("middleware", () => {
         name: "CacheMiddleware",
         wrapModelCall: async (request, handler) => {
           executionOrder.push("cache:before");
-          systemPrompts.push(request.systemPrompt || "");
+          systemPrompts.push(request.systemMessage.text);
 
           // Modify request: add cache info to system prompt
           const modifiedRequest = {
             ...request,
-            systemPrompt: `${request.systemPrompt || ""}\n[CACHE: miss]`,
+            systemMessage: request.systemMessage.concat("\n[CACHE: miss]"),
           };
 
           // Capture what will actually be sent to the model
-          actualSystemPromptSentToModel = modifiedRequest.systemPrompt;
+          actualSystemPromptSentToModel = modifiedRequest.systemMessage.text;
 
           // Call inner handler (base model handler)
           const response = await handler(modifiedRequest);
@@ -488,7 +489,24 @@ describe("middleware", () => {
 
       // Model should receive system message + user message
       expect(systemMessage).toBeInstanceOf(SystemMessage);
-      expect(systemMessage.content).toBe(actualSystemPromptSentToModel);
+      expect(systemMessage.content).toEqual([
+        {
+          text: "You are helpful",
+          type: "text",
+        },
+        {
+          text: "\n[AUTH: user authenticated]",
+          type: "text",
+        },
+        {
+          text: "\n[RETRY: attempt 1]",
+          type: "text",
+        },
+        {
+          text: "\n[CACHE: miss]",
+          type: "text",
+        },
+      ]);
     });
 
     it("should allow middleware to access state and runtime", async () => {
@@ -723,9 +741,7 @@ describe("middleware", () => {
         agent.invoke({
           messages: [{ role: "user", content: "Hi" }],
         })
-      ).rejects.toThrow(
-        'Invalid response from "wrapModelCall" in middleware "ModifyingMiddleware": expected AIMessage, got undefined'
-      );
+      ).rejects.toThrow("expected AIMessage, got undefined");
     });
 
     it("should propagate the middleware name in the error", async () => {
@@ -749,7 +765,73 @@ describe("middleware", () => {
         agent.invoke({
           messages: [{ role: "user", content: "Hi" }],
         })
-      ).rejects.toThrow('Error in middleware "ModifyingMiddleware": foobar');
+      ).rejects.toThrow("foobar");
+    });
+
+    it("should not nest middleware error prefixes when middleware re-throws errors", async () => {
+      const innerMiddleware = createMiddleware({
+        name: "InnerMiddleware",
+        wrapModelCall: () => {
+          throw new Error("original error");
+        },
+      });
+
+      const innerModel = new FakeToolCallingChatModel({
+        responses: [new AIMessage("Inner response")],
+      });
+
+      const innerAgent = createAgent({
+        model: innerModel,
+        systemPrompt: "You are an inner agent",
+        middleware: [innerMiddleware],
+      });
+
+      const subAgentTool = tool(
+        async () => {
+          await innerAgent.invoke({
+            messages: [{ role: "user", content: "Hi" }],
+          });
+          return "success";
+        },
+        {
+          name: "subAgentTool",
+          description: "A tool that spawns a sub-agent",
+          schema: z.object({}),
+        }
+      );
+
+      // Outer model that calls the subAgentTool
+      const outerModel = new FakeToolCallingModel({
+        toolCalls: [[{ name: "subAgentTool", args: {}, id: "1" }]],
+      });
+
+      // Outer middleware that wraps tool calls and invokes the inner agent
+      const outerMiddleware = createMiddleware({
+        name: "OuterMiddleware",
+        wrapToolCall: async (request, handler) => {
+          return handler(request);
+        },
+      });
+
+      const agent = createAgent({
+        model: outerModel,
+        tools: [subAgentTool],
+        systemPrompt: "You are an outer agent",
+        middleware: [outerMiddleware],
+      });
+
+      // Should only show the innermost middleware prefix, not nested prefixes
+      const error = await agent
+        .invoke({
+          messages: [{ role: "user", content: "Hi" }],
+        })
+        .catch((err) => err);
+
+      expect(error).toBeInstanceOf(MiddlewareError);
+      expect(error.name).toBe("Error");
+      expect(error.message).toBe("original error");
+      expect(error.cause).toBeInstanceOf(MiddlewareError);
+      expect(error.cause?.cause).toBeInstanceOf(Error);
     });
 
     it("should allow middleware to modify tool calls in response", async () => {
@@ -996,8 +1078,8 @@ describe("middleware", () => {
         }),
         wrapToolCall: async (request, handler) => {
           toolExecutions.push(`before:${request.toolCall.name}`);
-          expect(request.tool.name).toBe("get_weather");
-          expect(request.tool.description).toBe("Get weather for a location");
+          expect(request.tool?.name).toBe("get_weather");
+          expect(request.tool?.description).toBe("Get weather for a location");
           expect(request.toolCall).toMatchInlineSnapshot(`
             {
               "args": {
@@ -1234,45 +1316,6 @@ describe("middleware", () => {
       expect(capturedState.messages).toBeDefined();
     });
 
-    it("should include middleware name in error messages", async () => {
-      /**
-       * Test that errors thrown in wrapToolCall include the middleware name
-       * With the default error handler (matching Python), errors from middleware bubble up
-       */
-      const errorTool = tool(async () => "Success", {
-        name: "error_tool",
-        description: "A tool for testing errors",
-        schema: z.object({}),
-      });
-
-      // Middleware that throws an error
-      const errorMiddleware = createMiddleware({
-        name: "ErrorThrowingMiddleware",
-        wrapToolCall: async () => {
-          throw new Error("Something went wrong in middleware");
-        },
-      });
-
-      const model = new FakeToolCallingModel({
-        toolCalls: [[{ name: "error_tool", args: {}, id: "1" }]],
-      });
-
-      const agent = createAgent({
-        model,
-        tools: [errorTool],
-        middleware: [errorMiddleware],
-      });
-
-      // With default error handling (matches Python), errors from middleware bubble up
-      await expect(
-        agent.invoke({
-          messages: [new HumanMessage("Call the error tool")],
-        })
-      ).rejects.toThrow(
-        'Error in middleware "ErrorThrowingMiddleware": Something went wrong in middleware'
-      );
-    });
-
     it("should validate that wrapToolCall returns ToolMessage or Command", async () => {
       /**
        * Test that wrapToolCall must return ToolMessage or Command
@@ -1383,7 +1426,7 @@ describe("middleware", () => {
       const trackingMiddleware = createMiddleware({
         name: "TrackingMiddleware",
         wrapToolCall: async (request, handler) => {
-          toolCalls.push(request.tool.name as string);
+          toolCalls.push(request.tool?.name as string);
           return handler(request);
         },
       });
@@ -1509,7 +1552,7 @@ describe("middleware", () => {
         }),
         wrapToolCall: async (request, handler) => {
           // Check if user is admin
-          if (request.tool.name === "admin_action" && !request.state.isAdmin) {
+          if (request.tool?.name === "admin_action" && !request.state.isAdmin) {
             return new ToolMessage({
               content: "Access denied: admin privileges required",
               tool_call_id: request.toolCall.id!,
@@ -1558,7 +1601,7 @@ describe("middleware", () => {
 
       const slowTool = tool(
         async () => {
-          await new Promise((resolve) => setTimeout(resolve, 10));
+          await new Promise((resolve) => setTimeout(resolve, 15));
           return "Slow result";
         },
         {
@@ -1576,7 +1619,7 @@ describe("middleware", () => {
           const duration = Date.now() - startTime;
 
           metrics.push({
-            tool: request.tool.name as string,
+            tool: request.tool?.name as string,
             duration,
           });
 
@@ -1687,7 +1730,7 @@ describe("middleware", () => {
       const cacheMiddleware = createMiddleware({
         name: "CacheMiddleware",
         wrapToolCall: async (request, handler) => {
-          const cacheKey = `${request.tool.name}:${JSON.stringify(
+          const cacheKey = `${request.tool?.name}:${JSON.stringify(
             request.toolCall.args
           )}`;
 
@@ -1762,7 +1805,7 @@ describe("middleware", () => {
           const result = (await handler(request)) as ToolMessage;
 
           // Redact private tool results
-          if ((request.tool.name as string).includes("private")) {
+          if ((request.tool?.name as string).includes("private")) {
             return new ToolMessage({
               content: "[REDACTED]",
               tool_call_id: result.tool_call_id,
@@ -1872,6 +1915,43 @@ describe("middleware", () => {
         "layer2_after",
         "layer1_after",
       ]);
+    });
+
+    it("supports setting responseFormat with wrapModelCall", async () => {
+      const model = new FakeToolCallingChatModel({
+        responses: [
+          new AIMessage(
+            JSON.stringify({ answer: "The weather in Tokyo is 25°C" })
+          ),
+        ],
+      });
+
+      const middleware = createMiddleware({
+        name: "DynamicPromptMiddleware",
+        wrapModelCall: async (request, handler) => {
+          const systemPrompt = "You are a helpful assistant.";
+          return handler({ ...request, systemPrompt });
+        },
+      });
+
+      const agent = createAgent({
+        model,
+        responseFormat: z.object({ answer: z.string() }),
+        middleware: [middleware],
+      });
+
+      // Throws: "expected AIMessage, got object"
+      const result = await agent.invoke({
+        messages: [{ role: "user", content: "Hello" }],
+      });
+      expect(result.structuredResponse).toEqual({
+        answer: "The weather in Tokyo is 25°C",
+      });
+      const [human, assistant] = result.messages;
+      expect(human.content).toBe("Hello");
+      expect(assistant.content).toBe(
+        JSON.stringify({ answer: "The weather in Tokyo is 25°C" })
+      );
     });
   });
 
@@ -2393,6 +2473,62 @@ describe("middleware", () => {
       // Verify that only the input message is in the result (no model response)
       expect(result.messages).toHaveLength(1);
       expect(result.messages[0].content).toBe("Test");
+    });
+
+    it("should terminate when afterModel jumps to end (skips tools)", async () => {
+      const executionLog: string[] = [];
+
+      const toolFn = vi.fn(async ({ query }: { query: string }) => {
+        executionLog.push("tool_execution");
+        return `${query}`;
+      });
+
+      const sampleTool = tool(toolFn, {
+        name: "sample_tool",
+        description: "Sample tool",
+        schema: z.object({
+          query: z.string(),
+        }),
+      });
+
+      const middleware = createMiddleware({
+        name: "Middleware",
+        afterModel: {
+          hook: async () => {
+            executionLog.push("after_model");
+            return {
+              jumpTo: "end",
+            };
+          },
+          canJumpTo: ["end"],
+        },
+      });
+
+      const model = new FakeToolCallingModel({
+        toolCalls: [
+          [{ name: "sample_tool", args: { query: "Test" }, id: "test_id" }],
+        ],
+      });
+
+      const agent = createAgent({
+        model,
+        tools: [sampleTool],
+        middleware: [middleware],
+      });
+
+      const result = await agent.invoke({
+        messages: [new HumanMessage("Test")],
+      });
+
+      expect(executionLog).toEqual(["after_model"]);
+      expect(toolFn).not.toHaveBeenCalled();
+      expect(result.messages).toHaveLength(2);
+      expect(result.messages[0].content).toBe("Test");
+      expect(AIMessage.isInstance(result.messages[1])).toBe(true);
+      expect((result.messages[1] as AIMessage).tool_calls?.length).toBe(1);
+      expect(result.messages.some((m) => ToolMessage.isInstance(m))).toBe(
+        false
+      );
     });
   });
 });

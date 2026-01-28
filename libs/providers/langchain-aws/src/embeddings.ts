@@ -7,6 +7,16 @@ import { Embeddings, EmbeddingsParams } from "@langchain/core/embeddings";
 import { CredentialType } from "./types.js";
 
 /**
+ * Checks if the given model is an Amazon Nova embedding model.
+ * Nova models require a different request format using `messages` instead of `inputText`.
+ * @param model - The model ID string
+ * @returns true if the model is a Nova embedding model
+ */
+function isNovaEmbeddingModel(model: string): boolean {
+  return model.toLowerCase().includes("nova-embed");
+}
+
+/**
  * Interface that extends EmbeddingsParams and defines additional
  * parameters specific to the BedrockEmbeddings class.
  */
@@ -100,12 +110,29 @@ export class BedrockEmbeddings
         // replace newlines, which can negatively affect performance.
         const cleanedText = text.replace(/\n/g, " ");
 
+        // Nova embedding models use a different request format with `messages`
+        // instead of `inputText` used by Titan models
+        const requestBody = isNovaEmbeddingModel(this.model)
+          ? {
+              messages: [
+                {
+                  role: "user",
+                  content: [
+                    {
+                      text: cleanedText,
+                    },
+                  ],
+                },
+              ],
+            }
+          : {
+              inputText: cleanedText,
+            };
+
         const res = await this.client.send(
           new InvokeModelCommand({
             modelId: this.model,
-            body: JSON.stringify({
-              inputText: cleanedText,
-            }),
+            body: JSON.stringify(requestBody),
             contentType: "application/json",
             accept: "application/json",
           })

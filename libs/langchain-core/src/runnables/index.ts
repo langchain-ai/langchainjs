@@ -38,3 +38,4 @@ export {
   type RunnableWithMessageHistoryInputs,
   RunnableWithMessageHistory,
 } from "./history.js";
+export { raceWithSignal } from "../utils/signal.js";

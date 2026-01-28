@@ -1,5 +1,6 @@
 /* eslint-disable no-instanceof/no-instanceof */
 import type { ToolCall } from "@langchain/core/messages/tool";
+import { isGraphBubbleUp } from "@langchain/langgraph";
 
 export class MultipleToolsBoundError extends Error {
   constructor() {
@@ -65,5 +66,58 @@ export class ToolInvocationError extends Error {
 
     this.toolCall = toolCall;
     this.toolError = error;
+  }
+}
+
+/**
+ * Error thrown when a middleware fails.
+ *
+ * Use `MiddlewareError.wrap()` to create instances. The constructor is private
+ * to ensure that GraphBubbleUp errors (like GraphInterrupt) are never wrapped.
+ */
+export class MiddlewareError extends Error {
+  static readonly "~brand" = "MiddlewareError";
+
+  private constructor(error: unknown, middlewareName: string) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    super(errorMessage);
+    this.name =
+      error instanceof Error
+        ? error.name
+        : `${middlewareName[0].toUpperCase() + middlewareName.slice(1)}Error`;
+
+    if (error instanceof Error) {
+      this.cause = error;
+    }
+  }
+
+  /**
+   * Wrap an error in a MiddlewareError, unless it's a GraphBubbleUp error
+   * (like GraphInterrupt) which should propagate unchanged.
+   *
+   * @param error - The error to wrap
+   * @param middlewareName - The name of the middleware that threw the error
+   * @returns The original error if it's a GraphBubbleUp, otherwise a new MiddlewareError
+   */
+  static wrap(error: unknown, middlewareName: string): Error {
+    // Don't wrap GraphBubbleUp errors (GraphInterrupt, NodeInterrupt, etc.)
+    // These are control flow mechanisms that need to bubble up unchanged
+    if (isGraphBubbleUp(error)) {
+      return error;
+    }
+    return new MiddlewareError(error, middlewareName);
+  }
+
+  /**
+   * Check if the error is a MiddlewareError.
+   * @param error - The error to check
+   * @returns Whether the error is a MiddlewareError
+   */
+  static isInstance(error: unknown): error is MiddlewareError {
+    return (
+      error instanceof Error &&
+      "~brand" in error &&
+      error["~brand"] === "MiddlewareError"
+    );
   }
 }

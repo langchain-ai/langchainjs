@@ -15,7 +15,7 @@ import { load } from "../../load/index.js";
 
 class FakeStructuredChatModel extends FakeListChatModel {
   withStructuredOutput<
-    RunOutput extends Record<string, any> = Record<string, any>
+    RunOutput extends Record<string, any> = Record<string, any>,
   >(
     _params:
       | Record<string, any>
@@ -25,7 +25,7 @@ class FakeStructuredChatModel extends FakeListChatModel {
   ): Runnable<BaseLanguageModelInput, RunOutput, RunnableConfig>;
 
   withStructuredOutput<
-    RunOutput extends Record<string, any> = Record<string, any>
+    RunOutput extends Record<string, any> = Record<string, any>,
   >(
     _params:
       | Record<string, any>
@@ -39,7 +39,7 @@ class FakeStructuredChatModel extends FakeListChatModel {
   >;
 
   withStructuredOutput<
-    RunOutput extends Record<string, any> = Record<string, any>
+    RunOutput extends Record<string, any> = Record<string, any>,
   >(
     _params:
       | Record<string, any>

@@ -13,3 +13,10 @@ test("Test OllamaEmbeddings allows passthrough of request options", async () => 
     num_predict: 4321,
   });
 });
+
+test("Test OllamaEmbeddings dimensions parameter", async () => {
+  const embeddings = new OllamaEmbeddings({
+    dimensions: 512,
+  });
+  expect(embeddings.dimensions).toBe(512);
+});

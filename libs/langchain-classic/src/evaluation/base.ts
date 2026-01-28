@@ -12,7 +12,7 @@ import { BaseChain, LLMChain, LLMChainInput } from "../chains/index.js";
  */
 export interface LLMEvalChainInput<
   T extends EvalOutputType = EvalOutputType,
-  L extends BaseLanguageModelInterface = BaseLanguageModelInterface
+  L extends BaseLanguageModelInterface = BaseLanguageModelInterface,
 > extends LLMChainInput<T, L> {}
 
 export type ExtractLLMCallOptions<LanguageModelInterface> =
@@ -43,7 +43,7 @@ export type EvalOutputType = Record<string, string | number | boolean>;
  */
 export abstract class LLMEvalChain<
   T extends EvalOutputType = EvalOutputType,
-  L extends BaseLanguageModelInterface = BaseLanguageModelInterface
+  L extends BaseLanguageModelInterface = BaseLanguageModelInterface,
 > extends LLMChain<T, L> {
   requiresInput?: boolean = false;
 
@@ -78,7 +78,7 @@ export abstract class LLMEvalChain<
  */
 export abstract class EvalChain<
   RunInput extends ChainValues = ChainValues,
-  RunOutput extends ChainValues = ChainValues
+  RunOutput extends ChainValues = ChainValues,
 > extends BaseChain<RunInput, RunOutput> {
   requiresInput?: boolean = false;
 
@@ -161,7 +161,7 @@ export interface LLMTrajectoryEvaluatorArgs {
  */
 export abstract class LLMStringEvaluator<
   T extends EvalOutputType = EvalOutputType,
-  L extends BaseLanguageModelInterface = BaseLanguageModelInterface
+  L extends BaseLanguageModelInterface = BaseLanguageModelInterface,
 > extends LLMEvalChain<T, L> {
   /**
    * The name of the evaluation.

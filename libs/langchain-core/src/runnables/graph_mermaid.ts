@@ -1,4 +1,5 @@
 import { Edge, Node } from "./types.js";
+import { toBase64Url } from "./utils.js";
 
 function _escapeNodeLabel(nodeLabel: string): string {
   // Escapes the node label for Mermaid syntax.
@@ -97,20 +98,42 @@ export function drawMermaid(
 
   const seenSubgraphs = new Set<string>();
 
+  // sort prefixes by path length for correct nesting
+  function sortPrefixesByDepth(prefixes: string[]): string[] {
+    return [...prefixes].sort((a, b) => {
+      return a.split(":").length - b.split(":").length;
+    });
+  }
+
   function addSubgraph(edges: Edge[], prefix: string): void {
     const selfLoop = edges.length === 1 && edges[0].source === edges[0].target;
     if (prefix && !selfLoop) {
       const subgraph = prefix.split(":").pop()!;
-      if (seenSubgraphs.has(subgraph)) {
+
+      if (seenSubgraphs.has(prefix)) {
         throw new Error(
-          `Found duplicate subgraph '${subgraph}' -- this likely means that ` +
+          `Found duplicate subgraph '${subgraph}' at '${prefix} -- this likely means that ` +
             "you're reusing a subgraph node with the same name. " +
             "Please adjust your graph to have subgraph nodes with unique names."
         );
       }
 
-      seenSubgraphs.add(subgraph);
+      seenSubgraphs.add(prefix);
       mermaidGraph += `\tsubgraph ${subgraph}\n`;
+    }
+
+    // all nested prefixes for this level, sorted by depth
+    const nestedPrefixes = sortPrefixesByDepth(
+      Object.keys(edgeGroups).filter(
+        (nestedPrefix) =>
+          nestedPrefix.startsWith(`${prefix}:`) &&
+          nestedPrefix !== prefix &&
+          nestedPrefix.split(":").length === prefix.split(":").length + 1
+      )
+    );
+
+    for (const nestedPrefix of nestedPrefixes) {
+      addSubgraph(edgeGroups[nestedPrefix], nestedPrefix);
     }
 
     for (const edge of edges) {
@@ -141,13 +164,6 @@ export function drawMermaid(
       )}${edgeLabel}${_escapeNodeLabel(target)};\n`;
     }
 
-    // Recursively add nested subgraphs
-    for (const nestedPrefix in edgeGroups) {
-      if (nestedPrefix.startsWith(`${prefix}:`) && nestedPrefix !== prefix) {
-        addSubgraph(edgeGroups[nestedPrefix], nestedPrefix);
-      }
-    }
-
     if (prefix && !selfLoop) {
       mermaidGraph += "\tend\n";
     }
@@ -156,7 +172,7 @@ export function drawMermaid(
   // Start with the top-level edges (no common prefix)
   addSubgraph(edgeGroups[""] ?? [], "");
 
-  // Add remaining subgraphs
+  // Add remaining top-level subgraphs
   for (const prefix in edgeGroups) {
     if (!prefix.includes(":") && prefix !== "") {
       addSubgraph(edgeGroups[prefix], prefix);
@@ -201,8 +217,8 @@ export async function drawMermaidImage(
   let backgroundColor = config?.backgroundColor ?? "white";
   const imageType = config?.imageType ?? "png";
 
-  // Use btoa for compatibility, assume ASCII
-  const mermaidSyntaxEncoded = btoa(mermaidSyntax);
+  const mermaidSyntaxEncoded = toBase64Url(mermaidSyntax);
+
   // Check if the background color is a hexadecimal color code using regex
   if (backgroundColor !== undefined) {
     const hexColorPattern = /^#(?:[0-9a-fA-F]{3}){1,2}$/;

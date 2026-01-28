@@ -16,7 +16,7 @@ updater_script_dir="/app/updater_script"
 # Original directory paths
 original_updater_script_dir="/scripts/with_standard_tests/openai/node"
 
-# Run the shared script to copy all necessary folders/files
+# Run the shared script to copy all necessary folders/files and create mock tsconfig files
 bash /scripts/with_standard_tests/shared.sh providers/langchain-openai
 
 mkdir -p "$updater_script_dir"
@@ -37,5 +37,5 @@ cd "$monorepo_openai_dir"
 
 # Clean and reinstall to avoid dependency conflicts
 pnpm install --no-frozen-lockfile
-pnpm add @langchain/core
+pnpm add @langchain/core langsmith
 pnpm test

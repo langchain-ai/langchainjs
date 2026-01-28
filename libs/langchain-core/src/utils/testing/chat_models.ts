@@ -217,7 +217,7 @@ export class FakeStreamingChatModel extends BaseChatModel<FakeStreamingChatModel
 
   async *_streamResponseChunks(
     _messages: BaseMessage[],
-    _options: this["ParsedCallOptions"],
+    options: this["ParsedCallOptions"],
     runManager?: CallbackManagerForLLMRun
   ): AsyncGenerator<ChatGenerationChunk> {
     if (this.thrownErrorString) {
@@ -234,6 +234,7 @@ export class FakeStreamingChatModel extends BaseChatModel<FakeStreamingChatModel
           text: msgChunk.content?.toString() ?? "",
         });
 
+        if (options.signal?.aborted) break;
         yield cg;
         await runManager?.handleLLMNewToken(
           msgChunk.content as string,
@@ -260,6 +261,7 @@ export class FakeStreamingChatModel extends BaseChatModel<FakeStreamingChatModel
         message: new AIMessageChunk({ content: ch }),
         text: ch,
       });
+      if (options.signal?.aborted) break;
       yield cg;
       await runManager?.handleLLMNewToken(
         ch,
@@ -284,6 +286,13 @@ export interface FakeChatInput extends BaseChatModelParams {
   sleep?: number;
 
   emitCustomEvent?: boolean;
+
+  /**
+   * Generation info to include on the last chunk during streaming.
+   * This gets merged into response_metadata by the base chat model.
+   * Useful for testing response_metadata propagation (e.g., finish_reason).
+   */
+  generationInfo?: Record<string, unknown>;
 }
 
 export interface FakeListChatModelCallOptions extends BaseChatModelCallOptions {
@@ -325,12 +334,19 @@ export class FakeListChatModel extends BaseChatModel<FakeListChatModelCallOption
 
   emitCustomEvent = false;
 
+  generationInfo?: Record<string, unknown>;
+
+  private tools: (StructuredTool | ToolSpec)[] = [];
+
+  toolStyle: "openai" | "anthropic" | "bedrock" | "google" = "openai";
+
   constructor(params: FakeChatInput) {
     super(params);
-    const { responses, sleep, emitCustomEvent } = params;
+    const { responses, sleep, emitCustomEvent, generationInfo } = params;
     this.responses = responses;
     this.sleep = sleep;
     this.emitCustomEvent = emitCustomEvent ?? this.emitCustomEvent;
+    this.generationInfo = generationInfo;
   }
 
   _combineLLMOutput() {
@@ -391,12 +407,21 @@ export class FakeListChatModel extends BaseChatModel<FakeListChatModelCallOption
       });
     }
 
-    for await (const text of response) {
+    const responseChars = [...response];
+    for (let i = 0; i < responseChars.length; i++) {
+      const text = responseChars[i];
+      const isLastChunk = i === responseChars.length - 1;
       await this._sleepIfRequested();
       if (options?.thrownErrorString) {
         throw new Error(options.thrownErrorString);
       }
-      const chunk = this._createResponseChunk(text);
+      // Include generationInfo on the last chunk (like real providers do)
+      // This gets merged into response_metadata by the base chat model
+      const chunk = this._createResponseChunk(
+        text,
+        isLastChunk ? this.generationInfo : undefined
+      );
+      if (options.signal?.aborted) break;
       yield chunk;
       // eslint-disable-next-line no-void
       void runManager?.handleLLMNewToken(text);
@@ -415,10 +440,15 @@ export class FakeListChatModel extends BaseChatModel<FakeListChatModelCallOption
     });
   }
 
-  _createResponseChunk(text: string): ChatGenerationChunk {
+  _createResponseChunk(
+    text: string,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    generationInfo?: Record<string, any>
+  ): ChatGenerationChunk {
     return new ChatGenerationChunk({
       message: new AIMessageChunk({ content: text }),
       text,
+      generationInfo,
     });
   }
 
@@ -434,9 +464,66 @@ export class FakeListChatModel extends BaseChatModel<FakeListChatModelCallOption
     }
   }
 
+  bindTools(tools: (StructuredTool | ToolSpec)[]) {
+    const merged = [...this.tools, ...tools];
+
+    const toolDicts = merged.map((t) => {
+      switch (this.toolStyle) {
+        case "openai":
+          return {
+            type: "function",
+            function: {
+              name: t.name,
+              description: t.description,
+              parameters: toJsonSchema(t.schema),
+            },
+          };
+        case "anthropic":
+          return {
+            name: t.name,
+            description: t.description,
+            input_schema: toJsonSchema(t.schema),
+          };
+        case "bedrock":
+          return {
+            toolSpec: {
+              name: t.name,
+              description: t.description,
+              inputSchema: toJsonSchema(t.schema),
+            },
+          };
+        case "google":
+          return {
+            name: t.name,
+            description: t.description,
+            parameters: toJsonSchema(t.schema),
+          };
+        default:
+          throw new Error(`Unsupported tool style: ${this.toolStyle}`);
+      }
+    });
+
+    const wrapped =
+      this.toolStyle === "google"
+        ? [{ functionDeclarations: toolDicts }]
+        : toolDicts;
+
+    const next = new FakeListChatModel({
+      responses: this.responses,
+      sleep: this.sleep,
+      emitCustomEvent: this.emitCustomEvent,
+      generationInfo: this.generationInfo,
+    });
+    next.tools = merged;
+    next.toolStyle = this.toolStyle;
+    next.i = this.i;
+
+    return next.withConfig({ tools: wrapped } as BaseChatModelCallOptions);
+  }
+
   withStructuredOutput<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    RunOutput extends Record<string, any> = Record<string, any>
+    RunOutput extends Record<string, any> = Record<string, any>,
   >(
     _params:
       | StructuredOutputMethodParams<RunOutput, false>
@@ -448,7 +535,7 @@ export class FakeListChatModel extends BaseChatModel<FakeListChatModelCallOption
 
   withStructuredOutput<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    RunOutput extends Record<string, any> = Record<string, any>
+    RunOutput extends Record<string, any> = Record<string, any>,
   >(
     _params:
       | StructuredOutputMethodParams<RunOutput, true>
@@ -460,7 +547,7 @@ export class FakeListChatModel extends BaseChatModel<FakeListChatModelCallOption
 
   withStructuredOutput<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    RunOutput extends Record<string, any> = Record<string, any>
+    RunOutput extends Record<string, any> = Record<string, any>,
   >(
     _params:
       | StructuredOutputMethodParams<RunOutput, boolean>

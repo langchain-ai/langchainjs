@@ -1,5 +1,10 @@
 import type { OpenAI as OpenAIClient } from "openai";
-import { BaseMessage, ChatMessage } from "@langchain/core/messages";
+import {
+  BaseMessage,
+  ChatMessage,
+  ContentBlock,
+  Data,
+} from "@langchain/core/messages";
 
 export const iife = <T>(fn: () => T) => fn();
 
@@ -25,6 +30,24 @@ export function extractGenericMessageCustomRole(message: ChatMessage) {
   return message.role as OpenAIClient.ChatCompletionRole;
 }
 
+export function getRequiredFilenameFromMetadata(
+  block:
+    | ContentBlock.Multimodal.File
+    | ContentBlock.Multimodal.Video
+    | Data.StandardFileBlock
+): string {
+  const filename = (block.metadata?.filename ??
+    block.metadata?.name ??
+    block.metadata?.title) as string;
+
+  if (!filename) {
+    throw new Error(
+      "a filename or name or title is needed via meta-data for OpenAI when working with multimodal blocks"
+    );
+  }
+
+  return filename;
+}
 export function messageToOpenAIRole(
   message: BaseMessage
 ): OpenAIClient.ChatCompletionRole {
@@ -48,4 +71,8 @@ export function messageToOpenAIRole(
     default:
       throw new Error(`Unknown message type: ${type}`);
   }
+}
+
+export function _modelPrefersResponsesAPI(model: string): boolean {
+  return model.includes("gpt-5.2-pro");
 }

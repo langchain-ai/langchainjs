@@ -12,7 +12,7 @@ export function mergeResponseMetadata(
   a?: ResponseMetadata,
   b?: ResponseMetadata
 ): ResponseMetadata {
-  const output: ResponseMetadata = _mergeDicts(a ?? {}, b ?? {});
+  const output: ResponseMetadata = _mergeDicts(a, b) ?? {};
   return output;
 }
 

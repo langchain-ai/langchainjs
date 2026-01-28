@@ -28,6 +28,7 @@ import { GenerationChunk } from "../../outputs.js";
 // Import from web to avoid top-level side-effects from AsyncLocalStorage
 import { dispatchCustomEvent } from "../../callbacks/dispatch/web.js";
 import { AsyncLocalStorageProviderSingleton } from "../../singletons/index.js";
+import type { StreamEvent } from "../../tracers/event_stream.js";
 
 function reverse(s: string) {
   // Reverse a string.
@@ -134,6 +135,42 @@ test("Runnable streamEvents method on a chat model", async () => {
       tags: [],
     },
   ]);
+});
+
+test("Runnable streamEvents should preserve response_metadata from generationInfo", async () => {
+  // Test for issue #8470: streamEvents doesn't return response_metadata
+  // This verifies that generationInfo (which contains finish_reason, usage, etc.)
+  // is properly merged into response_metadata and surfaced in stream events
+  const model = new FakeListChatModel({
+    responses: ["abc"],
+    generationInfo: {
+      finish_reason: "stop",
+      model_name: "test-model",
+      usage: { prompt_tokens: 10, completion_tokens: 5 },
+    },
+  });
+
+  const events = [];
+  const eventStream = await model.streamEvents("hello", { version: "v2" });
+  for await (const event of eventStream) {
+    events.push(event);
+  }
+
+  // Find the on_chat_model_end event
+  const endEvent = events.find(
+    (e: { event: string }) => e.event === "on_chat_model_end"
+  );
+  expect(endEvent).toBeDefined();
+
+  // Verify response_metadata contains the generationInfo data
+  const output = (endEvent as { data: { output: AIMessageChunk } }).data.output;
+  expect(output.response_metadata).toBeDefined();
+  expect(output.response_metadata.finish_reason).toBe("stop");
+  expect(output.response_metadata.model_name).toBe("test-model");
+  expect(output.response_metadata.usage).toEqual({
+    prompt_tokens: 10,
+    completion_tokens: 5,
+  });
 });
 
 test("Runnable streamEvents call nested in another runnable + passed callbacks should still work", async () => {
@@ -2288,4 +2325,59 @@ test("streamEvents method handles errors", async () => {
   }
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   expect((caughtError as any)?.message).toEqual("should catch this error");
+});
+
+test("Runnable streamEvents method emits on_tool_error for failing tools", async () => {
+  const errorMessage = "Tool execution failed!";
+  const failingTool = new DynamicTool({
+    func: async () => {
+      throw new Error(errorMessage);
+    },
+    name: "failing_tool",
+    description: "A tool that always fails",
+  });
+
+  const events: StreamEvent[] = [];
+  let caughtError: unknown;
+
+  try {
+    const eventStream = failingTool.streamEvents({}, { version: "v2" });
+    for await (const event of eventStream) {
+      events.push(event);
+    }
+  } catch (e) {
+    caughtError = e;
+  }
+
+  // Verify error was thrown
+  expect(caughtError).toBeDefined();
+  expect((caughtError as Error).message).toBe(errorMessage);
+
+  // Verify events include on_tool_start and on_tool_error
+  expect(events).toEqual([
+    {
+      data: { input: {} },
+      event: "on_tool_start",
+      metadata: {},
+      name: "failing_tool",
+      run_id: expect.any(String),
+      tags: [],
+    },
+    {
+      data: {
+        input: expect.any(Object),
+        error: expect.stringContaining(errorMessage),
+      },
+      event: "on_tool_error",
+      metadata: {},
+      name: "failing_tool",
+      run_id: expect.any(String),
+      tags: [],
+    },
+  ]);
+
+  // Verify the on_tool_error event structure more specifically
+  const errorEvent = events.find((e) => e.event === "on_tool_error");
+  expect(errorEvent).toBeDefined();
+  expect(errorEvent?.data.error).toContain(errorMessage);
 });

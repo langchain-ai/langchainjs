@@ -23,7 +23,6 @@ export function _makeMessageChunkFromAnthropicEvent(
 } | null {
   const response_metadata = { model_provider: "anthropic" };
   if (data.type === "message_start") {
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { content, usage, ...additionalKwargs } = data.message;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const filteredAdditionalKwargs: Record<string, any> = {};
@@ -35,15 +34,7 @@ export function _makeMessageChunkFromAnthropicEvent(
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { input_tokens, output_tokens, ...rest }: Record<string, any> =
       usage ?? {};
-    const usageMetadata: UsageMetadata = {
-      input_tokens,
-      output_tokens,
-      total_tokens: input_tokens + output_tokens,
-      input_token_details: {
-        cache_creation: rest.cache_creation_input_tokens,
-        cache_read: rest.cache_read_input_tokens,
-      },
-    };
+    const usageMetadata = buildUsageMetadata(usage);
     return {
       chunk: new AIMessageChunk({
         content: fields.coerceContentToString ? "" : [],
@@ -251,18 +242,7 @@ export function anthropicResponseToChatMessages(
   };
   const usage: Record<string, number> | null | undefined =
     additionalKwargs.usage as Record<string, number> | null | undefined;
-  const usageMetadata =
-    usage != null
-      ? {
-          input_tokens: usage.input_tokens ?? 0,
-          output_tokens: usage.output_tokens ?? 0,
-          total_tokens: (usage.input_tokens ?? 0) + (usage.output_tokens ?? 0),
-          input_token_details: {
-            cache_creation: usage.cache_creation_input_tokens,
-            cache_read: usage.cache_read_input_tokens,
-          },
-        }
-      : undefined;
+  const usageMetadata = usage != null ? buildUsageMetadata(usage) : undefined;
   if (messages.length === 1 && messages[0].type === "text") {
     return [
       {
@@ -294,4 +274,24 @@ export function anthropicResponseToChatMessages(
     ];
     return generations;
   }
+}
+
+function buildUsageMetadata(
+  usage: Anthropic.Messages.Usage | Record<string, number>
+): UsageMetadata {
+  const cacheCreationInputTokens = usage.cache_creation_input_tokens ?? 0;
+  const cacheReadInputTokens = usage.cache_read_input_tokens ?? 0;
+  // Total input tokens in a Claude API request is the summation of `input_tokens`, `cache_creation_input_tokens`, and `cache_read_input_tokens`.
+  // ref: https://platform.claude.com/docs/en/api/messages
+  const totalInputTokens =
+    usage.input_tokens + cacheCreationInputTokens + cacheReadInputTokens;
+  return {
+    input_tokens: totalInputTokens,
+    output_tokens: usage.output_tokens,
+    total_tokens: totalInputTokens + usage.output_tokens,
+    input_token_details: {
+      cache_creation: cacheCreationInputTokens,
+      cache_read: cacheReadInputTokens,
+    },
+  };
 }

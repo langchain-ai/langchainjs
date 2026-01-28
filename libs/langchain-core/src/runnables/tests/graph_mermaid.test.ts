@@ -7,7 +7,9 @@ import {
   afterEach,
   type MockedFunction,
 } from "vitest";
-import { drawMermaidImage } from "../graph_mermaid.js";
+import { drawMermaid, drawMermaidImage } from "../graph_mermaid.js";
+import { toBase64Url } from "../utils.js";
+import { Edge, Node, RunnableInterface } from "../types.js";
 
 // Mock global fetch
 const mockFetch = vi.fn() as MockedFunction<typeof fetch>;
@@ -36,7 +38,7 @@ describe("drawMermaidImage", () => {
     expect(mockFetch).toHaveBeenCalledTimes(1);
 
     // Check the URL construction
-    const expectedEncodedSyntax = btoa(mermaidSyntax);
+    const expectedEncodedSyntax = toBase64Url(mermaidSyntax);
     const expectedUrl = `https://mermaid.ink/img/${expectedEncodedSyntax}?bgColor=!white&type=png`;
     expect(mockFetch).toHaveBeenCalledWith(expectedUrl);
   });
@@ -54,7 +56,7 @@ describe("drawMermaidImage", () => {
     });
 
     expect(result).toBe(mockBlob);
-    const expectedEncodedSyntax = btoa(mermaidSyntax);
+    const expectedEncodedSyntax = toBase64Url(mermaidSyntax);
     const expectedUrl = `https://mermaid.ink/img/${expectedEncodedSyntax}?bgColor=!white&type=jpeg`;
     expect(mockFetch).toHaveBeenCalledWith(expectedUrl);
   });
@@ -72,7 +74,7 @@ describe("drawMermaidImage", () => {
     });
 
     expect(result).toBe(mockBlob);
-    const expectedEncodedSyntax = btoa(mermaidSyntax);
+    const expectedEncodedSyntax = toBase64Url(mermaidSyntax);
     const expectedUrl = `https://mermaid.ink/img/${expectedEncodedSyntax}?bgColor=!white&type=webp`;
     expect(mockFetch).toHaveBeenCalledWith(expectedUrl);
   });
@@ -90,7 +92,7 @@ describe("drawMermaidImage", () => {
     });
 
     expect(result).toBe(mockBlob);
-    const expectedEncodedSyntax = btoa(mermaidSyntax);
+    const expectedEncodedSyntax = toBase64Url(mermaidSyntax);
     const expectedUrl = `https://mermaid.ink/img/${expectedEncodedSyntax}?bgColor=#FF5733&type=png`;
     expect(mockFetch).toHaveBeenCalledWith(expectedUrl);
   });
@@ -108,7 +110,7 @@ describe("drawMermaidImage", () => {
     });
 
     expect(result).toBe(mockBlob);
-    const expectedEncodedSyntax = btoa(mermaidSyntax);
+    const expectedEncodedSyntax = toBase64Url(mermaidSyntax);
     const expectedUrl = `https://mermaid.ink/img/${expectedEncodedSyntax}?bgColor=#FFF&type=png`;
     expect(mockFetch).toHaveBeenCalledWith(expectedUrl);
   });
@@ -126,7 +128,7 @@ describe("drawMermaidImage", () => {
     });
 
     expect(result).toBe(mockBlob);
-    const expectedEncodedSyntax = btoa(mermaidSyntax);
+    const expectedEncodedSyntax = toBase64Url(mermaidSyntax);
     const expectedUrl = `https://mermaid.ink/img/${expectedEncodedSyntax}?bgColor=!transparent&type=png`;
     expect(mockFetch).toHaveBeenCalledWith(expectedUrl);
   });
@@ -176,7 +178,7 @@ describe("drawMermaidImage", () => {
     const result = await drawMermaidImage(complexSyntax);
 
     expect(result).toBe(mockBlob);
-    const expectedEncodedSyntax = btoa(complexSyntax);
+    const expectedEncodedSyntax = toBase64Url(complexSyntax);
     const expectedUrl = `https://mermaid.ink/img/${expectedEncodedSyntax}?bgColor=!white&type=png`;
     expect(mockFetch).toHaveBeenCalledWith(expectedUrl);
   });
@@ -194,7 +196,7 @@ describe("drawMermaidImage", () => {
     });
 
     expect(result).toBe(mockBlob);
-    const expectedEncodedSyntax = btoa(mermaidSyntax);
+    const expectedEncodedSyntax = toBase64Url(mermaidSyntax);
     const expectedUrl = `https://mermaid.ink/img/${expectedEncodedSyntax}?bgColor=!white&type=png`;
     expect(mockFetch).toHaveBeenCalledWith(expectedUrl);
   });
@@ -211,5 +213,139 @@ describe("drawMermaidImage", () => {
     await expect(drawMermaidImage(mermaidSyntax)).rejects.toThrow(
       "Failed to render the graph using the Mermaid.INK API.\nStatus code: 500\nStatus text: Internal Server Error"
     );
+  });
+
+  test("nests deep subgraphs correctly", () => {
+    const data = {} as RunnableInterface;
+
+    const nodes: Record<string, Node> = {
+      __start__: {
+        id: "__start__",
+        data,
+        name: "__start__",
+      },
+      collectTools: {
+        id: "collectTools",
+        data,
+        name: "collectTools",
+        metadata: {},
+      },
+      "fooTool:userVerification": {
+        id: "fooTool:userVerification",
+        data,
+        name: "userVerification",
+        metadata: {},
+      },
+      "fooTool:fooSearchSource:explainReasoning": {
+        id: "fooTool:fooSearchSource:explainReasoning",
+        data,
+        name: "explainReasoning",
+        metadata: {},
+      },
+      "fooTool:fooSearchSource:fooGenericSearch:promptForTools": {
+        id: "fooTool:fooSearchSource:fooGenericSearch:promptForTools",
+        data,
+        name: "promptForTools",
+        metadata: {},
+      },
+      "fooTool:fooSearchSource:fooGenericSearch:searchToolWithQuery": {
+        id: "fooTool:fooSearchSource:fooGenericSearch:searchToolWithQuery",
+        data,
+        name: "searchToolWithQuery",
+        metadata: {},
+      },
+      "fooTool:fooSearchSource:emitfooToolResults": {
+        id: "fooTool:fooSearchSource:emitfooToolResults",
+        data,
+        name: "emitfooToolResults",
+        metadata: {},
+      },
+      "fooTool:reportToolResults": {
+        id: "fooTool:reportToolResults",
+        data,
+        name: "reportToolResults",
+        metadata: {},
+      },
+      promptForAnswer: {
+        id: "promptForAnswer",
+        data,
+        name: "promptForAnswer",
+        metadata: {},
+      },
+      __end__: {
+        id: "__end__",
+        data,
+        name: "__end__",
+      },
+    };
+
+    const edges: Edge[] = [
+      {
+        source: "fooTool:fooSearchSource:fooGenericSearch:promptForTools",
+        target: "fooTool:fooSearchSource:fooGenericSearch:searchToolWithQuery",
+        conditional: false,
+      },
+      {
+        source: "fooTool:fooSearchSource:fooGenericSearch:searchToolWithQuery",
+        target: "fooTool:fooSearchSource:emitfooToolResults",
+        conditional: false,
+      },
+      {
+        source: "fooTool:fooSearchSource:explainReasoning",
+        target: "fooTool:fooSearchSource:fooGenericSearch:promptForTools",
+        conditional: false,
+      },
+      {
+        source: "fooTool:fooSearchSource:emitfooToolResults",
+        target: "fooTool:reportToolResults",
+        conditional: false,
+      },
+      {
+        source: "fooTool:userVerification",
+        target: "fooTool:fooSearchSource:explainReasoning",
+        conditional: true,
+      },
+      {
+        source: "__start__",
+        target: "collectTools",
+        conditional: false,
+      },
+      {
+        source: "fooTool:reportToolResults",
+        target: "promptForAnswer",
+        conditional: false,
+      },
+      {
+        source: "collectTools",
+        target: "fooTool:userVerification",
+        conditional: true,
+      },
+      {
+        source: "promptForAnswer",
+        target: "__end__",
+        conditional: true,
+      },
+    ];
+
+    const result = drawMermaid(nodes, edges);
+
+    expect(result).toContain("subgraph fooTool");
+    expect(result).toContain("subgraph fooSearchSource");
+    expect(result).toContain("subgraph fooGenericSearch");
+
+    // verify proper nested order of subgraphs
+    const nestedPattern = [
+      "subgraph fooTool",
+      "subgraph fooSearchSource",
+      "subgraph fooGenericSearch",
+      // ... inside fooGenericSearch
+      "end",
+      // ... inside fooSearchSource
+      "end",
+      // ... inside fooTool
+      "end",
+    ].join("[\\s\\S]*?");
+
+    expect(result).toMatch(new RegExp(nestedPattern));
   });
 });

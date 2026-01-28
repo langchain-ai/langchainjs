@@ -133,9 +133,16 @@ export type GoogleAIResponseMimeType = "text/plain" | "application/json";
 
 export type GoogleAIModelModality = "TEXT" | "IMAGE" | "AUDIO" | string;
 
+export type GoogleThinkingLevel =
+  | "THINKING_LEVEL_UNSPECIFIED"
+  | "LOW"
+  | "MEDIUM"
+  | "HIGH";
+
 export interface GoogleThinkingConfig {
   thinkingBudget?: number;
   includeThoughts?: boolean;
+  thinkingLevel?: GoogleThinkingLevel;
 }
 
 export type GooglePrebuiltVoiceName = string;
@@ -249,6 +256,17 @@ export interface GoogleAIModelParams extends GoogleModelParams {
   reasoningEffort?: "low" | "medium" | "high";
 
   /**
+   * Optional. The level of thoughts tokens that the model should generate.
+   * Can be specified directly or via reasoningLevel for OpenAI compatibility.
+   */
+  thinkingLevel?: GoogleThinkingLevel;
+
+  /**
+   * An OpenAI compatible parameter that will map to "thinkingLevel"
+   */
+  reasoningLevel?: "low" | "medium" | "high";
+
+  /**
    * Top-p changes how the model selects tokens for output.
    *
    * Tokens are selected from most probable to least until the sum
@@ -321,6 +339,12 @@ export interface GoogleAIModelParams extends GoogleModelParams {
    * @default "text/plain"
    */
   responseMimeType?: GoogleAIResponseMimeType;
+
+  /**
+   * The schema that the model's output should conform to.
+   * When this is set, the model will output JSON that conforms to the schema.
+   */
+  responseSchema?: GeminiJsonSchema;
 
   /**
    * Whether or not to stream.
@@ -412,6 +436,12 @@ export interface GoogleAIModelRequestParams extends GoogleAIModelParams {
    * https://cloud.google.com/vertex-ai/generative-ai/docs/context-cache/context-cache-use
    */
   cachedContent?: string;
+
+  /**
+   * The schema that the model's output should conform to.
+   * When this is set, the model will output JSON that conforms to the schema.
+   */
+  responseSchema?: GeminiJsonSchema;
 }
 
 export interface GoogleAIBaseLLMInput<AuthOptions>
@@ -713,6 +743,7 @@ export interface GeminiGenerationConfig {
   responseModalities?: GoogleAIModelModality[];
   thinkingConfig?: GoogleThinkingConfig;
   speechConfig?: GoogleSpeechConfig;
+  responseSchema?: GeminiJsonSchema;
 }
 
 export interface GeminiRequest {

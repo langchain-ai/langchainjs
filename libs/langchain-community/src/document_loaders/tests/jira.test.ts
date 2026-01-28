@@ -1,5 +1,6 @@
 import { faker } from "@faker-js/faker";
 import {
+  adfToText,
   JiraDocumentConverter,
   JiraIssue,
   JiraUser,
@@ -44,7 +45,7 @@ describe("JiraDocumentConverter Unit Tests", () => {
     const document = converter.convertToDocuments([issue])[0];
 
     expect(document.pageContent).toContain(issue.fields.summary);
-    expect(document.pageContent).toContain(issue.fields.description);
+    expect(document.pageContent).toContain(adfToText(issue.fields.description));
     expect(document.pageContent).toContain(
       issue.fields.labels?.join(", ") || ""
     );
@@ -65,6 +66,54 @@ describe("JiraDocumentConverter Unit Tests", () => {
     expect(document.pageContent).toContain(
       issue.fields.progress.percent?.toString() || ""
     );
+  });
+
+  it("should include subtasks and parent issue", () => {
+    const converter = getConverter();
+    const parentIssue = someJiraIssue({ key: "PROJ-0" });
+    const subtask = someJiraIssue({ key: "PROJ-2" });
+    const issue = someJiraIssue({
+      fields: {
+        ...someJiraIssue().fields,
+        subtasks: [subtask],
+        parent: parentIssue,
+      },
+    });
+
+    const document = converter.convertToDocuments([issue])[0];
+    expect(document.pageContent).toContain("Subtasks:");
+    expect(document.pageContent).toContain(subtask.key);
+    expect(document.pageContent).toContain("Parent Issue:");
+    expect(document.pageContent).toContain(parentIssue.key);
+  });
+
+  it("should use custom description formatter", () => {
+    const customFormatter = jest.fn(() => "CUSTOM DESC");
+    const converter = new JiraDocumentConverter({
+      projectKey: "PROJ",
+      host: "https://example.com",
+      formatter: customFormatter,
+    });
+
+    const issue = someJiraIssue();
+    const document = converter.convertToDocuments([issue])[0];
+
+    expect(customFormatter).toHaveBeenCalledWith(
+      issue.fields.description,
+      issue
+    );
+    expect(document.pageContent).toContain("CUSTOM DESC");
+  });
+
+  it("should handle empty or nested ADF descriptions", () => {
+    const converter = getConverter();
+
+    const emptyAdfIssue = someJiraIssue({
+      fields: { ...someJiraIssue().fields, description: null },
+    });
+    const doc1 = converter.convertToDocuments([emptyAdfIssue])[0];
+
+    expect(doc1.pageContent).toContain(emptyAdfIssue.fields.summary);
   });
 });
 
@@ -222,12 +271,12 @@ export function someJiraIssue(overrides: Partial<JiraIssue> = {}): JiraIssue {
   const baseIssue: JiraIssue = {
     expand: "renderedFields",
     id: faker.string.numeric(5),
-    self: `https://${faker.internet.domainName()}/rest/api/2/issue/${issueKey}`,
+    self: `https://${faker.internet.domainName()}/rest/api/3/issue/${issueKey}`,
     key: issueKey,
     fields: {
       assignee: faker.datatype.boolean() ? someJiraUser() : undefined,
       created: faker.date.past().toISOString(),
-      description: faker.lorem.paragraph(),
+      description: someJiraIssueDescription(),
       issuelinks: [],
       issuetype: someJiraIssueType(),
       labels: faker.datatype.boolean()
@@ -262,5 +311,23 @@ export function someJiraIssue(overrides: Partial<JiraIssue> = {}): JiraIssue {
   return {
     ...baseIssue,
     ...overrides,
+  };
+}
+
+export function someJiraIssueDescription(text?: string): ADFNode {
+  return {
+    type: "doc",
+    version: 1,
+    content: [
+      {
+        type: "paragraph",
+        content: [
+          {
+            type: "text",
+            text: text ?? faker.lorem.paragraph(),
+          },
+        ],
+      },
+    ],
   };
 }

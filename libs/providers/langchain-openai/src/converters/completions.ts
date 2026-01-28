@@ -34,7 +34,11 @@ import type {
 } from "openai/resources/chat/completions";
 import { OpenAI as OpenAIClient } from "openai";
 import { handleMultiModalOutput } from "../utils/output.js";
-import { isReasoningModel, messageToOpenAIRole } from "../utils/misc.js";
+import {
+  getRequiredFilenameFromMetadata,
+  isReasoningModel,
+  messageToOpenAIRole,
+} from "../utils/misc.js";
 
 /**
  * @deprecated This converter is an internal detail of the OpenAI provider. Do not use it directly. This will be revisited in a future release.
@@ -157,6 +161,9 @@ export const completionsApiContentBlockConverter: StandardContentBlockConverter<
   fromStandardFileBlock(block): ChatCompletionContentPart.File {
     if (block.source_type === "url") {
       const data = parseBase64DataUrl({ dataUrl: block.url });
+
+      const filename = getRequiredFilenameFromMetadata(block);
+
       if (!data) {
         throw new Error(
           `URL file blocks with source_type ${block.source_type} must be formatted as a data URL for ChatOpenAI`
@@ -169,8 +176,7 @@ export const completionsApiContentBlockConverter: StandardContentBlockConverter<
           file_data: block.url, // formatted as base64 data URL
           ...(block.metadata?.filename || block.metadata?.name
             ? {
-                filename: (block.metadata?.filename ||
-                  block.metadata?.name) as string,
+                filename,
               }
             : {}),
         },
@@ -178,6 +184,8 @@ export const completionsApiContentBlockConverter: StandardContentBlockConverter<
     }
 
     if (block.source_type === "base64") {
+      const filename = getRequiredFilenameFromMetadata(block);
+
       return {
         type: "file",
         file: {
@@ -186,9 +194,7 @@ export const completionsApiContentBlockConverter: StandardContentBlockConverter<
           block.metadata?.name ||
           block.metadata?.title
             ? {
-                filename: (block.metadata?.filename ||
-                  block.metadata?.name ||
-                  block.metadata?.title) as string,
+                filename,
               }
             : {}),
         },
@@ -550,10 +556,13 @@ export const convertStandardContentBlockToCompletionsContentPart: Converter<
   }
   if (block.type === "file") {
     if (block.data) {
+      const filename = getRequiredFilenameFromMetadata(block);
+
       return {
         type: "file",
         file: {
-          file_data: block.data.toString(),
+          file_data: `data:${block.mimeType};base64,${block.data}`,
+          filename: filename,
         },
       };
     }
@@ -802,13 +811,11 @@ export const convertMessagesToCompletionsMessageParams: Converter<
     }
     if (message.additional_kwargs.function_call != null) {
       completionParam.function_call = message.additional_kwargs.function_call;
-      completionParam.content = "";
     }
     if (AIMessage.isInstance(message) && !!message.tool_calls?.length) {
       completionParam.tool_calls = message.tool_calls.map(
         convertLangChainToolCallToOpenAI
       );
-      completionParam.content = "";
     } else {
       if (message.additional_kwargs.tool_calls != null) {
         completionParam.tool_calls = message.additional_kwargs.tool_calls;

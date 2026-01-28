@@ -1,8 +1,17 @@
 {
   "extends": ["//"],
   "tasks": {
-    "build": {
-      "outputs": ["**/dist/**"]
+    "build:compile": {
+      "inputs": [
+        "src/**",
+        "!src/load/import_constants.ts",
+        "!src/load/import_map.ts",
+        "!src/load/import_type.ts",
+        "tsconfig.json",
+        "tsdown.config.ts",
+        "package.json"
+      ],
+      "outputs": ["dist/**"]
     }
   }
 }

@@ -1,11 +1,13 @@
 import {
   LlamaModel,
   LlamaContext,
+  LlamaEmbeddingContext,
   LlamaChatSession,
   LlamaJsonSchemaGrammar,
   LlamaGrammar,
   type LlamaModelOptions,
   LlamaContextOptions,
+  LlamaEmbeddingContextOptions,
   GbnfJsonSchema,
   Llama,
 } from "node-llama-cpp";
@@ -83,6 +85,19 @@ export async function createLlamaContext(
   };
 
   return model.createContext(options);
+}
+
+export async function createLlamaEmbeddingContext(
+  model: LlamaModel,
+  inputs: LlamaBaseCppInputs
+): Promise<LlamaEmbeddingContext> {
+  const options: LlamaEmbeddingContextOptions = {
+    batchSize: inputs?.batchSize,
+    contextSize: inputs?.contextSize,
+    threads: inputs?.threads,
+  };
+
+  return model.createEmbeddingContext(options);
 }
 
 export function createLlamaSession(context: LlamaContext): LlamaChatSession {

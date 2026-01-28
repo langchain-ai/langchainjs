@@ -24,6 +24,7 @@
   },
   "devDependencies": {
     "@langchain/eslint": "workspace:*",
+    "@langchain/tsconfig": "workspace:*",
     "eslint": "^9.34.0",
     "prettier": "^3.6.1"
   }

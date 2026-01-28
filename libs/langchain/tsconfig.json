@@ -1,23 +1,15 @@
 {
-  "extends": "@tsconfig/recommended",
+  "extends": "@langchain/tsconfig/base.json",
   "compilerOptions": {
-    "outDir": "../dist",
-    "rootDir": "./src",
-    "target": "ES2022",
-    "lib": ["ES2022", "ES2022.Object", "DOM"],
-    "module": "ES2020",
-    "moduleResolution": "bundler",
-    "esModuleInterop": true,
-    "declaration": true,
-    "noImplicitReturns": true,
-    "noFallthroughCasesInSwitch": true,
-    "noUnusedLocals": true,
-    "noUnusedParameters": true,
-    "useDefineForClassFields": true,
-    "strictPropertyInitialization": false,
-    "allowJs": true,
-    "strict": true
+    "rootDir": "src",
+    "outDir": "dist"
   },
-  "include": ["src/**/*"],
-  "exclude": ["node_modules", "dist", "docs"]
+  "include": ["src/**/*", "src/**/*.json"],
+  "exclude": ["dist", "node_modules"],
+  "references": [
+    { "path": "../langchain-core" },
+    { "path": "../providers/langchain-anthropic" },
+    { "path": "../providers/langchain-cohere" },
+    { "path": "../providers/langchain-openai" }
+  ]
 }

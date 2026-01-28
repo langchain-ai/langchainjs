@@ -53,10 +53,14 @@ import {
 import {
   convertBaseMessagesToContent,
   convertResponseContentToChatGenerationChunk,
+  convertUsageMetadata,
   mapGenerateContentResultToChatResult,
 } from "./utils/common.js";
 import { GoogleGenerativeAIToolsOutputParser } from "./output_parsers.js";
-import { GoogleGenerativeAIToolType } from "./types.js";
+import {
+  GoogleGenerativeAIThinkingConfig,
+  GoogleGenerativeAIToolType,
+} from "./types.js";
 import { convertToolsToGenAI } from "./utils/tools.js";
 import PROFILES from "./profiles.js";
 
@@ -181,6 +185,11 @@ export interface GoogleGenerativeAIChatInput
    */
   baseUrl?: string;
 
+  /**
+   * Google API custom headers to use
+   */
+  customHeaders?: Record<string, string>;
+
   /** Whether to stream the results or not */
   streaming?: boolean;
 
@@ -199,6 +208,12 @@ export interface GoogleGenerativeAIChatInput
    * - Gemini 1.0 Pro version gemini-1.0-pro-002
    */
   convertSystemMessageToHumanContent?: boolean | undefined;
+
+  /**
+   * Optional. Config for thinking features. An error will be returned if this
+   * field is set for models that don't support thinking.
+   */
+  thinkingConfig?: GoogleGenerativeAIThinkingConfig;
 }
 
 /**
@@ -624,6 +639,8 @@ export class ChatGoogleGenerativeAI
 
   convertSystemMessageToHumanContent: boolean | undefined;
 
+  thinkingConfig?: GoogleGenerativeAIThinkingConfig;
+
   private client: GenerativeModel;
 
   get _isMultimodalModel() {
@@ -632,7 +649,8 @@ export class ChatGoogleGenerativeAI
       this.model.startsWith("gemini-1.5") ||
       this.model.startsWith("gemini-2") ||
       (this.model.startsWith("gemma-3-") &&
-        !this.model.startsWith("gemma-3-1b")) // gemma-3 models are multimodal(but gemma-3n-* and gemma-3-1b are not)
+        !this.model.startsWith("gemma-3-1b")) || // gemma-3 models are multimodal(but gemma-3n-* and gemma-3-1b are not)
+      this.model.startsWith("gemini-3")
     );
   }
 
@@ -693,6 +711,8 @@ export class ChatGoogleGenerativeAI
     this.streaming = fields.streaming ?? this.streaming;
     this.json = fields.json;
 
+    this.thinkingConfig = fields.thinkingConfig ?? this.thinkingConfig;
+
     this.client = new GenerativeAI(this.apiKey).getGenerativeModel(
       {
         model: this.model,
@@ -704,11 +724,15 @@ export class ChatGoogleGenerativeAI
           topP: this.topP,
           topK: this.topK,
           ...(this.json ? { responseMimeType: "application/json" } : {}),
+          ...(this.thinkingConfig
+            ? { thinkingConfig: this.thinkingConfig }
+            : {}),
         },
       },
       {
         apiVersion: fields.apiVersion,
         baseUrl: fields.baseUrl,
+        customHeaders: fields.customHeaders,
       }
     );
     this.streamUsage = fields.streamUsage ?? this.streamUsage;
@@ -821,7 +845,8 @@ export class ChatGoogleGenerativeAI
     const prompt = convertBaseMessagesToContent(
       messages,
       this._isMultimodalModel,
-      this.useSystemInstruction
+      this.useSystemInstruction,
+      this.model
     );
     let actualPrompt = prompt;
     if (prompt[0].role === "system") {
@@ -835,7 +860,7 @@ export class ChatGoogleGenerativeAI
     if (this.streaming) {
       const tokenUsage: TokenUsage = {};
       const stream = this._streamResponseChunks(messages, options, runManager);
-      const finalChunks: Record<number, ChatGenerationChunk> = {};
+      const finalChunks: ChatGenerationChunk[] = [];
 
       for await (const chunk of stream) {
         const index =
@@ -846,9 +871,9 @@ export class ChatGoogleGenerativeAI
           finalChunks[index] = finalChunks[index].concat(chunk);
         }
       }
-      const generations = Object.entries(finalChunks)
-        .sort(([aKey], [bKey]) => parseInt(aKey, 10) - parseInt(bKey, 10))
-        .map(([_, value]) => value);
+      const generations = finalChunks.filter(
+        (c): c is ChatGenerationChunk => c !== undefined
+      );
 
       return { generations, llmOutput: { estimatedTokenUsage: tokenUsage } };
     }
@@ -860,16 +885,10 @@ export class ChatGoogleGenerativeAI
 
     let usageMetadata: UsageMetadata | undefined;
     if ("usageMetadata" in res.response) {
-      const genAIUsageMetadata = res.response.usageMetadata as {
-        promptTokenCount: number | undefined;
-        candidatesTokenCount: number | undefined;
-        totalTokenCount: number | undefined;
-      };
-      usageMetadata = {
-        input_tokens: genAIUsageMetadata.promptTokenCount ?? 0,
-        output_tokens: genAIUsageMetadata.candidatesTokenCount ?? 0,
-        total_tokens: genAIUsageMetadata.totalTokenCount ?? 0,
-      };
+      usageMetadata = convertUsageMetadata(
+        res.response.usageMetadata,
+        this.model
+      );
     }
 
     const generationResult = mapGenerateContentResultToChatResult(
@@ -895,7 +914,8 @@ export class ChatGoogleGenerativeAI
     const prompt = convertBaseMessagesToContent(
       messages,
       this._isMultimodalModel,
-      this.useSystemInstruction
+      this.useSystemInstruction,
+      this.model
     );
     let actualPrompt = prompt;
     if (prompt[0].role === "system") {
@@ -929,11 +949,10 @@ export class ChatGoogleGenerativeAI
         this.streamUsage !== false &&
         options.streamUsage !== false
       ) {
-        usageMetadata = {
-          input_tokens: response.usageMetadata.promptTokenCount ?? 0,
-          output_tokens: response.usageMetadata.candidatesTokenCount ?? 0,
-          total_tokens: response.usageMetadata.totalTokenCount ?? 0,
-        };
+        usageMetadata = convertUsageMetadata(
+          response.usageMetadata,
+          this.model
+        );
 
         // Under the hood, LangChain combines the prompt tokens. Google returns the updated
         // total each time, so we need to find the difference between the tokens.
@@ -1019,7 +1038,7 @@ export class ChatGoogleGenerativeAI
 
   withStructuredOutput<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    RunOutput extends Record<string, any> = Record<string, any>
+    RunOutput extends Record<string, any> = Record<string, any>,
   >(
     outputSchema:
       | InteropZodType<RunOutput>
@@ -1030,7 +1049,7 @@ export class ChatGoogleGenerativeAI
 
   withStructuredOutput<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    RunOutput extends Record<string, any> = Record<string, any>
+    RunOutput extends Record<string, any> = Record<string, any>,
   >(
     outputSchema:
       | InteropZodType<RunOutput>
@@ -1041,7 +1060,7 @@ export class ChatGoogleGenerativeAI
 
   withStructuredOutput<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    RunOutput extends Record<string, any> = Record<string, any>
+    RunOutput extends Record<string, any> = Record<string, any>,
   >(
     outputSchema:
       | InteropZodType<RunOutput>

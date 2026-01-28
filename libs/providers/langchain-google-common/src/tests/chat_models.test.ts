@@ -1010,6 +1010,90 @@ describe("Mock ChatGoogle - Gemini", () => {
     expect(thinkingConfig.thinkingBudget).toEqual(1024);
   });
 
+  test("1. Reasoning - thinkingLevel direct", async () => {
+    const record: Record<string, any> = {};
+    const projectId = mockId();
+    const authOptions: MockClientAuthInfo = {
+      record,
+      projectId,
+      resultFile: "chat-1-mock.json",
+    };
+    const model = new ChatGoogle({
+      authOptions,
+      thinkingLevel: "HIGH",
+    });
+    await model.invoke(
+      "You roll two dice. What's the probability they add up to 7?"
+    );
+
+    expect(record.opts).toBeDefined();
+    expect(record.opts.data).toBeDefined();
+    const { data } = record.opts;
+
+    expect(data).toHaveProperty("generationConfig");
+    expect(data.generationConfig).toHaveProperty("thinkingConfig");
+    const { thinkingConfig } = data.generationConfig;
+    expect(thinkingConfig).toHaveProperty("thinkingLevel");
+    expect(thinkingConfig.thinkingLevel).toEqual("HIGH");
+  });
+
+  test("1. Reasoning - reasoningLevel mapping", async () => {
+    const record: Record<string, any> = {};
+    const projectId = mockId();
+    const authOptions: MockClientAuthInfo = {
+      record,
+      projectId,
+      resultFile: "chat-1-mock.json",
+    };
+    const model = new ChatGoogle({
+      authOptions,
+      reasoningLevel: "medium",
+    });
+    await model.invoke(
+      "You roll two dice. What's the probability they add up to 7?"
+    );
+
+    expect(record.opts).toBeDefined();
+    expect(record.opts.data).toBeDefined();
+    const { data } = record.opts;
+
+    expect(data).toHaveProperty("generationConfig");
+    expect(data.generationConfig).toHaveProperty("thinkingConfig");
+    const { thinkingConfig } = data.generationConfig;
+    expect(thinkingConfig).toHaveProperty("thinkingLevel");
+    expect(thinkingConfig.thinkingLevel).toEqual("MEDIUM");
+  });
+
+  test("1. Reasoning - combined thinkingLevel and thinkingBudget", async () => {
+    const record: Record<string, any> = {};
+    const projectId = mockId();
+    const authOptions: MockClientAuthInfo = {
+      record,
+      projectId,
+      resultFile: "chat-1-mock.json",
+    };
+    const model = new ChatGoogle({
+      authOptions,
+      maxReasoningTokens: 100,
+      thinkingLevel: "LOW",
+    });
+    await model.invoke(
+      "You roll two dice. What's the probability they add up to 7?"
+    );
+
+    expect(record.opts).toBeDefined();
+    expect(record.opts.data).toBeDefined();
+    const { data } = record.opts;
+
+    expect(data).toHaveProperty("generationConfig");
+    expect(data.generationConfig).toHaveProperty("thinkingConfig");
+    const { thinkingConfig } = data.generationConfig;
+    expect(thinkingConfig).toHaveProperty("thinkingBudget");
+    expect(thinkingConfig.thinkingBudget).toEqual(100);
+    expect(thinkingConfig).toHaveProperty("thinkingLevel");
+    expect(thinkingConfig.thinkingLevel).toEqual("LOW");
+  });
+
   test("2. Safety - settings", async () => {
     const record: Record<string, any> = {};
     const projectId = mockId();
@@ -1649,7 +1733,9 @@ describe("Mock ChatGoogle - Gemini", () => {
     const baseModel = new ChatGoogle({
       authOptions,
     });
-    const model = baseModel.withStructuredOutput(tool);
+    const model = baseModel.withStructuredOutput(tool, {
+      method: "functionCalling",
+    });
 
     await model.invoke("What?");
 
@@ -1711,7 +1797,9 @@ describe("Mock ChatGoogle - Gemini", () => {
       },
       required: ["greeterName"],
     };
-    const model = baseModel.withStructuredOutput(schema);
+    const model = baseModel.withStructuredOutput(schema, {
+      method: "functionCalling",
+    });
     await model.invoke("Hi, I'm kwkaiser");
 
     const func = record?.opts?.data?.tools?.[0]?.functionDeclarations?.[0];
@@ -1719,6 +1807,124 @@ describe("Mock ChatGoogle - Gemini", () => {
     expect(func.name).toEqual("extract");
     expect(func.parameters?.properties?.greeterName?.type).toEqual("string");
     expect(func.parameters?.properties?.greeterName?.nullable).toEqual(true);
+  });
+
+  test("4. Functions withStructuredOutput - jsonSchema method request", async () => {
+    const record: Record<string, any> = {};
+    const projectId = mockId();
+    const authOptions: MockClientAuthInfo = {
+      record,
+      projectId,
+      resultFile: "chat-json-schema-mock.json",
+    };
+
+    const schema = z.object({
+      testName: z.string().describe("The name of the test that should be run."),
+    });
+
+    const baseModel = new ChatGoogle({
+      authOptions,
+    });
+    const model = baseModel.withStructuredOutput(schema, {
+      method: "jsonSchema",
+    });
+
+    await model.invoke("What?");
+
+    const { data } = record.opts;
+    // Should not have tools when using jsonSchema method
+    expect(data.tools).not.toBeDefined();
+    // Should have responseSchema in generationConfig
+    expect(data.generationConfig).toBeDefined();
+    expect(data.generationConfig.responseSchema).toBeDefined();
+    expect(data.generationConfig.responseSchema.type).toBe("object");
+    expect(data.generationConfig.responseSchema.properties).toBeDefined();
+    expect(
+      data.generationConfig.responseSchema.properties.testName
+    ).toBeDefined();
+    expect(data.generationConfig.responseSchema.properties.testName.type).toBe(
+      "string"
+    );
+    // Should set responseMimeType to application/json
+    expect(data.generationConfig.responseMimeType).toBe("application/json");
+  });
+
+  test("4. Functions withStructuredOutput - default uses jsonSchema method", async () => {
+    const record: Record<string, any> = {};
+    const projectId = mockId();
+    const authOptions: MockClientAuthInfo = {
+      record,
+      projectId,
+      resultFile: "chat-json-schema-mock.json",
+    };
+
+    const schema = z.object({
+      testName: z.string().describe("The name of the test."),
+    });
+
+    const baseModel = new ChatGoogle({
+      authOptions,
+    });
+    // Not specifying method - should default to jsonSchema
+    const model = baseModel.withStructuredOutput(schema);
+
+    await model.invoke("What is the answer?");
+
+    const { data } = record.opts;
+    // Should not have tools when using jsonSchema method (default)
+    expect(data.tools).not.toBeDefined();
+    // Should have responseSchema in generationConfig
+    expect(data.generationConfig).toBeDefined();
+    expect(data.generationConfig.responseSchema).toBeDefined();
+    expect(data.generationConfig.responseMimeType).toBe("application/json");
+  });
+
+  test("4. Functions withStructuredOutput - functionCalling method request", async () => {
+    const record: Record<string, any> = {};
+    const projectId = mockId();
+    const authOptions: MockClientAuthInfo = {
+      record,
+      projectId,
+      resultFile: "chat-4-mock.json",
+    };
+
+    const schema = z.object({
+      testName: z.string().describe("The name of the test that should be run."),
+    });
+
+    const baseModel = new ChatGoogle({
+      authOptions,
+    });
+    const model = baseModel.withStructuredOutput(schema, {
+      method: "functionCalling",
+    });
+
+    await model.invoke("What?");
+
+    const { data } = record.opts;
+    // Should have tools when using functionCalling method
+    expect(data.tools).toBeDefined();
+    expect(Array.isArray(data.tools)).toBeTruthy();
+    expect(data.tools).toHaveLength(1);
+    expect(data.tools[0].functionDeclarations).toBeDefined();
+    // Should not have responseSchema in generationConfig
+    expect(data.generationConfig?.responseSchema).not.toBeDefined();
+  });
+
+  test("4. Functions withStructuredOutput - jsonMode throws error", async () => {
+    const baseModel = new ChatGoogle({});
+
+    const schema = z.object({
+      answer: z.string(),
+    });
+
+    expect(() =>
+      baseModel.withStructuredOutput(schema, {
+        method: "jsonMode",
+      })
+    ).toThrowError(
+      `Google only supports "jsonSchema" or "functionCalling" as a method.`
+    );
   });
 
   test("4. Functions - results", async () => {

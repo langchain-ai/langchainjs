@@ -709,7 +709,7 @@ function _formatToolsToCohere(
  * <br />
  */
 export class ChatCohere<
-    CallOptions extends ChatCohereCallOptions = ChatCohereCallOptions
+    CallOptions extends ChatCohereCallOptions = ChatCohereCallOptions,
   >
   extends BaseChatModel<CallOptions, AIMessageChunk>
   implements ChatCohereInput

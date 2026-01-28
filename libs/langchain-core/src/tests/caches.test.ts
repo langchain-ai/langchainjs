@@ -1,6 +1,6 @@
 import { test, expect } from "vitest";
 
-import { InMemoryCache } from "../caches/base.js";
+import { InMemoryCache } from "../caches/index.js";
 
 test("InMemoryCache", async () => {
   const cache = new InMemoryCache();

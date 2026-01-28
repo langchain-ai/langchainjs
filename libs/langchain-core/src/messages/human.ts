@@ -9,14 +9,14 @@ import type { $InferMessageContent, MessageStructure } from "./message.js";
 import { Constructor } from "./utils.js";
 
 export interface HumanMessageFields<
-  TStructure extends MessageStructure = MessageStructure
+  TStructure extends MessageStructure = MessageStructure,
 > extends BaseMessageFields<TStructure, "human"> {}
 
 /**
  * Represents a human message in a conversation.
  */
 export class HumanMessage<
-  TStructure extends MessageStructure = MessageStructure
+  TStructure extends MessageStructure = MessageStructure,
 > extends BaseMessage<TStructure, "human"> {
   static lc_name() {
     return "HumanMessage";
@@ -42,7 +42,7 @@ export class HumanMessage<
  * other human message chunks.
  */
 export class HumanMessageChunk<
-  TStructure extends MessageStructure = MessageStructure
+  TStructure extends MessageStructure = MessageStructure,
 > extends BaseMessageChunk<TStructure, "human"> {
   static lc_name() {
     return "HumanMessageChunk";

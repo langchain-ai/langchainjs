@@ -114,8 +114,9 @@ test("Test ChatOpenAI streaming logprobs", async () => {
     logprobs: true,
   });
   const res = await model.invoke("Print hello world.");
-  // console.log(res.response_metadata.logprobs.content);
-  expect(res.response_metadata.logprobs.content.length).toBeGreaterThan(0);
+  expect(
+    (res.response_metadata.logprobs as any).content.length
+  ).toBeGreaterThan(0);
 });
 
 test("Test ChatOpenAI with search preview model", async () => {
@@ -172,7 +173,6 @@ test("Test ChatOpenAI tool calling with ToolMessages", async () => {
   const res = await chat.invoke([
     ["human", "What's the weather like in San Francisco, Tokyo, and Paris?"],
   ]);
-  // console.log(JSON.stringify(res));
   expect(res.additional_kwargs.tool_calls?.length).toBeGreaterThan(1);
   const toolMessages = res.additional_kwargs.tool_calls!.map(
     (toolCall) =>
@@ -194,7 +194,6 @@ test("Test ChatOpenAI tool calling with ToolMessages", async () => {
     toolError = e;
   }
   expect(toolError).toBeDefined();
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   expect((toolError as any)?.lc_error_code).toEqual("INVALID_TOOL_RESULTS");
   // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
   // @ts-expect-error unused var
@@ -642,22 +641,23 @@ test.skip("system prompt caching", async () => {
     },
   ];
   const res = await model.invoke(messages);
-  expect(res.response_metadata?.usage.prompt_tokens_details.cached_tokens).toBe(
-    0
-  );
+  expect(
+    (res.response_metadata?.usage as any).prompt_tokens_details.cached_tokens
+  ).toBe(0);
   await new Promise((resolve) => {
     setTimeout(resolve, 5000);
   });
   const res2 = await model.invoke(messages);
   expect(
-    res2.response_metadata?.usage.prompt_tokens_details.cached_tokens
+    (res2.response_metadata?.usage as any).prompt_tokens_details.cached_tokens
   ).toBeGreaterThan(0);
   let aggregate;
   for await (const chunk of await model.stream(messages)) {
     aggregate = aggregate ? concat(aggregate, chunk) : chunk;
   }
   expect(
-    aggregate?.response_metadata?.usage.prompt_tokens_details.cached_tokens
+    (aggregate?.response_metadata?.usage as any).prompt_tokens_details
+      .cached_tokens
   ).toBeGreaterThan(0);
 });
 
@@ -707,11 +707,11 @@ public class User
     }
   );
   expect(
-    typeof res.response_metadata?.usage?.completion_tokens_details
+    typeof (res.response_metadata?.usage as any).completion_tokens_details
       .accepted_prediction_tokens
   ).toBe("number");
   expect(
-    typeof res.response_metadata?.usage?.completion_tokens_details
+    typeof (res.response_metadata?.usage as any).completion_tokens_details
       .rejected_prediction_tokens
   ).toBe("number");
 });

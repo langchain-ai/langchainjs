@@ -19,22 +19,29 @@ export const getTermFrequency = (term: string, corpus: string) => {
 };
 
 /** Inverse document frequency. */
-export const getIDF = (term: string, documents: string[]) => {
+export const getIDF = <T>(term: string, documents: BMInputDocument<T>[]) => {
   // Number of relevant documents.
-  const relevantDocuments = documents.filter((document: string) =>
-    document.includes(term)
+  const relevantDocuments = documents.filter((document) =>
+    document.text.includes(term)
   ).length;
   return Math.log(
     (documents.length - relevantDocuments + 0.5) / (relevantDocuments + 0.5) + 1
   );
 };
 
+export interface BMInputDocument<T> {
+  /** The text from the original document */
+  text: string;
+  /** The original document */
+  document: T;
+}
+
 /** Represents a document; useful when sorting results.
  */
-export interface BMDocument {
-  /** The document is originally scoreed. */
-  document: string;
-  /** The score that the document recieves. */
+export interface BMOutputDocument<T> {
+  /** The original document */
+  document: T;
+  /** The score that the document receives. */
   score: number;
 }
 
@@ -47,25 +54,27 @@ export interface BMConstants {
 }
 
 /** If returns positive, the sorting results in secondEl coming before firstEl, else, firstEl comes before secondEL  */
-export type BMSorter = (firstEl: BMDocument, secondEl: BMDocument) => number;
+export type BMSorter<T> = (
+  firstEl: BMOutputDocument<T>,
+  secondEl: BMOutputDocument<T>
+) => number;
 
 /** Implementation of Okapi BM25 algorithm.
- *  @param documents: Collection of documents.
+ *  @param documents: Collection of documents with text content and associated data.
  *  @param keywords: query terms.
  *  @param constants: Contains free parameters k1 and b. b=0.75 and k1=1.2 by default.
- *  @param sort: A function that allows you to sort queries by a given rule. If not provided, returns results corresponding to the original order.
- * If this option is provided, the return type will not be an array of scores but an array of documents with their scores.
+ *  @param sorter: A function that allows you to sort results by a given rule. If not provided, returns results in the original document order.
  */
-export function BM25(
-  documents: string[],
+export function BM25<T>(
+  documents: BMInputDocument<T>[],
   keywords: string[],
   constants?: BMConstants,
-  sorter?: BMSorter
-): number[] | BMDocument[] {
+  sorter?: BMSorter<T>
+): BMOutputDocument<T>[] {
   const b = constants && constants.b ? constants.b : 0.75;
   const k1 = constants && constants.k1 ? constants.k1 : 1.2;
-  const documentLengths = documents.map((document: string) =>
-    getWordCount(document)
+  const documentLengths = documents.map((document) =>
+    getWordCount(document.text)
   );
   const averageDocumentLength =
     documentLengths.reduce((a, b) => a + b, 0) / documents.length;
@@ -74,14 +83,14 @@ export function BM25(
     return obj;
   }, new Map<string, number>());
 
-  const scores = documents.map((document: string, index: number) => {
+  const scoredDocs = documents.map(({ text, document }, index) => {
     const score = keywords
       .map((keyword: string) => {
         const inverseDocumentFrequency = idfByKeyword.get(keyword);
         if (inverseDocumentFrequency === undefined) {
           throw new Error("Missing keyword.");
         }
-        const termFrequency = getTermFrequency(keyword, document);
+        const termFrequency = getTermFrequency(keyword, text);
         const documentLength = documentLengths[index];
         return (
           (inverseDocumentFrequency * (termFrequency * (k1 + 1))) /
@@ -90,14 +99,11 @@ export function BM25(
         );
       })
       .reduce((a: number, b: number) => a + b, 0);
-    if (sorter) {
-      return { score, document } as BMDocument;
-    }
-    return score;
+    return { score, document } as BMOutputDocument<T>;
   });
   // sort the results
   if (sorter) {
-    return (scores as BMDocument[]).sort(sorter);
+    return scoredDocs.sort(sorter);
   }
-  return scores as number[];
+  return scoredDocs;
 }

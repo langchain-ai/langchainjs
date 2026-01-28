@@ -1,6 +1,6 @@
 import { test, expect } from "vitest";
 import { ContentBlock } from "../../messages/index.js";
-import { InMemoryCache } from "../base.js";
+import { InMemoryCache } from "../index.js";
 
 test("InMemoryCache works", async () => {
   const cache = new InMemoryCache();

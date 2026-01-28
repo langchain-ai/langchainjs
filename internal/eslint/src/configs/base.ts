@@ -23,6 +23,7 @@ const config: ConfigArray = tseslint.config(
       "**/.eslintrc.cjs",
       "**/eslint.config.js",
       "**/eslint.config.ts",
+      "**/tsdown.config.ts",
       "**/vitest.config.ts",
       // Vendor directories with different coding standards
       "**/src/utils/@cfworker/**",
@@ -143,11 +144,13 @@ const config: ConfigArray = tseslint.config(
     },
   },
   {
-    // Test file overrides
+    // Test file overrides - disable type-aware rules that are slow with zod/v3 imports
     name: "test",
     files: ["**/*.test.ts", "**/*.test-d.ts", "**/*.spec.ts"],
     rules: {
       "@typescript-eslint/no-unused-vars": "off",
+      "@typescript-eslint/no-floating-promises": "off",
+      "@typescript-eslint/no-misused-promises": "off",
       "no-process-env": "off",
       "import/no-extraneous-dependencies": "off",
       "no-restricted-imports": "off",

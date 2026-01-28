@@ -1,5 +1,156 @@
 # @langchain/google-vertexai
 
+## 2.1.13
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @langchain/google-gauth@2.1.13
+
+## 2.1.12
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @langchain/google-gauth@2.1.12
+
+## 2.1.11
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @langchain/google-gauth@2.1.11
+
+## 2.1.10
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @langchain/google-gauth@2.1.10
+
+## 2.1.9
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @langchain/google-gauth@2.1.9
+
+## 2.1.8
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @langchain/google-gauth@2.1.8
+
+## 2.1.7
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @langchain/google-gauth@2.1.7
+
+## 2.1.6
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @langchain/google-gauth@2.1.6
+
+## 2.1.5
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @langchain/google-gauth@2.1.5
+
+## 2.1.4
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @langchain/google-gauth@2.1.4
+
+## 2.1.3
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @langchain/google-gauth@2.1.3
+
+## 2.1.2
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @langchain/google-gauth@2.1.2
+
+## 2.1.1
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @langchain/google-gauth@2.1.1
+
+## 2.1.0
+
+### Patch Changes
+
+- [#8951](https://github.com/langchain-ai/langchainjs/pull/8951) [`a2a0088`](https://github.com/langchain-ai/langchainjs/commit/a2a00880b80119eb926de05e9c556a44fd56632e) Thanks [@christian-bromann](https://github.com/christian-bromann)! - fix(google-common): handle unsupported Zod schema features for Gemini tools
+
+- Updated dependencies []:
+  - @langchain/google-gauth@2.1.0
+
+## 2.0.4
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @langchain/google-gauth@2.0.4
+
+## 2.0.3
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @langchain/google-gauth@2.0.3
+
+## 2.0.2
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @langchain/google-gauth@2.0.2
+
+## 2.0.1
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @langchain/google-gauth@2.0.1
+
+## 1.0.4
+
+### Patch Changes
+
+- [#9416](https://github.com/langchain-ai/langchainjs/pull/9416) [`0fe9beb`](https://github.com/langchain-ai/langchainjs/commit/0fe9bebee6710f719e47f913eec1ec4f638e4de4) Thanks [@hntrl](https://github.com/hntrl)! - fix 'moduleResultion: "node"' compatibility
+
+- Updated dependencies [[`0fe9beb`](https://github.com/langchain-ai/langchainjs/commit/0fe9bebee6710f719e47f913eec1ec4f638e4de4)]:
+  - @langchain/google-gauth@2.0.0
+
+## 1.0.3
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @langchain/google-gauth@1.0.3
+
+## 1.0.2
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @langchain/google-gauth@1.0.2
+
 ## 1.0.1
 
 ### Patch Changes

@@ -1,6 +1,7 @@
 // eslint-disable-next-line import/no-extraneous-dependencies
 import {
   GenericContainer,
+  StartedTestContainer,
   StartupCheckStrategy,
   StartupStatus,
 } from "testcontainers";
@@ -69,12 +70,31 @@ class ReadyWhenMongotEstablished extends StartupCheckStrategy {
 export default async function setup() {
   if (!isUsingLocalAtlas()) return;
 
-  const container = await new GenericContainer("mongodb/mongodb-atlas-local")
-    .withExposedPorts({ host: 27017, container: 27017 })
-    .withWaitStrategy(new ReadyWhenMongotEstablished())
-    .withStartupTimeout(30_000)
-    .start();
+  let container: StartedTestContainer;
+  try {
+    container = await new GenericContainer("mongodb/mongodb-atlas-local")
+      .withExposedPorts({ host: 27017, container: 27017 })
+      .withWaitStrategy(new ReadyWhenMongotEstablished())
+      .withStartupTimeout(30_000)
+      .start();
+  } catch (error: Error | unknown) {
+    const hasMessage = (err: unknown): err is { message: string } =>
+      typeof err === "object" &&
+      err !== null &&
+      "message" in err &&
+      typeof (err as { message?: unknown }).message === "string";
 
+    const msg = hasMessage(error) ? error.message : String(error);
+
+    if (msg.includes("Could not find a working container runtime strategy")) {
+      console.error(
+        `${msg}\nMongoDB Atlas Local container failed to start. If you are trying to use a MongoDB Atlas instance without Docker, make sure MONGODB_ATLAS_URI environment variable is set to a valid MongoDB Atlas URI.`
+      );
+    } else {
+      console.error(error);
+    }
+    throw error;
+  }
   // @ts-expect-error Assigning properties on the globalThis object is Jest's recommended practice of sharing
   // context between setup and teardown modules.
   // See https://jestjs.io/docs/configuration#globalsetup-string.

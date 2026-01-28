@@ -1,6 +1,6 @@
 # 🦜🍎️ @langchain/core
 
-![npm](https://img.shields.io/npm/dm/@langchain/core) [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT) [![Twitter](https://img.shields.io/twitter/url/https/twitter.com/langchainai.svg?style=social&label=Follow%20%40LangChainAI)](https://twitter.com/langchainai)
+![npm](https://img.shields.io/npm/dm/@langchain/core) [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT) [![Twitter](https://img.shields.io/twitter/url/https/twitter.com/langchain.svg?style=social&label=Follow%20%40LangChain)](https://x.com/langchain)
 
 `@langchain/core` contains the core abstractions and schemas of LangChain.js, including base classes for language models,
 chat models, vectorstores, retrievers, and runnables.
@@ -109,4 +109,4 @@ Because `@langchain/core` is a low-level package whose abstractions will change 
 Bugfixes or suggestions should be made using the same guidelines as the main package.
 See [here](https://github.com/langchain-ai/langchainjs/tree/main/CONTRIBUTING.md) for detailed information.
 
-Please report any security issues or concerns following our [security guidelines](https://github.com/langchain-ai/langchainjs/tree/main/SECURITY.md).
+Please report any security issues or concerns following our [security guidelines](https://github.com/langchain-ai/.github/blob/main/SECURITY.md).

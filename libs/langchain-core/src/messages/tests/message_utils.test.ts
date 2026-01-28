@@ -619,38 +619,85 @@ test("getBufferString can handle complex messages", () => {
   expect(bufferString1).toBe("Human: Hello there!");
 
   const bufferString2 = getBufferString(messageArr2);
-  expect(bufferString2).toBe(
-    `AI: ${JSON.stringify(
-      [
-        {
-          type: "text",
-          text: "Hello there!",
-        },
-      ],
-      null,
-      2
-    )}`
-  );
+  // getBufferString now uses the `text` property which extracts only text content
+  // from content blocks, producing compact output to avoid token inflation
+  expect(bufferString2).toBe("AI: Hello there!");
 
   const bufferString3 = getBufferString(messageArr3);
-  expect(bufferString3).toBe(
-    `Human: ${JSON.stringify(
-      [
-        {
-          type: "image_url",
-          image_url: {
-            url: "https://example.com/image.jpg",
-          },
-        },
-        {
-          type: "image_url",
-          image_url: "https://example.com/image.jpg",
-        },
-      ],
-      null,
-      2
-    )}`
+  // Image content should return empty string for text property
+  expect(bufferString3).toBe("Human: ");
+});
+
+test("getBufferString includes tool_calls for AI messages", () => {
+  const toolCalls = [
+    { name: "get_weather", args: { city: "NYC" }, id: "call_123" },
+  ];
+
+  const messageWithToolCalls = new AIMessage({
+    content: "Let me check the weather for you.",
+    tool_calls: toolCalls,
+  });
+
+  const messageWithFunctionCall = new AIMessage({
+    content: "Let me check the weather.",
+    additional_kwargs: {
+      function_call: { name: "get_weather", arguments: '{"city": "NYC"}' },
+    },
+  });
+
+  const messageWithoutTools = new AIMessage({
+    content: "The weather is sunny!",
+  });
+
+  // AI message with tool_calls should include them in output
+  const bufferWithToolCalls = getBufferString([messageWithToolCalls]);
+  expect(bufferWithToolCalls).toBe(
+    `AI: Let me check the weather for you.${JSON.stringify(toolCalls)}`
   );
+
+  // AI message with legacy function_call should include it
+  const bufferWithFunctionCall = getBufferString([messageWithFunctionCall]);
+  expect(bufferWithFunctionCall).toContain("AI: Let me check the weather.");
+  expect(bufferWithFunctionCall).toContain("get_weather");
+
+  // AI message without tools should not have tool info
+  const bufferWithoutTools = getBufferString([messageWithoutTools]);
+  expect(bufferWithoutTools).toBe("AI: The weather is sunny!");
+});
+
+test("getBufferString uses text property to avoid metadata inflation", () => {
+  // Create messages with metadata that would inflate str() representation
+  const messages = [
+    new HumanMessage("What is the weather in NYC?"),
+    new AIMessage({
+      content: "Let me check the weather for you.",
+      tool_calls: [
+        { name: "get_weather", args: { city: "NYC" }, id: "call_123" },
+      ],
+    }),
+    new ToolMessage({
+      content: "72F and sunny",
+      tool_call_id: "call_123",
+      name: "get_weather",
+    }),
+    new AIMessage({
+      content: "It is 72F and sunny in NYC!",
+    }),
+  ];
+
+  const bufferString = getBufferString(messages);
+
+  // Should produce compact output
+  expect(bufferString).toContain("Human: What is the weather in NYC?");
+  expect(bufferString).toContain("AI: Let me check the weather for you.");
+  expect(bufferString).toContain("get_weather");
+  expect(bufferString).toContain("Tool: get_weather, 72F and sunny");
+  expect(bufferString).toContain("AI: It is 72F and sunny in NYC!");
+
+  // Should NOT contain metadata fields that would be in JSON.stringify
+  expect(bufferString).not.toContain("usage_metadata");
+  expect(bufferString).not.toContain("response_metadata");
+  expect(bufferString).not.toContain("additional_kwargs");
 });
 
 describe("chat message conversions", () => {

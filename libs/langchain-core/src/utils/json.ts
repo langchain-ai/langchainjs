@@ -26,75 +26,302 @@ export function parseJsonMarkdown(s: string, parser = parsePartialJson) {
   return parser(finalContent.trim());
 }
 
-// Adapted from https://github.com/KillianLucas/open-interpreter/blob/main/interpreter/core/llm/utils/parse_partial_json.py
-// MIT License
-export function parsePartialJson(s: string) {
-  // If the input is undefined, return null to indicate failure.
-  if (typeof s === "undefined") {
-    return null;
-  }
-
-  // Attempt to parse the string as-is.
+/**
+ * Recursive descent partial JSON parser.
+ * @param s - The string to parse.
+ * @returns The parsed value.
+ * @throws Error if the input is a malformed JSON string.
+ */
+export function strictParsePartialJson(s: string): unknown {
   try {
     return JSON.parse(s);
   } catch {
-    // Pass
+    // Continue to partial parsing
   }
 
-  // Initialize variables.
-  let new_s = "";
-  const stack = [];
-  let isInsideString = false;
-  let escaped = false;
+  const buffer = s.trim();
+  if (buffer.length === 0) throw new Error("Unexpected end of JSON input");
 
-  // Process each character in the string one at a time.
-  for (let char of s) {
-    if (isInsideString) {
-      if (char === '"' && !escaped) {
-        isInsideString = false;
-      } else if (char === "\n" && !escaped) {
-        char = "\\n"; // Replace the newline character with the escape sequence.
-      } else if (char === "\\") {
-        escaped = !escaped;
-      } else {
-        escaped = false;
-      }
-    } else {
-      if (char === '"') {
-        isInsideString = true;
-        escaped = false;
-      } else if (char === "{") {
-        stack.push("}");
-      } else if (char === "[") {
-        stack.push("]");
-      } else if (char === "}" || char === "]") {
-        if (stack && stack[stack.length - 1] === char) {
-          stack.pop();
+  let pos = 0;
+
+  function skipWhitespace(): void {
+    while (pos < buffer.length && /\s/.test(buffer[pos])) {
+      pos += 1;
+    }
+  }
+
+  function parseString(): string {
+    if (buffer[pos] !== '"') {
+      throw new Error(`Expected '"' at position ${pos}, got '${buffer[pos]}'`);
+    }
+
+    pos += 1;
+    let result = "";
+    let escaped = false;
+
+    while (pos < buffer.length) {
+      const char = buffer[pos];
+
+      if (escaped) {
+        if (char === "n") {
+          result += "\n";
+        } else if (char === "t") {
+          result += "\t";
+        } else if (char === "r") {
+          result += "\r";
+        } else if (char === "\\") {
+          result += "\\";
+        } else if (char === '"') {
+          result += '"';
+        } else if (char === "b") {
+          result += "\b";
+        } else if (char === "f") {
+          result += "\f";
+        } else if (char === "/") {
+          result += "/";
+        } else if (char === "u") {
+          const hex = buffer.substring(pos + 1, pos + 5);
+          if (/^[0-9A-Fa-f]{0,4}$/.test(hex)) {
+            if (hex.length === 4) {
+              result += String.fromCharCode(Number.parseInt(hex, 16));
+            } else {
+              result += `u${hex}`;
+            }
+
+            pos += hex.length;
+          } else {
+            throw new Error(
+              `Invalid unicode escape sequence '\\u${hex}' at position ${pos}`
+            );
+          }
         } else {
-          // Mismatched closing character; the input is malformed.
-          return null;
+          throw new Error(
+            `Invalid escape sequence '\\${char}' at position ${pos}`
+          );
         }
+        escaped = false;
+      } else if (char === "\\") {
+        escaped = true;
+      } else if (char === '"') {
+        pos += 1;
+        return result;
+      } else {
+        result += char;
+      }
+
+      pos += 1;
+    }
+
+    if (escaped) result += "\\";
+    return result;
+  }
+
+  function parseNumber(): number {
+    const start = pos;
+    let numStr = "";
+
+    if (buffer[pos] === "-") {
+      numStr += "-";
+      pos += 1;
+    }
+
+    if (pos < buffer.length && buffer[pos] === "0") {
+      numStr += "0";
+      pos += 1;
+
+      if (buffer[pos] >= "0" && buffer[pos] <= "9") {
+        throw new Error(`Invalid number at position ${start}`);
       }
     }
 
-    // Append the processed character to the new string.
-    new_s += char;
+    if (pos < buffer.length && buffer[pos] >= "1" && buffer[pos] <= "9") {
+      while (pos < buffer.length && buffer[pos] >= "0" && buffer[pos] <= "9") {
+        numStr += buffer[pos];
+        pos += 1;
+      }
+    }
+
+    if (pos < buffer.length && buffer[pos] === ".") {
+      numStr += ".";
+      pos += 1;
+      while (pos < buffer.length && buffer[pos] >= "0" && buffer[pos] <= "9") {
+        numStr += buffer[pos];
+        pos += 1;
+      }
+    }
+
+    if (pos < buffer.length && (buffer[pos] === "e" || buffer[pos] === "E")) {
+      numStr += buffer[pos];
+      pos += 1;
+      if (pos < buffer.length && (buffer[pos] === "+" || buffer[pos] === "-")) {
+        numStr += buffer[pos];
+        pos += 1;
+      }
+      while (pos < buffer.length && buffer[pos] >= "0" && buffer[pos] <= "9") {
+        numStr += buffer[pos];
+        pos += 1;
+      }
+    }
+
+    if (numStr === "-") return -0;
+
+    const num = Number.parseFloat(numStr);
+
+    if (Number.isNaN(num)) {
+      pos = start;
+      throw new Error(`Invalid number '${numStr}' at position ${start}`);
+    }
+
+    return num;
   }
 
-  // If we're still inside a string at the end of processing,
-  // we need to close the string.
-  if (isInsideString) {
-    new_s += '"';
+  function parseValue(): unknown {
+    skipWhitespace();
+
+    if (pos >= buffer.length) {
+      throw new Error(`Unexpected end of input at position ${pos}`);
+    }
+
+    const char = buffer[pos];
+
+    if (char === "{") return parseObject();
+    if (char === "[") return parseArray();
+    if (char === '"') return parseString();
+
+    if ("null".startsWith(buffer.substring(pos, pos + 4))) {
+      pos += Math.min(4, buffer.length - pos);
+      return null;
+    }
+
+    if ("true".startsWith(buffer.substring(pos, pos + 4))) {
+      pos += Math.min(4, buffer.length - pos);
+      return true;
+    }
+
+    if ("false".startsWith(buffer.substring(pos, pos + 5))) {
+      pos += Math.min(5, buffer.length - pos);
+      return false;
+    }
+
+    if (char === "-" || (char >= "0" && char <= "9")) {
+      return parseNumber();
+    }
+
+    throw new Error(`Unexpected character '${char}' at position ${pos}`);
   }
 
-  // Close any remaining open structures in the reverse order that they were opened.
-  for (let i = stack.length - 1; i >= 0; i -= 1) {
-    new_s += stack[i];
+  function parseArray(): unknown[] {
+    if (buffer[pos] !== "[") {
+      throw new Error(`Expected '[' at position ${pos}, got '${buffer[pos]}'`);
+    }
+
+    const arr: unknown[] = [];
+
+    pos += 1;
+    skipWhitespace();
+
+    if (pos >= buffer.length) return arr;
+    if (buffer[pos] === "]") {
+      pos += 1;
+      return arr;
+    }
+
+    while (pos < buffer.length) {
+      skipWhitespace();
+      if (pos >= buffer.length) return arr;
+
+      arr.push(parseValue());
+
+      skipWhitespace();
+      if (pos >= buffer.length) return arr;
+
+      if (buffer[pos] === "]") {
+        pos += 1;
+        return arr;
+      } else if (buffer[pos] === ",") {
+        pos += 1;
+        continue;
+      }
+
+      throw new Error(
+        `Expected ',' or ']' at position ${pos}, got '${buffer[pos]}'`
+      );
+    }
+
+    return arr;
   }
 
+  function parseObject(): Record<string, unknown> {
+    if (buffer[pos] !== "{") {
+      throw new Error(`Expected '{' at position ${pos}, got '${buffer[pos]}'`);
+    }
+
+    const obj: Record<string, unknown> = {};
+    pos += 1;
+    skipWhitespace();
+
+    if (pos >= buffer.length) return obj;
+    if (buffer[pos] === "}") {
+      pos += 1;
+      return obj;
+    }
+
+    while (pos < buffer.length) {
+      skipWhitespace();
+      if (pos >= buffer.length) return obj;
+
+      const key = parseString();
+
+      skipWhitespace();
+      if (pos >= buffer.length) return obj;
+
+      if (buffer[pos] !== ":") {
+        throw new Error(
+          `Expected ':' at position ${pos}, got '${buffer[pos]}'`
+        );
+      }
+      pos += 1;
+
+      skipWhitespace();
+      if (pos >= buffer.length) return obj;
+
+      obj[key] = parseValue();
+
+      skipWhitespace();
+      if (pos >= buffer.length) return obj;
+
+      if (buffer[pos] === "}") {
+        pos += 1;
+        return obj;
+      } else if (buffer[pos] === ",") {
+        pos += 1;
+        continue;
+      }
+
+      throw new Error(
+        `Expected ',' or '}' at position ${pos}, got '${buffer[pos]}'`
+      );
+    }
+
+    return obj;
+  }
+
+  const value = parseValue();
+  skipWhitespace();
+
+  if (pos < buffer.length) {
+    throw new Error(`Unexpected character '${buffer[pos]}' at position ${pos}`);
+  }
+
+  return value;
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function parsePartialJson(s: string): any | null {
   // Attempt to parse the modified string as JSON.
   try {
-    return JSON.parse(new_s);
+    if (typeof s === "undefined") return null;
+    return strictParsePartialJson(s);
   } catch {
     // If we still can't parse the string as JSON, return null to indicate failure.
     return null;

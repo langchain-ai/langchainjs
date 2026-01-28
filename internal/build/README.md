@@ -1,110 +1,246 @@
-# LangChain Build System
+# @langchain/build
 
-A modern build system for LangChain JavaScript/TypeScript packages that provides fast compilation, type checking, automated secret management, and advanced code generation for monorepo workspaces.
-
-## Overview
-
-This build system is designed to handle the complex requirements of LangChain's multi-package monorepo. It automatically discovers packages in the workspace, compiles them with optimal settings, and includes specialized tooling for LangChain's security patterns and dynamic loading capabilities.
-
-### Key Features
-
-- 🚀 **Fast Compilation**: Uses [tsdown](https://github.com/privatenumber/tsdown) for high-performance TypeScript bundling with Rolldown
-- 📦 **Monorepo Aware**: Automatically discovers and builds all non-private packages in pnpm workspaces
-- 🔍 **Secret Management**: Built-in scanning and validation of LangChain's `lc_secrets` patterns
-- 📝 **Type Generation**: Generates both ESM and CommonJS outputs with TypeScript declarations
-- ✅ **Quality Checks**: Integrated type checking with [arethetypeswrong](https://github.com/arethetypeswrong/arethetypeswrong), [publint](https://github.com/bluwy/publint), and unused dependency detection
-- 🗺️ **Import Maps**: Automatic generation of import maps for convenient bulk imports
-- 📋 **Import Constants**: Dynamic detection and export of optional dependency entrypoints
-- 🎯 **Selective Building**: Build all packages or target specific ones with flexible filtering
-- 👀 **Watch Mode**: Real-time compilation with file watching capabilities
-- 🛠️ **Rich CLI**: Full-featured command-line interface with comprehensive options
-
-## Architecture
-
-The build system consists of:
-
-```
-infra/build/
-├── index.ts              # Main build orchestrator
-├── cli.ts                # Command-line interface
-├── types.ts              # TypeScript type definitions
-├── utils.ts              # Utility functions
-├── plugins/
-│   ├── README.md         # Plugin documentation
-│   ├── lc-secrets.ts     # LangChain secrets scanning plugin
-│   ├── import-map.ts     # Import map generation plugin
-│   └── import-constants.ts # Import constants generation plugin
-├── package.json          # Build system dependencies
-└── README.md             # This documentation
-```
-
-### Core Technologies
-
-- **[tsdown](https://github.com/privatenumber/tsdown)** - Fast TypeScript bundler with Rolldown
-- **[TypeScript Compiler API](https://github.com/microsoft/TypeScript)** - For source code analysis and type checking
-- **[unplugin-unused](https://github.com/unplugin/unplugin-unused)** - For unused dependency detection
-- **Node.js built-ins** - File system operations and process management
+Pre-configured build system for LangChain packages using [tsdown](https://tsdown.dev/).
 
 ## Usage
 
-### CLI Commands
+Create a `tsdown.config.ts` in your package root:
 
-```bash
-# Get help
-pnpm build:new --help
+```typescript
+import { getBuildConfig } from "@langchain/build";
 
-# Build all packages in the workspace
-pnpm build:new
-
-# Build with watch mode for development
-pnpm build:new --watch
-
-# Build specific packages
-pnpm build:new @langchain/core
-pnpm build:new @langchain/core langchain @langchain/openai
-
-# Exclude packages from build
-pnpm build:new --exclude @langchain/community
-pnpm build:new -e @langchain/aws -e @langchain/openai
-
-# Skip various build steps
-pnpm build:new --no-emit          # Skip type declarations
-pnpm build:new --skip-unused      # Skip unused dependency check
-pnpm build:new --skip-clean       # Skip cleaning build directory
-pnpm build:new --skip-sourcemap   # Skip sourcemap generation
+export default getBuildConfig();
 ```
+
+Then run `tsdown` to build your package. See [tsdown documentation](https://tsdown.dev/) for CLI options.
 
 ## Development
 
 ### Adding New Packages
 
-1. Create package directory under appropriate workspace
-2. Add `package.json` with proper exports field
-3. Add `tsconfig.json` extending workspace config
-4. Run build - it will be automatically discovered
+1. Create package directory under the appropriate workspace
+2. Add a `tsdown.config.ts` file to the package root
+3. Configure the build config to the package's needs
+   - This includes adding the appropriate entrypoints to the `entry` array in the build config
+   - `tsdown` will automatically compile the `package.json` `exports` field to the appropriate entrypoints
+4. Set the `build` script in the package's `package.json` to `tsdown`
 
-### package.json Requirements
+## Configuration
 
-Each package must have a properly configured `exports` field that includes an `input` property to tell the build system which source file to compile for each entrypoint:
+### getBuildConfig(options?)
 
-```json
-{
-  "name": "@langchain/example",
-  "exports": {
-    ".": {
-      "input": "./src/index.ts", // ← Required: Source file for this entrypoint
-      "import": "./dist/index.js",
-      "require": "./dist/index.cjs",
-      "types": "./dist/index.d.ts"
-    },
-    "./tools": {
-      "input": "./src/tools/index.ts", // ← Required: Source file for tools entrypoint
-      "import": "./dist/tools/index.js",
-      "require": "./dist/tools/index.cjs",
-      "types": "./dist/tools/index.d.ts"
-    }
+Returns a tsdown configuration with the following defaults:
+
+- **Formats**: CommonJS and ESM
+- **Target**: ES2022
+- **Platform**: Node.js
+- **Type declarations**: Parallel generation with tsgo
+- **Source maps**: Enabled
+- **Validation**: ATTW (node16 profile), publint (strict), unused dependency checking
+
+Override any defaults by passing a partial `BuildOptions` object:
+
+```typescript
+export default getBuildConfig({
+  target: "es2020",
+  plugins: [myPlugin()],
+});
+```
+
+## Plugins
+
+This package exports several tsdown plugins for common LangChain patterns.
+
+### lcSecretsPlugin(options?)
+
+Scans TypeScript files for `lc_secrets` patterns and generates a TypeScript interface documenting all se crets used in the package.
+
+**What is lc_secrets?**
+
+LangChain uses a standardized convention where classes that need sensitive configuration (API keys, tokens) declare them via a `lc_secrets` getter:
+
+```typescript
+class OpenAIProvider {
+  get lc_secrets(): { [key: string]: string } {
+    return {
+      apiKey: "OPENAI_API_KEY", // Maps this.apiKey -> process.env.OPENAI_API_KEY
+      organization: "OPENAI_ORG_ID", // Maps this.organization -> process.env.OPENAI_ORG_ID
+    };
   }
 }
 ```
 
-**Important**: The `input` property is required for the build system to understand which TypeScript source file should be compiled for each export. Without this property, the entrypoint will be ignored during build.
+**How it works:**
+
+1. Scans all TypeScript files for classes with `lc_secrets` getters
+2. Extracts environment variable names (e.g., `OPENAI_API_KEY`)
+3. Validates naming conventions (UPPERCASE, no spaces)
+4. Generates a TypeScript `SecretMap` interface
+5. Reports validation errors
+
+**Generated output** (`src/load/import_type.ts`):
+
+```typescript
+/** Auto-generated by lc-secrets plugin. Do not edit manually */
+
+export interface OptionalImportMap {}
+
+export interface SecretMap {
+  OPENAI_API_KEY?: string;
+  OPENAI_ORG_ID?: string;
+}
+```
+
+**Usage:**
+
+```typescript
+import { getBuildConfig, lcSecretsPlugin } from "@langchain/build";
+
+export default getBuildConfig({
+  plugins: [
+    lcSecretsPlugin({
+      outputPath: "src/load/import_type.ts",
+      excludePatterns: [".test.ts"],
+    }),
+  ],
+});
+```
+
+### importConstantsPlugin(options?)
+
+Generates a TypeScript file containing an array of optional import entrypoints. These typically represent modules with optional dependencies.
+
+**How it works:**
+
+1. Reads `package.json` to determine the package name
+2. Generates import path strings for each configured entrypoint
+3. Writes a TypeScript file with an exported array
+
+**Package name handling:**
+
+- `@langchain/core` → `langchain/...`
+- `@langchain/community` → `langchain_community/...`
+- `@langchain/openai` → `langchain_openai/...`
+
+**Generated output** (`src/load/import_constants.ts`):
+
+```typescript
+/** Auto-generated by import-constants plugin. Do not edit manually */
+
+export const optionalImportEntrypoints: string[] = [
+  "langchain_community/tools/calculator",
+  "langchain_community/embeddings/openai",
+];
+```
+
+**Usage:**
+
+```typescript
+import { getBuildConfig, importConstantsPlugin } from "@langchain/build";
+
+export default getBuildConfig({
+  plugins: [
+    importConstantsPlugin({
+      entrypoints: ["tools/calculator", "embeddings/openai", "llms/anthropic"],
+    }),
+  ],
+});
+```
+
+### importMapPlugin(options?)
+
+Creates consolidated re-export files for all package entrypoints with namespace aliases. Useful for bulk imports, testing, and dynamic loading.
+
+**How it works:**
+
+1. Reads build input entrypoints from tsdown
+2. Filters based on configuration (node-only, optional deps, etc.)
+3. Generates re-export statements with namespaced aliases
+4. Handles extra import map entries with custom patterns
+
+**Generated output** (`src/load/import_map.ts`):
+
+```typescript
+/** Auto-generated by import-map plugin. Do not edit manually */
+
+export * as index from "../index.js";
+export * as tools__calculator from "../tools/calculator.js";
+export * as providers__openai from "../providers/openai.js";
+```
+
+Entrypoint paths are transformed to namespace aliases using double underscores: `tools/calculator` → `tools__calculator`.
+
+**Usage:**
+
+```typescript
+import { getBuildConfig, importMapPlugin } from "@langchain/build";
+
+export default getBuildConfig({
+  plugins: [
+    importMapPlugin({
+      nodeOnly: ["node-specific-tool"],
+      importsOptionalDependencies: ["openai", "anthropic"],
+      extraEntries: [
+        {
+          modules: ["*"],
+          alias: ["utils", "helpers"],
+          path: "./utils/helpers.js",
+        },
+      ],
+    }),
+  ],
+});
+```
+
+### cjsCompatPlugin(options?)
+
+Generates barrel files for CommonJS compatibility in dual-format packages. Creates re-export files that ensure proper module resolution in both CommonJS and ESM environments.
+
+**How it works:**
+
+1. For each entrypoint, generates barrel files (`.cjs`, `.d.cts`, `.d.ts`, `.js`)
+2. Each barrel re-exports from the compiled `dist/` directory
+3. Can clean up generated files when `mode: "clean"`
+
+**Generated files** (for entrypoint `tools/calculator`):
+
+```typescript
+// tools/calculator.cjs
+module.exports = require("../dist/tools/calculator.cjs");
+
+// tools/calculator.d.cts
+export * from "../dist/tools/calculator.js";
+
+// tools/calculator.d.ts
+export * from "../dist/tools/calculator.js";
+
+// tools/calculator.js
+export * from "../dist/tools/calculator.js";
+```
+
+**Usage:**
+
+```typescript
+import { getBuildConfig, cjsCompatPlugin } from "@langchain/build";
+
+export default getBuildConfig({
+  plugins: [
+    cjsCompatPlugin({
+      mode: "generate",
+      shouldGenerate: {
+        dcts: true,
+        cjs: true,
+        dts: true,
+        esm: true,
+      },
+    }),
+  ],
+});
+```
+
+## Dependencies
+
+- **tsdown**: TypeScript bundler powered by Rolldown
+- **@arethetypeswrong/core**: Type definitions validation
+- **publint**: Package validation
+- **unplugin-unused**: Unused dependency detection

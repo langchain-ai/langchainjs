@@ -9,11 +9,13 @@ import {
 import { concat } from "@langchain/core/utils/stream";
 import {
   ConversationRole as BedrockConversationRole,
+  BedrockRuntimeClient,
   type Message as BedrockMessage,
   type SystemContentBlock as BedrockSystemContentBlock,
+  ServiceTierType,
 } from "@aws-sdk/client-bedrock-runtime";
 import { z } from "zod/v3";
-import { describe, expect, test, it } from "vitest";
+import { describe, expect, test, it, vi } from "vitest";
 import { convertToConverseMessages } from "../utils/message_inputs.js";
 import { handleConverseStreamContentBlockDelta } from "../utils/message_outputs.js";
 import { ChatBedrockConverse } from "../chat_models.js";
@@ -161,6 +163,21 @@ describe("convertToConverseMessages", () => {
             },
           ],
         }),
+        new ToolMessage({
+          content: [
+            {
+              type: "text",
+              text: "long text...",
+            },
+            {
+              type: "cache_point",
+              cachePoint: {
+                type: "default",
+              },
+            },
+          ],
+          tool_call_id: "long_content_tool",
+        }),
       ],
       output: {
         converseMessages: [
@@ -193,6 +210,26 @@ describe("convertToConverseMessages", () => {
               },
               {
                 text: "The capital of Germany is Berlin.",
+              },
+            ],
+          },
+          {
+            role: BedrockConversationRole.USER,
+            content: [
+              {
+                toolResult: {
+                  toolUseId: "long_content_tool",
+                  content: [
+                    {
+                      text: "long text...",
+                    },
+                  ],
+                },
+              },
+              {
+                cachePoint: {
+                  type: "default",
+                },
               },
             ],
           },
@@ -399,6 +436,140 @@ describe("convertToConverseMessages", () => {
         ],
       },
     },
+    {
+      name: "standard v1 format with tool_call blocks (e.g., from Anthropic provider)",
+      input: [
+        new SystemMessage("You're an advanced AI assistant."),
+        new HumanMessage("What's the weather in SF?"),
+        new AIMessage({
+          content: [
+            { type: "text", text: "Let me check the weather for you." },
+            {
+              type: "tool_call",
+              id: "call_123",
+              name: "get_weather",
+              args: { location: "San Francisco" },
+            },
+          ],
+          response_metadata: {
+            output_version: "v1",
+            model_provider: "anthropic",
+          },
+        }),
+        new ToolMessage({
+          tool_call_id: "call_123",
+          content: "72°F and sunny",
+        }),
+      ],
+      output: {
+        converseSystem: [
+          {
+            text: "You're an advanced AI assistant.",
+          },
+        ],
+        converseMessages: [
+          {
+            role: BedrockConversationRole.USER,
+            content: [
+              {
+                text: "What's the weather in SF?",
+              },
+            ],
+          },
+          {
+            role: BedrockConversationRole.ASSISTANT,
+            content: [
+              {
+                text: "Let me check the weather for you.",
+              },
+              {
+                toolUse: {
+                  toolUseId: "call_123",
+                  name: "get_weather",
+                  input: { location: "San Francisco" },
+                },
+              },
+            ],
+          },
+          {
+            role: BedrockConversationRole.USER,
+            content: [
+              {
+                toolResult: {
+                  toolUseId: "call_123",
+                  content: [
+                    {
+                      text: "72°F and sunny",
+                    },
+                  ],
+                },
+              },
+            ],
+          },
+        ],
+      },
+    },
+    {
+      name: "standard v1 format with reasoning blocks (e.g., from Anthropic provider)",
+      input: [
+        new SystemMessage("You're an advanced AI assistant."),
+        new HumanMessage("What is 2+2?"),
+        new AIMessage({
+          content: [
+            {
+              type: "reasoning",
+              reasoning: "I need to add 2 and 2 together.",
+            },
+            { type: "text", text: "The answer is 4." },
+          ],
+          response_metadata: {
+            output_version: "v1",
+            model_provider: "anthropic",
+          },
+        }),
+        new HumanMessage("Thanks! What about 3+3?"),
+      ],
+      output: {
+        converseSystem: [
+          {
+            text: "You're an advanced AI assistant.",
+          },
+        ],
+        converseMessages: [
+          {
+            role: BedrockConversationRole.USER,
+            content: [
+              {
+                text: "What is 2+2?",
+              },
+            ],
+          },
+          {
+            role: BedrockConversationRole.ASSISTANT,
+            content: [
+              {
+                reasoningContent: {
+                  reasoningText: {
+                    text: "I need to add 2 and 2 together.",
+                  },
+                },
+              },
+              {
+                text: "The answer is 4.",
+              },
+            ],
+          },
+          {
+            role: BedrockConversationRole.USER,
+            content: [
+              {
+                text: "Thanks! What about 3+3?",
+              },
+            ],
+          },
+        ],
+      },
+    },
   ];
 
   it.each(testCases.map((tc) => [tc.name, tc]))(
@@ -450,6 +621,206 @@ test("Streaming supports empty string chunks", async () => {
   expect(finalChunk).toBeDefined();
   if (!finalChunk) return;
   expect(finalChunk.content).toBe("Hello world!");
+});
+
+describe("applicationInferenceProfile parameter", () => {
+  const baseConstructorArgs = {
+    region: "us-east-1",
+    credentials: {
+      secretAccessKey: "test-secret-key",
+      accessKeyId: "test-access-key",
+    },
+  };
+
+  it("should initialize applicationInferenceProfile from constructor", () => {
+    const testArn =
+      "arn:aws:bedrock:eu-west-1:123456789012:application-inference-profile/test-profile";
+    const model = new ChatBedrockConverse({
+      ...baseConstructorArgs,
+      model: "anthropic.claude-3-haiku-20240307-v1:0",
+      applicationInferenceProfile: testArn,
+    });
+    expect(model.model).toBe("anthropic.claude-3-haiku-20240307-v1:0");
+    expect(model.applicationInferenceProfile).toBe(testArn);
+  });
+
+  it("should be undefined when not provided in constructor", () => {
+    const model = new ChatBedrockConverse({
+      ...baseConstructorArgs,
+      model: "anthropic.claude-3-haiku-20240307-v1:0",
+    });
+
+    expect(model.model).toBe("anthropic.claude-3-haiku-20240307-v1:0");
+    expect(model.applicationInferenceProfile).toBeUndefined();
+  });
+
+  it("should send applicationInferenceProfile as modelId in ConverseCommand when provided", async () => {
+    const testArn =
+      "arn:aws:bedrock:eu-west-1:123456789012:application-inference-profile/test-profile";
+    const mockSend = vi.fn().mockResolvedValue({
+      output: {
+        message: {
+          role: "assistant",
+          content: [{ text: "Test response" }],
+        },
+      },
+      stopReason: "end_turn",
+      usage: {
+        inputTokens: 10,
+        outputTokens: 5,
+        totalTokens: 15,
+      },
+    });
+
+    const mockClient = {
+      send: mockSend,
+    } as unknown as BedrockRuntimeClient;
+
+    const model = new ChatBedrockConverse({
+      ...baseConstructorArgs,
+      model: "anthropic.claude-3-haiku-20240307-v1:0",
+      applicationInferenceProfile: testArn,
+      client: mockClient,
+    });
+
+    await model.invoke([new HumanMessage("Hello")]);
+
+    // Verify that send was called
+    expect(mockSend).toHaveBeenCalledTimes(1);
+
+    // Verify that the command was created with applicationInferenceProfile as modelId
+    const commandArg = mockSend.mock.calls[0][0];
+    expect(commandArg.input.modelId).toBe(testArn);
+    expect(commandArg.input.modelId).not.toBe(
+      "anthropic.claude-3-haiku-20240307-v1:0"
+    );
+  });
+
+  it("should send model as modelId in ConverseCommand when applicationInferenceProfile is not provided", async () => {
+    const mockSend = vi.fn().mockResolvedValue({
+      output: {
+        message: {
+          role: "assistant",
+          content: [{ text: "Test response" }],
+        },
+      },
+      stopReason: "end_turn",
+      usage: {
+        inputTokens: 10,
+        outputTokens: 5,
+        totalTokens: 15,
+      },
+    });
+
+    const mockClient = {
+      send: mockSend,
+    } as unknown as BedrockRuntimeClient;
+
+    const model = new ChatBedrockConverse({
+      ...baseConstructorArgs,
+      model: "anthropic.claude-3-haiku-20240307-v1:0",
+      client: mockClient,
+    });
+
+    await model.invoke([new HumanMessage("Hello")]);
+
+    // Verify that send was called
+    expect(mockSend).toHaveBeenCalledTimes(1);
+
+    // Verify that the command was created with model as modelId
+    const commandArg = mockSend.mock.calls[0][0];
+    expect(commandArg.input.modelId).toBe(
+      "anthropic.claude-3-haiku-20240307-v1:0"
+    );
+  });
+
+  it("should send applicationInferenceProfile as modelId in ConverseStreamCommand when provided", async () => {
+    const testArn =
+      "arn:aws:bedrock:eu-west-1:123456789012:application-inference-profile/test-profile";
+    const mockSend = vi.fn().mockResolvedValue({
+      stream: (async function* () {
+        yield {
+          contentBlockDelta: {
+            contentBlockIndex: 0,
+            delta: { text: "Test" },
+          },
+        };
+        yield {
+          metadata: {
+            usage: {
+              inputTokens: 10,
+              outputTokens: 5,
+              totalTokens: 15,
+            },
+          },
+        };
+      })(),
+    });
+
+    const mockClient = {
+      send: mockSend,
+    } as unknown as BedrockRuntimeClient;
+
+    const model = new ChatBedrockConverse({
+      ...baseConstructorArgs,
+      model: "anthropic.claude-3-haiku-20240307-v1:0",
+      applicationInferenceProfile: testArn,
+      streaming: true,
+      client: mockClient,
+    });
+
+    await model.invoke([new HumanMessage("Hello")]);
+
+    expect(mockSend).toHaveBeenCalledTimes(1);
+
+    const commandArg = mockSend.mock.calls[0][0];
+    expect(commandArg.input.modelId).toBe(testArn);
+    expect(commandArg.input.modelId).not.toBe(
+      "anthropic.claude-3-haiku-20240307-v1:0"
+    );
+  });
+
+  it("should send model as modelId in ConverseStreamCommand when applicationInferenceProfile is not provided", async () => {
+    const mockSend = vi.fn().mockResolvedValue({
+      stream: (async function* () {
+        yield {
+          contentBlockDelta: {
+            contentBlockIndex: 0,
+            delta: { text: "Test" },
+          },
+        };
+        yield {
+          metadata: {
+            usage: {
+              inputTokens: 10,
+              outputTokens: 5,
+              totalTokens: 15,
+            },
+          },
+        };
+      })(),
+    });
+
+    const mockClient = {
+      send: mockSend,
+    } as unknown as BedrockRuntimeClient;
+
+    const model = new ChatBedrockConverse({
+      ...baseConstructorArgs,
+      model: "anthropic.claude-3-haiku-20240307-v1:0",
+      streaming: true,
+      client: mockClient,
+    });
+
+    await model.invoke([new HumanMessage("Hello")]);
+
+    expect(mockSend).toHaveBeenCalledTimes(1);
+
+    const commandArg = mockSend.mock.calls[0][0];
+    expect(commandArg.input.modelId).toBe(
+      "anthropic.claude-3-haiku-20240307-v1:0"
+    );
+  });
 });
 
 describe("tool_choice works for supported models", () => {
@@ -706,4 +1077,85 @@ test("Test ChatBedrockConverse deserialization from model_id and region_name", a
   expect(loaded.model).toBe("anthropic.claude-3-sonnet-20240229-v1:0");
   expect(loaded.region).toBe("us-west-2");
   expect(loaded.temperature).toBe(0.7);
+});
+
+describe("serviceTier configuration", () => {
+  const baseConstructorArgs = {
+    region: "us-east-1",
+    credentials: {
+      secretAccessKey: "process.env.BEDROCK_AWS_SECRET_ACCESS_KEY",
+      accessKeyId: "process.env.BEDROCK_AWS_ACCESS_KEY_ID",
+    },
+  };
+
+  it("should set serviceTier in constructor", () => {
+    const model = new ChatBedrockConverse({
+      ...baseConstructorArgs,
+      serviceTier: "priority",
+    });
+    expect(model.serviceTier).toBe("priority");
+  });
+
+  it("should set serviceTier as undefined when not provided", () => {
+    const model = new ChatBedrockConverse({
+      ...baseConstructorArgs,
+    });
+    expect(model.serviceTier).toBeUndefined();
+  });
+
+  it.each(["priority", "default", "flex", "reserved"])(
+    "should include serviceTier in invocationParams when set to %s",
+    (serviceTier) => {
+      const model = new ChatBedrockConverse({
+        ...baseConstructorArgs,
+        serviceTier: serviceTier as ServiceTierType,
+      });
+      const params = model.invocationParams({});
+      expect(params.serviceTier).toEqual({ type: serviceTier });
+    }
+  );
+
+  it("should not include serviceTier in invocationParams when not set", () => {
+    const model = new ChatBedrockConverse({
+      ...baseConstructorArgs,
+    });
+    const params = model.invocationParams({});
+    expect(params.serviceTier).toBeUndefined();
+  });
+
+  it("should override serviceTier from call options in invocationParams", () => {
+    const model = new ChatBedrockConverse({
+      ...baseConstructorArgs,
+      serviceTier: "default",
+    });
+    const params = model.invocationParams({
+      serviceTier: "priority",
+    });
+    expect(params.serviceTier).toEqual({ type: "priority" });
+  });
+
+  it("should use class-level serviceTier when call options don't override it", () => {
+    const model = new ChatBedrockConverse({
+      ...baseConstructorArgs,
+      serviceTier: "flex",
+    });
+    const params = model.invocationParams({});
+    expect(params.serviceTier).toEqual({ type: "flex" });
+  });
+
+  it("should handle serviceTier in invocationParams with other config options", () => {
+    const model = new ChatBedrockConverse({
+      ...baseConstructorArgs,
+      serviceTier: "reserved",
+      temperature: 0.5,
+      maxTokens: 100,
+    });
+    const params = model.invocationParams({
+      stop: ["stop_sequence"],
+    });
+    expect(params.serviceTier).toEqual({ type: "reserved" });
+    expect(params.inferenceConfig?.temperature).toBe(0.5);
+    expect(params.inferenceConfig?.maxTokens).toBe(100);
+    expect(params.inferenceConfig?.stopSequences).toEqual(["stop_sequence"]);
+  });
 });

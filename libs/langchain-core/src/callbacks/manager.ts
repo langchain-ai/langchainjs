@@ -1,4 +1,4 @@
-import { v4 as uuidv4 } from "uuid";
+import { v7 as uuidv7 } from "uuid";
 import { AgentAction, AgentFinish } from "../agents.js";
 import type { ChainValues } from "../utils/types/index.js";
 import { LLMResult } from "../outputs.js";
@@ -679,7 +679,7 @@ export class CallbackManager
     return Promise.all(
       prompts.map(async (prompt, idx) => {
         // Can't have duplicate runs with the same run ID (if provided)
-        const runId_ = idx === 0 && runId ? runId : uuidv4();
+        const runId_ = idx === 0 && runId ? runId : uuidv7();
 
         await Promise.all(
           this.handlers.map((handler) => {
@@ -755,7 +755,7 @@ export class CallbackManager
     return Promise.all(
       messages.map(async (messageGroup, idx) => {
         // Can't have duplicate runs with the same run ID (if provided)
-        const runId_ = idx === 0 && runId ? runId : uuidv4();
+        const runId_ = idx === 0 && runId ? runId : uuidv7();
 
         await Promise.all(
           this.handlers.map((handler) => {
@@ -835,11 +835,13 @@ export class CallbackManager
   async handleChainStart(
     chain: Serialized,
     inputs: ChainValues,
-    runId = uuidv4(),
+    runId = uuidv7(),
     runType: string | undefined = undefined,
     _tags: string[] | undefined = undefined,
     _metadata: Record<string, unknown> | undefined = undefined,
-    runName: string | undefined = undefined
+    runName: string | undefined = undefined,
+    _parentRunId: string | undefined = undefined,
+    extra: Record<string, unknown> | undefined = undefined
   ): Promise<CallbackManagerForChainRun> {
     await Promise.all(
       this.handlers.map((handler) => {
@@ -858,7 +860,8 @@ export class CallbackManager
             this.tags,
             this.metadata,
             runType,
-            runName
+            runName,
+            extra
           );
         }
         return consumeCallback(async () => {
@@ -871,7 +874,8 @@ export class CallbackManager
               this.tags,
               this.metadata,
               runType,
-              runName
+              runName,
+              extra
             );
           } catch (err) {
             const logFunction = handler.raiseError
@@ -902,7 +906,7 @@ export class CallbackManager
   async handleToolStart(
     tool: Serialized,
     input: string,
-    runId = uuidv4(),
+    runId = uuidv7(),
     _parentRunId: string | undefined = undefined,
     _tags: string[] | undefined = undefined,
     _metadata: Record<string, unknown> | undefined = undefined,
@@ -967,7 +971,7 @@ export class CallbackManager
   async handleRetrieverStart(
     retriever: Serialized,
     query: string,
-    runId: string = uuidv4(),
+    runId: string = uuidv7(),
     _parentRunId: string | undefined = undefined,
     _tags: string[] | undefined = undefined,
     _metadata: Record<string, unknown> | undefined = undefined,
@@ -1152,7 +1156,7 @@ export class CallbackManager
 
   static fromHandlers(handlers: CallbackHandlerMethods) {
     class Handler extends BaseCallbackHandler {
-      name = uuidv4();
+      name = uuidv7();
 
       constructor() {
         super();
@@ -1220,7 +1224,7 @@ export class CallbackManager
       options?.verbose;
 
     const tracingV2Enabled =
-      LangChainTracer.getTraceableRunTree()?.tracingEnabled ||
+      LangChainTracer.getTraceableRunTree()?.tracingEnabled ??
       isTracingEnabled();
 
     const tracingEnabled =

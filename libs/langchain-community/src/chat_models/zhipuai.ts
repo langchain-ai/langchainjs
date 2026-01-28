@@ -1,5 +1,7 @@
 import {
   BaseChatModel,
+  BaseChatModelCallOptions,
+  BindToolsInput,
   type BaseChatModelParams,
 } from "@langchain/core/language_models/chat_models";
 import {
@@ -14,6 +16,16 @@ import { getEnvironmentVariable } from "@langchain/core/utils/env";
 
 import { encodeApiKey } from "../utils/zhipuai.js";
 import { convertEventStreamToIterableReadableDataStream } from "../utils/event_source_parse.js";
+import { Runnable } from "@langchain/core/runnables";
+import {
+  BaseLanguageModelInput,
+  ToolDefinition,
+} from "@langchain/core/language_models/base";
+import { convertToOpenAITool } from "@langchain/core/utils/function_calling";
+import {
+  makeInvalidToolCall,
+  parseToolCall,
+} from "@langchain/core/output_parsers/openai_tools";
 
 export type ZhipuMessageRole = "system" | "assistant" | "user";
 
@@ -39,9 +51,15 @@ type ModelName =
   // ChatGLM-Turbo
   | "glm-3-turbo" // context size: 128k
   | "chatglm_turbo"; // context size: 32k
+
+export interface ChatZhipuAICallOptions extends BaseChatModelCallOptions {
+  tools?: BindToolsInput[];
+}
+
 interface ChatCompletionRequest {
   model: ModelName;
   messages?: ZhipuMessage[];
+  tools?: ToolDefinition[];
   do_sample?: boolean;
   stream?: boolean;
   request_id?: string;
@@ -59,12 +77,23 @@ interface BaseResponse {
 
 interface ChoiceMessage {
   role: string;
-  content: string;
+  content?: string;
+  tool_calls?: ToolCall[];
+}
+
+interface ToolCall {
+  id: string;
+  type: string;
+  index: number;
+  function: {
+    name: string;
+    arguments: string; // Model-generated function call parameters list in JSON format.
+  };
 }
 
 interface ResponseChoice {
   index: number;
-  finish_reason: "stop" | "length" | "null" | null;
+  finish_reason: "stop" | "tool_calls" | "length" | "null" | null;
   delta: ChoiceMessage;
   message: ChoiceMessage;
 }
@@ -89,7 +118,8 @@ interface ChatCompletionResponse extends ZhipuAIError {
   };
   output: {
     text: string;
-    finish_reason: "stop" | "length" | "null" | null;
+    finish_reason: "stop" | "tool_calls" | "length" | "null" | null;
+    tool_calls?: ToolCall[];
   };
 }
 
@@ -182,7 +212,24 @@ function messageToRole(message: BaseMessage): ZhipuMessageRole {
   }
 }
 
-export class ChatZhipuAI extends BaseChatModel implements ChatZhipuAIParams {
+function parseRawToolCalls(rawToolCalls: ToolCall[]) {
+  const toolCalls = [];
+  const invalidToolCalls = [];
+  for (const rawToolCall of rawToolCalls) {
+    try {
+      toolCalls.push(parseToolCall(rawToolCall, { returnId: true }));
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (e: any) {
+      invalidToolCalls.push(makeInvalidToolCall(rawToolCall, e.message));
+    }
+  }
+  return { toolCalls, invalidToolCalls };
+}
+
+export class ChatZhipuAI
+  extends BaseChatModel<ChatZhipuAICallOptions>
+  implements ChatZhipuAIParams
+{
   static lc_name() {
     return "ChatZhipuAI";
   }
@@ -254,7 +301,9 @@ export class ChatZhipuAI extends BaseChatModel implements ChatZhipuAIParams {
   /**
    * Get the parameters used to invoke the model
    */
-  invocationParams(): Omit<ChatCompletionRequest, "messages"> {
+  invocationParams(
+    options?: this["ParsedCallOptions"]
+  ): Omit<ChatCompletionRequest, "messages"> {
     return {
       model: this.model,
       request_id: this.requestId,
@@ -264,6 +313,7 @@ export class ChatZhipuAI extends BaseChatModel implements ChatZhipuAIParams {
       top_p: this.topP,
       max_tokens: this.maxTokens,
       stop: this.stop,
+      tools: options?.tools?.map((tool) => convertToOpenAITool(tool)) ?? [],
     };
   }
 
@@ -280,7 +330,7 @@ export class ChatZhipuAI extends BaseChatModel implements ChatZhipuAIParams {
     options?: this["ParsedCallOptions"],
     runManager?: CallbackManagerForLLMRun
   ): Promise<ChatResult> {
-    const parameters = this.invocationParams();
+    const parameters = this.invocationParams(options);
 
     const messagesMapped: ZhipuMessage[] = messages.map((message) => ({
       role: messageToRole(message),
@@ -311,16 +361,19 @@ export class ChatZhipuAI extends BaseChatModel implements ChatZhipuAIParams {
               }
 
               const { delta, finish_reason } = data.choices[0];
-              const text = delta.content;
+              const text = delta.content ?? "";
+              const tool_calls = delta.tool_calls ?? [];
 
               if (!response) {
                 response = {
                   ...data,
-                  output: { text, finish_reason },
+                  output: { text, finish_reason, tool_calls },
                 };
               } else {
                 response.output.text += text;
                 response.output.finish_reason = finish_reason;
+                response.output.tool_calls =
+                  response.output.tool_calls?.concat(tool_calls) ?? tool_calls;
                 response.usage = data.usage;
               }
 
@@ -346,15 +399,15 @@ export class ChatZhipuAI extends BaseChatModel implements ChatZhipuAIParams {
           },
           false,
           options?.signal
-        ).then<ChatCompletionResponse>((data) => {
+        ).then<ChatCompletionResponse>((data: ChatCompletionResponse) => {
           if (data?.error?.code) {
             throw new Error(data?.error?.message);
           }
           const { finish_reason, message } = data.choices[0];
-          const text = message.content;
+          const text = message.content ?? "";
           return {
             ...data,
-            output: { text, finish_reason },
+            output: { text, finish_reason, tool_calls: message.tool_calls },
           };
         });
 
@@ -364,13 +417,20 @@ export class ChatZhipuAI extends BaseChatModel implements ChatZhipuAIParams {
       total_tokens = 0,
     } = data.usage;
 
-    const { text } = data.output;
+    const { text, tool_calls: rawToolCalls } = data.output;
+    const { toolCalls, invalidToolCalls } = parseRawToolCalls(
+      rawToolCalls ?? []
+    );
 
     return {
       generations: [
         {
           text,
-          message: new AIMessage(text),
+          message: new AIMessage({
+            content: text,
+            tool_calls: toolCalls,
+            invalid_tool_calls: invalidToolCalls,
+          }),
         },
       ],
       llmOutput: {
@@ -381,6 +441,20 @@ export class ChatZhipuAI extends BaseChatModel implements ChatZhipuAIParams {
         },
       },
     };
+  }
+
+  bindTools(
+    tools: BindToolsInput[],
+    kwargs?: Partial<this["ParsedCallOptions"]>
+  ): Runnable<
+    BaseLanguageModelInput,
+    AIMessageChunk,
+    BaseChatModelCallOptions
+  > {
+    return this.withConfig({
+      tools: tools.map((tool) => convertToOpenAITool(tool)),
+      ...kwargs,
+    });
   }
 
   /** @ignore */
@@ -493,7 +567,7 @@ export class ChatZhipuAI extends BaseChatModel implements ChatZhipuAIParams {
     runManager?: CallbackManagerForLLMRun
   ): AsyncGenerator<ChatGenerationChunk> {
     const parameters = {
-      ...this.invocationParams(),
+      ...this.invocationParams(options),
       stream: true,
     };
 
@@ -517,10 +591,20 @@ export class ChatZhipuAI extends BaseChatModel implements ChatZhipuAIParams {
         const deserializedChunk = this._deserialize(chunk);
         const { choices, usage, id } = deserializedChunk;
         const text = choices[0]?.delta?.content ?? "";
+        const rawToolCalls = choices[0]?.delta?.tool_calls ?? [];
+        const { toolCalls, invalidToolCalls } = parseRawToolCalls(rawToolCalls);
         const finished = !!choices[0]?.finish_reason;
+        const isToolCall = rawToolCalls.length > 0;
         yield new ChatGenerationChunk({
           text,
-          message: new AIMessageChunk({ content: text }),
+          // In stream mode, ZhipuAI's delta chunk includes
+          // either `tool_calls` or `content` field, but not both
+          message: isToolCall
+            ? new AIMessageChunk({
+                tool_calls: toolCalls,
+                invalid_tool_calls: invalidToolCalls,
+              })
+            : new AIMessageChunk({ content: text }),
           generationInfo: finished
             ? {
                 finished,

@@ -7,7 +7,7 @@ import {
   MessageContent,
   ToolMessage,
 } from "@langchain/core/messages";
-import { MessagesAnnotation, isCommand } from "@langchain/langgraph";
+import { isCommand } from "@langchain/langgraph";
 import {
   type InteropZodObject,
   interopParse,
@@ -24,15 +24,13 @@ import {
   Runnable,
   RunnableLike,
   RunnableConfig,
-  RunnableLambda,
   RunnableSequence,
   RunnableBinding,
 } from "@langchain/core/runnables";
 import type { ClientTool, ServerTool } from "@langchain/core/tools";
 
 import { isBaseChatModel, isConfigurableModel } from "./model.js";
-import { MultipleToolsBoundError } from "./errors.js";
-import { PROMPT_RUNNABLE_NAME } from "./constants.js";
+import { MultipleToolsBoundError, MiddlewareError } from "./errors.js";
 import type { AgentBuiltInState } from "./runtime.js";
 import type {
   ToolCallHandler,
@@ -345,27 +343,29 @@ export function hasToolCalls(message?: BaseMessage): boolean {
   );
 }
 
-type Prompt = string | SystemMessage;
-
-export function getPromptRunnable(prompt?: Prompt): Runnable {
-  let promptRunnable: Runnable;
-
-  if (prompt == null) {
-    promptRunnable = RunnableLambda.from(
-      (state: typeof MessagesAnnotation.State) => state.messages
-    ).withConfig({ runName: PROMPT_RUNNABLE_NAME });
-  } else if (typeof prompt === "string") {
-    const systemMessage = new SystemMessage(prompt);
-    promptRunnable = RunnableLambda.from(
-      (state: typeof MessagesAnnotation.State) => {
-        return [systemMessage, ...(state.messages ?? [])];
-      }
-    ).withConfig({ runName: PROMPT_RUNNABLE_NAME });
-  } else {
-    throw new Error(`Got unexpected type for 'prompt': ${typeof prompt}`);
+/**
+ * Normalizes a system prompt to a SystemMessage object.
+ * If it's already a SystemMessage, returns it as-is.
+ * If it's a string, converts it to a SystemMessage.
+ * If it's undefined, creates an empty system message so it is easier to append to it later.
+ */
+export function normalizeSystemPrompt(
+  systemPrompt?: string | SystemMessage
+): SystemMessage {
+  if (systemPrompt == null) {
+    return new SystemMessage("");
   }
-
-  return promptRunnable;
+  if (SystemMessage.isInstance(systemPrompt)) {
+    return systemPrompt;
+  }
+  if (typeof systemPrompt === "string") {
+    return new SystemMessage({
+      content: [{ type: "text", text: systemPrompt }],
+    });
+  }
+  throw new Error(
+    `Invalid systemPrompt type: expected string or SystemMessage, got ${typeof systemPrompt}`
+  );
 }
 
 /**
@@ -388,7 +388,11 @@ export async function bindTools(
   if (model) return model;
 
   if (isConfigurableModel(llm)) {
-    const model = _simpleBindTools(await llm._model(), toolClasses, options);
+    const model = _simpleBindTools(
+      await llm._getModelInstance(),
+      toolClasses,
+      options
+    );
     if (model) return model;
   }
 
@@ -471,14 +475,19 @@ function chainToolCallHandlers(
   }
 
   // Compose two handlers where outer wraps inner
+  // The key is to properly propagate request modifications through the chain
   function composeTwo(
     outer: WrapToolCallHook,
     inner: WrapToolCallHook
   ): WrapToolCallHook {
     return async (request, handler) => {
       // Create a wrapper that calls inner with the base handler
-      const innerHandler: ToolCallHandler = async () =>
-        inner(request, async () => handler(request));
+      // The innerHandler receives the (possibly modified) request from outer
+      // and passes it to inner, which then calls the base handler
+      const innerHandler: ToolCallHandler = async (passedRequest) => {
+        // inner receives the request passed by outer (which may be modified)
+        return inner(passedRequest, handler);
+      };
 
       // Call outer with the wrapped inner as its handler
       return outer(request, innerHandler);
@@ -518,6 +527,34 @@ export function wrapToolCall(
        * Wrap with error handling and validation
        */
       const wrappedHandler: WrapToolCallHook = async (request, handler) => {
+        /**
+         * Capture the original state for this middleware's schema parsing.
+         * This is important because the request may be modified (via override)
+         * as it passes through the middleware chain, but each middleware
+         * should always see the full original state for its schema parsing.
+         */
+        const originalState = request.state;
+
+        /**
+         * Create a handler that preserves state parsing for this middleware
+         * while allowing tool/toolCall/state modifications from inner middleware
+         */
+        const wrappedInnerHandler: ToolCallHandler = async (passedRequest) => {
+          /**
+           * Merge the passed request with the original state for parsing.
+           * This ensures middleware can override tool/toolCall while
+           * maintaining proper state parsing for each middleware in the chain.
+           */
+          const mergedState = {
+            ...originalState,
+            ...passedRequest.state,
+          };
+          return handler({
+            ...passedRequest,
+            state: mergedState,
+          });
+        };
+
         try {
           const result = await originalHandler(
             {
@@ -526,13 +563,13 @@ export function wrapToolCall(
                * override state with the state from the specific middleware
                */
               state: {
-                messages: request.state.messages,
+                messages: originalState.messages,
                 ...(m.stateSchema
-                  ? interopParse(m.stateSchema, { ...request.state })
+                  ? interopParse(m.stateSchema, { ...originalState })
                   : {}),
               },
             } as ToolCallRequest<AgentBuiltInState, unknown>,
-            handler
+            wrappedInnerHandler
           );
 
           /**
@@ -547,17 +584,7 @@ export function wrapToolCall(
 
           return result;
         } catch (error) {
-          /**
-           * Add middleware context to error if not already added
-           */
-          if (
-            // eslint-disable-next-line no-instanceof/no-instanceof
-            error instanceof Error &&
-            !error.message.includes(`middleware "${m.name}"`)
-          ) {
-            error.message = `Error in middleware "${m.name}": ${error.message}`;
-          }
-          throw error;
+          throw MiddlewareError.wrap(error, m.name);
         }
       };
       return wrappedHandler;

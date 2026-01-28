@@ -74,3 +74,9 @@ export class _RootEventFilter {
     return include;
   }
 }
+
+export const toBase64Url = (str: string): string => {
+  // Use btoa for compatibility, assume ASCII
+  const encoded = btoa(str);
+  return encoded.replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+};

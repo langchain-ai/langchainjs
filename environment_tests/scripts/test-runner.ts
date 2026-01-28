@@ -42,6 +42,7 @@ const dockerPackages: WorkspacePackage[] = [
   },
   { pkg: { name: "@langchain/build" }, path: "/langchain-build" },
   { pkg: { name: "@langchain/eslint" }, path: "/langchain-eslint" },
+  { pkg: { name: "@langchain/tsconfig" }, path: "/langchain-tsconfig" },
 ];
 
 class EnvironmentTestRunner {

@@ -40,7 +40,7 @@ export function _getMetadata<T extends ContentsOptions = { text: true }>(
  * ```
  */
 export class ExaRetriever<
-  T extends ContentsOptions = { text: true }
+  T extends ContentsOptions = { text: true },
 > extends BaseRetriever {
   static lc_name() {
     return "ExaRetriever";

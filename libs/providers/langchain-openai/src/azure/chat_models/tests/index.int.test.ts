@@ -1,4 +1,4 @@
-import { test, expect } from "vitest";
+import { test, expect, vi, describe } from "vitest";
 import { z } from "zod/v3";
 import {
   BaseMessage,
@@ -509,8 +509,8 @@ test("Test Azure ChatOpenAI Function calling with streaming", async () => {
 
 test("Test Azure ChatOpenAI can cache generations", async () => {
   const memoryCache = new InMemoryCache();
-  const lookupSpy = jest.spyOn(memoryCache, "lookup");
-  const updateSpy = jest.spyOn(memoryCache, "update");
+  const lookupSpy = vi.spyOn(memoryCache, "lookup");
+  const updateSpy = vi.spyOn(memoryCache, "update");
   const chat = new AzureChatOpenAI({
     model: "gpt-3.5-turbo",
     maxTokens: 10,
@@ -530,8 +530,8 @@ test("Test Azure ChatOpenAI can cache generations", async () => {
 
 test("Test Azure ChatOpenAI can write and read cached generations", async () => {
   const memoryCache = new InMemoryCache();
-  const lookupSpy = jest.spyOn(memoryCache, "lookup");
-  const updateSpy = jest.spyOn(memoryCache, "update");
+  const lookupSpy = vi.spyOn(memoryCache, "lookup");
+  const updateSpy = vi.spyOn(memoryCache, "update");
 
   const chat = new AzureChatOpenAI({
     model: "gpt-3.5-turbo",
@@ -539,7 +539,7 @@ test("Test Azure ChatOpenAI can write and read cached generations", async () => 
     n: 1,
     cache: memoryCache,
   });
-  const generateUncachedSpy = jest.spyOn(chat, "_generateUncached");
+  const generateUncachedSpy = vi.spyOn(chat, "_generateUncached");
 
   const messages = [
     [
@@ -568,8 +568,8 @@ test("Test Azure ChatOpenAI can write and read cached generations", async () => 
 
 test("Test Azure ChatOpenAI should not reuse cache if function call args have changed", async () => {
   const memoryCache = new InMemoryCache();
-  const lookupSpy = jest.spyOn(memoryCache, "lookup");
-  const updateSpy = jest.spyOn(memoryCache, "update");
+  const lookupSpy = vi.spyOn(memoryCache, "lookup");
+  const updateSpy = vi.spyOn(memoryCache, "update");
 
   const chat = new AzureChatOpenAI({
     model: "gpt-3.5-turbo",
@@ -578,7 +578,7 @@ test("Test Azure ChatOpenAI should not reuse cache if function call args have ch
     cache: memoryCache,
   });
 
-  const generateUncachedSpy = jest.spyOn(chat, "_generateUncached");
+  const generateUncachedSpy = vi.spyOn(chat, "_generateUncached");
 
   const messages = [
     [

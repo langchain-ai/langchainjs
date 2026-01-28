@@ -52,10 +52,10 @@ type IsDefaultZodObject<T> = T extends InteropZodDefault<any> ? true : false;
 export type WithMaybeContext<TContext> = undefined extends TContext
   ? { readonly context?: TContext }
   : IsOptionalZodObject<TContext> extends true
-  ? { readonly context?: TContext }
-  : IsDefaultZodObject<TContext> extends true
-  ? { readonly context?: TContext }
-  : { readonly context: TContext };
+    ? { readonly context?: TContext }
+    : IsDefaultZodObject<TContext> extends true
+      ? { readonly context?: TContext }
+      : { readonly context: TContext };
 
 /**
  * Runtime information available to middleware (readonly).
@@ -74,7 +74,7 @@ export type InternalAgentState<
   StructuredResponseType extends Record<string, unknown> | undefined = Record<
     string,
     unknown
-  >
+  >,
 > = {
   messages: BaseMessage[];
 } & (StructuredResponseType extends ResponseFormatUndefined
@@ -99,12 +99,12 @@ export type IsAllOptional<T> =
   undefined extends T
     ? true
     : IsOptionalType<T> extends true
-    ? true
-    : ExtractNonUndefined<T> extends Record<string, any>
-    ? {} extends ExtractNonUndefined<T>
       ? true
-      : false
-    : IsOptionalType<T>;
+      : ExtractNonUndefined<T> extends Record<string, any>
+        ? {} extends ExtractNonUndefined<T>
+          ? true
+          : false
+        : IsOptionalType<T>;
 
 /**
  * Pregel options that are propagated to the agent
@@ -117,7 +117,8 @@ type CreateAgentPregelOptions =
   | "signal"
   | "recursionLimit"
   | "maxConcurrency"
-  | "timeout";
+  | "timeout"
+  | "callbacks";
 
 /**
  * Pregel stream options that are propagated to the agent
@@ -139,23 +140,25 @@ export type InvokeConfiguration<ContextSchema extends Record<string, any>> =
           context?: Partial<ContextSchema>;
         }
     : /**
-     * If the context schema is all optional, `context` can be optional
-     */
-    IsAllOptional<ContextSchema> extends true
-    ? BaseCallbackConfig &
-        Partial<
-          Pick<PregelOptions<any, any, any>, CreateAgentPregelOptions>
-        > & {
-          context?: Partial<ContextSchema>;
-        }
-    : BaseCallbackConfig &
-        Partial<Pick<PregelOptions<any, any, any>, CreateAgentPregelOptions>> &
-        WithMaybeContext<ContextSchema>;
+       * If the context schema is all optional, `context` can be optional
+       */
+      IsAllOptional<ContextSchema> extends true
+      ? BaseCallbackConfig &
+          Partial<
+            Pick<PregelOptions<any, any, any>, CreateAgentPregelOptions>
+          > & {
+            context?: Partial<ContextSchema>;
+          }
+      : BaseCallbackConfig &
+          Partial<
+            Pick<PregelOptions<any, any, any>, CreateAgentPregelOptions>
+          > &
+          WithMaybeContext<ContextSchema>;
 
 export type StreamConfiguration<
   ContextSchema extends Record<string, any>,
   TStreamMode extends StreamMode | StreamMode[] | undefined,
-  TEncoding extends "text/event-stream" | undefined
+  TEncoding extends "text/event-stream" | undefined,
 > =
   /**
    * If the context schema is a default object, `context` can be optional
@@ -170,21 +173,21 @@ export type StreamConfiguration<
         context?: Partial<ContextSchema>;
       }
     : /**
-     * If the context schema is all optional, `context` can be optional
-     */
-    IsAllOptional<ContextSchema> extends true
-    ? Partial<
-        Pick<
-          PregelOptions<any, any, any, TStreamMode, boolean, TEncoding>,
-          CreateAgentPregelOptions | CreateAgentPregelStreamOptions
-        >
-      > & {
-        context?: Partial<ContextSchema>;
-      }
-    : Partial<
-        Pick<
-          PregelOptions<any, any, any, TStreamMode, boolean, TEncoding>,
-          CreateAgentPregelOptions | CreateAgentPregelStreamOptions
-        >
-      > &
-        WithMaybeContext<ContextSchema>;
+       * If the context schema is all optional, `context` can be optional
+       */
+      IsAllOptional<ContextSchema> extends true
+      ? Partial<
+          Pick<
+            PregelOptions<any, any, any, TStreamMode, boolean, TEncoding>,
+            CreateAgentPregelOptions | CreateAgentPregelStreamOptions
+          >
+        > & {
+          context?: Partial<ContextSchema>;
+        }
+      : Partial<
+          Pick<
+            PregelOptions<any, any, any, TStreamMode, boolean, TEncoding>,
+            CreateAgentPregelOptions | CreateAgentPregelStreamOptions
+          >
+        > &
+          WithMaybeContext<ContextSchema>;

@@ -10,6 +10,7 @@ import {
   isCustomTool,
   isOpenAICustomTool,
 } from "../utils/tools.js";
+import { _modelPrefersResponsesAPI } from "../utils/misc.js";
 import { _convertOpenAIResponsesUsageToLangChainUsage } from "../utils/output.js";
 import {
   ChatOpenAICompletions,
@@ -585,7 +586,7 @@ export interface ChatOpenAIFields extends BaseChatOpenAIFields {
  * <br />
  */
 export class ChatOpenAI<
-  CallOptions extends ChatOpenAICallOptions = ChatOpenAICallOptions
+  CallOptions extends ChatOpenAICallOptions = ChatOpenAICallOptions,
 > extends BaseChatOpenAI<CallOptions> {
   /**
    * Whether to use the responses API for all requests. If `false` the responses API will be used
@@ -629,7 +630,8 @@ export class ChatOpenAI<
       this.useResponsesApi ||
       usesBuiltInTools ||
       hasResponsesOnlyKwargs ||
-      hasCustomTools
+      hasCustomTools ||
+      _modelPrefersResponsesAPI(this.model)
     );
   }
 

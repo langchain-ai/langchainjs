@@ -1,7 +1,12 @@
 import { z } from "zod/v3";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { tool } from "@langchain/core/tools";
-import { AIMessage, HumanMessage, ToolMessage } from "@langchain/core/messages";
+import {
+  AIMessage,
+  BaseMessage,
+  HumanMessage,
+  ToolMessage,
+} from "@langchain/core/messages";
 import { Command } from "@langchain/langgraph";
 import { MemorySaver } from "@langchain/langgraph-checkpoint";
 
@@ -1106,5 +1111,660 @@ describe("humanInTheLoopMiddleware", () => {
     ).rejects.toThrow(
       "Invalid HITLResponse: decisions must be a non-empty array"
     );
+  });
+
+  describe("tool call ordering", () => {
+    it("should reproduce ordering bug with HITL middleware", async () => {
+      /**
+       * This test uses the actual HITL middleware and reproduces the ordering bug.
+       *
+       * Original order: [calc1, write1, calc2, write2]
+       * Buggy code produces: [calc1, calc2, write1, write2]
+       *
+       * This test will FAIL with the buggy code and PASS with the fix.
+       */
+      const hitlMiddleware = humanInTheLoopMiddleware({
+        interruptOn: {
+          write_file: {
+            allowedDecisions: ["approve"],
+          },
+          calculator: false, // Auto-approved
+        },
+      });
+
+      const model = new FakeToolCallingModel({
+        toolCalls: [
+          [
+            {
+              id: "call_1",
+              name: "calculator",
+              args: { a: 1, b: 2, operation: "add" },
+            },
+            {
+              id: "call_2",
+              name: "write_file",
+              args: { filename: "file1.txt", content: "Content 1" },
+            },
+            {
+              id: "call_3",
+              name: "calculator",
+              args: { a: 3, b: 4, operation: "add" },
+            },
+            {
+              id: "call_4",
+              name: "write_file",
+              args: { filename: "file2.txt", content: "Content 2" },
+            },
+          ],
+        ],
+      });
+
+      const checkpointer = new MemorySaver();
+      const agent = createAgent({
+        model,
+        checkpointer,
+        tools: [calculateTool, writeFileTool],
+        middleware: [hitlMiddleware],
+      });
+
+      const config = {
+        configurable: {
+          thread_id: "test-order-bug-reproduction",
+        },
+      };
+
+      // Step 1: Initial invocation - should interrupt
+      const initialResult = await agent.invoke(
+        {
+          messages: [
+            new HumanMessage(
+              "Calculate 1+2, write file1, calculate 3+4, write file2"
+            ),
+          ],
+        },
+        config
+      );
+
+      // Verify interrupt occurred
+      expect(initialResult.__interrupt__).toBeDefined();
+
+      // Step 2: Get state before resume to see original order
+      const stateBeforeResume = await agent.graph.getState(config);
+      const aiMessageBeforeResume = stateBeforeResume.values.messages
+        .slice()
+        .reverse()
+        .find((msg: BaseMessage) => AIMessage.isInstance(msg)) as AIMessage;
+
+      // Verify original order is correct
+      expect(aiMessageBeforeResume.tool_calls).toHaveLength(4);
+      expect(aiMessageBeforeResume.tool_calls?.[0]?.id).toBe("call_1");
+      expect(aiMessageBeforeResume.tool_calls?.[1]?.id).toBe("call_2");
+      expect(aiMessageBeforeResume.tool_calls?.[2]?.id).toBe("call_3");
+      expect(aiMessageBeforeResume.tool_calls?.[3]?.id).toBe("call_4");
+
+      // Step 3: Resume with approvals - this is where the middleware processes decisions
+      // The middleware returns { messages: [lastMessage, ...artificialToolMessages] }
+      // where lastMessage.tool_calls has been updated
+      const resumeResult = await agent.invoke(
+        new Command({
+          resume: {
+            decisions: [{ type: "approve" }, { type: "approve" }],
+          } as HITLResponse,
+        }),
+        config
+      );
+
+      // Step 4: Check the messages returned by the resume
+      // The middleware should have updated the tool_calls array order
+      // Find the AI message in the resume result that has our tool calls
+      const resumeMessages = resumeResult.messages || [];
+      const modifiedAIMessage = resumeMessages.find(
+        (msg) =>
+          AIMessage.isInstance(msg) &&
+          msg.tool_calls?.length === 4 &&
+          msg.tool_calls.find((tc) => tc.id === "call_1") &&
+          msg.tool_calls.find((tc) => tc.id === "call_2") &&
+          msg.tool_calls.find((tc) => tc.id === "call_3") &&
+          msg.tool_calls.find((tc) => tc.id === "call_4")
+      ) as AIMessage;
+
+      expect(modifiedAIMessage).toBeDefined();
+      expect(modifiedAIMessage?.tool_calls).toHaveLength(4);
+
+      const actualOrder = modifiedAIMessage?.tool_calls?.map((tc) => tc.id);
+      const actualNames = modifiedAIMessage?.tool_calls?.map((tc) => tc.name);
+
+      expect(actualOrder).toEqual(["call_1", "call_2", "call_3", "call_4"]);
+      expect(actualNames).toEqual([
+        "calculator",
+        "write_file",
+        "calculator",
+        "write_file",
+      ]);
+
+      // Verify each position individually for clearer error messages
+      expect(modifiedAIMessage?.tool_calls?.[0]?.id).toBe("call_1");
+      expect(modifiedAIMessage?.tool_calls?.[0]?.name).toBe("calculator");
+      expect(modifiedAIMessage?.tool_calls?.[1]?.id).toBe("call_2");
+      expect(modifiedAIMessage?.tool_calls?.[1]?.name).toBe("write_file");
+      expect(modifiedAIMessage?.tool_calls?.[2]?.id).toBe("call_3");
+      expect(modifiedAIMessage?.tool_calls?.[2]?.name).toBe("calculator");
+      expect(modifiedAIMessage?.tool_calls?.[3]?.id).toBe("call_4");
+      expect(modifiedAIMessage?.tool_calls?.[3]?.name).toBe("write_file");
+    });
+
+    it("should preserve original order when mixing auto-approved and interrupt tool calls", async () => {
+      const hitlMiddleware = humanInTheLoopMiddleware({
+        interruptOn: {
+          write_file: {
+            allowedDecisions: ["approve"],
+            description: "⚠️ File write operation requires approval",
+          },
+          calculator: false, // Auto-approved
+        },
+      });
+
+      // Create agent with mocked LLM that returns tool calls in specific order:
+      // 1. calculator (auto-approved)
+      // 2. write_file (interrupt)
+      // 3. calculator (auto-approved)
+      // 4. write_file (interrupt)
+      const model = new FakeToolCallingModel({
+        toolCalls: [
+          [
+            {
+              id: "call_1",
+              name: "calculator",
+              args: { a: 1, b: 2, operation: "add" },
+            },
+            {
+              id: "call_2",
+              name: "write_file",
+              args: { filename: "file1.txt", content: "Content 1" },
+            },
+            {
+              id: "call_3",
+              name: "calculator",
+              args: { a: 3, b: 4, operation: "add" },
+            },
+            {
+              id: "call_4",
+              name: "write_file",
+              args: { filename: "file2.txt", content: "Content 2" },
+            },
+          ],
+        ],
+      });
+
+      const checkpointer = new MemorySaver();
+      const agent = createAgent({
+        model,
+        checkpointer,
+        tools: [calculateTool, writeFileTool],
+        middleware: [hitlMiddleware],
+      });
+
+      const config = {
+        configurable: {
+          thread_id: "test-order-1",
+        },
+      };
+
+      // Initial invocation
+      const initialResult = await agent.invoke(
+        {
+          messages: [
+            new HumanMessage(
+              "Calculate 1+2, write file1, calculate 3+4, write file2"
+            ),
+          ],
+        },
+        config
+      );
+
+      // Verify interrupt occurred
+      expect(initialResult.__interrupt__).toBeDefined();
+      const interruptRequest = initialResult
+        .__interrupt__?.[0] as Interrupt<HITLRequest>;
+      const hitlRequest = interruptRequest.value;
+
+      // Verify action requests are in order (only interrupt calls)
+      expect(hitlRequest.actionRequests).toHaveLength(2);
+      expect(hitlRequest.actionRequests[0]?.name).toBe("write_file");
+      expect(hitlRequest.actionRequests[0]?.args.filename).toBe("file1.txt");
+      expect(hitlRequest.actionRequests[1]?.name).toBe("write_file");
+      expect(hitlRequest.actionRequests[1]?.args.filename).toBe("file2.txt");
+
+      // Get the state to check tool calls order
+      const state = await agent.graph.getState(config);
+      const lastMessage = state.values.messages
+        .slice()
+        .reverse()
+        .find((msg: unknown) => AIMessage.isInstance(msg)) as AIMessage;
+
+      // Verify original tool calls order
+      expect(lastMessage.tool_calls).toHaveLength(4);
+      expect(lastMessage.tool_calls?.[0]?.name).toBe("calculator");
+      expect(lastMessage.tool_calls?.[0]?.id).toBe("call_1");
+      expect(lastMessage.tool_calls?.[1]?.name).toBe("write_file");
+      expect(lastMessage.tool_calls?.[1]?.id).toBe("call_2");
+      expect(lastMessage.tool_calls?.[2]?.name).toBe("calculator");
+      expect(lastMessage.tool_calls?.[2]?.id).toBe("call_3");
+      expect(lastMessage.tool_calls?.[3]?.name).toBe("write_file");
+      expect(lastMessage.tool_calls?.[3]?.id).toBe("call_4");
+
+      // Resume with approvals
+      await agent.invoke(
+        new Command({
+          resume: {
+            decisions: [{ type: "approve" }, { type: "approve" }],
+          } as HITLResponse,
+        }),
+        config
+      );
+
+      // Verify tools were called in the correct order
+      expect(calculatorFn).toHaveBeenCalledTimes(2);
+      expect(writeFileFn).toHaveBeenCalledTimes(2);
+
+      // Most importantly: Check that tool_calls array maintains original interleaved order
+      // After resuming, get the final state and check the AI message tool_calls order
+      const finalState = await agent.graph.getState(config);
+      const finalAIMessage = finalState.values.messages
+        .slice()
+        .reverse()
+        .find((msg: BaseMessage) => AIMessage.isInstance(msg)) as AIMessage;
+
+      // Verify the tool_calls array preserves the original interleaved order:
+      // [calc1, write1, calc2, write2] NOT [calc1, calc2, write1, write2]
+      expect(finalAIMessage.tool_calls).toHaveLength(4);
+      expect(finalAIMessage.tool_calls?.[0]?.id).toBe("call_1"); // calculator
+      expect(finalAIMessage.tool_calls?.[0]?.name).toBe("calculator");
+      expect(finalAIMessage.tool_calls?.[1]?.id).toBe("call_2"); // write_file
+      expect(finalAIMessage.tool_calls?.[1]?.name).toBe("write_file");
+      expect(finalAIMessage.tool_calls?.[2]?.id).toBe("call_3"); // calculator
+      expect(finalAIMessage.tool_calls?.[2]?.name).toBe("calculator");
+      expect(finalAIMessage.tool_calls?.[3]?.id).toBe("call_4"); // write_file
+      expect(finalAIMessage.tool_calls?.[3]?.name).toBe("write_file");
+
+      // Check call order by examining call arguments
+      const calculatorCalls = calculatorFn.mock.calls;
+      const writeFileCalls = writeFileFn.mock.calls;
+
+      // First calculator call should be call_1 (1+2)
+      expect(calculatorCalls[0]?.[0]).toEqual({
+        a: 1,
+        b: 2,
+        operation: "add",
+      });
+
+      // First write_file call should be call_2 (file1.txt)
+      expect(writeFileCalls[0]?.[0]).toEqual({
+        filename: "file1.txt",
+        content: "Content 1",
+      });
+
+      // Second calculator call should be call_3 (3+4)
+      expect(calculatorCalls[1]?.[0]).toEqual({
+        a: 3,
+        b: 4,
+        operation: "add",
+      });
+
+      // Second write_file call should be call_4 (file2.txt)
+      expect(writeFileCalls[1]?.[0]).toEqual({
+        filename: "file2.txt",
+        content: "Content 2",
+      });
+    });
+
+    it("should preserve order when some interrupt calls are rejected", async () => {
+      const hitlMiddleware = humanInTheLoopMiddleware({
+        interruptOn: {
+          write_file: {
+            allowedDecisions: ["approve", "reject"],
+          },
+          calculator: false, // Auto-approved
+        },
+      });
+
+      const model = new FakeToolCallingModel({
+        toolCalls: [
+          [
+            {
+              id: "call_1",
+              name: "calculator",
+              args: { a: 1, b: 2, operation: "add" },
+            },
+            {
+              id: "call_2",
+              name: "write_file",
+              args: { filename: "file1.txt", content: "Content 1" },
+            },
+            {
+              id: "call_3",
+              name: "calculator",
+              args: { a: 3, b: 4, operation: "add" },
+            },
+            {
+              id: "call_4",
+              name: "write_file",
+              args: { filename: "file2.txt", content: "Content 2" },
+            },
+          ],
+        ],
+      });
+
+      const checkpointer = new MemorySaver();
+      const agent = createAgent({
+        model,
+        checkpointer,
+        tools: [calculateTool, writeFileTool],
+        middleware: [hitlMiddleware],
+      });
+
+      const config = {
+        configurable: {
+          thread_id: "test-order-reject",
+        },
+      };
+
+      // Initial invocation
+      await agent.invoke(
+        {
+          messages: [
+            new HumanMessage(
+              "Calculate 1+2, write file1, calculate 3+4, write file2"
+            ),
+          ],
+        },
+        config
+      );
+
+      // Resume with first approved, second rejected
+      await agent.invoke(
+        new Command({
+          resume: {
+            decisions: [
+              { type: "approve" },
+              { type: "reject", message: "File 2 not allowed" },
+            ],
+          } as HITLResponse,
+        }),
+        config
+      );
+
+      // Verify only first write_file was called (second was rejected)
+      expect(calculatorFn).toHaveBeenCalledTimes(0); // Calculators not called because we're going back to model
+      expect(writeFileFn).toHaveBeenCalledTimes(0); // No writes because we're going back to model
+
+      // Check state - should have rejected tool message
+      const state = await agent.graph.getState(config);
+      const messages = state.values.messages;
+      const toolMessages = messages.filter((msg: BaseMessage) =>
+        ToolMessage.isInstance(msg)
+      );
+
+      // Should have one tool message for the rejected call
+      expect(toolMessages.length).toBeGreaterThan(0);
+      const rejectedMessage = toolMessages.find(
+        (msg: ToolMessage) => msg.tool_call_id === "call_4"
+      );
+      expect(rejectedMessage).toBeDefined();
+      expect(rejectedMessage?.content).toBe("File 2 not allowed");
+    });
+
+    it("should preserve order with multiple auto-approved tools between interrupts", async () => {
+      const hitlMiddleware = humanInTheLoopMiddleware({
+        interruptOn: {
+          write_file: {
+            allowedDecisions: ["approve"],
+          },
+          calculator: false, // Auto-approved
+        },
+      });
+
+      const model = new FakeToolCallingModel({
+        toolCalls: [
+          [
+            {
+              id: "call_1",
+              name: "write_file",
+              args: { filename: "file1.txt", content: "Content 1" },
+            },
+            {
+              id: "call_2",
+              name: "calculator",
+              args: { a: 1, b: 2, operation: "add" },
+            },
+            {
+              id: "call_3",
+              name: "calculator",
+              args: { a: 3, b: 4, operation: "add" },
+            },
+            {
+              id: "call_4",
+              name: "write_file",
+              args: { filename: "file2.txt", content: "Content 2" },
+            },
+            {
+              id: "call_5",
+              name: "calculator",
+              args: { a: 5, b: 6, operation: "add" },
+            },
+          ],
+        ],
+      });
+
+      const checkpointer = new MemorySaver();
+      const agent = createAgent({
+        model,
+        checkpointer,
+        tools: [calculateTool, writeFileTool],
+        middleware: [hitlMiddleware],
+      });
+
+      const config = {
+        configurable: {
+          thread_id: "test-order-multiple-auto",
+        },
+      };
+
+      // Initial invocation
+      const initialResult = await agent.invoke(
+        {
+          messages: [
+            new HumanMessage(
+              "Write file1, calculate 1+2, calculate 3+4, write file2, calculate 5+6"
+            ),
+          ],
+        },
+        config
+      );
+
+      // Verify interrupt occurred
+      expect(initialResult.__interrupt__).toBeDefined();
+
+      // Get the state to verify original order
+      const state = await agent.graph.getState(config);
+      const lastMessage = state.values.messages
+        .slice()
+        .reverse()
+        .find((msg: BaseMessage) => AIMessage.isInstance(msg)) as AIMessage;
+
+      // Verify original tool calls order
+      expect(lastMessage.tool_calls).toHaveLength(5);
+      expect(lastMessage.tool_calls?.[0]?.name).toBe("write_file");
+      expect(lastMessage.tool_calls?.[0]?.id).toBe("call_1");
+      expect(lastMessage.tool_calls?.[1]?.name).toBe("calculator");
+      expect(lastMessage.tool_calls?.[1]?.id).toBe("call_2");
+      expect(lastMessage.tool_calls?.[2]?.name).toBe("calculator");
+      expect(lastMessage.tool_calls?.[2]?.id).toBe("call_3");
+      expect(lastMessage.tool_calls?.[3]?.name).toBe("write_file");
+      expect(lastMessage.tool_calls?.[3]?.id).toBe("call_4");
+      expect(lastMessage.tool_calls?.[4]?.name).toBe("calculator");
+      expect(lastMessage.tool_calls?.[4]?.id).toBe("call_5");
+
+      // Resume with approvals
+      await agent.invoke(
+        new Command({
+          resume: {
+            decisions: [{ type: "approve" }, { type: "approve" }],
+          } as HITLResponse,
+        }),
+        config
+      );
+
+      // Verify tools were called
+      expect(calculatorFn).toHaveBeenCalledTimes(3);
+      expect(writeFileFn).toHaveBeenCalledTimes(2);
+
+      // Verify call order
+      const calculatorCalls = calculatorFn.mock.calls;
+      const writeFileCalls = writeFileFn.mock.calls;
+
+      // First write_file should be file1.txt
+      expect(writeFileCalls[0]?.[0].filename).toBe("file1.txt");
+
+      // First calculator should be 1+2
+      expect(calculatorCalls[0]?.[0]).toEqual({
+        a: 1,
+        b: 2,
+        operation: "add",
+      });
+
+      // Second calculator should be 3+4
+      expect(calculatorCalls[1]?.[0]).toEqual({
+        a: 3,
+        b: 4,
+        operation: "add",
+      });
+
+      // Second write_file should be file2.txt
+      expect(writeFileCalls[1]?.[0].filename).toBe("file2.txt");
+
+      // Third calculator should be 5+6
+      expect(calculatorCalls[2]?.[0]).toEqual({
+        a: 5,
+        b: 6,
+        operation: "add",
+      });
+    });
+
+    it("should preserve order when editing interrupt tool calls", async () => {
+      const hitlMiddleware = humanInTheLoopMiddleware({
+        interruptOn: {
+          write_file: {
+            allowedDecisions: ["approve", "edit"],
+          },
+          calculator: false, // Auto-approved
+        },
+      });
+
+      const model = new FakeToolCallingModel({
+        toolCalls: [
+          [
+            {
+              id: "call_1",
+              name: "calculator",
+              args: { a: 1, b: 2, operation: "add" },
+            },
+            {
+              id: "call_2",
+              name: "write_file",
+              args: { filename: "original1.txt", content: "Original 1" },
+            },
+            {
+              id: "call_3",
+              name: "calculator",
+              args: { a: 3, b: 4, operation: "add" },
+            },
+            {
+              id: "call_4",
+              name: "write_file",
+              args: { filename: "original2.txt", content: "Original 2" },
+            },
+          ],
+        ],
+      });
+
+      const checkpointer = new MemorySaver();
+      const agent = createAgent({
+        model,
+        checkpointer,
+        tools: [calculateTool, writeFileTool],
+        middleware: [hitlMiddleware],
+      });
+
+      const config = {
+        configurable: {
+          thread_id: "test-order-edit",
+        },
+      };
+
+      // Initial invocation
+      await agent.invoke(
+        {
+          messages: [
+            new HumanMessage(
+              "Calculate 1+2, write file1, calculate 3+4, write file2"
+            ),
+          ],
+        },
+        config
+      );
+
+      // Resume with edits - edit first file, approve second
+      await agent.invoke(
+        new Command({
+          resume: {
+            decisions: [
+              {
+                type: "edit",
+                editedAction: {
+                  name: "write_file",
+                  args: { filename: "edited1.txt", content: "Edited 1" },
+                },
+              },
+              { type: "approve" },
+            ],
+          } as HITLResponse,
+        }),
+        config
+      );
+
+      // Verify tools were called in correct order
+      expect(calculatorFn).toHaveBeenCalledTimes(2);
+      expect(writeFileFn).toHaveBeenCalledTimes(2);
+
+      const calculatorCalls = calculatorFn.mock.calls;
+      const writeFileCalls = writeFileFn.mock.calls;
+
+      // First calculator (1+2)
+      expect(calculatorCalls[0]?.[0]).toEqual({
+        a: 1,
+        b: 2,
+        operation: "add",
+      });
+
+      // First write_file should be edited version
+      expect(writeFileCalls[0]?.[0]).toEqual({
+        filename: "edited1.txt",
+        content: "Edited 1",
+      });
+
+      // Second calculator (3+4)
+      expect(calculatorCalls[1]?.[0]).toEqual({
+        a: 3,
+        b: 4,
+        operation: "add",
+      });
+
+      // Second write_file should be original (approved)
+      expect(writeFileCalls[1]?.[0]).toEqual({
+        filename: "original2.txt",
+        content: "Original 2",
+      });
+    });
   });
 });

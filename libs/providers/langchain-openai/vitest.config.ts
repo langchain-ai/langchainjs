@@ -61,7 +61,10 @@ export default defineConfig((env) => {
       ...common.test,
       environment: "node",
       include: configDefaults.include,
-      typecheck: { enabled: true },
+      // Disable typecheck in CI because dependency range tests run in isolated
+      // Docker environments where workspace dependencies like @langchain/standard-tests
+      // may not have their transitive dependencies properly resolved
+      typecheck: { enabled: !process.env.CI },
     },
   };
 });

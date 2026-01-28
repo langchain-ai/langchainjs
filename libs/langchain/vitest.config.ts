@@ -12,7 +12,11 @@ export default defineConfig((env) => {
       globals: true,
       testTimeout: 30_000,
       maxWorkers: 0.5,
-      exclude: ["**/*.int.test.ts", ...configDefaults.exclude],
+      exclude: [
+        "**/*.int.test.ts",
+        "**/*.bench.test.ts",
+        ...configDefaults.exclude,
+      ],
       setupFiles: ["dotenv/config"],
     },
   };
@@ -26,6 +30,20 @@ export default defineConfig((env) => {
         exclude: configDefaults.exclude,
         include: ["**/*.int.test.ts"],
         name: "int",
+      },
+    } satisfies UserConfigExport;
+  }
+
+  if (env.mode === "bench") {
+    return {
+      test: {
+        ...common.test,
+        globals: false,
+        testTimeout: 100_000,
+        exclude: configDefaults.exclude,
+        include: ["**/*.bench.test.ts"],
+        name: "bench",
+        environment: "node",
       },
     } satisfies UserConfigExport;
   }

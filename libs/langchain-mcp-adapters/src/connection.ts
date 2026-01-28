@@ -153,11 +153,27 @@ export class ConnectionManager {
     if (this.#hooks.onCancelled) {
       mcpClient.setNotificationHandler(
         CancelledNotificationSchema,
-        (notification) =>
-          this.#hooks.onCancelled?.(notification.params, {
-            server: serverName,
-            options,
-          })
+        (notification) => {
+          const { requestId, reason } = notification.params;
+
+          if (requestId == null) {
+            return;
+          }
+
+          const result = this.#hooks.onCancelled?.(
+            { requestId, reason },
+            {
+              server: serverName,
+              options,
+            }
+          );
+
+          if (result && typeof result.catch === "function") {
+            result.catch(() => {
+              /* ignore hook errors */
+            });
+          }
+        }
       );
     }
 
@@ -545,11 +561,12 @@ export class ConnectionManager {
   #createStdioTransport(
     options: ResolvedStdioConnection
   ): StdioClientTransport {
-    const { command, args, env, stderr } = options;
+    const { command, args, env, stderr, cwd } = options;
     return new StdioClientTransport({
       command,
       args,
       stderr,
+      cwd,
       // eslint-disable-next-line no-process-env
       ...(env ? { env: { PATH: process.env.PATH!, ...env } } : {}),
     });

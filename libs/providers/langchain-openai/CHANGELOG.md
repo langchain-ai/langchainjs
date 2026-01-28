@@ -1,5 +1,79 @@
 # @langchain/openai
 
+## 1.2.3
+
+### Patch Changes
+
+- [#9679](https://github.com/langchain-ai/langchainjs/pull/9679) [`a7c6ec5`](https://github.com/langchain-ai/langchainjs/commit/a7c6ec51ab9baa186ab5ebf815599c08f5c7e8ab) Thanks [@christian-bromann](https://github.com/christian-bromann)! - feat(openai): elevate OpenAI image generation outputs to proper image content blocks
+
+- [#9810](https://github.com/langchain-ai/langchainjs/pull/9810) [`04923f9`](https://github.com/langchain-ai/langchainjs/commit/04923f9835e5b3677c180b601ae8f3e7d8be0236) Thanks [@christian-bromann](https://github.com/christian-bromann)! - Cb/OpenAI reasoning fix
+
+- [#9827](https://github.com/langchain-ai/langchainjs/pull/9827) [`e16c218`](https://github.com/langchain-ai/langchainjs/commit/e16c218b81980a1c576af5192342019975bb95b9) Thanks [@sanjaiyan-dev](https://github.com/sanjaiyan-dev)! - optimize stream chunk aggregation and remove redundant sorting
+
+## 1.2.2
+
+### Patch Changes
+
+- [#9777](https://github.com/langchain-ai/langchainjs/pull/9777) [`3efe79c`](https://github.com/langchain-ai/langchainjs/commit/3efe79c62ff2ffe0ada562f7eecd85be074b649a) Thanks [@christian-bromann](https://github.com/christian-bromann)! - fix(core): properly elevate reasoning tokens
+
+## 1.2.1
+
+### Patch Changes
+
+- [#9730](https://github.com/langchain-ai/langchainjs/pull/9730) [`13c9d5b`](https://github.com/langchain-ai/langchainjs/commit/13c9d5bfa3acac7ffb37642e9a50d84dc9004e88) Thanks [@christian-bromann](https://github.com/christian-bromann)! - fix(openai): pass through provider-native content in ToolMessage without stringification
+
+- [#9737](https://github.com/langchain-ai/langchainjs/pull/9737) [`75b3b90`](https://github.com/langchain-ai/langchainjs/commit/75b3b90c5fa62cbbfa678dfb01f031caed4488ef) Thanks [@hntrl](https://github.com/hntrl)! - fix(openai): pass runManager to \_streamResponseChunks in responses API
+
+## 1.2.0
+
+### Minor Changes
+
+- [#9541](https://github.com/langchain-ai/langchainjs/pull/9541) [`eab88a5`](https://github.com/langchain-ai/langchainjs/commit/eab88a5ab7610f5b63212f753ebcbeee2f393622) Thanks [@christian-bromann](https://github.com/christian-bromann)! - feat(openai): add support for fileSearch tool
+
+- [#9541](https://github.com/langchain-ai/langchainjs/pull/9541) [`5f79bc5`](https://github.com/langchain-ai/langchainjs/commit/5f79bc50aebc093c90b6716c0aebf5c4813d0171) Thanks [@christian-bromann](https://github.com/christian-bromann)! - feat(openai): support web search tool
+
+- [#9541](https://github.com/langchain-ai/langchainjs/pull/9541) [`7b301c0`](https://github.com/langchain-ai/langchainjs/commit/7b301c00ac851c286a13c2a908757cb40180c768) Thanks [@christian-bromann](https://github.com/christian-bromann)! - feat(openai): add support for shell tool
+
+- [#9541](https://github.com/langchain-ai/langchainjs/pull/9541) [`bb2f422`](https://github.com/langchain-ai/langchainjs/commit/bb2f422cd8e0d709d82baca44565980abb57120f) Thanks [@christian-bromann](https://github.com/christian-bromann)! - feat(openai): support code interpreter tool
+
+- [#9541](https://github.com/langchain-ai/langchainjs/pull/9541) [`2a5ba50`](https://github.com/langchain-ai/langchainjs/commit/2a5ba50d240e7d6181546facf088142fbb7b4977) Thanks [@christian-bromann](https://github.com/christian-bromann)! - feat(openai): add support for local shell tool
+
+- [#9634](https://github.com/langchain-ai/langchainjs/pull/9634) [`47edf3f`](https://github.com/langchain-ai/langchainjs/commit/47edf3fc673eb0627ec585a3a5c2b9381e234527) Thanks [@christian-bromann](https://github.com/christian-bromann)! - feat(openai): add 'moderateContent' to ChatOpenAI for content moderation #9410
+
+- [#9541](https://github.com/langchain-ai/langchainjs/pull/9541) [`2e563e3`](https://github.com/langchain-ai/langchainjs/commit/2e563e332772aa0468f610c334cbedd7f3513ce8) Thanks [@christian-bromann](https://github.com/christian-bromann)! - feat(openai): add support for apply patch tool
+
+- [#9541](https://github.com/langchain-ai/langchainjs/pull/9541) [`f97b488`](https://github.com/langchain-ai/langchainjs/commit/f97b488200b34c485b15a743277984ecacc62160) Thanks [@christian-bromann](https://github.com/christian-bromann)! - feat(openai): support for MCP connector tool
+
+- [#9541](https://github.com/langchain-ai/langchainjs/pull/9541) [`6baa851`](https://github.com/langchain-ai/langchainjs/commit/6baa851176b5dde5da19891df114a4645dfe7481) Thanks [@christian-bromann](https://github.com/christian-bromann)! - feat(langchain): add support for image generation tool
+
+- [#9541](https://github.com/langchain-ai/langchainjs/pull/9541) [`69a1045`](https://github.com/langchain-ai/langchainjs/commit/69a1045e1e14aed9273a1a4085ac35e601a1ecc7) Thanks [@christian-bromann](https://github.com/christian-bromann)! - add support for computer use tool
+
+### Patch Changes
+
+- [#9636](https://github.com/langchain-ai/langchainjs/pull/9636) [`5a01b5b`](https://github.com/langchain-ai/langchainjs/commit/5a01b5b705f6933958f61318b22f00b5f4763be8) Thanks [@christian-bromann](https://github.com/christian-bromann)! - fix content in AIMessage for tool and function calls
+
+- [#9570](https://github.com/langchain-ai/langchainjs/pull/9570) [`72795fe`](https://github.com/langchain-ai/langchainjs/commit/72795fe76b515d9edc7d78fb28db59df844ce0c3) Thanks [@ddewaele](https://github.com/ddewaele)! - fixes filename / base64 conversions in openai completions converters (#9512)
+
+- [#9648](https://github.com/langchain-ai/langchainjs/pull/9648) [`29a8480`](https://github.com/langchain-ai/langchainjs/commit/29a8480799d4c3534892a29cef4a135c437deb9b) Thanks [@christian-bromann](https://github.com/christian-bromann)! - fix(langchain): allow to set strict tag manually in providerStrategy #9578
+
+- [#9631](https://github.com/langchain-ai/langchainjs/pull/9631) [`3ecc1e7`](https://github.com/langchain-ai/langchainjs/commit/3ecc1e716704a032e941e670d1d9fbf5370d57aa) Thanks [@jacoblee93](https://github.com/jacoblee93)! - feat(openai): Prefer responses API for 5.2 pro
+
+- [#9591](https://github.com/langchain-ai/langchainjs/pull/9591) [`a552cad`](https://github.com/langchain-ai/langchainjs/commit/a552cad1a463239a0d1d1b5da7798978722738cf) Thanks [@Ayushsingla1](https://github.com/Ayushsingla1)! - add prompt cache retention support
+
+## 1.1.3
+
+### Patch Changes
+
+- [#9416](https://github.com/langchain-ai/langchainjs/pull/9416) [`0fe9beb`](https://github.com/langchain-ai/langchainjs/commit/0fe9bebee6710f719e47f913eec1ec4f638e4de4) Thanks [@hntrl](https://github.com/hntrl)! - fix 'moduleResultion: "node"' compatibility
+
+## 1.1.2
+
+### Patch Changes
+
+- [#9408](https://github.com/langchain-ai/langchainjs/pull/9408) [`415cb0b`](https://github.com/langchain-ai/langchainjs/commit/415cb0bfd26207583befdb02367bd12a46b33d51) Thanks [@sinedied](https://github.com/sinedied)! - Fix missing and inconsistent user agent headers
+
+- [#9301](https://github.com/langchain-ai/langchainjs/pull/9301) [`a2ad61e`](https://github.com/langchain-ai/langchainjs/commit/a2ad61e787a06a55a615f63589a65ada05927792) Thanks [@sinedied](https://github.com/sinedied)! - support callable function for apiKey
+
 ## 1.1.1
 
 ### Patch Changes

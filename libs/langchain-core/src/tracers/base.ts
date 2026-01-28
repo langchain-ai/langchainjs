@@ -163,6 +163,11 @@ export abstract class BaseTracer extends BaseCallbackHandler {
         // console.debug(
         //   `Parent run with UUID ${storedRun.parent_run_id} not found.`
         // );
+
+        // Child run with no trace_id and dotted_order causes 400 error on LangSmith.
+        // So we set the parent_run_id to undefined as a workaround.
+        // This run will be shown as isolated run on LangSmith.
+        storedRun.parent_run_id = undefined;
       }
     } else {
       storedRun.trace_id = storedRun.id;
@@ -408,7 +413,8 @@ export abstract class BaseTracer extends BaseCallbackHandler {
     tags?: string[],
     metadata?: KVMap,
     runType?: string,
-    name?: string
+    name?: string,
+    extra?: Record<string, unknown>
   ) {
     const execution_order = this._getExecutionOrder(parentRunId);
     const start_time = Date.now();
@@ -429,7 +435,7 @@ export abstract class BaseTracer extends BaseCallbackHandler {
       child_execution_order: execution_order,
       run_type: runType ?? "chain",
       child_runs: [],
-      extra: metadata ? { metadata } : {},
+      extra: metadata ? { ...extra, metadata } : { ...extra },
       tags: tags || [],
     };
     return this._addRunToRunMap(run);

@@ -6,7 +6,7 @@ import {
   type BaseMessage,
   isAIMessage,
   type UsageMetadata,
-  type BaseMessageFields,
+  type AIMessageFields,
   BaseMessageChunk,
 } from "@langchain/core/messages";
 import {
@@ -43,7 +43,8 @@ type ChatCompletionsInvocationParams = Omit<
  * @internal
  */
 export class ChatOpenAICompletions<
-  CallOptions extends ChatOpenAICompletionsCallOptions = ChatOpenAICompletionsCallOptions
+  CallOptions extends
+    ChatOpenAICompletionsCallOptions = ChatOpenAICompletionsCallOptions,
 > extends BaseChatOpenAI<CallOptions> {
   /** @internal */
   override invocationParams(
@@ -100,6 +101,8 @@ export class ChatOpenAICompletions<
         : {}),
       ...this.modelKwargs,
       prompt_cache_key: options?.promptCacheKey ?? this.promptCacheKey,
+      prompt_cache_retention:
+        options?.promptCacheRetention ?? this.promptCacheRetention,
       verbosity: options?.verbosity ?? this.verbosity,
     };
     if (options?.prediction !== undefined) {
@@ -168,9 +171,8 @@ export class ChatOpenAICompletions<
         functions,
         function_call
       );
-      const completionTokenUsage = await this._getNumTokensFromGenerations(
-        generations
-      );
+      const completionTokenUsage =
+        await this._getNumTokensFromGenerations(generations);
 
       usageMetadata.input_tokens = promptTokenUsage;
       usageMetadata.output_tokens = completionTokenUsage;
@@ -273,7 +275,7 @@ export class ChatOpenAICompletions<
             Object.entries(generation.message).filter(
               ([key]) => !key.startsWith("lc_")
             )
-          ) as BaseMessageFields
+          ) as AIMessageFields
         );
         generations.push(generation);
       }

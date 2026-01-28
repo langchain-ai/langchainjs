@@ -71,6 +71,7 @@ test("Test LangChain Hub while loading model", async () => {
   const pulledPrompt = await hub.pull("jacob/lahzo-testing", {
     includeModel: true,
     modelClass: ChatAnthropic,
+    secretsFromEnv: true,
   });
   const res = await pulledPrompt.invoke({
     agent: { name: "testing" },
@@ -82,6 +83,7 @@ test("Test LangChain Hub while loading model", async () => {
 test("Test LangChain Hub while loading OpenAI model with dynamic imports", async () => {
   const pulledPrompt = await nodePull("jacob/langchainjs-openai", {
     includeModel: true,
+    secretsFromEnv: true,
   });
   const res = await pulledPrompt.invoke({
     question: "Generate JSON",
@@ -93,6 +95,7 @@ test("Test LangChain Hub while loading OpenAI model with dynamic imports", async
 test("Test LangChain Hub while loading model with dynamic imports", async () => {
   const pulledPrompt = await nodePull("jacob/groq-test", {
     includeModel: true,
+    secretsFromEnv: true,
   });
   const res = await pulledPrompt.invoke({
     question:
@@ -105,6 +108,7 @@ test("Test LangChain Hub while loading model with dynamic imports", async () => 
 test("Test LangChain Hub while loading model with dynamic imports and structured output", async () => {
   const pulledPrompt = await nodePull("jacob/structured-output", {
     includeModel: true,
+    secretsFromEnv: true,
   });
   const res = await pulledPrompt.invoke({
     question:
@@ -117,6 +121,7 @@ test("Test LangChain Hub while loading model with dynamic imports and structured
 test("Test LangChain Hub while loading model with dynamic imports and structured output with no binding", async () => {
   const pulledPrompt = await nodePull("jacob/structured-output-2", {
     includeModel: true,
+    secretsFromEnv: true,
   });
   const res = await pulledPrompt.invoke({
     input:

@@ -1,85 +1,150 @@
 # Contributing to LangChain
 
-👋 Hi there! Thank you for being interested in contributing to LangChain.
-As an open source project in a rapidly developing field, we are extremely open
-to contributions, whether it be in the form of a new feature, improved infra, or better documentation.
+👋 Welcome! Thank you for your interest in contributing. LangChain has helped form the largest developer community in generative AI, and we're always open to new contributors. Whether you're fixing bugs, adding features, improving documentation, or sharing feedback, your involvement helps make LangChain and LangGraph better for everyone 🦜❤️
 
 To contribute to this project, please follow a ["fork and pull request"](https://docs.github.com/en/get-started/quickstart/contributing-to-projects) workflow. Please do not try to push directly to this repo unless you are a maintainer.
 
-## Quick Links
+## Ways to Contribute
 
-### Not sure what to work on?
+### 🐛 Report Bugs
 
-If you are not sure what to work on, we have a few suggestions:
+Found a bug? Please help us fix it by following these steps:
 
-- Look at the issues with the [help wanted](https://github.com/langchain-ai/langchainjs/issues?q=is%3Aissue+is%3Aopen+label%3A%22help+wanted%22) label. These are issues that we think are good targets for contributors. If you are interested in working on one of these, please comment on the issue so that we can assign it to you. And if you have any questions let us know, we're happy to guide you!
-- At the moment our main focus is reaching parity with the Python version for features and base functionality. If you are interested in working on a specific integration or feature, please let us know and we can help you get started.
+1. **Search**: Check if the issue already exists in our [GitHub Issues](https://github.com/langchain-ai/langchainjs/issues)
+2. **Create issue**: If no issue exists, create a new one. When writing, be sure to follow the template provided and include a [minimal, reproducible example](https://stackoverflow.com/help/minimal-reproducible-example). Attach any relevant labels to the final issue once created.
+3. **Wait**: A project maintainer will triage the issue and may ask for additional information. Please be patient as we manage a high volume of issues. Do not bump the issue unless you have new information to provide.
 
-### New abstractions
+> **Note**: If a project maintainer is unable to reproduce the issue, it is unlikely to be addressed in a timely manner.
 
-We aim to keep the same core APIs between the Python and JS versions of LangChain, where possible. As such we ask that if you have an idea for a new abstraction, please open an issue first to discuss it. This will help us make sure that the API is consistent across both versions. If you're not sure what to work on, we recommend looking at the links above first.
+If you are adding an issue, please try to keep it focused on a single topic. If two issues are related, or blocking, please link them rather than combining them. For example: "This issue is blocked by #123 and related to #456."
 
-### Want to add a specific integration?
+### 💡 Request Features
 
-LangChain supports several different types of integrations with third-party providers and frameworks, including LLM providers (e.g. [OpenAI](https://github.com/langchain-ai/langchainjs/blob/main/libs/providers/langchain-openai/src/chat_models.ts)), vector stores (e.g. [FAISS](https://github.com/langchain-ai/langchainjs/blob/main/libs/langchain-community/src/vectorstores/faiss.ts), document loaders (e.g. [Apify](https://github.com/langchain-ai/langchainjs/blob/main/libs/langchain-community/src/document_loaders/web/apify_dataset.ts)) persistent message history stores (e.g. [Redis](https://github.com/langchain-ai/langchainjs/blob/main/libs/providers/langchain-redis/src/caches.ts)), and more.
+Have an idea for a new feature or enhancement?
 
-We welcome such contributions, but ask that you read our dedicated [integration contribution guide](https://github.com/langchain-ai/langchainjs/blob/main/.github/contributing/INTEGRATIONS.md) for specific details and patterns to consider before opening a pull request.
+1. **Search**: Search the [issues](https://github.com/langchain-ai/langchainjs/issues) for existing feature requests
+2. **Discuss**: If no requests exist, start a new discussion under the relevant category so that project maintainers and the community can provide feedback
+3. **Describe**: Be sure to describe the use case and why it would be valuable to others. If possible, provide examples or mockups where applicable. Outline test cases that should pass.
 
-You can also check out the [guides on extending LangChain.js](https://js.langchain.com/docs/how_to/#custom) in our docs.
+### 📖 Improve Documentation
 
-#### Integration packages
+Documentation improvements are always welcome! We strive to keep our docs clear and comprehensive, and your perspective can make a big difference. See our [documentation contribution guide](https://docs.langchain.com/oss/javascript/contributing/documentation) for details.
 
-Integrations should generally reside in the `libs/langchain-community` workspace and be imported as `@langchain/community/module/name`. More in-depth integrations or suites of integrations may also reside in separate packages that depend on and extend `@langchain/core`. See [`@langchain/google-genai`](https://github.com/langchain-ai/langchainjs/blob/main/libs/langchain-google-genai) for an example.
+### 🛠️ Contribute Code
 
-### Want to add a feature that's already in Python?
+With a large userbase, it can be hard for our small team to keep up with all the feature requests and bug fixes. If you have the skills and time, we would love your help!
 
-If you're interested in contributing a feature that's already in the [LangChain Python repo](https://github.com/langchain-ai/langchain) and you'd like some help getting started, you can try pasting code snippets and classes into the [LangChain Python to JS translator](https://langchain-translator.vercel.app/).
+- If you start working on an issue, please assign it to yourself or ask a maintainer to do so. This helps avoid duplicate work.
+- If you are looking for something to work on, check out the issues labeled ["good first issue"](https://github.com/langchain-ai/langchainjs/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22) or ["help wanted"](https://github.com/langchain-ai/langchainjs/issues?q=is%3Aissue+is%3Aopen+label%3A%22help+wanted%22).
 
-It's a chat interface wrapping a fine-tuned `gpt-3.5-turbo` instance trained on prior ported features. This allows the model to innately take into account LangChain-specific code style and imports.
+### 🔌 Add an Integration
 
-It's an ongoing project, and feedback on runs will be used to improve the [LangSmith dataset](https://smith.langchain.com) for further fine-tuning! Try it out below:
+Integrations are a core component of LangChain. LangChain provides standard interfaces for several different components (language models, vector stores, etc) that are crucial when building LLM applications. Contributing an integration helps expand LangChain's ecosystem and makes your service discoverable to millions of developers.
 
-<https://langchain-translator.vercel.app/>
+**Why contribute an integration to LangChain?**
 
-## 🗺️ Contributing Guidelines
+- **Discoverability**: LangChain is the most used framework for building LLM applications, with over 20 million monthly downloads.
+- **Interoperability**: LangChain components expose a standard interface, allowing developers to easily swap them for each other. If you implement a LangChain integration, any developer using a different component will easily be able to swap yours in.
+- **Best Practices**: Through their standard interface, LangChain components encourage and facilitate best practices (streaming, async, etc.) that improve developer experience and application performance.
 
-### 🚩 GitHub Issues
+See our dedicated [integration contribution guide](https://github.com/langchain-ai/langchainjs/blob/main/.github/contributing/INTEGRATIONS.md) for specific details and patterns. You can also check out the [guides on extending LangChain.js](https://js.langchain.com/docs/how_to/#custom) in our docs.
 
-Our [issues](https://github.com/langchain-ai/langchainjs/issues) primarily contains bug reports and docs improvements. For feature requests, please defer to the [LangChain Forum](https://forum.langchain.com/).
+#### Integration Packages
 
-If you start working on an issue, please assign it to yourself.
+> **Important**: We no longer accept new integrations to the `@langchain/community` package. The package is already very crowded with many dependencies, and we want to keep it maintainable.
 
-If you are adding an issue, please try to keep it focused on a single modular bug/improvement/feature.
-If the two issues are related, or blocking, please link them rather than keep them as one single one.
+New integrations **must** be published as standalone packages. Here's how to contribute a new integration:
 
-We will try to keep these issues as up to date as possible, though
-with the rapid rate of development in this field some may get out of date.
-If you notice this happening, please just let us know.
+1. **Create your own repository** to distribute LangChain integrations (e.g., `https://github.com/yourname/langchain-yourservice`)
+2. **Publish the package to npm** (e.g., `@yourname/langchain-yourservice` or `langchain-yourservice`)
+3. **Let us know** by opening an issue or discussion so we can add it to the list of recommended integrations
 
-### 🙋 Getting Help
+## 📁 Project Structure
 
-Although we try to have a developer setup to make it as easy as possible for others to contribute (see below)
-it is possible that some pain point may arise around environment setup, linting, documentation, or other.
-Should that occur, please contact a maintainer! Not only do we want to help get you unblocked,
-but we also want to make sure that the process is smooth for future contributors.
+This is a monorepo managed with [pnpm workspaces](https://pnpm.io/workspaces) and [Turborepo](https://turbo.build/). Here's an overview of the main packages:
 
-In a similar vein, we do enforce certain linting, formatting, and documentation standards in the codebase.
-If you are finding these difficult (or even just annoying) to work with,
-feel free to contact a maintainer for help - we do not want these to get in the way of getting
-good code into the codebase.
+| Package                    | Path                                 | Description                                                      |
+| -------------------------- | ------------------------------------ | ---------------------------------------------------------------- |
+| `langchain`                | `libs/langchain`                     | Main LangChain package with agents, prompts, and orchestration   |
+| `@langchain/core`          | `libs/langchain-core`                | Core abstractions and interfaces (base classes, runnables, etc.) |
+| `@langchain/community`     | `libs/langchain-community`           | Community-maintained integrations                                |
+| `@langchain/textsplitters` | `libs/langchain-textsplitters`       | Text splitting utilities                                         |
+| `@langchain/openai`        | `libs/providers/langchain-openai`    | OpenAI integration                                               |
+| `@langchain/anthropic`     | `libs/providers/langchain-anthropic` | Anthropic integration                                            |
+| Other providers            | `libs/providers/langchain-*`         | First-party provider integrations                                |
 
-### 🏭 Release process
+## 📝 Pull Request Guidelines
 
-As of now, LangChain has an ad hoc release process: releases are cut with high frequency by
-a developer and published to [npm](https://www.npmjs.com/package/langchain).
+When submitting a pull request:
 
-If your contribution has made its way into a release, we will want to give you credit on Twitter (only if you want though)!
-If you have a Twitter account you would like us to mention, please let us know in the PR or in another manner.
+1. **Fill out the PR template** - Describe what your PR does, why it's needed, and any relevant context
+2. **Link related issues** - Use closing keywords like `Fixes #123` to automatically close issues when your PR is merged
+3. **Keep PRs focused** - One feature or fix per PR makes review easier and faster
+4. **Add tests** - Include unit tests for new functionality; integration tests for new external APIs
+5. **Update documentation** - If your change affects public APIs, update the relevant docs
+6. **Run checks locally** - Make sure `pnpm lint`, `pnpm format:check`, and `pnpm test` pass before pushing
 
-### 🛠️ Tooling
+### Review Process
 
-This project uses the following tools, which are worth getting familiar
-with if you plan to contribute:
+- A maintainer will review your PR and may request changes
+- Please respond to feedback in a timely manner
+- Once approved, a maintainer will merge your PR
+
+> **Tip**: If you'd like a shout-out on Twitter when your contribution is released, include your Twitter handle in the PR description!
+
+## 💬 Communication
+
+- **[LangChain Forum](https://forum.langchain.com)**: Connect with the community for technical questions, ideas, and feedback
+- **[GitHub Issues](https://github.com/langchain-ai/langchainjs/issues)**: Bug reports and feature requests
+- **[Slack](https://www.langchain.com/join-community)**: LangChain Community Slack
+
+## 🙋 Getting Help
+
+Although we try to have a developer setup to make it as easy as possible for others to contribute (see below), it is possible that some pain point may arise around environment setup, linting, documentation, or other.
+
+Should that occur, please contact a maintainer! Not only do we want to help get you unblocked, but we also want to make sure that the process is smooth for future contributors.
+
+In a similar vein, we do enforce certain linting, formatting, and documentation standards in the codebase. If you are finding these difficult (or even just annoying) to work with, feel free to contact a maintainer for help - we do not want these to get in the way of getting good code into the codebase.
+
+## 🏭 Release Process
+
+As of now, LangChain has an ad hoc release process: releases are cut with high frequency by a developer and published to [npm](https://www.npmjs.com/package/langchain).
+
+If your contribution has made its way into a release, we will want to give you credit on Twitter (only if you want though)! If you have a Twitter account you would like us to mention, please let us know in the PR or in another manner.
+
+### 🧪 Dev Releases
+
+For testing unreleased changes, maintainers can publish dev releases of individual packages. Dev releases are published to npm with a special tag and version format that includes the git commit SHA.
+
+**To create a dev release:**
+
+1. Go to [Actions → 📦 Publish](https://github.com/langchain-ai/langchainjs/actions/workflows/release.yml)
+2. Click "Run workflow"
+3. Select the branch you want to release from (defaults to `main`, but you can choose your feature branch)
+4. Optionally change the npm tag (defaults to `dev`)
+5. Click "Run workflow"
+
+**Version format:** `x.y.z-<tag>.<short-sha>` (e.g., `1.1.0-dev.abc1234`)
+
+**To install a dev release:**
+
+```bash
+# Install the latest dev release
+npm install @langchain/core@dev
+
+# Install a specific dev version
+npm install @langchain/core@1.1.0-dev.abc1234
+```
+
+Dev releases are useful for:
+
+- Testing bug fixes before an official release
+- Validating new features in downstream projects
+- CI/CD pipelines that need to test against the latest changes
+
+## 🛠️ Tooling
+
+This project uses the following tools, which are worth getting familiar with if you plan to contribute:
 
 - **[pnpm](https://pnpm.io/) (v10.14.0)** - dependency management
 - **[eslint](https://eslint.org/)** - enforcing standard lint rules
@@ -98,146 +163,113 @@ Next, try running the following common tasks:
 
 ## ✅ Common Tasks
 
-Our goal is to make it as easy as possible for you to contribute to this project.
-All of the below commands should be run from within a workspace directory (e.g. `libs/langchain`, `libs/langchain-community`) unless otherwise noted.
+Our goal is to make it as easy as possible for you to contribute to this project. All commands can be run from the project root using `pnpm --filter <package>` to target specific workspaces.
 
-```bash
-cd libs/langchain
-```
+Common package filters:
 
-Or, if you are working on a community integration:
-
-```bash
-cd libs/langchain-community
-```
+- `--filter langchain` - the main `langchain` package
+- `--filter @langchain/core` - the core package
+- `--filter @langchain/community` - community integrations
+- `--filter @langchain/openai` - OpenAI integration (and similarly for other providers)
 
 ### Setup
 
 **Prerequisite**: Node version v24.x is required. Please check node version `node -v` and update it if required.
 
-To get started, you will need to install the dependencies for the project. To do so, run:
+To get started, install the dependencies for the project from the root:
 
 ```bash
 pnpm install
 ```
 
-Then, you will need to switch directories into `libs/langchain-core` and build core by running:
+Then, build the core package (required before working on other packages):
 
 ```bash
-cd libs/langchain-core
-pnpm install
-pnpm build
+pnpm --filter @langchain/core build
 ```
 
 ### Linting
 
-We use [eslint](https://eslint.org/) to enforce standard lint rules.
-To run the linter, run:
+We use [eslint](https://eslint.org/) to enforce standard lint rules. To run the linter on a specific package:
 
 ```bash
-pnpm lint
+pnpm --filter langchain lint
+pnpm --filter @langchain/community lint
 ```
 
 ### Formatting
 
-We use [prettier](https://prettier.io) to enforce code formatting style.
-To run the formatter, run:
+We use [prettier](https://prettier.io) to enforce code formatting style. To run the formatter:
 
 ```bash
-pnpm format
+pnpm --filter langchain format
 ```
 
-To just check for formatting differences, without fixing them, run:
+To just check for formatting differences, without fixing them:
 
 ```bash
-pnpm format:check
+pnpm --filter langchain format:check
 ```
 
 ### Testing
 
-In general, tests should be added within a `tests/` folder alongside the modules they
-are testing.
+In general, tests should be added within a `tests/` folder alongside the modules they are testing.
 
 **Unit tests** cover modular logic that does not require calls to outside APIs.
 
-If you add new logic, please add a unit test.
-Unit tests should be called `*.test.ts`.
+If you add new logic, please add a unit test. Unit tests should be called `*.test.ts`.
 
-To run only unit tests, run:
-
-```bash
-pnpm test
-```
-
-#### Running a single test
-
-To run a single test, run the following from within a workspace:
+To run unit tests for a specific package:
 
 ```bash
-pnpm test:single /path/to/yourtest.test.ts
+pnpm --filter langchain test
+pnpm --filter @langchain/core test
 ```
-
-This is useful for developing individual features.
 
 **Integration tests** cover logic that requires making calls to outside APIs (often integration with other services).
 
-If you add support for a new external API, please add a new integration test.
-Integration tests should be called `*.int.test.ts`.
+If you add support for a new external API, please add a new integration test. Integration tests should be called `*.int.test.ts`.
 
-Note that most integration tests require credentials or other setup. You will likely need to set up a `libs/langchain/.env` or `libs/langchain-community/.env` file
-like the example [here](https://github.com/langchain-ai/langchainjs/blob/main/libs/langchain/.env.example).
+Note that most integration tests require credentials or other setup. You will likely need to set up a `libs/langchain/.env` or `libs/langchain-community/.env` file based on the [`.env.example` file](https://github.com/langchain-ai/langchainjs/blob/main/libs/langchain/.env.example).
 
-We generally recommend only running integration tests with `pnpm test:single`, but if you want to run all integration tests, run:
+We generally recommend only running integration tests with `pnpm --filter <package> test:single`, but if you want to run all integration tests:
 
 ```bash
-pnpm test:integration
+pnpm --filter langchain test:integration
 ```
+
+#### Type Tests
+
+We use type tests to verify that TypeScript types work correctly. Type tests are files ending in `.test-d.ts` and use `expectTypeOf` from vitest to assert type behavior.
+
+```typescript
+import { expectTypeOf } from "vitest";
+
+expectTypeOf(someFunction).returns.toMatchTypeOf<ExpectedType>();
+```
+
+Type tests ensure that:
+
+- Public APIs have correct type signatures
+- Generic types resolve correctly
+- Type inference works as expected
+
+To run type tests along with unit tests:
+
+```bash
+pnpm --filter langchain test
+```
+
+Find more information on writing type tests in the [Vitest docs](https://vitest.dev/guide/testing-types.html).
 
 ### Building
 
-To build the project, run:
+To build a specific package:
 
 ```bash
-pnpm build
+pnpm --filter langchain build
+pnpm --filter @langchain/core build
 ```
-
-### Adding an Entrypoint
-
-LangChain exposes multiple subpaths the user can import from, e.g.
-
-```typescript
-import { OpenAI } from "langchain/llms/openai";
-```
-
-We call these subpaths "entrypoints". In general, you should create a new entrypoint if you are adding a new integration with a 3rd party library. If you're adding self-contained functionality without any external dependencies, you can add it to an existing entrypoint.
-
-In order to declare a new entrypoint that users can import from, you
-should edit the `libs/langchain/langchain.config.js` or `libs/langchain-community/langchain.config.js` file. To add an
-entrypoint `tools` that imports from `tools/index.ts` you'd add
-the following to the `entrypoints` key inside the `config` variable:
-
-```typescript
-// ...
-entrypoints: {
-  // ...
-  tools: "tools/index",
-},
-// ...
-```
-
-If you're adding a new integration which requires installing a third party dependency, you must add the entrypoint to the `requiresOptionalDependency` array, also located inside `libs/langchain/langchain.config.js` or `libs/langchain-community/langchain.config.js`.
-
-```typescript
-// ...
-requiresOptionalDependency: [
-  // ...
-  "tools/index",
-],
-// ...
-```
-
-This will make sure the entrypoint is included in the published package,
-and in generated documentation.
 
 ## Advanced
 

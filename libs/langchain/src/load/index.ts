@@ -10,6 +10,8 @@ import { OptionalImportMap } from "./import_type.js";
  * @param text Serialized text representation of the module.
  * @param secretsMap
  * @param optionalImportsMap
+ * @param additionalImportsMap
+ * @param secretsFromEnv
  * @returns A loaded instance of a LangChain module.
  */
 export async function load<T>(
@@ -19,12 +21,14 @@ export async function load<T>(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   optionalImportsMap: OptionalImportMap & Record<string, any> = {},
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  additionalImportsMap: Record<string, any> = {}
+  additionalImportsMap: Record<string, any> = {},
+  secretsFromEnv?: boolean
 ): Promise<T> {
   return coreLoad(text, {
     secretsMap,
     optionalImportsMap,
     optionalImportEntrypoints,
     importMap: { ...importMap, ...additionalImportsMap },
+    secretsFromEnv,
   });
 }

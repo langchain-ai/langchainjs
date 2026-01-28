@@ -3,7 +3,7 @@ import type { BaseChatModel } from "@langchain/core/language_models/chat_models"
 
 export interface ConfigurableModelInterface {
   _queuedMethodOperations: Record<string, unknown>;
-  _model: () => Promise<BaseChatModel>;
+  _getModelInstance: () => Promise<BaseChatModel>;
 }
 
 export function isBaseChatModel(
@@ -23,7 +23,8 @@ export function isConfigurableModel(
     typeof model === "object" &&
     model != null &&
     "_queuedMethodOperations" in model &&
-    "_model" in model &&
-    typeof model._model === "function"
+    "_getModelInstance" in model &&
+    typeof (model as { _getModelInstance: unknown })._getModelInstance ===
+      "function"
   );
 }

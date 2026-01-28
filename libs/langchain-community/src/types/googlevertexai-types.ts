@@ -81,7 +81,7 @@ export interface GoogleVertexAIBasePrediction {
 }
 
 export interface GoogleVertexAILLMPredictions<
-  PredictionType extends GoogleVertexAIBasePrediction
+  PredictionType extends GoogleVertexAIBasePrediction,
 > {
   predictions: PredictionType[];
 }

@@ -3,7 +3,7 @@
 {
   "name": "Node.js & TypeScript",
   // Or use a Dockerfile or Docker Compose file. More info: https://containers.dev/guide/dockerfile
-  "image": "mcr.microsoft.com/devcontainers/typescript-node:1.1.0-20",
+  "image": "mcr.microsoft.com/devcontainers/typescript-node:4.0.3-24",
   "customizations": {
     "vscode": {
       "extensions": ["ms-vscode.vscode-typescript-next"]

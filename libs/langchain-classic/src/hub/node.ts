@@ -8,9 +8,30 @@ import {
 import { load } from "../load/index.js";
 import { getChatModelByClassName } from "../chat_models/universal.js";
 
-// TODO: Make this the default, add web entrypoint in next breaking release
-
 export { basePush as push } from "./base.js";
+
+function _idEquals(a: string[], b: string[]): boolean {
+  if (!Array.isArray(a) || !Array.isArray(b)) {
+    return false;
+  }
+  if (a.length !== b.length) {
+    return false;
+  }
+  for (let i = 0; i < a.length; i++) {
+    if (a[i] !== b[i]) {
+      return false;
+    }
+  }
+  return true;
+}
+
+function isRunnableBinding(a: string[]): boolean {
+  const wellKnownIds = [
+    ["langchain_core", "runnables", "RunnableBinding"],
+    ["langchain", "schema", "runnable", "RunnableBinding"],
+  ];
+  return wellKnownIds.some((id) => _idEquals(a, id));
+}
 
 /**
  * Pull a prompt from the hub.
@@ -20,6 +41,13 @@ export { basePush as push } from "./base.js";
  * @param options.includeModel Whether to also instantiate and attach a model instance to the prompt,
  *   if the prompt has associated model metadata. If set to true, invoking the resulting pulled prompt will
  *   also invoke the instantiated model. You must have the appropriate LangChain integration package installed.
+ * @param options.secrets A map of secrets to use when loading, e.g.
+ *   {'OPENAI_API_KEY': 'sk-...'}`.
+ *   If a secret is not found in the map, it will be loaded from the
+ *   environment if `secrets_from_env` is `True`. Should only be needed when
+ *   `includeModel` is `true`.
+ * @param options.secretsFromEnv Whether to load secrets from environment variables.
+ *   Use with caution and only with trusted prompts.
  * @returns
  */
 export async function pull<T extends Runnable>(
@@ -28,14 +56,21 @@ export async function pull<T extends Runnable>(
     apiKey?: string;
     apiUrl?: string;
     includeModel?: boolean;
+    secrets?: Record<string, string>;
+    secretsFromEnv?: boolean;
   }
 ) {
   const promptObject = await basePull(ownerRepoCommit, options);
   let modelClass;
   if (options?.includeModel) {
-    if (Array.isArray(promptObject.manifest.kwargs?.last?.kwargs?.bound?.id)) {
-      const modelName =
-        promptObject.manifest.kwargs?.last?.kwargs?.bound?.id.at(-1);
+    const chatModelObject = isRunnableBinding(
+      promptObject.manifest.kwargs?.last?.id
+    )
+      ? promptObject.manifest.kwargs?.last?.kwargs?.bound
+      : promptObject.manifest.kwargs?.last;
+
+    if (Array.isArray(chatModelObject?.id)) {
+      const modelName = chatModelObject?.id.at(-1);
 
       if (modelName) {
         modelClass = await getChatModelByClassName(modelName);
@@ -49,9 +84,10 @@ export async function pull<T extends Runnable>(
   }
   const loadedPrompt = await load<T>(
     JSON.stringify(promptObject.manifest),
-    undefined,
+    options?.secrets,
     generateOptionalImportMap(modelClass),
-    generateModelImportMap(modelClass)
+    generateModelImportMap(modelClass),
+    options?.secretsFromEnv
   );
   return bindOutputSchema(loadedPrompt);
 }

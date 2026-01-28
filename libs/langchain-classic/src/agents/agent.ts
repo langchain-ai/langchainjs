@@ -176,7 +176,7 @@ export class AgentRunnableSequence<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   RunInput = any,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  RunOutput = any
+  RunOutput = any,
 > extends RunnableSequence<RunInput, RunOutput> {
   streamRunnable?: boolean;
 
@@ -188,7 +188,7 @@ export class AgentRunnableSequence<
       RunnableLike<RunInput>,
       ...RunnableLike[],
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      RunnableLike<any, RunOutput>
+      RunnableLike<any, RunOutput>,
     ],
     config: { singleAction: boolean; streamRunnable?: boolean; name?: string }
   ): AgentRunnableSequence<RunInput, Exclude<RunOutput, Error>> {

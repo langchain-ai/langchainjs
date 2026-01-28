@@ -68,10 +68,8 @@ export interface FunctionCall {
 
 export type BaseMessageFields<
   TStructure extends MessageStructure = MessageStructure,
-  TRole extends MessageType = MessageType
-> = {
-  id?: string;
-  name?: string;
+  TRole extends MessageType = MessageType,
+> = Pick<Message, "id" | "name"> & {
   content?: $InferMessageContent<TStructure, TRole>;
   contentBlocks?: Array<ContentBlock.Standard>;
   /** @deprecated */
@@ -100,6 +98,8 @@ export function mergeContent(
     }
     if (typeof secondContent === "string") {
       return firstContent + secondContent;
+    } else if (Array.isArray(secondContent) && secondContent.length === 0) {
+      return firstContent;
     } else if (
       Array.isArray(secondContent) &&
       secondContent.some((c) => isDataContentBlock(c))
@@ -197,7 +197,7 @@ function stringifyWithDepthLimit(obj: any, depthLimit: number): string {
  */
 export abstract class BaseMessage<
     TStructure extends MessageStructure = MessageStructure,
-    TRole extends MessageType = MessageType
+    TRole extends MessageType = MessageType,
   >
   extends Serializable
   implements Message<TStructure, TRole>
@@ -220,6 +220,7 @@ export abstract class BaseMessage<
 
   id?: string;
 
+  /** @inheritdoc */
   name?: string;
 
   content: $InferMessageContent<TStructure, TRole>;
@@ -261,7 +262,9 @@ export abstract class BaseMessage<
       | BaseMessageFields<TStructure, TRole>
   ) {
     const fields: BaseMessageFields<TStructure, TRole> =
-      typeof arg === "string" || Array.isArray(arg) ? { content: arg } : arg;
+      typeof arg === "string" || Array.isArray(arg)
+        ? ({ content: arg } as BaseMessageFields<TStructure, TRole>)
+        : arg;
     if (!fields.additional_kwargs) {
       fields.additional_kwargs = {};
     }
@@ -419,13 +422,62 @@ export function isOpenAIToolCallArray(
   );
 }
 
+/**
+ * Default keys that should be preserved (not merged) when concatenating message chunks.
+ * These are identification and timestamp fields that shouldn't be summed or concatenated.
+ */
+export const DEFAULT_MERGE_IGNORE_KEYS: readonly string[] = [
+  "index", // Used for identification in tool calls, not accumulation
+  "created", // Timestamp field
+  "timestamp", // Timestamp field
+] as const;
+
+/**
+ * Options for controlling merge behavior in `_mergeDicts`.
+ */
+export interface MergeDictsOptions {
+  /**
+   * Keys to ignore during merging. When a key is in this list:
+   * - For numeric values: the original value is preserved (not summed)
+   * - For string values: the original value is preserved (not concatenated)
+   *
+   * Defaults to `DEFAULT_MERGE_IGNORE_KEYS` which includes 'index', 'created', 'timestamp'.
+   *
+   * @example
+   * // Extend defaults with custom keys
+   * { ignoreKeys: [...DEFAULT_MERGE_IGNORE_KEYS, 'role', 'customField'] }
+   */
+  ignoreKeys?: readonly string[];
+}
+
 export function _mergeDicts(
+  /**
+   * The left dictionary to merge.
+   */
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  left: Record<string, any> = {},
+  left: Record<string, any> | undefined,
+  /**
+   * The right dictionary to merge.
+   * @type {Record<string, any>}
+   */
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  right: Record<string, any> = {}
+  right: Record<string, any> | undefined,
+  /**
+   * The options for the merge.
+   */
+  options?: MergeDictsOptions
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-): Record<string, any> {
+): Record<string, any> | undefined {
+  /**
+   * The keys to ignore during merging.
+   */
+  const ignoreKeys = options?.ignoreKeys ?? DEFAULT_MERGE_IGNORE_KEYS;
+  if (left == null && right == null) {
+    return undefined;
+  }
+  if (left == null || right == null) {
+    return left ?? right;
+  }
   const merged = { ...left };
   for (const [key, value] of Object.entries(right)) {
     if (merged[key] == null) {
@@ -446,15 +498,26 @@ export function _mergeDicts(
       } else if (
         ["id", "name", "output_version", "model_provider"].includes(key)
       ) {
-        // Keep the incoming value for these fields
-        merged[key] = value;
+        // Keep the incoming value for these fields if its defined
+        if (value) {
+          merged[key] = value;
+        }
+      } else if (ignoreKeys.includes(key)) {
+        // Preserve the original value for ignored keys
+        continue;
       } else {
         merged[key] += value;
       }
+    } else if (typeof merged[key] === "number") {
+      if (ignoreKeys.includes(key)) {
+        // Preserve the original value for ignored keys
+        continue;
+      }
+      merged[key] = merged[key] + value;
     } else if (typeof merged[key] === "object" && !Array.isArray(merged[key])) {
-      merged[key] = _mergeDicts(merged[key], value);
+      merged[key] = _mergeDicts(merged[key], value, options);
     } else if (Array.isArray(merged[key])) {
-      merged[key] = _mergeLists(merged[key], value);
+      merged[key] = _mergeLists(merged[key], value, options);
     } else if (merged[key] === value) {
       continue;
     } else {
@@ -468,11 +531,12 @@ export function _mergeDicts(
 
 export function _mergeLists<Content extends ContentBlock>(
   left?: Content[],
-  right?: Content[]
+  right?: Content[],
+  options?: MergeDictsOptions
 ): Content[] | undefined {
-  if (left === undefined && right === undefined) {
+  if (left == null && right == null) {
     return undefined;
-  } else if (left === undefined || right === undefined) {
+  } else if (left == null || right == null) {
     return left || right;
   } else {
     const merged = [...left];
@@ -503,7 +567,8 @@ export function _mergeLists<Content extends ContentBlock>(
         ) {
           merged[toMerge] = _mergeDicts(
             merged[toMerge] as Record<string, unknown>,
-            item as Record<string, unknown>
+            item as Record<string, unknown>,
+            options
           ) as Content;
         } else {
           merged.push(item);
@@ -527,13 +592,14 @@ export function _mergeLists<Content extends ContentBlock>(
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function _mergeObj<T = any>(
   left: T | undefined,
-  right: T | undefined
-): T {
-  if (!left && !right) {
-    throw new Error("Cannot merge two undefined objects.");
+  right: T | undefined,
+  options?: MergeDictsOptions
+): T | undefined {
+  if (left == null && right == null) {
+    return undefined;
   }
-  if (!left || !right) {
-    return left || (right as T);
+  if (left == null || right == null) {
+    return left ?? right;
   } else if (typeof left !== typeof right) {
     throw new Error(
       `Cannot merge objects of different types.\nLeft ${typeof left}\nRight ${typeof right}`
@@ -541,9 +607,13 @@ export function _mergeObj<T = any>(
   } else if (typeof left === "string" && typeof right === "string") {
     return (left + right) as T;
   } else if (Array.isArray(left) && Array.isArray(right)) {
-    return _mergeLists(left, right) as T;
+    return _mergeLists(left, right, options) as T;
   } else if (typeof left === "object" && typeof right === "object") {
-    return _mergeDicts(left, right) as T;
+    return _mergeDicts(
+      left as Record<string, unknown>,
+      right as Record<string, unknown>,
+      options
+    ) as T;
   } else if (left === right) {
     return left;
   } else {
@@ -562,16 +632,23 @@ export function _mergeObj<T = any>(
  */
 export abstract class BaseMessageChunk<
   TStructure extends MessageStructure = MessageStructure,
-  TRole extends MessageType = MessageType
+  TRole extends MessageType = MessageType,
 > extends BaseMessage<TStructure, TRole> {
   abstract concat(chunk: BaseMessageChunk): BaseMessageChunk<TStructure, TRole>;
 
   static isInstance(obj: unknown): obj is BaseMessageChunk {
-    return (
-      super.isInstance(obj) &&
-      "concat" in obj &&
-      typeof obj.concat === "function"
-    );
+    if (!super.isInstance(obj)) {
+      return false;
+    }
+    // Check if obj is an instance of BaseMessageChunk by traversing the prototype chain
+    let proto = Object.getPrototypeOf(obj);
+    while (proto !== null) {
+      if (proto === BaseMessageChunk.prototype) {
+        return true;
+      }
+      proto = Object.getPrototypeOf(proto);
+    }
+    return false;
   }
 }
 
@@ -616,8 +693,5 @@ export function isBaseMessage(
 export function isBaseMessageChunk(
   messageLike?: unknown
 ): messageLike is BaseMessageChunk {
-  return (
-    isBaseMessage(messageLike) &&
-    typeof (messageLike as BaseMessageChunk).concat === "function"
-  );
+  return BaseMessageChunk.isInstance(messageLike);
 }

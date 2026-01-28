@@ -110,9 +110,8 @@ await retriever.docstore.mset(keyValuePairs);
 // retriever.vectorstore.addDocuments(taggedOriginalDocs);
 
 // Vectorstore alone retrieves the small chunks
-const vectorstoreResult = await retriever.vectorstore.similaritySearch(
-  "justice breyer"
-);
+const vectorstoreResult =
+  await retriever.vectorstore.similaritySearch("justice breyer");
 console.log(vectorstoreResult[0].pageContent);
 /*
   "What measures will be taken to crack down on corporations overcharging American businesses and consumers?"

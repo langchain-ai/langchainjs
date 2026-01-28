@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import * as z4 from "zod/v4";
-import { describe, test, expect } from "vitest";
+import { describe, test, expect, vi } from "vitest";
 import {
   AIMessageChunk,
   BaseMessage,
@@ -253,13 +253,7 @@ test("Test ChatOpenAI prompt value", async () => {
   expect(res.generations.length).toBe(1);
   for (const generation of res.generations) {
     expect(generation.length).toBe(2);
-    // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
-    // @ts-expect-error unused var
-    for (const g of generation) {
-      // console.log(g.text);
-    }
   }
-  // console.log({ res });
 });
 
 test("OpenAI Chat, docs, prompt templates", async () => {
@@ -274,37 +268,20 @@ test("OpenAI Chat, docs, prompt templates", async () => {
     HumanMessagePromptTemplate.fromTemplate("{text}"),
   ]);
 
-  // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
-  // @ts-expect-error unused var
-  const responseA = await chat.generatePrompt([
+  await chat.generatePrompt([
     await chatPrompt.formatPromptValue({
       input_language: "English",
       output_language: "French",
       text: "I love programming.",
     }),
   ]);
-
-  // console.log(responseA.generations);
 }, 5000);
 
 test("Test OpenAI with stop", async () => {
   const model = new ChatOpenAI({ maxTokens: 5 });
-  // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
-  // @ts-expect-error unused var
-  const res = await model.invoke([new HumanMessage("Print hello world")], {
+  await model.invoke([new HumanMessage("Print hello world")], {
     stop: ["world"],
   });
-  // console.log({ res });
-});
-
-test("Test OpenAI with stop in object", async () => {
-  const model = new ChatOpenAI({ maxTokens: 5 });
-  // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
-  // @ts-expect-error unused var
-  const res = await model.invoke([new HumanMessage("Print hello world")], {
-    stop: ["world"],
-  });
-  // console.log({ res });
 });
 
 test("Test OpenAI with timeout in call options", async () => {
@@ -423,10 +400,7 @@ test("Test OpenAI with specific roles in ChatMessage", async () => {
     "system"
   );
   const user_message = new ChatMessage("Hello!", "user");
-  // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
-  // @ts-expect-error unused var
-  const res = await chat.invoke([system_message, user_message]);
-  // console.log({ res });
+  await chat.invoke([system_message, user_message]);
 });
 
 test("Test ChatOpenAI stream method", async () => {
@@ -434,7 +408,6 @@ test("Test ChatOpenAI stream method", async () => {
   const stream = await model.stream("Print hello world.");
   const chunks = [];
   for await (const chunk of stream) {
-    // console.log(chunk);
     chunks.push(chunk);
   }
   expect(chunks.length).toBeGreaterThan(1);
@@ -446,17 +419,9 @@ test("Test ChatOpenAI stream method with abort", async () => {
       maxTokens: 100,
       model: "gpt-3.5-turbo",
     });
-    const stream = await model.stream(
-      "How is your day going? Be extremely verbose.",
-      {
-        signal: AbortSignal.timeout(500),
-      }
-    );
-    // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
-    // @ts-expect-error unused var
-    for await (const chunk of stream) {
-      // console.log(chunk);
-    }
+    await model.stream("How is your day going? Be extremely verbose.", {
+      signal: AbortSignal.timeout(500),
+    });
   }).rejects.toThrow();
 });
 
@@ -466,10 +431,7 @@ test("Test ChatOpenAI stream method with early break", async () => {
     "How is your day going? Be extremely verbose."
   );
   let i = 0;
-  // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
-  // @ts-expect-error unused var
-  for await (const chunk of stream) {
-    // console.log(chunk);
+  for await (const _ of stream) {
     i += 1;
     if (i > 10) {
       break;
@@ -485,14 +447,7 @@ test("Test ChatOpenAI stream method, timeout error thrown from SDK", async () =>
       timeout: 1,
       maxRetries: 0,
     });
-    const stream = await model.stream(
-      "How is your day going? Be extremely verbose."
-    );
-    // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
-    // @ts-expect-error unused var
-    for await (const chunk of stream) {
-      // console.log(chunk);
-    }
+    await model.stream("How is your day going? Be extremely verbose.");
   }).rejects.toThrow();
 });
 
@@ -558,10 +513,6 @@ test("Function calling with streaming", async () => {
     expect(finalResult?.additional_kwargs?.function_call?.name).toBe(
       "get_current_weather"
     );
-    // console.log(
-    //   JSON.parse(finalResult?.additional_kwargs?.function_call?.arguments ?? "")
-    //     .location
-    // );
   } finally {
     // Reset the environment variable
     process.env.LANGCHAIN_CALLBACKS_BACKGROUND = originalBackground;
@@ -570,8 +521,8 @@ test("Function calling with streaming", async () => {
 
 test("ChatOpenAI can cache generations", async () => {
   const memoryCache = new InMemoryCache();
-  const lookupSpy = jest.spyOn(memoryCache, "lookup");
-  const updateSpy = jest.spyOn(memoryCache, "update");
+  const lookupSpy = vi.spyOn(memoryCache, "lookup");
+  const updateSpy = vi.spyOn(memoryCache, "update");
   const chat = new ChatOpenAI({
     model: "gpt-3.5-turbo",
     maxTokens: 10,
@@ -597,8 +548,8 @@ test("ChatOpenAI can cache generations", async () => {
 
 test("ChatOpenAI can write and read cached generations", async () => {
   const memoryCache = new InMemoryCache();
-  const lookupSpy = jest.spyOn(memoryCache, "lookup");
-  const updateSpy = jest.spyOn(memoryCache, "update");
+  const lookupSpy = vi.spyOn(memoryCache, "lookup");
+  const updateSpy = vi.spyOn(memoryCache, "update");
 
   const chat = new ChatOpenAI({
     model: "gpt-3.5-turbo",
@@ -606,7 +557,7 @@ test("ChatOpenAI can write and read cached generations", async () => {
     n: 1,
     cache: memoryCache,
   });
-  const generateUncachedSpy = jest.spyOn(chat, "_generateUncached");
+  const generateUncachedSpy = vi.spyOn(chat, "_generateUncached");
 
   const messages = [
     [
@@ -635,8 +586,8 @@ test("ChatOpenAI can write and read cached generations", async () => {
 
 test("ChatOpenAI should not reuse cache if function call args have changed", async () => {
   const memoryCache = new InMemoryCache();
-  const lookupSpy = jest.spyOn(memoryCache, "lookup");
-  const updateSpy = jest.spyOn(memoryCache, "update");
+  const lookupSpy = vi.spyOn(memoryCache, "lookup");
+  const updateSpy = vi.spyOn(memoryCache, "update");
 
   const chat = new ChatOpenAI({
     model: "gpt-3.5-turbo",
@@ -645,7 +596,7 @@ test("ChatOpenAI should not reuse cache if function call args have changed", asy
     cache: memoryCache,
   });
 
-  const generateUncachedSpy = jest.spyOn(chat, "_generateUncached");
+  const generateUncachedSpy = vi.spyOn(chat, "_generateUncached");
 
   const messages = [
     [
@@ -828,13 +779,6 @@ test("Test ChatOpenAI token usage reporting for streaming calls", async () => {
           handleLLMEnd: async (output) => {
             streamingTokenUsed =
               output.llmOutput?.estimatedTokenUsage?.totalTokens;
-            // console.log(
-            //   "streaming usage",
-            //   output.llmOutput?.estimatedTokenUsage
-            // );
-          },
-          handleLLMError: async (_err) => {
-            // console.error(err);
           },
         },
       ],
@@ -851,10 +795,6 @@ test("Test ChatOpenAI token usage reporting for streaming calls", async () => {
         {
           handleLLMEnd: async (output) => {
             nonStreamingTokenUsed = output.llmOutput?.tokenUsage?.totalTokens;
-            // console.log("non-streaming usage", output.llmOutput?.estimated);
-          },
-          handleLLMError: async (_err) => {
-            // console.error(err);
           },
         },
       ],
@@ -908,9 +848,6 @@ test("Streaming tokens can be found in usage_metadata field", async () => {
       finalResult = chunk;
     }
   }
-  // console.log({
-  //   usage_metadata: finalResult?.usage_metadata,
-  // });
   expect(finalResult).toBeTruthy();
   expect(finalResult?.usage_metadata).toBeTruthy();
   expect(finalResult?.usage_metadata?.input_tokens).toBeGreaterThan(0);
@@ -927,9 +864,6 @@ test("streaming: true tokens can be found in usage_metadata field", async () => 
       include_usage: true,
     },
   });
-  // console.log({
-  //   usage_metadata: response?.usage_metadata,
-  // });
   expect(response).toBeTruthy();
   expect(response?.usage_metadata).toBeTruthy();
   expect(response?.usage_metadata?.input_tokens).toBeGreaterThan(0);
@@ -944,9 +878,6 @@ test("streaming: streamUsage will not override stream_options", async () => {
   const response = await model.invoke("Hello, how are you?", {
     stream_options: { include_usage: false },
   });
-  // console.log({
-  //   usage_metadata: response?.usage_metadata,
-  // });
   expect(response).toBeTruthy();
   expect(response?.usage_metadata).toBeFalsy();
 });
@@ -954,9 +885,6 @@ test("streaming: streamUsage will not override stream_options", async () => {
 test("streaming: streamUsage default is true", async () => {
   const model = new ChatOpenAI();
   const response = await model.invoke("Hello, how are you?");
-  // console.log({
-  //   usage_metadata: response?.usage_metadata,
-  // });
   expect(response).toBeTruthy();
   expect(response?.usage_metadata).toBeTruthy();
   expect(response?.usage_metadata?.input_tokens).toBeGreaterThan(0);
@@ -967,9 +895,6 @@ test("streaming: streamUsage default is true", async () => {
 test("populates ID field on AIMessage", async () => {
   const model = new ChatOpenAI();
   const response = await model.invoke("Hell");
-  // console.log({
-  //   invokeId: response.id,
-  // });
   expect(response.id?.length).toBeGreaterThan(1);
   expect(response?.id?.startsWith("chatcmpl-")).toBe(true);
 
@@ -982,9 +907,6 @@ test("populates ID field on AIMessage", async () => {
       finalChunk = finalChunk.concat(chunk);
     }
   }
-  // console.log({
-  //   streamId: finalChunk?.id,
-  // });
   expect(finalChunk?.id?.length).toBeGreaterThan(1);
   expect(finalChunk?.id?.startsWith("chatcmpl-")).toBe(true);
 });
@@ -1040,10 +962,6 @@ describe("Audio output", () => {
     if (!finalMsg.additional_kwargs.audio) {
       throw new Error("Not in additional kwargs");
     }
-    // console.log(
-    //   "response.additional_kwargs.audio",
-    //   finalMsg.additional_kwargs.audio
-    // );
     expect(Object.keys(finalMsg.additional_kwargs.audio).sort()).toEqual([
       "data",
       "expires_at",
@@ -1104,7 +1022,6 @@ describe("Audio output", () => {
       (response.additional_kwargs.audio as Record<string, any>).transcript
         .length
     ).toBeGreaterThan(1);
-    // console.log("response", (response.additional_kwargs.audio as any).transcript);
     const response2 = await model.invoke([
       ...input,
       response,
@@ -1113,7 +1030,6 @@ describe("Audio output", () => {
         content: "What did you just say?",
       },
     ]);
-    // console.log("response2", (response2.additional_kwargs.audio as any).transcript);
     expect(response2.additional_kwargs.audio).toBeTruthy();
     expect(
       (response2.additional_kwargs.audio as Record<string, any>).transcript
@@ -1134,7 +1050,6 @@ describe("Audio output", () => {
     });
 
     const response = await model.invoke("Make me an audio clip of you yelling");
-    // console.log("response", (response.additional_kwargs.audio as any).transcript);
     expect(response.additional_kwargs.audio).toBeTruthy();
     expect(
       (response.additional_kwargs.audio as Record<string, any>).transcript
@@ -1355,4 +1270,18 @@ describe("structured output works with different schema types", () => {
     expect(result.workAddress).toBeDefined();
     expect(result.billingAddress).toBeDefined();
   });
+});
+
+test("will call responses api for gpt-5.2-pro", async () => {
+  const model = new ChatOpenAI({
+    model: "gpt-5.2-pro",
+  });
+
+  // @ts-expect-error - responses is protected
+  const generateSpy = vi.spyOn(model.responses, "_generate");
+
+  const response = await model.invoke("what is the weather in Tokyo?");
+
+  expect(response).toBeDefined();
+  expect(generateSpy).toHaveBeenCalled();
 });

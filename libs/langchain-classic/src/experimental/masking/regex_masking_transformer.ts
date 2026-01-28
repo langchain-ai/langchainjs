@@ -93,7 +93,7 @@ export class RegexMaskingTransformer extends MaskingTransformer {
         // else use the hash function.
         const maskedValue = pattern.mask
           ? pattern.mask(match)
-          : pattern.replacement ?? this.hashFunction(match);
+          : (pattern.replacement ?? this.hashFunction(match));
 
         // Store the mapping of the masked value to the original value (match)
         originalValues.set(maskedValue, match);

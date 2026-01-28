@@ -1,6 +1,7 @@
 import type { BaseLanguageModelCallOptions } from "@langchain/core/language_models/base";
 import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
 import { GenerationChunk } from "@langchain/core/outputs";
+import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import type { StringWithAutocomplete } from "@langchain/core/utils/types";
 import { LLM, type BaseLLMParams } from "@langchain/core/language_models/llms";
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
@@ -22,6 +23,7 @@ export interface OllamaInput extends BaseLLMParams, OllamaCamelCaseOptions {
    * Optionally override the base URL to make request to.
    * This should only be set if your Ollama instance is being
    * server from a non-standard location.
+   * Defaults to `OLLAMA_BASE_URL` if set.
    * @default "http://localhost:11434"
    */
   baseUrl?: string;
@@ -38,6 +40,7 @@ export interface OllamaInput extends BaseLLMParams, OllamaCamelCaseOptions {
    * @default fetch
    */
   fetch?: typeof fetch;
+  think?: boolean;
 }
 
 /**
@@ -73,6 +76,8 @@ export class Ollama extends LLM<OllamaCallOptions> implements OllamaInput {
   model = "llama3";
 
   baseUrl = "http://localhost:11434";
+
+  think?: boolean;
 
   keepAlive?: string | number;
 
@@ -139,15 +144,18 @@ export class Ollama extends LLM<OllamaCallOptions> implements OllamaInput {
   constructor(fields?: OllamaInput & BaseLLMParams) {
     super(fields ?? {});
     this.model = fields?.model ?? this.model;
-    this.baseUrl = fields?.baseUrl?.endsWith("/")
-      ? fields?.baseUrl.slice(0, -1)
-      : fields?.baseUrl ?? this.baseUrl;
+    this.baseUrl = fields?.baseUrl
+      ? fields?.baseUrl.endsWith("/")
+        ? fields?.baseUrl.slice(0, -1)
+        : fields?.baseUrl
+      : (getEnvironmentVariable("OLLAMA_BASE_URL") ?? this.baseUrl);
     this.client = new OllamaClient({
       fetch: fields?.fetch,
       host: this.baseUrl,
       headers: fields?.headers,
     });
     this.keepAlive = fields?.keepAlive;
+    this.think = fields?.think;
 
     this.embeddingOnly = fields?.embeddingOnly;
     this.f16KV = fields?.f16Kv;
@@ -189,6 +197,7 @@ export class Ollama extends LLM<OllamaCallOptions> implements OllamaInput {
       model: this.model,
       format: this.format,
       keep_alive: this.keepAlive,
+      think: this.think,
       images: options?.images,
       options: {
         embedding_only: this.embeddingOnly,
@@ -241,14 +250,20 @@ export class Ollama extends LLM<OllamaCallOptions> implements OllamaInput {
       }
 
       if (!chunk.done) {
+        // when think is enabled, try thinking first
+        const token =
+          this.think || this.think === undefined
+            ? (chunk.thinking ?? chunk.response ?? "")
+            : (chunk.response ?? "");
+
         yield new GenerationChunk({
-          text: chunk.response,
+          text: token,
           generationInfo: {
             ...chunk,
             response: undefined,
           },
         });
-        await runManager?.handleLLMNewToken(chunk.response ?? "");
+        await runManager?.handleLLMNewToken(token);
       } else {
         yield new GenerationChunk({
           text: "",

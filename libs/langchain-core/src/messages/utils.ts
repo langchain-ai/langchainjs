@@ -1,6 +1,7 @@
 import { addLangChainErrorFields } from "../errors/index.js";
 import { SerializedConstructor } from "../load/serializable.js";
 import { _isToolCall } from "../tools/utils.js";
+import { parsePartialJson } from "../utils/json.js";
 import { AIMessage, AIMessageChunk, AIMessageChunkFields } from "./ai.js";
 import {
   BaseMessageLike,
@@ -20,7 +21,13 @@ import {
 import { HumanMessage, HumanMessageChunk } from "./human.js";
 import { RemoveMessage } from "./modifier.js";
 import { SystemMessage, SystemMessageChunk } from "./system.js";
-import { ToolCall, ToolMessage, ToolMessageFields } from "./tool.js";
+import {
+  InvalidToolCall,
+  ToolCall,
+  ToolCallChunk,
+  ToolMessage,
+  ToolMessageFields,
+} from "./tool.js";
 
 export type $Expand<T> = T extends infer U ? { [K in keyof U]: U[K] } : never;
 
@@ -34,10 +41,10 @@ type $KnownKeys<T> = {
   [K in keyof T]: string extends K
     ? never
     : number extends K
-    ? never
-    : symbol extends K
-    ? never
-    : K;
+      ? never
+      : symbol extends K
+        ? never
+        : K;
 }[keyof T];
 
 /**
@@ -49,10 +56,10 @@ type $KnownKeys<T> = {
 type $HasIndexSignature<T> = string extends keyof T
   ? true
   : number extends keyof T
-  ? true
-  : symbol extends keyof T
-  ? true
-  : false;
+    ? true
+    : symbol extends keyof T
+      ? true
+      : false;
 
 /**
  * Detects if T has an index signature and no known keys.
@@ -60,11 +67,12 @@ type $HasIndexSignature<T> = string extends keyof T
  * @template T - The type to check for index signatures and no known keys
  * @returns True if T has an index signature and no known keys, false otherwise
  */
-type $OnlyIndexSignatures<T> = $HasIndexSignature<T> extends true
-  ? [$KnownKeys<T>] extends [never]
-    ? true
-    : false
-  : false;
+type $OnlyIndexSignatures<T> =
+  $HasIndexSignature<T> extends true
+    ? [$KnownKeys<T>] extends [never]
+      ? true
+      : false
+    : false;
 
 /**
  * Recursively merges two object types T and U, with U taking precedence over T.
@@ -104,21 +112,21 @@ export type $MergeObjects<T, U> =
   $OnlyIndexSignatures<U> extends true
     ? U
     : // If T is purely index-signature based, prefer U as a whole (prevents leaking broad index signatures)
-    $OnlyIndexSignatures<T> extends true
-    ? U
-    : {
-        [K in keyof T | keyof U]: K extends keyof T
-          ? K extends keyof U
-            ? T[K] extends Record<string, unknown>
-              ? U[K] extends Record<string, unknown>
-                ? $MergeObjects<T[K], U[K]>
+      $OnlyIndexSignatures<T> extends true
+      ? U
+      : {
+          [K in keyof T | keyof U]: K extends keyof T
+            ? K extends keyof U
+              ? T[K] extends Record<string, unknown>
+                ? U[K] extends Record<string, unknown>
+                  ? $MergeObjects<T[K], U[K]>
+                  : U[K]
                 : U[K]
-              : U[K]
-            : T[K]
-          : K extends keyof U
-          ? U[K]
-          : never;
-      };
+              : T[K]
+            : K extends keyof U
+              ? U[K]
+              : never;
+        };
 
 /**
  * Merges two discriminated unions A and B based on a discriminator key (defaults to "type").
@@ -134,16 +142,16 @@ export type $MergeObjects<T, U> =
 export type $MergeDiscriminatedUnion<
   A extends Record<Key, PropertyKey>,
   B extends Record<Key, PropertyKey>,
-  Key extends PropertyKey = "type"
+  Key extends PropertyKey = "type",
 > = {
   // Create a mapped type over all possible discriminator values from both A and B
   [T in A[Key] | B[Key]]: [Extract<B, Record<Key, T>>] extends [never] // Check if B has a member with this discriminator value
     ? // If B doesn't have this discriminator value, use A's member
       Extract<A, Record<Key, T>>
     : // If B does have this discriminator value, merge A's and B's members (B takes precedence)
-    [Extract<A, Record<Key, T>>] extends [never]
-    ? Extract<B, Record<Key, T>>
-    : $MergeObjects<Extract<A, Record<Key, T>>, Extract<B, Record<Key, T>>>;
+      [Extract<A, Record<Key, T>>] extends [never]
+      ? Extract<B, Record<Key, T>>
+      : $MergeObjects<Extract<A, Record<Key, T>>, Extract<B, Record<Key, T>>>;
   // Index into the mapped type with all possible discriminator values
   // This converts the mapped type back into a union
 }[A[Key] | B[Key]];
@@ -300,6 +308,15 @@ export function coerceMessageLikeToMessage(
 /**
  * This function is used by memory classes to get a string representation
  * of the chat message history, based on the message content and role.
+ *
+ * Produces compact output like:
+ * ```
+ * Human: What's the weather?
+ * AI: Let me check...[tool_calls]
+ * Tool: 72°F and sunny
+ * ```
+ *
+ * This avoids token inflation from metadata when stringifying message objects directly.
  */
 export function getBufferString(
   messages: BaseMessage[],
@@ -309,25 +326,42 @@ export function getBufferString(
   const string_messages: string[] = [];
   for (const m of messages) {
     let role: string;
-    if (m._getType() === "human") {
+    if (m.type === "human") {
       role = humanPrefix;
-    } else if (m._getType() === "ai") {
+    } else if (m.type === "ai") {
       role = aiPrefix;
-    } else if (m._getType() === "system") {
+    } else if (m.type === "system") {
       role = "System";
-    } else if (m._getType() === "tool") {
+    } else if (m.type === "tool") {
       role = "Tool";
-    } else if (m._getType() === "generic") {
+    } else if (m.type === "generic") {
       role = (m as ChatMessage).role;
     } else {
-      throw new Error(`Got unsupported message type: ${m._getType()}`);
+      throw new Error(`Got unsupported message type: ${m.type}`);
     }
     const nameStr = m.name ? `${m.name}, ` : "";
-    const readableContent =
-      typeof m.content === "string"
-        ? m.content
-        : JSON.stringify(m.content, null, 2);
-    string_messages.push(`${role}: ${nameStr}${readableContent}`);
+
+    // Use m.text property which extracts only text content, avoiding metadata
+    // For non-string content (e.g., content blocks), m.text extracts only text blocks
+    const readableContent = m.text;
+
+    let message = `${role}: ${nameStr}${readableContent}`;
+
+    // Include tool calls for AI messages (matching Python's get_buffer_string behavior)
+    if (m.type === "ai") {
+      const aiMessage = m as AIMessage;
+      if (aiMessage.tool_calls && aiMessage.tool_calls.length > 0) {
+        message += JSON.stringify(aiMessage.tool_calls);
+      } else if (
+        aiMessage.additional_kwargs &&
+        "function_call" in aiMessage.additional_kwargs
+      ) {
+        // Legacy behavior assumes only one function call per message
+        message += JSON.stringify(aiMessage.additional_kwargs.function_call);
+      }
+    }
+
+    string_messages.push(message);
   }
   return string_messages.join("\n");
 }
@@ -444,4 +478,108 @@ export function convertToChunk(message: BaseMessage) {
   } else {
     throw new Error("Unknown message type.");
   }
+}
+
+/**
+ * Collapses an array of tool call chunks into complete tool calls.
+ *
+ * This function groups tool call chunks by their id and/or index, then attempts to
+ * parse and validate the accumulated arguments for each group. Successfully parsed
+ * tool calls are returned as valid `ToolCall` objects, while malformed ones are
+ * returned as `InvalidToolCall` objects.
+ *
+ * @param chunks - An array of `ToolCallChunk` objects to collapse
+ * @returns An object containing:
+ *   - `tool_call_chunks`: The original input chunks
+ *   - `tool_calls`: An array of successfully parsed and validated tool calls
+ *   - `invalid_tool_calls`: An array of tool calls that failed parsing or validation
+ *
+ * @remarks
+ * Chunks are grouped using the following matching logic:
+ * - If a chunk has both an id and index, it matches chunks with the same id and index
+ * - If a chunk has only an id, it matches chunks with the same id
+ * - If a chunk has only an index, it matches chunks with the same index
+ *
+ * For each group, the function:
+ * 1. Concatenates all `args` strings from the chunks
+ * 2. Attempts to parse the concatenated string as JSON
+ * 3. Validates that the result is a non-null object with a valid id
+ * 4. Creates either a `ToolCall` (if valid) or `InvalidToolCall` (if invalid)
+ */
+export function collapseToolCallChunks(chunks: ToolCallChunk[]): {
+  tool_call_chunks: ToolCallChunk[];
+  tool_calls: ToolCall[];
+  invalid_tool_calls: InvalidToolCall[];
+} {
+  const groupedToolCallChunks = chunks.reduce((acc, chunk) => {
+    const matchedChunkIndex = acc.findIndex(([match]) => {
+      // If chunk has an id and index, match if both are present
+      if (
+        "id" in chunk &&
+        chunk.id &&
+        "index" in chunk &&
+        chunk.index !== undefined
+      ) {
+        return chunk.id === match.id && chunk.index === match.index;
+      }
+      // If chunk has an id, we match on id
+      if ("id" in chunk && chunk.id) {
+        return chunk.id === match.id;
+      }
+      // If chunk has an index, we match on index
+      if ("index" in chunk && chunk.index !== undefined) {
+        return chunk.index === match.index;
+      }
+      return false;
+    });
+    if (matchedChunkIndex !== -1) {
+      acc[matchedChunkIndex].push(chunk);
+    } else {
+      acc.push([chunk]);
+    }
+    return acc;
+  }, [] as ToolCallChunk[][]);
+
+  const toolCalls: ToolCall[] = [];
+  const invalidToolCalls: InvalidToolCall[] = [];
+  for (const chunks of groupedToolCallChunks) {
+    let parsedArgs: Record<string, unknown> | null = null;
+    const name = chunks[0]?.name ?? "";
+    const joinedArgs = chunks
+      .map((c) => c.args || "")
+      .join("")
+      .trim();
+    const argsStr = joinedArgs.length ? joinedArgs : "{}";
+    const id = chunks[0]?.id;
+    try {
+      parsedArgs = parsePartialJson(argsStr);
+      if (
+        !id ||
+        parsedArgs === null ||
+        typeof parsedArgs !== "object" ||
+        Array.isArray(parsedArgs)
+      ) {
+        throw new Error("Malformed tool call chunk args.");
+      }
+      toolCalls.push({
+        name,
+        args: parsedArgs,
+        id,
+        type: "tool_call",
+      });
+    } catch {
+      invalidToolCalls.push({
+        name,
+        args: argsStr,
+        id,
+        error: "Malformed args.",
+        type: "invalid_tool_call",
+      });
+    }
+  }
+  return {
+    tool_call_chunks: chunks,
+    tool_calls: toolCalls,
+    invalid_tool_calls: invalidToolCalls,
+  };
 }

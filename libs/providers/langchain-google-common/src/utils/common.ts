@@ -102,12 +102,22 @@ export function convertToGeminiTools(tools: GoogleAIToolType[]): GeminiTool[] {
           ...funcs
         );
       } else if (isLangChainTool(tool)) {
-        const jsonSchema = schemaToGeminiParameters(tool.schema);
-        geminiTools[functionDeclarationsIndex].functionDeclarations!.push({
-          name: tool.name,
-          description: tool.description ?? `A function available to call.`,
-          parameters: jsonSchema as GeminiFunctionSchema,
-        });
+        try {
+          const jsonSchema = schemaToGeminiParameters(tool.schema);
+          geminiTools[functionDeclarationsIndex].functionDeclarations!.push({
+            name: tool.name,
+            description: tool.description ?? `A function available to call.`,
+            parameters: jsonSchema as GeminiFunctionSchema,
+          });
+        } catch (error) {
+          const errorMessage =
+            error && typeof error === "object" && "message" in error
+              ? String(error.message)
+              : String(error);
+          throw new Error(
+            `Failed to convert tool '${tool.name}' schema for Gemini: ${errorMessage}. `
+          );
+        }
       } else if (isOpenAITool(tool)) {
         geminiTools[functionDeclarationsIndex].functionDeclarations!.push({
           name: tool.function.name,
@@ -189,6 +199,10 @@ export function copyAIModelParamsInto(
   ret.logprobs = options?.logprobs ?? params?.logprobs ?? target.logprobs;
   ret.topLogprobs =
     options?.topLogprobs ?? params?.topLogprobs ?? target.topLogprobs;
+  ret.thinkingLevel =
+    options?.thinkingLevel ?? params?.thinkingLevel ?? target?.thinkingLevel;
+  ret.reasoningLevel =
+    options?.reasoningLevel ?? params?.reasoningLevel ?? target?.reasoningLevel;
   ret.convertSystemMessageToHumanContent =
     options?.convertSystemMessageToHumanContent ??
     params?.convertSystemMessageToHumanContent ??
@@ -197,6 +211,8 @@ export function copyAIModelParamsInto(
     options?.responseMimeType ??
     params?.responseMimeType ??
     target?.responseMimeType;
+  ret.responseSchema =
+    options?.responseSchema ?? params?.responseSchema ?? target?.responseSchema;
   ret.responseModalities =
     options?.responseModalities ??
     params?.responseModalities ??

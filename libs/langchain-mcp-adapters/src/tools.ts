@@ -34,6 +34,446 @@ import { getDebugLog } from "./logging.js";
 const debugLog = getDebugLog("tools");
 
 /**
+ * JSON Schema type definitions for dereferencing $defs.
+ */
+type JsonSchemaObject = {
+  type?: string;
+  properties?: Record<string, JsonSchemaObject>;
+  items?: JsonSchemaObject | JsonSchemaObject[];
+  additionalProperties?: boolean | JsonSchemaObject;
+  $ref?: string;
+  $defs?: Record<string, JsonSchemaObject>;
+  definitions?: Record<string, JsonSchemaObject>;
+  allOf?: JsonSchemaObject[];
+  anyOf?: JsonSchemaObject[];
+  oneOf?: JsonSchemaObject[];
+  not?: JsonSchemaObject;
+  if?: JsonSchemaObject;
+  then?: JsonSchemaObject;
+  else?: JsonSchemaObject;
+  required?: string[];
+  description?: string;
+  default?: unknown;
+  enum?: unknown[];
+  const?: unknown;
+  [key: string]: unknown;
+};
+
+/**
+ * Dereferences $ref pointers in a JSON Schema by inlining the definitions from $defs.
+ * This is necessary because some JSON Schema validators (like @cfworker/json-schema)
+ * don't automatically resolve $ref references to $defs.
+ *
+ * @param schema - The JSON Schema to dereference
+ * @returns A new schema with all $ref pointers resolved
+ */
+function dereferenceJsonSchema(schema: JsonSchemaObject): JsonSchemaObject {
+  const definitions = schema.$defs ?? schema.definitions ?? {};
+
+  /**
+   * Recursively resolve $ref pointers in the schema.
+   * Tracks visited refs to prevent infinite recursion with circular references.
+   */
+  function resolveRefs(
+    obj: JsonSchemaObject,
+    visitedRefs: Set<string> = new Set()
+  ): JsonSchemaObject {
+    if (typeof obj !== "object" || obj === null) {
+      return obj;
+    }
+
+    // Handle $ref
+    if (obj.$ref && typeof obj.$ref === "string") {
+      const refPath = obj.$ref;
+
+      // Only handle local references to $defs or definitions
+      const defsMatch = refPath.match(/^#\/\$defs\/(.+)$/);
+      const definitionsMatch = refPath.match(/^#\/definitions\/(.+)$/);
+      const match = defsMatch || definitionsMatch;
+
+      if (match) {
+        const defName = match[1];
+        const definition = definitions[defName];
+
+        if (definition) {
+          // Check for circular reference
+          if (visitedRefs.has(refPath)) {
+            // Return a placeholder for circular refs to avoid infinite loop
+            debugLog(
+              `WARNING: Circular reference detected for ${refPath}, using empty object`
+            );
+            return { type: "object" };
+          }
+
+          // Track this ref as visited
+          const newVisitedRefs = new Set(visitedRefs);
+          newVisitedRefs.add(refPath);
+
+          // Merge the resolved definition with any other properties from the original object
+          // (excluding $ref itself)
+          const { $ref: _, ...restOfObj } = obj;
+          const resolvedDef = resolveRefs(definition, newVisitedRefs);
+          return { ...resolvedDef, ...restOfObj };
+        } else {
+          debugLog(`WARNING: Could not resolve $ref: ${refPath}`);
+        }
+      }
+      // For non-local refs, return as-is
+      return obj;
+    }
+
+    // Recursively process all properties
+    const result: JsonSchemaObject = {};
+
+    for (const [key, value] of Object.entries(obj)) {
+      // Skip $defs and definitions as they're no longer needed after dereferencing
+      if (key === "$defs" || key === "definitions") {
+        continue;
+      }
+
+      if (Array.isArray(value)) {
+        result[key] = value.map((item) =>
+          typeof item === "object" && item !== null
+            ? resolveRefs(item as JsonSchemaObject, visitedRefs)
+            : item
+        );
+      } else if (typeof value === "object" && value !== null) {
+        result[key] = resolveRefs(value as JsonSchemaObject, visitedRefs);
+      } else {
+        result[key] = value;
+      }
+    }
+
+    return result;
+  }
+
+  return resolveRefs(schema);
+}
+
+/**
+ * Deep merges two JSON Schema objects.
+ * Arrays are concatenated (with special handling for enum), objects are recursively merged,
+ * primitives are overwritten.
+ *
+ * @param target - The target schema to merge into
+ * @param source - The source schema to merge from
+ * @returns A new merged schema
+ */
+function deepMergeSchemas(
+  target: JsonSchemaObject,
+  source: JsonSchemaObject
+): JsonSchemaObject {
+  const result: JsonSchemaObject = { ...target };
+
+  for (const [key, sourceValue] of Object.entries(source)) {
+    const targetValue = result[key];
+
+    if (key === "required" && Array.isArray(targetValue)) {
+      // Concatenate and deduplicate required arrays
+      result[key] = [
+        ...new Set([...targetValue, ...(sourceValue as string[])]),
+      ];
+    } else if (key === "const") {
+      // When merging const values, convert to enum to allow multiple values
+      const existingConst = result.const;
+      const existingEnum = result.enum as unknown[] | undefined;
+      const values = new Set<unknown>();
+
+      if (existingEnum) {
+        for (const v of existingEnum) values.add(v);
+      }
+      if (existingConst !== undefined) {
+        values.add(existingConst);
+      }
+      values.add(sourceValue);
+
+      // Remove const and use enum instead
+      delete result.const;
+      result.enum = [...values];
+    } else if (key === "enum" && Array.isArray(sourceValue)) {
+      // Merge enum values (union of all possible values)
+      const values = new Set<unknown>();
+      if (Array.isArray(targetValue)) {
+        for (const v of targetValue) values.add(v);
+      }
+      // Also include any existing const value
+      if (result.const !== undefined) {
+        values.add(result.const);
+        delete result.const;
+      }
+      for (const v of sourceValue) values.add(v);
+      result[key] = [...values];
+    } else if (
+      key === "properties" &&
+      typeof targetValue === "object" &&
+      targetValue !== null
+    ) {
+      // Recursively merge properties - merge each property individually
+      const mergedProps: Record<string, JsonSchemaObject> = {
+        ...(targetValue as Record<string, JsonSchemaObject>),
+      };
+      for (const [propKey, propValue] of Object.entries(
+        sourceValue as Record<string, JsonSchemaObject>
+      )) {
+        if (
+          mergedProps[propKey] &&
+          typeof mergedProps[propKey] === "object" &&
+          typeof propValue === "object"
+        ) {
+          mergedProps[propKey] = deepMergeSchemas(
+            mergedProps[propKey],
+            propValue
+          );
+        } else {
+          mergedProps[propKey] = propValue;
+        }
+      }
+      result[key] = mergedProps;
+    } else if (Array.isArray(sourceValue) && Array.isArray(targetValue)) {
+      // Concatenate arrays
+      result[key] = [...targetValue, ...sourceValue];
+    } else if (
+      typeof sourceValue === "object" &&
+      sourceValue !== null &&
+      !Array.isArray(sourceValue) &&
+      typeof targetValue === "object" &&
+      targetValue !== null &&
+      !Array.isArray(targetValue)
+    ) {
+      // Recursively merge objects
+      result[key] = deepMergeSchemas(
+        targetValue as JsonSchemaObject,
+        sourceValue as JsonSchemaObject
+      );
+    } else {
+      // Overwrite primitives or when types don't match
+      result[key] = sourceValue;
+    }
+  }
+
+  return result;
+}
+
+/**
+ * Extracts and merges properties from if/then/else conditional schemas.
+ * This is used when processing allOf items that contain conditionals.
+ *
+ * @param schema - A schema that may contain if/then/else
+ * @returns Properties extracted from both then and else branches
+ */
+function extractPropertiesFromConditional(
+  schema: JsonSchemaObject
+): JsonSchemaObject {
+  let result: JsonSchemaObject = {};
+
+  // Extract properties from 'then' branch
+  if (schema.then && typeof schema.then === "object") {
+    const thenSchema = schema.then as JsonSchemaObject;
+    if (thenSchema.properties) {
+      result = deepMergeSchemas(result, { properties: thenSchema.properties });
+    }
+    if (thenSchema.required) {
+      result.required = [
+        ...new Set([...(result.required || []), ...thenSchema.required]),
+      ];
+    }
+  }
+
+  // Extract properties from 'else' branch
+  if (schema.else && typeof schema.else === "object") {
+    const elseSchema = schema.else as JsonSchemaObject;
+    if (elseSchema.properties) {
+      result = deepMergeSchemas(result, { properties: elseSchema.properties });
+    }
+    if (elseSchema.required) {
+      result.required = [
+        ...new Set([...(result.required || []), ...elseSchema.required]),
+      ];
+    }
+  }
+
+  return result;
+}
+
+/**
+ * Simplifies a JSON Schema for LLM compatibility by removing patterns that
+ * OpenAI and other LLM providers don't support at the top level:
+ * - allOf: merged into the main schema
+ * - anyOf/oneOf: flattened to the first object variant or merged if all are objects
+ * - if/then/else: conditional schemas are removed, but properties are extracted
+ * - not: negation constraints are removed
+ * - $schema: meta schema reference is removed
+ * - unevaluatedProperties: not supported by OpenAI
+ *
+ * This transformation is applied recursively to nested schemas as well.
+ *
+ * @param schema - The JSON Schema to simplify
+ * @returns A new simplified schema compatible with LLM tool calling APIs
+ */
+function simplifyJsonSchemaForLLM(schema: JsonSchemaObject): JsonSchemaObject {
+  if (typeof schema !== "object" || schema === null) {
+    return schema;
+  }
+
+  // Start with a copy of the schema, excluding unsupported keywords
+  const {
+    allOf,
+    anyOf,
+    oneOf,
+    not: _not,
+    if: schemaIf,
+    then: schemaThen,
+    else: schemaElse,
+    $schema: _$schema,
+    unevaluatedProperties: _unevaluatedProperties,
+    ...baseSchema
+  } = schema;
+
+  let result: JsonSchemaObject = { ...baseSchema };
+
+  // Handle if/then/else at the current level by extracting properties
+  if (schemaIf || schemaThen || schemaElse) {
+    const conditionalProps = extractPropertiesFromConditional({
+      if: schemaIf,
+      then: schemaThen,
+      else: schemaElse,
+    } as JsonSchemaObject);
+    result = deepMergeSchemas(result, conditionalProps);
+    debugLog(`INFO: Extracted properties from if/then/else conditional`);
+  }
+
+  // Handle allOf by merging all schemas into the base
+  if (Array.isArray(allOf)) {
+    for (const subSchema of allOf) {
+      // First extract properties from any if/then/else in this subschema
+      if (subSchema.if || subSchema.then || subSchema.else) {
+        const conditionalProps = extractPropertiesFromConditional(subSchema);
+        result = deepMergeSchemas(result, conditionalProps);
+      }
+      // Then recursively simplify the subschema and merge
+      const simplified = simplifyJsonSchemaForLLM(subSchema);
+      result = deepMergeSchemas(result, simplified);
+    }
+    debugLog(
+      `INFO: Flattened allOf with ${allOf.length} schemas into base schema`
+    );
+  }
+
+  // Handle anyOf/oneOf by attempting to merge object schemas or picking first viable option
+  // Note: When merging anyOf/oneOf, we only merge properties but NOT required arrays,
+  // because the union semantics mean any ONE of the schemas should match, not all.
+  const unionSchemas = anyOf || oneOf;
+  if (Array.isArray(unionSchemas) && unionSchemas.length > 0) {
+    // Check if all schemas in the union are object-like (have type: object or have properties)
+    const allAreObjects = unionSchemas.every(
+      (s) =>
+        typeof s === "object" &&
+        s !== null &&
+        (s.type === "object" || s.properties)
+    );
+
+    // Collect all properties from all schemas, but only keep required fields
+    // that are common to ALL schemas (intersection)
+    const mergedProperties: Record<string, JsonSchemaObject> = {};
+    const requiredSets: Set<string>[] = [];
+
+    const schemasToMerge = allAreObjects
+      ? unionSchemas
+      : unionSchemas.filter(
+          (s) =>
+            typeof s === "object" &&
+            s !== null &&
+            (s.type === "object" || s.properties)
+        );
+
+    for (const subSchema of schemasToMerge) {
+      const simplified = simplifyJsonSchemaForLLM(subSchema);
+      // Merge properties
+      if (simplified.properties) {
+        Object.assign(mergedProperties, simplified.properties);
+      }
+      // Collect required sets for intersection
+      if (simplified.required && Array.isArray(simplified.required)) {
+        requiredSets.push(new Set(simplified.required));
+      }
+      // Merge type if present
+      if (simplified.type && !result.type) {
+        result.type = simplified.type;
+      }
+    }
+
+    // Merge the collected properties
+    if (Object.keys(mergedProperties).length > 0) {
+      result.properties = {
+        ...(result.properties as Record<string, JsonSchemaObject>),
+        ...mergedProperties,
+      };
+    }
+
+    // Only add required fields that are common to ALL schemas (intersection)
+    if (requiredSets.length > 0) {
+      const commonRequired = requiredSets.reduce((acc, set) => {
+        return new Set([...acc].filter((x) => set.has(x)));
+      });
+      if (commonRequired.size > 0) {
+        result.required = [
+          ...new Set([...(result.required || []), ...commonRequired]),
+        ];
+      }
+    }
+
+    debugLog(
+      `INFO: Merged ${schemasToMerge.length} object schemas from ${anyOf ? "anyOf" : "oneOf"}`
+    );
+  }
+
+  // Ensure we have type: "object" if there are properties
+  if (result.properties && !result.type) {
+    result.type = "object";
+  }
+
+  // Recursively simplify nested schemas in properties
+  if (result.properties) {
+    const simplifiedProperties: Record<string, JsonSchemaObject> = {};
+    for (const [propName, propSchema] of Object.entries(result.properties)) {
+      if (typeof propSchema === "object" && propSchema !== null) {
+        simplifiedProperties[propName] = simplifyJsonSchemaForLLM(
+          propSchema as JsonSchemaObject
+        );
+      } else {
+        simplifiedProperties[propName] = propSchema as JsonSchemaObject;
+      }
+    }
+    result.properties = simplifiedProperties;
+  }
+
+  // Simplify items schema for arrays
+  if (result.items) {
+    if (Array.isArray(result.items)) {
+      result.items = result.items.map((item) =>
+        typeof item === "object" && item !== null
+          ? simplifyJsonSchemaForLLM(item as JsonSchemaObject)
+          : item
+      );
+    } else if (typeof result.items === "object") {
+      result.items = simplifyJsonSchemaForLLM(result.items as JsonSchemaObject);
+    }
+  }
+
+  // Simplify additionalProperties if it's a schema
+  if (
+    typeof result.additionalProperties === "object" &&
+    result.additionalProperties !== null
+  ) {
+    result.additionalProperties = simplifyJsonSchemaForLLM(
+      result.additionalProperties as JsonSchemaObject
+    );
+  }
+
+  return result;
+}
+
+/**
  * MCP instance is either a Client or a MCPClient.
  *
  * `MCPClient`: is the base instance from the `@modelcontextprotocol/sdk` package.
@@ -85,13 +525,14 @@ function isResourceReference(
   resource:
     | EmbeddedResource["resource"]
     | ReadResourceResult["contents"][number]
-) {
+): boolean {
   return (
     typeof resource === "object" &&
     resource !== null &&
-    resource.uri != null &&
-    resource.blob == null &&
-    resource.text == null
+    "uri" in resource &&
+    typeof (resource as { uri?: unknown }).uri === "string" &&
+    (!("blob" in resource) || resource.blob == null) &&
+    (!("text" in resource) || resource.text == null)
   );
 }
 
@@ -115,7 +556,7 @@ async function* _embeddedResourceToStandardFileBlocks(
     return;
   }
 
-  if (resource.blob != null) {
+  if ("blob" in resource && resource.blob != null) {
     yield {
       type: "file",
       source_type: "base64",
@@ -125,7 +566,7 @@ async function* _embeddedResourceToStandardFileBlocks(
     } as ContentBlock.Data.StandardFileBlock &
       ContentBlock.Data.Base64ContentBlock;
   }
-  if (resource.text != null) {
+  if ("text" in resource && resource.text != null) {
     yield {
       type: "file",
       source_type: "text",
@@ -243,9 +684,14 @@ async function _embeddedResourceToArtifact(
     );
   }
 
-  if (!resource.blob && !resource.text && resource.uri) {
+  if (
+    (!("blob" in resource) || resource.blob == null) &&
+    (!("text" in resource) || resource.text == null) &&
+    "uri" in resource &&
+    typeof resource.uri === "string"
+  ) {
     const response: ReadResourceResult = await client.readResource({
-      uri: resource.resource.uri,
+      uri: resource.uri,
     });
 
     return response.contents.map(
@@ -259,6 +705,46 @@ async function _embeddedResourceToArtifact(
   }
   return [resource];
 }
+
+/**
+ * Special artifact type for structured content from MCP tool results
+ * @internal
+ */
+type MCPStructuredContentArtifact = {
+  type: "mcp_structured_content";
+  data: NonNullable<CallToolResult["structuredContent"]>;
+};
+
+/**
+ * Special artifact type for meta information from MCP tool results
+ * @internal
+ */
+type MCPMetaArtifact = {
+  type: "mcp_meta";
+  data: NonNullable<CallToolResult["_meta"]>;
+};
+
+/**
+ * Extended artifact type that includes MCP-specific artifacts
+ * @internal
+ */
+type ExtendedArtifact =
+  | EmbeddedResource
+  | ContentBlock.Multimodal.Standard
+  | MCPStructuredContentArtifact
+  | MCPMetaArtifact;
+
+/**
+ * Content type that may include structuredContent and meta
+ * @internal
+ */
+type ExtendedContent =
+  | (ContentBlock | ContentBlock.Multimodal.Standard)[]
+  | (ContentBlock.Text & {
+      structuredContent?: NonNullable<CallToolResult["structuredContent"]>;
+      meta?: NonNullable<CallToolResult["_meta"]>;
+    })
+  | string;
 
 /**
  * @internal
@@ -323,12 +809,7 @@ async function _convertCallToolResult({
   client,
   useStandardContentBlocks,
   outputHandling,
-}: ConvertCallToolResultArgs): Promise<
-  [
-    (ContentBlock | ContentBlock.Multimodal.Standard)[],
-    (EmbeddedResource | ContentBlock.Multimodal.Standard)[],
-  ]
-> {
+}: ConvertCallToolResultArgs): Promise<[ExtendedContent, ExtendedArtifact[]]> {
   if (!result) {
     throw new ToolException(
       `MCP tool '${toolName}' on server '${serverName}' returned an invalid result - tool call response was undefined`
@@ -344,7 +825,9 @@ async function _convertCallToolResult({
   if (result.isError) {
     throw new ToolException(
       `MCP tool '${toolName}' on server '${serverName}' returned an error: ${result.content
-        .map((content: MCPContentBlock) => content.text)
+        .map((content: MCPContentBlock) =>
+          content.type === "text" ? content.text : ""
+        )
         .join("\n")}`
     );
   }
@@ -391,13 +874,47 @@ async function _convertCallToolResult({
     )
   ).flat();
 
-  if (convertedContent.length === 1 && convertedContent[0].type === "text") {
-    // FIXME: get rid of this assertion
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    return [convertedContent[0].text as any, artifacts];
+  // Extract structuredContent and _meta from result
+  // These are optional fields that are part of the CallToolResult type
+  const structuredContent = result.structuredContent;
+  const meta = result._meta;
+
+  // Add structuredContent and meta as special artifacts
+  const enhancedArtifacts: ExtendedArtifact[] = [...artifacts];
+  if (structuredContent) {
+    enhancedArtifacts.push({
+      type: "mcp_structured_content",
+      data: structuredContent,
+    });
+  }
+  if (meta) {
+    enhancedArtifacts.push({
+      type: "mcp_meta",
+      data: meta,
+    });
   }
 
-  return [convertedContent, artifacts];
+  // If we have structuredContent or meta, create an enhanced content that includes all info
+  if (convertedContent.length === 1 && convertedContent[0].type === "text") {
+    const textBlock = convertedContent[0] as ContentBlock.Text;
+    const textContent = textBlock.text;
+
+    // If we have structuredContent or meta, wrap the content with additional info
+    if (structuredContent || meta) {
+      return [
+        {
+          ...textBlock,
+          ...(structuredContent ? { structuredContent } : {}),
+          ...(meta ? { meta } : {}),
+        } as ExtendedContent,
+        enhancedArtifacts,
+      ];
+    }
+
+    return [textContent as ExtendedContent, enhancedArtifacts];
+  }
+
+  return [convertedContent as ExtendedContent, enhancedArtifacts];
 }
 
 /**
@@ -451,11 +968,7 @@ type CallToolArgs = {
 };
 
 type ContentBlocksWithArtifacts =
-  | [
-      (ContentBlock | ContentBlock.Multimodal.Standard)[],
-      (EmbeddedResource | ContentBlock.Multimodal.Standard)[],
-    ]
-  | [string, (EmbeddedResource | ContentBlock.Multimodal.Standard)[]]
+  | [ExtendedContent, ExtendedArtifact[]]
   | Command;
 
 /**
@@ -483,8 +996,13 @@ async function _callTool({
     debugLog(`INFO: Calling tool ${toolName}(${JSON.stringify(args)})`);
 
     // Extract timeout from RunnableConfig and pass to MCP SDK
+    // Note: ensureConfig() converts timeout into an AbortSignal and deletes the timeout field.
+    // To preserve the numeric timeout for SDKs that accept an explicit timeout value, we read
+    // it from metadata.timeoutMs if present, falling back to any direct timeout.
+    const numericTimeout =
+      (config?.metadata?.timeoutMs as number | undefined) ?? config?.timeout;
     const requestOptions: RequestOptions = {
-      ...(config?.timeout ? { timeout: config.timeout } : {}),
+      ...(numericTimeout ? { timeout: numericTimeout } : {}),
       ...(config?.signal ? { signal: config.signal } : {}),
       ...(onProgress
         ? {
@@ -562,11 +1080,45 @@ async function _callTool({
       outputHandling,
     });
 
+    // Convert ExtendedContent to the format expected by afterToolCall
+    // afterToolCall expects: string | (ContentBlock | ContentBlock.Data.DataContentBlock)[]
+    // ExtendedContent can be: string | ContentBlock[] | (ContentBlock.Text & {...})
+    const normalizedContent:
+      | string
+      | (ContentBlock | ContentBlock.Data.DataContentBlock)[] =
+      typeof content === "string"
+        ? content
+        : Array.isArray(content)
+          ? (content as (ContentBlock | ContentBlock.Data.DataContentBlock)[])
+          : ([content] as (
+              | ContentBlock
+              | ContentBlock.Data.DataContentBlock
+            )[]);
+
+    // Filter artifacts to only include types expected by afterToolCall
+    // afterToolCall expects: (EmbeddedResource | ContentBlock.Multimodal.Standard)[]
+    // ExtendedArtifact includes additional types (MCPStructuredContentArtifact, MCPMetaArtifact)
+    // which need to be filtered out
+    const normalizedArtifacts: (
+      | EmbeddedResource
+      | ContentBlock.Multimodal.Standard
+    )[] = artifacts.filter(
+      (
+        artifact
+      ): artifact is EmbeddedResource | ContentBlock.Multimodal.Standard =>
+        artifact.type === "resource" ||
+        (artifact.type !== "mcp_structured_content" &&
+          artifact.type !== "mcp_meta" &&
+          typeof artifact === "object" &&
+          artifact !== null &&
+          "source_type" in artifact)
+    ) as (EmbeddedResource | ContentBlock.Multimodal.Standard)[];
+
     const interceptedResult = await afterToolCall?.(
       {
         name: toolName,
         args: finalArgs,
-        result: [content, artifacts],
+        result: [normalizedContent, normalizedArtifacts],
         serverName,
       },
       state,
@@ -675,10 +1227,21 @@ export async function loadMcpTools(
               tool.inputSchema.properties = {};
             }
 
+            // Dereference $defs/$ref in the schema to support Pydantic v2 schemas
+            // and other JSON schemas that use $defs for nested type definitions
+            const dereferencedSchema = dereferenceJsonSchema(
+              tool.inputSchema as JsonSchemaObject
+            );
+
+            // Simplify schema for LLM compatibility by removing allOf, anyOf, oneOf,
+            // if/then/else, not, and other patterns that OpenAI doesn't support
+            const simplifiedSchema =
+              simplifyJsonSchemaForLLM(dereferencedSchema);
+
             const dst = new DynamicStructuredTool({
               name: `${toolNamePrefix}${tool.name}`,
               description: tool.description || "",
-              schema: tool.inputSchema,
+              schema: simplifiedSchema,
               responseFormat: "content_and_artifact",
               metadata: { annotations: tool.annotations },
               defaultConfig: defaultToolTimeout

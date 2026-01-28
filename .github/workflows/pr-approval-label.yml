@@ -1,0 +1,31 @@
+name: "PR Approval Label"
+
+on:
+  pull_request_review:
+    types: [submitted]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  add-ready-label:
+    runs-on: ubuntu-latest
+    # Only run when an org member approves and PR is not from a fork
+    # (fork PRs don't have write permissions to add labels)
+    if: |
+      github.event.review.state == 'approved' &&
+      github.event.review.author_association == 'MEMBER' &&
+      github.event.pull_request.head.repo.full_name == github.repository
+    steps:
+      - name: Add ready label
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            await github.rest.issues.addLabels({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.payload.pull_request.number,
+              labels: ['ready']
+            });

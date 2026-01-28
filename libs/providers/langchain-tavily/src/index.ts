@@ -24,6 +24,18 @@ export type { TavilyMapAPIRetrieverFields } from "./tavily-map.js";
 export { TavilyMap } from "./tavily-map.js";
 
 export type {
+  ResearchModel,
+  CitationFormat,
+  TavilyResearchAPIRetrieverFields,
+} from "./tavily-research.js";
+
+export { TavilyResearch } from "./tavily-research.js";
+
+export type { TavilyGetResearchAPIRetrieverFields } from "./tavily-get-research.js";
+
+export { TavilyGetResearch } from "./tavily-get-research.js";
+
+export type {
   TavilyBaseSearchResponse,
   TavilySearchResponseWithSimpleImages,
   TavilySearchResponseWithImageDescriptions,
@@ -37,6 +49,9 @@ export type {
   TavilyCrawlResponse,
   TavilyMapParams,
   TavilyMapResponse,
+  TavilyResearchParams,
+  TavilyGetResearchResponse,
+  TavilyResearchQueueResponse,
   CrawlCategory,
 } from "./utils.js";
 
@@ -45,4 +60,5 @@ export {
   TavilyExtractAPIWrapper,
   TavilyCrawlAPIWrapper,
   TavilyMapAPIWrapper,
+  TavilyResearchAPIWrapper,
 } from "./utils.js";

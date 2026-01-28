@@ -1,4 +1,4 @@
-import { test, expect } from "@jest/globals";
+import { test, expect } from "vitest";
 import { DallEAPIWrapper } from "../dalle.js";
 
 test.skip("Dalle can generate images", async () => {

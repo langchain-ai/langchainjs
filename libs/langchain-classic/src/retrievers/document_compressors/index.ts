@@ -80,9 +80,8 @@ export class DocumentCompressorPipeline extends BaseDocumentCompressor {
           callbacks
         );
       } else {
-        transformedDocuments = await transformer.transformDocuments(
-          transformedDocuments
-        );
+        transformedDocuments =
+          await transformer.transformDocuments(transformedDocuments);
       }
     }
     return transformedDocuments;

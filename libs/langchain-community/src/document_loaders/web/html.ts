@@ -49,7 +49,10 @@ export class HTMLWebBaseLoader
 
   headers?: HeadersInit;
 
-  constructor(public webPath: string, fields?: WebBaseLoaderParams) {
+  constructor(
+    public webPath: string,
+    fields?: WebBaseLoaderParams
+  ) {
     super();
     const { timeout, textDecoder, headers, ...rest } = fields ?? {};
     this.timeout = timeout ?? 10000;

@@ -138,11 +138,12 @@ abstract class BaseCallbackHandlerMethodsClass {
     chain: Serialized,
     inputs: ChainValues,
     runId: string,
-    parentRunId?: string,
+    runType?: string,
     tags?: string[],
     metadata?: Record<string, unknown>,
-    runType?: string,
-    runName?: string
+    runName?: string,
+    parentRunId?: string,
+    extra?: Record<string, unknown>
   ): // eslint-disable-next-line @typescript-eslint/no-explicit-any
   Promise<any> | any;
 
@@ -403,7 +404,7 @@ export abstract class BaseCallbackHandler
 
   static fromMethods(methods: CallbackHandlerMethods) {
     class Handler extends BaseCallbackHandler {
-      name = uuid.v4();
+      name = uuid.v7();
 
       constructor() {
         super();

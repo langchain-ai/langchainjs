@@ -14,23 +14,24 @@ vi.mock(
 
 // Mock summarization model
 function createMockSummarizationModel() {
-  const invokeCallback = vi.fn().mockImplementation(async (prompt: string) => {
-    // Extract messages from prompt to create a realistic summary
-    if (prompt.includes("Context Extraction Assistant")) {
-      return {
-        content:
-          "Previous conversation covered: project architecture discussion, challenges with scalability, and recommendations for improvement. Key decisions: use microservices, implement caching, optimize database queries.",
-      };
-    }
-    return { content: "Summary of previous conversation." };
-  });
+  const invokeCallback = vi
+    .fn()
+    .mockImplementation(async (prompt: string, _config?: unknown) => {
+      // Extract messages from prompt to create a realistic summary
+      if (prompt.includes("Context Extraction Assistant")) {
+        return {
+          content:
+            "Previous conversation covered: project architecture discussion, challenges with scalability, and recommendations for improvement. Key decisions: use microservices, implement caching, optimize database queries.",
+        };
+      }
+      return { content: "Summary of previous conversation." };
+    });
 
   return {
     invoke: invokeCallback,
     getName: () => "mock-summarizer",
     _modelType: "mock",
     lc_runnable: true,
-    profile: {},
   };
 }
 
@@ -56,6 +57,101 @@ function createMockMainModel() {
 }
 
 describe("summarizationMiddleware", () => {
+  it("should tag the summarization model invocation with lc_source metadata", async () => {
+    const summarizationModel = createMockSummarizationModel();
+    const middleware = summarizationMiddleware({
+      model: summarizationModel as any,
+      trigger: { tokens: 50 }, // Lower threshold to trigger easily
+      keep: { messages: 2 },
+    });
+
+    const messages = [
+      new HumanMessage(
+        `I'm working on a complex software project. ${"x".repeat(200)}`
+      ),
+      new AIMessage(
+        `I understand your project. Let me help. ${"x".repeat(200)}`
+      ),
+      new HumanMessage(
+        `Here are more details about the architecture. ${"x".repeat(200)}`
+      ),
+      new AIMessage(`That's interesting. Tell me more. ${"x".repeat(200)}`),
+      new HumanMessage(`More information here. ${"x".repeat(200)}`),
+      new AIMessage(`Got it. ${"x".repeat(200)}`),
+      new HumanMessage("What do you recommend?"),
+    ];
+
+    const beforeModelHook = middleware.beforeModel;
+    if (typeof beforeModelHook === "function") {
+      await beforeModelHook({ messages } as any, { context: {} } as any);
+    } else {
+      await beforeModelHook?.hook({ messages } as any, { context: {} } as any);
+    }
+
+    expect(summarizationModel.invoke).toHaveBeenCalledTimes(1);
+    const [, config] = (summarizationModel.invoke as any).mock.calls[0] as [
+      string,
+      any,
+    ];
+    expect(config).toMatchObject({
+      metadata: {
+        lc_source: "summarization",
+      },
+    });
+  });
+
+  it("should merge lc_source metadata with parent runnable config from runtime", async () => {
+    const summarizationModel = createMockSummarizationModel();
+    const middleware = summarizationMiddleware({
+      model: summarizationModel as any,
+      trigger: { tokens: 50 }, // Lower threshold to trigger easily
+      keep: { messages: 2 },
+    });
+
+    const messages = [
+      new HumanMessage(
+        `I'm working on a complex software project. ${"x".repeat(200)}`
+      ),
+      new AIMessage(
+        `I understand your project. Let me help. ${"x".repeat(200)}`
+      ),
+      new HumanMessage(
+        `Here are more details about the architecture. ${"x".repeat(200)}`
+      ),
+      new AIMessage(`That's interesting. Tell me more. ${"x".repeat(200)}`),
+      new HumanMessage(`More information here. ${"x".repeat(200)}`),
+      new AIMessage(`Got it. ${"x".repeat(200)}`),
+      new HumanMessage("What do you recommend?"),
+    ];
+
+    // Pass metadata and tags via the runtime object
+    const runtime = {
+      context: {},
+      metadata: { test_parent: "metadata" },
+      tags: ["test_parent_tag"],
+    };
+
+    const beforeModelHook = middleware.beforeModel;
+    if (typeof beforeModelHook === "function") {
+      await beforeModelHook({ messages } as any, runtime as any);
+    } else {
+      await beforeModelHook?.hook({ messages } as any, runtime as any);
+    }
+
+    expect(summarizationModel.invoke).toHaveBeenCalledTimes(1);
+    const [, config] = (summarizationModel.invoke as any).mock.calls[0] as [
+      string,
+      any,
+    ];
+    expect(config).toMatchObject({
+      metadata: {
+        test_parent: "metadata",
+        lc_source: "summarization",
+      },
+    });
+    expect(config.tags).toContain("test_parent_tag");
+  });
+
   it("should trigger summarization when token count exceeds threshold", async () => {
     const summarizationModel = createMockSummarizationModel();
     const model = createMockMainModel();
@@ -102,6 +198,9 @@ describe("summarizationMiddleware", () => {
       "Here is a summary of the conversation to date"
     );
     expect(summaryMessage.content).toContain("Previous conversation covered:");
+    expect(summaryMessage.additional_kwargs).toStrictEqual({
+      lc_source: "summarization",
+    });
 
     // Verify only recent messages are kept (plus the new response)
     expect(result.messages.length).toBeLessThanOrEqual(4); // summary + kept messages + new response
@@ -152,6 +251,9 @@ describe("summarizationMiddleware", () => {
     expect(summaryMessage.content).toContain(
       "Here is a summary of the conversation to date"
     );
+    expect(summaryMessage.additional_kwargs).toStrictEqual({
+      lc_source: "summarization",
+    });
 
     // Verify only recent messages are kept (plus the new response)
     expect(result.messages.length).toBeLessThanOrEqual(4);
@@ -224,6 +326,11 @@ describe("summarizationMiddleware", () => {
     expect((result.messages[0] as HumanMessage).content).toContain(
       "Here is a summary of the conversation to date"
     );
+    expect(
+      (result.messages[0] as HumanMessage).additional_kwargs
+    ).toStrictEqual({
+      lc_source: "summarization",
+    });
   });
 
   it("should preserve AI/Tool message pairs together", async () => {
@@ -325,6 +432,11 @@ describe("summarizationMiddleware", () => {
     expect((result.messages[0] as HumanMessage).content).toContain(
       "Here is a summary of the conversation to date"
     );
+    expect(
+      (result.messages[0] as HumanMessage).additional_kwargs
+    ).toStrictEqual({
+      lc_source: "summarization",
+    });
     expect(result.messages[1]).toBeInstanceOf(AIMessage);
     expect((result.messages[1] as AIMessage).content).toContain(
       "Response 3: xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
@@ -337,11 +449,11 @@ describe("summarizationMiddleware", () => {
     expect((result.messages[3] as AIMessage).content).toContain("Response");
   });
 
-  /**
-   * This test is skipped because it requires a model profile, which is not available yet.
-   */
-  it.skip("should handle fraction-based trigger and keep with model profile", async () => {
+  it("should handle fraction-based trigger and keep with model profile", async () => {
     const summarizationModel = createMockSummarizationModel();
+    (summarizationModel as any).profile = {
+      maxInputTokens: 8192,
+    };
 
     // Create a mock model with profile that implements bindTools
     const modelWithProfile = new FakeToolCallingChatModel({
@@ -350,13 +462,6 @@ describe("summarizationMiddleware", () => {
     // Set both model and modelName properties for getProfileLimits to work
     (modelWithProfile as any).model = "gpt-5";
     (modelWithProfile as any).modelName = "gpt-5";
-    // Set profile directly on the model instance
-    Object.defineProperty(modelWithProfile, "profile", {
-      value: { maxInputTokens: 8192 },
-      writable: true,
-      enumerable: true,
-      configurable: true,
-    });
 
     const middleware = summarizationMiddleware({
       model: summarizationModel as any,
@@ -417,6 +522,11 @@ describe("summarizationMiddleware", () => {
     expect((result.messages[0] as HumanMessage).content).toContain(
       "Here is a summary of the conversation to date"
     );
+    expect(
+      (result.messages[0] as HumanMessage).additional_kwargs
+    ).toStrictEqual({
+      lc_source: "summarization",
+    });
     expect(result.messages[1]).toBeInstanceOf(AIMessage);
     expect((result.messages[1] as AIMessage).content).toContain(
       "Response 98: xxxxxxxxxx"
@@ -492,13 +602,10 @@ describe("summarizationMiddleware", () => {
     expect(summarizationModel.invoke).toHaveBeenCalledTimes(1);
     const summaryPrompt = summarizationModel.invoke.mock.calls[0][0];
     expect(summaryPrompt).toContain("Messages to summarize:");
-    expect(summaryPrompt).not.toContain(
-      '"content": "Message 1: xxxxxxxxxxxxxxx'
-    );
-    expect(summaryPrompt).toContain('"content": "Response 2: xxxxxxxxxxxxxxx');
-    expect(summaryPrompt).not.toContain(
-      '"content": "Message 3: xxxxxxxxxxxxxxx'
-    );
+    // Uses getBufferString format (Human:, AI:) instead of JSON format
+    expect(summaryPrompt).not.toContain("Human: Message 1: xxxxxxxxxxxxxxx");
+    expect(summaryPrompt).toContain("AI: Response 2: xxxxxxxxxxxxxxx");
+    expect(summaryPrompt).not.toContain("Human: Message 3: xxxxxxxxxxxxxxx");
 
     // Should trigger summarization
     expect(result.messages.length).toBe(5);
@@ -506,6 +613,11 @@ describe("summarizationMiddleware", () => {
     expect((result.messages[0] as HumanMessage).content).toContain(
       "Here is a summary of the conversation to date"
     );
+    expect(
+      (result.messages[0] as HumanMessage).additional_kwargs
+    ).toStrictEqual({
+      lc_source: "summarization",
+    });
     expect(result.messages[1]).toBeInstanceOf(HumanMessage);
     expect((result.messages[1] as HumanMessage).content).toContain(
       "Message 3: xxxxxxxxxx"
@@ -558,12 +670,11 @@ describe("summarizationMiddleware", () => {
     expect(summarizationModel.invoke).toHaveBeenCalledTimes(1);
     const summaryPrompt = summarizationModel.invoke.mock.calls[0][0];
     expect(summaryPrompt).toContain("Messages to summarize:");
-    expect(summaryPrompt).toContain('"content": "Message 1: xxxxxxxxxxxxxxx');
-    expect(summaryPrompt).toContain('"content": "Response 2: xxxxxxxxxxxxxxx');
-    expect(summaryPrompt).toContain('"content": "Message 3: xxxxxxxxxxxxxxx');
-    expect(summaryPrompt).not.toContain(
-      '"content": "Response 3: xxxxxxxxxxxxxxx'
-    );
+    // Uses getBufferString format (Human:, AI:) instead of JSON format
+    expect(summaryPrompt).toContain("Human: Message 1: xxxxxxxxxxxxxxx");
+    expect(summaryPrompt).toContain("AI: Response 2: xxxxxxxxxxxxxxx");
+    expect(summaryPrompt).toContain("Human: Message 3: xxxxxxxxxxxxxxx");
+    expect(summaryPrompt).not.toContain("AI: Response 3: xxxxxxxxxxxxxxx");
 
     // Should trigger summarization
     expect(result.messages.length).toBe(4);
@@ -571,6 +682,11 @@ describe("summarizationMiddleware", () => {
     expect((result.messages[0] as HumanMessage).content).toContain(
       "Here is a summary of the conversation to date"
     );
+    expect(
+      (result.messages[0] as HumanMessage).additional_kwargs
+    ).toStrictEqual({
+      lc_source: "summarization",
+    });
     expect(result.messages[1]).toBeInstanceOf(AIMessage);
     expect((result.messages[1] as AIMessage).content).toContain(
       "Response 3: xxxxxxxxxxx"
@@ -818,6 +934,9 @@ describe("summarizationMiddleware", () => {
     expect(summaryMessage.content).toContain(
       "Here is a summary of the conversation to date"
     );
+    expect(summaryMessage.additional_kwargs).toStrictEqual({
+      lc_source: "summarization",
+    });
 
     // Verify preserved messages don't start with AI(tool calls)
     // The preserved messages should start with a HumanMessage before the tool call pair
@@ -829,5 +948,438 @@ describe("summarizationMiddleware", () => {
     expect(
       !(AIMessage.isInstance(firstPreserved) && hasToolCalls(firstPreserved))
     ).toBe(true);
+  });
+
+  it("should use default summaryPrefix when not provided", async () => {
+    const summarizationModel = createMockSummarizationModel();
+    const model = createMockMainModel();
+
+    const middleware = summarizationMiddleware({
+      model: summarizationModel as any,
+      trigger: { tokens: 50 },
+      keep: { messages: 2 },
+    });
+
+    const agent = createAgent({
+      model,
+      middleware: [middleware],
+    });
+
+    const messages = [
+      new HumanMessage(`Message 1: ${"x".repeat(200)}`),
+      new AIMessage(`Response 1: ${"x".repeat(200)}`),
+      new HumanMessage(`Message 2: ${"x".repeat(200)}`),
+      new AIMessage(`Response 2: ${"x".repeat(200)}`),
+      new HumanMessage("Final question"),
+    ];
+
+    const result = await agent.invoke({ messages });
+
+    // Verify summarization was triggered
+    expect(summarizationModel.invoke).toHaveBeenCalled();
+
+    // Verify the default prefix is used
+    const summaryMessage = result.messages[0] as HumanMessage;
+    expect(summaryMessage.content).toContain(
+      "Here is a summary of the conversation to date:"
+    );
+    expect(summaryMessage.additional_kwargs).toStrictEqual({
+      lc_source: "summarization",
+    });
+  });
+
+  it("should use custom summaryPrefix when provided", async () => {
+    const summarizationModel = createMockSummarizationModel();
+    const model = createMockMainModel();
+
+    const customPrefix = "Custom summary prefix for testing:";
+
+    const middleware = summarizationMiddleware({
+      model: summarizationModel as any,
+      trigger: { tokens: 50 },
+      keep: { messages: 2 },
+      summaryPrefix: customPrefix,
+    });
+
+    const agent = createAgent({
+      model,
+      middleware: [middleware],
+    });
+
+    const messages = [
+      new HumanMessage(`Message 1: ${"x".repeat(200)}`),
+      new AIMessage(`Response 1: ${"x".repeat(200)}`),
+      new HumanMessage(`Message 2: ${"x".repeat(200)}`),
+      new AIMessage(`Response 2: ${"x".repeat(200)}`),
+      new HumanMessage("Final question"),
+    ];
+
+    const result = await agent.invoke({ messages });
+
+    // Verify summarization was triggered
+    expect(summarizationModel.invoke).toHaveBeenCalled();
+
+    // Verify the custom prefix is used
+    const summaryMessage = result.messages[0] as HumanMessage;
+    expect(summaryMessage.content).toContain(customPrefix);
+    expect(summaryMessage.content).not.toContain(
+      "Here is a summary of the conversation to date:"
+    );
+    expect(summaryMessage.additional_kwargs).toStrictEqual({
+      lc_source: "summarization",
+    });
+  });
+
+  it("should not leak summarization model streaming chunks when using streamMode messages", async () => {
+    const SUMMARIZATION_RAW_OUTPUT =
+      "INTERNAL_SUMMARY_OUTPUT_SHOULD_NOT_BE_STREAMED_AS_AI_MESSAGE";
+    const MAIN_MODEL_CONTENT =
+      "I understand your project. Let me analyze the architecture.";
+
+    // Create a summarization model with distinctive content
+    const summarizationModel = {
+      invoke: vi.fn().mockImplementation(async () => {
+        return { content: SUMMARIZATION_RAW_OUTPUT };
+      }),
+      getName: () => "mock-summarizer",
+      _modelType: "mock",
+      lc_runnable: true,
+      profile: {},
+    };
+
+    // Create a main model with a distinctive response
+    const model = new FakeToolCallingChatModel({
+      responses: [new AIMessage(MAIN_MODEL_CONTENT)],
+    });
+
+    const middleware = summarizationMiddleware({
+      model: summarizationModel as any,
+      trigger: { tokens: 50 },
+      keep: { messages: 2 },
+    });
+
+    const agent = createAgent({
+      model,
+      middleware: [middleware],
+    });
+
+    // Create enough messages to trigger summarization
+    const inputMessages = [
+      new HumanMessage(`Message 1: ${"x".repeat(200)}`),
+      new AIMessage(`Response 1: ${"x".repeat(200)}`),
+      new HumanMessage(`Message 2: ${"x".repeat(200)}`),
+      new AIMessage(`Response 2: ${"x".repeat(200)}`),
+      new HumanMessage("Final question"),
+    ];
+
+    // Stream with messages mode to capture all message chunks
+    const stream = await agent.stream(
+      { messages: inputMessages },
+      { streamMode: ["messages"] }
+    );
+
+    // Collect all streamed AIMessage content (only assistant/AI responses)
+    const streamedAIContents: string[] = [];
+    for await (const [mode, chunk] of stream) {
+      if (mode === "messages") {
+        const [msg] = chunk as [any, any];
+        // Only collect AIMessage content (role === "assistant" or type === "ai")
+        const isAIMessage =
+          msg._getType?.() === "ai" ||
+          msg.role === "assistant" ||
+          AIMessage.isInstance(msg);
+        if (isAIMessage) {
+          const content =
+            typeof msg.content === "string"
+              ? msg.content
+              : JSON.stringify(msg.content);
+          if (content) {
+            streamedAIContents.push(content);
+          }
+        }
+      }
+    }
+
+    // Verify summarization was triggered
+    expect(summarizationModel.invoke).toHaveBeenCalled();
+
+    // Verify the raw summarization model output does NOT appear as an AIMessage
+    // This would happen if callbacks leaked from the internal model.invoke()
+    const allStreamedAIContent = streamedAIContents.join(" ");
+    expect(allStreamedAIContent).not.toContain(
+      "INTERNAL_SUMMARY_OUTPUT_SHOULD_NOT_BE_STREAMED_AS_AI_MESSAGE"
+    );
+    expect(allStreamedAIContent).not.toContain(SUMMARIZATION_RAW_OUTPUT);
+
+    // Verify the main model's content DOES appear in the stream
+    expect(allStreamedAIContent).toContain(MAIN_MODEL_CONTENT);
+  });
+
+  it("should move cutoff backward to preserve AI/Tool pairs when cutoff lands on ToolMessage", async () => {
+    const summarizationModel = createMockSummarizationModel();
+
+    const model = new FakeToolCallingChatModel({
+      responses: [new AIMessage("Final response")],
+    });
+
+    const middleware = summarizationMiddleware({
+      model: summarizationModel as any,
+      trigger: { tokens: 100 },
+      keep: { tokens: 150 }, // Token budget that would land cutoff on ToolMessage
+    });
+
+    const agent = createAgent({
+      model,
+      middleware: [middleware],
+    });
+
+    // Create messages where aggressive summarization would normally land on ToolMessage
+    // Structure: HumanMessage(long) -> AIMessage(with tool_calls) -> ToolMessage -> HumanMessage -> HumanMessage
+    const messages = [
+      new HumanMessage("x".repeat(300)), // ~75 tokens
+      new AIMessage({
+        content: "y".repeat(200), // ~50 tokens
+        tool_calls: [
+          { id: "call_preserve", name: "test_tool", args: { test: true } },
+        ],
+      }),
+      new ToolMessage({
+        content: "z".repeat(50), // ~12 tokens
+        tool_call_id: "call_preserve",
+        name: "test_tool",
+      }),
+      new HumanMessage("a".repeat(180)), // ~45 tokens
+      new HumanMessage("b".repeat(160)), // ~40 tokens
+    ];
+    // Total: ~222 tokens, keep ~150 tokens
+    // In case of cutoff landing on a ToolMessage, the middleware should move the
+    // cutoff backward to include the AIMessage that contains the matching tool_calls.
+
+    const result = await agent.invoke({ messages });
+
+    // Find the preserved messages (after summary)
+    const summaryIndex = result.messages.findIndex(
+      (msg) =>
+        HumanMessage.isInstance(msg) &&
+        typeof msg.content === "string" &&
+        msg.content.includes("Here is a summary")
+    );
+
+    const preservedMessages = result.messages.slice(summaryIndex + 1);
+
+    // The AIMessage with tool_calls should be preserved along with its ToolMessage
+    const hasAIWithToolCalls = preservedMessages.some(
+      (msg) =>
+        AIMessage.isInstance(msg) && msg.tool_calls && msg.tool_calls.length > 0
+    );
+    const hasMatchingToolMessage = preservedMessages.some(
+      (msg) =>
+        ToolMessage.isInstance(msg) && msg.tool_call_id === "call_preserve"
+    );
+
+    // Both must be present - the AI/Tool pair should be kept together
+    expect(hasAIWithToolCalls).toBe(true);
+    expect(hasMatchingToolMessage).toBe(true);
+  });
+
+  it("should handle orphan ToolMessage by advancing forward", async () => {
+    /**
+     * Edge case: If a ToolMessage has no matching AIMessage (orphan),
+     * the middleware should fall back to advancing past ToolMessages.
+     */
+    const summarizationModel = createMockSummarizationModel();
+
+    const model = new FakeToolCallingChatModel({
+      responses: [new AIMessage("Final response")],
+    });
+
+    const middleware = summarizationMiddleware({
+      model: summarizationModel as any,
+      trigger: { tokens: 50 },
+      keep: { messages: 2 },
+    });
+
+    const agent = createAgent({
+      model,
+      middleware: [middleware],
+    });
+
+    // Create messages with an orphan ToolMessage (no matching AIMessage)
+    const messages = [
+      new HumanMessage("x".repeat(200)),
+      new AIMessage("No tool calls here"), // No tool_calls
+      new ToolMessage({
+        content: "Orphan result",
+        tool_call_id: "orphan_call", // No matching AIMessage
+        name: "orphan_tool",
+      }),
+      new HumanMessage("y".repeat(200)),
+      new HumanMessage("Final question"),
+    ];
+
+    const result = await agent.invoke({ messages });
+
+    // Verify we don't crash and the conversation continues
+    expect(result.messages.length).toBeGreaterThan(0);
+  });
+
+  it("should preserve many parallel tool calls together with AIMessage", async () => {
+    /**
+     * Port of Python test: test_summarization_middleware_many_parallel_tool_calls_safety
+     *
+     * When an AIMessage has many parallel tool calls (e.g., reading 10 files),
+     * all corresponding ToolMessages should be preserved along with the AIMessage.
+     */
+    const summarizationModel = createMockSummarizationModel();
+
+    const model = new FakeToolCallingChatModel({
+      responses: [new AIMessage("All files read and summarized")],
+    });
+
+    const middleware = summarizationMiddleware({
+      model: summarizationModel as any,
+      trigger: { tokens: 100 },
+      keep: { messages: 5 }, // This would normally cut in the middle of tool responses
+    });
+
+    const agent = createAgent({
+      model,
+      middleware: [middleware],
+    });
+
+    // Create 10 parallel tool calls
+    const toolCalls = Array.from({ length: 10 }, (_, i) => ({
+      id: `call_${i}`,
+      name: "read_file",
+      args: { file: `file${i}.txt` },
+    }));
+
+    const aiMessage = new AIMessage({
+      content: "I'll read all 10 files",
+      tool_calls: toolCalls,
+    });
+
+    const toolMessages = toolCalls.map(
+      (tc) =>
+        new ToolMessage({
+          content: `Contents of ${tc.args.file}`,
+          tool_call_id: tc.id,
+          name: tc.name,
+        })
+    );
+
+    const messages = [
+      new HumanMessage("x".repeat(500)), // Long message to trigger summarization
+      aiMessage,
+      ...toolMessages,
+      new HumanMessage("Now summarize them"),
+    ];
+
+    const result = await agent.invoke({ messages });
+
+    // Find preserved messages
+    const summaryIndex = result.messages.findIndex(
+      (msg) =>
+        HumanMessage.isInstance(msg) &&
+        typeof msg.content === "string" &&
+        msg.content.includes("Here is a summary")
+    );
+
+    if (summaryIndex === -1) {
+      // Summarization might not have triggered, that's fine
+      return;
+    }
+
+    const preservedMessages = result.messages.slice(summaryIndex + 1);
+
+    // If the AIMessage with tool_calls is preserved, all its ToolMessages should be too
+    const preservedAI = preservedMessages.find(
+      (msg) =>
+        AIMessage.isInstance(msg) && msg.tool_calls && msg.tool_calls.length > 0
+    );
+
+    if (preservedAI && AIMessage.isInstance(preservedAI)) {
+      // Count preserved ToolMessages that match this AI's tool_calls
+      const aiToolCallIds = new Set(
+        preservedAI.tool_calls?.map((tc) => tc.id) ?? []
+      );
+      const matchingToolMessages = preservedMessages.filter(
+        (msg) =>
+          ToolMessage.isInstance(msg) && aiToolCallIds.has(msg.tool_call_id)
+      );
+
+      // All matching tool messages should be preserved
+      expect(matchingToolMessages.length).toBe(preservedAI.tool_calls?.length);
+    }
+  });
+
+  it("should use getBufferString format to avoid token inflation from message metadata", async () => {
+    // Track the actual prompt sent to the summarization model
+    let capturedPrompt = "";
+    const summarizationModel = {
+      invoke: vi.fn().mockImplementation(async (prompt: string) => {
+        capturedPrompt = prompt;
+        return { content: "Summary of the conversation." };
+      }),
+      getName: () => "mock-summarizer",
+      _modelType: "mock",
+      lc_runnable: true,
+      profile: {},
+    };
+
+    const model = createMockMainModel();
+
+    const middleware = summarizationMiddleware({
+      model: summarizationModel as any,
+      trigger: { tokens: 50 },
+      keep: { messages: 1 },
+    });
+
+    const agent = createAgent({
+      model,
+      middleware: [middleware],
+    });
+
+    // Create messages with metadata that would inflate JSON.stringify representation
+    const inputMessages = [
+      new HumanMessage("What is the weather in NYC?"),
+      new AIMessage({
+        content: "Let me check the weather for you.",
+        tool_calls: [
+          { name: "get_weather", args: { city: "NYC" }, id: "call_123" },
+        ],
+      }),
+      new ToolMessage({
+        content: "72F and sunny",
+        tool_call_id: "call_123",
+        name: "get_weather",
+      }),
+      new AIMessage({
+        content: `It is 72F and sunny in NYC! ${"x".repeat(200)}`, // Add enough chars to trigger summarization
+      }),
+      new HumanMessage("Thanks!"),
+    ];
+
+    await agent.invoke({ messages: inputMessages });
+
+    // Verify summarization was triggered
+    expect(summarizationModel.invoke).toHaveBeenCalled();
+
+    // Verify the prompt uses getBufferString format (compact) instead of JSON.stringify
+    // The prompt should contain role prefixes like "Human:", "AI:", "Tool:" instead of
+    // full JSON with all metadata fields
+    expect(capturedPrompt).toContain("Human:");
+    expect(capturedPrompt).toContain("AI:");
+    expect(capturedPrompt).toContain("Tool:");
+
+    // Verify the prompt does NOT contain verbose metadata that would be in JSON.stringify
+    // These fields would appear if we used JSON.stringify(messages, null, 2)
+    expect(capturedPrompt).not.toContain('"type": "human"');
+    expect(capturedPrompt).not.toContain('"type": "ai"');
+    expect(capturedPrompt).not.toContain('"additional_kwargs"');
+    expect(capturedPrompt).not.toContain('"response_metadata"');
+
+    // The tool calls should still be included (as JSON appended to the AI message)
+    expect(capturedPrompt).toContain("get_weather");
   });
 });
