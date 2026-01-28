@@ -224,6 +224,11 @@ export interface ChatXAIInput extends BaseChatModelParams {
    * ```
    */
   searchParameters?: XAISearchParameters;
+  /**
+   * The base URL for the xAI API.
+   * @default "https://api.x.ai/v1"
+   */
+  baseURL?: string;
 }
 
 /**
@@ -640,7 +645,7 @@ export class ChatXAI extends ChatOpenAICompletions<ChatXAICallOptions> {
       model: fields?.model || "grok-beta",
       apiKey,
       configuration: {
-        baseURL: "https://api.x.ai/v1",
+        baseURL: fields?.baseURL ?? "https://api.x.ai/v1",
       },
     });
 
