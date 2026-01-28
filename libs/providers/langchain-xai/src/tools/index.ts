@@ -14,14 +14,26 @@ export const tools = {
 };
 
 // Re-export types for convenience
-export type { XAILiveSearchTool, XAILiveSearchToolOptions } from "./live_search.js";
-export type { XAIWebSearchTool, XAIWebSearchToolOptions } from "./web_search.js";
+export type {
+  XAILiveSearchTool,
+  XAILiveSearchToolOptions,
+} from "./live_search.js";
+export type {
+  XAIWebSearchTool,
+  XAIWebSearchToolOptions,
+} from "./web_search.js";
 export type { XAIXSearchTool, XAIXSearchToolOptions } from "./x_search.js";
 export type { XAICodeExecutionTool } from "./code_execution.js";
-export type { XAICollectionsSearchTool, XAICollectionsSearchToolOptions } from "./collections_search.js";
+export type {
+  XAICollectionsSearchTool,
+  XAICollectionsSearchToolOptions,
+} from "./collections_search.js";
 
 // Re-export tool type constants
-export { XAI_LIVE_SEARCH_TOOL_TYPE, XAI_LIVE_SEARCH_TOOL_NAME } from "./live_search.js";
+export {
+  XAI_LIVE_SEARCH_TOOL_TYPE,
+  XAI_LIVE_SEARCH_TOOL_NAME,
+} from "./live_search.js";
 export { XAI_WEB_SEARCH_TOOL_TYPE } from "./web_search.js";
 export { XAI_X_SEARCH_TOOL_TYPE } from "./x_search.js";
 export { XAI_CODE_EXECUTION_TOOL_TYPE } from "./code_execution.js";

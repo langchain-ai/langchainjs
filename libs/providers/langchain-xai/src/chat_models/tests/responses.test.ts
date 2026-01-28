@@ -585,7 +585,9 @@ describe("ChatXAIResponses with tool factory utilities", () => {
 
     expect(params.tools).toHaveLength(1);
     expect(params.tools?.[0].type).toBe(XAI_X_SEARCH_TOOL_TYPE);
-    expect((params.tools?.[0] as { allowed_x_handles?: string[] }).allowed_x_handles).toEqual(["elonmusk"]);
+    expect(
+      (params.tools?.[0] as { allowed_x_handles?: string[] }).allowed_x_handles
+    ).toEqual(["elonmusk"]);
   });
 
   test("should work with empty options for factories", () => {
@@ -601,6 +603,8 @@ describe("ChatXAIResponses with tool factory utilities", () => {
     // Empty options should only have the type field
     expect(model.tools?.[0]).toEqual({ type: XAI_WEB_SEARCH_TOOL_TYPE });
     expect(model.tools?.[1]).toEqual({ type: XAI_X_SEARCH_TOOL_TYPE });
-    expect(model.tools?.[2]).toEqual({ type: XAI_COLLECTIONS_SEARCH_TOOL_TYPE });
+    expect(model.tools?.[2]).toEqual({
+      type: XAI_COLLECTIONS_SEARCH_TOOL_TYPE,
+    });
   });
 });
