@@ -57,12 +57,33 @@ export function removeAdditionalProperties(
       delete newObj.additionalProperties;
     }
 
-    // Check for union types (anyOf, oneOf) which Gemini doesn't support
+    // Check for union types (anyOf, oneOf) which Gemini doesn't support.
+    // However, nullable types (e.g. Zod's .nullable()) produce
+    // anyOf: [{actualType}, {type: "null"}] which Gemini supports
+    // natively via the `nullable` field.
     if ("anyOf" in newObj || "oneOf" in newObj) {
-      throw new Error(
-        "zod_to_gemini_parameters: Gemini cannot handle union types (discriminatedUnion, anyOf, oneOf). " +
-          "Consider using a flat object structure with optional fields instead."
+      const variants = newObj.anyOf || newObj.oneOf;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const nullVariants = variants.filter((v: any) => v && v.type === "null");
+      const nonNullVariants = variants.filter(
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (v: any) => !v || v.type !== "null"
       );
+      if (nullVariants.length === 1 && nonNullVariants.length === 1) {
+        // Nullable type: flatten to { ...realType, nullable: true }
+        delete newObj.anyOf;
+        delete newObj.oneOf;
+        Object.assign(newObj, nonNullVariants[0]);
+        if ("additionalProperties" in newObj) {
+          delete newObj.additionalProperties;
+        }
+        newObj.nullable = true;
+      } else {
+        throw new Error(
+          "zod_to_gemini_parameters: Gemini cannot handle union types (discriminatedUnion, anyOf, oneOf). " +
+            "Consider using a flat object structure with optional fields instead."
+        );
+      }
     }
 
     // Convert exclusiveMinimum (from .positive()) to minimum

@@ -80,6 +80,54 @@ describe("schemaToGeminiParameters - edge cases", () => {
     expect(result.properties?.optionalField?.nullable).toBe(true);
   });
 
+  test("should handle nullable object type via anyOf", () => {
+    const zodSchema = z.object({
+      answer: z
+        .object({
+          value: z.string(),
+        })
+        .nullable(),
+      reasoning: z.string(),
+    });
+
+    const result = schemaToGeminiParameters(zodSchema);
+    expect(result.properties?.answer?.type).toBe("object");
+    expect(result.properties?.answer?.nullable).toBe(true);
+    expect(result.properties?.answer).not.toHaveProperty("anyOf");
+    expect(result.properties?.answer).not.toHaveProperty(
+      "additionalProperties"
+    );
+    expect(result.properties?.answer?.properties?.value?.type).toBe("string");
+  });
+
+  test("should handle nested nullable objects", () => {
+    const zodSchema = z.object({
+      outer: z.object({
+        inner: z
+          .object({
+            name: z.string(),
+          })
+          .nullable(),
+      }),
+    });
+
+    const result = schemaToGeminiParameters(zodSchema);
+    const inner = result.properties?.outer?.properties?.inner;
+    expect(inner?.type).toBe("object");
+    expect(inner?.nullable).toBe(true);
+    expect(inner).not.toHaveProperty("anyOf");
+  });
+
+  test("should still throw for real union types (non-nullable)", () => {
+    const zodSchema = z.object({
+      value: z.union([z.string(), z.number()]),
+    });
+
+    expect(() => schemaToGeminiParameters(zodSchema)).toThrow(
+      "Gemini cannot handle union types"
+    );
+  });
+
   test("should provide helpful error message for discriminatedUnion", () => {
     const zodSchema = z.object({
       data: z.discriminatedUnion("kind", [
