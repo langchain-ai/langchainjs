@@ -1,5 +1,12 @@
 # @langchain/community
 
+## 1.1.9
+
+### Patch Changes
+
+- Updated dependencies [[`1d58bf2`](https://github.com/langchain-ai/langchainjs/commit/1d58bf2bcb14055a64189af7e251bb93fa9d5aa0)]:
+  - @langchain/classic@1.0.12
+
 ## 1.1.8
 
 ### Patch Changes
