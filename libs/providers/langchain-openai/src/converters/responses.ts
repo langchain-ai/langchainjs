@@ -933,23 +933,21 @@ export const convertStandardContentMessageToResponsesInput: Converter<
     const resolveFileItem = (
       block: ContentBlock.Multimodal.File | ContentBlock.Multimodal.Video
     ): OpenAIClient.Responses.ResponseInputFile | undefined => {
-      const filename = getRequiredFilenameFromMetadata(block);
 
-      if (block.fileId && typeof filename === "string") {
+      if (block.fileId) {
         return {
           type: "input_file",
-          file_id: block.fileId,
-          ...(filename ? { filename } : {}),
+          file_id: block.fileId
         };
       }
-      if (block.url && typeof filename === "string") {
+      if (block.url) {
         return {
           type: "input_file",
-          file_url: block.url,
-          ...(filename ? { filename } : {}),
+          file_url: block.url
         };
       }
-      if (block.data && typeof filename === "string") {
+      if (block.data) {
+        const filename = getRequiredFilenameFromMetadata(block);
         const encoded =
           typeof block.data === "string"
             ? block.data
