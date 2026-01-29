@@ -8,6 +8,7 @@ import {
   HumanMessage,
   ToolCallChunk,
   ToolMessage,
+  SystemMessage
 } from "@langchain/core/messages";
 import {
   convertMessagesToResponsesInput,
@@ -691,6 +692,54 @@ describe("convertStandardContentMessageToResponsesInput", () => {
 });
 
 describe("convertMessagesToResponsesInput", () => {
+  describe("Regression Tests", () => {
+    it("correctly maps AIMessage content blocks to 'output_text' in full conversation", () => {
+      const messages = [
+        new SystemMessage({
+          content: "You are a helpful assistant that answers questions about the world.",
+        }),
+        new HumanMessage({
+          content: [{ type: "text", text: "how are you?" }],
+        }),
+        new AIMessage({
+          content: [{ type: "text", text: "I'm doing great, thanks!" }],
+        }),
+        new HumanMessage({
+          content: [{ type: "text", text: "what is your name?" }],
+        }),
+      ];
+
+      const result = convertMessagesToResponsesInput({
+        messages,
+        model: "gpt-4o",
+        zdrEnabled: false,
+      });
+
+      expect(result).toMatchObject([
+        {
+          type: "message",
+          role: "system",
+          content: "You are a helpful assistant that answers questions about the world.",
+        },
+        {
+          type: "message",
+          role: "user",
+          content: [{ type: "input_text", text: "how are you?" }],
+        },
+        {
+          type: "message",
+          role: "assistant",
+          content: [{ type: "output_text", text: "I'm doing great, thanks!" }],
+        },
+        {
+          type: "message",
+          role: "user",
+          content: [{ type: "input_text", text: "what is your name?" }],
+        },
+      ]);
+    });
+  });
+  
   describe("ToolMessage conversion", () => {
     it("passes through provider-native input_file content without stringification", () => {
       const toolMessage = new ToolMessage({
