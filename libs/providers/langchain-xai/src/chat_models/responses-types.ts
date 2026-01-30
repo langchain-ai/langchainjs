@@ -385,16 +385,16 @@ export interface XAIResponsesFunctionTool {
 
 /**
  * Web search tool definition.
- * Compatibility fields (search_context_size, user_location, filters) are rejected if set.
+ * Enables the model to search the web and browse pages for real-time information.
  */
 export interface XAIResponsesWebSearchTool {
   type: "web_search";
-  /** @deprecated Rejected if set. */
-  search_context_size?: never;
-  /** @deprecated Rejected if set. */
-  user_location?: never;
-  /** @deprecated Rejected if set. */
-  filters?: never;
+  /** Domains to exclusively include in the search (max 5). */
+  allowed_domains?: string[];
+  /** Domains to exclude from the search (max 5). */
+  excluded_domains?: string[];
+  /** Whether to enable image understanding during search. */
+  enable_image_understanding?: boolean;
 }
 
 /**
@@ -1369,6 +1369,22 @@ export interface ChatXAIResponsesCallOptions extends BaseChatModelCallOptions {
   reasoning?: XAIResponsesReasoning;
 
   /**
+   * A list of tools the model may call.
+   * Includes built-in tools (web_search, x_search, code_interpreter, file_search)
+   * and custom function tools.
+   *
+   * @example
+   * ```typescript
+   * import { tools } from "@langchain/xai";
+   *
+   * const result = await llm.invoke("What's happening on X?", {
+   *   tools: [tools.xaiWebSearch(), tools.xaiXSearch()],
+   * });
+   * ```
+   */
+  tools?: XAIResponsesTool[];
+
+  /**
    * Controls which tool is called by the model.
    */
   tool_choice?: XAIResponsesToolChoice;
@@ -1444,6 +1460,22 @@ export interface ChatXAIResponsesInput extends BaseChatModelParams {
    * Default reasoning configuration.
    */
   reasoning?: XAIResponsesReasoning;
+
+  /**
+   * Default tools to make available to the model.
+   * Can be overridden per-request in call options.
+   *
+   * @example
+   * ```typescript
+   * import { ChatXAIResponses, tools } from "@langchain/xai";
+   *
+   * const llm = new ChatXAIResponses({
+   *   model: "grok-4-1-fast",
+   *   tools: [tools.xaiWebSearch(), tools.xaiCodeExecution()],
+   * });
+   * ```
+   */
+  tools?: XAIResponsesTool[];
 }
 
 /**
