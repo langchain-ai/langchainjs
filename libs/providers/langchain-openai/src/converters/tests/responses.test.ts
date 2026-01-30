@@ -700,7 +700,7 @@ describe("convertMessagesToResponsesInput", () => {
             "You are a helpful assistant that answers questions about the world.",
         }),
         new HumanMessage({
-          content: [
+          contentBlocks: [
             { type: "text", text: "summary of this document" },
             {
               type: "file",
@@ -724,7 +724,7 @@ describe("convertMessagesToResponsesInput", () => {
       expect(result).toMatchObject([
         {
           type: "message",
-          role: "system",
+          role: "developer",
           content:
             "You are a helpful assistant that answers questions about the world.",
         },
