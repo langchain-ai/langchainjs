@@ -992,4 +992,126 @@ describe("ChatOpenAI", () => {
       await expect(model.moderateContent("Test content")).rejects.toThrow();
     });
   });
+
+  describe("reasoningEffort call option", () => {
+    it("should coalesce reasoningEffort into reasoning.effort via withConfig", async () => {
+      const mockFetch = vi.fn<(url: any, options?: any) => Promise<any>>();
+      mockFetch.mockImplementation((url, options) => {
+        mockFetch.mock.calls.push([url, options]);
+        return Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve({}),
+        });
+      });
+
+      const model = new ChatOpenAI({
+        model: "o3-mini",
+        apiKey: "test-key",
+        configuration: {
+          fetch: mockFetch,
+        },
+        maxRetries: 0,
+      });
+
+      const modelWithReasoningEffort = model.withConfig({
+        reasoningEffort: "high",
+      });
+
+      // This will fail since we're not returning a valid response
+      await expect(
+        modelWithReasoningEffort.invoke("Solve this complex problem")
+      ).rejects.toThrow();
+
+      expect(mockFetch).toHaveBeenCalled();
+      const [_url, options] = mockFetch.mock.calls[0];
+
+      if (options && options.body) {
+        const body = JSON.parse(options.body);
+        // For completions API, reasoning_effort should be extracted from reasoning
+        expect(body.reasoning_effort).toBe("high");
+      } else {
+        throw new Error("Body not found in request.");
+      }
+    });
+
+    it("should allow reasoning.effort to take precedence over reasoningEffort", async () => {
+      const mockFetch = vi.fn<(url: any, options?: any) => Promise<any>>();
+      mockFetch.mockImplementation((url, options) => {
+        mockFetch.mock.calls.push([url, options]);
+        return Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve({}),
+        });
+      });
+
+      const model = new ChatOpenAI({
+        model: "o3-mini",
+        apiKey: "test-key",
+        configuration: {
+          fetch: mockFetch,
+        },
+        maxRetries: 0,
+      });
+
+      // reasoning.effort should take precedence over reasoningEffort
+      const modelWithBothOptions = model.withConfig({
+        reasoningEffort: "low",
+        reasoning: { effort: "high" },
+      });
+
+      await expect(
+        modelWithBothOptions.invoke("Test message")
+      ).rejects.toThrow();
+
+      expect(mockFetch).toHaveBeenCalled();
+      const [_url, options] = mockFetch.mock.calls[0];
+
+      if (options && options.body) {
+        const body = JSON.parse(options.body);
+        // reasoning.effort should take precedence
+        expect(body.reasoning_effort).toBe("high");
+      } else {
+        throw new Error("Body not found in request.");
+      }
+    });
+
+    it("should not apply reasoningEffort for non-reasoning models", async () => {
+      const mockFetch = vi.fn<(url: any, options?: any) => Promise<any>>();
+      mockFetch.mockImplementation((url, options) => {
+        mockFetch.mock.calls.push([url, options]);
+        return Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve({}),
+        });
+      });
+
+      const model = new ChatOpenAI({
+        model: "gpt-4o-mini", // Non-reasoning model
+        apiKey: "test-key",
+        configuration: {
+          fetch: mockFetch,
+        },
+        maxRetries: 0,
+      });
+
+      const modelWithReasoningEffort = model.withConfig({
+        reasoningEffort: "high",
+      });
+
+      await expect(
+        modelWithReasoningEffort.invoke("Test message")
+      ).rejects.toThrow();
+
+      expect(mockFetch).toHaveBeenCalled();
+      const [_url, options] = mockFetch.mock.calls[0];
+
+      if (options && options.body) {
+        const body = JSON.parse(options.body);
+        // Non-reasoning models should not have reasoning_effort
+        expect(body.reasoning_effort).toBeUndefined();
+      } else {
+        throw new Error("Body not found in request.");
+      }
+    });
+  });
 });
