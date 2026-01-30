@@ -2,7 +2,7 @@ import { expect, test } from "@jest/globals";
 import pg, { PoolConfig } from "pg";
 import { OpenAIEmbeddings } from "@langchain/openai";
 import { Document } from "@langchain/core/documents";
-import { PGVectorStore } from "../pgvector";
+import { PGVectorStore } from "../pgvector.js";
 
 describe("PGVectorStore Score Normalization", () => {
   const embeddings = new OpenAIEmbeddings({
