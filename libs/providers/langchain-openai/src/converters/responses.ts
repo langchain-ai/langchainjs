@@ -31,6 +31,7 @@ import {
   parseCustomToolCall,
 } from "../utils/tools.js";
 import {
+  getFilenameFromMetadata,
   getRequiredFilenameFromMetadata,
   iife,
   isReasoningModel,
@@ -933,23 +934,24 @@ export const convertStandardContentMessageToResponsesInput: Converter<
     const resolveFileItem = (
       block: ContentBlock.Multimodal.File | ContentBlock.Multimodal.Video
     ): OpenAIClient.Responses.ResponseInputFile | undefined => {
-      const filename = getRequiredFilenameFromMetadata(block);
-
-      if (block.fileId && typeof filename === "string") {
+      if (block.fileId) {
+        const filename = getFilenameFromMetadata(block);
         return {
           type: "input_file",
           file_id: block.fileId,
           ...(filename ? { filename } : {}),
         };
       }
-      if (block.url && typeof filename === "string") {
+      if (block.url) {
+        const filename = getFilenameFromMetadata(block);
         return {
+          ...(filename ? { filename } : {}),
           type: "input_file",
           file_url: block.url,
-          ...(filename ? { filename } : {}),
         };
       }
-      if (block.data && typeof filename === "string") {
+      if (block.data) {
+        const filename = getRequiredFilenameFromMetadata(block);
         const encoded =
           typeof block.data === "string"
             ? block.data
