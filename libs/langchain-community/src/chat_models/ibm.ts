@@ -286,6 +286,9 @@ function _watsonxResponseToChatMessage(
           ...toolCall,
           type: "function",
         })),
+        ...("reasoning_content" in message
+          ? { reasoning: message?.reasoning_content }
+          : {}),
       };
 
       return new AIMessage({
@@ -344,7 +347,12 @@ function _convertDeltaToMessageChunk(
 
   const role = delta.role || defaultRole || "assistant";
   const content = delta.content ?? "";
-  const additional_kwargs = rawToolCalls ? { tool_calls: rawToolCalls } : {};
+  const additional_kwargs = {
+    ...(rawToolCalls ? { tool_calls: rawToolCalls } : {}),
+    ...("reasoning_content" in delta
+      ? { reasoning: delta?.reasoning_content }
+      : {}),
+  };
 
   const usageMetadata = {
     input_tokens: usage?.prompt_tokens ?? 0,
@@ -553,6 +561,7 @@ export class ChatWatsonx<
         "model",
         "modelGatewayKwargs",
         "modelGateway",
+        "reasoningEffort",
       ],
 
       DEPLOYMENT: ["idOrName"],
@@ -577,6 +586,8 @@ export class ChatWatsonx<
         "topP",
         "timeLimit",
         "model",
+        "reasoningEffort",
+        "includeReasoning",
       ],
     };
 
@@ -637,6 +648,10 @@ export class ChatWatsonx<
 
   timeLimit?: number;
 
+  includeReasoning?: boolean;
+
+  reasoningEffort?: "low" | "medium" | "high";
+
   maxConcurrency?: number;
 
   responseFormat?: TextChatResponseFormat;
@@ -678,6 +693,8 @@ export class ChatWatsonx<
     this.streaming = fields?.streaming ?? this.streaming;
     this.n = fields?.n ?? this.n;
     this.timeLimit = fields?.timeLimit;
+    this.reasoningEffort = fields?.reasoningEffort;
+    this.includeReasoning = fields?.includeReasoning;
 
     this.modelGateway = fields?.modelGateway ?? this.modelGateway;
     this.modelGatewayKwargs = fields?.modelGatewayKwargs;
@@ -739,6 +756,7 @@ export class ChatWatsonx<
       topLogprobs: options.topLogprobs ?? this.topLogprobs,
       logprobs: options.logprobs ?? this.logprobs,
       frequencyPenalty: options.frequencyPenalty ?? this.frequencyPenalty,
+      reasoningEffort: options.reasoningEffort ?? this.reasoningEffort,
     };
 
     const toolParams: Record<string, WatsonXAI.TextChatParameterTools[]> = tools
@@ -756,6 +774,7 @@ export class ChatWatsonx<
       : {
           timeLimit: timeLimit ?? this.timeLimit,
           projectId: options.projectId ?? this.projectId,
+          includeReasoning: options.includeReasoning ?? this.includeReasoning,
         };
 
     return {
