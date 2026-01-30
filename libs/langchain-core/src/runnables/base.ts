@@ -1687,7 +1687,7 @@ export class RunnableRetry<
 
   protected async _invoke(
     input: RunInput,
-    config?: CallOptions,
+    config?: Partial<CallOptions>,
     runManager?: CallbackManagerForChainRun
   ): Promise<RunOutput> {
     return pRetry(
@@ -1716,7 +1716,10 @@ export class RunnableRetry<
    * @param config The config for the runnable.
    * @returns A promise that resolves to the output of the runnable.
    */
-  async invoke(input: RunInput, config?: CallOptions): Promise<RunOutput> {
+  async invoke(
+    input: RunInput,
+    config?: Partial<CallOptions>
+  ): Promise<RunOutput> {
     return this._callWithConfig(this._invoke.bind(this), input, config);
   }
 
