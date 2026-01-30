@@ -11,6 +11,7 @@ export type GoogleAbstractedClientOps = {
   headers?: Record<string, string>;
   data?: unknown;
   responseType?: GoogleAbstractedClientOpsResponseType;
+  signal?: AbortSignal;
 };
 
 export interface GoogleAbstractedClient {
@@ -51,6 +52,7 @@ export abstract class GoogleAbstractedFetchClient
       method?: string;
       headers: Record<string, string>;
       body?: string;
+      signal?: AbortSignal;
     } = {
       method: opts.method,
       headers: {
@@ -58,6 +60,7 @@ export abstract class GoogleAbstractedFetchClient
         ...(opts.headers ?? {}),
         ...(additionalHeaders ?? {}),
       },
+      signal: opts.signal,
     };
     if (opts.data !== undefined) {
       if (typeof opts.data === "string") {

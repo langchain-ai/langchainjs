@@ -161,6 +161,7 @@ export class ChatOpenAIResponses<
     options: this["ParsedCallOptions"],
     runManager?: CallbackManagerForLLMRun
   ): Promise<ChatResult> {
+    options.signal?.throwIfAborted();
     const invocationParams = this.invocationParams(options);
     if (invocationParams.stream) {
       const stream = this._streamResponseChunks(messages, options, runManager);
@@ -234,6 +235,9 @@ export class ChatOpenAIResponses<
     );
 
     for await (const data of streamIterable) {
+      if (options.signal?.aborted) {
+        return;
+      }
       const chunk = convertResponsesDeltaToChatGenerationChunk(data);
       if (chunk == null) continue;
       yield chunk;

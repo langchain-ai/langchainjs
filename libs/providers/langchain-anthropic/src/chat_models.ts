@@ -1167,12 +1167,13 @@ export class ChatAnthropicMessages<
 
     const stream = await this.createStreamWithRetry(payload, {
       headers: options.headers,
+      signal: options.signal,
     });
 
     for await (const data of stream) {
       if (options.signal?.aborted) {
         stream.controller.abort();
-        throw new Error("AbortError: User aborted the request.");
+        return;
       }
       const shouldStreamUsage = this.streamUsage ?? options.streamUsage;
       const result = _makeMessageChunkFromAnthropicEvent(data, {
@@ -1259,6 +1260,7 @@ export class ChatAnthropicMessages<
     options: this["ParsedCallOptions"],
     runManager?: CallbackManagerForLLMRun
   ): Promise<ChatResult> {
+    options.signal?.throwIfAborted();
     if (this.stopSequences && options.stop) {
       throw new Error(
         `"stopSequence" parameter found in input and default params`

@@ -41,6 +41,10 @@ export abstract class ChatModelUnitTests<
         this.testChatModelWithStructuredOutput());
       test("should return standard LangSmith parameters", () =>
         this.testStandardParams());
+      test("invoke should throw when signal is already aborted", () =>
+        this.testInvokeThrowsWithAbortedSignal());
+      test("stream should handle aborted signal correctly", () =>
+        this.testStreamReturnsEarlyWithAbortedSignal());
     });
   }
 }

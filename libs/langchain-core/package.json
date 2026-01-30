@@ -229,6 +229,17 @@
         "default": "./dist/embeddings.js"
       }
     },
+    "./errors": {
+      "input": "./src/errors/index.ts",
+      "require": {
+        "types": "./dist/errors/index.d.cts",
+        "default": "./dist/errors/index.cjs"
+      },
+      "import": {
+        "types": "./dist/errors/index.d.ts",
+        "default": "./dist/errors/index.js"
+      }
+    },
     "./example_selectors": {
       "input": "./src/example_selectors/index.ts",
       "require": {
