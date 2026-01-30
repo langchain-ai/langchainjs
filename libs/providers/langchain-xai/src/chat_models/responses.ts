@@ -310,6 +310,7 @@ export class ChatXAIResponses<
     options: this["ParsedCallOptions"],
     runManager?: CallbackManagerForLLMRun
   ): Promise<ChatResult> {
+    options.signal?.throwIfAborted();
     const invocationParams = this.invocationParams(options);
     const input = convertMessagesToResponsesInput(messages);
 
@@ -378,6 +379,9 @@ export class ChatXAIResponses<
     } as XAIResponsesCreateParamsStreaming);
 
     for await (const event of streamIterable) {
+      if (options.signal?.aborted) {
+        return;
+      }
       const chunk = convertStreamEventToChunk(event);
       if (chunk) {
         yield chunk;

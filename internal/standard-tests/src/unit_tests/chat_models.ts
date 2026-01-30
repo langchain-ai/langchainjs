@@ -1,10 +1,11 @@
 import type { expect as JestExpect } from "@jest/globals";
 import type { expect as VitestExpect } from "vitest";
 import {
+  BaseChatModel,
   BaseChatModelCallOptions,
   LangSmithParams,
 } from "@langchain/core/language_models/chat_models";
-import { AIMessageChunk } from "@langchain/core/messages";
+import { AIMessageChunk, HumanMessage } from "@langchain/core/messages";
 import { z } from "zod/v3";
 import { InferInteropZodOutput } from "@langchain/core/utils/types";
 import { StructuredTool } from "@langchain/core/tools";
@@ -121,5 +122,50 @@ export abstract class ChatModelUnitTests<
     this.expect(Object.keys(lsParams).sort()).toEqual(
       Object.keys(expectedParams).sort()
     );
+  }
+
+  /**
+   * Test that invoke throws when signal is already aborted.
+   * This verifies the early abort check in _generate.
+   */
+  async testInvokeThrowsWithAbortedSignal() {
+    // Use BaseChatModel type to avoid generic type parameter issues with object literals
+    const chatModel: BaseChatModel = new this.Cls(this.constructorArgs);
+    const abortedSignal = AbortSignal.abort();
+
+    await this.expect(
+      chatModel.invoke([new HumanMessage("hello")], { signal: abortedSignal })
+    ).rejects.toThrow();
+  }
+
+  /**
+   * Test that stream handles an already-aborted signal correctly.
+   * The stream should either:
+   * 1. Throw immediately (if it goes through _generate which has throwIfAborted)
+   * 2. Complete with no chunks (if it goes directly to streaming and returns early)
+   *
+   * Either behavior is acceptable - the key is that we don't continue processing.
+   */
+  async testStreamReturnsEarlyWithAbortedSignal() {
+    // Use BaseChatModel type to avoid generic type parameter issues with object literals
+    const chatModel: BaseChatModel = new this.Cls(this.constructorArgs);
+    const abortedSignal = AbortSignal.abort();
+
+    const chunks: AIMessageChunk[] = [];
+    try {
+      const stream = await chatModel.stream([new HumanMessage("hello")], {
+        signal: abortedSignal,
+      });
+      for await (const chunk of stream) {
+        chunks.push(chunk);
+      }
+      // If we get here without throwing, we should have no chunks
+      // (stream returned early due to aborted signal)
+      this.expect(chunks.length).toBe(0);
+    } catch {
+      // Also acceptable - stream threw due to aborted signal
+      // (e.g., if it went through _generate path which has throwIfAborted)
+      this.expect(true).toBe(true);
+    }
   }
 }

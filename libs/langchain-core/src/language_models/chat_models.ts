@@ -272,7 +272,7 @@ export abstract class BaseChatModel<
    */
   async invoke(
     input: BaseLanguageModelInput,
-    options?: CallOptions
+    options?: Partial<CallOptions>
   ): Promise<OutputMessageType> {
     const promptValue = BaseChatModel._convertInputToPromptValue(input);
     const result = await this.generatePrompt(
@@ -296,7 +296,7 @@ export abstract class BaseChatModel<
 
   async *_streamIterator(
     input: BaseLanguageModelInput,
-    options?: CallOptions
+    options?: Partial<CallOptions>
   ): AsyncGenerator<OutputMessageType> {
     // Subclass check required to avoid double callbacks with default implementation
     if (
@@ -758,13 +758,13 @@ export abstract class BaseChatModel<
    */
   async generate(
     messages: BaseMessageLike[][],
-    options?: string[] | CallOptions,
+    options?: string[] | Partial<CallOptions>,
     callbacks?: Callbacks
   ): Promise<LLMResult> {
     // parse call options
-    let parsedOptions: CallOptions | undefined;
+    let parsedOptions: Partial<CallOptions> | undefined;
     if (Array.isArray(options)) {
-      parsedOptions = { stop: options } as CallOptions;
+      parsedOptions = { stop: options } as Partial<CallOptions>;
     } else {
       parsedOptions = options;
     }
@@ -845,7 +845,7 @@ export abstract class BaseChatModel<
    */
   async generatePrompt(
     promptValues: BasePromptValueInterface[],
-    options?: string[] | CallOptions,
+    options?: string[] | Partial<CallOptions>,
     callbacks?: Callbacks
   ): Promise<LLMResult> {
     const promptMessages: BaseMessage[][] = promptValues.map((promptValue) =>

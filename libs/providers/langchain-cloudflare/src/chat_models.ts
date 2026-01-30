@@ -182,6 +182,9 @@ export class ChatCloudflareWorkersAI
       response.body
     );
     for await (const chunk of stream) {
+      if (options.signal?.aborted) {
+        return;
+      }
       if (chunk !== "[DONE]") {
         const parsedChunk = JSON.parse(chunk);
         const generationChunk = new ChatGenerationChunk({
@@ -233,6 +236,7 @@ export class ChatCloudflareWorkersAI
     options: this["ParsedCallOptions"],
     runManager?: CallbackManagerForLLMRun
   ): Promise<string> {
+    options.signal?.throwIfAborted();
     if (!this.streaming) {
       const response = await this._request(messages, options);
 

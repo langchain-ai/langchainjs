@@ -482,6 +482,9 @@ export class ChatDeepSeek extends ChatOpenAICompletions<ChatDeepSeekCallOptions>
     let isThinking = false;
 
     for await (const chunk of stream) {
+      if (options.signal?.aborted) {
+        return;
+      }
       // If the model already provided reasoning_content natively, just yield it
       if (chunk.message.additional_kwargs.reasoning_content) {
         yield chunk;
