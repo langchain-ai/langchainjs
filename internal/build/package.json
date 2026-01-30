@@ -27,7 +27,7 @@
     "@langchain/eslint": "workspace:*",
     "@langchain/tsconfig": "workspace:*",
     "@tsconfig/recommended": "^1.0.10",
-    "eslint": "^9.39.1"
+    "eslint": "^9.39.2"
   },
   "optionalDependencies": {
     "@esbuild/win32-x64": "*",
