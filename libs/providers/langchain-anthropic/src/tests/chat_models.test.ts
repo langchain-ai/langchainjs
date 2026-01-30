@@ -9,12 +9,17 @@ import { z } from "zod";
 import { z as z4 } from "zod/v4";
 import { OutputParserException } from "@langchain/core/output_parsers";
 import { tool } from "@langchain/core/tools";
+import {
+  ContentBlockParam as AnthropicContentBlockParam,
+  MessageCreateParamsNonStreaming,
+} from "@anthropic-ai/sdk/resources";
 import { ChatAnthropic } from "../chat_models.js";
 import {
   _convertMessagesToAnthropicPayload,
   applyCacheControlToPayload,
 } from "../utils/message_inputs.js";
 import { AnthropicToolExtrasSchema } from "../utils/tools.js";
+import { AnthropicMessageCreateParams } from "../types.js";
 
 test("withStructuredOutput with output validation", async () => {
   const model = new ChatAnthropic({
@@ -1019,7 +1024,7 @@ describe("ContentBlock.Multimodal.Image format support", () => {
 
     const messageHistory = [
       new HumanMessage({
-        contentBlocks: [
+        content: [
           {
             type: "image",
             data: base64Data,
@@ -1080,7 +1085,9 @@ describe("applyCacheControlToPayload", () => {
   const cacheControl = { type: "ephemeral" as const, ttl: "5m" as const };
 
   test("applies cache_control to the last content block of string content", () => {
-    const payload = {
+    const payload: AnthropicMessageCreateParams = {
+      max_tokens: 1000,
+      model: "claude-3-5-sonnet-20241022",
       messages: [
         { role: "user" as const, content: "Hello" },
         { role: "assistant" as const, content: "Hi there!" },
@@ -1103,7 +1110,9 @@ describe("applyCacheControlToPayload", () => {
   });
 
   test("applies cache_control to the last content block of array content", () => {
-    const payload = {
+    const payload: AnthropicMessageCreateParams = {
+      max_tokens: 1000,
+      model: "claude-3-5-sonnet-20241022",
       messages: [
         { role: "user" as const, content: "Hello" },
         {
@@ -1134,7 +1143,9 @@ describe("applyCacheControlToPayload", () => {
   });
 
   test("applies cache_control to tool_use blocks without corruption", () => {
-    const payload = {
+    const payload: AnthropicMessageCreateParams = {
+      max_tokens: 1000,
+      model: "claude-3-5-sonnet-20241022",
       messages: [
         { role: "user" as const, content: "Hello" },
         {
@@ -1170,7 +1181,11 @@ describe("applyCacheControlToPayload", () => {
   });
 
   test("returns unchanged payload when messages array is empty", () => {
-    const payload = { messages: [] };
+    const payload: AnthropicMessageCreateParams = {
+      messages: [],
+      max_tokens: 1000,
+      model: "claude-3-5-sonnet-20241022",
+    };
 
     const result = applyCacheControlToPayload(payload, cacheControl);
 
@@ -1178,8 +1193,10 @@ describe("applyCacheControlToPayload", () => {
   });
 
   test("handles 1h TTL", () => {
-    const payload = {
+    const payload: AnthropicMessageCreateParams = {
       messages: [{ role: "user" as const, content: "Hello" }],
+      max_tokens: 1000,
+      model: "claude-3-5-sonnet-20241022",
     };
     const hourCacheControl = { type: "ephemeral" as const, ttl: "1h" as const };
 
@@ -1207,16 +1224,13 @@ describe("File ContentBlock handling", () => {
       ],
     });
 
-    const payload = _convertMessagesToAnthropicPayload(
-      [message],
-      "claude-3-5-sonnet-20241022"
-    );
+    const payload = _convertMessagesToAnthropicPayload([message]);
 
     expect(payload.messages).toHaveLength(1);
     expect(payload.messages[0].role).toBe("user");
     expect(Array.isArray(payload.messages[0].content)).toBe(true);
 
-    const content = payload.messages[0].content as any[];
+    const content = payload.messages[0].content;
     expect(content).toHaveLength(2);
     expect(content[0]).toEqual({
       type: "text",
@@ -1244,13 +1258,10 @@ describe("File ContentBlock handling", () => {
       ],
     });
 
-    const payload = _convertMessagesToAnthropicPayload(
-      [message],
-      "claude-3-5-sonnet-20241022"
-    );
+    const payload = _convertMessagesToAnthropicPayload([message]);
 
     expect(payload.messages).toHaveLength(1);
-    const content = payload.messages[0].content as any[];
+    const content = payload.messages[0].content as AnthropicContentBlockParam[];
     expect(content).toHaveLength(2);
     expect(content[0]).toEqual({ type: "text", text: "What's in this file?" });
     expect(content[1]).toEqual({
@@ -1276,19 +1287,20 @@ describe("File ContentBlock handling", () => {
       ],
     });
 
-    const payload = _convertMessagesToAnthropicPayload(
-      [message],
-      "claude-3-5-sonnet-20241022"
-    );
+    const payload = _convertMessagesToAnthropicPayload([message]);
 
     expect(payload.messages).toHaveLength(1);
-    const content = payload.messages[0].content as any[];
+    const content = payload.messages[0].content as AnthropicContentBlockParam[];
     expect(content).toHaveLength(2);
     expect(content[0]).toEqual({ type: "text", text: "Read this file" });
-    expect(content[1].type).toBe("document");
-    expect(content[1].source.type).toBe("base64");
-    expect(content[1].source.media_type).toBe("application/pdf");
-    expect(content[1].source.data).toBeTruthy();
+    if (content[1].type === "document" && content[1].source.type === "base64") {
+      expect(content[1].type).toBe("document");
+      expect(content[1].source.type).toBe("base64");
+      expect(content[1].source.media_type).toBe("application/pdf");
+      expect(content[1].source.data).toBeTruthy();
+    } else {
+      throw new Error("Expected document block with base64 source");
+    }
   });
 
   test("converts file ContentBlock with fileId to document block", () => {
@@ -1303,13 +1315,10 @@ describe("File ContentBlock handling", () => {
       ],
     });
 
-    const payload = _convertMessagesToAnthropicPayload(
-      [message],
-      "claude-3-5-sonnet-20241022"
-    );
+    const payload = _convertMessagesToAnthropicPayload([message]);
 
     expect(payload.messages).toHaveLength(1);
-    const content = payload.messages[0].content as any[];
+    const content = payload.messages[0].content;
     expect(content).toHaveLength(2);
     expect(content[0]).toEqual({ type: "text", text: "Analyze this file" });
     expect(content[1]).toEqual({
@@ -1333,12 +1342,9 @@ describe("File ContentBlock handling", () => {
       ],
     });
 
-    const payload = _convertMessagesToAnthropicPayload(
-      [message],
-      "claude-3-5-sonnet-20241022"
-    );
+    const payload = _convertMessagesToAnthropicPayload([message]);
 
-    const content = payload.messages[0].content as any[];
+    const content = payload.messages[0].content;
     expect(content[0]).toEqual({
       type: "document",
       source: {
