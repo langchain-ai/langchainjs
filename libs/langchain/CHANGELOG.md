@@ -1,5 +1,11 @@
 # langchain
 
+## 1.2.15
+
+### Patch Changes
+
+- [#9891](https://github.com/langchain-ai/langchainjs/pull/9891) [`983b212`](https://github.com/langchain-ai/langchainjs/commit/983b2123eeaa32011b7021643ba8c37698dfe2be) Thanks [@christian-bromann](https://github.com/christian-bromann)! - fix(langchain): support StateSchema in middleware pipeline
+
 ## 1.2.14
 
 ### Patch Changes

@@ -1,5 +1,11 @@
 # @langchain/classic
 
+## 1.0.12
+
+### Patch Changes
+
+- [#9888](https://github.com/langchain-ai/langchainjs/pull/9888) [`1d58bf2`](https://github.com/langchain-ai/langchainjs/commit/1d58bf2bcb14055a64189af7e251bb93fa9d5aa0) Thanks [@jacoblee93](https://github.com/jacoblee93)! - fix(classic): Fix typo in package.json
+
 ## 1.0.11
 
 ### Patch Changes
