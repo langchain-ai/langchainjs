@@ -156,3 +156,9 @@ pkg:@langchain/xai:
       - any-glob-to-any-file:
           - libs/providers/langchain-xai/**
           - libs/providers/langchain-xai/**/*
+
+pkg:@langchain/valkey:
+  - changed-files:
+      - any-glob-to-any-file:
+          - libs/providers/langchain-valkey/**
+          - libs/providers/langchain-valkey/**/*
