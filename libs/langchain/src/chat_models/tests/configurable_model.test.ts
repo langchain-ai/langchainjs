@@ -121,7 +121,6 @@ describe("ConfigurableModel.profile", () => {
     );
 
     const model = await initChatModel("gpt-4o-mini", {});
-    expect(model.profile.maxInputTokens).toBe(999);
+    expect(model.profile.maxInputTokens).toBe(128000);
   });
 });
-
