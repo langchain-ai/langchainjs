@@ -932,10 +932,9 @@ export class ChatGoogleGenerativeAI
     const stream = await this.caller.callWithOptions(
       { signal: options?.signal },
       async () => {
-        const { stream } = await this.client.generateContentStream(
-          request,
-          { signal: options?.signal }
-        );
+        const { stream } = await this.client.generateContentStream(request, {
+          signal: options?.signal,
+        });
         return stream;
       }
     );
@@ -1009,10 +1008,9 @@ export class ChatGoogleGenerativeAI
       { signal: options?.signal },
       async () => {
         try {
-          return await this.client.generateContent(
-            request,
-            { signal: options?.signal }
-          );
+          return await this.client.generateContent(request, {
+            signal: options?.signal,
+          });
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
         } catch (e: any) {
           // TODO: Improve error handling
