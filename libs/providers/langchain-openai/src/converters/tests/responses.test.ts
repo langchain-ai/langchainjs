@@ -6,6 +6,7 @@ import {
   AIMessageChunk,
   ContentBlock,
   HumanMessage,
+  SystemMessage,
   ToolCallChunk,
   ToolMessage,
 } from "@langchain/core/messages";
@@ -695,7 +696,8 @@ describe("convertMessagesToResponsesInput", () => {
     it("allows file_url without filename metadata and excludes filename from payload", () => {
       const messages = [
         new SystemMessage({
-          content: "You are a helpful assistant that answers questions about the world.",
+          content:
+            "You are a helpful assistant that answers questions about the world.",
         }),
         new HumanMessage({
           content: [
@@ -723,7 +725,8 @@ describe("convertMessagesToResponsesInput", () => {
         {
           type: "message",
           role: "system",
-          content: "You are a helpful assistant that answers questions about the world.",
+          content:
+            "You are a helpful assistant that answers questions about the world.",
         },
         {
           type: "message",
@@ -753,7 +756,7 @@ describe("convertMessagesToResponsesInput", () => {
       expect(fileBlock.filename).toBeUndefined();
     });
   });
-  
+
   describe("ToolMessage conversion", () => {
     it("passes through provider-native input_file content without stringification", () => {
       const toolMessage = new ToolMessage({
