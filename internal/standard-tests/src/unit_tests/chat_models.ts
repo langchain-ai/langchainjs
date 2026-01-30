@@ -9,6 +9,7 @@ import { AIMessageChunk, HumanMessage } from "@langchain/core/messages";
 import { z } from "zod/v3";
 import { InferInteropZodOutput } from "@langchain/core/utils/types";
 import { StructuredTool } from "@langchain/core/tools";
+import { ModelAbortError } from "@langchain/core/errors";
 import {
   BaseChatModelsTests,
   BaseChatModelsTestsFields,

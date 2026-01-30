@@ -58,6 +58,7 @@ import {
   InteropZodType,
   isInteropZodSchema,
 } from "../utils/types/zod.js";
+import { ModelAbortError } from "../errors/index.js";
 import { callbackHandlerPrefersStreaming } from "../callbacks/base.js";
 import { toJsonSchema } from "../utils/json_schema.js";
 import { getEnvironmentVariable } from "../utils/env.js";
@@ -349,6 +350,7 @@ export abstract class BaseChatModel<
           callOptions,
           runManagers?.[0]
         )) {
+          callOptions.signal?.throwIfAborted();
           if (chunk.message.id == null) {
             const runId = runManagers?.at(0)?.runId;
             if (runId != null) chunk.message._updateId(`run-${runId}`);
@@ -382,6 +384,8 @@ export abstract class BaseChatModel<
             };
           }
         }
+        // Throw error if stream ended due to abort (provider returned early)
+        callOptions.signal?.throwIfAborted();
       } catch (err) {
         await Promise.all(
           (runManagers ?? []).map((runManager) =>
@@ -484,10 +488,20 @@ export abstract class BaseChatModel<
           parsedOptions,
           runManagers?.[0]
         );
-        let aggregated;
+        let aggregated: ChatGenerationChunk | undefined;
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         let llmOutput: Record<string, any> | undefined;
         for await (const chunk of stream) {
+          // Check for abort signal - throw ModelAbortError with partial output
+          if (parsedOptions.signal?.aborted) {
+            const partialMessage = aggregated?.message as
+              | AIMessageChunk
+              | undefined;
+            throw new ModelAbortError(
+              "Model invocation was aborted.",
+              partialMessage
+            );
+          }
           if (chunk.message.id == null) {
             const runId = runManagers?.at(0)?.runId;
             if (runId != null) chunk.message._updateId(`run-${runId}`);
@@ -509,6 +523,16 @@ export abstract class BaseChatModel<
               },
             };
           }
+        }
+        // Check if stream ended due to abort (provider returned early)
+        if (parsedOptions.signal?.aborted) {
+          const partialMessage = aggregated?.message as
+            | AIMessageChunk
+            | undefined;
+          throw new ModelAbortError(
+            "Model invocation was aborted.",
+            partialMessage
+          );
         }
         if (aggregated === undefined) {
           throw new Error("Received empty response from chat model call.");
