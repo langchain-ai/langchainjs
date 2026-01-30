@@ -44,15 +44,17 @@ describe("PGVectorStore Score Normalization - Unit Tests", () => {
     // Test euclidean distance conversion: similarity = 1 / (1 + distance)
     vectorStore.distanceStrategy = "euclidean";
     const euclideanDistance = 0.5;
-    // @ts-expect-error - convertDistanceToScore is private
-    const euclideanSimilarity = vectorStore.convertDistanceToScore(euclideanDistance);
+    const euclideanSimilarity =
+      // @ts-expect-error - convertDistanceToScore is private
+      vectorStore.convertDistanceToScore(euclideanDistance);
     expect(euclideanSimilarity).toBe(1 / (1 + euclideanDistance));
 
     // Test inner product conversion: similarity = -distance
     vectorStore.distanceStrategy = "innerProduct";
     const innerProductDistance = -0.8; // This would be a negative value from pgvector
-    // @ts-expect-error - convertDistanceToScore is private
-    const innerProductSimilarity = vectorStore.convertDistanceToScore(innerProductDistance);
+    const innerProductSimilarity =
+      // @ts-expect-error - convertDistanceToScore is private
+      vectorStore.convertDistanceToScore(innerProductDistance);
     expect(innerProductSimilarity).toBe(-innerProductDistance);
   });
 
@@ -155,8 +157,9 @@ describe("PGVectorStore Score Normalization - Unit Tests", () => {
     const vectorStoreDistance = new PGVectorStore(embeddings, configDistance);
     vectorStoreDistance.distanceStrategy = "cosine";
     const rawDistance = 0.3;
-    // @ts-expect-error - convertDistanceToScore is private
-    const distanceResult = vectorStoreDistance.convertDistanceToScore(rawDistance);
+    const distanceResult =
+      // @ts-expect-error - convertDistanceToScore is private
+      vectorStoreDistance.convertDistanceToScore(rawDistance);
     expect(distanceResult).toBe(rawDistance); // Should return raw distance
 
     // With similarity mode, should convert distance to similarity
@@ -165,10 +168,14 @@ describe("PGVectorStore Score Normalization - Unit Tests", () => {
       scoreNormalization: "similarity" as const,
     };
 
-    const vectorStoreSimilarity = new PGVectorStore(embeddings, configSimilarity);
+    const vectorStoreSimilarity = new PGVectorStore(
+      embeddings,
+      configSimilarity
+    );
     vectorStoreSimilarity.distanceStrategy = "cosine";
-    // @ts-expect-error - convertDistanceToScore is private
-    const similarityResult = vectorStoreSimilarity.convertDistanceToScore(rawDistance);
+    const similarityResult =
+      // @ts-expect-error - convertDistanceToScore is private
+      vectorStoreSimilarity.convertDistanceToScore(rawDistance);
     expect(similarityResult).toBe(1 - rawDistance); // Should convert to similarity
     expect(similarityResult).not.toBe(rawDistance); // Should not be the same as raw distance
   });
