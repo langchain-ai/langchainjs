@@ -23,7 +23,7 @@ const modelAlias = "langchain-nodejs-ibm/granite-3-2-8b-instruct";
 const projectId = process.env.WATSONX_AI_PROJECT_ID;
 const version = "2024-05-31";
 const serviceUrl = process.env.WATSONX_AI_SERVICE_URL as string;
-const serviceUrlGateway = process.env.WATSONX_AI_SERVICE_URL_GATEWAY as string;
+const serviceUrlGateway = process.env.WATSONX_AI_GATEWAY_URL as string;
 
 const parameters = [
   ...models.map((model) => ({
