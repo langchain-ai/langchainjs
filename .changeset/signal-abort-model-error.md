@@ -1,5 +1,5 @@
 ---
-"@langchain/core": minor
+"@langchain/core": patch
 "@langchain/standard-tests": patch
 "@langchain/openai": patch
 "@langchain/anthropic": patch
