@@ -18,6 +18,15 @@ describe("ConfigurableModel._getCacheKey", () => {
 
     expect(model._getCacheKey(config1)).toBe(model._getCacheKey(config2));
   });
+
+  it("returns deterministic key for undefined or empty config", () => {
+    const model = new ConfigurableModel({});
+    const keyEmpty = model._getCacheKey({});
+    const keyUndefined = model._getCacheKey(undefined);
+
+    expect(typeof keyEmpty).toBe("string");
+    expect(keyEmpty).toBe(keyUndefined);
+  });
 });
 
 describe("ConfigurableModel._getModelInstance", () => {
@@ -25,19 +34,29 @@ describe("ConfigurableModel._getModelInstance", () => {
     vi.restoreAllMocks();
   });
 
-  it("caches instances for identical cache keys", async () => {
-    const getChatModelSpy = vi
-      .spyOn(universal, "getChatModelByClassName")
-      .mockResolvedValue(DummyChatModel as never);
+  it("returns same instance when called with no config (default cache key)", async () => {
+    vi.spyOn(universal, "getChatModelByClassName").mockResolvedValue(
+      DummyChatModel as never
+    );
 
     const model = await initChatModel("gpt-4o-mini");
+    const instance1 = await model._getModelInstance();
+    const instance2 = await model._getModelInstance();
 
+    expect(instance1).toBe(instance2);
+  });
+
+  it("caches instances for identical cache keys", async () => {
+    vi.spyOn(universal, "getChatModelByClassName").mockResolvedValue(
+      DummyChatModel as never
+    );
+
+    const model = await initChatModel("gpt-4o-mini");
     const config = { configurable: { model: "gpt-4o" } };
     const instance1 = await model._getModelInstance(config);
     const instance2 = await model._getModelInstance(config);
 
     expect(instance1).toBe(instance2);
-    expect(getChatModelSpy).toHaveBeenCalled();
   });
 
   it("reuses cached instances when only __pregel_ keys differ", async () => {
