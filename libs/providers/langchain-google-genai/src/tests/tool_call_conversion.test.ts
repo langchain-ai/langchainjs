@@ -1,6 +1,9 @@
 import { test, expect } from "@jest/globals";
 import { AIMessage } from "@langchain/core/messages";
 import { convertBaseMessagesToContent } from "../utils/common.js";
+import { z } from "zod";
+import { tool } from "@langchain/core/tools";
+import { ChatGoogleGenerativeAI } from "@langchain/google-genai";
 
 test("converts standard tool_call content blocks to Google functionCall format", () => {
   // Create AIMessage with standard tool_call content block
@@ -38,5 +41,53 @@ test("converts standard tool_call content blocks to Google functionCall format",
     operation: "add",
     number1: 2,
     number2: 3,
+  });
+});
+
+describe("Gemini Tool Schema Validation - Empty String in Enum", () => {
+  test("should throw descriptive error for empty string in z.enum", () => {
+    const model = new ChatGoogleGenerativeAI({
+      model: "gemini-2.0-flash-exp",
+    });
+
+    const schema = z.object({
+      status: z.enum(["", "active", "inactive"]).describe("Status value"),
+    });
+
+    const crashTool = tool(async (_input: z.infer<typeof schema>) => "ok", {
+      name: "crash_tool",
+      description: "This tool will crash Gemini SDK",
+      schema: schema,
+    });
+
+    expect(() => model.bindTools([crashTool])).toThrow(
+      /Invalid enum: empty string not allowed/
+    );
+  });
+
+  test("should throw descriptive error for empty string in z.nativeEnum", () => {
+    enum TestEnum {
+      A = "",
+      B = "active",
+      C = "inactive",
+    }
+
+    const model = new ChatGoogleGenerativeAI({
+      model: "gemini-2.0-flash-exp",
+    });
+
+    const schema = z.object({
+      status: z.nativeEnum(TestEnum).describe("Status value"),
+    });
+
+    const crashTool = tool(async (_input: z.infer<typeof schema>) => "ok", {
+      name: "crash_tool",
+      description: "This tool will crash Gemini SDK",
+      schema: schema,
+    });
+
+    expect(() => model.bindTools([crashTool])).toThrow(
+      /Invalid enum: empty string not allowed/
+    );
   });
 });
