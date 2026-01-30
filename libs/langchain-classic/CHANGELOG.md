@@ -1,5 +1,17 @@
 # @langchain/classic
 
+## 1.0.12
+
+### Patch Changes
+
+- [#9888](https://github.com/langchain-ai/langchainjs/pull/9888) [`1d58bf2`](https://github.com/langchain-ai/langchainjs/commit/1d58bf2bcb14055a64189af7e251bb93fa9d5aa0) Thanks [@jacoblee93](https://github.com/jacoblee93)! - fix(classic): Fix typo in package.json
+
+## 1.0.11
+
+### Patch Changes
+
+- [#9844](https://github.com/langchain-ai/langchainjs/pull/9844) [`a496cc0`](https://github.com/langchain-ai/langchainjs/commit/a496cc09d2b4d28a8eb0c4b96bd3555ab1cc47dc) Thanks [@VoVaVc](https://github.com/VoVaVc)! - Add support for Aurora Postgres DataSource
+
 ## 1.0.10
 
 ### Patch Changes

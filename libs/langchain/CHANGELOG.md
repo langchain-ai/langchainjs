@@ -1,5 +1,18 @@
 # langchain
 
+## 1.2.15
+
+### Patch Changes
+
+- [#9891](https://github.com/langchain-ai/langchainjs/pull/9891) [`983b212`](https://github.com/langchain-ai/langchainjs/commit/983b2123eeaa32011b7021643ba8c37698dfe2be) Thanks [@christian-bromann](https://github.com/christian-bromann)! - fix(langchain): support StateSchema in middleware pipeline
+
+## 1.2.14
+
+### Patch Changes
+
+- [#9870](https://github.com/langchain-ai/langchainjs/pull/9870) [`070b4d1`](https://github.com/langchain-ai/langchainjs/commit/070b4d14121ee5d1f24c8ad980cd4548f39f19eb) Thanks [@maahir30](https://github.com/maahir30)! - fix(langchain): StateSchema handling in AgentNode middleware
+  - Added `toPartialZodObject` helper that correctly handles both Zod objects and LangGraph's StateSchema when parsing middleware state in AgentNode .
+
 ## 1.2.13
 
 ### Patch Changes
