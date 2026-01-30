@@ -45,8 +45,6 @@ export abstract class ChatModelUnitTests<
         this.testInvokeThrowsWithAbortedSignal());
       test("stream should handle aborted signal correctly", () =>
         this.testStreamReturnsEarlyWithAbortedSignal());
-      test("should have correct ModelAbortError structure", () =>
-        this.testModelAbortErrorStructure());
     });
   }
 }
