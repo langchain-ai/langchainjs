@@ -1207,15 +1207,21 @@ describe("File ContentBlock handling", () => {
       ],
     });
 
-    const payload = _convertMessagesToAnthropicPayload([message], "claude-3-5-sonnet-20241022");
+    const payload = _convertMessagesToAnthropicPayload(
+      [message],
+      "claude-3-5-sonnet-20241022"
+    );
 
     expect(payload.messages).toHaveLength(1);
     expect(payload.messages[0].role).toBe("user");
     expect(Array.isArray(payload.messages[0].content)).toBe(true);
-    
+
     const content = payload.messages[0].content as any[];
     expect(content).toHaveLength(2);
-    expect(content[0]).toEqual({ type: "text", text: "Summarize this document" });
+    expect(content[0]).toEqual({
+      type: "text",
+      text: "Summarize this document",
+    });
     expect(content[1]).toEqual({
       type: "document",
       source: {
@@ -1238,7 +1244,10 @@ describe("File ContentBlock handling", () => {
       ],
     });
 
-    const payload = _convertMessagesToAnthropicPayload([message], "claude-3-5-sonnet-20241022");
+    const payload = _convertMessagesToAnthropicPayload(
+      [message],
+      "claude-3-5-sonnet-20241022"
+    );
 
     expect(payload.messages).toHaveLength(1);
     const content = payload.messages[0].content as any[];
@@ -1267,7 +1276,10 @@ describe("File ContentBlock handling", () => {
       ],
     });
 
-    const payload = _convertMessagesToAnthropicPayload([message], "claude-3-5-sonnet-20241022");
+    const payload = _convertMessagesToAnthropicPayload(
+      [message],
+      "claude-3-5-sonnet-20241022"
+    );
 
     expect(payload.messages).toHaveLength(1);
     const content = payload.messages[0].content as any[];
@@ -1291,7 +1303,10 @@ describe("File ContentBlock handling", () => {
       ],
     });
 
-    const payload = _convertMessagesToAnthropicPayload([message], "claude-3-5-sonnet-20241022");
+    const payload = _convertMessagesToAnthropicPayload(
+      [message],
+      "claude-3-5-sonnet-20241022"
+    );
 
     expect(payload.messages).toHaveLength(1);
     const content = payload.messages[0].content as any[];
@@ -1318,7 +1333,10 @@ describe("File ContentBlock handling", () => {
       ],
     });
 
-    const payload = _convertMessagesToAnthropicPayload([message], "claude-3-5-sonnet-20241022");
+    const payload = _convertMessagesToAnthropicPayload(
+      [message],
+      "claude-3-5-sonnet-20241022"
+    );
 
     const content = payload.messages[0].content as any[];
     expect(content[0]).toEqual({
