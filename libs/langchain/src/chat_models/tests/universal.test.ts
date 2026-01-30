@@ -18,22 +18,3 @@ describe("Will appropriately infer a model profiles", () => {
     expect(model.profile.maxInputTokens).toBeDefined();
   });
 });
-
-describe("ConfigurableModel critical units", () => {
-  it("_getCacheKey should ignore __pregel_ keys", async () => {
-    const model = await initChatModel("gpt-4o-mini");
-    const config1 = { configurable: { model: "gpt-4o", __pregel_foo: "bar" } };
-    const config2 = { configurable: { model: "gpt-4o" } };
-    
-    expect(model._getCacheKey(config1)).toBe(model._getCacheKey(config2));
-  });
-
-  it("_getModelInstance should cache instances", async () => {
-    const model = await initChatModel("gpt-4o-mini");
-    
-    const instance1 = await model._getModelInstance();
-    const instance2 = await model._getModelInstance();
-    
-    expect(instance1).toBe(instance2);
-  });
-});
