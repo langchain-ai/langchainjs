@@ -1,5 +1,46 @@
 # @langchain/xai
 
+## 1.3.0
+
+### Minor Changes
+
+- [#9890](https://github.com/langchain-ai/langchainjs/pull/9890) [`e3ea086`](https://github.com/langchain-ai/langchainjs/commit/e3ea086121b5936668ba01ae43f8087df9263ab3) Thanks [@hntrl](https://github.com/hntrl)! - feat(xai): add server-side agentic tools and deprecate live_search
+
+  Added new xAI server-side agentic tools for the Responses API:
+  - `xaiWebSearch()`: Web search with domain filtering and image understanding
+  - `xaiXSearch()`: X (Twitter) search with handle filtering, date ranges, and media understanding
+  - `xaiCodeExecution()`: Python code execution for calculations and analysis
+  - `xaiCollectionsSearch()`: Search through uploaded knowledge bases (vector stores)
+
+  Also:
+  - Deprecated `xaiLiveSearch()` with migration guidance to new tools
+  - Added `tools` support to `ChatXAIResponses` constructor and call options
+  - Updated `XAIResponsesWebSearchTool` type with correct filtering options
+
+### Patch Changes
+
+- [#9900](https://github.com/langchain-ai/langchainjs/pull/9900) [`a9b5059`](https://github.com/langchain-ai/langchainjs/commit/a9b50597186002221aaa4585246e569fa44c27c8) Thanks [@hntrl](https://github.com/hntrl)! - Improved abort signal handling for chat models:
+  - Added `ModelAbortError` class in `@langchain/core/errors` that contains partial output when a model invocation is aborted mid-stream
+  - `invoke()` now throws `ModelAbortError` with accumulated `partialOutput` when aborted during streaming (when using streaming callback handlers)
+  - `stream()` throws a regular `AbortError` when aborted (since chunks are already yielded to the caller)
+  - All provider implementations now properly check and propagate abort signals in both `_generate()` and `_streamResponseChunks()` methods
+  - Added standard tests for abort signal behavior
+
+- [#9900](https://github.com/langchain-ai/langchainjs/pull/9900) [`a9b5059`](https://github.com/langchain-ai/langchainjs/commit/a9b50597186002221aaa4585246e569fa44c27c8) Thanks [@hntrl](https://github.com/hntrl)! - fix(providers): add proper abort signal handling for invoke and stream operations
+  - Added early abort check (`signal.throwIfAborted()`) at the start of `_generate` methods to immediately throw when signal is already aborted
+  - Added abort signal checks inside streaming loops in `_streamResponseChunks` to return early when signal is aborted
+  - Propagated abort signals to underlying SDK calls where applicable (Google GenAI, Google Common/VertexAI, Cohere)
+  - Added standard tests for abort signal behavior in `@langchain/standard-tests`
+
+  This enables proper cancellation behavior for both invoke and streaming operations, and allows fallback chains to correctly proceed to the next runnable when the previous one is aborted.
+
+- [#9889](https://github.com/langchain-ai/langchainjs/pull/9889) [`b303711`](https://github.com/langchain-ai/langchainjs/commit/b303711736e06f3c04d6bb5f50032da2dfb021f3) Thanks [@hntrl](https://github.com/hntrl)! - feat(xai): add baseURL option to ChatXAI
+
+  Added `baseURL` configuration option to `ChatXAI` class, allowing users to override the default xAI API endpoint. This is useful for connecting to custom endpoints, proxies, or alternative API-compatible services.
+
+- Updated dependencies [[`1fa865b`](https://github.com/langchain-ai/langchainjs/commit/1fa865b1cb8a30c2269b83cdb5fc84d374c3fca9), [`28efb57`](https://github.com/langchain-ai/langchainjs/commit/28efb57448933368094ca41c63d9262ac0f348a6), [`4e42452`](https://github.com/langchain-ai/langchainjs/commit/4e42452e4c020408bd6687667e931497b05aaff5), [`a9b5059`](https://github.com/langchain-ai/langchainjs/commit/a9b50597186002221aaa4585246e569fa44c27c8), [`a9b5059`](https://github.com/langchain-ai/langchainjs/commit/a9b50597186002221aaa4585246e569fa44c27c8)]:
+  - @langchain/openai@1.2.4
+
 ## 1.2.2
 
 ### Patch Changes
