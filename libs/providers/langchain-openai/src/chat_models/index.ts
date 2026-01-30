@@ -658,7 +658,7 @@ export class ChatOpenAI<
     runManager?: CallbackManagerForLLMRun
   ): Promise<ChatResult> {
     if (this._useResponsesApi(options)) {
-      return this.responses._generate(messages, options);
+      return this.responses._generate(messages, options, runManager);
     }
     return this.completions._generate(messages, options, runManager);
   }
