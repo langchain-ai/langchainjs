@@ -1246,7 +1246,7 @@ test("ChatOpenAI with service_tier and useResponsesApi", async () => {
   const model = new ChatOpenAI({
     model: "gpt-4o",
     useResponsesApi: true,
-    service_tier: "default", 
+    service_tier: "default",
     apiKey: process.env.OPENAI_API_KEY || "sk-fake-key",
   });
   try {
