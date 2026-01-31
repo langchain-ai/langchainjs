@@ -1,13 +1,47 @@
 import { test, expect, describe, vi } from "vitest";
-import { bedrockPromptCachingMiddleware } from "../promptCaching";
+import { Runnable } from "@langchain/core/runnables";
+import { bedrockPromptCachingMiddleware } from "../promptCaching.js";
 
-// --- FIXED MOCK SETUP ---
+interface MockMessage {
+  type: string;
+  content: unknown;
+  additional_kwargs: Record<string, unknown>;
+  _getType: () => string;
+}
+
+const createMsg = (
+  type: "human" | "ai" | "system" | "tool",
+  content: unknown
+): MockMessage => ({
+  _getType: () => type,
+  type,
+  content,
+  additional_kwargs: {},
+});
+
+interface InputWithMessages {
+  messages: MockMessage[];
+}
+
+function hasMessages(input: unknown): input is InputWithMessages {
+  return (
+    typeof input === "object" &&
+    input !== null &&
+    "messages" in input &&
+    Array.isArray((input as InputWithMessages).messages)
+  );
+}
+
 const createMockRunnable = () => {
-  return {
-    // FIX: Added a check "if (!input)" to prevent crashing on undefined
-    invoke: vi.fn(async (input: any) => {
+  const mock = {
+    invoke: vi.fn(async (input: unknown) => {
       if (!input) return input;
-      return input.messages || input;
+
+      if (hasMessages(input)) {
+        return input.messages;
+      }
+
+      return input;
     }),
     bind: function () {
       return this;
@@ -15,15 +49,13 @@ const createMockRunnable = () => {
     clone: function () {
       return { ...this };
     },
-  } as any;
-};
+    withConfig: function () {
+      return this;
+    },
+  };
 
-const createMsg = (type: "human" | "ai" | "system" | "tool", content: any) => ({
-  _getType: () => type,
-  type,
-  content,
-  additional_kwargs: {},
-});
+  return mock as unknown as Runnable<unknown, unknown>;
+};
 
 describe("Bedrock Prompt Caching Middleware (Edge Case Stress Test)", () => {
   test("✅ HAPPY PATH: Should cache the last message when threshold is met", async () => {
@@ -31,6 +63,7 @@ describe("Bedrock Prompt Caching Middleware (Edge Case Stress Test)", () => {
     const middleware = bedrockPromptCachingMiddleware({
       minMessagesToCache: 2,
     });
+    
     const runnable = middleware(model);
 
     const messages = [
@@ -43,6 +76,7 @@ describe("Bedrock Prompt Caching Middleware (Edge Case Stress Test)", () => {
     await runnable.invoke({ messages });
 
     const lastMsg = messages[3];
+    
     expect(lastMsg.additional_kwargs.cache_control).toEqual({
       type: "ephemeral",
     });
@@ -53,6 +87,7 @@ describe("Bedrock Prompt Caching Middleware (Edge Case Stress Test)", () => {
     const middleware = bedrockPromptCachingMiddleware({
       minMessagesToCache: 5,
     });
+    
     const runnable = middleware(model);
 
     const messages = [
@@ -68,6 +103,7 @@ describe("Bedrock Prompt Caching Middleware (Edge Case Stress Test)", () => {
   test("🔌 DISABLE SWITCH: Should do nothing if enableCaching is false", async () => {
     const model = createMockRunnable();
     const middleware = bedrockPromptCachingMiddleware({ enableCaching: false });
+    
     const runnable = middleware(model);
 
     const messages = [
@@ -84,28 +120,30 @@ describe("Bedrock Prompt Caching Middleware (Edge Case Stress Test)", () => {
   test("🛡️ SAFETY CHECK: Should handle empty or undefined inputs gracefully", async () => {
     const model = createMockRunnable();
     const middleware = bedrockPromptCachingMiddleware();
+    
     const runnable = middleware(model);
 
     // 1. Empty array
     await expect(runnable.invoke([])).resolves.not.toThrow();
 
-    // 2. Undefined input (This was failing because the Mock was bad)
+    // 2. Undefined input
     await expect(runnable.invoke(undefined)).resolves.not.toThrow();
 
     // 3. Object without messages
     await expect(runnable.invoke({ unrelated: "data" })).resolves.not.toThrow();
   });
-  
+
   test("🧱 NON-TEXT CONTENT: Should skip messages with complex content", async () => {
     const model = createMockRunnable();
     const middleware = bedrockPromptCachingMiddleware({
       minMessagesToCache: 1,
     });
+    
     const runnable = middleware(model);
 
     const messages = [
       createMsg("human", "Text message"),
-      createMsg("human", [{ type: "image_url", url: "..." }]),
+      createMsg("human", [{ type: "image_url", url: "..." }]), // Content is an array, not string
     ];
 
     await runnable.invoke({ messages });
@@ -122,6 +160,7 @@ describe("Bedrock Prompt Caching Middleware (Edge Case Stress Test)", () => {
     const middleware = bedrockPromptCachingMiddleware({
       minMessagesToCache: 1,
     });
+    
     const runnable = middleware(model);
 
     const messages = [
@@ -142,6 +181,7 @@ describe("Bedrock Prompt Caching Middleware (Edge Case Stress Test)", () => {
     const middleware = bedrockPromptCachingMiddleware({
       minMessagesToCache: 1,
     });
+
     const runnable = middleware(model);
 
     const messages = [createMsg("human", "Raw array input")];

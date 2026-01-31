@@ -1,10 +1,4 @@
-import {
-  BaseMessage,
-  HumanMessage,
-  SystemMessage,
-  AIMessage,
-} from "@langchain/core/messages";
-
+import { BaseMessage } from "@langchain/core/messages";
 import { Runnable, RunnableConfig } from "@langchain/core/runnables";
 
 export interface BedrockPromptCachingConfig {
@@ -17,21 +11,31 @@ export function bedrockPromptCachingMiddleware(
 ) {
   const { enableCaching = true, minMessagesToCache = 2 } = config;
 
-  return (runnable: Runnable<any, any>): Runnable<any, any> => {
+  return <RunInput, RunOutput>(
+    runnable: Runnable<RunInput, RunOutput>
+  ): Runnable<RunInput, RunOutput> => {
     if (!enableCaching) {
       return runnable;
     }
 
     const originalInvoke = runnable.invoke.bind(runnable);
-    const newRunnable = runnable.clone();
+    const newRunnable = Object.create(runnable) as Runnable<
+      RunInput,
+      RunOutput
+    >;;
 
-    newRunnable.invoke = async (input: any, options?: RunnableConfig) => {
-      let messages: any[] = [];
+    newRunnable.invoke = async (input: RunInput, options?: RunnableConfig) => {
+      let messages: BaseMessage[] = [];
 
       if (Array.isArray(input)) {
-        messages = input;
-      } else if (input && Array.isArray(input.messages)) {
-        messages = input.messages;
+        messages = input as unknown as BaseMessage[];
+      } else if (
+        input &&
+        typeof input === "object" &&
+        "messages" in input &&
+        Array.isArray((input as { messages: unknown }).messages)
+      ) {
+        messages = (input as { messages: BaseMessage[] }).messages;
       }
 
       if (messages.length >= minMessagesToCache) {
@@ -40,13 +44,8 @@ export function bedrockPromptCachingMiddleware(
           const message = messages[i];
 
           // Robust check for message type
-          let msgType = "unknown";
-          if (typeof message._getType === "function") {
-            msgType = message._getType();
-          } else if (message.type) {
-            msgType = message.type;
-          }
-
+          const msgType = message.type;
+          
           const isCacheable =
             msgType === "human" || msgType === "system" || msgType === "ai";
 
