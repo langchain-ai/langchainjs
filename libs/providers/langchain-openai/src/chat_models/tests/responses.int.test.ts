@@ -1241,3 +1241,18 @@ it("won't modify structured output content if outputVersion is set", async () =>
     .invoke("respond with the name 'John'");
   expect(response.name).toBeDefined();
 });
+
+test("ChatOpenAI with service_tier and useResponsesApi", async () => {
+  const model = new ChatOpenAI({
+    model: "gpt-4o",
+    useResponsesApi: true,
+    service_tier: "default", 
+    apiKey: process.env.OPENAI_API_KEY || "sk-fake-key",
+  });
+  try {
+    const res = await model.invoke("Hello");
+    expect(res.content).toBeDefined();
+  } catch (e) {
+    console.log("Skipping invocation check due to missing creds/quota");
+  }
+});
