@@ -114,7 +114,7 @@ export abstract class BaseChain<
             listener = () => {
               reject(new Error("AbortError"));
             };
-            fullValues.signal?.addEventListener("abort", listener);
+            fullValues.signal?.addEventListener("abort", listener, { once: true });
           }),
         ]).finally(() => {
           if (fullValues.signal && listener) {
