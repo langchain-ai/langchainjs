@@ -2056,6 +2056,48 @@ describe("Mock ChatGoogle - Gemini", () => {
     expect(toolCall?.args?.resourceType).toEqual("user");
   });
 
+  test("4. Functions withStructuredOutput - auto-inject propertyOrdering from Zod", async () => {
+    const record: Record<string, any> = {};
+    const projectId = mockId();
+    const authOptions: MockClientAuthInfo = {
+      record,
+      projectId,
+      resultFile: "chat-json-schema-mock.json",
+    };
+
+    const schema = z.object({
+      reasoning: z.string().describe("Step by step reasoning"),
+      decision: z.string().describe("Final decision"),
+    });
+
+    const baseModel = new ChatGoogle({
+      authOptions,
+    });
+
+    const model = baseModel.withStructuredOutput(schema);
+
+    await model.invoke("Analyze this case");
+
+    const { data } = record.opts;
+
+    expect(data.generationConfig).toBeDefined();
+    expect(data.generationConfig.responseSchema).toBeDefined();
+
+    expect(data.generationConfig.responseSchema.propertyOrdering).toBeDefined();
+
+    expect(data.generationConfig.responseSchema.propertyOrdering).toEqual([
+      "reasoning",
+      "decision",
+    ]);
+
+    expect(
+      data.generationConfig.responseSchema.properties.reasoning
+    ).toBeDefined();
+    expect(
+      data.generationConfig.responseSchema.properties.decision
+    ).toBeDefined();
+  });
+
   test("5. Functions - function reply", async () => {
     const record: Record<string, any> = {};
     const projectId = mockId();

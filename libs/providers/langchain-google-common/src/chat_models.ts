@@ -561,6 +561,19 @@ export abstract class ChatGoogleBase<AuthOptions>
     } else {
       // Default to jsonSchema method
       const jsonSchema = schemaToGeminiParameters(schema);
+      if (
+        isInteropZodSchema(schema) &&
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (schema as any)._def?.typeName === "ZodObject"
+      ) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const objectSchema = schema as any;
+        if (objectSchema.shape) {
+          const keys = Object.keys(objectSchema.shape);
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          (jsonSchema as any).propertyOrdering = keys;
+        }
+      }
       llm = this.withConfig({
         responseSchema: jsonSchema as GeminiJsonSchema,
       });
