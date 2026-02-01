@@ -93,6 +93,13 @@ export type TavilyMapAPIRetrieverFields = ToolParams & {
   allowExternal?: boolean;
 
   /**
+   * Whether to include usage information (credits) in the response.
+   *
+   * @default false
+   */
+  includeUsage?: boolean;
+
+  /**
    * The name of the tool.
    *
    * @default "tavily_map"
@@ -257,6 +264,8 @@ export class TavilyMap extends StructuredTool<typeof inputSchema> {
 
   categories?: CrawlCategory[];
 
+  includeUsage?: boolean;
+
   private apiWrapper: TavilyMapAPIWrapper;
 
   constructor(params: TavilyMapAPIRetrieverFields = {}) {
@@ -294,6 +303,7 @@ export class TavilyMap extends StructuredTool<typeof inputSchema> {
     this.excludeDomains = params.excludeDomains;
     this.allowExternal = params.allowExternal;
     this.categories = params.categories;
+    this.includeUsage = params.includeUsage;
   }
 
   async _call(
@@ -344,6 +354,7 @@ export class TavilyMap extends StructuredTool<typeof inputSchema> {
         excludeDomains: effectiveExcludeDomains,
         allowExternal: effectiveAllowExternal,
         categories: effectiveCategories,
+        includeUsage: this.includeUsage,
       });
 
       if (

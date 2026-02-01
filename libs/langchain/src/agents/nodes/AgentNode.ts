@@ -13,14 +13,13 @@ import {
   InteropZodObject,
   getSchemaDescription,
   interopParse,
-  interopZodObjectPartial,
 } from "@langchain/core/utils/types";
 import { raceWithSignal } from "@langchain/core/runnables";
 import type { ToolCall } from "@langchain/core/messages/tool";
 import type { ClientTool, ServerTool } from "@langchain/core/tools";
 
 import { initChatModel } from "../../chat_models/universal.js";
-import { MultipleStructuredOutputsError } from "../errors.js";
+import { MultipleStructuredOutputsError, MiddlewareError } from "../errors.js";
 import { RunnableCallable } from "../RunnableCallable.js";
 import {
   bindTools,
@@ -28,7 +27,7 @@ import {
   hasToolCalls,
   isClientTool,
 } from "../utils.js";
-import { mergeAbortSignals } from "../nodes/utils.js";
+import { mergeAbortSignals, toPartialZodObject } from "../nodes/utils.js";
 import { CreateAgentParams } from "../types.js";
 import type { InternalAgentState, Runtime } from "../runtime.js";
 import type {
@@ -89,7 +88,9 @@ export interface AgentNodeOptions<
     unknown
   >,
   StateSchema extends AnyAnnotationRoot | InteropZodObject = AnyAnnotationRoot,
-  ContextSchema extends AnyAnnotationRoot | InteropZodObject = AnyAnnotationRoot
+  ContextSchema extends
+    | AnyAnnotationRoot
+    | InteropZodObject = AnyAnnotationRoot,
 > extends Pick<
     CreateAgentParams<StructuredResponseFormat, StateSchema, ContextSchema>,
     "model" | "includeAgentName" | "name" | "responseFormat" | "middleware"
@@ -100,7 +101,7 @@ export interface AgentNodeOptions<
   systemMessage: SystemMessage;
   wrapModelCallHookMiddleware?: [
     AgentMiddleware,
-    () => Record<string, unknown>
+    () => Record<string, unknown>,
   ][];
 }
 
@@ -121,7 +122,9 @@ export class AgentNode<
     string,
     unknown
   >,
-  ContextSchema extends AnyAnnotationRoot | InteropZodObject = AnyAnnotationRoot
+  ContextSchema extends
+    | AnyAnnotationRoot
+    | InteropZodObject = AnyAnnotationRoot,
 > extends RunnableCallable<
   InternalAgentState<StructuredResponseFormat>,
   | (
@@ -188,10 +191,13 @@ export class AgentNode<
           strategies.filter(
             (format) => format instanceof ToolStrategy
           ) as ToolStrategy[]
-        ).reduce((acc, format) => {
-          acc[format.name] = format;
-          return acc;
-        }, {} as Record<string, ToolStrategy>),
+        ).reduce(
+          (acc, format) => {
+            acc[format.name] = format;
+            return acc;
+          },
+          {} as Record<string, ToolStrategy>
+        ),
       };
     }
 
@@ -433,7 +439,7 @@ export class AgentNode<
             state: {
               ...(middleware.stateSchema
                 ? interopParse(
-                    interopZodObjectPartial(middleware.stateSchema),
+                    toPartialZodObject(middleware.stateSchema),
                     state
                   )
                 : {}),
@@ -556,16 +562,7 @@ export class AgentNode<
 
             return middlewareResponse;
           } catch (error) {
-            /**
-             * Add middleware context to error if not already added
-             */
-            if (
-              error instanceof Error &&
-              !error.message.includes(`middleware "${currentMiddleware.name}"`)
-            ) {
-              error.message = `Error in middleware "${currentMiddleware.name}": ${error.message}`;
-            }
-            throw error;
+            throw MiddlewareError.wrap(error, currentMiddleware.name);
           }
         };
       }
@@ -835,13 +832,18 @@ export class AgentNode<
      * check if the user requests a native schema output
      */
     if (structuredResponseFormat?.type === "native") {
+      const resolvedStrict =
+        preparedOptions?.modelSettings?.strict ??
+        structuredResponseFormat?.strategy?.strict ??
+        true;
+
       const jsonSchemaParams = {
         name: structuredResponseFormat.strategy.schema?.name ?? "extract",
         description: getSchemaDescription(
           structuredResponseFormat.strategy.schema
         ),
         schema: structuredResponseFormat.strategy.schema,
-        strict: true,
+        strict: resolvedStrict,
       };
 
       Object.assign(options, {
@@ -860,7 +862,7 @@ export class AgentNode<
           kwargs: { method: "json_schema" },
           schema: structuredResponseFormat.strategy.schema,
         },
-        strict: true,
+        strict: resolvedStrict,
       });
     }
 
@@ -869,7 +871,7 @@ export class AgentNode<
      */
     const modelWithTools = await bindTools(model, allTools, {
       ...options,
-      ...(preparedOptions?.modelSettings ?? {}),
+      ...preparedOptions?.modelSettings,
       tool_choice: toolChoice,
     });
 

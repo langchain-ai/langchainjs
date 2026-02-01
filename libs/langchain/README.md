@@ -1,6 +1,6 @@
 # 🦜️🔗 LangChain.js
 
-![npm](https://img.shields.io/npm/dm/langchain) [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT) [![Twitter](https://img.shields.io/twitter/url/https/twitter.com/langchainai.svg?style=social&label=Follow%20%40LangChainAI)](https://twitter.com/langchainai)
+![npm](https://img.shields.io/npm/dm/langchain) [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT) [![Twitter](https://img.shields.io/twitter/url/https/twitter.com/langchain.svg?style=social&label=Follow%20%40LangChain)](https://x.com/langchain)
 
 LangChain is a framework for building LLM-powered applications. It helps you chain together interoperable components and third-party integrations to simplify AI application development — all while future-proofing decisions as the underlying technology evolves.
 
@@ -18,7 +18,13 @@ To help you ship LangChain apps to production faster, check out [LangSmith](http
 
 You can use npm, pnpm, or yarn to install LangChain.js
 
-`npm install -S langchain` or `pnpm install langchain` or `yarn add langchain`
+```sh
+npm install -S langchain
+# or
+pnpm install langchain
+# or
+yarn add langchain
+```
 
 ## 🚀 Why use LangChain?
 
@@ -33,17 +39,19 @@ Use LangChain for:
 
 - [LangSmith](https://www.langchain.com/langsmith) - Unified developer platform for building, testing, and monitoring LLM applications. With LangSmith, you can debug poor-performing LLM app runs, evaluate agent trajectories, gain visibility in production, and deploy agents with confidence.
 - [LangGraph](https://docs.langchain.com/oss/javascript/langgraph/overview) - Build agents that can reliably handle complex tasks with LangGraph, our low-level agent orchestration framework. LangGraph offers customizable architecture, long-term memory, and human-in-the-loop workflows — and is trusted in production by companies like LinkedIn, Uber, Klarna, and GitLab.
+- [Deep Agents](https://docs.langchain.com/oss/javascript/deepagents/overview) - Build sophisticated "deep" agents that go beyond simple tool-calling loops. Deep Agents combines planning tools, sub-agent spawning, file system access, and detailed prompts to handle complex, multi-step tasks — inspired by applications like Claude Code and Deep Research.
 
 ## 🌐 Supported Environments
 
 LangChain.js is written in TypeScript and can be used in:
 
-- Node.js (ESM and CommonJS) - 18.x, 19.x, 20.x, 22.x
+- Node.js (ESM and CommonJS) - 20.x, 22.x, 24.x
 - Cloudflare Workers
 - Vercel / Next.js (Browser, Serverless and Edge functions)
 - Supabase Edge Functions
 - Browser
 - Deno
+- Bun
 
 ## 📖 Additional Resources
 

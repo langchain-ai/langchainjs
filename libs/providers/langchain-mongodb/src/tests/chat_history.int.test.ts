@@ -10,7 +10,7 @@ let collection: Collection;
 beforeAll(async () => {
   client = new MongoClient(uri());
   await client.connect();
-  collection = await client.db("langchain").createCollection("memory");
+  collection = await client.db("langchain_test").createCollection("memory");
 });
 
 beforeEach(async () => {

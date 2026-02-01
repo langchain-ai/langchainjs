@@ -36,7 +36,7 @@ export interface BaseLLMCallOptions extends BaseLanguageModelCallOptions {}
  * LLM Wrapper. Takes in a prompt (or prompts) and returns a string.
  */
 export abstract class BaseLLM<
-  CallOptions extends BaseLLMCallOptions = BaseLLMCallOptions
+  CallOptions extends BaseLLMCallOptions = BaseLLMCallOptions,
 > extends BaseLanguageModel<string, CallOptions> {
   // Backwards compatibility since fields have been moved to RunnableConfig
   declare ParsedCallOptions: Omit<
@@ -57,7 +57,7 @@ export abstract class BaseLLM<
    */
   async invoke(
     input: BaseLanguageModelInput,
-    options?: CallOptions
+    options?: Partial<CallOptions>
   ): Promise<string> {
     const promptValue = BaseLLM._convertInputToPromptValue(input);
     const result = await this.generatePrompt(
@@ -89,7 +89,7 @@ export abstract class BaseLLM<
 
   async *_streamIterator(
     input: BaseLanguageModelInput,
-    options?: CallOptions
+    options?: Partial<CallOptions>
   ): AsyncGenerator<string> {
     // Subclass check required to avoid double callbacks with default implementation
     if (
@@ -170,7 +170,7 @@ export abstract class BaseLLM<
    */
   async generatePrompt(
     promptValues: BasePromptValueInterface[],
-    options?: string[] | CallOptions,
+    options?: string[] | Partial<CallOptions>,
     callbacks?: Callbacks
   ): Promise<LLMResult> {
     const prompts: string[] = promptValues.map((promptValue) =>
@@ -461,16 +461,16 @@ export abstract class BaseLLM<
    */
   async generate(
     prompts: string[],
-    options?: string[] | CallOptions,
+    options?: string[] | Partial<CallOptions>,
     callbacks?: Callbacks
   ): Promise<LLMResult> {
     if (!Array.isArray(prompts)) {
       throw new Error("Argument 'prompts' is expected to be a string[]");
     }
 
-    let parsedOptions: CallOptions | undefined;
+    let parsedOptions: Partial<CallOptions> | undefined;
     if (Array.isArray(options)) {
-      parsedOptions = { stop: options } as CallOptions;
+      parsedOptions = { stop: options } as Partial<CallOptions>;
     } else {
       parsedOptions = options;
     }
@@ -546,7 +546,7 @@ export abstract class BaseLLM<
  * @augments BaseLLM
  */
 export abstract class LLM<
-  CallOptions extends BaseLLMCallOptions = BaseLLMCallOptions
+  CallOptions extends BaseLLMCallOptions = BaseLLMCallOptions,
 > extends BaseLLM<CallOptions> {
   /**
    * Run the LLM on the given prompt and input.

@@ -21,7 +21,7 @@ export type RouterOutputParserInput = {
  * RouterOutputParserInput object as parameters.
  */
 export class RouterOutputParser<
-  Y extends InteropZodType
+  Y extends InteropZodType,
 > extends JsonMarkdownStructuredOutputParser<Y> {
   defaultDestination = "DEFAULT";
 

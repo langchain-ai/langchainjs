@@ -92,18 +92,41 @@ export interface PatchResult<T> extends Array<OperationResult<T>> {
  to its dedicated function in efficient way.
  */
 
+/**
+ * Check if a key is a dangerous prototype property that could lead to prototype pollution.
+ * This provides defense-in-depth alongside the check in applyOperation.
+ */
+function isDangerousKey(key: string | number): boolean {
+  return Object.getOwnPropertyNames(Object.prototype).includes(key);
+}
+
 /* The operations applicable to an object */
 const objOps = {
   add: function (obj, key, document) {
+    if (isDangerousKey(key)) {
+      throw new TypeError(
+        "JSON-Patch: modifying `__proto__`, `constructor`, or `prototype` prop is banned for security reasons"
+      );
+    }
     obj[key] = this.value;
     return { newDocument: document };
   },
   remove: function (obj, key, document) {
+    if (isDangerousKey(key)) {
+      throw new TypeError(
+        "JSON-Patch: modifying `__proto__`, `constructor`, or `prototype` prop is banned for security reasons"
+      );
+    }
     var removed = obj[key];
     delete obj[key];
     return { newDocument: document, removed };
   },
   replace: function (obj, key, document) {
+    if (isDangerousKey(key)) {
+      throw new TypeError(
+        "JSON-Patch: modifying `__proto__`, `constructor`, or `prototype` prop is banned for security reasons"
+      );
+    }
     var removed = obj[key];
     obj[key] = this.value;
     return { newDocument: document, removed };

@@ -427,7 +427,7 @@ import { AzureChatOpenAIResponses } from "./responses.js";
  * </details>
  */
 export class AzureChatOpenAI<
-    CallOptions extends ChatOpenAICallOptions = ChatOpenAICallOptions
+    CallOptions extends ChatOpenAICallOptions = ChatOpenAICallOptions,
   >
   extends ChatOpenAI<CallOptions>
   implements Partial<AzureOpenAIChatInput>

@@ -1,10 +1,11 @@
 import { describe, it, expect, vi, type MockInstance } from "vitest";
-import { AIMessage, HumanMessage } from "@langchain/core/messages";
+import { AIMessage, HumanMessage, ToolMessage } from "@langchain/core/messages";
 import { BaseChatModel } from "@langchain/core/language_models/chat_models";
 import { ChatOpenAI } from "@langchain/openai";
 
 import { createAgent } from "../../index.js";
 import { todoListMiddleware } from "../todoListMiddleware.js";
+import { getHookFunction } from "../utils.js";
 
 function createMockModel(name = "ChatAnthropic", modelType = "anthropic") {
   // Mock Chat model extending BaseChatModel
@@ -162,5 +163,192 @@ describe("todoListMiddleware", () => {
     expect(result.todos).toEqual([
       { content: "Complete the requested task", status: "in_progress" },
     ]);
+  });
+
+  describe("parallel write_todos detection", () => {
+    it("should reject parallel write_todos calls with error messages", async () => {
+      /**
+       * Port of Python test: test_parallel_write_todos_calls_rejected
+       *
+       * When an AIMessage has multiple write_todos tool calls, all should be
+       * rejected with error ToolMessages.
+       */
+      const middleware = todoListMiddleware();
+
+      // Create an AI message with two write_todos tool calls
+      const aiMessage = new AIMessage({
+        content: "I'll update the todos",
+        tool_calls: [
+          {
+            name: "write_todos",
+            args: { todos: [{ content: "Task 1", status: "pending" }] },
+            id: "call_1",
+            type: "tool_call",
+          },
+          {
+            name: "write_todos",
+            args: { todos: [{ content: "Task 2", status: "pending" }] },
+            id: "call_2",
+            type: "tool_call",
+          },
+        ],
+      });
+
+      const state = {
+        messages: [new HumanMessage("Hello"), aiMessage],
+      };
+
+      // Call afterModel hook
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const fn = getHookFunction(middleware.afterModel as any);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const result = await fn(state as any, {} as any);
+
+      // Should return error messages
+      expect(result).toBeDefined();
+      expect(result!.messages).toHaveLength(2);
+      expect(result!.messages?.[0]).toBeInstanceOf(ToolMessage);
+      expect(result!.messages?.[1]).toBeInstanceOf(ToolMessage);
+
+      const msg1 = result!.messages?.[0] as ToolMessage;
+      const msg2 = result!.messages?.[1] as ToolMessage;
+
+      expect(msg1.tool_call_id).toBe("call_1");
+      expect(msg1.status).toBe("error");
+      expect(msg1.content).toContain(
+        "Error: The `write_todos` tool should never be called multiple times in parallel"
+      );
+
+      expect(msg2.tool_call_id).toBe("call_2");
+      expect(msg2.status).toBe("error");
+      expect(msg2.content).toContain(
+        "Error: The `write_todos` tool should never be called multiple times in parallel"
+      );
+    });
+
+    it("should reject parallel write_todos calls even when mixed with other tools", async () => {
+      /**
+       * Port of Python test: test_parallel_write_todos_with_other_tools
+       *
+       * When an AIMessage has multiple write_todos calls and other tool calls,
+       * only the write_todos calls should be rejected.
+       */
+      const middleware = todoListMiddleware();
+
+      // Create an AI message with two write_todos calls and one other tool call
+      const aiMessage = new AIMessage({
+        content: "I'll do multiple things",
+        tool_calls: [
+          {
+            name: "some_other_tool",
+            args: { param: "value" },
+            id: "call_other",
+            type: "tool_call",
+          },
+          {
+            name: "write_todos",
+            args: { todos: [{ content: "Task 1", status: "pending" }] },
+            id: "call_1",
+            type: "tool_call",
+          },
+          {
+            name: "write_todos",
+            args: { todos: [{ content: "Task 2", status: "pending" }] },
+            id: "call_2",
+            type: "tool_call",
+          },
+        ],
+      });
+
+      const state = {
+        messages: [new HumanMessage("Hello"), aiMessage],
+      };
+
+      // Call afterModel hook
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const fn = getHookFunction(middleware.afterModel as any);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const result = await fn(state as any, {} as any);
+
+      // Should return error messages for write_todos calls only
+      expect(result).toBeDefined();
+      expect(result!.messages).toHaveLength(2);
+
+      const toolCallIds = (result!.messages as ToolMessage[]).map(
+        (m) => m.tool_call_id
+      );
+      expect(toolCallIds).toContain("call_1");
+      expect(toolCallIds).toContain("call_2");
+      expect(toolCallIds).not.toContain("call_other");
+    });
+
+    it("should allow a single write_todos call", async () => {
+      /**
+       * Port of Python test: test_single_write_todos_call_allowed
+       *
+       * A single write_todos call should be allowed (return undefined).
+       */
+      const middleware = todoListMiddleware();
+
+      // Create an AI message with one write_todos tool call
+      const aiMessage = new AIMessage({
+        content: "I'll update the todos",
+        tool_calls: [
+          {
+            name: "write_todos",
+            args: { todos: [{ content: "Task 1", status: "pending" }] },
+            id: "call_1",
+            type: "tool_call",
+          },
+        ],
+      });
+
+      const state = {
+        messages: [new HumanMessage("Hello"), aiMessage],
+      };
+
+      // Call afterModel hook
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const fn = getHookFunction(middleware.afterModel as any);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const result = await fn(state as any, {} as any);
+
+      // Should return undefined (no intervention needed)
+      expect(result).toBeUndefined();
+    });
+
+    it("should handle empty messages gracefully", async () => {
+      const middleware = todoListMiddleware();
+
+      const state = {
+        messages: [],
+      };
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const fn = getHookFunction(middleware.afterModel as any);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const result = await fn(state as any, {} as any);
+
+      expect(result).toBeUndefined();
+    });
+
+    it("should handle AI message without tool calls gracefully", async () => {
+      const middleware = todoListMiddleware();
+
+      const aiMessage = new AIMessage({
+        content: "Just a regular response",
+      });
+
+      const state = {
+        messages: [new HumanMessage("Hello"), aiMessage],
+      };
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const fn = getHookFunction(middleware.afterModel as any);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const result = await fn(state as any, {} as any);
+
+      expect(result).toBeUndefined();
+    });
   });
 });

@@ -1,6 +1,6 @@
 {
   "name": "@langchain/cloudflare",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Cloudflare integration for LangChain.js",
   "author": "LangChain",
   "license": "MIT",
@@ -44,8 +44,7 @@
     "dotenv": "^16.3.1",
     "dpdm": "^3.14.0",
     "eslint": "^9.34.0",
-    "prettier": "^2.8.3",
-    "rollup": "^4.5.2",
+    "prettier": "^3.5.0",
     "typescript": "~5.8.3",
     "vitest": "^3.2.4"
   },

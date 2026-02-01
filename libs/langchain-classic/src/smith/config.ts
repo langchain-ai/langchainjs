@@ -36,7 +36,7 @@ export type DynamicRunEvaluatorParams<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   Prediction extends Record<string, any> = Record<string, unknown>,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  Reference extends Record<string, any> = Record<string, unknown>
+  Reference extends Record<string, any> = Record<string, unknown>,
 > = {
   input: Input;
   prediction?: Prediction;
@@ -62,14 +62,14 @@ export type RunEvaluatorLike =
 
 export function isOffTheShelfEvaluator<
   T extends keyof EvaluatorType,
-  U extends RunEvaluator | RunEvaluatorLike = RunEvaluator | RunEvaluatorLike
+  U extends RunEvaluator | RunEvaluatorLike = RunEvaluator | RunEvaluatorLike,
 >(evaluator: T | EvalConfig | U): evaluator is T | EvalConfig {
   return typeof evaluator === "string" || "evaluatorType" in evaluator;
 }
 
 export function isCustomEvaluator<
   T extends keyof EvaluatorType,
-  U extends RunEvaluator | RunEvaluatorLike = RunEvaluator | RunEvaluatorLike
+  U extends RunEvaluator | RunEvaluatorLike = RunEvaluator | RunEvaluatorLike,
 >(evaluator: T | EvalConfig | U): evaluator is U {
   return !isOffTheShelfEvaluator(evaluator);
 }
@@ -79,7 +79,7 @@ export type RunEvalType<
     | "criteria"
     | "labeled_criteria"
     | "embedding_distance",
-  U extends RunEvaluator | RunEvaluatorLike = RunEvaluator | RunEvaluatorLike
+  U extends RunEvaluator | RunEvaluatorLike = RunEvaluator | RunEvaluatorLike,
 > = T | EvalConfig | U;
 
 /**
@@ -96,7 +96,7 @@ export type RunEvalConfig<
     | "criteria"
     | "labeled_criteria"
     | "embedding_distance",
-  U extends RunEvaluator | RunEvaluatorLike = RunEvaluator | RunEvaluatorLike
+  U extends RunEvaluator | RunEvaluatorLike = RunEvaluator | RunEvaluatorLike,
 > = {
   /**
    * Evaluators to apply to a dataset run.

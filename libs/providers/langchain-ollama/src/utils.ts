@@ -35,7 +35,10 @@ export function convertOllamaMessagesToLangChain(
       index: 0,
       id: uuidv4(),
     })),
-    response_metadata: extra?.responseMetadata,
+    response_metadata: {
+      ...extra?.responseMetadata,
+      model_provider: "ollama",
+    },
     usage_metadata: extra?.usageMetadata,
   });
 }

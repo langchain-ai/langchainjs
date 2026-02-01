@@ -1,5 +1,11 @@
 # @langchain/mongodb
 
+## 1.1.0
+
+### Minor Changes
+
+- [#8251](https://github.com/langchain-ai/langchainjs/pull/8251) [`49ed8fc`](https://github.com/langchain-ai/langchainjs/commit/49ed8fc15b01e211a5a131905eab21d10accd05f) Thanks [@YasharF](https://github.com/YasharF)! - feat(mongodb): add MongoDB LLM cache
+
 ## 1.0.2
 
 ### Patch Changes

@@ -10,6 +10,8 @@ This package exposes four tools:
 - `TavilyExtract`: Extracts raw content from a list of URLs.
 - `TavilyCrawl`: Initiates a structured web crawl starting from a specified base URL.
 - `TavilyMap`: Generates a site map starting from a specified base URL.
+- `TavilyResearch`: Creates structured research tasks and optionally streams research output.
+- `TavilyGetResearch`: Retrieves research results by `request_id` for previously created research tasks.
 
 ## Installation
 
@@ -67,6 +69,47 @@ const results = await tool.invoke({
 });
 
 console.log(results);
+```
+
+### TavilyResearch
+
+```typescript
+import { TavilyResearch } from "@langchain/tavily";
+
+const tool = new TavilyResearch({
+  // Optional constructor defaults:
+  // model: "auto",
+  // stream: false,
+  // citationFormat: "numbered",
+  // apiBaseUrl: "https://api.tavily.com",
+});
+
+// Invoke with a research task
+const result = await tool.invoke({
+  input: "Research the latest developments in AI",
+  model: "mini",
+  citationFormat: "apa",
+});
+
+console.log(result);
+```
+
+### TavilyGetResearch
+
+```typescript
+import { TavilyGetResearch } from "@langchain/tavily";
+
+const tool = new TavilyGetResearch({
+  // Optional constructor parameters:
+  // apiBaseUrl: "https://api.tavily.com",
+});
+
+// Invoke with a request_id returned from TavilyResearch
+const result = await tool.invoke({
+  requestId: "your-request-id-here",
+});
+
+console.log(result);
 ```
 
 ### TavilyCrawl

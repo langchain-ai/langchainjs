@@ -217,7 +217,7 @@ export class FakeStreamingChatModel extends BaseChatModel<FakeStreamingChatModel
 
   async *_streamResponseChunks(
     _messages: BaseMessage[],
-    _options: this["ParsedCallOptions"],
+    options: this["ParsedCallOptions"],
     runManager?: CallbackManagerForLLMRun
   ): AsyncGenerator<ChatGenerationChunk> {
     if (this.thrownErrorString) {
@@ -234,6 +234,7 @@ export class FakeStreamingChatModel extends BaseChatModel<FakeStreamingChatModel
           text: msgChunk.content?.toString() ?? "",
         });
 
+        if (options.signal?.aborted) break;
         yield cg;
         await runManager?.handleLLMNewToken(
           msgChunk.content as string,
@@ -260,6 +261,7 @@ export class FakeStreamingChatModel extends BaseChatModel<FakeStreamingChatModel
         message: new AIMessageChunk({ content: ch }),
         text: ch,
       });
+      if (options.signal?.aborted) break;
       yield cg;
       await runManager?.handleLLMNewToken(
         ch,
@@ -333,6 +335,10 @@ export class FakeListChatModel extends BaseChatModel<FakeListChatModelCallOption
   emitCustomEvent = false;
 
   generationInfo?: Record<string, unknown>;
+
+  private tools: (StructuredTool | ToolSpec)[] = [];
+
+  toolStyle: "openai" | "anthropic" | "bedrock" | "google" = "openai";
 
   constructor(params: FakeChatInput) {
     super(params);
@@ -415,6 +421,7 @@ export class FakeListChatModel extends BaseChatModel<FakeListChatModelCallOption
         text,
         isLastChunk ? this.generationInfo : undefined
       );
+      if (options.signal?.aborted) break;
       yield chunk;
       // eslint-disable-next-line no-void
       void runManager?.handleLLMNewToken(text);
@@ -457,9 +464,66 @@ export class FakeListChatModel extends BaseChatModel<FakeListChatModelCallOption
     }
   }
 
+  bindTools(tools: (StructuredTool | ToolSpec)[]) {
+    const merged = [...this.tools, ...tools];
+
+    const toolDicts = merged.map((t) => {
+      switch (this.toolStyle) {
+        case "openai":
+          return {
+            type: "function",
+            function: {
+              name: t.name,
+              description: t.description,
+              parameters: toJsonSchema(t.schema),
+            },
+          };
+        case "anthropic":
+          return {
+            name: t.name,
+            description: t.description,
+            input_schema: toJsonSchema(t.schema),
+          };
+        case "bedrock":
+          return {
+            toolSpec: {
+              name: t.name,
+              description: t.description,
+              inputSchema: toJsonSchema(t.schema),
+            },
+          };
+        case "google":
+          return {
+            name: t.name,
+            description: t.description,
+            parameters: toJsonSchema(t.schema),
+          };
+        default:
+          throw new Error(`Unsupported tool style: ${this.toolStyle}`);
+      }
+    });
+
+    const wrapped =
+      this.toolStyle === "google"
+        ? [{ functionDeclarations: toolDicts }]
+        : toolDicts;
+
+    const next = new FakeListChatModel({
+      responses: this.responses,
+      sleep: this.sleep,
+      emitCustomEvent: this.emitCustomEvent,
+      generationInfo: this.generationInfo,
+    });
+    next.tools = merged;
+    next.toolStyle = this.toolStyle;
+    next.i = this.i;
+
+    return next.withConfig({ tools: wrapped } as BaseChatModelCallOptions);
+  }
+
   withStructuredOutput<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    RunOutput extends Record<string, any> = Record<string, any>
+    RunOutput extends Record<string, any> = Record<string, any>,
   >(
     _params:
       | StructuredOutputMethodParams<RunOutput, false>
@@ -471,7 +535,7 @@ export class FakeListChatModel extends BaseChatModel<FakeListChatModelCallOption
 
   withStructuredOutput<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    RunOutput extends Record<string, any> = Record<string, any>
+    RunOutput extends Record<string, any> = Record<string, any>,
   >(
     _params:
       | StructuredOutputMethodParams<RunOutput, true>
@@ -483,7 +547,7 @@ export class FakeListChatModel extends BaseChatModel<FakeListChatModelCallOption
 
   withStructuredOutput<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    RunOutput extends Record<string, any> = Record<string, any>
+    RunOutput extends Record<string, any> = Record<string, any>,
   >(
     _params:
       | StructuredOutputMethodParams<RunOutput, boolean>

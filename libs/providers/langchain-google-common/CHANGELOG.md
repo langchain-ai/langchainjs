@@ -1,5 +1,130 @@
 # @langchain/google-common
 
+## 2.1.14
+
+### Patch Changes
+
+- [#9900](https://github.com/langchain-ai/langchainjs/pull/9900) [`a9b5059`](https://github.com/langchain-ai/langchainjs/commit/a9b50597186002221aaa4585246e569fa44c27c8) Thanks [@hntrl](https://github.com/hntrl)! - Improved abort signal handling for chat models:
+  - Added `ModelAbortError` class in `@langchain/core/errors` that contains partial output when a model invocation is aborted mid-stream
+  - `invoke()` now throws `ModelAbortError` with accumulated `partialOutput` when aborted during streaming (when using streaming callback handlers)
+  - `stream()` throws a regular `AbortError` when aborted (since chunks are already yielded to the caller)
+  - All provider implementations now properly check and propagate abort signals in both `_generate()` and `_streamResponseChunks()` methods
+  - Added standard tests for abort signal behavior
+
+- [#9900](https://github.com/langchain-ai/langchainjs/pull/9900) [`a9b5059`](https://github.com/langchain-ai/langchainjs/commit/a9b50597186002221aaa4585246e569fa44c27c8) Thanks [@hntrl](https://github.com/hntrl)! - fix(providers): add proper abort signal handling for invoke and stream operations
+  - Added early abort check (`signal.throwIfAborted()`) at the start of `_generate` methods to immediately throw when signal is already aborted
+  - Added abort signal checks inside streaming loops in `_streamResponseChunks` to return early when signal is aborted
+  - Propagated abort signals to underlying SDK calls where applicable (Google GenAI, Google Common/VertexAI, Cohere)
+  - Added standard tests for abort signal behavior in `@langchain/standard-tests`
+
+  This enables proper cancellation behavior for both invoke and streaming operations, and allows fallback chains to correctly proceed to the next runnable when the previous one is aborted.
+
+- [#9864](https://github.com/langchain-ai/langchainjs/pull/9864) [`e10c6cb`](https://github.com/langchain-ai/langchainjs/commit/e10c6cb9cbbf420c95855225f4872c2e738bbd92) Thanks [@yukukotani](https://github.com/yukukotani)! - support nullable object types in zod to gemini schema conversion
+
+- Updated dependencies [[`a9b5059`](https://github.com/langchain-ai/langchainjs/commit/a9b50597186002221aaa4585246e569fa44c27c8), [`a9b5059`](https://github.com/langchain-ai/langchainjs/commit/a9b50597186002221aaa4585246e569fa44c27c8)]:
+  - @langchain/core@1.1.18
+
+## 2.1.13
+
+### Patch Changes
+
+- Updated dependencies [[`05a9733`](https://github.com/langchain-ai/langchainjs/commit/05a9733448a10764c0bfd070af859c33e623b998)]:
+  - @langchain/core@1.1.17
+
+## 2.1.12
+
+## 2.1.11
+
+### Patch Changes
+
+- Updated dependencies [[`70387a1`](https://github.com/langchain-ai/langchainjs/commit/70387a144464539d65a546c8130cf51dfad025a1), [`a7c6ec5`](https://github.com/langchain-ai/langchainjs/commit/a7c6ec51ab9baa186ab5ebf815599c08f5c7e8ab), [`5e04543`](https://github.com/langchain-ai/langchainjs/commit/5e045435a783fdae44bc9a43e01a8e5eb7100db2), [`40b4467`](https://github.com/langchain-ai/langchainjs/commit/40b446762445575844610ee528abc77c247b2c43), [`17e30bd`](https://github.com/langchain-ai/langchainjs/commit/17e30bd7f4c7bdf87c9c30304b3b9e121cc1fbbc)]:
+  - @langchain/core@1.1.16
+
+## 2.1.10
+
+### Patch Changes
+
+- Updated dependencies [[`230462d`](https://github.com/langchain-ai/langchainjs/commit/230462d28c3a8b5ccadf433ea2f523eb6e658de6)]:
+  - @langchain/core@1.1.15
+
+## 2.1.9
+
+### Patch Changes
+
+- Updated dependencies [[`bd1ab45`](https://github.com/langchain-ai/langchainjs/commit/bd1ab45364391f69ce93ecba36a4a15dafca2b76)]:
+  - @langchain/core@1.1.14
+
+## 2.1.8
+
+### Patch Changes
+
+- Updated dependencies [[`3efe79c`](https://github.com/langchain-ai/langchainjs/commit/3efe79c62ff2ffe0ada562f7eecd85be074b649a), [`b8561c1`](https://github.com/langchain-ai/langchainjs/commit/b8561c17556bdf7a3ff8d70bc307422642a9172e)]:
+  - @langchain/core@1.1.13
+
+## 2.1.7
+
+### Patch Changes
+
+- Updated dependencies [[`23be5af`](https://github.com/langchain-ai/langchainjs/commit/23be5afd59b5f4806edef11937ce5e2ba300f7ee)]:
+  - @langchain/core@1.1.12
+
+## 2.1.6
+
+### Patch Changes
+
+- Updated dependencies [[`a46a249`](https://github.com/langchain-ai/langchainjs/commit/a46a24983fd0fea649d950725a2673b3c435275f)]:
+  - @langchain/core@1.1.11
+
+## 2.1.5
+
+### Patch Changes
+
+- Updated dependencies [[`817fc9a`](https://github.com/langchain-ai/langchainjs/commit/817fc9a56d4699f3563a6e153b13eadf7bcc661b)]:
+  - @langchain/core@1.1.10
+
+## 2.1.4
+
+### Patch Changes
+
+- [#9738](https://github.com/langchain-ai/langchainjs/pull/9738) [`8ef1525`](https://github.com/langchain-ai/langchainjs/commit/8ef152555a945c95322f28209957b69605c04c91) Thanks [@hntrl](https://github.com/hntrl)! - feat(google-common): support thinkingLevel parameter for Gemini models
+
+- Updated dependencies [[`56600b9`](https://github.com/langchain-ai/langchainjs/commit/56600b94f8e185f44d4288b7a9b66c55778938dd), [`dc5c2ac`](https://github.com/langchain-ai/langchainjs/commit/dc5c2ac00f86dd2feeba9843d708926a5f38202e), [`c28d24a`](https://github.com/langchain-ai/langchainjs/commit/c28d24a8770f6d0e543cde116b0e38b3baf21301), [`bfcb87d`](https://github.com/langchain-ai/langchainjs/commit/bfcb87d23c580c7881f650960a448fe2e54a30b3)]:
+  - @langchain/core@1.1.9
+
+## 2.1.3
+
+### Patch Changes
+
+- Updated dependencies [[`e5063f9`](https://github.com/langchain-ai/langchainjs/commit/e5063f9c6e9989ea067dfdff39262b9e7b6aba62), [`8996647`](https://github.com/langchain-ai/langchainjs/commit/89966470e8c0b112ce4f9a326004af6a4173f9e6)]:
+  - @langchain/core@1.1.8
+
+## 2.1.2
+
+### Patch Changes
+
+- Updated dependencies [[`df9c42b`](https://github.com/langchain-ai/langchainjs/commit/df9c42b3ab61b85309ab47256e1d93c3188435ee), [`8d2982b`](https://github.com/langchain-ai/langchainjs/commit/8d2982bb94c0f4e4314ace3cc98a1ae87571b1ed), [`af664be`](https://github.com/langchain-ai/langchainjs/commit/af664becc0245b2315ea2f784c9a6c1d7622dbb4), [`ffb2402`](https://github.com/langchain-ai/langchainjs/commit/ffb24026cd93e58219519ee24c6e23ea57cb5bde)]:
+  - @langchain/core@1.1.7
+
+## 2.1.1
+
+### Patch Changes
+
+- Updated dependencies [[`a7b2a7d`](https://github.com/langchain-ai/langchainjs/commit/a7b2a7db5ef57df3731ae6c9931f4b663e909505), [`a496c5f`](https://github.com/langchain-ai/langchainjs/commit/a496c5fc64d94cc0809216325b0f1bfde3f92c45), [`1da1325`](https://github.com/langchain-ai/langchainjs/commit/1da1325aea044fb37af54a9de1f4ae0b9f47d4a2)]:
+  - @langchain/core@1.1.6
+
+## 2.1.0
+
+### Minor Changes
+
+- [#9518](https://github.com/langchain-ai/langchainjs/pull/9518) [`cc7051b`](https://github.com/langchain-ai/langchainjs/commit/cc7051b61503cdae91a2b74b41889d8d0f26a6e9) Thanks [@yukukotani](https://github.com/yukukotani)! - Add jsonSchema method support to withStructuredOutput in langchain-google-common and VertexAI
+
+### Patch Changes
+
+- [#8951](https://github.com/langchain-ai/langchainjs/pull/8951) [`a2a0088`](https://github.com/langchain-ai/langchainjs/commit/a2a00880b80119eb926de05e9c556a44fd56632e) Thanks [@christian-bromann](https://github.com/christian-bromann)! - fix(google-common): handle unsupported Zod schema features for Gemini tools
+
+- Updated dependencies [[`005c729`](https://github.com/langchain-ai/langchainjs/commit/005c72903bcdf090e0f4c58960c8c243481f9874), [`ab78246`](https://github.com/langchain-ai/langchainjs/commit/ab782462753e6c3ae5d55c0c251f795af32929d5), [`8cc81c7`](https://github.com/langchain-ai/langchainjs/commit/8cc81c7cee69530f7a6296c69123edbe227b2fce), [`f32e499`](https://github.com/langchain-ai/langchainjs/commit/f32e4991d0e707324e3f6af287a1ee87ab833b7e), [`a28d83d`](https://github.com/langchain-ai/langchainjs/commit/a28d83d49dd1fd31e67b52a44abc70f2cc2a2026), [`2e5ad70`](https://github.com/langchain-ai/langchainjs/commit/2e5ad70d16c1f13eaaea95336bbe2ec4a4a4954a), [`e456c66`](https://github.com/langchain-ai/langchainjs/commit/e456c661aa1ab8f1ed4a98c40616f5a13270e88e), [`1cfe603`](https://github.com/langchain-ai/langchainjs/commit/1cfe603e97d8711343ae5f1f5a75648e7bd2a16e)]:
+  - @langchain/core@1.1.5
+
 ## 2.0.4
 
 ### Patch Changes

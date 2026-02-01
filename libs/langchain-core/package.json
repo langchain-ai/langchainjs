@@ -1,6 +1,6 @@
 {
   "name": "@langchain/core",
-  "version": "1.1.4",
+  "version": "1.1.18",
   "description": "Core LangChain.js abstractions and schemas",
   "type": "module",
   "engines": {
@@ -35,7 +35,7 @@
     "camelcase": "6",
     "decamelize": "1.2.0",
     "js-tiktoken": "^1.0.12",
-    "langsmith": "^0.3.82",
+    "langsmith": ">=0.4.0 <1.0.0",
     "mustache": "^4.2.0",
     "p-queue": "^6.6.2",
     "uuid": "^10.0.0",
@@ -51,7 +51,7 @@
     "dpdm": "^3.14.0",
     "eslint": "^9.34.0",
     "ml-matrix": "^6.10.4",
-    "prettier": "^2.8.3",
+    "prettier": "^3.5.0",
     "rimraf": "^5.0.1",
     "typescript": "~5.8.3",
     "vitest": "^3.2.4",
@@ -227,6 +227,17 @@
       "import": {
         "types": "./dist/embeddings.d.ts",
         "default": "./dist/embeddings.js"
+      }
+    },
+    "./errors": {
+      "input": "./src/errors/index.ts",
+      "require": {
+        "types": "./dist/errors/index.d.cts",
+        "default": "./dist/errors/index.cjs"
+      },
+      "import": {
+        "types": "./dist/errors/index.d.ts",
+        "default": "./dist/errors/index.js"
       }
     },
     "./example_selectors": {
@@ -590,6 +601,17 @@
       "import": {
         "types": "./dist/utils/chunk_array.d.ts",
         "default": "./dist/utils/chunk_array.js"
+      }
+    },
+    "./utils/context": {
+      "input": "./src/utils/context.ts",
+      "require": {
+        "types": "./dist/utils/context.d.cts",
+        "default": "./dist/utils/context.cjs"
+      },
+      "import": {
+        "types": "./dist/utils/context.d.ts",
+        "default": "./dist/utils/context.js"
       }
     },
     "./utils/env": {

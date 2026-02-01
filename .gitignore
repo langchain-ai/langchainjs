@@ -16,6 +16,7 @@ package-lock.json
 yarn.lock
 
 .idea/
+.zed/
 
 .DS_Store
 
@@ -51,5 +52,6 @@ coverage/
 !**/src/**/*.d.cts
 
 examples/src/createAgent/*.png
+libs/langchain/graph-matrix.mermaid.md
 # LangGraph API
 .langgraph_api

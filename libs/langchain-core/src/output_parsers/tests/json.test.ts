@@ -4,6 +4,7 @@ import { RunnableSequence } from "../../runnables/base.js";
 import { RunnablePassthrough } from "../../runnables/passthrough.js";
 import { FakeStreamingLLM } from "../../utils/testing/index.js";
 import { JsonOutputParser } from "../json.js";
+import { AIMessage } from "../../messages/ai.js";
 
 async function acc(iter: AsyncGenerator<object>): Promise<object[]> {
   const acc = [];
@@ -577,3 +578,84 @@ for (const test_case of TEST_CASES_ESCAPED_QUOTES) {
     );
   });
 }
+
+describe("JsonOutputParser with ContentBlock messages", () => {
+  test("should parse AIMessage with ContentBlock[] content", async () => {
+    // This is the format returned by Gemini when using native JSON schema mode
+    // The content is an array of ContentBlocks, not a plain string
+    const parser = new JsonOutputParser();
+
+    const message = new AIMessage({
+      content: [
+        {
+          type: "text" as const,
+          text: '{"conclusion": true, "reason": "test passed"}',
+        },
+      ],
+    });
+
+    const result = await parser.invoke(message);
+    expect(result).toEqual({
+      conclusion: true,
+      reason: "test passed",
+    });
+  });
+
+  test("should handle multiple text ContentBlocks", async () => {
+    const parser = new JsonOutputParser();
+
+    // Edge case: multiple text blocks that together form valid JSON
+    // This shouldn't happen in practice, but the parser should handle it
+    const message = new AIMessage({
+      content: [
+        {
+          type: "text" as const,
+          text: '{"foo": "bar"',
+        },
+        {
+          type: "text" as const,
+          text: ', "baz": 123}',
+        },
+      ],
+    });
+
+    const result = await parser.invoke(message);
+    expect(result).toEqual({
+      foo: "bar",
+      baz: 123,
+    });
+  });
+
+  test("should handle ContentBlocks with non-text types gracefully", async () => {
+    const parser = new JsonOutputParser();
+
+    // If there's a non-text block mixed in, it should be ignored
+    const message = new AIMessage({
+      content: [
+        {
+          type: "image_url" as const,
+          image_url: "https://example.com/image.png",
+        },
+        {
+          type: "text" as const,
+          text: '{"answer": 42}',
+        },
+      ],
+    });
+
+    const result = await parser.invoke(message);
+    expect(result).toEqual({ answer: 42 });
+  });
+
+  test("should still work with string content", async () => {
+    const parser = new JsonOutputParser();
+
+    // String content should still work as before
+    const message = new AIMessage({
+      content: '{"simple": "string"}',
+    });
+
+    const result = await parser.invoke(message);
+    expect(result).toEqual({ simple: "string" });
+  });
+});

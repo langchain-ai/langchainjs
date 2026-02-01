@@ -55,7 +55,7 @@ export interface WatsonxLLMParams {
   topK?: number;
   topP?: number;
   repetitionPenalty?: number;
-  truncateInpuTokens?: number;
+  truncateInputTokens?: number;
   returnOptions?: ReturnOptionProperties;
   includeStopSequence?: boolean;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -123,7 +123,7 @@ export type WatsonxLLMConstructor = XOR<
  * Integration with an LLM.
  */
 export class WatsonxLLM<
-    CallOptions extends WatsonxCallOptionsLLM = WatsonxCallOptionsLLM
+    CallOptions extends WatsonxCallOptionsLLM = WatsonxCallOptionsLLM,
   >
   extends BaseLLM<CallOptions>
   implements BaseLLMParams
@@ -177,7 +177,7 @@ export class WatsonxLLM<
 
   repetitionPenalty?: number;
 
-  truncateInpuTokens?: number;
+  truncateInputTokens?: number;
 
   returnOptions?: ReturnOptionProperties;
 
@@ -259,7 +259,7 @@ export class WatsonxLLM<
       "stopSequence",
       "topK",
       "repetitionPenalty",
-      "truncateInpuTokens",
+      "truncateInputTokens",
       "returnOptions",
       "includeStopSequence",
     ];
@@ -307,7 +307,7 @@ export class WatsonxLLM<
     this.timeLimit = fields.timeLimit;
     this.topK = fields.topK;
     this.repetitionPenalty = fields.repetitionPenalty;
-    this.truncateInpuTokens = fields.truncateInpuTokens;
+    this.truncateInputTokens = fields.truncateInputTokens;
     this.returnOptions = fields.returnOptions;
     this.includeStopSequence = fields.includeStopSequence;
 
@@ -425,7 +425,7 @@ export class WatsonxLLM<
       repetition_penalty:
         parameters?.repetitionPenalty ?? this.repetitionPenalty,
       truncate_input_tokens:
-        parameters?.truncateInpuTokens ?? this.truncateInpuTokens,
+        parameters?.truncateInputTokens ?? this.truncateInputTokens,
       return_options: parameters?.returnOptions ?? this.returnOptions,
       include_stop_sequence:
         parameters?.includeStopSequence ?? this.includeStopSequence,
@@ -531,6 +531,7 @@ export class WatsonxLLM<
           prompt: input,
           stream: true,
           signal,
+          returnObject: true,
         });
       }
     } else {
@@ -641,10 +642,6 @@ export class WatsonxLLM<
     if (this.streaming) {
       const generations: Generation[][] = await Promise.all(
         prompts.map(async (prompt, promptIdx) => {
-          if (options.signal?.aborted) {
-            throw new Error("AbortError");
-          }
-
           const stream = this._streamResponseChunks(prompt, options);
           const geneartionsArray: GenerationInfo[] = [];
 
@@ -689,10 +686,6 @@ export class WatsonxLLM<
     } else {
       const generations: Generation[][] = await Promise.all(
         prompts.map(async (prompt) => {
-          if (options.signal?.aborted) {
-            throw new Error("AbortError");
-          }
-
           const callback = () =>
             this.generateSingleMessage(prompt, options, false);
           type ReturnMessage = ReturnType<typeof callback>;
@@ -760,16 +753,11 @@ export class WatsonxLLM<
       },
     };
     for await (const chunk of streamInferDeployedPrompt) {
-      if (options.signal?.aborted) {
-        throw new Error("AbortError");
-      }
-
       const results =
-        "model_id" in chunk.data
-          ? chunk.data.results.entries()
-          : chunk.data.choices.entries();
+        "model_id" in chunk.data ? chunk.data.results : chunk.data.choices;
+
       const usage = "usage" in chunk.data ? chunk.data.usage : {};
-      for (const [index, item] of results) {
+      for (const [index, item] of results.entries()) {
         const params =
           "generated_text" in item
             ? {
@@ -800,7 +788,7 @@ export class WatsonxLLM<
         if (!this.streaming)
           // eslint-disable-next-line no-void
           void runManager?.handleLLMNewToken(
-            "generated_text" in item ? item.generated_text : item.text ?? ""
+            "generated_text" in item ? item.generated_text : (item.text ?? "")
           );
       }
       Object.assign(responseChunk, { id: 0, event: "", data: {} });

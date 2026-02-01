@@ -65,7 +65,8 @@ export type ChatResponsesInvocationParams = Omit<
  * @internal
  */
 export class ChatOpenAIResponses<
-  CallOptions extends ChatOpenAIResponsesCallOptions = ChatOpenAIResponsesCallOptions
+  CallOptions extends
+    ChatOpenAIResponsesCallOptions = ChatOpenAIResponsesCallOptions,
 > extends BaseChatOpenAI<CallOptions> {
   override invocationParams(
     options?: this["ParsedCallOptions"]
@@ -73,7 +74,8 @@ export class ChatOpenAIResponses<
     let strict: boolean | undefined;
     if (options?.strict !== undefined) {
       strict = options.strict;
-    } else if (this.supportsStrictToolCalling !== undefined) {
+    }
+    if (strict === undefined && this.supportsStrictToolCalling !== undefined) {
       strict = this.supportsStrictToolCalling;
     }
 
@@ -139,6 +141,8 @@ export class ChatOpenAIResponses<
       parallel_tool_calls: options?.parallel_tool_calls,
       max_output_tokens: this.maxTokens === -1 ? undefined : this.maxTokens,
       prompt_cache_key: options?.promptCacheKey ?? this.promptCacheKey,
+      prompt_cache_retention:
+        options?.promptCacheRetention ?? this.promptCacheRetention,
       ...(this.zdrEnabled ? { store: false } : {}),
       ...this.modelKwargs,
     };
@@ -154,11 +158,13 @@ export class ChatOpenAIResponses<
 
   async _generate(
     messages: BaseMessage[],
-    options: this["ParsedCallOptions"]
+    options: this["ParsedCallOptions"],
+    runManager?: CallbackManagerForLLMRun
   ): Promise<ChatResult> {
+    options.signal?.throwIfAborted();
     const invocationParams = this.invocationParams(options);
     if (invocationParams.stream) {
-      const stream = this._streamResponseChunks(messages, options);
+      const stream = this._streamResponseChunks(messages, options, runManager);
       let finalChunk: ChatGenerationChunk | undefined;
       for await (const chunk of stream) {
         chunk.message.response_metadata = {
@@ -229,6 +235,9 @@ export class ChatOpenAIResponses<
     );
 
     for await (const data of streamIterable) {
+      if (options.signal?.aborted) {
+        return;
+      }
       const chunk = convertResponsesDeltaToChatGenerationChunk(data);
       if (chunk == null) continue;
       yield chunk;

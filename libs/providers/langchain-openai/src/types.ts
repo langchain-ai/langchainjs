@@ -23,6 +23,7 @@ export type OpenAIChatModelId =
   | (string & NonNullable<unknown>);
 
 export type OpenAIVerbosityParam = "low" | "medium" | "high" | null;
+export type OpenAICacheRetentionParam = "in-memory" | "24h" | null;
 
 export type OpenAIApiKey = ClientOptions["apiKey"];
 
@@ -215,6 +216,11 @@ export interface OpenAIChatInput extends OpenAIBaseInput {
    * [Learn more](https://platform.openai.com/docs/guides/prompt-caching).
    */
   promptCacheKey?: string;
+
+  /**
+   * Used by OpenAI to set cache retention time
+   */
+  promptCacheRetention?: OpenAICacheRetentionParam;
 }
 
 export interface AzureOpenAIInput {

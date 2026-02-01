@@ -161,10 +161,14 @@ export async function getChatModelByClassName(className: string) {
     if (
       "code" in err &&
       err.code?.toString().includes("ERR_MODULE_NOT_FOUND") &&
-      "message" in err
+      "message" in err &&
+      typeof err.message === "string"
     ) {
-      const attemptedPackage = err.message
-        .split("Error: Cannot find package '")[1]
+      const msg = err.message.startsWith("Error: ")
+        ? err.message.slice("Error: ".length)
+        : err.message;
+      const attemptedPackage = msg
+        .split("Cannot find package '")[1]
         .split("'")[0];
       throw new Error(
         `Unable to import ${attemptedPackage}. Please install with ` +
@@ -274,7 +278,8 @@ interface ConfigurableModelFields extends BaseChatModelParams {
  */
 export class ConfigurableModel<
   RunInput extends BaseLanguageModelInput = BaseLanguageModelInput,
-  CallOptions extends ConfigurableChatModelCallOptions = ConfigurableChatModelCallOptions
+  CallOptions extends
+    ConfigurableChatModelCallOptions = ConfigurableChatModelCallOptions,
 > extends BaseChatModel<CallOptions, AIMessageChunk> {
   _llmType(): string {
     return "chat_model";
@@ -344,7 +349,7 @@ export class ConfigurableModel<
     BaseChatModel<BaseChatModelCallOptions, AIMessageChunk<MessageStructure>>
   > {
     // Check cache first
-    const cacheKey = JSON.stringify(config ?? {});
+    const cacheKey = this._getCacheKey(config);
     const cachedModel = this._modelInstanceCache.get(cacheKey);
     if (cachedModel) {
       return cachedModel;
@@ -607,9 +612,25 @@ export class ConfigurableModel<
     if (this._profile) {
       return this._profile;
     }
-    const cacheKey = JSON.stringify({});
+    const cacheKey = this._getCacheKey({});
     const instance = this._modelInstanceCache.get(cacheKey);
     return instance?.profile ?? {};
+  }
+
+  /** @internal */
+  _getCacheKey(config?: RunnableConfig): string {
+    let toStringify = config ?? {};
+    if (toStringify.configurable) {
+      const { configurable } = toStringify;
+      const filtered: Record<string, unknown> = {};
+      for (const [k, v] of Object.entries(configurable)) {
+        if (!k.startsWith("__pregel_")) {
+          filtered[k] = v;
+        }
+      }
+      toStringify = { ...toStringify, configurable: filtered };
+    }
+    return JSON.stringify(toStringify);
   }
 }
 
@@ -624,7 +645,8 @@ export type ConfigurableFields = "any" | string[];
 
 export async function initChatModel<
   RunInput extends BaseLanguageModelInput = BaseLanguageModelInput,
-  CallOptions extends ConfigurableChatModelCallOptions = ConfigurableChatModelCallOptions
+  CallOptions extends
+    ConfigurableChatModelCallOptions = ConfigurableChatModelCallOptions,
 >(
   model: string,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -637,7 +659,8 @@ export async function initChatModel<
 
 export async function initChatModel<
   RunInput extends BaseLanguageModelInput = BaseLanguageModelInput,
-  CallOptions extends ConfigurableChatModelCallOptions = ConfigurableChatModelCallOptions
+  CallOptions extends
+    ConfigurableChatModelCallOptions = ConfigurableChatModelCallOptions,
 >(
   model: never,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -651,7 +674,8 @@ export async function initChatModel<
 
 export async function initChatModel<
   RunInput extends BaseLanguageModelInput = BaseLanguageModelInput,
-  CallOptions extends ConfigurableChatModelCallOptions = ConfigurableChatModelCallOptions
+  CallOptions extends
+    ConfigurableChatModelCallOptions = ConfigurableChatModelCallOptions,
 >(
   model?: string,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -891,7 +915,8 @@ export async function initChatModel<
  */
 export async function initChatModel<
   RunInput extends BaseLanguageModelInput = BaseLanguageModelInput,
-  CallOptions extends ConfigurableChatModelCallOptions = ConfigurableChatModelCallOptions
+  CallOptions extends
+    ConfigurableChatModelCallOptions = ConfigurableChatModelCallOptions,
 >(
   model?: string,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any

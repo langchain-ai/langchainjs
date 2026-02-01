@@ -735,6 +735,33 @@ export const clientConfigSchema = z
       )
       .optional()
       .default(false),
+    /**
+     * Behavior when a server fails to connect.
+     * - "throw": Throw an error immediately if any server fails to connect (default)
+     * - "ignore": Skip failed servers and continue with successfully connected ones
+     * - Function: Custom error handler. If the function throws, the error is bubbled through.
+     *   If it returns normally, the server is treated as ignored and skipped.
+     *
+     * @default "throw"
+     */
+    onConnectionError: z
+      .union([
+        z.enum(["throw", "ignore"]),
+        z
+          .function()
+          .args(
+            z.object({
+              serverName: z.string(),
+              error: z.unknown(),
+            })
+          )
+          .returns(z.void()),
+      ])
+      .describe(
+        "Behavior when a server fails to connect: 'throw' to error immediately, 'ignore' to skip failed servers, or a function for custom error handling"
+      )
+      .optional()
+      .default("throw"),
   })
   .and(baseConfigSchema)
   .and(toolHooksSchema)
@@ -784,6 +811,20 @@ export type ResolvedConnection = z.output<typeof connectionSchema>;
  * Type for {@link MultiServerMCPClient} configuration, with default values applied.
  */
 export type ResolvedClientConfig = z.output<typeof clientConfigSchema>;
+
+/**
+ * Custom error handler function for connection errors.
+ * If the function throws, the error is bubbled through.
+ * If it returns normally, the server is treated as ignored and skipped.
+ *
+ * @param params - Error handler parameters
+ * @param params.serverName - The name of the server that failed to connect
+ * @param params.error - The error that occurred during connection
+ */
+export type ConnectionErrorHandler = (params: {
+  serverName: string;
+  error: unknown;
+}) => void;
 
 export type LoadMcpToolsOptions = {
   /**
@@ -916,3 +957,70 @@ export interface CustomHTTPTransportOptions {
   authProvider?: OAuthClientProvider;
   headers?: Record<string, string>;
 }
+
+/**
+ * Represents a resource provided by an MCP server.
+ */
+export type MCPResource = {
+  /**
+   * The URI of the resource
+   */
+  uri: string;
+  /**
+   * Human-readable name of the resource
+   */
+  name: string;
+  /**
+   * Optional description of what the resource represents
+   */
+  description?: string;
+  /**
+   * Optional MIME type of the resource content
+   */
+  mimeType?: string;
+};
+
+/**
+ * Represents a resource template provided by an MCP server.
+ * Resource templates are used for dynamic resources with parameterized URIs.
+ */
+export type MCPResourceTemplate = {
+  /**
+   * The URI template with parameter placeholders (e.g., "users://{userId}/profile")
+   */
+  uriTemplate: string;
+  /**
+   * Human-readable name of the resource template
+   */
+  name: string;
+  /**
+   * Optional description of what the resource template represents
+   */
+  description?: string;
+  /**
+   * Optional MIME type of the resource content
+   */
+  mimeType?: string;
+};
+
+/**
+ * Represents the content of a resource retrieved from an MCP server.
+ */
+export type MCPResourceContent = {
+  /**
+   * The URI of the resource
+   */
+  uri: string;
+  /**
+   * Optional MIME type of the content
+   */
+  mimeType?: string;
+  /**
+   * Optional text content of the resource
+   */
+  text?: string;
+  /**
+   * Optional base64-encoded binary content of the resource
+   */
+  blob?: string;
+};

@@ -24,7 +24,7 @@ type CloseVectorCredentials = {
  * similarity searches, and saving and loading the vector store.
  */
 export abstract class CloseVector<
-  CloseVectorHNSWImplementation extends CloseVectorSaveableVectorStore
+  CloseVectorHNSWImplementation extends CloseVectorSaveableVectorStore,
 > extends SaveableVectorStore {
   declare FilterType: (doc: Document) => boolean;
 

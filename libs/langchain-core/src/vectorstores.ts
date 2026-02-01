@@ -154,7 +154,7 @@ export type VectorStoreRetrieverInput<V extends VectorStoreInterface> =
  * @extends BaseRetrieverInterface
  */
 export interface VectorStoreRetrieverInterface<
-  V extends VectorStoreInterface = VectorStoreInterface
+  V extends VectorStoreInterface = VectorStoreInterface,
 > extends BaseRetrieverInterface {
   vectorStore: V;
 
@@ -190,7 +190,7 @@ export interface VectorStoreRetrieverInterface<
  * @template V - Type of vector store implementing `VectorStoreInterface`.
  */
 export class VectorStoreRetriever<
-    V extends VectorStoreInterface = VectorStoreInterface
+    V extends VectorStoreInterface = VectorStoreInterface,
   >
   extends BaseRetriever
   implements VectorStoreRetrieverInterface

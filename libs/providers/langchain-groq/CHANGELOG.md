@@ -1,5 +1,30 @@
 # @langchain/groq
 
+## 1.0.4
+
+### Patch Changes
+
+- [#9900](https://github.com/langchain-ai/langchainjs/pull/9900) [`a9b5059`](https://github.com/langchain-ai/langchainjs/commit/a9b50597186002221aaa4585246e569fa44c27c8) Thanks [@hntrl](https://github.com/hntrl)! - Improved abort signal handling for chat models:
+  - Added `ModelAbortError` class in `@langchain/core/errors` that contains partial output when a model invocation is aborted mid-stream
+  - `invoke()` now throws `ModelAbortError` with accumulated `partialOutput` when aborted during streaming (when using streaming callback handlers)
+  - `stream()` throws a regular `AbortError` when aborted (since chunks are already yielded to the caller)
+  - All provider implementations now properly check and propagate abort signals in both `_generate()` and `_streamResponseChunks()` methods
+  - Added standard tests for abort signal behavior
+
+- [#9900](https://github.com/langchain-ai/langchainjs/pull/9900) [`a9b5059`](https://github.com/langchain-ai/langchainjs/commit/a9b50597186002221aaa4585246e569fa44c27c8) Thanks [@hntrl](https://github.com/hntrl)! - fix(providers): add proper abort signal handling for invoke and stream operations
+  - Added early abort check (`signal.throwIfAborted()`) at the start of `_generate` methods to immediately throw when signal is already aborted
+  - Added abort signal checks inside streaming loops in `_streamResponseChunks` to return early when signal is aborted
+  - Propagated abort signals to underlying SDK calls where applicable (Google GenAI, Google Common/VertexAI, Cohere)
+  - Added standard tests for abort signal behavior in `@langchain/standard-tests`
+
+  This enables proper cancellation behavior for both invoke and streaming operations, and allows fallback chains to correctly proceed to the next runnable when the previous one is aborted.
+
+## 1.0.3
+
+### Patch Changes
+
+- [#9777](https://github.com/langchain-ai/langchainjs/pull/9777) [`3efe79c`](https://github.com/langchain-ai/langchainjs/commit/3efe79c62ff2ffe0ada562f7eecd85be074b649a) Thanks [@christian-bromann](https://github.com/christian-bromann)! - fix(core): properly elevate reasoning tokens
+
 ## 1.0.2
 
 ### Patch Changes

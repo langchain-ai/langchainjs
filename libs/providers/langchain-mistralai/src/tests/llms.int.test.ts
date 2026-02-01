@@ -364,3 +364,38 @@ test("Test MistralAI can remove all hooks", async () => {
   // console.log(count);
   expect(count).toEqual(2);
 });
+
+test("Test MistralAI with useFim=false for non-FIM model", async () => {
+  const model = new MistralAI({
+    maxTokens: 10,
+    model: "mistral-small-latest",
+    useFim: false,
+  });
+  const res = await model.invoke("Hello, how are you?");
+  expect(res.length).toBeGreaterThan(1);
+});
+
+test("Test MistralAI with useFim=false streaming", async () => {
+  const model = new MistralAI({
+    maxTokens: 20,
+    model: "mistral-small-latest",
+    useFim: false,
+  });
+  const stream = await model.stream("Hello, how are you?");
+  const chunks = [];
+  for await (const chunk of stream) {
+    chunks.push(chunk);
+  }
+  expect(chunks.length).toBeGreaterThan(1);
+});
+
+test("Test MistralAI with mistral-large model automatically uses chat API", async () => {
+  // When using mistral-large-latest, useFim should default to false
+  const model = new MistralAI({
+    maxTokens: 10,
+    model: "mistral-large-latest",
+  });
+  expect(model.useFim).toBe(false);
+  const res = await model.invoke("Hello, how are you?");
+  expect(res.length).toBeGreaterThan(1);
+});

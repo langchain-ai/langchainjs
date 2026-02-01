@@ -71,6 +71,36 @@ const model = new ChatBedrockConverse({
 const response = await model.invoke(new HumanMessage("Hello world!"));
 ```
 
+### Service Tiers
+
+AWS Bedrock supports service tiers that control latency, cost, and capacity. You can set the tier at construction time or per-call.
+
+- Supported values: `priority`, `default`, `flex`, `reserved`.
+- See AWS docs: https://docs.aws.amazon.com/bedrock/latest/userguide/service-tiers-inference.html
+
+Set at construction time:
+
+```typescript
+import { ChatBedrockConverse } from "@langchain/aws";
+
+const llm = new ChatBedrockConverse({
+  region: process.env.BEDROCK_AWS_REGION ?? "us-east-1",
+  credentials: {
+    secretAccessKey: process.env.BEDROCK_AWS_SECRET_ACCESS_KEY!,
+    accessKeyId: process.env.BEDROCK_AWS_ACCESS_KEY_ID!,
+  },
+  serviceTier: "priority",
+});
+```
+
+Override per invocation (takes precedence over constructor):
+
+```typescript
+const res = await llm.invoke("Translate this", { serviceTier: "flex" });
+```
+
+`serviceTier` affects the request sent to Bedrock Converse (`{ serviceTier: { type: "..." } }`). If not provided, AWS uses the default tier.
+
 ### Using Application Inference Profiles
 
 AWS Bedrock [Application Inference Profiles](https://docs.aws.amazon.com/bedrock/latest/userguide/inference-profiles-create.html) allow you to define custom endpoints that can route requests across regions or manage traffic for your models.

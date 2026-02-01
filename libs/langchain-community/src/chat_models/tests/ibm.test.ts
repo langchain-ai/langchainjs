@@ -12,10 +12,12 @@ import { AIMessage, AIMessageChunk } from "@langchain/core/messages";
 import { IterableReadableStream } from "@langchain/core/utils/stream";
 import {
   ChatWatsonx,
-  ChatWatsonxConstructor,
+  ChatWatsonxDeployedInput,
+  ChatWatsonxGatewayInput,
   ChatWatsonxInput,
   WatsonxCallParams,
 } from "../ibm.js";
+import { WatsonxAuth } from "../../types/ibm.js";
 
 const fakeAuthProp = {
   watsonxAIAuthType: "iam",
@@ -32,7 +34,10 @@ export function getKey<K>(key: K): K {
 
 export const testProperties = (
   instance: ChatWatsonx,
-  testProps: ChatWatsonxConstructor,
+  testProps:
+    | ChatWatsonxInput
+    | ChatWatsonxDeployedInput
+    | (ChatWatsonxGatewayInput & WatsonxAuth),
   notExTestProps?: { [key: string]: any }
 ) => {
   const checkProperty = <T extends { [key: string]: any }>(
@@ -76,7 +81,7 @@ describe("Chat unit tests", () => {
       const instance = new ChatWatsonx({ ...testProps, ...fakeAuthProp });
 
       testProperties(instance, testProps);
-      expect(instance["service"]).toBeInstanceOf(WatsonXAI);
+      expect(instance["service"] as WatsonXAI).toBeInstanceOf(WatsonXAI);
     });
 
     test("Authenticate with projectId", async () => {
@@ -159,8 +164,8 @@ describe("Chat unit tests", () => {
         projectId,
       };
       const instance = new ChatWatsonx({ ...testProps, ...fakeAuthProp });
-      if (instance["service"]) {
-        const spy = jest.spyOn(instance["service"], "textChat");
+      if (instance["service"] as WatsonXAI) {
+        const spy = jest.spyOn(instance["service"] as WatsonXAI, "textChat");
         spy.mockResolvedValue({
           status: 200,
           headers: {},
@@ -220,8 +225,11 @@ describe("Chat unit tests", () => {
           },
         ],
       };
-      if (instance["service"]) {
-        const spy = jest.spyOn(instance["service"], "textChatStream");
+      if (instance["service"] as WatsonXAI) {
+        const spy = jest.spyOn(
+          instance["service"] as WatsonXAI,
+          "textChatStream"
+        );
         const stream = [
           `id: 1\nevent: message\ndata: ${JSON.stringify(chunk)}\n\n`,
           `id: 2\nevent: message\ndata: ${JSON.stringify(chunk)}\n\n`,
@@ -587,6 +595,262 @@ describe("Chat unit tests", () => {
             ...fakeAuthProp,
           })
       ).toThrow(/Unexpected properties: notExisting, notExObj./);
+    });
+  });
+
+  describe("AbortSignal parameter passing", () => {
+    test("Signal passed to textChat() with projectId", async () => {
+      const testProps = {
+        model: "ibm/granite-3-8b-instruct",
+        version: "2025-01-17",
+        serviceUrl: "https://test.watsonx.ai",
+        projectId: "test-project-id",
+      };
+      const instance = new ChatWatsonx({ ...testProps, ...fakeAuthProp });
+
+      const mockResponse = {
+        choices: [{ message: { role: "assistant", content: "" } }],
+      };
+      const spy = jest
+        .spyOn(instance["service"] as WatsonXAI, "textChat")
+        .mockResolvedValue({ result: mockResponse } as any);
+
+      const controller = new AbortController();
+      await instance.invoke("test", { signal: controller.signal });
+
+      expect(spy).toHaveBeenCalledWith(
+        expect.objectContaining({ signal: controller.signal }),
+        undefined
+      );
+
+      spy.mockRestore();
+    });
+
+    test("Signal passed to deploymentsTextChat() with idOrName", async () => {
+      const testProps = {
+        version: "2025-01-17",
+        serviceUrl: "https://test.watsonx.ai",
+        idOrName: "test-deployment",
+      };
+      const instance = new ChatWatsonx({ ...testProps, ...fakeAuthProp });
+
+      const mockResponse = {
+        choices: [{ message: { role: "assistant", content: "" } }],
+      };
+      const spy = jest
+        .spyOn(instance["service"] as WatsonXAI, "deploymentsTextChat")
+        .mockResolvedValue({ result: mockResponse } as any);
+
+      const controller = new AbortController();
+      await instance.invoke("test", { signal: controller.signal });
+
+      expect(spy).toHaveBeenCalledWith(
+        expect.objectContaining({ signal: controller.signal }),
+        undefined
+      );
+
+      spy.mockRestore();
+    });
+
+    test("Signal passed to textChatStream() with projectId", async () => {
+      const testProps = {
+        model: "ibm/granite-3-8b-instruct",
+        version: "2025-01-17",
+        serviceUrl: "https://test.watsonx.ai",
+        projectId: "test-project-id",
+      };
+      const instance = new ChatWatsonx({ ...testProps, ...fakeAuthProp });
+
+      async function* mockStream() {
+        yield { data: { choices: [{ delta: {} }] } };
+      }
+
+      const spy = jest
+        .spyOn(instance["service"] as WatsonXAI, "textChatStream")
+        .mockResolvedValue(mockStream() as any);
+
+      const controller = new AbortController();
+      const stream = await instance.stream("test", {
+        signal: controller.signal,
+      });
+
+      for await (const _chunk of stream) {
+        /* consume stream */
+      }
+
+      expect(spy).toHaveBeenCalledWith(
+        expect.objectContaining({ signal: controller.signal }),
+        undefined
+      );
+
+      spy.mockRestore();
+    });
+
+    test("Signal passed to deploymentsTextChatStream() with idOrName", async () => {
+      const testProps = {
+        version: "2025-01-17",
+        serviceUrl: "https://test.watsonx.ai",
+        idOrName: "test-deployment",
+      };
+      const instance = new ChatWatsonx({ ...testProps, ...fakeAuthProp });
+
+      async function* mockStream() {
+        yield { data: { choices: [{ delta: {} }] } };
+      }
+
+      const spy = jest
+        .spyOn(instance["service"] as WatsonXAI, "deploymentsTextChatStream")
+        .mockResolvedValue(mockStream() as any);
+
+      const controller = new AbortController();
+      const stream = await instance.stream("test", {
+        signal: controller.signal,
+      });
+
+      for await (const _chunk of stream) {
+        /* consume stream */
+      }
+
+      expect(spy).toHaveBeenCalledWith(
+        expect.objectContaining({ signal: controller.signal }),
+        undefined
+      );
+
+      spy.mockRestore();
+    });
+  });
+
+  describe("Reasoning effort", () => {
+    test("Invoke with reasoning effort in instance init", async () => {
+      const instance = new ChatWatsonx({
+        model: "ibm/granite-3-8b-instruct",
+        version: "2025-01-17",
+        serviceUrl: "https://test.watsonx.ai",
+        projectId: "test-project-id",
+        includeReasoning: true,
+        reasoningEffort: "low",
+        ...fakeAuthProp,
+      });
+      const reasoning = "it is what I am thinking";
+      const mockResponse = {
+        choices: [
+          {
+            message: {
+              role: "assistant",
+              content: "",
+              reasoning_content: reasoning,
+            },
+          },
+        ],
+      };
+      jest
+        .spyOn(instance["service"] as WatsonXAI as WatsonXAI, "textChat")
+        .mockResolvedValue({ result: mockResponse } as any);
+      const res = await instance.invoke("test");
+
+      expect(res.additional_kwargs.reasoning).toBe(reasoning);
+    });
+    test("Invoke with reasoning effort in methods options", async () => {
+      const instance = new ChatWatsonx({
+        model: "ibm/granite-3-8b-instruct",
+        version: "2025-01-17",
+        serviceUrl: "https://test.watsonx.ai",
+        projectId: "test-project-id",
+        ...fakeAuthProp,
+      });
+      const reasoning = "it is what I am thinking";
+      const mockResponse = {
+        choices: [
+          {
+            message: {
+              role: "assistant",
+              content: "",
+              reasoning_content: reasoning,
+            },
+          },
+        ],
+      };
+      jest
+        .spyOn(instance["service"] as WatsonXAI as WatsonXAI, "textChat")
+        .mockResolvedValue({ result: mockResponse } as any);
+      const res = await instance.invoke("test", {
+        includeReasoning: true,
+        reasoningEffort: "low",
+      });
+
+      expect(res.additional_kwargs.reasoning).toBe(reasoning);
+    });
+    test("Stream with reasoning effort in instance init", async () => {
+      const instance = new ChatWatsonx({
+        model: "ibm/granite-3-8b-instruct",
+        version: "2025-01-17",
+        serviceUrl: "https://test.watsonx.ai",
+        projectId: "test-project-id",
+        includeReasoning: true,
+        reasoningEffort: "low",
+        ...fakeAuthProp,
+      });
+      const reasoning = "it is what I am thinking";
+      async function* mockStream() {
+        yield {
+          data: { choices: [{ delta: { reasoning_content: reasoning } }] },
+        };
+      }
+      const spy = jest
+        .spyOn(instance["service"] as WatsonXAI as WatsonXAI, "textChatStream")
+        .mockResolvedValue(mockStream() as any);
+      const res = await instance.stream("test");
+
+      expect(spy).toHaveBeenCalledWith(
+        expect.objectContaining({
+          includeReasoning: true,
+          reasoningEffort: "low",
+        }),
+        undefined
+      );
+      let result: AIMessageChunk | undefined = undefined;
+      for await (const chunk of res) {
+        result ??= chunk;
+        result.concat(chunk);
+      }
+      expect(result?.additional_kwargs.reasoning).toBe(reasoning);
+    });
+    test("Stream with reasoning effort in methods option", async () => {
+      const instance = new ChatWatsonx({
+        model: "ibm/granite-3-8b-instruct",
+        version: "2025-01-17",
+        serviceUrl: "https://test.watsonx.ai",
+        projectId: "test-project-id",
+
+        ...fakeAuthProp,
+      });
+      const reasoning = "it is what I am thinking";
+      async function* mockStream() {
+        yield {
+          data: { choices: [{ delta: { reasoning_content: reasoning } }] },
+        };
+      }
+      const spy = jest
+        .spyOn(instance["service"] as WatsonXAI as WatsonXAI, "textChatStream")
+        .mockResolvedValue(mockStream() as any);
+      const res = await instance.stream("test", {
+        includeReasoning: true,
+        reasoningEffort: "low",
+      });
+
+      expect(spy).toHaveBeenCalledWith(
+        expect.objectContaining({
+          includeReasoning: true,
+          reasoningEffort: "low",
+        }),
+        undefined
+      );
+      let result: AIMessageChunk | undefined = undefined;
+      for await (const chunk of res) {
+        result ??= chunk;
+        result.concat(chunk);
+      }
+      expect(result?.additional_kwargs.reasoning).toBe(reasoning);
     });
   });
 });

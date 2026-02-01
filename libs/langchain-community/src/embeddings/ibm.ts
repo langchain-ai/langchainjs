@@ -200,7 +200,10 @@ export class WatsonxEmbeddings
     }
   }
 
-  scopeId() {
+  scopeId():
+    | { projectId: string; modelId: string }
+    | { spaceId: string; modelId: string }
+    | { model: string } {
     if (this.projectId)
       return { projectId: this.projectId, modelId: this.model };
     else if (this.spaceId)
@@ -237,33 +240,31 @@ export class WatsonxEmbeddings
 
   private async embedSingleText(inputs: string[]) {
     const scopeId = this.scopeId();
-    if (scopeId.modelId && this.service) {
+    if ("modelId" in scopeId && this.service) {
       const { service } = this;
-      const textEmbeddingParams: WatsonXAI.TextEmbeddingsParams = {
-        inputs,
-        ...scopeId,
-        parameters: this.invocationParams(),
-      };
       const caller = new AsyncCaller({
         maxConcurrency: this.maxConcurrency,
         maxRetries: this.maxRetries,
       });
       const embeddings = await caller.call(() =>
-        service.embedText(textEmbeddingParams)
+        service.embedText({
+          inputs,
+          ...scopeId,
+          parameters: this.invocationParams(),
+        })
       );
       return embeddings.result.results.map((item) => item.embedding);
-    } else if (this.gateway && scopeId.model) {
+    } else if (this.gateway && "model" in scopeId) {
       const { gateway } = this;
-      const textEmbeddingParams: CreateEmbeddingsParams = {
-        input: inputs,
-        ...scopeId,
-      };
       const caller = new AsyncCaller({
         maxConcurrency: this.maxConcurrency,
         maxRetries: this.maxRetries,
       });
       const embeddings = await caller.call(() =>
-        gateway.embeddings.completion.create(textEmbeddingParams)
+        gateway.embeddings.completion.create({
+          input: inputs,
+          ...scopeId,
+        })
       );
       const res = embeddings.result.data.map((item) => item.embedding);
       return res;

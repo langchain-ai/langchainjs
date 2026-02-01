@@ -19,12 +19,14 @@ export async function load<T>(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   optionalImportsMap: OptionalImportMap & Record<string, any> = {},
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  additionalImportsMap: Record<string, any> = {}
+  additionalImportsMap: Record<string, any> = {},
+  secretsFromEnv?: boolean
 ): Promise<T> {
   return coreLoad(text, {
     secretsMap,
     optionalImportsMap,
     optionalImportEntrypoints,
     importMap: { ...importMap, ...additionalImportsMap },
+    secretsFromEnv,
   });
 }

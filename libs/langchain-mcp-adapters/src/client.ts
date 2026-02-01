@@ -23,6 +23,10 @@ import {
   type ResolvedStdioConnection,
   type ResolvedStreamableHTTPConnection,
   type CustomHTTPTransportOptions,
+  type MCPResource,
+  type MCPResourceTemplate,
+  type MCPResourceContent,
+  type ConnectionErrorHandler,
   clientConfigSchema,
   connectionSchema,
   type LoadMcpToolsOptions,
@@ -144,6 +148,16 @@ export class MultiServerMCPClient {
   #config: ResolvedClientConfig;
 
   /**
+   * Behavior when a server fails to connect
+   */
+  #onConnectionError: "throw" | "ignore" | ConnectionErrorHandler;
+
+  /**
+   * Set of server names that have failed to connect (when onConnectionError is "ignore")
+   */
+  #failedServers: Set<string> = new Set();
+
+  /**
    * Returns clone of server config for inspection purposes.
    *
    * Client does not support config modifications.
@@ -209,6 +223,7 @@ export class MultiServerMCPClient {
     this.#config = parsedServerConfig;
     this.#mcpServers = parsedServerConfig.mcpServers;
     this.#clientConnections = new ConnectionManager(parsedServerConfig);
+    this.#onConnectionError = parsedServerConfig.onConnectionError;
   }
 
   /**
@@ -216,8 +231,11 @@ export class MultiServerMCPClient {
    * methods requiring an active connection (like {@link getTools} or {@link getClient}) are called,
    * but you can call it directly to ensure all connections are established before using the tools.
    *
+   * When a server fails to connect, the client will throw an error if `onConnectionError` is "throw",
+   * otherwise it will skip the server and continue with the remaining servers.
+   *
    * @returns A map of server names to arrays of tools
-   * @throws {MCPClientError} If initialization fails
+   * @throws {MCPClientError} If initialization fails and `onConnectionError` is "throw" (default)
    */
   async initializeConnections(
     customTransportOptions?: CustomHTTPTransportOptions
@@ -227,57 +245,57 @@ export class MultiServerMCPClient {
     }
 
     for (const [serverName, connection] of Object.entries(this.#mcpServers)) {
-      if (isResolvedStdioConnection(connection)) {
-        debugLog(
-          `INFO: Initializing stdio connection to server "${serverName}"...`
-        );
-
-        /**
-         * check if we already initialized this stdio connection
-         */
-        if (this.#clientConnections.has(serverName)) {
-          continue;
-        }
-
-        await this._initializeStdioConnection(serverName, connection);
-      } else if (isResolvedStreamableHTTPConnection(connection)) {
-        /**
-         * Users may want to use different connection options for tool calls or tool discovery.
-         */
-        const { authProvider, headers } = customTransportOptions ?? {};
-        const updatedConnection = {
-          ...connection,
-          authProvider: authProvider ?? connection.authProvider,
-          headers: { ...headers, ...connection.headers },
-        };
-
-        /**
-         * check if we already initialized this streamable HTTP connection
-         */
-        const key = {
-          serverName,
-          headers: updatedConnection.headers,
-          authProvider: updatedConnection.authProvider,
-        };
-        if (this.#clientConnections.has(key)) {
-          continue;
-        }
-
-        if (connection.type === "sse" || connection.transport === "sse") {
-          await this._initializeSSEConnection(serverName, updatedConnection);
-        } else {
-          await this._initializeStreamableHTTPConnection(
-            serverName,
-            updatedConnection
-          );
-        }
-      } else {
-        // This should never happen due to the validation in the constructor
-        throw new MCPClientError(
-          `Unsupported transport type for server "${serverName}"`,
-          serverName
-        );
+      // Skip servers that have already failed (when onConnectionError is "ignore")
+      if (
+        (this.#onConnectionError === "ignore" ||
+          typeof this.#onConnectionError === "function") &&
+        this.#failedServers.has(serverName)
+      ) {
+        continue;
       }
+
+      try {
+        await this._initializeConnection(
+          serverName,
+          connection,
+          customTransportOptions
+        );
+        // If we successfully initialized, remove from failed set (in case it was there before)
+        this.#failedServers.delete(serverName);
+      } catch (error) {
+        if (this.#onConnectionError === "throw") {
+          throw error;
+        }
+
+        // Handle custom error handler function
+        if (typeof this.#onConnectionError === "function") {
+          this.#onConnectionError({ serverName, error });
+          // If we get here, the handler didn't throw, so treat as ignored
+          this.#failedServers.add(serverName);
+          debugLog(
+            `WARN: Failed to initialize connection to server "${serverName}": ${String(error)}`
+          );
+          continue;
+        }
+
+        // Default "ignore" behavior
+        // Mark this server as failed so we don't try again
+        this.#failedServers.add(serverName);
+        debugLog(
+          `WARN: Failed to initialize connection to server "${serverName}": ${String(error)}`
+        );
+        continue;
+      }
+    }
+
+    // Warn if no servers successfully connected when using "ignore" mode
+    if (
+      this.#onConnectionError === "ignore" &&
+      Object.keys(this.#serverNameToTools).length === 0
+    ) {
+      debugLog(
+        `WARN: No servers successfully connected. All connection attempts failed.`
+      );
     }
 
     return this.#serverNameToTools;
@@ -392,13 +410,280 @@ export class MultiServerMCPClient {
   }
 
   /**
+   * List resources from specified servers.
+   *
+   * @param servers - Optional array of server names to filter resources by.
+   *                 If not provided, returns resources from all servers.
+   * @param options - Optional connection options for the resource listing, e.g. custom auth provider or headers.
+   * @returns A map of server names to their resources
+   *
+   * @example
+   * ```ts
+   * // List resources from all servers
+   * const resources = await client.listResources();
+   * ```
+   *
+   * @example
+   * ```ts
+   * // List resources from specific servers
+   * const resources = await client.listResources("server1", "server2");
+   * ```
+   */
+  async listResources(
+    ...servers: string[]
+  ): Promise<Record<string, MCPResource[]>>;
+  async listResources(
+    servers: string[],
+    options?: CustomHTTPTransportOptions
+  ): Promise<Record<string, MCPResource[]>>;
+  async listResources(
+    ...args: unknown[]
+  ): Promise<Record<string, MCPResource[]>> {
+    let servers: string[];
+    let options: CustomHTTPTransportOptions | undefined;
+
+    if (args.length === 0 || args.every((arg) => typeof arg === "string")) {
+      servers = args as string[];
+      await this.initializeConnections();
+    } else {
+      [servers, options] = args as [
+        string[],
+        CustomHTTPTransportOptions | undefined,
+      ];
+      await this.initializeConnections(options);
+    }
+
+    const targetServers =
+      servers.length > 0 ? servers : Object.keys(this.#config.mcpServers);
+
+    const result: Record<string, MCPResource[]> = {};
+
+    for (const serverName of targetServers) {
+      const client = await this.getClient(serverName, options);
+      if (!client) {
+        debugLog(`WARN: Server "${serverName}" not found or not connected`);
+        continue;
+      }
+
+      try {
+        const resourcesList = await client.listResources();
+        result[serverName] = resourcesList.resources.map((resource) => ({
+          uri: resource.uri,
+          name: resource.title ?? resource.name,
+          description: resource.description,
+          mimeType: resource.mimeType,
+        }));
+        debugLog(
+          `INFO: Listed ${result[serverName].length} resources from server "${serverName}"`
+        );
+      } catch (error) {
+        debugLog(
+          `ERROR: Failed to list resources from server "${serverName}": ${error}`
+        );
+        result[serverName] = [];
+      }
+    }
+
+    return result;
+  }
+
+  /**
+   * List resource templates from specified servers.
+   *
+   * Resource templates are used for dynamic resources with parameterized URIs.
+   *
+   * @param servers - Optional array of server names to filter resource templates by.
+   *                 If not provided, returns resource templates from all servers.
+   * @param options - Optional connection options for the resource template listing, e.g. custom auth provider or headers.
+   * @returns A map of server names to their resource templates
+   *
+   * @example
+   * ```ts
+   * // List resource templates from all servers
+   * const templates = await client.listResourceTemplates();
+   * ```
+   *
+   * @example
+   * ```ts
+   * // List resource templates from specific servers
+   * const templates = await client.listResourceTemplates("server1", "server2");
+   * ```
+   */
+  async listResourceTemplates(
+    ...servers: string[]
+  ): Promise<Record<string, MCPResourceTemplate[]>>;
+  async listResourceTemplates(
+    servers: string[],
+    options?: CustomHTTPTransportOptions
+  ): Promise<Record<string, MCPResourceTemplate[]>>;
+  async listResourceTemplates(
+    ...args: unknown[]
+  ): Promise<Record<string, MCPResourceTemplate[]>> {
+    let servers: string[];
+    let options: CustomHTTPTransportOptions | undefined;
+
+    if (args.length === 0 || args.every((arg) => typeof arg === "string")) {
+      servers = args as string[];
+      await this.initializeConnections();
+    } else {
+      [servers, options] = args as [
+        string[],
+        CustomHTTPTransportOptions | undefined,
+      ];
+      await this.initializeConnections(options);
+    }
+
+    const targetServers =
+      servers.length > 0 ? servers : Object.keys(this.#config.mcpServers);
+
+    const result: Record<string, MCPResourceTemplate[]> = {};
+
+    for (const serverName of targetServers) {
+      const client = await this.getClient(serverName, options);
+      if (!client) {
+        debugLog(`WARN: Server "${serverName}" not found or not connected`);
+        continue;
+      }
+
+      try {
+        const templatesList = await client.listResourceTemplates();
+        result[serverName] = templatesList.resourceTemplates.map(
+          (template) => ({
+            uriTemplate: template.uriTemplate,
+            name: template.title ?? template.name,
+            description: template.description,
+            mimeType: template.mimeType,
+          })
+        );
+        debugLog(
+          `INFO: Listed ${result[serverName].length} resource templates from server "${serverName}"`
+        );
+      } catch (error) {
+        debugLog(
+          `ERROR: Failed to list resource templates from server "${serverName}": ${error}`
+        );
+        result[serverName] = [];
+      }
+    }
+
+    return result;
+  }
+
+  /**
+   * Read a resource from a specific server.
+   *
+   * @param serverName - The name of the server to read the resource from
+   * @param uri - The URI of the resource to read
+   * @param options - Optional connection options for reading the resource, e.g. custom auth provider or headers.
+   * @returns The resource contents
+   *
+   * @example
+   * ```ts
+   * const content = await client.readResource("server1", "file://path/to/resource");
+   * ```
+   */
+  async readResource(
+    serverName: string,
+    uri: string,
+    options?: CustomHTTPTransportOptions
+  ): Promise<MCPResourceContent[]> {
+    await this.initializeConnections(options);
+
+    const client = await this.getClient(serverName, options);
+    if (!client) {
+      throw new MCPClientError(
+        `Server "${serverName}" not found or not connected`,
+        serverName
+      );
+    }
+
+    try {
+      debugLog(`INFO: Reading resource "${uri}" from server "${serverName}"`);
+      const result = await client.readResource({ uri });
+      return result.contents.map((content) => ({
+        uri: content.uri,
+        mimeType: content.mimeType,
+        text: "text" in content ? content.text : undefined,
+        blob: "blob" in content ? content.blob : undefined,
+      }));
+    } catch (error) {
+      throw new MCPClientError(
+        `Failed to read resource "${uri}" from server "${serverName}": ${error}`,
+        serverName
+      );
+    }
+  }
+
+  /**
    * Close all connections.
    */
   async close(): Promise<void> {
     debugLog(`INFO: Closing all MCP connections...`);
     this.#serverNameToTools = {};
+    this.#failedServers.clear();
     await this.#clientConnections.delete();
     debugLog(`INFO: All MCP connections closed`);
+  }
+
+  /**
+   * Initialize a connection to a specific server
+   */
+  private async _initializeConnection(
+    serverName: string,
+    connection: ResolvedConnection,
+    customTransportOptions?: CustomHTTPTransportOptions
+  ): Promise<void> {
+    if (isResolvedStdioConnection(connection)) {
+      debugLog(
+        `INFO: Initializing stdio connection to server "${serverName}"...`
+      );
+
+      /**
+       * check if we already initialized this stdio connection
+       */
+      if (this.#clientConnections.has(serverName)) {
+        return;
+      }
+
+      await this._initializeStdioConnection(serverName, connection);
+    } else if (isResolvedStreamableHTTPConnection(connection)) {
+      /**
+       * Users may want to use different connection options for tool calls or tool discovery.
+       */
+      const { authProvider, headers } = customTransportOptions ?? {};
+      const updatedConnection = {
+        ...connection,
+        authProvider: authProvider ?? connection.authProvider,
+        headers: { ...headers, ...connection.headers },
+      };
+
+      /**
+       * check if we already initialized this streamable HTTP connection
+       */
+      const key = {
+        serverName,
+        headers: updatedConnection.headers,
+        authProvider: updatedConnection.authProvider,
+      };
+      if (this.#clientConnections.has(key)) {
+        return;
+      }
+
+      if (connection.type === "sse" || connection.transport === "sse") {
+        await this._initializeSSEConnection(serverName, updatedConnection);
+      } else {
+        await this._initializeStreamableHTTPConnection(
+          serverName,
+          updatedConnection
+        );
+      }
+    } else {
+      // This should never happen due to the validation in the constructor
+      throw new MCPClientError(
+        `Unsupported transport type for server "${serverName}"`,
+        serverName
+      );
+    }
   }
 
   /**

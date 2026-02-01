@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { z } from "zod/v3";
+import { z as z4 } from "zod/v4";
 
 import { ChatOpenAI } from "@langchain/openai";
 import { ChatAnthropic } from "@langchain/anthropic";
@@ -7,7 +8,11 @@ import { AIMessage } from "@langchain/core/messages";
 
 import { createAgent, toolStrategy, providerStrategy } from "../index.js";
 import { FakeToolCallingModel, FakeToolCallingChatModel } from "./utils.js";
-import { hasSupportForJsonSchemaOutput } from "../responses.js";
+import {
+  hasSupportForJsonSchemaOutput,
+  ProviderStrategy,
+  ToolStrategy,
+} from "../responses.js";
 
 describe("structured output handling", () => {
   describe("toolStrategy", () => {
@@ -409,6 +414,70 @@ describe("structured output handling", () => {
         expect(res.structuredResponse).toEqual({ bar: "foo" });
       });
     });
+
+    describe("schema title extraction", () => {
+      it("should use title from Zod v4 schema with .meta({ title })", () => {
+        const zodSchema = z4
+          .object({
+            status: z4.string(),
+          })
+          .meta({ title: "my_custom_tool" });
+
+        const [strategy] = toolStrategy(zodSchema);
+
+        expect(strategy.name).toBe("my_custom_tool");
+      });
+
+      it("should use title from JSON schema", () => {
+        const jsonSchema = {
+          type: "object" as const,
+          title: "my_json_tool",
+          properties: {
+            status: { type: "string" },
+          },
+        };
+
+        const [strategy] = toolStrategy(jsonSchema);
+
+        expect(strategy.name).toBe("my_json_tool");
+      });
+
+      it("should fall back to extract-{n} when no title is provided", () => {
+        const zodSchema = z4.object({
+          status: z4.string(),
+        });
+
+        const [strategy] = toolStrategy(zodSchema);
+
+        expect(strategy.name).toMatch(/^extract-\d+$/);
+      });
+
+      it("should use title from ToolStrategy.fromSchema with Zod v4 schema", () => {
+        const zodSchema = z4
+          .object({
+            result: z4.number(),
+          })
+          .meta({ title: "calculate_result" });
+
+        const strategy = ToolStrategy.fromSchema(zodSchema);
+
+        expect(strategy.name).toBe("calculate_result");
+      });
+
+      it("should use title from ToolStrategy.fromSchema with JSON schema", () => {
+        const jsonSchema = {
+          type: "object" as const,
+          title: "get_data",
+          properties: {
+            value: { type: "number" },
+          },
+        };
+
+        const strategy = ToolStrategy.fromSchema(jsonSchema);
+
+        expect(strategy.name).toBe("get_data");
+      });
+    });
   });
 
   describe("providerStrategy", () => {
@@ -434,6 +503,44 @@ describe("structured output handling", () => {
             messages: [{ role: "user", content: "hi" }],
           })
         ).resolves.not.toThrowError();
+      });
+    });
+
+    describe("strict flag", () => {
+      it("should default to true when strict is not provided", () => {
+        const strategy = ProviderStrategy.fromSchema(
+          z.object({
+            foo: z.string(),
+          })
+        );
+        expect(strategy.strict).toBe(true);
+      });
+
+      it("should set strict to false when explicitly provided as false", () => {
+        const strategy = ProviderStrategy.fromSchema(
+          z.object({
+            foo: z.string(),
+          }),
+          false
+        );
+        expect(strategy.strict).toBe(false);
+      });
+
+      it("should work with providerStrategy helper function", () => {
+        const strategyDefault = providerStrategy(
+          z.object({
+            foo: z.string(),
+          })
+        );
+        expect(strategyDefault.strict).toBe(true);
+
+        const strategyStrict = providerStrategy({
+          schema: z.object({
+            foo: z.string(),
+          }),
+          strict: false,
+        });
+        expect(strategyStrict.strict).toBe(false);
       });
     });
   });

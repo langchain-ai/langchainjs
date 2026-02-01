@@ -46,8 +46,8 @@ pkg:@langchain/community:
 pkg:@langchain/core:
   - changed-flies:
       - any-glob-to-any-file:
-          - langchain-core/**
-          - langchain-core/**/*
+          - libs/langchain-core/**
+          - libs/langchain-core/**/*
 
 pkg:@langchain/mcp-adapters:
   - changed-files:

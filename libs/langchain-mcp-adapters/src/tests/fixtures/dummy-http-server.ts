@@ -4,7 +4,10 @@ import { randomUUID } from "node:crypto";
 // eslint-disable-next-line import/no-extraneous-dependencies
 import express, { type Express } from "express";
 
-import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import {
+  McpServer,
+  ResourceTemplate,
+} from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
 import { SSEServerTransport } from "@modelcontextprotocol/sdk/server/sse.js";
 import { isInitializeRequest } from "@modelcontextprotocol/sdk/types.js";
@@ -200,6 +203,102 @@ export function createDummyHttpServer(
               text: "This is a test resource.",
               // No blob, to test text-based resource handling
             },
+          },
+        ],
+      };
+    }
+  );
+
+  // Add a tool that returns structuredContent and _meta
+  server.tool(
+    "structured_tool",
+    "A tool that returns structuredContent and _meta",
+    {
+      input: z.string().describe("Some input string"),
+    },
+    async ({ input }) => {
+      return {
+        content: [
+          {
+            type: "text",
+            text: `Structured input was: ${input}`,
+          },
+        ],
+        structuredContent: {
+          type: "object",
+          data: {
+            result: "success",
+            value: input,
+            timestamp: new Date().toISOString(),
+          },
+        },
+        _meta: {
+          toolVersion: "1.0.0",
+          serverName: name,
+          executionTime: 100,
+        },
+      };
+    }
+  );
+
+  // Add resource handlers
+  server.registerResource(
+    "test-resource",
+    "mem://test.txt",
+    {
+      title: "Test Resource",
+      description: "A test resource for testing resource listing and reading",
+      mimeType: "text/plain",
+    },
+    async () => {
+      return {
+        contents: [
+          {
+            uri: "mem://test.txt",
+            mimeType: "text/plain",
+            text: "This is a test resource content.",
+          },
+        ],
+      };
+    }
+  );
+
+  server.registerResource(
+    "data-resource",
+    "mem://data.json",
+    {
+      title: "Data Resource",
+      description: "A JSON data resource",
+      mimeType: "application/json",
+    },
+    async () => {
+      return {
+        contents: [
+          {
+            uri: "mem://data.json",
+            mimeType: "application/json",
+            text: JSON.stringify({ key: "value", number: 42 }),
+          },
+        ],
+      };
+    }
+  );
+
+  // Add resource template
+  server.registerResource(
+    "user-profile",
+    new ResourceTemplate("mem://user/{userId}/profile", { list: undefined }),
+    {
+      title: "User Profile Template",
+      description: "A template for user profile resources",
+    },
+    async (uri, { userId }) => {
+      return {
+        contents: [
+          {
+            uri: uri.href,
+            mimeType: "application/json",
+            text: JSON.stringify({ userId, profile: "test profile" }),
           },
         ],
       };

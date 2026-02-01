@@ -15,6 +15,8 @@ import {
   $InferMessageProperty,
   $InferMessageProperties,
   $InferResponseMetadata,
+  $InferToolCalls,
+  $InferToolOutputs,
 } from "../message.js";
 import { ContentBlock } from "../content/index.js";
 import { ResponseMetadata, UsageMetadata } from "../metadata.js";
@@ -973,6 +975,226 @@ describe("$InferResponseMetadata<TStructure, TRole>", () => {
   test("should return `ResponseMetadata | undefined` when using `<MessageStructure, 'ai'>`", async () => {
     type AIResponseMetadata = $InferResponseMetadata<MessageStructure, "ai">;
     expectTypeOf<AIResponseMetadata>().toEqualTypeOf<ResponseMetadata>();
+  });
+});
+
+describe("$InferToolCalls<TStructure>", () => {
+  it("should return a fallback type when tools are not defined", async () => {
+    type ToolCalls = $InferToolCalls<MessageStructure>;
+
+    expectTypeOf<ToolCalls>().toEqualTypeOf<{
+      readonly type?: "tool_call";
+      id?: string;
+      name: string;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      args: Record<string, any>;
+    }>();
+  });
+
+  it("should return a union of tool call types when tools are defined", async () => {
+    interface S extends MessageStructure {
+      tools: {
+        calculator: MessageToolDefinition<{ a: number; b: number }, number>;
+        search: MessageToolDefinition<{ query: string }, string[]>;
+      };
+    }
+
+    type ToolCalls = $InferToolCalls<S>;
+
+    // Should be a union of tool call types for each tool
+    expectTypeOf<ToolCalls["name"]>().toEqualTypeOf<"calculator" | "search">();
+
+    // Extract individual tool calls
+    type CalcCall = Extract<ToolCalls, { name: "calculator" }>;
+    type SearchCall = Extract<ToolCalls, { name: "search" }>;
+
+    expectTypeOf<CalcCall>().toExtend<{
+      readonly type?: "tool_call";
+      id?: string;
+      name: "calculator";
+      args: { a: number; b: number };
+    }>();
+
+    expectTypeOf<SearchCall>().toExtend<{
+      readonly type?: "tool_call";
+      id?: string;
+      name: "search";
+      args: { query: string };
+    }>();
+  });
+
+  it("should narrow args type to the specific tool input", async () => {
+    interface S extends MessageStructure {
+      tools: {
+        translate: MessageToolDefinition<
+          { text: string; to: string; from?: string },
+          string
+        >;
+      };
+    }
+
+    type ToolCalls = $InferToolCalls<S>;
+    type TranslateCall = Extract<ToolCalls, { name: "translate" }>;
+
+    expectTypeOf<TranslateCall["args"]>().toEqualTypeOf<{
+      text: string;
+      to: string;
+      from?: string;
+    }>();
+  });
+
+  it("should use Record<string, any> fallback when tool input is unknown", async () => {
+    interface S extends MessageStructure {
+      tools: {
+        dynamicTool: MessageToolDefinition<unknown, string>;
+      };
+    }
+
+    type ToolCalls = $InferToolCalls<S>;
+    type DynamicCall = Extract<ToolCalls, { name: "dynamicTool" }>;
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    expectTypeOf<DynamicCall["args"]>().toEqualTypeOf<Record<string, any>>();
+  });
+
+  it("should include optional type and id fields", async () => {
+    interface S extends MessageStructure {
+      tools: {
+        myTool: MessageToolDefinition<{ x: number }, string>;
+      };
+    }
+
+    type ToolCalls = $InferToolCalls<S>;
+
+    // type should be optional and narrowed to "tool_call"
+    expectTypeOf<ToolCalls["type"]>().toEqualTypeOf<"tool_call" | undefined>();
+
+    // id should be optional string
+    expectTypeOf<ToolCalls["id"]>().toEqualTypeOf<string | undefined>();
+  });
+
+  it("should work with merged structures", async () => {
+    interface T extends MessageStructure {
+      tools: {
+        toolA: MessageToolDefinition<{ a: number }, string>;
+      };
+    }
+    interface U extends MessageStructure {
+      tools: {
+        toolB: MessageToolDefinition<{ b: string }, number>;
+      };
+    }
+
+    type M = $MergeMessageStructure<T, U>;
+    type ToolCalls = $InferToolCalls<M>;
+
+    expectTypeOf<ToolCalls["name"]>().toEqualTypeOf<"toolA" | "toolB">();
+
+    type ToolACall = Extract<ToolCalls, { name: "toolA" }>;
+    type ToolBCall = Extract<ToolCalls, { name: "toolB" }>;
+
+    expectTypeOf<ToolACall["args"]>().toEqualTypeOf<{ a: number }>();
+    expectTypeOf<ToolBCall["args"]>().toEqualTypeOf<{ b: string }>();
+  });
+});
+
+describe("$InferToolOutputs<TStructure>", () => {
+  it("should return unknown when tools are not defined", async () => {
+    type ToolOutputs = $InferToolOutputs<MessageStructure>;
+    expectTypeOf<ToolOutputs>().toEqualTypeOf<unknown>();
+  });
+
+  it("should return a union of tool output types when tools are defined", async () => {
+    interface S extends MessageStructure {
+      tools: {
+        calculator: MessageToolDefinition<{ a: number; b: number }, number>;
+        search: MessageToolDefinition<{ query: string }, string[]>;
+      };
+    }
+
+    type ToolOutputs = $InferToolOutputs<S>;
+
+    // Should be a union of output types: number | string[]
+    expectTypeOf<ToolOutputs>().toEqualTypeOf<number | string[]>();
+  });
+
+  it("should return the single output type when only one tool is defined", async () => {
+    interface S extends MessageStructure {
+      tools: {
+        translate: MessageToolDefinition<{ text: string }, string>;
+      };
+    }
+
+    type ToolOutputs = $InferToolOutputs<S>;
+    expectTypeOf<ToolOutputs>().toEqualTypeOf<string>();
+  });
+
+  it("should handle complex output types", async () => {
+    interface SearchResult {
+      title: string;
+      url: string;
+      snippet: string;
+    }
+
+    interface S extends MessageStructure {
+      tools: {
+        search: MessageToolDefinition<{ query: string }, SearchResult[]>;
+        fetch: MessageToolDefinition<
+          { url: string },
+          { status: number; body: string }
+        >;
+      };
+    }
+
+    type ToolOutputs = $InferToolOutputs<S>;
+
+    expectTypeOf<ToolOutputs>().toEqualTypeOf<
+      SearchResult[] | { status: number; body: string }
+    >();
+  });
+
+  it("should work with merged structures", async () => {
+    interface T extends MessageStructure {
+      tools: {
+        toolA: MessageToolDefinition<{ a: number }, boolean>;
+      };
+    }
+    interface U extends MessageStructure {
+      tools: {
+        toolB: MessageToolDefinition<{ b: string }, { result: string }>;
+      };
+    }
+
+    type M = $MergeMessageStructure<T, U>;
+    type ToolOutputs = $InferToolOutputs<M>;
+
+    expectTypeOf<ToolOutputs>().toEqualTypeOf<boolean | { result: string }>();
+  });
+
+  it("should handle tool with void output", async () => {
+    interface S extends MessageStructure {
+      tools: {
+        sideEffect: MessageToolDefinition<{ action: string }, void>;
+        getData: MessageToolDefinition<{ id: string }, { data: string }>;
+      };
+    }
+
+    type ToolOutputs = $InferToolOutputs<S>;
+    expectTypeOf<ToolOutputs>().toEqualTypeOf<void | { data: string }>();
+  });
+
+  it("should handle tool with undefined output", async () => {
+    interface S extends MessageStructure {
+      tools: {
+        maybeFind: MessageToolDefinition<
+          { id: string },
+          { value: string } | undefined
+        >;
+      };
+    }
+
+    type ToolOutputs = $InferToolOutputs<S>;
+    expectTypeOf<ToolOutputs>().toEqualTypeOf<{ value: string } | undefined>();
   });
 });
 

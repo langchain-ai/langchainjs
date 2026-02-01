@@ -22,3 +22,12 @@ INPUT examples:
 OUTPUT:
 - title, start time, end time, attendees, description (if available)
 `;
+
+export const DELETE_TOOL_DESCRIPTION = `A tool for deleting Google Calendar events and meetings.
+INPUT example:
+"action": "google_calendar_delete",
+"action_input": "delete the meeting with John at 3pm"
+
+OUTPUT:
+Output is a confirmation of a deleted event.
+`;

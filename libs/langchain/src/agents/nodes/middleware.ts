@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { z } from "zod/v3";
+import { z } from "zod/v4";
 import { LangGraphRunnableConfig, Command } from "@langchain/langgraph";
 import { interopParse } from "@langchain/core/utils/types";
 
@@ -26,7 +26,7 @@ export interface MiddlewareNodeOptions {
 
 export abstract class MiddlewareNode<
   TStateSchema extends Record<string, any>,
-  TContextSchema extends Record<string, any>
+  TContextSchema extends Record<string, any>,
 > extends RunnableCallable<TStateSchema, NodeOutput<TStateSchema>> {
   #options: MiddlewareNodeOptions;
 
@@ -153,8 +153,8 @@ export abstract class MiddlewareNode<
         jumpToConstraint && jumpToConstraint.length > 0
           ? `must be one of: ${jumpToConstraint?.join(", ")}.`
           : constraint
-          ? `no ${constraint} defined in middleware ${this.middleware.name}`
-          : "";
+            ? `no ${constraint} defined in middleware ${this.middleware.name}`
+            : "";
       throw new Error(`Invalid jump target: ${result.jumpTo}, ${suggestion}.`);
     }
 
@@ -183,13 +183,9 @@ export abstract class MiddlewareNode<
     return { ...state, ...result, jumpTo: result.jumpTo };
   }
 
-  get nodeOptions(): {
-    input: z.ZodObject<TStateSchema>;
-  } {
+  get nodeOptions() {
     return {
-      input: derivePrivateState(
-        this.middleware.stateSchema
-      ) as z.ZodObject<TStateSchema>,
+      input: derivePrivateState(this.middleware.stateSchema),
     };
   }
 }

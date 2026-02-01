@@ -58,6 +58,7 @@ import {
   InteropZodType,
   isInteropZodSchema,
 } from "../utils/types/zod.js";
+import { ModelAbortError } from "../errors/index.js";
 import { callbackHandlerPrefersStreaming } from "../callbacks/base.js";
 import { toJsonSchema } from "../utils/json_schema.js";
 import { getEnvironmentVariable } from "../utils/env.js";
@@ -206,7 +207,7 @@ export type BindToolsInput =
 export abstract class BaseChatModel<
   CallOptions extends BaseChatModelCallOptions = BaseChatModelCallOptions,
   // TODO: Fix the parameter order on the next minor version.
-  OutputMessageType extends BaseMessageChunk = AIMessageChunk
+  OutputMessageType extends BaseMessageChunk = AIMessageChunk,
 > extends BaseLanguageModel<OutputMessageType, CallOptions> {
   // Backwards compatibility since fields have been moved to RunnableConfig
   declare ParsedCallOptions: Omit<
@@ -272,7 +273,7 @@ export abstract class BaseChatModel<
    */
   async invoke(
     input: BaseLanguageModelInput,
-    options?: CallOptions
+    options?: Partial<CallOptions>
   ): Promise<OutputMessageType> {
     const promptValue = BaseChatModel._convertInputToPromptValue(input);
     const result = await this.generatePrompt(
@@ -296,7 +297,7 @@ export abstract class BaseChatModel<
 
   async *_streamIterator(
     input: BaseLanguageModelInput,
-    options?: CallOptions
+    options?: Partial<CallOptions>
   ): AsyncGenerator<OutputMessageType> {
     // Subclass check required to avoid double callbacks with default implementation
     if (
@@ -349,6 +350,7 @@ export abstract class BaseChatModel<
           callOptions,
           runManagers?.[0]
         )) {
+          callOptions.signal?.throwIfAborted();
           if (chunk.message.id == null) {
             const runId = runManagers?.at(0)?.runId;
             if (runId != null) chunk.message._updateId(`run-${runId}`);
@@ -382,6 +384,8 @@ export abstract class BaseChatModel<
             };
           }
         }
+        // Throw error if stream ended due to abort (provider returned early)
+        callOptions.signal?.throwIfAborted();
       } catch (err) {
         await Promise.all(
           (runManagers ?? []).map((runManager) =>
@@ -484,10 +488,20 @@ export abstract class BaseChatModel<
           parsedOptions,
           runManagers?.[0]
         );
-        let aggregated;
+        let aggregated: ChatGenerationChunk | undefined;
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         let llmOutput: Record<string, any> | undefined;
         for await (const chunk of stream) {
+          // Check for abort signal - throw ModelAbortError with partial output
+          if (parsedOptions.signal?.aborted) {
+            const partialMessage = aggregated?.message as
+              | AIMessageChunk
+              | undefined;
+            throw new ModelAbortError(
+              "Model invocation was aborted.",
+              partialMessage
+            );
+          }
           if (chunk.message.id == null) {
             const runId = runManagers?.at(0)?.runId;
             if (runId != null) chunk.message._updateId(`run-${runId}`);
@@ -509,6 +523,16 @@ export abstract class BaseChatModel<
               },
             };
           }
+        }
+        // Check if stream ended due to abort (provider returned early)
+        if (parsedOptions.signal?.aborted) {
+          const partialMessage = aggregated?.message as
+            | AIMessageChunk
+            | undefined;
+          throw new ModelAbortError(
+            "Model invocation was aborted.",
+            partialMessage
+          );
         }
         if (aggregated === undefined) {
           throw new Error("Received empty response from chat model call.");
@@ -758,13 +782,13 @@ export abstract class BaseChatModel<
    */
   async generate(
     messages: BaseMessageLike[][],
-    options?: string[] | CallOptions,
+    options?: string[] | Partial<CallOptions>,
     callbacks?: Callbacks
   ): Promise<LLMResult> {
     // parse call options
-    let parsedOptions: CallOptions | undefined;
+    let parsedOptions: Partial<CallOptions> | undefined;
     if (Array.isArray(options)) {
-      parsedOptions = { stop: options } as CallOptions;
+      parsedOptions = { stop: options } as Partial<CallOptions>;
     } else {
       parsedOptions = options;
     }
@@ -845,7 +869,7 @@ export abstract class BaseChatModel<
    */
   async generatePrompt(
     promptValues: BasePromptValueInterface[],
-    options?: string[] | CallOptions,
+    options?: string[] | Partial<CallOptions>,
     callbacks?: Callbacks
   ): Promise<LLMResult> {
     const promptMessages: BaseMessage[][] = promptValues.map((promptValue) =>
@@ -862,7 +886,7 @@ export abstract class BaseChatModel<
 
   withStructuredOutput<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    RunOutput extends Record<string, any> = Record<string, any>
+    RunOutput extends Record<string, any> = Record<string, any>,
   >(
     outputSchema:
       | ZodTypeV4<RunOutput>
@@ -873,7 +897,7 @@ export abstract class BaseChatModel<
 
   withStructuredOutput<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    RunOutput extends Record<string, any> = Record<string, any>
+    RunOutput extends Record<string, any> = Record<string, any>,
   >(
     outputSchema:
       | ZodTypeV4<RunOutput>
@@ -884,7 +908,7 @@ export abstract class BaseChatModel<
 
   withStructuredOutput<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    RunOutput extends Record<string, any> = Record<string, any>
+    RunOutput extends Record<string, any> = Record<string, any>,
   >(
     outputSchema:
       | ZodTypeV3<RunOutput>
@@ -895,7 +919,7 @@ export abstract class BaseChatModel<
 
   withStructuredOutput<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    RunOutput extends Record<string, any> = Record<string, any>
+    RunOutput extends Record<string, any> = Record<string, any>,
   >(
     outputSchema:
       | ZodTypeV3<RunOutput>
@@ -906,7 +930,7 @@ export abstract class BaseChatModel<
 
   withStructuredOutput<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    RunOutput extends Record<string, any> = Record<string, any>
+    RunOutput extends Record<string, any> = Record<string, any>,
   >(
     outputSchema:
       | InteropZodType<RunOutput>
@@ -1029,7 +1053,7 @@ export abstract class BaseChatModel<
  * implementation of _generate.
  */
 export abstract class SimpleChatModel<
-  CallOptions extends BaseChatModelCallOptions = BaseChatModelCallOptions
+  CallOptions extends BaseChatModelCallOptions = BaseChatModelCallOptions,
 > extends BaseChatModel<CallOptions> {
   abstract _call(
     messages: BaseMessage[],

@@ -17,6 +17,17 @@ function convertToV1FromChatGoogleMessage(
         yield { type: "text", text: block.text };
         continue;
       } else if (
+        _isContentBlock(block, "thinking") &&
+        _isString(block.thinking)
+      ) {
+        // Handle Google's thinking blocks (converted from Gemini's thought property)
+        yield {
+          type: "reasoning",
+          reasoning: block.thinking,
+          ...(block.signature ? { signature: block.signature } : {}),
+        };
+        continue;
+      } else if (
         _isContentBlock(block, "inlineData") &&
         _isObject(block.inlineData) &&
         _isString(block.inlineData.mimeType) &&

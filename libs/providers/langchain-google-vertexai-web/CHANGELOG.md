@@ -1,5 +1,110 @@
 # @langchain/google-vertexai-web
 
+## 2.1.14
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @langchain/google-webauth@2.1.14
+
+## 2.1.13
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @langchain/google-webauth@2.1.13
+
+## 2.1.12
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @langchain/google-webauth@2.1.12
+
+## 2.1.11
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @langchain/google-webauth@2.1.11
+
+## 2.1.10
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @langchain/google-webauth@2.1.10
+
+## 2.1.9
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @langchain/google-webauth@2.1.9
+
+## 2.1.8
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @langchain/google-webauth@2.1.8
+
+## 2.1.7
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @langchain/google-webauth@2.1.7
+
+## 2.1.6
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @langchain/google-webauth@2.1.6
+
+## 2.1.5
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @langchain/google-webauth@2.1.5
+
+## 2.1.4
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @langchain/google-webauth@2.1.4
+
+## 2.1.3
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @langchain/google-webauth@2.1.3
+
+## 2.1.2
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @langchain/google-webauth@2.1.2
+
+## 2.1.1
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @langchain/google-webauth@2.1.1
+
+## 2.1.0
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @langchain/google-webauth@2.1.0
+
 ## 2.0.4
 
 ### Patch Changes

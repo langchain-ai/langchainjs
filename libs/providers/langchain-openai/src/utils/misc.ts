@@ -30,6 +30,17 @@ export function extractGenericMessageCustomRole(message: ChatMessage) {
   return message.role as OpenAIClient.ChatCompletionRole;
 }
 
+export function getFilenameFromMetadata(
+  block:
+    | ContentBlock.Multimodal.File
+    | ContentBlock.Multimodal.Video
+    | Data.StandardFileBlock
+): string | undefined {
+  return (block.metadata?.filename ??
+    block.metadata?.name ??
+    block.metadata?.title) as string;
+}
+
 export function getRequiredFilenameFromMetadata(
   block:
     | ContentBlock.Multimodal.File
@@ -71,4 +82,8 @@ export function messageToOpenAIRole(
     default:
       throw new Error(`Unknown message type: ${type}`);
   }
+}
+
+export function _modelPrefersResponsesAPI(model: string): boolean {
+  return model.includes("gpt-5.2-pro");
 }

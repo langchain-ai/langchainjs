@@ -75,7 +75,7 @@ an existing Atlas cluster can be provided to the tests by specifying the `MONGOD
 MONGODB_ATLAS_URI='<atlas URI>' pnpm test:int
 ```
 
-If running against a remote Atlas cluster, the user must have readWrite permissions on the `langchain` database.
+If running against a remote Atlas cluster, the user must have readWrite permissions on the `langchain_test` database.
 
 If no `MONGODB_ATLAS_URI` is provided, the test suite will attempt to launch an instance of local Atlas in a container using [testcontainers](https://testcontainers.com/). This requires a container engine, see the [testcontainer backing engine documentation](https://node.testcontainers.org/supported-container-runtimes/) for details.
 

@@ -57,6 +57,54 @@ export function removeAdditionalProperties(
       delete newObj.additionalProperties;
     }
 
+    // Check for union types (anyOf, oneOf) which Gemini doesn't support
+    if ("anyOf" in newObj || "oneOf" in newObj) {
+      const unionTypes = newObj.anyOf || newObj.oneOf;
+
+      // Check if this is a nullable union (e.g., T | null)
+      // This is a 2-element array where one element is {type: "null"}
+      if (Array.isArray(unionTypes) && unionTypes.length === 2) {
+        const nullIndex = unionTypes.findIndex((t) => t.type === "null");
+
+        if (nullIndex >= 0) {
+          // This is a nullable union - extract the non-null type
+          const nonNullType = unionTypes[nullIndex === 0 ? 1 : 0];
+          delete newObj.anyOf;
+          delete newObj.oneOf;
+          // Merge the non-null type properties and add nullable: true
+          for (const key in nonNullType) {
+            if (key in nonNullType) {
+              newObj[key] = nonNullType[key];
+            }
+          }
+          newObj.nullable = true;
+        } else {
+          // Not a simple nullable union - reject it
+          throw new Error(
+            "zod_to_gemini_parameters: Gemini cannot handle union types (discriminatedUnion, anyOf, oneOf). " +
+              "Consider using a flat object structure with optional fields instead."
+          );
+        }
+      } else {
+        // Not a simple nullable union - reject it
+        throw new Error(
+          "zod_to_gemini_parameters: Gemini cannot handle union types (discriminatedUnion, anyOf, oneOf). " +
+            "Consider using a flat object structure with optional fields instead."
+        );
+      }
+    }
+
+    // Convert exclusiveMinimum (from .positive()) to minimum
+    if ("exclusiveMinimum" in newObj && newObj.exclusiveMinimum === 0) {
+      // Convert .positive() to .min(0.01)
+      newObj.minimum = 0.01;
+      delete newObj.exclusiveMinimum;
+    } else if ("exclusiveMinimum" in newObj) {
+      // Convert other exclusiveMinimum to minimum with a small increment
+      newObj.minimum = newObj.exclusiveMinimum + 0.00001;
+      delete newObj.exclusiveMinimum;
+    }
+
     adjustObjectType(newObj);
 
     for (const key in newObj) {
@@ -77,7 +125,7 @@ export function removeAdditionalProperties(
 
 export function schemaToGeminiParameters<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  RunOutput extends Record<string, any> = Record<string, any>
+  RunOutput extends Record<string, any> = Record<string, any>,
 >(schema: InteropZodType<RunOutput> | JsonSchema7Type): GeminiFunctionSchema {
   // Gemini doesn't accept either the $schema or additionalProperties
   // attributes, so we need to explicitly remove them.

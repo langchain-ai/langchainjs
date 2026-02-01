@@ -58,10 +58,12 @@ export class YoutubeLoader extends BaseDocumentLoader {
    * @returns The videoId of the YouTube video.
    */
   private static getVideoID(url: string): string {
+    // YouTube video IDs are exactly 11 characters: alphanumeric, underscores, and hyphens
+    // Using a bounded pattern to avoid ReDoS vulnerabilities
     const match = url.match(
-      /.*(?:youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=)([^#&?]*).*/
+      /(?:youtu\.be\/|youtube\.com\/(?:v\/|u\/\w\/|embed\/|watch\?v=|shorts\/))([a-zA-Z0-9_-]{11})(?:[?&#]|$)/
     );
-    if (match !== null && match[1].length === 11) {
+    if (match !== null) {
       return match[1];
     } else {
       throw new Error("Failed to get youtube video id from the url");

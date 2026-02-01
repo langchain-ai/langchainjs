@@ -1,9 +1,9 @@
-import { LlamaModel, LlamaContext, getLlama } from "node-llama-cpp";
+import { LlamaModel, LlamaEmbeddingContext, getLlama } from "node-llama-cpp";
 import { Embeddings, type EmbeddingsParams } from "@langchain/core/embeddings";
 import {
   LlamaBaseCppInputs,
   createLlamaModel,
-  createLlamaContext,
+  createLlamaEmbeddingContext,
 } from "../utils/llama_cpp.js";
 
 /**
@@ -33,7 +33,7 @@ export interface LlamaCppEmbeddingsParams
 export class LlamaCppEmbeddings extends Embeddings {
   _model: LlamaModel;
 
-  _context: LlamaContext;
+  _embeddingContext: LlamaEmbeddingContext;
 
   public constructor(inputs: LlamaCppEmbeddingsParams) {
     super(inputs);
@@ -53,7 +53,10 @@ export class LlamaCppEmbeddings extends Embeddings {
     const llama = await getLlama();
 
     instance._model = await createLlamaModel(inputs, llama);
-    instance._context = await createLlamaContext(instance._model, inputs);
+    instance._embeddingContext = await createLlamaEmbeddingContext(
+      instance._model,
+      inputs
+    );
 
     return instance;
   }
@@ -64,29 +67,13 @@ export class LlamaCppEmbeddings extends Embeddings {
    * @returns A Promise that resolves to an array of embeddings.
    */
   async embedDocuments(texts: string[]): Promise<number[][]> {
-    const tokensArray = [];
-
-    for (const text of texts) {
-      const encodings = await this.caller.call(
-        () =>
-          new Promise((resolve) => {
-            resolve(this._model.tokenize(text));
-          })
-      );
-      tokensArray.push(encodings);
-    }
-
     const embeddings: number[][] = [];
 
-    for (const tokens of tokensArray) {
-      const embedArray: number[] = [];
-
-      for (let i = 0; i < tokens.length; i += 1) {
-        const nToken: number = +tokens[i];
-        embedArray.push(nToken);
-      }
-
-      embeddings.push(embedArray);
+    for (const text of texts) {
+      const embedding = await this.caller.call(() =>
+        this._embeddingContext.getEmbeddingFor(text)
+      );
+      embeddings.push(Array.from(embedding.vector));
     }
 
     return embeddings;
@@ -98,20 +85,9 @@ export class LlamaCppEmbeddings extends Embeddings {
    * @returns A Promise that resolves to an array of numbers representing the embedding.
    */
   async embedQuery(text: string): Promise<number[]> {
-    const tokens: number[] = [];
-
-    const encodings = await this.caller.call(
-      () =>
-        new Promise((resolve) => {
-          resolve(this._model.tokenize(text));
-        })
+    const embedding = await this.caller.call(() =>
+      this._embeddingContext.getEmbeddingFor(text)
     );
-
-    for (let i = 0; i < encodings.length; i += 1) {
-      const token: number = +encodings[i];
-      tokens.push(token);
-    }
-
-    return tokens;
+    return Array.from(embedding.vector);
   }
 }

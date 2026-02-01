@@ -1,10 +1,11 @@
-import { test } from "@jest/globals";
+import { test, describe, expect } from "@jest/globals";
 import * as fs from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 import * as path from "node:path";
 import {
   AIMessage,
   AIMessageChunk,
+  ContentBlock,
   HumanMessage,
   SystemMessage,
   ToolMessage,
@@ -104,17 +105,15 @@ test("Test Google AI handleLLMNewToken callback", async () => {
   try {
     const model = new ChatGoogleGenerativeAI({ model: "gemini-2.0-flash" });
     let tokens = "";
-    const res = await model.call(
-      [new HumanMessage("what is 1 + 1?")],
-      undefined,
-      [
+    const res = await model.invoke([new HumanMessage("what is 1 + 1?")], {
+      callbacks: [
         {
           handleLLMNewToken(token: string) {
             tokens += token;
           },
         },
-      ]
-    );
+      ],
+    });
     const responseContent = typeof res.content === "string" ? res.content : "";
     expect(tokens).toBe(responseContent);
   } finally {
@@ -884,6 +883,91 @@ test("works with thinking config", async () => {
       thinkingBudget: 100,
     },
   });
-  const result = await model.invoke("What is the current weather in SF?");
+  const result = await model.invoke("What is 2+2?");
   expect(result.content).toBeDefined();
+
+  // Verify that content is an array with separate thinking and text blocks
+  if (Array.isArray(result.content)) {
+    const thinkingBlocks = result.content.filter(
+      (block): block is ContentBlock =>
+        typeof block === "object" &&
+        block !== null &&
+        "type" in block &&
+        block.type === "thinking"
+    );
+    const textBlocks = result.content.filter(
+      (block): block is ContentBlock =>
+        typeof block === "object" &&
+        block !== null &&
+        "type" in block &&
+        block.type === "text"
+    );
+
+    // Should have at least one thinking block when includeThoughts is true
+    expect(thinkingBlocks.length).toBeGreaterThan(0);
+
+    // Thinking blocks should have the 'thinking' field, not concatenated with text
+    thinkingBlocks.forEach((block) => {
+      expect(block).toHaveProperty("thinking");
+      expect(typeof block.thinking).toBe("string");
+    });
+
+    // Text blocks should be separate
+    textBlocks.forEach((block) => {
+      expect(block).toHaveProperty("text");
+      expect(typeof block.text).toBe("string");
+    });
+  }
+});
+
+describe("Google GenAI Reasoning with contentBlocks", () => {
+  test("invoke returns thinking as reasoning in contentBlocks", async () => {
+    const model = new ChatGoogleGenerativeAI({
+      model: "gemini-3-pro-preview",
+      maxRetries: 0,
+      thinkingConfig: {
+        includeThoughts: true,
+        thinkingBudget: 100,
+      },
+    });
+
+    const result = await model.invoke("What is 2 + 2?");
+
+    // Verify contentBlocks contains reasoning
+    const blocks = result.contentBlocks;
+    expect(blocks.length).toBeGreaterThan(0);
+
+    const reasoningBlocks = blocks.filter((b) => b.type === "reasoning");
+    expect(reasoningBlocks.length).toBeGreaterThan(0);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    expect((reasoningBlocks[0] as any).reasoning.length).toBeGreaterThan(0);
+
+    const textBlocks = blocks.filter((b) => b.type === "text");
+    expect(textBlocks.length).toBeGreaterThan(0);
+  });
+
+  test("stream returns thinking as reasoning in contentBlocks", async () => {
+    const model = new ChatGoogleGenerativeAI({
+      model: "gemini-3-pro-preview",
+      maxRetries: 0,
+      thinkingConfig: {
+        includeThoughts: true,
+        thinkingBudget: 100,
+      },
+    });
+
+    let fullMessage: AIMessageChunk | null = null;
+    for await (const chunk of await model.stream("What is 3 + 3?")) {
+      fullMessage = fullMessage ? concat(fullMessage, chunk) : chunk;
+    }
+
+    expect(fullMessage).toBeDefined();
+    const blocks = fullMessage!.contentBlocks;
+    expect(blocks.length).toBeGreaterThan(0);
+
+    const reasoningBlocks = blocks.filter((b) => b.type === "reasoning");
+    expect(reasoningBlocks.length).toBeGreaterThan(0);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    expect((reasoningBlocks[0] as any).reasoning.length).toBeGreaterThan(0);
+  }, 60000);
 });

@@ -9,6 +9,9 @@ import {
   AIMessageChunk,
   coerceMessageLikeToMessage,
   SystemMessage,
+  _mergeObj,
+  _mergeDicts,
+  DEFAULT_MERGE_IGNORE_KEYS,
 } from "../index.js";
 import { load } from "../../load/index.js";
 import { concat } from "../../utils/stream.js";
@@ -200,6 +203,51 @@ test("Can concat artifact (object) of ToolMessageChunk", () => {
   });
 });
 
+test("Can concat ToolMessageChunk when both artifacts are undefined", () => {
+  const chunk1 = new ToolMessageChunk({
+    content: "Hello",
+    tool_call_id: "1",
+  });
+  const chunk2 = new ToolMessageChunk({
+    content: " world",
+    tool_call_id: "1",
+  });
+
+  const concated = chunk1.concat(chunk2);
+  expect(concated.artifact).toBeUndefined();
+  expect(concated.content).toBe("Hello world");
+});
+
+test("Can concat ToolMessageChunk when only first artifact is undefined", () => {
+  const chunk1 = new ToolMessageChunk({
+    content: "Hello",
+    tool_call_id: "1",
+  });
+  const chunk2 = new ToolMessageChunk({
+    content: " world",
+    tool_call_id: "1",
+    artifact: { data: "test" },
+  });
+
+  const concated = chunk1.concat(chunk2);
+  expect(concated.artifact).toEqual({ data: "test" });
+});
+
+test("Can concat ToolMessageChunk when only second artifact is undefined", () => {
+  const chunk1 = new ToolMessageChunk({
+    content: "Hello",
+    tool_call_id: "1",
+    artifact: "some-artifact",
+  });
+  const chunk2 = new ToolMessageChunk({
+    content: " world",
+    tool_call_id: "1",
+  });
+
+  const concated = chunk1.concat(chunk2);
+  expect(concated.artifact).toBe("some-artifact");
+});
+
 describe("Complex AIMessageChunk concat", () => {
   it("concatenates content arrays of strings", () => {
     expect(
@@ -344,16 +392,17 @@ describe("Complex AIMessageChunk concat", () => {
     expect(
       new AIMessageChunk({
         content: [{ index: 0, type: "text", text: "I am" }],
+        response_metadata: { usage: { prompt_tokens: 5 } },
       }).concat(
         new AIMessageChunk({
           content: [{ type: "text", text: "" }],
-          response_metadata: { extra: "value" },
+          response_metadata: { usage: { prompt_tokens: 3 }, extra: "value" },
         })
       )
     ).toEqual(
       new AIMessageChunk({
         content: [{ index: 0, type: "text", text: "I am" }],
-        response_metadata: { extra: "value" },
+        response_metadata: { usage: { prompt_tokens: 8 }, extra: "value" },
       })
     );
   });
@@ -583,6 +632,56 @@ describe("Complex AIMessageChunk concat", () => {
       },
     ]);
   });
+
+  it("Should correctly preserve index when concatenating multiple tool calls in additional_kwargs", () => {
+    // Reproducer for issue #9774 - index was being summed instead of preserved
+    type CustomToolCall = {
+      index: number;
+      id?: string;
+      fn: { name?: string; args: string };
+    };
+    const chunks: Array<{ tool_calls: CustomToolCall[] }> = [
+      // add tool call
+      {
+        tool_calls: [{ index: 0, id: "0", fn: { name: "add", args: "" } }],
+      },
+      { tool_calls: [{ index: 0, fn: { args: '{"a": 2,' } }] },
+      { tool_calls: [{ index: 0, fn: { args: ' "b": 3}' } }] },
+      // multiply tool call
+      {
+        tool_calls: [{ index: 1, id: "1", fn: { name: "mul", args: "" } }],
+      },
+      { tool_calls: [{ index: 1, fn: { args: '{"a": 2,' } }] },
+      { tool_calls: [{ index: 1, fn: { args: ' "b": 3}' } }] },
+    ];
+
+    const stream = chunks.map(
+      (chunk) =>
+        new AIMessageChunk({
+          content: "",
+          additional_kwargs: chunk as unknown as Record<string, unknown>,
+        })
+    );
+
+    let merged: AIMessageChunk | undefined;
+    for (const chunk of stream) {
+      merged = merged ? merged.concat(chunk) : chunk;
+    }
+
+    // The indices should be preserved, not summed
+    const toolCalls = (
+      merged?.additional_kwargs as unknown as { tool_calls: CustomToolCall[] }
+    ).tool_calls;
+    expect(toolCalls).toHaveLength(2);
+    expect(toolCalls[0].index).toBe(0);
+    expect(toolCalls[0].id).toBe("0");
+    expect(toolCalls[0].fn.name).toBe("add");
+    expect(toolCalls[0].fn.args).toBe('{"a": 2, "b": 3}');
+    expect(toolCalls[1].index).toBe(1);
+    expect(toolCalls[1].id).toBe("1");
+    expect(toolCalls[1].fn.name).toBe("mul");
+    expect(toolCalls[1].fn.args).toBe('{"a": 2, "b": 3}');
+  });
 });
 
 describe("Message like coercion", () => {
@@ -811,6 +910,30 @@ describe("toFormattedString", () => {
       expect(output).toContain("unit: celsius");
     });
 
+    it("formats an AI message with nested objects in tool call args", () => {
+      const message = new AIMessage({
+        content: "Here is the result.",
+        tool_calls: [
+          {
+            id: "call_123",
+            name: "someTool",
+            args: { stringArg: "someFile", objectArg: { key: "someValue" } },
+            type: "tool_call",
+          },
+        ],
+      });
+
+      const output = message.toFormattedString();
+      expect(output).toContain("Ai Message");
+      expect(output).toContain("Tool Calls:");
+      expect(output).toContain("someTool (call_123)");
+      expect(output).toContain("stringArg: someFile");
+
+      // This should show the object, not [object Object]
+      expect(output).toContain('"key":"someValue"');
+      expect(output).not.toContain("[object Object]");
+    });
+
     it("formats an AI message with multiple tool calls", () => {
       const message = new AIMessage({
         content: "",
@@ -916,5 +1039,262 @@ describe("toFormattedString", () => {
       // Should have: title, Tool Calls:, tool info, blank line, content
       expect(lines).toContain("");
     });
+  });
+});
+
+describe("_mergeObj", () => {
+  it("returns undefined when both values are undefined", () => {
+    expect(_mergeObj(undefined, undefined)).toBeUndefined();
+  });
+
+  it("returns right value when left is undefined", () => {
+    expect(_mergeObj(undefined, "hello")).toBe("hello");
+    expect(_mergeObj(undefined, { foo: "bar" })).toEqual({ foo: "bar" });
+    expect(_mergeObj(undefined, [1, 2, 3])).toEqual([1, 2, 3]);
+  });
+
+  it("returns left value when right is undefined", () => {
+    expect(_mergeObj("hello", undefined)).toBe("hello");
+    expect(_mergeObj({ foo: "bar" }, undefined)).toEqual({ foo: "bar" });
+    expect(_mergeObj([1, 2, 3], undefined)).toEqual([1, 2, 3]);
+  });
+
+  it("concatenates strings", () => {
+    expect(_mergeObj("hello", " world")).toBe("hello world");
+  });
+
+  it("merges arrays", () => {
+    expect(_mergeObj([1, 2], [3, 4])).toEqual([1, 2, 3, 4]);
+  });
+
+  it("merges objects", () => {
+    expect(_mergeObj({ a: 1 }, { b: 2 })).toEqual({ a: 1, b: 2 });
+  });
+
+  it("returns same value when both are equal primitives", () => {
+    expect(_mergeObj(42, 42)).toBe(42);
+    expect(_mergeObj(true, true)).toBe(true);
+  });
+
+  it("throws error when merging different types", () => {
+    expect(() =>
+      _mergeObj<unknown>("string", { obj: true } as unknown)
+    ).toThrow("Cannot merge objects of different types");
+    expect(() => _mergeObj<unknown>(123, "string" as unknown)).toThrow(
+      "Cannot merge objects of different types"
+    );
+  });
+
+  it("throws error when merging different primitive values", () => {
+    expect(() => _mergeObj<unknown>(1, 2 as unknown)).toThrow(
+      "Can not merge objects"
+    );
+    expect(() => _mergeObj<unknown>(true, false as unknown)).toThrow(
+      "Can not merge objects"
+    );
+  });
+
+  it("handles null as left argument", () => {
+    expect(_mergeObj(null as unknown as undefined, "hello")).toBe("hello");
+    expect(_mergeObj(null as unknown as undefined, { foo: "bar" })).toEqual({
+      foo: "bar",
+    });
+  });
+
+  it("handles null as right argument", () => {
+    expect(_mergeObj("hello", null as unknown as undefined)).toBe("hello");
+    expect(_mergeObj({ foo: "bar" }, null as unknown as undefined)).toEqual({
+      foo: "bar",
+    });
+  });
+
+  it("handles null for both arguments", () => {
+    expect(
+      _mergeObj(null as unknown as undefined, null as unknown as undefined)
+    ).toBeUndefined();
+  });
+});
+
+describe("_mergeDicts", () => {
+  it("returns undefined when both values are undefined", () => {
+    expect(_mergeDicts(undefined, undefined)).toBeUndefined();
+  });
+
+  it("returns right value when left is undefined", () => {
+    expect(_mergeDicts(undefined, { foo: "bar" })).toEqual({ foo: "bar" });
+  });
+
+  it("returns left value when right is undefined", () => {
+    expect(_mergeDicts({ foo: "bar" }, undefined)).toEqual({ foo: "bar" });
+  });
+
+  it("merges two objects", () => {
+    expect(_mergeDicts({ a: 1 }, { b: 2 })).toEqual({ a: 1, b: 2 });
+  });
+
+  it("concatenates string values for the same key", () => {
+    expect(_mergeDicts({ a: "hello" }, { a: " world" })).toEqual({
+      a: "hello world",
+    });
+  });
+
+  it("adds numeric values for the same key", () => {
+    expect(_mergeDicts({ count: 5 }, { count: 3 })).toEqual({ count: 8 });
+  });
+
+  it("recursively merges nested objects", () => {
+    expect(_mergeDicts({ nested: { a: 1 } }, { nested: { b: 2 } })).toEqual({
+      nested: { a: 1, b: 2 },
+    });
+  });
+
+  it("handles null values in right dict by skipping them", () => {
+    expect(_mergeDicts({ a: "value" }, { a: null })).toEqual({ a: "value" });
+  });
+
+  it("handles null values in left dict by using right value", () => {
+    expect(_mergeDicts({ a: null }, { a: "value" })).toEqual({ a: "value" });
+  });
+
+  it("does not merge 'type' field (keeps original)", () => {
+    expect(_mergeDicts({ type: "text" }, { type: "delta" })).toEqual({
+      type: "text",
+    });
+  });
+
+  it("replaces 'id' field with incoming value if defined", () => {
+    expect(_mergeDicts({ id: "old" }, { id: "new" })).toEqual({ id: "new" });
+  });
+
+  it("keeps 'id' field if incoming is empty", () => {
+    expect(_mergeDicts({ id: "old" }, { id: "" })).toEqual({ id: "old" });
+  });
+
+  it("throws error when merging different types for same key", () => {
+    expect(() => _mergeDicts({ a: "string" }, { a: 123 })).toThrow(
+      "field[a] already exists in the message chunk, but with a different type"
+    );
+  });
+
+  it("handles empty objects", () => {
+    expect(_mergeDicts({}, {})).toEqual({});
+    expect(_mergeDicts({ a: 1 }, {})).toEqual({ a: 1 });
+    expect(_mergeDicts({}, { b: 2 })).toEqual({ b: 2 });
+  });
+
+  it("preserves 'index' field instead of summing", () => {
+    expect(_mergeDicts({ index: 0 }, { index: 0 })).toEqual({ index: 0 });
+    expect(_mergeDicts({ index: 1 }, { index: 1 })).toEqual({ index: 1 });
+  });
+
+  it("preserves 'created' timestamp field instead of summing", () => {
+    expect(
+      _mergeDicts({ created: 1734524005 }, { created: 1734524005 })
+    ).toEqual({ created: 1734524005 });
+  });
+
+  it("preserves 'timestamp' field instead of summing", () => {
+    expect(
+      _mergeDicts({ timestamp: 1734524005 }, { timestamp: 1734524005 })
+    ).toEqual({ timestamp: 1734524005 });
+  });
+
+  it("correctly merges nested objects with index field", () => {
+    expect(
+      _mergeDicts(
+        { index: 0, id: "0", fn: { name: "add", args: "" } },
+        { index: 0, fn: { args: '{"a": 2,' } }
+      )
+    ).toEqual({
+      index: 0,
+      id: "0",
+      fn: { name: "add", args: '{"a": 2,' },
+    });
+  });
+
+  it("supports custom ignoreKeys option to preserve additional fields", () => {
+    // Without custom ignoreKeys, 'role' would be concatenated
+    expect(_mergeDicts({ role: "assistant" }, { role: "assistant" })).toEqual({
+      role: "assistantassistant",
+    });
+
+    // With custom ignoreKeys, 'role' is preserved
+    expect(
+      _mergeDicts(
+        { role: "assistant" },
+        { role: "assistant" },
+        { ignoreKeys: [...DEFAULT_MERGE_IGNORE_KEYS, "role"] }
+      )
+    ).toEqual({ role: "assistant" });
+  });
+
+  it("supports custom ignoreKeys for numeric fields", () => {
+    // Custom numeric field without ignoreKeys - gets summed
+    expect(_mergeDicts({ customId: 100 }, { customId: 100 })).toEqual({
+      customId: 200,
+    });
+
+    // Custom numeric field with ignoreKeys - preserved
+    expect(
+      _mergeDicts(
+        { customId: 100 },
+        { customId: 100 },
+        { ignoreKeys: [...DEFAULT_MERGE_IGNORE_KEYS, "customId"] }
+      )
+    ).toEqual({ customId: 100 });
+  });
+
+  it("passes ignoreKeys through nested objects", () => {
+    expect(
+      _mergeDicts(
+        { nested: { customField: "a", index: 0 } },
+        { nested: { customField: "b", index: 0 } },
+        { ignoreKeys: [...DEFAULT_MERGE_IGNORE_KEYS, "customField"] }
+      )
+    ).toEqual({
+      nested: { customField: "a", index: 0 },
+    });
+  });
+
+  it("DEFAULT_MERGE_IGNORE_KEYS includes expected fields", () => {
+    expect(DEFAULT_MERGE_IGNORE_KEYS).toContain("index");
+    expect(DEFAULT_MERGE_IGNORE_KEYS).toContain("created");
+    expect(DEFAULT_MERGE_IGNORE_KEYS).toContain("timestamp");
+  });
+
+  it("handles null as left argument", () => {
+    expect(_mergeDicts(null as unknown as undefined, { foo: "bar" })).toEqual({
+      foo: "bar",
+    });
+  });
+
+  it("handles null as right argument", () => {
+    expect(_mergeDicts({ foo: "bar" }, null as unknown as undefined)).toEqual({
+      foo: "bar",
+    });
+  });
+
+  it("handles null for both arguments", () => {
+    expect(
+      _mergeDicts(null as unknown as undefined, null as unknown as undefined)
+    ).toBeUndefined();
+  });
+
+  it("handles nested null values in objects", () => {
+    expect(
+      _mergeDicts(
+        { nested: null as unknown as undefined },
+        { nested: { foo: "bar" } }
+      )
+    ).toEqual({ nested: { foo: "bar" } });
+  });
+
+  it("handles nested null values in right object", () => {
+    expect(
+      _mergeDicts(
+        { nested: { foo: "bar" } },
+        { nested: null as unknown as undefined }
+      )
+    ).toEqual({ nested: { foo: "bar" } });
   });
 });

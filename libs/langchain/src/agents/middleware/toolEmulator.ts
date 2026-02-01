@@ -141,7 +141,7 @@ export function toolEmulatorMiddleware(
       // Extract tool information for emulation
       const toolArgs = request.toolCall.args;
       const toolDescription =
-        request.tool.description || "No description available";
+        request.tool?.description || "No description available";
 
       // Build prompt for emulator LLM
       const toolArgsString =

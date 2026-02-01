@@ -600,5 +600,308 @@ describe("MultiServerMCPClient", () => {
 
       expect(Client.prototype.close).toHaveBeenCalledOnce();
     });
+
+    test("should ignore connection errors when onConnectionError is 'ignore'", async () => {
+      // Mock one successful and one failing connection
+      let clientCallCount = 0;
+      (Client as Mock).mockImplementation(() => {
+        clientCallCount += 1;
+        if (clientCallCount === 1) {
+          // First server fails
+          return {
+            connect: vi
+              .fn()
+              .mockReturnValue(Promise.reject(new Error("Connection failed"))),
+            listTools: vi.fn().mockReturnValue(Promise.resolve({ tools: [] })),
+          };
+        } else {
+          // Second server succeeds
+          return {
+            connect: vi.fn().mockReturnValue(Promise.resolve()),
+            listTools: vi.fn().mockReturnValue(Promise.resolve({ tools: [] })),
+          };
+        }
+      });
+
+      const client = new MultiServerMCPClient({
+        mcpServers: {
+          "failing-server": {
+            transport: "http",
+            url: "http://localhost:8123/mcp",
+          },
+          "working-server": {
+            transport: "http",
+            url: "http://localhost:8001/mcp",
+          },
+        },
+        onConnectionError: "ignore",
+      });
+
+      // Should not throw, even though one server fails
+      const tools = await client.initializeConnections();
+
+      // Should have tools from the working server only
+      expect(tools).toBeDefined();
+
+      // Working server should be accessible
+      const workingClient = await client.getClient("working-server");
+      expect(workingClient).toBeDefined();
+
+      // Failing server should not be accessible
+      const failingClient = await client.getClient("failing-server");
+      expect(failingClient).toBeUndefined();
+    });
+
+    test("should throw on connection failure when onConnectionError is 'throw'", async () => {
+      (Client as Mock).mockImplementationOnce(() => ({
+        connect: vi
+          .fn()
+          .mockReturnValue(Promise.reject(new Error("Connection failed"))),
+        listTools: vi.fn().mockReturnValue(Promise.resolve({ tools: [] })),
+      }));
+
+      const client = new MultiServerMCPClient({
+        mcpServers: {
+          "failing-server": {
+            transport: "http",
+            url: "http://localhost:8000/mcp",
+          },
+        },
+        onConnectionError: "throw",
+      });
+
+      // Should throw when onConnectionError is 'throw' (default behavior)
+      await expect(() => client.initializeConnections()).rejects.toThrow(
+        MCPClientError
+      );
+    });
+
+    test("should not throw when all servers fail and onConnectionError is 'ignore'", async () => {
+      (Client as Mock).mockImplementation(() => ({
+        connect: vi
+          .fn()
+          .mockReturnValue(Promise.reject(new Error("Connection failed"))),
+        listTools: vi.fn().mockReturnValue(Promise.resolve({ tools: [] })),
+      }));
+
+      const client = new MultiServerMCPClient({
+        mcpServers: {
+          "server-1": {
+            transport: "http",
+            url: "http://localhost:8000/mcp",
+          },
+          "server-2": {
+            transport: "http",
+            url: "http://localhost:8001/mcp",
+          },
+        },
+        onConnectionError: "ignore",
+      });
+
+      // Should not throw, even though all servers fail
+      const tools = await client.getTools();
+      expect(tools).toEqual([]);
+
+      // Both servers should be inaccessible
+      const client1 = await client.getClient("server-1");
+      const client2 = await client.getClient("server-2");
+      expect(client1).toBeUndefined();
+      expect(client2).toBeUndefined();
+    });
+
+    test("should call custom error handler and ignore if handler doesn't throw", async () => {
+      let clientCallCount = 0;
+      const errorHandler = vi.fn(({ serverName, error }) => {
+        // Handler doesn't throw, so server should be ignored
+        expect(serverName).toBe("failing-server");
+        expect(error).toBeInstanceOf(Error);
+      });
+
+      (Client as Mock).mockImplementation(() => {
+        clientCallCount += 1;
+        if (clientCallCount === 1) {
+          // First server (failing-server) fails
+          return {
+            connect: vi
+              .fn()
+              .mockReturnValue(Promise.reject(new Error("Connection failed"))),
+            listTools: vi.fn().mockReturnValue(Promise.resolve({ tools: [] })),
+          };
+        } else {
+          // Second server (working-server) succeeds
+          return {
+            connect: vi.fn().mockReturnValue(Promise.resolve()),
+            listTools: vi.fn().mockReturnValue(Promise.resolve({ tools: [] })),
+          };
+        }
+      });
+
+      const client = new MultiServerMCPClient({
+        mcpServers: {
+          "failing-server": {
+            transport: "http",
+            url: "http://localhost:8000/mcp",
+          },
+          "working-server": {
+            transport: "http",
+            url: "http://localhost:8001/mcp",
+          },
+        },
+        onConnectionError: errorHandler,
+      });
+
+      // Should not throw, even though one server fails
+      await client.initializeConnections();
+
+      // Error handler should have been called
+      expect(errorHandler).toHaveBeenCalledTimes(1);
+      expect(errorHandler).toHaveBeenCalledWith({
+        serverName: "failing-server",
+        error: expect.any(Error),
+      });
+
+      // Failing server should not be accessible
+      const failingClient = await client.getClient("failing-server");
+      expect(failingClient).toBeUndefined();
+
+      // Working server should be accessible
+      const workingClient = await client.getClient("working-server");
+      expect(workingClient).toBeDefined();
+    });
+
+    test("should throw if custom error handler throws", async () => {
+      const customError = new Error("Custom error from handler");
+      const errorHandler = vi.fn(() => {
+        throw customError;
+      });
+
+      (Client as Mock).mockImplementation(() => ({
+        connect: vi
+          .fn()
+          .mockReturnValue(Promise.reject(new Error("Connection failed"))),
+        listTools: vi.fn().mockReturnValue(Promise.resolve({ tools: [] })),
+      }));
+
+      const client = new MultiServerMCPClient({
+        mcpServers: {
+          "failing-server": {
+            transport: "http",
+            url: "http://localhost:8000/mcp",
+          },
+        },
+        onConnectionError: errorHandler,
+      });
+
+      // Should throw the error from the handler
+      await expect(() => client.initializeConnections()).rejects.toThrow(
+        customError
+      );
+
+      // Error handler should have been called
+      expect(errorHandler).toHaveBeenCalledTimes(1);
+    });
+
+    test("should skip failed servers on subsequent calls when using custom error handler", async () => {
+      const errorHandler = vi.fn(() => {
+        // Handler doesn't throw, so server should be ignored
+      });
+
+      let clientCallCount = 0;
+      (Client as Mock).mockImplementation(() => {
+        clientCallCount += 1;
+        if (clientCallCount === 1) {
+          // First server fails
+          return {
+            connect: vi
+              .fn()
+              .mockReturnValue(Promise.reject(new Error("Connection failed"))),
+            listTools: vi.fn().mockReturnValue(Promise.resolve({ tools: [] })),
+          };
+        } else {
+          // Second server succeeds
+          return {
+            connect: vi.fn().mockReturnValue(Promise.resolve()),
+            listTools: vi.fn().mockReturnValue(Promise.resolve({ tools: [] })),
+          };
+        }
+      });
+
+      const client = new MultiServerMCPClient({
+        mcpServers: {
+          "failing-server": {
+            transport: "http",
+            url: "http://localhost:8000/mcp",
+          },
+          "working-server": {
+            transport: "http",
+            url: "http://localhost:8001/mcp",
+          },
+        },
+        onConnectionError: errorHandler,
+      });
+
+      // First call - failing server should trigger handler
+      await client.initializeConnections();
+      expect(errorHandler).toHaveBeenCalledTimes(1);
+
+      // Second call - failing server should be skipped, handler shouldn't be called again
+      await client.initializeConnections();
+      expect(errorHandler).toHaveBeenCalledTimes(1); // Still only called once
+
+      // Failing server should not be accessible
+      const failingClient = await client.getClient("failing-server");
+      expect(failingClient).toBeUndefined();
+    });
+
+    test("should be idempotent when initializeConnections is called multiple times with onConnectionError 'ignore'", async () => {
+      let clientCallCount = 0;
+      (Client as Mock).mockImplementation(() => {
+        clientCallCount += 1;
+        if (clientCallCount === 1) {
+          // First server fails
+          return {
+            connect: vi
+              .fn()
+              .mockReturnValue(Promise.reject(new Error("Connection failed"))),
+            listTools: vi.fn().mockReturnValue(Promise.resolve({ tools: [] })),
+          };
+        } else {
+          // Second server succeeds
+          return {
+            connect: vi.fn().mockReturnValue(Promise.resolve()),
+            listTools: vi.fn().mockReturnValue(Promise.resolve({ tools: [] })),
+          };
+        }
+      });
+
+      const client = new MultiServerMCPClient({
+        mcpServers: {
+          "failing-server": {
+            transport: "http",
+            url: "http://localhost:8000/mcp",
+          },
+          "working-server": {
+            transport: "http",
+            url: "http://localhost:8001/mcp",
+          },
+        },
+        onConnectionError: "ignore",
+      });
+
+      // First call
+      const tools1 = await client.initializeConnections();
+      expect(tools1).toBeDefined();
+
+      // Second call should not throw and should return the same result
+      const tools2 = await client.initializeConnections();
+      expect(tools2).toBeDefined();
+      expect(Object.keys(tools2)).toEqual(Object.keys(tools1));
+
+      // Both calls should result in the same accessible servers
+      const workingClient1 = await client.getClient("working-server");
+      const workingClient2 = await client.getClient("working-server");
+      expect(workingClient1).toBeDefined();
+      expect(workingClient2).toBeDefined();
+    });
   });
 });

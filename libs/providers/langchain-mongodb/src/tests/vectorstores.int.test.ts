@@ -46,8 +46,6 @@ beforeAll(async () => {
   const [dbName, collectionName] = namespace.split(".");
   collection = await client.db(dbName).createCollection(collectionName);
 
-  if (!isUsingLocalAtlas()) return;
-
   await collection.createSearchIndex({
     name: "default",
     type: "search",
@@ -208,9 +206,8 @@ test("MongoDBAtlasVectorSearch with Maximal Marginal Relevance", async () => {
 
   const standardRetriever = await vectorStore.asRetriever();
 
-  const standardRetrieverOutput = await standardRetriever._getRelevantDocuments(
-    "foo"
-  );
+  const standardRetrieverOutput =
+    await standardRetriever._getRelevantDocuments("foo");
   expect(output).toHaveLength(texts.length);
 
   const standardRetrieverActual = standardRetrieverOutput.map(

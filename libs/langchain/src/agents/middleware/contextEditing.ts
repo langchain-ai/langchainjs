@@ -372,8 +372,8 @@ export class ClearToolUsesEdit implements ContextEdit {
       keepCount >= candidates.length
         ? []
         : keepCount > 0
-        ? candidates.slice(0, -keepCount)
-        : candidates;
+          ? candidates.slice(0, -keepCount)
+          : candidates;
 
     /**
      * If clearAtLeast is set, we may need to clear more messages to meet the token requirement

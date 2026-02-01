@@ -2,6 +2,7 @@ import {
   CodeExecutionTool,
   FunctionDeclarationsTool as GoogleGenerativeAIFunctionDeclarationsTool,
   GoogleSearchRetrievalTool,
+  Part,
 } from "@google/generative-ai";
 import { BindToolsInput } from "@langchain/core/language_models/chat_models";
 
@@ -23,4 +24,10 @@ export type GoogleGenerativeAIThinkingConfig = {
 export type GoogleGenerativeAIThinkingLevel =
   | "THINKING_LEVEL_UNSPECIFIED"
   | "LOW"
+  | "MEDIUM"
   | "HIGH";
+
+export type GoogleGenerativeAIPart = Part & {
+  thought?: boolean;
+  thoughtSignature?: string;
+};

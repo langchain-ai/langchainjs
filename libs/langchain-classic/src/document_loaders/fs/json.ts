@@ -149,7 +149,10 @@ export class JSONLoader extends TextLoader {
  * specifies the JSON pointer to extract.
  */
 export class JSONLinesLoader extends TextLoader {
-  constructor(filePathOrBlob: string | Blob, public pointer: string) {
+  constructor(
+    filePathOrBlob: string | Blob,
+    public pointer: string
+  ) {
     super(filePathOrBlob);
   }
 

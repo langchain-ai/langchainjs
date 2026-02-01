@@ -31,6 +31,7 @@ import {
   parseCustomToolCall,
 } from "../utils/tools.js";
 import {
+  getFilenameFromMetadata,
   getRequiredFilenameFromMetadata,
   iife,
   isReasoningModel,
@@ -40,6 +41,74 @@ import { Converter } from "@langchain/core/utils/format";
 import { completionsApiContentBlockConverter } from "./completions.js";
 
 const _FUNCTION_CALL_IDS_MAP_KEY = "__openai_function_call_ids__";
+
+type OpenAIAnnotation =
+  OpenAIClient.Responses.ResponseOutputText["annotations"][number];
+
+/**
+ * Converts an OpenAI annotation to a LangChain Citation or BaseContentBlock.
+ *
+ * OpenAI has several annotation types:
+ * - `url_citation`: Web citations with url, title, start_index, end_index
+ * - `file_citation`: File citations with file_id, filename, index
+ * - `container_file_citation`: Container file citations with container_id, file_id, filename, start_index, end_index
+ * - `file_path`: File paths with file_id, index
+ *
+ * This function maps them to LangChain's Citation format or preserves them as non-standard blocks.
+ */
+function convertOpenAIAnnotationToLangChain(
+  annotation: OpenAIAnnotation
+): ContentBlock.Citation | ContentBlock.NonStandard {
+  if (annotation.type === "url_citation") {
+    return {
+      type: "citation",
+      source: "url_citation",
+      url: annotation.url,
+      title: annotation.title,
+      startIndex: annotation.start_index,
+      endIndex: annotation.end_index,
+    } satisfies ContentBlock.Citation;
+  }
+
+  if (annotation.type === "file_citation") {
+    return {
+      type: "citation",
+      source: "file_citation",
+      title: annotation.filename,
+      startIndex: annotation.index,
+      // Store file_id in a way that can be retrieved
+      file_id: annotation.file_id,
+    } as ContentBlock.Citation;
+  }
+
+  if (annotation.type === "container_file_citation") {
+    return {
+      type: "citation",
+      source: "container_file_citation",
+      title: annotation.filename,
+      startIndex: annotation.start_index,
+      endIndex: annotation.end_index,
+      // Store additional IDs
+      file_id: annotation.file_id,
+      container_id: annotation.container_id,
+    } as ContentBlock.Citation;
+  }
+
+  if (annotation.type === "file_path") {
+    return {
+      type: "citation",
+      source: "file_path",
+      startIndex: annotation.index,
+      file_id: annotation.file_id,
+    } as ContentBlock.Citation;
+  }
+
+  // For unknown annotation types, preserve them as non-standard blocks
+  return {
+    type: "non_standard",
+    value: annotation as unknown as Record<string, unknown>,
+  } satisfies ContentBlock.NonStandard;
+}
 
 type ExcludeController<T> = T extends { controller: unknown } ? never : T;
 
@@ -228,8 +297,10 @@ export const convertResponsesMessageToAIMessage: Converter<
             return {
               type: "text",
               text: part.text,
-              annotations: part.annotations,
-            };
+              annotations: part.annotations.map(
+                convertOpenAIAnnotationToLangChain
+              ),
+            } satisfies ContentBlock.Text;
           }
 
           if (part.type === "refusal") {
@@ -267,6 +338,17 @@ export const convertResponsesMessageToAIMessage: Converter<
       }
     } else if (item.type === "reasoning") {
       additional_kwargs.reasoning = item;
+      // Also elevate reasoning to content for UI rendering
+      const reasoningText = item.summary
+        ?.map((s) => s.text)
+        .filter(Boolean)
+        .join("");
+      if (reasoningText) {
+        content.push({
+          type: "reasoning",
+          reasoning: reasoningText,
+        });
+      }
     } else if (item.type === "custom_tool_call") {
       const parsed = parseCustomToolCall(item);
       if (parsed) {
@@ -285,6 +367,22 @@ export const convertResponsesMessageToAIMessage: Converter<
           makeInvalidToolCall(item, "Malformed computer call")
         );
       }
+    } else if (item.type === "image_generation_call") {
+      // Add image as proper content block if result is available
+      if (item.result) {
+        content.push({
+          type: "image",
+          mimeType: "image/png",
+          data: item.result,
+          id: item.id,
+          metadata: {
+            status: item.status,
+          },
+        } satisfies ContentBlock.Multimodal.Image);
+      }
+      // Also store in tool_outputs for backwards compatibility and multi-turn editing (needs id)
+      additional_kwargs.tool_outputs ??= [];
+      additional_kwargs.tool_outputs.push(item);
     } else {
       additional_kwargs.tool_outputs ??= [];
       additional_kwargs.tool_outputs.push(item);
@@ -451,7 +549,7 @@ export const convertResponsesDeltaToChatGenerationChunk: Converter<
   OpenAIClient.Responses.ResponseStreamEvent,
   ChatGenerationChunk | null
 > = (event) => {
-  const content: Record<string, unknown>[] = [];
+  const content: ContentBlock[] = [];
   let generationInfo: Record<string, unknown> = {};
   let usage_metadata: UsageMetadata | undefined;
   const tool_call_chunks: ToolCallChunk[] = [];
@@ -469,14 +567,18 @@ export const convertResponsesDeltaToChatGenerationChunk: Converter<
       type: "text",
       text: event.delta,
       index: event.content_index,
-    });
+    } satisfies ContentBlock.Text);
   } else if (event.type === "response.output_text.annotation.added") {
     content.push({
       type: "text",
       text: "",
-      annotations: [event.annotation],
+      annotations: [
+        convertOpenAIAnnotationToLangChain(
+          event.annotation as OpenAIAnnotation
+        ),
+      ],
       index: event.content_index,
-    });
+    } satisfies ContentBlock.Text);
   } else if (
     event.type === "response.output_item.added" &&
     event.item.type === "message"
@@ -513,6 +615,24 @@ export const convertResponsesDeltaToChatGenerationChunk: Converter<
     additional_kwargs.tool_outputs = [event.item];
   } else if (
     event.type === "response.output_item.done" &&
+    event.item.type === "image_generation_call"
+  ) {
+    // Add image as proper content block if result is available
+    if (event.item.result) {
+      content.push({
+        type: "image",
+        mimeType: "image/png",
+        data: event.item.result,
+        id: event.item.id,
+        metadata: {
+          status: event.item.status,
+        },
+      } satisfies ContentBlock.Multimodal.Image);
+    }
+    // Also store in tool_outputs for backwards compatibility and multi-turn editing (needs id)
+    additional_kwargs.tool_outputs = [event.item];
+  } else if (
+    event.type === "response.output_item.done" &&
     [
       "web_search_call",
       "file_search_call",
@@ -520,7 +640,6 @@ export const convertResponsesDeltaToChatGenerationChunk: Converter<
       "mcp_call",
       "mcp_list_tools",
       "mcp_approval_request",
-      "image_generation_call",
       "custom_tool_call",
     ].includes(event.item.type)
   ) {
@@ -583,11 +702,31 @@ export const convertResponsesDeltaToChatGenerationChunk: Converter<
       type: event.item.type,
       ...(summary ? { summary } : {}),
     };
+
+    // Also elevate reasoning to content for UI rendering
+    const reasoningText = event.item.summary
+      ?.map((s) => s.text)
+      .filter(Boolean)
+      .join("");
+    if (reasoningText) {
+      content.push({
+        type: "reasoning",
+        reasoning: reasoningText,
+      });
+    }
   } else if (event.type === "response.reasoning_summary_part.added") {
     additional_kwargs.reasoning = {
       type: "reasoning",
       summary: [{ ...event.part, index: event.summary_index }],
     };
+
+    // Also elevate reasoning to content for UI rendering
+    if (event.part.text) {
+      content.push({
+        type: "reasoning",
+        reasoning: event.part.text,
+      });
+    }
   } else if (event.type === "response.reasoning_summary_text.delta") {
     additional_kwargs.reasoning = {
       type: "reasoning",
@@ -599,6 +738,14 @@ export const convertResponsesDeltaToChatGenerationChunk: Converter<
         },
       ],
     };
+
+    // Also elevate reasoning to content for UI rendering
+    if (event.delta) {
+      content.push({
+        type: "reasoning",
+        reasoning: event.delta,
+      });
+    }
   } else if (event.type === "response.image_generation_call.partial_image") {
     // noop/fixme: retaining partial images in a message chunk means that _all_
     // partial images get kept in history, so we don't do anything here.
@@ -612,7 +759,7 @@ export const convertResponsesDeltaToChatGenerationChunk: Converter<
     text: content.map((part) => part.text).join(""),
     message: new AIMessageChunk({
       id,
-      content: content as MessageContent,
+      content,
       tool_call_chunks,
       usage_metadata,
       additional_kwargs,
@@ -787,23 +934,24 @@ export const convertStandardContentMessageToResponsesInput: Converter<
     const resolveFileItem = (
       block: ContentBlock.Multimodal.File | ContentBlock.Multimodal.Video
     ): OpenAIClient.Responses.ResponseInputFile | undefined => {
-      const filename = getRequiredFilenameFromMetadata(block);
-
-      if (block.fileId && typeof filename === "string") {
+      if (block.fileId) {
+        const filename = getFilenameFromMetadata(block);
         return {
           type: "input_file",
           file_id: block.fileId,
           ...(filename ? { filename } : {}),
         };
       }
-      if (block.url && typeof filename === "string") {
+      if (block.url) {
+        const filename = getFilenameFromMetadata(block);
         return {
+          ...(filename ? { filename } : {}),
           type: "input_file",
           file_url: block.url,
-          ...(filename ? { filename } : {}),
         };
       }
-      if (block.data && typeof filename === "string") {
+      if (block.data) {
+        const filename = getRequiredFilenameFromMetadata(block);
         const encoded =
           typeof block.data === "string"
             ? block.data
@@ -877,8 +1025,8 @@ export const convertStandardContentMessageToResponsesInput: Converter<
         block.status === "success"
           ? "completed"
           : block.status === "error"
-          ? "incomplete"
-          : undefined;
+            ? "incomplete"
+            : undefined;
       return {
         type: "function_call_output",
         call_id: block.toolCallId ?? "",
@@ -1041,13 +1189,13 @@ export const convertMessagesToResponsesInput: Converter<
         return convertStandardContentMessageToResponsesInput(lcMsg);
       }
 
-      const additional_kwargs = lcMsg.additional_kwargs as
-        | BaseMessageFields["additional_kwargs"] & {
-            [_FUNCTION_CALL_IDS_MAP_KEY]?: Record<string, string>;
-            reasoning?: OpenAIClient.Responses.ResponseReasoningItem;
-            type?: string;
-            refusal?: string;
-          };
+      const additional_kwargs =
+        lcMsg.additional_kwargs as BaseMessageFields["additional_kwargs"] & {
+          [_FUNCTION_CALL_IDS_MAP_KEY]?: Record<string, string>;
+          reasoning?: OpenAIClient.Responses.ResponseReasoningItem;
+          type?: string;
+          refusal?: string;
+        };
 
       let role = messageToOpenAIRole(lcMsg);
       if (role === "system" && isReasoningModel(model)) role = "developer";
@@ -1131,12 +1279,27 @@ export const convertMessagesToResponsesInput: Converter<
           };
         }
 
+        // Check if content contains provider-native OpenAI content blocks
+        // that should be passed through without stringification
+        const isProviderNativeContent =
+          Array.isArray(toolMessage.content) &&
+          toolMessage.content.every(
+            (item) =>
+              typeof item === "object" &&
+              item !== null &&
+              "type" in item &&
+              (item.type === "input_file" ||
+                item.type === "input_image" ||
+                item.type === "input_text")
+          );
+
         return {
           type: "function_call_output",
           call_id: toolMessage.tool_call_id,
           id: toolMessage.id?.startsWith("fc_") ? toolMessage.id : undefined,
-          output:
-            typeof toolMessage.content !== "string"
+          output: isProviderNativeContent
+            ? (toolMessage.content as OpenAIClient.Responses.ResponseFunctionCallOutputItemList)
+            : typeof toolMessage.content !== "string"
               ? JSON.stringify(toolMessage.content)
               : toolMessage.content,
         };

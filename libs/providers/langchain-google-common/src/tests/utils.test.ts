@@ -104,6 +104,26 @@ describe("schemaToGeminiParameters", () => {
       expect((arrayItemsSchema as any).additionalProperties).toBeUndefined();
     }
   });
+
+  test("should throw error for union types", () => {
+    const zodSchema = z.object({
+      unionField: z.union([z.string(), z.number()]),
+    });
+
+    expect(() => schemaToGeminiParameters(zodSchema)).toThrow(
+      "zod_to_gemini_parameters: Gemini cannot handle union types"
+    );
+  });
+
+  test("converts positive() to minimum constraint", () => {
+    const zodSchema = z.object({
+      price: z.number().positive().describe("Product price"),
+    });
+
+    const convertedSchema = schemaToGeminiParameters(zodSchema);
+    expect(convertedSchema.properties?.price?.minimum).toBe(0.01);
+    expect(convertedSchema.properties?.price?.exclusiveMinimum).toBeUndefined();
+  });
 });
 
 describe("media core", () => {
@@ -385,9 +405,8 @@ describe("media core", () => {
 
     test("environment", async () => {
       expect(resolverMemory.length).toEqual(2);
-      const fooBlob = await mediaManager.resolvers?.[0]?.fetch(
-        "resolve://host/foo"
-      );
+      const fooBlob =
+        await mediaManager.resolvers?.[0]?.fetch("resolve://host/foo");
       expect(await fooBlob?.asString()).toEqual("fooing");
     });
 

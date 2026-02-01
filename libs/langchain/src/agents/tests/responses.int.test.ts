@@ -182,6 +182,54 @@ describe("structured output handling", () => {
   });
 
   describe("providerStrategy", () => {
+    it("should work with providerStrategy and tools", async () => {
+      const { tool: weatherTool, mock: weatherMock } = makeTool(
+        ({ location }: { location: string }) =>
+          `The weather in ${location} is sunny with a high of 75°F.`,
+        {
+          name: "get_weather",
+          description: "Get the current weather for a location",
+          schema: z.object({
+            location: z
+              .string()
+              .describe("The city and state, e.g. San Francisco, CA"),
+          }),
+        }
+      );
+
+      const ResponseSchema = z.object({
+        answer: z.string().describe("The final answer to the user's question"),
+        confidence: z
+          .number()
+          .min(0)
+          .max(1)
+          .describe("Confidence level from 0 to 1"),
+      });
+
+      const agent = createAgent({
+        model: "openai:gpt-4o",
+        systemPrompt:
+          "You are a helpful assistant. Use the available tools to answer questions.",
+        tools: [weatherTool],
+        responseFormat: providerStrategy(ResponseSchema),
+      });
+
+      const result = await agent.invoke({
+        messages: [
+          new HumanMessage("What's the weather like in San Francisco?"),
+        ],
+      });
+
+      // Verify tool was called
+      expect(weatherMock).toHaveBeenCalledTimes(1);
+
+      // Verify structured response is present and correctly parsed
+      expect(result.structuredResponse).toBeDefined();
+      expect(result.structuredResponse.answer).toBeDefined();
+      expect(typeof result.structuredResponse.answer).toBe("string");
+      expect(typeof result.structuredResponse.confidence).toBe("number");
+    });
+
     it("should support native structured output for newer Anthropic models", async () => {
       const model = new ChatAnthropic({
         model: "claude-sonnet-4-5-20250929",
@@ -243,5 +291,132 @@ describe("Strategy Selection", () => {
         msg.tool_calls?.some((tc) => tc.name.startsWith("extract-"))
     );
     expect(hasExtractToolCalls).toBe(false);
+  });
+});
+
+describe("Thinking models with responseFormat", () => {
+  it("should parse structured response from thinking model with providerStrategy", async () => {
+    // Use Anthropic model with thinking enabled
+    const model = new ChatAnthropic({
+      model: "claude-haiku-4-5-20251001",
+      thinking: { type: "enabled", budget_tokens: 5000 },
+      maxTokens: 15000,
+    });
+
+    // Define tools that should be called before returning structured output
+    const { tool: getDetailByName, mock: getDetailByNameMock } = makeTool(
+      ({ name }: { name: string }) =>
+        JSON.stringify({
+          name,
+          color: "blue",
+          size: "large",
+        }),
+      {
+        name: "get_detail_by_name",
+        description: "Get details about a shape by its name",
+        schema: z.object({
+          name: z.string(),
+        }),
+      }
+    );
+
+    const { tool: deleteShape, mock: deleteShapeMock } = makeTool(
+      ({ name }: { name: string }) =>
+        `Shape "${name}" has been deleted successfully.`,
+      {
+        name: "delete_shape",
+        description: "Delete a shape by its name",
+        schema: z.object({
+          name: z.string(),
+        }),
+      }
+    );
+
+    const ResponseSchema = z.object({
+      shapeName: z.string().describe("The name of the shape"),
+      details: z.string().describe("Details about the shape"),
+      wasDeleted: z.boolean().describe("Whether the shape was deleted"),
+    });
+
+    const agent = createAgent({
+      model,
+      tools: [getDetailByName, deleteShape],
+      systemPrompt: `You are a helpful shape management assistant.
+When asked to perform operations on shapes, you MUST:
+1. First use the get_detail_by_name tool to get information about the shape
+2. Then use the delete_shape tool if deletion is requested
+3. Only after using the tools, return the structured response`,
+      responseFormat: providerStrategy(ResponseSchema),
+    });
+
+    const result = await agent.invoke({
+      messages: [
+        new HumanMessage(
+          "Please delete the circle shape and tell me about it first"
+        ),
+      ],
+    });
+
+    // Verify user tools were called
+    expect(getDetailByNameMock).toHaveBeenCalledTimes(1);
+    expect(deleteShapeMock).toHaveBeenCalledTimes(1);
+
+    // Verify structured response is present and correctly parsed
+    // This was previously undefined due to thinking model content being an array
+    expect(result.structuredResponse).toBeDefined();
+    expect(result.structuredResponse.shapeName).toBe("circle");
+    expect(result.structuredResponse.wasDeleted).toBe(true);
+    expect(typeof result.structuredResponse.details).toBe("string");
+
+    // Verify no extract- tool calls (providerStrategy uses native structured output)
+    const hasExtractToolCalls = result.messages.some(
+      (msg) =>
+        AIMessage.isInstance(msg) &&
+        msg.tool_calls?.some((tc) => tc.name.startsWith("extract-"))
+    );
+    expect(hasExtractToolCalls).toBe(false);
+
+    // Verify AI messages contain thinking blocks (array content)
+    const aiMessages = result.messages.filter(AIMessage.isInstance);
+    const hasThinkingContent = aiMessages.some(
+      (msg) =>
+        Array.isArray(msg.content) &&
+        msg.content.some(
+          (block: any) =>
+            typeof block === "object" &&
+            block !== null &&
+            block.type === "thinking"
+        )
+    );
+    expect(hasThinkingContent).toBe(true);
+  });
+
+  it("should fail with toolStrategy and thinking models due to tool_choice conflict", async () => {
+    // Use Anthropic model with thinking enabled
+    const model = new ChatAnthropic({
+      model: "claude-haiku-4-5-20251001",
+      thinking: { type: "enabled", budget_tokens: 5000 },
+      maxTokens: 15000,
+    });
+
+    const ResponseSchema = z.object({
+      answer: z.string(),
+    });
+
+    const agent = createAgent({
+      model,
+      tools: [],
+      // toolStrategy uses tool_choice: "any" which conflicts with thinking mode
+      responseFormat: toolStrategy(ResponseSchema),
+    });
+
+    // This should fail because Anthropic doesn't allow thinking with forced tool use
+    await expect(
+      agent.invoke({
+        messages: [new HumanMessage("What is 2+2?")],
+      })
+    ).rejects.toThrow(
+      /Thinking may not be enabled when tool_choice forces tool use/
+    );
   });
 });

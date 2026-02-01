@@ -37,7 +37,10 @@ export class SitemapLoader
 
   chunkSize: number;
 
-  constructor(public webPath: string, params: SitemapLoaderParams = {}) {
+  constructor(
+    public webPath: string,
+    params: SitemapLoaderParams = {}
+  ) {
     const paramsWithDefaults = { chunkSize: DEFAULT_CHUNK_SIZE, ...params };
     let path = webPath.endsWith("/") ? webPath.slice(0, -1) : webPath;
     // Allow for custom sitemap paths to be passed in with the url.

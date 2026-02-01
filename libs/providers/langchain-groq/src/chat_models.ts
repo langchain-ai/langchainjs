@@ -379,6 +379,8 @@ function groqResponseToChatMessage(
   const rawToolCalls: OpenAIToolCall[] | undefined = message.tool_calls as
     | OpenAIToolCall[]
     | undefined;
+  // Add model_provider for block translator lookup
+  const enrichedMetadata = { ...responseMetadata, model_provider: "groq" };
   switch (message.role) {
     case "assistant": {
       const toolCalls = [];
@@ -397,7 +399,7 @@ function groqResponseToChatMessage(
         tool_calls: toolCalls,
         invalid_tool_calls: invalidToolCalls,
         usage_metadata: usageMetadata,
-        response_metadata: responseMetadata,
+        response_metadata: enrichedMetadata,
       });
     }
     default:
@@ -456,7 +458,7 @@ function _convertDeltaToMessageChunk(
     groqMessageId = xGroq.id;
   }
 
-  const response_metadata = { usage, timing };
+  const response_metadata = { usage, timing, model_provider: "groq" };
   if (role === "user") {
     return new HumanMessageChunk({ content, response_metadata });
   } else if (role === "assistant") {
@@ -1176,6 +1178,9 @@ export class ChatGroq extends BaseChatModel<
     let responseMetadata: Record<string, any> | undefined;
 
     for await (const data of response) {
+      if (options.signal?.aborted) {
+        return;
+      }
       responseMetadata = data;
       const choice = data?.choices[0];
       if (!choice) {
@@ -1251,6 +1256,7 @@ export class ChatGroq extends BaseChatModel<
     options: this["ParsedCallOptions"],
     runManager?: CallbackManagerForLLMRun
   ): Promise<ChatResult> {
+    options.signal?.throwIfAborted();
     if (this.streaming) {
       const tokenUsage: TokenUsage = {};
       const stream = this._streamResponseChunks(messages, options, runManager);
@@ -1378,7 +1384,7 @@ export class ChatGroq extends BaseChatModel<
 
   withStructuredOutput<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    RunOutput extends Record<string, any> = Record<string, any>
+    RunOutput extends Record<string, any> = Record<string, any>,
   >(
     outputSchema:
       | InteropZodType<RunOutput>
@@ -1389,7 +1395,7 @@ export class ChatGroq extends BaseChatModel<
 
   withStructuredOutput<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    RunOutput extends Record<string, any> = Record<string, any>
+    RunOutput extends Record<string, any> = Record<string, any>,
   >(
     outputSchema:
       | InteropZodType<RunOutput>
@@ -1400,7 +1406,7 @@ export class ChatGroq extends BaseChatModel<
 
   withStructuredOutput<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    RunOutput extends Record<string, any> = Record<string, any>
+    RunOutput extends Record<string, any> = Record<string, any>,
   >(
     outputSchema:
       | InteropZodType<RunOutput>

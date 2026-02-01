@@ -41,6 +41,13 @@ function isRunnableBinding(a: string[]): boolean {
  * @param options.includeModel Whether to also instantiate and attach a model instance to the prompt,
  *   if the prompt has associated model metadata. If set to true, invoking the resulting pulled prompt will
  *   also invoke the instantiated model. You must have the appropriate LangChain integration package installed.
+ * @param options.secrets A map of secrets to use when loading, e.g.
+ *   {'OPENAI_API_KEY': 'sk-...'}`.
+ *   If a secret is not found in the map, it will be loaded from the
+ *   environment if `secrets_from_env` is `True`. Should only be needed when
+ *   `includeModel` is `true`.
+ * @param options.secretsFromEnv Whether to load secrets from environment variables.
+ *   Use with caution and only with trusted prompts.
  * @returns
  */
 export async function pull<T extends Runnable>(
@@ -49,6 +56,8 @@ export async function pull<T extends Runnable>(
     apiKey?: string;
     apiUrl?: string;
     includeModel?: boolean;
+    secrets?: Record<string, string>;
+    secretsFromEnv?: boolean;
   }
 ) {
   const promptObject = await basePull(ownerRepoCommit, options);
@@ -75,9 +84,10 @@ export async function pull<T extends Runnable>(
   }
   const loadedPrompt = await load<T>(
     JSON.stringify(promptObject.manifest),
-    undefined,
+    options?.secrets,
     generateOptionalImportMap(modelClass),
-    generateModelImportMap(modelClass)
+    generateModelImportMap(modelClass),
+    options?.secretsFromEnv
   );
   return bindOutputSchema(loadedPrompt);
 }

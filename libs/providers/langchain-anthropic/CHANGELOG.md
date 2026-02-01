@@ -1,5 +1,152 @@
 # @langchain/anthropic
 
+## 1.3.13
+
+### Patch Changes
+
+- [#9881](https://github.com/langchain-ai/langchainjs/pull/9881) [`0c64698`](https://github.com/langchain-ai/langchainjs/commit/0c646989761d11eaa66a3290392ddb94ad54d5bd) Thanks [@marvikomo](https://github.com/marvikomo)! - handle standard file content blocks
+
+- [#9900](https://github.com/langchain-ai/langchainjs/pull/9900) [`a9b5059`](https://github.com/langchain-ai/langchainjs/commit/a9b50597186002221aaa4585246e569fa44c27c8) Thanks [@hntrl](https://github.com/hntrl)! - Improved abort signal handling for chat models:
+  - Added `ModelAbortError` class in `@langchain/core/errors` that contains partial output when a model invocation is aborted mid-stream
+  - `invoke()` now throws `ModelAbortError` with accumulated `partialOutput` when aborted during streaming (when using streaming callback handlers)
+  - `stream()` throws a regular `AbortError` when aborted (since chunks are already yielded to the caller)
+  - All provider implementations now properly check and propagate abort signals in both `_generate()` and `_streamResponseChunks()` methods
+  - Added standard tests for abort signal behavior
+
+- [#9900](https://github.com/langchain-ai/langchainjs/pull/9900) [`a9b5059`](https://github.com/langchain-ai/langchainjs/commit/a9b50597186002221aaa4585246e569fa44c27c8) Thanks [@hntrl](https://github.com/hntrl)! - fix(providers): add proper abort signal handling for invoke and stream operations
+  - Added early abort check (`signal.throwIfAborted()`) at the start of `_generate` methods to immediately throw when signal is already aborted
+  - Added abort signal checks inside streaming loops in `_streamResponseChunks` to return early when signal is aborted
+  - Propagated abort signals to underlying SDK calls where applicable (Google GenAI, Google Common/VertexAI, Cohere)
+  - Added standard tests for abort signal behavior in `@langchain/standard-tests`
+
+  This enables proper cancellation behavior for both invoke and streaming operations, and allows fallback chains to correctly proceed to the next runnable when the previous one is aborted.
+
+- Updated dependencies [[`a9b5059`](https://github.com/langchain-ai/langchainjs/commit/a9b50597186002221aaa4585246e569fa44c27c8), [`a9b5059`](https://github.com/langchain-ai/langchainjs/commit/a9b50597186002221aaa4585246e569fa44c27c8)]:
+  - @langchain/core@1.1.18
+
+## 1.3.12
+
+### Patch Changes
+
+- [#9854](https://github.com/langchain-ai/langchainjs/pull/9854) [`160b5bf`](https://github.com/langchain-ai/langchainjs/commit/160b5bfe49f31190d28ec10a95075ef845c49fa3) Thanks [@christian-bromann](https://github.com/christian-bromann)! - fix(anthropic): apply cache_control at final formatting layer
+
+- [#9852](https://github.com/langchain-ai/langchainjs/pull/9852) [`35c7723`](https://github.com/langchain-ai/langchainjs/commit/35c7723b9953cc417cedb362e697632936d50820) Thanks [@marvikomo](https://github.com/marvikomo)! - Fix image content blocks being silently dropped when using ContentBlock.Multimodal.Image format with url, data, or fileId properties
+
+- [#9841](https://github.com/langchain-ai/langchainjs/pull/9841) [`54dfdce`](https://github.com/langchain-ai/langchainjs/commit/54dfdce99b1d1c16e1024c136ca86e7d78d76d80) Thanks [@yukukotani](https://github.com/yukukotani)! - Fix input_tokens calculation in usage metadata
+
+- Updated dependencies [[`05a9733`](https://github.com/langchain-ai/langchainjs/commit/05a9733448a10764c0bfd070af859c33e623b998)]:
+  - @langchain/core@1.1.17
+
+## 1.3.11
+
+### Patch Changes
+
+- [#9809](https://github.com/langchain-ai/langchainjs/pull/9809) [`aeb63b7`](https://github.com/langchain-ai/langchainjs/commit/aeb63b729a575775b19d988a1e14ae17f66a8373) Thanks [@christian-bromann](https://github.com/christian-bromann)! - fix(anthropic): consolidate input_json_delta blocks in streaming toolcalls
+
+- Updated dependencies [[`70387a1`](https://github.com/langchain-ai/langchainjs/commit/70387a144464539d65a546c8130cf51dfad025a1), [`a7c6ec5`](https://github.com/langchain-ai/langchainjs/commit/a7c6ec51ab9baa186ab5ebf815599c08f5c7e8ab), [`5e04543`](https://github.com/langchain-ai/langchainjs/commit/5e045435a783fdae44bc9a43e01a8e5eb7100db2), [`40b4467`](https://github.com/langchain-ai/langchainjs/commit/40b446762445575844610ee528abc77c247b2c43), [`17e30bd`](https://github.com/langchain-ai/langchainjs/commit/17e30bd7f4c7bdf87c9c30304b3b9e121cc1fbbc)]:
+  - @langchain/core@1.1.16
+
+## 1.3.10
+
+### Patch Changes
+
+- [#9792](https://github.com/langchain-ai/langchainjs/pull/9792) [`7169eba`](https://github.com/langchain-ai/langchainjs/commit/7169ebac71574daf370d7c2f5b3e8bbfe4e25df7) Thanks [@xkcm](https://github.com/xkcm)! - Fixed converting partial tool inputs
+
+- Updated dependencies [[`230462d`](https://github.com/langchain-ai/langchainjs/commit/230462d28c3a8b5ccadf433ea2f523eb6e658de6)]:
+  - @langchain/core@1.1.15
+
+## 1.3.9
+
+### Patch Changes
+
+- Updated dependencies [[`bd1ab45`](https://github.com/langchain-ai/langchainjs/commit/bd1ab45364391f69ce93ecba36a4a15dafca2b76)]:
+  - @langchain/core@1.1.14
+
+## 1.3.8
+
+### Patch Changes
+
+- [#9777](https://github.com/langchain-ai/langchainjs/pull/9777) [`3efe79c`](https://github.com/langchain-ai/langchainjs/commit/3efe79c62ff2ffe0ada562f7eecd85be074b649a) Thanks [@christian-bromann](https://github.com/christian-bromann)! - fix(core): properly elevate reasoning tokens
+
+- Updated dependencies [[`3efe79c`](https://github.com/langchain-ai/langchainjs/commit/3efe79c62ff2ffe0ada562f7eecd85be074b649a), [`b8561c1`](https://github.com/langchain-ai/langchainjs/commit/b8561c17556bdf7a3ff8d70bc307422642a9172e)]:
+  - @langchain/core@1.1.13
+
+## 1.3.7
+
+### Patch Changes
+
+- Updated dependencies [[`23be5af`](https://github.com/langchain-ai/langchainjs/commit/23be5afd59b5f4806edef11937ce5e2ba300f7ee)]:
+  - @langchain/core@1.1.12
+
+## 1.3.6
+
+### Patch Changes
+
+- Updated dependencies [[`a46a249`](https://github.com/langchain-ai/langchainjs/commit/a46a24983fd0fea649d950725a2673b3c435275f)]:
+  - @langchain/core@1.1.11
+
+## 1.3.5
+
+### Patch Changes
+
+- Updated dependencies [[`817fc9a`](https://github.com/langchain-ai/langchainjs/commit/817fc9a56d4699f3563a6e153b13eadf7bcc661b)]:
+  - @langchain/core@1.1.10
+
+## 1.3.4
+
+### Patch Changes
+
+- Updated dependencies [[`56600b9`](https://github.com/langchain-ai/langchainjs/commit/56600b94f8e185f44d4288b7a9b66c55778938dd), [`dc5c2ac`](https://github.com/langchain-ai/langchainjs/commit/dc5c2ac00f86dd2feeba9843d708926a5f38202e), [`c28d24a`](https://github.com/langchain-ai/langchainjs/commit/c28d24a8770f6d0e543cde116b0e38b3baf21301), [`bfcb87d`](https://github.com/langchain-ai/langchainjs/commit/bfcb87d23c580c7881f650960a448fe2e54a30b3)]:
+  - @langchain/core@1.1.9
+
+## 1.3.3
+
+### Patch Changes
+
+- Updated dependencies [[`e5063f9`](https://github.com/langchain-ai/langchainjs/commit/e5063f9c6e9989ea067dfdff39262b9e7b6aba62), [`8996647`](https://github.com/langchain-ai/langchainjs/commit/89966470e8c0b112ce4f9a326004af6a4173f9e6)]:
+  - @langchain/core@1.1.8
+
+## 1.3.2
+
+### Patch Changes
+
+- Updated dependencies [[`df9c42b`](https://github.com/langchain-ai/langchainjs/commit/df9c42b3ab61b85309ab47256e1d93c3188435ee), [`8d2982b`](https://github.com/langchain-ai/langchainjs/commit/8d2982bb94c0f4e4314ace3cc98a1ae87571b1ed), [`af664be`](https://github.com/langchain-ai/langchainjs/commit/af664becc0245b2315ea2f784c9a6c1d7622dbb4), [`ffb2402`](https://github.com/langchain-ai/langchainjs/commit/ffb24026cd93e58219519ee24c6e23ea57cb5bde)]:
+  - @langchain/core@1.1.7
+
+## 1.3.1
+
+### Patch Changes
+
+- [#9669](https://github.com/langchain-ai/langchainjs/pull/9669) [`5068787`](https://github.com/langchain-ai/langchainjs/commit/50687872ad9f8cf83f42ca6130dd603527ec5402) Thanks [@hntrl](https://github.com/hntrl)! - set empty tool array in invocation params
+
+- Updated dependencies [[`a7b2a7d`](https://github.com/langchain-ai/langchainjs/commit/a7b2a7db5ef57df3731ae6c9931f4b663e909505), [`a496c5f`](https://github.com/langchain-ai/langchainjs/commit/a496c5fc64d94cc0809216325b0f1bfde3f92c45), [`1da1325`](https://github.com/langchain-ai/langchainjs/commit/1da1325aea044fb37af54a9de1f4ae0b9f47d4a2)]:
+  - @langchain/core@1.1.6
+
+## 1.3.0
+
+### Minor Changes
+
+- [#9540](https://github.com/langchain-ai/langchainjs/pull/9540) [`ece5c09`](https://github.com/langchain-ai/langchainjs/commit/ece5c09f461e6bcc93142e8f8c07316743e28d76) Thanks [@christian-bromann](https://github.com/christian-bromann)! - add named text editor tool
+
+- [#9588](https://github.com/langchain-ai/langchainjs/pull/9588) [`e9a7adc`](https://github.com/langchain-ai/langchainjs/commit/e9a7adca29dab5f1af47bbf7492d5cdebf9675fe) Thanks [@yu-iskw](https://github.com/yu-iskw)! - Expose `ChatAnthropicInput` type for improved type safety and user experience.
+
+  This change introduces a new exported type `ChatAnthropicInput` which is an intersection of `AnthropicInput` and `BaseChatModelParams`. This allows LangChain users to define and pass ChatAnthropic configuration options with full type safety and IntelliSense.
+
+### Patch Changes
+
+- [#9539](https://github.com/langchain-ai/langchainjs/pull/9539) [`12305b4`](https://github.com/langchain-ai/langchainjs/commit/12305b4327f41e60110c72d74c82e12ee27d20a5) Thanks [@christian-bromann](https://github.com/christian-bromann)! - feat(anthropic): support tool search tool
+
+- [#9614](https://github.com/langchain-ai/langchainjs/pull/9614) [`97de9af`](https://github.com/langchain-ai/langchainjs/commit/97de9afbe7ebaffb7c0b2682a80bf1e9c2187536) Thanks [@iltenahmet](https://github.com/iltenahmet)! - fix(anthropic): Fix `.js` import issue in `chat_models.ts`
+
+- [#9538](https://github.com/langchain-ai/langchainjs/pull/9538) [`4836f6c`](https://github.com/langchain-ai/langchainjs/commit/4836f6c48d8f04ca99c59a27d5a9bf876a6ad805) Thanks [@christian-bromann](https://github.com/christian-bromann)! - add named webfetch tool
+
+- [#9541](https://github.com/langchain-ai/langchainjs/pull/9541) [`a0d2d6c`](https://github.com/langchain-ai/langchainjs/commit/a0d2d6cad0455e24f94282d43210030580c7d26a) Thanks [@christian-bromann](https://github.com/christian-bromann)! - add named computer use tool
+
+- [#9541](https://github.com/langchain-ai/langchainjs/pull/9541) [`34547f5`](https://github.com/langchain-ai/langchainjs/commit/34547f5933a296a7423773e6d1fdd1022ff4936e) Thanks [@christian-bromann](https://github.com/christian-bromann)! - add named mcp toolset tool
+
+- Updated dependencies [[`005c729`](https://github.com/langchain-ai/langchainjs/commit/005c72903bcdf090e0f4c58960c8c243481f9874), [`ab78246`](https://github.com/langchain-ai/langchainjs/commit/ab782462753e6c3ae5d55c0c251f795af32929d5), [`8cc81c7`](https://github.com/langchain-ai/langchainjs/commit/8cc81c7cee69530f7a6296c69123edbe227b2fce), [`f32e499`](https://github.com/langchain-ai/langchainjs/commit/f32e4991d0e707324e3f6af287a1ee87ab833b7e), [`a28d83d`](https://github.com/langchain-ai/langchainjs/commit/a28d83d49dd1fd31e67b52a44abc70f2cc2a2026), [`2e5ad70`](https://github.com/langchain-ai/langchainjs/commit/2e5ad70d16c1f13eaaea95336bbe2ec4a4a4954a), [`e456c66`](https://github.com/langchain-ai/langchainjs/commit/e456c661aa1ab8f1ed4a98c40616f5a13270e88e), [`1cfe603`](https://github.com/langchain-ai/langchainjs/commit/1cfe603e97d8711343ae5f1f5a75648e7bd2a16e)]:
+  - @langchain/core@1.1.5
+
 ## 1.2.3
 
 ### Patch Changes

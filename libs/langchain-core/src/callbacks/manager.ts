@@ -839,7 +839,9 @@ export class CallbackManager
     runType: string | undefined = undefined,
     _tags: string[] | undefined = undefined,
     _metadata: Record<string, unknown> | undefined = undefined,
-    runName: string | undefined = undefined
+    runName: string | undefined = undefined,
+    _parentRunId: string | undefined = undefined,
+    extra: Record<string, unknown> | undefined = undefined
   ): Promise<CallbackManagerForChainRun> {
     await Promise.all(
       this.handlers.map((handler) => {
@@ -858,7 +860,8 @@ export class CallbackManager
             this.tags,
             this.metadata,
             runType,
-            runName
+            runName,
+            extra
           );
         }
         return consumeCallback(async () => {
@@ -871,7 +874,8 @@ export class CallbackManager
               this.tags,
               this.metadata,
               runType,
-              runName
+              runName,
+              extra
             );
           } catch (err) {
             const logFunction = handler.raiseError
@@ -1220,7 +1224,7 @@ export class CallbackManager
       options?.verbose;
 
     const tracingV2Enabled =
-      LangChainTracer.getTraceableRunTree()?.tracingEnabled ||
+      LangChainTracer.getTraceableRunTree()?.tracingEnabled ??
       isTracingEnabled();
 
     const tracingEnabled =

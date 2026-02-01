@@ -14,7 +14,7 @@ import type { DocumentInterface } from "./document.js";
  */
 export abstract class BaseDocumentTransformer<
   RunInput extends DocumentInterface[] = DocumentInterface[],
-  RunOutput extends DocumentInterface[] = DocumentInterface[]
+  RunOutput extends DocumentInterface[] = DocumentInterface[],
 > extends Runnable<RunInput, RunOutput> {
   lc_namespace = ["langchain_core", "documents", "transformers"];
 

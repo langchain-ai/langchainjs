@@ -22,9 +22,11 @@ function createMockModel(name = "ChatAnthropic", modelType = "anthropic") {
   const invokeCallback = vi
     .fn()
     .mockResolvedValue(new AIMessage("Response from model"));
-  return {
+  const bindToolsCallback = vi.fn();
+  // Create a mock that tracks bindTools calls and returns itself
+  const mockModel = {
     getName: () => name,
-    bindTools: vi.fn().mockReturnThis(),
+    bindTools: bindToolsCallback,
     _streamResponseChunks: vi.fn().mockReturnThis(),
     bind: vi.fn().mockReturnThis(),
     invoke: invokeCallback,
@@ -32,7 +34,19 @@ function createMockModel(name = "ChatAnthropic", modelType = "anthropic") {
     _modelType: modelType,
     _generate: vi.fn(),
     _llmType: () => modelType,
-  } as unknown as LanguageModelLike;
+    _lastBindToolsOptions: null as Record<string, unknown> | null,
+  };
+  // Store the options passed to bindTools for inspection
+  bindToolsCallback.mockImplementation(
+    (_tools: unknown, options: Record<string, unknown>) => {
+      mockModel._lastBindToolsOptions = options;
+      return mockModel;
+    }
+  );
+  return mockModel as unknown as LanguageModelLike & {
+    _lastBindToolsOptions: Record<string, unknown> | null;
+    bindTools: (tools: unknown, options: Record<string, unknown>) => void;
+  };
 }
 
 const consoleWarn = vi.spyOn(console, "warn");
@@ -42,7 +56,43 @@ describe("anthropicPromptCachingMiddleware", () => {
     vi.clearAllMocks();
   });
 
-  it("should add cache_control to model settings when conditions are met", async () => {
+  it("should add cache_control to modelSettings when conditions are met", async () => {
+    const model = createMockModel();
+
+    const middleware = anthropicPromptCachingMiddleware({
+      ttl: "5m",
+      minMessagesToCache: 3,
+    });
+
+    const agent = createAgent({
+      model,
+      middleware: [middleware],
+    });
+
+    // Test with enough messages to trigger caching
+    const messages = [
+      new SystemMessage("You are a helpful assistant"),
+      new HumanMessage("Hello"),
+      new AIMessage("Hi there!"),
+      new HumanMessage("How are you?"),
+      new AIMessage("I'm doing well, thanks!"),
+      new HumanMessage("What's the weather like?"),
+    ];
+
+    await agent.invoke({ messages });
+
+    // Verify bindTools was called with cache_control in options
+    expect(model.bindTools).toHaveBeenCalled();
+    const bindToolsOptions = (model as ReturnType<typeof createMockModel>)
+      ._lastBindToolsOptions;
+    expect(bindToolsOptions).toHaveProperty("cache_control");
+    expect(bindToolsOptions?.cache_control).toEqual({
+      type: "ephemeral",
+      ttl: "5m",
+    });
+  });
+
+  it("should pass cache_control via modelSettings, not modify messages", async () => {
     const model = createMockModel();
 
     const middleware = anthropicPromptCachingMiddleware({
@@ -69,52 +119,15 @@ describe("anthropicPromptCachingMiddleware", () => {
 
     expect(model.invoke).toHaveBeenCalled();
     const callArgs = (model.invoke as unknown as MockInstance).mock.calls[0];
+
+    // Messages should NOT have cache_control directly on content blocks
+    // (the cache_control is applied later by ChatAnthropic during formatting)
+    // The last message should remain unchanged - still a simple string content
     const lastMessage = callArgs[0].at(-1);
-    expect(lastMessage.content[0]).toHaveProperty("cache_control");
-    expect(lastMessage.content[0].cache_control).toEqual({
-      type: "ephemeral",
-      ttl: "5m",
-    });
-  });
-
-  it("should not add cache_control on multiple messages", async () => {
-    const model = createMockModel();
-
-    const middleware = anthropicPromptCachingMiddleware({
-      ttl: "5m",
-      minMessagesToCache: 3,
-    });
-
-    const agent = createAgent({
-      model,
-      middleware: [middleware],
-    });
-
-    // Test with enough messages to trigger caching
-    const messages = [
-      new SystemMessage("You are a helpful assistant"),
-      new HumanMessage("Hello"),
-      new AIMessage("Hi there!"),
-      new HumanMessage("How are you?"),
-      new AIMessage("I'm doing well, thanks!"),
-      new HumanMessage("What's the weather like?"),
-    ];
-
-    await agent.invoke({ messages });
-    await agent.invoke({
-      messages: [...messages, new HumanMessage("How are you?")],
-    });
-
-    expect(model.invoke).toHaveBeenCalled();
-    const [secondLastMessage, lastMessage] = (
-      model.invoke as unknown as MockInstance
-    ).mock.calls[1][0].slice(-2);
-    expect(secondLastMessage.content[0]).not.toHaveProperty("cache_control");
-    expect(lastMessage.content[0]).toHaveProperty("cache_control");
-    expect(lastMessage.content[0].cache_control).toEqual({
-      type: "ephemeral",
-      ttl: "5m",
-    });
+    // Content should be a string (unchanged from original HumanMessage)
+    // If it was an array with cache_control, that would mean the old implementation is used
+    expect(typeof lastMessage.content === "string").toBe(true);
+    expect(lastMessage.content).toBe("What's the weather like?");
   });
 
   it("should not add cache_control when message count is below threshold", async () => {
@@ -134,11 +147,11 @@ describe("anthropicPromptCachingMiddleware", () => {
 
     await agent.invoke({ messages });
 
-    // Verify the model was called without cache_control
-    expect(model.invoke).toHaveBeenCalled();
-    const callArgs = (model.invoke as unknown as MockInstance).mock.calls[0];
-    const lastMessage = callArgs[0].at(-1);
-    expect(lastMessage.content[0]).not.toHaveProperty("cache_control");
+    // Verify bindTools was called without cache_control
+    expect(model.bindTools).toHaveBeenCalled();
+    const bindToolsOptions = (model as ReturnType<typeof createMockModel>)
+      ._lastBindToolsOptions;
+    expect(bindToolsOptions?.cache_control).toBeUndefined();
   });
 
   it("should respect enableCaching setting", async () => {
@@ -162,10 +175,10 @@ describe("anthropicPromptCachingMiddleware", () => {
 
     await agent.invoke({ messages });
 
-    // Verify no cache_control was added
-    const callArgs = (model.invoke as unknown as MockInstance).mock.calls[0];
-    const lastMessage = callArgs[0].at(-1);
-    expect(lastMessage.content[0]).not.toHaveProperty("cache_control");
+    // Verify bindTools was called without cache_control
+    const bindToolsOptions = (model as ReturnType<typeof createMockModel>)
+      ._lastBindToolsOptions;
+    expect(bindToolsOptions?.cache_control).toBeUndefined();
   });
 
   describe("non-Anthropic models", () => {
@@ -226,11 +239,10 @@ describe("anthropicPromptCachingMiddleware", () => {
 
         await agent.invoke({ messages });
 
-        // Verify no cache_control was added
-        const callArgs = (model.invoke as unknown as MockInstance).mock
-          .calls[0];
-        const lastMessage = callArgs[0].at(-1);
-        expect(lastMessage.content[0]).not.toHaveProperty("cache_control");
+        // Verify no cache_control was added to modelSettings
+        const bindToolsOptions = (model as ReturnType<typeof createMockModel>)
+          ._lastBindToolsOptions;
+        expect(bindToolsOptions?.cache_control).toBeUndefined();
         expect(consoleWarn).toHaveBeenCalledWith(
           expect.stringContaining("Skipping caching for ChatOpenAI")
         );
@@ -260,11 +272,10 @@ describe("anthropicPromptCachingMiddleware", () => {
 
         await agent.invoke({ messages });
 
-        // Verify no cache_control was added
-        const callArgs = (model.invoke as unknown as MockInstance).mock
-          .calls[0];
-        const lastMessage = callArgs[0].at(-1);
-        expect(lastMessage.content[0]).not.toHaveProperty("cache_control");
+        // Verify no cache_control was added to modelSettings
+        const bindToolsOptions = (model as ReturnType<typeof createMockModel>)
+          ._lastBindToolsOptions;
+        expect(bindToolsOptions?.cache_control).toBeUndefined();
         expect(consoleWarn).not.toHaveBeenCalled();
       });
     });
@@ -288,11 +299,14 @@ describe("anthropicPromptCachingMiddleware", () => {
 
     await agent.invoke({ messages });
 
-    // Should have cache_control because total count is 3
-    const callArgs = (model.invoke as unknown as MockInstance).mock.calls[0];
-    const [systemPrompt] = callArgs[0];
-    expect(systemPrompt.type).toBe("system");
-    expect(systemPrompt.text).toBe("You are a helpful assistant");
+    // Should have cache_control in modelSettings because total count is 3
+    const bindToolsOptions = (model as ReturnType<typeof createMockModel>)
+      ._lastBindToolsOptions;
+    expect(bindToolsOptions).toHaveProperty("cache_control");
+    expect(bindToolsOptions?.cache_control).toEqual({
+      type: "ephemeral",
+      ttl: "1h",
+    });
   });
 
   it("should allow runtime context override", async () => {
@@ -326,8 +340,8 @@ describe("anthropicPromptCachingMiddleware", () => {
     );
 
     // Should not have cache_control because caching was disabled at runtime
-    const callArgs = (model.invoke as unknown as MockInstance).mock.calls[0];
-    const [firstMessage] = callArgs[0];
-    expect(firstMessage.content).toEqual("Hello");
+    const bindToolsOptions = (model as ReturnType<typeof createMockModel>)
+      ._lastBindToolsOptions;
+    expect(bindToolsOptions?.cache_control).toBeUndefined();
   });
 });

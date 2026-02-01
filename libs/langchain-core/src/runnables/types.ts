@@ -25,7 +25,7 @@ export interface RunnableInterface<
   RunInput = any,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   RunOutput = any,
-  CallOptions extends RunnableConfig = RunnableConfig
+  CallOptions extends RunnableConfig = RunnableConfig,
 > extends SerializableInterface {
   lc_serializable: boolean;
 
@@ -79,7 +79,7 @@ export interface Node {
 
 export interface RunnableConfig<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  ConfigurableFieldType extends Record<string, any> = Record<string, any>
+  ConfigurableFieldType extends Record<string, any> = Record<string, any>,
 > extends BaseCallbackConfig {
   /**
    * Runtime values for attributes previously made configurable on this Runnable,

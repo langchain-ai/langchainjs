@@ -17,7 +17,7 @@ beforeAll(async () => {
     monitorCommands: true,
   });
   await client.connect();
-  collection = await client.db("langchain").createCollection("storage");
+  collection = await client.db("langchain_test").createCollection("storage");
 });
 
 afterEach(async () => {

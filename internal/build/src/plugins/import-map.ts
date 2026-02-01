@@ -96,21 +96,24 @@ export function importMapPlugin(param: ImportMapPluginOptions = {}): Plugin {
     async buildStart({ input }) {
       if (!options.enabled) return;
 
-      const entrypoints = Object.entries(input).filter(([key]) => {
-        // Skip if it's the special "load" entrypoint
-        if (key === "load") return false;
+      const entrypoints = Object.entries(input)
+        .filter(([key]) => {
+          // Skip if it's the special "load" entrypoint
+          if (key === "load") return false;
 
-        // Skip if it's deprecated/node-only
-        if (options.nodeOnly.includes(key)) return false;
+          // Skip if it's deprecated/node-only
+          if (options.nodeOnly.includes(key)) return false;
 
-        // Skip if it requires optional dependency
-        if (options.importsOptionalDependencies.includes(key)) return false;
+          // Skip if it requires optional dependency
+          if (options.importsOptionalDependencies.includes(key)) return false;
 
-        // Skip if it's deprecated and should be omitted from import map
-        if (options.omitFromImportMap.includes(key)) return false;
+          // Skip if it's deprecated and should be omitted from import map
+          if (options.omitFromImportMap.includes(key)) return false;
 
-        return true;
-      });
+          return true;
+        })
+        // Sort for deterministic output to avoid git diffs from ordering changes
+        .sort(([a], [b]) => a.localeCompare(b));
 
       const dedupedImportEntries = options.extraEntries.reduce(
         (acc, { modules, path }) => {
