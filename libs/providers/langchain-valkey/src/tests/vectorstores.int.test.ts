@@ -165,6 +165,7 @@ describe("ValkeyVectorStore", () => {
 
 describe("ValkeyVectorStore with Custom Schema", () => {
   let client: GlideClient;
+  let store: ValkeyVectorStore;
 
   beforeAll(async () => {
     client = await GlideClient.createClient({
@@ -177,6 +178,12 @@ describe("ValkeyVectorStore with Custom Schema", () => {
     });
   });
 
+  afterEach(async () => {
+    if (store) {
+      await store.delete({ deleteAll: true });
+    }
+  });
+
   afterAll(async () => {
     client.close();
   });
@@ -186,7 +193,7 @@ describe("ValkeyVectorStore with Custom Schema", () => {
       userId: { type: SchemaFieldTypes.TAG, required: true },
     };
 
-    const store = new ValkeyVectorStore(new SyntheticEmbeddings(), {
+    store = new ValkeyVectorStore(new SyntheticEmbeddings(), {
       valkeyClient: client,
       indexName: "test-required",
       customSchema,
@@ -195,8 +202,6 @@ describe("ValkeyVectorStore with Custom Schema", () => {
     await expect(
       store.addDocuments([{ pageContent: "test", metadata: {} }])
     ).rejects.toThrow("Required metadata field 'userId' is missing");
-
-    await store.delete({ deleteAll: true });
   });
 
   test("validates field types", async () => {
@@ -204,7 +209,7 @@ describe("ValkeyVectorStore with Custom Schema", () => {
       score: { type: SchemaFieldTypes.NUMERIC, required: true },
     };
 
-    const store = new ValkeyVectorStore(new SyntheticEmbeddings(), {
+    store = new ValkeyVectorStore(new SyntheticEmbeddings(), {
       valkeyClient: client,
       indexName: "test-types",
       customSchema,
@@ -215,8 +220,6 @@ describe("ValkeyVectorStore with Custom Schema", () => {
         { pageContent: "test", metadata: { score: "not-a-number" } },
       ])
     ).rejects.toThrow("Metadata field 'score' must be a number");
-
-    await store.delete({ deleteAll: true });
   });
 
   test("stores and retrieves with custom schema", async () => {
@@ -226,7 +229,7 @@ describe("ValkeyVectorStore with Custom Schema", () => {
       score: { type: SchemaFieldTypes.NUMERIC },
     };
 
-    const store = new ValkeyVectorStore(new SyntheticEmbeddings(), {
+    store = new ValkeyVectorStore(new SyntheticEmbeddings(), {
       valkeyClient: client,
       indexName: "test-custom-schema",
       keyPrefix: "custom:",
@@ -248,8 +251,6 @@ describe("ValkeyVectorStore with Custom Schema", () => {
       category: "tech",
       score: 95,
     });
-
-    await store.delete({ deleteAll: true });
   });
 
   test("filters with custom metadata fields", async () => {
@@ -258,7 +259,7 @@ describe("ValkeyVectorStore with Custom Schema", () => {
       score: { type: SchemaFieldTypes.NUMERIC },
     };
 
-    const store = new ValkeyVectorStore(new SyntheticEmbeddings(), {
+    store = new ValkeyVectorStore(new SyntheticEmbeddings(), {
       valkeyClient: client,
       indexName: "test-custom-filter",
       keyPrefix: "filter:",
@@ -281,8 +282,6 @@ describe("ValkeyVectorStore with Custom Schema", () => {
     expect(results).toHaveLength(1);
     expect(results[0][0].metadata.category).toBe("tech");
     expect(results[0][0].metadata.score).toBe(95);
-
-    await store.delete({ deleteAll: true });
   });
 
   test("handles tag arrays", async () => {
@@ -290,7 +289,7 @@ describe("ValkeyVectorStore with Custom Schema", () => {
       tags: { type: SchemaFieldTypes.TAG, SEPARATOR: "," },
     };
 
-    const store = new ValkeyVectorStore(new SyntheticEmbeddings(), {
+    store = new ValkeyVectorStore(new SyntheticEmbeddings(), {
       valkeyClient: client,
       indexName: "test-tag-arrays",
       customSchema,
@@ -303,8 +302,6 @@ describe("ValkeyVectorStore with Custom Schema", () => {
 
     const results = await store.similaritySearch(pageContent, 1);
     expect(results).toHaveLength(1);
-
-    await store.delete({ deleteAll: true });
   });
 
   test("handles optional fields", async () => {
@@ -313,7 +310,7 @@ describe("ValkeyVectorStore with Custom Schema", () => {
       category: { type: SchemaFieldTypes.TAG },
     };
 
-    const store = new ValkeyVectorStore(new SyntheticEmbeddings(), {
+    store = new ValkeyVectorStore(new SyntheticEmbeddings(), {
       valkeyClient: client,
       indexName: "test-optional",
       customSchema,
@@ -327,7 +324,5 @@ describe("ValkeyVectorStore with Custom Schema", () => {
     const results = await store.similaritySearch(pageContent, 1);
     expect(results).toHaveLength(1);
     expect(results[0].metadata.userId).toBe("user123");
-
-    await store.delete({ deleteAll: true });
   });
 });
