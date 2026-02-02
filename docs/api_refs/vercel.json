@@ -1,13 +1,13 @@
 {
   "framework": null,
   "installCommand": "echo skipped",
-  "buildCommand": "mkdir -p public && echo '' > public/index.html",
+  "buildCommand": "mkdir -p public && echo '' > public/.gitkeep",
   "outputDirectory": "public",
-  "redirects": [
+  "routes": [
     {
-      "source": "/(.*)",
-      "destination": "https://reference.langchain.com/javascript/",
-      "permanent": true
+      "src": "/(.*)",
+      "status": 308,
+      "headers": { "Location": "https://reference.langchain.com/javascript/" }
     }
   ]
 }
