@@ -6,7 +6,7 @@
     {
       "source": "/(.*)",
       "destination": "https://reference.langchain.com/javascript/",
-      "permanent": false
+      "permanent": true
     }
   ]
 }
