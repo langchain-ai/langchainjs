@@ -1,6 +1,7 @@
 {
-  "installCommand": "",
-  "buildCommand": "",
+  "framework": null,
+  "installCommand": "echo skipped",
+  "buildCommand": "echo skipped",
   "redirects": [
     {
       "source": "/(.*)",
