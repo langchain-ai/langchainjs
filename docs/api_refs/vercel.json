@@ -5,8 +5,8 @@
   "outputDirectory": "public",
   "redirects": [
     {
-      "source": "/:path*",
-      "destination": "https://reference.langchain.com/javascript/:path*",
+      "source": "/(.*)",
+      "destination": "https://reference.langchain.com/javascript/",
       "permanent": true
     }
   ]
