@@ -12,6 +12,7 @@ import {
   CosmosClient,
   CosmosClientOptions,
   DatabaseRequest,
+  FullTextPolicy,
   IndexingPolicy,
   SqlParameter,
   SqlQuerySpec,
@@ -45,16 +46,7 @@ export const AzureCosmosDBNoSQLSearchType = {
 export type AzureCosmosDBNoSQLSearchType =
   (typeof AzureCosmosDBNoSQLSearchType)[keyof typeof AzureCosmosDBNoSQLSearchType];
 
-/**
- * Full-text policy for the container.
- */
-export type FullTextPolicy = {
-  defaultLanguage: string;
-  fullTextPaths: Array<{
-    path: string;
-    language?: string;
-  }>;
-};
+export type { FullTextPolicy } from "@azure/cosmos";
 
 /**
  * Full-text rank filter for hybrid search.
@@ -474,7 +466,7 @@ export class AzureCosmosDBNoSQLVectorStore extends VectorStore {
     const docs = await this.similaritySearchWithScoreInternal(
       queryEmbedding,
       fetchK,
-      options.filter
+      { ...options.filter, includeEmbeddings: true }
     );
     const embeddingList = docs.map((doc) => doc[0].metadata[this.embeddingKey]);
 
@@ -535,7 +527,9 @@ export class AzureCosmosDBNoSQLVectorStore extends VectorStore {
       ...(initOptions?.createContainerOptions ?? {}),
       indexingPolicy: initOptions?.indexingPolicy,
       vectorEmbeddingPolicy,
-      fullTextPolicy: initOptions?.fullTextPolicy as any,
+      ...(initOptions?.fullTextPolicy
+        ? { fullTextPolicy: initOptions.fullTextPolicy }
+        : {}),
       id: containerName,
     });
     this.container = container;
@@ -967,6 +961,9 @@ export class AzureCosmosDBNoSQLVectorStore extends VectorStore {
       }
     }
     if (fullTextRankFilter) {
+      if (isDefaultProjectionRequired) {
+        projection = `${table}.id, ${table}[@metadataKey] as ${this.metadataKey}`;
+      }
       const fields: string[] = [];
       const addedSearchFields = new Set<string>();
       fullTextRankFilter.forEach((item) => {
@@ -983,17 +980,14 @@ export class AzureCosmosDBNoSQLVectorStore extends VectorStore {
         }
       });
       if (fields.length > 0) {
-        if (!isDefaultProjectionRequired) {
-          projection += ", ";
-        } else {
-          isDefaultProjectionRequired = false;
-        }
-        projection += fields.join(", ");
+        projection += `, ${fields.join(", ")}`;
+      }
+    } else {
+      if (isDefaultProjectionRequired) {
+        projection = `${table}.id, ${table}[@textKey] as ${this.textKey}, ${table}[@metadataKey] as ${this.metadataKey}`;
       }
     }
-    if (isDefaultProjectionRequired) {
-      projection = `${table}.id, ${table}[@textKey] as ${this.textKey}, ${table}[@metadataKey] as metadata`;
-    }
+
     if (
       searchType === AzureCosmosDBNoSQLSearchType.Vector ||
       searchType === AzureCosmosDBNoSQLSearchType.VectorScoreThreshold ||
@@ -1001,7 +995,7 @@ export class AzureCosmosDBNoSQLVectorStore extends VectorStore {
       searchType === AzureCosmosDBNoSQLSearchType.HybridScoreThreshold
     ) {
       if (withEmbedding) {
-        projection += `, ${table}[@embeddingKey] as embedding`;
+        projection += `, ${table}[@embeddingKey] as ${this.embeddingKey}`;
       }
       projection += `, VectorDistance(${table}[@embeddingKey], @embeddings) as SimilarityScore`;
     }
@@ -1071,6 +1065,9 @@ export class AzureCosmosDBNoSQLVectorStore extends VectorStore {
     }
 
     if (fullTextRankFilter) {
+      if (isDefaultParamRequired) {
+        parameters.push({ name: "@metadataKey", value: this.metadataKey });
+      }
       isDefaultParamRequired = false;
       fullTextRankFilter.forEach((item, filterIndex) => {
         if (!addedFieldParams.has(item.searchField)) {
@@ -1100,6 +1097,40 @@ export class AzureCosmosDBNoSQLVectorStore extends VectorStore {
   }
 
   /**
+   * Extracts the text content from a query result item.
+   * Uses custom projection mapping alias if provided, otherwise falls back to the default textKey.
+   */
+  private extractTextFromItem(
+    item: Record<string, unknown>,
+    projectionMapping?: ProjectionMapping
+  ): string {
+    if (projectionMapping && this.textKey in projectionMapping) {
+      const textKey = projectionMapping[this.textKey];
+      return item[textKey] as string;
+    }
+    return item[this.textKey] as string;
+  }
+  /**
+   * Populates metadata object from query result item fields.
+   * Adds projected field aliases to metadata, or defaults to adding the document id.
+   */
+  private populateMetadataFromItem(
+    item: Record<string, unknown>,
+    baseMetadata: Record<string, unknown>,
+    projectionMapping?: ProjectionMapping
+  ): Record<string, unknown> {
+    if (projectionMapping) {
+      for (const [key, alias] of Object.entries(projectionMapping)) {
+        if (key !== this.textKey) {
+          baseMetadata[alias] = item[alias];
+        }
+      }
+    } else {
+      baseMetadata.id = item.id;
+    }
+    return baseMetadata;
+  }
+  /**
    * Executes a Cosmos DB SQL query and transforms the results into Documents with scores.
    * This method runs the query against the container, processes the returned items,
    * applies threshold filtering if specified, and constructs Document objects with metadata.
@@ -1123,89 +1154,41 @@ export class AzureCosmosDBNoSQLVectorStore extends VectorStore {
     await this.initialize();
 
     const { resources: items } = await this.container.items
-      .query(
-        {
-          query,
-          parameters,
-        },
-        { forceQueryPlan: true }
-      )
+      .query({ query, parameters }, { forceQueryPlan: true })
       .fetchAll();
 
+    const threshold = options.threshold ?? 0;
+    const isVectorSearch =
+      searchType === AzureCosmosDBNoSQLSearchType.Vector ||
+      searchType === AzureCosmosDBNoSQLSearchType.Hybrid ||
+      searchType === AzureCosmosDBNoSQLSearchType.VectorScoreThreshold ||
+      searchType === AzureCosmosDBNoSQLSearchType.HybridScoreThreshold;
+
+    const isThresholdSearch =
+      searchType === AzureCosmosDBNoSQLSearchType.VectorScoreThreshold ||
+      searchType === AzureCosmosDBNoSQLSearchType.HybridScoreThreshold;
+
     const docsAndScores: [Document, number][] = [];
-    const threshold = options.threshold || 0;
 
     for (const item of items) {
-      const metadata = { ...(item[this.metadataKey] || {}) };
-      let score = 0;
-      let text = "";
+      const score = isVectorSearch ? item.SimilarityScore : 0;
 
-      if (
-        searchType === AzureCosmosDBNoSQLSearchType.Vector ||
-        searchType === AzureCosmosDBNoSQLSearchType.Hybrid ||
-        searchType === AzureCosmosDBNoSQLSearchType.VectorScoreThreshold ||
-        searchType === AzureCosmosDBNoSQLSearchType.HybridScoreThreshold
-      ) {
-        score = item.SimilarityScore;
-        if (options.withEmbedding) {
-          metadata[this.embeddingKey] = item[this.embeddingKey];
-        }
-
-        if (
-          (searchType === AzureCosmosDBNoSQLSearchType.VectorScoreThreshold ||
-            searchType === AzureCosmosDBNoSQLSearchType.HybridScoreThreshold) &&
-          score <= threshold
-        ) {
-          continue;
-        }
-
-        if (
-          options.projectionMapping &&
-          this.textKey in options.projectionMapping
-        ) {
-          const textKey = options.projectionMapping[this.textKey];
-          text = item[textKey];
-        } else {
-          text = item[this.textKey];
-        }
-
-        if (options.projectionMapping) {
-          for (const [key, alias] of Object.entries(
-            options.projectionMapping
-          )) {
-            if (key === this.textKey) {
-              continue;
-            }
-            metadata[alias] = item[alias];
-          }
-        } else {
-          metadata.id = item.id;
-        }
-      } else {
-        // Full-text search
-        if (
-          options.projectionMapping &&
-          this.textKey in options.projectionMapping
-        ) {
-          const textKey = options.projectionMapping[this.textKey];
-          text = item[textKey];
-        } else {
-          text = item[this.textKey];
-        }
-
-        if (options.projectionMapping) {
-          for (const [key, alias] of Object.entries(
-            options.projectionMapping
-          )) {
-            if (key === this.textKey) {
-              continue;
-            }
-            metadata[alias] = item[alias];
-          }
-        } else {
-          metadata.id = item.id;
-        }
+      // Skip items below threshold for threshold-based searches
+      if (isThresholdSearch && score <= threshold) {
+        continue;
       }
+
+      const metadata: Record<string, unknown> = {
+        ...(item[this.metadataKey] || {}),
+      };
+
+      // Include embeddings if requested
+      if (isVectorSearch && options.withEmbedding) {
+        metadata[this.embeddingKey] = item[this.embeddingKey];
+      }
+
+      const text = this.extractTextFromItem(item, options.projectionMapping);
+      this.populateMetadataFromItem(item, metadata, options.projectionMapping);
 
       docsAndScores.push([
         new Document({

@@ -609,6 +609,10 @@ describe("Query Building Tests", () => {
             value: 10,
           },
           {
+            name: "@metadataKey",
+            value: "metadata",
+          },
+          {
             name: "@title",
             value: "title",
           },
@@ -1030,6 +1034,10 @@ describe("Query Building Tests", () => {
             value: 5,
           },
           {
+            name: "@metadataKey",
+            value: "metadata",
+          },
+          {
             name: "@title",
             value: "title",
           },
@@ -1082,6 +1090,10 @@ describe("Query Building Tests", () => {
           {
             name: "@limit",
             value: 5,
+          },
+          {
+            name: "@metadataKey",
+            value: "metadata",
           },
           {
             name: "@title",
