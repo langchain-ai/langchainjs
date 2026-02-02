@@ -1,5 +1,19 @@
 # @langchain/classic
 
+## 1.0.13
+
+### Patch Changes
+
+- Updated dependencies [[`1fa865b`](https://github.com/langchain-ai/langchainjs/commit/1fa865b1cb8a30c2269b83cdb5fc84d374c3fca9), [`28efb57`](https://github.com/langchain-ai/langchainjs/commit/28efb57448933368094ca41c63d9262ac0f348a6), [`4e42452`](https://github.com/langchain-ai/langchainjs/commit/4e42452e4c020408bd6687667e931497b05aaff5), [`a9b5059`](https://github.com/langchain-ai/langchainjs/commit/a9b50597186002221aaa4585246e569fa44c27c8), [`a9b5059`](https://github.com/langchain-ai/langchainjs/commit/a9b50597186002221aaa4585246e569fa44c27c8)]:
+  - @langchain/openai@1.2.4
+  - @langchain/textsplitters@1.0.1
+
+## 1.0.12
+
+### Patch Changes
+
+- [#9888](https://github.com/langchain-ai/langchainjs/pull/9888) [`1d58bf2`](https://github.com/langchain-ai/langchainjs/commit/1d58bf2bcb14055a64189af7e251bb93fa9d5aa0) Thanks [@jacoblee93](https://github.com/jacoblee93)! - fix(classic): Fix typo in package.json
+
 ## 1.0.11
 
 ### Patch Changes

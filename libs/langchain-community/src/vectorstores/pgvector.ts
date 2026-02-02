@@ -101,6 +101,13 @@ export interface PGVectorStoreArgs {
   chunkSize?: number;
   ids?: string[];
   distanceStrategy?: DistanceStrategy;
+  /**
+   * Configure how similarity scores are calculated.
+   * "distance" returns raw distance values (lower = more similar, default behavior for backward compatibility)
+   * "similarity" returns normalized similarity scores (higher = more similar)
+   * @default "distance"
+   */
+  scoreNormalization?: "distance" | "similarity";
 }
 
 /**
@@ -310,8 +317,89 @@ export class PGVectorStore extends VectorStore {
 
   distanceStrategy?: DistanceStrategy = "cosine";
 
+  scoreNormalization: "distance" | "similarity" = "distance";
+
   _vectorstoreType(): string {
     return "pgvector";
+  }
+
+  /**
+   * Performs similarity search with both distance and similarity scores returned.
+   * This method returns both the raw distance and the normalized similarity score for each result.
+   * @param query - Query vector.
+   * @param k - Number of most similar documents to return.
+   * @param filter - Optional filter to apply to the search.
+   * @returns Promise that resolves with an array of tuples, each containing a `Document` and an object with both distance and similarity scores.
+   */
+  async similaritySearchVectorWithScores(
+    query: number[],
+    k: number,
+    filter?: this["FilterType"]
+  ): Promise<[Document, { distance: number; similarity: number }][]> {
+    const results = await this.searchPostgres(query, k, filter, false);
+    // Convert results to return both distance and similarity scores
+    const enhancedResults: [
+      Document,
+      { distance: number; similarity: number },
+    ][] = [];
+    for (const [doc, distance] of results) {
+      const bothScores = this.convertDistanceToBoth(distance);
+      enhancedResults.push([doc, bothScores]);
+    }
+    return enhancedResults;
+  }
+
+  /**
+   * Converts distance to similarity score based on the distance strategy.
+   * @param distance Raw distance value from the database
+   * @returns Similarity score (higher = more similar)
+   *
+   * For cosine distance: similarity = (2 - distance) / 2, keeping values in [0, 1] range
+   * For euclidean distance: similarity = 1 / (1 + distance)
+   * For innerProduct: similarity = -distance (pgvector returns negative inner product)
+   */
+  private convertDistanceToSimilarity(distance: number): number {
+    switch (this.distanceStrategy) {
+      case "cosine":
+        // Cosine distance is in [0, 2], normalize to [0, 1] range where 1 = identical
+        return (2 - distance) / 2;
+      case "euclidean":
+        // Convert euclidean distance to similarity using: similarity = 1 / (1 + distance)
+        return 1 / (1 + distance);
+      case "innerProduct":
+        // pgvector returns negative inner product distance, converting back by negation
+        // (values are not normalized to [0, 1] range)
+        return -distance;
+      default:
+        // Fallback: return raw distance if unknown strategy
+        return distance;
+    }
+  }
+
+  /**
+   * Converts distance to score based on the normalization setting.
+   * @param distance Raw distance value from the database
+   * @returns Raw distance if scoreNormalization is "distance", otherwise similarity score
+   */
+  private convertDistanceToScore(distance: number): number {
+    return this.scoreNormalization === "distance"
+      ? distance // Return raw distance (lower = more similar)
+      : this.convertDistanceToSimilarity(distance); // Return similarity score (higher = more similar)
+  }
+
+  /**
+   * Converts distance to both distance and similarity score, useful when users want access to both values.
+   * @param distance Raw distance value from the database
+   * @returns Object containing both the raw distance and the similarity score
+   */
+  private convertDistanceToBoth(distance: number): {
+    distance: number;
+    similarity: number;
+  } {
+    return {
+      distance,
+      similarity: this.convertDistanceToSimilarity(distance),
+    };
   }
 
   constructor(embeddings: EmbeddingsInterface, config: PGVectorStoreArgs) {
@@ -348,6 +436,7 @@ export class PGVectorStore extends VectorStore {
     this.pool = pool;
     this.chunkSize = config.chunkSize ?? 500;
     this.distanceStrategy = config.distanceStrategy ?? this.distanceStrategy;
+    this.scoreNormalization = config.scoreNormalization ?? "distance";
 
     const langchainVerbose = getEnvironmentVariable("LANGCHAIN_VERBOSE");
 
@@ -881,7 +970,8 @@ export class PGVectorStore extends VectorStore {
         if (includeEmbedding) {
           document.metadata[this.vectorColumnName] = doc[this.vectorColumnName];
         }
-        results.push([document, doc._distance]);
+        const score = this.convertDistanceToScore(doc._distance);
+        results.push([document, score]);
       }
     }
     return results;

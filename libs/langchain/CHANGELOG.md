@@ -1,5 +1,20 @@
 # langchain
 
+## 1.2.16
+
+### Patch Changes
+
+- [#9885](https://github.com/langchain-ai/langchainjs/pull/9885) [`913893f`](https://github.com/langchain-ai/langchainjs/commit/913893f678f1fae2a1b9bf964c9d93ffd0176680) Thanks [@Ambas-T](https://github.com/Ambas-T)! - fix: filter pregel keys from cache key to avoid OOM
+
+- Updated dependencies [[`a9b5059`](https://github.com/langchain-ai/langchainjs/commit/a9b50597186002221aaa4585246e569fa44c27c8), [`a9b5059`](https://github.com/langchain-ai/langchainjs/commit/a9b50597186002221aaa4585246e569fa44c27c8)]:
+  - @langchain/core@1.1.18
+
+## 1.2.15
+
+### Patch Changes
+
+- [#9891](https://github.com/langchain-ai/langchainjs/pull/9891) [`983b212`](https://github.com/langchain-ai/langchainjs/commit/983b2123eeaa32011b7021643ba8c37698dfe2be) Thanks [@christian-bromann](https://github.com/christian-bromann)! - fix(langchain): support StateSchema in middleware pipeline
+
 ## 1.2.14
 
 ### Patch Changes

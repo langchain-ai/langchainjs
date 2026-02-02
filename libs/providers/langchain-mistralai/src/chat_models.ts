@@ -1142,6 +1142,7 @@ export class ChatMistralAI<
     options: this["ParsedCallOptions"],
     runManager?: CallbackManagerForLLMRun
   ): Promise<ChatResult> {
+    options.signal?.throwIfAborted();
     const tokenUsage: TokenUsage = {};
     const params = this.invocationParams(options);
     const mistralMessages = convertMessagesToMistralMessages(messages);
@@ -1235,7 +1236,7 @@ export class ChatMistralAI<
     const streamIterable = await this.completionWithRetry(input, true);
     for await (const { data } of streamIterable) {
       if (options.signal?.aborted) {
-        throw new Error("AbortError");
+        return;
       }
       const choice = data?.choices[0];
       if (!choice || !("delta" in choice)) {
