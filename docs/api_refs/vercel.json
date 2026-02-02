@@ -1,7 +1,8 @@
 {
   "framework": null,
   "installCommand": "echo skipped",
-  "buildCommand": "echo skipped",
+  "buildCommand": "mkdir -p public",
+  "outputDirectory": "public",
   "redirects": [
     {
       "source": "/(.*)",
