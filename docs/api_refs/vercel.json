@@ -3,11 +3,11 @@
   "installCommand": "echo skipped",
   "buildCommand": "mkdir -p public && echo '' > public/.gitkeep",
   "outputDirectory": "public",
-  "routes": [
+  "redirects": [
     {
-      "src": "/(.*)",
-      "status": 308,
-      "headers": { "Location": "https://reference.langchain.com/javascript/" }
+      "source": "/:path*",
+      "destination": "https://reference.langchain.com/javascript/:path*",
+      "permanent": true
     }
   ]
 }
