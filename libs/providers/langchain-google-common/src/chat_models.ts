@@ -339,6 +339,7 @@ export abstract class ChatGoogleBase<AuthOptions>
     options: this["ParsedCallOptions"],
     runManager: CallbackManagerForLLMRun | undefined
   ): Promise<ChatResult> {
+    options.signal?.throwIfAborted();
     const parameters = this.invocationParams(options);
     if (this.streaming) {
       const stream = this._streamResponseChunks(messages, options, runManager);
@@ -389,6 +390,9 @@ export abstract class ChatGoogleBase<AuthOptions>
     // During the loop, yield each time we get a chunk from the streaming parser
     // that is either available or added to the queue
     while (!stream.streamDone) {
+      if (options.signal?.aborted) {
+        return;
+      }
       const output = await stream.nextChunk();
       await runManager?.handleCustomEvent(
         `google-chunk-${this.constructor.name}`,

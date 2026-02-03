@@ -1,9 +1,14 @@
 import { test, expect, describe } from "vitest";
 
-import { AIMessageChunk, HumanMessage } from "@langchain/core/messages";
+import {
+  AIMessageChunk,
+  BaseMessage,
+  HumanMessage,
+} from "@langchain/core/messages";
 import { concat } from "@langchain/core/utils/stream";
 
 import { ChatXAIResponses } from "../index.js";
+import { tools } from "../../tools/index.js";
 
 test("invoke", async () => {
   const chat = new ChatXAIResponses({
@@ -111,7 +116,6 @@ test("invoke with system message", async () => {
     },
     new HumanMessage("Say hello"),
   ];
-  // @ts-expect-error - testing with mixed message types
   const res = await chat.invoke(messages);
   expect(res.content).toBeDefined();
 });
@@ -221,7 +225,7 @@ describe("Multi-turn Conversations", () => {
       maxRetries: 0,
     });
 
-    const messages = [new HumanMessage("My name is Alice.")];
+    const messages: BaseMessage[] = [new HumanMessage("My name is Alice.")];
     const res1 = await chat.invoke(messages);
     expect(res1.content).toBeDefined();
 
@@ -246,6 +250,147 @@ describe("Error Handling", () => {
 
     const message = new HumanMessage("Hello");
     await expect(chat.invoke([message])).rejects.toThrow();
+  });
+});
+
+// Server-side Agentic Tools Tests
+describe("Agentic Tools", () => {
+  test("invoke with web_search tool", async () => {
+    const chat = new ChatXAIResponses({
+      model: "grok-3-fast",
+      maxRetries: 0,
+    });
+
+    const message = new HumanMessage("What are the latest AI developments?");
+    const res = await chat.invoke([message], {
+      tools: [tools.xaiWebSearch()],
+    });
+
+    expect(res.content).toBeDefined();
+    expect((res.content as string).length).toBeGreaterThan(50);
+  });
+
+  test("invoke with web_search tool with domain filtering", async () => {
+    const chat = new ChatXAIResponses({
+      model: "grok-3-fast",
+      maxRetries: 0,
+    });
+
+    const message = new HumanMessage("What is quantum computing?");
+    const res = await chat.invoke([message], {
+      tools: [
+        tools.xaiWebSearch({
+          allowedDomains: ["wikipedia.org"],
+        }),
+      ],
+    });
+
+    expect(res.content).toBeDefined();
+    expect((res.content as string).length).toBeGreaterThan(50);
+  });
+
+  test("invoke with x_search tool", async () => {
+    const chat = new ChatXAIResponses({
+      model: "grok-3-fast",
+      maxRetries: 0,
+    });
+
+    const message = new HumanMessage(
+      "What are the latest posts from xAI on X?"
+    );
+    const res = await chat.invoke([message], {
+      tools: [tools.xaiXSearch()],
+    });
+
+    expect(res.content).toBeDefined();
+    expect((res.content as string).length).toBeGreaterThan(50);
+  });
+
+  test("invoke with x_search tool with handle filtering", async () => {
+    const chat = new ChatXAIResponses({
+      model: "grok-3-fast",
+      maxRetries: 0,
+    });
+
+    const message = new HumanMessage("What has Elon Musk posted recently?");
+    const res = await chat.invoke([message], {
+      tools: [
+        tools.xaiXSearch({
+          allowedXHandles: ["elonmusk"],
+        }),
+      ],
+    });
+
+    expect(res.content).toBeDefined();
+    expect((res.content as string).length).toBeGreaterThan(50);
+  });
+
+  test("invoke with code_execution tool", async () => {
+    const chat = new ChatXAIResponses({
+      model: "grok-3-fast",
+      maxRetries: 0,
+    });
+
+    const message = new HumanMessage(
+      "Calculate the compound interest for $10,000 at 5% annually for 10 years"
+    );
+    const res = await chat.invoke([message], {
+      tools: [tools.xaiCodeExecution()],
+    });
+
+    expect(res.content).toBeDefined();
+    expect((res.content as string).length).toBeGreaterThan(50);
+  });
+
+  test("invoke with multiple tools", async () => {
+    const chat = new ChatXAIResponses({
+      model: "grok-3-fast",
+      maxRetries: 0,
+    });
+
+    const message = new HumanMessage(
+      "What are the latest AI news and calculate how many days until 2026?"
+    );
+    const res = await chat.invoke([message], {
+      tools: [tools.xaiWebSearch(), tools.xaiCodeExecution()],
+    });
+
+    expect(res.content).toBeDefined();
+    expect((res.content as string).length).toBeGreaterThan(50);
+  });
+
+  test("invoke with tools in constructor", async () => {
+    const chat = new ChatXAIResponses({
+      model: "grok-3-fast",
+      maxRetries: 0,
+      tools: [tools.xaiWebSearch(), tools.xaiXSearch()],
+    });
+
+    const message = new HumanMessage("What is happening in tech today?");
+    const res = await chat.invoke([message]);
+
+    expect(res.content).toBeDefined();
+    expect((res.content as string).length).toBeGreaterThan(50);
+  });
+
+  test("stream with web_search tool", async () => {
+    const chat = new ChatXAIResponses({
+      model: "grok-3-fast",
+      maxRetries: 0,
+    });
+
+    const message = new HumanMessage("What are the top tech news stories?");
+    const stream = await chat.stream([message], {
+      tools: [tools.xaiWebSearch()],
+    });
+
+    let finalMessage: AIMessageChunk | undefined;
+    for await (const chunk of stream) {
+      finalMessage = !finalMessage ? chunk : concat(finalMessage, chunk);
+    }
+
+    expect(finalMessage).toBeDefined();
+    expect(finalMessage?.content).toBeDefined();
   });
 });
 

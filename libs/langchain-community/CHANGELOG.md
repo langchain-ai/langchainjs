@@ -1,5 +1,19 @@
 # @langchain/community
 
+## 1.1.10
+
+### Patch Changes
+
+- [#9883](https://github.com/langchain-ai/langchainjs/pull/9883) [`ea00005`](https://github.com/langchain-ai/langchainjs/commit/ea000051bd29670bec60099a5f50a13c0fedfc31) Thanks [@FilipZmijewski](https://github.com/FilipZmijewski)! - support aborting for Model Gateway and WatsonxLLM for IBM
+
+- [#9896](https://github.com/langchain-ai/langchainjs/pull/9896) [`70f329a`](https://github.com/langchain-ai/langchainjs/commit/70f329aa5c16bef9e7a942d4187c31f3d3b86b80) Thanks [@Axadali](https://github.com/Axadali)! - Add score normalization feature to PGVectorStore allowing users to choose between returning raw distances or normalized similarity scores. This makes PGVectorStore consistent with other vector stores in the LangChain ecosystem where higher scores indicate greater similarity. Maintains full backward compatibility by defaulting to distance mode.
+
+- [#9874](https://github.com/langchain-ai/langchainjs/pull/9874) [`a995a3f`](https://github.com/langchain-ai/langchainjs/commit/a995a3ff1940eebf7204574e6f058f8ff84f557e) Thanks [@phong-phuong](https://github.com/phong-phuong)! - fix jira failing to fetch issues
+
+- Updated dependencies [[`1fa865b`](https://github.com/langchain-ai/langchainjs/commit/1fa865b1cb8a30c2269b83cdb5fc84d374c3fca9), [`28efb57`](https://github.com/langchain-ai/langchainjs/commit/28efb57448933368094ca41c63d9262ac0f348a6), [`4e42452`](https://github.com/langchain-ai/langchainjs/commit/4e42452e4c020408bd6687667e931497b05aaff5), [`a9b5059`](https://github.com/langchain-ai/langchainjs/commit/a9b50597186002221aaa4585246e569fa44c27c8), [`a9b5059`](https://github.com/langchain-ai/langchainjs/commit/a9b50597186002221aaa4585246e569fa44c27c8)]:
+  - @langchain/openai@1.2.4
+  - @langchain/classic@1.0.13
+
 ## 1.1.9
 
 ### Patch Changes

@@ -394,7 +394,7 @@ export interface BaseLanguageModelInterface<
 
   generatePrompt(
     promptValues: BasePromptValueInterface[],
-    options?: string[] | CallOptions,
+    options?: string[] | Partial<CallOptions>,
     callbacks?: Callbacks
   ): Promise<LLMResult>;
 
