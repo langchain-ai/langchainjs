@@ -738,7 +738,7 @@ export class ValkeyVectorStore extends VectorStore {
               const tagFilter = value.map((v) => `{${v}}`).join("|");
               filterClauses.push(`@${indexedFieldName}:(${tagFilter})`);
             } else {
-              filterClauses.push(`@${indexedFieldName}:{${value}}`);
+              filterClauses.push(`@${indexedFieldName}:{${value ?? ''}}`);
             }
           } else if (fieldConfig.type === "TEXT") {
             // Handle text search
