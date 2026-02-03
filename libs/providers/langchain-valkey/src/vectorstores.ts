@@ -518,7 +518,7 @@ export class ValkeyVectorStore extends VectorStore {
           if (Array.isArray(doc?.value)) {
             const fieldsObj: Record<string, unknown> = {};
             for (const field of doc.value) {
-              if (field && field.key && field.value !== undefined) {
+              if (field?.key !== undefined && field?.value !== undefined) {
                 fieldsObj[String(field.key)] = field.value;
               }
             }
