@@ -187,7 +187,7 @@ export class AsyncCaller {
           listener = () => {
             reject(getAbortSignalError(options.signal));
           };
-          options.signal?.addEventListener("abort", listener);
+          options.signal?.addEventListener("abort", listener, { once: true });
         }),
       ]).finally(() => {
         if (options.signal && listener) {

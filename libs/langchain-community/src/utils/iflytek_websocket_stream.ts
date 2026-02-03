@@ -81,7 +81,12 @@ export abstract class BaseWebSocketStream<
     });
 
     if (options.signal) {
-      options.signal.onabort = () => ws.close();
+      // Use bind() instead of an arrow function to avoid capturing the
+      // surrounding scope (which includes large objects). This prevents
+      // memory leaks when the user passes a long-lived AbortSignal.
+      // Using { once: true } ensures the listener auto-removes after firing.
+      const abort = ws.close.bind(ws);
+      options.signal.addEventListener("abort", abort, { once: true });
     }
 
     this.close = closeWithInfo;
