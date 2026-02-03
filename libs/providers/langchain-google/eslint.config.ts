@@ -1,3 +1,13 @@
-import { langchainConfig } from "@langchain/eslint";
+import { langchainConfig, type ConfigArray } from "@langchain/eslint";
 
-export default langchainConfig;
+const config: ConfigArray = [
+  ...langchainConfig,
+  {
+    files: ["src/chat_models/api-types.ts"],
+    rules: {
+      "@typescript-eslint/no-namespace": "off",
+    },
+  },
+];
+
+export default config;
