@@ -37,9 +37,9 @@
       "promptTokenCount": 12,
       "toolUsePromptTokenCount": 0,
       "cachedContentTokenCount": 5,
-      "thoughtsTokenCount": 0,
+      "thoughtsTokenCount": 2,
       "candidatesTokenCount": 4,
-      "totalTokenCount": 16,
+      "totalTokenCount": 18,
       "promptTokensDetails": [
         {
           "modality": "TEXT",
