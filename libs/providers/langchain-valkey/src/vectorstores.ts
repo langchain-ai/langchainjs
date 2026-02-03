@@ -218,7 +218,7 @@ export class ValkeyVectorStore extends VectorStore {
       )) {
         const indexedFieldName = `${this.metadataKey}.${fieldName}`;
 
-        // Convert CustomSchemaField to proper Field format
+        // Only TAG and NUMERIC are supported for metadata fields
         if (fieldConfig.type === SchemaFieldTypes.TAG) {
           schema.push({
             type: "TAG",
@@ -230,11 +230,9 @@ export class ValkeyVectorStore extends VectorStore {
             name: indexedFieldName,
           });
         } else {
-          // Fallback for other types - basic field without attributes
-          schema.push({
-            type: fieldConfig.type as "TAG" | "NUMERIC" | "VECTOR",
-            name: indexedFieldName,
-          });
+          throw new Error(
+            `Unsupported field type '${fieldConfig.type}' for metadata field '${fieldName}'. Only TAG and NUMERIC are supported.`
+          );
         }
       }
     }
@@ -573,7 +571,7 @@ export class ValkeyVectorStore extends VectorStore {
       const documents = results[1];
       if (Array.isArray(documents)) {
         for (const doc of documents) {
-          if (doc && doc.value && Array.isArray(doc.value)) {
+          if (Array.isArray(doc?.value)) {
             const fieldsObj: Record<string, unknown> = {};
             for (const field of doc.value) {
               if (field && field.key && field.value !== undefined) {
@@ -599,11 +597,18 @@ export class ValkeyVectorStore extends VectorStore {
                     const fieldConfig = this.customSchema[fieldName];
                     let fieldValue = fieldsObj[fieldKey] as unknown;
                     // Convert numeric fields back to numbers
+                    // Note: Valkey stores NUMERIC fields as strings internally for indexing
+                    // We convert back to numbers, but this may lose precision for very large integers
                     if (
                       fieldConfig.type === "NUMERIC" &&
                       typeof fieldValue === "string"
                     ) {
-                      fieldValue = Number(fieldValue);
+                      const numValue = Number(fieldValue);
+                      // Only convert if it's a valid number and within safe integer range
+                      if (!isNaN(numValue) && Number.isSafeInteger(numValue)) {
+                        fieldValue = numValue;
+                      }
+                      // Otherwise keep as string to preserve precision
                     }
                     metadata[fieldName] = fieldValue;
                   }
@@ -714,35 +719,59 @@ export class ValkeyVectorStore extends VectorStore {
 
           if (fieldConfig.type === "NUMERIC") {
             // Handle numeric range queries
-            if (typeof value === "object" && value !== null) {
-              if ("min" in value && "max" in value) {
-                filterClauses.push(
-                  `@${indexedFieldName}:[${(value as Record<string, unknown>).min} ${(value as Record<string, unknown>).max}]`
-                );
-              } else if ("min" in value) {
-                filterClauses.push(
-                  `@${indexedFieldName}:[${(value as Record<string, unknown>).min} +inf]`
-                );
-              } else if ("max" in value) {
-                filterClauses.push(
-                  `@${indexedFieldName}:[-inf ${(value as Record<string, unknown>).max}]`
-                );
+            if (
+              typeof value === "object" &&
+              value !== null &&
+              !Array.isArray(value)
+            ) {
+              const rangeValue = value as Record<string, unknown>;
+
+              if ("min" in rangeValue && "max" in rangeValue) {
+                const min = Number(rangeValue.min);
+                const max = Number(rangeValue.max);
+                if (isNaN(min) || isNaN(max)) {
+                  throw new Error(
+                    `Invalid numeric range for field '${fieldName}': min and max must be numbers`
+                  );
+                }
+                filterClauses.push(`@${indexedFieldName}:[${min} ${max}]`);
+              } else if ("min" in rangeValue) {
+                const min = Number(rangeValue.min);
+                if (isNaN(min)) {
+                  throw new Error(
+                    `Invalid numeric range for field '${fieldName}': min must be a number`
+                  );
+                }
+                filterClauses.push(`@${indexedFieldName}:[${min} +inf]`);
+              } else if ("max" in rangeValue) {
+                const max = Number(rangeValue.max);
+                if (isNaN(max)) {
+                  throw new Error(
+                    `Invalid numeric range for field '${fieldName}': max must be a number`
+                  );
+                }
+                filterClauses.push(`@${indexedFieldName}:[-inf ${max}]`);
               }
-            } else {
+            } else if (typeof value === "number") {
               // Exact numeric match
               filterClauses.push(`@${indexedFieldName}:[${value} ${value}]`);
+            } else {
+              throw new Error(
+                `Invalid filter value for NUMERIC field '${fieldName}': expected number or range object`
+              );
             }
           } else if (fieldConfig.type === "TAG") {
             // Handle tag filtering
             if (Array.isArray(value)) {
-              const tagFilter = value.map((v) => `{${v}}`).join("|");
+              const tagFilter = value.map((v) => `{${String(v)}}`).join("|");
               filterClauses.push(`@${indexedFieldName}:(${tagFilter})`);
+            } else if (typeof value === "string") {
+              filterClauses.push(`@${indexedFieldName}:{${value}}`);
             } else {
-              filterClauses.push(`@${indexedFieldName}:{${value ?? ''}}`);
+              throw new Error(
+                `Invalid filter value for TAG field '${fieldName}': expected string or string array`
+              );
             }
-          } else if (fieldConfig.type === "TEXT") {
-            // Handle text search
-            filterClauses.push(`@${indexedFieldName}:(${value})`);
           }
         }
       }
@@ -776,43 +805,6 @@ export class ValkeyVectorStore extends VectorStore {
     };
 
     return [baseQuery, options];
-  }
-
-  private prepareFilter(filter: ValkeyVectorStoreFilterType) {
-    if (Array.isArray(filter)) {
-      const escaped = filter.map((f) => `{${this.escapeSpecialChars(f)}}`);
-      return escaped.length > 1 ? `(${escaped.join("|")})` : escaped[0];
-    }
-    return filter;
-  }
-
-  /**
-   * Escapes all '-', ':', and '"' characters.
-   * RediSearch considers these all as special characters, so we need
-   * to escape them
-   * @see https://redis.io/docs/stack/search/reference/query_syntax
-   *
-   * @param str
-   * @returns
-   */
-  private escapeSpecialChars(str: string) {
-    return str
-      .replaceAll("-", "\\-")
-      .replaceAll(":", "\\:")
-      .replaceAll(`"`, `\\"`);
-  }
-
-  /**
-   * Unescapes all '-', ':', and '"' characters, returning the original string
-   *
-   * @param str
-   * @returns
-   */
-  private unEscapeSpecialChars(str: string) {
-    return str
-      .replaceAll("\\-", "-")
-      .replaceAll("\\:", ":")
-      .replaceAll(`\\"`, `"`);
   }
 
   /**
