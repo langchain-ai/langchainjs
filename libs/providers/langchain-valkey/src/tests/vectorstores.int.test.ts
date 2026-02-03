@@ -325,4 +325,58 @@ describe("ValkeyVectorStore with Custom Schema", () => {
     expect(results).toHaveLength(1);
     expect(results[0].metadata.userId).toBe("user123");
   });
+
+  test("preserves large numbers as strings to avoid precision loss", async () => {
+    const customSchema = {
+      largeNumber: { type: SchemaFieldTypes.NUMERIC },
+      safeNumber: { type: SchemaFieldTypes.NUMERIC },
+    };
+
+    store = new ValkeyVectorStore(new SyntheticEmbeddings(), {
+      valkeyClient: client,
+      indexName: "test-large-numbers",
+      customSchema,
+    });
+
+    const pageContent = faker.lorem.sentence(5);
+    const unsafeInteger = Number.MAX_SAFE_INTEGER + 1;
+    const safeInteger = 42;
+
+    await store.addDocuments([
+      {
+        pageContent,
+        metadata: { largeNumber: unsafeInteger, safeNumber: safeInteger },
+      },
+    ]);
+
+    const results = await store.similaritySearch(pageContent, 1);
+    expect(results).toHaveLength(1);
+    // Safe integers are converted to numbers
+    expect(results[0].metadata.safeNumber).toBe(42);
+    expect(typeof results[0].metadata.safeNumber).toBe("number");
+    // Unsafe integers remain as strings to preserve precision
+    expect(typeof results[0].metadata.largeNumber).toBe("string");
+  });
+
+  test("throws error for unsupported field types", async () => {
+    const customSchema = {
+      vectorField: { type: SchemaFieldTypes.VECTOR },
+    };
+
+    store = new ValkeyVectorStore(new SyntheticEmbeddings(), {
+      valkeyClient: client,
+      indexName: "test-unsupported-type",
+      customSchema,
+    });
+
+    const pageContent = faker.lorem.sentence(5);
+
+    await expect(
+      store.addDocuments([
+        { pageContent, metadata: { vectorField: [1, 2, 3] } },
+      ])
+    ).rejects.toThrow(
+      "Unsupported field type 'VECTOR' for metadata field 'vectorField'. Only TAG and NUMERIC are supported."
+    );
+  });
 });
