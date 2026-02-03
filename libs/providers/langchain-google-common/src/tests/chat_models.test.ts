@@ -16,6 +16,7 @@ import { Serialized } from "@langchain/core/load/serializable";
 import { tool } from "@langchain/core/tools";
 import { z } from "zod/v3";
 import { toJsonSchema } from "@langchain/core/utils/json_schema";
+import { concat } from "@langchain/core/utils/stream";
 import { ChatGoogleBase, ChatGoogleBaseInput } from "../chat_models.js";
 import {
   authOptions,
@@ -2888,4 +2889,29 @@ test("Can set streaming param", () => {
     streaming: true,
   });
   expect(modelWithStreamingTrue.streaming).toBe(true);
+});
+
+test("Stream usage_metadata includes cache_read", async () => {
+  const record: Record<string, unknown> = {};
+  const projectId = mockId();
+  const model = new ChatGoogle({
+    authOptions: {
+      record,
+      projectId,
+      resultFile: "chat-stream-usage-cache-mock.json",
+    },
+    streaming: true,
+  });
+
+  const stream = await model.stream("Hello?", { streamUsage: true });
+  let finalChunk;
+  for await (const chunk of stream) {
+    finalChunk = finalChunk ? concat(finalChunk, chunk) : chunk;
+  }
+
+  expect(finalChunk).toBeDefined();
+  expect(finalChunk?.usage_metadata?.input_tokens).toBe(12);
+  expect(finalChunk?.usage_metadata?.output_tokens).toBe(4);
+  expect(finalChunk?.usage_metadata?.total_tokens).toBe(16);
+  expect(finalChunk?.usage_metadata?.input_token_details?.cache_read).toBe(5);
 });

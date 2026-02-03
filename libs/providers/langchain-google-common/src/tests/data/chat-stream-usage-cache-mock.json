@@ -1,0 +1,64 @@
+[
+  {
+    "candidates": [
+      {
+        "content": {
+          "role": "model",
+          "parts": [
+            {
+              "text": "Hello"
+            }
+          ]
+        }
+      }
+    ],
+    "promptFeedback": {
+      "safetyRatings": []
+    }
+  },
+  {
+    "candidates": [
+      {
+        "content": {
+          "role": "model",
+          "parts": [
+            {
+              "text": " world"
+            }
+          ]
+        },
+        "finishReason": "STOP"
+      }
+    ],
+    "promptFeedback": {
+      "safetyRatings": []
+    },
+    "usageMetadata": {
+      "promptTokenCount": 12,
+      "toolUsePromptTokenCount": 0,
+      "cachedContentTokenCount": 5,
+      "thoughtsTokenCount": 0,
+      "candidatesTokenCount": 4,
+      "totalTokenCount": 16,
+      "promptTokensDetails": [
+        {
+          "modality": "TEXT",
+          "tokenCount": 12
+        }
+      ],
+      "toolUsePromptTokensDetails": [],
+      "cacheTokensDetails": [
+        {
+          "modality": "TEXT",
+          "tokenCount": 5
+        }
+      ],
+      "candidatesTokensDetails": [
+        {
+          "modality": "TEXT",
+          "tokenCount": 4
+        }
+      ]
+    }
+  }
+]
