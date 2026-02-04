@@ -1,5 +1,16 @@
 # langchain
 
+## 1.2.17
+
+### Patch Changes
+
+- [#9916](https://github.com/langchain-ai/langchainjs/pull/9916) [`3516592`](https://github.com/langchain-ai/langchainjs/commit/3516592c51c44eb55e477c0d63ffdab5672ae97e) Thanks [@hntrl](https://github.com/hntrl)! - feat(langchain): add withConfig() method to ReactAgent
+
+  Adds a `withConfig()` method to ReactAgent following the same pattern as LangGraph's `Pregel.withConfig()`. This allows setting default configuration values (like `recursionLimit`, `tags`, or `configurable`) that get merged with invocation-time config.
+
+- Updated dependencies [[`41bfea5`](https://github.com/langchain-ai/langchainjs/commit/41bfea51cf119573a3b956ee782d2731fe71c681)]:
+  - @langchain/core@1.1.19
+
 ## 1.2.16
 
 ### Patch Changes
