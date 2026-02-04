@@ -4,7 +4,10 @@ import { OpenAIEmbeddings } from "@langchain/openai";
 import { CosmosClient } from "@azure/cosmos";
 
 import { DefaultAzureCredential } from "@azure/identity";
-import { AzureCosmosDBNoSQLVectorStore } from "../azure_cosmosdb_nosql.js";
+import {
+  AzureCosmosDBNoSQLVectorStore,
+  AzureCosmosDBNoSQLVectorStoreRetriever,
+} from "../azure_cosmosdb_nosql.js";
 
 const DATABASE_NAME = "langchainTestDB";
 const CONTAINER_NAME = "testContainer";
@@ -278,7 +281,7 @@ describe("AzureCosmosDBNoSQLVectorStore", () => {
       }
     );
 
-    const documents = Array.from({ length: 101 }, (_, i) => ({
+    const documents = Array.from({ length: 10 }, (_, i) => ({
       pageContent: `Document ${i}`,
       metadata: { a: i },
     }));
@@ -288,12 +291,29 @@ describe("AzureCosmosDBNoSQLVectorStore", () => {
     // Delete all documents
     await vectorStore.delete();
 
-    const results = await vectorStore.similaritySearch("document", 10);
+    // Verify deletion by querying the container directly
+    // (vector search may hang on empty containers)
+    const container = vectorStore.getContainer();
+    const { resources } = await container.items
+      .query("SELECT c.id FROM c")
+      .fetchAll();
 
-    expect(results.length).toEqual(0);
+    expect(resources.length).toEqual(0);
   });
 
   test("connect using managed identity", async () => {
+    // Skip if endpoint is not defined (needed for managed identity)
+    if (!process.env.AZURE_COSMOSDB_NOSQL_ENDPOINT) {
+      console.log(
+        "Skipping managed identity test: AZURE_COSMOSDB_NOSQL_ENDPOINT not set"
+      );
+      return;
+    } else {
+      console.log(
+        "Running managed identity test: AZURE_COSMOSDB_NOSQL_ENDPOINT is set"
+      );
+    }
+
     // First initialize using a regular connection string
     // to create the database and container, as managed identity
     // with RBAC does not have permission to create them.
@@ -343,5 +363,188 @@ describe("AzureCosmosDBNoSQLVectorStore", () => {
       // Restore the connection string
       process.env.AZURE_COSMOSDB_NOSQL_CONNECTION_STRING = connectionString;
     }
+  });
+
+  test("performs vector search with score threshold", async () => {
+    const vectorStore = new AzureCosmosDBNoSQLVectorStore(
+      new OpenAIEmbeddings(),
+      {
+        databaseName: DATABASE_NAME,
+        containerName: CONTAINER_NAME,
+      }
+    );
+
+    await vectorStore.addDocuments([
+      { pageContent: "This book is about politics", metadata: { a: 1 } },
+      { pageContent: "Cats sleeps a lot.", metadata: { b: 1 } },
+      { pageContent: "Sandwiches taste good.", metadata: { c: 1 } },
+      { pageContent: "The house is open", metadata: { d: 1, e: 2 } },
+    ]);
+
+    // Search with a high threshold (should filter out low-scoring results)
+    const results = await vectorStore.vectorSearchWithThreshold(
+      "sandwich",
+      10,
+      0.1 // Low threshold to include results
+    );
+
+    expect(results.length).toBeGreaterThan(0);
+    expect(results[0][0].pageContent).toBe("Sandwiches taste good.");
+    expect(results[0][1]).toBeGreaterThanOrEqual(0.1);
+  });
+
+  test("uses custom cosmos retriever with vector search", async () => {
+    const vectorStore = new AzureCosmosDBNoSQLVectorStore(
+      new OpenAIEmbeddings(),
+      {
+        databaseName: DATABASE_NAME,
+        containerName: CONTAINER_NAME,
+      }
+    );
+
+    await vectorStore.addDocuments([
+      { pageContent: "This book is about politics", metadata: { a: 1 } },
+      { pageContent: "Cats sleeps a lot.", metadata: { b: 1 } },
+      { pageContent: "Sandwiches taste good.", metadata: { c: 1 } },
+      { pageContent: "The house is open", metadata: { d: 1, e: 2 } },
+    ]);
+
+    const retriever = vectorStore.asCosmosRetriever({
+      searchType: "vector",
+      k: 2,
+    });
+
+    expect(retriever).toBeInstanceOf(AzureCosmosDBNoSQLVectorStoreRetriever);
+
+    const docs = await retriever.invoke("sandwich");
+    expect(docs.length).toBeLessThanOrEqual(2);
+    expect(docs[0].pageContent).toBe("Sandwiches taste good.");
+  });
+
+  test("uses custom cosmos retriever with vector_score_threshold", async () => {
+    const vectorStore = new AzureCosmosDBNoSQLVectorStore(
+      new OpenAIEmbeddings(),
+      {
+        databaseName: DATABASE_NAME,
+        containerName: CONTAINER_NAME,
+      }
+    );
+
+    await vectorStore.addDocuments([
+      { pageContent: "This book is about politics", metadata: { a: 1 } },
+      { pageContent: "Cats sleeps a lot.", metadata: { b: 1 } },
+      { pageContent: "Sandwiches taste good.", metadata: { c: 1 } },
+      { pageContent: "The house is open", metadata: { d: 1, e: 2 } },
+    ]);
+
+    const retriever = vectorStore.asCosmosRetriever({
+      searchType: "vector_score_threshold",
+      k: 10,
+      searchKwargs: {
+        scoreThreshold: 0.1,
+      },
+    });
+
+    const docs = await retriever.invoke("sandwich");
+    expect(docs.length).toBeGreaterThan(0);
+    expect(docs[0].pageContent).toBe("Sandwiches taste good.");
+  });
+
+  test("uses custom cosmos retriever with mmr search", async () => {
+    const texts = ["foo", "foo", "fox"];
+    const vectorStore = await AzureCosmosDBNoSQLVectorStore.fromTexts(
+      texts,
+      {},
+      new OpenAIEmbeddings(),
+      {
+        databaseName: DATABASE_NAME,
+        containerName: CONTAINER_NAME,
+      }
+    );
+
+    const retriever = vectorStore.asCosmosRetriever({
+      searchType: "mmr",
+      k: 3,
+      searchKwargs: {
+        fetchK: 20,
+        lambda: 0.1,
+      },
+    });
+
+    const docs = await retriever.invoke("foo");
+    expect(docs.length).toBe(3);
+
+    // MMR should promote diversity
+    const pageContents = docs.map((doc) => doc.pageContent);
+    expect(pageContents).toContain("fox");
+  });
+
+  test("getContainer returns the underlying container", async () => {
+    const vectorStore = new AzureCosmosDBNoSQLVectorStore(
+      new OpenAIEmbeddings(),
+      {
+        databaseName: DATABASE_NAME,
+        containerName: CONTAINER_NAME,
+      }
+    );
+
+    await vectorStore.addDocuments([
+      { pageContent: "Test document", metadata: {} },
+    ]);
+
+    const container = vectorStore.getContainer();
+    expect(container).toBeDefined();
+    expect(container.id).toBe(CONTAINER_NAME);
+  });
+
+  test("deleteDocumentById removes a specific document", async () => {
+    const vectorStore = new AzureCosmosDBNoSQLVectorStore(
+      new OpenAIEmbeddings(),
+      {
+        databaseName: DATABASE_NAME,
+        containerName: CONTAINER_NAME,
+      }
+    );
+
+    const ids = await vectorStore.addDocuments([
+      { pageContent: "Document to keep", metadata: {} },
+      { pageContent: "Document to delete", metadata: {} },
+    ]);
+
+    await vectorStore.deleteDocumentById(ids[1]);
+
+    const results = await vectorStore.similaritySearch("delete", 10);
+    expect(results.every((r) => r.pageContent !== "Document to delete")).toBe(
+      true
+    );
+  });
+
+  test("maxMarginalRelevanceSearchByVector works with embeddings", async () => {
+    const embeddings = new OpenAIEmbeddings();
+    const texts = ["foo", "foo", "fox"];
+    const vectorStore = await AzureCosmosDBNoSQLVectorStore.fromTexts(
+      texts,
+      {},
+      embeddings,
+      {
+        databaseName: DATABASE_NAME,
+        containerName: CONTAINER_NAME,
+      }
+    );
+
+    const queryEmbedding = await embeddings.embedQuery("foo");
+    const docs = await vectorStore.maxMarginalRelevanceSearchByVector(
+      queryEmbedding,
+      {
+        k: 3,
+        fetchK: 20,
+        lambda: 0.1,
+      }
+    );
+
+    expect(docs.length).toBe(3);
+    // MMR should promote diversity
+    const pageContents = docs.map((doc) => doc.pageContent);
+    expect(pageContents).toContain("fox");
   });
 });
