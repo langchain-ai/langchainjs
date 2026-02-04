@@ -1,5 +1,12 @@
 # @langchain/google-cloud-sql-pg
 
+## 1.0.20
+
+### Patch Changes
+
+- Updated dependencies [[`41bfea5`](https://github.com/langchain-ai/langchainjs/commit/41bfea51cf119573a3b956ee782d2731fe71c681)]:
+  - @langchain/core@1.1.19
+
 ## 1.0.19
 
 ### Patch Changes

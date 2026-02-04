@@ -1,5 +1,15 @@
 # @langchain/community
 
+## 1.1.11
+
+### Patch Changes
+
+- [#9905](https://github.com/langchain-ai/langchainjs/pull/9905) [`41bfea5`](https://github.com/langchain-ai/langchainjs/commit/41bfea51cf119573a3b956ee782d2731fe71c681) Thanks [@christian-bromann](https://github.com/christian-bromann)! - fix(classic/community/core): avoid long lived abort signals
+
+- Updated dependencies [[`41bfea5`](https://github.com/langchain-ai/langchainjs/commit/41bfea51cf119573a3b956ee782d2731fe71c681)]:
+  - @langchain/classic@1.0.14
+  - @langchain/openai@1.2.4
+
 ## 1.1.10
 
 ### Patch Changes
