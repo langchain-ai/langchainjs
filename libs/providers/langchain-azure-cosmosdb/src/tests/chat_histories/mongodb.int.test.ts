@@ -109,20 +109,22 @@ test("Test getAllSessions and clearAllSessions", async () => {
   };
 
   const sessionId1 = new ObjectId().toString();
-  const userId1 = new ObjectId().toString();
+  const userId = new ObjectId().toString();
   const sessionId2 = new ObjectId().toString();
-  const userId2 = new ObjectId().toString();
 
   const chatHistory1 = new AzureCosmosDBMongoChatMessageHistory(
     dbcfg,
     sessionId1,
-    userId1
+    userId
   );
   const chatHistory2 = new AzureCosmosDBMongoChatMessageHistory(
     dbcfg,
     sessionId2,
-    userId2
+    userId
   );
+
+  // Clear any existing sessions from previous test runs
+  await chatHistory1.clearAllSessions();
 
   await chatHistory1.addUserMessage("What is AI?");
   await chatHistory1.addAIMessage("AI stands for Artificial Intelligence.");
