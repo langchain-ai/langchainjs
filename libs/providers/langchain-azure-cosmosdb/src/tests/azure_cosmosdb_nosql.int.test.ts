@@ -10,6 +10,15 @@ import {
   type VectorIndex,
 } from "../azure_cosmosdb_nosql.js";
 
+function getEmbeddings() {
+  return new OpenAIEmbeddings({
+    model: process.env.OPENAI_EMBEDDINGS_MODEL,
+    configuration: {
+      baseURL: process.env.OPENAI_BASE_URL,
+    },
+  });
+}
+
 const DATABASE_NAME = "langchainTestDB";
 const CONTAINER_NAME = "testContainer";
 

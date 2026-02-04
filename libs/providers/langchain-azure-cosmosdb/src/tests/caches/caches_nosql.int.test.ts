@@ -7,8 +7,33 @@ import {
   VectorEmbeddingPolicy,
 } from "@azure/cosmos";
 import { DefaultAzureCredential } from "@azure/identity";
-import { ChatOpenAI, OpenAIEmbeddings } from "@langchain/openai";
+import {
+  ChatOpenAI,
+  OpenAIEmbeddings,
+  type ChatOpenAIFields,
+  type OpenAIEmbeddingsParams,
+} from "@langchain/openai";
 import { AzureCosmosDBNoSQLSemanticCache } from "../../caches/caches_nosql.js";
+
+function getEmbeddings(fields?: Partial<OpenAIEmbeddingsParams>) {
+  return new OpenAIEmbeddings({
+    model: process.env.OPENAI_EMBEDDINGS_MODEL,
+    ...fields,
+    configuration: {
+      baseURL: process.env.OPENAI_BASE_URL,
+    },
+  });
+}
+
+function getChatModel(fields?: Partial<ChatOpenAIFields>) {
+  return new ChatOpenAI({
+    model: process.env.OPENAI_CHAT_MODEL,
+    ...fields,
+    configuration: {
+      baseURL: process.env.OPENAI_BASE_URL,
+    },
+  });
+}
 
 const DATABASE_NAME = "langchainTestCacheDB";
 const CONTAINER_NAME = "testContainer";
@@ -44,7 +69,7 @@ async function initializeCache(
   similarityThreshold?: number
 ): Promise<AzureCosmosDBNoSQLSemanticCache> {
   let cache: AzureCosmosDBNoSQLSemanticCache;
-  const embeddingModel = new OpenAIEmbeddings();
+  const embeddingModel = getEmbeddings();
   const testEmbedding = await embeddingModel.embedDocuments(["sample text"]);
   const dimension = Math.min(
     testEmbedding[0].length,
@@ -52,7 +77,7 @@ async function initializeCache(
   );
   if (process.env.AZURE_COSMOSDB_NOSQL_CONNECTION_STRING) {
     cache = new AzureCosmosDBNoSQLSemanticCache(
-      new OpenAIEmbeddings(),
+      getEmbeddings(),
       {
         databaseName: DATABASE_NAME,
         containerName: CONTAINER_NAME,
@@ -67,7 +92,7 @@ async function initializeCache(
     );
   } else if (process.env.AZURE_COSMOSDB_NOSQL_ENDPOINT) {
     cache = new AzureCosmosDBNoSQLSemanticCache(
-      new OpenAIEmbeddings(),
+      getEmbeddings(),
       {
         databaseName: DATABASE_NAME,
         containerName: CONTAINER_NAME,
@@ -134,7 +159,7 @@ describe("Azure CosmosDB NoSQL Semantic Cache", () => {
 
   it("test AzureCosmosDBNoSqlSemanticCache with cosine quantizedFlat", async () => {
     const cache = await initializeCache("quantizedFlat", "cosine");
-    const model = new ChatOpenAI({ model: "gpt-4o-mini", cache });
+    const model = getChatModel({ model: "gpt-4o-mini", cache });
     const llmString = JSON.stringify(model._identifyingParams);
     await cache.update("foo", llmString, [{ text: "fizz" }]);
 
@@ -149,7 +174,7 @@ describe("Azure CosmosDB NoSQL Semantic Cache", () => {
 
   it("test AzureCosmosDBNoSqlSemanticCache with cosine flat", async () => {
     const cache = await initializeCache("flat", "cosine");
-    const model = new ChatOpenAI({ model: "gpt-4o-mini", cache });
+    const model = getChatModel({ model: "gpt-4o-mini", cache });
     const llmString = JSON.stringify(model._identifyingParams);
     await cache.update("foo", llmString, [{ text: "fizz" }]);
 
@@ -164,7 +189,7 @@ describe("Azure CosmosDB NoSQL Semantic Cache", () => {
 
   it("test AzureCosmosDBNoSqlSemanticCache with dotProduct quantizedFlat", async () => {
     const cache = await initializeCache("quantizedFlat", "dotproduct");
-    const model = new ChatOpenAI({ model: "gpt-4o-mini", cache });
+    const model = getChatModel({ model: "gpt-4o-mini", cache });
     const llmString = JSON.stringify(model._identifyingParams);
     await cache.update("foo", llmString, [{ text: "fizz" }]);
 
@@ -179,7 +204,7 @@ describe("Azure CosmosDB NoSQL Semantic Cache", () => {
 
   it("test AzureCosmosDBNoSqlSemanticCache with dotProduct flat", async () => {
     const cache = await initializeCache("flat", "cosine");
-    const model = new ChatOpenAI({ model: "gpt-4o-mini", cache });
+    const model = getChatModel({ model: "gpt-4o-mini", cache });
     const llmString = JSON.stringify(model._identifyingParams);
     await cache.update("foo", llmString, [{ text: "fizz" }]);
 
@@ -194,7 +219,7 @@ describe("Azure CosmosDB NoSQL Semantic Cache", () => {
 
   it("test AzureCosmosDBNoSqlSemanticCache with euclidean quantizedFlat", async () => {
     const cache = await initializeCache("quantizedFlat", "euclidean");
-    const model = new ChatOpenAI({ model: "gpt-4o-mini", cache });
+    const model = getChatModel({ model: "gpt-4o-mini", cache });
     const llmString = JSON.stringify(model._identifyingParams);
     await cache.update("foo", llmString, [{ text: "fizz" }]);
 
@@ -209,7 +234,7 @@ describe("Azure CosmosDB NoSQL Semantic Cache", () => {
 
   it("test AzureCosmosDBNoSqlSemanticCache with euclidean flat", async () => {
     const cache = await initializeCache("flat", "euclidean");
-    const model = new ChatOpenAI({ model: "gpt-4o-mini", cache });
+    const model = getChatModel({ model: "gpt-4o-mini", cache });
     const llmString = JSON.stringify(model._identifyingParams);
     await cache.update("foo", llmString, [{ text: "fizz" }]);
 
@@ -224,7 +249,7 @@ describe("Azure CosmosDB NoSQL Semantic Cache", () => {
 
   it("test AzureCosmosDBNoSqlSemanticCache response according to similarity score", async () => {
     const cache = await initializeCache("quantizedFlat", "cosine");
-    const model = new ChatOpenAI({ model: "gpt-4o-mini", cache });
+    const model = getChatModel({ model: "gpt-4o-mini", cache });
     const response1 = await model.invoke(
       "Where is the headquarter of Microsoft?"
     );
