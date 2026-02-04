@@ -217,6 +217,7 @@ export * as vectorstores__clickhouse from "../vectorstores/clickhouse.js";
 export * as vectorstores__closevector__node from "../vectorstores/closevector/node.js";
 export * as vectorstores__closevector__web from "../vectorstores/closevector/web.js";
 export * as vectorstores__convex from "../vectorstores/convex.js";
+export * as vectorstores__couchbase_query from "../vectorstores/couchbase_query.js";
 export * as vectorstores__couchbase_search from "../vectorstores/couchbase_search.js";
 export * as vectorstores__elasticsearch from "../vectorstores/elasticsearch.js";
 export * as vectorstores__faiss from "../vectorstores/faiss.js";

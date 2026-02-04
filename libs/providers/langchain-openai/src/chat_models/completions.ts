@@ -133,6 +133,7 @@ export class ChatOpenAICompletions<
     options: this["ParsedCallOptions"],
     runManager?: CallbackManagerForLLMRun
   ): Promise<ChatResult> {
+    options.signal?.throwIfAborted();
     const usageMetadata = {} as UsageMetadata;
     const params = this.invocationParams(options);
     const messagesMapped: OpenAIClient.Chat.Completions.ChatCompletionMessageParam[] =
@@ -315,6 +316,9 @@ export class ChatOpenAICompletions<
     const streamIterable = await this.completionWithRetry(params, options);
     let usage: OpenAIClient.Completions.CompletionUsage | undefined;
     for await (const data of streamIterable) {
+      if (options.signal?.aborted) {
+        return;
+      }
       const choice = data?.choices?.[0];
       if (data.usage) {
         usage = data.usage;

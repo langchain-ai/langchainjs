@@ -873,7 +873,7 @@ export function tool<
             cleanup();
             reject(getAbortSignalError(config.signal));
           };
-          config.signal.addEventListener("abort", listener);
+          config.signal.addEventListener("abort", listener, { once: true });
         }
 
         const childConfig = patchConfig(config, {

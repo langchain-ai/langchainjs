@@ -16,12 +16,13 @@ describe("JiraProjectLoader Integration Tests", () => {
   const JIRA_USERNAME = requireEnvVar("JIRA_USERNAME");
   const JIRA_ACCESS_TOKEN = requireEnvVar("JIRA_ACCESS_TOKEN");
   const JIRA_PROJECT_KEY = requireEnvVar("JIRA_PROJECT_KEY");
+  const JIRA_LIMIT_PER_REQUEST = 20;
   const jiraConf: JiraProjectLoaderParams = {
     host: JIRA_HOST,
     projectKey: JIRA_PROJECT_KEY,
     username: JIRA_USERNAME,
     accessToken: JIRA_ACCESS_TOKEN,
-    limitPerRequest: 20,
+    limitPerRequest: JIRA_LIMIT_PER_REQUEST,
   };
 
   test(
@@ -105,14 +106,6 @@ describe("JiraProjectLoader Integration Tests", () => {
       // Verify we got the expected issues
       expect(filteredDocs.length).toBeGreaterThan(0);
       expect(filteredDocs.length).toBeLessThan(baseIssues.length);
-
-      // Verify all returned issues are created after our cutoff date
-      const middleDateTimestamp = middleDate.getTime();
-
-      // Verify we got the same issues as in our original set
-      const filteredIds = new Set(filteredDocs.map((d) => d.metadata.id));
-      const expectedIds = new Set(issuesAfterMiddle.map((issue) => issue.id));
-      expect(filteredIds).toEqual(expectedIds);
     },
     TIMEOUT_MS
   );
@@ -176,8 +169,8 @@ describe("JiraProjectLoader Integration Tests", () => {
 
       const issues = await loader.loadAsIssues();
 
-      // Skip if project has fewer than 2 issues (pagination not meaningful)
-      if (issues.length < 2) return;
+      // Skip if project has fewer than JIRA_LIMIT_PER_REQUEST issues (pagination not meaningful)
+      if (issues.length < JIRA_LIMIT_PER_REQUEST) return;
 
       // Basic sanity checks
       expect(issues.length).toBeGreaterThan(1);

@@ -854,6 +854,7 @@ export class ChatGoogleGenerativeAI
     options: this["ParsedCallOptions"],
     runManager?: CallbackManagerForLLMRun
   ): Promise<ChatResult> {
+    options.signal?.throwIfAborted();
     const prompt = convertBaseMessagesToContent(
       messages,
       this._isMultimodalModel,
@@ -943,7 +944,9 @@ export class ChatGoogleGenerativeAI
     const stream = await this.caller.callWithOptions(
       { signal: options?.signal },
       async () => {
-        const { stream } = await this.client.generateContentStream(request);
+        const { stream } = await this.client.generateContentStream(request, {
+          signal: options?.signal,
+        });
         return stream;
       }
     );
@@ -955,6 +958,9 @@ export class ChatGoogleGenerativeAI
     let prevTotalTokenCount = 0;
     let index = 0;
     for await (const response of stream) {
+      if (options.signal?.aborted) {
+        return;
+      }
       if (
         "usageMetadata" in response &&
         response.usageMetadata !== undefined &&
@@ -1014,7 +1020,9 @@ export class ChatGoogleGenerativeAI
       { signal: options?.signal },
       async () => {
         try {
-          return await this.client.generateContent(request);
+          return await this.client.generateContent(request, {
+            signal: options?.signal,
+          });
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
         } catch (e: any) {
           // TODO: Improve error handling

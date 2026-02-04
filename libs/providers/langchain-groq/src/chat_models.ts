@@ -1178,6 +1178,9 @@ export class ChatGroq extends BaseChatModel<
     let responseMetadata: Record<string, any> | undefined;
 
     for await (const data of response) {
+      if (options.signal?.aborted) {
+        return;
+      }
       responseMetadata = data;
       const choice = data?.choices[0];
       if (!choice) {
@@ -1253,6 +1256,7 @@ export class ChatGroq extends BaseChatModel<
     options: this["ParsedCallOptions"],
     runManager?: CallbackManagerForLLMRun
   ): Promise<ChatResult> {
+    options.signal?.throwIfAborted();
     if (this.streaming) {
       const tokenUsage: TokenUsage = {};
       const stream = this._streamResponseChunks(messages, options, runManager);

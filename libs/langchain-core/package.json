@@ -1,6 +1,6 @@
 {
   "name": "@langchain/core",
-  "version": "1.1.17",
+  "version": "1.1.18",
   "description": "Core LangChain.js abstractions and schemas",
   "type": "module",
   "engines": {
@@ -227,6 +227,17 @@
       "import": {
         "types": "./dist/embeddings.d.ts",
         "default": "./dist/embeddings.js"
+      }
+    },
+    "./errors": {
+      "input": "./src/errors/index.ts",
+      "require": {
+        "types": "./dist/errors/index.d.cts",
+        "default": "./dist/errors/index.cjs"
+      },
+      "import": {
+        "types": "./dist/errors/index.d.ts",
+        "default": "./dist/errors/index.js"
       }
     },
     "./example_selectors": {
