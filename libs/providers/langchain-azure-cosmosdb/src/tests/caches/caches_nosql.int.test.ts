@@ -77,7 +77,7 @@ async function initializeCache(
   );
   if (process.env.AZURE_COSMOSDB_NOSQL_CONNECTION_STRING) {
     cache = new AzureCosmosDBNoSQLSemanticCache(
-      getEmbeddings(),
+      embeddingModel,
       {
         databaseName: DATABASE_NAME,
         containerName: CONTAINER_NAME,
@@ -92,7 +92,7 @@ async function initializeCache(
     );
   } else if (process.env.AZURE_COSMOSDB_NOSQL_ENDPOINT) {
     cache = new AzureCosmosDBNoSQLSemanticCache(
-      getEmbeddings(),
+      embeddingModel,
       {
         databaseName: DATABASE_NAME,
         containerName: CONTAINER_NAME,

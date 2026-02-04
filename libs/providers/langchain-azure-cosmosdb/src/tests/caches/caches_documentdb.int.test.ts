@@ -63,7 +63,7 @@ async function initializeCache(
     process.env.AZURE_COSMOSDB_MONGODB_CONNECTION_STRING;
   if (connectionString) {
     cache = new AzureDocumentDBSemanticCache(
-      getEmbeddings(),
+      embeddingModel,
       {
         databaseName: DATABASE_NAME,
         collectionName: COLLECTION_NAME,
@@ -96,30 +96,46 @@ describe("AzureDocumentDBSemanticCache", () => {
   });
 
   it("should store and retrieve cache using cosine similarity with ivf index", async () => {
-    const cache = await initializeCache("ivf", "cosine");
+    const cache = await initializeCache("ivf", "cosine", 0.9);
     const model = getChatModel({ model: "gpt-4o-mini", cache });
     const llmString = JSON.stringify(model._identifyingParams);
-    await cache.update("foo", llmString, [{ text: "fizz" }]);
+    await cache.update("What is the capital of France?", llmString, [
+      { text: "Paris" },
+    ]);
 
-    let cacheOutput = await cache.lookup("foo", llmString);
-    expect(cacheOutput).toEqual([{ text: "fizz" }]);
+    let cacheOutput = await cache.lookup(
+      "What is the capital of France?",
+      llmString
+    );
+    expect(cacheOutput).toEqual([{ text: "Paris" }]);
 
-    cacheOutput = await cache.lookup("bar", llmString);
+    cacheOutput = await cache.lookup(
+      "How do I bake chocolate chip cookies from scratch?",
+      llmString
+    );
     expect(cacheOutput).toEqual(null);
 
     await cache.clear(llmString);
   });
 
   it("should store and retrieve cache using euclidean similarity with hnsw index", async () => {
-    const cache = await initializeCache("hnsw", "euclidean");
+    const cache = await initializeCache("hnsw", "euclidean", 0.9);
     const model = getChatModel({ model: "gpt-4o-mini", cache });
     const llmString = JSON.stringify(model._identifyingParams);
-    await cache.update("foo", llmString, [{ text: "fizz" }]);
+    await cache.update("What is the capital of France?", llmString, [
+      { text: "Paris" },
+    ]);
 
-    let cacheOutput = await cache.lookup("foo", llmString);
-    expect(cacheOutput).toEqual([{ text: "fizz" }]);
+    let cacheOutput = await cache.lookup(
+      "What is the capital of France?",
+      llmString
+    );
+    expect(cacheOutput).toEqual([{ text: "Paris" }]);
 
-    cacheOutput = await cache.lookup("bar", llmString);
+    cacheOutput = await cache.lookup(
+      "How do I bake chocolate chip cookies from scratch?",
+      llmString
+    );
     expect(cacheOutput).toEqual(null);
 
     await cache.clear(llmString);
@@ -129,32 +145,53 @@ describe("AzureDocumentDBSemanticCache", () => {
     const cache = await initializeCache("ivf", "cosine", 0.8);
     const model = getChatModel({ model: "gpt-4o-mini", cache });
     const llmString = JSON.stringify(model._identifyingParams);
-    await cache.update("foo", llmString, [{ text: "fizz" }]);
+    await cache.update("What is the capital of France?", llmString, [
+      { text: "Paris" },
+    ]);
 
-    const cacheOutput = await cache.lookup("foo", llmString);
-    expect(cacheOutput).toEqual([{ text: "fizz" }]);
+    const cacheOutput = await cache.lookup(
+      "What is the capital of France?",
+      llmString
+    );
+    expect(cacheOutput).toEqual([{ text: "Paris" }]);
 
-    const resultBelowThreshold = await cache.lookup("bar", llmString);
+    const resultBelowThreshold = await cache.lookup(
+      "How do I bake chocolate chip cookies from scratch?",
+      llmString
+    );
     expect(resultBelowThreshold).toEqual(null);
 
     await cache.clear(llmString);
   });
 
   it("should handle a variety of cache updates and lookups", async () => {
-    const cache = await initializeCache("ivf", "cosine", 0.7);
+    const cache = await initializeCache("ivf", "cosine", 0.9);
     const model = getChatModel({ model: "gpt-4o-mini", cache });
     const llmString = JSON.stringify(model._identifyingParams);
 
-    await cache.update("test1", llmString, [{ text: "response 1" }]);
-    await cache.update("test2", llmString, [{ text: "response 2" }]);
+    await cache.update("What is the capital of France?", llmString, [
+      { text: "Paris" },
+    ]);
+    await cache.update("How do I train my dog to sit on command?", llmString, [
+      { text: "Use positive reinforcement" },
+    ]);
 
-    let cacheOutput = await cache.lookup("test1", llmString);
-    expect(cacheOutput).toEqual([{ text: "response 1" }]);
+    let cacheOutput = await cache.lookup(
+      "What is the capital of France?",
+      llmString
+    );
+    expect(cacheOutput).toEqual([{ text: "Paris" }]);
 
-    cacheOutput = await cache.lookup("test2", llmString);
-    expect(cacheOutput).toEqual([{ text: "response 2" }]);
+    cacheOutput = await cache.lookup(
+      "How do I train my dog to sit on command?",
+      llmString
+    );
+    expect(cacheOutput).toEqual([{ text: "Use positive reinforcement" }]);
 
-    cacheOutput = await cache.lookup("test3", llmString);
+    cacheOutput = await cache.lookup(
+      "How do I bake chocolate chip cookies from scratch?",
+      llmString
+    );
     expect(cacheOutput).toEqual(null);
 
     await cache.clear(llmString);
