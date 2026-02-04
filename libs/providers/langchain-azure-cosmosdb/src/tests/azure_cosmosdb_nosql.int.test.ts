@@ -92,7 +92,7 @@ describe("AzureCosmosDBNoSQLVectorStore", () => {
       { pageContent: "Sandwiches taste good.", metadata: { c: 1 } },
     ]);
 
-    const retriever = vectorStore.asRetriever({});
+    const retriever = vectorStore.asCosmosRetriever({});
 
     const docs = await retriever.invoke("house");
     expect(docs).toBeDefined();
@@ -137,7 +137,7 @@ describe("AzureCosmosDBNoSQLVectorStore", () => {
     const standardRetrieverExpected = ["foo", "foo", "fox"];
     expect(standardRetrieverActual).toEqual(standardRetrieverExpected);
 
-    const retriever = await vectorStore.asRetriever({
+    const retriever = await vectorStore.asCosmosRetriever({
       searchType: "mmr",
       searchKwargs: {
         fetchK: 20,
