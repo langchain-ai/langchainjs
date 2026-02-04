@@ -7,11 +7,11 @@ import {
   type OpenAIEmbeddingsParams,
 } from "@langchain/openai";
 import { MongoClient } from "mongodb";
-import { AzureCosmosDBMongoDBSemanticCache } from "../../caches/caches_mongodb.js";
+import { AzureDocumentDBSemanticCache } from "../../caches/caches_documentdb.js";
 import {
-  AzureCosmosDBMongoDBIndexOptions,
-  AzureCosmosDBMongoDBSimilarityType,
-} from "../../azure_cosmosdb_mongodb.js";
+  AzureDocumentDBIndexOptions,
+  AzureDocumentDBSimilarityType,
+} from "../../azure_documentdb.js";
 
 function getEmbeddings(fields?: Partial<OpenAIEmbeddingsParams>) {
   return new OpenAIEmbeddings({
@@ -40,27 +40,29 @@ async function initializeCache(
   indexType: any,
   distanceFunction: any,
   similarityThreshold: number = 0.6
-): Promise<AzureCosmosDBMongoDBSemanticCache> {
+): Promise<AzureDocumentDBSemanticCache> {
   const embeddingModel = getEmbeddings();
   const testEmbedding = await embeddingModel.embedDocuments(["sample text"]);
   const dimension = testEmbedding[0].length;
 
-  const indexOptions: AzureCosmosDBMongoDBIndexOptions = {
+  const indexOptions: AzureDocumentDBIndexOptions = {
     indexType,
     similarity:
       distanceFunction === "cosine"
-        ? AzureCosmosDBMongoDBSimilarityType.COS
+        ? AzureDocumentDBSimilarityType.COS
         : distanceFunction === "euclidean"
-          ? AzureCosmosDBMongoDBSimilarityType.L2
-          : AzureCosmosDBMongoDBSimilarityType.IP,
+          ? AzureDocumentDBSimilarityType.L2
+          : AzureDocumentDBSimilarityType.IP,
     dimensions: dimension,
   };
 
-  let cache: AzureCosmosDBMongoDBSemanticCache;
+  let cache: AzureDocumentDBSemanticCache;
 
-  const connectionString = process.env.AZURE_COSMOSDB_MONGODB_CONNECTION_STRING;
+  const connectionString =
+    process.env.AZURE_DOCUMENTDB_CONNECTION_STRING ||
+    process.env.AZURE_COSMOSDB_MONGODB_CONNECTION_STRING;
   if (connectionString) {
-    cache = new AzureCosmosDBMongoDBSemanticCache(
+    cache = new AzureDocumentDBSemanticCache(
       getEmbeddings(),
       {
         databaseName: DATABASE_NAME,
@@ -72,16 +74,17 @@ async function initializeCache(
     );
   } else {
     throw new Error(
-      "Please set the environment variable AZURE_COSMOSDB_MONGODB_CONNECTION_STRING"
+      "Please set the environment variable AZURE_DOCUMENTDB_CONNECTION_STRING"
     );
   }
 
   return cache;
 }
 
-describe("AzureCosmosDBMongoDBSemanticCache", () => {
+describe("AzureDocumentDBSemanticCache", () => {
   beforeEach(async () => {
     const connectionString =
+      process.env.AZURE_DOCUMENTDB_CONNECTION_STRING ||
       process.env.AZURE_COSMOSDB_MONGODB_CONNECTION_STRING;
     const client = new MongoClient(connectionString!);
 

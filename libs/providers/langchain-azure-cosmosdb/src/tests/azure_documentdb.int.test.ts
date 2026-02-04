@@ -3,7 +3,7 @@ import { MongoClient } from "mongodb";
 import { Document } from "@langchain/core/documents";
 import { OpenAIEmbeddings } from "@langchain/openai";
 
-import { AzureCosmosDBMongoDBVectorStore } from "../azure_cosmosdb_mongodb.js";
+import { AzureDocumentDBVectorStore } from "../azure_documentdb.js";
 
 function getEmbeddings() {
   return new OpenAIEmbeddings({
@@ -19,8 +19,8 @@ const COLLECTION_NAME = "test";
 const INDEX_NAME = "vectorSearchIndex";
 
 /*
- * To run this test, you need have an Azure Cosmos DB for vCore instance
- * running. You can deploy a free version on Azure Portal without any cost,
+ * To run this test, you need have an Azure DocumentDB instance running.
+ * You can deploy a free version on Azure Portal without any cost,
  * following this guide:
  * https://learn.microsoft.com/azure/cosmos-db/mongodb/vcore/quickstart-portal
  *
@@ -29,7 +29,7 @@ const INDEX_NAME = "vectorSearchIndex";
  *
  * Once you have the instance running, you need to set the following environment
  * variables before running the test:
- * - AZURE_COSMOSDB_MONGODB_CONNECTION_STRING
+ * - AZURE_DOCUMENTDB_CONNECTION_STRING
  * - AZURE_OPENAI_API_KEY
  * - AZURE_OPENAI_API_INSTANCE_NAME
  * - AZURE_OPENAI_API_EMBEDDINGS_DEPLOYMENT_NAME
@@ -37,9 +37,12 @@ const INDEX_NAME = "vectorSearchIndex";
  *
  * A regular OpenAI key can also be used instead of Azure OpenAI.
  */
-describe("AzureCosmosDBMongoDBVectorStore", () => {
+describe("AzureDocumentDBVectorStore", () => {
   beforeEach(async () => {
-    expect(process.env.AZURE_COSMOSDB_MONGODB_CONNECTION_STRING).toBeDefined();
+    const connectionString =
+      process.env.AZURE_DOCUMENTDB_CONNECTION_STRING ||
+      process.env.AZURE_COSMOSDB_MONGODB_CONNECTION_STRING;
+    expect(connectionString).toBeDefined();
 
     // Note: when using Azure OpenAI, you have to also set these variables
     // in addition to the API key:
@@ -50,9 +53,7 @@ describe("AzureCosmosDBMongoDBVectorStore", () => {
       process.env.OPENAI_API_KEY || process.env.AZURE_OPENAI_API_KEY
     ).toBeDefined();
 
-    const client = new MongoClient(
-      process.env.AZURE_COSMOSDB_MONGODB_CONNECTION_STRING!
-    );
+    const client = new MongoClient(connectionString!);
     await client.connect();
     const db = client.db(DATABASE_NAME);
     const collection = await db.createCollection(COLLECTION_NAME);
@@ -71,7 +72,7 @@ describe("AzureCosmosDBMongoDBVectorStore", () => {
   });
 
   test("performs similarity search", async () => {
-    const vectorStore = new AzureCosmosDBMongoDBVectorStore(getEmbeddings(), {
+    const vectorStore = new AzureDocumentDBVectorStore(getEmbeddings(), {
       databaseName: DATABASE_NAME,
       collectionName: COLLECTION_NAME,
       indexName: INDEX_NAME,
@@ -113,7 +114,7 @@ describe("AzureCosmosDBMongoDBVectorStore", () => {
 
   test("performs max marginal relevance search", async () => {
     const texts = ["foo", "foo", "fox"];
-    const vectorStore = await AzureCosmosDBMongoDBVectorStore.fromTexts(
+    const vectorStore = await AzureDocumentDBVectorStore.fromTexts(
       texts,
       {},
       getEmbeddings(),
@@ -173,7 +174,7 @@ describe("AzureCosmosDBMongoDBVectorStore", () => {
   });
 
   test("deletes documents by id", async () => {
-    const vectorStore = new AzureCosmosDBMongoDBVectorStore(getEmbeddings(), {
+    const vectorStore = new AzureDocumentDBVectorStore(getEmbeddings(), {
       databaseName: DATABASE_NAME,
       collectionName: COLLECTION_NAME,
       indexName: INDEX_NAME,
@@ -202,7 +203,7 @@ describe("AzureCosmosDBMongoDBVectorStore", () => {
   });
 
   test("deletes documents by filter", async () => {
-    const vectorStore = new AzureCosmosDBMongoDBVectorStore(getEmbeddings(), {
+    const vectorStore = new AzureDocumentDBVectorStore(getEmbeddings(), {
       databaseName: DATABASE_NAME,
       collectionName: COLLECTION_NAME,
       indexName: INDEX_NAME,
@@ -231,7 +232,7 @@ describe("AzureCosmosDBMongoDBVectorStore", () => {
   });
 
   test("deletes all documents", async () => {
-    const vectorStore = new AzureCosmosDBMongoDBVectorStore(getEmbeddings(), {
+    const vectorStore = new AzureDocumentDBVectorStore(getEmbeddings(), {
       databaseName: DATABASE_NAME,
       collectionName: COLLECTION_NAME,
       indexName: INDEX_NAME,
