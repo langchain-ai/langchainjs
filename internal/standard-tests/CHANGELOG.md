@@ -1,5 +1,12 @@
 # @langchain/standard-tests
 
+## 0.0.22
+
+### Patch Changes
+
+- Updated dependencies [[`41bfea5`](https://github.com/langchain-ai/langchainjs/commit/41bfea51cf119573a3b956ee782d2731fe71c681)]:
+  - @langchain/core@1.1.19
+
 ## 0.0.21
 
 ### Patch Changes
