@@ -3381,6 +3381,55 @@ importers:
         specifier: ^3.2.4
         version: 3.2.4(@types/debug@4.1.12)(@types/node@25.2.0)(jiti@2.6.1)(jsdom@26.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.5))(terser@5.46.0)(tsx@4.20.3)(yaml@2.8.2)
 
+  libs/providers/langchain-valkey:
+    dependencies:
+      '@valkey/valkey-glide':
+        specifier: ^2.2.5
+        version: 2.2.6
+    devDependencies:
+      '@faker-js/faker':
+        specifier: ^8.4.0
+        version: 8.4.1
+      '@langchain/core':
+        specifier: workspace:*
+        version: link:../../langchain-core
+      '@langchain/eslint':
+        specifier: workspace:*
+        version: link:../../../internal/eslint
+      '@langchain/tsconfig':
+        specifier: workspace:*
+        version: link:../../../internal/tsconfig
+      '@tsconfig/recommended':
+        specifier: ^1.0.3
+        version: 1.0.10
+      '@types/uuid':
+        specifier: ^9
+        version: 9.0.8
+      '@vitest/coverage-v8':
+        specifier: ^3.2.4
+        version: 3.2.4(vitest@3.2.4(@types/debug@4.1.12)(@types/node@25.0.10)(jiti@2.6.1)(jsdom@26.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.5))(terser@5.46.0)(tsx@4.20.3)(yaml@2.8.2))
+      dotenv:
+        specifier: ^16.3.1
+        version: 16.6.1
+      dpdm:
+        specifier: ^3.14.0
+        version: 3.14.0
+      eslint:
+        specifier: ^9.34.0
+        version: 9.39.1(jiti@2.6.1)
+      prettier:
+        specifier: ^3.5.0
+        version: 3.6.2
+      typescript:
+        specifier: ~5.8.3
+        version: 5.8.3
+      uuid:
+        specifier: ^10.0.0
+        version: 10.0.0
+      vitest:
+        specifier: ^3.2.4
+        version: 3.2.4(@types/debug@4.1.12)(@types/node@25.0.10)(jiti@2.6.1)(jsdom@26.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.5))(terser@5.46.0)(tsx@4.20.3)(yaml@2.8.2)
+
   libs/providers/langchain-weaviate:
     dependencies:
       uuid:
@@ -4251,10 +4300,6 @@ packages:
 
   '@babel/helper-string-parser@7.27.1':
     resolution: {integrity: sha512-qMlSxKbpRlAridDExk92nSobyDdpPijUq2DW6oDnUqd0iOGxmQjyqhMIihI9+zv4LPyZdRje2cavWPbCbWm3eA==}
-    engines: {node: '>=6.9.0'}
-
-  '@babel/helper-validator-identifier@7.27.1':
-    resolution: {integrity: sha512-D2hP9eA+Sqx1kBZgzxZh0y1trbuU+JoDkiEwqhQ36nodYqJwyEIhPSdMNd7lOm/4io72luTPWH20Yda0xOuUow==}
     engines: {node: '>=6.9.0'}
 
   '@babel/helper-validator-identifier@7.28.5':
@@ -9316,6 +9361,40 @@ packages:
   '@upstash/vector@1.2.2':
     resolution: {integrity: sha512-ptQ9xnxtKqmpNK52PCcHCszlPOLxIBfjsv7ty8RoF95pkjctS9rSjTQ3Pl9bx5VFbpDj+0dMXw88WLt6swDkgQ==}
 
+  '@valkey/valkey-glide-darwin-arm64@2.2.6':
+    resolution: {integrity: sha512-zGJakB4a2DyniXjINYtY171WAXVEZkxrFKRB2Eqcs8nSIqpUU8Ze4s4zdv2nSLvZg2PhjLrgl1oC8IYwiD7MJQ==}
+    cpu: [arm64]
+    os: [darwin]
+
+  '@valkey/valkey-glide-darwin-x64@2.2.6':
+    resolution: {integrity: sha512-z8HFJosuxgB8CEXEewDGOR36pCriFuzmZyUucdZhcNZCBh7uVmCao6H07fmq7DH0TrDnUi5vvjpCQqXGQf5FIA==}
+    cpu: [x64]
+    os: [darwin]
+
+  '@valkey/valkey-glide-linux-arm64-gnu@2.2.6':
+    resolution: {integrity: sha512-R6bSI8l1TkobHNQoRfTcFUiZhX5ICJwsSlo5LKbsp5BxCfU4RiGFjS8b2BSqNdpPqB4dxk4v/UGMHTICvN2dnw==}
+    cpu: [arm64]
+    os: [linux]
+
+  '@valkey/valkey-glide-linux-arm64-musl@2.2.6':
+    resolution: {integrity: sha512-QeNB428zwxFcAceTniehb+8NKFiaqSAjDRrvyHMZ5fBARzigp6cUj2Lw6rUjea/2o2cOZIbTURYtWNRtA8dL0A==}
+    cpu: [arm64]
+    os: [linux]
+
+  '@valkey/valkey-glide-linux-x64-gnu@2.2.6':
+    resolution: {integrity: sha512-97tXUvTJmTL4X7fx9wN6LBpMn4CkJ7zTTEhvF6vkwo2ktBEaSmmIE3HzRycu0tr2Gd8uJb3sfW/5RlFC+2cHMw==}
+    cpu: [x64]
+    os: [linux]
+
+  '@valkey/valkey-glide-linux-x64-musl@2.2.6':
+    resolution: {integrity: sha512-gL3lU4Hm0lteDD8GQvAVPTjTkQurhmYZEzNUkn3wLKTm6tmJ9TchDXagEH+KuRsvNNu9pJ8pGyxoFMHDDqPiwA==}
+    cpu: [x64]
+    os: [linux]
+
+  '@valkey/valkey-glide@2.2.6':
+    resolution: {integrity: sha512-5LDnScwP92i4jNHz0eTH+3UwDRNl0no/mPCGyUFQgeBE0/QLhMPK+ZEYNYNjHFuZASdPs1bYczi+pIL2bGosYQ==}
+    engines: {node: '>=16'}
+
   '@vercel/kv@3.0.0':
     resolution: {integrity: sha512-pKT8fRnfyYk2MgvyB6fn6ipJPCdfZwiKDdw7vB+HL50rjboEBHDVBEcnwfkEpVSp2AjNtoaOUH7zG+bVC/rvSg==}
     engines: {node: '>=14.6'}
@@ -9583,10 +9662,6 @@ packages:
   ansi-regex@5.0.1:
     resolution: {integrity: sha512-quJQXlTSUGL2LH9SUXo8VwsY4soanhgo6LNSm84E1LBcE8s3O0wpdiRzyR9z/ZZJMlMWv37qOOb9pdJlMUEKFQ==}
     engines: {node: '>=8'}
-
-  ansi-regex@6.1.0:
-    resolution: {integrity: sha512-7HSX4QQb4CspciLpVFwyRe79O3xsIZDDLER21kERQ71oaPodF8jL725AgJMFAYbooIqolJoRLuM81SpeUkpkvA==}
-    engines: {node: '>=12'}
 
   ansi-regex@6.2.2:
     resolution: {integrity: sha512-Bq3SmSpyFHaWjPk8If9yc6svM8c56dB5BAtW4Qbw5jHTwwXXcTLoRMkpDJp6VL0XzlWaCHTXrkFURMYmD0sLqg==}
@@ -13473,9 +13548,6 @@ packages:
 
   magic-bytes.js@1.12.1:
     resolution: {integrity: sha512-ThQLOhN86ZkJ7qemtVRGYM+gRgR8GEXNli9H/PMvpnZsE44Xfh3wx9kGJaldg314v85m+bFW6WBMaVHJc/c3zA==}
-
-  magic-string@0.30.17:
-    resolution: {integrity: sha512-sNPKHvyjVf7gyjwS4xGTaW/mCnF8wnjtifKBEhxfZ7E/S8tQ0rssrwGNn6q8JH/ohItJfSQp9mBtQYuTlH5QnA==}
 
   magic-string@0.30.21:
     resolution: {integrity: sha512-vd2F4YUyEXKGcLHoq+TEyCjxueSeHnFxyyjNp80yg0XV4vUhnDer/lvvlqM/arB5bXQN5K2/3oinyCRyx8T2CQ==}
@@ -19412,7 +19484,7 @@ snapshots:
 
   '@babel/code-frame@7.27.1':
     dependencies:
-      '@babel/helper-validator-identifier': 7.27.1
+      '@babel/helper-validator-identifier': 7.28.5
       js-tokens: 4.0.0
       picocolors: 1.1.1
 
@@ -19517,7 +19589,7 @@ snapshots:
     dependencies:
       '@babel/core': 7.28.0
       '@babel/helper-module-imports': 7.27.1
-      '@babel/helper-validator-identifier': 7.27.1
+      '@babel/helper-validator-identifier': 7.28.5
       '@babel/traverse': 7.28.0
     transitivePeerDependencies:
       - supports-color
@@ -19554,8 +19626,6 @@ snapshots:
       - supports-color
 
   '@babel/helper-string-parser@7.27.1': {}
-
-  '@babel/helper-validator-identifier@7.27.1': {}
 
   '@babel/helper-validator-identifier@7.28.5': {}
 
@@ -19902,7 +19972,7 @@ snapshots:
       '@babel/core': 7.28.0
       '@babel/helper-module-transforms': 7.27.3(@babel/core@7.28.0)
       '@babel/helper-plugin-utils': 7.27.1
-      '@babel/helper-validator-identifier': 7.27.1
+      '@babel/helper-validator-identifier': 7.28.5
       '@babel/traverse': 7.28.0
     transitivePeerDependencies:
       - supports-color
@@ -22895,7 +22965,7 @@ snapshots:
       is-wsl: 2.2.0
       lilconfig: 3.1.3
       minimatch: 9.0.5
-      semver: 7.7.2
+      semver: 7.7.3
       string-width: 4.2.3
       supports-color: 8.1.1
       tinyglobby: 0.2.15
@@ -25423,7 +25493,7 @@ snapshots:
       fast-glob: 3.3.3
       is-glob: 4.0.3
       minimatch: 9.0.5
-      semver: 7.7.2
+      semver: 7.7.3
       ts-api-utils: 2.1.0(typescript@5.8.3)
       typescript: 5.8.3
     transitivePeerDependencies:
@@ -25439,7 +25509,7 @@ snapshots:
       fast-glob: 3.3.3
       is-glob: 4.0.3
       minimatch: 9.0.5
-      semver: 7.7.2
+      semver: 7.7.3
       ts-api-utils: 2.1.0(typescript@5.9.3)
       typescript: 5.9.3
     transitivePeerDependencies:
@@ -25527,6 +25597,36 @@ snapshots:
       uncrypto: 0.1.3
 
   '@upstash/vector@1.2.2': {}
+
+  '@valkey/valkey-glide-darwin-arm64@2.2.6':
+    optional: true
+
+  '@valkey/valkey-glide-darwin-x64@2.2.6':
+    optional: true
+
+  '@valkey/valkey-glide-linux-arm64-gnu@2.2.6':
+    optional: true
+
+  '@valkey/valkey-glide-linux-arm64-musl@2.2.6':
+    optional: true
+
+  '@valkey/valkey-glide-linux-x64-gnu@2.2.6':
+    optional: true
+
+  '@valkey/valkey-glide-linux-x64-musl@2.2.6':
+    optional: true
+
+  '@valkey/valkey-glide@2.2.6':
+    dependencies:
+      long: 5.3.2
+      protobufjs: 7.5.3
+    optionalDependencies:
+      '@valkey/valkey-glide-darwin-arm64': 2.2.6
+      '@valkey/valkey-glide-darwin-x64': 2.2.6
+      '@valkey/valkey-glide-linux-arm64-gnu': 2.2.6
+      '@valkey/valkey-glide-linux-arm64-musl': 2.2.6
+      '@valkey/valkey-glide-linux-x64-gnu': 2.2.6
+      '@valkey/valkey-glide-linux-x64-musl': 2.2.6
 
   '@vercel/kv@3.0.0':
     dependencies:
@@ -25966,8 +26066,6 @@ snapshots:
   ansi-escapes@6.2.1: {}
 
   ansi-regex@5.0.1: {}
-
-  ansi-regex@6.1.0: {}
 
   ansi-regex@6.2.2: {}
 
@@ -26647,7 +26745,7 @@ snapshots:
       escalade: 3.2.0
       jsonc-parser: 3.3.1
       package-manager-detector: 1.3.0
-      semver: 7.7.2
+      semver: 7.7.3
       tinyexec: 1.0.1
       tinyglobby: 0.2.14
       yaml: 2.8.1
@@ -26839,7 +26937,7 @@ snapshots:
       convert-gitmoji: 0.1.5
       execa: 9.6.0
       ofetch: 1.4.1
-      semver: 7.7.2
+      semver: 7.7.3
       tinyglobby: 0.2.14
     transitivePeerDependencies:
       - magicast
@@ -29743,7 +29841,7 @@ snapshots:
       sleep-promise: 9.1.0
       slice-ansi: 7.1.0
       stdout-update: 4.0.1
-      strip-ansi: 7.1.0
+      strip-ansi: 7.1.2
     optionalDependencies:
       '@reflink/reflink': 0.1.19
 
@@ -31115,7 +31213,7 @@ snapshots:
       ansi-escapes: 5.0.0
       cli-cursor: 4.0.0
       slice-ansi: 5.0.0
-      strip-ansi: 7.1.0
+      strip-ansi: 7.1.2
       wrap-ansi: 8.1.0
 
   logform@2.7.0:
@@ -31209,10 +31307,6 @@ snapshots:
   macos-release@3.4.0: {}
 
   magic-bytes.js@1.12.1: {}
-
-  magic-string@0.30.17:
-    dependencies:
-      '@jridgewell/sourcemap-codec': 1.5.5
 
   magic-string@0.30.21:
     dependencies:
@@ -32099,7 +32193,7 @@ snapshots:
       log-symbols: 6.0.0
       stdin-discarder: 0.2.2
       string-width: 7.2.0
-      strip-ansi: 7.1.0
+      strip-ansi: 7.1.2
 
   os-name@6.1.0:
     dependencies:
@@ -33459,7 +33553,7 @@ snapshots:
     dependencies:
       color: 4.2.3
       detect-libc: 2.0.4
-      semver: 7.7.2
+      semver: 7.7.3
     optionalDependencies:
       '@img/sharp-darwin-arm64': 0.34.3
       '@img/sharp-darwin-x64': 0.34.3
@@ -33697,7 +33791,7 @@ snapshots:
       ansi-escapes: 6.2.1
       ansi-styles: 6.2.1
       string-width: 7.2.0
-      strip-ansi: 7.1.0
+      strip-ansi: 7.1.2
 
   steno@4.0.2: {}
 
@@ -33754,7 +33848,7 @@ snapshots:
     dependencies:
       emoji-regex: 10.4.0
       get-east-asian-width: 1.3.0
-      strip-ansi: 7.1.0
+      strip-ansi: 7.1.2
 
   string.prototype.trim@1.2.10:
     dependencies:
@@ -33793,7 +33887,7 @@ snapshots:
 
   strip-ansi@7.1.0:
     dependencies:
-      ansi-regex: 6.1.0
+      ansi-regex: 6.2.2
 
   strip-ansi@7.1.2:
     dependencies:
@@ -34605,7 +34699,7 @@ snapshots:
     dependencies:
       acorn: 8.15.0
       estree-walker: 3.0.3
-      magic-string: 0.30.17
+      magic-string: 0.30.21
       unplugin: 2.3.5
 
   underscore@1.12.1: {}
@@ -35502,7 +35596,7 @@ snapshots:
     dependencies:
       ansi-styles: 6.2.1
       string-width: 5.1.2
-      strip-ansi: 7.1.0
+      strip-ansi: 7.1.2
 
   wrappy@1.0.2: {}
 
