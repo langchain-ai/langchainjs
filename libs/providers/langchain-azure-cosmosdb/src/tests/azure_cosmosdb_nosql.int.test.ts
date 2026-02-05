@@ -92,6 +92,41 @@ describe("AzureCosmosDBNoSQLVectorStore", () => {
       { pageContent: "Sandwiches taste good.", metadata: { c: 1 } },
     ]);
 
+    const retriever = vectorStore.asRetriever({});
+
+    const docs = await retriever.invoke("house");
+    expect(docs).toBeDefined();
+    expect(docs[0]).toMatchObject({
+      pageContent: "The house is open",
+      metadata: { d: 1, e: 2 },
+    });
+  });
+
+  test("performs similarity search with custom retriever", async () => {
+    const vectorStore = new AzureCosmosDBNoSQLVectorStore(
+      new OpenAIEmbeddings(),
+      {
+        databaseName: DATABASE_NAME,
+        containerName: CONTAINER_NAME,
+      }
+    );
+
+    expect(vectorStore).toBeDefined();
+
+    await vectorStore.addDocuments([
+      { pageContent: "This book is about politics", metadata: { a: 1 } },
+      { pageContent: "Cats sleeps a lot.", metadata: { b: 1 } },
+      { pageContent: "Sandwiches taste good.", metadata: { c: 1 } },
+      { pageContent: "The house is open", metadata: { d: 1, e: 2 } },
+    ]);
+
+    const results = await vectorStore.similaritySearch("sandwich", 1);
+
+    expect(results.length).toEqual(1);
+    expect(results).toMatchObject([
+      { pageContent: "Sandwiches taste good.", metadata: { c: 1 } },
+    ]);
+
     const retriever = vectorStore.asCosmosRetriever({});
 
     const docs = await retriever.invoke("house");
@@ -281,7 +316,7 @@ describe("AzureCosmosDBNoSQLVectorStore", () => {
       }
     );
 
-    const documents = Array.from({ length: 10 }, (_, i) => ({
+    const documents = Array.from({ length: 101 }, (_, i) => ({
       pageContent: `Document ${i}`,
       metadata: { a: i },
     }));
@@ -308,10 +343,6 @@ describe("AzureCosmosDBNoSQLVectorStore", () => {
         "Skipping managed identity test: AZURE_COSMOSDB_NOSQL_ENDPOINT not set"
       );
       return;
-    } else {
-      console.log(
-        "Running managed identity test: AZURE_COSMOSDB_NOSQL_ENDPOINT is set"
-      );
     }
 
     // First initialize using a regular connection string
