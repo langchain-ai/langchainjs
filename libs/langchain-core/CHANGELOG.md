@@ -1,5 +1,26 @@
 # @langchain/core
 
+## 1.1.19
+
+### Patch Changes
+
+- [#9905](https://github.com/langchain-ai/langchainjs/pull/9905) [`41bfea5`](https://github.com/langchain-ai/langchainjs/commit/41bfea51cf119573a3b956ee782d2731fe71c681) Thanks [@christian-bromann](https://github.com/christian-bromann)! - fix(classic/community/core): avoid long lived abort signals
+
+## 1.1.18
+
+### Patch Changes
+
+- [#9900](https://github.com/langchain-ai/langchainjs/pull/9900) [`a9b5059`](https://github.com/langchain-ai/langchainjs/commit/a9b50597186002221aaa4585246e569fa44c27c8) Thanks [@hntrl](https://github.com/hntrl)! - fix(core): update method signatures to use `Partial<CallOptions>` for options parameters
+
+  Updated `invoke`, `stream`, `generate`, and `generatePrompt` method signatures across `Runnable`, `BaseChatModel`, and `BaseLLM` to correctly accept `Partial<CallOptions>` instead of full `CallOptions`. This aligns the implementation with the `RunnableInterface` specification and allows users to pass partial options (e.g., `{ signal: abortedSignal }`) without TypeScript errors.
+
+- [#9900](https://github.com/langchain-ai/langchainjs/pull/9900) [`a9b5059`](https://github.com/langchain-ai/langchainjs/commit/a9b50597186002221aaa4585246e569fa44c27c8) Thanks [@hntrl](https://github.com/hntrl)! - Improved abort signal handling for chat models:
+  - Added `ModelAbortError` class in `@langchain/core/errors` that contains partial output when a model invocation is aborted mid-stream
+  - `invoke()` now throws `ModelAbortError` with accumulated `partialOutput` when aborted during streaming (when using streaming callback handlers)
+  - `stream()` throws a regular `AbortError` when aborted (since chunks are already yielded to the caller)
+  - All provider implementations now properly check and propagate abort signals in both `_generate()` and `_streamResponseChunks()` methods
+  - Added standard tests for abort signal behavior
+
 ## 1.1.17
 
 ### Patch Changes

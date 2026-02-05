@@ -1,6 +1,6 @@
 {
   "name": "@langchain/redis",
-  "version": "1.0.1",
+  "version": "1.1.0",
   "description": "Sample integration for LangChain.js",
   "author": "LangChain",
   "license": "MIT",
@@ -28,6 +28,7 @@
     "format:check": "prettier --check \"src\""
   },
   "dependencies": {
+    "uuid": "^10.0.0",
     "redis": "^4.6.13"
   },
   "peerDependencies": {
@@ -46,7 +47,6 @@
     "eslint": "^9.34.0",
     "prettier": "^3.5.0",
     "typescript": "~5.8.3",
-    "uuid": "^10.0.0",
     "vitest": "^3.2.4"
   },
   "publishConfig": {

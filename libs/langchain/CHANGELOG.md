@@ -1,5 +1,25 @@
 # langchain
 
+## 1.2.17
+
+### Patch Changes
+
+- [#9916](https://github.com/langchain-ai/langchainjs/pull/9916) [`3516592`](https://github.com/langchain-ai/langchainjs/commit/3516592c51c44eb55e477c0d63ffdab5672ae97e) Thanks [@hntrl](https://github.com/hntrl)! - feat(langchain): add withConfig() method to ReactAgent
+
+  Adds a `withConfig()` method to ReactAgent following the same pattern as LangGraph's `Pregel.withConfig()`. This allows setting default configuration values (like `recursionLimit`, `tags`, or `configurable`) that get merged with invocation-time config.
+
+- Updated dependencies [[`41bfea5`](https://github.com/langchain-ai/langchainjs/commit/41bfea51cf119573a3b956ee782d2731fe71c681)]:
+  - @langchain/core@1.1.19
+
+## 1.2.16
+
+### Patch Changes
+
+- [#9885](https://github.com/langchain-ai/langchainjs/pull/9885) [`913893f`](https://github.com/langchain-ai/langchainjs/commit/913893f678f1fae2a1b9bf964c9d93ffd0176680) Thanks [@Ambas-T](https://github.com/Ambas-T)! - fix: filter pregel keys from cache key to avoid OOM
+
+- Updated dependencies [[`a9b5059`](https://github.com/langchain-ai/langchainjs/commit/a9b50597186002221aaa4585246e569fa44c27c8), [`a9b5059`](https://github.com/langchain-ai/langchainjs/commit/a9b50597186002221aaa4585246e569fa44c27c8)]:
+  - @langchain/core@1.1.18
+
 ## 1.2.15
 
 ### Patch Changes

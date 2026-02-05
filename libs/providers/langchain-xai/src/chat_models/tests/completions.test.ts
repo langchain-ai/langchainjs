@@ -15,6 +15,25 @@ beforeEach(() => {
   process.env.XAI_API_KEY = "foo";
 });
 
+describe("baseURL configuration", () => {
+  test("should use default baseURL when not specified", () => {
+    const model = new ChatXAI();
+    // Access the internal clientConfig via any cast for testing
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const clientConfig = (model as any).clientConfig;
+    expect(clientConfig.baseURL).toBe("https://api.x.ai/v1");
+  });
+
+  test("should use custom baseURL when provided", () => {
+    const model = new ChatXAI({
+      baseURL: "https://custom.api.example.com/v1",
+    });
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const clientConfig = (model as any).clientConfig;
+    expect(clientConfig.baseURL).toBe("https://custom.api.example.com/v1");
+  });
+});
+
 test("Serialization", () => {
   delete process.env.XAI_API_KEY;
   const model = new ChatXAI({

@@ -10,6 +10,7 @@ export * as document_loaders__base from "../document_loaders/base.js";
 export * as document_loaders__langsmith from "../document_loaders/langsmith.js";
 export * as documents from "../documents/index.js";
 export * as embeddings from "../embeddings.js";
+export * as errors from "../errors/index.js";
 export * as example_selectors from "../example_selectors/index.js";
 export * as index from "../index.js";
 export * as indexing from "../indexing/index.js";

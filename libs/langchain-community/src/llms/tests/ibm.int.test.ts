@@ -10,7 +10,7 @@ const modelAlias = "ibm/granite-3-8b-instruct";
 const projectId = process.env.WATSONX_AI_PROJECT_ID;
 const version = "2024-05-31";
 const serviceUrl = process.env.WATSONX_AI_SERVICE_URL as string;
-const serviceUrlGateway = process.env.WATSONX_AI_SERVICE_URL_GATEWAY as string;
+const serviceUrlGateway = process.env.WATSONX_AI_GATEWAY_URL as string;
 
 const parameters = [
   {
@@ -124,8 +124,8 @@ describe.each(parameters)("Text generation for $name", ({ params }) => {
         });
         controllerToAbort.abort();
         return ret;
-      }).rejects.toThrowError("AbortError");
-    }, 10000);
+      }).rejects.toThrow("canceled");
+    }, 20000);
 
     test("Concurenccy", async () => {
       const llm = new WatsonxLLM({
@@ -371,7 +371,7 @@ describe.each(parameters)("Text generation for $name", ({ params }) => {
             controller.abort();
           }
         }
-      }).rejects.toThrowError();
+      }).rejects.toThrow();
     });
   });
 
