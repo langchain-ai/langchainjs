@@ -85,5 +85,8 @@ export function messageToOpenAIRole(
 }
 
 export function _modelPrefersResponsesAPI(model: string): boolean {
-  return model.includes("gpt-5.2-pro");
+  if (model.includes("gpt-5.2-pro")) return true;
+  // Codex models are Responses API only
+  if (model.includes("codex")) return true;
+  return false;
 }

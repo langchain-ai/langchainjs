@@ -637,6 +637,8 @@ export const convertResponsesDeltaToChatGenerationChunk: Converter<
       "web_search_call",
       "file_search_call",
       "code_interpreter_call",
+      "shell_call",
+      "local_shell_call",
       "mcp_call",
       "mcp_list_tools",
       "mcp_approval_request",
@@ -1433,6 +1435,8 @@ export const convertMessagesToResponsesInput: Converter<
           "mcp_call",
           "code_interpreter_call",
           "image_generation_call",
+          "shell_call",
+          "local_shell_call",
         ];
 
         if (toolOutputs != null) {
