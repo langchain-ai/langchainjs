@@ -1,0 +1,2 @@
+provider = "google"
+output = "src/profiles.ts"

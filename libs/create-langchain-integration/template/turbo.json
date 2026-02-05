@@ -3,9 +3,6 @@
   "pipeline": {
     "build": {
       "outputs": ["**/dist/**"]
-    },
-    "build:internal": {
-      "dependsOn": ["^build:internal"]
     }
   }
 }

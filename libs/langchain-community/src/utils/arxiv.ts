@@ -1,4 +1,4 @@
-/* eslint-disable import/no-extraneous-dependencies */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Document } from "@langchain/core/documents";
 import { XMLParser } from "fast-xml-parser";
 
@@ -60,7 +60,7 @@ export async function fetchDirectArxivArticle(
     const processedEntries = entries.map(processEntry);
 
     return processedEntries;
-  } catch (error) {
+  } catch {
     throw new Error(`Failed to fetch articles with IDs ${arxivIds}`);
   }
 }
@@ -101,7 +101,7 @@ export async function fetchArxivResultsByQuery(
     const processedEntries = entries.map(processEntry);
 
     return processedEntries;
-  } catch (error) {
+  } catch {
     throw new Error(`Failed to fetch articles with query "${query}"`);
   }
 }
@@ -140,7 +140,7 @@ export async function fetchAndParsePDF(pdfUrl: string): Promise<string> {
     // Combine all document content into a single string
     const content = docs.map((doc) => doc.pageContent).join("\n\n");
     return content;
-  } catch (error) {
+  } catch {
     throw new Error(`Failed to fetch or parse PDF from ${pdfUrl}`);
   }
 }
@@ -169,7 +169,7 @@ export async function loadDocsFromResults(
         metadata,
       });
       docs.push(doc);
-    } catch (error) {
+    } catch {
       throw new Error(`Error loading document from ${pdfUrl}`);
     }
   }
@@ -223,7 +223,7 @@ function processEntry(entry: any): ArxivEntry {
   }
 
   // Extract PDF link
-  let pdfUrl = id.replace("/abs/", "/pdf/") + ".pdf";
+  let pdfUrl = `${id.replace("/abs/", "/pdf/")}.pdf`;
   const pdfLinkObj = links.find((link: any) => link["@_title"] === "pdf");
   if (pdfLinkObj && pdfLinkObj["@_href"]) {
     pdfUrl = pdfLinkObj["@_href"];

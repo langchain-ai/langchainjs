@@ -15,6 +15,7 @@ const client = new CacheClient({
   defaultTtlSeconds: 60 * 60 * 24,
 });
 const cache = await MomentoCache.fromProps({
+  // @ts-expect-error(@christian-bromann): outdated example needs to be updated
   client,
   cacheName: "langchain",
 });

@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/no-non-null-assertion */
-/* eslint-disable no-process-env */
 import { expect, test } from "@jest/globals";
 import {
   AudioSubtitleLoader,

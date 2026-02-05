@@ -153,7 +153,6 @@ export class ConfluencePagesLoader extends BaseDocumentLoader {
     url: string
   ): Promise<ConfluenceAPIResponse> {
     let retryCounter = 0;
-    // eslint-disable-next-line no-constant-condition
     while (true) {
       retryCounter += 1;
       try {

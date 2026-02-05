@@ -326,8 +326,8 @@ export class ClickHouseStore extends VectorStore {
 
     const searchQueryStr = `
       SELECT ${this.columnMap.document} AS document, ${
-      this.columnMap.metadata
-    } AS metadata, dist
+        this.columnMap.metadata
+      } AS metadata, dist
       FROM ${this.database}.${this.table}
       ${whereStr}
       ORDER BY L2Distance(${

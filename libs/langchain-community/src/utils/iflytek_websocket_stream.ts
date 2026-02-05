@@ -1,5 +1,5 @@
 export interface WebSocketConnection<
-  T extends Uint8Array | string = Uint8Array | string
+  T extends Uint8Array | string = Uint8Array | string,
 > {
   readable: ReadableStream<T>;
   writable: WritableStream<T>;
@@ -23,7 +23,7 @@ export interface WebSocketStreamOptions {
  * @see https://web.dev/websocketstream/
  */
 export abstract class BaseWebSocketStream<
-  T extends Uint8Array | string = Uint8Array | string
+  T extends Uint8Array | string = Uint8Array | string,
 > {
   readonly url: string;
 
@@ -81,8 +81,12 @@ export abstract class BaseWebSocketStream<
     });
 
     if (options.signal) {
-      // eslint-disable-next-line no-param-reassign
-      options.signal.onabort = () => ws.close();
+      // Use bind() instead of an arrow function to avoid capturing the
+      // surrounding scope (which includes large objects). This prevents
+      // memory leaks when the user passes a long-lived AbortSignal.
+      // Using { once: true } ensures the listener auto-removes after firing.
+      const abort = ws.close.bind(ws);
+      options.signal.addEventListener("abort", abort, { once: true });
     }
 
     this.close = closeWithInfo;

@@ -1,4 +1,4 @@
-import { TextLoader } from "langchain/document_loaders/fs/text";
+import { TextLoader } from "@langchain/classic/document_loaders/fs/text";
 
 /**
  * Loads a CSV file into a list of documents.
@@ -87,7 +87,6 @@ export class CSVLoader extends TextLoader {
         throw new Error(`Column ${column} not found in CSV file.`);
       }
       // Note TextLoader will raise an exception if the value is null.
-      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       return parsed.map((row) => row[column]!);
     }
 
@@ -106,7 +105,7 @@ async function CSVLoaderImports() {
   } catch (e) {
     console.error(e);
     throw new Error(
-      "Please install d3-dsv as a dependency with, e.g. `yarn add d3-dsv@2`"
+      "Please install d3-dsv as a dependency with, e.g. `pnpm install d3-dsv@2`"
     );
   }
 }

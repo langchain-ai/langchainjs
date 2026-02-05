@@ -249,6 +249,7 @@ export class Friendli extends LLM<BaseLLMCallOptions> {
 
         yield generationChunk;
 
+        // eslint-disable-next-line no-void
         void runManager?.handleLLMNewToken(generationChunk.text ?? "");
       } else {
         const parsedChunk = JSON.parse(chunk) as FriendliCompleteResponse;

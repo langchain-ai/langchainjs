@@ -1,4 +1,4 @@
-import { describe, expect, test } from "@jest/globals";
+import { describe, expect, test } from "vitest";
 import { Document } from "@langchain/core/documents";
 import {
   CharacterTextSplitter,
@@ -6,7 +6,7 @@ import {
   MarkdownTextSplitter,
   RecursiveCharacterTextSplitter,
   TokenTextSplitter,
-} from "../text_splitter.js";
+} from "../index.js";
 
 function textLineGenerator(char: string, length: number) {
   const line = new Array(length).join(char);
@@ -416,7 +416,7 @@ test("Test latex text splitter.", async () => {
 
 \\begin{verbatim}
 Hopefully this code block isn't split
-yarn add langchain
+pnpm install langchain
 \\end{verbatim}
 
 As an open source project in a rapidly developing field, we are extremely open to contributions.
@@ -431,7 +431,7 @@ As an open source project in a rapidly developing field, we are extremely open t
   const expectedOutput = [
     "\\begin{document}\n\\title{🦜️🔗 LangChain}\n⚡ Building applications with LLMs through composability ⚡",
     "\\section{Quick Install}",
-    "\\begin{verbatim}\nHopefully this code block isn't split\nyarn add langchain\n\\end{verbatim}",
+    "\\begin{verbatim}\nHopefully this code block isn't split\npnpm install langchain\n\\end{verbatim}",
     "As an open source project in a rapidly developing field, we are extremely open to contributions.",
     "\\end{document}",
   ];

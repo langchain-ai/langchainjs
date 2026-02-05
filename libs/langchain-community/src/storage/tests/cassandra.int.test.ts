@@ -1,5 +1,4 @@
-// /* eslint-disable no-process-env */
-// Hangs when run with other tests, uncomment for development
+// // Hangs when run with other tests, uncomment for development
 
 // import { test, expect, describe } from "@jest/globals";
 // import { CassandraClientFactory } from "../../utils/cassandra.js";
@@ -24,7 +23,7 @@ test("Empty test to prevent runner from complaining", async () => {});
 // //   1. switch "describe.skip(" to "describe("
 // //   2. Export ASTRA_DB_ENDPOINT and ASTRA_TOKEN; "test" keyspace should exist
 // //   3. cd langchainjs/libs/langchain-community
-// //   4. yarn test:single src/storage/tests/cassandra.int.test.ts
+// //   4. pnpm test:single src/storage/tests/cassandra.int.test.ts
 // // Once manual testing is complete, re-instate the ".skip"
 // describe.skip("CassandraKVStore", () => {
 //   let store: CassandraKVStore;

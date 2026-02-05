@@ -3,13 +3,15 @@ async function test() {
   const { OpenAI } = await import("@langchain/openai");
   const { ChatOllama } = await import("@langchain/ollama");
   const { ChatGoogle } = await import("@langchain/google-gauth");
-  const { LLMChain } = await import("langchain/chains");
+  const { LLMChain } = await import("@langchain/classic/chains");
   const { ChatPromptTemplate } = await import("@langchain/core/prompts");
   const { HuggingFaceTransformersEmbeddings } = await import(
     "@langchain/community/embeddings/huggingface_transformers"
   );
   const { Document } = await import("@langchain/core/documents");
-  const { MemoryVectorStore } = await import("langchain/vectorstores/memory");
+  const { MemoryVectorStore } = await import(
+    "@langchain/classic/vectorstores/memory"
+  );
 
   // Test exports
   assert(typeof OpenAI === "function");

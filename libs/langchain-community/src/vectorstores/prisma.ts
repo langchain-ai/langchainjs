@@ -1,5 +1,6 @@
 import { Document } from "@langchain/core/documents";
 import type { EmbeddingsInterface } from "@langchain/core/embeddings";
+import type { DocumentInterface } from "@langchain/core/documents";
 import { VectorStore } from "@langchain/core/vectorstores";
 
 const IdColumnSymbol = Symbol("id");
@@ -89,7 +90,7 @@ const OpMap = {
 
 type SimilarityModel<
   TModel extends Record<string, unknown> = Record<string, unknown>,
-  TColumns extends ModelColumns<TModel> = ModelColumns<TModel>
+  TColumns extends ModelColumns<TModel> = ModelColumns<TModel>,
 > = Pick<TModel, keyof ObjectIntersect<TModel, TColumns>> & {
   _distance: number | null;
 };
@@ -102,6 +103,15 @@ type DefaultPrismaVectorStore = PrismaVectorStore<
 >;
 
 /**
+ * Configuration for column types to enable proper type casting in SQL queries.
+ * This is particularly important for columns that require explicit casting,
+ * such as UUID columns in PostgreSQL.
+ */
+export interface ColumnTypeConfig {
+  [key: string]: "uuid" | "text" | "integer" | "bigint" | "jsonb";
+}
+
+/**
  * A specific implementation of the VectorStore class that is designed to
  * work with Prisma. It provides methods for adding models, documents, and
  * vectors, as well as for performing similarity searches.
@@ -110,7 +120,7 @@ export class PrismaVectorStore<
   TModel extends Record<string, unknown>,
   TModelName extends string,
   TSelectModel extends ModelColumns<TModel>,
-  TFilterModel extends PrismaSqlFilter<TModel>
+  TFilterModel extends PrismaSqlFilter<TModel>,
 > extends VectorStore {
   declare FilterType: TFilterModel;
 
@@ -125,6 +135,15 @@ export class PrismaVectorStore<
   idColumn: keyof TModel & string;
 
   contentColumn: keyof TModel & string;
+
+  protected columnTypes?: ColumnTypeConfig;
+
+  /**
+   * When true, addDocuments uses INSERT statements to create new records.
+   * When false (default), addDocuments uses UPDATE statements to update existing records by ID.
+   * Set to true when using with ParentDocumentRetriever or when documents don't pre-exist in the database.
+   */
+  protected useInsert: boolean;
 
   static IdColumn: typeof IdColumnSymbol = IdColumnSymbol;
 
@@ -147,6 +166,13 @@ export class PrismaVectorStore<
       vectorColumnName: string;
       columns: TSelectModel;
       filter?: TFilterModel;
+      columnTypes?: ColumnTypeConfig;
+      /**
+       * When true, addDocuments uses INSERT statements to create new records.
+       * When false (default), addDocuments uses UPDATE statements to update existing records by ID.
+       * Set to true when using with ParentDocumentRetriever or when documents don't pre-exist in the database.
+       */
+      useInsert?: boolean;
     }
   ) {
     super(embeddings, {});
@@ -168,6 +194,8 @@ export class PrismaVectorStore<
 
     this.tableName = config.tableName;
     this.vectorColumnName = config.vectorColumnName;
+    this.columnTypes = config.columnTypes;
+    this.useInsert = config.useInsert ?? false;
 
     this.selectColumns = entries
       .map(([key, alias]) => (alias && key) || null)
@@ -187,7 +215,7 @@ export class PrismaVectorStore<
     function create<
       TPrisma extends PrismaNamespace,
       TColumns extends ModelColumns<TModel>,
-      TFilters extends PrismaSqlFilter<TModel>
+      TFilters extends PrismaSqlFilter<TModel>,
     >(
       embeddings: EmbeddingsInterface,
       config: {
@@ -196,6 +224,8 @@ export class PrismaVectorStore<
         vectorColumnName: string;
         columns: TColumns;
         filter?: TFilters;
+        columnTypes?: ColumnTypeConfig;
+        useInsert?: boolean;
       }
     ) {
       type ModelName = keyof TPrisma["ModelName"] & string;
@@ -207,7 +237,7 @@ export class PrismaVectorStore<
 
     async function fromTexts<
       TPrisma extends PrismaNamespace,
-      TColumns extends ModelColumns<TModel>
+      TColumns extends ModelColumns<TModel>,
     >(
       texts: string[],
       metadatas: TModel[],
@@ -217,6 +247,8 @@ export class PrismaVectorStore<
         tableName: keyof TPrisma["ModelName"] & string;
         vectorColumnName: string;
         columns: TColumns;
+        columnTypes?: ColumnTypeConfig;
+        useInsert?: boolean;
       }
     ) {
       const docs: Document[] = [];
@@ -238,7 +270,7 @@ export class PrismaVectorStore<
     async function fromDocuments<
       TPrisma extends PrismaNamespace,
       TColumns extends ModelColumns<TModel>,
-      TFilters extends PrismaSqlFilter<TModel>
+      TFilters extends PrismaSqlFilter<TModel>,
     >(
       docs: Document<TModel>[],
       embeddings: EmbeddingsInterface,
@@ -247,6 +279,8 @@ export class PrismaVectorStore<
         tableName: keyof TPrisma["ModelName"] & string;
         vectorColumnName: string;
         columns: TColumns;
+        columnTypes?: ColumnTypeConfig;
+        useInsert?: boolean;
       }
     ) {
       type ModelName = keyof TPrisma["ModelName"] & string;
@@ -286,10 +320,12 @@ export class PrismaVectorStore<
    */
   async addDocuments(documents: Document<TModel>[]) {
     const texts = documents.map(({ pageContent }) => pageContent);
-    return this.addVectors(
-      await this.embeddings.embedDocuments(texts),
-      documents
-    );
+    const vectors = await this.embeddings.embedDocuments(texts);
+
+    if (this.useInsert) {
+      return this.addDocumentsWithVectors(vectors, documents);
+    }
+    return this.addVectors(vectors, documents);
   }
 
   /**
@@ -306,14 +342,82 @@ export class PrismaVectorStore<
     const vectorColumnRaw = this.Prisma.raw(`"${this.vectorColumnName}"`);
 
     await this.db.$transaction(
-      vectors.map((vector, idx) =>
-        this.db.$executeRaw(
+      vectors.map((vector, idx) => {
+        const idValue = documents[idx].metadata[this.idColumn];
+        const columnType = this.columnTypes?.[this.idColumn];
+
+        // Apply type casting based on configured column type
+        let whereClause;
+        if (columnType === "uuid") {
+          whereClause = this.Prisma.sql`${idColumnRaw} = ${idValue}::uuid`;
+        } else if (columnType === "integer") {
+          whereClause = this.Prisma.sql`${idColumnRaw} = ${idValue}::integer`;
+        } else if (columnType === "bigint") {
+          whereClause = this.Prisma.sql`${idColumnRaw} = ${idValue}::bigint`;
+        } else {
+          // Default behavior for backward compatibility
+          whereClause = this.Prisma.sql`${idColumnRaw} = ${idValue}`;
+        }
+
+        return this.db.$executeRaw(
           this.Prisma.sql`UPDATE ${tableNameRaw}
             SET ${vectorColumnRaw} = ${`[${vector.join(",")}]`}::vector
-            WHERE ${idColumnRaw} = ${documents[idx].metadata[this.idColumn]}
+            WHERE ${whereClause}
           `
-        )
-      )
+        );
+      })
+    );
+  }
+
+  /**
+   * Adds documents with their corresponding vectors to the store using INSERT statements.
+   * This method ensures documents are created if they don't exist, making it compatible
+   * with ParentDocumentRetriever which creates new child documents.
+   * @param vectors The vectors to add.
+   * @param documents The documents associated with the vectors.
+   * @returns A promise that resolves when the documents have been added.
+   */
+  async addDocumentsWithVectors(
+    vectors: number[][],
+    documents: Document<TModel>[]
+  ) {
+    // table name, column name cannot be parametrised
+    // these fields are thus not escaped by Prisma and can be dangerous if user input is used
+    const tableNameRaw = this.Prisma.raw(`"${this.tableName}"`);
+    const vectorColumnRaw = this.Prisma.raw(`"${this.vectorColumnName}"`);
+
+    // Build column names for INSERT statement
+    const columnNames = this.selectColumns.map((col) =>
+      this.Prisma.raw(`"${col}"`)
+    );
+    const allColumns = [...columnNames, vectorColumnRaw];
+
+    await this.db.$transaction(
+      vectors.map((vector, idx) => {
+        const document = documents[idx];
+        const vectorString = `[${vector.join(",")}]`;
+
+        // Build values for each column
+        const columnValues = this.selectColumns.map((col) => {
+          if (col === this.contentColumn) {
+            return document.pageContent;
+          }
+          return document.metadata[col];
+        });
+
+        // Add vector as the last value
+        const allValues = [
+          ...columnValues,
+          this.Prisma.sql`${vectorString}::vector`,
+        ];
+
+        return this.db.$executeRaw(
+          this.Prisma.sql`
+            INSERT INTO ${tableNameRaw} (${this.Prisma.join(allColumns, ", ")})
+            VALUES (${this.Prisma.join(allValues, ", ")})
+          `
+        );
+      })
     );
   }
 
@@ -352,7 +456,8 @@ export class PrismaVectorStore<
     query: string,
     k?: number,
     filter?: this["FilterType"]
-  ) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  ): Promise<[DocumentInterface<Record<string, any>>, number][]> {
     return super.similaritySearchWithScore(query, k, filter);
   }
 
@@ -424,6 +529,7 @@ export class PrismaVectorStore<
           const opNameKey = opName as keyof typeof OpMap;
           const colRaw = this.Prisma.raw(`"${key}"`);
           const opRaw = this.Prisma.raw(OpMap[opNameKey]);
+          const columnType = this.columnTypes?.[key];
 
           switch (OpMap[opNameKey]) {
             case OpMap.notIn:
@@ -447,6 +553,39 @@ export class PrismaVectorStore<
                 return this.Prisma.sql`${!isInOperator}`;
               }
 
+              // Apply type casting for IN/NOT IN operators based on column type
+              if (columnType === "uuid") {
+                const castedValues = value.map(
+                  (v) => this.Prisma.sql`${v}::uuid`
+                );
+                return this.Prisma.sql`${colRaw} ${opRaw} (${this.Prisma.join(
+                  castedValues
+                )})`;
+              } else if (columnType === "integer") {
+                const castedValues = value.map(
+                  (v) => this.Prisma.sql`${v}::integer`
+                );
+                return this.Prisma.sql`${colRaw} ${opRaw} (${this.Prisma.join(
+                  castedValues
+                )})`;
+              } else if (columnType === "bigint") {
+                const castedValues = value.map(
+                  (v) => this.Prisma.sql`${v}::bigint`
+                );
+                return this.Prisma.sql`${colRaw} ${opRaw} (${this.Prisma.join(
+                  castedValues
+                )})`;
+              } else if (columnType === "jsonb") {
+                const castedValues = value.map((v) => {
+                  const jsonValue =
+                    typeof v === "object" ? JSON.stringify(v) : v;
+                  return this.Prisma.sql`${jsonValue}::jsonb`;
+                });
+                return this.Prisma.sql`${colRaw} ${opRaw} (${this.Prisma.join(
+                  castedValues
+                )})`;
+              }
+
               return this.Prisma.sql`${colRaw} ${opRaw} (${this.Prisma.join(
                 value
               )})`;
@@ -455,7 +594,28 @@ export class PrismaVectorStore<
             case OpMap.isNotNull:
               return this.Prisma.sql`${colRaw} ${opRaw}`;
             default:
-              return this.Prisma.sql`${colRaw}::text ${opRaw} ${value}`;
+              // Apply proper type casting based on column type
+              if (columnType === "uuid") {
+                return this.Prisma.sql`${colRaw} ${opRaw} ${value}::uuid`;
+              } else if (columnType === "integer") {
+                return this.Prisma.sql`${colRaw} ${opRaw} ${value}::integer`;
+              } else if (columnType === "bigint") {
+                return this.Prisma.sql`${colRaw} ${opRaw} ${value}::bigint`;
+              } else if (columnType === "jsonb") {
+                // For JSONB, cast the value to JSON string then to jsonb
+                const jsonValue =
+                  typeof value === "object" ? JSON.stringify(value) : value;
+                return this.Prisma.sql`${colRaw} ${opRaw} ${jsonValue}::jsonb`;
+              } else if (columnType) {
+                // For other specified types, apply the cast
+                return this.Prisma
+                  .sql`${colRaw} ${opRaw} ${value}::${this.Prisma.raw(
+                  columnType
+                )}`;
+              } else {
+                // Default behavior for backward compatibility - cast column to text
+                return this.Prisma.sql`${colRaw}::text ${opRaw} ${value}`;
+              }
           }
         })
       ),
@@ -482,6 +642,8 @@ export class PrismaVectorStore<
       tableName: string;
       vectorColumnName: string;
       columns: ModelColumns<Record<string, unknown>>;
+      columnTypes?: ColumnTypeConfig;
+      useInsert?: boolean;
     }
   ): Promise<DefaultPrismaVectorStore> {
     const docs: Document[] = [];
@@ -513,6 +675,8 @@ export class PrismaVectorStore<
       tableName: string;
       vectorColumnName: string;
       columns: ModelColumns<Record<string, unknown>>;
+      columnTypes?: ColumnTypeConfig;
+      useInsert?: boolean;
     }
   ): Promise<DefaultPrismaVectorStore> {
     const instance = new PrismaVectorStore(embeddings, dbConfig);

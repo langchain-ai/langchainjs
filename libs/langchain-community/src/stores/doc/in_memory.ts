@@ -1,1 +1,1 @@
-export * from "langchain/stores/doc/in_memory";
+export * from "@langchain/classic/stores/doc/in_memory";

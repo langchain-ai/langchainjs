@@ -9,7 +9,7 @@ import {
 } from "@langchain/core/prompts";
 import { formatToOpenAITool } from "@langchain/openai";
 import { StructuredTool } from "@langchain/core/tools";
-import { z } from "zod";
+import { z } from "zod/v3";
 import { ChatTogetherAI } from "../togetherai.js";
 
 describe("ChatTogetherAI", () => {

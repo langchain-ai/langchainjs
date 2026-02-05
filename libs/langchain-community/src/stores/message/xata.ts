@@ -81,7 +81,7 @@ const chatMemoryColumns: Schemas.Column[] = [
  * ```
  */
 export class XataChatMessageHistory<
-  XataClient extends BaseClient
+  XataClient extends BaseClient,
 > extends BaseListChatMessageHistory {
   lc_namespace = ["langchain", "stores", "message", "xata"];
 
@@ -225,7 +225,7 @@ export class XataChatMessageHistory<
     let schema: GetTableSchemaResponse | null = null;
     try {
       schema = await this.apiClient.tables.getTableSchema(tableParams);
-    } catch (e) {
+    } catch {
       // pass
     }
     if (schema == null) {

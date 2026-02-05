@@ -175,7 +175,6 @@ test("It throws when no entities are configured", async () => {
   };
 
   expect(() => {
-    // eslint-disable-next-line no-new
     new ArcjetRedact(options);
   }).toThrow("no entities configured for redaction");
 });

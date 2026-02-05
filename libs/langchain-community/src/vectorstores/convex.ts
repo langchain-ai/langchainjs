@@ -1,4 +1,3 @@
-// eslint-disable-next-line import/no-extraneous-dependencies
 import {
   DocumentByInfo,
   FieldPaths,
@@ -40,7 +39,7 @@ export type ConvexVectorStoreConfig<
     "internal",
     { id: string },
     object | null
-  >
+  >,
 > = {
   readonly ctx: GenericActionCtx<DataModel>;
   /**
@@ -97,7 +96,7 @@ export class ConvexVectorStore<
     "internal",
     { id: string },
     object | null
-  >
+  >,
 > extends VectorStore {
   /**
    * Type that defines the filter used in the
@@ -280,7 +279,7 @@ export class ConvexVectorStore<
       "internal",
       { id: string },
       object | null
-    >
+    >,
   >(
     texts: string[],
     metadatas: object[] | object,
@@ -343,7 +342,7 @@ export class ConvexVectorStore<
       "internal",
       { id: string },
       object | null
-    >
+    >,
   >(
     docs: Document[],
     embeddings: EmbeddingsInterface,

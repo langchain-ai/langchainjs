@@ -93,6 +93,7 @@ describe("GithubRepoLoader URL encoding", () => {
       });
     });
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     global.fetch = mockFetch as any;
 
     const loader = new GithubRepoLoader(

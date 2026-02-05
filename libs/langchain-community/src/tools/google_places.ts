@@ -64,7 +64,7 @@ export class GooglePlacesAPI extends Tool {
       try {
         const json = await res.json();
         message = json.error.message;
-      } catch (e) {
+      } catch {
         message =
           "Unable to parse error message: Google did not return a JSON response.";
       }

@@ -1,0 +1,148 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`serialize + deserialize custom classes 1`] = `
+"lc: 1
+type: constructor
+id:
+  - langchain
+  - tests
+  - Person
+kwargs:
+  a_field: hello
+  api_key:
+    lc: 1
+    type: secret
+    id:
+      - PERSON_API_KEY
+  hello: 3
+"
+`;
+
+exports[`serialize + deserialize custom classes 2`] = `
+"lc: 1
+type: constructor
+id:
+  - langchain
+  - tests
+  - SpecialPerson
+kwargs:
+  a_field: hello
+  api_key:
+    lc: 1
+    type: secret
+    id:
+      - PERSON_API_KEY
+  another_api_key:
+    lc: 1
+    type: secret
+    id:
+      - SPECIAL_PERSON_API_KEY
+  by: 4
+  hello: 3
+  inherited:
+    lc: 1
+    type: secret
+    id:
+      - SPECIAL_PERSON_INHERITED_API_KEY
+  nested:
+    api:
+      key:
+        lc: 1
+        type: secret
+        id:
+          - SPECIAL_PERSON_NESTED_API_KEY
+"
+`;
+
+exports[`serialize + deserialize llm 1`] = `
+"lc: 1
+type: constructor
+id:
+  - langchain
+  - llms
+  - openai
+  - OpenAI
+kwargs:
+  temperature: 0.7
+  model: davinci
+  openai_api_key:
+    lc: 1
+    type: secret
+    id:
+      - OPENAI_API_KEY
+"
+`;
+
+exports[`serialize + deserialize runnable sequence with new and old ids 1`] = `
+"lc: 1
+type: constructor
+id:
+  - langchain_core
+  - runnables
+  - RunnableSequence
+kwargs:
+  first:
+    lc: 1
+    type: constructor
+    id:
+      - langchain_core
+      - prompts
+      - chat
+      - ChatPromptTemplate
+    kwargs:
+      input_variables: []
+      messages:
+        - lc: 1
+          type: constructor
+          id:
+            - langchain_core
+            - prompts
+            - chat
+            - HumanMessagePromptTemplate
+          kwargs:
+            prompt:
+              lc: 1
+              type: constructor
+              id:
+                - langchain_core
+                - prompts
+                - prompt
+                - PromptTemplate
+              kwargs:
+                input_variables: []
+                template_format: f-string
+                template: hi there
+  middle: []
+  last:
+    lc: 1
+    type: constructor
+    id:
+      - langchain
+      - chat_models
+      - openai
+      - ChatOpenAI
+    kwargs:
+      model: gpt-4o-mini
+      openai_api_key:
+        lc: 1
+        type: secret
+        id:
+          - OPENAI_API_KEY
+"
+`;
+
+exports[`serialize + deserialize with new and old ids 1`] = `
+"lc: 1
+type: constructor
+id:
+  - langchain_core
+  - prompts
+  - prompt
+  - PromptTemplate
+kwargs:
+  input_variables:
+    - name
+  template_format: f-string
+  template: Hello, {name}!
+"
+`;

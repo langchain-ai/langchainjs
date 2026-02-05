@@ -8,7 +8,7 @@ import {
   AsyncCallerParams,
 } from "@langchain/core/utils/async_caller";
 import { BaseDocumentLoader } from "@langchain/core/document_loaders/base";
-import { UnknownHandling } from "langchain/document_loaders/fs/directory";
+import { UnknownHandling } from "@langchain/classic/document_loaders/fs/directory";
 import { extname } from "../../utils/extname.js";
 
 const extensions = /* #__PURE__ */ new Set(binaryExtensions);

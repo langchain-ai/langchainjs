@@ -394,7 +394,9 @@ export abstract class BaseChatIflytekXinghuo
           break;
         }
       }
+      // eslint-disable-next-line no-void
       void streams.cancel();
+      // eslint-disable-next-line no-void
       void webSocketStream.close();
       return response;
     }
@@ -438,6 +440,7 @@ export abstract class BaseChatIflytekXinghuo
                 response = { ...response, usage: payload.usage?.text };
                 break;
               }
+              // eslint-disable-next-line no-void
               void runManager?.handleLLMNewToken(
                 payload.choices?.text[0]?.content
               );
@@ -445,6 +448,7 @@ export abstract class BaseChatIflytekXinghuo
               break;
             }
           }
+          // eslint-disable-next-line no-void
           void streams.cancel();
           return response;
         })()

@@ -71,7 +71,7 @@ export const condenseZepMemoryIntoHumanMessage = (memory: ZepMemoryData) => {
   }
 
   return new HumanMessage(
-    `${systemPrompt ? systemPrompt + "\n" : ""}${concatMessages}`
+    `${systemPrompt ? `${systemPrompt}\n` : ""}${concatMessages}`
   );
 };
 

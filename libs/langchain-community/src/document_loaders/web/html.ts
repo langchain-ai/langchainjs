@@ -25,14 +25,6 @@ export interface WebBaseLoaderParams extends AsyncCallerParams {
    * The headers to use in the fetch request.
    */
   headers?: HeadersInit;
-  /**
-   * The selector to use to extract the text from the document.
-   * Defaults to "body".
-   * @deprecated Use CheerioWebBaseLoaderParams from @langchain/community/document_loaders/web/cheerio
-   * instead.
-   */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  selector?: any;
 }
 
 export interface WebBaseLoader extends DocumentLoader {
@@ -57,7 +49,10 @@ export class HTMLWebBaseLoader
 
   headers?: HeadersInit;
 
-  constructor(public webPath: string, fields?: WebBaseLoaderParams) {
+  constructor(
+    public webPath: string,
+    fields?: WebBaseLoaderParams
+  ) {
     super();
     const { timeout, textDecoder, headers, ...rest } = fields ?? {};
     this.timeout = timeout ?? 10000;

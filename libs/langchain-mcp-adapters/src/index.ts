@@ -9,6 +9,9 @@ export type {
   OutputHandling,
   StdioConnection,
   StreamableHTTPConnection,
+  MCPResource,
+  MCPResourceTemplate,
+  MCPResourceContent,
 } from "./types.js";
 
 /**

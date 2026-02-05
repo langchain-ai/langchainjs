@@ -84,7 +84,7 @@ export class SERPGoogleScholarAPITool extends Tool {
       try {
         const json = await response.json(); // Attempt to parse the error response.
         message = json.error; // Extract the error message from the response.
-      } catch (error) {
+      } catch {
         // Handle cases where the response isn't valid JSON.
         message =
           "Unable to parse error message: SerpApi did not return a JSON response.";
@@ -96,11 +96,20 @@ export class SERPGoogleScholarAPITool extends Tool {
     }
 
     // Parse the JSON response from SerpApi.
-    const json = await response.json();
+    const json = (await response.json()) as {
+      organic_results: {
+        title: string;
+        link: string;
+        snippet: string;
+        publication_info: { summary: string; authors: { name: string }[] };
+        authors: { name: string }[];
+        inline_links: { cited_by: { total: string } };
+      }[];
+    };
 
     // Transform the raw response into a structured format.
     const results =
-      json.organic_results?.map((item: any) => ({
+      json.organic_results?.map((item) => ({
         title: item.title, // Title of the article or paper.
         link: item.link, // Direct link to the article or paper.
         snippet: item.snippet, // Brief snippet or description.
@@ -111,7 +120,7 @@ export class SERPGoogleScholarAPITool extends Tool {
             .join(" - ") ?? "", // Rejoin remaining parts as publication info.
         authors:
           item.publication_info?.authors
-            ?.map((author: any) => author.name) // Extract the list of author names.
+            ?.map((author: { name: string }) => author.name) // Extract the list of author names.
             .join(", ") ?? "", // Join author names with a comma.
         total_citations: item.inline_links?.cited_by?.total ?? "", // Total number of citations.
       })) ?? `No results found for ${input} on Google Scholar.`;

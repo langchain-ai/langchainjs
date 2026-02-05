@@ -133,7 +133,7 @@ describe("MariaDBVectorStore", () => {
           { pageContent: "hello", metadata: { a: 2023, country: "US" } },
         ];
         await localStore.addDocuments(documents);
-        await localStore.pool.query("DROP TABLE " + localStore.tableName);
+        await localStore.pool.query(`DROP TABLE ${localStore.tableName}`);
       }
     );
   });
@@ -165,7 +165,7 @@ describe("MariaDBVectorStore", () => {
       "63ae8c92-799a-11ef-98b2-f859713e4be4",
     ];
     beforeEach(async () => {
-      await store.pool.query("TRUNCATE TABLE " + store.tableName);
+      await store.pool.query(`TRUNCATE TABLE ${store.tableName}`);
       await store.addDocuments(documents, { ids });
     });
     test("similarity limit", async () => {
@@ -207,12 +207,12 @@ describe("MariaDBVectorStore", () => {
 
       await store.delete({ filter: { a: { $eq: 2023 } } });
       let res = await store.pool.query(
-        "SELECT COUNT(*) as a FROM " + store.tableName
+        `SELECT COUNT(*) as a FROM ${store.tableName}`
       );
       expect(res[0][0]).toEqual(2n);
 
       await store.delete({ ids: ["63ae8c92-799a-11ef-98b2-f859713e4be4"] });
-      res = await store.pool.query("SELECT COUNT(*) FROM " + store.tableName);
+      res = await store.pool.query(`SELECT COUNT(*) FROM ${store.tableName}`);
       expect(res[0][0]).toEqual(1n);
     });
   });
@@ -246,7 +246,7 @@ describe("MariaDBVectorStore", () => {
     ];
 
     beforeEach(async () => {
-      await store.pool.query("TRUNCATE TABLE " + store.tableName);
+      await store.pool.query(`TRUNCATE TABLE ${store.tableName}`);
       await store.addDocuments(documents, { ids });
     });
 
@@ -289,12 +289,12 @@ describe("MariaDBVectorStore", () => {
 
       await store.delete({ filter: { a: 2023 } });
       let res = await store.pool.query(
-        "SELECT COUNT(*) as a FROM " + store.tableName
+        `SELECT COUNT(*) as a FROM ${store.tableName}`
       );
       expect(res[0][0]).toEqual(2n);
 
       await store.delete({ ids: ["63ae8c92-799a-11ef-98b2-f859713e4be4"] });
-      res = await store.pool.query("SELECT COUNT(*) FROM " + store.tableName);
+      res = await store.pool.query(`SELECT COUNT(*) FROM ${store.tableName}`);
       expect(res[0][0]).toEqual(1n);
     });
   });

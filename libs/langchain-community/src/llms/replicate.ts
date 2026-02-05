@@ -151,9 +151,9 @@ export class Replicate extends LLM implements ReplicateInput {
     try {
       const { default: Replicate } = await import("replicate");
       return { Replicate };
-    } catch (e) {
+    } catch {
       throw new Error(
-        "Please install replicate as a dependency with, e.g. `yarn add replicate`"
+        "Please install replicate as a dependency with, e.g. `pnpm install replicate`"
       );
     }
   }
@@ -197,7 +197,6 @@ export class Replicate extends LLM implements ReplicateInput {
     }
 
     return {
-      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       [this.promptKey!]: prompt,
       ...this.input,
     };

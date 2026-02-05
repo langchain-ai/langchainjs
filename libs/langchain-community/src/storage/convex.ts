@@ -1,4 +1,3 @@
-// eslint-disable-next-line import/no-extraneous-dependencies
 import {
   FieldPaths,
   FunctionReference,
@@ -9,7 +8,6 @@ import {
   VectorIndexNames,
   makeFunctionReference,
 } from "convex/server";
-// eslint-disable-next-line import/no-extraneous-dependencies
 import { Value } from "convex/values";
 import { BaseStore } from "@langchain/core/stores";
 
@@ -39,7 +37,7 @@ export type ConvexKVStoreConfig<
     "mutation",
     "internal",
     { table: string; index: string; keyField: string; key: string }
-  >
+  >,
 > = {
   readonly ctx: GenericActionCtx<DataModel>;
   /**
@@ -99,7 +97,7 @@ export class ConvexKVStore<
     "mutation",
     "internal",
     { table: string; index: string; keyField: string; key: string }
-  >
+  >,
 > extends BaseStore<string, T> {
   lc_namespace = ["langchain", "storage", "convex"];
 

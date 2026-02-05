@@ -142,7 +142,7 @@ export class Neo4jVectorStore extends VectorStore {
     try {
       this.driver = neo4j.driver(url, neo4j.auth.basic(username, password));
       this.database = database;
-    } catch (error) {
+    } catch {
       throw new Error(
         "Could not create a Neo4j driver instance. Please check the connection details."
       );
@@ -357,8 +357,8 @@ export class Neo4jVectorStore extends VectorStore {
         RETURN reduce(str='', k IN ${JSON.stringify(textNodeProperties)} |
         str + '\\n' + k + ': ' + coalesce(node[k], '')) AS text,
         node {.*, \`${embeddingNodeProperty}\`: Null, id: Null, ${textNodeProperties
-        .map((prop) => `\`${prop}\`: Null`)
-        .join(", ")} } AS metadata, score
+          .map((prop) => `\`${prop}\`: Null`)
+          .join(", ")} } AS metadata, score
       `;
     }
 
@@ -378,9 +378,8 @@ export class Neo4jVectorStore extends VectorStore {
     }
 
     if (searchType === "hybrid") {
-      const ftsNodeLabel = await store.retrieveExistingFtsIndex(
-        textNodeProperties
-      );
+      const ftsNodeLabel =
+        await store.retrieveExistingFtsIndex(textNodeProperties);
 
       if (!ftsNodeLabel) {
         await store.createNewKeywordIndex(textNodeProperties);
@@ -393,7 +392,6 @@ export class Neo4jVectorStore extends VectorStore {
       }
     }
 
-    // eslint-disable-next-line no-constant-condition
     while (true) {
       const fetchQuery = `
         MATCH (n:\`${nodeLabel}\`)
@@ -493,7 +491,7 @@ export class Neo4jVectorStore extends VectorStore {
         const embeddingDimension =
           index.options.indexConfig["vector.dimensions"];
         return Number(embeddingDimension);
-      } catch (error) {
+      } catch {
         return null;
       }
     }
@@ -539,7 +537,7 @@ export class Neo4jVectorStore extends VectorStore {
         this.nodeLabel = labelOrType;
 
         return labelOrType;
-      } catch (error) {
+      } catch {
         return null;
       }
     }
@@ -737,11 +735,7 @@ export class Neo4jVectorStore extends VectorStore {
       if (results.some((result) => result.text == null)) {
         if (!this.retrievalQuery) {
           throw new Error(
-            "Make sure that none of the '" +
-              this.textNodeProperty +
-              "' properties on nodes with label '" +
-              this.nodeLabel +
-              "' are missing or empty"
+            `Make sure that none of the '${this.textNodeProperty}' properties on nodes with label '${this.nodeLabel}' are missing or empty`
           );
         } else {
           throw new Error(
@@ -1020,12 +1014,11 @@ function handleFieldFilter(
       throw new Error(`Invalid filter condition. Expected a value which is a dictionary
         with a single key that corresponds to an operator but got a dictionary
         with ${keys.length} keys. The first few keys are: ${keys
-        .slice(0, 3)
-        .join(", ")}
+          .slice(0, 3)
+          .join(", ")}
       `);
     }
 
-    // eslint-disable-next-line prefer-destructuring
     operator = keys[0];
     filterValue = value[operator];
 

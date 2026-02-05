@@ -1,14 +1,12 @@
 import { test, expect, jest } from "@jest/globals";
-import { insecureHash } from "@langchain/core/utils/hash";
+import { sha256 } from "@langchain/core/utils/hash";
 
 import { RedisCache } from "../ioredis.js";
-
-const sha1 = (str: string) => insecureHash(str);
 
 test("RedisCache", async () => {
   const redis = {
     get: jest.fn(async (key: string) => {
-      if (key === sha1("foo_bar_0")) {
+      if (key === sha256("foo_bar_0")) {
         return JSON.stringify({ text: "baz" });
       }
       return null;

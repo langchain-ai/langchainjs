@@ -171,7 +171,7 @@ export class StackExchangeAPI extends Tool {
 
       const endpointUrl = `${this.baseUrl}${endpoint}?${queryParamsString}`;
       return await this._makeRequest(endpointUrl);
-    } catch (e) {
+    } catch {
       throw new Error("Error while calling Stack Exchange API");
     }
   }
@@ -187,7 +187,7 @@ export class StackExchangeAPI extends Tool {
         throw new Error(`HTTP Error: ${response.statusText}`);
       }
       return await response.json();
-    } catch (e) {
+    } catch {
       throw new Error(`Error while calling Stack Exchange API: ${endpointUrl}`);
     }
   }

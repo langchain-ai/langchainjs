@@ -399,7 +399,7 @@ describe("PGVectorStore", () => {
     expect(result3.length).toEqual(3);
     expect(result3).toEqual(
       documents.map((doc) => {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any, no-param-reassign
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (doc as any).id = expect.any(String);
         return doc;
       })

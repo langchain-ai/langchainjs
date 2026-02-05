@@ -141,7 +141,10 @@ export class Milvus extends VectorStore {
 
   indexSearchParams: keyValueObj;
 
-  constructor(public embeddings: EmbeddingsInterface, args: MilvusLibArgs) {
+  constructor(
+    public embeddings: EmbeddingsInterface,
+    args: MilvusLibArgs
+  ) {
     super(embeddings, args);
     this.collectionName = args.collectionName ?? genCollectionName();
     this.partitionName = args.partitionName;
@@ -254,7 +257,6 @@ export class Milvus extends VectorStore {
     const documentIds = options?.ids ?? [];
 
     const insertDatas: InsertRow[] = [];
-    // eslint-disable-next-line no-plusplus
     for (let index = 0; index < vectors.length; index++) {
       const vec = vectors[index];
       const doc = documents[index];
@@ -574,9 +576,17 @@ export class Milvus extends VectorStore {
     });
     desc.schema.fields.forEach((field) => {
       this.fields.push(field.name);
-      // Only remove autoID fields from this.fields if we're using autoId mode
+      // Remove autoID fields from this.fields if we're using autoId mode
       // When autoId is false, we need to include the primary field for upsert operations
       if (field.autoID && this.autoId) {
+        const index = this.fields.indexOf(field.name);
+        if (index !== -1) {
+          this.fields.splice(index, 1);
+        }
+      }
+      // Remove isFunctionOutput fields from this.fields if this field is calculated on server side
+      // When isFunctionOutput is false, we need to include this field for upsert operations
+      if (field.is_function_output) {
         const index = this.fields.indexOf(field.name);
         if (index !== -1) {
           this.fields.splice(index, 1);
@@ -712,6 +722,7 @@ function createFieldTypeForMetadata(
   const sampleMetadata = documents[0].metadata;
   let textFieldMaxLength = 0;
   let jsonFieldMaxLength = 0;
+  const textEncoder = new TextEncoder();
   documents.forEach(({ metadata }) => {
     // check all keys name and count in metadata is same as sampleMetadata
     Object.keys(metadata).forEach((key) => {
@@ -726,13 +737,15 @@ function createFieldTypeForMetadata(
 
       // find max length of string field and json field, cache json string value
       if (typeof metadata[key] === "string") {
-        if (metadata[key].length > textFieldMaxLength) {
-          textFieldMaxLength = metadata[key].length;
+        const textLengthInBytes = textEncoder.encode(metadata[key]).length;
+        if (textLengthInBytes > textFieldMaxLength) {
+          textFieldMaxLength = textLengthInBytes;
         }
       } else if (typeof metadata[key] === "object") {
         const json = JSON.stringify(metadata[key]);
-        if (json.length > jsonFieldMaxLength) {
-          jsonFieldMaxLength = json.length;
+        const jsonLengthInBytes = textEncoder.encode(json).length;
+        if (jsonLengthInBytes > jsonFieldMaxLength) {
+          jsonFieldMaxLength = jsonLengthInBytes;
         }
       }
     });
@@ -781,7 +794,7 @@ function createFieldTypeForMetadata(
             max_length: jsonFieldMaxLength.toString(),
           },
         });
-      } catch (e) {
+      } catch {
         throw new Error("Failed to parse metadata field as JSON");
       }
     }
@@ -796,7 +809,6 @@ function genCollectionName(): string {
 function getTextFieldMaxLength(documents: Document[]) {
   let textMaxLength = 0;
   const textEncoder = new TextEncoder();
-  // eslint-disable-next-line no-plusplus
   for (let i = 0; i < documents.length; i++) {
     const text = documents[i].pageContent;
     const textLengthInBytes = textEncoder.encode(text).length;
@@ -819,7 +831,7 @@ function checkJsonString(value: string): { isJson: boolean; obj: any } {
   try {
     const result = JSON.parse(value);
     return { isJson: true, obj: result };
-  } catch (e) {
+  } catch {
     return { isJson: false, obj: null };
   }
 }

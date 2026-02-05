@@ -1,4 +1,3 @@
-/* eslint-disable import/no-extraneous-dependencies */
 import {
   LlamaModel,
   LlamaContext,
@@ -139,7 +138,7 @@ export class LlamaCpp extends LLM<LlamaCppCallOptions> {
       }
 
       return completion;
-    } catch (e) {
+    } catch {
       throw new Error("Error getting prompt completion.");
     }
   }

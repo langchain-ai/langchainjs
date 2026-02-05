@@ -1,0 +1,40 @@
+{
+  "extends": "@langchain/tsconfig/base.json",
+  "compilerOptions": {
+    "rootDir": "src",
+    "outDir": "dist"
+  },
+  "include": ["src/**/*"],
+  "exclude": ["dist", "node_modules"],
+  "references": [
+    { "path": "../langchain-core" },
+    { "path": "../langchain-textsplitters" },
+    { "path": "../providers/langchain-anthropic" },
+    { "path": "../providers/langchain-aws" },
+    { "path": "../providers/langchain-azure-cosmosdb" },
+    { "path": "../providers/langchain-azure-dynamic-sessions" },
+    { "path": "../providers/langchain-baidu-qianfan" },
+    { "path": "../providers/langchain-cloudflare" },
+    { "path": "../providers/langchain-cohere" },
+    { "path": "../providers/langchain-deepseek" },
+    { "path": "../providers/langchain-exa" },
+    { "path": "../providers/langchain-google-cloud-sql-pg" },
+    { "path": "../providers/langchain-google-common" },
+    { "path": "../providers/langchain-google-genai" },
+    { "path": "../providers/langchain-google-vertexai" },
+    { "path": "../providers/langchain-google-vertexai-web" },
+    { "path": "../providers/langchain-groq" },
+    { "path": "../providers/langchain-mistralai" },
+    { "path": "../providers/langchain-mongodb" },
+    { "path": "../providers/langchain-nomic" },
+    { "path": "../providers/langchain-ollama" },
+    { "path": "../providers/langchain-openai" },
+    { "path": "../providers/langchain-pinecone" },
+    { "path": "../providers/langchain-qdrant" },
+    { "path": "../providers/langchain-redis" },
+    { "path": "../providers/langchain-tavily" },
+    { "path": "../providers/langchain-weaviate" },
+    { "path": "../providers/langchain-xai" },
+    { "path": "../providers/langchain-yandex" }
+  ]
+}

@@ -256,7 +256,6 @@ export function _makeMessageChunkFromAnthropicEvent(
   }
 ): AIMessageChunk | null {
   if (data.type === "message_start") {
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { content, usage, ...additionalKwargs } = data.message;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const filteredAdditionalKwargs: Record<string, any> = {};

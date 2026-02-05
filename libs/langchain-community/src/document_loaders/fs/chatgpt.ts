@@ -1,5 +1,5 @@
 import { Document } from "@langchain/core/documents";
-import { TextLoader } from "langchain/document_loaders/fs/text";
+import { TextLoader } from "@langchain/classic/document_loaders/fs/text";
 
 interface ChatGPTMessage {
   author: {

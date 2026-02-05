@@ -1,5 +1,3 @@
-/* eslint-disable no-process-env */
-/* eslint-disable @typescript-eslint/no-non-null-assertion */
 import { test, jest, expect } from "@jest/globals";
 import S3Client from "@aws-sdk/client-s3";
 import * as fs from "node:fs";

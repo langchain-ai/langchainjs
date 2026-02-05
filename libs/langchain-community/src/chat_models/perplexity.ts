@@ -97,7 +97,7 @@ export interface PerplexityChatInput extends BaseChatModelParams {
   topP?: number;
 
   /** Search domain filter - limit the citations used by the online model to URLs from the specified domains. */
-  searchDomainFilter?: any[];
+  searchDomainFilter?: unknown[];
 
   /** Whether to return images */
   returnImages?: boolean;
@@ -194,6 +194,7 @@ export class ChatPerplexity
 
   topP?: number;
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   searchDomainFilter?: any[];
 
   returnImages?: boolean;
@@ -369,6 +370,7 @@ export class ChatPerplexity
       message: new AIMessage({
         content: message.content ?? "",
         additional_kwargs: {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           citations: (response as any).citations,
         },
       }),
@@ -399,7 +401,6 @@ export class ChatPerplexity
 
     const stream = await this.client.chat.completions.create({
       messages: messagesList,
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       ...this.invocationParams(options),
       stream: true,
     });
@@ -408,6 +409,7 @@ export class ChatPerplexity
     for await (const chunk of stream) {
       const choice = chunk.choices[0];
       const { delta } = choice;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const citations = (chunk as any).citations ?? [];
 
       if (!delta.content) continue;
@@ -450,7 +452,7 @@ export class ChatPerplexity
 
   withStructuredOutput<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    RunOutput extends Record<string, any> = Record<string, any>
+    RunOutput extends Record<string, any> = Record<string, any>,
   >(
     outputSchema:
       | InteropZodType<RunOutput>
@@ -461,7 +463,7 @@ export class ChatPerplexity
 
   withStructuredOutput<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    RunOutput extends Record<string, any> = Record<string, any>
+    RunOutput extends Record<string, any> = Record<string, any>,
   >(
     outputSchema:
       | InteropZodType<RunOutput>
@@ -472,7 +474,7 @@ export class ChatPerplexity
 
   withStructuredOutput<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    RunOutput extends Record<string, any> = Record<string, any>
+    RunOutput extends Record<string, any> = Record<string, any>,
   >(
     outputSchema:
       | InteropZodType<RunOutput>

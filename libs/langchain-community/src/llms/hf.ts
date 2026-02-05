@@ -190,9 +190,9 @@ export class HuggingFaceInference extends LLM implements HFInput {
     try {
       const { HfInference } = await import("@huggingface/inference");
       return { HfInference };
-    } catch (e) {
+    } catch {
       throw new Error(
-        "Please install huggingface as a dependency with, e.g. `yarn add @huggingface/inference`"
+        "Please install huggingface as a dependency with, e.g. `pnpm install @huggingface/inference`"
       );
     }
   }

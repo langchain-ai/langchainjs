@@ -39,7 +39,7 @@ const program = new Commander.Command(packageJson.name)
   .allowUnknownOption()
   .parse(process.argv);
 
-const packageManager = "yarn";
+const packageManager: string = "pnpm";
 
 async function run(): Promise<void> {
   const conf = new Conf({ projectName: "create-langchain-integration" });
@@ -127,11 +127,11 @@ async function notifyUpdate(): Promise<void> {
     const res = await update;
     if (res?.latest) {
       const updateMessage =
-        packageManager === "yarn"
-          ? "yarn global add create-langchain-integration@latest"
-          : packageManager === "pnpm"
+        packageManager === "pnpm"
           ? "pnpm add -g create-langchain-integration@latest"
-          : "npm i -g create-langchain-integration@latest";
+          : packageManager === "yarn"
+            ? "yarn global add create-langchain-integration@latest"
+            : "npm i -g create-langchain-integration@latest";
 
       console.log(
         yellow(

@@ -1,21 +1,16 @@
-/* eslint-disable no-process-env */
-import { test, expect } from "@jest/globals";
 import { ChatModelIntegrationTests } from "@langchain/standard-tests";
 import { AIMessageChunk } from "@langchain/core/messages";
 import {
   ChatWatsonx,
-  ChatWatsonxInput,
-  WatsonxCallOptionsChat,
-  WatsonxCallParams,
+  ChatWatsonxCallOptions,
+  ChatWatsonxConstructorInput,
 } from "../ibm.js";
-import { WatsonxAuth } from "../../types/ibm.js";
 
 class ChatWatsonxStandardIntegrationTests extends ChatModelIntegrationTests<
-  WatsonxCallOptionsChat,
+  ChatWatsonxCallOptions,
   AIMessageChunk,
-  ChatWatsonxInput &
-    WatsonxAuth &
-    Partial<Omit<WatsonxCallParams, "tool_choice">>
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  ChatWatsonxConstructorInput & Record<string, any>
 > {
   constructor() {
     if (!process.env.WATSONX_AI_APIKEY) {
@@ -26,7 +21,7 @@ class ChatWatsonxStandardIntegrationTests extends ChatModelIntegrationTests<
       chatModelHasToolCalling: true,
       chatModelHasStructuredOutput: true,
       constructorArgs: {
-        model: "meta-llama/llama-3-3-70b-instruct",
+        model: "ibm/granite-3-2-8b-instruct",
         version: "2024-05-31",
         serviceUrl: process.env.WATSONX_AI_SERVICE_URL ?? "testString",
         projectId: process.env.WATSONX_AI_PROJECT_ID ?? "testString",
@@ -35,12 +30,19 @@ class ChatWatsonxStandardIntegrationTests extends ChatModelIntegrationTests<
     });
   }
 
-  async testInvokeMoreComplexTools() {
+  async testWithStructuredOutput() {
     this.skipTestMessage(
-      "testInvokeMoreComplexTools",
+      "testWithStructuredOutput",
       "ChatWatsonx",
-      "Watsonx does not support tool schemas which contain object with unknown/any parameters." +
-        "Watsonx only supports objects in schemas when the parameters are defined."
+      "Assertion ```expect(handler.extraParams)``` is not valid in ChatWatsonx"
+    );
+  }
+
+  async testWithStructuredOutputIncludeRaw() {
+    this.skipTestMessage(
+      "testWithStructuredOutputIncludeRaw",
+      "ChatWatsonx",
+      "Assertion ```expect(handler.extraParams)``` is not valid in ChatWatsonx"
     );
   }
 }

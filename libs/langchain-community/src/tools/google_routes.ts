@@ -1,7 +1,7 @@
 import { StructuredTool } from "@langchain/core/tools";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import { InferInteropZodOutput } from "@langchain/core/utils/types";
-import { z } from "zod";
+import { z } from "zod/v3";
 
 /**
  * Interfaces for the response from the Google Routes API.
@@ -158,7 +158,6 @@ function createRouteLabel(route: any): string[] {
   return route.routeLabels;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function filterRoutes(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   route: any,

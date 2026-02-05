@@ -1,4 +1,3 @@
-/* eslint-disable no-process-env */
 import { ChatOpenAI } from "@langchain/openai";
 import { createClient } from "@vercel/kv";
 import { VercelKVCache } from "../vercel_kv.js";

@@ -1,0 +1,106 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`Multi-modal, multi part chat prompt works with instances of BaseMessage 1`] = `
+[
+  {
+    "id": [
+      "langchain_core",
+      "messages",
+      "SystemMessage",
+    ],
+    "kwargs": {
+      "additional_kwargs": {},
+      "content": "You are an AI assistant named Bob",
+      "response_metadata": {},
+    },
+    "lc": 1,
+    "type": "constructor",
+  },
+  {
+    "id": [
+      "langchain_core",
+      "messages",
+      "HumanMessage",
+    ],
+    "kwargs": {
+      "additional_kwargs": {},
+      "content": [
+        {
+          "image_url": "data:image/jpeg;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAA",
+          "type": "image_url",
+        },
+      ],
+      "response_metadata": {},
+    },
+    "lc": 1,
+    "type": "constructor",
+  },
+  {
+    "id": [
+      "langchain_core",
+      "messages",
+      "HumanMessage",
+    ],
+    "kwargs": {
+      "additional_kwargs": {},
+      "content": [
+        {
+          "text": "What is in this object {objectName}",
+          "type": "text",
+        },
+      ],
+      "response_metadata": {},
+    },
+    "lc": 1,
+    "type": "constructor",
+  },
+  {
+    "id": [
+      "langchain_core",
+      "messages",
+      "HumanMessage",
+    ],
+    "kwargs": {
+      "additional_kwargs": {},
+      "content": [
+        {
+          "image_url": {
+            "detail": "high",
+            "url": "data:image/jpeg;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAA",
+          },
+          "type": "image_url",
+        },
+      ],
+      "response_metadata": {},
+    },
+    "lc": 1,
+    "type": "constructor",
+  },
+  {
+    "id": [
+      "langchain_core",
+      "messages",
+      "HumanMessage",
+    ],
+    "kwargs": {
+      "additional_kwargs": {},
+      "content": [
+        {
+          "text": "What is in this object chair",
+          "type": "text",
+        },
+        {
+          "image_url": {
+            "detail": "high",
+            "url": "https://www.example.com/image.png",
+          },
+          "type": "image_url",
+        },
+      ],
+      "response_metadata": {},
+    },
+    "lc": 1,
+    "type": "constructor",
+  },
+]
+`;

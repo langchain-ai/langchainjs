@@ -63,7 +63,7 @@ export interface DatadogLLMObsRequestBody {
 
 export type FormatDocument<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  Metadata extends Record<string, any> = Record<string, any>
+  Metadata extends Record<string, any> = Record<string, any>,
 > = (document: Document<Metadata>) => {
   text: string;
   id: string;
@@ -195,7 +195,7 @@ export class DatadogLLMObsTracer
   protected uuidToBigInt(uuid: string): string {
     const hexString = uuid.replace(/-/g, "");
     const first64Bits = hexString.slice(0, 16);
-    const bigIntValue = BigInt("0x" + first64Bits).toString();
+    const bigIntValue = BigInt(`0x${first64Bits}`).toString();
 
     return bigIntValue;
   }

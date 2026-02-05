@@ -1,4 +1,4 @@
-import Metal from "@getmetal/metal-sdk";
+import type { Client as Metal } from "@getmetal/metal-sdk";
 
 import { BaseRetriever, BaseRetrieverInput } from "@langchain/core/retrievers";
 import { Document } from "@langchain/core/documents";

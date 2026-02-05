@@ -1,5 +1,5 @@
 import srtParser2 from "srt-parser-2";
-import { TextLoader } from "langchain/document_loaders/fs/text";
+import { TextLoader } from "@langchain/classic/document_loaders/fs/text";
 
 /**
  * A class that extends the `TextLoader` class. It represents a document

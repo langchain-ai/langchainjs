@@ -2,8 +2,9 @@
   "name": "langchain-convex-tests",
   "version": "0.0.1",
   "type": "module",
+  "private": true,
   "dependencies": {
     "convex": "1.4.1",
-    "@langchain/core": ">=0.3.0 <0.4.0"
+    "@langchain/core": "^1.0.0-alpha.6"
   }
 }

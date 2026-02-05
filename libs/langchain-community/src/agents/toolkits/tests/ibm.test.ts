@@ -1,13 +1,10 @@
-/* eslint-disable no-process-env */
-/* eslint-disable no-new */
 import {
   WatsonXAI,
   convertUtilityToolToWatsonxTool,
 } from "@ibm-cloud/watsonx-ai";
-import WatsonxAiMlVml_v1 from "@ibm-cloud/watsonx-ai/dist/watsonx-ai-ml/vml_v1.js";
 import { WatsonxTool } from "../ibm.js";
 
-const service = {} as WatsonxAiMlVml_v1;
+const service = {} as WatsonXAI;
 
 describe("Tool class tests", () => {
   describe("Positive tests", () => {
@@ -79,8 +76,9 @@ describe("Tool class tests", () => {
           },
           service
         );
-      } catch (e: any) {
-        expect(e.message).toBe("Unsupported root schema type");
+      } catch (e) {
+        const error = e as Error;
+        expect(error.message).toBe("Unsupported root schema type");
       }
     });
   });

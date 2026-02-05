@@ -4,7 +4,21 @@ import { Document } from "@langchain/core/documents";
 import { FakeEmbeddings } from "@langchain/core/utils/testing";
 import { HNSWLib } from "../hnswlib.js";
 
+// Helper function to check if hnswlib-node is available
+async function canImportHnswlib(): Promise<boolean> {
+  try {
+    await HNSWLib.imports();
+    return true;
+  } catch (error) {
+    return false;
+  }
+}
+
 test("Test HNSWLib.fromTexts + addVectors", async () => {
+  if (!(await canImportHnswlib())) {
+    console.warn("Skipping hnswlib test: hnswlib-node not available");
+    return;
+  }
   const vectorStore = await HNSWLib.fromTexts(
     ["Hello world"],
     [{ id: 2 }],
@@ -45,6 +59,10 @@ test("Test HNSWLib.fromTexts + addVectors", async () => {
 });
 
 test("Test HNSWLib metadata filtering", async () => {
+  if (!(await canImportHnswlib())) {
+    console.warn("Skipping hnswlib test: hnswlib-node not available");
+    return;
+  }
   const pageContent = "Hello world";
 
   const vectorStore = await HNSWLib.fromTexts(

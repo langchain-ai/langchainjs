@@ -1,8 +1,8 @@
 import {
   DirectoryLoader,
   UnknownHandling,
-} from "langchain/document_loaders/fs/directory";
-import { TextLoader } from "langchain/document_loaders/fs/text";
+} from "@langchain/classic/document_loaders/fs/directory";
+import { TextLoader } from "@langchain/classic/document_loaders/fs/text";
 
 /**
  * A class that extends the DirectoryLoader class. It represents a

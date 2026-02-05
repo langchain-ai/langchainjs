@@ -1,4 +1,4 @@
-import neo4j, { Driver, Record, auth } from "neo4j-driver";
+import neo4j, { Driver, Record, auth, type ServerInfo } from "neo4j-driver";
 import { v4 as uuidv4 } from "uuid";
 import { BaseListChatMessageHistory } from "@langchain/core/chat_history";
 import {
@@ -54,9 +54,10 @@ export class Neo4jChatMessageHistory extends BaseListChatMessageHistory {
     if (url && username && password) {
       try {
         this.driver = neo4j.driver(url, auth.basic(username, password));
-      } catch (e: any) {
+      } catch (e) {
+        const error = e as Error;
         throw new Error(
-          `Could not create a Neo4j driver instance. Please check the connection details.\nCause: ${e.message}`
+          `Could not create a Neo4j driver instance. Please check the connection details.\nCause: ${error.message}`
         );
       }
     } else {
@@ -71,16 +72,17 @@ export class Neo4jChatMessageHistory extends BaseListChatMessageHistory {
 
     try {
       await instance.verifyConnectivity();
-    } catch (e: any) {
+    } catch (e) {
+      const error = e as Error;
       throw new Error(
-        `Could not verify connection to the Neo4j database.\nCause: ${e.message}`
+        `Could not verify connection to the Neo4j database.\nCause: ${error.message}`
       );
     }
 
     return instance;
   }
 
-  async verifyConnectivity() {
+  async verifyConnectivity(): Promise<ServerInfo> {
     const connectivity = await this.driver.getServerInfo();
     return connectivity;
   }
@@ -107,8 +109,9 @@ export class Neo4jChatMessageHistory extends BaseListChatMessageHistory {
       const results = records.map((record: Record) => record.get("result"));
 
       return mapStoredMessagesToChatMessages(results);
-    } catch (e: any) {
-      throw new Error(`Ohno! Couldn't get messages.\nCause: ${e.message}`);
+    } catch (e) {
+      const error = e as Error;
+      throw new Error(`Ohno! Couldn't get messages.\nCause: ${error.message}`);
     }
   }
 
@@ -131,8 +134,9 @@ export class Neo4jChatMessageHistory extends BaseListChatMessageHistory {
         type: message.getType(),
         content: message.content,
       });
-    } catch (e: any) {
-      throw new Error(`Ohno! Couldn't add message.\nCause: ${e.message}`);
+    } catch (e) {
+      const error = e as Error;
+      throw new Error(`Ohno! Couldn't add message.\nCause: ${error.message}`);
     }
   }
 
@@ -147,9 +151,10 @@ export class Neo4jChatMessageHistory extends BaseListChatMessageHistory {
       await this.driver.executeQuery(clearMessagesCypherQuery, {
         sessionId: this.sessionId,
       });
-    } catch (e: any) {
+    } catch (e) {
+      const error = e as Error;
       throw new Error(
-        `Ohno! Couldn't clear chat history.\nCause: ${e.message}`
+        `Ohno! Couldn't clear chat history.\nCause: ${error.message}`
       );
     }
   }

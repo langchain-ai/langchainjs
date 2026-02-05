@@ -1,5 +1,5 @@
 import { MainApi } from "@rockset/client";
-import type { CreateCollectionRequest } from "@rockset/client/dist/codegen/api.d.ts";
+import type { CreateCollectionRequest } from "@rockset/client/dist/codegen/api.js";
 import { Collection } from "@rockset/client/dist/codegen/api.js";
 
 import type { EmbeddingsInterface } from "@langchain/core/embeddings";
