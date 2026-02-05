@@ -6,7 +6,7 @@
   "redirects": [
     {
       "source": "/(.*)",
-      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview",
+      "destination": "https://reference.langchain.com/javascript/",
       "permanent": true
     }
   ]
