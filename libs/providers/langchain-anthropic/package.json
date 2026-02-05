@@ -33,29 +33,29 @@
     "typegen:profiles": "pnpm --filter @langchain/model-profiles make --config profiles.toml"
   },
   "dependencies": {
-    "@anthropic-ai/sdk": "^0.71.0",
-    "zod": "^3.25.76 || ^4"
+    "@anthropic-ai/sdk": "^0.73.0",
+    "zod": "^4"
   },
   "peerDependencies": {
     "@langchain/core": "workspace:*"
   },
   "devDependencies": {
-    "@anthropic-ai/vertex-sdk": "^0.11.5",
+    "@anthropic-ai/vertex-sdk": "^0.14.3",
     "@cfworker/json-schema": "^4.1.1",
     "@langchain/core": "workspace:*",
     "@langchain/eslint": "workspace:*",
     "@langchain/standard-tests": "workspace:*",
     "@langchain/tsconfig": "workspace:*",
-    "@tsconfig/recommended": "^1.0.10",
-    "@vitest/coverage-v8": "^3.2.4",
-    "dotenv": "^17.2.1",
-    "dpdm": "^3.14.0",
-    "eslint": "^9.34.0",
-    "prettier": "^3.5.0",
-    "rimraf": "^5.0.1",
-    "typescript": "~5.8.3",
+    "@tsconfig/recommended": "^1.0.13",
+    "@vitest/coverage-v8": "^4.0.18",
+    "dotenv": "^17.2.3",
+    "dpdm": "^4.0.1",
+    "eslint": "^9.39.2",
+    "prettier": "^3.8.1",
+    "rimraf": "^6.1.2",
+    "typescript": "~5.9.3",
     "uuid": "^13.0.0",
-    "vitest": "^3.2.4"
+    "vitest": "^4.0.18"
   },
   "publishConfig": {
     "access": "public"

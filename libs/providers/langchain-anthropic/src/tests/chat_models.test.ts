@@ -241,6 +241,16 @@ test("invocationParams includes container with thinking enabled", () => {
   expect(params.thinking).toEqual({ type: "enabled", budget_tokens: 1000 });
 });
 
+test("supports adaptive thinking", () => {
+  const model = new ChatAnthropic({
+    model: "claude-sonnet-4-5-20250929",
+    anthropicApiKey: "testing",
+    thinking: { type: "adaptive" },
+  });
+  const params = model.invocationParams({});
+  expect(params.thinking).toEqual({ type: "adaptive" });
+});
+
 test("invocationParams returns undefined tools when tools is undefined", () => {
   const model = new ChatAnthropic({
     modelName: "claude-3-haiku",

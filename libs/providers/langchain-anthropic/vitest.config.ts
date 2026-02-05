@@ -1,11 +1,11 @@
 import {
   configDefaults,
   defineConfig,
-  type UserConfigExport,
+  type ViteUserConfigExport,
 } from "vitest/config";
 
 export default defineConfig((env) => {
-  const common: UserConfigExport = {
+  const common: ViteUserConfigExport = {
     test: {
       environment: "node",
       hideSkippedTests: true,
