@@ -198,6 +198,13 @@ function _thinkingInParams(
   );
 }
 
+function _compactionInParams(
+  params: AnthropicMessageCreateParams | AnthropicStreamingMessageCreateParams
+): boolean {
+  const cm = params.context_management;
+  return !!cm?.edits?.some((e) => e.type === "compact_20260112");
+}
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function isAnthropicTool(tool: any): tool is Anthropic.Messages.Tool {
   return "input_schema" in tool;
@@ -1238,7 +1245,8 @@ export class ChatAnthropicMessages<
     const coerceContentToString =
       !_toolsInParams(payload) &&
       !_documentsInParams(payload) &&
-      !_thinkingInParams(payload);
+      !_thinkingInParams(payload) &&
+      !_compactionInParams(payload);
 
     const stream = await this.createStreamWithRetry(payload, {
       headers: options.headers,

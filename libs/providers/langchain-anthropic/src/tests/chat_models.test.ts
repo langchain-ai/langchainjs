@@ -1356,7 +1356,7 @@ describe("File ContentBlock handling", () => {
   });
 });
 
-describe("Opus 4.6 features", () => {
+describe("Opus 4.6", () => {
   describe("Adaptive thinking", () => {
     test("invocationParams accepts adaptive thinking type", () => {
       const model = new ChatAnthropic({
