@@ -1,6 +1,6 @@
 {
   "name": "@langchain/community",
-  "version": "1.1.11",
+  "version": "1.1.12",
   "description": "Third-party integrations for LangChain.js",
   "author": "LangChain",
   "license": "MIT",

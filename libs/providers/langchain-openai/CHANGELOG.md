@@ -1,5 +1,19 @@
 # @langchain/openai
 
+## 1.2.5
+
+### Patch Changes
+
+- [#9743](https://github.com/langchain-ai/langchainjs/pull/9743) [`0870ca0`](https://github.com/langchain-ai/langchainjs/commit/0870ca0719dacd8a555b3341e581d6c15cd6faf3) Thanks [@d2201](https://github.com/d2201)! - fix(openai): include encrypted reasoning in ZDR responses input
+
+- [#9934](https://github.com/langchain-ai/langchainjs/pull/9934) [`cf46089`](https://github.com/langchain-ai/langchainjs/commit/cf46089d250b1ec87f99956f5cd87e2615ac25c5) Thanks [@hntrl](https://github.com/hntrl)! - feat(openai): update openai SDK to ^6.18.0
+  - Adds support for codex 5.3
+  - Added `action` option to image generation tool (`generate`, `edit`, `auto`)
+  - Removed `@ts-expect-error` for `gpt-image-1.5` model (now in SDK types)
+  - Auto-route codex models (`codex-mini-latest`, `gpt-5-codex`, `gpt-5.1-codex`, etc.) to Responses API
+  - Added `shell_call` and `local_shell_call` to streaming converter and input reconstruction
+  - Added unit tests for `isReasoningModel` and `_modelPrefersResponsesAPI`
+
 ## 1.2.4
 
 ### Patch Changes
