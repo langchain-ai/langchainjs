@@ -28,12 +28,14 @@ import {
   AnthropicSearchResultBlockParam,
   AnthropicToolResponse,
   AnthropicContainerUploadBlockParam,
+  AnthropicCompactionBlockParam,
 } from "../types.js";
 import {
   _isAnthropicImageBlockParam,
   _isAnthropicRedactedThinkingBlock,
   _isAnthropicSearchResultBlock,
   _isAnthropicThinkingBlock,
+  _isAnthropicCompactionBlock,
   standardContentBlockConverter,
 } from "./content.js";
 import { _formatStandardContent } from "./standard.js";
@@ -175,7 +177,9 @@ function* _formatContentBlocks(
     }
 
     const cacheControl =
-      "cache_control" in contentPart ? contentPart.cache_control : undefined;
+      "cache_control" in contentPart
+        ? (contentPart.cache_control as Anthropic.Beta.BetaCacheControlEphemeral)
+        : undefined;
 
     if (contentPart.type === "image_url") {
       let source;
@@ -321,6 +325,13 @@ function* _formatContentBlocks(
       const block: AnthropicRedactedThinkingBlockParam = {
         type: "redacted_thinking" as const, // Explicitly setting the type as "redacted_thinking"
         data: contentPart.data,
+        ...(cacheControl ? { cache_control: cacheControl } : {}),
+      };
+      yield block;
+    } else if (_isAnthropicCompactionBlock(contentPart)) {
+      const block: AnthropicCompactionBlockParam = {
+        type: "compaction" as const,
+        content: contentPart.content,
         ...(cacheControl ? { cache_control: cacheControl } : {}),
       };
       yield block;
