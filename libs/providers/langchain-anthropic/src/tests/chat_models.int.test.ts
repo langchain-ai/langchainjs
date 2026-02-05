@@ -1637,3 +1637,202 @@ describe("Anthropic Reasoning with contentBlocks", () => {
     expect((reasoningBlocks[0] as any).reasoning.length).toBeGreaterThan(10);
   }, 60000);
 });
+
+// ── Opus 4.6 features ──────────────────────────────────────────────────────
+
+const opus46Model = "claude-opus-4-6";
+
+describe("Opus 4.6: adaptive thinking", () => {
+  test("invoke with adaptive thinking", async () => {
+    const model = new ChatAnthropic({
+      model: opus46Model,
+      maxTokens: 4096,
+      thinking: { type: "adaptive" },
+    });
+
+    const response = await model.invoke("What is 15 * 23?");
+    expect(response.content).toBeDefined();
+
+    // With adaptive thinking at default high effort, the model may or may
+    // not include thinking blocks depending on problem complexity.
+    if (Array.isArray(response.content)) {
+      const textBlocks = (response.content as any[]).filter(
+        (b) => b.type === "text"
+      );
+      expect(textBlocks.length).toBeGreaterThan(0);
+    } else {
+      expect(typeof response.content).toBe("string");
+      expect(response.content.length).toBeGreaterThan(0);
+    }
+  }, 60000);
+
+  test("stream with adaptive thinking", async () => {
+    const model = new ChatAnthropic({
+      model: opus46Model,
+      maxTokens: 4096,
+      thinking: { type: "adaptive" },
+    });
+
+    let full: AIMessageChunk | undefined;
+    for await (const chunk of await model.stream("What is 15 * 23?")) {
+      full = full ? concat(full, chunk) : chunk;
+    }
+    expect(full).toBeInstanceOf(AIMessageChunk);
+    expect(full!.content).toBeDefined();
+  }, 60000);
+
+  test("adaptive thinking multiturn", async () => {
+    const model = new ChatAnthropic({
+      model: opus46Model,
+      maxTokens: 4096,
+      thinking: { type: "adaptive" },
+    });
+
+    const messages: BaseMessage[] = [new HumanMessage("Hello")];
+    const response1 = await model.invoke(messages);
+    messages.push(response1);
+    messages.push(new HumanMessage("What is 42 + 7?"));
+
+    // Second turn to verify thinking blocks round-trip correctly
+    const response2 = await model.invoke(messages);
+    expect(response2.content).toBeDefined();
+  }, 90000);
+});
+
+describe("Opus 4.6: effort parameter", () => {
+  test("invoke with low effort", async () => {
+    const model = new ChatAnthropic({
+      model: opus46Model,
+      maxTokens: 4096,
+      thinking: { type: "adaptive" },
+      outputConfig: { effort: "low" },
+    });
+
+    const response = await model.invoke("Say hello.");
+    expect(response.content).toBeDefined();
+  }, 30000);
+
+  test("invoke with medium effort", async () => {
+    const model = new ChatAnthropic({
+      model: opus46Model,
+      maxTokens: 4096,
+      thinking: { type: "adaptive" },
+      outputConfig: { effort: "medium" },
+    });
+
+    const response = await model.invoke(
+      "What are two benefits of exercise?"
+    );
+    expect(response.content).toBeDefined();
+  }, 60000);
+
+  test("stream with effort via call options", async () => {
+    const model = new ChatAnthropic({
+      model: opus46Model,
+      maxTokens: 4096,
+      thinking: { type: "adaptive" },
+    });
+
+    let full: AIMessageChunk | undefined;
+    for await (const chunk of await model.stream("Say hello.", {
+      outputConfig: { effort: "low" },
+    })) {
+      full = full ? concat(full, chunk) : chunk;
+    }
+    expect(full).toBeInstanceOf(AIMessageChunk);
+    expect(full!.content).toBeDefined();
+  }, 30000);
+});
+
+describe("Opus 4.6: inference_geo", () => {
+  test("invoke with inferenceGeo", async () => {
+    const model = new ChatAnthropic({
+      model: opus46Model,
+      maxTokens: 256,
+      inferenceGeo: "us",
+    });
+
+    const response = await model.invoke("Say hello.");
+    expect(response.content).toBeDefined();
+  }, 30000);
+
+  test("stream with inferenceGeo via call options", async () => {
+    const model = new ChatAnthropic({
+      model: opus46Model,
+      maxTokens: 256,
+    });
+
+    let full: AIMessageChunk | undefined;
+    for await (const chunk of await model.stream("Say hello.", {
+      inferenceGeo: "us",
+    })) {
+      full = full ? concat(full, chunk) : chunk;
+    }
+    expect(full).toBeInstanceOf(AIMessageChunk);
+  }, 30000);
+});
+
+describe("Opus 4.6: structured output with outputConfig", () => {
+  test("withStructuredOutput using jsonSchema method", async () => {
+    const model = new ChatAnthropic({
+      model: opus46Model,
+      maxTokens: 4096,
+    });
+
+    const schema = z.object({
+      answer: z.number().describe("The numeric answer"),
+    });
+
+    const structured = model.withStructuredOutput(schema, {
+      method: "jsonSchema",
+    });
+
+    const result = await structured.invoke("What is 2 + 2?");
+    expect(result).toBeDefined();
+    expect(typeof result.answer).toBe("number");
+  }, 60000);
+});
+
+describe("Opus 4.6: compaction API", () => {
+  test("invoke with compaction enabled", async () => {
+    const model = new ChatAnthropic({
+      model: opus46Model,
+      maxTokens: 4096,
+      contextManagement: {
+        edits: [
+          {
+            type: "compact_20260112",
+            trigger: { type: "input_tokens", value: 50000 },
+          },
+        ],
+      } as any,
+    });
+
+    // Simple request that won't trigger compaction but verifies the
+    // parameter is accepted by the API without error
+    const response = await model.invoke("Say hello.");
+    expect(response.content).toBeDefined();
+  }, 30000);
+
+  test("stream with compaction enabled", async () => {
+    const model = new ChatAnthropic({
+      model: opus46Model,
+      maxTokens: 4096,
+      contextManagement: {
+        edits: [
+          {
+            type: "compact_20260112",
+            trigger: { type: "input_tokens", value: 50000 },
+          },
+        ],
+      } as any,
+    });
+
+    let full: AIMessageChunk | undefined;
+    for await (const chunk of await model.stream("Say hello.")) {
+      full = full ? concat(full, chunk) : chunk;
+    }
+    expect(full).toBeInstanceOf(AIMessageChunk);
+    expect(full!.content).toBeDefined();
+  }, 30000);
+});

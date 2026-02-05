@@ -1355,3 +1355,330 @@ describe("File ContentBlock handling", () => {
     });
   });
 });
+
+describe("Opus 4.6 features", () => {
+  describe("Adaptive thinking", () => {
+    test("invocationParams accepts adaptive thinking type", () => {
+      const model = new ChatAnthropic({
+        model: "claude-opus-4-6",
+        temperature: 1,
+        apiKey: "testing",
+        thinking: { type: "adaptive" },
+      });
+
+      const params = model.invocationParams({});
+
+      expect(params.thinking).toEqual({ type: "adaptive" });
+    });
+
+    test("adaptive thinking disables temperature/topK/topP like enabled thinking", () => {
+      const model = new ChatAnthropic({
+        model: "claude-opus-4-6",
+        apiKey: "testing",
+        thinking: { type: "adaptive" },
+      });
+
+      const params = model.invocationParams({});
+
+      // When thinking is adaptive, temperature/top_k/top_p should not be set
+      expect(params.temperature).toBeUndefined();
+      expect(params.top_k).toBeUndefined();
+      expect(params.top_p).toBeUndefined();
+    });
+
+    test("adaptive thinking throws on non-default temperature", () => {
+      const model = new ChatAnthropic({
+        model: "claude-opus-4-6",
+        temperature: 0.5,
+        apiKey: "testing",
+        thinking: { type: "adaptive" },
+      });
+
+      expect(() => model.invocationParams({})).toThrow(
+        "temperature is not supported when thinking is enabled"
+      );
+    });
+
+    test("default max_tokens for claude-opus-4-6 is 16384", () => {
+      const model = new ChatAnthropic({
+        model: "claude-opus-4-6",
+        apiKey: "testing",
+      });
+
+      const params = model.invocationParams({});
+
+      expect(params.max_tokens).toBe(16384);
+    });
+  });
+
+  describe("Effort parameter (outputConfig)", () => {
+    test("invocationParams passes outputConfig from constructor", () => {
+      const model = new ChatAnthropic({
+        model: "claude-opus-4-6",
+        apiKey: "testing",
+        outputConfig: { effort: "medium" },
+      });
+
+      const params = model.invocationParams({});
+
+      expect(params.output_config).toEqual({ effort: "medium" });
+    });
+
+    test("invocationParams passes outputConfig from call options", () => {
+      const model = new ChatAnthropic({
+        model: "claude-opus-4-6",
+        apiKey: "testing",
+      });
+
+      const params = model.invocationParams({
+        outputConfig: { effort: "low" },
+      });
+
+      expect(params.output_config).toEqual({ effort: "low" });
+    });
+
+    test("call-option outputConfig overrides constructor outputConfig", () => {
+      const model = new ChatAnthropic({
+        model: "claude-opus-4-6",
+        apiKey: "testing",
+        outputConfig: { effort: "high" },
+      });
+
+      const params = model.invocationParams({
+        outputConfig: { effort: "low" },
+      });
+
+      expect(params.output_config).toEqual({ effort: "low" });
+    });
+
+    test("effort max is accepted", () => {
+      const model = new ChatAnthropic({
+        model: "claude-opus-4-6",
+        apiKey: "testing",
+        outputConfig: { effort: "max" },
+      });
+
+      const params = model.invocationParams({});
+
+      expect(params.output_config).toEqual({ effort: "max" });
+    });
+
+    test("output_config is undefined when not set", () => {
+      const model = new ChatAnthropic({
+        model: "claude-opus-4-6",
+        apiKey: "testing",
+      });
+
+      const params = model.invocationParams({});
+
+      expect(params.output_config).toBeUndefined();
+    });
+  });
+
+  describe("outputFormat to outputConfig.format migration", () => {
+    test("deprecated outputFormat on call options maps to output_config.format", () => {
+      const model = new ChatAnthropic({
+        model: "claude-opus-4-6",
+        apiKey: "testing",
+      });
+
+      const params = model.invocationParams({
+        outputFormat: {
+          type: "json_schema",
+          schema: { type: "object" },
+        },
+      });
+
+      expect(params.output_config).toEqual({
+        format: {
+          type: "json_schema",
+          schema: { type: "object" },
+        },
+      });
+      // Should not have standalone output_format
+      expect(params.output_format).toBeUndefined();
+    });
+
+    test("outputConfig.format takes precedence over deprecated outputFormat", () => {
+      const model = new ChatAnthropic({
+        model: "claude-opus-4-6",
+        apiKey: "testing",
+      });
+
+      const params = model.invocationParams({
+        outputConfig: {
+          format: {
+            type: "json_schema",
+            schema: { type: "object", properties: { a: { type: "string" } } },
+          },
+        },
+        outputFormat: {
+          type: "json_schema",
+          schema: { type: "object", properties: { b: { type: "number" } } },
+        },
+      });
+
+      // outputConfig.format should take precedence
+      expect(params.output_config?.format).toEqual({
+        type: "json_schema",
+        schema: { type: "object", properties: { a: { type: "string" } } },
+      });
+    });
+
+    test("effort and format can be combined in outputConfig", () => {
+      const model = new ChatAnthropic({
+        model: "claude-opus-4-6",
+        apiKey: "testing",
+        outputConfig: { effort: "medium" },
+      });
+
+      const params = model.invocationParams({
+        outputFormat: {
+          type: "json_schema",
+          schema: { type: "object" },
+        },
+      });
+
+      expect(params.output_config).toEqual({
+        effort: "medium",
+        format: {
+          type: "json_schema",
+          schema: { type: "object" },
+        },
+      });
+    });
+  });
+
+  describe("Data residency (inferenceGeo)", () => {
+    test("invocationParams passes inferenceGeo from constructor", () => {
+      const model = new ChatAnthropic({
+        model: "claude-opus-4-6",
+        apiKey: "testing",
+        inferenceGeo: "us",
+      });
+
+      const params = model.invocationParams({});
+
+      expect(params.inference_geo).toBe("us");
+    });
+
+    test("invocationParams passes inferenceGeo from call options", () => {
+      const model = new ChatAnthropic({
+        model: "claude-opus-4-6",
+        apiKey: "testing",
+      });
+
+      const params = model.invocationParams({
+        inferenceGeo: "us",
+      });
+
+      expect(params.inference_geo).toBe("us");
+    });
+
+    test("call-option inferenceGeo overrides constructor inferenceGeo", () => {
+      const model = new ChatAnthropic({
+        model: "claude-opus-4-6",
+        apiKey: "testing",
+        inferenceGeo: "eu",
+      });
+
+      const params = model.invocationParams({
+        inferenceGeo: "us",
+      });
+
+      expect(params.inference_geo).toBe("us");
+    });
+
+    test("inferenceGeo is undefined when not set", () => {
+      const model = new ChatAnthropic({
+        model: "claude-opus-4-6",
+        apiKey: "testing",
+      });
+
+      const params = model.invocationParams({});
+
+      expect(params.inference_geo).toBeUndefined();
+    });
+  });
+
+  describe("Compaction API", () => {
+    test("auto-adds compact beta header when compaction edit is present", () => {
+      const model = new ChatAnthropic({
+        model: "claude-opus-4-6",
+        apiKey: "testing",
+        contextManagement: {
+          edits: [
+            {
+              type: "compact_20260112",
+            },
+          ],
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        } as any,
+      });
+
+      const params = model.invocationParams({});
+
+      expect(params.betas).toContain("compact-2026-01-12");
+    });
+
+    test("does not add compact beta header when no compaction edits present", () => {
+      const model = new ChatAnthropic({
+        model: "claude-opus-4-6",
+        apiKey: "testing",
+        contextManagement: {
+          edits: [
+            {
+              type: "clear_tool_uses_20250919",
+              trigger: { type: "input_tokens", value: 10 },
+              clear_at_least: { type: "input_tokens", value: 5 },
+            },
+          ],
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        } as any,
+      });
+
+      const params = model.invocationParams({});
+
+      expect(
+        params.betas === undefined ||
+          !params.betas.includes("compact-2026-01-12")
+      ).toBe(true);
+    });
+
+    test("Can properly format messages with compaction blocks", async () => {
+      const messageHistory = [
+        new AIMessage({
+          content: [
+            {
+              type: "compaction",
+              content:
+                "Summary: The user asked about building a web scraper...",
+            },
+            {
+              type: "text",
+              text: "Based on our conversation so far, let me continue...",
+            },
+          ],
+        }),
+      ];
+
+      const formattedMessages =
+        _convertMessagesToAnthropicPayload(messageHistory);
+
+      expect(formattedMessages.messages).toHaveLength(1);
+      expect(formattedMessages.messages[0].role).toBe("assistant");
+      expect(formattedMessages.messages[0].content).toHaveLength(2);
+
+      const [compactionBlock, textBlock] =
+        formattedMessages.messages[0].content;
+      expect(compactionBlock).toEqual({
+        type: "compaction",
+        content: "Summary: The user asked about building a web scraper...",
+      });
+      expect(textBlock).toEqual({
+        type: "text",
+        text: "Based on our conversation so far, let me continue...",
+      });
+    });
+  });
+});
