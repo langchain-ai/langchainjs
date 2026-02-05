@@ -26,6 +26,7 @@ import { tool } from "@langchain/core/tools";
 import { z } from "zod/v3";
 import { ChatAnthropic } from "../chat_models.js";
 import {
+  AnthropicContextManagementConfigParam,
   AnthropicMessageResponse,
   ChatAnthropicContentBlock,
 } from "../types.js";
@@ -1636,4 +1637,207 @@ describe("Anthropic Reasoning with contentBlocks", () => {
     expect(reasoningBlocks.length).toBeGreaterThan(0);
     expect((reasoningBlocks[0] as any).reasoning.length).toBeGreaterThan(10);
   }, 60000);
+});
+
+describe("Opus 4.6", () => {
+  const opus46Model = "claude-opus-4-6";
+
+  describe("adaptive thinking", () => {
+    test("invoke", async () => {
+      const model = new ChatAnthropic({
+        model: opus46Model,
+        maxTokens: 4096,
+        thinking: { type: "adaptive" },
+      });
+
+      const result = await model.invoke("What is 15 * 23?");
+      expect(result.content).toBeDefined();
+
+      if (Array.isArray(result.content)) {
+        const textBlocks = (result.content as any[]).filter(
+          (b) => b.type === "text"
+        );
+        expect(textBlocks.length).toBeGreaterThan(0);
+      } else {
+        expect(typeof result.content).toBe("string");
+        expect((result.content as string).length).toBeGreaterThan(0);
+      }
+    }, 60000);
+
+    test("multiturn round-trip", async () => {
+      const model = new ChatAnthropic({
+        model: opus46Model,
+        maxTokens: 4096,
+        thinking: { type: "adaptive" },
+      });
+
+      const messages: BaseMessage[] = [new HumanMessage("Hello")];
+      const response1 = await model.invoke(messages);
+      messages.push(response1);
+      messages.push(new HumanMessage("What is 42 + 7?"));
+
+      const response2 = await model.invoke(messages);
+      expect(response2.content).toBeDefined();
+    }, 90000);
+
+    test("withStructuredOutput jsonSchema", async () => {
+      const model = new ChatAnthropic({
+        model: opus46Model,
+        maxTokens: 4096,
+      });
+
+      const schema = z.object({
+        answer: z.number().describe("The numeric answer"),
+      });
+
+      const structured = model.withStructuredOutput(schema, {
+        method: "jsonSchema",
+      });
+
+      const result = await structured.invoke("What is 2 + 2?");
+      expect(result).toBeDefined();
+      expect(typeof result.answer).toBe("number");
+    }, 60000);
+  });
+
+  describe("effort", () => {
+    test.each(["low", "medium", "high"] as const)(
+      "invoke with %s effort",
+      async (effort) => {
+        const model = new ChatAnthropic({
+          model: opus46Model,
+          maxTokens: 4096,
+          thinking: { type: "adaptive" },
+          outputConfig: { effort },
+        });
+
+        const result = await model.invoke("Say hello.");
+        expect(result.content).toBeDefined();
+      },
+      60000
+    );
+
+    test.each(["low", "medium", "high"] as const)(
+      "stream with %s effort",
+      async (effort) => {
+        const model = new ChatAnthropic({
+          model: opus46Model,
+          maxTokens: 4096,
+          thinking: { type: "adaptive" },
+          outputConfig: { effort },
+        });
+
+        let full: AIMessageChunk | undefined;
+        for await (const chunk of await model.stream("Say hello.")) {
+          full = full ? concat(full, chunk) : chunk;
+        }
+        expect(full).toBeInstanceOf(AIMessageChunk);
+        expect(full!.content).toBeDefined();
+      },
+      60000
+    );
+
+    test("via call options", async () => {
+      const model = new ChatAnthropic({
+        model: opus46Model,
+        maxTokens: 4096,
+        thinking: { type: "adaptive" },
+      });
+
+      const result = await model.invoke("Say hello.", {
+        outputConfig: { effort: "low" },
+      });
+      expect(result.content).toBeDefined();
+    }, 30000);
+  });
+
+  test("inferenceGeo", async () => {
+    const model = new ChatAnthropic({
+      model: opus46Model,
+      maxTokens: 256,
+      inferenceGeo: "us",
+    });
+
+    const result = await model.invoke("Say hello.");
+    expect(result.content).toBeDefined();
+  }, 30000);
+
+  describe("compaction", () => {
+    const compactionConfig: AnthropicContextManagementConfigParam = {
+      edits: [
+        {
+          type: "compact_20260112" as const,
+          trigger: { type: "input_tokens", value: 50000 },
+        },
+      ],
+    };
+
+    function buildLongConversation(): BaseMessage[] {
+      const padding =
+        "Lorem ipsum dolor sit amet, consectetur adipiscing elit. " +
+        "Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. " +
+        "Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris " +
+        "nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in " +
+        "reprehenderit in voluptate velit esse cillum dolore eu fugiat. ";
+
+      const messages: BaseMessage[] = [];
+      for (let i = 0; i < 300; i++) {
+        messages.push(new HumanMessage(`${padding} (message ${i})`));
+        messages.push(new AIMessage(`Acknowledged message ${i}. ${padding}`));
+      }
+      messages.push(new HumanMessage("Summarize our conversation."));
+      return messages;
+    }
+
+    test("accepted by API without triggering", async () => {
+      const model = new ChatAnthropic({
+        model: opus46Model,
+        maxTokens: 4096,
+        contextManagement: compactionConfig,
+      });
+
+      const response = await model.invoke("Say hello.");
+      expect(response.content).toBeDefined();
+    }, 30000);
+
+    test("triggers compaction block (invoke)", async () => {
+      const model = new ChatAnthropic({
+        model: opus46Model,
+        maxTokens: 4096,
+        contextManagement: compactionConfig,
+      });
+
+      const messages = buildLongConversation();
+      const result = await model.invoke(messages);
+
+      expect(Array.isArray(result.content)).toBe(true);
+      const blocks = result.content as any[];
+      const compactionBlock = blocks.find((b) => b.type === "compaction");
+      expect(compactionBlock).toBeDefined();
+      expect(typeof compactionBlock.content).toBe("string");
+      expect(compactionBlock.content.length).toBeGreaterThan(0);
+    }, 120000);
+
+    test("triggers compaction block (stream)", async () => {
+      const model = new ChatAnthropic({
+        model: opus46Model,
+        maxTokens: 4096,
+        contextManagement: compactionConfig,
+      });
+
+      const messages = buildLongConversation();
+      let full: AIMessageChunk | undefined;
+      for await (const chunk of await model.stream(messages)) {
+        full = full ? concat(full, chunk) : chunk;
+      }
+
+      expect(full).toBeInstanceOf(AIMessageChunk);
+      expect(Array.isArray(full!.content)).toBe(true);
+      const blocks = full!.content as any[];
+      const compactionBlock = blocks.find((b) => b.type === "compaction");
+      expect(compactionBlock).toBeDefined();
+      expect(typeof compactionBlock.content).toBe("string");
+      expect(compactionBlock.content.length).toBeGreaterThan(0);
+    }, 120000);
+  });
 });
