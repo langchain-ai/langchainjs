@@ -1,5 +1,5 @@
 ---
-"@langchain/anthropic": minor
+"@langchain/anthropic": patch
 ---
 
 feat(anthropic): add Claude Opus 4.6 support with adaptive thinking, effort parameter, compaction API, output_config migration, inference_geo, and structured outputs GA
