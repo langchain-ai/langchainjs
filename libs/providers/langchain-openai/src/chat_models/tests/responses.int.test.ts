@@ -1249,10 +1249,6 @@ test("ChatOpenAI with service_tier and useResponsesApi", async () => {
     service_tier: "default",
     apiKey: process.env.OPENAI_API_KEY || "sk-fake-key",
   });
-  try {
-    const res = await model.invoke("Hello");
-    expect(res.content).toBeDefined();
-  } catch (e) {
-    console.log("Skipping invocation check due to missing creds/quota");
-  }
+  const res = await model.invoke("Hello");
+  expect(res.content).toBeDefined();
 });
