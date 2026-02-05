@@ -1,85 +1,13 @@
 {
-  "buildCommand": "yarn build:vercel",
-  "outputDirectory": "build",
-  "trailingSlash": true,
-  "rewrites": [
-    {
-      "source": "/v0.1/:path(.*/?)*",
-      "destination": "https://langchainjs-v01.vercel.app/v0.1/:path*"
-    },
-    {
-      "source": "/robots.txt(/?)",
-      "destination": "/v0.2/robots.txt/"
-    },
-    {
-      "source": "/sitemap.xml(/?)",
-      "destination": "/v0.2/sitemap.xml/"
-    }
-  ],
+  "framework": null,
+  "installCommand": "echo skipped",
+  "buildCommand": "mkdir -p public && echo '' > public/.gitkeep",
+  "outputDirectory": "public",
   "redirects": [
     {
-      "source": "/",
-      "destination": "/v0.2/docs/introduction/"
-    },
-    {
-      "source": "/v0.1",
-      "destination": "/"
-    },
-    {
-      "source": "/v0.2/docs/get_started/introduction(/?)",
-      "destination": "/v0.2/docs/introduction/"
-    },
-    {
-      "source": "/docs(/?)",
-      "destination": "/v0.2/docs/introduction/"
-    },
-    {
-      "source": "/docs/get_started/introduction(/?)",
-      "destination": "/v0.2/docs/introduction/"
-    },
-    {
-      "source": "/v0.2/docs(/?)",
-      "destination": "/v0.2/docs/introduction/"
-    },
-    {
-      "source": "/docs/integrations/:path(.*/?)*",
-      "destination": "/v0.2/docs/integrations/:path*"
-    },
-    {
-      "source": "/docs/:path(.*/?)*",
-      "destination": "/v0.1/docs/:path*"
-    },
-    {
-      "source": "/docs/how_to/tool_calls_multi_modal(/?)",
-      "destination": "/docs/how_to/multimodal_inputs/"
-    },
-    {
-      "source": "/docs/langgraph(/?)",
-      "destination": "https://langchain-ai.github.io/langgraphjs/"
-    },
-    {
-      "source": "/docs/langsmith(/?)",
-      "destination": "https://docs.smith.langchain.com/"
-    },
-    {
-      "source": "/v0.2/docs/integrations/chat/chrome_ai(/?)",
-      "destination": "/v0.2/docs/integrations/llms/chrome_ai/"
-    },
-    {
-      "source": "/v0.2/docs/integrations/retrievers/vectorstore(/?)",
-      "destination": "/v0.2/docs/how_to/vectorstore_retriever/"
-    },
-    {
-      "source": "/v0.2/docs/integrations/chat_memory(/?)",
-      "destination": "/v0.2/docs/integrations/memory/"
-    },
-    {
-      "source": "/v0.2/docs/integrations/chat_memory/:path(.*/?)*",
-      "destination": "/v0.2/docs/integrations/memory/:path*"
-    },
-    {
-      "source": "/v0.2/docs/integrations/llms/togetherai(/?)",
-      "destination": "/v0.2/docs/integrations/llms/together/"
+      "source": "/(.*)",
+      "destination": "https://docs.langchain.com/oss/javascript/langchain/overview",
+      "permanent": true
     }
   ]
 }
