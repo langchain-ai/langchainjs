@@ -1,5 +1,16 @@
 # @langchain/classic
 
+## 1.0.15
+
+### Patch Changes
+
+- [#9763](https://github.com/langchain-ai/langchainjs/pull/9763) [`8f0757f`](https://github.com/langchain-ai/langchainjs/commit/8f0757f06b2ed9fe810f636333fc71ffcedb3feb) Thanks [@AdamParker19](https://github.com/AdamParker19)! - fix(langchain): resolve className collision in MODEL_PROVIDER_CONFIG
+
+  Refactored `getChatModelByClassName` to accept an optional `modelProvider` parameter for direct lookup, avoiding the className collision issue where multiple providers share the same className (e.g., `google-vertexai` and `google-vertexai-web` both use `"ChatVertexAI"`). When `modelProvider` is provided, the function uses direct config lookup instead of searching by className. Backward compatibility is maintained for existing callers that only pass `className`. This eliminates the duplicated import logic that was previously in `_initChatModelHelper`.
+
+- Updated dependencies [[`0870ca0`](https://github.com/langchain-ai/langchainjs/commit/0870ca0719dacd8a555b3341e581d6c15cd6faf3), [`cf46089`](https://github.com/langchain-ai/langchainjs/commit/cf46089d250b1ec87f99956f5cd87e2615ac25c5)]:
+  - @langchain/openai@1.2.5
+
 ## 1.0.14
 
 ### Patch Changes

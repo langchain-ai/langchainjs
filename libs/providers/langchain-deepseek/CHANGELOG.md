@@ -1,5 +1,12 @@
 # @langchain/deepseek
 
+## 1.0.9
+
+### Patch Changes
+
+- Updated dependencies [[`0870ca0`](https://github.com/langchain-ai/langchainjs/commit/0870ca0719dacd8a555b3341e581d6c15cd6faf3), [`cf46089`](https://github.com/langchain-ai/langchainjs/commit/cf46089d250b1ec87f99956f5cd87e2615ac25c5)]:
+  - @langchain/openai@1.2.5
+
 ## 1.0.8
 
 ### Patch Changes
