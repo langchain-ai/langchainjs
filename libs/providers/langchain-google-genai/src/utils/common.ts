@@ -333,9 +333,10 @@ function _convertLangChainContentToPart(
     } else if ("data" in content) {
       if (typeof content.data === "string") {
         source = content.data;
+        // eslint-disable-next-line no-instanceof/no-instanceof
       } else if (content.data instanceof Uint8Array) {
         const base64Data = Buffer.from(content.data).toString("base64");
-        let mimeType = content.mimeType;
+        const mimeType = content.mimeType;
 
         if (!mimeType) {
           throw new Error(
