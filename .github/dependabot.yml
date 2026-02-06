@@ -1,18 +1,97 @@
 version: 2
+
 updates:
+  # GitHub Actions
   - package-ecosystem: github-actions
     directory: "/"
     schedule:
       interval: weekly
+      day: monday
       time: "11:00"
     open-pull-requests-limit: 10
     groups:
-      patch-deps-updates:
-        update-types:
-          - "patch"
-      minor-deps-updates:
+      gh-actions-minor-and-patch:
         update-types:
           - "minor"
-      major-deps-updates:
+          - "patch"
+      gh-actions-major:
+        update-types:
+          - "major"
+
+  # Root devDependencies (turbo, typescript, prettier, eslint, etc.)
+  - package-ecosystem: npm
+    directory: "/"
+    schedule:
+      interval: weekly
+      day: monday
+      time: "11:00"
+    open-pull-requests-limit: 10
+    groups:
+      root-dev-minor-and-patch:
+        dependency-type: development
+        update-types:
+          - "minor"
+          - "patch"
+      root-dev-major:
+        dependency-type: development
+        update-types:
+          - "major"
+
+  # Core libraries (langchain-core, langchain, langchain-community, etc.)
+  - package-ecosystem: npm
+    directories:
+      - "/libs/langchain-core"
+      - "/libs/langchain"
+      - "/libs/langchain-classic"
+      - "/libs/langchain-community"
+      - "/libs/langchain-textsplitters"
+      - "/libs/langchain-mcp-adapters"
+    schedule:
+      interval: weekly
+      day: monday
+      time: "11:00"
+    open-pull-requests-limit: 10
+    groups:
+      core-libs-minor-and-patch:
+        update-types:
+          - "minor"
+          - "patch"
+      core-libs-major:
+        update-types:
+          - "major"
+
+  # Provider integrations
+  - package-ecosystem: npm
+    directories:
+      - "/libs/providers/*"
+    schedule:
+      interval: weekly
+      day: monday
+      time: "11:00"
+    open-pull-requests-limit: 15
+    groups:
+      providers-minor-and-patch:
+        update-types:
+          - "minor"
+          - "patch"
+      providers-major:
+        update-types:
+          - "major"
+
+  # Internal tooling packages
+  - package-ecosystem: npm
+    directories:
+      - "/internal/*"
+    schedule:
+      interval: weekly
+      day: monday
+      time: "11:00"
+    open-pull-requests-limit: 5
+    groups:
+      internal-minor-and-patch:
+        update-types:
+          - "minor"
+          - "patch"
+      internal-major:
         update-types:
           - "major"
