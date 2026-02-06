@@ -25,6 +25,23 @@ export interface BedrockEmbeddingsParams extends EmbeddingsParams {
   region?: string;
 
   credentials?: CredentialType;
+
+  /**
+   * Additional keyword arguments to pass to the model as part of the
+   * InvokeModel request body. These are merged into the request payload,
+   * allowing model-specific parameters like `normalize`, `embeddingTypes`, etc.
+   *
+   * If `dimensions` is also provided as a top-level parameter,
+   * it will take precedence over a `dimensions` key in `modelKwargs`.
+   */
+  modelKwargs?: Record<string, unknown>;
+
+  /**
+   * The number of dimensions for the output embeddings.
+   * Only supported by certain models (e.g., Amazon Titan Embed Text v2,
+   * Cohere Embed). If not specified, uses the model's default.
+   */
+  dimensions?: number;
 }
 
 /**
@@ -38,14 +55,15 @@ export interface BedrockEmbeddingsParams extends EmbeddingsParams {
  *     accessKeyId: "your-access-key-id",
  *     secretAccessKey: "your-secret-access-key",
  *   },
- *   model: "amazon.titan-embed-text-v1",
+ *   model: "amazon.titan-embed-text-v2:0",
+ *   dimensions: 512,
  * });
  *
  * // Embed a query and log the result
  * const res = await embeddings.embedQuery(
  *   "What would be a good company name for a company that makes colorful socks?"
  * );
- * console.log({ res });
+ * console.log({ res, length: res.length });
  * ```
  */
 export class BedrockEmbeddings
@@ -58,10 +76,16 @@ export class BedrockEmbeddings
 
   batchSize = 512;
 
+  modelKwargs?: Record<string, unknown>;
+
+  dimensions?: number;
+
   constructor(fields?: BedrockEmbeddingsParams) {
     super(fields ?? {});
 
     this.model = fields?.model ?? "amazon.titan-embed-text-v1";
+    this.modelKwargs = fields?.modelKwargs;
+    this.dimensions = fields?.dimensions;
 
     this.client =
       fields?.client ??
@@ -75,7 +99,7 @@ export class BedrockEmbeddings
    * Protected method to make a request to the Bedrock API to generate
    * embeddings. Handles the retry logic and returns the response from the
    * API.
-   * @param request Request to send to the Bedrock API.
+   * @param text Text to embed.
    * @returns Promise that resolves to the response from the API.
    */
   protected async _embedText(text: string): Promise<number[]> {
@@ -84,19 +108,27 @@ export class BedrockEmbeddings
         // replace newlines, which can negatively affect performance.
         const cleanedText = text.replace(/\n/g, " ");
 
+        const body: Record<string, unknown> = {
+          inputText: cleanedText,
+          ...this.modelKwargs,
+        };
+
+        // dimensions as a top-level param takes precedence over modelKwargs
+        if (this.dimensions !== undefined) {
+          body.dimensions = this.dimensions;
+        }
+
         const res = await this.client.send(
           new InvokeModelCommand({
             modelId: this.model,
-            body: JSON.stringify({
-              inputText: cleanedText,
-            }),
+            body: JSON.stringify(body),
             contentType: "application/json",
             accept: "application/json",
           })
         );
 
-        const body = new TextDecoder().decode(res.body);
-        return JSON.parse(body).embedding;
+        const responseBody = new TextDecoder().decode(res.body);
+        return JSON.parse(responseBody).embedding;
       } catch (e) {
         console.error({
           error: e,
