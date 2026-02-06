@@ -30,9 +30,9 @@
     "format:check": "prettier --check \"src\""
   },
   "dependencies": {
-    "@azure/cosmos": "^4.2.0",
-    "@azure/identity": "^4.5.0",
-    "mongodb": "^6.17.0"
+    "@azure/cosmos": "^4.9.1",
+    "@azure/identity": "^4.13.0",
+    "mongodb": "^7.1.0"
   },
   "peerDependencies": {
     "@langchain/core": "^1.0.0"
@@ -42,12 +42,12 @@
     "@langchain/eslint": "workspace:*",
     "@langchain/openai": "workspace:^",
     "@langchain/tsconfig": "workspace:*",
-    "@tsconfig/recommended": "^1.0.3",
+    "@tsconfig/recommended": "^1.0.13",
     "@vitest/coverage-v8": "^3.2.4",
-    "dotenv": "^16.4.5",
-    "dpdm": "^3.14.0",
-    "eslint": "^9.34.0",
-    "prettier": "^3.5.0",
+    "dotenv": "^16.6.1",
+    "dpdm": "^3.15.1",
+    "eslint": "^9.39.2",
+    "prettier": "^3.8.1",
     "typescript": "~5.8.3",
     "vitest": "^3.2.4"
   },
