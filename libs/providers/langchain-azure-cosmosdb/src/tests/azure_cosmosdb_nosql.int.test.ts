@@ -4,10 +4,7 @@ import { OpenAIEmbeddings } from "@langchain/openai";
 import { CosmosClient } from "@azure/cosmos";
 
 import { DefaultAzureCredential } from "@azure/identity";
-import {
-  AzureCosmosDBNoSQLVectorStore,
-  AzureCosmosDBNoSQLVectorStoreRetriever,
-} from "../azure_cosmosdb_nosql.js";
+import { AzureCosmosDBNoSQLVectorStore } from "../azure_cosmosdb_nosql.js";
 
 const DATABASE_NAME = "langchainTestDB";
 const CONTAINER_NAME = "testContainer";
@@ -102,41 +99,6 @@ describe("AzureCosmosDBNoSQLVectorStore", () => {
     });
   });
 
-  test("performs similarity search with custom retriever", async () => {
-    const vectorStore = new AzureCosmosDBNoSQLVectorStore(
-      new OpenAIEmbeddings(),
-      {
-        databaseName: DATABASE_NAME,
-        containerName: CONTAINER_NAME,
-      }
-    );
-
-    expect(vectorStore).toBeDefined();
-
-    await vectorStore.addDocuments([
-      { pageContent: "This book is about politics", metadata: { a: 1 } },
-      { pageContent: "Cats sleeps a lot.", metadata: { b: 1 } },
-      { pageContent: "Sandwiches taste good.", metadata: { c: 1 } },
-      { pageContent: "The house is open", metadata: { d: 1, e: 2 } },
-    ]);
-
-    const results = await vectorStore.similaritySearch("sandwich", 1);
-
-    expect(results.length).toEqual(1);
-    expect(results).toMatchObject([
-      { pageContent: "Sandwiches taste good.", metadata: { c: 1 } },
-    ]);
-
-    const retriever = vectorStore.asCosmosRetriever({});
-
-    const docs = await retriever.invoke("house");
-    expect(docs).toBeDefined();
-    expect(docs[0]).toMatchObject({
-      pageContent: "The house is open",
-      metadata: { d: 1, e: 2 },
-    });
-  });
-
   test("performs max marginal relevance search", async () => {
     const texts = ["foo", "foo", "fox"];
     const vectorStore = await AzureCosmosDBNoSQLVectorStore.fromTexts(
@@ -171,21 +133,6 @@ describe("AzureCosmosDBNoSQLVectorStore", () => {
     );
     const standardRetrieverExpected = ["foo", "foo", "fox"];
     expect(standardRetrieverActual).toEqual(standardRetrieverExpected);
-
-    const retriever = await vectorStore.asCosmosRetriever({
-      searchType: "mmr",
-      searchKwargs: {
-        fetchK: 20,
-        lambda: 0.1,
-      },
-    });
-
-    const retrieverOutput = await retriever.invoke("foo");
-    expect(output).toHaveLength(texts.length);
-
-    const retrieverActual = retrieverOutput.map((doc) => doc.pageContent);
-    const retrieverExpected = ["foo", "fox", "foo"];
-    expect(retrieverActual).toEqual(retrieverExpected);
 
     const similarity = await vectorStore.similaritySearchWithScore("foo", 1);
     expect(similarity.length).toBe(1);
@@ -412,102 +359,19 @@ describe("AzureCosmosDBNoSQLVectorStore", () => {
       { pageContent: "The house is open", metadata: { d: 1, e: 2 } },
     ]);
 
-    // Search with a high threshold (should filter out low-scoring results)
-    const results = await vectorStore.vectorSearchWithThreshold(
+    // Search with a low threshold to include results
+    const results = await vectorStore.similaritySearchWithScore(
       "sandwich",
       10,
-      0.1 // Low threshold to include results
+      {
+        searchType: "vector_score_threshold",
+        threshold: 0.1,
+      }
     );
 
     expect(results.length).toBeGreaterThan(0);
     expect(results[0][0].pageContent).toBe("Sandwiches taste good.");
     expect(results[0][1]).toBeGreaterThanOrEqual(0.1);
-  });
-
-  test("uses custom cosmos retriever with vector search", async () => {
-    const vectorStore = new AzureCosmosDBNoSQLVectorStore(
-      new OpenAIEmbeddings(),
-      {
-        databaseName: DATABASE_NAME,
-        containerName: CONTAINER_NAME,
-      }
-    );
-
-    await vectorStore.addDocuments([
-      { pageContent: "This book is about politics", metadata: { a: 1 } },
-      { pageContent: "Cats sleeps a lot.", metadata: { b: 1 } },
-      { pageContent: "Sandwiches taste good.", metadata: { c: 1 } },
-      { pageContent: "The house is open", metadata: { d: 1, e: 2 } },
-    ]);
-
-    const retriever = vectorStore.asCosmosRetriever({
-      searchType: "vector",
-      k: 2,
-    });
-
-    expect(retriever).toBeInstanceOf(AzureCosmosDBNoSQLVectorStoreRetriever);
-
-    const docs = await retriever.invoke("sandwich");
-    expect(docs.length).toBeLessThanOrEqual(2);
-    expect(docs[0].pageContent).toBe("Sandwiches taste good.");
-  });
-
-  test("uses custom cosmos retriever with vector_score_threshold", async () => {
-    const vectorStore = new AzureCosmosDBNoSQLVectorStore(
-      new OpenAIEmbeddings(),
-      {
-        databaseName: DATABASE_NAME,
-        containerName: CONTAINER_NAME,
-      }
-    );
-
-    await vectorStore.addDocuments([
-      { pageContent: "This book is about politics", metadata: { a: 1 } },
-      { pageContent: "Cats sleeps a lot.", metadata: { b: 1 } },
-      { pageContent: "Sandwiches taste good.", metadata: { c: 1 } },
-      { pageContent: "The house is open", metadata: { d: 1, e: 2 } },
-    ]);
-
-    const retriever = vectorStore.asCosmosRetriever({
-      searchType: "vector_score_threshold",
-      k: 10,
-      searchKwargs: {
-        scoreThreshold: 0.1,
-      },
-    });
-
-    const docs = await retriever.invoke("sandwich");
-    expect(docs.length).toBeGreaterThan(0);
-    expect(docs[0].pageContent).toBe("Sandwiches taste good.");
-  });
-
-  test("uses custom cosmos retriever with mmr search", async () => {
-    const texts = ["foo", "foo", "fox"];
-    const vectorStore = await AzureCosmosDBNoSQLVectorStore.fromTexts(
-      texts,
-      {},
-      new OpenAIEmbeddings(),
-      {
-        databaseName: DATABASE_NAME,
-        containerName: CONTAINER_NAME,
-      }
-    );
-
-    const retriever = vectorStore.asCosmosRetriever({
-      searchType: "mmr",
-      k: 3,
-      searchKwargs: {
-        fetchK: 20,
-        lambda: 0.1,
-      },
-    });
-
-    const docs = await retriever.invoke("foo");
-    expect(docs.length).toBe(3);
-
-    // MMR should promote diversity
-    const pageContents = docs.map((doc) => doc.pageContent);
-    expect(pageContents).toContain("fox");
   });
 
   test("getContainer returns the underlying container", async () => {
@@ -526,28 +390,6 @@ describe("AzureCosmosDBNoSQLVectorStore", () => {
     const container = vectorStore.getContainer();
     expect(container).toBeDefined();
     expect(container.id).toBe(CONTAINER_NAME);
-  });
-
-  test("deleteDocumentById removes a specific document", async () => {
-    const vectorStore = new AzureCosmosDBNoSQLVectorStore(
-      new OpenAIEmbeddings(),
-      {
-        databaseName: DATABASE_NAME,
-        containerName: CONTAINER_NAME,
-      }
-    );
-
-    const ids = await vectorStore.addDocuments([
-      { pageContent: "Document to keep", metadata: {} },
-      { pageContent: "Document to delete", metadata: {} },
-    ]);
-
-    await vectorStore.deleteDocumentById(ids[1]);
-
-    const results = await vectorStore.similaritySearch("delete", 10);
-    expect(results.every((r) => r.pageContent !== "Document to delete")).toBe(
-      true
-    );
   });
 
   test("maxMarginalRelevanceSearchByVector works with embeddings", async () => {
