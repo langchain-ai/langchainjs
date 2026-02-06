@@ -42,8 +42,8 @@ export const AzureCosmosDBNoSQLSearchType = {
 export type AzureCosmosDBNoSQLSearchType =
   (typeof AzureCosmosDBNoSQLSearchType)[keyof typeof AzureCosmosDBNoSQLSearchType];
 
-/** Re-export FullTextPolicy type from @azure/cosmos for convenience. */
-export type { FullTextPolicy } from "@azure/cosmos";
+/** Re-export FullTextPolicy and VectorIndex types from @azure/cosmos for convenience. */
+export type { FullTextPolicy, VectorIndex } from "@azure/cosmos";
 
 /**
  * Full-text rank filter item for full-text ranking queries.
