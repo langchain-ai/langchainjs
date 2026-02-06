@@ -209,7 +209,7 @@
     "reflect-metadata": "^0.2.2",
     "rimraf": "^5.0.1",
     "sqlite3": "^5.1.4",
-    "typeorm": "^0.3.26",
+    "typeorm": "^0.3.28",
     "typescript": "~5.8.3",
     "typesense": "^1.5.3",
     "vitest": "^3.2.4",
