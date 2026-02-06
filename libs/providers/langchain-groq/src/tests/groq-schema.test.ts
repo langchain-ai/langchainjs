@@ -169,6 +169,59 @@ describe("groqStrictifySchema", () => {
     expect(result.$defs.User.required).toEqual(["name", "email"]);
   });
 
+  it("should throw when root anyOf has no object variant", () => {
+    const schema = {
+      anyOf: [
+        { type: "string" },
+        { type: "number" },
+      ],
+    };
+
+    expect(() => groqStrictifySchema(schema)).toThrow(
+      /root schema to be an object type/
+    );
+  });
+
+  it("should throw when root has oneOf", () => {
+    const schema = {
+      oneOf: [
+        { type: "object", properties: { a: { type: "string" } } },
+        { type: "object", properties: { b: { type: "number" } } },
+      ],
+    };
+
+    expect(() => groqStrictifySchema(schema)).toThrow(
+      /does not support oneOf at the root/
+    );
+  });
+
+  it("should throw when root has not", () => {
+    const schema = {
+      not: { type: "null" },
+    };
+
+    expect(() => groqStrictifySchema(schema)).toThrow(
+      /does not support 'not' at the root/
+    );
+  });
+
+  it("should return $ref schemas unchanged in makeNullable", () => {
+    const schema = {
+      type: "object",
+      properties: {
+        ref: { $ref: "#/$defs/Thing" },
+      },
+      required: [],
+    };
+
+    const result = groqStrictifySchema(schema);
+
+    // $ref property was optional, but since it has no type/properties/enum/anyOf,
+    // it should be returned unchanged (not assumed to be string)
+    expect(result.properties.ref).toEqual({ $ref: "#/$defs/Thing" });
+    expect(result.properties.ref.type).toBeUndefined();
+  });
+
   it("should handle already nullable types", () => {
     const schema = {
       type: "object",
@@ -221,6 +274,11 @@ describe("getGroqStructuredOutputMethod", () => {
     expect(() => {
       getGroqStructuredOutputMethod("llama-3.3-70b-versatile", "jsonSchema");
     }).toThrow(/not supported for model/);
+  });
+
+  it("should return jsonSchema for new gpt-oss models via prefix matching", () => {
+    const method = getGroqStructuredOutputMethod("openai/gpt-oss-256b");
+    expect(method).toBe("jsonSchema");
   });
 
   it("should allow jsonMode for any model", () => {

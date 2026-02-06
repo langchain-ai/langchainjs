@@ -17,6 +17,7 @@ type JsonSchema = Record<string, any>;
  * Make a schema nullable using type array syntax (NOT anyOf).
  * Groq strict mode forbids anyOf at top level, so we use type: [T, "null"].
  * Handles: simple types, enums, anyOf, arrays, and objects.
+ * Unknown schema structures (e.g., `$ref`) are returned unchanged.
  */
 function makeNullable(schema: JsonSchema): JsonSchema {
   if (!schema || typeof schema !== "object") return schema;
@@ -82,8 +83,8 @@ function makeNullable(schema: JsonSchema): JsonSchema {
     return { ...schema, type: ["object", "null"] };
   }
 
-  // Last resort: assume string (safer than anyOf which breaks root)
-  return { ...schema, type: ["string", "null"] };
+  // Unknown schema structure (e.g., $ref) - return unchanged
+  return schema;
 }
 
 /**
@@ -93,7 +94,7 @@ function makeNullable(schema: JsonSchema): JsonSchema {
  * 1. Sets additionalProperties: false on all objects
  * 2. Moves all properties to required array
  * 3. Makes previously optional properties nullable
- * 4. Ensures root schema never has anyOf/oneOf/enum/not (Groq forbids these at top level)
+ * 4. Throws if root schema has oneOf/not; extracts object variant from anyOf (Groq forbids these at top level)
  *
  * @param schema - The schema to transform
  * @param isRoot - Whether this is the root schema (default: true on first call)
@@ -180,12 +181,25 @@ export function groqStrictifySchema(
         const cleaned = groqStrictifySchema(objectVariant, true);
         return { ...cleaned, type: "object" };
       }
+      // No object variant found - schema can't be used with Groq strict mode
+      throw new Error(
+        "Groq strict mode requires the root schema to be an object type, " +
+          "but the schema has anyOf/oneOf with no object variant."
+      );
     }
 
-    // Ensure root is explicitly type: "object" and remove forbidden keywords
-    delete result.anyOf;
-    delete result.oneOf;
-    delete result.not;
+    // Throw for oneOf/not at root (Groq forbids these)
+    if (result.oneOf) {
+      throw new Error(
+        "Groq strict mode does not support oneOf at the root schema level."
+      );
+    }
+    if (result.not) {
+      throw new Error(
+        "Groq strict mode does not support 'not' at the root schema level."
+      );
+    }
+
     if (result.properties) {
       result.type = "object";
     }
@@ -195,12 +209,12 @@ export function groqStrictifySchema(
 }
 
 /**
- * Models that support native JSON Schema structured output.
+ * Check if a model supports native JSON Schema structured output.
+ * Uses prefix matching so new gpt-oss models are automatically supported.
  */
-const MODELS_WITH_JSON_SCHEMA_SUPPORT = [
-  "openai/gpt-oss-20b",
-  "openai/gpt-oss-120b",
-];
+function supportsJsonSchema(model: string): boolean {
+  return model.startsWith("openai/gpt-oss");
+}
 
 /**
  * Supported structured output methods for Groq.
@@ -241,18 +255,18 @@ export function getGroqStructuredOutputMethod(
     );
   }
 
-  const supportsJsonSchema = MODELS_WITH_JSON_SCHEMA_SUPPORT.includes(model);
+  const modelSupportsJsonSchema = supportsJsonSchema(model);
 
   // If model supports JSON Schema and no method specified, use it by default
-  if (supportsJsonSchema && !method) {
+  if (modelSupportsJsonSchema && !method) {
     return "jsonSchema";
   }
 
   // If jsonSchema requested but not supported, throw
-  if (!supportsJsonSchema && method === "jsonSchema") {
+  if (!modelSupportsJsonSchema && method === "jsonSchema") {
     throw new Error(
       `Native JSON Schema structured output is not supported for model "${model}". ` +
-        `Supported models: ${MODELS_WITH_JSON_SCHEMA_SUPPORT.join(", ")}. ` +
+        `Only models with the "openai/gpt-oss" prefix are supported. ` +
         `Use "functionCalling" or "jsonMode" instead.`
     );
   }
