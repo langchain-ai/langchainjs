@@ -1,4 +1,7 @@
-import { AzureCosmosDBNoSQLVectorStore } from "@langchain/azure-cosmosdb";
+import {
+  AzureCosmosDBNoSQLVectorStore,
+  AzureCosmosDBNoSQLSearchType,
+} from "@langchain/azure-cosmosdb";
 import { OpenAIEmbeddings } from "@langchain/openai";
 
 /**
@@ -6,7 +9,6 @@ import { OpenAIEmbeddings } from "@langchain/openai";
  * Azure Cosmos DB for NoSQL vector store including:
  * - Vector search with score threshold
  * - Maximal Marginal Relevance (MMR) search
- * - Using the custom Cosmos retriever
  */
 
 // Create Azure Cosmos DB vector store
@@ -35,10 +37,13 @@ const store = await AzureCosmosDBNoSQLVectorStore.fromTexts(
 // 1. Vector search with score threshold
 // Only returns results with similarity score >= threshold
 console.log("=== Vector Search with Threshold ===");
-const thresholdResults = await store.vectorSearchWithThreshold(
+const thresholdResults = await store.similaritySearchWithScore(
   "What is machine learning?",
   10, // k - number of results
-  0.7 // threshold - minimum similarity score
+  {
+    searchType: AzureCosmosDBNoSQLSearchType.VectorScoreThreshold,
+    threshold: 0.7, // minimum similarity score
+  }
 );
 
 for (const [doc, score] of thresholdResults) {
@@ -77,38 +82,16 @@ for (const doc of mmrByVectorResults) {
   console.log(`Content: ${doc.pageContent}`);
 }
 
-// 4. Using the custom Cosmos retriever
-// Supports multiple search types in a unified interface
-console.log("\n=== Custom Cosmos Retriever ===");
-
-// Create retriever with vector_score_threshold search type
-const retriever = store.asCosmosRetriever({
-  searchType: "vector_score_threshold",
-  k: 5,
-  searchKwargs: {
-    scoreThreshold: 0.6,
-  },
-});
+// 4. Using the retriever interface
+console.log("\n=== Retriever ===");
+const retriever = store.asRetriever({ k: 3 });
 
 const retrieverDocs = await retriever.invoke("How do neural networks work?");
-console.log(`Found ${retrieverDocs.length} documents above threshold`);
+console.log(`Found ${retrieverDocs.length} documents`);
 
 for (const doc of retrieverDocs) {
   console.log(`Content: ${doc.pageContent}`);
 }
-
-// Create retriever with MMR search type
-const mmrRetriever = store.asCosmosRetriever({
-  searchType: "mmr",
-  k: 3,
-  searchKwargs: {
-    fetchK: 10,
-    lambda: 0.5,
-  },
-});
-
-const mmrRetrieverDocs = await mmrRetriever.invoke("AI and machine learning");
-console.log(`\nMMR Retriever found ${mmrRetrieverDocs.length} documents`);
 
 // Clean up
 await store.delete();
