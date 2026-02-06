@@ -24,15 +24,12 @@ export interface FireworksEmbeddingsParams extends EmbeddingsParams {
  */
 export interface CreateFireworksEmbeddingRequest {
   /**
-   * @type {string}
-   * @memberof CreateFireworksEmbeddingRequest
+   * Model name to use.
    */
   model: string;
 
   /**
    *  Text to generate vector expectation
-   * @type {CreateEmbeddingRequestInput}
-   * @memberof CreateFireworksEmbeddingRequest
    */
   input: string | string[];
 }

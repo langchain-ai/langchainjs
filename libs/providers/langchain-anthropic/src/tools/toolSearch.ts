@@ -17,7 +17,7 @@ export interface ToolSearchOptions {
  * Claude constructs regex patterns (using Python's `re.search()` syntax) to search
  * for tools by name, description, argument names, and argument descriptions.
  *
- * @note This tool requires the beta header `advanced-tool-use-2025-11-20` in API requests.
+ * **Note**: This tool requires the beta header `advanced-tool-use-2025-11-20` in API requests.
  *
  * @see {@link https://docs.anthropic.com/en/docs/build-with-claude/tool-use/tool-search-tool | Anthropic Tool Search Documentation}
  * @param options - Configuration options for the tool search tool
@@ -70,7 +70,7 @@ export function toolSearchRegex_20251119(
  * Claude uses natural language queries to search for tools by name, description,
  * argument names, and argument descriptions.
  *
- * @note This tool requires the beta header `advanced-tool-use-2025-11-20` in API requests.
+ * **Note**: This tool requires the beta header `advanced-tool-use-2025-11-20` in API requests.
  *
  * @see {@link https://docs.anthropic.com/en/docs/build-with-claude/tool-use/tool-search-tool | Anthropic Tool Search Documentation}
  * @param options - Configuration options for the tool search tool
