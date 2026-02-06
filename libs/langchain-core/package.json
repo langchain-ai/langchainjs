@@ -55,7 +55,7 @@
     "rimraf": "^5.0.1",
     "typescript": "~5.8.3",
     "vitest": "^3.2.4",
-    "web-streams-polyfill": "^4.0.0"
+    "web-streams-polyfill": "^4.2.0"
   },
   "publishConfig": {
     "access": "public"
