@@ -814,7 +814,7 @@ describe("convertMessagesToResponsesInput", () => {
       expect(fileBlock.filename).toBeUndefined();
     });
   });
-  
+
   describe("ToolMessage conversion", () => {
     it("passes through provider-native input_file content without stringification", () => {
       const toolMessage = new ToolMessage({
