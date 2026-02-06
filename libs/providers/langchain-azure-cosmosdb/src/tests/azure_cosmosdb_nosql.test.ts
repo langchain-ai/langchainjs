@@ -5,9 +5,7 @@ import { FakeEmbeddings } from "@langchain/core/utils/testing";
 
 import {
   AzureCosmosDBNoSQLVectorStore,
-  AzureCosmosDBNoSQLVectorStoreRetriever,
   AzureCosmosDBNoSQLSearchType,
-  AzureCosmosDBNoSQLRetrieverSearchTypes,
 } from "../azure_cosmosdb_nosql.js";
 
 const embedMock = vi.spyOn(FakeEmbeddings.prototype, "embedDocuments");
@@ -246,76 +244,6 @@ describe("AzureCosmosDBNoSQLSearchType", () => {
   });
 });
 
-describe("AzureCosmosDBNoSQLVectorStoreRetriever", () => {
-  test("should create a retriever with default search type", () => {
-    const embeddings = new FakeEmbeddings();
-    const client = createMockClient();
-    const store = new AzureCosmosDBNoSQLVectorStore(embeddings, {
-      client: client as any,
-    });
-
-    const retriever = new AzureCosmosDBNoSQLVectorStoreRetriever({
-      vectorStore: store,
-    });
-
-    expect(retriever).toBeDefined();
-    expect(retriever.cosmosSearchType).toBe("similarity");
-    expect(retriever.k).toBe(4);
-  });
-
-  test("should create a retriever with custom search type", () => {
-    const embeddings = new FakeEmbeddings();
-    const client = createMockClient();
-    const store = new AzureCosmosDBNoSQLVectorStore(embeddings, {
-      client: client as any,
-    });
-
-    const retriever = new AzureCosmosDBNoSQLVectorStoreRetriever({
-      vectorStore: store,
-      searchType: "hybrid",
-      k: 10,
-    });
-
-    expect(retriever.cosmosSearchType).toBe("hybrid");
-    expect(retriever.k).toBe(10);
-  });
-
-  test("should throw error for invalid search type", () => {
-    const embeddings = new FakeEmbeddings();
-    const client = createMockClient();
-    const store = new AzureCosmosDBNoSQLVectorStore(embeddings, {
-      client: client as any,
-    });
-
-    expect(
-      () =>
-        new AzureCosmosDBNoSQLVectorStoreRetriever({
-          vectorStore: store,
-          searchType: "invalid" as any,
-        })
-    ).toThrow(/Invalid search type/);
-  });
-
-  test("should have all allowed search types", () => {
-    expect(AzureCosmosDBNoSQLRetrieverSearchTypes).toContain("similarity");
-    expect(AzureCosmosDBNoSQLRetrieverSearchTypes).toContain("vector");
-    expect(AzureCosmosDBNoSQLRetrieverSearchTypes).toContain(
-      "vector_score_threshold"
-    );
-    expect(AzureCosmosDBNoSQLRetrieverSearchTypes).toContain(
-      "full_text_search"
-    );
-    expect(AzureCosmosDBNoSQLRetrieverSearchTypes).toContain(
-      "full_text_ranking"
-    );
-    expect(AzureCosmosDBNoSQLRetrieverSearchTypes).toContain("hybrid");
-    expect(AzureCosmosDBNoSQLRetrieverSearchTypes).toContain(
-      "hybrid_score_threshold"
-    );
-    expect(AzureCosmosDBNoSQLRetrieverSearchTypes).toContain("mmr");
-  });
-});
-
 describe("AzureCosmosDBNoSQLVectorStore utility methods", () => {
   test("getContainer should return the container", async () => {
     const embeddings = new FakeEmbeddings();
@@ -328,56 +256,5 @@ describe("AzureCosmosDBNoSQLVectorStore utility methods", () => {
 
     const container = store.getContainer();
     expect(container).toBeDefined();
-  });
-
-  test("asCosmosRetriever should create a custom retriever", () => {
-    const embeddings = new FakeEmbeddings();
-    const client = createMockClient();
-    const store = new AzureCosmosDBNoSQLVectorStore(embeddings, {
-      client: client as any,
-    });
-
-    const retriever = store.asCosmosRetriever({
-      searchType: "hybrid",
-      k: 10,
-      searchKwargs: {
-        weights: [0.6, 0.4],
-      },
-    });
-
-    expect(retriever).toBeInstanceOf(AzureCosmosDBNoSQLVectorStoreRetriever);
-    expect(retriever.cosmosSearchType).toBe("hybrid");
-    expect(retriever.k).toBe(10);
-    expect(retriever.searchKwargs.weights).toEqual([0.6, 0.4]);
-  });
-
-  test("asCosmosRetriever with no args should use defaults", () => {
-    const embeddings = new FakeEmbeddings();
-    const client = createMockClient();
-    const store = new AzureCosmosDBNoSQLVectorStore(embeddings, {
-      client: client as any,
-    });
-
-    const retriever = store.asCosmosRetriever();
-
-    expect(retriever).toBeInstanceOf(AzureCosmosDBNoSQLVectorStoreRetriever);
-    expect(retriever.cosmosSearchType).toBe("similarity");
-    expect(retriever.k).toBe(4);
-  });
-});
-
-describe("AzureCosmosDBNoSQLVectorStore factory methods", () => {
-  test("fromConnectionStringWithKey should create a store", async () => {
-    const embeddings = new FakeEmbeddings();
-    const connectionString =
-      "AccountEndpoint=https://test.documents.azure.com:443/;AccountKey=test==";
-
-    const store =
-      await AzureCosmosDBNoSQLVectorStore.fromConnectionStringWithKey(
-        connectionString,
-        embeddings
-      );
-
-    expect(store).toBeInstanceOf(AzureCosmosDBNoSQLVectorStore);
   });
 });
