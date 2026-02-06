@@ -8,6 +8,7 @@ overrides:
   '@langchain/core': workspace:*
   protobufjs: ^7.2.5
   rolldown: 1.0.0-beta.30
+  form-data: ^4.0.4
 
 importers:
 
@@ -11872,14 +11873,6 @@ packages:
     resolution: {integrity: sha512-G6NsmEW15s0Uw9XnCg+33H3ViYRyiM0hMrMhhqQOR8NFc5GhYrI+6I3u7OTw7b91J2g8rtvMBZJDbcGb2YUniw==}
     engines: {node: '>= 18'}
 
-  form-data@2.5.5:
-    resolution: {integrity: sha512-jqdObeR2rxZZbPSGL+3VckHMYtu+f9//KXBsVny6JSX/pa38Fy+bGjuG8eW/H6USNQWhLi8Num++cU2yOCNz4A==}
-    engines: {node: '>= 0.12'}
-
-  form-data@4.0.0:
-    resolution: {integrity: sha512-ETEklSGi5t0QMZuiXoA/Q6vcnxcLQP5vdugSpuAyi6SVGi2clPPp+xgEhuMaHC+zGgn31Kd235W35f7Hykkaww==}
-    engines: {node: '>= 6'}
-
   form-data@4.0.4:
     resolution: {integrity: sha512-KrGhL9Q4zjj0kiUt5OO4Mr/A/jlI2jDYs5eHBpYHPcBEVSiipAvn2Ko2HnPe20rmcuuvMHNdZFp+4IlGTMF0Ow==}
     engines: {node: '>= 6'}
@@ -21467,7 +21460,7 @@ snapshots:
 
   '@getzep/zep-cloud@1.0.12(@langchain/core@libs+langchain-core)(encoding@0.1.13)(langchain@0.3.30(cd3577897a4bf1c3b286d2872fe587ad))':
     dependencies:
-      form-data: 4.0.0
+      form-data: 4.0.5
       node-fetch: 2.7.0(encoding@0.1.13)
       qs: 6.11.2
       url-join: 4.0.1
@@ -21480,7 +21473,7 @@ snapshots:
 
   '@getzep/zep-cloud@1.0.12(@langchain/core@libs+langchain-core)(encoding@0.1.13)(langchain@libs+langchain)':
     dependencies:
-      form-data: 4.0.0
+      form-data: 4.0.5
       node-fetch: 2.7.0(encoding@0.1.13)
       qs: 6.11.2
       url-join: 4.0.1
@@ -21627,7 +21620,7 @@ snapshots:
   '@gradientai/nodejs-sdk@1.12.1':
     dependencies:
       axios: 0.21.4
-      form-data: 4.0.0
+      form-data: 4.0.5
     transitivePeerDependencies:
       - debug
 
@@ -22827,7 +22820,7 @@ snapshots:
 
   '@mixedbread-ai/sdk@2.2.11(encoding@0.1.13)':
     dependencies:
-      form-data: 4.0.0
+      form-data: 4.0.5
       formdata-node: 6.0.3
       js-base64: 3.7.2
       node-fetch: 2.7.0(encoding@0.1.13)
@@ -25211,7 +25204,7 @@ snapshots:
       '@types/caseless': 0.12.5
       '@types/node': 24.10.1
       '@types/tough-cookie': 4.0.5
-      form-data: 2.5.5
+      form-data: 4.0.5
 
   '@types/retry@0.12.0': {}
 
@@ -28883,21 +28876,6 @@ snapshots:
   form-data-encoder@1.7.2: {}
 
   form-data-encoder@4.1.0: {}
-
-  form-data@2.5.5:
-    dependencies:
-      asynckit: 0.4.0
-      combined-stream: 1.0.8
-      es-set-tostringtag: 2.1.0
-      hasown: 2.0.2
-      mime-types: 2.1.35
-      safe-buffer: 5.2.1
-
-  form-data@4.0.0:
-    dependencies:
-      asynckit: 0.4.0
-      combined-stream: 1.0.8
-      mime-types: 2.1.35
 
   form-data@4.0.4:
     dependencies:
