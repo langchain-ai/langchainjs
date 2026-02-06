@@ -57,7 +57,8 @@
       "@langchain/core": "workspace:*",
       "protobufjs": "^7.2.5",
       "rolldown": "1.0.0-beta.30",
-      "form-data": "^4.0.4"
+      "form-data": "^4.0.4",
+      "tar": ">=7.5.4"
     }
   },
   "lint-staged": {
