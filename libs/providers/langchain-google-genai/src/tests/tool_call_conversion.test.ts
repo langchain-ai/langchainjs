@@ -182,4 +182,111 @@ describe("ContentBlock.Multimodal support", () => {
       "/9j/4AAQSkZJRgABAQEASABIAAD/2wBDAAMCAgMCAgMDAwMEAwMEBQgFBQQEBQoHBwYIDAoMDAsKCwsNDhIQDQ4RDgsLEBYQERMUFRUVDA8XGBYUGBIUFRT/wAALCAABAAEBAREA/8QAFAABAAAAAAAAAAAAAAAAAAAACf/EABQQAQAAAAAAAAAAAAAAAAAAAAD/2gAIAQEAAD8AKp//2Q=="
     );
   });
+
+  test("should handle ContentBlock.Multimodal.Image with URL (DataRecordUrl)", () => {
+    const humanMessage = new HumanMessage({
+      contentBlocks: [
+        {
+          type: "image",
+          url: "https://example.com/image.jpg",
+          mimeType: "image/jpeg",
+        } satisfies ContentBlock.Multimodal.Image &
+          ContentBlock.Multimodal.DataRecordUrl,
+      ],
+    });
+
+    const result = convertBaseMessagesToContent(
+      [humanMessage],
+      true,
+      undefined,
+      "gemini-1.5-flash"
+    );
+
+    expect(result).toBeDefined();
+    expect(result.length).toBe(1);
+    const part = result[0].parts[0];
+    expect(part.fileData).toBeDefined();
+    expect(part.fileData?.fileUri).toBe("https://example.com/image.jpg");
+    expect(part.fileData?.mimeType).toBe("image/jpeg");
+  });
+
+  test("should handle ContentBlock.Multimodal.Video with YouTube URL", () => {
+    const humanMessage = new HumanMessage({
+      contentBlocks: [
+        {
+          type: "video",
+          url: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+          mimeType: "video/mp4",
+        } satisfies ContentBlock.Multimodal.Video &
+          ContentBlock.Multimodal.DataRecordUrl,
+      ],
+    });
+
+    const result = convertBaseMessagesToContent(
+      [humanMessage],
+      true,
+      undefined,
+      "gemini-1.5-flash"
+    );
+
+    expect(result).toBeDefined();
+    const part = result[0].parts[0];
+    expect(part.fileData).toBeDefined();
+    expect(part.fileData?.fileUri).toBe(
+      "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+    );
+    expect(part.fileData?.mimeType).toBe("video/mp4");
+  });
+
+  test("should handle ContentBlock.Multimodal.Audio with URL", () => {
+    const humanMessage = new HumanMessage({
+      contentBlocks: [
+        {
+          type: "audio",
+          url: "https://example.com/audio.mp3",
+          mimeType: "audio/mpeg",
+        } satisfies ContentBlock.Multimodal.Audio &
+          ContentBlock.Multimodal.DataRecordUrl,
+      ],
+    });
+
+    const result = convertBaseMessagesToContent(
+      [humanMessage],
+      true,
+      undefined,
+      "gemini-1.5-flash"
+    );
+
+    expect(result).toBeDefined();
+    const part = result[0].parts[0];
+    expect(part.fileData).toBeDefined();
+    expect(part.fileData?.fileUri).toBe("https://example.com/audio.mp3");
+    expect(part.fileData?.mimeType).toBe("audio/mpeg");
+  });
+
+  test("should handle ContentBlock.Multimodal.File with URL (PDF)", () => {
+    const humanMessage = new HumanMessage({
+      contentBlocks: [
+        {
+          type: "file",
+          url: "https://example.com/document.pdf",
+          mimeType: "application/pdf",
+        } satisfies ContentBlock.Multimodal.File &
+          ContentBlock.Multimodal.DataRecordUrl,
+      ],
+    });
+
+    const result = convertBaseMessagesToContent(
+      [humanMessage],
+      true,
+      undefined,
+      "gemini-1.5-flash"
+    );
+
+    expect(result).toBeDefined();
+    const part = result[0].parts[0];
+    expect(part.fileData).toBeDefined();
+    expect(part.fileData?.fileUri).toBe("https://example.com/document.pdf");
+    expect(part.fileData?.mimeType).toBe("application/pdf");
+  });
 });
