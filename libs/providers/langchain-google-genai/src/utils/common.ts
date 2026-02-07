@@ -338,6 +338,26 @@ function _convertLangChainContentToPart(
   } else if ("functionCall" in content) {
     // No action needed here — function calls will be added later from message.tool_calls
     return undefined;
+  } else if (content.type === "image") {
+    if (!isMultimodalModel) {
+      throw new Error("This model does not support images");
+    }
+    return {
+      inlineData: {
+        mimeType: content.mimeType,
+        data: content.data,
+      },
+    };
+  } else if (content.type === "file") {
+    if (!isMultimodalModel) {
+      throw new Error("This model does not support file uploads");
+    }
+    return {
+      inlineData: {
+        mimeType: content.mimeType,
+        data: content.data,
+      },
+    };
   } else {
     if ("type" in content) {
       throw new Error(`Unknown content type ${content.type}`);
