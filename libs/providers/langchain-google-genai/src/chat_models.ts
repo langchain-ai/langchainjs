@@ -110,6 +110,12 @@ export interface GoogleGenerativeAIChatInput
   model: string;
 
   /**
+   *  labels to be added to the model for cost tracking and telemetry
+   */
+
+  labels?: Record<string, string>;
+
+  /**
    * Controls the randomness of the output.
    *
    * Values can range from [0.0,2.0], inclusive. A value closer to 2.0
@@ -616,6 +622,8 @@ export class ChatGoogleGenerativeAI
   }
 
   model: string;
+  
+  labels?: Record<string, string>;
 
   temperature?: number; // default value chosen based on model
 
@@ -658,6 +666,8 @@ export class ChatGoogleGenerativeAI
     super(fields);
 
     this.model = fields.model.replace(/^models\//, "");
+
+    this.labels = fields.labels;
 
     this.maxOutputTokens = fields.maxOutputTokens ?? this.maxOutputTokens;
 
@@ -728,7 +738,9 @@ export class ChatGoogleGenerativeAI
             ? { thinkingConfig: this.thinkingConfig }
             : {}),
         },
-      },
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        labels: this.labels as any,
+      } as ModelParams,
       {
         apiVersion: fields.apiVersion,
         baseUrl: fields.baseUrl,
