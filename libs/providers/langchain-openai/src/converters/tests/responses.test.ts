@@ -228,6 +228,64 @@ describe("convertResponsesMessageToAIMessage", () => {
     );
     expect(reasoningBlocks.length).toBe(0);
   });
+
+  it("should store output in response_metadata", () => {
+    const output = [
+      {
+        type: "reasoning",
+        id: "rs_abc123",
+        summary: [{ type: "summary_text", text: "Thinking..." }],
+      },
+      {
+        type: "function_call",
+        id: "fc_xyz789",
+        call_id: "call_123",
+        name: "get_weather",
+        arguments: '{"city":"NYC"}',
+      },
+    ];
+    const response = {
+      id: "resp_123",
+      model: "o3-mini",
+      created_at: 1234567890,
+      object: "response",
+      status: "completed",
+      output,
+      usage: { input_tokens: 10, output_tokens: 20, total_tokens: 30 },
+    };
+
+    const result = convertResponsesMessageToAIMessage(response as any);
+
+    expect(result.response_metadata.output).toEqual(output);
+  });
+
+  it("should strip parsed_arguments from function_call items in stored output", () => {
+    const response = {
+      id: "resp_123",
+      model: "o3-mini",
+      created_at: 1234567890,
+      object: "response",
+      status: "completed",
+      output: [
+        {
+          type: "function_call",
+          id: "fc_xyz789",
+          call_id: "call_123",
+          name: "get_weather",
+          arguments: '{"city":"NYC"}',
+          parsed_arguments: { city: "NYC" },
+        },
+      ],
+      usage: { input_tokens: 10, output_tokens: 20, total_tokens: 30 },
+    };
+
+    const result = convertResponsesMessageToAIMessage(response as any);
+
+    const storedOutput = result.response_metadata.output as any[];
+    expect(storedOutput).toHaveLength(1);
+    expect(storedOutput[0].name).toBe("get_weather");
+    expect(storedOutput[0]).not.toHaveProperty("parsed_arguments");
+  });
 });
 
 describe("convertResponsesDeltaToChatGenerationChunk", () => {
@@ -976,6 +1034,77 @@ describe("convertMessagesToResponsesInput", () => {
           encrypted_content: "encrypted_payload",
         },
       ]);
+    });
+
+    it("uses fast path when response_metadata.output is available", () => {
+      const output = [
+        {
+          type: "reasoning",
+          id: "rs_abc123",
+          summary: [{ type: "summary_text", text: "Thinking..." }],
+        },
+        {
+          type: "function_call",
+          id: "fc_xyz789",
+          call_id: "call_123",
+          name: "get_weather",
+          arguments: '{"city":"NYC"}',
+        },
+      ];
+      const message = new AIMessage({
+        content: [],
+        tool_calls: [
+          { name: "get_weather", args: { city: "NYC" }, id: "call_123" },
+        ],
+        response_metadata: { output },
+      });
+
+      const result = convertMessagesToResponsesInput({
+        messages: [message],
+        zdrEnabled: false,
+        model: "o3-mini",
+      });
+
+      // Fast path returns the stored output verbatim
+      expect(result).toEqual(output);
+    });
+
+    it("round-trips reasoning + tool calls through AIMessage", () => {
+      const response = {
+        id: "resp_123",
+        model: "o3-mini",
+        created_at: 1234567890,
+        object: "response",
+        status: "completed",
+        output: [
+          {
+            type: "reasoning",
+            id: "rs_abc123",
+            summary: [{ type: "summary_text", text: "Thinking..." }],
+          },
+          {
+            type: "function_call",
+            id: "fc_xyz789",
+            call_id: "call_123",
+            name: "get_weather",
+            arguments: '{"city":"NYC"}',
+          },
+        ],
+        usage: { input_tokens: 10, output_tokens: 20, total_tokens: 30 },
+      };
+
+      // Convert API response to AIMessage
+      const aiMsg = convertResponsesMessageToAIMessage(response as any);
+
+      // Convert AIMessage back to Responses API input
+      const input = convertMessagesToResponsesInput({
+        messages: [aiMsg],
+        zdrEnabled: false,
+        model: "o3-mini",
+      });
+
+      // Should preserve the full output array including reasoning + function_call pairing
+      expect(input).toEqual(response.output);
     });
   });
 });
