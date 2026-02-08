@@ -153,6 +153,13 @@ export class ChatOpenAIResponses<
       params.reasoning = reasoning;
     }
 
+    if (this.service_tier !== undefined) {
+      params.service_tier = this.service_tier;
+    }
+    if (options?.service_tier !== undefined) {
+      params.service_tier = options.service_tier;
+    }
+
     return params;
   }
 
