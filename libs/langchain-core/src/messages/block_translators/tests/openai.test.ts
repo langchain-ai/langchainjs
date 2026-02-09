@@ -311,9 +311,7 @@ describe("openaiTranslator", () => {
               action: {
                 type: "search",
                 query: "melbourne australia news today",
-                sources: [
-                  { type: "url", url: "https://example.com/news" },
-                ],
+                sources: [{ type: "url", url: "https://example.com/news" }],
               },
             },
           ],
@@ -337,9 +335,7 @@ describe("openaiTranslator", () => {
             action: {
               type: "search",
               query: "melbourne australia news today",
-              sources: [
-                { type: "url", url: "https://example.com/news" },
-              ],
+              sources: [{ type: "url", url: "https://example.com/news" }],
             },
           },
         },
@@ -457,9 +453,7 @@ describe("openaiTranslator", () => {
       });
 
       const blocks = message.contentBlocks;
-      const serverToolCall = blocks.find(
-        (b) => b.type === "server_tool_call"
-      );
+      const serverToolCall = blocks.find((b) => b.type === "server_tool_call");
       const serverToolCallResult = blocks.find(
         (b) => b.type === "server_tool_call_result"
       );
@@ -494,9 +488,7 @@ describe("openaiTranslator", () => {
       });
 
       const blocks = message.contentBlocks;
-      const result = blocks.find(
-        (b) => b.type === "server_tool_call_result"
-      );
+      const result = blocks.find((b) => b.type === "server_tool_call_result");
 
       expect(result).toEqual({
         type: "server_tool_call_result",
@@ -522,12 +514,8 @@ describe("openaiTranslator", () => {
       });
 
       const blocks = message.contentBlocks;
-      const serverToolCall = blocks.find(
-        (b) => b.type === "server_tool_call"
-      );
-      const result = blocks.find(
-        (b) => b.type === "server_tool_call_result"
-      );
+      const serverToolCall = blocks.find((b) => b.type === "server_tool_call");
+      const result = blocks.find((b) => b.type === "server_tool_call_result");
 
       expect(serverToolCall).toBeDefined();
       expect(result).toBeUndefined();
