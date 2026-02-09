@@ -1,5 +1,17 @@
 # @langchain/model-profiles
 
+## 0.0.10
+
+### Patch Changes
+
+- [#9786](https://github.com/langchain-ai/langchainjs/pull/9786) [`8ee833c`](https://github.com/langchain-ai/langchainjs/commit/8ee833c1fb99891565832ead4990e246b30022a6) Thanks [@SkrOYC](https://github.com/SkrOYC)! - fix: resolve flaky tests and configuration issues
+  - @langchain/turbopuffer: Allow tests to pass when no test files are found (vitest --passWithNoTests)
+  - @langchain/model-profiles: Fix broken import path in generator test
+  - @langchain/classic: Fix AutoGPTPrompt test to be locale-independent by forcing en-US locale
+
+- Updated dependencies [[`71c3cba`](https://github.com/langchain-ai/langchainjs/commit/71c3cba843ab16d877299d158a1de0c7d22f3fb9)]:
+  - @langchain/core@1.1.20
+
 ## 0.0.9
 
 ### Patch Changes
