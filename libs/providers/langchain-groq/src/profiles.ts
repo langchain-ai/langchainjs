@@ -183,7 +183,7 @@ const PROFILES: Record<string, ModelProfile> = {
     audioOutputs: false,
     videoOutputs: false,
     toolCalling: true,
-    structuredOutput: true, // Supports native JSON Schema structured output
+    structuredOutput: true,
   },
   "qwen/qwen3-32b": {
     maxInputTokens: 131072,
