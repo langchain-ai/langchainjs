@@ -103,8 +103,7 @@ export interface AnthropicCacheControl {
 }
 
 export interface ChatAnthropicCallOptions
-  extends BaseChatModelCallOptions,
-    Pick<AnthropicInput, "streamUsage"> {
+  extends BaseChatModelCallOptions, Pick<AnthropicInput, "streamUsage"> {
   tools?: ChatAnthropicToolType[];
   /**
    * Whether or not to specify what tool the model should use
@@ -919,8 +918,8 @@ function extractToken(chunk: AIMessageChunk): string | undefined {
  * <br />
  */
 export class ChatAnthropicMessages<
-    CallOptions extends ChatAnthropicCallOptions = ChatAnthropicCallOptions,
-  >
+  CallOptions extends ChatAnthropicCallOptions = ChatAnthropicCallOptions,
+>
   extends BaseChatModel<CallOptions, AIMessageChunk>
   implements AnthropicInput
 {
