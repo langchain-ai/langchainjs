@@ -68,8 +68,7 @@ export interface AzureCosmosDBNoSQLInitOptions {
 /**
  * Configuration options for the `AzureCosmosDBNoSQLVectorStore` constructor.
  */
-export interface AzureCosmosDBNoSQLConfig
-  extends AzureCosmosDBNoSQLInitOptions {
+export interface AzureCosmosDBNoSQLConfig extends AzureCosmosDBNoSQLInitOptions {
   readonly client?: CosmosClient;
   readonly connectionString?: string;
   readonly endpoint?: string;

@@ -19,7 +19,8 @@ import {
 export type SupportedVectorTypes = "cosine" | "dot_product" | "euclidean";
 
 export interface CassandraLibArgs
-  extends CassandraClientArgs,
+  extends
+    CassandraClientArgs,
     Omit<CassandraTableArgs, "nonKeyColumns" | "keyspace"> {
   // keyspace is optional on CassandraClientArgs, but mandatory on CassandraTableArgs; we make it mandatory here
   keyspace: string;

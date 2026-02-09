@@ -25,8 +25,10 @@ export interface Task {
  * 'callbackManager' properties, and adds properties specific to
  * `BabyAGI`.
  */
-export interface BabyAGIInputs
-  extends Omit<ChainInputs, "memory" | "callbackManager"> {
+export interface BabyAGIInputs extends Omit<
+  ChainInputs,
+  "memory" | "callbackManager"
+> {
   creationChain: BaseChain;
   prioritizationChain: BaseChain;
   executionChain: BaseChain;

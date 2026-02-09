@@ -30,8 +30,7 @@ import {
   convertMessagesToCompletionsMessageParams,
 } from "../converters/completions.js";
 
-export interface ChatOpenAICompletionsCallOptions
-  extends BaseChatOpenAICallOptions {}
+export interface ChatOpenAICompletionsCallOptions extends BaseChatOpenAICallOptions {}
 
 type ChatCompletionsInvocationParams = Omit<
   OpenAIClient.Chat.Completions.ChatCompletionCreateParams,
@@ -43,8 +42,8 @@ type ChatCompletionsInvocationParams = Omit<
  * @internal
  */
 export class ChatOpenAICompletions<
-  CallOptions extends
-    ChatOpenAICompletionsCallOptions = ChatOpenAICompletionsCallOptions,
+  CallOptions extends ChatOpenAICompletionsCallOptions =
+    ChatOpenAICompletionsCallOptions,
 > extends BaseChatOpenAI<CallOptions> {
   /** @internal */
   override invocationParams(

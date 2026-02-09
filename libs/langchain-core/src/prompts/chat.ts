@@ -99,9 +99,9 @@ export interface MessagesPlaceholderFields<T extends string> {
  * extends the BaseMessagePromptTemplate.
  */
 export class MessagesPlaceholder<
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    RunInput extends InputValues = any,
-  >
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  RunInput extends InputValues = any,
+>
   extends BaseMessagePromptTemplate<RunInput>
   implements MessagesPlaceholderFields<Extract<keyof RunInput, string>>
 {
@@ -285,8 +285,9 @@ export abstract class BaseChatPromptTemplate<
  * Interface for the fields of a ChatMessagePromptTemplate.
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export interface ChatMessagePromptTemplateFields<T extends InputValues = any>
-  extends MessageStringPromptTemplateFields<T> {
+export interface ChatMessagePromptTemplateFields<
+  T extends InputValues = any,
+> extends MessageStringPromptTemplateFields<T> {
   role: string;
 }
 
@@ -921,11 +922,11 @@ function isMessagesPlaceholder(
  * ```
  */
 export class ChatPromptTemplate<
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    RunInput extends InputValues = any,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    PartialVariableName extends string = any,
-  >
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  RunInput extends InputValues = any,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  PartialVariableName extends string = any,
+>
   extends BaseChatPromptTemplate<RunInput, PartialVariableName>
   implements ChatPromptTemplateInput<RunInput, PartialVariableName>
 {
@@ -1189,8 +1190,8 @@ export class ChatPromptTemplate<
   static fromMessages<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     RunInput extends InputValues = any,
-    Extra extends
-      ChatPromptTemplateInput<RunInput> = ChatPromptTemplateInput<RunInput>,
+    Extra extends ChatPromptTemplateInput<RunInput> =
+      ChatPromptTemplateInput<RunInput>,
   >(
     promptMessages: (
       | ChatPromptTemplate<InputValues, string>

@@ -27,13 +27,13 @@ import { convertFromV1ToChatBedrockConverseMessage } from "./compat.js";
 function isDefaultCachePoint(block: unknown): boolean {
   return Boolean(
     typeof block === "object" &&
-      block !== null &&
-      "cachePoint" in block &&
-      block.cachePoint &&
-      typeof block.cachePoint === "object" &&
-      block.cachePoint !== null &&
-      "type" in block.cachePoint &&
-      block.cachePoint.type === "default"
+    block !== null &&
+    "cachePoint" in block &&
+    block.cachePoint &&
+    typeof block.cachePoint === "object" &&
+    block.cachePoint !== null &&
+    "type" in block.cachePoint &&
+    block.cachePoint.type === "default"
   );
 }
 

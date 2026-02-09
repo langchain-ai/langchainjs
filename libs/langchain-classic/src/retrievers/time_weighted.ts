@@ -7,8 +7,7 @@ import { CallbackManagerForRetrieverRun } from "@langchain/core/callbacks/manage
  * Interface for the fields required to initialize a
  * TimeWeightedVectorStoreRetriever instance.
  */
-export interface TimeWeightedVectorStoreRetrieverFields
-  extends BaseRetrieverInput {
+export interface TimeWeightedVectorStoreRetrieverFields extends BaseRetrieverInput {
   vectorStore: VectorStoreInterface;
   searchKwargs?: number;
   memoryStream?: DocumentInterface[];
