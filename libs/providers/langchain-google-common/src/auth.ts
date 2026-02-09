@@ -42,7 +42,6 @@ export abstract class GoogleAbstractedFetchClient
     }
   }
 
-  /* eslint-disable @typescript-eslint/no-explicit-any */
   /**
    * Build and throw a standardised Google request error.
    * Both the `!res.ok` path (native fetch) and the catch path (gaxios)
@@ -51,7 +50,7 @@ export abstract class GoogleAbstractedFetchClient
   protected _throwRequestError(
     status: number,
     body: string | undefined,
-    response: any,
+    response: unknown,
     context: {
       url: string;
       opts: GoogleAbstractedClientOps;
@@ -62,11 +61,12 @@ export abstract class GoogleAbstractedFetchClient
       ? `Google request failed with status code ${status}: ${body}`
       : `Google request failed with status code ${status}`;
     const error = new Error(message);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (error as any).response = response;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (error as any).details = context;
     throw error;
   }
-  /* eslint-enable @typescript-eslint/no-explicit-any */
 
   async _request(
     url: string | undefined,
