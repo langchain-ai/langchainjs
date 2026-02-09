@@ -247,6 +247,12 @@ pkg:@langchain/yandex:
           - libs/providers/langchain-yandex/**
           - libs/providers/langchain-yandex/**/*
 
+pkg:@langchain/valkey:
+  - changed-files:
+      - any-glob-to-any-file:
+          - libs/providers/langchain-valkey/**
+          - libs/providers/langchain-valkey/**/*
+
 community:
   - changed-files:
       - any-glob-to-any-file:
