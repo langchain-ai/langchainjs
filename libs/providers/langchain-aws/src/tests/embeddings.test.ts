@@ -240,4 +240,221 @@ describe("BedrockEmbeddings", () => {
       expect(mockSend).toHaveBeenCalledTimes(2);
     });
   });
+
+  describe("modelParameters", () => {
+    it("should merge modelParameters into Titan request body", async () => {
+      const mockSend = vi.fn().mockResolvedValue({
+        body: new TextEncoder().encode(
+          JSON.stringify({
+            embedding: [0.1, 0.2, 0.3],
+          })
+        ),
+      });
+
+      const mockClient = {
+        send: mockSend,
+      } as unknown as BedrockRuntimeClient;
+
+      const embeddings = new BedrockEmbeddings({
+        ...baseConstructorArgs,
+        model: "amazon.titan-embed-text-v2:0",
+        client: mockClient,
+        modelParameters: {
+          normalize: true,
+          embeddingTypes: ["float"],
+        },
+      });
+
+      await embeddings.embedQuery("Hello world");
+
+      const commandArg = mockSend.mock.calls[0][0];
+      const requestBody = JSON.parse(commandArg.input.body);
+
+      expect(requestBody).toEqual({
+        inputText: "Hello world",
+        normalize: true,
+        embeddingTypes: ["float"],
+      });
+    });
+
+    it("should include dimensions in request body", async () => {
+      const mockSend = vi.fn().mockResolvedValue({
+        body: new TextEncoder().encode(
+          JSON.stringify({
+            embedding: [0.1, 0.2, 0.3],
+          })
+        ),
+      });
+
+      const mockClient = {
+        send: mockSend,
+      } as unknown as BedrockRuntimeClient;
+
+      const embeddings = new BedrockEmbeddings({
+        ...baseConstructorArgs,
+        model: "amazon.titan-embed-text-v2:0",
+        client: mockClient,
+        dimensions: 512,
+      });
+
+      await embeddings.embedQuery("Hello world");
+
+      const commandArg = mockSend.mock.calls[0][0];
+      const requestBody = JSON.parse(commandArg.input.body);
+
+      expect(requestBody).toEqual({
+        inputText: "Hello world",
+        dimensions: 512,
+      });
+    });
+
+    it("should prefer top-level dimensions over modelParameters.dimensions", async () => {
+      const mockSend = vi.fn().mockResolvedValue({
+        body: new TextEncoder().encode(
+          JSON.stringify({
+            embedding: [0.1, 0.2, 0.3],
+          })
+        ),
+      });
+
+      const mockClient = {
+        send: mockSend,
+      } as unknown as BedrockRuntimeClient;
+
+      const embeddings = new BedrockEmbeddings({
+        ...baseConstructorArgs,
+        model: "amazon.titan-embed-text-v2:0",
+        client: mockClient,
+        dimensions: 512,
+        modelParameters: {
+          dimensions: 1024,
+          normalize: true,
+        },
+      });
+
+      await embeddings.embedQuery("Hello world");
+
+      const commandArg = mockSend.mock.calls[0][0];
+      const requestBody = JSON.parse(commandArg.input.body);
+
+      expect(requestBody).toEqual({
+        inputText: "Hello world",
+        dimensions: 512,
+        normalize: true,
+      });
+    });
+
+    it("should accept deprecated modelKwargs as an alias", async () => {
+      const mockSend = vi.fn().mockResolvedValue({
+        body: new TextEncoder().encode(
+          JSON.stringify({
+            embedding: [0.1, 0.2, 0.3],
+          })
+        ),
+      });
+
+      const mockClient = {
+        send: mockSend,
+      } as unknown as BedrockRuntimeClient;
+
+      const embeddings = new BedrockEmbeddings({
+        ...baseConstructorArgs,
+        model: "amazon.titan-embed-text-v2:0",
+        client: mockClient,
+        modelKwargs: {
+          normalize: true,
+        },
+      });
+
+      await embeddings.embedQuery("Hello world");
+
+      const commandArg = mockSend.mock.calls[0][0];
+      const requestBody = JSON.parse(commandArg.input.body);
+
+      expect(requestBody).toEqual({
+        inputText: "Hello world",
+        normalize: true,
+      });
+    });
+
+    it("should prefer modelParameters when both modelKwargs and modelParameters are set", async () => {
+      const mockSend = vi.fn().mockResolvedValue({
+        body: new TextEncoder().encode(
+          JSON.stringify({
+            embedding: [0.1, 0.2, 0.3],
+          })
+        ),
+      });
+
+      const mockClient = {
+        send: mockSend,
+      } as unknown as BedrockRuntimeClient;
+
+      const embeddings = new BedrockEmbeddings({
+        ...baseConstructorArgs,
+        model: "amazon.titan-embed-text-v2:0",
+        client: mockClient,
+        modelKwargs: {
+          normalize: false,
+          foo: "bar",
+        },
+        modelParameters: {
+          normalize: true,
+        },
+      });
+
+      await embeddings.embedQuery("Hello world");
+
+      const commandArg = mockSend.mock.calls[0][0];
+      const requestBody = JSON.parse(commandArg.input.body);
+
+      expect(requestBody).toEqual({
+        inputText: "Hello world",
+        foo: "bar",
+        normalize: true,
+      });
+    });
+
+    it("should merge modelParameters into Nova request body", async () => {
+      const mockSend = vi.fn().mockResolvedValue({
+        body: new TextEncoder().encode(
+          JSON.stringify({
+            embedding: [0.1, 0.2, 0.3],
+          })
+        ),
+      });
+
+      const mockClient = {
+        send: mockSend,
+      } as unknown as BedrockRuntimeClient;
+
+      const embeddings = new BedrockEmbeddings({
+        ...baseConstructorArgs,
+        model: "amazon.nova-embed-text-v1",
+        client: mockClient,
+        modelParameters: {
+          normalize: true,
+        },
+      });
+
+      await embeddings.embedQuery("Hello world");
+
+      const commandArg = mockSend.mock.calls[0][0];
+      const requestBody = JSON.parse(commandArg.input.body);
+
+      expect(requestBody).toEqual({
+        normalize: true,
+        messages: [
+          {
+            role: "user",
+            content: [
+              {
+                text: "Hello world",
+              },
+            ],
+          },
+        ],
+      });
+    });
+  });
 });
