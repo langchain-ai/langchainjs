@@ -1,4 +1,5 @@
 import { Runnable } from "@langchain/core/runnables";
+import type { Client } from "langsmith";
 import type { BaseLanguageModel } from "@langchain/core/language_models/base";
 import { load } from "../load/index.js";
 import {
@@ -32,6 +33,8 @@ export { basePush as push };
  *   `includeModel` is `true`.
  * @param options.secretsFromEnv Whether to load secrets from environment variables.
  *   Use with caution and only with trusted prompts.
+ * @param options.client LangSmith client to use when pulling the prompt
+ * @param options.skipCache Whether to skip the global default cache when pulling the prompt
  * @returns
  */
 export async function pull<T extends Runnable>(
@@ -44,6 +47,8 @@ export async function pull<T extends Runnable>(
     modelClass?: new (...args: any[]) => BaseLanguageModel;
     secrets?: Record<string, string>;
     secretsFromEnv?: boolean;
+    client?: Client;
+    skipCache?: boolean;
   }
 ) {
   const promptObject = await basePull(ownerRepoCommit, options);

@@ -322,8 +322,8 @@ importers:
         specifier: workspace:*
         version: link:../libs/langchain
       langsmith:
-        specifier: '>=0.4.0 <1.0.0'
-        version: 0.4.0(@opentelemetry/api@1.9.0)(openai@5.12.2(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.5))(zod@3.25.76))
+        specifier: '>=0.5.0 <1.0.0'
+        version: 0.5.0(@opentelemetry/api@1.9.0)(openai@5.12.2(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.5))(zod@3.25.76))
       lorem-ipsum:
         specifier: ^2.0.8
         version: 2.0.8
@@ -682,8 +682,8 @@ importers:
         specifier: ^1.0.0
         version: 1.0.0(@langchain/core@libs+langchain-core)
       langsmith:
-        specifier: '>=0.4.0 <1.0.0'
-        version: 0.4.0(@opentelemetry/api@1.9.0)(openai@5.12.2(ws@8.19.0(bufferutil@4.0.9)(utf-8-validate@6.0.5))(zod@3.25.76))
+        specifier: '>=0.5.0 <1.0.0'
+        version: 0.5.0(@opentelemetry/api@1.9.0)(openai@5.12.2(ws@8.19.0(bufferutil@4.0.9)(utf-8-validate@6.0.5))(zod@3.25.76))
       uuid:
         specifier: ^10.0.0
         version: 10.0.0
@@ -1115,7 +1115,7 @@ importers:
     optionalDependencies:
       langsmith:
         specifier: '>=0.4.0 <1.0.0'
-        version: 0.4.0(@opentelemetry/api@1.9.0)(openai@5.12.2(ws@8.19.0(bufferutil@4.0.9)(utf-8-validate@6.0.5))(zod@3.25.76))
+        version: 0.5.0(@opentelemetry/api@1.9.0)(openai@5.12.2(ws@8.19.0(bufferutil@4.0.9)(utf-8-validate@6.0.5))(zod@3.25.76))
 
   libs/langchain-community:
     dependencies:
@@ -1649,8 +1649,8 @@ importers:
         specifier: ^1.0.12
         version: 1.0.20
       langsmith:
-        specifier: '>=0.4.0 <1.0.0'
-        version: 0.4.0(@opentelemetry/api@1.9.0)(openai@6.18.0(ws@8.19.0(bufferutil@4.0.9)(utf-8-validate@6.0.5))(zod@3.25.76))
+        specifier: '>=0.5.0 <1.0.0'
+        version: 0.5.0(@opentelemetry/api@1.9.0)(openai@6.18.0(ws@8.19.0(bufferutil@4.0.9)(utf-8-validate@6.0.5))(zod@3.25.76))
       mustache:
         specifier: ^4.2.0
         version: 4.2.0
@@ -13334,8 +13334,8 @@ packages:
       openai:
         optional: true
 
-  langsmith@0.4.0:
-    resolution: {integrity: sha512-/X99fHBuBFFup778dNmgAVJMdFULz0S8yZUT1cD1RRSviMjxq1GZo8PulRR1ALDxpgYsJs8ueF9godUzF13LSw==}
+  langsmith@0.5.0:
+    resolution: {integrity: sha512-5U9Ar/wAu5vyTBBImvMLrM9sjynHzN703oLHScEqJaXWE6gm+uti0rWDryQZ6ObnuqSNa4IOUudYej9X6VNEwg==}
     peerDependencies:
       '@opentelemetry/api': '*'
       '@opentelemetry/exporter-trace-otlp-proto': '*'
@@ -30959,7 +30959,7 @@ snapshots:
       openai: 5.12.2(ws@8.19.0(bufferutil@4.0.9)(utf-8-validate@6.0.5))(zod@3.25.76)
     optional: true
 
-  langsmith@0.4.0(@opentelemetry/api@1.9.0)(openai@5.12.2(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.5))(zod@3.25.76)):
+  langsmith@0.5.0(@opentelemetry/api@1.9.0)(openai@5.12.2(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.5))(zod@3.25.76)):
     dependencies:
       '@types/uuid': 10.0.0
       chalk: 4.1.2
@@ -30971,7 +30971,7 @@ snapshots:
       '@opentelemetry/api': 1.9.0
       openai: 5.12.2(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.5))(zod@3.25.76)
 
-  langsmith@0.4.0(@opentelemetry/api@1.9.0)(openai@5.12.2(ws@8.19.0(bufferutil@4.0.9)(utf-8-validate@6.0.5))(zod@3.25.76)):
+  langsmith@0.5.0(@opentelemetry/api@1.9.0)(openai@5.12.2(ws@8.19.0(bufferutil@4.0.9)(utf-8-validate@6.0.5))(zod@3.25.76)):
     dependencies:
       '@types/uuid': 10.0.0
       chalk: 4.1.2
@@ -30983,7 +30983,7 @@ snapshots:
       '@opentelemetry/api': 1.9.0
       openai: 5.12.2(ws@8.19.0(bufferutil@4.0.9)(utf-8-validate@6.0.5))(zod@3.25.76)
 
-  langsmith@0.4.0(@opentelemetry/api@1.9.0)(openai@6.18.0(ws@8.19.0(bufferutil@4.0.9)(utf-8-validate@6.0.5))(zod@3.25.76)):
+  langsmith@0.5.0(@opentelemetry/api@1.9.0)(openai@6.18.0(ws@8.19.0(bufferutil@4.0.9)(utf-8-validate@6.0.5))(zod@3.25.76)):
     dependencies:
       '@types/uuid': 10.0.0
       chalk: 4.1.2
@@ -32140,7 +32140,7 @@ snapshots:
 
   ora@8.2.0:
     dependencies:
-      chalk: 5.4.1
+      chalk: 5.6.2
       cli-cursor: 5.0.0
       cli-spinners: 2.9.2
       is-interactive: 2.0.0
