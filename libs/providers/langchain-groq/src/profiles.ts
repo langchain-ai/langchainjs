@@ -169,7 +169,7 @@ const PROFILES: Record<string, ModelProfile> = {
     audioOutputs: false,
     videoOutputs: false,
     toolCalling: true,
-    structuredOutput: true, // Supports native JSON Schema structured output
+    structuredOutput: true,
   },
   "openai/gpt-oss-120b": {
     maxInputTokens: 131072,
