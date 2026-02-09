@@ -118,7 +118,10 @@ function convertOpenAIAnnotationToLangChain(
  * and also passes through annotations that are already in OpenAI format.
  */
 function convertLangChainAnnotationToOpenAI(
-  annotation: ContentBlock.Citation | ContentBlock.NonStandard | Record<string, unknown>
+  annotation:
+    | ContentBlock.Citation
+    | ContentBlock.NonStandard
+    | Record<string, unknown>
 ): OpenAIAnnotation {
   // If it's already in OpenAI format, pass through unchanged
   if (
