@@ -32,7 +32,7 @@
     "@langchain/google-webauth": "workspace:*"
   },
   "devDependencies": {
-    "@jest/globals": "^29.5.0",
+    "@jest/globals": "^30.2.0",
     "@langchain/eslint": "workspace:*",
     "@langchain/google-common": "workspace:*",
     "@langchain/standard-tests": "workspace:*",

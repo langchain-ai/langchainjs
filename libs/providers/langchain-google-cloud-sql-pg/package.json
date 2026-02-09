@@ -36,7 +36,7 @@
     "uuid": "^11.0.5"
   },
   "devDependencies": {
-    "@jest/globals": "^29.5.0",
+    "@jest/globals": "^30.2.0",
     "@langchain/core": "workspace:*",
     "@langchain/eslint": "workspace:*",
     "@swc/core": "^1.15.11",

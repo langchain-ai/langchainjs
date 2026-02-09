@@ -36,7 +36,7 @@
     "google-auth-library": "^10.1.0"
   },
   "devDependencies": {
-    "@jest/globals": "^29.5.0",
+    "@jest/globals": "^30.2.0",
     "@langchain/eslint": "workspace:*",
     "@swc/core": "^1.15.11",
     "@swc/jest": "^0.2.29",
