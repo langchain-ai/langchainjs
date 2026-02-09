@@ -171,8 +171,7 @@ export class DefaultGeminiSafetyHandler implements GoogleAISafetyHandler {
   }
 }
 
-export interface MessageGeminiSafetySettings
-  extends DefaultGeminiSafetySettings {
+export interface MessageGeminiSafetySettings extends DefaultGeminiSafetySettings {
   msg?: string;
   forceNewMessage?: boolean;
 }

@@ -420,8 +420,10 @@ class LoadedEvalConfig {
   }
 }
 
-export interface RunOnDatasetParams
-  extends Omit<RunEvalConfig, "customEvaluators"> {
+export interface RunOnDatasetParams extends Omit<
+  RunEvalConfig,
+  "customEvaluators"
+> {
   /**
    * Name of the project for logging and tracking.
    */

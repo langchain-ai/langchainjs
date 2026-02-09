@@ -16,15 +16,13 @@ import {
  * both EmbeddingsParams and GoogleVertexAIConnectionParams.
  */
 export interface GoogleVertexAIMultimodalEmbeddingsParams
-  extends EmbeddingsParams,
-    GoogleVertexAIBaseLLMInput<GoogleAuthOptions> {}
+  extends EmbeddingsParams, GoogleVertexAIBaseLLMInput<GoogleAuthOptions> {}
 
 /**
  * Options for the GoogleVertexAIMultimodalEmbeddings class, extending
  * AsyncCallerCallOptions.
  */
-interface GoogleVertexAIMultimodalEmbeddingsOptions
-  extends AsyncCallerCallOptions {}
+interface GoogleVertexAIMultimodalEmbeddingsOptions extends AsyncCallerCallOptions {}
 
 /**
  * An instance of media (text or image) that can be used for generating
@@ -41,8 +39,7 @@ interface GoogleVertexAIMultimodalEmbeddingsInstance {
  * The results of generating embeddings, extending
  * GoogleVertexAIBasePrediction. It includes text and image embeddings.
  */
-interface GoogleVertexAIMultimodalEmbeddingsResults
-  extends GoogleVertexAIBasePrediction {
+interface GoogleVertexAIMultimodalEmbeddingsResults extends GoogleVertexAIBasePrediction {
   textEmbedding?: number[];
   imageEmbedding?: number[];
 }

@@ -29,9 +29,9 @@ export interface EmbeddingsInterface<TOutput = number[]> {
  * An abstract class that provides methods for embedding documents and
  * queries using LangChain.
  */
-export abstract class Embeddings<TOutput = number[]>
-  implements EmbeddingsInterface<TOutput>
-{
+export abstract class Embeddings<
+  TOutput = number[],
+> implements EmbeddingsInterface<TOutput> {
   /**
    * The async caller should be used by subclasses to make any async calls,
    * which will thus benefit from the concurrency and retry logic.

@@ -7,7 +7,8 @@ import { WatsonxAuth, WatsonxRerankBasicOptions } from "../types/ibm.js";
 import { authenticateAndSetInstance } from "../utils/ibm.js";
 
 export interface WatsonxInputRerank
-  extends Omit<TextRerankParams, "modelId" | "inputs" | "query">,
+  extends
+    Omit<TextRerankParams, "modelId" | "inputs" | "query">,
     WatsonxRerankBasicOptions {
   model: string;
   truncateInputTokens?: number;
