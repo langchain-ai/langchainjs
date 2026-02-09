@@ -129,7 +129,7 @@ export class NeonPostgres extends VectorStore {
 
     const flatValues = rows.flat();
     const sql = neon(this.neonConnectionString);
-    return await sql(queryString, flatValues);
+    return await sql.query(queryString, flatValues);
   }
 
   /**
@@ -238,7 +238,7 @@ export class NeonPostgres extends VectorStore {
       LIMIT $2;`;
 
     const sql = neon(this.neonConnectionString);
-    const documents = await sql(queryString, parameters);
+    const documents = await sql.query(queryString, parameters);
 
     const results = [] as [Document, number][];
     for (const doc of documents) {
@@ -285,14 +285,14 @@ export class NeonPostgres extends VectorStore {
     const sql = neon(this.neonConnectionString);
 
     if (params.ids !== undefined) {
-      await sql(
+      await sql.query(
         `DELETE FROM ${this.computedTableName} 
         WHERE ${this.idColumnName} 
         IN (${params.ids.map((_, idx) => `$${idx + 1}`)})`,
         params.ids
       );
     } else if (params.deleteAll) {
-      await sql(`TRUNCATE TABLE ${this.tableName}`);
+      await sql.query(`TRUNCATE TABLE ${this.tableName}`);
     }
   }
 
@@ -305,10 +305,10 @@ export class NeonPostgres extends VectorStore {
   async ensureTableInDatabase(): Promise<void> {
     const sql = neon(this.neonConnectionString);
 
-    await sql(`CREATE EXTENSION IF NOT EXISTS vector;`);
-    await sql(`CREATE EXTENSION IF NOT EXISTS "uuid-ossp";`);
+    await sql`CREATE EXTENSION IF NOT EXISTS vector;`;
+    await sql`CREATE EXTENSION IF NOT EXISTS "uuid-ossp";`;
 
-    await sql(`
+    await sql.query(`
       CREATE TABLE IF NOT EXISTS ${this.computedTableName} (
         ${this.idColumnName} uuid NOT NULL DEFAULT uuid_generate_v4() PRIMARY KEY,
         ${this.contentColumnName} text,
