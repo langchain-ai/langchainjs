@@ -293,11 +293,12 @@ export function convertToV1FromResponses(
     ) {
       for (const toolOutput of message.additional_kwargs.tool_outputs) {
         if (_isContentBlock(toolOutput, "web_search_call")) {
-          // Build args from available action data.
-          // The ResponseFunctionWebSearch base type only has id, status, type.
-          // The action field (with query, sources, etc.) may be present at
-          // runtime when the `include` parameter includes
-          // "web_search_call.action.sources".
+          /**
+           * Build args from available action data.
+           * The ResponseFunctionWebSearch base type only has id, status, type.
+           * The action field (with query, sources, etc.) may be present at
+           * runtime when the `include` parameter includes "web_search_call.action.sources".
+           */
           const webSearchArgs: Record<string, unknown> = {};
           if (
             _isObject(toolOutput.action) &&
@@ -323,8 +324,7 @@ export function convertToV1FromResponses(
             yield {
               type: "server_tool_call_result",
               toolCallId: _isString(toolOutput.id) ? toolOutput.id : "",
-              status:
-                toolOutput.status === "completed" ? "success" : "error",
+              status: toolOutput.status === "completed" ? "success" : "error",
               output,
             };
           }
@@ -335,9 +335,7 @@ export function convertToV1FromResponses(
             type: "server_tool_call",
             name: "file_search",
             args: {
-              queries: _isArray(toolOutput.queries)
-                ? toolOutput.queries
-                : [],
+              queries: _isArray(toolOutput.queries) ? toolOutput.queries : [],
             },
           };
           // Emit a server_tool_call_result when results are available
@@ -348,8 +346,7 @@ export function convertToV1FromResponses(
             yield {
               type: "server_tool_call_result",
               toolCallId: _isString(toolOutput.id) ? toolOutput.id : "",
-              status:
-                toolOutput.status === "completed" ? "success" : "error",
+              status: toolOutput.status === "completed" ? "success" : "error",
               output: _isArray(toolOutput.results)
                 ? { results: toolOutput.results }
                 : {},
