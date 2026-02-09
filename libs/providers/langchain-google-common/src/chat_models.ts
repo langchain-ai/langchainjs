@@ -167,7 +167,8 @@ export class ChatConnection<AuthOptions> extends AbstractGoogleLLMConnection<
  * Input to chat model class.
  */
 export interface ChatGoogleBaseInput<AuthOptions>
-  extends BaseChatModelParams,
+  extends
+    BaseChatModelParams,
     GoogleConnectionParams<AuthOptions>,
     GoogleAIModelParams,
     GoogleAISafetyParams,

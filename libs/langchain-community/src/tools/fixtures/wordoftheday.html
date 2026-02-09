@@ -250,7 +250,10 @@
     <link
       rel="stylesheet"
       as="style"
-      onload="this.onload=null;this.rel='stylesheet'"
+      onload="
+        this.onload = null;
+        this.rel = 'stylesheet';
+      "
       href="https://fonts.googleapis.com/css?family=Lato:300,300i,400,700,900|Open+Sans:300,300i,400,400i,600,600i,700,700i|Playfair+Display:400,700"
     />
 
@@ -1499,7 +1502,7 @@
                         >
                           <button
                             rel="nofollow"
-                            onclick="window.location.href='/login'"
+                            onclick="window.location.href = '/login'"
                             class="ul-sign-in fw-bold text-center btn btn-gradient btn-md active w-100 text-white text-decoration-none"
                           >
                             <span class="text-white">Log In</span>
@@ -1557,7 +1560,7 @@
                         >
                           <button
                             rel="nofollow"
-                            onclick="window.location.href='/logout'"
+                            onclick="window.location.href = '/logout'"
                             class="ul-sign-out fw-bold text-center btn btn-gradient btn-md active w-100 text-white text-decoration-none"
                           >
                             <span class="text-white">Log Out</span>
@@ -1605,7 +1608,7 @@
                       <li class="loggedin-links ps-5 pe-5 mt-4">
                         <button
                           rel="nofollow"
-                          onclick="window.location.href='/logout'"
+                          onclick="window.location.href = '/logout'"
                           class="ul-sign-out fw-bold text-center btn btn-gradient btn-md active w-100 text-white text-decoration-none"
                         >
                           <span>Log Out</span>

@@ -196,9 +196,9 @@ function stringifyWithDepthLimit(obj: any, depthLimit: number): string {
  * includes methods like `toDict()` and `_getType()`.
  */
 export abstract class BaseMessage<
-    TStructure extends MessageStructure = MessageStructure,
-    TRole extends MessageType = MessageType,
-  >
+  TStructure extends MessageStructure = MessageStructure,
+  TRole extends MessageType = MessageType,
+>
   extends Serializable
   implements Message<TStructure, TRole>
 {

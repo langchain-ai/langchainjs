@@ -10,8 +10,7 @@ import {
 } from "@langchain/google-common/experimental/media";
 import { WebGoogleAuth, WebGoogleAuthOptions } from "./auth.js";
 
-export interface BlobStoreGoogleCloudStorageParams
-  extends BlobStoreGoogleCloudStorageBaseParams<WebGoogleAuthOptions> {}
+export interface BlobStoreGoogleCloudStorageParams extends BlobStoreGoogleCloudStorageBaseParams<WebGoogleAuthOptions> {}
 
 export class BlobStoreGoogleCloudStorage extends BlobStoreGoogleCloudStorageBase<WebGoogleAuthOptions> {
   buildClient(
@@ -21,8 +20,7 @@ export class BlobStoreGoogleCloudStorage extends BlobStoreGoogleCloudStorageBase
   }
 }
 
-export interface BlobStoreAIStudioFileParams
-  extends BlobStoreAIStudioFileBaseParams<WebGoogleAuthOptions> {}
+export interface BlobStoreAIStudioFileParams extends BlobStoreAIStudioFileBaseParams<WebGoogleAuthOptions> {}
 
 export class BlobStoreAIStudioFile extends BlobStoreAIStudioFileBase<WebGoogleAuthOptions> {
   buildAbstractedClient(

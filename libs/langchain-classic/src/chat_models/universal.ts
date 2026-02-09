@@ -34,11 +34,12 @@ import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
 import { ChatResult } from "@langchain/core/outputs";
 
 // TODO: remove once `EventStreamCallbackHandlerInput` is exposed in core
-interface EventStreamCallbackHandlerInput
-  extends Omit<LogStreamCallbackHandlerInput, "_schemaFormat"> {}
+interface EventStreamCallbackHandlerInput extends Omit<
+  LogStreamCallbackHandlerInput,
+  "_schemaFormat"
+> {}
 
-export interface ConfigurableChatModelCallOptions
-  extends BaseChatModelCallOptions {
+export interface ConfigurableChatModelCallOptions extends BaseChatModelCallOptions {
   tools?: (
     | StructuredToolInterface
     | Record<string, unknown>
@@ -289,8 +290,8 @@ interface ConfigurableModelFields extends BaseChatModelParams {
  */
 export class ConfigurableModel<
   RunInput extends BaseLanguageModelInput = BaseLanguageModelInput,
-  CallOptions extends
-    ConfigurableChatModelCallOptions = ConfigurableChatModelCallOptions,
+  CallOptions extends ConfigurableChatModelCallOptions =
+    ConfigurableChatModelCallOptions,
 > extends BaseChatModel<CallOptions, AIMessageChunk> {
   _llmType(): string {
     return "chat_model";
@@ -610,8 +611,8 @@ export type ConfigurableFields = "any" | string[];
 
 export async function initChatModel<
   RunInput extends BaseLanguageModelInput = BaseLanguageModelInput,
-  CallOptions extends
-    ConfigurableChatModelCallOptions = ConfigurableChatModelCallOptions,
+  CallOptions extends ConfigurableChatModelCallOptions =
+    ConfigurableChatModelCallOptions,
 >(
   model: string,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -624,8 +625,8 @@ export async function initChatModel<
 
 export async function initChatModel<
   RunInput extends BaseLanguageModelInput = BaseLanguageModelInput,
-  CallOptions extends
-    ConfigurableChatModelCallOptions = ConfigurableChatModelCallOptions,
+  CallOptions extends ConfigurableChatModelCallOptions =
+    ConfigurableChatModelCallOptions,
 >(
   model: never,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -638,8 +639,8 @@ export async function initChatModel<
 
 export async function initChatModel<
   RunInput extends BaseLanguageModelInput = BaseLanguageModelInput,
-  CallOptions extends
-    ConfigurableChatModelCallOptions = ConfigurableChatModelCallOptions,
+  CallOptions extends ConfigurableChatModelCallOptions =
+    ConfigurableChatModelCallOptions,
 >(
   model?: string,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -866,8 +867,8 @@ export async function initChatModel<
  */
 export async function initChatModel<
   RunInput extends BaseLanguageModelInput = BaseLanguageModelInput,
-  CallOptions extends
-    ConfigurableChatModelCallOptions = ConfigurableChatModelCallOptions,
+  CallOptions extends ConfigurableChatModelCallOptions =
+    ConfigurableChatModelCallOptions,
 >(
   model?: string,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any

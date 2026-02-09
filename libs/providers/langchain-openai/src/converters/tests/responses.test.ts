@@ -1620,3 +1620,55 @@ describe("convertResponsesDeltaToChatGenerationChunk - image generation", () => 
     expect(result).toBeNull();
   });
 });
+
+describe("Anthropic cross-provider compatibility", () => {
+  it("should drop tool_use blocks from assistant content in convertMessagesToResponsesInput", () => {
+    const message = new AIMessage({
+      content: [
+        { type: "text", text: "I will search for that." },
+        {
+          type: "tool_use",
+          id: "toolu_abc123",
+          name: "get_weather",
+          input: { location: "SF" },
+        },
+      ],
+      tool_calls: [
+        {
+          id: "toolu_abc123",
+          name: "get_weather",
+          args: { location: "SF" },
+        },
+      ],
+    });
+
+    const result = convertMessagesToResponsesInput({
+      messages: [message],
+      zdrEnabled: false,
+      model: "gpt-4o",
+    });
+
+    // Should have a message item + a function_call item
+    const messageItem = result.find((r: any) => r.type === "message") as any;
+    const fnCallItem = result.find(
+      (r: any) => r.type === "function_call"
+    ) as any;
+
+    expect(messageItem).toBeDefined();
+    expect(fnCallItem).toBeDefined();
+
+    // The message content should only have the text, no tool_use
+    if (typeof messageItem.content !== "string") {
+      expect(messageItem.content.some((c: any) => c.type === "tool_use")).toBe(
+        false
+      );
+      expect(messageItem.content).toHaveLength(1);
+      expect(messageItem.content[0].type).toBe("output_text");
+      expect(messageItem.content[0].text).toBe("I will search for that.");
+    }
+
+    // function_call should be present
+    expect(fnCallItem.name).toBe("get_weather");
+    expect(fnCallItem.call_id).toBe("toolu_abc123");
+  });
+});

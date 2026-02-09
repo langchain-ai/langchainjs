@@ -82,8 +82,7 @@ export interface PullModelOptions {
  * Input to chat model class.
  */
 export interface ChatOllamaInput
-  extends BaseChatModelParams,
-    OllamaCamelCaseOptions {
+  extends BaseChatModelParams, OllamaCamelCaseOptions {
   /**
    * The model to invoke. If the model does not exist, it
    * will be pulled.
