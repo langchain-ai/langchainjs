@@ -382,8 +382,8 @@ importers:
         specifier: ~5.8.3
         version: 5.8.3
       typesense:
-        specifier: ^1.5.3
-        version: 1.8.2(@babel/runtime@7.28.6)
+        specifier: ^3.0.1
+        version: 3.0.1(@babel/runtime@7.28.6)
       uuid:
         specifier: ^10.0.0
         version: 10.0.0
@@ -1098,8 +1098,8 @@ importers:
         specifier: ~5.8.3
         version: 5.8.3
       typesense:
-        specifier: ^1.5.3
-        version: 1.8.2(@babel/runtime@7.28.6)
+        specifier: ^3.0.1
+        version: 3.0.1(@babel/runtime@7.28.6)
       vitest:
         specifier: ^3.2.4
         version: 3.2.4(@types/debug@4.1.12)(@types/node@25.2.2)(jiti@2.6.1)(jsdom@26.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.5))(terser@5.46.0)(tsx@4.20.3)(yaml@2.8.1)
@@ -1613,8 +1613,8 @@ importers:
         specifier: ~5.8.3
         version: 5.8.3
       typesense:
-        specifier: ^1.5.3
-        version: 1.8.2(@babel/runtime@7.28.6)
+        specifier: ^3.0.1
+        version: 3.0.1(@babel/runtime@7.28.6)
       usearch:
         specifier: ^2.21.4
         version: 2.21.4
@@ -9904,6 +9904,9 @@ packages:
   axios@1.13.4:
     resolution: {integrity: sha512-1wVkUaAO6WyaYtCkcYCOx12ZgpGf9Zif+qXa4n+oYzK558YryKqiL6UWwd5DqiH3VRW0GYhTZQ/vlgJrCoNQlg==}
 
+  axios@1.13.5:
+    resolution: {integrity: sha512-cz4ur7Vb0xS4/KUN0tPWe44eqxrIu31me+fbang3ijiNscE129POzipJJA6zniq2C/Z6sJCjMimjS8Lc/GAs8Q==}
+
   axios@1.7.7:
     resolution: {integrity: sha512-S4kL7XrjgBmvdGut0sN3yJxqYzrDOnivkBiN0OFs6hLiUam3UPvswUo0kqGyhqUZGEOytHyumEdXsAkgCOUf3Q==}
 
@@ -16369,8 +16372,8 @@ packages:
     engines: {node: '>=14.17'}
     hasBin: true
 
-  typesense@1.8.2:
-    resolution: {integrity: sha512-aBpePjA99Qvo+OP2pJwMpvga4Jrm1Y2oV5NsrWXBxlqUDNEUCPZBIksPv2Hq0jxQxHhLLyJVbjXjByXsvpCDVA==}
+  typesense@3.0.1:
+    resolution: {integrity: sha512-aRzuDQlwR7s2sWw+JiR3CufrMWpzH5UAJ4XlybYczD02QPy5jCsEQiueqUu0Wiai4zW/RGYRruF3XrdEXPgPJA==}
     engines: {node: '>=18'}
     peerDependencies:
       '@babel/runtime': ^7.23.2
@@ -26160,6 +26163,14 @@ snapshots:
     transitivePeerDependencies:
       - debug
 
+  axios@1.13.5(debug@4.4.3):
+    dependencies:
+      follow-redirects: 1.15.11(debug@4.4.3)
+      form-data: 4.0.5
+      proxy-from-env: 1.1.0
+    transitivePeerDependencies:
+      - debug
+
   axios@1.7.7:
     dependencies:
       follow-redirects: 1.15.11(debug@4.4.3)
@@ -27008,7 +27019,7 @@ snapshots:
 
   cmake-js@7.4.0:
     dependencies:
-      axios: 1.13.4(debug@4.4.3)
+      axios: 1.13.5(debug@4.4.3)
       debug: 4.4.3(supports-color@8.1.1)
       fs-extra: 11.3.3
       memory-stream: 1.0.0
@@ -34379,11 +34390,12 @@ snapshots:
 
   typescript@5.9.3: {}
 
-  typesense@1.8.2(@babel/runtime@7.28.6):
+  typesense@3.0.1(@babel/runtime@7.28.6):
     dependencies:
       '@babel/runtime': 7.28.6
-      axios: 1.13.4(debug@4.4.3)
+      axios: 1.13.5(debug@4.4.3)
       loglevel: 1.9.2
+      tslib: 2.8.1
     transitivePeerDependencies:
       - debug
 
