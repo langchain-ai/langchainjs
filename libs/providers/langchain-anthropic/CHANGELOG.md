@@ -1,5 +1,12 @@
 # @langchain/anthropic
 
+## 1.3.16
+
+### Patch Changes
+
+- Updated dependencies [[`71c3cba`](https://github.com/langchain-ai/langchainjs/commit/71c3cba843ab16d877299d158a1de0c7d22f3fb9)]:
+  - @langchain/core@1.1.20
+
 ## 1.3.15
 
 ### Patch Changes
