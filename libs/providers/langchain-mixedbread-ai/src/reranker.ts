@@ -13,8 +13,10 @@ type RerankingRequestWithoutInput = Omit<
  * Interface extending RerankingRequestWithoutInput with additional
  * parameters specific to the MixedbreadAIRerank class.
  */
-export interface MixedbreadAIRerankParams
-  extends Omit<RerankingRequestWithoutInput, "model"> {
+export interface MixedbreadAIRerankParams extends Omit<
+  RerankingRequestWithoutInput,
+  "model"
+> {
   /**
    * The model to use for reranking. For example "default" or "mixedbread-ai/mxbai-rerank-large-v1".
    * @default {"default"}

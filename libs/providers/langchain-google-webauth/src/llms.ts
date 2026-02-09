@@ -8,8 +8,7 @@ import { WebGoogleAuth, WebGoogleAuthOptions } from "./auth.js";
 /**
  * Input to LLM class.
  */
-export interface GoogleLLMInput
-  extends GoogleBaseLLMInput<WebGoogleAuthOptions> {}
+export interface GoogleLLMInput extends GoogleBaseLLMInput<WebGoogleAuthOptions> {}
 
 /**
  * Integration with an LLM.

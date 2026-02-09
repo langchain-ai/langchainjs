@@ -20,8 +20,7 @@ import { convertEventStreamToIterableReadableDataStream } from "./utils/event_so
  * An interface defining the options for a Cloudflare Workers AI call. It extends
  * the BaseLanguageModelCallOptions interface.
  */
-export interface ChatCloudflareWorkersAICallOptions
-  extends BaseLanguageModelCallOptions {}
+export interface ChatCloudflareWorkersAICallOptions extends BaseLanguageModelCallOptions {}
 
 /**
  * A class that enables calls to the Cloudflare Workers AI API to access large language

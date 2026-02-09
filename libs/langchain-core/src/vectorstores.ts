@@ -190,8 +190,8 @@ export interface VectorStoreRetrieverInterface<
  * @template V - Type of vector store implementing `VectorStoreInterface`.
  */
 export class VectorStoreRetriever<
-    V extends VectorStoreInterface = VectorStoreInterface,
-  >
+  V extends VectorStoreInterface = VectorStoreInterface,
+>
   extends BaseRetriever
   implements VectorStoreRetrieverInterface
 {

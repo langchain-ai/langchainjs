@@ -21,8 +21,7 @@ import { CloseVector } from "./common.js";
 /**
  * Arguments for creating a CloseVectorNode instance, extending CloseVectorHNSWLibArgs.
  */
-export interface CloseVectorNodeArgs
-  extends CloseVectorHNSWLibArgs<HierarchicalNSWT> {
+export interface CloseVectorNodeArgs extends CloseVectorHNSWLibArgs<HierarchicalNSWT> {
   space: "cosine" | "l2" | "ip";
   instance?: CloseVectorHNSWNode;
 }
