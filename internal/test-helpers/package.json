@@ -20,7 +20,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@jest/globals": "^30.0.5"
+    "@jest/globals": "^30.2.0"
   },
   "devDependencies": {
     "@langchain/eslint": "workspace:*",
