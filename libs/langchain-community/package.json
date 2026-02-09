@@ -120,7 +120,7 @@
     "@types/word-extractor": "^1",
     "@types/ws": "^8",
     "@upstash/ratelimit": "^2.0.8",
-    "@upstash/redis": "^1.34.7",
+    "@upstash/redis": "^1.36.2",
     "@upstash/vector": "^1.2.1",
     "@vercel/kv": "^3.0.0",
     "@vercel/postgres": "^0.10.0",

@@ -76,7 +76,7 @@
     "@supabase/supabase-js": "^2.45.0",
     "@tensorflow/tfjs-backend-cpu": "^4.4.0",
     "@types/pg": "^8.15.5",
-    "@upstash/redis": "^1.34.7",
+    "@upstash/redis": "^1.36.2",
     "@upstash/vector": "^1.2.1",
     "@vercel/kv": "^3.0.0",
     "@xata.io/client": "^0.28.0",

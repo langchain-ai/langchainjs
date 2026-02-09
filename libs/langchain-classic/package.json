@@ -170,7 +170,7 @@
     "@types/pg": "^8.15.5",
     "@types/uuid": "^9",
     "@types/ws": "^8",
-    "@upstash/redis": "^1.35.3",
+    "@upstash/redis": "^1.36.2",
     "@upstash/vector": "^1.2.2",
     "@vercel/kv": "^3.0.0",
     "@vitest/coverage-v8": "^3.2.4",
