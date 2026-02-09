@@ -77,7 +77,10 @@ export class ExaRetriever<
       }
 
       documents.push(
-        new Document({ pageContent, metadata: _getMetadata<T>(result) })
+        new Document({
+          pageContent,
+          metadata: _getMetadata<T>(result),
+        })
       );
     }
     return documents;
