@@ -1,5 +1,12 @@
 # @langchain/google-gauth
 
+## 2.1.16
+
+### Patch Changes
+
+- Updated dependencies [[`5681181`](https://github.com/langchain-ai/langchainjs/commit/568118119f44cc4509a2c04dff2891230e874f46)]:
+  - @langchain/google-common@2.1.16
+
 ## 2.1.15
 
 ### Patch Changes

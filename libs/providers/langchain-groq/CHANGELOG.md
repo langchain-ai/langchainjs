@@ -1,5 +1,11 @@
 # @langchain/groq
 
+## 1.1.0
+
+### Minor Changes
+
+- [#9923](https://github.com/langchain-ai/langchainjs/pull/9923) [`dd31da9`](https://github.com/langchain-ai/langchainjs/commit/dd31da9c09683996090cbb5388731c091c8f2f81) Thanks [@eusoubrasileiro](https://github.com/eusoubrasileiro)! - feat(groq): add native JSON Schema structured output for gpt-oss models
+
 ## 1.0.4
 
 ### Patch Changes

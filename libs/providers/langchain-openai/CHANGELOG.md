@@ -1,5 +1,15 @@
 # @langchain/openai
 
+## 1.2.6
+
+### Patch Changes
+
+- [#9972](https://github.com/langchain-ai/langchainjs/pull/9972) [`16d691c`](https://github.com/langchain-ai/langchainjs/commit/16d691c7f8196e1d6322f051c25b2219ff2953b6) Thanks [@hntrl](https://github.com/hntrl)! - fix(openai): drop Anthropic `tool_use` content blocks when converting messages for OpenAI
+
+  When messages originating from Anthropic (e.g. via `ChatAnthropic`) are passed to `ChatOpenAI`, Anthropic-native `tool_use` blocks in `message.content` are now filtered out during conversion. These blocks are already represented in `message.tool_calls` and would cause an OpenAI API error if passed through.
+
+- [#9940](https://github.com/langchain-ai/langchainjs/pull/9940) [`1058574`](https://github.com/langchain-ai/langchainjs/commit/1058574b723f0d060eb9b3ca25be5aeeabbe51aa) Thanks [@saakshigupta2002](https://github.com/saakshigupta2002)! - fix(openai): correctly convert annotations back to OpenAI format in Responses API multi-turn conversations
+
 ## 1.2.5
 
 ### Patch Changes

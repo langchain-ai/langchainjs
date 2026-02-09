@@ -1,5 +1,18 @@
 # @langchain/classic
 
+## 1.0.16
+
+### Patch Changes
+
+- [#9786](https://github.com/langchain-ai/langchainjs/pull/9786) [`8ee833c`](https://github.com/langchain-ai/langchainjs/commit/8ee833c1fb99891565832ead4990e246b30022a6) Thanks [@SkrOYC](https://github.com/SkrOYC)! - fix: resolve flaky tests and configuration issues
+  - @langchain/turbopuffer: Allow tests to pass when no test files are found (vitest --passWithNoTests)
+  - @langchain/model-profiles: Fix broken import path in generator test
+  - @langchain/classic: Fix AutoGPTPrompt test to be locale-independent by forcing en-US locale
+
+- Updated dependencies [[`16d691c`](https://github.com/langchain-ai/langchainjs/commit/16d691c7f8196e1d6322f051c25b2219ff2953b6), [`1058574`](https://github.com/langchain-ai/langchainjs/commit/1058574b723f0d060eb9b3ca25be5aeeabbe51aa)]:
+  - @langchain/openai@1.2.6
+  - @langchain/textsplitters@1.0.1
+
 ## 1.0.15
 
 ### Patch Changes

@@ -1,5 +1,14 @@
 # langchain
 
+## 1.2.19
+
+### Patch Changes
+
+- [#9957](https://github.com/langchain-ai/langchainjs/pull/9957) [`71c3cba`](https://github.com/langchain-ai/langchainjs/commit/71c3cba843ab16d877299d158a1de0c7d22f3fb9) Thanks [@jacoblee93](https://github.com/jacoblee93)! - feat(langchain,core): Update prompt pulling params, LangSmith version
+
+- Updated dependencies [[`71c3cba`](https://github.com/langchain-ai/langchainjs/commit/71c3cba843ab16d877299d158a1de0c7d22f3fb9)]:
+  - @langchain/core@1.1.20
+
 ## 1.2.18
 
 ### Patch Changes
