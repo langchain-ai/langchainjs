@@ -1008,4 +1008,267 @@ describe("createAgent", () => {
     // Verify messages were processed correctly
     expect(result.messages.length).toBeGreaterThan(0);
   });
+
+  it("supports StateSchema in middleware stateSchema", async () => {
+    const { StateSchema } = await import("@langchain/langgraph");
+
+    // Create middleware with StateSchema instead of Zod object
+    const middleware = createMiddleware({
+      name: "stateSchemaMiddleware",
+      stateSchema: new StateSchema({
+        middlewareValue: z4.string().default("default"),
+      }),
+      contextSchema: z4.object({
+        middlewareContext: z4.number(),
+      }),
+      beforeModel: (_state, { context }) => {
+        expect(context.middlewareContext).toBe(42);
+        return {
+          middlewareValue: "modified",
+        };
+      },
+    });
+
+    const model = new FakeToolCallingChatModel({
+      responses: [new AIMessage("Done")],
+    });
+
+    const agent = createAgent({
+      model,
+      tools: [],
+      middleware: [middleware],
+    });
+
+    const result = await agent.invoke(
+      {
+        messages: [new HumanMessage("Test StateSchema middleware")],
+      },
+      {
+        context: {
+          middlewareContext: 42,
+        },
+      }
+    );
+
+    // Verify middleware state (StateSchema)
+    expect(result.middlewareValue).toBe("modified");
+
+    // Verify messages were processed correctly
+    expect(result.messages.length).toBeGreaterThan(0);
+  });
+
+  describe("withConfig", () => {
+    it("should return a new ReactAgent instance", () => {
+      const model = new FakeToolCallingModel();
+      const agent = createAgent({
+        model,
+        tools: [],
+      });
+
+      const configuredAgent = agent.withConfig({ recursionLimit: 1000 });
+
+      // Should return a new instance, not the same one
+      expect(configuredAgent).not.toBe(agent);
+      // Both should be ReactAgent instances
+      expect(configuredAgent).toHaveProperty("invoke");
+      expect(configuredAgent).toHaveProperty("stream");
+      expect(configuredAgent).toHaveProperty("withConfig");
+    });
+
+    it("should allow chaining multiple withConfig calls", () => {
+      const model = new FakeToolCallingModel();
+      const agent = createAgent({
+        model,
+        tools: [],
+      });
+
+      const configuredAgent = agent
+        .withConfig({ recursionLimit: 500 })
+        .withConfig({ tags: ["test"] });
+
+      // Should return a new instance after chaining
+      expect(configuredAgent).not.toBe(agent);
+      expect(configuredAgent).toHaveProperty("invoke");
+    });
+
+    it("should preserve original agent options", () => {
+      const systemPrompt = "You are a helpful assistant";
+      const model = new FakeToolCallingModel();
+      const agent = createAgent({
+        model,
+        tools: [],
+        systemPrompt,
+      });
+
+      const configuredAgent = agent.withConfig({ recursionLimit: 1000 });
+
+      // Both agents should have the same options
+      expect(configuredAgent.options.systemPrompt).toBe(systemPrompt);
+    });
+
+    it("should propagate configurable values to tools", async () => {
+      // This test verifies that config values set via withConfig()
+      // are actually propagated to the graph and accessible in tools
+      let capturedConfig: Record<string, unknown> | undefined;
+
+      const configCaptureTool = tool(
+        async (_input, config) => {
+          // Capture the config that was passed to this tool
+          capturedConfig = config?.configurable;
+          return "done";
+        },
+        {
+          name: "config_capture_tool",
+          description: "Captures the config for testing",
+          schema: z.object({
+            input: z.string(),
+          }),
+        }
+      );
+
+      const model = new FakeToolCallingChatModel({
+        responses: [
+          new AIMessage({
+            content: "",
+            tool_calls: [
+              {
+                name: "config_capture_tool",
+                id: "test-1",
+                args: { input: "test" },
+              },
+            ],
+          }),
+          new AIMessage("Done"),
+        ],
+      });
+
+      const agent = createAgent({
+        model,
+        tools: [configCaptureTool],
+      });
+
+      // Set a custom configurable value via withConfig
+      const configuredAgent = agent.withConfig({
+        configurable: { custom_test_value: "hello-from-withConfig" },
+      });
+
+      await configuredAgent.invoke({
+        messages: [new HumanMessage("test")],
+      });
+
+      // Verify the configurable value was propagated to the tool
+      expect(capturedConfig).toBeDefined();
+      expect(capturedConfig?.custom_test_value).toBe("hello-from-withConfig");
+    });
+
+    it("should merge withConfig values with invocation config", async () => {
+      // Verify that withConfig values are merged with invocation-time config
+      let capturedConfig: Record<string, unknown> | undefined;
+
+      const configCaptureTool = tool(
+        async (_input, config) => {
+          capturedConfig = config?.configurable;
+          return "done";
+        },
+        {
+          name: "config_capture_tool",
+          description: "Captures the config for testing",
+          schema: z.object({
+            input: z.string(),
+          }),
+        }
+      );
+
+      const model = new FakeToolCallingChatModel({
+        responses: [
+          new AIMessage({
+            content: "",
+            tool_calls: [
+              {
+                name: "config_capture_tool",
+                id: "test-1",
+                args: { input: "test" },
+              },
+            ],
+          }),
+          new AIMessage("Done"),
+        ],
+      });
+
+      const agent = createAgent({
+        model,
+        tools: [configCaptureTool],
+      });
+
+      // Set a default value via withConfig
+      const configuredAgent = agent.withConfig({
+        configurable: { default_value: "from-withConfig" },
+      });
+
+      // Invoke with additional configurable values
+      await configuredAgent.invoke(
+        { messages: [new HumanMessage("test")] },
+        { configurable: { invocation_value: "from-invoke" } }
+      );
+
+      // Both values should be present (merged)
+      expect(capturedConfig).toBeDefined();
+      expect(capturedConfig?.default_value).toBe("from-withConfig");
+      expect(capturedConfig?.invocation_value).toBe("from-invoke");
+    });
+
+    it("should allow invocation config to override withConfig values", async () => {
+      // Verify that invocation-time values override withConfig defaults
+      let capturedConfig: Record<string, unknown> | undefined;
+
+      const configCaptureTool = tool(
+        async (_input, config) => {
+          capturedConfig = config?.configurable;
+          return "done";
+        },
+        {
+          name: "config_capture_tool",
+          description: "Captures the config for testing",
+          schema: z.object({
+            input: z.string(),
+          }),
+        }
+      );
+
+      const model = new FakeToolCallingChatModel({
+        responses: [
+          new AIMessage({
+            content: "",
+            tool_calls: [
+              {
+                name: "config_capture_tool",
+                id: "test-1",
+                args: { input: "test" },
+              },
+            ],
+          }),
+          new AIMessage("Done"),
+        ],
+      });
+
+      const agent = createAgent({
+        model,
+        tools: [configCaptureTool],
+      });
+
+      // Set a default value via withConfig
+      const configuredAgent = agent.withConfig({
+        configurable: { shared_key: "default-value" },
+      });
+
+      // Override with invocation config
+      await configuredAgent.invoke(
+        { messages: [new HumanMessage("test")] },
+        { configurable: { shared_key: "overridden-value" } }
+      );
+
+      // Invocation value should win
+      expect(capturedConfig?.shared_key).toBe("overridden-value");
+    });
+  });
 });

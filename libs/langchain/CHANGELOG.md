@@ -1,5 +1,110 @@
 # langchain
 
+## 1.2.18
+
+### Patch Changes
+
+- [#9763](https://github.com/langchain-ai/langchainjs/pull/9763) [`8f0757f`](https://github.com/langchain-ai/langchainjs/commit/8f0757f06b2ed9fe810f636333fc71ffcedb3feb) Thanks [@AdamParker19](https://github.com/AdamParker19)! - fix(langchain): resolve className collision in MODEL_PROVIDER_CONFIG
+
+  Refactored `getChatModelByClassName` to accept an optional `modelProvider` parameter for direct lookup, avoiding the className collision issue where multiple providers share the same className (e.g., `google-vertexai` and `google-vertexai-web` both use `"ChatVertexAI"`). When `modelProvider` is provided, the function uses direct config lookup instead of searching by className. Backward compatibility is maintained for existing callers that only pass `className`. This eliminates the duplicated import logic that was previously in `_initChatModelHelper`.
+
+## 1.2.17
+
+### Patch Changes
+
+- [#9916](https://github.com/langchain-ai/langchainjs/pull/9916) [`3516592`](https://github.com/langchain-ai/langchainjs/commit/3516592c51c44eb55e477c0d63ffdab5672ae97e) Thanks [@hntrl](https://github.com/hntrl)! - feat(langchain): add withConfig() method to ReactAgent
+
+  Adds a `withConfig()` method to ReactAgent following the same pattern as LangGraph's `Pregel.withConfig()`. This allows setting default configuration values (like `recursionLimit`, `tags`, or `configurable`) that get merged with invocation-time config.
+
+- Updated dependencies [[`41bfea5`](https://github.com/langchain-ai/langchainjs/commit/41bfea51cf119573a3b956ee782d2731fe71c681)]:
+  - @langchain/core@1.1.19
+
+## 1.2.16
+
+### Patch Changes
+
+- [#9885](https://github.com/langchain-ai/langchainjs/pull/9885) [`913893f`](https://github.com/langchain-ai/langchainjs/commit/913893f678f1fae2a1b9bf964c9d93ffd0176680) Thanks [@Ambas-T](https://github.com/Ambas-T)! - fix: filter pregel keys from cache key to avoid OOM
+
+- Updated dependencies [[`a9b5059`](https://github.com/langchain-ai/langchainjs/commit/a9b50597186002221aaa4585246e569fa44c27c8), [`a9b5059`](https://github.com/langchain-ai/langchainjs/commit/a9b50597186002221aaa4585246e569fa44c27c8)]:
+  - @langchain/core@1.1.18
+
+## 1.2.15
+
+### Patch Changes
+
+- [#9891](https://github.com/langchain-ai/langchainjs/pull/9891) [`983b212`](https://github.com/langchain-ai/langchainjs/commit/983b2123eeaa32011b7021643ba8c37698dfe2be) Thanks [@christian-bromann](https://github.com/christian-bromann)! - fix(langchain): support StateSchema in middleware pipeline
+
+## 1.2.14
+
+### Patch Changes
+
+- [#9870](https://github.com/langchain-ai/langchainjs/pull/9870) [`070b4d1`](https://github.com/langchain-ai/langchainjs/commit/070b4d14121ee5d1f24c8ad980cd4548f39f19eb) Thanks [@maahir30](https://github.com/maahir30)! - fix(langchain): StateSchema handling in AgentNode middleware
+  - Added `toPartialZodObject` helper that correctly handles both Zod objects and LangGraph's StateSchema when parsing middleware state in AgentNode .
+
+## 1.2.13
+
+### Patch Changes
+
+- [#9854](https://github.com/langchain-ai/langchainjs/pull/9854) [`160b5bf`](https://github.com/langchain-ai/langchainjs/commit/160b5bfe49f31190d28ec10a95075ef845c49fa3) Thanks [@christian-bromann](https://github.com/christian-bromann)! - fix(anthropic): apply cache_control at final formatting layer
+
+- [#9850](https://github.com/langchain-ai/langchainjs/pull/9850) [`b56bf9e`](https://github.com/langchain-ai/langchainjs/commit/b56bf9e05a3190be58835e336ffb775c5d585fca) Thanks [@joeljohn159](https://github.com/joeljohn159)! - Fix `ToolNode` to route missing tool errors through `handleToolErrors` instead of throwing, allowing agents to recover when LLMs hallucinate tool names.
+
+- [#9847](https://github.com/langchain-ai/langchainjs/pull/9847) [`9cd35ae`](https://github.com/langchain-ai/langchainjs/commit/9cd35ae6ed878be88d3e68371df92cebc8d880ee) Thanks [@christian-bromann](https://github.com/christian-bromann)! - feat(langchain): add dynamic tool registration via middleware
+
+- [#9839](https://github.com/langchain-ai/langchainjs/pull/9839) [`134121a`](https://github.com/langchain-ai/langchainjs/commit/134121a6fc7e0ad1653bb5ce2ec347c61638c4df) Thanks [@maahir30](https://github.com/maahir30)! - ## Add state schema support to agents
+  - Introduce `createAgentState` function replacing `createAgentAnnotationConditional`
+  - Migrate from Zod-based schemas to LangGraph's native `StateSchema`, `ReducedValue`, and `UntrackedValue` primitives
+  - Support both `StateSchema` and Zod v3/v4 objects as input schemas
+  - Automatically merge state fields from user-provided schemas and middleware
+  - Properly handle reducer metadata extraction from Zod v4 schemas via `schemaMetaRegistry`
+  - Generate separate input/output schemas to avoid channel conflicts with reducers
+  - Add comprehensive test coverage for state schema functionality
+
+- Updated dependencies [[`05a9733`](https://github.com/langchain-ai/langchainjs/commit/05a9733448a10764c0bfd070af859c33e623b998)]:
+  - @langchain/core@1.1.17
+
+## 1.2.12
+
+### Patch Changes
+
+- [#9848](https://github.com/langchain-ai/langchainjs/pull/9848) [`3d26f58`](https://github.com/langchain-ai/langchainjs/commit/3d26f58e5b705f7c81104a6f1145c64e791d238b) Thanks [@christian-bromann](https://github.com/christian-bromann)! - fix(langchain): bubble up graph interrupt errors as is
+
+## 1.2.11
+
+### Patch Changes
+
+- [#9812](https://github.com/langchain-ai/langchainjs/pull/9812) [`b8e3da6`](https://github.com/langchain-ai/langchainjs/commit/b8e3da6618ca27e86d384a3ce6d01520861916af) Thanks [@christian-bromann](https://github.com/christian-bromann)! - fix(langchain): tag summarization model calls with lc_source metadata
+
+- Updated dependencies [[`70387a1`](https://github.com/langchain-ai/langchainjs/commit/70387a144464539d65a546c8130cf51dfad025a1), [`a7c6ec5`](https://github.com/langchain-ai/langchainjs/commit/a7c6ec51ab9baa186ab5ebf815599c08f5c7e8ab), [`5e04543`](https://github.com/langchain-ai/langchainjs/commit/5e045435a783fdae44bc9a43e01a8e5eb7100db2), [`40b4467`](https://github.com/langchain-ai/langchainjs/commit/40b446762445575844610ee528abc77c247b2c43), [`17e30bd`](https://github.com/langchain-ai/langchainjs/commit/17e30bd7f4c7bdf87c9c30304b3b9e121cc1fbbc)]:
+  - @langchain/core@1.1.16
+
+## 1.2.10
+
+### Patch Changes
+
+- [#9806](https://github.com/langchain-ai/langchainjs/pull/9806) [`cf56fc9`](https://github.com/langchain-ai/langchainjs/commit/cf56fc98aebf55a798e80cbd5c30259ffaf8ca47) Thanks [@christian-bromann](https://github.com/christian-bromann)! - fix(langchain): don't concatenate middleware error, instead use cause
+
+- Updated dependencies [[`230462d`](https://github.com/langchain-ai/langchainjs/commit/230462d28c3a8b5ccadf433ea2f523eb6e658de6)]:
+  - @langchain/core@1.1.15
+
+## 1.2.9
+
+### Patch Changes
+
+- Updated dependencies [[`bd1ab45`](https://github.com/langchain-ai/langchainjs/commit/bd1ab45364391f69ce93ecba36a4a15dafca2b76)]:
+  - @langchain/core@1.1.14
+
+## 1.2.8
+
+### Patch Changes
+
+- [#9779](https://github.com/langchain-ai/langchainjs/pull/9779) [`bb80067`](https://github.com/langchain-ai/langchainjs/commit/bb80067874af359d7347b07b75f5caa0ee246aea) Thanks [@hntrl](https://github.com/hntrl)! - add lc_source tag to summarization middleware messages
+
+- [#9784](https://github.com/langchain-ai/langchainjs/pull/9784) [`9a68b93`](https://github.com/langchain-ai/langchainjs/commit/9a68b933c13be556376244e83b18f61f051e6a5c) Thanks [@weiliddat](https://github.com/weiliddat)! - preserve reducer metadata in createAgent state schema
+
+- Updated dependencies [[`3efe79c`](https://github.com/langchain-ai/langchainjs/commit/3efe79c62ff2ffe0ada562f7eecd85be074b649a), [`b8561c1`](https://github.com/langchain-ai/langchainjs/commit/b8561c17556bdf7a3ff8d70bc307422642a9172e)]:
+  - @langchain/core@1.1.13
+
 ## 1.2.7
 
 ### Patch Changes

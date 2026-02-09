@@ -95,7 +95,7 @@ export abstract class GoogleConnection<
 
   async _buildOpts(
     data: unknown | undefined,
-    _options: CallOptions,
+    options: CallOptions,
     requestHeaders: Record<string, string> = {}
   ): Promise<GoogleAbstractedClientOps> {
     const url = await this.buildUrl();
@@ -112,6 +112,7 @@ export abstract class GoogleConnection<
       url,
       method,
       headers,
+      signal: options?.signal,
     };
     if (data && method === "POST") {
       opts.data = data;

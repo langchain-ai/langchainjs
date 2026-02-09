@@ -1,4 +1,4 @@
-import { test } from "@jest/globals";
+import { test, describe, expect } from "@jest/globals";
 import * as fs from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 import * as path from "node:path";
@@ -918,4 +918,56 @@ test("works with thinking config", async () => {
       expect(typeof block.text).toBe("string");
     });
   }
+});
+
+describe("Google GenAI Reasoning with contentBlocks", () => {
+  test("invoke returns thinking as reasoning in contentBlocks", async () => {
+    const model = new ChatGoogleGenerativeAI({
+      model: "gemini-3-pro-preview",
+      maxRetries: 0,
+      thinkingConfig: {
+        includeThoughts: true,
+        thinkingBudget: 100,
+      },
+    });
+
+    const result = await model.invoke("What is 2 + 2?");
+
+    // Verify contentBlocks contains reasoning
+    const blocks = result.contentBlocks;
+    expect(blocks.length).toBeGreaterThan(0);
+
+    const reasoningBlocks = blocks.filter((b) => b.type === "reasoning");
+    expect(reasoningBlocks.length).toBeGreaterThan(0);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    expect((reasoningBlocks[0] as any).reasoning.length).toBeGreaterThan(0);
+
+    const textBlocks = blocks.filter((b) => b.type === "text");
+    expect(textBlocks.length).toBeGreaterThan(0);
+  });
+
+  test("stream returns thinking as reasoning in contentBlocks", async () => {
+    const model = new ChatGoogleGenerativeAI({
+      model: "gemini-3-pro-preview",
+      maxRetries: 0,
+      thinkingConfig: {
+        includeThoughts: true,
+        thinkingBudget: 100,
+      },
+    });
+
+    let fullMessage: AIMessageChunk | null = null;
+    for await (const chunk of await model.stream("What is 3 + 3?")) {
+      fullMessage = fullMessage ? concat(fullMessage, chunk) : chunk;
+    }
+
+    expect(fullMessage).toBeDefined();
+    const blocks = fullMessage!.contentBlocks;
+    expect(blocks.length).toBeGreaterThan(0);
+
+    const reasoningBlocks = blocks.filter((b) => b.type === "reasoning");
+    expect(reasoningBlocks.length).toBeGreaterThan(0);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    expect((reasoningBlocks[0] as any).reasoning.length).toBeGreaterThan(0);
+  }, 60000);
 });

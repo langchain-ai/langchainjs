@@ -47,6 +47,7 @@ import {
   GoogleGenerativeAIPart,
   GoogleGenerativeAIToolType,
 } from "../types.js";
+import { assertNoEmptyStringEnums } from "./validate_schema.js";
 
 export const _FUNCTION_CALL_THOUGHT_SIGNATURES_MAP_KEY =
   "__gemini_function_call_thought_signatures__";
@@ -312,6 +313,13 @@ function _convertLangChainContentToPart(
       functionCall: {
         name: content.name,
         args: content.input,
+      },
+    };
+  } else if (content.type === "tool_call") {
+    return {
+      functionCall: {
+        name: content.name,
+        args: content.args,
       },
     };
   } else if (
@@ -824,6 +832,7 @@ export function convertToGenerativeAITools(
                 description: tool.description,
               };
             }
+            assertNoEmptyStringEnums(jsonSchema, tool.name);
             return {
               name: tool.name,
               description: tool.description,
@@ -831,13 +840,15 @@ export function convertToGenerativeAITools(
             };
           }
           if (isOpenAITool(tool)) {
+            const params = jsonSchemaToGeminiParameters(
+              tool.function.parameters
+            );
+            assertNoEmptyStringEnums(params, tool.function.name);
             return {
               name: tool.function.name,
               description:
                 tool.function.description ?? `A function available to call.`,
-              parameters: jsonSchemaToGeminiParameters(
-                tool.function.parameters
-              ),
+              parameters: params,
             };
           }
           return tool as unknown as GenerativeAIFunctionDeclaration;

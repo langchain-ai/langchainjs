@@ -21,6 +21,15 @@ export interface ImageGenerationInputMask {
  */
 export interface ImageGenerationOptions {
   /**
+   * Whether to generate a new image or edit an existing image.
+   * - `generate`: Generate a new image from scratch
+   * - `edit`: Edit an existing image
+   * - `auto`: Let the model decide based on the input
+   * @default "auto"
+   */
+  action?: "generate" | "edit" | "auto";
+
+  /**
    * Background type for the generated image.
    * - `transparent`: Generate image with transparent background
    * - `opaque`: Generate image with opaque background
@@ -49,7 +58,7 @@ export interface ImageGenerationOptions {
    * The image generation model to use.
    * @default "gpt-image-1"
    */
-  model?: "gpt-image-1" | "gpt-image-1-mini";
+  model?: "gpt-image-1" | "gpt-image-1-mini" | "gpt-image-1.5";
 
   /**
    * Moderation level for the generated image.
@@ -219,6 +228,7 @@ function convertInputImageMask(
 export function imageGeneration(options?: ImageGenerationOptions): ServerTool {
   return {
     type: "image_generation",
+    action: options?.action,
     background: options?.background,
     input_fidelity: options?.inputFidelity,
     input_image_mask: convertInputImageMask(options?.inputImageMask),

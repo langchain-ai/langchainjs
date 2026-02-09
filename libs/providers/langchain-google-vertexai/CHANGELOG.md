@@ -1,5 +1,68 @@
 # @langchain/google-vertexai
 
+## 2.1.15
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @langchain/google-gauth@2.1.15
+
+## 2.1.14
+
+### Patch Changes
+
+- [#9900](https://github.com/langchain-ai/langchainjs/pull/9900) [`a9b5059`](https://github.com/langchain-ai/langchainjs/commit/a9b50597186002221aaa4585246e569fa44c27c8) Thanks [@hntrl](https://github.com/hntrl)! - Improved abort signal handling for chat models:
+  - Added `ModelAbortError` class in `@langchain/core/errors` that contains partial output when a model invocation is aborted mid-stream
+  - `invoke()` now throws `ModelAbortError` with accumulated `partialOutput` when aborted during streaming (when using streaming callback handlers)
+  - `stream()` throws a regular `AbortError` when aborted (since chunks are already yielded to the caller)
+  - All provider implementations now properly check and propagate abort signals in both `_generate()` and `_streamResponseChunks()` methods
+  - Added standard tests for abort signal behavior
+
+- Updated dependencies []:
+  - @langchain/google-gauth@2.1.14
+
+## 2.1.13
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @langchain/google-gauth@2.1.13
+
+## 2.1.12
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @langchain/google-gauth@2.1.12
+
+## 2.1.11
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @langchain/google-gauth@2.1.11
+
+## 2.1.10
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @langchain/google-gauth@2.1.10
+
+## 2.1.9
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @langchain/google-gauth@2.1.9
+
+## 2.1.8
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @langchain/google-gauth@2.1.8
+
 ## 2.1.7
 
 ### Patch Changes

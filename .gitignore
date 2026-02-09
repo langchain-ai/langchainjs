@@ -16,6 +16,7 @@ package-lock.json
 yarn.lock
 
 .idea/
+.zed/
 
 .DS_Store
 

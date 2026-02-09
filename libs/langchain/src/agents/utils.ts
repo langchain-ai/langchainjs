@@ -7,10 +7,11 @@ import {
   MessageContent,
   ToolMessage,
 } from "@langchain/core/messages";
-import { isCommand } from "@langchain/langgraph";
+import { isCommand, StateSchema } from "@langchain/langgraph";
 import {
   type InteropZodObject,
   interopParse,
+  isInteropZodSchema,
 } from "@langchain/core/utils/types";
 import {
   BaseChatModel,
@@ -30,7 +31,7 @@ import {
 import type { ClientTool, ServerTool } from "@langchain/core/tools";
 
 import { isBaseChatModel, isConfigurableModel } from "./model.js";
-import { MultipleToolsBoundError } from "./errors.js";
+import { MultipleToolsBoundError, MiddlewareError } from "./errors.js";
 import type { AgentBuiltInState } from "./runtime.js";
 import type {
   ToolCallHandler,
@@ -41,6 +42,40 @@ import type {
 
 const NAME_PATTERN = /<name>(.*?)<\/name>/s;
 const CONTENT_PATTERN = /<content>(.*?)<\/content>/s;
+
+/**
+ * Parse middleware state from the full agent state based on the middleware's stateSchema.
+ *
+ * Handles two types of state schemas:
+ * 1. Zod schemas (v3 or v4) - parsed using interopParse
+ * 2. LangGraph StateSchema - extracts only the keys defined in `fields`
+ *
+ * @param stateSchema - The middleware's state schema (Zod or LangGraph StateSchema)
+ * @param state - The full agent state to parse from
+ * @returns Parsed state containing only the keys defined in the schema
+ */
+function parseMiddlewareState(
+  stateSchema: unknown,
+  state: Record<string, unknown>
+): Record<string, unknown> {
+  // Handle LangGraph StateSchema (has `fields` property)
+  if (StateSchema.isInstance(stateSchema)) {
+    const result: Record<string, unknown> = {};
+    for (const key of Object.keys(stateSchema.fields)) {
+      if (key in state) {
+        result[key] = state[key];
+      }
+    }
+    return result;
+  }
+
+  // Handle Zod schemas using interopParse
+  if (isInteropZodSchema(stateSchema)) {
+    return interopParse(stateSchema as InteropZodObject, state);
+  }
+
+  throw new Error(`Invalid state schema type: ${typeof stateSchema}`);
+}
 
 export type AgentNameMode = "inline";
 
@@ -475,14 +510,19 @@ function chainToolCallHandlers(
   }
 
   // Compose two handlers where outer wraps inner
+  // The key is to properly propagate request modifications through the chain
   function composeTwo(
     outer: WrapToolCallHook,
     inner: WrapToolCallHook
   ): WrapToolCallHook {
     return async (request, handler) => {
       // Create a wrapper that calls inner with the base handler
-      const innerHandler: ToolCallHandler = async () =>
-        inner(request, async () => handler(request));
+      // The innerHandler receives the (possibly modified) request from outer
+      // and passes it to inner, which then calls the base handler
+      const innerHandler: ToolCallHandler = async (passedRequest) => {
+        // inner receives the request passed by outer (which may be modified)
+        return inner(passedRequest, handler);
+      };
 
       // Call outer with the wrapped inner as its handler
       return outer(request, innerHandler);
@@ -522,6 +562,34 @@ export function wrapToolCall(
        * Wrap with error handling and validation
        */
       const wrappedHandler: WrapToolCallHook = async (request, handler) => {
+        /**
+         * Capture the original state for this middleware's schema parsing.
+         * This is important because the request may be modified (via override)
+         * as it passes through the middleware chain, but each middleware
+         * should always see the full original state for its schema parsing.
+         */
+        const originalState = request.state;
+
+        /**
+         * Create a handler that preserves state parsing for this middleware
+         * while allowing tool/toolCall/state modifications from inner middleware
+         */
+        const wrappedInnerHandler: ToolCallHandler = async (passedRequest) => {
+          /**
+           * Merge the passed request with the original state for parsing.
+           * This ensures middleware can override tool/toolCall while
+           * maintaining proper state parsing for each middleware in the chain.
+           */
+          const mergedState = {
+            ...originalState,
+            ...passedRequest.state,
+          };
+          return handler({
+            ...passedRequest,
+            state: mergedState,
+          });
+        };
+
         try {
           const result = await originalHandler(
             {
@@ -530,13 +598,13 @@ export function wrapToolCall(
                * override state with the state from the specific middleware
                */
               state: {
-                messages: request.state.messages,
+                messages: originalState.messages,
                 ...(m.stateSchema
-                  ? interopParse(m.stateSchema, { ...request.state })
+                  ? parseMiddlewareState(m.stateSchema, { ...originalState })
                   : {}),
               },
             } as ToolCallRequest<AgentBuiltInState, unknown>,
-            handler
+            wrappedInnerHandler
           );
 
           /**
@@ -551,17 +619,7 @@ export function wrapToolCall(
 
           return result;
         } catch (error) {
-          /**
-           * Add middleware context to error if not already added
-           */
-          if (
-            // eslint-disable-next-line no-instanceof/no-instanceof
-            error instanceof Error &&
-            !error.message.includes(`middleware "${m.name}"`)
-          ) {
-            error.message = `Error in middleware "${m.name}": ${error.message}`;
-          }
-          throw error;
+          throw MiddlewareError.wrap(error, m.name);
         }
       };
       return wrappedHandler;

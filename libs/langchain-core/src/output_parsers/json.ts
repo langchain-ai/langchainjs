@@ -2,6 +2,7 @@ import { BaseCumulativeTransformOutputParser } from "./transform.js";
 import { Operation, compare } from "../utils/json_patch.js";
 import { ChatGeneration, Generation } from "../outputs.js";
 import { parseJsonMarkdown, parsePartialJson } from "../utils/json.js";
+import type { BaseMessage } from "../messages/index.js";
 
 /**
  * Class for parsing the output of an LLM into a JSON object.
@@ -53,6 +54,17 @@ export class JsonOutputParser<
 
   getFormatInstructions(): string {
     return "";
+  }
+
+  /**
+   * Extracts text content from a message for JSON parsing.
+   * Uses the message's `.text` accessor which properly handles both
+   * string content and ContentBlock[] arrays (extracting text from text blocks).
+   * @param message The message to extract text from
+   * @returns The text content of the message
+   */
+  protected _baseMessageToString(message: BaseMessage): string {
+    return message.text;
   }
 }
 

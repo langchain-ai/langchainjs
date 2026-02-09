@@ -138,21 +138,38 @@ type ModelProviderConfig = {
 };
 
 /**
- * Helper function to get a chat model class by its class name
+ * Helper function to get a chat model class by its class name or model provider.
  * @param className The class name (e.g., "ChatOpenAI", "ChatAnthropic")
+ * @param modelProvider Optional model provider key for direct lookup (e.g., "google-vertexai-web").
+ *                      When provided, uses direct lookup to avoid className collision issues.
  * @returns The imported model class or undefined if not found
  */
-export async function getChatModelByClassName(className: string) {
-  // Find the provider config that matches the class name
-  const providerEntry = Object.entries(MODEL_PROVIDER_CONFIG).find(
-    ([, config]) => config.className === className
-  );
+export async function getChatModelByClassName(
+  className: string,
+  modelProvider?: string
+) {
+  let config: ModelProviderConfig | undefined;
 
-  if (!providerEntry) {
+  if (modelProvider) {
+    // Direct lookup by modelProvider key - avoids className collision
+    // (e.g., google-vertexai and google-vertexai-web both use "ChatVertexAI")
+    config = MODEL_PROVIDER_CONFIG[
+      modelProvider as keyof typeof MODEL_PROVIDER_CONFIG
+    ] as ModelProviderConfig | undefined;
+  } else {
+    // Fallback to className lookup for backward compatibility
+    const providerEntry = Object.entries(MODEL_PROVIDER_CONFIG).find(
+      ([, c]) => c.className === className
+    );
+    config = providerEntry
+      ? (providerEntry[1] as ModelProviderConfig)
+      : undefined;
+  }
+
+  if (!config) {
     return undefined;
   }
 
-  const [, config] = providerEntry;
   try {
     const module = await import(config.package);
     return module[config.className];
@@ -203,7 +220,11 @@ async function _initChatModelHelper(
   }
 
   const { modelProvider: _unused, ...passedParams } = params;
-  const ProviderClass = await getChatModelByClassName(config.className);
+  // Pass modelProviderCopy to use direct lookup and avoid className collision
+  const ProviderClass = await getChatModelByClassName(
+    config.className,
+    modelProviderCopy
+  );
   return new ProviderClass({ model, ...passedParams });
 }
 
@@ -349,7 +370,7 @@ export class ConfigurableModel<
     BaseChatModel<BaseChatModelCallOptions, AIMessageChunk<MessageStructure>>
   > {
     // Check cache first
-    const cacheKey = JSON.stringify(config ?? {});
+    const cacheKey = this._getCacheKey(config);
     const cachedModel = this._modelInstanceCache.get(cacheKey);
     if (cachedModel) {
       return cachedModel;
@@ -612,9 +633,25 @@ export class ConfigurableModel<
     if (this._profile) {
       return this._profile;
     }
-    const cacheKey = JSON.stringify({});
+    const cacheKey = this._getCacheKey({});
     const instance = this._modelInstanceCache.get(cacheKey);
     return instance?.profile ?? {};
+  }
+
+  /** @internal */
+  _getCacheKey(config?: RunnableConfig): string {
+    let toStringify = config ?? {};
+    if (toStringify.configurable) {
+      const { configurable } = toStringify;
+      const filtered: Record<string, unknown> = {};
+      for (const [k, v] of Object.entries(configurable)) {
+        if (!k.startsWith("__pregel_")) {
+          filtered[k] = v;
+        }
+      }
+      toStringify = { ...toStringify, configurable: filtered };
+    }
+    return JSON.stringify(toStringify);
   }
 }
 

@@ -20,11 +20,17 @@ import {
   InferInteropZodInput,
   InferInteropZodOutput,
 } from "@langchain/core/utils/types";
+import {
+  mergeConfigs,
+  pickRunnableConfigKeys,
+  type RunnableConfig,
+} from "@langchain/core/runnables";
 import { REMOVE_ALL_MESSAGES } from "@langchain/langgraph";
 import { createMiddleware } from "../middleware.js";
 import { countTokensApproximately } from "./utils.js";
 import { hasToolCalls } from "../utils.js";
 import { initChatModel } from "../../chat_models/universal.js";
+import type { Runtime } from "../runtime.js";
 
 export const DEFAULT_SUMMARY_PROMPT = `<role>
 Context Extraction Assistant
@@ -442,12 +448,14 @@ export function summarizationMiddleware(
         model,
         summaryPrompt,
         tokenCounter,
-        trimTokensToSummarize
+        trimTokensToSummarize,
+        runtime
       );
 
       const summaryMessage = new HumanMessage({
         content: `${summaryPrefix}\n\n${summary}`,
         id: uuid(),
+        additional_kwargs: { lc_source: "summarization" },
       });
 
       return {
@@ -883,14 +891,23 @@ function cutoffSeparatesToolPair(
 }
 
 /**
- * Generate summary for the given messages
+ * Generate summary for the given messages.
+ *
+ * @param messagesToSummarize - Messages to summarize.
+ * @param model - The language model to use for summarization.
+ * @param summaryPrompt - The prompt template for summarization.
+ * @param tokenCounter - Function to count tokens.
+ * @param trimTokensToSummarize - Optional token limit for trimming messages.
+ * @param runtime - The runtime environment, used to inherit config so that
+ *   LangGraph's handlers can properly track and tag the summarization model call.
  */
 async function createSummary(
   messagesToSummarize: BaseMessage[],
   model: BaseLanguageModel,
   summaryPrompt: string,
   tokenCounter: TokenCounter,
-  trimTokensToSummarize: number | undefined
+  trimTokensToSummarize: number | undefined,
+  runtime: Runtime<unknown>
 ): Promise<string> {
   if (!messagesToSummarize.length) {
     return "No previous conversation history.";
@@ -924,12 +941,15 @@ async function createSummary(
       formattedMessages
     );
     /**
-     * Invoke the model with an empty callbacks array to prevent the internal
-     * summarization call from being streamed to the UI. This ensures the
-     * summarization is an internal housekeeping step that doesn't leak
-     * assistant messages or streaming events.
+     * Merge parent runnable config with summarization metadata so LangGraph's
+     * stream handlers (and other callback-based consumers) can properly track
+     * and tag the summarization model call.
      */
-    const response = await model.invoke(formattedPrompt, { callbacks: [] });
+    const baseConfig: RunnableConfig = pickRunnableConfigKeys(runtime) ?? {};
+    const config = mergeConfigs(baseConfig, {
+      metadata: { lc_source: "summarization" },
+    });
+    const response = await model.invoke(formattedPrompt, config);
     const content = response.content;
     /**
      * Handle both string content and MessageContent array

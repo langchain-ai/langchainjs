@@ -1,6 +1,6 @@
 {
   "name": "@langchain/ollama",
-  "version": "1.1.0",
+  "version": "1.2.2",
   "description": "Ollama integration for LangChain.js",
   "author": "LangChain",
   "license": "MIT",
@@ -38,7 +38,7 @@
     "@langchain/core": "^1.0.0"
   },
   "devDependencies": {
-    "@jest/globals": "^29.5.0",
+    "@jest/globals": "^30.2.0",
     "@langchain/core": "workspace:*",
     "@langchain/eslint": "workspace:*",
     "@langchain/standard-tests": "workspace:*",

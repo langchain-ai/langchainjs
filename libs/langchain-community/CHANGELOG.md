@@ -1,5 +1,93 @@
 # @langchain/community
 
+## 1.1.12
+
+### Patch Changes
+
+- Updated dependencies [[`0870ca0`](https://github.com/langchain-ai/langchainjs/commit/0870ca0719dacd8a555b3341e581d6c15cd6faf3), [`8f0757f`](https://github.com/langchain-ai/langchainjs/commit/8f0757f06b2ed9fe810f636333fc71ffcedb3feb), [`cf46089`](https://github.com/langchain-ai/langchainjs/commit/cf46089d250b1ec87f99956f5cd87e2615ac25c5)]:
+  - @langchain/openai@1.2.5
+  - @langchain/classic@1.0.15
+
+## 1.1.11
+
+### Patch Changes
+
+- [#9905](https://github.com/langchain-ai/langchainjs/pull/9905) [`41bfea5`](https://github.com/langchain-ai/langchainjs/commit/41bfea51cf119573a3b956ee782d2731fe71c681) Thanks [@christian-bromann](https://github.com/christian-bromann)! - fix(classic/community/core): avoid long lived abort signals
+
+- Updated dependencies [[`41bfea5`](https://github.com/langchain-ai/langchainjs/commit/41bfea51cf119573a3b956ee782d2731fe71c681)]:
+  - @langchain/classic@1.0.14
+  - @langchain/openai@1.2.4
+
+## 1.1.10
+
+### Patch Changes
+
+- [#9883](https://github.com/langchain-ai/langchainjs/pull/9883) [`ea00005`](https://github.com/langchain-ai/langchainjs/commit/ea000051bd29670bec60099a5f50a13c0fedfc31) Thanks [@FilipZmijewski](https://github.com/FilipZmijewski)! - support aborting for Model Gateway and WatsonxLLM for IBM
+
+- [#9896](https://github.com/langchain-ai/langchainjs/pull/9896) [`70f329a`](https://github.com/langchain-ai/langchainjs/commit/70f329aa5c16bef9e7a942d4187c31f3d3b86b80) Thanks [@Axadali](https://github.com/Axadali)! - Add score normalization feature to PGVectorStore allowing users to choose between returning raw distances or normalized similarity scores. This makes PGVectorStore consistent with other vector stores in the LangChain ecosystem where higher scores indicate greater similarity. Maintains full backward compatibility by defaulting to distance mode.
+
+- [#9874](https://github.com/langchain-ai/langchainjs/pull/9874) [`a995a3f`](https://github.com/langchain-ai/langchainjs/commit/a995a3ff1940eebf7204574e6f058f8ff84f557e) Thanks [@phong-phuong](https://github.com/phong-phuong)! - fix jira failing to fetch issues
+
+- Updated dependencies [[`1fa865b`](https://github.com/langchain-ai/langchainjs/commit/1fa865b1cb8a30c2269b83cdb5fc84d374c3fca9), [`28efb57`](https://github.com/langchain-ai/langchainjs/commit/28efb57448933368094ca41c63d9262ac0f348a6), [`4e42452`](https://github.com/langchain-ai/langchainjs/commit/4e42452e4c020408bd6687667e931497b05aaff5), [`a9b5059`](https://github.com/langchain-ai/langchainjs/commit/a9b50597186002221aaa4585246e569fa44c27c8), [`a9b5059`](https://github.com/langchain-ai/langchainjs/commit/a9b50597186002221aaa4585246e569fa44c27c8)]:
+  - @langchain/openai@1.2.4
+  - @langchain/classic@1.0.13
+
+## 1.1.9
+
+### Patch Changes
+
+- Updated dependencies [[`1d58bf2`](https://github.com/langchain-ai/langchainjs/commit/1d58bf2bcb14055a64189af7e251bb93fa9d5aa0)]:
+  - @langchain/classic@1.0.12
+
+## 1.1.8
+
+### Patch Changes
+
+- [#9759](https://github.com/langchain-ai/langchainjs/pull/9759) [`82c51e4`](https://github.com/langchain-ai/langchainjs/commit/82c51e4125594c83b5578680e5a3d899f6268caa) Thanks [@ejscribner](https://github.com/ejscribner)! - Fix(couchbase): Add Couchbase peer dependency and add `CouchbaseQueryVectorStore` and `CouchbaseSearchVectorStore` to tsdown bundle
+
+- Updated dependencies [[`a496cc0`](https://github.com/langchain-ai/langchainjs/commit/a496cc09d2b4d28a8eb0c4b96bd3555ab1cc47dc)]:
+  - @langchain/classic@1.0.11
+
+## 1.1.7
+
+### Patch Changes
+
+- [#9832](https://github.com/langchain-ai/langchainjs/pull/9832) [`305291f`](https://github.com/langchain-ai/langchainjs/commit/305291fc287d30de575b931b34382e115c3bf20f) Thanks [@phong-phuong](https://github.com/phong-phuong)! - Update Jira Document Loader's issue.fields.description from plain string to ADFNode
+
+- Updated dependencies []:
+  - @langchain/classic@1.0.10
+  - @langchain/openai@1.2.3
+
+## 1.1.6
+
+### Patch Changes
+
+- [#9835](https://github.com/langchain-ai/langchainjs/pull/9835) [`adb3625`](https://github.com/langchain-ai/langchainjs/commit/adb36253e79babc38e75b1fcf10308aee04f67e2) Thanks [@maahir30](https://github.com/maahir30)! - Use UTF-8 byte length for metadata fields
+
+- Updated dependencies []:
+  - @langchain/classic@1.0.10
+
+## 1.1.5
+
+### Patch Changes
+
+- [#9822](https://github.com/langchain-ai/langchainjs/pull/9822) [`ff69e1e`](https://github.com/langchain-ai/langchainjs/commit/ff69e1e9769768d2d066a0f3f351e63e2b897db5) Thanks [@HarshVz](https://github.com/HarshVz)! - Add multi-region support for Alibaba Tongyi chat models. Users can now specify their region (China, Singapore, or US) when initializing ChatAlibabaTongyi. This enables proper API endpoint routing for users with region-specific API keys.
+  - Added `region` parameter to ChatAlibabaTongyi constructor
+  - Supported regions: `"china"` (default), `"singapore"`, `"us"`
+  - Maintains backward compatibility by defaulting to China region
+
+- Updated dependencies [[`a7c6ec5`](https://github.com/langchain-ai/langchainjs/commit/a7c6ec51ab9baa186ab5ebf815599c08f5c7e8ab), [`04923f9`](https://github.com/langchain-ai/langchainjs/commit/04923f9835e5b3677c180b601ae8f3e7d8be0236), [`e16c218`](https://github.com/langchain-ai/langchainjs/commit/e16c218b81980a1c576af5192342019975bb95b9)]:
+  - @langchain/openai@1.2.3
+  - @langchain/classic@1.0.10
+
+## 1.1.4
+
+### Patch Changes
+
+- Updated dependencies [[`3efe79c`](https://github.com/langchain-ai/langchainjs/commit/3efe79c62ff2ffe0ada562f7eecd85be074b649a)]:
+  - @langchain/openai@1.2.2
+  - @langchain/classic@1.0.9
+
 ## 1.1.3
 
 ### Patch Changes

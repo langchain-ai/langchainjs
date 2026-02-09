@@ -1,5 +1,97 @@
 # @langchain/anthropic
 
+## 1.3.15
+
+### Patch Changes
+
+- [#9932](https://github.com/langchain-ai/langchainjs/pull/9932) [`4f7f9c7`](https://github.com/langchain-ai/langchainjs/commit/4f7f9c77a42d361d995c938f79772801cd429a9f) Thanks [@hntrl](https://github.com/hntrl)! - feat(anthropic): add Claude Opus 4.6 support with adaptive thinking, effort parameter, compaction API, output_config migration, inference_geo, and structured outputs GA
+  - Upgrade `@anthropic-ai/sdk` from `^0.71.0` to `^0.73.0`
+  - Add `claude-opus-4-6` model with 16384 default max output tokens
+  - Support adaptive thinking (`thinking: { type: "adaptive" }`) recommended for Opus 4.6
+  - Add `outputConfig` parameter with effort levels (`low`, `medium`, `high`, `max`) for controlling token usage
+  - Migrate `outputFormat` to `outputConfig.format` (backwards compatible, `outputFormat` deprecated)
+  - Add compaction API support (beta) with auto-detection of `compact_20260112` edits and streaming handlers for compaction content blocks
+  - Add `inferenceGeo` parameter for data residency controls
+  - Remove structured-outputs beta header requirement (now GA)
+
+## 1.3.14
+
+### Patch Changes
+
+- Updated dependencies [[`41bfea5`](https://github.com/langchain-ai/langchainjs/commit/41bfea51cf119573a3b956ee782d2731fe71c681)]:
+  - @langchain/core@1.1.19
+
+## 1.3.13
+
+### Patch Changes
+
+- [#9881](https://github.com/langchain-ai/langchainjs/pull/9881) [`0c64698`](https://github.com/langchain-ai/langchainjs/commit/0c646989761d11eaa66a3290392ddb94ad54d5bd) Thanks [@marvikomo](https://github.com/marvikomo)! - handle standard file content blocks
+
+- [#9900](https://github.com/langchain-ai/langchainjs/pull/9900) [`a9b5059`](https://github.com/langchain-ai/langchainjs/commit/a9b50597186002221aaa4585246e569fa44c27c8) Thanks [@hntrl](https://github.com/hntrl)! - Improved abort signal handling for chat models:
+  - Added `ModelAbortError` class in `@langchain/core/errors` that contains partial output when a model invocation is aborted mid-stream
+  - `invoke()` now throws `ModelAbortError` with accumulated `partialOutput` when aborted during streaming (when using streaming callback handlers)
+  - `stream()` throws a regular `AbortError` when aborted (since chunks are already yielded to the caller)
+  - All provider implementations now properly check and propagate abort signals in both `_generate()` and `_streamResponseChunks()` methods
+  - Added standard tests for abort signal behavior
+
+- [#9900](https://github.com/langchain-ai/langchainjs/pull/9900) [`a9b5059`](https://github.com/langchain-ai/langchainjs/commit/a9b50597186002221aaa4585246e569fa44c27c8) Thanks [@hntrl](https://github.com/hntrl)! - fix(providers): add proper abort signal handling for invoke and stream operations
+  - Added early abort check (`signal.throwIfAborted()`) at the start of `_generate` methods to immediately throw when signal is already aborted
+  - Added abort signal checks inside streaming loops in `_streamResponseChunks` to return early when signal is aborted
+  - Propagated abort signals to underlying SDK calls where applicable (Google GenAI, Google Common/VertexAI, Cohere)
+  - Added standard tests for abort signal behavior in `@langchain/standard-tests`
+
+  This enables proper cancellation behavior for both invoke and streaming operations, and allows fallback chains to correctly proceed to the next runnable when the previous one is aborted.
+
+- Updated dependencies [[`a9b5059`](https://github.com/langchain-ai/langchainjs/commit/a9b50597186002221aaa4585246e569fa44c27c8), [`a9b5059`](https://github.com/langchain-ai/langchainjs/commit/a9b50597186002221aaa4585246e569fa44c27c8)]:
+  - @langchain/core@1.1.18
+
+## 1.3.12
+
+### Patch Changes
+
+- [#9854](https://github.com/langchain-ai/langchainjs/pull/9854) [`160b5bf`](https://github.com/langchain-ai/langchainjs/commit/160b5bfe49f31190d28ec10a95075ef845c49fa3) Thanks [@christian-bromann](https://github.com/christian-bromann)! - fix(anthropic): apply cache_control at final formatting layer
+
+- [#9852](https://github.com/langchain-ai/langchainjs/pull/9852) [`35c7723`](https://github.com/langchain-ai/langchainjs/commit/35c7723b9953cc417cedb362e697632936d50820) Thanks [@marvikomo](https://github.com/marvikomo)! - Fix image content blocks being silently dropped when using ContentBlock.Multimodal.Image format with url, data, or fileId properties
+
+- [#9841](https://github.com/langchain-ai/langchainjs/pull/9841) [`54dfdce`](https://github.com/langchain-ai/langchainjs/commit/54dfdce99b1d1c16e1024c136ca86e7d78d76d80) Thanks [@yukukotani](https://github.com/yukukotani)! - Fix input_tokens calculation in usage metadata
+
+- Updated dependencies [[`05a9733`](https://github.com/langchain-ai/langchainjs/commit/05a9733448a10764c0bfd070af859c33e623b998)]:
+  - @langchain/core@1.1.17
+
+## 1.3.11
+
+### Patch Changes
+
+- [#9809](https://github.com/langchain-ai/langchainjs/pull/9809) [`aeb63b7`](https://github.com/langchain-ai/langchainjs/commit/aeb63b729a575775b19d988a1e14ae17f66a8373) Thanks [@christian-bromann](https://github.com/christian-bromann)! - fix(anthropic): consolidate input_json_delta blocks in streaming toolcalls
+
+- Updated dependencies [[`70387a1`](https://github.com/langchain-ai/langchainjs/commit/70387a144464539d65a546c8130cf51dfad025a1), [`a7c6ec5`](https://github.com/langchain-ai/langchainjs/commit/a7c6ec51ab9baa186ab5ebf815599c08f5c7e8ab), [`5e04543`](https://github.com/langchain-ai/langchainjs/commit/5e045435a783fdae44bc9a43e01a8e5eb7100db2), [`40b4467`](https://github.com/langchain-ai/langchainjs/commit/40b446762445575844610ee528abc77c247b2c43), [`17e30bd`](https://github.com/langchain-ai/langchainjs/commit/17e30bd7f4c7bdf87c9c30304b3b9e121cc1fbbc)]:
+  - @langchain/core@1.1.16
+
+## 1.3.10
+
+### Patch Changes
+
+- [#9792](https://github.com/langchain-ai/langchainjs/pull/9792) [`7169eba`](https://github.com/langchain-ai/langchainjs/commit/7169ebac71574daf370d7c2f5b3e8bbfe4e25df7) Thanks [@xkcm](https://github.com/xkcm)! - Fixed converting partial tool inputs
+
+- Updated dependencies [[`230462d`](https://github.com/langchain-ai/langchainjs/commit/230462d28c3a8b5ccadf433ea2f523eb6e658de6)]:
+  - @langchain/core@1.1.15
+
+## 1.3.9
+
+### Patch Changes
+
+- Updated dependencies [[`bd1ab45`](https://github.com/langchain-ai/langchainjs/commit/bd1ab45364391f69ce93ecba36a4a15dafca2b76)]:
+  - @langchain/core@1.1.14
+
+## 1.3.8
+
+### Patch Changes
+
+- [#9777](https://github.com/langchain-ai/langchainjs/pull/9777) [`3efe79c`](https://github.com/langchain-ai/langchainjs/commit/3efe79c62ff2ffe0ada562f7eecd85be074b649a) Thanks [@christian-bromann](https://github.com/christian-bromann)! - fix(core): properly elevate reasoning tokens
+
+- Updated dependencies [[`3efe79c`](https://github.com/langchain-ai/langchainjs/commit/3efe79c62ff2ffe0ada562f7eecd85be074b649a), [`b8561c1`](https://github.com/langchain-ai/langchainjs/commit/b8561c17556bdf7a3ff8d70bc307422642a9172e)]:
+  - @langchain/core@1.1.13
+
 ## 1.3.7
 
 ### Patch Changes

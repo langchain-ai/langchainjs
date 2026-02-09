@@ -1,5 +1,64 @@
 # @langchain/openai
 
+## 1.2.5
+
+### Patch Changes
+
+- [#9743](https://github.com/langchain-ai/langchainjs/pull/9743) [`0870ca0`](https://github.com/langchain-ai/langchainjs/commit/0870ca0719dacd8a555b3341e581d6c15cd6faf3) Thanks [@d2201](https://github.com/d2201)! - fix(openai): include encrypted reasoning in ZDR responses input
+
+- [#9934](https://github.com/langchain-ai/langchainjs/pull/9934) [`cf46089`](https://github.com/langchain-ai/langchainjs/commit/cf46089d250b1ec87f99956f5cd87e2615ac25c5) Thanks [@hntrl](https://github.com/hntrl)! - feat(openai): update openai SDK to ^6.18.0
+  - Adds support for codex 5.3
+  - Added `action` option to image generation tool (`generate`, `edit`, `auto`)
+  - Removed `@ts-expect-error` for `gpt-image-1.5` model (now in SDK types)
+  - Auto-route codex models (`codex-mini-latest`, `gpt-5-codex`, `gpt-5.1-codex`, etc.) to Responses API
+  - Added `shell_call` and `local_shell_call` to streaming converter and input reconstruction
+  - Added unit tests for `isReasoningModel` and `_modelPrefersResponsesAPI`
+
+## 1.2.4
+
+### Patch Changes
+
+- [#9887](https://github.com/langchain-ai/langchainjs/pull/9887) [`1fa865b`](https://github.com/langchain-ai/langchainjs/commit/1fa865b1cb8a30c2269b83cdb5fc84d374c3fca9) Thanks [@Muhammad-Kamran-Khan](https://github.com/Muhammad-Kamran-Khan)! - Fix validation to allow file_url and file_id without filename metadata in Responses API, and prevent sending filename when not allowed.
+
+- [#9873](https://github.com/langchain-ai/langchainjs/pull/9873) [`28efb57`](https://github.com/langchain-ai/langchainjs/commit/28efb57448933368094ca41c63d9262ac0f348a6) Thanks [@hntrl](https://github.com/hntrl)! - Add `reasoningEffort` call option as a convenience shorthand for `reasoning.effort`
+  - Adds `reasoningEffort` to `BaseChatOpenAICallOptions` for easier configuration of reasoning models
+  - Automatically coalesces `reasoningEffort` into `reasoning.effort` when calling reasoning models (o1, o3, etc.)
+  - If both `reasoningEffort` and `reasoning.effort` are provided, `reasoning.effort` takes precedence
+  - Marked as `@deprecated` to encourage use of the full `reasoning.effort` option
+
+- [#9876](https://github.com/langchain-ai/langchainjs/pull/9876) [`4e42452`](https://github.com/langchain-ai/langchainjs/commit/4e42452e4c020408bd6687667e931497b05aaff5) Thanks [@sflanker](https://github.com/sflanker)! - fix(openai): pass runManager to responses.\_generate function in ChatOpenAI
+
+- [#9900](https://github.com/langchain-ai/langchainjs/pull/9900) [`a9b5059`](https://github.com/langchain-ai/langchainjs/commit/a9b50597186002221aaa4585246e569fa44c27c8) Thanks [@hntrl](https://github.com/hntrl)! - Improved abort signal handling for chat models:
+  - Added `ModelAbortError` class in `@langchain/core/errors` that contains partial output when a model invocation is aborted mid-stream
+  - `invoke()` now throws `ModelAbortError` with accumulated `partialOutput` when aborted during streaming (when using streaming callback handlers)
+  - `stream()` throws a regular `AbortError` when aborted (since chunks are already yielded to the caller)
+  - All provider implementations now properly check and propagate abort signals in both `_generate()` and `_streamResponseChunks()` methods
+  - Added standard tests for abort signal behavior
+
+- [#9900](https://github.com/langchain-ai/langchainjs/pull/9900) [`a9b5059`](https://github.com/langchain-ai/langchainjs/commit/a9b50597186002221aaa4585246e569fa44c27c8) Thanks [@hntrl](https://github.com/hntrl)! - fix(providers): add proper abort signal handling for invoke and stream operations
+  - Added early abort check (`signal.throwIfAborted()`) at the start of `_generate` methods to immediately throw when signal is already aborted
+  - Added abort signal checks inside streaming loops in `_streamResponseChunks` to return early when signal is aborted
+  - Propagated abort signals to underlying SDK calls where applicable (Google GenAI, Google Common/VertexAI, Cohere)
+  - Added standard tests for abort signal behavior in `@langchain/standard-tests`
+
+  This enables proper cancellation behavior for both invoke and streaming operations, and allows fallback chains to correctly proceed to the next runnable when the previous one is aborted.
+
+## 1.2.3
+
+### Patch Changes
+
+- [#9679](https://github.com/langchain-ai/langchainjs/pull/9679) [`a7c6ec5`](https://github.com/langchain-ai/langchainjs/commit/a7c6ec51ab9baa186ab5ebf815599c08f5c7e8ab) Thanks [@christian-bromann](https://github.com/christian-bromann)! - feat(openai): elevate OpenAI image generation outputs to proper image content blocks
+
+- [#9810](https://github.com/langchain-ai/langchainjs/pull/9810) [`04923f9`](https://github.com/langchain-ai/langchainjs/commit/04923f9835e5b3677c180b601ae8f3e7d8be0236) Thanks [@christian-bromann](https://github.com/christian-bromann)! - Cb/OpenAI reasoning fix
+
+- [#9827](https://github.com/langchain-ai/langchainjs/pull/9827) [`e16c218`](https://github.com/langchain-ai/langchainjs/commit/e16c218b81980a1c576af5192342019975bb95b9) Thanks [@sanjaiyan-dev](https://github.com/sanjaiyan-dev)! - optimize stream chunk aggregation and remove redundant sorting
+
+## 1.2.2
+
+### Patch Changes
+
+- [#9777](https://github.com/langchain-ai/langchainjs/pull/9777) [`3efe79c`](https://github.com/langchain-ai/langchainjs/commit/3efe79c62ff2ffe0ada562f7eecd85be074b649a) Thanks [@christian-bromann](https://github.com/christian-bromann)! - fix(core): properly elevate reasoning tokens
+
 ## 1.2.1
 
 ### Patch Changes

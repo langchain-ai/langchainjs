@@ -19,7 +19,7 @@ services:
       - ../libs/providers/langchain-cohere:/langchain-cohere
       - ../libs/providers/langchain-ollama:/langchain-ollama
       - ../libs/providers/langchain-google-gauth:/langchain-google-gauth
-      - ../libs/langchain-standard-tests:/langchain-standard-tests
+      - ../internal/standard-tests:/langchain-standard-tests
       - ../libs/langchain-scripts:/langchain-scripts
       - ../libs/langchain-textsplitters:/langchain-textsplitters
       - ../internal/build:/langchain-build
@@ -46,7 +46,7 @@ services:
       - ../libs/providers/langchain-cohere:/langchain-cohere
       - ../libs/providers/langchain-ollama:/langchain-ollama
       - ../libs/providers/langchain-google-gauth:/langchain-google-gauth
-      - ../libs/langchain-standard-tests:/langchain-standard-tests
+      - ../internal/standard-tests:/langchain-standard-tests
       - ../libs/langchain-scripts:/langchain-scripts
       - ../libs/langchain-textsplitters:/langchain-textsplitters
       - ../internal/build:/langchain-build
@@ -73,7 +73,7 @@ services:
       - ../libs/providers/langchain-cohere:/langchain-cohere
       - ../libs/providers/langchain-ollama:/langchain-ollama
       - ../libs/providers/langchain-google-gauth:/langchain-google-gauth
-      - ../libs/langchain-standard-tests:/langchain-standard-tests
+      - ../internal/standard-tests:/langchain-standard-tests
       - ../libs/langchain-scripts:/langchain-scripts
       - ../libs/langchain-textsplitters:/langchain-textsplitters
       - ../internal/build:/langchain-build
@@ -100,7 +100,7 @@ services:
       - ../libs/providers/langchain-cohere:/langchain-cohere
       - ../libs/providers/langchain-ollama:/langchain-ollama
       - ../libs/providers/langchain-google-gauth:/langchain-google-gauth
-      - ../libs/langchain-standard-tests:/langchain-standard-tests
+      - ../internal/standard-tests:/langchain-standard-tests
       - ../libs/langchain-scripts:/langchain-scripts
       - ../libs/langchain-textsplitters:/langchain-textsplitters
       - ../internal/build:/langchain-build
@@ -127,7 +127,7 @@ services:
       - ../libs/providers/langchain-cohere:/langchain-cohere
       - ../libs/providers/langchain-ollama:/langchain-ollama
       - ../libs/providers/langchain-google-gauth:/langchain-google-gauth
-      - ../libs/langchain-standard-tests:/langchain-standard-tests
+      - ../internal/standard-tests:/langchain-standard-tests
       - ../libs/langchain-scripts:/langchain-scripts
       - ../libs/langchain-textsplitters:/langchain-textsplitters
       - ../internal/build:/langchain-build
@@ -154,7 +154,7 @@ services:
       - ../libs/providers/langchain-cohere:/langchain-cohere
       - ../libs/providers/langchain-ollama:/langchain-ollama
       - ../libs/providers/langchain-google-gauth:/langchain-google-gauth
-      - ../libs/langchain-standard-tests:/langchain-standard-tests
+      - ../internal/standard-tests:/langchain-standard-tests
       - ../libs/langchain-scripts:/langchain-scripts
       - ../libs/langchain-textsplitters:/langchain-textsplitters
       - ../internal/build:/langchain-build
@@ -181,7 +181,7 @@ services:
       - ../libs/providers/langchain-cohere:/langchain-cohere
       - ../libs/providers/langchain-ollama:/langchain-ollama
       - ../libs/providers/langchain-google-gauth:/langchain-google-gauth
-      - ../libs/langchain-standard-tests:/langchain-standard-tests
+      - ../internal/standard-tests:/langchain-standard-tests
       - ../libs/langchain-scripts:/langchain-scripts
       - ../libs/langchain-textsplitters:/langchain-textsplitters
       - ../internal/build:/langchain-build
@@ -205,7 +205,7 @@ services:
       - ../libs/providers/langchain-cohere:/langchain-cohere
       - ../libs/providers/langchain-ollama:/langchain-ollama
       - ../libs/providers/langchain-google-gauth:/langchain-google-gauth
-      - ../libs/langchain-standard-tests:/langchain-standard-tests
+      - ../internal/standard-tests:/langchain-standard-tests
       - ../libs/langchain-scripts:/langchain-scripts
       - ../libs/langchain-textsplitters:/langchain-textsplitters
       - ../internal/build:/langchain-build
@@ -232,7 +232,7 @@ services:
       - ../libs/providers/langchain-cohere:/langchain-cohere
       - ../libs/providers/langchain-ollama:/langchain-ollama
       - ../libs/providers/langchain-google-gauth:/langchain-google-gauth
-      - ../libs/langchain-standard-tests:/langchain-standard-tests
+      - ../internal/standard-tests:/langchain-standard-tests
       - ../libs/langchain-scripts:/langchain-scripts
       - ../libs/langchain-textsplitters:/langchain-textsplitters
       - ../internal/build:/langchain-build

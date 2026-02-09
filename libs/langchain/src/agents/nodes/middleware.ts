@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { z } from "zod/v3";
+import { z } from "zod/v4";
 import { LangGraphRunnableConfig, Command } from "@langchain/langgraph";
 import { interopParse } from "@langchain/core/utils/types";
 
@@ -183,13 +183,9 @@ export abstract class MiddlewareNode<
     return { ...state, ...result, jumpTo: result.jumpTo };
   }
 
-  get nodeOptions(): {
-    input: z.ZodObject<TStateSchema>;
-  } {
+  get nodeOptions() {
     return {
-      input: derivePrivateState(
-        this.middleware.stateSchema
-      ) as z.ZodObject<TStateSchema>,
+      input: derivePrivateState(this.middleware.stateSchema),
     };
   }
 }

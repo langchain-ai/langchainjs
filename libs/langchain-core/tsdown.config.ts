@@ -20,6 +20,7 @@ export default getBuildConfig({
     "./src/context.ts",
     "./src/documents/index.ts",
     "./src/document_loaders/base.ts",
+    "./src/errors/index.ts",
     "./src/document_loaders/langsmith.ts",
     "./src/embeddings.ts",
     "./src/example_selectors/index.ts",

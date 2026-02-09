@@ -119,8 +119,14 @@ export const getTableAndColumnsName = async (
   appDataSource: DataSource
 ): Promise<Array<SqlTable>> => {
   let sql;
-  if (appDataSource.options.type === "postgres") {
-    const schema = appDataSource.options?.schema ?? "public";
+  if (
+    appDataSource.options.type === "postgres" ||
+    appDataSource.options.type === "aurora-postgres"
+  ) {
+    const schema =
+      appDataSource.options.type === "postgres"
+        ? (appDataSource.options?.schema ?? "public")
+        : "public";
     sql = `SELECT 
             t.table_name, 
             c.* 
@@ -279,6 +285,8 @@ export const generateTableInfoFromTables = async (
     let schema = null;
     if (appDataSource.options.type === "postgres") {
       schema = appDataSource.options?.schema ?? "public";
+    } else if (appDataSource.options.type === "aurora-postgres") {
+      schema = "public";
     } else if (appDataSource.options.type === "mssql") {
       schema = appDataSource.options?.schema;
     } else if (appDataSource.options.type === "sap") {
@@ -307,7 +315,10 @@ export const generateTableInfoFromTables = async (
       // We use backticks to quote the table names and thus allow for example spaces in table names
       sqlSelectInfoQuery = `SELECT * FROM \`${currentTable.tableName}\` LIMIT ${nbSampleRow};\n`;
     } else if (appDataSource.options.type === "postgres") {
-      const schema = appDataSource.options?.schema ?? "public";
+      const schema =
+        appDataSource.options.type === "postgres"
+          ? (appDataSource.options?.schema ?? "public")
+          : "public";
       sqlSelectInfoQuery = `SELECT * FROM "${schema}"."${currentTable.tableName}" LIMIT ${nbSampleRow};\n`;
     } else if (appDataSource.options.type === "mssql") {
       const schema = appDataSource.options?.schema;
@@ -357,7 +368,10 @@ export const generateTableInfoFromTables = async (
 export const getPromptTemplateFromDataSource = (
   appDataSource: DataSource
 ): PromptTemplate => {
-  if (appDataSource.options.type === "postgres") {
+  if (
+    appDataSource.options.type === "postgres" ||
+    appDataSource.options.type === "aurora-postgres"
+  ) {
     return SQL_POSTGRES_PROMPT;
   }
 

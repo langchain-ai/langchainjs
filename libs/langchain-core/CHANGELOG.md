@@ -1,5 +1,66 @@
 # @langchain/core
 
+## 1.1.19
+
+### Patch Changes
+
+- [#9905](https://github.com/langchain-ai/langchainjs/pull/9905) [`41bfea5`](https://github.com/langchain-ai/langchainjs/commit/41bfea51cf119573a3b956ee782d2731fe71c681) Thanks [@christian-bromann](https://github.com/christian-bromann)! - fix(classic/community/core): avoid long lived abort signals
+
+## 1.1.18
+
+### Patch Changes
+
+- [#9900](https://github.com/langchain-ai/langchainjs/pull/9900) [`a9b5059`](https://github.com/langchain-ai/langchainjs/commit/a9b50597186002221aaa4585246e569fa44c27c8) Thanks [@hntrl](https://github.com/hntrl)! - fix(core): update method signatures to use `Partial<CallOptions>` for options parameters
+
+  Updated `invoke`, `stream`, `generate`, and `generatePrompt` method signatures across `Runnable`, `BaseChatModel`, and `BaseLLM` to correctly accept `Partial<CallOptions>` instead of full `CallOptions`. This aligns the implementation with the `RunnableInterface` specification and allows users to pass partial options (e.g., `{ signal: abortedSignal }`) without TypeScript errors.
+
+- [#9900](https://github.com/langchain-ai/langchainjs/pull/9900) [`a9b5059`](https://github.com/langchain-ai/langchainjs/commit/a9b50597186002221aaa4585246e569fa44c27c8) Thanks [@hntrl](https://github.com/hntrl)! - Improved abort signal handling for chat models:
+  - Added `ModelAbortError` class in `@langchain/core/errors` that contains partial output when a model invocation is aborted mid-stream
+  - `invoke()` now throws `ModelAbortError` with accumulated `partialOutput` when aborted during streaming (when using streaming callback handlers)
+  - `stream()` throws a regular `AbortError` when aborted (since chunks are already yielded to the caller)
+  - All provider implementations now properly check and propagate abort signals in both `_generate()` and `_streamResponseChunks()` methods
+  - Added standard tests for abort signal behavior
+
+## 1.1.17
+
+### Patch Changes
+
+- [#9842](https://github.com/langchain-ai/langchainjs/pull/9842) [`05a9733`](https://github.com/langchain-ai/langchainjs/commit/05a9733448a10764c0bfd070af859c33e623b998) Thanks [@encodedz](https://github.com/encodedz)! - Adding `on_tool_error` event into EventStreamCallbackHandler
+
+## 1.1.16
+
+### Patch Changes
+
+- [#9830](https://github.com/langchain-ai/langchainjs/pull/9830) [`70387a1`](https://github.com/langchain-ai/langchainjs/commit/70387a144464539d65a546c8130cf51dfad025a1) Thanks [@bracesproul](https://github.com/bracesproul)! - fix: More undefined null errors and tests
+
+- [#9679](https://github.com/langchain-ai/langchainjs/pull/9679) [`a7c6ec5`](https://github.com/langchain-ai/langchainjs/commit/a7c6ec51ab9baa186ab5ebf815599c08f5c7e8ab) Thanks [@christian-bromann](https://github.com/christian-bromann)! - feat(openai): elevate OpenAI image generation outputs to proper image content blocks
+
+- [#9817](https://github.com/langchain-ai/langchainjs/pull/9817) [`5e04543`](https://github.com/langchain-ai/langchainjs/commit/5e045435a783fdae44bc9a43e01a8e5eb7100db2) Thanks [@Ashx098](https://github.com/Ashx098)! - read error.status when response.status is absent to avoid retrying OpenAI SDK 4xx
+
+- [#9819](https://github.com/langchain-ai/langchainjs/pull/9819) [`40b4467`](https://github.com/langchain-ai/langchainjs/commit/40b446762445575844610ee528abc77c247b2c43) Thanks [@MrDockal](https://github.com/MrDockal)! - Tool call content returns compacted json
+
+- [#9815](https://github.com/langchain-ai/langchainjs/pull/9815) [`17e30bd`](https://github.com/langchain-ai/langchainjs/commit/17e30bd7f4c7bdf87c9c30304b3b9e121cc1fbbc) Thanks [@hntrl](https://github.com/hntrl)! - fix(core): respect tracingEnabled=false from RunTree when env tracing is enabled
+
+## 1.1.15
+
+### Patch Changes
+
+- [#9781](https://github.com/langchain-ai/langchainjs/pull/9781) [`230462d`](https://github.com/langchain-ai/langchainjs/commit/230462d28c3a8b5ccadf433ea2f523eb6e658de6) Thanks [@christian-bromann](https://github.com/christian-bromann)! - fix(core): preserve index and timestamp fields in \_mergeDicts
+
+## 1.1.14
+
+### Patch Changes
+
+- [#9797](https://github.com/langchain-ai/langchainjs/pull/9797) [`bd1ab45`](https://github.com/langchain-ai/langchainjs/commit/bd1ab45364391f69ce93ecba36a4a15dafca2b76) Thanks [@christian-bromann](https://github.com/christian-bromann)! - handle undefined error objects in async-caller
+
+## 1.1.13
+
+### Patch Changes
+
+- [#9777](https://github.com/langchain-ai/langchainjs/pull/9777) [`3efe79c`](https://github.com/langchain-ai/langchainjs/commit/3efe79c62ff2ffe0ada562f7eecd85be074b649a) Thanks [@christian-bromann](https://github.com/christian-bromann)! - fix(core): properly elevate reasoning tokens
+
+- [#9789](https://github.com/langchain-ai/langchainjs/pull/9789) [`b8561c1`](https://github.com/langchain-ai/langchainjs/commit/b8561c17556bdf7a3ff8d70bc307422642a9172e) Thanks [@hntrl](https://github.com/hntrl)! - source JsonOutputParser content from text accessor
+
 ## 1.1.12
 
 ### Patch Changes

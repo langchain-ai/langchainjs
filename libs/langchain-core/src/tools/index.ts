@@ -873,7 +873,7 @@ export function tool<
             cleanup();
             reject(getAbortSignalError(config.signal));
           };
-          config.signal.addEventListener("abort", listener);
+          config.signal.addEventListener("abort", listener, { once: true });
         }
 
         const childConfig = patchConfig(config, {
@@ -954,7 +954,7 @@ function _formatToolOutput<TOutput extends ToolOutputType>(params: {
 
 function _stringify(content: unknown): string {
   try {
-    return JSON.stringify(content, null, 2) ?? "";
+    return JSON.stringify(content) ?? "";
   } catch (_noOp) {
     return `${content}`;
   }
