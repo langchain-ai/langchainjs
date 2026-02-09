@@ -11,8 +11,9 @@ import {
 } from "@langchain/core/utils/types";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-interface AnthropicToolsOutputParserParams<T extends Record<string, any>>
-  extends JsonOutputKeyToolsParserParamsInterop<T> {}
+interface AnthropicToolsOutputParserParams<
+  T extends Record<string, any>,
+> extends JsonOutputKeyToolsParserParamsInterop<T> {}
 
 export class AnthropicToolsOutputParser<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
