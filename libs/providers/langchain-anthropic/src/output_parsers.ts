@@ -10,8 +10,8 @@ import {
   InteropZodType,
 } from "@langchain/core/utils/types";
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 interface AnthropicToolsOutputParserParams<
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   T extends Record<string, any>,
 > extends JsonOutputKeyToolsParserParamsInterop<T> {}
 
