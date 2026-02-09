@@ -70,7 +70,7 @@
     "@huggingface/inference": "^4.13.11",
     "@huggingface/transformers": "^3.8.1",
     "@ibm-cloud/watsonx-ai": "^1.7.7",
-    "@jest/globals": "^29.5.0",
+    "@jest/globals": "^30.2.0",
     "@lancedb/lancedb": "^0.19.1",
     "@langchain/core": "workspace:*",
     "@langchain/eslint": "workspace:*",
