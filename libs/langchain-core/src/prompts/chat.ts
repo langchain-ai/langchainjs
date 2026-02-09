@@ -284,8 +284,8 @@ export abstract class BaseChatPromptTemplate<
 /**
  * Interface for the fields of a ChatMessagePromptTemplate.
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export interface ChatMessagePromptTemplateFields<
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   T extends InputValues = any,
 > extends MessageStringPromptTemplateFields<T> {
   role: string;
