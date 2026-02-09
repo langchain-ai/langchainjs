@@ -376,4 +376,86 @@ describe("convertCompletionsMessageToBaseMessage", () => {
       );
     });
   });
+
+  describe("Anthropic cross-provider compatibility", () => {
+    it("should drop tool_use blocks from content (already in tool_calls)", () => {
+      const message = new AIMessage({
+        content: [
+          { type: "text", text: "I will search for that." },
+          {
+            type: "tool_use",
+            id: "toolu_abc123",
+            name: "get_weather",
+            input: { location: "SF" },
+          },
+        ],
+        tool_calls: [
+          {
+            id: "toolu_abc123",
+            name: "get_weather",
+            args: { location: "SF" },
+          },
+        ],
+      });
+
+      const result = convertMessagesToCompletionsMessageParams({
+        messages: [message],
+      });
+
+      expect(result).toHaveLength(1);
+      expect(result[0]).toEqual({
+        role: "assistant",
+        content: [{ type: "text", text: "I will search for that." }],
+        tool_calls: [
+          {
+            id: "toolu_abc123",
+            type: "function",
+            function: {
+              name: "get_weather",
+              arguments: '{"location":"SF"}',
+            },
+          },
+        ],
+      });
+    });
+
+    it("should drop tool_use blocks alongside thinking blocks", () => {
+      const message = new AIMessage({
+        content: [
+          {
+            type: "thinking",
+            thinking: "I need to consider...",
+            signature: "sig123",
+          },
+          { type: "text", text: "Here is my answer." },
+          {
+            type: "tool_use",
+            id: "toolu_1",
+            name: "search",
+            input: { q: "langchain" },
+          },
+        ],
+        tool_calls: [
+          {
+            id: "toolu_1",
+            name: "search",
+            args: { q: "langchain" },
+          },
+        ],
+      });
+
+      const result = convertMessagesToCompletionsMessageParams({
+        messages: [message],
+      });
+
+      expect(result).toHaveLength(1);
+      // tool_use is dropped; thinking and text pass through (thinking is
+      // unrecognised by OpenAI but that's a separate concern)
+      const contentArr = result[0].content as any[];
+      expect(contentArr.some((c: any) => c.type === "tool_use")).toBe(false);
+      expect(contentArr.some((c: any) => c.type === "text")).toBe(true);
+      // tool_calls should still be present
+      expect((result[0] as any).tool_calls).toHaveLength(1);
+    });
+  });
 });
