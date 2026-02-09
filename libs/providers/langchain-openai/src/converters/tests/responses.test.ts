@@ -1659,9 +1659,9 @@ describe("Anthropic cross-provider compatibility", () => {
 
     // The message content should only have the text, no tool_use
     if (typeof messageItem.content !== "string") {
-      expect(
-        messageItem.content.some((c: any) => c.type === "tool_use")
-      ).toBe(false);
+      expect(messageItem.content.some((c: any) => c.type === "tool_use")).toBe(
+        false
+      );
       expect(messageItem.content).toHaveLength(1);
       expect(messageItem.content[0].type).toBe("output_text");
       expect(messageItem.content[0].text).toBe("I will search for that.");

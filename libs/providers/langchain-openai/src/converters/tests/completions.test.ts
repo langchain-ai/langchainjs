@@ -452,12 +452,8 @@ describe("convertCompletionsMessageToBaseMessage", () => {
       // tool_use is dropped; thinking and text pass through (thinking is
       // unrecognised by OpenAI but that's a separate concern)
       const contentArr = result[0].content as any[];
-      expect(
-        contentArr.some((c: any) => c.type === "tool_use")
-      ).toBe(false);
-      expect(
-        contentArr.some((c: any) => c.type === "text")
-      ).toBe(true);
+      expect(contentArr.some((c: any) => c.type === "tool_use")).toBe(false);
+      expect(contentArr.some((c: any) => c.type === "text")).toBe(true);
       // tool_calls should still be present
       expect((result[0] as any).tool_calls).toHaveLength(1);
     });
