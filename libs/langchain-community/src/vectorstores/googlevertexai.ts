@@ -37,8 +37,7 @@ export class IdDocument extends Document implements IdDocumentInput {
   }
 }
 
-interface IndexEndpointConnectionParams
-  extends GoogleVertexAIConnectionParams<GoogleAuthOptions> {
+interface IndexEndpointConnectionParams extends GoogleVertexAIConnectionParams<GoogleAuthOptions> {
   indexEndpoint: string;
 }
 
@@ -94,8 +93,7 @@ export interface MatchingEngineDeleteParams {
   ids: string[];
 }
 
-interface RemoveDatapointParams
-  extends GoogleVertexAIConnectionParams<GoogleAuthOptions> {
+interface RemoveDatapointParams extends GoogleVertexAIConnectionParams<GoogleAuthOptions> {
   index: string;
 }
 
@@ -141,8 +139,7 @@ class RemoveDatapointConnection extends GoogleVertexAIConnection<
   }
 }
 
-interface UpsertDatapointParams
-  extends GoogleVertexAIConnectionParams<GoogleAuthOptions> {
+interface UpsertDatapointParams extends GoogleVertexAIConnectionParams<GoogleAuthOptions> {
   index: string;
 }
 
@@ -205,8 +202,7 @@ class UpsertDatapointConnection extends GoogleVertexAIConnection<
   }
 }
 
-interface FindNeighborsConnectionParams
-  extends GoogleVertexAIConnectionParams<GoogleAuthOptions> {
+interface FindNeighborsConnectionParams extends GoogleVertexAIConnectionParams<GoogleAuthOptions> {
   indexEndpoint: string;
 
   deployedIndexId: string;
@@ -298,7 +294,8 @@ export interface PublicAPIEndpointInfo {
  * Parameters necessary to configure the Matching Engine.
  */
 export interface MatchingEngineArgs
-  extends GoogleVertexAIConnectionParams<GoogleAuthOptions>,
+  extends
+    GoogleVertexAIConnectionParams<GoogleAuthOptions>,
     IndexEndpointConnectionParams,
     UpsertDatapointParams {
   docstore: Docstore;

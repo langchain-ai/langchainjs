@@ -9,8 +9,7 @@ import { WebGoogleAuth, WebGoogleAuthOptions } from "./auth.js";
 /**
  * Input to chat model class.
  */
-export interface ChatGoogleInput
-  extends ChatGoogleBaseInput<WebGoogleAuthOptions> {}
+export interface ChatGoogleInput extends ChatGoogleBaseInput<WebGoogleAuthOptions> {}
 
 /**
  * Integration with a chat model.

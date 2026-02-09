@@ -141,10 +141,10 @@ export abstract class GoogleConnection<
 }
 
 export abstract class GoogleHostConnection<
-    CallOptions extends AsyncCallerCallOptions,
-    ResponseType extends GoogleResponse,
-    AuthOptions,
-  >
+  CallOptions extends AsyncCallerCallOptions,
+  ResponseType extends GoogleResponse,
+  AuthOptions,
+>
   extends GoogleConnection<CallOptions, ResponseType>
   implements GoogleConnectionParams<AuthOptions>
 {
@@ -246,11 +246,11 @@ export abstract class GoogleRawConnection<
 }
 
 export abstract class GoogleAIConnection<
-    CallOptions extends AsyncCallerCallOptions,
-    InputType,
-    AuthOptions,
-    ResponseType extends GoogleResponse,
-  >
+  CallOptions extends AsyncCallerCallOptions,
+  InputType,
+  AuthOptions,
+  ResponseType extends GoogleResponse,
+>
   extends GoogleHostConnection<CallOptions, ResponseType, AuthOptions>
   implements GoogleAIBaseLLMInput<AuthOptions>
 {

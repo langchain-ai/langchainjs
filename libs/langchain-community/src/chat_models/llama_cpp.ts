@@ -32,8 +32,7 @@ import {
  * can set this in the environment variable `LLAMA_PATH`.
  */
 export interface LlamaCppInputs
-  extends LlamaBaseCppInputs,
-    BaseChatModelParams {}
+  extends LlamaBaseCppInputs, BaseChatModelParams {}
 
 export interface LlamaCppCallOptions extends BaseLanguageModelCallOptions {
   /** The maximum number of tokens the response should contain. */

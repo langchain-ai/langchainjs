@@ -110,8 +110,7 @@ type RunInfo = {
   inputs?: Record<string, any>;
 };
 
-export interface EventStreamCallbackHandlerInput
-  extends BaseCallbackHandlerInput {
+export interface EventStreamCallbackHandlerInput extends BaseCallbackHandlerInput {
   autoClose?: boolean;
   includeNames?: string[];
   includeTypes?: string[];

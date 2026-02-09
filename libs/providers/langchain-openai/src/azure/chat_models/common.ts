@@ -41,8 +41,7 @@ export const AZURE_SERIALIZABLE_KEYS = [
 ];
 
 export interface AzureChatOpenAIFields
-  extends BaseChatOpenAIFields,
-    Partial<AzureOpenAIChatInput> {
+  extends BaseChatOpenAIFields, Partial<AzureOpenAIChatInput> {
   /**
    * Whether to use the responses API for all requests. If `false` the responses API will be used
    * only when required in order to fulfill the request.

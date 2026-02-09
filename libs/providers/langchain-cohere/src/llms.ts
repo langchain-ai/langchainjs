@@ -24,7 +24,8 @@ export interface BaseCohereInput extends BaseLLMParams {
 export type CohereInput = BaseCohereInput & CohereClientOptions;
 
 interface CohereCallOptions
-  extends BaseLanguageModelCallOptions,
+  extends
+    BaseLanguageModelCallOptions,
     Partial<Omit<CohereTypes.GenerateRequest, "message">> {}
 
 /**

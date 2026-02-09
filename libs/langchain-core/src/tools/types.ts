@@ -112,8 +112,10 @@ export type ToolRunnableConfig<
  *
  * @version 0.2.19
  */
-export interface StructuredToolParams
-  extends Pick<StructuredToolInterface, "name" | "schema" | "extras"> {
+export interface StructuredToolParams extends Pick<
+  StructuredToolInterface,
+  "name" | "schema" | "extras"
+> {
   /**
    * An optional description of the tool to pass to the model.
    */
@@ -213,9 +215,9 @@ export interface StructuredToolInterface<
   SchemaInputT = ToolInputSchemaInputType<SchemaT>,
   ToolOutputT = ToolOutputType,
 > extends RunnableInterface<
-    StructuredToolCallInput<SchemaT, SchemaInputT>,
-    ToolOutputT | ToolMessage
-  > {
+  StructuredToolCallInput<SchemaT, SchemaInputT>,
+  ToolOutputT | ToolMessage
+> {
   lc_namespace: string[];
 
   /**
@@ -334,8 +336,9 @@ export interface BaseDynamicToolInput extends ToolParams {
 /**
  * Interface for the input parameters of the DynamicTool class.
  */
-export interface DynamicToolInput<ToolOutputT = ToolOutputType>
-  extends BaseDynamicToolInput {
+export interface DynamicToolInput<
+  ToolOutputT = ToolOutputType,
+> extends BaseDynamicToolInput {
   func: (
     input: string,
     runManager?: CallbackManagerForToolRun,

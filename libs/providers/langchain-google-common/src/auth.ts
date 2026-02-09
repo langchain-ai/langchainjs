@@ -20,9 +20,7 @@ export interface GoogleAbstractedClient {
   get clientType(): string;
 }
 
-export abstract class GoogleAbstractedFetchClient
-  implements GoogleAbstractedClient
-{
+export abstract class GoogleAbstractedFetchClient implements GoogleAbstractedClient {
   abstract get clientType(): string;
 
   abstract getProjectId(): Promise<string>;

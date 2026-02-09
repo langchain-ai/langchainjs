@@ -122,12 +122,12 @@ export function _coerceToDict(value: any, defaultKey: string) {
  * transformed.
  */
 export abstract class Runnable<
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    RunInput = any,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    RunOutput = any,
-    CallOptions extends RunnableConfig = RunnableConfig,
-  >
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  RunInput = any,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  RunOutput = any,
+  CallOptions extends RunnableConfig = RunnableConfig,
+>
   extends Serializable
   implements RunnableInterface<RunInput, RunOutput, CallOptions>
 {
@@ -3130,12 +3130,12 @@ export interface RunnableAssignFields<RunInput> {
  * ```
  */
 export class RunnableAssign<
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    RunInput extends Record<string, any> = Record<string, any>,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    RunOutput extends Record<string, any> = Record<string, any>,
-    CallOptions extends RunnableConfig = RunnableConfig,
-  >
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  RunInput extends Record<string, any> = Record<string, any>,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  RunOutput extends Record<string, any> = Record<string, any>,
+  CallOptions extends RunnableConfig = RunnableConfig,
+>
   extends Runnable<RunInput, RunOutput>
   implements RunnableAssignFields<RunInput>
 {
@@ -3265,12 +3265,12 @@ export interface RunnablePickFields {
  * ```
  */
 export class RunnablePick<
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    RunInput extends Record<string, any> = Record<string, any>,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    RunOutput extends Record<string, any> | any = Record<string, any> | any,
-    CallOptions extends RunnableConfig = RunnableConfig,
-  >
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  RunInput extends Record<string, any> = Record<string, any>,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  RunOutput extends Record<string, any> | any = Record<string, any> | any,
+  CallOptions extends RunnableConfig = RunnableConfig,
+>
   extends Runnable<RunInput, RunOutput>
   implements RunnablePickFields
 {
@@ -3356,9 +3356,9 @@ export interface RunnableToolLikeArgs<
   RunInput extends InteropZodType = InteropZodType,
   RunOutput = unknown,
 > extends Omit<
-    RunnableBindingArgs<InferInteropZodOutput<RunInput>, RunOutput>,
-    "config"
-  > {
+  RunnableBindingArgs<InferInteropZodOutput<RunInput>, RunOutput>,
+  "config"
+> {
   name: string;
 
   description?: string;

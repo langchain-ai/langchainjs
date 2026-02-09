@@ -15,8 +15,9 @@ import {
 /**
  * Interface for the response hit from a vector search in Typesense.
  */
-interface VectorSearchResponseHit<T extends DocumentSchema>
-  extends SearchResponseHit<T> {
+interface VectorSearchResponseHit<
+  T extends DocumentSchema,
+> extends SearchResponseHit<T> {
   vector_distance?: number;
 }
 

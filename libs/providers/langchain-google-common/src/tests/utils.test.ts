@@ -190,9 +190,8 @@ describe("media core", () => {
     };
     const mblob: MediaBlob = await load(JSON.stringify(serialized), {
       importMap: {
-        google_common__experimental__utils__media_core: await import(
-          "../experimental/utils/media_core.js"
-        ),
+        google_common__experimental__utils__media_core:
+          await import("../experimental/utils/media_core.js"),
       },
     });
     expect(mblob.dataType).toEqual("text/plain");

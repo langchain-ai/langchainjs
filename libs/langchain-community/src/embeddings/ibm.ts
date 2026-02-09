@@ -16,7 +16,8 @@ import {
 } from "../utils/ibm.js";
 
 export interface WatsonxEmbeddingsParams
-  extends EmbeddingsParams,
+  extends
+    EmbeddingsParams,
     Omit<WatsonXAI.TextEmbeddingsParams, "modelId" | "inputs" | "parameters"> {
   /** Represents the maximum number of input tokens accepted. This can be used to avoid requests failing due to
    *  input being longer than configured limits. If the text is truncated, then it truncates the end of the input (on
@@ -33,8 +34,7 @@ export interface WatsonxEmbeddingsParams
   model: string;
 }
 export interface WatsonxInputEmbeddings
-  extends WatsonxEmbeddingsBasicOptions,
-    WatsonxEmbeddingsParams {}
+  extends WatsonxEmbeddingsBasicOptions, WatsonxEmbeddingsParams {}
 
 export type WatsonxEmbeddingsGatewayKwargs = Omit<
   CreateEmbeddingsParams,
@@ -47,7 +47,8 @@ export interface WatsonxEmbeddingsGatewayParams extends EmbeddingsParams {
 }
 
 export interface WatsonxInputGatewayEmbeddings
-  extends WatsonxEmbeddingsBasicOptions,
+  extends
+    WatsonxEmbeddingsBasicOptions,
     WatsonxEmbeddingsGatewayParams,
     Omit<
       CreateEmbeddingsParams,

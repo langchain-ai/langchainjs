@@ -393,8 +393,9 @@ export function transformResponseFormat(
 /**
  * Branded type for ToolStrategy arrays that preserves type information
  */
-export interface TypedToolStrategy<T = unknown>
-  extends Array<ToolStrategy<any>> {
+export interface TypedToolStrategy<T = unknown> extends Array<
+  ToolStrategy<any>
+> {
   _schemaType?: T;
 }
 export type ToolStrategyError =

@@ -489,9 +489,8 @@ export interface ExecutedToolCall {
 export type CreateAgentParams<
   StructuredResponseType extends Record<string, any> = Record<string, any>,
   TStateSchema extends StateDefinitionInit | undefined = undefined,
-  ContextSchema extends
-    | AnyAnnotationRoot
-    | InteropZodObject = AnyAnnotationRoot,
+  ContextSchema extends AnyAnnotationRoot | InteropZodObject =
+    AnyAnnotationRoot,
   ResponseFormatType =
     | InteropZodType<StructuredResponseType>
     | InteropZodType<unknown>[]

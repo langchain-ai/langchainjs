@@ -92,10 +92,10 @@ export interface ChatModelIntegrationTestsFields<
   OutputMessageType extends AIMessageChunk = AIMessageChunk,
   ConstructorArgs extends RecordStringAny = RecordStringAny,
 > extends BaseChatModelsTestsFields<
-    CallOptions,
-    OutputMessageType,
-    ConstructorArgs
-  > {
+  CallOptions,
+  OutputMessageType,
+  ConstructorArgs
+> {
   /**
    * Override the default AIMessage response type
    * to check for.

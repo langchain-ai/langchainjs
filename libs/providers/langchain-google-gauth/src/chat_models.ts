@@ -10,8 +10,7 @@ import { GAuthClient } from "./auth.js";
 /**
  * Input to chat model class.
  */
-export interface ChatGoogleInput
-  extends ChatGoogleBaseInput<GoogleAuthOptions> {}
+export interface ChatGoogleInput extends ChatGoogleBaseInput<GoogleAuthOptions> {}
 
 /**
  * Integration with a Google chat model.

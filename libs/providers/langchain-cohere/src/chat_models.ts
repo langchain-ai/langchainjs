@@ -87,7 +87,8 @@ interface TokenUsage {
 }
 
 export interface ChatCohereCallOptions
-  extends BaseChatModelCallOptions,
+  extends
+    BaseChatModelCallOptions,
     Partial<Omit<Cohere.ChatRequest, "message" | "tools">>,
     Partial<Omit<Cohere.ChatStreamRequest, "message" | "tools">>,
     Pick<ChatCohereInput, "streamUsage"> {
@@ -709,8 +710,8 @@ function _formatToolsToCohere(
  * <br />
  */
 export class ChatCohere<
-    CallOptions extends ChatCohereCallOptions = ChatCohereCallOptions,
-  >
+  CallOptions extends ChatCohereCallOptions = ChatCohereCallOptions,
+>
   extends BaseChatModel<CallOptions, AIMessageChunk>
   implements ChatCohereInput
 {

@@ -93,8 +93,10 @@ interface TokenUsage {
 
 type ChatMistralAIToolType = MistralAIToolCall | MistralAITool | BindToolsInput;
 
-export interface ChatMistralAICallOptions
-  extends Omit<BaseLanguageModelCallOptions, "stop"> {
+export interface ChatMistralAICallOptions extends Omit<
+  BaseLanguageModelCallOptions,
+  "stop"
+> {
   response_format?: {
     type: "text" | "json_object";
   };
@@ -111,8 +113,7 @@ export interface ChatMistralAICallOptions
  * Input to chat model class.
  */
 export interface ChatMistralAIInput
-  extends BaseChatModelParams,
-    Pick<ChatMistralAICallOptions, "streamUsage"> {
+  extends BaseChatModelParams, Pick<ChatMistralAICallOptions, "streamUsage"> {
   /**
    * The API key to use.
    * @default {process.env.MISTRAL_API_KEY}
@@ -909,8 +910,8 @@ function _convertToolToMistralTool(
  * <br />
  */
 export class ChatMistralAI<
-    CallOptions extends ChatMistralAICallOptions = ChatMistralAICallOptions,
-  >
+  CallOptions extends ChatMistralAICallOptions = ChatMistralAICallOptions,
+>
   extends BaseChatModel<CallOptions, AIMessageChunk>
   implements ChatMistralAIInput
 {

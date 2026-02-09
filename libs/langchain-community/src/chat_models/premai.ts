@@ -66,13 +66,11 @@ export interface ChatPremInput extends BaseChatModelParams {
   streaming?: boolean;
 }
 
-export interface ChatCompletionCreateParamsNonStreaming
-  extends CreateChatCompletionRequest {
+export interface ChatCompletionCreateParamsNonStreaming extends CreateChatCompletionRequest {
   stream?: false;
 }
 
-export interface ChatCompletionCreateParamsStreaming
-  extends CreateChatCompletionRequest {
+export interface ChatCompletionCreateParamsStreaming extends CreateChatCompletionRequest {
   stream: true;
 }
 
@@ -161,9 +159,9 @@ function _convertDeltaToMessageChunk(
  * Integration with a chat model.
  */
 export class ChatPrem<
-    CallOptions extends
-      BaseLanguageModelCallOptions = BaseLanguageModelCallOptions,
-  >
+  CallOptions extends BaseLanguageModelCallOptions =
+    BaseLanguageModelCallOptions,
+>
   extends BaseChatModel<CallOptions>
   implements ChatPremInput
 {

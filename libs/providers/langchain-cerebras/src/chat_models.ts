@@ -60,7 +60,8 @@ export interface ChatCerebrasInput extends BaseChatModelParams {
 }
 
 export interface ChatCerebrasCallOptions
-  extends BaseChatModelCallOptions,
+  extends
+    BaseChatModelCallOptions,
     Pick<Cerebras.RequestOptions, "httpAgent" | "headers"> {
   tools?: BindToolsInput[];
   tool_choice?: ToolChoice;

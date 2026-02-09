@@ -373,8 +373,8 @@ export function validateLLMHasNoBoundTools(llm: LanguageModelLike): void {
 export function hasToolCalls(message?: BaseMessage): boolean {
   return Boolean(
     AIMessage.isInstance(message) &&
-      message.tool_calls &&
-      message.tool_calls.length > 0
+    message.tool_calls &&
+    message.tool_calls.length > 0
   );
 }
 

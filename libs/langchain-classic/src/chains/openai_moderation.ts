@@ -11,8 +11,7 @@ import { BaseChain, ChainInputs } from "./base.js";
  * Interface for the input parameters of the OpenAIModerationChain class.
  */
 export interface OpenAIModerationChainInput
-  extends ChainInputs,
-    AsyncCallerParams {
+  extends ChainInputs, AsyncCallerParams {
   apiKey?: string;
   /** @deprecated Use "apiKey" instead. */
   openAIApiKey?: string;

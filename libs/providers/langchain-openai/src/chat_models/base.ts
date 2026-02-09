@@ -80,8 +80,7 @@ interface OpenAILLMOutput {
 export type { OpenAICallOptions, OpenAIChatInput };
 
 export interface BaseChatOpenAICallOptions
-  extends BaseChatModelCallOptions,
-    BaseFunctionCallOptions {
+  extends BaseChatModelCallOptions, BaseFunctionCallOptions {
   /**
    * Additional options to pass to the underlying axios request.
    */
@@ -220,8 +219,7 @@ export interface BaseChatOpenAICallOptions
 }
 
 export interface BaseChatOpenAIFields
-  extends Partial<OpenAIChatInput>,
-    BaseChatModelParams {
+  extends Partial<OpenAIChatInput>, BaseChatModelParams {
   /**
    * Optional configuration options for the OpenAI client.
    */
@@ -230,8 +228,8 @@ export interface BaseChatOpenAIFields
 
 /** @internal */
 export abstract class BaseChatOpenAI<
-    CallOptions extends BaseChatOpenAICallOptions,
-  >
+  CallOptions extends BaseChatOpenAICallOptions,
+>
   extends BaseChatModel<CallOptions, AIMessageChunk>
   implements Partial<OpenAIChatInput>
 {
