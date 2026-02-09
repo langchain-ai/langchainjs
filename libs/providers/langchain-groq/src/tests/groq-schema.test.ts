@@ -171,10 +171,7 @@ describe("groqStrictifySchema", () => {
 
   it("should throw when root anyOf has no object variant", () => {
     const schema = {
-      anyOf: [
-        { type: "string" },
-        { type: "number" },
-      ],
+      anyOf: [{ type: "string" }, { type: "number" }],
     };
 
     expect(() => groqStrictifySchema(schema)).toThrow(
