@@ -637,6 +637,8 @@ export const convertResponsesDeltaToChatGenerationChunk: Converter<
       "web_search_call",
       "file_search_call",
       "code_interpreter_call",
+      "shell_call",
+      "local_shell_call",
       "mcp_call",
       "mcp_list_tools",
       "mcp_approval_request",
@@ -1322,10 +1324,16 @@ export const convertMessagesToResponsesInput: Converter<
         const input: ResponsesInputItem[] = [];
 
         // reasoning items
-        if (additional_kwargs?.reasoning && !zdrEnabled) {
-          const reasoningItem = convertReasoningSummaryToResponsesReasoningItem(
-            additional_kwargs.reasoning
-          );
+        const reasoning = additional_kwargs?.reasoning;
+        const hasEncryptedContent = !!reasoning?.encrypted_content;
+        /**
+         * With ZDR enabled, OpenAI does not retain reasoning items, so we only send
+         * them when encrypted content is available (via include: ["reasoning.encrypted_content"]).
+         * With ZDR disabled, we include reasoning item ids so OpenAI can reference them, as it's storing them.
+         */
+        if (reasoning && (!zdrEnabled || hasEncryptedContent)) {
+          const reasoningItem =
+            convertReasoningSummaryToResponsesReasoningItem(reasoning);
           input.push(reasoningItem);
         }
 
@@ -1427,6 +1435,8 @@ export const convertMessagesToResponsesInput: Converter<
           "mcp_call",
           "code_interpreter_call",
           "image_generation_call",
+          "shell_call",
+          "local_shell_call",
         ];
 
         if (toolOutputs != null) {

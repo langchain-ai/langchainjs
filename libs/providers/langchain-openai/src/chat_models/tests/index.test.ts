@@ -6,6 +6,10 @@ import { load } from "@langchain/core/load";
 import { tool } from "@langchain/core/tools";
 import { ChatOpenAI } from "../index.js";
 import { _convertOpenAIResponsesUsageToLangChainUsage } from "../../utils/output.js";
+import {
+  isReasoningModel,
+  _modelPrefersResponsesAPI,
+} from "../../utils/misc.js";
 import { NewTokenIndices } from "@langchain/core/callbacks/base";
 
 describe("ChatOpenAI", () => {
@@ -577,6 +581,88 @@ describe("ChatOpenAI", () => {
           url: "data:image/png;base64,image2",
         },
       ]);
+    });
+  });
+
+  describe("isReasoningModel", () => {
+    it("should return true for o-series models", () => {
+      expect(isReasoningModel("o1")).toBe(true);
+      expect(isReasoningModel("o1-mini")).toBe(true);
+      expect(isReasoningModel("o1-preview")).toBe(true);
+      expect(isReasoningModel("o3")).toBe(true);
+      expect(isReasoningModel("o3-mini")).toBe(true);
+      expect(isReasoningModel("o3-pro")).toBe(true);
+      expect(isReasoningModel("o4-mini")).toBe(true);
+    });
+
+    it("should return true for gpt-5 family models", () => {
+      expect(isReasoningModel("gpt-5")).toBe(true);
+      expect(isReasoningModel("gpt-5-mini")).toBe(true);
+      expect(isReasoningModel("gpt-5-nano")).toBe(true);
+      expect(isReasoningModel("gpt-5-pro")).toBe(true);
+      expect(isReasoningModel("gpt-5.1")).toBe(true);
+      expect(isReasoningModel("gpt-5.1-mini")).toBe(true);
+      expect(isReasoningModel("gpt-5.2")).toBe(true);
+      expect(isReasoningModel("gpt-5.2-pro")).toBe(true);
+    });
+
+    it("should return true for codex models based on gpt-5", () => {
+      expect(isReasoningModel("gpt-5-codex")).toBe(true);
+      expect(isReasoningModel("gpt-5.1-codex")).toBe(true);
+      expect(isReasoningModel("gpt-5.1-codex-max")).toBe(true);
+      expect(isReasoningModel("gpt-5.2-codex")).toBe(true);
+      expect(isReasoningModel("gpt-5.2-codex-max")).toBe(true);
+      expect(isReasoningModel("gpt-5.3-codex")).toBe(true);
+    });
+
+    it("should return false for gpt-5-chat models", () => {
+      expect(isReasoningModel("gpt-5-chat-latest")).toBe(false);
+    });
+
+    it("should return false for non-reasoning models", () => {
+      expect(isReasoningModel("gpt-4o")).toBe(false);
+      expect(isReasoningModel("gpt-4o-mini")).toBe(false);
+      expect(isReasoningModel("gpt-4.1")).toBe(false);
+      expect(isReasoningModel("gpt-4.1-mini")).toBe(false);
+      expect(isReasoningModel("gpt-3.5-turbo")).toBe(false);
+    });
+
+    it("should return false for codex-mini-latest", () => {
+      // codex-mini-latest doesn't start with gpt-5 or o-series
+      expect(isReasoningModel("codex-mini-latest")).toBe(false);
+    });
+
+    it("should return false for undefined/empty", () => {
+      expect(isReasoningModel(undefined)).toBe(false);
+      expect(isReasoningModel("")).toBe(false);
+    });
+  });
+
+  describe("_modelPrefersResponsesAPI", () => {
+    it("should return true for gpt-5.2-pro", () => {
+      expect(_modelPrefersResponsesAPI("gpt-5.2-pro")).toBe(true);
+      expect(_modelPrefersResponsesAPI("gpt-5.2-pro-2025-12-11")).toBe(true);
+    });
+
+    it("should return true for codex models", () => {
+      expect(_modelPrefersResponsesAPI("codex-mini-latest")).toBe(true);
+      expect(_modelPrefersResponsesAPI("gpt-5-codex")).toBe(true);
+      expect(_modelPrefersResponsesAPI("gpt-5.1-codex")).toBe(true);
+      expect(_modelPrefersResponsesAPI("gpt-5.1-codex-max")).toBe(true);
+      expect(_modelPrefersResponsesAPI("gpt-5.2-codex")).toBe(true);
+      expect(_modelPrefersResponsesAPI("gpt-5.2-codex-max")).toBe(true);
+      expect(_modelPrefersResponsesAPI("gpt-5.3-codex")).toBe(true);
+    });
+
+    it("should return false for standard chat models", () => {
+      expect(_modelPrefersResponsesAPI("gpt-4o")).toBe(false);
+      expect(_modelPrefersResponsesAPI("gpt-4o-mini")).toBe(false);
+      expect(_modelPrefersResponsesAPI("gpt-4.1")).toBe(false);
+      expect(_modelPrefersResponsesAPI("gpt-5")).toBe(false);
+      expect(_modelPrefersResponsesAPI("gpt-5.1")).toBe(false);
+      expect(_modelPrefersResponsesAPI("gpt-5.2")).toBe(false);
+      expect(_modelPrefersResponsesAPI("o3")).toBe(false);
+      expect(_modelPrefersResponsesAPI("o4-mini")).toBe(false);
     });
   });
 

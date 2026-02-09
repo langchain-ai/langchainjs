@@ -11,9 +11,10 @@ import type { ToolCallChunk } from "@langchain/core/messages/tool";
 import { ChatGeneration } from "@langchain/core/outputs";
 import { AnthropicMessageResponse } from "../types.js";
 import { extractToolCalls } from "../output_parsers.js";
+import { _isAnthropicCompactionBlock } from "./content.js";
 
 export function _makeMessageChunkFromAnthropicEvent(
-  data: Anthropic.Messages.RawMessageStreamEvent,
+  data: Anthropic.Beta.Messages.BetaRawMessageStreamEvent,
   fields: {
     streamUsage: boolean;
     coerceContentToString: boolean;
@@ -225,6 +226,36 @@ export function _makeMessageChunkFromAnthropicEvent(
         content: fields.coerceContentToString
           ? content
           : [{ index: data.index, ...data.content_block }],
+        response_metadata,
+      }),
+    };
+  } else if (
+    data.type === "content_block_start" &&
+    _isAnthropicCompactionBlock(data.content_block)
+  ) {
+    return {
+      chunk: new AIMessageChunk({
+        content: fields.coerceContentToString
+          ? ""
+          : [{ index: data.index, ...data.content_block }],
+        response_metadata,
+      }),
+    };
+  } else if (
+    data.type === "content_block_delta" &&
+    data.delta.type === "compaction_delta"
+  ) {
+    return {
+      chunk: new AIMessageChunk({
+        content: fields.coerceContentToString
+          ? ""
+          : [
+              {
+                index: data.index,
+                ...data.delta,
+                type: "compaction",
+              },
+            ],
         response_metadata,
       }),
     };
