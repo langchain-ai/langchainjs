@@ -67,8 +67,7 @@ import {
  * Inputs for ChatBedrockConverse.
  */
 export interface ChatBedrockConverseInput
-  extends BaseChatModelParams,
-    Partial<DefaultProviderInit> {
+  extends BaseChatModelParams, Partial<DefaultProviderInit> {
   /**
    * The BedrockRuntimeClient to use.
    * It gives ability to override the default client with a custom one, allowing you to pass requestHandler {NodeHttpHandler} parameter
@@ -200,7 +199,8 @@ export interface ChatBedrockConverseInput
 }
 
 export interface ChatBedrockConverseCallOptions
-  extends BaseChatModelCallOptions,
+  extends
+    BaseChatModelCallOptions,
     Pick<
       ChatBedrockConverseInput,
       | "additionalModelRequestFields"

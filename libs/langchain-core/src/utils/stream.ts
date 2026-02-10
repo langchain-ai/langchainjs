@@ -185,8 +185,7 @@ export class AsyncGeneratorWithSetup<
   T = unknown,
   TReturn = unknown,
   TNext = unknown,
-> implements AsyncGenerator<T, TReturn, TNext>
-{
+> implements AsyncGenerator<T, TReturn, TNext> {
   private generator: AsyncGenerator<T>;
 
   public setup: Promise<S>;

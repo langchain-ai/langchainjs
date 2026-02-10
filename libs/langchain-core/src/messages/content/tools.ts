@@ -28,8 +28,10 @@ export declare namespace Tools {
    * This represents a request to call the tool named "foo" with arguments {"a": 1}
    * and an identifier of "123".
    */
-  export interface ToolCall<TName extends string = string, TArgs = unknown>
-    extends BaseContentBlock {
+  export interface ToolCall<
+    TName extends string = string,
+    TArgs = unknown,
+  > extends BaseContentBlock {
     /**
      * Type of the content block
      */
@@ -45,8 +47,9 @@ export declare namespace Tools {
   }
 
   /** Content block to represent partial data of a tool call */
-  export interface ToolCallChunk<TName extends string = string>
-    extends BaseContentBlock {
+  export interface ToolCallChunk<
+    TName extends string = string,
+  > extends BaseContentBlock {
     /**
      * Type of the content block
      */
@@ -66,8 +69,9 @@ export declare namespace Tools {
   }
 
   /** Content block to represent an invalid tool call */
-  export interface InvalidToolCall<TName extends string = string>
-    extends BaseContentBlock {
+  export interface InvalidToolCall<
+    TName extends string = string,
+  > extends BaseContentBlock {
     /**
      * Type of the content block
      */
@@ -108,8 +112,9 @@ export declare namespace Tools {
     args: TArgs;
   }
 
-  export interface ServerToolCallChunk<TName extends string = string>
-    extends BaseContentBlock {
+  export interface ServerToolCallChunk<
+    TName extends string = string,
+  > extends BaseContentBlock {
     /**
      * Type of the content block
      */
@@ -124,8 +129,9 @@ export declare namespace Tools {
     args?: string;
   }
 
-  export interface ServerToolCallResult<TOutput = Record<string, unknown>>
-    extends BaseContentBlock {
+  export interface ServerToolCallResult<
+    TOutput = Record<string, unknown>,
+  > extends BaseContentBlock {
     /**
      * Type of the content block
      */

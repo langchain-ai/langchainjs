@@ -110,6 +110,85 @@ function convertOpenAIAnnotationToLangChain(
   } satisfies ContentBlock.NonStandard;
 }
 
+/**
+ * Converts a LangChain Citation or BaseContentBlock back to an OpenAI annotation.
+ *
+ * This is the inverse of `convertOpenAIAnnotationToLangChain`. It handles all four
+ * annotation types (url_citation, file_citation, container_file_citation, file_path)
+ * and also passes through annotations that are already in OpenAI format.
+ */
+function convertLangChainAnnotationToOpenAI(
+  annotation:
+    | ContentBlock.Citation
+    | ContentBlock.NonStandard
+    | Record<string, unknown>
+): OpenAIAnnotation {
+  // If it's already in OpenAI format, pass through unchanged
+  if (
+    annotation.type === "url_citation" ||
+    annotation.type === "file_citation" ||
+    annotation.type === "container_file_citation" ||
+    annotation.type === "file_path"
+  ) {
+    return annotation as unknown as OpenAIAnnotation;
+  }
+
+  // Convert from LangChain citation format back to OpenAI format
+  if (annotation.type === "citation") {
+    const citation = annotation as ContentBlock.Citation & {
+      file_id?: string;
+      container_id?: string;
+    };
+
+    if (citation.source === "url_citation") {
+      return {
+        type: "url_citation",
+        url: citation.url ?? "",
+        title: citation.title ?? "",
+        start_index: citation.startIndex ?? 0,
+        end_index: citation.endIndex ?? 0,
+      } as OpenAIAnnotation;
+    }
+
+    if (citation.source === "file_citation") {
+      return {
+        type: "file_citation",
+        file_id: citation.file_id ?? "",
+        filename: citation.title ?? "",
+        index: citation.startIndex ?? 0,
+      } as OpenAIAnnotation;
+    }
+
+    if (citation.source === "container_file_citation") {
+      return {
+        type: "container_file_citation",
+        file_id: citation.file_id ?? "",
+        filename: citation.title ?? "",
+        container_id: citation.container_id ?? "",
+        start_index: citation.startIndex ?? 0,
+        end_index: citation.endIndex ?? 0,
+      } as OpenAIAnnotation;
+    }
+
+    if (citation.source === "file_path") {
+      return {
+        type: "file_path",
+        file_id: citation.file_id ?? "",
+        index: citation.startIndex ?? 0,
+      } as OpenAIAnnotation;
+    }
+  }
+
+  // For non_standard blocks, unwrap the value
+  if (annotation.type === "non_standard") {
+    return (annotation as ContentBlock.NonStandard)
+      .value as unknown as OpenAIAnnotation;
+  }
+
+  // Unknown format, pass through as-is
+  return annotation as unknown as OpenAIAnnotation;
+}
+
 type ExcludeController<T> = T extends { controller: unknown } ? never : T;
 
 export type ResponsesCreate = OpenAIClient.Responses["create"];
@@ -637,6 +716,8 @@ export const convertResponsesDeltaToChatGenerationChunk: Converter<
       "web_search_call",
       "file_search_call",
       "code_interpreter_call",
+      "shell_call",
+      "local_shell_call",
       "mcp_call",
       "mcp_list_tools",
       "mcp_approval_request",
@@ -1322,10 +1403,16 @@ export const convertMessagesToResponsesInput: Converter<
         const input: ResponsesInputItem[] = [];
 
         // reasoning items
-        if (additional_kwargs?.reasoning && !zdrEnabled) {
-          const reasoningItem = convertReasoningSummaryToResponsesReasoningItem(
-            additional_kwargs.reasoning
-          );
+        const reasoning = additional_kwargs?.reasoning;
+        const hasEncryptedContent = !!reasoning?.encrypted_content;
+        /**
+         * With ZDR enabled, OpenAI does not retain reasoning items, so we only send
+         * them when encrypted content is available (via include: ["reasoning.encrypted_content"]).
+         * With ZDR disabled, we include reasoning item ids so OpenAI can reference them, as it's storing them.
+         */
+        if (reasoning && (!zdrEnabled || hasEncryptedContent)) {
+          const reasoningItem =
+            convertReasoningSummaryToResponsesReasoningItem(reasoning);
           input.push(reasoningItem);
         }
 
@@ -1357,7 +1444,9 @@ export const convertMessagesToResponsesInput: Converter<
                   return {
                     type: "output_text",
                     text: item.text,
-                    annotations: item.annotations ?? [],
+                    annotations: (item.annotations ?? []).map(
+                      convertLangChainAnnotationToOpenAI
+                    ),
                   };
                 }
 
@@ -1427,6 +1516,8 @@ export const convertMessagesToResponsesInput: Converter<
           "mcp_call",
           "code_interpreter_call",
           "image_generation_call",
+          "shell_call",
+          "local_shell_call",
         ];
 
         if (toolOutputs != null) {

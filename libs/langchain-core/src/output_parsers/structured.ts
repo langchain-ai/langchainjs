@@ -23,8 +23,7 @@ export type JsonMarkdownStructuredOutputParserInput = {
   interpolationDepth?: number;
 };
 
-export interface JsonMarkdownFormatInstructionsOptions
-  extends FormatInstructionsOptions {
+export interface JsonMarkdownFormatInstructionsOptions extends FormatInstructionsOptions {
   interpolationDepth?: number;
 }
 

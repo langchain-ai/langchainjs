@@ -102,7 +102,8 @@ export interface WatsonxDeltaStream {
 /** Project/space params */
 
 export interface WatsonxCallOptionsChat
-  extends Partial<Omit<TextChatParams, "modelId" | "toolChoice" | "messages">>,
+  extends
+    Partial<Omit<TextChatParams, "modelId" | "toolChoice" | "messages">>,
     WatsonxBaseChatParams {
   model?: string;
 }
@@ -114,7 +115,8 @@ export interface WatsonxProjectSpaceParams extends WatsonxCallOptionsChat {
 }
 /** Deployed params */
 export interface WatsonxCallOptionsDeployedChat
-  extends Partial<Omit<DeploymentsTextChatParams, "messages">>,
+  extends
+    Partial<Omit<DeploymentsTextChatParams, "messages">>,
     WatsonxBaseChatParams {}
 
 export interface WatsonxDeployedParams extends WatsonxCallOptionsDeployedChat {
@@ -122,13 +124,13 @@ export interface WatsonxDeployedParams extends WatsonxCallOptionsDeployedChat {
   version: string;
 }
 /** Gateway params */
-export interface WatsonxGatewayChatKwargs
-  extends Omit<
-    CreateChatCompletionsParams,
-    keyof TextChatParams | "model" | "stream" | "messages"
-  > {}
+export interface WatsonxGatewayChatKwargs extends Omit<
+  CreateChatCompletionsParams,
+  keyof TextChatParams | "model" | "stream" | "messages"
+> {}
 export interface WatsonxCallOptionsGatewayChat
-  extends Omit<
+  extends
+    Omit<
       CreateChatCompletionsParams,
       | "stream"
       | "toolChoice"
@@ -141,24 +143,20 @@ export interface WatsonxCallOptionsGatewayChat
   modelGatewayKwargs?: WatsonxGatewayChatKwargs;
 }
 
-export interface WatsonxGatewayChatParams
-  extends WatsonxCallOptionsGatewayChat {
+export interface WatsonxGatewayChatParams extends WatsonxCallOptionsGatewayChat {
   serviceUrl: string;
   version: string;
 }
 
 // Chat input for different chat modes
 export interface ChatWatsonxInput
-  extends BaseChatModelParams,
-    WatsonxProjectSpaceParams {}
+  extends BaseChatModelParams, WatsonxProjectSpaceParams {}
 
 export interface ChatWatsonxDeployedInput
-  extends BaseChatModelParams,
-    WatsonxDeployedParams {}
+  extends BaseChatModelParams, WatsonxDeployedParams {}
 
 export interface ChatWatsonxGatewayInput
-  extends BaseChatModelParams,
-    WatsonxGatewayChatParams {
+  extends BaseChatModelParams, WatsonxGatewayChatParams {
   /** Flag indicating weather to use Model Gateway or no */
   modelGateway: boolean;
 }
@@ -446,8 +444,8 @@ export type ChatWatsonxCallOptions = XOR<
 >;
 
 export class ChatWatsonx<
-    CallOptions extends ChatWatsonxCallOptions = ChatWatsonxCallOptions,
-  >
+  CallOptions extends ChatWatsonxCallOptions = ChatWatsonxCallOptions,
+>
   extends BaseChatModel<CallOptions>
   implements ChatWatsonxConstructor
 {

@@ -253,8 +253,7 @@ export class CharacterTextSplitter
   }
 }
 
-export interface RecursiveCharacterTextSplitterParams
-  extends TextSplitterParams {
+export interface RecursiveCharacterTextSplitterParams extends TextSplitterParams {
   separators: string[];
 }
 

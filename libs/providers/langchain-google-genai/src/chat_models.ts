@@ -75,8 +75,7 @@ export type BaseMessageExamplePair = {
   output: BaseMessage;
 };
 
-export interface GoogleGenerativeAIChatCallOptions
-  extends BaseChatModelCallOptions {
+export interface GoogleGenerativeAIChatCallOptions extends BaseChatModelCallOptions {
   tools?: GoogleGenerativeAIToolType[];
   /**
    * Allowed functions to call when the mode is "any".
@@ -100,7 +99,8 @@ export interface GoogleGenerativeAIChatCallOptions
  * An interface defining the input to the ChatGoogleGenerativeAI class.
  */
 export interface GoogleGenerativeAIChatInput
-  extends BaseChatModelParams,
+  extends
+    BaseChatModelParams,
     Pick<GoogleGenerativeAIChatCallOptions, "streamUsage"> {
   /**
    * Model Name to use

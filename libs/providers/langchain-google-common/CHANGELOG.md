@@ -1,5 +1,31 @@
 # @langchain/google-common
 
+## 2.1.16
+
+### Patch Changes
+
+- [#9973](https://github.com/langchain-ai/langchainjs/pull/9973) [`5681181`](https://github.com/langchain-ai/langchainjs/commit/568118119f44cc4509a2c04dff2891230e874f46) Thanks [@hntrl](https://github.com/hntrl)! - fix(google-common): surface actual API error when GAuthClient's gaxios throws for non-2xx responses
+
+  Previously, when `GAuthClient._fetch` (via `google-auth-library`/gaxios) threw a `GaxiosError` for non-2xx
+  responses, the error bypassed `_request()`'s `!res.ok` formatting and propagated with an empty/undefined
+  message. Users saw "undefined" in their traces instead of the actual Google API error. This was particularly
+  impactful for `image_url`/`fileData` content where Gemini returns descriptive errors like
+  "Cannot fetch content from the provided URL" when it can't access the image.
+
+  The fix wraps `_fetch()` in a try/catch that extracts the status and response body from the thrown error and
+  re-throws with the same well-formatted message used by the existing `!res.ok` path. Both paths now funnel
+  through a shared `_throwRequestError()` helper.
+
+- Updated dependencies [[`71c3cba`](https://github.com/langchain-ai/langchainjs/commit/71c3cba843ab16d877299d158a1de0c7d22f3fb9)]:
+  - @langchain/core@1.1.20
+
+## 2.1.15
+
+### Patch Changes
+
+- Updated dependencies [[`41bfea5`](https://github.com/langchain-ai/langchainjs/commit/41bfea51cf119573a3b956ee782d2731fe71c681)]:
+  - @langchain/core@1.1.19
+
 ## 2.1.14
 
 ### Patch Changes

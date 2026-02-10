@@ -1,5 +1,33 @@
 # @langchain/anthropic
 
+## 1.3.16
+
+### Patch Changes
+
+- Updated dependencies [[`71c3cba`](https://github.com/langchain-ai/langchainjs/commit/71c3cba843ab16d877299d158a1de0c7d22f3fb9)]:
+  - @langchain/core@1.1.20
+
+## 1.3.15
+
+### Patch Changes
+
+- [#9932](https://github.com/langchain-ai/langchainjs/pull/9932) [`4f7f9c7`](https://github.com/langchain-ai/langchainjs/commit/4f7f9c77a42d361d995c938f79772801cd429a9f) Thanks [@hntrl](https://github.com/hntrl)! - feat(anthropic): add Claude Opus 4.6 support with adaptive thinking, effort parameter, compaction API, output_config migration, inference_geo, and structured outputs GA
+  - Upgrade `@anthropic-ai/sdk` from `^0.71.0` to `^0.73.0`
+  - Add `claude-opus-4-6` model with 16384 default max output tokens
+  - Support adaptive thinking (`thinking: { type: "adaptive" }`) recommended for Opus 4.6
+  - Add `outputConfig` parameter with effort levels (`low`, `medium`, `high`, `max`) for controlling token usage
+  - Migrate `outputFormat` to `outputConfig.format` (backwards compatible, `outputFormat` deprecated)
+  - Add compaction API support (beta) with auto-detection of `compact_20260112` edits and streaming handlers for compaction content blocks
+  - Add `inferenceGeo` parameter for data residency controls
+  - Remove structured-outputs beta header requirement (now GA)
+
+## 1.3.14
+
+### Patch Changes
+
+- Updated dependencies [[`41bfea5`](https://github.com/langchain-ai/langchainjs/commit/41bfea51cf119573a3b956ee782d2731fe71c681)]:
+  - @langchain/core@1.1.19
+
 ## 1.3.13
 
 ### Patch Changes

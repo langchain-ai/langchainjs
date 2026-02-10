@@ -18,8 +18,8 @@ export interface FunctionMessageFields<
  * Represents a function message in a conversation.
  */
 export class FunctionMessage<
-    TStructure extends MessageStructure = MessageStructure,
-  >
+  TStructure extends MessageStructure = MessageStructure,
+>
   extends BaseMessage<TStructure, "function">
   implements FunctionMessageFields<TStructure>
 {

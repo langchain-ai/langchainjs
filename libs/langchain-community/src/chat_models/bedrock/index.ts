@@ -9,7 +9,8 @@ import { BaseBedrockInput } from "../../utils/bedrock/index.js";
 import { BedrockChat as BaseBedrockChat } from "./web.js";
 
 export interface BedrockChatFields
-  extends Partial<BaseBedrockInput>,
+  extends
+    Partial<BaseBedrockInput>,
     BaseChatModelParams,
     Partial<DefaultProviderInit> {}
 

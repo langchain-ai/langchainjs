@@ -37,7 +37,7 @@
     "tools"
   ],
   "dependencies": {
-    "@modelcontextprotocol/sdk": "^1.25.2",
+    "@modelcontextprotocol/sdk": "^1.26.0",
     "debug": "^4.4.3",
     "zod": "^3.25.76 || ^4"
   },
@@ -65,14 +65,14 @@
     "@langchain/tsconfig": "workspace:*",
     "@tsconfig/recommended": "^1.0.10",
     "@types/debug": "^4.1.12",
-    "@types/express": "^5.0.3",
+    "@types/express": "^5.0.6",
     "@types/node": "^22.18.8",
     "@vitest/coverage-v8": "^3.2.4",
     "dotenv": "^16.6.1",
     "dpdm": "^3.14.0",
     "eslint": "^9.36.0",
     "eventsource": "^3.0.7",
-    "express": "^5.1.0",
+    "express": "^5.2.1",
     "langchain": "workspace:*",
     "npm-run-all2": "^8.0.4",
     "prettier": "^3.6.2",

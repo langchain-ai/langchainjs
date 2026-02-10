@@ -180,8 +180,7 @@ export interface BedrockChatCallOptions extends BaseChatModelCallOptions {
 }
 
 export interface BedrockChatFields
-  extends Partial<BaseBedrockInput>,
-    BaseChatModelParams {}
+  extends Partial<BaseBedrockInput>, BaseChatModelParams {}
 
 /**
  * AWS Bedrock chat model integration.
