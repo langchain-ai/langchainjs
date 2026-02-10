@@ -15,7 +15,7 @@ export namespace GenerativeLanguage {
     /**
      * Required. Controls the probability threshold at which harm is blocked.
      */
-    threshold: string;
+    threshold: "HARM_BLOCK_THRESHOLD_UNSPECIFIED" | "BLOCK_LOW_AND_ABOVE" | "BLOCK_MEDIUM_AND_ABOVE" | "BLOCK_ONLY_HIGH" | "BLOCK_NONE" | "OFF";
   }
 
   export type HarmCategory = "HARM_CATEGORY_UNSPECIFIED" | "HARM_CATEGORY_DEROGATORY" | "HARM_CATEGORY_TOXICITY" | "HARM_CATEGORY_VIOLENCE" | "HARM_CATEGORY_SEXUAL" | "HARM_CATEGORY_MEDICAL" | "HARM_CATEGORY_DANGEROUS" | "HARM_CATEGORY_HARASSMENT" | "HARM_CATEGORY_HATE_SPEECH" | "HARM_CATEGORY_SEXUALLY_EXPLICIT" | "HARM_CATEGORY_DANGEROUS_CONTENT" | "HARM_CATEGORY_CIVIC_INTEGRITY";
@@ -38,14 +38,14 @@ export namespace GenerativeLanguage {
      * it produces a response. If not specified, the default is HIGH. Recommended
      * for Gemini 3 or later models. Use with earlier models results in an error.
      */
-    thinkingLevel?: string;
+    thinkingLevel?: "THINKING_LEVEL_UNSPECIFIED" | "MINIMAL" | "LOW" | "MEDIUM" | "HIGH";
   }
 
   export type GenerativeLanguageModality = "MODALITY_UNSPECIFIED" | "TEXT" | "IMAGE" | "VIDEO" | "AUDIO" | "DOCUMENT";
 
   /** Media resolution for the input media. */
   export interface MediaResolution {
-    level?: string;
+    level?: "MEDIA_RESOLUTION_UNSPECIFIED" | "MEDIA_RESOLUTION_LOW" | "MEDIA_RESOLUTION_MEDIUM" | "MEDIA_RESOLUTION_HIGH" | "MEDIA_RESOLUTION_ULTRA_HIGH";
   }
 
   /** Config for speech generation and transcription. */
@@ -207,7 +207,7 @@ export namespace GenerativeLanguage {
    */
   export interface CodeExecutionResult {
     /** Required. Outcome of the code execution. */
-    outcome: string;
+    outcome: "OUTCOME_UNSPECIFIED" | "OUTCOME_OK" | "OUTCOME_FAILED" | "OUTCOME_DEADLINE_EXCEEDED";
 
     /**
      * Optional. Contains stdout when code execution is successful, stderr or other
@@ -229,7 +229,7 @@ export namespace GenerativeLanguage {
     code: string;
 
     /** Required. Programming language of the `code`. */
-    language: string;
+    language: "LANGUAGE_UNSPECIFIED" | "PYTHON";
   }
 
   /**
@@ -355,7 +355,7 @@ export namespace GenerativeLanguage {
     /**
      * Optional. If specified, the media resolution specified will be used.
      */
-    mediaResolution?: string;
+    mediaResolution?: "MEDIA_RESOLUTION_UNSPECIFIED" | "MEDIA_RESOLUTION_LOW" | "MEDIA_RESOLUTION_MEDIUM" | "MEDIA_RESOLUTION_HIGH";
 
     /**
      * Optional. Presence penalty applied to the next token's logprobs if the token has
@@ -405,7 +405,7 @@ export namespace GenerativeLanguage {
      * 
      * An empty list is equivalent to requesting only text.
      */
-    responseModalities?: Array<string>;
+    responseModalities?: Array<"MODALITY_UNSPECIFIED" | "TEXT" | "IMAGE" | "AUDIO">;
 
     /**
      * Optional. Output schema of the generated candidate text. Schemas must be a
@@ -500,7 +500,7 @@ export namespace GenerativeLanguage {
        * Optional. Specifies the function Behavior.
        * Currently only supported by the BidiGenerateContent method.
        */
-      behavior?: string;
+      behavior?: "UNSPECIFIED" | "BLOCKING" | "NON_BLOCKING";
 
       /** Required. A brief description of the function. */
       description: string;
@@ -623,7 +623,7 @@ export namespace GenerativeLanguage {
     /** Computer Use tool type. */
     export interface ComputerUse {
       /** Required. The environment being operated. */
-      environment: string;
+      environment: "ENVIRONMENT_UNSPECIFIED" | "ENVIRONMENT_BROWSER";
 
       /**
        * Optional. By default, predefined functions are included in the final model
@@ -652,7 +652,7 @@ export namespace GenerativeLanguage {
        * Optional. Specifies the mode in which function calling should execute. If
        * unspecified, the default value will be set to AUTO.
        */
-      mode?: string;
+      mode?: "MODE_UNSPECIFIED" | "AUTO" | "ANY" | "NONE" | "VALIDATED";
     }
 
     /** Retrieval config. */
@@ -787,6 +787,26 @@ export namespace GenerativeLanguage {
     }
 
     /**
+     * An object that represents a latitude/longitude pair. This is expressed as a
+     * pair of doubles to represent degrees latitude and degrees longitude. Unless
+     * specified otherwise, this object must conform to the
+     * WGS84 standard. Values must be within normalized ranges.
+     */
+    export interface LatLng {
+      /**
+       * The latitude in degrees. It must be in the range [-90.0, +90.0].
+       */
+      latitude?: number;
+
+      /**
+       * The longitude in degrees. It must be in the range [-180.0, +180.0].
+       */
+      longitude?: number;
+    }
+
+    export type Type = "TYPE_UNSPECIFIED" | "STRING" | "NUMBER" | "INTEGER" | "BOOLEAN" | "ARRAY" | "OBJECT" | "NULL";
+
+    /**
      * Represents a time interval, encoded as a Timestamp start (inclusive) and a
      * Timestamp end (exclusive).
      * 
@@ -811,26 +831,6 @@ export namespace GenerativeLanguage {
        */
       startTime?: string;
     }
-
-    /**
-     * An object that represents a latitude/longitude pair. This is expressed as a
-     * pair of doubles to represent degrees latitude and degrees longitude. Unless
-     * specified otherwise, this object must conform to the
-     * WGS84 standard. Values must be within normalized ranges.
-     */
-    export interface LatLng {
-      /**
-       * The latitude in degrees. It must be in the range [-90.0, +90.0].
-       */
-      latitude?: number;
-
-      /**
-       * The longitude in degrees. It must be in the range [-180.0, +180.0].
-       */
-      longitude?: number;
-    }
-
-    export type Type = "TYPE_UNSPECIFIED" | "STRING" | "NUMBER" | "INTEGER" | "BOOLEAN" | "ARRAY" | "OBJECT" | "NULL";
   }
 
   /** Request to generate a completion from the model. */
@@ -930,7 +930,7 @@ export namespace GenerativeLanguage {
     category: HarmCategory;
 
     /** Required. The probability of harm for this content. */
-    probability: string;
+    probability: "HARM_PROBABILITY_UNSPECIFIED" | "NEGLIGIBLE" | "LOW" | "MEDIUM" | "HIGH";
   }
 
   /** A collection of source attributions for a piece of content. */
@@ -1120,7 +1120,7 @@ export namespace GenerativeLanguage {
     retrievedUrl?: string;
 
     /** Status of the url retrieval. */
-    urlRetrievalStatus?: string;
+    urlRetrievalStatus?: "URL_RETRIEVAL_STATUS_UNSPECIFIED" | "URL_RETRIEVAL_STATUS_SUCCESS" | "URL_RETRIEVAL_STATUS_ERROR" | "URL_RETRIEVAL_STATUS_PAYWALL" | "URL_RETRIEVAL_STATUS_UNSAFE";
   }
 
   /** Metadata related to url context retrieval tool. */
@@ -1190,7 +1190,7 @@ export namespace GenerativeLanguage {
      * 
      * If empty, the model has not stopped generating tokens.
      */
-    readonly finishReason?: string;
+    readonly finishReason?: "FINISH_REASON_UNSPECIFIED" | "STOP" | "MAX_TOKENS" | "SAFETY" | "RECITATION" | "LANGUAGE" | "OTHER" | "BLOCKLIST" | "PROHIBITED_CONTENT" | "SPII" | "MALFORMED_FUNCTION_CALL" | "IMAGE_SAFETY" | "IMAGE_PROHIBITED_CONTENT" | "IMAGE_OTHER" | "NO_IMAGE" | "IMAGE_RECITATION" | "UNEXPECTED_TOOL_CALL" | "TOO_MANY_TOOL_CALLS" | "MISSING_THOUGHT_SIGNATURE" | "MALFORMED_RESPONSE";
 
     /**
      * Output only. Attribution information for sources that contributed to a grounded answer.
@@ -1302,7 +1302,7 @@ export namespace GenerativeLanguage {
      * Optional. If set, the prompt was blocked and no candidates are returned.
      * Rephrase the prompt.
      */
-    blockReason?: string;
+    blockReason?: "BLOCK_REASON_UNSPECIFIED" | "SAFETY" | "OTHER" | "BLOCKLIST" | "PROHIBITED_CONTENT" | "IMAGE_SAFETY";
 
     /**
      * Ratings for safety of the prompt.
@@ -1349,6 +1349,30 @@ export namespace GenerativeLanguage {
     readonly usageMetadata?: UsageMetadata;
   }
 
+  /** Chunk from the web. */
+  export interface Web {
+    /** Title of the chunk. */
+    title?: string;
+
+    /** URI reference of the chunk. */
+    uri?: string;
+  }
+
+  /**
+   * The status of the underlying model. This is used to indicate the stage of the
+   * underlying model and the retirement time if applicable.
+   */
+  export interface ModelStatus {
+    /** A message explaining the model status. */
+    message?: string;
+
+    /** The stage of the underlying model. */
+    modelStage?: ModelStage;
+
+    /** The time at which the model will be retired. */
+    retirementTime?: string;
+  }
+
   /**
    * Raw media bytes.
    * 
@@ -1368,98 +1392,6 @@ export namespace GenerativeLanguage {
      * formats](https://ai.google.dev/gemini-api/docs/prompting_with_media#supported_file_formats).
      */
     mimeType?: string;
-  }
-
-  /**
-   * A grounding chunk from Google Maps. A Maps chunk corresponds to a single
-   * place.
-   */
-  export interface Maps {
-    /**
-     * Sources that provide answers about the features of a given place in
-     * Google Maps.
-     */
-    placeAnswerSources?: PlaceAnswerSources;
-
-    /**
-     * This ID of the place, in `places/{place_id}` format. A user can use this
-     * ID to look up that place.
-     */
-    placeId?: string;
-
-    /** Text description of the place answer. */
-    text?: string;
-
-    /** Title of the place. */
-    title?: string;
-
-    /** URI reference of the place. */
-    uri?: string;
-  }
-
-  /** URI based data. */
-  export interface FileData {
-    /** Required. URI. */
-    fileUri: string;
-
-    /** Optional. The IANA standard MIME type of the source data. */
-    mimeType?: string;
-  }
-
-  /**
-   * The result output from a `FunctionCall` that contains a string
-   * representing the `FunctionDeclaration.name` and a structured JSON
-   * object containing any output from the function is used as context to
-   * the model. This should contain the result of a`FunctionCall` made
-   * based on model prediction.
-   */
-  export interface FunctionResponse {
-    /**
-     * Optional. The id of the function call this response is for. Populated by the client
-     * to match the corresponding function call `id`.
-     */
-    id?: string;
-
-    /**
-     * Required. The name of the function to call.
-     * Must be a-z, A-Z, 0-9, or contain underscores and dashes, with a maximum
-     * length of 64.
-     */
-    name: string;
-
-    /**
-     * Optional. Ordered `Parts` that constitute a function response. Parts may have
-     * different IANA MIME types.
-     */
-    parts?: Array<FunctionResponsePart>;
-
-    /**
-     * Required. The function response in JSON object format.
-     * Callers can use any keys of their choice that fit the function's syntax
-     * to return the function output, e.g. "output", "result", etc.
-     * In particular, if the function call failed to execute, the response can
-     * have an "error" key to return error details to the model.
-     */
-    response: Record<string, unknown>;
-
-    /**
-     * Optional. Specifies how the response should be scheduled in the conversation.
-     * Only applicable to NON_BLOCKING function calls, is ignored otherwise.
-     * Defaults to WHEN_IDLE.
-     */
-    scheduling?: string;
-
-    /**
-     * Optional. Signals that function call continues, and more responses will be
-     * returned, turning the function call into a generator.
-     * Is only applicable to NON_BLOCKING function calls, is ignored otherwise.
-     * If set to false, future responses will not be considered.
-     * It is allowed to return empty `response` with `will_continue=False` to
-     * signal that the function call is finished. This may still trigger the model
-     * generation. To avoid triggering the generation and finish the function
-     * call, additionally set `scheduling` to `SILENT`.
-     */
-    willContinue?: boolean;
   }
 
   /**
@@ -1528,15 +1460,35 @@ export namespace GenerativeLanguage {
     urlContext?: GenerativeLanguage.Tools.UrlContext;
   }
 
-  /** Google search entry point. */
-  export interface SearchEntryPoint {
-    /**
-     * Optional. Web content snippet that can be embedded in a web page or an app webview.
-     */
-    renderedContent?: string;
+  /** A citation to a source for a portion of a specific response. */
+  export interface CitationSource {
+    /** Optional. End of the attributed segment, exclusive. */
+    endIndex?: number;
 
-    /** Optional. Base64 encoded JSON representing array of  tuple. */
-    sdkBlob?: string;
+    /**
+     * Optional. License for the GitHub project that is attributed as a source for segment.
+     * 
+     * License info is required for code citations.
+     */
+    license?: string;
+
+    /**
+     * Optional. Start of segment of the response that is attributed to this source.
+     * 
+     * Index indicates the start of the segment, measured in bytes.
+     */
+    startIndex?: number;
+
+    /**
+     * Optional. URI that is attributed as a source for a portion of the text.
+     */
+    uri?: string;
+  }
+
+  /** The configuration for the prebuilt speaker to use. */
+  export interface PrebuiltVoiceConfig {
+    /** The name of the preset voice to use. */
+    voiceName?: string;
   }
 
   /**
@@ -1564,76 +1516,126 @@ export namespace GenerativeLanguage {
     name: string;
   }
 
-  /** Chunk from the web. */
-  export interface Web {
-    /** Title of the chunk. */
+  /**
+   * The result output from a `FunctionCall` that contains a string
+   * representing the `FunctionDeclaration.name` and a structured JSON
+   * object containing any output from the function is used as context to
+   * the model. This should contain the result of a`FunctionCall` made
+   * based on model prediction.
+   */
+  export interface FunctionResponse {
+    /**
+     * Optional. The id of the function call this response is for. Populated by the client
+     * to match the corresponding function call `id`.
+     */
+    id?: string;
+
+    /**
+     * Required. The name of the function to call.
+     * Must be a-z, A-Z, 0-9, or contain underscores and dashes, with a maximum
+     * length of 64.
+     */
+    name: string;
+
+    /**
+     * Optional. Ordered `Parts` that constitute a function response. Parts may have
+     * different IANA MIME types.
+     */
+    parts?: Array<FunctionResponsePart>;
+
+    /**
+     * Required. The function response in JSON object format.
+     * Callers can use any keys of their choice that fit the function's syntax
+     * to return the function output, e.g. "output", "result", etc.
+     * In particular, if the function call failed to execute, the response can
+     * have an "error" key to return error details to the model.
+     */
+    response: Record<string, unknown>;
+
+    /**
+     * Optional. Specifies how the response should be scheduled in the conversation.
+     * Only applicable to NON_BLOCKING function calls, is ignored otherwise.
+     * Defaults to WHEN_IDLE.
+     */
+    scheduling?: "SCHEDULING_UNSPECIFIED" | "SILENT" | "WHEN_IDLE" | "INTERRUPT";
+
+    /**
+     * Optional. Signals that function call continues, and more responses will be
+     * returned, turning the function call into a generator.
+     * Is only applicable to NON_BLOCKING function calls, is ignored otherwise.
+     * If set to false, future responses will not be considered.
+     * It is allowed to return empty `response` with `will_continue=False` to
+     * signal that the function call is finished. This may still trigger the model
+     * generation. To avoid triggering the generation and finish the function
+     * call, additionally set `scheduling` to `SILENT`.
+     */
+    willContinue?: boolean;
+  }
+
+  /**
+   * A grounding chunk from Google Maps. A Maps chunk corresponds to a single
+   * place.
+   */
+  export interface Maps {
+    /**
+     * Sources that provide answers about the features of a given place in
+     * Google Maps.
+     */
+    placeAnswerSources?: PlaceAnswerSources;
+
+    /**
+     * This ID of the place, in `places/{place_id}` format. A user can use this
+     * ID to look up that place.
+     */
+    placeId?: string;
+
+    /** Text description of the place answer. */
+    text?: string;
+
+    /** Title of the place. */
     title?: string;
 
-    /** URI reference of the chunk. */
+    /** URI reference of the place. */
     uri?: string;
   }
 
-  /**
-   * The status of the underlying model. This is used to indicate the stage of the
-   * underlying model and the retirement time if applicable.
-   */
-  export interface ModelStatus {
-    /** A message explaining the model status. */
-    message?: string;
+  /** URI based data. */
+  export interface FileData {
+    /** Required. URI. */
+    fileUri: string;
 
-    /** The stage of the underlying model. */
-    modelStage?: ModelStage;
-
-    /** The time at which the model will be retired. */
-    retirementTime?: string;
+    /** Optional. The IANA standard MIME type of the source data. */
+    mimeType?: string;
   }
 
-  /** The configuration for the prebuilt speaker to use. */
-  export interface PrebuiltVoiceConfig {
-    /** The name of the preset voice to use. */
-    voiceName?: string;
-  }
-
-  /** A citation to a source for a portion of a specific response. */
-  export interface CitationSource {
-    /** Optional. End of the attributed segment, exclusive. */
-    endIndex?: number;
-
+  /** Google search entry point. */
+  export interface SearchEntryPoint {
     /**
-     * Optional. License for the GitHub project that is attributed as a source for segment.
-     * 
-     * License info is required for code citations.
+     * Optional. Web content snippet that can be embedded in a web page or an app webview.
      */
-    license?: string;
+    renderedContent?: string;
 
-    /**
-     * Optional. Start of segment of the response that is attributed to this source.
-     * 
-     * Index indicates the start of the segment, measured in bytes.
-     */
-    startIndex?: number;
-
-    /**
-     * Optional. URI that is attributed as a source for a portion of the text.
-     */
-    uri?: string;
+    /** Optional. Base64 encoded JSON representing array of  tuple. */
+    sdkBlob?: string;
   }
 
   /**
-   * A datatype containing media that is part of a `FunctionResponse` message.
-   * 
-   * A `FunctionResponsePart` consists of data which has an associated datatype. A
-   * `FunctionResponsePart` can only contain one of the accepted types in
-   * `FunctionResponsePart.data`.
-   * 
-   * A `FunctionResponsePart` must have a fixed IANA MIME type identifying the
-   * type and subtype of the media if the `inline_data` field is filled with raw
-   * bytes.
+   * Collection of sources that provide answers about the features of a given
+   * place in Google Maps. Each PlaceAnswerSources message corresponds to a
+   * specific place in Google Maps. The Google Maps tool used these sources in
+   * order to answer questions about features of the place (e.g: "does Bar Foo
+   * have Wifi" or "is Foo Bar wheelchair accessible?"). Currently we only
+   * support review snippets as sources.
    */
-  export interface FunctionResponsePart {
-    /** Inline media bytes. */
-    inlineData?: FunctionResponseBlob;
+  export interface PlaceAnswerSources {
+    /**
+     * Snippets of reviews that are used to generate answers about the
+     * features of a given place in Google Maps.
+     */
+    reviewSnippets?: Array<ReviewSnippet>;
   }
+
+  export type ModelStage = "MODEL_STAGE_UNSPECIFIED" | "UNSTABLE_EXPERIMENTAL" | "EXPERIMENTAL" | "PREVIEW" | "STABLE" | "LEGACY" | "DEPRECATED" | "RETIRED";
 
   /**
    * Tool to retrieve public web data for grounding, powered by Google.
@@ -1658,22 +1660,47 @@ export namespace GenerativeLanguage {
     streamableHttpTransport?: StreamableHttpTransport;
   }
 
-  export type ModelStage = "MODEL_STAGE_UNSPECIFIED" | "UNSTABLE_EXPERIMENTAL" | "EXPERIMENTAL" | "PREVIEW" | "STABLE" | "LEGACY" | "DEPRECATED" | "RETIRED";
+  /**
+   * A datatype containing media that is part of a `FunctionResponse` message.
+   * 
+   * A `FunctionResponsePart` consists of data which has an associated datatype. A
+   * `FunctionResponsePart` can only contain one of the accepted types in
+   * `FunctionResponsePart.data`.
+   * 
+   * A `FunctionResponsePart` must have a fixed IANA MIME type identifying the
+   * type and subtype of the media if the `inline_data` field is filled with raw
+   * bytes.
+   */
+  export interface FunctionResponsePart {
+    /** Inline media bytes. */
+    inlineData?: FunctionResponseBlob;
+  }
 
   /**
-   * Collection of sources that provide answers about the features of a given
-   * place in Google Maps. Each PlaceAnswerSources message corresponds to a
-   * specific place in Google Maps. The Google Maps tool used these sources in
-   * order to answer questions about features of the place (e.g: "does Bar Foo
-   * have Wifi" or "is Foo Bar wheelchair accessible?"). Currently we only
-   * support review snippets as sources.
+   * Encapsulates a snippet of a user review that answers a question about
+   * the features of a specific place in Google Maps.
    */
-  export interface PlaceAnswerSources {
+  export interface ReviewSnippet {
+    /** A link that corresponds to the user review on Google Maps. */
+    googleMapsUri?: string;
+
+    /** The ID of the review snippet. */
+    reviewId?: string;
+
+    /** Title of the review. */
+    title?: string;
+  }
+
+  /** Describes the options to customize dynamic retrieval. */
+  export interface DynamicRetrievalConfig {
     /**
-     * Snippets of reviews that are used to generate answers about the
-     * features of a given place in Google Maps.
+     * The threshold to be used in dynamic retrieval.
+     * If not set, a system default value is used.
      */
-    reviewSnippets?: Array<ReviewSnippet>;
+    dynamicThreshold?: number;
+
+    /** The mode of the predictor to be used in dynamic retrieval. */
+    mode?: "MODE_UNSPECIFIED" | "MODE_DYNAMIC";
   }
 
   /**
@@ -1705,21 +1732,6 @@ export namespace GenerativeLanguage {
   }
 
   /**
-   * Encapsulates a snippet of a user review that answers a question about
-   * the features of a specific place in Google Maps.
-   */
-  export interface ReviewSnippet {
-    /** A link that corresponds to the user review on Google Maps. */
-    googleMapsUri?: string;
-
-    /** The ID of the review snippet. */
-    reviewId?: string;
-
-    /** Title of the review. */
-    title?: string;
-  }
-
-  /**
    * Raw media bytes for function response.
    * 
    * Text should not be sent as raw bytes, use the 'FunctionResponse.response'
@@ -1739,17 +1751,5 @@ export namespace GenerativeLanguage {
      * formats](https://ai.google.dev/gemini-api/docs/prompting_with_media#supported_file_formats).
      */
     mimeType?: string;
-  }
-
-  /** Describes the options to customize dynamic retrieval. */
-  export interface DynamicRetrievalConfig {
-    /**
-     * The threshold to be used in dynamic retrieval.
-     * If not set, a system default value is used.
-     */
-    dynamicThreshold?: number;
-
-    /** The mode of the predictor to be used in dynamic retrieval. */
-    mode?: string;
   }
 }

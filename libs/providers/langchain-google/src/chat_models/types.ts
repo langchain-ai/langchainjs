@@ -1,5 +1,4 @@
 /* eslint-disable @typescript-eslint/no-namespace */
-// https://cloud.google.com/vertex-ai/generative-ai/docs/model-reference/inference#request
 
 import type { InteropZodType } from "@langchain/core/utils/types";
 import type { BindToolsInput } from "@langchain/core/language_models/chat_models";
@@ -118,7 +117,7 @@ export interface ChatGoogleFields {
    * Represents the set of modalities that the model can return.
    * An empty list is equivalent to requesting only text.
    */
-  responseModalities?: ("TEXT" | "IMAGE" | "AUDIO")[];
+  responseModalities?: Prettify<GenerativeLanguageBase.GenerativeLanguageModality>[];
 
   /**
    * If true, enables enhanced civic answers feature.
@@ -149,12 +148,51 @@ export type GooglePlatformType = "gai" | "gcp";
 
 export { type GenerativeLanguage } from "./api-types.js";
 
+// There's a fair number of utilities that we need to extract from the base
+// GenerativeLanguage OpenAPI types, Adding these directly to the base types
+// would pollute the typegen output, so we're adding them here instead.
 declare module "./api-types.js" {
   export namespace GenerativeLanguage {
+    // GenerativeLanguage parts are contained as one intersecting type
+    // in the spec, so we need to pick out the specific parts we need.
     export namespace Part {
       export type CodeExecutionResult = Pick<
         GenerativeLanguageBase.Part,
         "codeExecutionResult"
+      >;
+      export type ExecutableCode = Pick<
+        GenerativeLanguageBase.Part,
+        "executableCode"
+      >;
+      export type FileData = Pick<
+        GenerativeLanguageBase.Part,
+        "fileData" | "videoMetadata"
+      >;
+      export type FunctionCall = Pick<
+        GenerativeLanguageBase.Part,
+        "functionCall"
+      >;
+      export type FunctionResponse = Pick<
+        GenerativeLanguageBase.Part,
+        "functionResponse"
+      >;
+      export type InlineData = Pick<
+        GenerativeLanguageBase.Part,
+        "inlineData" | "videoMetadata"
+      >;
+      export type MediaResolution = Pick<
+        GenerativeLanguageBase.Part,
+        "mediaResolution"
+      >;
+      export type PartMetadata = Pick<
+        GenerativeLanguageBase.Part,
+        "partMetadata"
+      >;
+      export type Text = Pick<GenerativeLanguageBase.Part, "text">;
+      export type Thought = Pick<GenerativeLanguageBase.Part, "thought">;
+      export type ThoughtSignature = Pick<
+        GenerativeLanguageBase.Part,
+        "thoughtSignature"
       >;
     }
   }
