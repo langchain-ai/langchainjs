@@ -1,6 +1,3 @@
-import { resolve4, resolve6 } from "dns/promises";
-import * as net from "net";
-
 // Private IP ranges (RFC 1918, loopback, link-local, etc.)
 const PRIVATE_IP_RANGES = [
   "10.0.0.0/8",
@@ -33,13 +30,40 @@ const CLOUD_METADATA_HOSTNAMES = [
 const LOCALHOST_NAMES = ["localhost", "localhost.localdomain"];
 
 /**
+ * IPv4 regex: four octets 0-255
+ */
+const IPV4_REGEX = /^(?:(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)\.){3}(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)$/;
+
+/**
+ * Check if a string is a valid IPv4 address.
+ */
+function isIPv4(ip: string): boolean {
+  return IPV4_REGEX.test(ip);
+}
+
+/**
+ * Check if a string is a valid IPv6 address.
+ * Uses expandIpv6 for validation.
+ */
+function isIPv6(ip: string): boolean {
+  return expandIpv6(ip) !== null;
+}
+
+/**
+ * Check if a string is a valid IP address (IPv4 or IPv6).
+ */
+function isIP(ip: string): boolean {
+  return isIPv4(ip) || isIPv6(ip);
+}
+
+/**
  * Parse an IP address string to an array of integers (for IPv4) or an array of 16-bit values (for IPv6)
  * Returns null if the IP is invalid.
  */
 function parseIp(ip: string): number[] | null {
-  if (net.isIPv4(ip)) {
+  if (isIPv4(ip)) {
     return ip.split(".").map((octet) => parseInt(octet, 10));
-  } else if (net.isIPv6(ip)) {
+  } else if (isIPv6(ip)) {
     // Normalize IPv6
     const expanded = expandIpv6(ip);
     if (!expanded) return null;
@@ -57,48 +81,45 @@ function parseIp(ip: string): number[] | null {
  * Expand compressed IPv6 address to full form.
  */
 function expandIpv6(ip: string): string | null {
-  // Use Node's built-in IPv6 validation by parsing
-  const socket = new net.Socket();
-  try {
-    if (!net.isIPv6(ip)) {
-      return null;
-    }
+  // Basic structural validation
+  if (!ip || typeof ip !== "string") return null;
 
-    // Simple expansion logic for IPv6
-    let normalized = ip;
+  // Must contain at least one colon
+  if (!ip.includes(":")) return null;
 
-    // Handle :: compression
-    if (normalized.includes("::")) {
-      const parts = normalized.split("::");
-      if (parts.length > 2) {
-        return null; // Invalid: multiple ::
-      }
+  // Check for invalid characters
+  if (!/^[0-9a-fA-F:]+$/.test(ip)) return null;
 
-      const [left, right] = parts;
-      const leftParts = left ? left.split(":") : [];
-      const rightParts = right ? right.split(":") : [];
-      const missing = 8 - (leftParts.length + rightParts.length);
+  let normalized = ip;
 
-      if (missing < 0) {
-        return null;
-      }
+  // Handle :: compression
+  if (normalized.includes("::")) {
+    const parts = normalized.split("::");
+    if (parts.length > 2) return null; // Multiple :: is invalid
 
-      const zeros = Array(missing).fill("0");
-      normalized = [...leftParts, ...zeros, ...rightParts]
-        .filter((p) => p !== "")
-        .join(":");
-    }
+    const [left, right] = parts;
+    const leftParts = left ? left.split(":") : [];
+    const rightParts = right ? right.split(":") : [];
+    const missing = 8 - (leftParts.length + rightParts.length);
 
-    // Pad missing zeros
-    const parts = normalized.split(":");
-    if (parts.length !== 8) {
-      return null;
-    }
+    if (missing < 0) return null;
 
-    return parts.map((p) => p.padStart(4, "0").toLowerCase()).join(":");
-  } finally {
-    socket.destroy();
+    const zeros = Array(missing).fill("0");
+    normalized = [...leftParts, ...zeros, ...rightParts]
+      .filter((p) => p !== "")
+      .join(":");
   }
+
+  const parts = normalized.split(":");
+  if (parts.length !== 8) return null;
+
+  // Validate each part is a valid hex group (1-4 chars)
+  for (const part of parts) {
+    if (part.length === 0 || part.length > 4) return null;
+    if (!/^[0-9a-fA-F]+$/.test(part)) return null;
+  }
+
+  return parts.map((p) => p.padStart(4, "0").toLowerCase()).join(":");
 }
 
 /**
@@ -122,7 +143,7 @@ function parseCidr(
     return null;
   }
 
-  const isIpv6 = net.isIPv6(addrStr);
+  const isIpv6 = isIPv6(addrStr);
 
   if (isIpv6 && prefixLen > 128) {
     return null;
@@ -149,7 +170,7 @@ function isIpInCidr(ip: string, cidr: string): boolean {
   }
 
   // Check IPv4 vs IPv6 mismatch
-  const isIpv6 = net.isIPv6(ip);
+  const isIpv6 = isIPv6(ip);
   if (isIpv6 !== cidrParsed.isIpv6) {
     return false;
   }
@@ -185,7 +206,7 @@ function isIpInCidr(ip: string, cidr: string): boolean {
  */
 export function isPrivateIp(ip: string): boolean {
   // Validate it's a proper IP
-  if (!net.isIP(ip)) {
+  if (!isIP(ip)) {
     return false;
   }
 
@@ -239,6 +260,44 @@ export function isLocalhost(hostname: string, ip?: string): boolean {
   }
 
   return false;
+}
+
+/**
+ * Resolve a hostname to IP addresses using DNS.
+ * Uses dynamic import so it only fails in non-Node environments (browsers, workers, etc.).
+ * Returns { ips, dnsAvailable } to distinguish between:
+ * - DNS module unavailable (browser/edge/workers) -> dnsAvailable=false
+ * - DNS resolution succeeded -> dnsAvailable=true, ips=[...]
+ * - DNS resolution failed -> throws ResolutionError
+ */
+async function resolveDns(
+  hostname: string
+): Promise<{ ips: string[]; dnsAvailable: boolean }> {
+  type DnsModule = {
+    resolve4: (hostname: string) => Promise<string[]>;
+    resolve6: (hostname: string) => Promise<string[]>;
+  };
+
+  let dns: DnsModule;
+  try {
+    // Dynamic import with bundler hints to prevent module resolution failures
+    dns = (await import(
+      /* webpackIgnore: true */ /* @vite-ignore */ "dns/promises"
+    )) as DnsModule;
+  } catch {
+    // dns module not available (browser, edge workers, etc.)
+    return { ips: [], dnsAvailable: false };
+  }
+
+  // DNS module is available, so we must succeed or throw a resolution error
+  try {
+    const ips = await dns.resolve4(hostname);
+    return { ips, dnsAvailable: true };
+  } catch {
+    // IPv4 failed, try IPv6
+    const ips = await dns.resolve6(hostname);
+    return { ips, dnsAvailable: true };
+  }
 }
 
 /**
@@ -299,7 +358,7 @@ export async function validateSafeUrl(
     }
 
     // If hostname is already an IP, validate it directly
-    if (net.isIP(hostname)) {
+    if (isIP(hostname)) {
       const ip = hostname;
 
       // Check if it's localhost first (before private IP check)
@@ -330,20 +389,17 @@ export async function validateSafeUrl(
     }
 
     // Try to resolve the hostname
-    let ips: string[] = [];
-    try {
-      // Try IPv4 first
-      ips = await resolve4(hostname);
-    } catch {
-      try {
-        // Fall back to IPv6
-        ips = await resolve6(hostname);
-      } catch {
-        // If DNS resolution fails, fail closed
-        throw new Error(`Failed to resolve hostname: ${hostname}`);
-      }
+    const { ips, dnsAvailable } = await resolveDns(hostname);
+
+    // If DNS is unavailable (browser/edge/workers), we've already done hostname-based checks above.
+    // Allow the URL if it's not cloud metadata and not localhost.
+    // In non-Node environments, we can't validate IP ranges, so we trust the hostname checks.
+    if (!dnsAvailable) {
+      // DNS module not available — allow if hostname checks passed
+      return url;
     }
 
+    // DNS was available but returned no IPs — fail closed
     if (ips.length === 0) {
       throw new Error(`Failed to resolve hostname: ${hostname}`);
     }
