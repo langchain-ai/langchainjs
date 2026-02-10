@@ -5,6 +5,7 @@ import {
   isLocalhost,
   validateSafeUrl,
   isSafeUrl,
+  isSameOrigin,
 } from "../ssrf.js";
 
 describe("isPrivateIp", () => {
@@ -250,6 +251,77 @@ describe("isSafeUrl", () => {
   test("should handle DNS resolution failures gracefully", async () => {
     const result = await isSafeUrl("https://nonexistent-domain-12345.test");
     expect(result).toBe(false);
+  });
+});
+
+describe("isSameOrigin", () => {
+  test("should return true for identical URLs", () => {
+    expect(isSameOrigin("https://example.com", "https://example.com")).toBe(
+      true
+    );
+    expect(
+      isSameOrigin("https://example.com/path", "https://example.com/other")
+    ).toBe(true);
+  });
+
+  test("should return true for URLs with same scheme, host, and port", () => {
+    expect(isSameOrigin("https://example.com:443", "https://example.com")).toBe(
+      true
+    );
+    expect(isSameOrigin("http://example.com:80", "http://example.com")).toBe(
+      true
+    );
+    expect(isSameOrigin("https://example.com:8443", "https://example.com:8443")).toBe(
+      true
+    );
+  });
+
+  test("should return false for different schemes", () => {
+    expect(isSameOrigin("http://example.com", "https://example.com")).toBe(
+      false
+    );
+  });
+
+  test("should return false for different hosts", () => {
+    expect(
+      isSameOrigin("https://example.com", "https://other.com")
+    ).toBe(false);
+    expect(
+      isSameOrigin("https://example.com", "https://subdomain.example.com")
+    ).toBe(false);
+  });
+
+  test("should return false for different ports", () => {
+    expect(
+      isSameOrigin("https://example.com:443", "https://example.com:8443")
+    ).toBe(false);
+    expect(isSameOrigin("http://example.com:8080", "http://example.com:9090")).toBe(
+      false
+    );
+  });
+
+  test("should return false for invalid URLs", () => {
+    expect(isSameOrigin("invalid", "https://example.com")).toBe(false);
+    expect(isSameOrigin("https://example.com", "not-a-url")).toBe(false);
+    expect(isSameOrigin("", "")).toBe(false);
+  });
+
+  test("should handle subdomain as different origin", () => {
+    expect(
+      isSameOrigin("https://sub.example.com", "https://example.com")
+    ).toBe(false);
+    expect(
+      isSameOrigin("https://www.example.com", "https://api.example.com")
+    ).toBe(false);
+  });
+
+  test("should be case-insensitive for hosts", () => {
+    expect(
+      isSameOrigin("https://Example.com", "https://example.com")
+    ).toBe(true);
+    expect(
+      isSameOrigin("HTTPS://EXAMPLE.COM", "https://example.com")
+    ).toBe(true);
   });
 });
 

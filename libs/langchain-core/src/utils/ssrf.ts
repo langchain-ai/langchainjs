@@ -397,3 +397,19 @@ export async function isSafeUrl(
     return false;
   }
 }
+
+/**
+ * Check if two URLs have the same origin (scheme, host, port).
+ * Uses semantic URL parsing to prevent SSRF bypasses via URL variations.
+ *
+ * @param url1 First URL
+ * @param url2 Second URL
+ * @returns true if both URLs have the same origin, false otherwise
+ */
+export function isSameOrigin(url1: string, url2: string): boolean {
+  try {
+    return new URL(url1).origin === new URL(url2).origin;
+  } catch {
+    return false;
+  }
+}

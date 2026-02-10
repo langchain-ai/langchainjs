@@ -1,6 +1,7 @@
 import { JSDOM, VirtualConsole } from "jsdom";
 import { Document } from "@langchain/core/documents";
 import { AsyncCaller } from "@langchain/core/utils/async_caller";
+import { isSameOrigin, validateSafeUrl } from "@langchain/core/utils/ssrf";
 import {
   BaseDocumentLoader,
   DocumentLoader,
@@ -103,7 +104,7 @@ export class RecursiveUrlLoader
 
       if (link.startsWith("http")) {
         const isAllowed =
-          !this.preventOutside || this.isSameOrigin(link, baseUrl);
+          !this.preventOutside || isSameOrigin(link, baseUrl);
         if (isAllowed) absolutePaths.push(link);
       } else if (link.startsWith("//")) {
         const base = new URL(baseUrl);
@@ -115,18 +116,6 @@ export class RecursiveUrlLoader
     }
 
     return Array.from(new Set(absolutePaths));
-  }
-
-  /**
-   * Check if two URLs have the same origin (scheme, host, port).
-   * Uses semantic URL parsing instead of string comparison to prevent SSRF bypasses.
-   */
-  private isSameOrigin(link: string, baseUrl: string): boolean {
-    try {
-      return new URL(link).origin === new URL(baseUrl).origin;
-    } catch {
-      return false;
-    }
   }
 
   private extractMetadata(rawHtml: string, url: string) {
@@ -155,6 +144,7 @@ export class RecursiveUrlLoader
   private async getUrlAsDoc(url: string): Promise<Document | null> {
     let res;
     try {
+      await validateSafeUrl(url, { allowHttp: true });
       res = await this.fetchWithTimeout(url, { timeout: this.timeout });
       res = await res.text();
     } catch {
@@ -182,6 +172,7 @@ export class RecursiveUrlLoader
 
     let res;
     try {
+      await validateSafeUrl(url, { allowHttp: true });
       res = await this.fetchWithTimeout(url, { timeout: this.timeout });
       res = await res.text();
     } catch {
