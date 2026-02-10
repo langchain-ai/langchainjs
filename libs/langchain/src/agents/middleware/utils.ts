@@ -3,6 +3,8 @@ import {
   ToolMessage,
   type BaseMessage,
 } from "@langchain/core/messages";
+import { isLangChainTool } from "@langchain/core/tools";
+import { convertToOpenAITool } from "@langchain/core/utils/function_calling";
 import {
   AfterModelHook,
   AfterAgentHook,
@@ -12,12 +14,34 @@ import {
 import { JumpToTarget } from "../constants.js";
 
 /**
- * Default token counter that approximates based on character count
+ * Default token counter that approximates based on character count.
+ *
+ * If tools are provided, the token count also includes stringified tool schemas.
+ *
  * @param messages Messages to count tokens for
+ * @param tools Optional list of tools to include in the token count. Each tool
+ *   can be either a LangChain tool instance or a dict representing a tool schema.
+ *   LangChain tool instances are converted to OpenAI tool format before counting.
  * @returns Approximate token count
  */
-export function countTokensApproximately(messages: BaseMessage[]): number {
+export function countTokensApproximately(
+  messages: BaseMessage[],
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  tools?: Array<Record<string, any>> | null
+): number {
+  const charsPerToken = 4;
   let totalChars = 0;
+
+  // Count tokens for tools if provided
+  if (tools && tools.length > 0) {
+    let toolsChars = 0;
+    for (const tool of tools) {
+      const toolDict = isLangChainTool(tool) ? convertToOpenAITool(tool) : tool;
+      toolsChars += JSON.stringify(toolDict).length;
+    }
+    totalChars += toolsChars;
+  }
+
   for (const msg of messages) {
     let textContent: string;
     if (typeof msg.content === "string") {
@@ -49,7 +73,7 @@ export function countTokensApproximately(messages: BaseMessage[]): number {
     totalChars += textContent.length;
   }
   // Approximate 1 token = 4 characters
-  return Math.ceil(totalChars / 4);
+  return Math.ceil(totalChars / charsPerToken);
 }
 
 export function getHookConstraint(
