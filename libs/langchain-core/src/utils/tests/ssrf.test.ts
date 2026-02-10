@@ -5,7 +5,7 @@ import {
   isLocalhost,
   validateSafeUrl,
   isSafeUrl,
-} from "../ssrf_protection.js";
+} from "../ssrf.js";
 
 describe("isPrivateIp", () => {
   // RFC 1918 private ranges

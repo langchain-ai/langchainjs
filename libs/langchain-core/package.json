@@ -702,15 +702,15 @@
         "default": "./dist/utils/math.js"
       }
     },
-    "./utils/ssrf_protection": {
-      "input": "./src/utils/ssrf_protection.ts",
+    "./utils/ssrf": {
+      "input": "./src/utils/ssrf.ts",
       "require": {
-        "types": "./dist/utils/ssrf_protection.d.cts",
-        "default": "./dist/utils/ssrf_protection.cjs"
+        "types": "./dist/utils/ssrf.d.cts",
+        "default": "./dist/utils/ssrf.cjs"
       },
       "import": {
-        "types": "./dist/utils/ssrf_protection.d.ts",
-        "default": "./dist/utils/ssrf_protection.js"
+        "types": "./dist/utils/ssrf.d.ts",
+        "default": "./dist/utils/ssrf.js"
       }
     },
     "./utils/stream": {
