@@ -83,6 +83,7 @@ export class ChatOpenAIResponses<
       temperature: this.temperature,
       top_p: this.topP,
       user: this.user,
+      service_tier: this.service_tier,
 
       // if include_usage is set or streamUsage then stream must be set to true.
       stream: this.streaming,
