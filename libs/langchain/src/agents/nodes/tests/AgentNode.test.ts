@@ -38,8 +38,14 @@ describe("AgentNode concurrency", () => {
     });
 
     await Promise.all([
-      node.invoke({ messages: [new HumanMessage("A")] }, { configurable: {} }),
-      node.invoke({ messages: [new HumanMessage("B")] }, { configurable: {} }),
+      node.invoke(
+        { messages: [new HumanMessage("A")], structuredResponse: {} },
+        { configurable: {} }
+      ),
+      node.invoke(
+        { messages: [new HumanMessage("B")], structuredResponse: {} },
+        { configurable: {} }
+      ),
     ]);
 
     expect(spy).toHaveBeenCalledTimes(2);
@@ -77,8 +83,14 @@ describe("AgentNode concurrency", () => {
     });
 
     await Promise.all([
-      node.invoke({ messages: [new HumanMessage("X")] }, { configurable: {} }),
-      node.invoke({ messages: [new HumanMessage("Y")] }, { configurable: {} }),
+      node.invoke(
+        { messages: [new HumanMessage("X")], structuredResponse: {} },
+        { configurable: {} }
+      ),
+      node.invoke(
+        { messages: [new HumanMessage("Y")], structuredResponse: {} },
+        { configurable: {} }
+      ),
     ]);
 
     expect(spy).toHaveBeenCalledTimes(2);
