@@ -88,13 +88,12 @@ export interface AgentNodeOptions<
     unknown
   >,
   StateSchema extends AnyAnnotationRoot | InteropZodObject = AnyAnnotationRoot,
-  ContextSchema extends
-    | AnyAnnotationRoot
-    | InteropZodObject = AnyAnnotationRoot,
+  ContextSchema extends AnyAnnotationRoot | InteropZodObject =
+    AnyAnnotationRoot,
 > extends Pick<
-    CreateAgentParams<StructuredResponseFormat, StateSchema, ContextSchema>,
-    "model" | "includeAgentName" | "name" | "responseFormat" | "middleware"
-  > {
+  CreateAgentParams<StructuredResponseFormat, StateSchema, ContextSchema>,
+  "model" | "includeAgentName" | "name" | "responseFormat" | "middleware"
+> {
   toolClasses: (ClientTool | ServerTool)[];
   shouldReturnDirect: Set<string>;
   signal?: AbortSignal;
@@ -122,9 +121,8 @@ export class AgentNode<
     string,
     unknown
   >,
-  ContextSchema extends
-    | AnyAnnotationRoot
-    | InteropZodObject = AnyAnnotationRoot,
+  ContextSchema extends AnyAnnotationRoot | InteropZodObject =
+    AnyAnnotationRoot,
 > extends RunnableCallable<
   InternalAgentState<StructuredResponseFormat>,
   | (
@@ -798,8 +796,8 @@ export class AgentNode<
       "remainingSteps" in state ? (state.remainingSteps as number) : undefined;
     return Boolean(
       remainingSteps &&
-        ((remainingSteps < 1 && allToolsReturnDirect) ||
-          (remainingSteps < 2 && hasToolCalls(state.messages.at(-1))))
+      ((remainingSteps < 1 && allToolsReturnDirect) ||
+        (remainingSteps < 2 && hasToolCalls(state.messages.at(-1))))
     );
   }
 
