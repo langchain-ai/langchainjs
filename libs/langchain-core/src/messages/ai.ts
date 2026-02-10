@@ -256,8 +256,8 @@ export type AIMessageChunkFields<
  * other AI message chunks.
  */
 export class AIMessageChunk<
-    TStructure extends MessageStructure = MessageStructure,
-  >
+  TStructure extends MessageStructure = MessageStructure,
+>
   extends BaseMessageChunk<TStructure, "ai">
   implements AIMessage<TStructure>, AIMessageChunkFields<TStructure>
 {

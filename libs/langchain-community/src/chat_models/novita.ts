@@ -19,8 +19,10 @@ type NovitaUnsupportedArgs =
 
 type NovitaUnsupportedCallOptions = "functions" | "function_call";
 
-export interface ChatNovitaCallOptions
-  extends Omit<ChatOpenAICallOptions, NovitaUnsupportedCallOptions> {
+export interface ChatNovitaCallOptions extends Omit<
+  ChatOpenAICallOptions,
+  NovitaUnsupportedCallOptions
+> {
   response_format: {
     type: "json_object";
     schema: Record<string, unknown>;
@@ -28,7 +30,8 @@ export interface ChatNovitaCallOptions
 }
 
 export interface ChatNovitaInput
-  extends Omit<OpenAIChatInput, "openAIApiKey" | NovitaUnsupportedArgs>,
+  extends
+    Omit<OpenAIChatInput, "openAIApiKey" | NovitaUnsupportedArgs>,
     BaseChatModelParams {
   /**
    * Novita API key

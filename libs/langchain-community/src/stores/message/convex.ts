@@ -27,12 +27,10 @@ import {
 export type ConvexChatMessageHistoryInput<
   DataModel extends GenericDataModel,
   TableName extends TableNamesInDataModel<DataModel> = "messages",
-  IndexName extends IndexNames<
-    NamedTableInfo<DataModel, TableName>
-  > = "bySessionId",
-  SessionIdFieldName extends FieldPaths<
-    NamedTableInfo<DataModel, TableName>
-  > = "sessionId",
+  IndexName extends IndexNames<NamedTableInfo<DataModel, TableName>> =
+    "bySessionId",
+  SessionIdFieldName extends FieldPaths<NamedTableInfo<DataModel, TableName>> =
+    "sessionId",
   MessageTextFieldName extends FieldPaths<
     NamedTableInfo<DataModel, TableName>
   > = "message",
@@ -87,13 +85,11 @@ export type ConvexChatMessageHistoryInput<
 
 export class ConvexChatMessageHistory<
   DataModel extends GenericDataModel,
-  SessionIdFieldName extends FieldPaths<
-    NamedTableInfo<DataModel, TableName>
-  > = "sessionId",
+  SessionIdFieldName extends FieldPaths<NamedTableInfo<DataModel, TableName>> =
+    "sessionId",
   TableName extends TableNamesInDataModel<DataModel> = "messages",
-  IndexName extends IndexNames<
-    NamedTableInfo<DataModel, TableName>
-  > = "bySessionId",
+  IndexName extends IndexNames<NamedTableInfo<DataModel, TableName>> =
+    "bySessionId",
   MessageTextFieldName extends FieldPaths<
     NamedTableInfo<DataModel, TableName>
   > = "message",

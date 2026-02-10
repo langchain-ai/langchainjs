@@ -30,8 +30,7 @@ export interface TencentHunyuanEmbeddingsParams extends EmbeddingsParams {
  * Interface that extends EmbeddingsParams and defines additional
  * parameters specific to the TencentHunyuanEmbeddingsParams class.
  */
-interface TencentHunyuanEmbeddingsParamsWithSign
-  extends TencentHunyuanEmbeddingsParams {
+interface TencentHunyuanEmbeddingsParamsWithSign extends TencentHunyuanEmbeddingsParams {
   /**
    * Tencent Cloud API v3 sign method.
    */

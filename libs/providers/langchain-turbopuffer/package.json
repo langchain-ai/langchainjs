@@ -1,6 +1,6 @@
 {
   "name": "@langchain/turbopuffer",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "LangChain.js integration for the turbopuffer vector database",
   "author": "LangChain",
   "license": "MIT",
@@ -21,7 +21,7 @@
     "lint": "pnpm lint:eslint && pnpm lint:dpdm",
     "lint:fix": "pnpm lint:eslint --fix && pnpm lint:dpdm",
     "clean": "rm -rf .turbo dist/",
-    "test": "vitest run",
+    "test": "vitest run --passWithNoTests",
     "test:watch": "vitest",
     "test:int": "vitest run --mode int",
     "format": "prettier --write \"src\"",

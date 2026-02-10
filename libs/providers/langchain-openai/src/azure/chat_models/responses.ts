@@ -16,9 +16,9 @@ import {
 } from "./common.js";
 
 export class AzureChatOpenAIResponses<
-    CallOptions extends
-      ChatOpenAIResponsesCallOptions = ChatOpenAIResponsesCallOptions,
-  >
+  CallOptions extends ChatOpenAIResponsesCallOptions =
+    ChatOpenAIResponsesCallOptions,
+>
   extends ChatOpenAIResponses<CallOptions>
   implements Partial<AzureOpenAIChatInput>
 {
