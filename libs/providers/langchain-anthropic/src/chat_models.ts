@@ -68,18 +68,37 @@ import { wrapAnthropicClientError } from "./utils/errors.js";
 import PROFILES from "./profiles.js";
 import { AnthropicBeta } from "@anthropic-ai/sdk/resources";
 
+// Default max output tokens per model family (prefix-matched).
+// These are sensible defaults for the `max_tokens` API parameter when
+// the user does not explicitly set `maxTokens`. Values are based on the
+// non-extended-thinking max output from:
+// https://docs.anthropic.com/en/docs/about-claude/models/all-models
+//
+// Order matters: more-specific prefixes must come before less-specific
+// ones so that prefix matching picks the right entry.
 const MODEL_DEFAULT_MAX_OUTPUT_TOKENS: Partial<
   Record<Anthropic.Model, number>
 > = {
+  // Claude 4.6 — 128K max output
   "claude-opus-4-6": 16384,
-  "claude-opus-4-5": 8192,
-  "claude-opus-4-1": 8192,
-  "claude-opus-4": 8192,
-  "claude-sonnet-4": 8192,
-  "claude-sonnet-3-7-sonnet": 8192,
-  "claude-3-5-sonnet": 4096,
-  "claude-3-5-haiku": 4096,
-  "claude-3-haiku": 2048,
+  // Claude 4.5 — 64K max output
+  "claude-opus-4-5": 16384,
+  "claude-sonnet-4-5": 16384,
+  "claude-haiku-4-5": 16384,
+  // Claude 4.1 — 32K max output
+  "claude-opus-4-1": 16384,
+  // Claude 4.0 — 32K / 64K max output
+  "claude-sonnet-4": 16384,
+  "claude-opus-4": 16384,
+  // Claude 3.7 — 64K max output (128K with beta header)
+  "claude-3-7-sonnet": 8192,
+  // Claude 3.5 — 8K max output
+  "claude-3-5-sonnet": 8192,
+  "claude-3-5-haiku": 8192,
+  // Claude 3.0 — 4K max output
+  "claude-3-opus": 4096,
+  "claude-3-sonnet": 4096,
+  "claude-3-haiku": 4096,
 };
 const FALLBACK_MAX_OUTPUT_TOKENS = 2048;
 
