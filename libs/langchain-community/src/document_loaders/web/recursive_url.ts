@@ -102,7 +102,8 @@ export class RecursiveUrlLoader
         continue;
 
       if (link.startsWith("http")) {
-        const isAllowed = !this.preventOutside || link.startsWith(baseUrl);
+        const isAllowed =
+          !this.preventOutside || this.isSameOrigin(link, baseUrl);
         if (isAllowed) absolutePaths.push(link);
       } else if (link.startsWith("//")) {
         const base = new URL(baseUrl);
@@ -114,6 +115,18 @@ export class RecursiveUrlLoader
     }
 
     return Array.from(new Set(absolutePaths));
+  }
+
+  /**
+   * Check if two URLs have the same origin (scheme, host, port).
+   * Uses semantic URL parsing instead of string comparison to prevent SSRF bypasses.
+   */
+  private isSameOrigin(link: string, baseUrl: string): boolean {
+    try {
+      return new URL(link).origin === new URL(baseUrl).origin;
+    } catch {
+      return false;
+    }
   }
 
   private extractMetadata(rawHtml: string, url: string) {
