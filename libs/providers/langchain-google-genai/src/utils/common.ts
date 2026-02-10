@@ -16,6 +16,7 @@ import {
   AIMessageChunk,
   BaseMessage,
   ChatMessage,
+  ContentBlock,
   ToolMessage,
   ToolMessageChunk,
   MessageContent,
@@ -129,6 +130,66 @@ function inferToolNameFromPreviousMessages(
     .find((toolCall) => {
       return toolCall.id === message.tool_call_id;
     })?.name;
+}
+
+/**
+ * Converts a ContentBlock.Multimodal block (image, video, audio, file)
+ * to the appropriate Google Generative AI Part format.
+ *
+ * Handles three data record variants:
+ *  - DataRecordBase64: has `data` property → InlineDataPart
+ *  - DataRecordUrl: has `url` property → FileDataPart (or InlineDataPart for data: URLs)
+ *  - DataRecordFileId: has `fileId` property → not directly supported, throws
+ */
+function _multimodalContentBlockToPart(
+  block: ContentBlock.Multimodal.Data,
+  defaultMimeType: string
+): InlineDataPart | FileDataPart {
+  if ("data" in block && block.data !== undefined) {
+    // DataRecordBase64: inline base64 data
+    const data =
+      block.data instanceof Uint8Array
+        ? btoa(String.fromCharCode(...block.data))
+        : block.data;
+    return {
+      inlineData: {
+        mimeType: block.mimeType || defaultMimeType,
+        data,
+      },
+    };
+  }
+
+  if ("url" in block && block.url !== undefined) {
+    // DataRecordUrl: check if it's a data: URL first
+    const parsed = parseBase64DataUrl({ dataUrl: block.url });
+    if (parsed) {
+      return {
+        inlineData: {
+          mimeType: parsed.mime_type,
+          data: parsed.data,
+        },
+      };
+    }
+    // Regular URL → fileData
+    return {
+      fileData: {
+        mimeType: block.mimeType || defaultMimeType,
+        fileUri: block.url,
+      },
+    };
+  }
+
+  if ("fileId" in block && block.fileId !== undefined) {
+    throw new Error(
+      `ContentBlock.Multimodal fileId is not supported by Google Generative AI. ` +
+        `Use a URL or base64 data instead.`
+    );
+  }
+
+  throw new Error(
+    `Invalid multimodal content block: must have "data", "url", or "fileId" property. ` +
+      `Received: ${JSON.stringify(block)}`
+  );
 }
 
 function _getStandardContentBlockConverter(isMultimodalModel: boolean) {
@@ -308,6 +369,38 @@ function _convertLangChainContentToPart(
     };
   } else if (content.type === "media") {
     return messageContentMedia(content);
+  } else if (content.type === "image") {
+    return _multimodalContentBlockToPart(
+      content as ContentBlock.Multimodal.Image,
+      "image/png"
+    );
+  } else if (content.type === "video") {
+    return _multimodalContentBlockToPart(
+      content as ContentBlock.Multimodal.Video,
+      "video/mp4"
+    );
+  } else if (content.type === "audio") {
+    return _multimodalContentBlockToPart(
+      content as ContentBlock.Multimodal.Audio,
+      "audio/mpeg"
+    );
+  } else if (content.type === "file") {
+    return _multimodalContentBlockToPart(
+      content as ContentBlock.Multimodal.File,
+      "application/octet-stream"
+    );
+  } else if (content.type === "text-plain") {
+    // text-plain blocks can have an inline text property
+    if (
+      "text" in content &&
+      typeof (content as ContentBlock.Multimodal.PlainText).text === "string"
+    ) {
+      return { text: (content as ContentBlock.Multimodal.PlainText).text! };
+    }
+    return _multimodalContentBlockToPart(
+      content as ContentBlock.Multimodal.PlainText,
+      "text/plain"
+    );
   } else if (content.type === "tool_use") {
     return {
       functionCall: {
