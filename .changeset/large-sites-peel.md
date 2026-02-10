@@ -1,5 +1,5 @@
 ---
-"langchain": major
+"langchain": patch
 ---
 
-Support concurrent agentNode dynamic prompts
+Support concurrent `agentNode` dynamic prompts properly.
