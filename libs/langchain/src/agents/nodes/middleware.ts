@@ -18,7 +18,8 @@ class AgentRuntime {}
 
 type NodeOutput<TStateSchema extends Record<string, any>> =
   | TStateSchema
-  | Command<any, TStateSchema, string>;
+  | Command<any, TStateSchema, string>
+  | { jumpTo?: JumpToTarget };
 
 export interface MiddlewareNodeOptions {
   getState: () => Record<string, unknown>;
