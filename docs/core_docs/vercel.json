@@ -5,6 +5,11 @@
   "outputDirectory": "public",
   "redirects": [
     {
+      "source": "/llms.txt",
+      "destination": "https://docs.langchain.com/llms.txt",
+      "permanent": true
+    },
+    {
       "source": "/(.*)",
       "destination": "https://docs.langchain.com/oss/javascript/langchain/overview",
       "permanent": true
