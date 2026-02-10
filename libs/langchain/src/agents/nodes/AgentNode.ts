@@ -46,9 +46,9 @@ import {
 
 type ResponseHandlerResult<StructuredResponseFormat> =
   | {
-  structuredResponse: StructuredResponseFormat;
-  messages: BaseMessage[];
-}
+      structuredResponse: StructuredResponseFormat;
+      messages: BaseMessage[];
+    }
   | Promise<Command>;
 
 /**
@@ -89,12 +89,12 @@ export interface AgentNodeOptions<
   >,
   StateSchema extends AnyAnnotationRoot | InteropZodObject = AnyAnnotationRoot,
   ContextSchema extends
-      | AnyAnnotationRoot
+    | AnyAnnotationRoot
     | InteropZodObject = AnyAnnotationRoot,
 > extends Pick<
-  CreateAgentParams<StructuredResponseFormat, StateSchema, ContextSchema>,
-  "model" | "includeAgentName" | "name" | "responseFormat" | "middleware"
-> {
+    CreateAgentParams<StructuredResponseFormat, StateSchema, ContextSchema>,
+    "model" | "includeAgentName" | "name" | "responseFormat" | "middleware"
+  > {
   toolClasses: (ClientTool | ServerTool)[];
   shouldReturnDirect: Set<string>;
   signal?: AbortSignal;
@@ -123,14 +123,14 @@ export class AgentNode<
     unknown
   >,
   ContextSchema extends
-      | AnyAnnotationRoot
+    | AnyAnnotationRoot
     | InteropZodObject = AnyAnnotationRoot,
 > extends RunnableCallable<
   InternalAgentState<StructuredResponseFormat>,
   | (
-  | { messages: BaseMessage[] }
-  | { structuredResponse: StructuredResponseFormat }
-  )
+      | { messages: BaseMessage[] }
+      | { structuredResponse: StructuredResponseFormat }
+    )
   | Command
 > {
   #options: AgentNodeOptions<StructuredResponseFormat, ContextSchema>;
@@ -323,9 +323,7 @@ export class AgentNode<
        * prepend the system message to the messages if it is not empty
        */
       const messages = [
-        ...(currentSystemMessage.text === ""
-          ? []
-          : [currentSystemMessage]),
+        ...(currentSystemMessage.text === "" ? [] : [currentSystemMessage]),
         ...request.messages,
       ];
 
@@ -418,9 +416,9 @@ export class AgentNode<
            */
           const context = currentMiddleware.contextSchema
             ? interopParse(
-              currentMiddleware.contextSchema,
-              lgConfig?.context || {}
-            )
+                currentMiddleware.contextSchema,
+                lgConfig?.context || {}
+              )
             : lgConfig?.context;
 
           /**
@@ -444,9 +442,9 @@ export class AgentNode<
             state: {
               ...(middleware.stateSchema
                 ? interopParse(
-                  toPartialZodObject(middleware.stateSchema),
-                  state
-                )
+                    toPartialZodObject(middleware.stateSchema),
+                    state
+                  )
                 : {}),
               ...currentGetState(),
               messages: state.messages,
@@ -652,9 +650,9 @@ export class AgentNode<
           }),
           new AIMessage(
             lastMessage ??
-            `Returning structured response: ${JSON.stringify(
-              structuredResponse
-            )}`
+              `Returning structured response: ${JSON.stringify(
+                structuredResponse
+              )}`
           ),
         ],
       };
@@ -800,8 +798,8 @@ export class AgentNode<
       "remainingSteps" in state ? (state.remainingSteps as number) : undefined;
     return Boolean(
       remainingSteps &&
-      ((remainingSteps < 1 && allToolsReturnDirect) ||
-        (remainingSteps < 2 && hasToolCalls(state.messages.at(-1))))
+        ((remainingSteps < 1 && allToolsReturnDirect) ||
+          (remainingSteps < 2 && hasToolCalls(state.messages.at(-1))))
     );
   }
 
