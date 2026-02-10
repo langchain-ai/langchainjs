@@ -230,7 +230,7 @@
     "@huggingface/transformers": "^3.8.1",
     "@ibm-cloud/watsonx-ai": "*",
     "@lancedb/lancedb": "^0.19.1",
-    "@langchain/core": "^1.0.0",
+    "@langchain/core": ">=1.1.21",
     "@layerup/layerup-security": "^1.5.12",
     "@libsql/client": "^0.17.0",
     "@mendable/firecrawl-js": "^1.4.3",
