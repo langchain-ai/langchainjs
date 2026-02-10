@@ -32,8 +32,7 @@ export interface ToolSpec {
 /**
  * Interface specific to the Fake Streaming Chat model.
  */
-export interface FakeStreamingChatModelCallOptions
-  extends BaseChatModelCallOptions {}
+export interface FakeStreamingChatModelCallOptions extends BaseChatModelCallOptions {}
 /**
  * Interface for the Constructor-field specific to the Fake Streaming Chat model (all optional because we fill in defaults).
  */

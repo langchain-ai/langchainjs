@@ -119,8 +119,7 @@ export class RunLog extends RunLogPatch {
 
 export type SchemaFormat = "original" | "streaming_events";
 
-export interface LogStreamCallbackHandlerInput
-  extends BaseCallbackHandlerInput {
+export interface LogStreamCallbackHandlerInput extends BaseCallbackHandlerInput {
   autoClose?: boolean;
   includeNames?: string[];
   includeTypes?: string[];

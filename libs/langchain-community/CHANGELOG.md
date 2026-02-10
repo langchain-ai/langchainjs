@@ -1,5 +1,15 @@
 # @langchain/community
 
+## 1.1.13
+
+### Patch Changes
+
+- [#9853](https://github.com/langchain-ai/langchainjs/pull/9853) [`9513c5a`](https://github.com/langchain-ai/langchainjs/commit/9513c5a9379fe99dae2049d12811828fa0ee5526) Thanks [@philip](https://github.com/philip)! - fix(community): update NeonPostgres vector store for @neondatabase/serverless v1.0.0 GA
+
+- Updated dependencies [[`16d691c`](https://github.com/langchain-ai/langchainjs/commit/16d691c7f8196e1d6322f051c25b2219ff2953b6), [`1058574`](https://github.com/langchain-ai/langchainjs/commit/1058574b723f0d060eb9b3ca25be5aeeabbe51aa), [`8ee833c`](https://github.com/langchain-ai/langchainjs/commit/8ee833c1fb99891565832ead4990e246b30022a6)]:
+  - @langchain/openai@1.2.6
+  - @langchain/classic@1.0.16
+
 ## 1.1.12
 
 ### Patch Changes

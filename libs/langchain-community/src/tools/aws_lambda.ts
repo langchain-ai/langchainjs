@@ -105,9 +105,8 @@ class AWSLambda extends DynamicTool {
  */
 async function LambdaImports() {
   try {
-    const { LambdaClient, InvokeCommand } = await import(
-      "@aws-sdk/client-lambda"
-    );
+    const { LambdaClient, InvokeCommand } =
+      await import("@aws-sdk/client-lambda");
 
     return {
       Client: LambdaClient as typeof LambdaClient,

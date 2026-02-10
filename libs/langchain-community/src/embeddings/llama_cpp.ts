@@ -11,8 +11,7 @@ import {
  * can set this in the environment variable `LLAMA_PATH`.
  */
 export interface LlamaCppEmbeddingsParams
-  extends LlamaBaseCppInputs,
-    EmbeddingsParams {}
+  extends LlamaBaseCppInputs, EmbeddingsParams {}
 
 /**
  * @example

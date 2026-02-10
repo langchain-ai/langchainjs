@@ -22,8 +22,7 @@ import {
 } from "../converters/responses.js";
 import { OpenAIVerbosityParam } from "../types.js";
 
-export interface ChatOpenAIResponsesCallOptions
-  extends BaseChatOpenAICallOptions {
+export interface ChatOpenAIResponsesCallOptions extends BaseChatOpenAICallOptions {
   /**
    * Configuration options for a text response from the model. Can be plain text or
    * structured JSON data.
@@ -65,8 +64,8 @@ export type ChatResponsesInvocationParams = Omit<
  * @internal
  */
 export class ChatOpenAIResponses<
-  CallOptions extends
-    ChatOpenAIResponsesCallOptions = ChatOpenAIResponsesCallOptions,
+  CallOptions extends ChatOpenAIResponsesCallOptions =
+    ChatOpenAIResponsesCallOptions,
 > extends BaseChatOpenAI<CallOptions> {
   override invocationParams(
     options?: this["ParsedCallOptions"]
@@ -84,6 +83,7 @@ export class ChatOpenAIResponses<
       temperature: this.temperature,
       top_p: this.topP,
       user: this.user,
+      service_tier: this.service_tier,
 
       // if include_usage is set or streamUsage then stream must be set to true.
       stream: this.streaming,

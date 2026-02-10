@@ -33,8 +33,9 @@ export type ApifyDatasetMappingFunction<Metadata extends Record<string, any>> =
     | Array<Document<Metadata>>
     | Promise<Document<Metadata> | Array<Document<Metadata>>>;
 
-export interface ApifyDatasetLoaderConfig<Metadata extends Record<string, any>>
-  extends AsyncCallerParams {
+export interface ApifyDatasetLoaderConfig<
+  Metadata extends Record<string, any>,
+> extends AsyncCallerParams {
   datasetMappingFunction: ApifyDatasetMappingFunction<Metadata>;
   clientOptions?: ApifyClientOptions;
 }
