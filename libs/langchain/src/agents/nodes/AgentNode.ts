@@ -6,7 +6,11 @@ import {
   ToolMessage,
   SystemMessage,
 } from "@langchain/core/messages";
-import { Command, type LangGraphRunnableConfig } from "@langchain/langgraph";
+import {
+  Command,
+  isCommand,
+  type LangGraphRunnableConfig,
+} from "@langchain/langgraph";
 import { type LanguageModelLike } from "@langchain/core/language_models/base";
 import { type BaseChatModelCallOptions } from "@langchain/core/language_models/chat_models";
 import {
@@ -58,7 +62,8 @@ type ResponseHandlerResult<StructuredResponseFormat> =
  */
 type InternalModelResponse<StructuredResponseFormat> =
   | AIMessage
-  | ResponseHandlerResult<StructuredResponseFormat>;
+  | ResponseHandlerResult<StructuredResponseFormat>
+  | Command;
 
 /**
  * Check if the response is an internal model response.
@@ -70,6 +75,7 @@ function isInternalModelResponse<StructuredResponseFormat>(
 ): response is InternalModelResponse<StructuredResponseFormat> {
   return (
     AIMessage.isInstance(response) ||
+    isCommand(response) ||
     (typeof response === "object" &&
       response !== null &&
       "structuredResponse" in response &&
@@ -125,11 +131,11 @@ export class AgentNode<
     AnyAnnotationRoot,
 > extends RunnableCallable<
   InternalAgentState<StructuredResponseFormat>,
-  | (
-      | { messages: BaseMessage[] }
-      | { structuredResponse: StructuredResponseFormat }
-    )
-  | Command
+  | Command[]
+  | {
+      messages: BaseMessage[];
+      structuredResponse: StructuredResponseFormat;
+    }
 > {
   #options: AgentNodeOptions<StructuredResponseFormat, ContextSchema>;
   #systemMessage: SystemMessage;
@@ -223,47 +229,69 @@ export class AgentNode<
       lastMessage.name &&
       this.#options.shouldReturnDirect.has(lastMessage.name)
     ) {
-      /**
-       * return directly without invoking the model again
-       */
-      return { messages: [] };
+      return [new Command({ update: { messages: [] } })];
     }
 
-    const response = await this.#invokeModel(state, config);
+    const { response, lastAiMessage, collectedCommands } =
+      await this.#invokeModel(state, config);
 
     /**
-     * if we were able to generate a structured response, return it
+     * structuredResponse — return as a plain state update dict (not a Command)
+     * because the structuredResponse channel uses UntrackedValue(guard=true)
+     * which only allows a single write per step.
      */
-    if ("structuredResponse" in response) {
+    if (
+      typeof response === "object" &&
+      response !== null &&
+      "structuredResponse" in response &&
+      "messages" in response
+    ) {
+      const { structuredResponse, messages } = response as {
+        structuredResponse: StructuredResponseFormat;
+        messages: BaseMessage[];
+      };
       return {
-        messages: [...state.messages, ...(response.messages || [])],
-        structuredResponse: response.structuredResponse,
+        messages: [...state.messages, ...messages],
+        structuredResponse,
       };
     }
 
-    /**
-     * if we need to direct the agent to the model, return the update
-     */
-    if (response instanceof Command) {
-      return response;
+    const commands: Command[] = [];
+    const aiMessage: AIMessage | null = AIMessage.isInstance(response)
+      ? response
+      : lastAiMessage;
+
+    // messages
+    if (aiMessage) {
+      aiMessage.name = this.name;
+      aiMessage.lc_kwargs.name = this.name;
+
+      if (this.#areMoreStepsNeeded(state, aiMessage)) {
+        commands.push(
+          new Command({
+            update: {
+              messages: [
+                new AIMessage({
+                  content: "Sorry, need more steps to process this request.",
+                  name: this.name,
+                  id: aiMessage.id,
+                }),
+              ],
+            },
+          })
+        );
+      } else {
+        commands.push(new Command({ update: { messages: [aiMessage] } }));
+      }
     }
 
-    response.name = this.name;
-    response.lc_kwargs.name = this.name;
-
-    if (this.#areMoreStepsNeeded(state, response)) {
-      return {
-        messages: [
-          new AIMessage({
-            content: "Sorry, need more steps to process this request.",
-            name: this.name,
-            id: response.id,
-          }),
-        ],
-      };
+    // Commands (from base handler retries or middleware)
+    if (isCommand(response) && !collectedCommands.includes(response)) {
+      commands.push(response);
     }
+    commands.push(...collectedCommands);
 
-    return { messages: [response] };
+    return commands;
   }
 
   /**
@@ -290,9 +318,21 @@ export class AgentNode<
     options: {
       lastMessage?: string;
     } = {}
-  ): Promise<AIMessage | ResponseHandlerResult<StructuredResponseFormat>> {
+  ): Promise<{
+    response: InternalModelResponse<StructuredResponseFormat>;
+    lastAiMessage: AIMessage | null;
+    collectedCommands: Command[];
+  }> {
     const model = await this.#deriveModel();
     const lgConfig = config as LangGraphRunnableConfig;
+
+    /**
+     * Shared tracking state for AIMessage and Command collection.
+     * lastAiMessage tracks the effective AIMessage through the middleware chain.
+     * collectedCommands accumulates Commands returned by middleware (not base handler).
+     */
+    let lastAiMessage: AIMessage | null = null;
+    const collectedCommands: Command[] = [];
 
     /**
      * Create the base handler that performs the actual model invocation
@@ -330,6 +370,8 @@ export class AgentNode<
         }),
         signal
       )) as AIMessage;
+
+      lastAiMessage = response;
 
       /**
        * if the user requests a native schema output, try to parse the response
@@ -533,7 +575,19 @@ export class AgentNode<
               };
             }
 
-            return innerHandler(normalizedReq);
+            const innerHandlerResult = await innerHandler(normalizedReq);
+
+            /**
+             * Normalize Commands so middleware always sees AIMessage from handler().
+             * When an inner middleware returns a Command, substitute the tracked
+             * lastAiMessage. The raw Command is still captured in innerHandlerResult
+             * for the framework's Command collection.
+             */
+            if (isCommand(innerHandlerResult) && lastAiMessage) {
+              return lastAiMessage as InternalModelResponse<StructuredResponseFormat>;
+            }
+
+            return innerHandlerResult;
           };
 
           // Call middleware's wrapModelCall with the validation handler
@@ -548,14 +602,20 @@ export class AgentNode<
             );
 
             /**
-             * Validate that this specific middleware returned a valid AIMessage
+             * Validate that this specific middleware returned a valid response
              */
             if (!isInternalModelResponse(middlewareResponse)) {
               throw new Error(
                 `Invalid response from "wrapModelCall" in middleware "${
                   currentMiddleware.name
-                }": expected AIMessage, got ${typeof middlewareResponse}`
+                }": expected AIMessage or Command, got ${typeof middlewareResponse}`
               );
+            }
+
+            if (AIMessage.isInstance(middlewareResponse)) {
+              lastAiMessage = middlewareResponse;
+            } else if (isCommand(middlewareResponse)) {
+              collectedCommands.push(middlewareResponse);
             }
 
             return middlewareResponse;
@@ -590,7 +650,8 @@ export class AgentNode<
       }) as Runtime<unknown>,
     };
 
-    return wrappedHandler(initialRequest);
+    const response = await wrappedHandler(initialRequest);
+    return { response, lastAiMessage, collectedCommands };
   }
 
   /**
@@ -885,11 +946,14 @@ export class AgentNode<
     return modelRunnable;
   }
 
-  getState(): {
-    messages: BaseMessage[];
-  } {
+  /**
+   * Returns internal bookkeeping state for StateManager, not graph output.
+   * The return shape differs from the node's output type (Command).
+   */
+  // @ts-expect-error Internal state shape differs from graph output type
+  getState(): { messages: BaseMessage[] } {
     const state = super.getState();
-    const origState = state && !(state instanceof Command) ? state : {};
+    const origState = state && !isCommand(state) ? state : {};
 
     return {
       messages: [],
