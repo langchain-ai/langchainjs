@@ -131,84 +131,84 @@ describe("isLocalhost", () => {
 });
 
 describe("validateSafeUrl", () => {
-  test("should accept valid public HTTPS URLs", async () => {
-    const result = await validateSafeUrl("https://example.com/path");
+  test("should accept valid public HTTPS URLs", () => {
+    const result = validateSafeUrl("https://example.com/path");
     expect(result).toBe("https://example.com/path");
   });
 
-  test("should reject localhost by default", async () => {
-    await expect(
+  test("should reject localhost by default", () => {
+    expect(() =>
       validateSafeUrl("https://localhost:8000/path")
-    ).rejects.toThrow(/localhost/);
+    ).toThrow(/localhost/);
   });
 
-  test("should allow localhost with allowPrivate flag", async () => {
-    const result = await validateSafeUrl("https://localhost:8000/path", {
+  test("should allow localhost with allowPrivate flag", () => {
+    const result = validateSafeUrl("https://localhost:8000/path", {
       allowPrivate: true,
     });
     expect(result).toBe("https://localhost:8000/path");
   });
 
-  test("should reject HTTP by default", async () => {
+  test("should reject HTTP by default", () => {
     // Using a public domain to focus on scheme check
-    await expect(validateSafeUrl("http://example.com/path")).rejects.toThrow(
+    expect(() => validateSafeUrl("http://example.com/path")).toThrow(
       /HTTP scheme not allowed/
     );
   });
 
-  test("should allow HTTP with allowHttp flag", async () => {
-    const result = await validateSafeUrl("http://example.com/path", {
+  test("should allow HTTP with allowHttp flag", () => {
+    const result = validateSafeUrl("http://example.com/path", {
       allowHttp: true,
     });
     expect(result).toBe("http://example.com/path");
   });
 
-  test("should reject invalid URL schemes", async () => {
-    await expect(validateSafeUrl("ftp://example.com")).rejects.toThrow();
-    await expect(validateSafeUrl("file:///etc/passwd")).rejects.toThrow();
-    await expect(validateSafeUrl("javascript:alert(1)")).rejects.toThrow();
+  test("should reject invalid URL schemes", () => {
+    expect(() => validateSafeUrl("ftp://example.com")).toThrow();
+    expect(() => validateSafeUrl("file:///etc/passwd")).toThrow();
+    expect(() => validateSafeUrl("javascript:alert(1)")).toThrow();
   });
 
-  test("should reject URLs with missing hostname", async () => {
-    await expect(validateSafeUrl("https://")).rejects.toThrow(
+  test("should reject URLs with missing hostname", () => {
+    expect(() => validateSafeUrl("https://")).toThrow(
       /invalid|missing hostname/i
     );
   });
 
-  test("should reject cloud metadata endpoints", async () => {
+  test("should reject cloud metadata endpoints", () => {
     // Direct metadata hostnames
-    await expect(validateSafeUrl("https://metadata")).rejects.toThrow(
+    expect(() => validateSafeUrl("https://metadata")).toThrow(
       /metadata/
     );
 
-    await expect(validateSafeUrl("https://instance-data")).rejects.toThrow(
+    expect(() => validateSafeUrl("https://instance-data")).toThrow(
       /instance-data/
     );
   });
 
-  test("should reject private IPs by default", async () => {
-    await expect(validateSafeUrl("https://192.168.1.1")).rejects.toThrow(
+  test("should reject private IPs by default", () => {
+    expect(() => validateSafeUrl("https://192.168.1.1")).toThrow(
       /private|allowPrivate/i
     );
 
-    await expect(validateSafeUrl("https://10.0.0.1")).rejects.toThrow(
+    expect(() => validateSafeUrl("https://10.0.0.1")).toThrow(
       /private|allowPrivate/i
     );
   });
 
-  test("should allow private IPs with allowPrivate flag", async () => {
-    const result = await validateSafeUrl("https://192.168.1.1", {
+  test("should allow private IPs with allowPrivate flag", () => {
+    const result = validateSafeUrl("https://192.168.1.1", {
       allowPrivate: true,
     });
     expect(result).toBe("https://192.168.1.1");
   });
 
-  test("should handle 127.0.0.1 as localhost", async () => {
-    await expect(validateSafeUrl("https://127.0.0.1")).rejects.toThrow(
+  test("should handle 127.0.0.1 as localhost", () => {
+    expect(() => validateSafeUrl("https://127.0.0.1")).toThrow(
       /localhost/i
     );
 
-    const result = await validateSafeUrl("https://127.0.0.1", {
+    const result = validateSafeUrl("https://127.0.0.1", {
       allowPrivate: true,
     });
     expect(result).toBe("https://127.0.0.1");
@@ -216,41 +216,41 @@ describe("validateSafeUrl", () => {
 });
 
 describe("isSafeUrl", () => {
-  test("should return true for safe URLs", async () => {
-    const result = await isSafeUrl("https://example.com");
+  test("should return true for safe URLs", () => {
+    const result = isSafeUrl("https://example.com");
     expect(result).toBe(true);
   });
 
-  test("should return false for localhost by default", async () => {
-    const result = await isSafeUrl("https://localhost");
+  test("should return false for localhost by default", () => {
+    const result = isSafeUrl("https://localhost");
     expect(result).toBe(false);
   });
 
-  test("should return true for localhost with allowPrivate", async () => {
-    const result = await isSafeUrl("https://localhost", {
+  test("should return true for localhost with allowPrivate", () => {
+    const result = isSafeUrl("https://localhost", {
       allowPrivate: true,
     });
     expect(result).toBe(true);
   });
 
-  test("should return false for invalid schemes", async () => {
-    const result = await isSafeUrl("ftp://example.com");
+  test("should return false for invalid schemes", () => {
+    const result = isSafeUrl("ftp://example.com");
     expect(result).toBe(false);
   });
 
-  test("should return false for HTTP by default", async () => {
-    const result = await isSafeUrl("http://example.com");
+  test("should return false for HTTP by default", () => {
+    const result = isSafeUrl("http://example.com");
     expect(result).toBe(false);
   });
 
-  test("should return true for HTTP with allowHttp", async () => {
-    const result = await isSafeUrl("http://example.com", { allowHttp: true });
+  test("should return true for HTTP with allowHttp", () => {
+    const result = isSafeUrl("http://example.com", { allowHttp: true });
     expect(result).toBe(true);
   });
 
-  test("should handle DNS resolution failures gracefully", async () => {
-    const result = await isSafeUrl("https://nonexistent-domain-12345.test");
-    expect(result).toBe(false);
+  test("should return true for unknown hostnames", () => {
+    const result = isSafeUrl("https://nonexistent-domain-12345.test");
+    expect(result).toBe(true);
   });
 });
 
@@ -326,25 +326,25 @@ describe("isSameOrigin", () => {
 });
 
 describe("Real-world URLs", () => {
-  test("should allow valid webhook URLs", async () => {
-    const result = await isSafeUrl("https://webhook.site/unique-id");
+  test("should allow valid webhook URLs", () => {
+    const result = isSafeUrl("https://webhook.site/unique-id");
     expect(result).toBe(true);
   });
 
-  test("should handle HTTPS external APIs", async () => {
+  test("should handle HTTPS external APIs", () => {
     // Changed to use example.com which is known to be safe
     // api.example.com may not exist and cause DNS resolution failure
-    const result = await isSafeUrl("https://www.google.com");
+    const result = isSafeUrl("https://www.google.com");
     expect(result).toBe(true);
   });
 
-  test("should reject localhost callbacks by default", async () => {
-    const result = await isSafeUrl("https://localhost:3000/callback");
+  test("should reject localhost callbacks by default", () => {
+    const result = isSafeUrl("https://localhost:3000/callback");
     expect(result).toBe(false);
   });
 
-  test("should allow localhost callbacks with flag", async () => {
-    const result = await isSafeUrl("https://localhost:3000/callback", {
+  test("should allow localhost callbacks with flag", () => {
+    const result = isSafeUrl("https://localhost:3000/callback", {
       allowPrivate: true,
     });
     expect(result).toBe(true);

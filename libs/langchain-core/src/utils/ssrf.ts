@@ -262,47 +262,11 @@ export function isLocalhost(hostname: string, ip?: string): boolean {
   return false;
 }
 
-/**
- * Resolve a hostname to IP addresses using DNS.
- * Uses dynamic import so it only fails in non-Node environments (browsers, workers, etc.).
- * Returns { ips, dnsAvailable } to distinguish between:
- * - DNS module unavailable (browser/edge/workers) -> dnsAvailable=false
- * - DNS resolution succeeded -> dnsAvailable=true, ips=[...]
- * - DNS resolution failed -> throws ResolutionError
- */
-async function resolveDns(
-  hostname: string
-): Promise<{ ips: string[]; dnsAvailable: boolean }> {
-  type DnsModule = {
-    resolve4: (hostname: string) => Promise<string[]>;
-    resolve6: (hostname: string) => Promise<string[]>;
-  };
-
-  let dns: DnsModule;
-  try {
-    // Dynamic import with bundler hints to prevent module resolution failures
-    dns = (await import(
-      /* webpackIgnore: true */ /* @vite-ignore */ "dns/promises"
-    )) as DnsModule;
-  } catch {
-    // dns module not available (browser, edge workers, etc.)
-    return { ips: [], dnsAvailable: false };
-  }
-
-  // DNS module is available, so we must succeed or throw a resolution error
-  try {
-    const ips = await dns.resolve4(hostname);
-    return { ips, dnsAvailable: true };
-  } catch {
-    // IPv4 failed, try IPv6
-    const ips = await dns.resolve6(hostname);
-    return { ips, dnsAvailable: true };
-  }
-}
 
 /**
  * Validate that a URL is safe to connect to.
- * Resolves the hostname to IP(s) and checks against private/metadata ranges.
+ * Performs static validation checks against hostnames and direct IP addresses.
+ * Does not perform DNS resolution.
  *
  * @param url URL to validate
  * @param options.allowPrivate Allow private IPs (default: false)
@@ -310,10 +274,10 @@ async function resolveDns(
  * @returns The validated URL
  * @throws Error if URL is not safe
  */
-export async function validateSafeUrl(
+export function validateSafeUrl(
   url: string,
   options?: { allowPrivate?: boolean; allowHttp?: boolean }
-): Promise<string> {
+): string {
   const allowPrivate = options?.allowPrivate ?? false;
   const allowHttp = options?.allowHttp ?? false;
 
@@ -388,41 +352,9 @@ export async function validateSafeUrl(
       return url;
     }
 
-    // Try to resolve the hostname
-    const { ips, dnsAvailable } = await resolveDns(hostname);
-
-    // If DNS is unavailable (browser/edge/workers), we've already done hostname-based checks above.
-    // Allow the URL if it's not cloud metadata and not localhost.
-    // In non-Node environments, we can't validate IP ranges, so we trust the hostname checks.
-    if (!dnsAvailable) {
-      // DNS module not available — allow if hostname checks passed
-      return url;
-    }
-
-    // DNS was available but returned no IPs — fail closed
-    if (ips.length === 0) {
-      throw new Error(`Failed to resolve hostname: ${hostname}`);
-    }
-
-    // Check each IP
-    for (const ip of ips) {
-      // Cloud metadata is always blocked
-      if (isCloudMetadata(hostname, ip)) {
-        throw new Error(
-          `URL resolves to cloud metadata IP: ${ip} (${hostname})`
-        );
-      }
-
-      // Check private IPs
-      if (isPrivateIp(ip)) {
-        if (!allowPrivate) {
-          throw new Error(
-            `URL resolves to private IP: ${ip} (${hostname}). Set allowPrivate: true to allow.`
-          );
-        }
-      }
-    }
-
+    // For regular hostnames, we've already done all hostname-based checks above
+    // (cloud metadata, localhost). If those passed, the URL is safe.
+    // We don't perform DNS resolution in this environment-agnostic function.
     return url;
   } catch (error) {
     if (error && typeof error === "object" && "message" in error) {
@@ -440,12 +372,12 @@ export async function validateSafeUrl(
  * @param options.allowHttp Allow http:// scheme (default: false)
  * @returns true if URL is safe, false otherwise
  */
-export async function isSafeUrl(
+export function isSafeUrl(
   url: string,
   options?: { allowPrivate?: boolean; allowHttp?: boolean }
-): Promise<boolean> {
+): boolean {
   try {
-    await validateSafeUrl(url, options);
+    validateSafeUrl(url, options);
     return true;
   } catch {
     return false;

@@ -143,7 +143,7 @@ export class RecursiveUrlLoader
   private async getUrlAsDoc(url: string): Promise<Document | null> {
     let res;
     try {
-      await validateSafeUrl(url, { allowHttp: true });
+      validateSafeUrl(url, { allowHttp: true });
       res = await this.fetchWithTimeout(url, { timeout: this.timeout });
       res = await res.text();
     } catch {
