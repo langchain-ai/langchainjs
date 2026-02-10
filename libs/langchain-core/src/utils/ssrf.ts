@@ -16,7 +16,11 @@ const PRIVATE_IP_RANGES = [
 ];
 
 // Cloud metadata IPs
-const CLOUD_METADATA_IPS = ["169.254.169.254", "169.254.170.2", "100.100.100.200"];
+const CLOUD_METADATA_IPS = [
+  "169.254.169.254",
+  "169.254.170.2",
+  "100.100.100.200",
+];
 
 // Cloud metadata hostnames (case-insensitive)
 const CLOUD_METADATA_HOSTNAMES = [
@@ -80,11 +84,7 @@ function expandIpv6(ip: string): string | null {
       }
 
       const zeros = Array(missing).fill("0");
-      normalized = [
-        ...leftParts,
-        ...zeros,
-        ...rightParts,
-      ]
+      normalized = [...leftParts, ...zeros, ...rightParts]
         .filter((p) => p !== "")
         .join(":");
     }
@@ -95,9 +95,7 @@ function expandIpv6(ip: string): string | null {
       return null;
     }
 
-    return parts
-      .map((p) => p.padStart(4, "0").toLowerCase())
-      .join(":");
+    return parts.map((p) => p.padStart(4, "0").toLowerCase()).join(":");
   } finally {
     socket.destroy();
   }

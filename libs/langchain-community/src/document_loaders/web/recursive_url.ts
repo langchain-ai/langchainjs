@@ -103,8 +103,7 @@ export class RecursiveUrlLoader
         continue;
 
       if (link.startsWith("http")) {
-        const isAllowed =
-          !this.preventOutside || isSameOrigin(link, baseUrl);
+        const isAllowed = !this.preventOutside || isSameOrigin(link, baseUrl);
         if (isAllowed) absolutePaths.push(link);
       } else if (link.startsWith("//")) {
         const base = new URL(baseUrl);
