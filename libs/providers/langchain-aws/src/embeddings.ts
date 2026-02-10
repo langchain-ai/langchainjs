@@ -57,11 +57,6 @@ export interface BedrockEmbeddingsParams extends EmbeddingsParams {
   modelParameters?: Record<string, unknown>;
 
   /**
-   * @deprecated Use `modelParameters` instead.
-   */
-  modelKwargs?: Record<string, unknown>;
-
-  /**
    * The number of dimensions for the output embeddings.
    * Only supported by certain models (e.g., Amazon Titan Embed Text v2,
    * Cohere Embed). If not specified, uses the model's default.
@@ -112,11 +107,6 @@ export class BedrockEmbeddings
 
   modelParameters?: Record<string, unknown>;
 
-  /**
-   * @deprecated Use `modelParameters` instead.
-   */
-  modelKwargs?: Record<string, unknown>;
-
   dimensions?: number;
 
   constructor(fields?: BedrockEmbeddingsParams) {
@@ -124,17 +114,7 @@ export class BedrockEmbeddings
 
     this.model = fields?.model ?? "amazon.titan-embed-text-v1";
     this.clientOptions = fields?.clientOptions;
-
-    // Prefer `modelParameters`, but keep `modelKwargs` for backwards
-    // compatibility. If both are provided, `modelParameters` wins.
-    const mergedModelParameters = {
-      ...(fields?.modelKwargs ?? {}),
-      ...(fields?.modelParameters ?? {}),
-    };
-    this.modelParameters = Object.keys(mergedModelParameters).length
-      ? mergedModelParameters
-      : undefined;
-    this.modelKwargs = fields?.modelKwargs;
+    this.modelParameters = fields?.modelParameters;
     this.dimensions = fields?.dimensions;
 
     this.client =
