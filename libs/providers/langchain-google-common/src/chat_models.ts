@@ -323,9 +323,8 @@ export abstract class ChatGoogleBase<AuthOptions>
     return this.withConfig({ tools: convertToGeminiTools(tools), ...kwargs });
   }
 
-  // Replace
   _llmType() {
-    return "chat_integration";
+    return "google";
   }
 
   /**
