@@ -184,6 +184,11 @@ export class ReactAgent<
     defaultConfig?: RunnableConfig
   ) {
     this.#defaultConfig = defaultConfig ?? {};
+    if (options.name) {
+      this.#defaultConfig = mergeConfigs(this.#defaultConfig, {
+        metadata: { lc_agent_name: options.name },
+      });
+    }
     this.#toolBehaviorVersion = options.version ?? this.#toolBehaviorVersion;
 
     /**
