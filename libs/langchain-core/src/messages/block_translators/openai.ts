@@ -51,10 +51,13 @@ export function convertToV1FromChatCompletions(
 ): Array<ContentBlock.Standard> {
   const blocks: Array<ContentBlock.Standard> = [];
   if (typeof message.content === "string") {
-    blocks.push({
-      type: "text",
-      text: message.content,
-    });
+    // Only add text block if content is non-empty
+    if (message.content.length > 0) {
+      blocks.push({
+        type: "text",
+        text: message.content,
+      });
+    }
   } else {
     blocks.push(...convertToV1FromChatCompletionsInput(message.content));
   }
@@ -108,10 +111,13 @@ export function convertToV1FromChatCompletionsChunk(
 ): Array<ContentBlock.Standard> {
   const blocks: Array<ContentBlock.Standard> = [];
   if (typeof message.content === "string") {
-    blocks.push({
-      type: "text",
-      text: message.content,
-    });
+    // Only add text block if content is non-empty
+    if (message.content.length > 0) {
+      blocks.push({
+        type: "text",
+        text: message.content,
+      });
+    }
   } else {
     blocks.push(...convertToV1FromChatCompletionsInput(message.content));
   }
