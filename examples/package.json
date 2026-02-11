@@ -43,7 +43,7 @@
     "@langchain/cloudflare": "workspace:*",
     "@langchain/cohere": "workspace:*",
     "@langchain/community": "workspace:*",
-    "@langchain/core": "workspace:*",
+    "@langchain/core": "workspace:^",
     "@langchain/deepseek": "workspace:*",
     "@langchain/exa": "workspace:*",
     "@langchain/google-cloud-sql-pg": "workspace:^",

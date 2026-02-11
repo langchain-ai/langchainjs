@@ -50,7 +50,7 @@
   "devDependencies": {
     "@langchain/anthropic": "workspace:*",
     "@langchain/cohere": "workspace:*",
-    "@langchain/core": "workspace:*",
+    "@langchain/core": "workspace:^",
     "@langchain/eslint": "workspace:*",
     "@langchain/openai": "workspace:*",
     "@langchain/tsconfig": "workspace:*",
@@ -76,7 +76,7 @@
     "yaml": "^2.8.1"
   },
   "peerDependencies": {
-    "@langchain/core": "workspace:*"
+    "@langchain/core": "workspace:^"
   },
   "dependencies": {
     "@langchain/langgraph": "^1.1.2",
