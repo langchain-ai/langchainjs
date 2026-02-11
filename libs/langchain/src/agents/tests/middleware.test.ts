@@ -2779,9 +2779,9 @@ describe("middleware", () => {
       // Outer should have received the AIMessage modified by inner,
       // NOT "Original" and NOT a Command
       expect(AIMessage.isInstance(outerReceivedFromHandler)).toBe(true);
-      expect(
-        (outerReceivedFromHandler as AIMessage).content
-      ).toBe("Modified by inner");
+      expect((outerReceivedFromHandler as AIMessage).content).toBe(
+        "Modified by inner"
+      );
 
       // Middle's Command state update should still be applied
       expect(result.middleFlag).toBe(true);
