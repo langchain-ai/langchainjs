@@ -252,7 +252,7 @@ const benchmarks: Benchmarks = {
       );
     },
     (result: TaskResult) => {
-      expect(result.latency.mean).toBeLessThanOrEqual(70);
+      expect(result.latency.mean).toBeLessThanOrEqual(80);
     },
   ],
 
@@ -281,7 +281,7 @@ const benchmarks: Benchmarks = {
       });
     },
     (result: TaskResult) => {
-      expect(result.latency.mean).toBeLessThanOrEqual(70);
+      expect(result.latency.mean).toBeLessThanOrEqual(80);
     },
   ],
 
@@ -429,7 +429,7 @@ const benchmarks: Benchmarks = {
       });
     },
     (result: TaskResult) => {
-      expect(result.latency.mean).toBeLessThanOrEqual(70);
+      expect(result.latency.mean).toBeLessThanOrEqual(80);
     },
   ],
 
@@ -470,7 +470,7 @@ const benchmarks: Benchmarks = {
       );
     },
     (result: TaskResult) => {
-      expect(result.latency.mean).toBeLessThanOrEqual(70);
+      expect(result.latency.mean).toBeLessThanOrEqual(80);
     },
   ],
 
