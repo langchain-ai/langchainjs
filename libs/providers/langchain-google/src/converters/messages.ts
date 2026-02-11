@@ -39,16 +39,12 @@ export const geminiContentBlockConverter: StandardContentBlockConverter<{
 }> = {
   providerName: "ChatGoogle",
 
-  fromStandardTextBlock(
-    block: Data.StandardTextBlock
-  ): Gemini.Part {
+  fromStandardTextBlock(block: Data.StandardTextBlock): Gemini.Part {
     console.log("fromStandardTextBlock", block);
     return { text: block.text };
   },
 
-  fromStandardImageBlock(
-    block: Data.StandardImageBlock
-  ): Gemini.Part {
+  fromStandardImageBlock(block: Data.StandardImageBlock): Gemini.Part {
     console.log("fromStandardImageBlock", block);
     if (isDataContentBlock(block)) {
       if (block.source_type === "base64") {
@@ -120,9 +116,7 @@ export const geminiContentBlockConverter: StandardContentBlockConverter<{
     );
   },
 
-  fromStandardAudioBlock(
-    block: Data.StandardAudioBlock
-  ): Gemini.Part {
+  fromStandardAudioBlock(block: Data.StandardAudioBlock): Gemini.Part {
     if (isDataContentBlock(block)) {
       if (block.source_type === "base64") {
         if (!block.mime_type) {
@@ -193,9 +187,7 @@ export const geminiContentBlockConverter: StandardContentBlockConverter<{
     );
   },
 
-  fromStandardFileBlock(
-    block: Data.StandardFileBlock
-  ): Gemini.Part {
+  fromStandardFileBlock(block: Data.StandardFileBlock): Gemini.Part {
     if (isDataContentBlock(block)) {
       if (block.source_type === "base64") {
         if (!block.mime_type) {
@@ -350,8 +342,7 @@ function convertStandardVideoContentBlockToGeminiPart(
   const ret: Gemini.Part | null =
     convertStandardDataContentBlockToGeminiPart(block);
   if (ret && block.metadata && "videoMetadata" in block.metadata) {
-    (ret as Gemini.Part.FileData).videoMetadata =
-      block.metadata.videoMetadata!;
+    (ret as Gemini.Part.FileData).videoMetadata = block.metadata.videoMetadata!;
   }
   return ret;
 }
@@ -1084,32 +1075,9 @@ export const convertGeminiCandidateToAIMessage: Converter<
     originalTextContentBlock = convertGeminiPartToContentBlock(parts[0]);
   } else {
     // Multiple parts - convert to array format with type fields
-    content = parts.map((p: Gemini.Part) =>
-      convertGeminiPartToContentBlock(p)
-    );
+    content = parts.map((p: Gemini.Part) => convertGeminiPartToContentBlock(p));
   }
 
-  // const chatGenerations = parts.map((part, index) => {
-  //   const gen = partToChatGeneration( part );
-  //   if (!gen.generationInfo) {
-  //     gen.generationInfo = {};
-  //   }
-  //   if (groundingMetadata) {
-  //     gen.generationInfo.groundingMetadata = groundingMetadata;
-  //     const groundingPart = groundingParts[index];
-  //     if (groundingPart) {
-  //       gen.generationInfo.groundingSupport = groundingPart;
-  //     }
-  //   }
-  //   if (citationMetadata) {
-  //     gen.generationInfo.citationMetadata = citationMetadata;
-  //   }
-  //   return gen;
-  // });
-
-  // urlRetrievalMetadata is not in the generated Candidate type but
-  // may still appear in API responses. Access it dynamically.
-  const candidateRecord = candidate as unknown as Record<string, unknown>;
   const additional_kwargs: Record<string, unknown> = {
     finishReason: candidate.finishReason,
     finishMessage: candidate.finishMessage,
@@ -1118,7 +1086,7 @@ export const convertGeminiCandidateToAIMessage: Converter<
     citationMetadata: candidate.citationMetadata,
     groundingMetadata: candidate.groundingMetadata,
     groundingAttributions: candidate.groundingAttributions,
-    urlRetrievalMetadata: candidateRecord.urlRetrievalMetadata,
+    urlRetrievalMetadata: candidate.urlRetrievalMetadata,
     urlContextMetadata: candidate.urlContextMetadata,
     avgLogprobs: candidate.avgLogprobs,
     logprobsResult: candidate.logprobsResult,
@@ -1132,7 +1100,7 @@ export const convertGeminiCandidateToAIMessage: Converter<
     citation_metadata: candidate.citationMetadata,
     grounding_metadata: candidate.groundingMetadata,
     grounding_attributions: candidate.groundingAttributions,
-    url_retrieval_metadata: candidateRecord.urlRetrievalMetadata,
+    url_retrieval_metadata: candidate.urlRetrievalMetadata,
     url_context_metadata: candidate.urlContextMetadata,
     avg_logprobs: candidate.avgLogprobs,
     logprobs_result: candidate.logprobsResult,
@@ -1204,8 +1172,7 @@ export const convertGeminiGenerateContentResponseToUsageMetadata: Converter<
     });
   }
 
-  const usageMetadata: Gemini.UsageMetadata | undefined =
-    data.usageMetadata;
+  const usageMetadata: Gemini.UsageMetadata | undefined = data.usageMetadata;
 
   const inputTokenCount = usageMetadata?.promptTokenCount ?? 0;
   const candidatesTokenCount = usageMetadata?.candidatesTokenCount ?? 0;

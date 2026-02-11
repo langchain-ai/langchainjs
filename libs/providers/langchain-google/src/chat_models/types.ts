@@ -268,6 +268,20 @@ declare module "./api-types.js" {
       export type FunctionCallingConfigMode =
         GeminiBase.Tools.FunctionCallingConfig["mode"];
     }
+
+    /**
+     * Legacy URL retrieval metadata (predecessor of UrlContextMetadata).
+     * Not in the current OpenAPI spec but still returned by the API.
+     */
+    export interface UrlRetrievalMetadata {
+      urlRetrievalContexts?: Array<GeminiBase.UrlMetadata>;
+    }
+
+    // Augment Candidate with legacy field the API still returns.
+    export interface Candidate {
+      /** @deprecated Use urlContextMetadata instead. */
+      readonly urlRetrievalMetadata?: UrlRetrievalMetadata;
+    }
   }
 }
 

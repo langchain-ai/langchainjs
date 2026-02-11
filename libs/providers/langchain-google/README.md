@@ -13,11 +13,11 @@ and [ChatVertex](google_vertex_ai) libraries.
 ## Installation
 
 ```bash
-pnpm install @langchain/core @langchain/gooogle
+pnpm install @langchain/core @langchain/google
 ```
 
 This package, along with the main LangChain package, depends on [`@langchain/core`](https://npmjs.com/package/@langchain/core/).
-If you are using this package with other LangChain packages, you should make sure that 
+If you are using this package with other LangChain packages, you should make sure that
 all the packages depend on the same instance of @langchain/core.
 
 ## Chat Models
@@ -36,27 +36,19 @@ well as Gemini-specific "Specialty Tools" (like Code Execution and Grounding).
 See the [LangChain.js documentation](https://docs.langchain.com/oss/javascript/integrations/chat/google).
 for details.
 
-## Embeddings
-
-Embedding models are not yet supported, but are planned.
-
-## Vertex AI Model Garden
-
-Other models available through Vertex AI are not yet supported, but are planned.
-
 ## Reporting issues
 
 Please report any problems encountered with the library in the
 [LangChain.js github repository](https://github.com/langchain-ai/langchainjs/issues).
 
-Please provide as many details as possible and make sure the title 
+Please provide as many details as possible and make sure the title
 references the @langchain/google library. A code sample that can reproduce
 the issue is very welcome.
 
 ## Development
 
 Contributions are welcome! You may wish to [open an issue](https://github.com/langchain-ai/langchainjs/issues)
-before you begin and tag [@hntrl](https://github.com/hntrl) and 
+before you begin and tag [@hntrl](https://github.com/hntrl) and
 [@afirstenberg](https://github.com/afirstenberg) with your plans.
 
 To develop the Google package, you'll need to follow these instructions:
@@ -89,7 +81,7 @@ pnpm test
 pnpm test:int
 ```
 
-Note that the integration tests run against currently supported models and 
+Note that the integration tests run against currently supported models and
 platforms.
 
 ### Lint & Format
