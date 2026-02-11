@@ -26,7 +26,7 @@ import {
 import { BaseLanguageModelInput } from "@langchain/core/language_models/base";
 import { ChatPromptValue } from "@langchain/core/prompt_values";
 import { tool } from "@langchain/core/tools";
-import { GeminiTool, GeminiUrlContextTool } from "../types.js";
+import type { Gemini } from "../types.js";
 import { Runnable } from "@langchain/core/runnables";
 import { InteropZodType } from "@langchain/core/utils/types";
 import { concat } from "@langchain/core/utils/stream";
@@ -496,7 +496,7 @@ describe.each(coreModelInfo)(
     });
 
     test("function reply", async () => {
-      const tools: GeminiTool[] = [
+      const tools: Gemini.Tool[] = [
         {
           functionDeclarations: [
             {
@@ -600,7 +600,7 @@ describe.each(coreModelInfo)(
 
     test("Supports GoogleSearchTool", async () => {
       // gemini-2.0-flash-lite-001: Not supported
-      const searchTool: GeminiTool = {
+      const searchTool: Gemini.Tool = {
         googleSearch: {},
       };
       const llm: Runnable = newChatGoogle().bindTools([searchTool]);
@@ -618,7 +618,7 @@ describe.each(coreModelInfo)(
       // Not available on Gemini 1.5
       // Not available on Gemini 2.0 Flash Lite (but available on Flash)
       // Not available on Vertex
-      const urlTool: GeminiUrlContextTool = {
+      const urlTool: Gemini.Tool = {
         urlContext: {},
       };
       const llm: Runnable = newChatGoogle().bindTools([urlTool]);

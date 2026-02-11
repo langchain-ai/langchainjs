@@ -39,7 +39,7 @@ import {
 import { JsonOutputKeyToolsParser } from "@langchain/core/output_parsers/openai_tools";
 
 import { ApiClient } from "../clients/index.js";
-import { ChatGoogleFields } from "./types.js";
+import type { ChatGoogleFields } from "./types.js";
 import { SafeJsonEventParserStream } from "../utils/stream.js";
 import {
   convertAIMessageToText,
@@ -61,8 +61,12 @@ import {
   convertToolChoiceToGeminiConfig,
   schemaToGeminiParameters,
 } from "../converters/tools.js";
-import { convertReasoningEffortToReasoningTokens } from "../converters/params.js";
-import { GenerativeLanguage } from "./api-types.js";
+import {
+  convertParamsToPlatformType,
+  convertFieldsToSpeechConfig,
+  convertFieldsToThinkingConfig,
+} from "../converters/params.js";
+import { Gemini } from "./api-types.js";
 
 export type GooglePlatformType = "gai" | "gcp";
 
@@ -79,46 +83,20 @@ export function getPlatformType(
   }
 }
 
-/**
- * See https://ai.google.dev/gemini-api/docs/openai#thinking
- * @param model
- * @param reasoningTokens
- */
-function reasoningTokensToReasoningEffort(
-  model?: string,
-  reasoningTokens?: number
-  // TODO(hntrl): sauce this from generative language api types (requires sparktype enum fix)
-): Lowercase<string> | undefined {
-  if (typeof reasoningTokens === "undefined") {
-    return undefined;
-  } else if (reasoningTokens === -1) {
-    // https://ai.google.dev/gemini-api/docs/thinking#thinking-levels
-    // says that high is "Default, dynamic" which is what -1 represented.
-    return "high";
-  } else if (reasoningTokens === 0) {
-    if (model?.startsWith("gemini-3-pro")) {
-      return "low";
-    } else {
-      return "minimal";
-    }
-  } else if (reasoningTokens <= 1024) {
-    return "low";
-  } else if (reasoningTokens <= 8192) {
-    if (model?.startsWith("gemini-3-pro")) {
-      return "low";
-    } else {
-      return "medium";
-    }
-  } else {
-    return "high";
-  }
-}
-
 export interface BaseChatGoogleParams
   extends BaseChatModelParams,
     ChatGoogleFields {
+  /**
+   * The name of the Gemini model to use.
+   *
+   * Example: "gemini-3-pro-preview"
+   */
   model: string;
 
+  /**
+   * Optional. The API client implementation for making HTTP requests to the Gemini API.
+   * If not set, a default client will be used based on the runtime environment.
+   */
   apiClient?: ApiClient;
 
   /**
@@ -160,52 +138,11 @@ export interface BaseChatGoogleParams
   streaming?: boolean;
 
   streamUsage?: boolean;
-
-  /**
-   * The number of reasoning tokens that the model should generate.
-   * If explicitly set, then the reasoning blocks will be returned.
-   */
-  maxReasoningTokens?: number;
-
-  /**
-   * An alias for `maxReasoningTokens` for compatibility.
-   */
-  thinkingBudget?: number;
-
-  /**
-   * An alias for `maxReasoningTokens` under Gemini 2.5 or
-   * the primary thinking/reasoning setting for Gemini 3.
-   * If explicitly set, then the reasoning blocks will be returned.
-   */
-  reasoningEffort?:
-    | GoogleThinkingLevel
-    | Lowercase<GoogleThinkingLevel>
-    | string;
-
-  /**
-   * An alias for `reasoningEffort` for compatibility.
-   */
-  thinkingLevel?: GoogleThinkingLevel | Lowercase<GoogleThinkingLevel> | string;
 }
 
 export interface BaseChatGoogleCallOptions
   extends BaseChatModelCallOptions,
     ChatGoogleFields {}
-
-export function fieldPlatformType(
-  params: BaseChatGoogleParams
-): GooglePlatformType | undefined {
-  if (typeof params === "undefined") {
-    return undefined;
-  }
-  if (typeof params.platformType !== "undefined") {
-    return params.platformType;
-  }
-  if (params.vertexai === true) {
-    return "gcp";
-  }
-  return undefined;
-}
 
 export abstract class BaseChatGoogle<
   CallOptions extends BaseChatGoogleCallOptions = BaseChatGoogleCallOptions
@@ -237,12 +174,11 @@ export abstract class BaseChatGoogle<
     this.apiClient = params.apiClient;
 
     this.model = params.model;
-    this._platform = fieldPlatformType(params);
+    this._platform = convertParamsToPlatformType(params);
     this._endpoint = params.endpoint;
     this._location = params.location;
     this._apiVersion = params.apiVersion;
 
-    // Logic borrowed from OpenAI library
     this.disableStreaming = params?.disableStreaming === true;
     this.streaming = params?.streaming === true;
     if (this.disableStreaming) this.streaming = false;
@@ -257,19 +193,19 @@ export abstract class BaseChatGoogle<
     return "google";
   }
 
-  get platformType(): GooglePlatformType | undefined {
+  protected get platformType(): GooglePlatformType | undefined {
     return this._platform;
   }
 
-  get platform(): GooglePlatformType {
+  protected get platform(): GooglePlatformType {
     return getPlatformType(this._platform, this.apiClient.hasApiKey());
   }
 
-  get isVertexExpress(): boolean {
+  protected get isVertexExpress(): boolean {
     return this.platform === "gcp" && this.apiClient.hasApiKey();
   }
 
-  get apiVersion(): string {
+  protected get apiVersion(): string {
     if (typeof this._apiVersion !== "undefined") {
       return this._apiVersion;
     } else if (this.platform === "gai") {
@@ -279,11 +215,11 @@ export abstract class BaseChatGoogle<
     }
   }
 
-  get location(): string {
+  protected get location(): string {
     return this._location || "global";
   }
 
-  get endpoint(): string {
+  protected get endpoint(): string {
     if (typeof this._endpoint !== "undefined") {
       return this._endpoint;
     } else if (this.platform === "gai") {
@@ -298,56 +234,27 @@ export abstract class BaseChatGoogle<
     }
   }
 
-  get publisher(): string {
+  protected get publisher(): string {
     return "google";
   }
 
-  get modelFamily(): string {
-    const parts = this.model.split("-");
-    return parts[0];
-  }
-
-  get modelVersion(): string {
-    const parts = this.model.split("-");
-    return parts[1];
-  }
-
-  get modelLevel(): string {
-    const parts = this.model.split("-");
-    let ret = parts[2];
-    if (ret === "flash" && parts[3] === "lite") {
-      ret = "flash-lite";
-    }
-    return ret;
-  }
-
-  get modelSpecialty(): string {
-    if (this.model.includes("image")) {
-      return "image";
-    } else if (this.model.includes("tts")) {
-      return "tts";
-    } else {
-      return "";
-    }
-  }
-
-  get urlMethod(): string {
+  protected get urlMethod(): string {
     return this.streaming ? "streamGenerateContent?alt=sse" : "generateContent";
   }
 
-  async buildUrlGenerativeLanguage(urlMethod?: string): Promise<string> {
+  protected async buildUrlGemini(urlMethod?: string): Promise<string> {
     return `https://${this.endpoint}/${this.apiVersion}/models/${this.model}:${
       urlMethod ?? this.urlMethod
     }`;
   }
 
-  async buildUrlVertexExpress(urlMethod?: string): Promise<string> {
+  protected async buildUrlVertexExpress(urlMethod?: string): Promise<string> {
     return `https://${this.endpoint}/${this.apiVersion}/publishers/${
       this.publisher
     }/models/${this.model}:${urlMethod ?? this.urlMethod}`;
   }
 
-  async buildUrlVertexLocation(urlMethod?: string): Promise<string> {
+  protected async buildUrlVertexLocation(urlMethod?: string): Promise<string> {
     const projectId = await this.apiClient.getProjectId();
     return `https://${this.endpoint}/${
       this.apiVersion
@@ -356,7 +263,7 @@ export abstract class BaseChatGoogle<
     }/models/${this.model}:${urlMethod ?? this.urlMethod}`;
   }
 
-  async buildUrlVertex(urlMethod?: string): Promise<string> {
+  protected async buildUrlVertex(urlMethod?: string): Promise<string> {
     if (this.isVertexExpress) {
       return this.buildUrlVertexExpress(urlMethod);
     } else {
@@ -364,184 +271,13 @@ export abstract class BaseChatGoogle<
     }
   }
 
-  async buildUrl(urlMethod?: string): Promise<string> {
+  protected async buildUrl(urlMethod?: string): Promise<string> {
     switch (this.platform) {
       case "gai":
-        return this.buildUrlGenerativeLanguage(urlMethod);
+        return this.buildUrlGemini(urlMethod);
       default:
         return this.buildUrlVertex(urlMethod);
     }
-  }
-
-  thinkingConfig(
-    fields: CombinableFields
-  ): { thinkingConfig: GoogleThinkingConfig } | {} {
-    // Thinking / reasoning
-    let includeThoughts = true;
-
-    let thinkingBudget =
-      fields?.maxReasoningTokens ??
-      fields?.thinkingBudget ??
-      convertReasoningEffortToReasoningTokens(
-        this.model,
-        fields?.reasoningEffort ?? fields?.thinkingLevel
-      );
-    if (
-      thinkingBudget === 0 ||
-      (this.model.includes("pro") && thinkingBudget === 128)
-    ) {
-      includeThoughts = false;
-    }
-    if (
-      this.model.startsWith("gemini-2.5-pro") &&
-      typeof thinkingBudget !== "undefined"
-    ) {
-      // Can't turn off Gemini 2.5 Pro thinking completely
-      if (thinkingBudget >= 0 && thinkingBudget < 128) {
-        thinkingBudget = 128;
-      }
-    }
-
-    const thinkingLevelRaw =
-      fields?.reasoningEffort ??
-      fields?.thinkingLevel ??
-      reasoningTokensToReasoningEffort(
-        this.model,
-        fields?.maxReasoningTokens ?? fields?.thinkingBudget
-      );
-    let thinkingLevel = thinkingLevelRaw?.toUpperCase();
-    if (thinkingLevel === "MINIMAL") {
-      includeThoughts = false;
-    }
-    if (this.model.startsWith("gemini-3-pro")) {
-      // Gemini 3 Pro has only low and high.
-      if (thinkingLevel === "MINIMAL") {
-        thinkingLevel = "LOW";
-      } else if (thinkingLevel === "MEDIUM") {
-        thinkingLevel = "HIGH";
-      }
-    }
-
-    // If we are using a model that doesn't support thinking at all (gemini 2.5 imaging)
-    // or we haven't explicitly tried to set a thinking budget/level, then bail out.
-    const thoughtsNotSupported =
-      this.modelVersion === "2.5" && this.modelSpecialty === "image";
-    if (
-      thoughtsNotSupported ||
-      typeof thinkingBudget === "undefined" ||
-      typeof thinkingLevel === "undefined"
-    ) {
-      return {};
-    }
-
-    // If we have gotten this far, then we want to explicitly set if we include thoughts or not.
-    const thinkingConfig: GenerativeLanguage.ThinkingConfig = {
-      includeThoughts,
-    };
-
-    // Explicitly setting the budget/level is only valid (currently) for text models.
-    if (this.modelSpecialty === "") {
-      if (this.model.startsWith("gemini-2.5")) {
-        thinkingConfig.thinkingBudget = thinkingBudget;
-      } else {
-        thinkingConfig.thinkingLevel = thinkingLevel;
-      }
-    }
-
-    return { thinkingConfig };
-  }
-
-  speechConfig(
-    fields: CombinableFields
-  ): { speechConfig: GenerativeLanguage.SpeechConfig } | {} {
-    const config:
-      | GoogleSpeechConfig
-      | GoogleSpeechConfigSimplified
-      | undefined = fields.speechConfig;
-    if (typeof config === "undefined") {
-      return {};
-    }
-
-    function isSpeechConfig(
-      config: GoogleSpeechConfig | GoogleSpeechConfigSimplified
-    ): config is GoogleSpeechConfig {
-      return (
-        typeof config === "object" &&
-        (Object.hasOwn(config, "voiceConfig") ||
-          Object.hasOwn(config, "multiSpeakerVoiceConfig"))
-      );
-    }
-
-    function hasLanguage(
-      config: GoogleSpeechConfigSimplified
-    ): config is GoogleSpeechSimplifiedLanguage {
-      return (
-        typeof config === "object" && Object.hasOwn(config, "languageCode")
-      );
-    }
-
-    function hasVoice(
-      config: GoogleSpeechSimplifiedLanguage
-    ): config is GoogleSpeechVoiceLanguage {
-      return Object.hasOwn(config, "voice");
-    }
-
-    // If this is already a GoogleSpeechConfig, just return it
-    if (isSpeechConfig(config)) {
-      return { speechConfig: config };
-    }
-
-    let languageCode: string | undefined;
-    let voice: GoogleSpeechVoice;
-    if (hasLanguage(config)) {
-      languageCode = config.languageCode;
-      voice = hasVoice(config) ? config.voice : config.voices;
-    } else {
-      languageCode = undefined;
-      voice = config;
-    }
-
-    let ret: GoogleSpeechConfig;
-
-    if (typeof voice === "string") {
-      // They just provided the prebuilt voice configuration name. Use it.
-      ret = {
-        voiceConfig: {
-          prebuiltVoiceConfig: {
-            voiceName: voice,
-          },
-        },
-      };
-    } else {
-      // This is multi-speaker, so we have speaker/name pairs
-      // If we have just one (why?), turn it into an array for the moment
-      const voices: GoogleSpeechSpeakerName[] = Array.isArray(voice)
-        ? voice
-        : [voice];
-      // Go through all the speaker/name pairs and turn this into the voice config array
-      const speakerVoiceConfigs: GoogleSpeakerVoiceConfig[] = voices.map(
-        (v: GoogleSpeechSpeakerName): GoogleSpeakerVoiceConfig => ({
-          speaker: v.speaker,
-          voiceConfig: {
-            prebuiltVoiceConfig: {
-              voiceName: v.name,
-            },
-          },
-        })
-      );
-      // Create the multi-speaker voice configuration
-      ret = {
-        multiSpeakerVoiceConfig: {
-          speakerVoiceConfigs,
-        },
-      };
-    }
-
-    if (languageCode) {
-      ret.languageCode = languageCode;
-    }
-
-    return { speechConfig: ret };
   }
 
   override invocationParams(options: this["ParsedCallOptions"]) {
@@ -599,8 +335,8 @@ export abstract class BaseChatGoogle<
         ...(fields.enableEnhancedCivicAnswers !== undefined
           ? { enableEnhancedCivicAnswers: fields.enableEnhancedCivicAnswers }
           : {}),
-        ...this.thinkingConfig(fields),
-        ...this.speechConfig(fields),
+        thinkingConfig: convertFieldsToThinkingConfig(this.model, fields),
+        speechConfig: convertFieldsToSpeechConfig(fields),
         ...(fields.imageConfig ? { imageConfig: fields.imageConfig } : {}),
         ...(fields.mediaResolution
           ? { mediaResolution: fields.mediaResolution }
@@ -642,7 +378,7 @@ export abstract class BaseChatGoogle<
     }
 
     const url = await this.buildUrl();
-    const body: GenerateContentRequest = {
+    const body = {
       ...this.invocationParams(options),
       systemInstruction: convertMessagesToGeminiSystemInstruction(messages),
       contents: convertMessagesToGeminiContents(messages),
@@ -672,7 +408,7 @@ export abstract class BaseChatGoogle<
       throw error;
     }
 
-    const data: GenerateContentResponse = await response.json();
+    const data: Gemini.GenerateContentResponse = await response.json();
     await runManager?.handleCustomEvent(`google-response-${moduleName}`, {
       data,
       url: response.url,
@@ -732,7 +468,7 @@ export abstract class BaseChatGoogle<
   ): AsyncGenerator<ChatGenerationChunk> {
     const streamUsage: boolean = this.streamUsage ?? true;
 
-    const body: GenerateContentRequest = {
+    const body = {
       ...this.invocationParams(options),
       systemInstruction: convertMessagesToGeminiSystemInstruction(messages),
       contents: convertMessagesToGeminiContents(messages),
@@ -775,9 +511,14 @@ export abstract class BaseChatGoogle<
       const stream = response.body
         .pipeThrough(new TextDecoderStream())
         .pipeThrough(new EventSourceParserStream())
-        .pipeThrough(new SafeJsonEventParserStream<GenerateContentResponse>())
         .pipeThrough(
-          new TransformStream<GenerateContentResponse, ChatGenerationChunk>({
+          new SafeJsonEventParserStream<Gemini.GenerateContentResponse>()
+        )
+        .pipeThrough(
+          new TransformStream<
+            Gemini.GenerateContentResponse,
+            ChatGenerationChunk
+          >({
             transform(chunk, controller) {
               // eslint-disable-next-line no-void
               void runManager?.handleCustomEvent(`google-chunk-${moduleName}`, {
@@ -975,7 +716,7 @@ export abstract class BaseChatGoogle<
     } else if (method === "functionCalling") {
       // Use function calling mode
       let functionName = name ?? "extract";
-      let tools: GeminiTool[];
+      let tools: Gemini.Tool[];
 
       if (isInteropZodSchema(schema)) {
         const jsonSchema = schemaToGeminiParameters(schema);
@@ -989,7 +730,7 @@ export abstract class BaseChatGoogle<
               {
                 name: functionName,
                 description,
-                parameters: jsonSchema as GeminiFunctionSchema,
+                parameters: jsonSchema as Gemini.Tools.Schema,
               },
             ],
           },
@@ -1000,13 +741,13 @@ export abstract class BaseChatGoogle<
           zodSchema: schema,
         });
       } else {
-        let geminiFunctionDefinition: GeminiFunctionDeclaration;
+        let geminiFunctionDefinition: Gemini.Tools.FunctionDeclaration;
         if (
           typeof schema.name === "string" &&
           typeof schema.parameters === "object" &&
           schema.parameters != null
         ) {
-          geminiFunctionDefinition = schema as GeminiFunctionDeclaration;
+          geminiFunctionDefinition = schema as Gemini.Tools.FunctionDeclaration;
           functionName = schema.name;
         } else {
           // We are providing the schema for *just* the parameters

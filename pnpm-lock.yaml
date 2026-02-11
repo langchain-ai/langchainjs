@@ -2379,8 +2379,8 @@ importers:
         specifier: ^2.8.3
         version: 2.8.8
       sparktype:
-        specifier: ^0.1.2
-        version: 0.1.2
+        specifier: ^0.1.3
+        version: 0.1.3
       typescript:
         specifier: ~5.8.3
         version: 5.8.3
@@ -7933,28 +7933,28 @@ packages:
   '@so-ric/colorspace@1.1.6':
     resolution: {integrity: sha512-/KiKkpHNOBgkFJwu9sh48LkHSMYGyuTcSFK/qMBdnOAlrRJzRSXAOFB5qwzaVQuDl8wAvHVMkaASQDReTahxuw==}
 
-  '@sparktype/darwin-arm64@0.1.2':
-    resolution: {integrity: sha512-w1LzDnTDD+FsiRWrQLh/MBMjkUO7TKprAef08L/KEf2u9OyHqI2e6M6UP1mChUEalRCBBE1JtNKUVpy7/P/ctg==}
+  '@sparktype/darwin-arm64@0.1.3':
+    resolution: {integrity: sha512-og47iyByVB9TJlHQtnxCJcqQ2+exk8dslIaIUxceT1hZWJxabivI1+DxvLa+33jubFmFwJ0FdooX6LKAcuWWVw==}
     cpu: [arm64]
     os: [darwin]
 
-  '@sparktype/darwin-x64@0.1.2':
-    resolution: {integrity: sha512-4cV/xO0GYV/o1IfW4QJOm7I/slA5g6hrRdU3j7mtsxJa5dvAP3p4nduA/bXDxzahPG03BCWUfk87X+bMe1LknA==}
+  '@sparktype/darwin-x64@0.1.3':
+    resolution: {integrity: sha512-h8sHVGC2XIgYmN2IJHUvh1l9HCmkGrdD+FGY4pCq/psltZarW3LQKidjNOPQIVOn0MbIcJVRk6NtXcCeKVrk9g==}
     cpu: [x64]
     os: [darwin]
 
-  '@sparktype/linux-arm64@0.1.2':
-    resolution: {integrity: sha512-cfXSwjVW47G7NpKauwr3hzyT6JhgLVOvOYycstLF61biAwHWDmUq77cq/wJ4kThrVwtJVyXEk8Czq0uedwnuxg==}
+  '@sparktype/linux-arm64@0.1.3':
+    resolution: {integrity: sha512-xtQH57ZVo9hjXbS8ghPNjvapwB+wKDZgc0jKslpyQSMA0JH5g6nfgJHQFGUKG7Umw5Tb4dpCHRPM3LQ4mEy3NQ==}
     cpu: [arm64]
     os: [linux]
 
-  '@sparktype/linux-x64@0.1.2':
-    resolution: {integrity: sha512-3Ff62jqjA/vZc+jMMFjiH/ndgrAXK+SuHec/VcRX5t+H6XLeO3piIZ0gAt3AerJnT6YVDcSnTmkzyfes1WN5PA==}
+  '@sparktype/linux-x64@0.1.3':
+    resolution: {integrity: sha512-6ijfrDUqpPvHjF3GGpcwF05uAClPNT7O6rFGvdP0p3NeDEFchkVdvq2zc2EGJat5ODR5ZdimgDqSGIn2zMkQRA==}
     cpu: [x64]
     os: [linux]
 
-  '@sparktype/win32-x64@0.1.2':
-    resolution: {integrity: sha512-r12t+ap2C75mJmJwLMzhywmsNYmMzlihFMrZYKVka4EqQW27tDyaLLe9pvtKi38/vIhypjU7FtkkxCB1GYqKjg==}
+  '@sparktype/win32-x64@0.1.3':
+    resolution: {integrity: sha512-O7Ytp4IEjpMOjvF+YcTdf1Ev/g53wLleZwbeqgyB9CKvjAwjJ1KnUvQ3do2ikRAFF3XCJn+bH0BGHqClqNyC+w==}
     cpu: [x64]
     os: [win32]
 
@@ -14455,8 +14455,8 @@ packages:
     resolution: {integrity: sha512-UjgapumWlbMhkBgzT7Ykc5YXUT46F0iKu8SGXq0bcwP5dz/h0Plj6enJqjz1Zbq2l5WaqYnrVbwWOWMyF3F47g==}
     engines: {node: '>=0.10.0'}
 
-  sparktype@0.1.2:
-    resolution: {integrity: sha512-uJ//YgJMwgzsga+gvlEiNpsTunCyV9Eksd5QvVQmqVMOS+2YSYU60EHsYUG7mc1JYkrkBtmh9LFdMU9nJbpAjg==}
+  sparktype@0.1.3:
+    resolution: {integrity: sha512-7w2B8tcUJa1ZYFYi8DGdsMkiPxr7wzgHX53Uy3sTOWzlYLGFk3fVTQnvr7wFzkWAFszNs8U+9lsP6Myme9+XrQ==}
     engines: {node: '>=16'}
     hasBin: true
 
@@ -21650,19 +21650,19 @@ snapshots:
       color: 5.0.3
       text-hex: 1.0.0
 
-  '@sparktype/darwin-arm64@0.1.2':
+  '@sparktype/darwin-arm64@0.1.3':
     optional: true
 
-  '@sparktype/darwin-x64@0.1.2':
+  '@sparktype/darwin-x64@0.1.3':
     optional: true
 
-  '@sparktype/linux-arm64@0.1.2':
+  '@sparktype/linux-arm64@0.1.3':
     optional: true
 
-  '@sparktype/linux-x64@0.1.2':
+  '@sparktype/linux-x64@0.1.3':
     optional: true
 
-  '@sparktype/win32-x64@0.1.2':
+  '@sparktype/win32-x64@0.1.3':
     optional: true
 
   '@spider-cloud/spider-client@0.1.85':
@@ -29764,13 +29764,13 @@ snapshots:
 
   source-map@0.6.1: {}
 
-  sparktype@0.1.2:
+  sparktype@0.1.3:
     optionalDependencies:
-      '@sparktype/darwin-arm64': 0.1.2
-      '@sparktype/darwin-x64': 0.1.2
-      '@sparktype/linux-arm64': 0.1.2
-      '@sparktype/linux-x64': 0.1.2
-      '@sparktype/win32-x64': 0.1.2
+      '@sparktype/darwin-arm64': 0.1.3
+      '@sparktype/darwin-x64': 0.1.3
+      '@sparktype/linux-arm64': 0.1.3
+      '@sparktype/linux-x64': 0.1.3
+      '@sparktype/win32-x64': 0.1.3
 
   sparse-bitfield@3.0.3:
     dependencies:

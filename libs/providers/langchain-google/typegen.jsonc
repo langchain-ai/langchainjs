@@ -1,7 +1,7 @@
 {
   "$schema": "https://hntrl.github.io/sparktype/schema.json",
   "specs": {
-    "generativelanguage": {
+    "gemini": {
       "url": "https://generativelanguage.googleapis.com/$discovery/OPENAPI3_0?version=v1beta"
     }
   },
@@ -9,68 +9,71 @@
     {
       "path": "./src/chat_models/api-types.ts",
       "format": "typescript",
+      "options": {
+        "widenEnums": true
+      },
       "contents": [
         {
-          "namespace": "GenerativeLanguage",
+          "namespace": "Gemini",
           "contents": [
-            "generativelanguage:SafetySetting",
-            "generativelanguage:HarmCategory",
-            "generativelanguage:ThinkingConfig",
-            "generativelanguage:GenerativeLanguageModality",
-            "generativelanguage:MediaResolution",
-            "generativelanguage:SpeechConfig",
-            "generativelanguage:VoiceConfig",
-            "generativelanguage:MultiSpeakerVoiceConfig",
-            "generativelanguage:SpeakerVoiceConfig",
-            "generativelanguage:ImageConfig",
-            "generativelanguage:Part",
-            "generativelanguage:VideoMetadata",
-            "generativelanguage:CodeExecutionResult",
-            "generativelanguage:ExecutableCode",
-            "generativelanguage:Content",
-            "generativelanguage:GenerationConfig",
+            "gemini:SafetySetting",
+            "gemini:HarmCategory",
+            "gemini:ThinkingConfig",
+            "gemini:GenerativeLanguageModality",
+            "gemini:MediaResolution",
+            "gemini:SpeechConfig",
+            "gemini:VoiceConfig",
+            "gemini:MultiSpeakerVoiceConfig",
+            "gemini:SpeakerVoiceConfig",
+            "gemini:ImageConfig",
+            "gemini:Part",
+            "gemini:VideoMetadata",
+            "gemini:CodeExecutionResult",
+            "gemini:ExecutableCode",
+            "gemini:Content",
+            "gemini:GenerationConfig",
             {
               "namespace": "Tools",
               "contents": [
-                "generativelanguage:FunctionDeclaration",
-                "generativelanguage:GoogleSearch",
-                "generativelanguage:CodeExecution",
-                "generativelanguage:UrlContext",
-                "generativelanguage:GoogleMaps",
-                "generativelanguage:FileSearch",
-                "generativelanguage:ComputerUse",
-                "generativelanguage:FunctionCallingConfig",
-                "generativelanguage:RetrievalConfig",
-                "generativelanguage:ToolConfig",
+                "gemini:FunctionDeclaration",
+                "gemini:GoogleSearch",
+                "gemini:CodeExecution",
+                "gemini:UrlContext",
+                "gemini:GoogleMaps",
+                "gemini:FileSearch",
+                "gemini:ComputerUse",
+                "gemini:FunctionCallingConfig",
+                "gemini:RetrievalConfig",
+                "gemini:ToolConfig",
                 // mapped as GeminiFunctionSchema
-                "generativelanguage:Schema"
+                "gemini:Schema"
               ]
             },
             // in/out types
-            "generativelanguage:GenerateContentRequest",
-            "generativelanguage:SafetyRating",
-            "generativelanguage:CitationMetadata",
-            "generativelanguage:GroundingMetadata",
-            "generativelanguage:GeminiSearchEntryPoint",
-            "generativelanguage:GroundingChunk",
-            "generativelanguage:RetrievedContext",
-            "generativelanguage:GoogleAiGenerativelanguageV1betaGroundingSupport", // what
-            "generativelanguage:GoogleAiGenerativelanguageV1betaSegment", // double what
-            "generativelanguage:RetrievalMetadata",
-            "generativelanguage:GroundingPassageId",
-            "generativelanguage:SemanticRetrieverChunk",
-            "generativelanguage:AttributionSourceId",
-            "generativelanguage:GroundingAttribution",
-            "generativelanguage:UrlMetadata",
-            "generativelanguage:UrlContextMetadata",
-            "generativelanguage:LogprobsResult",
-            "generativelanguage:TopCandidates", // also logprobs
-            "generativelanguage:LogprobsResultCandidate",
-            "generativelanguage:Candidate",
-            "generativelanguage:ModalityTokenCount",
-            "generativelanguage:UsageMetadata",
-            "generativelanguage:PromptFeedback",
-            "generativelanguage:GenerateContentResponse"
+            "gemini:GenerateContentRequest",
+            "gemini:SafetyRating",
+            "gemini:CitationMetadata",
+            "gemini:GroundingMetadata",
+            "gemini:GeminiSearchEntryPoint",
+            "gemini:GroundingChunk",
+            "gemini:RetrievedContext",
+            "gemini:GoogleAiGenerativelanguageV1betaGroundingSupport", // what
+            "gemini:GoogleAiGenerativelanguageV1betaSegment", // double what
+            "gemini:RetrievalMetadata",
+            "gemini:GroundingPassageId",
+            "gemini:SemanticRetrieverChunk",
+            "gemini:AttributionSourceId",
+            "gemini:GroundingAttribution",
+            "gemini:UrlMetadata",
+            "gemini:UrlContextMetadata",
+            "gemini:LogprobsResult",
+            "gemini:TopCandidates", // also logprobs
+            "gemini:LogprobsResultCandidate",
+            "gemini:Candidate",
+            "gemini:ModalityTokenCount",
+            "gemini:UsageMetadata",
+            "gemini:PromptFeedback",
+            "gemini:GenerateContentResponse"
           ]
         }
       ]

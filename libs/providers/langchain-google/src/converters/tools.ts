@@ -13,15 +13,7 @@ import type {
   BindToolsInput,
   ToolChoice,
 } from "@langchain/core/language_models/chat_models";
-import type {
-  GeminiFunctionCallingConfig,
-  GeminiFunctionCallingConfigMode,
-  GeminiFunctionDeclaration,
-  GeminiFunctionSchema,
-  GeminiGoogleSearchTool,
-  GeminiTool,
-  GeminiToolConfig,
-} from "../chat_models/types.js";
+import type { Gemini } from "../chat_models/types.js";
 import { InvalidToolError } from "../utils/errors.js";
 
 /**
@@ -86,7 +78,7 @@ function adjustObjectType(
 function removeAdditionalProperties(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   obj: Record<string, any>
-): GeminiFunctionSchema {
+): Gemini.Tools.Schema & { $schema?: string } {
   if (typeof obj === "object" && obj !== null) {
     const newObj = { ...obj };
 
@@ -106,10 +98,10 @@ function removeAdditionalProperties(
       }
     }
 
-    return newObj as GeminiFunctionSchema;
+    return newObj as Gemini.Tools.Schema;
   }
 
-  return obj as GeminiFunctionSchema;
+  return obj as Gemini.Tools.Schema;
 }
 
 /**
@@ -120,14 +112,14 @@ function removeAdditionalProperties(
  * unsupported properties and adjusts type definitions to be compatible with Gemini.
  *
  * @param schema - The schema to convert (Zod schema or JSON Schema 7)
- * @returns A GeminiFunctionSchema object compatible with Gemini's API
+ * @returns A schema object compatible with Gemini's API
  *
  * @internal
  */
 export function schemaToGeminiParameters<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   RunOutput extends Record<string, any> = Record<string, any>
->(schema: InteropZodType<RunOutput> | JsonSchema7Type): GeminiFunctionSchema {
+>(schema: InteropZodType<RunOutput> | JsonSchema7Type): Gemini.Tools.Schema {
   // Gemini doesn't accept either the $schema or additionalProperties
   // attributes, so we need to explicitly remove them.
   // Zod sometimes also makes an array of type (because of .nullish()),
@@ -144,14 +136,14 @@ export function schemaToGeminiParameters<
  * Converts a JSON Schema object to Gemini function parameters format.
  *
  * @param schema - The JSON Schema object to convert
- * @returns A GeminiFunctionSchema object compatible with Gemini's API
+ * @returns A schema object compatible with Gemini's API
  *
  * @internal
  */
 function jsonSchemaToGeminiParameters(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   schema: Record<string, any>
-): GeminiFunctionSchema {
+): Gemini.Tools.Schema {
   const jsonSchema = removeAdditionalProperties(schema);
   const { $schema, ...rest } = jsonSchema;
 
@@ -166,7 +158,7 @@ function jsonSchemaToGeminiParameters(
  * - Code execution tools (`codeExecution`)
  * - Google Search retrieval tools (`googleSearchRetrieval` or `googleSearch`)
  *
- * The full list of tool types are those defined by the `GeminiTool` type.
+ * The full list of tool types are those defined by the `Gemini.Tool` type.
  * Updating that list requires a change to the `geminiToolAttributes` below.
  *
  * @param tool - The tool to check
@@ -174,7 +166,7 @@ function jsonSchemaToGeminiParameters(
  *
  * @internal
  */
-function isGeminiTool(tool: BindToolsInput): tool is GeminiTool {
+function isGeminiTool(tool: BindToolsInput): tool is Gemini.Tool {
   if (typeof tool !== "object" || tool === null) {
     return false;
   }
@@ -183,10 +175,12 @@ function isGeminiTool(tool: BindToolsInput): tool is GeminiTool {
     "functionDeclarations",
     "codeExecution",
     "googleSearch",
+    "googleSearchRetrieval",
     "urlContext",
     "googleMaps",
     "fileSearch",
-    "computerUser",
+    "computerUse",
+    "mcpServers",
   ];
 
   return geminiToolAttributes.some((attr) => attr in tool);
@@ -249,9 +243,9 @@ function isGeminiTool(tool: BindToolsInput): tool is GeminiTool {
  */
 export const convertToolsToGeminiFunctionDeclarations: Converter<
   BindToolsInput[],
-  GeminiFunctionDeclaration[]
+  Gemini.Tools.FunctionDeclaration[]
 > = (tools) => {
-  const functionDeclarations: GeminiFunctionDeclaration[] = [];
+  const functionDeclarations: Gemini.Tools.FunctionDeclaration[] = [];
 
   for (const tool of tools) {
     // Skip if already in Gemini format (non-function tools)
@@ -298,7 +292,7 @@ export const convertToolsToGeminiFunctionDeclarations: Converter<
       "name" in tool &&
       typeof tool.name === "string"
     ) {
-      const funcDecl = tool as Partial<GeminiFunctionDeclaration>;
+      const funcDecl = tool as Partial<Gemini.Tools.FunctionDeclaration>;
       functionDeclarations.push({
         name: funcDecl.name!,
         description: funcDecl.description ?? `A function available to call.`,
@@ -326,7 +320,7 @@ export const convertToolsToGeminiFunctionDeclarations: Converter<
  * The conversion process:
  * 1. Separates Gemini-native tools from function declarations
  * 2. Converts LangChain/OpenAI tools to function declarations
- * 3. Groups all function declarations into a single GeminiTool object
+ * 3. Groups all function declarations into a single Tool object
  * 4. Returns an array with the grouped function declarations tool plus any
  *    non-function Gemini tools
  *
@@ -342,7 +336,7 @@ export const convertToolsToGeminiFunctionDeclarations: Converter<
  *   func: async () => {}
  * });
  *
- * const geminiCodeTool: GeminiTool = {
+ * const geminiCodeTool: Gemini.Tool = {
  *   codeExecution: { enabled: true }
  * };
  *
@@ -354,18 +348,18 @@ export const convertToolsToGeminiFunctionDeclarations: Converter<
  * ```
  *
  * @param tools - Array of tools in various formats (LangChain, OpenAI, or Gemini)
- * @returns Array of GeminiTool objects ready for API submission
+ * @returns Array of Tool objects ready for API submission
  */
 export const convertToolsToGeminiTools: Converter<
   BindToolsInput[],
-  GeminiTool[]
+  Gemini.Tool[]
 > = (tools) => {
   if (tools.length === 0) {
     return [];
   }
 
-  const geminiTools: GeminiTool[] = [];
-  const functionDeclarations: GeminiFunctionDeclaration[] = [];
+  const geminiTools: Gemini.Tool[] = [];
+  const functionDeclarations: Gemini.Tools.FunctionDeclaration[] = [];
 
   // Separate Gemini-native tools from function declarations
   for (const tool of tools) {
@@ -379,10 +373,10 @@ export const convertToolsToGeminiTools: Converter<
       }
     } else if ("googleSearchRetrieval" in tool) {
       // Convert the obsolete search into the modern one
-      const searchTool: GeminiGoogleSearchTool = {
+      const searchTool: Gemini.Tool = {
         googleSearch: {},
-      }
-      geminiTools.push( searchTool );
+      };
+      geminiTools.push(searchTool);
     } else {
       // Convert to function declaration
       const funcDecls = convertToolsToGeminiFunctionDeclarations([tool]);
@@ -454,14 +448,14 @@ export const convertToolsToGeminiTools: Converter<
 export function convertToolChoiceToGeminiConfig(
   toolChoice: ToolChoice | undefined,
   hasTools: boolean
-): GeminiToolConfig | undefined {
+): Gemini.Tools.ToolConfig | undefined {
   // Only create config if tools are present
   if (!hasTools) {
     return undefined;
   }
 
   // Convert tool_choice to Gemini function calling config mode
-  let mode: GeminiFunctionCallingConfigMode | undefined;
+  let mode: Gemini.Tools.FunctionCallingConfigMode | undefined;
   let allowedFunctionNames: string[] | undefined;
 
   let toolChoiceMode: string | undefined;
@@ -494,7 +488,7 @@ export function convertToolChoiceToGeminiConfig(
   }
 
   // Build toolConfig: use explicit mode if provided, otherwise default to AUTO
-  const functionCallingConfig: GeminiFunctionCallingConfig = {};
+  const functionCallingConfig: Gemini.Tools.FunctionCallingConfig = {};
   if (allowedFunctionNames?.length) {
     functionCallingConfig.allowedFunctionNames = allowedFunctionNames;
   }
