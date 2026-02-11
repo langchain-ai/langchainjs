@@ -1,6 +1,6 @@
 {
   "name": "@langchain/classic",
-  "version": "1.0.16",
+  "version": "1.0.17",
   "description": "Old abstractions from LangChain.js",
   "author": "LangChain",
   "license": "MIT",
