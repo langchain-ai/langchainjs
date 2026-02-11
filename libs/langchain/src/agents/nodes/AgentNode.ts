@@ -139,7 +139,6 @@ export class AgentNode<
 > {
   #options: AgentNodeOptions<StructuredResponseFormat, ContextSchema>;
   #systemMessage: SystemMessage;
-  #currentSystemMessage: SystemMessage;
 
   constructor(
     options: AgentNodeOptions<StructuredResponseFormat, ContextSchema>
@@ -327,6 +326,12 @@ export class AgentNode<
     const lgConfig = config as LangGraphRunnableConfig;
 
     /**
+     * Create a local variable for current system message to avoid concurrency issues
+     * Each invocation gets its own copy
+     */
+    let currentSystemMessage = this.#systemMessage;
+
+    /**
      * Shared tracking state for AIMessage and Command collection.
      * lastAiMessage tracks the effective AIMessage through the middleware chain.
      * collectedCommands accumulates Commands returned by middleware (not base handler).
@@ -356,9 +361,7 @@ export class AgentNode<
        * prepend the system message to the messages if it is not empty
        */
       const messages = [
-        ...(this.#currentSystemMessage.text === ""
-          ? []
-          : [this.#currentSystemMessage]),
+        ...(currentSystemMessage.text === "" ? [] : [currentSystemMessage]),
         ...request.messages,
       ];
 
@@ -539,9 +542,9 @@ export class AgentNode<
 
             let normalizedReq = req;
             const hasSystemPromptChanged =
-              req.systemPrompt !== this.#currentSystemMessage.text;
+              req.systemPrompt !== currentSystemMessage.text;
             const hasSystemMessageChanged =
-              req.systemMessage !== this.#currentSystemMessage;
+              req.systemMessage !== currentSystemMessage;
             if (hasSystemPromptChanged && hasSystemMessageChanged) {
               throw new Error(
                 "Cannot change both systemPrompt and systemMessage in the same request."
@@ -552,26 +555,26 @@ export class AgentNode<
              * Check if systemPrompt is a string was changed, if so create a new SystemMessage
              */
             if (hasSystemPromptChanged) {
-              this.#currentSystemMessage = new SystemMessage({
+              currentSystemMessage = new SystemMessage({
                 content: [{ type: "text", text: req.systemPrompt }],
               });
               normalizedReq = {
                 ...req,
-                systemPrompt: this.#currentSystemMessage.text,
-                systemMessage: this.#currentSystemMessage,
+                systemPrompt: currentSystemMessage.text,
+                systemMessage: currentSystemMessage,
               };
             }
             /**
              * If the systemMessage was changed, update the current system message
              */
             if (hasSystemMessageChanged) {
-              this.#currentSystemMessage = new SystemMessage({
+              currentSystemMessage = new SystemMessage({
                 ...req.systemMessage,
               });
               normalizedReq = {
                 ...req,
-                systemPrompt: this.#currentSystemMessage.text,
-                systemMessage: this.#currentSystemMessage,
+                systemPrompt: currentSystemMessage.text,
+                systemMessage: currentSystemMessage,
               };
             }
 
@@ -631,14 +634,14 @@ export class AgentNode<
      * Reset current system prompt to initial state and convert to string using .text getter
      * for backwards compatibility with ModelRequest
      */
-    this.#currentSystemMessage = this.#systemMessage;
+    currentSystemMessage = this.#systemMessage;
     const initialRequest: ModelRequest<
       InternalAgentState<StructuredResponseFormat>,
       unknown
     > = {
       model,
-      systemPrompt: this.#currentSystemMessage?.text,
-      systemMessage: this.#currentSystemMessage,
+      systemPrompt: currentSystemMessage?.text,
+      systemMessage: currentSystemMessage,
       messages: state.messages,
       tools: this.#options.toolClasses,
       state,
