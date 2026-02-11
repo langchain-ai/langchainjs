@@ -340,6 +340,19 @@ export const convertResponsesMessageToAIMessage: Converter<
   const content: MessageContent = [];
   const tool_calls: ToolCall[] = [];
   const invalid_tool_calls: InvalidToolCall[] = [];
+  // Preserve the raw output items so that convertMessagesToResponsesInput can
+  // return them verbatim on the fast path.  We strip `parsed_arguments` from
+  // function_call items because the OpenAI SDK injects it when using
+  // responses.parse(), but the API rejects it when sent back as input.
+  const cleanedOutput = response.output.map((item) => {
+    if (item.type === "function_call" && "parsed_arguments" in item) {
+      const cleaned = { ...item };
+      delete (cleaned as Record<string, unknown>).parsed_arguments;
+      return cleaned;
+    }
+    return item;
+  });
+
   const response_metadata: Record<string, unknown> = {
     model_provider: "openai",
     model: response.model,
@@ -348,6 +361,7 @@ export const convertResponsesMessageToAIMessage: Converter<
     incomplete_details: response.incomplete_details,
     metadata: response.metadata,
     object: response.object,
+    output: cleanedOutput,
     status: response.status,
     user: response.user,
     service_tier: response.service_tier,
@@ -738,7 +752,14 @@ export const convertResponsesDeltaToChatGenerationChunk: Converter<
       additional_kwargs.parsed ??= JSON.parse(msg.text);
     }
     for (const [key, value] of Object.entries(event.response)) {
-      if (key !== "id") response_metadata[key] = value;
+      if (key === "id") continue;
+      // Use the cleaned output from the converted message so that
+      // SDK-only fields like parsed_arguments are not persisted.
+      if (key === "output") {
+        response_metadata[key] = msg.response_metadata.output;
+      } else {
+        response_metadata[key] = value;
+      }
     }
   } else if (
     event.type === "response.function_call_arguments.delta" ||
