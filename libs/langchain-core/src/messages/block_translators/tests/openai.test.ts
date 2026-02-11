@@ -84,6 +84,72 @@ describe("openaiTranslator", () => {
       ];
       expect(full.contentBlocks).toEqual(expectedFull);
     });
+
+    it("should not include empty text block when content is empty string with tool calls", () => {
+      // When OpenAI returns tool calls without text content, content is often ""
+      const message = new AIMessage({
+        content: "",
+        tool_calls: [
+          {
+            id: "call_123",
+            name: "get_value",
+            args: { key: "a" },
+          },
+          {
+            id: "call_456",
+            name: "get_value",
+            args: { key: "b" },
+          },
+        ],
+        response_metadata: { model_provider: "openai" },
+      });
+
+      // Should NOT include empty text block, only tool calls
+      const expected: Array<ContentBlock.Standard> = [
+        {
+          type: "tool_call",
+          id: "call_123",
+          name: "get_value",
+          args: { key: "a" },
+        },
+        {
+          type: "tool_call",
+          id: "call_456",
+          name: "get_value",
+          args: { key: "b" },
+        },
+      ];
+
+      expect(message.contentBlocks).toEqual(expected);
+    });
+
+    it("should not include empty text block in chunk when content is empty string", () => {
+      const chunk = new AIMessageChunk({
+        content: "",
+        tool_call_chunks: [
+          {
+            type: "tool_call_chunk",
+            id: "call_abc",
+            name: "search",
+            args: '{"query":"test"}',
+            index: 0,
+          },
+        ],
+        response_metadata: { model_provider: "openai" },
+      });
+
+      // Should NOT include empty text block, only tool call
+      const expected: Array<ContentBlock.Standard> = [
+        {
+          type: "tool_call",
+          id: "call_abc",
+          name: "search",
+          args: { query: "test" },
+        },
+      ];
+
+      expect(chunk.contentBlocks).toEqual(expected);
+    });
   });
 
   describe("Responses", () => {
