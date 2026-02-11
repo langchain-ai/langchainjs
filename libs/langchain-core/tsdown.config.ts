@@ -65,6 +65,7 @@ export default getBuildConfig({
     "./src/utils/json_patch.ts",
     "./src/utils/json_schema.ts",
     "./src/utils/math.ts",
+    "./src/utils/ssrf.ts",
     "./src/utils/stream.ts",
     "./src/utils/testing/index.ts",
     "./src/utils/tiktoken.ts",
