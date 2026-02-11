@@ -1,4 +1,13 @@
-import { afterEach, beforeEach, describe, expect, MockInstance, test, vi } from "vitest";
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import {
+  afterEach,
+  beforeEach,
+  describe,
+  expect,
+  MockInstance,
+  test,
+  vi,
+} from "vitest";
 import * as z from "zod";
 import { BaseCallbackHandler } from "@langchain/core/callbacks/base";
 import {
@@ -21,7 +30,7 @@ import {
   HumanMessage,
   HumanMessageChunk,
   SystemMessage,
-  ToolMessage
+  ToolMessage,
 } from "@langchain/core/messages";
 import { BaseLanguageModelInput } from "@langchain/core/language_models/base";
 import { ChatPromptValue } from "@langchain/core/prompt_values";
@@ -34,28 +43,50 @@ import fs from "fs/promises";
 import * as os from "node:os";
 import * as path from "node:path";
 import { exec } from "node:child_process";
-import { ChatPromptTemplate, MessagesPlaceholder } from "@langchain/core/prompts";
+import {
+  ChatPromptTemplate,
+  MessagesPlaceholder,
+} from "@langchain/core/prompts";
+
+/**
+ * Builds the callback handler list for integration tests.
+ * Always includes a GoogleRequestRecorder for programmatic assertions.
+ * Optionally includes a GoogleRequestLogger for console output when
+ * the GOOGLE_LOG_REQUESTS env var is set (e.g. GOOGLE_LOG_REQUESTS=1).
+ */
+function buildTestCallbacks(
+  recorder: GoogleRequestRecorder
+): BaseCallbackHandler[] {
+  const cbs: BaseCallbackHandler[] = [recorder];
+  if (process.env.GOOGLE_LOG_REQUESTS) {
+    cbs.push(new GoogleRequestLogger());
+  }
+  return cbs;
+}
 
 type ModelInfoConfig = {
-  node?: boolean,
-  useApiKey?: boolean, // Should we set the API key from TEST_API_KEY
-  useCredentials?: boolean, // Should we set the credentials from TEST_CREDENTIALS
-  only?: boolean,
-  skip?: boolean,
-  delay?: number,
-  isThinking?: boolean, // Is this a thinking model?
-  isImage?: boolean, // Is this an image generation model?
-  hasImageThoughts?: boolean, // Is this an image model that has thinking output?
-  isTts?: boolean, // Is this a TTS model?
-}
+  node?: boolean;
+  useApiKey?: boolean; // Should we set the API key from TEST_API_KEY
+  useCredentials?: boolean; // Should we set the credentials from TEST_CREDENTIALS
+  only?: boolean;
+  skip?: boolean;
+  delay?: number;
+  isThinking?: boolean; // Is this a thinking model?
+  isImage?: boolean; // Is this an image generation model?
+  hasImageThoughts?: boolean; // Is this an image model that has thinking output?
+  isTts?: boolean; // Is this a TTS model?
+};
 
-type DefaultGoogleParams = Omit<ChatGoogleParams | ChatGoogleNodeParams, "model">;
+type DefaultGoogleParams = Omit<
+  ChatGoogleParams | ChatGoogleNodeParams,
+  "model"
+>;
 
 type ModelInfo = {
-  model: string,
-  defaultGoogleParams?: DefaultGoogleParams,
-  testConfig?: ModelInfoConfig,
-}
+  model: string;
+  defaultGoogleParams?: DefaultGoogleParams;
+  testConfig?: ModelInfoConfig;
+};
 
 const allModelInfo: ModelInfo[] = [
   {
@@ -69,8 +100,7 @@ const allModelInfo: ModelInfo[] = [
   },
   {
     model: "gemini-2.5-flash",
-    testConfig: {
-    },
+    testConfig: {},
   },
   {
     model: "gemini-2.5-pro",
@@ -85,7 +115,7 @@ const allModelInfo: ModelInfo[] = [
     model: "gemini-3-flash-preview",
     testConfig: {
       isThinking: true,
-    }
+    },
   },
   {
     model: "gemini-2.5-flash-image",
@@ -104,20 +134,22 @@ const allModelInfo: ModelInfo[] = [
     model: "gemini-2.5-flash-preview-tts",
     testConfig: {
       isTts: true,
-    }
+    },
   },
   {
     model: "gemini-2.5-pro-preview-tts",
     testConfig: {
       isTts: true,
       skip: true,
-    }
+    },
   },
 ];
 
 type ModelInfoTest = (modelInfo: ModelInfo) => boolean;
 
-function filterTestableModels(filters?: ModelInfoTest | ModelInfoTest[] ): ModelInfo[] {
+function filterTestableModels(
+  filters?: ModelInfoTest | ModelInfoTest[]
+): ModelInfo[] {
   // Add all the explansion info to every model
   const expandedModelInfo = expandAllModelInfo();
 
@@ -126,9 +158,8 @@ function filterTestableModels(filters?: ModelInfoTest | ModelInfoTest[] ): Model
     (modelInfo) => modelInfo.testConfig?.only === true
   );
 
-  const startingModels = modelsWithOnly.length > 0
-    ? modelsWithOnly
-    : expandedModelInfo;
+  const startingModels =
+    modelsWithOnly.length > 0 ? modelsWithOnly : expandedModelInfo;
 
   // If anything has "skip: true" set, remove those
   const skippedModels = startingModels.filter(
@@ -139,12 +170,10 @@ function filterTestableModels(filters?: ModelInfoTest | ModelInfoTest[] ): Model
   let filteredModels = skippedModels;
   if (filters) {
     const allFilters = Array.isArray(filters) ? filters : [filters];
-    allFilters.forEach( (filter: ModelInfoTest) => {
+    allFilters.forEach((filter: ModelInfoTest) => {
       filteredModels = filteredModels.filter(filter);
-    })
+    });
   }
-
-  console.error('filteredModels', filteredModels);
 
   return filteredModels;
 }
@@ -154,28 +183,28 @@ const expansionInfo: Partial<ModelInfo>[] = [
   {
     testConfig: {
       useApiKey: true,
-    }
+    },
   },
   {
     testConfig: {
       node: true,
       skip: true,
-    }
+    },
   },
   {
     testConfig: {
       useApiKey: true,
       node: true,
       skip: true,
-    }
-  }
-]
+    },
+  },
+];
 
 function expandAllModelInfo(): ModelInfo[] {
   const ret: ModelInfo[] = [];
 
-  allModelInfo.forEach( (modelInfo: ModelInfo) => {
-    expansionInfo.forEach( (addl: Partial<ModelInfo>) => {
+  allModelInfo.forEach((modelInfo: ModelInfo) => {
+    expansionInfo.forEach((addl: Partial<ModelInfo>) => {
       const newInfo: ModelInfo = {
         model: modelInfo.model,
         defaultGoogleParams: modelInfo.defaultGoogleParams,
@@ -196,7 +225,7 @@ function expandAllModelInfo(): ModelInfo[] {
       }
       ret.push(newInfo);
     });
-  })
+  });
 
   return ret;
 }
@@ -255,20 +284,22 @@ const coreModelInfo: ModelInfo[] = filterTestableModels([
 ]);
 describe.each(coreModelInfo)(
   "Google Core ($model) $testConfig",
-  ({model, defaultGoogleParams, testConfig}: ModelInfo) => {
-
+  ({ model, defaultGoogleParams, testConfig }: ModelInfo) => {
     let recorder: GoogleRequestRecorder;
     let callbacks: BaseCallbackHandler[];
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let warnSpy: MockInstance<any>;
 
-    function newChatGoogle(fields?: DefaultGoogleParams): ChatGoogle | ChatGoogleNode {
+    function newChatGoogle(
+      fields?: DefaultGoogleParams
+    ): ChatGoogle | ChatGoogleNode {
       recorder = new GoogleRequestRecorder();
-      callbacks = [recorder, new GoogleRequestLogger()];
+      callbacks = buildTestCallbacks(recorder);
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const configParams: ChatGoogleParams | ChatGoogleNodeParams | Record<string,any> = {};
+      const configParams:
+        | ChatGoogleParams
+        | ChatGoogleNodeParams
+        | Record<string, any> = {};
       const useNode = testConfig?.node ?? false;
       const useApiKey = testConfig?.useApiKey ?? !useNode;
       if (useApiKey) {
@@ -284,11 +315,9 @@ describe.each(coreModelInfo)(
       };
       if (useNode) {
         return new ChatGoogleNode(params);
-
       } else {
         return new ChatGoogle(params);
       }
-
     }
 
     beforeEach(async () => {
@@ -306,7 +335,6 @@ describe.each(coreModelInfo)(
     test("invoke", async () => {
       const llm = newChatGoogle();
       const result = await llm.invoke("What is 1 + 1?");
-      console.log(result);
 
       expect(AIMessage.isInstance(result)).to.equal(true);
 
@@ -325,7 +353,6 @@ describe.each(coreModelInfo)(
         seed: 6,
       });
       const result = await llm.invoke("What is 1 + 1?");
-      console.log(result);
 
       expect(AIMessage.isInstance(result)).to.equal(true);
 
@@ -341,8 +368,9 @@ describe.each(coreModelInfo)(
 
     test("invoke token count usage_metadata", async () => {
       const model = newChatGoogle();
-      const res: AIMessageChunk = await model.invoke("Why is the sky blue? Be concise.");
-      console.log(res);
+      const res: AIMessageChunk = await model.invoke(
+        "Why is the sky blue? Be concise."
+      );
       expect(res?.usage_metadata).toBeDefined();
       if (!res?.usage_metadata) {
         return;
@@ -392,7 +420,7 @@ describe.each(coreModelInfo)(
         streaming: true,
       });
 
-      const msg = "Why is the sky blue? Be verbose."
+      const msg = "Why is the sky blue? Be verbose.";
 
       let totalTokenCount = 0;
       let tokensString = "";
@@ -420,7 +448,6 @@ describe.each(coreModelInfo)(
       for await (const chunk of await model.stream(
         "Why is the sky blue? Be concise."
       )) {
-        console.log(chunk);
         if (!res) {
           res = chunk;
         } else {
@@ -478,17 +505,16 @@ describe.each(coreModelInfo)(
     test("function conversation", async () => {
       const tools = [weatherTool];
       const llm = newChatGoogle().bindTools(tools);
-      const history: BaseMessage[] = [new HumanMessage("What is the weather in New York?")];
+      const history: BaseMessage[] = [
+        new HumanMessage("What is the weather in New York?"),
+      ];
       const result1 = await llm.invoke(history);
       history.push(result1);
-      console.log('history1', history);
 
       const toolCalls = result1.tool_calls!;
       const toolCall = toolCalls[0];
       const toolMessage = await weatherTool.invoke(toolCall);
       history.push(toolMessage);
-
-      console.log('history2', history);
 
       const result2 = await llm.invoke(history);
 
@@ -546,9 +572,12 @@ describe.each(coreModelInfo)(
 
     test("function - force tool", async () => {
       const llm = newChatGoogle();
-      const llmWithTools: Runnable = llm.bindTools([calculatorTool, weatherTool], {
-        tool_choice: "calculator",
-      });
+      const llmWithTools: Runnable = llm.bindTools(
+        [calculatorTool, weatherTool],
+        {
+          tool_choice: "calculator",
+        }
+      );
 
       const result = await llmWithTools.invoke(
         "Whats the weather like in paris today? What's 1836 plus 7262?"
@@ -606,7 +635,6 @@ describe.each(coreModelInfo)(
       const llm: Runnable = newChatGoogle().bindTools([searchTool]);
 
       const result = await llm.invoke("Who won the 2024 MLB World Series?");
-      console.log("result", result);
       expect(result.content as string).toContain("Dodgers");
       expect(result).toHaveProperty("response_metadata");
 
@@ -660,14 +688,12 @@ describe.each(coreModelInfo)(
         "Whats the weather like today in San Francisco?"
       );
       let finalChunk: AIMessageChunk | undefined;
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       let toolCalls: any[] = [];
       for await (const chunk of stream) {
         finalChunk = !finalChunk ? chunk : concat(finalChunk, chunk);
         if (chunk.tool_calls && Array.isArray(chunk.tool_calls)) {
           toolCalls = [...toolCalls, ...chunk.tool_calls];
         }
-        console.log('finalChunk', finalChunk);
       }
 
       expect(finalChunk).toBeDefined();
@@ -748,11 +774,14 @@ describe.each(coreModelInfo)(
       });
       const llm: Runnable = newChatGoogle().withStructuredOutput(tool);
       const result = await llm.invoke("Parse this: Amazing product, 10/10");
-      console.log("Result:", result);
       expect(result).toHaveProperty("rating");
       expect(result).toHaveProperty("comment");
-      expect(recorder.request?.body?.generationConfig).not.toHaveProperty("responseMimeType");
-      expect(recorder.request?.body?.generationConfig).not.toHaveProperty("responseJsonSchema");
+      expect(recorder.request?.body?.generationConfig).not.toHaveProperty(
+        "responseMimeType"
+      );
+      expect(recorder.request?.body?.generationConfig).not.toHaveProperty(
+        "responseJsonSchema"
+      );
     });
 
     test("withStructuredOutput - zod jsonSchema", async () => {
@@ -764,11 +793,14 @@ describe.each(coreModelInfo)(
         method: "jsonSchema",
       });
       const result = await llm.invoke("Parse this: Amazing product, 10/10");
-      console.log("Result:", result);
       expect(result).toHaveProperty("rating");
       expect(result).toHaveProperty("comment");
-      expect(recorder.request?.body?.generationConfig).toHaveProperty("responseMimeType");
-      expect(recorder.request?.body?.generationConfig).toHaveProperty("responseJsonSchema");
+      expect(recorder.request?.body?.generationConfig).toHaveProperty(
+        "responseMimeType"
+      );
+      expect(recorder.request?.body?.generationConfig).toHaveProperty(
+        "responseJsonSchema"
+      );
     });
 
     test("withStructuredOutput - zod includeRaw", async () => {
@@ -780,7 +812,6 @@ describe.each(coreModelInfo)(
         includeRaw: true,
       });
       const result = await llm.invoke("Parse this: Amazing product, 10/10");
-      console.log("Result:", result);
       expect(result).toHaveProperty("raw");
       expect(result).toHaveProperty("parsed");
       expect(AIMessage.isInstance(result.raw)).toEqual(true);
@@ -795,14 +826,17 @@ describe.each(coreModelInfo)(
         responseSchema: tool as unknown as InteropZodType, // Weird typescript issue
       });
       const result = await llm.invoke("Parse this: Amazing product, 10/10");
-      console.log("Result:", result);
       expect(result).toHaveProperty("content");
       expect(typeof result.content).toEqual("string");
       const resultJson = JSON.parse(result.content as string);
       expect(resultJson).toHaveProperty("rating");
       expect(resultJson).toHaveProperty("comment");
-      expect(recorder.request?.body?.generationConfig).toHaveProperty("responseJsonSchema");
-      expect(recorder.request?.body?.generationConfig?.responseMimeType).toEqual("application/json");
+      expect(recorder.request?.body?.generationConfig).toHaveProperty(
+        "responseJsonSchema"
+      );
+      expect(
+        recorder.request?.body?.generationConfig?.responseMimeType
+      ).toEqual("application/json");
     });
 
     test("image - legacy", async () => {
@@ -829,9 +863,7 @@ describe.each(coreModelInfo)(
         content,
       });
 
-      const messages: BaseMessage[] = [
-        message,
-      ];
+      const messages: BaseMessage[] = [message];
 
       const res = await model.invoke(messages);
 
@@ -870,12 +902,10 @@ describe.each(coreModelInfo)(
         },
       ];
       const message = new HumanMessage({
-        contentBlocks: content
+        contentBlocks: content,
       });
 
-      const messages: BaseMessage[] = [
-        message,
-      ];
+      const messages: BaseMessage[] = [message];
 
       const res = await model.invoke(messages);
 
@@ -1000,8 +1030,8 @@ describe.each(coreModelInfo)(
         {
           type: "video",
           url: dataUri,
-        }
-      ]
+        },
+      ];
 
       const messages1: BaseMessage[] = [
         new HumanMessageChunk({ contentBlocks: message1 }),
@@ -1116,7 +1146,9 @@ describe.each(coreModelInfo)(
       expect(propSum(usage.input_token_details!)).toEqual(usage.input_tokens);
       if (usage.output_token_details?.text) {
         // Some models don't report the text tokens in the details
-        expect(propSum(usage.output_token_details!)).toEqual(usage.output_tokens);
+        expect(propSum(usage.output_token_details!)).toEqual(
+          usage.output_tokens
+        );
       }
       expect(usage.input_token_details).toHaveProperty("audio");
     });
@@ -1161,37 +1193,40 @@ describe.each(coreModelInfo)(
       expect(propSum(usage.input_token_details!)).toEqual(usage.input_tokens);
       if (usage.output_token_details?.text) {
         // Some models don't report the text tokens in the details
-        expect(propSum(usage.output_token_details!)).toEqual(usage.output_tokens);
+        expect(propSum(usage.output_token_details!)).toEqual(
+          usage.output_tokens
+        );
       }
       expect(usage.input_token_details).toHaveProperty("audio");
     });
-
   }
-)
+);
 
 const thinkingModelInfo: ModelInfo[] = filterTestableModels([
-  (modelInfo: ModelInfo) => modelInfo.testConfig?.isThinking === true
+  (modelInfo: ModelInfo) => modelInfo.testConfig?.isThinking === true,
 ]);
 describe.each(thinkingModelInfo)(
   "Google Thinking ($model) $testConfig",
-  ({model, defaultGoogleParams, testConfig}: ModelInfo) => {
-
+  ({ model, defaultGoogleParams, testConfig }: ModelInfo) => {
     let recorder: GoogleRequestRecorder;
     let callbacks: BaseCallbackHandler[];
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let warnSpy: MockInstance<any>;
 
-    function newChatGoogle( fields?: DefaultGoogleParams ): ChatGoogle | ChatGoogleNode {
+    function newChatGoogle(
+      fields?: DefaultGoogleParams
+    ): ChatGoogle | ChatGoogleNode {
       recorder = new GoogleRequestRecorder();
-      callbacks = [recorder, new GoogleRequestLogger()];
+      callbacks = buildTestCallbacks(recorder);
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const configParams: ChatGoogleParams | ChatGoogleNodeParams | Record<string, any> = {};
+      const configParams:
+        | ChatGoogleParams
+        | ChatGoogleNodeParams
+        | Record<string, any> = {};
       const useNode = testConfig?.node ?? false;
       const useApiKey = testConfig?.useApiKey ?? !useNode;
       if (useApiKey) {
-        configParams.apiKey = getEnvironmentVariable( "TEST_API_KEY" );
+        configParams.apiKey = getEnvironmentVariable("TEST_API_KEY");
       }
 
       const params = {
@@ -1202,35 +1237,34 @@ describe.each(thinkingModelInfo)(
         ...(fields ?? {}),
       };
       if (useNode) {
-        return new ChatGoogleNode( params );
-
+        return new ChatGoogleNode(params);
       } else {
-        return new ChatGoogle( params );
+        return new ChatGoogle(params);
       }
-
     }
 
-    beforeEach( async () => {
-      warnSpy = vi.spyOn( global.console, "warn" );
+    beforeEach(async () => {
+      warnSpy = vi.spyOn(global.console, "warn");
       const delay = testConfig?.delay ?? 0;
       if (delay) {
-        await new Promise( ( resolve ) => setTimeout( resolve, delay ) );
+        await new Promise((resolve) => setTimeout(resolve, delay));
       }
-    } );
+    });
 
-    afterEach( () => {
+    afterEach(() => {
       warnSpy.mockRestore();
-    } );
+    });
 
     test("thought signature - text", async () => {
       const llm = newChatGoogle();
       const result = await llm.invoke("What is 1 + 1?");
-      console.log(result);
 
       expect(result.text as string).toMatch(/(1 + 1 (equals|is|=) )?2.? ?/);
       expect(typeof result.content).toEqual("string");
-      expect(result.contentBlocks[0]).toHaveProperty('thoughtSignature');
-      expect(result.additional_kwargs.originalTextContentBlock).toHaveProperty("thoughtSignature");
+      expect(result.contentBlocks[0]).toHaveProperty("thoughtSignature");
+      expect(result.additional_kwargs.originalTextContentBlock).toHaveProperty(
+        "thoughtSignature"
+      );
     });
 
     test("thought signature - stream", async () => {
@@ -1239,12 +1273,13 @@ describe.each(thinkingModelInfo)(
       });
       const msg = "Why is the sky blue? Be verbose.";
       const result = await llm.invoke(msg);
-      console.log(result);
 
       expect(result.text as string).toMatch(/(1 + 1 (equals|is|=) )?2.? ?/);
       expect(typeof result.content).toEqual("string");
-      expect(result.contentBlocks[0]).toHaveProperty('thoughtSignature');
-      expect(result.additional_kwargs.originalTextContentBlock).toHaveProperty("thoughtSignature");
+      expect(result.contentBlocks[0]).toHaveProperty("thoughtSignature");
+      expect(result.additional_kwargs.originalTextContentBlock).toHaveProperty(
+        "thoughtSignature"
+      );
     });
 
     test("thought signature - function", async () => {
@@ -1260,7 +1295,9 @@ describe.each(thinkingModelInfo)(
         reasoningEffort: "high",
       });
       const result = await llm.invoke("Why is the sky blue?");
-      const reasoningSteps = result.contentBlocks.filter((b) => b.type === "reasoning");
+      const reasoningSteps = result.contentBlocks.filter(
+        (b) => b.type === "reasoning"
+      );
       const textSteps = result.contentBlocks.filter((b) => b.type === "text");
       expect(reasoningSteps?.length).toBeGreaterThan(0);
       expect(textSteps?.length).toBeGreaterThan(0);
@@ -1269,36 +1306,37 @@ describe.each(thinkingModelInfo)(
       // const textStepsText: string = textSteps.reduce((acc: string, val: ContentBlock.Text) => acc + val.text, "");
       // expect(textStepsText).toEqual(result.text);
     });
-
   }
 );
 
 const imageModelInfo: ModelInfo[] = filterTestableModels([
-  (modelInfo: ModelInfo) => modelInfo.testConfig?.isImage === true
+  (modelInfo: ModelInfo) => modelInfo.testConfig?.isImage === true,
 ]);
 describe.each(imageModelInfo)(
   "Google Image ($model) $testConfig",
-  ({model, defaultGoogleParams, testConfig}: ModelInfo) => {
-
+  ({ model, defaultGoogleParams, testConfig }: ModelInfo) => {
     let recorder: GoogleRequestRecorder;
     let callbacks: BaseCallbackHandler[];
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let warnSpy: MockInstance<any>;
 
     let testSeq = 0;
     let imageSeq = 0;
 
-    function newChatGoogle( fields?: DefaultGoogleParams ): ChatGoogle | ChatGoogleNode {
+    function newChatGoogle(
+      fields?: DefaultGoogleParams
+    ): ChatGoogle | ChatGoogleNode {
       recorder = new GoogleRequestRecorder();
-      callbacks = [recorder, new GoogleRequestLogger()];
+      callbacks = buildTestCallbacks(recorder);
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const configParams: ChatGoogleParams | ChatGoogleNodeParams | Record<string, any> = {};
+      const configParams:
+        | ChatGoogleParams
+        | ChatGoogleNodeParams
+        | Record<string, any> = {};
       const useNode = testConfig?.node ?? false;
       const useApiKey = testConfig?.useApiKey ?? !useNode;
       if (useApiKey) {
-        configParams.apiKey = getEnvironmentVariable( "TEST_API_KEY" );
+        configParams.apiKey = getEnvironmentVariable("TEST_API_KEY");
       }
 
       const params = {
@@ -1309,27 +1347,25 @@ describe.each(imageModelInfo)(
         ...(fields ?? {}),
       };
       if (useNode) {
-        return new ChatGoogleNode( params );
-
+        return new ChatGoogleNode(params);
       } else {
-        return new ChatGoogle( params );
+        return new ChatGoogle(params);
       }
-
     }
 
-    beforeEach( async () => {
+    beforeEach(async () => {
       imageSeq = 0;
-      warnSpy = vi.spyOn( global.console, "warn" );
+      warnSpy = vi.spyOn(global.console, "warn");
       const delay = testConfig?.delay ?? 0;
       if (delay) {
-        await new Promise( ( resolve ) => setTimeout( resolve, delay ) );
+        await new Promise((resolve) => setTimeout(resolve, delay));
       }
-    } );
+    });
 
-    afterEach( () => {
+    afterEach(() => {
       testSeq++;
       warnSpy.mockRestore();
-    } );
+    });
 
     async function openFile(block: ContentBlock.Multimodal.File) {
       if (!block.data) {
@@ -1344,27 +1380,29 @@ describe.each(imageModelInfo)(
         }
       }
 
-      const filePath = path.join(os.tmpdir(), `langchain-gemini-test-${Date.now()}-${testSeq}-${imageSeq++}.${ext}`);
+      const filePath = path.join(
+        os.tmpdir(),
+        `langchain-gemini-test-${Date.now()}-${testSeq}-${imageSeq++}.${ext}`
+      );
       await fs.writeFile(filePath, buffer);
-      console.log(`Saved output to: ${filePath}`);
       exec(`open "${filePath}"`);
     }
 
-    async function handleResult(blocks: ContentBlock.Standard[]): Promise<Record<string,number>> {
-      const ret: Record<string,number> = {
+    async function handleResult(
+      blocks: ContentBlock.Standard[]
+    ): Promise<Record<string, number>> {
+      const ret: Record<string, number> = {
         unknown: 0,
       };
 
       for (const block of blocks) {
         const type: string = block.type;
-        console.log("Block Type:", type);
-        ret[type] = (ret[type] ?? 0)+1
+        ret[type] = (ret[type] ?? 0) + 1;
         if (type === "file") {
           await openFile(block as ContentBlock.Multimodal.File);
         } else if (type === "text" || type === "reasoning") {
-          console.log(block.text);
+          // no-op
         } else {
-          console.log('Unexpected block type', type);
           ret.unknown = ret.unknown + 1;
         }
       }
@@ -1374,31 +1412,27 @@ describe.each(imageModelInfo)(
 
     test("draw - invoke", async () => {
       const llm = newChatGoogle({
-        responseModalities: [
-          "IMAGE",
-          "TEXT",
-        ]
+        responseModalities: ["IMAGE", "TEXT"],
       });
-      const prompt = "I would like to see a drawing of a house with the sun shining overhead. Drawn in crayon.";
+      const prompt =
+        "I would like to see a drawing of a house with the sun shining overhead. Drawn in crayon.";
       const result: AIMessage = await llm.invoke(prompt);
       await handleResult(result.contentBlocks);
     });
 
     test("draw - stream", async () => {
-      const llm = newChatGoogle( {
-        responseModalities: [
-          "IMAGE",
-          "TEXT",
-        ]
-      } );
-      const input = "I would like to see a drawing of a house with the sun shining overhead. Drawn in crayon.";
-      const res = await llm.stream( input );
+      const llm = newChatGoogle({
+        responseModalities: ["IMAGE", "TEXT"],
+      });
+      const input =
+        "I would like to see a drawing of a house with the sun shining overhead. Drawn in crayon.";
+      const res = await llm.stream(input);
       const resArray: AIMessageChunk[] = [];
-      for await ( const chunk of res ){
-        resArray.push( chunk );
+      for await (const chunk of res) {
+        resArray.push(chunk);
       }
 
-      const typeBlock: Record<string,ContentBlock.Standard[]> = {};
+      const typeBlock: Record<string, ContentBlock.Standard[]> = {};
       for (const chunk of resArray) {
         const modelProvider = chunk.response_metadata?.model_provider;
         expect(modelProvider).toEqual("google");
@@ -1410,24 +1444,19 @@ describe.each(imageModelInfo)(
           typeBlock[type] = currentTypeBlock;
         });
         await handleResult(contentBlocks);
-      };
+      }
 
-      console.log('typeCount', typeBlock);
       expect(typeBlock.file?.length).toBeGreaterThanOrEqual(1);
-    })
+    });
 
     test("draw - thinking", async () => {
       const llm = newChatGoogle({
-        responseModalities: [
-          "IMAGE",
-          "TEXT",
-        ],
+        responseModalities: ["IMAGE", "TEXT"],
         maxReasoningTokens: -1,
       });
-      const prompt = "I would like to see a drawing of a house with the sun shining overhead. Drawn in crayon.";
+      const prompt =
+        "I would like to see a drawing of a house with the sun shining overhead. Drawn in crayon.";
       const result: AIMessage = await llm.invoke(prompt);
-      console.log('recorder', recorder.response?.data?.candidates?.[0]?.content?.parts);
-      console.log('result info', result.content.length, result.contentBlocks.length);
       const types = await handleResult(result.contentBlocks);
       expect(types.unknown).toEqual(0);
       if (testConfig?.hasImageThoughts) {
@@ -1438,39 +1467,40 @@ describe.each(imageModelInfo)(
         expect(types.file ?? 0).toEqual(1);
       }
     });
-
   }
 );
 
 const ttsModelInfo: ModelInfo[] = filterTestableModels([
-  (modelInfo: ModelInfo) => modelInfo.testConfig?.isTts === true
+  (modelInfo: ModelInfo) => modelInfo.testConfig?.isTts === true,
 ]);
 
 describe.sequential.each(ttsModelInfo)(
   "Google TTS ($model) $testConfig",
-  ({model, defaultGoogleParams, testConfig}: ModelInfo) => {
-
+  ({ model, defaultGoogleParams, testConfig }: ModelInfo) => {
     let recorder: GoogleRequestRecorder;
     let callbacks: BaseCallbackHandler[];
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let warnSpy: MockInstance<any>;
 
     let testSeq = 0;
     let imageSeq = 0;
 
-    function newChatGoogle( fields?: DefaultGoogleParams ): ChatGoogle | ChatGoogleNode {
+    function newChatGoogle(
+      fields?: DefaultGoogleParams
+    ): ChatGoogle | ChatGoogleNode {
       recorder = new GoogleRequestRecorder();
-      callbacks = [recorder, new GoogleRequestLogger()];
+      callbacks = buildTestCallbacks(recorder);
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const configParams: ChatGoogleParams | ChatGoogleNodeParams | Record<string, any> = {
+      const configParams:
+        | ChatGoogleParams
+        | ChatGoogleNodeParams
+        | Record<string, any> = {
         responseModalities: ["AUDIO"],
       };
       const useNode = testConfig?.node ?? false;
       const useApiKey = testConfig?.useApiKey ?? !useNode;
       if (useApiKey) {
-        configParams.apiKey = getEnvironmentVariable( "TEST_API_KEY" );
+        configParams.apiKey = getEnvironmentVariable("TEST_API_KEY");
       }
 
       const params = {
@@ -1481,27 +1511,25 @@ describe.sequential.each(ttsModelInfo)(
         ...(fields ?? {}),
       };
       if (useNode) {
-        return new ChatGoogleNode( params );
-
+        return new ChatGoogleNode(params);
       } else {
-        return new ChatGoogle( params );
+        return new ChatGoogle(params);
       }
-
     }
 
-    beforeEach( async () => {
+    beforeEach(async () => {
       imageSeq = 0;
-      warnSpy = vi.spyOn( global.console, "warn" );
+      warnSpy = vi.spyOn(global.console, "warn");
       const delay = testConfig?.delay ?? 0;
       if (delay) {
-        await new Promise( ( resolve ) => setTimeout( resolve, delay ) );
+        await new Promise((resolve) => setTimeout(resolve, delay));
       }
-    } );
+    });
 
-    afterEach( () => {
+    afterEach(() => {
       testSeq++;
       warnSpy.mockRestore();
-    } );
+    });
 
     async function openFile(block: ContentBlock.Multimodal.File) {
       if (!block.data) {
@@ -1559,19 +1587,17 @@ describe.sequential.each(ttsModelInfo)(
       const wavBuffer = Buffer.concat([header, buffer]);
 
       await fs.writeFile(wavFile, wavBuffer);
-      console.log(`Saved output to: ${wavFile}`);
       exec(`afplay "${wavFile}"`);
     }
 
-    async function handleResult( blocks: ContentBlock.Standard[] ) {
+    async function handleResult(blocks: ContentBlock.Standard[]) {
       for (const block of blocks) {
-        console.log( "Block Type:", block.type );
         if (block.type === "file") {
-          await openFile( block as ContentBlock.Multimodal.File );
+          await openFile(block as ContentBlock.Multimodal.File);
         } else if (block.type === "text") {
-          console.log( block.text );
+          // no-op
         } else {
-          console.log( 'Unexpected block type', block.type );
+          // no-op
         }
       }
     }
@@ -1666,6 +1692,5 @@ describe.sequential.each(ttsModelInfo)(
         await handleResult(content);
       }
     }, 60000);
-
   }
 );

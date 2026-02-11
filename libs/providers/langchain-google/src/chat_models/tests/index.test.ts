@@ -1,4 +1,12 @@
-import { afterEach, beforeEach, describe, expect, MockInstance, test, vi } from "vitest";
+import {
+  afterEach,
+  beforeEach,
+  describe,
+  expect,
+  MockInstance,
+  test,
+  vi,
+} from "vitest";
 import * as fs from "node:fs";
 import { ApiClient } from "../../clients/index.js";
 import { GoogleRequestRecorder } from "../../utils/handler.js";
@@ -8,7 +16,7 @@ import type { Gemini } from "../types.js";
 
 interface MockResponseParameters {
   filePath: string;
-  url: string
+  url: string;
 }
 
 class MockResponse implements Response {
@@ -25,7 +33,7 @@ class MockResponse implements Response {
   readonly body: ReadableStream<Uint8Array<ArrayBuffer>> | null = null;
   readonly bodyUsed: boolean = false;
 
-  constructor( {filePath, url}: MockResponseParameters) {
+  constructor({ filePath, url }: MockResponseParameters) {
     this.bodyText = fs.readFileSync(filePath, "utf-8");
     this.filePath = filePath;
     this.url = url;
@@ -59,7 +67,6 @@ class MockResponse implements Response {
 }
 
 class MockApiClient extends ApiClient {
-
   request: Request;
 
   response: Response;
@@ -85,10 +92,9 @@ class MockApiClient extends ApiClient {
   }
 }
 
-type MockChatGoogleParams = ChatGoogleParams & {responseFile: string};
+type MockChatGoogleParams = ChatGoogleParams & { responseFile: string };
 
 describe("Google Mock", () => {
-
   let recorder: GoogleRequestRecorder;
   let callbacks: BaseCallbackHandler[];
 
@@ -96,7 +102,7 @@ describe("Google Mock", () => {
   let warnSpy: MockInstance<any>;
 
   function newChatGoogle(mockFields: MockChatGoogleParams): ChatGoogle {
-    const {model, responseFile, ...fields} = mockFields;
+    const { model, responseFile, ...fields } = mockFields;
     recorder = new GoogleRequestRecorder();
     callbacks = [
       recorder,
@@ -114,13 +120,13 @@ describe("Google Mock", () => {
     return new ChatGoogle(params);
   }
 
-  beforeEach( async () => {
-    warnSpy = vi.spyOn( global.console, "warn" );
-  } );
+  beforeEach(async () => {
+    warnSpy = vi.spyOn(global.console, "warn");
+  });
 
-  afterEach( () => {
+  afterEach(() => {
     warnSpy.mockRestore();
-  } );
+  });
 
   test("basic", async () => {
     const llm = newChatGoogle({
@@ -129,7 +135,9 @@ describe("Google Mock", () => {
     });
     await llm.invoke("What is 1+1?");
     // console.log('request',recorder.request);
-    expect(recorder?.request?.body?.generationConfig?.candidateCount).toEqual(1);
+    expect(recorder?.request?.body?.generationConfig?.candidateCount).toEqual(
+      1
+    );
   });
 
   type TestReasoning = {
@@ -139,7 +147,7 @@ describe("Google Mock", () => {
     expectIncludeThoughts?: boolean;
     expectThinkingBudget?: number;
     expectThinkingLevel?: Gemini.ThinkingLevel;
-  }
+  };
 
   const testReasoning25Tokens: TestReasoning[] = [
     {
@@ -276,13 +284,13 @@ describe("Google Mock", () => {
       model: "gemini-2.5-pro",
       reasoningEffort: "medium",
       expectIncludeThoughts: true,
-      expectThinkingBudget: 8*1024,
+      expectThinkingBudget: 8 * 1024,
     },
     {
       model: "gemini-2.5-pro",
       reasoningEffort: "high",
       expectIncludeThoughts: true,
-      expectThinkingBudget: 32*1024,
+      expectThinkingBudget: 32 * 1024,
     },
     {
       model: "gemini-2.5-flash",
@@ -300,13 +308,13 @@ describe("Google Mock", () => {
       model: "gemini-2.5-flash",
       reasoningEffort: "medium",
       expectIncludeThoughts: true,
-      expectThinkingBudget: 8*1024,
+      expectThinkingBudget: 8 * 1024,
     },
     {
       model: "gemini-2.5-flash",
       reasoningEffort: "high",
       expectIncludeThoughts: true,
-      expectThinkingBudget: 24*1024,
+      expectThinkingBudget: 24 * 1024,
     },
     {
       model: "gemini-2.5-flash-lite",
@@ -324,13 +332,13 @@ describe("Google Mock", () => {
       model: "gemini-2.5-flash-lite",
       reasoningEffort: "medium",
       expectIncludeThoughts: true,
-      expectThinkingBudget: 8*1024,
+      expectThinkingBudget: 8 * 1024,
     },
     {
       model: "gemini-2.5-flash-lite",
       reasoningEffort: "high",
       expectIncludeThoughts: true,
-      expectThinkingBudget: 24*1024,
+      expectThinkingBudget: 24 * 1024,
     },
   ];
   const testReasoning3Effort: TestReasoning[] = [
@@ -389,11 +397,18 @@ describe("Google Mock", () => {
     ...testReasoning3Tokens,
     ...testReasoning25Effort,
     ...testReasoning3Effort,
-  ]
+  ];
 
   describe.each(testReasoning)(
     "reasoning - $model - $maxReasoningTokens - $reasoningEffort",
-    ({model, maxReasoningTokens, reasoningEffort, expectIncludeThoughts, expectThinkingBudget, expectThinkingLevel}: TestReasoning) => {
+    ({
+      model,
+      maxReasoningTokens,
+      reasoningEffort,
+      expectIncludeThoughts,
+      expectThinkingBudget,
+      expectThinkingLevel,
+    }: TestReasoning) => {
       test("reasoning", async () => {
         const llm = newChatGoogle({
           model,
@@ -402,13 +417,12 @@ describe("Google Mock", () => {
           reasoningEffort,
         });
         await llm.invoke("What is 1+1?");
-        const thinkingConfig: Gemini.ThinkingConfig = recorder?.request?.body?.generationConfig?.thinkingConfig;
-        console.log('thinkingConfig', thinkingConfig);
+        const thinkingConfig: Gemini.ThinkingConfig =
+          recorder?.request?.body?.generationConfig?.thinkingConfig;
         expect(thinkingConfig?.thinkingBudget).toEqual(expectThinkingBudget);
         expect(thinkingConfig?.thinkingLevel).toEqual(expectThinkingLevel);
         expect(thinkingConfig?.includeThoughts).toEqual(expectIncludeThoughts);
       });
     }
-  )
-
+  );
 });

@@ -102,8 +102,14 @@ export class GoogleRequestLogger extends GoogleRequestCallbackHandler {
     const splitLen = this.shortenStringLength;
     const half = splitLen / 2;
     const replacer = (_key: string, value: any) => {
-      if (typeof value === "string" && splitLen > 0 && value.length > splitLen) {
-        return `${value.substring(0, half)}...${value.substring(value.length - half)}`;
+      if (
+        typeof value === "string" &&
+        splitLen > 0 &&
+        value.length > splitLen
+      ) {
+        return `${value.substring(0, half)}...${value.substring(
+          value.length - half
+        )}`;
       }
       return value;
     };
