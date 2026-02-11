@@ -34,11 +34,11 @@
     "uuid": "^10.0.0"
   },
   "peerDependencies": {
-    "@langchain/core": "workspace:*"
+    "@langchain/core": "workspace:^"
   },
   "devDependencies": {
     "@jest/globals": "^30.2.0",
-    "@langchain/core": "workspace:*",
+    "@langchain/core": "workspace:^",
     "@langchain/eslint": "workspace:*",
     "@types/uuid": "^10.0.0",
     "@swc/core": "^1.15.11",

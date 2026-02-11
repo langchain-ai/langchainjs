@@ -322,7 +322,7 @@ libs/providers/langchain-{provider}/
     "@langchain/core": "^1.0.0"
   },
   "devDependencies": {
-    "@langchain/core": "workspace:*",
+    "@langchain/core": "workspace:^",
     "@langchain/eslint": "workspace:*",
     "@langchain/standard-tests": "workspace:*",
     "@langchain/tsconfig": "workspace:*"

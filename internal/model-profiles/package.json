@@ -10,7 +10,7 @@
   },
   "dependencies": {
     "@iarna/toml": "^2.2.5",
-    "@langchain/core": "workspace:*",
+    "@langchain/core": "workspace:^",
     "commander": "^11.1.0",
     "prettier": "^3.5.0",
     "typescript": "^5.9.3",

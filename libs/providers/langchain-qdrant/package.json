@@ -36,7 +36,7 @@
   },
   "devDependencies": {
     "@faker-js/faker": "^8.4.1",
-    "@langchain/core": "workspace:*",
+    "@langchain/core": "workspace:^",
     "@langchain/eslint": "workspace:*",
     "@langchain/tsconfig": "workspace:*",
     "@tsconfig/recommended": "^1.0.3",

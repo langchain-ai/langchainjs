@@ -131,7 +131,7 @@
     "@langchain/baidu-qianfan": "workspace:*",
     "@langchain/cloudflare": "workspace:*",
     "@langchain/cohere": "workspace:*",
-    "@langchain/core": "workspace:*",
+    "@langchain/core": "workspace:^",
     "@langchain/deepseek": "workspace:*",
     "@langchain/eslint": "workspace:*",
     "@langchain/exa": "workspace:*",

@@ -37,7 +37,7 @@
   },
   "devDependencies": {
     "@jest/globals": "^30.2.0",
-    "@langchain/core": "workspace:*",
+    "@langchain/core": "workspace:^",
     "@langchain/eslint": "workspace:*",
     "@langchain/standard-tests": "workspace:*",
     "@swc/core": "^1.15.11",

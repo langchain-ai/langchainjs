@@ -58,7 +58,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.36.0",
-    "@langchain/core": "workspace:*",
+    "@langchain/core": "workspace:^",
     "@langchain/eslint": "workspace:*",
     "@langchain/langgraph": "^1.0.0",
     "@langchain/openai": "workspace:*",

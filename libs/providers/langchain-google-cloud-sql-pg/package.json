@@ -30,14 +30,14 @@
   },
   "dependencies": {
     "@google-cloud/cloud-sql-connector": "^1.6.0",
-    "@langchain/core": "workspace:*",
+    "@langchain/core": "workspace:^",
     "google-auth-library": "^9.15.0",
     "knex": "^3.1.0",
     "uuid": "^11.0.5"
   },
   "devDependencies": {
     "@jest/globals": "^30.2.0",
-    "@langchain/core": "workspace:*",
+    "@langchain/core": "workspace:^",
     "@langchain/eslint": "workspace:*",
     "@swc/core": "^1.15.11",
     "@swc/jest": "^0.2.29",
