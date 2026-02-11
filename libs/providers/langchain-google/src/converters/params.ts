@@ -218,7 +218,7 @@ export function getModelSpecialty(model: string): string {
 export function convertFieldsToThinkingConfig(
   model: string,
   fields: ChatGoogleFields
-): Gemini.ThinkingConfig {
+): Gemini.ThinkingConfig | undefined {
   // Thinking / reasoning
   let includeThoughts = true;
 
@@ -276,7 +276,7 @@ export function convertFieldsToThinkingConfig(
     typeof thinkingBudget === "undefined" ||
     typeof thinkingLevel === "undefined"
   ) {
-    return {};
+    return undefined;
   }
 
   // If we have gotten this far, then we want to explicitly set if we include thoughts or not.
@@ -289,8 +289,7 @@ export function convertFieldsToThinkingConfig(
     if (model.startsWith("gemini-2.5")) {
       thinkingConfig.thinkingBudget = thinkingBudget;
     } else {
-      thinkingConfig.thinkingLevel =
-        thinkingLevel as Gemini.ThinkingLevel;
+      thinkingConfig.thinkingLevel = thinkingLevel as Gemini.ThinkingLevel;
     }
   }
 
@@ -307,13 +306,11 @@ export function convertFieldsToThinkingConfig(
  */
 export function convertFieldsToSpeechConfig(
   fields: ChatGoogleFields
-): Gemini.SpeechConfig {
-  const config:
-    | Gemini.SpeechConfig
-    | SimplifiedSpeechConfig
-    | undefined = fields.speechConfig;
+): Gemini.SpeechConfig | undefined {
+  const config: Gemini.SpeechConfig | SimplifiedSpeechConfig | undefined =
+    fields.speechConfig;
   if (typeof config === "undefined") {
-    return {};
+    return undefined;
   }
 
   function isSpeechConfig(
@@ -369,17 +366,16 @@ export function convertFieldsToSpeechConfig(
     // If we have just one (why?), turn it into an array for the moment
     const voices: SpeechSpeakerName[] = Array.isArray(voice) ? voice : [voice];
     // Go through all the speaker/name pairs and turn this into the voice config array
-    const speakerVoiceConfigs: Gemini.SpeakerVoiceConfig[] =
-      voices.map(
-        (v: SpeechSpeakerName): Gemini.SpeakerVoiceConfig => ({
-          speaker: v.speaker,
-          voiceConfig: {
-            prebuiltVoiceConfig: {
-              voiceName: v.name,
-            },
+    const speakerVoiceConfigs: Gemini.SpeakerVoiceConfig[] = voices.map(
+      (v: SpeechSpeakerName): Gemini.SpeakerVoiceConfig => ({
+        speaker: v.speaker,
+        voiceConfig: {
+          prebuiltVoiceConfig: {
+            voiceName: v.name,
           },
-        })
-      );
+        },
+      })
+    );
     // Create the multi-speaker voice configuration
     ret = {
       multiSpeakerVoiceConfig: {
