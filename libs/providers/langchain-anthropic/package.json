@@ -37,12 +37,12 @@
     "zod": "^3.25.76 || ^4"
   },
   "peerDependencies": {
-    "@langchain/core": "workspace:*"
+    "@langchain/core": "workspace:^"
   },
   "devDependencies": {
     "@anthropic-ai/vertex-sdk": "^0.14.3",
     "@cfworker/json-schema": "^4.1.1",
-    "@langchain/core": "workspace:*",
+    "@langchain/core": "workspace:^",
     "@langchain/eslint": "workspace:*",
     "@langchain/standard-tests": "workspace:*",
     "@langchain/tsconfig": "workspace:*",

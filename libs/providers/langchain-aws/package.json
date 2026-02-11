@@ -40,7 +40,7 @@
   },
   "devDependencies": {
     "@aws-sdk/types": "^3.973.1",
-    "@langchain/core": "workspace:*",
+    "@langchain/core": "workspace:^",
     "@langchain/eslint": "workspace:*",
     "@langchain/standard-tests": "workspace:*",
     "@smithy/types": "^3.2.0",

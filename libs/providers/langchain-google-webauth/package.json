@@ -33,11 +33,11 @@
     "web-auth-library": "^1.0.3"
   },
   "peerDependencies": {
-    "@langchain/core": "workspace:*"
+    "@langchain/core": "workspace:^"
   },
   "devDependencies": {
     "@jest/globals": "^30.2.0",
-    "@langchain/core": "workspace:*",
+    "@langchain/core": "workspace:^",
     "@langchain/eslint": "workspace:*",
     "@swc/core": "^1.15.11",
     "@swc/jest": "^0.2.29",

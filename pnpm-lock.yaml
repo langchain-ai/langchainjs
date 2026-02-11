@@ -5,7 +5,7 @@ settings:
   excludeLinksFromLockfile: false
 
 overrides:
-  '@langchain/core': workspace:*
+  '@langchain/core': workspace:^
   protobufjs: ^7.2.5
   rolldown: 1.0.0-beta.30
   form-data: ^4.0.4
@@ -137,7 +137,7 @@ importers:
         specifier: workspace:*
         version: link:../libs/langchain-community
       '@langchain/core':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../libs/langchain-core
       '@langchain/deepseek':
         specifier: workspace:*
@@ -537,7 +537,7 @@ importers:
         specifier: ^2.2.5
         version: 2.2.5
       '@langchain/core':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../libs/langchain-core
       commander:
         specifier: ^11.1.0
@@ -571,7 +571,7 @@ importers:
         specifier: ^30.2.0
         version: 30.2.0
       '@langchain/core':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../libs/langchain-core
       vitest:
         specifier: ^3.2.4
@@ -699,7 +699,7 @@ importers:
         specifier: workspace:*
         version: link:../providers/langchain-cohere
       '@langchain/core':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../langchain-core
       '@langchain/eslint':
         specifier: workspace:*
@@ -865,7 +865,7 @@ importers:
         specifier: workspace:*
         version: link:../providers/langchain-cohere
       '@langchain/core':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../langchain-core
       '@langchain/deepseek':
         specifier: workspace:*
@@ -1239,7 +1239,7 @@ importers:
         specifier: ^0.19.1
         version: 0.19.1(apache-arrow@21.1.0)
       '@langchain/core':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../langchain-core
       '@langchain/eslint':
         specifier: workspace:*
@@ -1724,7 +1724,7 @@ importers:
         specifier: ^9.36.0
         version: 9.39.2
       '@langchain/core':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../langchain-core
       '@langchain/eslint':
         specifier: workspace:*
@@ -1801,7 +1801,7 @@ importers:
         version: 1.0.21
     devDependencies:
       '@langchain/core':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../langchain-core
       '@langchain/eslint':
         specifier: workspace:*
@@ -1850,7 +1850,7 @@ importers:
         specifier: ^4.1.1
         version: 4.1.1
       '@langchain/core':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../langchain-core
       '@langchain/eslint':
         specifier: workspace:*
@@ -1911,7 +1911,7 @@ importers:
         specifier: ^3.973.1
         version: 3.973.1
       '@langchain/core':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../langchain-core
       '@langchain/eslint':
         specifier: workspace:*
@@ -1966,7 +1966,7 @@ importers:
         version: 6.21.0(@aws-sdk/credential-providers@3.985.0)(socks@2.8.7)
     devDependencies:
       '@langchain/core':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../langchain-core
       '@langchain/eslint':
         specifier: workspace:*
@@ -2012,7 +2012,7 @@ importers:
         version: 10.0.0
     devDependencies:
       '@langchain/core':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../langchain-core
       '@langchain/eslint':
         specifier: workspace:*
@@ -2055,7 +2055,7 @@ importers:
         version: 0.1.9(@babel/core@7.29.0)(encoding@0.1.13)
     devDependencies:
       '@langchain/core':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../langchain-core
       '@langchain/eslint':
         specifier: workspace:*
@@ -2107,7 +2107,7 @@ importers:
         specifier: ^30.2.0
         version: 30.2.0
       '@langchain/core':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../langchain-core
       '@langchain/eslint':
         specifier: workspace:*
@@ -2168,7 +2168,7 @@ importers:
         specifier: ^4.20240909.0
         version: 4.20260207.0
       '@langchain/core':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../langchain-core
       '@langchain/eslint':
         specifier: workspace:*
@@ -2220,7 +2220,7 @@ importers:
         specifier: ^4.1.1
         version: 4.1.1
       '@langchain/core':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../langchain-core
       '@langchain/eslint':
         specifier: workspace:*
@@ -2266,7 +2266,7 @@ importers:
         version: link:../langchain-openai
     devDependencies:
       '@langchain/core':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../langchain-core
       '@langchain/eslint':
         specifier: workspace:*
@@ -2309,7 +2309,7 @@ importers:
         version: 1.10.2(encoding@0.1.13)(ws@8.19.0(bufferutil@4.1.0))
     devDependencies:
       '@langchain/core':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../langchain-core
       '@langchain/eslint':
         specifier: workspace:*
@@ -2351,7 +2351,7 @@ importers:
         specifier: ^1.6.0
         version: 1.9.0
       '@langchain/core':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../langchain-core
       google-auth-library:
         specifier: ^9.15.0
@@ -2428,7 +2428,7 @@ importers:
         specifier: ^30.2.0
         version: 30.2.0
       '@langchain/core':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../langchain-core
       '@langchain/eslint':
         specifier: workspace:*
@@ -2544,7 +2544,7 @@ importers:
         specifier: ^30.2.0
         version: 30.2.0
       '@langchain/core':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../langchain-core
       '@langchain/eslint':
         specifier: workspace:*
@@ -2724,7 +2724,7 @@ importers:
         specifier: ^30.2.0
         version: 30.2.0
       '@langchain/core':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../langchain-core
       '@langchain/eslint':
         specifier: workspace:*
@@ -2776,7 +2776,7 @@ importers:
         version: 0.19.0(encoding@0.1.13)
     devDependencies:
       '@langchain/core':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../langchain-core
       '@langchain/eslint':
         specifier: workspace:*
@@ -2831,7 +2831,7 @@ importers:
         version: 13.0.0
     devDependencies:
       '@langchain/core':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../langchain-core
       '@langchain/eslint':
         specifier: workspace:*
@@ -2877,7 +2877,7 @@ importers:
         version: 2.2.11(encoding@0.1.13)
     devDependencies:
       '@langchain/core':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../langchain-core
       '@langchain/eslint':
         specifier: workspace:*
@@ -2920,7 +2920,7 @@ importers:
         version: 6.21.0(@aws-sdk/credential-providers@3.985.0)(socks@2.8.7)
     devDependencies:
       '@langchain/core':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../langchain-core
       '@langchain/eslint':
         specifier: workspace:*
@@ -2978,7 +2978,7 @@ importers:
         specifier: ^30.2.0
         version: 30.2.0
       '@langchain/core':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../langchain-core
       '@langchain/eslint':
         specifier: workspace:*
@@ -3030,7 +3030,7 @@ importers:
         specifier: ^30.2.0
         version: 30.2.0
       '@langchain/core':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../langchain-core
       '@langchain/eslint':
         specifier: workspace:*
@@ -3088,7 +3088,7 @@ importers:
         specifier: ^4.1.1
         version: 4.1.1
       '@langchain/core':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../langchain-core
       '@langchain/eslint':
         specifier: workspace:*
@@ -3149,7 +3149,7 @@ importers:
         specifier: ^8.3.1
         version: 8.4.1
       '@langchain/core':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../langchain-core
       '@langchain/eslint':
         specifier: workspace:*
@@ -3210,7 +3210,7 @@ importers:
         specifier: ^8.4.1
         version: 8.4.1
       '@langchain/core':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../langchain-core
       '@langchain/eslint':
         specifier: workspace:*
@@ -3259,7 +3259,7 @@ importers:
         specifier: ^8.4.0
         version: 8.4.1
       '@langchain/core':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../langchain-core
       '@langchain/eslint':
         specifier: workspace:*
@@ -3302,7 +3302,7 @@ importers:
         version: 4.3.6
     devDependencies:
       '@langchain/core':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../langchain-core
       '@langchain/eslint':
         specifier: workspace:*
@@ -3345,7 +3345,7 @@ importers:
         specifier: ^8.4.1
         version: 8.4.1
       '@langchain/core':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../langchain-core
       '@langchain/eslint':
         specifier: workspace:*
@@ -3394,7 +3394,7 @@ importers:
         version: 3.11.0(encoding@0.1.13)
     devDependencies:
       '@langchain/core':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../langchain-core
       '@langchain/eslint':
         specifier: workspace:*
@@ -3443,7 +3443,7 @@ importers:
         version: link:../langchain-openai
     devDependencies:
       '@langchain/core':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../langchain-core
       '@langchain/eslint':
         specifier: workspace:*
@@ -3488,7 +3488,7 @@ importers:
   libs/providers/langchain-yandex:
     devDependencies:
       '@langchain/core':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../langchain-core
       '@langchain/eslint':
         specifier: workspace:*
@@ -5736,7 +5736,7 @@ packages:
   '@getzep/zep-cloud@1.0.12':
     resolution: {integrity: sha512-bqs8zetYaducNneOq9kU1ciW8IfuiPzGOGqLUwFLv0982bobe4HsZTKeY1/Pt0bQUf6/V1VWYT8vFHSCj/qy4A==}
     peerDependencies:
-      '@langchain/core': workspace:*
+      '@langchain/core': workspace:^
       langchain: '>=0.1.19 <0.4.0'
     peerDependenciesMeta:
       '@langchain/core':
@@ -6384,18 +6384,18 @@ packages:
     resolution: {integrity: sha512-h2bP0RUikQZu0Um1ZUPErQLXyhzroJqKRbRcxYRTAh49oNlsfeq4A3K4YEDRbGGuyPZI/Jiqwhks1wZwY73AZw==}
     engines: {node: '>=18'}
     peerDependencies:
-      '@langchain/core': workspace:*
+      '@langchain/core': workspace:^
 
   '@langchain/langgraph-checkpoint@1.0.0':
     resolution: {integrity: sha512-xrclBGvNCXDmi0Nz28t3vjpxSH6UYx6w5XAXSiiB1WEdc2xD2iY/a913I3x3a31XpInUW/GGfXXfePfaghV54A==}
     engines: {node: '>=18'}
     peerDependencies:
-      '@langchain/core': workspace:*
+      '@langchain/core': workspace:^
 
   '@langchain/langgraph-sdk@0.1.10':
     resolution: {integrity: sha512-9srSCb2bSvcvehMgjA2sMMwX0o1VUgPN6ghwm5Fwc9JGAKsQa6n1S4eCwy1h4abuYxwajH5n3spBw+4I2WYbgw==}
     peerDependencies:
-      '@langchain/core': workspace:*
+      '@langchain/core': workspace:^
       react: ^18 || ^19
       react-dom: ^18 || ^19
     peerDependenciesMeta:
@@ -6409,7 +6409,7 @@ packages:
   '@langchain/langgraph-sdk@1.6.0':
     resolution: {integrity: sha512-J/B1SkCG0U+eXEXH/X89dDHxP8I0eULjLtXYvZ39uk2TxEKjLsrW4LY5J7Qwrf0GCDA+IM/agjKSLXALnctWTw==}
     peerDependencies:
-      '@langchain/core': workspace:*
+      '@langchain/core': workspace:^
       react: ^18 || ^19
       react-dom: ^18 || ^19
     peerDependenciesMeta:
@@ -6424,7 +6424,7 @@ packages:
     resolution: {integrity: sha512-Sg0LZ/zb0osMT+2/poTRH6GbmzSYxPVzZPXikjryCFMCw52HGbq0sLEXFsaqfs+1HCcDs1Ob6IPw8IucE5pM9Q==}
     engines: {node: '>=18'}
     peerDependencies:
-      '@langchain/core': workspace:*
+      '@langchain/core': workspace:^
       zod: ^3.25.32 || ^4.1.0
       zod-to-json-schema: ^3.x
     peerDependenciesMeta:
@@ -6435,7 +6435,7 @@ packages:
     resolution: {integrity: sha512-9OhRF+7Zvcpure8TLtBrxfJDo0PAoHZhfzcPL6M3CsGXiYqLWm5tQe+FYqn9zRIV7IwphqVEl1QDNbOkVgo+kw==}
     engines: {node: '>=18'}
     peerDependencies:
-      '@langchain/core': workspace:*
+      '@langchain/core': workspace:^
       zod: ^3.25.32 || ^4.2.0
       zod-to-json-schema: ^3.x
     peerDependenciesMeta:
@@ -12383,7 +12383,7 @@ packages:
       '@azure/search-documents': ^12.0.0
       '@cloudflare/workers-types': ^4.20250504.0
       '@google/genai': ^1.2.0
-      '@langchain/core': workspace:*
+      '@langchain/core': workspace:^
       '@mistralai/mistralai': ^1.5.2
       '@qdrant/js-client-rest': 1.13.0
       '@supabase/supabase-js': ^2.49.1
