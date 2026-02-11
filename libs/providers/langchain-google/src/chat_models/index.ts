@@ -35,16 +35,12 @@ export interface ChatGoogleParams extends BaseChatGoogleParams {
  * when calling methods like `invoke()`, `stream()`, or `batch()` to customize
  * the behavior of a specific request.
  */
-export interface ChatGoogleCallOptions
-  extends BaseChatGoogleCallOptions {}
+export interface ChatGoogleCallOptions extends BaseChatGoogleCallOptions {}
 
 export class ChatGoogle extends BaseChatGoogle<ChatGoogleCallOptions> {
   apiKey?: string;
 
-  constructor(
-    model: string,
-    params?: Omit<ChatGoogleParams, "model">
-  );
+  constructor(model: string, params?: Omit<ChatGoogleParams, "model">);
   constructor(params: ChatGoogleParams);
   constructor(
     modelOrParams: string | ChatGoogleParams,

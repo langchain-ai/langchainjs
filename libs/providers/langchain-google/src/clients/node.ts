@@ -144,7 +144,6 @@ export interface NodeApiClientParams {
  * @see {@link GoogleAuthOptions} for advanced authentication configuration
  */
 export class NodeApiClient extends ApiClient {
-
   hasApiKey(): boolean {
     return typeof this.apiKey === "string" && this.apiKey !== "";
   }

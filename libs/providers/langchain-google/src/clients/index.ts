@@ -162,7 +162,6 @@ export interface WebApiClientParams {
  * @see {@link GCPCredentials} for service account credential structure
  */
 export class WebApiClient extends ApiClient {
-
   hasApiKey(): boolean {
     return typeof this.apiKey === "string" && this.apiKey !== "";
   }
