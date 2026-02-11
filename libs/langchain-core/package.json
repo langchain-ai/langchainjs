@@ -702,6 +702,17 @@
         "default": "./dist/utils/math.js"
       }
     },
+    "./utils/ssrf": {
+      "input": "./src/utils/ssrf.ts",
+      "require": {
+        "types": "./dist/utils/ssrf.d.cts",
+        "default": "./dist/utils/ssrf.cjs"
+      },
+      "import": {
+        "types": "./dist/utils/ssrf.d.ts",
+        "default": "./dist/utils/ssrf.js"
+      }
+    },
     "./utils/stream": {
       "input": "./src/utils/stream.ts",
       "require": {
