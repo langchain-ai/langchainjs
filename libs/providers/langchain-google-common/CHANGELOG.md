@@ -1,5 +1,64 @@
 # @langchain/google-common
 
+## 2.1.17
+
+### Patch Changes
+
+- [#9985](https://github.com/langchain-ai/langchainjs/pull/9985) [`e2ed407`](https://github.com/langchain-ai/langchainjs/commit/e2ed40729c54d132b91b7abecfb787fe5f09461e) Thanks [@turnerdev](https://github.com/turnerdev)! - Set the correct `_llmType` for Google models
+
+- Updated dependencies [[`d5e3db0`](https://github.com/langchain-ai/langchainjs/commit/d5e3db0d01ab321ec70a875805b2f74aefdadf9d)]:
+  - @langchain/core@1.1.21
+
+## 2.1.16
+
+### Patch Changes
+
+- [#9973](https://github.com/langchain-ai/langchainjs/pull/9973) [`5681181`](https://github.com/langchain-ai/langchainjs/commit/568118119f44cc4509a2c04dff2891230e874f46) Thanks [@hntrl](https://github.com/hntrl)! - fix(google-common): surface actual API error when GAuthClient's gaxios throws for non-2xx responses
+
+  Previously, when `GAuthClient._fetch` (via `google-auth-library`/gaxios) threw a `GaxiosError` for non-2xx
+  responses, the error bypassed `_request()`'s `!res.ok` formatting and propagated with an empty/undefined
+  message. Users saw "undefined" in their traces instead of the actual Google API error. This was particularly
+  impactful for `image_url`/`fileData` content where Gemini returns descriptive errors like
+  "Cannot fetch content from the provided URL" when it can't access the image.
+
+  The fix wraps `_fetch()` in a try/catch that extracts the status and response body from the thrown error and
+  re-throws with the same well-formatted message used by the existing `!res.ok` path. Both paths now funnel
+  through a shared `_throwRequestError()` helper.
+
+- Updated dependencies [[`71c3cba`](https://github.com/langchain-ai/langchainjs/commit/71c3cba843ab16d877299d158a1de0c7d22f3fb9)]:
+  - @langchain/core@1.1.20
+
+## 2.1.15
+
+### Patch Changes
+
+- Updated dependencies [[`41bfea5`](https://github.com/langchain-ai/langchainjs/commit/41bfea51cf119573a3b956ee782d2731fe71c681)]:
+  - @langchain/core@1.1.19
+
+## 2.1.14
+
+### Patch Changes
+
+- [#9900](https://github.com/langchain-ai/langchainjs/pull/9900) [`a9b5059`](https://github.com/langchain-ai/langchainjs/commit/a9b50597186002221aaa4585246e569fa44c27c8) Thanks [@hntrl](https://github.com/hntrl)! - Improved abort signal handling for chat models:
+  - Added `ModelAbortError` class in `@langchain/core/errors` that contains partial output when a model invocation is aborted mid-stream
+  - `invoke()` now throws `ModelAbortError` with accumulated `partialOutput` when aborted during streaming (when using streaming callback handlers)
+  - `stream()` throws a regular `AbortError` when aborted (since chunks are already yielded to the caller)
+  - All provider implementations now properly check and propagate abort signals in both `_generate()` and `_streamResponseChunks()` methods
+  - Added standard tests for abort signal behavior
+
+- [#9900](https://github.com/langchain-ai/langchainjs/pull/9900) [`a9b5059`](https://github.com/langchain-ai/langchainjs/commit/a9b50597186002221aaa4585246e569fa44c27c8) Thanks [@hntrl](https://github.com/hntrl)! - fix(providers): add proper abort signal handling for invoke and stream operations
+  - Added early abort check (`signal.throwIfAborted()`) at the start of `_generate` methods to immediately throw when signal is already aborted
+  - Added abort signal checks inside streaming loops in `_streamResponseChunks` to return early when signal is aborted
+  - Propagated abort signals to underlying SDK calls where applicable (Google GenAI, Google Common/VertexAI, Cohere)
+  - Added standard tests for abort signal behavior in `@langchain/standard-tests`
+
+  This enables proper cancellation behavior for both invoke and streaming operations, and allows fallback chains to correctly proceed to the next runnable when the previous one is aborted.
+
+- [#9864](https://github.com/langchain-ai/langchainjs/pull/9864) [`e10c6cb`](https://github.com/langchain-ai/langchainjs/commit/e10c6cb9cbbf420c95855225f4872c2e738bbd92) Thanks [@yukukotani](https://github.com/yukukotani)! - support nullable object types in zod to gemini schema conversion
+
+- Updated dependencies [[`a9b5059`](https://github.com/langchain-ai/langchainjs/commit/a9b50597186002221aaa4585246e569fa44c27c8), [`a9b5059`](https://github.com/langchain-ai/langchainjs/commit/a9b50597186002221aaa4585246e569fa44c27c8)]:
+  - @langchain/core@1.1.18
+
 ## 2.1.13
 
 ### Patch Changes

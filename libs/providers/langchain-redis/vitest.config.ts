@@ -9,6 +9,7 @@ export default defineConfig((env) => {
     test: {
       environment: "node",
       hideSkippedTests: true,
+      globals: true,
       testTimeout: 30_000,
       maxWorkers: 0.5,
       exclude: ["**/*.int.test.ts", ...configDefaults.exclude],
@@ -53,7 +54,7 @@ export default defineConfig((env) => {
         name: "int",
         environment: "node",
       },
-    };
+    } satisfies UserConfigExport;
   }
 
   return {
@@ -63,5 +64,5 @@ export default defineConfig((env) => {
       include: configDefaults.include,
       typecheck: { enabled: true },
     },
-  };
+  } satisfies UserConfigExport;
 });

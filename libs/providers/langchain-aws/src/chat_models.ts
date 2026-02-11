@@ -67,8 +67,7 @@ import {
  * Inputs for ChatBedrockConverse.
  */
 export interface ChatBedrockConverseInput
-  extends BaseChatModelParams,
-    Partial<DefaultProviderInit> {
+  extends BaseChatModelParams, Partial<DefaultProviderInit> {
   /**
    * The BedrockRuntimeClient to use.
    * It gives ability to override the default client with a custom one, allowing you to pass requestHandler {NodeHttpHandler} parameter
@@ -200,7 +199,8 @@ export interface ChatBedrockConverseInput
 }
 
 export interface ChatBedrockConverseCallOptions
-  extends BaseChatModelCallOptions,
+  extends
+    BaseChatModelCallOptions,
     Pick<
       ChatBedrockConverseInput,
       | "additionalModelRequestFields"
@@ -890,6 +890,7 @@ export class ChatBedrockConverse
     options: this["ParsedCallOptions"],
     runManager?: CallbackManagerForLLMRun
   ): Promise<ChatResult> {
+    options.signal?.throwIfAborted();
     if (this.streaming) {
       const stream = this._streamResponseChunks(messages, options, runManager);
       let finalResult: ChatGenerationChunk | undefined;
@@ -979,6 +980,9 @@ export class ChatBedrockConverse
     });
     if (response.stream) {
       for await (const chunk of response.stream) {
+        if (options.signal?.aborted) {
+          return;
+        }
         if (chunk.contentBlockStart) {
           yield handleConverseStreamContentBlockStart(chunk.contentBlockStart);
         } else if (chunk.contentBlockDelta) {

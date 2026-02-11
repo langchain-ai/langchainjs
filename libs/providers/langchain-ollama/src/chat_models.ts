@@ -82,8 +82,7 @@ export interface PullModelOptions {
  * Input to chat model class.
  */
 export interface ChatOllamaInput
-  extends BaseChatModelParams,
-    OllamaCamelCaseOptions {
+  extends BaseChatModelParams, OllamaCamelCaseOptions {
   /**
    * The model to invoke. If the model does not exist, it
    * will be pulled.
@@ -674,6 +673,7 @@ export class ChatOllama
     options: this["ParsedCallOptions"],
     runManager?: CallbackManagerForLLMRun
   ): Promise<ChatResult> {
+    options.signal?.throwIfAborted();
     if (this.checkOrPullModel) {
       if (!(await this.checkModelExistsOnMachine(this.model))) {
         await this.pull(this.model, {
@@ -751,6 +751,7 @@ export class ChatOllama
     for await (const streamChunk of stream) {
       if (options.signal?.aborted) {
         this.client.abort();
+        return;
       }
       const { message: responseMessage, ...rest } = streamChunk;
       usageMetadata.input_tokens += rest.prompt_eval_count ?? 0;

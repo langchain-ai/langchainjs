@@ -30,8 +30,7 @@ import {
   convertMessagesToCompletionsMessageParams,
 } from "../converters/completions.js";
 
-export interface ChatOpenAICompletionsCallOptions
-  extends BaseChatOpenAICallOptions {}
+export interface ChatOpenAICompletionsCallOptions extends BaseChatOpenAICallOptions {}
 
 type ChatCompletionsInvocationParams = Omit<
   OpenAIClient.Chat.Completions.ChatCompletionCreateParams,
@@ -43,8 +42,8 @@ type ChatCompletionsInvocationParams = Omit<
  * @internal
  */
 export class ChatOpenAICompletions<
-  CallOptions extends
-    ChatOpenAICompletionsCallOptions = ChatOpenAICompletionsCallOptions,
+  CallOptions extends ChatOpenAICompletionsCallOptions =
+    ChatOpenAICompletionsCallOptions,
 > extends BaseChatOpenAI<CallOptions> {
   /** @internal */
   override invocationParams(
@@ -133,6 +132,7 @@ export class ChatOpenAICompletions<
     options: this["ParsedCallOptions"],
     runManager?: CallbackManagerForLLMRun
   ): Promise<ChatResult> {
+    options.signal?.throwIfAborted();
     const usageMetadata = {} as UsageMetadata;
     const params = this.invocationParams(options);
     const messagesMapped: OpenAIClient.Chat.Completions.ChatCompletionMessageParam[] =
@@ -315,6 +315,9 @@ export class ChatOpenAICompletions<
     const streamIterable = await this.completionWithRetry(params, options);
     let usage: OpenAIClient.Completions.CompletionUsage | undefined;
     for await (const data of streamIterable) {
+      if (options.signal?.aborted) {
+        return;
+      }
       const choice = data?.choices?.[0];
       if (data.usage) {
         usage = data.usage;

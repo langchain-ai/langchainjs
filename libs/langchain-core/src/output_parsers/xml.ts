@@ -21,8 +21,7 @@ Here are the output tags:
 {tags}
 \`\`\``;
 
-export interface XMLOutputParserFields
-  extends BaseCumulativeTransformOutputParserInput {
+export interface XMLOutputParserFields extends BaseCumulativeTransformOutputParserInput {
   /**
    * Optional list of tags that the output should conform to.
    * Only used in formatting of the prompt.

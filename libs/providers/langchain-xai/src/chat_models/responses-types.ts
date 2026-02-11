@@ -385,16 +385,16 @@ export interface XAIResponsesFunctionTool {
 
 /**
  * Web search tool definition.
- * Compatibility fields (search_context_size, user_location, filters) are rejected if set.
+ * Enables the model to search the web and browse pages for real-time information.
  */
 export interface XAIResponsesWebSearchTool {
   type: "web_search";
-  /** @deprecated Rejected if set. */
-  search_context_size?: never;
-  /** @deprecated Rejected if set. */
-  user_location?: never;
-  /** @deprecated Rejected if set. */
-  filters?: never;
+  /** Domains to exclusively include in the search (max 5). */
+  allowed_domains?: string[];
+  /** Domains to exclude from the search (max 5). */
+  excluded_domains?: string[];
+  /** Whether to enable image understanding during search. */
+  enable_image_understanding?: boolean;
 }
 
 /**
@@ -640,16 +640,14 @@ export interface XAIResponsesCreateParams {
 /**
  * Streaming variant of the request params.
  */
-export interface XAIResponsesCreateParamsStreaming
-  extends XAIResponsesCreateParams {
+export interface XAIResponsesCreateParamsStreaming extends XAIResponsesCreateParams {
   stream: true;
 }
 
 /**
  * Non-streaming variant of the request params.
  */
-export interface XAIResponsesCreateParamsNonStreaming
-  extends XAIResponsesCreateParams {
+export interface XAIResponsesCreateParamsNonStreaming extends XAIResponsesCreateParams {
   stream?: false;
 }
 
@@ -1104,8 +1102,7 @@ export interface XAIResponsesStreamEventBase {
 /**
  * Response created event.
  */
-export interface XAIResponsesStreamEventCreated
-  extends XAIResponsesStreamEventBase {
+export interface XAIResponsesStreamEventCreated extends XAIResponsesStreamEventBase {
   type: "response.created";
   /** The response object. */
   response: XAIResponse;
@@ -1114,8 +1111,7 @@ export interface XAIResponsesStreamEventCreated
 /**
  * Response in progress event.
  */
-export interface XAIResponsesStreamEventInProgress
-  extends XAIResponsesStreamEventBase {
+export interface XAIResponsesStreamEventInProgress extends XAIResponsesStreamEventBase {
   type: "response.in_progress";
   /** The response object. */
   response: XAIResponse;
@@ -1124,8 +1120,7 @@ export interface XAIResponsesStreamEventInProgress
 /**
  * Response completed event.
  */
-export interface XAIResponsesStreamEventCompleted
-  extends XAIResponsesStreamEventBase {
+export interface XAIResponsesStreamEventCompleted extends XAIResponsesStreamEventBase {
   type: "response.completed";
   /** The completed response object. */
   response: XAIResponse;
@@ -1134,8 +1129,7 @@ export interface XAIResponsesStreamEventCompleted
 /**
  * Response failed event.
  */
-export interface XAIResponsesStreamEventFailed
-  extends XAIResponsesStreamEventBase {
+export interface XAIResponsesStreamEventFailed extends XAIResponsesStreamEventBase {
   type: "response.failed";
   /** The failed response object. */
   response: XAIResponse;
@@ -1151,8 +1145,7 @@ export interface XAIResponsesStreamEventFailed
 /**
  * Response incomplete event.
  */
-export interface XAIResponsesStreamEventIncomplete
-  extends XAIResponsesStreamEventBase {
+export interface XAIResponsesStreamEventIncomplete extends XAIResponsesStreamEventBase {
   type: "response.incomplete";
   /** The incomplete response object. */
   response: XAIResponse;
@@ -1161,8 +1154,7 @@ export interface XAIResponsesStreamEventIncomplete
 /**
  * Output item added event.
  */
-export interface XAIResponsesStreamEventOutputItemAdded
-  extends XAIResponsesStreamEventBase {
+export interface XAIResponsesStreamEventOutputItemAdded extends XAIResponsesStreamEventBase {
   type: "response.output_item.added";
   /** The index of the output item. */
   output_index: number;
@@ -1173,8 +1165,7 @@ export interface XAIResponsesStreamEventOutputItemAdded
 /**
  * Output item done event.
  */
-export interface XAIResponsesStreamEventOutputItemDone
-  extends XAIResponsesStreamEventBase {
+export interface XAIResponsesStreamEventOutputItemDone extends XAIResponsesStreamEventBase {
   type: "response.output_item.done";
   /** The index of the output item. */
   output_index: number;
@@ -1185,8 +1176,7 @@ export interface XAIResponsesStreamEventOutputItemDone
 /**
  * Content part added event.
  */
-export interface XAIResponsesStreamEventContentPartAdded
-  extends XAIResponsesStreamEventBase {
+export interface XAIResponsesStreamEventContentPartAdded extends XAIResponsesStreamEventBase {
   type: "response.content_part.added";
   /** The index of the output item. */
   output_index: number;
@@ -1199,8 +1189,7 @@ export interface XAIResponsesStreamEventContentPartAdded
 /**
  * Content part done event.
  */
-export interface XAIResponsesStreamEventContentPartDone
-  extends XAIResponsesStreamEventBase {
+export interface XAIResponsesStreamEventContentPartDone extends XAIResponsesStreamEventBase {
   type: "response.content_part.done";
   /** The index of the output item. */
   output_index: number;
@@ -1213,8 +1202,7 @@ export interface XAIResponsesStreamEventContentPartDone
 /**
  * Text delta event (streaming text).
  */
-export interface XAIResponsesStreamEventTextDelta
-  extends XAIResponsesStreamEventBase {
+export interface XAIResponsesStreamEventTextDelta extends XAIResponsesStreamEventBase {
   type: "response.output_text.delta";
   /** The index of the output item. */
   output_index: number;
@@ -1227,8 +1215,7 @@ export interface XAIResponsesStreamEventTextDelta
 /**
  * Text done event.
  */
-export interface XAIResponsesStreamEventTextDone
-  extends XAIResponsesStreamEventBase {
+export interface XAIResponsesStreamEventTextDone extends XAIResponsesStreamEventBase {
   type: "response.output_text.done";
   /** The index of the output item. */
   output_index: number;
@@ -1241,8 +1228,7 @@ export interface XAIResponsesStreamEventTextDone
 /**
  * Function call arguments delta event.
  */
-export interface XAIResponsesStreamEventFunctionCallArgumentsDelta
-  extends XAIResponsesStreamEventBase {
+export interface XAIResponsesStreamEventFunctionCallArgumentsDelta extends XAIResponsesStreamEventBase {
   type: "response.function_call_arguments.delta";
   /** The index of the output item. */
   output_index: number;
@@ -1255,8 +1241,7 @@ export interface XAIResponsesStreamEventFunctionCallArgumentsDelta
 /**
  * Function call arguments done event.
  */
-export interface XAIResponsesStreamEventFunctionCallArgumentsDone
-  extends XAIResponsesStreamEventBase {
+export interface XAIResponsesStreamEventFunctionCallArgumentsDone extends XAIResponsesStreamEventBase {
   type: "response.function_call_arguments.done";
   /** The index of the output item. */
   output_index: number;
@@ -1269,8 +1254,7 @@ export interface XAIResponsesStreamEventFunctionCallArgumentsDone
 /**
  * Reasoning summary text delta event.
  */
-export interface XAIResponsesStreamEventReasoningSummaryTextDelta
-  extends XAIResponsesStreamEventBase {
+export interface XAIResponsesStreamEventReasoningSummaryTextDelta extends XAIResponsesStreamEventBase {
   type: "response.reasoning_summary_text.delta";
   /** The index of the output item. */
   output_index: number;
@@ -1283,8 +1267,7 @@ export interface XAIResponsesStreamEventReasoningSummaryTextDelta
 /**
  * Reasoning summary text done event.
  */
-export interface XAIResponsesStreamEventReasoningSummaryTextDone
-  extends XAIResponsesStreamEventBase {
+export interface XAIResponsesStreamEventReasoningSummaryTextDone extends XAIResponsesStreamEventBase {
   type: "response.reasoning_summary_text.done";
   /** The index of the output item. */
   output_index: number;
@@ -1297,8 +1280,7 @@ export interface XAIResponsesStreamEventReasoningSummaryTextDone
 /**
  * Error event.
  */
-export interface XAIResponsesStreamEventError
-  extends XAIResponsesStreamEventBase {
+export interface XAIResponsesStreamEventError extends XAIResponsesStreamEventBase {
   type: "error";
   /** Error code. */
   code?: string;
@@ -1367,6 +1349,22 @@ export interface ChatXAIResponsesCallOptions extends BaseChatModelCallOptions {
    * Reasoning configuration for reasoning models.
    */
   reasoning?: XAIResponsesReasoning;
+
+  /**
+   * A list of tools the model may call.
+   * Includes built-in tools (web_search, x_search, code_interpreter, file_search)
+   * and custom function tools.
+   *
+   * @example
+   * ```typescript
+   * import { tools } from "@langchain/xai";
+   *
+   * const result = await llm.invoke("What's happening on X?", {
+   *   tools: [tools.xaiWebSearch(), tools.xaiXSearch()],
+   * });
+   * ```
+   */
+  tools?: XAIResponsesTool[];
 
   /**
    * Controls which tool is called by the model.
@@ -1444,6 +1442,22 @@ export interface ChatXAIResponsesInput extends BaseChatModelParams {
    * Default reasoning configuration.
    */
   reasoning?: XAIResponsesReasoning;
+
+  /**
+   * Default tools to make available to the model.
+   * Can be overridden per-request in call options.
+   *
+   * @example
+   * ```typescript
+   * import { ChatXAIResponses, tools } from "@langchain/xai";
+   *
+   * const llm = new ChatXAIResponses({
+   *   model: "grok-4-1-fast",
+   *   tools: [tools.xaiWebSearch(), tools.xaiCodeExecution()],
+   * });
+   * ```
+   */
+  tools?: XAIResponsesTool[];
 }
 
 /**

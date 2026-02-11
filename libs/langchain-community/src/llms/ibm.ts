@@ -68,14 +68,14 @@ export interface WatsonxDeploymentLLMParams {
 }
 /** Gateway parameters */
 
-interface WatsonxLLMGatewayKwargs
-  extends Omit<
-    CreateCompletionsParams,
-    keyof WatsonxLLMParams | "model" | "stream" | "prompt" | "maxTokens"
-  > {}
+interface WatsonxLLMGatewayKwargs extends Omit<
+  CreateCompletionsParams,
+  keyof WatsonxLLMParams | "model" | "stream" | "prompt" | "maxTokens"
+> {}
 
 export interface WatsonxLLMGatewayParams
-  extends WatsonxInit,
+  extends
+    WatsonxInit,
     Omit<
       CreateCompletionsParams,
       keyof WatsonxLLMGatewayKwargs | "stream" | "prompt"
@@ -87,8 +87,7 @@ export interface WatsonxLLMGatewayParams
 
 /** Call interface for second parameter of inbuild methods */
 export interface WatsonxCallOptionsLLM
-  extends BaseLanguageModelCallOptions,
-    Partial<WatsonxInit> {
+  extends BaseLanguageModelCallOptions, Partial<WatsonxInit> {
   maxRetries?: number;
   parameters?: XOR<Partial<WatsonxLLMParams>, Partial<WatsonxLLMGatewayParams>>;
   watsonxCallbacks?: RequestCallbacks;
@@ -97,20 +96,17 @@ export interface WatsonxCallOptionsLLM
 /** Constructor input interfaces for each mode */
 
 export interface WatsonxInputLLM
-  extends WatsonxLLMBasicOptions,
-    WatsonxLLMParams {
+  extends WatsonxLLMBasicOptions, WatsonxLLMParams {
   model: string;
   spaceId?: string;
   projectId?: string;
 }
 
 export interface WatsonxDeployedInputLLM
-  extends WatsonxLLMBasicOptions,
-    WatsonxDeploymentLLMParams {}
+  extends WatsonxLLMBasicOptions, WatsonxDeploymentLLMParams {}
 
 export interface WatsonxGatewayInputLLM
-  extends WatsonxLLMBasicOptions,
-    WatsonxLLMGatewayParams {}
+  extends WatsonxLLMBasicOptions, WatsonxLLMGatewayParams {}
 
 // Combined input for chat excluding each mode to not be present at the same time
 export type WatsonxLLMConstructor = XOR<
@@ -123,8 +119,8 @@ export type WatsonxLLMConstructor = XOR<
  * Integration with an LLM.
  */
 export class WatsonxLLM<
-    CallOptions extends WatsonxCallOptionsLLM = WatsonxCallOptionsLLM,
-  >
+  CallOptions extends WatsonxCallOptionsLLM = WatsonxCallOptionsLLM,
+>
   extends BaseLLM<CallOptions>
   implements BaseLLMParams
 {

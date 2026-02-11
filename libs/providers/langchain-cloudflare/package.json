@@ -1,6 +1,6 @@
 {
   "name": "@langchain/cloudflare",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Cloudflare integration for LangChain.js",
   "author": "LangChain",
   "license": "MIT",
@@ -34,7 +34,7 @@
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20240909.0",
-    "@langchain/core": "workspace:*",
+    "@langchain/core": "workspace:^",
     "@langchain/eslint": "workspace:*",
     "@langchain/standard-tests": "workspace:*",
     "@langchain/tsconfig": "workspace:*",

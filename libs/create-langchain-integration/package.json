@@ -21,9 +21,9 @@
     "@langchain/tsconfig": "workspace:*",
     "@types/prompts": "^2",
     "@types/validate-npm-package-name": "3.0.0",
-    "@vercel/ncc": "^0.34.0",
+    "@vercel/ncc": "^0.38.4",
     "commander": "^2.20.0",
-    "conf": "^10.2.0",
+    "conf": "^15.1.0",
     "dotenv": "^16.3.1",
     "eslint": "^9.34.0",
     "fast-glob": "^3.3.2",
@@ -32,6 +32,6 @@
     "prompts": "^2.4.2",
     "typescript": "~5.8.3",
     "update-check": "^1.5.4",
-    "validate-npm-package-name": "^5.0.0"
+    "validate-npm-package-name": "^7.0.2"
   }
 }

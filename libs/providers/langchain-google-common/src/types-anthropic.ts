@@ -7,14 +7,12 @@ interface AnthropicMessageContentBase {
   cache_control?: AnthropicCacheControl | null;
 }
 
-export interface AnthropicMessageContentText
-  extends AnthropicMessageContentBase {
+export interface AnthropicMessageContentText extends AnthropicMessageContentBase {
   type: "text";
   text: string;
 }
 
-export interface AnthropicMessageContentImage
-  extends AnthropicMessageContentBase {
+export interface AnthropicMessageContentImage extends AnthropicMessageContentBase {
   type: "image";
   source:
     | {
@@ -28,15 +26,13 @@ export interface AnthropicMessageContentImage
       };
 }
 
-export interface AnthropicMessageContentThinking
-  extends AnthropicMessageContentBase {
+export interface AnthropicMessageContentThinking extends AnthropicMessageContentBase {
   type: "thinking";
   thinking: string;
   signature: string;
 }
 
-export interface AnthropicMessageContentDocument
-  extends AnthropicMessageContentBase {
+export interface AnthropicMessageContentDocument extends AnthropicMessageContentBase {
   type: "document";
   source:
     | {
@@ -79,8 +75,7 @@ export interface AnthropicMessageContentDocument
   context?: string;
   title?: string;
 }
-export interface AnthropicMessageContentRedactedThinking
-  extends AnthropicMessageContentBase {
+export interface AnthropicMessageContentRedactedThinking extends AnthropicMessageContentBase {
   type: "redacted_thinking";
   data: string;
 }
@@ -88,8 +83,7 @@ export interface AnthropicMessageContentRedactedThinking
 // TODO: Define this
 export type AnthropicMessageContentToolUseInput = object;
 
-export interface AnthropicMessageContentToolUse
-  extends AnthropicMessageContentBase {
+export interface AnthropicMessageContentToolUse extends AnthropicMessageContentBase {
   type: "tool_use";
   id: string;
   name: string;
@@ -100,8 +94,7 @@ export type AnthropicMessageContentToolResultContent =
   | AnthropicMessageContentText
   | AnthropicMessageContentImage;
 
-export interface AnthropicMessageContentToolResult
-  extends AnthropicMessageContentBase {
+export interface AnthropicMessageContentToolResult extends AnthropicMessageContentBase {
   type: "tool_result";
   tool_use_id: string;
   is_error?: boolean;
@@ -266,14 +259,12 @@ export interface AnthropicStreamBaseEvent {
   type: AnthropicStreamEventType;
 }
 
-export interface AnthropicStreamMessageStartEvent
-  extends AnthropicStreamBaseEvent {
+export interface AnthropicStreamMessageStartEvent extends AnthropicStreamBaseEvent {
   type: "message_start";
   message: AnthropicResponseMessage;
 }
 
-export interface AnthropicStreamContentBlockStartEvent
-  extends AnthropicStreamBaseEvent {
+export interface AnthropicStreamContentBlockStartEvent extends AnthropicStreamBaseEvent {
   type: "content_block_start";
   index: number;
   content_block: AnthropicContent;
@@ -288,8 +279,7 @@ export interface AnthropicStreamTextDelta extends AnthropicStreamBaseDelta {
   text: string;
 }
 
-export interface AnthropicStreamInputJsonDelta
-  extends AnthropicStreamBaseDelta {
+export interface AnthropicStreamInputJsonDelta extends AnthropicStreamBaseDelta {
   type: "input_json_delta";
   partial_json: string;
 }
@@ -298,27 +288,23 @@ export type AnthropicStreamDelta =
   | AnthropicStreamTextDelta
   | AnthropicStreamInputJsonDelta;
 
-export interface AnthropicStreamContentBlockDeltaEvent
-  extends AnthropicStreamBaseEvent {
+export interface AnthropicStreamContentBlockDeltaEvent extends AnthropicStreamBaseEvent {
   type: "content_block_delta";
   index: number;
   delta: AnthropicStreamDelta;
 }
 
-export interface AnthropicStreamContentBlockStopEvent
-  extends AnthropicStreamBaseEvent {
+export interface AnthropicStreamContentBlockStopEvent extends AnthropicStreamBaseEvent {
   type: "content_block_stop";
   index: number;
 }
 
-export interface AnthropicStreamMessageDeltaEvent
-  extends AnthropicStreamBaseEvent {
+export interface AnthropicStreamMessageDeltaEvent extends AnthropicStreamBaseEvent {
   type: "message_delta";
   delta: Partial<AnthropicResponseMessage>;
 }
 
-export interface AnthropicStreamMessageStopEvent
-  extends AnthropicStreamBaseEvent {
+export interface AnthropicStreamMessageStopEvent extends AnthropicStreamBaseEvent {
   type: "message_stop";
 }
 
