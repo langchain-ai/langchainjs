@@ -217,7 +217,7 @@ export type WrapModelCallHook<
 > = (
   request: ModelRequest<NormalizedSchemaInput<TSchema>, TContext>,
   handler: WrapModelCallHandler<TSchema, TContext>
-) => PromiseOrValue<AIMessage>;
+) => PromiseOrValue<AIMessage | Command>;
 
 /**
  * Handler function type for the beforeAgent hook.
