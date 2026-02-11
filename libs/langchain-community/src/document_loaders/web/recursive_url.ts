@@ -1,6 +1,7 @@
 import { JSDOM, VirtualConsole } from "jsdom";
 import { Document } from "@langchain/core/documents";
 import { AsyncCaller } from "@langchain/core/utils/async_caller";
+import { isSameOrigin, validateSafeUrl } from "@langchain/core/utils/ssrf";
 import {
   BaseDocumentLoader,
   DocumentLoader,
@@ -102,7 +103,7 @@ export class RecursiveUrlLoader
         continue;
 
       if (link.startsWith("http")) {
-        const isAllowed = !this.preventOutside || link.startsWith(baseUrl);
+        const isAllowed = !this.preventOutside || isSameOrigin(link, baseUrl);
         if (isAllowed) absolutePaths.push(link);
       } else if (link.startsWith("//")) {
         const base = new URL(baseUrl);
@@ -142,6 +143,7 @@ export class RecursiveUrlLoader
   private async getUrlAsDoc(url: string): Promise<Document | null> {
     let res;
     try {
+      validateSafeUrl(url, { allowHttp: true });
       res = await this.fetchWithTimeout(url, { timeout: this.timeout });
       res = await res.text();
     } catch {
@@ -169,6 +171,7 @@ export class RecursiveUrlLoader
 
     let res;
     try {
+      await validateSafeUrl(url, { allowHttp: true });
       res = await this.fetchWithTimeout(url, { timeout: this.timeout });
       res = await res.text();
     } catch {
