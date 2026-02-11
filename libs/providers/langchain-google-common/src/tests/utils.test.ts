@@ -767,6 +767,28 @@ describe("gemini empty text content handling", () => {
     expect(textPart.text).toBe("");
   });
 
+  test("AIMessage with empty content and tool calls does not add empty text part", async () => {
+    const api = getGeminiAPI();
+    const messages = [
+      new HumanMessage("Search for LangChain"),
+      new AIMessage({
+        content: "",
+        tool_calls: [
+          { id: "call_1", name: "search", args: { query: "LangChain" } },
+        ],
+      }),
+    ];
+
+    const formatted = (await api.formatData(messages, {})) as GeminiRequest;
+
+    const modelContent = formatted.contents?.find(
+      (c) => c.role === "model"
+    );
+    expect(modelContent).toBeDefined();
+    expect(modelContent?.parts.length).toBe(1);
+    expect(modelContent?.parts[0]).toHaveProperty("functionCall");
+  });
+
   test("AIMessage with non-empty text content still works correctly", async () => {
     const api = getGeminiAPI();
     const messages = [
