@@ -43,6 +43,25 @@ export interface BedrockEmbeddingsParams extends EmbeddingsParams {
   region?: string;
 
   credentials?: CredentialType;
+
+  /**
+   * Additional parameters to pass to the model as part of the InvokeModel
+   * request body.
+   *
+   * These are merged into the request payload, allowing model-specific options
+   * like `normalize`, `embeddingTypes`, etc.
+   *
+   * If `dimensions` is also provided as a top-level parameter, it will take
+   * precedence over a `dimensions` key set in `modelParameters`.
+   */
+  modelParameters?: Record<string, unknown>;
+
+  /**
+   * The number of dimensions for the output embeddings.
+   * Only supported by certain models (e.g., Amazon Titan Embed Text v2,
+   * Cohere Embed). If not specified, uses the model's default.
+   */
+  dimensions?: number;
 }
 
 /**
@@ -56,7 +75,11 @@ export interface BedrockEmbeddingsParams extends EmbeddingsParams {
  *     accessKeyId: "your-access-key-id",
  *     secretAccessKey: "your-secret-access-key",
  *   },
- *   model: "amazon.titan-embed-text-v1",
+ *   model: "amazon.titan-embed-text-v2:0",
+ *   dimensions: 512,
+ *   modelParameters: {
+ *     normalize: true,
+ *   },
  *   // Configure client options (e.g., custom request handler)
  *   // clientOptions: {
  *   //   requestHandler: myCustomRequestHandler,
@@ -82,11 +105,17 @@ export class BedrockEmbeddings
 
   batchSize = 512;
 
+  modelParameters?: Record<string, unknown>;
+
+  dimensions?: number;
+
   constructor(fields?: BedrockEmbeddingsParams) {
     super(fields ?? {});
 
     this.model = fields?.model ?? "amazon.titan-embed-text-v1";
     this.clientOptions = fields?.clientOptions;
+    this.modelParameters = fields?.modelParameters;
+    this.dimensions = fields?.dimensions;
 
     this.client =
       fields?.client ??
@@ -112,7 +141,9 @@ export class BedrockEmbeddings
 
         // Nova embedding models use a different request format with `messages`
         // instead of `inputText` used by Titan models
-        const requestBody = isNovaEmbeddingModel(this.model)
+        const baseRequestBody: Record<string, unknown> = isNovaEmbeddingModel(
+          this.model
+        )
           ? {
               messages: [
                 {
@@ -128,6 +159,16 @@ export class BedrockEmbeddings
           : {
               inputText: cleanedText,
             };
+
+        const requestBody: Record<string, unknown> = {
+          ...(this.modelParameters ?? {}),
+          ...baseRequestBody,
+        };
+
+        // Top-level `dimensions` takes precedence over modelParameters.dimensions
+        if (this.dimensions !== undefined) {
+          requestBody.dimensions = this.dimensions;
+        }
 
         const res = await this.client.send(
           new InvokeModelCommand({
