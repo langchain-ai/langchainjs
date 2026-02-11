@@ -4,7 +4,7 @@ import { ApiClient } from "../../clients/index.js";
 import { GoogleRequestRecorder } from "../../utils/handler.js";
 import { BaseCallbackHandler } from "@langchain/core/callbacks/base";
 import { ChatGoogle, ChatGoogleParams } from "../index.js";
-import { GoogleThinkingConfig, GoogleThinkingLevel } from "../types.js";
+import type { Gemini } from "../types.js";
 
 interface MockResponseParameters {
   filePath: string;
@@ -138,7 +138,7 @@ describe("Google Mock", () => {
     reasoningEffort?: string;
     expectIncludeThoughts?: boolean;
     expectThinkingBudget?: number;
-    expectThinkingLevel?: GoogleThinkingLevel;
+    expectThinkingLevel?: Gemini.ThinkingLevel;
   }
 
   const testReasoning25Tokens: TestReasoning[] = [
@@ -402,7 +402,7 @@ describe("Google Mock", () => {
           reasoningEffort,
         });
         await llm.invoke("What is 1+1?");
-        const thinkingConfig: GoogleThinkingConfig = recorder?.request?.body?.generationConfig?.thinkingConfig;
+        const thinkingConfig: Gemini.ThinkingConfig = recorder?.request?.body?.generationConfig?.thinkingConfig;
         console.log('thinkingConfig', thinkingConfig);
         expect(thinkingConfig?.thinkingBudget).toEqual(expectThinkingBudget);
         expect(thinkingConfig?.thinkingLevel).toEqual(expectThinkingLevel);

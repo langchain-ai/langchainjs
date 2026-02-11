@@ -1,7 +1,4 @@
-import {
-  GeminiPromptFeedback,
-  GeminiSafetyRating,
-} from "../chat_models/types.js";
+import type { Gemini } from "../chat_models/types.js";
 import { iife } from "./misc.js";
 
 function GoogleError<TMarker extends string>(marker: TMarker) {
@@ -60,7 +57,7 @@ type PromptBlockedErrorParams = {
   /**
    * Optional array of safety ratings that contributed to the block decision
    */
-  safetyRatings?: GeminiSafetyRating[];
+  safetyRatings?: Gemini.SafetyRating[];
   /**
    * Optional custom error message. If not provided, a default message will be generated
    */
@@ -114,7 +111,7 @@ export class PromptBlockedError extends GoogleError("prompt-blocked") {
    *
    * @readonly
    */
-  readonly safetyRatings?: GeminiSafetyRating[];
+  readonly safetyRatings?: Gemini.SafetyRating[];
 
   constructor(params: PromptBlockedErrorParams) {
     const message =
@@ -149,7 +146,7 @@ export class PromptBlockedError extends GoogleError("prompt-blocked") {
    * ```
    */
   static fromPromptFeedback(
-    promptFeedback: GeminiPromptFeedback
+    promptFeedback: Gemini.PromptFeedback
   ): PromptBlockedError {
     return new PromptBlockedError({
       blockReason: promptFeedback.blockReason ?? "UNKNOWN",

@@ -456,31 +456,31 @@ importers:
         version: 0.25.8
       '@rolldown/binding-darwin-arm64':
         specifier: '*'
-        version: 1.0.0-rc.2
+        version: 1.0.0-rc.3
       '@rolldown/binding-darwin-x64':
         specifier: '*'
-        version: 1.0.0-rc.2
+        version: 1.0.0-rc.3
       '@rolldown/binding-linux-arm64-gnu':
         specifier: '*'
-        version: 1.0.0-rc.2
+        version: 1.0.0-rc.3
       '@rolldown/binding-linux-arm64-musl':
         specifier: '*'
-        version: 1.0.0-rc.2
+        version: 1.0.0-rc.3
       '@rolldown/binding-linux-x64-gnu':
         specifier: '*'
-        version: 1.0.0-rc.2
+        version: 1.0.0-rc.3
       '@rolldown/binding-linux-x64-musl':
         specifier: '*'
-        version: 1.0.0-rc.2
+        version: 1.0.0-rc.3
       '@rolldown/binding-win32-arm64-msvc':
         specifier: '*'
-        version: 1.0.0-rc.2
+        version: 1.0.0-rc.3
       '@rolldown/binding-win32-ia32-msvc':
         specifier: '*'
         version: 1.0.0-beta.52
       '@rolldown/binding-win32-x64-msvc':
         specifier: '*'
-        version: 1.0.0-rc.2
+        version: 1.0.0-rc.3
       '@swc/core-win32-x64-msvc':
         specifier: '*'
         version: 1.13.3
@@ -2376,8 +2376,8 @@ importers:
         specifier: ^2.8.3
         version: 2.8.8
       sparktype:
-        specifier: ^0.1.2
-        version: 0.1.2
+        specifier: ^0.1.3
+        version: 0.1.3
       typescript:
         specifier: ~5.8.3
         version: 5.8.3
@@ -7717,8 +7717,8 @@ packages:
     cpu: [arm64]
     os: [darwin]
 
-  '@rolldown/binding-darwin-arm64@1.0.0-rc.2':
-    resolution: {integrity: sha512-PYR+PQu1mMmQiiKHN2JiOctvH32Xc/Mf+Su2RSmWtC9BbIqlqsVWjbulnShk0imjRim0IsbkMMCN5vYQwiuqaA==}
+  '@rolldown/binding-darwin-arm64@1.0.0-rc.3':
+    resolution: {integrity: sha512-JWWLzvcmc/3pe7qdJqPpuPk91SoE/N+f3PcWx/6ZwuyDVyungAEJPvKm/eEldiDdwTmaEzWfIR+HORxYWrCi1A==}
     engines: {node: ^20.19.0 || >=22.12.0}
     cpu: [arm64]
     os: [darwin]
@@ -7728,8 +7728,8 @@ packages:
     cpu: [x64]
     os: [darwin]
 
-  '@rolldown/binding-darwin-x64@1.0.0-rc.2':
-    resolution: {integrity: sha512-X2G36Z6oh5ynoYpE2JAyG+uQ4kO/3N7XydM/I98FNk8VVgDKjajFF+v7TXJ2FMq6xa7Xm0UIUKHW2MRQroqoUA==}
+  '@rolldown/binding-darwin-x64@1.0.0-rc.3':
+    resolution: {integrity: sha512-MTakBxfx3tde5WSmbHxuqlDsIW0EzQym+PJYGF4P6lG2NmKzi128OGynoFUqoD5ryCySEY85dug4v+LWGBElIw==}
     engines: {node: ^20.19.0 || >=22.12.0}
     cpu: [x64]
     os: [darwin]
@@ -7749,8 +7749,8 @@ packages:
     cpu: [arm64]
     os: [linux]
 
-  '@rolldown/binding-linux-arm64-gnu@1.0.0-rc.2':
-    resolution: {integrity: sha512-Piso04EZ9IHV1aZSsLQVMOPTiCq4Ps2UPL3pchjNXHGJGFiB9U42s22LubPaEBFS+i6tCawS5EarIwex1zC4BA==}
+  '@rolldown/binding-linux-arm64-gnu@1.0.0-rc.3':
+    resolution: {integrity: sha512-kWXkoxxarYISBJ4bLNf5vFkEbb4JvccOwxWDxuK9yee8lg5XA7OpvlTptfRuwEvYcOZf+7VS69Uenpmpyo5Bjw==}
     engines: {node: ^20.19.0 || >=22.12.0}
     cpu: [arm64]
     os: [linux]
@@ -7760,8 +7760,8 @@ packages:
     cpu: [arm64]
     os: [linux]
 
-  '@rolldown/binding-linux-arm64-musl@1.0.0-rc.2':
-    resolution: {integrity: sha512-OwJCeMZlmjKsN9pfJfTmqYpe3JC+L6RO87+hu9ajRLr1Lh6cM2FRQ8e48DLRyRDww8Ti695XQvqEANEMmsuzLw==}
+  '@rolldown/binding-linux-arm64-musl@1.0.0-rc.3':
+    resolution: {integrity: sha512-Z03/wrqau9Bicfgb3Dbs6SYTHliELk2PM2LpG2nFd+cGupTMF5kanLEcj2vuuJLLhptNyS61rtk7SOZ+lPsTUA==}
     engines: {node: ^20.19.0 || >=22.12.0}
     cpu: [arm64]
     os: [linux]
@@ -7776,8 +7776,8 @@ packages:
     cpu: [x64]
     os: [linux]
 
-  '@rolldown/binding-linux-x64-gnu@1.0.0-rc.2':
-    resolution: {integrity: sha512-uQqBmA8dTWbKvfqbeSsXNUssRGfdgQCc0hkGfhQN7Pf85wG2h0Fd/z2d+ykyT4YbcsjQdgEGxBNsg3v4ekOuEA==}
+  '@rolldown/binding-linux-x64-gnu@1.0.0-rc.3':
+    resolution: {integrity: sha512-iSXXZsQp08CSilff/DCTFZHSVEpEwdicV3W8idHyrByrcsRDVh9sGC3sev6d8BygSGj3vt8GvUKBPCoyMA4tgQ==}
     engines: {node: ^20.19.0 || >=22.12.0}
     cpu: [x64]
     os: [linux]
@@ -7787,8 +7787,8 @@ packages:
     cpu: [x64]
     os: [linux]
 
-  '@rolldown/binding-linux-x64-musl@1.0.0-rc.2':
-    resolution: {integrity: sha512-ItZabVsICCYWHbP+jcAgNzjPAYg5GIVQp/NpqT6iOgWctaMYtobClc5m0kNtxwqfNrLXoyt998xUey4AvcxnGQ==}
+  '@rolldown/binding-linux-x64-musl@1.0.0-rc.3':
+    resolution: {integrity: sha512-qaj+MFudtdCv9xZo9znFvkgoajLdc+vwf0Kz5N44g+LU5XMe+IsACgn3UG7uTRlCCvhMAGXm1XlpEA5bZBrOcw==}
     engines: {node: ^20.19.0 || >=22.12.0}
     cpu: [x64]
     os: [linux]
@@ -7803,8 +7803,8 @@ packages:
     cpu: [arm64]
     os: [win32]
 
-  '@rolldown/binding-win32-arm64-msvc@1.0.0-rc.2':
-    resolution: {integrity: sha512-NIo7vwRUPEzZ4MuZGr5YbDdjJ84xdiG+YYf8ZBfTgvIsk9wM0sZamJPEXvaLkzVIHpOw5uqEHXS85Gqqb7aaqQ==}
+  '@rolldown/binding-win32-arm64-msvc@1.0.0-rc.3':
+    resolution: {integrity: sha512-85y5JifyMgs8m5K2XzR/VDsapKbiFiohl7s5lEj7nmNGO0pkTXE7q6TQScei96BNAsoK7JC3pA7ukA8WRHVJpg==}
     engines: {node: ^20.19.0 || >=22.12.0}
     cpu: [arm64]
     os: [win32]
@@ -7825,8 +7825,8 @@ packages:
     cpu: [x64]
     os: [win32]
 
-  '@rolldown/binding-win32-x64-msvc@1.0.0-rc.2':
-    resolution: {integrity: sha512-bLKzyLFbvngeNPZocuLo3LILrKwCrkyMxmRXs6fZYDrvh7cyZRw9v56maDL9ipPas0OOmQK1kAKYwvTs30G21Q==}
+  '@rolldown/binding-win32-x64-msvc@1.0.0-rc.3':
+    resolution: {integrity: sha512-a4VUQZH7LxGbUJ3qJ/TzQG8HxdHvf+jOnqf7B7oFx1TEBm+j2KNL2zr5SQ7wHkNAcaPevF6gf9tQnVBnC4mD+A==}
     engines: {node: ^20.19.0 || >=22.12.0}
     cpu: [x64]
     os: [win32]
@@ -8749,28 +8749,28 @@ packages:
     resolution: {integrity: sha512-4aUIteuyxtBUhVdiQqcDhKFitwfd9hqoSDYY2KRXiWtgoWJ9Bmise+KfEPDiVHWeJepvF8xJO9/9+WDIciMFFw==}
     engines: {node: '>=18.0.0'}
 
-  '@sparktype/darwin-arm64@0.1.2':
-    resolution: {integrity: sha512-w1LzDnTDD+FsiRWrQLh/MBMjkUO7TKprAef08L/KEf2u9OyHqI2e6M6UP1mChUEalRCBBE1JtNKUVpy7/P/ctg==}
+  '@sparktype/darwin-arm64@0.1.3':
+    resolution: {integrity: sha512-og47iyByVB9TJlHQtnxCJcqQ2+exk8dslIaIUxceT1hZWJxabivI1+DxvLa+33jubFmFwJ0FdooX6LKAcuWWVw==}
     cpu: [arm64]
     os: [darwin]
 
-  '@sparktype/darwin-x64@0.1.2':
-    resolution: {integrity: sha512-4cV/xO0GYV/o1IfW4QJOm7I/slA5g6hrRdU3j7mtsxJa5dvAP3p4nduA/bXDxzahPG03BCWUfk87X+bMe1LknA==}
+  '@sparktype/darwin-x64@0.1.3':
+    resolution: {integrity: sha512-h8sHVGC2XIgYmN2IJHUvh1l9HCmkGrdD+FGY4pCq/psltZarW3LQKidjNOPQIVOn0MbIcJVRk6NtXcCeKVrk9g==}
     cpu: [x64]
     os: [darwin]
 
-  '@sparktype/linux-arm64@0.1.2':
-    resolution: {integrity: sha512-cfXSwjVW47G7NpKauwr3hzyT6JhgLVOvOYycstLF61biAwHWDmUq77cq/wJ4kThrVwtJVyXEk8Czq0uedwnuxg==}
+  '@sparktype/linux-arm64@0.1.3':
+    resolution: {integrity: sha512-xtQH57ZVo9hjXbS8ghPNjvapwB+wKDZgc0jKslpyQSMA0JH5g6nfgJHQFGUKG7Umw5Tb4dpCHRPM3LQ4mEy3NQ==}
     cpu: [arm64]
     os: [linux]
 
-  '@sparktype/linux-x64@0.1.2':
-    resolution: {integrity: sha512-3Ff62jqjA/vZc+jMMFjiH/ndgrAXK+SuHec/VcRX5t+H6XLeO3piIZ0gAt3AerJnT6YVDcSnTmkzyfes1WN5PA==}
+  '@sparktype/linux-x64@0.1.3':
+    resolution: {integrity: sha512-6ijfrDUqpPvHjF3GGpcwF05uAClPNT7O6rFGvdP0p3NeDEFchkVdvq2zc2EGJat5ODR5ZdimgDqSGIn2zMkQRA==}
     cpu: [x64]
     os: [linux]
 
-  '@sparktype/win32-x64@0.1.2':
-    resolution: {integrity: sha512-r12t+ap2C75mJmJwLMzhywmsNYmMzlihFMrZYKVka4EqQW27tDyaLLe9pvtKi38/vIhypjU7FtkkxCB1GYqKjg==}
+  '@sparktype/win32-x64@0.1.3':
+    resolution: {integrity: sha512-O7Ytp4IEjpMOjvF+YcTdf1Ev/g53wLleZwbeqgyB9CKvjAwjJ1KnUvQ3do2ikRAFF3XCJn+bH0BGHqClqNyC+w==}
     cpu: [x64]
     os: [win32]
 
@@ -15512,8 +15512,8 @@ packages:
     resolution: {integrity: sha512-UjgapumWlbMhkBgzT7Ykc5YXUT46F0iKu8SGXq0bcwP5dz/h0Plj6enJqjz1Zbq2l5WaqYnrVbwWOWMyF3F47g==}
     engines: {node: '>=0.10.0'}
 
-  sparktype@0.1.2:
-    resolution: {integrity: sha512-uJ//YgJMwgzsga+gvlEiNpsTunCyV9Eksd5QvVQmqVMOS+2YSYU60EHsYUG7mc1JYkrkBtmh9LFdMU9nJbpAjg==}
+  sparktype@0.1.3:
+    resolution: {integrity: sha512-7w2B8tcUJa1ZYFYi8DGdsMkiPxr7wzgHX53Uy3sTOWzlYLGFk3fVTQnvr7wFzkWAFszNs8U+9lsP6Myme9+XrQ==}
     engines: {node: '>=16'}
     hasBin: true
 
@@ -23244,13 +23244,13 @@ snapshots:
   '@rolldown/binding-darwin-arm64@1.0.0-beta.30':
     optional: true
 
-  '@rolldown/binding-darwin-arm64@1.0.0-rc.2':
+  '@rolldown/binding-darwin-arm64@1.0.0-rc.3':
     optional: true
 
   '@rolldown/binding-darwin-x64@1.0.0-beta.30':
     optional: true
 
-  '@rolldown/binding-darwin-x64@1.0.0-rc.2':
+  '@rolldown/binding-darwin-x64@1.0.0-rc.3':
     optional: true
 
   '@rolldown/binding-freebsd-x64@1.0.0-beta.30':
@@ -23262,13 +23262,13 @@ snapshots:
   '@rolldown/binding-linux-arm64-gnu@1.0.0-beta.30':
     optional: true
 
-  '@rolldown/binding-linux-arm64-gnu@1.0.0-rc.2':
+  '@rolldown/binding-linux-arm64-gnu@1.0.0-rc.3':
     optional: true
 
   '@rolldown/binding-linux-arm64-musl@1.0.0-beta.30':
     optional: true
 
-  '@rolldown/binding-linux-arm64-musl@1.0.0-rc.2':
+  '@rolldown/binding-linux-arm64-musl@1.0.0-rc.3':
     optional: true
 
   '@rolldown/binding-linux-arm64-ohos@1.0.0-beta.30':
@@ -23277,13 +23277,13 @@ snapshots:
   '@rolldown/binding-linux-x64-gnu@1.0.0-beta.30':
     optional: true
 
-  '@rolldown/binding-linux-x64-gnu@1.0.0-rc.2':
+  '@rolldown/binding-linux-x64-gnu@1.0.0-rc.3':
     optional: true
 
   '@rolldown/binding-linux-x64-musl@1.0.0-beta.30':
     optional: true
 
-  '@rolldown/binding-linux-x64-musl@1.0.0-rc.2':
+  '@rolldown/binding-linux-x64-musl@1.0.0-rc.3':
     optional: true
 
   '@rolldown/binding-wasm32-wasi@1.0.0-beta.30':
@@ -23294,7 +23294,7 @@ snapshots:
   '@rolldown/binding-win32-arm64-msvc@1.0.0-beta.30':
     optional: true
 
-  '@rolldown/binding-win32-arm64-msvc@1.0.0-rc.2':
+  '@rolldown/binding-win32-arm64-msvc@1.0.0-rc.3':
     optional: true
 
   '@rolldown/binding-win32-ia32-msvc@1.0.0-beta.30':
@@ -23306,7 +23306,7 @@ snapshots:
   '@rolldown/binding-win32-x64-msvc@1.0.0-beta.30':
     optional: true
 
-  '@rolldown/binding-win32-x64-msvc@1.0.0-rc.2':
+  '@rolldown/binding-win32-x64-msvc@1.0.0-rc.3':
     optional: true
 
   '@rolldown/pluginutils@1.0.0-beta.30': {}
@@ -24660,19 +24660,19 @@ snapshots:
     dependencies:
       tslib: 2.8.1
 
-  '@sparktype/darwin-arm64@0.1.2':
+  '@sparktype/darwin-arm64@0.1.3':
     optional: true
 
-  '@sparktype/darwin-x64@0.1.2':
+  '@sparktype/darwin-x64@0.1.3':
     optional: true
 
-  '@sparktype/linux-arm64@0.1.2':
+  '@sparktype/linux-arm64@0.1.3':
     optional: true
 
-  '@sparktype/linux-x64@0.1.2':
+  '@sparktype/linux-x64@0.1.3':
     optional: true
 
-  '@sparktype/win32-x64@0.1.2':
+  '@sparktype/win32-x64@0.1.3':
     optional: true
 
   '@spider-cloud/spider-client@0.0.21': {}
@@ -33416,13 +33416,13 @@ snapshots:
 
   source-map@0.6.1: {}
 
-  sparktype@0.1.2:
+  sparktype@0.1.3:
     optionalDependencies:
-      '@sparktype/darwin-arm64': 0.1.2
-      '@sparktype/darwin-x64': 0.1.2
-      '@sparktype/linux-arm64': 0.1.2
-      '@sparktype/linux-x64': 0.1.2
-      '@sparktype/win32-x64': 0.1.2
+      '@sparktype/darwin-arm64': 0.1.3
+      '@sparktype/darwin-x64': 0.1.3
+      '@sparktype/linux-arm64': 0.1.3
+      '@sparktype/linux-x64': 0.1.3
+      '@sparktype/win32-x64': 0.1.3
 
   sparse-bitfield@3.0.3:
     dependencies:

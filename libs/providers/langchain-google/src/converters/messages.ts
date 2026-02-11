@@ -20,21 +20,7 @@ import {
   MessageContentText,
 } from "@langchain/core/messages";
 import { Converter } from "@langchain/core/utils/format";
-import {
-  GenerateContentRequest,
-  GeminiContent,
-  GeminiPart,
-  GeminiCandidate,
-  GeminiRole,
-  GenerateContentResponse,
-  GeminiUsageMetadata,
-  GeminiModalityTokenCount,
-  GeminiGroundingSupport,
-  GeminiPartFunctionCall,
-  GeminiPartBaseFile,
-  GeminiPartInlineData,
-  GeminiPartFileData,
-} from "../chat_models/types.js";
+import type { Gemini } from "../chat_models/types.js";
 import { iife } from "../utils/misc.js";
 import { ToolCallNotFoundError } from "../utils/errors.js";
 
@@ -46,20 +32,24 @@ import { ToolCallNotFoundError } from "../utils/errors.js";
  * Use ContentBlock.Multimodal.Standard instead.
  */
 export const geminiContentBlockConverter: StandardContentBlockConverter<{
-  text: GeminiPart;
-  image: GeminiPart;
-  audio: GeminiPart;
-  file: GeminiPart;
+  text: Gemini.Part;
+  image: Gemini.Part;
+  audio: Gemini.Part;
+  file: Gemini.Part;
 }> = {
   providerName: "ChatGoogle",
 
-  fromStandardTextBlock(block: Data.StandardTextBlock): GeminiPart {
-    console.log('fromStandardTextBlock', block);
+  fromStandardTextBlock(
+    block: Data.StandardTextBlock
+  ): Gemini.Part {
+    console.log("fromStandardTextBlock", block);
     return { text: block.text };
   },
 
-  fromStandardImageBlock(block: Data.StandardImageBlock): GeminiPart {
-    console.log('fromStandardImageBlock', block);
+  fromStandardImageBlock(
+    block: Data.StandardImageBlock
+  ): Gemini.Part {
+    console.log("fromStandardImageBlock", block);
     if (isDataContentBlock(block)) {
       if (block.source_type === "base64") {
         if (!block.mime_type) {
@@ -130,7 +120,9 @@ export const geminiContentBlockConverter: StandardContentBlockConverter<{
     );
   },
 
-  fromStandardAudioBlock(block: Data.StandardAudioBlock): GeminiPart {
+  fromStandardAudioBlock(
+    block: Data.StandardAudioBlock
+  ): Gemini.Part {
     if (isDataContentBlock(block)) {
       if (block.source_type === "base64") {
         if (!block.mime_type) {
@@ -201,7 +193,9 @@ export const geminiContentBlockConverter: StandardContentBlockConverter<{
     );
   },
 
-  fromStandardFileBlock(block: Data.StandardFileBlock): GeminiPart {
+  fromStandardFileBlock(
+    block: Data.StandardFileBlock
+  ): Gemini.Part {
     if (isDataContentBlock(block)) {
       if (block.source_type === "base64") {
         if (!block.mime_type) {
@@ -289,19 +283,19 @@ export const geminiContentBlockConverter: StandardContentBlockConverter<{
 
 function convertStandardDataContentBlockToGeminiPart(
   block: ContentBlock.Multimodal.Data
-): GeminiPart | null {
-
+): Gemini.Part | null {
   function uint8arrayToString(data: Uint8Array): string {
     return btoa(
       Array.from(data as Uint8Array)
         .map((byte) => String.fromCharCode(byte))
         .join("")
-    )
+    );
   }
 
-  function extractMimeType(
-    str: string
-  ): { mimeType: string | null; data: string | null } {
+  function extractMimeType(str: string): {
+    mimeType: string | null;
+    data: string | null;
+  } {
     if (str.startsWith("data:")) {
       return {
         mimeType: str.split(":")[1].split(";")[0],
@@ -311,12 +305,15 @@ function convertStandardDataContentBlockToGeminiPart(
     return {
       mimeType: null,
       data: null,
-    }
+    };
   }
 
   if ("mimeType" in block && "data" in block) {
     const mimeType = block.mimeType!;
-    const data: string = typeof block.data === "string" ? block.data : uint8arrayToString(block.data!)
+    const data: string =
+      typeof block.data === "string"
+        ? block.data
+        : uint8arrayToString(block.data!);
     return {
       inlineData: {
         mimeType,
@@ -330,17 +327,17 @@ function convertStandardDataContentBlockToGeminiPart(
       fileData: {
         mimeType,
         fileUri,
-      }
-    }
+      },
+    };
   } else if ("url" in block && block.url?.startsWith("data:")) {
-    const {mimeType, data} = extractMimeType(block.url!);
+    const { mimeType, data } = extractMimeType(block.url!);
     if (mimeType && data) {
       return {
         inlineData: {
           mimeType,
           data,
-        }
-      }
+        },
+      };
     }
   }
   // FIXME - report this somehow?
@@ -349,27 +346,28 @@ function convertStandardDataContentBlockToGeminiPart(
 
 function convertStandardVideoContentBlockToGeminiPart(
   block: ContentBlock.Multimodal.Video
-): GeminiPart | null {
-  const ret: GeminiPart | null = convertStandardDataContentBlockToGeminiPart(block);
+): Gemini.Part | null {
+  const ret: Gemini.Part | null =
+    convertStandardDataContentBlockToGeminiPart(block);
   if (ret && block.metadata && "videoMetadata" in block.metadata) {
-    (ret as GeminiPartBaseFile).videoMetadata = block.metadata.videoMetadata!;
+    (ret as Gemini.Part.FileData).videoMetadata =
+      block.metadata.videoMetadata!;
   }
   return ret;
-
 }
 
 /**
  * Converts a single LangChain standard content block (v1 format)
- * into a GeminiPart.
+ * into a Gemini.Part.
  *
  * This is intended to be called from `convertStandardContentMessageToGeminiContent`
  */
 function convertStandardContentBlockToGeminiPart(
   block: ContentBlock.Standard
-): GeminiPart | null {
+): Gemini.Part | null {
   switch (block.type) {
     case "text":
-      return {text: block.text};
+      return { text: block.text };
     case "image":
     case "audio":
       return convertStandardDataContentBlockToGeminiPart(block);
@@ -388,13 +386,13 @@ function convertStandardContentBlockToGeminiPart(
  */
 function convertStandardContentMessageToGeminiContent(
   message: BaseMessage
-): GeminiContent | null {
+): Gemini.Content | null {
   // Skip system messages - they're handled separately
   if (SystemMessage.isInstance(message)) {
     return null;
   }
 
-  let role: GeminiRole;
+  let role: Gemini.Role;
   if (HumanMessage.isInstance(message)) {
     role = "user";
   } else if (AIMessage.isInstance(message)) {
@@ -424,16 +422,19 @@ function convertStandardContentMessageToGeminiContent(
     role = "user";
   }
 
-  const parts: GeminiPart[] = [];
+  const parts: Gemini.Part[] = [];
 
   // Process standard content blocks
   message.contentBlocks.forEach((block: ContentBlock.Standard) => {
-    const contentBlock = message.additional_kwargs.originalTextContentBlock as ContentBlock.Standard || block;
-    const part: GeminiPart | null = convertStandardContentBlockToGeminiPart(contentBlock);
+    const contentBlock =
+      (message.additional_kwargs
+        .originalTextContentBlock as ContentBlock.Standard) || block;
+    const part: Gemini.Part | null =
+      convertStandardContentBlockToGeminiPart(contentBlock);
     if (part) {
       parts.push(part);
     }
-  })
+  });
 
   // Handle tool messages as function responses
   if (ToolMessage.isInstance(message) && message.tool_call_id) {
@@ -466,8 +467,8 @@ function convertStandardContentMessageToGeminiContent(
  */
 function convertLegacyContentMessageToGeminiContent(
   message: BaseMessage,
-  messages: BaseMessage[],
-): GeminiContent | null {
+  messages: BaseMessage[]
+): Gemini.Content | null {
   // Skip system messages - they're handled separately
   if (SystemMessage.isInstance(message)) {
     return null;
@@ -479,11 +480,7 @@ function convertLegacyContentMessageToGeminiContent(
   function isMessageContentText(
     content: object
   ): content is MessageContentText {
-    return (
-      typeof content === "object" &&
-      content !== null &&
-      "text" in content
-    );
+    return typeof content === "object" && content !== null && "text" in content;
   }
 
   /**
@@ -493,9 +490,7 @@ function convertLegacyContentMessageToGeminiContent(
     content: object
   ): content is MessageContentImageUrl {
     return (
-      typeof content === "object" &&
-      content !== null &&
-      "image_url" in content
+      typeof content === "object" && content !== null && "image_url" in content
     );
   }
 
@@ -538,7 +533,11 @@ function convertLegacyContentMessageToGeminiContent(
       // Extract the pathname from the URL
       const pathname = new URL(url).pathname;
       // Get the file extension (handle query params and fragments)
-      const extension = pathname.split(".").pop()?.toLowerCase().split(/[?#]/)[0];
+      const extension = pathname
+        .split(".")
+        .pop()
+        ?.toLowerCase()
+        .split(/[?#]/)[0];
       return extension ? mimeTypeMap[extension] : "application/octet-stream";
     } catch {
       // If URL parsing fails, try a simple extension extraction
@@ -553,7 +552,7 @@ function convertLegacyContentMessageToGeminiContent(
 
   function messageContentImageUrlData(
     content: MessageContentImageUrl
-  ): GeminiPartInlineData | GeminiPartFileData {
+  ): Gemini.Part.InlineData | Gemini.Part.FileData {
     const url: string =
       typeof content.image_url === "string"
         ? content.image_url
@@ -562,7 +561,7 @@ function convertLegacyContentMessageToGeminiContent(
       throw new Error("Missing Image URL");
     }
 
-    const dataUrl = parseBase64DataUrl({dataUrl: url});
+    const dataUrl = parseBase64DataUrl({ dataUrl: url });
     if (dataUrl?.data && dataUrl?.mime_type) {
       return {
         inlineData: {
@@ -584,7 +583,7 @@ function convertLegacyContentMessageToGeminiContent(
 
   function messageContentImageUrl(
     content: MessageContentImageUrl
-  ): GeminiPartInlineData | GeminiPartFileData {
+  ): Gemini.Part.InlineData | Gemini.Part.FileData {
     const ret = messageContentImageUrlData(content);
     supplementVideoMetadata(content, ret);
     return ret;
@@ -593,7 +592,7 @@ function convertLegacyContentMessageToGeminiContent(
   function messageContentMediaData(
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     content: Record<string, any>
-  ): GeminiPartInlineData | GeminiPartFileData {
+  ): Gemini.Part.InlineData | Gemini.Part.FileData {
     if ("mimeType" in content && "data" in content) {
       return {
         inlineData: {
@@ -621,8 +620,8 @@ function convertLegacyContentMessageToGeminiContent(
   function supplementVideoMetadata(
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     content: MessageContentImageUrl | Record<string, any>,
-    ret: GeminiPartInlineData | GeminiPartFileData
-  ): GeminiPartInlineData | GeminiPartFileData {
+    ret: Gemini.Part.InlineData | Gemini.Part.FileData
+  ): Gemini.Part.InlineData | Gemini.Part.FileData {
     // Add videoMetadata if defined
     if ("videoMetadata" in content && typeof ret === "object") {
       ret.videoMetadata = content.videoMetadata;
@@ -633,13 +632,13 @@ function convertLegacyContentMessageToGeminiContent(
   function messageContentMedia(
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     content: Record<string, any>
-  ): GeminiPartInlineData | GeminiPartFileData {
+  ): Gemini.Part.InlineData | Gemini.Part.FileData {
     const ret = messageContentMediaData(content);
     supplementVideoMetadata(content, ret);
     return ret;
   }
 
-  const role: GeminiRole = iife(() => {
+  const role: Gemini.Role = iife(() => {
     if (HumanMessage.isInstance(message)) {
       return "user";
     } else if (AIMessage.isInstance(message)) {
@@ -670,7 +669,7 @@ function convertLegacyContentMessageToGeminiContent(
     }
   });
 
-  let parts: GeminiPart[] = [];
+  let parts: Gemini.Part[] = [];
 
   // Handle legacy content formats
   if (typeof message.content === "string") {
@@ -681,8 +680,8 @@ function convertLegacyContentMessageToGeminiContent(
   } else if (Array.isArray(message.content)) {
     // Array of content blocks (legacy format)
     for (const item of message.content) {
-      if (typeof item === "string"){
-        parts.push( {text: item} );
+      if (typeof item === "string") {
+        parts.push({ text: item });
       } else if (typeof item === "object" && item !== null) {
         if (isMessageContentText(item)) {
           parts.push({ text: item.text });
@@ -691,21 +690,17 @@ function convertLegacyContentMessageToGeminiContent(
             convertToProviderContentBlock(item, geminiContentBlockConverter)
           );
         } else if (item?.type === "functionCall") {
-          const {type, functionCall, ...etc} = item;
+          const { type, functionCall, ...etc } = item;
           parts.push({
             ...etc,
             functionCall,
-          } as GeminiPartFunctionCall);
+          } as Gemini.Part.FunctionCall);
         } else if (isMessageContentImageUrl(item)) {
-          parts.push(
-            messageContentImageUrl(item)
-          );
+          parts.push(messageContentImageUrl(item));
         } else if (isMessageContentMedia(item)) {
-          parts.push(
-            messageContentMedia(item)
-          );
+          parts.push(messageContentMedia(item));
         } else {
-          parts.push(item as GeminiPart);
+          parts.push(item as Gemini.Part);
         }
       }
     }
@@ -784,16 +779,17 @@ function convertLegacyContentMessageToGeminiContent(
  */
 export const convertMessagesToGeminiContents: Converter<
   BaseMessage[],
-  GenerateContentRequest["contents"]
+  Gemini.GenerateContentRequest["contents"]
 > = (messages) => {
-  const contents: GeminiContent[] = [];
+  const contents: Gemini.Content[] = [];
 
   for (const message of messages) {
-    // const content: GeminiContent | null = convertContentMessageToGeminiContent(message, messages);
-    const content: GeminiContent | null = iife(() => {
-      const outputVersion = "output_version" in message.response_metadata
-        ? message.response_metadata?.output_version as string
-        : "v0";
+    // const content: Gemini.Content | null = convertContentMessageToGeminiContent(message, messages);
+    const content: Gemini.Content | null = iife(() => {
+      const outputVersion =
+        "output_version" in message.response_metadata
+          ? (message.response_metadata?.output_version as string)
+          : "v0";
       switch (outputVersion) {
         case "v1":
           return convertStandardContentMessageToGeminiContent(message);
@@ -850,9 +846,9 @@ export const convertMessagesToGeminiContents: Converter<
  */
 export const convertMessagesToGeminiSystemInstruction: Converter<
   BaseMessage[],
-  GenerateContentRequest["systemInstruction"]
+  Gemini.GenerateContentRequest["systemInstruction"]
 > = (messages) => {
-  const systemParts: GeminiPart[] = [];
+  const systemParts: Gemini.Part[] = [];
 
   for (const message of messages) {
     if (SystemMessage.isInstance(message)) {
@@ -872,12 +868,12 @@ export const convertMessagesToGeminiSystemInstruction: Converter<
 /**
  * Converts an array of Gemini API parts into an array of LangChain tool calls.
  *
- * This function iterates through a given array of `GeminiPart` objects,
+ * This function iterates through a given array of `Gemini.Part` objects,
  * identifies parts that represent a function call, and transforms them into
  * LangChain's standardized `ToolCall` format. Each resulting tool call is
  * assigned a unique, sequential ID.
  *
- * @param parts - An array of `GeminiPart` objects, which may or may not
+ * @param parts - An array of `Gemini.Part` objects, which may or may not
  *   contain function calls.
  * @returns An array of `ContentBlock.Tools.ToolCall` objects. If no function
  *   call parts are found, an empty array is returned.
@@ -888,7 +884,7 @@ export const convertMessagesToGeminiSystemInstruction: Converter<
  *
  * @example
  * ```typescript
- * const geminiParts: GeminiPart[] = [
+ * const geminiParts: Gemini.Part[] = [
  *   { text: "Thinking about what to do..." },
  *   {
  *     functionCall: {
@@ -913,9 +909,11 @@ export const convertMessagesToGeminiSystemInstruction: Converter<
  * ```
  */
 export const convertGeminiPartsToToolCalls: Converter<
-  GeminiPart[],
-  ContentBlock.Tools.ToolCall<string,Record<string, unknown>>[]
-> = (parts: GeminiPart[]): ContentBlock.Tools.ToolCall<string,Record<string, unknown>>[] => {
+  Gemini.Part[],
+  ContentBlock.Tools.ToolCall<string, Record<string, unknown>>[]
+> = (
+  parts: Gemini.Part[]
+): ContentBlock.Tools.ToolCall<string, Record<string, unknown>>[] => {
   const toolCalls: ContentBlock.Tools.ToolCall<
     string,
     Record<string, unknown>
@@ -923,8 +921,8 @@ export const convertGeminiPartsToToolCalls: Converter<
 
   for (let i = 0; i < parts.length; i++) {
     const part = parts[i];
-    if ("functionCall" in part) {
-      const functionCallPart: GeminiPartFunctionCall = part;
+    if ("functionCall" in part && part.functionCall) {
+      const functionCallPart = part as Gemini.Part.FunctionCall;
       toolCalls.push({
         type: "tool_call",
         id: `call_${toolCalls.length}`,
@@ -936,12 +934,12 @@ export const convertGeminiPartsToToolCalls: Converter<
   }
 
   return toolCalls;
-}
+};
 
 export const convertGeminiPartToContentBlock: Converter<
-  GeminiPart, 
+  Gemini.Part,
   ContentBlock
-> = (part: GeminiPart): ContentBlock => {
+> = (part: Gemini.Part): ContentBlock => {
   const block: ContentBlock = iife(() => {
     if ("text" in part && part.text) {
       return {
@@ -973,7 +971,7 @@ export const convertGeminiPartToContentBlock: Converter<
         type: "executableCode",
         executableCode: part.executableCode,
       };
-    } else if ("codeExecutionResult" in part && part.codeExecutionResult){
+    } else if ("codeExecutionResult" in part && part.codeExecutionResult) {
       return {
         type: "codeExecutionResult",
         codeExecutionResult: part.codeExecutionResult,
@@ -986,7 +984,7 @@ export const convertGeminiPartToContentBlock: Converter<
     thoughtSignature: part.thoughtSignature,
     partMetadata: part.partMetadata,
     ...block,
-  }
+  };
   for (const attribute in ret) {
     if (ret[attribute] === undefined) {
       delete ret[attribute];
@@ -994,7 +992,7 @@ export const convertGeminiPartToContentBlock: Converter<
   }
 
   return ret;
-}
+};
 
 /**
  * Converts a Gemini API candidate response to a LangChain AIMessage.
@@ -1014,7 +1012,7 @@ export const convertGeminiPartToContentBlock: Converter<
  *
  * @example
  * ```typescript
- * const candidate: GeminiCandidate = {
+ * const candidate: Gemini.Candidate = {
  *   content: {
  *     parts: [
  *       { text: "Hello, how can I help you?" }
@@ -1032,14 +1030,13 @@ export const convertGeminiPartToContentBlock: Converter<
  * @returns An AIMessage instance with converted content, tool calls, and metadata
  */
 export const convertGeminiCandidateToAIMessage: Converter<
-  GeminiCandidate,
+  Gemini.Candidate,
   AIMessage
 > = (candidate) => {
-
   function groundingSupportByPart(
-    groundingSupports?: GeminiGroundingSupport[]
-  ): GeminiGroundingSupport[][] {
-    const ret: GeminiGroundingSupport[][] = [];
+    groundingSupports?: Gemini.GroundingSupport[]
+  ): Gemini.GroundingSupport[][] {
+    const ret: Gemini.GroundingSupport[][] = [];
 
     if (!groundingSupports || groundingSupports.length === 0) {
       return [[]];
@@ -1082,12 +1079,14 @@ export const convertGeminiCandidateToAIMessage: Converter<
     !("thought" in parts[0])
   ) {
     // Single text part - store as string for simplicity and backwards compatibility
-    content = parts[0].text;
+    content = parts[0].text ?? "";
     // But retain all the metadata
     originalTextContentBlock = convertGeminiPartToContentBlock(parts[0]);
   } else {
     // Multiple parts - convert to array format with type fields
-    content = parts.map((p: GeminiPart) => convertGeminiPartToContentBlock(p));
+    content = parts.map((p: Gemini.Part) =>
+      convertGeminiPartToContentBlock(p)
+    );
   }
 
   // const chatGenerations = parts.map((part, index) => {
@@ -1108,6 +1107,9 @@ export const convertGeminiCandidateToAIMessage: Converter<
   //   return gen;
   // });
 
+  // urlRetrievalMetadata is not in the generated Candidate type but
+  // may still appear in API responses. Access it dynamically.
+  const candidateRecord = candidate as unknown as Record<string, unknown>;
   const additional_kwargs: Record<string, unknown> = {
     finishReason: candidate.finishReason,
     finishMessage: candidate.finishMessage,
@@ -1116,7 +1118,7 @@ export const convertGeminiCandidateToAIMessage: Converter<
     citationMetadata: candidate.citationMetadata,
     groundingMetadata: candidate.groundingMetadata,
     groundingAttributions: candidate.groundingAttributions,
-    urlRetrievalMetadata: candidate.urlRetrievalMetadata,
+    urlRetrievalMetadata: candidateRecord.urlRetrievalMetadata,
     urlContextMetadata: candidate.urlContextMetadata,
     avgLogprobs: candidate.avgLogprobs,
     logprobsResult: candidate.logprobsResult,
@@ -1130,7 +1132,7 @@ export const convertGeminiCandidateToAIMessage: Converter<
     citation_metadata: candidate.citationMetadata,
     grounding_metadata: candidate.groundingMetadata,
     grounding_attributions: candidate.groundingAttributions,
-    url_retrieval_metadata: candidate.urlRetrievalMetadata,
+    url_retrieval_metadata: candidateRecord.urlRetrievalMetadata,
     url_context_metadata: candidate.urlContextMetadata,
     avg_logprobs: candidate.avgLogprobs,
     logprobs_result: candidate.logprobsResult,
@@ -1152,7 +1154,6 @@ export const convertGeminiCandidateToAIMessage: Converter<
     }
   }
 
-
   return new AIMessage({
     content,
     tool_calls: toolCalls.length > 0 ? toolCalls : undefined,
@@ -1161,39 +1162,41 @@ export const convertGeminiCandidateToAIMessage: Converter<
   });
 };
 
-export const convertAIMessageToText: Converter<
-  AIMessage,
-  string
-> = (message: AIMessage): string => {
+export const convertAIMessageToText: Converter<AIMessage, string> = (
+  message: AIMessage
+): string => {
   if (typeof message.content === "string") {
     return message.content;
   } else if (Array.isArray(message.content)) {
     return message.content
       .filter(
-        (c) =>
-          typeof c === "string" ||
-          (c as { type?: string }).type === "text"
+        (c) => typeof c === "string" || (c as { type?: string }).type === "text"
       )
       .map((c) =>
         typeof c === "string" ? c : (c as { text?: string }).text || ""
       )
-      .join("")
+      .join("");
   } else {
     return "";
   }
-}
+};
 
 export const convertGeminiGenerateContentResponseToUsageMetadata: Converter<
-  GenerateContentResponse,
+  Gemini.GenerateContentResponse,
   UsageMetadata
-> = (data: GenerateContentResponse): UsageMetadata => {
-
+> = (data: Gemini.GenerateContentResponse): UsageMetadata => {
   function addModalityCounts(
-    modalityTokenCounts: GeminiModalityTokenCount[] | undefined,
+    modalityTokenCounts: Gemini.ModalityTokenCount[] | undefined,
     details: InputTokenDetails | OutputTokenDetails
   ): void {
     modalityTokenCounts?.forEach((modalityTokenCount) => {
       const { modality, tokenCount } = modalityTokenCount;
+      if (
+        typeof modality === "undefined" ||
+        typeof tokenCount === "undefined"
+      ) {
+        return;
+      }
       const modalityLc: keyof ModalitiesTokenDetails =
         modality.toLowerCase() as keyof ModalitiesTokenDetails;
       const currentCount = details[modalityLc] ?? 0;
@@ -1201,7 +1204,8 @@ export const convertGeminiGenerateContentResponseToUsageMetadata: Converter<
     });
   }
 
-  const usageMetadata: GeminiUsageMetadata | undefined = data.usageMetadata;
+  const usageMetadata: Gemini.UsageMetadata | undefined =
+    data.usageMetadata;
 
   const inputTokenCount = usageMetadata?.promptTokenCount ?? 0;
   const candidatesTokenCount = usageMetadata?.candidatesTokenCount ?? 0;
@@ -1228,4 +1232,4 @@ export const convertGeminiGenerateContentResponseToUsageMetadata: Converter<
     input_token_details,
     output_token_details,
   };
-}
+};

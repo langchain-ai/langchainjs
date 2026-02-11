@@ -2,7 +2,7 @@
 
 import type { InteropZodType } from "@langchain/core/utils/types";
 import type { BindToolsInput } from "@langchain/core/language_models/chat_models";
-import type { GenerativeLanguage as GenerativeLanguageBase } from "./api-types.js";
+import type { Gemini as GeminiBase } from "./api-types.js";
 import type { Prettify } from "../utils/misc.js";
 
 export interface ChatGoogleFields {
@@ -91,12 +91,12 @@ export interface ChatGoogleFields {
   /**
    * Per request settings for blocking unsafe content
    */
-  safetySettings?: Prettify<GenerativeLanguageBase.SafetySetting>[];
+  safetySettings?: Prettify<GeminiBase.SafetySetting>[];
 
   /**
    * Configuration for the model's thinking process
    */
-  thinkingConfig?: Prettify<GenerativeLanguageBase.ThinkingConfig>;
+  thinkingConfig?: Prettify<GeminiBase.ThinkingConfig>;
 
   /**
    * The schema that the generated response should match.
@@ -117,7 +117,7 @@ export interface ChatGoogleFields {
    * Represents the set of modalities that the model can return.
    * An empty list is equivalent to requesting only text.
    */
-  responseModalities?: Prettify<GenerativeLanguageBase.GenerativeLanguageModality>[];
+  responseModalities?: Prettify<GeminiBase.GenerativeLanguageModality>[];
 
   /**
    * If true, enables enhanced civic answers feature.
@@ -130,693 +130,181 @@ export interface ChatGoogleFields {
    * or a simplified version we've defined (which can be as simple
    * as the name of a pre-defined voice).
    */
-  speechConfig?: Prettify<GenerativeLanguageBase.SpeechConfig>;
-  // speechConfig?: GoogleSpeechConfig | GoogleSpeechConfigSimplified;
+  speechConfig?: Prettify<GeminiBase.SpeechConfig> | SimplifiedSpeechConfig;
 
   /**
    * Configuration for image generation.
    */
-  imageConfig?: Prettify<GenerativeLanguageBase.ImageConfig>;
+  imageConfig?: Prettify<GeminiBase.ImageConfig>;
 
   /**
    * Media resolution for input media processing.
    */
-  mediaResolution?: Prettify<GenerativeLanguageBase.MediaResolution>;
+  mediaResolution?: Prettify<GeminiBase.MediaResolution>;
+
+  /**
+   * The number of reasoning tokens that the model should generate.
+   * If explicitly set, then the reasoning blocks will be returned.
+   */
+  maxReasoningTokens?: number;
+
+  /**
+   * An alias for `maxReasoningTokens` for compatibility.
+   */
+  thinkingBudget?: number;
+
+  /**
+   * An alias for `maxReasoningTokens` under Gemini 2.5 or
+   * the primary thinking/reasoning setting for Gemini 3.
+   * If explicitly set, then the reasoning blocks will be returned.
+   */
+  reasoningEffort?: GeminiBase.ThinkingLevel;
+
+  /**
+   * An alias for `reasoningEffort` for compatibility.
+   */
+  thinkingLevel?: GeminiBase.ThinkingLevel;
 }
 
 export type GooglePlatformType = "gai" | "gcp";
 
-export { type GenerativeLanguage } from "./api-types.js";
+export { type Gemini } from "./api-types.js";
 
 // There's a fair number of utilities that we need to extract from the base
-// GenerativeLanguage OpenAPI types, Adding these directly to the base types
+// Gemini OpenAPI types, Adding these directly to the base types
 // would pollute the typegen output, so we're adding them here instead.
 declare module "./api-types.js" {
-  export namespace GenerativeLanguage {
-    // GenerativeLanguage parts are contained as one intersecting type
+  export namespace Gemini {
+    // Gemini parts are contained as one intersecting type
     // in the spec, so we need to pick out the specific parts we need.
     export namespace Part {
       export type CodeExecutionResult = Pick<
-        GenerativeLanguageBase.Part,
+        GeminiBase.Part,
         "codeExecutionResult"
       >;
-      export type ExecutableCode = Pick<
-        GenerativeLanguageBase.Part,
-        "executableCode"
-      >;
+      export type ExecutableCode = Pick<GeminiBase.Part, "executableCode">;
       export type FileData = Pick<
-        GenerativeLanguageBase.Part,
+        GeminiBase.Part,
         "fileData" | "videoMetadata"
       >;
-      export type FunctionCall = Pick<
-        GenerativeLanguageBase.Part,
-        "functionCall"
-      >;
-      export type FunctionResponse = Pick<
-        GenerativeLanguageBase.Part,
-        "functionResponse"
-      >;
+      export type FunctionCall = Required<
+        Pick<GeminiBase.Part, "functionCall">
+      > &
+        Pick<GeminiBase.Part, "thoughtSignature">;
+      export type FunctionResponse = Pick<GeminiBase.Part, "functionResponse">;
       export type InlineData = Pick<
-        GenerativeLanguageBase.Part,
+        GeminiBase.Part,
         "inlineData" | "videoMetadata"
       >;
-      export type MediaResolution = Pick<
-        GenerativeLanguageBase.Part,
-        "mediaResolution"
+      export type MediaResolution = Pick<GeminiBase.Part, "mediaResolution">;
+      export type PartMetadata = Pick<GeminiBase.Part, "partMetadata">;
+      export type Text = Pick<GeminiBase.Part, "text">;
+      export type Thought = Pick<GeminiBase.Part, "thought">;
+      export type ThoughtSignature = Pick<GeminiBase.Part, "thoughtSignature">;
+    }
+
+    export namespace PrebuiltVoiceConfig {
+      /**
+       * The name of a prebuilt voice that can be used for speech synthesis.
+       *
+       * Extracted as a non-nullable type from the GeminiBase.PrebuiltVoiceConfig["voiceName"] property.
+       */
+      export type VoiceName = NonNullable<
+        GeminiBase.PrebuiltVoiceConfig["voiceName"]
       >;
-      export type PartMetadata = Pick<
-        GenerativeLanguageBase.Part,
-        "partMetadata"
+    }
+
+    export namespace SpeakerVoiceConfig {
+      /**
+       * The speaker identifier for a custom or multi-speaker TTS configuration.
+       *
+       * Extracted as a non-nullable type from the GeminiBase.SpeakerVoiceConfig["speaker"] property.
+       */
+      export type Speaker = NonNullable<
+        GeminiBase.SpeakerVoiceConfig["speaker"]
       >;
-      export type Text = Pick<GenerativeLanguageBase.Part, "text">;
-      export type Thought = Pick<GenerativeLanguageBase.Part, "thought">;
-      export type ThoughtSignature = Pick<
-        GenerativeLanguageBase.Part,
-        "thoughtSignature"
+    }
+
+    export namespace SpeechConfig {
+      /**
+       * The BCP-47 language code for speech synthesis (e.g., "en-US").
+       *
+       * Extracted as a non-nullable type from the GeminiBase.SpeechConfig["languageCode"] property.
+       */
+      export type LanguageCode = NonNullable<
+        GeminiBase.SpeechConfig["languageCode"]
       >;
+    }
+
+    /**
+     * The level of "thinking" or reasoning configured for the model.
+     *
+     * Corresponds to GeminiBase.ThinkingConfig["thinkingLevel"].
+     */
+    export type ThinkingLevel = GeminiBase.ThinkingConfig["thinkingLevel"];
+
+    /**
+     * The role of a content message. The spec types this as `string`, but
+     * the API only accepts these specific values.
+     */
+    export type Role = "user" | "model" | "function";
+
+    /**
+     * Alias for the unwieldy generated grounding support type name.
+     */
+    export type GroundingSupport =
+      GeminiBase.GoogleAiGenerativelanguageV1betaGroundingSupport;
+
+    /**
+     * Alias for the unwieldy generated segment type name.
+     */
+    export type Segment = GeminiBase.GoogleAiGenerativelanguageV1betaSegment;
+
+    export namespace Tools {
+      /**
+       * The mode for function calling configuration, extracted from the
+       * FunctionCallingConfig interface.
+       */
+      export type FunctionCallingConfigMode =
+        GeminiBase.Tools.FunctionCallingConfig["mode"];
     }
   }
 }
 
-// export interface GoogleSafetySetting {
-//   /**
-//    * The safety category to configure a threshold for.
-//    */
-//   category?: GoogleHarmCategory;
-
-//   /**
-//    * The threshold for blocking responses that could belong to the specified
-//    * safety category based on probability.
-//    */
-//   threshold?: GoogleHarmBlockThreshold;
-
-//   /**
-//    * Specify if the threshold is used for probability or severity score. If not
-//    * specified, the threshold is used for probability score.
-//    */
-//   method?: GoogleHarmBlockMethod;
-// }
-
-// /** Harm categories that block content */
-// export type GoogleHarmCategory =
-//   | "HARM_CATEGORY_UNSPECIFIED"
-//   | "HARM_CATEGORY_HATE_SPEECH"
-//   | "HARM_CATEGORY_DANGEROUS_CONTENT"
-//   | "HARM_CATEGORY_HARASSMENT"
-//   | "HARM_CATEGORY_SEXUALLY_EXPLICIT"
-//   | "HARM_CATEGORY_CIVIC_INTEGRITY";
-
-// /** Probability thresholds levels used to block a response. */
-// export type GoogleHarmBlockThreshold =
-//   | "HARM_BLOCK_THRESHOLD_UNSPECIFIED"
-//   | "BLOCK_LOW_AND_ABOVE"
-//   | "BLOCK_MEDIUM_AND_ABOVE"
-//   | "BLOCK_ONLY_HIGH"
-//   | "BLOCK_NONE"
-//   | "OFF";
-
-// /**
-//  * A probability threshold that blocks a response based on a combination of
-//  * probability and severity.
-//  */
-// export type GoogleHarmBlockMethod =
-//   | "HARM_BLOCK_METHOD_UNSPECIFIED"
-//   | "SEVERITY"
-//   | "PROBABILITY";
-
-// export type GoogleThinkingLevel = "MINIMAL" | "LOW" | "MEDIUM" | "HIGH";
-
-// /** Configuration for the model's thinking process */
-// export interface GoogleThinkingConfig {
-//   /**
-//    * Indicates whether to include thoughts in the response.
-//    * If true, thoughts are returned only when available.
-//    */
-//   includeThoughts?: boolean;
-//   /**
-//    * The maximum number of tokens that can be used for the
-//    * thinking/reasoning stages.
-//    */
-//   thinkingBudget?: number;
-//   /**
-//    * Controls the maximum depth of the model's internal reasoning process
-//    * before it produces a response. If not specified, the default is HIGH.
-//    * Recommended for Gemini 3 or later models.
-//    * Use with earlier models results in an error.
-//    */
-//   thinkingLevel?: GoogleThinkingLevel;
-// }
-
-// /** Modality types for response generation */
-// export type GoogleModality =
-//   | "TEXT"
-//   | "IMAGE"
-//   | "AUDIO"
-//   | "MODALITY_UNSPECIFIED";
-
-// /** Media resolution for input media processing */
-// export type GoogleMediaResolution =
-//   | "MEDIA_RESOLUTION_UNSPECIFIED"
-//   | "MEDIA_RESOLUTION_LOW"
-//   | "MEDIA_RESOLUTION_MEDIUM"
-//   | "MEDIA_RESOLUTION_HIGH";
-
-// /** Configuration for speech generation */
-// export interface GoogleSpeechConfigSingle {
-//   /**
-//    * The configuration for single-voice output.
-//    * Mutually exclusive with multiSpeakerVoiceConfig.
-//    */
-//   voiceConfig?: GoogleVoiceConfig;
-
-//   /**
-//    * Language code (in BCP 47 format, e.g. "en-US") for speech synthesis.
-//    */
-//   languageCode?: string;
-// }
-
-// export interface GoogleSpeechConfigMulti {
-//   /**
-//    * The configuration for multi-speaker setup.
-//    * Mutually exclusive with voiceConfig.
-//    */
-//   multiSpeakerVoiceConfig?: GoogleMultiSpeakerVoiceConfig;
-
-//   /**
-//    * Language code (in BCP 47 format, e.g. "en-US") for speech synthesis.
-//    */
-//   languageCode?: string;
-// }
-
-// export type GoogleSpeechConfig =
-//   | GoogleSpeechConfigSingle
-//   | GoogleSpeechConfigMulti;
-
-// /** Configuration for a voice to use */
-// export interface GoogleVoiceConfig {
-//   /**
-//    * The configuration for the prebuilt voice to use.
-//    */
-//   prebuiltVoiceConfig?: GooglePrebuiltVoiceConfig;
-// }
-
-// export type GooglePrebuiltVoiceName = string;
-
-// /** Configuration for a prebuilt voice */
-// export interface GooglePrebuiltVoiceConfig {
-//   /**
-//    * The name of the preset voice to use.
-//    */
-//   voiceName?: GooglePrebuiltVoiceName;
-// }
-
-// /** Configuration for multi-speaker voice setup */
-// export interface GoogleMultiSpeakerVoiceConfig {
-//   /**
-//    * All the enabled speaker voices.
-//    */
-//   speakerVoiceConfigs: GoogleSpeakerVoiceConfig[];
-// }
-
-// /** Configuration for a single speaker in multi-speaker setup */
-// export interface GoogleSpeakerVoiceConfig {
-//   /**
-//    * The name of the speaker to use. Should be the same as in the prompt.
-//    */
-//   speaker: string;
-
-//   /**
-//    * The configuration for the voice to use.
-//    */
-//   voiceConfig: GoogleVoiceConfig;
-// }
-
-// /**
-//  * A simplified version of the GoogleSpeakerVoiceConfig
-//  */
-// export interface GoogleSpeechSpeakerName {
-//   speaker: string;
-//   name: GooglePrebuiltVoiceName;
-// }
-
-// export type GoogleSpeechVoice =
-//   | GooglePrebuiltVoiceName
-//   | GoogleSpeechSpeakerName
-//   | GoogleSpeechSpeakerName[];
-
-// export interface GoogleSpeechVoiceLanguage {
-//   voice: GoogleSpeechVoice;
-//   languageCode: string;
-// }
-
-// export interface GoogleSpeechVoicesLanguage {
-//   voices: GoogleSpeechVoice;
-//   languageCode: string;
-// }
-
-// /**
-//  * A simplified way to represent the voice (or voices) and language code.
-//  * "voice" and "voices" are semantically the same, we're not enforcing
-//  * that one is an array and one isn't.
-//  */
-// export type GoogleSpeechSimplifiedLanguage =
-//   | GoogleSpeechVoiceLanguage
-//   | GoogleSpeechVoicesLanguage;
-
-// /**
-//  * A simplified way to represent the voices.
-//  * It can either be the voice (or voices), or the voice or voices with language configuration
-//  */
-// export type GoogleSpeechConfigSimplified =
-//   | GoogleSpeechVoice
-//   | GoogleSpeechSimplifiedLanguage;
-
-// /** Configuration for image generation */
-// export interface GoogleImageConfig {
-//   /**
-//    * The aspect ratio of the image to generate.
-//    * Supported aspect ratios: 1:1, 2:3, 3:2, 3:4, 4:3, 9:16, 16:9, 21:9.
-//    */
-//   aspectRatio?: string;
-// }
-
-// // Gemini API Types based on https://ai.google.dev/api/generate-content
-// // TODO(hntrl): automate fetching these from OpenAPI spec
-// // https://generativelanguage.googleapis.com/$discovery/OPENAPI3_0?version=v1beta&key=
-
-// export type GeminiRole = "user" | "model" | "function";
-
-// export interface GeminiPartBase {
-//   thought?: boolean; // Output only
-//   thoughtSignature?: string;
-//   partMetadata?: Record<string, unknown>;
-// }
-
-// export interface GeminiVideoMetadata {
-//   fps?: number; // Double in range (0.0, 24.0]
-//   startOffset?: string;
-//   endOffset?: string;
-// }
-
-// export interface GeminiPartBaseFile extends GeminiPartBase {
-//   videoMetadata?: GeminiVideoMetadata;
-// }
-
-// export interface GeminiPartText extends GeminiPartBase {
-//   text: string;
-// }
-
-// export interface GeminiPartInlineData extends GeminiPartBaseFile {
-//   inlineData: {
-//     mimeType: string;
-//     data: string;
-//   };
-// }
-
-// export interface GeminiPartFileData extends GeminiPartBaseFile {
-//   fileData: {
-//     mimeType: string;
-//     fileUri: string;
-//   };
-// }
-
-// // AI Studio only?
-// export interface GeminiPartFunctionCall extends GeminiPartBase {
-//   functionCall: {
-//     name: string;
-//     args?: Record<string, unknown>;
-//   };
-// }
-
-// // AI Studio Only?
-// export interface GeminiPartFunctionResponse extends GeminiPartBase {
-//   functionResponse: {
-//     name: string;
-//     response: Record<string, unknown>;
-//   };
-// }
-
-// export type GeminiCodeExecutionResultOutcome =
-//   | "OUTCOME_OK"
-//   | "OUTCOME_FAILED"
-//   | "OUTCOME_DEADLINE_EXCEEDED";
-
-// export interface GeminiCodeExecutionResult extends GeminiPartBase {
-//   codeExecutionResult: {
-//     output?: string;
-//     outcome: GeminiCodeExecutionResultOutcome;
-//   };
-// }
-
-// export interface GeminiExecutableCode extends GeminiPartBase {
-//   executableCode: {
-//     code: string;
-//     language: string;
-//   };
-// }
-
-// export type GeminiPart =
-//   | GeminiPartText
-//   | GeminiPartInlineData
-//   | GeminiPartFileData
-//   | GeminiPartFunctionCall
-//   | GeminiPartFunctionResponse
-//   | GeminiCodeExecutionResult
-//   | GeminiExecutableCode;
-
-// export interface GeminiContent {
-//   role: GeminiRole;
-//   parts: GeminiPart[];
-// }
-
-// export interface GeminiSystemInstruction {
-//   parts: GeminiPart[];
-// }
-
-// export interface GeminiGenerationConfig {
-//   stopSequences?: string[];
-//   responseMimeType?: string;
-//   responseSchema?: unknown;
-//   responseJsonSchema?: unknown;
-//   responseModalities?: string[];
-//   candidateCount?: number;
-//   maxOutputTokens?: number;
-//   temperature?: number;
-//   topP?: number;
-//   topK?: number;
-//   seed?: number;
-//   presencePenalty?: number;
-//   frequencyPenalty?: number;
-//   responseLogprobs?: boolean;
-//   logprobs?: number;
-//   enableEnhancedCivicAnswers?: boolean;
-//   thinkingConfig?: GoogleThinkingConfig;
-//   speechConfig?: GoogleSpeechConfig;
-//   imageConfig?: GoogleImageConfig;
-//   mediaResolution?: GoogleMediaResolution;
-// }
-
-// export interface GeminiFunctionDeclaration {
-//   name: string;
-//   description?: string;
-//   parameters?: GeminiFunctionSchema;
-// }
-
-// export interface GeminiFunctionSchema {
-//   type?: string;
-//   properties?: Record<string, GeminiFunctionSchema>;
-//   required?: string[];
-//   items?: GeminiFunctionSchema;
-//   enum?: unknown[];
-//   nullable?: boolean;
-//   [key: string]: unknown;
-// }
-
-// export interface GeminiFunctionDeclarationTool {
-//   functionDeclarations: GeminiFunctionDeclaration[];
-// }
-
-// export interface GeminiCodeExecutionTool {
-//   codeExecution: Record<string, unknown>;
-// }
-
-// export interface GeminiGoogleSearchTool {
-//   // TODO - Implement timeRangeFilter attribute?
-//   googleSearch: Record<string, unknown>;
-// }
-
-// export interface GeminiUrlContextTool {
-//   // No properties defined
-//   urlContext: {};
-// }
-
-// export interface GeminiGoogleMapsTool {
-//   googleMaps: {
-//     enableWidget?: boolean;
-//   };
-// }
-
-// export interface GeminiFileSearchTool {
-//   fileSearch: {
-//     metadataFilter?: string;
-//     topK?: number;
-//     fileSearchStoreNames?: string[];
-//   };
-// }
-
-// export type GeminiComputerUseToolEnvironment =
-//   | "ENVIRONMENT_UNSPECIFIED"
-//   | "ENVIRONMENT_BROWSER";
-
-// export interface GeminiComputerUseTool {
-//   computerUse: {
-//     environment: GeminiComputerUseToolEnvironment;
-//     excludedPredefinedFunctions?: string[];
-//   };
-// }
-
-// // **Important**: Adding tools here should also be added to `isGeminiTool()`
-// export type GeminiTool =
-//   | GeminiFunctionDeclarationTool
-//   | GeminiCodeExecutionTool
-//   | GeminiGoogleSearchTool
-//   | GeminiUrlContextTool
-//   | GeminiGoogleMapsTool
-//   | GeminiFileSearchTool
-//   | GeminiComputerUseTool;
-
-// export type GeminiFunctionCallingConfigMode =
-//   | "AUTO"
-//   | "ANY"
-//   | "NONE"
-//   | "VALIDATED"
-//   | string;
-
-// export interface GeminiFunctionCallingConfig {
-//   allowedFunctionNames?: string[];
-//   mode?: GeminiFunctionCallingConfigMode;
-// }
-
-// export interface GeminiRetrievalConfig {
-//   languageCode?: string;
-//   latLgn?: string;
-// }
-
-// export interface GeminiToolConfig {
-//   functionCallingConfig?: GeminiFunctionCallingConfig;
-//   retrievalConfig?: GeminiRetrievalConfig;
-// }
-
-// export interface GenerateContentRequest {
-//   contents: GeminiContent[];
-//   tools?: GeminiTool[];
-//   toolConfig?: GeminiToolConfig;
-//   safetySettings?: GoogleSafetySetting[];
-//   systemInstruction?: GeminiSystemInstruction;
-//   generationConfig?: GeminiGenerationConfig;
-//   cachedContent?: string;
-// }
-
-// export type GeminiFinishReason =
-//   | "FINISH_REASON_UNSPECIFIED"
-//   | "STOP"
-//   | "MAX_TOKENS"
-//   | "SAFETY"
-//   | "RECITATION"
-//   | "LANGUAGE"
-//   | "OTHER"
-//   | "BLOCKLIST"
-//   | "PROHIBITED_CONTENT"
-//   | "SPII"
-//   | "MALFORMED_FUNCTION_CALL"
-//   | "IMAGE_SAFETY"
-//   | "IMAGE_PROHIBITED_CONTENT"
-//   | "IMAGE_OTHER"
-//   | "NO_IMAGE"
-//   | "IMAGE_RECITATION"
-//   | "UNEXPECTED_TOOL_CALL"
-//   | "TOO_MANY_TOOL_CALLS"
-//   | "MISSING_THOUGHT_SIGNATURE";
-
-// export interface GeminiSafetyRating {
-//   category: GoogleHarmCategory;
-//   probability: string;
-//   blocked?: boolean;
-// }
-
-// export interface GeminiCitationMetadata {
-//   citations: GeminiCitation[];
-// }
-
-// export interface GeminiCitation {
-//   startIndex: number;
-//   endIndex: number;
-//   uri: string;
-//   title: string;
-//   license: string;
-//   publicationDate: GoogleTypeDate;
-// }
-
-// export interface GoogleTypeDate {
-//   year: number; // 1-9999 or 0 to specify a date without a year
-//   month: number; // 1-12 or 0 to specify a year without a month and day
-//   day: number; // Must be from 1 to 31 and valid for the year and month, or 0 to specify a year by itself or a year and month where the day isn't significant
-// }
-
-// export interface GeminiGroundingMetadata {
-//   webSearchQueries?: string[];
-//   searchEntryPoint?: GeminiSearchEntryPoint;
-//   groundingChunks: GeminiGroundingChunk[];
-//   groundingSupports?: GeminiGroundingSupport[];
-//   retrievalMetadata?: GeminiRetrievalMetadata;
-// }
-
-// export interface GeminiSearchEntryPoint {
-//   renderedContent?: string;
-//   sdkBlob?: string; // Base64 encoded JSON representing array of tuple.
-// }
-
-// export interface GeminiGroundingChunk {
-//   web: GeminiGroundingChunkWeb;
-//   retrievedContext: GeminiGroundingChunkRetrievedContext;
-// }
-
-// export interface GeminiGroundingChunkWeb {
-//   uri: string;
-//   title: string;
-// }
-
-// export interface GeminiGroundingChunkRetrievedContext {
-//   uri: string;
-//   title: string;
-//   text: string;
-// }
-
-// export interface GeminiGroundingSupport {
-//   segment: GeminiSegment;
-//   groundingChunkIndices: number[];
-//   confidenceScores: number[];
-// }
-
-// export interface GeminiSegment {
-//   partIndex: number;
-//   startIndex: number;
-//   endIndex: number;
-//   text: string;
-// }
-
-// export interface GeminiRetrievalMetadata {
-//   googleSearchDynamicRetrievalScore: number;
-// }
-
-// export interface GeminiGroundingPassageId {
-//   passageId: string;
-//   partIndex: number;
-// }
-
-// export interface GeminiSemanticRetrieverChunk {
-//   source: string;
-//   chunk: string;
-// }
-
-// export interface GeminiAttributionSourceId {
-//   groundingPassage: GeminiGroundingPassageId;
-//   semanticRetrieverChunk: GeminiSemanticRetrieverChunk;
-// }
-
-// export interface GeminiGroundingAttribution {
-//   sourceId: GeminiAttributionSourceId;
-//   content: GeminiContent;
-// }
-
-// export type GeminiUrlRetrievalStatus =
-//   | "URL_RETRIEVAL_STATUS_SUCCESS"
-//   | "URL_RETRIEVAL_STATUS_ERROR";
-
-// export interface GeminiUrlRetrievalContext {
-//   retrievedUrl: string;
-//   urlRetrievalStatus: GeminiUrlRetrievalStatus;
-// }
-
-// export interface GeminiUrlRetrievalMetadata {
-//   urlRetrievalContexts: GeminiUrlRetrievalContext[];
-// }
-
-// export type GeminiUrlMetadata = GeminiUrlRetrievalContext;
-
-// export interface GeminiUrlContextMetadata {
-//   urlMetadata: GeminiUrlMetadata[];
-// }
-
-// export interface GeminiLogprobsResult {
-//   topCandidates: GeminiLogprobsTopCandidate[];
-//   chosenCandidates: GeminiLogprobsResultCandidate[];
-// }
-
-// export interface GeminiLogprobsTopCandidate {
-//   candidates: GeminiLogprobsResultCandidate[];
-// }
-
-// export interface GeminiLogprobsResultCandidate {
-//   token: string;
-//   tokenId: number;
-//   logProbability: number;
-// }
-
-// export interface GeminiCandidate {
-//   content: GeminiContent;
-//   finishReason?: GeminiFinishReason;
-//   finishMessage?: string;
-//   safetyRatings?: GeminiSafetyRating[];
-//   tokenCount?: number;
-//   index?: number;
-//   citationMetadata?: GeminiCitationMetadata;
-//   groundingMetadata?: GeminiGroundingMetadata;
-//   groundingAttributions?: GeminiGroundingAttribution;
-//   urlRetrievalMetadata?: GeminiUrlRetrievalMetadata;
-//   urlContextMetadata?: GeminiUrlContextMetadata;
-//   avgLogprobs?: number;
-//   logprobsResult: GeminiLogprobsResult;
-// }
-
-// export type GeminiModalityEnum =
-//   | "TEXT"
-//   | "IMAGE"
-//   | "VIDEO"
-//   | "AUDIO"
-//   | "DOCUMENT"
-//   | string;
-
-// export interface GeminiModalityTokenCount {
-//   modality: GeminiModalityEnum;
-//   tokenCount: number;
-// }
-
-// export interface GeminiUsageMetadata {
-//   promptTokenCount?: number;
-//   cachedContentTokenCount?: number;
-//   candidatesTokenCount?: number;
-//   toolUsePromptTokenCount?: number;
-//   thoughtsTokenCount?: number;
-//   totalTokenCount?: number;
-
-//   promptTokensDetails: GeminiModalityTokenCount[];
-//   toolUsePromptTokensDetails: GeminiModalityTokenCount[];
-//   cacheTokensDetails: GeminiModalityTokenCount[];
-//   candidatesTokensDetails: GeminiModalityTokenCount[];
-
-//   [key: string]: unknown;
-// }
-
-// export interface GeminiPromptFeedback {
-//   blockReason?: string;
-//   safetyRatings?: GeminiSafetyRating[];
-// }
-
-// export interface GenerateContentResponse {
-//   candidates?: GeminiCandidate[];
-//   promptFeedback?: GeminiPromptFeedback;
-//   usageMetadata?: GeminiUsageMetadata;
-//   modelVersion?: string;
-//   responseId?: string;
-// }
+/**
+ * Simplified speaker/name pair for multi-speaker config.
+ * - `speaker` derived from SpeakerVoiceConfig["speaker"]
+ * - `name` is the prebuilt voice name
+ */
+export interface SpeechSpeakerName {
+  speaker: GeminiBase.SpeakerVoiceConfig.Speaker;
+  name: GeminiBase.PrebuiltVoiceConfig.VoiceName;
+}
+
+/** A voice can be a prebuilt voice name, a speaker/name pair, or an array of pairs */
+export type SpeechVoice =
+  | GeminiBase.PrebuiltVoiceConfig.VoiceName
+  | SpeechSpeakerName
+  | SpeechSpeakerName[];
+
+/** Voice with language code (derived from SpeechConfig's languageCode) */
+export interface SpeechVoiceLanguage {
+  voice: SpeechVoice;
+  languageCode: GeminiBase.SpeechConfig.LanguageCode;
+}
+
+/** Voices with language code */
+export interface SpeechVoicesLanguage {
+  voices: SpeechVoice;
+  languageCode: GeminiBase.SpeechConfig.LanguageCode;
+}
+
+/** Simplified language config (with voice or voices) */
+export type SimplifiedSpeechLanguageConfig =
+  | SpeechVoiceLanguage
+  | SpeechVoicesLanguage;
+
+/** Top-level simplified config: just a voice, or voice+language */
+export type SimplifiedSpeechConfig =
+  | SpeechVoice
+  | SimplifiedSpeechLanguageConfig;
