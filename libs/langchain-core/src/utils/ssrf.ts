@@ -32,7 +32,8 @@ const LOCALHOST_NAMES = ["localhost", "localhost.localdomain"];
 /**
  * IPv4 regex: four octets 0-255
  */
-const IPV4_REGEX = /^(?:(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)\.){3}(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)$/;
+const IPV4_REGEX =
+  /^(?:(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)\.){3}(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)$/;
 
 /**
  * Check if a string is a valid IPv4 address.
@@ -261,7 +262,6 @@ export function isLocalhost(hostname: string, ip?: string): boolean {
 
   return false;
 }
-
 
 /**
  * Validate that a URL is safe to connect to.

@@ -137,9 +137,9 @@ describe("validateSafeUrl", () => {
   });
 
   test("should reject localhost by default", () => {
-    expect(() =>
-      validateSafeUrl("https://localhost:8000/path")
-    ).toThrow(/localhost/);
+    expect(() => validateSafeUrl("https://localhost:8000/path")).toThrow(
+      /localhost/
+    );
   });
 
   test("should allow localhost with allowPrivate flag", () => {
@@ -177,9 +177,7 @@ describe("validateSafeUrl", () => {
 
   test("should reject cloud metadata endpoints", () => {
     // Direct metadata hostnames
-    expect(() => validateSafeUrl("https://metadata")).toThrow(
-      /metadata/
-    );
+    expect(() => validateSafeUrl("https://metadata")).toThrow(/metadata/);
 
     expect(() => validateSafeUrl("https://instance-data")).toThrow(
       /instance-data/
@@ -204,9 +202,7 @@ describe("validateSafeUrl", () => {
   });
 
   test("should handle 127.0.0.1 as localhost", () => {
-    expect(() => validateSafeUrl("https://127.0.0.1")).toThrow(
-      /localhost/i
-    );
+    expect(() => validateSafeUrl("https://127.0.0.1")).toThrow(/localhost/i);
 
     const result = validateSafeUrl("https://127.0.0.1", {
       allowPrivate: true,
