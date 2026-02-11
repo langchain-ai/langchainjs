@@ -1,5 +1,13 @@
 # @langchain/openai
 
+## 1.2.7
+
+### Patch Changes
+
+- [#9954](https://github.com/langchain-ai/langchainjs/pull/9954) [`6939dab`](https://github.com/langchain-ai/langchainjs/commit/6939dabc8dc6481942e7e2c19e3dc61bc374d65a) Thanks [@akintunero](https://github.com/akintunero)! - fix(openai): store response.output in response_metadata for reasoning model round-trips
+
+- [#9898](https://github.com/langchain-ai/langchainjs/pull/9898) [`ad581c7`](https://github.com/langchain-ai/langchainjs/commit/ad581c76138ea12ebdaee444c0dcdc4f6a280624) Thanks [@Muhammad-Kamran-Khan](https://github.com/Muhammad-Kamran-Khan)! - fix(openai): pass service_tier to API when using Responses API
+
 ## 1.2.6
 
 ### Patch Changes

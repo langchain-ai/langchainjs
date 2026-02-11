@@ -1,5 +1,18 @@
 # @langchain/community
 
+## 1.1.14
+
+### Patch Changes
+
+- [#9990](https://github.com/langchain-ai/langchainjs/pull/9990) [`d5e3db0`](https://github.com/langchain-ai/langchainjs/commit/d5e3db0d01ab321ec70a875805b2f74aefdadf9d) Thanks [@hntrl](https://github.com/hntrl)! - feat(core): Add SSRF protection module (`@langchain/core/utils/ssrf`) with utilities for validating URLs against private IPs, cloud metadata endpoints, and localhost.
+
+  fix(community): Harden `RecursiveUrlLoader` against SSRF attacks by integrating `validateSafeUrl` and replacing string-based URL comparison with origin-based `isSameOrigin` from the shared SSRF module.
+
+- Updated dependencies [[`d5e3db0`](https://github.com/langchain-ai/langchainjs/commit/d5e3db0d01ab321ec70a875805b2f74aefdadf9d), [`6939dab`](https://github.com/langchain-ai/langchainjs/commit/6939dabc8dc6481942e7e2c19e3dc61bc374d65a), [`ad581c7`](https://github.com/langchain-ai/langchainjs/commit/ad581c76138ea12ebdaee444c0dcdc4f6a280624)]:
+  - @langchain/core@1.1.21
+  - @langchain/openai@1.2.7
+  - @langchain/classic@1.0.17
+
 ## 1.1.13
 
 ### Patch Changes
