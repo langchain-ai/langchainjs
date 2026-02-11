@@ -18,7 +18,8 @@ class AgentRuntime {}
 
 type NodeOutput<TStateSchema extends Record<string, any>> =
   | TStateSchema
-  | Command<any, TStateSchema, string>;
+  | Command<any, TStateSchema, string>
+  | { jumpTo?: JumpToTarget };
 
 export interface MiddlewareNodeOptions {
   getState: () => Record<string, unknown>;
@@ -119,10 +120,12 @@ export abstract class MiddlewareNode<
     );
 
     /**
-     * If result is undefined, return current state
+     * If result is undefined, the hook made no state changes — return
+     * only the jumpTo sentinel so we don't re-emit every input key as
+     * a state update.
      */
     if (!result) {
-      return { ...state, jumpTo: undefined };
+      return { jumpTo: undefined };
     }
 
     /**
