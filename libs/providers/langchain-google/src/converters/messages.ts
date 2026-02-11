@@ -40,12 +40,10 @@ export const geminiContentBlockConverter: StandardContentBlockConverter<{
   providerName: "ChatGoogle",
 
   fromStandardTextBlock(block: Data.StandardTextBlock): Gemini.Part {
-    console.log("fromStandardTextBlock", block);
     return { text: block.text };
   },
 
   fromStandardImageBlock(block: Data.StandardImageBlock): Gemini.Part {
-    console.log("fromStandardImageBlock", block);
     if (isDataContentBlock(block)) {
       if (block.source_type === "base64") {
         if (!block.mime_type) {
