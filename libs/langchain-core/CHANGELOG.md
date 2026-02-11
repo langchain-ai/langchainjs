@@ -1,5 +1,11 @@
 # @langchain/core
 
+## 1.1.22
+
+### Patch Changes
+
+- [#9995](https://github.com/langchain-ai/langchainjs/pull/9995) [`8f166b1`](https://github.com/langchain-ai/langchainjs/commit/8f166b159343ae6fd0d6d44c0835ab56c0b153f4) Thanks [@kaigritun](https://github.com/kaigritun)! - fix(core): skip empty text blocks in ChatOpenAI contentBlocks
+
 ## 1.1.21
 
 ### Patch Changes
