@@ -148,7 +148,7 @@
     "eslint": "^9.34.0",
     "prettier": "^3.5.0",
     "reflect-metadata": "^0.2.2",
-    "tsx": "^3.12.3",
+    "tsx": "^4.21.0",
     "typeorm": "^0.3.28",
     "typescript": "~5.8.3",
     "zod": "^3.25.76"

@@ -71,7 +71,7 @@
     "dotenv": "^16.6.1",
     "dpdm": "^3.14.0",
     "eslint": "^9.36.0",
-    "eventsource": "^3.0.7",
+    "eventsource": "^4.1.0",
     "express": "^5.2.1",
     "langchain": "workspace:*",
     "npm-run-all2": "^8.0.4",

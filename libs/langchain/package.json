@@ -69,7 +69,7 @@
     "prettier": "^3.5.0",
     "reflect-metadata": "^0.2.2",
     "rimraf": "^5.0.1",
-    "tinybench": "^5.1.0",
+    "tinybench": "^6.0.0",
     "typeorm": "^0.3.28",
     "typescript": "~5.8.3",
     "vitest": "^3.2.4",

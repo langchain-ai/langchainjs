@@ -1,20 +1,18 @@
 import { z } from "zod/v3";
 
 import { describe, it, expect, beforeAll, afterAll } from "vitest";
-import { Bench, type TaskResult } from "tinybench";
+import { Bench, type TaskResultCompleted } from "tinybench";
 import { AIMessage, HumanMessage } from "@langchain/core/messages";
 import { tool } from "@langchain/core/tools";
 
 import { FakeToolCallingChatModel } from "./utils.js";
 import { createAgent, createMiddleware } from "../index.js";
 
-const bench = new Bench();
-bench.concurrency = "bench";
-bench.threshold = 2;
+const bench = new Bench({ concurrency: "bench", threshold: 2 });
 
 type Benchmarks = Record<
   string,
-  [() => Promise<void>, (result: TaskResult) => void]
+  [() => Promise<void>, (result: TaskResultCompleted) => void]
 >;
 
 // Helper function to create multiple tools
@@ -63,7 +61,7 @@ const benchmarks: Benchmarks = {
         messages: [new HumanMessage("Hello, world!")],
       });
     },
-    (result: TaskResult) => {
+    (result: TaskResultCompleted) => {
       expect(result.latency.mean).toBeLessThanOrEqual(60);
     },
   ],
@@ -85,7 +83,7 @@ const benchmarks: Benchmarks = {
         messages: [new HumanMessage("Use tool_0")],
       });
     },
-    (result: TaskResult) => {
+    (result: TaskResultCompleted) => {
       expect(result.latency.mean).toBeLessThanOrEqual(60);
     },
   ],
@@ -107,7 +105,7 @@ const benchmarks: Benchmarks = {
         messages: [new HumanMessage("Use tool_0")],
       });
     },
-    (result: TaskResult) => {
+    (result: TaskResultCompleted) => {
       expect(result.latency.mean).toBeLessThanOrEqual(60);
     },
   ],
@@ -129,7 +127,7 @@ const benchmarks: Benchmarks = {
         messages,
       });
     },
-    (result: TaskResult) => {
+    (result: TaskResultCompleted) => {
       expect(result.latency.mean).toBeLessThanOrEqual(60);
     },
   ],
@@ -158,7 +156,7 @@ const benchmarks: Benchmarks = {
         messages: [new HumanMessage("Hello")],
       });
     },
-    (result: TaskResult) => {
+    (result: TaskResultCompleted) => {
       expect(result.latency.mean).toBeLessThanOrEqual(60);
     },
   ],
@@ -196,7 +194,7 @@ const benchmarks: Benchmarks = {
         messages: [new HumanMessage("Hello")],
       });
     },
-    (result: TaskResult) => {
+    (result: TaskResultCompleted) => {
       expect(result.latency.mean).toBeLessThanOrEqual(65);
     },
   ],
@@ -251,7 +249,7 @@ const benchmarks: Benchmarks = {
         }
       );
     },
-    (result: TaskResult) => {
+    (result: TaskResultCompleted) => {
       expect(result.latency.mean).toBeLessThanOrEqual(80);
     },
   ],
@@ -280,7 +278,7 @@ const benchmarks: Benchmarks = {
         messages: [new HumanMessage("Hello")],
       });
     },
-    (result: TaskResult) => {
+    (result: TaskResultCompleted) => {
       expect(result.latency.mean).toBeLessThanOrEqual(80);
     },
   ],
@@ -330,7 +328,7 @@ const benchmarks: Benchmarks = {
         messages: [new HumanMessage("Use test_tool")],
       });
     },
-    (result: TaskResult) => {
+    (result: TaskResultCompleted) => {
       expect(result.latency.mean).toBeLessThanOrEqual(120);
     },
   ],
@@ -357,7 +355,7 @@ const benchmarks: Benchmarks = {
         messages: [new HumanMessage("Extract: John, 30")],
       });
     },
-    (result: TaskResult) => {
+    (result: TaskResultCompleted) => {
       expect(result.latency.mean).toBeLessThanOrEqual(60);
     },
   ],
@@ -397,7 +395,7 @@ const benchmarks: Benchmarks = {
         },
       });
     },
-    (result: TaskResult) => {
+    (result: TaskResultCompleted) => {
       expect(result.latency.mean).toBeLessThanOrEqual(60);
     },
   ],
@@ -428,7 +426,7 @@ const benchmarks: Benchmarks = {
         messages: [new HumanMessage("Use tool_0")],
       });
     },
-    (result: TaskResult) => {
+    (result: TaskResultCompleted) => {
       expect(result.latency.mean).toBeLessThanOrEqual(80);
     },
   ],
@@ -469,7 +467,7 @@ const benchmarks: Benchmarks = {
         }
       );
     },
-    (result: TaskResult) => {
+    (result: TaskResultCompleted) => {
       expect(result.latency.mean).toBeLessThanOrEqual(80);
     },
   ],
@@ -499,7 +497,7 @@ const benchmarks: Benchmarks = {
         messages,
       });
     },
-    (result: TaskResult) => {
+    (result: TaskResultCompleted) => {
       expect(result.latency.mean).toBeLessThanOrEqual(60);
     },
   ],
@@ -546,7 +544,7 @@ const benchmarks: Benchmarks = {
         messages: [new HumanMessage("Use middleware_tool")],
       });
     },
-    (result: TaskResult) => {
+    (result: TaskResultCompleted) => {
       expect(result.latency.mean).toBeLessThanOrEqual(120);
     },
   ],
@@ -562,7 +560,8 @@ describe("createAgent benchmarks", () => {
   for (const [name, [, resultFn]] of Object.entries(benchmarks)) {
     it(name, () => {
       const result = bench.tasks.find((t) => t.name === name)!.result;
-      if (!result) throw new Error(`Result for ${name} is undefined`);
+      if (!result || result.state !== "completed")
+        throw new Error(`Result for ${name} is not completed`);
       resultFn(result);
     });
   }
@@ -574,10 +573,12 @@ describe("createAgent benchmarks", () => {
 
     // Sort tasks by mean latency
     const sortedTasks = [...bench.tasks]
-      .filter((task) => task.result)
-      .sort(
-        (a, b) => (a.result!.latency.mean || 0) - (b.result!.latency.mean || 0)
-      );
+      .filter((task) => task.result?.state === "completed")
+      .sort((a, b) => {
+        const aResult = a.result as unknown as TaskResultCompleted;
+        const bResult = b.result as unknown as TaskResultCompleted;
+        return aResult.latency.mean - bResult.latency.mean;
+      });
 
     // Calculate column widths
     const nameWidth = Math.max(
@@ -606,14 +607,14 @@ describe("createAgent benchmarks", () => {
 
     // Print results
     for (const task of sortedTasks) {
-      const result = task.result!;
+      const result = task.result as unknown as TaskResultCompleted;
       const latency = result.latency;
       const mean = latency.mean.toFixed(2);
       const min = latency.min.toFixed(2);
       const max = latency.max.toFixed(2);
       const sd = latency.sd.toFixed(2);
       const p99 = latency.p99?.toFixed(2) ?? "N/A";
-      const samples = latency.samples.length.toString();
+      const samples = latency.samplesCount.toString();
 
       console.log(
         `${task.name.padEnd(nameWidth)} │ ${mean.padStart(
@@ -630,7 +631,7 @@ describe("createAgent benchmarks", () => {
     console.log("📈 Detailed Statistics\n");
 
     for (const task of sortedTasks) {
-      const result = task.result!;
+      const result = task.result as unknown as TaskResultCompleted;
       const latency = result.latency;
 
       console.log(`\n${task.name}:`);
@@ -645,10 +646,7 @@ describe("createAgent benchmarks", () => {
       console.log(
         `  MOE:      ${latency.moe.toFixed(4)} ms (±${latency.rme.toFixed(2)}%)`
       );
-      console.log(`  Samples:  ${latency.samples.length}`);
-      if (result.error) {
-        console.log(`  ⚠️  Error: ${result.error.message}`);
-      }
+      console.log(`  Samples:  ${latency.samplesCount}`);
     }
 
     console.log(`\n${"=".repeat(100)}\n`);
