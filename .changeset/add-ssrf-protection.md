@@ -1,5 +1,5 @@
 ---
-"@langchain/core": minor
+"@langchain/core": patch
 "@langchain/community": patch
 ---
 
