@@ -6,6 +6,11 @@ import { load } from "@langchain/core/load";
 import { tool } from "@langchain/core/tools";
 import { ChatOpenAI } from "../index.js";
 import { _convertOpenAIResponsesUsageToLangChainUsage } from "../../utils/output.js";
+import {
+  isReasoningModel,
+  _modelPrefersResponsesAPI,
+} from "../../utils/misc.js";
+import { NewTokenIndices } from "@langchain/core/callbacks/base";
 
 describe("ChatOpenAI", () => {
   describe("should initialize with correct values", () => {
@@ -579,6 +584,88 @@ describe("ChatOpenAI", () => {
     });
   });
 
+  describe("isReasoningModel", () => {
+    it("should return true for o-series models", () => {
+      expect(isReasoningModel("o1")).toBe(true);
+      expect(isReasoningModel("o1-mini")).toBe(true);
+      expect(isReasoningModel("o1-preview")).toBe(true);
+      expect(isReasoningModel("o3")).toBe(true);
+      expect(isReasoningModel("o3-mini")).toBe(true);
+      expect(isReasoningModel("o3-pro")).toBe(true);
+      expect(isReasoningModel("o4-mini")).toBe(true);
+    });
+
+    it("should return true for gpt-5 family models", () => {
+      expect(isReasoningModel("gpt-5")).toBe(true);
+      expect(isReasoningModel("gpt-5-mini")).toBe(true);
+      expect(isReasoningModel("gpt-5-nano")).toBe(true);
+      expect(isReasoningModel("gpt-5-pro")).toBe(true);
+      expect(isReasoningModel("gpt-5.1")).toBe(true);
+      expect(isReasoningModel("gpt-5.1-mini")).toBe(true);
+      expect(isReasoningModel("gpt-5.2")).toBe(true);
+      expect(isReasoningModel("gpt-5.2-pro")).toBe(true);
+    });
+
+    it("should return true for codex models based on gpt-5", () => {
+      expect(isReasoningModel("gpt-5-codex")).toBe(true);
+      expect(isReasoningModel("gpt-5.1-codex")).toBe(true);
+      expect(isReasoningModel("gpt-5.1-codex-max")).toBe(true);
+      expect(isReasoningModel("gpt-5.2-codex")).toBe(true);
+      expect(isReasoningModel("gpt-5.2-codex-max")).toBe(true);
+      expect(isReasoningModel("gpt-5.3-codex")).toBe(true);
+    });
+
+    it("should return false for gpt-5-chat models", () => {
+      expect(isReasoningModel("gpt-5-chat-latest")).toBe(false);
+    });
+
+    it("should return false for non-reasoning models", () => {
+      expect(isReasoningModel("gpt-4o")).toBe(false);
+      expect(isReasoningModel("gpt-4o-mini")).toBe(false);
+      expect(isReasoningModel("gpt-4.1")).toBe(false);
+      expect(isReasoningModel("gpt-4.1-mini")).toBe(false);
+      expect(isReasoningModel("gpt-3.5-turbo")).toBe(false);
+    });
+
+    it("should return false for codex-mini-latest", () => {
+      // codex-mini-latest doesn't start with gpt-5 or o-series
+      expect(isReasoningModel("codex-mini-latest")).toBe(false);
+    });
+
+    it("should return false for undefined/empty", () => {
+      expect(isReasoningModel(undefined)).toBe(false);
+      expect(isReasoningModel("")).toBe(false);
+    });
+  });
+
+  describe("_modelPrefersResponsesAPI", () => {
+    it("should return true for gpt-5.2-pro", () => {
+      expect(_modelPrefersResponsesAPI("gpt-5.2-pro")).toBe(true);
+      expect(_modelPrefersResponsesAPI("gpt-5.2-pro-2025-12-11")).toBe(true);
+    });
+
+    it("should return true for codex models", () => {
+      expect(_modelPrefersResponsesAPI("codex-mini-latest")).toBe(true);
+      expect(_modelPrefersResponsesAPI("gpt-5-codex")).toBe(true);
+      expect(_modelPrefersResponsesAPI("gpt-5.1-codex")).toBe(true);
+      expect(_modelPrefersResponsesAPI("gpt-5.1-codex-max")).toBe(true);
+      expect(_modelPrefersResponsesAPI("gpt-5.2-codex")).toBe(true);
+      expect(_modelPrefersResponsesAPI("gpt-5.2-codex-max")).toBe(true);
+      expect(_modelPrefersResponsesAPI("gpt-5.3-codex")).toBe(true);
+    });
+
+    it("should return false for standard chat models", () => {
+      expect(_modelPrefersResponsesAPI("gpt-4o")).toBe(false);
+      expect(_modelPrefersResponsesAPI("gpt-4o-mini")).toBe(false);
+      expect(_modelPrefersResponsesAPI("gpt-4.1")).toBe(false);
+      expect(_modelPrefersResponsesAPI("gpt-5")).toBe(false);
+      expect(_modelPrefersResponsesAPI("gpt-5.1")).toBe(false);
+      expect(_modelPrefersResponsesAPI("gpt-5.2")).toBe(false);
+      expect(_modelPrefersResponsesAPI("o3")).toBe(false);
+      expect(_modelPrefersResponsesAPI("o4-mini")).toBe(false);
+    });
+  });
+
   describe("Responses API usage metadata conversion", () => {
     it("should convert OpenAI Responses usage to LangChain format with cached tokens", () => {
       const usage = {
@@ -990,6 +1077,373 @@ describe("ChatOpenAI", () => {
       });
 
       await expect(model.moderateContent("Test content")).rejects.toThrow();
+    });
+  });
+
+  describe("reasoningEffort call option", () => {
+    it("should coalesce reasoningEffort into reasoning.effort via withConfig", async () => {
+      const mockFetch = vi.fn<(url: any, options?: any) => Promise<any>>();
+      mockFetch.mockImplementation((url, options) => {
+        mockFetch.mock.calls.push([url, options]);
+        return Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve({}),
+        });
+      });
+
+      const model = new ChatOpenAI({
+        model: "o3-mini",
+        apiKey: "test-key",
+        configuration: {
+          fetch: mockFetch,
+        },
+        maxRetries: 0,
+      });
+
+      const modelWithReasoningEffort = model.withConfig({
+        reasoningEffort: "high",
+      });
+
+      // This will fail since we're not returning a valid response
+      await expect(
+        modelWithReasoningEffort.invoke("Solve this complex problem")
+      ).rejects.toThrow();
+
+      expect(mockFetch).toHaveBeenCalled();
+      const [_url, options] = mockFetch.mock.calls[0];
+
+      if (options && options.body) {
+        const body = JSON.parse(options.body);
+        // For completions API, reasoning_effort should be extracted from reasoning
+        expect(body.reasoning_effort).toBe("high");
+      } else {
+        throw new Error("Body not found in request.");
+      }
+    });
+
+    it("should allow reasoning.effort to take precedence over reasoningEffort", async () => {
+      const mockFetch = vi.fn<(url: any, options?: any) => Promise<any>>();
+      mockFetch.mockImplementation((url, options) => {
+        mockFetch.mock.calls.push([url, options]);
+        return Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve({}),
+        });
+      });
+
+      const model = new ChatOpenAI({
+        model: "o3-mini",
+        apiKey: "test-key",
+        configuration: {
+          fetch: mockFetch,
+        },
+        maxRetries: 0,
+      });
+
+      // reasoning.effort should take precedence over reasoningEffort
+      const modelWithBothOptions = model.withConfig({
+        reasoningEffort: "low",
+        reasoning: { effort: "high" },
+      });
+
+      await expect(
+        modelWithBothOptions.invoke("Test message")
+      ).rejects.toThrow();
+
+      expect(mockFetch).toHaveBeenCalled();
+      const [_url, options] = mockFetch.mock.calls[0];
+
+      if (options && options.body) {
+        const body = JSON.parse(options.body);
+        // reasoning.effort should take precedence
+        expect(body.reasoning_effort).toBe("high");
+      } else {
+        throw new Error("Body not found in request.");
+      }
+    });
+
+    it("should not apply reasoningEffort for non-reasoning models", async () => {
+      const mockFetch = vi.fn<(url: any, options?: any) => Promise<any>>();
+      mockFetch.mockImplementation((url, options) => {
+        mockFetch.mock.calls.push([url, options]);
+        return Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve({}),
+        });
+      });
+
+      const model = new ChatOpenAI({
+        model: "gpt-4o-mini", // Non-reasoning model
+        apiKey: "test-key",
+        configuration: {
+          fetch: mockFetch,
+        },
+        maxRetries: 0,
+      });
+
+      const modelWithReasoningEffort = model.withConfig({
+        reasoningEffort: "high",
+      });
+
+      await expect(
+        modelWithReasoningEffort.invoke("Test message")
+      ).rejects.toThrow();
+
+      expect(mockFetch).toHaveBeenCalled();
+      const [_url, options] = mockFetch.mock.calls[0];
+
+      if (options && options.body) {
+        const body = JSON.parse(options.body);
+        // Non-reasoning models should not have reasoning_effort
+        expect(body.reasoning_effort).toBeUndefined();
+      } else {
+        throw new Error("Body not found in request.");
+      }
+    });
+  });
+
+  describe("generate", () => {
+    test("should pass run manager to responsesAPI", async () => {
+      const mockResponseDefaults = {
+        object: "response",
+        background: false,
+        created_at: Math.floor(Date.now() / 1000),
+        completed_at: null,
+        error: null,
+        frequency_penalty: 0.0,
+        incomplete_details: null,
+        instructions: null,
+        max_output_tokens: null,
+        max_tool_calls: null,
+        output: [],
+        parallel_tool_calls: true,
+        presence_penalty: 0.0,
+        previous_response_id: null,
+        prompt_cache_key: null,
+        prompt_cache_retention: null,
+        reasoning: { effort: null, summary: null },
+        safety_identifier: null,
+        service_tier: "auto",
+        store: true,
+        temperature: 1.0,
+        text: { format: { type: "text" }, verbosity: "medium" },
+        tool_choice: "auto",
+        tools: [],
+        top_logprobs: 0,
+        top_p: 1.0,
+        truncation: "disabled",
+        usage: null,
+        user: null,
+        metadata: {},
+      };
+      const mockGenerationResponse = [
+        {
+          type: "response.created",
+          response: {
+            ...mockResponseDefaults,
+            id: "resp_0",
+            status: "in_progress",
+          },
+          sequence_number: 0,
+        },
+        {
+          type: "response.in_progress",
+          response: {
+            ...mockResponseDefaults,
+            id: "resp_0",
+            status: "in_progress",
+          },
+          sequence_number: 1,
+        },
+        {
+          type: "response.output_item.added",
+          item: {
+            id: "msg_0",
+            type: "message",
+            status: "in_progress",
+            content: [],
+            role: "assistant",
+          },
+          output_index: 0,
+          sequence_number: 2,
+        },
+        {
+          type: "response.content_part.added",
+          content_index: 0,
+          item_id: "msg_0",
+          output_index: 0,
+          part: {
+            type: "output_text",
+            annotations: [],
+            logprobs: [],
+            text: "",
+          },
+          sequence_number: 3,
+        },
+        {
+          type: "response.output_text.delta",
+          content_index: 0,
+          delta: "Foo",
+          item_id: "msg_0",
+          logprobs: [],
+          obfuscation: "hSUmUFWGq",
+          output_index: 0,
+          sequence_number: 4,
+        },
+        {
+          type: "response.output_text.delta",
+          content_index: 0,
+          delta: " bar",
+          item_id: "msg_0",
+          logprobs: [],
+          obfuscation: "1xY1pY4JXGO",
+          output_index: 0,
+          sequence_number: 5,
+        },
+        {
+          type: "response.output_text.done",
+          content_index: 0,
+          item_id: "msg_0",
+          logprobs: [],
+          output_index: 0,
+          sequence_number: 39,
+          text: "Foo bar",
+        },
+        {
+          type: "response.content_part.done",
+          content_index: 0,
+          item_id: "msg_0",
+          output_index: 0,
+          part: {
+            type: "output_text",
+            annotations: [],
+            logprobs: [],
+            text: "Foo bar",
+          },
+          sequence_number: 40,
+        },
+        {
+          type: "response.output_item.done",
+          item: {
+            id: "msg_0",
+            type: "message",
+            status: "completed",
+            content: [
+              {
+                type: "output_text",
+                annotations: [],
+                logprobs: [],
+                text: "Foo bar",
+              },
+            ],
+            role: "assistant",
+          },
+          output_index: 0,
+          sequence_number: 41,
+        },
+        {
+          type: "response.completed",
+          response: {
+            ...mockResponseDefaults,
+            id: "resp_0",
+            status: "completed",
+            completed_at: Math.round(Date.now() / 1000),
+            output: [
+              {
+                id: "msg_0",
+                type: "message",
+                status: "completed",
+                content: [
+                  {
+                    type: "output_text",
+                    annotations: [],
+                    logprobs: [],
+                    text: "Foo bar",
+                  },
+                ],
+                role: "assistant",
+              },
+            ],
+            parallel_tool_calls: true,
+            presence_penalty: 0.0,
+            previous_response_id: null,
+            prompt_cache_key: null,
+            prompt_cache_retention: null,
+            reasoning: { effort: null, summary: null },
+            safety_identifier: null,
+            service_tier: "default",
+            store: true,
+            temperature: 1.0,
+            text: { format: { type: "text" }, verbosity: "medium" },
+            tool_choice: "auto",
+            tools: [],
+            top_logprobs: 0,
+            top_p: 1.0,
+            truncation: "disabled",
+            usage: {
+              input_tokens: 17,
+              input_tokens_details: { cached_tokens: 0 },
+              output_tokens: 36,
+              output_tokens_details: { reasoning_tokens: 0 },
+              total_tokens: 53,
+            },
+            user: null,
+            metadata: {},
+          },
+          sequence_number: 42,
+        },
+      ]
+        .map((e) => `event: ${e.type}\ndata: ${JSON.stringify(e)}\n`)
+        .join("\n");
+      const mockFetch =
+        vi.fn<(url: string | URL | Request, options?: any) => Promise<any>>();
+      mockFetch.mockImplementation((urlOrRequest, _options) => {
+        if (typeof urlOrRequest === "string") {
+          expect(urlOrRequest.endsWith("/responses")).toBeTruthy();
+        } else if ("pathname" in urlOrRequest && urlOrRequest.pathname) {
+          expect(urlOrRequest.pathname.endsWith("/responses")).toBeTruthy();
+        } else if ("url" in urlOrRequest) {
+          expect(urlOrRequest.url.endsWith("/responses")).toBeTruthy();
+        }
+        return Promise.resolve(
+          new Response(`${mockGenerationResponse}\n`, {
+            status: 200,
+            headers: {
+              "Content-Type": "text/event-stream",
+            },
+          })
+        );
+      });
+
+      const model = new ChatOpenAI({
+        model: "gpt-4.1",
+        apiKey: "test-key",
+        useResponsesApi: true,
+        streaming: true,
+        configuration: {
+          fetch: mockFetch,
+        },
+      });
+
+      const callbackHandler = {
+        handleLLMNewToken:
+          vi.fn<
+            (
+              token: string,
+              idx: NewTokenIndices,
+              runId: string,
+              parentRunId: string,
+              tags?: string[]
+            ) => Promise<void> | void
+          >(),
+      };
+
+      const result = await model.invoke("test", {
+        callbacks: [callbackHandler],
+      });
+
+      expect(callbackHandler.handleLLMNewToken).toHaveBeenCalled();
+      expect(result.text).toEqual("Foo bar");
     });
   });
 });

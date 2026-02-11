@@ -6,6 +6,7 @@ import {
   AIMessageChunk,
   ContentBlock,
   HumanMessage,
+  SystemMessage,
   ToolCallChunk,
   ToolMessage,
 } from "@langchain/core/messages";
@@ -226,6 +227,64 @@ describe("convertResponsesMessageToAIMessage", () => {
       (block) => block.type === "reasoning"
     );
     expect(reasoningBlocks.length).toBe(0);
+  });
+
+  it("should store output in response_metadata", () => {
+    const output = [
+      {
+        type: "reasoning",
+        id: "rs_abc123",
+        summary: [{ type: "summary_text", text: "Thinking..." }],
+      },
+      {
+        type: "function_call",
+        id: "fc_xyz789",
+        call_id: "call_123",
+        name: "get_weather",
+        arguments: '{"city":"NYC"}',
+      },
+    ];
+    const response = {
+      id: "resp_123",
+      model: "o3-mini",
+      created_at: 1234567890,
+      object: "response",
+      status: "completed",
+      output,
+      usage: { input_tokens: 10, output_tokens: 20, total_tokens: 30 },
+    };
+
+    const result = convertResponsesMessageToAIMessage(response as any);
+
+    expect(result.response_metadata.output).toEqual(output);
+  });
+
+  it("should strip parsed_arguments from function_call items in stored output", () => {
+    const response = {
+      id: "resp_123",
+      model: "o3-mini",
+      created_at: 1234567890,
+      object: "response",
+      status: "completed",
+      output: [
+        {
+          type: "function_call",
+          id: "fc_xyz789",
+          call_id: "call_123",
+          name: "get_weather",
+          arguments: '{"city":"NYC"}',
+          parsed_arguments: { city: "NYC" },
+        },
+      ],
+      usage: { input_tokens: 10, output_tokens: 20, total_tokens: 30 },
+    };
+
+    const result = convertResponsesMessageToAIMessage(response as any);
+
+    const storedOutput = result.response_metadata.output as any[];
+    expect(storedOutput).toHaveLength(1);
+    expect(storedOutput[0].name).toBe("get_weather");
+    expect(storedOutput[0]).not.toHaveProperty("parsed_arguments");
   });
 });
 
@@ -691,6 +750,71 @@ describe("convertStandardContentMessageToResponsesInput", () => {
 });
 
 describe("convertMessagesToResponsesInput", () => {
+  describe("Regression Tests", () => {
+    it("allows file_url without filename metadata and excludes filename from payload", () => {
+      const messages = [
+        new SystemMessage({
+          content:
+            "You are a helpful assistant that answers questions about the world.",
+        }),
+        new HumanMessage({
+          contentBlocks: [
+            { type: "text", text: "summary of this document" },
+            {
+              type: "file",
+              url: "https://www.appropedia.org/w/images/c/ca/Writing_Sample.pdf",
+              mimeType: "application/pdf",
+            },
+            {
+              type: "text",
+              text: 'The user cannot see this text only you can, they have uploaded a file.\n<file id="cmh43owcq0001rag7ce3flj36" filename="Writing_Sample.pdf" mimeType="application/pdf" size="47104 bytes" url="https://www.appropedia.org/w/images/c/ca/Writing_Sample.pdf" />',
+            },
+          ],
+        }),
+      ];
+
+      const result = convertMessagesToResponsesInput({
+        messages,
+        model: "gpt-5.2",
+        zdrEnabled: true,
+      });
+
+      expect(result).toMatchObject([
+        {
+          type: "message",
+          role: "developer",
+          content:
+            "You are a helpful assistant that answers questions about the world.",
+        },
+        {
+          type: "message",
+          role: "user",
+          content: [
+            { type: "input_text", text: "summary of this document" },
+            {
+              type: "input_file",
+              file_url:
+                "https://www.appropedia.org/w/images/c/ca/Writing_Sample.pdf",
+            },
+            {
+              type: "input_text",
+              text: expect.stringContaining("The user cannot see this text"),
+            },
+          ],
+        },
+      ]);
+
+      const userMessageContent = (result[1] as any).content;
+      const fileBlock = userMessageContent[1];
+
+      expect(fileBlock.type).toBe("input_file");
+      expect(fileBlock.file_url).toBe(
+        "https://www.appropedia.org/w/images/c/ca/Writing_Sample.pdf"
+      );
+      expect(fileBlock.filename).toBeUndefined();
+    });
+  });
+
   describe("ToolMessage conversion", () => {
     it("passes through provider-native input_file content without stringification", () => {
       const toolMessage = new ToolMessage({
@@ -881,6 +1005,108 @@ describe("convertMessagesToResponsesInput", () => {
       ]);
     });
   });
+
+  describe("assistant reasoning conversion", () => {
+    it("includes reasoning items in ZDR mode when encrypted content is present", () => {
+      const message = new AIMessage({
+        content: [],
+        additional_kwargs: {
+          reasoning: {
+            id: "reasoning_123",
+            type: "reasoning",
+            summary: [{ type: "summary_text", text: "Encrypted summary" }],
+            encrypted_content: "encrypted_payload",
+          },
+        },
+      });
+
+      const result = convertMessagesToResponsesInput({
+        messages: [message],
+        zdrEnabled: true,
+        model: "gpt-4o",
+      });
+
+      expect(result).toEqual([
+        {
+          id: "reasoning_123",
+          type: "reasoning",
+          summary: [{ type: "summary_text", text: "Encrypted summary" }],
+          encrypted_content: "encrypted_payload",
+        },
+      ]);
+    });
+
+    it("uses fast path when response_metadata.output is available", () => {
+      const output = [
+        {
+          type: "reasoning",
+          id: "rs_abc123",
+          summary: [{ type: "summary_text", text: "Thinking..." }],
+        },
+        {
+          type: "function_call",
+          id: "fc_xyz789",
+          call_id: "call_123",
+          name: "get_weather",
+          arguments: '{"city":"NYC"}',
+        },
+      ];
+      const message = new AIMessage({
+        content: [],
+        tool_calls: [
+          { name: "get_weather", args: { city: "NYC" }, id: "call_123" },
+        ],
+        response_metadata: { output },
+      });
+
+      const result = convertMessagesToResponsesInput({
+        messages: [message],
+        zdrEnabled: false,
+        model: "o3-mini",
+      });
+
+      // Fast path returns the stored output verbatim
+      expect(result).toEqual(output);
+    });
+
+    it("round-trips reasoning + tool calls through AIMessage", () => {
+      const response = {
+        id: "resp_123",
+        model: "o3-mini",
+        created_at: 1234567890,
+        object: "response",
+        status: "completed",
+        output: [
+          {
+            type: "reasoning",
+            id: "rs_abc123",
+            summary: [{ type: "summary_text", text: "Thinking..." }],
+          },
+          {
+            type: "function_call",
+            id: "fc_xyz789",
+            call_id: "call_123",
+            name: "get_weather",
+            arguments: '{"city":"NYC"}',
+          },
+        ],
+        usage: { input_tokens: 10, output_tokens: 20, total_tokens: 30 },
+      };
+
+      // Convert API response to AIMessage
+      const aiMsg = convertResponsesMessageToAIMessage(response as any);
+
+      // Convert AIMessage back to Responses API input
+      const input = convertMessagesToResponsesInput({
+        messages: [aiMsg],
+        zdrEnabled: false,
+        model: "o3-mini",
+      });
+
+      // Should preserve the full output array including reasoning + function_call pairing
+      expect(input).toEqual(response.output);
+    });
+  });
 });
 
 describe("convertResponsesMessageToAIMessage", () => {
@@ -1065,6 +1291,378 @@ describe("convertResponsesMessageToAIMessage", () => {
   });
 });
 
+describe("annotation round-trip conversion", () => {
+  it("should correctly round-trip url_citation annotations through AIMessage conversion", () => {
+    // Simulate an OpenAI response with url_citation annotations
+    const response = {
+      id: "resp_123",
+      model: "gpt-4o",
+      created_at: 1234567890,
+      object: "response",
+      status: "completed",
+      output: [
+        {
+          type: "message",
+          id: "msg_123",
+          role: "assistant",
+          content: [
+            {
+              type: "output_text",
+              text: "Here is the information you requested.",
+              annotations: [
+                {
+                  type: "url_citation",
+                  url: "https://example.com/article",
+                  title: "Example Article",
+                  start_index: 0,
+                  end_index: 38,
+                },
+              ],
+            },
+          ],
+        },
+      ],
+      usage: {
+        input_tokens: 10,
+        output_tokens: 20,
+        total_tokens: 30,
+      },
+    };
+
+    // Step 1: Convert OpenAI response -> LangChain AIMessage
+    const aiMessage = convertResponsesMessageToAIMessage(response as any);
+
+    // Verify annotations were converted to LangChain format
+    const contentArray = aiMessage.content as ContentBlock.Text[];
+    expect(contentArray[0].annotations).toEqual([
+      {
+        type: "citation",
+        source: "url_citation",
+        url: "https://example.com/article",
+        title: "Example Article",
+        startIndex: 0,
+        endIndex: 38,
+      },
+    ]);
+
+    // Step 2: Convert LangChain AIMessage -> OpenAI Responses input (multi-turn)
+    const result = convertMessagesToResponsesInput({
+      messages: [aiMessage],
+      zdrEnabled: false,
+      model: "gpt-4o",
+    });
+
+    // Find the message item
+    const messageItem = result.find((item) => item.type === "message") as any;
+    expect(messageItem).toBeDefined();
+
+    // Verify annotations are correctly converted back to OpenAI format
+    const outputTextBlock = messageItem.content.find(
+      (c: any) => c.type === "output_text"
+    );
+    expect(outputTextBlock).toBeDefined();
+    expect(outputTextBlock.annotations).toEqual([
+      {
+        type: "url_citation",
+        url: "https://example.com/article",
+        title: "Example Article",
+        start_index: 0,
+        end_index: 38,
+      },
+    ]);
+  });
+
+  it("should correctly round-trip file_citation annotations", () => {
+    const response = {
+      id: "resp_456",
+      model: "gpt-4o",
+      created_at: 1234567890,
+      object: "response",
+      status: "completed",
+      output: [
+        {
+          type: "message",
+          id: "msg_456",
+          role: "assistant",
+          content: [
+            {
+              type: "output_text",
+              text: "From the uploaded document.",
+              annotations: [
+                {
+                  type: "file_citation",
+                  file_id: "file-abc123",
+                  filename: "report.pdf",
+                  index: 5,
+                },
+              ],
+            },
+          ],
+        },
+      ],
+      usage: { input_tokens: 10, output_tokens: 20, total_tokens: 30 },
+    };
+
+    const aiMessage = convertResponsesMessageToAIMessage(response as any);
+    const result = convertMessagesToResponsesInput({
+      messages: [aiMessage],
+      zdrEnabled: false,
+      model: "gpt-4o",
+    });
+
+    const messageItem = result.find((item) => item.type === "message") as any;
+    const outputTextBlock = messageItem.content.find(
+      (c: any) => c.type === "output_text"
+    );
+    expect(outputTextBlock.annotations).toEqual([
+      {
+        type: "file_citation",
+        file_id: "file-abc123",
+        filename: "report.pdf",
+        index: 5,
+      },
+    ]);
+  });
+
+  it("should correctly round-trip container_file_citation annotations", () => {
+    const response = {
+      id: "resp_789",
+      model: "gpt-4o",
+      created_at: 1234567890,
+      object: "response",
+      status: "completed",
+      output: [
+        {
+          type: "message",
+          id: "msg_789",
+          role: "assistant",
+          content: [
+            {
+              type: "output_text",
+              text: "From the container file.",
+              annotations: [
+                {
+                  type: "container_file_citation",
+                  file_id: "file-def456",
+                  filename: "data.csv",
+                  container_id: "container-xyz",
+                  start_index: 0,
+                  end_index: 24,
+                },
+              ],
+            },
+          ],
+        },
+      ],
+      usage: { input_tokens: 10, output_tokens: 20, total_tokens: 30 },
+    };
+
+    const aiMessage = convertResponsesMessageToAIMessage(response as any);
+    const result = convertMessagesToResponsesInput({
+      messages: [aiMessage],
+      zdrEnabled: false,
+      model: "gpt-4o",
+    });
+
+    const messageItem = result.find((item) => item.type === "message") as any;
+    const outputTextBlock = messageItem.content.find(
+      (c: any) => c.type === "output_text"
+    );
+    expect(outputTextBlock.annotations).toEqual([
+      {
+        type: "container_file_citation",
+        file_id: "file-def456",
+        filename: "data.csv",
+        container_id: "container-xyz",
+        start_index: 0,
+        end_index: 24,
+      },
+    ]);
+  });
+
+  it("should correctly round-trip file_path annotations", () => {
+    const response = {
+      id: "resp_101",
+      model: "gpt-4o",
+      created_at: 1234567890,
+      object: "response",
+      status: "completed",
+      output: [
+        {
+          type: "message",
+          id: "msg_101",
+          role: "assistant",
+          content: [
+            {
+              type: "output_text",
+              text: "Here is the file output.",
+              annotations: [
+                {
+                  type: "file_path",
+                  file_id: "file-ghi789",
+                  index: 10,
+                },
+              ],
+            },
+          ],
+        },
+      ],
+      usage: { input_tokens: 10, output_tokens: 20, total_tokens: 30 },
+    };
+
+    const aiMessage = convertResponsesMessageToAIMessage(response as any);
+    const result = convertMessagesToResponsesInput({
+      messages: [aiMessage],
+      zdrEnabled: false,
+      model: "gpt-4o",
+    });
+
+    const messageItem = result.find((item) => item.type === "message") as any;
+    const outputTextBlock = messageItem.content.find(
+      (c: any) => c.type === "output_text"
+    );
+    expect(outputTextBlock.annotations).toEqual([
+      {
+        type: "file_path",
+        file_id: "file-ghi789",
+        index: 10,
+      },
+    ]);
+  });
+
+  it("should pass through annotations already in OpenAI format", () => {
+    // AIMessage with annotations already in OpenAI format (e.g., from output_text block passthrough)
+    const aiMessage = new AIMessage({
+      content: [
+        {
+          type: "text",
+          text: "Citation text",
+          annotations: [
+            {
+              type: "url_citation",
+              url: "https://example.com",
+              title: "Example",
+              start_index: 0,
+              end_index: 13,
+            },
+          ],
+        },
+      ],
+    });
+
+    const result = convertMessagesToResponsesInput({
+      messages: [aiMessage],
+      zdrEnabled: false,
+      model: "gpt-4o",
+    });
+
+    const messageItem = result.find((item) => item.type === "message") as any;
+    const outputTextBlock = messageItem.content.find(
+      (c: any) => c.type === "output_text"
+    );
+    expect(outputTextBlock.annotations).toEqual([
+      {
+        type: "url_citation",
+        url: "https://example.com",
+        title: "Example",
+        start_index: 0,
+        end_index: 13,
+      },
+    ]);
+  });
+
+  it("should handle empty annotations array", () => {
+    const aiMessage = new AIMessage({
+      content: [
+        {
+          type: "text",
+          text: "No citations here.",
+          annotations: [],
+        },
+      ],
+    });
+
+    const result = convertMessagesToResponsesInput({
+      messages: [aiMessage],
+      zdrEnabled: false,
+      model: "gpt-4o",
+    });
+
+    const messageItem = result.find((item) => item.type === "message") as any;
+    const outputTextBlock = messageItem.content.find(
+      (c: any) => c.type === "output_text"
+    );
+    expect(outputTextBlock.annotations).toEqual([]);
+  });
+
+  it("should handle multiple annotations of different types in one text block", () => {
+    const response = {
+      id: "resp_multi",
+      model: "gpt-4o",
+      created_at: 1234567890,
+      object: "response",
+      status: "completed",
+      output: [
+        {
+          type: "message",
+          id: "msg_multi",
+          role: "assistant",
+          content: [
+            {
+              type: "output_text",
+              text: "Multiple sources cited here.",
+              annotations: [
+                {
+                  type: "url_citation",
+                  url: "https://example.com/page1",
+                  title: "Page 1",
+                  start_index: 0,
+                  end_index: 10,
+                },
+                {
+                  type: "url_citation",
+                  url: "https://example.com/page2",
+                  title: "Page 2",
+                  start_index: 11,
+                  end_index: 27,
+                },
+              ],
+            },
+          ],
+        },
+      ],
+      usage: { input_tokens: 10, output_tokens: 20, total_tokens: 30 },
+    };
+
+    const aiMessage = convertResponsesMessageToAIMessage(response as any);
+    const result = convertMessagesToResponsesInput({
+      messages: [aiMessage],
+      zdrEnabled: false,
+      model: "gpt-4o",
+    });
+
+    const messageItem = result.find((item) => item.type === "message") as any;
+    const outputTextBlock = messageItem.content.find(
+      (c: any) => c.type === "output_text"
+    );
+    expect(outputTextBlock.annotations).toHaveLength(2);
+    expect(outputTextBlock.annotations[0]).toEqual({
+      type: "url_citation",
+      url: "https://example.com/page1",
+      title: "Page 1",
+      start_index: 0,
+      end_index: 10,
+    });
+    expect(outputTextBlock.annotations[1]).toEqual({
+      type: "url_citation",
+      url: "https://example.com/page2",
+      title: "Page 2",
+      start_index: 11,
+      end_index: 27,
+    });
+  });
+});
+
 describe("convertResponsesDeltaToChatGenerationChunk - image generation", () => {
   it("should convert image_generation_call streaming event to image content block", () => {
     const streamEvent: OpenAIClient.Responses.ResponseStreamEvent = {
@@ -1149,5 +1747,57 @@ describe("convertResponsesDeltaToChatGenerationChunk - image generation", () => 
 
     // Partial images should be ignored
     expect(result).toBeNull();
+  });
+});
+
+describe("Anthropic cross-provider compatibility", () => {
+  it("should drop tool_use blocks from assistant content in convertMessagesToResponsesInput", () => {
+    const message = new AIMessage({
+      content: [
+        { type: "text", text: "I will search for that." },
+        {
+          type: "tool_use",
+          id: "toolu_abc123",
+          name: "get_weather",
+          input: { location: "SF" },
+        },
+      ],
+      tool_calls: [
+        {
+          id: "toolu_abc123",
+          name: "get_weather",
+          args: { location: "SF" },
+        },
+      ],
+    });
+
+    const result = convertMessagesToResponsesInput({
+      messages: [message],
+      zdrEnabled: false,
+      model: "gpt-4o",
+    });
+
+    // Should have a message item + a function_call item
+    const messageItem = result.find((r: any) => r.type === "message") as any;
+    const fnCallItem = result.find(
+      (r: any) => r.type === "function_call"
+    ) as any;
+
+    expect(messageItem).toBeDefined();
+    expect(fnCallItem).toBeDefined();
+
+    // The message content should only have the text, no tool_use
+    if (typeof messageItem.content !== "string") {
+      expect(messageItem.content.some((c: any) => c.type === "tool_use")).toBe(
+        false
+      );
+      expect(messageItem.content).toHaveLength(1);
+      expect(messageItem.content[0].type).toBe("output_text");
+      expect(messageItem.content[0].text).toBe("I will search for that.");
+    }
+
+    // function_call should be present
+    expect(fnCallItem.name).toBe("get_weather");
+    expect(fnCallItem.call_id).toBe("toolu_abc123");
   });
 });

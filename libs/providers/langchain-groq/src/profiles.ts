@@ -169,7 +169,7 @@ const PROFILES: Record<string, ModelProfile> = {
     audioOutputs: false,
     videoOutputs: false,
     toolCalling: true,
-    structuredOutput: false,
+    structuredOutput: true,
   },
   "openai/gpt-oss-120b": {
     maxInputTokens: 131072,
@@ -183,7 +183,7 @@ const PROFILES: Record<string, ModelProfile> = {
     audioOutputs: false,
     videoOutputs: false,
     toolCalling: true,
-    structuredOutput: false,
+    structuredOutput: true,
   },
   "qwen/qwen3-32b": {
     maxInputTokens: 131072,

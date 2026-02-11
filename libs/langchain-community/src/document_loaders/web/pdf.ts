@@ -120,9 +120,8 @@ export class WebPDFLoader extends BaseDocumentLoader {
 
 async function PDFLoaderImports() {
   try {
-    const { default: mod } = await import(
-      "pdf-parse/lib/pdf.js/v1.10.100/build/pdf.js"
-    );
+    const { default: mod } =
+      await import("pdf-parse/lib/pdf.js/v1.10.100/build/pdf.js");
     const { getDocument, version } = mod;
     return { getDocument, version };
   } catch (e) {

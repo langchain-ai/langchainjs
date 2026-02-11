@@ -37,7 +37,7 @@
   },
   "devDependencies": {
     "@faker-js/faker": "^8.3.1",
-    "@langchain/core": "workspace:*",
+    "@langchain/core": "workspace:^",
     "@langchain/eslint": "workspace:*",
     "@langchain/openai": "workspace:*",
     "@pinecone-database/pinecone": "^5.0.2",

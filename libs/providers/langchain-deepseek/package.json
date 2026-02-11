@@ -1,6 +1,6 @@
 {
   "name": "@langchain/deepseek",
-  "version": "1.0.7",
+  "version": "1.0.11",
   "description": "Deepseek integration for LangChain.js",
   "type": "module",
   "author": "LangChain",
@@ -39,7 +39,7 @@
     "@langchain/core": "^1.0.0"
   },
   "devDependencies": {
-    "@langchain/core": "workspace:*",
+    "@langchain/core": "workspace:^",
     "@langchain/eslint": "workspace:*",
     "@langchain/standard-tests": "workspace:*",
     "@langchain/tsconfig": "workspace:*",

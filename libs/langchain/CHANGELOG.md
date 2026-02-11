@@ -1,5 +1,72 @@
 # langchain
 
+## 1.2.21
+
+### Patch Changes
+
+- [#9996](https://github.com/langchain-ai/langchainjs/pull/9996) [`5113204`](https://github.com/langchain-ai/langchainjs/commit/5113204bba5eb1d0b23a4d3aae2c02ba3caf8b6b) Thanks [@christian-bromann](https://github.com/christian-bromann)! - fix(langchain): propagate subagent name in metadata
+
+- Updated dependencies [[`8f166b1`](https://github.com/langchain-ai/langchainjs/commit/8f166b159343ae6fd0d6d44c0835ab56c0b153f4)]:
+  - @langchain/core@1.1.22
+
+## 1.2.20
+
+### Patch Changes
+
+- [#9983](https://github.com/langchain-ai/langchainjs/pull/9983) [`ea7e791`](https://github.com/langchain-ai/langchainjs/commit/ea7e791ff6c93188b7febbd98ea22359fa96eb20) Thanks [@encodedz](https://github.com/encodedz)! - Support concurrent `agentNode` dynamic prompts properly.
+
+- [#9986](https://github.com/langchain-ai/langchainjs/pull/9986) [`8a52dad`](https://github.com/langchain-ai/langchainjs/commit/8a52dad1eace191b19d24cc5683acb22a5b9e964) Thanks [@brettshollenberger](https://github.com/brettshollenberger)! - Don't re-emit input state from middleware hooks that return void
+
+- [#9982](https://github.com/langchain-ai/langchainjs/pull/9982) [`4558fa6`](https://github.com/langchain-ai/langchainjs/commit/4558fa6438749b9f6eca980099241d97c56b1a8f) Thanks [@hntrl](https://github.com/hntrl)! - feat(langchain): add optional `tools` parameter to `countTokensApproximately` for more accurate token estimates when tools are bound to a model
+
+- [#9981](https://github.com/langchain-ai/langchainjs/pull/9981) [`5f28338`](https://github.com/langchain-ai/langchainjs/commit/5f283389c0dba1822f37139f0913016d77167734) Thanks [@hntrl](https://github.com/hntrl)! - feat(agents): support returning Command from wrapModelCall middleware
+
+  Allow `wrapModelCall` middleware hooks to return `Command` objects for advanced
+  control flow (routing, state updates), matching the existing `wrapToolCall`
+  pattern. The framework tracks the effective AIMessage through the middleware
+  chain so outer middleware always receive an AIMessage from `handler()`, even
+  when an inner middleware returns a Command.
+
+- Updated dependencies [[`d5e3db0`](https://github.com/langchain-ai/langchainjs/commit/d5e3db0d01ab321ec70a875805b2f74aefdadf9d)]:
+  - @langchain/core@1.1.21
+
+## 1.2.19
+
+### Patch Changes
+
+- [#9957](https://github.com/langchain-ai/langchainjs/pull/9957) [`71c3cba`](https://github.com/langchain-ai/langchainjs/commit/71c3cba843ab16d877299d158a1de0c7d22f3fb9) Thanks [@jacoblee93](https://github.com/jacoblee93)! - feat(langchain,core): Update prompt pulling params, LangSmith version
+
+- Updated dependencies [[`71c3cba`](https://github.com/langchain-ai/langchainjs/commit/71c3cba843ab16d877299d158a1de0c7d22f3fb9)]:
+  - @langchain/core@1.1.20
+
+## 1.2.18
+
+### Patch Changes
+
+- [#9763](https://github.com/langchain-ai/langchainjs/pull/9763) [`8f0757f`](https://github.com/langchain-ai/langchainjs/commit/8f0757f06b2ed9fe810f636333fc71ffcedb3feb) Thanks [@AdamParker19](https://github.com/AdamParker19)! - fix(langchain): resolve className collision in MODEL_PROVIDER_CONFIG
+
+  Refactored `getChatModelByClassName` to accept an optional `modelProvider` parameter for direct lookup, avoiding the className collision issue where multiple providers share the same className (e.g., `google-vertexai` and `google-vertexai-web` both use `"ChatVertexAI"`). When `modelProvider` is provided, the function uses direct config lookup instead of searching by className. Backward compatibility is maintained for existing callers that only pass `className`. This eliminates the duplicated import logic that was previously in `_initChatModelHelper`.
+
+## 1.2.17
+
+### Patch Changes
+
+- [#9916](https://github.com/langchain-ai/langchainjs/pull/9916) [`3516592`](https://github.com/langchain-ai/langchainjs/commit/3516592c51c44eb55e477c0d63ffdab5672ae97e) Thanks [@hntrl](https://github.com/hntrl)! - feat(langchain): add withConfig() method to ReactAgent
+
+  Adds a `withConfig()` method to ReactAgent following the same pattern as LangGraph's `Pregel.withConfig()`. This allows setting default configuration values (like `recursionLimit`, `tags`, or `configurable`) that get merged with invocation-time config.
+
+- Updated dependencies [[`41bfea5`](https://github.com/langchain-ai/langchainjs/commit/41bfea51cf119573a3b956ee782d2731fe71c681)]:
+  - @langchain/core@1.1.19
+
+## 1.2.16
+
+### Patch Changes
+
+- [#9885](https://github.com/langchain-ai/langchainjs/pull/9885) [`913893f`](https://github.com/langchain-ai/langchainjs/commit/913893f678f1fae2a1b9bf964c9d93ffd0176680) Thanks [@Ambas-T](https://github.com/Ambas-T)! - fix: filter pregel keys from cache key to avoid OOM
+
+- Updated dependencies [[`a9b5059`](https://github.com/langchain-ai/langchainjs/commit/a9b50597186002221aaa4585246e569fa44c27c8), [`a9b5059`](https://github.com/langchain-ai/langchainjs/commit/a9b50597186002221aaa4585246e569fa44c27c8)]:
+  - @langchain/core@1.1.18
+
 ## 1.2.15
 
 ### Patch Changes

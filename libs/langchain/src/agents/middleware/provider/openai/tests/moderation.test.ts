@@ -28,9 +28,8 @@ vi.mock("../../../../../chat_models/universal.js", async () => {
   const actual = await vi.importActual(
     "../../../../../chat_models/universal.js"
   );
-  const { ChatOpenAI } = await import(
-    "../../../tests/__mocks__/@langchain/openai.js"
-  );
+  const { ChatOpenAI } =
+    await import("../../../tests/__mocks__/@langchain/openai.js");
   return {
     ...actual,
     initChatModel: vi.fn().mockResolvedValue(new ChatOpenAI()),

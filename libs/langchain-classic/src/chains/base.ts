@@ -30,9 +30,9 @@ export interface ChainInputs extends BaseLangChainParams {
  * Base interface that all chains must implement.
  */
 export abstract class BaseChain<
-    RunInput extends ChainValues = ChainValues,
-    RunOutput extends ChainValues = ChainValues,
-  >
+  RunInput extends ChainValues = ChainValues,
+  RunOutput extends ChainValues = ChainValues,
+>
   extends BaseLangChain<RunInput, RunOutput>
   implements ChainInputs
 {
@@ -114,7 +114,9 @@ export abstract class BaseChain<
             listener = () => {
               reject(new Error("AbortError"));
             };
-            fullValues.signal?.addEventListener("abort", listener);
+            fullValues.signal?.addEventListener("abort", listener, {
+              once: true,
+            });
           }),
         ]).finally(() => {
           if (fullValues.signal && listener) {
@@ -301,15 +303,13 @@ export abstract class BaseChain<
         return StuffDocumentsChain.deserialize(data);
       }
       case "map_reduce_documents_chain": {
-        const { MapReduceDocumentsChain } = await import(
-          "./combine_docs_chain.js"
-        );
+        const { MapReduceDocumentsChain } =
+          await import("./combine_docs_chain.js");
         return MapReduceDocumentsChain.deserialize(data);
       }
       case "refine_documents_chain": {
-        const { RefineDocumentsChain } = await import(
-          "./combine_docs_chain.js"
-        );
+        const { RefineDocumentsChain } =
+          await import("./combine_docs_chain.js");
         return RefineDocumentsChain.deserialize(data);
       }
       case "vector_db_qa": {

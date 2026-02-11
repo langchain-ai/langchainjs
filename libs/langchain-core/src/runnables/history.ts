@@ -26,8 +26,10 @@ type GetSessionHistoryCallable = (
   | BaseChatMessageHistory
   | BaseListChatMessageHistory;
 
-export interface RunnableWithMessageHistoryInputs<RunInput, RunOutput>
-  extends Omit<RunnableBindingArgs<RunInput, RunOutput>, "bound" | "config"> {
+export interface RunnableWithMessageHistoryInputs<
+  RunInput,
+  RunOutput,
+> extends Omit<RunnableBindingArgs<RunInput, RunOutput>, "bound" | "config"> {
   runnable: Runnable<RunInput, RunOutput>;
   getMessageHistory: GetSessionHistoryCallable;
   inputMessagesKey?: string;

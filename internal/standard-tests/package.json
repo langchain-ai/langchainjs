@@ -1,6 +1,6 @@
 {
   "name": "@langchain/standard-tests",
-  "version": "0.0.20",
+  "version": "0.0.23",
   "description": "Standard tests for LangChain.js",
   "author": "LangChain",
   "license": "MIT",
@@ -27,8 +27,8 @@
     "format:check": "prettier --check \"src\""
   },
   "dependencies": {
-    "@jest/globals": "^29.5.0",
-    "@langchain/core": "workspace:*",
+    "@jest/globals": "^30.2.0",
+    "@langchain/core": "workspace:^",
     "zod": "^3.25.76 || ^4"
   },
   "devDependencies": {

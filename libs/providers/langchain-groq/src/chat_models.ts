@@ -72,8 +72,13 @@ import {
 } from "@langchain/core/output_parsers/openai_tools";
 import { convertToOpenAITool } from "@langchain/core/utils/function_calling";
 import { ToolCallChunk } from "@langchain/core/messages/tool";
+import { getSchemaDescription } from "@langchain/core/utils/types";
 
 import PROFILES from "./profiles.js";
+import {
+  getGroqStructuredOutputMethod,
+  groqStrictifySchema,
+} from "./utils/groq-schema.js";
 
 type ChatGroqToolType = BindToolsInput | ChatCompletionTool;
 
@@ -1178,6 +1183,9 @@ export class ChatGroq extends BaseChatModel<
     let responseMetadata: Record<string, any> | undefined;
 
     for await (const data of response) {
+      if (options.signal?.aborted) {
+        return;
+      }
       responseMetadata = data;
       const choice = data?.choices[0];
       if (!choice) {
@@ -1253,6 +1261,7 @@ export class ChatGroq extends BaseChatModel<
     options: this["ParsedCallOptions"],
     runManager?: CallbackManagerForLLMRun
   ): Promise<ChatResult> {
+    options.signal?.throwIfAborted();
     if (this.streaming) {
       const tokenUsage: TokenUsage = {};
       const stream = this._streamResponseChunks(messages, options, runManager);
@@ -1419,14 +1428,53 @@ export class ChatGroq extends BaseChatModel<
     const schema: InteropZodType<RunOutput> | Record<string, any> =
       outputSchema;
     const name = config?.name;
-    const method = config?.method;
     const includeRaw = config?.includeRaw;
+
+    // Determine the structured output method based on model capabilities
+    const method = getGroqStructuredOutputMethod(this.model, config?.method);
 
     let functionName = name ?? "extract";
     let outputParser: BaseLLMOutputParser<RunOutput>;
     let llm: Runnable<BaseLanguageModelInput>;
 
-    if (method === "jsonMode") {
+    if (method === "jsonSchema") {
+      // Native JSON Schema mode for gpt-oss models
+      // Uses Groq's strict JSON Schema response format
+      const schemaName = name ?? "structured_output";
+      const description = getSchemaDescription(schema);
+      const jsonSchema = isInteropZodSchema(schema)
+        ? toJsonSchema(schema)
+        : schema;
+
+      // Transform schema for Groq strict mode requirements
+      const strictSchema = groqStrictifySchema(jsonSchema);
+
+      llm = this.withConfig({
+        response_format: {
+          type: "json_schema",
+          json_schema: {
+            name: schemaName,
+            description,
+            strict: true,
+            schema: strictSchema,
+          },
+        },
+        ls_structured_output_format: {
+          kwargs: { method: "jsonSchema" },
+          schema: {
+            title: schemaName,
+            description,
+            ...jsonSchema,
+          },
+        },
+      });
+
+      if (isInteropZodSchema(schema)) {
+        outputParser = StructuredOutputParser.fromZodSchema(schema);
+      } else {
+        outputParser = new JsonOutputParser<RunOutput>();
+      }
+    } else if (method === "jsonMode") {
       let outputSchema: JsonSchema7Type | undefined;
       if (isInteropZodSchema(schema)) {
         outputParser = StructuredOutputParser.fromZodSchema(schema);

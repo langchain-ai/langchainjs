@@ -1,6 +1,6 @@
 {
   "name": "@langchain/model-profiles",
-  "version": "0.0.7",
+  "version": "0.0.10",
   "private": true,
   "type": "module",
   "scripts": {
@@ -10,7 +10,7 @@
   },
   "dependencies": {
     "@iarna/toml": "^2.2.5",
-    "@langchain/core": "workspace:*",
+    "@langchain/core": "workspace:^",
     "commander": "^11.1.0",
     "prettier": "^3.5.0",
     "typescript": "^5.9.3",
@@ -19,7 +19,7 @@
   "devDependencies": {
     "@types/iarna__toml": "^2.0.5",
     "@types/node": "^20.0.0",
-    "tsx": "^4.20.3",
+    "tsx": "^4.21.0",
     "vitest": "^1.0.0"
   }
 }
