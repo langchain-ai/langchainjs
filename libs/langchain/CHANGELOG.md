@@ -1,5 +1,14 @@
 # langchain
 
+## 1.2.21
+
+### Patch Changes
+
+- [#9996](https://github.com/langchain-ai/langchainjs/pull/9996) [`5113204`](https://github.com/langchain-ai/langchainjs/commit/5113204bba5eb1d0b23a4d3aae2c02ba3caf8b6b) Thanks [@christian-bromann](https://github.com/christian-bromann)! - fix(langchain): propagate subagent name in metadata
+
+- Updated dependencies [[`8f166b1`](https://github.com/langchain-ai/langchainjs/commit/8f166b159343ae6fd0d6d44c0835ab56c0b153f4)]:
+  - @langchain/core@1.1.22
+
 ## 1.2.20
 
 ### Patch Changes
