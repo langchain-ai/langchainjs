@@ -1,6 +1,7 @@
 import { CallbackManager } from "@langchain/core/callbacks/manager";
 import { LLMResult } from "@langchain/core/outputs";
 import { StringPromptValue } from "@langchain/core/prompt_values";
+import { expect, describe, test } from "@jest/globals";
 import { TokenUsage } from "../../types/ibm.js";
 import { WatsonxLLM, WatsonxInputLLM } from "../ibm.js";
 
@@ -345,7 +346,7 @@ describe.each(parameters)("Text generation for $name", ({ params }) => {
         for await (const chunk of stream) {
           chunks.push(chunk);
         }
-      }).rejects.toThrowError();
+      }).rejects.toThrow();
     });
 
     test("Signal in call options", async () => {
@@ -408,11 +409,11 @@ describe.each(parameters)("Text generation for $name", ({ params }) => {
       });
 
       // @ts-expect-error Intentionally passing wrong parameter
-      await expect(instance.getNumTokens(12)).rejects.toThrowError();
+      await expect(instance.getNumTokens(12)).rejects.toThrow();
       await expect(
         // @ts-expect-error Intentionally passing wrong parameter
         instance.getNumTokens(12, { wrong: "Wrong" })
-      ).rejects.toThrowError();
+      ).rejects.toThrow();
     });
   });
 });
