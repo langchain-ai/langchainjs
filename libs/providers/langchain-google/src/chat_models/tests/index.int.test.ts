@@ -644,7 +644,10 @@ describe.each(coreModelInfo)(
 
     test("URL Context Tool", async () => {
       // Not available on Gemini 1.5
-      // Not available on Gemini 2.0 Flash Lite (but available on Flash)
+      // Not available on Gemini 2.0 Flash
+      if (model.startsWith("gemini-2.0-flash")) {
+        return;
+      }
       // Not available on Vertex
       const urlTool: Gemini.Tool = {
         urlContext: {},
