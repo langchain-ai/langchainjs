@@ -331,6 +331,262 @@ describe("openaiTranslator", () => {
       expect(message.contentBlocks).toEqual(expected);
     });
 
+    it("should translate web_search_call without action data to server_tool_call with empty args and result", () => {
+      const message = new AIMessage({
+        content: [{ type: "text", text: "Here is what I found:" }],
+        additional_kwargs: {
+          tool_outputs: [
+            {
+              type: "web_search_call",
+              id: "ws_abc123",
+              status: "completed",
+            },
+          ],
+        },
+        response_metadata: { model_provider: "openai" },
+      });
+
+      const expected: Array<ContentBlock.Standard> = [
+        { type: "text", text: "Here is what I found:" },
+        {
+          type: "server_tool_call",
+          name: "web_search",
+          id: "ws_abc123",
+          args: {},
+        },
+        {
+          type: "server_tool_call_result",
+          toolCallId: "ws_abc123",
+          status: "success",
+          output: {},
+        },
+      ];
+
+      expect(message.contentBlocks).toEqual(expected);
+    });
+
+    it("should translate web_search_call with action data to server_tool_call with query args", () => {
+      const message = new AIMessage({
+        content: [{ type: "text", text: "Here is what I found:" }],
+        additional_kwargs: {
+          tool_outputs: [
+            {
+              type: "web_search_call",
+              id: "ws_abc456",
+              status: "completed",
+              action: {
+                type: "search",
+                query: "melbourne australia news today",
+                sources: [{ type: "url", url: "https://example.com/news" }],
+              },
+            },
+          ],
+        },
+        response_metadata: { model_provider: "openai" },
+      });
+
+      const expected: Array<ContentBlock.Standard> = [
+        { type: "text", text: "Here is what I found:" },
+        {
+          type: "server_tool_call",
+          name: "web_search",
+          id: "ws_abc456",
+          args: { query: "melbourne australia news today" },
+        },
+        {
+          type: "server_tool_call_result",
+          toolCallId: "ws_abc456",
+          status: "success",
+          output: {
+            action: {
+              type: "search",
+              query: "melbourne australia news today",
+              sources: [{ type: "url", url: "https://example.com/news" }],
+            },
+          },
+        },
+      ];
+
+      expect(message.contentBlocks).toEqual(expected);
+    });
+
+    it("should translate multiple web_search_call items to multiple server_tool_call blocks", () => {
+      const message = new AIMessage({
+        content: [{ type: "text", text: "Search results:" }],
+        additional_kwargs: {
+          tool_outputs: [
+            {
+              type: "web_search_call",
+              id: "ws_001",
+              status: "completed",
+            },
+            {
+              type: "web_search_call",
+              id: "ws_002",
+              status: "completed",
+            },
+          ],
+        },
+        response_metadata: { model_provider: "openai" },
+      });
+
+      const blocks = message.contentBlocks;
+      const serverToolCalls = blocks.filter(
+        (b) => b.type === "server_tool_call"
+      );
+      const serverToolCallResults = blocks.filter(
+        (b) => b.type === "server_tool_call_result"
+      );
+
+      expect(serverToolCalls).toHaveLength(2);
+      expect(serverToolCallResults).toHaveLength(2);
+      expect(serverToolCalls[0]).toMatchObject({
+        id: "ws_001",
+        name: "web_search",
+      });
+      expect(serverToolCalls[1]).toMatchObject({
+        id: "ws_002",
+        name: "web_search",
+      });
+    });
+
+    it("should translate file_search_call to server_tool_call with queries and results", () => {
+      const message = new AIMessage({
+        content: [{ type: "text", text: "Found these files:" }],
+        additional_kwargs: {
+          tool_outputs: [
+            {
+              type: "file_search_call",
+              id: "fs_abc123",
+              status: "completed",
+              queries: ["quarterly report", "revenue 2025"],
+              results: [
+                {
+                  file_id: "file_001",
+                  filename: "report.pdf",
+                  score: 0.95,
+                  text: "Revenue grew 15% in Q3...",
+                },
+              ],
+            },
+          ],
+        },
+        response_metadata: { model_provider: "openai" },
+      });
+
+      const expected: Array<ContentBlock.Standard> = [
+        { type: "text", text: "Found these files:" },
+        {
+          type: "server_tool_call",
+          name: "file_search",
+          id: "fs_abc123",
+          args: { queries: ["quarterly report", "revenue 2025"] },
+        },
+        {
+          type: "server_tool_call_result",
+          toolCallId: "fs_abc123",
+          status: "success",
+          output: {
+            results: [
+              {
+                file_id: "file_001",
+                filename: "report.pdf",
+                score: 0.95,
+                text: "Revenue grew 15% in Q3...",
+              },
+            ],
+          },
+        },
+      ];
+
+      expect(message.contentBlocks).toEqual(expected);
+    });
+
+    it("should translate file_search_call without results to server_tool_call with empty output", () => {
+      const message = new AIMessage({
+        content: [{ type: "text", text: "Searching..." }],
+        additional_kwargs: {
+          tool_outputs: [
+            {
+              type: "file_search_call",
+              id: "fs_abc456",
+              status: "completed",
+              queries: ["test query"],
+            },
+          ],
+        },
+        response_metadata: { model_provider: "openai" },
+      });
+
+      const blocks = message.contentBlocks;
+      const serverToolCall = blocks.find((b) => b.type === "server_tool_call");
+      const serverToolCallResult = blocks.find(
+        (b) => b.type === "server_tool_call_result"
+      );
+
+      expect(serverToolCall).toEqual({
+        type: "server_tool_call",
+        name: "file_search",
+        id: "fs_abc456",
+        args: { queries: ["test query"] },
+      });
+      expect(serverToolCallResult).toEqual({
+        type: "server_tool_call_result",
+        toolCallId: "fs_abc456",
+        status: "success",
+        output: {},
+      });
+    });
+
+    it("should translate web_search_call with failed status to error result", () => {
+      const message = new AIMessage({
+        content: [],
+        additional_kwargs: {
+          tool_outputs: [
+            {
+              type: "web_search_call",
+              id: "ws_fail",
+              status: "failed",
+            },
+          ],
+        },
+        response_metadata: { model_provider: "openai" },
+      });
+
+      const blocks = message.contentBlocks;
+      const result = blocks.find((b) => b.type === "server_tool_call_result");
+
+      expect(result).toEqual({
+        type: "server_tool_call_result",
+        toolCallId: "ws_fail",
+        status: "error",
+        output: {},
+      });
+    });
+
+    it("should not emit server_tool_call_result for in_progress web_search_call", () => {
+      const message = new AIMessage({
+        content: [],
+        additional_kwargs: {
+          tool_outputs: [
+            {
+              type: "web_search_call",
+              id: "ws_progress",
+              status: "in_progress",
+            },
+          ],
+        },
+        response_metadata: { model_provider: "openai" },
+      });
+
+      const blocks = message.contentBlocks;
+      const serverToolCall = blocks.find((b) => b.type === "server_tool_call");
+      const result = blocks.find((b) => b.type === "server_tool_call_result");
+
+      expect(serverToolCall).toBeDefined();
+      expect(result).toBeUndefined();
+    });
+
     it("should not add image block when image_generation_call has no result", () => {
       const message = new AIMessage({
         content: [{ type: "text", text: "Generating..." }],
