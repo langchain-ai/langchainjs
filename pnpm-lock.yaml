@@ -1210,7 +1210,7 @@ importers:
         version: 4.0.6
       '@getzep/zep-cloud':
         specifier: ^1.0.6
-        version: 1.0.12(@langchain/core@libs+langchain-core)(encoding@0.1.13)(langchain@libs+langchain)
+        version: 1.0.12(@langchain/core@libs+langchain-core)(encoding@0.1.13)(langchain@0.3.30(bef1b3b0bc47d2de957a34aeb1c09877))
       '@getzep/zep-js':
         specifier: ^0.9.0
         version: 0.9.0
@@ -1288,7 +1288,7 @@ importers:
         version: 1.16.2(typescript@5.8.3)
       '@raycast/api':
         specifier: ^1.104.5
-        version: 1.104.5(@types/node@25.2.2)
+        version: 1.104.5(@types/node@24.10.12)
       '@rockset/client':
         specifier: ^0.9.1
         version: 0.9.2(encoding@0.1.13)
@@ -1519,7 +1519,7 @@ importers:
         version: 3.0.9
       jest:
         specifier: ^30.2.0
-        version: 30.2.0(@types/node@25.2.2)(ts-node@10.9.2(@swc/core@1.15.11(@swc/helpers@0.5.18))(@types/node@25.2.2)(typescript@5.8.3))
+        version: 30.2.0(@types/node@24.10.12)(ts-node@10.9.2(@swc/core@1.15.11(@swc/helpers@0.5.18))(@types/node@24.10.12)(typescript@5.8.3))
       jest-environment-node:
         specifier: ^30.2.0
         version: 30.2.0
@@ -1606,10 +1606,10 @@ importers:
         version: 1.2.3
       ts-jest:
         specifier: ^29.4.6
-        version: 29.4.6(@babel/core@7.29.0)(@jest/transform@30.2.0)(@jest/types@30.2.0)(babel-jest@30.2.0(@babel/core@7.29.0))(jest-util@30.2.0)(jest@30.2.0(@types/node@25.2.2)(ts-node@10.9.2(@swc/core@1.15.11(@swc/helpers@0.5.18))(@types/node@25.2.2)(typescript@5.8.3)))(typescript@5.8.3)
+        version: 29.4.6(@babel/core@7.29.0)(@jest/transform@30.2.0)(@jest/types@30.2.0)(babel-jest@30.2.0(@babel/core@7.29.0))(jest-util@30.2.0)(jest@30.2.0(@types/node@24.10.12)(ts-node@10.9.2(@swc/core@1.15.11(@swc/helpers@0.5.18))(@types/node@24.10.12)(typescript@5.8.3)))(typescript@5.8.3)
       typeorm:
         specifier: ^0.3.28
-        version: 0.3.28(better-sqlite3@12.6.2)(ioredis@5.9.2)(mongodb@6.21.0(@aws-sdk/credential-providers@3.985.0)(socks@2.8.7))(mysql2@3.16.3)(pg@8.18.0)(redis@4.7.1)(sqlite3@5.1.7)(ts-node@10.9.2(@swc/core@1.15.11(@swc/helpers@0.5.18))(@types/node@25.2.2)(typescript@5.8.3))
+        version: 0.3.28(better-sqlite3@12.6.2)(ioredis@5.9.2)(mongodb@6.21.0(@aws-sdk/credential-providers@3.985.0)(socks@2.8.7))(mysql2@3.16.3)(pg@8.18.0)(redis@4.7.1)(sqlite3@5.1.7)(ts-node@10.9.2(@swc/core@1.15.11(@swc/helpers@0.5.18))(@types/node@24.10.12)(typescript@5.8.3))
       typescript:
         specifier: ~5.8.3
         version: 5.8.3
@@ -2344,6 +2344,55 @@ importers:
       vitest:
         specifier: ^3.2.4
         version: 3.2.4(@types/debug@4.1.12)(@types/node@25.2.2)(jiti@2.6.1)(jsdom@28.0.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
+
+  libs/providers/langchain-google:
+    dependencies:
+      eventsource-parser:
+        specifier: ^3.0.6
+        version: 3.0.6
+      google-auth-library:
+        specifier: ^10.5.0
+        version: 10.5.0
+      jose:
+        specifier: ^6.1.2
+        version: 6.1.2
+    devDependencies:
+      '@langchain/core':
+        specifier: workspace:^
+        version: link:../../langchain-core
+      '@langchain/eslint':
+        specifier: workspace:*
+        version: link:../../../internal/eslint
+      '@langchain/standard-tests':
+        specifier: workspace:*
+        version: link:../../../internal/standard-tests
+      '@tsconfig/recommended':
+        specifier: ^1.0.10
+        version: 1.0.13
+      dpdm:
+        specifier: ^3.14.0
+        version: 3.15.1
+      eslint:
+        specifier: ^9.34.0
+        version: 9.39.2(jiti@2.6.1)
+      prettier:
+        specifier: ^2.8.3
+        version: 2.8.8
+      sparktype:
+        specifier: ^0.1.3
+        version: 0.1.3
+      typescript:
+        specifier: ~5.8.3
+        version: 5.8.3
+      vitest:
+        specifier: ^3.2.4
+        version: 3.2.4(@types/debug@4.1.12)(@types/node@25.2.2)(jiti@2.6.1)(jsdom@28.0.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
+      zod:
+        specifier: ^3.25.76 || ^4
+        version: 4.3.6
+      zod-to-json-schema:
+        specifier: ^3.24.6
+        version: 3.25.1(zod@4.3.6)
 
   libs/providers/langchain-google-cloud-sql-pg:
     dependencies:
@@ -6253,6 +6302,66 @@ packages:
     peerDependencies:
       apache-arrow: '>=15.0.0 <=18.1.0'
 
+  '@langchain/anthropic@1.3.17':
+    resolution: {integrity: sha512-5z/dqw/atLvH1hGtHrF9q4ZT3uSL34Y3XmSYKMtpgsibVnlFG2QmxikkjJnwAYGBTjrsTQuE7khrBPFkJSEucA==}
+    engines: {node: '>=20'}
+    peerDependencies:
+      '@langchain/core': workspace:^
+
+  '@langchain/aws@1.2.2':
+    resolution: {integrity: sha512-KIrqcVUAMiwPr97hA/6OIARAlvTHUDuDeDhSqMuYWSpMqE48cmwnexbs9PwR5Tlq2RBlIJix81SSvt/tLGfsFA==}
+    engines: {node: '>=20'}
+    peerDependencies:
+      '@langchain/core': workspace:^
+
+  '@langchain/cohere@1.0.2':
+    resolution: {integrity: sha512-v7OWwLshIQTIgt7mbGI8RkVwuHxOESauXlpw0oEouiiG0oUo/difFNpBSvrMAldLIa7cyYB/jPV+l6n15qsuYg==}
+    engines: {node: '>=20'}
+    peerDependencies:
+      '@langchain/core': workspace:^
+
+  '@langchain/deepseek@1.0.11':
+    resolution: {integrity: sha512-w0Cjm4IL55wv1l8Hdfm1aihtor7J0BabCfcZ6GlkKrPpaOBfdROAQchrmU6HPhTEGAwbfDhv6rHmBy/82PAEnQ==}
+    engines: {node: '>=20'}
+    peerDependencies:
+      '@langchain/core': workspace:^
+
+  '@langchain/google-common@2.1.17':
+    resolution: {integrity: sha512-G0YXDi0XPmiKXPhw5kceMM++vA3tXt6al7JnjzolY7Z8Pc9hlUwCHjOKL/u5wETgqGvEPZBAB5V1Z90tFC3byw==}
+    engines: {node: '>=20'}
+    peerDependencies:
+      '@langchain/core': workspace:^
+
+  '@langchain/google-gauth@2.1.17':
+    resolution: {integrity: sha512-U1cnIG+vrwOdlEXbF3O13/I1iYA3XCc0qIbDUzrrVXS1iOwY/MN+rKUOSsU9Zu5tPvolUv7+s4cNNXe7aksSdQ==}
+    engines: {node: '>=20'}
+
+  '@langchain/google-genai@2.1.17':
+    resolution: {integrity: sha512-qUiOJq1f6eNd0rpgwg1af9xIRrm5A5oL7q0JPH7Uucy920ddGz+JDlt6PoCeKSleObO3k1x7SMWFZ7IJF9CLXQ==}
+    engines: {node: '>=20'}
+    peerDependencies:
+      '@langchain/core': workspace:^
+
+  '@langchain/google-vertexai-web@2.1.17':
+    resolution: {integrity: sha512-F6Bo4cJp9TpxPUPVz4SKsS1bPme3unZqAvVoHdxUe4YJo8cALZYDy7n7KnKQkMpyCquD9UKMuD0W25Ao43EUbw==}
+    engines: {node: '>=20'}
+
+  '@langchain/google-vertexai@2.1.17':
+    resolution: {integrity: sha512-6BB78l/3mnSH54yPz4BoJvRy465QtEbynI8QtkCRcjVHvHUOAgT6Ka/kOU2TWMXbWVCh11y+jMWVvJ8PaI+UyQ==}
+    engines: {node: '>=20'}
+
+  '@langchain/google-webauth@2.1.17':
+    resolution: {integrity: sha512-53F74R8yG0tyvMlWbojrB5QDgAAAoYSPZCFhTphya0QFMZCoX9FaD311CEjmwbRoosHLkWUODJzKMyb0hxhzyA==}
+    engines: {node: '>=20'}
+    peerDependencies:
+      '@langchain/core': workspace:^
+
+  '@langchain/groq@1.1.0':
+    resolution: {integrity: sha512-OppT1BzyoAhmY9cX2isxZ0L9pYjNNrva0IiyQRavLZ006J4SNkv/DfrOt/ZlqhvNUmb/bQfrV4AzfOVjMXUa+A==}
+    engines: {node: '>=20'}
+    peerDependencies:
+      '@langchain/core': workspace:^
+
   '@langchain/langgraph-checkpoint@0.1.1':
     resolution: {integrity: sha512-h2bP0RUikQZu0Um1ZUPErQLXyhzroJqKRbRcxYRTAh49oNlsfeq4A3K4YEDRbGGuyPZI/Jiqwhks1wZwY73AZw==}
     engines: {node: '>=18'}
@@ -6314,6 +6423,42 @@ packages:
     peerDependenciesMeta:
       zod-to-json-schema:
         optional: true
+
+  '@langchain/mistralai@1.0.4':
+    resolution: {integrity: sha512-e3tHpcD5Of+Dz5bA7IgNWEUaexjaAU6epqLvbI0FHdZeg7IItDuVlRh7pSDvUwdVag2bndqwPEbSOHXZWP5OCw==}
+    engines: {node: '>=20'}
+    peerDependencies:
+      '@langchain/core': workspace:^
+
+  '@langchain/ollama@1.2.2':
+    resolution: {integrity: sha512-UmbDSToADT15O7kMBm+0MVs/Zie8SHVFMKt4BDSyunXZOgDdqIPvc4pEqy50m1/gq6kIaVuR2hRAy5kcF0V8kg==}
+    engines: {node: '>=20'}
+    peerDependencies:
+      '@langchain/core': workspace:^
+
+  '@langchain/openai@0.6.17':
+    resolution: {integrity: sha512-JVSzD+FL5v/2UQxKd+ikB1h4PQOtn0VlK8nqW2kPp0fshItCv4utrjBKXC/rubBnSXoRTyonBINe8QRZ6OojVQ==}
+    engines: {node: '>=18'}
+    peerDependencies:
+      '@langchain/core': workspace:^
+
+  '@langchain/openai@1.2.7':
+    resolution: {integrity: sha512-vR9zoF0/EZ03X0Tc6woIEWRDSDSr2l64n+MQCW8NduScJtBJs5r/Ng3Lrp2bjtJQywEMQoOhcrV2DMmAIPWgnw==}
+    engines: {node: '>=20'}
+    peerDependencies:
+      '@langchain/core': workspace:^
+
+  '@langchain/textsplitters@0.1.0':
+    resolution: {integrity: sha512-djI4uw9rlkAb5iMhtLED+xJebDdAG935AdP4eRTB02R7OB/act55Bj9wsskhZsvuyQRpO4O1wQOp85s6T6GWmw==}
+    engines: {node: '>=18'}
+    peerDependencies:
+      '@langchain/core': workspace:^
+
+  '@langchain/xai@1.3.3':
+    resolution: {integrity: sha512-bK4WeoFPy8+sEwlJ6FsGWaf8uaNOCKd4QFydQibuRtkShFMnAdkombIdujlNTtNkycguftlWU45dihf72jHm6Q==}
+    engines: {node: '>=20'}
+    peerDependencies:
+      '@langchain/core': workspace:^
 
   '@layerup/layerup-security@1.6.0':
     resolution: {integrity: sha512-HSBZobDxgi0aHrEoN49RwLSbv60614upoE+noAR/nlysp8K1H1mu9EBw2cY5YTk6XbmEqEjddu9dMPb71NABMA==}
@@ -7787,6 +7932,31 @@ packages:
 
   '@so-ric/colorspace@1.1.6':
     resolution: {integrity: sha512-/KiKkpHNOBgkFJwu9sh48LkHSMYGyuTcSFK/qMBdnOAlrRJzRSXAOFB5qwzaVQuDl8wAvHVMkaASQDReTahxuw==}
+
+  '@sparktype/darwin-arm64@0.1.3':
+    resolution: {integrity: sha512-og47iyByVB9TJlHQtnxCJcqQ2+exk8dslIaIUxceT1hZWJxabivI1+DxvLa+33jubFmFwJ0FdooX6LKAcuWWVw==}
+    cpu: [arm64]
+    os: [darwin]
+
+  '@sparktype/darwin-x64@0.1.3':
+    resolution: {integrity: sha512-h8sHVGC2XIgYmN2IJHUvh1l9HCmkGrdD+FGY4pCq/psltZarW3LQKidjNOPQIVOn0MbIcJVRk6NtXcCeKVrk9g==}
+    cpu: [x64]
+    os: [darwin]
+
+  '@sparktype/linux-arm64@0.1.3':
+    resolution: {integrity: sha512-xtQH57ZVo9hjXbS8ghPNjvapwB+wKDZgc0jKslpyQSMA0JH5g6nfgJHQFGUKG7Umw5Tb4dpCHRPM3LQ4mEy3NQ==}
+    cpu: [arm64]
+    os: [linux]
+
+  '@sparktype/linux-x64@0.1.3':
+    resolution: {integrity: sha512-6ijfrDUqpPvHjF3GGpcwF05uAClPNT7O6rFGvdP0p3NeDEFchkVdvq2zc2EGJat5ODR5ZdimgDqSGIn2zMkQRA==}
+    cpu: [x64]
+    os: [linux]
+
+  '@sparktype/win32-x64@0.1.3':
+    resolution: {integrity: sha512-O7Ytp4IEjpMOjvF+YcTdf1Ev/g53wLleZwbeqgyB9CKvjAwjJ1KnUvQ3do2ikRAFF3XCJn+bH0BGHqClqNyC+w==}
+    cpu: [x64]
+    os: [win32]
 
   '@spider-cloud/spider-client@0.1.85':
     resolution: {integrity: sha512-+ktKNb9wIvJx/PApMVN6hyRHB6BHOTlnBSmuK9cq7nRpf9NngX1DHNu2ung0rlwhKx7LTfRuRc0CMeIa72JGfA==}
@@ -11834,6 +12004,9 @@ packages:
   jose@4.15.9:
     resolution: {integrity: sha512-1vUQX+IdDMVPj4k8kOxgUqlcK518yluMuGZwqlr44FS1ppZB/5GWh4rZG89erpOBOJjU/OBsnCVFfapsRz6nEA==}
 
+  jose@6.1.2:
+    resolution: {integrity: sha512-MpcPtHLE5EmztuFIqB0vzHAWJPpmN1E6L4oo+kze56LIs3MyXIj9ZHMDxqOvkP38gBR7K1v3jqd4WU2+nrfONQ==}
+
   jose@6.1.3:
     resolution: {integrity: sha512-0TpaTfihd4QMNwrz/ob2Bp7X04yuxJkjRGi4aKmOqwhov54i6u79oCv7T+C7lo70MKH6BesI3vscD1yb/yzKXQ==}
 
@@ -12005,6 +12178,81 @@ packages:
 
   kuler@2.0.0:
     resolution: {integrity: sha512-Xq9nH7KlWZmXAtodXDDRE7vs6DU1gTU8zYDHDiWLSip45Egwq3plLHzPn27NgvzL2r1LMPC1vdqh98sQxtqj4A==}
+
+  langchain@0.3.30:
+    resolution: {integrity: sha512-UyVsfwHDpHbrnWrjWuhJHqi8Non+Zcsf2kdpDTqyJF8NXrHBOpjdHT5LvPuW9fnE7miDTWf5mLcrWAGZgcrznQ==}
+    engines: {node: '>=18'}
+    peerDependencies:
+      '@langchain/anthropic': '*'
+      '@langchain/aws': '*'
+      '@langchain/cerebras': '*'
+      '@langchain/cohere': '*'
+      '@langchain/core': workspace:^
+      '@langchain/deepseek': '*'
+      '@langchain/google-genai': '*'
+      '@langchain/google-vertexai': '*'
+      '@langchain/google-vertexai-web': '*'
+      '@langchain/groq': '*'
+      '@langchain/mistralai': '*'
+      '@langchain/ollama': '*'
+      '@langchain/xai': '*'
+      axios: '*'
+      cheerio: '*'
+      handlebars: ^4.7.8
+      peggy: ^3.0.2
+      typeorm: '*'
+    peerDependenciesMeta:
+      '@langchain/anthropic':
+        optional: true
+      '@langchain/aws':
+        optional: true
+      '@langchain/cerebras':
+        optional: true
+      '@langchain/cohere':
+        optional: true
+      '@langchain/deepseek':
+        optional: true
+      '@langchain/google-genai':
+        optional: true
+      '@langchain/google-vertexai':
+        optional: true
+      '@langchain/google-vertexai-web':
+        optional: true
+      '@langchain/groq':
+        optional: true
+      '@langchain/mistralai':
+        optional: true
+      '@langchain/ollama':
+        optional: true
+      '@langchain/xai':
+        optional: true
+      axios:
+        optional: true
+      cheerio:
+        optional: true
+      handlebars:
+        optional: true
+      peggy:
+        optional: true
+      typeorm:
+        optional: true
+
+  langsmith@0.3.87:
+    resolution: {integrity: sha512-XXR1+9INH8YX96FKWc5tie0QixWz6tOqAsAKfcJyPkE0xPep+NDz0IQLR32q4bn10QK3LqD2HN6T3n6z1YLW7Q==}
+    peerDependencies:
+      '@opentelemetry/api': '*'
+      '@opentelemetry/exporter-trace-otlp-proto': '*'
+      '@opentelemetry/sdk-trace-base': '*'
+      openai: '*'
+    peerDependenciesMeta:
+      '@opentelemetry/api':
+        optional: true
+      '@opentelemetry/exporter-trace-otlp-proto':
+        optional: true
+      '@opentelemetry/sdk-trace-base':
+        optional: true
+      openai:
+        optional: true
 
   langsmith@0.5.0:
     resolution: {integrity: sha512-5U9Ar/wAu5vyTBBImvMLrM9sjynHzN703oLHScEqJaXWE6gm+uti0rWDryQZ6ObnuqSNa4IOUudYej9X6VNEwg==}
@@ -12941,6 +13189,18 @@ packages:
 
   openai@4.104.0:
     resolution: {integrity: sha512-p99EFNsA/yX6UhVO93f5kJsDRLAg+CTA2RBqdHK4RtK8u5IJw32Hyb2dTGKbnnFmnuoBv5r7Z2CURI9sGZpSuA==}
+    hasBin: true
+    peerDependencies:
+      ws: ^8.18.0
+      zod: ^3.23.8
+    peerDependenciesMeta:
+      ws:
+        optional: true
+      zod:
+        optional: true
+
+  openai@5.12.2:
+    resolution: {integrity: sha512-xqzHHQch5Tws5PcKR2xsZGX9xtch+JQFz5zb14dGqlshmmDAFBFEWmeIpf7wVqWV+w7Emj7jRgkNJakyKE0tYQ==}
     hasBin: true
     peerDependencies:
       ws: ^8.18.0
@@ -14194,6 +14454,11 @@ packages:
   source-map@0.6.1:
     resolution: {integrity: sha512-UjgapumWlbMhkBgzT7Ykc5YXUT46F0iKu8SGXq0bcwP5dz/h0Plj6enJqjz1Zbq2l5WaqYnrVbwWOWMyF3F47g==}
     engines: {node: '>=0.10.0'}
+
+  sparktype@0.1.3:
+    resolution: {integrity: sha512-7w2B8tcUJa1ZYFYi8DGdsMkiPxr7wzgHX53Uy3sTOWzlYLGFk3fVTQnvr7wFzkWAFszNs8U+9lsP6Myme9+XrQ==}
+    engines: {node: '>=16'}
+    hasBin: true
 
   sparse-bitfield@3.0.3:
     resolution: {integrity: sha512-kvzhi7vqKTfkh0PZU+2D2PIllw2ymqJKujUcyPMd9Y75Nv4nPbGJZXNhxsgdQab2BmlDct1YnfQCguEvHr7VsQ==}
@@ -18799,6 +19064,19 @@ snapshots:
     transitivePeerDependencies:
       - debug
 
+  '@getzep/zep-cloud@1.0.12(@langchain/core@libs+langchain-core)(encoding@0.1.13)(langchain@0.3.30(bef1b3b0bc47d2de957a34aeb1c09877))':
+    dependencies:
+      form-data: 4.0.5
+      node-fetch: 2.7.0(encoding@0.1.13)
+      qs: 6.11.2
+      url-join: 4.0.1
+      zod: 3.25.76
+    optionalDependencies:
+      '@langchain/core': link:libs/langchain-core
+      langchain: 0.3.30(bef1b3b0bc47d2de957a34aeb1c09877)
+    transitivePeerDependencies:
+      - encoding
+
   '@getzep/zep-cloud@1.0.12(@langchain/core@libs+langchain-core)(encoding@0.1.13)(langchain@libs+langchain)':
     dependencies:
       form-data: 4.0.5
@@ -19104,6 +19382,16 @@ snapshots:
 
   '@inquirer/ansi@1.0.2': {}
 
+  '@inquirer/checkbox@4.3.2(@types/node@24.10.12)':
+    dependencies:
+      '@inquirer/ansi': 1.0.2
+      '@inquirer/core': 10.3.2(@types/node@24.10.12)
+      '@inquirer/figures': 1.0.15
+      '@inquirer/type': 3.0.10(@types/node@24.10.12)
+      yoctocolors-cjs: 2.1.3
+    optionalDependencies:
+      '@types/node': 24.10.12
+
   '@inquirer/checkbox@4.3.2(@types/node@25.2.2)':
     dependencies:
       '@inquirer/ansi': 1.0.2
@@ -19114,12 +19402,32 @@ snapshots:
     optionalDependencies:
       '@types/node': 25.2.2
 
+  '@inquirer/confirm@5.1.21(@types/node@24.10.12)':
+    dependencies:
+      '@inquirer/core': 10.3.2(@types/node@24.10.12)
+      '@inquirer/type': 3.0.10(@types/node@24.10.12)
+    optionalDependencies:
+      '@types/node': 24.10.12
+
   '@inquirer/confirm@5.1.21(@types/node@25.2.2)':
     dependencies:
       '@inquirer/core': 10.3.2(@types/node@25.2.2)
       '@inquirer/type': 3.0.10(@types/node@25.2.2)
     optionalDependencies:
       '@types/node': 25.2.2
+
+  '@inquirer/core@10.3.2(@types/node@24.10.12)':
+    dependencies:
+      '@inquirer/ansi': 1.0.2
+      '@inquirer/figures': 1.0.15
+      '@inquirer/type': 3.0.10(@types/node@24.10.12)
+      cli-width: 4.1.0
+      mute-stream: 2.0.0
+      signal-exit: 4.1.0
+      wrap-ansi: 6.2.0
+      yoctocolors-cjs: 2.1.3
+    optionalDependencies:
+      '@types/node': 24.10.12
 
   '@inquirer/core@10.3.2(@types/node@25.2.2)':
     dependencies:
@@ -19134,6 +19442,14 @@ snapshots:
     optionalDependencies:
       '@types/node': 25.2.2
 
+  '@inquirer/editor@4.2.23(@types/node@24.10.12)':
+    dependencies:
+      '@inquirer/core': 10.3.2(@types/node@24.10.12)
+      '@inquirer/external-editor': 1.0.3(@types/node@24.10.12)
+      '@inquirer/type': 3.0.10(@types/node@24.10.12)
+    optionalDependencies:
+      '@types/node': 24.10.12
+
   '@inquirer/editor@4.2.23(@types/node@25.2.2)':
     dependencies:
       '@inquirer/core': 10.3.2(@types/node@25.2.2)
@@ -19142,6 +19458,14 @@ snapshots:
     optionalDependencies:
       '@types/node': 25.2.2
 
+  '@inquirer/expand@4.0.23(@types/node@24.10.12)':
+    dependencies:
+      '@inquirer/core': 10.3.2(@types/node@24.10.12)
+      '@inquirer/type': 3.0.10(@types/node@24.10.12)
+      yoctocolors-cjs: 2.1.3
+    optionalDependencies:
+      '@types/node': 24.10.12
+
   '@inquirer/expand@4.0.23(@types/node@25.2.2)':
     dependencies:
       '@inquirer/core': 10.3.2(@types/node@25.2.2)
@@ -19149,6 +19473,13 @@ snapshots:
       yoctocolors-cjs: 2.1.3
     optionalDependencies:
       '@types/node': 25.2.2
+
+  '@inquirer/external-editor@1.0.3(@types/node@24.10.12)':
+    dependencies:
+      chardet: 2.1.1
+      iconv-lite: 0.7.2
+    optionalDependencies:
+      '@types/node': 24.10.12
 
   '@inquirer/external-editor@1.0.3(@types/node@25.2.2)':
     dependencies:
@@ -19159,12 +19490,26 @@ snapshots:
 
   '@inquirer/figures@1.0.15': {}
 
+  '@inquirer/input@4.3.1(@types/node@24.10.12)':
+    dependencies:
+      '@inquirer/core': 10.3.2(@types/node@24.10.12)
+      '@inquirer/type': 3.0.10(@types/node@24.10.12)
+    optionalDependencies:
+      '@types/node': 24.10.12
+
   '@inquirer/input@4.3.1(@types/node@25.2.2)':
     dependencies:
       '@inquirer/core': 10.3.2(@types/node@25.2.2)
       '@inquirer/type': 3.0.10(@types/node@25.2.2)
     optionalDependencies:
       '@types/node': 25.2.2
+
+  '@inquirer/number@3.0.23(@types/node@24.10.12)':
+    dependencies:
+      '@inquirer/core': 10.3.2(@types/node@24.10.12)
+      '@inquirer/type': 3.0.10(@types/node@24.10.12)
+    optionalDependencies:
+      '@types/node': 24.10.12
 
   '@inquirer/number@3.0.23(@types/node@25.2.2)':
     dependencies:
@@ -19173,6 +19518,14 @@ snapshots:
     optionalDependencies:
       '@types/node': 25.2.2
 
+  '@inquirer/password@4.0.23(@types/node@24.10.12)':
+    dependencies:
+      '@inquirer/ansi': 1.0.2
+      '@inquirer/core': 10.3.2(@types/node@24.10.12)
+      '@inquirer/type': 3.0.10(@types/node@24.10.12)
+    optionalDependencies:
+      '@types/node': 24.10.12
+
   '@inquirer/password@4.0.23(@types/node@25.2.2)':
     dependencies:
       '@inquirer/ansi': 1.0.2
@@ -19180,6 +19533,21 @@ snapshots:
       '@inquirer/type': 3.0.10(@types/node@25.2.2)
     optionalDependencies:
       '@types/node': 25.2.2
+
+  '@inquirer/prompts@7.10.1(@types/node@24.10.12)':
+    dependencies:
+      '@inquirer/checkbox': 4.3.2(@types/node@24.10.12)
+      '@inquirer/confirm': 5.1.21(@types/node@24.10.12)
+      '@inquirer/editor': 4.2.23(@types/node@24.10.12)
+      '@inquirer/expand': 4.0.23(@types/node@24.10.12)
+      '@inquirer/input': 4.3.1(@types/node@24.10.12)
+      '@inquirer/number': 3.0.23(@types/node@24.10.12)
+      '@inquirer/password': 4.0.23(@types/node@24.10.12)
+      '@inquirer/rawlist': 4.1.11(@types/node@24.10.12)
+      '@inquirer/search': 3.2.2(@types/node@24.10.12)
+      '@inquirer/select': 4.4.2(@types/node@24.10.12)
+    optionalDependencies:
+      '@types/node': 24.10.12
 
   '@inquirer/prompts@7.10.1(@types/node@25.2.2)':
     dependencies:
@@ -19196,6 +19564,14 @@ snapshots:
     optionalDependencies:
       '@types/node': 25.2.2
 
+  '@inquirer/rawlist@4.1.11(@types/node@24.10.12)':
+    dependencies:
+      '@inquirer/core': 10.3.2(@types/node@24.10.12)
+      '@inquirer/type': 3.0.10(@types/node@24.10.12)
+      yoctocolors-cjs: 2.1.3
+    optionalDependencies:
+      '@types/node': 24.10.12
+
   '@inquirer/rawlist@4.1.11(@types/node@25.2.2)':
     dependencies:
       '@inquirer/core': 10.3.2(@types/node@25.2.2)
@@ -19203,6 +19579,15 @@ snapshots:
       yoctocolors-cjs: 2.1.3
     optionalDependencies:
       '@types/node': 25.2.2
+
+  '@inquirer/search@3.2.2(@types/node@24.10.12)':
+    dependencies:
+      '@inquirer/core': 10.3.2(@types/node@24.10.12)
+      '@inquirer/figures': 1.0.15
+      '@inquirer/type': 3.0.10(@types/node@24.10.12)
+      yoctocolors-cjs: 2.1.3
+    optionalDependencies:
+      '@types/node': 24.10.12
 
   '@inquirer/search@3.2.2(@types/node@25.2.2)':
     dependencies:
@@ -19213,6 +19598,16 @@ snapshots:
     optionalDependencies:
       '@types/node': 25.2.2
 
+  '@inquirer/select@4.4.2(@types/node@24.10.12)':
+    dependencies:
+      '@inquirer/ansi': 1.0.2
+      '@inquirer/core': 10.3.2(@types/node@24.10.12)
+      '@inquirer/figures': 1.0.15
+      '@inquirer/type': 3.0.10(@types/node@24.10.12)
+      yoctocolors-cjs: 2.1.3
+    optionalDependencies:
+      '@types/node': 24.10.12
+
   '@inquirer/select@4.4.2(@types/node@25.2.2)':
     dependencies:
       '@inquirer/ansi': 1.0.2
@@ -19222,6 +19617,10 @@ snapshots:
       yoctocolors-cjs: 2.1.3
     optionalDependencies:
       '@types/node': 25.2.2
+
+  '@inquirer/type@3.0.10(@types/node@24.10.12)':
+    optionalDependencies:
+      '@types/node': 24.10.12
 
   '@inquirer/type@3.0.10(@types/node@25.2.2)':
     optionalDependencies:
@@ -19261,6 +19660,42 @@ snapshots:
       jest-util: 30.2.0
       slash: 3.0.0
 
+  '@jest/core@30.2.0(ts-node@10.9.2(@swc/core@1.15.11(@swc/helpers@0.5.18))(@types/node@24.10.12)(typescript@5.8.3))':
+    dependencies:
+      '@jest/console': 30.2.0
+      '@jest/pattern': 30.0.1
+      '@jest/reporters': 30.2.0
+      '@jest/test-result': 30.2.0
+      '@jest/transform': 30.2.0
+      '@jest/types': 30.2.0
+      '@types/node': 24.10.12
+      ansi-escapes: 4.3.2
+      chalk: 4.1.2
+      ci-info: 4.4.0
+      exit-x: 0.2.2
+      graceful-fs: 4.2.11
+      jest-changed-files: 30.2.0
+      jest-config: 30.2.0(@types/node@24.10.12)(ts-node@10.9.2(@swc/core@1.15.11(@swc/helpers@0.5.18))(@types/node@24.10.12)(typescript@5.8.3))
+      jest-haste-map: 30.2.0
+      jest-message-util: 30.2.0
+      jest-regex-util: 30.0.1
+      jest-resolve: 30.2.0
+      jest-resolve-dependencies: 30.2.0
+      jest-runner: 30.2.0
+      jest-runtime: 30.2.0
+      jest-snapshot: 30.2.0
+      jest-util: 30.2.0
+      jest-validate: 30.2.0
+      jest-watcher: 30.2.0
+      micromatch: 4.0.8
+      pretty-format: 30.2.0
+      slash: 3.0.0
+    transitivePeerDependencies:
+      - babel-plugin-macros
+      - esbuild-register
+      - supports-color
+      - ts-node
+
   '@jest/core@30.2.0(ts-node@10.9.2(@swc/core@1.15.11(@swc/helpers@0.5.18))(@types/node@25.2.2)(typescript@5.8.3))':
     dependencies:
       '@jest/console': 30.2.0
@@ -19269,14 +19704,14 @@ snapshots:
       '@jest/test-result': 30.2.0
       '@jest/transform': 30.2.0
       '@jest/types': 30.2.0
-      '@types/node': 25.2.2
+      '@types/node': 24.10.12
       ansi-escapes: 4.3.2
       chalk: 4.1.2
       ci-info: 4.4.0
       exit-x: 0.2.2
       graceful-fs: 4.2.11
       jest-changed-files: 30.2.0
-      jest-config: 30.2.0(@types/node@25.2.2)(ts-node@10.9.2(@swc/core@1.15.11(@swc/helpers@0.5.18))(@types/node@25.2.2)(typescript@5.8.3))
+      jest-config: 30.2.0(@types/node@24.10.12)(ts-node@10.9.2(@swc/core@1.15.11(@swc/helpers@0.5.18))(@types/node@25.2.2)(typescript@5.8.3))
       jest-haste-map: 30.2.0
       jest-message-util: 30.2.0
       jest-regex-util: 30.0.1
@@ -19516,6 +19951,93 @@ snapshots:
       '@lancedb/lancedb-win32-arm64-msvc': 0.19.1
       '@lancedb/lancedb-win32-x64-msvc': 0.19.1
 
+  '@langchain/anthropic@1.3.17(@langchain/core@libs+langchain-core)':
+    dependencies:
+      '@anthropic-ai/sdk': 0.73.0(zod@4.3.6)
+      '@langchain/core': link:libs/langchain-core
+      zod: 4.3.6
+    optional: true
+
+  '@langchain/aws@1.2.2(@langchain/core@libs+langchain-core)':
+    dependencies:
+      '@aws-sdk/client-bedrock-agent-runtime': 3.985.0
+      '@aws-sdk/client-bedrock-runtime': 3.985.0
+      '@aws-sdk/client-kendra': 3.985.0
+      '@aws-sdk/credential-provider-node': 3.972.6
+      '@langchain/core': link:libs/langchain-core
+    transitivePeerDependencies:
+      - aws-crt
+    optional: true
+
+  '@langchain/cohere@1.0.2(@langchain/core@libs+langchain-core)':
+    dependencies:
+      '@langchain/core': link:libs/langchain-core
+      cohere-ai: 7.20.0
+      uuid: 10.0.0
+    transitivePeerDependencies:
+      - aws-crt
+    optional: true
+
+  '@langchain/deepseek@1.0.11(@langchain/core@libs+langchain-core)(ws@8.19.0(bufferutil@4.1.0))':
+    dependencies:
+      '@langchain/core': link:libs/langchain-core
+      '@langchain/openai': 1.2.7(@langchain/core@libs+langchain-core)(ws@8.19.0(bufferutil@4.1.0))
+    transitivePeerDependencies:
+      - ws
+    optional: true
+
+  '@langchain/google-common@2.1.17(@langchain/core@libs+langchain-core)':
+    dependencies:
+      '@langchain/core': link:libs/langchain-core
+      uuid: 10.0.0
+    optional: true
+
+  '@langchain/google-gauth@2.1.17(@langchain/core@libs+langchain-core)':
+    dependencies:
+      '@langchain/google-common': 2.1.17(@langchain/core@libs+langchain-core)
+      google-auth-library: 10.5.0
+    transitivePeerDependencies:
+      - '@langchain/core'
+      - supports-color
+    optional: true
+
+  '@langchain/google-genai@2.1.17(@langchain/core@libs+langchain-core)':
+    dependencies:
+      '@google/generative-ai': 0.24.1
+      '@langchain/core': link:libs/langchain-core
+      uuid: 11.1.0
+    optional: true
+
+  '@langchain/google-vertexai-web@2.1.17(@langchain/core@libs+langchain-core)':
+    dependencies:
+      '@langchain/google-webauth': 2.1.17(@langchain/core@libs+langchain-core)
+    transitivePeerDependencies:
+      - '@langchain/core'
+    optional: true
+
+  '@langchain/google-vertexai@2.1.17(@langchain/core@libs+langchain-core)':
+    dependencies:
+      '@langchain/google-gauth': 2.1.17(@langchain/core@libs+langchain-core)
+    transitivePeerDependencies:
+      - '@langchain/core'
+      - supports-color
+    optional: true
+
+  '@langchain/google-webauth@2.1.17(@langchain/core@libs+langchain-core)':
+    dependencies:
+      '@langchain/core': link:libs/langchain-core
+      '@langchain/google-common': 2.1.17(@langchain/core@libs+langchain-core)
+      web-auth-library: 1.0.3
+    optional: true
+
+  '@langchain/groq@1.1.0(@langchain/core@libs+langchain-core)(encoding@0.1.13)':
+    dependencies:
+      '@langchain/core': link:libs/langchain-core
+      groq-sdk: 0.19.0(encoding@0.1.13)
+    transitivePeerDependencies:
+      - encoding
+    optional: true
+
   '@langchain/langgraph-checkpoint@0.1.1(@langchain/core@libs+langchain-core)':
     dependencies:
       '@langchain/core': link:libs/langchain-core
@@ -19586,6 +20108,57 @@ snapshots:
     transitivePeerDependencies:
       - react
       - react-dom
+
+  '@langchain/mistralai@1.0.4(@langchain/core@libs+langchain-core)(bufferutil@4.1.0)':
+    dependencies:
+      '@langchain/core': link:libs/langchain-core
+      '@mistralai/mistralai': 1.14.0(bufferutil@4.1.0)
+      uuid: 13.0.0
+    transitivePeerDependencies:
+      - bufferutil
+      - utf-8-validate
+    optional: true
+
+  '@langchain/ollama@1.2.2(@langchain/core@libs+langchain-core)':
+    dependencies:
+      '@langchain/core': link:libs/langchain-core
+      ollama: 0.6.3
+      uuid: 10.0.0
+    optional: true
+
+  '@langchain/openai@0.6.17(@langchain/core@libs+langchain-core)(ws@8.19.0(bufferutil@4.1.0))':
+    dependencies:
+      '@langchain/core': link:libs/langchain-core
+      js-tiktoken: 1.0.21
+      openai: 5.12.2(ws@8.19.0(bufferutil@4.1.0))(zod@3.25.76)
+      zod: 3.25.76
+    transitivePeerDependencies:
+      - ws
+    optional: true
+
+  '@langchain/openai@1.2.7(@langchain/core@libs+langchain-core)(ws@8.19.0(bufferutil@4.1.0))':
+    dependencies:
+      '@langchain/core': link:libs/langchain-core
+      js-tiktoken: 1.0.21
+      openai: 6.18.0(ws@8.19.0(bufferutil@4.1.0))(zod@4.3.6)
+      zod: 4.3.6
+    transitivePeerDependencies:
+      - ws
+    optional: true
+
+  '@langchain/textsplitters@0.1.0(@langchain/core@libs+langchain-core)':
+    dependencies:
+      '@langchain/core': link:libs/langchain-core
+      js-tiktoken: 1.0.21
+    optional: true
+
+  '@langchain/xai@1.3.3(@langchain/core@libs+langchain-core)(ws@8.19.0(bufferutil@4.1.0))':
+    dependencies:
+      '@langchain/core': link:libs/langchain-core
+      '@langchain/openai': 1.2.7(@langchain/core@libs+langchain-core)(ws@8.19.0(bufferutil@4.1.0))
+    transitivePeerDependencies:
+      - ws
+    optional: true
 
   '@layerup/layerup-security@1.6.0(encoding@0.1.13)(ws@8.19.0(bufferutil@4.1.0))(zod@3.25.76)':
     dependencies:
@@ -20111,9 +20684,9 @@ snapshots:
     dependencies:
       '@oclif/core': 4.8.0
 
-  '@oclif/plugin-not-found@3.2.74(@types/node@25.2.2)':
+  '@oclif/plugin-not-found@3.2.74(@types/node@24.10.12)':
     dependencies:
-      '@inquirer/prompts': 7.10.1(@types/node@25.2.2)
+      '@inquirer/prompts': 7.10.1(@types/node@24.10.12)
       '@oclif/core': 4.8.0
       ansis: 3.17.0
       fast-levenshtein: 3.0.0
@@ -20437,16 +21010,16 @@ snapshots:
     dependencies:
       quansync: 1.0.0
 
-  '@raycast/api@1.104.5(@types/node@25.2.2)':
+  '@raycast/api@1.104.5(@types/node@24.10.12)':
     dependencies:
       '@oclif/core': 4.8.0
       '@oclif/plugin-autocomplete': 3.2.40
       '@oclif/plugin-help': 6.2.37
-      '@oclif/plugin-not-found': 3.2.74(@types/node@25.2.2)
+      '@oclif/plugin-not-found': 3.2.74(@types/node@24.10.12)
       esbuild: 0.25.12
       react: 19.0.0
     optionalDependencies:
-      '@types/node': 25.2.2
+      '@types/node': 24.10.12
     transitivePeerDependencies:
       - supports-color
 
@@ -21077,6 +21650,21 @@ snapshots:
       color: 5.0.3
       text-hex: 1.0.0
 
+  '@sparktype/darwin-arm64@0.1.3':
+    optional: true
+
+  '@sparktype/darwin-x64@0.1.3':
+    optional: true
+
+  '@sparktype/linux-arm64@0.1.3':
+    optional: true
+
+  '@sparktype/linux-x64@0.1.3':
+    optional: true
+
+  '@sparktype/win32-x64@0.1.3':
+    optional: true
+
   '@spider-cloud/spider-client@0.1.85':
     dependencies:
       exponential-backoff: 3.1.3
@@ -21456,6 +22044,7 @@ snapshots:
   '@types/node@25.2.2':
     dependencies:
       undici-types: 7.16.0
+    optional: true
 
   '@types/offscreencanvas@2019.7.3': {}
 
@@ -25975,6 +26564,25 @@ snapshots:
       - babel-plugin-macros
       - supports-color
 
+  jest-cli@30.2.0(@types/node@24.10.12)(ts-node@10.9.2(@swc/core@1.15.11(@swc/helpers@0.5.18))(@types/node@24.10.12)(typescript@5.8.3)):
+    dependencies:
+      '@jest/core': 30.2.0(ts-node@10.9.2(@swc/core@1.15.11(@swc/helpers@0.5.18))(@types/node@24.10.12)(typescript@5.8.3))
+      '@jest/test-result': 30.2.0
+      '@jest/types': 30.2.0
+      chalk: 4.1.2
+      exit-x: 0.2.2
+      import-local: 3.2.0
+      jest-config: 30.2.0(@types/node@24.10.12)(ts-node@10.9.2(@swc/core@1.15.11(@swc/helpers@0.5.18))(@types/node@24.10.12)(typescript@5.8.3))
+      jest-util: 30.2.0
+      jest-validate: 30.2.0
+      yargs: 17.7.2
+    transitivePeerDependencies:
+      - '@types/node'
+      - babel-plugin-macros
+      - esbuild-register
+      - supports-color
+      - ts-node
+
   jest-cli@30.2.0(@types/node@25.2.2)(ts-node@10.9.2(@swc/core@1.15.11(@swc/helpers@0.5.18))(@types/node@25.2.2)(typescript@5.8.3)):
     dependencies:
       '@jest/core': 30.2.0(ts-node@10.9.2(@swc/core@1.15.11(@swc/helpers@0.5.18))(@types/node@25.2.2)(typescript@5.8.3))
@@ -25993,6 +26601,72 @@ snapshots:
       - esbuild-register
       - supports-color
       - ts-node
+
+  jest-config@30.2.0(@types/node@24.10.12)(ts-node@10.9.2(@swc/core@1.15.11(@swc/helpers@0.5.18))(@types/node@24.10.12)(typescript@5.8.3)):
+    dependencies:
+      '@babel/core': 7.29.0
+      '@jest/get-type': 30.1.0
+      '@jest/pattern': 30.0.1
+      '@jest/test-sequencer': 30.2.0
+      '@jest/types': 30.2.0
+      babel-jest: 30.2.0(@babel/core@7.29.0)
+      chalk: 4.1.2
+      ci-info: 4.4.0
+      deepmerge: 4.3.1
+      glob: 10.5.0
+      graceful-fs: 4.2.11
+      jest-circus: 30.2.0
+      jest-docblock: 30.2.0
+      jest-environment-node: 30.2.0
+      jest-regex-util: 30.0.1
+      jest-resolve: 30.2.0
+      jest-runner: 30.2.0
+      jest-util: 30.2.0
+      jest-validate: 30.2.0
+      micromatch: 4.0.8
+      parse-json: 5.2.0
+      pretty-format: 30.2.0
+      slash: 3.0.0
+      strip-json-comments: 3.1.1
+    optionalDependencies:
+      '@types/node': 24.10.12
+      ts-node: 10.9.2(@swc/core@1.15.11(@swc/helpers@0.5.18))(@types/node@24.10.12)(typescript@5.8.3)
+    transitivePeerDependencies:
+      - babel-plugin-macros
+      - supports-color
+
+  jest-config@30.2.0(@types/node@24.10.12)(ts-node@10.9.2(@swc/core@1.15.11(@swc/helpers@0.5.18))(@types/node@25.2.2)(typescript@5.8.3)):
+    dependencies:
+      '@babel/core': 7.29.0
+      '@jest/get-type': 30.1.0
+      '@jest/pattern': 30.0.1
+      '@jest/test-sequencer': 30.2.0
+      '@jest/types': 30.2.0
+      babel-jest: 30.2.0(@babel/core@7.29.0)
+      chalk: 4.1.2
+      ci-info: 4.4.0
+      deepmerge: 4.3.1
+      glob: 10.5.0
+      graceful-fs: 4.2.11
+      jest-circus: 30.2.0
+      jest-docblock: 30.2.0
+      jest-environment-node: 30.2.0
+      jest-regex-util: 30.0.1
+      jest-resolve: 30.2.0
+      jest-runner: 30.2.0
+      jest-util: 30.2.0
+      jest-validate: 30.2.0
+      micromatch: 4.0.8
+      parse-json: 5.2.0
+      pretty-format: 30.2.0
+      slash: 3.0.0
+      strip-json-comments: 3.1.1
+    optionalDependencies:
+      '@types/node': 24.10.12
+      ts-node: 10.9.2(@swc/core@1.15.11(@swc/helpers@0.5.18))(@types/node@25.2.2)(typescript@5.8.3)
+    transitivePeerDependencies:
+      - babel-plugin-macros
+      - supports-color
 
   jest-config@30.2.0(@types/node@25.2.2)(ts-node@10.9.2(@swc/core@1.15.11(@swc/helpers@0.5.18))(@types/node@25.2.2)(typescript@5.8.3)):
     dependencies:
@@ -26248,6 +26922,19 @@ snapshots:
       merge-stream: 2.0.0
       supports-color: 8.1.1
 
+  jest@30.2.0(@types/node@24.10.12)(ts-node@10.9.2(@swc/core@1.15.11(@swc/helpers@0.5.18))(@types/node@24.10.12)(typescript@5.8.3)):
+    dependencies:
+      '@jest/core': 30.2.0(ts-node@10.9.2(@swc/core@1.15.11(@swc/helpers@0.5.18))(@types/node@24.10.12)(typescript@5.8.3))
+      '@jest/types': 30.2.0
+      import-local: 3.2.0
+      jest-cli: 30.2.0(@types/node@24.10.12)(ts-node@10.9.2(@swc/core@1.15.11(@swc/helpers@0.5.18))(@types/node@24.10.12)(typescript@5.8.3))
+    transitivePeerDependencies:
+      - '@types/node'
+      - babel-plugin-macros
+      - esbuild-register
+      - supports-color
+      - ts-node
+
   jest@30.2.0(@types/node@25.2.2)(ts-node@10.9.2(@swc/core@1.15.11(@swc/helpers@0.5.18))(@types/node@25.2.2)(typescript@5.8.3)):
     dependencies:
       '@jest/core': 30.2.0(ts-node@10.9.2(@swc/core@1.15.11(@swc/helpers@0.5.18))(@types/node@25.2.2)(typescript@5.8.3))
@@ -26266,6 +26953,8 @@ snapshots:
   jiti@2.6.1: {}
 
   jose@4.15.9: {}
+
+  jose@6.1.2: {}
 
   jose@6.1.3: {}
 
@@ -26446,6 +27135,58 @@ snapshots:
   kolorist@1.8.0: {}
 
   kuler@2.0.0: {}
+
+  langchain@0.3.30(bef1b3b0bc47d2de957a34aeb1c09877):
+    dependencies:
+      '@langchain/core': link:libs/langchain-core
+      '@langchain/openai': 0.6.17(@langchain/core@libs+langchain-core)(ws@8.19.0(bufferutil@4.1.0))
+      '@langchain/textsplitters': 0.1.0(@langchain/core@libs+langchain-core)
+      js-tiktoken: 1.0.21
+      js-yaml: 4.1.1
+      jsonpointer: 5.0.1
+      langsmith: 0.3.87(@opentelemetry/api@1.9.0)(openai@6.18.0(ws@8.19.0(bufferutil@4.1.0))(zod@4.3.6))
+      openapi-types: 12.1.3
+      p-retry: 4.6.2
+      uuid: 10.0.0
+      yaml: 2.8.2
+      zod: 3.25.76
+    optionalDependencies:
+      '@langchain/anthropic': 1.3.17(@langchain/core@libs+langchain-core)
+      '@langchain/aws': 1.2.2(@langchain/core@libs+langchain-core)
+      '@langchain/cohere': 1.0.2(@langchain/core@libs+langchain-core)
+      '@langchain/deepseek': 1.0.11(@langchain/core@libs+langchain-core)(ws@8.19.0(bufferutil@4.1.0))
+      '@langchain/google-genai': 2.1.17(@langchain/core@libs+langchain-core)
+      '@langchain/google-vertexai': 2.1.17(@langchain/core@libs+langchain-core)
+      '@langchain/google-vertexai-web': 2.1.17(@langchain/core@libs+langchain-core)
+      '@langchain/groq': 1.1.0(@langchain/core@libs+langchain-core)(encoding@0.1.13)
+      '@langchain/mistralai': 1.0.4(@langchain/core@libs+langchain-core)(bufferutil@4.1.0)
+      '@langchain/ollama': 1.2.2(@langchain/core@libs+langchain-core)
+      '@langchain/xai': 1.3.3(@langchain/core@libs+langchain-core)(ws@8.19.0(bufferutil@4.1.0))
+      axios: 1.13.5(debug@4.4.3)
+      cheerio: 1.0.0-rc.12
+      handlebars: 4.7.8
+      peggy: 3.0.2
+      typeorm: 0.3.28(better-sqlite3@12.6.2)(ioredis@5.9.2)(mongodb@6.21.0(@aws-sdk/credential-providers@3.985.0)(socks@2.8.7))(mysql2@3.16.3)(pg@8.18.0)(redis@4.7.1)(sqlite3@5.1.7)(ts-node@10.9.2(@swc/core@1.15.11(@swc/helpers@0.5.18))(@types/node@24.10.12)(typescript@5.8.3))
+    transitivePeerDependencies:
+      - '@opentelemetry/api'
+      - '@opentelemetry/exporter-trace-otlp-proto'
+      - '@opentelemetry/sdk-trace-base'
+      - openai
+      - ws
+    optional: true
+
+  langsmith@0.3.87(@opentelemetry/api@1.9.0)(openai@6.18.0(ws@8.19.0(bufferutil@4.1.0))(zod@4.3.6)):
+    dependencies:
+      '@types/uuid': 10.0.0
+      chalk: 4.1.2
+      console-table-printer: 2.15.0
+      p-queue: 6.6.2
+      semver: 7.7.4
+      uuid: 10.0.0
+    optionalDependencies:
+      '@opentelemetry/api': 1.9.0
+      openai: 6.18.0(ws@8.19.0(bufferutil@4.1.0))(zod@4.3.6)
+    optional: true
 
   langsmith@0.5.0(@opentelemetry/api@1.9.0)(openai@5.23.2(ws@8.19.0(bufferutil@4.1.0))(zod@3.25.76)):
     dependencies:
@@ -27524,6 +28265,12 @@ snapshots:
       zod: 4.3.6
     transitivePeerDependencies:
       - encoding
+
+  openai@5.12.2(ws@8.19.0(bufferutil@4.1.0))(zod@3.25.76):
+    optionalDependencies:
+      ws: 8.19.0(bufferutil@4.1.0)
+      zod: 3.25.76
+    optional: true
 
   openai@5.23.2(ws@8.19.0(bufferutil@4.1.0))(zod@3.25.76):
     optionalDependencies:
@@ -29017,6 +29764,14 @@ snapshots:
 
   source-map@0.6.1: {}
 
+  sparktype@0.1.3:
+    optionalDependencies:
+      '@sparktype/darwin-arm64': 0.1.3
+      '@sparktype/darwin-x64': 0.1.3
+      '@sparktype/linux-arm64': 0.1.3
+      '@sparktype/linux-x64': 0.1.3
+      '@sparktype/win32-x64': 0.1.3
+
   sparse-bitfield@3.0.3:
     dependencies:
       memory-pager: 1.5.0
@@ -29526,6 +30281,26 @@ snapshots:
 
   ts-error@1.0.6: {}
 
+  ts-jest@29.4.6(@babel/core@7.29.0)(@jest/transform@30.2.0)(@jest/types@30.2.0)(babel-jest@30.2.0(@babel/core@7.29.0))(jest-util@30.2.0)(jest@30.2.0(@types/node@24.10.12)(ts-node@10.9.2(@swc/core@1.15.11(@swc/helpers@0.5.18))(@types/node@24.10.12)(typescript@5.8.3)))(typescript@5.8.3):
+    dependencies:
+      bs-logger: 0.2.6
+      fast-json-stable-stringify: 2.1.0
+      handlebars: 4.7.8
+      jest: 30.2.0(@types/node@24.10.12)(ts-node@10.9.2(@swc/core@1.15.11(@swc/helpers@0.5.18))(@types/node@24.10.12)(typescript@5.8.3))
+      json5: 2.2.3
+      lodash.memoize: 4.1.2
+      make-error: 1.3.6
+      semver: 7.7.4
+      type-fest: 4.41.0
+      typescript: 5.8.3
+      yargs-parser: 21.1.1
+    optionalDependencies:
+      '@babel/core': 7.29.0
+      '@jest/transform': 30.2.0
+      '@jest/types': 30.2.0
+      babel-jest: 30.2.0(@babel/core@7.29.0)
+      jest-util: 30.2.0
+
   ts-jest@29.4.6(@babel/core@7.29.0)(@jest/transform@30.2.0)(@jest/types@30.2.0)(babel-jest@30.2.0(@babel/core@7.29.0))(jest-util@30.2.0)(jest@30.2.0(@types/node@25.2.2)(ts-node@10.9.2(@swc/core@1.15.11(@swc/helpers@0.5.18))(@types/node@25.2.2)(typescript@5.8.3)))(typescript@5.8.3):
     dependencies:
       bs-logger: 0.2.6
@@ -29569,6 +30344,27 @@ snapshots:
       yn: 3.1.1
     optionalDependencies:
       '@swc/core': 1.15.11(@swc/helpers@0.5.18)
+
+  ts-node@10.9.2(@swc/core@1.15.11(@swc/helpers@0.5.18))(@types/node@24.10.12)(typescript@5.8.3):
+    dependencies:
+      '@cspotcode/source-map-support': 0.8.1
+      '@tsconfig/node10': 1.0.12
+      '@tsconfig/node12': 1.0.11
+      '@tsconfig/node14': 1.0.3
+      '@tsconfig/node16': 1.0.4
+      '@types/node': 24.10.12
+      acorn: 8.15.0
+      acorn-walk: 8.3.4
+      arg: 4.1.3
+      create-require: 1.1.1
+      diff: 4.0.4
+      make-error: 1.3.6
+      typescript: 5.8.3
+      v8-compile-cache-lib: 3.0.1
+      yn: 3.1.1
+    optionalDependencies:
+      '@swc/core': 1.15.11(@swc/helpers@0.5.18)
+    optional: true
 
   ts-node@10.9.2(@swc/core@1.15.11(@swc/helpers@0.5.18))(@types/node@25.2.2)(typescript@5.8.3):
     dependencies:
@@ -29778,6 +30574,36 @@ snapshots:
   typedarray-dts@1.0.0: {}
 
   typedarray@0.0.6: {}
+
+  typeorm@0.3.28(better-sqlite3@12.6.2)(ioredis@5.9.2)(mongodb@6.21.0(@aws-sdk/credential-providers@3.985.0)(socks@2.8.7))(mysql2@3.16.3)(pg@8.18.0)(redis@4.7.1)(sqlite3@5.1.7)(ts-node@10.9.2(@swc/core@1.15.11(@swc/helpers@0.5.18))(@types/node@24.10.12)(typescript@5.8.3)):
+    dependencies:
+      '@sqltools/formatter': 1.2.5
+      ansis: 4.2.0
+      app-root-path: 3.1.0
+      buffer: 6.0.3
+      dayjs: 1.11.19
+      debug: 4.4.3(supports-color@8.1.1)
+      dedent: 1.7.1
+      dotenv: 16.6.1
+      glob: 10.5.0
+      reflect-metadata: 0.2.2
+      sha.js: 2.4.12
+      sql-highlight: 6.1.0
+      tslib: 2.8.1
+      uuid: 11.1.0
+      yargs: 17.7.2
+    optionalDependencies:
+      better-sqlite3: 12.6.2
+      ioredis: 5.9.2
+      mongodb: 6.21.0(@aws-sdk/credential-providers@3.985.0)(socks@2.8.7)
+      mysql2: 3.16.3
+      pg: 8.18.0
+      redis: 4.7.1
+      sqlite3: 5.1.7
+      ts-node: 10.9.2(@swc/core@1.15.11(@swc/helpers@0.5.18))(@types/node@24.10.12)(typescript@5.8.3)
+    transitivePeerDependencies:
+      - babel-plugin-macros
+      - supports-color
 
   typeorm@0.3.28(better-sqlite3@12.6.2)(ioredis@5.9.2)(mongodb@6.21.0(@aws-sdk/credential-providers@3.985.0)(socks@2.8.7))(mysql2@3.16.3)(pg@8.18.0)(redis@4.7.1)(sqlite3@5.1.7)(ts-node@10.9.2(@swc/core@1.15.11(@swc/helpers@0.5.18))(@types/node@25.2.2)(typescript@5.8.3)):
     dependencies:
