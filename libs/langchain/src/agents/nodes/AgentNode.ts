@@ -909,17 +909,28 @@ export class AgentNode<
       };
 
       Object.assign(options, {
+        /**
+         * OpenAI-style options
+         * Used by ChatOpenAI, ChatXAI, and other OpenAI-compatible providers.
+         */
         response_format: {
           type: "json_schema",
           json_schema: jsonSchemaParams,
         },
-        output_format: {
-          type: "json_schema",
-          schema: structuredResponseFormat.strategy.schema,
+
+        /**
+         * Anthropic-style options
+         */
+        outputConfig: {
+          format: {
+            type: "json_schema",
+            schema: structuredResponseFormat.strategy.schema,
+          },
         },
-        headers: {
-          "anthropic-beta": "structured-outputs-2025-11-13",
-        },
+
+        /**
+         * for LangSmith structured output tracing
+         */
         ls_structured_output_format: {
           kwargs: { method: "json_schema" },
           schema: structuredResponseFormat.strategy.schema,
