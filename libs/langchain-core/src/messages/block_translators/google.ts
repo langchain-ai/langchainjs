@@ -10,17 +10,19 @@ function convertToV1FromChatGoogleMessage(
     const content = iife(() => {
       if (typeof message.content === "string") {
         if (message.additional_kwargs.originalTextContentBlock) {
-          return [{
-            ...message.additional_kwargs.originalTextContentBlock,
-            type: "text",
-          }]
+          return [
+            {
+              ...message.additional_kwargs.originalTextContentBlock,
+              type: "text",
+            },
+          ];
         } else {
-          return [{ type: "text", text: message.content }]
+          return [{ type: "text", text: message.content }];
         }
       } else {
         return message.content;
       }
-    })
+    });
     for (const block of content) {
       const contentBlockBase: ContentBlock.Standard = iife(() => {
         if (_isContentBlock(block, "text") && _isString(block.text)) {
@@ -70,26 +72,27 @@ function convertToV1FromChatGoogleMessage(
           return { type: "non_standard", value: block };
         }
         return { type: "non_standard", value: block };
-      })
+      });
       const contentBlock: ContentBlock.Standard = iife(() => {
         if ("thought" in block && block.thought) {
-          const reasoning: string = contentBlockBase.type === "text" ? contentBlockBase.text : "";
+          const reasoning: string =
+            contentBlockBase.type === "text" ? contentBlockBase.text : "";
           return {
             type: "reasoning",
             reasoning,
             reasoningContentBlock: contentBlockBase,
-          }
+          };
         } else {
           return contentBlockBase;
         }
-      })
+      });
 
       const ret: ContentBlock.Standard = {
         thought: block.thought,
         thoughtSignature: block.thoughtSignature,
         partMetadata: block.partMetadata,
         ...contentBlock,
-      }
+      };
       for (const attribute in ret) {
         if (ret[attribute] === undefined) {
           delete ret[attribute];
