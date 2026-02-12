@@ -1,4 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import { describe, test, expect } from "@jest/globals";
 import { WatsonxRerank, WatsonxInputRerank } from "../ibm.js";
 
 function getKey<K>(key: K): K {
@@ -80,7 +81,7 @@ describe("Embeddings unit tests", () => {
             ...testProps,
             ...fakeAuthProp,
           })
-      ).toThrowError();
+      ).toThrow();
     });
 
     test("Missing other props", async () => {
@@ -93,7 +94,7 @@ describe("Embeddings unit tests", () => {
           new WatsonxRerank({
             ...testPropsProjectId,
           })
-      ).toThrowError();
+      ).toThrow();
       // @ts-expect-error //Intentionally passing wrong value
       const testPropsServiceUrl: WatsonxInputLLM = {
         serviceUrl: process.env.WATSONX_AI_SERVICE_URL as string,
@@ -103,7 +104,7 @@ describe("Embeddings unit tests", () => {
           new WatsonxRerank({
             ...testPropsServiceUrl,
           })
-      ).toThrowError();
+      ).toThrow();
       const testPropsVersion = {
         version: "2024-05-31",
       };
@@ -113,7 +114,7 @@ describe("Embeddings unit tests", () => {
             // @ts-expect-error Intentionally passing wrong props
             testPropsVersion,
           })
-      ).toThrowError();
+      ).toThrow();
     });
 
     test("Passing more than one id", async () => {
@@ -130,7 +131,7 @@ describe("Embeddings unit tests", () => {
             ...testProps,
             ...fakeAuthProp,
           })
-      ).toThrowError();
+      ).toThrow();
     });
 
     test("Invalid properties", () => {

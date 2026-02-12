@@ -39,7 +39,7 @@
   },
   "devDependencies": {
     "@cfworker/json-schema": "^4.1.1",
-    "@langchain/core": "workspace:*",
+    "@langchain/core": "workspace:^",
     "@langchain/eslint": "workspace:*",
     "@langchain/standard-tests": "workspace:*",
     "@langchain/tsconfig": "workspace:*",

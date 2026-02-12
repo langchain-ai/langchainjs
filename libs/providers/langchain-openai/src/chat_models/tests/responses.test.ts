@@ -51,3 +51,15 @@ describe("strict tool-calling configuration", () => {
     expect((params.tools as Array<{ strict?: boolean }>)[0].strict).toBe(false);
   });
 });
+
+describe("service_tier configuration", () => {
+  it("passes service_tier to invocation params", () => {
+    const model = new ChatOpenAIResponses({
+      model: "gpt-4o",
+      service_tier: "auto",
+    });
+
+    const params = model.invocationParams({});
+    expect(params.service_tier).toBe("auto");
+  });
+});

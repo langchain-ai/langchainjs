@@ -1,6 +1,6 @@
 {
   "name": "@langchain/classic",
-  "version": "1.0.16",
+  "version": "1.0.17",
   "description": "Old abstractions from LangChain.js",
   "author": "LangChain",
   "license": "MIT",
@@ -131,7 +131,7 @@
     "@langchain/baidu-qianfan": "workspace:*",
     "@langchain/cloudflare": "workspace:*",
     "@langchain/cohere": "workspace:*",
-    "@langchain/core": "workspace:*",
+    "@langchain/core": "workspace:^",
     "@langchain/deepseek": "workspace:*",
     "@langchain/eslint": "workspace:*",
     "@langchain/exa": "workspace:*",

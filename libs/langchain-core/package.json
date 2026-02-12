@@ -1,6 +1,6 @@
 {
   "name": "@langchain/core",
-  "version": "1.1.20",
+  "version": "1.1.24",
   "description": "Core LangChain.js abstractions and schemas",
   "type": "module",
   "engines": {
@@ -700,6 +700,17 @@
       "import": {
         "types": "./dist/utils/math.d.ts",
         "default": "./dist/utils/math.js"
+      }
+    },
+    "./utils/ssrf": {
+      "input": "./src/utils/ssrf.ts",
+      "require": {
+        "types": "./dist/utils/ssrf.d.cts",
+        "default": "./dist/utils/ssrf.cjs"
+      },
+      "import": {
+        "types": "./dist/utils/ssrf.d.ts",
+        "default": "./dist/utils/ssrf.js"
       }
     },
     "./utils/stream": {

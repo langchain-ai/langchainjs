@@ -1,6 +1,6 @@
 {
   "name": "@langchain/mcp-adapters",
-  "version": "1.1.2",
+  "version": "1.1.3",
   "description": "LangChain.js adapters for Model Context Protocol (MCP)",
   "author": "LangChain",
   "license": "MIT",
@@ -58,7 +58,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.36.0",
-    "@langchain/core": "workspace:*",
+    "@langchain/core": "workspace:^",
     "@langchain/eslint": "workspace:*",
     "@langchain/langgraph": "^1.0.0",
     "@langchain/openai": "workspace:*",
@@ -71,7 +71,7 @@
     "dotenv": "^16.6.1",
     "dpdm": "^3.14.0",
     "eslint": "^9.36.0",
-    "eventsource": "^3.0.7",
+    "eventsource": "^4.1.0",
     "express": "^5.2.1",
     "langchain": "workspace:*",
     "npm-run-all2": "^8.0.4",

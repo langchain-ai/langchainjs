@@ -1,5 +1,14 @@
 # @langchain/anthropic
 
+## 1.3.17
+
+### Patch Changes
+
+- [#9991](https://github.com/langchain-ai/langchainjs/pull/9991) [`dca939d`](https://github.com/langchain-ai/langchainjs/commit/dca939dee687b2a0a0a56dfbb1677ab2cd1ceb62) Thanks [@nickwinder](https://github.com/nickwinder)! - fix(anthropic): update MODEL_DEFAULT_MAX_OUTPUT_TOKENS with correct values for all Claude models
+
+- Updated dependencies [[`d5e3db0`](https://github.com/langchain-ai/langchainjs/commit/d5e3db0d01ab321ec70a875805b2f74aefdadf9d)]:
+  - @langchain/core@1.1.21
+
 ## 1.3.16
 
 ### Patch Changes

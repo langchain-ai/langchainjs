@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable dot-notation */
 import { Gateway } from "@ibm-cloud/watsonx-ai/gateway";
-import { afterAll, jest } from "@jest/globals";
+import { jest, expect, describe, test } from "@jest/globals";
 import { AIMessageChunk } from "@langchain/core/messages";
 import {
   transformStreamToObjectStream,
@@ -350,7 +350,7 @@ describe("LLM unit tests", () => {
             ...testPropsProjectId,
             ...fakeAuthProp,
           })
-      ).toThrowError();
+      ).toThrow();
       const testPropsVersion = {
         version: "2024-05-31",
       };
@@ -360,7 +360,7 @@ describe("LLM unit tests", () => {
             // @ts-expect-error Intentionally passing wrong type of an object
             testPropsVersion,
           })
-      ).toThrowError();
+      ).toThrow();
     });
 
     test("Passing more than one id", async () => {
@@ -377,7 +377,7 @@ describe("LLM unit tests", () => {
             ...testProps,
             ...fakeAuthProp,
           })
-      ).toThrowError();
+      ).toThrow();
     });
     test("Id with modelGateway", async () => {
       const testProps = {
@@ -472,7 +472,7 @@ describe("LLM unit tests", () => {
         ],
       };
       const spy = jest
-        .spyOn(instance["service"], "generateText")
+        .spyOn(instance["service"] as WatsonXAI, "generateText")
         .mockResolvedValue({ result: mockResponse } as any);
 
       const controller = new AbortController();
@@ -495,7 +495,7 @@ describe("LLM unit tests", () => {
         ],
       };
       const spy = jest
-        .spyOn(instance["service"], "generateText")
+        .spyOn(instance["service"] as WatsonXAI, "generateText")
         .mockResolvedValue({ result: mockResponse } as any);
       const controller = new AbortController();
       await instance.invoke("test", { signal: controller.signal });
@@ -514,7 +514,7 @@ describe("LLM unit tests", () => {
       }
 
       const spy = jest
-        .spyOn(instance["service"], "generateTextStream")
+        .spyOn(instance["service"] as WatsonXAI, "generateTextStream")
         .mockResolvedValue(mockStream() as any);
 
       const controller = new AbortController();
@@ -540,7 +540,7 @@ describe("LLM unit tests", () => {
       }
 
       const spy = jest
-        .spyOn(instance["service"], "generateTextStream")
+        .spyOn(instance["service"] as WatsonXAI, "generateTextStream")
         .mockResolvedValue(mockStream() as any);
 
       const controller = new AbortController();

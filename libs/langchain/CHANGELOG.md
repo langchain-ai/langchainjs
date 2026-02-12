@@ -1,5 +1,53 @@
 # langchain
 
+## 1.2.23
+
+### Patch Changes
+
+- [#10010](https://github.com/langchain-ai/langchainjs/pull/10010) [`bf6eac4`](https://github.com/langchain-ai/langchainjs/commit/bf6eac40179f87da18fd122b4efc2ee48cd44b6c) Thanks [@christian-bromann](https://github.com/christian-bromann)! - fix(langchain): fix structured output on opus
+
+- Updated dependencies [[`70a4400`](https://github.com/langchain-ai/langchainjs/commit/70a440085b4bc2d036726ed12d9dc7841e914061)]:
+  - @langchain/core@1.1.24
+
+## 1.2.22
+
+### Patch Changes
+
+- [#10008](https://github.com/langchain-ai/langchainjs/pull/10008) [`5283513`](https://github.com/langchain-ai/langchainjs/commit/5283513740ff93063f9c1eaa583365f590ec5994) Thanks [@christian-bromann](https://github.com/christian-bromann)! - fix(langchain): re-export missing interface
+
+- Updated dependencies [[`71d08c0`](https://github.com/langchain-ai/langchainjs/commit/71d08c0a3a2597bd5a084eb35a7830e5ea1a2b29)]:
+  - @langchain/core@1.1.23
+
+## 1.2.21
+
+### Patch Changes
+
+- [#9996](https://github.com/langchain-ai/langchainjs/pull/9996) [`5113204`](https://github.com/langchain-ai/langchainjs/commit/5113204bba5eb1d0b23a4d3aae2c02ba3caf8b6b) Thanks [@christian-bromann](https://github.com/christian-bromann)! - fix(langchain): propagate subagent name in metadata
+
+- Updated dependencies [[`8f166b1`](https://github.com/langchain-ai/langchainjs/commit/8f166b159343ae6fd0d6d44c0835ab56c0b153f4)]:
+  - @langchain/core@1.1.22
+
+## 1.2.20
+
+### Patch Changes
+
+- [#9983](https://github.com/langchain-ai/langchainjs/pull/9983) [`ea7e791`](https://github.com/langchain-ai/langchainjs/commit/ea7e791ff6c93188b7febbd98ea22359fa96eb20) Thanks [@encodedz](https://github.com/encodedz)! - Support concurrent `agentNode` dynamic prompts properly.
+
+- [#9986](https://github.com/langchain-ai/langchainjs/pull/9986) [`8a52dad`](https://github.com/langchain-ai/langchainjs/commit/8a52dad1eace191b19d24cc5683acb22a5b9e964) Thanks [@brettshollenberger](https://github.com/brettshollenberger)! - Don't re-emit input state from middleware hooks that return void
+
+- [#9982](https://github.com/langchain-ai/langchainjs/pull/9982) [`4558fa6`](https://github.com/langchain-ai/langchainjs/commit/4558fa6438749b9f6eca980099241d97c56b1a8f) Thanks [@hntrl](https://github.com/hntrl)! - feat(langchain): add optional `tools` parameter to `countTokensApproximately` for more accurate token estimates when tools are bound to a model
+
+- [#9981](https://github.com/langchain-ai/langchainjs/pull/9981) [`5f28338`](https://github.com/langchain-ai/langchainjs/commit/5f283389c0dba1822f37139f0913016d77167734) Thanks [@hntrl](https://github.com/hntrl)! - feat(agents): support returning Command from wrapModelCall middleware
+
+  Allow `wrapModelCall` middleware hooks to return `Command` objects for advanced
+  control flow (routing, state updates), matching the existing `wrapToolCall`
+  pattern. The framework tracks the effective AIMessage through the middleware
+  chain so outer middleware always receive an AIMessage from `handler()`, even
+  when an inner middleware returns a Command.
+
+- Updated dependencies [[`d5e3db0`](https://github.com/langchain-ai/langchainjs/commit/d5e3db0d01ab321ec70a875805b2f74aefdadf9d)]:
+  - @langchain/core@1.1.21
+
 ## 1.2.19
 
 ### Patch Changes

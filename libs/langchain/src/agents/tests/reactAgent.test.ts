@@ -1271,4 +1271,99 @@ describe("createAgent", () => {
       expect(capturedConfig?.shared_key).toBe("overridden-value");
     });
   });
+
+  describe("lc_agent_name metadata", () => {
+    it("should propagate lc_agent_name in config.metadata when name is provided", async () => {
+      let capturedMetadata: Record<string, unknown> | undefined;
+
+      const metadataCaptureTool = tool(
+        async (_input, config) => {
+          capturedMetadata = config?.metadata;
+          return "done";
+        },
+        {
+          name: "metadata_capture_tool",
+          description: "Captures the metadata for testing",
+          schema: z.object({
+            input: z.string(),
+          }),
+        }
+      );
+
+      const model = new FakeToolCallingChatModel({
+        responses: [
+          new AIMessage({
+            content: "",
+            tool_calls: [
+              {
+                name: "metadata_capture_tool",
+                id: "test-1",
+                args: { input: "test" },
+              },
+            ],
+          }),
+          new AIMessage("Done"),
+        ],
+      });
+
+      const agent = createAgent({
+        model,
+        tools: [metadataCaptureTool],
+        name: "my-test-agent",
+      });
+
+      await agent.invoke({
+        messages: [new HumanMessage("test")],
+      });
+
+      expect(capturedMetadata).toBeDefined();
+      expect(capturedMetadata?.lc_agent_name).toBe("my-test-agent");
+    });
+
+    it("should not set lc_agent_name when name is not provided", async () => {
+      let capturedMetadata: Record<string, unknown> | undefined;
+
+      const metadataCaptureTool = tool(
+        async (_input, config) => {
+          capturedMetadata = config?.metadata;
+          return "done";
+        },
+        {
+          name: "metadata_capture_tool",
+          description: "Captures the metadata for testing",
+          schema: z.object({
+            input: z.string(),
+          }),
+        }
+      );
+
+      const model = new FakeToolCallingChatModel({
+        responses: [
+          new AIMessage({
+            content: "",
+            tool_calls: [
+              {
+                name: "metadata_capture_tool",
+                id: "test-1",
+                args: { input: "test" },
+              },
+            ],
+          }),
+          new AIMessage("Done"),
+        ],
+      });
+
+      const agent = createAgent({
+        model,
+        tools: [metadataCaptureTool],
+      });
+
+      await agent.invoke({
+        messages: [new HumanMessage("test")],
+      });
+
+      expect(capturedMetadata).toBeDefined();
+      expect(capturedMetadata?.lc_agent_name).toBeUndefined();
+    });
+  });
 });
