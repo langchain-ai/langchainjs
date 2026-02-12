@@ -383,6 +383,62 @@ describe("anthropicTranslator", () => {
     expect(full?.contentBlocks).toEqual(expectedContentBlocks);
   });
 
+  it("should correctly parse string input for web_search server_tool_use (no double-JSON encoding)", () => {
+    // During streaming accumulation, input can be a JSON string like '{"query": "..."}'
+    // instead of a parsed object. The translator should parse it correctly.
+    const message = new AIMessage({
+      content: [
+        {
+          type: "server_tool_use",
+          id: "srvtoolu_stream_001",
+          name: "web_search",
+          input: '{"query": "weather NYC today"}',
+        },
+      ],
+      response_metadata: {
+        model_provider: "anthropic",
+      },
+    });
+
+    const expectedContent: Array<ContentBlock.Standard> = [
+      {
+        type: "server_tool_call",
+        name: "web_search",
+        id: "srvtoolu_stream_001",
+        args: { query: "weather NYC today" },
+      },
+    ];
+
+    expect(message.contentBlocks).toEqual(expectedContent);
+  });
+
+  it("should correctly parse string input for code_execution server_tool_use (no double-JSON encoding)", () => {
+    const message = new AIMessage({
+      content: [
+        {
+          type: "server_tool_use",
+          id: "srvtoolu_code_001",
+          name: "code_execution",
+          input: '{"code": "print(42)"}',
+        },
+      ],
+      response_metadata: {
+        model_provider: "anthropic",
+      },
+    });
+
+    const expectedContent: Array<ContentBlock.Standard> = [
+      {
+        type: "server_tool_call",
+        name: "code_execution",
+        id: "srvtoolu_code_001",
+        args: { code: "print(42)" },
+      },
+    ];
+
+    expect(message.contentBlocks).toEqual(expectedContent);
+  });
+
   it("should translate anthropic input to standard content blocks", () => {
     const message = new HumanMessage({
       content: [
