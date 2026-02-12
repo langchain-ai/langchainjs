@@ -583,11 +583,14 @@ describe.each(coreModelInfo)(
         "Whats the weather like in paris today? What's 1836 plus 7262?"
       );
 
-      expect(result.tool_calls).toHaveLength(1);
+      expect(result.tool_calls?.length).toBeGreaterThanOrEqual(1);
       expect(result.tool_calls?.[0]).toBeDefined();
       if (!result.tool_calls?.[0]) return;
-      expect(result.tool_calls?.[0].name).toBe("calculator");
-      expect(result.tool_calls?.[0].args).toHaveProperty("expression");
+      // All tool calls should be constrained to the forced tool
+      for (const call of result.tool_calls!) {
+        expect(call.name).toBe("calculator");
+        expect(call.args).toHaveProperty("expression");
+      }
     });
 
     test("function - tool with nullish parameters", async () => {
@@ -1259,38 +1262,43 @@ describe.each(thinkingModelInfo)(
     });
 
     test("thought signature - text", async () => {
-      const llm = newChatGoogle();
+      const llm = newChatGoogle({
+        reasoningEffort: "low",
+      });
       const result = await llm.invoke("What is 1 + 1?");
 
       expect(result.text as string).toMatch(/(1 + 1 (equals|is|=) )?2.? ?/);
-      expect(typeof result.content).toEqual("string");
-      expect(result.contentBlocks[0]).toHaveProperty("thoughtSignature");
-      expect(result.additional_kwargs.originalTextContentBlock).toHaveProperty(
-        "thoughtSignature"
+      // With includeThoughts: true, response may have multiple parts (reasoning + text)
+      const hasThoughtSignature = result.contentBlocks.some(
+        (b) => "thoughtSignature" in b
       );
+      expect(hasThoughtSignature).toBe(true);
     });
 
     test("thought signature - stream", async () => {
       const llm = newChatGoogle({
         streaming: true,
+        reasoningEffort: "low",
       });
-      const msg = "Why is the sky blue? Be verbose.";
-      const result = await llm.invoke(msg);
+      const result = await llm.invoke("What is 1 + 1?");
 
       expect(result.text as string).toMatch(/(1 + 1 (equals|is|=) )?2.? ?/);
-      expect(typeof result.content).toEqual("string");
-      expect(result.contentBlocks[0]).toHaveProperty("thoughtSignature");
-      expect(result.additional_kwargs.originalTextContentBlock).toHaveProperty(
-        "thoughtSignature"
+      const hasThoughtSignature = result.contentBlocks.some(
+        (b) => "thoughtSignature" in b
       );
+      expect(hasThoughtSignature).toBe(true);
     });
 
     test("thought signature - function", async () => {
       const tools = [weatherTool];
-      const llm: Runnable = newChatGoogle().bindTools(tools);
+      const llm: Runnable = newChatGoogle({
+        reasoningEffort: "low",
+      }).bindTools(tools);
       const result = await llm.invoke("What is the weather in New York?");
-      expect(result.content[0]).toHaveProperty("thoughtSignature");
-      expect(result.contentBlocks[0]).toHaveProperty("thoughtSignature");
+      const hasThoughtSignature = result.contentBlocks.some(
+        (b: ContentBlock.Standard) => "thoughtSignature" in b
+      );
+      expect(hasThoughtSignature).toBe(true);
     });
 
     test("thinking - invoke", async () => {

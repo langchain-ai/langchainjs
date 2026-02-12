@@ -7,6 +7,7 @@ import {
   getGCPCredentialsAccessToken,
   normalizeGCPCredentials,
 } from "../utils/gcp-auth.js";
+import { ConfigurationError } from "../utils/errors.js";
 import { iife } from "../utils/misc.js";
 
 /**
@@ -404,7 +405,7 @@ export function ensureAuthScopes(
       (scope) => !existingScopes.includes(scope)
     );
     if (missingScopes.length > 0) {
-      throw new Error(
+      throw new ConfigurationError(
         `Invalid auth scopes. Scopes must include ${requiredScopes.join(", ")}`
       );
     }

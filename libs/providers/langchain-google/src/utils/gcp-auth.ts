@@ -82,7 +82,7 @@ export function normalizeGCPCredentials(
   credentials: string | GCPCredentials
 ): GCPCredentials {
   return typeof credentials === "string"
-    ? Object.freeze(JSON.parse(credentials as string))
+    ? Object.freeze(JSON.parse(credentials))
     : Object.isFrozen(credentials)
     ? credentials
     : Object.freeze(credentials);

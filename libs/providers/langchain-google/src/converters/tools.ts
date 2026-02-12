@@ -14,7 +14,7 @@ import type {
   ToolChoice,
 } from "@langchain/core/language_models/chat_models";
 import type { Gemini } from "../chat_models/types.js";
-import { InvalidToolError } from "../utils/errors.js";
+import { InvalidInputError, InvalidToolError } from "../utils/errors.js";
 
 /**
  * Adjusts a JSON Schema object type to be compatible with Gemini's function schema format.
@@ -49,14 +49,23 @@ function adjustObjectType(
     obj.nullable = true;
   } else if (len === 1 && nullIndex === 0) {
     // This is nullable only without a type, which doesn't make sense for Gemini
-    throw new Error("Gemini cannot handle null type");
+    throw new InvalidInputError(
+      "Gemini does not support null-only types in function schemas. Provide a non-null type alongside nullable."
+    );
   } else if (len === 1) {
     // Although an array, it has only one value.
     // So set it to the string to match what Gemini expects.
     obj.type = obj?.type[0];
+  } else if (len === 0) {
+    // Empty type array is invalid
+    throw new InvalidInputError(
+      "Gemini does not support empty type arrays in function schemas. Provide at least one type."
+    );
   } else {
     // Anything else could be a union type, so reject it.
-    throw new Error("Gemini cannot handle union types");
+    throw new InvalidInputError(
+      "Gemini does not support union types in function schemas. Use a single type instead."
+    );
   }
   return obj;
 }
@@ -175,7 +184,6 @@ function isGeminiTool(tool: BindToolsInput): tool is Gemini.Tool {
     "functionDeclarations",
     "codeExecution",
     "googleSearch",
-    "googleSearchRetrieval",
     "urlContext",
     "googleMaps",
     "fileSearch",

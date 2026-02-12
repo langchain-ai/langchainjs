@@ -5,6 +5,7 @@ import {
   getGCPCredentialsAccessToken,
   normalizeGCPCredentials,
 } from "../utils/gcp-auth.js";
+import { AuthError } from "../utils/errors.js";
 import { iife } from "../utils/misc.js";
 
 /**
@@ -263,8 +264,10 @@ export class WebApiClient extends ApiClient {
    *                  in-place to include authentication information.
    * @returns A Promise that resolves to the HTTP response
    *
-   * @throws {AuthError} If service account authentication fails (e.g., invalid
-   *                     credentials, network error, or token generation failure)
+   * @throws {AuthError} If no authentication method is available (neither apiKey
+   *                     nor credentials), or if service account authentication
+   *                     fails (e.g., invalid credentials, network error, or
+   *                     token generation failure)
    *
    * @example
    * ```typescript
@@ -279,14 +282,20 @@ export class WebApiClient extends ApiClient {
    * - Service account tokens are automatically cached and refreshed
    * - If both API key and credentials are provided, API key takes precedence
    */
-  fetch(request: Request): Promise<Response> {
-    if (this.params.apiKey) {
-      request.headers.set(GOOGLE_API_KEY_HEADER, this.params.apiKey);
+  async fetch(request: Request): Promise<Response> {
+    if (!this.apiKey && !this.credentials) {
+      throw new AuthError({
+        message:
+          "No authentication method available. Please provide either an apiKey or credentials.",
+      });
+    }
+    if (this.apiKey) {
+      request.headers.set(GOOGLE_API_KEY_HEADER, this.apiKey);
     }
     if (this.credentials) {
       request.headers.set(
         GCP_API_KEY_HEADER,
-        `Bearer ${getGCPCredentialsAccessToken(this.credentials)}`
+        `Bearer ${await getGCPCredentialsAccessToken(this.credentials)}`
       );
     }
     return fetch(request);

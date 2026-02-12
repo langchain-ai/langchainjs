@@ -696,3 +696,29 @@ export class MalformedOutputError extends GoogleError("malformed-output") {
     this.cause = params.cause;
   }
 }
+
+/**
+ * Error thrown when input provided to the Google provider is invalid.
+ *
+ * This error is thrown when the user provides input that cannot be
+ * processed by Gemini, such as:
+ * - Union types in tool/function schemas
+ * - Null-only types in schemas
+ * - Unsupported content block source types
+ * - Missing required fields in content blocks
+ *
+ * @example
+ * ```typescript
+ * try {
+ *   const result = schemaToGeminiParameters(unionTypeSchema);
+ * } catch (error) {
+ *   if (InvalidInputError.isInstance(error)) {
+ *     console.log(`Invalid input: ${error.message}`);
+ *   }
+ * }
+ * ```
+ */
+export class InvalidInputError extends GoogleError("invalid-input") {
+  readonly name = "InvalidInputError" as const;
+}
+

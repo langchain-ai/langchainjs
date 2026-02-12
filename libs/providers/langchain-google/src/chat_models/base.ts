@@ -169,7 +169,9 @@ export abstract class BaseChatGoogle<
     super(params);
 
     if (!params.apiClient) {
-      throw new Error("BaseChatGoogle requires an apiClient");
+      throw new ConfigurationError(
+        "BaseChatGoogle requires an apiClient. This should be provided automatically by ChatGoogle constructors. If you're extending BaseChatGoogle directly, please provide an apiClient instance."
+      );
     }
     this.apiClient = params.apiClient;
 
@@ -555,17 +557,22 @@ export abstract class BaseChatGoogle<
                   response_metadata: {
                     model_provider: "google",
                   },
+                  additional_kwargs: {
+                    ...(message.additional_kwargs.originalTextContentBlock
+                      ? {
+                          originalTextContentBlock:
+                            message.additional_kwargs
+                              .originalTextContentBlock,
+                        }
+                      : {}),
+                    ...(candidate.finishReason
+                      ? {
+                          finishReason: candidate.finishReason,
+                          finishMessage: candidate.finishMessage,
+                        }
+                      : {}),
+                  },
                 };
-
-                // Include the finish reason, if available
-                if (candidate.finishReason) {
-                  messageChunkParams.additional_kwargs = {
-                    finishReason: candidate.finishReason,
-                    finishMessage: candidate.finishMessage,
-                    originalTextContentBlock:
-                      message.additional_kwargs.originalTextContentBlock,
-                  };
-                }
 
                 // Include usageMetadata if there is any and we have
                 // enabled it with streamUsage on

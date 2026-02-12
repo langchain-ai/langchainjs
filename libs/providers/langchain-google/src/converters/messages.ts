@@ -22,7 +22,7 @@ import {
 import { Converter } from "@langchain/core/utils/format";
 import type { Gemini } from "../chat_models/types.js";
 import { iife } from "../utils/misc.js";
-import { ToolCallNotFoundError } from "../utils/errors.js";
+import { InvalidInputError, ToolCallNotFoundError } from "../utils/errors.js";
 
 /**
  * Standard content block converter for Google Gemini API.
@@ -47,7 +47,7 @@ export const geminiContentBlockConverter: StandardContentBlockConverter<{
     if (isDataContentBlock(block)) {
       if (block.source_type === "base64") {
         if (!block.mime_type) {
-          throw new Error("mime_type is required for base64 image blocks");
+          throw new InvalidInputError("mime_type is required for base64 image blocks");
         }
         const dataStr =
           typeof block.data === "string"
@@ -107,10 +107,10 @@ export const geminiContentBlockConverter: StandardContentBlockConverter<{
       }
     }
 
-    throw new Error(
-      `Image content blocks with source_type ${
+    throw new InvalidInputError(
+      `Image content blocks with source_type "${
         (block as Data.DataContentBlock).source_type
-      } are not supported for ChatGoogle`
+      }" are not supported for ChatGoogle. Supported source types are: "base64", "url", "id".`
     );
   },
 
@@ -118,7 +118,7 @@ export const geminiContentBlockConverter: StandardContentBlockConverter<{
     if (isDataContentBlock(block)) {
       if (block.source_type === "base64") {
         if (!block.mime_type) {
-          throw new Error("mime_type is required for base64 audio blocks");
+          throw new InvalidInputError("mime_type is required for base64 audio blocks");
         }
         const dataStr =
           typeof block.data === "string"
@@ -178,10 +178,10 @@ export const geminiContentBlockConverter: StandardContentBlockConverter<{
       }
     }
 
-    throw new Error(
-      `Audio content blocks with source_type ${
+    throw new InvalidInputError(
+      `Audio content blocks with source_type "${
         (block as Data.DataContentBlock).source_type
-      } are not supported for ChatGoogle`
+      }" are not supported for ChatGoogle. Supported source types are: "base64", "url", "id".`
     );
   },
 
@@ -189,7 +189,7 @@ export const geminiContentBlockConverter: StandardContentBlockConverter<{
     if (isDataContentBlock(block)) {
       if (block.source_type === "base64") {
         if (!block.mime_type) {
-          throw new Error("mime_type is required for base64 file blocks");
+          throw new InvalidInputError("mime_type is required for base64 file blocks");
         }
         const dataStr =
           typeof block.data === "string"
@@ -263,10 +263,10 @@ export const geminiContentBlockConverter: StandardContentBlockConverter<{
       };
     }
 
-    throw new Error(
-      `File content blocks with source_type ${
+    throw new InvalidInputError(
+      `File content blocks with source_type "${
         (block as Data.DataContentBlock).source_type
-      } are not supported for ChatGoogle`
+      }" are not supported for ChatGoogle. Supported source types are: "base64", "url", "id", "text".`
     );
   },
 };
@@ -547,7 +547,7 @@ function convertLegacyContentMessageToGeminiContent(
         ? content.image_url
         : content.image_url.url;
     if (!url) {
-      throw new Error("Missing Image URL");
+      throw new InvalidInputError("Missing image URL in image_url content block.");
     }
 
     const dataUrl = parseBase64DataUrl({ dataUrl: url });
@@ -601,8 +601,8 @@ function convertLegacyContentMessageToGeminiContent(
       // not in an async function, so we can't do that.
     }
 
-    throw new Error(
-      `Invalid media content: ${JSON.stringify(content, null, 1)}`
+    throw new InvalidInputError(
+      `Invalid media content: ${JSON.stringify(content, null, 1)}. Expected either { mimeType, data } for inline data or { mimeType, fileUri } for file references.`
     );
   }
 
@@ -930,7 +930,7 @@ export const convertGeminiPartToContentBlock: Converter<
   ContentBlock
 > = (part: Gemini.Part): ContentBlock => {
   const block: ContentBlock = iife(() => {
-    if ("text" in part && part.text) {
+    if ("text" in part && typeof part.text === "string") {
       return {
         type: "text",
         text: part.text,
@@ -1065,7 +1065,8 @@ export const convertGeminiCandidateToAIMessage: Converter<
   } else if (
     parts.length === 1 &&
     "text" in parts[0] &&
-    !("thought" in parts[0])
+    !("thought" in parts[0]) &&
+    !("thoughtSignature" in parts[0])
   ) {
     // Single text part - store as string for simplicity and backwards compatibility
     content = parts[0].text ?? "";
