@@ -1,5 +1,11 @@
 # @langchain/core
 
+## 1.1.24
+
+### Patch Changes
+
+- [#9978](https://github.com/langchain-ai/langchainjs/pull/9978) [`70a4400`](https://github.com/langchain-ai/langchainjs/commit/70a440085b4bc2d036726ed12d9dc7841e914061) Thanks [@christian-bromann](https://github.com/christian-bromann)! - fix(core): fix web_search_call and file_search_call contentBlocks for OpenAI Responses API
+
 ## 1.1.23
 
 ### Patch Changes
