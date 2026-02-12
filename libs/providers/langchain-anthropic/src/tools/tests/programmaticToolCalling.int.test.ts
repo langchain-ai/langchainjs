@@ -1,5 +1,10 @@
 import { expect, it, describe } from "vitest";
-import { AIMessage, HumanMessage, ToolMessage } from "@langchain/core/messages";
+import {
+  AIMessage,
+  AIMessageChunk,
+  HumanMessage,
+  ToolMessage,
+} from "@langchain/core/messages";
 
 import { ChatAnthropic } from "../../chat_models.js";
 import { codeExecution_20250825 } from "../codeExecution.js";
@@ -67,10 +72,12 @@ describe("Programmatic Tool Calling Integration Tests", () => {
       hasServerToolUse || hasCodeExecutionResult || toolUseBlocks.length > 0
     ).toBe(true);
 
-    // If we got a tool_use block with caller, verify the caller field
+    // If we got a tool_use block with caller, verify the caller field is an object
+    // with type referencing code_execution
     for (const block of toolUseBlocks) {
       if (block.caller) {
-        expect(block.caller).toBe("code_execution_20250825");
+        const caller = block.caller as Record<string, unknown>;
+        expect(caller.type).toBe("code_execution_20250825");
       }
     }
   }, 120000);
@@ -197,6 +204,7 @@ describe("Programmatic Tool Calling Integration Tests", () => {
       },
     ];
 
+    // Streaming invoke returns AIMessageChunk, not AIMessage
     const response = await llm.invoke(
       [
         new HumanMessage(
@@ -206,12 +214,26 @@ describe("Programmatic Tool Calling Integration Tests", () => {
       { tools }
     );
 
-    expect(response).toBeInstanceOf(AIMessage);
+    expect(response).toBeInstanceOf(AIMessageChunk);
     expect(Array.isArray(response.content)).toBe(true);
 
     const contentBlocks = response.content as Array<Record<string, unknown>>;
-    // At minimum we should see some code execution or tool activity
+    // Should see code execution or tool activity
     expect(contentBlocks.length).toBeGreaterThan(0);
+
+    // Verify caller field is preserved through streaming on tool_use blocks
+    const toolUseBlocks = contentBlocks.filter(
+      (block) => block.type === "tool_use"
+    );
+    for (const block of toolUseBlocks) {
+      if (block.caller) {
+        const caller = block.caller as Record<string, unknown>;
+        expect(caller.type).toBe("code_execution_20250825");
+      }
+    }
+
+    // Container should be in additional_kwargs for streaming responses
+    expect(response.additional_kwargs?.container).toBeDefined();
   }, 120000);
 
   it("multi-turn with programmatic tool calling and tool results", async () => {
@@ -253,7 +275,11 @@ describe("Programmatic Tool Calling Integration Tests", () => {
     );
 
     if (toolUseBlocks.length > 0) {
-      // Provide tool result and continue conversation
+      // When responding to programmatic tool calls, container_id is required
+      const containerId = (
+        response1.response_metadata?.container as { id?: string } | undefined
+      )?.id;
+
       const toolResult = new ToolMessage({
         content: "72",
         tool_call_id: toolUseBlocks[0].id as string,
@@ -266,9 +292,8 @@ describe("Programmatic Tool Calling Integration Tests", () => {
           ),
           response1,
           toolResult,
-          new HumanMessage("What was the temperature?"),
         ],
-        { tools }
+        { tools, container: containerId }
       );
 
       expect(response2).toBeInstanceOf(AIMessage);
