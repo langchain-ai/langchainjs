@@ -1,6 +1,6 @@
 {
   "name": "@langchain/google",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "description": "Google integrations for LangChain.js",
   "author": "LangChain",
   "license": "MIT",
@@ -28,7 +28,9 @@
     "test:standard": "pnpm test:standard:unit && pnpm test:standard:int",
     "format": "prettier --config .prettierrc --write \"src\"",
     "format:check": "prettier --config .prettierrc --check \"src\"",
-    "typegen": "sparktype generate",
+    "typegen": "pnpm run typegen:sparktype && pnpm run typegen:profiles",
+    "typegen:sparktype": "sparktype generate",
+    "typegen:profiles": "pnpm --filter @langchain/model-profiles make --config profiles.toml",
     "typegen:check": "sparktype check"
   },
   "dependencies": {

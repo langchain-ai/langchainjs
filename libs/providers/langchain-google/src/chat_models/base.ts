@@ -14,6 +14,8 @@ import { concat } from "@langchain/core/utils/stream";
 import { ChatGenerationChunk, ChatResult } from "@langchain/core/outputs";
 import { EventSourceParserStream } from "eventsource-parser/stream";
 import type { BindToolsInput } from "@langchain/core/language_models/chat_models";
+import type { ModelProfile } from "@langchain/core/language_models/profile";
+import PROFILES from "./profiles.js";
 import type {
   BaseLanguageModelInput,
   StructuredOutputMethodOptions,
@@ -242,6 +244,23 @@ export abstract class BaseChatGoogle<
 
   protected get urlMethod(): string {
     return this.streaming ? "streamGenerateContent?alt=sse" : "generateContent";
+  }
+
+  /**
+   * Returns the model profile for this instance's model, describing its
+   * capabilities and constraints (e.g. max tokens, input/output modalities,
+   * tool calling support).
+   *
+   * @example
+   * ```typescript
+   * const model = new ChatGoogle({ model: "gemini-2.5-pro" });
+   * const profile = model.profile;
+   * console.log(profile.maxInputTokens); // 1048576
+   * console.log(profile.imageInputs); // true
+   * ```
+   */
+  get profile(): ModelProfile {
+    return PROFILES[this.model] ?? {};
   }
 
   protected async buildUrlGemini(urlMethod?: string): Promise<string> {

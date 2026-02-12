@@ -23,6 +23,7 @@ import type { Notifications } from "./types.js";
 
 import {
   _resolveDetailedOutputHandling,
+  callToolResultContentTypes,
   type CallToolResultContentType,
   type LoadMcpToolsOptions,
   type OutputHandling,
@@ -658,11 +659,22 @@ async function _toolOutputToContentBlocks(
         blocks.push(block);
       }
       return blocks;
+    case "resource_link": {
+      return [
+        {
+          type: "file",
+          source_type: "url",
+          url: content.uri,
+          mime_type: content.mimeType,
+        } as ContentBlock.Data.StandardFileBlock &
+          ContentBlock.Data.URLContentBlock,
+      ];
+    }
     default:
       throw new ToolException(
         `MCP tool '${toolName}' on server '${serverName}' returned a content block with unexpected type "${
           (content as { type: string }).type
-        }." Expected one of "text", "image", or "audio".`
+        }." Expected one of ${callToolResultContentTypes.map((t: string) => `"${t}"`).join(", ")}.`
       );
   }
 }

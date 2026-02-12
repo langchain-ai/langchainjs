@@ -1,6 +1,6 @@
 {
   "name": "@langchain/google-gauth",
-  "version": "2.1.17",
+  "version": "2.1.18",
   "description": "Google auth based authentication support for Google services",
   "author": "LangChain",
   "license": "MIT",

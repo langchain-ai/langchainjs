@@ -1,5 +1,11 @@
 # @langchain/aws
 
+## 1.2.3
+
+### Patch Changes
+
+- [#9976](https://github.com/langchain-ai/langchainjs/pull/9976) [`c67e8a3`](https://github.com/langchain-ai/langchainjs/commit/c67e8a34412855a28f760ac80468865ad206b0d4) Thanks [@akintunero](https://github.com/akintunero)! - Add `modelParameters` and `dimensions` to `BedrockEmbeddings` request payload.
+
 ## 1.2.2
 
 ### Patch Changes
