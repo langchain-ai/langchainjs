@@ -14,7 +14,8 @@
     "directory": "libs/providers/langchain-google"
   },
   "scripts": {
-    "build": "pnpm --filter @langchain/build compile @langchain/google",
+    "build": "turbo build:compile --filter @langchain/google --output-logs new-only",
+    "build:compile": "tsdown",
     "lint:eslint": "eslint --cache src/",
     "lint:dpdm": "dpdm --skip-dynamic-imports circular --exit-code circular:1 --no-warning --no-tree src/**/*.ts",
     "lint": "pnpm lint:eslint && pnpm lint:dpdm",
@@ -61,31 +62,35 @@
   "exports": {
     ".": {
       "input": "./src/index.ts",
-      "import": {
-        "types": "./dist/index.d.ts",
-        "default": "./dist/index.js"
-      },
       "require": {
         "types": "./dist/index.d.cts",
         "default": "./dist/index.cjs"
+      },
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
       }
     },
     "./node": {
       "input": "./src/node.ts",
-      "import": {
-        "types": "./dist/node.d.ts",
-        "default": "./dist/node.js"
-      },
       "require": {
         "types": "./dist/node.d.cts",
         "default": "./dist/node.cjs"
+      },
+      "import": {
+        "types": "./dist/node.d.ts",
+        "default": "./dist/node.js"
       }
-    }
+    },
+    "./package.json": "./package.json"
   },
   "files": [
     "dist/",
     "CHANGELOG.md",
     "README.md",
     "LICENSE"
-  ]
+  ],
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.cts"
 }
