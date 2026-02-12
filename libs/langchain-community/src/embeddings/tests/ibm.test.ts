@@ -1,6 +1,6 @@
 /* eslint-disable dot-notation */
 import { Gateway } from "@ibm-cloud/watsonx-ai/gateway";
-import { jest } from "@jest/globals";
+import { jest, expect, describe, test } from "@jest/globals";
 import { testProperties } from "../../llms/tests/ibm.test.js";
 import { WatsonxEmbeddings, WatsonxInputEmbeddings } from "../ibm.js";
 
@@ -146,7 +146,7 @@ describe("Negative tests", () => {
           ...testProps,
           ...fakeAuthProp,
         })
-    ).toThrowError();
+    ).toThrow();
   });
 
   test("Missing other props", async () => {
@@ -159,7 +159,7 @@ describe("Negative tests", () => {
         new WatsonxEmbeddings({
           ...testPropsProjectId,
         })
-    ).toThrowError();
+    ).toThrow();
     // @ts-expect-error //Intentionally passing wrong value
     const testPropsServiceUrl: WatsonxInputLLM = {
       serviceUrl: process.env.WATSONX_AI_SERVICE_URL as string,
@@ -169,7 +169,7 @@ describe("Negative tests", () => {
         new WatsonxEmbeddings({
           ...testPropsServiceUrl,
         })
-    ).toThrowError();
+    ).toThrow();
     const testPropsVersion = {
       version: "2024-05-31",
     };
@@ -179,7 +179,7 @@ describe("Negative tests", () => {
           // @ts-expect-error Intentionally passing wrong props
           testPropsVersion,
         })
-    ).toThrowError();
+    ).toThrow();
   });
 
   test("Passing more than one id", async () => {
@@ -196,7 +196,7 @@ describe("Negative tests", () => {
           ...testProps,
           ...fakeAuthProp,
         })
-    ).toThrowError();
+    ).toThrow();
   });
 
   test("Id with modelGateway", async () => {

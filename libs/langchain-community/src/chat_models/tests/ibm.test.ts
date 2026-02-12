@@ -2,7 +2,7 @@
 /* eslint-disable dot-notation */
 import { z } from "zod";
 import { DynamicStructuredTool } from "@langchain/core/tools";
-import { jest } from "@jest/globals";
+import { jest, describe, test, expect } from "@jest/globals";
 import { Gateway } from "@ibm-cloud/watsonx-ai/gateway";
 import {
   transformStreamToObjectStream,
@@ -481,7 +481,7 @@ describe("Chat unit tests", () => {
             ...testPropsProjectId,
             ...fakeAuthProp,
           })
-      ).toThrowError();
+      ).toThrow();
       // @ts-expect-error Intentionally passing not enough parameters
       const testPropsServiceUrl: ChatWatsonxInput = {
         serviceUrl,
@@ -492,7 +492,7 @@ describe("Chat unit tests", () => {
             ...testPropsServiceUrl,
             ...fakeAuthProp,
           })
-      ).toThrowError();
+      ).toThrow();
       const testPropsVersion = {
         version: "2024-05-31",
       };
@@ -502,7 +502,7 @@ describe("Chat unit tests", () => {
             // @ts-expect-error Intentionally passing wrong type of an object
             testPropsVersion,
           })
-      ).toThrowError();
+      ).toThrow();
     });
 
     test("Passing more than one id", async () => {
@@ -519,7 +519,7 @@ describe("Chat unit tests", () => {
             ...testProps,
             ...fakeAuthProp,
           })
-      ).toThrowError();
+      ).toThrow();
     });
     test("Id with modelGateway", async () => {
       const testProps = {
