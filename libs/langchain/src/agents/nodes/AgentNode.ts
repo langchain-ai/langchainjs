@@ -910,7 +910,7 @@ export class AgentNode<
 
       Object.assign(options, {
         /**
-         * OpenAI-style options (snake_case)
+         * OpenAI-style options
          * Used by ChatOpenAI, ChatXAI, and other OpenAI-compatible providers.
          */
         response_format: {
@@ -919,10 +919,7 @@ export class AgentNode<
         },
 
         /**
-         * Anthropic-style options (camelCase)
-         * ChatAnthropic.invocationParams() reads `outputConfig` and `outputFormat`,
-         * not the snake_case variants above. Without these, the structured output
-         * configuration is silently lost for Anthropic models.
+         * Anthropic-style options
          */
         outputConfig: {
           format: {
@@ -931,6 +928,9 @@ export class AgentNode<
           },
         },
 
+        /**
+         * for LangSmith structured output tracing
+         */
         ls_structured_output_format: {
           kwargs: { method: "json_schema" },
           schema: structuredResponseFormat.strategy.schema,
