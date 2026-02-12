@@ -1,5 +1,14 @@
 # @langchain/google-common
 
+## 2.1.18
+
+### Patch Changes
+
+- [#9948](https://github.com/langchain-ai/langchainjs/pull/9948) [`58c00aa`](https://github.com/langchain-ai/langchainjs/commit/58c00aa51994e421741c88f51f6e9d2726433a03) Thanks [@aditya-gg04](https://github.com/aditya-gg04)! - support input_audio content for Gemini
+
+- Updated dependencies [[`71d08c0`](https://github.com/langchain-ai/langchainjs/commit/71d08c0a3a2597bd5a084eb35a7830e5ea1a2b29)]:
+  - @langchain/core@1.1.23
+
 ## 2.1.17
 
 ### Patch Changes

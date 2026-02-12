@@ -1,5 +1,14 @@
 # langchain
 
+## 1.2.22
+
+### Patch Changes
+
+- [#10008](https://github.com/langchain-ai/langchainjs/pull/10008) [`5283513`](https://github.com/langchain-ai/langchainjs/commit/5283513740ff93063f9c1eaa583365f590ec5994) Thanks [@christian-bromann](https://github.com/christian-bromann)! - fix(langchain): re-export missing interface
+
+- Updated dependencies [[`71d08c0`](https://github.com/langchain-ai/langchainjs/commit/71d08c0a3a2597bd5a084eb35a7830e5ea1a2b29)]:
+  - @langchain/core@1.1.23
+
 ## 1.2.21
 
 ### Patch Changes
