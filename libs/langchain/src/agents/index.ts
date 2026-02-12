@@ -567,6 +567,7 @@ export {
   providerStrategy,
   ToolStrategy,
   ProviderStrategy,
+  type TypedToolStrategy,
   type ResponseFormat,
   type ResponseFormatUndefined,
 } from "./responses.js";
