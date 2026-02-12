@@ -909,17 +909,36 @@ export class AgentNode<
       };
 
       Object.assign(options, {
+        /**
+         * OpenAI-style options (snake_case)
+         * Used by ChatOpenAI, ChatXAI, and other OpenAI-compatible providers.
+         */
         response_format: {
           type: "json_schema",
           json_schema: jsonSchemaParams,
         },
-        output_format: {
-          type: "json_schema",
-          schema: structuredResponseFormat.strategy.schema,
+
+        /**
+         * Anthropic-style options (camelCase)
+         * ChatAnthropic.invocationParams() reads `outputConfig` and `outputFormat`,
+         * not the snake_case variants above. Without these, the structured output
+         * configuration is silently lost for Anthropic models.
+         */
+        outputConfig: {
+          format: {
+            type: "json_schema",
+            schema: structuredResponseFormat.strategy.schema,
+          },
         },
+        /**
+         * Enable the Anthropic structured outputs beta via both the `betas`
+         * array (used by invocationParams) and the `headers` fallback.
+         */
+        betas: ["structured-outputs-2025-11-13"],
         headers: {
           "anthropic-beta": "structured-outputs-2025-11-13",
         },
+
         ls_structured_output_format: {
           kwargs: { method: "json_schema" },
           schema: structuredResponseFormat.strategy.schema,
