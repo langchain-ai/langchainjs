@@ -1,5 +1,14 @@
 # langchain
 
+## 1.2.23
+
+### Patch Changes
+
+- [#10010](https://github.com/langchain-ai/langchainjs/pull/10010) [`bf6eac4`](https://github.com/langchain-ai/langchainjs/commit/bf6eac40179f87da18fd122b4efc2ee48cd44b6c) Thanks [@christian-bromann](https://github.com/christian-bromann)! - fix(langchain): fix structured output on opus
+
+- Updated dependencies [[`70a4400`](https://github.com/langchain-ai/langchainjs/commit/70a440085b4bc2d036726ed12d9dc7841e914061)]:
+  - @langchain/core@1.1.24
+
 ## 1.2.22
 
 ### Patch Changes
