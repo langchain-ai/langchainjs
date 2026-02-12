@@ -930,14 +930,6 @@ export class AgentNode<
             schema: structuredResponseFormat.strategy.schema,
           },
         },
-        /**
-         * Enable the Anthropic structured outputs beta via both the `betas`
-         * array (used by invocationParams) and the `headers` fallback.
-         */
-        betas: ["structured-outputs-2025-11-13"],
-        headers: {
-          "anthropic-beta": "structured-outputs-2025-11-13",
-        },
 
         ls_structured_output_format: {
           kwargs: { method: "json_schema" },
