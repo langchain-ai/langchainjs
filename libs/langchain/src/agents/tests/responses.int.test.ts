@@ -264,6 +264,59 @@ describe("structured output handling", () => {
       expect(result.messages.at(-1)?.content).toContain('{"answer": "Paris"}');
       expect((result.messages.at(-1) as AIMessage).tool_calls?.length).toBe(0);
     });
+
+    it("should return structured output with Claude Opus 4.6 end-to-end", async () => {
+      const model = new ChatAnthropic({
+        model: "claude-opus-4-6",
+      });
+
+      const { tool: weatherTool, mock: weatherMock } = makeTool(
+        ({ city }: { city: string }) =>
+          `The weather in ${city} is 22°C and partly cloudy.`,
+        {
+          name: "get_weather",
+          description: "Get the current weather for a city",
+          schema: z.object({
+            city: z.string().describe("The city name"),
+          }),
+        }
+      );
+
+      const ResponseSchema = z.object({
+        city: z.string().describe("The city that was queried"),
+        temperature: z.number().describe("The temperature"),
+        summary: z.string().describe("A brief weather summary"),
+      });
+
+      const agent = createAgent({
+        model,
+        tools: [weatherTool],
+        systemPrompt:
+          "You are a weather assistant. Use the get_weather tool to answer questions about weather. Return exact values from the tool.",
+        responseFormat: providerStrategy(ResponseSchema),
+      });
+
+      const result = await agent.invoke({
+        messages: [new HumanMessage("What is the weather in Berlin?")],
+      });
+
+      // Verify tool was called
+      expect(weatherMock).toHaveBeenCalledTimes(1);
+
+      // Verify structured response is present and correctly parsed
+      expect(result.structuredResponse).toBeDefined();
+      expect(result.structuredResponse.temperature).toBe(22);
+      expect(result.structuredResponse.city).toBe("Berlin");
+      expect(typeof result.structuredResponse.summary).toBe("string");
+
+      // Verify no extract- tool calls (providerStrategy uses native structured output)
+      const hasExtractToolCalls = result.messages.some(
+        (msg) =>
+          AIMessage.isInstance(msg) &&
+          msg.tool_calls?.some((tc) => tc.name.startsWith("extract-"))
+      );
+      expect(hasExtractToolCalls).toBe(false);
+    });
   });
 });
 
