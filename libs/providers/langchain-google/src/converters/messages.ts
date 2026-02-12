@@ -47,7 +47,9 @@ export const geminiContentBlockConverter: StandardContentBlockConverter<{
     if (isDataContentBlock(block)) {
       if (block.source_type === "base64") {
         if (!block.mime_type) {
-          throw new InvalidInputError("mime_type is required for base64 image blocks");
+          throw new InvalidInputError(
+            "mime_type is required for base64 image blocks"
+          );
         }
         const dataStr =
           typeof block.data === "string"
@@ -118,7 +120,9 @@ export const geminiContentBlockConverter: StandardContentBlockConverter<{
     if (isDataContentBlock(block)) {
       if (block.source_type === "base64") {
         if (!block.mime_type) {
-          throw new InvalidInputError("mime_type is required for base64 audio blocks");
+          throw new InvalidInputError(
+            "mime_type is required for base64 audio blocks"
+          );
         }
         const dataStr =
           typeof block.data === "string"
@@ -189,7 +193,9 @@ export const geminiContentBlockConverter: StandardContentBlockConverter<{
     if (isDataContentBlock(block)) {
       if (block.source_type === "base64") {
         if (!block.mime_type) {
-          throw new InvalidInputError("mime_type is required for base64 file blocks");
+          throw new InvalidInputError(
+            "mime_type is required for base64 file blocks"
+          );
         }
         const dataStr =
           typeof block.data === "string"
@@ -547,7 +553,9 @@ function convertLegacyContentMessageToGeminiContent(
         ? content.image_url
         : content.image_url.url;
     if (!url) {
-      throw new InvalidInputError("Missing image URL in image_url content block.");
+      throw new InvalidInputError(
+        "Missing image URL in image_url content block."
+      );
     }
 
     const dataUrl = parseBase64DataUrl({ dataUrl: url });
@@ -602,7 +610,11 @@ function convertLegacyContentMessageToGeminiContent(
     }
 
     throw new InvalidInputError(
-      `Invalid media content: ${JSON.stringify(content, null, 1)}. Expected either { mimeType, data } for inline data or { mimeType, fileUri } for file references.`
+      `Invalid media content: ${JSON.stringify(
+        content,
+        null,
+        1
+      )}. Expected either { mimeType, data } for inline data or { mimeType, fileUri } for file references.`
     );
   }
 
@@ -1060,20 +1072,45 @@ export const convertGeminiCandidateToAIMessage: Converter<
     groundingMetadata?.groundingSupports
   );
 
-  if (parts.length === 0) {
+  // Determine if a part carries actual content vs. just metadata.
+  // Metadata-only parts (e.g. empty text with only thoughtSignature) should not
+  // prevent collapsing a single-text response into a string.
+  const hasContentPayload = (p: Gemini.Part): boolean =>
+    !!p.text ||
+    !!p.thought ||
+    !!p.inlineData ||
+    !!p.fileData ||
+    !!p.functionCall ||
+    !!p.functionResponse ||
+    !!p.executableCode ||
+    !!p.codeExecutionResult;
+
+  const contentParts = parts.filter(hasContentPayload);
+
+  if (contentParts.length === 0) {
+    // No content-bearing parts (may still have metadata-only parts)
     content = "";
+    if (parts.length > 0) {
+      originalTextContentBlock = convertGeminiPartToContentBlock(parts[0]);
+    }
   } else if (
-    parts.length === 1 &&
-    "text" in parts[0] &&
-    !("thought" in parts[0]) &&
-    !("thoughtSignature" in parts[0])
+    contentParts.length === 1 &&
+    "text" in contentParts[0] &&
+    !("thought" in contentParts[0])
   ) {
-    // Single text part - store as string for simplicity and backwards compatibility
-    content = parts[0].text ?? "";
-    // But retain all the metadata
-    originalTextContentBlock = convertGeminiPartToContentBlock(parts[0]);
+    // Single text content part (possibly alongside metadata-only parts like
+    // thoughtSignature) - store as string
+    content = contentParts[0].text ?? "";
+    // Merge metadata from any metadata-only parts into the content block
+    const mergedPart: Gemini.Part = { ...contentParts[0] };
+    for (const p of parts) {
+      if (p !== contentParts[0] && p.thoughtSignature) {
+        mergedPart.thoughtSignature = p.thoughtSignature;
+      }
+    }
+    originalTextContentBlock = convertGeminiPartToContentBlock(mergedPart);
   } else {
-    // Multiple parts - convert to array format with type fields
+    // Multiple content parts - convert to array format with type fields
     content = parts.map((p: Gemini.Part) => convertGeminiPartToContentBlock(p));
   }
 
