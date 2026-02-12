@@ -51,6 +51,35 @@ export const AnthropicToolExtrasSchema = z.object({
  * when making requests to the Anthropic API. Beta features are experimental
  * capabilities that may change or be removed.
  */
+/**
+ * Checks whether any tools have `allowed_callers` referencing code execution,
+ * which requires the `advanced-tool-use-2025-11-20` beta header.
+ */
+export function getToolsRequiringAdvancedBeta(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  tools: any[] | undefined
+): boolean {
+  if (!tools) return false;
+  return tools.some((tool) => {
+    // Raw Anthropic tool definition with allowed_callers
+    if (typeof tool === "object" && tool != null && "allowed_callers" in tool) {
+      const callers = tool.allowed_callers as string[] | undefined;
+      return callers?.some((c: string) => c.startsWith("code_execution"));
+    }
+    // LangChain tool with extras
+    if (
+      typeof tool === "object" &&
+      tool != null &&
+      "extras" in tool &&
+      tool.extras?.allowed_callers
+    ) {
+      const callers = tool.extras.allowed_callers as string[] | undefined;
+      return callers?.some((c: string) => c.startsWith("code_execution"));
+    }
+    return false;
+  });
+}
+
 export const ANTHROPIC_TOOL_BETAS: Record<string, string> = {
   tool_search_tool_regex_20251119: "advanced-tool-use-2025-11-20",
   tool_search_tool_bm25_20251119: "advanced-tool-use-2025-11-20",

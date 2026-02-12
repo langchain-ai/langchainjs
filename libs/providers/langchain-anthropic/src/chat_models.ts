@@ -38,6 +38,7 @@ import { AnthropicToolsOutputParser } from "./output_parsers.js";
 import {
   ANTHROPIC_TOOL_BETAS,
   AnthropicToolExtrasSchema,
+  getToolsRequiringAdvancedBeta,
   handleToolChoice,
 } from "./utils/tools.js";
 import {
@@ -391,6 +392,14 @@ export interface AnthropicInput {
    * See https://docs.claude.com/en/api/beta-headers for available beta features.
    */
   betas?: AnthropicBeta[];
+
+  /**
+   * When true, automatically reuses the last container ID from AI message
+   * response_metadata in the conversation history. This enables file
+   * persistence across turns when using the code_execution tool without
+   * manually extracting and passing container IDs.
+   */
+  reuseLastContainer?: boolean;
 }
 
 /**
@@ -1005,6 +1014,8 @@ export class ChatAnthropicMessages<
 
   betas?: AnthropicBeta[];
 
+  reuseLastContainer?: boolean;
+
   /**
    * Optional method that returns an initialized underlying Anthropic client.
    * Useful for accessing Anthropic models hosted on other cloud services
@@ -1053,6 +1064,8 @@ export class ChatAnthropicMessages<
     this.outputConfig = fields?.outputConfig ?? this.outputConfig;
     this.inferenceGeo = fields?.inferenceGeo ?? this.inferenceGeo;
     this.betas = fields?.betas ?? this.betas;
+    this.reuseLastContainer =
+      fields?.reuseLastContainer ?? this.reuseLastContainer;
 
     this.createClient =
       fields?.createClient ??
@@ -1159,6 +1172,15 @@ export class ChatAnthropicMessages<
       return acc;
     }, []);
 
+    // Auto-detect advanced-tool-use beta when tools have allowed_callers
+    // referencing code execution (programmatic tool calling).
+    if (
+      getToolsRequiringAdvancedBeta(options?.tools) &&
+      !toolBetas?.includes("advanced-tool-use-2025-11-20")
+    ) {
+      toolBetas?.push("advanced-tool-use-2025-11-20");
+    }
+
     // Merge output_config from constructor and call options, with backwards
     // compat for the deprecated outputFormat call option.
     const mergedOutputConfig: AnthropicOutputConfig | undefined = (() => {
@@ -1255,11 +1277,32 @@ export class ChatAnthropicMessages<
       );
     }
 
-    const payload = {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const payload: Record<string, any> = {
       ...params,
       ...formattedMessages,
       stream: true,
-    } as const;
+    };
+
+    // Automatically reuse the last container from message history
+    if (this.reuseLastContainer && !payload.container) {
+      for (let i = messages.length - 1; i >= 0; i--) {
+        const msg = messages[i];
+        if (msg._getType() === "ai") {
+          const container = msg.response_metadata?.container;
+          if (
+            container &&
+            typeof container === "object" &&
+            "id" in container &&
+            container.id
+          ) {
+            payload.container = container.id;
+            break;
+          }
+        }
+      }
+    }
+
     const coerceContentToString =
       !_toolsInParams(payload) &&
       !_documentsInParams(payload) &&
@@ -1336,14 +1379,33 @@ export class ChatAnthropicMessages<
       );
     }
 
-    const response = await this.completionWithRetry(
-      {
-        ...params,
-        stream: false,
-        ...formattedMessages,
-      },
-      requestOptions
-    );
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const payload: Record<string, any> = {
+      ...params,
+      stream: false,
+      ...formattedMessages,
+    };
+
+    // Automatically reuse the last container from message history
+    if (this.reuseLastContainer && !payload.container) {
+      for (let i = messages.length - 1; i >= 0; i--) {
+        const msg = messages[i];
+        if (msg._getType() === "ai") {
+          const container = msg.response_metadata?.container;
+          if (
+            container &&
+            typeof container === "object" &&
+            "id" in container &&
+            container.id
+          ) {
+            payload.container = container.id;
+            break;
+          }
+        }
+      }
+    }
+
+    const response = await this.completionWithRetry(payload, requestOptions);
 
     const { content, ...additionalKwargs } = response;
 
