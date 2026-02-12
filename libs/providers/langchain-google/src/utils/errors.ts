@@ -721,4 +721,3 @@ export class MalformedOutputError extends GoogleError("malformed-output") {
 export class InvalidInputError extends GoogleError("invalid-input") {
   readonly name = "InvalidInputError" as const;
 }
-

@@ -561,8 +561,7 @@ export abstract class BaseChatGoogle<
                     ...(message.additional_kwargs.originalTextContentBlock
                       ? {
                           originalTextContentBlock:
-                            message.additional_kwargs
-                              .originalTextContentBlock,
+                            message.additional_kwargs.originalTextContentBlock,
                         }
                       : {}),
                     ...(candidate.finishReason
