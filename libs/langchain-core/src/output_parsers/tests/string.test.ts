@@ -79,7 +79,7 @@ test("ignores reasoning blocks and returns only text", async () => {
     {
       type: "reasoning",
       reasoning: "internal reasoning",
-    } as any,
+    },
     {
       type: "text",
       text: "final answer",
@@ -99,7 +99,7 @@ test("ignores thinking blocks", async () => {
     {
       type: "thinking",
       thinking: "hidden thoughts",
-    } as any,
+    },
     {
       type: "text",
       text: "visible output",
@@ -119,7 +119,7 @@ test("ignores redacted_thinking blocks", async () => {
     {
       type: "redacted_thinking",
       redacted_thinking: "redacted",
-    } as any,
+    },
     {
       type: "text",
       text: "answer",
