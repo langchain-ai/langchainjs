@@ -1638,8 +1638,8 @@ importers:
         specifier: ^4.0.2
         version: 4.1.1
       ansi-styles:
-        specifier: ^5.0.0
-        version: 5.2.0
+        specifier: ^6.2.3
+        version: 6.2.3
       camelcase:
         specifier: '6'
         version: 6.3.0
