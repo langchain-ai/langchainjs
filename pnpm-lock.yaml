@@ -233,7 +233,7 @@ importers:
         specifier: ^2.45.0
         version: 2.95.3(bufferutil@4.1.0)
       '@tensorflow/tfjs-backend-cpu':
-        specifier: ^4.4.0
+        specifier: ^4.22.0
         version: 4.22.0(@tensorflow/tfjs-core@4.22.0(encoding@0.1.13))
       '@tsconfig/recommended':
         specifier: ^1.0.2
@@ -958,7 +958,7 @@ importers:
         specifier: ^2.53.0
         version: 2.95.3(bufferutil@4.1.0)
       '@tensorflow/tfjs-backend-cpu':
-        specifier: ^4.4.0
+        specifier: ^4.22.0
         version: 4.22.0(@tensorflow/tfjs-core@4.22.0(encoding@0.1.13))
       '@tsconfig/recommended':
         specifier: ^1.0.2
@@ -1320,8 +1320,8 @@ importers:
         specifier: ^1.3.3
         version: 1.3.3(@tensorflow/tfjs-converter@3.21.0(@tensorflow/tfjs-core@4.22.0(encoding@0.1.13)))(@tensorflow/tfjs-core@4.22.0(encoding@0.1.13))
       '@tensorflow/tfjs-backend-cpu':
-        specifier: ^3
-        version: 3.21.0(@tensorflow/tfjs-core@4.22.0(encoding@0.1.13))
+        specifier: ^4
+        version: 4.22.0(@tensorflow/tfjs-core@4.22.0(encoding@0.1.13))
       '@tensorflow/tfjs-core':
         specifier: ^4.22.0
         version: 4.22.0(encoding@0.1.13)
@@ -8280,12 +8280,6 @@ packages:
     peerDependencies:
       '@tensorflow/tfjs-converter': ^3.6.0
       '@tensorflow/tfjs-core': ^3.6.0
-
-  '@tensorflow/tfjs-backend-cpu@3.21.0':
-    resolution: {integrity: sha512-88S21UAdzyK0CsLUrH17GPTD+26E85OP9CqmLZslaWjWUmBkeTQ5Zqyp6iK+gELnLxPx6q7JsNEeFuPv4254lQ==}
-    engines: {yarn: '>= 1.3.2'}
-    peerDependencies:
-      '@tensorflow/tfjs-core': 3.21.0
 
   '@tensorflow/tfjs-backend-cpu@4.22.0':
     resolution: {integrity: sha512-1u0FmuLGuRAi8D2c3cocHTASGXOmHc/4OvoVDENJayjYkS119fcTcQf4iHrtLthWyDIPy3JiPhRrZQC9EwnhLw==}
@@ -22456,12 +22450,6 @@ snapshots:
     dependencies:
       '@tensorflow/tfjs-converter': 3.21.0(@tensorflow/tfjs-core@4.22.0(encoding@0.1.13))
       '@tensorflow/tfjs-core': 4.22.0(encoding@0.1.13)
-
-  '@tensorflow/tfjs-backend-cpu@3.21.0(@tensorflow/tfjs-core@4.22.0(encoding@0.1.13))':
-    dependencies:
-      '@tensorflow/tfjs-core': 4.22.0(encoding@0.1.13)
-      '@types/seedrandom': 2.4.34
-      seedrandom: 3.0.5
 
   '@tensorflow/tfjs-backend-cpu@4.22.0(@tensorflow/tfjs-core@4.22.0(encoding@0.1.13))':
     dependencies:
