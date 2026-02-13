@@ -162,7 +162,7 @@
     "@qdrant/js-client-rest": "^1.15.0",
     "@rockset/client": "^0.9.1",
     "@supabase/supabase-js": "^2.53.0",
-    "@tensorflow/tfjs-backend-cpu": "^4.4.0",
+    "@tensorflow/tfjs-backend-cpu": "^4.22.0",
     "@langchain/tsconfig": "workspace:*",
     "@tsconfig/recommended": "^1.0.2",
     "@types/js-yaml": "^4",
