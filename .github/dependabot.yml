@@ -51,6 +51,8 @@ updates:
       day: monday
       time: "11:00"
     open-pull-requests-limit: 10
+    ignore:
+      - dependency-name: "p-queue"
     groups:
       core-libs-minor-and-patch:
         update-types:
