@@ -509,8 +509,8 @@ importers:
         specifier: ^5.2.1
         version: 5.5.5(@types/eslint@9.6.1)(eslint-config-prettier@10.1.8(eslint@9.39.2(jiti@2.6.1)))(eslint@9.39.2(jiti@2.6.1))(prettier@3.8.1)
       globals:
-        specifier: ^16.4.0
-        version: 16.5.0
+        specifier: ^17.3.0
+        version: 17.3.0
       prettier:
         specifier: ^3.6.2
         version: 3.8.1
@@ -11359,8 +11359,8 @@ packages:
     resolution: {integrity: sha512-oahGvuMGQlPw/ivIYBjVSrWAfWLBeku5tpPE2fOPLi+WHffIWbuh2tCjhyQhTBPMf5E9jDEH4FOmTYgYwbKwtQ==}
     engines: {node: '>=18'}
 
-  globals@16.5.0:
-    resolution: {integrity: sha512-c/c15i26VrJ4IRt5Z89DnIzCGDn9EcebibhAOjw5ibqEHsE1wLUgkPn9RDmNcUKyU87GeaL633nyJ+pplFR2ZQ==}
+  globals@17.3.0:
+    resolution: {integrity: sha512-yMqGUQVVCkD4tqjOJf3TnrvaaHDMYp4VlUSObbkIiuCPe/ofdMBFIAcBbCSRFWOnos6qRiTVStDwqPLUclaxIw==}
     engines: {node: '>=18'}
 
   globalthis@1.0.4:
@@ -22724,7 +22724,6 @@ snapshots:
   '@types/node@25.2.3':
     dependencies:
       undici-types: 7.16.0
-    optional: true
 
   '@types/offscreencanvas@2019.7.3': {}
 
@@ -22790,7 +22789,7 @@ snapshots:
 
   '@types/sqlite3@3.1.11':
     dependencies:
-      '@types/node': 24.10.12
+      '@types/node': 25.2.3
 
   '@types/ssh2-streams@0.1.13':
     dependencies:
@@ -26394,7 +26393,7 @@ snapshots:
 
   globals@14.0.0: {}
 
-  globals@16.5.0: {}
+  globals@17.3.0: {}
 
   globalthis@1.0.4:
     dependencies:
