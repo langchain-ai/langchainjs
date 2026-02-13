@@ -187,6 +187,17 @@ export class FakeToolCallingChatModel extends BaseChatModel {
     this.structuredOutputMessages = [];
   }
 
+  /**
+   * Reset internal iteration state so this fake can be reused across
+   * multiple benchmark iterations without drifting through responses.
+   */
+  reset(options?: { idx?: number; clearStructuredOutputMessages?: boolean }) {
+    this.idx = options?.idx ?? 0;
+    if (options?.clearStructuredOutputMessages ?? true) {
+      this.structuredOutputMessages = [];
+    }
+  }
+
   _llmType() {
     return "fake";
   }

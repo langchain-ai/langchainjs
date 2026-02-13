@@ -66,9 +66,15 @@ export function setContextVariable<T>(name: PropertyKey, value: T): void {
   const runTree = asyncLocalStorageInstance.getStore();
   const contextVars = { ...runTree?.[_CONTEXT_VARIABLES_KEY] };
   contextVars[name] = value;
-  let newValue = {};
+  // Preserve existing store shape:
+  // - If it's a RunTree, clone it as a RunTree.
+  // - Otherwise, if it's an object store (used for runnable config), shallow-clone it
+  //   so we don't discard config/extra when adding context vars.
+  let newValue: Record<PropertyKey, unknown> = {};
   if (isRunTree(runTree)) {
-    newValue = new RunTree(runTree);
+    newValue = new RunTree(runTree) as unknown as Record<PropertyKey, unknown>;
+  } else if (runTree && typeof runTree === "object") {
+    newValue = { ...(runTree as Record<PropertyKey, unknown>) };
   }
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   (newValue as any)[_CONTEXT_VARIABLES_KEY] = contextVars;

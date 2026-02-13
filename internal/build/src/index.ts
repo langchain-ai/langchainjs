@@ -55,6 +55,9 @@ export function getBuildConfig(options?: Partial<BuildOptions>): BuildOptions {
     format: ["cjs", "esm"],
     target: "es2022",
     platform: "node",
+    // rolldown/tsdown can emit `.mjs` for ESM when `fixedExtension` is enabled.
+    // We want stable `.js` ESM output for `"type": "module"` packages.
+    fixedExtension: false,
     dts: {
       parallel: true,
       tsgo: true,

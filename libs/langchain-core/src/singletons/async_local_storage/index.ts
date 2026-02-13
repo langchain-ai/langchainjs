@@ -1,5 +1,4 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { RunTree } from "langsmith";
 import {
   AsyncLocalStorageInterface,
   getGlobalAsyncLocalStorageInstance,
@@ -26,6 +25,15 @@ export class MockAsyncLocalStorage implements AsyncLocalStorageInterface {
 const mockAsyncLocalStorage = new MockAsyncLocalStorage();
 
 const LC_CHILD_KEY = Symbol.for("lc:child_config");
+
+type Extra = Record<PropertyKey, unknown>;
+type StoreWithExtra = {
+  extra?: Extra;
+} & {
+  [key: string]: unknown;
+  [key: number]: unknown;
+  [key: symbol]: unknown;
+};
 
 class AsyncLocalStorageProvider {
   getInstance(): AsyncLocalStorageInterface {
@@ -64,14 +72,18 @@ class AsyncLocalStorageProvider {
     if (langChainTracer && parentRunId) {
       runTree = langChainTracer.getRunTreeWithTracingConfig(parentRunId);
     } else if (!avoidCreatingRootRunTree) {
-      runTree = new RunTree({
-        name: "<runnable_lambda>",
-        tracingEnabled: false,
-      });
+      // When tracing is disabled, constructing a LangSmith RunTree is pure overhead
+      // (UUID generation, timestamp formatting, env reads). We only need an async-local
+      // store to propagate runnable config to child invocations.
+      runTree = { extra: {} };
     }
 
     if (runTree) {
-      runTree.extra = { ...runTree.extra, [LC_CHILD_KEY]: config };
+      // Ensure we preserve any existing extra fields regardless of store type
+      // (RunTree or lightweight object store).
+      const store = runTree as StoreWithExtra;
+      const existingExtra: Extra = store.extra ?? {};
+      store.extra = { ...existingExtra, [LC_CHILD_KEY]: config };
     }
 
     if (
@@ -81,8 +93,10 @@ class AsyncLocalStorageProvider {
       if (runTree === undefined) {
         runTree = {};
       }
-      (runTree as any)[_CONTEXT_VARIABLES_KEY] =
-        previousValue[_CONTEXT_VARIABLES_KEY];
+      const store = runTree as StoreWithExtra;
+      store[_CONTEXT_VARIABLES_KEY] = (previousValue as StoreWithExtra)[
+        _CONTEXT_VARIABLES_KEY
+      ];
     }
 
     return storage.run(runTree, callback);
