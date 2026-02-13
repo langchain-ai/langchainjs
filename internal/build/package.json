@@ -18,7 +18,7 @@
     "prettier": "^3.8.1",
     "publint": "^0.3.15",
     "rolldown": "^1.0.0-rc.4",
-    "tsdown": "^0.17.0",
+    "tsdown": "^0.20.3",
     "type-fest": "^5.3.0",
     "typescript": "^5.9.3",
     "unplugin-unused": "^0.5.6"
