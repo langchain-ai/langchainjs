@@ -1,6 +1,6 @@
 {
   "name": "@langchain/core",
-  "version": "1.1.20",
+  "version": "1.1.24",
   "description": "Core LangChain.js abstractions and schemas",
   "type": "module",
   "engines": {
@@ -31,7 +31,7 @@
   "license": "MIT",
   "dependencies": {
     "@cfworker/json-schema": "^4.0.2",
-    "ansi-styles": "^5.0.0",
+    "ansi-styles": "^6.2.3",
     "camelcase": "6",
     "decamelize": "1.2.0",
     "js-tiktoken": "^1.0.12",
@@ -700,6 +700,17 @@
       "import": {
         "types": "./dist/utils/math.d.ts",
         "default": "./dist/utils/math.js"
+      }
+    },
+    "./utils/ssrf": {
+      "input": "./src/utils/ssrf.ts",
+      "require": {
+        "types": "./dist/utils/ssrf.d.cts",
+        "default": "./dist/utils/ssrf.cjs"
+      },
+      "import": {
+        "types": "./dist/utils/ssrf.d.ts",
+        "default": "./dist/utils/ssrf.js"
       }
     },
     "./utils/stream": {

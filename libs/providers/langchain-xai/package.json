@@ -1,6 +1,6 @@
 {
   "name": "@langchain/xai",
-  "version": "1.3.2",
+  "version": "1.3.3",
   "description": "xAI integration for LangChain.js",
   "author": "LangChain",
   "license": "MIT",
@@ -39,7 +39,7 @@
     "@langchain/core": "^1.0.0"
   },
   "devDependencies": {
-    "@langchain/core": "workspace:*",
+    "@langchain/core": "workspace:^",
     "@langchain/eslint": "workspace:*",
     "@langchain/openai": "workspace:^",
     "@langchain/standard-tests": "workspace:*",

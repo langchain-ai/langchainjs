@@ -184,6 +184,11 @@ export class ReactAgent<
     defaultConfig?: RunnableConfig
   ) {
     this.#defaultConfig = defaultConfig ?? {};
+    if (options.name) {
+      this.#defaultConfig = mergeConfigs(this.#defaultConfig, {
+        metadata: { lc_agent_name: options.name },
+      });
+    }
     this.#toolBehaviorVersion = options.version ?? this.#toolBehaviorVersion;
 
     /**
@@ -1199,6 +1204,7 @@ export class ReactAgent<
    */
   async stream<
     TStreamMode extends StreamMode | StreamMode[] | undefined,
+    TSubgraphs extends boolean,
     TEncoding extends "text/event-stream" | undefined,
   >(
     state: InvokeStateParameter<Types>,
@@ -1210,6 +1216,7 @@ export class ReactAgent<
       > &
         InferMiddlewareContextInputs<Types["Middleware"]>,
       TStreamMode,
+      TSubgraphs,
       TEncoding
     >
   ) {
@@ -1225,7 +1232,7 @@ export class ReactAgent<
       IterableReadableStream<
         StreamOutputMap<
           TStreamMode,
-          false,
+          TSubgraphs,
           MergedAgentState<Types>,
           MergedAgentState<Types>,
           string,
@@ -1302,6 +1309,7 @@ export class ReactAgent<
       > &
         InferMiddlewareContextInputs<Types["Middleware"]>,
       StreamMode | StreamMode[] | undefined,
+      boolean,
       "text/event-stream" | undefined
     > & { version?: "v1" | "v2" },
     streamOptions?: Parameters<Runnable["streamEvents"]>[2]
