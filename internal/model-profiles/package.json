@@ -11,15 +11,15 @@
   "dependencies": {
     "@iarna/toml": "^2.2.5",
     "@langchain/core": "workspace:^",
-    "commander": "^11.1.0",
-    "prettier": "^3.5.0",
+    "commander": "^14.0.3",
+    "prettier": "^3.8.1",
     "typescript": "^5.9.3",
-    "zod": "^4.1.12"
+    "zod": "^4.3.6"
   },
   "devDependencies": {
     "@types/iarna__toml": "^2.0.5",
     "@types/node": "^25.2.3",
     "tsx": "^4.21.0",
-    "vitest": "^1.0.0"
+    "vitest": "^4.0.18"
   }
 }
