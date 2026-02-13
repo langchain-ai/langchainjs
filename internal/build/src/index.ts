@@ -1,23 +1,24 @@
 import type { UserConfig as BuildOptions } from "tsdown";
+import type { UserConfig as BuildOptions } from "tsdown";
 import type { PackageJson } from "type-fest";
 import path from "node:path";
 
 export {
   type CjsCompatPluginOptions,
   cjsCompatPlugin,
-} from "./plugins/cjs-compat.ts";
+} from "./plugins/cjs-compat";
 export {
   type ImportConstantsPluginOptions,
   importConstantsPlugin,
-} from "./plugins/import-constants.ts";
+} from "./plugins/import-constants";
 export {
   type ImportMapPluginOptions,
   importMapPlugin,
-} from "./plugins/import-map.ts";
+} from "./plugins/import-map";
 export {
   type SecretPluginOptions,
   lcSecretsPlugin,
-} from "./plugins/lc-secrets.ts";
+} from "./plugins/lc-secrets";
 
 /**
  * Creates a standardized tsdown build configuration for LangChain packages.
@@ -65,11 +66,11 @@ export function getBuildConfig(options?: Partial<BuildOptions>): BuildOptions {
     },
     sourcemap: true,
     unbundle: true,
-    // In unbundle (transpile-only) mode, dependencies remain as external imports
-    // and should not trigger "bundled dependency" warnings. Setting inlineOnly
-    // to false suppresses these warnings for all packages. Individual packages
-    // can override this with a specific allowlist if needed.
-    inlineOnly: false,
+    outExtensions: ({ format }) => {
+      if (format === "es") return { js: ".js", dts: ".d.ts" };
+      if (format === "cjs") return { js: ".cjs", dts: ".d.cts" };
+      return undefined;
+    },
     exports: {
       customExports: async (exports) => {
         return Object.entries(exports).reduce(

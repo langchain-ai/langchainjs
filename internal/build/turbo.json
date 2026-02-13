@@ -1,0 +1,19 @@
+{
+  "extends": [
+    "//"
+  ],
+  "tasks": {
+    "build": {
+      "dependsOn": [],
+      "inputs": [
+        "src/**",
+        "tsconfig.json",
+        "tsdown.config.ts",
+        "package.json"
+      ],
+      "outputs": [
+        "dist/**"
+      ]
+    }
+  }
+}
