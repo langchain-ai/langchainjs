@@ -118,7 +118,8 @@ type CreateAgentPregelOptions =
   | "recursionLimit"
   | "maxConcurrency"
   | "timeout"
-  | "callbacks";
+  | "callbacks"
+  | "subgraphs";
 
 /**
  * Pregel stream options that are propagated to the agent
@@ -158,6 +159,7 @@ export type InvokeConfiguration<ContextSchema extends Record<string, any>> =
 export type StreamConfiguration<
   ContextSchema extends Record<string, any>,
   TStreamMode extends StreamMode | StreamMode[] | undefined,
+  TSubgraphs extends boolean,
   TEncoding extends "text/event-stream" | undefined,
 > =
   /**
@@ -166,8 +168,8 @@ export type StreamConfiguration<
   ContextSchema extends InteropZodDefault<any>
     ? Partial<
         Pick<
-          PregelOptions<any, any, any, TStreamMode, boolean, TEncoding>,
-          CreateAgentPregelOptions
+          PregelOptions<any, any, any, TStreamMode, TSubgraphs, TEncoding>,
+          CreateAgentPregelOptions | CreateAgentPregelStreamOptions
         >
       > & {
         context?: Partial<ContextSchema>;
@@ -178,7 +180,7 @@ export type StreamConfiguration<
       IsAllOptional<ContextSchema> extends true
       ? Partial<
           Pick<
-            PregelOptions<any, any, any, TStreamMode, boolean, TEncoding>,
+            PregelOptions<any, any, any, TStreamMode, TSubgraphs, TEncoding>,
             CreateAgentPregelOptions | CreateAgentPregelStreamOptions
           >
         > & {
@@ -186,7 +188,7 @@ export type StreamConfiguration<
         }
       : Partial<
           Pick<
-            PregelOptions<any, any, any, TStreamMode, boolean, TEncoding>,
+            PregelOptions<any, any, any, TStreamMode, TSubgraphs, TEncoding>,
             CreateAgentPregelOptions | CreateAgentPregelStreamOptions
           >
         > &
