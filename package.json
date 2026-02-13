@@ -47,7 +47,7 @@
     "lint-staged": "^16.2.7",
     "prettier": "^3.5.0",
     "semver": "^7.7.4",
-    "tsdown": "^0.15.12",
+    "tsdown": "^0.20.3",
     "tsx": "^4.21.0",
     "turbo": "^2.8.7",
     "typescript": "^5.9.3"
