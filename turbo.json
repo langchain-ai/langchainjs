@@ -13,8 +13,7 @@
   "tasks": {
     "build:compile": {
       "dependsOn": [
-        "^build:compile",
-        "@langchain/build#build"
+        "^build:compile"
       ],
       "env": [
         "BUILD_MODE"
