@@ -1024,9 +1024,7 @@ describe("gemini empty text content handling", () => {
     const formatted = (await api.formatData(messages, {})) as GeminiRequest;
 
     // The AIMessage("") should produce a model content entry with a text part
-    const modelContent = formatted.contents?.find(
-      (c) => c.role === "model"
-    );
+    const modelContent = formatted.contents?.find((c) => c.role === "model");
     expect(modelContent).toBeDefined();
     expect(modelContent?.parts.length).toBeGreaterThanOrEqual(1);
 
@@ -1048,9 +1046,7 @@ describe("gemini empty text content handling", () => {
 
     const formatted = (await api.formatData(messages, {})) as GeminiRequest;
 
-    const modelContent = formatted.contents?.find(
-      (c) => c.role === "model"
-    );
+    const modelContent = formatted.contents?.find((c) => c.role === "model");
     expect(modelContent).toBeDefined();
     expect(modelContent?.parts.length).toBeGreaterThanOrEqual(1);
 
@@ -1073,9 +1069,7 @@ describe("gemini empty text content handling", () => {
 
     const formatted = (await api.formatData(messages, {})) as GeminiRequest;
 
-    const modelContent = formatted.contents?.find(
-      (c) => c.role === "model"
-    );
+    const modelContent = formatted.contents?.find((c) => c.role === "model");
     expect(modelContent).toBeDefined();
     expect(modelContent?.parts.length).toBe(1);
     expect(modelContent?.parts[0]).toHaveProperty("functionCall");
@@ -1091,9 +1085,7 @@ describe("gemini empty text content handling", () => {
 
     const formatted = (await api.formatData(messages, {})) as GeminiRequest;
 
-    const modelContent = formatted.contents?.find(
-      (c) => c.role === "model"
-    );
+    const modelContent = formatted.contents?.find((c) => c.role === "model");
     expect(modelContent).toBeDefined();
 
     const textPart = modelContent?.parts[0] as GeminiPartText;
