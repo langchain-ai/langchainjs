@@ -1,7 +1,7 @@
 import path from "node:path";
 import fs from "node:fs/promises";
 import type { Plugin } from "rolldown";
-import { isSafeProjectPath, toPosixPath } from "../utils.ts";
+import { isSafeProjectPath } from "../utils";
 
 /**
  * Options for configuring the CJS compatibility plugin.
@@ -169,6 +169,7 @@ export function cjsCompatPlugin(param: CjsCompatPluginOptions = {}): Plugin {
           if (dirPath !== ".") {
             const target = path.resolve(dirPath);
             if (isSafeProjectPath(target)) {
+              await fs.rm(target, { recursive: true }).catch(() => {});
               await fs.rm(target, { recursive: true }).catch(() => {});
             }
           }
