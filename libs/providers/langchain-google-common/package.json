@@ -1,6 +1,6 @@
 {
   "name": "@langchain/google-common",
-  "version": "2.1.17",
+  "version": "2.1.18",
   "description": "Core types and classes for Google services.",
   "type": "module",
   "engines": {

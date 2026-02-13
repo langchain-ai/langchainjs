@@ -1,5 +1,21 @@
 # @langchain/core
 
+## 1.1.24
+
+### Patch Changes
+
+- [#9978](https://github.com/langchain-ai/langchainjs/pull/9978) [`70a4400`](https://github.com/langchain-ai/langchainjs/commit/70a440085b4bc2d036726ed12d9dc7841e914061) Thanks [@christian-bromann](https://github.com/christian-bromann)! - fix(core): fix web_search_call and file_search_call contentBlocks for OpenAI Responses API
+
+## 1.1.23
+
+### Patch Changes
+
+- [#10000](https://github.com/langchain-ai/langchainjs/pull/10000) [`71d08c0`](https://github.com/langchain-ai/langchainjs/commit/71d08c0a3a2597bd5a084eb35a7830e5ea1a2b29) Thanks [@hntrl](https://github.com/hntrl)! - feat(google): add `@langchain/google` -- unified Google/Gemini integration
+
+  New package that replaces the fragmented `@langchain/google-genai` / `@langchain/google-common` / Vertex AI package stack with a single integration.
+
+  Published as 0.1.0 (early release). Existing Google packages will continue to receive maintenance updates.
+
 ## 1.1.22
 
 ### Patch Changes

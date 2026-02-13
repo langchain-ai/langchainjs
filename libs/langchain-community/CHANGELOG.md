@@ -1,5 +1,15 @@
 # @langchain/community
 
+## 1.1.15
+
+### Patch Changes
+
+- [#10003](https://github.com/langchain-ai/langchainjs/pull/10003) [`6c5b2b1`](https://github.com/langchain-ai/langchainjs/commit/6c5b2b19a5cb181cb7f6bd21e9e72baf517ad59a) Thanks [@FilipZmijewski](https://github.com/FilipZmijewski)! - fix(community): IBM tests
+
+- Updated dependencies [[`71d08c0`](https://github.com/langchain-ai/langchainjs/commit/71d08c0a3a2597bd5a084eb35a7830e5ea1a2b29)]:
+  - @langchain/core@1.1.23
+  - @langchain/classic@1.0.17
+
 ## 1.1.14
 
 ### Patch Changes

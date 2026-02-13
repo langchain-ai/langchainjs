@@ -1,5 +1,29 @@
 # langchain
 
+## 1.2.24
+
+### Patch Changes
+
+- [#10034](https://github.com/langchain-ai/langchainjs/pull/10034) [`8eea9d4`](https://github.com/langchain-ai/langchainjs/commit/8eea9d462d2e782e62455973d6b0907aa917b41e) Thanks [@christian-bromann](https://github.com/christian-bromann)! - fix(langchain): fix streaming types
+
+## 1.2.23
+
+### Patch Changes
+
+- [#10010](https://github.com/langchain-ai/langchainjs/pull/10010) [`bf6eac4`](https://github.com/langchain-ai/langchainjs/commit/bf6eac40179f87da18fd122b4efc2ee48cd44b6c) Thanks [@christian-bromann](https://github.com/christian-bromann)! - fix(langchain): fix structured output on opus
+
+- Updated dependencies [[`70a4400`](https://github.com/langchain-ai/langchainjs/commit/70a440085b4bc2d036726ed12d9dc7841e914061)]:
+  - @langchain/core@1.1.24
+
+## 1.2.22
+
+### Patch Changes
+
+- [#10008](https://github.com/langchain-ai/langchainjs/pull/10008) [`5283513`](https://github.com/langchain-ai/langchainjs/commit/5283513740ff93063f9c1eaa583365f590ec5994) Thanks [@christian-bromann](https://github.com/christian-bromann)! - fix(langchain): re-export missing interface
+
+- Updated dependencies [[`71d08c0`](https://github.com/langchain-ai/langchainjs/commit/71d08c0a3a2597bd5a084eb35a7830e5ea1a2b29)]:
+  - @langchain/core@1.1.23
+
 ## 1.2.21
 
 ### Patch Changes

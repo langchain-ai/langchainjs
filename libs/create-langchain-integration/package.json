@@ -20,7 +20,7 @@
     "@langchain/eslint": "workspace:*",
     "@langchain/tsconfig": "workspace:*",
     "@types/prompts": "^2",
-    "@types/validate-npm-package-name": "3.0.0",
+    "@types/validate-npm-package-name": "4.0.2",
     "@vercel/ncc": "^0.38.4",
     "commander": "^2.20.0",
     "conf": "^15.1.0",
