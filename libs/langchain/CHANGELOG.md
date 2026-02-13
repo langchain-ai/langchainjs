@@ -1,5 +1,11 @@
 # langchain
 
+## 1.2.24
+
+### Patch Changes
+
+- [#10034](https://github.com/langchain-ai/langchainjs/pull/10034) [`8eea9d4`](https://github.com/langchain-ai/langchainjs/commit/8eea9d462d2e782e62455973d6b0907aa917b41e) Thanks [@christian-bromann](https://github.com/christian-bromann)! - fix(langchain): fix streaming types
+
 ## 1.2.23
 
 ### Patch Changes
