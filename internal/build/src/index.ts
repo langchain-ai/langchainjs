@@ -6,19 +6,19 @@ import path from "node:path";
 export {
   type CjsCompatPluginOptions,
   cjsCompatPlugin,
-} from "./plugins/cjs-compat";
+} from "./plugins/cjs-compat.ts";
 export {
   type ImportConstantsPluginOptions,
   importConstantsPlugin,
-} from "./plugins/import-constants";
+} from "./plugins/import-constants.ts";
 export {
   type ImportMapPluginOptions,
   importMapPlugin,
-} from "./plugins/import-map";
+} from "./plugins/import-map.ts";
 export {
   type SecretPluginOptions,
   lcSecretsPlugin,
-} from "./plugins/lc-secrets";
+} from "./plugins/lc-secrets.ts";
 
 /**
  * Creates a standardized tsdown build configuration for LangChain packages.
@@ -66,11 +66,7 @@ export function getBuildConfig(options?: Partial<BuildOptions>): BuildOptions {
     },
     sourcemap: true,
     unbundle: true,
-    outExtensions: ({ format }) => {
-      if (format === "es") return { js: ".js", dts: ".d.ts" };
-      if (format === "cjs") return { js: ".cjs", dts: ".d.cts" };
-      return undefined;
-    },
+    fixedExtension: false,
     exports: {
       customExports: async (exports) => {
         return Object.entries(exports).reduce(
