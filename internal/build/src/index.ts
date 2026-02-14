@@ -65,6 +65,11 @@ export function getBuildConfig(options?: Partial<BuildOptions>): BuildOptions {
     },
     sourcemap: true,
     unbundle: true,
+    // In unbundle (transpile-only) mode, dependencies remain as external imports
+    // and should not trigger "bundled dependency" warnings. Setting inlineOnly
+    // to false suppresses these warnings for all packages. Individual packages
+    // can override this with a specific allowlist if needed.
+    inlineOnly: false,
     exports: {
       customExports: async (exports) => {
         return Object.entries(exports).reduce(
