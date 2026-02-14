@@ -473,10 +473,9 @@ describe("modelRetryMiddleware", () => {
 
   describe("Backoff behavior", () => {
     it("should apply exponential backoff", async () => {
+      vi.useFakeTimers();
       class BackoffTestModel extends FakeToolCallingModel {
         private attempt = 0;
-        private delays: number[] = [];
-        private lastTime = Date.now();
 
         constructor() {
           super({ toolCalls: [[]] });
@@ -484,11 +483,6 @@ describe("modelRetryMiddleware", () => {
 
         _generate = vi.fn(
           async (...args: Parameters<FakeToolCallingModel["_generate"]>) => {
-            const currentTime = Date.now();
-            if (this.attempt > 0) {
-              this.delays.push(currentTime - this.lastTime);
-            }
-            this.lastTime = currentTime;
             this.attempt += 1;
             if (this.attempt <= 2) {
               throw new Error(`Temporary failure ${this.attempt}`);
@@ -503,12 +497,10 @@ describe("modelRetryMiddleware", () => {
           return this as unknown as RunnableBinding<any, any, any>;
         }
 
-        getDelays() {
-          return this.delays;
-        }
       }
 
       const model = new BackoffTestModel();
+      const setTimeoutSpy = vi.spyOn(globalThis, "setTimeout");
 
       const retry = modelRetryMiddleware({
         maxRetries: 3,
@@ -524,27 +516,32 @@ describe("modelRetryMiddleware", () => {
         checkpointer: new MemorySaver(),
       });
 
-      await agent.invoke(
+      const invokePromise = agent.invoke(
         { messages: [new HumanMessage("Hello")] },
         { configurable: { thread_id: "test" } }
       );
 
-      const delays = model.getDelays();
-      // Should have delays between retries
-      expect(delays.length).toBeGreaterThan(0);
-      // First delay should be around initialDelayMs (100ms)
-      expect(delays[0]).toBeGreaterThanOrEqual(90);
-      expect(delays[0]).toBeLessThan(150);
-      expect(delays[1]).toBeGreaterThanOrEqual(180);
-      expect(delays[1]).toBeLessThan(250);
-      expect(model._generate).toHaveBeenCalledTimes(3);
+      await vi.runAllTimersAsync();
+
+      try {
+        await invokePromise;
+        const retryDelays = setTimeoutSpy.mock.calls
+          .map(([, ms]) => ms)
+          .filter((ms): ms is number => typeof ms === "number" && ms >= 100);
+
+        expect(retryDelays.slice(0, 2)).toEqual([100, 200]);
+        expect(model._generate).toHaveBeenCalledTimes(3);
+      } finally {
+        setTimeoutSpy.mockRestore();
+        vi.clearAllTimers();
+        vi.useRealTimers();
+      }
     });
 
     it("should apply constant backoff when backoffFactor is 0", async () => {
+      vi.useFakeTimers();
       class ConstantBackoffTestModel extends FakeToolCallingModel {
         private attempt = 0;
-        private delays: number[] = [];
-        private lastTime = Date.now();
 
         constructor() {
           super({ toolCalls: [[]] });
@@ -552,11 +549,6 @@ describe("modelRetryMiddleware", () => {
 
         _generate = vi.fn(
           async (...args: Parameters<FakeToolCallingModel["_generate"]>) => {
-            const currentTime = Date.now();
-            if (this.attempt > 0) {
-              this.delays.push(currentTime - this.lastTime);
-            }
-            this.lastTime = currentTime;
             this.attempt += 1;
             if (this.attempt <= 2) {
               throw new Error(`Temporary failure ${this.attempt}`);
@@ -571,12 +563,10 @@ describe("modelRetryMiddleware", () => {
           return this as unknown as RunnableBinding<any, any, any>;
         }
 
-        getDelays() {
-          return this.delays;
-        }
       }
 
       const model = new ConstantBackoffTestModel();
+      const setTimeoutSpy = vi.spyOn(globalThis, "setTimeout");
 
       const retry = modelRetryMiddleware({
         maxRetries: 3,
@@ -592,16 +582,26 @@ describe("modelRetryMiddleware", () => {
         checkpointer: new MemorySaver(),
       });
 
-      await agent.invoke(
+      const invokePromise = agent.invoke(
         { messages: [new HumanMessage("Hello")] },
         { configurable: { thread_id: "test" } }
       );
 
-      const delays = model.getDelays();
-      const avgDelay = delays.reduce((a, b) => a + b, 0) / delays.length;
-      expect(avgDelay).toBeGreaterThanOrEqual(90);
-      expect(avgDelay).toBeLessThan(150);
-      expect(model._generate).toHaveBeenCalledTimes(3);
+      await vi.runAllTimersAsync();
+
+      try {
+        await invokePromise;
+        const retryDelays = setTimeoutSpy.mock.calls
+          .map(([, ms]) => ms)
+          .filter((ms): ms is number => typeof ms === "number" && ms >= 100);
+
+        expect(retryDelays.slice(0, 2)).toEqual([100, 100]);
+        expect(model._generate).toHaveBeenCalledTimes(3);
+      } finally {
+        setTimeoutSpy.mockRestore();
+        vi.clearAllTimers();
+        vi.useRealTimers();
+      }
     });
   });
 });

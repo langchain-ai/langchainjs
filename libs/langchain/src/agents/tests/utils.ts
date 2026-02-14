@@ -153,7 +153,7 @@ export class FakeConfigurableModel extends BaseChatModel {
 }
 
 export class FakeToolCallingChatModel extends BaseChatModel {
-  sleep?: number = 50;
+  sleep?: number = 0;
 
   responses?: BaseMessage[];
 

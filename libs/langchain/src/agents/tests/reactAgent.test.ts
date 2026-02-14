@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from "vitest";
+import { describe, it, expect, beforeEach, vi } from "vitest";
 import { z } from "zod/v3";
 import { z as z4 } from "zod/v4";
 
@@ -683,6 +683,7 @@ describe("createAgent", () => {
     });
 
     it("should handle abort signal in tools", async () => {
+      vi.useFakeTimers();
       const abortController = new AbortController();
 
       const abortableTool = tool(
@@ -734,18 +735,27 @@ describe("createAgent", () => {
         ],
       });
 
+      const executionExpectation = expect(executionPromise).rejects.toMatchObject({
+        message: "custom abort",
+      });
+
       // Abort after a short delay
       setTimeout(() => {
         abortController.abort("custom abort");
       }, 1000);
+      await vi.advanceTimersByTimeAsync(1000);
 
       // Verify that the execution throws an abort error
-      await expect(executionPromise).rejects.toMatchObject({
-        message: "custom abort",
-      });
+      try {
+        await executionExpectation;
+      } finally {
+        vi.clearAllTimers();
+        vi.useRealTimers();
+      }
     });
 
     it("should merge abort signals from agent and config", async () => {
+      vi.useFakeTimers();
       const agentAbortController = new AbortController();
       const configAbortController = new AbortController();
 
@@ -811,6 +821,10 @@ describe("createAgent", () => {
         { signal: configAbortController.signal }
       );
 
+      const configExecutionExpectation = expect(configExecution).rejects.toThrow(
+        /Config abort/
+      );
+
       setTimeout(() => {
         configAbortController.abort(new Error("Config abort"));
       }, 1000);
@@ -818,9 +832,16 @@ describe("createAgent", () => {
         agentAbortController.abort(new Error("Agent abort"));
       }, 2000);
 
-      await expect(configExecution).rejects.toThrow(/Config abort/);
-      expect(agentAbortController.signal.aborted).toBe(false);
-      expect(configAbortController.signal.aborted).toBe(true);
+      await vi.advanceTimersByTimeAsync(1000);
+
+      try {
+        await configExecutionExpectation;
+        expect(agentAbortController.signal.aborted).toBe(false);
+        expect(configAbortController.signal.aborted).toBe(true);
+      } finally {
+        vi.clearAllTimers();
+        vi.useRealTimers();
+      }
     });
   });
 

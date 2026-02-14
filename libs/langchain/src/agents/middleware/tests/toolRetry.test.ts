@@ -2,12 +2,11 @@
  * Tests for ToolRetryMiddleware functionality.
  */
 
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi } from "vitest";
 import { HumanMessage, ToolMessage } from "@langchain/core/messages";
 import { tool } from "@langchain/core/tools";
 import { z } from "zod/v3";
 import { MemorySaver } from "@langchain/langgraph-checkpoint";
-import { performance } from "node:perf_hooks";
 
 import { createAgent, createMiddleware } from "../../index.js";
 import { toolRetryMiddleware } from "../toolRetry.js";
@@ -734,6 +733,7 @@ describe("toolRetryMiddleware", () => {
 
   describe("Backoff calculation", () => {
     it("should use exponential backoff", async () => {
+      vi.useFakeTimers();
       const tempFailingTool = createTemporaryFailureTool(3);
 
       const model = new FakeToolCallingModel({
@@ -763,27 +763,36 @@ describe("toolRetryMiddleware", () => {
         checkpointer: new MemorySaver(),
       });
 
-      const startTime = performance.now();
-      const result = await agent.invoke(
+      const setTimeoutSpy = vi.spyOn(globalThis, "setTimeout");
+
+      const invokePromise = agent.invoke(
         { messages: [new HumanMessage("Use temp failing tool")] },
         { configurable: { thread_id: "test" } }
       );
-      const endTime = performance.now();
 
-      const toolMessages = result.messages.filter(ToolMessage.isInstance);
-      expect(toolMessages).toHaveLength(1);
-      expect(toolMessages[0].content).toContain("Success after 4 attempts");
+      await vi.runAllTimersAsync();
 
-      // Calculate expected total delay: 50 + 100 + 200 = 350ms
-      const expectedDelay = 50 + 100 + 200;
-      const actualDelay = endTime - startTime;
+      try {
+        const result = await invokePromise;
+        const toolMessages = result.messages.filter(ToolMessage.isInstance);
+        expect(toolMessages).toHaveLength(1);
+        expect(toolMessages[0].content).toContain("Success after 4 attempts");
 
-      // Allow some tolerance for execution time
-      expect(actualDelay).toBeGreaterThanOrEqual(expectedDelay);
-      expect(actualDelay).toBeLessThan(expectedDelay + 200); // +200ms tolerance
+        // Verify the delay values passed to setTimeout: 50 + 100 + 200
+        const retryDelays = setTimeoutSpy.mock.calls
+          .map(([, ms]) => ms)
+          .filter((ms): ms is number => typeof ms === "number" && ms >= 50);
+
+        expect(retryDelays.slice(0, 3)).toEqual([50, 100, 200]);
+      } finally {
+        setTimeoutSpy.mockRestore();
+        vi.clearAllTimers();
+        vi.useRealTimers();
+      }
     });
 
     it("should use constant backoff when backoffFactor is 0", async () => {
+      vi.useFakeTimers();
       const tempFailingTool = createTemporaryFailureTool(2);
 
       const model = new FakeToolCallingModel({
@@ -813,25 +822,32 @@ describe("toolRetryMiddleware", () => {
         checkpointer: new MemorySaver(),
       });
 
-      const startTime = performance.now();
-      const result = await agent.invoke(
+      const setTimeoutSpy = vi.spyOn(globalThis, "setTimeout");
+
+      const invokePromise = agent.invoke(
         { messages: [new HumanMessage("Use temp failing tool")] },
         { configurable: { thread_id: "test" } }
       );
-      const endTime = performance.now();
 
-      const toolMessages = result.messages.filter(ToolMessage.isInstance);
-      expect(toolMessages).toHaveLength(1);
-      expect(toolMessages[0].content).toContain("Success after 3 attempts");
+      await vi.runAllTimersAsync();
 
-      // Calculate expected total delay: 50 + 50 = 100ms (constant)
-      const expectedDelay = 50 + 50;
-      const actualDelay = endTime - startTime;
+      try {
+        const result = await invokePromise;
+        const toolMessages = result.messages.filter(ToolMessage.isInstance);
+        expect(toolMessages).toHaveLength(1);
+        expect(toolMessages[0].content).toContain("Success after 3 attempts");
 
-      // Verify constant backoff (should be much less than exponential)
-      expect(actualDelay).toBeGreaterThanOrEqual(expectedDelay);
-      expect(actualDelay).toBeLessThan(expectedDelay + 200); // +200ms tolerance
-      // With exponential backoff (2.0), would be 50 + 100 = 150ms minimum
+        // Verify constant delay values passed to setTimeout: 50 + 50
+        const retryDelays = setTimeoutSpy.mock.calls
+          .map(([, ms]) => ms)
+          .filter((ms): ms is number => typeof ms === "number" && ms >= 50);
+
+        expect(retryDelays.slice(0, 2)).toEqual([50, 50]);
+      } finally {
+        setTimeoutSpy.mockRestore();
+        vi.clearAllTimers();
+        vi.useRealTimers();
+      }
     });
 
     it("should cap delay at maxDelay", () => {
