@@ -1301,7 +1301,7 @@ describe.each(thinkingModelInfo)(
       expect(hasThoughtSignature).toBe(true);
     });
 
-    test.only("thinking - invoke", async () => {
+    test("thinking - invoke", async () => {
       const llm = newChatGoogle({
         reasoningEffort: "high",
       });
