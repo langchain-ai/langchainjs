@@ -131,7 +131,9 @@ export function cjsCompatPlugin(param: CjsCompatPluginOptions = {}): Plugin {
           if (options.mode === "generate") {
             const target = path.resolve(`./${fileName}`);
             if (isSafeProjectPath(target)) {
-              await fs.mkdir(path.dirname(target), { recursive: true }).catch(() => {});
+              await fs
+                .mkdir(path.dirname(target), { recursive: true })
+                .catch(() => {});
               await fs.writeFile(target, source);
             }
           }
