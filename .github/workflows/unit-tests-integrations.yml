@@ -62,10 +62,10 @@ jobs:
             first_entry=true
             for package in "${packages[@]}"; do
               if [ "$first_entry" = true ]; then
-                matrix="$matrix{\"os\": \"ubuntu-latest\", \"node-version\": \"20\", \"package\": \"$package\"},{\"os\": \"ubuntu-latest\", \"node-version\": \"20\", \"package\": \"$package\"}"
+                matrix="$matrix{\"os\": \"ubuntu-latest\", \"node-version\": \"22\", \"package\": \"$package\"},{\"os\": \"ubuntu-latest\", \"node-version\": \"22\", \"package\": \"$package\"}"
                 first_entry=false
               else
-                matrix="$matrix, {\"os\": \"ubuntu-latest\", \"node-version\": \"20\", \"package\": \"$package\"},{\"os\": \"ubuntu-latest\", \"node-version\": \"20\", \"package\": \"$package\"}"
+                matrix="$matrix, {\"os\": \"ubuntu-latest\", \"node-version\": \"22\", \"package\": \"$package\"},{\"os\": \"ubuntu-latest\", \"node-version\": \"22\", \"package\": \"$package\"}"
               fi
             done
           else
@@ -77,10 +77,10 @@ jobs:
               if echo "$changed_files" | grep -q "$package"; then
                 echo "Package $package found in changed files."
                 if [ "$first_entry" = true ]; then
-                matrix="$matrix{\"os\": \"ubuntu-latest\", \"node-version\": \"20\", \"package\": \"$package\"},{\"os\": \"ubuntu-latest\", \"node-version\": \"20\", \"package\": \"$package\"}"
+                matrix="$matrix{\"os\": \"ubuntu-latest\", \"node-version\": \"22\", \"package\": \"$package\"},{\"os\": \"ubuntu-latest\", \"node-version\": \"22\", \"package\": \"$package\"}"
                 first_entry=false
               else
-                matrix="$matrix, {\"os\": \"ubuntu-latest\", \"node-version\": \"20\", \"package\": \"$package\"},{\"os\": \"ubuntu-latest\", \"node-version\": \"20\", \"package\": \"$package\"}"
+                matrix="$matrix, {\"os\": \"ubuntu-latest\", \"node-version\": \"22\", \"package\": \"$package\"},{\"os\": \"ubuntu-latest\", \"node-version\": \"22\", \"package\": \"$package\"}"
               fi
               fi
             done
