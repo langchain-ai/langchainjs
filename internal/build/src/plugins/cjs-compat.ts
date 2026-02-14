@@ -129,11 +129,11 @@ export function cjsCompatPlugin(param: CjsCompatPluginOptions = {}): Plugin {
           const topLevelPath = fileName.split("/")[0];
           pathsToEmit.add(topLevelPath);
           if (options.mode === "generate") {
-            this.emitFile({
-              type: "asset",
-              fileName: `../${fileName}`,
-              source,
-            });
+            const target = path.resolve(`./${fileName}`);
+            if (isSafeProjectPath(target)) {
+              await fs.mkdir(path.dirname(target), { recursive: true }).catch(() => {});
+              await fs.writeFile(target, source);
+            }
           }
           if (options.mode === "clean") {
             const target = path.resolve(`./${fileName}`);
