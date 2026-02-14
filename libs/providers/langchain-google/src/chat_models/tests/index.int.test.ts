@@ -1301,7 +1301,7 @@ describe.each(thinkingModelInfo)(
       expect(hasThoughtSignature).toBe(true);
     });
 
-    test("thinking - invoke", async () => {
+    test.only("thinking - invoke", async () => {
       const llm = newChatGoogle({
         reasoningEffort: "high",
       });
@@ -1313,9 +1313,9 @@ describe.each(thinkingModelInfo)(
       expect(reasoningSteps?.length).toBeGreaterThan(0);
       expect(textSteps?.length).toBeGreaterThan(0);
 
-      // I think result.text should just have actual text, not reasoning, but the code says otherwise
-      // const textStepsText: string = textSteps.reduce((acc: string, val: ContentBlock.Text) => acc + val.text, "");
-      // expect(textStepsText).toEqual(result.text);
+      // Result.text should just have actual text, not reasoning
+      const textStepsText: string = textSteps.reduce((acc: string, val: ContentBlock.Text) => acc + val.text, "");
+      expect(textStepsText).toEqual(result.text);
     });
   }
 );
