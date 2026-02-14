@@ -271,9 +271,7 @@ export class AgentNode<
            */
           const modifiedTools = req.tools ?? [];
           const newTools = modifiedTools.filter(
-            (tool) =>
-              isClientTool(tool) &&
-              !this.#toolNameSet.has(tool.name)
+            (tool) => isClientTool(tool) && !this.#toolNameSet.has(tool.name)
           );
           if (newTools.length > 0) {
             throw new Error(
@@ -288,9 +286,7 @@ export class AgentNode<
            * We can't allow this as the ToolNode is already initiated with given tools.
            */
           const invalidTools = modifiedTools.filter(
-            (tool) =>
-              isClientTool(tool) &&
-              !this.#toolRefSet.has(tool)
+            (tool) => isClientTool(tool) && !this.#toolRefSet.has(tool)
           );
           if (invalidTools.length > 0) {
             throw new Error(

@@ -496,7 +496,6 @@ describe("modelRetryMiddleware", () => {
           this["tools"] = [...this["tools"], ...tools];
           return this as unknown as RunnableBinding<any, any, any>;
         }
-
       }
 
       const model = new BackoffTestModel();
@@ -562,7 +561,6 @@ describe("modelRetryMiddleware", () => {
           this["tools"] = [...this["tools"], ...tools];
           return this as unknown as RunnableBinding<any, any, any>;
         }
-
       }
 
       const model = new ConstantBackoffTestModel();

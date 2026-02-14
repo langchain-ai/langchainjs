@@ -735,7 +735,9 @@ describe("createAgent", () => {
         ],
       });
 
-      const executionExpectation = expect(executionPromise).rejects.toMatchObject({
+      const executionExpectation = expect(
+        executionPromise
+      ).rejects.toMatchObject({
         message: "custom abort",
       });
 
@@ -821,9 +823,8 @@ describe("createAgent", () => {
         { signal: configAbortController.signal }
       );
 
-      const configExecutionExpectation = expect(configExecution).rejects.toThrow(
-        /Config abort/
-      );
+      const configExecutionExpectation =
+        expect(configExecution).rejects.toThrow(/Config abort/);
 
       setTimeout(() => {
         configAbortController.abort(new Error("Config abort"));
