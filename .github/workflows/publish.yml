@@ -50,7 +50,7 @@ jobs:
         # and this action will build + publish to npm.
       - name: 🚀 PR / Publish
         id: changesets
-        uses: changesets/action@c48e67d110a68bc90ccf1098e9646092baacaa87
+        uses: changesets/action@6a0a831ff30acef54f2c6aa1cbbc1096b066edaf
         with:
           version: pnpm run changeset:version
           commit: "chore: version packages"

@@ -1,5 +1,13 @@
 # @langchain/google-cloud-sql-pg
 
+## 1.0.22
+
+### Patch Changes
+
+- [#10033](https://github.com/langchain-ai/langchainjs/pull/10033) [`aa2f89d`](https://github.com/langchain-ai/langchainjs/commit/aa2f89d5aa04beb4ae9ebaaa71427e7013301354) Thanks [@corridor-security](https://github.com/apps/corridor-security)! - Fix SQL Injection via Table/Schema Name in PostgresChatMessageHistory.initialize()
+
+- [#10032](https://github.com/langchain-ai/langchainjs/pull/10032) [`33c0b5d`](https://github.com/langchain-ai/langchainjs/commit/33c0b5d2d547e18f6708511f7a3101b0a0ec76fb) Thanks [@corridor-security](https://github.com/apps/corridor-security)! - Fix SQL Injection via Filter Parameter in PostgresVectorStore.queryCollection()
+
 ## 1.0.21
 
 ### Patch Changes

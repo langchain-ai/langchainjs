@@ -59,8 +59,8 @@ export class PostgresChatMessageHistory extends BaseChatMessageHistory {
     tableName: string,
     schemaName: string = "public"
   ) {
-    const query = `SELECT column_name, data_type FROM information_schema.columns WHERE table_name = '${tableName}' AND table_schema = '${schemaName}'`;
-    const { rows } = await engine.pool.raw(query);
+    const query = `SELECT column_name, data_type FROM information_schema.columns WHERE table_name = :tableName AND table_schema = :schemaName`;
+    const { rows } = await engine.pool.raw(query, { tableName, schemaName });
     const columnNames: string[] = [];
 
     for (const index in rows) {

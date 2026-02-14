@@ -71,3 +71,63 @@ describe("StringOutputParser", () => {
     }).rejects.toThrowError();
   });
 });
+
+test("ignores reasoning blocks and returns only text", async () => {
+  const parser = new StringOutputParser();
+
+  const content: ContentBlock[] = [
+    {
+      type: "reasoning",
+      reasoning: "internal reasoning",
+    },
+    {
+      type: "text",
+      text: "final answer",
+    },
+  ];
+
+  const msg: BaseMessage = new AIMessage({ content });
+  const result = await parser.invoke(msg);
+
+  expect(result).toEqual("final answer");
+});
+
+test("ignores thinking blocks", async () => {
+  const parser = new StringOutputParser();
+
+  const content: ContentBlock[] = [
+    {
+      type: "thinking",
+      thinking: "hidden thoughts",
+    },
+    {
+      type: "text",
+      text: "visible output",
+    },
+  ];
+
+  const msg: BaseMessage = new AIMessage({ content });
+  const result = await parser.invoke(msg);
+
+  expect(result).toEqual("visible output");
+});
+
+test("ignores redacted_thinking blocks", async () => {
+  const parser = new StringOutputParser();
+
+  const content: ContentBlock[] = [
+    {
+      type: "redacted_thinking",
+      redacted_thinking: "redacted",
+    },
+    {
+      type: "text",
+      text: "answer",
+    },
+  ];
+
+  const msg: BaseMessage = new AIMessage({ content });
+  const result = await parser.invoke(msg);
+
+  expect(result).toEqual("answer");
+});
