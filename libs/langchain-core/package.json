@@ -875,5 +875,5 @@
     "outputs.d.ts",
     "outputs.js"
   ],
-  "module": "./dist/index.mjs"
+  "module": "./dist/index.js"
 }
