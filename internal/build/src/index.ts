@@ -74,13 +74,19 @@ export function getBuildConfig(options?: Partial<BuildOptions>): BuildOptions {
               value !== null &&
               "import" in value
             ) {
-              const outputPath = path.join(
-                path.dirname(value.import),
-                path.basename(value.import, path.extname(value.import))
+              // Use path.posix to ensure forward slashes on all platforms.
+              // On Windows, path.join/dirname produce backslash paths which
+              // break package.json exports and publint validation.
+              const importValue = value.import.replace(/\\/g, "/");
+              const dir = path.posix.dirname(importValue);
+              const base = path.posix.basename(
+                importValue,
+                path.posix.extname(importValue)
               );
-              const inputPath = path.join(
-                path.dirname(value.import).replace("./dist", "./src"),
-                `${path.basename(value.import, path.extname(value.import))}.ts`
+              const outputPath = path.posix.join(dir, base);
+              const inputPath = path.posix.join(
+                dir.replace("./dist", "./src"),
+                `${base}.ts`
               );
               acc[key] = {
                 input: `./${inputPath}`,
