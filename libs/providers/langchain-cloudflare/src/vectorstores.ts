@@ -1,6 +1,6 @@
 import * as uuid from "uuid";
 
-import {
+import type {
   VectorizeIndex,
   VectorizeVectorMetadata,
   VectorizeVectorMetadataFilter,
