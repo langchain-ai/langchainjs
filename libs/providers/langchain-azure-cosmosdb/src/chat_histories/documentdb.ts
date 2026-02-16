@@ -22,6 +22,7 @@ export interface AzureDocumentDBChatHistoryDBConfig {
 
 export type ChatSessionDocumentDB = {
   id: string;
+  user_id: string;
   context: Record<string, unknown>;
 };
 
