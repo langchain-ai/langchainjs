@@ -34,7 +34,7 @@ const ID_USER = "userId";
  * Stores chat message history in an Azure DocumentDB collection.
  */
 export class AzureDocumentDBChatMessageHistory extends BaseListChatMessageHistory {
-  lc_namespace = ["langchain", "stores", "message", "azuredocumentdb"];
+  lc_namespace = ["langchain", "stores", "message", "azurecosmosdb"];
 
   get lc_secrets(): { [key: string]: string } {
     return {
