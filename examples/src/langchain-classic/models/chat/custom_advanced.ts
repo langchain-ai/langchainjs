@@ -7,8 +7,7 @@ import {
 } from "@langchain/core/language_models/chat_models";
 import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
 
-export interface AdvancedCustomChatModelOptions
-  extends BaseChatModelCallOptions {}
+export interface AdvancedCustomChatModelOptions extends BaseChatModelCallOptions {}
 
 export interface AdvancedCustomChatModelParams extends BaseChatModelParams {
   n: number;

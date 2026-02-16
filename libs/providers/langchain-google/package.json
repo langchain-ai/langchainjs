@@ -1,0 +1,96 @@
+{
+  "name": "@langchain/google",
+  "version": "0.1.0",
+  "description": "Google integrations for LangChain.js",
+  "author": "LangChain",
+  "license": "MIT",
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:langchain-ai/langchainjs.git",
+    "directory": "libs/providers/langchain-google"
+  },
+  "scripts": {
+    "build": "turbo build:compile --filter @langchain/google --output-logs new-only",
+    "build:compile": "tsdown",
+    "lint:eslint": "eslint --cache src/",
+    "lint:dpdm": "dpdm --skip-dynamic-imports circular --exit-code circular:1 --no-warning --no-tree src/**/*.ts",
+    "lint": "pnpm lint:eslint && pnpm lint:dpdm",
+    "lint:fix": "pnpm lint:eslint --fix && pnpm lint:dpdm",
+    "clean": "rm -rf .turbo dist/",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:int": "vitest run --mode int",
+    "test:standard:unit": "vitest run --mode standard-unit",
+    "test:standard:int": "vitest run --mode standard-int",
+    "test:standard": "pnpm test:standard:unit && pnpm test:standard:int",
+    "format": "prettier --config .prettierrc --write \"src\"",
+    "format:check": "prettier --config .prettierrc --check \"src\"",
+    "typegen": "pnpm run typegen:sparktype && pnpm run typegen:profiles",
+    "typegen:sparktype": "sparktype generate",
+    "typegen:profiles": "pnpm --filter @langchain/model-profiles make --config profiles.toml",
+    "typegen:check": "sparktype check"
+  },
+  "dependencies": {
+    "eventsource-parser": "^3.0.6",
+    "google-auth-library": "^10.5.0",
+    "jose": "^6.1.2"
+  },
+  "peerDependencies": {
+    "@langchain/core": "^1.0.0"
+  },
+  "devDependencies": {
+    "@langchain/core": "workspace:^",
+    "@langchain/eslint": "workspace:*",
+    "@langchain/standard-tests": "workspace:*",
+    "@tsconfig/recommended": "^1.0.10",
+    "dpdm": "^3.14.0",
+    "eslint": "^9.34.0",
+    "prettier": "^2.8.3",
+    "sparktype": "^0.1.3",
+    "typescript": "~5.8.3",
+    "vitest": "^3.2.4",
+    "zod": "^3.25.76 || ^4",
+    "zod-to-json-schema": "^3.24.6"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "exports": {
+    ".": {
+      "input": "./src/index.ts",
+      "require": {
+        "types": "./dist/index.d.cts",
+        "default": "./dist/index.cjs"
+      },
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      }
+    },
+    "./node": {
+      "input": "./src/node.ts",
+      "require": {
+        "types": "./dist/node.d.cts",
+        "default": "./dist/node.cjs"
+      },
+      "import": {
+        "types": "./dist/node.d.ts",
+        "default": "./dist/node.js"
+      }
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist/",
+    "CHANGELOG.md",
+    "README.md",
+    "LICENSE"
+  ],
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.cts"
+}

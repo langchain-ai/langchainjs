@@ -168,11 +168,10 @@ import { ReactAgent } from "./ReactAgent.js";
 export function createAgent<
   StructuredResponseFormat extends Record<string, any> = Record<string, any>,
   TStateSchema extends StateDefinitionInit | undefined = undefined,
-  ContextSchema extends
-    | AnyAnnotationRoot
-    | InteropZodObject = AnyAnnotationRoot,
-  const TMiddleware extends
-    readonly AgentMiddleware[] = readonly AgentMiddleware[],
+  ContextSchema extends AnyAnnotationRoot | InteropZodObject =
+    AnyAnnotationRoot,
+  const TMiddleware extends readonly AgentMiddleware[] =
+    readonly AgentMiddleware[],
   const TTools extends readonly (ClientTool | ServerTool)[] = readonly (
     | ClientTool
     | ServerTool
@@ -202,11 +201,10 @@ export function createAgent<
 export function createAgent<
   StructuredResponseFormat extends readonly InteropZodType<any>[],
   TStateSchema extends StateDefinitionInit | undefined = undefined,
-  ContextSchema extends
-    | AnyAnnotationRoot
-    | InteropZodObject = AnyAnnotationRoot,
-  const TMiddleware extends
-    readonly AgentMiddleware[] = readonly AgentMiddleware[],
+  ContextSchema extends AnyAnnotationRoot | InteropZodObject =
+    AnyAnnotationRoot,
+  const TMiddleware extends readonly AgentMiddleware[] =
+    readonly AgentMiddleware[],
   const TTools extends readonly (ClientTool | ServerTool)[] = readonly (
     | ClientTool
     | ServerTool
@@ -239,11 +237,10 @@ export function createAgent<
 // Overload 3: With responseFormat as JsonSchemaFormat (JSON schema object)
 export function createAgent<
   TStateSchema extends StateDefinitionInit | undefined = undefined,
-  ContextSchema extends
-    | AnyAnnotationRoot
-    | InteropZodObject = AnyAnnotationRoot,
-  const TMiddleware extends
-    readonly AgentMiddleware[] = readonly AgentMiddleware[],
+  ContextSchema extends AnyAnnotationRoot | InteropZodObject =
+    AnyAnnotationRoot,
+  const TMiddleware extends readonly AgentMiddleware[] =
+    readonly AgentMiddleware[],
   const TTools extends readonly (ClientTool | ServerTool)[] = readonly (
     | ClientTool
     | ServerTool
@@ -272,11 +269,10 @@ export function createAgent<
 // Overload 4: With responseFormat as array of JsonSchemaFormat (JSON schema objects)
 export function createAgent<
   TStateSchema extends StateDefinitionInit | undefined = undefined,
-  ContextSchema extends
-    | AnyAnnotationRoot
-    | InteropZodObject = AnyAnnotationRoot,
-  const TMiddleware extends
-    readonly AgentMiddleware[] = readonly AgentMiddleware[],
+  ContextSchema extends AnyAnnotationRoot | InteropZodObject =
+    AnyAnnotationRoot,
+  const TMiddleware extends readonly AgentMiddleware[] =
+    readonly AgentMiddleware[],
   const TTools extends readonly (ClientTool | ServerTool)[] = readonly (
     | ClientTool
     | ServerTool
@@ -305,11 +301,10 @@ export function createAgent<
 // Overload 4.5: With responseFormat as union of JsonSchemaFormat | JsonSchemaFormat[]
 export function createAgent<
   TStateSchema extends StateDefinitionInit | undefined = undefined,
-  ContextSchema extends
-    | AnyAnnotationRoot
-    | InteropZodObject = AnyAnnotationRoot,
-  const TMiddleware extends
-    readonly AgentMiddleware[] = readonly AgentMiddleware[],
+  ContextSchema extends AnyAnnotationRoot | InteropZodObject =
+    AnyAnnotationRoot,
+  const TMiddleware extends readonly AgentMiddleware[] =
+    readonly AgentMiddleware[],
   const TTools extends readonly (ClientTool | ServerTool)[] = readonly (
     | ClientTool
     | ServerTool
@@ -339,11 +334,10 @@ export function createAgent<
 export function createAgent<
   StructuredResponseFormat extends Record<string, any> = Record<string, any>,
   TStateSchema extends StateDefinitionInit | undefined = undefined,
-  ContextSchema extends
-    | AnyAnnotationRoot
-    | InteropZodObject = AnyAnnotationRoot,
-  const TMiddleware extends
-    readonly AgentMiddleware[] = readonly AgentMiddleware[],
+  ContextSchema extends AnyAnnotationRoot | InteropZodObject =
+    AnyAnnotationRoot,
+  const TMiddleware extends readonly AgentMiddleware[] =
+    readonly AgentMiddleware[],
   const TTools extends readonly (ClientTool | ServerTool)[] = readonly (
     | ClientTool
     | ServerTool
@@ -373,11 +367,10 @@ export function createAgent<
 export function createAgent<
   StructuredResponseFormat extends Record<string, any> = Record<string, any>,
   TStateSchema extends StateDefinitionInit | undefined = undefined,
-  ContextSchema extends
-    | AnyAnnotationRoot
-    | InteropZodObject = AnyAnnotationRoot,
-  const TMiddleware extends
-    readonly AgentMiddleware[] = readonly AgentMiddleware[],
+  ContextSchema extends AnyAnnotationRoot | InteropZodObject =
+    AnyAnnotationRoot,
+  const TMiddleware extends readonly AgentMiddleware[] =
+    readonly AgentMiddleware[],
   const TTools extends readonly (ClientTool | ServerTool)[] = readonly (
     | ClientTool
     | ServerTool
@@ -407,11 +400,10 @@ export function createAgent<
 export function createAgent<
   StructuredResponseFormat extends Record<string, any> = Record<string, any>,
   TStateSchema extends StateDefinitionInit | undefined = undefined,
-  ContextSchema extends
-    | AnyAnnotationRoot
-    | InteropZodObject = AnyAnnotationRoot,
-  const TMiddleware extends
-    readonly AgentMiddleware[] = readonly AgentMiddleware[],
+  ContextSchema extends AnyAnnotationRoot | InteropZodObject =
+    AnyAnnotationRoot,
+  const TMiddleware extends readonly AgentMiddleware[] =
+    readonly AgentMiddleware[],
   const TTools extends readonly (ClientTool | ServerTool)[] = readonly (
     | ClientTool
     | ServerTool
@@ -440,11 +432,10 @@ export function createAgent<
 // Overload 8: Without responseFormat property at all - with proper middleware state typing
 export function createAgent<
   TStateSchema extends StateDefinitionInit | undefined = undefined,
-  ContextSchema extends
-    | AnyAnnotationRoot
-    | InteropZodObject = AnyAnnotationRoot,
-  const TMiddleware extends
-    readonly AgentMiddleware[] = readonly AgentMiddleware[],
+  ContextSchema extends AnyAnnotationRoot | InteropZodObject =
+    AnyAnnotationRoot,
+  const TMiddleware extends readonly AgentMiddleware[] =
+    readonly AgentMiddleware[],
   const TTools extends readonly (ClientTool | ServerTool)[] = readonly (
     | ClientTool
     | ServerTool
@@ -472,11 +463,10 @@ export function createAgent<
 // Overload 9: With responseFormat explicitly undefined
 export function createAgent<
   TStateSchema extends StateDefinitionInit | undefined = undefined,
-  ContextSchema extends
-    | AnyAnnotationRoot
-    | InteropZodObject = AnyAnnotationRoot,
-  const TMiddleware extends
-    readonly AgentMiddleware[] = readonly AgentMiddleware[],
+  ContextSchema extends AnyAnnotationRoot | InteropZodObject =
+    AnyAnnotationRoot,
+  const TMiddleware extends readonly AgentMiddleware[] =
+    readonly AgentMiddleware[],
   const TTools extends readonly (ClientTool | ServerTool)[] = readonly (
     | ClientTool
     | ServerTool
@@ -509,11 +499,10 @@ export function createAgent<
 export function createAgent<
   StructuredResponseFormat extends Record<string, any> = Record<string, any>,
   TStateSchema extends StateDefinitionInit | undefined = undefined,
-  ContextSchema extends
-    | AnyAnnotationRoot
-    | InteropZodObject = AnyAnnotationRoot,
-  const TMiddleware extends
-    readonly AgentMiddleware[] = readonly AgentMiddleware[],
+  ContextSchema extends AnyAnnotationRoot | InteropZodObject =
+    AnyAnnotationRoot,
+  const TMiddleware extends readonly AgentMiddleware[] =
+    readonly AgentMiddleware[],
   const TTools extends readonly (ClientTool | ServerTool)[] = readonly (
     | ClientTool
     | ServerTool
@@ -578,6 +567,7 @@ export {
   providerStrategy,
   ToolStrategy,
   ProviderStrategy,
+  type TypedToolStrategy,
   type ResponseFormat,
   type ResponseFormatUndefined,
 } from "./responses.js";

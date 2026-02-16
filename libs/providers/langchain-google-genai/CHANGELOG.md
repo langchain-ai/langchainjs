@@ -1,5 +1,57 @@
 # @langchain/google-genai
 
+## 2.1.18
+
+### Patch Changes
+
+- Updated dependencies [[`71d08c0`](https://github.com/langchain-ai/langchainjs/commit/71d08c0a3a2597bd5a084eb35a7830e5ea1a2b29)]:
+  - @langchain/core@1.1.23
+
+## 2.1.17
+
+### Patch Changes
+
+- Updated dependencies [[`d5e3db0`](https://github.com/langchain-ai/langchainjs/commit/d5e3db0d01ab321ec70a875805b2f74aefdadf9d)]:
+  - @langchain/core@1.1.21
+
+## 2.1.16
+
+### Patch Changes
+
+- Updated dependencies [[`71c3cba`](https://github.com/langchain-ai/langchainjs/commit/71c3cba843ab16d877299d158a1de0c7d22f3fb9)]:
+  - @langchain/core@1.1.20
+
+## 2.1.15
+
+### Patch Changes
+
+- Updated dependencies [[`41bfea5`](https://github.com/langchain-ai/langchainjs/commit/41bfea51cf119573a3b956ee782d2731fe71c681)]:
+  - @langchain/core@1.1.19
+
+## 2.1.14
+
+### Patch Changes
+
+- [#9900](https://github.com/langchain-ai/langchainjs/pull/9900) [`a9b5059`](https://github.com/langchain-ai/langchainjs/commit/a9b50597186002221aaa4585246e569fa44c27c8) Thanks [@hntrl](https://github.com/hntrl)! - Improved abort signal handling for chat models:
+  - Added `ModelAbortError` class in `@langchain/core/errors` that contains partial output when a model invocation is aborted mid-stream
+  - `invoke()` now throws `ModelAbortError` with accumulated `partialOutput` when aborted during streaming (when using streaming callback handlers)
+  - `stream()` throws a regular `AbortError` when aborted (since chunks are already yielded to the caller)
+  - All provider implementations now properly check and propagate abort signals in both `_generate()` and `_streamResponseChunks()` methods
+  - Added standard tests for abort signal behavior
+
+- [#9900](https://github.com/langchain-ai/langchainjs/pull/9900) [`a9b5059`](https://github.com/langchain-ai/langchainjs/commit/a9b50597186002221aaa4585246e569fa44c27c8) Thanks [@hntrl](https://github.com/hntrl)! - fix(providers): add proper abort signal handling for invoke and stream operations
+  - Added early abort check (`signal.throwIfAborted()`) at the start of `_generate` methods to immediately throw when signal is already aborted
+  - Added abort signal checks inside streaming loops in `_streamResponseChunks` to return early when signal is aborted
+  - Propagated abort signals to underlying SDK calls where applicable (Google GenAI, Google Common/VertexAI, Cohere)
+  - Added standard tests for abort signal behavior in `@langchain/standard-tests`
+
+  This enables proper cancellation behavior for both invoke and streaming operations, and allows fallback chains to correctly proceed to the next runnable when the previous one is aborted.
+
+- [#9875](https://github.com/langchain-ai/langchainjs/pull/9875) [`a000b0f`](https://github.com/langchain-ai/langchainjs/commit/a000b0f642f24dd6a2159a4fa2c6bda5838a68e1) Thanks [@joeljohn159](https://github.com/joeljohn159)! - Add validation for empty strings in enum values to provide clear error messages instead of cryptic runtime errors from Gemini API
+
+- Updated dependencies [[`a9b5059`](https://github.com/langchain-ai/langchainjs/commit/a9b50597186002221aaa4585246e569fa44c27c8), [`a9b5059`](https://github.com/langchain-ai/langchainjs/commit/a9b50597186002221aaa4585246e569fa44c27c8)]:
+  - @langchain/core@1.1.18
+
 ## 2.1.13
 
 ### Patch Changes

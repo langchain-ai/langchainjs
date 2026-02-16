@@ -1,5 +1,45 @@
 # @langchain/google-webauth
 
+## 2.1.18
+
+### Patch Changes
+
+- Updated dependencies [[`58c00aa`](https://github.com/langchain-ai/langchainjs/commit/58c00aa51994e421741c88f51f6e9d2726433a03), [`71d08c0`](https://github.com/langchain-ai/langchainjs/commit/71d08c0a3a2597bd5a084eb35a7830e5ea1a2b29)]:
+  - @langchain/google-common@2.1.18
+  - @langchain/core@1.1.23
+
+## 2.1.17
+
+### Patch Changes
+
+- Updated dependencies [[`d5e3db0`](https://github.com/langchain-ai/langchainjs/commit/d5e3db0d01ab321ec70a875805b2f74aefdadf9d), [`e2ed407`](https://github.com/langchain-ai/langchainjs/commit/e2ed40729c54d132b91b7abecfb787fe5f09461e)]:
+  - @langchain/core@1.1.21
+  - @langchain/google-common@2.1.17
+
+## 2.1.16
+
+### Patch Changes
+
+- Updated dependencies [[`5681181`](https://github.com/langchain-ai/langchainjs/commit/568118119f44cc4509a2c04dff2891230e874f46), [`71c3cba`](https://github.com/langchain-ai/langchainjs/commit/71c3cba843ab16d877299d158a1de0c7d22f3fb9)]:
+  - @langchain/google-common@2.1.16
+  - @langchain/core@1.1.20
+
+## 2.1.15
+
+### Patch Changes
+
+- Updated dependencies [[`41bfea5`](https://github.com/langchain-ai/langchainjs/commit/41bfea51cf119573a3b956ee782d2731fe71c681)]:
+  - @langchain/core@1.1.19
+  - @langchain/google-common@2.1.15
+
+## 2.1.14
+
+### Patch Changes
+
+- Updated dependencies [[`a9b5059`](https://github.com/langchain-ai/langchainjs/commit/a9b50597186002221aaa4585246e569fa44c27c8), [`a9b5059`](https://github.com/langchain-ai/langchainjs/commit/a9b50597186002221aaa4585246e569fa44c27c8), [`a9b5059`](https://github.com/langchain-ai/langchainjs/commit/a9b50597186002221aaa4585246e569fa44c27c8), [`e10c6cb`](https://github.com/langchain-ai/langchainjs/commit/e10c6cb9cbbf420c95855225f4872c2e738bbd92)]:
+  - @langchain/core@1.1.18
+  - @langchain/google-common@2.1.14
+
 ## 2.1.13
 
 ### Patch Changes

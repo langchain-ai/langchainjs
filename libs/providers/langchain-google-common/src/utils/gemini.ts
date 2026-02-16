@@ -171,8 +171,7 @@ export class DefaultGeminiSafetyHandler implements GoogleAISafetyHandler {
   }
 }
 
-export interface MessageGeminiSafetySettings
-  extends DefaultGeminiSafetySettings {
+export interface MessageGeminiSafetySettings extends DefaultGeminiSafetySettings {
   msg?: string;
   forceNewMessage?: boolean;
 }
@@ -624,6 +623,16 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
         return await messageContentMedia(content);
       case "reasoning":
         return messageContentReasoning(content as MessageContentReasoning);
+      case "input_audio":
+        if ("input_audio" in content) {
+          return {
+            inlineData: {
+              mimeType: `audio/${content.input_audio.format}`,
+              data: content.input_audio.data,
+            },
+          };
+        }
+        break;
       default:
         throw new Error(
           `Unsupported type "${

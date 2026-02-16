@@ -80,8 +80,7 @@ interface OpenAILLMOutput {
 export type { OpenAICallOptions, OpenAIChatInput };
 
 export interface BaseChatOpenAICallOptions
-  extends BaseChatModelCallOptions,
-    BaseFunctionCallOptions {
+  extends BaseChatModelCallOptions, BaseFunctionCallOptions {
   /**
    * Additional options to pass to the underlying axios request.
    */
@@ -185,6 +184,17 @@ export interface BaseChatOpenAICallOptions
   reasoning?: OpenAIClient.Reasoning;
 
   /**
+   * Constrains effort on reasoning for reasoning models. Reduces reasoning in responses,
+   * which can reduce latency and cost at the expense of quality.
+   *
+   * Accepts values: "low", "medium", or "high".
+   *
+   * @deprecated This is a convenience option that will be merged into the `reasoning` object.
+   * Use `reasoning.effort` instead.
+   */
+  reasoningEffort?: OpenAIClient.Reasoning["effort"];
+
+  /**
    * Service tier to use for this request. Can be "auto", "default", or "flex"
    * Specifies the service tier for prioritization and latency optimization.
    */
@@ -209,8 +219,7 @@ export interface BaseChatOpenAICallOptions
 }
 
 export interface BaseChatOpenAIFields
-  extends Partial<OpenAIChatInput>,
-    BaseChatModelParams {
+  extends Partial<OpenAIChatInput>, BaseChatModelParams {
   /**
    * Optional configuration options for the OpenAI client.
    */
@@ -219,8 +228,8 @@ export interface BaseChatOpenAIFields
 
 /** @internal */
 export abstract class BaseChatOpenAI<
-    CallOptions extends BaseChatOpenAICallOptions,
-  >
+  CallOptions extends BaseChatOpenAICallOptions,
+>
   extends BaseChatModel<CallOptions, AIMessageChunk>
   implements Partial<OpenAIChatInput>
 {
@@ -340,6 +349,7 @@ export abstract class BaseChatOpenAI<
       "response_format",
       "seed",
       "reasoning",
+      "reasoning_effort",
       "service_tier",
     ];
   }
@@ -528,6 +538,17 @@ export abstract class BaseChatOpenAI<
       reasoning = {
         ...reasoning,
         ...options.reasoning,
+      };
+    }
+
+    // Coalesce reasoningEffort into reasoning.effort if reasoning.effort is not already set
+    if (
+      options?.reasoningEffort !== undefined &&
+      reasoning?.effort === undefined
+    ) {
+      reasoning = {
+        ...reasoning,
+        effort: options.reasoningEffort,
       };
     }
 

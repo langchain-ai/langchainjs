@@ -33,8 +33,8 @@
     "@langchain/core": "^1.0.0"
   },
   "devDependencies": {
-    "@jest/globals": "^29.5.0",
-    "@langchain/core": "workspace:*",
+    "@jest/globals": "^30.2.0",
+    "@langchain/core": "workspace:^",
     "@langchain/eslint": "workspace:*",
     "@langchain/openai": "workspace:*",
     "@langchain/tsconfig": "workspace:*",

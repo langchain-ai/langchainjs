@@ -89,11 +89,11 @@ export { ToolInputParsingException };
  * Base class for Tools that accept input of any shape defined by a Zod schema.
  */
 export abstract class StructuredTool<
-    SchemaT = ToolInputSchemaBase,
-    SchemaOutputT = ToolInputSchemaOutputType<SchemaT>,
-    SchemaInputT = ToolInputSchemaInputType<SchemaT>,
-    ToolOutputT = ToolOutputType,
-  >
+  SchemaT = ToolInputSchemaBase,
+  SchemaOutputT = ToolInputSchemaOutputType<SchemaT>,
+  SchemaInputT = ToolInputSchemaInputType<SchemaT>,
+  ToolOutputT = ToolOutputType,
+>
   extends BaseLangChain<
     StructuredToolCallInput<SchemaT, SchemaInputT>,
     ToolOutputT | ToolMessage
@@ -669,10 +669,8 @@ export function tool<
 >;
 
 export function tool<
-  SchemaT extends
-    | InteropZodObject
-    | InteropZodType<string>
-    | JSONSchema = InteropZodObject,
+  SchemaT extends InteropZodObject | InteropZodType<string> | JSONSchema =
+    InteropZodObject,
   NameT extends string = string,
   SchemaOutputT = ToolInputSchemaOutputType<SchemaT>,
   SchemaInputT = ToolInputSchemaInputType<SchemaT>,
@@ -784,10 +782,8 @@ export function tool<
 >;
 
 export function tool<
-  SchemaT extends
-    | InteropZodObject
-    | InteropZodType<string>
-    | JSONSchema = InteropZodObject,
+  SchemaT extends InteropZodObject | InteropZodType<string> | JSONSchema =
+    InteropZodObject,
   NameT extends string = string,
   SchemaOutputT = ToolInputSchemaOutputType<SchemaT>,
   SchemaInputT = ToolInputSchemaInputType<SchemaT>,
@@ -873,7 +869,7 @@ export function tool<
             cleanup();
             reject(getAbortSignalError(config.signal));
           };
-          config.signal.addEventListener("abort", listener);
+          config.signal.addEventListener("abort", listener, { once: true });
         }
 
         const childConfig = patchConfig(config, {

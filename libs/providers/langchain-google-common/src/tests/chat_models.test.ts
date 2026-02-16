@@ -1432,6 +1432,52 @@ describe("Mock ChatGoogle - Gemini", () => {
     expect(result.content).toBe("A blue square.");
   });
 
+  test("3. invoke - input_audio", async () => {
+    const record: Record<string, any> = {};
+    const projectId = mockId();
+    const authOptions: MockClientAuthInfo = {
+      record,
+      projectId,
+      resultFile: "chat-3-input-audio-mock.json",
+    };
+
+    const model = new ChatGoogle({
+      authOptions,
+      model: "gemini-1.5-flash",
+    });
+
+    const message: ContentBlock[] = [
+      {
+        type: "text",
+        text: "Transcribe this audio",
+      },
+      {
+        type: "input_audio",
+        input_audio: {
+          format: "wav",
+          data: "BASE64_AUDIO_DATA",
+        },
+      },
+    ];
+
+    const messages: BaseMessage[] = [
+      new HumanMessageChunk({ content: message }),
+    ];
+
+    await model.invoke(messages);
+
+    const parts = record?.opts?.data?.contents?.[0]?.parts;
+    expect(parts).toBeDefined();
+    expect(parts).toHaveLength(2);
+
+    expect(parts[0]).toHaveProperty("text");
+    expect(parts[1]).toHaveProperty("inlineData");
+    expect(parts[1].inlineData).toEqual({
+      mimeType: "audio/wav",
+      data: "BASE64_AUDIO_DATA",
+    });
+  });
+
   test("3. invoke - media - manager", async () => {
     class MemStore extends InMemoryStore<MediaBlob> {
       get length() {

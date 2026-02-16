@@ -1,0 +1,2 @@
+provider = "google"
+output = "src/chat_models/profiles.ts"

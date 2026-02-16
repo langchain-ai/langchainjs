@@ -167,7 +167,8 @@ export class ChatConnection<AuthOptions> extends AbstractGoogleLLMConnection<
  * Input to chat model class.
  */
 export interface ChatGoogleBaseInput<AuthOptions>
-  extends BaseChatModelParams,
+  extends
+    BaseChatModelParams,
     GoogleConnectionParams<AuthOptions>,
     GoogleAIModelParams,
     GoogleAISafetyParams,
@@ -322,9 +323,8 @@ export abstract class ChatGoogleBase<AuthOptions>
     return this.withConfig({ tools: convertToGeminiTools(tools), ...kwargs });
   }
 
-  // Replace
   _llmType() {
-    return "chat_integration";
+    return "google";
   }
 
   /**
@@ -339,6 +339,7 @@ export abstract class ChatGoogleBase<AuthOptions>
     options: this["ParsedCallOptions"],
     runManager: CallbackManagerForLLMRun | undefined
   ): Promise<ChatResult> {
+    options.signal?.throwIfAborted();
     const parameters = this.invocationParams(options);
     if (this.streaming) {
       const stream = this._streamResponseChunks(messages, options, runManager);
@@ -389,6 +390,9 @@ export abstract class ChatGoogleBase<AuthOptions>
     // During the loop, yield each time we get a chunk from the streaming parser
     // that is either available or added to the queue
     while (!stream.streamDone) {
+      if (options.signal?.aborted) {
+        return;
+      }
       const output = await stream.nextChunk();
       await runManager?.handleCustomEvent(
         `google-chunk-${this.constructor.name}`,

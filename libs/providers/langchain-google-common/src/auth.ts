@@ -11,6 +11,7 @@ export type GoogleAbstractedClientOps = {
   headers?: Record<string, string>;
   data?: unknown;
   responseType?: GoogleAbstractedClientOpsResponseType;
+  signal?: AbortSignal;
 };
 
 export interface GoogleAbstractedClient {
@@ -19,9 +20,7 @@ export interface GoogleAbstractedClient {
   get clientType(): string;
 }
 
-export abstract class GoogleAbstractedFetchClient
-  implements GoogleAbstractedClient
-{
+export abstract class GoogleAbstractedFetchClient implements GoogleAbstractedClient {
   abstract get clientType(): string;
 
   abstract getProjectId(): Promise<string>;
@@ -41,6 +40,32 @@ export abstract class GoogleAbstractedFetchClient
     }
   }
 
+  /**
+   * Build and throw a standardised Google request error.
+   * Both the `!res.ok` path (native fetch) and the catch path (gaxios)
+   * funnel through here so the caller always sees the same shape.
+   */
+  protected _throwRequestError(
+    status: number,
+    body: string | undefined,
+    response: unknown,
+    context: {
+      url: string;
+      opts: GoogleAbstractedClientOps;
+      fetchOptions?: Record<string, unknown>;
+    }
+  ): never {
+    const message = body
+      ? `Google request failed with status code ${status}: ${body}`
+      : `Google request failed with status code ${status}`;
+    const error = new Error(message);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (error as any).response = response;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (error as any).details = context;
+    throw error;
+  }
+
   async _request(
     url: string | undefined,
     opts: GoogleAbstractedClientOps,
@@ -51,6 +76,7 @@ export abstract class GoogleAbstractedFetchClient
       method?: string;
       headers: Record<string, string>;
       body?: string;
+      signal?: AbortSignal;
     } = {
       method: opts.method,
       headers: {
@@ -58,6 +84,7 @@ export abstract class GoogleAbstractedFetchClient
         ...(opts.headers ?? {}),
         ...(additionalHeaders ?? {}),
       },
+      signal: opts.signal,
     };
     if (opts.data !== undefined) {
       if (typeof opts.data === "string") {
@@ -67,23 +94,51 @@ export abstract class GoogleAbstractedFetchClient
       }
     }
 
-    const res = await this._fetch(url, fetchOptions);
+    const context = { url, opts, fetchOptions };
+
+    let res: Response;
+    try {
+      res = await this._fetch(url, fetchOptions);
+    } catch (fetchError) {
+      // The _fetch implementation (e.g. GAuthClient using google-auth-library)
+      // may throw its own error (e.g. GaxiosError) for non-2xx responses
+      // before we can handle them here. Extract what we can from the error
+      // and re-throw with a useful, formatted message.
+      /* eslint-disable @typescript-eslint/no-explicit-any */
+      const err = fetchError as any;
+      const status = err?.response?.status ?? err?.status;
+
+      if (status != null) {
+        let body: string | undefined;
+
+        if (err?.response?.data != null) {
+          if (typeof err.response.data === "string") {
+            body = err.response.data;
+          } else if (typeof err.response.data === "object") {
+            try {
+              body = JSON.stringify(err.response.data);
+            } catch {
+              // best effort
+            }
+          }
+        }
+
+        this._throwRequestError(
+          status,
+          body,
+          err?.response ?? { status },
+          context
+        );
+      }
+
+      // No status info available — re-throw the original error as-is
+      throw fetchError;
+      /* eslint-enable @typescript-eslint/no-explicit-any */
+    }
 
     if (!res.ok) {
-      const resText = await res.text();
-      const error = new Error(
-        `Google request failed with status code ${res.status}: ${resText}`
-      );
-      /* eslint-disable @typescript-eslint/no-explicit-any */
-      (error as any).response = res;
-      (error as any).details = {
-        url,
-        opts,
-        fetchOptions,
-        result: res,
-      };
-      /* eslint-enable @typescript-eslint/no-explicit-any */
-      throw error;
+      const body = await res.text();
+      this._throwRequestError(res.status, body, res, context);
     }
 
     const data = await this._buildData(res, opts);

@@ -1,5 +1,86 @@
 # @langchain/community
 
+## 1.1.15
+
+### Patch Changes
+
+- [#10003](https://github.com/langchain-ai/langchainjs/pull/10003) [`6c5b2b1`](https://github.com/langchain-ai/langchainjs/commit/6c5b2b19a5cb181cb7f6bd21e9e72baf517ad59a) Thanks [@FilipZmijewski](https://github.com/FilipZmijewski)! - fix(community): IBM tests
+
+- Updated dependencies [[`71d08c0`](https://github.com/langchain-ai/langchainjs/commit/71d08c0a3a2597bd5a084eb35a7830e5ea1a2b29)]:
+  - @langchain/core@1.1.23
+  - @langchain/classic@1.0.17
+
+## 1.1.14
+
+### Patch Changes
+
+- [#9990](https://github.com/langchain-ai/langchainjs/pull/9990) [`d5e3db0`](https://github.com/langchain-ai/langchainjs/commit/d5e3db0d01ab321ec70a875805b2f74aefdadf9d) Thanks [@hntrl](https://github.com/hntrl)! - feat(core): Add SSRF protection module (`@langchain/core/utils/ssrf`) with utilities for validating URLs against private IPs, cloud metadata endpoints, and localhost.
+
+  fix(community): Harden `RecursiveUrlLoader` against SSRF attacks by integrating `validateSafeUrl` and replacing string-based URL comparison with origin-based `isSameOrigin` from the shared SSRF module.
+
+- Updated dependencies [[`d5e3db0`](https://github.com/langchain-ai/langchainjs/commit/d5e3db0d01ab321ec70a875805b2f74aefdadf9d), [`6939dab`](https://github.com/langchain-ai/langchainjs/commit/6939dabc8dc6481942e7e2c19e3dc61bc374d65a), [`ad581c7`](https://github.com/langchain-ai/langchainjs/commit/ad581c76138ea12ebdaee444c0dcdc4f6a280624)]:
+  - @langchain/core@1.1.21
+  - @langchain/openai@1.2.7
+  - @langchain/classic@1.0.17
+
+## 1.1.13
+
+### Patch Changes
+
+- [#9853](https://github.com/langchain-ai/langchainjs/pull/9853) [`9513c5a`](https://github.com/langchain-ai/langchainjs/commit/9513c5a9379fe99dae2049d12811828fa0ee5526) Thanks [@philip](https://github.com/philip)! - fix(community): update NeonPostgres vector store for @neondatabase/serverless v1.0.0 GA
+
+- Updated dependencies [[`16d691c`](https://github.com/langchain-ai/langchainjs/commit/16d691c7f8196e1d6322f051c25b2219ff2953b6), [`1058574`](https://github.com/langchain-ai/langchainjs/commit/1058574b723f0d060eb9b3ca25be5aeeabbe51aa), [`8ee833c`](https://github.com/langchain-ai/langchainjs/commit/8ee833c1fb99891565832ead4990e246b30022a6)]:
+  - @langchain/openai@1.2.6
+  - @langchain/classic@1.0.16
+
+## 1.1.12
+
+### Patch Changes
+
+- Updated dependencies [[`0870ca0`](https://github.com/langchain-ai/langchainjs/commit/0870ca0719dacd8a555b3341e581d6c15cd6faf3), [`8f0757f`](https://github.com/langchain-ai/langchainjs/commit/8f0757f06b2ed9fe810f636333fc71ffcedb3feb), [`cf46089`](https://github.com/langchain-ai/langchainjs/commit/cf46089d250b1ec87f99956f5cd87e2615ac25c5)]:
+  - @langchain/openai@1.2.5
+  - @langchain/classic@1.0.15
+
+## 1.1.11
+
+### Patch Changes
+
+- [#9905](https://github.com/langchain-ai/langchainjs/pull/9905) [`41bfea5`](https://github.com/langchain-ai/langchainjs/commit/41bfea51cf119573a3b956ee782d2731fe71c681) Thanks [@christian-bromann](https://github.com/christian-bromann)! - fix(classic/community/core): avoid long lived abort signals
+
+- Updated dependencies [[`41bfea5`](https://github.com/langchain-ai/langchainjs/commit/41bfea51cf119573a3b956ee782d2731fe71c681)]:
+  - @langchain/classic@1.0.14
+  - @langchain/openai@1.2.4
+
+## 1.1.10
+
+### Patch Changes
+
+- [#9883](https://github.com/langchain-ai/langchainjs/pull/9883) [`ea00005`](https://github.com/langchain-ai/langchainjs/commit/ea000051bd29670bec60099a5f50a13c0fedfc31) Thanks [@FilipZmijewski](https://github.com/FilipZmijewski)! - support aborting for Model Gateway and WatsonxLLM for IBM
+
+- [#9896](https://github.com/langchain-ai/langchainjs/pull/9896) [`70f329a`](https://github.com/langchain-ai/langchainjs/commit/70f329aa5c16bef9e7a942d4187c31f3d3b86b80) Thanks [@Axadali](https://github.com/Axadali)! - Add score normalization feature to PGVectorStore allowing users to choose between returning raw distances or normalized similarity scores. This makes PGVectorStore consistent with other vector stores in the LangChain ecosystem where higher scores indicate greater similarity. Maintains full backward compatibility by defaulting to distance mode.
+
+- [#9874](https://github.com/langchain-ai/langchainjs/pull/9874) [`a995a3f`](https://github.com/langchain-ai/langchainjs/commit/a995a3ff1940eebf7204574e6f058f8ff84f557e) Thanks [@phong-phuong](https://github.com/phong-phuong)! - fix jira failing to fetch issues
+
+- Updated dependencies [[`1fa865b`](https://github.com/langchain-ai/langchainjs/commit/1fa865b1cb8a30c2269b83cdb5fc84d374c3fca9), [`28efb57`](https://github.com/langchain-ai/langchainjs/commit/28efb57448933368094ca41c63d9262ac0f348a6), [`4e42452`](https://github.com/langchain-ai/langchainjs/commit/4e42452e4c020408bd6687667e931497b05aaff5), [`a9b5059`](https://github.com/langchain-ai/langchainjs/commit/a9b50597186002221aaa4585246e569fa44c27c8), [`a9b5059`](https://github.com/langchain-ai/langchainjs/commit/a9b50597186002221aaa4585246e569fa44c27c8)]:
+  - @langchain/openai@1.2.4
+  - @langchain/classic@1.0.13
+
+## 1.1.9
+
+### Patch Changes
+
+- Updated dependencies [[`1d58bf2`](https://github.com/langchain-ai/langchainjs/commit/1d58bf2bcb14055a64189af7e251bb93fa9d5aa0)]:
+  - @langchain/classic@1.0.12
+
+## 1.1.8
+
+### Patch Changes
+
+- [#9759](https://github.com/langchain-ai/langchainjs/pull/9759) [`82c51e4`](https://github.com/langchain-ai/langchainjs/commit/82c51e4125594c83b5578680e5a3d899f6268caa) Thanks [@ejscribner](https://github.com/ejscribner)! - Fix(couchbase): Add Couchbase peer dependency and add `CouchbaseQueryVectorStore` and `CouchbaseSearchVectorStore` to tsdown bundle
+
+- Updated dependencies [[`a496cc0`](https://github.com/langchain-ai/langchainjs/commit/a496cc09d2b4d28a8eb0c4b96bd3555ab1cc47dc)]:
+  - @langchain/classic@1.0.11
+
 ## 1.1.7
 
 ### Patch Changes

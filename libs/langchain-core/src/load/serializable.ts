@@ -16,8 +16,7 @@ export interface SerializedConstructor extends BaseSerialized<"constructor"> {
 
 export interface SerializedSecret extends BaseSerialized<"secret"> {}
 
-export interface SerializedNotImplemented
-  extends BaseSerialized<"not_implemented"> {}
+export interface SerializedNotImplemented extends BaseSerialized<"not_implemented"> {}
 
 export type Serialized =
   | SerializedConstructor

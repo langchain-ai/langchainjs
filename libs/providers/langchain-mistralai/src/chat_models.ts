@@ -93,8 +93,10 @@ interface TokenUsage {
 
 type ChatMistralAIToolType = MistralAIToolCall | MistralAITool | BindToolsInput;
 
-export interface ChatMistralAICallOptions
-  extends Omit<BaseLanguageModelCallOptions, "stop"> {
+export interface ChatMistralAICallOptions extends Omit<
+  BaseLanguageModelCallOptions,
+  "stop"
+> {
   response_format?: {
     type: "text" | "json_object";
   };
@@ -111,8 +113,7 @@ export interface ChatMistralAICallOptions
  * Input to chat model class.
  */
 export interface ChatMistralAIInput
-  extends BaseChatModelParams,
-    Pick<ChatMistralAICallOptions, "streamUsage"> {
+  extends BaseChatModelParams, Pick<ChatMistralAICallOptions, "streamUsage"> {
   /**
    * The API key to use.
    * @default {process.env.MISTRAL_API_KEY}
@@ -909,8 +910,8 @@ function _convertToolToMistralTool(
  * <br />
  */
 export class ChatMistralAI<
-    CallOptions extends ChatMistralAICallOptions = ChatMistralAICallOptions,
-  >
+  CallOptions extends ChatMistralAICallOptions = ChatMistralAICallOptions,
+>
   extends BaseChatModel<CallOptions, AIMessageChunk>
   implements ChatMistralAIInput
 {
@@ -1142,6 +1143,7 @@ export class ChatMistralAI<
     options: this["ParsedCallOptions"],
     runManager?: CallbackManagerForLLMRun
   ): Promise<ChatResult> {
+    options.signal?.throwIfAborted();
     const tokenUsage: TokenUsage = {};
     const params = this.invocationParams(options);
     const mistralMessages = convertMessagesToMistralMessages(messages);
@@ -1235,7 +1237,7 @@ export class ChatMistralAI<
     const streamIterable = await this.completionWithRetry(input, true);
     for await (const { data } of streamIterable) {
       if (options.signal?.aborted) {
-        throw new Error("AbortError");
+        return;
       }
       const choice = data?.choices[0];
       if (!choice || !("delta" in choice)) {

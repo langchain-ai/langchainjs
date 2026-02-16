@@ -1,6 +1,6 @@
 {
   "name": "@langchain/openai",
-  "version": "1.2.3",
+  "version": "1.2.7",
   "description": "OpenAI integrations for LangChain.js",
   "author": "LangChain",
   "license": "MIT",
@@ -34,7 +34,7 @@
   },
   "dependencies": {
     "js-tiktoken": "^1.0.12",
-    "openai": "^6.16.0",
+    "openai": "^6.18.0",
     "zod": "^3.25.76 || ^4"
   },
   "peerDependencies": {
@@ -43,12 +43,12 @@
   "devDependencies": {
     "@azure/identity": "^4.2.1",
     "@cfworker/json-schema": "^4.1.1",
-    "@langchain/core": "workspace:*",
+    "@langchain/core": "workspace:^",
     "@langchain/eslint": "workspace:*",
     "@langchain/standard-tests": "workspace:*",
     "@langchain/tsconfig": "workspace:*",
     "@tsconfig/recommended": "^1.0.10",
-    "@types/node": "^24.10.1",
+    "@types/node": "^25.2.3",
     "@vitest/coverage-v8": "^3.2.4",
     "dotenv": "^17.2.1",
     "dpdm": "^3.14.0",

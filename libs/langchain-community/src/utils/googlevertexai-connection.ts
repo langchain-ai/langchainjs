@@ -70,10 +70,10 @@ export abstract class GoogleConnection<
 }
 
 export abstract class GoogleVertexAIConnection<
-    CallOptions extends AsyncCallerCallOptions,
-    ResponseType extends GoogleResponse,
-    AuthOptions,
-  >
+  CallOptions extends AsyncCallerCallOptions,
+  ResponseType extends GoogleResponse,
+  AuthOptions,
+>
   extends GoogleConnection<CallOptions, ResponseType>
   implements GoogleVertexAIConnectionParams<AuthOptions>
 {
@@ -173,11 +173,11 @@ export function simpleValue(val: unknown): unknown {
 }
 
 export class GoogleVertexAILLMConnection<
-    CallOptions extends BaseLanguageModelCallOptions,
-    InstanceType,
-    PredictionType extends GoogleVertexAIBasePrediction,
-    AuthOptions,
-  >
+  CallOptions extends BaseLanguageModelCallOptions,
+  InstanceType,
+  PredictionType extends GoogleVertexAIBasePrediction,
+  AuthOptions,
+>
   extends GoogleVertexAIConnection<
     CallOptions,
     GoogleVertexAILLMResponse<PredictionType>,
