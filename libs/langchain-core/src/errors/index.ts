@@ -144,40 +144,40 @@ export class ContextOverflowError extends ns.brand(
 ) {
   readonly name = "ContextOverflowError";
 
+  /**
+   * The underlying error that caused this {@link ContextOverflowError}, if any.
+   *
+   * This property is optionally set when wrapping a lower-level error using {@link ContextOverflowError.fromError}.
+   * It allows error handlers to access or inspect the original error that led to the context overflow.
+   */
+  cause?: Error;
+
   constructor(message?: string) {
     super(message ?? "Input exceeded the model's context window.");
   }
-}
-
-/**
- * Error thrown when input exceeds the model's context limit.
- *
- * This exception is raised by chat models when the input tokens exceed
- * the maximum context window supported by the model.
- */
-export class ContextOverflowError extends Error {
-  readonly name = "ContextOverflowError";
-
-  readonly lc_error_code = "CONTEXT_OVERFLOW";
-
-  constructor(message: string, options?: ErrorOptions) {
-    super(message, options);
-    if (Error.captureStackTrace) {
-      Error.captureStackTrace(this, ContextOverflowError);
-    }
-  }
 
   /**
-   * Type guard to check if an error is a ContextOverflowError
+   * Creates a new {@link ContextOverflowError} instance from an existing error.
+   *
+   * This static utility copies the message from the provided error and
+   * attaches the original error as the {@link ContextOverflowError.cause} property,
+   * enabling error handlers to inspect or propagate the original failure.
+   *
+   * @param obj - The original error object causing the context overflow.
+   * @returns A new {@link ContextOverflowError} instance with the original error set as its cause.
+   *
+   * @example
+   * ```typescript
+   * try {
+   *   await model.invoke(input);
+   * } catch (err) {
+   *   throw ContextOverflowError.fromError(err);
+   * }
+   * ```
    */
-  static isInstance(error: unknown): error is ContextOverflowError {
-    return (
-      typeof error === "object" &&
-      error !== null &&
-      "name" in error &&
-      error.name === "ContextOverflowError" &&
-      "lc_error_code" in error &&
-      error.lc_error_code === "CONTEXT_OVERFLOW"
-    );
+  static fromError(obj: Error): ContextOverflowError {
+    const error = new ContextOverflowError(obj.message);
+    error.cause = obj;
+    return error;
   }
 }
