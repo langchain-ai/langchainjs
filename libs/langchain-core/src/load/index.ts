@@ -1,6 +1,12 @@
 /**
  * Load LangChain objects from JSON strings or objects.
  *
+ * **WARNING: `load()` deserializes data by instantiating classes and invoking
+ * constructors. Never call `load()` on untrusted or user-supplied input.**
+ * Doing so can lead to insecure deserialization — including arbitrary class
+ * instantiation, secret exfiltration, and server-side request forgery (SSRF).
+ * Only deserialize data that originates from a trusted source you control.
+ *
  * ## How it works
  *
  * Each `Serializable` LangChain object has a unique identifier (its "class path"),
@@ -20,6 +26,17 @@
  *   found, `null` is returned instead of loading from environment variables.
  * - `true`: If a secret is not found in `secretsMap`, it will be loaded from
  *   environment variables. Use this only in trusted environments.
+ *
+ * ### Hardening recommendations
+ *
+ * - **Never enable `secretsFromEnv`** unless the serialized data is fully trusted.
+ *   A crafted payload can reference arbitrary environment variable names, leaking
+ *   secrets to an attacker-controlled class constructor.
+ * - **Keep `secretsMap` minimal.** Only include the specific secrets the serialized
+ *   object actually needs.
+ * - **Keep `importMap` / `optionalImportsMap` as small and static as possible.**
+ *   Each entry widens the set of classes an attacker can instantiate. Never
+ *   populate these maps from user input.
  *
  * ### Injection protection (escape-based)
  *
@@ -403,8 +420,18 @@ async function reviver(this: ReviverContext, value: unknown): Promise<unknown> {
 /**
  * Load a LangChain object from a JSON string.
  *
+ * **WARNING — insecure deserialization risk.** This function instantiates
+ * classes and invokes constructors based on the contents of `text`. If `text`
+ * originates from an untrusted source, an attacker can craft a payload that
+ * instantiates arbitrary allowed classes with attacker-controlled arguments,
+ * potentially causing secret exfiltration, SSRF, or other side effects.
+ *
+ * Only call `load()` on data you have produced yourself or received from a
+ * fully trusted origin (e.g., your own database). **Never deserialize
+ * user-supplied or network-received JSON without independent validation.**
+ *
  * @param text - The JSON string to parse and load.
- * @param options - Options for loading.
+ * @param options - Options for loading. See {@link LoadOptions} for security guidance.
  * @returns The loaded LangChain object.
  *
  * @example
@@ -415,12 +442,12 @@ async function reviver(this: ReviverContext, value: unknown): Promise<unknown> {
  * // Basic usage - secrets must be provided explicitly
  * const msg = await load<AIMessage>(jsonString);
  *
- * // With secrets from a map
+ * // With secrets from a map (preferred over secretsFromEnv)
  * const msg = await load<AIMessage>(jsonString, {
  *   secretsMap: { OPENAI_API_KEY: "sk-..." }
  * });
  *
- * // Allow loading secrets from environment (use with caution)
+ * // Allow loading secrets from environment — ONLY for fully trusted data
  * const msg = await load<AIMessage>(jsonString, {
  *   secretsFromEnv: true
  * });
