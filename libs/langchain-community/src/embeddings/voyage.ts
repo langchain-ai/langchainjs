@@ -218,6 +218,17 @@ export class VoyageEmbeddings
         body: JSON.stringify(request),
       });
 
+      if (!response.ok) {
+        let errorMessage = `Voyage AI API error ${response.status}`;
+        try {
+          const errorBody = await response.json();
+          errorMessage += `: ${errorBody?.detail ?? JSON.stringify(errorBody)}`;
+        } catch {
+          errorMessage += `: ${response.statusText}`;
+        }
+        throw new Error(errorMessage);
+      }
+
       const json = await response.json();
       return json;
     };
