@@ -107,7 +107,7 @@
     "redis": "^4.6.13",
     "sqlite3": "^5.1.4",
     "typesense": "^3.0.1",
-    "uuid": "^10.0.0",
+    "uuid": "^13.0.0",
     "voy-search": "0.6.2",
     "weaviate-client": "^3.5.2",
     "zod-to-json-schema": "^3.22.3",

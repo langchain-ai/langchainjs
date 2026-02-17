@@ -30,7 +30,7 @@
     "format:check": "prettier --check \"src\""
   },
   "dependencies": {
-    "uuid": "^10.0.0"
+    "uuid": "^13.0.0"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20240909.0",

@@ -30,7 +30,7 @@
   },
   "dependencies": {
     "@cerebras/cerebras_cloud_sdk": "^1.15.0",
-    "uuid": "^10.0.0"
+    "uuid": "^13.0.0"
   },
   "peerDependencies": {
     "@langchain/core": "^1.0.0"

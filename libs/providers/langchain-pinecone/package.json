@@ -29,7 +29,7 @@
   },
   "dependencies": {
     "flat": "^5.0.2",
-    "uuid": "^10.0.0"
+    "uuid": "^13.0.0"
   },
   "peerDependencies": {
     "@langchain/core": "^1.0.0",

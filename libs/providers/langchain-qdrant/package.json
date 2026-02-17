@@ -29,7 +29,7 @@
   },
   "dependencies": {
     "@qdrant/js-client-rest": "^1.15.0",
-    "uuid": "^10.0.0"
+    "uuid": "^13.0.0"
   },
   "peerDependencies": {
     "@langchain/core": "^1.0.0"

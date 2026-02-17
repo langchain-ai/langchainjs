@@ -32,7 +32,7 @@
     "format:check": "prettier --check \"src\""
   },
   "dependencies": {
-    "uuid": "^10.0.0",
+    "uuid": "^13.0.0",
     "weaviate-client": "^3.5.2"
   },
   "peerDependencies": {

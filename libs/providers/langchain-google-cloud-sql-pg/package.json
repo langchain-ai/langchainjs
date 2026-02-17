@@ -33,7 +33,7 @@
     "@langchain/core": "workspace:^",
     "google-auth-library": "^9.15.0",
     "knex": "^3.1.0",
-    "uuid": "^11.0.5"
+    "uuid": "^13.0.0"
   },
   "devDependencies": {
     "@jest/globals": "^30.2.0",
