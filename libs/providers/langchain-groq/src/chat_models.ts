@@ -1017,10 +1017,19 @@ export class ChatGroq extends BaseChatModel<
     return [...super.callKeys, ...ALL_CALL_KEYS];
   }
 
-  constructor(fields: ChatGroqInput) {
-    super(fields);
+  constructor(model: string, fields?: Omit<ChatGroqInput, "model">);
+  constructor(fields: ChatGroqInput);
+  constructor(
+    modelOrFields?: string | ChatGroqInput,
+    fields?: Omit<ChatGroqInput, "model">
+  ) {
+    const params =
+      typeof modelOrFields === "string"
+        ? { ...(fields ?? {}), model: modelOrFields }
+        : modelOrFields ?? {};
+    super(params);
 
-    const apiKey = fields.apiKey || getEnvironmentVariable("GROQ_API_KEY");
+    const apiKey = params.apiKey || getEnvironmentVariable("GROQ_API_KEY");
     if (!apiKey) {
       throw new Error(
         `Groq API key not found. Please set the GROQ_API_KEY environment variable or provide the key into "apiKey"`
@@ -1028,37 +1037,37 @@ export class ChatGroq extends BaseChatModel<
     }
     const defaultHeaders = {
       "User-Agent": "langchainjs",
-      ...(fields.defaultHeaders ?? {}),
+      ...(params.defaultHeaders ?? {}),
     };
 
     this.client = new Groq({
       apiKey,
       dangerouslyAllowBrowser: true,
-      baseURL: fields.baseUrl,
-      timeout: fields.timeout,
-      httpAgent: fields.httpAgent,
-      fetch: fields.fetch,
+      baseURL: params.baseUrl,
+      timeout: params.timeout,
+      httpAgent: params.httpAgent,
+      fetch: params.fetch,
       maxRetries: 0,
       defaultHeaders,
-      defaultQuery: fields.defaultQuery,
+      defaultQuery: params.defaultQuery,
     });
     this.apiKey = apiKey;
-    this.temperature = fields.temperature ?? this.temperature;
-    this.model = fields.model;
-    this.streaming = fields.streaming ?? this.streaming;
+    this.temperature = params.temperature ?? this.temperature;
+    this.model = params.model;
+    this.streaming = params.streaming ?? this.streaming;
     this.stop =
-      fields.stopSequences ??
-      (typeof fields.stop === "string" ? [fields.stop] : fields.stop) ??
+      params.stopSequences ??
+      (typeof params.stop === "string" ? [params.stop] : params.stop) ??
       [];
     this.stopSequences = this.stop;
-    this.maxTokens = fields.maxTokens;
-    this.topP = fields.topP;
-    this.frequencyPenalty = fields.frequencyPenalty;
-    this.presencePenalty = fields.presencePenalty;
-    this.logprobs = fields.logprobs;
-    this.n = fields.n;
-    this.logitBias = fields.logitBias;
-    this.user = fields.user;
+    this.maxTokens = params.maxTokens;
+    this.topP = params.topP;
+    this.frequencyPenalty = params.frequencyPenalty;
+    this.presencePenalty = params.presencePenalty;
+    this.logprobs = params.logprobs;
+    this.n = params.n;
+    this.logitBias = params.logitBias;
+    this.user = params.user;
   }
 
   getLsParams(options: this["ParsedCallOptions"]): LangSmithParams {

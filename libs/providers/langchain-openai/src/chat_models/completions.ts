@@ -22,8 +22,12 @@ import {
   _convertToOpenAITool,
 } from "../utils/tools.js";
 import { isReasoningModel } from "../utils/misc.js";
-import { BaseChatOpenAICallOptions } from "./base.js";
-import { BaseChatOpenAI } from "./base.js";
+import {
+  BaseChatOpenAI,
+  BaseChatOpenAICallOptions,
+  BaseChatOpenAIFields,
+  getChatOpenAIModelParams,
+} from "./base.js";
 import {
   convertCompletionsDeltaToBaseMessageChunk,
   convertCompletionsMessageToBaseMessage,
@@ -45,6 +49,15 @@ export class ChatOpenAICompletions<
   CallOptions extends ChatOpenAICompletionsCallOptions =
     ChatOpenAICompletionsCallOptions,
 > extends BaseChatOpenAI<CallOptions> {
+  constructor(model: string, fields?: Omit<BaseChatOpenAIFields, "model">);
+  constructor(fields?: BaseChatOpenAIFields);
+  constructor(
+    modelOrFields?: string | BaseChatOpenAIFields,
+    fieldsArg?: Omit<BaseChatOpenAIFields, "model">
+  ) {
+    super(getChatOpenAIModelParams(modelOrFields, fieldsArg));
+  }
+
   /** @internal */
   override invocationParams(
     options?: this["ParsedCallOptions"],

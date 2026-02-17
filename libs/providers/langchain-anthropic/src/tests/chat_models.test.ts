@@ -13,13 +13,31 @@ import {
   ContentBlockParam as AnthropicContentBlockParam,
   MessageCreateParamsNonStreaming,
 } from "@anthropic-ai/sdk/resources";
-import { ChatAnthropic } from "../chat_models.js";
+import { ChatAnthropic, ChatAnthropicMessages } from "../chat_models.js";
 import {
   _convertMessagesToAnthropicPayload,
   applyCacheControlToPayload,
 } from "../utils/message_inputs.js";
 import { AnthropicToolExtrasSchema } from "../utils/tools.js";
 import { AnthropicMessageCreateParams } from "../types.js";
+
+test("constructor supports model shorthand for ChatAnthropicMessages", () => {
+  const model = new ChatAnthropicMessages("claude-3-haiku-20240307", {
+    anthropicApiKey: "testing",
+  });
+
+  expect(model.model).toBe("claude-3-haiku-20240307");
+  expect(model.modelName).toBe("claude-3-haiku-20240307");
+});
+
+test("constructor supports model shorthand for ChatAnthropic", () => {
+  const model = new ChatAnthropic("claude-3-haiku-20240307", {
+    anthropicApiKey: "testing",
+  });
+
+  expect(model.model).toBe("claude-3-haiku-20240307");
+  expect(model.modelName).toBe("claude-3-haiku-20240307");
+});
 
 test("withStructuredOutput with output validation", async () => {
   const model = new ChatAnthropic({

@@ -731,8 +731,17 @@ export class ChatBedrockConverse
    */
   supportsToolChoiceValues?: Array<"auto" | "any" | "tool">;
 
-  constructor(fields?: ChatBedrockConverseInput) {
-    super(fields ?? {});
+  constructor(model: string, params?: Omit<ChatBedrockConverseInput, "model">);
+  constructor(fields?: ChatBedrockConverseInput);
+  constructor(
+    modelOrFields?: string | ChatBedrockConverseInput,
+    params?: Omit<ChatBedrockConverseInput, "model">
+  ) {
+    const fields =
+      typeof modelOrFields === "string"
+        ? { ...(params ?? {}), model: modelOrFields }
+        : modelOrFields ?? {};
+    super(fields);
     const {
       profile,
       filepath,
@@ -744,7 +753,7 @@ export class ChatBedrockConverse
       webIdentityTokenFile,
       roleAssumerWithWebIdentity,
       ...rest
-    } = fields ?? {};
+    } = fields;
 
     const credentials =
       rest?.credentials ??
@@ -768,9 +777,9 @@ export class ChatBedrockConverse
     }
 
     this.client =
-      fields?.client ??
+      fields.client ??
       new BedrockRuntimeClient({
-        ...fields?.clientOptions,
+        ...fields.clientOptions,
         region,
         credentials,
         endpoint: rest.endpointHost

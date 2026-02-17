@@ -654,7 +654,19 @@ export class ChatGoogleGenerativeAI
     );
   }
 
-  constructor(fields: GoogleGenerativeAIChatInput) {
+  constructor(
+    model: string,
+    fields?: Omit<GoogleGenerativeAIChatInput, "model">
+  );
+  constructor(fields: GoogleGenerativeAIChatInput);
+  constructor(
+    modelOrFields: string | GoogleGenerativeAIChatInput,
+    fieldsArg?: Omit<GoogleGenerativeAIChatInput, "model">
+  ) {
+    const fields =
+      typeof modelOrFields === "string"
+        ? { ...(fieldsArg ?? {}), model: modelOrFields }
+        : modelOrFields;
     super(fields);
 
     this.model = fields.model.replace(/^models\//, "");

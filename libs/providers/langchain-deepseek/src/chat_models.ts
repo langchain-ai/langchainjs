@@ -426,8 +426,17 @@ export class ChatDeepSeek extends ChatOpenAICompletions<ChatDeepSeekCallOptions>
 
   lc_namespace = ["langchain", "chat_models", "deepseek"];
 
-  constructor(fields?: Partial<ChatDeepSeekInput>) {
-    const apiKey = fields?.apiKey || getEnvironmentVariable("DEEPSEEK_API_KEY");
+  constructor(model: string, fields?: Omit<ChatDeepSeekInput, "model">);
+  constructor(fields?: Partial<ChatDeepSeekInput>);
+  constructor(
+    modelOrFields?: string | Partial<ChatDeepSeekInput>,
+    fieldsArg?: Omit<ChatDeepSeekInput, "model">
+  ) {
+    const fields =
+      typeof modelOrFields === "string"
+        ? { ...(fieldsArg ?? {}), model: modelOrFields }
+        : modelOrFields ?? {};
+    const apiKey = fields.apiKey || getEnvironmentVariable("DEEPSEEK_API_KEY");
     if (!apiKey) {
       throw new Error(
         `Deepseek API key not found. Please set the DEEPSEEK_API_KEY environment variable or pass the key into "apiKey" field.`
@@ -439,7 +448,7 @@ export class ChatDeepSeek extends ChatOpenAICompletions<ChatDeepSeekCallOptions>
       apiKey,
       configuration: {
         baseURL: "https://api.deepseek.com",
-        ...fields?.configuration,
+        ...fields.configuration,
       },
     });
   }

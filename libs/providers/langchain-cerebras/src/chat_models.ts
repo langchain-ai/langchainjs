@@ -456,8 +456,16 @@ export class ChatCerebras
 
   streaming?: boolean;
 
-  constructor(fields: ChatCerebrasInput) {
-    super(fields ?? {});
+  constructor(model: string, fields?: Omit<ChatCerebrasInput, "model">);
+  constructor(fields?: ChatCerebrasInput);
+  constructor(
+    modelOrFields?: string | ChatCerebrasInput,
+    fieldsArg?: Omit<ChatCerebrasInput, "model">
+  ) {
+    const fields = (typeof modelOrFields === "string"
+      ? { ...(fieldsArg ?? {}), model: modelOrFields }
+      : modelOrFields ?? {}) as ChatCerebrasInput;
+    super(fields);
     this.model = fields.model;
     this.maxCompletionTokens = fields.maxCompletionTokens;
     this.temperature = fields.temperature;
