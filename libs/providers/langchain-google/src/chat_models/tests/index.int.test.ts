@@ -1317,6 +1317,30 @@ describe.each(thinkingModelInfo)(
       // const textStepsText: string = textSteps.reduce((acc: string, val: ContentBlock.Text) => acc + val.text, "");
       // expect(textStepsText).toEqual(result.text);
     });
+
+    test("thinking - invoke with uppercase reasoningEffort", async () => {
+      const llm = newChatGoogle({
+        reasoningEffort: "HIGH",
+      });
+      const result = await llm.invoke("Why is the sky blue?");
+      const reasoningSteps = result.contentBlocks.filter(
+        (b) => b.type === "reasoning"
+      );
+      const textSteps = result.contentBlocks.filter((b) => b.type === "text");
+      expect(reasoningSteps?.length).toBeGreaterThan(0);
+      expect(textSteps?.length).toBeGreaterThan(0);
+    });
+
+    test("thinking - invoke with uppercase thinkingLevel", async () => {
+      const llm = newChatGoogle({
+        thinkingLevel: "LOW",
+      });
+      const result = await llm.invoke("What is 1 + 1?");
+      const hasThoughtSignature = result.contentBlocks.some(
+        (b) => "thoughtSignature" in b
+      );
+      expect(hasThoughtSignature).toBe(true);
+    });
   }
 );
 

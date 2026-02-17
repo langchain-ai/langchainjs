@@ -32,8 +32,8 @@ import type { Gemini } from "../chat_models/api-types.js";
  * @param {string | undefined} modelName
  *   The Gemini model name (e.g., "gemini-2.5-flash"). Used to determine token range constraints.
  * @param {string | undefined} effort
- *   The reasoning effort level: one of "none", "minimal", "low", "medium", "high".
- *   If undefined, the function returns undefined.
+ *   The reasoning effort level: one of "none", "minimal", "low", "medium", "high"
+ *   (case-insensitive). If undefined, the function returns undefined.
  * @returns {number | undefined}
  *   The corresponding token count for the given effort and model. Returns undefined if
  *   the effort is not recognized or not provided.
@@ -59,7 +59,8 @@ export function convertReasoningEffortToReasoningTokens(
     ? 24 * 1024
     : 32 * 1024;
 
-  switch (effort) {
+  const normalizedEffort = effort.toLowerCase();
+  switch (normalizedEffort) {
     case "none":
     case "minimal":
       return minTokens;
