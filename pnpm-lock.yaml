@@ -425,7 +425,7 @@ importers:
         specifier: ^0.3.15
         version: 0.3.17
       rolldown:
-        specifier: 1.0.0-rc.4
+        specifier: ^1.0.0-rc.4
         version: 1.0.0-rc.4
       tsdown:
         specifier: ^0.20.3
