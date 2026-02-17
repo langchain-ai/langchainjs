@@ -74,7 +74,7 @@ export class ChatCloudflareWorkersAI
     const fields =
       typeof modelOrFields === "string"
         ? { ...(paramsArg ?? {}), model: modelOrFields }
-        : modelOrFields ?? {};
+        : (modelOrFields ?? {});
     super(fields);
 
     this.model = fields.model ?? this.model;

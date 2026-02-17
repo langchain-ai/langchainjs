@@ -435,7 +435,7 @@ export class ChatDeepSeek extends ChatOpenAICompletions<ChatDeepSeekCallOptions>
     const fields =
       typeof modelOrFields === "string"
         ? { ...(fieldsArg ?? {}), model: modelOrFields }
-        : modelOrFields ?? {};
+        : (modelOrFields ?? {});
     const apiKey = fields.apiKey || getEnvironmentVariable("DEEPSEEK_API_KEY");
     if (!apiKey) {
       throw new Error(

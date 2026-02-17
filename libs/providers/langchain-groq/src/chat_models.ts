@@ -1029,7 +1029,7 @@ export class ChatGroq extends BaseChatModel<
     const params =
       typeof modelOrFields === "string"
         ? { ...(fields ?? {}), model: modelOrFields }
-        : modelOrFields ?? {};
+        : (modelOrFields ?? {});
     super(params);
 
     const apiKey = params.apiKey || getEnvironmentVariable("GROQ_API_KEY");

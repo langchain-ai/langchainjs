@@ -303,7 +303,7 @@ export class ChatVertexAI extends ChatGoogle {
     const fields =
       typeof modelOrFields === "string"
         ? { ...(paramsArg ?? {}), model: modelOrFields }
-        : modelOrFields ?? {};
+        : (modelOrFields ?? {});
     super({
       ...fields,
       platformType: "gcp",

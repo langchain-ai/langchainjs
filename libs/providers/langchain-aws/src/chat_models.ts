@@ -740,7 +740,7 @@ export class ChatBedrockConverse
     const fields =
       typeof modelOrFields === "string"
         ? { ...(params ?? {}), model: modelOrFields }
-        : modelOrFields ?? {};
+        : (modelOrFields ?? {});
     super(fields);
     const {
       profile,

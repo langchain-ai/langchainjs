@@ -984,7 +984,7 @@ export class ChatMistralAI<
     const fields =
       typeof modelOrFields === "string"
         ? { ...(fieldsArg ?? {}), model: modelOrFields }
-        : modelOrFields ?? {};
+        : (modelOrFields ?? {});
     super(fields);
     const apiKey = fields.apiKey ?? getEnvironmentVariable("MISTRAL_API_KEY");
     if (!apiKey) {
@@ -1007,8 +1007,7 @@ export class ChatMistralAI<
     this.streamUsage = fields.streamUsage ?? this.streamUsage;
     this.beforeRequestHooks =
       fields.beforeRequestHooks ?? this.beforeRequestHooks;
-    this.requestErrorHooks =
-      fields.requestErrorHooks ?? this.requestErrorHooks;
+    this.requestErrorHooks = fields.requestErrorHooks ?? this.requestErrorHooks;
     this.responseHooks = fields.responseHooks ?? this.responseHooks;
     this.presencePenalty = fields.presencePenalty ?? this.presencePenalty;
     this.frequencyPenalty = fields.frequencyPenalty ?? this.frequencyPenalty;

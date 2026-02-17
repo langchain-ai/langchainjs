@@ -8,14 +8,11 @@ describe("ChatCloudflareWorkersAI constructor overloads", () => {
   });
 
   it("accepts a model string with params", async () => {
-    const chat = new ChatCloudflareWorkersAI(
-      "@cf/meta/llama-3-8b-instruct",
-      {
-        cloudflareAccountId: "account",
-        cloudflareApiToken: "token",
-        streaming: true,
-      }
-    );
+    const chat = new ChatCloudflareWorkersAI("@cf/meta/llama-3-8b-instruct", {
+      cloudflareAccountId: "account",
+      cloudflareApiToken: "token",
+      streaming: true,
+    });
     expectTypeOf(chat).toEqualTypeOf<ChatCloudflareWorkersAI>();
   });
 

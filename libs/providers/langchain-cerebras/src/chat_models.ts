@@ -465,9 +465,11 @@ export class ChatCerebras
     modelOrFields?: string | ChatCerebrasInput,
     fieldsArg?: Omit<ChatCerebrasInput, "model">
   ) {
-    const fields = (typeof modelOrFields === "string"
-      ? { ...(fieldsArg ?? {}), model: modelOrFields }
-      : modelOrFields ?? {}) as ChatCerebrasInput;
+    const fields = (
+      typeof modelOrFields === "string"
+        ? { ...(fieldsArg ?? {}), model: modelOrFields }
+        : (modelOrFields ?? {})
+    ) as ChatCerebrasInput;
     super(fields);
     this.model = fields.model;
     this.maxCompletionTokens = fields.maxCompletionTokens;

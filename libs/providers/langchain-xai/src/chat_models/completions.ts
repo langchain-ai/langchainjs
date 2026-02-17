@@ -641,7 +641,7 @@ export class ChatXAI extends ChatOpenAICompletions<ChatXAICallOptions> {
     const fields =
       typeof modelOrFields === "string"
         ? { ...(fieldsArg ?? {}), model: modelOrFields }
-        : modelOrFields ?? {};
+        : (modelOrFields ?? {});
     const apiKey = fields?.apiKey || getEnvironmentVariable("XAI_API_KEY");
     if (!apiKey) {
       throw new Error(

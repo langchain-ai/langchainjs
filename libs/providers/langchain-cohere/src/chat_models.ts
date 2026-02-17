@@ -740,7 +740,7 @@ export class ChatCohere<
     const params =
       typeof modelOrFields === "string"
         ? { ...(fields ?? {}), model: modelOrFields }
-        : modelOrFields ?? {};
+        : (modelOrFields ?? {});
     super(params);
 
     this.client = getCohereClient(params);

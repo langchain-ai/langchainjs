@@ -76,7 +76,7 @@ export class ChatYandexGPT extends BaseChatModel {
     const params =
       typeof modelOrFields === "string"
         ? { ...(fields ?? {}), model: modelOrFields }
-        : modelOrFields ?? {};
+        : (modelOrFields ?? {});
     super(params);
 
     const apiKey = params.apiKey ?? getEnvironmentVariable("YC_API_KEY");

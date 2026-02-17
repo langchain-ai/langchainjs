@@ -510,7 +510,7 @@ export class ChatOllama
     const fields =
       typeof modelOrFields === "string"
         ? { ...(fieldsArg ?? {}), model: modelOrFields }
-        : modelOrFields ?? {};
+        : (modelOrFields ?? {});
     super(fields);
 
     this.baseUrl =

@@ -1012,7 +1012,10 @@ export class ChatAnthropicMessages<
    */
   createClient: (options: ClientOptions) => Anthropic;
 
-  constructor(model: string, fields?: Omit<ChatAnthropicInput, "model" | "modelName">);
+  constructor(
+    model: string,
+    fields?: Omit<ChatAnthropicInput, "model" | "modelName">
+  );
   constructor(fields?: ChatAnthropicInput);
   constructor(
     modelOrFields?: string | ChatAnthropicInput,
@@ -1730,5 +1733,4 @@ export class ChatAnthropicMessages<
   }
 }
 
-export class ChatAnthropic extends ChatAnthropicMessages {
-}
+export class ChatAnthropic extends ChatAnthropicMessages {}

@@ -248,12 +248,15 @@ export class ChatBaiduQianfan
     modelOrFields?:
       | string
       | (Partial<BaiduQianfanChatInput> & BaseChatModelParams),
-    paramsArg?: Omit<Partial<BaiduQianfanChatInput> & BaseChatModelParams, "model">
+    paramsArg?: Omit<
+      Partial<BaiduQianfanChatInput> & BaseChatModelParams,
+      "model"
+    >
   ) {
     const fields =
       typeof modelOrFields === "string"
         ? { ...(paramsArg ?? {}), model: modelOrFields }
-        : modelOrFields ?? {};
+        : (modelOrFields ?? {});
 
     super(fields);
 

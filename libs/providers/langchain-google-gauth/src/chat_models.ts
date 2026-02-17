@@ -33,7 +33,7 @@ export class ChatGoogle
     const fields =
       typeof modelOrFields === "string"
         ? { ...(paramsArg ?? {}), model: modelOrFields }
-        : modelOrFields ?? {};
+        : (modelOrFields ?? {});
     super(fields);
   }
 
