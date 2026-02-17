@@ -36,12 +36,14 @@
     "@aws-sdk/credential-provider-node": "^3.750.0"
   },
   "peerDependencies": {
-    "@langchain/core": "^1.0.0"
+    "@langchain/core": "^1.0.0",
+    "zod": "^3.25.76"
   },
   "devDependencies": {
     "@aws-sdk/types": "^3.973.1",
     "@langchain/core": "workspace:^",
     "@langchain/eslint": "workspace:*",
+    "bedrock-agentcore": "^0.2.0",
     "@langchain/standard-tests": "workspace:*",
     "@smithy/types": "^4.12.0",
     "@langchain/tsconfig": "workspace:*",
