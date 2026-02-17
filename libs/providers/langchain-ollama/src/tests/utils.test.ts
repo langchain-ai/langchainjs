@@ -36,7 +36,9 @@ test("convertToOllamaMessages preserves tool_calls when AIMessage content is a s
 
   const result = convertToOllamaMessages([aiMsg]);
 
-  const toolCallMsg = result.find((m) => m.tool_calls && m.tool_calls.length > 0);
+  const toolCallMsg = result.find(
+    (m) => m.tool_calls && m.tool_calls.length > 0
+  );
   expect(toolCallMsg).toBeDefined();
   expect(toolCallMsg!.content).toBe("I'll look that up for you.");
   expect(toolCallMsg!.tool_calls![0].id).toBe("call_123");
