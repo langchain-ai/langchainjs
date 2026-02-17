@@ -1,7 +1,7 @@
 import path from "node:path";
 import fs from "node:fs/promises";
 import type { Plugin } from "rolldown";
-import { isSafeProjectPath } from "../utils.ts";
+import { isSafeProjectPath, toPosixPath } from "../utils.ts";
 
 /**
  * Options for configuring the CJS compatibility plugin.
@@ -134,12 +134,11 @@ export function cjsCompatPlugin(param: CjsCompatPluginOptions = {}): Plugin {
           const topLevelPath = fileName.split("/")[0];
           pathsToEmit.add(topLevelPath);
           if (options.mode === "generate") {
-            // Write directly to the filesystem instead of using
-            // this.emitFile — rolldown 1.0.0-rc.3+ rejects relative
-            // paths like `../${fileName}` in emitFile's fileName.
-            const target = path.resolve(process.env.INIT_CWD ?? "", fileName);
+            const target = path.resolve(`./${fileName}`);
             if (isSafeProjectPath(target)) {
-              await fs.mkdir(path.dirname(target), { recursive: true });
+              await fs
+                .mkdir(path.dirname(target), { recursive: true })
+                .catch(() => {});
               await fs.writeFile(target, source);
             }
           }
@@ -170,7 +169,6 @@ export function cjsCompatPlugin(param: CjsCompatPluginOptions = {}): Plugin {
           if (dirPath !== ".") {
             const target = path.resolve(dirPath);
             if (isSafeProjectPath(target)) {
-              await fs.rm(target, { recursive: true }).catch(() => {});
               await fs.rm(target, { recursive: true }).catch(() => {});
             }
           }
