@@ -115,7 +115,7 @@
     "@browserbasehq/stagehand": "^1.3.0",
     "@clickhouse/client": "^0.2.5",
     "@cloudflare/workers-types": "^4.20250801.0",
-    "@elastic/elasticsearch": "^8.4.0",
+    "@elastic/elasticsearch": "^9.3.1",
     "@eslint/js": "^9.36.0",
     "@faker-js/faker": "^10.0.0",
     "@getmetal/metal-sdk": "^4.0.0",
