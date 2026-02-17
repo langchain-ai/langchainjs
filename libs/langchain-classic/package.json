@@ -185,7 +185,7 @@
     "dotenv": "^16.0.3",
     "dpdm": "^3.14.0",
     "duck-duck-scrape": "^2.2.5",
-    "eslint": "^9.36.0",
+    "eslint": "^10.0.0",
     "exa-js": "^1.0.12",
     "firebase-admin": "^13.6.1",
     "graphql": "^16.6.0",

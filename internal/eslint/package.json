@@ -14,7 +14,7 @@
     "langchain"
   ],
   "peerDependencies": {
-    "eslint": "^9.34.0",
+    "eslint": "^10.0.0",
     "typescript": "^5.9.2"
   },
   "dependencies": {
@@ -31,7 +31,7 @@
   "devDependencies": {
     "@langchain/tsconfig": "workspace:*",
     "@tsconfig/recommended": "^1.0.10",
-    "eslint": "^9.34.0",
+    "eslint": "^10.0.0",
     "typescript": "^5.9.2"
   },
   "scripts": {

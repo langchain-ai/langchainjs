@@ -150,7 +150,7 @@
     "dpdm": "^3.14.0",
     "duck-duck-scrape": "^2.2.5",
     "epub2": "^3.0.1",
-    "eslint": "^9.34.0",
+    "eslint": "^10.0.0",
     "faiss-node": "^0.5.1",
     "fast-xml-parser": "^5.3.6",
     "firebase-admin": "^13.6.1",
