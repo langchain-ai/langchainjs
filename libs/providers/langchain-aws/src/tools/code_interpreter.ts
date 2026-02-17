@@ -279,8 +279,8 @@ export class CodeInterpreterToolkit extends BaseToolkit {
   }
 
   // The file-system methods below are intentionally public so they can be
-  // called programmatically for context management (e.g. pre-loading data
-  // files or reading results outside of the agent tool loop).
+  // called programmatically for context management (e.g. offloading large tool responses
+  // or reading results outside of the agent tool loop).
 
   async readFiles(
     input: ReadFilesInput,
