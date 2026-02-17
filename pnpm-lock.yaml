@@ -425,7 +425,7 @@ importers:
         specifier: ^0.3.15
         version: 0.3.17
       rolldown:
-        specifier: 1.0.0-rc.4
+        specifier: ^1.0.0-rc.4
         version: 1.0.0-rc.4
       tsdown:
         specifier: ^0.20.3
@@ -16560,17 +16560,17 @@ snapshots:
     dependencies:
       '@aws-crypto/sha256-browser': 5.2.0
       '@aws-crypto/sha256-js': 5.2.0
-      '@aws-sdk/core': 3.973.9
-      '@aws-sdk/credential-provider-node': 3.972.8
+      '@aws-sdk/core': 3.973.10
+      '@aws-sdk/credential-provider-node': 3.972.9
       '@aws-sdk/middleware-host-header': 3.972.3
       '@aws-sdk/middleware-logger': 3.972.3
       '@aws-sdk/middleware-recursion-detection': 3.972.3
-      '@aws-sdk/middleware-user-agent': 3.972.9
+      '@aws-sdk/middleware-user-agent': 3.972.10
       '@aws-sdk/region-config-resolver': 3.972.3
       '@aws-sdk/types': 3.973.1
       '@aws-sdk/util-endpoints': 3.989.0
       '@aws-sdk/util-user-agent-browser': 3.972.3
-      '@aws-sdk/util-user-agent-node': 3.972.7
+      '@aws-sdk/util-user-agent-node': 3.972.8
       '@smithy/config-resolver': 4.4.6
       '@smithy/core': 3.23.0
       '@smithy/fetch-http-handler': 5.3.9
@@ -20617,7 +20617,7 @@ snapshots:
       '@aws-sdk/client-bedrock-agent-runtime': 3.992.0
       '@aws-sdk/client-bedrock-runtime': 3.989.0
       '@aws-sdk/client-kendra': 3.989.0
-      '@aws-sdk/credential-provider-node': 3.972.8
+      '@aws-sdk/credential-provider-node': 3.972.9
       '@langchain/core': link:libs/langchain-core
     transitivePeerDependencies:
       - aws-crt
