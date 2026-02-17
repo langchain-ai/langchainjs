@@ -40,9 +40,7 @@ export function wrapOpenAIClientError(e: unknown) {
     error.name = "AbortError";
   } else if (_isContextOverflowError(e)) {
     const message =
-      "message" in e && typeof e.message === "string"
-        ? e.message
-        : String(e);
+      "message" in e && typeof e.message === "string" ? e.message : String(e);
     error = new ContextOverflowError(message, { cause: e });
   } else if (
     "status" in e &&
