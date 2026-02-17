@@ -3,6 +3,7 @@
 import type { AIMessageChunk } from "../messages/ai.js";
 
 export type LangChainErrorCodes =
+  | "CONTEXT_OVERFLOW"
   | "INVALID_PROMPT_INPUT"
   | "INVALID_TOOL_RESULTS"
   | "MESSAGE_COERCION_FAILURE"
@@ -57,6 +58,39 @@ export class ModelAbortError extends Error {
       error.name === "ModelAbortError" &&
       "lc_error_code" in error &&
       error.lc_error_code === "MODEL_ABORTED"
+    );
+  }
+}
+
+/**
+ * Error thrown when input exceeds the model's context limit.
+ *
+ * This exception is raised by chat models when the input tokens exceed
+ * the maximum context window supported by the model.
+ */
+export class ContextOverflowError extends Error {
+  readonly name = "ContextOverflowError";
+
+  readonly lc_error_code = "CONTEXT_OVERFLOW";
+
+  constructor(message: string, options?: ErrorOptions) {
+    super(message, options);
+    if (Error.captureStackTrace) {
+      Error.captureStackTrace(this, ContextOverflowError);
+    }
+  }
+
+  /**
+   * Type guard to check if an error is a ContextOverflowError
+   */
+  static isInstance(error: unknown): error is ContextOverflowError {
+    return (
+      typeof error === "object" &&
+      error !== null &&
+      "name" in error &&
+      error.name === "ContextOverflowError" &&
+      "lc_error_code" in error &&
+      error.lc_error_code === "CONTEXT_OVERFLOW"
     );
   }
 }
