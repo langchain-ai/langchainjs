@@ -111,3 +111,98 @@ test("configure respects tracingEnabled=false from RunTree even when env tracing
 
   vi.unstubAllEnvs();
 });
+
+test("configure removes inherited LangChainTracer when tracingEnabled=false from RunTree", async () => {
+  // Enable tracing via environment variable
+  vi.stubEnv("LANGCHAIN_TRACING_V2", "true");
+
+  // Mock getTraceableRunTree to return a RunTree with tracingEnabled=false
+  vi.spyOn(LangChainTracer, "getTraceableRunTree").mockReturnValue(
+    new RunTree({
+      name: "test-run",
+      tracingEnabled: false,
+      id: "test-run-id",
+    })
+  );
+
+  // Create a callback manager with an inherited LangChainTracer
+  // (simulates a child run inheriting a tracer from a traced parent)
+  const parentManager = new CallbackManager();
+  const inheritedTracer = new LangChainTracer();
+  parentManager.addHandler(inheritedTracer, true);
+
+  const manager = CallbackManager.configure(parentManager);
+
+  // The inherited tracer should be REMOVED because the RunTree
+  // explicitly disabled tracing
+  const hasTracer = manager?.handlers.some(
+    (handler) => handler.name === "langchain_tracer"
+  );
+  expect(hasTracer).toBe(false);
+
+  vi.unstubAllEnvs();
+});
+
+test("configure keeps inherited LangChainTracer when tracingEnabled=true from RunTree", async () => {
+  // Enable tracing via environment variable
+  vi.stubEnv("LANGCHAIN_TRACING_V2", "true");
+
+  // Mock getTraceableRunTree to return a RunTree with tracingEnabled=true
+  vi.spyOn(LangChainTracer, "getTraceableRunTree").mockReturnValue(
+    new RunTree({
+      name: "test-run",
+      tracingEnabled: true,
+      id: "test-run-id",
+    })
+  );
+
+  // Create a callback manager with an inherited LangChainTracer
+  const parentManager = new CallbackManager();
+  const inheritedTracer = new LangChainTracer();
+  parentManager.addHandler(inheritedTracer, true);
+
+  const manager = CallbackManager.configure(parentManager);
+
+  // The inherited tracer should be KEPT because tracing is enabled
+  const hasTracer = manager?.handlers.some(
+    (handler) => handler.name === "langchain_tracer"
+  );
+  expect(hasTracer).toBe(true);
+
+  vi.unstubAllEnvs();
+});
+
+test("configure removes inherited LangChainTracer but keeps other handlers when tracingEnabled=false", async () => {
+  // Enable tracing via environment variable
+  vi.stubEnv("LANGCHAIN_TRACING_V2", "true");
+
+  // Mock getTraceableRunTree to return a RunTree with tracingEnabled=false
+  vi.spyOn(LangChainTracer, "getTraceableRunTree").mockReturnValue(
+    new RunTree({
+      name: "test-run",
+      tracingEnabled: false,
+      id: "test-run-id",
+    })
+  );
+
+  // Create a callback manager with both a LangChainTracer and a custom handler
+  const parentManager = new CallbackManager();
+  const inheritedTracer = new LangChainTracer();
+  parentManager.addHandler(inheritedTracer, true);
+  parentManager.addHandler(handlerInstance, true);
+
+  const manager = CallbackManager.configure(parentManager);
+
+  // The LangChainTracer should be removed but the custom handler should remain
+  const hasTracer = manager?.handlers.some(
+    (handler) => handler.name === "langchain_tracer"
+  );
+  expect(hasTracer).toBe(false);
+
+  const hasCustomHandler = manager?.handlers.some(
+    (handler) => handler.name === "TestHandler"
+  );
+  expect(hasCustomHandler).toBe(true);
+
+  vi.unstubAllEnvs();
+});
