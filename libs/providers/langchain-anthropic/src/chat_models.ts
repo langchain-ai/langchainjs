@@ -1731,19 +1731,4 @@ export class ChatAnthropicMessages<
 }
 
 export class ChatAnthropic extends ChatAnthropicMessages {
-  constructor(
-    model: string,
-    fields?: Omit<ChatAnthropicInput, "model" | "modelName">
-  );
-  constructor(fields?: ChatAnthropicInput);
-  constructor(
-    modelOrFields?: string | ChatAnthropicInput,
-    fieldsArg?: Omit<ChatAnthropicInput, "model" | "modelName">
-  ) {
-    if (typeof modelOrFields === "string") {
-      super({ ...fieldsArg, model: modelOrFields });
-    } else {
-      super(modelOrFields);
-    }
-  }
 }

@@ -30,15 +30,6 @@ test("constructor supports model shorthand for ChatAnthropicMessages", () => {
   expect(model.modelName).toBe("claude-3-haiku-20240307");
 });
 
-test("constructor supports model shorthand for ChatAnthropic", () => {
-  const model = new ChatAnthropic("claude-3-haiku-20240307", {
-    anthropicApiKey: "testing",
-  });
-
-  expect(model.model).toBe("claude-3-haiku-20240307");
-  expect(model.modelName).toBe("claude-3-haiku-20240307");
-});
-
 test("withStructuredOutput with output validation", async () => {
   const model = new ChatAnthropic({
     modelName: "claude-3-haiku-20240307",

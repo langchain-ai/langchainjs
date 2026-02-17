@@ -125,12 +125,12 @@ export interface ChatMistralAIInput
    * @deprecated Use `model` instead.
    * @default {"mistral-small-latest"}
    */
-  modelName?: string;
+  modelName?: MistralAIChatCompletionRequest["model"];
   /**
    * The name of the model to use.
    * @default {"mistral-small-latest"}
    */
-  model?: string;
+  model?: MistralAIChatCompletionRequest["model"];
   /**
    * Override the default server URL used by the Mistral SDK.
    * @deprecated use serverURL instead
@@ -972,7 +972,10 @@ export class ChatMistralAI<
 
   numCompletions?: number;
 
-  constructor(model: string, fields?: Omit<ChatMistralAIInput, "model">);
+  constructor(
+    model: MistralAIChatCompletionRequest["model"],
+    fields?: Omit<ChatMistralAIInput, "model">
+  );
   constructor(fields?: ChatMistralAIInput);
   constructor(
     modelOrFields?: string | ChatMistralAIInput,

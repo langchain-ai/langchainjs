@@ -88,7 +88,7 @@ export interface ChatOllamaInput
    * will be pulled.
    * @default "llama3"
    */
-  model?: string;
+  model?: OllamaChatRequest["model"];
   /**
    * The host URL of the Ollama server.
    * Defaults to `OLLAMA_BASE_URL` if set.
@@ -498,7 +498,10 @@ export class ChatOllama
 
   think?: boolean;
 
-  constructor(model: string, fields?: Omit<ChatOllamaInput, "model">);
+  constructor(
+    model: OllamaChatRequest["model"],
+    fields?: Omit<ChatOllamaInput, "model">
+  );
   constructor(fields?: ChatOllamaInput);
   constructor(
     modelOrFields?: string | ChatOllamaInput,

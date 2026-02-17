@@ -107,7 +107,7 @@ export interface GoogleGenerativeAIChatInput
    *
    * Note: The format must follow the pattern - `{model}`
    */
-  model: string;
+  model: ModelParams["model"];
 
   /**
    * Controls the randomness of the output.
@@ -655,12 +655,12 @@ export class ChatGoogleGenerativeAI
   }
 
   constructor(
-    model: string,
+    model: ModelParams["model"],
     fields?: Omit<GoogleGenerativeAIChatInput, "model">
   );
   constructor(fields: GoogleGenerativeAIChatInput);
   constructor(
-    modelOrFields: string | GoogleGenerativeAIChatInput,
+    modelOrFields: ModelParams["model"] | GoogleGenerativeAIChatInput,
     fieldsArg?: Omit<GoogleGenerativeAIChatInput, "model">
   ) {
     const fields =

@@ -246,7 +246,7 @@ export interface ChatGroqInput extends BaseChatModelParams {
   /**
    * The name of the model to use.
    */
-  model: string;
+  model: ChatCompletionCreateParams["model"];
   /**
    * Up to 4 sequences where the API will stop generating further tokens. The
    * returned text will not contain the stop sequence.
@@ -1017,7 +1017,10 @@ export class ChatGroq extends BaseChatModel<
     return [...super.callKeys, ...ALL_CALL_KEYS];
   }
 
-  constructor(model: string, fields?: Omit<ChatGroqInput, "model">);
+  constructor(
+    model: ChatCompletionCreateParams["model"],
+    fields?: Omit<ChatGroqInput, "model">
+  );
   constructor(fields: ChatGroqInput);
   constructor(
     modelOrFields?: string | ChatGroqInput,

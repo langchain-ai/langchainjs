@@ -46,7 +46,7 @@ import {
  * Input to chat model class.
  */
 export interface ChatCerebrasInput extends BaseChatModelParams {
-  model: string;
+  model: Cerebras.ChatCompletionCreateParams["model"];
   apiKey?: string;
   streaming?: boolean;
   maxTokens?: number;
@@ -456,7 +456,10 @@ export class ChatCerebras
 
   streaming?: boolean;
 
-  constructor(model: string, fields?: Omit<ChatCerebrasInput, "model">);
+  constructor(
+    model: Cerebras.ChatCompletionCreateParams["model"],
+    fields?: Omit<ChatCerebrasInput, "model">
+  );
   constructor(fields?: ChatCerebrasInput);
   constructor(
     modelOrFields?: string | ChatCerebrasInput,
