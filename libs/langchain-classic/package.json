@@ -120,7 +120,7 @@
     "@faker-js/faker": "^10.0.0",
     "@getmetal/metal-sdk": "^4.0.0",
     "@getzep/zep-cloud": "^1.0.12",
-    "@getzep/zep-js": "^0.9.0",
+    "@getzep/zep-js": "^2.0.2",
     "@gomomento/sdk": "1.117.2",
     "@google/generative-ai": "^0.7.0",
     "@lancedb/lancedb": "^0.19.1",
