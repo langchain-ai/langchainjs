@@ -97,8 +97,8 @@ importers:
         specifier: ^1.0.12
         version: 1.0.12(@langchain/core@libs+langchain-core)(encoding@0.1.13)(langchain@libs+langchain)
       '@getzep/zep-js':
-        specifier: ^0.9.0
-        version: 0.9.0
+        specifier: ^2.0.2
+        version: 2.0.2(encoding@0.1.13)
       '@gomomento/sdk':
         specifier: 1.117.2
         version: 1.117.2
@@ -831,8 +831,8 @@ importers:
         specifier: ^1.0.12
         version: 1.0.12(@langchain/core@libs+langchain-core)(encoding@0.1.13)(langchain@libs+langchain)
       '@getzep/zep-js':
-        specifier: ^0.9.0
-        version: 0.9.0
+        specifier: ^2.0.2
+        version: 2.0.2(encoding@0.1.13)
       '@gomomento/sdk':
         specifier: 1.117.2
         version: 1.117.2
@@ -1211,8 +1211,8 @@ importers:
         specifier: ^1.0.6
         version: 1.0.12(@langchain/core@libs+langchain-core)(encoding@0.1.13)(langchain@0.3.30(ffa60b9a123c3b24255db8c4d595f35b))
       '@getzep/zep-js':
-        specifier: ^0.9.0
-        version: 0.9.0
+        specifier: ^2.0.2
+        version: 2.0.2(encoding@0.1.13)
       '@gomomento/sdk-core':
         specifier: ^1.117.2
         version: 1.117.2
@@ -5938,9 +5938,8 @@ packages:
       langchain:
         optional: true
 
-  '@getzep/zep-js@0.9.0':
-    resolution: {integrity: sha512-GNaH7EwAisAaMuaUZzOR3hk3yTc7LXrqboPfSN6mZE0rAWGHOjT7V53Hec6yFJqFyXs4/7DsJvZlOcs+gEygNQ==}
-    engines: {node: '>=18.0.0'}
+  '@getzep/zep-js@2.0.2':
+    resolution: {integrity: sha512-Xf2oZIYBE70ALDvemajk4EH6NcLEeUXKw5aQkzPL1piw5GefrtPbrKNhlkZaO4GbXo9a6SK9xr84yUnb+9BoeA==}
 
   '@gomomento/generated-types@0.126.0':
     resolution: {integrity: sha512-6lhfNXjCyFe6CuEDOHIF5W8k+jLhW8OMBs8YacbnWdNeqskmRQrb1eVY9f3iFcYY3J4m7jBBKawLNY7jUvT4eQ==}
@@ -8300,10 +8299,6 @@ packages:
   '@supabase/supabase-js@2.95.3':
     resolution: {integrity: sha512-Fukw1cUTQ6xdLiHDJhKKPu6svEPaCEDvThqCne3OaQyZvuq2qjhJAd91kJu3PXLG18aooCgYBaB6qQz35hhABg==}
     engines: {node: '>=20.0.0'}
-
-  '@supercharge/promise-pool@3.2.0':
-    resolution: {integrity: sha512-pj0cAALblTZBPtMltWOlZTQSLT07jIaFNeM8TWoJD1cQMgDB9mcMlVMoetiB35OzNJpqQ2b+QEtwiR9f20mADg==}
-    engines: {node: '>=8'}
 
   '@swc/core-darwin-arm64@1.15.11':
     resolution: {integrity: sha512-QoIupRWVH8AF1TgxYyeA5nS18dtqMuxNwchjBIwJo3RdwLEFiJq6onOx9JAxHtuPwUkIVuU2Xbp+jCJ7Vzmgtg==}
@@ -14202,6 +14197,14 @@ packages:
 
   qs@6.14.1:
     resolution: {integrity: sha512-4EK3+xJl8Ts67nLYNwqw/dsFVnCf+qR7RgXSK9jEEm9unao3njwMDdmsdvoKBKHzxd7tCYz5e5M+SnMjdtXGQQ==}
+    engines: {node: '>=0.6'}
+
+  qs@6.14.2:
+    resolution: {integrity: sha512-V/yCWTTF7VJ9hIh18Ugr2zhJMP01MY7c5kh4J870L7imm6/DIzBsNLTXzMwUA3yZ5b/KBqLx8Kp3uRvd7xSe3Q==}
+    engines: {node: '>=0.6'}
+
+  qs@6.15.0:
+    resolution: {integrity: sha512-mAZTtNCeetKMH+pSjrb76NAM8V9a05I9aBZOHztWy/UqcJdQYNsf59vrRKWnojAT9Y+GbIvoTBC++CPHqpDBhQ==}
     engines: {node: '>=0.6'}
 
   quansync@0.2.11:
@@ -20306,11 +20309,15 @@ snapshots:
     transitivePeerDependencies:
       - encoding
 
-  '@getzep/zep-js@0.9.0':
+  '@getzep/zep-js@2.0.2(encoding@0.1.13)':
     dependencies:
-      '@supercharge/promise-pool': 3.2.0
-      semver: 7.7.4
-      typescript: 5.9.3
+      form-data: 4.0.5
+      formdata-node: 6.0.3
+      node-fetch: 2.7.0(encoding@0.1.13)
+      qs: 6.11.2
+      url-join: 4.0.1
+    transitivePeerDependencies:
+      - encoding
 
   '@gomomento/generated-types@0.126.0(@grpc/grpc-js@1.13.1)(google-protobuf@3.21.2)':
     dependencies:
@@ -22857,8 +22864,6 @@ snapshots:
       - bufferutil
       - utf-8-validate
 
-  '@supercharge/promise-pool@3.2.0': {}
-
   '@swc/core-darwin-arm64@1.15.11':
     optional: true
 
@@ -24427,7 +24432,7 @@ snapshots:
       http-errors: 2.0.1
       iconv-lite: 0.4.24
       on-finished: 2.4.1
-      qs: 6.14.1
+      qs: 6.14.2
       raw-body: 2.5.3
       type-is: 1.6.18
       unpipe: 1.0.0
@@ -24442,7 +24447,7 @@ snapshots:
       http-errors: 2.0.1
       iconv-lite: 0.7.2
       on-finished: 2.4.1
-      qs: 6.14.1
+      qs: 6.15.0
       raw-body: 3.0.2
       type-is: 2.0.1
     transitivePeerDependencies:
@@ -26309,7 +26314,7 @@ snapshots:
       parseurl: 1.3.3
       path-to-regexp: 0.1.12
       proxy-addr: 2.0.7
-      qs: 6.14.1
+      qs: 6.14.2
       range-parser: 1.2.1
       safe-buffer: 5.2.1
       send: 0.19.2
@@ -26933,7 +26938,7 @@ snapshots:
       extend: 3.0.2
       gaxios: 7.1.3
       google-auth-library: 10.5.0
-      qs: 6.14.1
+      qs: 6.15.0
       url-template: 2.0.8
     transitivePeerDependencies:
       - supports-color
@@ -30022,6 +30027,14 @@ snapshots:
     dependencies:
       side-channel: 1.1.0
 
+  qs@6.14.2:
+    dependencies:
+      side-channel: 1.1.0
+
+  qs@6.15.0:
+    dependencies:
+      side-channel: 1.1.0
+
   quansync@0.2.11: {}
 
   quansync@1.0.0: {}
@@ -31761,7 +31774,7 @@ snapshots:
   url@0.11.4:
     dependencies:
       punycode: 1.4.1
-      qs: 6.14.1
+      qs: 6.15.0
 
   usearch@2.21.4:
     dependencies:
