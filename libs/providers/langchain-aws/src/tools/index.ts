@@ -10,5 +10,3 @@ export type {
   DeleteFilesInput,
   UploadFileInput,
 } from "./code_interpreter.js";
-
-

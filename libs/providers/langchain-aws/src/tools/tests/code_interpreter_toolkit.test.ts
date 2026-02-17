@@ -69,12 +69,16 @@ describe("Zod Schemas", () => {
 
     it("should accept javascript and typescript languages", () => {
       expect(
-        ExecuteCodeInputSchema.parse({ code: "console.log(1)", language: "javascript" })
-          .language
+        ExecuteCodeInputSchema.parse({
+          code: "console.log(1)",
+          language: "javascript",
+        }).language
       ).toBe("javascript");
       expect(
-        ExecuteCodeInputSchema.parse({ code: "console.log(1)", language: "typescript" })
-          .language
+        ExecuteCodeInputSchema.parse({
+          code: "console.log(1)",
+          language: "typescript",
+        }).language
       ).toBe("typescript");
     });
 

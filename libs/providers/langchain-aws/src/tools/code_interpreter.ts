@@ -75,9 +75,7 @@ export const ListFilesInputSchema = z.object({
 });
 
 export const DeleteFilesInputSchema = z.object({
-  paths: z
-    .array(z.string())
-    .describe("List of file paths to delete"),
+  paths: z.array(z.string()).describe("List of file paths to delete"),
 });
 
 export const UploadFileInputSchema = z.object({
