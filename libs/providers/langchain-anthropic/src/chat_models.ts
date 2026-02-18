@@ -1023,8 +1023,8 @@ export class ChatAnthropicMessages<
   ) {
     const fields =
       typeof modelOrFields === "string"
-        ? { ...fieldsArg, model: modelOrFields }
-        : modelOrFields;
+        ? { ...(fieldsArg ?? {}), model: modelOrFields }
+        : (modelOrFields ?? {});
     super(fields ?? {});
 
     this.anthropicApiKey =
