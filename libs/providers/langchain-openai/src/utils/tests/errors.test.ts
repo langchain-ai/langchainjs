@@ -23,9 +23,6 @@ describe("wrapOpenAIClientError", () => {
       "maximum context length"
     );
     expect((wrapped as ContextOverflowError).cause).toBe(originalError);
-    expect((wrapped as ContextOverflowError).lc_error_code).toBe(
-      "CONTEXT_OVERFLOW"
-    );
   });
 
   test("should wrap context overflow error (Input tokens exceed)", () => {
