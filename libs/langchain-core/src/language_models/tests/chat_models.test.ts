@@ -475,28 +475,34 @@ test("Test ChatModel cache key hashes base64 data for compactness", async () => 
 });
 
 test("Test ChatModel cache differentiates by message name", async () => {
-  const model = new FakeListChatModel({
-    responses: ["response-for-lead", "response-for-intern"],
+  const model = new FakeChatModel({
     cache: true,
   });
   if (!model.cache) {
     throw new Error("Cache not enabled");
   }
 
-  const content = [{ type: "text", text: "Approve the PR" }];
+  const content = [
+    {
+      type: "image_url",
+      image_url: { url: "data:image/png;base64,SAME_IMAGE" },
+    },
+    { type: "text", text: "What do you see?" },
+  ];
 
-  const result1 = await model.invoke([
-    new HumanMessage({ content, name: "tech-lead" }),
-  ]);
-  const result2 = await model.invoke([
-    new HumanMessage({ content, name: "intern" }),
-  ]);
+  const runCollector = new RunCollectorCallbackHandler();
 
-  // Same content but different names must produce distinct cache keys,
-  // so the second call should hit the model (not the cache) and get
-  // the next response from FakeListChatModel.
-  expect(result1.content).toBe("response-for-lead");
-  expect(result2.content).toBe("response-for-intern");
+  await model.invoke([new HumanMessage({ content, name: "tech-lead" })], {
+    callbacks: [runCollector],
+  });
+  await model.invoke([new HumanMessage({ content, name: "intern" })], {
+    callbacks: [runCollector],
+  });
+
+  // Same multimodal content but different names must produce distinct
+  // cache keys, so neither call should be a cache hit for the other.
+  expect(runCollector.tracedRuns[0].extra?.cached).not.toBe(true);
+  expect(runCollector.tracedRuns[1].extra?.cached).not.toBe(true);
 });
 
 test("Test ChatModel can emit a custom event", async () => {
