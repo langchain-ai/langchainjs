@@ -70,6 +70,7 @@ class MockResponse implements Response {
 class MockStreamingResponse implements Response {
   private readonly bodyText: string;
 
+
   readonly headers: Headers = new Headers();
   readonly ok: boolean = true;
   readonly redirected: boolean = false;
@@ -116,6 +117,76 @@ class MockStreamingResponse implements Response {
       filePath: "",
       url: this.url,
     });
+  }
+}
+
+class MockChunkStreamingResponse implements Response {
+  readonly headers: Headers = new Headers();
+  readonly ok: boolean = true;
+  readonly redirected: boolean = false;
+  readonly status: number = 200;
+  readonly statusText: string = "OK";
+  readonly type: ResponseType = "basic";
+  readonly url: string = "http://localhost";
+  readonly bodyUsed: boolean = false;
+  readonly body: ReadableStream<Uint8Array>;
+
+  constructor(chunks: object[]) {
+    const encoder = new TextEncoder();
+    this.body = new ReadableStream({
+      start(controller) {
+        for (const chunk of chunks) {
+          const sseEvent = `data: ${JSON.stringify(chunk)}\n\n`;
+          controller.enqueue(encoder.encode(sseEvent));
+        }
+        controller.close();
+      },
+    });
+  }
+
+  async arrayBuffer(): Promise<ArrayBuffer> {
+    throw new Error("Not implemented");
+  }
+  async blob(): Promise<Blob> {
+    throw new Error("Not implemented");
+  }
+  async formData(): Promise<FormData> {
+    throw new Error("Not implemented");
+  }
+  async json(): Promise<unknown> {
+    throw new Error("Not implemented - use streaming");
+  }
+  async text(): Promise<string> {
+    throw new Error("Not implemented");
+  }
+  async bytes(): Promise<Uint8Array> {
+    throw new Error("Not implemented");
+  }
+  clone(): Response {
+    throw new Error("Not implemented");
+  }
+}
+
+class MockStreamingApiClient extends ApiClient {
+  request: Request;
+
+  response: Response;
+
+  private chunks: object[];
+
+  constructor(chunks: object[]) {
+    super();
+    this.chunks = chunks;
+  }
+
+  async fetch(request: Request): Promise<Response> {
+    this.request = request;
+    this.response = new MockChunkStreamingResponse(this.chunks);
+    return this.response;
+  }
+
+  hasApiKey(): boolean {
+    return false;
   }
 }
 
@@ -621,5 +692,243 @@ describe("Google Mock", () => {
       expect(res).toBeDefined();
       expect(res!.usage_metadata).toBeUndefined();
     });
+  });
+
+  test("handleLLMNewToken is called for non-text streaming chunks", async () => {
+    const execCodeChunk = {
+      candidates: [
+        {
+          content: {
+            parts: [
+              {
+                executableCode: {
+                  language: "PYTHON",
+                  code: "fib = []\na, b = 0, 1\nfor _ in range(10):\n    fib.append(a)\n    a, b = b, a + b\nprint(fib)\n",
+                },
+              },
+            ],
+            role: "model",
+          },
+          index: 0,
+        },
+      ],
+      usageMetadata: {
+        promptTokenCount: 19,
+        candidatesTokenCount: 55,
+        totalTokenCount: 155,
+        promptTokensDetails: [{ modality: "TEXT", tokenCount: 19 }],
+        thoughtsTokenCount: 81,
+      },
+      modelVersion: "gemini-2.5-flash",
+    };
+
+    const execResultChunk = {
+      candidates: [
+        {
+          content: {
+            parts: [
+              {
+                codeExecutionResult: {
+                  outcome: "OUTCOME_OK",
+                  output: "[0, 1, 1, 2, 3, 5, 8, 13, 21, 34]\n",
+                },
+              },
+            ],
+            role: "model",
+          },
+          index: 0,
+        },
+      ],
+      usageMetadata: {
+        promptTokenCount: 19,
+        candidatesTokenCount: 55,
+        totalTokenCount: 155,
+        promptTokensDetails: [{ modality: "TEXT", tokenCount: 19 }],
+        thoughtsTokenCount: 81,
+      },
+      modelVersion: "gemini-2.5-flash",
+    };
+
+    const textChunk = {
+      candidates: [
+        {
+          content: {
+            parts: [
+              {
+                text: "The first 10 Fibonacci numbers are: 0, 1, 1, 2, 3, 5, 8, 13, 21, 34.",
+              },
+            ],
+            role: "model",
+          },
+          finishReason: "STOP",
+          index: 0,
+        },
+      ],
+      usageMetadata: {
+        promptTokenCount: 19,
+        candidatesTokenCount: 97,
+        totalTokenCount: 390,
+        promptTokensDetails: [{ modality: "TEXT", tokenCount: 19 }],
+        thoughtsTokenCount: 81,
+      },
+      modelVersion: "gemini-2.5-flash",
+    };
+
+    const apiClient = new MockStreamingApiClient([
+      execCodeChunk,
+      execResultChunk,
+      textChunk,
+    ]);
+
+    const newTokenCalls: { text: string; chunk: unknown }[] = [];
+
+    const llm = new ChatGoogle({
+      model: "gemini-2.5-flash",
+      streaming: true,
+      apiClient,
+      callbacks: [
+        {
+          handleLLMNewToken(
+            token: string,
+            _idx: unknown,
+            _runId: unknown,
+            _parentRunId: unknown,
+            _tags: unknown,
+            fields: { chunk?: unknown }
+          ) {
+            newTokenCalls.push({ text: token, chunk: fields?.chunk });
+          },
+        },
+      ],
+    });
+
+    await llm.invoke("Calculate fibonacci numbers");
+
+    expect(newTokenCalls.length).toBe(3);
+
+    const nonTextCalls = newTokenCalls.filter((c) => c.text === "");
+    expect(nonTextCalls).toHaveLength(2);
+    expect(nonTextCalls[0]?.chunk).toBeDefined();
+    expect(nonTextCalls[1]?.chunk).toBeDefined();
+
+    const textCall = newTokenCalls.find((c) => c.text.includes("Fibonacci"));
+    expect(textCall).toBeDefined();
+  });
+
+  test("handleLLMNewToken is called for inlineData streaming chunks", async () => {
+    const execCodeChunk = {
+      candidates: [
+        {
+          content: {
+            parts: [
+              {
+                executableCode: {
+                  language: "PYTHON",
+                  code: "import matplotlib.pyplot as plt\nx = range(-10, 11)\ny = [i**2 for i in x]\nplt.plot(x, y)\nplt.savefig('plot.png')\nprint('done')\n",
+                },
+              },
+            ],
+            role: "model",
+          },
+          index: 0,
+        },
+      ],
+      usageMetadata: {
+        promptTokenCount: 22,
+        candidatesTokenCount: 206,
+        totalTokenCount: 443,
+      },
+      modelVersion: "gemini-2.5-flash",
+    };
+
+    const resultWithImageChunk = {
+      candidates: [
+        {
+          content: {
+            parts: [
+              {
+                codeExecutionResult: {
+                  outcome: "OUTCOME_OK",
+                  output: "done\n",
+                },
+              },
+              {
+                inlineData: {
+                  mimeType: "image/png",
+                  data: "iVBORw0KGgoAAAANSUhEUg==", // truncated base64
+                },
+              },
+            ],
+            role: "model",
+          },
+          index: 0,
+        },
+      ],
+      usageMetadata: {
+        promptTokenCount: 22,
+        candidatesTokenCount: 206,
+        totalTokenCount: 443,
+      },
+      modelVersion: "gemini-2.5-flash",
+    };
+
+    const textChunk = {
+      candidates: [
+        {
+          content: {
+            parts: [{ text: "Here is the plot of y = x^2." }],
+            role: "model",
+          },
+          finishReason: "STOP",
+          index: 0,
+        },
+      ],
+      usageMetadata: {
+        promptTokenCount: 22,
+        candidatesTokenCount: 220,
+        totalTokenCount: 500,
+      },
+      modelVersion: "gemini-2.5-flash",
+    };
+
+    const apiClient = new MockStreamingApiClient([
+      execCodeChunk,
+      resultWithImageChunk,
+      textChunk,
+    ]);
+
+    const newTokenCalls: { text: string; chunk: unknown }[] = [];
+
+    const llm = new ChatGoogle({
+      model: "gemini-2.5-flash",
+      streaming: true,
+      apiClient,
+      callbacks: [
+        {
+          handleLLMNewToken(
+            token: string,
+            _idx: unknown,
+            _runId: unknown,
+            _parentRunId: unknown,
+            _tags: unknown,
+            fields: { chunk?: unknown }
+          ) {
+            newTokenCalls.push({ text: token, chunk: fields?.chunk });
+          },
+        },
+      ],
+    });
+
+    await llm.invoke("Plot y=x^2");
+
+    expect(newTokenCalls.length).toBe(3);
+
+    const nonTextCalls = newTokenCalls.filter((c) => c.text === "");
+    expect(nonTextCalls).toHaveLength(2);
+    expect(nonTextCalls[0]?.chunk).toBeDefined();
+    expect(nonTextCalls[1]?.chunk).toBeDefined();
+
+    const textCall = newTokenCalls.find((c) => c.text.includes("plot"));
+    expect(textCall).toBeDefined();
   });
 });
