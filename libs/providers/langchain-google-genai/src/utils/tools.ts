@@ -58,7 +58,7 @@ function processTools(tools: GoogleGenerativeAIToolType[]): GenerativeAITool[] {
         );
       }
     } else {
-      genAITools.push(tool as GenerativeAITool);
+      genAITools.push(normalizeDirectGenAITool(tool as GenerativeAITool));
     }
   });
 
@@ -95,6 +95,29 @@ function processTools(tools: GoogleGenerativeAIToolType[]): GenerativeAITool[] {
         ]
       : []),
   ];
+}
+
+function normalizeDirectGenAITool(tool: GenerativeAITool): GenerativeAITool {
+  if ("functionDeclarations" in tool && Array.isArray(tool.functionDeclarations)) {
+    return {
+      ...tool,
+      functionDeclarations: tool.functionDeclarations.map(
+        (declaration): FunctionDeclaration => {
+          if (!declaration.parameters) {
+            return declaration;
+          }
+          return {
+            ...declaration,
+            parameters: removeAdditionalProperties(
+              declaration.parameters as Record<string, unknown>
+            ) as FunctionDeclarationSchema,
+          };
+        }
+      ),
+    };
+  }
+
+  return tool;
 }
 
 function convertOpenAIToolToGenAI(

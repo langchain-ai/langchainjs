@@ -21,6 +21,33 @@ export interface GenerativeAIJsonSchemaDirty extends GenerativeAIJsonSchema {
   additionalProperties?: boolean;
 }
 
+export function adjustObjectType(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  obj: Record<string, any>
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+): Record<string, any> {
+  if (!Array.isArray(obj.type)) {
+    return obj;
+  }
+
+  const len = obj.type.length;
+  const nullIndex = obj.type.indexOf("null");
+  if (len === 2 && nullIndex >= 0) {
+    const typeIndex = nullIndex === 0 ? 1 : 0;
+    obj.type = obj.type[typeIndex];
+    obj.nullable = true;
+  } else if (len === 1 && nullIndex === 0) {
+    throw new Error("zod_to_genai_parameters: Gemini cannot handle null type");
+  } else if (len === 1) {
+    obj.type = obj.type[0];
+  } else {
+    throw new Error(
+      "zod_to_genai_parameters: Gemini cannot handle union types"
+    );
+  }
+  return obj;
+}
+
 export function removeAdditionalProperties(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   obj: Record<string, any>
@@ -37,6 +64,45 @@ export function removeAdditionalProperties(
     if ("strict" in newObj) {
       delete newObj.strict;
     }
+
+    if ("anyOf" in newObj || "oneOf" in newObj) {
+      const unionTypes = newObj.anyOf || newObj.oneOf;
+      if (Array.isArray(unionTypes) && unionTypes.length === 2) {
+        const nullIndex = unionTypes.findIndex(
+          (t) => typeof t === "object" && t !== null && t.type === "null"
+        );
+        if (nullIndex >= 0) {
+          const nonNullType = unionTypes[nullIndex === 0 ? 1 : 0];
+          delete newObj.anyOf;
+          delete newObj.oneOf;
+          if (typeof nonNullType === "object" && nonNullType !== null) {
+            for (const key in nonNullType) {
+              if (key in nonNullType) {
+                newObj[key] = nonNullType[key];
+              }
+            }
+            newObj.nullable = true;
+          } else {
+            throw new Error(
+              "zod_to_genai_parameters: Gemini cannot handle union types (discriminatedUnion, anyOf, oneOf). " +
+                "Consider using a flat object structure with optional fields instead."
+            );
+          }
+        } else {
+          throw new Error(
+            "zod_to_genai_parameters: Gemini cannot handle union types (discriminatedUnion, anyOf, oneOf). " +
+              "Consider using a flat object structure with optional fields instead."
+          );
+        }
+      } else {
+        throw new Error(
+          "zod_to_genai_parameters: Gemini cannot handle union types (discriminatedUnion, anyOf, oneOf). " +
+            "Consider using a flat object structure with optional fields instead."
+        );
+      }
+    }
+
+    adjustObjectType(newObj);
 
     for (const key in newObj) {
       if (key in newObj) {
