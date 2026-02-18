@@ -1,5 +1,11 @@
 # @langchain/ollama
 
+## 1.2.3
+
+### Patch Changes
+
+- [#10065](https://github.com/langchain-ai/langchainjs/pull/10065) [`e2b3d90`](https://github.com/langchain-ai/langchainjs/commit/e2b3d90a7b27dbb6a303e52bab08a1c881c2c850) Thanks [@MatanTsach](https://github.com/MatanTsach)! - fix(ollama): preserve tool_calls when AIMessage content is a string
+
 ## 1.2.2
 
 ### Patch Changes
