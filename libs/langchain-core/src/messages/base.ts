@@ -21,7 +21,7 @@ import {
 const MESSAGE_SYMBOL = Symbol.for("langchain.message");
 
 export interface StoredMessageData {
-  content: string;
+  content: string | object;
   role: string | undefined;
   name: string | undefined;
   tool_call_id: string | undefined;

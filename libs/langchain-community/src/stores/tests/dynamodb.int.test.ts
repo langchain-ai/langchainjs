@@ -90,4 +90,22 @@ describe("DynamoDB message history store", () => {
 
     expect(await messageHistory.getMessages()).toEqual(expectedMessages);
   });
+
+  test("should handle messages with array content (thinking mode)", async () => {
+    const thinkingMessage = new AIMessage({
+      content: [
+        {
+          type: "reasoning_content",
+          reasoningText: { text: "Let me think...", signature: "sig123" },
+        },
+        { type: "text", text: "The answer is 4." },
+      ],
+    });
+
+    await messageHistory.addMessage(thinkingMessage);
+    const retrieved = await messageHistory.getMessages();
+
+    expect(retrieved.length).toBe(1);
+    expect(retrieved[0].content).toEqual(thinkingMessage.content);
+  });
 });

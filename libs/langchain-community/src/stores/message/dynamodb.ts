@@ -86,6 +86,27 @@ export class DynamoDBChatMessageHistory extends BaseListChatMessageHistory {
   private dynamoKey: Record<string, AttributeValue> = {};
 
   /**
+   * Attempts to parse a raw DynamoDB string value back to its original type.
+   * If the value is valid JSON that deserializes to an object or array, the
+   * parsed value is returned. Otherwise the raw string is returned as-is,
+   * preserving backward-compatibility with existing stored plain-string content.
+   *
+   * @param rawContent - The raw string value read from DynamoDB.
+   * @returns The parsed object/array, or the original string.
+   */
+  private parseRawContent(rawContent: string): string | object {
+    try {
+      const parsed = JSON.parse(rawContent);
+      if (typeof parsed === "object" && parsed !== null) {
+        return parsed;
+      }
+    } catch {
+      return rawContent;
+    }
+    return rawContent;
+  }
+
+  /**
    * Transforms a `StoredMessage` into a `DynamoDBSerializedChatMessage`.
    * The `DynamoDBSerializedChatMessage` format is suitable for storing in DynamoDB.
    *
@@ -109,7 +130,7 @@ export class DynamoDBChatMessageHistory extends BaseListChatMessageHistory {
           S: type,
         },
         text: {
-          S: content,
+          S: typeof content === "string" ? content : JSON.stringify(content),
         },
         additional_kwargs: isAdditionalKwargs
           ? { S: JSON.stringify(additional_kwargs) }
@@ -177,13 +198,19 @@ export class DynamoDBChatMessageHistory extends BaseListChatMessageHistory {
             item.M !== undefined
         )
         .map((item) => {
+          const rawContent = item.M?.text.S;
+          const parsedContent =
+            rawContent !== undefined
+              ? this.parseRawContent(rawContent)
+              : undefined;
+
           const data: {
             role?: string;
-            content: string | undefined;
+            content: string | object | undefined;
             additional_kwargs?: Record<string, unknown>;
           } = {
             role: item.M?.role?.S,
-            content: item.M?.text.S,
+            content: parsedContent,
             additional_kwargs: item.M?.additional_kwargs?.S
               ? JSON.parse(item.M?.additional_kwargs.S)
               : undefined,
