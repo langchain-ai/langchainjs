@@ -417,6 +417,16 @@ export class AIMessageChunk<
         combinedFields.tool_call_chunks = rawToolCalls;
       }
     }
+    if (this.tool_calls !== undefined || chunk.tool_calls !== undefined) {
+      const rawToolCalls = _mergeLists(
+        this.tool_calls as ContentBlock.Tools.ToolCall[],
+        chunk.tool_calls as ContentBlock.Tools.ToolCall[]
+      );
+      if (rawToolCalls !== undefined && rawToolCalls.length > 0) {
+        combinedFields.tool_calls =
+          rawToolCalls as $InferToolCalls<TStructure>[];
+      }
+    }
     if (
       this.tool_calls !== undefined || 
       chunk.tool_calls !== undefined
