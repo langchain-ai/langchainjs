@@ -45,12 +45,15 @@ export function createAgentState<
     // Handle StateSchema: extract from .fields
     if (StateSchema.isInstance(schema)) {
       for (const [key, field] of Object.entries(schema.fields)) {
-        if (key.startsWith("_")) {
-          continue;
-        }
         if (!(key in stateFields)) {
           // Add to stateFields to preserve ReducedValue/UntrackedValue behavior
           stateFields[key] = field;
+
+          // Private state (underscore-prefixed) persists in the graph state
+          // but is not exposed as input/output channels.
+          if (key.startsWith("_")) {
+            continue;
+          }
 
           // For ioFields, extract the appropriate schema from ReducedValue
           if (ReducedValue.isInstance(field)) {
@@ -70,10 +73,8 @@ export function createAgentState<
     // Handle Zod v3/v4: extract shape using interop utilities
     const shape = getInteropZodObjectShape(schema);
     for (const [key, fieldSchema] of Object.entries(shape)) {
-      // Skip private state properties (prefixed with underscore)
-      if (key.startsWith("_")) {
-        continue;
-      }
+      const isPrivate = key.startsWith("_");
+
       if (!(key in stateFields)) {
         // Check for reducer metadata (Zod v4 only supports schemaMetaRegistry)
         if (isZodSchemaV4(fieldSchema)) {
@@ -85,16 +86,20 @@ export function createAgentState<
                 inputSchema: meta.reducer.schema as any,
                 reducer: meta.reducer.fn,
               });
-              // For input, use the inputSchema
-              inputFields[key] = meta.reducer.schema;
-              outputFields[key] = fieldSchema;
+              if (!isPrivate) {
+                // For input, use the inputSchema
+                inputFields[key] = meta.reducer.schema;
+                outputFields[key] = fieldSchema;
+              }
             } else {
               stateFields[key] = new ReducedValue(fieldSchema as any, {
                 reducer: meta.reducer.fn,
               });
-              // No inputSchema, use the value schema
-              inputFields[key] = fieldSchema;
-              outputFields[key] = fieldSchema;
+              if (!isPrivate) {
+                // No inputSchema, use the value schema
+                inputFields[key] = fieldSchema;
+                outputFields[key] = fieldSchema;
+              }
             }
             continue;
           }
@@ -102,8 +107,13 @@ export function createAgentState<
 
         // No reducer - use schema directly
         stateFields[key] = fieldSchema;
-        inputFields[key] = fieldSchema;
-        outputFields[key] = fieldSchema;
+
+        // Private state (underscore-prefixed) persists in the graph state
+        // but is not exposed as input/output channels.
+        if (!isPrivate) {
+          inputFields[key] = fieldSchema;
+          outputFields[key] = fieldSchema;
+        }
       }
     }
   };

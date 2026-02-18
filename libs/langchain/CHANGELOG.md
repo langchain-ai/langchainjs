@@ -1,5 +1,16 @@
 # langchain
 
+## 1.2.25
+
+### Patch Changes
+
+- [#10083](https://github.com/langchain-ai/langchainjs/pull/10083) [`219b38d`](https://github.com/langchain-ai/langchainjs/commit/219b38d6d95977f3f9bf19625e72f42036d24df0) Thanks [@christian-bromann](https://github.com/christian-bromann)! - fix(langchain): export ModelRequest interface
+
+- [#10084](https://github.com/langchain-ai/langchainjs/pull/10084) [`7cae8a9`](https://github.com/langchain-ai/langchainjs/commit/7cae8a9ee6aece5f2df0fc6417ffd799bce4d1ca) Thanks [@christian-bromann](https://github.com/christian-bromann)! - fix(langchain): persist underscore-prefixed middleware state fields across graph steps
+
+- Updated dependencies [[`ed6ea53`](https://github.com/langchain-ai/langchainjs/commit/ed6ea53c38a004b65e30c0f5888a0ac7d8ee7028)]:
+  - @langchain/core@1.1.26
+
 ## 1.2.24
 
 ### Patch Changes
