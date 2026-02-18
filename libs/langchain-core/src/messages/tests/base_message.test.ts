@@ -412,8 +412,18 @@ describe("Complex AIMessageChunk concat", () => {
     const chunk2 = new AIMessageChunk({
       content: "",
       tool_calls: [
-        { type: "tool_call", id: "call_0", name: "get_weather", args: { location: "SF" } },
-        { type: "tool_call", id: "call_1", name: "web_search", args: { query: "news" } },
+        {
+          type: "tool_call",
+          id: "call_0",
+          name: "get_weather",
+          args: { location: "SF" },
+        },
+        {
+          type: "tool_call",
+          id: "call_1",
+          name: "web_search",
+          args: { query: "news" },
+        },
       ],
     });
     const result = chunk1.concat(chunk2);
