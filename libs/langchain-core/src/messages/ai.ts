@@ -402,6 +402,7 @@ export class AIMessageChunk<
         chunk.response_metadata
       ),
       tool_call_chunks: [],
+      tool_calls: [],
       id: this.id ?? chunk.id,
     };
     if (
@@ -414,6 +415,19 @@ export class AIMessageChunk<
       );
       if (rawToolCalls !== undefined && rawToolCalls.length > 0) {
         combinedFields.tool_call_chunks = rawToolCalls;
+      }
+    }
+    if (
+      this.tool_calls !== undefined || 
+      chunk.tool_calls !== undefined
+    ) {
+      const rawToolCalls = _mergeLists(
+        this.tool_calls as ContentBlock.Tools.ToolCall[],
+        chunk.tool_calls as ContentBlock.Tools.ToolCall[]
+      );
+      if (rawToolCalls !== undefined && rawToolCalls.length > 0) {
+        combinedFields.tool_calls =
+          rawToolCalls as $InferToolCalls<TStructure>[];
       }
     }
     if (
