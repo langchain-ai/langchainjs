@@ -474,6 +474,31 @@ test("Test ChatModel cache key hashes base64 data for compactness", async () => 
   expect(value).toBeDefined();
 });
 
+test("Test ChatModel cache differentiates by message name", async () => {
+  const model = new FakeListChatModel({
+    responses: ["response-for-lead", "response-for-intern"],
+    cache: true,
+  });
+  if (!model.cache) {
+    throw new Error("Cache not enabled");
+  }
+
+  const content = [{ type: "text", text: "Approve the PR" }];
+
+  const result1 = await model.invoke([
+    new HumanMessage({ content, name: "tech-lead" }),
+  ]);
+  const result2 = await model.invoke([
+    new HumanMessage({ content, name: "intern" }),
+  ]);
+
+  // Same content but different names must produce distinct cache keys,
+  // so the second call should hit the model (not the cache) and get
+  // the next response from FakeListChatModel.
+  expect(result1.content).toBe("response-for-lead");
+  expect(result2.content).toBe("response-for-intern");
+});
+
 test("Test ChatModel can emit a custom event", async () => {
   const model = new FakeListChatModel({
     responses: ["hi"],
