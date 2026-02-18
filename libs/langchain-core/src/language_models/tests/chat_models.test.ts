@@ -4,7 +4,7 @@ import { z as z4 } from "zod/v4";
 import { zodToJsonSchema } from "../../utils/zod-to-json-schema/index.js";
 import { FakeChatModel, FakeListChatModel } from "../../utils/testing/index.js";
 import { HumanMessage } from "../../messages/human.js";
-import { getBufferString } from "../../messages/utils.js";
+
 import { AIMessage } from "../../messages/ai.js";
 import { RunCollectorCallbackHandler } from "../../tracers/run_collector.js";
 
@@ -267,28 +267,27 @@ test("Test ChatModel can cache complex messages", async () => {
     content: contentToCache,
   });
 
-  const prompt = getBufferString([humanMessage]);
-  // getBufferString now uses the `text` property which extracts only text content
-  // from content blocks, producing compact output to avoid token inflation
-  expect(prompt).toBe("Human: Hello there!");
-
+  // Cache key now serializes the full message content (including non-text blocks)
+  const cacheKey = JSON.stringify([
+    { type: "human", content: contentToCache },
+  ]);
   const llmKey = model._getSerializedCacheKeyParametersForCall({});
 
   // Invoke model to trigger cache update
   await model.invoke([humanMessage]);
 
-  const value = await model.cache.lookup(prompt, llmKey);
+  const value = await model.cache.lookup(cacheKey, llmKey);
   expect(value).toBeDefined();
   if (!value) return;
 
-  // FakeChatModel returns m.text for text content (extracts text from blocks)
-  // This is consistent with using the text property for compact representation
-  expect(value[0].text).toEqual("Hello there!");
+  // FakeChatModel JSON-stringifies array content for its response
+  const expectedText = JSON.stringify(contentToCache, null, 2);
+  expect(value[0].text).toEqual(expectedText);
 
   expect("message" in value[0]).toBeTruthy();
   if (!("message" in value[0])) return;
   const cachedMsg = value[0].message as AIMessage;
-  expect(cachedMsg.content).toEqual("Hello there!");
+  expect(cachedMsg.content).toEqual(expectedText);
 });
 
 test("Test ChatModel with cache does not start multiple chat model runs", async () => {
@@ -309,10 +308,12 @@ test("Test ChatModel with cache does not start multiple chat model runs", async 
     content: contentToCache,
   });
 
-  const prompt = getBufferString([humanMessage]);
+  const cacheKey = JSON.stringify([
+    { type: "human", content: contentToCache },
+  ]);
   const llmKey = model._getSerializedCacheKeyParametersForCall({});
 
-  const value = await model.cache.lookup(prompt, llmKey);
+  const value = await model.cache.lookup(cacheKey, llmKey);
   expect(value).toBeNull();
 
   const runCollector = new RunCollectorCallbackHandler();
@@ -323,7 +324,7 @@ test("Test ChatModel with cache does not start multiple chat model runs", async 
     callbacks: [runCollector],
   });
 
-  expect(await model.cache.lookup(prompt, llmKey)).toBeDefined();
+  expect(await model.cache.lookup(cacheKey, llmKey)).toBeDefined();
 
   const events = [];
   for await (const event of eventStream) {
@@ -347,6 +348,72 @@ test("Test ChatModel with cache does not start multiple chat model runs", async 
   expect(events2[0].event).toEqual("on_chat_model_start");
   expect(events2[1].event).toEqual("on_chat_model_end");
   expect(runCollector.tracedRuns[1].extra?.cached).toBe(true);
+});
+
+test("Test ChatModel cache differentiates multimodal content", async () => {
+  const model = new FakeChatModel({
+    cache: true,
+  });
+  if (!model.cache) {
+    throw new Error("Cache not enabled");
+  }
+
+  const result1 = await model.invoke([
+    new HumanMessage({
+      content: [
+        {
+          type: "image_url",
+          image_url: { url: "data:image/png;base64,AAAA" },
+        },
+        { type: "text", text: "Describe this image" },
+      ],
+    }),
+  ]);
+
+  const result2 = await model.invoke([
+    new HumanMessage({
+      content: [
+        {
+          type: "image_url",
+          image_url: { url: "data:image/png;base64,BBBB" },
+        },
+        { type: "text", text: "Describe this image" },
+      ],
+    }),
+  ]);
+
+  // FakeChatModel JSON-stringifies array content, so different images
+  // produce different model outputs. With the fix, the second invocation
+  // should NOT return the first's cached result.
+  expect(result1.content).not.toEqual(result2.content);
+  expect(result1.content).toContain("AAAA");
+  expect(result2.content).toContain("BBBB");
+});
+
+test("Test ChatModel cache hits for identical multimodal content", async () => {
+  const model = new FakeChatModel({
+    cache: true,
+  });
+  if (!model.cache) {
+    throw new Error("Cache not enabled");
+  }
+
+  const makeMessage = () =>
+    new HumanMessage({
+      content: [
+        {
+          type: "image_url",
+          image_url: { url: "data:image/png;base64,SAME" },
+        },
+        { type: "text", text: "Describe this image" },
+      ],
+    });
+
+  const result1 = await model.invoke([makeMessage()]);
+  const result2 = await model.invoke([makeMessage()]);
+
+  // Identical multimodal content should still produce cache hits
+  expect(result1.content).toEqual(result2.content);
 });
 
 test("Test ChatModel can emit a custom event", async () => {

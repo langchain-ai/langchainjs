@@ -155,6 +155,33 @@ export type BaseChatModelCallOptions = BaseLanguageModelCallOptions & {
   outputVersion?: MessageOutputVersion;
 };
 
+/**
+ * Serialize messages into a deterministic string suitable for use as a cache key.
+ * Unlike getBufferString/BaseMessage.text which only extract text-type blocks,
+ * this includes all content blocks (image_url, document, etc.) to prevent
+ * cache collisions for multimodal inputs that share the same text.
+ */
+function _serializeCachePrompt(messages: BaseMessage[]): string {
+  return JSON.stringify(
+    messages.map((m) => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const obj: Record<string, any> = {
+        type: m.type,
+        content: m.content,
+      };
+      if (m.name != null) obj.name = m.name;
+      if (
+        "tool_calls" in m &&
+        Array.isArray(m.tool_calls) &&
+        m.tool_calls.length > 0
+      ) {
+        obj.tool_calls = m.tool_calls;
+      }
+      return obj;
+    })
+  );
+}
+
 function _formatForTracing(messages: BaseMessage[]): BaseMessage[] {
   const messagesToTrace: BaseMessage[] = [];
   for (const message of messages) {
@@ -673,9 +700,7 @@ export abstract class BaseChatModel<
     const missingPromptIndices: number[] = [];
     const results = await Promise.allSettled(
       baseMessages.map(async (baseMessage, index) => {
-        // Join all content into one string for the prompt index
-        const prompt =
-          BaseChatModel._convertInputToPromptValue(baseMessage).toString();
+        const prompt = _serializeCachePrompt(baseMessage);
         const result = await cache.lookup(prompt, llmStringKey);
 
         if (result == null) {
@@ -833,10 +858,7 @@ export abstract class BaseChatModel<
         results.generations.map(async (generation, index) => {
           const promptIndex = missingPromptIndices[index];
           generations[promptIndex] = generation;
-          // Join all content into one string for the prompt index
-          const prompt = BaseChatModel._convertInputToPromptValue(
-            baseMessages[promptIndex]
-          ).toString();
+          const prompt = _serializeCachePrompt(baseMessages[promptIndex]);
           return cache.update(prompt, llmStringKey, generation);
         })
       );
