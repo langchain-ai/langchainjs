@@ -445,10 +445,10 @@ test("Web Search Tool - web_fetch_tool_result round-trips through message format
 
   // Both blocks should be preserved (not dropped)
   expect(result.messages[1].content).toHaveLength(2);
-  expect(
-    (result.messages[1].content as ContentBlock[])[0].type
-  ).toBe("server_tool_use");
-  expect(
-    (result.messages[1].content as ContentBlock[])[1].type
-  ).toBe("web_fetch_tool_result");
+  expect((result.messages[1].content as ContentBlock[])[0].type).toBe(
+    "server_tool_use"
+  );
+  expect((result.messages[1].content as ContentBlock[])[1].type).toBe(
+    "web_fetch_tool_result"
+  );
 });
