@@ -35,6 +35,7 @@
     "typegen:check": "sparktype check"
   },
   "dependencies": {
+    "@langchain/openai": "workspace:*",
     "eventsource-parser": "^3.0.6"
   },
   "peerDependencies": {
@@ -43,10 +44,12 @@
   "devDependencies": {
     "@langchain/core": "workspace:^",
     "@langchain/eslint": "workspace:*",
+    "@langchain/openai": "workspace:^",
     "@langchain/standard-tests": "workspace:*",
     "@tsconfig/recommended": "^1.0.10",
     "dpdm": "^3.14.0",
     "eslint": "^9.34.0",
+    "openai": "^6.22.0",
     "prettier": "^2.8.3",
     "sparktype": "^0.1.3",
     "typescript": "~5.8.3",

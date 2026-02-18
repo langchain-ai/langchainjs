@@ -8,7 +8,11 @@ import type {
   BaseLanguageModelInput,
   StructuredOutputMethodOptions,
 } from "@langchain/core/language_models/base";
-import { AIMessageChunk, BaseMessage } from "@langchain/core/messages";
+import {
+  AIMessage,
+  AIMessageChunk,
+  BaseMessage,
+} from "@langchain/core/messages";
 import { ChatGenerationChunk, type ChatResult } from "@langchain/core/outputs";
 import type { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
 import {
@@ -16,13 +20,11 @@ import {
   RunnablePassthrough,
   RunnableSequence,
 } from "@langchain/core/runnables";
-import {
-  toJsonSchema,
-  type JsonSchema7Type,
-} from "@langchain/core/utils/json_schema";
+import { toJsonSchema } from "@langchain/core/utils/json_schema";
 import {
   type InteropZodType,
   isInteropZodSchema,
+  getSchemaDescription,
 } from "@langchain/core/utils/types";
 import {
   JsonOutputParser,
@@ -36,9 +38,14 @@ import type {
   ChatOpenRouterParams,
   ChatOpenRouterCallOptions,
 } from "./types.js";
+import type { OpenAI as OpenAIClient } from "openai";
 import type { OpenRouter } from "../api-types.js";
 
-type OpenRouterRequestBody = OpenRouter.ChatGenerationParams & {
+type OpenRouterRequestBody = Omit<
+  OpenRouter.ChatGenerationParams,
+  "messages"
+> & {
+  messages: OpenAIClient.Chat.Completions.ChatCompletionMessageParam[];
   top_k?: number | null;
   repetition_penalty?: number | null;
   min_p?: number | null;
@@ -48,8 +55,8 @@ type OpenRouterRequestBody = OpenRouter.ChatGenerationParams & {
 };
 import {
   convertMessagesToOpenRouterParams,
-  convertOpenRouterResponseToAIMessage,
-  convertOpenRouterDeltaToAIMessageChunk,
+  convertOpenRouterResponseToBaseMessage,
+  convertOpenRouterDeltaToBaseMessageChunk,
   convertUsageMetadata,
 } from "../converters/messages.js";
 import {
@@ -310,7 +317,7 @@ export class ChatOpenRouter extends BaseChatModel<
   ): Promise<ChatResult> {
     const body: OpenRouterRequestBody = {
       ...this.invocationParams(options),
-      messages: convertMessagesToOpenRouterParams(messages),
+      messages: convertMessagesToOpenRouterParams(messages, this.model),
       stream: false,
     };
 
@@ -332,8 +339,10 @@ export class ChatOpenRouter extends BaseChatModel<
       throw new OpenRouterError("No choices returned in response.");
     }
 
-    const message = convertOpenRouterResponseToAIMessage(choice, data);
-    message.usage_metadata = convertUsageMetadata(data.usage);
+    const message = convertOpenRouterResponseToBaseMessage(choice, data);
+    if (AIMessage.isInstance(message)) {
+      message.usage_metadata = convertUsageMetadata(data.usage);
+    }
 
     const text = typeof message.content === "string" ? message.content : "";
 
@@ -360,7 +369,7 @@ export class ChatOpenRouter extends BaseChatModel<
   ): AsyncGenerator<ChatGenerationChunk> {
     const body: OpenRouterRequestBody = {
       ...this.invocationParams(options),
-      messages: convertMessagesToOpenRouterParams(messages),
+      messages: convertMessagesToOpenRouterParams(messages, this.model),
       stream: true,
     };
 
@@ -395,14 +404,18 @@ export class ChatOpenRouter extends BaseChatModel<
         const choice = data.choices?.[0];
         if (!choice?.delta) continue;
 
-        const chunk = convertOpenRouterDeltaToAIMessageChunk(
+        const chunk = convertOpenRouterDeltaToBaseMessageChunk(
           choice.delta,
           data,
           defaultRole
         );
         defaultRole = choice.delta.role ?? defaultRole;
 
-        if (data.usage && this.streamUsage) {
+        if (
+          data.usage &&
+          this.streamUsage &&
+          AIMessageChunk.isInstance(chunk)
+        ) {
           chunk.usage_metadata = convertUsageMetadata(data.usage);
         }
 
@@ -494,50 +507,36 @@ export class ChatOpenRouter extends BaseChatModel<
     });
 
     if (method === "jsonSchema") {
-      const jsonSchemaParams = {
-        name: name ?? "extract",
-        description: isInteropZodSchema(schema)
-          ? (toJsonSchema(schema) as JsonSchema7Type & { description?: string })
-              .description
-          : (schema as { description?: string }).description,
-        schema,
-        strict: config?.strict,
-      };
-
       llm = this.withConfig({
         response_format: {
           type: "json_schema",
-          json_schema: jsonSchemaParams,
+          json_schema: {
+            name: name ?? "extract",
+            description: getSchemaDescription(schema),
+            schema,
+            strict: config?.strict,
+          },
         },
       } as Partial<ChatOpenRouterCallOptions>);
 
-      if (isInteropZodSchema(schema)) {
-        outputParser = StructuredOutputParser.fromZodSchema(schema);
-      } else {
-        outputParser = new JsonOutputParser<RunOutput>();
-      }
+      outputParser = isInteropZodSchema(schema)
+        ? StructuredOutputParser.fromZodSchema(schema)
+        : new JsonOutputParser<RunOutput>();
     } else if (method === "jsonMode") {
       llm = this.withConfig({
         response_format: { type: "json_object" },
       } as Partial<ChatOpenRouterCallOptions>);
 
-      if (isInteropZodSchema(schema)) {
-        outputParser = StructuredOutputParser.fromZodSchema(schema);
-      } else {
-        outputParser = new JsonOutputParser<RunOutput>();
-      }
+      outputParser = isInteropZodSchema(schema)
+        ? StructuredOutputParser.fromZodSchema(schema)
+        : new JsonOutputParser<RunOutput>();
     } else {
-      // functionCalling (default)
       let functionName = name ?? "extract";
-      const asJsonSchema = toJsonSchema(schema);
-
-      if (
-        typeof (schema as Record<string, unknown>).name === "string" &&
-        typeof (schema as Record<string, unknown>).parameters === "object"
-      ) {
-        functionName =
-          ((schema as Record<string, unknown>).name as string) ?? functionName;
+      if ("name" in (schema as Record<string, unknown>)) {
+        functionName = (schema as Record<string, unknown>).name as string;
       }
+
+      const asJsonSchema = toJsonSchema(schema);
 
       llm = this.withConfig({
         tools: [
@@ -545,8 +544,7 @@ export class ChatOpenRouter extends BaseChatModel<
             type: "function" as const,
             function: {
               name: functionName,
-              description:
-                (asJsonSchema as { description?: string }).description ?? "",
+              description: getSchemaDescription(schema) ?? "",
               parameters: asJsonSchema,
             },
           },
@@ -558,18 +556,16 @@ export class ChatOpenRouter extends BaseChatModel<
         ...(config?.strict !== undefined ? { strict: config.strict } : {}),
       } as Partial<ChatOpenRouterCallOptions>);
 
-      if (isInteropZodSchema(schema)) {
-        outputParser = new JsonOutputKeyToolsParser({
-          returnSingle: true,
-          keyName: functionName,
-          zodSchema: schema,
-        });
-      } else {
-        outputParser = new JsonOutputKeyToolsParser<RunOutput>({
-          returnSingle: true,
-          keyName: functionName,
-        });
-      }
+      outputParser = isInteropZodSchema(schema)
+        ? new JsonOutputKeyToolsParser({
+            returnSingle: true,
+            keyName: functionName,
+            zodSchema: schema,
+          })
+        : new JsonOutputKeyToolsParser<RunOutput>({
+            returnSingle: true,
+            keyName: functionName,
+          });
     }
 
     if (!includeRaw) {

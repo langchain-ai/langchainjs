@@ -31,5 +31,5 @@ export function formatToolChoice(
   if (typeof toolChoice === "string") {
     return { type: "function", function: { name: toolChoice } };
   }
-  return toolChoice as OpenRouter.ToolChoiceOption;
+  return toolChoice as unknown as OpenRouter.ToolChoiceOption;
 }

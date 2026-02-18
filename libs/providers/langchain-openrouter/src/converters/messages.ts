@@ -1,17 +1,14 @@
 import {
-  AIMessage,
-  AIMessageChunk,
   BaseMessage,
-  ChatMessage,
-  ToolMessage,
-  ToolCallChunk,
+  BaseMessageChunk,
   UsageMetadata,
 } from "@langchain/core/messages";
 import {
-  convertLangChainToolCallToOpenAI,
-  parseToolCall,
-  makeInvalidToolCall,
-} from "@langchain/core/output_parsers/openai_tools";
+  convertMessagesToCompletionsMessageParams,
+  convertCompletionsMessageToBaseMessage,
+  convertCompletionsDeltaToBaseMessageChunk,
+} from "@langchain/openai";
+import type { OpenAI as OpenAIClient } from "openai";
 import type { OpenRouter } from "../api-types.js";
 
 /**
@@ -21,102 +18,25 @@ import type { OpenRouter } from "../api-types.js";
  */
 export type StreamingChunkData = OpenRouter.ChatStreamingResponseChunk["data"];
 
-/**
- * Content part types we build when converting outbound messages.
- */
-type ContentPart =
-  | OpenRouter.ChatMessageContentItemText
-  | OpenRouter.ChatMessageContentItemImage;
-
 // ---------------------------------------------------------------------------
 // LangChain → OpenRouter
 // ---------------------------------------------------------------------------
 
-function messageToRole(
-  message: BaseMessage
-): "user" | "assistant" | "system" | "tool" {
-  const type = message._getType();
-  switch (type) {
-    case "system":
-      return "system";
-    case "ai":
-      return "assistant";
-    case "human":
-      return "user";
-    case "tool":
-      return "tool";
-    case "generic": {
-      if (ChatMessage.isInstance(message)) {
-        const role = message.role.toLowerCase();
-        if (role === "assistant" || role === "ai") return "assistant";
-        if (role === "system") return "system";
-        if (role === "tool") return "tool";
-      }
-      return "user";
-    }
-    default:
-      return "user";
-  }
-}
-
-function contentToOpenRouterParts(
-  content: BaseMessage["content"]
-): string | ContentPart[] {
-  if (typeof content === "string") return content;
-  if (!Array.isArray(content)) return "";
-
-  const parts: ContentPart[] = [];
-  for (const block of content) {
-    if (typeof block === "string") {
-      parts.push({ type: "text", text: block });
-    } else if (block.type === "text") {
-      parts.push({
-        type: "text",
-        text: (block as { text: string }).text,
-      });
-    } else if (block.type === "image_url") {
-      const imageUrl = (block as { image_url: string | { url: string } })
-        .image_url;
-      const url = typeof imageUrl === "string" ? imageUrl : imageUrl.url;
-      parts.push({ type: "image_url", image_url: { url } });
-    }
-  }
-  return parts.length > 0 ? parts : "";
-}
-
 /**
  * Convert an array of LangChain messages to the OpenRouter request format.
  *
- * The generated `OpenRouter.Message` is an empty placeholder (it's a
- * `oneOf` union in the spec). We build concrete message objects and
- * return them cast to `OpenRouter.Message[]` so they satisfy the
- * `ChatGenerationParams.messages` field.
+ * Delegates to the OpenAI completions converter since OpenRouter's chat
+ * API is wire-compatible with OpenAI's. This gives us full support for
+ * standard content blocks, reasoning-model developer role mapping,
+ * multi-modal inputs, and all edge cases handled upstream.
  */
 export function convertMessagesToOpenRouterParams(
-  messages: BaseMessage[]
-): OpenRouter.Message[] {
-  return messages.map((message) => {
-    const role = messageToRole(message);
-    const content = contentToOpenRouterParts(message.content);
-
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const param: Record<string, any> = { role, content };
-
-    if (AIMessage.isInstance(message) && message.tool_calls?.length) {
-      param.tool_calls = message.tool_calls.map(
-        convertLangChainToolCallToOpenAI
-      );
-    }
-
-    if (ToolMessage.isInstance(message) && message.tool_call_id) {
-      param.tool_call_id = message.tool_call_id;
-    }
-
-    if (message.name) {
-      param.name = message.name;
-    }
-
-    return param as OpenRouter.Message;
+  messages: BaseMessage[],
+  model?: string
+): OpenAIClient.Chat.Completions.ChatCompletionMessageParam[] {
+  return convertMessagesToCompletionsMessageParams({
+    messages,
+    model,
   });
 }
 
@@ -125,46 +45,31 @@ export function convertMessagesToOpenRouterParams(
 // ---------------------------------------------------------------------------
 
 /**
- * Convert a non-streaming OpenRouter choice into an `AIMessage`.
+ * Convert a non-streaming OpenRouter response choice into a BaseMessage.
+ *
+ * Delegates to the OpenAI completions converter for tool call parsing,
+ * multi-modal output handling, and audio support, then patches
+ * response_metadata to reflect the OpenRouter provider.
  */
-export function convertOpenRouterResponseToAIMessage(
+export function convertOpenRouterResponseToBaseMessage(
   choice: OpenRouter.ChatResponseChoice,
   rawResponse: OpenRouter.ChatResponse
-): AIMessage {
-  const msg = choice.message;
-  const content = msg?.content ?? "";
-  const rawToolCalls = msg?.tool_calls as
-    | OpenRouter.ChatMessageToolCall[]
-    | undefined;
-
-  const toolCalls = [];
-  const invalidToolCalls = [];
-  for (const raw of rawToolCalls ?? []) {
-    try {
-      toolCalls.push(parseToolCall(raw, { returnId: true }));
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } catch (e: any) {
-      invalidToolCalls.push(makeInvalidToolCall(raw, e.message));
-    }
-  }
-
-  return new AIMessage({
-    content,
-    tool_calls: toolCalls,
-    invalid_tool_calls: invalidToolCalls,
-    additional_kwargs: {
-      ...(rawToolCalls ? { tool_calls: rawToolCalls } : {}),
-    },
-    response_metadata: {
-      model_provider: "openrouter",
-      model_name: rawResponse.model,
-      finish_reason: choice.finish_reason,
-      ...(rawResponse.system_fingerprint
-        ? { system_fingerprint: rawResponse.system_fingerprint }
-        : {}),
-    },
-    id: rawResponse.id,
+): BaseMessage {
+  const message = convertCompletionsMessageToBaseMessage({
+    message:
+      choice.message as unknown as OpenAIClient.Chat.Completions.ChatCompletionMessage,
+    rawResponse:
+      rawResponse as unknown as OpenAIClient.Chat.Completions.ChatCompletion,
   });
+
+  message.response_metadata = {
+    ...message.response_metadata,
+    model_provider: "openrouter",
+    model_name: rawResponse.model,
+    finish_reason: choice.finish_reason,
+  };
+
+  return message;
 }
 
 // ---------------------------------------------------------------------------
@@ -172,51 +77,31 @@ export function convertOpenRouterResponseToAIMessage(
 // ---------------------------------------------------------------------------
 
 /**
- * Convert a streaming delta into an `AIMessageChunk`.
+ * Convert a streaming delta into a BaseMessageChunk.
+ *
+ * Delegates to the OpenAI completions converter for tool call chunk
+ * parsing, audio handling, and role-specific message types, then
+ * patches response_metadata to reflect the OpenRouter provider.
  */
-export function convertOpenRouterDeltaToAIMessageChunk(
+export function convertOpenRouterDeltaToBaseMessageChunk(
   delta: OpenRouter.ChatStreamingMessageChunk,
   rawChunk: StreamingChunkData,
   defaultRole?: string
-): AIMessageChunk {
-  const role = delta.role ?? defaultRole ?? "assistant";
-  const content = delta.content ?? "";
-
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const additional_kwargs: Record<string, any> = {};
-  if (delta.tool_calls) {
-    additional_kwargs.tool_calls = delta.tool_calls;
-  }
-
-  const toolCallChunks: ToolCallChunk[] = [];
-  if (Array.isArray(delta.tool_calls)) {
-    for (const rawToolCall of delta.tool_calls) {
-      toolCallChunks.push({
-        name: rawToolCall.function?.name,
-        args: rawToolCall.function?.arguments,
-        id: rawToolCall.id,
-        index: rawToolCall.index,
-        type: "tool_call_chunk",
-      });
-    }
-  }
-
-  if (role !== "assistant") {
-    return new AIMessageChunk({
-      content,
-      additional_kwargs,
-      id: rawChunk.id,
-      response_metadata: { model_provider: "openrouter" },
-    });
-  }
-
-  return new AIMessageChunk({
-    content,
-    tool_call_chunks: toolCallChunks,
-    additional_kwargs,
-    id: rawChunk.id,
-    response_metadata: { model_provider: "openrouter" },
+): BaseMessageChunk {
+  const chunk = convertCompletionsDeltaToBaseMessageChunk({
+    delta: delta as Record<string, unknown>,
+    rawResponse:
+      rawChunk as unknown as OpenAIClient.Chat.Completions.ChatCompletionChunk,
+    defaultRole: (defaultRole ??
+      "assistant") as OpenAIClient.Chat.ChatCompletionRole,
   });
+
+  chunk.response_metadata = {
+    ...chunk.response_metadata,
+    model_provider: "openrouter",
+  };
+
+  return chunk;
 }
 
 // ---------------------------------------------------------------------------

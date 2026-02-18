@@ -5,14 +5,8 @@ import type {
 import type { BindToolsInput } from "@langchain/core/language_models/chat_models";
 import type { OpenRouter } from "../api-types.js";
 
-/**
- * Response format types for the `response_format` call option.
- */
 export type OpenRouterResponseFormat =
-  | { type: "text" }
-  | { type: "json_object" }
-  | OpenRouter.ResponseFormatJSONSchema
-  | OpenRouter.ResponseFormatTextGrammar;
+  OpenRouter.ChatGenerationParams["response_format"];
 
 /**
  * Plugin configuration for OpenRouter plugins (e.g. web search).
