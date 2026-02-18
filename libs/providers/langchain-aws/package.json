@@ -30,7 +30,7 @@
     "format:check": "prettier --check \"src\""
   },
   "dependencies": {
-    "@aws-sdk/client-bedrock-agent-runtime": "^3.755.0",
+    "@aws-sdk/client-bedrock-agent-runtime": "^3.991.0",
     "@aws-sdk/client-bedrock-runtime": "^3.989.0",
     "@aws-sdk/client-kendra": "^3.750.0",
     "@aws-sdk/credential-provider-node": "^3.750.0"
