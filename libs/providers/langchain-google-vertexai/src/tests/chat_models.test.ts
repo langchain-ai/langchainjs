@@ -20,3 +20,9 @@ test("Labels parameter support", () => {
     expect(model.platform).toEqual("gcp");
   }).not.toThrow();
 });
+
+test("Constructor overload supports model string", () => {
+  const model = new ChatVertexAI("gemini-1.5-pro");
+  expect(model.model).toEqual("gemini-1.5-pro");
+  expect(model.platform).toEqual("gcp");
+});
