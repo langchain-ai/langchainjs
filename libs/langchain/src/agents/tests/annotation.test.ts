@@ -56,8 +56,8 @@ describe("createAgentState", () => {
   describe("user-provided StateSchema", () => {
     it("should add public fields to state, input, and output", () => {
       const schema = new StateSchema({
-        userId: z.string(),
-        count: z.number(),
+        userId: z4.string(),
+        count: z4.number(),
       });
 
       const { state, input, output } = createAgentState(false, schema, []);
@@ -73,9 +73,9 @@ describe("createAgentState", () => {
     it("should add ReducedValue fields to state and extract schemas for input/output", () => {
       const schema = new StateSchema({
         history: new ReducedValue(
-          z.array(z.string()).default(() => []),
+          z4.array(z4.string()).default(() => []),
           {
-            inputSchema: z.string(),
+            inputSchema: z4.string(),
             reducer: (current, next) => [...current, next],
           }
         ),
@@ -88,7 +88,11 @@ describe("createAgentState", () => {
       expect(getFieldKeys(output)).toContain("history");
 
       // State should have the ReducedValue instance
-      expect(ReducedValue.isInstance(state.fields.history)).toBe(true);
+      expect(
+        ReducedValue.isInstance(
+          (state.fields as Record<string, unknown>).history
+        )
+      ).toBe(true);
     });
   });
 
@@ -146,16 +150,16 @@ describe("createAgentState", () => {
     it("should include StateSchema _prefixed ReducedValue fields in state but not in input/output", () => {
       const schema = new StateSchema({
         _privateAccum: new ReducedValue(
-          z.array(z.string()).default(() => []),
+          z4.array(z4.string()).default(() => []),
           {
-            inputSchema: z.string(),
+            inputSchema: z4.string(),
             reducer: (current, next) => [...current, next],
           }
         ),
         publicHistory: new ReducedValue(
-          z.array(z.string()).default(() => []),
+          z4.array(z4.string()).default(() => []),
           {
-            inputSchema: z.string(),
+            inputSchema: z4.string(),
             reducer: (current, next) => [...current, next],
           }
         ),
@@ -165,7 +169,11 @@ describe("createAgentState", () => {
 
       // Private ReducedValue MUST be in state
       expect(getFieldKeys(state)).toContain("_privateAccum");
-      expect(ReducedValue.isInstance(state.fields._privateAccum)).toBe(true);
+      expect(
+        ReducedValue.isInstance(
+          (state.fields as Record<string, unknown>)._privateAccum
+        )
+      ).toBe(true);
 
       // Private ReducedValue must NOT be in input/output
       expect(getFieldKeys(input)).not.toContain("_privateAccum");
@@ -212,8 +220,8 @@ describe("createAgentState", () => {
 
     it("should include middleware StateSchema _prefixed fields in state but not in input/output", () => {
       const middlewareSchema = new StateSchema({
-        _internalCounter: z.number().default(0),
-        visibleStatus: z.string().optional(),
+        _internalCounter: z4.number().default(0),
+        visibleStatus: z4.string().optional(),
       });
 
       const middleware = [
