@@ -1,5 +1,22 @@
 import { APIConnectionTimeoutError, APIUserAbortError } from "openai";
+import { ContextOverflowError } from "@langchain/core/errors";
 import { addLangChainErrorFields } from "./errors.js";
+
+function _isOpenAIContextOverflowError(e: object): boolean {
+  const errorStr = String(e);
+  if (errorStr.includes("context_length_exceeded")) {
+    return true;
+  }
+  if (
+    "message" in e &&
+    typeof e.message === "string" &&
+    (e.message.includes("Input tokens exceed the configured limit") ||
+      e.message.includes("exceeds the context window"))
+  ) {
+    return true;
+  }
+  return false;
+}
 
 export function wrapOpenAIClientError(e: unknown) {
   if (!e || typeof e !== "object") {
@@ -21,6 +38,8 @@ export function wrapOpenAIClientError(e: unknown) {
   ) {
     error = new Error(e.message);
     error.name = "AbortError";
+  } else if (_isOpenAIContextOverflowError(e)) {
+    error = ContextOverflowError.fromError(e as Error);
   } else if (
     "status" in e &&
     e.status === 400 &&
