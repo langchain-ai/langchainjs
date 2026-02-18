@@ -7,13 +7,17 @@ export class OpenRouterJsonParseStream extends TransformStream<
 > {
   constructor() {
     super({
-      transform(event, controller) {
-        if (!event.data || event.data === "[DONE]") return;
+      transform(chunk, controller) {
         try {
-          const parsed = JSON.parse(event.data) as StreamingChunkData;
-          controller.enqueue(parsed);
+          if (chunk.data) {
+            const parsed = JSON.parse(chunk.data);
+            controller.enqueue(parsed);
+          } else {
+            controller.enqueue(undefined);
+          }
         } catch {
-          // Ignore malformed chunks
+          // If parsing fails, enqueue null to indicate invalid JSON
+          controller.enqueue(undefined);
         }
       },
     });

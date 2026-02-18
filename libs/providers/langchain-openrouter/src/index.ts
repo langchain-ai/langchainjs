@@ -1,10 +1,15 @@
 export { ChatOpenRouter } from "./chat_models/index.js";
 export type {
-  ChatOpenRouterInput,
+  ChatOpenRouterParams as ChatOpenRouterInput,
   ChatOpenRouterCallOptions,
   ChatOpenRouterFields,
-  OpenRouterRequestBody,
   OpenRouterResponseFormat,
   OpenRouterPlugin,
 } from "./chat_models/types.js";
 export type { OpenRouter } from "./api-types.js";
+export {
+  OpenRouterError,
+  OpenRouterAuthError,
+  OpenRouterRateLimitError,
+} from "./utils/errors.js";
+export { default as OPENROUTER_MODEL_PROFILES } from "./profiles.js";

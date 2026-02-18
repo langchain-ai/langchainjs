@@ -3,6 +3,7 @@ import {
   type BindToolsInput,
   type LangSmithParams,
 } from "@langchain/core/language_models/chat_models";
+import type { ModelProfile } from "@langchain/core/language_models/profile";
 import type {
   BaseLanguageModelInput,
   StructuredOutputMethodOptions,
@@ -32,11 +33,19 @@ import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import { EventSourceParserStream } from "eventsource-parser/stream";
 
 import type {
-  ChatOpenRouterInput,
+  ChatOpenRouterParams,
   ChatOpenRouterCallOptions,
-  OpenRouterRequestBody,
 } from "./types.js";
 import type { OpenRouter } from "../api-types.js";
+
+type OpenRouterRequestBody = OpenRouter.ChatGenerationParams & {
+  top_k?: number | null;
+  repetition_penalty?: number | null;
+  min_p?: number | null;
+  top_a?: number | null;
+  prediction?: { type: "content"; content: string };
+  transforms?: string[];
+};
 import {
   convertMessagesToOpenRouterParams,
   convertOpenRouterResponseToAIMessage,
@@ -47,11 +56,16 @@ import {
   convertToolsToOpenRouter,
   formatToolChoice,
 } from "../converters/tools.js";
-import { OpenRouterError } from "../utils/errors.js";
+import { OpenRouterError, OpenRouterAuthError } from "../utils/errors.js";
+import { resolveOpenRouterStructuredOutputMethod } from "../utils/structured_output.js";
 import { OpenRouterJsonParseStream } from "../utils/stream.js";
+import PROFILES from "../profiles.js";
 
 const DEFAULT_BASE_URL = "https://openrouter.ai/api/v1";
 
+/**
+ * OpenRouter chat model integration.
+ */
 export class ChatOpenRouter extends BaseChatModel<
   ChatOpenRouterCallOptions,
   AIMessageChunk
@@ -104,65 +118,91 @@ export class ChatOpenRouter extends BaseChatModel<
     ];
   }
 
+  /** Model identifier, e.g. `"anthropic/claude-4-sonnet"`. */
   model: string;
 
+  /** OpenRouter API key. Falls back to the `OPENROUTER_API_KEY` env var. */
   apiKey: string;
 
+  /** Base URL for the API. Defaults to `"https://openrouter.ai/api/v1"`. */
   baseURL: string;
 
+  /** Sampling temperature (0–2). */
   temperature?: number;
 
+  /** Maximum number of tokens to generate. */
   maxTokens?: number;
 
+  /** Nucleus sampling cutoff probability. */
   topP?: number;
 
+  /** Top-K sampling: only consider the K most likely tokens. */
   topK?: number;
 
+  /** Additive penalty based on how often a token has appeared so far (−2 to 2). */
   frequencyPenalty?: number;
 
+  /** Additive penalty based on whether a token has appeared at all (−2 to 2). */
   presencePenalty?: number;
 
+  /** Multiplicative penalty applied to repeated token logits (0 to 2). */
   repetitionPenalty?: number;
 
+  /** Minimum probability threshold for token sampling. */
   minP?: number;
 
+  /** Top-A sampling threshold. */
   topA?: number;
 
+  /** Random seed for deterministic generation. */
   seed?: number;
 
+  /** Stop sequences that halt generation. */
   stop?: string[];
 
+  /** Token-level biases to apply during sampling. */
   logitBias?: Record<string, number>;
 
+  /** Number of most-likely log-probabilities to return per token. */
   topLogprobs?: number;
 
+  /** Stable identifier for end-users, used for abuse detection. */
   user?: string;
 
+  /** OpenRouter-specific transformations to apply to the request. */
   transforms?: string[];
 
+  /** OpenRouter-specific list of models for routing. */
   models?: string[];
 
+  /** OpenRouter-specific routing strategy. */
   route?: "fallback";
 
+  /** OpenRouter-specific provider preferences and ordering. */
   provider?: OpenRouter.ProviderPreferences;
 
-  plugins?: ChatOpenRouterInput["plugins"];
+  /** OpenRouter plugins to enable (e.g. web search). */
+  plugins?: ChatOpenRouterParams["plugins"];
 
+  /** Your site URL — used for rankings on openrouter.ai. */
   siteUrl?: string;
 
+  /** Your site/app name — used for rankings on openrouter.ai. */
   siteName?: string;
 
+  /** Extra params passed through to the API body. */
   modelKwargs?: Record<string, unknown>;
 
+  /** Whether to include token usage in streaming chunks. Defaults to `true`. */
   streamUsage: boolean;
 
-  constructor(fields: ChatOpenRouterInput) {
+  constructor(fields: ChatOpenRouterParams) {
     super(fields);
     const apiKey =
       fields.apiKey ?? getEnvironmentVariable("OPENROUTER_API_KEY");
     if (!apiKey) {
-      throw new Error(
-        "OpenRouter API key is required. Set it via the `apiKey` parameter or the OPENROUTER_API_KEY environment variable."
+      throw new OpenRouterAuthError(
+        "OpenRouter API key is required. Get one at https://openrouter.ai/keys and set it via the `apiKey` parameter or the OPENROUTER_API_KEY environment variable."
       );
     }
     this.apiKey = apiKey;
@@ -197,9 +237,9 @@ export class ChatOpenRouter extends BaseChatModel<
     return "openrouter";
   }
 
-  // ---------------------------------------------------------------------------
-  // Request building
-  // ---------------------------------------------------------------------------
+  get profile(): ModelProfile {
+    return PROFILES[this.model] ?? {};
+  }
 
   private buildHeaders(): Record<string, string> {
     return {
@@ -216,7 +256,7 @@ export class ChatOpenRouter extends BaseChatModel<
 
   override invocationParams(
     options: this["ParsedCallOptions"]
-  ): OpenRouterRequestBody {
+  ): Omit<OpenRouterRequestBody, "messages"> {
     const tools = options.tools
       ? convertToolsToOpenRouter(options.tools, { strict: options.strict })
       : undefined;
@@ -251,10 +291,6 @@ export class ChatOpenRouter extends BaseChatModel<
     };
   }
 
-  // ---------------------------------------------------------------------------
-  // LangSmith tracing
-  // ---------------------------------------------------------------------------
-
   override getLsParams(options: this["ParsedCallOptions"]): LangSmithParams {
     const params = this.invocationParams(options);
     return {
@@ -266,10 +302,6 @@ export class ChatOpenRouter extends BaseChatModel<
       ls_stop: options.stop,
     };
   }
-
-  // ---------------------------------------------------------------------------
-  // Non-streaming generation
-  // ---------------------------------------------------------------------------
 
   async _generate(
     messages: BaseMessage[],
@@ -303,8 +335,7 @@ export class ChatOpenRouter extends BaseChatModel<
     const message = convertOpenRouterResponseToAIMessage(choice, data);
     message.usage_metadata = convertUsageMetadata(data.usage);
 
-    const text =
-      typeof message.content === "string" ? message.content : "";
+    const text = typeof message.content === "string" ? message.content : "";
 
     await runManager?.handleLLMNewToken(text);
 
@@ -321,10 +352,6 @@ export class ChatOpenRouter extends BaseChatModel<
       llmOutput: { tokenUsage: data.usage },
     };
   }
-
-  // ---------------------------------------------------------------------------
-  // Streaming generation
-  // ---------------------------------------------------------------------------
 
   async *_streamResponseChunks(
     messages: BaseMessage[],
@@ -379,8 +406,7 @@ export class ChatOpenRouter extends BaseChatModel<
           chunk.usage_metadata = convertUsageMetadata(data.usage);
         }
 
-        const text =
-          typeof chunk.content === "string" ? chunk.content : "";
+        const text = typeof chunk.content === "string" ? chunk.content : "";
 
         const generationChunk = new ChatGenerationChunk({
           message: chunk,
@@ -400,10 +426,6 @@ export class ChatOpenRouter extends BaseChatModel<
     }
   }
 
-  // ---------------------------------------------------------------------------
-  // Tool binding
-  // ---------------------------------------------------------------------------
-
   override bindTools(
     tools: BindToolsInput[],
     kwargs?: Partial<ChatOpenRouterCallOptions>
@@ -413,10 +435,6 @@ export class ChatOpenRouter extends BaseChatModel<
       tools,
     } as Partial<ChatOpenRouterCallOptions>);
   }
-
-  // ---------------------------------------------------------------------------
-  // Structured output
-  // ---------------------------------------------------------------------------
 
   withStructuredOutput<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -451,10 +469,7 @@ export class ChatOpenRouter extends BaseChatModel<
     config?: StructuredOutputMethodOptions<boolean>
   ):
     | Runnable<BaseLanguageModelInput, RunOutput>
-    | Runnable<
-        BaseLanguageModelInput,
-        { raw: BaseMessage; parsed: RunOutput }
-      >;
+    | Runnable<BaseLanguageModelInput, { raw: BaseMessage; parsed: RunOutput }>;
 
   withStructuredOutput<
     RunOutput extends Record<string, unknown> = Record<string, unknown>
@@ -470,7 +485,13 @@ export class ChatOpenRouter extends BaseChatModel<
       schema: outputSchema,
     };
 
-    const method = config?.method ?? "functionCalling";
+    const method = resolveOpenRouterStructuredOutputMethod({
+      model: this.model,
+      method: config?.method,
+      profile: this.profile,
+      models: this.models,
+      route: this.route,
+    });
 
     if (method === "jsonSchema") {
       const jsonSchemaParams = {

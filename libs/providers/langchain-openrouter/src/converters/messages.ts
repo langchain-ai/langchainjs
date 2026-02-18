@@ -19,8 +19,7 @@ import type { OpenRouter } from "../api-types.js";
  * contains this object directly (without the `data` wrapper that the
  * OpenAPI spec describes on `ChatStreamingResponseChunk`).
  */
-export type StreamingChunkData =
-  OpenRouter.ChatStreamingResponseChunk["data"];
+export type StreamingChunkData = OpenRouter.ChatStreamingResponseChunk["data"];
 
 /**
  * Content part types we build when converting outbound messages.

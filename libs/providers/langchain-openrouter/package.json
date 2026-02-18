@@ -27,9 +27,11 @@
     "test:standard:unit": "vitest run --mode standard-unit",
     "test:standard:int": "vitest run --mode standard-int",
     "test:standard": "pnpm test:standard:unit && pnpm test:standard:int",
-    "format": "prettier --config .prettierrc --write \"src\"",
-    "format:check": "prettier --config .prettierrc --check \"src\"",
-    "typegen": "sparktype generate",
+    "format": "prettier --write \"src\"",
+    "format:check": "prettier --check \"src\"",
+    "typegen": "pnpm run typegen:sparktype && pnpm run typegen:profiles",
+    "typegen:sparktype": "sparktype generate",
+    "typegen:profiles": "pnpm --filter @langchain/model-profiles make --config profiles.toml",
     "typegen:check": "sparktype check"
   },
   "dependencies": {

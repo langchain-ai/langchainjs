@@ -24,52 +24,51 @@ export interface OpenRouterPlugin {
 }
 
 /**
- * Full request body sent to the OpenRouter API.
- *
- * Extends the generated `ChatGenerationParams` with additional
- * OpenRouter-specific fields not yet in the OpenAPI spec.
- */
-export type OpenRouterRequestBody = OpenRouter.ChatGenerationParams & {
-  top_k?: number | null;
-  repetition_penalty?: number | null;
-  min_p?: number | null;
-  top_a?: number | null;
-  prediction?: { type: "content"; content: string };
-};
-
-/**
  * Shared fields that can be set at construction time or overridden per-call.
  */
 export interface ChatOpenRouterFields {
+  /** Sampling temperature (0–2). */
   temperature?: number;
+  /** Maximum number of tokens to generate. */
   maxTokens?: number;
+  /** Nucleus sampling cutoff probability. */
   topP?: number;
+  /** Top-K sampling: only consider the K most likely tokens. */
   topK?: number;
+  /** Additive penalty based on how often a token has appeared so far (−2 to 2). */
   frequencyPenalty?: number;
+  /** Additive penalty based on whether a token has appeared at all (−2 to 2). */
   presencePenalty?: number;
+  /** Multiplicative penalty applied to repeated token logits (0 to 2). */
   repetitionPenalty?: number;
+  /** Minimum probability threshold for token sampling. */
   minP?: number;
+  /** Top-A sampling threshold. */
   topA?: number;
+  /** Random seed for deterministic generation. */
   seed?: number;
+  /** Stop sequences that halt generation. */
   stop?: string[];
+  /** Token-level biases to apply during sampling. */
   logitBias?: Record<string, number>;
+  /** Number of most-likely log-probabilities to return per token. */
   topLogprobs?: number;
-  /** OpenRouter-specific: transformations to apply to the request. */
+  /** OpenRouter-specific transformations to apply to the request. */
   transforms?: string[];
-  /** OpenRouter-specific: list of models for routing. */
+  /** OpenRouter-specific list of models for routing. */
   models?: string[];
-  /** OpenRouter-specific: routing strategy. */
+  /** OpenRouter-specific routing strategy. */
   route?: "fallback";
-  /** OpenRouter-specific: provider preferences / ordering. */
+  /** OpenRouter-specific provider preferences and ordering. */
   provider?: OpenRouter.ProviderPreferences;
-  /** OpenRouter-specific: plugins to enable (e.g. web search). */
+  /** OpenRouter plugins to enable (e.g. web search). */
   plugins?: OpenRouterPlugin[];
 }
 
 /**
  * Constructor parameters for `ChatOpenRouter`.
  */
-export interface ChatOpenRouterInput
+export interface ChatOpenRouterParams
   extends BaseChatModelParams,
     ChatOpenRouterFields {
   /** Model identifier, e.g. "anthropic/claude-4-sonnet". */
@@ -96,7 +95,9 @@ export interface ChatOpenRouterInput
 export interface ChatOpenRouterCallOptions
   extends BaseChatModelCallOptions,
     ChatOpenRouterFields {
+  /** Tool definitions to bind for this call. */
   tools?: BindToolsInput[];
+  /** Response format constraint (text, JSON object, or JSON schema). */
   response_format?: OpenRouterResponseFormat;
   /** Whether tool schemas should use strict mode. */
   strict?: boolean;
@@ -104,5 +105,6 @@ export interface ChatOpenRouterCallOptions
   prediction?: { type: "content"; content: string };
   /** Stable identifier for end-users, used for abuse detection. */
   user?: string;
+  /** Abort signal to cancel the request. */
   signal?: AbortSignal;
 }
