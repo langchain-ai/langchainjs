@@ -2,35 +2,37 @@ import { test, expect, afterAll } from "vitest";
 import { MongoClient, ObjectId } from "mongodb";
 import { AIMessage, HumanMessage } from "@langchain/core/messages";
 import {
-  AzureCosmosDBMongoChatMessageHistory,
-  AzureCosmosDBMongoChatHistoryDBConfig,
-} from "../../chat_histories/mongodb.js";
+  AzureDocumentDBChatMessageHistory,
+  AzureDocumentDBChatHistoryDBConfig,
+} from "../../chat_histories/documentdb.js";
 
 afterAll(async () => {
-  const client = new MongoClient(
-    process.env.AZURE_COSMOSDB_MONGODB_CONNECTION_STRING!
-  );
+  const connectionString =
+    process.env.AZURE_DOCUMENTDB_CONNECTION_STRING ||
+    process.env.AZURE_COSMOSDB_MONGODB_CONNECTION_STRING;
+  const client = new MongoClient(connectionString!);
   await client.connect();
   await client.db("langchain").dropDatabase();
   await client.close();
 });
 
-test("Test Azure Cosmos MongoDB history store", async () => {
-  expect(process.env.AZURE_COSMOSDB_MONGODB_CONNECTION_STRING).toBeDefined();
+test("Test Azure DocumentDB history store", async () => {
+  const connectionString =
+    process.env.AZURE_DOCUMENTDB_CONNECTION_STRING ||
+    process.env.AZURE_COSMOSDB_MONGODB_CONNECTION_STRING;
+  expect(connectionString).toBeDefined();
 
-  const mongoClient = new MongoClient(
-    process.env.AZURE_COSMOSDB_MONGODB_CONNECTION_STRING!
-  );
-  const dbcfg: AzureCosmosDBMongoChatHistoryDBConfig = {
+  const mongoClient = new MongoClient(connectionString!);
+  const dbcfg: AzureDocumentDBChatHistoryDBConfig = {
     client: mongoClient,
-    connectionString: process.env.AZURE_COSMOSDB_MONGODB_CONNECTION_STRING,
+    connectionString,
     databaseName: "langchain",
     collectionName: "chathistory",
   };
 
   const sessionId = new ObjectId().toString();
   const userId = new ObjectId().toString();
-  const chatHistory = new AzureCosmosDBMongoChatMessageHistory(
+  const chatHistory = new AzureDocumentDBChatMessageHistory(
     dbcfg,
     sessionId,
     userId
@@ -55,22 +57,23 @@ test("Test Azure Cosmos MongoDB history store", async () => {
   await mongoClient.close();
 });
 
-test("Test clear Azure Cosmos MongoDB history store", async () => {
-  expect(process.env.AZURE_COSMOSDB_MONGODB_CONNECTION_STRING).toBeDefined();
+test("Test clear Azure DocumentDB history store", async () => {
+  const connectionString =
+    process.env.AZURE_DOCUMENTDB_CONNECTION_STRING ||
+    process.env.AZURE_COSMOSDB_MONGODB_CONNECTION_STRING;
+  expect(connectionString).toBeDefined();
 
-  const mongoClient = new MongoClient(
-    process.env.AZURE_COSMOSDB_MONGODB_CONNECTION_STRING!
-  );
-  const dbcfg: AzureCosmosDBMongoChatHistoryDBConfig = {
+  const mongoClient = new MongoClient(connectionString!);
+  const dbcfg: AzureDocumentDBChatHistoryDBConfig = {
     client: mongoClient,
-    connectionString: process.env.AZURE_COSMOSDB_MONGODB_CONNECTION_STRING,
+    connectionString,
     databaseName: "langchain",
     collectionName: "chathistory",
   };
 
   const sessionId = new ObjectId().toString();
   const userId = new ObjectId().toString();
-  const chatHistory = new AzureCosmosDBMongoChatMessageHistory(
+  const chatHistory = new AzureDocumentDBChatMessageHistory(
     dbcfg,
     sessionId,
     userId
@@ -96,14 +99,15 @@ test("Test clear Azure Cosmos MongoDB history store", async () => {
 });
 
 test("Test getAllSessions and clearAllSessions", async () => {
-  expect(process.env.AZURE_COSMOSDB_MONGODB_CONNECTION_STRING).toBeDefined();
+  const connectionString =
+    process.env.AZURE_DOCUMENTDB_CONNECTION_STRING ||
+    process.env.AZURE_COSMOSDB_MONGODB_CONNECTION_STRING;
+  expect(connectionString).toBeDefined();
 
-  const mongoClient = new MongoClient(
-    process.env.AZURE_COSMOSDB_MONGODB_CONNECTION_STRING!
-  );
-  const dbcfg: AzureCosmosDBMongoChatHistoryDBConfig = {
+  const mongoClient = new MongoClient(connectionString!);
+  const dbcfg: AzureDocumentDBChatHistoryDBConfig = {
     client: mongoClient,
-    connectionString: process.env.AZURE_COSMOSDB_MONGODB_CONNECTION_STRING,
+    connectionString,
     databaseName: "langchain",
     collectionName: "chathistory",
   };
@@ -112,12 +116,12 @@ test("Test getAllSessions and clearAllSessions", async () => {
   const userId = new ObjectId().toString();
   const sessionId2 = new ObjectId().toString();
 
-  const chatHistory1 = new AzureCosmosDBMongoChatMessageHistory(
+  const chatHistory1 = new AzureDocumentDBChatMessageHistory(
     dbcfg,
     sessionId1,
     userId
   );
-  const chatHistory2 = new AzureCosmosDBMongoChatMessageHistory(
+  const chatHistory2 = new AzureDocumentDBChatMessageHistory(
     dbcfg,
     sessionId2,
     userId

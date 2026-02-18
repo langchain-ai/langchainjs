@@ -6,6 +6,15 @@ import { CosmosClient } from "@azure/cosmos";
 import { DefaultAzureCredential } from "@azure/identity";
 import { AzureCosmosDBNoSQLVectorStore } from "../azure_cosmosdb_nosql.js";
 
+function getEmbeddings() {
+  return new OpenAIEmbeddings({
+    model: process.env.OPENAI_EMBEDDINGS_MODEL,
+    configuration: {
+      baseURL: process.env.OPENAI_BASE_URL,
+    },
+  });
+}
+
 const DATABASE_NAME = "langchainTestDB";
 const CONTAINER_NAME = "testContainer";
 
@@ -65,13 +74,10 @@ describe("AzureCosmosDBNoSQLVectorStore", () => {
   });
 
   test("performs similarity search", async () => {
-    const vectorStore = new AzureCosmosDBNoSQLVectorStore(
-      new OpenAIEmbeddings(),
-      {
-        databaseName: DATABASE_NAME,
-        containerName: CONTAINER_NAME,
-      }
-    );
+    const vectorStore = new AzureCosmosDBNoSQLVectorStore(getEmbeddings(), {
+      databaseName: DATABASE_NAME,
+      containerName: CONTAINER_NAME,
+    });
 
     expect(vectorStore).toBeDefined();
 
@@ -104,7 +110,7 @@ describe("AzureCosmosDBNoSQLVectorStore", () => {
     const vectorStore = await AzureCosmosDBNoSQLVectorStore.fromTexts(
       texts,
       {},
-      new OpenAIEmbeddings(),
+      getEmbeddings(),
       {
         databaseName: DATABASE_NAME,
         containerName: CONTAINER_NAME,
@@ -154,13 +160,10 @@ describe("AzureCosmosDBNoSQLVectorStore", () => {
   });
 
   test("performs similarity search with filter", async () => {
-    const vectorStore = new AzureCosmosDBNoSQLVectorStore(
-      new OpenAIEmbeddings(),
-      {
-        databaseName: DATABASE_NAME,
-        containerName: CONTAINER_NAME,
-      }
-    );
+    const vectorStore = new AzureCosmosDBNoSQLVectorStore(getEmbeddings(), {
+      databaseName: DATABASE_NAME,
+      containerName: CONTAINER_NAME,
+    });
 
     expect(vectorStore).toBeDefined();
 
@@ -182,13 +185,10 @@ describe("AzureCosmosDBNoSQLVectorStore", () => {
   });
 
   test("performs similarity search including vectors in the results", async () => {
-    const vectorStore = new AzureCosmosDBNoSQLVectorStore(
-      new OpenAIEmbeddings(),
-      {
-        databaseName: DATABASE_NAME,
-        containerName: CONTAINER_NAME,
-      }
-    );
+    const vectorStore = new AzureCosmosDBNoSQLVectorStore(getEmbeddings(), {
+      databaseName: DATABASE_NAME,
+      containerName: CONTAINER_NAME,
+    });
 
     expect(vectorStore).toBeDefined();
 
@@ -213,13 +213,10 @@ describe("AzureCosmosDBNoSQLVectorStore", () => {
   });
 
   test("deletes documents by id", async () => {
-    const vectorStore = new AzureCosmosDBNoSQLVectorStore(
-      new OpenAIEmbeddings(),
-      {
-        databaseName: DATABASE_NAME,
-        containerName: CONTAINER_NAME,
-      }
-    );
+    const vectorStore = new AzureCosmosDBNoSQLVectorStore(getEmbeddings(), {
+      databaseName: DATABASE_NAME,
+      containerName: CONTAINER_NAME,
+    });
 
     const ids = await vectorStore.addDocuments([
       { pageContent: "This book is about politics", metadata: { a: 1 } },
@@ -239,13 +236,10 @@ describe("AzureCosmosDBNoSQLVectorStore", () => {
   });
 
   test("deletes documents by filter", async () => {
-    const vectorStore = new AzureCosmosDBNoSQLVectorStore(
-      new OpenAIEmbeddings(),
-      {
-        databaseName: DATABASE_NAME,
-        containerName: CONTAINER_NAME,
-      }
-    );
+    const vectorStore = new AzureCosmosDBNoSQLVectorStore(getEmbeddings(), {
+      databaseName: DATABASE_NAME,
+      containerName: CONTAINER_NAME,
+    });
 
     await vectorStore.addDocuments([
       { pageContent: "This book is about politics", metadata: { a: 1 } },
@@ -270,13 +264,10 @@ describe("AzureCosmosDBNoSQLVectorStore", () => {
   });
 
   test("deletes all documents", async () => {
-    const vectorStore = new AzureCosmosDBNoSQLVectorStore(
-      new OpenAIEmbeddings(),
-      {
-        databaseName: DATABASE_NAME,
-        containerName: CONTAINER_NAME,
-      }
-    );
+    const vectorStore = new AzureCosmosDBNoSQLVectorStore(getEmbeddings(), {
+      databaseName: DATABASE_NAME,
+      containerName: CONTAINER_NAME,
+    });
 
     const documents = Array.from({ length: 101 }, (_, i) => ({
       pageContent: `Document ${i}`,
@@ -297,13 +288,10 @@ describe("AzureCosmosDBNoSQLVectorStore", () => {
     // First initialize using a regular connection string
     // to create the database and container, as managed identity
     // with RBAC does not have permission to create them.
-    const vectorStoreCS = new AzureCosmosDBNoSQLVectorStore(
-      new OpenAIEmbeddings(),
-      {
-        databaseName: DATABASE_NAME,
-        containerName: CONTAINER_NAME,
-      }
-    );
+    const vectorStoreCS = new AzureCosmosDBNoSQLVectorStore(getEmbeddings(), {
+      databaseName: DATABASE_NAME,
+      containerName: CONTAINER_NAME,
+    });
     await vectorStoreCS.addDocuments([{ pageContent: "init", metadata: {} }]);
 
     const connectionString = process.env.AZURE_COSMOSDB_NOSQL_CONNECTION_STRING;
@@ -315,13 +303,10 @@ describe("AzureCosmosDBNoSQLVectorStore", () => {
     expect(process.env.AZURE_COSMOSDB_NOSQL_CONNECTION_STRING).toBeFalsy();
     expect(process.env.AZURE_COSMOSDB_NOSQL_ENDPOINT).toBeDefined();
 
-    const vectorStore = new AzureCosmosDBNoSQLVectorStore(
-      new OpenAIEmbeddings(),
-      {
-        databaseName: DATABASE_NAME,
-        containerName: CONTAINER_NAME,
-      }
-    );
+    const vectorStore = new AzureCosmosDBNoSQLVectorStore(getEmbeddings(), {
+      databaseName: DATABASE_NAME,
+      containerName: CONTAINER_NAME,
+    });
 
     expect(vectorStore).toBeDefined();
 
