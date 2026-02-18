@@ -106,8 +106,8 @@ describe("todoListMiddleware", () => {
 
     const model = new ChatOpenAI({
       model: "gpt-4o",
+      apiKey: "test-key",
       configuration: {
-        apiKey: "test-key",
         fetch: openAIFetchMock,
       },
       maxRetries: 0, // Disable retries for faster test execution
