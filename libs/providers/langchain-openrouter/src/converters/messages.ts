@@ -18,10 +18,7 @@ import type { OpenRouter } from "../api-types.js";
  */
 export type StreamingChunkData = OpenRouter.ChatStreamingResponseChunk["data"];
 
-// ---------------------------------------------------------------------------
 // LangChain → OpenRouter
-// ---------------------------------------------------------------------------
-
 /**
  * Convert an array of LangChain messages to the OpenRouter request format.
  *
@@ -40,10 +37,7 @@ export function convertMessagesToOpenRouterParams(
   });
 }
 
-// ---------------------------------------------------------------------------
 // OpenRouter → LangChain (non-streaming)
-// ---------------------------------------------------------------------------
-
 /**
  * Convert a non-streaming OpenRouter response choice into a BaseMessage.
  *
@@ -72,10 +66,7 @@ export function convertOpenRouterResponseToBaseMessage(
   return message;
 }
 
-// ---------------------------------------------------------------------------
 // OpenRouter → LangChain (streaming)
-// ---------------------------------------------------------------------------
-
 /**
  * Convert a streaming delta into a BaseMessageChunk.
  *
@@ -104,9 +95,7 @@ export function convertOpenRouterDeltaToBaseMessageChunk(
   return chunk;
 }
 
-// ---------------------------------------------------------------------------
 // Usage metadata
-// ---------------------------------------------------------------------------
 
 /**
  * Convert OpenRouter usage info to LangChain's `UsageMetadata`,

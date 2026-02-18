@@ -41,6 +41,13 @@ import type {
 import type { OpenAI as OpenAIClient } from "openai";
 import type { OpenRouter } from "../api-types.js";
 
+/**
+ * Full request body sent to the OpenRouter `/chat/completions` endpoint.
+ *
+ * Extends the base generation params with OpenRouter-specific sampling
+ * knobs (`top_k`, `min_p`, etc.) and features (`prediction`, `transforms`)
+ * that aren't part of the standard OpenAI spec.
+ */
 type OpenRouterRequestBody = Omit<
   OpenRouter.ChatGenerationParams,
   "messages"
@@ -72,6 +79,11 @@ const DEFAULT_BASE_URL = "https://openrouter.ai/api/v1";
 
 /**
  * OpenRouter chat model integration.
+ *
+ * Talks directly to the OpenRouter REST API via `fetch` (no SDK dependency)
+ * and supports tool calling, structured output, and streaming. Any model
+ * available on OpenRouter can be used by passing its identifier (e.g.
+ * `"anthropic/claude-4-sonnet"`) as the `model` param.
  */
 export class ChatOpenRouter extends BaseChatModel<
   ChatOpenRouterCallOptions,
@@ -83,18 +95,21 @@ export class ChatOpenRouter extends BaseChatModel<
 
   lc_serializable = true;
 
+  /** Maps secret fields to the environment variable they can be loaded from. */
   get lc_secrets(): { [key: string]: string } | undefined {
     return {
       apiKey: "OPENROUTER_API_KEY",
     };
   }
 
+  /** Allows serialized JSON to use `modelName` as an alias for `model`. */
   get lc_aliases(): Record<string, string> {
     return {
       modelName: "model",
     };
   }
 
+  /** Fields that may be overridden per-call via `.bind()` / `.withConfig()`. */
   get callKeys(): string[] {
     return [
       ...super.callKeys,
@@ -244,10 +259,12 @@ export class ChatOpenRouter extends BaseChatModel<
     return "openrouter";
   }
 
+  /** Static capability profile (context size, tool support, etc.) for the current model. */
   get profile(): ModelProfile {
     return PROFILES[this.model] ?? {};
   }
 
+  /** Builds auth + content-type headers, plus optional site attribution headers. */
   private buildHeaders(): Record<string, string> {
     return {
       Authorization: `Bearer ${this.apiKey}`,
@@ -257,10 +274,15 @@ export class ChatOpenRouter extends BaseChatModel<
     };
   }
 
+  /** Returns the full chat-completions endpoint URL. */
   private buildUrl(): string {
     return `${this.baseURL}/chat/completions`;
   }
 
+  /**
+   * Merges constructor-level defaults with per-call overrides into the
+   * API request body (everything except `messages`, which is added later).
+   */
   override invocationParams(
     options: this["ParsedCallOptions"]
   ): Omit<OpenRouterRequestBody, "messages"> {
@@ -298,6 +320,7 @@ export class ChatOpenRouter extends BaseChatModel<
     };
   }
 
+  /** Returns metadata for LangSmith tracing (provider, model name, temperature, etc.). */
   override getLsParams(options: this["ParsedCallOptions"]): LangSmithParams {
     const params = this.invocationParams(options);
     return {
@@ -310,6 +333,10 @@ export class ChatOpenRouter extends BaseChatModel<
     };
   }
 
+  /**
+   * Non-streaming generation. Sends a single request and returns the
+   * complete response with the generated message and token usage.
+   */
   async _generate(
     messages: BaseMessage[],
     options: this["ParsedCallOptions"],
@@ -362,6 +389,11 @@ export class ChatOpenRouter extends BaseChatModel<
     };
   }
 
+  /**
+   * Streaming generation. Opens an SSE connection and yields one
+   * `ChatGenerationChunk` per delta received from the API. The stream
+   * pipeline is: raw bytes -> text -> SSE events -> JSON-parsed deltas.
+   */
   async *_streamResponseChunks(
     messages: BaseMessage[],
     options: this["ParsedCallOptions"],
@@ -439,6 +471,10 @@ export class ChatOpenRouter extends BaseChatModel<
     }
   }
 
+  /**
+   * Returns a new Runnable with the given tools bound into every call.
+   * Equivalent to `.withConfig({ tools, ...kwargs })`.
+   */
   override bindTools(
     tools: BindToolsInput[],
     kwargs?: Partial<ChatOpenRouterCallOptions>
@@ -449,6 +485,19 @@ export class ChatOpenRouter extends BaseChatModel<
     } as Partial<ChatOpenRouterCallOptions>);
   }
 
+  /**
+   * Returns a Runnable that forces the model to produce output conforming
+   * to `outputSchema` (a Zod schema or plain JSON Schema object).
+   *
+   * The extraction strategy (JSON Schema response format, function calling,
+   * or JSON mode) is chosen automatically based on model capabilities —
+   * see {@link resolveOpenRouterStructuredOutputMethod}. You can override
+   * this via `config.method`.
+   *
+   * When `config.includeRaw` is `true` the returned object contains both
+   * the raw `BaseMessage` and the parsed output, with a fallback that
+   * sets `parsed: null` if the parser throws.
+   */
   withStructuredOutput<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     RunOutput extends Record<string, any> = Record<string, any>

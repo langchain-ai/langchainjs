@@ -1,5 +1,15 @@
 import type { ModelProfile } from "@langchain/core/language_models/profile";
 
+/**
+ * The three strategies OpenRouter can use to extract structured output:
+ *
+ * - `"jsonSchema"` — native JSON Schema response format (only models that
+ *    advertise `structuredOutput` in their profile support this).
+ * - `"functionCalling"` — wraps the schema as a tool/function call and
+ *    parses the tool output. Works on any model that supports tools.
+ * - `"jsonMode"` — asks the model to respond in JSON without a strict
+ *    schema constraint (`response_format: { type: "json_object" }`).
+ */
 const SUPPORTED_STRUCTURED_OUTPUT_METHODS = [
   "jsonSchema",
   "functionCalling",
@@ -10,13 +20,33 @@ export type OpenRouterStructuredOutputMethod =
   (typeof SUPPORTED_STRUCTURED_OUTPUT_METHODS)[number];
 
 interface ResolveStructuredOutputMethodParams {
+  /** The model identifier, e.g. `"anthropic/claude-4-sonnet"`. */
   model: string;
+  /** Caller-requested method, or `undefined` to auto-detect. */
   method: unknown;
+  /** Static capability profile for the model. */
   profile: ModelProfile;
+  /** Optional list of candidate models used with OpenRouter routing. */
   models?: string[];
+  /** Optional routing strategy (currently only `"fallback"`). */
   route?: "fallback";
 }
 
+/**
+ * Determines which structured-output strategy to use for a given model
+ * and caller configuration.
+ *
+ * Resolution order:
+ * 1. If the caller explicitly requested a method, validate and return it
+ *    (throws if the method is unsupported or incompatible with the model).
+ * 2. If OpenRouter routing is active (multi-model `models` list or
+ *    `route: "fallback"`), fall back to `"functionCalling"` because the
+ *    actual backend model — and its capabilities — are unknown at request
+ *    time.
+ * 3. Otherwise, pick the best method the model supports: `"jsonSchema"`
+ *    when the profile advertises native structured output, else
+ *    `"functionCalling"`.
+ */
 export function resolveOpenRouterStructuredOutputMethod({
   model,
   method,
@@ -54,8 +84,6 @@ export function resolveOpenRouterStructuredOutputMethod({
   const hasRoutedModelSelection =
     route === "fallback" || (models?.length ?? 0) > 0;
 
-  // OpenRouter routing may resolve to different backend models at runtime.
-  // Use function calling as the safer default when model capability certainty is lower.
   if (hasRoutedModelSelection) {
     return "functionCalling";
   }

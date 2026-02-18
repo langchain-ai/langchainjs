@@ -1,17 +1,20 @@
-/** @internal */
-const OPENROUTER_ERROR_SYMBOL = Symbol.for("langchain.openrouter.error");
-/** @internal */
-const OPENROUTER_AUTH_ERROR_SYMBOL = Symbol.for(
-  "langchain.openrouter.error.auth"
-);
-/** @internal */
-const OPENROUTER_RATE_LIMIT_ERROR_SYMBOL = Symbol.for(
-  "langchain.openrouter.error.rate_limit"
-);
+import { ns as baseNs, LangChainError } from "@langchain/core/errors";
 
-/** Base error for all OpenRouter API errors. */
-export class OpenRouterError extends Error {
-  readonly [OPENROUTER_ERROR_SYMBOL] = true as const;
+const ns = baseNs.sub("openrouter");
+
+/**
+ * Base error for all OpenRouter API errors.
+ *
+ * Subclasses ({@link OpenRouterAuthError}, {@link OpenRouterRateLimitError})
+ * represent specific failure modes. Use the static {@link fromResponse}
+ * factory to let the library pick the right subclass from an HTTP response,
+ * or throw this class directly for generic API failures.
+ *
+ * Type-check errors with `OpenRouterError.isInstance(err)` rather than
+ * `instanceof` — this avoids cross-realm / duplicate-package pitfalls.
+ */
+export class OpenRouterError extends ns.brand(LangChainError) {
+  readonly name: string = "OpenRouterError";
 
   /** HTTP or API error code, if available. */
   code?: number;
@@ -25,27 +28,22 @@ export class OpenRouterError extends Error {
     metadata?: Record<string, unknown>
   ) {
     super(message);
-    this.name = "OpenRouterError";
     this.code = code;
     this.metadata = metadata;
-    if ("captureStackTrace" in Error) {
-      (
-        Error as { captureStackTrace: (t: object, c: unknown) => void }
-      ).captureStackTrace(this, this.constructor);
-    }
   }
 
-  /** Returns `true` if `obj` is any `OpenRouterError` (including subclasses). */
-  static isInstance(obj: unknown): obj is OpenRouterError {
-    return (
-      typeof obj === "object" &&
-      obj !== null &&
-      OPENROUTER_ERROR_SYMBOL in obj &&
-      obj[OPENROUTER_ERROR_SYMBOL] === true
-    );
-  }
-
-  /** Creates a typed error from an HTTP response (401/403 -> Auth, 429 -> RateLimit). */
+  /**
+   * Creates a typed error from an HTTP `Response`.
+   *
+   * Attempts to parse the body as JSON (OpenRouter's standard
+   * `{ error: { message, code, metadata } }` shape). Falls back to the
+   * raw HTTP status text when the body is missing or unparseable.
+   *
+   * Status-code mapping:
+   * - 401 / 403 -> {@link OpenRouterAuthError}
+   * - 429       -> {@link OpenRouterRateLimitError}
+   * - anything else -> {@link OpenRouterError}
+   */
   static async fromResponse(response: Response): Promise<OpenRouterError> {
     let body: Record<string, unknown> = {};
     try {
@@ -75,9 +73,15 @@ export class OpenRouterError extends Error {
   }
 }
 
-/** Thrown on authentication or authorization failures (HTTP 401/403 or missing API key). */
-export class OpenRouterAuthError extends OpenRouterError {
-  readonly [OPENROUTER_AUTH_ERROR_SYMBOL] = true as const;
+/**
+ * Thrown on authentication or authorization failures.
+ *
+ * Created automatically by {@link OpenRouterError.fromResponse} for
+ * HTTP 401/403 responses, and thrown directly by the constructor when
+ * no API key is provided.
+ */
+export class OpenRouterAuthError extends ns.brand(OpenRouterError, "auth") {
+  readonly name = "OpenRouterAuthError";
 
   constructor(
     message: string,
@@ -85,23 +89,20 @@ export class OpenRouterAuthError extends OpenRouterError {
     metadata?: Record<string, unknown>
   ) {
     super(message, code, metadata);
-    this.name = "OpenRouterAuthError";
-  }
-
-  /** Returns `true` if `obj` is an `OpenRouterAuthError`. */
-  static isInstance(obj: unknown): obj is OpenRouterAuthError {
-    return (
-      typeof obj === "object" &&
-      obj !== null &&
-      OPENROUTER_AUTH_ERROR_SYMBOL in obj &&
-      obj[OPENROUTER_AUTH_ERROR_SYMBOL] === true
-    );
   }
 }
 
-/** Thrown when the API returns a rate-limit response (HTTP 429). */
-export class OpenRouterRateLimitError extends OpenRouterError {
-  readonly [OPENROUTER_RATE_LIMIT_ERROR_SYMBOL] = true as const;
+/**
+ * Thrown when the API returns HTTP 429 (Too Many Requests).
+ *
+ * Callers can catch this specifically to implement back-off / retry
+ * logic without catching unrelated API errors.
+ */
+export class OpenRouterRateLimitError extends ns.brand(
+  OpenRouterError,
+  "rate_limit"
+) {
+  readonly name = "OpenRouterRateLimitError";
 
   constructor(
     message: string,
@@ -109,16 +110,5 @@ export class OpenRouterRateLimitError extends OpenRouterError {
     metadata?: Record<string, unknown>
   ) {
     super(message, code, metadata);
-    this.name = "OpenRouterRateLimitError";
-  }
-
-  /** Returns `true` if `obj` is an `OpenRouterRateLimitError`. */
-  static isInstance(obj: unknown): obj is OpenRouterRateLimitError {
-    return (
-      typeof obj === "object" &&
-      obj !== null &&
-      OPENROUTER_RATE_LIMIT_ERROR_SYMBOL in obj &&
-      obj[OPENROUTER_RATE_LIMIT_ERROR_SYMBOL] === true
-    );
   }
 }
