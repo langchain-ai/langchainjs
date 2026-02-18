@@ -1,5 +1,11 @@
 # @langchain/core
 
+## 1.1.26
+
+### Patch Changes
+
+- [#10085](https://github.com/langchain-ai/langchainjs/pull/10085) [`ed6ea53`](https://github.com/langchain-ai/langchainjs/commit/ed6ea53c38a004b65e30c0f5888a0ac7d8ee7028) Thanks [@colifran](https://github.com/colifran)! - fix(google): tool_calls are not preserved when concatenating AIMessageChunks
+
 ## 1.1.25
 
 ### Patch Changes
