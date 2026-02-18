@@ -4,8 +4,9 @@ import { z as z4 } from "zod/v4";
 import { zodToJsonSchema } from "../../utils/zod-to-json-schema/index.js";
 import { FakeChatModel, FakeListChatModel } from "../../utils/testing/index.js";
 import { HumanMessage } from "../../messages/human.js";
-
+import { getBufferString } from "../../messages/utils.js";
 import { AIMessage } from "../../messages/ai.js";
+import { sha256 } from "../../utils/hash.js";
 import { RunCollectorCallbackHandler } from "../../tracers/run_collector.js";
 
 test("Test ChatModel accepts array shorthand for messages", async () => {
@@ -267,20 +268,19 @@ test("Test ChatModel can cache complex messages", async () => {
     content: contentToCache,
   });
 
-  // Cache key now serializes the full message content (including non-text blocks)
+  // Array content triggers the JSON serialization path (even for text-only blocks)
   const cacheKey = JSON.stringify([
     { type: "human", content: contentToCache },
   ]);
   const llmKey = model._getSerializedCacheKeyParametersForCall({});
 
-  // Invoke model to trigger cache update
   await model.invoke([humanMessage]);
 
   const value = await model.cache.lookup(cacheKey, llmKey);
   expect(value).toBeDefined();
   if (!value) return;
 
-  // FakeChatModel JSON-stringifies array content for its response
+  // FakeChatModel JSON-stringifies array content
   const expectedText = JSON.stringify(contentToCache, null, 2);
   expect(value[0].text).toEqual(expectedText);
 
@@ -350,6 +350,30 @@ test("Test ChatModel with cache does not start multiple chat model runs", async 
   expect(runCollector.tracedRuns[1].extra?.cached).toBe(true);
 });
 
+test("Test ChatModel cache key backward compat for plain text messages", async () => {
+  const model = new FakeChatModel({
+    cache: true,
+  });
+  if (!model.cache) {
+    throw new Error("Cache not enabled");
+  }
+
+  const humanMessage = new HumanMessage("What is the weather?");
+  const legacyKey = getBufferString([humanMessage]);
+  expect(legacyKey).toBe("Human: What is the weather?");
+
+  const llmKey = model._getSerializedCacheKeyParametersForCall({});
+
+  await model.invoke([humanMessage]);
+
+  // The cache key for plain string content must match getBufferString
+  // so that existing cache entries created before this fix remain valid.
+  const value = await model.cache.lookup(legacyKey, llmKey);
+  expect(value).toBeDefined();
+  if (!value) return;
+  expect(value[0].text).toEqual("What is the weather?");
+});
+
 test("Test ChatModel cache differentiates multimodal content", async () => {
   const model = new FakeChatModel({
     cache: true,
@@ -382,9 +406,6 @@ test("Test ChatModel cache differentiates multimodal content", async () => {
     }),
   ]);
 
-  // FakeChatModel JSON-stringifies array content, so different images
-  // produce different model outputs. With the fix, the second invocation
-  // should NOT return the first's cached result.
   expect(result1.content).not.toEqual(result2.content);
   expect(result1.content).toContain("AAAA");
   expect(result2.content).toContain("BBBB");
@@ -412,8 +433,45 @@ test("Test ChatModel cache hits for identical multimodal content", async () => {
   const result1 = await model.invoke([makeMessage()]);
   const result2 = await model.invoke([makeMessage()]);
 
-  // Identical multimodal content should still produce cache hits
   expect(result1.content).toEqual(result2.content);
+});
+
+test("Test ChatModel cache key hashes base64 data for compactness", async () => {
+  const model = new FakeChatModel({
+    cache: true,
+  });
+  if (!model.cache) {
+    throw new Error("Cache not enabled");
+  }
+
+  const dataUrl = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAo=";
+  const humanMessage = new HumanMessage({
+    content: [
+      { type: "image_url", image_url: { url: dataUrl } },
+      { type: "text", text: "Describe this" },
+    ],
+  });
+
+  const llmKey = model._getSerializedCacheKeyParametersForCall({});
+
+  await model.invoke([humanMessage]);
+
+  // The cache key should contain a sha256 digest, not the raw base64 data
+  const expectedKey = JSON.stringify([
+    {
+      type: "human",
+      content: [
+        {
+          type: "image_url",
+          image_url: { url: `sha256:${sha256(dataUrl)}` },
+        },
+        { type: "text", text: "Describe this" },
+      ],
+    },
+  ]);
+
+  const value = await model.cache.lookup(expectedKey, llmKey);
+  expect(value).toBeDefined();
 });
 
 test("Test ChatModel can emit a custom event", async () => {
