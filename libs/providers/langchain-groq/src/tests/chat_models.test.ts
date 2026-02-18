@@ -12,6 +12,15 @@ test("Serialization", () => {
   );
 });
 
+test("Constructor shorthand", () => {
+  const model = new ChatGroq("llama-3.3-70b-versatile", {
+    apiKey: "foo",
+    temperature: 0.1,
+  });
+  expect(model.model).toBe("llama-3.3-70b-versatile");
+  expect(model.temperature).toBe(0.1);
+});
+
 test("messageToGroqRole", () => {
   // Test generic messages (ChatMessage type = "generic") with valid roles
   // These test the extractGenericMessageCustomRole path

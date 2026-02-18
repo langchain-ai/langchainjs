@@ -106,7 +106,7 @@ describe("todoListMiddleware", () => {
 
     const model = new ChatOpenAI({
       model: "gpt-4o",
-      apiKey: "test-key", // Add required API key for testing
+      apiKey: "test-key",
       configuration: {
         fetch: openAIFetchMock,
       },

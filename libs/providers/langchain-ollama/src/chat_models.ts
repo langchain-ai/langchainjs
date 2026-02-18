@@ -88,7 +88,7 @@ export interface ChatOllamaInput
    * will be pulled.
    * @default "llama3"
    */
-  model?: string;
+  model?: OllamaChatRequest["model"];
   /**
    * The host URL of the Ollama server.
    * Defaults to `OLLAMA_BASE_URL` if set.
@@ -498,55 +498,67 @@ export class ChatOllama
 
   think?: boolean;
 
-  constructor(fields?: ChatOllamaInput) {
-    super(fields ?? {});
+  constructor(
+    model: OllamaChatRequest["model"],
+    fields?: Omit<ChatOllamaInput, "model">
+  );
+  constructor(fields?: ChatOllamaInput);
+  constructor(
+    modelOrFields?: string | ChatOllamaInput,
+    fieldsArg?: Omit<ChatOllamaInput, "model">
+  ) {
+    const fields =
+      typeof modelOrFields === "string"
+        ? { ...(fieldsArg ?? {}), model: modelOrFields }
+        : (modelOrFields ?? {});
+    super(fields);
 
     this.baseUrl =
-      fields?.baseUrl ??
+      fields.baseUrl ??
       getEnvironmentVariable("OLLAMA_BASE_URL") ??
       this.baseUrl;
 
     this.client = new Ollama({
-      fetch: fields?.fetch,
+      fetch: fields.fetch,
       host: this.baseUrl,
-      headers: fields?.headers,
+      headers: fields.headers,
     });
 
-    this.model = fields?.model ?? this.model;
-    this.numa = fields?.numa;
-    this.numCtx = fields?.numCtx;
-    this.numBatch = fields?.numBatch;
-    this.numGpu = fields?.numGpu;
-    this.mainGpu = fields?.mainGpu;
-    this.lowVram = fields?.lowVram;
-    this.f16Kv = fields?.f16Kv;
-    this.logitsAll = fields?.logitsAll;
-    this.vocabOnly = fields?.vocabOnly;
-    this.useMmap = fields?.useMmap;
-    this.useMlock = fields?.useMlock;
-    this.embeddingOnly = fields?.embeddingOnly;
-    this.numThread = fields?.numThread;
-    this.numKeep = fields?.numKeep;
-    this.seed = fields?.seed;
-    this.numPredict = fields?.numPredict;
-    this.topK = fields?.topK;
-    this.topP = fields?.topP;
-    this.tfsZ = fields?.tfsZ;
-    this.typicalP = fields?.typicalP;
-    this.repeatLastN = fields?.repeatLastN;
-    this.temperature = fields?.temperature;
-    this.repeatPenalty = fields?.repeatPenalty;
-    this.presencePenalty = fields?.presencePenalty;
-    this.frequencyPenalty = fields?.frequencyPenalty;
-    this.mirostat = fields?.mirostat;
-    this.mirostatTau = fields?.mirostatTau;
-    this.mirostatEta = fields?.mirostatEta;
-    this.penalizeNewline = fields?.penalizeNewline;
-    this.streaming = fields?.streaming;
-    this.format = fields?.format;
-    this.keepAlive = fields?.keepAlive;
-    this.think = fields?.think;
-    this.checkOrPullModel = fields?.checkOrPullModel ?? this.checkOrPullModel;
+    this.model = fields.model ?? this.model;
+    this.numa = fields.numa;
+    this.numCtx = fields.numCtx;
+    this.numBatch = fields.numBatch;
+    this.numGpu = fields.numGpu;
+    this.mainGpu = fields.mainGpu;
+    this.lowVram = fields.lowVram;
+    this.f16Kv = fields.f16Kv;
+    this.logitsAll = fields.logitsAll;
+    this.vocabOnly = fields.vocabOnly;
+    this.useMmap = fields.useMmap;
+    this.useMlock = fields.useMlock;
+    this.embeddingOnly = fields.embeddingOnly;
+    this.numThread = fields.numThread;
+    this.numKeep = fields.numKeep;
+    this.seed = fields.seed;
+    this.numPredict = fields.numPredict;
+    this.topK = fields.topK;
+    this.topP = fields.topP;
+    this.tfsZ = fields.tfsZ;
+    this.typicalP = fields.typicalP;
+    this.repeatLastN = fields.repeatLastN;
+    this.temperature = fields.temperature;
+    this.repeatPenalty = fields.repeatPenalty;
+    this.presencePenalty = fields.presencePenalty;
+    this.frequencyPenalty = fields.frequencyPenalty;
+    this.mirostat = fields.mirostat;
+    this.mirostatTau = fields.mirostatTau;
+    this.mirostatEta = fields.mirostatEta;
+    this.penalizeNewline = fields.penalizeNewline;
+    this.streaming = fields.streaming;
+    this.format = fields.format;
+    this.keepAlive = fields.keepAlive;
+    this.think = fields.think;
+    this.checkOrPullModel = fields.checkOrPullModel ?? this.checkOrPullModel;
   }
 
   // Replace

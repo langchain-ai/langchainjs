@@ -24,7 +24,16 @@ export class ChatGoogle
     return "ChatGoogle";
   }
 
-  constructor(fields?: ChatGoogleInput) {
+  constructor(model: string, params?: Omit<ChatGoogleInput, "model">);
+  constructor(fields?: ChatGoogleInput);
+  constructor(
+    modelOrFields?: string | ChatGoogleInput,
+    paramsArg?: Omit<ChatGoogleInput, "model">
+  ) {
+    const fields =
+      typeof modelOrFields === "string"
+        ? { ...(paramsArg ?? {}), model: modelOrFields }
+        : (modelOrFields ?? {});
     super(fields);
   }
 
