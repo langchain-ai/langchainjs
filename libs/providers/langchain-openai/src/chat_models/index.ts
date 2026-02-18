@@ -610,6 +610,8 @@ export class ChatOpenAI<
     return [...super.callKeys, "useResponsesApi"];
   }
 
+  protected fields?: ChatOpenAIFields;
+
   constructor(model: string, fields?: Omit<ChatOpenAIFields, "model">);
   constructor(fields?: ChatOpenAIFields);
   constructor(
@@ -618,6 +620,7 @@ export class ChatOpenAI<
   ) {
     const fields = getChatOpenAIModelParams(modelOrFields, fieldsArg);
     super(fields);
+    this.fields = fields;
     this.useResponsesApi = fields?.useResponsesApi ?? false;
     this.responses = fields?.responses ?? new ChatOpenAIResponses(fields);
     this.completions = fields?.completions ?? new ChatOpenAICompletions(fields);
