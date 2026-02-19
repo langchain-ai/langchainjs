@@ -939,7 +939,8 @@ export class CallbackManager
     _parentRunId: string | undefined = undefined,
     _tags: string[] | undefined = undefined,
     _metadata: Record<string, unknown> | undefined = undefined,
-    runName: string | undefined = undefined
+    runName: string | undefined = undefined,
+    toolCallId: string | undefined = undefined
   ): Promise<CallbackManagerForToolRun> {
     await Promise.all(
       this.handlers.map((handler) => {
@@ -969,7 +970,8 @@ export class CallbackManager
               this._parentRunId,
               this.tags,
               this.metadata,
-              runName
+              runName,
+              toolCallId
             );
           } catch (err) {
             const logFunction = handler.raiseError

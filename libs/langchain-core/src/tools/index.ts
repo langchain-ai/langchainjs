@@ -277,6 +277,17 @@ export abstract class StructuredTool<
       this.metadata,
       { verbose: this.verbose }
     );
+
+    let toolCallId: string | undefined;
+    // Extract toolCallId ONLY if the original arg was a ToolCall
+    if (_isToolCall(arg)) {
+      toolCallId = arg.id;
+    }
+    // Or if it was provided in the config's toolCall property
+    if (!toolCallId && _configHasToolCallId(config)) {
+      toolCallId = config.toolCall.id;
+    }
+
     const runManager = await callbackManager_?.handleToolStart(
       this.toJSON(),
       // Log the original raw input arg
@@ -320,16 +331,6 @@ export abstract class StructuredTool<
       }
     } else {
       content = result;
-    }
-
-    let toolCallId: string | undefined;
-    // Extract toolCallId ONLY if the original arg was a ToolCall
-    if (_isToolCall(arg)) {
-      toolCallId = arg.id;
-    }
-    // Or if it was provided in the config's toolCall property
-    if (!toolCallId && _configHasToolCallId(config)) {
-      toolCallId = config.toolCall.id;
     }
 
     const formattedOutput = _formatToolOutput<ToolOutputT>({
