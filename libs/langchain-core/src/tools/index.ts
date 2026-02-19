@@ -306,7 +306,7 @@ export abstract class StructuredTool<
       await runManager?.handleToolError(e);
       throw e;
     }
-    
+
     let content;
     let artifact;
     if (this.responseFormat === "content_and_artifact") {
