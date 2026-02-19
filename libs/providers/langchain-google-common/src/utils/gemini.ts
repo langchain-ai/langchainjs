@@ -366,6 +366,15 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
     }
   }
 
+  function messageContentMultimodalImageData(
+    content: ContentBlock.Multimodal.Image
+  ) {
+    if (!content.url) {
+      throw new Error("Missing Image URL");
+    }
+    return inlineOrFileDataFromUrl(content.url);
+  }
+
   function messageContentImageUrlData(
     content: MessageContentImageUrl
   ): GeminiPartInlineData | GeminiPartFileData {
@@ -377,6 +386,10 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
       throw new Error("Missing Image URL");
     }
 
+    return inlineOrFileDataFromUrl(url);
+  }
+
+  function inlineOrFileDataFromUrl(url: string) {
     const mimeTypeAndData = extractMimeType(url);
     if (mimeTypeAndData) {
       return {
@@ -617,6 +630,13 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
         if ("image_url" in content) {
           // Type guard for MessageContentImageUrl
           return messageContentImageUrl(content as MessageContentImageUrl);
+        }
+        break;
+      case "image":
+        if ("url" in content) {
+          return messageContentMultimodalImageData(
+            content as ContentBlock.Multimodal.Image
+          );
         }
         break;
       case "media":
