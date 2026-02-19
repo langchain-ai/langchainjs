@@ -237,6 +237,36 @@ describe("Google Mock", () => {
       expectThinkingLevel: "HIGH",
     },
     {
+      model: "gemini-3.1-pro",
+      maxReasoningTokens: -1,
+      expectIncludeThoughts: true,
+      expectThinkingLevel: "HIGH",
+    },
+    {
+      model: "gemini-3.1-pro",
+      maxReasoningTokens: 0,
+      expectIncludeThoughts: false,
+      expectThinkingLevel: "MINIMAL",
+    },
+    {
+      model: "gemini-3.1-pro",
+      maxReasoningTokens: 1000,
+      expectIncludeThoughts: true,
+      expectThinkingLevel: "LOW",
+    },
+    {
+      model: "gemini-3.1-pro",
+      maxReasoningTokens: 8000,
+      expectIncludeThoughts: true,
+      expectThinkingLevel: "MEDIUM",
+    },
+    {
+      model: "gemini-3.1-pro",
+      maxReasoningTokens: 20000,
+      expectIncludeThoughts: true,
+      expectThinkingLevel: "HIGH",
+    },
+    {
       model: "gemini-3-flash",
       maxReasoningTokens: -1,
       expectIncludeThoughts: true,
@@ -362,6 +392,30 @@ describe("Google Mock", () => {
     },
     {
       model: "gemini-3-pro",
+      reasoningEffort: "high",
+      expectIncludeThoughts: true,
+      expectThinkingLevel: "HIGH",
+    },
+    {
+      model: "gemini-3.1-pro",
+      reasoningEffort: "minimal",
+      expectIncludeThoughts: false,
+      expectThinkingLevel: "MINIMAL",
+    },
+    {
+      model: "gemini-3.1-pro",
+      reasoningEffort: "low",
+      expectIncludeThoughts: true,
+      expectThinkingLevel: "LOW",
+    },
+    {
+      model: "gemini-3.1-pro",
+      reasoningEffort: "medium",
+      expectIncludeThoughts: true,
+      expectThinkingLevel: "MEDIUM",
+    },
+    {
+      model: "gemini-3.1-pro",
       reasoningEffort: "high",
       expectIncludeThoughts: true,
       expectThinkingLevel: "HIGH",
