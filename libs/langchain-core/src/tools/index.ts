@@ -59,7 +59,7 @@ import type {
   ToolRuntime,
 } from "./types.js";
 import { type JSONSchema, validatesOnlyStrings } from "../utils/json_schema.js";
-import { isAsyncGenerator } from "../runnables/iter.js";
+import { consumeAsyncGenerator, isAsyncGenerator } from "../runnables/iter.js";
 
 export type {
   BaseDynamicToolInput,
@@ -292,16 +292,11 @@ export abstract class StructuredTool<
     let result;
     try {
       const raw = await this._call(parsed, runManager, config);
-      if (isAsyncGenerator(raw)) {
-        let iterResult = await raw.next();
-        while (!iterResult.done) {
-          await runManager?.handleToolStream(iterResult.value);
-          iterResult = await raw.next();
-        }
-        result = iterResult.value;
-      } else {
-        result = raw;
-      }
+      result = isAsyncGenerator(raw)
+        ? await consumeAsyncGenerator(raw, (chunk) =>
+            runManager?.handleToolStream(chunk)
+          )
+        : raw;
     } catch (e) {
       await runManager?.handleToolError(e);
       throw e;
