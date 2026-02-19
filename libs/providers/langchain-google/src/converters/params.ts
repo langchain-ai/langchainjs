@@ -259,12 +259,15 @@ export function convertFieldsToThinkingConfig(
   }
   if (model.startsWith("gemini-3-pro")) {
     // Gemini 3 Pro has only low and high.
-    // Gemini 3.1 Pro matches what Gemini 3 Flash has.
-    // Once Gemini 3 is removed, this block can be removed
     if (thinkingLevel === "MINIMAL") {
       thinkingLevel = "LOW";
     } else if (thinkingLevel === "MEDIUM") {
       thinkingLevel = "HIGH";
+    }
+  } else if (model.startsWith("gemini-3.1-pro")) {
+    // Gemini 3.1 Pro does not have "minimal"
+    if (thinkingLevel === "MINIMAL") {
+      thinkingLevel = "LOW";
     }
   }
 

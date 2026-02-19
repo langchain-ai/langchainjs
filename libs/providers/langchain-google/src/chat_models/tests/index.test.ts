@@ -246,7 +246,7 @@ describe("Google Mock", () => {
       model: "gemini-3.1-pro",
       maxReasoningTokens: 0,
       expectIncludeThoughts: false,
-      expectThinkingLevel: "MINIMAL",
+      expectThinkingLevel: "LOW",
     },
     {
       model: "gemini-3.1-pro",
@@ -400,7 +400,7 @@ describe("Google Mock", () => {
       model: "gemini-3.1-pro",
       reasoningEffort: "minimal",
       expectIncludeThoughts: false,
-      expectThinkingLevel: "MINIMAL",
+      expectThinkingLevel: "LOW",
     },
     {
       model: "gemini-3.1-pro",
