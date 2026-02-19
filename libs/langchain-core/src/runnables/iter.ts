@@ -31,6 +31,14 @@ export function isAsyncIterable(
   );
 }
 
+export function isAsyncGenerator(x: unknown): x is AsyncGenerator {
+  return (
+    x != null &&
+    typeof x === "object" &&
+    typeof (x as AsyncGenerator).next === "function"
+  );
+}
+
 export function* consumeIteratorInContext<T>(
   context: Partial<RunnableConfig> | undefined,
   iter: IterableIterator<T>
