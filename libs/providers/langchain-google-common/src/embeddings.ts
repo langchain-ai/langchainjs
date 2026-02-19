@@ -22,6 +22,7 @@ import {
   AIStudioEmbeddingsRequest,
   GeminiPartText,
   VertexEmbeddingsRequest,
+  GoogleEmbeddingsTaskType,
 } from "./types.js";
 
 class EmbeddingsConnection<
@@ -139,6 +140,10 @@ export abstract class BaseGoogleEmbeddings<AuthOptions>
 
   dimensions?: number;
 
+  taskType?: GoogleEmbeddingsTaskType;
+
+  title?: string;
+
   private connection: EmbeddingsConnection<
     BaseGoogleEmbeddingsOptions,
     AuthOptions
@@ -149,6 +154,8 @@ export abstract class BaseGoogleEmbeddings<AuthOptions>
 
     this.model = fields.model;
     this.dimensions = fields.dimensions ?? fields.outputDimensionality;
+    this.taskType = fields.taskType;
+    this.title = fields.title;
 
     this.connection = new EmbeddingsConnection(
       { ...fields, ...this },
@@ -245,9 +252,18 @@ export abstract class BaseGoogleEmbeddings<AuthOptions>
     // TODO: Make this configurable
     const chunkSize = 1;
     const instanceChunks: VertexEmbeddingsInstance[][] = chunkArray(
-      documents.map((document) => ({
-        content: document,
-      })),
+      documents.map((document) => {
+        const instance: VertexEmbeddingsInstance = {
+          content: document,
+        };
+        if (this.taskType) {
+          instance.taskType = this.taskType;
+        }
+        if (this.title) {
+          instance.title = this.title;
+        }
+        return instance;
+      }),
       chunkSize
     );
     const parameters: VertexEmbeddingsParameters = this.buildParameters();
