@@ -295,17 +295,8 @@ export abstract class BaseMessage<
 
   /** Get text content of the message. */
   get text(): string {
-    if (typeof this.content === "string") {
-      return this.content;
-    }
-    if (!Array.isArray(this.content)) return "";
-    return this.content
-      .map((c) => {
-        if (typeof c === "string") return c;
-        if (c.type === "text") return c.text;
-        return "";
-      })
-      .join("");
+    const textBlocks:ContentBlock.Text[] = this.contentBlocks.filter((block: ContentBlock.Standard) => block.type === "text");
+    return textBlocks.reduce((acc: string, block: ContentBlock.Text) => acc + block.text,"");
   }
 
   get contentBlocks(): Array<ContentBlock.Standard> {
