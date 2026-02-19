@@ -506,6 +506,10 @@ export abstract class BaseChatModel<
             const runId = runManagers?.at(0)?.runId;
             if (runId != null) chunk.message._updateId(`run-${runId}`);
           }
+          chunk.message.response_metadata = {
+            ...chunk.generationInfo,
+            ...chunk.message.response_metadata,
+          };
           if (aggregated === undefined) {
             aggregated = chunk;
           } else {

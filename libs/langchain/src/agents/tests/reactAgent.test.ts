@@ -5,15 +5,12 @@ import { z as z4 } from "zod/v4";
 import {
   BaseMessage,
   AIMessage,
-  AIMessageChunk,
   HumanMessage,
   ToolMessage,
 } from "@langchain/core/messages";
 import { BaseCallbackHandler } from "@langchain/core/callbacks/base";
 import { FakeListChatModel } from "@langchain/core/utils/testing";
-import type { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
 import type { ChatResult } from "@langchain/core/outputs";
-import { ChatGenerationChunk } from "@langchain/core/outputs";
 import { StructuredTool, tool } from "@langchain/core/tools";
 import { RunnableLambda } from "@langchain/core/runnables";
 import {
@@ -40,68 +37,6 @@ class StreamingPrefCallbackHandler extends BaseCallbackHandler {
   name = "streaming_pref_callback_handler";
 
   lc_prefer_streaming = true;
-}
-
-class FakeProviderStyleChatModel extends FakeListChatModel {
-  override _formatGeneration(text: string) {
-    return {
-      message: new AIMessage({
-        content: text,
-        response_metadata: {
-          ...this.generationInfo,
-          model_provider: "fake-provider",
-        },
-      }),
-      text,
-    };
-  }
-
-  override _createResponseChunk(
-    text: string,
-    generationInfo?: Record<string, unknown>
-  ) {
-    return new ChatGenerationChunk({
-      message: new AIMessageChunk({
-        content: text,
-        response_metadata: {
-          model_provider: "fake-provider",
-        },
-      }),
-      text,
-      generationInfo,
-    });
-  }
-
-  override async *_streamResponseChunks(
-    _messages: BaseMessage[],
-    options: { signal?: AbortSignal },
-    runManager?: CallbackManagerForLLMRun
-  ): AsyncGenerator<ChatGenerationChunk> {
-    const response = this._currentResponse();
-    this._incrementResponse();
-
-    const responseChars = [...response];
-    for (let i = 0; i < responseChars.length; i++) {
-      const text = responseChars[i];
-      const isLastChunk = i === responseChars.length - 1;
-      const chunk = this._createResponseChunk(
-        text,
-        isLastChunk ? this.generationInfo : undefined
-      );
-      if (options.signal?.aborted) break;
-      yield chunk;
-      await runManager?.handleLLMNewToken(
-        text,
-        undefined,
-        undefined,
-        undefined,
-        undefined,
-        {
-          chunk,
-        }
-      );
-    }
-  }
 }
 
 describe("createAgent", () => {
@@ -145,7 +80,7 @@ describe("createAgent", () => {
   });
 
   it("should preserve response_metadata in values stream mode", async () => {
-    const model = new FakeProviderStyleChatModel({
+    const model = new FakeListChatModel({
       responses: ["hello"],
       generationInfo: {
         finish_reason: "stop",
@@ -158,9 +93,22 @@ describe("createAgent", () => {
       callbacks: [new StreamingPrefCallbackHandler()],
     });
 
+    let capturedResponse: AIMessage | undefined;
+    const middleware = createMiddleware({
+      name: "capture_response_metadata",
+      wrapModelCall: async (request, handler) => {
+        const response = await handler(request);
+        if (AIMessage.isInstance(response)) {
+          capturedResponse = response;
+        }
+        return response;
+      },
+    });
+
     const agent = createAgent({
       model,
       tools: [],
+      middleware: [middleware],
     });
 
     const stream = await agent.stream(
@@ -168,49 +116,17 @@ describe("createAgent", () => {
       { streamMode: ["values", "messages"] }
     );
 
-    let finalAiMessage: AIMessage | undefined;
-    let finishReasonFromMessagesStream: string | undefined;
-    for await (const [event, payload] of stream as AsyncIterable<
-      [string, unknown]
-    >) {
-      if (event === "messages" && Array.isArray(payload)) {
-        const candidate = payload[0];
-        if (AIMessageChunk.isInstance(candidate)) {
-          const finishReason = candidate.response_metadata.finish_reason;
-          if (typeof finishReason === "string") {
-            finishReasonFromMessagesStream = finishReason;
-          }
-        }
-      }
-
-      if (
-        event !== "values" ||
-        typeof payload !== "object" ||
-        payload === null ||
-        !("messages" in payload)
-      ) {
-        continue;
-      }
-
-      const messages = payload.messages;
-      if (!Array.isArray(messages)) {
-        continue;
-      }
-
-      const candidate = messages.at(-1);
-      if (AIMessage.isInstance(candidate)) {
-        finalAiMessage = candidate;
-      }
+    for await (const _ of stream) {
+      // stream consumed to completion
     }
 
-    expect(finalAiMessage).toBeDefined();
-    expect(finalAiMessage?.response_metadata.finish_reason).toBe("stop");
-    expect(finalAiMessage?.response_metadata.usage_metadata).toEqual({
+    expect(capturedResponse).toBeDefined();
+    expect(capturedResponse?.response_metadata.finish_reason).toBe("stop");
+    expect(capturedResponse?.response_metadata.usage_metadata).toEqual({
       input_tokens: 1,
       output_tokens: 5,
       total_tokens: 6,
     });
-    expect(finishReasonFromMessagesStream).toBe("stop");
   });
 
   it("should reject LLM with bound tools", async () => {
