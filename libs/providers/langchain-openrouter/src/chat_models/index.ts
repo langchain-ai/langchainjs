@@ -484,7 +484,11 @@ export class ChatOpenRouter extends BaseChatModel<
   override bindTools(
     tools: BindToolsInput[],
     kwargs?: Partial<ChatOpenRouterCallOptions>
-  ): Runnable<BaseLanguageModelInput, AIMessageChunk, ChatOpenRouterCallOptions> {
+  ): Runnable<
+    BaseLanguageModelInput,
+    AIMessageChunk,
+    ChatOpenRouterCallOptions
+  > {
     return this.withConfig({
       ...kwargs,
       tools,
