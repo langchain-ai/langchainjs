@@ -1,3 +1,4 @@
+/// <reference types="@cloudflare/workers-types" />
 /**
  * Welcome to Cloudflare Workers! This is your first worker.
  *
