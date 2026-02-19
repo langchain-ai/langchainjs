@@ -85,6 +85,11 @@ describe("ChatXAIResponses Constructor", () => {
     expect(model.model).toBe("grok-3-mini");
   });
 
+  test("should accept model shorthand", () => {
+    const model = new ChatXAIResponses("grok-3-mini");
+    expect(model.model).toBe("grok-3-mini");
+  });
+
   test("should use default baseURL when not specified", () => {
     const model = new ChatXAIResponses();
     expect(model.baseURL).toBe("https://api.x.ai/v1");

@@ -3,6 +3,14 @@ import { test, expect } from "vitest";
 import { ChatDeepSeek } from "../chat_models.js";
 import { AIMessageChunk } from "@langchain/core/messages";
 
+test("ChatDeepSeek constructor accepts model shorthand", () => {
+  const model = new ChatDeepSeek("deepseek-chat", {
+    apiKey: "test",
+  });
+
+  expect(model.model).toBe("deepseek-chat");
+});
+
 test("ChatDeepSeek should separate <think> tags into reasoning_content", async () => {
   const stream = new ReadableStream({
     start(controller) {

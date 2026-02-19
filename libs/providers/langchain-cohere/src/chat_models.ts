@@ -731,15 +731,24 @@ export class ChatCohere<
 
   streamUsage: boolean = true;
 
-  constructor(fields?: ChatCohereInput) {
-    super(fields ?? {});
+  constructor(model: string, fields?: Omit<ChatCohereInput, "model">);
+  constructor(fields?: ChatCohereInput);
+  constructor(
+    modelOrFields?: string | ChatCohereInput,
+    fields?: Omit<ChatCohereInput, "model">
+  ) {
+    const params =
+      typeof modelOrFields === "string"
+        ? { ...(fields ?? {}), model: modelOrFields }
+        : (modelOrFields ?? {});
+    super(params);
 
-    this.client = getCohereClient(fields);
+    this.client = getCohereClient(params);
 
-    this.model = fields?.model ?? this.model;
-    this.temperature = fields?.temperature ?? this.temperature;
-    this.streaming = fields?.streaming ?? this.streaming;
-    this.streamUsage = fields?.streamUsage ?? this.streamUsage;
+    this.model = params.model ?? this.model;
+    this.temperature = params.temperature ?? this.temperature;
+    this.streaming = params.streaming ?? this.streaming;
+    this.streamUsage = params.streamUsage ?? this.streamUsage;
   }
 
   getLsParams(options: this["ParsedCallOptions"]): LangSmithParams {
