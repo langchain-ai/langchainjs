@@ -67,14 +67,23 @@ export class ChatYandexGPT extends BaseChatModel {
 
   folderID?: string;
 
-  constructor(fields?: YandexGPTInputs) {
-    super(fields ?? {});
+  constructor(model: string, fields?: Omit<YandexGPTInputs, "model">);
+  constructor(fields?: YandexGPTInputs);
+  constructor(
+    modelOrFields?: string | YandexGPTInputs,
+    fields?: Omit<YandexGPTInputs, "model">
+  ) {
+    const params =
+      typeof modelOrFields === "string"
+        ? { ...(fields ?? {}), model: modelOrFields }
+        : (modelOrFields ?? {});
+    super(params);
 
-    const apiKey = fields?.apiKey ?? getEnvironmentVariable("YC_API_KEY");
+    const apiKey = params.apiKey ?? getEnvironmentVariable("YC_API_KEY");
 
-    const iamToken = fields?.iamToken ?? getEnvironmentVariable("YC_IAM_TOKEN");
+    const iamToken = params.iamToken ?? getEnvironmentVariable("YC_IAM_TOKEN");
 
-    const folderID = fields?.folderID ?? getEnvironmentVariable("YC_FOLDER_ID");
+    const folderID = params.folderID ?? getEnvironmentVariable("YC_FOLDER_ID");
 
     if (apiKey === undefined && iamToken === undefined) {
       throw new Error(
@@ -82,14 +91,14 @@ export class ChatYandexGPT extends BaseChatModel {
       );
     }
 
-    this.modelURI = fields?.modelURI;
+    this.modelURI = params.modelURI;
     this.apiKey = apiKey;
     this.iamToken = iamToken;
     this.folderID = folderID;
-    this.maxTokens = fields?.maxTokens ?? this.maxTokens;
-    this.temperature = fields?.temperature ?? this.temperature;
-    this.model = fields?.model ?? this.model;
-    this.modelVersion = fields?.modelVersion ?? this.modelVersion;
+    this.maxTokens = params.maxTokens ?? this.maxTokens;
+    this.temperature = params.temperature ?? this.temperature;
+    this.model = params.model ?? this.model;
+    this.modelVersion = params.modelVersion ?? this.modelVersion;
 
     if (this.modelURI === undefined && folderID === undefined) {
       throw new Error(

@@ -1,6 +1,14 @@
 import { describe, it, expect } from "vitest";
 import { ChatOpenAIResponses } from "../responses.js";
 
+describe("constructor shorthand", () => {
+  it("supports string model shorthand", () => {
+    const model = new ChatOpenAIResponses("gpt-4o-mini", { temperature: 0.3 });
+    expect(model.model).toBe("gpt-4o-mini");
+    expect(model.temperature).toBe(0.3);
+  });
+});
+
 describe("strict tool-calling configuration", () => {
   it("falls back to supportsStrictToolCalling when strict is undefined", () => {
     const model = new ChatOpenAIResponses({
