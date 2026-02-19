@@ -296,7 +296,8 @@ export abstract class StructuredTool<
       undefined,
       undefined,
       undefined,
-      config.runName
+      config.runName,
+      toolCallId
     );
     delete config.runId;
 

@@ -633,6 +633,45 @@ describe("Generator tools (async function*)", () => {
     expect(events).toEqual(["start", "stream", "stream", "end"]);
   });
 
+  test("handleToolStart receives toolCallId when invoked with ToolCall", async () => {
+    const expectedToolCallId = "call_abc123";
+    let receivedToolCallId: string | undefined;
+
+    const testTool = tool((input: { x: number }) => String(input.x), {
+      name: "adder",
+      schema: z.object({ x: z.number() }),
+      description: "Echo x",
+    });
+
+    const toolCall: ToolCall = {
+      id: expectedToolCallId,
+      name: "adder",
+      args: { x: 42 },
+      type: "tool_call",
+    };
+
+    await testTool.invoke(toolCall, {
+      callbacks: [
+        {
+          handleToolStart(
+            _tool,
+            _input,
+            _runId,
+            _parentRunId,
+            _tags,
+            _metadata,
+            _runName,
+            toolCallId
+          ) {
+            receivedToolCallId = toolCallId;
+          },
+        },
+      ],
+    });
+
+    expect(receivedToolCallId).toBe(expectedToolCallId);
+  });
+
   test("should handle generator errors mid-stream", async () => {
     let handleToolErrorCalled = false;
 
