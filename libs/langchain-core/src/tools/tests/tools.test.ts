@@ -12,6 +12,7 @@ import {
 } from "../index.js";
 import { ToolCall, ToolMessage } from "../../messages/tool.js";
 import { RunnableConfig } from "../../runnables/types.js";
+import { awaitAllCallbacks } from "../../singletons/callbacks.js";
 
 test("Tool should error if responseFormat is content_and_artifact but the function doesn't return a tuple", async () => {
   const weatherSchema = z.object({
@@ -494,5 +495,140 @@ describe("tool()", () => {
     expect(testTool.extras).toEqual({
       foo: "test",
     });
+  });
+});
+
+describe("Generator tools (async function*)", () => {
+  test("Generator tool yields partial results and returns final result", async () => {
+    const partials: unknown[] = [];
+
+    const testTool = tool(
+      async function* (input: { city: string }) {
+        yield { status: "searching", city: input.city };
+        yield { status: "found", temperature: 72 };
+        return `Weather in ${input.city}: 72F`;
+      },
+      {
+        name: "weather",
+        schema: z.object({ city: z.string() }),
+        description: "Get weather",
+      }
+    );
+
+    const result = await testTool.invoke(
+      {
+        id: "call_123",
+        name: "weather",
+        args: { city: "SF" },
+        type: "tool_call",
+      },
+      {
+        callbacks: [
+          {
+            handleToolStream(chunk: unknown) {
+              partials.push(chunk);
+            },
+          },
+        ],
+      }
+    );
+
+    expect(result).toBeInstanceOf(ToolMessage);
+    expect(result.content).toBe("Weather in SF: 72F");
+
+    expect(partials).toHaveLength(2);
+    expect(partials[0]).toEqual({ status: "searching", city: "SF" });
+    expect(partials[1]).toEqual({ status: "found", temperature: 72 });
+  });
+
+  test("Non generator tool still works correctly", async () => {
+    const partials: unknown[] = [];
+
+    const testTool = tool(
+      async (input: { city: string }) => {
+        return `Weather in ${input.city}: 72F`;
+      },
+      {
+        name: "weather",
+        schema: z.object({ city: z.string() }),
+        description: "Get weather",
+      }
+    );
+
+    const result = await testTool.invoke(
+      { city: "SF" },
+      {
+        callbacks: [
+          {
+            handleToolStream(chunk: unknown) {
+              partials.push(chunk);
+            },
+          },
+        ],
+      }
+    );
+
+    expect(result).toBe("Weather in SF: 72F");
+    expect(partials).toHaveLength(0);
+  });
+
+  test("Generator tool with no yields works", async () => {
+    const testTool = tool(
+      async function* (input: { x: number }) {
+        return input.x * 2;
+      },
+      {
+        name: "double",
+        schema: z.object({ x: z.number() }),
+        description: "Double a number",
+      }
+    );
+
+    const result = await testTool.invoke({ x: 5 });
+    expect(result).toBe(10);
+  });
+
+  test("handleToolStart and handleToolEnd still fire with generator tools", async () => {
+    const events: string[] = [];
+
+    const testTool = tool(
+      async function* (input: { city: string }) {
+        yield { status: "searching", city: input.city };
+        yield { status: "found", temperature: 72 };
+        return `Weather in ${input.city}: 72F`;
+      },
+      {
+        name: "weather",
+        schema: z.object({ city: z.string() }),
+        description: "Get weather",
+      }
+    );
+
+    await testTool.invoke(
+      { city: "SF" },
+      {
+        callbacks: [
+          {
+            handleToolStart() {
+              events.push("start");
+            },
+          },
+          {
+            handleToolStream() {
+              events.push("stream");
+            },
+          },
+          {
+            handleToolEnd() {
+              events.push("end");
+            },
+          },
+        ],
+      }
+    );
+
+    await awaitAllCallbacks();
+
+    expect(events).toEqual(["start", "stream", "stream", "end"]);
   });
 });

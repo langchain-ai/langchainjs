@@ -369,7 +369,7 @@ export interface DynamicStructuredToolInput<
     input: SchemaOutputT,
     runManager?: CallbackManagerForToolRun,
     config?: RunnableConfig
-  ) => Promise<ToolOutputT>;
+  ) => Promise<ToolOutputT> | AsyncGenerator<unknown, ToolOutputT>;
   schema: SchemaT;
 }
 

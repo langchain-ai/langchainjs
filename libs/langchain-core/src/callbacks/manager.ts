@@ -565,6 +565,35 @@ export class CallbackManagerForToolRun
     );
   }
 
+  async handleToolStream(chunk: unknown): Promise<void> {
+    await Promise.all(
+      this.handlers.map((handler) =>
+        consumeCallback(async () => {
+          if (!handler.ignoreAgent) {
+            try {
+              await handler.handleToolStream?.(
+                chunk,
+                this.runId,
+                this._parentRunId,
+                this.tags
+              );
+            } catch (err) {
+              const logFunction = handler.raiseError
+                ? console.error
+                : console.warn;
+              logFunction(
+                `Error in handler ${handler.constructor.name}, handleToolStream: ${err}`
+              );
+              if (handler.raiseError) {
+                throw err;
+              }
+            }
+          }
+        }, handler.awaitHandlers)
+      )
+    );
+  }
+
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   async handleToolEnd(output: any): Promise<void> {
     await Promise.all(

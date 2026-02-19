@@ -59,6 +59,7 @@ import type {
   ToolRuntime,
 } from "./types.js";
 import { type JSONSchema, validatesOnlyStrings } from "../utils/json_schema.js";
+import { isAsyncGenerator } from "../runnables/iter.js";
 
 export type {
   BaseDynamicToolInput,
@@ -159,7 +160,7 @@ export abstract class StructuredTool<
     arg: SchemaOutputT,
     runManager?: CallbackManagerForToolRun,
     parentConfig?: ToolRunnableConfig
-  ): Promise<ToolOutputT>;
+  ): Promise<ToolOutputT> | AsyncGenerator<unknown, ToolOutputT>;
 
   /**
    * Invokes the tool with the provided input and configuration.
@@ -287,14 +288,25 @@ export abstract class StructuredTool<
       config.runName
     );
     delete config.runId;
+
     let result;
     try {
-      // Pass the correctly typed parsed input to _call
-      result = await this._call(parsed, runManager, config);
+      const raw = await this._call(parsed, runManager, config);
+      if (isAsyncGenerator(raw)) {
+        let iterResult = await raw.next();
+        while (!iterResult.done) {
+          await runManager?.handleToolStream(iterResult.value);
+          iterResult = await raw.next();
+        }
+        result = iterResult.value;
+      } else {
+        result = raw;
+      }
     } catch (e) {
       await runManager?.handleToolError(e);
       throw e;
     }
+    
     let content;
     let artifact;
     if (this.responseFormat === "content_and_artifact") {
@@ -514,7 +526,7 @@ export class DynamicStructuredTool<
     >[0],
     runManager?: CallbackManagerForToolRun,
     parentConfig?: RunnableConfig
-  ): Promise<ToolOutputT> {
+  ): Promise<ToolOutputT> | AsyncGenerator<unknown, ToolOutputT> {
     return this.func(arg, runManager, parentConfig);
   }
 }
