@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeAll, afterAll } from "vitest";
 import { ChatOpenRouter } from "../index.js";
+import type { ChatOpenRouterCallOptions } from "../types.js";
 import { OpenRouterAuthError } from "../../utils/errors.js";
 
 let savedKey: string | undefined;
@@ -102,11 +103,10 @@ describe("invocationParams", () => {
       maxTokens: 500,
     });
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const params = model.invocationParams({
       temperature: 0.2,
       maxTokens: 100,
-    } as any);
+    } as ChatOpenRouterCallOptions);
 
     expect(params.temperature).toBe(0.2);
     expect(params.max_tokens).toBe(100);
@@ -119,8 +119,7 @@ describe("invocationParams", () => {
       topK: 50,
     });
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const params = model.invocationParams({} as any);
+    const params = model.invocationParams({} as ChatOpenRouterCallOptions);
 
     expect(params.temperature).toBe(0.7);
     expect(params.top_k).toBe(50);
@@ -135,8 +134,7 @@ describe("invocationParams", () => {
       provider: { order: ["OpenAI"] },
     });
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const params = model.invocationParams({} as any);
+    const params = model.invocationParams({} as ChatOpenRouterCallOptions);
 
     expect(params.transforms).toEqual(["middle-out"]);
     expect(params.models).toEqual(["a", "b"]);
@@ -147,14 +145,14 @@ describe("invocationParams", () => {
   it("includes prediction only when set", () => {
     const model = new ChatOpenRouter({ model: "openai/gpt-4o" });
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const withoutPrediction = model.invocationParams({} as any);
+    const withoutPrediction = model.invocationParams(
+      {} as ChatOpenRouterCallOptions
+    );
     expect(withoutPrediction).not.toHaveProperty("prediction");
 
     const withPrediction = model.invocationParams({
       prediction: { type: "content", content: "hello" },
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } as any);
+    } as ChatOpenRouterCallOptions);
     expect(withPrediction.prediction).toEqual({
       type: "content",
       content: "hello",
@@ -172,8 +170,9 @@ describe("getLsParams", () => {
       maxTokens: 256,
     });
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const ls = model.getLsParams({ stop: ["END"] } as any);
+    const ls = model.getLsParams({
+      stop: ["END"],
+    } as ChatOpenRouterCallOptions);
 
     expect(ls.ls_provider).toBe("openrouter");
     expect(ls.ls_model_name).toBe("anthropic/claude-4-sonnet");
