@@ -637,20 +637,20 @@ describe("Generator tools (async function*)", () => {
     let handleToolErrorCalled = false;
 
     const testTool = tool(
-      async function* (_input: Record<string, never>) {
-        yield "chunk1";
+      async function* (input: { chunk: string }) {
+        yield input.chunk;
         throw new Error("Mid-stream failure");
       },
       {
         name: "failing",
-        schema: z.object({}),
+        schema: z.object({ chunk: z.string() }),
         description: "Generator that throws after yielding",
       }
     );
 
     await expect(
       testTool.invoke(
-        {},
+        { chunk: "chunk1" },
         {
           callbacks: [
             {
@@ -668,71 +668,69 @@ describe("Generator tools (async function*)", () => {
     expect(handleToolErrorCalled).toBe(true);
   });
 
-  test("should handle callback errors during streaming", async () => {
+  test("should handle callback errors during streaming (resilient)", async () => {
+    let handleToolErrorCalled = false;
+
     const testTool = tool(
-      async function* (_input: Record<string, never>) {
-        yield "chunk1";
+      async function* (input: { chunk: string }) {
+        yield input.chunk;
         return "final";
       },
       {
         name: "streaming",
-        schema: z.object({}),
+        schema: z.object({ chunk: z.string() }),
         description: "Generator that yields then returns",
       }
     );
 
-    await expect(
-      testTool.invoke(
-        {},
-        {
-          callbacks: [
-            {
-              handleToolStream: async () => {
-                throw new Error("Callback failed");
-              },
-              raiseError: true,
-              awaitHandlers: true,
+    const result = await testTool.invoke(
+      { chunk: "chunk1" },
+      {
+        callbacks: [
+          {
+            handleToolStream: async () => {
+              throw new Error("Callback failed");
             },
-          ],
-        }
-      )
-    ).rejects.toThrow("Callback failed");
+            handleToolError(err: unknown) {
+              handleToolErrorCalled = true;
+              expect(err).toBeInstanceOf(Error);
+              expect((err as Error).message).toBe("Callback failed");
+            },
+            raiseError: true,
+            awaitHandlers: true,
+          },
+        ],
+      }
+    );
+
+    await awaitAllCallbacks();
+    expect(handleToolErrorCalled).toBe(true);
+    expect(result).toBe("final");
   });
 
   test("should close generator on early termination (cleanup runs)", async () => {
     let generatorCleanupRan = false;
 
-    const testTool = tool(
-      async function* (_input: Record<string, never>) {
+    // When generator throws mid-stream, invoke rejects and we still close the generator in finally.
+    const throwingTool = tool(
+      async function* (input: { chunk: string }) {
         try {
-          yield "chunk1";
+          yield input.chunk;
+          throw new Error("Generator fails");
         } finally {
           generatorCleanupRan = true;
         }
       },
       {
-        name: "cleanup",
-        schema: z.object({}),
-        description: "Generator with finally for cleanup",
+        name: "throwing",
+        schema: z.object({ chunk: z.string() }),
+        description: "Generator that throws after yield",
       }
     );
 
-    await expect(
-      testTool.invoke(
-        {},
-        {
-          callbacks: [
-            {
-              handleToolStream: async () => {
-                throw new Error("Consumer stops early");
-              },
-              raiseError: true,
-              awaitHandlers: true,
-            },
-          ],
-        }
-      )
-    ).rejects.toThrow("Consumer stops early");
+    await expect(throwingTool.invoke({ chunk: "chunk1" })).rejects.toThrow(
+      "Generator fails"
+    );
 
     expect(generatorCleanupRan).toBe(true);
   });

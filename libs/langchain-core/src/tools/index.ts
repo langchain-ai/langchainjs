@@ -293,9 +293,13 @@ export abstract class StructuredTool<
     try {
       const raw = await this._call(parsed, runManager, config);
       result = isAsyncGenerator(raw)
-        ? await consumeAsyncGenerator(raw, (chunk) =>
-            runManager?.handleToolStream(chunk)
-          )
+        ? await consumeAsyncGenerator(raw, async (chunk) => {
+            try {
+              await runManager?.handleToolStream(chunk);
+            } catch (streamError) {
+              await runManager?.handleToolError(streamError);
+            }
+          })
         : raw;
     } catch (e) {
       await runManager?.handleToolError(e);
