@@ -66,7 +66,7 @@ export interface ChatOpenRouterParams
   extends BaseChatModelParams,
     ChatOpenRouterFields {
   /** Model identifier, e.g. "anthropic/claude-4-sonnet". */
-  model: string;
+  model?: string;
   /** OpenRouter API key. Falls back to `OPENROUTER_API_KEY` env var. */
   apiKey?: string;
   /** Base URL for the API. Defaults to "https://openrouter.ai/api/v1". */

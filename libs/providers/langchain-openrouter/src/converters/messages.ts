@@ -58,6 +58,7 @@ export function convertOpenRouterResponseToBaseMessage(
 
   message.response_metadata = {
     ...message.response_metadata,
+    model: rawResponse.model,
     model_provider: "openrouter",
     model_name: rawResponse.model,
     finish_reason: choice.finish_reason,

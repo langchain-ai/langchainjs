@@ -228,6 +228,11 @@ export class ChatOpenRouter extends BaseChatModel<
       );
     }
     this.apiKey = apiKey;
+    if (!fields.model) {
+      throw new Error(
+        'ChatOpenRouter requires a `model` parameter, e.g. "openai/gpt-4o-mini".'
+      );
+    }
     this.model = fields.model;
     this.baseURL = fields.baseURL ?? DEFAULT_BASE_URL;
     this.temperature = fields.temperature;
@@ -432,6 +437,7 @@ export class ChatOpenRouter extends BaseChatModel<
       while (true) {
         const { done, value: data } = await reader.read();
         if (done) break;
+        if (!data) continue;
 
         const choice = data.choices?.[0];
         if (!choice?.delta) continue;
@@ -478,7 +484,7 @@ export class ChatOpenRouter extends BaseChatModel<
   override bindTools(
     tools: BindToolsInput[],
     kwargs?: Partial<ChatOpenRouterCallOptions>
-  ): Runnable<BaseMessage[], AIMessageChunk, ChatOpenRouterCallOptions> {
+  ): Runnable<BaseLanguageModelInput, AIMessageChunk, ChatOpenRouterCallOptions> {
     return this.withConfig({
       ...kwargs,
       tools,
@@ -555,15 +561,26 @@ export class ChatOpenRouter extends BaseChatModel<
       route: this.route,
     });
 
+    const asJsonSchema = toJsonSchema(schema);
+
     if (method === "jsonSchema") {
+      const schemaName = name ?? "extract";
       llm = this.withConfig({
         response_format: {
           type: "json_schema",
           json_schema: {
-            name: name ?? "extract",
+            name: schemaName,
             description: getSchemaDescription(schema),
-            schema,
+            schema: asJsonSchema,
             strict: config?.strict,
+          },
+        },
+        ls_structured_output_format: {
+          kwargs: { method: "json_schema" },
+          schema: {
+            title: schemaName,
+            description: getSchemaDescription(schema),
+            ...asJsonSchema,
           },
         },
       } as Partial<ChatOpenRouterCallOptions>);
@@ -574,6 +591,10 @@ export class ChatOpenRouter extends BaseChatModel<
     } else if (method === "jsonMode") {
       llm = this.withConfig({
         response_format: { type: "json_object" },
+        ls_structured_output_format: {
+          kwargs: { method: "json_mode" },
+          schema: { title: name ?? "extract", ...asJsonSchema },
+        },
       } as Partial<ChatOpenRouterCallOptions>);
 
       outputParser = isInteropZodSchema(schema)
@@ -584,8 +605,6 @@ export class ChatOpenRouter extends BaseChatModel<
       if ("name" in (schema as Record<string, unknown>)) {
         functionName = (schema as Record<string, unknown>).name as string;
       }
-
-      const asJsonSchema = toJsonSchema(schema);
 
       llm = this.withConfig({
         tools: [
@@ -601,6 +620,10 @@ export class ChatOpenRouter extends BaseChatModel<
         tool_choice: {
           type: "function" as const,
           function: { name: functionName },
+        },
+        ls_structured_output_format: {
+          kwargs: { method: "function_calling" },
+          schema: { title: functionName, ...asJsonSchema },
         },
         ...(config?.strict !== undefined ? { strict: config.strict } : {}),
       } as Partial<ChatOpenRouterCallOptions>);

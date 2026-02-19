@@ -56,8 +56,12 @@ export class OpenRouterError extends ns.brand(LangChainError) {
       | { message?: string; code?: number; metadata?: Record<string, unknown> }
       | undefined;
 
-    const message =
+    const baseMessage =
       error?.message ?? `HTTP ${response.status}: ${response.statusText}`;
+    const metadataStr = error?.metadata
+      ? ` | metadata: ${JSON.stringify(error.metadata)}`
+      : "";
+    const message = `${baseMessage}${metadataStr}`;
     const code = error?.code ?? response.status;
 
     if (response.status === 401 || response.status === 403) {
