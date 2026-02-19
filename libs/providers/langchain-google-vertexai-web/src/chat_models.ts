@@ -297,7 +297,16 @@ export class ChatVertexAI extends ChatGoogle {
     return "ChatVertexAI";
   }
 
-  constructor(fields?: ChatVertexAIInput) {
+  constructor(model: string, fields?: Omit<ChatVertexAIInput, "model">);
+  constructor(fields?: ChatVertexAIInput);
+  constructor(
+    modelOrFields?: string | ChatVertexAIInput,
+    fieldsArg?: Omit<ChatVertexAIInput, "model">
+  ) {
+    const fields =
+      typeof modelOrFields === "string"
+        ? { ...(fieldsArg ?? {}), model: modelOrFields }
+        : (modelOrFields ?? {});
     super({
       ...fields,
       platformType: "gcp",

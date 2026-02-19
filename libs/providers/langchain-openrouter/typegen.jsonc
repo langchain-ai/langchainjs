@@ -1,0 +1,75 @@
+{
+  "$schema": "https://hntrl.github.io/sparktype/schema.json",
+  "specs": {
+    "openrouter": {
+      "url": "https://openrouter.ai/openapi.json"
+    }
+  },
+  "outputs": [
+    {
+      "path": "./src/api-types.ts",
+      "format": "typescript",
+      "options": {
+        "widenEnums": true
+      },
+      "contents": [
+        {
+          "namespace": "OpenRouter",
+          "contents": [
+            // --- Messages ---
+            "openrouter:ChatMessageContentItemText",
+            "openrouter:ChatMessageContentItemImage",
+            "openrouter:ChatMessageContentItemAudio",
+            "openrouter:ChatMessageContentItemVideo",
+            "openrouter:ChatMessageContentItem",
+            "openrouter:ChatMessageContentItemCacheControl",
+            "openrouter:SystemMessage",
+            "openrouter:UserMessage",
+            "openrouter:DeveloperMessage",
+            "openrouter:AssistantMessage",
+            "openrouter:ToolResponseMessage",
+            "openrouter:Message",
+
+            // --- Tool definitions ---
+            "openrouter:ToolDefinitionJson",
+            "openrouter:NamedToolChoice",
+            "openrouter:ToolChoiceOption",
+
+            // --- Tool calls ---
+            "openrouter:ChatMessageToolCall",
+            "openrouter:ChatStreamingMessageToolCall",
+
+            // --- Response format ---
+            "openrouter:JSONSchemaConfig",
+            "openrouter:ResponseFormatJSONSchema",
+            "openrouter:ResponseFormatTextGrammar",
+
+            // --- Request ---
+            "openrouter:ChatStreamOptions",
+            "openrouter:ChatGenerationParams",
+
+            // --- Provider preferences ---
+            "openrouter:ProviderPreferences",
+            "openrouter:ProviderSortUnion",
+
+            // --- Response (non-streaming) ---
+            "openrouter:ChatGenerationTokenUsage",
+            "openrouter:ChatCompletionFinishReason",
+            "openrouter:ChatMessageTokenLogprob",
+            "openrouter:ChatMessageTokenLogprobs",
+            "openrouter:ChatResponseChoice",
+            "openrouter:ChatResponse",
+
+            // --- Response (streaming) ---
+            "openrouter:ChatStreamingMessageChunk",
+            "openrouter:ChatStreamingChoice",
+            "openrouter:ChatStreamingResponseChunk",
+
+            // --- Error ---
+            "openrouter:ChatError"
+          ]
+        }
+      ]
+    }
+  ]
+}

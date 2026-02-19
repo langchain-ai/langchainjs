@@ -1080,6 +1080,20 @@ test("Test ChatBedrockConverse deserialization from model_id and region_name", a
   expect(loaded.temperature).toBe(0.7);
 });
 
+test("ChatBedrockConverse supports string model shorthand", () => {
+  const modelId = "anthropic.claude-3-haiku-20240307-v1:0";
+  const model = new ChatBedrockConverse(modelId, {
+    region: "us-east-1",
+    credentials: {
+      accessKeyId: "test-key",
+      secretAccessKey: "test-secret",
+    },
+  });
+
+  expect(model.model).toBe(modelId);
+  expect(model.region).toBe("us-east-1");
+});
+
 describe("serviceTier configuration", () => {
   const baseConstructorArgs = {
     region: "us-east-1",
