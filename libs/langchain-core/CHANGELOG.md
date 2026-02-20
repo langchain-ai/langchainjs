@@ -1,5 +1,32 @@
 # @langchain/core
 
+## 1.1.26
+
+### Patch Changes
+
+- [#10085](https://github.com/langchain-ai/langchainjs/pull/10085) [`ed6ea53`](https://github.com/langchain-ai/langchainjs/commit/ed6ea53c38a004b65e30c0f5888a0ac7d8ee7028) Thanks [@colifran](https://github.com/colifran)! - fix(google): tool_calls are not preserved when concatenating AIMessageChunks
+
+## 1.1.25
+
+### Patch Changes
+
+- [#10002](https://github.com/langchain-ai/langchainjs/pull/10002) [`27186c5`](https://github.com/langchain-ai/langchainjs/commit/27186c54884cfe7c2522fa50b42c3ca0ccaefdba) Thanks [@aditya-gg04](https://github.com/aditya-gg04)! - fix(core): support reasoning/thinking blocks in StringOutputParser
+
+- [#10077](https://github.com/langchain-ai/langchainjs/pull/10077) [`05396f7`](https://github.com/langchain-ai/langchainjs/commit/05396f7ce0a91c49a3bae4bbcd3dbdd6cbd18089) Thanks [@christian-bromann](https://github.com/christian-bromann)! - feat(core): add ContextOverflowError, raise in anthropic and openai
+
+- [#10081](https://github.com/langchain-ai/langchainjs/pull/10081) [`5a6f26b`](https://github.com/langchain-ai/langchainjs/commit/5a6f26bbaed80195dc538c538b96219a8b03f38f) Thanks [@hntrl](https://github.com/hntrl)! - feat(core): add namespace-based symbol branding for error class hierarchies
+
+  Introduces `createNamespace` utility for hierarchical symbol-based branding of class hierarchies.
+  All LangChain error classes now use this pattern, replacing hand-rolled duck-type `isInstance` checks
+  with reliable cross-realm `Symbol.for`-based identity.
+  - New `LangChainError` base class that all LangChain errors extend
+  - New `createNamespace` / `Namespace` API in `@langchain/core/utils/namespace`
+  - Refactored `ModelAbortError`, `ContextOverflowError` to use namespace branding
+  - Added `ContextOverflowError.fromError()` static factory method
+  - Deprecated `addLangChainErrorFields` in favor of `LangChainError` subclasses
+  - Migrated Google provider errors (`GoogleError`, `ConfigurationError`, etc.) to namespace branding
+  - Updated Anthropic and OpenAI providers to use `ContextOverflowError.fromError()`
+
 ## 1.1.24
 
 ### Patch Changes

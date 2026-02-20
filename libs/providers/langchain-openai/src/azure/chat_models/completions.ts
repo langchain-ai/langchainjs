@@ -13,6 +13,7 @@ import {
   AZURE_SECRETS,
   AZURE_SERIALIZABLE_KEYS,
   AzureChatOpenAIFields,
+  getAzureChatOpenAIParams,
 } from "./common.js";
 
 export class AzureChatOpenAICompletions<
@@ -64,7 +65,22 @@ export class AzureChatOpenAICompletions<
     return params;
   }
 
-  constructor(fields?: AzureChatOpenAIFields) {
+  constructor(
+    deploymentName: string,
+    fields?: Omit<
+      AzureChatOpenAIFields,
+      "deploymentName" | "azureOpenAIApiDeploymentName" | "model"
+    >
+  );
+  constructor(fields?: AzureChatOpenAIFields);
+  constructor(
+    deploymentOrFields?: string | AzureChatOpenAIFields,
+    fieldsArg?: Omit<
+      AzureChatOpenAIFields,
+      "deploymentName" | "azureOpenAIApiDeploymentName" | "model"
+    >
+  ) {
+    const fields = getAzureChatOpenAIParams(deploymentOrFields, fieldsArg);
     super(fields);
     _constructAzureFields.call(this, fields);
   }

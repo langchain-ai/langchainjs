@@ -125,12 +125,12 @@ export interface ChatMistralAIInput
    * @deprecated Use `model` instead.
    * @default {"mistral-small-latest"}
    */
-  modelName?: string;
+  modelName?: MistralAIChatCompletionRequest["model"];
   /**
    * The name of the model to use.
    * @default {"mistral-small-latest"}
    */
-  model?: string;
+  model?: MistralAIChatCompletionRequest["model"];
   /**
    * Override the default server URL used by the Mistral SDK.
    * @deprecated use serverURL instead
@@ -972,35 +972,46 @@ export class ChatMistralAI<
 
   numCompletions?: number;
 
-  constructor(fields?: ChatMistralAIInput) {
-    super(fields ?? {});
-    const apiKey = fields?.apiKey ?? getEnvironmentVariable("MISTRAL_API_KEY");
+  constructor(
+    model: MistralAIChatCompletionRequest["model"],
+    fields?: Omit<ChatMistralAIInput, "model">
+  );
+  constructor(fields?: ChatMistralAIInput);
+  constructor(
+    modelOrFields?: string | ChatMistralAIInput,
+    fieldsArg?: Omit<ChatMistralAIInput, "model">
+  ) {
+    const fields =
+      typeof modelOrFields === "string"
+        ? { ...(fieldsArg ?? {}), model: modelOrFields }
+        : (modelOrFields ?? {});
+    super(fields);
+    const apiKey = fields.apiKey ?? getEnvironmentVariable("MISTRAL_API_KEY");
     if (!apiKey) {
       throw new Error(
         "API key MISTRAL_API_KEY is missing for MistralAI, but it is required."
       );
     }
     this.apiKey = apiKey;
-    this.streaming = fields?.streaming ?? this.streaming;
-    this.serverURL = fields?.serverURL ?? this.serverURL;
-    this.temperature = fields?.temperature ?? this.temperature;
-    this.topP = fields?.topP ?? this.topP;
-    this.maxTokens = fields?.maxTokens ?? this.maxTokens;
-    this.safePrompt = fields?.safePrompt ?? this.safePrompt;
-    this.randomSeed = fields?.seed ?? fields?.randomSeed ?? this.seed;
+    this.streaming = fields.streaming ?? this.streaming;
+    this.serverURL = fields.serverURL ?? this.serverURL;
+    this.temperature = fields.temperature ?? this.temperature;
+    this.topP = fields.topP ?? this.topP;
+    this.maxTokens = fields.maxTokens ?? this.maxTokens;
+    this.safePrompt = fields.safePrompt ?? this.safePrompt;
+    this.randomSeed = fields.seed ?? fields.randomSeed ?? this.seed;
     this.seed = this.randomSeed;
-    this.maxRetries = fields?.maxRetries;
-    this.httpClient = fields?.httpClient;
-    this.model = fields?.model ?? fields?.modelName ?? this.model;
-    this.streamUsage = fields?.streamUsage ?? this.streamUsage;
+    this.maxRetries = fields.maxRetries;
+    this.httpClient = fields.httpClient;
+    this.model = fields.model ?? fields.modelName ?? this.model;
+    this.streamUsage = fields.streamUsage ?? this.streamUsage;
     this.beforeRequestHooks =
-      fields?.beforeRequestHooks ?? this.beforeRequestHooks;
-    this.requestErrorHooks =
-      fields?.requestErrorHooks ?? this.requestErrorHooks;
-    this.responseHooks = fields?.responseHooks ?? this.responseHooks;
-    this.presencePenalty = fields?.presencePenalty ?? this.presencePenalty;
-    this.frequencyPenalty = fields?.frequencyPenalty ?? this.frequencyPenalty;
-    this.numCompletions = fields?.numCompletions ?? this.numCompletions;
+      fields.beforeRequestHooks ?? this.beforeRequestHooks;
+    this.requestErrorHooks = fields.requestErrorHooks ?? this.requestErrorHooks;
+    this.responseHooks = fields.responseHooks ?? this.responseHooks;
+    this.presencePenalty = fields.presencePenalty ?? this.presencePenalty;
+    this.frequencyPenalty = fields.frequencyPenalty ?? this.frequencyPenalty;
+    this.numCompletions = fields.numCompletions ?? this.numCompletions;
     this.addAllHooksToHttpClient();
   }
 

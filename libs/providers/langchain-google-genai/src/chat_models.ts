@@ -107,7 +107,7 @@ export interface GoogleGenerativeAIChatInput
    *
    * Note: The format must follow the pattern - `{model}`
    */
-  model: string;
+  model: ModelParams["model"];
 
   /**
    *  labels to be added to the model for cost tracking and telemetry
@@ -662,7 +662,19 @@ export class ChatGoogleGenerativeAI
     );
   }
 
-  constructor(fields: GoogleGenerativeAIChatInput) {
+  constructor(
+    model: ModelParams["model"],
+    fields?: Omit<GoogleGenerativeAIChatInput, "model">
+  );
+  constructor(fields: GoogleGenerativeAIChatInput);
+  constructor(
+    modelOrFields: ModelParams["model"] | GoogleGenerativeAIChatInput,
+    fieldsArg?: Omit<GoogleGenerativeAIChatInput, "model">
+  ) {
+    const fields =
+      typeof modelOrFields === "string"
+        ? { ...(fieldsArg ?? {}), model: modelOrFields }
+        : modelOrFields;
     super(fields);
 
     this.model = fields.model.replace(/^models\//, "");

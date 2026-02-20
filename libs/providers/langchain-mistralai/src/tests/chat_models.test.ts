@@ -45,6 +45,21 @@ test("Serialization", () => {
   );
 });
 
+test("Constructor supports string model shorthand", () => {
+  const shorthand = new ChatMistralAI("mistral-small-latest", {
+    apiKey: "test-api-key",
+    temperature: 0.2,
+  });
+  const explicit = new ChatMistralAI({
+    apiKey: "test-api-key",
+    model: "mistral-small-latest",
+    temperature: 0.2,
+  });
+
+  expect(shorthand.model).toBe(explicit.model);
+  expect(shorthand.temperature).toBe(explicit.temperature);
+});
+
 /**
  * Test to make sure that the logic in convertMessagesToMistralMessages that makes sure
  * tool calls are only included if there is a corresponding ToolMessage works as expected

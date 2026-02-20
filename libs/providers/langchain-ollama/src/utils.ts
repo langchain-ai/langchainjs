@@ -50,6 +50,23 @@ function extractBase64FromDataUrl(dataUrl: string): string {
 
 function convertAMessagesToOllama(messages: AIMessage): OllamaMessage[] {
   if (typeof messages.content === "string") {
+    if (messages.tool_calls?.length) {
+      const toolCalls: OllamaToolCall[] = messages.tool_calls.map((tc) => ({
+        id: tc.id,
+        type: "function",
+        function: {
+          name: tc.name,
+          arguments: tc.args,
+        },
+      }));
+      return [
+        {
+          role: "assistant",
+          content: messages.content,
+          tool_calls: toolCalls,
+        },
+      ];
+    }
     return [
       {
         role: "assistant",

@@ -48,6 +48,13 @@ test("Google AI - `temperature` must be in range [0.0,2.0]", async () => {
   ).toThrow();
 });
 
+test("Google AI - supports string model shorthand constructor", async () => {
+  const model = new ChatGoogleGenerativeAI("models/gemini-2.0-flash", {
+    temperature: 0.1,
+  });
+  expect(model.model).toBe("gemini-2.0-flash");
+});
+
 test("Google AI - `maxOutputTokens` must be positive", async () => {
   expect(
     () =>
