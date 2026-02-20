@@ -239,26 +239,9 @@ export class ChatBaiduQianfan
 
   qianfanSecretKey?: string;
 
-  constructor(
-    model: string,
-    params?: Omit<Partial<BaiduQianfanChatInput> & BaseChatModelParams, "model">
-  );
-  constructor(fields?: Partial<BaiduQianfanChatInput> & BaseChatModelParams);
-  constructor(
-    modelOrFields?:
-      | string
-      | (Partial<BaiduQianfanChatInput> & BaseChatModelParams),
-    paramsArg?: Omit<
-      Partial<BaiduQianfanChatInput> & BaseChatModelParams,
-      "model"
-    >
-  ) {
-    const fields =
-      typeof modelOrFields === "string"
-        ? { ...(paramsArg ?? {}), model: modelOrFields }
-        : (modelOrFields ?? {});
-
-    super(fields);
+  constructor(fields?: Partial<BaiduQianfanChatInput> & BaseChatModelParams) {
+    super(fields ?? {});
+    this._addVersion("@langchain/baidu-qianfan", __PKG_VERSION__);
 
     this.modelName = fields?.model ?? fields?.modelName ?? this.model;
     this.model = this.modelName;

@@ -668,6 +668,7 @@ export class ChatGoogleGenerativeAI
         ? { ...(fieldsArg ?? {}), model: modelOrFields }
         : modelOrFields;
     super(fields);
+    this._addVersion("@langchain/google-genai", __PKG_VERSION__);
 
     this.model = fields.model.replace(/^models\//, "");
 

@@ -269,6 +269,20 @@ export abstract class BaseLangChain<
     this.callbacks = params.callbacks;
     this.tags = params.tags ?? [];
     this.metadata = params.metadata ?? {};
+    this._addVersion("@langchain/core", __PKG_VERSION__);
+  }
+
+  protected _addVersion(pkg: string, version: string) {
+    const existing = this.metadata?.versions;
+    this.metadata = {
+      ...this.metadata,
+      versions: {
+        ...(typeof existing === "object" && existing !== null
+          ? existing
+          : {}),
+        [pkg]: version,
+      },
+    };
   }
 }
 

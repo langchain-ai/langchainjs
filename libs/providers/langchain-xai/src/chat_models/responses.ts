@@ -126,6 +126,8 @@ export class ChatXAIResponses<
         : (modelOrFields ?? {});
     super(fields);
 
+    this._addVersion("@langchain/xai", __PKG_VERSION__);
+
     const apiKey = fields?.apiKey ?? getEnvironmentVariable("XAI_API_KEY");
     if (!apiKey) {
       throw new Error(

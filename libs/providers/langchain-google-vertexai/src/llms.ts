@@ -21,5 +21,6 @@ export class VertexAI extends GoogleLLM {
       ...fields,
       platformType: "gcp",
     });
+    this._addVersion("@langchain/google-vertexai", __PKG_VERSION__);
   }
 }

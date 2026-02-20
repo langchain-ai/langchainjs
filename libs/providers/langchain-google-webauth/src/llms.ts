@@ -26,6 +26,7 @@ export class GoogleLLM
 
   constructor(fields?: GoogleLLMInput) {
     super(fields);
+    this._addVersion("@langchain/google-webauth", __PKG_VERSION__);
   }
 
   buildAbstractedClient(
