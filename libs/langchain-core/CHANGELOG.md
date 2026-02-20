@@ -1,5 +1,11 @@
 # @langchain/core
 
+## 1.1.27
+
+### Patch Changes
+
+- [#10104](https://github.com/langchain-ai/langchainjs/pull/10104) [`fb2226e`](https://github.com/langchain-ai/langchainjs/commit/fb2226e6decdaba21e78b3f01877b45fa1eed6d3) Thanks [@hntrl](https://github.com/hntrl)! - Revert "chore(deps): bump ansi-styles from 5.2.0 to 6.2.3"
+
 ## 1.1.26
 
 ### Patch Changes

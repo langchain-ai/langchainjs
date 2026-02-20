@@ -264,6 +264,11 @@ export function convertFieldsToThinkingConfig(
     } else if (thinkingLevel === "MEDIUM") {
       thinkingLevel = "HIGH";
     }
+  } else if (model.startsWith("gemini-3.1-pro")) {
+    // Gemini 3.1 Pro does not have "minimal"
+    if (thinkingLevel === "MINIMAL") {
+      thinkingLevel = "LOW";
+    }
   }
 
   // If we are using a model that doesn't support thinking at all (gemini 2.5 imaging)
