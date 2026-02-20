@@ -1,5 +1,12 @@
 # @langchain/google-common
 
+## 2.1.20
+
+### Patch Changes
+
+- Updated dependencies [[`fb2226e`](https://github.com/langchain-ai/langchainjs/commit/fb2226e6decdaba21e78b3f01877b45fa1eed6d3)]:
+  - @langchain/core@1.1.27
+
 ## 2.1.19
 
 ### Patch Changes

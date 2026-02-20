@@ -1,5 +1,11 @@
 # @langchain/google
 
+## 0.1.2
+
+### Patch Changes
+
+- [#10101](https://github.com/langchain-ai/langchainjs/pull/10101) [`a54de44`](https://github.com/langchain-ai/langchainjs/commit/a54de4410be4b5c159b9ee1590a8187017dc9dfc) Thanks [@afirstenberg](https://github.com/afirstenberg)! - add Gemini 3.1 Pro support
+
 ## 0.1.1
 
 ### Patch Changes
