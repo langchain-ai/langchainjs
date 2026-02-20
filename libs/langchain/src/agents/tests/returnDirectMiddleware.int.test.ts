@@ -6,7 +6,7 @@ import {
 } from "../../index.js";
 import { tool } from "@langchain/core/tools";
 import { z } from "zod";
-import { HumanMessage } from "@langchain/core/messages";
+import { HumanMessage, AIMessage, ToolMessage } from "@langchain/core/messages";
 
 /**
  * Integration tests for returnDirect functionality with middleware
@@ -101,10 +101,12 @@ describe("returnDirect with beforeModel middleware", () => {
 
     // Verify: Should complete successfully
     const lastMessage = result.messages[result.messages.length - 1];
-    expect(lastMessage._getType()).toBe("ai");
+    expect(AIMessage.isInstance(lastMessage)).toBe(true);
 
     // Verify: Calculator tool was used
-    const toolMessages = result.messages.filter((m) => m._getType() === "tool");
+    const toolMessages = result.messages.filter((m) =>
+      ToolMessage.isInstance(m)
+    );
     const hasCalculatorTool = toolMessages.some((m) => m.name === "calculator");
     expect(hasCalculatorTool).toBe(true);
   }, 30000);
@@ -135,11 +137,11 @@ describe("returnDirect with beforeModel middleware", () => {
 
     // Verify: Should end immediately after tool execution
     const lastMessage = result.messages[result.messages.length - 1];
-    expect(lastMessage._getType()).toBe("tool");
+    expect(ToolMessage.isInstance(lastMessage)).toBe(true);
     expect(lastMessage.name).toBe("ask_question");
 
     // Verify: No subsequent AI message
-    const aiMessages = result.messages.filter((m) => m._getType() === "ai");
+    const aiMessages = result.messages.filter((m) => AIMessage.isInstance(m));
     expect(aiMessages.length).toBe(1); // Only the one that called the tool
   }, 30000);
 });
@@ -169,7 +171,7 @@ describe("returnDirect without beforeModel middleware", () => {
 
     // Verify: Should work normally
     const lastMessage = result.messages[result.messages.length - 1];
-    expect(lastMessage._getType()).toBe("ai");
+    expect(AIMessage.isInstance(lastMessage)).toBe(true);
   }, 30000);
 
   it("should work with returnDirect tool and afterModel middleware", async () => {
@@ -187,7 +189,7 @@ describe("returnDirect without beforeModel middleware", () => {
 
     // Verify: returnDirect works with afterModel middleware
     const lastMessage = result.messages[result.messages.length - 1];
-    expect(lastMessage._getType()).toBe("tool");
+    expect(ToolMessage.isInstance(lastMessage)).toBe(true);
     expect(lastMessage.name).toBe("ask_question");
   }, 30000);
 });
@@ -207,7 +209,7 @@ describe("returnDirect baseline (no middleware)", () => {
 
     // Verify: returnDirect works without middleware (baseline)
     const lastMessage = result.messages[result.messages.length - 1];
-    expect(lastMessage._getType()).toBe("tool");
+    expect(ToolMessage.isInstance(lastMessage)).toBe(true);
     expect(lastMessage.name).toBe("ask_question");
   }, 30000);
 
@@ -225,6 +227,6 @@ describe("returnDirect baseline (no middleware)", () => {
 
     // Verify: Normal tools work without middleware (baseline)
     const lastMessage = result.messages[result.messages.length - 1];
-    expect(lastMessage._getType()).toBe("ai");
+    expect(AIMessage.isInstance(lastMessage)).toBe(true);
   }, 30000);
 });
