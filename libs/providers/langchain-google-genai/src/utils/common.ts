@@ -338,6 +338,35 @@ function _convertLangChainContentToPart(
   } else if ("functionCall" in content) {
     // No action needed here — function calls will be added later from message.tool_calls
     return undefined;
+  } else if (
+    content.type === "image" ||
+    content.type === "video" ||
+    content.type === "audio" ||
+    content.type === "file"
+  ) {
+    // Handle ContentBlock.Multimodal.* (Image, Video, Audio, File)
+    // Supports both DataRecordUrl (url) and DataRecordBase64 (data) formats
+    if (!isMultimodalModel) {
+      throw new Error("This model does not support multimodal content");
+    }
+
+    if ("url" in content && content.url) {
+      // DataRecordUrl format - external URL reference (YouTube, hosted files, etc.)
+      return {
+        fileData: {
+          mimeType: content.mimeType,
+          fileUri: content.url,
+        },
+      };
+    } else if ("data" in content && content.data) {
+      // DataRecordBase64 format - inline base64 data
+      return {
+        inlineData: {
+          mimeType: content.mimeType,
+          data: content.data,
+        },
+      };
+    }
   } else {
     if ("type" in content) {
       throw new Error(`Unknown content type ${content.type}`);
