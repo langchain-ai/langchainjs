@@ -498,20 +498,9 @@ export class ChatOllama
 
   think?: boolean;
 
-  constructor(
-    model: OllamaChatRequest["model"],
-    fields?: Omit<ChatOllamaInput, "model">
-  );
-  constructor(fields?: ChatOllamaInput);
-  constructor(
-    modelOrFields?: string | ChatOllamaInput,
-    fieldsArg?: Omit<ChatOllamaInput, "model">
-  ) {
-    const fields =
-      typeof modelOrFields === "string"
-        ? { ...(fieldsArg ?? {}), model: modelOrFields }
-        : (modelOrFields ?? {});
-    super(fields);
+  constructor(fields?: ChatOllamaInput) {
+    super(fields ?? {});
+    this._addVersion("@langchain/ollama", __PKG_VERSION__);
 
     this.baseUrl =
       fields.baseUrl ??

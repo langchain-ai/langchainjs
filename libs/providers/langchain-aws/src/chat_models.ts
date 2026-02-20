@@ -731,17 +731,9 @@ export class ChatBedrockConverse
    */
   supportsToolChoiceValues?: Array<"auto" | "any" | "tool">;
 
-  constructor(model: string, params?: Omit<ChatBedrockConverseInput, "model">);
-  constructor(fields?: ChatBedrockConverseInput);
-  constructor(
-    modelOrFields?: string | ChatBedrockConverseInput,
-    params?: Omit<ChatBedrockConverseInput, "model">
-  ) {
-    const fields =
-      typeof modelOrFields === "string"
-        ? { ...(params ?? {}), model: modelOrFields }
-        : (modelOrFields ?? {});
-    super(fields);
+  constructor(fields?: ChatBedrockConverseInput) {
+    super(fields ?? {});
+    this._addVersion("@langchain/aws", __PKG_VERSION__);
     const {
       profile,
       filepath,

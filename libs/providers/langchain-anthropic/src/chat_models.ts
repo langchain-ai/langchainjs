@@ -1026,6 +1026,7 @@ export class ChatAnthropicMessages<
         ? { ...(fieldsArg ?? {}), model: modelOrFields }
         : (modelOrFields ?? {});
     super(fields ?? {});
+    this._addVersion("@langchain/anthropic", __PKG_VERSION__);
 
     this.anthropicApiKey =
       fields?.apiKey ??

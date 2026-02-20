@@ -1017,20 +1017,9 @@ export class ChatGroq extends BaseChatModel<
     return [...super.callKeys, ...ALL_CALL_KEYS];
   }
 
-  constructor(
-    model: ChatCompletionCreateParams["model"],
-    fields?: Omit<ChatGroqInput, "model">
-  );
-  constructor(fields: ChatGroqInput);
-  constructor(
-    modelOrFields?: string | ChatGroqInput,
-    fields?: Omit<ChatGroqInput, "model">
-  ) {
-    const params =
-      typeof modelOrFields === "string"
-        ? { ...(fields ?? {}), model: modelOrFields }
-        : (modelOrFields ?? {});
-    super(params);
+  constructor(fields: ChatGroqInput) {
+    super(fields);
+    this._addVersion("@langchain/groq", __PKG_VERSION__);
 
     const apiKey = params.apiKey || getEnvironmentVariable("GROQ_API_KEY");
     if (!apiKey) {

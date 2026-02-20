@@ -67,17 +67,9 @@ export class ChatYandexGPT extends BaseChatModel {
 
   folderID?: string;
 
-  constructor(model: string, fields?: Omit<YandexGPTInputs, "model">);
-  constructor(fields?: YandexGPTInputs);
-  constructor(
-    modelOrFields?: string | YandexGPTInputs,
-    fields?: Omit<YandexGPTInputs, "model">
-  ) {
-    const params =
-      typeof modelOrFields === "string"
-        ? { ...(fields ?? {}), model: modelOrFields }
-        : (modelOrFields ?? {});
-    super(params);
+  constructor(fields?: YandexGPTInputs) {
+    super(fields ?? {});
+    this._addVersion("@langchain/yandex", __PKG_VERSION__);
 
     const apiKey = params.apiKey ?? getEnvironmentVariable("YC_API_KEY");
 

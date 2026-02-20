@@ -226,8 +226,18 @@ export class ChatOpenRouter extends BaseChatModel<
   /** Whether to include token usage in streaming chunks. Defaults to `true`. */
   streamUsage: boolean;
 
-  constructor(fields: ChatOpenRouterParams) {
+  constructor(model: string, fields?: Omit<ChatOpenRouterParams, "model">);
+  constructor(fields: ChatOpenRouterParams);
+  constructor(
+    modelOrFields: string | ChatOpenRouterParams,
+    fieldsArg?: Omit<ChatOpenRouterParams, "model">
+  ) {
+    const fields =
+      typeof modelOrFields === "string"
+        ? { ...(fieldsArg ?? {}), model: modelOrFields }
+        : modelOrFields;
     super(fields);
+    this._addVersion("@langchain/openrouter", __PKG_VERSION__);
     const apiKey =
       fields.apiKey ?? getEnvironmentVariable("OPENROUTER_API_KEY");
     if (!apiKey) {
