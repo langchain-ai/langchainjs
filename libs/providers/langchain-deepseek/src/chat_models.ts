@@ -451,6 +451,7 @@ export class ChatDeepSeek extends ChatOpenAICompletions<ChatDeepSeekCallOptions>
         ...fields.configuration,
       },
     });
+    this._addVersion("@langchain/deepseek", __PKG_VERSION__);
   }
 
   protected override _convertCompletionsDeltaToBaseMessageChunk(

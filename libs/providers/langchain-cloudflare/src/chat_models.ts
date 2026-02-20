@@ -62,20 +62,9 @@ export class ChatCloudflareWorkersAI
 
   streaming = false;
 
-  constructor(
-    model: string,
-    params?: Omit<CloudflareWorkersAIInput & BaseChatModelParams, "model">
-  );
-  constructor(fields?: CloudflareWorkersAIInput & BaseChatModelParams);
-  constructor(
-    modelOrFields?: string | (CloudflareWorkersAIInput & BaseChatModelParams),
-    paramsArg?: Omit<CloudflareWorkersAIInput & BaseChatModelParams, "model">
-  ) {
-    const fields =
-      typeof modelOrFields === "string"
-        ? { ...(paramsArg ?? {}), model: modelOrFields }
-        : (modelOrFields ?? {});
-    super(fields);
+  constructor(fields?: CloudflareWorkersAIInput & BaseChatModelParams) {
+    super(fields ?? {});
+    this._addVersion("@langchain/cloudflare", __PKG_VERSION__);
 
     this.model = fields.model ?? this.model;
     this.streaming = fields.streaming ?? this.streaming;
