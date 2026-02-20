@@ -376,7 +376,7 @@ test("Model can handle empty content messages", async () => {
 test("Test reasoning_content blocks multiturn invoke", async () => {
   const model = new ChatBedrockConverse({
     ...baseConstructorArgs,
-    model: "us.anthropic.claude-3-7-sonnet-20250219-v1:0",
+    model: "us.anthropic.claude-sonnet-4-5-20250929-v1:0",
     maxTokens: 5000,
     additionalModelRequestFields: {
       thinking: { type: "enabled", budget_tokens: 2000 },
@@ -421,7 +421,7 @@ test("Test reasoning_content blocks multiturn invoke", async () => {
 test("Test reasoning_content blocks multiturn streaming", async () => {
   const model = new ChatBedrockConverse({
     ...baseConstructorArgs,
-    model: "us.anthropic.claude-3-7-sonnet-20250219-v1:0",
+    model: "us.anthropic.claude-sonnet-4-5-20250929-v1:0",
     maxTokens: 5000,
     additionalModelRequestFields: {
       thinking: { type: "enabled", budget_tokens: 2000 },
@@ -474,7 +474,7 @@ test("Test reasoning_content blocks multiturn streaming", async () => {
 test("Test ChatBedrockConverse can respond to tool invocations with thinking enabled", async () => {
   const model = new ChatBedrockConverse({
     ...baseConstructorArgs,
-    model: "us.anthropic.claude-3-7-sonnet-20250219-v1:0",
+    model: "us.anthropic.claude-sonnet-4-5-20250929-v1:0",
     maxTokens: 5000,
     additionalModelRequestFields: {
       thinking: { type: "enabled", budget_tokens: 2000 },
@@ -526,7 +526,7 @@ describe("AWS Bedrock Reasoning with contentBlocks", () => {
   test("invoke returns reasoning_content as reasoning in contentBlocks", async () => {
     const model = new ChatBedrockConverse({
       ...baseConstructorArgs,
-      model: "us.anthropic.claude-3-7-sonnet-20250219-v1:0",
+      model: "us.anthropic.claude-sonnet-4-5-20250929-v1:0",
       maxTokens: 5000,
       additionalModelRequestFields: {
         thinking: { type: "enabled", budget_tokens: 2000 },
@@ -551,7 +551,7 @@ describe("AWS Bedrock Reasoning with contentBlocks", () => {
   test("stream returns reasoning_content as reasoning in contentBlocks", async () => {
     const model = new ChatBedrockConverse({
       ...baseConstructorArgs,
-      model: "us.anthropic.claude-3-7-sonnet-20250219-v1:0",
+      model: "us.anthropic.claude-sonnet-4-5-20250929-v1:0",
       maxTokens: 5000,
       additionalModelRequestFields: {
         thinking: { type: "enabled", budget_tokens: 2000 },

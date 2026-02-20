@@ -13,7 +13,7 @@ describe("Files API with Code Execution", () => {
   beforeEach(() => {
     // Create ChatAnthropic model with code execution beta header and bind tools
     const baseModel = new ChatAnthropic({
-      model: "claude-3-5-haiku-20241022",
+      model: "claude-haiku-4-5-20251001",
       temperature: 0,
       clientOptions: {
         defaultHeaders: {

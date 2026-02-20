@@ -1096,7 +1096,7 @@ describe("applyCacheControlToPayload", () => {
   test("applies cache_control to the last content block of string content", () => {
     const payload: AnthropicMessageCreateParams = {
       max_tokens: 1000,
-      model: "claude-3-5-sonnet-20241022",
+      model: "claude-sonnet-4-5-20250929",
       messages: [
         { role: "user" as const, content: "Hello" },
         { role: "assistant" as const, content: "Hi there!" },
@@ -1121,7 +1121,7 @@ describe("applyCacheControlToPayload", () => {
   test("applies cache_control to the last content block of array content", () => {
     const payload: AnthropicMessageCreateParams = {
       max_tokens: 1000,
-      model: "claude-3-5-sonnet-20241022",
+      model: "claude-sonnet-4-5-20250929",
       messages: [
         { role: "user" as const, content: "Hello" },
         {
@@ -1154,7 +1154,7 @@ describe("applyCacheControlToPayload", () => {
   test("applies cache_control to tool_use blocks without corruption", () => {
     const payload: AnthropicMessageCreateParams = {
       max_tokens: 1000,
-      model: "claude-3-5-sonnet-20241022",
+      model: "claude-sonnet-4-5-20250929",
       messages: [
         { role: "user" as const, content: "Hello" },
         {
@@ -1193,7 +1193,7 @@ describe("applyCacheControlToPayload", () => {
     const payload: AnthropicMessageCreateParams = {
       messages: [],
       max_tokens: 1000,
-      model: "claude-3-5-sonnet-20241022",
+      model: "claude-sonnet-4-5-20250929",
     };
 
     const result = applyCacheControlToPayload(payload, cacheControl);
@@ -1205,7 +1205,7 @@ describe("applyCacheControlToPayload", () => {
     const payload: AnthropicMessageCreateParams = {
       messages: [{ role: "user" as const, content: "Hello" }],
       max_tokens: 1000,
-      model: "claude-3-5-sonnet-20241022",
+      model: "claude-sonnet-4-5-20250929",
     };
     const hourCacheControl = { type: "ephemeral" as const, ttl: "1h" as const };
 
