@@ -12,11 +12,13 @@ import {
   isAIMessage,
   MessageOutputVersion,
 } from "../messages/index.js";
+import { getBufferString } from "../messages/utils.js";
 import {
   convertToOpenAIImageBlock,
   isURLContentBlock,
   isBase64ContentBlock,
 } from "../messages/content/data.js";
+import { sha256 } from "../utils/hash.js";
 import type { BasePromptValueInterface } from "../prompt_values.js";
 import {
   LLMResult,
@@ -154,6 +156,89 @@ export type BaseChatModelCallOptions = BaseLanguageModelCallOptions & {
    */
   outputVersion?: MessageOutputVersion;
 };
+
+const BASE64_DATA_URL_RE = /^data:[^;]+;base64,/;
+
+/**
+ * Replace inline base64 data with a SHA-256 digest so cache keys stay compact
+ * regardless of image/media payload size.
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function _compactContentForCache(content: any): any {
+  if (typeof content === "string") return content;
+  if (!Array.isArray(content)) return content;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  return content.map((block: any) => {
+    if (typeof block === "string") return block;
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let result: any = block;
+
+    if (block.type === "image_url" && block.image_url != null) {
+      const iu = block.image_url;
+      if (typeof iu === "string" && BASE64_DATA_URL_RE.test(iu)) {
+        result = { ...block, image_url: `sha256:${sha256(iu)}` };
+      } else if (
+        typeof iu === "object" &&
+        typeof iu.url === "string" &&
+        BASE64_DATA_URL_RE.test(iu.url)
+      ) {
+        result = {
+          ...block,
+          image_url: { ...iu, url: `sha256:${sha256(iu.url)}` },
+        };
+      }
+    }
+
+    if (
+      typeof block.data === "string" &&
+      BASE64_DATA_URL_RE.test(block.data)
+    ) {
+      result = { ...(result === block ? block : result), data: `sha256:${sha256(block.data)}` };
+    }
+
+    return result;
+  });
+}
+
+/**
+ * Serialize messages into a deterministic string suitable for use as a cache key.
+ *
+ * For plain-text messages (content is a string) the output matches the legacy
+ * `getBufferString` format so that existing cache entries remain valid.
+ *
+ * For multimodal messages (content is an array of blocks) the full content is
+ * JSON-serialized with inline base64 data replaced by SHA-256 digests, ensuring
+ * distinct images / documents produce distinct cache keys while keeping keys
+ * compact.
+ */
+function _serializeCachePrompt(messages: BaseMessage[]): string {
+  const hasComplexContent = messages.some((m) => Array.isArray(m.content));
+
+  if (!hasComplexContent) {
+    return getBufferString(messages);
+  }
+
+  return JSON.stringify(
+    messages.map((m) => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const obj: Record<string, any> = {
+        type: m.type,
+        content: _compactContentForCache(m.content),
+      };
+      // name disambiguates messages from different named senders/tools
+      if (m.name != null) obj.name = m.name;
+      if (
+        "tool_calls" in m &&
+        Array.isArray(m.tool_calls) &&
+        m.tool_calls.length > 0
+      ) {
+        obj.tool_calls = m.tool_calls;
+      }
+      return obj;
+    })
+  );
+}
 
 function _formatForTracing(messages: BaseMessage[]): BaseMessage[] {
   const messagesToTrace: BaseMessage[] = [];
@@ -673,9 +758,7 @@ export abstract class BaseChatModel<
     const missingPromptIndices: number[] = [];
     const results = await Promise.allSettled(
       baseMessages.map(async (baseMessage, index) => {
-        // Join all content into one string for the prompt index
-        const prompt =
-          BaseChatModel._convertInputToPromptValue(baseMessage).toString();
+        const prompt = _serializeCachePrompt(baseMessage);
         const result = await cache.lookup(prompt, llmStringKey);
 
         if (result == null) {
@@ -833,10 +916,7 @@ export abstract class BaseChatModel<
         results.generations.map(async (generation, index) => {
           const promptIndex = missingPromptIndices[index];
           generations[promptIndex] = generation;
-          // Join all content into one string for the prompt index
-          const prompt = BaseChatModel._convertInputToPromptValue(
-            baseMessages[promptIndex]
-          ).toString();
+          const prompt = _serializeCachePrompt(baseMessages[promptIndex]);
           return cache.update(prompt, llmStringKey, generation);
         })
       );
