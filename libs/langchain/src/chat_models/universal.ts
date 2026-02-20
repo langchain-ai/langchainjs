@@ -794,7 +794,7 @@ export async function initChatModel<
  *
  * const claudeResult = await configurableModel.invoke("what's your name", {
  *   configurable: {
- *     model: "claude-3-5-sonnet-20240620",
+ *     model: "claude-sonnet-4-5-20250929",
  *   },
  * });
  * ```
@@ -823,7 +823,7 @@ export async function initChatModel<
  *   "what's your name",
  *   {
  *     configurable: {
- *       foo_model: "claude-3-5-sonnet-20240620",
+ *       foo_model: "claude-sonnet-4-5-20250929",
  *       foo_modelProvider: "anthropic",
  *       foo_temperature: 0.6,
  *       foo_apiKey: process.env.ANTHROPIC_API_KEY,
@@ -897,7 +897,7 @@ export async function initChatModel<
  *   "Which city is hotter today and which is bigger: LA or NY?",
  *   {
  *     configurable: {
- *       model: "claude-3-5-sonnet-20240620",
+ *       model: "claude-sonnet-4-5-20250929",
  *       apiKey: process.env.ANTHROPIC_API_KEY,
  *     },
  *   }

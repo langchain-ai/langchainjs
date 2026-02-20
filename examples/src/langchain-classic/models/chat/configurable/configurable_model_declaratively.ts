@@ -66,7 +66,7 @@ toolCalls1:  [
 
 const toolCalls2 = (
   await llmWithTools.invoke("what's bigger in 2024 LA or NYC", {
-    configurable: { model: "claude-3-5-sonnet-20240620" },
+    configurable: { model: "claude-sonnet-4-5-20250929" },
   })
 ).tool_calls;
 console.log("toolCalls2: ", JSON.stringify(toolCalls2, null, 2));

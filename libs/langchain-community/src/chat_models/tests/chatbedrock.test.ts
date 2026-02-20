@@ -64,19 +64,19 @@ describe("Test model provider detection", () => {
       region: "eu-west-1",
     },
     {
-      modelId: "mx.anthropic.claude-3-5-sonnet-20240620-v1:0",
+      modelId: "mx.anthropic.claude-sonnet-4-5-20250929-v1:0",
       expectedProvider: "anthropic",
       shouldThrow: false,
       region: "us-west-2",
     },
     {
-      modelId: "apac.anthropic.claude-3-5-sonnet-20240620-v1:0",
+      modelId: "apac.anthropic.claude-sonnet-4-5-20250929-v1:0",
       expectedProvider: "anthropic",
       shouldThrow: false,
       region: "ap-northeast-1",
     },
     {
-      modelId: "us-gov.anthropic.claude-3-5-sonnet-20240620-v1:0",
+      modelId: "us-gov.anthropic.claude-sonnet-4-5-20250929-v1:0",
       expectedProvider: "anthropic",
       shouldThrow: false,
       region: "us-gov-west-1",

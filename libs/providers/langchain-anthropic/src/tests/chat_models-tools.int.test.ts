@@ -651,7 +651,7 @@ test("Can call and use two tool calls at once", async () => {
     }),
   };
   const largeModel = new ChatAnthropic({
-    model: "claude-3-5-sonnet-latest",
+    model: "claude-sonnet-4-5-20250929",
     temperature: 0,
   }).bindTools([tool]);
 
@@ -712,7 +712,7 @@ test("converting messages doesn't drop tool input", async () => {
     }),
   };
   const largeModel = new ChatAnthropic({
-    model: "claude-3-5-sonnet-latest",
+    model: "claude-sonnet-4-5-20250929",
     temperature: 0,
   }).bindTools([tool]);
 
