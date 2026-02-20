@@ -65,6 +65,35 @@ type InternalModelResponse<StructuredResponseFormat> =
   | ResponseHandlerResult<StructuredResponseFormat>
   | Command;
 
+type BaseModelHandler<
+  StructuredResponseFormat extends Record<string, unknown>,
+> = (
+  request: ModelRequest<InternalAgentState<StructuredResponseFormat>, unknown>,
+  ctx: InvokeModelContext<StructuredResponseFormat>
+) => Promise<AIMessage | ResponseHandlerResult<StructuredResponseFormat>>;
+
+interface InvokeModelContext<
+  StructuredResponseFormat extends Record<string, unknown>,
+> {
+  state: InternalAgentState<StructuredResponseFormat>;
+  config: RunnableConfig;
+  lgConfig: LangGraphRunnableConfig;
+  options: {
+    lastMessage?: string;
+  };
+  baseHandler: BaseModelHandler<StructuredResponseFormat>;
+  currentSystemMessage: SystemMessage;
+  lastAiMessage: AIMessage | null;
+  collectedCommands: Command[];
+}
+
+type ComposedModelHandler<
+  StructuredResponseFormat extends Record<string, unknown>,
+> = (
+  request: ModelRequest<InternalAgentState<StructuredResponseFormat>, unknown>,
+  ctx: InvokeModelContext<StructuredResponseFormat>
+) => Promise<InternalModelResponse<StructuredResponseFormat>>;
+
 /**
  * Check if the response is an internal model response.
  * @param response - The response to check.
@@ -139,6 +168,10 @@ export class AgentNode<
 > {
   #options: AgentNodeOptions<StructuredResponseFormat, ContextSchema>;
   #systemMessage: SystemMessage;
+  #composedModelHandler?: ComposedModelHandler<StructuredResponseFormat>;
+  #resolvedModel?: LanguageModelLike | Promise<LanguageModelLike>;
+  #toolNameSet: Set<string>;
+  #toolRefSet: Set<ClientTool | ServerTool>;
 
   constructor(
     options: AgentNodeOptions<StructuredResponseFormat, ContextSchema>
@@ -150,6 +183,204 @@ export class AgentNode<
 
     this.#options = options;
     this.#systemMessage = options.systemMessage;
+    this.#toolNameSet = new Set(
+      this.#options.toolClasses.map((t) => String(t.name))
+    );
+    this.#toolRefSet = new Set(this.#options.toolClasses);
+  }
+
+  #getComposedModelHandler(): ComposedModelHandler<StructuredResponseFormat> {
+    if (this.#composedModelHandler) {
+      return this.#composedModelHandler;
+    }
+
+    const wrapperMiddleware = this.#options.wrapModelCallHookMiddleware ?? [];
+    let wrappedHandler: ComposedModelHandler<StructuredResponseFormat> = async (
+      request,
+      ctx
+    ) =>
+      ctx.baseHandler(
+        request,
+        ctx
+      ) as unknown as InternalModelResponse<StructuredResponseFormat>;
+
+    /**
+     * Build composed handler from last to first so first middleware becomes outermost
+     */
+    for (let i = wrapperMiddleware.length - 1; i >= 0; i--) {
+      const [middleware, getMiddlewareState] = wrapperMiddleware[i];
+      if (!middleware.wrapModelCall) {
+        continue;
+      }
+
+      const innerHandler = wrappedHandler;
+      wrappedHandler = async (
+        request,
+        ctx
+      ): Promise<InternalModelResponse<StructuredResponseFormat>> => {
+        /**
+         * Merge context with default context of middleware
+         */
+        const context = middleware.contextSchema
+          ? interopParse(middleware.contextSchema, ctx.lgConfig?.context || {})
+          : ctx.lgConfig?.context;
+
+        /**
+         * Create runtime
+         */
+        const runtime: Runtime<unknown> = Object.freeze({
+          context,
+          writer: ctx.lgConfig.writer,
+          interrupt: ctx.lgConfig.interrupt,
+          signal: ctx.lgConfig.signal,
+        });
+
+        /**
+         * Create the request with state and runtime
+         */
+        const requestWithStateAndRuntime: ModelRequest<
+          InternalAgentState<StructuredResponseFormat>,
+          unknown
+        > = {
+          ...request,
+          state: {
+            ...(middleware.stateSchema
+              ? interopParse(
+                  toPartialZodObject(middleware.stateSchema),
+                  ctx.state
+                )
+              : {}),
+            ...getMiddlewareState(),
+            messages: ctx.state.messages,
+          } as InternalAgentState<StructuredResponseFormat>,
+          runtime,
+        };
+
+        /**
+         * Create handler that validates tools and calls the inner handler
+         */
+        const handlerWithValidation = async (
+          req: ModelRequest<
+            InternalAgentState<StructuredResponseFormat>,
+            unknown
+          >
+        ): Promise<InternalModelResponse<StructuredResponseFormat>> => {
+          /**
+           * Verify that the user didn't add any new tools.
+           * We can't allow this as the ToolNode is already initiated with given tools.
+           */
+          const modifiedTools = req.tools ?? [];
+          const newTools = modifiedTools.filter(
+            (tool) => isClientTool(tool) && !this.#toolNameSet.has(tool.name)
+          );
+          if (newTools.length > 0) {
+            throw new Error(
+              `You have added a new tool in "wrapModelCall" hook of middleware "${
+                middleware.name
+              }": ${newTools.map((tool) => tool.name).join(", ")}. This is not supported.`
+            );
+          }
+
+          /**
+           * Verify that user has not added or modified a tool with the same name.
+           * We can't allow this as the ToolNode is already initiated with given tools.
+           */
+          const invalidTools = modifiedTools.filter(
+            (tool) => isClientTool(tool) && !this.#toolRefSet.has(tool)
+          );
+          if (invalidTools.length > 0) {
+            throw new Error(
+              `You have modified a tool in "wrapModelCall" hook of middleware "${
+                middleware.name
+              }": ${invalidTools.map((tool) => tool.name).join(", ")}. This is not supported.`
+            );
+          }
+
+          let normalizedReq = req;
+          const hasSystemPromptChanged =
+            req.systemPrompt !== ctx.currentSystemMessage.text;
+          const hasSystemMessageChanged =
+            req.systemMessage !== ctx.currentSystemMessage;
+          if (hasSystemPromptChanged && hasSystemMessageChanged) {
+            throw new Error(
+              "Cannot change both systemPrompt and systemMessage in the same request."
+            );
+          }
+
+          /**
+           * Check if systemPrompt is a string was changed, if so create a new SystemMessage
+           */
+          if (hasSystemPromptChanged) {
+            ctx.currentSystemMessage = new SystemMessage({
+              content: [{ type: "text", text: req.systemPrompt }],
+            });
+            normalizedReq = {
+              ...req,
+              systemPrompt: ctx.currentSystemMessage.text,
+              systemMessage: ctx.currentSystemMessage,
+            };
+          }
+          /**
+           * If the systemMessage was changed, update the current system message
+           */
+          if (hasSystemMessageChanged) {
+            ctx.currentSystemMessage = new SystemMessage({
+              ...req.systemMessage,
+            });
+            normalizedReq = {
+              ...req,
+              systemPrompt: ctx.currentSystemMessage.text,
+              systemMessage: ctx.currentSystemMessage,
+            };
+          }
+
+          const innerHandlerResult = await innerHandler(normalizedReq, ctx);
+
+          /**
+           * Normalize Commands so middleware always sees AIMessage from handler().
+           * When an inner middleware returns a Command, substitute the tracked
+           * lastAiMessage. The raw Command is still captured in innerHandlerResult
+           * for the framework's Command collection.
+           */
+          if (isCommand(innerHandlerResult) && ctx.lastAiMessage) {
+            return ctx.lastAiMessage as InternalModelResponse<StructuredResponseFormat>;
+          }
+
+          return innerHandlerResult;
+        };
+
+        try {
+          const middlewareResponse = await middleware.wrapModelCall?.(
+            requestWithStateAndRuntime,
+            handlerWithValidation as WrapModelCallHandler
+          );
+
+          /**
+           * Validate that this specific middleware returned a valid response
+           */
+          if (!isInternalModelResponse(middlewareResponse)) {
+            throw new Error(
+              `Invalid response from "wrapModelCall" in middleware "${
+                middleware.name
+              }": expected AIMessage or Command, got ${typeof middlewareResponse}`
+            );
+          }
+
+          if (AIMessage.isInstance(middlewareResponse)) {
+            ctx.lastAiMessage = middlewareResponse;
+          } else if (isCommand(middlewareResponse)) {
+            ctx.collectedCommands.push(middlewareResponse);
+          }
+
+          return middlewareResponse;
+        } catch (error) {
+          throw MiddlewareError.wrap(error, middleware.name);
+        }
+      };
+    }
+
+    this.#composedModelHandler = wrappedHandler;
+    return wrappedHandler;
   }
 
   /**
@@ -300,12 +531,18 @@ export class AgentNode<
    * @returns The model.
    */
   #deriveModel() {
+    if (this.#resolvedModel) {
+      return this.#resolvedModel;
+    }
+
     if (typeof this.#options.model === "string") {
-      return initChatModel(this.#options.model);
+      this.#resolvedModel = initChatModel(this.#options.model);
+      return this.#resolvedModel;
     }
 
     if (this.#options.model) {
-      return this.#options.model;
+      this.#resolvedModel = this.#options.model;
+      return this.#resolvedModel;
     }
 
     throw new Error("No model option was provided, either via `model` option.");
@@ -326,24 +563,11 @@ export class AgentNode<
     const lgConfig = config as LangGraphRunnableConfig;
 
     /**
-     * Create a local variable for current system message to avoid concurrency issues
-     * Each invocation gets its own copy
-     */
-    let currentSystemMessage = this.#systemMessage;
-
-    /**
-     * Shared tracking state for AIMessage and Command collection.
-     * lastAiMessage tracks the effective AIMessage through the middleware chain.
-     * collectedCommands accumulates Commands returned by middleware (not base handler).
-     */
-    let lastAiMessage: AIMessage | null = null;
-    const collectedCommands: Command[] = [];
-
-    /**
      * Create the base handler that performs the actual model invocation
      */
-    const baseHandler = async (
-      request: ModelRequest
+    const baseHandler: BaseModelHandler<StructuredResponseFormat> = async (
+      request,
+      ctx
     ): Promise<AIMessage | ResponseHandlerResult<StructuredResponseFormat>> => {
       /**
        * Check if the LLM already has bound tools and throw if it does.
@@ -361,20 +585,22 @@ export class AgentNode<
        * prepend the system message to the messages if it is not empty
        */
       const messages = [
-        ...(currentSystemMessage.text === "" ? [] : [currentSystemMessage]),
+        ...(ctx.currentSystemMessage.text === ""
+          ? []
+          : [ctx.currentSystemMessage]),
         ...request.messages,
       ];
 
-      const signal = mergeAbortSignals(this.#options.signal, config.signal);
+      const signal = mergeAbortSignals(this.#options.signal, ctx.config.signal);
       const response = (await raceWithSignal(
         modelWithTools.invoke(messages, {
-          ...config,
+          ...ctx.config,
           signal,
         }),
         signal
       )) as AIMessage;
 
-      lastAiMessage = response;
+      ctx.lastAiMessage = response;
 
       /**
        * if the user requests a native schema output, try to parse the response
@@ -423,225 +649,33 @@ export class AgentNode<
         response,
         toolCalls[0],
         structuredResponseFormat,
-        toolMessageContent ?? options.lastMessage
+        toolMessageContent ?? ctx.options.lastMessage
       );
     };
-
-    const wrapperMiddleware = this.#options.wrapModelCallHookMiddleware ?? [];
-    let wrappedHandler: (
-      request: ModelRequest<
-        InternalAgentState<StructuredResponseFormat>,
-        unknown
-      >
-    ) => Promise<InternalModelResponse<StructuredResponseFormat>> = baseHandler;
-
-    /**
-     * Build composed handler from last to first so first middleware becomes outermost
-     */
-    for (let i = wrapperMiddleware.length - 1; i >= 0; i--) {
-      const [middleware, getMiddlewareState] = wrapperMiddleware[i];
-      if (middleware.wrapModelCall) {
-        const innerHandler = wrappedHandler;
-        const currentMiddleware = middleware;
-        const currentGetState = getMiddlewareState;
-
-        wrappedHandler = async (
-          request: ModelRequest<
-            InternalAgentState<StructuredResponseFormat>,
-            unknown
-          >
-        ): Promise<InternalModelResponse<StructuredResponseFormat>> => {
-          /**
-           * Merge context with default context of middleware
-           */
-          const context = currentMiddleware.contextSchema
-            ? interopParse(
-                currentMiddleware.contextSchema,
-                lgConfig?.context || {}
-              )
-            : lgConfig?.context;
-
-          /**
-           * Create runtime
-           */
-          const runtime: Runtime<unknown> = Object.freeze({
-            context,
-            writer: lgConfig.writer,
-            interrupt: lgConfig.interrupt,
-            signal: lgConfig.signal,
-          });
-
-          /**
-           * Create the request with state and runtime
-           */
-          const requestWithStateAndRuntime: ModelRequest<
-            InternalAgentState<StructuredResponseFormat>,
-            unknown
-          > = {
-            ...request,
-            state: {
-              ...(middleware.stateSchema
-                ? interopParse(
-                    toPartialZodObject(middleware.stateSchema),
-                    state
-                  )
-                : {}),
-              ...currentGetState(),
-              messages: state.messages,
-            } as InternalAgentState<StructuredResponseFormat>,
-            runtime,
-          };
-
-          /**
-           * Create handler that validates tools and calls the inner handler
-           */
-          const handlerWithValidation = async (
-            req: ModelRequest<
-              InternalAgentState<StructuredResponseFormat>,
-              unknown
-            >
-          ): Promise<InternalModelResponse<StructuredResponseFormat>> => {
-            /**
-             * Verify that the user didn't add any new tools.
-             * We can't allow this as the ToolNode is already initiated with given tools.
-             */
-            const modifiedTools = req.tools ?? [];
-            const newTools = modifiedTools.filter(
-              (tool) =>
-                isClientTool(tool) &&
-                !this.#options.toolClasses.some((t) => t.name === tool.name)
-            );
-            if (newTools.length > 0) {
-              throw new Error(
-                `You have added a new tool in "wrapModelCall" hook of middleware "${
-                  currentMiddleware.name
-                }": ${newTools
-                  .map((tool) => tool.name)
-                  .join(", ")}. This is not supported.`
-              );
-            }
-
-            /**
-             * Verify that user has not added or modified a tool with the same name.
-             * We can't allow this as the ToolNode is already initiated with given tools.
-             */
-            const invalidTools = modifiedTools.filter(
-              (tool) =>
-                isClientTool(tool) &&
-                this.#options.toolClasses.every((t) => t !== tool)
-            );
-            if (invalidTools.length > 0) {
-              throw new Error(
-                `You have modified a tool in "wrapModelCall" hook of middleware "${
-                  currentMiddleware.name
-                }": ${invalidTools
-                  .map((tool) => tool.name)
-                  .join(", ")}. This is not supported.`
-              );
-            }
-
-            let normalizedReq = req;
-            const hasSystemPromptChanged =
-              req.systemPrompt !== currentSystemMessage.text;
-            const hasSystemMessageChanged =
-              req.systemMessage !== currentSystemMessage;
-            if (hasSystemPromptChanged && hasSystemMessageChanged) {
-              throw new Error(
-                "Cannot change both systemPrompt and systemMessage in the same request."
-              );
-            }
-
-            /**
-             * Check if systemPrompt is a string was changed, if so create a new SystemMessage
-             */
-            if (hasSystemPromptChanged) {
-              currentSystemMessage = new SystemMessage({
-                content: [{ type: "text", text: req.systemPrompt }],
-              });
-              normalizedReq = {
-                ...req,
-                systemPrompt: currentSystemMessage.text,
-                systemMessage: currentSystemMessage,
-              };
-            }
-            /**
-             * If the systemMessage was changed, update the current system message
-             */
-            if (hasSystemMessageChanged) {
-              currentSystemMessage = new SystemMessage({
-                ...req.systemMessage,
-              });
-              normalizedReq = {
-                ...req,
-                systemPrompt: currentSystemMessage.text,
-                systemMessage: currentSystemMessage,
-              };
-            }
-
-            const innerHandlerResult = await innerHandler(normalizedReq);
-
-            /**
-             * Normalize Commands so middleware always sees AIMessage from handler().
-             * When an inner middleware returns a Command, substitute the tracked
-             * lastAiMessage. The raw Command is still captured in innerHandlerResult
-             * for the framework's Command collection.
-             */
-            if (isCommand(innerHandlerResult) && lastAiMessage) {
-              return lastAiMessage as InternalModelResponse<StructuredResponseFormat>;
-            }
-
-            return innerHandlerResult;
-          };
-
-          // Call middleware's wrapModelCall with the validation handler
-          if (!currentMiddleware.wrapModelCall) {
-            return handlerWithValidation(requestWithStateAndRuntime);
-          }
-
-          try {
-            const middlewareResponse = await currentMiddleware.wrapModelCall(
-              requestWithStateAndRuntime,
-              handlerWithValidation as WrapModelCallHandler
-            );
-
-            /**
-             * Validate that this specific middleware returned a valid response
-             */
-            if (!isInternalModelResponse(middlewareResponse)) {
-              throw new Error(
-                `Invalid response from "wrapModelCall" in middleware "${
-                  currentMiddleware.name
-                }": expected AIMessage or Command, got ${typeof middlewareResponse}`
-              );
-            }
-
-            if (AIMessage.isInstance(middlewareResponse)) {
-              lastAiMessage = middlewareResponse;
-            } else if (isCommand(middlewareResponse)) {
-              collectedCommands.push(middlewareResponse);
-            }
-
-            return middlewareResponse;
-          } catch (error) {
-            throw MiddlewareError.wrap(error, currentMiddleware.name);
-          }
-        };
-      }
-    }
 
     /**
      * Execute the wrapped handler with the initial request
      * Reset current system prompt to initial state and convert to string using .text getter
      * for backwards compatibility with ModelRequest
      */
-    currentSystemMessage = this.#systemMessage;
+    const ctx: InvokeModelContext<StructuredResponseFormat> = {
+      state,
+      config,
+      lgConfig,
+      options,
+      baseHandler,
+      currentSystemMessage: this.#systemMessage,
+      lastAiMessage: null,
+      collectedCommands: [],
+    };
+
     const initialRequest: ModelRequest<
       InternalAgentState<StructuredResponseFormat>,
       unknown
     > = {
       model,
-      systemPrompt: currentSystemMessage?.text,
-      systemMessage: currentSystemMessage,
+      systemPrompt: ctx.currentSystemMessage?.text,
+      systemMessage: ctx.currentSystemMessage,
       messages: state.messages,
       tools: this.#options.toolClasses,
       state,
@@ -653,8 +687,12 @@ export class AgentNode<
       }) as Runtime<unknown>,
     };
 
-    const response = await wrappedHandler(initialRequest);
-    return { response, lastAiMessage, collectedCommands };
+    const response = await this.#getComposedModelHandler()(initialRequest, ctx);
+    return {
+      response,
+      lastAiMessage: ctx.lastAiMessage,
+      collectedCommands: ctx.collectedCommands,
+    };
   }
 
   /**

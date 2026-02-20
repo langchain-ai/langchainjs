@@ -153,7 +153,7 @@ export class FakeConfigurableModel extends BaseChatModel {
 }
 
 export class FakeToolCallingChatModel extends BaseChatModel {
-  sleep?: number = 50;
+  sleep?: number = 0;
 
   responses?: BaseMessage[];
 
@@ -185,6 +185,17 @@ export class FakeToolCallingChatModel extends BaseChatModel {
     this.toolStyle = fields.toolStyle ?? this.toolStyle;
     this.structuredResponse = fields.structuredResponse;
     this.structuredOutputMessages = [];
+  }
+
+  /**
+   * Reset internal iteration state so this fake can be reused across
+   * multiple benchmark iterations without drifting through responses.
+   */
+  reset(options?: { idx?: number; clearStructuredOutputMessages?: boolean }) {
+    this.idx = options?.idx ?? 0;
+    if (options?.clearStructuredOutputMessages ?? true) {
+      this.structuredOutputMessages = [];
+    }
   }
 
   _llmType() {

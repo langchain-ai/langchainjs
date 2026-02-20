@@ -6,6 +6,8 @@ import { RunnableLambda } from "../../runnables/base.js";
 import { FakeListChatModel } from "../../utils/testing/index.js";
 import { getCallbackManagerForConfig } from "../../runnables/config.js";
 import { BaseCallbackHandler } from "../../callbacks/base.js";
+import { isRunTree } from "langsmith/run_trees";
+import { getGlobalAsyncLocalStorageInstance } from "../async_local_storage/globals.js";
 
 class FakeCallbackHandler extends BaseCallbackHandler {
   name = `fake-${v4()}`;
@@ -200,4 +202,15 @@ test("Runnable streamEvents method with streaming nested in a RunnableLambda", a
     return event.event === "on_llm_stream";
   });
   expect(chatModelStreamEvent).toBeDefined();
+});
+
+test("runWithConfig should not construct a RunTree when tracing is disabled", () => {
+  AsyncLocalStorageProviderSingleton.runWithConfig({ tags: ["bench"] }, () => {
+    const als = getGlobalAsyncLocalStorageInstance();
+    const store = als?.getStore();
+    // We still propagate runnable config via the async-local store,
+    // but we avoid the expensive LangSmith RunTree constructor.
+    expect(isRunTree(store)).toBe(false);
+    expect(store?.extra).toBeDefined();
+  });
 });

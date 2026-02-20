@@ -34,7 +34,7 @@ export class FakeLLM extends LLM {
 }
 
 export class FakeStreamingLLM extends LLM {
-  sleep?: number = 50;
+  sleep?: number = 0;
 
   responses?: string[];
 

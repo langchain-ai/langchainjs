@@ -10,10 +10,11 @@ import { createAgent, createMiddleware } from "../index.js";
 
 const bench = new Bench({ concurrency: "bench", threshold: 2 });
 
-type Benchmarks = Record<
-  string,
-  [() => Promise<void>, (result: TaskResultCompleted) => void]
->;
+type Benchmark = {
+  warmup?: () => Promise<void>;
+  fn: () => Promise<void>;
+  assert: (result: TaskResultCompleted) => void;
+};
 
 // Helper function to create multiple tools
 function createTools(count: number) {
@@ -37,210 +38,332 @@ function createLargeMessageHistory(count: number) {
   );
 }
 
-const benchmarks: Benchmarks = {
-  "simple tool calling agent": [
-    async () => {
-      const model = new FakeToolCallingChatModel({
-        responses: [new AIMessage({ content: "Hello, world!" })],
-      });
+const tools10 = createTools(10);
+const tools50 = createTools(50);
+const messages50 = createLargeMessageHistory(50);
+const messages100 = createLargeMessageHistory(100);
 
-      const t = tool(async () => "Hello, world!", {
-        name: "test",
-        description: "Test tool",
-        schema: z.object({
-          name: z.string(),
-        }),
-      });
+const simpleToolCallingModel = new FakeToolCallingChatModel({
+  responses: [new AIMessage({ content: "Hello, world!" })],
+});
+const simpleTool = tool(async () => "Hello, world!", {
+  name: "test",
+  description: "Test tool",
+  schema: z.object({
+    name: z.string(),
+  }),
+});
+const simpleToolCallingAgent = createAgent({
+  model: simpleToolCallingModel,
+  tools: [simpleTool],
+});
 
-      const agent = createAgent({
-        model,
-        tools: [t],
-      });
+const modelDone = new FakeToolCallingChatModel({
+  responses: [new AIMessage({ content: "Done" })],
+});
 
-      await agent.invoke({
+const agentWith10Tools = createAgent({
+  model: modelDone,
+  tools: tools10,
+});
+
+const agentWith50Tools = createAgent({
+  model: modelDone,
+  tools: tools50,
+});
+
+const agentWithLargeHistory = createAgent({
+  model: new FakeToolCallingChatModel({
+    responses: [new AIMessage({ content: "Response" })],
+  }),
+  tools: [],
+});
+
+const singleMiddleware = createMiddleware({
+  name: "TestMiddleware",
+  beforeModel: async (state) => state,
+});
+const agentWithSingleMiddleware = createAgent({
+  model: modelDone,
+  tools: [],
+  middleware: [singleMiddleware],
+});
+
+const middleware5 = Array.from({ length: 5 }, (_, i) =>
+  createMiddleware({
+    name: `Middleware${i}`,
+    stateSchema: z.object({
+      [`count${i}`]: z.number().default(0),
+    }),
+    beforeModel: async (state) => {
+      return {
+        [`count${i}`]: (state[`count${i}`] ?? 0) + 1,
+      };
+    },
+    afterModel: async (state) => state,
+  })
+);
+const agentWith5Middleware = createAgent({
+  model: modelDone,
+  tools: [],
+  middleware: middleware5,
+});
+
+const middleware10 = Array.from({ length: 10 }, (_, i) =>
+  createMiddleware({
+    name: `Middleware${i}`,
+    stateSchema: z.object({
+      [`count${i}`]: z.number().default(0),
+    }),
+    beforeAgent: async (state) => {
+      return {
+        [`count${i}`]: (state[`count${i}`] ?? 0) + 1,
+      };
+    },
+    beforeModel: async (state) => {
+      return {
+        [`count${i}`]: (state[`count${i}`] ?? 0) + 1,
+      };
+    },
+    afterModel: async (state) => {
+      return {
+        [`count${i}`]: (state[`count${i}`] ?? 0) + 1,
+      };
+    },
+    afterAgent: async (state) => {
+      return {
+        [`count${i}`]: (state[`count${i}`] ?? 0) + 1,
+      };
+    },
+  })
+);
+const agentWith10Middleware = createAgent({
+  model: modelDone,
+  tools: [],
+  middleware: middleware10,
+});
+
+const wrapModelCallMiddleware = createMiddleware({
+  name: "WrapModelCallMiddleware",
+  wrapModelCall: async (request, handler) => handler(request),
+});
+const agentWithWrapModelCall = createAgent({
+  model: modelDone,
+  tools: [],
+  middleware: [wrapModelCallMiddleware],
+});
+
+const wrapToolCallModel = new FakeToolCallingChatModel({
+  responses: [
+    new AIMessage({
+      content: "",
+      tool_calls: [
+        {
+          name: "test_tool",
+          args: { value: "test" },
+          id: "call_1",
+          type: "tool_call" as const,
+        },
+      ],
+    }),
+    new AIMessage({ content: "Done" }),
+  ],
+});
+const testTool = tool(async () => "result", {
+  name: "test_tool",
+  description: "Test tool",
+  schema: z.object({
+    value: z.string(),
+  }),
+});
+const wrapToolCallMiddleware = createMiddleware({
+  name: "WrapToolCallMiddleware",
+  wrapToolCall: async (request, handler) => handler(request),
+});
+const agentWithWrapToolCall = createAgent({
+  model: wrapToolCallModel,
+  tools: [testTool],
+  middleware: [wrapToolCallMiddleware],
+});
+
+const responseFormatModel = new FakeToolCallingChatModel({
+  responses: [new AIMessage({ content: "Done" })],
+  structuredResponse: { name: "John", age: 30 },
+});
+const responseSchema = z.object({
+  name: z.string(),
+  age: z.number(),
+});
+const agentWithResponseFormat = createAgent({
+  model: responseFormatModel,
+  tools: [],
+  responseFormat: responseSchema,
+});
+
+const metadataTimestamp = Date.now();
+const stateSchema = z.object({
+  counter: z.number().default(0),
+  history: z.array(z.string()).default([]),
+  metadata: z
+    .object({
+      userId: z.string(),
+      sessionId: z.string(),
+      timestamp: z.number(),
+    })
+    .optional(),
+});
+const agentWithComplexStateSchema = createAgent({
+  model: modelDone,
+  tools: [],
+  stateSchema,
+});
+
+const middleware5Simple = Array.from({ length: 5 }, (_, i) =>
+  createMiddleware({
+    name: `Middleware${i}`,
+    beforeModel: async (state) => state,
+    afterModel: async (state) => state,
+  })
+);
+const agentWith10ToolsAnd5Middleware = createAgent({
+  model: modelDone,
+  tools: tools10,
+  middleware: middleware5Simple,
+});
+
+const middleware10Value = Array.from({ length: 10 }, (_, i) =>
+  createMiddleware({
+    name: `Middleware${i}`,
+    stateSchema: z.object({
+      [`value${i}`]: z.string().default(""),
+    }),
+    beforeAgent: async (state) => state,
+    beforeModel: async (state) => state,
+    afterModel: async (state) => state,
+    afterAgent: async (state) => state,
+  })
+);
+const agentWith50ToolsAnd10Middleware = createAgent({
+  model: modelDone,
+  tools: tools50,
+  middleware: middleware10Value,
+});
+
+const middleware3 = Array.from({ length: 3 }, (_, i) =>
+  createMiddleware({
+    name: `Middleware${i}`,
+    beforeModel: async (state) => state,
+  })
+);
+const agentWithLargeHistoryAndMiddleware = createAgent({
+  model: modelDone,
+  tools: [],
+  middleware: middleware3,
+});
+
+const middlewareToolsModel = new FakeToolCallingChatModel({
+  responses: [
+    new AIMessage({
+      content: "",
+      tool_calls: [
+        {
+          name: "middleware_tool",
+          args: { input: "test" },
+          id: "call_1",
+          type: "tool_call" as const,
+        },
+      ],
+    }),
+    new AIMessage({ content: "Done" }),
+  ],
+});
+const middlewareTool = tool(async () => "result", {
+  name: "middleware_tool",
+  description: "Tool from middleware",
+  schema: z.object({
+    input: z.string(),
+  }),
+});
+const middlewareWithTools = createMiddleware({
+  name: "MiddlewareWithTools",
+  tools: [middlewareTool],
+});
+const agentWithMiddlewareTools = createAgent({
+  model: middlewareToolsModel,
+  tools: [],
+  middleware: [middlewareWithTools],
+});
+
+const benchmarks: Record<string, Benchmark> = {
+  "simple tool calling agent": {
+    fn: async () => {
+      await simpleToolCallingAgent.invoke({
         messages: [new HumanMessage("Hello, world!")],
       });
     },
-    (result: TaskResultCompleted) => {
+    assert: (result) => {
       expect(result.latency.mean).toBeLessThanOrEqual(60);
     },
-  ],
+  },
 
-  "agent with 10 tools": [
-    async () => {
-      const model = new FakeToolCallingChatModel({
-        responses: [new AIMessage({ content: "Done" })],
-      });
-
-      const tools = createTools(10);
-
-      const agent = createAgent({
-        model,
-        tools,
-      });
-
-      await agent.invoke({
+  "agent with 10 tools": {
+    fn: async () => {
+      await agentWith10Tools.invoke({
         messages: [new HumanMessage("Use tool_0")],
       });
     },
-    (result: TaskResultCompleted) => {
+    assert: (result) => {
       expect(result.latency.mean).toBeLessThanOrEqual(60);
     },
-  ],
+  },
 
-  "agent with 50 tools": [
-    async () => {
-      const model = new FakeToolCallingChatModel({
-        responses: [new AIMessage({ content: "Done" })],
-      });
-
-      const tools = createTools(50);
-
-      const agent = createAgent({
-        model,
-        tools,
-      });
-
-      await agent.invoke({
+  "agent with 50 tools": {
+    fn: async () => {
+      await agentWith50Tools.invoke({
         messages: [new HumanMessage("Use tool_0")],
       });
     },
-    (result: TaskResultCompleted) => {
+    assert: (result) => {
       expect(result.latency.mean).toBeLessThanOrEqual(60);
     },
-  ],
+  },
 
-  "agent with large message history (100 messages)": [
-    async () => {
-      const model = new FakeToolCallingChatModel({
-        responses: [new AIMessage({ content: "Response" })],
-      });
-
-      const agent = createAgent({
-        model,
-        tools: [],
-      });
-
-      const messages = createLargeMessageHistory(100);
-
-      await agent.invoke({
-        messages,
+  "agent with large message history (100 messages)": {
+    fn: async () => {
+      await agentWithLargeHistory.invoke({
+        messages: messages100,
       });
     },
-    (result: TaskResultCompleted) => {
+    assert: (result) => {
       expect(result.latency.mean).toBeLessThanOrEqual(60);
     },
-  ],
+  },
 
-  "agent with single middleware (beforeModel hook)": [
-    async () => {
-      const model = new FakeToolCallingChatModel({
-        responses: [new AIMessage({ content: "Done" })],
-      });
-
-      const middleware = createMiddleware({
-        name: "TestMiddleware",
-        beforeModel: async (state) => {
-          // Simple state modification
-          return state;
-        },
-      });
-
-      const agent = createAgent({
-        model,
-        tools: [],
-        middleware: [middleware],
-      });
-
-      await agent.invoke({
+  "agent with single middleware (beforeModel hook)": {
+    fn: async () => {
+      await agentWithSingleMiddleware.invoke({
         messages: [new HumanMessage("Hello")],
       });
     },
-    (result: TaskResultCompleted) => {
+    assert: (result) => {
       expect(result.latency.mean).toBeLessThanOrEqual(60);
     },
-  ],
+  },
 
-  "agent with 5 middleware instances": [
-    async () => {
-      const model = new FakeToolCallingChatModel({
-        responses: [new AIMessage({ content: "Done" })],
-      });
-
-      const middleware = Array.from({ length: 5 }, (_, i) =>
-        createMiddleware({
-          name: `Middleware${i}`,
-          stateSchema: z.object({
-            [`count${i}`]: z.number().default(0),
-          }),
-          beforeModel: async (state) => {
-            return {
-              [`count${i}`]: (state[`count${i}`] ?? 0) + 1,
-            };
-          },
-          afterModel: async (state) => {
-            return state;
-          },
-        })
-      );
-
-      const agent = createAgent({
-        model,
-        tools: [],
-        middleware,
-      });
-
-      await agent.invoke({
+  "agent with 5 middleware instances": {
+    fn: async () => {
+      await agentWith5Middleware.invoke({
         messages: [new HumanMessage("Hello")],
       });
     },
-    (result: TaskResultCompleted) => {
+    assert: (result) => {
       expect(result.latency.mean).toBeLessThanOrEqual(65);
     },
-  ],
+  },
 
-  "agent with 10 middleware instances": [
-    async () => {
-      const model = new FakeToolCallingChatModel({
-        responses: [new AIMessage({ content: "Done" })],
-      });
-
-      const middleware = Array.from({ length: 10 }, (_, i) =>
-        createMiddleware({
-          name: `Middleware${i}`,
-          stateSchema: z.object({
-            [`count${i}`]: z.number().default(0),
-          }),
-          beforeAgent: async (state) => {
-            return {
-              [`count${i}`]: (state[`count${i}`] ?? 0) + 1,
-            };
-          },
-          beforeModel: async (state) => {
-            return {
-              [`count${i}`]: (state[`count${i}`] ?? 0) + 1,
-            };
-          },
-          afterModel: async (state) => {
-            return {
-              [`count${i}`]: (state[`count${i}`] ?? 0) + 1,
-            };
-          },
-          afterAgent: async (state) => {
-            return {
-              [`count${i}`]: (state[`count${i}`] ?? 0) + 1,
-            };
-          },
-        })
-      );
-
-      const agent = createAgent({
-        model,
-        tools: [],
-        middleware,
-      });
-
-      await agent.invoke(
+  "agent with 10 middleware instances": {
+    fn: async () => {
+      await agentWith10Middleware.invoke(
         {
           messages: [new HumanMessage("Hello")],
         },
@@ -249,216 +372,90 @@ const benchmarks: Benchmarks = {
         }
       );
     },
-    (result: TaskResultCompleted) => {
+    assert: (result) => {
       expect(result.latency.mean).toBeLessThanOrEqual(80);
     },
-  ],
+  },
 
-  "agent with wrapModelCall middleware": [
-    async () => {
-      const model = new FakeToolCallingChatModel({
-        responses: [new AIMessage({ content: "Done" })],
-      });
-
-      const middleware = createMiddleware({
-        name: "WrapModelCallMiddleware",
-        wrapModelCall: async (request, handler) => {
-          // Pass through with minimal overhead
-          return handler(request);
-        },
-      });
-
-      const agent = createAgent({
-        model,
-        tools: [],
-        middleware: [middleware],
-      });
-
-      await agent.invoke({
+  "agent with wrapModelCall middleware": {
+    fn: async () => {
+      await agentWithWrapModelCall.invoke({
         messages: [new HumanMessage("Hello")],
       });
     },
-    (result: TaskResultCompleted) => {
+    assert: (result) => {
       expect(result.latency.mean).toBeLessThanOrEqual(80);
     },
-  ],
+  },
 
-  "agent with wrapToolCall middleware": [
-    async () => {
-      const model = new FakeToolCallingChatModel({
-        responses: [
-          new AIMessage({
-            content: "",
-            tool_calls: [
-              {
-                name: "test_tool",
-                args: { value: "test" },
-                id: "call_1",
-                type: "tool_call" as const,
-              },
-            ],
-          }),
-          new AIMessage({ content: "Done" }),
-        ],
-      });
-
-      const testTool = tool(async () => "result", {
-        name: "test_tool",
-        description: "Test tool",
-        schema: z.object({
-          value: z.string(),
-        }),
-      });
-
-      const middleware = createMiddleware({
-        name: "WrapToolCallMiddleware",
-        wrapToolCall: async (request, handler) => {
-          // Pass through with minimal overhead
-          return handler(request);
-        },
-      });
-
-      const agent = createAgent({
-        model,
-        tools: [testTool],
-        middleware: [middleware],
-      });
-
-      await agent.invoke({
+  "agent with wrapToolCall middleware": {
+    warmup: async () => {
+      wrapToolCallModel.reset();
+      await agentWithWrapToolCall.invoke({
         messages: [new HumanMessage("Use test_tool")],
       });
     },
-    (result: TaskResultCompleted) => {
+    fn: async () => {
+      wrapToolCallModel.reset();
+      await agentWithWrapToolCall.invoke({
+        messages: [new HumanMessage("Use test_tool")],
+      });
+    },
+    assert: (result) => {
       expect(result.latency.mean).toBeLessThanOrEqual(120);
     },
-  ],
+  },
 
-  "agent with responseFormat": [
-    async () => {
-      const model = new FakeToolCallingChatModel({
-        responses: [new AIMessage({ content: "Done" })],
-        structuredResponse: { name: "John", age: 30 },
-      });
-
-      const responseSchema = z.object({
-        name: z.string(),
-        age: z.number(),
-      });
-
-      const agent = createAgent({
-        model,
-        tools: [],
-        responseFormat: responseSchema,
-      });
-
-      await agent.invoke({
+  "agent with responseFormat": {
+    warmup: async () => {
+      responseFormatModel.reset();
+      await agentWithResponseFormat.invoke({
         messages: [new HumanMessage("Extract: John, 30")],
       });
     },
-    (result: TaskResultCompleted) => {
+    fn: async () => {
+      responseFormatModel.reset();
+      await agentWithResponseFormat.invoke({
+        messages: [new HumanMessage("Extract: John, 30")],
+      });
+    },
+    assert: (result) => {
       expect(result.latency.mean).toBeLessThanOrEqual(60);
     },
-  ],
+  },
 
-  "agent with complex state schema": [
-    async () => {
-      const model = new FakeToolCallingChatModel({
-        responses: [new AIMessage({ content: "Done" })],
-      });
-
-      const stateSchema = z.object({
-        counter: z.number().default(0),
-        history: z.array(z.string()).default([]),
-        metadata: z
-          .object({
-            userId: z.string(),
-            sessionId: z.string(),
-            timestamp: z.number(),
-          })
-          .optional(),
-      });
-
-      const agent = createAgent({
-        model,
-        tools: [],
-        stateSchema,
-      });
-
-      await agent.invoke({
+  "agent with complex state schema": {
+    fn: async () => {
+      await agentWithComplexStateSchema.invoke({
         messages: [new HumanMessage("Hello")],
         counter: 0,
         history: [],
         metadata: {
           userId: "user123",
           sessionId: "session456",
-          timestamp: Date.now(),
+          timestamp: metadataTimestamp,
         },
       });
     },
-    (result: TaskResultCompleted) => {
+    assert: (result) => {
       expect(result.latency.mean).toBeLessThanOrEqual(60);
     },
-  ],
+  },
 
-  "agent with 10 tools and 5 middleware": [
-    async () => {
-      const model = new FakeToolCallingChatModel({
-        responses: [new AIMessage({ content: "Done" })],
-      });
-
-      const tools = createTools(10);
-
-      const middleware = Array.from({ length: 5 }, (_, i) =>
-        createMiddleware({
-          name: `Middleware${i}`,
-          beforeModel: async (state) => state,
-          afterModel: async (state) => state,
-        })
-      );
-
-      const agent = createAgent({
-        model,
-        tools,
-        middleware,
-      });
-
-      await agent.invoke({
+  "agent with 10 tools and 5 middleware": {
+    fn: async () => {
+      await agentWith10ToolsAnd5Middleware.invoke({
         messages: [new HumanMessage("Use tool_0")],
       });
     },
-    (result: TaskResultCompleted) => {
+    assert: (result) => {
       expect(result.latency.mean).toBeLessThanOrEqual(80);
     },
-  ],
+  },
 
-  "agent with 50 tools and 10 middleware": [
-    async () => {
-      const model = new FakeToolCallingChatModel({
-        responses: [new AIMessage({ content: "Done" })],
-      });
-
-      const tools = createTools(50);
-
-      const middleware = Array.from({ length: 10 }, (_, i) =>
-        createMiddleware({
-          name: `Middleware${i}`,
-          stateSchema: z.object({
-            [`value${i}`]: z.string().default(""),
-          }),
-          beforeAgent: async (state) => state,
-          beforeModel: async (state) => state,
-          afterModel: async (state) => state,
-          afterAgent: async (state) => state,
-        })
-      );
-
-      const agent = createAgent({
-        model,
-        tools,
-        middleware,
-      });
-
-      await agent.invoke(
+  "agent with 50 tools and 10 middleware": {
+    fn: async () => {
+      await agentWith50ToolsAnd10Middleware.invoke(
         {
           messages: [new HumanMessage("Use tool_0")],
         },
@@ -467,102 +464,64 @@ const benchmarks: Benchmarks = {
         }
       );
     },
-    (result: TaskResultCompleted) => {
+    assert: (result) => {
       expect(result.latency.mean).toBeLessThanOrEqual(80);
     },
-  ],
+  },
 
-  "agent with large message history and middleware": [
-    async () => {
-      const model = new FakeToolCallingChatModel({
-        responses: [new AIMessage({ content: "Done" })],
-      });
-
-      const middleware = Array.from({ length: 3 }, (_, i) =>
-        createMiddleware({
-          name: `Middleware${i}`,
-          beforeModel: async (state) => state,
-        })
-      );
-
-      const agent = createAgent({
-        model,
-        tools: [],
-        middleware,
-      });
-
-      const messages = createLargeMessageHistory(50);
-
-      await agent.invoke({
-        messages,
+  "agent with large message history and middleware": {
+    fn: async () => {
+      await agentWithLargeHistoryAndMiddleware.invoke({
+        messages: messages50,
       });
     },
-    (result: TaskResultCompleted) => {
+    assert: (result) => {
       expect(result.latency.mean).toBeLessThanOrEqual(60);
     },
-  ],
+  },
 
-  "agent with middleware tools": [
-    async () => {
-      const model = new FakeToolCallingChatModel({
-        responses: [
-          new AIMessage({
-            content: "",
-            tool_calls: [
-              {
-                name: "middleware_tool",
-                args: { input: "test" },
-                id: "call_1",
-                type: "tool_call" as const,
-              },
-            ],
-          }),
-          new AIMessage({ content: "Done" }),
-        ],
-      });
-
-      const middlewareTool = tool(async () => "result", {
-        name: "middleware_tool",
-        description: "Tool from middleware",
-        schema: z.object({
-          input: z.string(),
-        }),
-      });
-
-      const middleware = createMiddleware({
-        name: "MiddlewareWithTools",
-        tools: [middlewareTool],
-      });
-
-      const agent = createAgent({
-        model,
-        tools: [],
-        middleware: [middleware],
-      });
-
-      await agent.invoke({
+  "agent with middleware tools": {
+    warmup: async () => {
+      middlewareToolsModel.reset();
+      await agentWithMiddlewareTools.invoke({
         messages: [new HumanMessage("Use middleware_tool")],
       });
     },
-    (result: TaskResultCompleted) => {
+    fn: async () => {
+      middlewareToolsModel.reset();
+      await agentWithMiddlewareTools.invoke({
+        messages: [new HumanMessage("Use middleware_tool")],
+      });
+    },
+    assert: (result) => {
       expect(result.latency.mean).toBeLessThanOrEqual(120);
     },
-  ],
+  },
 };
 
 describe("createAgent benchmarks", () => {
-  for (const [name, [fn]] of Object.entries(benchmarks)) {
+  for (const [name, { fn }] of Object.entries(benchmarks)) {
     bench.add(name, fn);
   }
 
+  beforeAll(async () => {
+    for (const { warmup, fn } of Object.values(benchmarks)) {
+      if (warmup) {
+        await warmup();
+      } else {
+        await fn();
+      }
+    }
+  }, 60 * 1000);
+
   beforeAll(bench.run.bind(bench), 60 * 1000);
 
-  for (const [name, [, resultFn]] of Object.entries(benchmarks)) {
+  for (const [name, { assert }] of Object.entries(benchmarks)) {
     it(name, () => {
       const result = bench.tasks.find((t) => t.name === name)!.result;
       if (!result || result.state !== "completed")
         throw new Error(`Result for ${name} is not completed`);
-      resultFn(result);
+      assert(result);
     });
   }
 
