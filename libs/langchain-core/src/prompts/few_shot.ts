@@ -22,15 +22,13 @@ import {
 export interface FewShotPromptTemplateInput extends BasePromptTemplateInput<InputValues> {
   /**
    * Examples to format into the prompt. Exactly one of this or
-   * {@link exampleSelector} must be
-   * provided.
+   * {@link FewShotPromptTemplateInput.exampleSelector} must be provided.
    */
   examples?: Example[];
 
   /**
    * An {@link BaseExampleSelector} Examples to format into the prompt. Exactly one of this or
-   * {@link examples} must be
-   * provided.
+   * {@link FewShotPromptTemplateInput.examples} must be provided.
    */
   exampleSelector?: BaseExampleSelector;
 
@@ -272,8 +270,7 @@ export class FewShotPromptTemplate
 export interface FewShotChatMessagePromptTemplateInput extends BasePromptTemplateInput<InputValues> {
   /**
    * Examples to format into the prompt. Exactly one of this or
-   * {@link exampleSelector} must be
-   * provided.
+   * {@link FewShotChatMessagePromptTemplateInput.exampleSelector} must be provided.
    */
   examples?: Example[];
 
@@ -291,8 +288,7 @@ export interface FewShotChatMessagePromptTemplateInput extends BasePromptTemplat
 
   /**
    * An {@link BaseExampleSelector} Examples to format into the prompt. Exactly one of this or
-   * {@link examples} must be
-   * provided.
+   * {@link FewShotChatMessagePromptTemplateInput.examples} must be provided.
    */
   exampleSelector?: BaseExampleSelector | undefined;
 

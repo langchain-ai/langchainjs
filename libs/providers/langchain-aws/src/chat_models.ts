@@ -92,7 +92,7 @@ export interface ChatBedrockConverseInput
    * For example, "anthropic.claude-3-haiku-20240307-v1:0", this is equivalent to the modelId property in the
    * list-foundation-models api.
    * See the below link for a full list of models.
-   * @link https://docs.aws.amazon.com/bedrock/latest/userguide/model-ids.html#model-ids-arns
+   * @see https://docs.aws.amazon.com/bedrock/latest/userguide/model-ids.html#model-ids-arns
    *
    * @default anthropic.claude-3-haiku-20240307-v1:0
    */
@@ -103,7 +103,7 @@ export interface ChatBedrockConverseInput
    * For example, "arn:aws:bedrock:eu-west-1:123456789102:application-inference-profile/fm16bt65tzgx", will override this.model in final /invoke URL call.
    * Must still provide `model` as normal modelId to benefit from all the metadata.
    * See the below link for more details on creating and using application inference profiles.
-   * @link https://docs.aws.amazon.com/bedrock/latest/userguide/inference-profiles-create.html
+   * @see https://docs.aws.amazon.com/bedrock/latest/userguide/inference-profiles-create.html
    */
   applicationInferenceProfile?: string;
 
@@ -141,7 +141,7 @@ export interface ChatBedrockConverseInput
    * probability distribution of tokens that could be next in the sequence.
    * The default value is the default value for the model that you are using.
    * For more information, see the inference parameters for foundation models link below.
-   * @link https://docs.aws.amazon.com/bedrock/latest/userguide/model-parameters.html
+   * @see https://docs.aws.amazon.com/bedrock/latest/userguide/model-parameters.html
    */
   topP?: number;
 
@@ -149,7 +149,7 @@ export interface ChatBedrockConverseInput
    * Additional inference parameters that the model supports, beyond the
    * base set of inference parameters that the Converse API supports in the `inferenceConfig`
    * field. For more information, see the model parameters link below.
-   * @link https://docs.aws.amazon.com/bedrock/latest/userguide/model-parameters.html
+   * @see https://docs.aws.amazon.com/bedrock/latest/userguide/model-parameters.html
    */
   additionalModelRequestFields?: __DocumentType;
   /**

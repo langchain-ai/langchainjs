@@ -51,7 +51,7 @@ export interface ChatTogetherAIInput
  *
  * The TogetherAI API is compatible to the OpenAI API with some limitations. View the
  * full API ref at:
- * @link {https://docs.together.ai/reference/chat-completions}
+ * @see https://docs.together.ai/reference/chat-completions
  *
  * Setup:
  * Install `@langchain/community` and set an environment variable named `TOGETHER_AI_API_KEY`.
