@@ -82,7 +82,7 @@ describe("Test model provider detection", () => {
       region: "us-gov-west-1",
     },
     {
-      modelId: "us.anthropic.claude-3-7-sonnet-20250219-v1:0",
+      modelId: "us.anthropic.claude-sonnet-4-5-20250929-v1:0",
       expectedProvider: "anthropic",
       shouldThrow: false,
       region: "us-west-2",
