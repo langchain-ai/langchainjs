@@ -62,7 +62,7 @@ const extendedThinkingModelName = "claude-3-7-sonnet-20250219";
 const citationsModelName = "claude-sonnet-4-5-20250929";
 
 // use this for tests involving PDF documents
-const pdfModelName = "claude-3-5-haiku-20241022";
+const pdfModelName = "claude-haiku-4-5-20251001";
 
 // Use this model for all other tests
 const modelName = "claude-3-haiku-20240307";

@@ -190,7 +190,7 @@ const PROFILES: Record<string, ModelProfile> = {
     pdfToolMessage: true,
     imageToolMessage: true,
   },
-  "claude-3-5-haiku-20241022": {
+  "claude-haiku-4-5-20251001": {
     maxInputTokens: 200000,
     imageInputs: true,
     audioInputs: false,
