@@ -77,6 +77,22 @@ describe("ChatOpenRouter constructor", () => {
     expect(model.streamUsage).toBe(true);
   });
 
+  it("defaults siteUrl and siteName for OpenRouter attribution", () => {
+    const model = new ChatOpenRouter({ model: "openai/gpt-4o" });
+    expect(model.siteUrl).toBe("https://docs.langchain.com/oss");
+    expect(model.siteName).toBe("langchain");
+  });
+
+  it("allows user to override siteUrl and siteName", () => {
+    const model = new ChatOpenRouter({
+      model: "openai/gpt-4o",
+      siteUrl: "https://my-custom-app.com",
+      siteName: "My Custom App",
+    });
+    expect(model.siteUrl).toBe("https://my-custom-app.com");
+    expect(model.siteName).toBe("My Custom App");
+  });
+
   it("throws OpenRouterAuthError when no API key is available", () => {
     const original = process.env.OPENROUTER_API_KEY;
     delete process.env.OPENROUTER_API_KEY;

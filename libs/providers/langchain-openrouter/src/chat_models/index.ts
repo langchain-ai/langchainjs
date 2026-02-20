@@ -206,11 +206,19 @@ export class ChatOpenRouter extends BaseChatModel<
   /** OpenRouter plugins to enable (e.g. web search). */
   plugins?: ChatOpenRouterParams["plugins"];
 
-  /** Your site URL — used for rankings on openrouter.ai. */
-  siteUrl?: string;
+  /**
+   * Application URL for OpenRouter attribution. Maps to `HTTP-Referer` header.
+   *
+   * See https://openrouter.ai/docs/app-attribution for details.
+   */
+  siteUrl: string;
 
-  /** Your site/app name — used for rankings on openrouter.ai. */
-  siteName?: string;
+  /**
+   * Application title for OpenRouter attribution. Maps to `X-Title` header.
+   *
+   * See https://openrouter.ai/docs/app-attribution for details.
+   */
+  siteName: string;
 
   /** Extra params passed through to the API body. */
   modelKwargs?: Record<string, unknown>;
@@ -254,8 +262,8 @@ export class ChatOpenRouter extends BaseChatModel<
     this.route = fields.route;
     this.provider = fields.provider;
     this.plugins = fields.plugins;
-    this.siteUrl = fields.siteUrl;
-    this.siteName = fields.siteName;
+    this.siteUrl = fields.siteUrl ?? "https://docs.langchain.com/oss";
+    this.siteName = fields.siteName ?? "langchain";
     this.modelKwargs = fields.modelKwargs;
     this.streamUsage = fields.streamUsage ?? true;
   }
@@ -274,8 +282,8 @@ export class ChatOpenRouter extends BaseChatModel<
     return {
       Authorization: `Bearer ${this.apiKey}`,
       "Content-Type": "application/json",
-      ...(this.siteUrl ? { "HTTP-Referer": this.siteUrl } : {}),
-      ...(this.siteName ? { "X-Title": this.siteName } : {}),
+      "HTTP-Referer": this.siteUrl,
+      "X-Title": this.siteName,
     };
   }
 
