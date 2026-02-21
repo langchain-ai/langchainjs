@@ -209,6 +209,18 @@ abstract class BaseCallbackHandlerMethodsClass {
   ): // eslint-disable-next-line @typescript-eslint/no-explicit-any
     Promise<any> | any;
 
+  /**
+   * Called when a streaming tool yields a partial value. Tools that are async generators
+   * invoke this once per yielded value.
+   */
+  handleToolStream?(
+    chunk: unknown,
+    runId: string,
+    parentRunId?: string,
+    tags?: string[]
+  ): // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    Promise<any> | any;
+
   handleText?(
     text: string,
     runId: string,
