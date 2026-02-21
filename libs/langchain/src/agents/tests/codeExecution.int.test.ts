@@ -8,7 +8,7 @@ describe("Code Execution Tool", () => {
   it("should use Anthropic code_execution tool to calculate statistics", async () => {
     // Create ChatAnthropic model with code execution beta header
     const model = new ChatAnthropic({
-      model: "claude-3-5-haiku-20241022",
+      model: "claude-haiku-4-5-20251001",
       temperature: 0,
       clientOptions: {
         defaultHeaders: {
