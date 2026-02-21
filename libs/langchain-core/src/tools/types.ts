@@ -25,7 +25,7 @@ import {
 } from "../utils/types/zod.js";
 
 import { JSONSchema } from "../utils/json_schema.js";
-import type { BaseStore } from "../stores.js";
+import type { RuntimeStore } from "../stores.js";
 
 export type ResponseFormat = "content" | "content_and_artifact" | string;
 
@@ -550,7 +550,7 @@ export type ToolRuntime<
   /**
    * BaseStore instance for persistent storage (from langgraph `Runtime`).
    */
-  store: BaseStore<string, unknown> | null;
+  store: RuntimeStore | null;
   /**
    * Stream writer for streaming output (from langgraph `Runtime`).
    */

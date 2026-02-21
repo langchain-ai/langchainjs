@@ -148,3 +148,24 @@ describe("ToolRuntime", () => {
     );
   });
 });
+
+// ToolRuntime.store typing (type-level test)
+declare const runtime: ToolRuntime;
+
+// Type-only assertions (no runtime execution)
+runtime.store?.toString();
+
+// ---- Allowed minimal capabilities ----
+runtime.store?.get?.("foo");
+runtime.store?.mget?.(["foo", "bar"]);
+
+// ---- Disallowed capabilities ----
+
+// @ts-expect-error RuntimeStore must not expose put
+runtime.store?.put?.("foo", "bar");
+
+// @ts-expect-error RuntimeStore must not expose search
+runtime.store?.search?.("query");
+
+// @ts-expect-error RuntimeStore must not expose mset
+runtime.store?.mset?.([["foo", "bar"]]);
