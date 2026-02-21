@@ -2571,7 +2571,7 @@ describe("Mock ChatGoogle - Anthropic", () => {
       resultFile: "claude-chat-1-mock.json",
     };
     const model = new ChatGoogle({
-      model: "claude-3-5-sonnet@20240620",
+      model: "claude-sonnet-4-5@20250929",
       platformType: "gcp",
       authOptions,
     });
@@ -2599,7 +2599,7 @@ describe("Mock ChatGoogle - Anthropic", () => {
       resultFile: "claude-chat-1-mock.json",
     };
     const model = new ChatGoogle({
-      model: "claude-3-5-sonnet@20240620",
+      model: "claude-sonnet-4-5@20250929",
       platformType: "gcp",
       authOptions,
     });

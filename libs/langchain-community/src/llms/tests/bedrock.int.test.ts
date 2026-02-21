@@ -180,7 +180,7 @@ test("Test Bedrock LLM streaming: Claude-v2", async () => {
 
 test("Test Bedrock LLM: Inference Models", async () => {
   const region = process.env.BEDROCK_AWS_REGION!;
-  const model = "eu.anthropic.claude-3-5-sonnet-20240620-v1:0";
+  const model = "eu.anthropic.claude-sonnet-4-5-20250929-v1:0";
   const prompt = "Human: What is your name?\n\nAssistant:";
 
   const bedrock = new Bedrock({
