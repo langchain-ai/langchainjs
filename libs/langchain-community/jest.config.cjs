@@ -4,6 +4,8 @@ module.exports = {
   modulePathIgnorePatterns: ["dist/", "docs/"],
   moduleNameMapper: {
     "^(\\.{1,2}/.*)\\.js$": "$1",
+    "^@langchain/standard-tests$":
+      "<rootDir>/../../internal/standard-tests/src/index.ts",
     "^p-retry$": "<rootDir>/scripts/p-retry-mock.cjs",
     "^p-queue$": "<rootDir>/scripts/p-queue-mock.cjs",
   },
