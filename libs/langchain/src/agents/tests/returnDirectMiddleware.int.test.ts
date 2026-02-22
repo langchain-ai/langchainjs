@@ -150,7 +150,7 @@ describe("returnDirect without beforeModel middleware", () => {
   // Create middleware without beforeModel hooks
   const afterModelOnlyMiddleware = createMiddleware({
     name: "AfterModelOnly",
-    afterModel: async (state, runtime) => {
+    afterModel: async () => {
       // No-op middleware for testing
       return undefined;
     },
