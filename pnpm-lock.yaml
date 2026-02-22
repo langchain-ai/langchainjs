@@ -1209,7 +1209,7 @@ importers:
         version: 4.0.6
       '@getzep/zep-cloud':
         specifier: ^1.0.6
-        version: 1.0.12(@langchain/core@libs+langchain-core)(encoding@0.1.13)(langchain@0.3.30(55a3065116bf61819bf240bc9d72b65a))
+        version: 1.0.12(@langchain/core@libs+langchain-core)(encoding@0.1.13)(langchain@0.3.30(098e44f1da36974eb0a30e7021c9ac5a))
       '@getzep/zep-js':
         specifier: ^2.0.2
         version: 2.0.2(encoding@0.1.13)
@@ -1528,6 +1528,9 @@ importers:
       jsonwebtoken:
         specifier: ^9.0.3
         version: 9.0.3
+      langsmith:
+        specifier: '>=0.4.0 <1.0.0'
+        version: 0.5.4(@opentelemetry/api@1.9.0)(openai@6.18.0(ws@8.19.0(bufferutil@4.1.0))(zod@4.3.6))
       lodash:
         specifier: ^4.17.23
         version: 4.17.23
@@ -6532,62 +6535,62 @@ packages:
     peerDependencies:
       apache-arrow: '>=15.0.0 <=18.1.0'
 
-  '@langchain/anthropic@1.3.18':
-    resolution: {integrity: sha512-3qkaTsFUf5OBad2AQQlF72h8vWx0IerPf7BrUQI+eB+S3iJdLyoK6BgCC96yAC7FJIZVEPuKUSwkxhgCGPHibQ==}
+  '@langchain/anthropic@1.3.19':
+    resolution: {integrity: sha512-OY7/pi4MBuBA/RCJJGqL0Dx3J7Udqwz35Q9sTv5oWiwt6UgMQKGZ17k8gEXyknpuKcRd3A81M09mzoGL8/6zGQ==}
     engines: {node: '>=20'}
     peerDependencies:
       '@langchain/core': workspace:^
 
-  '@langchain/aws@1.2.3':
-    resolution: {integrity: sha512-nbBmA+ALUquVNwBuC/tOIjGglzoDWePV64uDszDxl6YViDnrsWjbZt7dXhzGJ0yMRmujlmK2RL/JCAz939VG+w==}
+  '@langchain/aws@1.2.4':
+    resolution: {integrity: sha512-M1tS1rVKxygOyLA8XcMtltWUzIlF0QuNFg1SzdFoITgVismy3tnUDSUp0aCTsed2Ki9URNCeLjrbC5UkCmPASA==}
     engines: {node: '>=20'}
     peerDependencies:
       '@langchain/core': workspace:^
 
-  '@langchain/cohere@1.0.2':
-    resolution: {integrity: sha512-v7OWwLshIQTIgt7mbGI8RkVwuHxOESauXlpw0oEouiiG0oUo/difFNpBSvrMAldLIa7cyYB/jPV+l6n15qsuYg==}
+  '@langchain/cohere@1.0.3':
+    resolution: {integrity: sha512-JFVnlYZotTvcQKAI+JSsXnJjF6PXuwhrNFJUkJaoajVsM9Plc6XlXw4ITjt8ECd+S8IWDwCgBlzlUpCHXjHvXA==}
     engines: {node: '>=20'}
     peerDependencies:
       '@langchain/core': workspace:^
 
-  '@langchain/deepseek@1.0.12':
-    resolution: {integrity: sha512-colj/cwBn4qsnUeISgpcAQwYmGnPuojr63nR2lhuUcjDpWzj2SyGVWkjnoWs2oje6CCNMJPCrsP2RP1T7ppWPw==}
+  '@langchain/deepseek@1.0.13':
+    resolution: {integrity: sha512-K7bc5wPf55Rl/bSusXP3m0lhXXhq7xlt6PQC/sZuPhiLoB6ielPMbaeZYLuuJudAGu26rd8QIESbJPFBgVqWDw==}
     engines: {node: '>=20'}
     peerDependencies:
       '@langchain/core': workspace:^
 
-  '@langchain/google-common@2.1.19':
-    resolution: {integrity: sha512-siVJeb1o3QNPdhBgHd+rNj04pvG6iRN/da4G6CTISj00NRlWQDZRxIyI2Z+BUWLmv/4fijXRQN/YiAwCJWtKgQ==}
+  '@langchain/google-common@2.1.20':
+    resolution: {integrity: sha512-4NlznVy3GM6WbzxCq4FGwfm9OTeDOpp6MRBBMU2I9LsV0eoDjz3qkZzrXHUhxqtKzEs969QiI+QchiYgZoGqWA==}
     engines: {node: '>=20'}
     peerDependencies:
       '@langchain/core': workspace:^
 
-  '@langchain/google-gauth@2.1.19':
-    resolution: {integrity: sha512-guEPA6jCKETReCTrWrJlQGENlMlGKWfDZd0ooJoMJD3+N9Y4IPsMOqWaswfkZrxMmBTSQsBWMsd/0ZWwvU+nSA==}
+  '@langchain/google-gauth@2.1.20':
+    resolution: {integrity: sha512-q3+C9M9oH0tpDL/UIIMWAvt6s6lfk82+ohDgVOT/UMToIw+p9N1U3LHCfy65nh6IXVVfgB0TK7uqPWqQjNz4oQ==}
     engines: {node: '>=20'}
 
-  '@langchain/google-genai@2.1.19':
-    resolution: {integrity: sha512-41u+a81BIr8UcGcptJ57Pc7IyEXP75LERzheyS5X+iNSQu5U4vaIMwSNnyJ0hzAlTjSp552XCsa8D2Ifq7icuA==}
-    engines: {node: '>=20'}
-    peerDependencies:
-      '@langchain/core': workspace:^
-
-  '@langchain/google-vertexai-web@2.1.19':
-    resolution: {integrity: sha512-nu2qAaeg2pU/In/9DHXGDm82VfokiXsDszQuzF2v6IbTqqEJNJhxZ72KpCRbqf7/zHm4np39IfBe5xgZr3Ur0w==}
-    engines: {node: '>=20'}
-
-  '@langchain/google-vertexai@2.1.19':
-    resolution: {integrity: sha512-VbqlLwe8MUj8VHq3QNiorfSDMaJiZ4pWmI6PS1xLN8MopM/7/KtdtfLpMeVa297fJ9UXQPV/lnJ27qo7g5xiHw==}
-    engines: {node: '>=20'}
-
-  '@langchain/google-webauth@2.1.19':
-    resolution: {integrity: sha512-uHTbwR+G/MUyGU7fLto8BV+ISH+k3PNBRdtYFmiB5ljmDbxAEhJ/UzAWJc9GRdb7Fpqkr9I7/reSEPER1R5U9g==}
+  '@langchain/google-genai@2.1.20':
+    resolution: {integrity: sha512-x4zS3iv6x27M38izV/einJM9qXAGvVAYt2fUW8hiQnh9AX0vYVJBkoqGpxsvHNejqGYlTXOollPUp3XuVjlHjQ==}
     engines: {node: '>=20'}
     peerDependencies:
       '@langchain/core': workspace:^
 
-  '@langchain/groq@1.1.1':
-    resolution: {integrity: sha512-NrV7b+3+uakv4IXuER7UbFFsRFJnlPjSqc/nZ+hxygcltgCg/a4ib67EvNU9aJJLX1C6qyAW15Kaq6jYQUXAtg==}
+  '@langchain/google-vertexai-web@2.1.20':
+    resolution: {integrity: sha512-40BOu7y1Pz0GKJwulnEswpEuY4H6Dd06K1c/7PciKr/B21e1DldteAS1VwCsc25M/MCG8+2B4h7MS4qvICl0DA==}
+    engines: {node: '>=20'}
+
+  '@langchain/google-vertexai@2.1.20':
+    resolution: {integrity: sha512-GbvWXuyjM3TD6VxyS20HNR8lq5gSPSypw4v2HnHiX81VSm7TPUwEamzhLVm1OXNeNjktITeUGjcOwIdnTsmEPQ==}
+    engines: {node: '>=20'}
+
+  '@langchain/google-webauth@2.1.20':
+    resolution: {integrity: sha512-D2yO7RUhzNVP8qmuAiZV0VEs9O+sBkqBmpk9rO5YGdevhrp8hkVlpKKyyFj9Cl5fABzjzozqi54dtEFI4M+B3Q==}
+    engines: {node: '>=20'}
+    peerDependencies:
+      '@langchain/core': workspace:^
+
+  '@langchain/groq@1.1.2':
+    resolution: {integrity: sha512-vHRLkHAuhOrKHLqPpZqP9/sUV9DEdzyzMS14yG0XseejkqRXJ+yx+3psmSSFn/3kPPRRx+xQ6XeFPS7HWxEfTg==}
     engines: {node: '>=20'}
     peerDependencies:
       '@langchain/core': workspace:^
@@ -6654,14 +6657,14 @@ packages:
       zod-to-json-schema:
         optional: true
 
-  '@langchain/mistralai@1.0.4':
-    resolution: {integrity: sha512-e3tHpcD5Of+Dz5bA7IgNWEUaexjaAU6epqLvbI0FHdZeg7IItDuVlRh7pSDvUwdVag2bndqwPEbSOHXZWP5OCw==}
+  '@langchain/mistralai@1.0.5':
+    resolution: {integrity: sha512-vAh+9z5wsGHAFo2u/aHqJQ3twIjHRfPfClg2DBiRz9Zj64nVc9AF7E8V2RqkhA6qumrE/nWEaK9Atn8Taou1lg==}
     engines: {node: '>=20'}
     peerDependencies:
       '@langchain/core': workspace:^
 
-  '@langchain/ollama@1.2.3':
-    resolution: {integrity: sha512-wkXdKVFQWeDOpAv77R8g0/ra4b0EFbTwFw4ot/lrWo/iOZZ3WI82wbbtsjb0yrbAJU4CoUjyLygZft8Szbza6A==}
+  '@langchain/ollama@1.2.4':
+    resolution: {integrity: sha512-Cn29iRvjhojuOP0BczEKtcu+8zyS+jiFu1OVpOFSuXAYQVxrk8UrGjwWpdVaD9yPBKTO6Qm4wL+c3jfadQcL+A==}
     engines: {node: '>=20'}
     peerDependencies:
       '@langchain/core': workspace:^
@@ -6672,8 +6675,8 @@ packages:
     peerDependencies:
       '@langchain/core': workspace:^
 
-  '@langchain/openai@1.2.8':
-    resolution: {integrity: sha512-qliwC7sb7/Kw0tsl/EiMchMThKt62rZbyofKXtxPwYBte3BMzMXo2HKaEFvAN2QHVOuDi4voqQ7ZlRXc/o2e8w==}
+  '@langchain/openai@1.2.9':
+    resolution: {integrity: sha512-hExRiUoKOg1vfkwBAI5J2C4tqNx5LLZ0CUelG8Ej6K8bS2LfFN9bL4ZNQYqNIwAJNSqpDaV9tknxP2fssZjp+Q==}
     engines: {node: '>=20'}
     peerDependencies:
       '@langchain/core': workspace:^
@@ -6684,8 +6687,8 @@ packages:
     peerDependencies:
       '@langchain/core': workspace:^
 
-  '@langchain/xai@1.3.4':
-    resolution: {integrity: sha512-80YJ9pU1iQNlwqpTHAAZMlJZ8wBXpKVFvwUtU1mBe2B8ssQT5O46dr83vIXCQhM4X/VK87EFKlDsJRq1o5nYvw==}
+  '@langchain/xai@1.3.5':
+    resolution: {integrity: sha512-DLmYxCRfmEK9Ig2TiXJd0Wn41hjAr8jG3VqvkWhiIqn7Pw75x5WsP9/49jxf0Twar4RXre6kBe2GB7X3e5LdPA==}
     engines: {node: '>=20'}
     peerDependencies:
       '@langchain/core': workspace:^
@@ -20230,7 +20233,7 @@ snapshots:
     transitivePeerDependencies:
       - debug
 
-  '@getzep/zep-cloud@1.0.12(@langchain/core@libs+langchain-core)(encoding@0.1.13)(langchain@0.3.30(55a3065116bf61819bf240bc9d72b65a))':
+  '@getzep/zep-cloud@1.0.12(@langchain/core@libs+langchain-core)(encoding@0.1.13)(langchain@0.3.30(098e44f1da36974eb0a30e7021c9ac5a))':
     dependencies:
       form-data: 4.0.5
       node-fetch: 2.7.0(encoding@0.1.13)
@@ -20239,7 +20242,7 @@ snapshots:
       zod: 3.25.76
     optionalDependencies:
       '@langchain/core': link:libs/langchain-core
-      langchain: 0.3.30(55a3065116bf61819bf240bc9d72b65a)
+      langchain: 0.3.30(098e44f1da36974eb0a30e7021c9ac5a)
     transitivePeerDependencies:
       - encoding
 
@@ -20964,14 +20967,14 @@ snapshots:
       '@lancedb/lancedb-win32-arm64-msvc': 0.19.1
       '@lancedb/lancedb-win32-x64-msvc': 0.19.1
 
-  '@langchain/anthropic@1.3.18(@langchain/core@libs+langchain-core)':
+  '@langchain/anthropic@1.3.19(@langchain/core@libs+langchain-core)':
     dependencies:
       '@anthropic-ai/sdk': 0.74.0(zod@4.3.6)
       '@langchain/core': link:libs/langchain-core
       zod: 4.3.6
     optional: true
 
-  '@langchain/aws@1.2.3(@langchain/core@libs+langchain-core)':
+  '@langchain/aws@1.2.4(@langchain/core@libs+langchain-core)':
     dependencies:
       '@aws-sdk/client-bedrock-agent-runtime': 3.992.0
       '@aws-sdk/client-bedrock-runtime': 3.992.0
@@ -20982,7 +20985,7 @@ snapshots:
       - aws-crt
     optional: true
 
-  '@langchain/cohere@1.0.2(@langchain/core@libs+langchain-core)':
+  '@langchain/cohere@1.0.3(@langchain/core@libs+langchain-core)':
     dependencies:
       '@langchain/core': link:libs/langchain-core
       cohere-ai: 7.20.0
@@ -20991,59 +20994,59 @@ snapshots:
       - aws-crt
     optional: true
 
-  '@langchain/deepseek@1.0.12(@langchain/core@libs+langchain-core)(ws@8.19.0(bufferutil@4.1.0))':
+  '@langchain/deepseek@1.0.13(@langchain/core@libs+langchain-core)(ws@8.19.0(bufferutil@4.1.0))':
     dependencies:
       '@langchain/core': link:libs/langchain-core
-      '@langchain/openai': 1.2.8(@langchain/core@libs+langchain-core)(ws@8.19.0(bufferutil@4.1.0))
+      '@langchain/openai': 1.2.9(@langchain/core@libs+langchain-core)(ws@8.19.0(bufferutil@4.1.0))
     transitivePeerDependencies:
       - ws
     optional: true
 
-  '@langchain/google-common@2.1.19(@langchain/core@libs+langchain-core)':
+  '@langchain/google-common@2.1.20(@langchain/core@libs+langchain-core)':
     dependencies:
       '@langchain/core': link:libs/langchain-core
       uuid: 10.0.0
     optional: true
 
-  '@langchain/google-gauth@2.1.19(@langchain/core@libs+langchain-core)':
+  '@langchain/google-gauth@2.1.20(@langchain/core@libs+langchain-core)':
     dependencies:
-      '@langchain/google-common': 2.1.19(@langchain/core@libs+langchain-core)
+      '@langchain/google-common': 2.1.20(@langchain/core@libs+langchain-core)
       google-auth-library: 10.5.0
     transitivePeerDependencies:
       - '@langchain/core'
       - supports-color
     optional: true
 
-  '@langchain/google-genai@2.1.19(@langchain/core@libs+langchain-core)':
+  '@langchain/google-genai@2.1.20(@langchain/core@libs+langchain-core)':
     dependencies:
       '@google/generative-ai': 0.24.1
       '@langchain/core': link:libs/langchain-core
       uuid: 11.1.0
     optional: true
 
-  '@langchain/google-vertexai-web@2.1.19(@langchain/core@libs+langchain-core)':
+  '@langchain/google-vertexai-web@2.1.20(@langchain/core@libs+langchain-core)':
     dependencies:
-      '@langchain/google-webauth': 2.1.19(@langchain/core@libs+langchain-core)
+      '@langchain/google-webauth': 2.1.20(@langchain/core@libs+langchain-core)
     transitivePeerDependencies:
       - '@langchain/core'
     optional: true
 
-  '@langchain/google-vertexai@2.1.19(@langchain/core@libs+langchain-core)':
+  '@langchain/google-vertexai@2.1.20(@langchain/core@libs+langchain-core)':
     dependencies:
-      '@langchain/google-gauth': 2.1.19(@langchain/core@libs+langchain-core)
+      '@langchain/google-gauth': 2.1.20(@langchain/core@libs+langchain-core)
     transitivePeerDependencies:
       - '@langchain/core'
       - supports-color
     optional: true
 
-  '@langchain/google-webauth@2.1.19(@langchain/core@libs+langchain-core)':
+  '@langchain/google-webauth@2.1.20(@langchain/core@libs+langchain-core)':
     dependencies:
       '@langchain/core': link:libs/langchain-core
-      '@langchain/google-common': 2.1.19(@langchain/core@libs+langchain-core)
+      '@langchain/google-common': 2.1.20(@langchain/core@libs+langchain-core)
       web-auth-library: 1.0.3
     optional: true
 
-  '@langchain/groq@1.1.1(@langchain/core@libs+langchain-core)(encoding@0.1.13)':
+  '@langchain/groq@1.1.2(@langchain/core@libs+langchain-core)(encoding@0.1.13)':
     dependencies:
       '@langchain/core': link:libs/langchain-core
       groq-sdk: 0.37.0(encoding@0.1.13)
@@ -21122,7 +21125,7 @@ snapshots:
       - react
       - react-dom
 
-  '@langchain/mistralai@1.0.4(@langchain/core@libs+langchain-core)(bufferutil@4.1.0)':
+  '@langchain/mistralai@1.0.5(@langchain/core@libs+langchain-core)(bufferutil@4.1.0)':
     dependencies:
       '@langchain/core': link:libs/langchain-core
       '@mistralai/mistralai': 1.14.0(bufferutil@4.1.0)
@@ -21132,7 +21135,7 @@ snapshots:
       - utf-8-validate
     optional: true
 
-  '@langchain/ollama@1.2.3(@langchain/core@libs+langchain-core)':
+  '@langchain/ollama@1.2.4(@langchain/core@libs+langchain-core)':
     dependencies:
       '@langchain/core': link:libs/langchain-core
       ollama: 0.6.3
@@ -21149,7 +21152,7 @@ snapshots:
       - ws
     optional: true
 
-  '@langchain/openai@1.2.8(@langchain/core@libs+langchain-core)(ws@8.19.0(bufferutil@4.1.0))':
+  '@langchain/openai@1.2.9(@langchain/core@libs+langchain-core)(ws@8.19.0(bufferutil@4.1.0))':
     dependencies:
       '@langchain/core': link:libs/langchain-core
       js-tiktoken: 1.0.21
@@ -21165,10 +21168,10 @@ snapshots:
       js-tiktoken: 1.0.21
     optional: true
 
-  '@langchain/xai@1.3.4(@langchain/core@libs+langchain-core)(ws@8.19.0(bufferutil@4.1.0))':
+  '@langchain/xai@1.3.5(@langchain/core@libs+langchain-core)(ws@8.19.0(bufferutil@4.1.0))':
     dependencies:
       '@langchain/core': link:libs/langchain-core
-      '@langchain/openai': 1.2.8(@langchain/core@libs+langchain-core)(ws@8.19.0(bufferutil@4.1.0))
+      '@langchain/openai': 1.2.9(@langchain/core@libs+langchain-core)(ws@8.19.0(bufferutil@4.1.0))
     transitivePeerDependencies:
       - ws
     optional: true
@@ -23235,7 +23238,6 @@ snapshots:
   '@types/node@25.2.3':
     dependencies:
       undici-types: 7.16.0
-    optional: true
 
   '@types/offscreencanvas@2019.7.3': {}
 
@@ -23301,7 +23303,7 @@ snapshots:
 
   '@types/sqlite3@3.1.11':
     dependencies:
-      '@types/node': 24.10.12
+      '@types/node': 25.2.3
 
   '@types/ssh2-streams@0.1.13':
     dependencies:
@@ -28208,7 +28210,7 @@ snapshots:
 
   kuler@2.0.0: {}
 
-  langchain@0.3.30(55a3065116bf61819bf240bc9d72b65a):
+  langchain@0.3.30(098e44f1da36974eb0a30e7021c9ac5a):
     dependencies:
       '@langchain/core': link:libs/langchain-core
       '@langchain/openai': 0.6.17(@langchain/core@libs+langchain-core)(ws@8.19.0(bufferutil@4.1.0))
@@ -28223,17 +28225,17 @@ snapshots:
       yaml: 2.8.2
       zod: 3.25.76
     optionalDependencies:
-      '@langchain/anthropic': 1.3.18(@langchain/core@libs+langchain-core)
-      '@langchain/aws': 1.2.3(@langchain/core@libs+langchain-core)
-      '@langchain/cohere': 1.0.2(@langchain/core@libs+langchain-core)
-      '@langchain/deepseek': 1.0.12(@langchain/core@libs+langchain-core)(ws@8.19.0(bufferutil@4.1.0))
-      '@langchain/google-genai': 2.1.19(@langchain/core@libs+langchain-core)
-      '@langchain/google-vertexai': 2.1.19(@langchain/core@libs+langchain-core)
-      '@langchain/google-vertexai-web': 2.1.19(@langchain/core@libs+langchain-core)
-      '@langchain/groq': 1.1.1(@langchain/core@libs+langchain-core)(encoding@0.1.13)
-      '@langchain/mistralai': 1.0.4(@langchain/core@libs+langchain-core)(bufferutil@4.1.0)
-      '@langchain/ollama': 1.2.3(@langchain/core@libs+langchain-core)
-      '@langchain/xai': 1.3.4(@langchain/core@libs+langchain-core)(ws@8.19.0(bufferutil@4.1.0))
+      '@langchain/anthropic': 1.3.19(@langchain/core@libs+langchain-core)
+      '@langchain/aws': 1.2.4(@langchain/core@libs+langchain-core)
+      '@langchain/cohere': 1.0.3(@langchain/core@libs+langchain-core)
+      '@langchain/deepseek': 1.0.13(@langchain/core@libs+langchain-core)(ws@8.19.0(bufferutil@4.1.0))
+      '@langchain/google-genai': 2.1.20(@langchain/core@libs+langchain-core)
+      '@langchain/google-vertexai': 2.1.20(@langchain/core@libs+langchain-core)
+      '@langchain/google-vertexai-web': 2.1.20(@langchain/core@libs+langchain-core)
+      '@langchain/groq': 1.1.2(@langchain/core@libs+langchain-core)(encoding@0.1.13)
+      '@langchain/mistralai': 1.0.5(@langchain/core@libs+langchain-core)(bufferutil@4.1.0)
+      '@langchain/ollama': 1.2.4(@langchain/core@libs+langchain-core)
+      '@langchain/xai': 1.3.5(@langchain/core@libs+langchain-core)(ws@8.19.0(bufferutil@4.1.0))
       axios: 1.13.5(debug@4.4.3)
       cheerio: 1.2.0
       handlebars: 4.7.8
@@ -28283,6 +28285,18 @@ snapshots:
     optionalDependencies:
       '@opentelemetry/api': 1.9.0
       openai: 5.23.2(ws@8.19.0(bufferutil@4.1.0))(zod@4.3.6)
+
+  langsmith@0.5.4(@opentelemetry/api@1.9.0)(openai@6.18.0(ws@8.19.0(bufferutil@4.1.0))(zod@4.3.6)):
+    dependencies:
+      '@types/uuid': 10.0.0
+      chalk: 4.1.2
+      console-table-printer: 2.15.0
+      p-queue: 6.6.2
+      semver: 7.7.4
+      uuid: 10.0.0
+    optionalDependencies:
+      '@opentelemetry/api': 1.9.0
+      openai: 6.18.0(ws@8.19.0(bufferutil@4.1.0))(zod@4.3.6)
 
   langsmith@0.5.4(@opentelemetry/api@1.9.0)(openai@6.22.0(ws@8.19.0(bufferutil@4.1.0))(zod@4.3.6)):
     dependencies:
