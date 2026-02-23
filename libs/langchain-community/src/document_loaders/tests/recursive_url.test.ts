@@ -1,5 +1,101 @@
-import { test, describe, expect } from "@jest/globals";
+import { test, describe, expect, jest, beforeEach, afterEach } from "@jest/globals";
 import { RecursiveUrlLoader } from "../web/recursive_url.js";
+
+const _originalFetch = globalThis.fetch;
+
+describe("RecursiveUrlLoader - Redirect SSRF Protection", () => {
+  afterEach(() => {
+    globalThis.fetch = _originalFetch;
+  });
+
+  test("blocks redirects to private IPs (localhost)", async () => {
+    globalThis.fetch = jest.fn<typeof fetch>().mockResolvedValue(
+      new Response(null, {
+        status: 302,
+        headers: { Location: "http://127.0.0.1/admin" },
+      })
+    );
+
+    const loader = new RecursiveUrlLoader(
+      "https://example.com/",
+      { maxDepth: 0 }
+    );
+    const docs = await loader.load();
+    expect(docs).toHaveLength(0);
+  });
+
+  test("blocks redirects to cloud metadata IPs", async () => {
+    globalThis.fetch = jest.fn<typeof fetch>().mockResolvedValue(
+      new Response(null, {
+        status: 302,
+        headers: { Location: "http://169.254.169.254/latest/meta-data/" },
+      })
+    );
+
+    const loader = new RecursiveUrlLoader(
+      "https://example.com/",
+      { maxDepth: 0 }
+    );
+    const docs = await loader.load();
+    expect(docs).toHaveLength(0);
+  });
+
+  test("blocks redirects to private network ranges", async () => {
+    globalThis.fetch = jest.fn<typeof fetch>().mockResolvedValue(
+      new Response(null, {
+        status: 302,
+        headers: { Location: "http://192.168.1.1/internal" },
+      })
+    );
+
+    const loader = new RecursiveUrlLoader(
+      "https://example.com/",
+      { maxDepth: 0 }
+    );
+    const docs = await loader.load();
+    expect(docs).toHaveLength(0);
+  });
+
+  test("follows safe redirects", async () => {
+    globalThis.fetch = jest.fn<typeof fetch>()
+      .mockResolvedValueOnce(
+        new Response(null, {
+          status: 301,
+          headers: { Location: "https://www.example.com/" },
+        })
+      )
+      .mockResolvedValueOnce(
+        new Response("<html><body>Hello</body></html>", {
+          status: 200,
+          headers: { "Content-Type": "text/html" },
+        })
+      );
+
+    const loader = new RecursiveUrlLoader(
+      "https://example.com/",
+      { maxDepth: 0 }
+    );
+    const docs = await loader.load();
+    expect(docs).toHaveLength(1);
+    expect(docs[0].pageContent).toContain("Hello");
+  });
+
+  test("throws on too many redirects", async () => {
+    globalThis.fetch = jest.fn<typeof fetch>().mockResolvedValue(
+      new Response(null, {
+        status: 302,
+        headers: { Location: "https://example.com/loop" },
+      })
+    );
+
+    const loader = new RecursiveUrlLoader(
+      "https://example.com/",
+      { maxDepth: 0 }
+    );
+    const docs = await loader.load();
+    expect(docs).toHaveLength(0);
+  });
+});
 
 describe("RecursiveUrlLoader - URL Origin Validation", () => {
   describe("preventOutside origin checking", () => {

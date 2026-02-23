@@ -10,6 +10,9 @@ import {
 const virtualConsole = new VirtualConsole();
 virtualConsole.on("error", () => {});
 
+const MAX_REDIRECTS = 10;
+const REDIRECT_CODES = new Set([301, 302, 303, 307, 308]);
+
 export interface RecursiveUrlLoaderOptions {
   excludeDirs?: string[];
   extractor?: (text: string) => string;
@@ -59,8 +62,33 @@ export class RecursiveUrlLoader
     options: { timeout: number } & RequestInit
   ): Promise<Response> {
     const { timeout, ...rest } = options;
-    return this.caller.call(() =>
-      fetch(resource, { ...rest, signal: AbortSignal.timeout(timeout) })
+    let currentUrl = resource;
+
+    for (let i = 0; i <= MAX_REDIRECTS; i++) {
+      validateSafeUrl(currentUrl, { allowHttp: true });
+
+      const response = await this.caller.call(() =>
+        fetch(currentUrl, {
+          ...rest,
+          redirect: "manual",
+          signal: AbortSignal.timeout(timeout),
+        })
+      );
+
+      if (REDIRECT_CODES.has(response.status)) {
+        const location = response.headers.get("location");
+        if (!location) {
+          throw new Error("Redirect response missing Location header");
+        }
+        currentUrl = new URL(location, currentUrl).href;
+        continue;
+      }
+
+      return response;
+    }
+
+    throw new Error(
+      `Too many redirects (max ${MAX_REDIRECTS})`
     );
   }
 
@@ -143,7 +171,6 @@ export class RecursiveUrlLoader
   private async getUrlAsDoc(url: string): Promise<Document | null> {
     let res;
     try {
-      validateSafeUrl(url, { allowHttp: true });
       res = await this.fetchWithTimeout(url, { timeout: this.timeout });
       res = await res.text();
     } catch {
@@ -171,7 +198,6 @@ export class RecursiveUrlLoader
 
     let res;
     try {
-      await validateSafeUrl(url, { allowHttp: true });
       res = await this.fetchWithTimeout(url, { timeout: this.timeout });
       res = await res.text();
     } catch {
