@@ -258,8 +258,7 @@ test("Can properly format anthropic messages when AIMessage content is an empty 
         content: [
           {
             type: "tool_result",
-            content:
-              "It is currently 24 degrees with hail in San Francisco.",
+            content: "It is currently 24 degrees with hail in San Francisco.",
             tool_use_id: "weather_call",
           },
         ],
