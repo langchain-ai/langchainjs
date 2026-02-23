@@ -565,13 +565,13 @@ export class CallbackManagerForToolRun
     );
   }
 
-  async handleToolStream(chunk: unknown): Promise<void> {
+  async handleToolEvent(chunk: unknown): Promise<void> {
     await Promise.all(
       this.handlers.map((handler) =>
         consumeCallback(async () => {
           if (!handler.ignoreAgent) {
             try {
-              await handler.handleToolStream?.(
+              await handler.handleToolEvent?.(
                 chunk,
                 this.runId,
                 this._parentRunId,

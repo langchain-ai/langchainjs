@@ -525,7 +525,7 @@ describe("Generator tools (async function*)", () => {
       {
         callbacks: [
           {
-            handleToolStream(chunk: unknown) {
+            handleToolEvent(chunk: unknown) {
               partials.push(chunk);
             },
           },
@@ -561,7 +561,7 @@ describe("Generator tools (async function*)", () => {
     const result = await stringSchemaTool.invoke("hello", {
       callbacks: [
         {
-          handleToolStream(chunk: unknown) {
+          handleToolEvent(chunk: unknown) {
             partials.push(chunk);
           },
         },
@@ -593,7 +593,7 @@ describe("Generator tools (async function*)", () => {
       {
         callbacks: [
           {
-            handleToolStream(chunk: unknown) {
+            handleToolEvent(chunk: unknown) {
               partials.push(chunk);
             },
           },
@@ -648,7 +648,7 @@ describe("Generator tools (async function*)", () => {
             },
           },
           {
-            handleToolStream() {
+            handleToolEvent() {
               events.push("stream");
             },
           },
@@ -760,7 +760,7 @@ describe("Generator tools (async function*)", () => {
       {
         callbacks: [
           {
-            handleToolStream: async () => {
+            handleToolEvent: async () => {
               throw new Error("Callback failed");
             },
             handleToolError(err: unknown) {

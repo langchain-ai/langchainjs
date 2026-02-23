@@ -214,7 +214,7 @@ abstract class BaseCallbackHandlerMethodsClass {
    * Called when a streaming tool yields a partial value. Tools that are async generators
    * invoke this once per yielded value.
    */
-  handleToolStream?(
+  handleToolEvent?(
     chunk: unknown,
     runId: string,
     parentRunId?: string,

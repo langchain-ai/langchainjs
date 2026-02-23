@@ -307,7 +307,7 @@ export abstract class StructuredTool<
       result = isAsyncGenerator(raw)
         ? await consumeAsyncGenerator(raw, async (chunk) => {
             try {
-              await runManager?.handleToolStream(chunk);
+              await runManager?.handleToolEvent(chunk);
             } catch (streamError) {
               await runManager?.handleToolError(streamError);
             }
