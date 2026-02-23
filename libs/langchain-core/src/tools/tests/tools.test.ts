@@ -545,7 +545,7 @@ describe("Generator tools (async function*)", () => {
     const partials: unknown[] = [];
 
     const testTool = tool(
-      async (input: { city: string }) => {
+      async (input) => {
         return `Weather in ${input.city}: 72F`;
       },
       {
@@ -575,7 +575,7 @@ describe("Generator tools (async function*)", () => {
   test("Generator tool with no yields works", async () => {
     const testTool = tool(
       // eslint-disable-next-line require-yield -- intentional: testing generator with no yields
-      async function* (input: { x: number }) {
+      async function* (input) {
         return input.x * 2;
       },
       {
@@ -593,7 +593,7 @@ describe("Generator tools (async function*)", () => {
     const events: string[] = [];
 
     const testTool = tool(
-      async function* (input: { city: string }) {
+      async function* (input) {
         yield { status: "searching", city: input.city };
         yield { status: "found", temperature: 72 };
         return `Weather in ${input.city}: 72F`;
@@ -637,7 +637,7 @@ describe("Generator tools (async function*)", () => {
     const expectedToolCallId = "call_abc123";
     let receivedToolCallId: string | undefined;
 
-    const testTool = tool((input: { x: number }) => String(input.x), {
+    const testTool = tool((input) => String(input.x), {
       name: "adder",
       schema: z.object({ x: z.number() }),
       description: "Echo x",
@@ -676,7 +676,7 @@ describe("Generator tools (async function*)", () => {
     let handleToolErrorCalled = false;
 
     const testTool = tool(
-      async function* (input: { chunk: string }) {
+      async function* (input) {
         yield input.chunk;
         throw new Error("Mid-stream failure");
       },
@@ -711,7 +711,7 @@ describe("Generator tools (async function*)", () => {
     let handleToolErrorCalled = false;
 
     const testTool = tool(
-      async function* (input: { chunk: string }) {
+      async function* (input) {
         yield input.chunk;
         return "final";
       },
@@ -752,7 +752,7 @@ describe("Generator tools (async function*)", () => {
 
     // When generator throws mid-stream, invoke rejects and we still close the generator in finally.
     const throwingTool = tool(
-      async function* (input: { chunk: string }) {
+      async function* (input) {
         try {
           yield input.chunk;
           throw new Error("Generator fails");
