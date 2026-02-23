@@ -1,5 +1,14 @@
 # @langchain/aws
 
+## 1.2.5
+
+### Patch Changes
+
+- [#10108](https://github.com/langchain-ai/langchainjs/pull/10108) [`e7576ee`](https://github.com/langchain-ai/langchainjs/commit/e7576ee9e6408c399c08d271db43f63e622da10f) Thanks [@hntrl](https://github.com/hntrl)! - fix: replace retired Anthropic model IDs with active replacements
+  - Update default model in ChatAnthropic from `claude-3-5-sonnet-latest` to `claude-sonnet-4-5-20250929`
+  - Regenerate model profiles with latest data from models.dev API
+  - Replace retired `claude-3-5-haiku-20241022`, `claude-3-7-sonnet-20250219`, `claude-3-5-sonnet-20240620`, and `claude-3-5-sonnet-20241022` in tests, docstrings, and examples
+
 ## 1.2.4
 
 ### Patch Changes
