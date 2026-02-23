@@ -680,8 +680,9 @@ export function piiMiddleware(
       let lastAiIdx: number | null = null;
       let lastAiMsg: AIMessage | null = null;
       for (let i = messages.length - 1; i >= 0; i--) {
-        if (AIMessage.isInstance(messages[i])) {
-          lastAiMsg = messages[i];
+        const msg = messages[i];
+        if (AIMessage.isInstance(msg)) {
+          lastAiMsg = msg;
           lastAiIdx = i;
           break;
         }
