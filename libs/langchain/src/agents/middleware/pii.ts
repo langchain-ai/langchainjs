@@ -552,7 +552,7 @@ export function piiMiddleware(
     applyToOutput?: boolean;
     applyToToolResults?: boolean;
   } = {}
-): ReturnType<typeof createMiddleware> {
+) {
   const { strategy = "redact", detector } = options;
   const resolvedRule = resolveRedactionRule({
     piiType,

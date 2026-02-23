@@ -10,6 +10,7 @@ import type { InteropZodToStateDefinition } from "@langchain/langgraph/zod";
 import type {
   AnnotationRoot,
   StateSchema,
+  InferStateSchemaValue,
   InferStateSchemaUpdate,
   StateDefinitionInit,
 } from "@langchain/langgraph";
@@ -97,11 +98,13 @@ export type NormalizedSchemaInput<
   TSchema extends StateDefinitionInit | undefined | never = any,
 > = [TSchema] extends [never]
   ? AgentBuiltInState
-  : TSchema extends InteropZodObject
-    ? InferInteropZodOutput<TSchema> & AgentBuiltInState
-    : TSchema extends StateDefinitionInit
-      ? InferSchemaInput<TSchema> & AgentBuiltInState
-      : AgentBuiltInState;
+  : TSchema extends StateSchema<infer TFields>
+    ? InferStateSchemaValue<TFields> & AgentBuiltInState
+    : TSchema extends InteropZodObject
+      ? InferInteropZodOutput<TSchema> & AgentBuiltInState
+      : TSchema extends StateDefinitionInit
+        ? InferSchemaValue<TSchema> & AgentBuiltInState
+        : AgentBuiltInState;
 
 /**
  * Result type for middleware functions.
@@ -622,11 +625,13 @@ export type InferChannelType<T extends AnyAnnotationRoot | InteropZodObject> =
  */
 export type InferMiddlewareState<T extends AgentMiddleware> =
   T extends AgentMiddleware<infer TSchema, any, any, any>
-    ? TSchema extends InteropZodObject
-      ? FilterPrivateProps<InferInteropZodOutput<TSchema>>
-      : TSchema extends StateDefinitionInit
-        ? FilterPrivateProps<InferSchemaInput<TSchema>>
-        : {}
+    ? TSchema extends StateSchema<infer TFields>
+      ? FilterPrivateProps<InferStateSchemaValue<TFields>>
+      : TSchema extends InteropZodObject
+        ? FilterPrivateProps<InferInteropZodOutput<TSchema>>
+        : TSchema extends StateDefinitionInit
+          ? FilterPrivateProps<InferSchemaValue<TSchema>>
+          : {}
     : {};
 
 /**
@@ -636,11 +641,13 @@ export type InferMiddlewareState<T extends AgentMiddleware> =
  */
 export type InferMiddlewareInputState<T extends AgentMiddleware> =
   T extends AgentMiddleware<infer TSchema, any, any, any>
-    ? TSchema extends InteropZodObject
-      ? FilterPrivateProps<InferInteropZodInput<TSchema>>
-      : TSchema extends StateDefinitionInit
-        ? FilterPrivateProps<InferSchemaInput<TSchema>>
-        : {}
+    ? TSchema extends StateSchema<infer TFields>
+      ? FilterPrivateProps<InferStateSchemaUpdate<TFields>>
+      : TSchema extends InteropZodObject
+        ? FilterPrivateProps<InferInteropZodInput<TSchema>>
+        : TSchema extends StateDefinitionInit
+          ? FilterPrivateProps<InferSchemaInput<TSchema>>
+          : {}
     : {};
 
 /**
@@ -769,11 +776,20 @@ export type ToAnnotationRoot<A extends StateDefinitionInit> =
       ? InteropZodToStateDefinition<A>
       : never;
 
-export type InferSchemaInput<A extends StateDefinitionInit | undefined> =
+export type InferSchemaValue<A extends StateDefinitionInit | undefined> =
   A extends StateSchema<infer TFields>
-    ? InferStateSchemaUpdate<TFields>
+    ? InferStateSchemaValue<TFields>
     : A extends InteropZodObject
       ? InferInteropZodOutput<A>
       : A extends AnyAnnotationRoot
         ? A["State"]
+        : {};
+
+export type InferSchemaInput<A extends StateDefinitionInit | undefined> =
+  A extends StateSchema<infer TFields>
+    ? InferStateSchemaUpdate<TFields>
+    : A extends InteropZodObject
+      ? InferInteropZodInput<A>
+      : A extends AnyAnnotationRoot
+        ? A["Update"]
         : {};
