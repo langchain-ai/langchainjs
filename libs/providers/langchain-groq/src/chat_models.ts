@@ -101,6 +101,7 @@ const CREATE_PARAMS_BASE_CALL_KEYS = [
   "n", // not supported, but left in for forward compatibility
   "parallel_tool_calls",
   "presence_penalty",
+  "reasoning_effort",
   "reasoning_format",
   "response_format",
   "seed",
@@ -290,6 +291,13 @@ export interface ChatGroqInput extends BaseChatModelParams {
    * Default query parameters included with every request
    */
   defaultQuery?: Record<string, string>;
+
+  /**
+   * The level of reasoning effort the model will use.
+   * Supported by `openai/gpt-oss-20b`, `openai/gpt-oss-120b`, and `qwen/qwen3-32b`.
+   * @see https://console.groq.com/docs/reasoning#options-for-reasoning-effort
+   */
+  reasoningEffort?: "none" | "default" | "low" | "medium" | "high" | null;
 }
 
 type GroqRoleEnum = "system" | "assistant" | "user" | "function";
@@ -967,6 +975,8 @@ export class ChatGroq extends BaseChatModel<
 
   user: string | null | undefined;
 
+  reasoningEffort: ChatCompletionsAPI.ChatCompletionCreateParamsBase["reasoning_effort"];
+
   reasoningFormat: ChatCompletionsAPI.ChatCompletionCreateParamsBase["reasoning_format"];
 
   serviceTier: ChatCompletionsAPI.ChatCompletionCreateParamsBase["service_tier"];
@@ -993,6 +1003,7 @@ export class ChatGroq extends BaseChatModel<
       "n",
       "logitBias",
       "user",
+      "reasoningEffort",
       "reasoningFormat",
       "serviceTier",
       "topLogprobs",
@@ -1071,6 +1082,7 @@ export class ChatGroq extends BaseChatModel<
     this.n = params.n;
     this.logitBias = params.logitBias;
     this.user = params.user;
+    this.reasoningEffort = params.reasoningEffort;
   }
 
   getLsParams(options: this["ParsedCallOptions"]): LangSmithParams {
@@ -1132,6 +1144,7 @@ export class ChatGroq extends BaseChatModel<
       n: this.n,
       parallel_tool_calls: options?.parallel_tool_calls,
       presence_penalty: this.presencePenalty,
+      reasoning_effort: this.reasoningEffort,
       reasoning_format: this.reasoningFormat,
       response_format: options?.response_format,
       seed: options?.seed,
