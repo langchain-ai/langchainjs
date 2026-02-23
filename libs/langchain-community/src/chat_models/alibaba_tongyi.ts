@@ -1171,6 +1171,10 @@ export class ChatAlibabaTongyi
       const response = await fetch(this.apiUrl, {
         method: "POST",
         headers: {
+          // This integration uses the native DashScope endpoint
+          // (`/api/v1/services/aigc/text-generation/generation`), not the OpenAI-compatible
+          // endpoint (`/compatible-mode/v1/chat/completions`). For native streaming, DashScope
+          // expects `X-DashScope-SSE: enable` to emit SSE `data:` chunks our parser consumes.
           ...(stream
             ? {
                 Accept: "text/event-stream",
@@ -1317,6 +1321,8 @@ export class ChatAlibabaTongyi
       method: "POST",
       headers: {
         Authorization: `Bearer ${this.alibabaApiKey}`,
+        // Native DashScope stream() path: keep SSE framing explicit on the
+        // `/api/v1/services/aigc/text-generation/generation` endpoint.
         Accept: "text/event-stream",
         "X-DashScope-SSE": "enable",
         "Content-Type": "application/json",
