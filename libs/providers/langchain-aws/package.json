@@ -33,7 +33,7 @@
     "@aws-sdk/client-bedrock-agent-runtime": "^3.991.0",
     "@aws-sdk/client-bedrock-runtime": "^3.989.0",
     "@aws-sdk/client-kendra": "^3.750.0",
-    "@aws-sdk/credential-provider-node": "^3.750.0"
+    "@aws-sdk/credential-provider-node": "^3.972.10"
   },
   "peerDependencies": {
     "@langchain/core": "^1.0.0"
