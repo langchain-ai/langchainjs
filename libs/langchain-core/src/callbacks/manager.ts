@@ -570,15 +570,7 @@ export class CallbackManagerForToolRun
                 this.tags
               );
             } catch (err) {
-              const logFunction = handler.raiseError
-                ? console.error
-                : console.warn;
-              logFunction(
-                `Error in handler ${handler.constructor.name}, handleToolStream: ${err}`
-              );
-              if (handler.raiseError) {
-                throw err;
-              }
+              if (handler.raiseError) throw err;
             }
           }
         }, handler.awaitHandlers)
