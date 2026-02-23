@@ -15,7 +15,7 @@
   "dependencies": {
     "@arethetypeswrong/core": "^0.18.2",
     "@typescript/native-preview": "^7.0.0-dev.20260223.1",
-    "prettier": "^3.6.2",
+    "prettier": "^3.8.1",
     "publint": "^0.3.15",
     "rolldown": "^1.0.0-rc.4",
     "tsdown": "^0.20.3",
@@ -27,7 +27,7 @@
     "@langchain/eslint": "workspace:*",
     "@langchain/tsconfig": "workspace:*",
     "@tsconfig/recommended": "^1.0.10",
-    "eslint": "^9.39.1"
+    "eslint": "^10.0.1"
   },
   "optionalDependencies": {
     "@esbuild/win32-x64": "*",
