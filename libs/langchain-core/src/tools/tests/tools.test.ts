@@ -503,7 +503,7 @@ describe("Generator tools (async function*)", () => {
     const partials: unknown[] = [];
 
     const testTool = tool(
-      async function* (input: { city: string }) {
+      async function* (input) {
         yield { status: "searching", city: input.city };
         yield { status: "found", temperature: 72 };
         return `Weather in ${input.city}: 72F`;
