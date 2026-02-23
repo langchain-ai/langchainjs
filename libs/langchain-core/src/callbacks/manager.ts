@@ -164,7 +164,15 @@ export class BaseRunManager {
               this.metadata
             );
           } catch (err) {
-            if (handler.raiseError) throw err;
+            const logFunction = handler.raiseError
+              ? console.error
+              : console.warn;
+            logFunction(
+              `Error in handler ${handler.constructor.name}, handleCustomEvent: ${err}`
+            );
+            if (handler.raiseError) {
+              throw err;
+            }
           }
         }, handler.awaitHandlers)
       )
