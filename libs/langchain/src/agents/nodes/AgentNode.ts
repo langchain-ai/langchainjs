@@ -451,6 +451,8 @@ export class AgentNode<
             unknown
           >
         ): Promise<InternalModelResponse<StructuredResponseFormat>> => {
+          const baselineSystemMessage = currentSystemMessage;
+
           /**
            * Merge context with default context of middleware
            */
@@ -501,6 +503,8 @@ export class AgentNode<
               unknown
             >
           ): Promise<InternalModelResponse<StructuredResponseFormat>> => {
+            currentSystemMessage = baselineSystemMessage;
+
             /**
              * Verify that the user didn't add any new tools.
              * We can't allow this as the ToolNode is already initiated with given tools.
