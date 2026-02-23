@@ -277,9 +277,7 @@ export abstract class BaseLangChain<
     this.metadata = {
       ...this.metadata,
       versions: {
-        ...(typeof existing === "object" && existing !== null
-          ? existing
-          : {}),
+        ...(typeof existing === "object" && existing !== null ? existing : {}),
         [pkg]: version,
       },
     };

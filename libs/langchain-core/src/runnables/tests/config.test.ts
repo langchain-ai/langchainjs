@@ -24,10 +24,7 @@ describe("mergeConfigs metadata", () => {
   });
 
   it("later config overwrites earlier for same key", () => {
-    const result = mergeConfigs(
-      { metadata: { a: 1 } },
-      { metadata: { a: 2 } }
-    );
+    const result = mergeConfigs({ metadata: { a: 1 } }, { metadata: { a: 2 } });
     expect(result.metadata).toEqual({ a: 2 });
   });
 
