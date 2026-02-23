@@ -481,10 +481,13 @@ describe("StateSchema support", () => {
 
     it("should infer ReducedValue hooks as value types", () => {
       const AgentState = new StateSchema({
-        history: new ReducedValue(z.array(z.string()).default(() => []), {
-          inputSchema: z.string(),
-          reducer: (current, next) => [...current, next],
-        }),
+        history: new ReducedValue(
+          z.array(z.string()).default(() => []),
+          {
+            inputSchema: z.string(),
+            reducer: (current, next) => [...current, next],
+          }
+        ),
       });
 
       type Resolved = NormalizedSchemaInput<typeof AgentState>;
@@ -518,10 +521,13 @@ describe("StateSchema support", () => {
 
     it("should infer reduced fields in InferAgentState", () => {
       const AgentState = new StateSchema({
-        items: new ReducedValue(z.array(z.number()).default(() => []), {
-          inputSchema: z.number(),
-          reducer: (current, next) => [...current, next],
-        }),
+        items: new ReducedValue(
+          z.array(z.number()).default(() => []),
+          {
+            inputSchema: z.number(),
+            reducer: (current, next) => [...current, next],
+          }
+        ),
       });
 
       const agent = createAgent({
@@ -538,10 +544,13 @@ describe("StateSchema support", () => {
       const AgentState = new StateSchema({
         name: z.string(),
         count: z.number().default(0),
-        history: new ReducedValue(z.array(z.string()).default(() => []), {
-          inputSchema: z.string(),
-          reducer: (current, next) => [...current, next],
-        }),
+        history: new ReducedValue(
+          z.array(z.string()).default(() => []),
+          {
+            inputSchema: z.string(),
+            reducer: (current, next) => [...current, next],
+          }
+        ),
       });
 
       createMiddleware({
