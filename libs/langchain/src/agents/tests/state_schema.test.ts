@@ -729,7 +729,7 @@ describe("StateSchema support", () => {
         name: "HistoryMiddleware",
         stateSchema: MiddlewareState,
         beforeModel: async () => {
-          return { history: ["middleware-entry"] };
+          return { history: "middleware-entry" };
         },
       });
 

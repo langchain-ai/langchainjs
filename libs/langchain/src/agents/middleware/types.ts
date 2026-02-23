@@ -106,6 +106,18 @@ export type NormalizedSchemaInput<
         ? InferSchemaValue<TSchema> & AgentBuiltInState
         : AgentBuiltInState;
 
+export type NormalizedSchemaUpdate<
+  TSchema extends StateDefinitionInit | undefined | never = any,
+> = [TSchema] extends [never]
+  ? AgentBuiltInState
+  : TSchema extends StateSchema<infer TFields>
+    ? InferStateSchemaUpdate<TFields> & AgentBuiltInState
+    : TSchema extends InteropZodObject
+      ? InferInteropZodInput<TSchema> & AgentBuiltInState
+      : TSchema extends StateDefinitionInit
+        ? InferSchemaInput<TSchema> & AgentBuiltInState
+        : AgentBuiltInState;
+
 /**
  * Result type for middleware functions.
  */
@@ -230,10 +242,10 @@ export type WrapModelCallHook<
  * @param runtime - The runtime context containing metadata, signal, writer, interrupt, etc.
  * @returns A middleware result containing partial state updates or undefined to pass through
  */
-type BeforeAgentHandler<TSchema, TContext> = (
-  state: TSchema,
+type BeforeAgentHandler<TState, TUpdate, TContext> = (
+  state: TState,
   runtime: Runtime<TContext>
-) => PromiseOrValue<MiddlewareResult<Partial<TSchema>>>;
+) => PromiseOrValue<MiddlewareResult<Partial<TUpdate>>>;
 
 /**
  * Hook type for the beforeAgent lifecycle event.
@@ -244,9 +256,17 @@ export type BeforeAgentHook<
   TSchema extends StateDefinitionInit | undefined = undefined,
   TContext = unknown,
 > =
-  | BeforeAgentHandler<NormalizedSchemaInput<TSchema>, TContext>
+  | BeforeAgentHandler<
+      NormalizedSchemaInput<TSchema>,
+      NormalizedSchemaUpdate<TSchema>,
+      TContext
+    >
   | {
-      hook: BeforeAgentHandler<NormalizedSchemaInput<TSchema>, TContext>;
+      hook: BeforeAgentHandler<
+        NormalizedSchemaInput<TSchema>,
+        NormalizedSchemaUpdate<TSchema>,
+        TContext
+      >;
       canJumpTo?: JumpToTarget[];
     };
 
@@ -258,10 +278,10 @@ export type BeforeAgentHook<
  * @param runtime - The runtime context containing metadata, signal, writer, interrupt, etc.
  * @returns A middleware result containing partial state updates or undefined to pass through
  */
-type BeforeModelHandler<TSchema, TContext> = (
-  state: TSchema,
+type BeforeModelHandler<TState, TUpdate, TContext> = (
+  state: TState,
   runtime: Runtime<TContext>
-) => PromiseOrValue<MiddlewareResult<Partial<TSchema>>>;
+) => PromiseOrValue<MiddlewareResult<Partial<TUpdate>>>;
 
 /**
  * Hook type for the beforeModel lifecycle event.
@@ -272,9 +292,17 @@ export type BeforeModelHook<
   TSchema extends StateDefinitionInit | undefined = undefined,
   TContext = unknown,
 > =
-  | BeforeModelHandler<NormalizedSchemaInput<TSchema>, TContext>
+  | BeforeModelHandler<
+      NormalizedSchemaInput<TSchema>,
+      NormalizedSchemaUpdate<TSchema>,
+      TContext
+    >
   | {
-      hook: BeforeModelHandler<NormalizedSchemaInput<TSchema>, TContext>;
+      hook: BeforeModelHandler<
+        NormalizedSchemaInput<TSchema>,
+        NormalizedSchemaUpdate<TSchema>,
+        TContext
+      >;
       canJumpTo?: JumpToTarget[];
     };
 
@@ -287,10 +315,10 @@ export type BeforeModelHook<
  * @param runtime - The runtime context containing metadata, signal, writer, interrupt, etc.
  * @returns A middleware result containing partial state updates or undefined to pass through
  */
-type AfterModelHandler<TSchema, TContext> = (
-  state: TSchema,
+type AfterModelHandler<TState, TUpdate, TContext> = (
+  state: TState,
   runtime: Runtime<TContext>
-) => PromiseOrValue<MiddlewareResult<Partial<TSchema>>>;
+) => PromiseOrValue<MiddlewareResult<Partial<TUpdate>>>;
 
 /**
  * Hook type for the afterModel lifecycle event.
@@ -301,9 +329,17 @@ export type AfterModelHook<
   TSchema extends StateDefinitionInit | undefined = undefined,
   TContext = unknown,
 > =
-  | AfterModelHandler<NormalizedSchemaInput<TSchema>, TContext>
+  | AfterModelHandler<
+      NormalizedSchemaInput<TSchema>,
+      NormalizedSchemaUpdate<TSchema>,
+      TContext
+    >
   | {
-      hook: AfterModelHandler<NormalizedSchemaInput<TSchema>, TContext>;
+      hook: AfterModelHandler<
+        NormalizedSchemaInput<TSchema>,
+        NormalizedSchemaUpdate<TSchema>,
+        TContext
+      >;
       canJumpTo?: JumpToTarget[];
     };
 
@@ -315,10 +351,10 @@ export type AfterModelHook<
  * @param runtime - The runtime context containing metadata, signal, writer, interrupt, etc.
  * @returns A middleware result containing partial state updates or undefined to pass through
  */
-type AfterAgentHandler<TSchema, TContext> = (
-  state: TSchema,
+type AfterAgentHandler<TState, TUpdate, TContext> = (
+  state: TState,
   runtime: Runtime<TContext>
-) => PromiseOrValue<MiddlewareResult<Partial<TSchema>>>;
+) => PromiseOrValue<MiddlewareResult<Partial<TUpdate>>>;
 
 /**
  * Hook type for the afterAgent lifecycle event.
@@ -329,9 +365,17 @@ export type AfterAgentHook<
   TSchema extends StateDefinitionInit | undefined = undefined,
   TContext = unknown,
 > =
-  | AfterAgentHandler<NormalizedSchemaInput<TSchema>, TContext>
+  | AfterAgentHandler<
+      NormalizedSchemaInput<TSchema>,
+      NormalizedSchemaUpdate<TSchema>,
+      TContext
+    >
   | {
-      hook: AfterAgentHandler<NormalizedSchemaInput<TSchema>, TContext>;
+      hook: AfterAgentHandler<
+        NormalizedSchemaInput<TSchema>,
+        NormalizedSchemaUpdate<TSchema>,
+        TContext
+      >;
       canJumpTo?: JumpToTarget[];
     };
 
