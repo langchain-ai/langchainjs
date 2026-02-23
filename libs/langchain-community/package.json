@@ -157,7 +157,7 @@
     "google-auth-library": "^9.10.0",
     "googleapis": "^171.4.0",
     "graphql": "^16.6.0",
-    "hdb": "0.19.8",
+    "hdb": "2.27.1",
     "hnswlib-node": "^3.0.0",
     "html-to-text": "^9.0.5",
     "ibm-cloud-sdk-core": "^5.4.6",
