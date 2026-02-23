@@ -87,9 +87,7 @@ export class RecursiveUrlLoader
       return response;
     }
 
-    throw new Error(
-      `Too many redirects (max ${MAX_REDIRECTS})`
-    );
+    throw new Error(`Too many redirects (max ${MAX_REDIRECTS})`);
   }
 
   private getChildLinks(html: string, baseUrl: string): Array<string> {

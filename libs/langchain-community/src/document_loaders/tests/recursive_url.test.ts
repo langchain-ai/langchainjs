@@ -1,4 +1,11 @@
-import { test, describe, expect, jest, beforeEach, afterEach } from "@jest/globals";
+import {
+  test,
+  describe,
+  expect,
+  jest,
+  beforeEach,
+  afterEach,
+} from "@jest/globals";
 import { RecursiveUrlLoader } from "../web/recursive_url.js";
 
 const _originalFetch = globalThis.fetch;
@@ -16,10 +23,9 @@ describe("RecursiveUrlLoader - Redirect SSRF Protection", () => {
       })
     );
 
-    const loader = new RecursiveUrlLoader(
-      "https://example.com/",
-      { maxDepth: 0 }
-    );
+    const loader = new RecursiveUrlLoader("https://example.com/", {
+      maxDepth: 0,
+    });
     const docs = await loader.load();
     expect(docs).toHaveLength(0);
   });
@@ -32,10 +38,9 @@ describe("RecursiveUrlLoader - Redirect SSRF Protection", () => {
       })
     );
 
-    const loader = new RecursiveUrlLoader(
-      "https://example.com/",
-      { maxDepth: 0 }
-    );
+    const loader = new RecursiveUrlLoader("https://example.com/", {
+      maxDepth: 0,
+    });
     const docs = await loader.load();
     expect(docs).toHaveLength(0);
   });
@@ -48,16 +53,16 @@ describe("RecursiveUrlLoader - Redirect SSRF Protection", () => {
       })
     );
 
-    const loader = new RecursiveUrlLoader(
-      "https://example.com/",
-      { maxDepth: 0 }
-    );
+    const loader = new RecursiveUrlLoader("https://example.com/", {
+      maxDepth: 0,
+    });
     const docs = await loader.load();
     expect(docs).toHaveLength(0);
   });
 
   test("follows safe redirects", async () => {
-    globalThis.fetch = jest.fn<typeof fetch>()
+    globalThis.fetch = jest
+      .fn<typeof fetch>()
       .mockResolvedValueOnce(
         new Response(null, {
           status: 301,
@@ -71,10 +76,9 @@ describe("RecursiveUrlLoader - Redirect SSRF Protection", () => {
         })
       );
 
-    const loader = new RecursiveUrlLoader(
-      "https://example.com/",
-      { maxDepth: 0 }
-    );
+    const loader = new RecursiveUrlLoader("https://example.com/", {
+      maxDepth: 0,
+    });
     const docs = await loader.load();
     expect(docs).toHaveLength(1);
     expect(docs[0].pageContent).toContain("Hello");
@@ -88,10 +92,9 @@ describe("RecursiveUrlLoader - Redirect SSRF Protection", () => {
       })
     );
 
-    const loader = new RecursiveUrlLoader(
-      "https://example.com/",
-      { maxDepth: 0 }
-    );
+    const loader = new RecursiveUrlLoader("https://example.com/", {
+      maxDepth: 0,
+    });
     const docs = await loader.load();
     expect(docs).toHaveLength(0);
   });
