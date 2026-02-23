@@ -541,6 +541,39 @@ describe("Generator tools (async function*)", () => {
     expect(partials[1]).toEqual({ status: "found", temperature: 72 });
   });
 
+  test("DynamicTool (string schema) generator yields partial results and returns final result", async () => {
+    const partials: unknown[] = [];
+
+    const stringSchemaTool = tool(
+      async function* (input: string) {
+        yield { message: "step 1", input };
+        await new Promise((r) => setTimeout(r, 10));
+        yield { message: "step 2" };
+        return `Done: ${input}`;
+      },
+      {
+        name: "string_stream_tool",
+        description: "A string-input tool that streams progress",
+        schema: z.string(),
+      }
+    );
+
+    const result = await stringSchemaTool.invoke("hello", {
+      callbacks: [
+        {
+          handleToolStream(chunk: unknown) {
+            partials.push(chunk);
+          },
+        },
+      ],
+    });
+
+    expect(result).toBe("Done: hello");
+    expect(partials).toHaveLength(2);
+    expect(partials[0]).toEqual({ message: "step 1", input: "hello" });
+    expect(partials[1]).toEqual({ message: "step 2" });
+  });
+
   test("Non generator tool still works correctly", async () => {
     const partials: unknown[] = [];
 

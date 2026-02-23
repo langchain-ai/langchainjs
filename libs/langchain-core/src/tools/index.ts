@@ -442,11 +442,11 @@ export class DynamicTool<
   }
 
   /** @ignore */
-  async _call(
+  _call(
     input: string, // DynamicTool's _call specifically expects a string after schema transformation
     runManager?: CallbackManagerForToolRun,
     parentConfig?: ToolRunnableConfig
-  ): Promise<ToolOutputT> {
+  ): Promise<ToolOutputT> | AsyncGenerator<unknown, ToolOutputT> {
     return this.func(input, runManager, parentConfig);
   }
 }

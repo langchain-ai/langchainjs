@@ -343,7 +343,7 @@ export interface DynamicToolInput<
     input: string,
     runManager?: CallbackManagerForToolRun,
     config?: ToolRunnableConfig
-  ) => Promise<ToolOutputT>;
+  ) => Promise<ToolOutputT> | AsyncGenerator<unknown, ToolOutputT>;
 }
 
 /**
