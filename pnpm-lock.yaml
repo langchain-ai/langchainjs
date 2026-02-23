@@ -1209,7 +1209,7 @@ importers:
         version: 4.0.6
       '@getzep/zep-cloud':
         specifier: ^1.0.6
-        version: 1.0.12(@langchain/core@libs+langchain-core)(encoding@0.1.13)(langchain@0.3.30(c3cf3c3ab98592edf78851112a44ab8a))
+        version: 1.0.12(@langchain/core@libs+langchain-core)(encoding@0.1.13)(langchain@0.3.30(ce03f827ba7fe953c39a864cd6841702))
       '@getzep/zep-js':
         specifier: ^2.0.2
         version: 2.0.2(encoding@0.1.13)
@@ -1643,8 +1643,8 @@ importers:
         specifier: '6'
         version: 6.3.0
       decamelize:
-        specifier: 1.2.0
-        version: 1.2.0
+        specifier: 6.0.1
+        version: 6.0.1
       js-tiktoken:
         specifier: ^1.0.12
         version: 1.0.21
@@ -6601,14 +6601,14 @@ packages:
     peerDependencies:
       apache-arrow: '>=15.0.0 <=18.1.0'
 
-  '@langchain/anthropic@1.3.19':
-    resolution: {integrity: sha512-OY7/pi4MBuBA/RCJJGqL0Dx3J7Udqwz35Q9sTv5oWiwt6UgMQKGZ17k8gEXyknpuKcRd3A81M09mzoGL8/6zGQ==}
+  '@langchain/anthropic@1.3.20':
+    resolution: {integrity: sha512-Bbo8KR0lbGjFvkH2z1m0KdQPF+yHVCP+Wu6q0GmMdwK2AFCDCTHor48MhpIn10WvYKZhHMbBzHvB9NV4yLcPhQ==}
     engines: {node: '>=20'}
     peerDependencies:
       '@langchain/core': workspace:^
 
-  '@langchain/aws@1.2.4':
-    resolution: {integrity: sha512-M1tS1rVKxygOyLA8XcMtltWUzIlF0QuNFg1SzdFoITgVismy3tnUDSUp0aCTsed2Ki9URNCeLjrbC5UkCmPASA==}
+  '@langchain/aws@1.2.5':
+    resolution: {integrity: sha512-tTKaH0Y1YkfFNARsAvmzap2ydl9rDUcfEKKNLVP1NHPeQ2m+miNY/fPAp6+1MM3TwvZjjrwDVoWLHEPBtMeCgQ==}
     engines: {node: '>=20'}
     peerDependencies:
       '@langchain/core': workspace:^
@@ -10745,9 +10745,9 @@ packages:
       supports-color:
         optional: true
 
-  decamelize@1.2.0:
-    resolution: {integrity: sha512-z2S+W9X73hAUUki+N+9Za2lBlun89zigOyGrsax+KUQ6wKW4ZoWpEYBkGhQjwAjjDCkWxhY0VKEhk8wzY7F5cA==}
-    engines: {node: '>=0.10.0'}
+  decamelize@6.0.1:
+    resolution: {integrity: sha512-G7Cqgaelq68XHJNGlZ7lrNQyhZGsFqpwtGFexqUv4IQdjKoSYF7ipZ9UuTJZUSQXFj/XaoBLuEVIVqr8EJngEQ==}
+    engines: {node: ^12.20.0 || ^14.13.1 || >=16.0.0}
 
   decimal.js@10.6.0:
     resolution: {integrity: sha512-YpgQiITW3JXGntzdUmyUR1V812Hn8T1YVXhCu+wO3OpS4eU9l4YdD3qjyiKdV6mvV29zapkMeD390UVEf2lkUg==}
@@ -20709,7 +20709,7 @@ snapshots:
     transitivePeerDependencies:
       - debug
 
-  '@getzep/zep-cloud@1.0.12(@langchain/core@libs+langchain-core)(encoding@0.1.13)(langchain@0.3.30(c3cf3c3ab98592edf78851112a44ab8a))':
+  '@getzep/zep-cloud@1.0.12(@langchain/core@libs+langchain-core)(encoding@0.1.13)(langchain@0.3.30(ce03f827ba7fe953c39a864cd6841702))':
     dependencies:
       form-data: 4.0.5
       node-fetch: 2.7.0(encoding@0.1.13)
@@ -20718,7 +20718,7 @@ snapshots:
       zod: 3.25.76
     optionalDependencies:
       '@langchain/core': link:libs/langchain-core
-      langchain: 0.3.30(c3cf3c3ab98592edf78851112a44ab8a)
+      langchain: 0.3.30(ce03f827ba7fe953c39a864cd6841702)
     transitivePeerDependencies:
       - encoding
 
@@ -21600,14 +21600,14 @@ snapshots:
       '@lancedb/lancedb-win32-arm64-msvc': 0.19.1
       '@lancedb/lancedb-win32-x64-msvc': 0.19.1
 
-  '@langchain/anthropic@1.3.19(@langchain/core@libs+langchain-core)':
+  '@langchain/anthropic@1.3.20(@langchain/core@libs+langchain-core)':
     dependencies:
       '@anthropic-ai/sdk': 0.74.0(zod@4.3.6)
       '@langchain/core': link:libs/langchain-core
       zod: 4.3.6
     optional: true
 
-  '@langchain/aws@1.2.4(@langchain/core@libs+langchain-core)':
+  '@langchain/aws@1.2.5(@langchain/core@libs+langchain-core)':
     dependencies:
       '@aws-sdk/client-bedrock-agent-runtime': 3.995.0
       '@aws-sdk/client-bedrock-runtime': 3.995.0
@@ -26444,7 +26444,7 @@ snapshots:
     optionalDependencies:
       supports-color: 8.1.1
 
-  decamelize@1.2.0: {}
+  decamelize@6.0.1: {}
 
   decimal.js@10.6.0: {}
 
@@ -29244,7 +29244,7 @@ snapshots:
 
   kuler@2.0.0: {}
 
-  langchain@0.3.30(c3cf3c3ab98592edf78851112a44ab8a):
+  langchain@0.3.30(ce03f827ba7fe953c39a864cd6841702):
     dependencies:
       '@langchain/core': link:libs/langchain-core
       '@langchain/openai': 0.6.17(@langchain/core@libs+langchain-core)(ws@8.19.0(bufferutil@4.1.0))
@@ -29259,8 +29259,8 @@ snapshots:
       yaml: 2.8.2
       zod: 3.25.76
     optionalDependencies:
-      '@langchain/anthropic': 1.3.19(@langchain/core@libs+langchain-core)
-      '@langchain/aws': 1.2.4(@langchain/core@libs+langchain-core)
+      '@langchain/anthropic': 1.3.20(@langchain/core@libs+langchain-core)
+      '@langchain/aws': 1.2.5(@langchain/core@libs+langchain-core)
       '@langchain/cohere': 1.0.3(@langchain/core@libs+langchain-core)
       '@langchain/deepseek': 1.0.13(@langchain/core@libs+langchain-core)(ws@8.19.0(bufferutil@4.1.0))
       '@langchain/google-genai': 2.1.20(@langchain/core@libs+langchain-core)
