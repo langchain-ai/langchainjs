@@ -148,6 +148,7 @@ function _multimodalContentBlockToPart(
   if ("data" in block && block.data !== undefined) {
     // DataRecordBase64: inline base64 data
     const data =
+      // eslint-disable-next-line no-instanceof/no-instanceof
       block.data instanceof Uint8Array
         ? btoa(String.fromCharCode(...block.data))
         : block.data;
