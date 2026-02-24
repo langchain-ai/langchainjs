@@ -41,6 +41,7 @@ import type {
   AgentMiddleware,
   AnyAnnotationRoot,
   InferSchemaInput,
+  InferSchemaValue,
   InferMiddlewareStates,
   InferMiddlewareContexts,
 } from "./middleware/types.js";
@@ -305,7 +306,7 @@ export type InferAgentStateSchema<T> = InferAgentType<T, "State">;
  * // { userId: string; count: number }
  * ```
  */
-export type InferAgentState<T> = InferSchemaInput<InferAgentType<T, "State">> &
+export type InferAgentState<T> = InferSchemaValue<InferAgentType<T, "State">> &
   InferMiddlewareStates<InferAgentType<T, "Middleware">>;
 
 /**
@@ -347,7 +348,7 @@ export type InferAgentContextSchema<T> = InferAgentType<T, "Context">;
  * // { sessionId: string; userId: string }
  * ```
  */
-export type InferAgentContext<T> = InferSchemaInput<
+export type InferAgentContext<T> = InferSchemaValue<
   InferAgentType<T, "Context">
 > &
   InferMiddlewareContexts<InferAgentType<T, "Middleware">>;
