@@ -43,7 +43,7 @@ import {
  *   }),
  *   beforeModel: async (state, runtime) => {
  *     if (!state.isAuthenticated) {
- *       throw new Error("Not authenticated")
+ *       throw new Error("Not authenticated");
  *     }
  *   },
  * });
