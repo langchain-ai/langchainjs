@@ -1,5 +1,19 @@
 # @langchain/community
 
+## 1.1.18
+
+### Patch Changes
+
+- [#10108](https://github.com/langchain-ai/langchainjs/pull/10108) [`e7576ee`](https://github.com/langchain-ai/langchainjs/commit/e7576ee9e6408c399c08d271db43f63e622da10f) Thanks [@hntrl](https://github.com/hntrl)! - fix: replace retired Anthropic model IDs with active replacements
+  - Update default model in ChatAnthropic from `claude-3-5-sonnet-latest` to `claude-sonnet-4-5-20250929`
+  - Regenerate model profiles with latest data from models.dev API
+  - Replace retired `claude-3-5-haiku-20241022`, `claude-3-7-sonnet-20250219`, `claude-3-5-sonnet-20240620`, and `claude-3-5-sonnet-20241022` in tests, docstrings, and examples
+
+- [#10116](https://github.com/langchain-ai/langchainjs/pull/10116) [`2812d2b`](https://github.com/langchain-ai/langchainjs/commit/2812d2b2b9fd9343c4850e2ab906b8cf440975ee) Thanks [@hntrl](https://github.com/hntrl)! - Validate redirects in RecursiveUrlLoader to prevent SSRF bypasses.
+
+- Updated dependencies []:
+  - @langchain/classic@1.0.19
+
 ## 1.1.17
 
 ### Patch Changes

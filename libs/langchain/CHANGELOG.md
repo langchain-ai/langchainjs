@@ -1,5 +1,16 @@
 # langchain
 
+## 1.2.26
+
+### Patch Changes
+
+- [#10108](https://github.com/langchain-ai/langchainjs/pull/10108) [`e7576ee`](https://github.com/langchain-ai/langchainjs/commit/e7576ee9e6408c399c08d271db43f63e622da10f) Thanks [@hntrl](https://github.com/hntrl)! - fix: replace retired Anthropic model IDs with active replacements
+  - Update default model in ChatAnthropic from `claude-3-5-sonnet-latest` to `claude-sonnet-4-5-20250929`
+  - Regenerate model profiles with latest data from models.dev API
+  - Replace retired `claude-3-5-haiku-20241022`, `claude-3-7-sonnet-20250219`, `claude-3-5-sonnet-20240620`, and `claude-3-5-sonnet-20241022` in tests, docstrings, and examples
+
+- [#10114](https://github.com/langchain-ai/langchainjs/pull/10114) [`0050c91`](https://github.com/langchain-ai/langchainjs/commit/0050c91481267327d88c430f5aacf57bd336facf) Thanks [@christian-bromann](https://github.com/christian-bromann)! - fix(langchain): reset shared currentSystemMessage on middleware handler retry
+
 ## 1.2.25
 
 ### Patch Changes
