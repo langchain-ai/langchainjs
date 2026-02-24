@@ -221,6 +221,18 @@ export interface OpenAIChatInput extends OpenAIBaseInput {
    * Used by OpenAI to set cache retention time
    */
   promptCacheRetention?: OpenAICacheRetentionParam;
+
+  /**
+   * Whether to use WebSocket transport for the Responses API. When enabled, a persistent
+   * WebSocket connection is used instead of HTTP requests, which can reduce latency for
+   * multiple sequential requests.
+   *
+   * Requires `useResponsesApi` to be `true` (or will automatically enable it).
+   *
+   * @default false
+   * @see https://developers.openai.com/api/docs/guides/websocket-mode
+   */
+  useWebSocket?: boolean;
 }
 
 export interface AzureOpenAIInput {

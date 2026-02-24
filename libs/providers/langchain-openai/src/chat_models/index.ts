@@ -1,5 +1,5 @@
 import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
-import { AIMessageChunk, type BaseMessage } from "@langchain/core/messages";
+import { AIMessageChunk, isAIMessage, type BaseMessage } from "@langchain/core/messages";
 import { ChatGenerationChunk, type ChatResult } from "@langchain/core/outputs";
 import { type BaseLanguageModelInput } from "@langchain/core/language_models/base";
 import { Runnable } from "@langchain/core/runnables";
@@ -12,6 +12,15 @@ import {
 } from "../utils/tools.js";
 import { _modelPrefersResponsesAPI } from "../utils/misc.js";
 import { _convertOpenAIResponsesUsageToLangChainUsage } from "../utils/output.js";
+import {
+  OpenAIWebSocketManager,
+  type WebSocketRequest,
+} from "../utils/websocket.js";
+import {
+  convertMessagesToResponsesInput,
+  convertResponsesDeltaToChatGenerationChunk,
+  convertResponsesMessageToAIMessage,
+} from "../converters/responses.js";
 import {
   ChatOpenAICompletions,
   ChatOpenAICompletionsCallOptions,
@@ -37,6 +46,19 @@ export interface ChatOpenAIFields extends BaseChatOpenAIFields {
    * only when required in order to fulfill the request.
    */
   useResponsesApi?: boolean;
+
+  /**
+   * Whether to use WebSocket transport for the Responses API. When enabled, a persistent
+   * WebSocket connection is used instead of HTTP requests, which can reduce latency for
+   * multiple sequential requests.
+   *
+   * Requires `useResponsesApi` to be `true` (or will automatically enable it).
+   *
+   * @default false
+   * @see https://developers.openai.com/api/docs/guides/websocket-mode
+   */
+  useWebSocket?: boolean;
+
   /**
    * The completions chat instance
    * @internal
@@ -598,16 +620,30 @@ export class ChatOpenAI<
    */
   useResponsesApi = false;
 
+  /**
+   * Whether to use WebSocket transport for the Responses API. When enabled, a persistent
+   * WebSocket connection is used instead of HTTP requests, which can reduce latency for
+   * multiple sequential requests.
+   *
+   * Requires `useResponsesApi` to be `true` (or will automatically enable it).
+   *
+   * @default false
+   * @see https://developers.openai.com/api/docs/guides/websocket-mode
+   */
+  useWebSocket = false;
+
+  protected wsManager: OpenAIWebSocketManager | null = null;
+
   protected responses: ChatOpenAIResponses;
 
   protected completions: ChatOpenAICompletions;
 
   get lc_serializable_keys(): string[] {
-    return [...super.lc_serializable_keys, "useResponsesApi"];
+    return [...super.lc_serializable_keys, "useResponsesApi", "useWebSocket"];
   }
 
   get callKeys(): string[] {
-    return [...super.callKeys, "useResponsesApi"];
+    return [...super.callKeys, "useResponsesApi", "useWebSocket"];
   }
 
   protected fields?: ChatOpenAIFields;
@@ -622,6 +658,10 @@ export class ChatOpenAI<
     super(fields);
     this.fields = fields;
     this.useResponsesApi = fields?.useResponsesApi ?? false;
+    this.useWebSocket = fields?.useWebSocket ?? false;
+    if (this.useWebSocket) {
+      this.useResponsesApi = true;
+    }
     this.responses = fields?.responses ?? new ChatOpenAIResponses(fields);
     this.completions = fields?.completions ?? new ChatOpenAICompletions(fields);
   }
@@ -641,6 +681,7 @@ export class ChatOpenAI<
 
     return (
       this.useResponsesApi ||
+      this.useWebSocket ||
       usesBuiltInTools ||
       hasResponsesOnlyKwargs ||
       hasCustomTools ||
@@ -671,6 +712,9 @@ export class ChatOpenAI<
     runManager?: CallbackManagerForLLMRun
   ): Promise<ChatResult> {
     if (this._useResponsesApi(options)) {
+      if (this.useWebSocket && !this.responses.invocationParams(options).stream) {
+        return this._generateWebSocket(messages, options);
+      }
       return this.responses._generate(messages, options, runManager);
     }
     return this.completions._generate(messages, options, runManager);
@@ -682,6 +726,14 @@ export class ChatOpenAI<
     runManager?: CallbackManagerForLLMRun
   ): AsyncGenerator<ChatGenerationChunk> {
     if (this._useResponsesApi(options)) {
+      if (this.useWebSocket) {
+        yield* this._streamResponseChunksWebSocket(
+          messages,
+          options,
+          runManager
+        );
+        return;
+      }
       yield* this.responses._streamResponseChunks(
         messages,
         this._combineCallOptions(options),
@@ -694,6 +746,122 @@ export class ChatOpenAI<
       this._combineCallOptions(options),
       runManager
     );
+  }
+
+  /**
+   * Get or lazily create the WebSocket manager for persistent connections to the
+   * Responses API.
+   */
+  protected _getOrCreateWsManager(): OpenAIWebSocketManager {
+    if (!this.wsManager) {
+      this._getClientOptions(undefined);
+      const baseURL = this.client
+        ? (this.clientConfig.baseURL ?? "https://api.openai.com/v1")
+        : "https://api.openai.com/v1";
+
+      this.wsManager = new OpenAIWebSocketManager({
+        apiKey: String(this.apiKey ?? ""),
+        baseURL,
+        organization: this.organization,
+      });
+    }
+    return this.wsManager;
+  }
+
+  /**
+   * Generate a response via WebSocket transport (non-streaming).
+   */
+  protected async _generateWebSocket(
+    messages: BaseMessage[],
+    options: this["ParsedCallOptions"]
+  ): Promise<ChatResult> {
+    const invocationParams = this.responses.invocationParams(options);
+    const input = convertMessagesToResponsesInput({
+      messages,
+      zdrEnabled: this.zdrEnabled ?? false,
+      model: this.model,
+    });
+
+    const requestBody = {
+      input,
+      ...invocationParams,
+      stream: false,
+    };
+
+    const wsManager = this._getOrCreateWsManager();
+    const data = await wsManager.invoke(
+      requestBody as unknown as WebSocketRequest,
+      options?.signal ?? undefined
+    );
+
+    return {
+      generations: [
+        {
+          text: data.output_text,
+          message: convertResponsesMessageToAIMessage(data),
+        },
+      ],
+      llmOutput: {
+        id: data.id,
+        estimatedTokenUsage: data.usage
+          ? {
+              promptTokens: data.usage.input_tokens,
+              completionTokens: data.usage.output_tokens,
+              totalTokens: data.usage.total_tokens,
+            }
+          : undefined,
+      },
+    };
+  }
+
+  /**
+   * Stream response chunks via WebSocket transport.
+   */
+  protected async *_streamResponseChunksWebSocket(
+    messages: BaseMessage[],
+    options: this["ParsedCallOptions"],
+    _runManager?: CallbackManagerForLLMRun
+  ): AsyncGenerator<ChatGenerationChunk> {
+    const lastAIMessage = messages.filter((m) => isAIMessage(m)).pop();
+    const lastAIMessageId = lastAIMessage?.response_metadata?.id as
+      | string
+      | undefined;
+
+    const request = {
+      ...this.responses.invocationParams(options),
+      input: convertMessagesToResponsesInput({
+        messages,
+        zdrEnabled: this.zdrEnabled ?? false,
+        model: this.model,
+      }),
+      stream: true as const,
+      ...(lastAIMessageId &&
+      lastAIMessageId.startsWith("resp_") &&
+      !this.zdrEnabled
+        ? { previous_response_id: lastAIMessageId }
+        : {}),
+    };
+
+    const wsManager = this._getOrCreateWsManager();
+
+    for await (const data of wsManager.stream(
+      request as unknown as WebSocketRequest,
+      options.signal ?? undefined
+    )) {
+      const chunk = convertResponsesDeltaToChatGenerationChunk(data);
+      if (chunk == null) continue;
+      yield chunk;
+    }
+  }
+
+  /**
+   * Close the WebSocket connection if one exists.
+   */
+  closeWebSocket() {
+    if (this.wsManager) {
+      this.wsManager.close();
+      this.wsManager = null;
+    }
   }
 
   override withConfig(
