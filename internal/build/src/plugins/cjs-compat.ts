@@ -1,7 +1,7 @@
 import path from "node:path";
 import fs from "node:fs/promises";
 import type { Plugin } from "rolldown";
-import { isSafeProjectPath } from "../utils.ts";
+import { isSafeProjectPath, toPosixPath } from "../utils.ts";
 
 /**
  * Options for configuring the CJS compatibility plugin.
@@ -97,20 +97,25 @@ export function cjsCompatPlugin(param: CjsCompatPluginOptions = {}): Plugin {
 
       // Get relative path of the entrypoint from src directory
       for (const entrypointPath of Object.values(input)) {
-        const relativePath = path.relative(
-          path.join(process.env.INIT_CWD ?? "", "src"),
-          entrypointPath
+        // Normalize to forward slashes for cross-platform compatibility.
+        // On Windows, path.relative and path.join produce backslash paths
+        // which break split("/") operations and import path generation.
+        const relativePath = toPosixPath(
+          path.relative(
+            path.join(process.env.INIT_CWD ?? "", "src"),
+            entrypointPath
+          )
         );
 
         // Get the target path for the barrel file (e.g. callbacks/base/index)
-        const barrelTarget = path.join(
-          path.dirname(relativePath),
-          path.basename(relativePath, path.extname(relativePath))
+        const barrelTarget = path.posix.join(
+          path.posix.dirname(relativePath),
+          path.posix.basename(relativePath, path.posix.extname(relativePath))
         );
         // Get the path for the barrel file (e.g. callbacks/base)
         const barrelPath =
-          path.basename(barrelTarget) === "index"
-            ? path.dirname(barrelTarget)
+          path.posix.basename(barrelTarget) === "index"
+            ? path.posix.dirname(barrelTarget)
             : barrelTarget;
         // Get the depth of the barrel file (e.g. 1 for callbacks/base/index)
         const barrelDepth = barrelPath.split("/").length - 1;
@@ -129,11 +134,13 @@ export function cjsCompatPlugin(param: CjsCompatPluginOptions = {}): Plugin {
           const topLevelPath = fileName.split("/")[0];
           pathsToEmit.add(topLevelPath);
           if (options.mode === "generate") {
-            this.emitFile({
-              type: "asset",
-              fileName: `../${fileName}`,
-              source,
-            });
+            const target = path.resolve(`./${fileName}`);
+            if (isSafeProjectPath(target)) {
+              await fs
+                .mkdir(path.dirname(target), { recursive: true })
+                .catch(() => {});
+              await fs.writeFile(target, source);
+            }
           }
           if (options.mode === "clean") {
             const target = path.resolve(`./${fileName}`);
@@ -158,11 +165,11 @@ export function cjsCompatPlugin(param: CjsCompatPluginOptions = {}): Plugin {
 
         if (options.mode === "clean") {
           // Remove any directories that were created for nested entrypoints
-          const dirPath = path.dirname(barrelPath);
+          const dirPath = path.posix.dirname(barrelPath);
           if (dirPath !== ".") {
             const target = path.resolve(dirPath);
             if (isSafeProjectPath(target)) {
-              await fs.rmdir(target, { recursive: true }).catch(() => {});
+              await fs.rm(target, { recursive: true }).catch(() => {});
             }
           }
         }

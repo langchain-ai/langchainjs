@@ -975,9 +975,9 @@ export class ChatAnthropicMessages<
 
   maxTokens: number;
 
-  modelName = "claude-3-5-sonnet-latest";
+  modelName = "claude-sonnet-4-5-20250929";
 
-  model = "claude-3-5-sonnet-latest";
+  model = "claude-sonnet-4-5-20250929";
 
   invocationKwargs?: Kwargs;
 
@@ -1012,7 +1012,19 @@ export class ChatAnthropicMessages<
    */
   createClient: (options: ClientOptions) => Anthropic;
 
-  constructor(fields?: ChatAnthropicInput) {
+  constructor(
+    model: string,
+    fields?: Omit<ChatAnthropicInput, "model" | "modelName">
+  );
+  constructor(fields?: ChatAnthropicInput);
+  constructor(
+    modelOrFields?: string | ChatAnthropicInput,
+    fieldsArg?: Omit<ChatAnthropicInput, "model" | "modelName">
+  ) {
+    const fields =
+      typeof modelOrFields === "string"
+        ? { ...(fieldsArg ?? {}), model: modelOrFields }
+        : (modelOrFields ?? {});
     super(fields ?? {});
 
     this.anthropicApiKey =

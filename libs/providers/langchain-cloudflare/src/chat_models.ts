@@ -62,19 +62,31 @@ export class ChatCloudflareWorkersAI
 
   streaming = false;
 
-  constructor(fields?: CloudflareWorkersAIInput & BaseChatModelParams) {
-    super(fields ?? {});
+  constructor(
+    model: string,
+    params?: Omit<CloudflareWorkersAIInput & BaseChatModelParams, "model">
+  );
+  constructor(fields?: CloudflareWorkersAIInput & BaseChatModelParams);
+  constructor(
+    modelOrFields?: string | (CloudflareWorkersAIInput & BaseChatModelParams),
+    paramsArg?: Omit<CloudflareWorkersAIInput & BaseChatModelParams, "model">
+  ) {
+    const fields =
+      typeof modelOrFields === "string"
+        ? { ...(paramsArg ?? {}), model: modelOrFields }
+        : (modelOrFields ?? {});
+    super(fields);
 
-    this.model = fields?.model ?? this.model;
-    this.streaming = fields?.streaming ?? this.streaming;
+    this.model = fields.model ?? this.model;
+    this.streaming = fields.streaming ?? this.streaming;
     this.cloudflareAccountId =
-      fields?.cloudflareAccountId ??
+      fields.cloudflareAccountId ??
       getEnvironmentVariable("CLOUDFLARE_ACCOUNT_ID");
     this.cloudflareApiToken =
-      fields?.cloudflareApiToken ??
+      fields.cloudflareApiToken ??
       getEnvironmentVariable("CLOUDFLARE_API_TOKEN");
     this.baseUrl =
-      fields?.baseUrl ??
+      fields.baseUrl ??
       `https://api.cloudflare.com/client/v4/accounts/${this.cloudflareAccountId}/ai/run`;
     if (this.baseUrl.endsWith("/")) {
       this.baseUrl = this.baseUrl.slice(0, -1);

@@ -883,7 +883,7 @@ describe("tool_choice works for supported models", () => {
     // Claude 3 should NOT throw
     const claude3Model = new ChatBedrockConverse({
       ...baseConstructorArgs,
-      model: "anthropic.claude-3-5-sonnet-20240620-v1:0",
+      model: "anthropic.claude-sonnet-4-5-20250929-v1:0",
       supportsToolChoiceValues: supportsToolChoiceValuesClaude3,
     });
     const claude3ModelWithTool = claude3Model.bindTools([tool], {
@@ -981,7 +981,7 @@ describe("tool_choice works for supported models", () => {
   });
 
   it.each([
-    "anthropic.claude-3-5-sonnet-20240620-v1:0",
+    "anthropic.claude-sonnet-4-5-20250929-v1:0",
     "anthropic.claude-sonnet-4-20250514-v1:0",
   ])(
     "should bind tool_choice when using WSO with model that supports tool choice: %s",
@@ -1077,6 +1077,20 @@ test("Test ChatBedrockConverse deserialization from model_id and region_name", a
   expect(loaded.model).toBe("anthropic.claude-3-sonnet-20240229-v1:0");
   expect(loaded.region).toBe("us-west-2");
   expect(loaded.temperature).toBe(0.7);
+});
+
+test("ChatBedrockConverse supports string model shorthand", () => {
+  const modelId = "anthropic.claude-3-haiku-20240307-v1:0";
+  const model = new ChatBedrockConverse(modelId, {
+    region: "us-east-1",
+    credentials: {
+      accessKeyId: "test-key",
+      secretAccessKey: "test-secret",
+    },
+  });
+
+  expect(model.model).toBe(modelId);
+  expect(model.region).toBe("us-east-1");
 });
 
 describe("serviceTier configuration", () => {

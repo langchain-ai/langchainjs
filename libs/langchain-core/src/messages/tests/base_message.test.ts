@@ -407,6 +407,39 @@ describe("Complex AIMessageChunk concat", () => {
     );
   });
 
+  it("preserves full tool_calls when concatenating chunks", () => {
+    const chunk1 = new AIMessageChunk({ content: "" });
+    const chunk2 = new AIMessageChunk({
+      content: "",
+      tool_calls: [
+        {
+          type: "tool_call",
+          id: "call_0",
+          name: "get_weather",
+          args: { location: "SF" },
+        },
+        {
+          type: "tool_call",
+          id: "call_1",
+          name: "web_search",
+          args: { query: "news" },
+        },
+      ],
+    });
+    const result = chunk1.concat(chunk2);
+    expect(result.tool_calls).toHaveLength(2);
+    expect(result.tool_calls?.[0]).toMatchObject({
+      id: "call_0",
+      name: "get_weather",
+      args: { location: "SF" },
+    });
+    expect(result.tool_calls?.[1]).toMatchObject({
+      id: "call_1",
+      name: "web_search",
+      args: { query: "news" },
+    });
+  });
+
   it("concatenates partial json tool call chunks", () => {
     const chunks: ToolCallChunk[] = [
       {

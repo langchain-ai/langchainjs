@@ -1,5 +1,21 @@
 # @langchain/google-gauth
 
+## 2.1.20
+
+### Patch Changes
+
+- [#10080](https://github.com/langchain-ai/langchainjs/pull/10080) [`b583729`](https://github.com/langchain-ai/langchainjs/commit/b583729e99cf0c035630f6b311c4d069a1980cca) Thanks [@hntrl](https://github.com/hntrl)! - Add string-model constructor overloads for chat models (with supporting tests where applicable).
+
+- Updated dependencies []:
+  - @langchain/google-common@2.1.20
+
+## 2.1.19
+
+### Patch Changes
+
+- Updated dependencies [[`7be50a7`](https://github.com/langchain-ai/langchainjs/commit/7be50a7014d7622e0ab8d303dfc9c633ebc96333)]:
+  - @langchain/google-common@2.1.19
+
 ## 2.1.18
 
 ### Patch Changes
