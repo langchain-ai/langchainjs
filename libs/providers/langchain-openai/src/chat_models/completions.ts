@@ -425,6 +425,14 @@ export class ChatOpenAICompletions<
         text: "",
       });
       yield generationChunk;
+      await runManager?.handleLLMNewToken(
+        generationChunk.text ?? "",
+        { prompt: 0, completion: 0 },
+        undefined,
+        undefined,
+        undefined,
+        { chunk: generationChunk }
+      );
     }
     if (options.signal?.aborted) {
       throw new Error("AbortError");
