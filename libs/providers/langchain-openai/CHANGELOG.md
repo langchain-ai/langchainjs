@@ -1,5 +1,16 @@
 # @langchain/openai
 
+## 1.2.10
+
+### Patch Changes
+
+- [#10143](https://github.com/langchain-ai/langchainjs/pull/10143) [`62ba83e`](https://github.com/langchain-ai/langchainjs/commit/62ba83edd5206c86d8da8d1b608a2493ee4f3da8) Thanks [@topliceanurazvan](https://github.com/topliceanurazvan)! - fix(openai): emit handleLLMNewToken callback for usage chunk in Completions API streaming
+
+  The final usage chunk in `_streamResponseChunks` was only yielded via the async generator but did not call `runManager.handleLLMNewToken()`. This meant callback-based consumers (e.g. LangGraph's `StreamMessagesHandler`) never received the `usage_metadata` chunk. Added the missing `handleLLMNewToken` call to match the behavior of the main streaming loop.
+
+- Updated dependencies [[`10a876c`](https://github.com/langchain-ai/langchainjs/commit/10a876c7d5ff27d8f2889761ee20e95f76a50518), [`b46d96a`](https://github.com/langchain-ai/langchainjs/commit/b46d96a508a8bf212561dbb6f025e35c75f16257)]:
+  - @langchain/core@1.1.28
+
 ## 1.2.9
 
 ### Patch Changes

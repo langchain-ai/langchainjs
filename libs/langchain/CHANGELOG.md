@@ -1,5 +1,14 @@
 # langchain
 
+## 1.2.27
+
+### Patch Changes
+
+- [#10137](https://github.com/langchain-ai/langchainjs/pull/10137) [`87a585e`](https://github.com/langchain-ai/langchainjs/commit/87a585e4b5d36fa2f82e34a92caa6e7c4289f370) Thanks [@hntrl](https://github.com/hntrl)! - fix(agents): infer StateSchema value types in middleware hooks
+
+- Updated dependencies [[`10a876c`](https://github.com/langchain-ai/langchainjs/commit/10a876c7d5ff27d8f2889761ee20e95f76a50518), [`b46d96a`](https://github.com/langchain-ai/langchainjs/commit/b46d96a508a8bf212561dbb6f025e35c75f16257)]:
+  - @langchain/core@1.1.28
+
 ## 1.2.26
 
 ### Patch Changes
