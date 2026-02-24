@@ -212,6 +212,62 @@ test("Can properly format anthropic messages when given two tool results", async
   });
 });
 
+test("Can properly format anthropic messages when AIMessage content is an empty array with tool_calls", async () => {
+  const messageHistory = [
+    new HumanMessage("What is the weather in SF?"),
+    new AIMessage({
+      content: [],
+      tool_calls: [
+        {
+          name: "get_weather",
+          id: "weather_call",
+          args: {
+            location: "SF",
+          },
+        },
+      ],
+    }),
+    new ToolMessage({
+      name: "get_weather",
+      tool_call_id: "weather_call",
+      content: "It is currently 24 degrees with hail in San Francisco.",
+    }),
+  ];
+
+  const formattedMessages = _convertMessagesToAnthropicPayload(messageHistory);
+
+  expect(formattedMessages).toEqual({
+    messages: [
+      {
+        role: "user",
+        content: "What is the weather in SF?",
+      },
+      {
+        role: "assistant",
+        content: [
+          {
+            type: "tool_use",
+            id: "weather_call",
+            name: "get_weather",
+            input: { location: "SF" },
+          },
+        ],
+      },
+      {
+        role: "user",
+        content: [
+          {
+            type: "tool_result",
+            content: "It is currently 24 degrees with hail in San Francisco.",
+            tool_use_id: "weather_call",
+          },
+        ],
+      },
+    ],
+    system: undefined,
+  });
+});
+
 test("invocationParams includes container when provided in call options", () => {
   const model = new ChatAnthropic({
     modelName: "claude-3-haiku-20240307",

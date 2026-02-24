@@ -36,7 +36,7 @@
     "@langchain/eslint": "workspace:*",
     "@langchain/google-common": "workspace:*",
     "@langchain/standard-tests": "workspace:*",
-    "@swc/core": "^1.15.11",
+    "@swc/core": "^1.15.13",
     "@swc/jest": "^0.2.29",
     "@langchain/tsconfig": "workspace:*",
     "@tsconfig/recommended": "^1.0.3",

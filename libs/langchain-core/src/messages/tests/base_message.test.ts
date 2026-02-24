@@ -122,6 +122,70 @@ test("Deserialisation and serialisation of tool_call_id", async () => {
   expect(deserialized).toEqual(message);
 });
 
+test("_mergeLists merges blocks by numeric index", () => {
+  const chunk1 = new AIMessageChunk({
+    content: [
+      {
+        type: "reasoning",
+        index: 0,
+        reasoning: "**Expl",
+      },
+    ],
+  });
+
+  const chunk2 = new AIMessageChunk({
+    content: [
+      {
+        type: "reasoning",
+        index: 0,
+        reasoning: "oring",
+      },
+    ],
+  });
+
+  const merged = chunk1.concat(chunk2);
+  expect(Array.isArray(merged.content)).toBe(true);
+  expect(merged.content).toEqual([
+    {
+      type: "reasoning",
+      index: 0,
+      reasoning: "**Exploring",
+    },
+  ]);
+});
+
+test("_mergeLists merges blocks by string index", () => {
+  const chunk1 = new AIMessageChunk({
+    content: [
+      {
+        type: "reasoning",
+        index: "lc_rs_305f30",
+        reasoning: "**Expl",
+      },
+    ],
+  });
+
+  const chunk2 = new AIMessageChunk({
+    content: [
+      {
+        type: "reasoning",
+        index: "lc_rs_305f30",
+        reasoning: "oring",
+      },
+    ],
+  });
+
+  const merged = chunk1.concat(chunk2);
+  expect(Array.isArray(merged.content)).toBe(true);
+  expect(merged.content).toEqual([
+    {
+      type: "reasoning",
+      index: "lc_rs_305f30",
+      reasoning: "**Exploring",
+    },
+  ]);
+});
+
 test("Deserialisation and serialisation of messages with ID", async () => {
   const config = {
     importMap: { messages: { AIMessage } },
