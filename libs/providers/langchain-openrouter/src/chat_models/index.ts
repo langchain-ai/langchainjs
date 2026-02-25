@@ -478,7 +478,9 @@ export class ChatOpenRouter extends BaseChatModel<
         });
 
         yield generationChunk;
-        await runManager?.handleLLMNewToken(text);
+        await runManager?.handleLLMNewToken(text, {
+          chunk: generationChunk,
+        });
       }
     } finally {
       reader.releaseLock();
