@@ -139,10 +139,13 @@ export function llmToolSelectorMiddleware(options: LLMToolSelectorConfig) {
           toolSelectionSchema
         );
 
-      const response = await structuredModel?.invoke([
-        { role: "system", content: selectionRequest.systemMessage },
-        selectionRequest.lastUserMessage,
-      ]);
+      const response = await structuredModel?.invoke(
+        [
+          { role: "system", content: selectionRequest.systemMessage },
+          selectionRequest.lastUserMessage,
+        ],
+        { callbacks: [] }
+      );
 
       // Response should be an object with a tools array
       if (!response || typeof response !== "object" || !("tools" in response)) {
