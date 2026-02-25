@@ -13,6 +13,7 @@ import { StateSchema, ReducedValue, Command } from "@langchain/langgraph";
 import { createAgent, createMiddleware } from "../index.js";
 import { FakeToolCallingModel } from "./utils.js";
 import type { InferAgentState } from "../types.js";
+import type { NormalizedSchemaInput } from "../middleware/types.js";
 
 describe("StateSchema support", () => {
   describe("basic functionality", () => {
@@ -476,6 +477,89 @@ describe("StateSchema support", () => {
       // Verify types using expectTypeOf
       expectTypeOf(result).toHaveProperty("messages");
       expectTypeOf(result.messages).toExtend<BaseMessage[]>();
+    });
+
+    it("should infer ReducedValue hooks as value types", () => {
+      const AgentState = new StateSchema({
+        history: new ReducedValue(
+          z.array(z.string()).default(() => []),
+          {
+            inputSchema: z.string(),
+            reducer: (current, next) => [...current, next],
+          }
+        ),
+      });
+
+      type Resolved = NormalizedSchemaInput<typeof AgentState>;
+      expectTypeOf<Resolved>().not.toBeAny();
+
+      createMiddleware({
+        name: "test-middleware",
+        stateSchema: AgentState,
+        beforeAgent: (state) => {
+          expectTypeOf(state.history).toEqualTypeOf<string[]>();
+        },
+        beforeModel: (state) => {
+          expectTypeOf(state.history).toEqualTypeOf<string[]>();
+        },
+        afterModel: (state) => {
+          expectTypeOf(state.history).toEqualTypeOf<string[]>();
+        },
+        afterAgent: (state) => {
+          expectTypeOf(state.history).toEqualTypeOf<string[]>();
+        },
+        wrapModelCall: (request, handler) => {
+          expectTypeOf(request.state.history).toEqualTypeOf<string[]>();
+          return handler(request);
+        },
+        wrapToolCall: (request, handler) => {
+          expectTypeOf(request.state.history).toEqualTypeOf<string[]>();
+          return handler(request);
+        },
+      });
+    });
+
+    it("should infer reduced fields in InferAgentState", () => {
+      const AgentState = new StateSchema({
+        items: new ReducedValue(
+          z.array(z.number()).default(() => []),
+          {
+            inputSchema: z.number(),
+            reducer: (current, next) => [...current, next],
+          }
+        ),
+      });
+
+      const agent = createAgent({
+        model: new FakeToolCallingModel({ toolCalls: [] }),
+        tools: [],
+        stateSchema: AgentState,
+      });
+
+      type State = InferAgentState<typeof agent>;
+      expectTypeOf<State["items"]>().toEqualTypeOf<number[]>();
+    });
+
+    it("should infer mixed reduced and non-reduced fields", () => {
+      const AgentState = new StateSchema({
+        name: z.string(),
+        count: z.number().default(0),
+        history: new ReducedValue(
+          z.array(z.string()).default(() => []),
+          {
+            inputSchema: z.string(),
+            reducer: (current, next) => [...current, next],
+          }
+        ),
+      });
+
+      createMiddleware({
+        name: "mixed-middleware",
+        stateSchema: AgentState,
+        beforeModel: (state) => {
+          expectTypeOf(state.history).toEqualTypeOf<string[]>();
+        },
+      });
     });
 
     it("should have proper result structure with ReducedValue", async () => {

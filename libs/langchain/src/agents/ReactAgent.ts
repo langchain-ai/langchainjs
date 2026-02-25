@@ -65,7 +65,7 @@ import type {
   InferMiddlewareInputStates,
   InferContextInput,
   AnyAnnotationRoot,
-  InferSchemaInput,
+  InferSchemaValue,
   ToAnnotationRoot,
 } from "./middleware/types.js";
 import { type ResponseFormatUndefined } from "./responses.js";
@@ -85,7 +85,7 @@ type BaseGraphDestination =
   | typeof END;
 
 // Helper type to get the state definition with middleware states
-type MergedAgentState<Types extends AgentTypeConfig> = InferSchemaInput<
+type MergedAgentState<Types extends AgentTypeConfig> = InferSchemaValue<
   Types["State"]
 > &
   (Types["Response"] extends ResponseFormatUndefined

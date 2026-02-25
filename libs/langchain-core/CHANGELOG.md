@@ -1,5 +1,13 @@
 # @langchain/core
 
+## 1.1.28
+
+### Patch Changes
+
+- [#10140](https://github.com/langchain-ai/langchainjs/pull/10140) [`10a876c`](https://github.com/langchain-ai/langchainjs/commit/10a876c7d5ff27d8f2889761ee20e95f76a50518) Thanks [@hntrl](https://github.com/hntrl)! - Merge content blocks by string index during streaming.
+
+- [#10102](https://github.com/langchain-ai/langchainjs/pull/10102) [`b46d96a`](https://github.com/langchain-ai/langchainjs/commit/b46d96a508a8bf212561dbb6f025e35c75f16257) Thanks [@colifran](https://github.com/colifran)! - feat: implement aynchronous generator tool calling for streaming partial tool results
+
 ## 1.1.27
 
 ### Patch Changes
