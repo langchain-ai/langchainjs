@@ -63,7 +63,8 @@ export interface ChatOpenRouterFields {
  * Constructor parameters for `ChatOpenRouter`.
  */
 export interface ChatOpenRouterParams
-  extends BaseChatModelParams, ChatOpenRouterFields {
+  extends BaseChatModelParams,
+    ChatOpenRouterFields {
   /** Model identifier, e.g. "anthropic/claude-4-sonnet". */
   model?: string;
   /** OpenRouter API key. Falls back to `OPENROUTER_API_KEY` env var. */
@@ -96,7 +97,8 @@ export interface ChatOpenRouterParams
  * Per-call options for `ChatOpenRouter`.
  */
 export interface ChatOpenRouterCallOptions
-  extends BaseChatModelCallOptions, ChatOpenRouterFields {
+  extends BaseChatModelCallOptions,
+    ChatOpenRouterFields {
   /** Tool definitions to bind for this call. */
   tools?: BindToolsInput[];
   /** Response format constraint (text, JSON object, or JSON schema). */

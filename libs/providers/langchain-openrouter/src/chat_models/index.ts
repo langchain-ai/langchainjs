@@ -528,7 +528,7 @@ export class ChatOpenRouter extends BaseChatModel<
    */
   withStructuredOutput<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    RunOutput extends Record<string, any> = Record<string, any>,
+    RunOutput extends Record<string, any> = Record<string, any>
   >(
     outputSchema:
       | InteropZodType<RunOutput>
@@ -539,7 +539,7 @@ export class ChatOpenRouter extends BaseChatModel<
 
   withStructuredOutput<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    RunOutput extends Record<string, any> = Record<string, any>,
+    RunOutput extends Record<string, any> = Record<string, any>
   >(
     outputSchema:
       | InteropZodType<RunOutput>
@@ -550,7 +550,7 @@ export class ChatOpenRouter extends BaseChatModel<
 
   withStructuredOutput<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    RunOutput extends Record<string, any> = Record<string, any>,
+    RunOutput extends Record<string, any> = Record<string, any>
   >(
     outputSchema:
       | InteropZodType<RunOutput>
@@ -562,7 +562,7 @@ export class ChatOpenRouter extends BaseChatModel<
     | Runnable<BaseLanguageModelInput, { raw: BaseMessage; parsed: RunOutput }>;
 
   withStructuredOutput<
-    RunOutput extends Record<string, unknown> = Record<string, unknown>,
+    RunOutput extends Record<string, unknown> = Record<string, unknown>
   >(
     outputSchema: InteropZodType<RunOutput> | Record<string, unknown>,
     config?: StructuredOutputMethodOptions<boolean>

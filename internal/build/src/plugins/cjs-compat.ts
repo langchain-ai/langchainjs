@@ -191,14 +191,14 @@ export function cjsCompatPlugin(param: CjsCompatPluginOptions = {}): Plugin {
             ...(options.files ?? []),
             ...Array.from(pathsToEmit),
           ];
-          await fs.writeFile(
-            packageJsonPath,
-            /**
-             * set new line at the end of the file
-             * see .editorconfig
-             */
-            `${JSON.stringify(packageJson, null, 2)}\n`
-          );
+          /**
+           * set new line at the end of the file
+           * see .editorconfig
+           */
+          const serialized = `${JSON.stringify(packageJson, null, 2)}\n`;
+          const tmpPath = `${packageJsonPath}.tmp`;
+          await fs.writeFile(tmpPath, serialized);
+          await fs.rename(tmpPath, packageJsonPath);
         }
       },
       order: "post",
