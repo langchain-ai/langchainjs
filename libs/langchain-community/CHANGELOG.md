@@ -1,5 +1,14 @@
 # @langchain/community
 
+## 1.1.19
+
+### Patch Changes
+
+- Updated dependencies [[`10a876c`](https://github.com/langchain-ai/langchainjs/commit/10a876c7d5ff27d8f2889761ee20e95f76a50518), [`62ba83e`](https://github.com/langchain-ai/langchainjs/commit/62ba83edd5206c86d8da8d1b608a2493ee4f3da8), [`b46d96a`](https://github.com/langchain-ai/langchainjs/commit/b46d96a508a8bf212561dbb6f025e35c75f16257)]:
+  - @langchain/core@1.1.28
+  - @langchain/openai@1.2.10
+  - @langchain/classic@1.0.20
+
 ## 1.1.18
 
 ### Patch Changes
