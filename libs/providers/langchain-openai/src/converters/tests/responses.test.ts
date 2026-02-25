@@ -747,6 +747,133 @@ describe("convertStandardContentMessageToResponsesInput", () => {
       `a filename or name or title is needed via meta-data for OpenAI when working with multimodal blocks`
     );
   });
+
+  it.each([
+    {
+      ext: "docx",
+      mimeType:
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      filename: "report.docx",
+    },
+    {
+      ext: "pptx",
+      mimeType:
+        "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+      filename: "slides.pptx",
+    },
+    {
+      ext: "xlsx",
+      mimeType:
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      filename: "data.xlsx",
+    },
+    {
+      ext: "csv",
+      mimeType: "text/csv",
+      filename: "data.csv",
+    },
+  ])(
+    "converts $ext file block with base64 data to input_file",
+    ({ mimeType, filename }) => {
+      const message = new HumanMessage({
+        contentBlocks: [
+          {
+            type: "file",
+            mimeType,
+            data: "dGVzdGRhdGE=",
+            metadata: { filename },
+          },
+        ],
+      });
+
+      const result = convertStandardContentMessageToResponsesInput(message);
+
+      expect(result).toEqual([
+        {
+          role: "user",
+          type: "message",
+          content: [
+            {
+              type: "input_file",
+              file_data: `data:${mimeType};base64,dGVzdGRhdGE=`,
+              filename,
+            },
+          ],
+        },
+      ]);
+    }
+  );
+
+  it.each([
+    { ext: "docx", filename: "report.docx" },
+    { ext: "pptx", filename: "slides.pptx" },
+    { ext: "xlsx", filename: "data.xlsx" },
+    { ext: "csv", filename: "data.csv" },
+  ])(
+    "converts $ext file block with URL to input_file",
+    ({ filename }) => {
+      const url = `https://example.com/${filename}`;
+      const message = new HumanMessage({
+        contentBlocks: [
+          {
+            type: "file",
+            url,
+            metadata: { filename },
+          },
+        ],
+      });
+
+      const result = convertStandardContentMessageToResponsesInput(message);
+
+      expect(result).toEqual([
+        {
+          role: "user",
+          type: "message",
+          content: [
+            {
+              type: "input_file",
+              file_url: url,
+              filename,
+            },
+          ],
+        },
+      ]);
+    }
+  );
+
+  it.each([
+    { ext: "docx", fileId: "file-docx-123" },
+    { ext: "pptx", fileId: "file-pptx-456" },
+    { ext: "xlsx", fileId: "file-xlsx-789" },
+    { ext: "csv", fileId: "file-csv-012" },
+  ])(
+    "converts $ext file block with fileId to input_file",
+    ({ fileId }) => {
+      const message = new HumanMessage({
+        contentBlocks: [
+          {
+            type: "file",
+            fileId,
+          },
+        ],
+      });
+
+      const result = convertStandardContentMessageToResponsesInput(message);
+
+      expect(result).toEqual([
+        {
+          role: "user",
+          type: "message",
+          content: [
+            {
+              type: "input_file",
+              file_id: fileId,
+            },
+          ],
+        },
+      ]);
+    }
+  );
 });
 
 describe("convertMessagesToResponsesInput", () => {
