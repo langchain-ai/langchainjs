@@ -173,6 +173,7 @@ type ExtractToolDefinition<T> =
     infer _SchemaOutputT,
     infer SchemaInputT,
     infer ToolOutputT,
+    infer _ToolYieldT,
     infer _NameT
   >
     ? MessageToolDefinition<SchemaInputT, ToolOutputT>

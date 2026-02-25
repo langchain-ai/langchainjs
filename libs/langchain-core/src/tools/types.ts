@@ -338,12 +338,13 @@ export interface BaseDynamicToolInput extends ToolParams {
  */
 export interface DynamicToolInput<
   ToolOutputT = ToolOutputType,
+  ToolYieldT = unknown,
 > extends BaseDynamicToolInput {
   func: (
     input: string,
     runManager?: CallbackManagerForToolRun,
     config?: ToolRunnableConfig
-  ) => Promise<ToolOutputT> | AsyncGenerator<unknown, ToolOutputT>;
+  ) => Promise<ToolOutputT> | AsyncGenerator<ToolYieldT, ToolOutputT>;
 }
 
 /**
@@ -351,11 +352,14 @@ export interface DynamicToolInput<
  *
  * @param SchemaT - The type of the tool input schema. Usually you don't need to specify this.
  * @param SchemaOutputT - The TypeScript type representing the result of applying the schema to the tool arguments. Useful for type checking tool handler functions when using JSONSchema.
+ * @param ToolOutputT - The return type of the tool.
+ * @param ToolYieldT - The type of values yielded by the tool when using an async generator (defaults to unknown).
  */
 export interface DynamicStructuredToolInput<
   SchemaT = ToolInputSchemaBase,
   SchemaOutputT = ToolInputSchemaOutputType<SchemaT>,
   ToolOutputT = ToolOutputType,
+  ToolYieldT = unknown,
 > extends BaseDynamicToolInput {
   /**
    * Tool handler function - the function that will be called when the tool is invoked.
@@ -363,13 +367,13 @@ export interface DynamicStructuredToolInput<
    * @param input - The input to the tool.
    * @param runManager - The run manager for the tool.
    * @param config - The configuration for the tool.
-   * @returns The result of the tool.
+   * @returns The result of the tool (Promise or AsyncGenerator yielding ToolYieldT and returning ToolOutputT).
    */
   func: (
     input: SchemaOutputT,
     runManager?: CallbackManagerForToolRun,
     config?: RunnableConfig
-  ) => Promise<ToolOutputT> | AsyncGenerator<unknown, ToolOutputT>;
+  ) => Promise<ToolOutputT> | AsyncGenerator<ToolYieldT, ToolOutputT>;
   schema: SchemaT;
 }
 
