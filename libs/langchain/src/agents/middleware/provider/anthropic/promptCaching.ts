@@ -82,7 +82,7 @@ class PromptCachingMiddlewareError extends Error {
  * import { anthropicPromptCachingMiddleware } from "langchain";
  *
  * const agent = createAgent({
- *   model: "anthropic:claude-3-5-sonnet",
+ *   model: "anthropic:claude-sonnet-4-5",
  *   middleware: [
  *     anthropicPromptCachingMiddleware()
  *   ]
@@ -98,7 +98,7 @@ class PromptCachingMiddlewareError extends Error {
  * });
  *
  * const agent = createAgent({
- *   model: "anthropic:claude-3-5-sonnet",
+ *   model: "anthropic:claude-sonnet-4-5",
  *   systemPrompt: "You are a helpful assistant with deep knowledge of...", // Long system prompt
  *   middleware: [cachingMiddleware]
  * });
@@ -108,7 +108,7 @@ class PromptCachingMiddlewareError extends Error {
  * Conditional caching based on runtime context
  * ```typescript
  * const agent = createAgent({
- *   model: "anthropic:claude-3-5-sonnet",
+ *   model: "anthropic:claude-sonnet-4-5",
  *   middleware: [
  *     anthropicPromptCachingMiddleware({
  *       enableCaching: true,
@@ -132,7 +132,7 @@ class PromptCachingMiddlewareError extends Error {
  * Optimal setup for customer support chatbot
  * ```typescript
  * const supportAgent = createAgent({
- *   model: "anthropic:claude-3-5-sonnet",
+ *   model: "anthropic:claude-sonnet-4-5",
  *   systemPrompt: `You are a customer support agent for ACME Corp.
  *
  *     Company policies:

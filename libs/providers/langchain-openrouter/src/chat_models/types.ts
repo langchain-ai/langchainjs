@@ -71,9 +71,19 @@ export interface ChatOpenRouterParams
   apiKey?: string;
   /** Base URL for the API. Defaults to "https://openrouter.ai/api/v1". */
   baseURL?: string;
-  /** Your site URL — used for OpenRouter rankings / rate limits. */
+  /**
+   * Application URL for OpenRouter attribution. Maps to `HTTP-Referer` header.
+   * Defaults to `"https://docs.langchain.com/oss"`.
+   *
+   * See https://openrouter.ai/docs/app-attribution for details.
+   */
   siteUrl?: string;
-  /** Your site name — shown on the OpenRouter leaderboard. */
+  /**
+   * Application title for OpenRouter attribution. Maps to `X-Title` header.
+   * Defaults to `"langchain"`.
+   *
+   * See https://openrouter.ai/docs/app-attribution for details.
+   */
   siteName?: string;
   /** Stable identifier for end-users, used for abuse detection. */
   user?: string;

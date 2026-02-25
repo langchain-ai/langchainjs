@@ -1,6 +1,6 @@
 {
   "name": "@langchain/google-gauth",
-  "version": "2.1.19",
+  "version": "2.1.20",
   "description": "Google auth based authentication support for Google services",
   "author": "LangChain",
   "license": "MIT",
@@ -38,7 +38,7 @@
   "devDependencies": {
     "@jest/globals": "^30.2.0",
     "@langchain/eslint": "workspace:*",
-    "@swc/core": "^1.15.11",
+    "@swc/core": "^1.15.13",
     "@swc/jest": "^0.2.29",
     "@langchain/tsconfig": "workspace:*",
     "@tsconfig/recommended": "^1.0.3",

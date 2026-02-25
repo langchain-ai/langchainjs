@@ -883,7 +883,7 @@ describe("tool_choice works for supported models", () => {
     // Claude 3 should NOT throw
     const claude3Model = new ChatBedrockConverse({
       ...baseConstructorArgs,
-      model: "anthropic.claude-3-5-sonnet-20240620-v1:0",
+      model: "anthropic.claude-sonnet-4-5-20250929-v1:0",
       supportsToolChoiceValues: supportsToolChoiceValuesClaude3,
     });
     const claude3ModelWithTool = claude3Model.bindTools([tool], {
@@ -981,7 +981,7 @@ describe("tool_choice works for supported models", () => {
   });
 
   it.each([
-    "anthropic.claude-3-5-sonnet-20240620-v1:0",
+    "anthropic.claude-sonnet-4-5-20250929-v1:0",
     "anthropic.claude-sonnet-4-20250514-v1:0",
   ])(
     "should bind tool_choice when using WSO with model that supports tool choice: %s",

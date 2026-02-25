@@ -1,5 +1,27 @@
 # @langchain/anthropic
 
+## 1.3.20
+
+### Patch Changes
+
+- [#10117](https://github.com/langchain-ai/langchainjs/pull/10117) [`66df7fa`](https://github.com/langchain-ai/langchainjs/commit/66df7fa31f43be9eb148bbe0768d26e6d67d6216) Thanks [@hntrl](https://github.com/hntrl)! - fix(anthropic): convert tool_calls to tool_use blocks when AIMessage content is an empty array
+
+  When `AIMessage.content` was an empty array `[]` with `tool_calls` present, the tool calls were silently dropped during message formatting. This caused Anthropic API requests to fail with a 400 error. The array content branch now appends any tool_calls not already represented in the content array as `tool_use` blocks, matching the behavior of the string content path.
+
+- [#10108](https://github.com/langchain-ai/langchainjs/pull/10108) [`e7576ee`](https://github.com/langchain-ai/langchainjs/commit/e7576ee9e6408c399c08d271db43f63e622da10f) Thanks [@hntrl](https://github.com/hntrl)! - fix: replace retired Anthropic model IDs with active replacements
+  - Update default model in ChatAnthropic from `claude-3-5-sonnet-latest` to `claude-sonnet-4-5-20250929`
+  - Regenerate model profiles with latest data from models.dev API
+  - Replace retired `claude-3-5-haiku-20241022`, `claude-3-7-sonnet-20250219`, `claude-3-5-sonnet-20240620`, and `claude-3-5-sonnet-20241022` in tests, docstrings, and examples
+
+## 1.3.19
+
+### Patch Changes
+
+- [#10080](https://github.com/langchain-ai/langchainjs/pull/10080) [`b583729`](https://github.com/langchain-ai/langchainjs/commit/b583729e99cf0c035630f6b311c4d069a1980cca) Thanks [@hntrl](https://github.com/hntrl)! - Add string-model constructor overloads for chat models (with supporting tests where applicable).
+
+- Updated dependencies [[`fb2226e`](https://github.com/langchain-ai/langchainjs/commit/fb2226e6decdaba21e78b3f01877b45fa1eed6d3)]:
+  - @langchain/core@1.1.27
+
 ## 1.3.18
 
 ### Patch Changes

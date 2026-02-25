@@ -1,5 +1,25 @@
 # @langchain/openai
 
+## 1.2.10
+
+### Patch Changes
+
+- [#10143](https://github.com/langchain-ai/langchainjs/pull/10143) [`62ba83e`](https://github.com/langchain-ai/langchainjs/commit/62ba83edd5206c86d8da8d1b608a2493ee4f3da8) Thanks [@topliceanurazvan](https://github.com/topliceanurazvan)! - fix(openai): emit handleLLMNewToken callback for usage chunk in Completions API streaming
+
+  The final usage chunk in `_streamResponseChunks` was only yielded via the async generator but did not call `runManager.handleLLMNewToken()`. This meant callback-based consumers (e.g. LangGraph's `StreamMessagesHandler`) never received the `usage_metadata` chunk. Added the missing `handleLLMNewToken` call to match the behavior of the main streaming loop.
+
+- Updated dependencies [[`10a876c`](https://github.com/langchain-ai/langchainjs/commit/10a876c7d5ff27d8f2889761ee20e95f76a50518), [`b46d96a`](https://github.com/langchain-ai/langchainjs/commit/b46d96a508a8bf212561dbb6f025e35c75f16257)]:
+  - @langchain/core@1.1.28
+
+## 1.2.9
+
+### Patch Changes
+
+- [#10080](https://github.com/langchain-ai/langchainjs/pull/10080) [`b583729`](https://github.com/langchain-ai/langchainjs/commit/b583729e99cf0c035630f6b311c4d069a1980cca) Thanks [@hntrl](https://github.com/hntrl)! - Add string-model constructor overloads for chat models (with supporting tests where applicable).
+
+- Updated dependencies [[`fb2226e`](https://github.com/langchain-ai/langchainjs/commit/fb2226e6decdaba21e78b3f01877b45fa1eed6d3)]:
+  - @langchain/core@1.1.27
+
 ## 1.2.8
 
 ### Patch Changes

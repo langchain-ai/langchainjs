@@ -1,6 +1,6 @@
 {
   "name": "@langchain/google-webauth",
-  "version": "2.1.19",
+  "version": "2.1.20",
   "description": "Web-based authentication support for Google services",
   "author": "LangChain",
   "license": "MIT",
@@ -39,7 +39,7 @@
     "@jest/globals": "^30.2.0",
     "@langchain/core": "workspace:^",
     "@langchain/eslint": "workspace:*",
-    "@swc/core": "^1.15.11",
+    "@swc/core": "^1.15.13",
     "@swc/jest": "^0.2.29",
     "@langchain/tsconfig": "workspace:*",
     "@tsconfig/recommended": "^1.0.3",
