@@ -352,11 +352,15 @@ export type AfterAgentHook<
     };
 
 /**
- * Unique symbol used to brand middleware instances.
- * This prevents functions from being accidentally assignable to AgentMiddleware
- * since functions have a 'name' property that would otherwise make them structurally compatible.
+ * String-keyed brand for middleware instances.
+ * Uses a string literal instead of a unique symbol so that the AgentMiddleware
+ * interface is structurally compatible across different package installations
+ * (e.g., when deepagents pins langchain@1.2.26 but the consumer uses 1.2.27).
+ *
+ * This still prevents functions from being accidentally assignable to
+ * AgentMiddleware since functions don't have this property.
  */
-export const MIDDLEWARE_BRAND: unique symbol = Symbol("AgentMiddleware");
+export const MIDDLEWARE_BRAND = "~middlewareBrand" as const;
 
 /**
  * Base middleware interface.
@@ -391,6 +395,9 @@ export interface AgentMiddleware<
   /**
    * Brand property to distinguish middleware instances from plain objects or functions.
    * This is required and prevents accidental assignment of functions to middleware arrays.
+   *
+   * Uses a string key (not a unique symbol) so that the type is structurally
+   * compatible across different package installations/versions.
    */
   readonly [MIDDLEWARE_BRAND]: true;
 
