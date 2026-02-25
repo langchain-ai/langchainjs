@@ -473,7 +473,9 @@ function convertMessagesToTongyiParams(
 ): TongyiMessage[] {
   return messages.map((message): TongyiMessage => {
     if (typeof message.content !== "string") {
-      throw new Error("ChatAlibabaTongyi only supports string message content. Complex content types (arrays, objects) are not supported.");
+      throw new Error(
+        "ChatAlibabaTongyi only supports string message content. Complex content types (arrays, objects) are not supported."
+      );
     }
     const completionParam: TongyiMessage = {
       role: messageToTongyiRole(message),
