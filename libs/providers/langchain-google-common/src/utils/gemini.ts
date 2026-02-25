@@ -742,6 +742,14 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
     }
     const parts: GeminiPart[] = [...contentParts, ...toolParts];
 
+    // Ensure at least one part exists to prevent Gemini API 400 errors
+    // when a message has empty text content and no tool calls.
+    // This commonly happens when an AI message with empty content
+    // (e.g. during a tool call) is passed back as conversation history.
+    if (parts.length === 0) {
+      parts.push({ text: "" });
+    }
+
     const signatures: string[] =
       (message?.additional_kwargs?.signatures as string[]) ?? [];
     if (signatures.length === parts.length) {
