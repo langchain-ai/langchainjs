@@ -731,8 +731,17 @@ export class ChatCohere<
 
   streamUsage: boolean = true;
 
-  constructor(fields?: ChatCohereInput) {
-    super(fields ?? {});
+  constructor(model: string, fields?: Omit<ChatCohereInput, "model">);
+  constructor(fields?: ChatCohereInput);
+  constructor(
+    modelOrFields?: string | ChatCohereInput,
+    fields?: Omit<ChatCohereInput, "model">
+  ) {
+    const params =
+      typeof modelOrFields === "string"
+        ? { ...(fields ?? {}), model: modelOrFields }
+        : (modelOrFields ?? {});
+    super(params);
     this._addVersion("@langchain/cohere", __PKG_VERSION__);
 
     this.client = getCohereClient(params);

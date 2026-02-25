@@ -972,10 +972,22 @@ export class ChatMistralAI<
 
   numCompletions?: number;
 
-  constructor(fields?: ChatMistralAIInput) {
-    super(fields ?? {});
+  constructor(
+    model: MistralAIChatCompletionRequest["model"],
+    fields?: Omit<ChatMistralAIInput, "model">
+  );
+  constructor(fields?: ChatMistralAIInput);
+  constructor(
+    modelOrFields?: string | ChatMistralAIInput,
+    fieldsArg?: Omit<ChatMistralAIInput, "model">
+  ) {
+    const fields =
+      typeof modelOrFields === "string"
+        ? { ...(fieldsArg ?? {}), model: modelOrFields }
+        : (modelOrFields ?? {});
+    super(fields);
     this._addVersion("@langchain/mistralai", __PKG_VERSION__);
-    const apiKey = fields?.apiKey ?? getEnvironmentVariable("MISTRAL_API_KEY");
+    const apiKey = fields.apiKey ?? getEnvironmentVariable("MISTRAL_API_KEY");
     if (!apiKey) {
       throw new Error(
         "API key MISTRAL_API_KEY is missing for MistralAI, but it is required."

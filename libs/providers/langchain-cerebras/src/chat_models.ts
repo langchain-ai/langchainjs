@@ -456,8 +456,21 @@ export class ChatCerebras
 
   streaming?: boolean;
 
-  constructor(fields: ChatCerebrasInput) {
-    super(fields ?? {});
+  constructor(
+    model: Cerebras.ChatCompletionCreateParams["model"],
+    fields?: Omit<ChatCerebrasInput, "model">
+  );
+  constructor(fields?: ChatCerebrasInput);
+  constructor(
+    modelOrFields?: string | ChatCerebrasInput,
+    fieldsArg?: Omit<ChatCerebrasInput, "model">
+  ) {
+    const fields = (
+      typeof modelOrFields === "string"
+        ? { ...(fieldsArg ?? {}), model: modelOrFields }
+        : (modelOrFields ?? {})
+    ) as ChatCerebrasInput;
+    super(fields);
     this._addVersion("@langchain/cerebras", __PKG_VERSION__);
     this.model = fields.model;
     this.maxCompletionTokens = fields.maxCompletionTokens;
