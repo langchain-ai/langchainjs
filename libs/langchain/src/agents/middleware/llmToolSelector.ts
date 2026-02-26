@@ -148,6 +148,7 @@ export function llmToolSelectorMiddleware(options: LLMToolSelectorConfig) {
         pickRunnableConfigKeys(request.runtime) ?? {};
       const config = mergeConfigs(baseConfig, {
         metadata: { lc_source: "llmToolSelector" },
+        callbacks: [],
       });
 
       const response = await structuredModel?.invoke(
@@ -155,7 +156,7 @@ export function llmToolSelectorMiddleware(options: LLMToolSelectorConfig) {
           { role: "system", content: selectionRequest.systemMessage },
           selectionRequest.lastUserMessage,
         ],
-        { callbacks: [], ...config }
+        config
       );
 
       // Response should be an object with a tools array
