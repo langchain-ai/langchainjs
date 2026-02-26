@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeAll, afterAll } from "vitest";
+import { describe, it, expect, beforeAll, afterAll, vi } from "vitest";
 import { ChatOpenRouter } from "../index.js";
 import type { ChatOpenRouterCallOptions } from "../types.js";
 import { OpenRouterAuthError } from "../../utils/errors.js";
@@ -196,5 +196,74 @@ describe("getLsParams", () => {
     expect(ls.ls_temperature).toBe(0.3);
     expect(ls.ls_max_tokens).toBe(256);
     expect(ls.ls_stop).toEqual(["END"]);
+  });
+});
+
+describe("stream callbacks", () => {
+  it("passes chunk via handleLLMNewToken callback fields", async () => {
+    const model = new ChatOpenRouter({
+      model: "openai/gpt-4o-mini",
+      streamUsage: false,
+    });
+
+    const text = "Hi";
+    const chunkData = {
+      id: "chatcmpl-1",
+      choices: [
+        {
+          index: 0,
+          delta: { content: text },
+          finish_reason: null,
+        },
+      ],
+      model: "openai/gpt-4o-mini",
+    };
+
+    const encoder = new TextEncoder();
+    const stream = new ReadableStream<Uint8Array>({
+      start(controller) {
+        controller.enqueue(
+          encoder.encode(`data: ${JSON.stringify(chunkData)}\n\n`)
+        );
+        controller.close();
+      },
+    });
+    const response = new Response(stream, { status: 200 });
+    const fetchSpy = vi.spyOn(globalThis, "fetch").mockResolvedValue(response);
+
+    const tokens: string[] = [];
+    let receivedFields: Record<string, unknown> | undefined;
+
+    try {
+      const res = await model.stream("Hello", {
+        callbacks: [
+          {
+            handleLLMNewToken: (
+              token: string,
+              _idx?: number,
+              _runId?: string,
+              _parentRunId?: string,
+              fields?: Record<string, unknown>
+            ) => {
+              tokens.push(token);
+              receivedFields = fields;
+            },
+          },
+        ],
+      });
+
+      for await (const _chunk of res) {
+        // consume stream
+      }
+    } finally {
+      fetchSpy.mockRestore();
+    }
+
+    expect(tokens).toEqual([text]);
+    expect(receivedFields).toEqual(
+      expect.objectContaining({
+        chunk: expect.objectContaining({ text }),
+      })
+    );
   });
 });

@@ -478,7 +478,13 @@ export class ChatOpenRouter extends BaseChatModel<
         });
 
         yield generationChunk;
-        await runManager?.handleLLMNewToken(text);
+        await runManager?.handleLLMNewToken(
+          text,
+          undefined,
+          undefined,
+          undefined,
+          { chunk: generationChunk }
+        );
       }
     } finally {
       reader.releaseLock();
