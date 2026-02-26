@@ -636,8 +636,10 @@ export abstract class BaseChatGoogle<
                 if (chunk?.usageMetadata && streamUsage) {
                   const cumulative =
                     convertGeminiGenerateContentResponseToUsageMetadata(chunk);
-                  messageChunkParams.usage_metadata =
-                    subtractUsageMetadata(cumulative, previousUsage);
+                  messageChunkParams.usage_metadata = subtractUsageMetadata(
+                    cumulative,
+                    previousUsage
+                  );
                   previousUsage = cumulative;
                 }
                 const messageChunk = new AIMessageChunk(messageChunkParams);
