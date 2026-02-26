@@ -967,10 +967,7 @@ describe("usage_metadata serialized", () => {
       },
     });
 
-    const deserialized: AIMessage = await load(
-      JSON.stringify(message),
-      config
-    );
+    const deserialized: AIMessage = await load(JSON.stringify(message), config);
     expect(deserialized.usage_metadata).toEqual({
       input_tokens: 100,
       output_tokens: 50,
