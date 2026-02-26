@@ -3123,8 +3123,8 @@ importers:
         specifier: ^1.0.12
         version: 1.0.21
       openai:
-        specifier: ^6.22.0
-        version: 6.22.0(ws@8.19.0(bufferutil@4.1.0))(zod@4.3.6)
+        specifier: ^6.24.0
+        version: 6.25.0(ws@8.19.0(bufferutil@4.1.0))(zod@4.3.6)
       zod:
         specifier: ^3.25.76 || ^4
         version: 4.3.6
@@ -30531,7 +30531,6 @@ snapshots:
     optionalDependencies:
       ws: 8.19.0(bufferutil@4.1.0)
       zod: 4.3.6
-    optional: true
 
   openai@6.3.0(ws@8.19.0(bufferutil@4.1.0))(zod@4.3.6):
     optionalDependencies:
