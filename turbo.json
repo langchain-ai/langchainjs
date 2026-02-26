@@ -1,14 +1,7 @@
 {
   "$schema": "https://turbo.build/schema.json",
   "globalDependencies": ["**/.env", "pnpm-lock.yaml"],
-  "globalPassThroughEnv": [
-    "CI",
-    "NODE_ENV",
-    "GITHUB_ACTIONS",
-    "ALIBABA_API_KEY",
-    "ALIBABA_REGION",
-    "DASHSCOPE_API_KEY"
-  ],
+  "globalPassThroughEnv": ["CI", "NODE_ENV", "GITHUB_ACTIONS"],
   "ui": "stream",
   "tasks": {
     "build:compile": {
