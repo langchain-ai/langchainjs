@@ -1,5 +1,14 @@
 # @langchain/xai
 
+## 1.3.7
+
+### Patch Changes
+
+- [#10106](https://github.com/langchain-ai/langchainjs/pull/10106) [`9f30267`](https://github.com/langchain-ai/langchainjs/commit/9f30267e95a2a42fac71f1d3674b84c5a190dbbc) Thanks [@hntrl](https://github.com/hntrl)! - Add package version metadata to runnable traces. Each package now stamps its version in `this.metadata.versions` at construction time, making version info available in LangSmith trace metadata.
+
+- Updated dependencies [[`9f30267`](https://github.com/langchain-ai/langchainjs/commit/9f30267e95a2a42fac71f1d3674b84c5a190dbbc), [`f298a9b`](https://github.com/langchain-ai/langchainjs/commit/f298a9bdedff7bc2b0eb7f6b5e6b52fd3042a7b7)]:
+  - @langchain/openai@1.2.11
+
 ## 1.3.6
 
 ### Patch Changes

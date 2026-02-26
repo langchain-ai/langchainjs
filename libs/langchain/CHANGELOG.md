@@ -1,5 +1,22 @@
 # langchain
 
+## 1.2.28
+
+### Patch Changes
+
+- [#10169](https://github.com/langchain-ai/langchainjs/pull/10169) [`3b1fd54`](https://github.com/langchain-ai/langchainjs/commit/3b1fd5458a4aa29c398122829f383f21b5ac39da) Thanks [@hntrl](https://github.com/hntrl)! - fix(core, langchain): bump uuid dependency from ^10.0.0 to ^11.0.0 to fix Metro bundler error
+
+  The `uuid` v10 package has ambiguous `exports` in its `package.json` which causes Metro (used by Expo/React Native) to resolve the wrong entry point, resulting in `Cannot read properties of undefined (reading 'v1')`. The `uuid` v11 package fixes its exports map to work correctly with Metro's package exports resolution.
+
+- [#10165](https://github.com/langchain-ai/langchainjs/pull/10165) [`01a84ae`](https://github.com/langchain-ai/langchainjs/commit/01a84ae4b73ee2e3add940250aca2236213eaab2) Thanks [@hntrl](https://github.com/hntrl)! - fix(agents): propagate store and checkpointer in ReactAgent
+  - Added `checkpointer` and `store` getter/setter pairs on `ReactAgent` that forward to the internal compiled graph. This fixes an issue where the LangGraph API server's checkpointer injection was silently ignored, causing thread state to be lost across server restarts.
+  - Propagate `store` and `configurable` from the LangGraph config into the middleware `runtime` object. Previously, `runtime.store` was always `undefined` even when a store was provided to `createAgent()`.
+
+- [#10146](https://github.com/langchain-ai/langchainjs/pull/10146) [`67cc069`](https://github.com/langchain-ai/langchainjs/commit/67cc069af19844d8c2676f6ae36117af7c7740d4) Thanks [@eddienubes](https://github.com/eddienubes)! - docs: update an outdated middleware example
+
+- Updated dependencies [[`9f30267`](https://github.com/langchain-ai/langchainjs/commit/9f30267e95a2a42fac71f1d3674b84c5a190dbbc), [`403a99f`](https://github.com/langchain-ai/langchainjs/commit/403a99fd826383f30300809ae077e1c967023520), [`3b1fd54`](https://github.com/langchain-ai/langchainjs/commit/3b1fd5458a4aa29c398122829f383f21b5ac39da), [`77bd982`](https://github.com/langchain-ai/langchainjs/commit/77bd98274a885e947d76f7a9c6dd0b3763453218)]:
+  - @langchain/core@1.1.29
+
 ## 1.2.27
 
 ### Patch Changes
