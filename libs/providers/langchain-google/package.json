@@ -37,7 +37,8 @@
   "dependencies": {
     "eventsource-parser": "^3.0.6",
     "google-auth-library": "^10.5.0",
-    "jose": "^6.1.3"
+    "jose": "^6.1.3",
+    "uuid": "^10.0.0"
   },
   "peerDependencies": {
     "@langchain/core": "^1.0.0"
