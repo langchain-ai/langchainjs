@@ -70,7 +70,7 @@ import {
   convertFieldsToThinkingConfig,
 } from "../converters/params.js";
 import { Gemini } from "./api-types.js";
-import { subtractUsageMetadata } from "../utils/usage_metadata.js";
+import { subtractUsageMetadata } from "../utils/metadata.js";
 
 export type GooglePlatformType = "gai" | "gcp";
 
