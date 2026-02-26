@@ -8,6 +8,7 @@ import {
   AIMessageChunk,
   AIMessageChunkFields,
   BaseMessage,
+  type UsageMetadata,
 } from "@langchain/core/messages";
 import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
 import { concat } from "@langchain/core/utils/stream";
@@ -69,6 +70,7 @@ import {
   convertFieldsToThinkingConfig,
 } from "../converters/params.js";
 import { Gemini } from "./api-types.js";
+import { subtractUsageMetadata } from "../utils/metadata.js";
 
 export type GooglePlatformType = "gai" | "gcp";
 
@@ -530,6 +532,7 @@ export abstract class BaseChatGoogle<
     }
 
     if (response.body) {
+      let previousUsage: UsageMetadata | undefined;
       const stream = response.body
         .pipeThrough(new TextDecoderStream())
         .pipeThrough(new EventSourceParserStream())
@@ -593,11 +596,14 @@ export abstract class BaseChatGoogle<
                   },
                 };
 
-                // Include usageMetadata if there is any and we have
-                // enabled it with streamUsage on
                 if (chunk?.usageMetadata && streamUsage) {
-                  messageChunkParams.usage_metadata =
+                  const cumulative =
                     convertGeminiGenerateContentResponseToUsageMetadata(chunk);
+                  messageChunkParams.usage_metadata = subtractUsageMetadata(
+                    cumulative,
+                    previousUsage
+                  );
+                  previousUsage = cumulative;
                 }
                 const messageChunk = new AIMessageChunk(messageChunkParams);
 
