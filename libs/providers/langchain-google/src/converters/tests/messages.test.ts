@@ -1,9 +1,5 @@
 import { describe, expect, test } from "vitest";
-import {
-  AIMessage,
-  HumanMessage,
-  ToolMessage,
-} from "@langchain/core/messages";
+import { AIMessage, HumanMessage, ToolMessage } from "@langchain/core/messages";
 import type { Gemini } from "../../chat_models/types.js";
 import {
   convertGeminiPartsToToolCalls,
