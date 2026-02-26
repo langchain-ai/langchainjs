@@ -1,5 +1,25 @@
 # langchain
 
+## 1.2.27
+
+### Patch Changes
+
+- [#10137](https://github.com/langchain-ai/langchainjs/pull/10137) [`87a585e`](https://github.com/langchain-ai/langchainjs/commit/87a585e4b5d36fa2f82e34a92caa6e7c4289f370) Thanks [@hntrl](https://github.com/hntrl)! - fix(agents): infer StateSchema value types in middleware hooks
+
+- Updated dependencies [[`10a876c`](https://github.com/langchain-ai/langchainjs/commit/10a876c7d5ff27d8f2889761ee20e95f76a50518), [`b46d96a`](https://github.com/langchain-ai/langchainjs/commit/b46d96a508a8bf212561dbb6f025e35c75f16257)]:
+  - @langchain/core@1.1.28
+
+## 1.2.26
+
+### Patch Changes
+
+- [#10108](https://github.com/langchain-ai/langchainjs/pull/10108) [`e7576ee`](https://github.com/langchain-ai/langchainjs/commit/e7576ee9e6408c399c08d271db43f63e622da10f) Thanks [@hntrl](https://github.com/hntrl)! - fix: replace retired Anthropic model IDs with active replacements
+  - Update default model in ChatAnthropic from `claude-3-5-sonnet-latest` to `claude-sonnet-4-5-20250929`
+  - Regenerate model profiles with latest data from models.dev API
+  - Replace retired `claude-3-5-haiku-20241022`, `claude-3-7-sonnet-20250219`, `claude-3-5-sonnet-20240620`, and `claude-3-5-sonnet-20241022` in tests, docstrings, and examples
+
+- [#10114](https://github.com/langchain-ai/langchainjs/pull/10114) [`0050c91`](https://github.com/langchain-ai/langchainjs/commit/0050c91481267327d88c430f5aacf57bd336facf) Thanks [@christian-bromann](https://github.com/christian-bromann)! - fix(langchain): reset shared currentSystemMessage on middleware handler retry
+
 ## 1.2.25
 
 ### Patch Changes

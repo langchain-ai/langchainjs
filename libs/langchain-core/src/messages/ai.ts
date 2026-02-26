@@ -48,6 +48,7 @@ export class AIMessage<TStructure extends MessageStructure = MessageStructure>
       ...super.lc_aliases,
       tool_calls: "tool_calls",
       invalid_tool_calls: "invalid_tool_calls",
+      usage_metadata: "usage_metadata",
     };
   }
 
@@ -329,6 +330,7 @@ export class AIMessageChunk<
       tool_calls: "tool_calls",
       invalid_tool_calls: "invalid_tool_calls",
       tool_call_chunks: "tool_call_chunks",
+      usage_metadata: "usage_metadata",
     };
   }
 

@@ -19,6 +19,7 @@ import {
   MessageContentComplex,
   MessageContentText,
 } from "@langchain/core/messages";
+import { v4 as uuidv4 } from "uuid";
 import { Converter } from "@langchain/core/utils/format";
 import type { Gemini } from "../chat_models/types.js";
 import { iife } from "../utils/misc.js";
@@ -440,6 +441,7 @@ function convertStandardContentMessageToGeminiContent(
     // FIXME: ToolMessage almost never has a name, we need to refer to the message history
     parts.push({
       functionResponse: {
+        id: message.tool_call_id,
         name: message.name || "unknown",
         response: { result: responseContent },
       },
@@ -724,6 +726,7 @@ function convertLegacyContentMessageToGeminiContent(
     }
     parts.push({
       functionResponse: {
+        id: message.tool_call_id,
         name: toolCall?.name || "unknown",
         response: { result: responseContent },
       },
@@ -926,7 +929,7 @@ export const convertGeminiPartsToToolCalls: Converter<
       const functionCallPart = part as Gemini.Part.FunctionCall;
       toolCalls.push({
         type: "tool_call",
-        id: `call_${toolCalls.length}`,
+        id: functionCallPart.functionCall.id ?? uuidv4().replace(/-/g, ""),
         name: functionCallPart.functionCall.name,
         args: functionCallPart.functionCall.args ?? {},
         thoughtSignature: functionCallPart.thoughtSignature,

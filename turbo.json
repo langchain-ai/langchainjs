@@ -1,24 +1,52 @@
 {
   "$schema": "https://turbo.build/schema.json",
-  "globalDependencies": ["**/.env", "pnpm-lock.yaml"],
-  "globalPassThroughEnv": ["CI", "NODE_ENV", "GITHUB_ACTIONS"],
+  "globalDependencies": [
+    "**/.env",
+    "pnpm-lock.yaml"
+  ],
+  "globalPassThroughEnv": [
+    "CI",
+    "NODE_ENV",
+    "GITHUB_ACTIONS"
+  ],
   "ui": "stream",
   "tasks": {
     "build:compile": {
-      "dependsOn": ["^build:compile"],
-      "env": ["BUILD_MODE"],
-      "inputs": ["src/**", "tsconfig.json", "tsdown.config.ts", "package.json"],
-      "outputs": ["dist/**"]
+      "dependsOn": [
+        "^build:compile"
+      ],
+      "env": [
+        "BUILD_MODE"
+      ],
+      "inputs": [
+        "src/**",
+        "tsconfig.json",
+        "tsdown.config.ts",
+        "package.json"
+      ],
+      "outputs": [
+        "dist/**"
+      ]
     },
     "build:examples": {
-      "dependsOn": ["^build:compile"]
+      "dependsOn": [
+        "^build:compile"
+      ]
     },
     "lint": {
-      "inputs": ["src/**/*.ts", "src/**/*.tsx", "eslint.config.ts"],
+      "inputs": [
+        "src/**/*.ts",
+        "src/**/*.tsx",
+        "eslint.config.ts"
+      ],
       "outputs": []
     },
     "lint:fix": {
-      "inputs": ["src/**/*.ts", "src/**/*.tsx", "eslint.config.ts"],
+      "inputs": [
+        "src/**/*.ts",
+        "src/**/*.tsx",
+        "eslint.config.ts"
+      ],
       "outputs": [],
       "cache": false
     },
@@ -26,46 +54,81 @@
       "cache": false
     },
     "format:check": {
-      "inputs": ["src/**"],
+      "inputs": [
+        "src/**"
+      ],
       "outputs": []
     },
     "test": {
-      "dependsOn": ["build:compile"],
-      "inputs": ["src/**", "tests/**", "**/*.test.ts", "vitest.config.ts"],
+      "dependsOn": [
+        "build:compile"
+      ],
+      "inputs": [
+        "src/**",
+        "tests/**",
+        "**/*.test.ts",
+        "vitest.config.ts"
+      ],
       "outputs": []
     },
     "test:ci": {
-      "dependsOn": ["build:compile"],
-      "inputs": ["src/**", "tests/**", "**/*.test.ts", "vitest.config.ts"],
-      "outputs": ["coverage/**"]
+      "dependsOn": [
+        "build:compile"
+      ],
+      "inputs": [
+        "src/**",
+        "tests/**",
+        "**/*.test.ts",
+        "vitest.config.ts"
+      ],
+      "outputs": [
+        "coverage/**"
+      ]
     },
     "test:single": {
-      "dependsOn": ["build:compile"],
+      "dependsOn": [
+        "build:compile"
+      ],
       "cache": false
     },
     "test:int": {
-      "dependsOn": ["build:compile"],
+      "dependsOn": [
+        "build:compile"
+      ],
       "cache": false
     },
     "test:integration": {
-      "dependsOn": ["build:compile"],
+      "dependsOn": [
+        "build:compile"
+      ],
       "cache": false
     },
     "test:standard:unit": {
-      "dependsOn": ["^build:compile"],
-      "inputs": ["src/**", "tests/**"],
+      "dependsOn": [
+        "^build:compile"
+      ],
+      "inputs": [
+        "src/**",
+        "tests/**"
+      ],
       "outputs": []
     },
     "test:standard:int": {
-      "dependsOn": ["^build:compile"],
+      "dependsOn": [
+        "^build:compile"
+      ],
       "cache": false
     },
     "test:standard": {
-      "dependsOn": ["^build:compile"],
+      "dependsOn": [
+        "^build:compile"
+      ],
       "cache": false
     },
     "test:bench": {
-      "dependsOn": ["^build:compile"],
+      "dependsOn": [
+        "^build:compile"
+      ],
       "outputs": []
     },
     "clean": {

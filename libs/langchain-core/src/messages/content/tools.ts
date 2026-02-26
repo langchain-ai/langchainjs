@@ -65,7 +65,7 @@ export declare namespace Tools {
     /**
      * The index of the tool call chunk
      */
-    index?: number;
+    index?: string | number;
   }
 
   /** Content block to represent an invalid tool call */

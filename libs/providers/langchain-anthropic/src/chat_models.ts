@@ -1026,6 +1026,7 @@ export class ChatAnthropicMessages<
         ? { ...(fieldsArg ?? {}), model: modelOrFields }
         : (modelOrFields ?? {});
     super(fields ?? {});
+    this._addVersion("@langchain/anthropic", __PKG_VERSION__);
 
     this.anthropicApiKey =
       fields?.apiKey ??
@@ -1225,7 +1226,9 @@ export class ChatAnthropicMessages<
       // Only set temperature, top_k, and top_p if thinking is disabled
       output.temperature = this.temperature;
       output.top_k = this.topK;
-      output.top_p = this.topP;
+      if (this.topP !== undefined) {
+        output.top_p = this.topP;
+      }
     }
 
     return output;

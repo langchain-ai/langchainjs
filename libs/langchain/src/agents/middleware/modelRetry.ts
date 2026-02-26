@@ -5,7 +5,6 @@ import { z } from "zod/v3";
 import { AIMessage } from "@langchain/core/messages";
 
 import { createMiddleware } from "../middleware.js";
-import type { AgentMiddleware } from "./types.js";
 import { sleep, calculateRetryDelay } from "./utils.js";
 import { RetrySchema } from "./constants.js";
 import { InvalidRetryConfigError } from "./error.js";
@@ -124,9 +123,7 @@ export type ModelRetryMiddlewareConfig = z.input<
  * @param config - Configuration options for the retry middleware
  * @returns A middleware instance that handles model failures with retries
  */
-export function modelRetryMiddleware(
-  config: ModelRetryMiddlewareConfig = {}
-): AgentMiddleware {
+export function modelRetryMiddleware(config: ModelRetryMiddlewareConfig = {}) {
   const { success, error, data } =
     ModelRetryMiddlewareOptionsSchema.safeParse(config);
   if (!success) {

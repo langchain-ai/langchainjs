@@ -41,9 +41,9 @@ import {
  *   contextSchema: z.object({
  *     userId: z.string(),
  *   }),
- *   beforeModel: async (state, runtime, controls) => {
+ *   beforeModel: async (state, runtime) => {
  *     if (!state.isAuthenticated) {
- *       return controls.terminate(new Error("Not authenticated"));
+ *       throw new Error("Not authenticated");
  *     }
  *   },
  * });
