@@ -2,7 +2,7 @@ import { z } from "zod/v3";
 import { describe, it, expectTypeOf } from "vitest";
 
 import { tool, DynamicStructuredTool, DynamicTool } from "../index.js";
-import type { ToolEventType, ToolRuntime } from "../types.js";
+import type { ToolRuntime } from "../types.js";
 import type { RunnableConfig } from "../../runnables/config.js";
 
 describe("tool() literal name type inference", () => {
@@ -25,7 +25,7 @@ describe("tool() literal name type inference", () => {
         { query: string },
         { query: string },
         string,
-        ToolEventType,
+        unknown,
         "mySpecificTool"
       >
     >();
@@ -151,7 +151,7 @@ describe("tool() async generator type inference", () => {
         { query: string },
         { query: string },
         string,
-        ToolEventType,
+        unknown,
         "regularTool"
       >
     >();
