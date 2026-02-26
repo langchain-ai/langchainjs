@@ -991,21 +991,7 @@ export abstract class BaseChatModel<
 
     let functionName = name ?? "extract";
     let tools: ToolDefinition[];
-    if (isSerializableSchema(schema)) {
-      const jsonSchema = schema["~standard"].jsonSchema.input({
-        target: "draft-07",
-      });
-      tools = [
-        {
-          type: "function",
-          function: {
-            name: functionName,
-            description,
-            parameters: jsonSchema,
-          },
-        },
-      ];
-    } else if (isInteropZodSchema(schema)) {
+    if (isInteropZodSchema(schema) || isSerializableSchema(schema)) {
       tools = [
         {
           type: "function",
