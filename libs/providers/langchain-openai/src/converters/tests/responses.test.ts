@@ -809,71 +809,65 @@ describe("convertStandardContentMessageToResponsesInput", () => {
     { ext: "pptx", filename: "slides.pptx" },
     { ext: "xlsx", filename: "data.xlsx" },
     { ext: "csv", filename: "data.csv" },
-  ])(
-    "converts $ext file block with URL to input_file",
-    ({ filename }) => {
-      const url = `https://example.com/${filename}`;
-      const message = new HumanMessage({
-        contentBlocks: [
+  ])("converts $ext file block with URL to input_file", ({ filename }) => {
+    const url = `https://example.com/${filename}`;
+    const message = new HumanMessage({
+      contentBlocks: [
+        {
+          type: "file",
+          url,
+          metadata: { filename },
+        },
+      ],
+    });
+
+    const result = convertStandardContentMessageToResponsesInput(message);
+
+    expect(result).toEqual([
+      {
+        role: "user",
+        type: "message",
+        content: [
           {
-            type: "file",
-            url,
-            metadata: { filename },
+            type: "input_file",
+            file_url: url,
+            filename,
           },
         ],
-      });
-
-      const result = convertStandardContentMessageToResponsesInput(message);
-
-      expect(result).toEqual([
-        {
-          role: "user",
-          type: "message",
-          content: [
-            {
-              type: "input_file",
-              file_url: url,
-              filename,
-            },
-          ],
-        },
-      ]);
-    }
-  );
+      },
+    ]);
+  });
 
   it.each([
     { ext: "docx", fileId: "file-docx-123" },
     { ext: "pptx", fileId: "file-pptx-456" },
     { ext: "xlsx", fileId: "file-xlsx-789" },
     { ext: "csv", fileId: "file-csv-012" },
-  ])(
-    "converts $ext file block with fileId to input_file",
-    ({ fileId }) => {
-      const message = new HumanMessage({
-        contentBlocks: [
+  ])("converts $ext file block with fileId to input_file", ({ fileId }) => {
+    const message = new HumanMessage({
+      contentBlocks: [
+        {
+          type: "file",
+          fileId,
+        },
+      ],
+    });
+
+    const result = convertStandardContentMessageToResponsesInput(message);
+
+    expect(result).toEqual([
+      {
+        role: "user",
+        type: "message",
+        content: [
           {
-            type: "file",
-            fileId,
+            type: "input_file",
+            file_id: fileId,
           },
         ],
-      });
-
-      const result = convertStandardContentMessageToResponsesInput(message);
-
-      expect(result).toEqual([
-        {
-          role: "user",
-          type: "message",
-          content: [
-            {
-              type: "input_file",
-              file_id: fileId,
-            },
-          ],
-        },
-      ]);
-    }
-  );
+      },
+    ]);
+  });
 });
 
 describe("convertMessagesToResponsesInput", () => {
