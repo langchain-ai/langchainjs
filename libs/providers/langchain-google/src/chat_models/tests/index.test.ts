@@ -70,7 +70,6 @@ class MockResponse implements Response {
 class MockStreamingResponse implements Response {
   private readonly bodyText: string;
 
-
   readonly headers: Headers = new Headers();
   readonly ok: boolean = true;
   readonly redirected: boolean = false;
