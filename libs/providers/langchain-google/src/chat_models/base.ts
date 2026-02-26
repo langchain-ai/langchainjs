@@ -169,6 +169,7 @@ export abstract class BaseChatGoogle<
 
   constructor(protected params: BaseChatGoogleParams) {
     super(params);
+    this._addVersion("@langchain/google", __PKG_VERSION__);
 
     if (!params.apiClient) {
       throw new ConfigurationError(

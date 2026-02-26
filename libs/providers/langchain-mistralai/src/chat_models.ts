@@ -986,6 +986,7 @@ export class ChatMistralAI<
         ? { ...(fieldsArg ?? {}), model: modelOrFields }
         : (modelOrFields ?? {});
     super(fields);
+    this._addVersion("@langchain/mistralai", __PKG_VERSION__);
     const apiKey = fields.apiKey ?? getEnvironmentVariable("MISTRAL_API_KEY");
     if (!apiKey) {
       throw new Error(
