@@ -11,7 +11,7 @@ import {
 } from "@langchain/core/messages";
 import { tool } from "@langchain/core/tools";
 import { z as z4 } from "zod";
-import { Command, StateSchema } from "@langchain/langgraph";
+import { Command, InMemoryStore, StateSchema } from "@langchain/langgraph";
 
 import { createAgent, createMiddleware, toolStrategy } from "../index.js";
 import { FakeToolCallingChatModel, FakeToolCallingModel } from "./utils.js";
@@ -2874,5 +2874,46 @@ describe("middleware", () => {
       );
       expect(aiMessages.length).toBeGreaterThanOrEqual(1);
     });
+  });
+
+  it("should propagate store to middleware runtime", async () => {
+    const store = new InMemoryStore();
+    const storeValues: unknown[] = [];
+
+    const middleware = createMiddleware({
+      name: "storeCheck",
+      beforeAgent: (_state, runtime) => {
+        storeValues.push(runtime.store);
+        return {};
+      },
+      beforeModel: (_state, runtime) => {
+        storeValues.push(runtime.store);
+        return {};
+      },
+      afterModel: (_state, runtime) => {
+        storeValues.push(runtime.store);
+        return {};
+      },
+    });
+
+    const model = new FakeToolCallingChatModel({
+      responses: [new AIMessage("hello")],
+    });
+
+    const agent = createAgent({
+      model,
+      tools: [],
+      store,
+      middleware: [middleware],
+    });
+
+    await agent.invoke({
+      messages: [new HumanMessage("hi")],
+    });
+
+    expect(storeValues.length).toBeGreaterThan(0);
+    for (const val of storeValues) {
+      expect(val).toBeDefined();
+    }
   });
 });
