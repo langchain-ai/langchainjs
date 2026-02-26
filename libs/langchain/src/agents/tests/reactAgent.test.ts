@@ -33,6 +33,7 @@ import {
   createCheckpointer,
   SearchAPI,
 } from "./utils.js";
+import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
 
 class StreamingPrefCallbackHandler extends BaseCallbackHandler {
   name = "streaming_pref_callback_handler";
