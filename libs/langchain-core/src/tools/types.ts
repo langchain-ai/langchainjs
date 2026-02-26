@@ -32,6 +32,8 @@ export type ResponseFormat = "content" | "content_and_artifact" | string;
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type ToolOutputType = any;
 
+export type ToolEventType = unknown;
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type ContentAndArtifact = [MessageContent, any];
 
@@ -335,15 +337,19 @@ export interface BaseDynamicToolInput extends ToolParams {
 
 /**
  * Interface for the input parameters of the DynamicTool class.
+ *
+ * @param ToolOutputT - The return type of the tool.
+ * @param ToolEventT - The type of values yielded by the tool when using an async generator.
  */
 export interface DynamicToolInput<
   ToolOutputT = ToolOutputType,
+  ToolEventT = ToolEventType,
 > extends BaseDynamicToolInput {
   func: (
     input: string,
     runManager?: CallbackManagerForToolRun,
     config?: ToolRunnableConfig
-  ) => Promise<ToolOutputT> | AsyncGenerator<unknown, ToolOutputT>;
+  ) => Promise<ToolOutputT> | AsyncGenerator<ToolEventT, ToolOutputT>;
 }
 
 /**
@@ -351,11 +357,14 @@ export interface DynamicToolInput<
  *
  * @param SchemaT - The type of the tool input schema. Usually you don't need to specify this.
  * @param SchemaOutputT - The TypeScript type representing the result of applying the schema to the tool arguments. Useful for type checking tool handler functions when using JSONSchema.
+ * @param ToolOutputT - The return type of the tool.
+ * @param ToolEventT - The type of values yielded by the tool when using an async generator.
  */
 export interface DynamicStructuredToolInput<
   SchemaT = ToolInputSchemaBase,
   SchemaOutputT = ToolInputSchemaOutputType<SchemaT>,
   ToolOutputT = ToolOutputType,
+  ToolEventT = ToolEventType,
 > extends BaseDynamicToolInput {
   /**
    * Tool handler function - the function that will be called when the tool is invoked.
@@ -369,7 +378,7 @@ export interface DynamicStructuredToolInput<
     input: SchemaOutputT,
     runManager?: CallbackManagerForToolRun,
     config?: RunnableConfig
-  ) => Promise<ToolOutputT> | AsyncGenerator<unknown, ToolOutputT>;
+  ) => Promise<ToolOutputT> | AsyncGenerator<ToolEventT, ToolOutputT>;
   schema: SchemaT;
 }
 
