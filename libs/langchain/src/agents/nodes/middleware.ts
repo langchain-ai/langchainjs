@@ -93,11 +93,10 @@ export abstract class MiddlewareNode<
       messages: invokeState.messages,
     };
 
-    /**
-     * ToDo: implement later
-     */
     const runtime: Runtime<TContextSchema> = {
       context: filteredContext,
+      store: config?.store,
+      configurable: config?.configurable,
       writer: config?.writer,
       interrupt: config?.interrupt,
       signal: config?.signal,

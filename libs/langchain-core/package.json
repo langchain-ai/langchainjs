@@ -1,6 +1,6 @@
 {
   "name": "@langchain/core",
-  "version": "1.1.26",
+  "version": "1.1.28",
   "description": "Core LangChain.js abstractions and schemas",
   "type": "module",
   "engines": {
@@ -31,14 +31,14 @@
   "license": "MIT",
   "dependencies": {
     "@cfworker/json-schema": "^4.0.2",
-    "ansi-styles": "^6.2.3",
+    "ansi-styles": "^5.0.0",
     "camelcase": "6",
     "decamelize": "1.2.0",
     "js-tiktoken": "^1.0.12",
     "langsmith": ">=0.5.0 <1.0.0",
     "mustache": "^4.2.0",
     "p-queue": "^6.6.2",
-    "uuid": "^10.0.0",
+    "uuid": "^11.1.0",
     "zod": "^3.25.76 || ^4"
   },
   "devDependencies": {

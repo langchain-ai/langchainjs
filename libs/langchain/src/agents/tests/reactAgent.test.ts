@@ -17,6 +17,7 @@ import {
   Command,
   getCurrentTaskInput,
   type BaseCheckpointSaver,
+  type BaseStore,
 } from "@langchain/langgraph";
 
 import {
@@ -127,6 +128,47 @@ describe("createAgent", () => {
       output_tokens: 5,
       total_tokens: 6,
     });
+  });
+
+  it("should propagate checkpointer set after construction", async () => {
+    const model = new FakeToolCallingModel();
+
+    const agent = createAgent({
+      model,
+      tools: [],
+    });
+
+    const externalCheckpointer = createCheckpointer();
+    agent.checkpointer = externalCheckpointer;
+
+    const inputs = [new HumanMessage("hi?")];
+    const thread = { configurable: { thread_id: "propagation-test" } };
+    await agent.invoke({ messages: inputs }, thread);
+
+    const saved = await externalCheckpointer.get(thread);
+    expect(saved).toBeDefined();
+    expect(saved?.channel_values).toMatchObject({
+      messages: [
+        expect.objectContaining({ content: "hi?" }),
+        new AIMessage({ name: "model", content: "hi?", id: "0" }),
+      ],
+    });
+  });
+
+  it("should propagate store set after construction", async () => {
+    const model = new FakeToolCallingModel();
+
+    const agent = createAgent({
+      model,
+      tools: [],
+    });
+
+    expect(agent.store).toBeUndefined();
+
+    const newStore = {} as BaseStore;
+    agent.store = newStore;
+    expect(agent.store).toBe(newStore);
+    expect(agent.graph.store).toBe(newStore);
   });
 
   it("should reject LLM with bound tools", async () => {

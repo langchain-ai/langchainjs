@@ -15,7 +15,11 @@ import {
   type StreamOutputMap,
   type PregelOptions,
 } from "@langchain/langgraph";
-import type { CheckpointListOptions } from "@langchain/langgraph-checkpoint";
+import type {
+  BaseCheckpointSaver,
+  BaseStore,
+  CheckpointListOptions,
+} from "@langchain/langgraph-checkpoint";
 import {
   ToolMessage,
   AIMessage,
@@ -65,7 +69,7 @@ import type {
   InferMiddlewareInputStates,
   InferContextInput,
   AnyAnnotationRoot,
-  InferSchemaInput,
+  InferSchemaValue,
   ToAnnotationRoot,
 } from "./middleware/types.js";
 import { type ResponseFormatUndefined } from "./responses.js";
@@ -85,7 +89,7 @@ type BaseGraphDestination =
   | typeof END;
 
 // Helper type to get the state definition with middleware states
-type MergedAgentState<Types extends AgentTypeConfig> = InferSchemaInput<
+type MergedAgentState<Types extends AgentTypeConfig> = InferSchemaValue<
   Types["State"]
 > &
   (Types["Response"] extends ResponseFormatUndefined
@@ -687,6 +691,22 @@ export class ReactAgent<
    */
   get graph(): AgentGraph<Types> {
     return this.#graph;
+  }
+
+  get checkpointer(): BaseCheckpointSaver | boolean | undefined {
+    return this.#graph.checkpointer;
+  }
+
+  set checkpointer(value: BaseCheckpointSaver | boolean | undefined) {
+    this.#graph.checkpointer = value;
+  }
+
+  get store(): BaseStore | undefined {
+    return this.#graph.store;
+  }
+
+  set store(value: BaseStore | undefined) {
+    this.#graph.store = value;
   }
 
   /**

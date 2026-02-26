@@ -1031,6 +1031,7 @@ export class ChatGroq extends BaseChatModel<
         ? { ...(fields ?? {}), model: modelOrFields }
         : (modelOrFields ?? {});
     super(params);
+    this._addVersion("@langchain/groq", __PKG_VERSION__);
 
     const apiKey = params.apiKey || getEnvironmentVariable("GROQ_API_KEY");
     if (!apiKey) {

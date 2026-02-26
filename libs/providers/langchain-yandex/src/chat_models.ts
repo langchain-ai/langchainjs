@@ -78,6 +78,7 @@ export class ChatYandexGPT extends BaseChatModel {
         ? { ...(fields ?? {}), model: modelOrFields }
         : (modelOrFields ?? {});
     super(params);
+    this._addVersion("@langchain/yandex", __PKG_VERSION__);
 
     const apiKey = params.apiKey ?? getEnvironmentVariable("YC_API_KEY");
 

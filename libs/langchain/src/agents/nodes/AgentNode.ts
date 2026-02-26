@@ -451,6 +451,8 @@ export class AgentNode<
             unknown
           >
         ): Promise<InternalModelResponse<StructuredResponseFormat>> => {
+          const baselineSystemMessage = currentSystemMessage;
+
           /**
            * Merge context with default context of middleware
            */
@@ -466,6 +468,8 @@ export class AgentNode<
            */
           const runtime: Runtime<unknown> = Object.freeze({
             context,
+            store: lgConfig.store,
+            configurable: lgConfig.configurable,
             writer: lgConfig.writer,
             interrupt: lgConfig.interrupt,
             signal: lgConfig.signal,
@@ -501,6 +505,8 @@ export class AgentNode<
               unknown
             >
           ): Promise<InternalModelResponse<StructuredResponseFormat>> => {
+            currentSystemMessage = baselineSystemMessage;
+
             /**
              * Verify that the user didn't add any new tools.
              * We can't allow this as the ToolNode is already initiated with given tools.
@@ -647,6 +653,8 @@ export class AgentNode<
       state,
       runtime: Object.freeze({
         context: lgConfig?.context,
+        store: lgConfig.store,
+        configurable: lgConfig.configurable,
         writer: lgConfig.writer,
         interrupt: lgConfig.interrupt,
         signal: lgConfig.signal,

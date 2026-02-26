@@ -1,6 +1,6 @@
 {
   "name": "@langchain/cerebras",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Cerebras integration for LangChain.js",
   "author": "LangChain",
   "license": "MIT",
@@ -40,7 +40,7 @@
     "@langchain/core": "workspace:^",
     "@langchain/eslint": "workspace:*",
     "@langchain/standard-tests": "workspace:*",
-    "@swc/core": "^1.15.11",
+    "@swc/core": "^1.15.13",
     "@swc/jest": "^0.2.29",
     "@langchain/tsconfig": "workspace:*",
     "@tsconfig/recommended": "^1.0.3",

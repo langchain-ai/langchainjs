@@ -12,6 +12,7 @@ import { ApiClient } from "../../clients/index.js";
 import { GoogleRequestRecorder } from "../../utils/handler.js";
 import { BaseCallbackHandler } from "@langchain/core/callbacks/base";
 import { ChatGoogle, ChatGoogleParams } from "../index.js";
+import { AIMessageChunk } from "@langchain/core/messages";
 import type { Gemini } from "../types.js";
 
 interface MockResponseParameters {
@@ -66,6 +67,63 @@ class MockResponse implements Response {
   }
 }
 
+class MockStreamingResponse implements Response {
+  private readonly bodyText: string;
+
+  readonly headers: Headers = new Headers();
+  readonly ok: boolean = true;
+  readonly redirected: boolean = false;
+  readonly status: number = 200;
+  readonly statusText: string = "OK";
+  readonly type: ResponseType = "basic";
+  readonly url: string = "http://localhost";
+  readonly body: ReadableStream<Uint8Array<ArrayBuffer>>;
+  readonly bodyUsed: boolean = false;
+
+  constructor({ filePath, url }: MockResponseParameters) {
+    this.bodyText = fs.readFileSync(filePath, "utf-8");
+    this.url = url;
+    const text = this.bodyText;
+    this.body = new ReadableStream({
+      start(controller) {
+        controller.enqueue(new TextEncoder().encode(text));
+        controller.close();
+      },
+    });
+  }
+
+  async arrayBuffer(): Promise<ArrayBuffer> {
+    return new TextEncoder().encode(this.bodyText).buffer;
+  }
+  async blob(): Promise<Blob> {
+    return new Blob([this.bodyText]);
+  }
+  async formData(): Promise<FormData> {
+    throw new Error("Not implemented");
+  }
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  async json(): Promise<any> {
+    return JSON.parse(this.bodyText);
+  }
+  async text(): Promise<string> {
+    return this.bodyText;
+  }
+  async bytes(): Promise<Uint8Array<ArrayBuffer>> {
+    return new TextEncoder().encode(this.bodyText);
+  }
+  clone(): Response {
+    return new MockStreamingResponse({
+      filePath: "",
+      url: this.url,
+    });
+  }
+}
+
+interface MockApiClientOptions {
+  fileName: string;
+  streaming?: boolean;
+}
+
 class MockApiClient extends ApiClient {
   request: Request;
 
@@ -73,17 +131,20 @@ class MockApiClient extends ApiClient {
 
   filePath: string;
 
-  constructor(fileName: string) {
+  streaming: boolean;
+
+  constructor({ fileName, streaming }: MockApiClientOptions) {
     super();
     this.filePath = `src/chat_models/tests/data/mock/${fileName}`;
+    this.streaming = streaming ?? false;
   }
 
   async fetch(request: Request): Promise<Response> {
     this.request = request;
-    this.response = new MockResponse({
-      filePath: this.filePath,
-      url: request.url,
-    });
+    const params = { filePath: this.filePath, url: request.url };
+    this.response = this.streaming
+      ? new MockStreamingResponse(params)
+      : new MockResponse(params);
     return this.response;
   }
 
@@ -92,7 +153,10 @@ class MockApiClient extends ApiClient {
   }
 }
 
-type MockChatGoogleParams = ChatGoogleParams & { responseFile: string };
+type MockChatGoogleParams = ChatGoogleParams & {
+  responseFile: string;
+  streaming?: boolean;
+};
 
 describe("Google Mock", () => {
   let recorder: GoogleRequestRecorder;
@@ -102,14 +166,17 @@ describe("Google Mock", () => {
   let warnSpy: MockInstance<any>;
 
   function newChatGoogle(mockFields: MockChatGoogleParams): ChatGoogle {
-    const { model, responseFile, ...fields } = mockFields;
+    const { model, responseFile, streaming, ...fields } = mockFields;
     recorder = new GoogleRequestRecorder();
     callbacks = [
       recorder,
       // new GoogleRequestLogger(),
     ];
 
-    const apiClient = new MockApiClient(responseFile);
+    const apiClient = new MockApiClient({
+      fileName: responseFile,
+      streaming,
+    });
 
     const params = {
       model,
@@ -232,6 +299,36 @@ describe("Google Mock", () => {
     },
     {
       model: "gemini-3-pro",
+      maxReasoningTokens: 20000,
+      expectIncludeThoughts: true,
+      expectThinkingLevel: "HIGH",
+    },
+    {
+      model: "gemini-3.1-pro",
+      maxReasoningTokens: -1,
+      expectIncludeThoughts: true,
+      expectThinkingLevel: "HIGH",
+    },
+    {
+      model: "gemini-3.1-pro",
+      maxReasoningTokens: 0,
+      expectIncludeThoughts: false,
+      expectThinkingLevel: "LOW",
+    },
+    {
+      model: "gemini-3.1-pro",
+      maxReasoningTokens: 1000,
+      expectIncludeThoughts: true,
+      expectThinkingLevel: "LOW",
+    },
+    {
+      model: "gemini-3.1-pro",
+      maxReasoningTokens: 8000,
+      expectIncludeThoughts: true,
+      expectThinkingLevel: "MEDIUM",
+    },
+    {
+      model: "gemini-3.1-pro",
       maxReasoningTokens: 20000,
       expectIncludeThoughts: true,
       expectThinkingLevel: "HIGH",
@@ -367,6 +464,30 @@ describe("Google Mock", () => {
       expectThinkingLevel: "HIGH",
     },
     {
+      model: "gemini-3.1-pro",
+      reasoningEffort: "minimal",
+      expectIncludeThoughts: false,
+      expectThinkingLevel: "LOW",
+    },
+    {
+      model: "gemini-3.1-pro",
+      reasoningEffort: "low",
+      expectIncludeThoughts: true,
+      expectThinkingLevel: "LOW",
+    },
+    {
+      model: "gemini-3.1-pro",
+      reasoningEffort: "medium",
+      expectIncludeThoughts: true,
+      expectThinkingLevel: "MEDIUM",
+    },
+    {
+      model: "gemini-3.1-pro",
+      reasoningEffort: "high",
+      expectIncludeThoughts: true,
+      expectThinkingLevel: "HIGH",
+    },
+    {
       model: "gemini-3-flash",
       reasoningEffort: "minimal",
       expectIncludeThoughts: false,
@@ -425,4 +546,80 @@ describe("Google Mock", () => {
       });
     }
   );
+
+  describe("streaming usage_metadata", () => {
+    test("each chunk carries delta usage_metadata that sums to correct totals", async () => {
+      const llm = newChatGoogle({
+        model: "gemini-2.5-flash",
+        responseFile: "gemini-stream-001.txt",
+        streaming: true,
+      });
+
+      const chunks: AIMessageChunk[] = [];
+      for await (const chunk of await llm.stream("Why is the sky blue?")) {
+        chunks.push(chunk);
+      }
+
+      const chunksWithUsage = chunks.filter(
+        (c) => c.usage_metadata !== undefined
+      );
+      expect(chunksWithUsage.length).toBeGreaterThan(1);
+
+      expect(chunksWithUsage[0].usage_metadata!.input_tokens).toBe(10);
+      expect(chunksWithUsage[0].usage_metadata!.output_tokens).toBe(1);
+      expect(chunksWithUsage[0].usage_metadata!.total_tokens).toBe(11);
+
+      expect(chunksWithUsage[1].usage_metadata!.input_tokens).toBe(0);
+      expect(chunksWithUsage[1].usage_metadata!.output_tokens).toBe(4);
+      expect(chunksWithUsage[1].usage_metadata!.total_tokens).toBe(4);
+
+      expect(chunksWithUsage[2].usage_metadata!.input_tokens).toBe(0);
+      expect(chunksWithUsage[2].usage_metadata!.output_tokens).toBe(7);
+      expect(chunksWithUsage[2].usage_metadata!.total_tokens).toBe(7);
+    });
+
+    test("concatenated stream chunks have correct (non-inflated) usage_metadata", async () => {
+      const llm = newChatGoogle({
+        model: "gemini-2.5-flash",
+        responseFile: "gemini-stream-001.txt",
+        streaming: true,
+      });
+
+      let res: AIMessageChunk | null = null;
+      for await (const chunk of await llm.stream("Why is the sky blue?")) {
+        if (!res) {
+          res = chunk;
+        } else {
+          res = res.concat(chunk);
+        }
+      }
+
+      expect(res).toBeDefined();
+      expect(res!.usage_metadata).toBeDefined();
+      expect(res!.usage_metadata!.input_tokens).toBe(10);
+      expect(res!.usage_metadata!.output_tokens).toBe(12);
+      expect(res!.usage_metadata!.total_tokens).toBe(22);
+    });
+
+    test("streamUsage false excludes usage_metadata from all chunks", async () => {
+      const llm = newChatGoogle({
+        model: "gemini-2.5-flash",
+        responseFile: "gemini-stream-001.txt",
+        streaming: true,
+        streamUsage: false,
+      });
+
+      let res: AIMessageChunk | null = null;
+      for await (const chunk of await llm.stream("Why is the sky blue?")) {
+        if (!res) {
+          res = chunk;
+        } else {
+          res = res.concat(chunk);
+        }
+      }
+
+      expect(res).toBeDefined();
+      expect(res!.usage_metadata).toBeUndefined();
+    });
+  });
 });

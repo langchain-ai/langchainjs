@@ -505,6 +505,17 @@ export function getAnthropicAPI(config?: AnthropicAPIConfig): GoogleAIAPI {
     };
   }
 
+  function toolUseContentToAnthropicContent(
+    content: Record<string, unknown>
+  ): AnthropicMessageContentToolUse {
+    return {
+      type: "tool_use",
+      id: content.id as string,
+      name: content.name as string,
+      input: content.input as Record<string, unknown>,
+    };
+  }
+
   function thinkingContentToAnthropicContent(
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     content: Record<string, any>
@@ -539,6 +550,8 @@ export function getAnthropicAPI(config?: AnthropicAPIConfig): GoogleAIAPI {
         return imageContentToAnthropicContent(
           content as MessageContentImageUrl
         );
+      case "tool_use":
+        return toolUseContentToAnthropicContent(content);
       case "thinking":
         return thinkingContentToAnthropicContent(
           content as Record<string, unknown>
@@ -548,6 +561,9 @@ export function getAnthropicAPI(config?: AnthropicAPIConfig): GoogleAIAPI {
           content as Record<string, unknown>
         );
       default:
+        if (type === "tool_call") {
+          return undefined;
+        }
         console.warn(`Unexpected content type: ${type}`, content);
         return undefined;
     }
@@ -831,9 +847,20 @@ export function getAnthropicAPI(config?: AnthropicAPIConfig): GoogleAIAPI {
   function aiMessageToAnthropicMessage(base: AIMessage): AnthropicMessage {
     const ret = baseRoleToAnthropicMessage(base, "assistant");
 
-    const toolContent = toolCallsToAnthropicContent(base.tool_calls);
+    const content = ret.content as AnthropicMessageContent[];
+    const existingToolUseIds = new Set(
+      content
+        .filter(
+          (block): block is AnthropicMessageContentToolUse =>
+            block.type === "tool_use"
+        )
+        .map((block) => block.id)
+    );
+
+    const toolContent = toolCallsToAnthropicContent(base.tool_calls).filter(
+      (block) => !existingToolUseIds.has(block.id)
+    );
     if (toolContent.length > 0) {
-      const content = ret.content as AnthropicMessageContent[];
       ret.content = [...content, ...toolContent];
     }
 

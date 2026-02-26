@@ -279,7 +279,7 @@ export interface ChatBedrockConverseCallOptions
  * import { ChatBedrockConverse } from '@langchain/aws';
  *
  * const llm = new ChatBedrockConverse({
- *   model: "anthropic.claude-3-5-sonnet-20240620-v1:0",
+ *   model: "anthropic.claude-sonnet-4-5-20250929-v1:0",
  *   temperature: 0,
  *   maxTokens: undefined,
  *   timeout: undefined,
@@ -742,6 +742,7 @@ export class ChatBedrockConverse
         ? { ...(params ?? {}), model: modelOrFields }
         : (modelOrFields ?? {});
     super(fields);
+    this._addVersion("@langchain/aws", __PKG_VERSION__);
     const {
       profile,
       filepath,
