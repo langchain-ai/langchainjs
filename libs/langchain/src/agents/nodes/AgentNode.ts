@@ -468,6 +468,8 @@ export class AgentNode<
            */
           const runtime: Runtime<unknown> = Object.freeze({
             context,
+            store: lgConfig.store,
+            configurable: lgConfig.configurable,
             writer: lgConfig.writer,
             interrupt: lgConfig.interrupt,
             signal: lgConfig.signal,
@@ -651,6 +653,8 @@ export class AgentNode<
       state,
       runtime: Object.freeze({
         context: lgConfig?.context,
+        store: lgConfig.store,
+        configurable: lgConfig.configurable,
         writer: lgConfig.writer,
         interrupt: lgConfig.interrupt,
         signal: lgConfig.signal,
