@@ -1,5 +1,16 @@
 # @langchain/anthropic
 
+## 1.3.21
+
+### Patch Changes
+
+- [#10106](https://github.com/langchain-ai/langchainjs/pull/10106) [`9f30267`](https://github.com/langchain-ai/langchainjs/commit/9f30267e95a2a42fac71f1d3674b84c5a190dbbc) Thanks [@hntrl](https://github.com/hntrl)! - Add package version metadata to runnable traces. Each package now stamps its version in `this.metadata.versions` at construction time, making version info available in LangSmith trace metadata.
+
+- [#10166](https://github.com/langchain-ai/langchainjs/pull/10166) [`e9c41f0`](https://github.com/langchain-ai/langchainjs/commit/e9c41f0ab9ea6e7fdeceffa9063a422d4fb62777) Thanks [@kanweiwei](https://github.com/kanweiwei)! - fix(anthropic): only set topP when defined to avoid API error
+
+- Updated dependencies [[`9f30267`](https://github.com/langchain-ai/langchainjs/commit/9f30267e95a2a42fac71f1d3674b84c5a190dbbc), [`403a99f`](https://github.com/langchain-ai/langchainjs/commit/403a99fd826383f30300809ae077e1c967023520), [`3b1fd54`](https://github.com/langchain-ai/langchainjs/commit/3b1fd5458a4aa29c398122829f383f21b5ac39da), [`77bd982`](https://github.com/langchain-ai/langchainjs/commit/77bd98274a885e947d76f7a9c6dd0b3763453218)]:
+  - @langchain/core@1.1.29
+
 ## 1.3.20
 
 ### Patch Changes
