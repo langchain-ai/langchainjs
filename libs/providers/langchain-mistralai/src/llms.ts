@@ -180,6 +180,7 @@ export class MistralAI
 
   constructor(fields?: MistralAIInput) {
     super(fields ?? {});
+    this._addVersion("@langchain/mistralai", __PKG_VERSION__);
 
     this.model = fields?.model ?? this.model;
     this.temperature = fields?.temperature ?? this.temperature;
