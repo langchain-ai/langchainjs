@@ -685,8 +685,8 @@ importers:
         specifier: '>=0.5.0 <1.0.0'
         version: 0.5.7(@opentelemetry/api@1.9.0)(openai@6.22.0(ws@8.19.0(bufferutil@4.1.0))(zod@4.3.6))
       uuid:
-        specifier: ^10.0.0
-        version: 10.0.0
+        specifier: ^11.1.0
+        version: 11.1.0
       zod:
         specifier: ^3.25.76 || ^4
         version: 4.3.6
@@ -1658,8 +1658,8 @@ importers:
         specifier: ^6.6.2
         version: 6.6.2
       uuid:
-        specifier: ^10.0.0
-        version: 10.0.0
+        specifier: ^11.1.0
+        version: 11.1.0
       zod:
         specifier: ^3.25.76 || ^4
         version: 4.3.6
