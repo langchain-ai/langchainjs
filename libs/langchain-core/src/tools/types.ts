@@ -53,19 +53,6 @@ export type InferToolOutputFromFunc<F> = F extends (
 /* eslint-enable @typescript-eslint/no-explicit-any */
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export type InferToolOutputFromFunc<F> = F extends (
-  ...args: any[]
-) => AsyncGenerator<any, infer R, any>
-  ? R
-  : // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    F extends (...args: any[]) => Promise<infer R>
-    ? R
-    : // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      F extends (...args: any[]) => infer R
-      ? R
-      : ToolOutputType;
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type ContentAndArtifact = [MessageContent, any];
 
 /**
