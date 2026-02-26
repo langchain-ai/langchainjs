@@ -107,10 +107,10 @@ jobs:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
       - name: Setup pnpm
         uses: pnpm/action-setup@41ff72655975bd51cab0327fa583b6e92b6d3061 # v4.2.0
-      - name: Use Node.js ${{ matrix.node-version }}
+      - name: Use Node.js (build)
         uses: actions/setup-node@6044e13b5dc448c55e2357c09f80417699197238 # v6.2.0
         with:
-          node-version: ${{ matrix.node-version }}
+          node-version-file: ".nvmrc"
           cache: "pnpm"
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
@@ -122,5 +122,9 @@ jobs:
         # in CI is easier if we separate the build step from the test step.
       - name: Build '@langchain/${{ matrix.package }}' package
         run: pnpm build --filter @langchain/${{ matrix.package }}
+      - name: Use Node.js ${{ matrix.node-version }} (test)
+        uses: actions/setup-node@6044e13b5dc448c55e2357c09f80417699197238 # v6.2.0
+        with:
+          node-version: ${{ matrix.node-version }}
       - name: Test '@langchain/${{ matrix.package }}' package
         run: pnpm test:unit:ci --filter @langchain/${{ matrix.package }}
