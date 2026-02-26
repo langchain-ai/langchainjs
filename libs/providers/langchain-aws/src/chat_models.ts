@@ -279,7 +279,7 @@ export interface ChatBedrockConverseCallOptions
  * import { ChatBedrockConverse } from '@langchain/aws';
  *
  * const llm = new ChatBedrockConverse({
- *   model: "anthropic.claude-3-5-sonnet-20240620-v1:0",
+ *   model: "anthropic.claude-sonnet-4-5-20250929-v1:0",
  *   temperature: 0,
  *   maxTokens: undefined,
  *   timeout: undefined,
@@ -731,8 +731,18 @@ export class ChatBedrockConverse
    */
   supportsToolChoiceValues?: Array<"auto" | "any" | "tool">;
 
-  constructor(fields?: ChatBedrockConverseInput) {
-    super(fields ?? {});
+  constructor(model: string, params?: Omit<ChatBedrockConverseInput, "model">);
+  constructor(fields?: ChatBedrockConverseInput);
+  constructor(
+    modelOrFields?: string | ChatBedrockConverseInput,
+    params?: Omit<ChatBedrockConverseInput, "model">
+  ) {
+    const fields =
+      typeof modelOrFields === "string"
+        ? { ...(params ?? {}), model: modelOrFields }
+        : (modelOrFields ?? {});
+    super(fields);
+    this._addVersion("@langchain/aws", __PKG_VERSION__);
     const {
       profile,
       filepath,
@@ -744,7 +754,7 @@ export class ChatBedrockConverse
       webIdentityTokenFile,
       roleAssumerWithWebIdentity,
       ...rest
-    } = fields ?? {};
+    } = fields;
 
     const credentials =
       rest?.credentials ??
@@ -768,9 +778,9 @@ export class ChatBedrockConverse
     }
 
     this.client =
-      fields?.client ??
+      fields.client ??
       new BedrockRuntimeClient({
-        ...fields?.clientOptions,
+        ...fields.clientOptions,
         region,
         credentials,
         endpoint: rest.endpointHost

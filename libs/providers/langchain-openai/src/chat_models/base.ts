@@ -226,6 +226,19 @@ export interface BaseChatOpenAIFields
   configuration?: ClientOptions;
 }
 
+export function getChatOpenAIModelParams<TParams extends BaseChatOpenAIFields>(
+  modelOrParams?: string | TParams,
+  paramsArg?: Omit<TParams, "model">
+): TParams | undefined {
+  if (typeof modelOrParams === "string") {
+    return { model: modelOrParams, ...(paramsArg ?? {}) } as TParams;
+  }
+  if (modelOrParams == null) {
+    return paramsArg as TParams | undefined;
+  }
+  return modelOrParams;
+}
+
 /** @internal */
 export abstract class BaseChatOpenAI<
   CallOptions extends BaseChatOpenAICallOptions,
@@ -513,6 +526,8 @@ export abstract class BaseChatOpenAI<
     }
 
     this.zdrEnabled = fields?.zdrEnabled ?? false;
+
+    this._addVersion("@langchain/openai", __PKG_VERSION__);
   }
 
   /**

@@ -632,7 +632,16 @@ export class ChatXAI extends ChatOpenAICompletions<ChatXAICallOptions> {
    */
   searchParameters?: XAISearchParameters;
 
-  constructor(fields?: Partial<ChatXAIInput>) {
+  constructor(model: string, fields?: Omit<ChatXAIInput, "model">);
+  constructor(fields?: Partial<ChatXAIInput>);
+  constructor(
+    modelOrFields?: string | Partial<ChatXAIInput>,
+    fieldsArg?: Omit<ChatXAIInput, "model">
+  ) {
+    const fields =
+      typeof modelOrFields === "string"
+        ? { ...(fieldsArg ?? {}), model: modelOrFields }
+        : (modelOrFields ?? {});
     const apiKey = fields?.apiKey || getEnvironmentVariable("XAI_API_KEY");
     if (!apiKey) {
       throw new Error(
@@ -648,6 +657,8 @@ export class ChatXAI extends ChatOpenAICompletions<ChatXAICallOptions> {
         baseURL: fields?.baseURL ?? "https://api.x.ai/v1",
       },
     });
+
+    this._addVersion("@langchain/xai", __PKG_VERSION__);
 
     this.searchParameters = fields?.searchParameters;
   }

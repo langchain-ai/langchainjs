@@ -1,6 +1,6 @@
 {
   "name": "@langchain/ollama",
-  "version": "1.2.3",
+  "version": "1.2.5",
   "description": "Ollama integration for LangChain.js",
   "author": "LangChain",
   "license": "MIT",

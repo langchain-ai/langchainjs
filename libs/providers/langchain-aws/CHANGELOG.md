@@ -1,5 +1,33 @@
 # @langchain/aws
 
+## 1.3.0
+
+### Minor Changes
+
+- [#10150](https://github.com/langchain-ai/langchainjs/pull/10150) [`4fe6aa3`](https://github.com/langchain-ai/langchainjs/commit/4fe6aa31b50556e183a61737f60c8bef31d0e72b) Thanks [@hntrl](https://github.com/hntrl)! - feat(aws): Add video and audio content block support for ChatBedrockConverse input messages
+  - Convert standard multimodal video/audio blocks (base64, Uint8Array, data URL, S3 URI) to Bedrock's native format
+  - Pass through native Bedrock video/audio blocks unchanged
+  - Adds support for all Bedrock video formats (flv, mkv, mov, mp4, mpeg, mpg, three_gp, webm, wmv) and audio formats (aac, flac, m4a, mka, mkv, mp3, mp4, mpeg, mpga, ogg, opus, pcm, wav, webm, x-aac)
+
+### Patch Changes
+
+- [#10106](https://github.com/langchain-ai/langchainjs/pull/10106) [`9f30267`](https://github.com/langchain-ai/langchainjs/commit/9f30267e95a2a42fac71f1d3674b84c5a190dbbc) Thanks [@hntrl](https://github.com/hntrl)! - Add package version metadata to runnable traces. Each package now stamps its version in `this.metadata.versions` at construction time, making version info available in LangSmith trace metadata.
+
+## 1.2.5
+
+### Patch Changes
+
+- [#10108](https://github.com/langchain-ai/langchainjs/pull/10108) [`e7576ee`](https://github.com/langchain-ai/langchainjs/commit/e7576ee9e6408c399c08d271db43f63e622da10f) Thanks [@hntrl](https://github.com/hntrl)! - fix: replace retired Anthropic model IDs with active replacements
+  - Update default model in ChatAnthropic from `claude-3-5-sonnet-latest` to `claude-sonnet-4-5-20250929`
+  - Regenerate model profiles with latest data from models.dev API
+  - Replace retired `claude-3-5-haiku-20241022`, `claude-3-7-sonnet-20250219`, `claude-3-5-sonnet-20240620`, and `claude-3-5-sonnet-20241022` in tests, docstrings, and examples
+
+## 1.2.4
+
+### Patch Changes
+
+- [#10080](https://github.com/langchain-ai/langchainjs/pull/10080) [`b583729`](https://github.com/langchain-ai/langchainjs/commit/b583729e99cf0c035630f6b311c4d069a1980cca) Thanks [@hntrl](https://github.com/hntrl)! - Add string-model constructor overloads for chat models (with supporting tests where applicable).
+
 ## 1.2.3
 
 ### Patch Changes

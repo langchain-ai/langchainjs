@@ -1,6 +1,5 @@
 import type { LanguageModelLike } from "@langchain/core/language_models/base";
 import { initChatModel } from "../../chat_models/universal.js";
-import type { AgentMiddleware } from "./types.js";
 import { createMiddleware } from "../middleware.js";
 
 /**
@@ -40,7 +39,7 @@ export function modelFallbackMiddleware(
    * The fallback models to try, in order.
    */
   ...fallbackModels: (string | LanguageModelLike)[]
-): AgentMiddleware {
+) {
   return createMiddleware({
     name: "modelFallbackMiddleware",
     wrapModelCall: async (request, handler) => {

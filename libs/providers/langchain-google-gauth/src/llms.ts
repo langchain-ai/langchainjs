@@ -27,6 +27,7 @@ export class GoogleLLM
 
   constructor(fields?: GoogleLLMInput) {
     super(fields);
+    this._addVersion("@langchain/google-gauth", __PKG_VERSION__);
   }
 
   buildAbstractedClient(

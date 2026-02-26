@@ -1,5 +1,46 @@
 # @langchain/community
 
+## 1.1.20
+
+### Patch Changes
+
+- Updated dependencies [[`9f30267`](https://github.com/langchain-ai/langchainjs/commit/9f30267e95a2a42fac71f1d3674b84c5a190dbbc), [`403a99f`](https://github.com/langchain-ai/langchainjs/commit/403a99fd826383f30300809ae077e1c967023520), [`3b1fd54`](https://github.com/langchain-ai/langchainjs/commit/3b1fd5458a4aa29c398122829f383f21b5ac39da), [`f298a9b`](https://github.com/langchain-ai/langchainjs/commit/f298a9bdedff7bc2b0eb7f6b5e6b52fd3042a7b7), [`77bd982`](https://github.com/langchain-ai/langchainjs/commit/77bd98274a885e947d76f7a9c6dd0b3763453218)]:
+  - @langchain/core@1.1.29
+  - @langchain/openai@1.2.11
+  - @langchain/classic@1.0.21
+
+## 1.1.19
+
+### Patch Changes
+
+- Updated dependencies [[`10a876c`](https://github.com/langchain-ai/langchainjs/commit/10a876c7d5ff27d8f2889761ee20e95f76a50518), [`62ba83e`](https://github.com/langchain-ai/langchainjs/commit/62ba83edd5206c86d8da8d1b608a2493ee4f3da8), [`b46d96a`](https://github.com/langchain-ai/langchainjs/commit/b46d96a508a8bf212561dbb6f025e35c75f16257)]:
+  - @langchain/core@1.1.28
+  - @langchain/openai@1.2.10
+  - @langchain/classic@1.0.20
+
+## 1.1.18
+
+### Patch Changes
+
+- [#10108](https://github.com/langchain-ai/langchainjs/pull/10108) [`e7576ee`](https://github.com/langchain-ai/langchainjs/commit/e7576ee9e6408c399c08d271db43f63e622da10f) Thanks [@hntrl](https://github.com/hntrl)! - fix: replace retired Anthropic model IDs with active replacements
+  - Update default model in ChatAnthropic from `claude-3-5-sonnet-latest` to `claude-sonnet-4-5-20250929`
+  - Regenerate model profiles with latest data from models.dev API
+  - Replace retired `claude-3-5-haiku-20241022`, `claude-3-7-sonnet-20250219`, `claude-3-5-sonnet-20240620`, and `claude-3-5-sonnet-20241022` in tests, docstrings, and examples
+
+- [#10116](https://github.com/langchain-ai/langchainjs/pull/10116) [`2812d2b`](https://github.com/langchain-ai/langchainjs/commit/2812d2b2b9fd9343c4850e2ab906b8cf440975ee) Thanks [@hntrl](https://github.com/hntrl)! - Validate redirects in RecursiveUrlLoader to prevent SSRF bypasses.
+
+- Updated dependencies []:
+  - @langchain/classic@1.0.19
+
+## 1.1.17
+
+### Patch Changes
+
+- Updated dependencies [[`b583729`](https://github.com/langchain-ai/langchainjs/commit/b583729e99cf0c035630f6b311c4d069a1980cca), [`fb2226e`](https://github.com/langchain-ai/langchainjs/commit/fb2226e6decdaba21e78b3f01877b45fa1eed6d3)]:
+  - @langchain/openai@1.2.9
+  - @langchain/core@1.1.27
+  - @langchain/classic@1.0.19
+
 ## 1.1.16
 
 ### Patch Changes

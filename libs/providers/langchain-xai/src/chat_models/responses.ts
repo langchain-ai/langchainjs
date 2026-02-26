@@ -114,8 +114,19 @@ export class ChatXAIResponses<
   // Constructor
   // -------------------------------------------------------------------------
 
-  constructor(fields?: ChatXAIResponsesInput) {
-    super(fields ?? {});
+  constructor(model: string, fields?: Omit<ChatXAIResponsesInput, "model">);
+  constructor(fields?: ChatXAIResponsesInput);
+  constructor(
+    modelOrFields?: string | ChatXAIResponsesInput,
+    fieldsArg?: Omit<ChatXAIResponsesInput, "model">
+  ) {
+    const fields =
+      typeof modelOrFields === "string"
+        ? { ...(fieldsArg ?? {}), model: modelOrFields }
+        : (modelOrFields ?? {});
+    super(fields);
+
+    this._addVersion("@langchain/xai", __PKG_VERSION__);
 
     const apiKey = fields?.apiKey ?? getEnvironmentVariable("XAI_API_KEY");
     if (!apiKey) {

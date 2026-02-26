@@ -1,6 +1,6 @@
 {
   "name": "@langchain/google-common",
-  "version": "2.1.19",
+  "version": "2.1.21",
   "description": "Core types and classes for Google services.",
   "type": "module",
   "engines": {
@@ -41,7 +41,7 @@
     "@langchain/core": "workspace:^",
     "@langchain/eslint": "workspace:*",
     "@types/uuid": "^10.0.0",
-    "@swc/core": "^1.15.11",
+    "@swc/core": "^1.15.13",
     "@swc/jest": "^0.2.29",
     "@langchain/tsconfig": "workspace:*",
     "@tsconfig/recommended": "^1.0.3",
