@@ -67,7 +67,7 @@ import {
   isSerializableSchema,
   isStandardSchema,
   SerializableSchema,
-} from "../utils/types/standard-schema.js";
+} from "../utils/standard_schema.js";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type ToolChoice = string | Record<string, any> | "auto" | "any";

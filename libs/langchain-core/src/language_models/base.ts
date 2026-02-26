@@ -27,7 +27,7 @@ import {
   InteropZodType,
 } from "../utils/types/zod.js";
 import { ModelProfile } from "./profile.js";
-import { SerializableSchema } from "../utils/types/standard-schema.js";
+import { SerializableSchema } from "../utils/standard_schema.js";
 
 // https://www.npmjs.com/package/js-tiktoken
 
