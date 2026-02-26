@@ -34,12 +34,23 @@ export type ToolOutputType = any;
 
 export type ToolEventType = unknown;
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+/* eslint-disable @typescript-eslint/no-explicit-any */
 export type InferToolEventFromFunc<F> = F extends (
   ...args: any[]
 ) => AsyncGenerator<infer Y, any, any>
   ? Y
   : ToolEventType;
+
+export type InferToolOutputFromFunc<F> = F extends (
+  ...args: any[]
+) => AsyncGenerator<any, infer R, any>
+  ? R
+  : F extends (...args: any[]) => Promise<infer R>
+    ? R
+    : F extends (...args: any[]) => infer R
+      ? R
+      : ToolOutputType;
+/* eslint-enable @typescript-eslint/no-explicit-any */
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type InferToolOutputFromFunc<F> = F extends (
