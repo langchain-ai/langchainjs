@@ -59,6 +59,7 @@ import type {
   ToolRuntime,
   ToolEventType,
   InferToolEventFromFunc,
+  InferToolOutputFromFunc,
 } from "./types.js";
 import { type JSONSchema, validatesOnlyStrings } from "../utils/json_schema.js";
 import { consumeAsyncGenerator, isAsyncGenerator } from "../runnables/iter.js";
@@ -653,7 +654,7 @@ export function tool<
 >(
   func: FuncT,
   fields: ToolWrapperParams<SchemaT>
-): DynamicTool<ToolOutputT, InferToolEventFromFunc<FuncT>>;
+): DynamicTool<InferToolOutputFromFunc<FuncT>, InferToolEventFromFunc<FuncT>>;
 
 export function tool<
   SchemaT extends ZodStringV4,
@@ -670,7 +671,7 @@ export function tool<
 >(
   func: FuncT,
   fields: ToolWrapperParams<SchemaT>
-): DynamicTool<ToolOutputT, InferToolEventFromFunc<FuncT>>;
+): DynamicTool<InferToolOutputFromFunc<FuncT>, InferToolEventFromFunc<FuncT>>;
 
 export function tool<
   SchemaT extends ZodObjectV3,
@@ -687,7 +688,7 @@ export function tool<
   SchemaT,
   SchemaOutputT,
   SchemaInputT,
-  ToolOutputT,
+  InferToolOutputFromFunc<FuncT>,
   InferToolEventFromFunc<FuncT>,
   NameT
 >;
@@ -707,7 +708,7 @@ export function tool<
   SchemaT,
   SchemaOutputT,
   SchemaInputT,
-  ToolOutputT,
+  InferToolOutputFromFunc<FuncT>,
   InferToolEventFromFunc<FuncT>,
   NameT
 >;
@@ -734,7 +735,7 @@ export function tool<
   SchemaT,
   SchemaOutputT,
   SchemaInputT,
-  ToolOutputT,
+  InferToolOutputFromFunc<FuncT>,
   InferToolEventFromFunc<FuncT>,
   NameT
 >;
@@ -756,11 +757,11 @@ export function tool<
       SchemaT,
       SchemaOutputT,
       SchemaInputT,
-      ToolOutputT,
+      InferToolOutputFromFunc<FuncT>,
       InferToolEventFromFunc<FuncT>,
       NameT
     >
-  | DynamicTool<ToolOutputT, InferToolEventFromFunc<FuncT>>;
+  | DynamicTool<InferToolOutputFromFunc<FuncT>, InferToolEventFromFunc<FuncT>>;
 
 // Overloads with ToolRuntime as CallOptions
 export function tool<
