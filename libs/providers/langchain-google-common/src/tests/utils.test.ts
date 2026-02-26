@@ -4,9 +4,10 @@ import { InMemoryStore } from "@langchain/core/stores";
 import { SerializedConstructor } from "@langchain/core/load/serializable";
 import { load } from "@langchain/core/load";
 import { z } from "zod/v3";
-import { HumanMessage } from "@langchain/core/messages";
+import { AIMessage, HumanMessage, ToolMessage } from "@langchain/core/messages";
 import { schemaToGeminiParameters } from "../utils/zod_to_gemini_parameters.js";
 import { getGeminiAPI } from "../utils/gemini.js";
+import { getAnthropicAPI } from "../utils/anthropic.js";
 import {
   GeminiPartFileData,
   GeminiPartInlineData,
@@ -25,6 +26,94 @@ import {
   ReadableSseJsonStream,
   ReadableSseStream,
 } from "../utils/stream.js";
+
+describe("anthropic formatting", () => {
+  test("keeps existing tool_use content and does not duplicate when tool_calls are also present", async () => {
+    const anthropic = getAnthropicAPI();
+    const input = [
+      new HumanMessage("Use a tool."),
+      new AIMessage({
+        content: [
+          { type: "text", text: "I will call a tool." },
+          {
+            type: "tool_use",
+            id: "toolu_123",
+            name: "lookup_weather",
+            input: { city: "SF" },
+          } as any,
+        ],
+        tool_calls: [
+          {
+            id: "toolu_123",
+            name: "lookup_weather",
+            args: { city: "SF" },
+            type: "tool_call",
+          },
+        ],
+      }),
+      new ToolMessage({
+        tool_call_id: "toolu_123",
+        content: [{ type: "text", text: "72 and sunny" }],
+      }),
+    ];
+
+    const request = (await anthropic.formatData(input, {
+      model: "claude-sonnet-4",
+      maxOutputTokens: 256,
+    } as any)) as any;
+
+    const assistant = request.messages.find((m: any) => m.role === "assistant");
+    const toolUseBlocks = assistant.content.filter(
+      (block: any) => block.type === "tool_use"
+    );
+
+    expect(toolUseBlocks).toHaveLength(1);
+    expect(toolUseBlocks[0]).toMatchObject({
+      id: "toolu_123",
+      name: "lookup_weather",
+      input: { city: "SF" },
+    });
+  });
+
+  test("formats tool messages as tool_result content", async () => {
+    const anthropic = getAnthropicAPI();
+    const input = [
+      new HumanMessage("Use a tool."),
+      new AIMessage({
+        content: [
+          {
+            type: "tool_use",
+            id: "toolu_abc",
+            name: "lookup_weather",
+            input: { city: "Paris" },
+          } as any,
+        ],
+      }),
+      new ToolMessage({
+        tool_call_id: "toolu_abc",
+        content: [{ type: "text", text: "18C" }],
+      }),
+    ];
+
+    const request = (await anthropic.formatData(input, {
+      model: "claude-sonnet-4",
+      maxOutputTokens: 256,
+    } as any)) as any;
+
+    const userToolResult = request.messages.find(
+      (m: any) =>
+        m.role === "user" &&
+        m.content?.[0]?.type === "tool_result" &&
+        m.content?.[0]?.tool_use_id === "toolu_abc"
+    );
+
+    expect(userToolResult).toBeDefined();
+    expect(userToolResult.content[0].content[0]).toMatchObject({
+      type: "text",
+      text: "18C",
+    });
+  });
+});
 
 describe("schemaToGeminiParameters", () => {
   test("can convert zod schema to gemini schema", () => {
