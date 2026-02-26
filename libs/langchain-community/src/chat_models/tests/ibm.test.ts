@@ -853,4 +853,136 @@ describe("Chat unit tests", () => {
       expect(result?.additional_kwargs.reasoning).toBe(reasoning);
     });
   });
+
+  describe("Framework callback properties handling", () => {
+    test("Reject framework properties when passed to constructor", async () => {
+      const testPropsWithFrameworkProps = {
+        model,
+        version: "2024-05-31",
+        serviceUrl,
+        projectId,
+        handlers: [],
+        inheritableHandlers: [],
+        inheritableTags: ["tag1"],
+        inheritableMetadata: { key: "value" },
+        name: "test-run",
+        _parentRunId: "parent-run-id-123",
+        ...fakeAuthProp,
+      };
+
+      expect(() => {
+        new ChatWatsonx(testPropsWithFrameworkProps as any);
+      }).toThrow(
+        /Unexpected properties: handlers, inheritableHandlers, inheritableTags, inheritableMetadata, name, _parentRunId/
+      );
+    });
+
+    test("Handle LangChain framework properties in invocationParams", async () => {
+      const testProps: ChatWatsonxInput = {
+        model,
+        version: "2024-05-31",
+        serviceUrl,
+        projectId,
+      };
+      const instance = new ChatWatsonx({ ...testProps, ...fakeAuthProp });
+
+      const optionsWithFrameworkProps = {
+        handlers: [],
+        inheritableHandlers: [],
+        inheritableTags: ["tag1"],
+        inheritableMetadata: { key: "value" },
+        name: "test-run",
+        _parentRunId: "parent-run-id-123",
+        maxTokens: 100,
+      };
+
+      expect(() => {
+        instance.invocationParams(optionsWithFrameworkProps as any);
+      }).not.toThrow();
+    });
+
+    test("Handle framework properties with tools", async () => {
+      const testProps: ChatWatsonxInput = {
+        model,
+        version: "2024-05-31",
+        serviceUrl,
+        projectId,
+      };
+      const instance = new ChatWatsonx({ ...testProps, ...fakeAuthProp });
+
+      const optionsWithToolsAndFrameworkProps = {
+        handlers: [],
+        inheritableHandlers: [],
+        inheritableTags: ["tool-invocation"],
+        inheritableMetadata: { source: "tool" },
+        name: "weather-query",
+        _parentRunId: "parent-123",
+        tools: [],
+        tool_choice: "auto",
+        maxTokens: 100,
+      };
+
+      expect(() => {
+        instance.invocationParams(optionsWithToolsAndFrameworkProps as any);
+      }).not.toThrow();
+    });
+
+    test("Invoke with framework properties from tool without validation error", async () => {
+      const instance = new ChatWatsonx({
+        version: "2024-03-14",
+        serviceUrl,
+        projectId,
+        watsonxAIAuthType: "iam",
+        watsonxAIApikey: "fake_key",
+        model,
+      });
+
+      const mockResponse = {
+        status: 200,
+        headers: {},
+        statusText: "OK",
+        result: {
+          id: "",
+          created: 1752142071,
+          model_id: model,
+          choices: [
+            {
+              index: 0,
+              message: {
+                role: "assistant",
+                content: "Test response",
+                refusal: "",
+                tool_calls: [],
+              },
+              finish_reason: "stop",
+            },
+          ],
+          usage: {
+            prompt_tokens: 10,
+            completion_tokens: 5,
+            total_tokens: 15,
+          },
+        },
+      };
+
+      if (instance["service"]) {
+        jest
+          .spyOn(instance["service"], "textChat")
+          .mockResolvedValue(mockResponse as any);
+      }
+
+      const toolInvocationOptions = {
+        handlers: [],
+        inheritableHandlers: [],
+        inheritableTags: ["webbrowser", "tool"],
+        inheritableMetadata: { tool: "WebBrowser" },
+        name: "browser-invoke",
+        _parentRunId: "parent-run-id-abc123",
+      };
+
+      await expect(
+        instance.invoke("test input", toolInvocationOptions as any)
+      ).resolves.toBeDefined();
+    });
+  });
 });
