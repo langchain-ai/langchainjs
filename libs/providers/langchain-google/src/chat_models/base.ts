@@ -8,6 +8,9 @@ import {
   AIMessageChunk,
   AIMessageChunkFields,
   BaseMessage,
+  type UsageMetadata,
+  type InputTokenDetails,
+  type OutputTokenDetails,
 } from "@langchain/core/messages";
 import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
 import { concat } from "@langchain/core/utils/stream";
@@ -69,6 +72,43 @@ import {
   convertFieldsToThinkingConfig,
 } from "../converters/params.js";
 import { Gemini } from "./api-types.js";
+
+function subtractTokenDetails<T extends InputTokenDetails | OutputTokenDetails>(
+  current?: T,
+  previous?: T
+): T | undefined {
+  if (!current) return undefined;
+  if (!previous) return current;
+  const result = {} as Record<string, number>;
+  for (const key of Object.keys(current) as (keyof T)[]) {
+    const cur = current[key] as number | undefined;
+    const prev = previous[key] as number | undefined;
+    if (cur !== undefined) {
+      result[key as string] = cur - (prev ?? 0);
+    }
+  }
+  return result as T;
+}
+
+function subtractUsageMetadata(
+  current: UsageMetadata,
+  previous?: UsageMetadata
+): UsageMetadata {
+  if (!previous) return current;
+  return {
+    input_tokens: current.input_tokens - previous.input_tokens,
+    output_tokens: current.output_tokens - previous.output_tokens,
+    total_tokens: current.total_tokens - previous.total_tokens,
+    input_token_details: subtractTokenDetails(
+      current.input_token_details,
+      previous.input_token_details
+    ),
+    output_token_details: subtractTokenDetails(
+      current.output_token_details,
+      previous.output_token_details
+    ),
+  };
+}
 
 export type GooglePlatformType = "gai" | "gcp";
 
@@ -529,6 +569,7 @@ export abstract class BaseChatGoogle<
     }
 
     if (response.body) {
+      let previousUsage: UsageMetadata | undefined;
       const stream = response.body
         .pipeThrough(new TextDecoderStream())
         .pipeThrough(new EventSourceParserStream())
@@ -592,11 +633,12 @@ export abstract class BaseChatGoogle<
                   },
                 };
 
-                // Include usageMetadata if there is any and we have
-                // enabled it with streamUsage on
                 if (chunk?.usageMetadata && streamUsage) {
-                  messageChunkParams.usage_metadata =
+                  const cumulative =
                     convertGeminiGenerateContentResponseToUsageMetadata(chunk);
+                  messageChunkParams.usage_metadata =
+                    subtractUsageMetadata(cumulative, previousUsage);
+                  previousUsage = cumulative;
                 }
                 const messageChunk = new AIMessageChunk(messageChunkParams);
 
