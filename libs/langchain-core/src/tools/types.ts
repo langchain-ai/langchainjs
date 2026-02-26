@@ -35,6 +35,13 @@ export type ToolOutputType = any;
 export type ToolEventType = unknown;
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
+export type InferToolEventFromFunc<F> = F extends (
+  ...args: any[]
+) => AsyncGenerator<infer Y, any, any>
+  ? Y
+  : ToolEventType;
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type ContentAndArtifact = [MessageContent, any];
 
 /**

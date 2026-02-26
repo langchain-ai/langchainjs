@@ -58,6 +58,7 @@ import type {
   ToolOutputType,
   ToolRuntime,
   ToolEventType,
+  InferToolEventFromFunc,
 } from "./types.js";
 import { type JSONSchema, validatesOnlyStrings } from "../utils/json_schema.js";
 import { consumeAsyncGenerator, isAsyncGenerator } from "../runnables/iter.js";
@@ -637,159 +638,39 @@ interface ToolWrapperParams<
  *
  * @returns {DynamicStructuredTool<SchemaT>} A new StructuredTool instance.
  */
-// Generator overloads must come before non-generator overloads so TypeScript picks the more specific AsyncGenerator signature instead
-// of falling through to RunnableFunc (whose return type is `any`).
 export function tool<
   SchemaT extends ZodStringV3,
-  ToolEventT = ToolEventType,
   ToolOutputT = ToolOutputType,
-  TState = unknown,
-  TContext = unknown,
+  FuncT extends RunnableFunc<
+    InferInteropZodOutput<SchemaT>,
+    ToolOutputT,
+    ToolRunnableConfig
+  > = RunnableFunc<
+    InferInteropZodOutput<SchemaT>,
+    ToolOutputT,
+    ToolRunnableConfig
+  >,
 >(
-  func: (
-    input: InferInteropZodOutput<SchemaT>,
-    runtime?: ToolRuntime<TState, TContext>
-  ) => AsyncGenerator<ToolEventT, ToolOutputT>,
+  func: FuncT,
   fields: ToolWrapperParams<SchemaT>
-): DynamicTool<ToolOutputT, ToolEventT>;
+): DynamicTool<ToolOutputT, InferToolEventFromFunc<FuncT>>;
 
 export function tool<
   SchemaT extends ZodStringV4,
-  ToolEventT = ToolEventType,
   ToolOutputT = ToolOutputType,
-  TState = unknown,
-  TContext = unknown,
->(
-  func: (
-    input: InferInteropZodOutput<SchemaT>,
-    runtime?: ToolRuntime<TState, TContext>
-  ) => AsyncGenerator<ToolEventT, ToolOutputT>,
-  fields: ToolWrapperParams<SchemaT>
-): DynamicTool<ToolOutputT, ToolEventT>;
-
-export function tool<
-  SchemaT extends ZodObjectV3,
-  NameT extends string,
-  SchemaOutputT = InferInteropZodOutput<SchemaT>,
-  SchemaInputT = InferInteropZodInput<SchemaT>,
-  ToolEventT = ToolEventType,
-  ToolOutputT = ToolOutputType,
-  TState = unknown,
-  TContext = unknown,
->(
-  func: (
-    input: SchemaOutputT,
-    runtime?: ToolRuntime<TState, TContext>
-  ) => AsyncGenerator<ToolEventT, ToolOutputT>,
-  fields: ToolWrapperParams<SchemaT, NameT>
-): DynamicStructuredTool<
-  SchemaT,
-  SchemaOutputT,
-  SchemaInputT,
-  ToolOutputT,
-  ToolEventT,
-  NameT
->;
-
-export function tool<
-  SchemaT extends ZodObjectV4,
-  NameT extends string,
-  SchemaOutputT = InferInteropZodOutput<SchemaT>,
-  SchemaInputT = InferInteropZodInput<SchemaT>,
-  ToolEventT = ToolEventType,
-  ToolOutputT = ToolOutputType,
-  TState = unknown,
-  TContext = unknown,
->(
-  func: (
-    input: SchemaOutputT,
-    runtime?: ToolRuntime<TState, TContext>
-  ) => AsyncGenerator<ToolEventT, ToolOutputT>,
-  fields: ToolWrapperParams<SchemaT, NameT>
-): DynamicStructuredTool<
-  SchemaT,
-  SchemaOutputT,
-  SchemaInputT,
-  ToolOutputT,
-  ToolEventT,
-  NameT
->;
-
-export function tool<
-  SchemaT extends JSONSchema,
-  NameT extends string,
-  SchemaOutputT = ToolInputSchemaOutputType<SchemaT>,
-  SchemaInputT = ToolInputSchemaInputType<SchemaT>,
-  ToolEventT = ToolEventType,
-  ToolOutputT = ToolOutputType,
-  TState = unknown,
-  TContext = unknown,
->(
-  func: (
-    input: Parameters<
-      DynamicStructuredToolInput<
-        SchemaT,
-        SchemaOutputT,
-        ToolOutputT,
-        ToolEventT
-      >["func"]
-    >[0],
-    runtime?: ToolRuntime<TState, TContext>
-  ) => AsyncGenerator<ToolEventT, ToolOutputT>,
-  fields: ToolWrapperParams<SchemaT, NameT>
-): DynamicStructuredTool<
-  SchemaT,
-  SchemaOutputT,
-  SchemaInputT,
-  ToolOutputT,
-  ToolEventT,
-  NameT
->;
-
-export function tool<
-  SchemaT extends InteropZodObject | InteropZodType<string> | JSONSchema =
-    InteropZodObject,
-  NameT extends string = string,
-  SchemaOutputT = ToolInputSchemaOutputType<SchemaT>,
-  SchemaInputT = ToolInputSchemaInputType<SchemaT>,
-  ToolEventT = ToolEventType,
-  ToolOutputT = ToolOutputType,
-  TState = unknown,
-  TContext = unknown,
->(
-  func: (
-    input: SchemaOutputT,
-    runtime?: ToolRuntime<TState, TContext>
-  ) => AsyncGenerator<ToolEventT, ToolOutputT>,
-  fields: ToolWrapperParams<SchemaT, NameT>
-):
-  | DynamicStructuredTool<
-      SchemaT,
-      SchemaOutputT,
-      SchemaInputT,
-      ToolOutputT,
-      ToolEventT,
-      NameT
-    >
-  | DynamicTool<ToolOutputT, ToolEventT>;
-
-export function tool<SchemaT extends ZodStringV3, ToolOutputT = ToolOutputType>(
-  func: RunnableFunc<
+  FuncT extends RunnableFunc<
+    InferInteropZodOutput<SchemaT>,
+    ToolOutputT,
+    ToolRunnableConfig
+  > = RunnableFunc<
     InferInteropZodOutput<SchemaT>,
     ToolOutputT,
     ToolRunnableConfig
   >,
+>(
+  func: FuncT,
   fields: ToolWrapperParams<SchemaT>
-): DynamicTool<ToolOutputT>;
-
-export function tool<SchemaT extends ZodStringV4, ToolOutputT = ToolOutputType>(
-  func: RunnableFunc<
-    InferInteropZodOutput<SchemaT>,
-    ToolOutputT,
-    ToolRunnableConfig
-  >,
-  fields: ToolWrapperParams<SchemaT>
-): DynamicTool<ToolOutputT>;
+): DynamicTool<ToolOutputT, InferToolEventFromFunc<FuncT>>;
 
 export function tool<
   SchemaT extends ZodObjectV3,
@@ -797,15 +678,17 @@ export function tool<
   SchemaOutputT = InferInteropZodOutput<SchemaT>,
   SchemaInputT = InferInteropZodInput<SchemaT>,
   ToolOutputT = ToolOutputType,
+  FuncT extends RunnableFunc<SchemaOutputT, ToolOutputT, ToolRunnableConfig> =
+    RunnableFunc<SchemaOutputT, ToolOutputT, ToolRunnableConfig>,
 >(
-  func: RunnableFunc<SchemaOutputT, ToolOutputT, ToolRunnableConfig>,
+  func: FuncT,
   fields: ToolWrapperParams<SchemaT, NameT>
 ): DynamicStructuredTool<
   SchemaT,
   SchemaOutputT,
   SchemaInputT,
   ToolOutputT,
-  ToolEventType,
+  InferToolEventFromFunc<FuncT>,
   NameT
 >;
 
@@ -815,15 +698,17 @@ export function tool<
   SchemaOutputT = InferInteropZodOutput<SchemaT>,
   SchemaInputT = InferInteropZodInput<SchemaT>,
   ToolOutputT = ToolOutputType,
+  FuncT extends RunnableFunc<SchemaOutputT, ToolOutputT, ToolRunnableConfig> =
+    RunnableFunc<SchemaOutputT, ToolOutputT, ToolRunnableConfig>,
 >(
-  func: RunnableFunc<SchemaOutputT, ToolOutputT, ToolRunnableConfig>,
+  func: FuncT,
   fields: ToolWrapperParams<SchemaT, NameT>
 ): DynamicStructuredTool<
   SchemaT,
   SchemaOutputT,
   SchemaInputT,
   ToolOutputT,
-  ToolEventType,
+  InferToolEventFromFunc<FuncT>,
   NameT
 >;
 
@@ -833,19 +718,24 @@ export function tool<
   SchemaOutputT = ToolInputSchemaOutputType<SchemaT>,
   SchemaInputT = ToolInputSchemaInputType<SchemaT>,
   ToolOutputT = ToolOutputType,
->(
-  func: RunnableFunc<
+  FuncT extends RunnableFunc<
+    Parameters<DynamicStructuredToolInput<SchemaT>["func"]>[0],
+    ToolOutputT,
+    ToolRunnableConfig
+  > = RunnableFunc<
     Parameters<DynamicStructuredToolInput<SchemaT>["func"]>[0],
     ToolOutputT,
     ToolRunnableConfig
   >,
+>(
+  func: FuncT,
   fields: ToolWrapperParams<SchemaT, NameT>
 ): DynamicStructuredTool<
   SchemaT,
   SchemaOutputT,
   SchemaInputT,
   ToolOutputT,
-  ToolEventType,
+  InferToolEventFromFunc<FuncT>,
   NameT
 >;
 
@@ -856,8 +746,10 @@ export function tool<
   SchemaOutputT = ToolInputSchemaOutputType<SchemaT>,
   SchemaInputT = ToolInputSchemaInputType<SchemaT>,
   ToolOutputT = ToolOutputType,
+  FuncT extends RunnableFunc<SchemaOutputT, ToolOutputT, ToolRunnableConfig> =
+    RunnableFunc<SchemaOutputT, ToolOutputT, ToolRunnableConfig>,
 >(
-  func: RunnableFunc<SchemaOutputT, ToolOutputT, ToolRunnableConfig>,
+  func: FuncT,
   fields: ToolWrapperParams<SchemaT, NameT>
 ):
   | DynamicStructuredTool<
@@ -865,10 +757,10 @@ export function tool<
       SchemaOutputT,
       SchemaInputT,
       ToolOutputT,
-      ToolEventType,
+      InferToolEventFromFunc<FuncT>,
       NameT
     >
-  | DynamicTool<ToolOutputT>;
+  | DynamicTool<ToolOutputT, InferToolEventFromFunc<FuncT>>;
 
 // Overloads with ToolRuntime as CallOptions
 export function tool<
