@@ -633,16 +633,14 @@ export abstract class BaseChatGoogle<
           const { done, value } = await reader.read();
           if (done) break;
           yield value;
-          if (value.text) {
-            await runManager?.handleLLMNewToken(
-              value.text,
-              undefined,
-              undefined,
-              undefined,
-              undefined,
-              { chunk: value }
-            );
-          }
+          await runManager?.handleLLMNewToken(
+            value.text ?? "",
+            undefined,
+            undefined,
+            undefined,
+            undefined,
+            { chunk: value }
+          );
         }
       } finally {
         reader.releaseLock();
