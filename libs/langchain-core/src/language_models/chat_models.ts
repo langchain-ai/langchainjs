@@ -63,6 +63,11 @@ import { callbackHandlerPrefersStreaming } from "../callbacks/base.js";
 import { toJsonSchema } from "../utils/json_schema.js";
 import { getEnvironmentVariable } from "../utils/env.js";
 import { castStandardMessageContent, iife } from "./utils.js";
+import {
+  isSerializableSchema,
+  isStandardSchema,
+  SerializableSchema,
+} from "../utils/types/standard-schema.js";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type ToolChoice = string | Record<string, any> | "auto" | "any";
@@ -888,6 +893,20 @@ export abstract class BaseChatModel<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     RunOutput extends Record<string, any> = Record<string, any>,
   >(
+    outputSchema: SerializableSchema<RunOutput, RunOutput>,
+    config?: StructuredOutputMethodOptions<false>
+  ): Runnable<BaseLanguageModelInput, RunOutput>;
+  withStructuredOutput<
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    RunOutput extends Record<string, any> = Record<string, any>,
+  >(
+    outputSchema: SerializableSchema<RunOutput, RunOutput>,
+    config?: StructuredOutputMethodOptions<true>
+  ): Runnable<BaseLanguageModelInput, { raw: BaseMessage; parsed: RunOutput }>;
+  withStructuredOutput<
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    RunOutput extends Record<string, any> = Record<string, any>,
+  >(
     outputSchema:
       | ZodTypeV4<RunOutput>
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -972,7 +991,21 @@ export abstract class BaseChatModel<
 
     let functionName = name ?? "extract";
     let tools: ToolDefinition[];
-    if (isInteropZodSchema(schema)) {
+    if (isSerializableSchema(schema)) {
+      const jsonSchema = schema["~standard"].jsonSchema.input({
+        target: "draft-07",
+      });
+      tools = [
+        {
+          type: "function",
+          function: {
+            name: functionName,
+            description,
+            parameters: jsonSchema,
+          },
+        },
+      ];
+    } else if (isInteropZodSchema(schema)) {
       tools = [
         {
           type: "function",
@@ -1001,7 +1034,7 @@ export abstract class BaseChatModel<
 
     const llm = this.bindTools(tools);
     const outputParser = RunnableLambda.from<OutputMessageType, RunOutput>(
-      (input: BaseMessageChunk): RunOutput => {
+      async (input: BaseMessageChunk): Promise<RunOutput> => {
         if (!AIMessageChunk.isInstance(input)) {
           throw new Error("Input is not an AIMessageChunk.");
         }
@@ -1014,7 +1047,17 @@ export abstract class BaseChatModel<
         if (!toolCall) {
           throw new Error(`No tool call found with name ${functionName}.`);
         }
-        return toolCall.args as RunOutput;
+        const args = toolCall.args;
+        if (isStandardSchema(schema)) {
+          const result = await schema["~standard"].validate(args);
+          if (result.issues) {
+            throw new Error(
+              `Validation failed: ${JSON.stringify(result.issues)}`
+            );
+          }
+          return result.value as RunOutput;
+        }
+        return args as RunOutput;
       }
     );
 
