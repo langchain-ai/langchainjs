@@ -12,6 +12,7 @@
     "./base.json": "./base.json"
   },
   "files": [
-    "base.json"
+    "base.json",
+    "env.d.ts"
   ]
 }

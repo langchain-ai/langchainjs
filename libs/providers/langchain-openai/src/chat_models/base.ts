@@ -526,6 +526,8 @@ export abstract class BaseChatOpenAI<
     }
 
     this.zdrEnabled = fields?.zdrEnabled ?? false;
+
+    this._addVersion("@langchain/openai", __PKG_VERSION__);
   }
 
   /**

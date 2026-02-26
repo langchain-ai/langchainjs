@@ -658,6 +658,8 @@ export class ChatXAI extends ChatOpenAICompletions<ChatXAICallOptions> {
       },
     });
 
+    this._addVersion("@langchain/xai", __PKG_VERSION__);
+
     this.searchParameters = fields?.searchParameters;
   }
 

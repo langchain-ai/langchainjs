@@ -77,6 +77,7 @@ export class YandexGPT extends LLM implements YandexGPTInputs {
 
   constructor(fields?: YandexGPTInputs) {
     super(fields ?? {});
+    this._addVersion("@langchain/yandex", __PKG_VERSION__);
     const apiKey = fields?.apiKey ?? getEnvironmentVariable("YC_API_KEY");
 
     const iamToken = fields?.iamToken ?? getEnvironmentVariable("YC_IAM_TOKEN");

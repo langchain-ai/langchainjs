@@ -742,6 +742,7 @@ export class ChatBedrockConverse
         ? { ...(params ?? {}), model: modelOrFields }
         : (modelOrFields ?? {});
     super(fields);
+    this._addVersion("@langchain/aws", __PKG_VERSION__);
     const {
       profile,
       filepath,

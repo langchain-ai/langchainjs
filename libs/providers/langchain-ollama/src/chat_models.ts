@@ -512,6 +512,7 @@ export class ChatOllama
         ? { ...(fieldsArg ?? {}), model: modelOrFields }
         : (modelOrFields ?? {});
     super(fields);
+    this._addVersion("@langchain/ollama", __PKG_VERSION__);
 
     this.baseUrl =
       fields.baseUrl ??

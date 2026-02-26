@@ -471,6 +471,7 @@ export class ChatCerebras
         : (modelOrFields ?? {})
     ) as ChatCerebrasInput;
     super(fields);
+    this._addVersion("@langchain/cerebras", __PKG_VERSION__);
     this.model = fields.model;
     this.maxCompletionTokens = fields.maxCompletionTokens;
     this.temperature = fields.temperature;
