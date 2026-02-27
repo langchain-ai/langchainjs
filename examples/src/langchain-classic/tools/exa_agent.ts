@@ -6,7 +6,7 @@ import { ChatOpenAI } from "@langchain/openai";
 import Exa from "exa-js";
 import {
   AgentExecutor,
-  createOpenAIFunctionsAgent,
+  createOpenAIToolsAgent,
 } from "@langchain/classic/agents";
 import { createRetrieverTool } from "@langchain/classic/tools/retriever";
 import { ExaRetriever } from "@langchain/exa";
@@ -28,7 +28,7 @@ const searchTool = createRetrieverTool(exaRetriever, {
 });
 
 const tools = [searchTool];
-const llm = new ChatOpenAI({ model: "gpt-4", temperature: 0 });
+const llm = new ChatOpenAI({ model: "gpt-4o", temperature: 0 });
 const prompt = ChatPromptTemplate.fromMessages([
   [
     "system",
@@ -38,7 +38,7 @@ const prompt = ChatPromptTemplate.fromMessages([
   new MessagesPlaceholder("agent_scratchpad"),
 ]);
 const agentExecutor = new AgentExecutor({
-  agent: await createOpenAIFunctionsAgent({
+  agent: await createOpenAIToolsAgent({
     llm,
     tools,
     prompt,
