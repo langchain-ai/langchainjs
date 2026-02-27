@@ -408,6 +408,178 @@ describe("ChatOpenAI", () => {
     });
   });
 
+  describe("withStructuredOutput with Standard Schema", () => {
+    function makeMockStandardSchema() {
+      return {
+        "~standard": {
+          version: 1 as const,
+          vendor: "test",
+          validate: (value: unknown) => ({
+            value: value as Record<string, unknown>,
+          }),
+          jsonSchema: {
+            input: () => ({
+              type: "object",
+              properties: {
+                location: { type: "string", description: "The city name" },
+              },
+              required: ["location"],
+            }),
+            output: () => ({
+              type: "object",
+              properties: {
+                location: { type: "string", description: "The city name" },
+              },
+              required: ["location"],
+            }),
+          },
+        },
+      };
+    }
+
+    it("sends correct tool definition with functionCalling method", async () => {
+      const mockFetch = vi.fn<(url: any, options?: any) => Promise<any>>();
+      mockFetch.mockImplementation((url, options) => {
+        mockFetch.mock.calls.push([url, options]);
+        return Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve({}),
+        });
+      });
+
+      const model = new ChatOpenAI({
+        model: "gpt-4o-mini",
+        apiKey: "test-key",
+        configuration: { fetch: mockFetch },
+        maxRetries: 0,
+      });
+
+      const modelWithTools = model.withStructuredOutput(
+        makeMockStandardSchema(),
+        { method: "functionCalling" }
+      );
+
+      await expect(
+        modelWithTools.invoke("What's the weather?")
+      ).rejects.toThrow();
+
+      expect(mockFetch).toHaveBeenCalled();
+      const [, options] = mockFetch.mock.calls[0];
+      const body = JSON.parse(options.body);
+
+      expect(body.tools).toHaveLength(1);
+      expect(body.tools[0].function.name).toBe("extract");
+      expect(body.tools[0].function.parameters).toEqual({
+        type: "object",
+        properties: {
+          location: { type: "string", description: "The city name" },
+        },
+        required: ["location"],
+      });
+    });
+
+    it("sends correct json_schema with jsonSchema method", async () => {
+      const mockFetch = vi.fn<(url: any, options?: any) => Promise<any>>();
+      mockFetch.mockImplementation((url, options) => {
+        mockFetch.mock.calls.push([url, options]);
+        return Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve({}),
+        });
+      });
+
+      const model = new ChatOpenAI({
+        model: "gpt-4o-2024-08-06",
+        apiKey: "test-key",
+        configuration: { fetch: mockFetch },
+        maxRetries: 0,
+      });
+
+      const modelWithTools = model.withStructuredOutput(
+        makeMockStandardSchema(),
+        { name: "get_weather", method: "jsonSchema" }
+      );
+
+      await expect(
+        modelWithTools.invoke("What's the weather?")
+      ).rejects.toThrow();
+
+      expect(mockFetch).toHaveBeenCalled();
+      const [, options] = mockFetch.mock.calls[0];
+      const body = JSON.parse(options.body);
+
+      expect(body.response_format).toBeDefined();
+      expect(body.response_format.type).toBe("json_schema");
+      expect(body.response_format.json_schema.name).toBe("get_weather");
+      expect(body.response_format.json_schema.schema).toEqual({
+        type: "object",
+        properties: {
+          location: { type: "string", description: "The city name" },
+        },
+        required: ["location"],
+      });
+    });
+
+    it("populates ls_structured_output_format metadata", async () => {
+      const mockFetch = vi.fn<(url: any, options?: any) => Promise<any>>();
+      mockFetch.mockImplementation((url, options) => {
+        mockFetch.mock.calls.push([url, options]);
+        return Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve({}),
+        });
+      });
+
+      const schema = makeMockStandardSchema();
+      const model = new ChatOpenAI({
+        model: "gpt-4o-mini",
+        apiKey: "test-key",
+        configuration: { fetch: mockFetch },
+        maxRetries: 0,
+      }).withStructuredOutput(schema, {
+        method: "functionCalling",
+      });
+
+      let extra: any;
+      await expect(
+        model.invoke("What's the weather?", {
+          callbacks: [
+            {
+              handleLLMStart: (
+                _1: any,
+                _2: any,
+                _3: any,
+                _4: any,
+                extraParams: any
+              ) => {
+                extra = extraParams;
+              },
+            },
+          ],
+        })
+      ).rejects.toThrow();
+
+      const expectedJsonSchema = {
+        type: "object",
+        properties: {
+          location: { type: "string", description: "The city name" },
+        },
+        required: ["location"],
+      };
+      expect(extra).toMatchObject({
+        options: {
+          ls_structured_output_format: {
+            kwargs: { method: "function_calling" },
+            schema: {
+              title: "extract",
+              ...expectedJsonSchema,
+            },
+          },
+        },
+      });
+    });
+  });
+
   // https://github.com/langchain-ai/langchainjs/issues/8586
   test("multiple bindTools calls will not override each other", async () => {
     const model = new ChatOpenAI({
