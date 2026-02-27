@@ -966,6 +966,7 @@ export abstract class BaseChatOpenAI<
   >(
     outputSchema:
       | InteropZodType<RunOutput>
+      | SerializableSchema<RunOutput>
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
     config?: StructuredOutputMethodOptions<false>
@@ -977,6 +978,7 @@ export abstract class BaseChatOpenAI<
   >(
     outputSchema:
       | InteropZodType<RunOutput>
+      | SerializableSchema<RunOutput>
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
     config?: StructuredOutputMethodOptions<true>
@@ -988,6 +990,7 @@ export abstract class BaseChatOpenAI<
   >(
     outputSchema:
       | InteropZodType<RunOutput>
+      | SerializableSchema<RunOutput>
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
     config?: StructuredOutputMethodOptions<boolean>
