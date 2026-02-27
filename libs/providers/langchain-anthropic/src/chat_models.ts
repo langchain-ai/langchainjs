@@ -70,6 +70,7 @@ import { AnthropicBeta } from "@anthropic-ai/sdk/resources";
 import {
   assembleStructuredOutputPipeline,
   createContentParser,
+  createFunctionCallingParser,
 } from "@langchain/core/language_models/structured_output";
 import {
   isSerializableSchema,
@@ -1627,6 +1628,7 @@ export class ChatAnthropicMessages<
     } else if (method === "functionCalling") {
       let functionName = name ?? "extract";
       let tools: Anthropic.Messages.Tool[];
+
       if (isInteropZodSchema(schema) || isSerializableSchema(schema)) {
         const jsonSchema = toJsonSchema(schema);
         tools = [
@@ -1637,35 +1639,32 @@ export class ChatAnthropicMessages<
             input_schema: jsonSchema as Anthropic.Messages.Tool.InputSchema,
           },
         ];
-        outputParser = new AnthropicToolsOutputParser({
-          returnSingle: true,
-          keyName: functionName,
-          zodSchema: isInteropZodSchema(schema) ? schema : undefined,
-          serializableSchema: isSerializableSchema(schema) ? schema : undefined,
-        });
       } else {
-        let anthropicTools: Anthropic.Messages.Tool;
         if (
           typeof schema.name === "string" &&
           typeof schema.description === "string" &&
           typeof schema.input_schema === "object" &&
           schema.input_schema != null
         ) {
-          anthropicTools = schema as Anthropic.Messages.Tool;
+          tools = [schema as Anthropic.Messages.Tool];
           functionName = schema.name;
         } else {
-          anthropicTools = {
-            name: functionName,
-            description: schema.description ?? "",
-            input_schema: schema as Anthropic.Messages.Tool.InputSchema,
-          };
+          tools = [
+            {
+              name: functionName,
+              description: schema.description ?? "",
+              input_schema: schema as Anthropic.Messages.Tool.InputSchema,
+            },
+          ];
         }
-        tools = [anthropicTools];
-        outputParser = new AnthropicToolsOutputParser<RunOutput>({
-          returnSingle: true,
-          keyName: functionName,
-        });
       }
+
+      outputParser = createFunctionCallingParser(
+        schema,
+        functionName,
+        AnthropicToolsOutputParser
+      );
+
       if (
         this.thinking?.type === "enabled" ||
         this.thinking?.type === "adaptive"
