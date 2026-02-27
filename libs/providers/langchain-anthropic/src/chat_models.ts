@@ -67,6 +67,14 @@ import {
 import { wrapAnthropicClientError } from "./utils/errors.js";
 import PROFILES from "./profiles.js";
 import { AnthropicBeta } from "@anthropic-ai/sdk/resources";
+import {
+  assembleStructuredOutputPipeline,
+  createContentParser,
+} from "@langchain/core/language_models/structured_output";
+import {
+  isSerializableSchema,
+  SerializableSchema,
+} from "@langchain/core/utils/standard_schema";
 
 // Default max output tokens per model family (prefix-matched).
 // These are sensible defaults for the `max_tokens` API parameter when
@@ -1550,6 +1558,7 @@ export class ChatAnthropicMessages<
   >(
     outputSchema:
       | InteropZodType<RunOutput>
+      | SerializableSchema<RunOutput>
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
     config?: StructuredOutputMethodOptions<false>
@@ -1561,6 +1570,7 @@ export class ChatAnthropicMessages<
   >(
     outputSchema:
       | InteropZodType<RunOutput>
+      | SerializableSchema<RunOutput>
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
     config?: StructuredOutputMethodOptions<true>
@@ -1572,6 +1582,7 @@ export class ChatAnthropicMessages<
   >(
     outputSchema:
       | InteropZodType<RunOutput>
+      | SerializableSchema<RunOutput>
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
     config?: StructuredOutputMethodOptions<boolean>
@@ -1598,9 +1609,7 @@ export class ChatAnthropicMessages<
     }
     if (method === "jsonSchema") {
       // https://docs.claude.com/en/docs/build-with-claude/structured-outputs
-      outputParser = isInteropZodSchema(schema)
-        ? StructuredOutputParser.fromZodSchema(schema)
-        : new JsonOutputParser<RunOutput>();
+      outputParser = createContentParser(schema);
       const jsonSchema = transformJSONSchema(toJsonSchema(schema));
       llm = this.withConfig({
         outputVersion: "v0",
@@ -1618,7 +1627,7 @@ export class ChatAnthropicMessages<
     } else if (method === "functionCalling") {
       let functionName = name ?? "extract";
       let tools: Anthropic.Messages.Tool[];
-      if (isInteropZodSchema(schema)) {
+      if (isInteropZodSchema(schema) || isSerializableSchema(schema)) {
         const jsonSchema = toJsonSchema(schema);
         tools = [
           {
@@ -1631,7 +1640,8 @@ export class ChatAnthropicMessages<
         outputParser = new AnthropicToolsOutputParser({
           returnSingle: true,
           keyName: functionName,
-          zodSchema: schema,
+          zodSchema: isInteropZodSchema(schema) ? schema : undefined,
+          serializableSchema: isSerializableSchema(schema) ? schema : undefined,
         });
       } else {
         let anthropicTools: Anthropic.Messages.Tool;
@@ -1706,33 +1716,12 @@ export class ChatAnthropicMessages<
       );
     }
 
-    if (!includeRaw) {
-      return llm.pipe(outputParser).withConfig({
-        runName: "ChatAnthropicStructuredOutput",
-      }) as Runnable<BaseLanguageModelInput, RunOutput>;
-    }
-
-    const parserAssign = RunnablePassthrough.assign({
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      parsed: (input: any, config) => outputParser.invoke(input.raw, config),
-    });
-    const parserNone = RunnablePassthrough.assign({
-      parsed: () => null,
-    });
-    const parsedWithFallback = parserAssign.withFallbacks({
-      fallbacks: [parserNone],
-    });
-    return RunnableSequence.from<
-      BaseLanguageModelInput,
-      { raw: BaseMessage; parsed: RunOutput }
-    >([
-      {
-        raw: llm,
-      },
-      parsedWithFallback,
-    ]).withConfig({
-      runName: "StructuredOutputRunnable",
-    });
+    return assembleStructuredOutputPipeline(
+      llm,
+      outputParser,
+      includeRaw,
+      includeRaw ? "ChatAnthropicStructuredOutput" : "StructuredOutputRunnable"
+    );
   }
 }
 
