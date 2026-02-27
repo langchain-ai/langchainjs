@@ -144,6 +144,102 @@ describe("convertMessagesToGeminiContents", () => {
     ).toBe("tool-call-abc");
   });
 
+  test("preserves thought and thoughtSignature on text parts from thinking models (legacy path)", () => {
+    // Gemini thinking models produce [thought, thought, functionCall] turns.
+    // Verify the converter preserves thought/thoughtSignature on every part
+    // so the API can distinguish thoughts from regular text on the next call.
+    const messages = [
+      new HumanMessage("What's the weather in Paris?"),
+      new AIMessage({
+        content: [
+          {
+            type: "text",
+            text: "I need to check the weather.",
+            thought: true,
+            thoughtSignature: "dGhvdWdodC1zaWduYXR1cmUtMQ==",
+          },
+          {
+            type: "text",
+            text: "Let me use the weather tool.",
+            thought: true,
+            thoughtSignature: "dGhvdWdodC1zaWduYXR1cmUtMg==",
+          },
+          {
+            type: "functionCall",
+            functionCall: {
+              name: "get_weather",
+              args: { city: "Paris" },
+            },
+            thoughtSignature: "ZnVuY3Rpb24tY2FsbC1zaWc=",
+          },
+        ] as unknown as Array<Record<string, unknown>>,
+        tool_calls: [
+          {
+            name: "get_weather",
+            args: { city: "Paris" },
+            id: "call-123",
+            type: "tool_call" as const,
+          },
+        ],
+      }),
+      new ToolMessage({
+        content: JSON.stringify({ temperature: 22, condition: "sunny" }),
+        tool_call_id: "call-123",
+        name: "get_weather",
+      }),
+    ];
+
+    const contents = convertMessagesToGeminiContents(messages);
+
+    const modelContent = contents.find((c) => c.role === "model");
+    expect(modelContent).toBeDefined();
+    expect(modelContent!.parts.length).toBeGreaterThanOrEqual(3);
+
+    const thoughtParts = modelContent!.parts.filter(
+      (p) => "text" in p && (p as Gemini.Part).thought === true
+    );
+    expect(thoughtParts).toHaveLength(2);
+    expect((thoughtParts[0] as Gemini.Part).text).toBe(
+      "I need to check the weather."
+    );
+    expect((thoughtParts[0] as Gemini.Part).thoughtSignature).toBe(
+      "dGhvdWdodC1zaWduYXR1cmUtMQ=="
+    );
+    expect((thoughtParts[1] as Gemini.Part).text).toBe(
+      "Let me use the weather tool."
+    );
+    expect((thoughtParts[1] as Gemini.Part).thoughtSignature).toBe(
+      "dGhvdWdodC1zaWduYXR1cmUtMg=="
+    );
+
+    const functionCallPart = modelContent!.parts.find(
+      (p) => "functionCall" in p
+    ) as Gemini.Part.FunctionCall | undefined;
+    expect(functionCallPart).toBeDefined();
+    expect(functionCallPart!.functionCall!.name).toBe("get_weather");
+    expect(functionCallPart!.thoughtSignature).toBe("ZnVuY3Rpb24tY2FsbC1zaWc=");
+  });
+
+  test("does not add thought or thoughtSignature to regular text parts", () => {
+    const messages = [
+      new HumanMessage("hello"),
+      new AIMessage({
+        content: [{ type: "text", text: "Hello! How can I help you?" }],
+      }),
+    ];
+
+    const contents = convertMessagesToGeminiContents(messages);
+
+    const modelContent = contents.find((c) => c.role === "model");
+    expect(modelContent).toBeDefined();
+    expect(modelContent!.parts).toHaveLength(1);
+
+    const textPart = modelContent!.parts[0] as Gemini.Part;
+    expect(textPart.text).toBe("Hello! How can I help you?");
+    expect(textPart.thought).toBeUndefined();
+    expect(textPart.thoughtSignature).toBeUndefined();
+  });
+
   test("passes tool_call_id through as functionResponse.id (v1 standard path)", () => {
     const messages = [
       new HumanMessage("hello"),
