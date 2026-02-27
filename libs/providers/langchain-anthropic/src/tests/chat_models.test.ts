@@ -1421,6 +1421,152 @@ describe("File ContentBlock handling", () => {
   });
 });
 
+function makeSerializableSchema() {
+  return {
+    "~standard": {
+      version: 1 as const,
+      vendor: "test",
+      validate: (value: unknown) => {
+        const obj = value as Record<string, unknown>;
+        if (
+          typeof obj === "object" &&
+          obj !== null &&
+          typeof obj.name === "string"
+        ) {
+          return { value: obj };
+        }
+        return {
+          issues: [{ message: "Expected object with string 'name' field" }],
+        };
+      },
+      jsonSchema: {
+        input: () => ({
+          type: "object",
+          properties: { name: { type: "string" } },
+          required: ["name"],
+        }),
+        output: () => ({
+          type: "object",
+          properties: { name: { type: "string" } },
+          required: ["name"],
+        }),
+      },
+    },
+  };
+}
+
+describe("withStructuredOutput with SerializableSchema", () => {
+  test("functionCalling with valid output parses correctly", async () => {
+    const model = new ChatAnthropic({
+      modelName: "claude-3-haiku-20240307",
+      temperature: 0,
+      anthropicApiKey: "testing",
+    });
+    vi.spyOn(model as any, "invoke").mockResolvedValue(
+      new AIMessage({
+        content: [
+          {
+            type: "tool_use",
+            id: "notreal",
+            name: "extract",
+            input: { name: "Claude" },
+          },
+        ],
+      })
+    );
+
+    const schema = makeSerializableSchema();
+    const modelWithStructuredOutput = model.withStructuredOutput(schema);
+
+    const result = await modelWithStructuredOutput.invoke("What is your name?");
+    expect(result).toEqual({ name: "Claude" });
+  });
+
+  test("functionCalling with invalid output throws OutputParserException", async () => {
+    const model = new ChatAnthropic({
+      modelName: "claude-3-haiku-20240307",
+      temperature: 0,
+      anthropicApiKey: "testing",
+    });
+    vi.spyOn(model as any, "invoke").mockResolvedValue(
+      new AIMessageChunk({
+        content: [
+          {
+            type: "tool_use",
+            id: "notreal",
+            name: "extract",
+            input: { wrong_field: 123 },
+          },
+        ],
+      })
+    );
+
+    const schema = makeSerializableSchema();
+    const modelWithStructuredOutput = model.withStructuredOutput(schema);
+
+    await expect(async () => {
+      await modelWithStructuredOutput.invoke("What is your name?");
+    }).rejects.toThrow(OutputParserException);
+  });
+
+  test("functionCalling with custom name", async () => {
+    const model = new ChatAnthropic({
+      modelName: "claude-3-haiku-20240307",
+      temperature: 0,
+      anthropicApiKey: "testing",
+    });
+    vi.spyOn(model as any, "invoke").mockResolvedValue(
+      new AIMessage({
+        content: [
+          {
+            type: "tool_use",
+            id: "notreal",
+            name: "PersonInfo",
+            input: { name: "Alice" },
+          },
+        ],
+      })
+    );
+
+    const schema = makeSerializableSchema();
+    const modelWithStructuredOutput = model.withStructuredOutput(schema, {
+      name: "PersonInfo",
+    });
+
+    const result = await modelWithStructuredOutput.invoke("Who is this?");
+    expect(result).toEqual({ name: "Alice" });
+  });
+
+  test("functionCalling with includeRaw returns raw and parsed", async () => {
+    const rawMessage = new AIMessage({
+      content: [
+        {
+          type: "tool_use",
+          id: "notreal",
+          name: "extract",
+          input: { name: "Bob" },
+        },
+      ],
+    });
+    const model = new ChatAnthropic({
+      modelName: "claude-3-haiku-20240307",
+      temperature: 0,
+      anthropicApiKey: "testing",
+    });
+    vi.spyOn(model as any, "invoke").mockResolvedValue(rawMessage);
+
+    const schema = makeSerializableSchema();
+    const modelWithStructuredOutput = model.withStructuredOutput(schema, {
+      includeRaw: true,
+    });
+
+    const result = await modelWithStructuredOutput.invoke("Tell me a name");
+    expect(result).toHaveProperty("raw");
+    expect(result).toHaveProperty("parsed");
+    expect(result.parsed).toEqual({ name: "Bob" });
+  });
+});
+
 describe("Opus 4.6", () => {
   describe("Adaptive thinking", () => {
     test("invocationParams accepts adaptive thinking type", () => {
