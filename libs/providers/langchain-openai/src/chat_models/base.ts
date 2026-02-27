@@ -8,7 +8,10 @@ import {
   type BaseChatModelParams,
   BaseChatModelCallOptions,
 } from "@langchain/core/language_models/chat_models";
-import { isSerializableSchema } from "@langchain/core/utils/standard_schema";
+import {
+  isSerializableSchema,
+  type SerializableSchema,
+} from "@langchain/core/utils/standard_schema";
 import {
   createContentParser,
   assembleStructuredOutputPipeline,
@@ -1014,7 +1017,10 @@ export abstract class BaseChatOpenAI<
   withStructuredOutput<
     RunOutput extends Record<string, unknown> = Record<string, unknown>,
   >(
-    outputSchema: InteropZodType<RunOutput> | Record<string, unknown>,
+    outputSchema:
+      | InteropZodType<RunOutput>
+      | SerializableSchema<RunOutput>
+      | Record<string, unknown>,
     config?: StructuredOutputMethodOptions<boolean>
   ) {
     let llm: Runnable<BaseLanguageModelInput>;
