@@ -22,10 +22,6 @@ import {
 } from "@langchain/core/language_models/base";
 import { ModelProfile } from "@langchain/core/language_models/profile";
 import { Runnable, RunnableLambda } from "@langchain/core/runnables";
-import {
-  JsonOutputParser,
-  StructuredOutputParser,
-} from "@langchain/core/output_parsers";
 import { JsonOutputKeyToolsParser } from "@langchain/core/output_parsers/openai_tools";
 import {
   getSchemaDescription,
@@ -1082,88 +1078,61 @@ export abstract class BaseChatOpenAI<
       );
     } else {
       let functionName = name ?? "extract";
-      // Is function calling
-      if (isInteropZodSchema(schema) || isSerializableSchema(schema)) {
-        const asJsonSchema = toJsonSchema(schema);
-        llm = this.withConfig({
-          outputVersion: "v0",
-          tools: [
-            {
-              type: "function" as const,
-              function: {
-                name: functionName,
-                description: asJsonSchema.description,
-                parameters: asJsonSchema,
-              },
-            },
-          ],
-          tool_choice: {
-            type: "function" as const,
-            function: {
-              name: functionName,
-            },
-          },
-          ls_structured_output_format: {
-            kwargs: { method: "function_calling" },
-            schema: { title: functionName, ...asJsonSchema },
-          },
-          // Do not pass `strict` argument to OpenAI if `config.strict` is undefined
-          ...(config?.strict !== undefined ? { strict: config.strict } : {}),
-        } as Partial<CallOptions>);
+      const asJsonSchema = toJsonSchema(schema);
 
-        if (isInteropZodSchema(schema)) {
-          outputParser = new JsonOutputKeyToolsParser({
-            returnSingle: true,
-            keyName: functionName,
-            zodSchema: schema,
-          });
-        } else {
-          outputParser = new JsonOutputKeyToolsParser({
-            returnSingle: true,
-            keyName: functionName,
-            serializableSchema: schema,
-          });
-        }
+      // Is function calling
+      let toolFunction: FunctionDefinition;
+      if (isInteropZodSchema(schema) || isSerializableSchema(schema)) {
+        toolFunction = {
+          name: functionName,
+          description: asJsonSchema.description,
+          parameters: asJsonSchema,
+        };
+      } else if (
+        typeof schema.name === "string" &&
+        typeof schema.parameters === "object" &&
+        schema.parameters != null
+      ) {
+        toolFunction = schema as unknown as FunctionDefinition;
+        functionName = schema.name;
       } else {
-        let openAIFunctionDefinition: FunctionDefinition;
-        if (
-          typeof schema.name === "string" &&
-          typeof schema.parameters === "object" &&
-          schema.parameters != null
-        ) {
-          openAIFunctionDefinition = schema as unknown as FunctionDefinition;
-          functionName = schema.name;
-        } else {
-          functionName = (schema.title as string) ?? functionName;
-          openAIFunctionDefinition = {
-            name: functionName,
-            description: (schema.description as string) ?? "",
-            parameters: schema,
-          };
-        }
-        const asJsonSchema = toJsonSchema(schema);
-        llm = this.withConfig({
-          outputVersion: "v0",
-          tools: [
-            {
-              type: "function" as const,
-              function: openAIFunctionDefinition,
-            },
-          ],
-          tool_choice: {
-            type: "function" as const,
-            function: {
-              name: functionName,
-            },
-          },
-          ls_structured_output_format: {
-            kwargs: { method: "function_calling" },
-            schema: { title: functionName, ...asJsonSchema },
-          },
-          // Do not pass `strict` argument to OpenAI if `config.strict` is undefined
-          ...(config?.strict !== undefined ? { strict: config.strict } : {}),
-        } as Partial<CallOptions>);
-        outputParser = new JsonOutputKeyToolsParser<RunOutput>({
+        functionName = (schema.title as string) ?? functionName;
+        toolFunction = {
+          name: functionName,
+          description: (schema.description as string) ?? "",
+          parameters: schema,
+        };
+      }
+
+      llm = this.withConfig({
+        outputVersion: "v0",
+        tools: [{ type: "function" as const, function: toolFunction }],
+        tool_choice: {
+          type: "function" as const,
+          function: { name: functionName },
+        },
+        ls_structured_output_format: {
+          kwargs: { method: "function_calling" },
+          schema: { title: functionName, ...asJsonSchema },
+        },
+        // Do not pass `strict` argument to OpenAI if `config.strict` is undefined
+        ...(config?.strict !== undefined ? { strict: config.strict } : {}),
+      } as Partial<CallOptions>);
+
+      if (isInteropZodSchema(schema)) {
+        outputParser = new JsonOutputKeyToolsParser({
+          returnSingle: true,
+          keyName: functionName,
+          zodSchema: schema,
+        });
+      } else if (isSerializableSchema(schema)) {
+        outputParser = new JsonOutputKeyToolsParser({
+          returnSingle: true,
+          keyName: functionName,
+          serializableSchema: schema,
+        });
+      } else {
+        outputParser = new JsonOutputKeyToolsParser({
           returnSingle: true,
           keyName: functionName,
         });

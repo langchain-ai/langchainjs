@@ -307,6 +307,17 @@
         "default": "./dist/language_models/profile.js"
       }
     },
+    "./language_models/structured_output": {
+      "input": "./src/language_models/structured_output.ts",
+      "require": {
+        "types": "./dist/language_models/structured_output.d.cts",
+        "default": "./dist/language_models/structured_output.cjs"
+      },
+      "import": {
+        "types": "./dist/language_models/structured_output.d.ts",
+        "default": "./dist/language_models/structured_output.js"
+      }
+    },
     "./load": {
       "input": "./src/load/index.ts",
       "require": {
@@ -712,6 +723,17 @@
       "import": {
         "types": "./dist/utils/ssrf.d.ts",
         "default": "./dist/utils/ssrf.js"
+      }
+    },
+    "./utils/standard_schema": {
+      "input": "./src/utils/standard_schema.ts",
+      "require": {
+        "types": "./dist/utils/standard_schema.d.cts",
+        "default": "./dist/utils/standard_schema.cjs"
+      },
+      "import": {
+        "types": "./dist/utils/standard_schema.d.ts",
+        "default": "./dist/utils/standard_schema.js"
       }
     },
     "./utils/stream": {
