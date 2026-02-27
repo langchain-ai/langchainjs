@@ -2,9 +2,11 @@ import { expect } from "vitest";
 import {
   toBeHumanMessage,
   toBeAIMessage,
+  toBeSystemMessage,
   toBeToolMessage,
   toHaveToolCalls,
   toHaveToolCallCount,
+  toContainToolCall,
   toHaveToolMessages,
   toHaveBeenInterrupted,
   toHaveStructuredResponse,
@@ -13,9 +15,11 @@ import {
 expect.extend({
   toBeHumanMessage,
   toBeAIMessage,
+  toBeSystemMessage,
   toBeToolMessage,
   toHaveToolCalls,
   toHaveToolCallCount,
+  toContainToolCall,
   toHaveToolMessages,
   toHaveBeenInterrupted,
   toHaveStructuredResponse,

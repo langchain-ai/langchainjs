@@ -2,6 +2,7 @@
 import { BaseMessage } from "../../messages/base.js";
 import { HumanMessage } from "../../messages/human.js";
 import { AIMessage } from "../../messages/ai.js";
+import { SystemMessage } from "../../messages/system.js";
 import { ToolMessage } from "../../messages/tool.js";
 
 /**
@@ -120,6 +121,11 @@ export const toBeAIMessage = makeMessageTypeMatcher(
   AIMessage.isInstance
 );
 
+export const toBeSystemMessage = makeMessageTypeMatcher(
+  "SystemMessage",
+  SystemMessage.isInstance
+);
+
 export const toBeToolMessage = makeMessageTypeMatcher(
   "ToolMessage",
   ToolMessage.isInstance
@@ -215,6 +221,41 @@ export function toHaveToolCallCount(
       `Expected ${isNot ? "not " : ""}${expected} tool call(s)\n` +
       `Received: ${actual}`,
     actual,
+    expected,
+  };
+}
+
+export function toContainToolCall(
+  this: ExpectExtendThis,
+  received: unknown,
+  expected: Record<string, unknown>
+): ExpectationResult {
+  const { isNot, utils } = this;
+
+  if (!AIMessage.isInstance(received)) {
+    return {
+      pass: false,
+      message: () =>
+        `${utils.matcherHint("toContainToolCall")}\n\n` +
+        `Expected: AIMessage\n` +
+        `Received: ${getMessageTypeName(received)}`,
+    };
+  }
+
+  const actual = received.tool_calls ?? [];
+  const found = actual.some((tc) =>
+    Object.entries(expected).every(([key, value]) =>
+      this.equals((tc as any)[key], value)
+    )
+  );
+
+  return {
+    pass: found,
+    message: () =>
+      `${utils.matcherHint("toContainToolCall")}\n\n` +
+      `Expected AIMessage ${isNot ? "not " : ""}to contain a tool call matching ${utils.printExpected(expected)}\n` +
+      `Received tool calls: ${utils.printReceived(actual.map((tc) => ({ name: tc.name, id: tc.id })))}`,
+    actual: actual.map((tc) => ({ name: tc.name, id: tc.id })),
     expected,
   };
 }
@@ -375,6 +416,22 @@ export function toHaveStructuredResponse(
 }
 
 /**
+ * Returns the first message in the array matching the given message class.
+ * Replaces the pattern: `messages.find(X.isInstance) as X`
+ */
+export function firstOfType<T extends BaseMessage>(
+  messages: BaseMessage[],
+  cls: { isInstance(obj: unknown): obj is T }
+): T | undefined {
+  for (const msg of messages) {
+    if (cls.isInstance(msg)) {
+      return msg;
+    }
+  }
+  return undefined;
+}
+
+/**
  * Returns the last message in the array matching the given message class.
  * Replaces the pattern: `[...msgs].reverse().find(X.isInstance) as X`
  */
@@ -389,4 +446,15 @@ export function lastOfType<T extends BaseMessage>(
     }
   }
   return undefined;
+}
+
+/**
+ * Returns all messages in the array matching the given message class.
+ * Replaces the pattern: `messages.filter(X.isInstance) as X[]`
+ */
+export function messagesOfType<T extends BaseMessage>(
+  messages: BaseMessage[],
+  cls: { isInstance(obj: unknown): obj is T }
+): T[] {
+  return messages.filter((msg): msg is T => cls.isInstance(msg));
 }
