@@ -1,17 +1,21 @@
-import { BaseMessage } from "../messages";
+import { BaseMessage } from "../messages/index.js";
 import {
   BaseLLMOutputParser,
   JsonOutputParser,
   StandardSchemaOutputParser,
   StructuredOutputParser,
-} from "../output_parsers";
-import { Runnable, RunnablePassthrough, RunnableSequence } from "../runnables";
+} from "../output_parsers/index.js";
+import {
+  Runnable,
+  RunnablePassthrough,
+  RunnableSequence,
+} from "../runnables/index.js";
 import {
   isSerializableSchema,
   SerializableSchema,
-} from "../utils/standard_schema";
-import { InteropZodType, isInteropZodSchema } from "../utils/types";
-import { BaseLanguageModelInput } from "./base";
+} from "../utils/standard_schema.js";
+import { InteropZodType, isInteropZodSchema } from "../utils/types/index.js";
+import { BaseLanguageModelInput } from "./base.js";
 
 /**
  * Creates the appropriate content-based output parser for a schema. Use this for
@@ -22,13 +26,13 @@ import { BaseLanguageModelInput } from "./base";
  * - Plain JSON schema -> JsonOutputParser (no validation)
  */
 export function createContentParser<
-  // eslint-disable-next-lint @typescript-eslint/no-explicit-any
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   RunOutput extends Record<string, any> = Record<string, any>,
 >(
   schema:
     | InteropZodType<RunOutput>
     | SerializableSchema<RunOutput, RunOutput>
-    // eslint-disable-next-lint @typescript-eslint/no-explicit-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     | Record<string, any>
 ): BaseLLMOutputParser<RunOutput> {
   if (isInteropZodSchema(schema)) {
@@ -48,10 +52,11 @@ export function createContentParser<
  * If parsing fails, `parsed` falls back to null.
  */
 export function assembleStructuredOutputPipeline<
-  // eslint-disable-next-lint @typescript-eslint/no-explicit-any
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   RunOutput extends Record<string, any> = Record<string, any>,
 >(
   llm: Runnable<BaseLanguageModelInput>,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   outputParser: Runnable<any, RunOutput>,
   includeRaw?: boolean,
   runName?: string
@@ -64,7 +69,7 @@ export function assembleStructuredOutputPipeline<
   }
 
   const parserAssign = RunnablePassthrough.assign({
-    // eslint-disable-next-lint @typescript-eslint/no-explicit-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     parsed: (input: any, config) => outputParser.invoke(input.raw, config),
   });
   const parserNone = RunnablePassthrough.assign({
