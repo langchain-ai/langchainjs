@@ -419,6 +419,168 @@ describe("humanInTheLoopMiddleware", () => {
     expect(stateAfterResume.next.length).toBeGreaterThan(0);
   });
 
+  it("should execute approved tools when executeApprovedOnReject is enabled", async () => {
+    const hitlMiddleware = humanInTheLoopMiddleware({
+      interruptOn: {
+        calculator: {
+          allowedDecisions: ["approve", "reject"],
+        },
+        write_file: {
+          allowedDecisions: ["approve", "reject"],
+        },
+      },
+      executeApprovedOnReject: true,
+    });
+
+    const model = new FakeToolCallingModel({
+      toolCalls: [
+        [
+          {
+            id: "call_1",
+            name: "calculator",
+            args: { a: 7, b: 8, operation: "add" },
+          },
+          {
+            id: "call_2",
+            name: "write_file",
+            args: { filename: "blocked.txt", content: "blocked" },
+          },
+        ],
+      ],
+    });
+
+    const checkpointer = new MemorySaver();
+    const agent = createAgent({
+      model,
+      checkpointer,
+      tools: [calculateTool, writeFileTool],
+      middleware: [hitlMiddleware],
+    });
+
+    const config = {
+      configurable: {
+        thread_id: "test-execute-approved-on-reject",
+      },
+    };
+
+    await agent.invoke(
+      {
+        messages: [new HumanMessage("Calculate and write file")],
+      },
+      config
+    );
+
+    const result = await agent.invoke(
+      new Command({
+        resume: {
+          decisions: [
+            { type: "approve" },
+            { type: "reject", message: "WARNING: File write not allowed" },
+          ],
+        } as HITLResponse,
+      }),
+      config
+    );
+
+    expect(calculatorFn).toHaveBeenCalledTimes(1);
+    expect(calculatorFn).toHaveBeenCalledWith(
+      { a: 7, b: 8, operation: "add" },
+      expect.anything()
+    );
+    expect(writeFileFn).not.toHaveBeenCalled();
+
+    const toolMessages = result.messages.filter((msg: BaseMessage) =>
+      ToolMessage.isInstance(msg)
+    ) as ToolMessage[];
+
+    const rejectedMessage = toolMessages.find(
+      (msg) => msg.tool_call_id === "call_2"
+    );
+    expect(rejectedMessage).toBeDefined();
+    expect(rejectedMessage?.status).toBe("error");
+    expect(rejectedMessage?.content).toBe("WARNING: File write not allowed");
+  });
+
+  it("should still return to model when all decisions are rejected with executeApprovedOnReject enabled", async () => {
+    const hitlMiddleware = humanInTheLoopMiddleware({
+      interruptOn: {
+        calculator: {
+          allowedDecisions: ["reject"],
+        },
+        write_file: {
+          allowedDecisions: ["reject"],
+        },
+      },
+      executeApprovedOnReject: true,
+    });
+
+    const model = new FakeToolCallingModel({
+      toolCalls: [
+        [
+          {
+            id: "call_1",
+            name: "calculator",
+            args: { a: 2, b: 3, operation: "add" },
+          },
+          {
+            id: "call_2",
+            name: "write_file",
+            args: { filename: "blocked.txt", content: "blocked" },
+          },
+        ],
+      ],
+    });
+
+    const checkpointer = new MemorySaver();
+    const agent = createAgent({
+      model,
+      checkpointer,
+      tools: [calculateTool, writeFileTool],
+      middleware: [hitlMiddleware],
+    });
+
+    const config = {
+      configurable: {
+        thread_id: "test-execute-approved-on-reject-all-reject",
+      },
+    };
+
+    await agent.invoke(
+      {
+        messages: [new HumanMessage("Calculate and write file")],
+      },
+      config
+    );
+
+    const result = await agent.invoke(
+      new Command({
+        resume: {
+          decisions: [
+            { type: "reject", message: "Rejected calculator" },
+            { type: "reject", message: "Rejected write_file" },
+          ],
+        } as HITLResponse,
+      }),
+      config
+    );
+
+    expect(calculatorFn).not.toHaveBeenCalled();
+    expect(writeFileFn).not.toHaveBeenCalled();
+
+    const toolMessages = result.messages.filter((msg: BaseMessage) =>
+      ToolMessage.isInstance(msg)
+    ) as ToolMessage[];
+    expect(toolMessages).toHaveLength(2);
+    expect(toolMessages.map((msg) => msg.tool_call_id).sort()).toEqual([
+      "call_1",
+      "call_2",
+    ]);
+
+    const stateAfterResume = await agent.graph.getState(config);
+    expect(stateAfterResume.next).toBeDefined();
+    expect(stateAfterResume.next.length).toBeGreaterThan(0);
+  });
+
   it("should handle manual response type", async () => {
     const hitlMiddleware = humanInTheLoopMiddleware({
       interruptOn: {
