@@ -20,7 +20,7 @@ export default defineConfig((env) => {
         "**/*.bench.test.ts",
         ...configDefaults.exclude,
       ],
-      setupFiles: ["dotenv/config"],
+      setupFiles: ["dotenv/config", "vitest.setup.ts"],
     },
   };
 
