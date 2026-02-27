@@ -1,13 +1,17 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { BaseMessage } from "../../messages/base.js";
-import { HumanMessage } from "../../messages/human.js";
-import { AIMessage } from "../../messages/ai.js";
-import { SystemMessage } from "../../messages/system.js";
-import { ToolMessage } from "../../messages/tool.js";
+import { BaseMessage } from "@langchain/core/messages";
+import { HumanMessage } from "@langchain/core/messages";
+import { AIMessage } from "@langchain/core/messages";
+import { SystemMessage } from "@langchain/core/messages";
+import { ToolMessage } from "@langchain/core/messages";
 
 /**
- * The `this` context Vitest provides to custom matchers via `expect.extend`.
- * See: https://vitest.dev/guide/extending-matchers.html
+ * The `this` context that Vitest and Jest provide to custom matchers
+ * via `expect.extend`.
+ *
+ * Compatible with both frameworks:
+ * - https://vitest.dev/guide/extending-matchers.html
+ * - https://jestjs.io/docs/expect#expectextendmatchers
  */
 interface ExpectExtendThis {
   isNot: boolean;
@@ -19,10 +23,6 @@ interface ExpectExtendThis {
   };
 }
 
-/**
- * The return value shape for a custom matcher.
- * See: https://vitest.dev/guide/extending-matchers.html
- */
 interface ExpectationResult {
   pass: boolean;
   message: () => string;
@@ -458,3 +458,19 @@ export function messagesOfType<T extends BaseMessage>(
 ): T[] {
   return messages.filter((msg): msg is T => cls.isInstance(msg));
 }
+
+/**
+ * All matcher functions bundled for convenient use with `expect.extend()`.
+ */
+export const langchainMatchers = {
+  toBeHumanMessage,
+  toBeAIMessage,
+  toBeSystemMessage,
+  toBeToolMessage,
+  toHaveToolCalls,
+  toHaveToolCallCount,
+  toContainToolCall,
+  toHaveToolMessages,
+  toHaveBeenInterrupted,
+  toHaveStructuredResponse,
+};
