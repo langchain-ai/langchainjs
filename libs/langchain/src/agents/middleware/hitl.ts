@@ -249,6 +249,18 @@ const contextSchema = z.object({
    * `description`, that per-tool text is used and this prefix is ignored.
    */
   descriptionPrefix: z.string().default("Tool execution requires approval"),
+  /**
+   * Opt-in mode to execute approved/edited actions even when at least one action
+   * in the same HITL batch is rejected.
+   *
+   * - `false` (default): legacy behavior. If any action is rejected, execution
+   *   returns to the model and approved/edited actions in that batch are not
+   *   executed yet.
+   * - `true`: python-like behavior. Rejected actions produce `ToolMessage` with
+   *   `status: "error"` while approved/edited actions continue to tool execution.
+   *   If all actions are rejected, control returns to the model.
+   */
+  executeApprovedOnReject: z.boolean().default(false),
 });
 export type HumanInTheLoopMiddlewareConfig = InferInteropZodInput<
   typeof contextSchema
@@ -314,6 +326,10 @@ export type HumanInTheLoopMiddlewareConfig = InferInteropZodInput<
  * @param options.interruptOn[toolName].description - Custom approval message for the tool. Can be either a static string or a callable that dynamically generates the description based on agent state, runtime, and tool call information
  * @param options.interruptOn[toolName].argsSchema - JSON schema for the arguments associated with the action, if edits are allowed
  * @param options.descriptionPrefix - Default prefix for approval messages (default: "Tool execution requires approval"). Only used for tools that do not define a custom `description` in their InterruptOnConfig.
+ * @param options.executeApprovedOnReject - Opt-in behavior for mixed decision
+ * batches. When `true`, approved/edited actions execute even if other actions in
+ * the same batch are rejected. When `false` (default), any rejection sends
+ * control back to the model before executing approved/edited actions.
  *
  * @returns A middleware instance that can be passed to `createAgent`
  *
@@ -597,7 +613,7 @@ export function humanInTheLoopMiddleware(
     name: "HumanInTheLoopMiddleware",
     contextSchema,
     afterModel: {
-      canJumpTo: ["model"],
+      canJumpTo: ["model", "tools"],
       hook: async (state, runtime) => {
         const config = interopParse(contextSchema, {
           ...options,
@@ -724,6 +740,11 @@ export function humanInTheLoopMiddleware(
         const hasRejectedToolCalls = decisions.some(
           (decision) => decision.type === "reject"
         );
+        const hasNonRejectedToolCalls = decisions.some(
+          (decision) => decision.type !== "reject"
+        );
+        const executeApprovedOnReject =
+          options.executeApprovedOnReject ?? config.executeApprovedOnReject;
 
         /**
          * Process each decision using helper method
@@ -742,11 +763,16 @@ export function humanInTheLoopMiddleware(
           if (
             revisedToolCall &&
             /**
-             * If any decision is a rejected, we are going back to the model
-             * with only the tool calls that were rejected as we don't know
-             * the results of the approved/updated tool calls at this point.
+             * Legacy behavior: if any decision is rejected, go back to model and
+             * keep only rejected calls in the AI message.
+             *
+             * Opt-in behavior (`executeApprovedOnReject`): always keep all revised
+             * calls, so approved/edited calls can continue to tool execution while
+             * rejected calls are represented by artificial error tool messages.
              */
-            (!hasRejectedToolCalls || decision.type === "reject")
+            (executeApprovedOnReject ||
+              !hasRejectedToolCalls ||
+              decision.type === "reject")
           ) {
             revisedToolCalls.push(revisedToolCall);
           }
@@ -762,9 +788,15 @@ export function humanInTheLoopMiddleware(
           lastMessage.tool_calls = revisedToolCalls;
         }
 
-        const jumpTo: JumpToTarget | undefined = hasRejectedToolCalls
-          ? "model"
-          : undefined;
+        const jumpTo: JumpToTarget | undefined =
+          hasRejectedToolCalls &&
+          executeApprovedOnReject &&
+          hasNonRejectedToolCalls
+            ? "tools"
+            : hasRejectedToolCalls &&
+                (!executeApprovedOnReject || !hasNonRejectedToolCalls)
+              ? "model"
+              : undefined;
         return {
           messages: [lastMessage, ...artificialToolMessages],
           jumpTo,
