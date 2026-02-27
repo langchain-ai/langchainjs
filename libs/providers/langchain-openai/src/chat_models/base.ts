@@ -1051,13 +1051,13 @@ export abstract class BaseChatOpenAI<
         },
       } as Partial<CallOptions>);
     } else if (method === "jsonSchema") {
+      const asJsonSchema = toJsonSchema(schema);
       const openaiJsonSchemaParams = {
         name: name ?? "extract",
-        description: getSchemaDescription(schema),
-        schema,
+        description: getSchemaDescription(asJsonSchema),
+        schema: asJsonSchema,
         strict: config?.strict,
       };
-      const asJsonSchema = toJsonSchema(openaiJsonSchemaParams.schema);
       llm = this.withConfig({
         outputVersion: "v0",
         response_format: {
