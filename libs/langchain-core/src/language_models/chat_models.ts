@@ -1034,7 +1034,7 @@ export abstract class BaseChatModel<
 
     const llm = this.bindTools(tools);
     const outputParser = RunnableLambda.from<OutputMessageType, RunOutput>(
-      async (input: BaseMessageChunk): Promise<RunOutput> => {
+      (input: BaseMessageChunk): RunOutput => {
         if (!AIMessageChunk.isInstance(input)) {
           throw new Error("Input is not an AIMessageChunk.");
         }
@@ -1047,17 +1047,7 @@ export abstract class BaseChatModel<
         if (!toolCall) {
           throw new Error(`No tool call found with name ${functionName}.`);
         }
-        const args = toolCall.args;
-        if (isStandardSchema(schema)) {
-          const result = await schema["~standard"].validate(args);
-          if (result.issues) {
-            throw new Error(
-              `Validation failed: ${JSON.stringify(result.issues)}`
-            );
-          }
-          return result.value as RunOutput;
-        }
-        return args as RunOutput;
+        return toolCall.args as RunOutput;
       }
     );
 
