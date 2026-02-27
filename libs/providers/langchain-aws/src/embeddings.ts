@@ -188,12 +188,14 @@ export class BedrockEmbeddings
         // eslint-disable-next-line no-instanceof/no-instanceof
         if (e instanceof Error) {
           throw new Error(
-            `An error occurred while embedding documents with Bedrock: ${e.message}`
+            `An error occurred while embedding documents with Bedrock: ${e.message}`,
+            { cause: e }
           );
         }
 
         throw new Error(
-          "An error occurred while embedding documents with Bedrock"
+          "An error occurred while embedding documents with Bedrock",
+          { cause: e }
         );
       }
     });

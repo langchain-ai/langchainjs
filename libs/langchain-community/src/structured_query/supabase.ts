@@ -128,7 +128,7 @@ export class SupabaseTranslator<
    * @returns The built column name.
    */
   buildColumnName(attr: string, value: string | number, includeType = true) {
-    let column = "";
+    let column;
     if (isString(value)) {
       column = `metadata->>${attr}`;
     } else if (isInt(value)) {

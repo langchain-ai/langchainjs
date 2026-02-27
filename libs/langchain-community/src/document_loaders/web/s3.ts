@@ -118,7 +118,8 @@ export class S3Loader extends BaseDocumentLoader {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (e: any) {
       throw new Error(
-        `Failed to download file ${this.key} from S3 bucket ${this.bucket}: ${e.message}`
+        `Failed to download file ${this.key} from S3 bucket ${this.bucket}: ${e.message}`,
+        { cause: e }
       );
     }
 

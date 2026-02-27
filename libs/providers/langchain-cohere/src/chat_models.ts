@@ -815,7 +815,7 @@ export class ChatCohere<
 
     const toolResults = this._messagesToCohereToolResultsCurrChatTurn(messages);
     const chatHistory = [];
-    let messageStr: string = "";
+    let messageStr: string;
     let tempToolResults: {
       call: Cohere.ToolCall;
       outputs: any;

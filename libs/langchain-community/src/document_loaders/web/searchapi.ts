@@ -171,7 +171,8 @@ export class SearchApiLoader extends BaseDocumentLoader {
     } catch (error) {
       console.error(error);
       throw new Error(
-        `Failed to process search results from SearchApi: ${error}`
+        `Failed to process search results from SearchApi: ${error}`,
+        { cause: error }
       );
     }
   }

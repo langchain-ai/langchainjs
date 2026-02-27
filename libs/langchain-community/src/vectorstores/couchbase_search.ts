@@ -1,5 +1,4 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable import/no-extraneous-dependencies */
 import { EmbeddingsInterface } from "@langchain/core/embeddings";
 import { VectorStore } from "@langchain/core/vectorstores";
 import {
@@ -181,7 +180,9 @@ export class CouchbaseSearchVectorStore extends VectorStore {
         throw new Error("Error while initializing vector store");
       }
     } catch (err) {
-      throw new Error(`Error while initializing vector store: ${err}`);
+      throw new Error(`Error while initializing vector store: ${err}`, {
+        cause: err,
+      });
     }
     return store;
   }
@@ -364,7 +365,7 @@ export class CouchbaseSearchVectorStore extends VectorStore {
       }
     } catch (err) {
       console.log("error received");
-      throw new Error(`Search failed with error: ${err}`);
+      throw new Error(`Search failed with error: ${err}`, { cause: err });
     }
     return docsWithScore;
   }
@@ -534,7 +535,7 @@ export class CouchbaseSearchVectorStore extends VectorStore {
       },
     }));
 
-    let docIds: string[] = [];
+    let docIds: string[];
     try {
       docIds = await this.upsertDocuments(documentsToInsert);
     } catch (err) {
@@ -641,7 +642,9 @@ export class CouchbaseSearchVectorStore extends VectorStore {
     try {
       await Promise.all(deleteDocumentsPromises);
     } catch (err) {
-      throw new Error(`Error while deleting documents, Error: ${err}`);
+      throw new Error(`Error while deleting documents, Error: ${err}`, {
+        cause: err,
+      });
     }
   }
 }

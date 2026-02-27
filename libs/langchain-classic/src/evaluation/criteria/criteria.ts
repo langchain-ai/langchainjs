@@ -87,8 +87,8 @@ export class CriteriaResultOutputParser extends BaseLLMOutputParser<EvalOutputTy
     const { text } = generations[0];
 
     const parsed = text.trim().split("\n");
-    let reasoning = "";
-    let verdict = "";
+    let reasoning;
+    let verdict;
 
     if (parsed.length === 1) {
       [verdict] = parsed;

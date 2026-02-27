@@ -51,7 +51,7 @@ class MemgraphGraph extends Neo4jGraph {
       console.debug("Schema refreshed successfully.");
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
-      throw new Error(error.message);
+      throw new Error(error.message, { cause: error });
     }
 
     return graph;

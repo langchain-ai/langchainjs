@@ -631,8 +631,6 @@ export class PostgresVectorStore extends VectorStore {
     );
     const k = options?.k ? options.k : this.k;
     const documentsWithScores: [Document, number][] = [];
-    let docsList: Document[] = [];
-
     const embeddingList = results.map((row: { [x: string]: string }) =>
       JSON.parse(row[this.embeddingColumn])
     );
@@ -660,7 +658,7 @@ export class PostgresVectorStore extends VectorStore {
       ]);
     }
 
-    docsList = documentsWithScores
+    const docsList = documentsWithScores
       .filter((_, i) => mmrSelected.includes(i))
       .map(([doc, _]) => doc);
 

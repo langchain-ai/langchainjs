@@ -76,7 +76,9 @@ export class GmailSendMessage extends GmailBaseTool {
 
       return `Message sent. Message Id: ${response.data.id}`;
     } catch (error) {
-      throw new Error(`An error occurred while sending the message: ${error}`);
+      throw new Error(`An error occurred while sending the message: ${error}`, {
+        cause: error,
+      });
     }
   }
 }

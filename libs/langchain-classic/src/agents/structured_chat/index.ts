@@ -334,7 +334,7 @@ export async function createStructuredChatAgent({
       )}`
     );
   }
-  let toolNames: string[] = [];
+  let toolNames: string[];
   if (tools.every(isOpenAITool)) {
     toolNames = tools.map((tool) => tool.function.name);
   } else if (tools.every(isStructuredTool)) {

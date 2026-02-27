@@ -477,7 +477,7 @@ export class WeaviateStore extends VectorStore {
       }
       return documents;
     } catch (e) {
-      throw Error(`Error in similaritySearch ${e}`);
+      throw new Error(`Error in similaritySearch ${e}`, { cause: e });
     }
   }
 

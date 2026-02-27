@@ -170,6 +170,7 @@ export class JsonStream implements AbstractStream {
    * Repeat this for as much as we can.
    */
   _parseBuffer(): void {
+    // eslint-disable-next-line no-useless-assignment -- initial null is needed for do-while type inference
     let obj = null;
     do {
       this._skipTo("{");

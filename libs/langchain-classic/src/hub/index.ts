@@ -74,7 +74,8 @@ export async function pull<T extends Runnable>(
           `  modelClass: ChatAnthropic,`,
           `});`,
           "```",
-        ].join("\n")
+        ].join("\n"),
+        { cause: e }
       );
     } else {
       throw e;

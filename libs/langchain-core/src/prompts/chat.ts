@@ -542,7 +542,7 @@ class _StringImageMessagePromptTemplate<
       } else if (isImageTemplateParam(item)) {
         let imgTemplate = item.image_url ?? "";
         let imgTemplateObject: ImagePromptTemplate<InputValues>;
-        let inputVariables: string[] = [];
+        let inputVariables: string[];
         if (typeof imgTemplate === "string") {
           let parsedTemplate: ParsedTemplateNode[];
           if (additionalOptions?.templateFormat === "mustache") {

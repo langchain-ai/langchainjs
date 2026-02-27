@@ -66,7 +66,8 @@ export abstract class BufferLoader extends BaseDocumentLoader {
     } catch (e) {
       console.error(e);
       throw new Error(
-        `Failed to load fs/promises. TextLoader available only on environment 'node'. It appears you are running environment '${getEnv()}'. See https://<link to docs> for alternatives.`
+        `Failed to load fs/promises. TextLoader available only on environment 'node'. It appears you are running environment '${getEnv()}'. See https://<link to docs> for alternatives.`,
+        { cause: e }
       );
     }
   }

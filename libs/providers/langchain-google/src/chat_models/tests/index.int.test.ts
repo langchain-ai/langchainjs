@@ -1623,7 +1623,6 @@ describe.sequential.each(ttsModelInfo)(
       header.write("data", offset);
       offset += 4;
       header.writeUInt32LE(dataSize, offset);
-      offset += 4;
 
       const wavBuffer = Buffer.concat([header, buffer]);
 
