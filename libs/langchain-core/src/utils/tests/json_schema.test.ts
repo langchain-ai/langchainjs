@@ -62,4 +62,61 @@ describe("toJsonSchema", () => {
       });
     });
   });
+
+  describe("with Standard JSON Schema", () => {
+    it("should extract JSON schema via ~standard.jsonSchema.input()", () => {
+      const standardSchema = {
+        "~standard": {
+          version: 1 as const,
+          vendor: "test",
+          jsonSchema: {
+            input: () => ({
+              type: "object",
+              properties: {
+                name: { type: "string" },
+                age: { type: "number" },
+              },
+              required: ["name", "age"],
+            }),
+            output: () => ({
+              type: "object",
+              properties: {
+                name: { type: "string" },
+                age: { type: "number" },
+              },
+              required: ["name", "age"],
+            }),
+          },
+        },
+      };
+      const jsonSchema = toJsonSchema(standardSchema);
+      expect(jsonSchema).toEqual({
+        type: "object",
+        properties: {
+          name: { type: "string" },
+          age: { type: "number" },
+        },
+        required: ["name", "age"],
+      });
+    });
+
+    it("should pass target draft-07 to the input function", () => {
+      let receivedTarget: string | undefined;
+      const standardSchema = {
+        "~standard": {
+          version: 1 as const,
+          vendor: "test",
+          jsonSchema: {
+            input: (params: { target: string }) => {
+              receivedTarget = params.target;
+              return { type: "object" };
+            },
+            output: () => ({ type: "object" }),
+          },
+        },
+      };
+      toJsonSchema(standardSchema);
+      expect(receivedTarget).toBe("draft-07");
+    });
+  });
 });

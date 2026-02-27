@@ -27,6 +27,7 @@ import {
   InteropZodType,
 } from "../utils/types/zod.js";
 import { ModelProfile } from "./profile.js";
+import { SerializableSchema } from "../utils/standard_schema.js";
 
 // https://www.npmjs.com/package/js-tiktoken
 
@@ -625,6 +626,20 @@ export abstract class BaseLanguageModel<
     return {};
   }
 
+  withStructuredOutput?<
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    RunOutput extends Record<string, any> = Record<string, any>,
+  >(
+    schema: SerializableSchema<RunOutput, RunOutput>,
+    config?: StructuredOutputMethodOptions<false>
+  ): Runnable<BaseLanguageModelInput, RunOutput>;
+  withStructuredOutput?<
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    RunOutput extends Record<string, any> = Record<string, any>,
+  >(
+    schema: SerializableSchema<RunOutput, RunOutput>,
+    config?: StructuredOutputMethodOptions<true>
+  ): Runnable<BaseLanguageModelInput, { raw: BaseMessage; parsed: RunOutput }>;
   withStructuredOutput?<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     RunOutput extends Record<string, any> = Record<string, any>,

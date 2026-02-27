@@ -48,11 +48,9 @@ import {
 import {
   Runnable,
   RunnableLambda,
-  RunnableSequence,
   RunnableToolLike,
 } from "../runnables/base.js";
 import { concat } from "../utils/stream.js";
-import { RunnablePassthrough } from "../runnables/passthrough.js";
 import {
   getSchemaDescription,
   InteropZodType,
@@ -63,6 +61,11 @@ import { callbackHandlerPrefersStreaming } from "../callbacks/base.js";
 import { toJsonSchema } from "../utils/json_schema.js";
 import { getEnvironmentVariable } from "../utils/env.js";
 import { castStandardMessageContent, iife } from "./utils.js";
+import {
+  isSerializableSchema,
+  SerializableSchema,
+} from "../utils/standard_schema.js";
+import { assembleStructuredOutputPipeline } from "./structured_output.js";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type ToolChoice = string | Record<string, any> | "auto" | "any";
@@ -888,6 +891,20 @@ export abstract class BaseChatModel<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     RunOutput extends Record<string, any> = Record<string, any>,
   >(
+    outputSchema: SerializableSchema<RunOutput, RunOutput>,
+    config?: StructuredOutputMethodOptions<false>
+  ): Runnable<BaseLanguageModelInput, RunOutput>;
+  withStructuredOutput<
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    RunOutput extends Record<string, any> = Record<string, any>,
+  >(
+    outputSchema: SerializableSchema<RunOutput, RunOutput>,
+    config?: StructuredOutputMethodOptions<true>
+  ): Runnable<BaseLanguageModelInput, { raw: BaseMessage; parsed: RunOutput }>;
+  withStructuredOutput<
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    RunOutput extends Record<string, any> = Record<string, any>,
+  >(
     outputSchema:
       | ZodTypeV4<RunOutput>
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -972,7 +989,7 @@ export abstract class BaseChatModel<
 
     let functionName = name ?? "extract";
     let tools: ToolDefinition[];
-    if (isInteropZodSchema(schema)) {
+    if (isInteropZodSchema(schema) || isSerializableSchema(schema)) {
       tools = [
         {
           type: "function",
@@ -1018,33 +1035,12 @@ export abstract class BaseChatModel<
       }
     );
 
-    if (!includeRaw) {
-      return llm.pipe(outputParser).withConfig({
-        runName: "StructuredOutput",
-      }) as Runnable<BaseLanguageModelInput, RunOutput>;
-    }
-
-    const parserAssign = RunnablePassthrough.assign({
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      parsed: (input: any, config) => outputParser.invoke(input.raw, config),
-    });
-    const parserNone = RunnablePassthrough.assign({
-      parsed: () => null,
-    });
-    const parsedWithFallback = parserAssign.withFallbacks({
-      fallbacks: [parserNone],
-    });
-    return RunnableSequence.from<
-      BaseLanguageModelInput,
-      { raw: BaseMessage; parsed: RunOutput }
-    >([
-      {
-        raw: llm,
-      },
-      parsedWithFallback,
-    ]).withConfig({
-      runName: "StructuredOutputRunnable",
-    });
+    return assembleStructuredOutputPipeline(
+      llm,
+      outputParser,
+      includeRaw,
+      "StructuredOutput"
+    );
   }
 }
 

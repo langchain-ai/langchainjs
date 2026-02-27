@@ -13,6 +13,8 @@ import {
   type JsonSchema7Type as JSONSchema,
   zodToJsonSchema,
 } from "./zod-to-json-schema/index.js";
+import { StandardJSONSchemaV1 } from "@standard-schema/spec";
+import { isStandardJSONSchema } from "./standard_schema.js";
 
 export { deepCompareStrict, Validator } from "@cfworker/json-schema";
 
@@ -22,14 +24,20 @@ export type ToJSONSchemaParams = NonNullable<
 
 /**
  * Converts a Zod schema or JSON schema to a JSON schema.
+ *
  * @param schema - The schema to convert.
  * @param params - The parameters to pass to the toJSONSchema function.
  * @returns The converted schema.
  */
 export function toJsonSchema(
-  schema: InteropZodType | JSONSchema,
+  schema: StandardJSONSchemaV1 | InteropZodType | JSONSchema,
   params?: ToJSONSchemaParams
 ): JSONSchema {
+  if (isStandardJSONSchema(schema) && !isZodSchemaV4(schema)) {
+    return schema["~standard"].jsonSchema.input({
+      target: "draft-07",
+    }) as JSONSchema;
+  }
   if (isZodSchemaV4(schema)) {
     const inputSchema = interopZodTransformInputSchema(schema, true);
     if (isZodObjectV4(inputSchema)) {

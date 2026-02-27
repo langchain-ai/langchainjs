@@ -31,6 +31,7 @@
   "license": "MIT",
   "dependencies": {
     "@cfworker/json-schema": "^4.0.2",
+    "@standard-schema/spec": "^1.1.0",
     "ansi-styles": "^5.0.0",
     "camelcase": "6",
     "decamelize": "1.2.0",
@@ -304,6 +305,17 @@
       "import": {
         "types": "./dist/language_models/profile.d.ts",
         "default": "./dist/language_models/profile.js"
+      }
+    },
+    "./language_models/structured_output": {
+      "input": "./src/language_models/structured_output.ts",
+      "require": {
+        "types": "./dist/language_models/structured_output.d.cts",
+        "default": "./dist/language_models/structured_output.cjs"
+      },
+      "import": {
+        "types": "./dist/language_models/structured_output.d.ts",
+        "default": "./dist/language_models/structured_output.js"
       }
     },
     "./load": {
@@ -711,6 +723,17 @@
       "import": {
         "types": "./dist/utils/ssrf.d.ts",
         "default": "./dist/utils/ssrf.js"
+      }
+    },
+    "./utils/standard_schema": {
+      "input": "./src/utils/standard_schema.ts",
+      "require": {
+        "types": "./dist/utils/standard_schema.d.cts",
+        "default": "./dist/utils/standard_schema.cjs"
+      },
+      "import": {
+        "types": "./dist/utils/standard_schema.d.ts",
+        "default": "./dist/utils/standard_schema.js"
       }
     },
     "./utils/stream": {
