@@ -7,12 +7,13 @@ import type {
  * A schema that supports both runtime validation and JSON Schema generation.
  * Any schema passed to withStructuredOutput must satisfy both interfaces.
  */
-export type SerializableSchema<
-  Input = unknown,
-  Output = Input,
-> = StandardSchemaV1<Input, Output> & StandardJSONSchemaV1<Input, Output>;
+export type SerializableSchema<Input = any, Output = Input> = StandardSchemaV1<
+  Input,
+  Output
+> &
+  StandardJSONSchemaV1<Input, Output>;
 
-export function isStandardSchema<Input = unknown, Output = Input>(
+export function isStandardSchema<Input = any, Output = Input>(
   schema: unknown
 ): schema is StandardSchemaV1<Input, Output> {
   return (
@@ -25,7 +26,12 @@ export function isStandardSchema<Input = unknown, Output = Input>(
   );
 }
 
-export function isStandardJSONSchema<Input = unknown, Output = Input>(
+/**
+ * Type guard for Standard JSON Schema V1. Returns true if the value has a
+ * `~standard.jsonSchema` interface, indicating it can be converted to a
+ * JSON Schema object (e.g. for sending as a tool definition to an LLM).
+ */
+export function isStandardJSONSchema<Input = any, Output = Input>(
   schema: unknown
 ): schema is StandardJSONSchemaV1<Input, Output> {
   return (
@@ -38,7 +44,12 @@ export function isStandardJSONSchema<Input = unknown, Output = Input>(
   );
 }
 
-export function isSerializableSchema<Input = unknown, Output = Input>(
+/**
+ * Type guard for Standard Schema V1. Returns true if the value has a
+ * `~standard.validate` interface, indicating it can validate unknown
+ * values at runtime (e.g. for parsing LLM output).
+ */
+export function isSerializableSchema<Input = any, Output = Input>(
   schema: unknown
 ): schema is SerializableSchema<Input, Output> {
   return isStandardSchema(schema) && isStandardJSONSchema(schema);
