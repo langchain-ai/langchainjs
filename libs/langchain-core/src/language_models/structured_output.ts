@@ -5,6 +5,7 @@ import {
   StandardSchemaOutputParser,
   StructuredOutputParser,
 } from "../output_parsers/index.js";
+import { JsonOutputKeyToolsParser } from "../output_parsers/openai_tools/json_output_tools_parsers.js";
 import {
   Runnable,
   RunnablePassthrough,
@@ -42,6 +43,42 @@ export function createContentParser<
     return StandardSchemaOutputParser.fromStandardSchema(schema);
   }
   return new JsonOutputParser<RunOutput>();
+}
+
+type FunctionCallingParserConstructor<
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  T extends Record<string, any> = Record<string, any>,
+> = new (params: {
+  keyName: string;
+  returnSingle?: boolean;
+  zodSchema?: InteropZodType<T>;
+  serializableSchema?: SerializableSchema<T>;
+}) => BaseLLMOutputParser<T>;
+
+export function createFunctionCallingParser<
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  RunOutput extends Record<string, any> = Record<string, any>,
+>(
+  schema:
+    | InteropZodType<RunOutput>
+    | SerializableSchema<RunOutput, RunOutput>
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    | Record<string, any>,
+  keyName: string,
+  ParserClass?: FunctionCallingParserConstructor<RunOutput>
+): BaseLLMOutputParser<RunOutput> {
+  const Ctor = ParserClass ?? JsonOutputKeyToolsParser;
+  if (isInteropZodSchema(schema)) {
+    return new Ctor({ returnSingle: true, keyName, zodSchema: schema });
+  }
+  if (isSerializableSchema(schema)) {
+    return new Ctor({
+      returnSingle: true,
+      keyName,
+      serializableSchema: schema,
+    });
+  }
+  return new Ctor({ returnSingle: true, keyName });
 }
 
 /**

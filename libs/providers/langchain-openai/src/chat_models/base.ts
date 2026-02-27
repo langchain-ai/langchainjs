@@ -15,6 +15,7 @@ import {
 import {
   createContentParser,
   assembleStructuredOutputPipeline,
+  createFunctionCallingParser,
 } from "@langchain/core/language_models/structured_output";
 import {
   isOpenAITool as isOpenAIFunctionTool,
@@ -1076,13 +1077,12 @@ export abstract class BaseChatOpenAI<
           },
         },
       } as Partial<CallOptions>);
-      const altParser = createContentParser(schema);
       outputParser = RunnableLambda.from<AIMessageChunk, RunOutput>(
         (aiMessage: AIMessageChunk) => {
           if ("parsed" in aiMessage.additional_kwargs) {
             return aiMessage.additional_kwargs.parsed as RunOutput;
           }
-          return altParser;
+          return createContentParser(schema);
         }
       );
     } else {
@@ -1128,24 +1128,7 @@ export abstract class BaseChatOpenAI<
         ...(config?.strict !== undefined ? { strict: config.strict } : {}),
       } as Partial<CallOptions>);
 
-      if (isInteropZodSchema(schema)) {
-        outputParser = new JsonOutputKeyToolsParser({
-          returnSingle: true,
-          keyName: functionName,
-          zodSchema: schema,
-        });
-      } else if (isSerializableSchema(schema)) {
-        outputParser = new JsonOutputKeyToolsParser({
-          returnSingle: true,
-          keyName: functionName,
-          serializableSchema: schema,
-        });
-      } else {
-        outputParser = new JsonOutputKeyToolsParser({
-          returnSingle: true,
-          keyName: functionName,
-        });
-      }
+      outputParser = createFunctionCallingParser(schema, functionName);
     }
 
     return assembleStructuredOutputPipeline(llm, outputParser, includeRaw);
