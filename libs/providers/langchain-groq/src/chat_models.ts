@@ -1499,11 +1499,17 @@ export class ChatGroq extends BaseChatModel<
       outputParser = createContentParser(schema);
     } else if (method === "jsonMode") {
       outputParser = createContentParser(schema);
+
+      const asJsonSchema =
+        isInteropZodSchema(schema) || isSerializableSchema(schema)
+          ? toJsonSchema(schema)
+          : undefined;
+
       llm = this.withConfig({
         response_format: { type: "json_object" },
         ls_structured_output_format: {
           kwargs: { method: "jsonMode" },
-          schema: isInteropZodSchema(schema) ? toJsonSchema(schema) : undefined,
+          schema: asJsonSchema,
         },
       });
     } else {
