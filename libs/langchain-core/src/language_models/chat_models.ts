@@ -65,9 +65,9 @@ import { getEnvironmentVariable } from "../utils/env.js";
 import { castStandardMessageContent, iife } from "./utils.js";
 import {
   isSerializableSchema,
-  isStandardSchema,
   SerializableSchema,
 } from "../utils/standard_schema.js";
+import { assembleStructuredOutputPipeline } from "./structured_output.js";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type ToolChoice = string | Record<string, any> | "auto" | "any";
@@ -1037,33 +1037,12 @@ export abstract class BaseChatModel<
       }
     );
 
-    if (!includeRaw) {
-      return llm.pipe(outputParser).withConfig({
-        runName: "StructuredOutput",
-      }) as Runnable<BaseLanguageModelInput, RunOutput>;
-    }
-
-    const parserAssign = RunnablePassthrough.assign({
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      parsed: (input: any, config) => outputParser.invoke(input.raw, config),
-    });
-    const parserNone = RunnablePassthrough.assign({
-      parsed: () => null,
-    });
-    const parsedWithFallback = parserAssign.withFallbacks({
-      fallbacks: [parserNone],
-    });
-    return RunnableSequence.from<
-      BaseLanguageModelInput,
-      { raw: BaseMessage; parsed: RunOutput }
-    >([
-      {
-        raw: llm,
-      },
-      parsedWithFallback,
-    ]).withConfig({
-      runName: "StructuredOutputRunnable",
-    });
+    return assembleStructuredOutputPipeline(
+      llm,
+      outputParser,
+      includeRaw,
+      "StructuredOutput"
+    );
   }
 }
 

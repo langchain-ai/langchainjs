@@ -8,6 +8,11 @@ import {
   type BaseChatModelParams,
   BaseChatModelCallOptions,
 } from "@langchain/core/language_models/chat_models";
+import { isSerializableSchema } from "@langchain/core/utils/standard_schema";
+import {
+  createContentParser,
+  assembleStructuredOutputPipeline,
+} from "@langchain/core/language_models/structured_output";
 import {
   isOpenAITool as isOpenAIFunctionTool,
   type BaseFunctionCallOptions,
@@ -16,12 +21,7 @@ import {
   type StructuredOutputMethodOptions,
 } from "@langchain/core/language_models/base";
 import { ModelProfile } from "@langchain/core/language_models/profile";
-import {
-  Runnable,
-  RunnableLambda,
-  RunnablePassthrough,
-  RunnableSequence,
-} from "@langchain/core/runnables";
+import { Runnable, RunnableLambda } from "@langchain/core/runnables";
 import {
   JsonOutputParser,
   StructuredOutputParser,
@@ -1038,11 +1038,7 @@ export abstract class BaseChatOpenAI<
     const method = getStructuredOutputMethod(this.model, config?.method);
 
     if (method === "jsonMode") {
-      if (isInteropZodSchema(schema)) {
-        outputParser = StructuredOutputParser.fromZodSchema(schema);
-      } else {
-        outputParser = new JsonOutputParser<RunOutput>();
-      }
+      outputParser = createContentParser(schema);
       const asJsonSchema = toJsonSchema(schema);
       llm = this.withConfig({
         outputVersion: "v0",
@@ -1075,23 +1071,19 @@ export abstract class BaseChatOpenAI<
           },
         },
       } as Partial<CallOptions>);
-      if (isInteropZodSchema(schema)) {
-        const altParser = StructuredOutputParser.fromZodSchema(schema);
-        outputParser = RunnableLambda.from<AIMessageChunk, RunOutput>(
-          (aiMessage: AIMessageChunk) => {
-            if ("parsed" in aiMessage.additional_kwargs) {
-              return aiMessage.additional_kwargs.parsed as RunOutput;
-            }
-            return altParser;
+      const altParser = createContentParser(schema);
+      outputParser = RunnableLambda.from<AIMessageChunk, RunOutput>(
+        (aiMessage: AIMessageChunk) => {
+          if ("parsed" in aiMessage.additional_kwargs) {
+            return aiMessage.additional_kwargs.parsed as RunOutput;
           }
-        );
-      } else {
-        outputParser = new JsonOutputParser<RunOutput>();
-      }
+          return altParser;
+        }
+      );
     } else {
       let functionName = name ?? "extract";
       // Is function calling
-      if (isInteropZodSchema(schema)) {
+      if (isInteropZodSchema(schema) || isSerializableSchema(schema)) {
         const asJsonSchema = toJsonSchema(schema);
         llm = this.withConfig({
           outputVersion: "v0",
@@ -1118,11 +1110,20 @@ export abstract class BaseChatOpenAI<
           // Do not pass `strict` argument to OpenAI if `config.strict` is undefined
           ...(config?.strict !== undefined ? { strict: config.strict } : {}),
         } as Partial<CallOptions>);
-        outputParser = new JsonOutputKeyToolsParser({
-          returnSingle: true,
-          keyName: functionName,
-          zodSchema: schema,
-        });
+
+        if (isInteropZodSchema(schema)) {
+          outputParser = new JsonOutputKeyToolsParser({
+            returnSingle: true,
+            keyName: functionName,
+            zodSchema: schema,
+          });
+        } else {
+          outputParser = new JsonOutputKeyToolsParser({
+            returnSingle: true,
+            keyName: functionName,
+            serializableSchema: schema,
+          });
+        }
       } else {
         let openAIFunctionDefinition: FunctionDefinition;
         if (
@@ -1169,26 +1170,6 @@ export abstract class BaseChatOpenAI<
       }
     }
 
-    if (!includeRaw) {
-      return llm.pipe(outputParser) as Runnable<
-        BaseLanguageModelInput,
-        RunOutput
-      >;
-    }
-
-    const parserAssign = RunnablePassthrough.assign({
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      parsed: (input: any, config) => outputParser.invoke(input.raw, config),
-    });
-    const parserNone = RunnablePassthrough.assign({
-      parsed: () => null,
-    });
-    const parsedWithFallback = parserAssign.withFallbacks({
-      fallbacks: [parserNone],
-    });
-    return RunnableSequence.from<
-      BaseLanguageModelInput,
-      { raw: BaseMessage; parsed: RunOutput }
-    >([{ raw: llm }, parsedWithFallback]);
+    return assembleStructuredOutputPipeline(llm, outputParser, includeRaw);
   }
 }
