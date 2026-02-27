@@ -4,7 +4,7 @@
     "rootDir": "src",
     "outDir": "dist"
   },
-  "include": ["src/**/*", "src/**/*.json"],
+  "include": ["src/**/*", "src/**/*.json", "vitest.d.ts"],
   "exclude": ["dist", "node_modules"],
   "references": [
     { "path": "../langchain-core" },
