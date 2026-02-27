@@ -68,8 +68,7 @@
       "@gradientai/nodejs-sdk>axios": "^1.13.5",
       "mem0ai>axios": "^1.13.5",
       "conf>ajv": "8.18.0",
-      "@modelcontextprotocol/sdk>ajv": "8.18.0",
-      "langchain>langsmith": ">=0.4.6"
+      "@modelcontextprotocol/sdk>ajv": "8.18.0"
     }
   },
   "lint-staged": {
