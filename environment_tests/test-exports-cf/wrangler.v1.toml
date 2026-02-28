@@ -1,0 +1,12 @@
+# Wrangler configuration for LangChain v1 Cloudflare Workers tests
+#
+# LangChain v1 requires nodejs_compat because @langchain/langgraph
+# (a dependency) uses static imports for node:async_hooks.
+#
+# While @langchain/core uses dynamic imports with graceful fallback,
+# the langgraph dependency still requires the nodejs_compat flag.
+
+name = "test-exports-cf-v1"
+main = "src/index.v1.ts"
+compatibility_date = "2024-09-23"
+compatibility_flags = ["nodejs_compat"]
