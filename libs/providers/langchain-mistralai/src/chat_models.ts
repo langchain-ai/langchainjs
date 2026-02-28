@@ -53,27 +53,14 @@ import {
 import { AsyncCaller } from "@langchain/core/utils/async_caller";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import { NewTokenIndices } from "@langchain/core/callbacks/base";
+import { type BaseLLMOutputParser } from "@langchain/core/output_parsers";
 import {
-  type BaseLLMOutputParser,
-  JsonOutputParser,
-  StructuredOutputParser,
-} from "@langchain/core/output_parsers";
-import {
-  JsonOutputKeyToolsParser,
   convertLangChainToolCallToOpenAI,
   makeInvalidToolCall,
   parseToolCall,
 } from "@langchain/core/output_parsers/openai_tools";
-import {
-  Runnable,
-  RunnablePassthrough,
-  RunnableSequence,
-  RunnableBinding,
-} from "@langchain/core/runnables";
-import {
-  JsonSchema7Type,
-  toJsonSchema,
-} from "@langchain/core/utils/json_schema";
+import { Runnable, RunnableBinding } from "@langchain/core/runnables";
+import { toJsonSchema } from "@langchain/core/utils/json_schema";
 import { ToolCallChunk } from "@langchain/core/messages/tool";
 import { isLangChainTool } from "@langchain/core/utils/function_calling";
 import {
