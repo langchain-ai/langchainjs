@@ -8,3 +8,4 @@ export * from "./runnables.js";
 export * from "./tools.js";
 export * from "./tracers.js";
 export * from "./vectorstores.js";
+export { fakeModel } from "./fake_model_builder.js";
