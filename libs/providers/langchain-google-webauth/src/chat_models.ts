@@ -34,6 +34,7 @@ export class ChatGoogle
         ? { ...(fieldsArg ?? {}), model: modelOrFields }
         : (modelOrFields ?? {});
     super(fields);
+    this._addVersion("@langchain/google-webauth", __PKG_VERSION__);
   }
 
   buildAbstractedClient(

@@ -76,6 +76,7 @@ export class ChatCloudflareWorkersAI
         ? { ...(paramsArg ?? {}), model: modelOrFields }
         : (modelOrFields ?? {});
     super(fields);
+    this._addVersion("@langchain/cloudflare", __PKG_VERSION__);
 
     this.model = fields.model ?? this.model;
     this.streaming = fields.streaming ?? this.streaming;

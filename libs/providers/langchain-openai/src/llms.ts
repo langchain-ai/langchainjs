@@ -143,6 +143,7 @@ export class OpenAI<CallOptions extends OpenAICallOptions = OpenAICallOptions>
       }
   ) {
     super(fields ?? {});
+    this._addVersion("@langchain/openai", __PKG_VERSION__);
 
     this.openAIApiKey =
       fields?.apiKey ??

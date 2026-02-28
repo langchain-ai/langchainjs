@@ -1,0 +1,6 @@
+data: {"candidates":[{"content":{"parts":[{"text":"The"}],"role":"model"}}],"usageMetadata":{"promptTokenCount":10,"candidatesTokenCount":1,"totalTokenCount":11,"promptTokensDetails":[{"modality":"TEXT","tokenCount":10}]},"modelVersion":"gemini-2.5-flash"}
+
+data: {"candidates":[{"content":{"parts":[{"text":" sky"}],"role":"model"}}],"usageMetadata":{"promptTokenCount":10,"candidatesTokenCount":5,"totalTokenCount":15,"promptTokensDetails":[{"modality":"TEXT","tokenCount":10}]},"modelVersion":"gemini-2.5-flash"}
+
+data: {"candidates":[{"content":{"parts":[{"text":" is blue."}],"role":"model"},"finishReason":"STOP"}],"usageMetadata":{"promptTokenCount":10,"candidatesTokenCount":12,"totalTokenCount":22,"promptTokensDetails":[{"modality":"TEXT","tokenCount":10}]},"modelVersion":"gemini-2.5-flash"}
+

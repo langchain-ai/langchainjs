@@ -1,5 +1,18 @@
 # @langchain/aws
 
+## 1.3.0
+
+### Minor Changes
+
+- [#10150](https://github.com/langchain-ai/langchainjs/pull/10150) [`4fe6aa3`](https://github.com/langchain-ai/langchainjs/commit/4fe6aa31b50556e183a61737f60c8bef31d0e72b) Thanks [@hntrl](https://github.com/hntrl)! - feat(aws): Add video and audio content block support for ChatBedrockConverse input messages
+  - Convert standard multimodal video/audio blocks (base64, Uint8Array, data URL, S3 URI) to Bedrock's native format
+  - Pass through native Bedrock video/audio blocks unchanged
+  - Adds support for all Bedrock video formats (flv, mkv, mov, mp4, mpeg, mpg, three_gp, webm, wmv) and audio formats (aac, flac, m4a, mka, mkv, mp3, mp4, mpeg, mpga, ogg, opus, pcm, wav, webm, x-aac)
+
+### Patch Changes
+
+- [#10106](https://github.com/langchain-ai/langchainjs/pull/10106) [`9f30267`](https://github.com/langchain-ai/langchainjs/commit/9f30267e95a2a42fac71f1d3674b84c5a190dbbc) Thanks [@hntrl](https://github.com/hntrl)! - Add package version metadata to runnable traces. Each package now stamps its version in `this.metadata.versions` at construction time, making version info available in LangSmith trace metadata.
+
 ## 1.2.5
 
 ### Patch Changes

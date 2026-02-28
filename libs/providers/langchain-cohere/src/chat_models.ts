@@ -742,6 +742,7 @@ export class ChatCohere<
         ? { ...(fields ?? {}), model: modelOrFields }
         : (modelOrFields ?? {});
     super(params);
+    this._addVersion("@langchain/cohere", __PKG_VERSION__);
 
     this.client = getCohereClient(params);
 
