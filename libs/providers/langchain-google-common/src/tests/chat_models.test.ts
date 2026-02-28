@@ -16,6 +16,7 @@ import { Serialized } from "@langchain/core/load/serializable";
 import { tool } from "@langchain/core/tools";
 import { z } from "zod/v3";
 import { toJsonSchema } from "@langchain/core/utils/json_schema";
+import { concat } from "@langchain/core/utils/stream";
 import { ChatGoogleBase, ChatGoogleBaseInput } from "../chat_models.js";
 import {
   authOptions,
@@ -2934,4 +2935,55 @@ test("Can set streaming param", () => {
     streaming: true,
   });
   expect(modelWithStreamingTrue.streaming).toBe(true);
+});
+
+test("Invoke usage_metadata maps token details", async () => {
+  const record: Record<string, unknown> = {};
+  const projectId = mockId();
+  const model = new ChatGoogle({
+    authOptions: {
+      record,
+      projectId,
+      resultFile: "chat-usage-metadata-mock.json",
+    },
+  });
+
+  const result = await model.invoke("Hello?");
+
+  expect(result.usage_metadata?.input_tokens).toBe(30);
+  expect(result.usage_metadata?.output_tokens).toBe(10);
+  expect(result.usage_metadata?.total_tokens).toBe(40);
+  expect(result.usage_metadata?.input_token_details?.text).toBe(20);
+  expect(result.usage_metadata?.input_token_details?.image).toBe(10);
+  expect(result.usage_metadata?.input_token_details?.cache_read).toBe(8);
+  expect(result.usage_metadata?.output_token_details?.text).toBe(6);
+  expect(result.usage_metadata?.output_token_details?.reasoning).toBe(4);
+});
+
+test("Stream usage_metadata includes cache_read", async () => {
+  const record: Record<string, unknown> = {};
+  const projectId = mockId();
+  const model = new ChatGoogle({
+    authOptions: {
+      record,
+      projectId,
+      resultFile: "chat-stream-usage-cache-mock.json",
+    },
+    streaming: true,
+  });
+
+  const stream = await model.stream("Hello?", { streamUsage: true });
+  let finalChunk;
+  for await (const chunk of stream) {
+    finalChunk = finalChunk ? concat(finalChunk, chunk) : chunk;
+  }
+
+  expect(finalChunk).toBeDefined();
+  expect(finalChunk?.usage_metadata?.input_tokens).toBe(12);
+  expect(finalChunk?.usage_metadata?.output_tokens).toBe(6);
+  expect(finalChunk?.usage_metadata?.total_tokens).toBe(18);
+  expect(finalChunk?.usage_metadata?.input_token_details?.text).toBe(12);
+  expect(finalChunk?.usage_metadata?.input_token_details?.cache_read).toBe(5);
+  expect(finalChunk?.usage_metadata?.output_token_details?.text).toBe(4);
+  expect(finalChunk?.usage_metadata?.output_token_details?.reasoning).toBe(2);
 });

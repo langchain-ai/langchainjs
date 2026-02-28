@@ -1,5 +1,5 @@
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
-import { UsageMetadata, type BaseMessage } from "@langchain/core/messages";
+import { type BaseMessage } from "@langchain/core/messages";
 import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
 
 import {
@@ -386,7 +386,8 @@ export abstract class ChatGoogleBase<AuthOptions>
 
     // Get the streaming parser of the response
     const stream = response.data as JsonStream;
-    let usageMetadata: UsageMetadata | undefined;
+    const shouldStreamUsage =
+      this.streamUsage !== false && options.streamUsage !== false;
     // Loop until the end of the stream
     // During the loop, yield each time we get a chunk from the streaming parser
     // that is either available or added to the queue
@@ -401,18 +402,7 @@ export abstract class ChatGoogleBase<AuthOptions>
           output,
         }
       );
-      if (
-        output &&
-        output.usageMetadata &&
-        this.streamUsage !== false &&
-        options.streamUsage !== false
-      ) {
-        usageMetadata = {
-          input_tokens: output.usageMetadata.promptTokenCount,
-          output_tokens: output.usageMetadata.candidatesTokenCount,
-          total_tokens: output.usageMetadata.totalTokenCount,
-        };
-      }
+
       const chunk =
         output !== null
           ? this.connection.api.responseToChatGeneration({ data: output })
@@ -421,9 +411,16 @@ export abstract class ChatGoogleBase<AuthOptions>
               generationInfo: { finishReason: "stop" },
               message: new AIMessageChunk({
                 content: "",
-                usage_metadata: usageMetadata,
               }),
             });
+
+      if (shouldStreamUsage && chunk) {
+        chunk.message = new AIMessageChunk({
+          ...chunk.message,
+          usage_metadata: chunk.generationInfo?.usage_metadata,
+        });
+      }
+
       if (chunk) {
         yield chunk;
         await runManager?.handleLLMNewToken(
