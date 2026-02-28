@@ -1212,9 +1212,27 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
   function responseToChatGeneration(
     response: GoogleLLMResponse
   ): ChatGenerationChunk {
+    const parts = responseToParts(response);
+    const fields = partsToBaseMessageChunkFields(parts);
+    const message =
+      typeof fields.content === "string"
+        ? new AIMessageChunk(fields)
+        : fields.content?.every((item) => item.type === "text")
+          ? new AIMessageChunk({
+              ...fields,
+              content: fields.content
+                .map((item) => ("text" in item ? item.text : ""))
+                .join(""),
+              response_metadata: {
+                ...fields.response_metadata,
+                model_provider: "google-vertexai",
+              },
+            })
+          : new AIMessageChunk(fields);
+
     return new ChatGenerationChunk({
       text: responseToString(response),
-      message: partToMessageChunk(responseToParts(response)[0]),
+      message,
       generationInfo: responseToGenerationInfo(response),
     });
   }
