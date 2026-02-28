@@ -130,7 +130,8 @@ export class SerpAPILoader extends BaseDocumentLoader {
     } catch (error) {
       console.error(error);
       throw new Error(
-        `Failed to process search results from SerpAPI: ${error}`
+        `Failed to process search results from SerpAPI: ${error}`,
+        { cause: error }
       );
     }
   }

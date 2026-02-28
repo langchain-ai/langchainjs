@@ -294,7 +294,8 @@ export class Neo4jGraph {
     } catch (error: Any) {
       if (error.code === "Neo.ClientError.Procedure.ProcedureNotFound") {
         throw new Error(
-          "Could not use APOC procedures. Please ensure the APOC plugin is installed in Neo4j and that 'apoc.meta.data()' is allowed in Neo4j configuration."
+          "Could not use APOC procedures. Please ensure the APOC plugin is installed in Neo4j and that 'apoc.meta.data()' is allowed in Neo4j configuration.",
+          { cause: error }
         );
       }
 

@@ -378,7 +378,7 @@ export class SingleStoreVectorStore extends VectorStore {
     const whereClause =
       whereClauses.length > 0 ? `WHERE ${whereClauses.join(" AND ")}` : "";
 
-    let queryText = "";
+    let queryText: string;
     switch (this.searchConfig.searchStrategy) {
       case "TEXT_ONLY":
       case "FILTER_BY_VECTOR":

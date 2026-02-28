@@ -65,7 +65,7 @@ async function main() {
     await PEInstance.closeConnection();
   } catch (error: any) {
     console.error("Error:", error);
-    throw Error(error);
+    throw new Error(String(error), { cause: error });
   }
 }
 

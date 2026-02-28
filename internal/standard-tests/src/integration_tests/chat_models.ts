@@ -326,7 +326,7 @@ export abstract class ChatModelIntegrationTests<
 
     // The last event should contain the final content via the `event.data.output` field
     const endContent = events[events.length - 1].data.output;
-    let endContentText = "";
+    let endContentText: string;
     if (typeof endContent === "string") {
       endContentText = endContent;
     } else if (Array.isArray(endContent) && "text" in endContent[0]) {

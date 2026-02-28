@@ -14,24 +14,24 @@
     "langchain"
   ],
   "peerDependencies": {
-    "eslint": "^9.34.0",
+    "eslint": "^10.0.1",
     "typescript": "^5.9.3"
   },
   "dependencies": {
-    "@eslint/js": "^9.34.0",
+    "@eslint/js": "^10.0.1",
     "@types/node": "^25.2.3",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-import": "^2.32.0",
     "eslint-plugin-no-instanceof": "^1.0.1",
     "eslint-plugin-prettier": "^5.2.1",
     "globals": "^17.3.0",
-    "prettier": "^3.6.2",
+    "prettier": "^3.8.1",
     "typescript-eslint": "^8.56.0"
   },
   "devDependencies": {
     "@langchain/tsconfig": "workspace:*",
     "@tsconfig/recommended": "^1.0.10",
-    "eslint": "^9.34.0",
+    "eslint": "^10.0.1",
     "typescript": "^5.9.3"
   },
   "scripts": {

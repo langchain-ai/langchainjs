@@ -184,7 +184,7 @@ export class SequentialChain extends BaseChain implements SequentialChainInput {
     values: ChainValues,
     runManager?: CallbackManagerForChainRun
   ): Promise<ChainValues> {
-    let input: ChainValues = {};
+    let input: ChainValues;
     const allChainValues: ChainValues = values;
     let i = 0;
     for (const chain of this.chains) {

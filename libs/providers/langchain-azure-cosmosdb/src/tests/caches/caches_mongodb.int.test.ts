@@ -88,7 +88,7 @@ describe("AzureCosmosDBMongoDBSemanticCache", () => {
     try {
       await client.db(DATABASE_NAME).collection(COLLECTION_NAME).drop();
     } catch (error) {
-      throw new Error("Please set collection name here");
+      throw new Error("Please set collection name here", { cause: error });
     }
   });
 

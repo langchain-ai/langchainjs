@@ -94,15 +94,12 @@ export class StructuredQueryOutputParser extends AsymmetricStructuredOutputParse
     query,
     filter,
   }: InferInteropZodOutput<typeof queryInputSchema>): Promise<StructuredQuery> {
-    let myQuery = query;
-    if (myQuery.length === 0) {
-      myQuery = " ";
-    }
+    const effectiveQuery = query.length === 0 ? " " : query;
     if (filter === "NO_FILTER" || filter === undefined) {
-      return new StructuredQuery(query);
+      return new StructuredQuery(effectiveQuery);
     } else {
       const parsedFilter = await this.queryTransformer.parse(filter);
-      return new StructuredQuery(query, parsedFilter);
+      return new StructuredQuery(effectiveQuery, parsedFilter);
     }
   }
 

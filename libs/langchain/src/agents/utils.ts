@@ -172,7 +172,7 @@ export function _removeInlineAgentName<T extends BaseMessage>(message: T): T {
     return message;
   }
 
-  let updatedContent: MessageContent = [];
+  let updatedContent: MessageContent;
   let updatedName: string | undefined;
 
   if (Array.isArray(message.content)) {

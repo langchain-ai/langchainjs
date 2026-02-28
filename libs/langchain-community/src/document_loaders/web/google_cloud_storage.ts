@@ -84,7 +84,8 @@ export class GoogleCloudStorageLoader extends BaseDocumentLoader {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (e: any) {
       throw new Error(
-        `Failed to download file ${this.file} from google cloud storage bucket ${this.bucket}: ${e.message}`
+        `Failed to download file ${this.file} from google cloud storage bucket ${this.bucket}: ${e.message}`,
+        { cause: e }
       );
     }
 

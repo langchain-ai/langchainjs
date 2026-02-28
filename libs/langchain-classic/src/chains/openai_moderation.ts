@@ -135,7 +135,7 @@ export class OpenAIModerationChain
       if (error instanceof Error) {
         throw error;
       } else {
-        throw new Error(error as string);
+        throw new Error(error as string, { cause: error });
       }
     }
     const output = this._moderate(text, mod.results[0]);

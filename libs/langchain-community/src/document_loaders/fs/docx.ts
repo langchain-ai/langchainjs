@@ -115,7 +115,8 @@ async function DocxLoaderImports() {
   } catch (e) {
     console.error(e);
     throw new Error(
-      "Failed to load mammoth. Please install it with eg. `npm install mammoth`."
+      "Failed to load mammoth. Please install it with eg. `npm install mammoth`.",
+      { cause: e }
     );
   }
 }
@@ -127,7 +128,8 @@ async function DocLoaderImports() {
   } catch (e) {
     console.error(e);
     throw new Error(
-      "Failed to load word-extractor. Please install it with eg. `npm install word-extractor`."
+      "Failed to load word-extractor. Please install it with eg. `npm install word-extractor`.",
+      { cause: e }
     );
   }
 }

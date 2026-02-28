@@ -127,7 +127,8 @@ async function PDFLoaderImports() {
   } catch (e) {
     console.error(e);
     throw new Error(
-      "Failed to load pdf-parse. This loader currently supports pdf-parse v1 only. Please install v1, e.g. `npm install pdf-parse@^1` (v2 is not yet supported)."
+      "Failed to load pdf-parse. This loader currently supports pdf-parse v1 only. Please install v1, e.g. `npm install pdf-parse@^1` (v2 is not yet supported).",
+      { cause: e }
     );
   }
 }

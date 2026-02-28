@@ -115,7 +115,8 @@ export function convertToGeminiTools(tools: GoogleAIToolType[]): GeminiTool[] {
               ? String(error.message)
               : String(error);
           throw new Error(
-            `Failed to convert tool '${tool.name}' schema for Gemini: ${errorMessage}. `
+            `Failed to convert tool '${tool.name}' schema for Gemini: ${errorMessage}. `,
+            { cause: error }
           );
         }
       } else if (isOpenAITool(tool)) {

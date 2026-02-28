@@ -245,7 +245,7 @@ test("Test function calling and structured output", async () => {
   expect(parsed.response).toBeDefined();
 
   // Test function calling
-  let aiMsg = await llm
+  const aiMsg = await llm
     .bindTools([multiply], { response_format, strict: true })
     .invoke("whats 5 * 4");
 
@@ -255,7 +255,7 @@ test("Test function calling and structured output", async () => {
     new Set(["x", "y"])
   );
 
-  aiMsg = await llm
+  await llm
     .bindTools([multiply], { response_format, strict: true })
     .invoke("Tell me a joke");
 
@@ -723,7 +723,7 @@ test("Test computer call", async () => {
   let computerCall = findComputerCall(aiMessage);
   expect(computerCall).toBeDefined();
 
-  aiMessage = await llm.invoke(
+  await llm.invoke(
     [
       humanMessage,
       aiMessage,

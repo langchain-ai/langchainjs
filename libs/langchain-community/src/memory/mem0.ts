@@ -196,7 +196,8 @@ export class Mem0Memory extends BaseChatMemory implements Mem0MemoryInput {
     } catch (error) {
       console.error("Failed to initialize Mem0Client:", error);
       throw new Error(
-        "Failed to initialize Mem0Client. Please check your configuration."
+        "Failed to initialize Mem0Client. Please check your configuration.",
+        { cause: error }
       );
     }
   }
@@ -212,7 +213,7 @@ export class Mem0Memory extends BaseChatMemory implements Mem0MemoryInput {
    */
   async loadMemoryVariables(values: InputValues): Promise<MemoryVariables> {
     const searchType = values.input ? "search" : "get_all";
-    let memories: Memory[] = [];
+    let memories: Memory[];
 
     try {
       if (searchType === "get_all") {

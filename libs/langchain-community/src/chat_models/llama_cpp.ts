@@ -141,7 +141,7 @@ export class ChatLlamaCpp extends SimpleChatModel<LlamaCppCallOptions> {
     options: this["ParsedCallOptions"],
     runManager?: CallbackManagerForLLMRun
   ): Promise<string> {
-    let prompt = "";
+    let prompt;
 
     if (messages.length > 1) {
       // We need to build a new _session
@@ -183,7 +183,7 @@ export class ChatLlamaCpp extends SimpleChatModel<LlamaCppCallOptions> {
           throw error;
         }
       }
-      throw new Error("Error getting prompt completion.");
+      throw new Error("Error getting prompt completion.", { cause: e });
     }
   }
 
@@ -223,8 +223,8 @@ export class ChatLlamaCpp extends SimpleChatModel<LlamaCppCallOptions> {
   protected _buildSession(messages: BaseMessage[]): string {
     let prompt = "";
     let sysMessage = "";
-    let noSystemMessages: BaseMessage[] = [];
-    let interactions: ChatHistoryItem[] = [];
+    let noSystemMessages: BaseMessage[];
+    let interactions: ChatHistoryItem[];
 
     // Let's see if we have a system message
     if (messages.findIndex((msg) => msg.getType() === "system") !== -1) {

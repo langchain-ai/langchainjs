@@ -107,7 +107,7 @@ export function convertToBedrockToolChoice(
     | "any"
     | "tool";
   if (!supportsToolChoiceValues.includes(toolChoiceType)) {
-    let supportedTxt = "";
+    let supportedTxt;
     if (supportsToolChoiceValues.length) {
       supportedTxt =
         `Model ${fields.model} does not currently support 'tool_choice' ` +

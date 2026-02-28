@@ -227,7 +227,7 @@ export class AgentExecutorIterator
       nextStepOutput as AgentStep[]
     );
 
-    let output: Record<string, string | AgentStep[]> = {};
+    let output: Record<string, string | AgentStep[]>;
     if (Array.isArray(nextStepOutput) && nextStepOutput.length === 1) {
       const nextStep = nextStepOutput[0];
       const toolReturn = await this.agentExecutor._getToolReturn(nextStep);

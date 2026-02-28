@@ -250,7 +250,7 @@ export class DallEAPIWrapper extends Tool {
 
     const response = await this.client.images.generate(generateImageFields);
 
-    let data = "";
+    let data: string;
     if (this.dallEResponseFormat === "url") {
       [data] =
         response.data

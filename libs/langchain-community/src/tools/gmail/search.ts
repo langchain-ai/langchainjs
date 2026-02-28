@@ -60,7 +60,9 @@ export class GmailSearch extends GmailBaseTool {
 
       throw new Error(`Invalid resource: ${resource}`);
     } catch (error) {
-      throw new Error(`Error while searching Gmail: ${error}`);
+      throw new Error(`Error while searching Gmail: ${error}`, {
+        cause: error,
+      });
     }
   }
 
@@ -90,7 +92,9 @@ export class GmailSearch extends GmailBaseTool {
             sender,
           };
         } catch (error) {
-          throw new Error(`Error while fetching message: ${error}`);
+          throw new Error(`Error while fetching message: ${error}`, {
+            cause: error,
+          });
         }
       })
     );
@@ -124,7 +128,9 @@ export class GmailSearch extends GmailBaseTool {
             sender,
           };
         } catch (error) {
-          throw new Error(`Error while fetching thread: ${error}`);
+          throw new Error(`Error while fetching thread: ${error}`, {
+            cause: error,
+          });
         }
       })
     );
