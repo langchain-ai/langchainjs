@@ -495,8 +495,7 @@ export class ChatWatsonx<
   }
 
   private checkValidProperties(
-    fields: this["ParsedCallOptions"] | ChatWatsonxConstructorInput,
-    includeCommonProps = true
+    fields: this["ParsedCallOptions"] | ChatWatsonxConstructorInput
   ) {
     const PROPERTY_GROUPS = {
       ALWAYS_ALLOWED: [
@@ -589,11 +588,11 @@ export class ChatWatsonx<
       ],
     };
 
-    const validProps: string[] = [...PROPERTY_GROUPS.ALWAYS_ALLOWED];
-
-    if (includeCommonProps) {
-      validProps.push(...PROPERTY_GROUPS.AUTH, ...PROPERTY_GROUPS.SHARED);
-    }
+    const validProps: string[] = [
+      ...PROPERTY_GROUPS.ALWAYS_ALLOWED,
+      ...PROPERTY_GROUPS.AUTH,
+      ...PROPERTY_GROUPS.SHARED,
+    ];
 
     if (this.modelGateway) {
       validProps.push(...PROPERTY_GROUPS.GATEWAY);
@@ -741,7 +740,6 @@ export class ChatWatsonx<
     const { tools, responseFormat, timeLimit, tool_choice } = options;
 
     expectOneOf(options, ["spaceId", "projectId", "idOrName", "modelGateway"]);
-    this.checkValidProperties(options, false);
 
     const paramDefaults = {
       maxTokens: options.maxTokens ?? this.maxTokens,
