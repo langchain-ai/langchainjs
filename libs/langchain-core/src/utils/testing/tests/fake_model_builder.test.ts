@@ -110,9 +110,7 @@ describe("fakeModel builder", () => {
     });
 
     test("wraps around when responses are exhausted", async () => {
-      const model = fakeModel()
-        .respond(new AIMessage("only"))
-        .build();
+      const model = fakeModel().respond(new AIMessage("only")).build();
 
       await model.invoke([new HumanMessage("1")]);
       const r2 = await model.invoke([new HumanMessage("2")]);
@@ -123,17 +121,12 @@ describe("fakeModel builder", () => {
   describe("build-time validation", () => {
     test("throws when mixing .turn() and .respond()", () => {
       expect(() =>
-        fakeModel()
-          .turn([])
-          .respond(new AIMessage("hi"))
-          .build()
+        fakeModel().turn([]).respond(new AIMessage("hi")).build()
       ).toThrow("Cannot mix .turn() and .respond()");
     });
 
     test("throws when nothing is configured", () => {
-      expect(() => fakeModel().build()).toThrow(
-        "Must configure at least one"
-      );
+      expect(() => fakeModel().build()).toThrow("Must configure at least one");
     });
 
     test("allows .alwaysThrow() without turns or responses", () => {
@@ -151,13 +144,13 @@ describe("fakeModel builder", () => {
         .turn([])
         .build();
 
-      await expect(
-        model.invoke([new HumanMessage("a")])
-      ).rejects.toThrow("fail 1");
+      await expect(model.invoke([new HumanMessage("a")])).rejects.toThrow(
+        "fail 1"
+      );
 
-      await expect(
-        model.invoke([new HumanMessage("b")])
-      ).rejects.toThrow("fail 2");
+      await expect(model.invoke([new HumanMessage("b")])).rejects.toThrow(
+        "fail 2"
+      );
 
       const result = await model.invoke([new HumanMessage("c")]);
       expect(result.content).toBe("c");
@@ -170,9 +163,9 @@ describe("fakeModel builder", () => {
         .turn([])
         .build();
 
-      await expect(
-        model.invoke([new HumanMessage("x")])
-      ).rejects.toThrow("fail");
+      await expect(model.invoke([new HumanMessage("x")])).rejects.toThrow(
+        "fail"
+      );
 
       const r1 = await model.invoke([new HumanMessage("y")]);
       expect(r1.tool_calls?.[0]?.name).toBe("a");
@@ -184,17 +177,15 @@ describe("fakeModel builder", () => {
 
   describe(".alwaysThrow()", () => {
     test("every call throws", async () => {
-      const model = fakeModel()
-        .alwaysThrow(new Error("always"))
-        .build();
+      const model = fakeModel().alwaysThrow(new Error("always")).build();
 
-      await expect(
-        model.invoke([new HumanMessage("a")])
-      ).rejects.toThrow("always");
+      await expect(model.invoke([new HumanMessage("a")])).rejects.toThrow(
+        "always"
+      );
 
-      await expect(
-        model.invoke([new HumanMessage("b")])
-      ).rejects.toThrow("always");
+      await expect(model.invoke([new HumanMessage("b")])).rejects.toThrow(
+        "always"
+      );
     });
   });
 
@@ -226,13 +217,9 @@ describe("fakeModel builder", () => {
     });
 
     test("records alwaysThrow calls", async () => {
-      const model = fakeModel()
-        .alwaysThrow(new Error("nope"))
-        .build();
+      const model = fakeModel().alwaysThrow(new Error("nope")).build();
 
-      await expect(
-        model.invoke([new HumanMessage("try")])
-      ).rejects.toThrow();
+      await expect(model.invoke([new HumanMessage("try")])).rejects.toThrow();
 
       expect(model.callCount).toBe(1);
     });
