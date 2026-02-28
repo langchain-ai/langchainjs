@@ -1,11 +1,14 @@
 import Anthropic from "@anthropic-ai/sdk";
-import { test, expect } from "vitest";
+import { test, expect, describe } from "vitest";
 import {
   AIMessage,
   ContentBlock,
   HumanMessage,
 } from "@langchain/core/messages";
-import { anthropicResponseToChatMessages } from "../utils/message_outputs.js";
+import {
+  anthropicResponseToChatMessages,
+  _makeMessageChunkFromAnthropicEvent,
+} from "../utils/message_outputs.js";
 import { _convertMessagesToAnthropicPayload } from "../utils/message_inputs.js";
 
 test("Web Search Tool - Anthropic response to LangChain format", () => {
@@ -201,4 +204,251 @@ test("Web Search Tool - LangChain message to Anthropic format", () => {
       },
     ],
   });
+});
+
+describe("Streaming: server_tool_use blocks", () => {
+  test("input_json_delta for server_tool_use does NOT emit tool_call_chunks", () => {
+    const blockTypesByIndex = new Map<number, string>();
+
+    // Simulate content_block_start for server_tool_use
+    const startResult = _makeMessageChunkFromAnthropicEvent(
+      {
+        type: "content_block_start",
+        index: 1,
+        content_block: {
+          type: "server_tool_use",
+          id: "srvtoolu_014hJH82Qum7Td6UV8gDXThB",
+          name: "web_search",
+          input: {},
+        },
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      } as any,
+      {
+        streamUsage: false,
+        coerceContentToString: false,
+        blockTypesByIndex,
+      }
+    );
+    expect(startResult).not.toBeNull();
+    expect(startResult!.chunk.tool_call_chunks).toEqual([]);
+
+    // Simulate input_json_delta for the same server_tool_use index
+    const deltaResult = _makeMessageChunkFromAnthropicEvent(
+      {
+        type: "content_block_delta",
+        index: 1,
+        delta: {
+          type: "input_json_delta",
+          partial_json: '{"query": "weather NYC today"}',
+        },
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      } as any,
+      {
+        streamUsage: false,
+        coerceContentToString: false,
+        blockTypesByIndex,
+      }
+    );
+    expect(deltaResult).not.toBeNull();
+    // server_tool_use input_json_delta should NOT produce tool_call_chunks
+    expect(deltaResult!.chunk.tool_call_chunks).toEqual([]);
+    // But the content block should still be emitted
+    expect(deltaResult!.chunk.content).toEqual([
+      {
+        index: 1,
+        input: '{"query": "weather NYC today"}',
+        type: "input_json_delta",
+      },
+    ]);
+  });
+
+  test("input_json_delta for regular tool_use still emits tool_call_chunks", () => {
+    const blockTypesByIndex = new Map<number, string>();
+
+    // Simulate content_block_start for regular tool_use
+    _makeMessageChunkFromAnthropicEvent(
+      {
+        type: "content_block_start",
+        index: 0,
+        content_block: {
+          type: "tool_use",
+          id: "toolu_user_001",
+          name: "get_weather",
+          input: {},
+        },
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      } as any,
+      {
+        streamUsage: false,
+        coerceContentToString: false,
+        blockTypesByIndex,
+      }
+    );
+
+    // Simulate input_json_delta for the regular tool_use
+    const deltaResult = _makeMessageChunkFromAnthropicEvent(
+      {
+        type: "content_block_delta",
+        index: 0,
+        delta: {
+          type: "input_json_delta",
+          partial_json: '{"location": "NYC"}',
+        },
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      } as any,
+      {
+        streamUsage: false,
+        coerceContentToString: false,
+        blockTypesByIndex,
+      }
+    );
+    expect(deltaResult).not.toBeNull();
+    // Regular tool_use SHOULD produce tool_call_chunks
+    expect(deltaResult!.chunk.tool_call_chunks).toHaveLength(1);
+    expect(deltaResult!.chunk.tool_call_chunks![0]).toEqual({
+      index: 0,
+      args: '{"location": "NYC"}',
+    });
+  });
+
+  test("mixed tool_use and server_tool_use in same stream are handled correctly", () => {
+    const blockTypesByIndex = new Map<number, string>();
+
+    // Start regular tool_use at index 0
+    _makeMessageChunkFromAnthropicEvent(
+      {
+        type: "content_block_start",
+        index: 0,
+        content_block: {
+          type: "tool_use",
+          id: "toolu_user_001",
+          name: "get_weather",
+          input: {},
+        },
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      } as any,
+      { streamUsage: false, coerceContentToString: false, blockTypesByIndex }
+    );
+
+    // Start server_tool_use at index 1
+    _makeMessageChunkFromAnthropicEvent(
+      {
+        type: "content_block_start",
+        index: 1,
+        content_block: {
+          type: "server_tool_use",
+          id: "srvtoolu_001",
+          name: "web_search",
+          input: {},
+        },
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      } as any,
+      { streamUsage: false, coerceContentToString: false, blockTypesByIndex }
+    );
+
+    // Delta for tool_use (index 0) -> should have tool_call_chunks
+    const clientDelta = _makeMessageChunkFromAnthropicEvent(
+      {
+        type: "content_block_delta",
+        index: 0,
+        delta: { type: "input_json_delta", partial_json: '{"loc": "NYC"}' },
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      } as any,
+      { streamUsage: false, coerceContentToString: false, blockTypesByIndex }
+    );
+    expect(clientDelta!.chunk.tool_call_chunks).toHaveLength(1);
+
+    // Delta for server_tool_use (index 1) -> should NOT have tool_call_chunks
+    const serverDelta = _makeMessageChunkFromAnthropicEvent(
+      {
+        type: "content_block_delta",
+        index: 1,
+        delta: {
+          type: "input_json_delta",
+          partial_json: '{"query": "weather"}',
+        },
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      } as any,
+      { streamUsage: false, coerceContentToString: false, blockTypesByIndex }
+    );
+    expect(serverDelta!.chunk.tool_call_chunks).toEqual([]);
+  });
+
+  test("web_search_tool_result content_block_start is handled", () => {
+    const blockTypesByIndex = new Map<number, string>();
+    const result = _makeMessageChunkFromAnthropicEvent(
+      {
+        type: "content_block_start",
+        index: 2,
+        content_block: {
+          type: "web_search_tool_result",
+          tool_use_id: "srvtoolu_014hJH82Qum7Td6UV8gDXThB",
+          content: [
+            {
+              type: "web_search_result",
+              title: "Test Result",
+              url: "https://example.com",
+              encrypted_content: "abc123",
+              page_age: null,
+            },
+          ],
+        },
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      } as any,
+      { streamUsage: false, coerceContentToString: false, blockTypesByIndex }
+    );
+    expect(result).not.toBeNull();
+    expect(result!.chunk.tool_call_chunks).toEqual([]);
+  });
+
+  test("web_fetch_tool_result content_block_start is not dropped", () => {
+    const blockTypesByIndex = new Map<number, string>();
+    const result = _makeMessageChunkFromAnthropicEvent(
+      {
+        type: "content_block_start",
+        index: 3,
+        content_block: {
+          type: "web_fetch_tool_result",
+          tool_use_id: "srvtoolu_fetch_001",
+          content: "Page content here...",
+        },
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      } as any,
+      { streamUsage: false, coerceContentToString: false, blockTypesByIndex }
+    );
+    expect(result).not.toBeNull();
+    expect(result!.chunk.tool_call_chunks).toEqual([]);
+  });
+});
+
+test("Web Search Tool - web_fetch_tool_result round-trips through message formatting", () => {
+  const langChainMessage = new AIMessage({
+    content: [
+      {
+        type: "server_tool_use",
+        id: "srvtoolu_fetch_001",
+        name: "web_fetch",
+        input: { url: "https://example.com" },
+      },
+      {
+        type: "web_fetch_tool_result",
+        tool_use_id: "srvtoolu_fetch_001",
+        content: "Page content here...",
+      },
+    ],
+  });
+
+  const result = _convertMessagesToAnthropicPayload([
+    new HumanMessage("Fetch this page"),
+    langChainMessage,
+  ]);
+
+  // Both blocks should be preserved (not dropped)
+  expect(result.messages[1].content).toHaveLength(2);
+  expect((result.messages[1].content as ContentBlock[])[0].type).toBe(
+    "server_tool_use"
+  );
+  expect((result.messages[1].content as ContentBlock[])[1].type).toBe(
+    "web_fetch_tool_result"
+  );
 });

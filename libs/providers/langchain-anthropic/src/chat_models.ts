@@ -1286,6 +1286,12 @@ export class ChatAnthropicMessages<
       signal: options.signal,
     });
 
+    // Track content block types by index so that input_json_delta events
+    // for server_tool_use blocks are not emitted as tool_call_chunks.
+    // This map is populated inside _makeMessageChunkFromAnthropicEvent on
+    // content_block_start events and read on input_json_delta events.
+    const blockTypesByIndex = new Map<number, string>();
+
     for await (const data of stream) {
       if (options.signal?.aborted) {
         stream.controller.abort();
@@ -1295,6 +1301,7 @@ export class ChatAnthropicMessages<
       const result = _makeMessageChunkFromAnthropicEvent(data, {
         streamUsage: shouldStreamUsage,
         coerceContentToString,
+        blockTypesByIndex,
       });
       if (!result) continue;
 
