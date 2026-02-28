@@ -1,5 +1,11 @@
 # @langchain/google-common
 
+## 2.1.22
+
+### Patch Changes
+
+- [#10187](https://github.com/langchain-ai/langchainjs/pull/10187) [`3590ee3`](https://github.com/langchain-ai/langchainjs/commit/3590ee3229a9a55b0c818c1e396f6445b2368103) Thanks [@colifran](https://github.com/colifran)! - fix(google): streaming chunks missing index produces empty text blocks when using ChatVertexAI with Claude models
+
 ## 2.1.21
 
 ### Patch Changes
