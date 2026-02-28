@@ -47,6 +47,7 @@ import {
   ChatPromptTemplate,
   MessagesPlaceholder,
 } from "@langchain/core/prompts";
+import { BindToolsInput } from "@langchain/core/language_models/chat_models";
 
 /**
  * Builds the callback handler list for integration tests.
@@ -134,7 +135,16 @@ const allModelInfo: ModelInfo[] = [
     testConfig: {
       isImage: true,
       hasImageThoughts: true,
+      only: true,
     },
+  },
+  {
+    model: "gemini-3.1-flash-image-preview",
+    testConfig: {
+      isImage: true,
+      hasImageThoughts: true,
+      only: true,
+    }
   },
   {
     model: "gemini-2.5-flash-preview-tts",
@@ -1508,6 +1518,63 @@ describe.each(imageModelInfo)(
         expect(types.file ?? 0).toEqual(1);
       }
     });
+
+    test("draw - thinking minimal", async () => {
+      const llm = newChatGoogle({
+        responseModalities: ["IMAGE", "TEXT"],
+        reasoningEffort: "minimal",
+      });
+      const prompt =
+        "I would like to see a drawing of a house with the sun shining overhead. Drawn in crayon.";
+      const result: AIMessage = await llm.invoke(prompt);
+      const types = await handleResult(result.contentBlocks);
+      expect(types.unknown).toEqual(0);
+      expect(types.file ?? 0).toEqual(1);
+    });
+
+    test("draw - thinking high", async () => {
+      const llm = newChatGoogle({
+        responseModalities: ["IMAGE", "TEXT"],
+        reasoningEffort: "high",
+      });
+      const prompt =
+        "I would like to see a drawing of a house with the sun shining overhead. Drawn in crayon.";
+      const result: AIMessage = await llm.invoke(prompt);
+      const types = await handleResult(result.contentBlocks);
+      expect(types.unknown).toEqual(0);
+      if (testConfig?.hasImageThoughts) {
+        expect(types.file ?? 0).toEqual(1);
+        expect(types.text ?? 0).toEqual(0);
+        expect(types.reasoning ?? 0).toEqual(3); // Two text and one image reasoning
+      } else {
+        expect(types.file ?? 0).toEqual(1);
+      }
+    });
+
+    test("draw - image search", async () => {
+      const tools: BindToolsInput[] = [
+        {
+          googleSearch: {
+            searchTypes: {
+              imageSearch: {},
+            }
+          },
+        }
+      ]
+      const llm = newChatGoogle({
+        responseModalities: ["IMAGE", "TEXT"],
+        tools,
+      });
+      const prompt =
+        "I would like to see a drawing of the flag of the USA from 1814 " +
+        "based on the actual Star Spangled Banner flag in the Smithsonian. " +
+        "Make sure you search for what this specific flag looks like exactly. "+
+        "Drawn in watercolors.";
+      const result: AIMessage = await llm.invoke(prompt);
+      const types = await handleResult(result.contentBlocks);
+      expect(types.unknown).toEqual(0);
+      expect(types.file ?? 0).toEqual(1);
+    })
   }
 );
 
