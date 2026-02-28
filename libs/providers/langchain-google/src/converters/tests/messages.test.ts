@@ -144,6 +144,35 @@ describe("convertMessagesToGeminiContents", () => {
     ).toBe("tool-call-abc");
   });
 
+  test("preserves thought and thoughtSignature on text parts from thinking models (legacy path)", () => {
+    // Gemini thinking models produce [thought, functionCall] turns.
+    // Verify the converter preserves thought/thoughtSignature on text parts
+    // so the API can distinguish thoughts from regular text on the next call.
+    const messages = [
+      new HumanMessage("What's the weather in Paris?"),
+      new AIMessage({
+        content: [
+          {
+            type: "text",
+            text: "I need to check the weather.",
+            thought: true,
+            thoughtSignature: "dGhvdWdodC1zaWduYXR1cmUtMQ==",
+          },
+        ] as unknown as Array<Record<string, unknown>>,
+      }),
+    ];
+
+    const contents = convertMessagesToGeminiContents(messages);
+
+    const modelContent = contents.find((c) => c.role === "model");
+    expect(modelContent).toBeDefined();
+
+    const part = modelContent!.parts[0] as Gemini.Part;
+    expect(part.text).toBe("I need to check the weather.");
+    expect(part.thought).toBe(true);
+    expect(part.thoughtSignature).toBe("dGhvdWdodC1zaWduYXR1cmUtMQ==");
+  });
+
   test("passes tool_call_id through as functionResponse.id (v1 standard path)", () => {
     const messages = [
       new HumanMessage("hello"),
