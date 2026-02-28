@@ -8,7 +8,8 @@ import {
   HumanMessage,
   ToolMessage,
 } from "@langchain/core/messages";
-import type { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
+import { BaseCallbackHandler } from "@langchain/core/callbacks/base";
+import { FakeListChatModel } from "@langchain/core/utils/testing";
 import type { ChatResult } from "@langchain/core/outputs";
 import { StructuredTool, tool } from "@langchain/core/tools";
 import { RunnableLambda } from "@langchain/core/runnables";
@@ -32,6 +33,13 @@ import {
   createCheckpointer,
   SearchAPI,
 } from "./utils.js";
+import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
+
+class StreamingPrefCallbackHandler extends BaseCallbackHandler {
+  name = "streaming_pref_callback_handler";
+
+  lc_prefer_streaming = true;
+}
 
 describe("createAgent", () => {
   let syncCheckpointer: BaseCheckpointSaver;
@@ -71,6 +79,56 @@ describe("createAgent", () => {
     });
     // Note: Checkpoint properties may vary by implementation
     expect(saved).toHaveProperty("channel_values");
+  });
+
+  it("should preserve response_metadata in values stream mode", async () => {
+    const model = new FakeListChatModel({
+      responses: ["hello"],
+      generationInfo: {
+        finish_reason: "stop",
+        usage_metadata: {
+          input_tokens: 1,
+          output_tokens: 5,
+          total_tokens: 6,
+        },
+      },
+      callbacks: [new StreamingPrefCallbackHandler()],
+    });
+
+    let capturedResponse: AIMessage | undefined;
+    const middleware = createMiddleware({
+      name: "capture_response_metadata",
+      wrapModelCall: async (request, handler) => {
+        const response = await handler(request);
+        if (AIMessage.isInstance(response)) {
+          capturedResponse = response;
+        }
+        return response;
+      },
+    });
+
+    const agent = createAgent({
+      model,
+      tools: [],
+      middleware: [middleware],
+    });
+
+    const stream = await agent.stream(
+      { messages: [new HumanMessage("hello")] },
+      { streamMode: ["values", "messages"] }
+    );
+
+    for await (const _ of stream) {
+      // stream consumed to completion
+    }
+
+    expect(capturedResponse).toBeDefined();
+    expect(capturedResponse?.response_metadata.finish_reason).toBe("stop");
+    expect(capturedResponse?.response_metadata.usage_metadata).toEqual({
+      input_tokens: 1,
+      output_tokens: 5,
+      total_tokens: 6,
+    });
   });
 
   it("should propagate checkpointer set after construction", async () => {
