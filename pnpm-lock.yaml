@@ -20,7 +20,7 @@ importers:
         version: 0.5.2(encoding@0.1.13)
       '@changesets/cli':
         specifier: ^2.29.8
-        version: 2.29.8(@types/node@25.3.2)
+        version: 2.29.8(@types/node@25.3.3)
       '@langchain/build':
         specifier: workspace:*
         version: link:internal/build
@@ -263,7 +263,7 @@ importers:
         version: 3.0.0
       '@vitest/coverage-v8':
         specifier: ^3.2.4
-        version: 3.2.4(vitest@3.2.4(@types/debug@4.1.12)(@types/node@25.3.2)(jiti@2.6.1)(jsdom@28.1.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2))
+        version: 3.2.4(vitest@3.2.4(@types/debug@4.1.12)(@types/node@25.3.3)(jiti@2.6.1)(jsdom@28.1.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2))
       '@xata.io/client':
         specifier: ^0.28.0
         version: 0.28.4(typescript@5.8.3)
@@ -271,8 +271,8 @@ importers:
         specifier: ^2.3.5
         version: 2.6.9
       axios:
-        specifier: ^1.13.5
-        version: 1.13.5(debug@4.4.3)
+        specifier: ^1.13.6
+        version: 1.13.6(debug@4.4.3)
       cheerio:
         specifier: 1.2.0
         version: 1.2.0
@@ -368,10 +368,10 @@ importers:
         version: 0.2.2
       release-it:
         specifier: ^19.0.4
-        version: 19.2.4(@types/node@25.3.2)(magicast@0.3.5)
+        version: 19.2.4(@types/node@25.3.3)(magicast@0.3.5)
       release-it-pnpm:
         specifier: ^4.6.6
-        version: 4.6.6(magicast@0.3.5)(release-it@19.2.4(@types/node@25.3.2)(magicast@0.3.5))
+        version: 4.6.6(magicast@0.3.5)(release-it@19.2.4(@types/node@25.3.3)(magicast@0.3.5))
       rimraf:
         specifier: ^5.0.1
         version: 5.0.10
@@ -389,7 +389,7 @@ importers:
         version: 10.0.0
       vitest:
         specifier: ^3.2.4
-        version: 3.2.4(@types/debug@4.1.12)(@types/node@25.3.2)(jiti@2.6.1)(jsdom@28.1.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
+        version: 3.2.4(@types/debug@4.1.12)(@types/node@25.3.3)(jiti@2.6.1)(jsdom@28.1.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
       voy-search:
         specifier: 0.6.2
         version: 0.6.2
@@ -405,7 +405,7 @@ importers:
         version: 4.21.0
       typeorm:
         specifier: ^0.3.28
-        version: 0.3.28(better-sqlite3@12.6.2)(ioredis@5.9.2)(mongodb@6.21.0(@aws-sdk/credential-providers@3.985.0)(socks@2.8.7))(mysql2@3.18.0(@types/node@25.3.2))(pg@8.18.0)(redis@4.7.1)(sqlite3@5.1.7)(ts-node@10.9.2(@swc/core@1.15.13(@swc/helpers@0.5.18))(@types/node@25.3.2)(typescript@5.8.3))
+        version: 0.3.28(better-sqlite3@12.6.2)(ioredis@5.9.2)(mongodb@6.21.0(@aws-sdk/credential-providers@3.985.0)(socks@2.8.7))(mysql2@3.18.0(@types/node@25.3.3))(pg@8.18.0)(redis@4.7.1)(sqlite3@5.1.7)(ts-node@10.9.2(@swc/core@1.15.13(@swc/helpers@0.5.18))(@types/node@25.3.3)(typescript@5.8.3))
       zod:
         specifier: ^3.25.76
         version: 3.25.76
@@ -574,7 +574,7 @@ importers:
         version: link:../../libs/langchain-core
       vitest:
         specifier: ^3.2.4
-        version: 3.2.4(@types/debug@4.1.12)(@types/node@25.3.2)(jiti@2.6.1)(jsdom@28.1.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
+        version: 3.2.4(@types/debug@4.1.12)(@types/node@25.3.3)(jiti@2.6.1)(jsdom@28.1.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
       zod:
         specifier: ^3.25.76 || ^4
         version: 4.3.6
@@ -726,7 +726,7 @@ importers:
         version: 8.18.1
       '@vitest/coverage-v8':
         specifier: ^3.2.4
-        version: 3.2.4(vitest@3.2.4(@types/debug@4.1.12)(@types/node@25.3.2)(jiti@2.6.1)(jsdom@28.1.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2))
+        version: 3.2.4(vitest@3.2.4(@types/debug@4.1.12)(@types/node@25.3.3)(jiti@2.6.1)(jsdom@28.1.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2))
       cheerio:
         specifier: 1.2.0
         version: 1.2.0
@@ -759,13 +759,13 @@ importers:
         version: 6.0.0
       typeorm:
         specifier: ^0.3.28
-        version: 0.3.28(better-sqlite3@12.6.2)(ioredis@5.9.2)(mongodb@6.21.0(@aws-sdk/credential-providers@3.985.0)(socks@2.8.7))(mysql2@3.18.0(@types/node@25.3.2))(pg@8.18.0)(redis@4.7.1)(sqlite3@5.1.7)(ts-node@10.9.2(@swc/core@1.15.13(@swc/helpers@0.5.18))(@types/node@25.3.2)(typescript@5.8.3))
+        version: 0.3.28(better-sqlite3@12.6.2)(ioredis@5.9.2)(mongodb@6.21.0(@aws-sdk/credential-providers@3.985.0)(socks@2.8.7))(mysql2@3.18.0(@types/node@25.3.3))(pg@8.18.0)(redis@4.7.1)(sqlite3@5.1.7)(ts-node@10.9.2(@swc/core@1.15.13(@swc/helpers@0.5.18))(@types/node@25.3.3)(typescript@5.8.3))
       typescript:
         specifier: ~5.8.3
         version: 5.8.3
       vitest:
         specifier: ^3.2.4
-        version: 3.2.4(@types/debug@4.1.12)(@types/node@25.3.2)(jiti@2.6.1)(jsdom@28.1.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
+        version: 3.2.4(@types/debug@4.1.12)(@types/node@25.3.3)(jiti@2.6.1)(jsdom@28.1.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
       yaml:
         specifier: ^2.8.1
         version: 2.8.2
@@ -988,7 +988,7 @@ importers:
         version: 3.0.0
       '@vitest/coverage-v8':
         specifier: ^3.2.4
-        version: 3.2.4(vitest@3.2.4(@types/debug@4.1.12)(@types/node@25.3.2)(jiti@2.6.1)(jsdom@28.1.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2))
+        version: 3.2.4(vitest@3.2.4(@types/debug@4.1.12)(@types/node@25.3.3)(jiti@2.6.1)(jsdom@28.1.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2))
       '@xata.io/client':
         specifier: ^0.28.4
         version: 0.28.4(typescript@5.8.3)
@@ -996,8 +996,8 @@ importers:
         specifier: ^2.3.5
         version: 2.6.9
       axios:
-        specifier: ^1.13.5
-        version: 1.13.5(debug@4.4.3)
+        specifier: ^1.13.6
+        version: 1.13.6(debug@4.4.3)
       cheerio:
         specifier: 1.2.0
         version: 1.2.0
@@ -1093,7 +1093,7 @@ importers:
         version: 5.1.7
       typeorm:
         specifier: ^0.3.28
-        version: 0.3.28(better-sqlite3@12.6.2)(ioredis@5.9.2)(mongodb@6.21.0(@aws-sdk/credential-providers@3.985.0)(socks@2.8.7))(mysql2@3.18.0(@types/node@25.3.2))(pg@8.18.0)(redis@4.7.1)(sqlite3@5.1.7)(ts-node@10.9.2(@swc/core@1.15.13(@swc/helpers@0.5.18))(@types/node@25.3.2)(typescript@5.8.3))
+        version: 0.3.28(better-sqlite3@12.6.2)(ioredis@5.9.2)(mongodb@6.21.0(@aws-sdk/credential-providers@3.985.0)(socks@2.8.7))(mysql2@3.18.0(@types/node@25.3.3))(pg@8.18.0)(redis@4.7.1)(sqlite3@5.1.7)(ts-node@10.9.2(@swc/core@1.15.13(@swc/helpers@0.5.18))(@types/node@25.3.3)(typescript@5.8.3))
       typescript:
         specifier: ~5.8.3
         version: 5.8.3
@@ -1102,7 +1102,7 @@ importers:
         version: 3.0.1(@babel/runtime@7.28.6)
       vitest:
         specifier: ^3.2.4
-        version: 3.2.4(@types/debug@4.1.12)(@types/node@25.3.2)(jiti@2.6.1)(jsdom@28.1.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
+        version: 3.2.4(@types/debug@4.1.12)(@types/node@25.3.3)(jiti@2.6.1)(jsdom@28.1.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
       voy-search:
         specifier: 0.6.2
         version: 0.6.2
@@ -1209,7 +1209,7 @@ importers:
         version: 4.0.6
       '@getzep/zep-cloud':
         specifier: ^1.0.6
-        version: 1.0.12(@langchain/core@libs+langchain-core)(encoding@0.1.13)(langchain@0.3.30(80b97a6c90a0d5061ba2762a01dc451d))
+        version: 1.0.12(@langchain/core@libs+langchain-core)(encoding@0.1.13)(langchain@0.3.30(d3c314cf413fc3f4abbbb38b204da055))
       '@getzep/zep-js':
         specifier: ^2.0.2
         version: 2.0.2(encoding@0.1.13)
@@ -1702,7 +1702,7 @@ importers:
         version: 5.8.3
       vitest:
         specifier: ^3.2.4
-        version: 3.2.4(@types/debug@4.1.12)(@types/node@25.3.2)(jiti@2.6.1)(jsdom@28.1.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
+        version: 3.2.4(@types/debug@4.1.12)(@types/node@25.3.3)(jiti@2.6.1)(jsdom@28.1.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
       web-streams-polyfill:
         specifier: ^4.2.0
         version: 4.2.0
@@ -1813,7 +1813,7 @@ importers:
         version: 1.0.13
       '@vitest/coverage-v8':
         specifier: ^3.2.4
-        version: 3.2.4(vitest@3.2.4(@types/debug@4.1.12)(@types/node@25.3.2)(jiti@2.6.1)(jsdom@28.1.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2))
+        version: 3.2.4(vitest@3.2.4(@types/debug@4.1.12)(@types/node@25.3.3)(jiti@2.6.1)(jsdom@28.1.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2))
       dotenv:
         specifier: ^16.3.1
         version: 16.6.1
@@ -1831,7 +1831,7 @@ importers:
         version: 5.8.3
       vitest:
         specifier: ^3.2.4
-        version: 3.2.4(@types/debug@4.1.12)(@types/node@25.3.2)(jiti@2.6.1)(jsdom@28.1.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
+        version: 3.2.4(@types/debug@4.1.12)(@types/node@25.3.3)(jiti@2.6.1)(jsdom@28.1.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
 
   libs/providers/langchain-anthropic:
     dependencies:
@@ -1865,7 +1865,7 @@ importers:
         version: 1.0.13
       '@vitest/coverage-v8':
         specifier: ^3.2.4
-        version: 3.2.4(vitest@3.2.4(@types/debug@4.1.12)(@types/node@25.3.2)(jiti@2.6.1)(jsdom@28.1.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2))
+        version: 3.2.4(vitest@3.2.4(@types/debug@4.1.12)(@types/node@25.3.3)(jiti@2.6.1)(jsdom@28.1.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2))
       dotenv:
         specifier: ^17.2.1
         version: 17.2.4
@@ -1889,7 +1889,7 @@ importers:
         version: 13.0.0
       vitest:
         specifier: ^3.2.4
-        version: 3.2.4(@types/debug@4.1.12)(@types/node@25.3.2)(jiti@2.6.1)(jsdom@28.1.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
+        version: 3.2.4(@types/debug@4.1.12)(@types/node@25.3.3)(jiti@2.6.1)(jsdom@28.1.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
 
   libs/providers/langchain-aws:
     dependencies:
@@ -1929,7 +1929,7 @@ importers:
         version: 1.0.13
       '@vitest/coverage-v8':
         specifier: ^3.2.4
-        version: 3.2.4(vitest@3.2.4(@types/debug@4.1.12)(@types/node@25.3.2)(jiti@2.6.1)(jsdom@28.1.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2))
+        version: 3.2.4(vitest@3.2.4(@types/debug@4.1.12)(@types/node@25.3.3)(jiti@2.6.1)(jsdom@28.1.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2))
       dotenv:
         specifier: ^16.3.1
         version: 16.6.1
@@ -1947,7 +1947,7 @@ importers:
         version: 5.8.3
       vitest:
         specifier: ^3.2.4
-        version: 3.2.4(@types/debug@4.1.12)(@types/node@25.3.2)(jiti@2.6.1)(jsdom@28.1.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
+        version: 3.2.4(@types/debug@4.1.12)(@types/node@25.3.3)(jiti@2.6.1)(jsdom@28.1.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
       zod:
         specifier: ^3.25.76
         version: 3.25.76
@@ -1981,7 +1981,7 @@ importers:
         version: 1.0.13
       '@vitest/coverage-v8':
         specifier: ^3.2.4
-        version: 3.2.4(vitest@3.2.4(@types/debug@4.1.12)(@types/node@25.3.2)(jiti@2.6.1)(jsdom@28.1.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2))
+        version: 3.2.4(vitest@3.2.4(@types/debug@4.1.12)(@types/node@25.3.3)(jiti@2.6.1)(jsdom@28.1.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2))
       dotenv:
         specifier: ^16.6.1
         version: 16.6.1
@@ -1999,7 +1999,7 @@ importers:
         version: 5.8.3
       vitest:
         specifier: ^3.2.4
-        version: 3.2.4(@types/debug@4.1.12)(@types/node@25.3.2)(jiti@2.6.1)(jsdom@28.1.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
+        version: 3.2.4(@types/debug@4.1.12)(@types/node@25.3.3)(jiti@2.6.1)(jsdom@28.1.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
 
   libs/providers/langchain-azure-dynamic-sessions:
     dependencies:
@@ -2027,7 +2027,7 @@ importers:
         version: 9.0.8
       '@vitest/coverage-v8':
         specifier: ^3.2.4
-        version: 3.2.4(vitest@3.2.4(@types/debug@4.1.12)(@types/node@25.3.2)(jiti@2.6.1)(jsdom@28.1.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2))
+        version: 3.2.4(vitest@3.2.4(@types/debug@4.1.12)(@types/node@25.3.3)(jiti@2.6.1)(jsdom@28.1.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2))
       dotenv:
         specifier: ^16.4.5
         version: 16.6.1
@@ -2045,7 +2045,7 @@ importers:
         version: 5.8.3
       vitest:
         specifier: ^3.2.4
-        version: 3.2.4(@types/debug@4.1.12)(@types/node@25.3.2)(jiti@2.6.1)(jsdom@28.1.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
+        version: 3.2.4(@types/debug@4.1.12)(@types/node@25.3.3)(jiti@2.6.1)(jsdom@28.1.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
 
   libs/providers/langchain-baidu-qianfan:
     dependencies:
@@ -2073,7 +2073,7 @@ importers:
         version: 9.0.8
       '@vitest/coverage-v8':
         specifier: ^3.2.4
-        version: 3.2.4(vitest@3.2.4(@types/debug@4.1.12)(@types/node@25.3.2)(jiti@2.6.1)(jsdom@28.1.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2))
+        version: 3.2.4(vitest@3.2.4(@types/debug@4.1.12)(@types/node@25.3.3)(jiti@2.6.1)(jsdom@28.1.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2))
       dotenv:
         specifier: ^16.3.1
         version: 16.6.1
@@ -2091,7 +2091,7 @@ importers:
         version: 5.8.3
       vitest:
         specifier: ^3.2.4
-        version: 3.2.4(@types/debug@4.1.12)(@types/node@25.3.2)(jiti@2.6.1)(jsdom@28.1.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
+        version: 3.2.4(@types/debug@4.1.12)(@types/node@25.3.3)(jiti@2.6.1)(jsdom@28.1.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
 
   libs/providers/langchain-cerebras:
     dependencies:
@@ -2140,7 +2140,7 @@ importers:
         version: 9.39.2(jiti@2.6.1)
       jest:
         specifier: ^30.2.0
-        version: 30.2.0(@types/node@25.3.2)(ts-node@10.9.2(@swc/core@1.15.13(@swc/helpers@0.5.18))(@types/node@25.3.2)(typescript@5.8.3))
+        version: 30.2.0(@types/node@25.3.3)(ts-node@10.9.2(@swc/core@1.15.13(@swc/helpers@0.5.18))(@types/node@25.3.3)(typescript@5.8.3))
       jest-environment-node:
         specifier: ^30.2.0
         version: 30.2.0
@@ -2149,7 +2149,7 @@ importers:
         version: 3.8.1
       ts-jest:
         specifier: ^29.4.6
-        version: 29.4.6(@babel/core@7.29.0)(@jest/transform@30.2.0)(@jest/types@30.2.0)(babel-jest@30.2.0(@babel/core@7.29.0))(jest-util@30.2.0)(jest@30.2.0(@types/node@25.3.2)(ts-node@10.9.2(@swc/core@1.15.13(@swc/helpers@0.5.18))(@types/node@25.3.2)(typescript@5.8.3)))(typescript@5.8.3)
+        version: 29.4.6(@babel/core@7.29.0)(@jest/transform@30.2.0)(@jest/types@30.2.0)(babel-jest@30.2.0(@babel/core@7.29.0))(jest-util@30.2.0)(jest@30.2.0(@types/node@25.3.3)(ts-node@10.9.2(@swc/core@1.15.13(@swc/helpers@0.5.18))(@types/node@25.3.3)(typescript@5.8.3)))(typescript@5.8.3)
       typescript:
         specifier: ~5.8.3
         version: 5.8.3
@@ -2186,7 +2186,7 @@ importers:
         version: 9.0.8
       '@vitest/coverage-v8':
         specifier: ^3.2.4
-        version: 3.2.4(vitest@3.2.4(@types/debug@4.1.12)(@types/node@25.3.2)(jiti@2.6.1)(jsdom@28.1.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2))
+        version: 3.2.4(vitest@3.2.4(@types/debug@4.1.12)(@types/node@25.3.3)(jiti@2.6.1)(jsdom@28.1.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2))
       dotenv:
         specifier: ^16.3.1
         version: 16.6.1
@@ -2204,7 +2204,7 @@ importers:
         version: 5.8.3
       vitest:
         specifier: ^3.2.4
-        version: 3.2.4(@types/debug@4.1.12)(@types/node@25.3.2)(jiti@2.6.1)(jsdom@28.1.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
+        version: 3.2.4(@types/debug@4.1.12)(@types/node@25.3.3)(jiti@2.6.1)(jsdom@28.1.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
 
   libs/providers/langchain-cohere:
     dependencies:
@@ -2235,7 +2235,7 @@ importers:
         version: 1.0.13
       '@vitest/coverage-v8':
         specifier: ^3.2.4
-        version: 3.2.4(vitest@3.2.4(@types/debug@4.1.12)(@types/node@25.3.2)(jiti@2.6.1)(jsdom@28.1.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2))
+        version: 3.2.4(vitest@3.2.4(@types/debug@4.1.12)(@types/node@25.3.3)(jiti@2.6.1)(jsdom@28.1.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2))
       dotenv:
         specifier: ^16.6.1
         version: 16.6.1
@@ -2253,7 +2253,7 @@ importers:
         version: 5.8.3
       vitest:
         specifier: ^3.2.4
-        version: 3.2.4(@types/debug@4.1.12)(@types/node@25.3.2)(jiti@2.6.1)(jsdom@28.1.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
+        version: 3.2.4(@types/debug@4.1.12)(@types/node@25.3.3)(jiti@2.6.1)(jsdom@28.1.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
       zod:
         specifier: ^3.25.76
         version: 3.25.76
@@ -2281,7 +2281,7 @@ importers:
         version: 1.0.13
       '@vitest/coverage-v8':
         specifier: ^3.2.4
-        version: 3.2.4(vitest@3.2.4(@types/debug@4.1.12)(@types/node@25.3.2)(jiti@2.6.1)(jsdom@28.1.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2))
+        version: 3.2.4(vitest@3.2.4(@types/debug@4.1.12)(@types/node@25.3.3)(jiti@2.6.1)(jsdom@28.1.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2))
       dotenv:
         specifier: ^16.3.1
         version: 16.6.1
@@ -2299,7 +2299,7 @@ importers:
         version: 5.8.3
       vitest:
         specifier: ^3.2.4
-        version: 3.2.4(@types/debug@4.1.12)(@types/node@25.3.2)(jiti@2.6.1)(jsdom@28.1.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
+        version: 3.2.4(@types/debug@4.1.12)(@types/node@25.3.3)(jiti@2.6.1)(jsdom@28.1.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
 
   libs/providers/langchain-exa:
     dependencies:
@@ -2324,7 +2324,7 @@ importers:
         version: 9.0.8
       '@vitest/coverage-v8':
         specifier: ^3.2.4
-        version: 3.2.4(vitest@3.2.4(@types/debug@4.1.12)(@types/node@25.3.2)(jiti@2.6.1)(jsdom@28.1.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2))
+        version: 3.2.4(vitest@3.2.4(@types/debug@4.1.12)(@types/node@25.3.3)(jiti@2.6.1)(jsdom@28.1.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2))
       dotenv:
         specifier: ^16.3.1
         version: 16.6.1
@@ -2342,7 +2342,7 @@ importers:
         version: 5.8.3
       vitest:
         specifier: ^3.2.4
-        version: 3.2.4(@types/debug@4.1.12)(@types/node@25.3.2)(jiti@2.6.1)(jsdom@28.1.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
+        version: 3.2.4(@types/debug@4.1.12)(@types/node@25.3.3)(jiti@2.6.1)(jsdom@28.1.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
 
   libs/providers/langchain-google:
     dependencies:
@@ -2388,7 +2388,7 @@ importers:
         version: 5.8.3
       vitest:
         specifier: ^3.2.4
-        version: 3.2.4(@types/debug@4.1.12)(@types/node@25.3.2)(jiti@2.6.1)(jsdom@28.1.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
+        version: 3.2.4(@types/debug@4.1.12)(@types/node@25.3.3)(jiti@2.6.1)(jsdom@28.1.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
       zod:
         specifier: ^3.25.76 || ^4
         version: 4.3.6
@@ -2449,7 +2449,7 @@ importers:
         version: 9.39.2(jiti@2.6.1)
       jest:
         specifier: ^30.2.0
-        version: 30.2.0(@types/node@25.3.2)(ts-node@10.9.2(@swc/core@1.15.13(@swc/helpers@0.5.18))(@types/node@25.3.2)(typescript@5.8.3))
+        version: 30.2.0(@types/node@25.3.3)(ts-node@10.9.2(@swc/core@1.15.13(@swc/helpers@0.5.18))(@types/node@25.3.3)(typescript@5.8.3))
       jest-environment-node:
         specifier: ^30.2.0
         version: 30.2.0
@@ -2464,7 +2464,7 @@ importers:
         version: 11.12.0
       ts-jest:
         specifier: ^29.4.6
-        version: 29.4.6(@babel/core@7.29.0)(@jest/transform@30.2.0)(@jest/types@30.2.0)(babel-jest@30.2.0(@babel/core@7.29.0))(jest-util@30.2.0)(jest@30.2.0(@types/node@25.3.2)(ts-node@10.9.2(@swc/core@1.15.13(@swc/helpers@0.5.18))(@types/node@25.3.2)(typescript@5.8.3)))(typescript@5.8.3)
+        version: 29.4.6(@babel/core@7.29.0)(@jest/transform@30.2.0)(@jest/types@30.2.0)(babel-jest@30.2.0(@babel/core@7.29.0))(jest-util@30.2.0)(jest@30.2.0(@types/node@25.3.3)(ts-node@10.9.2(@swc/core@1.15.13(@swc/helpers@0.5.18))(@types/node@25.3.3)(typescript@5.8.3)))(typescript@5.8.3)
       typescript:
         specifier: ~5.8.3
         version: 5.8.3
@@ -2510,7 +2510,7 @@ importers:
         version: 9.39.2(jiti@2.6.1)
       jest:
         specifier: ^30.2.0
-        version: 30.2.0(@types/node@25.3.2)(ts-node@10.9.2(@swc/core@1.15.13(@swc/helpers@0.5.18))(@types/node@25.3.2)(typescript@5.8.3))
+        version: 30.2.0(@types/node@25.3.3)(ts-node@10.9.2(@swc/core@1.15.13(@swc/helpers@0.5.18))(@types/node@25.3.3)(typescript@5.8.3))
       jest-environment-node:
         specifier: ^30.2.0
         version: 30.2.0
@@ -2519,7 +2519,7 @@ importers:
         version: 3.8.1
       ts-jest:
         specifier: ^29.4.6
-        version: 29.4.6(@babel/core@7.29.0)(@jest/transform@30.2.0)(@jest/types@30.2.0)(babel-jest@30.2.0(@babel/core@7.29.0))(jest-util@30.2.0)(jest@30.2.0(@types/node@25.3.2)(ts-node@10.9.2(@swc/core@1.15.13(@swc/helpers@0.5.18))(@types/node@25.3.2)(typescript@5.8.3)))(typescript@5.8.3)
+        version: 29.4.6(@babel/core@7.29.0)(@jest/transform@30.2.0)(@jest/types@30.2.0)(babel-jest@30.2.0(@babel/core@7.29.0))(jest-util@30.2.0)(jest@30.2.0(@types/node@25.3.3)(ts-node@10.9.2(@swc/core@1.15.13(@swc/helpers@0.5.18))(@types/node@25.3.3)(typescript@5.8.3)))(typescript@5.8.3)
       typescript:
         specifier: ~5.8.3
         version: 5.8.3
@@ -2565,7 +2565,7 @@ importers:
         version: 9.39.2(jiti@2.6.1)
       jest:
         specifier: ^30.2.0
-        version: 30.2.0(@types/node@25.3.2)(ts-node@10.9.2(@swc/core@1.15.13(@swc/helpers@0.5.18))(@types/node@25.3.2)(typescript@5.8.3))
+        version: 30.2.0(@types/node@25.3.3)(ts-node@10.9.2(@swc/core@1.15.13(@swc/helpers@0.5.18))(@types/node@25.3.3)(typescript@5.8.3))
       jest-environment-node:
         specifier: ^30.2.0
         version: 30.2.0
@@ -2574,7 +2574,7 @@ importers:
         version: 3.8.1
       ts-jest:
         specifier: ^29.4.6
-        version: 29.4.6(@babel/core@7.29.0)(@jest/transform@30.2.0)(@jest/types@30.2.0)(babel-jest@30.2.0(@babel/core@7.29.0))(jest-util@30.2.0)(jest@30.2.0(@types/node@25.3.2)(ts-node@10.9.2(@swc/core@1.15.13(@swc/helpers@0.5.18))(@types/node@25.3.2)(typescript@5.8.3)))(typescript@5.8.3)
+        version: 29.4.6(@babel/core@7.29.0)(@jest/transform@30.2.0)(@jest/types@30.2.0)(babel-jest@30.2.0(@babel/core@7.29.0))(jest-util@30.2.0)(jest@30.2.0(@types/node@25.3.3)(ts-node@10.9.2(@swc/core@1.15.13(@swc/helpers@0.5.18))(@types/node@25.3.3)(typescript@5.8.3)))(typescript@5.8.3)
       typescript:
         specifier: ~5.8.3
         version: 5.8.3
@@ -2629,7 +2629,7 @@ importers:
         version: 3.0.0
       jest:
         specifier: ^30.2.0
-        version: 30.2.0(@types/node@25.3.2)(ts-node@10.9.2(@swc/core@1.15.13(@swc/helpers@0.5.18))(@types/node@25.3.2)(typescript@5.8.3))
+        version: 30.2.0(@types/node@25.3.3)(ts-node@10.9.2(@swc/core@1.15.13(@swc/helpers@0.5.18))(@types/node@25.3.3)(typescript@5.8.3))
       jest-environment-node:
         specifier: ^30.2.0
         version: 30.2.0
@@ -2638,7 +2638,7 @@ importers:
         version: 3.8.1
       ts-jest:
         specifier: ^29.4.6
-        version: 29.4.6(@babel/core@7.29.0)(@jest/transform@30.2.0)(@jest/types@30.2.0)(babel-jest@30.2.0(@babel/core@7.29.0))(jest-util@30.2.0)(jest@30.2.0(@types/node@25.3.2)(ts-node@10.9.2(@swc/core@1.15.13(@swc/helpers@0.5.18))(@types/node@25.3.2)(typescript@5.8.3)))(typescript@5.8.3)
+        version: 29.4.6(@babel/core@7.29.0)(@jest/transform@30.2.0)(@jest/types@30.2.0)(babel-jest@30.2.0(@babel/core@7.29.0))(jest-util@30.2.0)(jest@30.2.0(@types/node@25.3.3)(ts-node@10.9.2(@swc/core@1.15.13(@swc/helpers@0.5.18))(@types/node@25.3.3)(typescript@5.8.3)))(typescript@5.8.3)
       typescript:
         specifier: ~5.8.3
         version: 5.8.3
@@ -2687,7 +2687,7 @@ importers:
         version: 9.39.2(jiti@2.6.1)
       jest:
         specifier: ^30.2.0
-        version: 30.2.0(@types/node@25.3.2)(ts-node@10.9.2(@swc/core@1.15.13(@swc/helpers@0.5.18))(@types/node@25.3.2)(typescript@5.8.3))
+        version: 30.2.0(@types/node@25.3.3)(ts-node@10.9.2(@swc/core@1.15.13(@swc/helpers@0.5.18))(@types/node@25.3.3)(typescript@5.8.3))
       jest-environment-node:
         specifier: ^30.2.0
         version: 30.2.0
@@ -2696,7 +2696,7 @@ importers:
         version: 3.8.1
       ts-jest:
         specifier: ^29.4.6
-        version: 29.4.6(@babel/core@7.29.0)(@jest/transform@30.2.0)(@jest/types@30.2.0)(babel-jest@30.2.0(@babel/core@7.29.0))(jest-util@30.2.0)(jest@30.2.0(@types/node@25.3.2)(ts-node@10.9.2(@swc/core@1.15.13(@swc/helpers@0.5.18))(@types/node@25.3.2)(typescript@5.8.3)))(typescript@5.8.3)
+        version: 29.4.6(@babel/core@7.29.0)(@jest/transform@30.2.0)(@jest/types@30.2.0)(babel-jest@30.2.0(@babel/core@7.29.0))(jest-util@30.2.0)(jest@30.2.0(@types/node@25.3.3)(ts-node@10.9.2(@swc/core@1.15.13(@swc/helpers@0.5.18))(@types/node@25.3.3)(typescript@5.8.3)))(typescript@5.8.3)
       typescript:
         specifier: ~5.8.3
         version: 5.8.3
@@ -2745,7 +2745,7 @@ importers:
         version: 9.39.2(jiti@2.6.1)
       jest:
         specifier: ^30.2.0
-        version: 30.2.0(@types/node@25.3.2)(ts-node@10.9.2(@swc/core@1.15.13(@swc/helpers@0.5.18))(@types/node@25.3.2)(typescript@5.8.3))
+        version: 30.2.0(@types/node@25.3.3)(ts-node@10.9.2(@swc/core@1.15.13(@swc/helpers@0.5.18))(@types/node@25.3.3)(typescript@5.8.3))
       jest-environment-node:
         specifier: ^30.2.0
         version: 30.2.0
@@ -2754,7 +2754,7 @@ importers:
         version: 3.8.1
       ts-jest:
         specifier: ^29.4.6
-        version: 29.4.6(@babel/core@7.29.0)(@jest/transform@30.2.0)(@jest/types@30.2.0)(babel-jest@30.2.0(@babel/core@7.29.0))(jest-util@30.2.0)(jest@30.2.0(@types/node@25.3.2)(ts-node@10.9.2(@swc/core@1.15.13(@swc/helpers@0.5.18))(@types/node@25.3.2)(typescript@5.8.3)))(typescript@5.8.3)
+        version: 29.4.6(@babel/core@7.29.0)(@jest/transform@30.2.0)(@jest/types@30.2.0)(babel-jest@30.2.0(@babel/core@7.29.0))(jest-util@30.2.0)(jest@30.2.0(@types/node@25.3.3)(ts-node@10.9.2(@swc/core@1.15.13(@swc/helpers@0.5.18))(@types/node@25.3.3)(typescript@5.8.3)))(typescript@5.8.3)
       typescript:
         specifier: ~5.8.3
         version: 5.8.3
@@ -2803,7 +2803,7 @@ importers:
         version: 9.39.2(jiti@2.6.1)
       jest:
         specifier: ^30.2.0
-        version: 30.2.0(@types/node@25.3.2)(ts-node@10.9.2(@swc/core@1.15.13(@swc/helpers@0.5.18))(@types/node@25.3.2)(typescript@5.8.3))
+        version: 30.2.0(@types/node@25.3.3)(ts-node@10.9.2(@swc/core@1.15.13(@swc/helpers@0.5.18))(@types/node@25.3.3)(typescript@5.8.3))
       jest-environment-node:
         specifier: ^30.2.0
         version: 30.2.0
@@ -2812,7 +2812,7 @@ importers:
         version: 3.8.1
       ts-jest:
         specifier: ^29.4.6
-        version: 29.4.6(@babel/core@7.29.0)(@jest/transform@30.2.0)(@jest/types@30.2.0)(babel-jest@30.2.0(@babel/core@7.29.0))(jest-util@30.2.0)(jest@30.2.0(@types/node@25.3.2)(ts-node@10.9.2(@swc/core@1.15.13(@swc/helpers@0.5.18))(@types/node@25.3.2)(typescript@5.8.3)))(typescript@5.8.3)
+        version: 29.4.6(@babel/core@7.29.0)(@jest/transform@30.2.0)(@jest/types@30.2.0)(babel-jest@30.2.0(@babel/core@7.29.0))(jest-util@30.2.0)(jest@30.2.0(@types/node@25.3.3)(ts-node@10.9.2(@swc/core@1.15.13(@swc/helpers@0.5.18))(@types/node@25.3.3)(typescript@5.8.3)))(typescript@5.8.3)
       typescript:
         specifier: ~5.8.3
         version: 5.8.3
@@ -2849,7 +2849,7 @@ importers:
         version: 9.0.8
       '@vitest/coverage-v8':
         specifier: ^3.2.4
-        version: 3.2.4(vitest@3.2.4(@types/debug@4.1.12)(@types/node@25.3.2)(jiti@2.6.1)(jsdom@28.1.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2))
+        version: 3.2.4(vitest@3.2.4(@types/debug@4.1.12)(@types/node@25.3.3)(jiti@2.6.1)(jsdom@28.1.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2))
       dotenv:
         specifier: ^16.3.1
         version: 16.6.1
@@ -2867,7 +2867,7 @@ importers:
         version: 5.8.3
       vitest:
         specifier: ^3.2.4
-        version: 3.2.4(@types/debug@4.1.12)(@types/node@25.3.2)(jiti@2.6.1)(jsdom@28.1.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
+        version: 3.2.4(@types/debug@4.1.12)(@types/node@25.3.3)(jiti@2.6.1)(jsdom@28.1.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
       zod:
         specifier: ^4.0.14
         version: 4.3.6
@@ -2898,7 +2898,7 @@ importers:
         version: 1.0.13
       '@vitest/coverage-v8':
         specifier: ^3.2.4
-        version: 3.2.4(vitest@3.2.4(@types/debug@4.1.12)(@types/node@25.3.2)(jiti@2.6.1)(jsdom@28.1.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2))
+        version: 3.2.4(vitest@3.2.4(@types/debug@4.1.12)(@types/node@25.3.3)(jiti@2.6.1)(jsdom@28.1.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2))
       dotenv:
         specifier: ^16.3.1
         version: 16.6.1
@@ -2916,7 +2916,7 @@ importers:
         version: 5.8.3
       vitest:
         specifier: ^3.2.4
-        version: 3.2.4(@types/debug@4.1.12)(@types/node@25.3.2)(jiti@2.6.1)(jsdom@28.1.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
+        version: 3.2.4(@types/debug@4.1.12)(@types/node@25.3.3)(jiti@2.6.1)(jsdom@28.1.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
       zod:
         specifier: ^3.25.76
         version: 3.25.76
@@ -2944,7 +2944,7 @@ importers:
         version: 1.0.13
       '@vitest/coverage-v8':
         specifier: ^3.2.4
-        version: 3.2.4(vitest@3.2.4(@types/debug@4.1.12)(@types/node@25.3.2)(jiti@2.6.1)(jsdom@28.1.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2))
+        version: 3.2.4(vitest@3.2.4(@types/debug@4.1.12)(@types/node@25.3.3)(jiti@2.6.1)(jsdom@28.1.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2))
       dotenv:
         specifier: ^16.3.1
         version: 16.6.1
@@ -2962,7 +2962,7 @@ importers:
         version: 5.8.3
       vitest:
         specifier: ^3.2.4
-        version: 3.2.4(@types/debug@4.1.12)(@types/node@25.3.2)(jiti@2.6.1)(jsdom@28.1.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
+        version: 3.2.4(@types/debug@4.1.12)(@types/node@25.3.3)(jiti@2.6.1)(jsdom@28.1.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
 
   libs/providers/langchain-mongodb:
     dependencies:
@@ -2990,7 +2990,7 @@ importers:
         version: 9.0.8
       '@vitest/coverage-v8':
         specifier: ^3.2.4
-        version: 3.2.4(vitest@3.2.4(@types/debug@4.1.12)(@types/node@25.3.2)(jiti@2.6.1)(jsdom@28.1.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2))
+        version: 3.2.4(vitest@3.2.4(@types/debug@4.1.12)(@types/node@25.3.3)(jiti@2.6.1)(jsdom@28.1.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2))
       bson:
         specifier: ^7.2.0
         version: 7.2.0
@@ -3017,7 +3017,7 @@ importers:
         version: 10.0.0
       vitest:
         specifier: ^3.2.4
-        version: 3.2.4(@types/debug@4.1.12)(@types/node@25.3.2)(jiti@2.6.1)(jsdom@28.1.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
+        version: 3.2.4(@types/debug@4.1.12)(@types/node@25.3.3)(jiti@2.6.1)(jsdom@28.1.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
 
   libs/providers/langchain-nomic:
     dependencies:
@@ -3048,7 +3048,7 @@ importers:
         version: 9.0.8
       '@vitest/coverage-v8':
         specifier: ^3.2.4
-        version: 3.2.4(vitest@3.2.4(@types/debug@4.1.12)(@types/node@25.3.2)(jiti@2.6.1)(jsdom@28.1.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2))
+        version: 3.2.4(vitest@3.2.4(@types/debug@4.1.12)(@types/node@25.3.3)(jiti@2.6.1)(jsdom@28.1.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2))
       dotenv:
         specifier: ^16.3.1
         version: 16.6.1
@@ -3066,7 +3066,7 @@ importers:
         version: 5.8.3
       vitest:
         specifier: ^3.2.4
-        version: 3.2.4(@types/debug@4.1.12)(@types/node@25.3.2)(jiti@2.6.1)(jsdom@28.1.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
+        version: 3.2.4(@types/debug@4.1.12)(@types/node@25.3.3)(jiti@2.6.1)(jsdom@28.1.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
 
   libs/providers/langchain-ollama:
     dependencies:
@@ -3097,7 +3097,7 @@ importers:
         version: 1.0.13
       '@vitest/coverage-v8':
         specifier: ^3.2.4
-        version: 3.2.4(vitest@3.2.4(@types/debug@4.1.12)(@types/node@25.3.2)(jiti@2.6.1)(jsdom@28.1.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2))
+        version: 3.2.4(vitest@3.2.4(@types/debug@4.1.12)(@types/node@25.3.3)(jiti@2.6.1)(jsdom@28.1.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2))
       dotenv:
         specifier: ^16.3.1
         version: 16.6.1
@@ -3115,7 +3115,7 @@ importers:
         version: 5.8.3
       vitest:
         specifier: ^3.2.4
-        version: 3.2.4(@types/debug@4.1.12)(@types/node@25.3.2)(jiti@2.6.1)(jsdom@28.1.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
+        version: 3.2.4(@types/debug@4.1.12)(@types/node@25.3.3)(jiti@2.6.1)(jsdom@28.1.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
       zod:
         specifier: ^3.25.76
         version: 3.25.76
@@ -3228,7 +3228,7 @@ importers:
         version: 5.8.3
       vitest:
         specifier: ^3.2.4
-        version: 3.2.4(@types/debug@4.1.12)(@types/node@25.3.2)(jiti@2.6.1)(jsdom@28.1.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
+        version: 3.2.4(@types/debug@4.1.12)(@types/node@25.3.3)(jiti@2.6.1)(jsdom@28.1.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
       zod:
         specifier: ^3.25.76 || ^4
         version: 4.3.6
@@ -3274,7 +3274,7 @@ importers:
         version: 10.0.0
       '@vitest/coverage-v8':
         specifier: ^3.2.4
-        version: 3.2.4(vitest@3.2.4(@types/debug@4.1.12)(@types/node@25.3.2)(jiti@2.6.1)(jsdom@28.1.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2))
+        version: 3.2.4(vitest@3.2.4(@types/debug@4.1.12)(@types/node@25.3.3)(jiti@2.6.1)(jsdom@28.1.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2))
       dotenv:
         specifier: ^16.3.1
         version: 16.6.1
@@ -3295,7 +3295,7 @@ importers:
         version: 5.8.3
       vitest:
         specifier: ^3.2.4
-        version: 3.2.4(@types/debug@4.1.12)(@types/node@25.3.2)(jiti@2.6.1)(jsdom@28.1.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
+        version: 3.2.4(@types/debug@4.1.12)(@types/node@25.3.3)(jiti@2.6.1)(jsdom@28.1.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
 
   libs/providers/langchain-qdrant:
     dependencies:
@@ -3326,7 +3326,7 @@ importers:
         version: 9.0.8
       '@vitest/coverage-v8':
         specifier: ^3.2.4
-        version: 3.2.4(vitest@3.2.4(@types/debug@4.1.12)(@types/node@25.3.2)(jiti@2.6.1)(jsdom@28.1.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2))
+        version: 3.2.4(vitest@3.2.4(@types/debug@4.1.12)(@types/node@25.3.3)(jiti@2.6.1)(jsdom@28.1.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2))
       dotenv:
         specifier: ^16.3.1
         version: 16.6.1
@@ -3344,7 +3344,7 @@ importers:
         version: 5.8.3
       vitest:
         specifier: ^3.2.4
-        version: 3.2.4(@types/debug@4.1.12)(@types/node@25.3.2)(jiti@2.6.1)(jsdom@28.1.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
+        version: 3.2.4(@types/debug@4.1.12)(@types/node@25.3.3)(jiti@2.6.1)(jsdom@28.1.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
 
   libs/providers/langchain-redis:
     dependencies:
@@ -3375,7 +3375,7 @@ importers:
         version: 9.0.8
       '@vitest/coverage-v8':
         specifier: ^3.2.4
-        version: 3.2.4(vitest@3.2.4(@types/debug@4.1.12)(@types/node@25.3.2)(jiti@2.6.1)(jsdom@28.1.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2))
+        version: 3.2.4(vitest@3.2.4(@types/debug@4.1.12)(@types/node@25.3.3)(jiti@2.6.1)(jsdom@28.1.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2))
       dotenv:
         specifier: ^16.3.1
         version: 16.6.1
@@ -3393,7 +3393,7 @@ importers:
         version: 5.8.3
       vitest:
         specifier: ^3.2.4
-        version: 3.2.4(@types/debug@4.1.12)(@types/node@25.3.2)(jiti@2.6.1)(jsdom@28.1.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
+        version: 3.2.4(@types/debug@4.1.12)(@types/node@25.3.3)(jiti@2.6.1)(jsdom@28.1.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
 
   libs/providers/langchain-tavily:
     dependencies:
@@ -3415,7 +3415,7 @@ importers:
         version: 1.0.13
       '@vitest/coverage-v8':
         specifier: ^3.2.4
-        version: 3.2.4(vitest@3.2.4(@types/debug@4.1.12)(@types/node@25.3.2)(jiti@2.6.1)(jsdom@28.1.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2))
+        version: 3.2.4(vitest@3.2.4(@types/debug@4.1.12)(@types/node@25.3.3)(jiti@2.6.1)(jsdom@28.1.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2))
       dotenv:
         specifier: ^16.3.1
         version: 16.6.1
@@ -3433,7 +3433,7 @@ importers:
         version: 5.8.3
       vitest:
         specifier: ^3.2.4
-        version: 3.2.4(@types/debug@4.1.12)(@types/node@25.3.2)(jiti@2.6.1)(jsdom@28.1.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
+        version: 3.2.4(@types/debug@4.1.12)(@types/node@25.3.3)(jiti@2.6.1)(jsdom@28.1.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
 
   libs/providers/langchain-turbopuffer:
     dependencies:
@@ -3464,7 +3464,7 @@ importers:
         version: 10.0.0
       '@vitest/coverage-v8':
         specifier: ^3.2.4
-        version: 3.2.4(vitest@3.2.4(@types/debug@4.1.12)(@types/node@25.3.2)(jiti@2.6.1)(jsdom@28.1.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2))
+        version: 3.2.4(vitest@3.2.4(@types/debug@4.1.12)(@types/node@25.3.3)(jiti@2.6.1)(jsdom@28.1.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2))
       dotenv:
         specifier: ^16.3.1
         version: 16.6.1
@@ -3482,7 +3482,7 @@ importers:
         version: 5.8.3
       vitest:
         specifier: ^3.2.4
-        version: 3.2.4(@types/debug@4.1.12)(@types/node@25.3.2)(jiti@2.6.1)(jsdom@28.1.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
+        version: 3.2.4(@types/debug@4.1.12)(@types/node@25.3.3)(jiti@2.6.1)(jsdom@28.1.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
 
   libs/providers/langchain-weaviate:
     dependencies:
@@ -3513,7 +3513,7 @@ importers:
         version: 9.0.8
       '@vitest/coverage-v8':
         specifier: ^3.2.4
-        version: 3.2.4(vitest@3.2.4(@types/debug@4.1.12)(@types/node@25.3.2)(jiti@2.6.1)(jsdom@28.1.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2))
+        version: 3.2.4(vitest@3.2.4(@types/debug@4.1.12)(@types/node@25.3.3)(jiti@2.6.1)(jsdom@28.1.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2))
       dotenv:
         specifier: ^16.3.1
         version: 16.6.1
@@ -3534,7 +3534,7 @@ importers:
         version: 5.8.3
       vitest:
         specifier: ^3.2.4
-        version: 3.2.4(@types/debug@4.1.12)(@types/node@25.3.2)(jiti@2.6.1)(jsdom@28.1.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
+        version: 3.2.4(@types/debug@4.1.12)(@types/node@25.3.3)(jiti@2.6.1)(jsdom@28.1.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
 
   libs/providers/langchain-xai:
     dependencies:
@@ -3562,7 +3562,7 @@ importers:
         version: 9.0.8
       '@vitest/coverage-v8':
         specifier: ^3.2.4
-        version: 3.2.4(vitest@3.2.4(@types/debug@4.1.12)(@types/node@25.3.2)(jiti@2.6.1)(jsdom@28.1.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2))
+        version: 3.2.4(vitest@3.2.4(@types/debug@4.1.12)(@types/node@25.3.3)(jiti@2.6.1)(jsdom@28.1.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2))
       dotenv:
         specifier: ^16.3.1
         version: 16.6.1
@@ -3580,7 +3580,7 @@ importers:
         version: 5.8.3
       vitest:
         specifier: ^3.2.4
-        version: 3.2.4(@types/debug@4.1.12)(@types/node@25.3.2)(jiti@2.6.1)(jsdom@28.1.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
+        version: 3.2.4(@types/debug@4.1.12)(@types/node@25.3.3)(jiti@2.6.1)(jsdom@28.1.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
       zod:
         specifier: ^3.25.76
         version: 3.25.76
@@ -3601,7 +3601,7 @@ importers:
         version: 1.0.13
       '@vitest/coverage-v8':
         specifier: ^3.2.4
-        version: 3.2.4(vitest@3.2.4(@types/debug@4.1.12)(@types/node@25.3.2)(jiti@2.6.1)(jsdom@28.1.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2))
+        version: 3.2.4(vitest@3.2.4(@types/debug@4.1.12)(@types/node@25.3.3)(jiti@2.6.1)(jsdom@28.1.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2))
       dotenv:
         specifier: ^16.3.1
         version: 16.6.1
@@ -3619,7 +3619,7 @@ importers:
         version: 5.8.3
       vitest:
         specifier: ^3.2.4
-        version: 3.2.4(@types/debug@4.1.12)(@types/node@25.3.2)(jiti@2.6.1)(jsdom@28.1.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
+        version: 3.2.4(@types/debug@4.1.12)(@types/node@25.3.3)(jiti@2.6.1)(jsdom@28.1.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
 
 packages:
 
@@ -6711,6 +6711,36 @@ packages:
     peerDependencies:
       '@langchain/core': workspace:^
 
+  '@langchain/google-common@2.1.22':
+    resolution: {integrity: sha512-G5GXVbZt5trwt4jY5IdJU7DhBPgFkWR4X8Or164P+Qt33YhQ4npsjqqxDtOKDelDusSTmSA1rd0qlC0Yjl4rqQ==}
+    engines: {node: '>=20'}
+    peerDependencies:
+      '@langchain/core': workspace:^
+
+  '@langchain/google-gauth@2.1.22':
+    resolution: {integrity: sha512-es5lqfggEXNKQJKW+mUqN3C8NUz/ZI1iCx2BpCvUnKiIOGtEUGaAVATyD5UkxqMkVe8D7D8IoL2HO2YbhKVNkw==}
+    engines: {node: '>=20'}
+
+  '@langchain/google-genai@2.1.22':
+    resolution: {integrity: sha512-01dplEIhEgwdY5dGwjWQXl5jhaAcz8DDXIlyCCms1QnR3HhVckZY1YrpAUiY1atoOcPXN+6/DrSPWUAM0mZVUQ==}
+    engines: {node: '>=20'}
+    peerDependencies:
+      '@langchain/core': workspace:^
+
+  '@langchain/google-vertexai-web@2.1.22':
+    resolution: {integrity: sha512-kubXfwSGjQVycPCDKR0WPMuEV8rGfFnK6ATA/ndhaG7I5DMkJoqm1rtuwyIoaaR+2i0DfmqiJtE7PwskHlWd6g==}
+    engines: {node: '>=20'}
+
+  '@langchain/google-vertexai@2.1.22':
+    resolution: {integrity: sha512-s1Vt/40zxNam+ZifIktJmTcFeqtUGhrXODp6kktM+vAJ1cFomXEM0LJdf9oyvPxMWaloU46ZmVlWwCPnLl5YDQ==}
+    engines: {node: '>=20'}
+
+  '@langchain/google-webauth@2.1.22':
+    resolution: {integrity: sha512-D94wM7jw7R28ENcF/qJL1ZtzVoxb4hajS1vSs0GI+At0oA4jhvCU6IaOQqK+ETptquKFuPXGfOmDvrf+YzdH6g==}
+    engines: {node: '>=20'}
+    peerDependencies:
+      '@langchain/core': workspace:^
+
   '@langchain/groq@1.1.3':
     resolution: {integrity: sha512-b8B/nyhoch8PvT8WHiamL017kD5McOUJFLhEjEHZi0FLyP8whvmq7lngeZHRu+nLKKScqGkEfTkNyE9LEfU9Fw==}
     engines: {node: '>=20'}
@@ -9021,8 +9051,8 @@ packages:
   '@types/node@25.3.0':
     resolution: {integrity: sha512-4K3bqJpXpqfg2XKGK9bpDTc6xO/xoUP/RBWS7AtRMug6zZFaRekiLzjVtAoZMquxoAbzBvy5nxQ7veS5eYzf8A==}
 
-  '@types/node@25.3.2':
-    resolution: {integrity: sha512-RpV6r/ij22zRRdyBPcxDeKAzH43phWVKEjL2iksqo1Vz3CuBUrgmPpPhALKiRfU7OMCmeeO9vECBMsV0hMTG8Q==}
+  '@types/node@25.3.3':
+    resolution: {integrity: sha512-DpzbrH7wIcBaJibpKo9nnSQL0MTRdnWttGyE5haGwK86xgMOkFLp7vEyfQPGLOJh5wNYiJ3V9PmUMDhV9u8kkQ==}
 
   '@types/offscreencanvas@2019.7.3':
     resolution: {integrity: sha512-ieXiYmgSRXUDeOntE1InxjWyvEelZGP63M+cGuquuRLuIKKT1osnkXjxev9B7d1nXSug5vpunx+gNlbVxMlC9A==}
@@ -9870,8 +9900,8 @@ packages:
   axios@0.21.4:
     resolution: {integrity: sha512-ut5vewkiu8jjGBdqpM44XxjuCjq9LAKeHVmoVfHVzy8eHgxxq8SbAVQNovDA8mVi05kP0Ea/n/UzcSHcTJQfNg==}
 
-  axios@1.13.5:
-    resolution: {integrity: sha512-cz4ur7Vb0xS4/KUN0tPWe44eqxrIu31me+fbang3ijiNscE129POzipJJA6zniq2C/Z6sJCjMimjS8Lc/GAs8Q==}
+  axios@1.13.6:
+    resolution: {integrity: sha512-ChTCHMouEe2kn713WHbQGcuYrr6fXTBiu460OTwWrWob16g1bXn4vtz07Ope7ewMozJAnEquLk5lWQWtBig9DQ==}
 
   axios@1.7.7:
     resolution: {integrity: sha512-S4kL7XrjgBmvdGut0sN3yJxqYzrDOnivkBiN0OFs6hLiUam3UPvswUo0kqGyhqUZGEOytHyumEdXsAkgCOUf3Q==}
@@ -20281,7 +20311,7 @@ snapshots:
     transitivePeerDependencies:
       - encoding
 
-  '@changesets/cli@2.29.8(@types/node@25.3.2)':
+  '@changesets/cli@2.29.8(@types/node@25.3.3)':
     dependencies:
       '@changesets/apply-release-plan': 7.0.14
       '@changesets/assemble-release-plan': 6.0.9
@@ -20297,7 +20327,7 @@ snapshots:
       '@changesets/should-skip-package': 0.1.2
       '@changesets/types': 6.1.0
       '@changesets/write': 0.4.0
-      '@inquirer/external-editor': 1.0.3(@types/node@25.3.2)
+      '@inquirer/external-editor': 1.0.3(@types/node@25.3.3)
       '@manypkg/get-packages': 1.1.3
       ansi-colors: 4.1.3
       ci-info: 3.9.0
@@ -21014,12 +21044,12 @@ snapshots:
 
   '@getmetal/metal-sdk@4.0.6':
     dependencies:
-      axios: 1.13.5(debug@4.4.3)
+      axios: 1.13.6(debug@4.4.3)
       mime-types: 2.1.35
     transitivePeerDependencies:
       - debug
 
-  '@getzep/zep-cloud@1.0.12(@langchain/core@libs+langchain-core)(encoding@0.1.13)(langchain@0.3.30(80b97a6c90a0d5061ba2762a01dc451d))':
+  '@getzep/zep-cloud@1.0.12(@langchain/core@libs+langchain-core)(encoding@0.1.13)(langchain@0.3.30(d3c314cf413fc3f4abbbb38b204da055))':
     dependencies:
       form-data: 4.0.5
       node-fetch: 2.7.0(encoding@0.1.13)
@@ -21028,7 +21058,7 @@ snapshots:
       zod: 3.25.76
     optionalDependencies:
       '@langchain/core': link:libs/langchain-core
-      langchain: 0.3.30(80b97a6c90a0d5061ba2762a01dc451d)
+      langchain: 0.3.30(d3c314cf413fc3f4abbbb38b204da055)
     transitivePeerDependencies:
       - encoding
 
@@ -21351,15 +21381,15 @@ snapshots:
     optionalDependencies:
       '@types/node': 25.3.0
 
-  '@inquirer/checkbox@4.3.2(@types/node@25.3.2)':
+  '@inquirer/checkbox@4.3.2(@types/node@25.3.3)':
     dependencies:
       '@inquirer/ansi': 1.0.2
-      '@inquirer/core': 10.3.2(@types/node@25.3.2)
+      '@inquirer/core': 10.3.2(@types/node@25.3.3)
       '@inquirer/figures': 1.0.15
-      '@inquirer/type': 3.0.10(@types/node@25.3.2)
+      '@inquirer/type': 3.0.10(@types/node@25.3.3)
       yoctocolors-cjs: 2.1.3
     optionalDependencies:
-      '@types/node': 25.3.2
+      '@types/node': 25.3.3
 
   '@inquirer/confirm@5.1.21(@types/node@25.3.0)':
     dependencies:
@@ -21368,12 +21398,12 @@ snapshots:
     optionalDependencies:
       '@types/node': 25.3.0
 
-  '@inquirer/confirm@5.1.21(@types/node@25.3.2)':
+  '@inquirer/confirm@5.1.21(@types/node@25.3.3)':
     dependencies:
-      '@inquirer/core': 10.3.2(@types/node@25.3.2)
-      '@inquirer/type': 3.0.10(@types/node@25.3.2)
+      '@inquirer/core': 10.3.2(@types/node@25.3.3)
+      '@inquirer/type': 3.0.10(@types/node@25.3.3)
     optionalDependencies:
-      '@types/node': 25.3.2
+      '@types/node': 25.3.3
 
   '@inquirer/core@10.3.2(@types/node@25.3.0)':
     dependencies:
@@ -21388,18 +21418,18 @@ snapshots:
     optionalDependencies:
       '@types/node': 25.3.0
 
-  '@inquirer/core@10.3.2(@types/node@25.3.2)':
+  '@inquirer/core@10.3.2(@types/node@25.3.3)':
     dependencies:
       '@inquirer/ansi': 1.0.2
       '@inquirer/figures': 1.0.15
-      '@inquirer/type': 3.0.10(@types/node@25.3.2)
+      '@inquirer/type': 3.0.10(@types/node@25.3.3)
       cli-width: 4.1.0
       mute-stream: 2.0.0
       signal-exit: 4.1.0
       wrap-ansi: 6.2.0
       yoctocolors-cjs: 2.1.3
     optionalDependencies:
-      '@types/node': 25.3.2
+      '@types/node': 25.3.3
 
   '@inquirer/editor@4.2.23(@types/node@25.3.0)':
     dependencies:
@@ -21409,13 +21439,13 @@ snapshots:
     optionalDependencies:
       '@types/node': 25.3.0
 
-  '@inquirer/editor@4.2.23(@types/node@25.3.2)':
+  '@inquirer/editor@4.2.23(@types/node@25.3.3)':
     dependencies:
-      '@inquirer/core': 10.3.2(@types/node@25.3.2)
-      '@inquirer/external-editor': 1.0.3(@types/node@25.3.2)
-      '@inquirer/type': 3.0.10(@types/node@25.3.2)
+      '@inquirer/core': 10.3.2(@types/node@25.3.3)
+      '@inquirer/external-editor': 1.0.3(@types/node@25.3.3)
+      '@inquirer/type': 3.0.10(@types/node@25.3.3)
     optionalDependencies:
-      '@types/node': 25.3.2
+      '@types/node': 25.3.3
 
   '@inquirer/expand@4.0.23(@types/node@25.3.0)':
     dependencies:
@@ -21425,13 +21455,13 @@ snapshots:
     optionalDependencies:
       '@types/node': 25.3.0
 
-  '@inquirer/expand@4.0.23(@types/node@25.3.2)':
+  '@inquirer/expand@4.0.23(@types/node@25.3.3)':
     dependencies:
-      '@inquirer/core': 10.3.2(@types/node@25.3.2)
-      '@inquirer/type': 3.0.10(@types/node@25.3.2)
+      '@inquirer/core': 10.3.2(@types/node@25.3.3)
+      '@inquirer/type': 3.0.10(@types/node@25.3.3)
       yoctocolors-cjs: 2.1.3
     optionalDependencies:
-      '@types/node': 25.3.2
+      '@types/node': 25.3.3
 
   '@inquirer/external-editor@1.0.3(@types/node@25.3.0)':
     dependencies:
@@ -21440,12 +21470,12 @@ snapshots:
     optionalDependencies:
       '@types/node': 25.3.0
 
-  '@inquirer/external-editor@1.0.3(@types/node@25.3.2)':
+  '@inquirer/external-editor@1.0.3(@types/node@25.3.3)':
     dependencies:
       chardet: 2.1.1
       iconv-lite: 0.7.2
     optionalDependencies:
-      '@types/node': 25.3.2
+      '@types/node': 25.3.3
 
   '@inquirer/figures@1.0.15': {}
 
@@ -21456,12 +21486,12 @@ snapshots:
     optionalDependencies:
       '@types/node': 25.3.0
 
-  '@inquirer/input@4.3.1(@types/node@25.3.2)':
+  '@inquirer/input@4.3.1(@types/node@25.3.3)':
     dependencies:
-      '@inquirer/core': 10.3.2(@types/node@25.3.2)
-      '@inquirer/type': 3.0.10(@types/node@25.3.2)
+      '@inquirer/core': 10.3.2(@types/node@25.3.3)
+      '@inquirer/type': 3.0.10(@types/node@25.3.3)
     optionalDependencies:
-      '@types/node': 25.3.2
+      '@types/node': 25.3.3
 
   '@inquirer/number@3.0.23(@types/node@25.3.0)':
     dependencies:
@@ -21470,12 +21500,12 @@ snapshots:
     optionalDependencies:
       '@types/node': 25.3.0
 
-  '@inquirer/number@3.0.23(@types/node@25.3.2)':
+  '@inquirer/number@3.0.23(@types/node@25.3.3)':
     dependencies:
-      '@inquirer/core': 10.3.2(@types/node@25.3.2)
-      '@inquirer/type': 3.0.10(@types/node@25.3.2)
+      '@inquirer/core': 10.3.2(@types/node@25.3.3)
+      '@inquirer/type': 3.0.10(@types/node@25.3.3)
     optionalDependencies:
-      '@types/node': 25.3.2
+      '@types/node': 25.3.3
 
   '@inquirer/password@4.0.23(@types/node@25.3.0)':
     dependencies:
@@ -21485,13 +21515,13 @@ snapshots:
     optionalDependencies:
       '@types/node': 25.3.0
 
-  '@inquirer/password@4.0.23(@types/node@25.3.2)':
+  '@inquirer/password@4.0.23(@types/node@25.3.3)':
     dependencies:
       '@inquirer/ansi': 1.0.2
-      '@inquirer/core': 10.3.2(@types/node@25.3.2)
-      '@inquirer/type': 3.0.10(@types/node@25.3.2)
+      '@inquirer/core': 10.3.2(@types/node@25.3.3)
+      '@inquirer/type': 3.0.10(@types/node@25.3.3)
     optionalDependencies:
-      '@types/node': 25.3.2
+      '@types/node': 25.3.3
 
   '@inquirer/prompts@7.10.1(@types/node@25.3.0)':
     dependencies:
@@ -21508,20 +21538,20 @@ snapshots:
     optionalDependencies:
       '@types/node': 25.3.0
 
-  '@inquirer/prompts@7.10.1(@types/node@25.3.2)':
+  '@inquirer/prompts@7.10.1(@types/node@25.3.3)':
     dependencies:
-      '@inquirer/checkbox': 4.3.2(@types/node@25.3.2)
-      '@inquirer/confirm': 5.1.21(@types/node@25.3.2)
-      '@inquirer/editor': 4.2.23(@types/node@25.3.2)
-      '@inquirer/expand': 4.0.23(@types/node@25.3.2)
-      '@inquirer/input': 4.3.1(@types/node@25.3.2)
-      '@inquirer/number': 3.0.23(@types/node@25.3.2)
-      '@inquirer/password': 4.0.23(@types/node@25.3.2)
-      '@inquirer/rawlist': 4.1.11(@types/node@25.3.2)
-      '@inquirer/search': 3.2.2(@types/node@25.3.2)
-      '@inquirer/select': 4.4.2(@types/node@25.3.2)
+      '@inquirer/checkbox': 4.3.2(@types/node@25.3.3)
+      '@inquirer/confirm': 5.1.21(@types/node@25.3.3)
+      '@inquirer/editor': 4.2.23(@types/node@25.3.3)
+      '@inquirer/expand': 4.0.23(@types/node@25.3.3)
+      '@inquirer/input': 4.3.1(@types/node@25.3.3)
+      '@inquirer/number': 3.0.23(@types/node@25.3.3)
+      '@inquirer/password': 4.0.23(@types/node@25.3.3)
+      '@inquirer/rawlist': 4.1.11(@types/node@25.3.3)
+      '@inquirer/search': 3.2.2(@types/node@25.3.3)
+      '@inquirer/select': 4.4.2(@types/node@25.3.3)
     optionalDependencies:
-      '@types/node': 25.3.2
+      '@types/node': 25.3.3
 
   '@inquirer/rawlist@4.1.11(@types/node@25.3.0)':
     dependencies:
@@ -21531,13 +21561,13 @@ snapshots:
     optionalDependencies:
       '@types/node': 25.3.0
 
-  '@inquirer/rawlist@4.1.11(@types/node@25.3.2)':
+  '@inquirer/rawlist@4.1.11(@types/node@25.3.3)':
     dependencies:
-      '@inquirer/core': 10.3.2(@types/node@25.3.2)
-      '@inquirer/type': 3.0.10(@types/node@25.3.2)
+      '@inquirer/core': 10.3.2(@types/node@25.3.3)
+      '@inquirer/type': 3.0.10(@types/node@25.3.3)
       yoctocolors-cjs: 2.1.3
     optionalDependencies:
-      '@types/node': 25.3.2
+      '@types/node': 25.3.3
 
   '@inquirer/search@3.2.2(@types/node@25.3.0)':
     dependencies:
@@ -21548,14 +21578,14 @@ snapshots:
     optionalDependencies:
       '@types/node': 25.3.0
 
-  '@inquirer/search@3.2.2(@types/node@25.3.2)':
+  '@inquirer/search@3.2.2(@types/node@25.3.3)':
     dependencies:
-      '@inquirer/core': 10.3.2(@types/node@25.3.2)
+      '@inquirer/core': 10.3.2(@types/node@25.3.3)
       '@inquirer/figures': 1.0.15
-      '@inquirer/type': 3.0.10(@types/node@25.3.2)
+      '@inquirer/type': 3.0.10(@types/node@25.3.3)
       yoctocolors-cjs: 2.1.3
     optionalDependencies:
-      '@types/node': 25.3.2
+      '@types/node': 25.3.3
 
   '@inquirer/select@4.4.2(@types/node@25.3.0)':
     dependencies:
@@ -21567,23 +21597,23 @@ snapshots:
     optionalDependencies:
       '@types/node': 25.3.0
 
-  '@inquirer/select@4.4.2(@types/node@25.3.2)':
+  '@inquirer/select@4.4.2(@types/node@25.3.3)':
     dependencies:
       '@inquirer/ansi': 1.0.2
-      '@inquirer/core': 10.3.2(@types/node@25.3.2)
+      '@inquirer/core': 10.3.2(@types/node@25.3.3)
       '@inquirer/figures': 1.0.15
-      '@inquirer/type': 3.0.10(@types/node@25.3.2)
+      '@inquirer/type': 3.0.10(@types/node@25.3.3)
       yoctocolors-cjs: 2.1.3
     optionalDependencies:
-      '@types/node': 25.3.2
+      '@types/node': 25.3.3
 
   '@inquirer/type@3.0.10(@types/node@25.3.0)':
     optionalDependencies:
       '@types/node': 25.3.0
 
-  '@inquirer/type@3.0.10(@types/node@25.3.2)':
+  '@inquirer/type@3.0.10(@types/node@25.3.3)':
     optionalDependencies:
-      '@types/node': 25.3.2
+      '@types/node': 25.3.3
 
   '@ioredis/commands@1.5.0': {}
 
@@ -21655,7 +21685,7 @@ snapshots:
       - supports-color
       - ts-node
 
-  '@jest/core@30.2.0(ts-node@10.9.2(@swc/core@1.15.13(@swc/helpers@0.5.18))(@types/node@25.3.2)(typescript@5.8.3))':
+  '@jest/core@30.2.0(ts-node@10.9.2(@swc/core@1.15.13(@swc/helpers@0.5.18))(@types/node@25.3.3)(typescript@5.8.3))':
     dependencies:
       '@jest/console': 30.2.0
       '@jest/pattern': 30.0.1
@@ -21670,7 +21700,7 @@ snapshots:
       exit-x: 0.2.2
       graceful-fs: 4.2.11
       jest-changed-files: 30.2.0
-      jest-config: 30.2.0(@types/node@25.3.0)(ts-node@10.9.2(@swc/core@1.15.13(@swc/helpers@0.5.18))(@types/node@25.3.2)(typescript@5.8.3))
+      jest-config: 30.2.0(@types/node@25.3.0)(ts-node@10.9.2(@swc/core@1.15.13(@swc/helpers@0.5.18))(@types/node@25.3.3)(typescript@5.8.3))
       jest-haste-map: 30.2.0
       jest-message-util: 30.2.0
       jest-regex-util: 30.0.1
@@ -21945,6 +21975,50 @@ snapshots:
       - ws
     optional: true
 
+  '@langchain/google-common@2.1.22(@langchain/core@libs+langchain-core)':
+    dependencies:
+      '@langchain/core': link:libs/langchain-core
+      uuid: 10.0.0
+    optional: true
+
+  '@langchain/google-gauth@2.1.22(@langchain/core@libs+langchain-core)':
+    dependencies:
+      '@langchain/google-common': 2.1.22(@langchain/core@libs+langchain-core)
+      google-auth-library: 10.6.1
+    transitivePeerDependencies:
+      - '@langchain/core'
+      - supports-color
+    optional: true
+
+  '@langchain/google-genai@2.1.22(@langchain/core@libs+langchain-core)':
+    dependencies:
+      '@google/generative-ai': 0.24.1
+      '@langchain/core': link:libs/langchain-core
+      uuid: 11.1.0
+    optional: true
+
+  '@langchain/google-vertexai-web@2.1.22(@langchain/core@libs+langchain-core)':
+    dependencies:
+      '@langchain/google-webauth': 2.1.22(@langchain/core@libs+langchain-core)
+    transitivePeerDependencies:
+      - '@langchain/core'
+    optional: true
+
+  '@langchain/google-vertexai@2.1.22(@langchain/core@libs+langchain-core)':
+    dependencies:
+      '@langchain/google-gauth': 2.1.22(@langchain/core@libs+langchain-core)
+    transitivePeerDependencies:
+      - '@langchain/core'
+      - supports-color
+    optional: true
+
+  '@langchain/google-webauth@2.1.22(@langchain/core@libs+langchain-core)':
+    dependencies:
+      '@langchain/core': link:libs/langchain-core
+      '@langchain/google-common': 2.1.22(@langchain/core@libs+langchain-core)
+      web-auth-library: 1.0.3
+    optional: true
+
   '@langchain/groq@1.1.3(@langchain/core@libs+langchain-core)(encoding@0.1.13)':
     dependencies:
       '@langchain/core': link:libs/langchain-core
@@ -22077,7 +22151,7 @@ snapshots:
 
   '@layerup/layerup-security@1.6.0(encoding@0.1.13)(ws@8.19.0(bufferutil@4.1.0))(zod@3.25.76)':
     dependencies:
-      axios: 1.13.5(debug@4.4.3)
+      axios: 1.13.6(debug@4.4.3)
       openai: 4.104.0(encoding@0.1.13)(ws@8.19.0(bufferutil@4.1.0))(zod@3.25.76)
     transitivePeerDependencies:
       - debug
@@ -22087,7 +22161,7 @@ snapshots:
 
   '@layerup/layerup-security@1.6.0(encoding@0.1.13)(ws@8.19.0(bufferutil@4.1.0))(zod@4.3.6)':
     dependencies:
-      axios: 1.13.5(debug@4.4.3)
+      axios: 1.13.6(debug@4.4.3)
       openai: 4.104.0(encoding@0.1.13)(ws@8.19.0(bufferutil@4.1.0))(zod@4.3.6)
     transitivePeerDependencies:
       - debug
@@ -22198,7 +22272,7 @@ snapshots:
 
   '@mendable/firecrawl-js@4.13.0':
     dependencies:
-      axios: 1.13.5(debug@4.4.3)
+      axios: 1.13.6(debug@4.4.3)
       typescript-event-target: 1.1.2
       zod: 3.25.76
       zod-to-json-schema: 3.25.1(zod@3.25.76)
@@ -22881,7 +22955,7 @@ snapshots:
 
   '@premai/prem-sdk@0.3.100':
     dependencies:
-      axios: 1.13.5(debug@4.4.3)
+      axios: 1.13.6(debug@4.4.3)
       form-data: 4.0.5
     transitivePeerDependencies:
       - debug
@@ -24469,7 +24543,7 @@ snapshots:
     dependencies:
       undici-types: 7.18.2
 
-  '@types/node@25.3.2':
+  '@types/node@25.3.3':
     dependencies:
       undici-types: 7.18.2
 
@@ -24537,7 +24611,7 @@ snapshots:
 
   '@types/sqlite3@3.1.11':
     dependencies:
-      '@types/node': 25.3.2
+      '@types/node': 25.3.3
 
   '@types/ssh2-streams@0.1.13':
     dependencies:
@@ -24923,7 +24997,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@vitest/coverage-v8@3.2.4(vitest@3.2.4(@types/debug@4.1.12)(@types/node@25.3.2)(jiti@2.6.1)(jsdom@28.1.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2))':
+  '@vitest/coverage-v8@3.2.4(vitest@3.2.4(@types/debug@4.1.12)(@types/node@25.3.3)(jiti@2.6.1)(jsdom@28.1.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2))':
     dependencies:
       '@ampproject/remapping': 2.3.0
       '@bcoe/v8-coverage': 1.0.2
@@ -24938,7 +25012,7 @@ snapshots:
       std-env: 3.10.0
       test-exclude: 7.0.1
       tinyrainbow: 2.0.0
-      vitest: 3.2.4(@types/debug@4.1.12)(@types/node@25.3.2)(jiti@2.6.1)(jsdom@28.1.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
+      vitest: 3.2.4(@types/debug@4.1.12)(@types/node@25.3.3)(jiti@2.6.1)(jsdom@28.1.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
     transitivePeerDependencies:
       - supports-color
 
@@ -24964,13 +25038,13 @@ snapshots:
     optionalDependencies:
       vite: 7.3.1(@types/node@25.2.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
 
-  '@vitest/mocker@3.2.4(vite@7.3.1(@types/node@25.3.2)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2))':
+  '@vitest/mocker@3.2.4(vite@7.3.1(@types/node@25.3.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2))':
     dependencies:
       '@vitest/spy': 3.2.4
       estree-walker: 3.0.3
       magic-string: 0.30.21
     optionalDependencies:
-      vite: 7.3.1(@types/node@25.3.2)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
+      vite: 7.3.1(@types/node@25.3.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
 
   '@vitest/pretty-format@3.2.4':
     dependencies:
@@ -25305,7 +25379,7 @@ snapshots:
       '@crawlee/types': 3.16.0
       ansi-colors: 4.1.3
       async-retry: 1.3.3
-      axios: 1.13.5(debug@4.4.3)
+      axios: 1.13.6(debug@4.4.3)
       content-type: 1.0.5
       ow: 0.28.2
       proxy-agent: 6.5.0
@@ -25507,7 +25581,7 @@ snapshots:
     transitivePeerDependencies:
       - debug
 
-  axios@1.13.5(debug@4.4.3):
+  axios@1.13.6(debug@4.4.3):
     dependencies:
       follow-redirects: 1.15.11(debug@4.4.3)
       form-data: 4.0.5
@@ -26288,7 +26362,7 @@ snapshots:
 
   closevector-node@0.1.6:
     dependencies:
-      axios: 1.13.5(debug@4.4.3)
+      axios: 1.13.6(debug@4.4.3)
       closevector-common: 0.1.3
       closevector-hnswlib-node: 0.1.1
       jsonwebtoken: 9.0.3
@@ -26313,7 +26387,7 @@ snapshots:
 
   closevector-web@0.1.6:
     dependencies:
-      axios: 1.13.5(debug@4.4.3)
+      axios: 1.13.6(debug@4.4.3)
       closevector-browserify-zlib: 0.1.0-alpha.3
       closevector-common: 0.1.3
       closevector-crypto-jwt: 0.1.0-alpha.3
@@ -28524,7 +28598,7 @@ snapshots:
       '@types/debug': 4.1.12
       '@types/node': 18.19.130
       '@types/tough-cookie': 4.0.5
-      axios: 1.13.5(debug@4.4.3)
+      axios: 1.13.6(debug@4.4.3)
       camelcase: 6.3.0
       debug: 4.4.3(supports-color@8.1.1)
       dotenv: 16.6.1
@@ -28534,7 +28608,7 @@ snapshots:
       isstream: 0.1.2
       jsonwebtoken: 9.0.3
       mime-types: 2.1.35
-      retry-axios: 2.6.0(axios@1.13.5)
+      retry-axios: 2.6.0(axios@1.13.6)
       tough-cookie: 4.1.4
     transitivePeerDependencies:
       - supports-color
@@ -28591,17 +28665,17 @@ snapshots:
 
   ini@1.3.8: {}
 
-  inquirer@12.11.1(@types/node@25.3.2):
+  inquirer@12.11.1(@types/node@25.3.3):
     dependencies:
       '@inquirer/ansi': 1.0.2
-      '@inquirer/core': 10.3.2(@types/node@25.3.2)
-      '@inquirer/prompts': 7.10.1(@types/node@25.3.2)
-      '@inquirer/type': 3.0.10(@types/node@25.3.2)
+      '@inquirer/core': 10.3.2(@types/node@25.3.3)
+      '@inquirer/prompts': 7.10.1(@types/node@25.3.3)
+      '@inquirer/type': 3.0.10(@types/node@25.3.3)
       mute-stream: 2.0.0
       run-async: 4.0.6
       rxjs: 7.8.2
     optionalDependencies:
-      '@types/node': 25.3.2
+      '@types/node': 25.3.3
 
   interface-datastore@9.0.2:
     dependencies:
@@ -29039,15 +29113,15 @@ snapshots:
       - supports-color
       - ts-node
 
-  jest-cli@30.2.0(@types/node@25.3.2)(ts-node@10.9.2(@swc/core@1.15.13(@swc/helpers@0.5.18))(@types/node@25.3.2)(typescript@5.8.3)):
+  jest-cli@30.2.0(@types/node@25.3.3)(ts-node@10.9.2(@swc/core@1.15.13(@swc/helpers@0.5.18))(@types/node@25.3.3)(typescript@5.8.3)):
     dependencies:
-      '@jest/core': 30.2.0(ts-node@10.9.2(@swc/core@1.15.13(@swc/helpers@0.5.18))(@types/node@25.3.2)(typescript@5.8.3))
+      '@jest/core': 30.2.0(ts-node@10.9.2(@swc/core@1.15.13(@swc/helpers@0.5.18))(@types/node@25.3.3)(typescript@5.8.3))
       '@jest/test-result': 30.2.0
       '@jest/types': 30.2.0
       chalk: 4.1.2
       exit-x: 0.2.2
       import-local: 3.2.0
-      jest-config: 30.2.0(@types/node@25.3.2)(ts-node@10.9.2(@swc/core@1.15.13(@swc/helpers@0.5.18))(@types/node@25.3.2)(typescript@5.8.3))
+      jest-config: 30.2.0(@types/node@25.3.3)(ts-node@10.9.2(@swc/core@1.15.13(@swc/helpers@0.5.18))(@types/node@25.3.3)(typescript@5.8.3))
       jest-util: 30.2.0
       jest-validate: 30.2.0
       yargs: 17.7.2
@@ -29091,7 +29165,7 @@ snapshots:
       - babel-plugin-macros
       - supports-color
 
-  jest-config@30.2.0(@types/node@25.3.0)(ts-node@10.9.2(@swc/core@1.15.13(@swc/helpers@0.5.18))(@types/node@25.3.2)(typescript@5.8.3)):
+  jest-config@30.2.0(@types/node@25.3.0)(ts-node@10.9.2(@swc/core@1.15.13(@swc/helpers@0.5.18))(@types/node@25.3.3)(typescript@5.8.3)):
     dependencies:
       '@babel/core': 7.29.0
       '@jest/get-type': 30.1.0
@@ -29119,12 +29193,12 @@ snapshots:
       strip-json-comments: 3.1.1
     optionalDependencies:
       '@types/node': 25.3.0
-      ts-node: 10.9.2(@swc/core@1.15.13(@swc/helpers@0.5.18))(@types/node@25.3.2)(typescript@5.8.3)
+      ts-node: 10.9.2(@swc/core@1.15.13(@swc/helpers@0.5.18))(@types/node@25.3.3)(typescript@5.8.3)
     transitivePeerDependencies:
       - babel-plugin-macros
       - supports-color
 
-  jest-config@30.2.0(@types/node@25.3.2)(ts-node@10.9.2(@swc/core@1.15.13(@swc/helpers@0.5.18))(@types/node@25.3.2)(typescript@5.8.3)):
+  jest-config@30.2.0(@types/node@25.3.3)(ts-node@10.9.2(@swc/core@1.15.13(@swc/helpers@0.5.18))(@types/node@25.3.3)(typescript@5.8.3)):
     dependencies:
       '@babel/core': 7.29.0
       '@jest/get-type': 30.1.0
@@ -29151,8 +29225,8 @@ snapshots:
       slash: 3.0.0
       strip-json-comments: 3.1.1
     optionalDependencies:
-      '@types/node': 25.3.2
-      ts-node: 10.9.2(@swc/core@1.15.13(@swc/helpers@0.5.18))(@types/node@25.3.2)(typescript@5.8.3)
+      '@types/node': 25.3.3
+      ts-node: 10.9.2(@swc/core@1.15.13(@swc/helpers@0.5.18))(@types/node@25.3.3)(typescript@5.8.3)
     transitivePeerDependencies:
       - babel-plugin-macros
       - supports-color
@@ -29391,12 +29465,12 @@ snapshots:
       - supports-color
       - ts-node
 
-  jest@30.2.0(@types/node@25.3.2)(ts-node@10.9.2(@swc/core@1.15.13(@swc/helpers@0.5.18))(@types/node@25.3.2)(typescript@5.8.3)):
+  jest@30.2.0(@types/node@25.3.3)(ts-node@10.9.2(@swc/core@1.15.13(@swc/helpers@0.5.18))(@types/node@25.3.3)(typescript@5.8.3)):
     dependencies:
-      '@jest/core': 30.2.0(ts-node@10.9.2(@swc/core@1.15.13(@swc/helpers@0.5.18))(@types/node@25.3.2)(typescript@5.8.3))
+      '@jest/core': 30.2.0(ts-node@10.9.2(@swc/core@1.15.13(@swc/helpers@0.5.18))(@types/node@25.3.3)(typescript@5.8.3))
       '@jest/types': 30.2.0
       import-local: 3.2.0
-      jest-cli: 30.2.0(@types/node@25.3.2)(ts-node@10.9.2(@swc/core@1.15.13(@swc/helpers@0.5.18))(@types/node@25.3.2)(typescript@5.8.3))
+      jest-cli: 30.2.0(@types/node@25.3.3)(ts-node@10.9.2(@swc/core@1.15.13(@swc/helpers@0.5.18))(@types/node@25.3.3)(typescript@5.8.3))
     transitivePeerDependencies:
       - '@types/node'
       - babel-plugin-macros
@@ -29593,7 +29667,7 @@ snapshots:
 
   kuler@2.0.0: {}
 
-  langchain@0.3.30(80b97a6c90a0d5061ba2762a01dc451d):
+  langchain@0.3.30(d3c314cf413fc3f4abbbb38b204da055):
     dependencies:
       '@langchain/core': link:libs/langchain-core
       '@langchain/openai': 0.6.17(@langchain/core@libs+langchain-core)(ws@8.19.0(bufferutil@4.1.0))
@@ -29612,11 +29686,14 @@ snapshots:
       '@langchain/aws': 1.3.0(@langchain/core@libs+langchain-core)
       '@langchain/cohere': 1.0.4(@langchain/core@libs+langchain-core)
       '@langchain/deepseek': 1.0.15(@langchain/core@libs+langchain-core)(ws@8.19.0(bufferutil@4.1.0))
+      '@langchain/google-genai': 2.1.22(@langchain/core@libs+langchain-core)
+      '@langchain/google-vertexai': 2.1.22(@langchain/core@libs+langchain-core)
+      '@langchain/google-vertexai-web': 2.1.22(@langchain/core@libs+langchain-core)
       '@langchain/groq': 1.1.3(@langchain/core@libs+langchain-core)(encoding@0.1.13)
       '@langchain/mistralai': 1.0.6(@langchain/core@libs+langchain-core)(bufferutil@4.1.0)
       '@langchain/ollama': 1.2.5(@langchain/core@libs+langchain-core)
       '@langchain/xai': 1.3.7(@langchain/core@libs+langchain-core)(ws@8.19.0(bufferutil@4.1.0))
-      axios: 1.13.5(debug@4.4.3)
+      axios: 1.13.6(debug@4.4.3)
       cheerio: 1.2.0
       handlebars: 4.7.8
       peggy: 3.0.2
@@ -30295,9 +30372,9 @@ snapshots:
       named-placeholders: 1.1.6
       sql-escaper: 1.3.3
 
-  mysql2@3.18.0(@types/node@25.3.2):
+  mysql2@3.18.0(@types/node@25.3.3):
     dependencies:
-      '@types/node': 25.3.2
+      '@types/node': 25.3.3
       aws-ssl-profiles: 1.1.2
       denque: 2.1.0
       generate-function: 2.3.1
@@ -31673,19 +31750,19 @@ snapshots:
     dependencies:
       jsesc: 3.1.0
 
-  release-it-pnpm@4.6.6(magicast@0.3.5)(release-it@19.2.4(@types/node@25.3.2)(magicast@0.3.5)):
+  release-it-pnpm@4.6.6(magicast@0.3.5)(release-it@19.2.4(@types/node@25.3.3)(magicast@0.3.5)):
     dependencies:
       bumpp: 10.4.1(magicast@0.3.5)
       changelogithub: 13.16.1(magicast@0.3.5)
       conventional-changelog-conventionalcommits: 9.1.0
       conventional-recommended-bump: 11.2.0
       kolorist: 1.8.0
-      release-it: 19.2.4(@types/node@25.3.2)(magicast@0.3.5)
+      release-it: 19.2.4(@types/node@25.3.3)(magicast@0.3.5)
       semver: 7.7.4
     transitivePeerDependencies:
       - magicast
 
-  release-it@19.2.4(@types/node@25.3.2)(magicast@0.3.5):
+  release-it@19.2.4(@types/node@25.3.3)(magicast@0.3.5):
     dependencies:
       '@nodeutils/defaults-deep': 1.1.0
       '@octokit/rest': 22.0.1
@@ -31695,7 +31772,7 @@ snapshots:
       ci-info: 4.4.0
       eta: 4.5.0
       git-url-parse: 16.1.0
-      inquirer: 12.11.1(@types/node@25.3.2)
+      inquirer: 12.11.1(@types/node@25.3.3)
       issue-parser: 7.0.1
       lodash.merge: 4.6.2
       mime-types: 3.0.2
@@ -31753,9 +31830,9 @@ snapshots:
       onetime: 7.0.0
       signal-exit: 4.1.0
 
-  retry-axios@2.6.0(axios@1.13.5):
+  retry-axios@2.6.0(axios@1.13.6):
     dependencies:
-      axios: 1.13.5(debug@4.4.3)
+      axios: 1.13.6(debug@4.4.3)
 
   retry-request@7.0.2(encoding@0.1.13):
     dependencies:
@@ -32241,7 +32318,7 @@ snapshots:
 
   sonix-speech-recognition@2.1.1:
     dependencies:
-      axios: 1.13.5(debug@4.4.3)
+      axios: 1.13.6(debug@4.4.3)
       form-data: 4.0.5
     transitivePeerDependencies:
       - debug
@@ -32826,12 +32903,12 @@ snapshots:
       babel-jest: 30.2.0(@babel/core@7.29.0)
       jest-util: 30.2.0
 
-  ts-jest@29.4.6(@babel/core@7.29.0)(@jest/transform@30.2.0)(@jest/types@30.2.0)(babel-jest@30.2.0(@babel/core@7.29.0))(jest-util@30.2.0)(jest@30.2.0(@types/node@25.3.2)(ts-node@10.9.2(@swc/core@1.15.13(@swc/helpers@0.5.18))(@types/node@25.3.2)(typescript@5.8.3)))(typescript@5.8.3):
+  ts-jest@29.4.6(@babel/core@7.29.0)(@jest/transform@30.2.0)(@jest/types@30.2.0)(babel-jest@30.2.0(@babel/core@7.29.0))(jest-util@30.2.0)(jest@30.2.0(@types/node@25.3.3)(ts-node@10.9.2(@swc/core@1.15.13(@swc/helpers@0.5.18))(@types/node@25.3.3)(typescript@5.8.3)))(typescript@5.8.3):
     dependencies:
       bs-logger: 0.2.6
       fast-json-stable-stringify: 2.1.0
       handlebars: 4.7.8
-      jest: 30.2.0(@types/node@25.3.2)(ts-node@10.9.2(@swc/core@1.15.13(@swc/helpers@0.5.18))(@types/node@25.3.2)(typescript@5.8.3))
+      jest: 30.2.0(@types/node@25.3.3)(ts-node@10.9.2(@swc/core@1.15.13(@swc/helpers@0.5.18))(@types/node@25.3.3)(typescript@5.8.3))
       json5: 2.2.3
       lodash.memoize: 4.1.2
       make-error: 1.3.6
@@ -32891,14 +32968,14 @@ snapshots:
       '@swc/core': 1.15.13(@swc/helpers@0.5.18)
     optional: true
 
-  ts-node@10.9.2(@swc/core@1.15.13(@swc/helpers@0.5.18))(@types/node@25.3.2)(typescript@5.8.3):
+  ts-node@10.9.2(@swc/core@1.15.13(@swc/helpers@0.5.18))(@types/node@25.3.3)(typescript@5.8.3):
     dependencies:
       '@cspotcode/source-map-support': 0.8.1
       '@tsconfig/node10': 1.0.12
       '@tsconfig/node12': 1.0.11
       '@tsconfig/node14': 1.0.3
       '@tsconfig/node16': 1.0.4
-      '@types/node': 25.3.2
+      '@types/node': 25.3.3
       acorn: 8.15.0
       acorn-walk: 8.3.4
       arg: 4.1.3
@@ -33102,7 +33179,7 @@ snapshots:
       - babel-plugin-macros
       - supports-color
 
-  typeorm@0.3.28(better-sqlite3@12.6.2)(ioredis@5.9.2)(mongodb@6.21.0(@aws-sdk/credential-providers@3.985.0)(socks@2.8.7))(mysql2@3.18.0(@types/node@25.3.2))(pg@8.18.0)(redis@4.7.1)(sqlite3@5.1.7)(ts-node@10.9.2(@swc/core@1.15.13(@swc/helpers@0.5.18))(@types/node@25.3.2)(typescript@5.8.3)):
+  typeorm@0.3.28(better-sqlite3@12.6.2)(ioredis@5.9.2)(mongodb@6.21.0(@aws-sdk/credential-providers@3.985.0)(socks@2.8.7))(mysql2@3.18.0(@types/node@25.3.3))(pg@8.18.0)(redis@4.7.1)(sqlite3@5.1.7)(ts-node@10.9.2(@swc/core@1.15.13(@swc/helpers@0.5.18))(@types/node@25.3.3)(typescript@5.8.3)):
     dependencies:
       '@sqltools/formatter': 1.2.5
       ansis: 4.2.0
@@ -33123,11 +33200,11 @@ snapshots:
       better-sqlite3: 12.6.2
       ioredis: 5.9.2
       mongodb: 6.21.0(@aws-sdk/credential-providers@3.985.0)(socks@2.8.7)
-      mysql2: 3.18.0(@types/node@25.3.2)
+      mysql2: 3.18.0(@types/node@25.3.3)
       pg: 8.18.0
       redis: 4.7.1
       sqlite3: 5.1.7
-      ts-node: 10.9.2(@swc/core@1.15.13(@swc/helpers@0.5.18))(@types/node@25.3.2)(typescript@5.8.3)
+      ts-node: 10.9.2(@swc/core@1.15.13(@swc/helpers@0.5.18))(@types/node@25.3.3)(typescript@5.8.3)
     transitivePeerDependencies:
       - babel-plugin-macros
       - supports-color
@@ -33165,7 +33242,7 @@ snapshots:
   typesense@3.0.1(@babel/runtime@7.28.6):
     dependencies:
       '@babel/runtime': 7.28.6
-      axios: 1.13.5(debug@4.4.3)
+      axios: 1.13.6(debug@4.4.3)
       loglevel: 1.9.2
       tslib: 2.8.1
     transitivePeerDependencies:
@@ -33446,13 +33523,13 @@ snapshots:
       - tsx
       - yaml
 
-  vite-node@3.2.4(@types/node@25.3.2)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2):
+  vite-node@3.2.4(@types/node@25.3.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2):
     dependencies:
       cac: 6.7.14
       debug: 4.4.3(supports-color@8.1.1)
       es-module-lexer: 1.7.0
       pathe: 2.0.3
-      vite: 7.3.1(@types/node@25.3.2)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
+      vite: 7.3.1(@types/node@25.3.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
     transitivePeerDependencies:
       - '@types/node'
       - jiti
@@ -33493,7 +33570,7 @@ snapshots:
       tsx: 4.21.0
       yaml: 2.8.2
 
-  vite@7.3.1(@types/node@25.3.2)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2):
+  vite@7.3.1(@types/node@25.3.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2):
     dependencies:
       esbuild: 0.27.3
       fdir: 6.5.0(picomatch@4.0.3)
@@ -33502,7 +33579,7 @@ snapshots:
       rollup: 4.57.1
       tinyglobby: 0.2.15
     optionalDependencies:
-      '@types/node': 25.3.2
+      '@types/node': 25.3.3
       fsevents: 2.3.3
       jiti: 2.6.1
       terser: 5.46.0
@@ -33587,11 +33664,11 @@ snapshots:
       - tsx
       - yaml
 
-  vitest@3.2.4(@types/debug@4.1.12)(@types/node@25.3.2)(jiti@2.6.1)(jsdom@28.1.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2):
+  vitest@3.2.4(@types/debug@4.1.12)(@types/node@25.3.3)(jiti@2.6.1)(jsdom@28.1.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2):
     dependencies:
       '@types/chai': 5.2.3
       '@vitest/expect': 3.2.4
-      '@vitest/mocker': 3.2.4(vite@7.3.1(@types/node@25.3.2)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2))
+      '@vitest/mocker': 3.2.4(vite@7.3.1(@types/node@25.3.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2))
       '@vitest/pretty-format': 3.2.4
       '@vitest/runner': 3.2.4
       '@vitest/snapshot': 3.2.4
@@ -33609,12 +33686,12 @@ snapshots:
       tinyglobby: 0.2.15
       tinypool: 1.1.1
       tinyrainbow: 2.0.0
-      vite: 7.3.1(@types/node@25.3.2)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
-      vite-node: 3.2.4(@types/node@25.3.2)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
+      vite: 7.3.1(@types/node@25.3.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
+      vite-node: 3.2.4(@types/node@25.3.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
       why-is-node-running: 2.3.0
     optionalDependencies:
       '@types/debug': 4.1.12
-      '@types/node': 25.3.2
+      '@types/node': 25.3.3
       jsdom: 28.1.0
     transitivePeerDependencies:
       - jiti
