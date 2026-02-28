@@ -396,3 +396,19 @@ test(`Test ChatModel should not serialize a passed "cache" parameter`, async () 
     `{"lc":1,"type":"constructor","id":["langchain","chat_models","fake-list","FakeListChatModel"],"kwargs":{"responses":["hi"],"emit_custom_event":true}}`
   );
 });
+
+// https://github.com/langchain-ai/langchainjs/issues/8557
+test("Test invoke throws descriptive error when model returns empty generations", async () => {
+  // Create a chat model subclass that returns empty generations
+  // (simulating blocked content from Google AI)
+  class EmptyGenerationsChatModel extends FakeChatModel {
+    async _generate(): Promise<{ generations: never[] }> {
+      return { generations: [] };
+    }
+  }
+
+  const model = new EmptyGenerationsChatModel({});
+  await expect(model.invoke("test")).rejects.toThrow(
+    /No chat generation returned/
+  );
+});
