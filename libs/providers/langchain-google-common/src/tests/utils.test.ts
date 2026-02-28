@@ -900,6 +900,50 @@ describe("gemini image URL handling", () => {
     }
   });
 
+  test("responseToChatGeneration preserves all parallel tool calls", () => {
+    const api = getGeminiAPI();
+
+    // Simulate a Gemini streaming response containing two functionCall parts
+    const response = {
+      data: {
+        candidates: [
+          {
+            content: {
+              role: "model",
+              parts: [
+                {
+                  functionCall: {
+                    name: "search",
+                    args: { query: "Mac Mini M4 specs" },
+                  },
+                },
+                {
+                  functionCall: {
+                    name: "search",
+                    args: { query: "Mac Mini M4 reviews" },
+                  },
+                },
+              ],
+            },
+            finishReason: "STOP",
+          },
+        ],
+      },
+    };
+
+    const chunk = api.responseToChatGeneration(response as any);
+    const message = chunk.message as AIMessageChunk;
+
+    expect(message.tool_calls).toBeDefined();
+    expect(message.tool_calls!.length).toBe(2);
+    expect(message.tool_calls![0].name).toBe("search");
+    expect(message.tool_calls![0].args).toEqual({ query: "Mac Mini M4 specs" });
+    expect(message.tool_calls![1].name).toBe("search");
+    expect(message.tool_calls![1].args).toEqual({
+      query: "Mac Mini M4 reviews",
+    });
+  });
+
   test("handles malformed URLs gracefully", async () => {
     const api = getGeminiAPI();
     const message = new HumanMessage({
