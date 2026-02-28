@@ -167,7 +167,8 @@ export class TogetherAIEmbeddings
    * API.
    * @param {string} input The input text to embed.
    * @returns Promise that resolves to the response from the API.
-   * @TODO Figure out return type and statically type it.
+   *
+   * TODO: Figure out return type and statically type it.
    */
   private async embeddingWithRetry(
     input: string

@@ -42,9 +42,9 @@ export interface WebFetch20250910Options {
  * web pages and PDF documents. Claude can only fetch URLs that have been explicitly
  * provided by the user or that come from previous web search or web fetch results.
  *
- * @warning Enabling the web fetch tool in environments where Claude processes untrusted
- * input alongside sensitive data poses data exfiltration risks. We recommend only using
- * this tool in trusted environments or when handling non-sensitive data.
+ * **Warning**: Enabling the web fetch tool in environments where Claude processes untrusted
+ * input alongside sensitive data poses data exfiltration risks. We recommend only using this tool
+ * in trusted environments or when handling non-sensitive data.
  *
  * @see {@link https://docs.anthropic.com/en/docs/build-with-claude/tool-use/web-fetch-tool | Anthropic Web Fetch Documentation}
  * @param options - Configuration options for the web fetch tool

@@ -261,13 +261,11 @@ export class ZepVectorStore extends VectorStore {
   /**
    * Performs a similarity search on the Zep collection.
    *
-   * @param {string} query - The query string to search for.
-   * @param {number} [k=4] - The number of results to return. Defaults to 4.
-   * @param {this["FilterType"] | undefined} [filter=undefined] - An optional set of JSONPath filters to apply to the search.
-   * @param {Callbacks | undefined} [_callbacks=undefined] - Optional callbacks. Currently not implemented.
-   * @returns {Promise<Document[]>} - A promise that resolves to an array of Documents that are similar to the query.
-   *
-   * @async
+   * @param query - The query string to search for.
+   * @param k - The number of results to return. Defaults to 4.
+   * @param filter - An optional set of JSONPath filters to apply to the search.
+   * @param _callbacks - Optional callbacks. Currently not implemented.
+   * @returns A promise that resolves to an array of Documents that are similar to the query.
    */
   async similaritySearch(
     query: string,

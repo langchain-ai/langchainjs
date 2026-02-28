@@ -236,7 +236,6 @@ export interface LLMGraphTransformerProps {
   relationshipProperties?: string[];
 
   /**
-   * @description
    * The LLM may rarely create relationships without a type, causing extraction to fail.
    * Use this to provide a fallback relationship type in such case.
    */
