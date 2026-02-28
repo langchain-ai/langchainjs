@@ -258,6 +258,31 @@ function _getStandardContentBlockConverter(isMultimodalModel: boolean) {
   return standardContentBlockConverter;
 }
 
+function parseBase64ImageUrl(source: string): {
+  data: string;
+  mimeType: string;
+} {
+  const parts = source.split(",");
+  if (parts.length !== 2) {
+    throw new Error("Please provide image as base64 encoded data URL");
+  }
+
+  const [dm, data] = parts;
+
+  if (!dm.startsWith("data:")) {
+    throw new Error("Please provide image as base64 encoded data URL");
+  }
+
+  const [mimeType, encoding] = dm.replace(/^data:/, "").split(";");
+  if (encoding !== "base64") {
+    throw new Error("Please provide image as base64 encoded data URL");
+  }
+
+  return {
+    data,
+    mimeType,
+  };
+}
 function _convertLangChainContentToPart(
   content: MessageContentComplex,
   isMultimodalModel: boolean
@@ -290,15 +315,48 @@ function _convertLangChainContentToPart(
     } else {
       throw new Error("Please provide image as base64 encoded data URL");
     }
-    const [dm, data] = source.split(",");
-    if (!dm.startsWith("data:")) {
-      throw new Error("Please provide image as base64 encoded data URL");
+    const { data, mimeType } = parseBase64ImageUrl(source);
+    return {
+      inlineData: {
+        data,
+        mimeType,
+      },
+    };
+  } else if (content.type === "image") {
+    if (!isMultimodalModel) {
+      throw new Error(`This model does not support images`);
+    }
+    console.log(content);
+    let source: string;
+    if ("url" in content && typeof content.url === "string") {
+      source = content.url;
+    } else if ("data" in content) {
+      if (typeof content.data === "string") {
+        source = content.data;
+        // eslint-disable-next-line no-instanceof/no-instanceof
+      } else if (content.data instanceof Uint8Array) {
+        const base64Data = Buffer.from(content.data).toString("base64");
+        const mimeType = content.mimeType;
+
+        if (!mimeType) {
+          throw new Error(
+            "mimeType is required when providing Uint8Array data"
+          );
+        }
+        return {
+          inlineData: {
+            data: base64Data,
+            mimeType,
+          },
+        };
+      } else {
+        throw new Error("Invalid data format. Expected string or Uint8Array");
+      }
+    } else {
+      throw new Error("None of URL or data provided");
     }
 
-    const [mimeType, encoding] = dm.replace(/^data:/, "").split(";");
-    if (encoding !== "base64") {
-      throw new Error("Please provide image as base64 encoded data URL");
-    }
+    const { data, mimeType } = parseBase64ImageUrl(source);
 
     return {
       inlineData: {
