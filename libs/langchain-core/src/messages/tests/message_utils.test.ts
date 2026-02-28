@@ -714,4 +714,25 @@ describe("chat message conversions", () => {
 
     expect(convertedBackMessages).toEqual(originalMessages);
   });
+
+  it("can round-trip messages with array content (thinking mode)", () => {
+    const originalMessages = [
+      new AIMessage({
+        content: [
+          {
+            type: "reasoning_content",
+            reasoningText: { text: "Let me think...", signature: "sig123" },
+          },
+          { type: "text", text: "The answer is 42." },
+        ],
+      }),
+    ];
+
+    const storedMessages = mapChatMessagesToStoredMessages(originalMessages);
+    // Content should be preserved as an array in the stored form
+    expect(Array.isArray(storedMessages[0].data.content)).toBe(true);
+
+    const convertedBack = mapStoredMessagesToChatMessages(storedMessages);
+    expect(convertedBack).toEqual(originalMessages);
+  });
 });
