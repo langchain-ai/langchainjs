@@ -9,6 +9,7 @@ import {
   SystemMessage,
   ToolCallChunk,
   ToolMessage,
+  SystemMessage
 } from "@langchain/core/messages";
 import {
   convertMessagesToResponsesInput,
@@ -872,58 +873,115 @@ describe("convertStandardContentMessageToResponsesInput", () => {
 
 describe("convertMessagesToResponsesInput", () => {
   describe("Regression Tests", () => {
-    it("allows file_url without filename metadata and excludes filename from payload", () => {
-      const messages = [
-        new SystemMessage({
-          content:
-            "You are a helpful assistant that answers questions about the world.",
-        }),
-        new HumanMessage({
-          contentBlocks: [
-            { type: "text", text: "summary of this document" },
-            {
-              type: "file",
-              url: "https://www.appropedia.org/w/images/c/ca/Writing_Sample.pdf",
-              mimeType: "application/pdf",
-            },
-            {
-              type: "text",
-              text: 'The user cannot see this text only you can, they have uploaded a file.\n<file id="cmh43owcq0001rag7ce3flj36" filename="Writing_Sample.pdf" mimeType="application/pdf" size="47104 bytes" url="https://www.appropedia.org/w/images/c/ca/Writing_Sample.pdf" />',
-            },
-          ],
-        }),
-      ];
+  it("correctly maps AIMessage content blocks to 'output_text' in full conversation", () => {
+    const messages = [
+      new SystemMessage({
+        content: "You are a helpful assistant that answers questions about the world.",
+      }),
+      new HumanMessage({
+        content: [{ type: "text", text: "how are you?" }],
+      }),
+      new AIMessage({
+        content: [{ type: "text", text: "I'm doing great, thanks!" }],
+      }),
+      new HumanMessage({
+        content: [{ type: "text", text: "what is your name?" }],
+      }),
+    ];
 
-      const result = convertMessagesToResponsesInput({
-        messages,
-        model: "gpt-5.2",
-        zdrEnabled: true,
-      });
+    const result = convertMessagesToResponsesInput({
+      messages,
+      model: "gpt-4o",
+      zdrEnabled: false,
+    });
 
-      expect(result).toMatchObject([
-        {
-          type: "message",
-          role: "developer",
-          content:
-            "You are a helpful assistant that answers questions about the world.",
-        },
-        {
-          type: "message",
-          role: "user",
-          content: [
-            { type: "input_text", text: "summary of this document" },
-            {
-              type: "input_file",
-              file_url:
-                "https://www.appropedia.org/w/images/c/ca/Writing_Sample.pdf",
-            },
-            {
-              type: "input_text",
-              text: expect.stringContaining("The user cannot see this text"),
-            },
-          ],
-        },
-      ]);
+    expect(result).toMatchObject([
+      {
+        type: "message",
+        role: "system",
+        content: "You are a helpful assistant that answers questions about the world.",
+      },
+      {
+        type: "message",
+        role: "user",
+        content: [{ type: "input_text", text: "how are you?" }],
+      },
+      {
+        type: "message",
+        role: "assistant",
+        content: [{ type: "output_text", text: "I'm doing great, thanks!" }],
+      },
+      {
+        type: "message",
+        role: "user",
+        content: [{ type: "input_text", text: "what is your name?" }],
+      },
+    ]);
+  });
+
+  it("allows file_url without filename metadata and excludes filename from payload", () => {
+    const messages = [
+      new SystemMessage({
+        content:
+          "You are a helpful assistant that answers questions about the world.",
+      }),
+      new HumanMessage({
+        contentBlocks: [
+          { type: "text", text: "summary of this document" },
+          {
+            type: "file",
+            url: "https://www.appropedia.org/w/images/c/ca/Writing_Sample.pdf",
+            mimeType: "application/pdf",
+          },
+          {
+            type: "text",
+            text: 'The user cannot see this text only you can, they have uploaded a file.\n<file id="cmh43owcq0001rag7ce3flj36" filename="Writing_Sample.pdf" mimeType="application/pdf" size="47104 bytes" url="https://www.appropedia.org/w/images/c/ca/Writing_Sample.pdf" />',
+          },
+        ],
+      }),
+    ];
+
+    const result = convertMessagesToResponsesInput({
+      messages,
+      model: "gpt-5.2",
+      zdrEnabled: true,
+    });
+
+    expect(result).toMatchObject([
+      {
+        type: "message",
+        role: "developer",
+        content:
+          "You are a helpful assistant that answers questions about the world.",
+      },
+      {
+        type: "message",
+        role: "user",
+        content: [
+          { type: "input_text", text: "summary of this document" },
+          {
+            type: "input_file",
+            file_url:
+              "https://www.appropedia.org/w/images/c/ca/Writing_Sample.pdf",
+          },
+          {
+            type: "input_text",
+            text: expect.stringContaining("The user cannot see this text"),
+          },
+        ],
+      },
+    ]);
+
+    const userMessageContent = (result[1] as any).content;
+    const fileBlock = userMessageContent[1];
+
+    expect(fileBlock.type).toBe("input_file");
+    expect(fileBlock.file_url).toBe(
+      "https://www.appropedia.org/w/images/c/ca/Writing_Sample.pdf"
+    );
+    expect(fileBlock.filename).toBeUndefined();
+  });
+});
 
       const userMessageContent = (result[1] as any).content;
       const fileBlock = userMessageContent[1];
