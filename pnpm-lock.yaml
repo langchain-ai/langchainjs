@@ -10,6 +10,7 @@ overrides:
   form-data: ^4.0.4
   tar: '>=7.5.4'
   node-forge: '>=1.3.2'
+  minimatch: '>=3.1.3'
 
 importers:
 
@@ -1209,7 +1210,7 @@ importers:
         version: 4.0.6
       '@getzep/zep-cloud':
         specifier: ^1.0.6
-        version: 1.0.12(@langchain/core@libs+langchain-core)(encoding@0.1.13)(langchain@0.3.30(af052a70426fa9510b8748777b717f5a))
+        version: 1.0.12(@langchain/core@libs+langchain-core)(encoding@0.1.13)(langchain@0.3.30(77611017b1c7538c7ccf55552ac4c178))
       '@getzep/zep-js':
         specifier: ^2.0.2
         version: 2.0.2(encoding@0.1.13)
@@ -6595,62 +6596,62 @@ packages:
     peerDependencies:
       apache-arrow: '>=15.0.0 <=18.1.0'
 
-  '@langchain/anthropic@1.3.20':
-    resolution: {integrity: sha512-Bbo8KR0lbGjFvkH2z1m0KdQPF+yHVCP+Wu6q0GmMdwK2AFCDCTHor48MhpIn10WvYKZhHMbBzHvB9NV4yLcPhQ==}
+  '@langchain/anthropic@1.3.21':
+    resolution: {integrity: sha512-AKiujsOopj7wmxt+GOfO9t5vviCwRZhAx6WEuyuCxHNjzgGpNlVzmWDAA6gE4Ta5IGnHJ+BU9ZSemDoTDt8Plw==}
     engines: {node: '>=20'}
     peerDependencies:
       '@langchain/core': workspace:^
 
-  '@langchain/aws@1.2.5':
-    resolution: {integrity: sha512-tTKaH0Y1YkfFNARsAvmzap2ydl9rDUcfEKKNLVP1NHPeQ2m+miNY/fPAp6+1MM3TwvZjjrwDVoWLHEPBtMeCgQ==}
+  '@langchain/aws@1.3.0':
+    resolution: {integrity: sha512-UHuqubtcCCTdrs0vk2dXAteXqxT9e/9tTylS01sWL29mX3pXg346CUjgSoF77psy3hHVxG+uQcA5x3ys0qH16g==}
     engines: {node: '>=20'}
     peerDependencies:
       '@langchain/core': workspace:^
 
-  '@langchain/cohere@1.0.3':
-    resolution: {integrity: sha512-JFVnlYZotTvcQKAI+JSsXnJjF6PXuwhrNFJUkJaoajVsM9Plc6XlXw4ITjt8ECd+S8IWDwCgBlzlUpCHXjHvXA==}
+  '@langchain/cohere@1.0.4':
+    resolution: {integrity: sha512-Bi0RK7sXWHyRIZ3J0AKf9hX1fOTpX4ncntqj640vuY5h/qRDahe5L9ZNUiinO1iN2QtL3Y/pCKYRlQJ9w8HA8w==}
     engines: {node: '>=20'}
     peerDependencies:
       '@langchain/core': workspace:^
 
-  '@langchain/deepseek@1.0.14':
-    resolution: {integrity: sha512-VDI4XgcIPzjH82C3+SGvpb6VDWMfB45jI2eWaMnvR5QAdi0+ggQr1zvNJil0TPzynG67YeuTun/M6SlTimxAZA==}
+  '@langchain/deepseek@1.0.15':
+    resolution: {integrity: sha512-BHx8843NREj7S6iRqysD1qAmMn67gwYtw5akL70yHwyBSb1jeSqZhbLA6Ijd/4V9OV5keA3M0TXArhskybsBSA==}
     engines: {node: '>=20'}
     peerDependencies:
       '@langchain/core': workspace:^
 
-  '@langchain/google-common@2.1.20':
-    resolution: {integrity: sha512-4NlznVy3GM6WbzxCq4FGwfm9OTeDOpp6MRBBMU2I9LsV0eoDjz3qkZzrXHUhxqtKzEs969QiI+QchiYgZoGqWA==}
+  '@langchain/google-common@2.1.21':
+    resolution: {integrity: sha512-5hP++Gy7t3MGTNkQYSD6FsGEyOq+pCIDKWFmaf9sXSUKCHObs1pTBKmxrH8ZaY3pFHfm94Iiu+hVRVAybLNAGA==}
     engines: {node: '>=20'}
     peerDependencies:
       '@langchain/core': workspace:^
 
-  '@langchain/google-gauth@2.1.20':
-    resolution: {integrity: sha512-q3+C9M9oH0tpDL/UIIMWAvt6s6lfk82+ohDgVOT/UMToIw+p9N1U3LHCfy65nh6IXVVfgB0TK7uqPWqQjNz4oQ==}
+  '@langchain/google-gauth@2.1.21':
+    resolution: {integrity: sha512-5VaoRgAmKLntiA2/6n8gFdC/Qn8mMmHcVN+Y2JV8MkhokGvqvgvRbqsqz28qD2LNSN7KsIPLaihF8vlP7xJZIA==}
     engines: {node: '>=20'}
 
-  '@langchain/google-genai@2.1.20':
-    resolution: {integrity: sha512-x4zS3iv6x27M38izV/einJM9qXAGvVAYt2fUW8hiQnh9AX0vYVJBkoqGpxsvHNejqGYlTXOollPUp3XuVjlHjQ==}
-    engines: {node: '>=20'}
-    peerDependencies:
-      '@langchain/core': workspace:^
-
-  '@langchain/google-vertexai-web@2.1.20':
-    resolution: {integrity: sha512-40BOu7y1Pz0GKJwulnEswpEuY4H6Dd06K1c/7PciKr/B21e1DldteAS1VwCsc25M/MCG8+2B4h7MS4qvICl0DA==}
-    engines: {node: '>=20'}
-
-  '@langchain/google-vertexai@2.1.20':
-    resolution: {integrity: sha512-GbvWXuyjM3TD6VxyS20HNR8lq5gSPSypw4v2HnHiX81VSm7TPUwEamzhLVm1OXNeNjktITeUGjcOwIdnTsmEPQ==}
-    engines: {node: '>=20'}
-
-  '@langchain/google-webauth@2.1.20':
-    resolution: {integrity: sha512-D2yO7RUhzNVP8qmuAiZV0VEs9O+sBkqBmpk9rO5YGdevhrp8hkVlpKKyyFj9Cl5fABzjzozqi54dtEFI4M+B3Q==}
+  '@langchain/google-genai@2.1.21':
+    resolution: {integrity: sha512-wHFeaH5abfBNEF4xi88pdrQfKUoLMyoiOkbLQJbMIZ6JStUJAuu4h61rRMD05DtEnuIi3IOCgd/DU7zSY3u7CQ==}
     engines: {node: '>=20'}
     peerDependencies:
       '@langchain/core': workspace:^
 
-  '@langchain/groq@1.1.2':
-    resolution: {integrity: sha512-vHRLkHAuhOrKHLqPpZqP9/sUV9DEdzyzMS14yG0XseejkqRXJ+yx+3psmSSFn/3kPPRRx+xQ6XeFPS7HWxEfTg==}
+  '@langchain/google-vertexai-web@2.1.21':
+    resolution: {integrity: sha512-ycHJGQkg5xQHt2XK4tfjselk6hBZkzDFKhXZZ5YyR7kkphz8pui1IMVkc+r0oYm7/a+F5A5ShU4Vw4YDVntTZw==}
+    engines: {node: '>=20'}
+
+  '@langchain/google-vertexai@2.1.21':
+    resolution: {integrity: sha512-R9WCQCalGs0ANTNVlJrQUtFs75mXRytaP56s3NIsyjSnknBDTZjBi8tsqABitZNj/OeQmnd74L2kaCt1Qgkupw==}
+    engines: {node: '>=20'}
+
+  '@langchain/google-webauth@2.1.21':
+    resolution: {integrity: sha512-os7YrsAVydnlfDCuD4dayoE566mJ9Vu/2Nn/h/Y15b06mbvz/5V5XxtbAfFxbAOwUXx2MlcTa+ndh598KdzK1w==}
+    engines: {node: '>=20'}
+    peerDependencies:
+      '@langchain/core': workspace:^
+
+  '@langchain/groq@1.1.3':
+    resolution: {integrity: sha512-b8B/nyhoch8PvT8WHiamL017kD5McOUJFLhEjEHZi0FLyP8whvmq7lngeZHRu+nLKKScqGkEfTkNyE9LEfU9Fw==}
     engines: {node: '>=20'}
     peerDependencies:
       '@langchain/core': workspace:^
@@ -6717,14 +6718,14 @@ packages:
       zod-to-json-schema:
         optional: true
 
-  '@langchain/mistralai@1.0.5':
-    resolution: {integrity: sha512-vAh+9z5wsGHAFo2u/aHqJQ3twIjHRfPfClg2DBiRz9Zj64nVc9AF7E8V2RqkhA6qumrE/nWEaK9Atn8Taou1lg==}
+  '@langchain/mistralai@1.0.6':
+    resolution: {integrity: sha512-ilELXbALwASJcakSpl4zPNP7oE0fLcNbUYgAoduC9uPPeDyqt98+XH758keSgQfpYtfqYh8cngzlj9pxAz/4fg==}
     engines: {node: '>=20'}
     peerDependencies:
       '@langchain/core': workspace:^
 
-  '@langchain/ollama@1.2.4':
-    resolution: {integrity: sha512-Cn29iRvjhojuOP0BczEKtcu+8zyS+jiFu1OVpOFSuXAYQVxrk8UrGjwWpdVaD9yPBKTO6Qm4wL+c3jfadQcL+A==}
+  '@langchain/ollama@1.2.5':
+    resolution: {integrity: sha512-JxXZoKQ/r9jMjtNVR/2i1WUHppjQiZYlmnfcSI9rDQrffvwZOlmkIf+oq7ifGWlAs0Zwb9pDh9QeJgChfCU6HA==}
     engines: {node: '>=20'}
     peerDependencies:
       '@langchain/core': workspace:^
@@ -6735,8 +6736,8 @@ packages:
     peerDependencies:
       '@langchain/core': workspace:^
 
-  '@langchain/openai@1.2.10':
-    resolution: {integrity: sha512-1O/kz5eC76BLq24ij3PTHBAo/P5lE5etA6mcKu6goKo5KfeXw8c1ae9TGbjiBahIM7Gh7bAlrh7ITHnedqsJ3g==}
+  '@langchain/openai@1.2.11':
+    resolution: {integrity: sha512-//a3OcvHKuz9QXAn3QJjASdtSyyF1JmsZKVzuUa2uR2YLFAS+XMZYLfel9RaNdt8LWkwhSpCiVvegqUGRBU+uw==}
     engines: {node: '>=20'}
     peerDependencies:
       '@langchain/core': workspace:^
@@ -6747,8 +6748,8 @@ packages:
     peerDependencies:
       '@langchain/core': workspace:^
 
-  '@langchain/xai@1.3.6':
-    resolution: {integrity: sha512-1laaCM7R/QW5eUjZkFBBX4aFaOtjCPjqnMhPlUM87ls1HWAfLgMnELrNGcBXRfM743Xj5vWfTePh6Egnw94sEA==}
+  '@langchain/xai@1.3.7':
+    resolution: {integrity: sha512-xMTbweudyIBiPbt2KC7k1iEyYc5x5KxtMtVfdhARY1+SD/pVtpG27U3JuDN2Gna+lY9j1Wx9htyKGVddYJXp2g==}
     engines: {node: '>=20'}
     peerDependencies:
       '@langchain/core': workspace:^
@@ -10001,9 +10002,6 @@ packages:
   bowser@2.14.1:
     resolution: {integrity: sha512-tzPjzCxygAKWFOJP011oxFHs57HzIhOEracIgAePE4pqB3LikALKnSzUyU4MGs9/iCEUuHlAJTjTc5M+u7YEGg==}
 
-  brace-expansion@1.1.12:
-    resolution: {integrity: sha512-9T9UjW3r0UW5c1Q7GTwllptXwhvYmEzFhzMfZ9H7FQWt+uZePjZPjBP/W1ZEyZ1twGWom5/56TF4lPcqjnDHcg==}
-
   brace-expansion@2.0.2:
     resolution: {integrity: sha512-Jt0vHyM+jmUBqojB7E1NIYadt0vI0Qxjxd2TErW94wDz+E2LAm5vKMXXwg6ZZBTHPuUlDgQHKXvjGBdfcF1ZDQ==}
 
@@ -10534,9 +10532,6 @@ packages:
   compress-commons@6.0.2:
     resolution: {integrity: sha512-6FqVXeETqWPoGcfzrXb37E50NP0LXT8kAMu5ooZayhWWdgEY4lBEEcbQNXtkuKQsGduxiIcI4gOTsxTmuq/bSg==}
     engines: {node: '>= 14'}
-
-  concat-map@0.0.1:
-    resolution: {integrity: sha512-/Srv4dswyQNBfohGpz9o6Yb3Gz3SrUDqBH5rTuhGR7ahtlbYKnVxw2bCFMRljaA7EXHaXZ8wsHdodFvbkhKmqg==}
 
   concat-stream@2.0.0:
     resolution: {integrity: sha512-MWufYdFw53ccGjCA+Ol7XJYpAlW6/prSMzuPOTRnJGcGzuhLn4Scrz7qf6o8bROZ514ltazcIFJZevcfbo0x7A==}
@@ -13445,19 +13440,9 @@ packages:
   minimalistic-crypto-utils@1.0.1:
     resolution: {integrity: sha512-JIYlbt6g8i5jKfJ3xz7rF0LXmv2TkDxBLUkiBeZ7bAx4GnnNMr8xFpGnOxn6GhTEHx3SjRrZEoU+j04prX1ktg==}
 
-  minimatch@3.1.2:
-    resolution: {integrity: sha512-J7p63hRiAjw1NDEww1W7i37+ByIrOWO5XQQAzZ3VOcL0PNybwpfmV/N05zFAzwQ9USyEcX6t3UO+K5aqBQOIHw==}
-
-  minimatch@3.1.3:
-    resolution: {integrity: sha512-M2GCs7Vk83NxkUyQV1bkABc4yxgz9kILhHImZiBPAZ9ybuvCb0/H7lEl5XvIg3g+9d4eNotkZA5IWwYl0tibaA==}
-
   minimatch@5.1.7:
     resolution: {integrity: sha512-FjiwU9HaHW6YB3H4a1sFudnv93lvydNjz2lmyUXR6IwKhGI+bgL3SOZrBGn6kvvX2pJvhEkGSGjyTHN47O4rqA==}
     engines: {node: '>=10'}
-
-  minimatch@9.0.5:
-    resolution: {integrity: sha512-G6T0ZX48xgozx7587koeX9Ys2NYy6Gmv//P89sEte9V9whIapMNF4idKxnW2QtCcLiTWlb/wfCabAtAFWhhBow==}
-    engines: {node: '>=16 || 14 >=14.17'}
 
   minimist@1.2.8:
     resolution: {integrity: sha512-2yyAR8qBkN3YuheJanUpWC5U3bb5osDywNB8RzDVlDwDHbocAJveqqj1u8+SVD7jkWT4yvsHCpWqqWqAxb0zCA==}
@@ -20549,7 +20534,7 @@ snapshots:
     dependencies:
       '@eslint/object-schema': 2.1.7
       debug: 4.4.3(supports-color@8.1.1)
-      minimatch: 3.1.2
+      minimatch: 5.1.7
     transitivePeerDependencies:
       - supports-color
 
@@ -20570,7 +20555,7 @@ snapshots:
       ignore: 5.3.2
       import-fresh: 3.3.1
       js-yaml: 4.1.1
-      minimatch: 3.1.2
+      minimatch: 5.1.7
       strip-json-comments: 3.1.1
     transitivePeerDependencies:
       - supports-color
@@ -20669,7 +20654,7 @@ snapshots:
     transitivePeerDependencies:
       - debug
 
-  '@getzep/zep-cloud@1.0.12(@langchain/core@libs+langchain-core)(encoding@0.1.13)(langchain@0.3.30(af052a70426fa9510b8748777b717f5a))':
+  '@getzep/zep-cloud@1.0.12(@langchain/core@libs+langchain-core)(encoding@0.1.13)(langchain@0.3.30(77611017b1c7538c7ccf55552ac4c178))':
     dependencies:
       form-data: 4.0.5
       node-fetch: 2.7.0(encoding@0.1.13)
@@ -20678,7 +20663,7 @@ snapshots:
       zod: 3.25.76
     optionalDependencies:
       '@langchain/core': link:libs/langchain-core
-      langchain: 0.3.30(af052a70426fa9510b8748777b717f5a)
+      langchain: 0.3.30(77611017b1c7538c7ccf55552ac4c178)
     transitivePeerDependencies:
       - encoding
 
@@ -21560,14 +21545,14 @@ snapshots:
       '@lancedb/lancedb-win32-arm64-msvc': 0.19.1
       '@lancedb/lancedb-win32-x64-msvc': 0.19.1
 
-  '@langchain/anthropic@1.3.20(@langchain/core@libs+langchain-core)':
+  '@langchain/anthropic@1.3.21(@langchain/core@libs+langchain-core)':
     dependencies:
       '@anthropic-ai/sdk': 0.74.0(zod@4.3.6)
       '@langchain/core': link:libs/langchain-core
       zod: 4.3.6
     optional: true
 
-  '@langchain/aws@1.2.5(@langchain/core@libs+langchain-core)':
+  '@langchain/aws@1.3.0(@langchain/core@libs+langchain-core)':
     dependencies:
       '@aws-sdk/client-bedrock-agent-runtime': 3.998.0
       '@aws-sdk/client-bedrock-runtime': 3.998.0
@@ -21578,7 +21563,7 @@ snapshots:
       - aws-crt
     optional: true
 
-  '@langchain/cohere@1.0.3(@langchain/core@libs+langchain-core)':
+  '@langchain/cohere@1.0.4(@langchain/core@libs+langchain-core)':
     dependencies:
       '@langchain/core': link:libs/langchain-core
       cohere-ai: 7.20.0
@@ -21587,59 +21572,59 @@ snapshots:
       - aws-crt
     optional: true
 
-  '@langchain/deepseek@1.0.14(@langchain/core@libs+langchain-core)(ws@8.19.0(bufferutil@4.1.0))':
+  '@langchain/deepseek@1.0.15(@langchain/core@libs+langchain-core)(ws@8.19.0(bufferutil@4.1.0))':
     dependencies:
       '@langchain/core': link:libs/langchain-core
-      '@langchain/openai': 1.2.10(@langchain/core@libs+langchain-core)(ws@8.19.0(bufferutil@4.1.0))
+      '@langchain/openai': 1.2.11(@langchain/core@libs+langchain-core)(ws@8.19.0(bufferutil@4.1.0))
     transitivePeerDependencies:
       - ws
     optional: true
 
-  '@langchain/google-common@2.1.20(@langchain/core@libs+langchain-core)':
+  '@langchain/google-common@2.1.21(@langchain/core@libs+langchain-core)':
     dependencies:
       '@langchain/core': link:libs/langchain-core
       uuid: 10.0.0
     optional: true
 
-  '@langchain/google-gauth@2.1.20(@langchain/core@libs+langchain-core)':
+  '@langchain/google-gauth@2.1.21(@langchain/core@libs+langchain-core)':
     dependencies:
-      '@langchain/google-common': 2.1.20(@langchain/core@libs+langchain-core)
+      '@langchain/google-common': 2.1.21(@langchain/core@libs+langchain-core)
       google-auth-library: 10.6.1
     transitivePeerDependencies:
       - '@langchain/core'
       - supports-color
     optional: true
 
-  '@langchain/google-genai@2.1.20(@langchain/core@libs+langchain-core)':
+  '@langchain/google-genai@2.1.21(@langchain/core@libs+langchain-core)':
     dependencies:
       '@google/generative-ai': 0.24.1
       '@langchain/core': link:libs/langchain-core
       uuid: 11.1.0
     optional: true
 
-  '@langchain/google-vertexai-web@2.1.20(@langchain/core@libs+langchain-core)':
+  '@langchain/google-vertexai-web@2.1.21(@langchain/core@libs+langchain-core)':
     dependencies:
-      '@langchain/google-webauth': 2.1.20(@langchain/core@libs+langchain-core)
+      '@langchain/google-webauth': 2.1.21(@langchain/core@libs+langchain-core)
     transitivePeerDependencies:
       - '@langchain/core'
     optional: true
 
-  '@langchain/google-vertexai@2.1.20(@langchain/core@libs+langchain-core)':
+  '@langchain/google-vertexai@2.1.21(@langchain/core@libs+langchain-core)':
     dependencies:
-      '@langchain/google-gauth': 2.1.20(@langchain/core@libs+langchain-core)
+      '@langchain/google-gauth': 2.1.21(@langchain/core@libs+langchain-core)
     transitivePeerDependencies:
       - '@langchain/core'
       - supports-color
     optional: true
 
-  '@langchain/google-webauth@2.1.20(@langchain/core@libs+langchain-core)':
+  '@langchain/google-webauth@2.1.21(@langchain/core@libs+langchain-core)':
     dependencies:
       '@langchain/core': link:libs/langchain-core
-      '@langchain/google-common': 2.1.20(@langchain/core@libs+langchain-core)
+      '@langchain/google-common': 2.1.21(@langchain/core@libs+langchain-core)
       web-auth-library: 1.0.3
     optional: true
 
-  '@langchain/groq@1.1.2(@langchain/core@libs+langchain-core)(encoding@0.1.13)':
+  '@langchain/groq@1.1.3(@langchain/core@libs+langchain-core)(encoding@0.1.13)':
     dependencies:
       '@langchain/core': link:libs/langchain-core
       groq-sdk: 0.37.0(encoding@0.1.13)
@@ -21718,7 +21703,7 @@ snapshots:
       - react
       - react-dom
 
-  '@langchain/mistralai@1.0.5(@langchain/core@libs+langchain-core)(bufferutil@4.1.0)':
+  '@langchain/mistralai@1.0.6(@langchain/core@libs+langchain-core)(bufferutil@4.1.0)':
     dependencies:
       '@langchain/core': link:libs/langchain-core
       '@mistralai/mistralai': 1.14.1(bufferutil@4.1.0)
@@ -21728,7 +21713,7 @@ snapshots:
       - utf-8-validate
     optional: true
 
-  '@langchain/ollama@1.2.4(@langchain/core@libs+langchain-core)':
+  '@langchain/ollama@1.2.5(@langchain/core@libs+langchain-core)':
     dependencies:
       '@langchain/core': link:libs/langchain-core
       ollama: 0.6.3
@@ -21745,7 +21730,7 @@ snapshots:
       - ws
     optional: true
 
-  '@langchain/openai@1.2.10(@langchain/core@libs+langchain-core)(ws@8.19.0(bufferutil@4.1.0))':
+  '@langchain/openai@1.2.11(@langchain/core@libs+langchain-core)(ws@8.19.0(bufferutil@4.1.0))':
     dependencies:
       '@langchain/core': link:libs/langchain-core
       js-tiktoken: 1.0.21
@@ -21761,10 +21746,10 @@ snapshots:
       js-tiktoken: 1.0.21
     optional: true
 
-  '@langchain/xai@1.3.6(@langchain/core@libs+langchain-core)(ws@8.19.0(bufferutil@4.1.0))':
+  '@langchain/xai@1.3.7(@langchain/core@libs+langchain-core)(ws@8.19.0(bufferutil@4.1.0))':
     dependencies:
       '@langchain/core': link:libs/langchain-core
-      '@langchain/openai': 1.2.10(@langchain/core@libs+langchain-core)(ws@8.19.0(bufferutil@4.1.0))
+      '@langchain/openai': 1.2.11(@langchain/core@libs+langchain-core)(ws@8.19.0(bufferutil@4.1.0))
     transitivePeerDependencies:
       - ws
     optional: true
@@ -22280,7 +22265,7 @@ snapshots:
       indent-string: 4.0.0
       is-wsl: 2.2.0
       lilconfig: 3.1.3
-      minimatch: 9.0.5
+      minimatch: 5.1.7
       semver: 7.7.4
       string-width: 4.2.3
       supports-color: 8.1.1
@@ -24414,7 +24399,7 @@ snapshots:
       '@typescript-eslint/types': 8.55.0
       '@typescript-eslint/visitor-keys': 8.55.0
       debug: 4.4.3(supports-color@8.1.1)
-      minimatch: 9.0.5
+      minimatch: 5.1.7
       semver: 7.7.4
       tinyglobby: 0.2.15
       ts-api-utils: 2.4.0(typescript@5.8.3)
@@ -24429,7 +24414,7 @@ snapshots:
       '@typescript-eslint/types': 8.56.0
       '@typescript-eslint/visitor-keys': 8.56.0
       debug: 4.4.3(supports-color@8.1.1)
-      minimatch: 9.0.5
+      minimatch: 5.1.7
       semver: 7.7.4
       tinyglobby: 0.2.15
       ts-api-utils: 2.4.0(typescript@5.9.3)
@@ -25484,11 +25469,6 @@ snapshots:
 
   bowser@2.14.1: {}
 
-  brace-expansion@1.1.12:
-    dependencies:
-      balanced-match: 1.0.2
-      concat-map: 0.0.1
-
   brace-expansion@2.0.2:
     dependencies:
       balanced-match: 1.0.2
@@ -26170,8 +26150,6 @@ snapshots:
       is-stream: 2.0.1
       normalize-path: 3.0.0
       readable-stream: 4.7.0
-
-  concat-map@0.0.1: {}
 
   concat-stream@2.0.0:
     dependencies:
@@ -27099,7 +27077,7 @@ snapshots:
       hasown: 2.0.2
       is-core-module: 2.16.1
       is-glob: 4.0.3
-      minimatch: 3.1.2
+      minimatch: 5.1.7
       object.fromentries: 2.0.8
       object.groupby: 1.0.3
       object.values: 1.2.1
@@ -27174,7 +27152,7 @@ snapshots:
       is-glob: 4.0.3
       json-stable-stringify-without-jsonify: 1.0.1
       lodash.merge: 4.6.2
-      minimatch: 3.1.2
+      minimatch: 5.1.7
       natural-compare: 1.4.0
       optionator: 0.9.4
     optionalDependencies:
@@ -27872,7 +27850,7 @@ snapshots:
     dependencies:
       foreground-child: 3.3.1
       jackspeak: 3.4.3
-      minimatch: 9.0.5
+      minimatch: 5.1.7
       minipass: 7.1.2
       package-json-from-dist: 1.0.1
       path-scurry: 1.11.1
@@ -27882,7 +27860,7 @@ snapshots:
       fs.realpath: 1.0.0
       inflight: 1.0.6
       inherits: 2.0.4
-      minimatch: 3.1.2
+      minimatch: 5.1.7
       once: 1.4.0
       path-is-absolute: 1.0.1
 
@@ -29287,7 +29265,7 @@ snapshots:
 
   kuler@2.0.0: {}
 
-  langchain@0.3.30(af052a70426fa9510b8748777b717f5a):
+  langchain@0.3.30(77611017b1c7538c7ccf55552ac4c178):
     dependencies:
       '@langchain/core': link:libs/langchain-core
       '@langchain/openai': 0.6.17(@langchain/core@libs+langchain-core)(ws@8.19.0(bufferutil@4.1.0))
@@ -29302,17 +29280,17 @@ snapshots:
       yaml: 2.8.2
       zod: 3.25.76
     optionalDependencies:
-      '@langchain/anthropic': 1.3.20(@langchain/core@libs+langchain-core)
-      '@langchain/aws': 1.2.5(@langchain/core@libs+langchain-core)
-      '@langchain/cohere': 1.0.3(@langchain/core@libs+langchain-core)
-      '@langchain/deepseek': 1.0.14(@langchain/core@libs+langchain-core)(ws@8.19.0(bufferutil@4.1.0))
-      '@langchain/google-genai': 2.1.20(@langchain/core@libs+langchain-core)
-      '@langchain/google-vertexai': 2.1.20(@langchain/core@libs+langchain-core)
-      '@langchain/google-vertexai-web': 2.1.20(@langchain/core@libs+langchain-core)
-      '@langchain/groq': 1.1.2(@langchain/core@libs+langchain-core)(encoding@0.1.13)
-      '@langchain/mistralai': 1.0.5(@langchain/core@libs+langchain-core)(bufferutil@4.1.0)
-      '@langchain/ollama': 1.2.4(@langchain/core@libs+langchain-core)
-      '@langchain/xai': 1.3.6(@langchain/core@libs+langchain-core)(ws@8.19.0(bufferutil@4.1.0))
+      '@langchain/anthropic': 1.3.21(@langchain/core@libs+langchain-core)
+      '@langchain/aws': 1.3.0(@langchain/core@libs+langchain-core)
+      '@langchain/cohere': 1.0.4(@langchain/core@libs+langchain-core)
+      '@langchain/deepseek': 1.0.15(@langchain/core@libs+langchain-core)(ws@8.19.0(bufferutil@4.1.0))
+      '@langchain/google-genai': 2.1.21(@langchain/core@libs+langchain-core)
+      '@langchain/google-vertexai': 2.1.21(@langchain/core@libs+langchain-core)
+      '@langchain/google-vertexai-web': 2.1.21(@langchain/core@libs+langchain-core)
+      '@langchain/groq': 1.1.3(@langchain/core@libs+langchain-core)(encoding@0.1.13)
+      '@langchain/mistralai': 1.0.6(@langchain/core@libs+langchain-core)(bufferutil@4.1.0)
+      '@langchain/ollama': 1.2.5(@langchain/core@libs+langchain-core)
+      '@langchain/xai': 1.3.7(@langchain/core@libs+langchain-core)(ws@8.19.0(bufferutil@4.1.0))
       axios: 1.13.5(debug@4.4.3)
       cheerio: 1.2.0
       handlebars: 4.7.8
@@ -29831,19 +29809,7 @@ snapshots:
 
   minimalistic-crypto-utils@1.0.1: {}
 
-  minimatch@3.1.2:
-    dependencies:
-      brace-expansion: 1.1.12
-
-  minimatch@3.1.3:
-    dependencies:
-      brace-expansion: 1.1.12
-
   minimatch@5.1.7:
-    dependencies:
-      brace-expansion: 2.0.2
-
-  minimatch@9.0.5:
     dependencies:
       brace-expansion: 2.0.2
 
@@ -32356,13 +32322,13 @@ snapshots:
     dependencies:
       '@istanbuljs/schema': 0.1.3
       glob: 7.2.3
-      minimatch: 3.1.3
+      minimatch: 5.1.7
 
   test-exclude@7.0.1:
     dependencies:
       '@istanbuljs/schema': 0.1.3
       glob: 10.5.0
-      minimatch: 9.0.5
+      minimatch: 5.1.7
 
   testcontainers@11.12.0:
     dependencies:
