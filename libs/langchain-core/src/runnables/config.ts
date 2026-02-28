@@ -37,6 +37,15 @@ export function mergeConfigs<CallOptions extends RunnableConfig>(
         } else if (options.timeout !== undefined) {
           copy.timeout = Math.min(copy.timeout, options.timeout);
         }
+      } else if (key === "streamTimeout") {
+        if (copy.streamTimeout === undefined) {
+          copy.streamTimeout = options.streamTimeout;
+        } else if (options.streamTimeout !== undefined) {
+          copy.streamTimeout = Math.min(
+            copy.streamTimeout,
+            options.streamTimeout
+          );
+        }
       } else if (key === "signal") {
         if (copy.signal === undefined) {
           copy.signal = options.signal;
@@ -210,6 +219,24 @@ export function ensureConfig<CallOptions extends RunnableConfig>(
      */
     delete empty.timeout;
   }
+  if (empty.streamTimeout !== undefined) {
+    if (empty.streamTimeout <= 0) {
+      throw new Error("Stream timeout must be a positive number");
+    }
+    // Store streamTimeout in metadata for downstream consumers.
+    // Unlike timeout, streamTimeout is not converted to a signal here because
+    // it needs to be reset on each chunk received. The actual enforcement
+    // happens in the streaming layer (AsyncGeneratorWithSetup).
+    if (!empty.metadata) {
+      empty.metadata = {};
+    }
+    // Do not overwrite if already set upstream.
+    if (empty.metadata.streamTimeoutMs === undefined) {
+      empty.metadata.streamTimeoutMs = empty.streamTimeout;
+    }
+    // Delete streamTimeout to ensure idempotent normalization
+    delete empty.streamTimeout;
+  }
   return empty as CallOptions;
 }
 
@@ -268,6 +295,7 @@ export function pickRunnableConfigKeys<CallOptions extends Record<string, any>>(
     metadata: config.metadata,
     maxConcurrency: config.maxConcurrency,
     timeout: config.timeout,
+    streamTimeout: config.streamTimeout,
     signal: config.signal,
     // @ts-expect-error - Store is a LangGraph-specific property
     // which wewant to pass through to all runnables.
