@@ -35,6 +35,7 @@ export class ChatGoogle
         ? { ...(paramsArg ?? {}), model: modelOrFields }
         : (modelOrFields ?? {});
     super(fields);
+    this._addVersion("@langchain/google-gauth", __PKG_VERSION__);
   }
 
   buildAbstractedClient(

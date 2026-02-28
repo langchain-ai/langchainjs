@@ -949,6 +949,59 @@ describe("usage_metadata serialized", () => {
     expect(jsonConcatenatedAIMessageChunk).toContain("output_tokens");
     expect(jsonConcatenatedAIMessageChunk).toContain("total_tokens");
   });
+
+  test("AIMessage usage_metadata survives serialization round-trip", async () => {
+    const config = {
+      importMap: { messages: { AIMessage } },
+      optionalImportEntrypoints: [],
+      optionalImportsMap: {},
+      secretsMap: {},
+    };
+
+    const message = new AIMessage({
+      content: "Hello",
+      usage_metadata: {
+        input_tokens: 100,
+        output_tokens: 50,
+        total_tokens: 150,
+      },
+    });
+
+    const deserialized: AIMessage = await load(JSON.stringify(message), config);
+    expect(deserialized.usage_metadata).toEqual({
+      input_tokens: 100,
+      output_tokens: 50,
+      total_tokens: 150,
+    });
+  });
+
+  test("AIMessageChunk usage_metadata survives serialization round-trip", async () => {
+    const config = {
+      importMap: { messages: { AIMessageChunk } },
+      optionalImportEntrypoints: [],
+      optionalImportsMap: {},
+      secretsMap: {},
+    };
+
+    const message = new AIMessageChunk({
+      content: "Hello",
+      usage_metadata: {
+        input_tokens: 100,
+        output_tokens: 50,
+        total_tokens: 150,
+      },
+    });
+
+    const deserialized: AIMessageChunk = await load(
+      JSON.stringify(message),
+      config
+    );
+    expect(deserialized.usage_metadata).toEqual({
+      input_tokens: 100,
+      output_tokens: 50,
+      total_tokens: 150,
+    });
+  });
 });
 
 describe("toFormattedString", () => {

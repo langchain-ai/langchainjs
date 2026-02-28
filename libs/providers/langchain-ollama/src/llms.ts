@@ -143,6 +143,7 @@ export class Ollama extends LLM<OllamaCallOptions> implements OllamaInput {
 
   constructor(fields?: OllamaInput & BaseLLMParams) {
     super(fields ?? {});
+    this._addVersion("@langchain/ollama", __PKG_VERSION__);
     this.model = fields?.model ?? this.model;
     this.baseUrl = fields?.baseUrl
       ? fields?.baseUrl.endsWith("/")

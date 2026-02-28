@@ -1,5 +1,13 @@
 # @langchain/azure-cosmosdb
 
+## 1.2.0
+
+### Minor Changes
+
+- [#9919](https://github.com/langchain-ai/langchainjs/pull/9919) [`1a6fee7`](https://github.com/langchain-ai/langchainjs/commit/1a6fee726948bac6ee65d0fb33b6d53cdd9b07e7) Thanks [@sinedied](https://github.com/sinedied)! - Add cache, chat history and vector store integrations for Azure DocumentDB
+
+- [#9926](https://github.com/langchain-ai/langchainjs/pull/9926) [`79415fb`](https://github.com/langchain-ai/langchainjs/commit/79415fb88e643f906793714249cd2a12b4a18e16) Thanks [@sinedied](https://github.com/sinedied)! - Add advanced search options and retriever methods to AzureCosmosDBNoSQLVectorStore
+
 ## 1.1.0
 
 ### Minor Changes
