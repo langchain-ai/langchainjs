@@ -202,6 +202,95 @@ describe("anthropic formatting", () => {
     expect(allText).toContain("Hello world");
   });
 
+  test("strips internal fields like index from text content blocks on re-format", async () => {
+    const anthropic = getAnthropicAPI();
+    const input = [
+      new HumanMessage("Hi"),
+      new AIMessage({
+        content: [{ type: "text", text: "Hello world", index: 0 } as any],
+      }),
+      new HumanMessage("Follow up"),
+    ];
+
+    const request = (await anthropic.formatData(input, {
+      model: "claude-sonnet-4",
+      maxOutputTokens: 256,
+    } as any)) as any;
+
+    const assistant = request.messages.find((m: any) => m.role === "assistant");
+    expect(assistant.content).toHaveLength(1);
+    expect(assistant.content[0]).toEqual({
+      type: "text",
+      text: "Hello world",
+    });
+    expect(assistant.content[0]).not.toHaveProperty("index");
+  });
+
+  test("streaming round-trip strips index from accumulated content before sending to API", async () => {
+    const anthropic = getAnthropicAPI();
+
+    const streamingEvents = [
+      { data: { type: "message_start", message: { content: [] } } },
+      {
+        data: {
+          type: "content_block_start",
+          index: 0,
+          content_block: { type: "text", text: "" },
+        },
+      },
+      {
+        data: {
+          type: "content_block_delta",
+          index: 0,
+          delta: { type: "text_delta", text: "Hello" },
+        },
+      },
+      {
+        data: {
+          type: "content_block_delta",
+          index: 0,
+          delta: { type: "text_delta", text: " world" },
+        },
+      },
+      { data: { type: "content_block_stop", index: 0 } },
+      {
+        data: {
+          type: "message_delta",
+          delta: { stop_reason: "end_turn" },
+          usage: { output_tokens: 5 },
+        },
+      },
+      { data: { type: "message_stop" } },
+    ];
+
+    let accumulated: ChatGenerationChunk | null = null;
+    for (const event of streamingEvents) {
+      const chunk = anthropic.responseToChatGeneration(event as any);
+      if (chunk) {
+        accumulated = accumulated ? concat(accumulated, chunk) : chunk;
+      }
+    }
+
+    const aiMessage = accumulated!.message as AIMessageChunk;
+
+    const request = (await anthropic.formatData(
+      [
+        new HumanMessage("Hi"),
+        new AIMessage({ content: aiMessage.content }),
+        new HumanMessage("Follow up"),
+      ],
+      { model: "claude-sonnet-4", maxOutputTokens: 256 } as any
+    )) as any;
+
+    const assistant = request.messages.find((m: any) => m.role === "assistant");
+    for (const block of assistant.content) {
+      expect(block).not.toHaveProperty("index");
+      if (block.type === "text") {
+        expect(Object.keys(block).sort()).toEqual(["text", "type"]);
+      }
+    }
+  });
+
   test("filters empty text blocks from AI messages during formatting", async () => {
     const anthropic = getAnthropicAPI();
     const input = [

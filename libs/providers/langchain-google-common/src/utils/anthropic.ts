@@ -473,7 +473,7 @@ export function getAnthropicAPI(config?: AnthropicAPIConfig): GoogleAIAPI {
     if (!content.text) {
       return undefined;
     }
-    return content;
+    return { type: "text", text: content.text };
   }
 
   function extractMimeType(
