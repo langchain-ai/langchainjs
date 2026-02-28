@@ -12,6 +12,9 @@
         "package.json"
       ],
       "outputs": ["dist/**"]
+    },
+    "test:standard:int": {
+      "env": ["ALIBABA_API_KEY", "ALIBABA_REGION", "DASHSCOPE_API_KEY"]
     }
   }
 }
