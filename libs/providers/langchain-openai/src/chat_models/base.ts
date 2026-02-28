@@ -26,7 +26,6 @@ import {
 } from "@langchain/core/language_models/base";
 import { ModelProfile } from "@langchain/core/language_models/profile";
 import { Runnable, RunnableLambda } from "@langchain/core/runnables";
-import { JsonOutputKeyToolsParser } from "@langchain/core/output_parsers/openai_tools";
 import {
   getSchemaDescription,
   InteropZodType,

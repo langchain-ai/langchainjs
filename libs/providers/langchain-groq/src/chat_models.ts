@@ -1,7 +1,4 @@
-import {
-  JsonSchema7Type,
-  toJsonSchema,
-} from "@langchain/core/utils/json_schema";
+import { toJsonSchema } from "@langchain/core/utils/json_schema";
 import { NewTokenIndices } from "@langchain/core/callbacks/base";
 import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
 import {
@@ -48,24 +45,15 @@ import type {
   ChatCompletionTool,
 } from "groq-sdk/resources/chat/completions";
 import type { RequestOptions } from "groq-sdk/core";
-import {
-  Runnable,
-  RunnablePassthrough,
-  RunnableSequence,
-} from "@langchain/core/runnables";
+import { Runnable } from "@langchain/core/runnables";
 import {
   BaseLanguageModelInput,
   FunctionDefinition,
   StructuredOutputMethodOptions,
 } from "@langchain/core/language_models/base";
 import { ModelProfile } from "@langchain/core/language_models/profile";
+import { BaseLLMOutputParser } from "@langchain/core/output_parsers";
 import {
-  BaseLLMOutputParser,
-  JsonOutputParser,
-  StructuredOutputParser,
-} from "@langchain/core/output_parsers";
-import {
-  JsonOutputKeyToolsParser,
   parseToolCall,
   makeInvalidToolCall,
   convertLangChainToolCallToOpenAI,
