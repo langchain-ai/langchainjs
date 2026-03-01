@@ -176,7 +176,7 @@
     "@vitest/coverage-v8": "^3.2.4",
     "@xata.io/client": "^0.28.4",
     "@zilliz/milvus2-sdk-node": "^2.3.5",
-    "axios": "^1.13.5",
+    "axios": "^1.13.6",
     "cheerio": "1.2.0",
     "chromadb": "^1.5.3",
     "cohere-ai": "^7.14.0",
