@@ -67,6 +67,7 @@ import {
 import { isReasoningModel, messageToOpenAIRole } from "../utils/misc.js";
 import { wrapOpenAIClientError } from "../utils/client.js";
 import PROFILES from "./profiles.js";
+import { JsonOutputParser } from "@langchain/core/output_parsers";
 
 interface OpenAILLMOutput {
   tokenUsage: {
@@ -1084,6 +1085,19 @@ export abstract class BaseChatOpenAI<
           return createContentParser(schema);
         }
       );
+      if (isInteropZodSchema(schema) || isSerializableSchema(schema)) {
+        const altParser = createContentParser<RunOutput>(schema);
+        outputParser = RunnableLambda.from<AIMessageChunk, RunOutput>(
+          (aiMessage: AIMessageChunk) => {
+            if ("parsed" in aiMessage.additional_kwargs) {
+              return aiMessage.additional_kwargs.parsed as RunOutput;
+            }
+            return altParser;
+          }
+        );
+      } else {
+        outputParser = new JsonOutputParser<RunOutput>();
+      }
     } else {
       let functionName = name ?? "extract";
       const asJsonSchema = toJsonSchema(schema);
