@@ -1,6 +1,6 @@
 import { StandardSchemaV1 } from "@standard-schema/spec";
-import { BaseOutputParser, OutputParserException } from "./base";
-import { parseJsonMarkdown } from "./json";
+import { BaseOutputParser, OutputParserException } from "./base.js";
+import { parseJsonMarkdown } from "./json.js";
 
 export class StandardSchemaOutputParser<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any

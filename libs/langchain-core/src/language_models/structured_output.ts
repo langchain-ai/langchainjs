@@ -1,16 +1,22 @@
-import { SerializableSchema } from "../../dist/utils/standard_schema";
-import { BaseMessage } from "../messages";
+import { BaseMessage } from "../messages/index.js";
 import {
   BaseLLMOutputParser,
   JsonOutputParser,
   StructuredOutputParser,
-} from "../output_parsers";
-import { JsonOutputKeyToolsParser } from "../output_parsers/openai_tools";
-import { StandardSchemaOutputParser } from "../output_parsers/standard_schema";
-import { Runnable, RunnablePassthrough, RunnableSequence } from "../runnables";
-import { isSerializableSchema } from "../utils/standard_schema";
-import { InteropZodType, isInteropZodSchema } from "../utils/types";
-import { BaseLanguageModelInput } from "./base";
+} from "../output_parsers/index.js";
+import { JsonOutputKeyToolsParser } from "../output_parsers/openai_tools/json_output_tools_parsers.js";
+import { StandardSchemaOutputParser } from "../output_parsers/standard_schema.js";
+import {
+  Runnable,
+  RunnablePassthrough,
+  RunnableSequence,
+} from "../runnables/index.js";
+import {
+  isSerializableSchema,
+  SerializableSchema,
+} from "../utils/standard_schema.js";
+import { InteropZodType, isInteropZodSchema } from "../utils/types/index.js";
+import { BaseLanguageModelInput } from "./base.js";
 
 /**
  * Creates the appropriate content-based output parser for a schema. Use this for
