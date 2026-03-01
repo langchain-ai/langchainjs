@@ -32,7 +32,7 @@ export function createContentParser<
 >(
   schema:
     | InteropZodType<RunOutput>
-    | SerializableSchema<RunOutput, RunOutput>
+    | SerializableSchema<RunOutput>
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     | Record<string, any>
 ): BaseLLMOutputParser<RunOutput> {
@@ -69,7 +69,7 @@ export function createFunctionCallingParser<
 >(
   schema:
     | InteropZodType<RunOutput>
-    | SerializableSchema<RunOutput, RunOutput>
+    | SerializableSchema<RunOutput>
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     | Record<string, any>,
   keyName: string,

@@ -891,7 +891,7 @@ export abstract class BaseChatModel<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     RunOutput extends Record<string, any> = Record<string, any>,
   >(
-    outputSchema: SerializableSchema<RunOutput, RunOutput>,
+    outputSchema: SerializableSchema<RunOutput>,
     config?: StructuredOutputMethodOptions<false>
   ): Runnable<BaseLanguageModelInput, RunOutput>;
 
@@ -899,7 +899,7 @@ export abstract class BaseChatModel<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     RunOutput extends Record<string, any> = Record<string, any>,
   >(
-    outputSchema: SerializableSchema<RunOutput, RunOutput>,
+    outputSchema: SerializableSchema<RunOutput>,
     config?: StructuredOutputMethodOptions<true>
   ): Runnable<BaseLanguageModelInput, { raw: BaseMessage; parsed: RunOutput }>;
 
@@ -953,7 +953,7 @@ export abstract class BaseChatModel<
   >(
     outputSchema:
       | InteropZodType<RunOutput>
-      | SerializableSchema<RunOutput, RunOutput>
+      | SerializableSchema<RunOutput>
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
     config?: StructuredOutputMethodOptions<boolean>

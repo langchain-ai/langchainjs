@@ -630,7 +630,7 @@ export abstract class BaseLanguageModel<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     RunOutput extends Record<string, any> = Record<string, any>,
   >(
-    schema: SerializableSchema<RunOutput, RunOutput>,
+    schema: SerializableSchema<RunOutput>,
     config?: StructuredOutputMethodOptions<false>
   ): Runnable<BaseLanguageModelInput, RunOutput>;
 
@@ -638,7 +638,7 @@ export abstract class BaseLanguageModel<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     RunOutput extends Record<string, any> = Record<string, any>,
   >(
-    schema: SerializableSchema<RunOutput, RunOutput>,
+    schema: SerializableSchema<RunOutput>,
     config?: StructuredOutputMethodOptions<true>
   ): Runnable<BaseLanguageModelInput, { raw: BaseMessage; parsed: RunOutput }>;
 
