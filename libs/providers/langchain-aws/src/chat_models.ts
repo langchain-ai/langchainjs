@@ -1094,7 +1094,7 @@ export class ChatBedrockConverse
       functionName = asJsonSchema.name;
     }
 
-    let tools: ToolDefinition[] = [
+    const tools: ToolDefinition[] = [
       {
         type: "function",
         function: {

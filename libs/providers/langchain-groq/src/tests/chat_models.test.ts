@@ -96,6 +96,7 @@ describe("withStructuredOutput with SerializableSchema", () => {
       model: "llama-3.3-70b-versatile",
       apiKey: "testing",
     });
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     vi.spyOn(model as any, "invoke").mockResolvedValue(
       new AIMessage({
         content: "",
@@ -121,6 +122,7 @@ describe("withStructuredOutput with SerializableSchema", () => {
       model: "llama-3.3-70b-versatile",
       apiKey: "testing",
     });
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     vi.spyOn(model as any, "invoke").mockResolvedValue(
       new AIMessage({
         content: "",
@@ -147,6 +149,7 @@ describe("withStructuredOutput with SerializableSchema", () => {
       model: "llama-3.3-70b-versatile",
       apiKey: "testing",
     });
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     vi.spyOn(model as any, "invoke").mockResolvedValue(
       new AIMessage({
         content: "",
@@ -184,6 +187,7 @@ describe("withStructuredOutput with SerializableSchema", () => {
       model: "llama-3.3-70b-versatile",
       apiKey: "testing",
     });
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     vi.spyOn(model as any, "invoke").mockResolvedValue(rawMessage);
 
     const schema = makeSerializableSchema();
