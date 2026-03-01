@@ -16,17 +16,8 @@ import {
   type StructuredOutputMethodOptions,
 } from "@langchain/core/language_models/base";
 import { ModelProfile } from "@langchain/core/language_models/profile";
-import {
-  Runnable,
-  RunnableLambda,
-  RunnablePassthrough,
-  RunnableSequence,
-} from "@langchain/core/runnables";
-import {
-  JsonOutputParser,
-  StructuredOutputParser,
-} from "@langchain/core/output_parsers";
-import { JsonOutputKeyToolsParser } from "@langchain/core/output_parsers/openai_tools";
+import { Runnable, RunnableLambda } from "@langchain/core/runnables";
+import { JsonOutputParser } from "@langchain/core/output_parsers";
 import {
   getSchemaDescription,
   InteropZodType,
