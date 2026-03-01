@@ -15,22 +15,13 @@ import {
 } from "@langchain/core/messages";
 import { ChatGenerationChunk, type ChatResult } from "@langchain/core/outputs";
 import type { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
-import {
-  Runnable,
-  RunnablePassthrough,
-  RunnableSequence,
-} from "@langchain/core/runnables";
+import { Runnable } from "@langchain/core/runnables";
 import { toJsonSchema } from "@langchain/core/utils/json_schema";
 import {
   type InteropZodType,
   isInteropZodSchema,
   getSchemaDescription,
 } from "@langchain/core/utils/types";
-import {
-  JsonOutputParser,
-  StructuredOutputParser,
-} from "@langchain/core/output_parsers";
-import { JsonOutputKeyToolsParser } from "@langchain/core/output_parsers/openai_tools";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import { EventSourceParserStream } from "eventsource-parser/stream";
 
@@ -74,6 +65,15 @@ import { OpenRouterError, OpenRouterAuthError } from "../utils/errors.js";
 import { resolveOpenRouterStructuredOutputMethod } from "../utils/structured_output.js";
 import { OpenRouterJsonParseStream } from "../utils/stream.js";
 import PROFILES from "../profiles.js";
+import {
+  isSerializableSchema,
+  SerializableSchema,
+} from "@langchain/core/utils/standard_schema";
+import {
+  assembleStructuredOutputPipeline,
+  createContentParser,
+  createFunctionCallingParser,
+} from "@langchain/core/language_models/structured_output";
 
 const DEFAULT_BASE_URL = "https://openrouter.ai/api/v1";
 
@@ -538,6 +538,7 @@ export class ChatOpenRouter extends BaseChatModel<
   >(
     outputSchema:
       | InteropZodType<RunOutput>
+      | SerializableSchema<RunOutput>
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
     config?: StructuredOutputMethodOptions<false>
@@ -549,6 +550,7 @@ export class ChatOpenRouter extends BaseChatModel<
   >(
     outputSchema:
       | InteropZodType<RunOutput>
+      | SerializableSchema<RunOutput>
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
     config?: StructuredOutputMethodOptions<true>
@@ -560,6 +562,7 @@ export class ChatOpenRouter extends BaseChatModel<
   >(
     outputSchema:
       | InteropZodType<RunOutput>
+      | SerializableSchema<RunOutput>
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
     config?: StructuredOutputMethodOptions<boolean>
@@ -570,7 +573,10 @@ export class ChatOpenRouter extends BaseChatModel<
   withStructuredOutput<
     RunOutput extends Record<string, unknown> = Record<string, unknown>
   >(
-    outputSchema: InteropZodType<RunOutput> | Record<string, unknown>,
+    outputSchema:
+      | InteropZodType<RunOutput>
+      | SerializableSchema<RunOutput>
+      | Record<string, unknown>,
     config?: StructuredOutputMethodOptions<boolean>
   ) {
     let llm: Runnable<BaseLanguageModelInput>;
@@ -590,6 +596,7 @@ export class ChatOpenRouter extends BaseChatModel<
     });
 
     const asJsonSchema = toJsonSchema(schema);
+    const description = getSchemaDescription(asJsonSchema);
 
     if (method === "jsonSchema") {
       const schemaName = name ?? "extract";
@@ -598,7 +605,7 @@ export class ChatOpenRouter extends BaseChatModel<
           type: "json_schema",
           json_schema: {
             name: schemaName,
-            description: getSchemaDescription(schema),
+            description,
             schema: asJsonSchema,
             strict: config?.strict,
           },
@@ -607,15 +614,12 @@ export class ChatOpenRouter extends BaseChatModel<
           kwargs: { method: "json_schema" },
           schema: {
             title: schemaName,
-            description: getSchemaDescription(schema),
+            description,
             ...asJsonSchema,
           },
         },
       } as Partial<ChatOpenRouterCallOptions>);
-
-      outputParser = isInteropZodSchema(schema)
-        ? StructuredOutputParser.fromZodSchema(schema)
-        : new JsonOutputParser<RunOutput>();
+      outputParser = createContentParser(schema);
     } else if (method === "jsonMode") {
       llm = this.withConfig({
         response_format: { type: "json_object" },
@@ -624,13 +628,15 @@ export class ChatOpenRouter extends BaseChatModel<
           schema: { title: name ?? "extract", ...asJsonSchema },
         },
       } as Partial<ChatOpenRouterCallOptions>);
-
-      outputParser = isInteropZodSchema(schema)
-        ? StructuredOutputParser.fromZodSchema(schema)
-        : new JsonOutputParser<RunOutput>();
+      outputParser = createContentParser(schema);
     } else {
       let functionName = name ?? "extract";
-      if ("name" in (schema as Record<string, unknown>)) {
+
+      if (
+        !isInteropZodSchema(schema) &&
+        !isSerializableSchema(schema) &&
+        "name" in (schema as Record<string, unknown>)
+      ) {
         functionName = (schema as Record<string, unknown>).name as string;
       }
 
@@ -640,7 +646,7 @@ export class ChatOpenRouter extends BaseChatModel<
             type: "function" as const,
             function: {
               name: functionName,
-              description: getSchemaDescription(schema) ?? "",
+              description: description ?? "",
               parameters: asJsonSchema,
             },
           },
@@ -656,39 +662,14 @@ export class ChatOpenRouter extends BaseChatModel<
         ...(config?.strict !== undefined ? { strict: config.strict } : {}),
       } as Partial<ChatOpenRouterCallOptions>);
 
-      outputParser = isInteropZodSchema(schema)
-        ? new JsonOutputKeyToolsParser({
-            returnSingle: true,
-            keyName: functionName,
-            zodSchema: schema,
-          })
-        : new JsonOutputKeyToolsParser<RunOutput>({
-            returnSingle: true,
-            keyName: functionName,
-          });
+      outputParser = createFunctionCallingParser(schema, functionName);
     }
 
-    if (!includeRaw) {
-      return llm.pipe(outputParser).withConfig({
-        runName: "ChatOpenRouterStructuredOutput",
-      }) as Runnable<BaseLanguageModelInput, RunOutput>;
-    }
-
-    const parserAssign = RunnablePassthrough.assign({
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      parsed: (input: any, config) => outputParser.invoke(input.raw, config),
-    });
-    const parserNone = RunnablePassthrough.assign({
-      parsed: () => null,
-    });
-    const parsedWithFallback = parserAssign.withFallbacks({
-      fallbacks: [parserNone],
-    });
-    return RunnableSequence.from<
-      BaseLanguageModelInput,
-      { raw: BaseMessage; parsed: RunOutput }
-    >([{ raw: llm }, parsedWithFallback]).withConfig({
-      runName: "ChatOpenRouterStructuredOutput",
-    });
+    return assembleStructuredOutputPipeline(
+      llm,
+      outputParser,
+      includeRaw,
+      "ChatOpenRouterStructuredOutput"
+    );
   }
 }
