@@ -265,12 +265,10 @@ export function getAnthropicAPI(config?: AnthropicAPIConfig): GoogleAIAPI {
     event: AnthropicStreamContentBlockStartEvent
   ): ChatGenerationChunk | null {
     const content = event.content_block;
-    const message = contentToMessage([content]);
-    if (!message) {
-      return null;
-    }
-
     const text = "text" in content ? content.text : "";
+    const message = new AIMessageChunk({
+      content: [{ index: event.index, ...content }],
+    });
     return new ChatGenerationChunk({
       message,
       text,
@@ -334,7 +332,9 @@ export function getAnthropicAPI(config?: AnthropicAPIConfig): GoogleAIAPI {
   ): ChatGenerationChunk {
     const delta = event.delta as AnthropicStreamTextDelta;
     const text = delta?.text;
-    const message = newAIMessageChunk(text);
+    const message = new AIMessageChunk({
+      content: [{ index: event.index, type: "text", text }],
+    });
     return new ChatGenerationChunk({
       message,
       text,
@@ -469,7 +469,10 @@ export function getAnthropicAPI(config?: AnthropicAPIConfig): GoogleAIAPI {
 
   function textContentToAnthropicContent(
     content: MessageContentText
-  ): AnthropicMessageContentText {
+  ): AnthropicMessageContentText | undefined {
+    if (!content.text) {
+      return undefined;
+    }
     return content;
   }
 
