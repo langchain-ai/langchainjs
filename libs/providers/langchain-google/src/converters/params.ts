@@ -1,6 +1,5 @@
 import type {
   ChatGoogleFields,
-  GooglePlatformType,
   SimplifiedSpeechConfig,
   SimplifiedSpeechLanguageConfig,
   SpeechSpeakerName,
@@ -8,6 +7,7 @@ import type {
   SpeechVoiceLanguage,
 } from "../chat_models/types.js";
 import type { Gemini } from "../chat_models/api-types.js";
+import { GooglePlatformType } from "../utils/platform.js";
 
 /**
  * Converts a reasoning "effort" level value (e.g., "minimal", "low", "medium", "high")

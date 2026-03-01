@@ -3,7 +3,7 @@ import { ChatGoogleParams } from "./index.js";
 import {
   BaseChatGoogle,
   getGoogleChatModelParams,
-  getPlatformType,
+
 } from "./base.js";
 import { GENERATIVE_AI_AUTH_SCOPES, VERTEX_AI_AUTH_SCOPES } from "../const.js";
 import {
@@ -12,6 +12,7 @@ import {
   NodeApiClientParams,
 } from "../clients/node.js";
 import { convertParamsToPlatformType } from "../converters/params.js";
+import { getPlatformType } from "../utils/platform";
 
 interface ChatGoogleNodeParams extends NodeApiClientParams, ChatGoogleParams {}
 

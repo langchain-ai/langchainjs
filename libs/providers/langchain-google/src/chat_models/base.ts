@@ -1,3 +1,4 @@
+import type { BindToolsInput } from "@langchain/core/language_models/chat_models";
 import {
   BaseChatModel,
   type BaseChatModelCallOptions,
@@ -14,31 +15,13 @@ import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
 import { concat } from "@langchain/core/utils/stream";
 import { ChatGenerationChunk, ChatResult } from "@langchain/core/outputs";
 import { EventSourceParserStream } from "eventsource-parser/stream";
-import type { BindToolsInput } from "@langchain/core/language_models/chat_models";
 import type { ModelProfile } from "@langchain/core/language_models/profile";
 import PROFILES from "./profiles.js";
-import type {
-  BaseLanguageModelInput,
-  StructuredOutputMethodOptions,
-} from "@langchain/core/language_models/base";
-import {
-  Runnable,
-  RunnableLambda,
-  RunnablePassthrough,
-  RunnableSequence,
-} from "@langchain/core/runnables";
-import {
-  toJsonSchema,
-  type JsonSchema7Type,
-} from "@langchain/core/utils/json_schema";
-import {
-  InteropZodType,
-  isInteropZodSchema,
-} from "@langchain/core/utils/types";
-import {
-  JsonOutputParser,
-  StructuredOutputParser,
-} from "@langchain/core/output_parsers";
+import type { BaseLanguageModelInput, StructuredOutputMethodOptions, } from "@langchain/core/language_models/base";
+import { Runnable, RunnableLambda, RunnablePassthrough, RunnableSequence, } from "@langchain/core/runnables";
+import { type JsonSchema7Type, toJsonSchema, } from "@langchain/core/utils/json_schema";
+import { InteropZodType, isInteropZodSchema, } from "@langchain/core/utils/types";
+import { JsonOutputParser, StructuredOutputParser, } from "@langchain/core/output_parsers";
 import { JsonOutputKeyToolsParser } from "@langchain/core/output_parsers/openai_tools";
 
 import { ApiClient } from "../clients/index.js";
@@ -60,32 +43,18 @@ import {
   RequestError,
 } from "../utils/errors.js";
 import {
-  convertToolsToGeminiTools,
   convertToolChoiceToGeminiConfig,
+  convertToolsToGeminiTools,
   schemaToGeminiParameters,
 } from "../converters/tools.js";
 import {
-  convertParamsToPlatformType,
   convertFieldsToSpeechConfig,
   convertFieldsToThinkingConfig,
+  convertParamsToPlatformType,
 } from "../converters/params.js";
 import { Gemini } from "./api-types.js";
 import { subtractUsageMetadata } from "../utils/metadata.js";
-
-export type GooglePlatformType = "gai" | "gcp";
-
-export function getPlatformType(
-  platform: GooglePlatformType | undefined,
-  hasApiKey: boolean
-): GooglePlatformType {
-  if (typeof platform !== "undefined") {
-    return platform;
-  } else if (hasApiKey) {
-    return "gai";
-  } else {
-    return "gcp";
-  }
-}
+import { getPlatformType, GooglePlatformType } from "../utils/platform.js";
 
 export interface BaseChatGoogleParams
   extends BaseChatModelParams,
