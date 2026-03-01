@@ -1462,6 +1462,7 @@ describe("withStructuredOutput with SerializableSchema", () => {
       temperature: 0,
       anthropicApiKey: "testing",
     });
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     vi.spyOn(model as any, "invoke").mockResolvedValue(
       new AIMessage({
         content: [
@@ -1488,6 +1489,7 @@ describe("withStructuredOutput with SerializableSchema", () => {
       temperature: 0,
       anthropicApiKey: "testing",
     });
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     vi.spyOn(model as any, "invoke").mockResolvedValue(
       new AIMessageChunk({
         content: [
@@ -1515,6 +1517,7 @@ describe("withStructuredOutput with SerializableSchema", () => {
       temperature: 0,
       anthropicApiKey: "testing",
     });
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     vi.spyOn(model as any, "invoke").mockResolvedValue(
       new AIMessage({
         content: [
@@ -1553,6 +1556,7 @@ describe("withStructuredOutput with SerializableSchema", () => {
       temperature: 0,
       anthropicApiKey: "testing",
     });
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     vi.spyOn(model as any, "invoke").mockResolvedValue(rawMessage);
 
     const schema = makeSerializableSchema();
