@@ -31,6 +31,7 @@
   "license": "MIT",
   "dependencies": {
     "@cfworker/json-schema": "^4.0.2",
+    "@standard-schema/spec": "^1.1.0",
     "ansi-styles": "^5.0.0",
     "camelcase": "6",
     "decamelize": "1.2.0",
