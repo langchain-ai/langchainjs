@@ -1,4 +1,4 @@
-import { test } from "@jest/globals";
+import { test, jest, describe, expect } from "@jest/globals";
 import type { HarmBlockThreshold, HarmCategory } from "@google/generative-ai";
 import { z } from "zod/v3";
 import { toJsonSchema } from "@langchain/core/utils/json_schema";
@@ -1009,4 +1009,176 @@ test("convertBaseMessagesToContent should handle AIMessages with custom names", 
   expect(result).toHaveLength(2);
   expect(result[0].role).toBe("user");
   expect(result[1].role).toBe("model");
+});
+
+function makeSerializableSchema() {
+  return {
+    "~standard": {
+      version: 1 as const,
+      vendor: "test",
+      validate: (value: unknown) => {
+        const obj = value as Record<string, unknown>;
+        if (
+          typeof obj === "object" &&
+          obj !== null &&
+          typeof obj.name === "string"
+        ) {
+          return { value: obj };
+        }
+        return {
+          issues: [{ message: "Expected object with string 'name' field" }],
+        };
+      },
+      jsonSchema: {
+        input: () => ({
+          type: "object",
+          properties: { name: { type: "string" } },
+          required: ["name"],
+        }),
+        output: () => ({
+          type: "object",
+          properties: { name: { type: "string" } },
+          required: ["name"],
+        }),
+      },
+    },
+  };
+}
+
+describe("withStructuredOutput with SerializableSchema", () => {
+  test("functionCalling with valid output parses correctly", async () => {
+    const model = new ChatGoogleGenerativeAI({
+      model: "gemini-2.0-flash",
+      apiKey: "test-key",
+    });
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    jest.spyOn(model as any, "invoke").mockResolvedValue(
+      new AIMessage({
+        content: "",
+        tool_calls: [
+          {
+            id: "call_123",
+            name: "extract",
+            args: { name: "Gemini" },
+          },
+        ],
+      })
+    );
+
+    const schema = makeSerializableSchema();
+    const result = await model
+      .withStructuredOutput(schema, { method: "functionCalling" })
+      .invoke("What is your name?");
+    expect(result).toEqual({ name: "Gemini" });
+  });
+
+  test("functionCalling with custom name", async () => {
+    const model = new ChatGoogleGenerativeAI({
+      model: "gemini-2.0-flash",
+      apiKey: "test-key",
+    });
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    jest.spyOn(model as any, "invoke").mockResolvedValue(
+      new AIMessage({
+        content: "",
+        tool_calls: [
+          {
+            id: "call_123",
+            name: "PersonInfo",
+            args: { name: "Alice" },
+          },
+        ],
+      })
+    );
+
+    const schema = makeSerializableSchema();
+    const result = await model
+      .withStructuredOutput(schema, {
+        method: "functionCalling",
+        name: "PersonInfo",
+      })
+      .invoke("Who is this?");
+    expect(result).toEqual({ name: "Alice" });
+  });
+
+  test("functionCalling with includeRaw returns raw and parsed", async () => {
+    const rawMessage = new AIMessage({
+      content: "",
+      tool_calls: [
+        {
+          id: "call_123",
+          name: "extract",
+          args: { name: "Bob" },
+        },
+      ],
+    });
+    const model = new ChatGoogleGenerativeAI({
+      model: "gemini-2.0-flash",
+      apiKey: "test-key",
+    });
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    jest.spyOn(model as any, "invoke").mockResolvedValue(rawMessage);
+
+    const schema = makeSerializableSchema();
+    const result = await model
+      .withStructuredOutput(schema, {
+        method: "functionCalling",
+        includeRaw: true,
+      })
+      .invoke("Tell me a name");
+    expect(result).toHaveProperty("raw");
+    expect(result).toHaveProperty("parsed");
+    expect(result.parsed).toEqual({ name: "Bob" });
+  });
+
+  test("jsonSchema (default) with valid output parses correctly", async () => {
+    const model = new ChatGoogleGenerativeAI({
+      model: "gemini-2.0-flash",
+      apiKey: "test-key",
+    });
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    jest.spyOn(model as any, "invoke").mockResolvedValue(
+      new AIMessage({
+        content: '{"name": "Eve"}',
+      })
+    );
+
+    const schema = makeSerializableSchema();
+    const result = await model
+      .withStructuredOutput(schema)
+      .invoke("What is your name?");
+    expect(result).toEqual({ name: "Eve" });
+  });
+
+  test("jsonSchema with invalid output throws validation error", async () => {
+    const model = new ChatGoogleGenerativeAI({
+      model: "gemini-2.0-flash",
+      apiKey: "test-key",
+    });
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    jest.spyOn(model as any, "invoke").mockResolvedValue(
+      new AIMessage({
+        content: '{"age": 25}',
+      })
+    );
+
+    const schema = makeSerializableSchema();
+    await expect(
+      model.withStructuredOutput(schema).invoke("What is your name?")
+    ).rejects.toThrow();
+  });
+
+  test("jsonMode throws error", () => {
+    const model = new ChatGoogleGenerativeAI({
+      model: "gemini-2.0-flash",
+      apiKey: "test-key",
+    });
+    const schema = makeSerializableSchema();
+
+    expect(() =>
+      model.withStructuredOutput(schema, { method: "jsonMode" })
+    ).toThrow(
+      `ChatGoogleGenerativeAI only supports "jsonSchema" or "functionCalling" as a method.`
+    );
+  });
 });
