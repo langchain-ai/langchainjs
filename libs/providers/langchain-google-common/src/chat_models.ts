@@ -14,16 +14,7 @@ import {
   StructuredOutputMethodOptions,
 } from "@langchain/core/language_models/base";
 import { type ModelProfile } from "@langchain/core/language_models/profile";
-import {
-  Runnable,
-  RunnablePassthrough,
-  RunnableSequence,
-} from "@langchain/core/runnables";
-import { JsonOutputKeyToolsParser } from "@langchain/core/output_parsers/openai_tools";
-import {
-  BaseLLMOutputParser,
-  JsonOutputParser,
-} from "@langchain/core/output_parsers";
+import { Runnable } from "@langchain/core/runnables";
 import { AsyncCaller } from "@langchain/core/utils/async_caller";
 import { concat } from "@langchain/core/utils/stream";
 import {
@@ -69,6 +60,15 @@ import {
   schemaToGeminiParameters,
 } from "./utils/zod_to_gemini_parameters.js";
 import PROFILES from "./profiles.js";
+import {
+  isSerializableSchema,
+  SerializableSchema,
+} from "@langchain/core/utils/standard_schema";
+import {
+  assembleStructuredOutputPipeline,
+  createContentParser,
+  createFunctionCallingParser,
+} from "@langchain/core/language_models/structured_output";
 
 export class ChatConnection<AuthOptions> extends AbstractGoogleLLMConnection<
   BaseMessage[],
@@ -462,6 +462,7 @@ export abstract class ChatGoogleBase<AuthOptions>
   >(
     outputSchema:
       | InteropZodType<RunOutput>
+      | SerializableSchema<RunOutput>
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
     config?: StructuredOutputMethodOptions<false>
@@ -473,6 +474,7 @@ export abstract class ChatGoogleBase<AuthOptions>
   >(
     outputSchema:
       | InteropZodType<RunOutput>
+      | SerializableSchema<RunOutput>
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
     config?: StructuredOutputMethodOptions<true>
@@ -484,6 +486,7 @@ export abstract class ChatGoogleBase<AuthOptions>
   >(
     outputSchema:
       | InteropZodType<RunOutput>
+      | SerializableSchema<RunOutput>
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
     config?: StructuredOutputMethodOptions<boolean>
@@ -493,24 +496,25 @@ export abstract class ChatGoogleBase<AuthOptions>
         BaseLanguageModelInput,
         { raw: BaseMessage; parsed: RunOutput }
       > {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const schema: InteropZodType<RunOutput> | Record<string, any> =
-      outputSchema;
+    const schema = outputSchema;
     const name = config?.name;
     const method = config?.method;
     const includeRaw = config?.includeRaw;
+
     if (method === "jsonMode") {
       throw new Error(
         `Google only supports "jsonSchema" or "functionCalling" as a method.`
       );
     }
 
-    let llm;
-    let outputParser: BaseLLMOutputParser<RunOutput>;
+    let llm: Runnable<BaseLanguageModelInput>;
+    let outputParser: Runnable<AIMessageChunk, RunOutput>;
+
     if (method === "functionCalling") {
       let functionName = name ?? "extract";
       let tools: GeminiTool[];
-      if (isInteropZodSchema(schema)) {
+
+      if (isInteropZodSchema(schema) || isSerializableSchema(schema)) {
         const jsonSchema = schemaToGeminiParameters(schema);
         tools = [
           {
@@ -524,11 +528,6 @@ export abstract class ChatGoogleBase<AuthOptions>
             ],
           },
         ];
-        outputParser = new JsonOutputKeyToolsParser({
-          returnSingle: true,
-          keyName: functionName,
-          zodSchema: schema,
-        });
       } else {
         let geminiFunctionDefinition: GeminiFunctionDeclaration;
         if (
@@ -553,47 +552,24 @@ export abstract class ChatGoogleBase<AuthOptions>
             functionDeclarations: [geminiFunctionDefinition],
           },
         ];
-        outputParser = new JsonOutputKeyToolsParser<RunOutput>({
-          returnSingle: true,
-          keyName: functionName,
-        });
       }
+
       llm = this.bindTools(tools).withConfig({ tool_choice: functionName });
+      outputParser = createFunctionCallingParser(schema, functionName);
     } else {
       // Default to jsonSchema method
       const jsonSchema = schemaToGeminiParameters(schema);
       llm = this.withConfig({
         responseSchema: jsonSchema as GeminiJsonSchema,
       });
-      outputParser = new JsonOutputParser();
+      outputParser = createContentParser(schema);
     }
 
-    if (!includeRaw) {
-      return llm.pipe(outputParser).withConfig({
-        runName: "ChatGoogleStructuredOutput",
-      }) as Runnable<BaseLanguageModelInput, RunOutput>;
-    }
-
-    const parserAssign = RunnablePassthrough.assign({
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      parsed: (input: any, config) => outputParser.invoke(input.raw, config),
-    });
-    const parserNone = RunnablePassthrough.assign({
-      parsed: () => null,
-    });
-    const parsedWithFallback = parserAssign.withFallbacks({
-      fallbacks: [parserNone],
-    });
-    return RunnableSequence.from<
-      BaseLanguageModelInput,
-      { raw: BaseMessage; parsed: RunOutput }
-    >([
-      {
-        raw: llm,
-      },
-      parsedWithFallback,
-    ]).withConfig({
-      runName: "StructuredOutputRunnable",
-    });
+    return assembleStructuredOutputPipeline(
+      llm,
+      outputParser,
+      includeRaw,
+      includeRaw ? "StructuredOutputRunnable" : "ChatGoogleStructuredOutput"
+    );
   }
 }
