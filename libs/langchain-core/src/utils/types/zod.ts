@@ -16,7 +16,7 @@ import {
   $ZodNever,
   $ZodOptional,
 } from "zod/v4/core";
-import { SerializableSchema } from "../standard_schema";
+import { SerializableSchema } from "../standard_schema.js";
 
 export type ZodStringV3 = z3.ZodString;
 
