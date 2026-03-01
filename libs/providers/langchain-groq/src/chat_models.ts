@@ -1454,7 +1454,6 @@ export class ChatGroq extends BaseChatModel<
       // Uses Groq's strict JSON Schema response format
       const schemaName = name ?? "structured_output";
 
-      // FLAGGING: IS ORDERING OKAY HERE?
       const jsonSchema =
         isInteropZodSchema(schema) || isSerializableSchema(schema)
           ? toJsonSchema(schema)

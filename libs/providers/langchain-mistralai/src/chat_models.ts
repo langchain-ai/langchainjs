@@ -1409,7 +1409,6 @@ export class ChatMistralAI<
         BaseLanguageModelInput,
         { raw: BaseMessage; parsed: RunOutput }
       > {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const schema = outputSchema;
     const name = config?.name;
     const method = config?.method;

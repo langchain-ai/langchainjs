@@ -1355,3 +1355,142 @@ describe("serviceTier configuration", () => {
     expect(params.inferenceConfig?.stopSequences).toEqual(["stop_sequence"]);
   });
 });
+
+function makeSerializableSchema() {
+  return {
+    "~standard": {
+      version: 1 as const,
+      vendor: "test",
+      validate: (value: unknown) => {
+        const obj = value as Record<string, unknown>;
+        if (
+          typeof obj === "object" &&
+          obj !== null &&
+          typeof obj.name === "string"
+        ) {
+          return { value: obj };
+        }
+        return {
+          issues: [{ message: "Expected object with string 'name' field" }],
+        };
+      },
+      jsonSchema: {
+        input: () => ({
+          type: "object",
+          properties: { name: { type: "string" } },
+          required: ["name"],
+        }),
+        output: () => ({
+          type: "object",
+          properties: { name: { type: "string" } },
+          required: ["name"],
+        }),
+      },
+    },
+  };
+}
+
+describe("withStructuredOutput with SerializableSchema", () => {
+  const baseConstructorArgs = {
+    region: "us-east-1",
+    credentials: {
+      secretAccessKey: "test-secret-key",
+      accessKeyId: "test-access-key",
+    },
+  };
+
+  test("functionCalling with valid output parses correctly", async () => {
+    const model = new ChatBedrockConverse({
+      ...baseConstructorArgs,
+      model: "anthropic.claude-3-haiku-20240307-v1:0",
+    });
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    vi.spyOn(model as any, "invoke").mockResolvedValue(
+      new AIMessage({
+        content: "",
+        tool_calls: [
+          {
+            id: "call_123",
+            name: "extract",
+            args: { name: "Claude" },
+          },
+        ],
+      })
+    );
+
+    const schema = makeSerializableSchema();
+    const modelWithStructuredOutput = model.withStructuredOutput(schema);
+
+    const result = await modelWithStructuredOutput.invoke("What is your name?");
+    expect(result).toEqual({ name: "Claude" });
+  });
+
+  test("functionCalling with custom name", async () => {
+    const model = new ChatBedrockConverse({
+      ...baseConstructorArgs,
+      model: "anthropic.claude-3-haiku-20240307-v1:0",
+    });
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    vi.spyOn(model as any, "invoke").mockResolvedValue(
+      new AIMessage({
+        content: "",
+        tool_calls: [
+          {
+            id: "call_123",
+            name: "PersonInfo",
+            args: { name: "Alice" },
+          },
+        ],
+      })
+    );
+
+    const schema = makeSerializableSchema();
+    const modelWithStructuredOutput = model.withStructuredOutput(schema, {
+      name: "PersonInfo",
+    });
+
+    const result = await modelWithStructuredOutput.invoke("Who is this?");
+    expect(result).toEqual({ name: "Alice" });
+  });
+
+  test("functionCalling with includeRaw returns raw and parsed", async () => {
+    const rawMessage = new AIMessage({
+      content: "",
+      tool_calls: [
+        {
+          id: "call_123",
+          name: "extract",
+          args: { name: "Bob" },
+        },
+      ],
+    });
+    const model = new ChatBedrockConverse({
+      ...baseConstructorArgs,
+      model: "anthropic.claude-3-haiku-20240307-v1:0",
+    });
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    vi.spyOn(model as any, "invoke").mockResolvedValue(rawMessage);
+
+    const schema = makeSerializableSchema();
+    const modelWithStructuredOutput = model.withStructuredOutput(schema, {
+      includeRaw: true,
+    });
+
+    const result = await modelWithStructuredOutput.invoke("Tell me a name");
+    expect(result).toHaveProperty("raw");
+    expect(result).toHaveProperty("parsed");
+    expect(result.parsed).toEqual({ name: "Bob" });
+  });
+
+  test("throws when jsonMode is requested", () => {
+    const model = new ChatBedrockConverse({
+      ...baseConstructorArgs,
+      model: "anthropic.claude-3-haiku-20240307-v1:0",
+    });
+
+    const schema = makeSerializableSchema();
+    expect(() =>
+      model.withStructuredOutput(schema, { method: "jsonMode" })
+    ).toThrow("does not support");
+  });
+});
