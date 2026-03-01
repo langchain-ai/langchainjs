@@ -1047,16 +1047,19 @@ describe("withStructuredOutput - StandardSchema", () => {
       model: "gemini-1.5-flash",
       apiKey: "testing",
     });
-    jest
-      .spyOn(model, "invoke")
-      .mockResolvedValue(
-        new AIMessage({
-          content: "",
-          tool_calls: [
-            { name: "extract", args: { name: "cobalt" }, id: "1", type: "tool_call" },
-          ],
-        })
-      );
+    jest.spyOn(model, "invoke").mockResolvedValue(
+      new AIMessage({
+        content: "",
+        tool_calls: [
+          {
+            name: "extract",
+            args: { name: "cobalt" },
+            id: "1",
+            type: "tool_call",
+          },
+        ],
+      })
+    );
 
     const schema = makeSerializableSchema();
     const structured = model.withStructuredOutput(schema, {
@@ -1073,16 +1076,19 @@ describe("withStructuredOutput - StandardSchema", () => {
       model: "gemini-1.5-flash",
       apiKey: "testing",
     });
-    jest
-      .spyOn(model, "invoke")
-      .mockResolvedValue(
-        new AIMessageChunk({
-          content: "",
-          tool_calls: [
-            { name: "extract", args: { invalid: true }, id: "1", type: "tool_call" },
-          ],
-        })
-      );
+    jest.spyOn(model, "invoke").mockResolvedValue(
+      new AIMessageChunk({
+        content: "",
+        tool_calls: [
+          {
+            name: "extract",
+            args: { invalid: true },
+            id: "1",
+            type: "tool_call",
+          },
+        ],
+      })
+    );
 
     const schema = makeSerializableSchema();
     const structured = model.withStructuredOutput(schema, {
@@ -1100,16 +1106,19 @@ describe("withStructuredOutput - StandardSchema", () => {
       model: "gemini-1.5-flash",
       apiKey: "testing",
     });
-    jest
-      .spyOn(model, "invoke")
-      .mockResolvedValue(
-        new AIMessage({
-          content: "",
-          tool_calls: [
-            { name: "GetName", args: { name: "test" }, id: "1", type: "tool_call" },
-          ],
-        })
-      );
+    jest.spyOn(model, "invoke").mockResolvedValue(
+      new AIMessage({
+        content: "",
+        tool_calls: [
+          {
+            name: "GetName",
+            args: { name: "test" },
+            id: "1",
+            type: "tool_call",
+          },
+        ],
+      })
+    );
 
     const schema = makeSerializableSchema();
     const structured = model.withStructuredOutput(schema, {
@@ -1125,7 +1134,12 @@ describe("withStructuredOutput - StandardSchema", () => {
     const mockResponse = new AIMessage({
       content: "",
       tool_calls: [
-        { name: "extract", args: { name: "cobalt" }, id: "1", type: "tool_call" },
+        {
+          name: "extract",
+          args: { name: "cobalt" },
+          id: "1",
+          type: "tool_call",
+        },
       ],
     });
     const model = new ChatGoogleGenerativeAI({
