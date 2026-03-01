@@ -19,7 +19,7 @@ export class StandardSchemaOutputParser<
     this.schema = schema;
   }
 
-  static fromStandardSchema<
+  static fromSerializableSchema<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     RunOutput extends Record<string, any> = Record<string, any>,
   >(schema: StandardSchemaV1<RunOutput>) {
