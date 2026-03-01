@@ -14,6 +14,9 @@ module.exports = {
     "\\.pnp\\.[^\\/]+$",
     "./scripts/jest-setup-after-env.js",
   ],
+  globals: {
+    __PKG_VERSION__: "0.0.0-test",
+  },
   setupFiles: ["dotenv/config"],
   testTimeout: 20_000,
 };

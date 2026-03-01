@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { expect, test, jest } from "@jest/globals";
+import { describe, expect, test, jest } from "@jest/globals";
 import {
   AIMessage,
   BaseMessage,
@@ -2934,4 +2934,144 @@ test("Can set streaming param", () => {
     streaming: true,
   });
   expect(modelWithStreamingTrue.streaming).toBe(true);
+});
+
+describe("withStructuredOutput - StandardSchema", () => {
+  function makeSerializableSchema() {
+    return {
+      "~standard": {
+        version: 1 as const,
+        vendor: "test",
+        validate: (value: unknown) => {
+          const v = value as Record<string, unknown>;
+          if (v && typeof v === "object" && "testName" in v) {
+            return { value: v as { testName: string } };
+          }
+          return {
+            issues: [{ message: "Expected object with testName" }],
+          };
+        },
+        jsonSchema: {
+          input: () => ({
+            type: "object" as const,
+            properties: {
+              testName: {
+                type: "string",
+                description: "The name of the test that should be run.",
+              },
+            },
+            required: ["testName"],
+          }),
+          output: () => ({ type: "object" as const, properties: {} }),
+        },
+      },
+    };
+  }
+
+  test("functionCalling sends correct Gemini tool format", async () => {
+    const record: Record<string, any> = {};
+    const projectId = mockId();
+    const authOptions: MockClientAuthInfo = {
+      record,
+      projectId,
+      resultFile: "chat-4-mock.json",
+    };
+
+    const baseModel = new ChatGoogle({ authOptions });
+    const schema = makeSerializableSchema();
+    const model = baseModel.withStructuredOutput(schema, {
+      method: "functionCalling",
+    });
+
+    await model.invoke("What?");
+
+    const toolsResult = record?.opts?.data?.tools;
+    expect(toolsResult).toBeDefined();
+    expect(Array.isArray(toolsResult)).toBeTruthy();
+    expect(toolsResult).toHaveLength(1);
+
+    const func = toolsResult[0]?.functionDeclarations?.[0];
+    expect(func).toBeDefined();
+    expect(func.name).toBe("extract");
+    expect(func.parameters).toBeDefined();
+    expect(func.parameters.type).toBe("object");
+    expect(func.parameters.properties.testName).toBeDefined();
+    expect(func.parameters.properties.testName.type).toBe("string");
+  });
+
+  test("functionCalling with custom name", async () => {
+    const record: Record<string, any> = {};
+    const projectId = mockId();
+    const authOptions: MockClientAuthInfo = {
+      record,
+      projectId,
+      resultFile: "chat-4-mock.json",
+    };
+
+    const baseModel = new ChatGoogle({ authOptions });
+    const schema = makeSerializableSchema();
+    const model = baseModel.withStructuredOutput(schema, {
+      method: "functionCalling",
+      name: "test",
+    });
+
+    await model.invoke("What?");
+
+    const func = record?.opts?.data?.tools?.[0]?.functionDeclarations?.[0];
+    expect(func).toBeDefined();
+    expect(func.name).toBe("test");
+  });
+
+  test("jsonSchema sends correct responseSchema", async () => {
+    const record: Record<string, any> = {};
+    const projectId = mockId();
+    const authOptions: MockClientAuthInfo = {
+      record,
+      projectId,
+      resultFile: "chat-json-schema-mock.json",
+    };
+
+    const baseModel = new ChatGoogle({ authOptions });
+    const schema = makeSerializableSchema();
+    const model = baseModel.withStructuredOutput(schema, {
+      method: "jsonSchema",
+    });
+
+    await model.invoke("What?");
+
+    const { data } = record.opts;
+    expect(data.tools).not.toBeDefined();
+    expect(data.generationConfig).toBeDefined();
+    expect(data.generationConfig.responseSchema).toBeDefined();
+    expect(data.generationConfig.responseSchema.type).toBe("object");
+    expect(
+      data.generationConfig.responseSchema.properties.testName
+    ).toBeDefined();
+    expect(data.generationConfig.responseSchema.properties.testName.type).toBe(
+      "string"
+    );
+    expect(data.generationConfig.responseMimeType).toBe("application/json");
+  });
+
+  test("default method uses jsonSchema with StandardSchema", async () => {
+    const record: Record<string, any> = {};
+    const projectId = mockId();
+    const authOptions: MockClientAuthInfo = {
+      record,
+      projectId,
+      resultFile: "chat-json-schema-mock.json",
+    };
+
+    const baseModel = new ChatGoogle({ authOptions });
+    const schema = makeSerializableSchema();
+    const model = baseModel.withStructuredOutput(schema);
+
+    await model.invoke("What?");
+
+    const { data } = record.opts;
+    expect(data.tools).not.toBeDefined();
+    expect(data.generationConfig).toBeDefined();
+    expect(data.generationConfig.responseSchema).toBeDefined();
+    expect(data.generationConfig.responseMimeType).toBe("application/json");
+  });
 });
