@@ -16,6 +16,7 @@ import {
   $ZodNever,
   $ZodOptional,
 } from "zod/v4/core";
+import { SerializableSchema } from "../standard_schema";
 
 export type ZodStringV3 = z3.ZodString;
 
@@ -350,19 +351,19 @@ export function interopParse<T>(schema: InteropZodType<T>, input: unknown): T {
 }
 
 /**
- * Retrieves the description from a schema definition (v3, v4, or plain object), if available.
+ * Retrieves the description from a schema definition (v3, v4, standard schema, or plain object), if available.
  *
  * @param {unknown} schema - The schema to extract the description from.
  * @returns {string | undefined} The description of the schema, or undefined if not present.
  */
 export function getSchemaDescription(
-  schema: InteropZodType<unknown> | Record<string, unknown>
+  schema: SerializableSchema | InteropZodType<unknown> | Record<string, unknown>
 ): string | undefined {
   if (isZodSchemaV4(schema)) {
     return globalRegistry.get(schema)?.description;
   }
   if (isZodSchemaV3(schema as z3.ZodType<Record<string, unknown>>)) {
-    return schema.description as string | undefined;
+    return (schema as z3.ZodType<Record<string, unknown>>).description;
   }
   if ("description" in schema && typeof schema.description === "string") {
     return schema.description;
