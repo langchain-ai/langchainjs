@@ -322,3 +322,15 @@ export abstract class BaseGoogleEmbeddings<TOutput = number[]>
     return this._process([document]);
   }
 }
+
+export function getGoogleEmbeddingsParams<
+  TParams extends BaseGoogleEmbeddingsParams
+>(
+  modelOrParams: string | TParams,
+  paramsArg?: Omit<TParams, "model">
+): TParams {
+  const model =
+    typeof modelOrParams === "string" ? modelOrParams : modelOrParams.model;
+  const params = typeof modelOrParams === "string" ? paramsArg : modelOrParams;
+  return {model, ...params} as TParams;
+}
