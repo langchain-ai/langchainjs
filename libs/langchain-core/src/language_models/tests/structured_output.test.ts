@@ -129,10 +129,10 @@ describe("createFunctionCallingParser", () => {
     }
 
     const schema = makeSerializableSchema();
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const parser = createFunctionCallingParser(
       schema,
       "extract",
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       CustomParser as any
     );
     expect(parser).toBeInstanceOf(CustomParser);
