@@ -785,7 +785,7 @@ export class ChatCerebras
       functionName = schema.name;
     }
 
-    let tools: ToolDefinition[] = [
+    const tools: ToolDefinition[] = [
       {
         type: "function",
         function: {
