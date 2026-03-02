@@ -1,6 +1,7 @@
 import { BaseMessage } from "../messages/index.js";
 import {
   BaseLLMOutputParser,
+  BaseOutputParser,
   JsonOutputParser,
   StructuredOutputParser,
 } from "../output_parsers/index.js";
@@ -35,7 +36,7 @@ export function createContentParser<
     | SerializableSchema<RunOutput>
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     | Record<string, any>
-): BaseLLMOutputParser<RunOutput> {
+): BaseOutputParser<RunOutput> {
   if (isInteropZodSchema(schema)) {
     return StructuredOutputParser.fromZodSchema(schema);
   }

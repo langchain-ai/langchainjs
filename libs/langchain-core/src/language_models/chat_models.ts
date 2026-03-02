@@ -63,7 +63,7 @@ import { getEnvironmentVariable } from "../utils/env.js";
 import { castStandardMessageContent, iife } from "./utils.js";
 import {
   isSerializableSchema,
-  SerializableSchema,
+  type SerializableSchema,
 } from "../utils/standard_schema.js";
 import { assembleStructuredOutputPipeline } from "./structured_output.js";
 
