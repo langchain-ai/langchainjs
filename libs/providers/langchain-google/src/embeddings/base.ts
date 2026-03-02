@@ -1,7 +1,7 @@
 import { EmbeddingsParams, MultimodalEmbeddings } from "@langchain/core/embeddings";
 import { ApiClient } from "../clients/index.js";
 import { getPlatformType, GooglePlatformType } from "../utils/platform.js";
-import { ConfigurationError } from "../utils/errors.js";
+import { ConfigurationError, RequestError } from "../utils/errors.js";
 import { convertParamsToPlatformType } from "../converters/params.js";
 import { ContentBlock } from "@langchain/core/messages";
 import { convertStandardContentBlockToGeminiPart } from "../converters/messages.js";
@@ -306,6 +306,7 @@ export abstract class BaseGoogleEmbeddings<TOutput = number[]>
 
   protected async _process(documents: ContentBlock.Standard[]): Promise<TOutput | undefined> {
     const url = await this.buildUrl();
+    console.log(this.platform, url);
     const body = this._convertDocumentsToBody(documents);
     const request = new Request(url, {
       method: "POST",
@@ -315,6 +316,10 @@ export abstract class BaseGoogleEmbeddings<TOutput = number[]>
       body: JSON.stringify(body),
     })
     const response: Response = await this.apiClient.fetch(request);
+    if (!response.ok) {
+      const error = await RequestError.fromResponse(response);
+      throw error;
+    }
     return await this._convertResponseToValues(response) as TOutput;
   }
 
