@@ -281,7 +281,16 @@ export abstract class BaseChatModel<
       options,
       options?.callbacks
     );
-    const chatGeneration = result.generations[0][0] as ChatGeneration;
+    const chatGeneration = result.generations[0]?.[0] as
+      | ChatGeneration
+      | undefined;
+    if (!chatGeneration) {
+      throw new Error(
+        "No chat generation returned. The model returned an empty response. " +
+          "This may indicate the prompt was blocked by safety filters, " +
+          "the model hit a token limit, or an internal error occurred."
+      );
+    }
     // TODO: Remove cast after figuring out inheritance
     return chatGeneration.message as OutputMessageType;
   }

@@ -14,10 +14,12 @@ type ThinkingBlock = { type: "thinking"; thinking: string; signature?: string };
 type TextBlock = { type: "text"; text: string };
 
 function createMockResponse(
-  candidates: GenerateContentCandidate[]
+  candidates: GenerateContentCandidate[],
+  promptFeedback?: Record<string, unknown>
 ): EnhancedGenerateContentResponse {
   return {
     candidates,
+    promptFeedback: promptFeedback as EnhancedGenerateContentResponse["promptFeedback"],
     text: () => {
       const parts = candidates[0]?.content?.parts ?? [];
       return parts
@@ -267,5 +269,65 @@ describe("Streaming thinking content handling", () => {
     // Should NOT be a concatenated string like "Thinking...Answer"
     expect(typeof content).not.toBe("string");
     expect(Array.isArray(content)).toBe(true);
+  });
+});
+
+// https://github.com/langchain-ai/langchainjs/issues/8557
+describe("Blocked content handling", () => {
+  test("should throw an error with block reason when content is blocked by safety filters", () => {
+    const mockResponse = createMockResponse([], {
+      blockReason: "SAFETY",
+      safetyRatings: [
+        {
+          category: "HARM_CATEGORY_SEXUALLY_EXPLICIT",
+          probability: "HIGH",
+        },
+      ],
+    });
+
+    expect(() => mapGenerateContentResultToChatResult(mockResponse)).toThrow(
+      /Content generation was blocked.*Block reason: SAFETY/
+    );
+  });
+
+  test("should throw an error with block reason for PROHIBITED_CONTENT", () => {
+    const mockResponse = createMockResponse([], {
+      blockReason: "PROHIBITED_CONTENT",
+    });
+
+    expect(() => mapGenerateContentResultToChatResult(mockResponse)).toThrow(
+      /Content generation was blocked.*Block reason: PROHIBITED_CONTENT/
+    );
+  });
+
+  test("should throw a generic error when no candidates and no block reason", () => {
+    const mockResponse = createMockResponse([]);
+
+    expect(() => mapGenerateContentResultToChatResult(mockResponse)).toThrow(
+      /No candidates returned from Google Generative AI/
+    );
+  });
+
+  test("should throw when candidates array is undefined", () => {
+    const mockResponse: EnhancedGenerateContentResponse = {
+      candidates: undefined,
+      text: () => "",
+      functionCall: () => undefined,
+      functionCalls: () => undefined,
+    };
+
+    expect(() => mapGenerateContentResultToChatResult(mockResponse)).toThrow(
+      /No candidates returned from Google Generative AI/
+    );
+  });
+
+  test("streaming should return null when no candidates (not throw)", () => {
+    const mockResponse = createMockResponse([]);
+
+    const result = convertResponseContentToChatGenerationChunk(mockResponse, {
+      index: 0,
+    });
+
+    expect(result).toBeNull();
   });
 });
