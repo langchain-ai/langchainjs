@@ -24,9 +24,9 @@
     "test": "NODE_OPTIONS=--experimental-vm-modules jest --testPathIgnorePatterns=\\.int\\.test.ts --testPathIgnorePatterns=arcjet --testPathIgnorePatterns=srt --testPathIgnorePatterns=standard --testTimeout 30000 --runInBand",
     "test:watch": "NODE_OPTIONS=--experimental-vm-modules jest --watch --testPathIgnorePatterns=\\.int\\.test.ts",
     "test:single": "NODE_OPTIONS=--experimental-vm-modules jest --config jest.config.cjs --testTimeout 100000",
-    "test:int": "NODE_OPTIONS=--experimental-vm-modules jest --testPathPattern=\\.int\\.test.ts --testTimeout 100000 --runInBand",
-    "test:standard:unit": "NODE_OPTIONS=--experimental-vm-modules jest --testPathPattern=\\.standard\\.test.ts --testTimeout 100000 --runInBand",
-    "test:standard:int": "NODE_OPTIONS=--experimental-vm-modules jest --testPathPattern=\\.standard\\.int\\.test.ts --testTimeout 100000 --runInBand",
+    "test:int": "NODE_OPTIONS=--experimental-vm-modules jest --testPathPatterns=\\.int\\.test.ts --testTimeout 100000 --runInBand",
+    "test:standard:unit": "NODE_OPTIONS=--experimental-vm-modules jest --testPathPatterns=\\.standard\\.test.ts --testTimeout 100000 --runInBand",
+    "test:standard:int": "NODE_OPTIONS=--experimental-vm-modules jest --testPathPatterns=\\.standard\\.int\\.test.ts --testTimeout 100000 --runInBand",
     "test:standard": "pnpm test:standard:unit && pnpm test:standard:int",
     "format": "prettier --write \"src\"",
     "format:check": "prettier --check \"src\""
@@ -37,6 +37,7 @@
     "binary-extensions": "^2.2.0",
     "flat": "^5.0.2",
     "js-yaml": "^4.1.1",
+    "langsmith": ">=0.4.0 <1.0.0",
     "math-expression-evaluator": "^2.0.0",
     "uuid": "^10.0.0",
     "zod": "^3.25.76 || ^4"
