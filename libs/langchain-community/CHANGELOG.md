@@ -1,5 +1,16 @@
 # @langchain/community
 
+## 1.1.21
+
+### Patch Changes
+
+- [#10113](https://github.com/langchain-ai/langchainjs/pull/10113) [`7d198ae`](https://github.com/langchain-ai/langchainjs/commit/7d198aeac323598a5b018d31793cf299d0f2c921) Thanks [@pawel-twardziak](https://github.com/pawel-twardziak)! - Feat/community chatalitongyi tool calling
+
+- [#9722](https://github.com/langchain-ai/langchainjs/pull/9722) [`df9dbd2`](https://github.com/langchain-ai/langchainjs/commit/df9dbd26994aefc47e26c18f2fc7ec4657e4dc1b) Thanks [@cs7-shrey](https://github.com/cs7-shrey)! - feat(milvus): Add TTL support by passing properties to Milvus
+
+- Updated dependencies []:
+  - @langchain/classic@1.0.21
+
 ## 1.1.20
 
 ### Patch Changes

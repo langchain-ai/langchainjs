@@ -1,5 +1,18 @@
 # @langchain/google
 
+## 0.1.4
+
+### Patch Changes
+
+- [#10195](https://github.com/langchain-ai/langchainjs/pull/10195) [`05f46ff`](https://github.com/langchain-ai/langchainjs/commit/05f46ff36c12ce5259c2c8e0da89349396f25b8c) Thanks [@hntrl](https://github.com/hntrl)! - fix(google): don't send empty toolConfig when no tool_choice is specified
+
+  When `bindTools()` was called without specifying `tool_choice`, an empty
+  `toolConfig: { functionCallingConfig: {} }` was included in the API request.
+  This caused the Gemini API to return tool invocations as text (Python code
+  blocks) instead of structured `functionCall` parts. Now returns `undefined`
+  when no `tool_choice` is set, omitting `toolConfig` from the request entirely
+  and letting the API default to AUTO mode.
+
 ## 0.1.3
 
 ### Patch Changes
