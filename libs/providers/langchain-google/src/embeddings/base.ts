@@ -181,6 +181,10 @@ export abstract class BaseGoogleEmbeddings<TOutput = number[]>
     }
   }
 
+  get isMultimodal(): boolean {
+    return this.model.startsWith("multimodal");
+  }
+
   protected _convertDocumentsToBodyAIStudio(documents: ContentBlock.Standard[]): AIStudio.Request {
     const parts: Gemini.Part[] = documents.map((document: ContentBlock.Standard) => {
       const part = convertStandardContentBlockToGeminiPart(document);
@@ -233,7 +237,9 @@ export abstract class BaseGoogleEmbeddings<TOutput = number[]>
   protected _convertStandardContentBlockToVertexInstance(block: ContentBlock.Standard): Vertex.Instance {
     switch (block.type) {
       case "text":
-        return {text: block.text};
+        return this.isMultimodal
+          ? {text: block.text}
+          : {content: block.text};
       case "image":
       case "video":
         return this._convertStandardDataContentBlockToVertexInstance(block);
@@ -276,12 +282,14 @@ export abstract class BaseGoogleEmbeddings<TOutput = number[]>
   protected async _convertResponseToValuesVertex(response: Response): Promise<number[]> {
     const body: Vertex.Response = await response.json();
     const embeddings: number[][] = body.predictions.map((prediction: Vertex.Prediction) => {
-      if ("textEmbedding" in prediction) {
+      if ("embeddings" in prediction) {
+        return prediction.embeddings?.values ?? [];
+      } else if ("textEmbedding" in prediction) {
         return prediction.textEmbedding ?? [];
       } else if ("imageEmbedding" in prediction) {
         return prediction.imageEmbedding ?? [];
       } else if ("videoEmbedding" in prediction) {
-        const videoEmbeddings = prediction.videoEmbeddings;
+        const videoEmbeddings = (prediction as Vertex.VideoEmbeddings).videoEmbeddings;
         const videoEmbedding = videoEmbeddings?.[0];
         return videoEmbedding?.embedding ?? [];
       } else {
@@ -307,6 +315,7 @@ export abstract class BaseGoogleEmbeddings<TOutput = number[]>
   protected async _process(documents: ContentBlock.Standard[]): Promise<TOutput | undefined> {
     const url = await this.buildUrl();
     const body = this._convertDocumentsToBody(documents);
+    console.log(JSON.stringify(body,null,1));
     const request = new Request(url, {
       method: "POST",
       headers: {

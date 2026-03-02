@@ -3,6 +3,10 @@
 // eslint-disable-next-line @typescript-eslint/no-namespace
 export namespace Vertex {
 
+  export interface InstanceContent {
+    content: string;
+  }
+
   export interface InstanceText {
     text: string;
   }
@@ -43,7 +47,9 @@ export namespace Vertex {
 
   export type InstanceVideo = InstanceVideoUri | InstanceVideoBase64;
 
-  export type Instance = Partial<InstanceText> & Partial<InstanceImage> & Partial<InstanceVideo>;
+  export type InstanceMultimodal = Partial<InstanceText> & Partial<InstanceImage> & Partial<InstanceVideo>;
+
+  export type Instance = Partial<InstanceContent> | InstanceMultimodal;
 
   export interface Params {
     autoTruncate?: boolean;
@@ -53,6 +59,16 @@ export namespace Vertex {
   export interface Request {
     instances: Instance[];
     parameters: Params;
+  }
+
+  export interface PredictionContent {
+    embeddings: {
+      statistics: {
+        token_count: number;
+        truncated: boolean;
+      };
+      values: number[];
+    };
   }
 
   export interface TextEmbedding {
@@ -73,7 +89,9 @@ export namespace Vertex {
     videoEmbeddings: VideoEmbedding[];
   }
 
-  export type Prediction = Partial<TextEmbedding> & Partial<ImageEmbedding> & Partial<VideoEmbeddings>;
+  export type PredictionMultimodal = Partial<TextEmbedding> & Partial<ImageEmbedding> & Partial<VideoEmbeddings>;
+
+  export type Prediction = Partial<PredictionContent> | PredictionMultimodal;
 
   export interface Response {
     predictions: Prediction[];

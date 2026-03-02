@@ -92,7 +92,6 @@ const expansionInfo: Partial<ModelInfo>[] = [
   {
     testConfig: {
       node: true,
-      skip: true,
     },
   },
   {
