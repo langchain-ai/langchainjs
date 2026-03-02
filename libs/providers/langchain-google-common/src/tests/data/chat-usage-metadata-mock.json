@@ -1,0 +1,41 @@
+{
+  "candidates": [
+    {
+      "content": {
+        "role": "model",
+        "parts": [
+          {
+            "text": "OK"
+          }
+        ]
+      },
+      "finishReason": "STOP"
+    }
+  ],
+  "promptFeedback": {
+    "safetyRatings": []
+  },
+  "usageMetadata": {
+    "promptTokenCount": 30,
+    "cachedContentTokenCount": 8,
+    "thoughtsTokenCount": 4,
+    "candidatesTokenCount": 6,
+    "totalTokenCount": 40,
+    "promptTokensDetails": [
+      {
+        "modality": "TEXT",
+        "tokenCount": 20
+      },
+      {
+        "modality": "IMAGE",
+        "tokenCount": 10
+      }
+    ],
+    "candidatesTokensDetails": [
+      {
+        "modality": "TEXT",
+        "tokenCount": 6
+      }
+    ]
+  }
+}
