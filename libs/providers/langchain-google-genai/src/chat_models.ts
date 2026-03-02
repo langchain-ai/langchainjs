@@ -1113,56 +1113,49 @@ export class ChatGoogleGenerativeAI
 
     if (method === "functionCalling") {
       let functionName = name ?? "extract";
-      let tools: GoogleGenerativeAIFunctionDeclarationsTool[];
+      let geminiFunctionDeclaration: GenerativeAIFunctionDeclaration;
       if (isInteropZodSchema(schema) || isSerializableSchema(schema)) {
         const jsonSchema = schemaToGenerativeAIParameters(schema);
-        tools = [
-          {
-            functionDeclarations: [
-              {
-                name: functionName,
-                description:
-                  jsonSchema.description ?? "A function available to call.",
-                parameters: jsonSchema as GenerativeAIFunctionDeclarationSchema,
-              },
-            ],
-          },
-        ];
+        geminiFunctionDeclaration = {
+          name: functionName,
+          description:
+            jsonSchema.description ?? "A function available to call.",
+          parameters: jsonSchema as GenerativeAIFunctionDeclarationSchema,
+        };
+      } else if (
+        typeof schema.name === "string" &&
+        typeof schema.parameters === "object" &&
+        schema.parameters != null
+      ) {
+        geminiFunctionDeclaration = schema as GenerativeAIFunctionDeclaration;
+        geminiFunctionDeclaration.parameters = removeAdditionalProperties(
+          schema.parameters
+        ) as GenerativeAIFunctionDeclarationSchema;
+        functionName = schema.name;
       } else {
-        let geminiFunctionDefinition: GenerativeAIFunctionDeclaration;
-        if (
-          typeof schema.name === "string" &&
-          typeof schema.parameters === "object" &&
-          schema.parameters != null
-        ) {
-          geminiFunctionDefinition = schema as GenerativeAIFunctionDeclaration;
-          geminiFunctionDefinition.parameters = removeAdditionalProperties(
-            schema.parameters
-          ) as GenerativeAIFunctionDeclarationSchema;
-          functionName = schema.name;
-        } else {
-          geminiFunctionDefinition = {
-            name: functionName,
-            description: schema.description ?? "",
-            parameters: removeAdditionalProperties(
-              schema
-            ) as GenerativeAIFunctionDeclarationSchema,
-          };
-        }
-        tools = [
-          {
-            functionDeclarations: [geminiFunctionDefinition],
-          },
-        ];
+        geminiFunctionDeclaration = {
+          name: functionName,
+          description: schema.description ?? "",
+          parameters: removeAdditionalProperties(
+            schema
+          ) as GenerativeAIFunctionDeclarationSchema,
+        };
       }
+
+      const tools: GoogleGenerativeAIFunctionDeclarationsTool[] = [
+        {
+          functionDeclarations: [geminiFunctionDeclaration],
+        },
+      ];
+      llm = this.bindTools(tools).withConfig({
+        allowedFunctionNames: [functionName],
+      });
+
       outputParser = createFunctionCallingParser(
         schema,
         functionName,
         GoogleGenerativeAIToolsOutputParser
       );
-      llm = this.bindTools(tools).withConfig({
-        allowedFunctionNames: [functionName],
-      });
     } else {
       const jsonSchema = schemaToGenerativeAIParameters(schema);
       llm = this.withConfig({
