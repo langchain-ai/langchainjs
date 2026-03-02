@@ -306,7 +306,6 @@ export abstract class BaseGoogleEmbeddings<TOutput = number[]>
 
   protected async _process(documents: ContentBlock.Standard[]): Promise<TOutput | undefined> {
     const url = await this.buildUrl();
-    console.log(this.platform, url);
     const body = this._convertDocumentsToBody(documents);
     const request = new Request(url, {
       method: "POST",
