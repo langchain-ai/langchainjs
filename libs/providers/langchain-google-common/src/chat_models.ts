@@ -512,48 +512,38 @@ export abstract class ChatGoogleBase<AuthOptions>
 
     if (method === "functionCalling") {
       let functionName = name ?? "extract";
-      let tools: GeminiTool[];
+      let geminiFunctionDeclaration: GeminiFunctionDeclaration;
       if (isInteropZodSchema(schema) || isSerializableSchema(schema)) {
         const jsonSchema = schemaToGeminiParameters(schema);
-        tools = [
-          {
-            functionDeclarations: [
-              {
-                name: functionName,
-                description:
-                  jsonSchema.description ?? "A function available to call.",
-                parameters: jsonSchema as GeminiFunctionSchema,
-              },
-            ],
-          },
-        ];
+        geminiFunctionDeclaration = {
+          name: functionName,
+          description:
+            jsonSchema.description ?? "A function available to call.",
+          parameters: jsonSchema as GeminiFunctionSchema,
+        };
+      } else if (
+        typeof schema.name === "string" &&
+        typeof schema.parameters === "object" &&
+        schema.parameters != null
+      ) {
+        geminiFunctionDeclaration = schema as GeminiFunctionDeclaration;
+        functionName = schema.name;
       } else {
-        let geminiFunctionDefinition: GeminiFunctionDeclaration;
-        if (
-          typeof schema.name === "string" &&
-          typeof schema.parameters === "object" &&
-          schema.parameters != null
-        ) {
-          geminiFunctionDefinition = schema as GeminiFunctionDeclaration;
-          functionName = schema.name;
-        } else {
-          // We are providing the schema for *just* the parameters, probably
-          const parameters: GeminiJsonSchema =
-            removeAdditionalProperties(schema);
-          geminiFunctionDefinition = {
-            name: functionName,
-            description: schema.description ?? "",
-            parameters,
-          };
-        }
-        tools = [
-          {
-            functionDeclarations: [geminiFunctionDefinition],
-          },
-        ];
+        // We are providing the schema for *just* the parameters, probably
+        const parameters: GeminiJsonSchema = removeAdditionalProperties(schema);
+        geminiFunctionDeclaration = {
+          name: functionName,
+          description: schema.description ?? "",
+          parameters,
+        };
       }
-      outputParser = createFunctionCallingParser(schema, functionName);
+
+      const tools: GeminiTool[] = [
+        { functionDeclarations: [geminiFunctionDeclaration] },
+      ];
       llm = this.bindTools(tools).withConfig({ tool_choice: functionName });
+
+      outputParser = createFunctionCallingParser(schema, functionName);
     } else {
       // Default to jsonSchema method
       const jsonSchema = schemaToGeminiParameters(schema);
