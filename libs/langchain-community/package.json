@@ -199,7 +199,7 @@
     "typescript": "~5.8.3",
     "typesense": "^3.0.1",
     "usearch": "^2.21.4",
-    "voy-search": "0.6.2",
+    "voy-search": "0.6.3",
     "weaviate-client": "^3.5.2",
     "word-extractor": "^1.0.4",
     "youtubei.js": "^16.0.1"
@@ -316,7 +316,7 @@
     "typeorm": "^0.3.28",
     "typesense": "^3.0.1",
     "usearch": "^1.1.1",
-    "voy-search": "0.6.2",
+    "voy-search": "0.6.3",
     "word-extractor": "*",
     "ws": "^8.14.2",
     "youtubei.js": "*"

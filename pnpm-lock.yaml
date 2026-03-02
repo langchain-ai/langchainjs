@@ -391,8 +391,8 @@ importers:
         specifier: ^3.2.4
         version: 3.2.4(@types/debug@4.1.12)(@types/node@25.3.3)(jiti@2.6.1)(jsdom@28.1.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
       voy-search:
-        specifier: 0.6.2
-        version: 0.6.2
+        specifier: 0.6.3
+        version: 0.6.3
       weaviate-client:
         specifier: ^3.5.2
         version: 3.11.0(encoding@0.1.13)
@@ -1104,8 +1104,8 @@ importers:
         specifier: ^3.2.4
         version: 3.2.4(@types/debug@4.1.12)(@types/node@25.3.3)(jiti@2.6.1)(jsdom@28.1.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
       voy-search:
-        specifier: 0.6.2
-        version: 0.6.2
+        specifier: 0.6.3
+        version: 0.6.3
       weaviate-client:
         specifier: ^3.8.0
         version: 3.11.0(encoding@0.1.13)
@@ -1619,8 +1619,8 @@ importers:
         specifier: ^2.21.4
         version: 2.21.4
       voy-search:
-        specifier: 0.6.2
-        version: 0.6.2
+        specifier: 0.6.3
+        version: 0.6.3
       weaviate-client:
         specifier: ^3.5.2
         version: 3.11.0(encoding@0.1.13)
@@ -16476,8 +16476,8 @@ packages:
   vm-browserify@1.1.2:
     resolution: {integrity: sha512-2ham8XPWTONajOR0ohOKOHXkm3+gaBmGut3SRuu75xLd/RRaY6vqgh8NBYYk7+RW3u5AtzPQZG8F10LHkl0lAQ==}
 
-  voy-search@0.6.2:
-    resolution: {integrity: sha512-4iiumLzpCUUrelGTZzT3Zg7xY5QKxf1iGJeGE6xxbZl1RZmHyzk5DviUwbSYjbTsQetPLrASh96JEABXO1AAIA==}
+  voy-search@0.6.3:
+    resolution: {integrity: sha512-GRwrXcT3Qmzr/CuwpwX55XWpgqM2hUqLipSwI8bGcfsDTJGa+mFxsOXzWHNMRpcYd+U2RP73f2USLDWQu5yFdQ==}
 
   w3c-xmlserializer@5.0.0:
     resolution: {integrity: sha512-o8qghlI8NZHU1lLPrpi2+Uq7abh4GGPpYANlalzWxyWteJOCsr/P+oPBA49TOLu5FTZO4d3F9MnWJfiMo4BkmA==}
@@ -33715,7 +33715,7 @@ snapshots:
 
   vm-browserify@1.1.2: {}
 
-  voy-search@0.6.2: {}
+  voy-search@0.6.3: {}
 
   w3c-xmlserializer@5.0.0:
     dependencies:
