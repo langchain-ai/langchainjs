@@ -33,7 +33,7 @@ export class ScoreThresholdRetriever<
 
   async invoke(query: string): Promise<Document[]> {
     let currentK = 0;
-    let filteredResults: [Document, number][] = [];
+    let filteredResults: [Document, number][];
     do {
       currentK += this.kIncrement;
       const results = await this.vectorStore.similaritySearchWithScore(

@@ -105,7 +105,7 @@ export class ParentDocumentRetriever extends MultiVectorRetriever {
   }
 
   async _getRelevantDocuments(query: string): Promise<Document[]> {
-    let subDocs: SubDocs = [];
+    let subDocs: SubDocs;
     if (this.childDocumentRetriever) {
       subDocs = await this.childDocumentRetriever.invoke(query);
     } else {

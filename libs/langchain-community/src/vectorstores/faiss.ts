@@ -444,7 +444,8 @@ export class FaissStore extends SaveableVectorStore {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
       throw new Error(
-        `Could not import faiss-node. Please install faiss-node as a dependency with, e.g. \`npm install -S faiss-node\`.\n\nError: ${err?.message}`
+        `Could not import faiss-node. Please install faiss-node as a dependency with, e.g. \`npm install -S faiss-node\`.\n\nError: ${err?.message}`,
+        { cause: err }
       );
     }
   }
@@ -462,7 +463,8 @@ export class FaissStore extends SaveableVectorStore {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
       throw new Error(
-        `Could not import pickleparser. Please install pickleparser as a dependency with, e.g. \`npm install -S pickleparser\`.\n\nError: ${err?.message}`
+        `Could not import pickleparser. Please install pickleparser as a dependency with, e.g. \`npm install -S pickleparser\`.\n\nError: ${err?.message}`,
+        { cause: err }
       );
     }
   }

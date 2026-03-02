@@ -190,7 +190,8 @@ export class PuppeteerWebBaseLoader
     } catch (e) {
       console.error(e);
       throw new Error(
-        "Please install puppeteer as a dependency with, e.g. `pnpm install puppeteer`"
+        "Please install puppeteer as a dependency with, e.g. `pnpm install puppeteer`",
+        { cause: e }
       );
     }
   }

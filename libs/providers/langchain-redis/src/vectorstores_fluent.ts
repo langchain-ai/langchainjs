@@ -418,7 +418,8 @@ export class FluentRedisVectorStore extends VectorStore {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       if ((err as any)?.message.includes("unknown command")) {
         throw new Error(
-          "Failed to run FT.INFO command. Please ensure that you are running a RediSearch-capable Redis instance: https://js.langchain.com/docs/integrations/vectorstores/redis/#setup"
+          "Failed to run FT.INFO command. Please ensure that you are running a RediSearch-capable Redis instance: https://js.langchain.com/docs/integrations/vectorstores/redis/#setup",
+          { cause: err }
         );
       }
       // index doesn't exist

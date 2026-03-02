@@ -6,7 +6,6 @@ import {
   MessageContent,
   SystemMessage,
   ToolMessage,
-  UsageMetadata,
   isAIMessage,
 } from "@langchain/core/messages";
 import { ToolCall, ToolCallChunk } from "@langchain/core/messages/tool";
@@ -269,11 +268,10 @@ export function _makeMessageChunkFromAnthropicEvent(
       additional_kwargs: filteredAdditionalKwargs,
     });
   } else if (data.type === "message_delta") {
-    let usageMetadata: UsageMetadata | undefined;
     return new AIMessageChunk({
       content: fields.coerceContentToString ? "" : [],
       additional_kwargs: { ...data.delta },
-      usage_metadata: usageMetadata,
+      usage_metadata: undefined,
     });
   } else if (
     data.type === "content_block_start" &&

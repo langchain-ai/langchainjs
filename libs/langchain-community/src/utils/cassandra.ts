@@ -817,7 +817,7 @@ export class CassandraTable {
       .map((col) => col.name)
       .join(", ");
 
-    let primaryKey = "";
+    let primaryKey;
 
     // If partition columns are specified, they are included in a () wrapper
     // If not, the clustering columns are used, and the first clustering column
@@ -1143,8 +1143,7 @@ export class CassandraTable {
 
     const allColumns = [...this.primaryKey, ...this.nonKeyColumns];
 
-    let cql = "";
-    cql = `CREATE TABLE IF NOT EXISTS ${this.keyspace}.${this.table} (
+    let cql = `CREATE TABLE IF NOT EXISTS ${this.keyspace}.${this.table} (
       ${
         allColumns.length > 0
           ? `${allColumns.map((col) => `${col.name} ${col.type}`).join(", ")}`

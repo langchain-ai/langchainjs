@@ -197,7 +197,7 @@ export class ZepCloudMemory
    */
   async loadMemoryVariables(values: InputValues): Promise<MemoryVariables> {
     const memoryType = values.memoryType ?? "perpetual";
-    let memory: Memory | null = null;
+    let memory: Memory | null;
     try {
       memory = await this.zepClient.memory.get(this.sessionId, {
         memoryType,

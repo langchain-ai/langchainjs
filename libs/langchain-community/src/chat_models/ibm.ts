@@ -885,11 +885,6 @@ export class ChatWatsonx<
     if (this.streaming) {
       const stream = this._streamResponseChunks(messages, options, runManager);
       const finalChunks: Record<number, ChatGenerationChunk> = {};
-      let tokenUsage: UsageMetadata = {
-        input_tokens: 0,
-        output_tokens: 0,
-        total_tokens: 0,
-      };
       const tokenUsages: UsageMetadata[] = [];
       for await (const chunk of stream) {
         const message = chunk.message as AIMessageChunk;
@@ -915,7 +910,7 @@ export class ChatWatsonx<
           finalChunks[index] = finalChunks[index].concat(chunk);
         }
       }
-      tokenUsage = tokenUsages.reduce((acc, curr) => {
+      const tokenUsage = tokenUsages.reduce((acc, curr) => {
         return {
           input_tokens: acc.input_tokens + curr.input_tokens,
           output_tokens: acc.output_tokens + curr.output_tokens,

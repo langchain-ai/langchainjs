@@ -502,19 +502,15 @@ export class ChatAlibabaTongyi
         const reader = response.body.getReader();
         const decoder = new TextDecoder("utf-8");
         let data = "";
-        let continueReading = true;
-        while (continueReading) {
+        while (true) {
           const { done, value } = await reader.read();
           if (done) {
-            continueReading = false;
             break;
           }
           data += decoder.decode(value);
-          let continueProcessing = true;
-          while (continueProcessing) {
+          while (true) {
             const newlineIndex = data.indexOf("\n");
             if (newlineIndex === -1) {
-              continueProcessing = false;
               break;
             }
             const line = data.slice(0, newlineIndex);

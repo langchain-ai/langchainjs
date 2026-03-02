@@ -84,7 +84,8 @@ export class _HashedDocument implements HashedDocumentInterface {
       this.metadataHash = metadataHash;
     } catch (e) {
       throw new Error(
-        `Failed to hash metadata: ${e}. Please use a dict that can be serialized using json.`
+        `Failed to hash metadata: ${e}. Please use a dict that can be serialized using json.`,
+        { cause: e }
       );
     }
 

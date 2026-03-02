@@ -180,7 +180,9 @@ export class WikipediaQueryRun extends Tool {
       const result = await this._fetchPage(page, redirect);
       return result.extract;
     } catch (error) {
-      throw new Error(`Failed to fetch content for page "${page}": ${error}`);
+      throw new Error(`Failed to fetch content for page "${page}": ${error}`, {
+        cause: error,
+      });
     }
   }
 

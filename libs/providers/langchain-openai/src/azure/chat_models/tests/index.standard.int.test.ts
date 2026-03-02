@@ -6,7 +6,7 @@ import { AIMessageChunk } from "@langchain/core/messages";
 import { AzureChatOpenAI } from "../index.js";
 import { ChatOpenAICallOptions } from "../../../chat_models/index.js";
 
-let openAIAPIKey: string | undefined;
+const openAIAPIKey: string | undefined = process.env.OPENAI_API_KEY;
 
 afterAll(() => {
   if (openAIAPIKey) {

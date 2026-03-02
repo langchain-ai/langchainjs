@@ -185,7 +185,8 @@ export async function getChatModelByClassName(
         .split("'")[0];
       throw new Error(
         `Unable to import ${attemptedPackage}. Please install with ` +
-          `\`npm install ${attemptedPackage}\` or \`pnpm install ${attemptedPackage}\``
+          `\`npm install ${attemptedPackage}\` or \`pnpm install ${attemptedPackage}\``,
+        { cause: e }
       );
     }
     throw e;

@@ -216,7 +216,7 @@ export class WatsonxToolsOutputParser<
   }
 
   protected async _validateResult(result: unknown): Promise<T> {
-    let parsedResult = result;
+    let parsedResult;
     if (typeof result === "string") {
       try {
         parsedResult = JSON.parse(result);

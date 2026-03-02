@@ -159,7 +159,9 @@ export class YandexGPTEmbeddings
 
           embeddings.push(responseData.embedding);
         } catch (error) {
-          throw new Error(`Failed to fetch ${apiUrl} from YandexGPT ${error}`);
+          throw new Error(`Failed to fetch ${apiUrl} from YandexGPT ${error}`, {
+            cause: error,
+          });
         }
       }
 

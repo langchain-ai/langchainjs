@@ -139,7 +139,7 @@ export function drawMermaid(
     for (const edge of edges) {
       const { source, target, data, conditional } = edge;
 
-      let edgeLabel = "";
+      let edgeLabel: string;
       if (data !== undefined) {
         let edgeData = data;
         const words = edgeData.split(" ");

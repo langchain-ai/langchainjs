@@ -543,7 +543,7 @@ export function collapseToolCallChunks(chunks: ToolCallChunk[]): {
   const toolCalls: ToolCall[] = [];
   const invalidToolCalls: InvalidToolCall[] = [];
   for (const chunks of groupedToolCallChunks) {
-    let parsedArgs: Record<string, unknown> | null = null;
+    let parsedArgs: Record<string, unknown> | null;
     const name = chunks[0]?.name ?? "";
     const joinedArgs = chunks
       .map((c) => c.args || "")

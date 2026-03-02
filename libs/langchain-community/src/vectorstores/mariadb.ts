@@ -551,7 +551,7 @@ export class MariaDBStore extends VectorStore {
       await this.pool.batch(insertQuery, batchParams);
     } catch (e) {
       console.error(e);
-      throw new Error(`Error inserting: ${(e as Error).message}`);
+      throw new Error(`Error inserting: ${(e as Error).message}`, { cause: e });
     }
   }
 
@@ -797,7 +797,8 @@ export class MariaDBStore extends VectorStore {
     } catch (e) {
       console.error(e);
       throw new Error(
-        `Error adding column or creating index: ${(e as Error).message}`
+        `Error adding column or creating index: ${(e as Error).message}`,
+        { cause: e }
       );
     }
   }

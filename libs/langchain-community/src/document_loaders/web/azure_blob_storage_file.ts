@@ -108,7 +108,8 @@ export class AzureBlobStorageFileLoader extends BaseDocumentLoader {
           this.blobName
         } from Azure Blob Storage container ${this.container}: ${
           (e as Error).message
-        }`
+        }`,
+        { cause: e }
       );
     }
 

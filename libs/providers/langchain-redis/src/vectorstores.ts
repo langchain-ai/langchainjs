@@ -394,7 +394,7 @@ export class RedisVectorStore extends VectorStore {
           const document = res.value;
           if (document.vector_score) {
             // Reconstruct metadata from both the JSON field and individual fields
-            let metadata: Record<string, unknown> = {};
+            let metadata: Record<string, unknown>;
             try {
               metadata = JSON.parse(
                 this.unEscapeSpecialChars((document.metadata ?? "{}") as string)
@@ -495,7 +495,8 @@ export class RedisVectorStore extends VectorStore {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       if ((err as any)?.message.includes("unknown command")) {
         throw new Error(
-          "Failed to run FT.INFO command. Please ensure that you are running a RediSearch-capable Redis instance: https://js.langchain.com/docs/integrations/vectorstores/redis/#setup"
+          "Failed to run FT.INFO command. Please ensure that you are running a RediSearch-capable Redis instance: https://js.langchain.com/docs/integrations/vectorstores/redis/#setup",
+          { cause: err }
         );
       }
       // index doesn't exist

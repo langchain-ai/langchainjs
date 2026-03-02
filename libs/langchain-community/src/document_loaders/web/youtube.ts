@@ -118,7 +118,8 @@ export class YoutubeLoader extends BaseDocumentLoader {
       }
     } catch (e: unknown) {
       throw new Error(
-        `Failed to get YouTube video transcription: ${(e as Error).message}`
+        `Failed to get YouTube video transcription: ${(e as Error).message}`,
+        { cause: e }
       );
     }
     const document = new Document({

@@ -235,6 +235,6 @@ export const checkValidTemplate = (
     }
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } catch (e: any) {
-    throw new Error(`Invalid prompt schema: ${e.message}`);
+    throw new Error(`Invalid prompt schema: ${e.message}`, { cause: e });
   }
 };

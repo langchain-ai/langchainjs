@@ -258,7 +258,7 @@ export class ZepMemory extends BaseChatMemory implements ZepMemoryInput {
 
     const lastN = values.lastN ?? undefined;
 
-    let memory: BaseMemory | null = null;
+    let memory: BaseMemory | null;
     try {
       memory = await zepClient.memory.getMemory(this.sessionId, lastN);
     } catch (error) {

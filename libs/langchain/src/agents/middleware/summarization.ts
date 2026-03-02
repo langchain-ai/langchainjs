@@ -351,7 +351,7 @@ export function summarizationMiddleware(
       /**
        * Validate trigger conditions
        */
-      let triggerConditions: ContextSize[] = [];
+      let triggerConditions: ContextSize[];
       if (resolvedTrigger === undefined) {
         triggerConditions = [];
       } else if (Array.isArray(resolvedTrigger)) {

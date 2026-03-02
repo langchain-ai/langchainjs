@@ -43,7 +43,7 @@ export class AnthropicToolsOutputParser<
   }
 
   protected async _validateResult(result: unknown): Promise<T> {
-    let parsedResult = result;
+    let parsedResult: unknown;
     if (typeof result === "string") {
       try {
         parsedResult = JSON.parse(result);

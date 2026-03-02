@@ -105,7 +105,8 @@ async function CSVLoaderImports() {
   } catch (e) {
     console.error(e);
     throw new Error(
-      "Please install d3-dsv as a dependency with, e.g. `pnpm install d3-dsv@2`"
+      "Please install d3-dsv as a dependency with, e.g. `pnpm install d3-dsv@2`",
+      { cause: e }
     );
   }
 }

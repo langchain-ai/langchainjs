@@ -301,7 +301,7 @@ export class GoogleVertexAIStream {
    * Repeat this for as much as we can.
    */
   _parseBuffer(): void {
-    let obj = null;
+    let obj;
     do {
       this._skipTo("{");
       obj = this._getFullObject();

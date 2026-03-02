@@ -261,7 +261,9 @@ describe("VectorStore creation", () => {
     try {
       await PEInstance.closeConnection();
     } catch (error) {
-      throw new Error(`Error on closing connection: ${error}`);
+      throw new Error(`Error on closing connection: ${error}`, {
+        cause: error,
+      });
     }
   });
 });
@@ -494,7 +496,9 @@ describe("VectorStore methods", () => {
       await PEInstance.pool.raw(`TRUNCATE TABLE "${CUSTOM_TABLE}"`);
       await PEInstance.closeConnection();
     } catch (error) {
-      throw new Error(`Error on closing connection: ${error}`);
+      throw new Error(`Error on closing connection: ${error}`, {
+        cause: error,
+      });
     }
   });
 });

@@ -57,7 +57,8 @@ export class Neo4jChatMessageHistory extends BaseListChatMessageHistory {
       } catch (e) {
         const error = e as Error;
         throw new Error(
-          `Could not create a Neo4j driver instance. Please check the connection details.\nCause: ${error.message}`
+          `Could not create a Neo4j driver instance. Please check the connection details.\nCause: ${error.message}`,
+          { cause: e }
         );
       }
     } else {
@@ -75,7 +76,8 @@ export class Neo4jChatMessageHistory extends BaseListChatMessageHistory {
     } catch (e) {
       const error = e as Error;
       throw new Error(
-        `Could not verify connection to the Neo4j database.\nCause: ${error.message}`
+        `Could not verify connection to the Neo4j database.\nCause: ${error.message}`,
+        { cause: e }
       );
     }
 
@@ -111,7 +113,9 @@ export class Neo4jChatMessageHistory extends BaseListChatMessageHistory {
       return mapStoredMessagesToChatMessages(results);
     } catch (e) {
       const error = e as Error;
-      throw new Error(`Ohno! Couldn't get messages.\nCause: ${error.message}`);
+      throw new Error(`Ohno! Couldn't get messages.\nCause: ${error.message}`, {
+        cause: e,
+      });
     }
   }
 
@@ -136,7 +140,9 @@ export class Neo4jChatMessageHistory extends BaseListChatMessageHistory {
       });
     } catch (e) {
       const error = e as Error;
-      throw new Error(`Ohno! Couldn't add message.\nCause: ${error.message}`);
+      throw new Error(`Ohno! Couldn't add message.\nCause: ${error.message}`, {
+        cause: e,
+      });
     }
   }
 
@@ -154,7 +160,8 @@ export class Neo4jChatMessageHistory extends BaseListChatMessageHistory {
     } catch (e) {
       const error = e as Error;
       throw new Error(
-        `Ohno! Couldn't clear chat history.\nCause: ${error.message}`
+        `Ohno! Couldn't clear chat history.\nCause: ${error.message}`,
+        { cause: e }
       );
     }
   }

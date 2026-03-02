@@ -690,7 +690,9 @@ export class PGVectorStore extends VectorStore {
         await this.pool.query(insertQuery, flatValues);
       } catch (e) {
         console.error(e);
-        throw new Error(`Error inserting: ${(e as Error).message}`);
+        throw new Error(`Error inserting: ${(e as Error).message}`, {
+          cause: e,
+        });
       }
     }
   }
@@ -1061,7 +1063,8 @@ export class PGVectorStore extends VectorStore {
       if (!(e as Error).message.includes("already exists")) {
         console.error(e);
         throw new Error(
-          `Error adding column or creating index: ${(e as Error).message}`
+          `Error adding column or creating index: ${(e as Error).message}`,
+          { cause: e }
         );
       }
     }
@@ -1143,7 +1146,7 @@ export class PGVectorStore extends VectorStore {
     distanceFunction?: string;
     namespace?: string;
   }): Promise<void> {
-    let idxDistanceFunction = config?.distanceFunction || "vector_cosine_ops";
+    let idxDistanceFunction: string;
     const prefix = config?.namespace ? `${config.namespace}_` : "";
 
     switch (this.distanceStrategy) {

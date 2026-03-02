@@ -258,7 +258,9 @@ export class Chroma extends VectorStore {
           ...(this.collectionMetadata && { metadata: this.collectionMetadata }),
         });
       } catch (err) {
-        throw new Error(`Chroma getOrCreateCollection error: ${err}`);
+        throw new Error(`Chroma getOrCreateCollection error: ${err}`, {
+          cause: err,
+        });
       }
     }
 

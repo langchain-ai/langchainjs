@@ -162,7 +162,9 @@ export class TypeORMVectorStore extends VectorStore {
         await documentRepository.save(chunk);
       } catch (e) {
         console.error(e);
-        throw new Error(`Error inserting: ${chunk[0].pageContent}`);
+        throw new Error(`Error inserting: ${chunk[0].pageContent}`, {
+          cause: e,
+        });
       }
     }
   }

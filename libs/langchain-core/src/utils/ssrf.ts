@@ -360,7 +360,7 @@ export function validateSafeUrl(
     if (error && typeof error === "object" && "message" in error) {
       throw error;
     }
-    throw new Error(`URL validation failed: ${error}`);
+    throw new Error(`URL validation failed: ${error}`, { cause: error });
   }
 }
 

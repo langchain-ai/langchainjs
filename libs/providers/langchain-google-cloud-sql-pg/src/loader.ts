@@ -188,8 +188,9 @@ export class PostgresLoader extends BaseDocumentLoader {
       result = await engine.pool.raw(queryStmt);
     } catch (error) {
       if (typeof error === "string") {
-        throw Error(error);
+        throw new Error(error, { cause: error });
       }
+      throw error;
     }
     const columnNames = result.fields.map(
       (field: { name: string }) => field.name
@@ -276,8 +277,9 @@ export class PostgresLoader extends BaseDocumentLoader {
       }
     } catch (error) {
       if (typeof error === "string") {
-        throw Error(error);
+        throw new Error(error, { cause: error });
       }
+      throw error;
     }
   }
 }

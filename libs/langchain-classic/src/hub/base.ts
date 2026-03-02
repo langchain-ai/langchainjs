@@ -203,7 +203,8 @@ async function loadLangSmith(): Promise<new (config?: ClientConfig) => Client> {
     // eslint-disable-next-line no-instanceof/no-instanceof
     const errorMessage = error instanceof Error ? error.message : String(error);
     throw new Error(
-      `Error loading "langsmith" package, install it via \`npm install langsmith\` before you use this function.\nError: ${errorMessage}`
+      `Error loading "langsmith" package, install it via \`npm install langsmith\` before you use this function.\nError: ${errorMessage}`,
+      { cause: error }
     );
   }
 }

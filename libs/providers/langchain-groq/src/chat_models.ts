@@ -1216,6 +1216,9 @@ export class ChatGroq extends BaseChatModel<
         data,
         lastMessageId
       );
+      if (chunk.id) {
+        lastMessageId = chunk.id;
+      }
       const newTokenIndices = {
         prompt: options.promptIndex ?? 0,
         completion: choice.index ?? 0,

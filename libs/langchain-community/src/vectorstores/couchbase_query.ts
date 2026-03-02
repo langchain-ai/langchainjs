@@ -1,5 +1,4 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable import/no-extraneous-dependencies */
 import { EmbeddingsInterface } from "@langchain/core/embeddings";
 import { VectorStore } from "@langchain/core/vectorstores";
 import { Bucket, Cluster, Collection, Scope } from "couchbase";
@@ -187,7 +186,8 @@ export class CouchbaseQueryVectorStore extends VectorStore {
       store._collection = store._scope.collection(store.collectionName);
     } catch (err) {
       throw new Error(
-        `Error connecting to couchbase, Please check connection and credentials. ${err}`
+        `Error connecting to couchbase, Please check connection and credentials. ${err}`,
+        { cause: err }
       );
     }
 
@@ -199,7 +199,9 @@ export class CouchbaseQueryVectorStore extends VectorStore {
         throw new Error("Error while initializing vector store");
       }
     } catch (err) {
-      throw new Error(`Error while initializing vector store: ${err}`);
+      throw new Error(`Error while initializing vector store: ${err}`, {
+        cause: err,
+      });
     }
     return store;
   }
@@ -218,7 +220,8 @@ export class CouchbaseQueryVectorStore extends VectorStore {
       return true;
     } catch (err) {
       throw new Error(
-        `Bucket with name ${this.bucketName} does not exist. Error: ${err}`
+        `Bucket with name ${this.bucketName} does not exist. Error: ${err}`,
+        { cause: err }
       );
     }
   }
@@ -249,7 +252,8 @@ export class CouchbaseQueryVectorStore extends VectorStore {
       return true;
     } catch (err) {
       throw new Error(
-        `Scope ${this.scopeName} or Collection ${this.collectionName} does not exist. Error: ${err}`
+        `Scope ${this.scopeName} or Collection ${this.collectionName} does not exist. Error: ${err}`,
+        { cause: err }
       );
     }
   }
@@ -410,7 +414,7 @@ export class CouchbaseQueryVectorStore extends VectorStore {
         docsWithScore.push([doc, distance]);
       }
     } catch (err) {
-      throw new Error(`Query failed with error: ${err}`);
+      throw new Error(`Query failed with error: ${err}`, { cause: err });
     }
     return docsWithScore;
   }
@@ -589,7 +593,8 @@ export class CouchbaseQueryVectorStore extends VectorStore {
         throw new Error(
           "Vector dimension is required for creating Query index. " +
             "Unable to determine the dimension from the embedding object. " +
-            `Error: ${e}`
+            `Error: ${e}`,
+          { cause: e }
         );
       }
     }
@@ -657,10 +662,11 @@ export class CouchbaseQueryVectorStore extends VectorStore {
         "first_error_message" in e.cause
       ) {
         throw new Error(
-          `Index creation failed with error: ${e.cause.first_error_message}`
+          `Index creation failed with error: ${e.cause.first_error_message}`,
+          { cause: e }
         );
       }
-      throw new Error(`Index creation failed with error: ${e}`);
+      throw new Error(`Index creation failed with error: ${e}`, { cause: e });
     }
   }
 

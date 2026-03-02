@@ -66,7 +66,7 @@ export async function pull<T extends Runnable>(
     if (options?.includeModel) {
       throw new Error(
         [
-          e.message,
+          (e as Error).message,
           "",
           `To load prompts with an associated non-OpenAI model, you must use the "langchain/hub/node" entrypoint, or pass a "modelClass" parameter like this:`,
           "",
@@ -79,7 +79,8 @@ export async function pull<T extends Runnable>(
           `  modelClass: ChatAnthropic,`,
           `});`,
           "```",
-        ].join("\n")
+        ].join("\n"),
+        { cause: e }
       );
     } else {
       throw e;

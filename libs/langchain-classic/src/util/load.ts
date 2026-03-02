@@ -17,6 +17,6 @@ export const loadFromFile = async <T>(
     return loader(await fs.readFile(uri, { encoding: "utf-8" }), uri, values);
   } catch (e) {
     console.error(e);
-    throw new Error(`Could not load file at ${uri}`);
+    throw new Error(`Could not load file at ${uri}`, { cause: e });
   }
 };

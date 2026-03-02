@@ -184,7 +184,6 @@ export class PostgresRecordManager implements RecordManagerInterface {
     if (groupIds) {
       values.push(groupIds);
       query += ` AND group_id = ANY($${index})`;
-      index += 1;
     }
 
     query += ";";

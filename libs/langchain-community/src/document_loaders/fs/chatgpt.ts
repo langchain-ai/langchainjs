@@ -51,7 +51,7 @@ export class ChatGPTLoader extends TextLoader {
       data = JSON.parse(raw);
     } catch (e) {
       console.error(e);
-      throw new Error("Failed to parse JSON");
+      throw new Error("Failed to parse JSON", { cause: e });
     }
 
     const truncatedData = this.numLogs > 0 ? data.slice(0, this.numLogs) : data;
@@ -75,7 +75,7 @@ export class ChatGPTLoader extends TextLoader {
         text = await readFile(this.filePathOrBlob, "utf8");
       } catch (e) {
         console.error(e);
-        throw new Error("Failed to read file");
+        throw new Error("Failed to read file", { cause: e });
       }
       metadata = { source: this.filePathOrBlob };
     } else {
@@ -83,7 +83,7 @@ export class ChatGPTLoader extends TextLoader {
         text = await this.filePathOrBlob.text();
       } catch (e) {
         console.error(e);
-        throw new Error("Failed to read blob");
+        throw new Error("Failed to read blob", { cause: e });
       }
       metadata = { source: "blob", blobType: this.filePathOrBlob.type };
     }

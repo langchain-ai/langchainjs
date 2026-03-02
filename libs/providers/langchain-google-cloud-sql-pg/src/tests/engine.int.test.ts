@@ -81,7 +81,9 @@ describe("PostgresEngine Instance creation", () => {
     try {
       await PEInstance.closeConnection();
     } catch (error) {
-      throw new Error(`Error on closing connection: ${error}`);
+      throw new Error(`Error on closing connection: ${error}`, {
+        cause: error,
+      });
     }
   });
 
@@ -164,7 +166,9 @@ describe("PostgresEngine - table initialization", () => {
     try {
       await PEInstance.closeConnection();
     } catch (error) {
-      throw new Error(`Error on closing connection: ${error}`);
+      throw new Error(`Error on closing connection: ${error}`, {
+        cause: error,
+      });
     }
   });
 });

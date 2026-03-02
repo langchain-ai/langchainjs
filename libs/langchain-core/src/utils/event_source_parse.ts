@@ -64,7 +64,8 @@ export async function getBytes(
           "Parsing event source stream failed.",
           "Ensure your implementation of fetch returns a web or Node readable stream.",
           `Error: ${e.message}`,
-        ].join("\n")
+        ].join("\n"),
+        { cause: e }
       );
     }
   }

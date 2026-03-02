@@ -224,7 +224,9 @@ export class VercelPostgres extends VectorStore {
         ids.push(...result.rows.map((row) => row[this.idColumnName]));
       } catch (e) {
         console.error(e);
-        throw new Error(`Error inserting: ${(e as Error).message}`);
+        throw new Error(`Error inserting: ${(e as Error).message}`, {
+          cause: e,
+        });
       }
     }
     return ids;

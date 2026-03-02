@@ -71,7 +71,7 @@ export class ExpressionParser extends BaseOutputParser<ParsedType> {
       const masterHandler = MasterHandler.createMasterHandler();
       return await masterHandler.handle(expressionStatement);
     } catch (err) {
-      throw new Error(`Error parsing ${err}: ${text}`);
+      throw new Error(`Error parsing ${err}: ${text}`, { cause: err });
     }
   }
 

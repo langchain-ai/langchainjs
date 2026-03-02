@@ -180,7 +180,8 @@ export class ConfluencePagesLoader extends BaseDocumentLoader {
       } catch (error) {
         if (retryCounter >= this.maxRetries)
           throw new Error(
-            `Failed to fetch ${url} from Confluence (retry: ${retryCounter}): ${error}`
+            `Failed to fetch ${url} from Confluence (retry: ${retryCounter}): ${error}`,
+            { cause: error }
           );
       }
     }

@@ -86,7 +86,7 @@ export class AirtableLoader extends BaseDocumentLoader {
       } while (offset);
     } catch (error) {
       console.error("Error loading Airtable records:", error);
-      throw new Error("Failed to load Airtable records");
+      throw new Error("Failed to load Airtable records", { cause: error });
     }
 
     return documents;
@@ -114,7 +114,9 @@ export class AirtableLoader extends BaseDocumentLoader {
       } while (offset);
     } catch (error) {
       console.error("Error loading Airtable records lazily:", error);
-      throw new Error("Failed to load Airtable records lazily");
+      throw new Error("Failed to load Airtable records lazily", {
+        cause: error,
+      });
     }
   }
 

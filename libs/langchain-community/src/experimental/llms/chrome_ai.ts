@@ -158,7 +158,8 @@ export class ChromeAI extends LLM<ChromeAICallOptions> {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (e: any) {
       throw new Error(
-        `Could not initialize ChromeAI instance. Make sure you are running a version of Chrome with the proper experimental flags enabled.\n\nError message: ${e.message}`
+        `Could not initialize ChromeAI instance. Make sure you are running a version of Chrome with the proper experimental flags enabled.\n\nError message: ${e.message}`,
+        { cause: e }
       );
     }
     const availability = await aiInstance.availability();

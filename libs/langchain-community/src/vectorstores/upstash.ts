@@ -208,7 +208,7 @@ export class UpstashVectorStore extends VectorStore {
     filter?: this["FilterType"],
     options?: { includeVectors: boolean }
   ) {
-    let queryResult: QueryResult<UpstashQueryMetadata>[] = [];
+    let queryResult: QueryResult<UpstashQueryMetadata>[];
 
     const namespace = this.index.namespace(this.namespace ?? "");
 

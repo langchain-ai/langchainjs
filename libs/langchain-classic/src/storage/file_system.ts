@@ -69,7 +69,8 @@ export class LocalFileStore extends BaseStore<string, Uint8Array> {
       throw new Error(
         `Error reading and parsing file at path: ${
           this.rootPath
-        }.\nError: ${JSON.stringify(e)}`
+        }.\nError: ${JSON.stringify(e)}`,
+        { cause: e }
       );
     }
   }
@@ -85,7 +86,8 @@ export class LocalFileStore extends BaseStore<string, Uint8Array> {
       throw new Error(
         `Error writing file at path: ${this.getFullPath(
           key
-        )}.\nError: ${JSON.stringify(error)}`
+        )}.\nError: ${JSON.stringify(error)}`,
+        { cause: error }
       );
     }
   }
@@ -116,7 +118,8 @@ export class LocalFileStore extends BaseStore<string, Uint8Array> {
       return fullPath;
     } catch (e) {
       throw new Error(
-        `Error getting full path for key: ${key}.\nError: ${String(e)}`
+        `Error getting full path for key: ${key}.\nError: ${String(e)}`,
+        { cause: e }
       );
     }
   }
@@ -189,7 +192,8 @@ export class LocalFileStore extends BaseStore<string, Uint8Array> {
         throw new Error(
           `An error occurred creating directory at: ${rootPath}.\nError: ${JSON.stringify(
             error
-          )}`
+          )}`,
+          { cause: error }
         );
       }
     }

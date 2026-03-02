@@ -121,7 +121,8 @@ export class FileSystemChatMessageHistory extends BaseListChatMessageHistory {
         return {};
       }
       throw new Error(
-        `Error loading FileSystemChatMessageHistory store: ${error}`
+        `Error loading FileSystemChatMessageHistory store: ${error}`,
+        { cause: _error }
       );
     }
   }
@@ -132,7 +133,8 @@ export class FileSystemChatMessageHistory extends BaseListChatMessageHistory {
       await fs.writeFile(this.filePath, JSON.stringify(store));
     } catch (error) {
       throw new Error(
-        `Error saving FileSystemChatMessageHistory store: ${error}`
+        `Error saving FileSystemChatMessageHistory store: ${error}`,
+        { cause: error }
       );
     }
   }

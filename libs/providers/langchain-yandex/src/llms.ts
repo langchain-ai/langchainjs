@@ -159,7 +159,9 @@ export class YandexGPT extends LLM implements YandexGPTInputs {
         const responseData = await response.json();
         return responseData.result.alternatives[0].message.text;
       } catch (error) {
-        throw new Error(`Failed to fetch ${apiUrl} from YandexGPT ${error}`);
+        throw new Error(`Failed to fetch ${apiUrl} from YandexGPT ${error}`, {
+          cause: error,
+        });
       }
     });
   }
