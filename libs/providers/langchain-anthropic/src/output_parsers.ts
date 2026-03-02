@@ -113,6 +113,7 @@ export function extractToolCalls(content: Record<string, any>[]) {
         args: block.input,
         id: block.id,
         type: "tool_call",
+        ...(block.caller ? { caller: block.caller } : {}),
       });
     }
   }
