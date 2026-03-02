@@ -76,10 +76,10 @@
     "yaml": "^2.8.1"
   },
   "peerDependencies": {
-    "@langchain/core": "workspace:^"
+    "@langchain/core": "workspace:^",
+    "@langchain/langgraph": "^1.1.2"
   },
   "dependencies": {
-    "@langchain/langgraph": "^1.1.2",
     "@langchain/langgraph-checkpoint": "^1.0.0",
     "langsmith": ">=0.5.0 <1.0.0",
     "uuid": "^11.1.0",
