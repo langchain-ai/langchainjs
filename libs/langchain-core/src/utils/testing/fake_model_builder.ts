@@ -31,7 +31,10 @@ interface FakeModelCall {
 }
 
 function deriveContent(messages: BaseMessage[]): string {
-  return messages.map((m) => m.text).filter(Boolean).join("-");
+  return messages
+    .map((m) => m.text)
+    .filter(Boolean)
+    .join("-");
 }
 
 let idCounter = 0;
