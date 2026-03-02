@@ -1630,24 +1630,22 @@ export class ChatAnthropicMessages<
             input_schema: jsonSchema as Anthropic.Messages.Tool.InputSchema,
           },
         ];
+      } else if (
+        typeof schema.name === "string" &&
+        typeof schema.description === "string" &&
+        typeof schema.input_schema === "object" &&
+        schema.input_schema != null
+      ) {
+        tools = [schema as Anthropic.Messages.Tool];
+        functionName = schema.name;
       } else {
-        if (
-          typeof schema.name === "string" &&
-          typeof schema.description === "string" &&
-          typeof schema.input_schema === "object" &&
-          schema.input_schema != null
-        ) {
-          tools = [schema as Anthropic.Messages.Tool];
-          functionName = schema.name;
-        } else {
-          tools = [
-            {
-              name: functionName,
-              description: schema.description ?? "",
-              input_schema: schema as Anthropic.Messages.Tool.InputSchema,
-            },
-          ];
-        }
+        tools = [
+          {
+            name: functionName,
+            description: schema.description ?? "",
+            input_schema: schema as Anthropic.Messages.Tool.InputSchema,
+          },
+        ];
       }
 
       outputParser = createFunctionCallingParser(
