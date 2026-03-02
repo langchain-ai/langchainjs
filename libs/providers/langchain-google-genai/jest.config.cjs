@@ -1,3 +1,5 @@
+const pkg = require("./package.json");
+
 /** @type {import('ts-jest').JestConfigWithTsJest} */
 module.exports = {
   preset: "ts-jest/presets/default-esm",
@@ -8,6 +10,9 @@ module.exports = {
   },
   transform: {
     "^.+\\.tsx?$": ["@swc/jest"],
+  },
+  globals: {
+    __PKG_VERSION__: pkg.version,
   },
   transformIgnorePatterns: [
     "/node_modules/",

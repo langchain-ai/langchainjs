@@ -10,6 +10,10 @@ import {
   type JsonSchema7Type,
   toJsonSchema,
 } from "@langchain/core/utils/json_schema";
+import {
+  isSerializableSchema,
+  SerializableSchema,
+} from "@langchain/core/utils/standard_schema";
 
 export interface GenerativeAIJsonSchema extends Record<string, unknown> {
   properties?: Record<string, GenerativeAIJsonSchema>;
@@ -58,15 +62,19 @@ export function schemaToGenerativeAIParameters<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   RunOutput extends Record<string, any> = Record<string, any>,
 >(
-  schema: InteropZodType<RunOutput> | JsonSchema7Type
+  schema:
+    | InteropZodType<RunOutput>
+    | SerializableSchema<RunOutput>
+    | JsonSchema7Type
 ): GenerativeAIFunctionDeclarationSchema {
   // GenerativeAI doesn't accept either the $schema or additionalProperties
   // attributes, so we need to explicitly remove them.
   const jsonSchema = removeAdditionalProperties(
-    isInteropZodSchema(schema) ? toJsonSchema(schema) : schema
+    isInteropZodSchema(schema) || isSerializableSchema(schema)
+      ? toJsonSchema(schema)
+      : schema
   );
   const { $schema, ...rest } = jsonSchema;
-
   return rest as GenerativeAIFunctionDeclarationSchema;
 }
 
