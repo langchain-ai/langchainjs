@@ -1104,7 +1104,7 @@ export abstract class BaseChatOpenAI<
         };
       } else if (
         typeof schema.name === "string" &&
-        typeof schema.paramerers === "object" &&
+        typeof schema.parameters === "object" &&
         schema.parameters != null
       ) {
         toolFunction = schema as unknown as FunctionDefinition;
