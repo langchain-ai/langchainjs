@@ -127,10 +127,10 @@ class FakeBuiltModel extends BaseChatModel {
   respond(entry: BaseMessage | Error | ResponseFactory): this {
     if (typeof entry === "function") {
       this.queue.push({ kind: "factory", factory: entry });
-    } else if (entry instanceof Error) {
-      this.queue.push({ kind: "error", error: entry });
-    } else {
+    } else if (BaseMessage.isInstance(entry)) {
       this.queue.push({ kind: "message", message: entry });
+    } else {
+      this.queue.push({ kind: "error", error: entry });
     }
     return this;
   }
@@ -220,7 +220,7 @@ class FakeBuiltModel extends BaseChatModel {
 
     if (entry.kind === "factory") {
       const result = entry.factory(messages);
-      if (result instanceof Error) {
+      if (!BaseMessage.isInstance(result)) {
         throw result;
       }
       return {
