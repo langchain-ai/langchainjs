@@ -124,9 +124,7 @@ class FakeBuiltModel extends BaseChatModel {
     return [];
   }
 
-  respond(
-    entry: BaseMessage | Error | ResponseFactory
-  ): this {
+  respond(entry: BaseMessage | Error | ResponseFactory): this {
     if (typeof entry === "function") {
       this.queue.push({ kind: "factory", factory: entry });
     } else if (entry instanceof Error) {
