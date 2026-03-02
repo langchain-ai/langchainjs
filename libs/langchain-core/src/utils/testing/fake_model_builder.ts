@@ -14,32 +14,20 @@ import type { ToolCall } from "../../messages/tool.js";
 import type { ChatResult } from "../../outputs.js";
 import { Runnable, RunnableLambda } from "../../runnables/base.js";
 import { StructuredTool } from "../../tools/index.js";
-import { toJsonSchema } from "../json_schema.js";
 import type { InteropZodType } from "../types/zod.js";
 import type { ToolSpec } from "./chat_models.js";
 
-type ToolStyle = "openai" | "anthropic" | "bedrock" | "google";
+type ResponseFactory = (messages: BaseMessage[]) => BaseMessage | Error;
+
+type QueueEntry =
+  | { kind: "message"; message: BaseMessage }
+  | { kind: "toolCalls"; toolCalls: ToolCall[] }
+  | { kind: "error"; error: Error }
+  | { kind: "factory"; factory: ResponseFactory };
 
 interface FakeModelCall {
   messages: BaseMessage[];
   options: any;
-}
-
-interface SharedRefs {
-  callIndex: { current: number };
-  responseIndex: { current: number };
-  calls: FakeModelCall[];
-}
-
-interface FakeBuiltModelConfig {
-  mode: "turns" | "responses";
-  turns: ToolCall[][];
-  responses: BaseMessage[];
-  throwMap: Map<number, Error>;
-  alwaysThrowError: Error | undefined;
-  structuredResponseValue: any;
-  toolStyleValue: ToolStyle;
-  refs: SharedRefs;
 }
 
 function deriveContent(messages: BaseMessage[]): string {
@@ -75,65 +63,57 @@ function deriveContent(messages: BaseMessage[]): string {
   return content;
 }
 
-function formatToolDicts(
-  tools: (StructuredTool | ToolSpec)[],
-  style: ToolStyle
-) {
-  const toolDicts = tools.map((t) => {
-    switch (style) {
-      case "openai":
-        return {
-          type: "function",
-          function: {
-            name: t.name,
-            description: t.description,
-            parameters: toJsonSchema(t.schema),
-          },
-        };
-      case "anthropic":
-        return {
-          name: t.name,
-          description: t.description,
-          input_schema: toJsonSchema(t.schema),
-        };
-      case "bedrock":
-        return {
-          toolSpec: {
-            name: t.name,
-            description: t.description,
-            inputSchema: toJsonSchema(t.schema),
-          },
-        };
-      case "google":
-        return {
-          name: t.name,
-          description: t.description,
-          parameters: toJsonSchema(t.schema),
-        };
-      default:
-        throw new Error(`Unsupported tool style: ${style}`);
-    }
-  });
-
-  return style === "google" ? [{ functionDeclarations: toolDicts }] : toolDicts;
+let idCounter = 0;
+function nextToolCallId(): string {
+  idCounter += 1;
+  return `fake_tc_${idCounter}`;
 }
 
+/**
+ * A fake chat model for testing, created via {@link fakeModel}.
+ *
+ * Queue responses with `.respond()` and `.respondWithTools()`, then
+ * pass the instance directly wherever a chat model is expected.
+ *
+ * Each builder method queues a model response consumed in order per `invoke()`:
+ *
+ * `.respond(entry)` — enqueue a `BaseMessage`, `Error`, or factory function.
+ *
+ * `.respondWithTools(toolCalls[])` — enqueue an `AIMessage` with the given
+ * tool calls. Content is derived from the input messages automatically.
+ *
+ * Both can be mixed freely in one chain. When all queued responses are
+ * consumed, further invocations throw.
+ *
+ * Additional configuration:
+ * - `.alwaysThrow(error)` — every call throws (overrides the queue)
+ * - `.structuredResponse(value)` — value returned by `withStructuredOutput()`
+ *
+ * The model records all invocations in `.calls` / `.callCount`.
+ */
 class FakeBuiltModel extends BaseChatModel {
-  private config: FakeBuiltModelConfig;
+  private queue: QueueEntry[] = [];
 
-  private tools: (StructuredTool | ToolSpec)[] = [];
+  private _alwaysThrowError: Error | undefined;
+
+  private _structuredResponseValue: any;
+
+  private _tools: (StructuredTool | ToolSpec)[] = [];
+
+  private _callIndex = 0;
+
+  private _calls: FakeModelCall[] = [];
 
   get calls(): FakeModelCall[] {
-    return this.config.refs.calls;
+    return this._calls;
   }
 
   get callCount(): number {
-    return this.config.refs.calls.length;
+    return this._calls.length;
   }
 
-  constructor(config: FakeBuiltModelConfig) {
+  constructor() {
     super({});
-    this.config = config;
   }
 
   _llmType(): string {
@@ -144,14 +124,55 @@ class FakeBuiltModel extends BaseChatModel {
     return [];
   }
 
+  respond(
+    entry: BaseMessage | Error | ResponseFactory
+  ): this {
+    if (typeof entry === "function") {
+      this.queue.push({ kind: "factory", factory: entry });
+    } else if (entry instanceof Error) {
+      this.queue.push({ kind: "error", error: entry });
+    } else {
+      this.queue.push({ kind: "message", message: entry });
+    }
+    return this;
+  }
+
+  respondWithTools(
+    toolCalls: Array<{ name: string; args: Record<string, any>; id?: string }>
+  ): this {
+    this.queue.push({
+      kind: "toolCalls",
+      toolCalls: toolCalls.map((tc) => ({
+        name: tc.name,
+        args: tc.args,
+        id: tc.id ?? nextToolCallId(),
+        type: "tool_call" as const,
+      })),
+    });
+    return this;
+  }
+
+  alwaysThrow(error: Error): this {
+    this._alwaysThrowError = error;
+    return this;
+  }
+
+  structuredResponse(value: Record<string, any>): this {
+    this._structuredResponseValue = value;
+    return this;
+  }
+
   bindTools(tools: (StructuredTool | ToolSpec)[]) {
-    const merged = [...this.tools, ...tools];
-    const wrapped = formatToolDicts(merged, this.config.toolStyleValue);
+    const merged = [...this._tools, ...tools];
+    const next = new FakeBuiltModel();
+    next.queue = this.queue;
+    next._alwaysThrowError = this._alwaysThrowError;
+    next._structuredResponseValue = this._structuredResponseValue;
+    next._tools = merged;
+    next._calls = this._calls;
+    next._callIndex = this._callIndex;
 
-    const next = new FakeBuiltModel(this.config);
-    next.tools = merged;
-
-    return next.withConfig({ tools: wrapped } as BaseChatModelCallOptions);
+    return next.withConfig({} as BaseChatModelCallOptions);
   }
 
   withStructuredOutput<
@@ -168,9 +189,9 @@ class FakeBuiltModel extends BaseChatModel {
         BaseLanguageModelInput,
         { raw: BaseMessage; parsed: RunOutput }
       > {
-    const { structuredResponseValue } = this.config;
+    const { _structuredResponseValue } = this;
     return RunnableLambda.from(async () => {
-      return structuredResponseValue as RunOutput;
+      return _structuredResponseValue as RunOutput;
     }) as Runnable;
   }
 
@@ -179,45 +200,49 @@ class FakeBuiltModel extends BaseChatModel {
     options?: this["ParsedCallOptions"],
     _runManager?: CallbackManagerForLLMRun
   ): Promise<ChatResult> {
-    const { refs } = this.config;
+    this._calls.push({ messages: [...messages], options });
 
-    refs.calls.push({ messages: [...messages], options });
+    const currentCallIndex = this._callIndex;
+    this._callIndex += 1;
 
-    const currentCallIndex = refs.callIndex.current;
-    refs.callIndex.current += 1;
-
-    if (this.config.alwaysThrowError) {
-      throw this.config.alwaysThrowError;
+    if (this._alwaysThrowError) {
+      throw this._alwaysThrowError;
     }
 
-    const throwError = this.config.throwMap.get(currentCallIndex);
-    if (throwError) {
-      throw throwError;
+    const entry = this.queue[currentCallIndex];
+    if (!entry) {
+      throw new Error(
+        `FakeModel: no response queued for invocation ${currentCallIndex} (${this.queue.length} total queued).`
+      );
     }
 
-    const currentResponseIndex = refs.responseIndex.current;
-    refs.responseIndex.current += 1;
+    if (entry.kind === "error") {
+      throw entry.error;
+    }
 
-    if (this.config.mode === "responses") {
-      const responseList = this.config.responses;
-      const msg = responseList[currentResponseIndex % responseList.length];
+    if (entry.kind === "factory") {
+      const result = entry.factory(messages);
+      if (result instanceof Error) {
+        throw result;
+      }
       return {
-        generations: [{ text: "", message: msg }],
+        generations: [{ text: "", message: result }],
+      };
+    }
+
+    if (entry.kind === "message") {
+      return {
+        generations: [{ text: "", message: entry.message }],
       };
     }
 
     const content = deriveContent(messages);
-    const turnList = this.config.turns;
-    const currentToolCalls =
-      turnList[currentResponseIndex % turnList.length] || [];
-    const messageId = currentCallIndex.toString();
-
     const message = new AIMessage({
       content,
-      id: messageId,
+      id: currentCallIndex.toString(),
       tool_calls:
-        currentToolCalls.length > 0
-          ? currentToolCalls.map((tc) => ({
+        entry.toolCalls.length > 0
+          ? entry.toolCalls.map((tc) => ({
               ...tc,
               type: "tool_call" as const,
             }))
@@ -231,116 +256,22 @@ class FakeBuiltModel extends BaseChatModel {
   }
 }
 
-class FakeModelBuilder {
-  private _turns: ToolCall[][] = [];
-
-  private _responses: BaseMessage[] = [];
-
-  private _hasTurns = false;
-
-  private _hasResponses = false;
-
-  private _throwMap = new Map<number, Error>();
-
-  private _alwaysThrowError: Error | undefined;
-
-  private _structuredResponseValue: any;
-
-  private _toolStyleValue: ToolStyle = "openai";
-
-  turn(
-    toolCalls: Array<{ name: string; args: Record<string, any>; id?: string }>
-  ): this {
-    this._hasTurns = true;
-    this._turns.push(
-      toolCalls.map((tc) => ({
-        name: tc.name,
-        args: tc.args,
-        id: tc.id,
-        type: "tool_call" as const,
-      }))
-    );
-    return this;
-  }
-
-  respond(message: BaseMessage): this {
-    this._hasResponses = true;
-    this._responses.push(message);
-    return this;
-  }
-
-  throwOnTurn(callIndex: number, error: Error): this {
-    this._throwMap.set(callIndex, error);
-    return this;
-  }
-
-  alwaysThrow(error: Error): this {
-    this._alwaysThrowError = error;
-    return this;
-  }
-
-  structuredResponse(value: Record<string, any>): this {
-    this._structuredResponseValue = value;
-    return this;
-  }
-
-  toolStyle(style: ToolStyle): this {
-    this._toolStyleValue = style;
-    return this;
-  }
-
-  build(): FakeBuiltModel {
-    if (this._hasTurns && this._hasResponses) {
-      throw new Error(
-        "Cannot mix .turn() and .respond() — use .turn() for tool-call sequences or .respond() for pre-built messages."
-      );
-    }
-
-    if (!this._hasTurns && !this._hasResponses && !this._alwaysThrowError) {
-      throw new Error(
-        "Must configure at least one .turn(), .respond(), or .alwaysThrow() before calling .build()."
-      );
-    }
-
-    const mode = this._hasResponses ? "responses" : "turns";
-
-    return new FakeBuiltModel({
-      mode,
-      turns: this._turns,
-      responses: this._responses,
-      throwMap: this._throwMap,
-      alwaysThrowError: this._alwaysThrowError,
-      structuredResponseValue: this._structuredResponseValue,
-      toolStyleValue: this._toolStyleValue,
-      refs: {
-        callIndex: { current: 0 },
-        responseIndex: { current: 0 },
-        calls: [],
-      },
-    });
-  }
-}
-
 /**
- * Creates a builder for a fake chat model suitable for testing.
+ * Creates a fake chat model for testing.
  *
- * Two modes — use one or the other, not both:
+ * @example
+ * ```typescript
+ * const model = fakeModel()
+ *   .respondWithTools([{ name: "search", args: { query: "weather" } }])
+ *   .respond(new AIMessage("Sunny and warm."));
  *
- * `.turn(toolCalls[])` — script tool-call sequences per model invocation.
- * An empty array means no tool calls (terminal response).
- * Content is derived from the input messages automatically.
+ * const r1 = await model.invoke([new HumanMessage("What's the weather?")]);
+ * // r1.tool_calls[0].name === "search"
  *
- * `.respond(message)` — supply pre-built `BaseMessage` responses.
- * The model returns them in order.
- *
- * Additional configuration:
- * - `.throwOnTurn(callIndex, error)` — throw on a specific call (by total call count)
- * - `.alwaysThrow(error)` — every call throws
- * - `.structuredResponse(value)` — value returned by `withStructuredOutput()`
- * - `.toolStyle(style)` — how `bindTools` formats tool specs
- *
- * The built model records all invocations in `model.calls`.
+ * const r2 = await model.invoke([new HumanMessage("Thanks")]);
+ * // r2.content === "Sunny and warm."
+ * ```
  */
-export function fakeModel(): FakeModelBuilder {
-  return new FakeModelBuilder();
+export function fakeModel(): FakeBuiltModel {
+  return new FakeBuiltModel();
 }
