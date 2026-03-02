@@ -6,7 +6,7 @@ LangChain is a framework for building LLM-powered applications. It helps you cha
 
 **Documentation**: To learn more about LangChain, check out [the docs](https://docs.langchain.com/oss/javascript/langchain/overview).
 
-If you're looking for more advanced customization or agent orchestration, check out [LangGraph.js](https://docs.langchain.com/oss/javascript/langgraph/overview). our framework for building agents and controllable workflows.
+If you're looking for more advanced customization or agent orchestration, check out [LangGraph.js](https://docs.langchain.com/oss/javascript/langgraph/overview), our framework for building agents and controllable workflows.
 
 > [!NOTE]
 > Looking for the Python version? Check out [LangChain](https://github.com/langchain-ai/langchain).
