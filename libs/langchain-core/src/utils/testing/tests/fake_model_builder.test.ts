@@ -1,22 +1,15 @@
 import { describe, test, expect } from "vitest";
 import { AIMessage, HumanMessage } from "../../../messages/index.js";
 import { RunnableBinding } from "../../../runnables/base.js";
-import { StructuredTool } from "../../../tools/index.js";
+import { tool } from "../../../tools/index.js";
 import { z } from "zod/v3";
 import { fakeModel } from "../index.js";
 
-const dummyTool = new (class extends StructuredTool {
-  name = "dummy";
-
-  description = "A dummy tool";
-
-  schema = z.object({ input: z.string() });
-
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  async _call(_input: any) {
-    return "dummy result";
-  }
-})();
+const dummyTool = tool(async () => "dummy result", {
+  name: "dummy",
+  description: "A dummy tool",
+  schema: z.object({ input: z.string() }),
+});
 
 describe("fakeModel", () => {
   describe(".respondWithTools()", () => {
