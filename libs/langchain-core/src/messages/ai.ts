@@ -48,6 +48,7 @@ export class AIMessage<TStructure extends MessageStructure = MessageStructure>
       ...super.lc_aliases,
       tool_calls: "tool_calls",
       invalid_tool_calls: "invalid_tool_calls",
+      usage_metadata: "usage_metadata",
     };
   }
 
@@ -329,6 +330,7 @@ export class AIMessageChunk<
       tool_calls: "tool_calls",
       invalid_tool_calls: "invalid_tool_calls",
       tool_call_chunks: "tool_call_chunks",
+      usage_metadata: "usage_metadata",
     };
   }
 
@@ -402,6 +404,7 @@ export class AIMessageChunk<
         chunk.response_metadata
       ),
       tool_call_chunks: [],
+      tool_calls: [],
       id: this.id ?? chunk.id,
     };
     if (
@@ -414,6 +417,16 @@ export class AIMessageChunk<
       );
       if (rawToolCalls !== undefined && rawToolCalls.length > 0) {
         combinedFields.tool_call_chunks = rawToolCalls;
+      }
+    }
+    if (this.tool_calls !== undefined || chunk.tool_calls !== undefined) {
+      const rawToolCalls = _mergeLists(
+        this.tool_calls as ContentBlock.Tools.ToolCall[],
+        chunk.tool_calls as ContentBlock.Tools.ToolCall[]
+      );
+      if (rawToolCalls !== undefined && rawToolCalls.length > 0) {
+        combinedFields.tool_calls =
+          rawToolCalls as $InferToolCalls<TStructure>[];
       }
     }
     if (

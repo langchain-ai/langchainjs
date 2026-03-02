@@ -10,6 +10,7 @@ import type { InteropZodToStateDefinition } from "@langchain/langgraph/zod";
 import type {
   AnnotationRoot,
   StateSchema,
+  InferStateSchemaValue,
   InferStateSchemaUpdate,
   StateDefinitionInit,
 } from "@langchain/langgraph";
@@ -93,15 +94,33 @@ export interface MiddlewareTypeConfig<
  */
 export type DefaultMiddlewareTypeConfig = MiddlewareTypeConfig;
 
+export type InferSchemaValueType<TSchema> = [TSchema] extends [never]
+  ? AgentBuiltInState
+  : TSchema extends StateSchema<infer TFields>
+    ? InferStateSchemaValue<TFields> & AgentBuiltInState
+    : TSchema extends InteropZodObject
+      ? InferInteropZodOutput<TSchema> & AgentBuiltInState
+      : TSchema extends StateDefinitionInit
+        ? InferSchemaValue<TSchema> & AgentBuiltInState
+        : AgentBuiltInState;
+
+export type InferSchemaUpdateType<TSchema> = [TSchema] extends [never]
+  ? AgentBuiltInState
+  : TSchema extends StateSchema<infer TFields>
+    ? InferStateSchemaUpdate<TFields> & AgentBuiltInState
+    : TSchema extends InteropZodObject
+      ? InferInteropZodInput<TSchema> & AgentBuiltInState
+      : TSchema extends StateDefinitionInit
+        ? InferSchemaInput<TSchema> & AgentBuiltInState
+        : AgentBuiltInState;
+
 export type NormalizedSchemaInput<
   TSchema extends StateDefinitionInit | undefined | never = any,
-> = [TSchema] extends [never]
-  ? AgentBuiltInState
-  : TSchema extends InteropZodObject
-    ? InferInteropZodOutput<TSchema> & AgentBuiltInState
-    : TSchema extends StateDefinitionInit
-      ? InferSchemaInput<TSchema> & AgentBuiltInState
-      : AgentBuiltInState;
+> = InferSchemaValueType<TSchema>;
+
+export type NormalizedSchemaUpdate<
+  TSchema extends StateDefinitionInit | undefined | never = any,
+> = InferSchemaUpdateType<TSchema>;
 
 /**
  * Result type for middleware functions.
@@ -228,9 +247,9 @@ export type WrapModelCallHook<
  * @returns A middleware result containing partial state updates or undefined to pass through
  */
 type BeforeAgentHandler<TSchema, TContext> = (
-  state: TSchema,
+  state: InferSchemaValueType<TSchema>,
   runtime: Runtime<TContext>
-) => PromiseOrValue<MiddlewareResult<Partial<TSchema>>>;
+) => PromiseOrValue<MiddlewareResult<Partial<InferSchemaUpdateType<TSchema>>>>;
 
 /**
  * Hook type for the beforeAgent lifecycle event.
@@ -241,9 +260,9 @@ export type BeforeAgentHook<
   TSchema extends StateDefinitionInit | undefined = undefined,
   TContext = unknown,
 > =
-  | BeforeAgentHandler<NormalizedSchemaInput<TSchema>, TContext>
+  | BeforeAgentHandler<TSchema, TContext>
   | {
-      hook: BeforeAgentHandler<NormalizedSchemaInput<TSchema>, TContext>;
+      hook: BeforeAgentHandler<TSchema, TContext>;
       canJumpTo?: JumpToTarget[];
     };
 
@@ -256,9 +275,9 @@ export type BeforeAgentHook<
  * @returns A middleware result containing partial state updates or undefined to pass through
  */
 type BeforeModelHandler<TSchema, TContext> = (
-  state: TSchema,
+  state: InferSchemaValueType<TSchema>,
   runtime: Runtime<TContext>
-) => PromiseOrValue<MiddlewareResult<Partial<TSchema>>>;
+) => PromiseOrValue<MiddlewareResult<Partial<InferSchemaUpdateType<TSchema>>>>;
 
 /**
  * Hook type for the beforeModel lifecycle event.
@@ -269,9 +288,9 @@ export type BeforeModelHook<
   TSchema extends StateDefinitionInit | undefined = undefined,
   TContext = unknown,
 > =
-  | BeforeModelHandler<NormalizedSchemaInput<TSchema>, TContext>
+  | BeforeModelHandler<TSchema, TContext>
   | {
-      hook: BeforeModelHandler<NormalizedSchemaInput<TSchema>, TContext>;
+      hook: BeforeModelHandler<TSchema, TContext>;
       canJumpTo?: JumpToTarget[];
     };
 
@@ -285,9 +304,9 @@ export type BeforeModelHook<
  * @returns A middleware result containing partial state updates or undefined to pass through
  */
 type AfterModelHandler<TSchema, TContext> = (
-  state: TSchema,
+  state: InferSchemaValueType<TSchema>,
   runtime: Runtime<TContext>
-) => PromiseOrValue<MiddlewareResult<Partial<TSchema>>>;
+) => PromiseOrValue<MiddlewareResult<Partial<InferSchemaUpdateType<TSchema>>>>;
 
 /**
  * Hook type for the afterModel lifecycle event.
@@ -298,9 +317,9 @@ export type AfterModelHook<
   TSchema extends StateDefinitionInit | undefined = undefined,
   TContext = unknown,
 > =
-  | AfterModelHandler<NormalizedSchemaInput<TSchema>, TContext>
+  | AfterModelHandler<TSchema, TContext>
   | {
-      hook: AfterModelHandler<NormalizedSchemaInput<TSchema>, TContext>;
+      hook: AfterModelHandler<TSchema, TContext>;
       canJumpTo?: JumpToTarget[];
     };
 
@@ -313,9 +332,9 @@ export type AfterModelHook<
  * @returns A middleware result containing partial state updates or undefined to pass through
  */
 type AfterAgentHandler<TSchema, TContext> = (
-  state: TSchema,
+  state: InferSchemaValueType<TSchema>,
   runtime: Runtime<TContext>
-) => PromiseOrValue<MiddlewareResult<Partial<TSchema>>>;
+) => PromiseOrValue<MiddlewareResult<Partial<InferSchemaUpdateType<TSchema>>>>;
 
 /**
  * Hook type for the afterAgent lifecycle event.
@@ -326,9 +345,9 @@ export type AfterAgentHook<
   TSchema extends StateDefinitionInit | undefined = undefined,
   TContext = unknown,
 > =
-  | AfterAgentHandler<NormalizedSchemaInput<TSchema>, TContext>
+  | AfterAgentHandler<TSchema, TContext>
   | {
-      hook: AfterAgentHandler<NormalizedSchemaInput<TSchema>, TContext>;
+      hook: AfterAgentHandler<TSchema, TContext>;
       canJumpTo?: JumpToTarget[];
     };
 
@@ -622,11 +641,13 @@ export type InferChannelType<T extends AnyAnnotationRoot | InteropZodObject> =
  */
 export type InferMiddlewareState<T extends AgentMiddleware> =
   T extends AgentMiddleware<infer TSchema, any, any, any>
-    ? TSchema extends InteropZodObject
-      ? FilterPrivateProps<InferInteropZodOutput<TSchema>>
-      : TSchema extends StateDefinitionInit
-        ? FilterPrivateProps<InferSchemaInput<TSchema>>
-        : {}
+    ? TSchema extends StateSchema<infer TFields>
+      ? FilterPrivateProps<InferStateSchemaValue<TFields>>
+      : TSchema extends InteropZodObject
+        ? FilterPrivateProps<InferInteropZodOutput<TSchema>>
+        : TSchema extends StateDefinitionInit
+          ? FilterPrivateProps<InferSchemaValue<TSchema>>
+          : {}
     : {};
 
 /**
@@ -636,11 +657,13 @@ export type InferMiddlewareState<T extends AgentMiddleware> =
  */
 export type InferMiddlewareInputState<T extends AgentMiddleware> =
   T extends AgentMiddleware<infer TSchema, any, any, any>
-    ? TSchema extends InteropZodObject
-      ? FilterPrivateProps<InferInteropZodInput<TSchema>>
-      : TSchema extends StateDefinitionInit
-        ? FilterPrivateProps<InferSchemaInput<TSchema>>
-        : {}
+    ? TSchema extends StateSchema<infer TFields>
+      ? FilterPrivateProps<InferStateSchemaUpdate<TFields>>
+      : TSchema extends InteropZodObject
+        ? FilterPrivateProps<InferInteropZodInput<TSchema>>
+        : TSchema extends StateDefinitionInit
+          ? FilterPrivateProps<InferSchemaInput<TSchema>>
+          : {}
     : {};
 
 /**
@@ -769,11 +792,20 @@ export type ToAnnotationRoot<A extends StateDefinitionInit> =
       ? InteropZodToStateDefinition<A>
       : never;
 
-export type InferSchemaInput<A extends StateDefinitionInit | undefined> =
+export type InferSchemaValue<A extends StateDefinitionInit | undefined> =
   A extends StateSchema<infer TFields>
-    ? InferStateSchemaUpdate<TFields>
+    ? InferStateSchemaValue<TFields>
     : A extends InteropZodObject
       ? InferInteropZodOutput<A>
       : A extends AnyAnnotationRoot
         ? A["State"]
+        : {};
+
+export type InferSchemaInput<A extends StateDefinitionInit | undefined> =
+  A extends StateSchema<infer TFields>
+    ? InferStateSchemaUpdate<TFields>
+    : A extends InteropZodObject
+      ? InferInteropZodInput<A>
+      : A extends AnyAnnotationRoot
+        ? A["Update"]
         : {};

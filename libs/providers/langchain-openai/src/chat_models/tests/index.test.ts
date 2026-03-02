@@ -14,6 +14,12 @@ import { NewTokenIndices } from "@langchain/core/callbacks/base";
 
 describe("ChatOpenAI", () => {
   describe("should initialize with correct values", () => {
+    it("supports string model shorthand", () => {
+      const chat = new ChatOpenAI("gpt-4o-mini", { temperature: 0.2 });
+      expect(chat.model).toBe("gpt-4o-mini");
+      expect(chat.temperature).toBe(0.2);
+    });
+
     it("should handle disableStreaming and streaming properties", () => {
       let chat = new ChatOpenAI({
         model: "gpt-4o-mini",

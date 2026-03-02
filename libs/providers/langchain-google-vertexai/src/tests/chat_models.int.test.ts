@@ -758,8 +758,8 @@ describe("Express Gemini Chat", () => {
 const testAnthropicModelNames = [
   // ["claude-3-sonnet@20240229"],
   // ["claude-3-5-sonnet@20240620"],
-  ["claude-3-5-sonnet-v2@20241022"],
-  ["claude-3-7-sonnet@20250219"],
+  // ["claude-3-5-sonnet-v2@20241022"],
+  ["claude-sonnet-4-5@20250929"],
 ];
 
 describe.each(testAnthropicModelNames)(

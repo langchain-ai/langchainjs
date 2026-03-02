@@ -3,7 +3,7 @@
 import type { InteropZodType } from "@langchain/core/utils/types";
 import type { BindToolsInput } from "@langchain/core/language_models/chat_models";
 import type { Gemini as GeminiBase } from "./api-types.js";
-import type { Prettify } from "../utils/misc.js";
+import type { LowercaseLiteral, Prettify } from "../utils/misc.js";
 
 export interface ChatGoogleFields {
   /**
@@ -239,9 +239,12 @@ declare module "./api-types.js" {
     /**
      * The level of "thinking" or reasoning configured for the model.
      *
-     * Corresponds to GeminiBase.ThinkingConfig["thinkingLevel"].
+     * Extends GeminiBase.ThinkingConfig["thinkingLevel"] to also accept
+     * lowercase variants (e.g. "high" in addition to "HIGH").
      */
-    export type ThinkingLevel = GeminiBase.ThinkingConfig["thinkingLevel"];
+    export type ThinkingLevel =
+      | GeminiBase.ThinkingConfig["thinkingLevel"]
+      | LowercaseLiteral<GeminiBase.ThinkingConfig["thinkingLevel"]>;
 
     /**
      * The role of a content message. The spec types this as `string`, but

@@ -52,6 +52,13 @@ test("Serialization with no params", () => {
   );
 });
 
+test("Serialization with model shorthand", () => {
+  const model = new ChatXAI("grok-2-1212");
+  expect(JSON.stringify(model)).toEqual(
+    `{"lc":1,"type":"constructor","id":["langchain","chat_models","xai","ChatXAI"],"kwargs":{"model":"grok-2-1212"}}`
+  );
+});
+
 describe("Server Tool Calling", () => {
   describe("isXAIBuiltInTool", () => {
     test("should identify live_search as a built-in tool", () => {

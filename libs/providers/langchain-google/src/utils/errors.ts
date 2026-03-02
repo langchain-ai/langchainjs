@@ -1,28 +1,30 @@
+import { ns as baseNs, LangChainError } from "@langchain/core/errors";
 import type { Gemini } from "../chat_models/types.js";
 import { iife } from "./misc.js";
 
-function GoogleError<TMarker extends string>(marker: TMarker) {
-  const symbol: symbol = Symbol.for(`langchain.google.error.${marker}`);
+// Internal namespace for all Google provider errors
+const ns = baseNs.sub("google");
 
-  return class extends Error {
-    readonly [symbol] = true as const;
-
-    constructor(message: string) {
-      super(message);
-      if (Error.captureStackTrace) {
-        Error.captureStackTrace(this, this.constructor);
-      }
-    }
-
-    isInstance(obj: unknown): obj is this {
-      return (
-        typeof obj === "object" &&
-        obj !== null &&
-        symbol in obj &&
-        obj[symbol as keyof typeof obj] === true
-      );
-    }
-  };
+/**
+ * Base error class for all Google provider errors.
+ *
+ * All Google-specific error classes extend this class. Use
+ * `GoogleError.isInstance(obj)` to check if an object is any
+ * Google provider error.
+ *
+ * @example
+ * ```typescript
+ * try {
+ *   await model.invoke("hello");
+ * } catch (error) {
+ *   if (GoogleError.isInstance(error)) {
+ *     console.log("Got a Google error:", error.message);
+ *   }
+ * }
+ * ```
+ */
+export class GoogleError extends ns.brand(LangChainError) {
+  readonly name: string = "GoogleError";
 }
 
 /**
@@ -42,8 +44,8 @@ function GoogleError<TMarker extends string>(marker: TMarker) {
  * }
  * ```
  */
-export class ConfigurationError extends GoogleError("configuration") {
-  readonly name = "ConfigurationError" as const;
+export class ConfigurationError extends ns.brand(GoogleError, "configuration") {
+  readonly name = "ConfigurationError";
 }
 
 /**
@@ -83,12 +85,11 @@ type PromptBlockedErrorParams = {
  * }
  * ```
  */
-export class PromptBlockedError extends GoogleError("prompt-blocked") {
-  /**
-   * The name of the error class.
-   * @readonly
-   */
-  readonly name = "PromptBlockedError" as const;
+export class PromptBlockedError extends ns.brand(
+  GoogleError,
+  "prompt-blocked"
+) {
+  readonly name = "PromptBlockedError";
 
   /**
    * The reason why the prompt was blocked.
@@ -220,7 +221,7 @@ type AuthErrorParams = {
  * }
  * ```
  */
-export class AuthError extends GoogleError("auth") {
+export class AuthError extends ns.brand(GoogleError, "auth") {
   readonly name = "AuthError" as const;
 
   /**
@@ -399,7 +400,7 @@ type RequestErrorParams = {
  * }
  * ```
  */
-export class RequestError extends GoogleError("request") {
+export class RequestError extends ns.brand(GoogleError, "request") {
   readonly name = "RequestError" as const;
 
   /**
@@ -554,8 +555,8 @@ export class RequestError extends GoogleError("request") {
  * }
  * ```
  */
-export class NoCandidatesError extends GoogleError("no-candidates") {
-  readonly name = "NoCandidatesError" as const;
+export class NoCandidatesError extends ns.brand(GoogleError, "no-candidates") {
+  readonly name = "NoCandidatesError";
 
   constructor() {
     super(
@@ -586,8 +587,8 @@ export class NoCandidatesError extends GoogleError("no-candidates") {
  * }
  * ```
  */
-export class InvalidToolError extends GoogleError("invalid-tool") {
-  readonly name = "InvalidToolError" as const;
+export class InvalidToolError extends ns.brand(GoogleError, "invalid-tool") {
+  readonly name = "InvalidToolError";
 
   /**
    * The invalid tool that was provided.
@@ -627,8 +628,11 @@ export class InvalidToolError extends GoogleError("invalid-tool") {
  * }
  * ```
  */
-export class ToolCallNotFoundError extends GoogleError("tool-call-not-found") {
-  readonly name = "ToolCallNotFoundError" as const;
+export class ToolCallNotFoundError extends ns.brand(
+  GoogleError,
+  "tool-call-not-found"
+) {
+  readonly name = "ToolCallNotFoundError";
 
   /**
    * The tool call ID that could not be found in the conversation history.
@@ -681,8 +685,11 @@ type MalformedOutputErrorParams = {
  * }
  * ```
  */
-export class MalformedOutputError extends GoogleError("malformed-output") {
-  readonly name = "MalformedOutputError" as const;
+export class MalformedOutputError extends ns.brand(
+  GoogleError,
+  "malformed-output"
+) {
+  readonly name = "MalformedOutputError";
 
   /**
    * Optional cause of the parsing error.
@@ -718,6 +725,6 @@ export class MalformedOutputError extends GoogleError("malformed-output") {
  * }
  * ```
  */
-export class InvalidInputError extends GoogleError("invalid-input") {
-  readonly name = "InvalidInputError" as const;
+export class InvalidInputError extends ns.brand(GoogleError, "invalid-input") {
+  readonly name = "InvalidInputError";
 }

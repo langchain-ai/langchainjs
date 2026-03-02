@@ -116,9 +116,7 @@ export type LLMToolSelectorConfig = InferInteropZodInput<
  * });
  * ```
  */
-export function llmToolSelectorMiddleware(
-  options: LLMToolSelectorConfig
-): ReturnType<typeof createMiddleware> {
+export function llmToolSelectorMiddleware(options: LLMToolSelectorConfig) {
   return createMiddleware({
     name: "LLMToolSelector",
     contextSchema: LLMToolSelectorOptionsSchema,

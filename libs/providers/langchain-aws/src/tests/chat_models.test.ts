@@ -623,6 +623,188 @@ test("Streaming supports empty string chunks", async () => {
   expect(finalChunk.content).toBe("Hello world!");
 });
 
+describe("video content block conversion", () => {
+  test("converts multimodal video block with base64 data", () => {
+    const videoData = btoa("fake-video-bytes");
+    const result = convertToConverseMessages([
+      new HumanMessage({
+        content: [
+          { type: "text", text: "Describe this video" },
+          {
+            type: "video",
+            mimeType: "video/mp4",
+            data: videoData,
+          },
+        ],
+      }),
+    ]);
+
+    expect(result.converseMessages).toHaveLength(1);
+    const content = result.converseMessages[0].content!;
+    expect(content).toHaveLength(2);
+    expect(content[0]).toEqual({ text: "Describe this video" });
+    expect(content[1]).toHaveProperty("video");
+    expect(content[1].video?.format).toBe("mp4");
+    expect(content[1].video?.source?.bytes).toBeInstanceOf(Uint8Array);
+  });
+
+  test("converts multimodal video block with Uint8Array data", () => {
+    const videoBytes = new Uint8Array([1, 2, 3, 4]);
+    const result = convertToConverseMessages([
+      new HumanMessage({
+        content: [
+          {
+            type: "video",
+            mimeType: "video/webm",
+            data: videoBytes,
+          },
+        ],
+      }),
+    ]);
+
+    const content = result.converseMessages[0].content!;
+    expect(content[0]).toHaveProperty("video");
+    expect(content[0].video?.format).toBe("webm");
+    expect(content[0].video?.source?.bytes).toBe(videoBytes);
+  });
+
+  test("passes through native Bedrock video block", () => {
+    const videoSource = {
+      bytes: new Uint8Array([1, 2, 3]),
+    };
+    const result = convertToConverseMessages([
+      new HumanMessage({
+        content: [
+          {
+            type: "video",
+            video: {
+              format: "mp4",
+              source: videoSource,
+            },
+          },
+        ],
+      }),
+    ]);
+
+    const content = result.converseMessages[0].content!;
+    expect(content[0]).toHaveProperty("video");
+    expect(content[0].video?.format).toBe("mp4");
+    expect(content[0].video?.source).toBe(videoSource);
+  });
+
+  test("converts video block with S3 fileId", () => {
+    const result = convertToConverseMessages([
+      new HumanMessage({
+        content: [
+          {
+            type: "video",
+            mimeType: "video/mp4",
+            fileId: "s3://my-bucket/my-video.mp4",
+          },
+        ],
+      }),
+    ]);
+
+    const content = result.converseMessages[0].content!;
+    expect(content[0]).toHaveProperty("video");
+    expect(content[0].video?.format).toBe("mp4");
+    expect(content[0].video?.source?.s3Location?.uri).toBe(
+      "s3://my-bucket/my-video.mp4"
+    );
+  });
+});
+
+describe("audio content block conversion", () => {
+  test("converts multimodal audio block with base64 data", () => {
+    const audioData = btoa("fake-audio-bytes");
+    const result = convertToConverseMessages([
+      new HumanMessage({
+        content: [
+          { type: "text", text: "Transcribe this audio" },
+          {
+            type: "audio",
+            mimeType: "audio/mp3",
+            data: audioData,
+          },
+        ],
+      }),
+    ]);
+
+    expect(result.converseMessages).toHaveLength(1);
+    const content = result.converseMessages[0].content!;
+    expect(content).toHaveLength(2);
+    expect(content[0]).toEqual({ text: "Transcribe this audio" });
+    expect(content[1]).toHaveProperty("audio");
+    expect(content[1].audio?.format).toBe("mp3");
+    expect(content[1].audio?.source?.bytes).toBeInstanceOf(Uint8Array);
+  });
+
+  test("converts multimodal audio block with Uint8Array data", () => {
+    const audioBytes = new Uint8Array([1, 2, 3, 4]);
+    const result = convertToConverseMessages([
+      new HumanMessage({
+        content: [
+          {
+            type: "audio",
+            mimeType: "audio/wav",
+            data: audioBytes,
+          },
+        ],
+      }),
+    ]);
+
+    const content = result.converseMessages[0].content!;
+    expect(content[0]).toHaveProperty("audio");
+    expect(content[0].audio?.format).toBe("wav");
+    expect(content[0].audio?.source?.bytes).toBe(audioBytes);
+  });
+
+  test("passes through native Bedrock audio block", () => {
+    const audioSource = {
+      bytes: new Uint8Array([1, 2, 3]),
+    };
+    const result = convertToConverseMessages([
+      new HumanMessage({
+        content: [
+          {
+            type: "audio",
+            audio: {
+              format: "flac",
+              source: audioSource,
+            },
+          },
+        ],
+      }),
+    ]);
+
+    const content = result.converseMessages[0].content!;
+    expect(content[0]).toHaveProperty("audio");
+    expect(content[0].audio?.format).toBe("flac");
+    expect(content[0].audio?.source).toBe(audioSource);
+  });
+
+  test("converts audio block with S3 fileId", () => {
+    const result = convertToConverseMessages([
+      new HumanMessage({
+        content: [
+          {
+            type: "audio",
+            mimeType: "audio/mp3",
+            fileId: "s3://my-bucket/my-audio.mp3",
+          },
+        ],
+      }),
+    ]);
+
+    const content = result.converseMessages[0].content!;
+    expect(content[0]).toHaveProperty("audio");
+    expect(content[0].audio?.format).toBe("mp3");
+    expect(content[0].audio?.source?.s3Location?.uri).toBe(
+      "s3://my-bucket/my-audio.mp3"
+    );
+  });
+});
+
 describe("applicationInferenceProfile parameter", () => {
   const baseConstructorArgs = {
     region: "us-east-1",
@@ -883,7 +1065,7 @@ describe("tool_choice works for supported models", () => {
     // Claude 3 should NOT throw
     const claude3Model = new ChatBedrockConverse({
       ...baseConstructorArgs,
-      model: "anthropic.claude-3-5-sonnet-20240620-v1:0",
+      model: "anthropic.claude-sonnet-4-5-20250929-v1:0",
       supportsToolChoiceValues: supportsToolChoiceValuesClaude3,
     });
     const claude3ModelWithTool = claude3Model.bindTools([tool], {
@@ -981,7 +1163,7 @@ describe("tool_choice works for supported models", () => {
   });
 
   it.each([
-    "anthropic.claude-3-5-sonnet-20240620-v1:0",
+    "anthropic.claude-sonnet-4-5-20250929-v1:0",
     "anthropic.claude-sonnet-4-20250514-v1:0",
   ])(
     "should bind tool_choice when using WSO with model that supports tool choice: %s",
@@ -1077,6 +1259,20 @@ test("Test ChatBedrockConverse deserialization from model_id and region_name", a
   expect(loaded.model).toBe("anthropic.claude-3-sonnet-20240229-v1:0");
   expect(loaded.region).toBe("us-west-2");
   expect(loaded.temperature).toBe(0.7);
+});
+
+test("ChatBedrockConverse supports string model shorthand", () => {
+  const modelId = "anthropic.claude-3-haiku-20240307-v1:0";
+  const model = new ChatBedrockConverse(modelId, {
+    region: "us-east-1",
+    credentials: {
+      accessKeyId: "test-key",
+      secretAccessKey: "test-secret",
+    },
+  });
+
+  expect(model.model).toBe(modelId);
+  expect(model.region).toBe("us-east-1");
 });
 
 describe("serviceTier configuration", () => {

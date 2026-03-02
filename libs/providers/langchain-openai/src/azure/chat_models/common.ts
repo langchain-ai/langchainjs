@@ -49,6 +49,27 @@ export interface AzureChatOpenAIFields
   useResponsesApi?: boolean;
 }
 
+export function getAzureChatOpenAIParams(
+  modelOrFields?: string | AzureChatOpenAIFields,
+  fieldsArg?: Omit<
+    AzureChatOpenAIFields,
+    "deploymentName" | "azureOpenAIApiDeploymentName" | "model"
+  >
+): AzureChatOpenAIFields | undefined {
+  if (typeof modelOrFields === "string") {
+    return {
+      model: modelOrFields,
+      deploymentName: modelOrFields,
+      azureOpenAIApiDeploymentName: modelOrFields,
+      ...(fieldsArg ?? {}),
+    };
+  }
+  if (modelOrFields == null) {
+    return fieldsArg as AzureChatOpenAIFields | undefined;
+  }
+  return modelOrFields;
+}
+
 export function _constructAzureFields(
   this: Partial<AzureOpenAIChatInput>,
   fields?: AzureChatOpenAIFields

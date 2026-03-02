@@ -529,6 +529,18 @@ export function _mergeDicts(
   return merged;
 }
 
+function isMergeableIndex(index: unknown): index is number | string {
+  return typeof index === "number" || typeof index === "string";
+}
+
+function hasMergeableIndex(
+  value: unknown
+): value is { index: number | string } {
+  if (typeof value !== "object" || value === null) return false;
+  if (!("index" in value)) return false;
+  return isMergeableIndex(value.index);
+}
+
 export function _mergeLists<Content extends ContentBlock>(
   left?: Content[],
   right?: Content[],
@@ -541,25 +553,17 @@ export function _mergeLists<Content extends ContentBlock>(
   } else {
     const merged = [...left];
     for (const item of right) {
-      if (
-        typeof item === "object" &&
-        item !== null &&
-        "index" in item &&
-        typeof item.index === "number"
-      ) {
+      if (hasMergeableIndex(item)) {
         const toMerge = merged.findIndex((leftItem) => {
-          const isObject = typeof leftItem === "object";
-          const indiciesMatch =
-            "index" in leftItem && leftItem.index === item.index;
+          if (!hasMergeableIndex(leftItem)) return false;
+
+          const indiciesMatch = leftItem.index === item.index;
           const idsMatch =
-            "id" in leftItem && "id" in item && leftItem?.id === item?.id;
-          const eitherItemMissingID =
-            !("id" in leftItem) ||
-            !leftItem?.id ||
-            !("id" in item) ||
-            !item?.id;
-          return isObject && indiciesMatch && (idsMatch || eitherItemMissingID);
+            leftItem.id != null && item.id != null && leftItem.id === item.id;
+          const eitherItemMissingID = leftItem.id == null || item.id == null;
+          return indiciesMatch && (idsMatch || eitherItemMissingID);
         });
+
         if (
           toMerge !== -1 &&
           typeof merged[toMerge] === "object" &&
@@ -579,7 +583,6 @@ export function _mergeLists<Content extends ContentBlock>(
         "text" in item &&
         item.text === ""
       ) {
-        // No-op - skip empty text blocks
         continue;
       } else {
         merged.push(item);

@@ -1,9 +1,12 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { vi, test, expect, beforeEach } from "vitest";
+import { vi, test, expect, beforeEach, describe } from "vitest";
 import { Document } from "@langchain/core/documents";
 import { FakeEmbeddings } from "@langchain/core/utils/testing";
 
-import { AzureCosmosDBNoSQLVectorStore } from "../azure_cosmosdb_nosql.js";
+import {
+  AzureCosmosDBNoSQLVectorStore,
+  AzureCosmosDBNoSQLSearchType,
+} from "../azure_cosmosdb_nosql.js";
 
 const embedMock = vi.spyOn(FakeEmbeddings.prototype, "embedDocuments");
 
@@ -220,4 +223,38 @@ test("AzureCosmosDBNoSQLVectorStore initializes from documents", async () => {
     ],
   ]);
   expect(embedMock).toHaveBeenCalledTimes(1);
+});
+
+describe("AzureCosmosDBNoSQLSearchType", () => {
+  test("should have all expected search types", () => {
+    expect(AzureCosmosDBNoSQLSearchType.Vector).toBe("vector");
+    expect(AzureCosmosDBNoSQLSearchType.VectorScoreThreshold).toBe(
+      "vector_score_threshold"
+    );
+    expect(AzureCosmosDBNoSQLSearchType.FullTextSearch).toBe(
+      "full_text_search"
+    );
+    expect(AzureCosmosDBNoSQLSearchType.FullTextRanking).toBe(
+      "full_text_ranking"
+    );
+    expect(AzureCosmosDBNoSQLSearchType.Hybrid).toBe("hybrid");
+    expect(AzureCosmosDBNoSQLSearchType.HybridScoreThreshold).toBe(
+      "hybrid_score_threshold"
+    );
+  });
+});
+
+describe("AzureCosmosDBNoSQLVectorStore utility methods", () => {
+  test("getContainer should return the container", async () => {
+    const embeddings = new FakeEmbeddings();
+    const client = createMockClient();
+    const store = new AzureCosmosDBNoSQLVectorStore(embeddings, {
+      client: client as any,
+    });
+
+    await store.addDocuments([{ pageContent: "test", metadata: {} }]);
+
+    const container = store.getContainer();
+    expect(container).toBeDefined();
+  });
 });

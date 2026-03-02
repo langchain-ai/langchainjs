@@ -70,6 +70,104 @@ export function extractImageInfo(
   };
 }
 
+const mimeTypeToVideoFormat: Record<string, Bedrock.VideoFormat> = {
+  "video/flv": "flv",
+  "video/mkv": "mkv",
+  "video/mov": "mov",
+  "video/mp4": "mp4",
+  "video/mpeg": "mpeg",
+  "video/mpg": "mpg",
+  "video/three_gp": "three_gp",
+  "video/webm": "webm",
+  "video/wmv": "wmv",
+};
+
+const mimeTypeToAudioFormat: Record<string, Bedrock.AudioFormat> = {
+  "audio/aac": "aac",
+  "audio/flac": "flac",
+  "audio/m4a": "m4a",
+  "audio/mka": "mka",
+  "audio/mkv": "mkv",
+  "audio/mp3": "mp3",
+  "audio/mp4": "mp4",
+  "audio/mpeg": "mpeg",
+  "audio/mpga": "mpga",
+  "audio/ogg": "ogg",
+  "audio/opus": "opus",
+  "audio/pcm": "pcm",
+  "audio/wav": "wav",
+  "audio/webm": "webm",
+  "audio/x-aac": "x-aac",
+};
+
+function resolveMediaSource(
+  block: Record<string, unknown>
+): Bedrock.AudioSource.BytesMember | Bedrock.AudioSource.S3LocationMember {
+  if (typeof block.data === "string") {
+    return {
+      bytes: Uint8Array.from(atob(block.data), (c) => c.charCodeAt(0)),
+    };
+  }
+
+  // eslint-disable-next-line no-instanceof/no-instanceof
+  if (block.data instanceof Uint8Array) {
+    return { bytes: block.data };
+  }
+
+  if (typeof block.url === "string") {
+    const parsedData = parseBase64DataUrl({
+      dataUrl: block.url,
+      asTypedArray: true,
+    });
+    if (parsedData) {
+      return { bytes: parsedData.data };
+    }
+    throw new Error(
+      `Only base64 data URLs are supported for ${block.type} blocks with 'url' field with ChatBedrockConverse.`
+    );
+  }
+
+  if (typeof block.fileId === "string") {
+    return { s3Location: { uri: block.fileId } };
+  }
+
+  throw new Error(
+    `${block.type} block must include one of: 'data' (base64 string or Uint8Array), 'url' (base64 data URL), or 'fileId' (S3 URI).`
+  );
+}
+
+function convertMultimodalVideoBlock(
+  block: Record<string, unknown>
+): Bedrock.ContentBlock {
+  const mimeType = block.mimeType as string | undefined;
+  let format: Bedrock.VideoFormat | undefined;
+  if (mimeType) {
+    format = mimeTypeToVideoFormat[mimeType];
+    if (!format) {
+      const parsed = parseMimeType(mimeType);
+      format = parsed.subtype as Bedrock.VideoFormat;
+    }
+  }
+  const source = resolveMediaSource(block);
+  return { video: { format, source } };
+}
+
+function convertMultimodalAudioBlock(
+  block: Record<string, unknown>
+): Bedrock.ContentBlock {
+  const mimeType = block.mimeType as string | undefined;
+  let format: Bedrock.AudioFormat | undefined;
+  if (mimeType) {
+    format = mimeTypeToAudioFormat[mimeType];
+    if (!format) {
+      const parsed = parseMimeType(mimeType);
+      format = parsed.subtype as Bedrock.AudioFormat;
+    }
+  }
+  const source = resolveMediaSource(block);
+  return { audio: { format, source } };
+}
+
 const standardContentBlockConverter: StandardContentBlockConverter<{
   text: Bedrock.ContentBlock.TextMember;
   image: Bedrock.ContentBlock.ImageMember;
@@ -317,6 +415,26 @@ function convertLangChainContentBlockToConverseContentBlock<
     return {
       image: block.image,
     };
+  }
+
+  if (block.type === "video" && block.video !== undefined) {
+    return {
+      video: block.video,
+    };
+  }
+
+  if (block.type === "video") {
+    return convertMultimodalVideoBlock(block);
+  }
+
+  if (block.type === "audio" && block.audio !== undefined) {
+    return {
+      audio: block.audio,
+    };
+  }
+
+  if (block.type === "audio") {
+    return convertMultimodalAudioBlock(block);
   }
 
   if (isDefaultCachePoint(block)) {

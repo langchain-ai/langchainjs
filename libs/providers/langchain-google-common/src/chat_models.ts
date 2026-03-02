@@ -245,6 +245,7 @@ export abstract class ChatGoogleBase<AuthOptions>
 
   constructor(fields?: ChatGoogleBaseInput<AuthOptions>) {
     super(ensureParams(fields));
+    this._addVersion("@langchain/google-common", __PKG_VERSION__);
 
     copyAndValidateModelParamsInto(fields, this);
     this.safetyHandler =
