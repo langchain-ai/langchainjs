@@ -21,12 +21,7 @@ import type {
   BaseLanguageModelInput,
   StructuredOutputMethodOptions,
 } from "@langchain/core/language_models/base";
-import {
-  Runnable,
-  RunnableLambda,
-  RunnablePassthrough,
-  RunnableSequence,
-} from "@langchain/core/runnables";
+import { Runnable, RunnableLambda } from "@langchain/core/runnables";
 import {
   toJsonSchema,
   type JsonSchema7Type,
@@ -35,12 +30,6 @@ import {
   InteropZodType,
   isInteropZodSchema,
 } from "@langchain/core/utils/types";
-import {
-  BaseOutputParser,
-  JsonOutputParser,
-  StructuredOutputParser,
-} from "@langchain/core/output_parsers";
-import { JsonOutputKeyToolsParser } from "@langchain/core/output_parsers/openai_tools";
 
 import { ApiClient } from "../clients/index.js";
 import type { ChatGoogleFields } from "./types.js";
