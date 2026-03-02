@@ -18,6 +18,7 @@ export function _makeMessageChunkFromAnthropicEvent(
   fields: {
     streamUsage: boolean;
     coerceContentToString: boolean;
+    blockTypesByIndex?: Map<number, string>;
   }
 ): {
   chunk: AIMessageChunk;
@@ -81,8 +82,17 @@ export function _makeMessageChunkFromAnthropicEvent(
       "document",
       "server_tool_use",
       "web_search_tool_result",
+      "web_fetch_tool_result",
+      "code_execution_tool_result",
+      "bash_code_execution_tool_result",
+      "text_editor_code_execution_tool_result",
+      "mcp_tool_result",
+      "mcp_tool_use",
     ].includes(data.content_block.type)
   ) {
+    // Track the block type by index so that input_json_delta can distinguish
+    // between tool_use (client) and server_tool_use blocks.
+    fields.blockTypesByIndex?.set(data.index, data.content_block.type);
     const contentBlock = data.content_block;
     let toolCallChunks: ToolCallChunk[];
     if (contentBlock.type === "tool_use") {
@@ -162,6 +172,14 @@ export function _makeMessageChunkFromAnthropicEvent(
     data.type === "content_block_delta" &&
     data.delta.type === "input_json_delta"
   ) {
+    // Only emit tool_call_chunks for actual tool_use (client tool) blocks.
+    // server_tool_use blocks also stream input_json_delta events, but those
+    // should NOT produce tool_call_chunks since they lack id/name and would
+    // fail validation in collapseToolCallChunks(), producing invalid_tool_calls.
+    const blockType = fields.blockTypesByIndex?.get(data.index);
+    const isClientToolUse =
+      blockType === undefined || blockType === "tool_use";
+
     return {
       chunk: new AIMessageChunk({
         content: fields.coerceContentToString
@@ -175,12 +193,14 @@ export function _makeMessageChunkFromAnthropicEvent(
             ],
         response_metadata,
         additional_kwargs: {},
-        tool_call_chunks: [
-          {
-            index: data.index,
-            args: data.delta.partial_json,
-          },
-        ],
+        tool_call_chunks: isClientToolUse
+          ? [
+              {
+                index: data.index,
+                args: data.delta.partial_json,
+              },
+            ]
+          : [],
       }),
     };
   } else if (
