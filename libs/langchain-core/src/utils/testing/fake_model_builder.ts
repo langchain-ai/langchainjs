@@ -31,36 +31,7 @@ interface FakeModelCall {
 }
 
 function deriveContent(messages: BaseMessage[]): string {
-  const lastMessage = messages[messages.length - 1];
-  let content = lastMessage.content as string;
-
-  if (messages.length > 1) {
-    const parts = messages.map((m) => m.content).filter(Boolean);
-    content = parts
-      .map((part) => {
-        if (typeof part === "string") {
-          return part;
-        } else if (typeof part === "object" && "text" in part) {
-          return (part as { text: string }).text;
-        } else if (Array.isArray(part)) {
-          return part
-            .map((p) => {
-              if (typeof p === "string") {
-                return p;
-              } else if (typeof p === "object" && "text" in p) {
-                return (p as { text: string }).text;
-              }
-              return "";
-            })
-            .join("-");
-        } else {
-          return JSON.stringify(part);
-        }
-      })
-      .join("-");
-  }
-
-  return content;
+  return messages.map((m) => m.text).filter(Boolean).join("-");
 }
 
 let idCounter = 0;
