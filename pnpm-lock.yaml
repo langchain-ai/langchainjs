@@ -1212,7 +1212,7 @@ importers:
         version: 4.0.6
       '@getzep/zep-cloud':
         specifier: ^1.0.6
-        version: 1.0.12(@langchain/core@libs+langchain-core)(encoding@0.1.13)(langchain@0.3.30(d3c314cf413fc3f4abbbb38b204da055))
+        version: 1.0.12(@langchain/core@libs+langchain-core)(encoding@0.1.13)(langchain@0.3.30(520f05ad9c4a17e5a9bc5d39cd68641e))
       '@getzep/zep-js':
         specifier: ^2.0.2
         version: 2.0.2(encoding@0.1.13)
@@ -1363,9 +1363,6 @@ importers:
       '@types/mozilla-readability':
         specifier: ^0.2.1
         version: 0.2.1
-      '@types/pdf-parse':
-        specifier: ^1.1.1
-        version: 1.1.5
       '@types/pg':
         specifier: ^8.11.0
         version: 8.16.0
@@ -6717,32 +6714,32 @@ packages:
     peerDependencies:
       '@langchain/core': workspace:^
 
-  '@langchain/google-common@2.1.22':
-    resolution: {integrity: sha512-G5GXVbZt5trwt4jY5IdJU7DhBPgFkWR4X8Or164P+Qt33YhQ4npsjqqxDtOKDelDusSTmSA1rd0qlC0Yjl4rqQ==}
+  '@langchain/google-common@2.1.23':
+    resolution: {integrity: sha512-P/Yz7/D58qZPxx4wxWhr18LJNOvlbY3ArvAQCAKkQN7s7NI8hUjW5sWjQJYPvrO8OnjZcUnrAjNV6VHQafiXow==}
     engines: {node: '>=20'}
     peerDependencies:
       '@langchain/core': workspace:^
 
-  '@langchain/google-gauth@2.1.22':
-    resolution: {integrity: sha512-es5lqfggEXNKQJKW+mUqN3C8NUz/ZI1iCx2BpCvUnKiIOGtEUGaAVATyD5UkxqMkVe8D7D8IoL2HO2YbhKVNkw==}
+  '@langchain/google-gauth@2.1.23':
+    resolution: {integrity: sha512-HggqRwL8uTk8IZs+IE0fZ2P9bzle7356wVGKYVDvmERgRgvZTVioVcDZCdZytawJ7VJyKyAyEPyzbZbvsHe9ZQ==}
     engines: {node: '>=20'}
 
-  '@langchain/google-genai@2.1.22':
-    resolution: {integrity: sha512-01dplEIhEgwdY5dGwjWQXl5jhaAcz8DDXIlyCCms1QnR3HhVckZY1YrpAUiY1atoOcPXN+6/DrSPWUAM0mZVUQ==}
+  '@langchain/google-genai@2.1.23':
+    resolution: {integrity: sha512-FYdKFjW4qsEu9sowuoTJSOqDlbBB/6s1NM9pMWU4jJCyo4uiHZ2Y9MNt+K30Prn5/Y99o4HJ7jxiCQbCV+ehmA==}
     engines: {node: '>=20'}
     peerDependencies:
       '@langchain/core': workspace:^
 
-  '@langchain/google-vertexai-web@2.1.22':
-    resolution: {integrity: sha512-kubXfwSGjQVycPCDKR0WPMuEV8rGfFnK6ATA/ndhaG7I5DMkJoqm1rtuwyIoaaR+2i0DfmqiJtE7PwskHlWd6g==}
+  '@langchain/google-vertexai-web@2.1.23':
+    resolution: {integrity: sha512-I74JDy3DhxSlO3mkO56+neL50pigupFCzO00SnRhqSnGcPJSP8fZ3QFO+wQTFazHJZ0iCzC8VjNyUhzPvUQ6vA==}
     engines: {node: '>=20'}
 
-  '@langchain/google-vertexai@2.1.22':
-    resolution: {integrity: sha512-s1Vt/40zxNam+ZifIktJmTcFeqtUGhrXODp6kktM+vAJ1cFomXEM0LJdf9oyvPxMWaloU46ZmVlWwCPnLl5YDQ==}
+  '@langchain/google-vertexai@2.1.23':
+    resolution: {integrity: sha512-6fiHTQddjk6P8NZj83nALYKQiB89wIRm6CfZUqF79HJRu4sjtlynNfAwP2CUlBwwHsGPJvidm3e0nI0JqYz3RQ==}
     engines: {node: '>=20'}
 
-  '@langchain/google-webauth@2.1.22':
-    resolution: {integrity: sha512-D94wM7jw7R28ENcF/qJL1ZtzVoxb4hajS1vSs0GI+At0oA4jhvCU6IaOQqK+ETptquKFuPXGfOmDvrf+YzdH6g==}
+  '@langchain/google-webauth@2.1.23':
+    resolution: {integrity: sha512-zbRlh9FIfujSzCNCVA1QdH8vmus9iAnAkjhy9gN9+sDxTOgbNFFRrNQEGJO/IAugQA9wuOE97VxvbyDhUJZp9g==}
     engines: {node: '>=20'}
     peerDependencies:
       '@langchain/core': workspace:^
@@ -9069,9 +9066,6 @@ packages:
   '@types/parse-path@7.1.0':
     resolution: {integrity: sha512-EULJ8LApcVEPbrfND0cRQqutIOdiIgJ1Mgrhpy755r14xMohPTEpkV/k28SJvuOs9bHRFW8x+KeDAEPiGQPB9Q==}
     deprecated: This is a stub types definition. parse-path provides its own type definitions, so you do not need this installed.
-
-  '@types/pdf-parse@1.1.5':
-    resolution: {integrity: sha512-kBfrSXsloMnUJOKi25s3+hRmkycHfLK6A09eRGqF/N8BkQoPUmaCr+q8Cli5FnfohEz/rsv82zAiPz/LXtOGhA==}
 
   '@types/pg-copy-streams@1.2.5':
     resolution: {integrity: sha512-7D6/GYW2uHIaVU6S/5omI+6RZnwlZBpLQDZAH83xX1rjxAOK0f6/deKyyUTewxqts145VIGn6XWYz1YGf50G5g==}
@@ -21058,7 +21052,7 @@ snapshots:
     transitivePeerDependencies:
       - debug
 
-  '@getzep/zep-cloud@1.0.12(@langchain/core@libs+langchain-core)(encoding@0.1.13)(langchain@0.3.30(d3c314cf413fc3f4abbbb38b204da055))':
+  '@getzep/zep-cloud@1.0.12(@langchain/core@libs+langchain-core)(encoding@0.1.13)(langchain@0.3.30(520f05ad9c4a17e5a9bc5d39cd68641e))':
     dependencies:
       form-data: 4.0.5
       node-fetch: 2.7.0(encoding@0.1.13)
@@ -21067,7 +21061,7 @@ snapshots:
       zod: 3.25.76
     optionalDependencies:
       '@langchain/core': link:libs/langchain-core
-      langchain: 0.3.30(d3c314cf413fc3f4abbbb38b204da055)
+      langchain: 0.3.30(520f05ad9c4a17e5a9bc5d39cd68641e)
     transitivePeerDependencies:
       - encoding
 
@@ -21984,47 +21978,47 @@ snapshots:
       - ws
     optional: true
 
-  '@langchain/google-common@2.1.22(@langchain/core@libs+langchain-core)':
+  '@langchain/google-common@2.1.23(@langchain/core@libs+langchain-core)':
     dependencies:
       '@langchain/core': link:libs/langchain-core
       uuid: 10.0.0
     optional: true
 
-  '@langchain/google-gauth@2.1.22(@langchain/core@libs+langchain-core)':
+  '@langchain/google-gauth@2.1.23(@langchain/core@libs+langchain-core)':
     dependencies:
-      '@langchain/google-common': 2.1.22(@langchain/core@libs+langchain-core)
+      '@langchain/google-common': 2.1.23(@langchain/core@libs+langchain-core)
       google-auth-library: 10.6.1
     transitivePeerDependencies:
       - '@langchain/core'
       - supports-color
     optional: true
 
-  '@langchain/google-genai@2.1.22(@langchain/core@libs+langchain-core)':
+  '@langchain/google-genai@2.1.23(@langchain/core@libs+langchain-core)':
     dependencies:
       '@google/generative-ai': 0.24.1
       '@langchain/core': link:libs/langchain-core
       uuid: 11.1.0
     optional: true
 
-  '@langchain/google-vertexai-web@2.1.22(@langchain/core@libs+langchain-core)':
+  '@langchain/google-vertexai-web@2.1.23(@langchain/core@libs+langchain-core)':
     dependencies:
-      '@langchain/google-webauth': 2.1.22(@langchain/core@libs+langchain-core)
+      '@langchain/google-webauth': 2.1.23(@langchain/core@libs+langchain-core)
     transitivePeerDependencies:
       - '@langchain/core'
     optional: true
 
-  '@langchain/google-vertexai@2.1.22(@langchain/core@libs+langchain-core)':
+  '@langchain/google-vertexai@2.1.23(@langchain/core@libs+langchain-core)':
     dependencies:
-      '@langchain/google-gauth': 2.1.22(@langchain/core@libs+langchain-core)
+      '@langchain/google-gauth': 2.1.23(@langchain/core@libs+langchain-core)
     transitivePeerDependencies:
       - '@langchain/core'
       - supports-color
     optional: true
 
-  '@langchain/google-webauth@2.1.22(@langchain/core@libs+langchain-core)':
+  '@langchain/google-webauth@2.1.23(@langchain/core@libs+langchain-core)':
     dependencies:
       '@langchain/core': link:libs/langchain-core
-      '@langchain/google-common': 2.1.22(@langchain/core@libs+langchain-core)
+      '@langchain/google-common': 2.1.23(@langchain/core@libs+langchain-core)
       web-auth-library: 1.0.3
     optional: true
 
@@ -24563,10 +24557,6 @@ snapshots:
   '@types/parse-path@7.1.0':
     dependencies:
       parse-path: 7.1.0
-
-  '@types/pdf-parse@1.1.5':
-    dependencies:
-      '@types/node': 25.2.3
 
   '@types/pg-copy-streams@1.2.5':
     dependencies:
@@ -29679,7 +29669,7 @@ snapshots:
 
   kuler@2.0.0: {}
 
-  langchain@0.3.30(d3c314cf413fc3f4abbbb38b204da055):
+  langchain@0.3.30(520f05ad9c4a17e5a9bc5d39cd68641e):
     dependencies:
       '@langchain/core': link:libs/langchain-core
       '@langchain/openai': 0.6.17(@langchain/core@libs+langchain-core)(ws@8.19.0(bufferutil@4.1.0))
@@ -29698,9 +29688,9 @@ snapshots:
       '@langchain/aws': 1.3.0(@langchain/core@libs+langchain-core)
       '@langchain/cohere': 1.0.4(@langchain/core@libs+langchain-core)
       '@langchain/deepseek': 1.0.15(@langchain/core@libs+langchain-core)(ws@8.19.0(bufferutil@4.1.0))
-      '@langchain/google-genai': 2.1.22(@langchain/core@libs+langchain-core)
-      '@langchain/google-vertexai': 2.1.22(@langchain/core@libs+langchain-core)
-      '@langchain/google-vertexai-web': 2.1.22(@langchain/core@libs+langchain-core)
+      '@langchain/google-genai': 2.1.23(@langchain/core@libs+langchain-core)
+      '@langchain/google-vertexai': 2.1.23(@langchain/core@libs+langchain-core)
+      '@langchain/google-vertexai-web': 2.1.23(@langchain/core@libs+langchain-core)
       '@langchain/groq': 1.1.3(@langchain/core@libs+langchain-core)(encoding@0.1.13)
       '@langchain/mistralai': 1.0.6(@langchain/core@libs+langchain-core)(bufferutil@4.1.0)
       '@langchain/ollama': 1.2.5(@langchain/core@libs+langchain-core)
