@@ -18,7 +18,6 @@ export default getBuildConfig({
     "./src/storage/encoder_backed.ts",
     "./src/storage/in_memory.ts",
     "./src/storage/file_system.ts",
-    "./src/testing/index.ts",
   ],
   define: { __PKG_VERSION__: JSON.stringify(pkg.version) },
   plugins: [

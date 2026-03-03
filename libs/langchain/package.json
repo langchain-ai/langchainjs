@@ -24,8 +24,7 @@
     "hub.d.cts",
     "hub.cjs",
     "hub.d.ts",
-    "hub.js",
-    "testing"
+    "hub.js"
   ],
   "repository": {
     "type": "git",
@@ -203,17 +202,6 @@
       "import": {
         "types": "./dist/storage/in_memory.d.ts",
         "default": "./dist/storage/in_memory.js"
-      }
-    },
-    "./testing": {
-      "input": "./src/testing/index.ts",
-      "require": {
-        "types": "./dist/testing/index.d.cts",
-        "default": "./dist/testing/index.cjs"
-      },
-      "import": {
-        "types": "./dist/testing/index.d.ts",
-        "default": "./dist/testing/index.js"
       }
     },
     "./package.json": "./package.json"
