@@ -18,7 +18,7 @@ import {
 } from "./format.js";
 
 /** @internal */
-const MESSAGE_SYMBOL = Symbol.for("langchain.message");
+const MESSAGE_SYMBOL: symbol = Symbol.for("langchain.message");
 
 export interface StoredMessageData {
   content: string | object;

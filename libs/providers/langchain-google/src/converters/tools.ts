@@ -457,12 +457,10 @@ export function convertToolChoiceToGeminiConfig(
   toolChoice: ToolChoice | undefined,
   hasTools: boolean
 ): Gemini.Tools.ToolConfig | undefined {
-  // Only create config if tools are present
-  if (!hasTools) {
+  if (!hasTools || toolChoice === undefined) {
     return undefined;
   }
 
-  // Convert tool_choice to Gemini function calling config mode
   let mode: Gemini.Tools.FunctionCallingConfigMode | undefined;
   let allowedFunctionNames: string[] | undefined;
 
@@ -482,7 +480,6 @@ export function convertToolChoiceToGeminiConfig(
   } else if (toolChoiceMode === "none") {
     mode = "NONE";
   } else if (typeof toolChoiceMode === "string") {
-    // A function name, which is deprecated, but supported
     mode = "ANY";
     toolChoiceFunction = toolChoiceMode;
   }
@@ -495,7 +492,6 @@ export function convertToolChoiceToGeminiConfig(
     }
   }
 
-  // Build toolConfig: use explicit mode if provided, otherwise default to AUTO
   const functionCallingConfig: Gemini.Tools.FunctionCallingConfig = {};
   if (allowedFunctionNames?.length) {
     functionCallingConfig.allowedFunctionNames = allowedFunctionNames;
