@@ -43,6 +43,47 @@ function makeSerializableSchema() {
   };
 }
 
+// Simulates callable schema libraries like ArkType where typeof === "function"
+function makeCallableStandardSchema() {
+  const fn = (value: unknown) => value;
+  Object.defineProperty(fn, "~standard", {
+    value: {
+      version: 1 as const,
+      vendor: "test-callable",
+      validate: mockValidate,
+    },
+    enumerable: true,
+  });
+  return fn;
+}
+
+function makeCallableJsonSchema() {
+  const fn = (value: unknown) => value;
+  Object.defineProperty(fn, "~standard", {
+    value: {
+      version: 1 as const,
+      vendor: "test-callable",
+      jsonSchema: mockJsonSchema,
+    },
+    enumerable: true,
+  });
+  return fn;
+}
+
+function makeCallableSerializableSchema() {
+  const fn = (value: unknown) => value;
+  Object.defineProperty(fn, "~standard", {
+    value: {
+      version: 1 as const,
+      vendor: "test-callable",
+      validate: mockValidate,
+      jsonSchema: mockJsonSchema,
+    },
+    enumerable: true,
+  });
+  return fn;
+}
+
 describe("isStandardSchema", () => {
   it("returns true for an object with ~standard.validate", () => {
     expect(isStandardSchema(makeStandardSchemaOnly())).toBe(true);
@@ -80,6 +121,14 @@ describe("isStandardSchema", () => {
   it("returns false when ~standard is not an object", () => {
     expect(isStandardSchema({ "~standard": "string" })).toBe(false);
   });
+
+  it("returns true for a callable (function) schema with ~standard.validate", () => {
+    expect(isStandardSchema(makeCallableStandardSchema())).toBe(true);
+  });
+
+  it("returns true for a callable serializable schema", () => {
+    expect(isStandardSchema(makeCallableSerializableSchema())).toBe(true);
+  });
 });
 
 describe("isStandardJsonSchema", () => {
@@ -111,6 +160,14 @@ describe("isStandardJsonSchema", () => {
     expect(isStandardJsonSchema("hello")).toBe(false);
     expect(isStandardJsonSchema(42)).toBe(false);
   });
+
+  it("returns true for a callable (function) schema with ~standard.jsonSchema", () => {
+    expect(isStandardJsonSchema(makeCallableJsonSchema())).toBe(true);
+  });
+
+  it("returns true for a callable serializable schema", () => {
+    expect(isStandardJsonSchema(makeCallableSerializableSchema())).toBe(true);
+  });
 });
 
 describe("isSerializableSchema", () => {
@@ -141,5 +198,17 @@ describe("isSerializableSchema", () => {
   it("returns false for a primitive", () => {
     expect(isSerializableSchema("hello")).toBe(false);
     expect(isSerializableSchema(42)).toBe(false);
+  });
+
+  it("returns true for a callable (function) schema with both validate and jsonSchema", () => {
+    expect(isSerializableSchema(makeCallableSerializableSchema())).toBe(true);
+  });
+
+  it("returns false for a callable schema with only validate", () => {
+    expect(isSerializableSchema(makeCallableStandardSchema())).toBe(false);
+  });
+
+  it("returns false for a callable schema with only jsonSchema", () => {
+    expect(isSerializableSchema(makeCallableJsonSchema())).toBe(false);
   });
 });

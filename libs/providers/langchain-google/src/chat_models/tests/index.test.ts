@@ -12,7 +12,8 @@ import { ApiClient } from "../../clients/index.js";
 import { GoogleRequestRecorder } from "../../utils/handler.js";
 import { BaseCallbackHandler } from "@langchain/core/callbacks/base";
 import { ChatGoogle, ChatGoogleParams } from "../index.js";
-import { AIMessageChunk } from "@langchain/core/messages";
+import { AIMessage, AIMessageChunk } from "@langchain/core/messages";
+import { OutputParserException } from "@langchain/core/output_parsers";
 import type { Gemini } from "../types.js";
 
 interface MockResponseParameters {
@@ -929,5 +930,218 @@ describe("Google Mock", () => {
 
     const textCall = newTokenCalls.find((c) => c.text.includes("plot"));
     expect(textCall).toBeDefined();
+  });
+});
+
+function makeSerializableSchema() {
+  return {
+    "~standard": {
+      version: 1 as const,
+      vendor: "test",
+      validate: (value: unknown) => {
+        const obj = value as Record<string, unknown>;
+        if (
+          typeof obj === "object" &&
+          obj !== null &&
+          typeof obj.name === "string"
+        ) {
+          return { value: obj };
+        }
+        return {
+          issues: [{ message: "Expected object with string 'name' field" }],
+        };
+      },
+      jsonSchema: {
+        input: () => ({
+          type: "object",
+          properties: { name: { type: "string" } },
+          required: ["name"],
+        }),
+        output: () => ({
+          type: "object",
+          properties: { name: { type: "string" } },
+          required: ["name"],
+        }),
+      },
+    },
+  };
+}
+
+describe("withStructuredOutput with SerializableSchema", () => {
+  test("functionCalling with valid output parses correctly", async () => {
+    const apiClient = new MockApiClient({
+      fileName: "gemini-chat-001.json",
+    });
+    const model = new ChatGoogle({
+      model: "gemini-3-pro-preview",
+      apiClient,
+    });
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    vi.spyOn(model as any, "invoke").mockResolvedValue(
+      new AIMessage({
+        content: "",
+        tool_calls: [
+          {
+            id: "call_123",
+            name: "extract",
+            args: { name: "Claude" },
+          },
+        ],
+      })
+    );
+
+    const schema = makeSerializableSchema();
+    const structured = model.withStructuredOutput(schema, {
+      method: "functionCalling",
+    });
+
+    const result = await structured.invoke("What is your name?");
+    expect(result).toEqual({ name: "Claude" });
+  });
+
+  test("functionCalling with invalid output throws OutputParserException", async () => {
+    const apiClient = new MockApiClient({
+      fileName: "gemini-chat-001.json",
+    });
+    const model = new ChatGoogle({
+      model: "gemini-3-pro-preview",
+      apiClient,
+    });
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    vi.spyOn(model as any, "invoke").mockResolvedValue(
+      new AIMessage({
+        content: "",
+        tool_calls: [
+          {
+            id: "call_123",
+            name: "extract",
+            args: { wrong_field: 123 },
+          },
+        ],
+      })
+    );
+
+    const schema = makeSerializableSchema();
+    const structured = model.withStructuredOutput(schema, {
+      method: "functionCalling",
+    });
+
+    await expect(async () => {
+      await structured.invoke("What is your name?");
+    }).rejects.toThrow(OutputParserException);
+  });
+
+  test("functionCalling with custom name", async () => {
+    const apiClient = new MockApiClient({
+      fileName: "gemini-chat-001.json",
+    });
+    const model = new ChatGoogle({
+      model: "gemini-3-pro-preview",
+      apiClient,
+    });
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    vi.spyOn(model as any, "invoke").mockResolvedValue(
+      new AIMessage({
+        content: "",
+        tool_calls: [
+          {
+            id: "call_123",
+            name: "PersonInfo",
+            args: { name: "Alice" },
+          },
+        ],
+      })
+    );
+
+    const schema = makeSerializableSchema();
+    const structured = model.withStructuredOutput(schema, {
+      method: "functionCalling",
+      name: "PersonInfo",
+    });
+
+    const result = await structured.invoke("Who is this?");
+    expect(result).toEqual({ name: "Alice" });
+  });
+
+  test("functionCalling with includeRaw returns raw and parsed", async () => {
+    const rawMessage = new AIMessage({
+      content: "",
+      tool_calls: [
+        {
+          id: "call_123",
+          name: "extract",
+          args: { name: "Bob" },
+        },
+      ],
+    });
+    const apiClient = new MockApiClient({
+      fileName: "gemini-chat-001.json",
+    });
+    const model = new ChatGoogle({
+      model: "gemini-3-pro-preview",
+      apiClient,
+    });
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    vi.spyOn(model as any, "invoke").mockResolvedValue(rawMessage);
+
+    const schema = makeSerializableSchema();
+    const structured = model.withStructuredOutput(schema, {
+      method: "functionCalling",
+      includeRaw: true,
+    });
+
+    const result = await structured.invoke("Tell me a name");
+    expect(result).toHaveProperty("raw");
+    expect(result).toHaveProperty("parsed");
+    expect(result.parsed).toEqual({ name: "Bob" });
+  });
+
+  test("jsonSchema with valid output parses correctly", async () => {
+    const apiClient = new MockApiClient({
+      fileName: "gemini-chat-001.json",
+    });
+    const model = new ChatGoogle({
+      model: "gemini-3-pro-preview",
+      apiClient,
+    });
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    vi.spyOn(model as any, "invoke").mockResolvedValue(
+      new AIMessage({
+        content: '{"name": "Eve"}',
+      })
+    );
+
+    const schema = makeSerializableSchema();
+    const structured = model.withStructuredOutput(schema, {
+      method: "jsonSchema",
+    });
+
+    const result = await structured.invoke("What is your name?");
+    expect(result).toEqual({ name: "Eve" });
+  });
+
+  test("jsonSchema with invalid output throws OutputParserException", async () => {
+    const apiClient = new MockApiClient({
+      fileName: "gemini-chat-001.json",
+    });
+    const model = new ChatGoogle({
+      model: "gemini-3-pro-preview",
+      apiClient,
+    });
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    vi.spyOn(model as any, "invoke").mockResolvedValue(
+      new AIMessage({
+        content: '{"wrong_field": 123}',
+      })
+    );
+
+    const schema = makeSerializableSchema();
+    const structured = model.withStructuredOutput(schema, {
+      method: "jsonSchema",
+    });
+
+    await expect(async () => {
+      await structured.invoke("What is your name?");
+    }).rejects.toThrow(OutputParserException);
   });
 });
