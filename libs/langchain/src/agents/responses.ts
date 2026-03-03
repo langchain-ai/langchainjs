@@ -10,6 +10,10 @@ import { type AIMessage } from "@langchain/core/messages";
 import { type LanguageModelLike } from "@langchain/core/language_models/base";
 import { toJsonSchema, Validator } from "@langchain/core/utils/json_schema";
 import { type FunctionDefinition } from "@langchain/core/language_models/base";
+import {
+  type SerializableSchema,
+  isSerializableSchema,
+} from "@langchain/core/utils/standard_schema";
 
 import {
   StructuredOutputParsingError,
@@ -78,12 +82,17 @@ export class ToolStrategy<_T = unknown> {
   ): ToolStrategy<S extends InteropZodType<infer U> ? U : unknown>;
 
   static fromSchema(
+    schema: SerializableSchema,
+    outputOptions?: ToolStrategyOptions
+  ): ToolStrategy<Record<string, unknown>>;
+
+  static fromSchema(
     schema: Record<string, unknown>,
     outputOptions?: ToolStrategyOptions
   ): ToolStrategy<Record<string, unknown>>;
 
   static fromSchema(
-    schema: InteropZodObject | Record<string, unknown>,
+    schema: InteropZodObject | SerializableSchema | Record<string, unknown>,
     outputOptions?: ToolStrategyOptions
   ): ToolStrategy<any> {
     /**
@@ -94,7 +103,7 @@ export class ToolStrategy<_T = unknown> {
       return name ?? `extract-${++bindingIdentifier}`;
     }
 
-    if (isInteropZodSchema(schema)) {
+    if (isSerializableSchema(schema) || isInteropZodSchema(schema)) {
       const asJsonSchema = toJsonSchema(schema);
       const tool = {
         type: "function" as const,
@@ -201,12 +210,17 @@ export class ProviderStrategy<T = unknown> {
   ): ProviderStrategy<T>;
 
   static fromSchema(
+    schema: SerializableSchema,
+    strict?: boolean
+  ): ProviderStrategy<Record<string, unknown>>;
+
+  static fromSchema(
     schema: Record<string, unknown>,
     strict?: boolean
   ): ProviderStrategy<Record<string, unknown>>;
 
   static fromSchema<T = unknown>(
-    schema: InteropZodType<T> | Record<string, unknown>,
+    schema: InteropZodType<T> | SerializableSchema | Record<string, unknown>,
     strict?: boolean
   ): ProviderStrategy<T> | ProviderStrategy<Record<string, unknown>> {
     const asJsonSchema = toJsonSchema(schema);
@@ -289,6 +303,8 @@ export function transformResponseFormat(
   responseFormat?:
     | InteropZodType<any>
     | InteropZodType<any>[]
+    | SerializableSchema
+    | SerializableSchema[]
     | JsonSchemaFormat
     | JsonSchemaFormat[]
     | ResponseFormat
@@ -311,7 +327,7 @@ export function transformResponseFormat(
   }
 
   /**
-   * If users provide an array, it should only contain raw schemas (Zod or JSON schema),
+   * If users provide an array, it should only contain raw schemas (Zod, Standard Schema or JSON schema),
    * not ToolStrategy or ProviderStrategy instances.
    */
   if (Array.isArray(responseFormat)) {
@@ -325,6 +341,15 @@ export function transformResponseFormat(
       )
     ) {
       return responseFormat as unknown as ResponseFormat[];
+    }
+
+    /**
+     * Check if all items are Standard Schema
+     */
+    if (responseFormat.every((item) => isSerializableSchema(item))) {
+      return responseFormat.map((item) =>
+        ToolStrategy.fromSchema(item as SerializableSchema, options)
+      );
     }
 
     /**
@@ -342,7 +367,10 @@ export function transformResponseFormat(
     if (
       responseFormat.every(
         (item) =>
-          typeof item === "object" && item !== null && !isInteropZodObject(item)
+          typeof item === "object" &&
+          item !== null &&
+          !isInteropZodObject(item) &&
+          !isSerializableSchema(item)
       )
     ) {
       return responseFormat.map((item) =>
@@ -352,7 +380,7 @@ export function transformResponseFormat(
 
     throw new Error(
       `Invalid response format: list contains mixed types.\n` +
-        `All items must be either InteropZodObject or plain JSON schema objects.`
+        `All items must be either InteropZodObject, Standard Schema, or plain JSON schema objects.`
     );
   }
 
@@ -364,6 +392,15 @@ export function transformResponseFormat(
   }
 
   const useProviderStrategy = hasSupportForJsonSchemaOutput(model);
+
+  /**
+   * `responseFormat` is a Standard Schema
+   */
+  if (isSerializableSchema(responseFormat)) {
+    return useProviderStrategy
+      ? [ProviderStrategy.fromSchema(responseFormat)]
+      : [ToolStrategy.fromSchema(responseFormat, options)];
+  }
 
   /**
    * `responseFormat` is a Zod schema
@@ -438,6 +475,14 @@ export function toolStrategy<T extends readonly InteropZodType<any>[]>(
   { [K in keyof T]: T[K] extends InteropZodType<infer U> ? U : never }[number]
 >;
 export function toolStrategy(
+  responseFormat: SerializableSchema,
+  options?: ToolStrategyOptions
+): TypedToolStrategy<Record<string, unknown>>;
+export function toolStrategy(
+  responseFormat: SerializableSchema[],
+  options?: ToolStrategyOptions
+): TypedToolStrategy<Record<string, unknown>>;
+export function toolStrategy(
   responseFormat: JsonSchemaFormat,
   options?: ToolStrategyOptions
 ): TypedToolStrategy<Record<string, unknown>>;
@@ -458,8 +503,8 @@ export function toolStrategy(
  * extract and validate the structured output from the tool call. This approach is automatically
  * used when your model doesn't support native JSON schema output.
  *
- * @param responseFormat - The schema(s) to enforce. Can be a single Zod schema, an array of Zod schemas,
- *   a JSON schema object, or an array of JSON schema objects.
+ * @param responseFormat - The schema(s) to enforce. Can be a single Zod schema, a Standard Schema
+ *   (e.g., Valibot, ArkType, TypeBox), a JSON schema object, or arrays of any of these.
  * @param options - Optional configuration for the tool strategy
  * @param options.handleError - How to handle errors when the model calls multiple structured output tools
  *   or when the output doesn't match the schema. Defaults to `true` (auto-retry). Can be `false` (throw),
@@ -500,6 +545,8 @@ export function toolStrategy(
   responseFormat:
     | InteropZodType<any>
     | InteropZodType<any>[]
+    | SerializableSchema
+    | SerializableSchema[]
     | JsonSchemaFormat
     | JsonSchemaFormat[],
   options?: ToolStrategyOptions
@@ -520,7 +567,7 @@ export function toolStrategy(
  * that directly conform to the provided schema without requiring tool calls. This is the
  * recommended approach for structured output when your model supports it.
  *
- * @param responseFormat - The schema to enforce, either a Zod schema, a JSON schema object, or an options object with `schema` and optional `strict` flag
+ * @param responseFormat - The schema to enforce, either a Zod schema, a Standard Schema (e.g., Valibot, ArkType, TypeBox), a JSON schema object, or an options object with `schema` and optional `strict` flag
  * @returns A `ProviderStrategy` instance that can be used as the `responseFormat` in `createAgent`
  *
  * @example
@@ -559,14 +606,23 @@ export function providerStrategy<T extends InteropZodType<unknown>>(
 ): ProviderStrategy<T extends InteropZodType<infer U> ? U : never>;
 export function providerStrategy(
   responseFormat:
+    | SerializableSchema
+    | { schema: SerializableSchema; strict?: boolean }
+): ProviderStrategy<Record<string, unknown>>;
+export function providerStrategy(
+  responseFormat:
     | JsonSchemaFormat
     | { schema: JsonSchemaFormat; strict?: boolean }
 ): ProviderStrategy<Record<string, unknown>>;
 export function providerStrategy(
   responseFormat:
     | InteropZodType<unknown>
+    | SerializableSchema
     | JsonSchemaFormat
-    | { schema: InteropZodType<unknown> | JsonSchemaFormat; strict?: boolean }
+    | {
+        schema: InteropZodType<unknown> | SerializableSchema | JsonSchemaFormat;
+        strict?: boolean;
+      }
 ): ProviderStrategy<unknown> {
   /**
    * Handle options object format
@@ -576,10 +632,11 @@ export function providerStrategy(
     responseFormat !== null &&
     "schema" in responseFormat &&
     !isInteropZodSchema(responseFormat) &&
+    !isSerializableSchema(responseFormat) &&
     !("type" in responseFormat)
   ) {
     const { schema, strict: strictFlag } = responseFormat as {
-      schema: InteropZodType<unknown> | JsonSchemaFormat;
+      schema: InteropZodType<unknown> | SerializableSchema | JsonSchemaFormat;
       strict?: boolean;
     };
     return ProviderStrategy.fromSchema(
