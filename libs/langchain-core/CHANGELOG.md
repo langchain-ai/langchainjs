@@ -1,5 +1,21 @@
 # @langchain/core
 
+## 1.1.30
+
+### Patch Changes
+
+- [#10243](https://github.com/langchain-ai/langchainjs/pull/10243) [`96c630d`](https://github.com/langchain-ai/langchainjs/commit/96c630dfd009f2546d5bc36f5067ff868bb4067f) Thanks [@hntrl](https://github.com/hntrl)! - fix: add explicit `: symbol` type annotations to Symbol.for() declarations for cross-version compatibility
+
+  TypeScript infers `unique symbol` type when Symbol.for() is used without an explicit type annotation, causing type incompatibility when multiple versions of the same package are present in a dependency tree. By adding explicit `: symbol` annotations, all declarations now use the general symbol type, making them compatible across versions while maintaining identical runtime behavior.
+
+  Changes:
+  - Added `: symbol` to `MESSAGE_SYMBOL` in messages/base.ts
+  - Added `: symbol` to `MIDDLEWARE_BRAND` in agents/middleware/types.ts (also changed from Symbol() to Symbol.for() for cross-realm compatibility)
+
+- [#10256](https://github.com/langchain-ai/langchainjs/pull/10256) [`a8b9ccc`](https://github.com/langchain-ai/langchainjs/commit/a8b9ccca5a85984a5a30008acd09f9991e591638) Thanks [@colifran](https://github.com/colifran)! - fix(core): standard schema type guards don't support callable schemas
+
+- [#10204](https://github.com/langchain-ai/langchainjs/pull/10204) [`a1f22bb`](https://github.com/langchain-ai/langchainjs/commit/a1f22bba907731a18dca23c31cec5333444a3f55) Thanks [@colifran](https://github.com/colifran)! - feat(core): implement standard schema support for structured output
+
 ## 1.1.29
 
 ### Patch Changes
