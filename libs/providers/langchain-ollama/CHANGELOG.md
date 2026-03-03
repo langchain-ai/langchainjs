@@ -1,5 +1,11 @@
 # @langchain/ollama
 
+## 1.2.6
+
+### Patch Changes
+
+- [#10212](https://github.com/langchain-ai/langchainjs/pull/10212) [`9920cfe`](https://github.com/langchain-ai/langchainjs/commit/9920cfed2b9588b8ba401088b49c0bf9820634ca) Thanks [@colifran](https://github.com/colifran)! - feat(ollama): implement standard schema support for structured output
+
 ## 1.2.5
 
 ### Patch Changes
