@@ -18,7 +18,6 @@
   "homepage": "https://github.com/langchain-ai/langchainjs/tree/main/libs/langchain-standard-tests/",
   "scripts": {
     "build": "exit 0",
-    "test": "vitest run",
     "lint:eslint": "eslint --cache src/",
     "lint:dpdm": "dpdm --skip-dynamic-imports circular --exit-code circular:1 --no-warning --no-tree src/*.ts src/**/*.ts",
     "lint": "pnpm lint:eslint && pnpm lint:dpdm",
@@ -57,14 +56,6 @@
     "./vitest": {
       "types": "./src/vitest.ts",
       "import": "./src/vitest.ts"
-    },
-    "./vitest-setup": {
-      "types": "./src/vitest-setup.ts",
-      "import": "./src/vitest-setup.ts"
-    },
-    "./matchers": {
-      "types": "./src/matchers.ts",
-      "import": "./src/matchers.ts"
     },
     "./package.json": "./package.json"
   },
