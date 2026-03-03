@@ -706,9 +706,6 @@ importers:
       '@langchain/openai':
         specifier: workspace:*
         version: link:../providers/langchain-openai
-      '@langchain/standard-tests':
-        specifier: workspace:*
-        version: link:../../internal/standard-tests
       '@langchain/tsconfig':
         specifier: workspace:*
         version: link:../../internal/tsconfig

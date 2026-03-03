@@ -4,8 +4,8 @@ import {
   AIMessage,
   SystemMessage,
   ToolMessage,
-} from "@langchain/core/messages";
-import { firstOfType, lastOfType, messagesOfType } from "../matchers.ts";
+} from "../../messages/index.js";
+import { firstOfType, lastOfType, messagesOfType } from "../matchers.js";
 
 // -- Message type matchers --
 
