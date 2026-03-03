@@ -327,7 +327,7 @@ export function transformResponseFormat(
   }
 
   /**
-   * If users provide an array, it should only contain raw schemas (Zod or JSON schema),
+   * If users provide an array, it should only contain raw schemas (Zod, Standard Schema or JSON schema),
    * not ToolStrategy or ProviderStrategy instances.
    */
   if (Array.isArray(responseFormat)) {
