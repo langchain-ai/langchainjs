@@ -73,6 +73,7 @@ export default getBuildConfig({
     "./src/utils/testing/index.ts",
     "./src/utils/tiktoken.ts",
     "./src/utils/types/index.ts",
+    "./src/testing/fake_model_builder.ts",
     "./src/testing/matchers.ts",
     "./src/vectorstores.ts",
   ],

@@ -1,21 +1,21 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { CallbackManagerForLLMRun } from "../../callbacks/manager.js";
+import { CallbackManagerForLLMRun } from "../callbacks/manager.js";
 import {
   BaseChatModel,
   BaseChatModelCallOptions,
-} from "../../language_models/chat_models.js";
+} from "../language_models/chat_models.js";
 import {
   BaseLanguageModelInput,
   StructuredOutputMethodOptions,
   StructuredOutputMethodParams,
-} from "../../language_models/base.js";
-import { BaseMessage, AIMessage } from "../../messages/index.js";
-import type { ToolCall } from "../../messages/tool.js";
-import type { ChatResult } from "../../outputs.js";
-import { Runnable, RunnableLambda } from "../../runnables/base.js";
-import { StructuredTool } from "../../tools/index.js";
-import type { InteropZodType } from "../types/zod.js";
-import type { ToolSpec } from "./chat_models.js";
+} from "../language_models/base.js";
+import { BaseMessage, AIMessage } from "../messages/index.js";
+import type { ToolCall } from "../messages/tool.js";
+import type { ChatResult } from "../outputs.js";
+import { Runnable, RunnableLambda } from "../runnables/base.js";
+import { StructuredTool } from "../tools/index.js";
+import type { InteropZodType } from "../utils/types/zod.js";
+import type { ToolSpec } from "../utils/testing/chat_models.js";
 
 type ResponseFactory = (messages: BaseMessage[]) => BaseMessage | Error;
 

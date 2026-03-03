@@ -66,3 +66,4 @@ export {
   langchainMatchers,
   type LangChainMatchers,
 } from "@langchain/core/testing/matchers";
+export { fakeModel } from "@langchain/core/testing/fake_model_builder";

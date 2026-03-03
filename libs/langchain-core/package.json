@@ -516,6 +516,17 @@
         "default": "./dist/structured_query/index.js"
       }
     },
+    "./testing/fake_model_builder": {
+      "input": "./src/testing/fake_model_builder.ts",
+      "require": {
+        "types": "./dist/testing/fake_model_builder.d.cts",
+        "default": "./dist/testing/fake_model_builder.cjs"
+      },
+      "import": {
+        "types": "./dist/testing/fake_model_builder.d.ts",
+        "default": "./dist/testing/fake_model_builder.js"
+      }
+    },
     "./testing/matchers": {
       "input": "./src/testing/matchers.ts",
       "require": {
