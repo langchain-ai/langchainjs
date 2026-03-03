@@ -1059,7 +1059,7 @@ export abstract class BaseChatOpenAI<
       const openaiJsonSchemaParams = {
         name: name ?? "extract",
         description: getSchemaDescription(asJsonSchema),
-        schema: asJsonSchema,
+        schema: isInteropZodSchema(schema) ? schema : asJsonSchema,
         strict: config?.strict,
       };
       llm = this.withConfig({
