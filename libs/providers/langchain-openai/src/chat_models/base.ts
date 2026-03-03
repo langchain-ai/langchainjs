@@ -1080,11 +1080,11 @@ export abstract class BaseChatOpenAI<
       if (isInteropZodSchema(schema) || isSerializableSchema(schema)) {
         const altParser = createContentParser(schema);
         outputParser = RunnableLambda.from<AIMessageChunk, RunOutput>(
-          (aiMessage: AIMessageChunk) => {
+          async (aiMessage: AIMessageChunk) => {
             if ("parsed" in aiMessage.additional_kwargs) {
               return aiMessage.additional_kwargs.parsed as RunOutput;
             }
-            return altParser;
+            return altParser.invoke(aiMessage.content as string);
           }
         );
       } else {
