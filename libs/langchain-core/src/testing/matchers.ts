@@ -14,7 +14,7 @@ import { ToolMessage } from "../messages/index.js";
  * - https://jestjs.io/docs/expect#expectextendmatchers
  */
 interface ExpectExtendThis {
-  isNot: boolean;
+  isNot?: boolean;
   equals(a: unknown, b: unknown): boolean;
   utils: {
     matcherHint(name: string, received?: string, expected?: string): string;
