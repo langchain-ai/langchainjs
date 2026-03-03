@@ -59,15 +59,21 @@ describe("createFunctionCallingParser", () => {
     const schema = z.object({ name: z.string() });
     const parser = createFunctionCallingParser(schema, "extract");
     expect(parser).toBeInstanceOf(JsonOutputKeyToolsParser);
-    expect((parser as JsonOutputKeyToolsParser).keyName).toBe("extract");
-    expect((parser as JsonOutputKeyToolsParser).zodSchema).toBeDefined();
+    expect((parser as unknown as JsonOutputKeyToolsParser).keyName).toBe(
+      "extract"
+    );
+    expect(
+      (parser as unknown as JsonOutputKeyToolsParser).zodSchema
+    ).toBeDefined();
   });
 
   it("returns JsonOutputKeyToolsParser with zodSchema for a Zod v4 schema", () => {
     const schema = z4.object({ name: z4.string() });
     const parser = createFunctionCallingParser(schema, "extract");
     expect(parser).toBeInstanceOf(JsonOutputKeyToolsParser);
-    expect((parser as JsonOutputKeyToolsParser).zodSchema).toBeDefined();
+    expect(
+      (parser as unknown as JsonOutputKeyToolsParser).zodSchema
+    ).toBeDefined();
   });
 
   it("returns JsonOutputKeyToolsParser with serializableSchema for a serializable schema", () => {
@@ -97,7 +103,9 @@ describe("createFunctionCallingParser", () => {
   it("uses the provided keyName", () => {
     const schema = z.object({ name: z.string() });
     const parser = createFunctionCallingParser(schema, "MyFunction");
-    expect((parser as JsonOutputKeyToolsParser).keyName).toBe("MyFunction");
+    expect((parser as unknown as JsonOutputKeyToolsParser).keyName).toBe(
+      "MyFunction"
+    );
   });
 
   it("uses a custom parser class when provided", () => {
