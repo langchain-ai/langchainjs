@@ -209,4 +209,3 @@ describe("toHaveStructuredResponse", () => {
     expect(() => expect({}).toHaveStructuredResponse()).toThrow();
   });
 });
-
