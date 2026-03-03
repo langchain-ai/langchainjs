@@ -161,29 +161,26 @@ export function toHaveToolCalls(
     };
   }
 
-  for (let i = 0; i < expected.length; i++) {
-    const match = Object.entries(expected[i]).every(([key, value]) =>
-      this.equals((actual[i] as any)[key], value)
-    );
-    if (!match) {
-      return {
-        pass: false,
-        message: () => {
-          const receivedFields: Record<string, unknown> = {};
-          for (const key of Object.keys(expected[i])) {
-            receivedFields[key] = (actual[i] as any)[key];
-          }
-          return (
-            `${utils.matcherHint("toHaveToolCalls")}\n\n` +
-            `Tool call at index ${i} did not match:\n` +
-            `Expected: ${utils.printExpected(expected[i])}\n` +
-            `Received: ${utils.printReceived(receivedFields)}`
-          );
-        },
-        actual: actual[i],
-        expected: expected[i],
-      };
-    }
+  const unmatched = expected.filter(
+    (exp) =>
+      !actual.some((tc) =>
+        Object.entries(exp).every(([key, value]) =>
+          this.equals((tc as any)[key], value)
+        )
+      )
+  );
+
+  if (unmatched.length > 0) {
+    return {
+      pass: false,
+      message: () =>
+        `${utils.matcherHint("toHaveToolCalls")}\n\n` +
+        `Could not find matching tool call(s) for:\n` +
+        `${utils.printExpected(unmatched)}\n` +
+        `Received tool calls: ${utils.printReceived(actual.map((tc) => ({ name: tc.name, id: tc.id, args: tc.args })))}`,
+      actual: actual.map((tc) => ({ name: tc.name, id: tc.id, args: tc.args })),
+      expected,
+    };
   }
 
   return {

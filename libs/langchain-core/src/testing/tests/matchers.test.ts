@@ -96,6 +96,10 @@ describe("toHaveToolCalls", () => {
     expect(aiWithTools).toHaveToolCalls([{ name: "search" }, { name: "calc" }]);
   });
 
+  test("passes regardless of order", () => {
+    expect(aiWithTools).toHaveToolCalls([{ name: "calc" }, { name: "search" }]);
+  });
+
   test("fails on non-AIMessage", () => {
     expect(() => expect(new HumanMessage("hi")).toHaveToolCalls([])).toThrow();
   });
@@ -103,6 +107,15 @@ describe("toHaveToolCalls", () => {
   test("fails on wrong count", () => {
     expect(() =>
       expect(aiWithTools).toHaveToolCalls([{ name: "search" }])
+    ).toThrow();
+  });
+
+  test("fails when a tool call does not match", () => {
+    expect(() =>
+      expect(aiWithTools).toHaveToolCalls([
+        { name: "search" },
+        { name: "nonexistent" },
+      ])
     ).toThrow();
   });
 });

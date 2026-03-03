@@ -58,3 +58,14 @@ export { InMemoryStore } from "@langchain/core/stores";
  * LangChain Documents
  */
 export { type DocumentInput, Document } from "@langchain/core/documents";
+
+/**
+ * LangChain Testing Utilities
+ */
+export {
+  langchainMatchers,
+  firstOfType,
+  lastOfType,
+  messagesOfType,
+  type LangChainMatchers,
+} from "@langchain/core/testing/matchers";
