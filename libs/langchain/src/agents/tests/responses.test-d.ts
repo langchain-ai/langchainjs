@@ -2,6 +2,7 @@ import { describe, expectTypeOf, it } from "vitest";
 import { LanguageModelLike } from "@langchain/core/language_models/base";
 import { Tool } from "@langchain/core/tools";
 import { z } from "zod/v3";
+import type { SerializableSchema } from "@langchain/core/utils/standard_schema";
 
 import { createAgent, toolStrategy, providerStrategy } from "../index.js";
 import type { JsonSchemaFormat } from "../responses.js";
@@ -400,6 +401,64 @@ describe("response format", () => {
         // @ts-expect-error - validate error: only one schema is allowed for native outputs
         responseFormat: providerStrategy([jsonSchema, jsonSchema]),
       });
+    });
+  });
+
+  describe("using Standard Schema", () => {
+    it("should allow a single Standard Schema with toolStrategy", async () => {
+      const standardSchema = {} as SerializableSchema;
+      const agent = createAgent({
+        model: new FakeToolCallingChatModel({}),
+        tools: [],
+        responseFormat: toolStrategy(standardSchema),
+      });
+      const result = await agent.invoke(prompt);
+      expectTypeOf(result.structuredResponse).toEqualTypeOf<
+        Record<string, unknown>
+      >();
+    });
+
+    it("should allow an array of Standard Schemas with toolStrategy", async () => {
+      const schema1 = {} as SerializableSchema;
+      const schema2 = {} as SerializableSchema;
+      const agent = createAgent({
+        model: new FakeToolCallingChatModel({}),
+        tools: [],
+        responseFormat: toolStrategy([schema1, schema2]),
+      });
+      const result = await agent.invoke(prompt);
+      expectTypeOf(result.structuredResponse).toEqualTypeOf<
+        Record<string, unknown>
+      >();
+    });
+
+    it("should allow a Standard Schema with providerStrategy", async () => {
+      const standardSchema = {} as SerializableSchema;
+      const agent = createAgent({
+        model: new FakeToolCallingChatModel({}),
+        tools: [],
+        responseFormat: providerStrategy(standardSchema),
+      });
+      const result = await agent.invoke(prompt);
+      expectTypeOf(result.structuredResponse).toEqualTypeOf<
+        Record<string, unknown>
+      >();
+    });
+
+    it("should allow a Standard Schema with providerStrategy options", async () => {
+      const standardSchema = {} as SerializableSchema;
+      const agent = createAgent({
+        model: new FakeToolCallingChatModel({}),
+        tools: [],
+        responseFormat: providerStrategy({
+          schema: standardSchema,
+          strict: false,
+        }),
+      });
+      const result = await agent.invoke(prompt);
+      expectTypeOf(result.structuredResponse).toEqualTypeOf<
+        Record<string, unknown>
+      >();
     });
   });
 });
