@@ -1,5 +1,6 @@
 import { Document, DocumentInterface } from "@langchain/core/documents";
 import { chunkArray } from "@langchain/core/utils/chunk_array";
+import { validateSafeUrl } from "@langchain/core/utils/ssrf";
 import { CheerioWebBaseLoader, CheerioWebBaseLoaderParams } from "./cheerio.js";
 
 /**
@@ -97,6 +98,11 @@ export class SitemapLoader
       if (!loc) {
         return;
       }
+
+      if (this._checkUrlPatterns(loc)) {
+        return;
+      }
+
       const changefreq = $(element).find("changefreq").text();
       const lastmod = $(element).find("lastmod").text();
       const priority = $(element).find("priority").text();
@@ -110,8 +116,12 @@ export class SitemapLoader
   async _loadSitemapUrls(
     elements: Array<SiteMapElement>
   ): Promise<DocumentInterface[]> {
+    const urls = elements.map((ele) => {
+      validateSafeUrl(ele.loc, { allowHttp: true });
+      return ele.loc;
+    });
     const all = await CheerioWebBaseLoader.scrapeAll(
-      elements.map((ele) => ele.loc),
+      urls,
       this.caller,
       this.timeout,
       this.textDecoder
