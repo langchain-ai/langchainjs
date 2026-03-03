@@ -2,7 +2,7 @@
 "@langchain/community": patch
 ---
 
-fix(community): Fix SQL injection via table/schema names in TypeORMVectorStore
+fix(community): Properly quote SQL identifiers in TypeORMVectorStore
 
 - Added `quoteIdentifier()` helper that escapes double quotes and wraps identifiers per the SQL standard
 - Fixed `getTablePath()` to always quote table and schema identifiers
