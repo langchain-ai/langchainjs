@@ -413,50 +413,6 @@ export function toHaveStructuredResponse(
 }
 
 /**
- * Returns the first message in the array matching the given message class.
- * Replaces the pattern: `messages.find(X.isInstance) as X`
- */
-export function firstOfType<T extends BaseMessage>(
-  messages: BaseMessage[],
-  cls: { isInstance(obj: unknown): obj is T }
-): T | undefined {
-  for (const msg of messages) {
-    if (cls.isInstance(msg)) {
-      return msg;
-    }
-  }
-  return undefined;
-}
-
-/**
- * Returns the last message in the array matching the given message class.
- * Replaces the pattern: `[...msgs].reverse().find(X.isInstance) as X`
- */
-export function lastOfType<T extends BaseMessage>(
-  messages: BaseMessage[],
-  cls: { isInstance(obj: unknown): obj is T }
-): T | undefined {
-  for (let i = messages.length - 1; i >= 0; i--) {
-    const msg = messages[i];
-    if (cls.isInstance(msg)) {
-      return msg;
-    }
-  }
-  return undefined;
-}
-
-/**
- * Returns all messages in the array matching the given message class.
- * Replaces the pattern: `messages.filter(X.isInstance) as X[]`
- */
-export function messagesOfType<T extends BaseMessage>(
-  messages: BaseMessage[],
-  cls: { isInstance(obj: unknown): obj is T }
-): T[] {
-  return messages.filter((msg): msg is T => cls.isInstance(msg));
-}
-
-/**
  * All matcher functions bundled for convenient use with `expect.extend()`.
  */
 export const langchainMatchers = {
