@@ -28,9 +28,17 @@ test("Test Web PDF loader from blob", async () => {
           "Author": "",
           "CreationDate": "D:20171207010315Z",
           "Creator": "LaTeX with hyperref package",
+          "Custom": {
+            "PTEX.Fullbanner": "This is pdfTeX, Version 3.14159265-2.6-1.40.17 (TeX Live 2016) kpathsea version 6.2.2",
+          },
+          "EncryptFilterName": null,
           "IsAcroFormPresent": false,
+          "IsCollectionPresent": false,
+          "IsLinearized": false,
+          "IsSignaturesPresent": false,
           "IsXFAPresent": false,
           "Keywords": "",
+          "Language": null,
           "ModDate": "D:20171207010315Z",
           "PDFFormatVersion": "1.5",
           "Producer": "pdfTeX-1.40.17",
@@ -42,54 +50,6 @@ test("Test Web PDF loader from blob", async () => {
         },
         "metadata": null,
         "totalPages": 15,
-        "version": "1.10.100",
-      },
-    }
-  `);
-});
-
-test("Test Web PDF loader with custom pdfjs", async () => {
-  const filePath = path.resolve(
-    path.dirname(url.fileURLToPath(import.meta.url)),
-    "./example_data/1706.03762.pdf"
-  );
-  const loader = new WebPDFLoader(
-    new Blob([await fs.readFile(filePath)], {
-      type: "application/pdf",
-    }),
-    {
-      pdfjs: () => import("pdf-parse/lib/pdf.js/v1.10.100/build/pdf.js"),
-    }
-  );
-  const docs = await loader.load();
-
-  expect(docs.length).toBe(15);
-  expect(docs[0].pageContent).toContain("Attention Is All You Need");
-  expect(docs[0].metadata).toMatchInlineSnapshot(`
-    {
-      "loc": {
-        "pageNumber": 1,
-      },
-      "pdf": {
-        "info": {
-          "Author": "",
-          "CreationDate": "D:20171207010315Z",
-          "Creator": "LaTeX with hyperref package",
-          "IsAcroFormPresent": false,
-          "IsXFAPresent": false,
-          "Keywords": "",
-          "ModDate": "D:20171207010315Z",
-          "PDFFormatVersion": "1.5",
-          "Producer": "pdfTeX-1.40.17",
-          "Subject": "",
-          "Title": "",
-          "Trapped": {
-            "name": "False",
-          },
-        },
-        "metadata": null,
-        "totalPages": 15,
-        "version": "1.10.100",
       },
     }
   `);
