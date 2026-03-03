@@ -14,3 +14,4 @@ export {
   toHaveBeenInterrupted,
   toHaveStructuredResponse,
 } from "@langchain/core/testing/matchers";
+export type { LangChainMatchers } from "@langchain/core/testing/matchers";
