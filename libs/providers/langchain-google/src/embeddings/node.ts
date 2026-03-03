@@ -1,9 +1,8 @@
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
-import { ChatGoogleParams } from "./index.js";
+import { GoogleEmbeddingsParams } from "./index.js";
 import {
-  BaseChatGoogle,
-  getGoogleChatModelParams,
-
+  BaseGoogleEmbeddings,
+  getGoogleEmbeddingsParams,
 } from "./base.js";
 import { GENERATIVE_AI_AUTH_SCOPES, VERTEX_AI_AUTH_SCOPES } from "../const.js";
 import {
@@ -12,18 +11,18 @@ import {
   NodeApiClientParams,
 } from "../clients/node.js";
 import { convertParamsToPlatformType } from "../converters/params.js";
-import { getPlatformType } from "../utils/platform";
+import { getPlatformType } from "../utils/platform.js";
 
-interface ChatGoogleNodeParams extends NodeApiClientParams, ChatGoogleParams {}
+interface GoogleEmbeddingsNodeParams extends NodeApiClientParams, GoogleEmbeddingsParams {}
 
-class ChatGoogleNode extends BaseChatGoogle {
-  constructor(model: string, params?: Omit<ChatGoogleNodeParams, "model">);
-  constructor(params: ChatGoogleNodeParams);
+class GoogleEmbeddingsNode extends BaseGoogleEmbeddings {
+  constructor(model: string, params?: Omit<GoogleEmbeddingsNodeParams, "model">);
+  constructor(params: GoogleEmbeddingsNodeParams);
   constructor(
-    modelOrParams: string | ChatGoogleNodeParams,
-    paramsArg?: Omit<ChatGoogleNodeParams, "model">
+    modelOrParams: string | GoogleEmbeddingsNodeParams,
+    paramsArg?: Omit<GoogleEmbeddingsNodeParams, "model">
   ) {
-    const params = getGoogleChatModelParams(modelOrParams, paramsArg);
+    const params = getGoogleEmbeddingsParams(modelOrParams, paramsArg);
     if (!params.googleAuthOptions) {
       params.apiKey = params.apiKey ?? getEnvironmentVariable("GOOGLE_API_KEY");
     }
@@ -39,7 +38,7 @@ class ChatGoogleNode extends BaseChatGoogle {
   }
 }
 
-function getRequiredAuthScopes(params: ChatGoogleNodeParams): string[] {
+function getRequiredAuthScopes(params: GoogleEmbeddingsNodeParams): string[] {
   const hasApiKey = typeof params.apiKey !== "undefined";
   const platformType = convertParamsToPlatformType(params);
   const platform = getPlatformType(platformType, hasApiKey);
@@ -54,6 +53,6 @@ function getRequiredAuthScopes(params: ChatGoogleNodeParams): string[] {
 }
 
 export {
-  type ChatGoogleNodeParams as ChatGoogleParams,
-  ChatGoogleNode as ChatGoogle,
+  type GoogleEmbeddingsNodeParams as GoogleEmbeddingsParams,
+  GoogleEmbeddingsNode as GoogleEmbeddings,
 };

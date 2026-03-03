@@ -357,8 +357,9 @@ function convertStandardVideoContentBlockToGeminiPart(
  * into a Gemini.Part.
  *
  * This is intended to be called from `convertStandardContentMessageToGeminiContent`
+ * but is used elsewhere as well.
  */
-function convertStandardContentBlockToGeminiPart(
+export function convertStandardContentBlockToGeminiPart(
   block: ContentBlock.Standard
 ): Gemini.Part | null {
   switch (block.type) {
