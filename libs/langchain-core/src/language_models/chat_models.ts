@@ -157,7 +157,9 @@ export type BaseChatModelCallOptions = BaseLanguageModelCallOptions & {
   outputVersion?: MessageOutputVersion;
 };
 
-const BASE64_DATA_URL_RE = /^data:[^;]+;base64,/;
+function _isDataUrl(s: string): boolean {
+  return s.startsWith("data:") && s.includes(";base64,");
+}
 
 /**
  * Replace inline base64 data with a SHA-256 digest so cache keys stay compact
@@ -176,12 +178,12 @@ function _compactContentForCache(content: any): any {
 
     if (block.type === "image_url" && block.image_url != null) {
       const iu = block.image_url;
-      if (typeof iu === "string" && BASE64_DATA_URL_RE.test(iu)) {
+      if (typeof iu === "string" && _isDataUrl(iu)) {
         result = { ...block, image_url: `sha256:${sha256(iu)}` };
       } else if (
         typeof iu === "object" &&
         typeof iu.url === "string" &&
-        BASE64_DATA_URL_RE.test(iu.url)
+        _isDataUrl(iu.url)
       ) {
         result = {
           ...block,
@@ -192,7 +194,8 @@ function _compactContentForCache(content: any): any {
 
     if (
       typeof block.data === "string" &&
-      BASE64_DATA_URL_RE.test(block.data)
+      block.data.length > 0 &&
+      (block.type === "image" || block.type === "audio" || block.type === "file")
     ) {
       result = { ...(result === block ? block : result), data: `sha256:${sha256(block.data)}` };
     }
