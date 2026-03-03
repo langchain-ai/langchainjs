@@ -1,4 +1,17 @@
-# 🦜️🔗 LangChain.js
+<div align="center">
+  <a href="https://www.langchain.com/">
+    <picture>
+      <source media="(prefers-color-scheme: light)" srcset=".github/images/logo-light.svg">
+      <source media="(prefers-color-scheme: dark)" srcset=".github/images/logo-dark.svg">
+      <img alt="LangChain Logo" src=".github/images/logo-dark.svg" width="80%">
+ <img alt="LangChain Logo" src=".github/images/logo-dark.svg" width="50%">
+</picture>
+  </a>
+</div>
+
+<div align="center">
+  <h3>The agent engineering platform.</h3>
+</div>
 
 ![npm](https://img.shields.io/npm/dm/langchain) [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT) [![Twitter](https://img.shields.io/twitter/url/https/twitter.com/langchain.svg?style=social&label=Follow%20%40LangChain)](https://x.com/langchain)
 

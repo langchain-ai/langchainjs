@@ -1,5 +1,17 @@
 # @langchain/google-common
 
+## 2.1.23
+
+### Patch Changes
+
+- [#10194](https://github.com/langchain-ai/langchainjs/pull/10194) [`d43194b`](https://github.com/langchain-ai/langchainjs/commit/d43194b625f19acf79cbe958300dadb7b0a6a89d) Thanks [@colifran](https://github.com/colifran)! - fix(google): strip internal fields from text content blocks before sending to Anthropic API
+
+## 2.1.22
+
+### Patch Changes
+
+- [#10187](https://github.com/langchain-ai/langchainjs/pull/10187) [`3590ee3`](https://github.com/langchain-ai/langchainjs/commit/3590ee3229a9a55b0c818c1e396f6445b2368103) Thanks [@colifran](https://github.com/colifran)! - fix(google): streaming chunks missing index produces empty text blocks when using ChatVertexAI with Claude models
+
 ## 2.1.21
 
 ### Patch Changes
