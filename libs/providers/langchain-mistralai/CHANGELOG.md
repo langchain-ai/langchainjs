@@ -1,5 +1,11 @@
 # @langchain/mistralai
 
+## 1.0.7
+
+### Patch Changes
+
+- [#10211](https://github.com/langchain-ai/langchainjs/pull/10211) [`a4d257f`](https://github.com/langchain-ai/langchainjs/commit/a4d257fe4919e26662e9001fa8252a93625b17e0) Thanks [@colifran](https://github.com/colifran)! - feat(mistralai): implement standard schema support for structured output
+
 ## 1.0.6
 
 ### Patch Changes
