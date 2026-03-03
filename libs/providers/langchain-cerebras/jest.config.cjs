@@ -18,4 +18,7 @@ module.exports = {
   testTimeout: 20_000,
   passWithNoTests: true,
   collectCoverageFrom: ["src/**/*.ts"],
+  globals: {
+    __PKG_VERSION__: "0.0.0-test",
+  },
 };
