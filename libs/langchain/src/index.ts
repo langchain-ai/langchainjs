@@ -64,8 +64,5 @@ export { type DocumentInput, Document } from "@langchain/core/documents";
  */
 export {
   langchainMatchers,
-  firstOfType,
-  lastOfType,
-  messagesOfType,
   type LangChainMatchers,
 } from "@langchain/core/testing/matchers";

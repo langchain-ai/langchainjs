@@ -5,8 +5,6 @@ import {
   SystemMessage,
   ToolMessage,
 } from "../../messages/index.js";
-import { firstOfType, lastOfType, messagesOfType } from "../matchers.js";
-
 // -- Message type matchers --
 
 describe("toBeHumanMessage", () => {
@@ -212,34 +210,3 @@ describe("toHaveStructuredResponse", () => {
   });
 });
 
-// -- Utility helpers --
-
-describe("firstOfType / lastOfType / messagesOfType", () => {
-  const messages = [
-    new HumanMessage("first human"),
-    new AIMessage("first ai"),
-    new HumanMessage("second human"),
-    new AIMessage("second ai"),
-  ];
-
-  test("firstOfType returns the first match", () => {
-    const result = firstOfType(messages, AIMessage);
-    expect(result).toBeDefined();
-    expect(result!.content).toBe("first ai");
-  });
-
-  test("lastOfType returns the last match", () => {
-    const result = lastOfType(messages, HumanMessage);
-    expect(result).toBeDefined();
-    expect(result!.content).toBe("second human");
-  });
-
-  test("messagesOfType returns all matches", () => {
-    const result = messagesOfType(messages, AIMessage);
-    expect(result).toHaveLength(2);
-  });
-
-  test("firstOfType returns undefined when not found", () => {
-    expect(firstOfType(messages, ToolMessage)).toBeUndefined();
-  });
-});
