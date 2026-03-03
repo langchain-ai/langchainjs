@@ -61,11 +61,9 @@ export class PDFLoader extends BufferLoader {
     });
 
     try {
-      const textResult = await parser.getText({
-        ...(this.parsedItemSeparator
+      const textResult = await parser.getText((this.parsedItemSeparator
           ? { itemJoiner: this.parsedItemSeparator }
-          : {}),
-      });
+          : {}));
       const infoResult = await parser.getInfo();
 
       const documents: Document[] = [];
