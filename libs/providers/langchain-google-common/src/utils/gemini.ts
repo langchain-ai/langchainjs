@@ -604,6 +604,69 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
     },
   };
 
+  /**
+   * Converts a ContentBlock.Multimodal block (image, video, audio, file)
+   * to the appropriate GeminiPart format.
+   *
+   * Handles three data record variants:
+   *  - DataRecordBase64: has `data` property → GeminiPartInlineData
+   *  - DataRecordUrl: has `url` property → GeminiPartFileData (or GeminiPartInlineData for data: URLs)
+   *  - DataRecordFileId: has `fileId` property → not directly supported, throws
+   */
+  function multimodalContentBlockToPart(
+    block: ContentBlock.Multimodal.Data,
+    defaultMimeType: string
+  ): GeminiPartInlineData | GeminiPartFileData {
+    if ("data" in block && block.data !== undefined) {
+      // DataRecordBase64: inline base64 data
+      const data =
+        // eslint-disable-next-line no-instanceof/no-instanceof
+        block.data instanceof Uint8Array
+          ? btoa(String.fromCharCode(...block.data))
+          : block.data;
+      return {
+        inlineData: {
+          mimeType: block.mimeType || defaultMimeType,
+          data,
+        },
+      };
+    }
+
+    if ("url" in block && block.url !== undefined) {
+      // DataRecordUrl: check if it's a data: URL first
+      const parsed = extractMimeType(block.url);
+      if (parsed) {
+        return {
+          inlineData: {
+            mimeType: parsed.mimeType,
+            data: parsed.data,
+          },
+        };
+      }
+      // Regular URL → fileData
+      const mimeType =
+        block.mimeType || inferMimeTypeFromUrl(block.url) || defaultMimeType;
+      return {
+        fileData: {
+          mimeType,
+          fileUri: block.url,
+        },
+      };
+    }
+
+    if ("fileId" in block && block.fileId !== undefined) {
+      throw new Error(
+        `ContentBlock.Multimodal fileId is not supported by Google Gemini. ` +
+          `Use a URL (e.g. gs:// URI) or base64 data instead.`
+      );
+    }
+
+    throw new Error(
+      `Invalid multimodal content block: must have "data", "url", or "fileId" property. ` +
+        `Received: ${JSON.stringify(block)}`
+    );
+  }
+
   async function messageContentComplexToPart(
     content: MessageContentComplex
   ): Promise<GeminiPart | null> {
@@ -633,6 +696,39 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
           };
         }
         break;
+      case "image":
+        return multimodalContentBlockToPart(
+          content as ContentBlock.Multimodal.Image,
+          "image/png"
+        );
+      case "video":
+        return multimodalContentBlockToPart(
+          content as ContentBlock.Multimodal.Video,
+          "video/mp4"
+        );
+      case "audio":
+        return multimodalContentBlockToPart(
+          content as ContentBlock.Multimodal.Audio,
+          "audio/mpeg"
+        );
+      case "file":
+        return multimodalContentBlockToPart(
+          content as ContentBlock.Multimodal.File,
+          "application/octet-stream"
+        );
+      case "text-plain":
+        // text-plain blocks can have an inline text property
+        if (
+          "text" in content &&
+          typeof (content as ContentBlock.Multimodal.PlainText).text ===
+            "string"
+        ) {
+          return { text: (content as ContentBlock.Multimodal.PlainText).text! };
+        }
+        return multimodalContentBlockToPart(
+          content as ContentBlock.Multimodal.PlainText,
+          "text/plain"
+        );
       default:
         throw new Error(
           `Unsupported type "${
