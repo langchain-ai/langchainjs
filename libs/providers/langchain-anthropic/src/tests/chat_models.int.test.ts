@@ -894,6 +894,9 @@ test("system prompt caching", async () => {
   expect(agg!.usage_metadata?.input_token_details?.cache_read).toBeGreaterThan(
     0
   );
+  expect(agg!.usage_metadata?.input_tokens).toBeGreaterThan(
+    agg!.usage_metadata?.input_token_details?.cache_read ?? 0
+  );
 });
 
 // TODO: Add proper test with long tool content
@@ -1001,6 +1004,20 @@ test("human message caching", async () => {
   );
   expect(res2.usage_metadata?.input_tokens).toBeGreaterThan(
     res2.usage_metadata?.input_token_details?.cache_read ?? 0
+  );
+
+  const stream = await model.stream(messages);
+  let agg;
+  for await (const chunk of stream) {
+    agg = agg === undefined ? chunk : concat(agg, chunk);
+  }
+  expect(agg).toBeDefined();
+  expect(agg!.usage_metadata?.input_token_details?.cache_creation).toBe(0);
+  expect(agg!.usage_metadata?.input_token_details?.cache_read).toBeGreaterThan(
+    0
+  );
+  expect(agg!.usage_metadata?.input_tokens).toBeGreaterThan(
+    agg!.usage_metadata?.input_token_details?.cache_read ?? 0
   );
 });
 
