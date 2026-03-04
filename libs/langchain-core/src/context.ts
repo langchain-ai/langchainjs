@@ -27,5 +27,3 @@ export {
   registerConfigureHook,
   type ConfigureHook,
 };
-
-export const foo = "bar";
