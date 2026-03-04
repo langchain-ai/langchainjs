@@ -1144,7 +1144,7 @@ export class ChatGroq extends BaseChatModel<
       n: this.n,
       parallel_tool_calls: options?.parallel_tool_calls,
       presence_penalty: this.presencePenalty,
-      reasoning_effort: this.reasoningEffort,
+      reasoning_effort: options?.reasoning_effort ?? this.reasoningEffort,
       reasoning_format: this.reasoningFormat,
       response_format: options?.response_format,
       seed: options?.seed,

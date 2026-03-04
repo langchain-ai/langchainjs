@@ -1,4 +1,4 @@
-import { test, expect } from "vitest";
+import { test, expect, describe } from "vitest";
 import { ChatMessage } from "@langchain/core/messages";
 import { ChatGroq, messageToGroqRole } from "../chat_models.js";
 
@@ -53,4 +53,35 @@ test("messageToGroqRole", () => {
   expect(() => messageToGroqRole(genericCustom)).toThrow(
     'Unsupported message role: custom-role. Expected "system", "assistant", "user", or "function"'
   );
+});
+
+describe("reasoningEffort", () => {
+  test("passes reasoning_effort through invocationParams", () => {
+    const model = new ChatGroq({
+      apiKey: "foo",
+      model: "openai/gpt-oss-120b",
+      reasoningEffort: "low",
+    });
+    const params = model.invocationParams({});
+    expect(params.reasoning_effort).toBe("low");
+  });
+
+  test("supports override via call options", () => {
+    const model = new ChatGroq({
+      apiKey: "foo",
+      model: "openai/gpt-oss-120b",
+      reasoningEffort: "low",
+    });
+    const params = model.invocationParams({ reasoning_effort: "high" });
+    expect(params.reasoning_effort).toBe("high");
+  });
+
+  test("is undefined when not set", () => {
+    const model = new ChatGroq({
+      apiKey: "foo",
+      model: "llama-3.3-70b-versatile",
+    });
+    const params = model.invocationParams({});
+    expect(params.reasoning_effort).toBeUndefined();
+  });
 });
