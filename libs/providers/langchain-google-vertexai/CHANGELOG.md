@@ -1,5 +1,12 @@
 # @langchain/google-vertexai
 
+## 2.1.24
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @langchain/google-gauth@2.1.24
+
 ## 2.1.23
 
 ### Patch Changes

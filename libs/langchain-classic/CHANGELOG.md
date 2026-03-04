@@ -1,5 +1,12 @@
 # @langchain/classic
 
+## 1.0.22
+
+### Patch Changes
+
+- Updated dependencies [[`3682a8d`](https://github.com/langchain-ai/langchainjs/commit/3682a8d4e0ed0855a5283f26bcfd1c0415dde075)]:
+  - @langchain/openai@1.2.12
+
 ## 1.0.21
 
 ### Patch Changes

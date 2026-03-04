@@ -1,5 +1,11 @@
 # @langchain/aws
 
+## 1.3.1
+
+### Patch Changes
+
+- [#10213](https://github.com/langchain-ai/langchainjs/pull/10213) [`e0b661e`](https://github.com/langchain-ai/langchainjs/commit/e0b661e07f3357ca4dff5a7cf061df76c57965c5) Thanks [@colifran](https://github.com/colifran)! - feat(aws): implement standard schema support for structured output
+
 ## 1.3.0
 
 ### Minor Changes
