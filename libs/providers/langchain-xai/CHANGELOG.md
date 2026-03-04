@@ -1,5 +1,14 @@
 # @langchain/xai
 
+## 1.3.8
+
+### Patch Changes
+
+- [#10216](https://github.com/langchain-ai/langchainjs/pull/10216) [`445797f`](https://github.com/langchain-ai/langchainjs/commit/445797fb5f758ac561b3199344b8f0ea173e4d09) Thanks [@colifran](https://github.com/colifran)! - feat(xai): implement standard schema support for structured output
+
+- Updated dependencies [[`3682a8d`](https://github.com/langchain-ai/langchainjs/commit/3682a8d4e0ed0855a5283f26bcfd1c0415dde075)]:
+  - @langchain/openai@1.2.12
+
 ## 1.3.7
 
 ### Patch Changes

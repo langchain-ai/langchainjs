@@ -1,5 +1,11 @@
 # @langchain/groq
 
+## 1.1.4
+
+### Patch Changes
+
+- [#10210](https://github.com/langchain-ai/langchainjs/pull/10210) [`6d5d1bf`](https://github.com/langchain-ai/langchainjs/commit/6d5d1bf96a9b76a595661a8a1ea7ea4f89c9a500) Thanks [@colifran](https://github.com/colifran)! - feat(groq): implement standard schema support for structured output
+
 ## 1.1.3
 
 ### Patch Changes

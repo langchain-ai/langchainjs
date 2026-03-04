@@ -1,5 +1,11 @@
 # @langchain/google
 
+## 0.1.5
+
+### Patch Changes
+
+- [#10260](https://github.com/langchain-ai/langchainjs/pull/10260) [`09babb4`](https://github.com/langchain-ai/langchainjs/commit/09babb49853467b00da460c2af3cc811bbffc685) Thanks [@colifran](https://github.com/colifran)! - feat(google): implement standard schema support for structured output
+
 ## 0.1.4
 
 ### Patch Changes

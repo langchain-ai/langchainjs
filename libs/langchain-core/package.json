@@ -1,6 +1,6 @@
 {
   "name": "@langchain/core",
-  "version": "1.1.29",
+  "version": "1.1.30",
   "description": "Core LangChain.js abstractions and schemas",
   "type": "module",
   "engines": {
@@ -516,6 +516,17 @@
         "default": "./dist/structured_query/index.js"
       }
     },
+    "./testing/matchers": {
+      "input": "./src/testing/matchers.ts",
+      "require": {
+        "types": "./dist/testing/matchers.d.cts",
+        "default": "./dist/testing/matchers.cjs"
+      },
+      "import": {
+        "types": "./dist/testing/matchers.d.ts",
+        "default": "./dist/testing/matchers.js"
+      }
+    },
     "./tools": {
       "input": "./src/tools/index.ts",
       "require": {
@@ -876,6 +887,7 @@
     "runnables.cjs",
     "runnables.d.ts",
     "runnables.js",
+    "testing",
     "tools.d.cts",
     "tools.cjs",
     "tools.d.ts",

@@ -1,5 +1,11 @@
 # @langchain/cerebras
 
+## 1.0.4
+
+### Patch Changes
+
+- [#10214](https://github.com/langchain-ai/langchainjs/pull/10214) [`655ccae`](https://github.com/langchain-ai/langchainjs/commit/655ccaee13648d4cfe2e60a31d8f1f3a04e4a7b9) Thanks [@colifran](https://github.com/colifran)! - feat(cerebras): implement standard schema support for structured output
+
 ## 1.0.3
 
 ### Patch Changes
