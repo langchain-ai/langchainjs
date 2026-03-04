@@ -259,6 +259,7 @@ export class ChatBaiduQianfan
         : (modelOrFields ?? {});
 
     super(fields);
+    this._addVersion("@langchain/baidu-qianfan", __PKG_VERSION__);
 
     this.modelName = fields?.model ?? fields?.modelName ?? this.model;
     this.model = this.modelName;

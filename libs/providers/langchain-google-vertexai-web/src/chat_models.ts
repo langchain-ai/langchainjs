@@ -311,5 +311,6 @@ export class ChatVertexAI extends ChatGoogle {
       ...fields,
       platformType: "gcp",
     });
+    this._addVersion("@langchain/google-vertexai-web", __PKG_VERSION__);
   }
 }

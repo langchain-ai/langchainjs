@@ -182,7 +182,8 @@ abstract class BaseCallbackHandlerMethodsClass {
     parentRunId?: string,
     tags?: string[],
     metadata?: Record<string, unknown>,
-    runName?: string
+    runName?: string,
+    toolCallId?: string
   ): // eslint-disable-next-line @typescript-eslint/no-explicit-any
     Promise<any> | any;
 
@@ -203,6 +204,18 @@ abstract class BaseCallbackHandlerMethodsClass {
   handleToolEnd?(
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     output: any,
+    runId: string,
+    parentRunId?: string,
+    tags?: string[]
+  ): // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    Promise<any> | any;
+
+  /**
+   * Called when a streaming tool yields a partial value. Tools that are async generators
+   * invoke this once per yielded value.
+   */
+  handleToolEvent?(
+    chunk: unknown,
     runId: string,
     parentRunId?: string,
     tags?: string[]

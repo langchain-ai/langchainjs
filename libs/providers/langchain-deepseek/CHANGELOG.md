@@ -1,5 +1,30 @@
 # @langchain/deepseek
 
+## 1.0.16
+
+### Patch Changes
+
+- [#10206](https://github.com/langchain-ai/langchainjs/pull/10206) [`c4bfe24`](https://github.com/langchain-ai/langchainjs/commit/c4bfe2428f2616b6fc94d8b78c5a770d38f22733) Thanks [@colifran](https://github.com/colifran)! - feat(deepseek): implement standard schema support for structured output
+
+- Updated dependencies [[`3682a8d`](https://github.com/langchain-ai/langchainjs/commit/3682a8d4e0ed0855a5283f26bcfd1c0415dde075)]:
+  - @langchain/openai@1.2.12
+
+## 1.0.15
+
+### Patch Changes
+
+- [#10106](https://github.com/langchain-ai/langchainjs/pull/10106) [`9f30267`](https://github.com/langchain-ai/langchainjs/commit/9f30267e95a2a42fac71f1d3674b84c5a190dbbc) Thanks [@hntrl](https://github.com/hntrl)! - Add package version metadata to runnable traces. Each package now stamps its version in `this.metadata.versions` at construction time, making version info available in LangSmith trace metadata.
+
+- Updated dependencies [[`9f30267`](https://github.com/langchain-ai/langchainjs/commit/9f30267e95a2a42fac71f1d3674b84c5a190dbbc), [`f298a9b`](https://github.com/langchain-ai/langchainjs/commit/f298a9bdedff7bc2b0eb7f6b5e6b52fd3042a7b7)]:
+  - @langchain/openai@1.2.11
+
+## 1.0.14
+
+### Patch Changes
+
+- Updated dependencies [[`62ba83e`](https://github.com/langchain-ai/langchainjs/commit/62ba83edd5206c86d8da8d1b608a2493ee4f3da8)]:
+  - @langchain/openai@1.2.10
+
 ## 1.0.13
 
 ### Patch Changes

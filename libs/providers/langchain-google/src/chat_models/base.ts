@@ -8,6 +8,7 @@ import {
   AIMessageChunk,
   AIMessageChunkFields,
   BaseMessage,
+  type UsageMetadata,
 } from "@langchain/core/messages";
 import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
 import { concat } from "@langchain/core/utils/stream";
@@ -20,12 +21,7 @@ import type {
   BaseLanguageModelInput,
   StructuredOutputMethodOptions,
 } from "@langchain/core/language_models/base";
-import {
-  Runnable,
-  RunnableLambda,
-  RunnablePassthrough,
-  RunnableSequence,
-} from "@langchain/core/runnables";
+import { Runnable, RunnableLambda } from "@langchain/core/runnables";
 import {
   toJsonSchema,
   type JsonSchema7Type,
@@ -34,11 +30,6 @@ import {
   InteropZodType,
   isInteropZodSchema,
 } from "@langchain/core/utils/types";
-import {
-  JsonOutputParser,
-  StructuredOutputParser,
-} from "@langchain/core/output_parsers";
-import { JsonOutputKeyToolsParser } from "@langchain/core/output_parsers/openai_tools";
 
 import { ApiClient } from "../clients/index.js";
 import type { ChatGoogleFields } from "./types.js";
@@ -69,6 +60,16 @@ import {
   convertFieldsToThinkingConfig,
 } from "../converters/params.js";
 import { Gemini } from "./api-types.js";
+import { subtractUsageMetadata } from "../utils/metadata.js";
+import {
+  isSerializableSchema,
+  SerializableSchema,
+} from "@langchain/core/utils/standard_schema";
+import {
+  assembleStructuredOutputPipeline,
+  createContentParser,
+  createFunctionCallingParser,
+} from "@langchain/core/language_models/structured_output";
 
 export type GooglePlatformType = "gai" | "gcp";
 
@@ -169,6 +170,7 @@ export abstract class BaseChatGoogle<
 
   constructor(protected params: BaseChatGoogleParams) {
     super(params);
+    this._addVersion("@langchain/google", __PKG_VERSION__);
 
     if (!params.apiClient) {
       throw new ConfigurationError(
@@ -323,7 +325,10 @@ export abstract class BaseChatGoogle<
 
     if (fields.responseSchema) {
       // Convert Zod schema to JSON Schema if needed
-      if (isInteropZodSchema(fields.responseSchema)) {
+      if (
+        isInteropZodSchema(fields.responseSchema) ||
+        isSerializableSchema(fields.responseSchema)
+      ) {
         responseJsonSchema = toJsonSchema(fields.responseSchema);
       } else {
         responseJsonSchema = fields.responseSchema as Record<string, unknown>;
@@ -529,6 +534,7 @@ export abstract class BaseChatGoogle<
     }
 
     if (response.body) {
+      let previousUsage: UsageMetadata | undefined;
       const stream = response.body
         .pipeThrough(new TextDecoderStream())
         .pipeThrough(new EventSourceParserStream())
@@ -592,11 +598,14 @@ export abstract class BaseChatGoogle<
                   },
                 };
 
-                // Include usageMetadata if there is any and we have
-                // enabled it with streamUsage on
                 if (chunk?.usageMetadata && streamUsage) {
-                  messageChunkParams.usage_metadata =
+                  const cumulative =
                     convertGeminiGenerateContentResponseToUsageMetadata(chunk);
+                  messageChunkParams.usage_metadata = subtractUsageMetadata(
+                    cumulative,
+                    previousUsage
+                  );
+                  previousUsage = cumulative;
                 }
                 const messageChunk = new AIMessageChunk(messageChunkParams);
 
@@ -626,16 +635,14 @@ export abstract class BaseChatGoogle<
           const { done, value } = await reader.read();
           if (done) break;
           yield value;
-          if (value.text) {
-            await runManager?.handleLLMNewToken(
-              value.text,
-              undefined,
-              undefined,
-              undefined,
-              undefined,
-              { chunk: value }
-            );
-          }
+          await runManager?.handleLLMNewToken(
+            value.text ?? "",
+            undefined,
+            undefined,
+            undefined,
+            undefined,
+            { chunk: value }
+          );
         }
       } finally {
         reader.releaseLock();
@@ -677,6 +684,7 @@ export abstract class BaseChatGoogle<
   >(
     outputSchema:
       | InteropZodType<RunOutput>
+      | SerializableSchema<RunOutput>
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
     config?: StructuredOutputMethodOptions<boolean>
@@ -727,110 +735,67 @@ export abstract class BaseChatGoogle<
           }
 
           // Parse JSON and validate with schema
-          if (isInteropZodSchema(schema)) {
-            const zodParser = StructuredOutputParser.fromZodSchema(
-              schema as InteropZodType<RunOutput>
-            );
-            return (await zodParser.parse(input.text)) as RunOutput;
-          } else {
-            const jsonParser = new JsonOutputParser<RunOutput>();
-            return await jsonParser.parse(input.text);
-          }
+          const parser = createContentParser(schema);
+          return await parser.parse(input.text);
         }
       );
     } else if (method === "functionCalling") {
       // Use function calling mode
       let functionName = name ?? "extract";
-      let tools: Gemini.Tool[];
+      let geminiFunctionDeclaration: Gemini.Tools.FunctionDeclaration;
 
-      if (isInteropZodSchema(schema)) {
+      if (isInteropZodSchema(schema) || isSerializableSchema(schema)) {
         const jsonSchema = schemaToGeminiParameters(schema);
         const description =
           typeof jsonSchema.description === "string"
             ? jsonSchema.description
             : "A function available to call.";
-        tools = [
-          {
-            functionDeclarations: [
-              {
-                name: functionName,
-                description,
-                parameters: jsonSchema as Gemini.Tools.Schema,
-              },
-            ],
-          },
-        ];
-        outputParser = new JsonOutputKeyToolsParser({
-          returnSingle: true,
-          keyName: functionName,
-          zodSchema: schema,
-        });
+        geminiFunctionDeclaration = {
+          name: functionName,
+          description,
+          parameters: jsonSchema as Gemini.Tools.Schema,
+        };
+      } else if (
+        typeof schema.name === "string" &&
+        typeof schema.parameters === "object" &&
+        schema.parameters != null
+      ) {
+        geminiFunctionDeclaration = schema as Gemini.Tools.FunctionDeclaration;
+        functionName = schema.name;
       } else {
-        let geminiFunctionDefinition: Gemini.Tools.FunctionDeclaration;
-        if (
-          typeof schema.name === "string" &&
-          typeof schema.parameters === "object" &&
-          schema.parameters != null
-        ) {
-          geminiFunctionDefinition = schema as Gemini.Tools.FunctionDeclaration;
-          functionName = schema.name;
-        } else {
-          // We are providing the schema for *just* the parameters
-          const parameters = schemaToGeminiParameters(schema);
-          geminiFunctionDefinition = {
-            name: functionName,
-            description: (schema as { description?: string }).description ?? "",
-            parameters,
-          };
-        }
-        tools = [
-          {
-            functionDeclarations: [geminiFunctionDefinition],
-          },
-        ];
-        outputParser = new JsonOutputKeyToolsParser<RunOutput>({
-          returnSingle: true,
-          keyName: functionName,
-        });
+        // We are providing the schema for *just* the parameters
+        const parameters = schemaToGeminiParameters(schema);
+        geminiFunctionDeclaration = {
+          name: functionName,
+          description: (schema as { description?: string }).description ?? "",
+          parameters,
+        };
       }
 
+      const tools: Gemini.Tool[] = [
+        {
+          functionDeclarations: [geminiFunctionDeclaration],
+        },
+      ];
       llm = this.bindTools(tools).withConfig({
         tool_choice: functionName,
       } as Partial<CallOptions>);
+
+      outputParser = createFunctionCallingParser(schema, functionName);
     } else {
       throw new ConfigurationError(
         `Unrecognized structured output method '${method}'. Expected 'functionCalling' or 'jsonSchema'`
       );
     }
 
-    // Shared logic for handling includeRaw
-    if (!includeRaw) {
-      return llm.pipe(outputParser).withConfig({
-        runName: "ChatGoogleStructuredOutput",
-      }) as Runnable<BaseLanguageModelInput, RunOutput>;
-    }
-
-    const parserAssign = RunnablePassthrough.assign({
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      parsed: (input: any, config) => outputParser.invoke(input.raw, config),
-    });
-    const parserNone = RunnablePassthrough.assign({
-      parsed: () => null,
-    });
-    const parsedWithFallback = parserAssign.withFallbacks({
-      fallbacks: [parserNone],
-    });
-    return RunnableSequence.from<
-      BaseLanguageModelInput,
-      { raw: BaseMessage; parsed: RunOutput }
-    >([
-      {
-        raw: llm,
-      },
-      parsedWithFallback,
-    ]).withConfig({
-      runName: "ChatGoogleStructuredOutputRunnable",
-    });
+    return assembleStructuredOutputPipeline(
+      llm,
+      outputParser,
+      includeRaw,
+      includeRaw
+        ? "ChatGoogleStructuredOutputRunnable"
+        : "ChatGoogleStructuredOutput"
+    );
   }
 }
 

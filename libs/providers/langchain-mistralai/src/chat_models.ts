@@ -53,27 +53,14 @@ import {
 import { AsyncCaller } from "@langchain/core/utils/async_caller";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import { NewTokenIndices } from "@langchain/core/callbacks/base";
+import { type BaseLLMOutputParser } from "@langchain/core/output_parsers";
 import {
-  type BaseLLMOutputParser,
-  JsonOutputParser,
-  StructuredOutputParser,
-} from "@langchain/core/output_parsers";
-import {
-  JsonOutputKeyToolsParser,
   convertLangChainToolCallToOpenAI,
   makeInvalidToolCall,
   parseToolCall,
 } from "@langchain/core/output_parsers/openai_tools";
-import {
-  Runnable,
-  RunnablePassthrough,
-  RunnableSequence,
-  RunnableBinding,
-} from "@langchain/core/runnables";
-import {
-  JsonSchema7Type,
-  toJsonSchema,
-} from "@langchain/core/utils/json_schema";
+import { Runnable, RunnableBinding } from "@langchain/core/runnables";
+import { toJsonSchema } from "@langchain/core/utils/json_schema";
 import { ToolCallChunk } from "@langchain/core/messages/tool";
 import { isLangChainTool } from "@langchain/core/utils/function_calling";
 import {
@@ -84,6 +71,15 @@ import {
   _convertToolCallIdToMistralCompatible,
   _mistralContentChunkToMessageContentComplex,
 } from "./utils.js";
+import {
+  isSerializableSchema,
+  SerializableSchema,
+} from "@langchain/core/utils/standard_schema";
+import {
+  assembleStructuredOutputPipeline,
+  createContentParser,
+  createFunctionCallingParser,
+} from "@langchain/core/language_models/structured_output";
 
 interface TokenUsage {
   completionTokens?: number;
@@ -986,6 +982,7 @@ export class ChatMistralAI<
         ? { ...(fieldsArg ?? {}), model: modelOrFields }
         : (modelOrFields ?? {});
     super(fields);
+    this._addVersion("@langchain/mistralai", __PKG_VERSION__);
     const apiKey = fields.apiKey ?? getEnvironmentVariable("MISTRAL_API_KEY");
     if (!apiKey) {
       throw new Error(
@@ -1378,6 +1375,7 @@ export class ChatMistralAI<
   >(
     outputSchema:
       | InteropZodType<RunOutput>
+      | SerializableSchema<RunOutput>
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
     config?: StructuredOutputMethodOptions<false>
@@ -1389,6 +1387,7 @@ export class ChatMistralAI<
   >(
     outputSchema:
       | InteropZodType<RunOutput>
+      | SerializableSchema<RunOutput>
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
     config?: StructuredOutputMethodOptions<true>
@@ -1400,6 +1399,7 @@ export class ChatMistralAI<
   >(
     outputSchema:
       | InteropZodType<RunOutput>
+      | SerializableSchema<RunOutput>
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
     config?: StructuredOutputMethodOptions<boolean>
@@ -1409,9 +1409,7 @@ export class ChatMistralAI<
         BaseLanguageModelInput,
         { raw: BaseMessage; parsed: RunOutput }
       > {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const schema: InteropZodType<RunOutput> | Record<string, any> =
-      outputSchema;
+    const schema = outputSchema;
     const name = config?.name;
     const method = config?.method;
     const includeRaw = config?.includeRaw;
@@ -1420,102 +1418,62 @@ export class ChatMistralAI<
     let outputParser: BaseLLMOutputParser<RunOutput>;
 
     if (method === "jsonMode") {
-      let outputSchema: JsonSchema7Type | undefined;
-      if (isInteropZodSchema(schema)) {
-        outputParser = StructuredOutputParser.fromZodSchema(schema);
-        outputSchema = toJsonSchema(schema);
-      } else {
-        outputParser = new JsonOutputParser<RunOutput>();
-      }
+      outputParser = createContentParser(schema);
+
+      const asJsonSchema =
+        isInteropZodSchema(schema) || isSerializableSchema(schema)
+          ? toJsonSchema(schema)
+          : undefined;
+
       llm = this.withConfig({
         response_format: { type: "json_object" },
         ls_structured_output_format: {
           kwargs: { method: "jsonMode" },
-          schema: outputSchema,
+          schema: asJsonSchema,
         },
       } as Partial<CallOptions>);
     } else {
       let functionName = name ?? "extract";
+      let toolFunction: FunctionDefinition;
+
       // Is function calling
-      if (isInteropZodSchema(schema)) {
+      if (isInteropZodSchema(schema) || isSerializableSchema(schema)) {
         const asJsonSchema = toJsonSchema(schema);
-        llm = this.bindTools([
-          {
-            type: "function" as const,
-            function: {
-              name: functionName,
-              description: asJsonSchema.description,
-              parameters: asJsonSchema,
-            },
-          },
-        ]).withConfig({
-          tool_choice: "any",
+        toolFunction = {
+          name: functionName,
+          description: asJsonSchema.description,
+          parameters: asJsonSchema,
+        };
+      } else if (
+        typeof schema.name === "string" &&
+        typeof schema.parameters === "object" &&
+        schema.parameters != null
+      ) {
+        toolFunction = schema as FunctionDefinition;
+        functionName = schema.name;
+      } else {
+        toolFunction = {
+          name: functionName,
+          description: schema.description ?? "",
+          parameters: schema,
+        };
+      }
+
+      llm = this.bindTools([
+        { type: "function" as const, function: toolFunction },
+      ]).withConfig({
+        tool_choice: "any",
+        ...((isInteropZodSchema(schema) || isSerializableSchema(schema)) && {
           ls_structured_output_format: {
             kwargs: { method: "functionCalling" },
-            schema: asJsonSchema,
+            schema: toolFunction.parameters,
           },
-        } as Partial<CallOptions>);
-        outputParser = new JsonOutputKeyToolsParser({
-          returnSingle: true,
-          keyName: functionName,
-          zodSchema: schema,
-        });
-      } else {
-        let openAIFunctionDefinition: FunctionDefinition;
-        if (
-          typeof schema.name === "string" &&
-          typeof schema.parameters === "object" &&
-          schema.parameters != null
-        ) {
-          openAIFunctionDefinition = schema as FunctionDefinition;
-          functionName = schema.name;
-        } else {
-          openAIFunctionDefinition = {
-            name: functionName,
-            description: schema.description ?? "",
-            parameters: schema,
-          };
-        }
-        llm = this.bindTools([
-          {
-            type: "function" as const,
-            function: openAIFunctionDefinition,
-          },
-        ]).withConfig({
-          tool_choice: "any",
-        } as Partial<CallOptions>);
-        outputParser = new JsonOutputKeyToolsParser<RunOutput>({
-          returnSingle: true,
-          keyName: functionName,
-        });
-      }
+        }),
+      } as Partial<CallOptions>);
+
+      outputParser = createFunctionCallingParser(schema, functionName);
     }
 
-    if (!includeRaw) {
-      return llm.pipe(outputParser) as Runnable<
-        BaseLanguageModelInput,
-        RunOutput
-      >;
-    }
-
-    const parserAssign = RunnablePassthrough.assign({
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      parsed: (input: any, config) => outputParser.invoke(input.raw, config),
-    });
-    const parserNone = RunnablePassthrough.assign({
-      parsed: () => null,
-    });
-    const parsedWithFallback = parserAssign.withFallbacks({
-      fallbacks: [parserNone],
-    });
-    return RunnableSequence.from<
-      BaseLanguageModelInput,
-      { raw: BaseMessage; parsed: RunOutput }
-    >([
-      {
-        raw: llm,
-      },
-      parsedWithFallback,
-    ]);
+    return assembleStructuredOutputPipeline(llm, outputParser, includeRaw);
   }
 }

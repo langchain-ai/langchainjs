@@ -623,6 +623,188 @@ test("Streaming supports empty string chunks", async () => {
   expect(finalChunk.content).toBe("Hello world!");
 });
 
+describe("video content block conversion", () => {
+  test("converts multimodal video block with base64 data", () => {
+    const videoData = btoa("fake-video-bytes");
+    const result = convertToConverseMessages([
+      new HumanMessage({
+        content: [
+          { type: "text", text: "Describe this video" },
+          {
+            type: "video",
+            mimeType: "video/mp4",
+            data: videoData,
+          },
+        ],
+      }),
+    ]);
+
+    expect(result.converseMessages).toHaveLength(1);
+    const content = result.converseMessages[0].content!;
+    expect(content).toHaveLength(2);
+    expect(content[0]).toEqual({ text: "Describe this video" });
+    expect(content[1]).toHaveProperty("video");
+    expect(content[1].video?.format).toBe("mp4");
+    expect(content[1].video?.source?.bytes).toBeInstanceOf(Uint8Array);
+  });
+
+  test("converts multimodal video block with Uint8Array data", () => {
+    const videoBytes = new Uint8Array([1, 2, 3, 4]);
+    const result = convertToConverseMessages([
+      new HumanMessage({
+        content: [
+          {
+            type: "video",
+            mimeType: "video/webm",
+            data: videoBytes,
+          },
+        ],
+      }),
+    ]);
+
+    const content = result.converseMessages[0].content!;
+    expect(content[0]).toHaveProperty("video");
+    expect(content[0].video?.format).toBe("webm");
+    expect(content[0].video?.source?.bytes).toBe(videoBytes);
+  });
+
+  test("passes through native Bedrock video block", () => {
+    const videoSource = {
+      bytes: new Uint8Array([1, 2, 3]),
+    };
+    const result = convertToConverseMessages([
+      new HumanMessage({
+        content: [
+          {
+            type: "video",
+            video: {
+              format: "mp4",
+              source: videoSource,
+            },
+          },
+        ],
+      }),
+    ]);
+
+    const content = result.converseMessages[0].content!;
+    expect(content[0]).toHaveProperty("video");
+    expect(content[0].video?.format).toBe("mp4");
+    expect(content[0].video?.source).toBe(videoSource);
+  });
+
+  test("converts video block with S3 fileId", () => {
+    const result = convertToConverseMessages([
+      new HumanMessage({
+        content: [
+          {
+            type: "video",
+            mimeType: "video/mp4",
+            fileId: "s3://my-bucket/my-video.mp4",
+          },
+        ],
+      }),
+    ]);
+
+    const content = result.converseMessages[0].content!;
+    expect(content[0]).toHaveProperty("video");
+    expect(content[0].video?.format).toBe("mp4");
+    expect(content[0].video?.source?.s3Location?.uri).toBe(
+      "s3://my-bucket/my-video.mp4"
+    );
+  });
+});
+
+describe("audio content block conversion", () => {
+  test("converts multimodal audio block with base64 data", () => {
+    const audioData = btoa("fake-audio-bytes");
+    const result = convertToConverseMessages([
+      new HumanMessage({
+        content: [
+          { type: "text", text: "Transcribe this audio" },
+          {
+            type: "audio",
+            mimeType: "audio/mp3",
+            data: audioData,
+          },
+        ],
+      }),
+    ]);
+
+    expect(result.converseMessages).toHaveLength(1);
+    const content = result.converseMessages[0].content!;
+    expect(content).toHaveLength(2);
+    expect(content[0]).toEqual({ text: "Transcribe this audio" });
+    expect(content[1]).toHaveProperty("audio");
+    expect(content[1].audio?.format).toBe("mp3");
+    expect(content[1].audio?.source?.bytes).toBeInstanceOf(Uint8Array);
+  });
+
+  test("converts multimodal audio block with Uint8Array data", () => {
+    const audioBytes = new Uint8Array([1, 2, 3, 4]);
+    const result = convertToConverseMessages([
+      new HumanMessage({
+        content: [
+          {
+            type: "audio",
+            mimeType: "audio/wav",
+            data: audioBytes,
+          },
+        ],
+      }),
+    ]);
+
+    const content = result.converseMessages[0].content!;
+    expect(content[0]).toHaveProperty("audio");
+    expect(content[0].audio?.format).toBe("wav");
+    expect(content[0].audio?.source?.bytes).toBe(audioBytes);
+  });
+
+  test("passes through native Bedrock audio block", () => {
+    const audioSource = {
+      bytes: new Uint8Array([1, 2, 3]),
+    };
+    const result = convertToConverseMessages([
+      new HumanMessage({
+        content: [
+          {
+            type: "audio",
+            audio: {
+              format: "flac",
+              source: audioSource,
+            },
+          },
+        ],
+      }),
+    ]);
+
+    const content = result.converseMessages[0].content!;
+    expect(content[0]).toHaveProperty("audio");
+    expect(content[0].audio?.format).toBe("flac");
+    expect(content[0].audio?.source).toBe(audioSource);
+  });
+
+  test("converts audio block with S3 fileId", () => {
+    const result = convertToConverseMessages([
+      new HumanMessage({
+        content: [
+          {
+            type: "audio",
+            mimeType: "audio/mp3",
+            fileId: "s3://my-bucket/my-audio.mp3",
+          },
+        ],
+      }),
+    ]);
+
+    const content = result.converseMessages[0].content!;
+    expect(content[0]).toHaveProperty("audio");
+    expect(content[0].audio?.format).toBe("mp3");
+    expect(content[0].audio?.source?.s3Location?.uri).toBe(
+      "s3://my-bucket/my-audio.mp3"
+    );
+  });
+});
+
 describe("applicationInferenceProfile parameter", () => {
   const baseConstructorArgs = {
     region: "us-east-1",
@@ -1171,5 +1353,154 @@ describe("serviceTier configuration", () => {
     expect(params.inferenceConfig?.temperature).toBe(0.5);
     expect(params.inferenceConfig?.maxTokens).toBe(100);
     expect(params.inferenceConfig?.stopSequences).toEqual(["stop_sequence"]);
+  });
+});
+
+describe("withStructuredOutput - StandardSchema", () => {
+  function makeSerializableSchema() {
+    return {
+      "~standard": {
+        version: 1 as const,
+        vendor: "test",
+        validate: (value: unknown) => {
+          const v = value as Record<string, unknown>;
+          if (v && typeof v === "object" && "name" in v) {
+            return { value: v as { name: string } };
+          }
+          return {
+            issues: [{ message: "Expected object with name" }],
+          };
+        },
+        jsonSchema: {
+          input: () => ({
+            type: "object" as const,
+            properties: {
+              name: { type: "string", description: "A name" },
+            },
+            required: ["name"],
+          }),
+          output: () => ({ type: "object" as const, properties: {} }),
+        },
+      },
+    };
+  }
+
+  const baseConstructorArgs = {
+    region: "us-east-1",
+    credentials: {
+      secretAccessKey: "test-secret-key",
+      accessKeyId: "test-access-key",
+    },
+  };
+
+  test("functionCalling with valid output parses correctly", async () => {
+    const model = new ChatBedrockConverse({
+      ...baseConstructorArgs,
+      model: "anthropic.claude-3-haiku-20240307-v1:0",
+    });
+    vi
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      .spyOn(model as any, "invoke")
+      .mockResolvedValue(
+        new AIMessage({
+          content: "",
+          tool_calls: [
+            {
+              name: "extract",
+              args: { name: "cobalt" },
+              id: "1",
+              type: "tool_call",
+            },
+          ],
+        })
+      );
+
+    const schema = makeSerializableSchema();
+    const structured = model.withStructuredOutput(schema);
+
+    const result = await structured.invoke("What?");
+    expect(result).toEqual({ name: "cobalt" });
+  });
+
+  test("functionCalling with custom name", async () => {
+    const model = new ChatBedrockConverse({
+      ...baseConstructorArgs,
+      model: "anthropic.claude-3-haiku-20240307-v1:0",
+    });
+    vi
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      .spyOn(model as any, "invoke")
+      .mockResolvedValue(
+        new AIMessage({
+          content: "",
+          tool_calls: [
+            {
+              name: "GetName",
+              args: { name: "test" },
+              id: "1",
+              type: "tool_call",
+            },
+          ],
+        })
+      );
+
+    const schema = makeSerializableSchema();
+    const structured = model.withStructuredOutput(schema, {
+      name: "GetName",
+    });
+
+    const result = await structured.invoke("What?");
+    expect(result).toEqual({ name: "test" });
+  });
+
+  test("functionCalling with includeRaw returns raw and parsed", async () => {
+    const mockResponse = new AIMessage({
+      content: "",
+      tool_calls: [
+        {
+          name: "extract",
+          args: { name: "cobalt" },
+          id: "1",
+          type: "tool_call",
+        },
+      ],
+    });
+    const model = new ChatBedrockConverse({
+      ...baseConstructorArgs,
+      model: "anthropic.claude-3-haiku-20240307-v1:0",
+    });
+    vi
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      .spyOn(model as any, "invoke")
+      .mockResolvedValue(mockResponse);
+
+    const schema = makeSerializableSchema();
+    const structured = model.withStructuredOutput(schema, {
+      includeRaw: true,
+    });
+
+    const result = await structured.invoke("What?");
+    expect(result).toHaveProperty("raw");
+    expect(result).toHaveProperty("parsed");
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    expect((result as any).parsed).toEqual({ name: "cobalt" });
+  });
+
+  test("no tool calls throws error", async () => {
+    const model = new ChatBedrockConverse({
+      ...baseConstructorArgs,
+      model: "anthropic.claude-3-haiku-20240307-v1:0",
+    });
+    vi
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      .spyOn(model as any, "invoke")
+      .mockResolvedValue(new AIMessage({ content: "No tools here" }));
+
+    const schema = makeSerializableSchema();
+    const structured = model.withStructuredOutput(schema);
+
+    await expect(async () => {
+      await structured.invoke("What?");
+    }).rejects.toThrow("No tool calls found in the response.");
   });
 });

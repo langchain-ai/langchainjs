@@ -78,7 +78,7 @@ export declare namespace ContentBlock {
     /**
      * Index of block in aggregate response. Used during streaming.
      */
-    index?: number;
+    index?: string | number;
     /**
      * Citations and other annotations.
      */
@@ -103,7 +103,7 @@ export declare namespace ContentBlock {
     /**
      * Index of block in aggregate response. Used during streaming.
      */
-    index?: number;
+    index?: string | number;
   }
 
   /**

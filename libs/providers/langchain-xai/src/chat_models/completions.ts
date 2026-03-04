@@ -39,6 +39,7 @@ import {
   XAI_LIVE_SEARCH_TOOL_TYPE,
   XAILiveSearchTool,
 } from "../tools/live_search.js";
+import { SerializableSchema } from "@langchain/core/utils/standard_schema";
 
 export type OpenAIToolChoice =
   | OpenAIClient.ChatCompletionToolChoiceOption
@@ -658,6 +659,8 @@ export class ChatXAI extends ChatOpenAICompletions<ChatXAICallOptions> {
       },
     });
 
+    this._addVersion("@langchain/xai", __PKG_VERSION__);
+
     this.searchParameters = fields?.searchParameters;
   }
 
@@ -908,6 +911,7 @@ export class ChatXAI extends ChatOpenAICompletions<ChatXAICallOptions> {
   >(
     outputSchema:
       | InteropZodType<RunOutput>
+      | SerializableSchema<RunOutput>
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
     config?: StructuredOutputMethodOptions<false>
@@ -919,6 +923,7 @@ export class ChatXAI extends ChatOpenAICompletions<ChatXAICallOptions> {
   >(
     outputSchema:
       | InteropZodType<RunOutput>
+      | SerializableSchema<RunOutput>
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
     config?: StructuredOutputMethodOptions<true>
@@ -930,6 +935,7 @@ export class ChatXAI extends ChatOpenAICompletions<ChatXAICallOptions> {
   >(
     outputSchema:
       | InteropZodType<RunOutput>
+      | SerializableSchema<RunOutput>
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
     config?: StructuredOutputMethodOptions<boolean>
@@ -943,6 +949,7 @@ export class ChatXAI extends ChatOpenAICompletions<ChatXAICallOptions> {
   >(
     outputSchema:
       | InteropZodType<RunOutput>
+      | SerializableSchema<RunOutput>
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
     config?: StructuredOutputMethodOptions<boolean>

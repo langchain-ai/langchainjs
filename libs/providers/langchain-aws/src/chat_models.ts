@@ -32,12 +32,7 @@ import {
   DefaultProviderInit,
 } from "@aws-sdk/credential-provider-node";
 import type { DocumentType as __DocumentType } from "@smithy/types";
-import {
-  Runnable,
-  RunnableLambda,
-  RunnablePassthrough,
-  RunnableSequence,
-} from "@langchain/core/runnables";
+import { Runnable, RunnableLambda } from "@langchain/core/runnables";
 import {
   getSchemaDescription,
   InteropZodType,
@@ -62,6 +57,11 @@ import {
   handleConverseStreamContentBlockStart,
   handleConverseStreamMetadata,
 } from "./utils/message_outputs.js";
+import {
+  isSerializableSchema,
+  SerializableSchema,
+} from "@langchain/core/utils/standard_schema";
+import { assembleStructuredOutputPipeline } from "@langchain/core/language_models/structured_output";
 
 /**
  * Inputs for ChatBedrockConverse.
@@ -742,6 +742,7 @@ export class ChatBedrockConverse
         ? { ...(params ?? {}), model: modelOrFields }
         : (modelOrFields ?? {});
     super(fields);
+    this._addVersion("@langchain/aws", __PKG_VERSION__);
     const {
       profile,
       filepath,
@@ -1032,6 +1033,7 @@ export class ChatBedrockConverse
   >(
     outputSchema:
       | InteropZodType<RunOutput>
+      | SerializableSchema<RunOutput>
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
     config?: StructuredOutputMethodOptions<false>
@@ -1043,6 +1045,7 @@ export class ChatBedrockConverse
   >(
     outputSchema:
       | InteropZodType<RunOutput>
+      | SerializableSchema<RunOutput>
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
     config?: StructuredOutputMethodOptions<true>
@@ -1054,6 +1057,7 @@ export class ChatBedrockConverse
   >(
     outputSchema:
       | InteropZodType<RunOutput>
+      | SerializableSchema<RunOutput>
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
     config?: StructuredOutputMethodOptions<boolean>
@@ -1066,46 +1070,41 @@ export class ChatBedrockConverse
           parsed: RunOutput;
         }
       > {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const schema: InteropZodType<RunOutput> | Record<string, any> =
-      outputSchema;
+    const schema = outputSchema;
     const name = config?.name;
     const description =
       getSchemaDescription(schema) ?? "A function available to call.";
     const method = config?.method;
     const includeRaw = config?.includeRaw;
+
     if (method === "jsonMode") {
       throw new Error(`ChatBedrockConverse does not support 'jsonMode'.`);
     }
 
     let functionName = name ?? "extract";
-    let tools: ToolDefinition[];
-    if (isInteropZodSchema(schema)) {
-      tools = [
-        {
-          type: "function",
-          function: {
-            name: functionName,
-            description,
-            parameters: toJsonSchema(schema),
-          },
-        },
-      ];
-    } else {
-      if ("name" in schema) {
-        functionName = schema.name;
-      }
-      tools = [
-        {
-          type: "function",
-          function: {
-            name: functionName,
-            description,
-            parameters: schema,
-          },
-        },
-      ];
+    if (
+      !isInteropZodSchema(schema) &&
+      !isSerializableSchema(schema) &&
+      "name" in schema
+    ) {
+      functionName = schema.name;
     }
+
+    const asJsonSchema =
+      isInteropZodSchema(schema) || isSerializableSchema(schema)
+        ? toJsonSchema(schema)
+        : schema;
+
+    const tools: ToolDefinition[] = [
+      {
+        type: "function",
+        function: {
+          name: functionName,
+          description,
+          parameters: asJsonSchema,
+        },
+      },
+    ];
 
     const supportsToolChoiceValues = this.supportsToolChoiceValues ?? [];
     let toolChoiceObj: { tool_choice: string } | undefined;
@@ -1135,32 +1134,11 @@ export class ChatBedrockConverse
       }
     );
 
-    if (!includeRaw) {
-      return llm.pipe(outputParser).withConfig({
-        runName: "StructuredOutput",
-      }) as Runnable<BaseLanguageModelInput, RunOutput>;
-    }
-
-    const parserAssign = RunnablePassthrough.assign({
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      parsed: (input: any, config) => outputParser.invoke(input.raw, config),
-    });
-    const parserNone = RunnablePassthrough.assign({
-      parsed: () => null,
-    });
-    const parsedWithFallback = parserAssign.withFallbacks({
-      fallbacks: [parserNone],
-    });
-    return RunnableSequence.from<
-      BaseLanguageModelInput,
-      { raw: BaseMessage; parsed: RunOutput }
-    >([
-      {
-        raw: llm,
-      },
-      parsedWithFallback,
-    ]).withConfig({
-      runName: "StructuredOutputRunnable",
-    });
+    return assembleStructuredOutputPipeline(
+      llm,
+      outputParser,
+      includeRaw,
+      includeRaw ? "StructuredOutputRunnable" : "StructuredOutput"
+    );
   }
 }

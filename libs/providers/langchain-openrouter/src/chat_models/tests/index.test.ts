@@ -1,4 +1,6 @@
-import { describe, it, expect, beforeAll, afterAll } from "vitest";
+import { describe, it, expect, beforeAll, afterAll, vi, test } from "vitest";
+import { AIMessage } from "@langchain/core/messages";
+import { OutputParserException } from "@langchain/core/output_parsers";
 import { ChatOpenRouter } from "../index.js";
 import type { ChatOpenRouterCallOptions } from "../types.js";
 import { OpenRouterAuthError } from "../../utils/errors.js";
@@ -196,5 +198,288 @@ describe("getLsParams", () => {
     expect(ls.ls_temperature).toBe(0.3);
     expect(ls.ls_max_tokens).toBe(256);
     expect(ls.ls_stop).toEqual(["END"]);
+  });
+});
+
+describe("stream callbacks", () => {
+  it("passes chunk via handleLLMNewToken callback fields", async () => {
+    const model = new ChatOpenRouter({
+      model: "openai/gpt-4o-mini",
+      streamUsage: false,
+    });
+
+    const text = "Hi";
+    const chunkData = {
+      id: "chatcmpl-1",
+      choices: [
+        {
+          index: 0,
+          delta: { content: text },
+          finish_reason: null,
+        },
+      ],
+      model: "openai/gpt-4o-mini",
+    };
+
+    const encoder = new TextEncoder();
+    const stream = new ReadableStream<Uint8Array>({
+      start(controller) {
+        controller.enqueue(
+          encoder.encode(`data: ${JSON.stringify(chunkData)}\n\n`)
+        );
+        controller.close();
+      },
+    });
+    const response = new Response(stream, { status: 200 });
+    const fetchSpy = vi.spyOn(globalThis, "fetch").mockResolvedValue(response);
+
+    const tokens: string[] = [];
+    let receivedFields: Record<string, unknown> | undefined;
+
+    try {
+      const res = await model.stream("Hello", {
+        callbacks: [
+          {
+            handleLLMNewToken: (
+              token: string,
+              _idx?: number,
+              _runId?: string,
+              _parentRunId?: string,
+              fields?: Record<string, unknown>
+            ) => {
+              tokens.push(token);
+              receivedFields = fields;
+            },
+          },
+        ],
+      });
+
+      for await (const _chunk of res) {
+        // consume stream
+      }
+    } finally {
+      fetchSpy.mockRestore();
+    }
+
+    expect(tokens).toEqual([text]);
+    expect(receivedFields).toEqual(
+      expect.objectContaining({
+        chunk: expect.objectContaining({ text }),
+      })
+    );
+  });
+});
+
+function makeSerializableSchema() {
+  return {
+    "~standard": {
+      version: 1 as const,
+      vendor: "test",
+      validate: (value: unknown) => {
+        const obj = value as Record<string, unknown>;
+        if (
+          typeof obj === "object" &&
+          obj !== null &&
+          typeof obj.name === "string"
+        ) {
+          return { value: obj };
+        }
+        return {
+          issues: [{ message: "Expected object with string 'name' field" }],
+        };
+      },
+      jsonSchema: {
+        input: () => ({
+          type: "object",
+          properties: { name: { type: "string" } },
+          required: ["name"],
+        }),
+        output: () => ({
+          type: "object",
+          properties: { name: { type: "string" } },
+          required: ["name"],
+        }),
+      },
+    },
+  };
+}
+
+describe("withStructuredOutput with SerializableSchema", () => {
+  test("functionCalling with valid output parses correctly", async () => {
+    const model = new ChatOpenRouter({ model: "openai/gpt-4o" });
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    vi.spyOn(model as any, "invoke").mockResolvedValue(
+      new AIMessage({
+        content: "",
+        tool_calls: [
+          {
+            id: "call_123",
+            name: "extract",
+            args: { name: "Claude" },
+          },
+        ],
+      })
+    );
+
+    const schema = makeSerializableSchema();
+    const structured = model.withStructuredOutput(schema, {
+      method: "functionCalling",
+    });
+
+    const result = await structured.invoke("What is your name?");
+    expect(result).toEqual({ name: "Claude" });
+  });
+
+  test("functionCalling with invalid output throws OutputParserException", async () => {
+    const model = new ChatOpenRouter({ model: "openai/gpt-4o" });
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    vi.spyOn(model as any, "invoke").mockResolvedValue(
+      new AIMessage({
+        content: "",
+        tool_calls: [
+          {
+            id: "call_123",
+            name: "extract",
+            args: { wrong_field: 123 },
+          },
+        ],
+      })
+    );
+
+    const schema = makeSerializableSchema();
+    const structured = model.withStructuredOutput(schema, {
+      method: "functionCalling",
+    });
+
+    await expect(async () => {
+      await structured.invoke("What is your name?");
+    }).rejects.toThrow(OutputParserException);
+  });
+
+  test("functionCalling with custom name", async () => {
+    const model = new ChatOpenRouter({ model: "openai/gpt-4o" });
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    vi.spyOn(model as any, "invoke").mockResolvedValue(
+      new AIMessage({
+        content: "",
+        tool_calls: [
+          {
+            id: "call_123",
+            name: "PersonInfo",
+            args: { name: "Alice" },
+          },
+        ],
+      })
+    );
+
+    const schema = makeSerializableSchema();
+    const structured = model.withStructuredOutput(schema, {
+      method: "functionCalling",
+      name: "PersonInfo",
+    });
+
+    const result = await structured.invoke("Who is this?");
+    expect(result).toEqual({ name: "Alice" });
+  });
+
+  test("functionCalling with includeRaw returns raw and parsed", async () => {
+    const rawMessage = new AIMessage({
+      content: "",
+      tool_calls: [
+        {
+          id: "call_123",
+          name: "extract",
+          args: { name: "Bob" },
+        },
+      ],
+    });
+    const model = new ChatOpenRouter({ model: "openai/gpt-4o" });
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    vi.spyOn(model as any, "invoke").mockResolvedValue(rawMessage);
+
+    const schema = makeSerializableSchema();
+    const structured = model.withStructuredOutput(schema, {
+      method: "functionCalling",
+      includeRaw: true,
+    });
+
+    const result = await structured.invoke("Tell me a name");
+    expect(result).toHaveProperty("raw");
+    expect(result).toHaveProperty("parsed");
+    expect(result.parsed).toEqual({ name: "Bob" });
+  });
+
+  test("jsonMode with valid output parses correctly", async () => {
+    const model = new ChatOpenRouter({ model: "openai/gpt-4o" });
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    vi.spyOn(model as any, "invoke").mockResolvedValue(
+      new AIMessage({
+        content: '{"name": "Alice"}',
+      })
+    );
+
+    const schema = makeSerializableSchema();
+    const structured = model.withStructuredOutput(schema, {
+      method: "jsonMode",
+    });
+
+    const result = await structured.invoke("What is your name?");
+    expect(result).toEqual({ name: "Alice" });
+  });
+
+  test("jsonMode with invalid output throws OutputParserException", async () => {
+    const model = new ChatOpenRouter({ model: "openai/gpt-4o" });
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    vi.spyOn(model as any, "invoke").mockResolvedValue(
+      new AIMessage({
+        content: '{"wrong_field": 123}',
+      })
+    );
+
+    const schema = makeSerializableSchema();
+    const structured = model.withStructuredOutput(schema, {
+      method: "jsonMode",
+    });
+
+    await expect(async () => {
+      await structured.invoke("What is your name?");
+    }).rejects.toThrow(OutputParserException);
+  });
+
+  test("jsonSchema with valid output parses correctly", async () => {
+    const model = new ChatOpenRouter({ model: "openai/gpt-4o-mini" });
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    vi.spyOn(model as any, "invoke").mockResolvedValue(
+      new AIMessage({
+        content: '{"name": "Eve"}',
+      })
+    );
+
+    const schema = makeSerializableSchema();
+    const structured = model.withStructuredOutput(schema, {
+      method: "jsonSchema",
+    });
+
+    const result = await structured.invoke("What is your name?");
+    expect(result).toEqual({ name: "Eve" });
+  });
+
+  test("jsonSchema with invalid output throws OutputParserException", async () => {
+    const model = new ChatOpenRouter({ model: "openai/gpt-4o-mini" });
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    vi.spyOn(model as any, "invoke").mockResolvedValue(
+      new AIMessage({
+        content: '{"wrong_field": 123}',
+      })
+    );
+
+    const schema = makeSerializableSchema();
+    const structured = model.withStructuredOutput(schema, {
+      method: "jsonSchema",
+    });
+
+    await expect(async () => {
+      await structured.invoke("What is your name?");
+    }).rejects.toThrow(OutputParserException);
   });
 });

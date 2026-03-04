@@ -59,6 +59,7 @@ import type {
   ToolRuntime,
 } from "./types.js";
 import { type JSONSchema, validatesOnlyStrings } from "../utils/json_schema.js";
+import { consumeAsyncGenerator, isAsyncGenerator } from "../runnables/iter.js";
 
 export type {
   BaseDynamicToolInput,
@@ -159,7 +160,7 @@ export abstract class StructuredTool<
     arg: SchemaOutputT,
     runManager?: CallbackManagerForToolRun,
     parentConfig?: ToolRunnableConfig
-  ): Promise<ToolOutputT>;
+  ): Promise<ToolOutputT> | AsyncGenerator<unknown, ToolOutputT>;
 
   /**
    * Invokes the tool with the provided input and configuration.
@@ -276,6 +277,17 @@ export abstract class StructuredTool<
       this.metadata,
       { verbose: this.verbose }
     );
+
+    let toolCallId: string | undefined;
+    // Extract toolCallId ONLY if the original arg was a ToolCall
+    if (_isToolCall(arg)) {
+      toolCallId = arg.id;
+    }
+    // Or if it was provided in the config's toolCall property
+    if (!toolCallId && _configHasToolCallId(config)) {
+      toolCallId = config.toolCall.id;
+    }
+
     const runManager = await callbackManager_?.handleToolStart(
       this.toJSON(),
       // Log the original raw input arg
@@ -284,17 +296,28 @@ export abstract class StructuredTool<
       undefined,
       undefined,
       undefined,
-      config.runName
+      config.runName,
+      toolCallId
     );
     delete config.runId;
+
     let result;
     try {
-      // Pass the correctly typed parsed input to _call
-      result = await this._call(parsed, runManager, config);
+      const raw = await this._call(parsed, runManager, config);
+      result = isAsyncGenerator(raw)
+        ? await consumeAsyncGenerator(raw, async (chunk) => {
+            try {
+              await runManager?.handleToolEvent(chunk);
+            } catch (streamError) {
+              await runManager?.handleToolError(streamError);
+            }
+          })
+        : raw;
     } catch (e) {
       await runManager?.handleToolError(e);
       throw e;
     }
+
     let content;
     let artifact;
     if (this.responseFormat === "content_and_artifact") {
@@ -309,16 +332,6 @@ export abstract class StructuredTool<
       }
     } else {
       content = result;
-    }
-
-    let toolCallId: string | undefined;
-    // Extract toolCallId ONLY if the original arg was a ToolCall
-    if (_isToolCall(arg)) {
-      toolCallId = arg.id;
-    }
-    // Or if it was provided in the config's toolCall property
-    if (!toolCallId && _configHasToolCallId(config)) {
-      toolCallId = config.toolCall.id;
     }
 
     const formattedOutput = _formatToolOutput<ToolOutputT>({
@@ -429,11 +442,11 @@ export class DynamicTool<
   }
 
   /** @ignore */
-  async _call(
+  _call(
     input: string, // DynamicTool's _call specifically expects a string after schema transformation
     runManager?: CallbackManagerForToolRun,
     parentConfig?: ToolRunnableConfig
-  ): Promise<ToolOutputT> {
+  ): Promise<ToolOutputT> | AsyncGenerator<unknown, ToolOutputT> {
     return this.func(input, runManager, parentConfig);
   }
 }
@@ -514,7 +527,7 @@ export class DynamicStructuredTool<
     >[0],
     runManager?: CallbackManagerForToolRun,
     parentConfig?: RunnableConfig
-  ): Promise<ToolOutputT> {
+  ): Promise<ToolOutputT> | AsyncGenerator<unknown, ToolOutputT> {
     return this.func(arg, runManager, parentConfig);
   }
 }

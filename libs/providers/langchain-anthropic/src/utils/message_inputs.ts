@@ -511,23 +511,26 @@ export function _convertMessagesToAnthropicPayload(
         }
       } else {
         const { content } = message;
-        const hasMismatchedToolCalls = !message.tool_calls.every((toolCall) =>
-          content.find(
-            (contentPart) =>
-              (contentPart.type === "tool_use" ||
-                contentPart.type === "input_json_delta" ||
-                contentPart.type === "server_tool_use") &&
-              contentPart.id === toolCall.id
-          )
+        const formattedContent = _formatContent(message, message.tool_calls);
+        const formattedContentArr = Array.isArray(formattedContent)
+          ? formattedContent
+          : [{ type: "text" as const, text: formattedContent }];
+        const missingToolCalls = message.tool_calls.filter(
+          (toolCall) =>
+            !content.find(
+              (contentPart) =>
+                (contentPart.type === "tool_use" ||
+                  contentPart.type === "input_json_delta" ||
+                  contentPart.type === "server_tool_use") &&
+                contentPart.id === toolCall.id
+            )
         );
-        if (hasMismatchedToolCalls) {
-          console.warn(
-            `The "tool_calls" field on a message is only respected if content is a string.`
-          );
-        }
         return {
           role,
-          content: _formatContent(message, message.tool_calls),
+          content: [
+            ...formattedContentArr,
+            ...missingToolCalls.map(_convertLangChainToolCallToAnthropic),
+          ],
         };
       }
     } else {

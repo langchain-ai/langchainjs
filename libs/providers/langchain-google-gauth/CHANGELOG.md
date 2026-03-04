@@ -1,5 +1,35 @@
 # @langchain/google-gauth
 
+## 2.1.24
+
+### Patch Changes
+
+- Updated dependencies [[`745b09a`](https://github.com/langchain-ai/langchainjs/commit/745b09a1b0c92643cbc99e773012924948438629)]:
+  - @langchain/google-common@2.1.24
+
+## 2.1.23
+
+### Patch Changes
+
+- Updated dependencies [[`d43194b`](https://github.com/langchain-ai/langchainjs/commit/d43194b625f19acf79cbe958300dadb7b0a6a89d)]:
+  - @langchain/google-common@2.1.23
+
+## 2.1.22
+
+### Patch Changes
+
+- Updated dependencies [[`3590ee3`](https://github.com/langchain-ai/langchainjs/commit/3590ee3229a9a55b0c818c1e396f6445b2368103)]:
+  - @langchain/google-common@2.1.22
+
+## 2.1.21
+
+### Patch Changes
+
+- [#10106](https://github.com/langchain-ai/langchainjs/pull/10106) [`9f30267`](https://github.com/langchain-ai/langchainjs/commit/9f30267e95a2a42fac71f1d3674b84c5a190dbbc) Thanks [@hntrl](https://github.com/hntrl)! - Add package version metadata to runnable traces. Each package now stamps its version in `this.metadata.versions` at construction time, making version info available in LangSmith trace metadata.
+
+- Updated dependencies [[`9f30267`](https://github.com/langchain-ai/langchainjs/commit/9f30267e95a2a42fac71f1d3674b84c5a190dbbc), [`e0e5a02`](https://github.com/langchain-ai/langchainjs/commit/e0e5a02ea1b855ad7b8d562d1c7770f984100a5d)]:
+  - @langchain/google-common@2.1.21
+
 ## 2.1.20
 
 ### Patch Changes

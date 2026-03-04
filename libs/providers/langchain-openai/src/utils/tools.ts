@@ -31,13 +31,15 @@ export function _convertToOpenAITool(
      */
     strict?: boolean;
   }
-): OpenAIClient.ChatCompletionTool {
-  let toolDef: OpenAIClient.ChatCompletionTool | undefined;
+): OpenAIClient.Chat.Completions.ChatCompletionFunctionTool {
+  let toolDef: OpenAIClient.Chat.Completions.ChatCompletionFunctionTool;
 
   if (isLangChainTool(tool)) {
-    toolDef = formatToOpenAITool(tool);
+    toolDef = formatToOpenAITool(
+      tool
+    ) as OpenAIClient.Chat.Completions.ChatCompletionFunctionTool;
   } else {
-    toolDef = tool as ToolDefinition;
+    toolDef = tool as OpenAIClient.Chat.Completions.ChatCompletionFunctionTool;
   }
 
   if (fields?.strict !== undefined) {

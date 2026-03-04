@@ -1,5 +1,38 @@
 # @langchain/anthropic
 
+## 1.3.22
+
+### Patch Changes
+
+- [#10207](https://github.com/langchain-ai/langchainjs/pull/10207) [`acab2f7`](https://github.com/langchain-ai/langchainjs/commit/acab2f75d6661b17b5f5f5eceb113427f7d32036) Thanks [@colifran](https://github.com/colifran)! - feat(anthropic): implement standard schema support for structured output
+
+- Updated dependencies [[`96c630d`](https://github.com/langchain-ai/langchainjs/commit/96c630dfd009f2546d5bc36f5067ff868bb4067f), [`a8b9ccc`](https://github.com/langchain-ai/langchainjs/commit/a8b9ccca5a85984a5a30008acd09f9991e591638), [`a1f22bb`](https://github.com/langchain-ai/langchainjs/commit/a1f22bba907731a18dca23c31cec5333444a3f55)]:
+  - @langchain/core@1.1.30
+
+## 1.3.21
+
+### Patch Changes
+
+- [#10106](https://github.com/langchain-ai/langchainjs/pull/10106) [`9f30267`](https://github.com/langchain-ai/langchainjs/commit/9f30267e95a2a42fac71f1d3674b84c5a190dbbc) Thanks [@hntrl](https://github.com/hntrl)! - Add package version metadata to runnable traces. Each package now stamps its version in `this.metadata.versions` at construction time, making version info available in LangSmith trace metadata.
+
+- [#10166](https://github.com/langchain-ai/langchainjs/pull/10166) [`e9c41f0`](https://github.com/langchain-ai/langchainjs/commit/e9c41f0ab9ea6e7fdeceffa9063a422d4fb62777) Thanks [@kanweiwei](https://github.com/kanweiwei)! - fix(anthropic): only set topP when defined to avoid API error
+
+- Updated dependencies [[`9f30267`](https://github.com/langchain-ai/langchainjs/commit/9f30267e95a2a42fac71f1d3674b84c5a190dbbc), [`403a99f`](https://github.com/langchain-ai/langchainjs/commit/403a99fd826383f30300809ae077e1c967023520), [`3b1fd54`](https://github.com/langchain-ai/langchainjs/commit/3b1fd5458a4aa29c398122829f383f21b5ac39da), [`77bd982`](https://github.com/langchain-ai/langchainjs/commit/77bd98274a885e947d76f7a9c6dd0b3763453218)]:
+  - @langchain/core@1.1.29
+
+## 1.3.20
+
+### Patch Changes
+
+- [#10117](https://github.com/langchain-ai/langchainjs/pull/10117) [`66df7fa`](https://github.com/langchain-ai/langchainjs/commit/66df7fa31f43be9eb148bbe0768d26e6d67d6216) Thanks [@hntrl](https://github.com/hntrl)! - fix(anthropic): convert tool_calls to tool_use blocks when AIMessage content is an empty array
+
+  When `AIMessage.content` was an empty array `[]` with `tool_calls` present, the tool calls were silently dropped during message formatting. This caused Anthropic API requests to fail with a 400 error. The array content branch now appends any tool_calls not already represented in the content array as `tool_use` blocks, matching the behavior of the string content path.
+
+- [#10108](https://github.com/langchain-ai/langchainjs/pull/10108) [`e7576ee`](https://github.com/langchain-ai/langchainjs/commit/e7576ee9e6408c399c08d271db43f63e622da10f) Thanks [@hntrl](https://github.com/hntrl)! - fix: replace retired Anthropic model IDs with active replacements
+  - Update default model in ChatAnthropic from `claude-3-5-sonnet-latest` to `claude-sonnet-4-5-20250929`
+  - Regenerate model profiles with latest data from models.dev API
+  - Replace retired `claude-3-5-haiku-20241022`, `claude-3-7-sonnet-20250219`, `claude-3-5-sonnet-20240620`, and `claude-3-5-sonnet-20241022` in tests, docstrings, and examples
+
 ## 1.3.19
 
 ### Patch Changes

@@ -122,6 +122,70 @@ test("Deserialisation and serialisation of tool_call_id", async () => {
   expect(deserialized).toEqual(message);
 });
 
+test("_mergeLists merges blocks by numeric index", () => {
+  const chunk1 = new AIMessageChunk({
+    content: [
+      {
+        type: "reasoning",
+        index: 0,
+        reasoning: "**Expl",
+      },
+    ],
+  });
+
+  const chunk2 = new AIMessageChunk({
+    content: [
+      {
+        type: "reasoning",
+        index: 0,
+        reasoning: "oring",
+      },
+    ],
+  });
+
+  const merged = chunk1.concat(chunk2);
+  expect(Array.isArray(merged.content)).toBe(true);
+  expect(merged.content).toEqual([
+    {
+      type: "reasoning",
+      index: 0,
+      reasoning: "**Exploring",
+    },
+  ]);
+});
+
+test("_mergeLists merges blocks by string index", () => {
+  const chunk1 = new AIMessageChunk({
+    content: [
+      {
+        type: "reasoning",
+        index: "lc_rs_305f30",
+        reasoning: "**Expl",
+      },
+    ],
+  });
+
+  const chunk2 = new AIMessageChunk({
+    content: [
+      {
+        type: "reasoning",
+        index: "lc_rs_305f30",
+        reasoning: "oring",
+      },
+    ],
+  });
+
+  const merged = chunk1.concat(chunk2);
+  expect(Array.isArray(merged.content)).toBe(true);
+  expect(merged.content).toEqual([
+    {
+      type: "reasoning",
+      index: "lc_rs_305f30",
+      reasoning: "**Exploring",
+    },
+  ]);
+});
+
 test("Deserialisation and serialisation of messages with ID", async () => {
   const config = {
     importMap: { messages: { AIMessage } },
@@ -884,6 +948,59 @@ describe("usage_metadata serialized", () => {
     expect(jsonConcatenatedAIMessageChunk).toContain("input_tokens");
     expect(jsonConcatenatedAIMessageChunk).toContain("output_tokens");
     expect(jsonConcatenatedAIMessageChunk).toContain("total_tokens");
+  });
+
+  test("AIMessage usage_metadata survives serialization round-trip", async () => {
+    const config = {
+      importMap: { messages: { AIMessage } },
+      optionalImportEntrypoints: [],
+      optionalImportsMap: {},
+      secretsMap: {},
+    };
+
+    const message = new AIMessage({
+      content: "Hello",
+      usage_metadata: {
+        input_tokens: 100,
+        output_tokens: 50,
+        total_tokens: 150,
+      },
+    });
+
+    const deserialized: AIMessage = await load(JSON.stringify(message), config);
+    expect(deserialized.usage_metadata).toEqual({
+      input_tokens: 100,
+      output_tokens: 50,
+      total_tokens: 150,
+    });
+  });
+
+  test("AIMessageChunk usage_metadata survives serialization round-trip", async () => {
+    const config = {
+      importMap: { messages: { AIMessageChunk } },
+      optionalImportEntrypoints: [],
+      optionalImportsMap: {},
+      secretsMap: {},
+    };
+
+    const message = new AIMessageChunk({
+      content: "Hello",
+      usage_metadata: {
+        input_tokens: 100,
+        output_tokens: 50,
+        total_tokens: 150,
+      },
+    });
+
+    const deserialized: AIMessageChunk = await load(
+      JSON.stringify(message),
+      config
+    );
+    expect(deserialized.usage_metadata).toEqual({
+      input_tokens: 100,
+      output_tokens: 50,
+      total_tokens: 150,
+    });
   });
 });
 
