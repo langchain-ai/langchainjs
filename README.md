@@ -70,6 +70,14 @@ LangChain.js is written in TypeScript and can be used in:
 - [LangChain Forum](https://forum.langchain.com): Connect with the community and share all of your technical questions, ideas, and feedback.
 - [Chat LangChain](https://chat.langchain.com): Ask questions & chat with our documentation.
 
+## 🛠️ Community Tools & Integrations
+
+Third-party toolkits built on top of LangChain.js.
+
+| Toolkit | npm | Description |
+|---------|-----|-------------|
+| [agentwallet-langchain](https://www.npmjs.com/package/agentwallet-langchain) | `agentwallet-langchain` | Non-custodial wallet toolkit for AI agents. Tools: `AgentWalletBalanceTool`, `AgentWalletTransferTool`, `AgentWalletSwapTool`, `AgentWalletBridgeTool`, `AgentWalletX402Tool`. The `AgentWalletToolkit` bundles everything and works with LangGraph's `ToolNode`. |
+
 ## 💁 Contributing
 
 As an open-source project in a rapidly developing field, we are extremely open to contributions, whether it be in the form of a new feature, improved infrastructure, or better documentation.
