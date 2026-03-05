@@ -1,6 +1,6 @@
 ---
-"@langchain/core": minor
-"langchain": minor
+"@langchain/core": patch
+"langchain": patch
 ---
 
 feat: add custom Vitest matchers for LangChain message and tool call assertions
