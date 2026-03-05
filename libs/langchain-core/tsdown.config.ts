@@ -73,7 +73,7 @@ export default getBuildConfig({
     "./src/utils/testing/index.ts",
     "./src/utils/tiktoken.ts",
     "./src/utils/types/index.ts",
-    "./src/testing/matchers.ts",
+    "./src/testing/index.ts",
     "./src/vectorstores.ts",
   ],
   define: { __PKG_VERSION__: JSON.stringify(pkg.version) },

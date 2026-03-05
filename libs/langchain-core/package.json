@@ -516,15 +516,15 @@
         "default": "./dist/structured_query/index.js"
       }
     },
-    "./testing/matchers": {
-      "input": "./src/testing/matchers.ts",
+    "./testing": {
+      "input": "./src/testing/index.ts",
       "require": {
-        "types": "./dist/testing/matchers.d.cts",
-        "default": "./dist/testing/matchers.cjs"
+        "types": "./dist/testing/index.d.cts",
+        "default": "./dist/testing/index.cjs"
       },
       "import": {
-        "types": "./dist/testing/matchers.d.ts",
-        "default": "./dist/testing/matchers.js"
+        "types": "./dist/testing/index.d.ts",
+        "default": "./dist/testing/index.js"
       }
     },
     "./tools": {
