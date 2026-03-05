@@ -1,3 +1,4 @@
+import { test, expect } from "vitest";
 import { ChatModelUnitTests } from "@langchain/standard-tests/vitest";
 import { AIMessageChunk } from "@langchain/core/messages";
 import { ChatCohere, ChatCohereCallOptions } from "../chat_models.js";
@@ -31,3 +32,10 @@ class ChatCohereStandardUnitTests extends ChatModelUnitTests<
 
 const testClass = new ChatCohereStandardUnitTests();
 testClass.runTests("ChatCohereStandardUnitTests");
+
+test("ChatCohere accepts model string shorthand", () => {
+  process.env.COHERE_API_KEY = "test";
+  const model = new ChatCohere("command-r", { temperature: 0 });
+  expect(model.model).toBe("command-r");
+  expect(model.temperature).toBe(0);
+});

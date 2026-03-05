@@ -13,6 +13,7 @@ import {
   type InteropZodType,
   interopSafeParseAsync,
 } from "../../utils/types/zod.js";
+import { SerializableSchema } from "../../utils/standard_schema.js";
 
 export type ParsedToolCall = {
   id?: string;
@@ -121,7 +122,7 @@ export function makeInvalidToolCall(
  * Class for parsing the output of a tool-calling LLM into a JSON object.
  */
 export class JsonOutputToolsParser<
-  T
+  T,
 > extends BaseCumulativeTransformOutputParser<T> {
   static lc_name() {
     return "JsonOutputToolsParser";
@@ -208,23 +209,30 @@ type JsonOutputKeyToolsParserParamsBase = {
 
 type JsonOutputKeyToolsParserParamsV3<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  T extends Record<string, any> = Record<string, any>
+  T extends Record<string, any> = Record<string, any>,
 > = { zodSchema?: z3.ZodType<T> } & JsonOutputKeyToolsParserParamsBase;
 
 type JsonOutputKeyToolsParserParamsV4<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  T extends Record<string, any> = Record<string, any>
+  T extends Record<string, any> = Record<string, any>,
 > = { zodSchema?: z4.$ZodType<T, T> } & JsonOutputKeyToolsParserParamsBase;
 
 export type JsonOutputKeyToolsParserParamsInterop<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  T extends Record<string, any> = Record<string, any>
+  T extends Record<string, any> = Record<string, any>,
 > = { zodSchema?: InteropZodType<T> } & JsonOutputKeyToolsParserParamsBase;
+
+export type JsonOutputKeyToolsParserParamsSerializable<
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  T extends Record<string, any> = Record<string, any>,
+> = {
+  serializableSchema?: SerializableSchema<T>;
+} & JsonOutputKeyToolsParserParamsBase;
 
 // Use Zod 3 for backwards compatibility
 export type JsonOutputKeyToolsParserParams<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  T extends Record<string, any> = Record<string, any>
+  T extends Record<string, any> = Record<string, any>,
 > = JsonOutputKeyToolsParserParamsV3<T>;
 
 /**
@@ -233,7 +241,7 @@ export type JsonOutputKeyToolsParserParams<
  */
 export class JsonOutputKeyToolsParser<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  T extends Record<string, any> = Record<string, any>
+  T extends Record<string, any> = Record<string, any>,
 > extends JsonOutputToolsParser<T> {
   static lc_name() {
     return "JsonOutputKeyToolsParser";
@@ -253,6 +261,8 @@ export class JsonOutputKeyToolsParser<
 
   zodSchema?: InteropZodType<T>;
 
+  serializableSchema?: SerializableSchema<T>;
+
   constructor(params: JsonOutputKeyToolsParserParamsV3<T>);
 
   constructor(params: JsonOutputKeyToolsParserParamsV4<T>);
@@ -264,14 +274,35 @@ export class JsonOutputKeyToolsParser<
       | JsonOutputKeyToolsParserParamsV3<T>
       | JsonOutputKeyToolsParserParamsV4<T>
       | JsonOutputKeyToolsParserParamsInterop<T>
+      | JsonOutputKeyToolsParserParamsSerializable<T>
   ) {
     super(params);
     this.keyName = params.keyName;
     this.returnSingle = params.returnSingle ?? this.returnSingle;
-    this.zodSchema = params.zodSchema;
+    if ("zodSchema" in params) {
+      this.zodSchema = params.zodSchema;
+    }
+    if ("serializableSchema" in params) {
+      this.serializableSchema = params.serializableSchema;
+    }
   }
 
   protected async _validateResult(result: unknown): Promise<T> {
+    if (this.serializableSchema !== undefined) {
+      const validated =
+        await this.serializableSchema["~standard"].validate(result);
+      if (validated.issues) {
+        throw new OutputParserException(
+          `Failed to parse. Text: "${JSON.stringify(
+            result,
+            null,
+            2
+          )}". Error: ${JSON.stringify(validated.issues)}`,
+          JSON.stringify(result, null, 2)
+        );
+      }
+      return validated.value as T;
+    }
     if (this.zodSchema === undefined) {
       return result as T;
     }

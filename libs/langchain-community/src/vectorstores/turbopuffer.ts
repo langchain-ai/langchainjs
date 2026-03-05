@@ -9,13 +9,22 @@ import { chunkArray } from "@langchain/core/utils/chunk_array";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import { VectorStore } from "@langchain/core/vectorstores";
 
+/**
+ * @deprecated Use `TurbopufferDistanceMetric` from `@langchain/turbopuffer` instead.
+ */
 export type TurbopufferDistanceMetric = "cosine_distance" | "euclidean_squared";
 
+/**
+ * @deprecated Use `TurbopufferFilter` from `@langchain/turbopuffer` instead.
+ */
 export type TurbopufferFilterType = Record<
   string,
   Array<[string, string[] | string]>
 >;
 
+/**
+ * @deprecated Use `TurbopufferParams` from `@langchain/turbopuffer` instead.
+ */
 export interface TurbopufferParams extends AsyncCallerParams {
   apiKey?: string;
   namespace?: string;
@@ -24,6 +33,9 @@ export interface TurbopufferParams extends AsyncCallerParams {
   batchSize?: number;
 }
 
+/**
+ * @deprecated Use `@langchain/turbopuffer` instead.
+ */
 export interface TurbopufferQueryResult {
   dist: number;
   id: number;
@@ -31,6 +43,11 @@ export interface TurbopufferQueryResult {
   attributes: Record<string, string>;
 }
 
+/**
+ * @deprecated Use `TurbopufferVectorStore` from `@langchain/turbopuffer` instead.
+ * The new package uses the official SDK and supports document deletion, region
+ * configuration, and returns document IDs in search results.
+ */
 export class TurbopufferVectorStore extends VectorStore {
   declare FilterType: TurbopufferFilterType;
 

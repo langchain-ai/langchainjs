@@ -1,5 +1,11 @@
-import { test, expect, describe } from "vitest";
-import { AIMessage, HumanMessage, ToolMessage } from "@langchain/core/messages";
+import { test, expect, describe, vi } from "vitest";
+import {
+  AIMessage,
+  AIMessageChunk,
+  HumanMessage,
+  ToolMessage,
+} from "@langchain/core/messages";
+import { OutputParserException } from "@langchain/core/output_parsers";
 import {
   ChatMistralAI,
   convertMessagesToMistralMessages,
@@ -9,6 +15,7 @@ import {
   _convertToolCallIdToMistralCompatible,
   _mistralContentChunkToMessageContentComplex,
 } from "../utils.js";
+import { ChatCompletionRequest } from "@mistralai/mistralai/models/components/chatcompletionrequest.js";
 
 describe("Mistral Tool Call ID Conversion", () => {
   test("valid and invalid Mistral tool call IDs", () => {
@@ -42,6 +49,21 @@ test("Serialization", () => {
   expect(JSON.stringify(model)).toEqual(
     `{"lc":1,"type":"constructor","id":["langchain","chat_models","mistralai","ChatMistralAI"],"kwargs":{"mistral_api_key":{"lc":1,"type":"secret","id":["MISTRAL_API_KEY"]}}}`
   );
+});
+
+test("Constructor supports string model shorthand", () => {
+  const shorthand = new ChatMistralAI("mistral-small-latest", {
+    apiKey: "test-api-key",
+    temperature: 0.2,
+  });
+  const explicit = new ChatMistralAI({
+    apiKey: "test-api-key",
+    model: "mistral-small-latest",
+    temperature: 0.2,
+  });
+
+  expect(shorthand.model).toBe(explicit.model);
+  expect(shorthand.temperature).toBe(explicit.temperature);
 });
 
 /**
@@ -87,4 +109,240 @@ test("convertMessagesToMistralMessages converts roles and filters toolCalls", ()
 
   const toolMsg = converted.find((m) => m.role === "tool");
   expect(toolMsg?.toolCallId).toBe("123456789");
+});
+
+describe("withStructuredOutput - StandardSchema", () => {
+  function makeSerializableSchema() {
+    return {
+      "~standard": {
+        version: 1 as const,
+        vendor: "test",
+        validate: (value: unknown) => {
+          const v = value as Record<string, unknown>;
+          if (v && typeof v === "object" && "name" in v) {
+            return { value: v as { name: string } };
+          }
+          return {
+            issues: [{ message: "Expected object with name" }],
+          };
+        },
+        jsonSchema: {
+          input: () => ({
+            type: "object" as const,
+            properties: {
+              name: { type: "string", description: "A name" },
+            },
+            required: ["name"],
+          }),
+          output: () => ({ type: "object" as const, properties: {} }),
+        },
+      },
+    };
+  }
+
+  test("functionCalling with valid output parses correctly", async () => {
+    const model = new ChatMistralAI({
+      model: "mistral-small-latest",
+      apiKey: "testing",
+    });
+    vi
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      .spyOn(model as any, "invoke")
+      .mockResolvedValue(
+        new AIMessage({
+          content: "",
+          tool_calls: [
+            {
+              name: "extract",
+              args: { name: "cobalt" },
+              id: "1",
+              type: "tool_call",
+            },
+          ],
+        })
+      );
+
+    const schema = makeSerializableSchema();
+    const structured = model.withStructuredOutput(schema, {
+      name: "extract",
+    });
+
+    const result = await structured.invoke("What?");
+    expect(result).toEqual({ name: "cobalt" });
+  });
+
+  test("functionCalling with invalid output throws OutputParserException", async () => {
+    const model = new ChatMistralAI({
+      model: "mistral-small-latest",
+      apiKey: "testing",
+    });
+    vi
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      .spyOn(model as any, "invoke")
+      .mockResolvedValue(
+        new AIMessageChunk({
+          content: "",
+          tool_calls: [
+            {
+              name: "extract",
+              args: { invalid: true },
+              id: "1",
+              type: "tool_call",
+            },
+          ],
+        })
+      );
+
+    const schema = makeSerializableSchema();
+    const structured = model.withStructuredOutput(schema, {
+      name: "extract",
+    });
+
+    await expect(async () => {
+      await structured.invoke("What?");
+    }).rejects.toThrow(OutputParserException);
+  });
+
+  test("functionCalling with custom name", async () => {
+    const model = new ChatMistralAI({
+      model: "mistral-small-latest",
+      apiKey: "testing",
+    });
+    vi
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      .spyOn(model as any, "invoke")
+      .mockResolvedValue(
+        new AIMessage({
+          content: "",
+          tool_calls: [
+            {
+              name: "GetName",
+              args: { name: "test" },
+              id: "1",
+              type: "tool_call",
+            },
+          ],
+        })
+      );
+
+    const schema = makeSerializableSchema();
+    const structured = model.withStructuredOutput(schema, {
+      name: "GetName",
+    });
+
+    const result = await structured.invoke("What?");
+    expect(result).toEqual({ name: "test" });
+  });
+
+  test("functionCalling with includeRaw returns raw and parsed", async () => {
+    const mockResponse = new AIMessage({
+      content: "",
+      tool_calls: [
+        {
+          name: "extract",
+          args: { name: "cobalt" },
+          id: "1",
+          type: "tool_call",
+        },
+      ],
+    });
+    const model = new ChatMistralAI({
+      model: "mistral-small-latest",
+      apiKey: "testing",
+    });
+    vi
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      .spyOn(model as any, "invoke")
+      .mockResolvedValue(mockResponse);
+
+    const schema = makeSerializableSchema();
+    const structured = model.withStructuredOutput(schema, {
+      name: "extract",
+      includeRaw: true,
+    });
+
+    const result = await structured.invoke("What?");
+    expect(result).toHaveProperty("raw");
+    expect(result).toHaveProperty("parsed");
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    expect((result as any).parsed).toEqual({ name: "cobalt" });
+  });
+});
+
+describe("Streaming", () => {
+  test("streaming request includes stream: true parameter", async () => {
+    // Mock the Mistral SDK to capture the request parameters
+    const mockStreamFn = vi.fn().mockImplementation(async function* () {
+      yield {
+        data: {
+          id: "test-id",
+          object: "chat.completion.chunk",
+          created: Date.now(),
+          model: "mistral-small-latest",
+          choices: [
+            {
+              index: 0,
+              delta: { role: "assistant", content: "Hello" },
+              finishReason: null,
+            },
+          ],
+        },
+      };
+      yield {
+        data: {
+          id: "test-id",
+          object: "chat.completion.chunk",
+          created: Date.now(),
+          model: "mistral-small-latest",
+          choices: [
+            {
+              index: 0,
+              delta: { content: " world!" },
+              finishReason: "stop",
+            },
+          ],
+        },
+      };
+    });
+
+    const model = new ChatMistralAI({
+      apiKey: "test-api-key",
+      model: "mistral-small-latest",
+    });
+
+    // Override completionWithRetry to capture the call
+    const originalCompletionWithRetry = model.completionWithRetry.bind(model);
+    let capturedStreamParam = false;
+
+    model.completionWithRetry = async function (
+      input: unknown,
+      streaming: boolean
+    ) {
+      if (streaming) {
+        // Verify that when we call stream, we would pass stream: true
+        // The actual fix adds { ...input, stream: true } in the implementation
+        capturedStreamParam = true;
+        return mockStreamFn();
+      }
+      return originalCompletionWithRetry(
+        input as ChatCompletionRequest,
+        streaming
+      );
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } as any;
+
+    // Consume the stream
+    const chunks: string[] = [];
+    for await (const chunk of model._streamResponseChunks(
+      [new HumanMessage("Hello")],
+      {}
+    )) {
+      chunks.push(chunk.text);
+    }
+
+    // Verify streaming was called
+    expect(capturedStreamParam).toBe(true);
+    expect(chunks.length).toBe(2);
+    expect(chunks.join("")).toBe("Hello world!");
+  });
 });

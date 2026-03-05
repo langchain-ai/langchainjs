@@ -1,6 +1,7 @@
 import { JSDOM, VirtualConsole } from "jsdom";
 import { Document } from "@langchain/core/documents";
 import { AsyncCaller } from "@langchain/core/utils/async_caller";
+import { isSameOrigin, validateSafeUrl } from "@langchain/core/utils/ssrf";
 import {
   BaseDocumentLoader,
   DocumentLoader,
@@ -8,6 +9,9 @@ import {
 
 const virtualConsole = new VirtualConsole();
 virtualConsole.on("error", () => {});
+
+const MAX_REDIRECTS = 10;
+const REDIRECT_CODES = new Set([301, 302, 303, 307, 308]);
 
 export interface RecursiveUrlLoaderOptions {
   excludeDirs?: string[];
@@ -58,9 +62,32 @@ export class RecursiveUrlLoader
     options: { timeout: number } & RequestInit
   ): Promise<Response> {
     const { timeout, ...rest } = options;
-    return this.caller.call(() =>
-      fetch(resource, { ...rest, signal: AbortSignal.timeout(timeout) })
-    );
+    let currentUrl = resource;
+
+    for (let i = 0; i <= MAX_REDIRECTS; i++) {
+      validateSafeUrl(currentUrl, { allowHttp: true });
+
+      const response = await this.caller.call(() =>
+        fetch(currentUrl, {
+          ...rest,
+          redirect: "manual",
+          signal: AbortSignal.timeout(timeout),
+        })
+      );
+
+      if (REDIRECT_CODES.has(response.status)) {
+        const location = response.headers.get("location");
+        if (!location) {
+          throw new Error("Redirect response missing Location header");
+        }
+        currentUrl = new URL(location, currentUrl).href;
+        continue;
+      }
+
+      return response;
+    }
+
+    throw new Error(`Too many redirects (max ${MAX_REDIRECTS})`);
   }
 
   private getChildLinks(html: string, baseUrl: string): Array<string> {
@@ -102,7 +129,7 @@ export class RecursiveUrlLoader
         continue;
 
       if (link.startsWith("http")) {
-        const isAllowed = !this.preventOutside || link.startsWith(baseUrl);
+        const isAllowed = !this.preventOutside || isSameOrigin(link, baseUrl);
         if (isAllowed) absolutePaths.push(link);
       } else if (link.startsWith("//")) {
         const base = new URL(baseUrl);

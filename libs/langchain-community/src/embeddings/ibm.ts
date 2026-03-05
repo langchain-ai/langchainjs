@@ -16,7 +16,8 @@ import {
 } from "../utils/ibm.js";
 
 export interface WatsonxEmbeddingsParams
-  extends EmbeddingsParams,
+  extends
+    EmbeddingsParams,
     Omit<WatsonXAI.TextEmbeddingsParams, "modelId" | "inputs" | "parameters"> {
   /** Represents the maximum number of input tokens accepted. This can be used to avoid requests failing due to
    *  input being longer than configured limits. If the text is truncated, then it truncates the end of the input (on
@@ -33,8 +34,7 @@ export interface WatsonxEmbeddingsParams
   model: string;
 }
 export interface WatsonxInputEmbeddings
-  extends WatsonxEmbeddingsBasicOptions,
-    WatsonxEmbeddingsParams {}
+  extends WatsonxEmbeddingsBasicOptions, WatsonxEmbeddingsParams {}
 
 export type WatsonxEmbeddingsGatewayKwargs = Omit<
   CreateEmbeddingsParams,
@@ -47,7 +47,8 @@ export interface WatsonxEmbeddingsGatewayParams extends EmbeddingsParams {
 }
 
 export interface WatsonxInputGatewayEmbeddings
-  extends WatsonxEmbeddingsBasicOptions,
+  extends
+    WatsonxEmbeddingsBasicOptions,
     WatsonxEmbeddingsGatewayParams,
     Omit<
       CreateEmbeddingsParams,
@@ -200,7 +201,10 @@ export class WatsonxEmbeddings
     }
   }
 
-  scopeId() {
+  scopeId():
+    | { projectId: string; modelId: string }
+    | { spaceId: string; modelId: string }
+    | { model: string } {
     if (this.projectId)
       return { projectId: this.projectId, modelId: this.model };
     else if (this.spaceId)
@@ -237,33 +241,31 @@ export class WatsonxEmbeddings
 
   private async embedSingleText(inputs: string[]) {
     const scopeId = this.scopeId();
-    if (scopeId.modelId && this.service) {
+    if ("modelId" in scopeId && this.service) {
       const { service } = this;
-      const textEmbeddingParams: WatsonXAI.TextEmbeddingsParams = {
-        inputs,
-        ...scopeId,
-        parameters: this.invocationParams(),
-      };
       const caller = new AsyncCaller({
         maxConcurrency: this.maxConcurrency,
         maxRetries: this.maxRetries,
       });
       const embeddings = await caller.call(() =>
-        service.embedText(textEmbeddingParams)
+        service.embedText({
+          inputs,
+          ...scopeId,
+          parameters: this.invocationParams(),
+        })
       );
       return embeddings.result.results.map((item) => item.embedding);
-    } else if (this.gateway && scopeId.model) {
+    } else if (this.gateway && "model" in scopeId) {
       const { gateway } = this;
-      const textEmbeddingParams: CreateEmbeddingsParams = {
-        input: inputs,
-        ...scopeId,
-      };
       const caller = new AsyncCaller({
         maxConcurrency: this.maxConcurrency,
         maxRetries: this.maxRetries,
       });
       const embeddings = await caller.call(() =>
-        gateway.embeddings.completion.create(textEmbeddingParams)
+        gateway.embeddings.completion.create({
+          input: inputs,
+          ...scopeId,
+        })
       );
       const res = embeddings.result.data.map((item) => item.embedding);
       return res;

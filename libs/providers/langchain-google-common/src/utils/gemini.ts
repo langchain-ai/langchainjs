@@ -171,8 +171,7 @@ export class DefaultGeminiSafetyHandler implements GoogleAISafetyHandler {
   }
 }
 
-export interface MessageGeminiSafetySettings
-  extends DefaultGeminiSafetySettings {
+export interface MessageGeminiSafetySettings extends DefaultGeminiSafetySettings {
   msg?: string;
   forceNewMessage?: boolean;
 }
@@ -624,6 +623,16 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
         return await messageContentMedia(content);
       case "reasoning":
         return messageContentReasoning(content as MessageContentReasoning);
+      case "input_audio":
+        if ("input_audio" in content) {
+          return {
+            inlineData: {
+              mimeType: `audio/${content.input_audio.format}`,
+              data: content.input_audio.data,
+            },
+          };
+        }
+        break;
       default:
         throw new Error(
           `Unsupported type "${
@@ -1164,9 +1173,9 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
       Array.isArray(response.data) && response.data[0]
         ? response.data[0]
         : response.data &&
-          (response.data as GenerateContentResponseData).candidates
-        ? (response.data as GenerateContentResponseData)
-        : undefined;
+            (response.data as GenerateContentResponseData).candidates
+          ? (response.data as GenerateContentResponseData)
+          : undefined;
     if (!data) {
       return {};
     }
@@ -1694,12 +1703,33 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
 
     // Add thinking configuration if explicitly set
     // Note that you cannot have thinkingBudget set to 0 and includeThoughts true
-    if (typeof parameters.maxReasoningTokens !== "undefined") {
-      const includeThoughts = parameters.maxReasoningTokens !== 0;
-      ret.thinkingConfig = {
-        thinkingBudget: parameters.maxReasoningTokens,
-        includeThoughts,
-      };
+    if (
+      typeof parameters.maxReasoningTokens !== "undefined" ||
+      typeof parameters.thinkingLevel !== "undefined" ||
+      typeof parameters.reasoningLevel !== "undefined"
+    ) {
+      ret.thinkingConfig = {};
+
+      if (typeof parameters.maxReasoningTokens !== "undefined") {
+        const includeThoughts = parameters.maxReasoningTokens !== 0;
+        ret.thinkingConfig.thinkingBudget = parameters.maxReasoningTokens;
+        ret.thinkingConfig.includeThoughts = includeThoughts;
+      }
+
+      // Map reasoningLevel to thinkingLevel if provided
+      if (typeof parameters.reasoningLevel !== "undefined") {
+        const levelMap: Record<string, string> = {
+          low: "LOW",
+          medium: "MEDIUM",
+          high: "HIGH",
+        };
+        ret.thinkingConfig.thinkingLevel = levelMap[parameters.reasoningLevel];
+      }
+
+      // Direct thinkingLevel takes precedence over reasoningLevel
+      if (typeof parameters.thinkingLevel !== "undefined") {
+        ret.thinkingConfig.thinkingLevel = parameters.thinkingLevel;
+      }
     }
 
     // Remove any undefined properties, so we don't send them

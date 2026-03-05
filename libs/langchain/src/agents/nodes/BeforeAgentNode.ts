@@ -1,4 +1,4 @@
-import { z } from "zod/v3";
+import { z } from "zod/v4";
 import { RunnableConfig } from "@langchain/core/runnables";
 import { MiddlewareNode, type MiddlewareNodeOptions } from "./middleware.js";
 import type { AgentMiddleware, MiddlewareResult } from "../middleware/types.js";
@@ -10,7 +10,7 @@ import { getHookFunction } from "../middleware/utils.js";
  */
 export class BeforeAgentNode<
   TStateSchema extends Record<string, unknown> = Record<string, unknown>,
-  TContextSchema extends Record<string, unknown> = Record<string, unknown>
+  TContextSchema extends Record<string, unknown> = Record<string, unknown>,
 > extends MiddlewareNode<TStateSchema, TContextSchema> {
   lc_namespace = ["langchain", "agents", "beforeAgentNodes"];
 

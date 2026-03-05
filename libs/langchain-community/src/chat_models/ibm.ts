@@ -102,7 +102,8 @@ export interface WatsonxDeltaStream {
 /** Project/space params */
 
 export interface WatsonxCallOptionsChat
-  extends Partial<Omit<TextChatParams, "modelId" | "toolChoice" | "messages">>,
+  extends
+    Partial<Omit<TextChatParams, "modelId" | "toolChoice" | "messages">>,
     WatsonxBaseChatParams {
   model?: string;
 }
@@ -114,7 +115,8 @@ export interface WatsonxProjectSpaceParams extends WatsonxCallOptionsChat {
 }
 /** Deployed params */
 export interface WatsonxCallOptionsDeployedChat
-  extends Partial<Omit<DeploymentsTextChatParams, "messages">>,
+  extends
+    Partial<Omit<DeploymentsTextChatParams, "messages">>,
     WatsonxBaseChatParams {}
 
 export interface WatsonxDeployedParams extends WatsonxCallOptionsDeployedChat {
@@ -122,13 +124,13 @@ export interface WatsonxDeployedParams extends WatsonxCallOptionsDeployedChat {
   version: string;
 }
 /** Gateway params */
-export interface WatsonxGatewayChatKwargs
-  extends Omit<
-    CreateChatCompletionsParams,
-    keyof TextChatParams | "model" | "stream" | "messages"
-  > {}
+export interface WatsonxGatewayChatKwargs extends Omit<
+  CreateChatCompletionsParams,
+  keyof TextChatParams | "model" | "stream" | "messages"
+> {}
 export interface WatsonxCallOptionsGatewayChat
-  extends Omit<
+  extends
+    Omit<
       CreateChatCompletionsParams,
       | "stream"
       | "toolChoice"
@@ -141,24 +143,20 @@ export interface WatsonxCallOptionsGatewayChat
   modelGatewayKwargs?: WatsonxGatewayChatKwargs;
 }
 
-export interface WatsonxGatewayChatParams
-  extends WatsonxCallOptionsGatewayChat {
+export interface WatsonxGatewayChatParams extends WatsonxCallOptionsGatewayChat {
   serviceUrl: string;
   version: string;
 }
 
 // Chat input for different chat modes
 export interface ChatWatsonxInput
-  extends BaseChatModelParams,
-    WatsonxProjectSpaceParams {}
+  extends BaseChatModelParams, WatsonxProjectSpaceParams {}
 
 export interface ChatWatsonxDeployedInput
-  extends BaseChatModelParams,
-    WatsonxDeployedParams {}
+  extends BaseChatModelParams, WatsonxDeployedParams {}
 
 export interface ChatWatsonxGatewayInput
-  extends BaseChatModelParams,
-    WatsonxGatewayChatParams {
+  extends BaseChatModelParams, WatsonxGatewayChatParams {
   /** Flag indicating weather to use Model Gateway or no */
   modelGateway: boolean;
 }
@@ -286,6 +284,9 @@ function _watsonxResponseToChatMessage(
           ...toolCall,
           type: "function",
         })),
+        ...("reasoning_content" in message
+          ? { reasoning: message?.reasoning_content }
+          : {}),
       };
 
       return new AIMessage({
@@ -344,7 +345,12 @@ function _convertDeltaToMessageChunk(
 
   const role = delta.role || defaultRole || "assistant";
   const content = delta.content ?? "";
-  const additional_kwargs = rawToolCalls ? { tool_calls: rawToolCalls } : {};
+  const additional_kwargs = {
+    ...(rawToolCalls ? { tool_calls: rawToolCalls } : {}),
+    ...("reasoning_content" in delta
+      ? { reasoning: delta?.reasoning_content }
+      : {}),
+  };
 
   const usageMetadata = {
     input_tokens: usage?.prompt_tokens ?? 0,
@@ -438,8 +444,8 @@ export type ChatWatsonxCallOptions = XOR<
 >;
 
 export class ChatWatsonx<
-    CallOptions extends ChatWatsonxCallOptions = ChatWatsonxCallOptions
-  >
+  CallOptions extends ChatWatsonxCallOptions = ChatWatsonxCallOptions,
+>
   extends BaseChatModel<CallOptions>
   implements ChatWatsonxConstructor
 {
@@ -499,6 +505,9 @@ export class ChatWatsonx<
         "tool_choice",
         "promptIndex",
         "ls_structured_output_format",
+        "watsonxCallbacks",
+        "writer",
+        "interrupt",
       ],
 
       AUTH: [
@@ -514,7 +523,6 @@ export class ChatWatsonx<
 
       SHARED: [
         "maxRetries",
-        "watsonxCallbacks",
         "authenticator",
         "serviceUrl",
         "version",
@@ -529,7 +537,6 @@ export class ChatWatsonx<
         "verbose",
         "tags",
         "headers",
-        "signal",
         "disableStreaming",
         "timeout",
         "stopSequences",
@@ -552,6 +559,7 @@ export class ChatWatsonx<
         "model",
         "modelGatewayKwargs",
         "modelGateway",
+        "reasoningEffort",
       ],
 
       DEPLOYMENT: ["idOrName"],
@@ -576,6 +584,8 @@ export class ChatWatsonx<
         "topP",
         "timeLimit",
         "model",
+        "reasoningEffort",
+        "includeReasoning",
       ],
     };
 
@@ -636,6 +646,10 @@ export class ChatWatsonx<
 
   timeLimit?: number;
 
+  includeReasoning?: boolean;
+
+  reasoningEffort?: "low" | "medium" | "high";
+
   maxConcurrency?: number;
 
   responseFormat?: TextChatResponseFormat;
@@ -677,6 +691,8 @@ export class ChatWatsonx<
     this.streaming = fields?.streaming ?? this.streaming;
     this.n = fields?.n ?? this.n;
     this.timeLimit = fields?.timeLimit;
+    this.reasoningEffort = fields?.reasoningEffort;
+    this.includeReasoning = fields?.includeReasoning;
 
     this.modelGateway = fields?.modelGateway ?? this.modelGateway;
     this.modelGatewayKwargs = fields?.modelGatewayKwargs;
@@ -738,6 +754,7 @@ export class ChatWatsonx<
       topLogprobs: options.topLogprobs ?? this.topLogprobs,
       logprobs: options.logprobs ?? this.logprobs,
       frequencyPenalty: options.frequencyPenalty ?? this.frequencyPenalty,
+      reasoningEffort: options.reasoningEffort ?? this.reasoningEffort,
     };
 
     const toolParams: Record<string, WatsonXAI.TextChatParameterTools[]> = tools
@@ -755,6 +772,7 @@ export class ChatWatsonx<
       : {
           timeLimit: timeLimit ?? this.timeLimit,
           projectId: options.projectId ?? this.projectId,
+          includeReasoning: options.includeReasoning ?? this.includeReasoning,
         };
 
     return {
@@ -834,6 +852,7 @@ export class ChatWatsonx<
     scopeId: ReturnType<ChatWatsonx["scopeId"]>,
     params: ReturnType<ChatWatsonx["invocationParams"]>,
     messages: ChatsMessage[],
+    signal?: AbortSignal,
     stream: S = false as S
   ): Promise<
     S extends true ? Stream<ChatObjectStream> : Response<ChatsResponse>
@@ -843,7 +862,9 @@ export class ChatWatsonx<
         return this.gateway.chat.completion.create({
           ...params,
           ...scopeId,
+          signal,
           stream,
+          ...(stream ? { returnObject: true } : {}),
           messages,
         });
       }
@@ -872,12 +893,13 @@ export class ChatWatsonx<
       const tokenUsages: UsageMetadata[] = [];
       for await (const chunk of stream) {
         const message = chunk.message as AIMessageChunk;
-        if (message?.usage_metadata) {
+        const usageMetadata = message?.usage_metadata as UsageMetadata;
+        if (usageMetadata) {
           const completion = chunk.generationInfo?.completion;
           if (tokenUsages[completion])
             tokenUsages[completion].output_tokens =
-              message.usage_metadata.output_tokens;
-          else tokenUsages[completion] = message.usage_metadata;
+              usageMetadata?.output_tokens;
+          else tokenUsages[completion] = usageMetadata;
         }
         chunk.message.response_metadata = {
           model: this.model,
@@ -918,6 +940,7 @@ export class ChatWatsonx<
             scopeId,
             params,
             watsonxMessages,
+            options.signal,
             false
           );
         }
@@ -991,9 +1014,16 @@ export class ChatWatsonx<
       this.model
     );
     const watsonxCallbacks = this.invocationCallbacks(options);
+    const { signal } = options;
     const callback = () => {
       if (this.modelGateway) {
-        return this._chatModelGateway(scopeId, params, watsonxMessages, true);
+        return this._chatModelGateway(
+          scopeId,
+          params,
+          watsonxMessages,
+          signal,
+          true
+        );
       }
       if (this.service) {
         if ("idOrName" in scopeId)
@@ -1002,7 +1032,7 @@ export class ChatWatsonx<
               ...scopeId,
               messages: watsonxMessages,
               returnObject: true,
-              signal: options?.signal,
+              signal,
             },
             watsonxCallbacks
           );
@@ -1013,7 +1043,7 @@ export class ChatWatsonx<
               ...scopeId,
               messages: watsonxMessages,
               returnObject: true,
-              signal: options?.signal,
+              signal,
             },
             watsonxCallbacks
           );
@@ -1120,7 +1150,7 @@ export class ChatWatsonx<
 
   withStructuredOutput<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    RunOutput extends Record<string, any> = Record<string, any>
+    RunOutput extends Record<string, any> = Record<string, any>,
   >(
     outputSchema:
       | InteropZodType<RunOutput>
@@ -1131,7 +1161,7 @@ export class ChatWatsonx<
 
   withStructuredOutput<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    RunOutput extends Record<string, any> = Record<string, any>
+    RunOutput extends Record<string, any> = Record<string, any>,
   >(
     outputSchema:
       | InteropZodType<RunOutput>
@@ -1142,7 +1172,7 @@ export class ChatWatsonx<
 
   withStructuredOutput<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    RunOutput extends Record<string, any> = Record<string, any>
+    RunOutput extends Record<string, any> = Record<string, any>,
   >(
     outputSchema:
       | InteropZodType<RunOutput>

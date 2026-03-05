@@ -25,7 +25,7 @@ export interface BasePromptTemplateInput<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   InputVariables extends InputValues = any,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  PartialVariableName extends string = any
+  PartialVariableName extends string = any,
 > {
   /**
    * A list of variable names the prompt template expects
@@ -46,12 +46,12 @@ export interface BasePromptTemplateInput<
  * string prompt given a set of input values.
  */
 export abstract class BasePromptTemplate<
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    RunInput extends InputValues = any,
-    RunOutput extends BasePromptValueInterface = BasePromptValueInterface,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    PartialVariableName extends string = any
-  >
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  RunInput extends InputValues = any,
+  RunOutput extends BasePromptValueInterface = BasePromptValueInterface,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  PartialVariableName extends string = any,
+>
   extends Runnable<RunInput, RunOutput>
   implements BasePromptTemplateInput
 {

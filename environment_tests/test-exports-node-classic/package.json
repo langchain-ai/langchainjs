@@ -13,7 +13,7 @@
   "author": "LangChain",
   "license": "MIT",
   "dependencies": {
-    "@langchain/core": "workspace:*",
+    "@langchain/core": "workspace:^",
     "@langchain/classic": "workspace:*",
     "@tsconfig/recommended": "^1.0.10",
     "@types/node": "^24.3.0",
@@ -22,7 +22,6 @@
   },
   "devDependencies": {
     "@types/node": "^18.15.11",
-    "prettier": "^2.8.3"
+    "prettier": "^3.5.0"
   }
 }
-

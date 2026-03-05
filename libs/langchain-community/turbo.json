@@ -1,18 +1,20 @@
 {
-  "extends": [
-    "//"
-  ],
+  "extends": ["//"],
   "tasks": {
-    "build": {
+    "build:compile": {
       "inputs": [
-        "src/**/*",
+        "src/**",
         "!src/load/import_constants.ts",
         "!src/load/import_map.ts",
-        "!src/load/import_type.ts"
+        "!src/load/import_type.ts",
+        "tsconfig.json",
+        "tsdown.config.ts",
+        "package.json"
       ],
-      "outputs": [
-        "**/dist/**"
-      ]
+      "outputs": ["dist/**"]
+    },
+    "test:standard:int": {
+      "env": ["ALIBABA_API_KEY", "ALIBABA_REGION", "DASHSCOPE_API_KEY"]
     }
   }
 }

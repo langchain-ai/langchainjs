@@ -1,7 +1,10 @@
 import { z } from "zod/v3";
+import { z as z4 } from "zod/v4";
 import { describe, it, expect } from "vitest";
-import { HumanMessage } from "@langchain/core/messages";
+import { HumanMessage, ToolMessage } from "@langchain/core/messages";
 import { tool } from "@langchain/core/tools";
+import { registry } from "@langchain/langgraph/zod";
+import { Command } from "@langchain/langgraph";
 
 import { createMiddleware, createAgent } from "../index.js";
 import { FakeToolCallingModel } from "./utils.js";
@@ -251,5 +254,76 @@ describe("middleware state management", () => {
       middlewareCBeforeModelState: "CBefore",
       middlewareCAfterModelState: "middlewareCAfterModelState",
     });
+  });
+});
+
+describe("state schema reducer preservation", () => {
+  it("should preserve Zod v4 reducer metadata when converting to v3-compatible schema", async () => {
+    const stateSchema = z4.object({
+      tasks: z4
+        .array(z4.string())
+        .default([])
+        .register(registry, {
+          reducer: {
+            fn: (
+              existing: string[],
+              incoming: string | string[] | undefined
+            ) => {
+              if (incoming === undefined) return existing;
+              const incomingArray = Array.isArray(incoming)
+                ? incoming
+                : [incoming];
+              return [...existing, ...incomingArray];
+            },
+          },
+          default: () => [] as string[],
+        }),
+    });
+
+    const addTaskTool = tool(
+      async ({ taskName }) => {
+        return new Command({
+          update: {
+            tasks: taskName,
+            messages: [
+              new ToolMessage({
+                content: `Added task: ${taskName}`,
+                tool_call_id: "test",
+              }),
+            ],
+          },
+        });
+      },
+      {
+        name: "add_task",
+        description: "Add a task to the list",
+        schema: z.object({
+          taskName: z.string().describe("The name of the task to add"),
+        }),
+        returnDirect: false,
+      }
+    );
+
+    const model = new FakeToolCallingModel({
+      toolCalls: [
+        [
+          { name: "add_task", args: { taskName: "Task A" }, id: "1" },
+          { name: "add_task", args: { taskName: "Task B" }, id: "2" },
+        ],
+      ],
+    });
+
+    const agent = createAgent({
+      model,
+      tools: [addTaskTool],
+      stateSchema,
+    });
+
+    const result = await agent.invoke({
+      messages: [new HumanMessage("Add two tasks")],
+      tasks: ["Initial Task"],
+    });
+
+    expect(result.tasks).toEqual(["Initial Task", "Task A", "Task B"]);
   });
 });

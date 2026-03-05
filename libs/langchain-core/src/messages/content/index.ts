@@ -78,7 +78,7 @@ export declare namespace ContentBlock {
     /**
      * Index of block in aggregate response. Used during streaming.
      */
-    index?: number;
+    index?: string | number;
     /**
      * Citations and other annotations.
      */
@@ -103,7 +103,7 @@ export declare namespace ContentBlock {
     /**
      * Index of block in aggregate response. Used during streaming.
      */
-    index?: number;
+    index?: string | number;
   }
 
   /**
@@ -115,7 +115,7 @@ export declare namespace ContentBlock {
    */
   export interface NonStandard<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    TValue extends Record<string, any> = Record<string, any>
+    TValue extends Record<string, any> = Record<string, any>,
   > extends ContentBlock {
     /**
      * Type of the content block

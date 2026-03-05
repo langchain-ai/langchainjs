@@ -792,12 +792,23 @@ export const convertMessagesToCompletionsMessageParams: Converter<
     const content =
       typeof message.content === "string"
         ? message.content
-        : message.content.map((m) => {
+        : message.content.flatMap((m) => {
             if (isDataContentBlock(m)) {
               return convertToProviderContentBlock(
                 m,
                 completionsApiContentBlockConverter
               );
+            }
+            // Drop Anthropic tool_use blocks from content — these are
+            // already represented in message.tool_calls and would cause
+            // an API error if passed through to OpenAI.
+            if (
+              typeof m === "object" &&
+              m !== null &&
+              "type" in m &&
+              m.type === "tool_use"
+            ) {
+              return [];
             }
             return m;
           });

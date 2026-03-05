@@ -45,14 +45,14 @@ export type ToolReturnType<TInput, TConfig, TOutput> =
   TOutput extends DirectToolOutput
     ? TOutput
     : TConfig extends { toolCall: { id: string } }
-    ? ToolMessage
-    : TConfig extends { toolCall: { id: undefined } }
-    ? TOutput
-    : TConfig extends { toolCall: { id?: string } }
-    ? TOutput | ToolMessage
-    : TInput extends ToolCall
-    ? ToolMessage
-    : TOutput;
+      ? ToolMessage
+      : TConfig extends { toolCall: { id: undefined } }
+        ? TOutput
+        : TConfig extends { toolCall: { id?: string } }
+          ? TOutput | ToolMessage
+          : TInput extends ToolCall
+            ? ToolMessage
+            : TOutput;
 
 /**
  * Base type that establishes the types of input schemas that can be used for LangChain tool
@@ -101,7 +101,7 @@ export type ToolRunnableConfig<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   ConfigurableFieldType extends Record<string, any> = Record<string, any>,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  ContextSchema = any
+  ContextSchema = any,
 > = RunnableConfig<ConfigurableFieldType> & {
   toolCall?: ToolCall;
   context?: ContextSchema;
@@ -112,8 +112,10 @@ export type ToolRunnableConfig<
  *
  * @version 0.2.19
  */
-export interface StructuredToolParams
-  extends Pick<StructuredToolInterface, "name" | "schema" | "extras"> {
+export interface StructuredToolParams extends Pick<
+  StructuredToolInterface,
+  "name" | "schema" | "extras"
+> {
   /**
    * An optional description of the tool to pass to the model.
    */
@@ -134,8 +136,8 @@ export interface StructuredToolParams
 export type ToolInputSchemaOutputType<T> = T extends InteropZodType
   ? InferInteropZodOutput<T>
   : T extends JSONSchema
-  ? unknown
-  : never;
+    ? unknown
+    : never;
 
 /**
  * Utility type that resolves the input type of a tool input schema.
@@ -151,8 +153,8 @@ export type ToolInputSchemaOutputType<T> = T extends InteropZodType
 export type ToolInputSchemaInputType<T> = T extends InteropZodType
   ? InferInteropZodInput<T>
   : T extends JSONSchema
-  ? unknown
-  : never;
+    ? unknown
+    : never;
 
 /**
  * Defines the type that will be passed into a tool handler function as a result of a tool call.
@@ -162,7 +164,7 @@ export type ToolInputSchemaInputType<T> = T extends InteropZodType
  */
 export type StructuredToolCallInput<
   SchemaT = ToolInputSchemaBase,
-  SchemaInputT = ToolInputSchemaInputType<SchemaT>
+  SchemaInputT = ToolInputSchemaInputType<SchemaT>,
 > =
   | (ToolInputSchemaOutputType<SchemaT> extends string ? string : never)
   | SchemaInputT
@@ -211,11 +213,11 @@ export type ToolCallInput<SchemaT = StringInputToolSchema> =
 export interface StructuredToolInterface<
   SchemaT = ToolInputSchemaBase,
   SchemaInputT = ToolInputSchemaInputType<SchemaT>,
-  ToolOutputT = ToolOutputType
+  ToolOutputT = ToolOutputType,
 > extends RunnableInterface<
-    StructuredToolCallInput<SchemaT, SchemaInputT>,
-    ToolOutputT | ToolMessage
-  > {
+  StructuredToolCallInput<SchemaT, SchemaInputT>,
+  ToolOutputT | ToolMessage
+> {
   lc_namespace: string[];
 
   /**
@@ -231,7 +233,7 @@ export interface StructuredToolInterface<
    */
   invoke<
     TArg extends StructuredToolCallInput<SchemaT, SchemaInputT>,
-    TConfig extends ToolRunnableConfig | undefined
+    TConfig extends ToolRunnableConfig | undefined,
   >(
     arg: TArg,
     configArg?: TConfig
@@ -250,7 +252,7 @@ export interface StructuredToolInterface<
    */
   call<
     TArg extends StructuredToolCallInput<SchemaT, SchemaInputT>,
-    TConfig extends ToolRunnableConfig | undefined
+    TConfig extends ToolRunnableConfig | undefined,
   >(
     arg: TArg,
     configArg?: TConfig,
@@ -294,7 +296,7 @@ export interface StructuredToolInterface<
 export interface ToolInterface<
   SchemaT = StringInputToolSchema,
   SchemaInputT = ToolInputSchemaInputType<SchemaT>,
-  ToolOutputT = ToolOutputType
+  ToolOutputT = ToolOutputType,
 > extends StructuredToolInterface<SchemaT, SchemaInputT, ToolOutputT> {
   /**
    * @deprecated Use .invoke() instead. Will be removed in 0.3.0.
@@ -307,7 +309,7 @@ export interface ToolInterface<
    */
   call<
     TArg extends StructuredToolCallInput<SchemaT, SchemaInputT>,
-    TConfig extends ToolRunnableConfig | undefined
+    TConfig extends ToolRunnableConfig | undefined,
   >(
     // TODO: shouldn't this be narrowed based on SchemaT?
     arg: TArg,
@@ -334,13 +336,14 @@ export interface BaseDynamicToolInput extends ToolParams {
 /**
  * Interface for the input parameters of the DynamicTool class.
  */
-export interface DynamicToolInput<ToolOutputT = ToolOutputType>
-  extends BaseDynamicToolInput {
+export interface DynamicToolInput<
+  ToolOutputT = ToolOutputType,
+> extends BaseDynamicToolInput {
   func: (
     input: string,
     runManager?: CallbackManagerForToolRun,
     config?: ToolRunnableConfig
-  ) => Promise<ToolOutputT>;
+  ) => Promise<ToolOutputT> | AsyncGenerator<unknown, ToolOutputT>;
 }
 
 /**
@@ -352,7 +355,7 @@ export interface DynamicToolInput<ToolOutputT = ToolOutputType>
 export interface DynamicStructuredToolInput<
   SchemaT = ToolInputSchemaBase,
   SchemaOutputT = ToolInputSchemaOutputType<SchemaT>,
-  ToolOutputT = ToolOutputType
+  ToolOutputT = ToolOutputType,
 > extends BaseDynamicToolInput {
   /**
    * Tool handler function - the function that will be called when the tool is invoked.
@@ -366,7 +369,7 @@ export interface DynamicStructuredToolInput<
     input: SchemaOutputT,
     runManager?: CallbackManagerForToolRun,
     config?: RunnableConfig
-  ) => Promise<ToolOutputT>;
+  ) => Promise<ToolOutputT> | AsyncGenerator<unknown, ToolOutputT>;
   schema: SchemaT;
 }
 
@@ -463,7 +466,7 @@ export function isLangChainTool(tool?: unknown): tool is StructuredToolParams {
  *
  * @example
  * ```typescript
- * import { tool, ToolRuntime } from "@langchain/core/tools";
+ * import { tool, type ToolRuntime } from "@langchain/core/tools";
  * import { z } from "zod";
  *
  * const stateSchema = z.object({
@@ -472,7 +475,7 @@ export function isLangChainTool(tool?: unknown): tool is StructuredToolParams {
  * });
  *
  * const greet = tool(
- *   async ({ name }, runtime) => {
+ *   async ({ name }, runtime: ToolRuntime<typeof stateSchema>) => {
  *     // Access state
  *     const messages = runtime.state.messages;
  *
@@ -500,6 +503,13 @@ export function isLangChainTool(tool?: unknown): tool is StructuredToolParams {
  *     stateSchema,
  *   }
  * );
+ *
+ * const agent = createAgent({
+ *   model,
+ *   tools: [greet],
+ *   stateSchema,
+ *   contextSchema,
+ * });
  * ```
  *
  * @template StateT - The type of the state schema (inferred from stateSchema)
@@ -507,7 +517,7 @@ export function isLangChainTool(tool?: unknown): tool is StructuredToolParams {
  */
 export type ToolRuntime<
   TState = unknown,
-  TContext = unknown
+  TContext = unknown,
 > = RunnableConfig & {
   /**
    * The current graph state.
@@ -515,8 +525,8 @@ export type ToolRuntime<
   state: TState extends InteropZodObject
     ? InferInteropZodOutput<TState>
     : TState extends Record<string, unknown>
-    ? TState
-    : unknown;
+      ? TState
+      : unknown;
   /**
    * The ID of the current tool call.
    */
@@ -535,8 +545,8 @@ export type ToolRuntime<
   context: TContext extends InteropZodObject
     ? InferInteropZodOutput<TContext>
     : TContext extends Record<string, unknown>
-    ? TContext
-    : unknown;
+      ? TContext
+      : unknown;
   /**
    * BaseStore instance for persistent storage (from langgraph `Runtime`).
    */

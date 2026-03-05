@@ -1,6 +1,6 @@
 export interface DocumentInput<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  Metadata extends Record<string, any> = Record<string, any>
+  Metadata extends Record<string, any> = Record<string, any>,
 > {
   pageContent: string;
 
@@ -17,7 +17,7 @@ export interface DocumentInput<
 
 export interface DocumentInterface<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  Metadata extends Record<string, any> = Record<string, any>
+  Metadata extends Record<string, any> = Record<string, any>,
 > {
   pageContent: string;
 
@@ -37,8 +37,9 @@ export interface DocumentInterface<
  */
 export class Document<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  Metadata extends Record<string, any> = Record<string, any>
-> implements DocumentInput, DocumentInterface
+  Metadata extends Record<string, any> = Record<string, any>,
+>
+  implements DocumentInput, DocumentInterface
 {
   pageContent: string;
 

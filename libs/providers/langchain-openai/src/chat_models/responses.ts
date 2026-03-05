@@ -14,7 +14,12 @@ import {
   isOpenAICustomTool,
   ResponsesTool,
 } from "../utils/tools.js";
-import { BaseChatOpenAI, BaseChatOpenAICallOptions } from "./base.js";
+import {
+  BaseChatOpenAI,
+  BaseChatOpenAICallOptions,
+  BaseChatOpenAIFields,
+  getChatOpenAIModelParams,
+} from "./base.js";
 import {
   convertMessagesToResponsesInput,
   convertResponsesDeltaToChatGenerationChunk,
@@ -22,8 +27,7 @@ import {
 } from "../converters/responses.js";
 import { OpenAIVerbosityParam } from "../types.js";
 
-export interface ChatOpenAIResponsesCallOptions
-  extends BaseChatOpenAICallOptions {
+export interface ChatOpenAIResponsesCallOptions extends BaseChatOpenAICallOptions {
   /**
    * Configuration options for a text response from the model. Can be plain text or
    * structured JSON data.
@@ -65,8 +69,18 @@ export type ChatResponsesInvocationParams = Omit<
  * @internal
  */
 export class ChatOpenAIResponses<
-  CallOptions extends ChatOpenAIResponsesCallOptions = ChatOpenAIResponsesCallOptions
+  CallOptions extends ChatOpenAIResponsesCallOptions =
+    ChatOpenAIResponsesCallOptions,
 > extends BaseChatOpenAI<CallOptions> {
+  constructor(model: string, fields?: Omit<BaseChatOpenAIFields, "model">);
+  constructor(fields?: BaseChatOpenAIFields);
+  constructor(
+    modelOrFields?: string | BaseChatOpenAIFields,
+    fieldsArg?: Omit<BaseChatOpenAIFields, "model">
+  ) {
+    super(getChatOpenAIModelParams(modelOrFields, fieldsArg));
+  }
+
   override invocationParams(
     options?: this["ParsedCallOptions"]
   ): ChatResponsesInvocationParams {
@@ -83,6 +97,7 @@ export class ChatOpenAIResponses<
       temperature: this.temperature,
       top_p: this.topP,
       user: this.user,
+      service_tier: this.service_tier,
 
       // if include_usage is set or streamUsage then stream must be set to true.
       stream: this.streaming,
@@ -157,11 +172,13 @@ export class ChatOpenAIResponses<
 
   async _generate(
     messages: BaseMessage[],
-    options: this["ParsedCallOptions"]
+    options: this["ParsedCallOptions"],
+    runManager?: CallbackManagerForLLMRun
   ): Promise<ChatResult> {
+    options.signal?.throwIfAborted();
     const invocationParams = this.invocationParams(options);
     if (invocationParams.stream) {
-      const stream = this._streamResponseChunks(messages, options);
+      const stream = this._streamResponseChunks(messages, options, runManager);
       let finalChunk: ChatGenerationChunk | undefined;
       for await (const chunk of stream) {
         chunk.message.response_metadata = {
@@ -232,6 +249,9 @@ export class ChatOpenAIResponses<
     );
 
     for await (const data of streamIterable) {
+      if (options.signal?.aborted) {
+        return;
+      }
       const chunk = convertResponsesDeltaToChatGenerationChunk(data);
       if (chunk == null) continue;
       yield chunk;

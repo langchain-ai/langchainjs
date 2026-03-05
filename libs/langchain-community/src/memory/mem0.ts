@@ -248,7 +248,7 @@ export class Mem0Memory extends BaseChatMemory implements Mem0MemoryInput {
             this.humanPrefix,
             this.aiPrefix
           )
-        : condenseMem0MemoryIntoHumanMessage(memories).content ?? "",
+        : (condenseMem0MemoryIntoHumanMessage(memories).content ?? ""),
     };
   }
 

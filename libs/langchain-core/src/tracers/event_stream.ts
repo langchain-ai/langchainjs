@@ -41,6 +41,12 @@ export type StreamEventData = {
    */
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   chunk?: any;
+
+  /**
+   * Error message if the runnable that generated the event failed.
+   * This field will only be present if the runnable failed.
+   */
+  error?: string;
 };
 
 /**
@@ -104,8 +110,7 @@ type RunInfo = {
   inputs?: Record<string, any>;
 };
 
-export interface EventStreamCallbackHandlerInput
-  extends BaseCallbackHandlerInput {
+export interface EventStreamCallbackHandlerInput extends BaseCallbackHandlerInput {
   autoClose?: boolean;
   includeNames?: string[];
   includeTypes?: string[];
@@ -173,6 +178,8 @@ export class EventStreamCallbackHandler
 
   public receiveStream: IterableReadableStream<StreamEvent>;
 
+  private readableStreamClosed = false;
+
   name = "event_stream_tracer";
 
   lc_prefer_streaming = true;
@@ -186,7 +193,11 @@ export class EventStreamCallbackHandler
     this.excludeNames = fields?.excludeNames;
     this.excludeTypes = fields?.excludeTypes;
     this.excludeTags = fields?.excludeTags;
-    this.transformStream = new TransformStream();
+    this.transformStream = new TransformStream({
+      flush: () => {
+        this.readableStreamClosed = true;
+      },
+    });
     this.writer = this.transformStream.writable.getWriter();
     this.receiveStream = IterableReadableStream.fromReadableStream(
       this.transformStream.readable
@@ -312,6 +323,7 @@ export class EventStreamCallbackHandler
   }
 
   async send(payload: StreamEvent, run: RunInfo) {
+    if (this.readableStreamClosed) return;
     if (this._includeRun(run)) {
       await this.writer.write(payload);
     }
@@ -565,6 +577,34 @@ export class EventStreamCallbackHandler
         data: {
           output,
           input: runInfo.inputs,
+        },
+        run_id: run.id,
+        name: runInfo.name,
+        tags: runInfo.tags,
+        metadata: runInfo.metadata,
+      },
+      runInfo
+    );
+  }
+
+  async onToolError(run: Run): Promise<void> {
+    const runInfo = this.runInfoMap.get(run.id);
+    this.runInfoMap.delete(run.id);
+    if (runInfo === undefined) {
+      throw new Error(`onToolEnd: Run ID ${run.id} not found in run map.`);
+    }
+    if (runInfo.inputs === undefined) {
+      throw new Error(
+        `onToolEnd: Run ID ${run.id} is a tool call, and is expected to have traced inputs.`
+      );
+    }
+
+    await this.sendEndEvent(
+      {
+        event: "on_tool_error",
+        data: {
+          input: runInfo.inputs,
+          error: run.error,
         },
         run_id: run.id,
         name: runInfo.name,

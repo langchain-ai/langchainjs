@@ -1,6 +1,6 @@
 {
   "name": "langchain",
-  "version": "1.2.0",
+  "version": "1.2.29",
   "description": "Typescript bindings for langchain",
   "author": "LangChain",
   "license": "MIT",
@@ -50,7 +50,7 @@
   "devDependencies": {
     "@langchain/anthropic": "workspace:*",
     "@langchain/cohere": "workspace:*",
-    "@langchain/core": "workspace:*",
+    "@langchain/core": "workspace:^",
     "@langchain/eslint": "workspace:*",
     "@langchain/openai": "workspace:*",
     "@langchain/tsconfig": "workspace:*",
@@ -60,30 +60,29 @@
     "@types/uuid": "^9",
     "@types/ws": "^8",
     "@vitest/coverage-v8": "^3.2.4",
-    "cheerio": "1.0.0-rc.12",
+    "cheerio": "1.2.0",
     "dotenv": "^16.0.3",
     "dpdm": "^3.14.0",
     "eslint": "^9.34.0",
-    "openai": "^5.1.0",
+    "openai": "^6.22.0",
     "peggy": "^3.0.2",
-    "prettier": "^2.8.3",
+    "prettier": "^3.5.0",
     "reflect-metadata": "^0.2.2",
     "rimraf": "^5.0.1",
-    "rollup": "^3.19.1",
-    "tinybench": "^5.1.0",
-    "typeorm": "^0.3.26",
+    "tinybench": "^6.0.0",
+    "typeorm": "^0.3.28",
     "typescript": "~5.8.3",
     "vitest": "^3.2.4",
     "yaml": "^2.8.1"
   },
   "peerDependencies": {
-    "@langchain/core": "workspace:*"
+    "@langchain/core": "workspace:^"
   },
   "dependencies": {
-    "@langchain/langgraph": "^1.0.0",
+    "@langchain/langgraph": "^1.1.2",
     "@langchain/langgraph-checkpoint": "^1.0.0",
-    "langsmith": "~0.3.74",
-    "uuid": "^10.0.0",
+    "langsmith": ">=0.5.0 <1.0.0",
+    "uuid": "^11.1.0",
     "zod": "^3.25.76 || ^4"
   },
   "publishConfig": {

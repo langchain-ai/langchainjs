@@ -13,7 +13,7 @@ import type { Runtime, AgentBuiltInState } from "../runtime.js";
  */
 export interface ModelRequest<
   TState extends Record<string, unknown> = Record<string, unknown>,
-  TContext = unknown
+  TContext = unknown,
 > {
   /**
    * The model to use for this step.

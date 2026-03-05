@@ -547,7 +547,7 @@ export class ChatMinimax
             message.name ??
             (sender_type === "BOT"
               ? this.fallbackBotName()
-              : options?.defaultUserName ?? this.defaultUserName),
+              : (options?.defaultUserName ?? this.defaultUserName)),
         };
       });
   }

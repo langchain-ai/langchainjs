@@ -1,6 +1,6 @@
 {
   "name": "@langchain/baidu-qianfan",
-  "version": "1.0.1",
+  "version": "1.0.3",
   "description": "Baidu Qianfan integration for LangChain.js",
   "author": "LangChain",
   "license": "MIT",
@@ -32,7 +32,7 @@
     "@langchain/core": "^1.0.0"
   },
   "devDependencies": {
-    "@langchain/core": "workspace:*",
+    "@langchain/core": "workspace:^",
     "@langchain/eslint": "workspace:*",
     "@langchain/openai": "workspace:*",
     "@langchain/tsconfig": "workspace:*",
@@ -42,8 +42,7 @@
     "dotenv": "^16.3.1",
     "dpdm": "^3.14.0",
     "eslint": "^9.34.0",
-    "prettier": "^2.8.3",
-    "rollup": "^4.5.2",
+    "prettier": "^3.5.0",
     "typescript": "~5.8.3",
     "vitest": "^3.2.4"
   },

@@ -1,5 +1,230 @@
 # @langchain/community
 
+## 1.1.22
+
+### Patch Changes
+
+- Updated dependencies [[`96c630d`](https://github.com/langchain-ai/langchainjs/commit/96c630dfd009f2546d5bc36f5067ff868bb4067f), [`a8b9ccc`](https://github.com/langchain-ai/langchainjs/commit/a8b9ccca5a85984a5a30008acd09f9991e591638), [`a1f22bb`](https://github.com/langchain-ai/langchainjs/commit/a1f22bba907731a18dca23c31cec5333444a3f55), [`3682a8d`](https://github.com/langchain-ai/langchainjs/commit/3682a8d4e0ed0855a5283f26bcfd1c0415dde075)]:
+  - @langchain/core@1.1.30
+  - @langchain/openai@1.2.12
+  - @langchain/classic@1.0.22
+
+## 1.1.21
+
+### Patch Changes
+
+- [#10113](https://github.com/langchain-ai/langchainjs/pull/10113) [`7d198ae`](https://github.com/langchain-ai/langchainjs/commit/7d198aeac323598a5b018d31793cf299d0f2c921) Thanks [@pawel-twardziak](https://github.com/pawel-twardziak)! - Feat/community chatalitongyi tool calling
+
+- [#9722](https://github.com/langchain-ai/langchainjs/pull/9722) [`df9dbd2`](https://github.com/langchain-ai/langchainjs/commit/df9dbd26994aefc47e26c18f2fc7ec4657e4dc1b) Thanks [@cs7-shrey](https://github.com/cs7-shrey)! - feat(milvus): Add TTL support by passing properties to Milvus
+
+- Updated dependencies []:
+  - @langchain/classic@1.0.21
+
+## 1.1.20
+
+### Patch Changes
+
+- Updated dependencies [[`9f30267`](https://github.com/langchain-ai/langchainjs/commit/9f30267e95a2a42fac71f1d3674b84c5a190dbbc), [`403a99f`](https://github.com/langchain-ai/langchainjs/commit/403a99fd826383f30300809ae077e1c967023520), [`3b1fd54`](https://github.com/langchain-ai/langchainjs/commit/3b1fd5458a4aa29c398122829f383f21b5ac39da), [`f298a9b`](https://github.com/langchain-ai/langchainjs/commit/f298a9bdedff7bc2b0eb7f6b5e6b52fd3042a7b7), [`77bd982`](https://github.com/langchain-ai/langchainjs/commit/77bd98274a885e947d76f7a9c6dd0b3763453218)]:
+  - @langchain/core@1.1.29
+  - @langchain/openai@1.2.11
+  - @langchain/classic@1.0.21
+
+## 1.1.19
+
+### Patch Changes
+
+- Updated dependencies [[`10a876c`](https://github.com/langchain-ai/langchainjs/commit/10a876c7d5ff27d8f2889761ee20e95f76a50518), [`62ba83e`](https://github.com/langchain-ai/langchainjs/commit/62ba83edd5206c86d8da8d1b608a2493ee4f3da8), [`b46d96a`](https://github.com/langchain-ai/langchainjs/commit/b46d96a508a8bf212561dbb6f025e35c75f16257)]:
+  - @langchain/core@1.1.28
+  - @langchain/openai@1.2.10
+  - @langchain/classic@1.0.20
+
+## 1.1.18
+
+### Patch Changes
+
+- [#10108](https://github.com/langchain-ai/langchainjs/pull/10108) [`e7576ee`](https://github.com/langchain-ai/langchainjs/commit/e7576ee9e6408c399c08d271db43f63e622da10f) Thanks [@hntrl](https://github.com/hntrl)! - fix: replace retired Anthropic model IDs with active replacements
+  - Update default model in ChatAnthropic from `claude-3-5-sonnet-latest` to `claude-sonnet-4-5-20250929`
+  - Regenerate model profiles with latest data from models.dev API
+  - Replace retired `claude-3-5-haiku-20241022`, `claude-3-7-sonnet-20250219`, `claude-3-5-sonnet-20240620`, and `claude-3-5-sonnet-20241022` in tests, docstrings, and examples
+
+- [#10116](https://github.com/langchain-ai/langchainjs/pull/10116) [`2812d2b`](https://github.com/langchain-ai/langchainjs/commit/2812d2b2b9fd9343c4850e2ab906b8cf440975ee) Thanks [@hntrl](https://github.com/hntrl)! - Validate redirects in RecursiveUrlLoader to prevent SSRF bypasses.
+
+- Updated dependencies []:
+  - @langchain/classic@1.0.19
+
+## 1.1.17
+
+### Patch Changes
+
+- Updated dependencies [[`b583729`](https://github.com/langchain-ai/langchainjs/commit/b583729e99cf0c035630f6b311c4d069a1980cca), [`fb2226e`](https://github.com/langchain-ai/langchainjs/commit/fb2226e6decdaba21e78b3f01877b45fa1eed6d3)]:
+  - @langchain/openai@1.2.9
+  - @langchain/core@1.1.27
+  - @langchain/classic@1.0.19
+
+## 1.1.16
+
+### Patch Changes
+
+- Updated dependencies [[`27186c5`](https://github.com/langchain-ai/langchainjs/commit/27186c54884cfe7c2522fa50b42c3ca0ccaefdba), [`05396f7`](https://github.com/langchain-ai/langchainjs/commit/05396f7ce0a91c49a3bae4bbcd3dbdd6cbd18089), [`5a6f26b`](https://github.com/langchain-ai/langchainjs/commit/5a6f26bbaed80195dc538c538b96219a8b03f38f), [`7be50a7`](https://github.com/langchain-ai/langchainjs/commit/7be50a7014d7622e0ab8d303dfc9c633ebc96333)]:
+  - @langchain/core@1.1.25
+  - @langchain/openai@1.2.8
+  - @langchain/classic@1.0.18
+
+## 1.1.15
+
+### Patch Changes
+
+- [#10003](https://github.com/langchain-ai/langchainjs/pull/10003) [`6c5b2b1`](https://github.com/langchain-ai/langchainjs/commit/6c5b2b19a5cb181cb7f6bd21e9e72baf517ad59a) Thanks [@FilipZmijewski](https://github.com/FilipZmijewski)! - fix(community): IBM tests
+
+- Updated dependencies [[`71d08c0`](https://github.com/langchain-ai/langchainjs/commit/71d08c0a3a2597bd5a084eb35a7830e5ea1a2b29)]:
+  - @langchain/core@1.1.23
+  - @langchain/classic@1.0.17
+
+## 1.1.14
+
+### Patch Changes
+
+- [#9990](https://github.com/langchain-ai/langchainjs/pull/9990) [`d5e3db0`](https://github.com/langchain-ai/langchainjs/commit/d5e3db0d01ab321ec70a875805b2f74aefdadf9d) Thanks [@hntrl](https://github.com/hntrl)! - feat(core): Add SSRF protection module (`@langchain/core/utils/ssrf`) with utilities for validating URLs against private IPs, cloud metadata endpoints, and localhost.
+
+  fix(community): Harden `RecursiveUrlLoader` against SSRF attacks by integrating `validateSafeUrl` and replacing string-based URL comparison with origin-based `isSameOrigin` from the shared SSRF module.
+
+- Updated dependencies [[`d5e3db0`](https://github.com/langchain-ai/langchainjs/commit/d5e3db0d01ab321ec70a875805b2f74aefdadf9d), [`6939dab`](https://github.com/langchain-ai/langchainjs/commit/6939dabc8dc6481942e7e2c19e3dc61bc374d65a), [`ad581c7`](https://github.com/langchain-ai/langchainjs/commit/ad581c76138ea12ebdaee444c0dcdc4f6a280624)]:
+  - @langchain/core@1.1.21
+  - @langchain/openai@1.2.7
+  - @langchain/classic@1.0.17
+
+## 1.1.13
+
+### Patch Changes
+
+- [#9853](https://github.com/langchain-ai/langchainjs/pull/9853) [`9513c5a`](https://github.com/langchain-ai/langchainjs/commit/9513c5a9379fe99dae2049d12811828fa0ee5526) Thanks [@philip](https://github.com/philip)! - fix(community): update NeonPostgres vector store for @neondatabase/serverless v1.0.0 GA
+
+- Updated dependencies [[`16d691c`](https://github.com/langchain-ai/langchainjs/commit/16d691c7f8196e1d6322f051c25b2219ff2953b6), [`1058574`](https://github.com/langchain-ai/langchainjs/commit/1058574b723f0d060eb9b3ca25be5aeeabbe51aa), [`8ee833c`](https://github.com/langchain-ai/langchainjs/commit/8ee833c1fb99891565832ead4990e246b30022a6)]:
+  - @langchain/openai@1.2.6
+  - @langchain/classic@1.0.16
+
+## 1.1.12
+
+### Patch Changes
+
+- Updated dependencies [[`0870ca0`](https://github.com/langchain-ai/langchainjs/commit/0870ca0719dacd8a555b3341e581d6c15cd6faf3), [`8f0757f`](https://github.com/langchain-ai/langchainjs/commit/8f0757f06b2ed9fe810f636333fc71ffcedb3feb), [`cf46089`](https://github.com/langchain-ai/langchainjs/commit/cf46089d250b1ec87f99956f5cd87e2615ac25c5)]:
+  - @langchain/openai@1.2.5
+  - @langchain/classic@1.0.15
+
+## 1.1.11
+
+### Patch Changes
+
+- [#9905](https://github.com/langchain-ai/langchainjs/pull/9905) [`41bfea5`](https://github.com/langchain-ai/langchainjs/commit/41bfea51cf119573a3b956ee782d2731fe71c681) Thanks [@christian-bromann](https://github.com/christian-bromann)! - fix(classic/community/core): avoid long lived abort signals
+
+- Updated dependencies [[`41bfea5`](https://github.com/langchain-ai/langchainjs/commit/41bfea51cf119573a3b956ee782d2731fe71c681)]:
+  - @langchain/classic@1.0.14
+  - @langchain/openai@1.2.4
+
+## 1.1.10
+
+### Patch Changes
+
+- [#9883](https://github.com/langchain-ai/langchainjs/pull/9883) [`ea00005`](https://github.com/langchain-ai/langchainjs/commit/ea000051bd29670bec60099a5f50a13c0fedfc31) Thanks [@FilipZmijewski](https://github.com/FilipZmijewski)! - support aborting for Model Gateway and WatsonxLLM for IBM
+
+- [#9896](https://github.com/langchain-ai/langchainjs/pull/9896) [`70f329a`](https://github.com/langchain-ai/langchainjs/commit/70f329aa5c16bef9e7a942d4187c31f3d3b86b80) Thanks [@Axadali](https://github.com/Axadali)! - Add score normalization feature to PGVectorStore allowing users to choose between returning raw distances or normalized similarity scores. This makes PGVectorStore consistent with other vector stores in the LangChain ecosystem where higher scores indicate greater similarity. Maintains full backward compatibility by defaulting to distance mode.
+
+- [#9874](https://github.com/langchain-ai/langchainjs/pull/9874) [`a995a3f`](https://github.com/langchain-ai/langchainjs/commit/a995a3ff1940eebf7204574e6f058f8ff84f557e) Thanks [@phong-phuong](https://github.com/phong-phuong)! - fix jira failing to fetch issues
+
+- Updated dependencies [[`1fa865b`](https://github.com/langchain-ai/langchainjs/commit/1fa865b1cb8a30c2269b83cdb5fc84d374c3fca9), [`28efb57`](https://github.com/langchain-ai/langchainjs/commit/28efb57448933368094ca41c63d9262ac0f348a6), [`4e42452`](https://github.com/langchain-ai/langchainjs/commit/4e42452e4c020408bd6687667e931497b05aaff5), [`a9b5059`](https://github.com/langchain-ai/langchainjs/commit/a9b50597186002221aaa4585246e569fa44c27c8), [`a9b5059`](https://github.com/langchain-ai/langchainjs/commit/a9b50597186002221aaa4585246e569fa44c27c8)]:
+  - @langchain/openai@1.2.4
+  - @langchain/classic@1.0.13
+
+## 1.1.9
+
+### Patch Changes
+
+- Updated dependencies [[`1d58bf2`](https://github.com/langchain-ai/langchainjs/commit/1d58bf2bcb14055a64189af7e251bb93fa9d5aa0)]:
+  - @langchain/classic@1.0.12
+
+## 1.1.8
+
+### Patch Changes
+
+- [#9759](https://github.com/langchain-ai/langchainjs/pull/9759) [`82c51e4`](https://github.com/langchain-ai/langchainjs/commit/82c51e4125594c83b5578680e5a3d899f6268caa) Thanks [@ejscribner](https://github.com/ejscribner)! - Fix(couchbase): Add Couchbase peer dependency and add `CouchbaseQueryVectorStore` and `CouchbaseSearchVectorStore` to tsdown bundle
+
+- Updated dependencies [[`a496cc0`](https://github.com/langchain-ai/langchainjs/commit/a496cc09d2b4d28a8eb0c4b96bd3555ab1cc47dc)]:
+  - @langchain/classic@1.0.11
+
+## 1.1.7
+
+### Patch Changes
+
+- [#9832](https://github.com/langchain-ai/langchainjs/pull/9832) [`305291f`](https://github.com/langchain-ai/langchainjs/commit/305291fc287d30de575b931b34382e115c3bf20f) Thanks [@phong-phuong](https://github.com/phong-phuong)! - Update Jira Document Loader's issue.fields.description from plain string to ADFNode
+
+- Updated dependencies []:
+  - @langchain/classic@1.0.10
+  - @langchain/openai@1.2.3
+
+## 1.1.6
+
+### Patch Changes
+
+- [#9835](https://github.com/langchain-ai/langchainjs/pull/9835) [`adb3625`](https://github.com/langchain-ai/langchainjs/commit/adb36253e79babc38e75b1fcf10308aee04f67e2) Thanks [@maahir30](https://github.com/maahir30)! - Use UTF-8 byte length for metadata fields
+
+- Updated dependencies []:
+  - @langchain/classic@1.0.10
+
+## 1.1.5
+
+### Patch Changes
+
+- [#9822](https://github.com/langchain-ai/langchainjs/pull/9822) [`ff69e1e`](https://github.com/langchain-ai/langchainjs/commit/ff69e1e9769768d2d066a0f3f351e63e2b897db5) Thanks [@HarshVz](https://github.com/HarshVz)! - Add multi-region support for Alibaba Tongyi chat models. Users can now specify their region (China, Singapore, or US) when initializing ChatAlibabaTongyi. This enables proper API endpoint routing for users with region-specific API keys.
+  - Added `region` parameter to ChatAlibabaTongyi constructor
+  - Supported regions: `"china"` (default), `"singapore"`, `"us"`
+  - Maintains backward compatibility by defaulting to China region
+
+- Updated dependencies [[`a7c6ec5`](https://github.com/langchain-ai/langchainjs/commit/a7c6ec51ab9baa186ab5ebf815599c08f5c7e8ab), [`04923f9`](https://github.com/langchain-ai/langchainjs/commit/04923f9835e5b3677c180b601ae8f3e7d8be0236), [`e16c218`](https://github.com/langchain-ai/langchainjs/commit/e16c218b81980a1c576af5192342019975bb95b9)]:
+  - @langchain/openai@1.2.3
+  - @langchain/classic@1.0.10
+
+## 1.1.4
+
+### Patch Changes
+
+- Updated dependencies [[`3efe79c`](https://github.com/langchain-ai/langchainjs/commit/3efe79c62ff2ffe0ada562f7eecd85be074b649a)]:
+  - @langchain/openai@1.2.2
+  - @langchain/classic@1.0.9
+
+## 1.1.3
+
+### Patch Changes
+
+- [#9757](https://github.com/langchain-ai/langchainjs/pull/9757) [`8619adb`](https://github.com/langchain-ai/langchainjs/commit/8619adb81f16977b3ab8d4607ad5c30f79c41e3d) Thanks [@FilipZmijewski](https://github.com/FilipZmijewski)! - fix: add properties to check valid props
+
+- Updated dependencies []:
+  - @langchain/classic@1.0.8
+  - @langchain/openai@1.2.1
+
+## 1.1.2
+
+### Patch Changes
+
+- [#9601](https://github.com/langchain-ai/langchainjs/pull/9601) [`d79d2ff`](https://github.com/langchain-ai/langchainjs/commit/d79d2ff99b43f60c49f35ba6173bc916352ef0cd) Thanks [@Orenoid](https://github.com/Orenoid)! - feat(zhipuai): support tool calling in ChatZhipuAI
+
+- Updated dependencies [[`13c9d5b`](https://github.com/langchain-ai/langchainjs/commit/13c9d5bfa3acac7ffb37642e9a50d84dc9004e88), [`cc502e1`](https://github.com/langchain-ai/langchainjs/commit/cc502e1b67dbadcd123a7ea2964c791c2bbad581), [`75b3b90`](https://github.com/langchain-ai/langchainjs/commit/75b3b90c5fa62cbbfa678dfb01f031caed4488ef)]:
+  - @langchain/openai@1.2.1
+  - @langchain/classic@1.0.8
+
+## 1.1.1
+
+### Patch Changes
+
+- [#9671](https://github.com/langchain-ai/langchainjs/pull/9671) [`7f8685b`](https://github.com/langchain-ai/langchainjs/commit/7f8685b062d0fe61f9947e2811d46f8fd0365167) Thanks [@FilipZmijewski](https://github.com/FilipZmijewski)! - support aborting for Model Gateway and WatsonxLLM for IBM
+
+- [#9681](https://github.com/langchain-ai/langchainjs/pull/9681) [`9bdd109`](https://github.com/langchain-ai/langchainjs/commit/9bdd109b2078828ddf55e7665caa9891f108f69c) Thanks [@robertmaybin](https://github.com/robertmaybin)! - Add @langchain/turbopuffer package for turbopuffer vector database integration
+
+  Deprecate @langchain/community/vectorstores/turbopuffer in favor of @langchain/turbopuffer
+
+- Updated dependencies [[`af664be`](https://github.com/langchain-ai/langchainjs/commit/af664becc0245b2315ea2f784c9a6c1d7622dbb4)]:
+  - @langchain/classic@1.0.7
+  - @langchain/openai@1.2.0
+
 ## 1.1.0
 
 ### Minor Changes

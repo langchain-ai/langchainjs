@@ -182,6 +182,13 @@ To get started, install the dependencies for the project from the root:
 pnpm install
 ```
 
+Make sure you have [`nvm`](https://github.com/nvm-sh/nvm?tab=readme-ov-file#installing-and-updating) installed and setup:
+
+```sh
+# switch to recommended Node.js version
+nvm use
+```
+
 Then, build the core package (required before working on other packages):
 
 ```bash

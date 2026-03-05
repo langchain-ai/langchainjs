@@ -35,6 +35,11 @@ export {
 } from "@langchain/core/tools";
 
 /**
+ * LangChain utilities
+ */
+export { context } from "@langchain/core/utils/context";
+
+/**
  * LangChain Agents
  */
 export * from "./agents/index.js";
@@ -53,3 +58,12 @@ export { InMemoryStore } from "@langchain/core/stores";
  * LangChain Documents
  */
 export { type DocumentInput, Document } from "@langchain/core/documents";
+
+/**
+ * LangChain Testing Utilities
+ */
+export {
+  langchainMatchers,
+  type LangChainMatchers,
+  fakeModel,
+} from "@langchain/core/testing";

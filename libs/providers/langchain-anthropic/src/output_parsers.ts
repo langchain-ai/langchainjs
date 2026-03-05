@@ -2,21 +2,29 @@ import {
   BaseLLMOutputParser,
   OutputParserException,
 } from "@langchain/core/output_parsers";
-import { JsonOutputKeyToolsParserParamsInterop } from "@langchain/core/output_parsers/openai_tools";
+import {
+  JsonOutputKeyToolsParserParamsInterop,
+  JsonOutputKeyToolsParserParamsSerializable,
+} from "@langchain/core/output_parsers/openai_tools";
 import { ChatGeneration } from "@langchain/core/outputs";
 import { ToolCall } from "@langchain/core/messages/tool";
 import {
   interopSafeParseAsync,
   InteropZodType,
 } from "@langchain/core/utils/types";
+import { SerializableSchema } from "@langchain/core/utils/standard_schema";
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-interface AnthropicToolsOutputParserParams<T extends Record<string, any>>
-  extends JsonOutputKeyToolsParserParamsInterop<T> {}
+interface AnthropicToolsOutputParserParams<
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  T extends Record<string, any>,
+>
+  extends
+    JsonOutputKeyToolsParserParamsInterop<T>,
+    JsonOutputKeyToolsParserParamsSerializable<T> {}
 
 export class AnthropicToolsOutputParser<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  T extends Record<string, any> = Record<string, any>
+  T extends Record<string, any> = Record<string, any>,
 > extends BaseLLMOutputParser<T> {
   static lc_name() {
     return "AnthropicToolsOutputParser";
@@ -34,11 +42,14 @@ export class AnthropicToolsOutputParser<
 
   zodSchema?: InteropZodType<T>;
 
+  serializableSchema?: SerializableSchema<T>;
+
   constructor(params: AnthropicToolsOutputParserParams<T>) {
     super(params);
     this.keyName = params.keyName;
     this.returnSingle = params.returnSingle ?? this.returnSingle;
     this.zodSchema = params.zodSchema;
+    this.serializableSchema = params.serializableSchema;
   }
 
   protected async _validateResult(result: unknown): Promise<T> {
@@ -60,6 +71,23 @@ export class AnthropicToolsOutputParser<
     } else {
       parsedResult = result;
     }
+
+    if (this.serializableSchema !== undefined) {
+      const validated =
+        await this.serializableSchema["~standard"].validate(parsedResult);
+      if (validated.issues) {
+        throw new OutputParserException(
+          `Failed to parse. Text: "${JSON.stringify(
+            parsedResult,
+            null,
+            2
+          )}". Error: ${JSON.stringify(validated.issues)}`,
+          JSON.stringify(parsedResult, null, 2)
+        );
+      }
+      return validated.value as T;
+    }
+
     if (this.zodSchema === undefined) {
       return parsedResult as T;
     }

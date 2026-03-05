@@ -57,7 +57,7 @@ type ValueType = {
  * ```
  */
 export class SupabaseTranslator<
-  T extends SupabaseVectorStore
+  T extends SupabaseVectorStore,
 > extends BaseTranslator<T> {
   declare VisitOperationOutput: SupabaseFilterRPCCall;
 

@@ -12,6 +12,7 @@ import {
 } from "../index.js";
 import { ToolCall, ToolMessage } from "../../messages/tool.js";
 import { RunnableConfig } from "../../runnables/types.js";
+import { awaitAllCallbacks } from "../../singletons/callbacks.js";
 
 test("Tool should error if responseFormat is content_and_artifact but the function doesn't return a tuple", async () => {
   const weatherSchema = z.object({
@@ -494,5 +495,315 @@ describe("tool()", () => {
     expect(testTool.extras).toEqual({
       foo: "test",
     });
+  });
+});
+
+describe("Generator tools (async function*)", () => {
+  test("Generator tool yields partial results and returns final result", async () => {
+    const partials: unknown[] = [];
+
+    const testTool = tool(
+      async function* (input) {
+        yield { status: "searching", city: input.city };
+        yield { status: "found", temperature: 72 };
+        return `Weather in ${input.city}: 72F`;
+      },
+      {
+        name: "weather",
+        schema: z.object({ city: z.string() }),
+        description: "Get weather",
+      }
+    );
+
+    const result = await testTool.invoke(
+      {
+        id: "call_123",
+        name: "weather",
+        args: { city: "SF" },
+        type: "tool_call",
+      },
+      {
+        callbacks: [
+          {
+            handleToolEvent(chunk: unknown) {
+              partials.push(chunk);
+            },
+          },
+        ],
+      }
+    );
+
+    expect(result).toBeInstanceOf(ToolMessage);
+    expect(result.content).toBe("Weather in SF: 72F");
+
+    expect(partials).toHaveLength(2);
+    expect(partials[0]).toEqual({ status: "searching", city: "SF" });
+    expect(partials[1]).toEqual({ status: "found", temperature: 72 });
+  });
+
+  test("DynamicTool (string schema) generator yields partial results and returns final result", async () => {
+    const partials: unknown[] = [];
+
+    const stringSchemaTool = tool(
+      async function* (input: string) {
+        yield { message: "step 1", input };
+        await new Promise((r) => setTimeout(r, 10));
+        yield { message: "step 2" };
+        return `Done: ${input}`;
+      },
+      {
+        name: "string_stream_tool",
+        description: "A string-input tool that streams progress",
+        schema: z.string(),
+      }
+    );
+
+    const result = await stringSchemaTool.invoke("hello", {
+      callbacks: [
+        {
+          handleToolEvent(chunk: unknown) {
+            partials.push(chunk);
+          },
+        },
+      ],
+    });
+
+    expect(result).toBe("Done: hello");
+    expect(partials).toHaveLength(2);
+    expect(partials[0]).toEqual({ message: "step 1", input: "hello" });
+    expect(partials[1]).toEqual({ message: "step 2" });
+  });
+
+  test("Non generator tool still works correctly", async () => {
+    const partials: unknown[] = [];
+
+    const testTool = tool(
+      async (input) => {
+        return `Weather in ${input.city}: 72F`;
+      },
+      {
+        name: "weather",
+        schema: z.object({ city: z.string() }),
+        description: "Get weather",
+      }
+    );
+
+    const result = await testTool.invoke(
+      { city: "SF" },
+      {
+        callbacks: [
+          {
+            handleToolEvent(chunk: unknown) {
+              partials.push(chunk);
+            },
+          },
+        ],
+      }
+    );
+
+    expect(result).toBe("Weather in SF: 72F");
+    expect(partials).toHaveLength(0);
+  });
+
+  test("Generator tool with no yields works", async () => {
+    const testTool = tool(
+      // eslint-disable-next-line require-yield -- intentional: testing generator with no yields
+      async function* (input) {
+        return input.x * 2;
+      },
+      {
+        name: "double",
+        schema: z.object({ x: z.number() }),
+        description: "Double a number",
+      }
+    );
+
+    const result = await testTool.invoke({ x: 5 });
+    expect(result).toBe(10);
+  });
+
+  test("handleToolStart and handleToolEnd still fire with generator tools", async () => {
+    const events: string[] = [];
+
+    const testTool = tool(
+      async function* (input) {
+        yield { status: "searching", city: input.city };
+        yield { status: "found", temperature: 72 };
+        return `Weather in ${input.city}: 72F`;
+      },
+      {
+        name: "weather",
+        schema: z.object({ city: z.string() }),
+        description: "Get weather",
+      }
+    );
+
+    await testTool.invoke(
+      { city: "SF" },
+      {
+        callbacks: [
+          {
+            handleToolStart() {
+              events.push("start");
+            },
+          },
+          {
+            handleToolEvent() {
+              events.push("stream");
+            },
+          },
+          {
+            handleToolEnd() {
+              events.push("end");
+            },
+          },
+        ],
+      }
+    );
+
+    await awaitAllCallbacks();
+
+    expect(events).toEqual(["start", "stream", "stream", "end"]);
+  });
+
+  test("handleToolStart receives toolCallId when invoked with ToolCall", async () => {
+    const expectedToolCallId = "call_abc123";
+    let receivedToolCallId: string | undefined;
+
+    const testTool = tool((input) => String(input.x), {
+      name: "adder",
+      schema: z.object({ x: z.number() }),
+      description: "Echo x",
+    });
+
+    const toolCall: ToolCall = {
+      id: expectedToolCallId,
+      name: "adder",
+      args: { x: 42 },
+      type: "tool_call",
+    };
+
+    await testTool.invoke(toolCall, {
+      callbacks: [
+        {
+          handleToolStart(
+            _tool,
+            _input,
+            _runId,
+            _parentRunId,
+            _tags,
+            _metadata,
+            _runName,
+            toolCallId
+          ) {
+            receivedToolCallId = toolCallId;
+          },
+        },
+      ],
+    });
+
+    expect(receivedToolCallId).toBe(expectedToolCallId);
+  });
+
+  test("should handle generator errors mid-stream", async () => {
+    let handleToolErrorCalled = false;
+
+    const testTool = tool(
+      async function* (input) {
+        yield input.chunk;
+        throw new Error("Mid-stream failure");
+      },
+      {
+        name: "failing",
+        schema: z.object({ chunk: z.string() }),
+        description: "Generator that throws after yielding",
+      }
+    );
+
+    await expect(
+      testTool.invoke(
+        { chunk: "chunk1" },
+        {
+          callbacks: [
+            {
+              handleToolError(err: unknown) {
+                handleToolErrorCalled = true;
+                expect(err).toBeInstanceOf(Error);
+                expect((err as Error).message).toBe("Mid-stream failure");
+              },
+            },
+          ],
+        }
+      )
+    ).rejects.toThrow("Mid-stream failure");
+
+    expect(handleToolErrorCalled).toBe(true);
+  });
+
+  test("should handle callback errors during streaming (resilient)", async () => {
+    let handleToolErrorCalled = false;
+
+    const testTool = tool(
+      async function* (input) {
+        yield input.chunk;
+        return "final";
+      },
+      {
+        name: "streaming",
+        schema: z.object({ chunk: z.string() }),
+        description: "Generator that yields then returns",
+      }
+    );
+
+    const result = await testTool.invoke(
+      { chunk: "chunk1" },
+      {
+        callbacks: [
+          {
+            handleToolEvent: async () => {
+              throw new Error("Callback failed");
+            },
+            handleToolError(err: unknown) {
+              handleToolErrorCalled = true;
+              expect(err).toBeInstanceOf(Error);
+              expect((err as Error).message).toBe("Callback failed");
+            },
+            raiseError: true,
+            awaitHandlers: true,
+          },
+        ],
+      }
+    );
+
+    await awaitAllCallbacks();
+    expect(handleToolErrorCalled).toBe(true);
+    expect(result).toBe("final");
+  });
+
+  test("should close generator on early termination (cleanup runs)", async () => {
+    let generatorCleanupRan = false;
+
+    // When generator throws mid-stream, invoke rejects and we still close the generator in finally.
+    const throwingTool = tool(
+      async function* (input) {
+        try {
+          yield input.chunk;
+          throw new Error("Generator fails");
+        } finally {
+          generatorCleanupRan = true;
+        }
+      },
+      {
+        name: "throwing",
+        schema: z.object({ chunk: z.string() }),
+        description: "Generator that throws after yield",
+      }
+    );
+
+    await expect(throwingTool.invoke({ chunk: "chunk1" })).rejects.toThrow(
+      "Generator fails"
+    );
+
+    expect(generatorCleanupRan).toBe(true);
   });
 });

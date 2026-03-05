@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <!--<!
   [endif]--><head>
@@ -229,12 +229,12 @@
     <script>
       (function (i, r) {
         i["GoogleAnalyticsObject"] = r;
-        (i[r] =
+        ((i[r] =
           i[r] ||
           function () {
             (i[r].q = i[r].q || []).push(arguments);
           }),
-          (i[r].l = 1 * new Date());
+          (i[r].l = 1 * new Date()));
       })(window, "ga");
     </script>
 
@@ -250,7 +250,10 @@
     <link
       rel="stylesheet"
       as="style"
-      onload="this.onload=null;this.rel='stylesheet'"
+      onload="
+        this.onload = null;
+        this.rel = 'stylesheet';
+      "
       href="https://fonts.googleapis.com/css?family=Lato:300,300i,400,700,900|Open+Sans:300,300i,400,400i,600,600i,700,700i|Playfair+Display:400,700"
     />
 
@@ -276,13 +279,13 @@
             function a() {
               t.media = e;
             }
-            t.addEventListener
+            (t.addEventListener
               ? t.addEventListener("load", a)
               : t.attachEvent && t.attachEvent("onload", a),
               setTimeout(function () {
-                (t.rel = "stylesheet"), (t.media = "only x");
+                ((t.rel = "stylesheet"), (t.media = "only x"));
               }),
-              setTimeout(a, 3e3);
+              setTimeout(a, 3e3));
           }),
           (e.poly = function () {
             if (!e.support())
@@ -304,11 +307,11 @@
           var a = t.setInterval(e.poly, 500);
           t.addEventListener
             ? t.addEventListener("load", function () {
-                e.poly(), t.clearInterval(a);
+                (e.poly(), t.clearInterval(a));
               })
             : t.attachEvent &&
               t.attachEvent("onload", function () {
-                e.poly(), t.clearInterval(a);
+                (e.poly(), t.clearInterval(a));
               });
         }
         "undefined" != typeof exports
@@ -922,7 +925,11 @@
       .adthrive-footer-message span,
       .adthrive-privacy-preferences a {
         color: #a9a9a9;
-        font-family: Arial, Helvetica Neue, Helvetica, sans-serif;
+        font-family:
+          Arial,
+          Helvetica Neue,
+          Helvetica,
+          sans-serif;
         font-size: 13px;
       }
       .adthrive-ccpa-link a {
@@ -1495,7 +1502,7 @@
                         >
                           <button
                             rel="nofollow"
-                            onclick="window.location.href='/login'"
+                            onclick="window.location.href = '/login'"
                             class="ul-sign-in fw-bold text-center btn btn-gradient btn-md active w-100 text-white text-decoration-none"
                           >
                             <span class="text-white">Log In</span>
@@ -1553,7 +1560,7 @@
                         >
                           <button
                             rel="nofollow"
-                            onclick="window.location.href='/logout'"
+                            onclick="window.location.href = '/logout'"
                             class="ul-sign-out fw-bold text-center btn btn-gradient btn-md active w-100 text-white text-decoration-none"
                           >
                             <span class="text-white">Log Out</span>
@@ -1601,7 +1608,7 @@
                       <li class="loggedin-links ps-5 pe-5 mt-4">
                         <button
                           rel="nofollow"
-                          onclick="window.location.href='/logout'"
+                          onclick="window.location.href = '/logout'"
                           class="ul-sign-out fw-bold text-center btn btn-gradient btn-md active w-100 text-white text-decoration-none"
                         >
                           <span>Log Out</span>

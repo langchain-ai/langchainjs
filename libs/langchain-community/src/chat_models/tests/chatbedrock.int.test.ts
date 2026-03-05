@@ -434,7 +434,7 @@ test(".withConfig tools", async () => {
     .describe("Get the weather for a city");
   const model = new BedrockChatWeb({
     region: process.env.BEDROCK_AWS_REGION,
-    model: "anthropic.claude-3-5-sonnet-20240620-v1:0",
+    model: "anthropic.claude-sonnet-4-5-20250929-v1:0",
     maxRetries: 0,
     credentials: {
       secretAccessKey: process.env.BEDROCK_AWS_SECRET_ACCESS_KEY!,

@@ -25,8 +25,7 @@ export type RemoteRetrieverValues = Record<string, any>;
  * instance.
  */
 export interface RemoteRetrieverParams
-  extends AsyncCallerParams,
-    BaseRetrieverInput {
+  extends AsyncCallerParams, BaseRetrieverInput {
   /**
    * The URL of the remote retriever server
    */

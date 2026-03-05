@@ -12,6 +12,7 @@ import {
   BedrockRuntimeClient,
   type Message as BedrockMessage,
   type SystemContentBlock as BedrockSystemContentBlock,
+  ServiceTierType,
 } from "@aws-sdk/client-bedrock-runtime";
 import { z } from "zod/v3";
 import { describe, expect, test, it, vi } from "vitest";
@@ -162,6 +163,21 @@ describe("convertToConverseMessages", () => {
             },
           ],
         }),
+        new ToolMessage({
+          content: [
+            {
+              type: "text",
+              text: "long text...",
+            },
+            {
+              type: "cache_point",
+              cachePoint: {
+                type: "default",
+              },
+            },
+          ],
+          tool_call_id: "long_content_tool",
+        }),
       ],
       output: {
         converseMessages: [
@@ -194,6 +210,26 @@ describe("convertToConverseMessages", () => {
               },
               {
                 text: "The capital of Germany is Berlin.",
+              },
+            ],
+          },
+          {
+            role: BedrockConversationRole.USER,
+            content: [
+              {
+                toolResult: {
+                  toolUseId: "long_content_tool",
+                  content: [
+                    {
+                      text: "long text...",
+                    },
+                  ],
+                },
+              },
+              {
+                cachePoint: {
+                  type: "default",
+                },
               },
             ],
           },
@@ -400,6 +436,140 @@ describe("convertToConverseMessages", () => {
         ],
       },
     },
+    {
+      name: "standard v1 format with tool_call blocks (e.g., from Anthropic provider)",
+      input: [
+        new SystemMessage("You're an advanced AI assistant."),
+        new HumanMessage("What's the weather in SF?"),
+        new AIMessage({
+          content: [
+            { type: "text", text: "Let me check the weather for you." },
+            {
+              type: "tool_call",
+              id: "call_123",
+              name: "get_weather",
+              args: { location: "San Francisco" },
+            },
+          ],
+          response_metadata: {
+            output_version: "v1",
+            model_provider: "anthropic",
+          },
+        }),
+        new ToolMessage({
+          tool_call_id: "call_123",
+          content: "72°F and sunny",
+        }),
+      ],
+      output: {
+        converseSystem: [
+          {
+            text: "You're an advanced AI assistant.",
+          },
+        ],
+        converseMessages: [
+          {
+            role: BedrockConversationRole.USER,
+            content: [
+              {
+                text: "What's the weather in SF?",
+              },
+            ],
+          },
+          {
+            role: BedrockConversationRole.ASSISTANT,
+            content: [
+              {
+                text: "Let me check the weather for you.",
+              },
+              {
+                toolUse: {
+                  toolUseId: "call_123",
+                  name: "get_weather",
+                  input: { location: "San Francisco" },
+                },
+              },
+            ],
+          },
+          {
+            role: BedrockConversationRole.USER,
+            content: [
+              {
+                toolResult: {
+                  toolUseId: "call_123",
+                  content: [
+                    {
+                      text: "72°F and sunny",
+                    },
+                  ],
+                },
+              },
+            ],
+          },
+        ],
+      },
+    },
+    {
+      name: "standard v1 format with reasoning blocks (e.g., from Anthropic provider)",
+      input: [
+        new SystemMessage("You're an advanced AI assistant."),
+        new HumanMessage("What is 2+2?"),
+        new AIMessage({
+          content: [
+            {
+              type: "reasoning",
+              reasoning: "I need to add 2 and 2 together.",
+            },
+            { type: "text", text: "The answer is 4." },
+          ],
+          response_metadata: {
+            output_version: "v1",
+            model_provider: "anthropic",
+          },
+        }),
+        new HumanMessage("Thanks! What about 3+3?"),
+      ],
+      output: {
+        converseSystem: [
+          {
+            text: "You're an advanced AI assistant.",
+          },
+        ],
+        converseMessages: [
+          {
+            role: BedrockConversationRole.USER,
+            content: [
+              {
+                text: "What is 2+2?",
+              },
+            ],
+          },
+          {
+            role: BedrockConversationRole.ASSISTANT,
+            content: [
+              {
+                reasoningContent: {
+                  reasoningText: {
+                    text: "I need to add 2 and 2 together.",
+                  },
+                },
+              },
+              {
+                text: "The answer is 4.",
+              },
+            ],
+          },
+          {
+            role: BedrockConversationRole.USER,
+            content: [
+              {
+                text: "Thanks! What about 3+3?",
+              },
+            ],
+          },
+        ],
+      },
+    },
   ];
 
   it.each(testCases.map((tc) => [tc.name, tc]))(
@@ -451,6 +621,188 @@ test("Streaming supports empty string chunks", async () => {
   expect(finalChunk).toBeDefined();
   if (!finalChunk) return;
   expect(finalChunk.content).toBe("Hello world!");
+});
+
+describe("video content block conversion", () => {
+  test("converts multimodal video block with base64 data", () => {
+    const videoData = btoa("fake-video-bytes");
+    const result = convertToConverseMessages([
+      new HumanMessage({
+        content: [
+          { type: "text", text: "Describe this video" },
+          {
+            type: "video",
+            mimeType: "video/mp4",
+            data: videoData,
+          },
+        ],
+      }),
+    ]);
+
+    expect(result.converseMessages).toHaveLength(1);
+    const content = result.converseMessages[0].content!;
+    expect(content).toHaveLength(2);
+    expect(content[0]).toEqual({ text: "Describe this video" });
+    expect(content[1]).toHaveProperty("video");
+    expect(content[1].video?.format).toBe("mp4");
+    expect(content[1].video?.source?.bytes).toBeInstanceOf(Uint8Array);
+  });
+
+  test("converts multimodal video block with Uint8Array data", () => {
+    const videoBytes = new Uint8Array([1, 2, 3, 4]);
+    const result = convertToConverseMessages([
+      new HumanMessage({
+        content: [
+          {
+            type: "video",
+            mimeType: "video/webm",
+            data: videoBytes,
+          },
+        ],
+      }),
+    ]);
+
+    const content = result.converseMessages[0].content!;
+    expect(content[0]).toHaveProperty("video");
+    expect(content[0].video?.format).toBe("webm");
+    expect(content[0].video?.source?.bytes).toBe(videoBytes);
+  });
+
+  test("passes through native Bedrock video block", () => {
+    const videoSource = {
+      bytes: new Uint8Array([1, 2, 3]),
+    };
+    const result = convertToConverseMessages([
+      new HumanMessage({
+        content: [
+          {
+            type: "video",
+            video: {
+              format: "mp4",
+              source: videoSource,
+            },
+          },
+        ],
+      }),
+    ]);
+
+    const content = result.converseMessages[0].content!;
+    expect(content[0]).toHaveProperty("video");
+    expect(content[0].video?.format).toBe("mp4");
+    expect(content[0].video?.source).toBe(videoSource);
+  });
+
+  test("converts video block with S3 fileId", () => {
+    const result = convertToConverseMessages([
+      new HumanMessage({
+        content: [
+          {
+            type: "video",
+            mimeType: "video/mp4",
+            fileId: "s3://my-bucket/my-video.mp4",
+          },
+        ],
+      }),
+    ]);
+
+    const content = result.converseMessages[0].content!;
+    expect(content[0]).toHaveProperty("video");
+    expect(content[0].video?.format).toBe("mp4");
+    expect(content[0].video?.source?.s3Location?.uri).toBe(
+      "s3://my-bucket/my-video.mp4"
+    );
+  });
+});
+
+describe("audio content block conversion", () => {
+  test("converts multimodal audio block with base64 data", () => {
+    const audioData = btoa("fake-audio-bytes");
+    const result = convertToConverseMessages([
+      new HumanMessage({
+        content: [
+          { type: "text", text: "Transcribe this audio" },
+          {
+            type: "audio",
+            mimeType: "audio/mp3",
+            data: audioData,
+          },
+        ],
+      }),
+    ]);
+
+    expect(result.converseMessages).toHaveLength(1);
+    const content = result.converseMessages[0].content!;
+    expect(content).toHaveLength(2);
+    expect(content[0]).toEqual({ text: "Transcribe this audio" });
+    expect(content[1]).toHaveProperty("audio");
+    expect(content[1].audio?.format).toBe("mp3");
+    expect(content[1].audio?.source?.bytes).toBeInstanceOf(Uint8Array);
+  });
+
+  test("converts multimodal audio block with Uint8Array data", () => {
+    const audioBytes = new Uint8Array([1, 2, 3, 4]);
+    const result = convertToConverseMessages([
+      new HumanMessage({
+        content: [
+          {
+            type: "audio",
+            mimeType: "audio/wav",
+            data: audioBytes,
+          },
+        ],
+      }),
+    ]);
+
+    const content = result.converseMessages[0].content!;
+    expect(content[0]).toHaveProperty("audio");
+    expect(content[0].audio?.format).toBe("wav");
+    expect(content[0].audio?.source?.bytes).toBe(audioBytes);
+  });
+
+  test("passes through native Bedrock audio block", () => {
+    const audioSource = {
+      bytes: new Uint8Array([1, 2, 3]),
+    };
+    const result = convertToConverseMessages([
+      new HumanMessage({
+        content: [
+          {
+            type: "audio",
+            audio: {
+              format: "flac",
+              source: audioSource,
+            },
+          },
+        ],
+      }),
+    ]);
+
+    const content = result.converseMessages[0].content!;
+    expect(content[0]).toHaveProperty("audio");
+    expect(content[0].audio?.format).toBe("flac");
+    expect(content[0].audio?.source).toBe(audioSource);
+  });
+
+  test("converts audio block with S3 fileId", () => {
+    const result = convertToConverseMessages([
+      new HumanMessage({
+        content: [
+          {
+            type: "audio",
+            mimeType: "audio/mp3",
+            fileId: "s3://my-bucket/my-audio.mp3",
+          },
+        ],
+      }),
+    ]);
+
+    const content = result.converseMessages[0].content!;
+    expect(content[0]).toHaveProperty("audio");
+    expect(content[0].audio?.format).toBe("mp3");
+    expect(content[0].audio?.source?.s3Location?.uri).toBe(
+      "s3://my-bucket/my-audio.mp3"
+    );
+  });
 });
 
 describe("applicationInferenceProfile parameter", () => {
@@ -713,7 +1065,7 @@ describe("tool_choice works for supported models", () => {
     // Claude 3 should NOT throw
     const claude3Model = new ChatBedrockConverse({
       ...baseConstructorArgs,
-      model: "anthropic.claude-3-5-sonnet-20240620-v1:0",
+      model: "anthropic.claude-sonnet-4-5-20250929-v1:0",
       supportsToolChoiceValues: supportsToolChoiceValuesClaude3,
     });
     const claude3ModelWithTool = claude3Model.bindTools([tool], {
@@ -811,7 +1163,7 @@ describe("tool_choice works for supported models", () => {
   });
 
   it.each([
-    "anthropic.claude-3-5-sonnet-20240620-v1:0",
+    "anthropic.claude-sonnet-4-5-20250929-v1:0",
     "anthropic.claude-sonnet-4-20250514-v1:0",
   ])(
     "should bind tool_choice when using WSO with model that supports tool choice: %s",
@@ -907,4 +1259,248 @@ test("Test ChatBedrockConverse deserialization from model_id and region_name", a
   expect(loaded.model).toBe("anthropic.claude-3-sonnet-20240229-v1:0");
   expect(loaded.region).toBe("us-west-2");
   expect(loaded.temperature).toBe(0.7);
+});
+
+test("ChatBedrockConverse supports string model shorthand", () => {
+  const modelId = "anthropic.claude-3-haiku-20240307-v1:0";
+  const model = new ChatBedrockConverse(modelId, {
+    region: "us-east-1",
+    credentials: {
+      accessKeyId: "test-key",
+      secretAccessKey: "test-secret",
+    },
+  });
+
+  expect(model.model).toBe(modelId);
+  expect(model.region).toBe("us-east-1");
+});
+
+describe("serviceTier configuration", () => {
+  const baseConstructorArgs = {
+    region: "us-east-1",
+    credentials: {
+      secretAccessKey: "process.env.BEDROCK_AWS_SECRET_ACCESS_KEY",
+      accessKeyId: "process.env.BEDROCK_AWS_ACCESS_KEY_ID",
+    },
+  };
+
+  it("should set serviceTier in constructor", () => {
+    const model = new ChatBedrockConverse({
+      ...baseConstructorArgs,
+      serviceTier: "priority",
+    });
+    expect(model.serviceTier).toBe("priority");
+  });
+
+  it("should set serviceTier as undefined when not provided", () => {
+    const model = new ChatBedrockConverse({
+      ...baseConstructorArgs,
+    });
+    expect(model.serviceTier).toBeUndefined();
+  });
+
+  it.each(["priority", "default", "flex", "reserved"])(
+    "should include serviceTier in invocationParams when set to %s",
+    (serviceTier) => {
+      const model = new ChatBedrockConverse({
+        ...baseConstructorArgs,
+        serviceTier: serviceTier as ServiceTierType,
+      });
+      const params = model.invocationParams({});
+      expect(params.serviceTier).toEqual({ type: serviceTier });
+    }
+  );
+
+  it("should not include serviceTier in invocationParams when not set", () => {
+    const model = new ChatBedrockConverse({
+      ...baseConstructorArgs,
+    });
+    const params = model.invocationParams({});
+    expect(params.serviceTier).toBeUndefined();
+  });
+
+  it("should override serviceTier from call options in invocationParams", () => {
+    const model = new ChatBedrockConverse({
+      ...baseConstructorArgs,
+      serviceTier: "default",
+    });
+    const params = model.invocationParams({
+      serviceTier: "priority",
+    });
+    expect(params.serviceTier).toEqual({ type: "priority" });
+  });
+
+  it("should use class-level serviceTier when call options don't override it", () => {
+    const model = new ChatBedrockConverse({
+      ...baseConstructorArgs,
+      serviceTier: "flex",
+    });
+    const params = model.invocationParams({});
+    expect(params.serviceTier).toEqual({ type: "flex" });
+  });
+
+  it("should handle serviceTier in invocationParams with other config options", () => {
+    const model = new ChatBedrockConverse({
+      ...baseConstructorArgs,
+      serviceTier: "reserved",
+      temperature: 0.5,
+      maxTokens: 100,
+    });
+    const params = model.invocationParams({
+      stop: ["stop_sequence"],
+    });
+    expect(params.serviceTier).toEqual({ type: "reserved" });
+    expect(params.inferenceConfig?.temperature).toBe(0.5);
+    expect(params.inferenceConfig?.maxTokens).toBe(100);
+    expect(params.inferenceConfig?.stopSequences).toEqual(["stop_sequence"]);
+  });
+});
+
+describe("withStructuredOutput - StandardSchema", () => {
+  function makeSerializableSchema() {
+    return {
+      "~standard": {
+        version: 1 as const,
+        vendor: "test",
+        validate: (value: unknown) => {
+          const v = value as Record<string, unknown>;
+          if (v && typeof v === "object" && "name" in v) {
+            return { value: v as { name: string } };
+          }
+          return {
+            issues: [{ message: "Expected object with name" }],
+          };
+        },
+        jsonSchema: {
+          input: () => ({
+            type: "object" as const,
+            properties: {
+              name: { type: "string", description: "A name" },
+            },
+            required: ["name"],
+          }),
+          output: () => ({ type: "object" as const, properties: {} }),
+        },
+      },
+    };
+  }
+
+  const baseConstructorArgs = {
+    region: "us-east-1",
+    credentials: {
+      secretAccessKey: "test-secret-key",
+      accessKeyId: "test-access-key",
+    },
+  };
+
+  test("functionCalling with valid output parses correctly", async () => {
+    const model = new ChatBedrockConverse({
+      ...baseConstructorArgs,
+      model: "anthropic.claude-3-haiku-20240307-v1:0",
+    });
+    vi
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      .spyOn(model as any, "invoke")
+      .mockResolvedValue(
+        new AIMessage({
+          content: "",
+          tool_calls: [
+            {
+              name: "extract",
+              args: { name: "cobalt" },
+              id: "1",
+              type: "tool_call",
+            },
+          ],
+        })
+      );
+
+    const schema = makeSerializableSchema();
+    const structured = model.withStructuredOutput(schema);
+
+    const result = await structured.invoke("What?");
+    expect(result).toEqual({ name: "cobalt" });
+  });
+
+  test("functionCalling with custom name", async () => {
+    const model = new ChatBedrockConverse({
+      ...baseConstructorArgs,
+      model: "anthropic.claude-3-haiku-20240307-v1:0",
+    });
+    vi
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      .spyOn(model as any, "invoke")
+      .mockResolvedValue(
+        new AIMessage({
+          content: "",
+          tool_calls: [
+            {
+              name: "GetName",
+              args: { name: "test" },
+              id: "1",
+              type: "tool_call",
+            },
+          ],
+        })
+      );
+
+    const schema = makeSerializableSchema();
+    const structured = model.withStructuredOutput(schema, {
+      name: "GetName",
+    });
+
+    const result = await structured.invoke("What?");
+    expect(result).toEqual({ name: "test" });
+  });
+
+  test("functionCalling with includeRaw returns raw and parsed", async () => {
+    const mockResponse = new AIMessage({
+      content: "",
+      tool_calls: [
+        {
+          name: "extract",
+          args: { name: "cobalt" },
+          id: "1",
+          type: "tool_call",
+        },
+      ],
+    });
+    const model = new ChatBedrockConverse({
+      ...baseConstructorArgs,
+      model: "anthropic.claude-3-haiku-20240307-v1:0",
+    });
+    vi
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      .spyOn(model as any, "invoke")
+      .mockResolvedValue(mockResponse);
+
+    const schema = makeSerializableSchema();
+    const structured = model.withStructuredOutput(schema, {
+      includeRaw: true,
+    });
+
+    const result = await structured.invoke("What?");
+    expect(result).toHaveProperty("raw");
+    expect(result).toHaveProperty("parsed");
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    expect((result as any).parsed).toEqual({ name: "cobalt" });
+  });
+
+  test("no tool calls throws error", async () => {
+    const model = new ChatBedrockConverse({
+      ...baseConstructorArgs,
+      model: "anthropic.claude-3-haiku-20240307-v1:0",
+    });
+    vi
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      .spyOn(model as any, "invoke")
+      .mockResolvedValue(new AIMessage({ content: "No tools here" }));
+
+    const schema = makeSerializableSchema();
+    const structured = model.withStructuredOutput(schema);
+
+    await expect(async () => {
+      await structured.invoke("What?");
+    }).rejects.toThrow("No tool calls found in the response.");
+  });
 });

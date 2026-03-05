@@ -38,12 +38,15 @@ export class StateManager {
    */
   getState(name: string) {
     const middlewareNodes = this.#nodes.get(name) ?? [];
-    const state = middlewareNodes.reduce((prev, node) => {
-      return {
-        ...prev,
-        ...((node.getState() as Record<string, unknown>) ?? {}),
-      };
-    }, {} as Record<string, unknown>);
+    const state = middlewareNodes.reduce(
+      (prev, node) => {
+        return {
+          ...prev,
+          ...((node.getState() as Record<string, unknown>) ?? {}),
+        };
+      },
+      {} as Record<string, unknown>
+    );
 
     /**
      * we internally reset the jumpTo property and shouldn't propagate this value

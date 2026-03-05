@@ -28,6 +28,7 @@ import { GenerationChunk } from "../../outputs.js";
 // Import from web to avoid top-level side-effects from AsyncLocalStorage
 import { dispatchCustomEvent } from "../../callbacks/dispatch/web.js";
 import { AsyncLocalStorageProviderSingleton } from "../../singletons/index.js";
+import type { StreamEvent } from "../../tracers/event_stream.js";
 
 function reverse(s: string) {
   // Reverse a string.
@@ -2324,4 +2325,59 @@ test("streamEvents method handles errors", async () => {
   }
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   expect((caughtError as any)?.message).toEqual("should catch this error");
+});
+
+test("Runnable streamEvents method emits on_tool_error for failing tools", async () => {
+  const errorMessage = "Tool execution failed!";
+  const failingTool = new DynamicTool({
+    func: async () => {
+      throw new Error(errorMessage);
+    },
+    name: "failing_tool",
+    description: "A tool that always fails",
+  });
+
+  const events: StreamEvent[] = [];
+  let caughtError: unknown;
+
+  try {
+    const eventStream = failingTool.streamEvents({}, { version: "v2" });
+    for await (const event of eventStream) {
+      events.push(event);
+    }
+  } catch (e) {
+    caughtError = e;
+  }
+
+  // Verify error was thrown
+  expect(caughtError).toBeDefined();
+  expect((caughtError as Error).message).toBe(errorMessage);
+
+  // Verify events include on_tool_start and on_tool_error
+  expect(events).toEqual([
+    {
+      data: { input: {} },
+      event: "on_tool_start",
+      metadata: {},
+      name: "failing_tool",
+      run_id: expect.any(String),
+      tags: [],
+    },
+    {
+      data: {
+        input: expect.any(Object),
+        error: expect.stringContaining(errorMessage),
+      },
+      event: "on_tool_error",
+      metadata: {},
+      name: "failing_tool",
+      run_id: expect.any(String),
+      tags: [],
+    },
+  ]);
+
+  // Verify the on_tool_error event structure more specifically
+  const errorEvent = events.find((e) => e.event === "on_tool_error");
+  expect(errorEvent).toBeDefined();
+  expect(errorEvent?.data.error).toContain(errorMessage);
 });

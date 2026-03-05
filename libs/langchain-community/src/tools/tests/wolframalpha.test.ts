@@ -14,7 +14,7 @@ describe("wolfram alpha test suite", () => {
       async () =>
         ({
           text: () => Promise.resolve(MOCK_ANSWER),
-        } as Response)
+        }) as Response
     );
   });
 

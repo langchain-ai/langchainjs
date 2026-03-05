@@ -78,9 +78,8 @@ await retriever.docstore.mset(keyValuePairs);
 // retriever.vectorstore.addDocuments(taggedOriginalDocs);
 
 // Vectorstore alone retrieves the small chunks
-const vectorstoreResult = await retriever.vectorstore.similaritySearch(
-  "justice breyer"
-);
+const vectorstoreResult =
+  await retriever.vectorstore.similaritySearch("justice breyer");
 console.log(vectorstoreResult[0].pageContent.length);
 /*
   1118

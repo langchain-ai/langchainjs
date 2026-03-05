@@ -27,18 +27,9 @@ import type {
   Message as OllamaMessage,
   Tool as OllamaTool,
 } from "ollama";
-import {
-  Runnable,
-  RunnablePassthrough,
-  RunnableSequence,
-} from "@langchain/core/runnables";
+import { Runnable } from "@langchain/core/runnables";
 import { convertToOpenAITool } from "@langchain/core/utils/function_calling";
 import { concat } from "@langchain/core/utils/stream";
-import {
-  JsonOutputParser,
-  StructuredOutputParser,
-} from "@langchain/core/output_parsers";
-import { JsonOutputKeyToolsParser } from "@langchain/core/output_parsers/openai_tools";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import {
   InteropZodType,
@@ -50,6 +41,15 @@ import {
   convertToOllamaMessages,
 } from "./utils.js";
 import { OllamaCamelCaseOptions } from "./types.js";
+import {
+  isSerializableSchema,
+  SerializableSchema,
+} from "@langchain/core/utils/standard_schema";
+import {
+  assembleStructuredOutputPipeline,
+  createContentParser,
+  createFunctionCallingParser,
+} from "@langchain/core/language_models/structured_output";
 
 export interface ChatOllamaCallOptions extends BaseChatModelCallOptions {
   /**
@@ -82,14 +82,13 @@ export interface PullModelOptions {
  * Input to chat model class.
  */
 export interface ChatOllamaInput
-  extends BaseChatModelParams,
-    OllamaCamelCaseOptions {
+  extends BaseChatModelParams, OllamaCamelCaseOptions {
   /**
    * The model to invoke. If the model does not exist, it
    * will be pulled.
    * @default "llama3"
    */
-  model?: string;
+  model?: OllamaChatRequest["model"];
   /**
    * The host URL of the Ollama server.
    * Defaults to `OLLAMA_BASE_URL` if set.
@@ -499,55 +498,68 @@ export class ChatOllama
 
   think?: boolean;
 
-  constructor(fields?: ChatOllamaInput) {
-    super(fields ?? {});
+  constructor(
+    model: OllamaChatRequest["model"],
+    fields?: Omit<ChatOllamaInput, "model">
+  );
+  constructor(fields?: ChatOllamaInput);
+  constructor(
+    modelOrFields?: string | ChatOllamaInput,
+    fieldsArg?: Omit<ChatOllamaInput, "model">
+  ) {
+    const fields =
+      typeof modelOrFields === "string"
+        ? { ...(fieldsArg ?? {}), model: modelOrFields }
+        : (modelOrFields ?? {});
+    super(fields);
+    this._addVersion("@langchain/ollama", __PKG_VERSION__);
 
     this.baseUrl =
-      fields?.baseUrl ??
+      fields.baseUrl ??
       getEnvironmentVariable("OLLAMA_BASE_URL") ??
       this.baseUrl;
 
     this.client = new Ollama({
-      fetch: fields?.fetch,
+      fetch: fields.fetch,
       host: this.baseUrl,
-      headers: fields?.headers,
+      headers: fields.headers,
     });
 
-    this.model = fields?.model ?? this.model;
-    this.numa = fields?.numa;
-    this.numCtx = fields?.numCtx;
-    this.numBatch = fields?.numBatch;
-    this.numGpu = fields?.numGpu;
-    this.mainGpu = fields?.mainGpu;
-    this.lowVram = fields?.lowVram;
-    this.f16Kv = fields?.f16Kv;
-    this.logitsAll = fields?.logitsAll;
-    this.vocabOnly = fields?.vocabOnly;
-    this.useMmap = fields?.useMmap;
-    this.useMlock = fields?.useMlock;
-    this.embeddingOnly = fields?.embeddingOnly;
-    this.numThread = fields?.numThread;
-    this.numKeep = fields?.numKeep;
-    this.seed = fields?.seed;
-    this.numPredict = fields?.numPredict;
-    this.topK = fields?.topK;
-    this.topP = fields?.topP;
-    this.tfsZ = fields?.tfsZ;
-    this.typicalP = fields?.typicalP;
-    this.repeatLastN = fields?.repeatLastN;
-    this.temperature = fields?.temperature;
-    this.repeatPenalty = fields?.repeatPenalty;
-    this.presencePenalty = fields?.presencePenalty;
-    this.frequencyPenalty = fields?.frequencyPenalty;
-    this.mirostat = fields?.mirostat;
-    this.mirostatTau = fields?.mirostatTau;
-    this.mirostatEta = fields?.mirostatEta;
-    this.penalizeNewline = fields?.penalizeNewline;
-    this.streaming = fields?.streaming;
-    this.format = fields?.format;
-    this.keepAlive = fields?.keepAlive;
-    this.think = fields?.think;
-    this.checkOrPullModel = fields?.checkOrPullModel ?? this.checkOrPullModel;
+    this.model = fields.model ?? this.model;
+    this.numa = fields.numa;
+    this.numCtx = fields.numCtx;
+    this.numBatch = fields.numBatch;
+    this.numGpu = fields.numGpu;
+    this.mainGpu = fields.mainGpu;
+    this.lowVram = fields.lowVram;
+    this.f16Kv = fields.f16Kv;
+    this.logitsAll = fields.logitsAll;
+    this.vocabOnly = fields.vocabOnly;
+    this.useMmap = fields.useMmap;
+    this.useMlock = fields.useMlock;
+    this.embeddingOnly = fields.embeddingOnly;
+    this.numThread = fields.numThread;
+    this.numKeep = fields.numKeep;
+    this.seed = fields.seed;
+    this.numPredict = fields.numPredict;
+    this.topK = fields.topK;
+    this.topP = fields.topP;
+    this.tfsZ = fields.tfsZ;
+    this.typicalP = fields.typicalP;
+    this.repeatLastN = fields.repeatLastN;
+    this.temperature = fields.temperature;
+    this.repeatPenalty = fields.repeatPenalty;
+    this.presencePenalty = fields.presencePenalty;
+    this.frequencyPenalty = fields.frequencyPenalty;
+    this.mirostat = fields.mirostat;
+    this.mirostatTau = fields.mirostatTau;
+    this.mirostatEta = fields.mirostatEta;
+    this.penalizeNewline = fields.penalizeNewline;
+    this.streaming = fields.streaming;
+    this.format = fields.format;
+    this.keepAlive = fields.keepAlive;
+    this.think = fields.think;
+    this.checkOrPullModel = fields.checkOrPullModel ?? this.checkOrPullModel;
   }
 
   // Replace
@@ -674,6 +686,7 @@ export class ChatOllama
     options: this["ParsedCallOptions"],
     runManager?: CallbackManagerForLLMRun
   ): Promise<ChatResult> {
+    options.signal?.throwIfAborted();
     if (this.checkOrPullModel) {
       if (!(await this.checkModelExistsOnMachine(this.model))) {
         await this.pull(this.model, {
@@ -748,11 +761,12 @@ export class ChatOllama
 
     let lastMetadata: Omit<OllamaChatResponse, "message"> | undefined;
 
-    for await (const chunk of stream) {
+    for await (const streamChunk of stream) {
       if (options.signal?.aborted) {
         this.client.abort();
+        return;
       }
-      const { message: responseMessage, ...rest } = chunk;
+      const { message: responseMessage, ...rest } = streamChunk;
       usageMetadata.input_tokens += rest.prompt_eval_count ?? 0;
       usageMetadata.output_tokens += rest.eval_count ?? 0;
       usageMetadata.total_tokens =
@@ -761,14 +775,22 @@ export class ChatOllama
 
       // when think is enabled, try thinking first
       const token = this.think
-        ? responseMessage.thinking ?? responseMessage.content ?? ""
-        : responseMessage.content ?? "";
+        ? (responseMessage.thinking ?? responseMessage.content ?? "")
+        : (responseMessage.content ?? "");
 
-      yield new ChatGenerationChunk({
+      const chunk = new ChatGenerationChunk({
         text: token,
         message: convertOllamaMessagesToLangChain(responseMessage),
       });
-      await runManager?.handleLLMNewToken(token);
+      yield chunk;
+      await runManager?.handleLLMNewToken(
+        token,
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        { chunk }
+      );
     }
 
     // Yield the `response_metadata` as the final chunk.
@@ -776,7 +798,10 @@ export class ChatOllama
       text: "",
       message: new AIMessageChunk({
         content: "",
-        response_metadata: lastMetadata,
+        response_metadata: {
+          ...lastMetadata,
+          model_provider: "ollama",
+        },
         usage_metadata: usageMetadata,
       }),
     });
@@ -784,10 +809,11 @@ export class ChatOllama
 
   withStructuredOutput<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    RunOutput extends Record<string, any> = Record<string, any>
+    RunOutput extends Record<string, any> = Record<string, any>,
   >(
     outputSchema:
       | InteropZodType<RunOutput>
+      | SerializableSchema<RunOutput>
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
     config?: StructuredOutputMethodOptions<false>
@@ -795,10 +821,11 @@ export class ChatOllama
 
   withStructuredOutput<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    RunOutput extends Record<string, any> = Record<string, any>
+    RunOutput extends Record<string, any> = Record<string, any>,
   >(
     outputSchema:
       | InteropZodType<RunOutput>
+      | SerializableSchema<RunOutput>
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
     config?: StructuredOutputMethodOptions<true>
@@ -806,10 +833,11 @@ export class ChatOllama
 
   withStructuredOutput<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    RunOutput extends Record<string, any> = Record<string, any>
+    RunOutput extends Record<string, any> = Record<string, any>,
   >(
     outputSchema:
       | InteropZodType<RunOutput>
+      | SerializableSchema<RunOutput>
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
     config?: StructuredOutputMethodOptions<boolean>
@@ -825,10 +853,11 @@ export class ChatOllama
 
   withStructuredOutput<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    RunOutput extends Record<string, any> = Record<string, any>
+    RunOutput extends Record<string, any> = Record<string, any>,
   >(
     outputSchema:
       | InteropZodType<RunOutput>
+      | SerializableSchema<RunOutput>
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
     config?: StructuredOutputMethodOptions<boolean>
@@ -852,79 +881,48 @@ export class ChatOllama
 
     if (method === "functionCalling") {
       let functionName = name ?? "extract";
-      if (isInteropZodSchema(schema)) {
-        const jsonSchema = toJsonSchema(schema);
-        llm = this.bindTools([
-          {
-            type: "function",
-            function: {
-              name: functionName,
-              description: jsonSchema.description,
-              parameters: jsonSchema,
-            },
-          },
-        ]).withConfig({
-          ls_structured_output_format: {
-            kwargs: { method },
-            schema: jsonSchema,
-          },
-        } as Partial<ChatOllamaCallOptions>);
-        outputParser = new JsonOutputKeyToolsParser({
-          returnSingle: true,
-          keyName: functionName,
-          zodSchema: schema,
-        });
-      } else {
-        let openAIFunctionDefinition: FunctionDefinition;
-        if (
-          typeof schema.name === "string" &&
-          typeof schema.parameters === "object" &&
-          schema.parameters != null
-        ) {
-          openAIFunctionDefinition = schema as FunctionDefinition;
-          functionName = schema.name;
-        } else {
-          openAIFunctionDefinition = {
-            name: functionName,
-            description: schema.description ?? "",
-            parameters: schema,
-          };
-        }
-        llm = this.bindTools([
-          {
-            type: "function",
-            function: openAIFunctionDefinition,
-          },
-        ]).withConfig({
-          ls_structured_output_format: {
-            kwargs: { method },
-            schema,
-          },
-        } as Partial<ChatOllamaCallOptions>);
-        outputParser = new JsonOutputKeyToolsParser<RunOutput>({
-          returnSingle: true,
-          keyName: functionName,
-        });
-      }
-    } else if (method === "jsonMode") {
-      outputParser = isInteropZodSchema(schema)
-        ? StructuredOutputParser.fromZodSchema(schema)
-        : new JsonOutputParser<RunOutput>();
+      let toolFunction: FunctionDefinition;
       const jsonSchema = toJsonSchema(schema);
-      llm = this.withConfig({
-        format: "json",
+
+      if (isInteropZodSchema(schema) || isSerializableSchema(schema)) {
+        toolFunction = {
+          name: functionName,
+          description: jsonSchema.description,
+          parameters: jsonSchema,
+        };
+      } else if (
+        typeof schema.name === "string" &&
+        typeof schema.parameters === "object" &&
+        schema.parameters != null
+      ) {
+        toolFunction = schema as FunctionDefinition;
+        functionName = schema.name;
+      } else {
+        toolFunction = {
+          name: functionName,
+          description: schema.description ?? "",
+          parameters: schema,
+        };
+      }
+
+      llm = this.bindTools([
+        { type: "function", function: toolFunction },
+      ]).withConfig({
         ls_structured_output_format: {
           kwargs: { method },
-          schema: jsonSchema,
+          schema:
+            isInteropZodSchema(schema) || isSerializableSchema(schema)
+              ? jsonSchema
+              : schema,
         },
       } as Partial<ChatOllamaCallOptions>);
-    } else if (method === "jsonSchema") {
-      outputParser = isInteropZodSchema(schema)
-        ? StructuredOutputParser.fromZodSchema(schema)
-        : new JsonOutputParser<RunOutput>();
+
+      outputParser = createFunctionCallingParser(schema, functionName);
+    } else if (method === "jsonMode" || method === "jsonSchema") {
+      outputParser = createContentParser(schema);
       const jsonSchema = toJsonSchema(schema);
       llm = this.withConfig({
-        format: jsonSchema,
+        format: method === "jsonMode" ? "json" : jsonSchema,
         ls_structured_output_format: {
           kwargs: { method },
           schema: jsonSchema,
@@ -936,32 +934,11 @@ export class ChatOllama
       );
     }
 
-    if (!includeRaw) {
-      return llm.pipe(outputParser).withConfig({
-        runName: "ChatOllamaStructuredOutput",
-      }) as Runnable<BaseLanguageModelInput, RunOutput>;
-    }
-
-    const parserAssign = RunnablePassthrough.assign({
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      parsed: (input: any, config) => outputParser.invoke(input.raw, config),
-    });
-    const parserNone = RunnablePassthrough.assign({
-      parsed: () => null,
-    });
-    const parsedWithFallback = parserAssign.withFallbacks({
-      fallbacks: [parserNone],
-    });
-    return RunnableSequence.from<
-      BaseLanguageModelInput,
-      { raw: BaseMessage; parsed: RunOutput }
-    >([
-      {
-        raw: llm,
-      },
-      parsedWithFallback,
-    ]).withConfig({
-      runName: "StructuredOutputRunnable",
-    });
+    return assembleStructuredOutputPipeline(
+      llm,
+      outputParser,
+      includeRaw,
+      includeRaw ? "StructuredOutputRunnable" : "ChatOllamaStructuredOutput"
+    );
   }
 }

@@ -11,6 +11,10 @@ import {
   GeminiJsonSchema,
   GeminiJsonSchemaDirty,
 } from "../types.js";
+import {
+  isSerializableSchema,
+  SerializableSchema,
+} from "@langchain/core/utils/standard_schema";
 
 export function adjustObjectType(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -59,10 +63,39 @@ export function removeAdditionalProperties(
 
     // Check for union types (anyOf, oneOf) which Gemini doesn't support
     if ("anyOf" in newObj || "oneOf" in newObj) {
-      throw new Error(
-        "zod_to_gemini_parameters: Gemini cannot handle union types (discriminatedUnion, anyOf, oneOf). " +
-          "Consider using a flat object structure with optional fields instead."
-      );
+      const unionTypes = newObj.anyOf || newObj.oneOf;
+
+      // Check if this is a nullable union (e.g., T | null)
+      // This is a 2-element array where one element is {type: "null"}
+      if (Array.isArray(unionTypes) && unionTypes.length === 2) {
+        const nullIndex = unionTypes.findIndex((t) => t.type === "null");
+
+        if (nullIndex >= 0) {
+          // This is a nullable union - extract the non-null type
+          const nonNullType = unionTypes[nullIndex === 0 ? 1 : 0];
+          delete newObj.anyOf;
+          delete newObj.oneOf;
+          // Merge the non-null type properties and add nullable: true
+          for (const key in nonNullType) {
+            if (key in nonNullType) {
+              newObj[key] = nonNullType[key];
+            }
+          }
+          newObj.nullable = true;
+        } else {
+          // Not a simple nullable union - reject it
+          throw new Error(
+            "zod_to_gemini_parameters: Gemini cannot handle union types (discriminatedUnion, anyOf, oneOf). " +
+              "Consider using a flat object structure with optional fields instead."
+          );
+        }
+      } else {
+        // Not a simple nullable union - reject it
+        throw new Error(
+          "zod_to_gemini_parameters: Gemini cannot handle union types (discriminatedUnion, anyOf, oneOf). " +
+            "Consider using a flat object structure with optional fields instead."
+        );
+      }
     }
 
     // Convert exclusiveMinimum (from .positive()) to minimum
@@ -96,17 +129,23 @@ export function removeAdditionalProperties(
 
 export function schemaToGeminiParameters<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  RunOutput extends Record<string, any> = Record<string, any>
->(schema: InteropZodType<RunOutput> | JsonSchema7Type): GeminiFunctionSchema {
+  RunOutput extends Record<string, any> = Record<string, any>,
+>(
+  schema:
+    | SerializableSchema<RunOutput>
+    | InteropZodType<RunOutput>
+    | JsonSchema7Type
+): GeminiFunctionSchema {
   // Gemini doesn't accept either the $schema or additionalProperties
   // attributes, so we need to explicitly remove them.
   // Zod sometimes also makes an array of type (because of .nullish()),
   // which needs cleaning up.
   const jsonSchema = removeAdditionalProperties(
-    isInteropZodSchema(schema) ? toJsonSchema(schema) : schema
+    isInteropZodSchema(schema) || isSerializableSchema(schema)
+      ? toJsonSchema(schema)
+      : schema
   );
   const { $schema, ...rest } = jsonSchema;
-
   return rest;
 }
 

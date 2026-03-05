@@ -1,6 +1,14 @@
 import { describe, it, expect } from "vitest";
 import { ChatOpenAIResponses } from "../responses.js";
 
+describe("constructor shorthand", () => {
+  it("supports string model shorthand", () => {
+    const model = new ChatOpenAIResponses("gpt-4o-mini", { temperature: 0.3 });
+    expect(model.model).toBe("gpt-4o-mini");
+    expect(model.temperature).toBe(0.3);
+  });
+});
+
 describe("strict tool-calling configuration", () => {
   it("falls back to supportsStrictToolCalling when strict is undefined", () => {
     const model = new ChatOpenAIResponses({
@@ -49,5 +57,17 @@ describe("strict tool-calling configuration", () => {
     expect("strict" in params).toBe(false);
 
     expect((params.tools as Array<{ strict?: boolean }>)[0].strict).toBe(false);
+  });
+});
+
+describe("service_tier configuration", () => {
+  it("passes service_tier to invocation params", () => {
+    const model = new ChatOpenAIResponses({
+      model: "gpt-4o",
+      service_tier: "auto",
+    });
+
+    const params = model.invocationParams({});
+    expect(params.service_tier).toBe("auto");
   });
 });

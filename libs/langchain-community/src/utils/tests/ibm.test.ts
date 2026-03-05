@@ -21,7 +21,7 @@ describe("Utils tests", () => {
       expect(instance).toBeInstanceOf(WatsonxAiMlVml_v1);
     });
 
-    test.only("Test authentication gateway function", () => {
+    test("Test authentication gateway function", () => {
       const instance = authenticateAndSetGatewayInstance({
         version: "2024-05-31",
         serviceUrl,

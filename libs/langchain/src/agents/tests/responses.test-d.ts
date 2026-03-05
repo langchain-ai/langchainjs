@@ -2,9 +2,11 @@ import { describe, expectTypeOf, it } from "vitest";
 import { LanguageModelLike } from "@langchain/core/language_models/base";
 import { Tool } from "@langchain/core/tools";
 import { z } from "zod/v3";
+import type { SerializableSchema } from "@langchain/core/utils/standard_schema";
 
 import { createAgent, toolStrategy, providerStrategy } from "../index.js";
 import type { JsonSchemaFormat } from "../responses.js";
+import type { InferAgentResponse } from "../types.js";
 import { FakeToolCallingChatModel } from "./utils.js";
 
 const prompt = {
@@ -134,6 +136,113 @@ describe("response format", () => {
       expectTypeOf(res.structuredResponse).toEqualTypeOf<
         { capitalA: string } | { capitalB: string }
       >();
+    });
+
+    describe("should properly infer response format from agent type", () => {
+      it("via schema list", () => {
+        const agent = createAgent({
+          model: new FakeToolCallingChatModel({}),
+          tools: [],
+          // Note: Using 'as const' is required for proper type inference
+          // of the union type from the array of schemas
+          responseFormat: [
+            z.object({
+              capitalA: z.string(),
+            }),
+            z.object({
+              capitalB: z.string(),
+            }),
+          ] as const,
+        });
+
+        type AgentResponse = InferAgentResponse<typeof agent>;
+        expectTypeOf<AgentResponse>().toEqualTypeOf<
+          | {
+              capitalA: string;
+            }
+          | {
+              capitalB: string;
+            }
+        >();
+      });
+
+      it("via single schema", () => {
+        const agent = createAgent({
+          model: new FakeToolCallingChatModel({}),
+          tools: [],
+          // Note: Using 'as const' is required for proper type inference
+          // of the union type from the array of schemas
+          responseFormat: z.object({
+            capitalA: z.string(),
+          }),
+        });
+
+        type AgentResponse = InferAgentResponse<typeof agent>;
+        expectTypeOf<AgentResponse>().toEqualTypeOf<{
+          capitalA: string;
+        }>();
+      });
+
+      it("via use if providerStrategy", () => {
+        const agent = createAgent({
+          model: new FakeToolCallingChatModel({}),
+          tools: [],
+          // Note: Using 'as const' is required for proper type inference
+          // of the union type from the array of schemas
+          responseFormat: providerStrategy(
+            z.object({
+              capitalB: z.string(),
+            })
+          ),
+        });
+
+        type AgentResponse = InferAgentResponse<typeof agent>;
+        expectTypeOf<AgentResponse>().toEqualTypeOf<{
+          capitalB: string;
+        }>();
+      });
+
+      it("via use if toolStrategy", () => {
+        const agent = createAgent({
+          model: new FakeToolCallingChatModel({}),
+          tools: [],
+          // Note: Using 'as const' is required for proper type inference
+          // of the union type from the array of schemas
+          responseFormat: toolStrategy(
+            z.object({
+              capitalC: z.string(),
+            })
+          ),
+        });
+
+        type AgentResponse = InferAgentResponse<typeof agent>;
+        expectTypeOf<AgentResponse>().toEqualTypeOf<{
+          capitalC: string;
+        }>();
+
+        const agent2 = createAgent({
+          model: new FakeToolCallingChatModel({}),
+          // Note: Using 'as const' is required for proper type inference
+          // of the union type from the array of schemas
+          responseFormat: toolStrategy([
+            z.object({
+              capitalD: z.string(),
+            }),
+            z.object({
+              capitalE: z.string(),
+            }),
+          ]),
+        });
+        type AgentResponse2 = InferAgentResponse<typeof agent2>;
+        expectTypeOf<AgentResponse2>().toEqualTypeOf<
+          | {
+              capitalD: string;
+            }
+          | {
+              capitalE: string;
+            }
+        >();
+      });
     });
   });
 
@@ -292,6 +401,64 @@ describe("response format", () => {
         // @ts-expect-error - validate error: only one schema is allowed for native outputs
         responseFormat: providerStrategy([jsonSchema, jsonSchema]),
       });
+    });
+  });
+
+  describe("using Standard Schema", () => {
+    it("should allow a single Standard Schema with toolStrategy", async () => {
+      const standardSchema = {} as SerializableSchema;
+      const agent = createAgent({
+        model: new FakeToolCallingChatModel({}),
+        tools: [],
+        responseFormat: toolStrategy(standardSchema),
+      });
+      const result = await agent.invoke(prompt);
+      expectTypeOf(result.structuredResponse).toEqualTypeOf<
+        Record<string, unknown>
+      >();
+    });
+
+    it("should allow an array of Standard Schemas with toolStrategy", async () => {
+      const schema1 = {} as SerializableSchema;
+      const schema2 = {} as SerializableSchema;
+      const agent = createAgent({
+        model: new FakeToolCallingChatModel({}),
+        tools: [],
+        responseFormat: toolStrategy([schema1, schema2]),
+      });
+      const result = await agent.invoke(prompt);
+      expectTypeOf(result.structuredResponse).toEqualTypeOf<
+        Record<string, unknown>
+      >();
+    });
+
+    it("should allow a Standard Schema with providerStrategy", async () => {
+      const standardSchema = {} as SerializableSchema;
+      const agent = createAgent({
+        model: new FakeToolCallingChatModel({}),
+        tools: [],
+        responseFormat: providerStrategy(standardSchema),
+      });
+      const result = await agent.invoke(prompt);
+      expectTypeOf(result.structuredResponse).toEqualTypeOf<
+        Record<string, unknown>
+      >();
+    });
+
+    it("should allow a Standard Schema with providerStrategy options", async () => {
+      const standardSchema = {} as SerializableSchema;
+      const agent = createAgent({
+        model: new FakeToolCallingChatModel({}),
+        tools: [],
+        responseFormat: providerStrategy({
+          schema: standardSchema,
+          strict: false,
+        }),
+      });
+      const result = await agent.invoke(prompt);
+      expectTypeOf(result.structuredResponse).toEqualTypeOf<
+        Record<string, unknown>
+      >();
     });
   });
 });

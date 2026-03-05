@@ -182,6 +182,54 @@ describe("structured output handling", () => {
   });
 
   describe("providerStrategy", () => {
+    it("should work with providerStrategy and tools", async () => {
+      const { tool: weatherTool, mock: weatherMock } = makeTool(
+        ({ location }: { location: string }) =>
+          `The weather in ${location} is sunny with a high of 75°F.`,
+        {
+          name: "get_weather",
+          description: "Get the current weather for a location",
+          schema: z.object({
+            location: z
+              .string()
+              .describe("The city and state, e.g. San Francisco, CA"),
+          }),
+        }
+      );
+
+      const ResponseSchema = z.object({
+        answer: z.string().describe("The final answer to the user's question"),
+        confidence: z
+          .number()
+          .min(0)
+          .max(1)
+          .describe("Confidence level from 0 to 1"),
+      });
+
+      const agent = createAgent({
+        model: "openai:gpt-4o",
+        systemPrompt:
+          "You are a helpful assistant. Use the available tools to answer questions.",
+        tools: [weatherTool],
+        responseFormat: providerStrategy(ResponseSchema),
+      });
+
+      const result = await agent.invoke({
+        messages: [
+          new HumanMessage("What's the weather like in San Francisco?"),
+        ],
+      });
+
+      // Verify tool was called
+      expect(weatherMock).toHaveBeenCalledTimes(1);
+
+      // Verify structured response is present and correctly parsed
+      expect(result.structuredResponse).toBeDefined();
+      expect(result.structuredResponse.answer).toBeDefined();
+      expect(typeof result.structuredResponse.answer).toBe("string");
+      expect(typeof result.structuredResponse.confidence).toBe("number");
+    });
+
     it("should support native structured output for newer Anthropic models", async () => {
       const model = new ChatAnthropic({
         model: "claude-sonnet-4-5-20250929",
@@ -215,6 +263,59 @@ describe("structured output handling", () => {
       expect(result.messages.length).toBe(4);
       expect(result.messages.at(-1)?.content).toContain('{"answer": "Paris"}');
       expect((result.messages.at(-1) as AIMessage).tool_calls?.length).toBe(0);
+    });
+
+    it("should return structured output with Claude Opus 4.6 end-to-end", async () => {
+      const model = new ChatAnthropic({
+        model: "claude-opus-4-6",
+      });
+
+      const { tool: weatherTool, mock: weatherMock } = makeTool(
+        ({ city }: { city: string }) =>
+          `The weather in ${city} is 22°C and partly cloudy.`,
+        {
+          name: "get_weather",
+          description: "Get the current weather for a city",
+          schema: z.object({
+            city: z.string().describe("The city name"),
+          }),
+        }
+      );
+
+      const ResponseSchema = z.object({
+        city: z.string().describe("The city that was queried"),
+        temperature: z.number().describe("The temperature"),
+        summary: z.string().describe("A brief weather summary"),
+      });
+
+      const agent = createAgent({
+        model,
+        tools: [weatherTool],
+        systemPrompt:
+          "You are a weather assistant. Use the get_weather tool to answer questions about weather. Return exact values from the tool.",
+        responseFormat: providerStrategy(ResponseSchema),
+      });
+
+      const result = await agent.invoke({
+        messages: [new HumanMessage("What is the weather in Berlin?")],
+      });
+
+      // Verify tool was called
+      expect(weatherMock).toHaveBeenCalledTimes(1);
+
+      // Verify structured response is present and correctly parsed
+      expect(result.structuredResponse).toBeDefined();
+      expect(result.structuredResponse.temperature).toBe(22);
+      expect(result.structuredResponse.city).toBe("Berlin");
+      expect(typeof result.structuredResponse.summary).toBe("string");
+
+      // Verify no extract- tool calls (providerStrategy uses native structured output)
+      const hasExtractToolCalls = result.messages.some(
+        (msg) =>
+          AIMessage.isInstance(msg) &&
+          msg.tool_calls?.some((tc) => tc.name.startsWith("extract-"))
+      );
+      expect(hasExtractToolCalls).toBe(false);
     });
   });
 });

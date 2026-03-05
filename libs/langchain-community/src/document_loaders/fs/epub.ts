@@ -9,7 +9,10 @@ import { BaseDocumentLoader } from "@langchain/core/document_loaders/base";
 export class EPubLoader extends BaseDocumentLoader {
   private splitChapters: boolean;
 
-  constructor(public filePath: string, { splitChapters = true } = {}) {
+  constructor(
+    public filePath: string,
+    { splitChapters = true } = {}
+  ) {
     super();
     this.splitChapters = splitChapters;
   }

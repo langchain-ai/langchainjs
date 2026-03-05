@@ -2,7 +2,7 @@ import { InStatement, InValue } from "@libsql/client";
 
 export type WhereCondition<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  Metadata extends Record<string, any> = Record<string, any>
+  Metadata extends Record<string, any> = Record<string, any>,
 > = {
   [Key in keyof Metadata]:
     | {

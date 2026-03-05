@@ -420,8 +420,10 @@ class LoadedEvalConfig {
   }
 }
 
-export interface RunOnDatasetParams
-  extends Omit<RunEvalConfig, "customEvaluators"> {
+export interface RunOnDatasetParams extends Omit<
+  RunEvalConfig,
+  "customEvaluators"
+> {
   /**
    * Name of the project for logging and tracking.
    */
@@ -752,9 +754,8 @@ export async function runOnDataset(
     { run_id: string; execution_time?: number; feedback: Feedback[] }
   > = {};
   if (evaluationConfig) {
-    const loadedEvalConfig = await LoadedEvalConfig.fromRunEvalConfig(
-      evaluationConfig
-    );
+    const loadedEvalConfig =
+      await LoadedEvalConfig.fromRunEvalConfig(evaluationConfig);
     evalResults = await applyEvaluators({
       evaluation: loadedEvalConfig,
       runs,

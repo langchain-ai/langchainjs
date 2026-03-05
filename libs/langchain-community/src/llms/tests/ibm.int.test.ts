@@ -1,6 +1,7 @@
 import { CallbackManager } from "@langchain/core/callbacks/manager";
 import { LLMResult } from "@langchain/core/outputs";
 import { StringPromptValue } from "@langchain/core/prompt_values";
+import { expect, describe, test } from "@jest/globals";
 import { TokenUsage } from "../../types/ibm.js";
 import { WatsonxLLM, WatsonxInputLLM } from "../ibm.js";
 
@@ -10,7 +11,7 @@ const modelAlias = "ibm/granite-3-8b-instruct";
 const projectId = process.env.WATSONX_AI_PROJECT_ID;
 const version = "2024-05-31";
 const serviceUrl = process.env.WATSONX_AI_SERVICE_URL as string;
-const serviceUrlGateway = process.env.WATSONX_AI_SERVICE_URL_GATEWAY as string;
+const serviceUrlGateway = process.env.WATSONX_AI_GATEWAY_URL as string;
 
 const parameters = [
   {
@@ -124,8 +125,8 @@ describe.each(parameters)("Text generation for $name", ({ params }) => {
         });
         controllerToAbort.abort();
         return ret;
-      }).rejects.toThrowError("AbortError");
-    }, 10000);
+      }).rejects.toThrow("canceled");
+    }, 20000);
 
     test("Concurenccy", async () => {
       const llm = new WatsonxLLM({
@@ -345,7 +346,7 @@ describe.each(parameters)("Text generation for $name", ({ params }) => {
         for await (const chunk of stream) {
           chunks.push(chunk);
         }
-      }).rejects.toThrowError();
+      }).rejects.toThrow();
     });
 
     test("Signal in call options", async () => {
@@ -371,7 +372,7 @@ describe.each(parameters)("Text generation for $name", ({ params }) => {
             controller.abort();
           }
         }
-      }).rejects.toThrowError();
+      }).rejects.toThrow();
     });
   });
 
@@ -408,11 +409,11 @@ describe.each(parameters)("Text generation for $name", ({ params }) => {
       });
 
       // @ts-expect-error Intentionally passing wrong parameter
-      await expect(instance.getNumTokens(12)).rejects.toThrowError();
+      await expect(instance.getNumTokens(12)).rejects.toThrow();
       await expect(
         // @ts-expect-error Intentionally passing wrong parameter
         instance.getNumTokens(12, { wrong: "Wrong" })
-      ).rejects.toThrowError();
+      ).rejects.toThrow();
     });
   });
 });

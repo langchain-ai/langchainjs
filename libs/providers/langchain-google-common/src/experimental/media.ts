@@ -22,13 +22,14 @@ import {
   GoogleAbstractedClientOpsMethod,
 } from "../auth.js";
 
-export interface GoogleUploadConnectionParams<AuthOptions>
-  extends GoogleConnectionParams<AuthOptions> {}
+export interface GoogleUploadConnectionParams<
+  AuthOptions,
+> extends GoogleConnectionParams<AuthOptions> {}
 
 export abstract class GoogleMultipartUploadConnection<
   CallOptions extends AsyncCallerCallOptions,
   ResponseType extends GoogleResponse,
-  AuthOptions
+  AuthOptions,
 > extends GoogleHostConnection<CallOptions, ResponseType, AuthOptions> {
   constructor(
     fields: GoogleConnectionParams<AuthOptions> | undefined,
@@ -80,7 +81,7 @@ export abstract class GoogleMultipartUploadConnection<
 export abstract class GoogleDownloadConnection<
   CallOptions extends AsyncCallerCallOptions,
   ResponseType extends GoogleResponse,
-  AuthOptions
+  AuthOptions,
 > extends GoogleHostConnection<CallOptions, ResponseType, AuthOptions> {
   async request(options: CallOptions): Promise<ResponseType> {
     return this._request(undefined, options);
@@ -89,7 +90,7 @@ export abstract class GoogleDownloadConnection<
 
 export abstract class GoogleDownloadRawConnection<
   CallOptions extends AsyncCallerCallOptions,
-  AuthOptions
+  AuthOptions,
 > extends GoogleRawConnection<CallOptions, AuthOptions> {
   buildMethod(): GoogleAbstractedClientOpsMethod {
     return "GET";
@@ -101,13 +102,14 @@ export abstract class GoogleDownloadRawConnection<
 }
 
 export interface BlobStoreGoogleParams<AuthOptions>
-  extends GoogleConnectionParams<AuthOptions>,
+  extends
+    GoogleConnectionParams<AuthOptions>,
     AsyncCallerParams,
     BlobStoreOptions {}
 
 export abstract class BlobStoreGoogle<
   ResponseType extends GoogleResponse,
-  AuthOptions
+  AuthOptions,
 > extends BlobStore {
   caller: AsyncCaller;
 
@@ -130,7 +132,7 @@ export abstract class BlobStoreGoogle<
 
   abstract buildSetConnection([key, blob]: [
     string,
-    MediaBlob
+    MediaBlob,
   ]): GoogleMultipartUploadConnection<
     AsyncCallerCallOptions,
     ResponseType,
@@ -288,11 +290,12 @@ export interface GoogleCloudStorageConnectionParams {
 }
 
 export interface GoogleCloudStorageUploadConnectionParams<AuthOptions>
-  extends GoogleUploadConnectionParams<AuthOptions>,
+  extends
+    GoogleUploadConnectionParams<AuthOptions>,
     GoogleCloudStorageConnectionParams {}
 
 export class GoogleCloudStorageUploadConnection<
-  AuthOptions
+  AuthOptions,
 > extends GoogleMultipartUploadConnection<
   AsyncCallerCallOptions,
   GoogleCloudStorageResponse,
@@ -315,7 +318,8 @@ export class GoogleCloudStorageUploadConnection<
 }
 
 export interface GoogleCloudStorageDownloadConnectionParams<AuthOptions>
-  extends GoogleCloudStorageConnectionParams,
+  extends
+    GoogleCloudStorageConnectionParams,
     GoogleConnectionParams<AuthOptions> {
   method: GoogleAbstractedClientOpsMethod;
   alt: "media" | undefined;
@@ -323,7 +327,7 @@ export interface GoogleCloudStorageDownloadConnectionParams<AuthOptions>
 
 export class GoogleCloudStorageDownloadConnection<
   ResponseType extends GoogleResponse,
-  AuthOptions
+  AuthOptions,
 > extends GoogleDownloadConnection<
   AsyncCallerCallOptions,
   ResponseType,
@@ -358,11 +362,12 @@ export class GoogleCloudStorageDownloadConnection<
 }
 
 export interface GoogleCloudStorageRawConnectionParams<AuthOptions>
-  extends GoogleCloudStorageConnectionParams,
+  extends
+    GoogleCloudStorageConnectionParams,
     GoogleConnectionParams<AuthOptions> {}
 
 export class GoogleCloudStorageRawConnection<
-  AuthOptions
+  AuthOptions,
 > extends GoogleDownloadRawConnection<AsyncCallerCallOptions, AuthOptions> {
   uri: GoogleCloudStorageUri;
 
@@ -382,13 +387,14 @@ export class GoogleCloudStorageRawConnection<
   }
 }
 
-export interface BlobStoreGoogleCloudStorageBaseParams<AuthOptions>
-  extends BlobStoreGoogleParams<AuthOptions> {
+export interface BlobStoreGoogleCloudStorageBaseParams<
+  AuthOptions,
+> extends BlobStoreGoogleParams<AuthOptions> {
   uriPrefix: GoogleCloudStorageUri;
 }
 
 export abstract class BlobStoreGoogleCloudStorageBase<
-  AuthOptions
+  AuthOptions,
 > extends BlobStoreGoogle<GoogleCloudStorageResponse, AuthOptions> {
   params: BlobStoreGoogleCloudStorageBaseParams<AuthOptions>;
 
@@ -403,7 +409,7 @@ export abstract class BlobStoreGoogleCloudStorageBase<
 
   buildSetConnection([key, _blob]: [
     string,
-    MediaBlob
+    MediaBlob,
   ]): GoogleMultipartUploadConnection<
     AsyncCallerCallOptions,
     GoogleCloudStorageResponse,
@@ -569,11 +575,12 @@ export type AIStudioFileResponse =
 export interface AIStudioFileConnectionParams {}
 
 export interface AIStudioFileUploadConnectionParams<AuthOptions>
-  extends GoogleUploadConnectionParams<AuthOptions>,
+  extends
+    GoogleUploadConnectionParams<AuthOptions>,
     AIStudioFileConnectionParams {}
 
 export class AIStudioFileUploadConnection<
-  AuthOptions
+  AuthOptions,
 > extends GoogleMultipartUploadConnection<
   AsyncCallerCallOptions,
   AIStudioFileSaveResponse,
@@ -589,15 +596,14 @@ export class AIStudioFileUploadConnection<
 }
 
 export interface AIStudioFileDownloadConnectionParams<AuthOptions>
-  extends AIStudioFileConnectionParams,
-    GoogleConnectionParams<AuthOptions> {
+  extends AIStudioFileConnectionParams, GoogleConnectionParams<AuthOptions> {
   method: GoogleAbstractedClientOpsMethod;
   name: string;
 }
 
 export class AIStudioFileDownloadConnection<
   ResponseType extends GoogleResponse,
-  AuthOptions
+  AuthOptions,
 > extends GoogleDownloadConnection<
   AsyncCallerCallOptions,
   ResponseType,
@@ -630,13 +636,14 @@ export class AIStudioFileDownloadConnection<
   }
 }
 
-export interface BlobStoreAIStudioFileBaseParams<AuthOptions>
-  extends BlobStoreGoogleParams<AuthOptions> {
+export interface BlobStoreAIStudioFileBaseParams<
+  AuthOptions,
+> extends BlobStoreGoogleParams<AuthOptions> {
   retryTime?: number;
 }
 
 export abstract class BlobStoreAIStudioFileBase<
-  AuthOptions
+  AuthOptions,
 > extends BlobStoreGoogle<AIStudioFileResponse, AuthOptions> {
   params?: BlobStoreAIStudioFileBaseParams<AuthOptions>;
 
@@ -693,7 +700,7 @@ export abstract class BlobStoreAIStudioFileBase<
 
   async _set([key, blob]: [
     string,
-    MediaBlob
+    MediaBlob,
   ]): Promise<AIStudioFileSaveResponse> {
     const response = (await super._set([
       key,
@@ -718,7 +725,7 @@ export abstract class BlobStoreAIStudioFileBase<
 
   buildSetConnection([_key, _blob]: [
     string,
-    MediaBlob
+    MediaBlob,
   ]): GoogleMultipartUploadConnection<
     AsyncCallerCallOptions,
     AIStudioFileResponse,

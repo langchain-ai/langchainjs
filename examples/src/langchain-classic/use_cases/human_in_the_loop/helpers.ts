@@ -49,10 +49,13 @@ export const model: Runnable = new ChatOpenAI({
 }).bindTools(tools);
 
 const callTool = (toolInvocation: Record<string, any>): Runnable => {
-  const toolMap: Record<string, StructuredTool> = tools.reduce((acc, tool) => {
-    acc[tool.name] = tool;
-    return acc;
-  }, {} as Record<string, StructuredTool>);
+  const toolMap: Record<string, StructuredTool> = tools.reduce(
+    (acc, tool) => {
+      acc[tool.name] = tool;
+      return acc;
+    },
+    {} as Record<string, StructuredTool>
+  );
   const tool = toolMap[toolInvocation.type];
   return RunnablePassthrough.assign({
     output: (input, config) => tool.invoke(input.args, config),

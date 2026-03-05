@@ -371,8 +371,8 @@ describe.each(matrix)(
         v === undefined
           ? "undefined"
           : v.length === 0
-          ? "empty"
-          : `<code>${v.join("</code>, <code>")}</code>`;
+            ? "empty"
+            : `<code>${v.join("</code>, <code>")}</code>`;
       const aBeforeAgentLabel = fmt(aBeforeAgent);
       const aAfterAgentLabel = fmt(aAfterAgent);
       const aBeforeLabel = fmt(aBefore);

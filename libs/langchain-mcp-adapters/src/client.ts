@@ -603,8 +603,8 @@ export class MultiServerMCPClient {
       return result.contents.map((content) => ({
         uri: content.uri,
         mimeType: content.mimeType,
-        text: content.text as string | undefined,
-        blob: content.blob as string | undefined,
+        text: "text" in content ? content.text : undefined,
+        blob: "blob" in content ? content.blob : undefined,
       }));
     } catch (error) {
       throw new MCPClientError(

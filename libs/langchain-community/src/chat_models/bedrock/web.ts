@@ -180,8 +180,7 @@ export interface BedrockChatCallOptions extends BaseChatModelCallOptions {
 }
 
 export interface BedrockChatFields
-  extends Partial<BaseBedrockInput>,
-    BaseChatModelParams {}
+  extends Partial<BaseBedrockInput>, BaseChatModelParams {}
 
 /**
  * AWS Bedrock chat model integration.
@@ -230,7 +229,7 @@ export interface BedrockChatFields
  * const llm = new BedrockChat({
  *   region: process.env.AWS_REGION,
  *   maxRetries: 0,
- *   model: "anthropic.claude-3-5-sonnet-20240620-v1:0",
+ *   model: "anthropic.claude-sonnet-4-5-20250929-v1:0",
  *   temperature: 0,
  *   maxTokens: undefined,
  *   // other params...
@@ -239,7 +238,7 @@ export interface BedrockChatFields
  * // You can also pass credentials in explicitly:
  * const llmWithCredentials = new BedrockChat({
  *   region: process.env.BEDROCK_AWS_REGION,
- *   model: "anthropic.claude-3-5-sonnet-20240620-v1:0",
+ *   model: "anthropic.claude-sonnet-4-5-20250929-v1:0",
  *   credentials: {
  *     secretAccessKey: process.env.BEDROCK_AWS_SECRET_ACCESS_KEY!,
  *     accessKeyId: process.env.BEDROCK_AWS_ACCESS_KEY_ID!,
@@ -270,7 +269,7 @@ export interface BedrockChatFields
  *   "response_metadata": {
  *     "type": "message",
  *     "role": "assistant",
- *     "model": "claude-3-5-sonnet-20240620",
+ *     "model": "claude-sonnet-4-5-20250929",
  *     "stop_reason": "end_turn",
  *     "stop_sequence": null,
  *     "usage": {
@@ -304,7 +303,7 @@ export interface BedrockChatFields
  *   "response_metadata": {
  *     "type": "message",
  *     "role": "assistant",
- *     "model": "claude-3-5-sonnet-20240620",
+ *     "model": "claude-sonnet-4-5-20250929",
  *     "stop_reason": null,
  *     "stop_sequence": null
  *   },
@@ -372,7 +371,7 @@ export interface BedrockChatFields
  *   "response_metadata": {
  *     "type": "message",
  *     "role": "assistant",
- *     "model": "claude-3-5-sonnet-20240620",
+ *     "model": "claude-sonnet-4-5-20250929",
  *     "stop_reason": null,
  *     "stop_sequence": null,
  *     "amazon-bedrock-invocationMetrics": {
@@ -492,7 +491,7 @@ export interface BedrockChatFields
  * "response_metadata": {
  *   "type": "message",
  *   "role": "assistant",
- *   "model": "claude-3-5-sonnet-20240620",
+ *   "model": "claude-sonnet-4-5-20250929",
  *   "stop_reason": "end_turn",
  *   "stop_sequence": null,
  *   "usage": {

@@ -17,6 +17,7 @@ import type {
   GuardrailConfiguration,
   PerformanceConfiguration,
   ConverseRequest,
+  ServiceTierType,
 } from "@aws-sdk/client-bedrock-runtime";
 import {
   BedrockRuntimeClient,
@@ -31,12 +32,7 @@ import {
   DefaultProviderInit,
 } from "@aws-sdk/credential-provider-node";
 import type { DocumentType as __DocumentType } from "@smithy/types";
-import {
-  Runnable,
-  RunnableLambda,
-  RunnablePassthrough,
-  RunnableSequence,
-} from "@langchain/core/runnables";
+import { Runnable, RunnableLambda } from "@langchain/core/runnables";
 import {
   getSchemaDescription,
   InteropZodType,
@@ -61,13 +57,17 @@ import {
   handleConverseStreamContentBlockStart,
   handleConverseStreamMetadata,
 } from "./utils/message_outputs.js";
+import {
+  isSerializableSchema,
+  SerializableSchema,
+} from "@langchain/core/utils/standard_schema";
+import { assembleStructuredOutputPipeline } from "@langchain/core/language_models/structured_output";
 
 /**
  * Inputs for ChatBedrockConverse.
  */
 export interface ChatBedrockConverseInput
-  extends BaseChatModelParams,
-    Partial<DefaultProviderInit> {
+  extends BaseChatModelParams, Partial<DefaultProviderInit> {
   /**
    * The BedrockRuntimeClient to use.
    * It gives ability to override the default client with a custom one, allowing you to pass requestHandler {NodeHttpHandler} parameter
@@ -172,6 +172,24 @@ export interface ChatBedrockConverseInput
   performanceConfig?: PerformanceConfiguration;
 
   /**
+   * Service tier for model invocation.
+   *
+   * Specifies the processing tier type used for serving the request. Supported values are
+   * 'priority', 'default', 'flex', and 'reserved'.
+   *
+   * - 'priority': Prioritized processing for lower latency
+   * - 'default': Standard processing tier
+   * - 'flex': Flexible processing tier with lower cost
+   * - 'reserved': Reserved capacity for consistent performance
+   *
+   * If not provided, AWS uses the default tier.
+   *
+   * For more information, see:
+   * https://docs.aws.amazon.com/bedrock/latest/userguide/service-tiers-inference.html
+   */
+  serviceTier?: ServiceTierType;
+
+  /**
    * Which types of `tool_choice` values the model supports.
    *
    * Inferred if not specified. Inferred as ['auto', 'any', 'tool'] if a 'claude-3'
@@ -181,13 +199,15 @@ export interface ChatBedrockConverseInput
 }
 
 export interface ChatBedrockConverseCallOptions
-  extends BaseChatModelCallOptions,
+  extends
+    BaseChatModelCallOptions,
     Pick<
       ChatBedrockConverseInput,
       | "additionalModelRequestFields"
       | "streamUsage"
       | "guardrailConfig"
       | "performanceConfig"
+      | "serviceTier"
     > {
   /**
    * A list of stop sequences. A stop sequence is a sequence of characters that causes
@@ -259,7 +279,7 @@ export interface ChatBedrockConverseCallOptions
  * import { ChatBedrockConverse } from '@langchain/aws';
  *
  * const llm = new ChatBedrockConverse({
- *   model: "anthropic.claude-3-5-sonnet-20240620-v1:0",
+ *   model: "anthropic.claude-sonnet-4-5-20250929-v1:0",
  *   temperature: 0,
  *   maxTokens: undefined,
  *   timeout: undefined,
@@ -697,6 +717,8 @@ export class ChatBedrockConverse
 
   performanceConfig?: PerformanceConfiguration;
 
+  serviceTier?: ServiceTierType | undefined = undefined;
+
   client: BedrockRuntimeClient;
 
   clientOptions?: BedrockRuntimeClientConfig;
@@ -709,8 +731,18 @@ export class ChatBedrockConverse
    */
   supportsToolChoiceValues?: Array<"auto" | "any" | "tool">;
 
-  constructor(fields?: ChatBedrockConverseInput) {
-    super(fields ?? {});
+  constructor(model: string, params?: Omit<ChatBedrockConverseInput, "model">);
+  constructor(fields?: ChatBedrockConverseInput);
+  constructor(
+    modelOrFields?: string | ChatBedrockConverseInput,
+    params?: Omit<ChatBedrockConverseInput, "model">
+  ) {
+    const fields =
+      typeof modelOrFields === "string"
+        ? { ...(params ?? {}), model: modelOrFields }
+        : (modelOrFields ?? {});
+    super(fields);
+    this._addVersion("@langchain/aws", __PKG_VERSION__);
     const {
       profile,
       filepath,
@@ -722,7 +754,7 @@ export class ChatBedrockConverse
       webIdentityTokenFile,
       roleAssumerWithWebIdentity,
       ...rest
-    } = fields ?? {};
+    } = fields;
 
     const credentials =
       rest?.credentials ??
@@ -746,9 +778,9 @@ export class ChatBedrockConverse
     }
 
     this.client =
-      fields?.client ??
+      fields.client ??
       new BedrockRuntimeClient({
-        ...fields?.clientOptions,
+        ...fields.clientOptions,
         region,
         credentials,
         endpoint: rest.endpointHost
@@ -768,6 +800,7 @@ export class ChatBedrockConverse
     this.streamUsage = rest?.streamUsage ?? this.streamUsage;
     this.guardrailConfig = rest?.guardrailConfig;
     this.performanceConfig = rest?.performanceConfig;
+    this.serviceTier = rest?.serviceTier;
     this.clientOptions = rest?.clientOptions;
 
     if (rest?.supportsToolChoiceValues === undefined) {
@@ -842,6 +875,8 @@ export class ChatBedrockConverse
       (Array.isArray(candidateInferenceConfig.stopSequences) &&
         candidateInferenceConfig.stopSequences.length > 0);
 
+    const serviceTierType = options?.serviceTier ?? this.serviceTier;
+
     return {
       inferenceConfig: hasInferenceValues
         ? candidateInferenceConfig
@@ -852,6 +887,11 @@ export class ChatBedrockConverse
         options?.additionalModelRequestFields,
       guardrailConfig: this.guardrailConfig ?? options?.guardrailConfig,
       performanceConfig: options?.performanceConfig,
+      serviceTier: serviceTierType
+        ? {
+            type: serviceTierType,
+          }
+        : undefined,
     };
   }
 
@@ -860,6 +900,7 @@ export class ChatBedrockConverse
     options: this["ParsedCallOptions"],
     runManager?: CallbackManagerForLLMRun
   ): Promise<ChatResult> {
+    options.signal?.throwIfAborted();
     if (this.streaming) {
       const stream = this._streamResponseChunks(messages, options, runManager);
       let finalResult: ChatGenerationChunk | undefined;
@@ -949,6 +990,9 @@ export class ChatBedrockConverse
     });
     if (response.stream) {
       for await (const chunk of response.stream) {
+        if (options.signal?.aborted) {
+          return;
+        }
         if (chunk.contentBlockStart) {
           yield handleConverseStreamContentBlockStart(chunk.contentBlockStart);
         } else if (chunk.contentBlockDelta) {
@@ -985,10 +1029,11 @@ export class ChatBedrockConverse
 
   withStructuredOutput<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    RunOutput extends Record<string, any> = Record<string, any>
+    RunOutput extends Record<string, any> = Record<string, any>,
   >(
     outputSchema:
       | InteropZodType<RunOutput>
+      | SerializableSchema<RunOutput>
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
     config?: StructuredOutputMethodOptions<false>
@@ -996,10 +1041,11 @@ export class ChatBedrockConverse
 
   withStructuredOutput<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    RunOutput extends Record<string, any> = Record<string, any>
+    RunOutput extends Record<string, any> = Record<string, any>,
   >(
     outputSchema:
       | InteropZodType<RunOutput>
+      | SerializableSchema<RunOutput>
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
     config?: StructuredOutputMethodOptions<true>
@@ -1007,10 +1053,11 @@ export class ChatBedrockConverse
 
   withStructuredOutput<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    RunOutput extends Record<string, any> = Record<string, any>
+    RunOutput extends Record<string, any> = Record<string, any>,
   >(
     outputSchema:
       | InteropZodType<RunOutput>
+      | SerializableSchema<RunOutput>
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
     config?: StructuredOutputMethodOptions<boolean>
@@ -1023,46 +1070,41 @@ export class ChatBedrockConverse
           parsed: RunOutput;
         }
       > {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const schema: InteropZodType<RunOutput> | Record<string, any> =
-      outputSchema;
+    const schema = outputSchema;
     const name = config?.name;
     const description =
       getSchemaDescription(schema) ?? "A function available to call.";
     const method = config?.method;
     const includeRaw = config?.includeRaw;
+
     if (method === "jsonMode") {
       throw new Error(`ChatBedrockConverse does not support 'jsonMode'.`);
     }
 
     let functionName = name ?? "extract";
-    let tools: ToolDefinition[];
-    if (isInteropZodSchema(schema)) {
-      tools = [
-        {
-          type: "function",
-          function: {
-            name: functionName,
-            description,
-            parameters: toJsonSchema(schema),
-          },
-        },
-      ];
-    } else {
-      if ("name" in schema) {
-        functionName = schema.name;
-      }
-      tools = [
-        {
-          type: "function",
-          function: {
-            name: functionName,
-            description,
-            parameters: schema,
-          },
-        },
-      ];
+    if (
+      !isInteropZodSchema(schema) &&
+      !isSerializableSchema(schema) &&
+      "name" in schema
+    ) {
+      functionName = schema.name;
     }
+
+    const asJsonSchema =
+      isInteropZodSchema(schema) || isSerializableSchema(schema)
+        ? toJsonSchema(schema)
+        : schema;
+
+    const tools: ToolDefinition[] = [
+      {
+        type: "function",
+        function: {
+          name: functionName,
+          description,
+          parameters: asJsonSchema,
+        },
+      },
+    ];
 
     const supportsToolChoiceValues = this.supportsToolChoiceValues ?? [];
     let toolChoiceObj: { tool_choice: string } | undefined;
@@ -1092,32 +1134,11 @@ export class ChatBedrockConverse
       }
     );
 
-    if (!includeRaw) {
-      return llm.pipe(outputParser).withConfig({
-        runName: "StructuredOutput",
-      }) as Runnable<BaseLanguageModelInput, RunOutput>;
-    }
-
-    const parserAssign = RunnablePassthrough.assign({
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      parsed: (input: any, config) => outputParser.invoke(input.raw, config),
-    });
-    const parserNone = RunnablePassthrough.assign({
-      parsed: () => null,
-    });
-    const parsedWithFallback = parserAssign.withFallbacks({
-      fallbacks: [parserNone],
-    });
-    return RunnableSequence.from<
-      BaseLanguageModelInput,
-      { raw: BaseMessage; parsed: RunOutput }
-    >([
-      {
-        raw: llm,
-      },
-      parsedWithFallback,
-    ]).withConfig({
-      runName: "StructuredOutputRunnable",
-    });
+    return assembleStructuredOutputPipeline(
+      llm,
+      outputParser,
+      includeRaw,
+      includeRaw ? "StructuredOutputRunnable" : "StructuredOutput"
+    );
   }
 }

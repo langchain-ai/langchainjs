@@ -1,8 +1,8 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import type {
   InteropZodObject,
   InferInteropZodOutput,
 } from "@langchain/core/utils/types";
+import type { StateDefinitionInit } from "@langchain/langgraph";
 import type { ClientTool, ServerTool } from "@langchain/core/tools";
 
 import {
@@ -31,7 +31,7 @@ import {
  * @param config.afterAgent - The function to run after the agent execution completes
  * @returns A middleware instance
  *
- * @example
+ * @example Using Zod schema
  * ```ts
  * const authMiddleware = createMiddleware({
  *   name: "AuthMiddleware",
@@ -41,17 +41,40 @@ import {
  *   contextSchema: z.object({
  *     userId: z.string(),
  *   }),
- *   beforeModel: async (state, runtime, controls) => {
+ *   beforeModel: async (state, runtime) => {
  *     if (!state.isAuthenticated) {
- *       return controls.terminate(new Error("Not authenticated"));
+ *       throw new Error("Not authenticated");
  *     }
+ *   },
+ * });
+ * ```
+ *
+ * @example Using StateSchema
+ * ```ts
+ * import { StateSchema, ReducedValue } from "@langchain/langgraph";
+ *
+ * const historyMiddleware = createMiddleware({
+ *   name: "HistoryMiddleware",
+ *   stateSchema: new StateSchema({
+ *     count: z.number().default(0),
+ *     history: new ReducedValue(
+ *       z.array(z.string()).default(() => []),
+ *       { inputSchema: z.string(), reducer: (current, next) => [...current, next] }
+ *     ),
+ *   }),
+ *   beforeModel: async (state, runtime) => {
+ *     return { count: state.count + 1 };
  *   },
  * });
  * ```
  */
 export function createMiddleware<
-  TSchema extends InteropZodObject | undefined = undefined,
-  TContextSchema extends InteropZodObject | undefined = undefined
+  TSchema extends StateDefinitionInit | undefined = undefined,
+  TContextSchema extends InteropZodObject | undefined = undefined,
+  const TTools extends readonly (ClientTool | ServerTool)[] = readonly (
+    | ClientTool
+    | ServerTool
+  )[],
 >(config: {
   /**
    * The name of the middleware
@@ -59,9 +82,9 @@ export function createMiddleware<
   name: string;
   /**
    * The schema of the middleware state. Middleware state is persisted between multiple invocations. It can be either:
-   * - A Zod object
-   * - A Zod optional object
-   * - A Zod default object
+   * - A Zod object (InteropZodObject)
+   * - A StateSchema from LangGraph (supports ReducedValue, UntrackedValue)
+   * - An AnnotationRoot
    * - Undefined
    */
   stateSchema?: TSchema;
@@ -76,7 +99,7 @@ export function createMiddleware<
   /**
    * Additional tools registered by the middleware.
    */
-  tools?: (ClientTool | ServerTool)[];
+  tools?: TTools;
   /**
    * Wraps tool execution with custom logic. This allows you to:
    * - Modify tool call parameters before execution
@@ -209,8 +232,18 @@ export function createMiddleware<
    * @returns The modified middleware state or undefined to pass through
    */
   afterAgent?: AfterAgentHook<TSchema, NormalizeContextSchema<TContextSchema>>;
-}): AgentMiddleware<TSchema, TContextSchema, any> {
-  const middleware: AgentMiddleware<TSchema, TContextSchema, any> = {
+}): AgentMiddleware<
+  TSchema,
+  TContextSchema,
+  NormalizeContextSchema<TContextSchema>,
+  TTools
+> {
+  const middleware: AgentMiddleware<
+    TSchema,
+    TContextSchema,
+    NormalizeContextSchema<TContextSchema>,
+    TTools
+  > = {
     [MIDDLEWARE_BRAND]: true as const,
     name: config.name,
     stateSchema: config.stateSchema,
@@ -221,14 +254,14 @@ export function createMiddleware<
     beforeModel: config.beforeModel,
     afterModel: config.afterModel,
     afterAgent: config.afterAgent,
-    tools: config.tools ?? [],
+    tools: config.tools,
   };
 
   return middleware;
 }
 
 type NormalizeContextSchema<
-  TContextSchema extends InteropZodObject | undefined = undefined
+  TContextSchema extends InteropZodObject | undefined = undefined,
 > = TContextSchema extends InteropZodObject
   ? InferInteropZodOutput<TContextSchema>
-  : never;
+  : unknown;

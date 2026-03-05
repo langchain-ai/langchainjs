@@ -719,9 +719,8 @@ public class User
 test("Test ChatOpenAI tool calling with empty schema in streaming vs non-streaming", async () => {
   const { tool } = await import("@langchain/core/tools");
   const { z } = await import("zod");
-  const { HumanMessage, SystemMessage } = await import(
-    "@langchain/core/messages"
-  );
+  const { HumanMessage, SystemMessage } =
+    await import("@langchain/core/messages");
 
   const llm = new ChatOpenAI({
     model: "gpt-3.5-turbo-1106",

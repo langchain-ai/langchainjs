@@ -42,21 +42,16 @@ export interface WatsonxRequestBasicOptions {
   promptIndex?: number;
 }
 export interface WatsonxChatBasicOptions
-  extends BaseChatModelCallOptions,
-    WatsonxRequestBasicOptions {}
+  extends BaseChatModelCallOptions, WatsonxRequestBasicOptions {}
 
 export interface WatsonxLLMBasicOptions
-  extends BaseLLMParams,
-    WatsonxInit,
-    WatsonxRequestBasicOptions {}
+  extends BaseLLMParams, WatsonxInit, WatsonxRequestBasicOptions {}
 
 export interface WatsonxRerankBasicOptions
-  extends WatsonxInit,
-    WatsonxRequestBasicOptions {}
+  extends WatsonxInit, WatsonxRequestBasicOptions {}
 
 export interface WatsonxEmbeddingsBasicOptions
-  extends WatsonxInit,
-    WatsonxRequestBasicOptions {}
+  extends WatsonxInit, WatsonxRequestBasicOptions {}
 
 export interface WatsonxBaseChatParams extends WatsonxChatBasicOptions {
   tool_choice?: WatsonxTooChoice;

@@ -100,7 +100,11 @@ describe("OpenAI Code Interpreter Tool Tests", () => {
       });
       expect(tool.type).toBe("code_interpreter");
       expect(
-        typeof tool.container === "object" && tool.container.memory_limit
+        typeof tool.container === "object" &&
+          tool.container !== null &&
+          "memory_limit" in tool.container
+          ? tool.container.memory_limit
+          : undefined
       ).toBe(memoryLimit);
     }
   });

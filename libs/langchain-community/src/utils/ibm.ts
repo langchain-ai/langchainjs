@@ -185,11 +185,12 @@ export function _convertToolCallIdToMistralCompatible(
   }
 }
 
-interface WatsonxToolsOutputParserParams<T extends Record<string, any>>
-  extends JsonOutputKeyToolsParserParamsInterop<T> {}
+interface WatsonxToolsOutputParserParams<
+  T extends Record<string, any>,
+> extends JsonOutputKeyToolsParserParamsInterop<T> {}
 
 export class WatsonxToolsOutputParser<
-  T extends Record<string, any> = Record<string, any>
+  T extends Record<string, any> = Record<string, any>,
 > extends JsonOutputToolsParser<T> {
   static lc_name() {
     return "WatsonxToolsOutputParser";

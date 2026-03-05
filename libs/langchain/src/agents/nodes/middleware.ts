@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { z } from "zod/v3";
+import { z } from "zod/v4";
 import { LangGraphRunnableConfig, Command } from "@langchain/langgraph";
 import { interopParse } from "@langchain/core/utils/types";
 
@@ -18,7 +18,8 @@ class AgentRuntime {}
 
 type NodeOutput<TStateSchema extends Record<string, any>> =
   | TStateSchema
-  | Command<any, TStateSchema, string>;
+  | Command<any, TStateSchema, string>
+  | { jumpTo?: JumpToTarget };
 
 export interface MiddlewareNodeOptions {
   getState: () => Record<string, unknown>;
@@ -26,7 +27,7 @@ export interface MiddlewareNodeOptions {
 
 export abstract class MiddlewareNode<
   TStateSchema extends Record<string, any>,
-  TContextSchema extends Record<string, any>
+  TContextSchema extends Record<string, any>,
 > extends RunnableCallable<TStateSchema, NodeOutput<TStateSchema>> {
   #options: MiddlewareNodeOptions;
 
@@ -92,11 +93,10 @@ export abstract class MiddlewareNode<
       messages: invokeState.messages,
     };
 
-    /**
-     * ToDo: implement later
-     */
     const runtime: Runtime<TContextSchema> = {
       context: filteredContext,
+      store: config?.store,
+      configurable: config?.configurable,
       writer: config?.writer,
       interrupt: config?.interrupt,
       signal: config?.signal,
@@ -119,10 +119,12 @@ export abstract class MiddlewareNode<
     );
 
     /**
-     * If result is undefined, return current state
+     * If result is undefined, the hook made no state changes — return
+     * only the jumpTo sentinel so we don't re-emit every input key as
+     * a state update.
      */
     if (!result) {
-      return { ...state, jumpTo: undefined };
+      return { jumpTo: undefined };
     }
 
     /**
@@ -153,8 +155,8 @@ export abstract class MiddlewareNode<
         jumpToConstraint && jumpToConstraint.length > 0
           ? `must be one of: ${jumpToConstraint?.join(", ")}.`
           : constraint
-          ? `no ${constraint} defined in middleware ${this.middleware.name}`
-          : "";
+            ? `no ${constraint} defined in middleware ${this.middleware.name}`
+            : "";
       throw new Error(`Invalid jump target: ${result.jumpTo}, ${suggestion}.`);
     }
 
@@ -183,13 +185,9 @@ export abstract class MiddlewareNode<
     return { ...state, ...result, jumpTo: result.jumpTo };
   }
 
-  get nodeOptions(): {
-    input: z.ZodObject<TStateSchema>;
-  } {
+  get nodeOptions() {
     return {
-      input: derivePrivateState(
-        this.middleware.stateSchema
-      ) as z.ZodObject<TStateSchema>,
+      input: derivePrivateState(this.middleware.stateSchema),
     };
   }
 }

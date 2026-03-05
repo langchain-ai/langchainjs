@@ -20,7 +20,11 @@ import {
   ChatOpenAIResponses,
   ChatOpenAIResponsesCallOptions,
 } from "./responses.js";
-import { BaseChatOpenAI, BaseChatOpenAIFields } from "./base.js";
+import {
+  BaseChatOpenAI,
+  BaseChatOpenAIFields,
+  getChatOpenAIModelParams,
+} from "./base.js";
 
 export type { OpenAICallOptions, OpenAIChatInput };
 
@@ -586,7 +590,7 @@ export interface ChatOpenAIFields extends BaseChatOpenAIFields {
  * <br />
  */
 export class ChatOpenAI<
-  CallOptions extends ChatOpenAICallOptions = ChatOpenAICallOptions
+  CallOptions extends ChatOpenAICallOptions = ChatOpenAICallOptions,
 > extends BaseChatOpenAI<CallOptions> {
   /**
    * Whether to use the responses API for all requests. If `false` the responses API will be used
@@ -606,8 +610,17 @@ export class ChatOpenAI<
     return [...super.callKeys, "useResponsesApi"];
   }
 
-  constructor(protected fields?: ChatOpenAIFields) {
+  protected fields?: ChatOpenAIFields;
+
+  constructor(model: string, fields?: Omit<ChatOpenAIFields, "model">);
+  constructor(fields?: ChatOpenAIFields);
+  constructor(
+    modelOrFields?: string | ChatOpenAIFields,
+    fieldsArg?: Omit<ChatOpenAIFields, "model">
+  ) {
+    const fields = getChatOpenAIModelParams(modelOrFields, fieldsArg);
     super(fields);
+    this.fields = fields;
     this.useResponsesApi = fields?.useResponsesApi ?? false;
     this.responses = fields?.responses ?? new ChatOpenAIResponses(fields);
     this.completions = fields?.completions ?? new ChatOpenAICompletions(fields);
@@ -658,7 +671,7 @@ export class ChatOpenAI<
     runManager?: CallbackManagerForLLMRun
   ): Promise<ChatResult> {
     if (this._useResponsesApi(options)) {
-      return this.responses._generate(messages, options);
+      return this.responses._generate(messages, options, runManager);
     }
     return this.completions._generate(messages, options, runManager);
   }

@@ -9,8 +9,7 @@ import {
 } from "@langchain/core/utils/async_caller";
 
 export interface ChaindeskRetrieverArgs
-  extends AsyncCallerParams,
-    BaseRetrieverInput {
+  extends AsyncCallerParams, BaseRetrieverInput {
   datastoreId: string;
   topK?: number;
   filter?: Record<string, unknown>;

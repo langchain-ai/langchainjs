@@ -114,7 +114,8 @@ export interface TogetherAIInputs extends BaseLLMParams {
 }
 
 export interface TogetherAICallOptions
-  extends BaseLLMCallOptions,
+  extends
+    BaseLLMCallOptions,
     Pick<
       TogetherAIInputs,
       | "modelName"

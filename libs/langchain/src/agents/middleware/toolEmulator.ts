@@ -72,9 +72,7 @@ export interface ToolEmulatorOptions {
  * });
  * ```
  */
-export function toolEmulatorMiddleware(
-  options: ToolEmulatorOptions = {}
-): ReturnType<typeof createMiddleware> {
+export function toolEmulatorMiddleware(options: ToolEmulatorOptions = {}) {
   let agentModel: BaseChatModel | undefined;
   const { tools, model } = options;
 
@@ -141,7 +139,7 @@ export function toolEmulatorMiddleware(
       // Extract tool information for emulation
       const toolArgs = request.toolCall.args;
       const toolDescription =
-        request.tool.description || "No description available";
+        request.tool?.description || "No description available";
 
       // Build prompt for emulator LLM
       const toolArgsString =

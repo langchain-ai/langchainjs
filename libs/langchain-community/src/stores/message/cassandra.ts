@@ -12,8 +12,7 @@ import {
   CassandraClientArgs,
 } from "../../utils/cassandra.js";
 
-export interface CassandraChatMessageHistoryOptions
-  extends CassandraClientArgs {
+export interface CassandraChatMessageHistoryOptions extends CassandraClientArgs {
   keyspace: string;
   table: string;
   sessionId: string;

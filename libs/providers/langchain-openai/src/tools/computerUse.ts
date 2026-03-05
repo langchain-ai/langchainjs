@@ -100,8 +100,8 @@ const ComputerUseWaitActionSchema = z.object({
   duration: z.number().optional(),
 });
 
-// Discriminated union schema for individual action types
-const ComputerUseActionUnionSchema = z.discriminatedUnion("type", [
+// Union schema for individual action types
+const ComputerUseActionUnionSchema = z.union([
   ComputerUseScreenshotActionSchema,
   ComputerUseClickActionSchema,
   ComputerUseDoubleClickActionSchema,

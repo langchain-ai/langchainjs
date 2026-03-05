@@ -1,4 +1,4 @@
-import { test, expect } from "vitest";
+import { test, expect, describe } from "vitest";
 import {
   AIMessage,
   AIMessageChunk,
@@ -309,4 +309,74 @@ test("invoke with image input", async () => {
   expect((res.content as string).toLowerCase()).toMatch(
     /google|logo|text|image/
   );
+});
+
+describe("Groq Reasoning with contentBlocks", () => {
+  test("invoke with parsed reasoning returns reasoning in contentBlocks", async () => {
+    const chat = new ChatGroq({
+      maxRetries: 0,
+      model: "qwen/qwen3-32b", // Model that supports reasoning
+      reasoningFormat: "parsed",
+    });
+
+    const result = await chat.invoke("What is 2 + 2? Think step by step.");
+
+    // Verify contentBlocks is accessible
+    const blocks = result.contentBlocks;
+    expect(blocks.length).toBeGreaterThan(0);
+
+    // Should have at least text content
+    const textBlocks = blocks.filter((b) => b.type === "text");
+    expect(textBlocks.length).toBeGreaterThan(0);
+
+    // Check if reasoning is present (depends on model response)
+    const reasoningBlocks = blocks.filter((b) => b.type === "reasoning");
+    if (reasoningBlocks.length > 0) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      expect((reasoningBlocks[0] as any).reasoning.length).toBeGreaterThan(0);
+    }
+  });
+
+  test("stream returns reasoning in contentBlocks when available", async () => {
+    const chat = new ChatGroq({
+      maxRetries: 0,
+      model: "qwen/qwen3-32b",
+      reasoningFormat: "parsed",
+    });
+
+    let fullMessage: AIMessageChunk | undefined;
+    for await (const chunk of await chat.stream(
+      "What is 3 + 3? Think step by step."
+    )) {
+      fullMessage = !fullMessage ? chunk : concat(fullMessage, chunk);
+    }
+
+    expect(fullMessage).toBeDefined();
+    const blocks = fullMessage!.contentBlocks;
+    expect(blocks.length).toBeGreaterThan(0);
+
+    // Should have at least text content
+    const textBlocks = blocks.filter((b) => b.type === "text");
+    expect(textBlocks.length).toBeGreaterThan(0);
+  }, 60000);
+
+  test("invoke with raw reasoning extracts from think tags", async () => {
+    const chat = new ChatGroq({
+      maxRetries: 0,
+      model: "qwen/qwen3-32b",
+      reasoningFormat: "raw",
+    });
+
+    const result = await chat.invoke("What is 5 + 5? Think step by step.");
+
+    const blocks = result.contentBlocks;
+    expect(blocks.length).toBeGreaterThan(0);
+
+    // Raw reasoning may have think tags parsed into reasoning blocks
+    const reasoningBlocks = blocks.filter((b) => b.type === "reasoning");
+    const textBlocks = blocks.filter((b) => b.type === "text");
+
+    // At least one type should be present
+    expect(reasoningBlocks.length + textBlocks.length).toBeGreaterThan(0);
+  });
 });

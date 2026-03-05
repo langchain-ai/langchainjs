@@ -68,14 +68,14 @@ export interface WatsonxDeploymentLLMParams {
 }
 /** Gateway parameters */
 
-interface WatsonxLLMGatewayKwargs
-  extends Omit<
-    CreateCompletionsParams,
-    keyof WatsonxLLMParams | "model" | "stream" | "prompt" | "maxTokens"
-  > {}
+interface WatsonxLLMGatewayKwargs extends Omit<
+  CreateCompletionsParams,
+  keyof WatsonxLLMParams | "model" | "stream" | "prompt" | "maxTokens"
+> {}
 
 export interface WatsonxLLMGatewayParams
-  extends WatsonxInit,
+  extends
+    WatsonxInit,
     Omit<
       CreateCompletionsParams,
       keyof WatsonxLLMGatewayKwargs | "stream" | "prompt"
@@ -87,8 +87,7 @@ export interface WatsonxLLMGatewayParams
 
 /** Call interface for second parameter of inbuild methods */
 export interface WatsonxCallOptionsLLM
-  extends BaseLanguageModelCallOptions,
-    Partial<WatsonxInit> {
+  extends BaseLanguageModelCallOptions, Partial<WatsonxInit> {
   maxRetries?: number;
   parameters?: XOR<Partial<WatsonxLLMParams>, Partial<WatsonxLLMGatewayParams>>;
   watsonxCallbacks?: RequestCallbacks;
@@ -97,20 +96,17 @@ export interface WatsonxCallOptionsLLM
 /** Constructor input interfaces for each mode */
 
 export interface WatsonxInputLLM
-  extends WatsonxLLMBasicOptions,
-    WatsonxLLMParams {
+  extends WatsonxLLMBasicOptions, WatsonxLLMParams {
   model: string;
   spaceId?: string;
   projectId?: string;
 }
 
 export interface WatsonxDeployedInputLLM
-  extends WatsonxLLMBasicOptions,
-    WatsonxDeploymentLLMParams {}
+  extends WatsonxLLMBasicOptions, WatsonxDeploymentLLMParams {}
 
 export interface WatsonxGatewayInputLLM
-  extends WatsonxLLMBasicOptions,
-    WatsonxLLMGatewayParams {}
+  extends WatsonxLLMBasicOptions, WatsonxLLMGatewayParams {}
 
 // Combined input for chat excluding each mode to not be present at the same time
 export type WatsonxLLMConstructor = XOR<
@@ -123,8 +119,8 @@ export type WatsonxLLMConstructor = XOR<
  * Integration with an LLM.
  */
 export class WatsonxLLM<
-    CallOptions extends WatsonxCallOptionsLLM = WatsonxCallOptionsLLM
-  >
+  CallOptions extends WatsonxCallOptionsLLM = WatsonxCallOptionsLLM,
+>
   extends BaseLLM<CallOptions>
   implements BaseLLMParams
 {
@@ -531,6 +527,7 @@ export class WatsonxLLM<
           prompt: input,
           stream: true,
           signal,
+          returnObject: true,
         });
       }
     } else {
@@ -641,10 +638,6 @@ export class WatsonxLLM<
     if (this.streaming) {
       const generations: Generation[][] = await Promise.all(
         prompts.map(async (prompt, promptIdx) => {
-          if (options.signal?.aborted) {
-            throw new Error("AbortError");
-          }
-
           const stream = this._streamResponseChunks(prompt, options);
           const geneartionsArray: GenerationInfo[] = [];
 
@@ -689,10 +682,6 @@ export class WatsonxLLM<
     } else {
       const generations: Generation[][] = await Promise.all(
         prompts.map(async (prompt) => {
-          if (options.signal?.aborted) {
-            throw new Error("AbortError");
-          }
-
           const callback = () =>
             this.generateSingleMessage(prompt, options, false);
           type ReturnMessage = ReturnType<typeof callback>;
@@ -760,16 +749,11 @@ export class WatsonxLLM<
       },
     };
     for await (const chunk of streamInferDeployedPrompt) {
-      if (options.signal?.aborted) {
-        throw new Error("AbortError");
-      }
-
       const results =
-        "model_id" in chunk.data
-          ? chunk.data.results.entries()
-          : chunk.data.choices.entries();
+        "model_id" in chunk.data ? chunk.data.results : chunk.data.choices;
+
       const usage = "usage" in chunk.data ? chunk.data.usage : {};
-      for (const [index, item] of results) {
+      for (const [index, item] of results.entries()) {
         const params =
           "generated_text" in item
             ? {
@@ -800,7 +784,7 @@ export class WatsonxLLM<
         if (!this.streaming)
           // eslint-disable-next-line no-void
           void runManager?.handleLLMNewToken(
-            "generated_text" in item ? item.generated_text : item.text ?? ""
+            "generated_text" in item ? item.generated_text : (item.text ?? "")
           );
       }
       Object.assign(responseChunk, { id: 0, event: "", data: {} });

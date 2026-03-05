@@ -199,6 +199,10 @@ export function copyAIModelParamsInto(
   ret.logprobs = options?.logprobs ?? params?.logprobs ?? target.logprobs;
   ret.topLogprobs =
     options?.topLogprobs ?? params?.topLogprobs ?? target.topLogprobs;
+  ret.thinkingLevel =
+    options?.thinkingLevel ?? params?.thinkingLevel ?? target?.thinkingLevel;
+  ret.reasoningLevel =
+    options?.reasoningLevel ?? params?.reasoningLevel ?? target?.reasoningLevel;
   ret.convertSystemMessageToHumanContent =
     options?.convertSystemMessageToHumanContent ??
     params?.convertSystemMessageToHumanContent ??

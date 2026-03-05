@@ -5,6 +5,15 @@ import { OpenAIEmbeddings } from "@langchain/openai";
 
 import { AzureCosmosDBMongoDBVectorStore } from "../azure_cosmosdb_mongodb.js";
 
+function getEmbeddings() {
+  return new OpenAIEmbeddings({
+    model: process.env.OPENAI_EMBEDDINGS_MODEL,
+    configuration: {
+      baseURL: process.env.OPENAI_BASE_URL,
+    },
+  });
+}
+
 const DATABASE_NAME = "langchain";
 const COLLECTION_NAME = "test";
 const INDEX_NAME = "vectorSearchIndex";
@@ -62,17 +71,14 @@ describe("AzureCosmosDBMongoDBVectorStore", () => {
   });
 
   test("performs similarity search", async () => {
-    const vectorStore = new AzureCosmosDBMongoDBVectorStore(
-      new OpenAIEmbeddings(),
-      {
-        databaseName: DATABASE_NAME,
-        collectionName: COLLECTION_NAME,
-        indexName: INDEX_NAME,
-        indexOptions: {
-          numLists: 1,
-        },
-      }
-    );
+    const vectorStore = new AzureCosmosDBMongoDBVectorStore(getEmbeddings(), {
+      databaseName: DATABASE_NAME,
+      collectionName: COLLECTION_NAME,
+      indexName: INDEX_NAME,
+      indexOptions: {
+        numLists: 1,
+      },
+    });
 
     expect(vectorStore).toBeDefined();
 
@@ -95,7 +101,7 @@ describe("AzureCosmosDBMongoDBVectorStore", () => {
 
     const retriever = vectorStore.asRetriever({});
 
-    const docs = await retriever.getRelevantDocuments("house");
+    const docs = await retriever.invoke("house");
     expect(docs).toBeDefined();
     expect(docs[0]).toMatchObject({
       pageContent: "The house is open",
@@ -110,7 +116,7 @@ describe("AzureCosmosDBMongoDBVectorStore", () => {
     const vectorStore = await AzureCosmosDBMongoDBVectorStore.fromTexts(
       texts,
       {},
-      new OpenAIEmbeddings(),
+      getEmbeddings(),
       {
         databaseName: DATABASE_NAME,
         collectionName: COLLECTION_NAME,
@@ -135,8 +141,7 @@ describe("AzureCosmosDBMongoDBVectorStore", () => {
 
     const standardRetriever = await vectorStore.asRetriever();
 
-    const standardRetrieverOutput =
-      await standardRetriever.getRelevantDocuments("foo");
+    const standardRetrieverOutput = await standardRetriever.invoke("foo");
     expect(output).toHaveLength(texts.length);
 
     const standardRetrieverActual = standardRetrieverOutput.map(
@@ -153,7 +158,7 @@ describe("AzureCosmosDBMongoDBVectorStore", () => {
       },
     });
 
-    const retrieverOutput = await retriever.getRelevantDocuments("foo");
+    const retrieverOutput = await retriever.invoke("foo");
     expect(output).toHaveLength(texts.length);
 
     const retrieverActual = retrieverOutput.map((doc) => doc.pageContent);
@@ -167,17 +172,14 @@ describe("AzureCosmosDBMongoDBVectorStore", () => {
   });
 
   test("deletes documents by id", async () => {
-    const vectorStore = new AzureCosmosDBMongoDBVectorStore(
-      new OpenAIEmbeddings(),
-      {
-        databaseName: DATABASE_NAME,
-        collectionName: COLLECTION_NAME,
-        indexName: INDEX_NAME,
-        indexOptions: {
-          numLists: 1,
-        },
-      }
-    );
+    const vectorStore = new AzureCosmosDBMongoDBVectorStore(getEmbeddings(), {
+      databaseName: DATABASE_NAME,
+      collectionName: COLLECTION_NAME,
+      indexName: INDEX_NAME,
+      indexOptions: {
+        numLists: 1,
+      },
+    });
 
     const ids = await vectorStore.addDocuments([
       { pageContent: "This book is about politics", metadata: { a: 1 } },
@@ -199,17 +201,14 @@ describe("AzureCosmosDBMongoDBVectorStore", () => {
   });
 
   test("deletes documents by filter", async () => {
-    const vectorStore = new AzureCosmosDBMongoDBVectorStore(
-      new OpenAIEmbeddings(),
-      {
-        databaseName: DATABASE_NAME,
-        collectionName: COLLECTION_NAME,
-        indexName: INDEX_NAME,
-        indexOptions: {
-          numLists: 1,
-        },
-      }
-    );
+    const vectorStore = new AzureCosmosDBMongoDBVectorStore(getEmbeddings(), {
+      databaseName: DATABASE_NAME,
+      collectionName: COLLECTION_NAME,
+      indexName: INDEX_NAME,
+      indexOptions: {
+        numLists: 1,
+      },
+    });
 
     await vectorStore.addDocuments([
       { pageContent: "This book is about politics", metadata: { a: 1 } },
@@ -231,17 +230,14 @@ describe("AzureCosmosDBMongoDBVectorStore", () => {
   });
 
   test("deletes all documents", async () => {
-    const vectorStore = new AzureCosmosDBMongoDBVectorStore(
-      new OpenAIEmbeddings(),
-      {
-        databaseName: DATABASE_NAME,
-        collectionName: COLLECTION_NAME,
-        indexName: INDEX_NAME,
-        indexOptions: {
-          numLists: 1,
-        },
-      }
-    );
+    const vectorStore = new AzureCosmosDBMongoDBVectorStore(getEmbeddings(), {
+      databaseName: DATABASE_NAME,
+      collectionName: COLLECTION_NAME,
+      indexName: INDEX_NAME,
+      indexOptions: {
+        numLists: 1,
+      },
+    });
 
     await vectorStore.addDocuments([
       { pageContent: "This book is about politics", metadata: { a: 1 } },

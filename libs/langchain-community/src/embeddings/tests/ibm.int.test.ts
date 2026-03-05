@@ -4,7 +4,7 @@ import { WatsonxEmbeddings } from "../ibm.js";
 const projectId = process.env.WATSONX_AI_PROJECT_ID;
 const version = "2024-05-31";
 const serviceUrl = process.env.WATSONX_AI_SERVICE_URL as string;
-const serviceUrlGateway = process.env.WATSONX_AI_SERVICE_URL_GATEWAY as string;
+const serviceUrlGateway = process.env.WATSONX_AI_GATEWAY_URL as string;
 const model = "ibm/slate-125m-english-rtrvr-v2";
 const modelAlias = "langchain-nodejs-ibm/slate-125m-english-rtrvr-v2";
 const parameters = [

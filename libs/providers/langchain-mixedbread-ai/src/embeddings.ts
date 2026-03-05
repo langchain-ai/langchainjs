@@ -14,8 +14,7 @@ type EmbeddingsRequestWithoutInput = Omit<
  * parameters specific to the MixedbreadAIEmbeddings class.
  */
 export interface MixedbreadAIEmbeddingsParams
-  extends EmbeddingsParams,
-    Omit<EmbeddingsRequestWithoutInput, "model"> {
+  extends EmbeddingsParams, Omit<EmbeddingsRequestWithoutInput, "model"> {
   /**
    * The model to use for generating embeddings.
    * @default {"mixedbread-ai/mxbai-embed-large-v1"}

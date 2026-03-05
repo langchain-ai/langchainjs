@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import { StructuredTool, tool } from "@langchain/core/tools";
+import type { ToolCall } from "@langchain/core/messages/tool";
 
 import {
   AIMessage,
@@ -985,4 +986,146 @@ describe("ToolNode error handling", () => {
       );
     });
   }
+
+  it("should handle missing tool name with default error handler", async () => {
+    const getWeatherTool = tool(
+      ({ location }) => `Weather in ${location}: sunny`,
+      {
+        name: "get_weather",
+        description: "Get weather for a location",
+        schema: z.object({
+          location: z.string(),
+        }),
+      }
+    );
+
+    const toolNode = new ToolNode([getWeatherTool]);
+
+    const messageWithInvalidTool = new AIMessage({
+      content: "",
+      tool_calls: [
+        {
+          name: "nonexistent_tool",
+          args: { foo: "bar" },
+          id: "call_123",
+          type: "tool_call",
+        },
+      ],
+    });
+
+    const result = await toolNode.invoke({
+      messages: [messageWithInvalidTool],
+    });
+
+    expect(result.messages).toHaveLength(1);
+    expect(result.messages[0]).toBeInstanceOf(ToolMessage);
+
+    const toolMessage = result.messages[0] as ToolMessage;
+    expect(toolMessage.content).toContain(
+      "nonexistent_tool is not a valid tool"
+    );
+    expect(toolMessage.content).toContain("get_weather");
+    expect(toolMessage.tool_call_id).toBe("call_123");
+    expect(toolMessage.name).toBe("nonexistent_tool");
+    expect(toolMessage.status).toBe("error");
+  });
+
+  it("should return graceful error for missing tool even when handleToolErrors is false", async () => {
+    /**
+     * Missing tools always return a graceful error message (not thrown) to allow
+     * the LLM to see the error and potentially retry with a valid tool name.
+     * The handleToolErrors option only affects errors during tool execution.
+     */
+    const getWeatherTool = tool(
+      ({ location }) => `Weather in ${location}: sunny`,
+      {
+        name: "get_weather",
+        description: "Get weather for a location",
+        schema: z.object({
+          location: z.string(),
+        }),
+      }
+    );
+
+    const toolNode = new ToolNode([getWeatherTool], {
+      handleToolErrors: false,
+    });
+
+    const messageWithInvalidTool = new AIMessage({
+      content: "",
+      tool_calls: [
+        {
+          name: "nonexistent_tool",
+          args: { foo: "bar" },
+          id: "call_789",
+          type: "tool_call",
+        },
+      ],
+    });
+
+    // Missing tools return a graceful error message instead of throwing
+    const result = await toolNode.invoke({
+      messages: [messageWithInvalidTool],
+    });
+
+    expect(result.messages).toHaveLength(1);
+    const toolMessage = result.messages[0] as ToolMessage;
+    expect(toolMessage.content).toContain(
+      "nonexistent_tool is not a valid tool"
+    );
+    expect(toolMessage.status).toBe("error");
+  });
+
+  it("should return graceful error for missing tool regardless of custom error handler", async () => {
+    /**
+     * Missing tools are handled before the custom error handler is invoked.
+     * Custom error handlers are for tool execution errors, not missing tools.
+     */
+    const getWeatherTool = tool(
+      ({ location }) => `Weather in ${location}: sunny`,
+      {
+        name: "get_weather",
+        description: "Get weather for a location",
+        schema: z.object({
+          location: z.string(),
+        }),
+      }
+    );
+
+    const customErrorHandler = (error: unknown, toolCall: ToolCall) => {
+      return new ToolMessage({
+        content: `Custom error: ${error}`,
+        tool_call_id: toolCall.id!,
+        name: toolCall.name,
+      });
+    };
+
+    const toolNode = new ToolNode([getWeatherTool], {
+      handleToolErrors: customErrorHandler,
+    });
+
+    const messageWithInvalidTool = new AIMessage({
+      content: "",
+      tool_calls: [
+        {
+          name: "missing_tool",
+          args: { x: "y" },
+          id: "call_custom",
+          type: "tool_call",
+        },
+      ],
+    });
+
+    const result = await toolNode.invoke({
+      messages: [messageWithInvalidTool],
+    });
+
+    // Missing tools get a standard error message, not passed to custom handler
+    expect(result.messages).toHaveLength(1);
+    const toolMessage = result.messages[0] as ToolMessage;
+    expect(toolMessage.content).toContain("missing_tool is not a valid tool");
+    expect(toolMessage.content).toContain("get_weather");
+    expect(toolMessage.tool_call_id).toBe("call_custom");
+    expect(toolMessage.status).toBe("error");
+  });
 });

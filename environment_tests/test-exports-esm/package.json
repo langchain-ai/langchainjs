@@ -21,7 +21,7 @@
   "dependencies": {
     "@langchain/anthropic": "workspace:*",
     "@langchain/community": "workspace:*",
-    "@langchain/core": "workspace:*",
+    "@langchain/core": "workspace:^",
     "@langchain/classic": "workspace:*",
     "@langchain/openai": "workspace:*",
     "@tsconfig/recommended": "^1.0.2",
@@ -35,6 +35,6 @@
   },
   "devDependencies": {
     "@types/node": "^18.15.11",
-    "prettier": "^2.8.3"
+    "prettier": "^3.5.0"
   }
 }

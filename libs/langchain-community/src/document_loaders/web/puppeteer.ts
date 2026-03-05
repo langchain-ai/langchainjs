@@ -58,7 +58,10 @@ export class PuppeteerWebBaseLoader
 {
   options: PuppeteerWebBaseLoaderOptions | undefined;
 
-  constructor(public webPath: string, options?: PuppeteerWebBaseLoaderOptions) {
+  constructor(
+    public webPath: string,
+    options?: PuppeteerWebBaseLoaderOptions
+  ) {
     super();
     this.options = options ?? undefined;
   }

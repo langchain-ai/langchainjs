@@ -27,12 +27,10 @@ import {
 export type ConvexChatMessageHistoryInput<
   DataModel extends GenericDataModel,
   TableName extends TableNamesInDataModel<DataModel> = "messages",
-  IndexName extends IndexNames<
-    NamedTableInfo<DataModel, TableName>
-  > = "bySessionId",
-  SessionIdFieldName extends FieldPaths<
-    NamedTableInfo<DataModel, TableName>
-  > = "sessionId",
+  IndexName extends IndexNames<NamedTableInfo<DataModel, TableName>> =
+    "bySessionId",
+  SessionIdFieldName extends FieldPaths<NamedTableInfo<DataModel, TableName>> =
+    "sessionId",
   MessageTextFieldName extends FieldPaths<
     NamedTableInfo<DataModel, TableName>
   > = "message",
@@ -51,7 +49,7 @@ export type ConvexChatMessageHistoryInput<
     "mutation",
     "internal",
     { table: string; index: string; keyField: string; key: string }
-  > = any
+  > = any,
 > = {
   readonly ctx: GenericActionCtx<DataModel>;
   readonly sessionId: DocumentByName<DataModel, TableName>[SessionIdFieldName];
@@ -87,13 +85,11 @@ export type ConvexChatMessageHistoryInput<
 
 export class ConvexChatMessageHistory<
   DataModel extends GenericDataModel,
-  SessionIdFieldName extends FieldPaths<
-    NamedTableInfo<DataModel, TableName>
-  > = "sessionId",
+  SessionIdFieldName extends FieldPaths<NamedTableInfo<DataModel, TableName>> =
+    "sessionId",
   TableName extends TableNamesInDataModel<DataModel> = "messages",
-  IndexName extends IndexNames<
-    NamedTableInfo<DataModel, TableName>
-  > = "bySessionId",
+  IndexName extends IndexNames<NamedTableInfo<DataModel, TableName>> =
+    "bySessionId",
   MessageTextFieldName extends FieldPaths<
     NamedTableInfo<DataModel, TableName>
   > = "message",
@@ -112,7 +108,7 @@ export class ConvexChatMessageHistory<
     "mutation",
     "internal",
     { table: string; index: string; keyField: string; key: string }
-  > = any
+  > = any,
 > extends BaseListChatMessageHistory {
   lc_namespace = ["langchain", "stores", "message", "convex"];
 
