@@ -65,4 +65,5 @@ export { type DocumentInput, Document } from "@langchain/core/documents";
 export {
   langchainMatchers,
   type LangChainMatchers,
-} from "@langchain/core/testing/matchers";
+  fakeModel,
+} from "@langchain/core/testing";

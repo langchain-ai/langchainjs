@@ -1,7 +1,7 @@
 import { describe, test, expect } from "vitest";
-import { AIMessage, HumanMessage } from "../../../messages/index.js";
-import { RunnableBinding } from "../../../runnables/base.js";
-import { tool } from "../../../tools/index.js";
+import { AIMessage, HumanMessage } from "../../messages/index.js";
+import { RunnableBinding } from "../../runnables/base.js";
+import { tool } from "../../tools/index.js";
 import { z } from "zod/v3";
 import { fakeModel } from "../index.js";
 
