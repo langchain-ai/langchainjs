@@ -1363,9 +1363,6 @@ importers:
       '@types/mozilla-readability':
         specifier: ^0.2.1
         version: 0.2.1
-      '@types/pdf-parse':
-        specifier: ^1.1.1
-        version: 1.1.5
       '@types/pg':
         specifier: ^8.11.0
         version: 8.16.0
@@ -9105,9 +9102,6 @@ packages:
   '@types/parse-path@7.1.0':
     resolution: {integrity: sha512-EULJ8LApcVEPbrfND0cRQqutIOdiIgJ1Mgrhpy755r14xMohPTEpkV/k28SJvuOs9bHRFW8x+KeDAEPiGQPB9Q==}
     deprecated: This is a stub types definition. parse-path provides its own type definitions, so you do not need this installed.
-
-  '@types/pdf-parse@1.1.5':
-    resolution: {integrity: sha512-kBfrSXsloMnUJOKi25s3+hRmkycHfLK6A09eRGqF/N8BkQoPUmaCr+q8Cli5FnfohEz/rsv82zAiPz/LXtOGhA==}
 
   '@types/pg-copy-streams@1.2.5':
     resolution: {integrity: sha512-7D6/GYW2uHIaVU6S/5omI+6RZnwlZBpLQDZAH83xX1rjxAOK0f6/deKyyUTewxqts145VIGn6XWYz1YGf50G5g==}
@@ -24698,10 +24692,6 @@ snapshots:
   '@types/parse-path@7.1.0':
     dependencies:
       parse-path: 7.1.0
-
-  '@types/pdf-parse@1.1.5':
-    dependencies:
-      '@types/node': 25.2.3
 
   '@types/pg-copy-streams@1.2.5':
     dependencies:

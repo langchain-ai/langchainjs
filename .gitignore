@@ -58,3 +58,6 @@ libs/langchain/graph-matrix.mermaid.md
 
 # Build info files
 *.tsbuildinfo
+
+# Coding Agent
+.claude
