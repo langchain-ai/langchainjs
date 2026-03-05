@@ -1,8 +1,10 @@
 import { faker } from "@faker-js/faker";
 import {
+  ADFNode,
   adfToText,
   JiraDocumentConverter,
   JiraIssue,
+  JiraProjectLoader,
   JiraUser,
   JiraIssueType,
   JiraPriority,
@@ -36,6 +38,7 @@ describe("JiraDocumentConverter Unit Tests", () => {
       id: issue.id,
       host: converter.host,
       projectKey: converter.projectKey,
+      created: issue.fields.created,
     });
   });
 
@@ -114,6 +117,163 @@ describe("JiraDocumentConverter Unit Tests", () => {
     const doc1 = converter.convertToDocuments([emptyAdfIssue])[0];
 
     expect(doc1.pageContent).toContain(emptyAdfIssue.fields.summary);
+  });
+});
+
+describe("JiraProjectLoader", () => {
+  const originalFetch = global.fetch;
+
+  afterEach(() => {
+    global.fetch = originalFetch;
+  });
+
+  function mockFetch(
+    ...responses: Array<{ ok: boolean; status: number; body: unknown }>
+  ) {
+    const calls: { url: string; init: RequestInit }[] = [];
+    let callIndex = 0;
+    global.fetch = jest.fn(
+      async (url: RequestInfo | URL, init?: RequestInit) => {
+        calls.push({ url: url.toString(), init: init ?? {} });
+        const res = responses[callIndex] ?? responses[responses.length - 1];
+        callIndex += 1;
+        return {
+          ok: res.ok,
+          status: res.status,
+          json: async () => res.body,
+        } as Response;
+      }
+    );
+    return calls;
+  }
+
+  function makeLoader(
+    overrides: Partial<
+      Parameters<typeof JiraProjectLoader.prototype.load>[0]
+    > = {}
+  ) {
+    return new JiraProjectLoader({
+      host: "https://jira.example.com",
+      projectKey: "TEST",
+      username: "user@example.com",
+      accessToken: "test-token",
+      ...overrides,
+    });
+  }
+
+  it("should send POST request with correct format", async () => {
+    const issue = someJiraIssue();
+    const calls = mockFetch({
+      ok: true,
+      status: 200,
+      body: { issues: [issue], isLast: true },
+    });
+
+    const loader = makeLoader();
+    await loader.loadAsIssues();
+
+    expect(calls).toHaveLength(1);
+    const { url, init } = calls[0];
+    expect(url).toBe("https://jira.example.com/rest/api/3/search/jql");
+    expect(init.method).toBe("POST");
+    expect(init.headers).toMatchObject({
+      "Content-Type": "application/json",
+      Accept: "application/json",
+    });
+
+    const body = JSON.parse(init.body as string);
+    expect(body.jql).toContain("project = TEST");
+    expect(body.fields).toEqual(["*all"]);
+    expect(typeof body.maxResults).toBe("number");
+  });
+
+  it("should include createdAfter in JQL", async () => {
+    const issue = someJiraIssue();
+    const calls = mockFetch({
+      ok: true,
+      status: 200,
+      body: { issues: [issue], isLast: true },
+    });
+
+    const loader = makeLoader({ createdAfter: new Date("2024-06-15") });
+    await loader.loadAsIssues();
+
+    const body = JSON.parse(calls[0].init.body as string);
+    expect(body.jql).toContain('created >= "2024-06-15"');
+  });
+
+  it("should paginate via nextPageToken", async () => {
+    const page1Issue = someJiraIssue();
+    const page2Issue = someJiraIssue();
+    const calls = mockFetch(
+      {
+        ok: true,
+        status: 200,
+        body: {
+          issues: [page1Issue],
+          isLast: false,
+          nextPageToken: "token-abc",
+        },
+      },
+      {
+        ok: true,
+        status: 200,
+        body: { issues: [page2Issue], isLast: true },
+      }
+    );
+
+    const loader = makeLoader();
+    const issues = await loader.loadAsIssues();
+
+    expect(calls).toHaveLength(2);
+    expect(issues).toHaveLength(2);
+
+    // First request should not have nextPageToken
+    const body1 = JSON.parse(calls[0].init.body as string);
+    expect(body1.nextPageToken).toBeUndefined();
+
+    // Second request should include nextPageToken
+    const body2 = JSON.parse(calls[1].init.body as string);
+    expect(body2.nextPageToken).toBe("token-abc");
+  });
+
+  it("should throw on non-ok response", async () => {
+    mockFetch({
+      ok: false,
+      status: 401,
+      body: { errorMessages: ["Unauthorized"] },
+    });
+
+    const loader = makeLoader();
+    await expect(loader.loadAsIssues()).rejects.toThrow(
+      /Jira API request failed with status 401/
+    );
+  });
+
+  it("should throw when nextPageToken is missing but isLast is not true", async () => {
+    mockFetch({
+      ok: true,
+      status: 200,
+      body: { issues: [someJiraIssue()], isLast: false },
+    });
+
+    const loader = makeLoader();
+    await expect(loader.loadAsIssues()).rejects.toThrow(
+      "Expected nextPageToken but none returned"
+    );
+  });
+
+  it("should propagate errors from load() instead of swallowing them", async () => {
+    mockFetch({
+      ok: false,
+      status: 403,
+      body: { errorMessages: ["Forbidden"] },
+    });
+
+    const loader = makeLoader();
+    await expect(loader.load()).rejects.toThrow(
+      /Jira API request failed with status 403/
+    );
   });
 });
 
