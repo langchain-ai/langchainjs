@@ -79,7 +79,7 @@
     "@upstash/redis": "^1.36.2",
     "@upstash/vector": "^1.2.1",
     "@vercel/kv": "^3.0.0",
-    "@xata.io/client": "^0.28.0",
+    "@xata.io/client": "^0.30.1",
     "@zilliz/milvus2-sdk-node": "^2.3.5",
     "axios": "^1.13.6",
     "chromadb": "^1.5.3",

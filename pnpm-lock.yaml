@@ -265,8 +265,8 @@ importers:
         specifier: ^3.2.4
         version: 3.2.4(vitest@3.2.4(@types/debug@4.1.12)(@types/node@25.3.5)(jiti@2.6.1)(jsdom@28.1.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2))
       '@xata.io/client':
-        specifier: ^0.28.0
-        version: 0.28.4(typescript@5.8.3)
+        specifier: ^0.30.1
+        version: 0.30.1(typescript@5.8.3)
       '@zilliz/milvus2-sdk-node':
         specifier: ^2.3.5
         version: 2.6.9
@@ -990,8 +990,8 @@ importers:
         specifier: ^3.2.4
         version: 3.2.4(vitest@3.2.4(@types/debug@4.1.12)(@types/node@25.3.5)(jiti@2.6.1)(jsdom@28.1.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2))
       '@xata.io/client':
-        specifier: ^0.28.4
-        version: 0.28.4(typescript@5.8.3)
+        specifier: ^0.30.1
+        version: 0.30.1(typescript@5.8.3)
       '@zilliz/milvus2-sdk-node':
         specifier: ^2.3.5
         version: 2.6.9
@@ -1400,8 +1400,8 @@ importers:
         specifier: ^3.6.0
         version: 3.6.0(zod@4.3.6)
       '@xata.io/client':
-        specifier: ^0.28.0
-        version: 0.28.4(typescript@5.8.3)
+        specifier: ^0.30.1
+        version: 0.30.1(typescript@5.8.3)
       '@xenova/transformers':
         specifier: ^2.17.2
         version: 2.17.2
@@ -9651,8 +9651,8 @@ packages:
     peerDependencies:
       zod: '>= 3'
 
-  '@xata.io/client@0.28.4':
-    resolution: {integrity: sha512-B02WHIA/ViHya84XvH6JCo13rd5h4S5vVyY2aYi6fIcjDIbCpsSLJ4oGWpdodovRYeAZy9Go4OhdyZwMIRC4BQ==}
+  '@xata.io/client@0.30.1':
+    resolution: {integrity: sha512-dAzDPHmIfenVIpF39m1elmW5ngjWu2mO8ZqJBN7dmYdXr98uhPANfLdVZnc3mUNG+NH37LqY1dSO862hIo2oRw==}
     peerDependencies:
       typescript: '>=4.5'
 
@@ -25552,7 +25552,7 @@ snapshots:
     dependencies:
       zod: 4.3.6
 
-  '@xata.io/client@0.28.4(typescript@5.8.3)':
+  '@xata.io/client@0.30.1(typescript@5.8.3)':
     dependencies:
       typescript: 5.8.3
 
