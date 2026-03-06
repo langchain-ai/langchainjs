@@ -97,7 +97,7 @@
     "langchain": "workspace:*",
     "lorem-ipsum": "^2.0.8",
     "lunary": "^0.8.8",
-    "mariadb": "^3.4.0",
+    "mariadb": "^3.5.1",
     "mem0ai": "^2.1.8",
     "mongodb": "^6.20.0",
     "pg": "^8.16.3",
