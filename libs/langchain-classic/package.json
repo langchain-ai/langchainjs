@@ -118,7 +118,7 @@
     "@elastic/elasticsearch": "^8.4.0",
     "@eslint/js": "^9.36.0",
     "@faker-js/faker": "^10.0.0",
-    "@getmetal/metal-sdk": "^4.0.0",
+    "@getmetal/metal-sdk": "^7.7.1",
     "@getzep/zep-cloud": "^1.0.12",
     "@getzep/zep-js": "^2.0.2",
     "@gomomento/sdk": "1.117.2",
