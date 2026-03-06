@@ -343,8 +343,8 @@ importers:
         specifier: ^6.22.0
         version: 6.25.0(ws@8.19.0(bufferutil@4.1.0))(zod@3.25.76)
       peggy:
-        specifier: ^3.0.2
-        version: 3.0.2
+        specifier: ^5.1.0
+        version: 5.1.0
       pg:
         specifier: ^8.16.3
         version: 8.18.0
@@ -743,8 +743,8 @@ importers:
         specifier: ^6.22.0
         version: 6.25.0(ws@8.19.0(bufferutil@4.1.0))(zod@4.3.6)
       peggy:
-        specifier: ^3.0.2
-        version: 3.0.2
+        specifier: ^5.1.0
+        version: 5.1.0
       prettier:
         specifier: ^3.5.0
         version: 3.8.1
@@ -1062,8 +1062,8 @@ importers:
         specifier: ^6.22.0
         version: 6.25.0(ws@8.19.0(bufferutil@4.1.0))(zod@4.3.6)
       peggy:
-        specifier: ^3.0.2
-        version: 3.0.2
+        specifier: ^5.1.0
+        version: 5.1.0
       pg:
         specifier: ^8.16.3
         version: 8.18.0
@@ -7446,6 +7446,10 @@ packages:
 
   '@oxc-project/types@0.76.0':
     resolution: {integrity: sha512-CH3THIrSViKal8yV/Wh3FK0pFhp40nzW1MUDCik9fNuid2D/7JJXKJnfFOAvMxInGXDlvmgT6ACAzrl47TqzkQ==}
+
+  '@peggyjs/from-mem@3.1.3':
+    resolution: {integrity: sha512-LLlgtfXIaeYXoOYovOI0spLM8ZXaqkAlmcRRrLzHJzLMqkU6Sw0R4KMoCoHx1PjaP815pSCBlS+BN6aD8t1Jgg==}
+    engines: {node: '>=20.8'}
 
   '@petamoriken/float16@3.9.3':
     resolution: {integrity: sha512-8awtpHXCx/bNpFt4mt2xdkgtgVvKqty8VbjHI/WWWQuEw+KLzFot3f4+LkQY9YmOtq7A5GdOnqoIC8Pdygjk2g==}
@@ -14260,6 +14264,11 @@ packages:
     engines: {node: '>=14'}
     hasBin: true
 
+  peggy@5.1.0:
+    resolution: {integrity: sha512-IEo5aYRZ2kXH4Qby06cjtL114PZnwLoTiA41vUmg2vPZgANn+c87m5BUurhuDr5/cu758ZlpgsAfBVx+hhO5+w==}
+    engines: {node: '>=20'}
+    hasBin: true
+
   pend@1.2.0:
     resolution: {integrity: sha512-F3asv42UuXchdzt+xXqfW1OGlVBe+mxa2mqI0pg5yAHZPvFmY3Y6drSf/GQ1A86WgWEN9Kzh/WrgKa6iGcHXLg==}
 
@@ -15147,6 +15156,10 @@ packages:
   source-map-generator@0.8.0:
     resolution: {integrity: sha512-psgxdGMwl5MZM9S3FWee4EgsEaIjahYV5AzGnwUvPhWeITz/j6rKpysQHlQ4USdxvINlb8lKfWGIXwfkrgtqkA==}
     engines: {node: '>= 10'}
+
+  source-map-generator@2.0.6:
+    resolution: {integrity: sha512-IlassDs1Ve8nV6uyQZXF9kdkJpVKnMte2JZQXu13M0A5zwc+vu6+LNHfmxsHBMDtoZE21RHiKI0/xvpecZRCNg==}
+    engines: {node: '>=20'}
 
   source-map-js@1.2.1:
     resolution: {integrity: sha512-UXWMKhLOwVKb728IUtQPXxfYU+usdybtUrK/8uGE8CQMvrhOpwvzDBwj0QhSL7MQc7vIsISBG8VQ8+IDQxpfQA==}
@@ -22326,6 +22339,10 @@ snapshots:
   '@oxc-project/types@0.113.0': {}
 
   '@oxc-project/types@0.76.0': {}
+
+  '@peggyjs/from-mem@3.1.3':
+    dependencies:
+      semver: 7.7.4
 
   '@petamoriken/float16@3.9.3': {}
 
@@ -30414,6 +30431,13 @@ snapshots:
     dependencies:
       commander: 10.0.1
       source-map-generator: 0.8.0
+    optional: true
+
+  peggy@5.1.0:
+    dependencies:
+      '@peggyjs/from-mem': 3.1.3
+      commander: 14.0.3
+      source-map-generator: 2.0.6
 
   pend@1.2.0: {}
 
@@ -31545,7 +31569,10 @@ snapshots:
     transitivePeerDependencies:
       - debug
 
-  source-map-generator@0.8.0: {}
+  source-map-generator@0.8.0:
+    optional: true
+
+  source-map-generator@2.0.6: {}
 
   source-map-js@1.2.1: {}
 
