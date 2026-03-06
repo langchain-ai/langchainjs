@@ -331,7 +331,7 @@ export function createAgent<
   >
 >;
 
-// Overload 6: With responseFormat as single SerializableSchema (Standard Schema, e.g. ArkType)
+// Overload 6: With responseFormat as single SerializableSchema
 export function createAgent<
   TStateSchema extends StateDefinitionInit | undefined = undefined,
   ContextSchema extends AnyAnnotationRoot | InteropZodObject =
