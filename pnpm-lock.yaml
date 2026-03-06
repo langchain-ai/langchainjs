@@ -283,8 +283,8 @@ importers:
         specifier: ^7.14.0
         version: 7.20.0
       convex:
-        specifier: ^1.3.1
-        version: 1.31.7(react@19.0.0)
+        specifier: ^1.32.0
+        version: 1.32.0(bufferutil@4.1.0)(react@19.0.0)
       date-fns:
         specifier: ^4.1.0
         version: 4.1.0
@@ -1008,8 +1008,8 @@ importers:
         specifier: ^7.14.0
         version: 7.20.0
       convex:
-        specifier: ^1.3.1
-        version: 1.31.7(react@19.0.0)
+        specifier: ^1.32.0
+        version: 1.32.0(bufferutil@4.1.0)(react@19.0.0)
       date-fns:
         specifier: ^4.1.0
         version: 4.1.0
@@ -1445,8 +1445,8 @@ importers:
         specifier: '>=6.0.0'
         version: 7.20.0
       convex:
-        specifier: ^1.3.1
-        version: 1.31.7(react@19.0.0)
+        specifier: ^1.32.0
+        version: 1.32.0(bufferutil@4.1.0)(react@19.0.0)
       couchbase:
         specifier: ^4.6.1
         version: 4.6.1
@@ -10520,8 +10520,8 @@ packages:
   convert-source-map@2.0.0:
     resolution: {integrity: sha512-Kvp459HrV2FEJ1CAsi1Ku+MY3kasH19TFykTz2xWmMeq6bk2NU3XXvfJ+Q61m0xktWwt+1HSYf3JZsTms3aRJg==}
 
-  convex@1.31.7:
-    resolution: {integrity: sha512-PtNMe1mAIOvA8Yz100QTOaIdgt2rIuWqencVXrb4McdhxBHZ8IJ1eXTnrgCC9HydyilGT1pOn+KNqT14mqn9fQ==}
+  convex@1.32.0:
+    resolution: {integrity: sha512-5FlajdLpW75pdLS+/CgGH5H6yeRuA+ru50AKJEYbJpmyILUS+7fdTvsdTaQ7ZFXMv0gE8mX4S+S3AtJ94k0mfw==}
     engines: {node: '>=18.0.0', npm: '>=7.0.0'}
     hasBin: true
     peerDependencies:
@@ -16512,6 +16512,18 @@ packages:
   write-file-atomic@5.0.1:
     resolution: {integrity: sha512-+QU2zd6OTD8XWIJCbffaiQeH9U73qIqafo1x6V1snCWYGJf6cVE0cDR4D8xRzcEnfI21IFrUPzPGtcPf8AC+Rw==}
     engines: {node: ^14.17.0 || ^16.13.0 || >=18.0.0}
+
+  ws@8.18.0:
+    resolution: {integrity: sha512-8VbfWfHLbbwu3+N6OKsOMpBdT4kXPDDB9cJk2bJ6mh9ucxdlnNvH1e+roYkKmN9Nxw2yjz7VzeO9oOz2zJ04Pw==}
+    engines: {node: '>=10.0.0'}
+    peerDependencies:
+      bufferutil: ^4.0.1
+      utf-8-validate: '>=5.0.2'
+    peerDependenciesMeta:
+      bufferutil:
+        optional: true
+      utf-8-validate:
+        optional: true
 
   ws@8.19.0:
     resolution: {integrity: sha512-blAT2mjOEIi0ZzruJfIhb3nps74PRWTCz1IjglWEEpQl5XS/UNama6u2/rjFkDDouqr4L67ry+1aGIALViWjDg==}
@@ -25920,12 +25932,16 @@ snapshots:
 
   convert-source-map@2.0.0: {}
 
-  convex@1.31.7(react@19.0.0):
+  convex@1.32.0(bufferutil@4.1.0)(react@19.0.0):
     dependencies:
       esbuild: 0.27.0
       prettier: 3.8.1
+      ws: 8.18.0(bufferutil@4.1.0)
     optionalDependencies:
       react: 19.0.0
+    transitivePeerDependencies:
+      - bufferutil
+      - utf-8-validate
 
   convict@6.2.4:
     dependencies:
@@ -33112,6 +33128,10 @@ snapshots:
     dependencies:
       imurmurhash: 0.1.4
       signal-exit: 4.1.0
+
+  ws@8.18.0(bufferutil@4.1.0):
+    optionalDependencies:
+      bufferutil: 4.1.0
 
   ws@8.19.0(bufferutil@4.1.0):
     optionalDependencies:
