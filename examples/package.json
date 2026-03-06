@@ -98,7 +98,7 @@
     "lorem-ipsum": "^2.0.8",
     "lunary": "^0.8.8",
     "mariadb": "^3.5.1",
-    "mem0ai": "^2.1.8",
+    "mem0ai": "^2.2.4",
     "mongodb": "^6.20.0",
     "pg": "^8.16.3",
     "pickleparser": "^0.2.1",
