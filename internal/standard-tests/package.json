@@ -35,7 +35,7 @@
     "@langchain/eslint": "workspace:*",
     "@langchain/tsconfig": "workspace:*",
     "@tsconfig/recommended": "^1.0.3",
-    "dpdm": "^3.14.0",
+    "dpdm": "^4.0.1",
     "eslint": "^9.34.0",
     "prettier": "^3.5.0",
     "typescript": "~5.9.3"
