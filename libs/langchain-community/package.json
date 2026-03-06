@@ -3445,7 +3445,18 @@
         "default": "./dist/vectorstores/zep_cloud.js"
       }
     },
-    "./package.json": "./package.json"
+    "./package.json": "./package.json",
+    "./tools/modelslab": {
+      "input": "./src/tools/modelslab.ts",
+      "require": {
+        "types": "./dist/tools/modelslab.d.cts",
+        "default": "./dist/tools/modelslab.cjs"
+      },
+      "import": {
+        "types": "./dist/tools/modelslab.d.ts",
+        "default": "./dist/tools/modelslab.js"
+      }
+    }
   },
   "files": [
     "dist/",
