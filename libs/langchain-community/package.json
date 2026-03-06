@@ -148,7 +148,7 @@
     "datastore-core": "^11.0.2",
     "discord.js": "^14.25.1",
     "dotenv": "^16.6.1",
-    "dpdm": "^3.14.0",
+    "dpdm": "^4.0.1",
     "duck-duck-scrape": "^2.2.5",
     "epub2": "^3.0.1",
     "eslint": "^9.34.0",
