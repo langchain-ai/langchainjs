@@ -213,7 +213,7 @@
     "typescript": "~5.8.3",
     "typesense": "^3.0.1",
     "vitest": "^3.2.4",
-    "voy-search": "0.6.2",
+    "voy-search": "0.6.3",
     "weaviate-client": "^3.8.0",
     "zod-to-json-schema": "^3.24.6"
   },
