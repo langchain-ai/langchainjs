@@ -299,7 +299,7 @@ export function createAgent<
   >
 >;
 
-// Overload 4.5: With responseFormat as union of JsonSchemaFormat | JsonSchemaFormat[]
+// Overload 5: With responseFormat as union of JsonSchemaFormat | JsonSchemaFormat[]
 export function createAgent<
   TStateSchema extends StateDefinitionInit | undefined = undefined,
   ContextSchema extends AnyAnnotationRoot | InteropZodObject =
@@ -331,7 +331,7 @@ export function createAgent<
   >
 >;
 
-// Overload 4.6: With responseFormat as single SerializableSchema (Standard Schema, e.g. ArkType)
+// Overload 6: With responseFormat as single SerializableSchema (Standard Schema, e.g. ArkType)
 export function createAgent<
   TStateSchema extends StateDefinitionInit | undefined = undefined,
   ContextSchema extends AnyAnnotationRoot | InteropZodObject =
@@ -363,7 +363,7 @@ export function createAgent<
   >
 >;
 
-// Overload 4.7: With responseFormat as array of SerializableSchema
+// Overload 7: With responseFormat as array of SerializableSchema
 export function createAgent<
   TStateSchema extends StateDefinitionInit | undefined = undefined,
   ContextSchema extends AnyAnnotationRoot | InteropZodObject =
@@ -395,7 +395,7 @@ export function createAgent<
   >
 >;
 
-// Overload 5: With responseFormat as TypedToolStrategy (for union types from toolStrategy)
+// Overload 8: With responseFormat as TypedToolStrategy (for union types from toolStrategy)
 export function createAgent<
   StructuredResponseFormat extends Record<string, any> = Record<string, any>,
   TStateSchema extends StateDefinitionInit | undefined = undefined,
@@ -428,7 +428,7 @@ export function createAgent<
   >
 >;
 
-// Overload 6: With responseFormat as single ToolStrategy instance
+// Overload 9: With responseFormat as single ToolStrategy instance
 export function createAgent<
   StructuredResponseFormat extends Record<string, any> = Record<string, any>,
   TStateSchema extends StateDefinitionInit | undefined = undefined,
@@ -461,7 +461,7 @@ export function createAgent<
   >
 >;
 
-// Overload 7: With responseFormat as ProviderStrategy
+// Overload 10: With responseFormat as ProviderStrategy
 export function createAgent<
   StructuredResponseFormat extends Record<string, any> = Record<string, any>,
   TStateSchema extends StateDefinitionInit | undefined = undefined,
@@ -494,7 +494,7 @@ export function createAgent<
   >
 >;
 
-// Overload 8: Without responseFormat property at all - with proper middleware state typing
+// Overload 11: Without responseFormat property at all - with proper middleware state typing
 export function createAgent<
   TStateSchema extends StateDefinitionInit | undefined = undefined,
   ContextSchema extends AnyAnnotationRoot | InteropZodObject =
@@ -525,7 +525,7 @@ export function createAgent<
   >
 >;
 
-// Overload 9: With responseFormat explicitly undefined
+// Overload 12: With responseFormat explicitly undefined
 export function createAgent<
   TStateSchema extends StateDefinitionInit | undefined = undefined,
   ContextSchema extends AnyAnnotationRoot | InteropZodObject =
@@ -560,7 +560,7 @@ export function createAgent<
   >
 >;
 
-// Overload 10: For other ResponseFormat values (failsafe)
+// Overload 13: For other ResponseFormat values (failsafe)
 export function createAgent<
   StructuredResponseFormat extends Record<string, any> = Record<string, any>,
   TStateSchema extends StateDefinitionInit | undefined = undefined,
