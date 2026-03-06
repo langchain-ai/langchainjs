@@ -244,6 +244,8 @@ const TodoSchema = z.object({
   content: z.string().describe("Content of the todo item"),
   status: TodoStatus,
 });
+export type Todo = z.infer<typeof TodoSchema>;
+
 const stateSchema = z.object({
   todos: z.array(TodoSchema).default([]),
 });
