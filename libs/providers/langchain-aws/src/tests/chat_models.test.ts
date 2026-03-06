@@ -1504,3 +1504,109 @@ describe("withStructuredOutput - StandardSchema", () => {
     }).rejects.toThrow("No tool calls found in the response.");
   });
 });
+
+describe("bedrockApiKey / bedrockApiSecret credentials", () => {
+  it("should accept bedrockApiKey and bedrockApiSecret in constructor", () => {
+    const model = new ChatBedrockConverse({
+      region: "us-east-1",
+      bedrockApiKey: "test-access-key-id",
+      bedrockApiSecret: "test-secret-access-key",
+    });
+    expect(model.bedrockApiKey).toBe("test-access-key-id");
+    expect(model.bedrockApiSecret).toBe("test-secret-access-key");
+    expect(model.bedrockApiSessionToken).toBeUndefined();
+    expect(model.region).toBe("us-east-1");
+  });
+
+  it("should accept bedrockApiSessionToken for temporary credentials", () => {
+    const model = new ChatBedrockConverse({
+      region: "us-east-1",
+      bedrockApiKey: "test-access-key-id",
+      bedrockApiSecret: "test-secret-access-key",
+      bedrockApiSessionToken: "test-session-token",
+    });
+    expect(model.bedrockApiKey).toBe("test-access-key-id");
+    expect(model.bedrockApiSecret).toBe("test-secret-access-key");
+    expect(model.bedrockApiSessionToken).toBe("test-session-token");
+  });
+
+  it("should read bedrockApiKey from BEDROCK_AWS_ACCESS_KEY_ID env var", () => {
+    process.env.BEDROCK_AWS_ACCESS_KEY_ID = "env-access-key";
+    process.env.BEDROCK_AWS_SECRET_ACCESS_KEY = "env-secret-key";
+    try {
+      const model = new ChatBedrockConverse({
+        region: "us-east-1",
+      });
+      expect(model.bedrockApiKey).toBe("env-access-key");
+      expect(model.bedrockApiSecret).toBe("env-secret-key");
+    } finally {
+      delete process.env.BEDROCK_AWS_ACCESS_KEY_ID;
+      delete process.env.BEDROCK_AWS_SECRET_ACCESS_KEY;
+    }
+  });
+
+  it("should read bedrockApiSessionToken from BEDROCK_AWS_SESSION_TOKEN env var", () => {
+    process.env.BEDROCK_AWS_ACCESS_KEY_ID = "env-access-key";
+    process.env.BEDROCK_AWS_SECRET_ACCESS_KEY = "env-secret-key";
+    process.env.BEDROCK_AWS_SESSION_TOKEN = "env-session-token";
+    try {
+      const model = new ChatBedrockConverse({
+        region: "us-east-1",
+      });
+      expect(model.bedrockApiSessionToken).toBe("env-session-token");
+    } finally {
+      delete process.env.BEDROCK_AWS_ACCESS_KEY_ID;
+      delete process.env.BEDROCK_AWS_SECRET_ACCESS_KEY;
+      delete process.env.BEDROCK_AWS_SESSION_TOKEN;
+    }
+  });
+
+  it("should prefer explicit credentials over bedrockApiKey/bedrockApiSecret", () => {
+    const model = new ChatBedrockConverse({
+      region: "us-east-1",
+      bedrockApiKey: "api-key-value",
+      bedrockApiSecret: "api-secret-value",
+      credentials: {
+        accessKeyId: "explicit-key",
+        secretAccessKey: "explicit-secret",
+      },
+    });
+    expect(model.bedrockApiKey).toBe("api-key-value");
+    expect(model.bedrockApiSecret).toBe("api-secret-value");
+    expect(model.region).toBe("us-east-1");
+  });
+
+  it("should use bedrockApiKey with string model shorthand", () => {
+    const model = new ChatBedrockConverse(
+      "anthropic.claude-3-haiku-20240307-v1:0",
+      {
+        region: "us-east-1",
+        bedrockApiKey: "test-key",
+        bedrockApiSecret: "test-secret",
+      }
+    );
+    expect(model.model).toBe("anthropic.claude-3-haiku-20240307-v1:0");
+    expect(model.bedrockApiKey).toBe("test-key");
+    expect(model.bedrockApiSecret).toBe("test-secret");
+  });
+
+  it("should include bedrockApiKey and bedrockApiSecret in lc_secrets", () => {
+    const model = new ChatBedrockConverse({
+      region: "us-east-1",
+      bedrockApiKey: "test-key",
+      bedrockApiSecret: "test-secret",
+    });
+    expect(model.lc_secrets).toHaveProperty(
+      "bedrockApiKey",
+      "BEDROCK_AWS_ACCESS_KEY_ID"
+    );
+    expect(model.lc_secrets).toHaveProperty(
+      "bedrockApiSecret",
+      "BEDROCK_AWS_SECRET_ACCESS_KEY"
+    );
+    expect(model.lc_secrets).toHaveProperty(
+      "bedrockApiSessionToken",
+      "BEDROCK_AWS_SESSION_TOKEN"
+    );
+  });
+});
