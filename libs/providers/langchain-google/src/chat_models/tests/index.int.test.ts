@@ -115,12 +115,21 @@ const allModelInfo: ModelInfo[] = [
     model: "gemini-3-flash-preview",
     testConfig: {
       isThinking: true,
+      only: true,
     },
   },
   {
     model: "gemini-3.1-pro-preview",
     testConfig: {
       isThinking: true,
+      only: true,
+    },
+  },
+  {
+    model: "gemini-3.1-flash-lite-preview",
+    testConfig: {
+      isThinking: true,
+      only: true,
     },
   },
   {
@@ -194,7 +203,6 @@ const expansionInfo: Partial<ModelInfo>[] = [
   {
     testConfig: {
       node: true,
-      skip: true,
     },
   },
   {
