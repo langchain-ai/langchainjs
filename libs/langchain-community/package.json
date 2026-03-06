@@ -263,7 +263,7 @@
     "apify-client": "^2.22.2",
     "assemblyai": "^4.25.1",
     "azion": "^3.1.1",
-    "better-sqlite3": ">=9.4.0 <12.0.0",
+    "better-sqlite3": ">=9.4.0 <13.0.0",
     "cassandra-driver": "^4.7.2",
     "cborg": "^4.5.8",
     "cheerio": "^1.2.0",
