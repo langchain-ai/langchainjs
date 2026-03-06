@@ -14,6 +14,7 @@ import type {
 } from "./types.js";
 import type { AgentMiddleware, AnyAnnotationRoot } from "./middleware/types.js";
 import type { ExtractZodArrayTypes } from "./types.js";
+import type { SerializableSchema } from "@langchain/core/utils/standard_schema";
 import type {
   ToolStrategy,
   TypedToolStrategy,
@@ -317,6 +318,70 @@ export function createAgent<
     JsonSchemaFormat | JsonSchemaFormat[]
   > & {
     responseFormat: JsonSchemaFormat | JsonSchemaFormat[];
+    middleware?: TMiddleware;
+    tools?: TTools;
+  }
+): ReactAgent<
+  AgentTypeConfig<
+    Record<string, unknown>,
+    TStateSchema,
+    ContextSchema,
+    TMiddleware,
+    CombineTools<TTools, TMiddleware>
+  >
+>;
+
+// Overload 4.6: With responseFormat as single SerializableSchema (Standard Schema, e.g. ArkType)
+export function createAgent<
+  TStateSchema extends StateDefinitionInit | undefined = undefined,
+  ContextSchema extends AnyAnnotationRoot | InteropZodObject =
+    AnyAnnotationRoot,
+  const TMiddleware extends readonly AgentMiddleware[] =
+    readonly AgentMiddleware[],
+  const TTools extends readonly (ClientTool | ServerTool)[] = readonly (
+    | ClientTool
+    | ServerTool
+  )[],
+>(
+  params: CreateAgentParams<
+    Record<string, unknown>,
+    TStateSchema,
+    ContextSchema,
+    SerializableSchema
+  > & {
+    responseFormat: SerializableSchema;
+    middleware?: TMiddleware;
+    tools?: TTools;
+  }
+): ReactAgent<
+  AgentTypeConfig<
+    Record<string, unknown>,
+    TStateSchema,
+    ContextSchema,
+    TMiddleware,
+    CombineTools<TTools, TMiddleware>
+  >
+>;
+
+// Overload 4.7: With responseFormat as array of SerializableSchema
+export function createAgent<
+  TStateSchema extends StateDefinitionInit | undefined = undefined,
+  ContextSchema extends AnyAnnotationRoot | InteropZodObject =
+    AnyAnnotationRoot,
+  const TMiddleware extends readonly AgentMiddleware[] =
+    readonly AgentMiddleware[],
+  const TTools extends readonly (ClientTool | ServerTool)[] = readonly (
+    | ClientTool
+    | ServerTool
+  )[],
+>(
+  params: CreateAgentParams<
+    Record<string, unknown>,
+    TStateSchema,
+    ContextSchema,
+    SerializableSchema[]
+  > & {
+    responseFormat: SerializableSchema[];
     middleware?: TMiddleware;
     tools?: TTools;
   }
