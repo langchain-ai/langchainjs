@@ -1,5 +1,15 @@
 # @langchain/community
 
+## 1.1.23
+
+### Patch Changes
+
+- [#10253](https://github.com/langchain-ai/langchainjs/pull/10253) [`07b8619`](https://github.com/langchain-ai/langchainjs/commit/07b8619c1c5aec7618ff544e5cf2df1bfca1a9a0) Thanks [@pawel-twardziak](https://github.com/pawel-twardziak)! - fix(community): switch JiraProjectLoader to POST+JSON and propagate API errors
+
+- Updated dependencies [[`ca826f6`](https://github.com/langchain-ai/langchainjs/commit/ca826f6fecae6087bf0dee7781ee80b587396ec1), [`db7d017`](https://github.com/langchain-ai/langchainjs/commit/db7d017f7ce13cb937147aabcbfa3847d80bde9d)]:
+  - @langchain/core@1.1.32
+  - @langchain/classic@1.0.22
+
 ## 1.1.22
 
 ### Patch Changes

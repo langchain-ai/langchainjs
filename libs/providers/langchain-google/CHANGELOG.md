@@ -1,5 +1,11 @@
 # @langchain/google
 
+## 0.1.6
+
+### Patch Changes
+
+- [#10267](https://github.com/langchain-ai/langchainjs/pull/10267) [`b68f083`](https://github.com/langchain-ai/langchainjs/commit/b68f083dfeb433aa535c50223935a4059a25be8e) Thanks [@afirstenberg](https://github.com/afirstenberg)! - feat(@langchain/google) Test Gemini 3.1 Flash-Lite
+
 ## 0.1.5
 
 ### Patch Changes
