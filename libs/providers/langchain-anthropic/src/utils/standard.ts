@@ -217,11 +217,18 @@ export function _formatStandardContent(
         input,
       });
     } else if (block.type === "reasoning" && isAnthropicMessage) {
-      result.push({
-        type: "thinking",
-        thinking: block.reasoning,
-        signature: String(block.signature),
-      });
+      if (block.redacted) {
+        result.push({
+          type: "redacted_thinking",
+          data: "",
+        });
+      } else {
+        result.push({
+          type: "thinking",
+          thinking: block.reasoning,
+          signature: String(block.signature),
+        });
+      }
     } else if (block.type === "server_tool_call" && isAnthropicMessage) {
       if (block.name === "web_search") {
         result.push({
