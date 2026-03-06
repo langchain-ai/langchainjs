@@ -5,9 +5,11 @@ import {
   HumanMessage,
   SystemMessage,
 } from "@langchain/core/messages";
+import { Command, isCommand } from "@langchain/langgraph";
+import { z } from "zod/v3";
 import { FakeToolCallingChatModel } from "../../tests/utils.js";
 import { AgentNode } from "../AgentNode.js";
-import { createMiddleware } from "../../index.js";
+import { createMiddleware, toolStrategy } from "../../index.js";
 
 describe("AgentNode concurrency", () => {
   it("concurrent invocations get isolated system messages via systemPrompt", async () => {
@@ -436,5 +438,92 @@ describe("AgentNode system message reset on handler retry", () => {
     expect(retryMessages[0].text).toContain("[inner]");
     expect(retryMessages[1]).toBeInstanceOf(HumanMessage);
     expect(retryMessages[1].text).toBe("summarized context");
+  });
+});
+
+describe("AgentNode Command collection through middleware", () => {
+  it("should preserve structured-output retry Command through middleware", async () => {
+    const format = toolStrategy(z.object({ foo: z.string() }));
+    const extractToolName = format[0].name;
+
+    const model = new FakeToolCallingChatModel({
+      responses: [
+        new AIMessage({
+          content: "",
+          tool_calls: [
+            { name: extractToolName, args: { INVALID: 123 }, id: "call_1" },
+          ],
+        }),
+      ],
+    });
+
+    const middleware = createMiddleware({
+      name: "Passthrough",
+      wrapModelCall: async (request, handler) => handler(request),
+    });
+
+    const node = new AgentNode<Record<string, unknown>>({
+      model,
+      systemMessage: new SystemMessage("test"),
+      toolClasses: [],
+      shouldReturnDirect: new Set(),
+      middleware: [middleware],
+      wrapModelCallHookMiddleware: [[middleware, () => ({})]],
+      responseFormat: format,
+    });
+
+    const result = await node.invoke(
+      { messages: [new HumanMessage("hi")], structuredResponse: {} },
+      { configurable: {} }
+    );
+
+    const commands = result as Command[];
+    expect(commands.filter(isCommand).length).toBeGreaterThanOrEqual(2);
+  });
+
+  it("should not double-collect Command returned by inner middleware", async () => {
+    const retryCommand = new Command({
+      update: { messages: [] },
+      goto: "model_request",
+    });
+
+    const model = new FakeToolCallingChatModel({
+      responses: [new AIMessage("ok")],
+      sleep: 0,
+    });
+
+    const inner = createMiddleware({
+      name: "CommandMiddleware",
+      wrapModelCall: async (_request, handler) => {
+        await handler(_request);
+        return retryCommand;
+      },
+    });
+
+    const outer = createMiddleware({
+      name: "Outer",
+      wrapModelCall: async (request, handler) => handler(request),
+    });
+
+    const node = new AgentNode({
+      model,
+      systemMessage: new SystemMessage("test"),
+      toolClasses: [],
+      shouldReturnDirect: new Set(),
+      middleware: [outer, inner],
+      wrapModelCallHookMiddleware: [
+        [outer, () => ({})],
+        [inner, () => ({})],
+      ],
+    });
+
+    const result = await node.invoke(
+      { messages: [new HumanMessage("hi")], structuredResponse: {} },
+      { configurable: {} }
+    );
+
+    const commands = result as Command[];
+    const matchingCommands = commands.filter((cmd) => cmd === retryCommand);
+    expect(matchingCommands).toHaveLength(1);
   });
 });
