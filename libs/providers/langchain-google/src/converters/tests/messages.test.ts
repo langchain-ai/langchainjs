@@ -569,6 +569,7 @@ describe("convertMessagesToGeminiContents", () => {
         .id
     ).toBeUndefined();
   });
+<<<<<<< HEAD
 
   test("v1 contentBlocks: text-plain block produces fileData part", () => {
     const messages = [
@@ -722,4 +723,6 @@ describe("convertMessagesToGeminiContents", () => {
       (userContent!.parts[3] as Gemini.Part.FileData).fileData!.fileUri
     ).toBe("gs://bucket/report.pdf");
   });
+=======
+>>>>>>> 968b70618 (Have generated IDs use a known pattern so they can be removed when being sent back to Gemini, which is not expecting them.)
 });

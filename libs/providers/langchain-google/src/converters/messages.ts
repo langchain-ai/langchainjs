@@ -456,6 +456,7 @@ function convertStandardContentMessageToGeminiContent(
       typeof message.content === "string"
         ? message.content
         : JSON.stringify(message.content);
+<<<<<<< HEAD
     // Find the matching tool call in a preceding AIMessage to get the function name
     const aiMsg = messages
       .filter(AIMessage.isInstance)
@@ -465,11 +466,18 @@ function convertStandardContentMessageToGeminiContent(
     const matchedToolCall = aiMsg?.tool_calls?.find(
       (tc) => tc.id === message.tool_call_id
     );
+=======
+    // FIXME: ToolMessage almost never has a name, we need to refer to the message history
+>>>>>>> 968b70618 (Have generated IDs use a known pattern so they can be removed when being sent back to Gemini, which is not expecting them.)
     const isGeneratedId = message.tool_call_id.startsWith("lc-tool-call-");
     parts.push({
       functionResponse: {
         ...(isGeneratedId ? {} : { id: message.tool_call_id }),
+<<<<<<< HEAD
         name: matchedToolCall?.name ?? message.name ?? "unknown",
+=======
+        name: message.name || "unknown",
+>>>>>>> 968b70618 (Have generated IDs use a known pattern so they can be removed when being sent back to Gemini, which is not expecting them.)
         response: { result: responseContent },
       },
     });
@@ -764,6 +772,7 @@ function convertLegacyContentMessageToGeminiContent(
       throw new ToolCallNotFoundError(message.tool_call_id);
     }
     const isGeneratedId = message.tool_call_id.startsWith("lc-tool-call-");
+<<<<<<< HEAD
     const matchedToolCall = aiMsg.tool_calls?.find(
       (tc) => tc.id === message.tool_call_id
     );
@@ -771,6 +780,12 @@ function convertLegacyContentMessageToGeminiContent(
       functionResponse: {
         ...(isGeneratedId ? {} : { id: message.tool_call_id }),
         name: matchedToolCall?.name ?? message.name ?? "unknown",
+=======
+    parts.push({
+      functionResponse: {
+        ...(isGeneratedId ? {} : { id: message.tool_call_id }),
+        name: toolCall?.name || "unknown",
+>>>>>>> 968b70618 (Have generated IDs use a known pattern so they can be removed when being sent back to Gemini, which is not expecting them.)
         response: { result: responseContent },
       },
     });
@@ -980,9 +995,13 @@ export const convertGeminiPartsToToolCalls: Converter<
       const functionCallPart = part as Gemini.Part.FunctionCall;
       toolCalls.push({
         type: "tool_call",
+<<<<<<< HEAD
         id:
           functionCallPart.functionCall.id ??
           `lc-tool-call-${uuidv4().replace(/-/g, "")}`,
+=======
+        id: functionCallPart.functionCall.id ?? `lc-tool-call-${uuidv4().replace(/-/g, "")}`,
+>>>>>>> 968b70618 (Have generated IDs use a known pattern so they can be removed when being sent back to Gemini, which is not expecting them.)
         name: functionCallPart.functionCall.name,
         args: functionCallPart.functionCall.args ?? {},
         thoughtSignature: functionCallPart.thoughtSignature,
