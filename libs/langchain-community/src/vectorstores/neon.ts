@@ -74,7 +74,7 @@ export class NeonPostgres extends VectorStore {
 
   get computedTableName() {
     return typeof this.schemaName !== "string"
-      ? `${this.tableName}`
+      ? `"${this.tableName}"`
       : `"${this.schemaName}"."${this.tableName}"`;
   }
 
