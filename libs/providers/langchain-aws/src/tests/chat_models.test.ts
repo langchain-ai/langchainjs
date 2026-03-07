@@ -13,6 +13,7 @@ import {
   type Message as BedrockMessage,
   type SystemContentBlock as BedrockSystemContentBlock,
   ServiceTierType,
+  type OutputConfig,
 } from "@aws-sdk/client-bedrock-runtime";
 import { z } from "zod/v3";
 import { describe, expect, test, it, vi } from "vitest";
@@ -1502,5 +1503,46 @@ describe("withStructuredOutput - StandardSchema", () => {
     await expect(async () => {
       await structured.invoke("What?");
     }).rejects.toThrow("No tool calls found in the response.");
+  });
+});
+
+describe("outputConfig configuration", () => {
+  const baseConstructorArgs = {
+    region: "us-east-1",
+    credentials: {
+      secretAccessKey: "process.env.BEDROCK_AWS_SECRET_ACCESS_KEY",
+      accessKeyId: "process.env.BEDROCK_AWS_ACCESS_KEY_ID",
+    },
+  };
+
+  const testOutputConfig: OutputConfig = {
+    textFormat: {
+      type: "json_schema",
+      structure: {
+        jsonSchema: {
+          schema: JSON.stringify({
+            type: "object",
+            properties: { name: { type: "string" } },
+          }),
+          name: "TestSchema",
+          description: "A test schema",
+        },
+      },
+    },
+  };
+
+  it("should set outputConfig in constructor", () => {
+    const model = new ChatBedrockConverse({
+      ...baseConstructorArgs,
+      outputConfig: testOutputConfig,
+    });
+    expect(model.outputConfig).toEqual(testOutputConfig);
+  });
+
+  it("should leave outputConfig undefined when not provided", () => {
+    const model = new ChatBedrockConverse({
+      ...baseConstructorArgs,
+    });
+    expect(model.outputConfig).toBeUndefined();
   });
 });

@@ -18,6 +18,7 @@ import type {
   PerformanceConfiguration,
   ConverseRequest,
   ServiceTierType,
+  OutputConfig,
 } from "@aws-sdk/client-bedrock-runtime";
 import {
   BedrockRuntimeClient,
@@ -166,6 +167,13 @@ export interface ChatBedrockConverseInput
   guardrailConfig?: GuardrailConfiguration;
 
   /**
+   * Structured output configuration.
+   * Allows specifying output format constraints for models that support structured output.
+   * @link https://docs.aws.amazon.com/bedrock/latest/userguide/structured-output.html
+   */
+  outputConfig?: OutputConfig;
+
+  /**
    * Model performance configuration.
    * See https://docs.aws.amazon.com/bedrock/latest/userguide/latency-optimized-inference.html
    */
@@ -206,6 +214,7 @@ export interface ChatBedrockConverseCallOptions
       | "additionalModelRequestFields"
       | "streamUsage"
       | "guardrailConfig"
+      | "outputConfig"
       | "performanceConfig"
       | "serviceTier"
     > {
@@ -715,6 +724,8 @@ export class ChatBedrockConverse
 
   guardrailConfig?: GuardrailConfiguration;
 
+  outputConfig?: OutputConfig;
+
   performanceConfig?: PerformanceConfiguration;
 
   serviceTier?: ServiceTierType | undefined = undefined;
@@ -799,6 +810,7 @@ export class ChatBedrockConverse
     this.additionalModelRequestFields = rest?.additionalModelRequestFields;
     this.streamUsage = rest?.streamUsage ?? this.streamUsage;
     this.guardrailConfig = rest?.guardrailConfig;
+    this.outputConfig = rest?.outputConfig;
     this.performanceConfig = rest?.performanceConfig;
     this.serviceTier = rest?.serviceTier;
     this.clientOptions = rest?.clientOptions;
@@ -886,6 +898,7 @@ export class ChatBedrockConverse
         this.additionalModelRequestFields ??
         options?.additionalModelRequestFields,
       guardrailConfig: this.guardrailConfig ?? options?.guardrailConfig,
+      outputConfig: options?.outputConfig ?? this.outputConfig,
       performanceConfig: options?.performanceConfig,
       serviceTier: serviceTierType
         ? {
