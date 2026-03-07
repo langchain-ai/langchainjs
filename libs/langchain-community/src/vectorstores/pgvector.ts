@@ -313,6 +313,8 @@ export class PGVectorStore extends VectorStore {
 
   client?: PoolClient;
 
+  private _isInternalPool: boolean;
+
   chunkSize = 500;
 
   distanceStrategy?: DistanceStrategy = "cosine";
@@ -432,6 +434,7 @@ export class PGVectorStore extends VectorStore {
         "You must provide either a `postgresConnectionOptions` object or a `pool` instance."
       );
     }
+    this._isInternalPool = !config.pool;
     const pool = config.pool ?? new pg.Pool(config.postgresConnectionOptions);
     this.pool = pool;
     this.chunkSize = config.chunkSize ?? 500;
@@ -509,7 +512,8 @@ export class PGVectorStore extends VectorStore {
   }
 
   protected async _initializeClient() {
-    this.client = await this.pool.connect();
+    // No-op: previously acquired a pool client that was never used.
+    // All queries use this.pool.query() directly.
   }
 
   /**
@@ -1117,13 +1121,17 @@ export class PGVectorStore extends VectorStore {
   }
 
   /**
-   * Closes all the clients in the pool and terminates the pool.
+   * Releases any held client and, if the pool was created internally,
+   * terminates the pool. Externally-provided pools (passed via
+   * `config.pool`) are left open so other consumers can continue using them.
    *
-   * @returns Promise that resolves when all clients are closed and the pool is terminated.
+   * @returns Promise that resolves when cleanup is complete.
    */
   async end(): Promise<void> {
     this.client?.release();
-    return this.pool.end();
+    if (this._isInternalPool) {
+      return this.pool.end();
+    }
   }
 
   /**
