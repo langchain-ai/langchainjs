@@ -9,6 +9,7 @@ import {
   type BaseMessage,
   ChatMessage,
   AIMessageChunk,
+  ToolMessage,
 } from "@langchain/core/messages";
 import { ChatGenerationChunk, type ChatResult } from "@langchain/core/outputs";
 import { type CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
@@ -27,11 +28,12 @@ import {
   parseToolCall,
 } from "@langchain/core/output_parsers/openai_tools";
 
-export type ZhipuMessageRole = "system" | "assistant" | "user";
+export type ZhipuMessageRole = "system" | "assistant" | "user" | "tool";
 
 interface ZhipuMessage {
   role: ZhipuMessageRole;
   content: string;
+  tool_call_id?: string;
 }
 
 /**
@@ -196,13 +198,15 @@ function messageToRole(message: BaseMessage): ZhipuMessageRole {
       return "user";
     case "system":
       return "system";
+    case "tool":
+      return "tool";
     case "function":
       throw new Error("Function messages not supported yet");
     case "generic": {
       if (!ChatMessage.isInstance(message)) {
         throw new Error("Invalid generic chat message");
       }
-      if (["system", "assistant", "user"].includes(message.role)) {
+      if (["system", "assistant", "user", "tool"].includes(message.role)) {
         return message.role as ZhipuMessageRole;
       }
       throw new Error(`Unknown message type: ${type}`);
@@ -332,10 +336,17 @@ export class ChatZhipuAI
   ): Promise<ChatResult> {
     const parameters = this.invocationParams(options);
 
-    const messagesMapped: ZhipuMessage[] = messages.map((message) => ({
-      role: messageToRole(message),
-      content: message.content as string,
-    }));
+    const messagesMapped: ZhipuMessage[] = messages.map((message) => {
+      const role = messageToRole(message);
+      const mappedMessage: ZhipuMessage = {
+        role,
+        content: message.content as string,
+      };
+      if (role === "tool" && ToolMessage.isInstance(message)) {
+        mappedMessage.tool_call_id = message.tool_call_id;
+      }
+      return mappedMessage;
+    });
 
     const data = parameters.stream
       ? await new Promise<ChatCompletionResponse>((resolve, reject) => {
@@ -571,10 +582,17 @@ export class ChatZhipuAI
       stream: true,
     };
 
-    const messagesMapped: ZhipuMessage[] = messages.map((message) => ({
-      role: messageToRole(message),
-      content: message.content as string,
-    }));
+    const messagesMapped: ZhipuMessage[] = messages.map((message) => {
+      const role = messageToRole(message);
+      const mappedMessage: ZhipuMessage = {
+        role,
+        content: message.content as string,
+      };
+      if (role === "tool" && ToolMessage.isInstance(message)) {
+        mappedMessage.tool_call_id = message.tool_call_id;
+      }
+      return mappedMessage;
+    });
 
     const stream = await this.caller.call(async () =>
       this.createZhipuStream(
