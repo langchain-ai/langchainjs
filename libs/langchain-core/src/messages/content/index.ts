@@ -104,6 +104,18 @@ export declare namespace ContentBlock {
      * Index of block in aggregate response. Used during streaming.
      */
     index?: string | number;
+    /**
+     * Provider-specific signature for the reasoning block.
+     *
+     * Some providers (e.g. Anthropic) include a cryptographic signature
+     * that must be preserved when round-tripping thinking blocks back
+     * to the API.
+     */
+    signature?: string;
+    /**
+     * Whether the reasoning content was redacted by the provider.
+     */
+    redacted?: boolean;
   }
 
   /**

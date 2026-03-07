@@ -6,12 +6,17 @@ import {
   AIMessage,
   AIMessageChunk,
   UsageMetadata,
+  type ContentBlock,
 } from "@langchain/core/messages";
 import type { ToolCallChunk } from "@langchain/core/messages/tool";
 import { ChatGeneration } from "@langchain/core/outputs";
 import { AnthropicMessageResponse } from "../types.js";
 import { extractToolCalls } from "../output_parsers.js";
-import { _isAnthropicCompactionBlock } from "./content.js";
+import {
+  _isAnthropicCompactionBlock,
+  _isAnthropicThinkingBlock,
+  _isAnthropicRedactedThinkingBlock,
+} from "./content.js";
 
 export function _makeMessageChunkFromAnthropicEvent(
   data: Anthropic.Beta.Messages.BetaRawMessageStreamEvent,
@@ -24,7 +29,7 @@ export function _makeMessageChunkFromAnthropicEvent(
 } | null {
   const response_metadata = { model_provider: "anthropic" };
   if (data.type === "message_start") {
-    const { content, usage, ...additionalKwargs } = data.message;
+    const { content: _, usage, ...additionalKwargs } = data.message;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const filteredAdditionalKwargs: Record<string, any> = {};
     for (const [key, value] of Object.entries(additionalKwargs)) {
@@ -32,9 +37,11 @@ export function _makeMessageChunkFromAnthropicEvent(
         filteredAdditionalKwargs[key] = value;
       }
     }
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { input_tokens, output_tokens, ...rest }: Record<string, any> =
-      usage ?? {};
+    const {
+      input_tokens: __,
+      output_tokens: ___,
+      ...rest
+    }: Anthropic.Messages.Usage = usage ?? {};
     const usageMetadata = buildUsageMetadata(usage);
     return {
       chunk: new AIMessageChunk({
@@ -139,13 +146,31 @@ export function _makeMessageChunkFromAnthropicEvent(
         contentBlock.citations = [contentBlock.citation];
         delete contentBlock.citation;
       }
-      if (
-        contentBlock.type === "thinking_delta" ||
-        contentBlock.type === "signature_delta"
-      ) {
+      if (contentBlock.type === "thinking_delta") {
         return {
           chunk: new AIMessageChunk({
-            content: [{ index: data.index, ...contentBlock, type: "thinking" }],
+            content: [
+              {
+                index: data.index,
+                type: "reasoning" as const,
+                reasoning: contentBlock.thinking,
+              },
+            ] satisfies ContentBlock.Reasoning[],
+            response_metadata,
+          }),
+        };
+      }
+      if (contentBlock.type === "signature_delta") {
+        return {
+          chunk: new AIMessageChunk({
+            content: [
+              {
+                index: data.index,
+                type: "reasoning" as const,
+                reasoning: "",
+                signature: contentBlock.signature,
+              },
+            ] satisfies ContentBlock.Reasoning[],
             response_metadata,
           }),
         };
@@ -212,7 +237,14 @@ export function _makeMessageChunkFromAnthropicEvent(
       chunk: new AIMessageChunk({
         content: fields.coerceContentToString
           ? ""
-          : [{ index: data.index, ...data.content_block }],
+          : [
+              {
+                index: data.index,
+                type: "reasoning" as const,
+                reasoning: "",
+                redacted: true,
+              },
+            ],
         response_metadata,
       }),
     };
@@ -225,7 +257,13 @@ export function _makeMessageChunkFromAnthropicEvent(
       chunk: new AIMessageChunk({
         content: fields.coerceContentToString
           ? content
-          : [{ index: data.index, ...data.content_block }],
+          : ([
+              {
+                index: data.index,
+                type: "reasoning" as const,
+                reasoning: content,
+              },
+            ] satisfies ContentBlock.Reasoning[]),
         response_metadata,
       }),
     };
@@ -289,12 +327,28 @@ export function anthropicResponseToChatMessages(
     ];
   } else {
     const toolCalls = extractToolCalls(messages);
+    const normalizedContent = messages.map((block) => {
+      if (_isAnthropicThinkingBlock(block)) {
+        return {
+          type: "reasoning" as const,
+          reasoning: block.thinking,
+          signature: block.signature,
+        } satisfies ContentBlock.Reasoning;
+      }
+      if (_isAnthropicRedactedThinkingBlock(block)) {
+        return {
+          type: "reasoning" as const,
+          reasoning: "",
+          redacted: true,
+        } satisfies ContentBlock.Reasoning;
+      }
+      return block;
+    }) as ContentBlock.Standard[];
     const generations: ChatGeneration[] = [
       {
         text: "",
         message: new AIMessage({
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          content: messages as any,
+          content: normalizedContent,
           additional_kwargs: additionalKwargs,
           tool_calls: toolCalls,
           usage_metadata: usageMetadata,

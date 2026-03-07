@@ -144,4 +144,39 @@ describe("_formatStandardContent", () => {
       _formatStandardContent(createAnthropicMessage([audioBlock]))
     ).toThrowError(/does not support audio/i);
   });
+
+  it("converts standard reasoning blocks to Anthropic thinking blocks", () => {
+    const reasoningBlock: ContentBlock.Reasoning = {
+      type: "reasoning",
+      reasoning: "Let me think about this...",
+      signature: "sig_abc123",
+    };
+
+    const [content] = _formatStandardContent(
+      createAnthropicMessage([reasoningBlock])
+    );
+
+    expect(content).toMatchObject({
+      type: "thinking",
+      thinking: "Let me think about this...",
+      signature: "sig_abc123",
+    });
+  });
+
+  it("converts redacted reasoning blocks to Anthropic redacted_thinking blocks", () => {
+    const reasoningBlock: ContentBlock.Reasoning = {
+      type: "reasoning",
+      reasoning: "",
+      redacted: true,
+    };
+
+    const [content] = _formatStandardContent(
+      createAnthropicMessage([reasoningBlock])
+    );
+
+    expect(content).toMatchObject({
+      type: "redacted_thinking",
+      data: "",
+    });
+  });
 });
