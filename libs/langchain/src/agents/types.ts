@@ -28,7 +28,7 @@ import type {
   DynamicStructuredTool,
   StructuredToolInterface,
 } from "@langchain/core/tools";
-
+import type { SerializableSchema } from "@langchain/core/utils/standard_schema";
 import type {
   ResponseFormat,
   ToolStrategy,
@@ -173,6 +173,7 @@ type ExtractToolDefinition<T> =
     infer _SchemaOutputT,
     infer SchemaInputT,
     infer ToolOutputT,
+    infer _ToolEventT,
     infer _NameT
   >
     ? MessageToolDefinition<SchemaInputT, ToolOutputT>
@@ -495,6 +496,8 @@ export type CreateAgentParams<
   ResponseFormatType =
     | InteropZodType<StructuredResponseType>
     | InteropZodType<unknown>[]
+    | SerializableSchema<StructuredResponseType>
+    | SerializableSchema[]
     | JsonSchemaFormat
     | JsonSchemaFormat[]
     | ResponseFormat

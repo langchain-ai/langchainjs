@@ -10,6 +10,9 @@ on:
       - "libs/**"
   workflow_dispatch: # Allows triggering the workflow manually in GitHub UI
 
+permissions:
+  contents: read
+
 # If another push to the same PR or branch happens while this workflow is still running,
 # cancel the earlier run in favor of the next run.
 #

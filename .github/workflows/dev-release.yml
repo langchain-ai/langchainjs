@@ -10,6 +10,9 @@ on:
         default: "dev"
         type: string
 
+permissions:
+  contents: read
+
 env:
   CI: true
 
