@@ -327,7 +327,7 @@ describe("Google Mock", () => {
     {
       model: "gemini-2.5-flash-lite",
       maxReasoningTokens: -1,
-      expectIncludeThoughts: true,
+      expectIncludeThoughts: false,
       expectThinkingBudget: -1,
     },
     {
@@ -430,6 +430,36 @@ describe("Google Mock", () => {
     },
     {
       model: "gemini-3-flash",
+      maxReasoningTokens: 20000,
+      expectIncludeThoughts: true,
+      expectThinkingLevel: "HIGH",
+    },
+    {
+      model: "gemini-3.1-flash-lite",
+      maxReasoningTokens: -1,
+      expectIncludeThoughts: false,
+      expectThinkingLevel: "MINIMAL",
+    },
+    {
+      model: "gemini-3.1-flash-lite",
+      maxReasoningTokens: 0,
+      expectIncludeThoughts: false,
+      expectThinkingLevel: "MINIMAL",
+    },
+    {
+      model: "gemini-3.1-flash-lite",
+      maxReasoningTokens: 1000,
+      expectIncludeThoughts: true,
+      expectThinkingLevel: "LOW",
+    },
+    {
+      model: "gemini-3.1-flash-lite",
+      maxReasoningTokens: 8000,
+      expectIncludeThoughts: true,
+      expectThinkingLevel: "MEDIUM",
+    },
+    {
+      model: "gemini-3.1-flash-lite",
       maxReasoningTokens: 20000,
       expectIncludeThoughts: true,
       expectThinkingLevel: "HIGH",
@@ -578,6 +608,30 @@ describe("Google Mock", () => {
     },
     {
       model: "gemini-3-flash",
+      reasoningEffort: "high",
+      expectIncludeThoughts: true,
+      expectThinkingLevel: "HIGH",
+    },
+    {
+      model: "gemini-3.1-flash-lite",
+      reasoningEffort: "minimal",
+      expectIncludeThoughts: false,
+      expectThinkingLevel: "MINIMAL",
+    },
+    {
+      model: "gemini-3.1-flash-lite",
+      reasoningEffort: "low",
+      expectIncludeThoughts: true,
+      expectThinkingLevel: "LOW",
+    },
+    {
+      model: "gemini-3.1-flash-lite",
+      reasoningEffort: "medium",
+      expectIncludeThoughts: true,
+      expectThinkingLevel: "MEDIUM",
+    },
+    {
+      model: "gemini-3.1-flash-lite",
       reasoningEffort: "high",
       expectIncludeThoughts: true,
       expectThinkingLevel: "HIGH",
