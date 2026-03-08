@@ -17,6 +17,8 @@ import {
   type XAILiveSearchTool,
 } from "../../tools/live_search.js";
 
+const TEST_MODEL = process.env.XAI_TEST_MODEL ?? "grok-3-fast";
+
 test("invoke", async () => {
   const chat = new ChatXAI({
     maxRetries: 0,
@@ -75,7 +77,7 @@ test("streaming", async () => {
 test("invoke with bound tools", async () => {
   const chat = new ChatXAI({
     maxRetries: 0,
-    model: "grok-2-1212",
+    model: TEST_MODEL,
   });
   const message = new HumanMessage("What is the current weather in Hawaii?");
   const res = await chat
@@ -147,7 +149,7 @@ test("stream with bound tools, yielding a single chunk", async () => {
 
 test("Few shotting with tool calls", async () => {
   const chat = new ChatXAI({
-    model: "grok-2-1212",
+    model: TEST_MODEL,
     temperature: 0,
   })
     .bindTools([
@@ -198,7 +200,7 @@ test("Few shotting with tool calls", async () => {
 
 test("xAI can stream tool calls", async () => {
   const model = new ChatXAI({
-    model: "grok-2-1212",
+    model: TEST_MODEL,
     temperature: 0,
   });
 
@@ -239,7 +241,7 @@ describe("Server Tool Calling (Live Search)", () => {
   test("invoke with live_search built-in tool", async () => {
     const chat = new ChatXAI({
       maxRetries: 0,
-      model: "grok-2-1212",
+      model: TEST_MODEL,
     });
 
     const liveSearchTool: XAILiveSearchTool = {
@@ -262,7 +264,7 @@ describe("Server Tool Calling (Live Search)", () => {
   test("invoke with searchParameters in constructor", async () => {
     const chat = new ChatXAI({
       maxRetries: 0,
-      model: "grok-2-1212",
+      model: TEST_MODEL,
       searchParameters: {
         mode: "auto",
         max_search_results: 5,
@@ -279,7 +281,7 @@ describe("Server Tool Calling (Live Search)", () => {
   test("invoke with searchParameters in call options", async () => {
     const chat = new ChatXAI({
       maxRetries: 0,
-      model: "grok-2-1212",
+      model: TEST_MODEL,
     });
 
     const message = new HumanMessage(
@@ -299,7 +301,7 @@ describe("Server Tool Calling (Live Search)", () => {
   test("invoke with searchParameters sources in call options", async () => {
     const chat = new ChatXAI({
       maxRetries: 0,
-      model: "grok-2-1212",
+      model: TEST_MODEL,
     });
 
     const message = new HumanMessage(
@@ -328,7 +330,7 @@ describe("Server Tool Calling (Live Search)", () => {
   test("stream with live_search tool", async () => {
     const chat = new ChatXAI({
       maxRetries: 0,
-      model: "grok-2-1212",
+      model: TEST_MODEL,
     });
 
     const liveSearchTool: XAILiveSearchTool = {
@@ -352,7 +354,7 @@ describe("Server Tool Calling (Live Search)", () => {
   test("combine live_search with function tools", async () => {
     const chat = new ChatXAI({
       maxRetries: 0,
-      model: "grok-2-1212",
+      model: TEST_MODEL,
     });
 
     const liveSearchTool: XAILiveSearchTool = {

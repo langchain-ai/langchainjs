@@ -8,6 +8,7 @@ import { getBufferString } from "../../messages/utils.js";
 import { AIMessage } from "../../messages/ai.js";
 import { sha256 } from "../../utils/hash.js";
 import { RunCollectorCallbackHandler } from "../../tracers/run_collector.js";
+import { StandardJSONSchemaV1, StandardSchemaV1 } from "@standard-schema/spec";
 
 test("Test ChatModel accepts array shorthand for messages", async () => {
   const model = new FakeChatModel({});
@@ -551,4 +552,54 @@ test(`Test ChatModel should not serialize a passed "cache" parameter`, async () 
   expect(JSON.stringify(model)).toEqual(
     `{"lc":1,"type":"constructor","id":["langchain","chat_models","fake-list","FakeListChatModel"],"kwargs":{"responses":["hi"],"emit_custom_event":true}}`
   );
+});
+
+test("Test ChatModel withStructuredOutput with Standard Schema", async () => {
+  const mockStandardSchema: StandardSchemaV1 & StandardJSONSchemaV1 = {
+    "~standard": {
+      version: 1,
+      vendor: "test",
+      validate: (value: unknown) => ({
+        value: value as Record<string, unknown>,
+      }),
+      jsonSchema: {
+        input: () => ({
+          type: "object",
+          properties: {
+            test: { type: "boolean" },
+            nested: {
+              type: "object",
+              properties: {
+                somethingelse: { type: "string" },
+              },
+            },
+          },
+          required: ["test", "nested"],
+        }),
+        output: () => ({
+          type: "object",
+          properties: {
+            test: { type: "boolean" },
+            nested: {
+              type: "object",
+              properties: {
+                somethingelse: { type: "string" },
+              },
+            },
+          },
+          required: ["test", "nested"],
+        }),
+      },
+    },
+  };
+
+  const model = new FakeListChatModel({
+    responses: [`{ "test": true, "nested": { "somethingelse": "somevalue" } }`],
+  }).withStructuredOutput(mockStandardSchema);
+
+  const response = await model.invoke("Hello there!");
+  expect(response).toEqual({
+    test: true,
+    nested: { somethingelse: "somevalue" },
+  });
 });

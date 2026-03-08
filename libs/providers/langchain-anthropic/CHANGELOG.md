@@ -1,5 +1,14 @@
 # @langchain/anthropic
 
+## 1.3.22
+
+### Patch Changes
+
+- [#10207](https://github.com/langchain-ai/langchainjs/pull/10207) [`acab2f7`](https://github.com/langchain-ai/langchainjs/commit/acab2f75d6661b17b5f5f5eceb113427f7d32036) Thanks [@colifran](https://github.com/colifran)! - feat(anthropic): implement standard schema support for structured output
+
+- Updated dependencies [[`96c630d`](https://github.com/langchain-ai/langchainjs/commit/96c630dfd009f2546d5bc36f5067ff868bb4067f), [`a8b9ccc`](https://github.com/langchain-ai/langchainjs/commit/a8b9ccca5a85984a5a30008acd09f9991e591638), [`a1f22bb`](https://github.com/langchain-ai/langchainjs/commit/a1f22bba907731a18dca23c31cec5333444a3f55)]:
+  - @langchain/core@1.1.30
+
 ## 1.3.21
 
 ### Patch Changes

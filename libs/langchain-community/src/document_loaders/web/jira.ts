@@ -149,11 +149,13 @@ export type JiraDescriptionFormatter = (
 ) => string | ADFNode | null;
 
 export type JiraAPIResponse = {
-  expand: string;
-  startAt: number;
-  maxResults: number;
-  total: number;
+  expand?: string;
+  startAt?: number;
+  maxResults?: number;
+  total?: number;
   issues: JiraIssue[];
+  isLast?: boolean;
+  nextPageToken?: string;
 };
 
 export interface ADFNode {
@@ -397,7 +399,7 @@ export interface JiraProjectLoaderParams {
 }
 
 /**
- * Class representing a document loader for loading pages from Confluence.
+ * Class representing a document loader for loading issues from Jira.
  */
 export class JiraProjectLoader extends BaseDocumentLoader {
   private readonly accessToken?: string;
@@ -455,19 +457,14 @@ export class JiraProjectLoader extends BaseDocumentLoader {
   }
 
   public async load(): Promise<Document[]> {
-    try {
-      const allJiraIssues = await this.loadAsIssues();
-      const filtered = allJiraIssues.filter((issue) => {
-        if (this.filterFn) {
-          return this.filterFn(issue);
-        }
-        return true;
-      });
-      return this.documentConverter.convertToDocuments(filtered);
-    } catch (error) {
-      console.error("Error:", error);
-      return [];
-    }
+    const allJiraIssues = await this.loadAsIssues();
+    const filtered = allJiraIssues.filter((issue) => {
+      if (this.filterFn) {
+        return this.filterFn(issue);
+      }
+      return true;
+    });
+    return this.documentConverter.convertToDocuments(filtered);
   }
 
   public async loadAsIssues(): Promise<JiraIssue[]> {
@@ -505,24 +502,33 @@ export class JiraProjectLoader extends BaseDocumentLoader {
           : []),
       ];
 
-      const params = new URLSearchParams({
+      const body: Record<string, unknown> = {
         jql: `${jqlParts.join(" AND ")} ORDER BY created ASC, key ASC`,
-        maxResults: `${this.limitPerRequest}`,
-        fields: "*all",
-      });
+        maxResults: this.limitPerRequest,
+        fields: ["*all"],
+      };
 
       if (nextPageToken) {
-        params.set("nextPageToken", nextPageToken);
+        body.nextPageToken = nextPageToken;
       }
 
-      const response = await fetch(`${url}?${params}`, {
+      const response = await fetch(url, {
+        method: "POST",
         headers: {
           Authorization: authorizationHeader,
           Accept: "application/json",
+          "Content-Type": "application/json",
         },
+        body: JSON.stringify(body),
       });
 
       const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(
+          `Jira API request failed with status ${response.status}: ${JSON.stringify(data)}`
+        );
+      }
 
       if (data.issues?.length) {
         yield data.issues;

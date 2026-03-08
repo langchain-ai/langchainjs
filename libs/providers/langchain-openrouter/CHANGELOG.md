@@ -1,5 +1,14 @@
 # @langchain/openrouter
 
+## 0.1.5
+
+### Patch Changes
+
+- [#10215](https://github.com/langchain-ai/langchainjs/pull/10215) [`a68d354`](https://github.com/langchain-ai/langchainjs/commit/a68d354bc3557e990241d2cbfe36bfb9dcb11d14) Thanks [@colifran](https://github.com/colifran)! - feat(openrouter): implement standard schema support for structured output
+
+- Updated dependencies [[`3682a8d`](https://github.com/langchain-ai/langchainjs/commit/3682a8d4e0ed0855a5283f26bcfd1c0415dde075)]:
+  - @langchain/openai@1.2.12
+
 ## 0.1.4
 
 ### Patch Changes
