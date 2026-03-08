@@ -122,7 +122,56 @@ function _formatContent(content: MessageContent) {
     return content;
   } else {
     const contentBlocks = content.flatMap((contentPart) => {
-      if (contentPart.type === "image_url") {
+      // Legacy data content blocks (have source_type property) — must come
+      // first because they share `type` values with the new multimodal blocks
+      // but use different property names (e.g. mime_type vs mimeType).
+      if ("source_type" in contentPart) {
+        const sourceType = (contentPart as Record<string, unknown>)
+          .source_type as string;
+        const blockType = contentPart.type as string;
+
+        if (sourceType === "base64" && blockType === "image") {
+          return {
+            type: "image" as const,
+            source: {
+              type: "base64" as const,
+              media_type:
+                (contentPart as Record<string, unknown>).mime_type ?? "",
+              data: (contentPart as Record<string, unknown>).data ?? "",
+            },
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          } as any;
+        } else if (sourceType === "base64" && blockType === "file") {
+          return {
+            type: "document" as const,
+            source: {
+              type: "base64" as const,
+              media_type:
+                (contentPart as Record<string, unknown>).mime_type ?? "",
+              data: (contentPart as Record<string, unknown>).data ?? "",
+            },
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          } as any;
+        } else if (sourceType === "url" && blockType === "file") {
+          // NOTE: URL source may not work on Bedrock (see file block below).
+          return {
+            type: "document" as const,
+            source: {
+              type: "url" as const,
+              url: (contentPart as Record<string, unknown>).url ?? "",
+            },
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          } as any;
+        } else if (sourceType === "text") {
+          return {
+            type: "text" as const,
+            text: (contentPart as Record<string, unknown>).text ?? "",
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          } as any;
+        }
+        // Skip unsupported legacy source types (audio, id, etc.)
+        return [];
+      } else if (contentPart.type === "image_url") {
         let source;
         if (typeof contentPart.image_url === "string") {
           source = _formatImage(contentPart.image_url);
@@ -130,9 +179,87 @@ function _formatContent(content: MessageContent) {
           source = _formatImage(contentPart.image_url.url);
         }
         return {
-          type: "image" as const, // Explicitly setting the type as "image"
+          type: "image" as const,
           source,
         };
+      } else if (contentPart.type === "image") {
+        // New multimodal image format
+        if ("url" in contentPart && typeof contentPart.url === "string") {
+          const source = _formatImage(contentPart.url);
+          return {
+            type: "image" as const,
+            source,
+          };
+        } else if (
+          "data" in contentPart &&
+          (typeof contentPart.data === "string" ||
+            // eslint-disable-next-line no-instanceof/no-instanceof
+            contentPart.data instanceof Uint8Array)
+        ) {
+          const mimeType =
+            "mimeType" in contentPart &&
+            typeof contentPart.mimeType === "string"
+              ? contentPart.mimeType
+              : "image/jpeg";
+          const data =
+            typeof contentPart.data === "string"
+              ? contentPart.data
+              : Buffer.from(contentPart.data).toString("base64");
+          return {
+            type: "image" as const,
+            source: {
+              type: "base64" as const,
+              media_type: mimeType,
+              data,
+            },
+          };
+        }
+        return [];
+      } else if (contentPart.type === "file") {
+        // New multimodal file format → Anthropic document block.
+        // NOTE: URL source type may not be supported on Bedrock. The AWS
+        // Bedrock docs only document base64 sources. URL sources are included
+        // here to match the @langchain/anthropic reference implementation;
+        // if Bedrock rejects them, users will receive a clear API error.
+        if ("url" in contentPart && typeof contentPart.url === "string") {
+          return {
+            type: "document" as const,
+            source: {
+              type: "url" as const,
+              url: contentPart.url,
+            },
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          } as any;
+        } else if (
+          "data" in contentPart &&
+          (typeof contentPart.data === "string" ||
+            // eslint-disable-next-line no-instanceof/no-instanceof
+            contentPart.data instanceof Uint8Array)
+        ) {
+          const mimeType =
+            "mimeType" in contentPart &&
+            typeof contentPart.mimeType === "string"
+              ? contentPart.mimeType
+              : "application/pdf";
+          const data =
+            typeof contentPart.data === "string"
+              ? contentPart.data
+              : Buffer.from(contentPart.data).toString("base64");
+          return {
+            type: "document" as const,
+            source: {
+              type: "base64" as const,
+              media_type: mimeType,
+              data,
+            },
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          } as any;
+        }
+        return [];
+      } else if (contentPart.type === "document") {
+        // Anthropic-native document block — pass through
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        return { ...contentPart } as any;
       } else if (
         contentPart.type === "text" ||
         contentPart.type === "text_delta"
@@ -140,9 +267,8 @@ function _formatContent(content: MessageContent) {
         if (contentPart.text === "") {
           return [];
         }
-        // Assuming contentPart is of type MessageContentText here
         return {
-          type: "text" as const, // Explicitly setting the type as "text"
+          type: "text" as const,
           text: contentPart.text,
         };
       } else if (
@@ -157,7 +283,8 @@ function _formatContent(content: MessageContent) {
       } else if (contentPart.type === "input_json_delta") {
         return [];
       } else {
-        throw new Error("Unsupported message content format");
+        // Silently skip unsupported types (audio, video, etc.)
+        return [];
       }
     });
     return contentBlocks;
