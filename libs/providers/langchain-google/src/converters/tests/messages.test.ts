@@ -144,6 +144,118 @@ describe("convertMessagesToGeminiContents", () => {
     ).toBe("tool-call-abc");
   });
 
+  test("resolves functionResponse.name from tool_calls (legacy path)", () => {
+    const messages = [
+      new HumanMessage("hello"),
+      new AIMessage({
+        content: "",
+        tool_calls: [
+          {
+            name: "get_weather",
+            args: { city: "London" },
+            id: "call-123",
+            type: "tool_call",
+          },
+        ],
+      }),
+      new ToolMessage({
+        content: '{"temp": 15}',
+        tool_call_id: "call-123",
+      }),
+    ];
+
+    const contents = convertMessagesToGeminiContents(messages);
+
+    const toolResponseContent = contents.find((c) => c.role === "function");
+    expect(toolResponseContent).toBeDefined();
+
+    const functionResponsePart = toolResponseContent!.parts.find(
+      (p) => "functionResponse" in p && p.functionResponse
+    );
+    expect(functionResponsePart).toBeDefined();
+    expect(
+      (functionResponsePart as Gemini.Part.FunctionResponse).functionResponse!
+        .name
+    ).toBe("get_weather");
+  });
+
+  test("resolves functionResponse.name for multiple tool calls (legacy path)", () => {
+    const messages = [
+      new HumanMessage("hello"),
+      new AIMessage({
+        content: "",
+        tool_calls: [
+          {
+            name: "get_weather",
+            args: { city: "London" },
+            id: "call-1",
+            type: "tool_call",
+          },
+          {
+            name: "get_time",
+            args: { timezone: "UTC" },
+            id: "call-2",
+            type: "tool_call",
+          },
+        ],
+      }),
+      new ToolMessage({
+        content: '{"temp": 15}',
+        tool_call_id: "call-1",
+      }),
+      new ToolMessage({
+        content: '{"time": "12:00"}',
+        tool_call_id: "call-2",
+      }),
+    ];
+
+    const contents = convertMessagesToGeminiContents(messages);
+
+    const toolResponseContents = contents.filter((c) => c.role === "function");
+    expect(toolResponseContents).toHaveLength(2);
+
+    const firstResponse = toolResponseContents[0].parts.find(
+      (p) => "functionResponse" in p && p.functionResponse
+    ) as Gemini.Part.FunctionResponse;
+    expect(firstResponse.functionResponse!.name).toBe("get_weather");
+
+    const secondResponse = toolResponseContents[1].parts.find(
+      (p) => "functionResponse" in p && p.functionResponse
+    ) as Gemini.Part.FunctionResponse;
+    expect(secondResponse.functionResponse!.name).toBe("get_time");
+  });
+
+  test("falls back to ToolMessage.name when tool call lookup succeeds (legacy path)", () => {
+    // Even when ToolMessage has a name, the tool_calls lookup should take priority
+    const messages = [
+      new HumanMessage("hello"),
+      new AIMessage({
+        content: "",
+        tool_calls: [
+          {
+            name: "get_weather",
+            args: {},
+            id: "call-abc",
+            type: "tool_call",
+          },
+        ],
+      }),
+      new ToolMessage({
+        content: "result",
+        tool_call_id: "call-abc",
+        name: "get_weather",
+      }),
+    ];
+
+    const contents = convertMessagesToGeminiContents(messages);
+
+    const toolResponseContent = contents.find((c) => c.role === "function");
+    const functionResponsePart = toolResponseContent!.parts.find(
+      (p) => "functionResponse" in p && p.functionResponse
+    ) as Gemini.Part.FunctionResponse;
+    expect(functionResponsePart.functionResponse!.name).toBe("get_weather");
+  });
+
   test("passes tool_call_id through as functionResponse.id (v1 standard path)", () => {
     const messages = [
       new HumanMessage("hello"),
