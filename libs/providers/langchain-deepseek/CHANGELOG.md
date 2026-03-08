@@ -1,5 +1,14 @@
 # @langchain/deepseek
 
+## 1.0.16
+
+### Patch Changes
+
+- [#10206](https://github.com/langchain-ai/langchainjs/pull/10206) [`c4bfe24`](https://github.com/langchain-ai/langchainjs/commit/c4bfe2428f2616b6fc94d8b78c5a770d38f22733) Thanks [@colifran](https://github.com/colifran)! - feat(deepseek): implement standard schema support for structured output
+
+- Updated dependencies [[`3682a8d`](https://github.com/langchain-ai/langchainjs/commit/3682a8d4e0ed0855a5283f26bcfd1c0415dde075)]:
+  - @langchain/openai@1.2.12
+
 ## 1.0.15
 
 ### Patch Changes

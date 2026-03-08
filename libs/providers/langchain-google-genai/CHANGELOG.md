@@ -1,5 +1,16 @@
 # @langchain/google-genai
 
+## 2.1.24
+
+### Patch Changes
+
+- [#10209](https://github.com/langchain-ai/langchainjs/pull/10209) [`4b0f205`](https://github.com/langchain-ai/langchainjs/commit/4b0f2053ddbdbbf0cf3375d84485ecd8cc873dd0) Thanks [@colifran](https://github.com/colifran)! - feat(google-genai): implement standard schema support for structured output
+
+- Updated dependencies [[`96c630d`](https://github.com/langchain-ai/langchainjs/commit/96c630dfd009f2546d5bc36f5067ff868bb4067f), [`a8b9ccc`](https://github.com/langchain-ai/langchainjs/commit/a8b9ccca5a85984a5a30008acd09f9991e591638), [`a1f22bb`](https://github.com/langchain-ai/langchainjs/commit/a1f22bba907731a18dca23c31cec5333444a3f55)]:
+  - @langchain/core@1.1.30
+
+## 2.1.23
+
 ## 2.1.22
 
 ## 2.1.21

@@ -5,6 +5,7 @@ import { z as z4 } from "zod/v4";
 import { ChatOpenAI } from "@langchain/openai";
 import { ChatAnthropic } from "@langchain/anthropic";
 import { AIMessage } from "@langchain/core/messages";
+import type { SerializableSchema } from "@langchain/core/utils/standard_schema";
 
 import { createAgent, toolStrategy, providerStrategy } from "../index.js";
 import { FakeToolCallingModel, FakeToolCallingChatModel } from "./utils.js";
@@ -13,6 +14,28 @@ import {
   ProviderStrategy,
   ToolStrategy,
 } from "../responses.js";
+
+function makeSerializableSchema(
+  jsonSchema: Record<string, unknown> = {
+    type: "object",
+    properties: {
+      foo: { type: "string" },
+    },
+    required: ["foo"],
+  }
+): SerializableSchema {
+  return {
+    "~standard": {
+      version: 1 as const,
+      vendor: "test",
+      validate: (value: unknown) => ({ value }),
+      jsonSchema: {
+        input: () => jsonSchema,
+        output: () => jsonSchema,
+      },
+    },
+  } as unknown as SerializableSchema;
+}
 
 describe("structured output handling", () => {
   describe("toolStrategy", () => {
@@ -541,6 +564,119 @@ describe("structured output handling", () => {
           strict: false,
         });
         expect(strategyStrict.strict).toBe(false);
+      });
+    });
+  });
+
+  describe("Standard Schema support", () => {
+    describe("toolStrategy with Standard Schema", () => {
+      it("should accept a single Standard Schema", () => {
+        const schema = makeSerializableSchema();
+        const [strategy] = toolStrategy(schema);
+
+        expect(strategy).toBeInstanceOf(ToolStrategy);
+        expect(strategy.schema).toEqual({
+          type: "object",
+          properties: { foo: { type: "string" } },
+          required: ["foo"],
+        });
+      });
+
+      it("should accept an array of Standard Schemas", () => {
+        const schema1 = makeSerializableSchema({
+          type: "object",
+          properties: { foo: { type: "string" } },
+          required: ["foo"],
+        });
+        const schema2 = makeSerializableSchema({
+          type: "object",
+          properties: { bar: { type: "number" } },
+          required: ["bar"],
+        });
+        const strategies = toolStrategy([schema1, schema2]);
+
+        expect(strategies).toHaveLength(2);
+        expect(strategies[0]).toBeInstanceOf(ToolStrategy);
+        expect(strategies[1]).toBeInstanceOf(ToolStrategy);
+      });
+
+      it("should return a structured response with Standard Schema via toolStrategy", async () => {
+        const schema = makeSerializableSchema();
+        const strategies = toolStrategy(schema);
+        const [strategy] = strategies;
+        const toolName = strategy.name;
+
+        const model = new FakeToolCallingModel({
+          toolCalls: [[{ name: toolName, args: { foo: "bar" }, id: "call_1" }]],
+        });
+        const agent = createAgent({
+          model,
+          tools: [],
+          responseFormat: strategies,
+        });
+
+        const res = await agent.invoke({
+          messages: [{ role: "user", content: "hi" }],
+        });
+
+        expect(res.structuredResponse).toEqual({ foo: "bar" });
+      });
+    });
+
+    describe("providerStrategy with Standard Schema", () => {
+      it("should accept a Standard Schema directly", () => {
+        const schema = makeSerializableSchema();
+        const strategy = providerStrategy(schema);
+
+        expect(strategy).toBeInstanceOf(ProviderStrategy);
+        expect(strategy.schema).toEqual({
+          type: "object",
+          properties: { foo: { type: "string" } },
+          required: ["foo"],
+        });
+      });
+
+      it("should accept a Standard Schema in options object", () => {
+        const schema = makeSerializableSchema();
+        const strategy = providerStrategy({ schema, strict: false });
+
+        expect(strategy).toBeInstanceOf(ProviderStrategy);
+        expect(strategy.strict).toBe(false);
+      });
+    });
+
+    describe("ToolStrategy.fromSchema with Standard Schema", () => {
+      it("should create a ToolStrategy from a Standard Schema", () => {
+        const schema = makeSerializableSchema({
+          type: "object",
+          title: "my_standard_tool",
+          properties: { foo: { type: "string" } },
+          required: ["foo"],
+        });
+        const strategy = ToolStrategy.fromSchema(schema);
+
+        expect(strategy.name).toBe("my_standard_tool");
+        expect(strategy.schema).toEqual({
+          type: "object",
+          title: "my_standard_tool",
+          properties: { foo: { type: "string" } },
+          required: ["foo"],
+        });
+      });
+    });
+
+    describe("ProviderStrategy.fromSchema with Standard Schema", () => {
+      it("should create a ProviderStrategy from a Standard Schema", () => {
+        const schema = makeSerializableSchema();
+        const strategy = ProviderStrategy.fromSchema(schema);
+
+        expect(strategy).toBeInstanceOf(ProviderStrategy);
+        expect(strategy.schema).toEqual({
+          type: "object",
+          properties: { foo: { type: "string" } },
+          required: ["foo"],
+        });
+        expect(strategy.strict).toBe(true);
       });
     });
   });

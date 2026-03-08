@@ -1,4 +1,3 @@
-/* eslint-disable import/no-extraneous-dependencies */
 import { Cluster, QueryResult } from "couchbase";
 import { Document } from "@langchain/core/documents";
 import {

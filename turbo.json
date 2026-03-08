@@ -95,7 +95,8 @@
       "dependsOn": [
         "build:compile"
       ],
-      "cache": false
+      "cache": false,
+      "env": ["XAI_API_KEY"]
     },
     "test:integration": {
       "dependsOn": [
