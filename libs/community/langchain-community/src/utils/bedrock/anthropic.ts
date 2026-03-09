@@ -3,11 +3,11 @@ import {
   AIMessageChunk,
   BaseMessage,
   HumanMessage,
+  isAIMessage,
   MessageContent,
   SystemMessage,
   ToolMessage,
   UsageMetadata,
-  isAIMessage,
 } from "@langchain/core/messages";
 import { ToolCall, ToolCallChunk } from "@langchain/core/messages/tool";
 import { concat } from "@langchain/core/utils/stream";
@@ -43,17 +43,16 @@ function _formatImage(imageUrl: string) {
     type: "base64",
     media_type: match[1] ?? "",
     data: match[2] ?? "",
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  } as any;
+  };
 }
 
 function _ensureMessageContents(
   messages: BaseMessage[]
 ): (SystemMessage | HumanMessage | AIMessage)[] {
   // Merge runs of human/tool messages into single human messages with content blocks.
-  const updatedMsgs = [];
+  const updatedMsgs: (SystemMessage | HumanMessage | AIMessage)[] = [];
   for (const message of messages) {
-    if (message._getType() === "tool") {
+    if (ToolMessage.isInstance(message)) {
       if (typeof message.content === "string") {
         const previousMessage = updatedMsgs[updatedMsgs.length - 1];
         if (
@@ -66,7 +65,7 @@ function _ensureMessageContents(
           previousMessage.content.push({
             type: "tool_result",
             content: message.content,
-            tool_use_id: (message as ToolMessage).tool_call_id,
+            tool_use_id: message.tool_call_id,
           });
         } else {
           // If not, we create a new human message with the tool result.
@@ -76,7 +75,7 @@ function _ensureMessageContents(
                 {
                   type: "tool_result",
                   content: message.content,
-                  tool_use_id: (message as ToolMessage).tool_call_id,
+                  tool_use_id: message.tool_call_id,
                 },
               ],
             })
@@ -89,14 +88,20 @@ function _ensureMessageContents(
               {
                 type: "tool_result",
                 content: _formatContent(message.content),
-                tool_use_id: (message as ToolMessage).tool_call_id,
+                tool_use_id: message.tool_call_id,
               },
             ],
           })
         );
       }
-    } else {
+    } else if (
+      SystemMessage.isInstance(message) ||
+      HumanMessage.isInstance(message) ||
+      AIMessage.isInstance(message)
+    ) {
       updatedMsgs.push(message);
+    } else {
+      throw new Error(`Message type "${message._getType()}" is not supported.`);
     }
   }
   return updatedMsgs;
@@ -121,7 +126,7 @@ function _formatContent(content: MessageContent) {
   if (typeof content === "string") {
     return content;
   } else {
-    const contentBlocks = content.flatMap((contentPart) => {
+    return content.flatMap((contentPart) => {
       // Legacy data content blocks (have source_type property) — must come
       // first because they share `type` values with the new multimodal blocks
       // but use different property names (e.g. mime_type vs mimeType).
@@ -139,8 +144,7 @@ function _formatContent(content: MessageContent) {
                 (contentPart as Record<string, unknown>).mime_type ?? "",
               data: (contentPart as Record<string, unknown>).data ?? "",
             },
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          } as any;
+          };
         } else if (sourceType === "base64" && blockType === "file") {
           return {
             type: "document" as const,
@@ -150,8 +154,7 @@ function _formatContent(content: MessageContent) {
                 (contentPart as Record<string, unknown>).mime_type ?? "",
               data: (contentPart as Record<string, unknown>).data ?? "",
             },
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          } as any;
+          };
         } else if (sourceType === "url" && blockType === "file") {
           // NOTE: URL source may not work on Bedrock (see file block below).
           return {
@@ -160,27 +163,32 @@ function _formatContent(content: MessageContent) {
               type: "url" as const,
               url: (contentPart as Record<string, unknown>).url ?? "",
             },
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          } as any;
+          };
         } else if (sourceType === "text") {
           return {
             type: "text" as const,
             text: (contentPart as Record<string, unknown>).text ?? "",
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          } as any;
+          };
         }
         // Skip unsupported legacy source types (audio, id, etc.)
         return [];
       } else if (contentPart.type === "image_url") {
-        let source;
+        let imageUrl: string;
         if (typeof contentPart.image_url === "string") {
-          source = _formatImage(contentPart.image_url);
+          imageUrl = contentPart.image_url;
+        } else if (
+          typeof contentPart.image_url === "object" &&
+          contentPart.image_url !== null &&
+          "url" in contentPart.image_url &&
+          typeof contentPart.image_url.url === "string"
+        ) {
+          imageUrl = contentPart.image_url.url;
         } else {
-          source = _formatImage(contentPart.image_url.url);
+          return [];
         }
         return {
           type: "image" as const,
-          source,
+          source: _formatImage(imageUrl),
         };
       } else if (contentPart.type === "image") {
         // New multimodal image format
@@ -228,8 +236,7 @@ function _formatContent(content: MessageContent) {
               type: "url" as const,
               url: contentPart.url,
             },
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          } as any;
+          };
         } else if (
           "data" in contentPart &&
           (typeof contentPart.data === "string" ||
@@ -252,14 +259,13 @@ function _formatContent(content: MessageContent) {
               media_type: mimeType,
               data,
             },
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          } as any;
+          };
         }
         return [];
       } else if (contentPart.type === "document") {
         // Anthropic-native document block — pass through
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        return { ...contentPart } as any;
+
+        return { ...contentPart };
       } else if (
         contentPart.type === "text" ||
         contentPart.type === "text_delta"
@@ -278,8 +284,7 @@ function _formatContent(content: MessageContent) {
         // TODO: Fix when SDK types are fixed
         return {
           ...contentPart,
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        } as any;
+        };
       } else if (contentPart.type === "input_json_delta") {
         return [];
       } else {
@@ -287,7 +292,6 @@ function _formatContent(content: MessageContent) {
         return [];
       }
     });
-    return contentBlocks;
   }
 }
 
@@ -489,8 +493,11 @@ export function extractToolCallChunk(
   if (
     toolUseChunks &&
     "index" in toolUseChunks &&
+    typeof toolUseChunks.index === "number" &&
     "name" in toolUseChunks &&
-    "id" in toolUseChunks
+    typeof toolUseChunks.name === "string" &&
+    "id" in toolUseChunks &&
+    typeof toolUseChunks.id === "string"
   ) {
     newToolCallChunk = {
       args: "",
@@ -508,6 +515,7 @@ export function extractToolCallChunk(
   if (
     inputJsonDeltaChunks &&
     "index" in inputJsonDeltaChunks &&
+    typeof inputJsonDeltaChunks.index === "number" &&
     "input" in inputJsonDeltaChunks
   ) {
     if (typeof inputJsonDeltaChunks.input === "string") {
@@ -566,6 +574,13 @@ export function extractToolUseContent(
         !("input" in toolUseMsg || "name" in toolUseMsg || "id" in toolUseMsg)
       )
         return;
+      if (
+        typeof toolUseMsg.id !== "string" ||
+        typeof toolUseMsg.name !== "string" ||
+        typeof toolUseMsg.input !== "string"
+      ) {
+        return;
+      }
       const parsedArgs = JSON.parse(toolUseMsg.input);
       if (parsedArgs) {
         toolUseContent = {
