@@ -31,7 +31,7 @@ import { ChatOpenAICompletions } from "../completions.js";
 // Save the original value of the 'LANGCHAIN_CALLBACKS_BACKGROUND' environment variable
 const originalBackground = process.env.LANGCHAIN_CALLBACKS_BACKGROUND;
 
-test("Test ChatOpenAI Generate", async () => {
+test.only("Test ChatOpenAI Generate", async () => {
   const chat = new ChatOpenAI({
     model: "gpt-3.5-turbo",
     maxTokens: 10,
@@ -48,6 +48,7 @@ test("Test ChatOpenAI Generate", async () => {
     }
   }
   // console.log({ res });
+  await new Promise((resolve) => setTimeout(resolve, 1000));
 });
 
 test("Test ChatOpenAI invoke fails with proper error", async () => {
