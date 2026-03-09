@@ -703,10 +703,7 @@ export abstract class BaseChatGoogle<
     config?: StructuredOutputMethodOptions<boolean>
   ):
     | Runnable<BaseLanguageModelInput, RunOutput>
-    | Runnable<
-        BaseLanguageModelInput,
-        { raw: BaseMessage; parsed: RunOutput }
-      >;
+    | Runnable<BaseLanguageModelInput, { raw: BaseMessage; parsed: RunOutput }>;
 
   /**
    * Get structured output from the model based on a schema.
