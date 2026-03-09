@@ -451,7 +451,7 @@ export class PGVectorStore extends VectorStore {
 
   get computedTableName() {
     return this.schemaName == null
-      ? `${this.tableName}`
+      ? `"${this.tableName}"`
       : `"${this.schemaName}"."${this.tableName}"`;
   }
 
