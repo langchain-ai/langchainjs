@@ -401,4 +401,88 @@ describe("Milvus", () => {
     expect(descriptionField).toBeDefined();
     expect(Number(descriptionField.type_params.max_length)).toBe(1024);
   });
+
+  test("Milvus createCollection uses actual length when metadata value exceeds default max", async () => {
+    const { Milvus } = await import("../milvus.js");
+
+    mockMilvusClient.hasCollection.mockResolvedValueOnce({
+      status: { error_code: ErrorCode.SUCCESS },
+      value: false,
+    });
+
+    const embeddings = new FakeEmbeddings();
+    const milvus = new Milvus(embeddings, {
+      collectionName: "test_collection",
+      autoId: true,
+      primaryField: "id",
+      textField: "text",
+      vectorField: "vector",
+      metadataTextFieldMaxLength: 10, // intentionally small
+      clientConfig: {
+        address: "localhost:19530",
+      },
+    });
+
+    const longValue = "a".repeat(50);
+    const documents = [
+      new Document({
+        pageContent: "Test content",
+        metadata: {
+          description: longValue,
+        },
+      }),
+    ];
+
+    await milvus.addDocuments(documents);
+
+    const createCollectionCall =
+      mockMilvusClient.createCollection.mock.calls[0][0];
+    const descriptionField = createCollectionCall.fields.find(
+      (f: any) => f.name === "description"
+    );
+    expect(descriptionField).toBeDefined();
+    // Actual data length (50) exceeds configured max (10), so actual length should be used
+    expect(Number(descriptionField.type_params.max_length)).toBe(50);
+  });
+
+  test("Milvus createCollection applies metadataTextFieldMaxLength to JSON metadata fields", async () => {
+    const { Milvus } = await import("../milvus.js");
+
+    mockMilvusClient.hasCollection.mockResolvedValueOnce({
+      status: { error_code: ErrorCode.SUCCESS },
+      value: false,
+    });
+
+    const embeddings = new FakeEmbeddings();
+    const milvus = new Milvus(embeddings, {
+      collectionName: "test_collection",
+      autoId: true,
+      primaryField: "id",
+      textField: "text",
+      vectorField: "vector",
+      clientConfig: {
+        address: "localhost:19530",
+      },
+    });
+
+    const documents = [
+      new Document({
+        pageContent: "Test content",
+        metadata: {
+          tags: { category: "ai" }, // object metadata → JSON VarChar
+        },
+      }),
+    ];
+
+    await milvus.addDocuments(documents);
+
+    const createCollectionCall =
+      mockMilvusClient.createCollection.mock.calls[0][0];
+    const tagsField = createCollectionCall.fields.find(
+      (f: any) => f.name === "tags"
+    );
+    expect(tagsField).toBeDefined();
+    // JSON serialized {"category":"ai"} is 17 bytes, but default max is 65535
+    expect(Number(tagsField.type_params.max_length)).toBe(65535);
+  });
 });
