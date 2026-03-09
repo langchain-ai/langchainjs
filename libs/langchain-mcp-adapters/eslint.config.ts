@@ -10,7 +10,7 @@ const config: ConfigArray = [
     // Allow imports from peerDependencies in source files
     files: ["src/**/*.ts"],
     rules: {
-      "import/no-extraneous-dependencies": [
+      "import-x/no-extraneous-dependencies": [
         "error",
         {
           devDependencies: false,
@@ -29,13 +29,13 @@ const config: ConfigArray = [
       },
     },
     rules: {
-      "import/no-extraneous-dependencies": "off",
+      "import-x/no-extraneous-dependencies": "off",
       "no-process-env": "off",
     },
   },
   {
     // Override parser options for test files
-    files: ["__tests__/**/*.ts", "**/*.test.ts", "**/*.test-d.ts"],
+    files: ["__tests__/**/*.ts", "**/*.test.ts", "**/*.test-d.ts", "src/tests/**/*.ts"],
     languageOptions: {
       parserOptions: {
         project: "./tsconfig.tests.json",
@@ -43,7 +43,7 @@ const config: ConfigArray = [
       },
     },
     rules: {
-      "import/no-extraneous-dependencies": [
+      "import-x/no-extraneous-dependencies": [
         "error",
         {
           devDependencies: true,

@@ -1,7 +1,5 @@
 import { randomUUID } from "node:crypto";
 
-// it's in dev dependencies - not sure why eslint gets mad here.
-// eslint-disable-next-line import/no-extraneous-dependencies
 import express, { type Express } from "express";
 
 import {

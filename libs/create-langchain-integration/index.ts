@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-/* eslint-disable import/no-extraneous-dependencies */
+/* eslint-disable import-x/no-extraneous-dependencies */
 import Commander from "commander";
 import Conf from "conf";
 import fs from "fs";

@@ -11,7 +11,7 @@ export default defineConfig(
       "@typescript-eslint/no-explicit-any": "off",
       "@typescript-eslint/no-unused-vars": "off",
       "@typescript-eslint/no-floating-promises": "off",
-      "import/no-extraneous-dependencies": "off",
+      "import-x/no-extraneous-dependencies": "off",
       "no-instanceof/no-instanceof": "off",
       "@typescript-eslint/no-misused-promises": "off",
     },
