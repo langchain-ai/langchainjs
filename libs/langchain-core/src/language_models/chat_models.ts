@@ -320,14 +320,15 @@ export abstract class BaseChatModel<
         ...this.getLsParams(callOptions),
       };
       const invocationParams = this?.invocationParams(callOptions);
-      const callbackManager_ = await CallbackManager.configure(
+      const { tools: _, ...invocationParamsWithoutTools } = invocationParams;
+      const callbackManager_ = CallbackManager.configure(
         runnableConfig.callbacks,
         this.callbacks,
         runnableConfig.tags,
         this.tags,
         inheritableMetadata,
         {
-          ...invocationParams,
+          invocation_params: invocationParamsWithoutTools,
           ...this.metadata,
         },
         { verbose: this.verbose }
@@ -448,15 +449,16 @@ export abstract class BaseChatModel<
         ...this.getLsParams(parsedOptions),
       };
       const invocationParams = this?.invocationParams(parsedOptions);
+      const { tools: _, ...invocationParamsWithoutTools } = invocationParams;
       // create callback manager and start run
-      const callbackManager_ = await CallbackManager.configure(
+      const callbackManager_ = CallbackManager.configure(
         handledOptions.callbacks,
         this.callbacks,
         handledOptions.tags,
         this.tags,
         inheritableMetadata,
         {
-          ...invocationParams,
+          invocation_params: invocationParamsWithoutTools,
           ...this.metadata,
         },
         { verbose: this.verbose }
@@ -655,15 +657,16 @@ export abstract class BaseChatModel<
       ...this.getLsParams(parsedOptions),
     };
     const invocationParams = this?.invocationParams(parsedOptions);
+    const { tools: _, ...invocationParamsWithoutTools } = invocationParams;
     // create callback manager and start run
-    const callbackManager_ = await CallbackManager.configure(
+    const callbackManager_ = CallbackManager.configure(
       handledOptions.callbacks,
       this.callbacks,
       handledOptions.tags,
       this.tags,
       inheritableMetadata,
       {
-        ...invocationParams,
+        invocation_params: invocationParamsWithoutTools,
         ...this.metadata,
       },
       { verbose: this.verbose }

@@ -101,13 +101,14 @@ export abstract class BaseLLM<
       const [runnableConfig, callOptions] =
         this._separateRunnableConfigFromCallOptionsCompat(options);
       const invocationParams = this?.invocationParams(callOptions);
-      const callbackManager_ = await CallbackManager.configure(
+      const { tools: _, ...invocationParamsWithoutTools } = invocationParams;
+      const callbackManager_ = CallbackManager.configure(
         runnableConfig.callbacks,
         this.callbacks,
         runnableConfig.tags,
         this.tags,
         runnableConfig.metadata,
-        { ...invocationParams, ...this.metadata },
+        { invocation_params: invocationParamsWithoutTools, ...this.metadata },
         { verbose: this.verbose }
       );
       const extra = {
@@ -238,13 +239,14 @@ export abstract class BaseLLM<
       runManagers = startedRunManagers;
     } else {
       const invocationParams = this?.invocationParams(parsedOptions);
-      const callbackManager_ = await CallbackManager.configure(
+      const { tools: _, ...invocationParamsWithoutTools } = invocationParams;
+      const callbackManager_ = CallbackManager.configure(
         handledOptions.callbacks,
         this.callbacks,
         handledOptions.tags,
         this.tags,
         handledOptions.metadata,
-        { ...invocationParams, ...this.metadata },
+        { invocation_params: invocationParamsWithoutTools, ...this.metadata },
         { verbose: this.verbose }
       );
       const extra = {
@@ -350,13 +352,14 @@ export abstract class BaseLLM<
     }
   > {
     const invocationParams = this?.invocationParams(parsedOptions);
-    const callbackManager_ = await CallbackManager.configure(
+    const { tools: _, ...invocationParamsWithoutTools } = invocationParams;
+    const callbackManager_ = CallbackManager.configure(
       handledOptions.callbacks,
       this.callbacks,
       handledOptions.tags,
       this.tags,
       handledOptions.metadata,
-      { ...invocationParams, ...this.metadata },
+      { invocation_params: invocationParamsWithoutTools, ...this.metadata },
       { verbose: this.verbose }
     );
     const extra = {
