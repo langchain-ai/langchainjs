@@ -782,6 +782,8 @@ describe("ChatOpenAI", () => {
       expect(isReasoningModel("gpt-5.1-mini")).toBe(true);
       expect(isReasoningModel("gpt-5.2")).toBe(true);
       expect(isReasoningModel("gpt-5.2-pro")).toBe(true);
+      expect(isReasoningModel("gpt-5.4")).toBe(true);
+      expect(isReasoningModel("gpt-5.4-pro")).toBe(true);
     });
 
     it("should return true for codex models based on gpt-5", () => {
@@ -822,6 +824,10 @@ describe("ChatOpenAI", () => {
       expect(_modelPrefersResponsesAPI("gpt-5.2-pro-2025-12-11")).toBe(true);
     });
 
+    it("should return true for gpt-5.4-pro", () => {
+      expect(_modelPrefersResponsesAPI("gpt-5.4-pro")).toBe(true);
+    });
+
     it("should return true for codex models", () => {
       expect(_modelPrefersResponsesAPI("codex-mini-latest")).toBe(true);
       expect(_modelPrefersResponsesAPI("gpt-5-codex")).toBe(true);
@@ -839,6 +845,7 @@ describe("ChatOpenAI", () => {
       expect(_modelPrefersResponsesAPI("gpt-5")).toBe(false);
       expect(_modelPrefersResponsesAPI("gpt-5.1")).toBe(false);
       expect(_modelPrefersResponsesAPI("gpt-5.2")).toBe(false);
+      expect(_modelPrefersResponsesAPI("gpt-5.4")).toBe(false);
       expect(_modelPrefersResponsesAPI("o3")).toBe(false);
       expect(_modelPrefersResponsesAPI("o4-mini")).toBe(false);
     });
