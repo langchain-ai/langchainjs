@@ -275,6 +275,133 @@ describe("JiraProjectLoader", () => {
       /Jira API request failed with status 403/
     );
   });
+
+  it("should use custom jql when provided", async () => {
+    const issue = someJiraIssue();
+    const calls = mockFetch({
+      ok: true,
+      status: 200,
+      body: { issues: [issue], isLast: true },
+    });
+
+    const customJql =
+      "project = AC AND sprint in openSprints() ORDER BY priority DESC";
+    const loader = makeLoader({ jql: customJql });
+    await loader.loadAsIssues();
+
+    const body = JSON.parse(calls[0].init.body as string);
+    expect(body.jql).toBe(customJql);
+  });
+
+  it("should ignore createdAfter when custom jql is provided", async () => {
+    const issue = someJiraIssue();
+    const calls = mockFetch({
+      ok: true,
+      status: 200,
+      body: { issues: [issue], isLast: true },
+    });
+
+    const customJql = 'project = AC AND status = "In Progress"';
+    const loader = makeLoader({
+      jql: customJql,
+      createdAfter: new Date("2024-01-01"),
+    });
+    await loader.loadAsIssues();
+
+    const body = JSON.parse(calls[0].init.body as string);
+    expect(body.jql).toBe(customJql);
+    expect(body.jql).not.toContain("created >=");
+  });
+
+  it("should respect maxTotal and stop pagination early", async () => {
+    const calls = mockFetch(
+      {
+        ok: true,
+        status: 200,
+        body: {
+          issues: [someJiraIssue(), someJiraIssue(), someJiraIssue()],
+          isLast: false,
+          nextPageToken: "token-page2",
+        },
+      },
+      {
+        ok: true,
+        status: 200,
+        body: {
+          issues: [someJiraIssue(), someJiraIssue(), someJiraIssue()],
+          isLast: false,
+          nextPageToken: "token-page3",
+        },
+      },
+      {
+        ok: true,
+        status: 200,
+        body: {
+          issues: [someJiraIssue()],
+          isLast: true,
+        },
+      }
+    );
+
+    const loader = makeLoader({ maxTotal: 5, limitPerRequest: 3 });
+    const issues = await loader.loadAsIssues();
+
+    // Should stop after 2 pages (3 + 3 = 6 >= maxTotal of 5)
+    // and trim to exactly 5
+    expect(issues).toHaveLength(5);
+    // Should not fetch page 3
+    expect(calls).toHaveLength(2);
+  });
+
+  it("should adjust page size when approaching maxTotal", async () => {
+    const calls = mockFetch(
+      {
+        ok: true,
+        status: 200,
+        body: {
+          issues: [someJiraIssue(), someJiraIssue(), someJiraIssue()],
+          isLast: false,
+          nextPageToken: "token-page2",
+        },
+      },
+      {
+        ok: true,
+        status: 200,
+        body: {
+          issues: [someJiraIssue()],
+          isLast: true,
+        },
+      }
+    );
+
+    const loader = makeLoader({ maxTotal: 4, limitPerRequest: 3 });
+    await loader.loadAsIssues();
+
+    // First request: page size = min(3, 4) = 3
+    const body1 = JSON.parse(calls[0].init.body as string);
+    expect(body1.maxResults).toBe(3);
+
+    // Second request: page size = min(3, remaining=1) = 1
+    const body2 = JSON.parse(calls[1].init.body as string);
+    expect(body2.maxResults).toBe(1);
+  });
+
+  it("should fetch all issues when maxTotal is not set", async () => {
+    mockFetch({
+      ok: true,
+      status: 200,
+      body: {
+        issues: [someJiraIssue(), someJiraIssue(), someJiraIssue()],
+        isLast: true,
+      },
+    });
+
+    const loader = makeLoader();
+    const issues = await loader.loadAsIssues();
+
+    // Without maxTotal, returns everything
+    expect(issues).toHaveLength(3);
+  });
 });
 
 export function someJiraIssueType(
