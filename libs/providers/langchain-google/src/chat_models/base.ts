@@ -71,7 +71,26 @@ import {
   createFunctionCallingParser,
 } from "@langchain/core/language_models/structured_output";
 
+declare const __PKG_VERSION__: string;
+
 export type GooglePlatformType = "gai" | "gcp";
+
+type StructuredOutputSchema<
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  RunOutput extends Record<string, any>
+> =
+  | InteropZodType<RunOutput>
+  | SerializableSchema<RunOutput>
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  | Record<string, any>;
+
+type StructuredOutputWithRaw<
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  RunOutput extends Record<string, any>
+> = {
+  raw: BaseMessage;
+  parsed: RunOutput;
+};
 
 export function getPlatformType(
   platform: GooglePlatformType | undefined,
@@ -682,18 +701,35 @@ export abstract class BaseChatGoogle<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     RunOutput extends Record<string, any> = Record<string, any>
   >(
-    outputSchema:
-      | InteropZodType<RunOutput>
-      | SerializableSchema<RunOutput>
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      | Record<string, any>,
+    outputSchema: StructuredOutputSchema<RunOutput>,
+    config?: StructuredOutputMethodOptions<false>
+  ): Runnable<BaseLanguageModelInput, RunOutput>;
+
+  withStructuredOutput<
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    RunOutput extends Record<string, any> = Record<string, any>
+  >(
+    outputSchema: StructuredOutputSchema<RunOutput>,
+    config?: StructuredOutputMethodOptions<true>
+  ): Runnable<BaseLanguageModelInput, StructuredOutputWithRaw<RunOutput>>;
+
+  withStructuredOutput<
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    RunOutput extends Record<string, any> = Record<string, any>
+  >(
+    outputSchema: StructuredOutputSchema<RunOutput>,
     config?: StructuredOutputMethodOptions<boolean>
   ):
     | Runnable<BaseLanguageModelInput, RunOutput>
-    | Runnable<
-        BaseLanguageModelInput,
-        { raw: BaseMessage; parsed: RunOutput }
-      > {
+    | Runnable<BaseLanguageModelInput, StructuredOutputWithRaw<RunOutput>>;
+
+  withStructuredOutput<
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    RunOutput extends Record<string, any> = Record<string, any>
+  >(
+    outputSchema: StructuredOutputSchema<RunOutput>,
+    config?: StructuredOutputMethodOptions<boolean>
+  ) {
     let llm: Runnable<BaseMessage[], AIMessageChunk, CallOptions>;
     let outputParser: Runnable<BaseMessage, RunOutput>;
 

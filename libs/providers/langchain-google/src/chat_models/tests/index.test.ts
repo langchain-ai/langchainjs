@@ -10,7 +10,11 @@ import {
 import * as fs from "node:fs";
 import { ApiClient } from "../../clients/index.js";
 import { GoogleRequestRecorder } from "../../utils/handler.js";
-import { BaseCallbackHandler } from "@langchain/core/callbacks/base";
+import {
+  BaseCallbackHandler,
+  type HandleLLMNewTokenCallbackFields,
+  type NewTokenIndices,
+} from "@langchain/core/callbacks/base";
 import { ChatGoogle, ChatGoogleParams } from "../index.js";
 import { AIMessage, AIMessageChunk } from "@langchain/core/messages";
 import { OutputParserException } from "@langchain/core/output_parsers";
@@ -844,11 +848,11 @@ describe("Google Mock", () => {
         {
           handleLLMNewToken(
             token: string,
-            _idx: unknown,
-            _runId: unknown,
-            _parentRunId: unknown,
-            _tags: unknown,
-            fields: { chunk?: unknown }
+            _idx: NewTokenIndices,
+            _runId: string,
+            _parentRunId?: string,
+            _tags?: string[],
+            fields?: HandleLLMNewTokenCallbackFields
           ) {
             newTokenCalls.push({ text: token, chunk: fields?.chunk });
           },
@@ -961,11 +965,11 @@ describe("Google Mock", () => {
         {
           handleLLMNewToken(
             token: string,
-            _idx: unknown,
-            _runId: unknown,
-            _parentRunId: unknown,
-            _tags: unknown,
-            fields: { chunk?: unknown }
+            _idx: NewTokenIndices,
+            _runId: string,
+            _parentRunId?: string,
+            _tags?: string[],
+            fields?: HandleLLMNewTokenCallbackFields
           ) {
             newTokenCalls.push({ text: token, chunk: fields?.chunk });
           },

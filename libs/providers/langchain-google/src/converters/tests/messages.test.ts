@@ -133,8 +133,15 @@ describe("convertMessagesToGeminiContents", () => {
 
     const toolResponseContent = contents.find((c) => c.role === "function");
     expect(toolResponseContent).toBeDefined();
+    if (!toolResponseContent) {
+      throw new Error("Expected function response content");
+    }
+    expect(toolResponseContent.parts).toBeDefined();
+    if (!toolResponseContent.parts) {
+      throw new Error("Expected function response parts");
+    }
 
-    const functionResponsePart = toolResponseContent!.parts.find(
+    const functionResponsePart = toolResponseContent.parts.find(
       (p) => "functionResponse" in p && p.functionResponse
     );
     expect(functionResponsePart).toBeDefined();
@@ -170,8 +177,15 @@ describe("convertMessagesToGeminiContents", () => {
 
     const toolResponseContent = contents.find((c) => c.role === "function");
     expect(toolResponseContent).toBeDefined();
+    if (!toolResponseContent) {
+      throw new Error("Expected function response content");
+    }
+    expect(toolResponseContent.parts).toBeDefined();
+    if (!toolResponseContent.parts) {
+      throw new Error("Expected function response parts");
+    }
 
-    const functionResponsePart = toolResponseContent!.parts.find(
+    const functionResponsePart = toolResponseContent.parts.find(
       (p) => "functionResponse" in p && p.functionResponse
     );
     expect(functionResponsePart).toBeDefined();
