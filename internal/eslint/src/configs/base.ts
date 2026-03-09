@@ -2,7 +2,7 @@ import js from "@eslint/js";
 import tseslint, { type ConfigArray } from "typescript-eslint";
 import prettierConfig from "eslint-config-prettier";
 import noInstanceofPlugin from "eslint-plugin-no-instanceof";
-import importPlugin from "eslint-plugin-import";
+import importPlugin from "eslint-plugin-import-x";
 
 const config: ConfigArray = tseslint.config(
   // Global ignores need to be in their own config object
@@ -44,7 +44,7 @@ const config: ConfigArray = tseslint.config(
     plugins: {
       "@typescript-eslint": tseslint.plugin,
       "no-instanceof": noInstanceofPlugin,
-      import: importPlugin,
+      "import-x": importPlugin,
     },
     languageOptions: {
       parser: tseslint.parser,
@@ -88,15 +88,15 @@ const config: ConfigArray = tseslint.config(
       "@typescript-eslint/no-empty-object-type": "off",
 
       // Import rules
-      "import/extensions": ["error", "ignorePackages"],
-      "import/no-extraneous-dependencies": [
+      "import-x/extensions": ["error", "ignorePackages"],
+      "import-x/no-extraneous-dependencies": [
         "error",
         { devDependencies: ["**/*.test.ts", "**/*.test-d.ts", "**/*.spec.ts"] },
       ],
-      "import/no-unresolved": "off",
-      "import/prefer-default-export": "off",
-      "import/no-cycle": "off",
-      "import/no-relative-packages": "off",
+      "import-x/no-unresolved": "off",
+      "import-x/prefer-default-export": "off",
+      "import-x/no-cycle": "off",
+      "import-x/no-relative-packages": "off",
 
       // General rules
       "no-instanceof/no-instanceof": "error",
@@ -146,13 +146,13 @@ const config: ConfigArray = tseslint.config(
   {
     // Test file overrides - disable type-aware rules that are slow with zod/v3 imports
     name: "test",
-    files: ["**/*.test.ts", "**/*.test-d.ts", "**/*.spec.ts"],
+    files: ["**/*.test.ts", "**/*.test-d.ts", "**/*.spec.ts", "**/tests/**/*.ts"],
     rules: {
       "@typescript-eslint/no-unused-vars": "off",
       "@typescript-eslint/no-floating-promises": "off",
       "@typescript-eslint/no-misused-promises": "off",
       "no-process-env": "off",
-      "import/no-extraneous-dependencies": "off",
+      "import-x/no-extraneous-dependencies": "off",
       "no-restricted-imports": "off",
     },
   }
