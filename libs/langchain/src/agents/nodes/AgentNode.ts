@@ -468,6 +468,8 @@ export class AgentNode<
            */
           const runtime: Runtime<unknown> = Object.freeze({
             context,
+            store: lgConfig.store,
+            configurable: lgConfig.configurable,
             writer: lgConfig.writer,
             interrupt: lgConfig.interrupt,
             signal: lgConfig.signal,
@@ -586,11 +588,18 @@ export class AgentNode<
 
             /**
              * Normalize Commands so middleware always sees AIMessage from handler().
-             * When an inner middleware returns a Command, substitute the tracked
-             * lastAiMessage. The raw Command is still captured in innerHandlerResult
-             * for the framework's Command collection.
+             * When an inner handler (base handler or nested middleware) returns a
+             * Command (e.g. structured-output retry), substitute the tracked
+             * lastAiMessage so the middleware sees an AIMessage, and collect the
+             * raw Command so the framework can still propagate it (e.g. for retries).
+             *
+             * Only collect if not already present: Commands from inner middleware
+             * are already tracked via the middleware validation layer (line ~627).
              */
             if (isCommand(innerHandlerResult) && lastAiMessage) {
+              if (!collectedCommands.includes(innerHandlerResult)) {
+                collectedCommands.push(innerHandlerResult);
+              }
               return lastAiMessage as InternalModelResponse<StructuredResponseFormat>;
             }
 
@@ -651,6 +660,8 @@ export class AgentNode<
       state,
       runtime: Object.freeze({
         context: lgConfig?.context,
+        store: lgConfig.store,
+        configurable: lgConfig.configurable,
         writer: lgConfig.writer,
         interrupt: lgConfig.interrupt,
         signal: lgConfig.signal,

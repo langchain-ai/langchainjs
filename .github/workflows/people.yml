@@ -7,6 +7,9 @@ on:
     branches: [jacob/people]
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 jobs:
   langchain-people:
     if: github.repository_owner == 'langchain-ai'

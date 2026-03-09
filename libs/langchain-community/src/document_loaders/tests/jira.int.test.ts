@@ -146,8 +146,7 @@ describe("JiraProjectLoader Integration Tests", () => {
       accessToken: "invalid_token",
     });
 
-    const docs = await loader.load();
-    expect(docs).toEqual([]);
+    await expect(loader.load()).rejects.toThrow();
   });
 
   test("should handle invalid project key", async () => {
@@ -156,8 +155,7 @@ describe("JiraProjectLoader Integration Tests", () => {
       projectKey: "INVALID_PROJECT_KEY",
     });
 
-    const docs = await loader.load();
-    expect(docs).toEqual([]);
+    await expect(loader.load()).rejects.toThrow();
   });
 
   test(

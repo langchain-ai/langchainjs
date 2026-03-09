@@ -5,6 +5,9 @@ on:
   schedule:
     - cron: "0 13 * * *"
 
+permissions:
+  contents: read
+
 jobs:
   standard-tests:
     runs-on: ubuntu-latest

@@ -1,5 +1,34 @@
 # @langchain/community
 
+## 1.1.22
+
+### Patch Changes
+
+- Updated dependencies [[`96c630d`](https://github.com/langchain-ai/langchainjs/commit/96c630dfd009f2546d5bc36f5067ff868bb4067f), [`a8b9ccc`](https://github.com/langchain-ai/langchainjs/commit/a8b9ccca5a85984a5a30008acd09f9991e591638), [`a1f22bb`](https://github.com/langchain-ai/langchainjs/commit/a1f22bba907731a18dca23c31cec5333444a3f55), [`3682a8d`](https://github.com/langchain-ai/langchainjs/commit/3682a8d4e0ed0855a5283f26bcfd1c0415dde075)]:
+  - @langchain/core@1.1.30
+  - @langchain/openai@1.2.12
+  - @langchain/classic@1.0.22
+
+## 1.1.21
+
+### Patch Changes
+
+- [#10113](https://github.com/langchain-ai/langchainjs/pull/10113) [`7d198ae`](https://github.com/langchain-ai/langchainjs/commit/7d198aeac323598a5b018d31793cf299d0f2c921) Thanks [@pawel-twardziak](https://github.com/pawel-twardziak)! - Feat/community chatalitongyi tool calling
+
+- [#9722](https://github.com/langchain-ai/langchainjs/pull/9722) [`df9dbd2`](https://github.com/langchain-ai/langchainjs/commit/df9dbd26994aefc47e26c18f2fc7ec4657e4dc1b) Thanks [@cs7-shrey](https://github.com/cs7-shrey)! - feat(milvus): Add TTL support by passing properties to Milvus
+
+- Updated dependencies []:
+  - @langchain/classic@1.0.21
+
+## 1.1.20
+
+### Patch Changes
+
+- Updated dependencies [[`9f30267`](https://github.com/langchain-ai/langchainjs/commit/9f30267e95a2a42fac71f1d3674b84c5a190dbbc), [`403a99f`](https://github.com/langchain-ai/langchainjs/commit/403a99fd826383f30300809ae077e1c967023520), [`3b1fd54`](https://github.com/langchain-ai/langchainjs/commit/3b1fd5458a4aa29c398122829f383f21b5ac39da), [`f298a9b`](https://github.com/langchain-ai/langchainjs/commit/f298a9bdedff7bc2b0eb7f6b5e6b52fd3042a7b7), [`77bd982`](https://github.com/langchain-ai/langchainjs/commit/77bd98274a885e947d76f7a9c6dd0b3763453218)]:
+  - @langchain/core@1.1.29
+  - @langchain/openai@1.2.11
+  - @langchain/classic@1.0.21
+
 ## 1.1.19
 
 ### Patch Changes

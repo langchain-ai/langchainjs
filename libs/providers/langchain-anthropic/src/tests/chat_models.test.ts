@@ -1747,3 +1747,187 @@ describe("Opus 4.6", () => {
     });
   });
 });
+
+describe("withStructuredOutput - StandardSchema", () => {
+  function makeSerializableSchema() {
+    return {
+      "~standard": {
+        version: 1 as const,
+        vendor: "test",
+        validate: (value: unknown) => {
+          const v = value as Record<string, unknown>;
+          if (
+            v &&
+            typeof v === "object" &&
+            "alerts" in v &&
+            Array.isArray(v.alerts)
+          ) {
+            return {
+              value: v as {
+                alerts: Array<{ description: string; severity: string }>;
+              },
+            };
+          }
+          return {
+            issues: [{ message: "Expected object with alerts array" }],
+          };
+        },
+        jsonSchema: {
+          input: () => ({
+            type: "object" as const,
+            properties: {
+              alerts: {
+                type: "array",
+                items: {
+                  type: "object",
+                  properties: {
+                    description: { type: "string" },
+                    severity: {
+                      type: "string",
+                      enum: ["HIGH", "MEDIUM", "LOW"],
+                    },
+                  },
+                  required: ["description", "severity"],
+                },
+              },
+            },
+            required: ["alerts"],
+            description: "Important security alerts",
+          }),
+          output: () => ({ type: "object" as const, properties: {} }),
+        },
+      },
+    };
+  }
+
+  test("functionCalling with valid output parses correctly", async () => {
+    const model = new ChatAnthropic({
+      modelName: "claude-3-haiku-20240307",
+      temperature: 0,
+      anthropicApiKey: "testing",
+    });
+    vi
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      .spyOn(model as any, "invoke")
+      .mockResolvedValue(
+        new AIMessage({
+          content: [
+            {
+              type: "tool_use",
+              id: "notreal",
+              name: "extract",
+              input: { alerts: [{ description: "test", severity: "LOW" }] },
+            },
+          ],
+        })
+      );
+
+    const schema = makeSerializableSchema();
+    const structured = model.withStructuredOutput(schema, {
+      name: "extract",
+    });
+
+    const result = await structured.invoke("test input");
+    expect(result).toEqual({
+      alerts: [{ description: "test", severity: "LOW" }],
+    });
+  });
+
+  test("functionCalling with invalid output throws OutputParserException", async () => {
+    const model = new ChatAnthropic({
+      modelName: "claude-3-haiku-20240307",
+      temperature: 0,
+      anthropicApiKey: "testing",
+    });
+    vi.spyOn(model, "invoke").mockResolvedValue(
+      new AIMessageChunk({
+        content: [
+          {
+            type: "tool_use",
+            id: "notreal",
+            name: "extract",
+            input: "Incorrect string tool call input",
+          },
+        ],
+      })
+    );
+
+    const schema = makeSerializableSchema();
+    const structured = model.withStructuredOutput(schema, {
+      name: "extract",
+    });
+
+    await expect(async () => {
+      await structured.invoke("test input");
+    }).rejects.toThrow(OutputParserException);
+  });
+
+  test("functionCalling with custom name", async () => {
+    const model = new ChatAnthropic({
+      modelName: "claude-3-haiku-20240307",
+      temperature: 0,
+      anthropicApiKey: "testing",
+    });
+    vi
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      .spyOn(model as any, "invoke")
+      .mockResolvedValue(
+        new AIMessage({
+          content: [
+            {
+              type: "tool_use",
+              id: "notreal",
+              name: "SecurityAlerts",
+              input: { alerts: [{ description: "breach", severity: "HIGH" }] },
+            },
+          ],
+        })
+      );
+
+    const schema = makeSerializableSchema();
+    const structured = model.withStructuredOutput(schema, {
+      name: "SecurityAlerts",
+    });
+
+    const result = await structured.invoke("test input");
+    expect(result).toEqual({
+      alerts: [{ description: "breach", severity: "HIGH" }],
+    });
+  });
+
+  test("functionCalling with includeRaw returns raw and parsed", async () => {
+    const mockResponse = new AIMessage({
+      content: [
+        {
+          type: "tool_use",
+          id: "notreal",
+          name: "extract",
+          input: { alerts: [{ description: "test", severity: "MEDIUM" }] },
+        },
+      ],
+    });
+    const model = new ChatAnthropic({
+      modelName: "claude-3-haiku-20240307",
+      temperature: 0,
+      anthropicApiKey: "testing",
+    });
+    vi
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      .spyOn(model as any, "invoke")
+      .mockResolvedValue(mockResponse);
+
+    const schema = makeSerializableSchema();
+    const structured = model.withStructuredOutput(schema, {
+      name: "extract",
+      includeRaw: true,
+    });
+
+    const result = await structured.invoke("test input");
+    expect(result).toHaveProperty("raw");
+    expect(result).toHaveProperty("parsed");
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    expect((result as any).parsed).toEqual({
+      alerts: [{ description: "test", severity: "MEDIUM" }],
+    });
+  });
+});

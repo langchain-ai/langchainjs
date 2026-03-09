@@ -1,6 +1,6 @@
 {
   "name": "@langchain/core",
-  "version": "1.1.28",
+  "version": "1.1.31",
   "description": "Core LangChain.js abstractions and schemas",
   "type": "module",
   "engines": {
@@ -31,6 +31,7 @@
   "license": "MIT",
   "dependencies": {
     "@cfworker/json-schema": "^4.0.2",
+    "@standard-schema/spec": "^1.1.0",
     "ansi-styles": "^5.0.0",
     "camelcase": "6",
     "decamelize": "1.2.0",
@@ -38,7 +39,7 @@
     "langsmith": ">=0.5.0 <1.0.0",
     "mustache": "^4.2.0",
     "p-queue": "^6.6.2",
-    "uuid": "^10.0.0",
+    "uuid": "^11.1.0",
     "zod": "^3.25.76 || ^4"
   },
   "devDependencies": {
@@ -52,7 +53,7 @@
     "eslint": "^9.34.0",
     "ml-matrix": "^6.10.4",
     "prettier": "^3.5.0",
-    "rimraf": "^5.0.1",
+    "rimraf": "^6.1.3",
     "typescript": "~5.8.3",
     "vitest": "^3.2.4",
     "web-streams-polyfill": "^4.2.0"
@@ -306,6 +307,17 @@
         "default": "./dist/language_models/profile.js"
       }
     },
+    "./language_models/structured_output": {
+      "input": "./src/language_models/structured_output.ts",
+      "require": {
+        "types": "./dist/language_models/structured_output.d.cts",
+        "default": "./dist/language_models/structured_output.cjs"
+      },
+      "import": {
+        "types": "./dist/language_models/structured_output.d.ts",
+        "default": "./dist/language_models/structured_output.js"
+      }
+    },
     "./load": {
       "input": "./src/load/index.ts",
       "require": {
@@ -502,6 +514,17 @@
       "import": {
         "types": "./dist/structured_query/index.d.ts",
         "default": "./dist/structured_query/index.js"
+      }
+    },
+    "./testing": {
+      "input": "./src/testing/index.ts",
+      "require": {
+        "types": "./dist/testing/index.d.cts",
+        "default": "./dist/testing/index.cjs"
+      },
+      "import": {
+        "types": "./dist/testing/index.d.ts",
+        "default": "./dist/testing/index.js"
       }
     },
     "./tools": {
@@ -713,6 +736,17 @@
         "default": "./dist/utils/ssrf.js"
       }
     },
+    "./utils/standard_schema": {
+      "input": "./src/utils/standard_schema.ts",
+      "require": {
+        "types": "./dist/utils/standard_schema.d.cts",
+        "default": "./dist/utils/standard_schema.cjs"
+      },
+      "import": {
+        "types": "./dist/utils/standard_schema.d.ts",
+        "default": "./dist/utils/standard_schema.js"
+      }
+    },
     "./utils/stream": {
       "input": "./src/utils/stream.ts",
       "require": {
@@ -785,15 +819,15 @@
     "prompts.cjs",
     "prompts.d.ts",
     "prompts.js",
-    "utils",
     "output_parsers",
+    "utils",
     "types",
     "language_models",
+    "callbacks",
     "embeddings.d.cts",
     "embeddings.cjs",
     "embeddings.d.ts",
     "embeddings.js",
-    "callbacks",
     "tracers",
     "example_selectors.d.cts",
     "example_selectors.cjs",
@@ -853,10 +887,15 @@
     "runnables.cjs",
     "runnables.d.ts",
     "runnables.js",
+    "testing",
     "tools.d.cts",
     "tools.cjs",
     "tools.d.ts",
     "tools.js",
+    "errors.d.cts",
+    "errors.cjs",
+    "errors.d.ts",
+    "errors.js",
     "vectorstores.d.cts",
     "vectorstores.cjs",
     "vectorstores.d.ts",
