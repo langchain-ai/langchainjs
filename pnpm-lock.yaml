@@ -3133,7 +3133,7 @@ importers:
         specifier: ^1.0.12
         version: 1.0.21
       openai:
-        specifier: ^6.24.0
+        specifier: ^6.27.0
         version: 6.27.0(ws@8.19.0(bufferutil@4.1.0))(zod@4.3.6)
       zod:
         specifier: ^3.25.76 || ^4
