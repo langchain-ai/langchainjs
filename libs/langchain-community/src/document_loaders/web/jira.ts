@@ -396,6 +396,31 @@ export interface JiraProjectLoaderParams {
   createdAfter?: Date;
   filterFn?: (issue: JiraIssue) => boolean;
   descriptionFormatter?: JiraDescriptionFormatter;
+
+  /**
+   * Optional custom JQL query. When provided, this replaces the
+   * auto-generated `project = <projectKey>` query entirely, giving
+   * full control over filtering, sorting, and scoping.
+   *
+   * Examples:
+   *   "project = AC AND status = 'In Progress'"
+   *   "project = AC AND sprint in openSprints() ORDER BY priority DESC"
+   *   "assignee = currentUser() AND updated >= -7d"
+   *
+   * Note: `createdAfter` is ignored when `jql` is provided — include
+   * any date filters directly in your JQL string.
+   */
+  jql?: string;
+
+  /**
+   * Maximum total number of issues to fetch across all pages.
+   * When set, pagination stops early once this limit is reached.
+   * Without this, the loader fetches every issue matching the query.
+   *
+   * Note: `limitPerRequest` controls the page size (how many issues
+   * per API call), while `maxTotal` controls the overall cap.
+   */
+  maxTotal?: number;
 }
 
 /**
@@ -420,6 +445,10 @@ export class JiraProjectLoader extends BaseDocumentLoader {
 
   private readonly personalAccessToken?: string;
 
+  private readonly jql?: string;
+
+  private readonly maxTotal?: number;
+
   constructor({
     host,
     projectKey,
@@ -430,6 +459,8 @@ export class JiraProjectLoader extends BaseDocumentLoader {
     personalAccessToken,
     filterFn,
     descriptionFormatter: formatter,
+    jql,
+    maxTotal,
   }: JiraProjectLoaderParams) {
     super();
     this.host = host;
@@ -445,6 +476,8 @@ export class JiraProjectLoader extends BaseDocumentLoader {
     });
     this.personalAccessToken = personalAccessToken;
     this.filterFn = filterFn;
+    this.jql = jql;
+    this.maxTotal = maxTotal;
   }
 
   private buildAuthorizationHeader(): string {
@@ -472,6 +505,9 @@ export class JiraProjectLoader extends BaseDocumentLoader {
 
     for await (const issues of this.fetchIssues()) {
       allIssues.push(...issues);
+      if (this.maxTotal && allIssues.length >= this.maxTotal) {
+        return allIssues.slice(0, this.maxTotal);
+      }
     }
 
     return allIssues;
@@ -487,24 +523,41 @@ export class JiraProjectLoader extends BaseDocumentLoader {
     return `${year}-${month}-${dayOfMonth}`;
   }
 
+  private buildJql(): string {
+    // If custom JQL is provided, use it directly
+    if (this.jql) {
+      return this.jql;
+    }
+
+    // Otherwise, build JQL from projectKey and createdAfter
+    const createdAfterAsString = this.toJiraDateString(this.createdAfter);
+    const jqlParts = [
+      `project = ${this.projectKey}`,
+      ...(createdAfterAsString ? [`created >= "${createdAfterAsString}"`] : []),
+    ];
+    return `${jqlParts.join(" AND ")} ORDER BY created ASC, key ASC`;
+  }
+
   protected async *fetchIssues(): AsyncIterable<JiraIssue[]> {
     const authorizationHeader = this.buildAuthorizationHeader();
     const url = `${this.host}/rest/api/3/search/jql`;
-    const createdAfterAsString = this.toJiraDateString(this.createdAfter);
+    const jql = this.buildJql();
 
     let nextPageToken: string | undefined;
+    let totalFetched = 0;
 
     while (true) {
-      const jqlParts = [
-        `project = ${this.projectKey}`,
-        ...(createdAfterAsString
-          ? [`created >= "${createdAfterAsString}"`]
-          : []),
-      ];
+      // If maxTotal is set, don't request more than we need
+      let pageSize = this.limitPerRequest;
+      if (this.maxTotal) {
+        const remaining = this.maxTotal - totalFetched;
+        if (remaining <= 0) break;
+        pageSize = Math.min(pageSize, remaining);
+      }
 
       const body: Record<string, unknown> = {
-        jql: `${jqlParts.join(" AND ")} ORDER BY created ASC, key ASC`,
-        maxResults: this.limitPerRequest,
+        jql,
+        maxResults: pageSize,
         fields: ["*all"],
       };
 
@@ -532,6 +585,7 @@ export class JiraProjectLoader extends BaseDocumentLoader {
 
       if (data.issues?.length) {
         yield data.issues;
+        totalFetched += data.issues.length;
       }
 
       if (data.isLast === true) break;
