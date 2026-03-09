@@ -108,7 +108,7 @@ export abstract class BaseLLM<
         runnableConfig.tags,
         this.tags,
         runnableConfig.metadata,
-        { invocation_params: invocationParamsWithoutTools, ...this.metadata },
+        { ...invocationParamsWithoutTools, ...this.metadata },
         { verbose: this.verbose }
       );
       const extra = {
@@ -246,7 +246,7 @@ export abstract class BaseLLM<
         handledOptions.tags,
         this.tags,
         handledOptions.metadata,
-        { invocation_params: invocationParamsWithoutTools, ...this.metadata },
+        { ...invocationParamsWithoutTools, ...this.metadata },
         { verbose: this.verbose }
       );
       const extra = {
@@ -359,7 +359,7 @@ export abstract class BaseLLM<
       handledOptions.tags,
       this.tags,
       handledOptions.metadata,
-      { invocation_params: invocationParamsWithoutTools, ...this.metadata },
+      { ...invocationParamsWithoutTools, ...this.metadata },
       { verbose: this.verbose }
     );
     const extra = {

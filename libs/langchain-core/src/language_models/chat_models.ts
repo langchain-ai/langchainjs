@@ -328,7 +328,7 @@ export abstract class BaseChatModel<
         this.tags,
         inheritableMetadata,
         {
-          invocation_params: invocationParamsWithoutTools,
+          ...invocationParamsWithoutTools,
           ...this.metadata,
         },
         { verbose: this.verbose }
@@ -458,7 +458,7 @@ export abstract class BaseChatModel<
         this.tags,
         inheritableMetadata,
         {
-          invocation_params: invocationParamsWithoutTools,
+          ...invocationParamsWithoutTools,
           ...this.metadata,
         },
         { verbose: this.verbose }
@@ -666,7 +666,7 @@ export abstract class BaseChatModel<
       this.tags,
       inheritableMetadata,
       {
-        invocation_params: invocationParamsWithoutTools,
+        ...invocationParamsWithoutTools,
         ...this.metadata,
       },
       { verbose: this.verbose }
