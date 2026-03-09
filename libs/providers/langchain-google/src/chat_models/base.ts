@@ -1,6 +1,7 @@
 import {
   BaseChatModel,
   type BaseChatModelCallOptions,
+  type LangSmithParams,
   type BaseChatModelParams,
 } from "@langchain/core/language_models/chat_models";
 import {
@@ -368,6 +369,18 @@ export abstract class BaseChatGoogle<
           ? { mediaResolution: fields.mediaResolution }
           : {}),
       },
+    };
+  }
+
+  getLsParams(options: this["ParsedCallOptions"]): LangSmithParams {
+    const params = this.invocationParams(options);
+    return {
+      ls_provider: "google",
+      ls_model_name: this.model,
+      ls_model_type: "chat",
+      ls_temperature: params.generationConfig?.temperature ?? undefined,
+      ls_max_tokens: params.generationConfig?.maxOutputTokens ?? undefined,
+      ls_stop: options.stop,
     };
   }
 
