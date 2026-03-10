@@ -560,8 +560,7 @@ export function _mergeLists<Content extends ContentBlock>(
           const indiciesMatch = leftItem.index === item.index;
           const leftHasId = leftItem.id != null && leftItem.id !== "";
           const rightHasId = item.id != null && item.id !== "";
-          const idsMatch =
-            leftHasId && rightHasId && leftItem.id === item.id;
+          const idsMatch = leftHasId && rightHasId && leftItem.id === item.id;
           const eitherItemMissingID = !leftHasId || !rightHasId;
           return indiciesMatch && (idsMatch || eitherItemMissingID);
         });
