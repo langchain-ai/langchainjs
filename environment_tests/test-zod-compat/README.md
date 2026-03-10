@@ -16,19 +16,16 @@ the packages were built with.
 
 ## What's tested
 
-Each test exercises both `@langchain/core` primitives and `langchain` agent APIs:
+Each test simulates a real consumer app using `@langchain/core` and `langchain`:
 
-**Core types:**
-- `tool()` with simple, nested, enum, string, and deeply-nested schemas
+- `tool()` with simple, nested, enum, and deeply-nested zod schemas
 - `StructuredOutputParser.fromZodSchema()`
-- `InteropZodType` assignability for all primitive and composite types
-- `InferInteropZodOutput` type inference
-- `ZodV3Like`/`ZodV4Like`/`ZodV3ObjectLike`/`ZodV4ObjectLike` assignability
-
-**Agent APIs:**
 - `createMiddleware()` with `stateSchema` and `beforeAgent`/`beforeModel` hooks
 - `createAgent()` — basic, with middleware, with `responseFormat`, with `stateSchema`, kitchen sink
 - `toolStrategy()` and `providerStrategy()` with zod schemas
+
+No internal type utilities are imported — only public consumer-facing APIs.
+On `main` (before the fix), `zod-mismatch` will OOM. On this branch it passes.
 
 ## Running
 

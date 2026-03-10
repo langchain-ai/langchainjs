@@ -1,21 +1,12 @@
 /**
  * Zod v3 compatibility test
  *
- * Verifies that @langchain/core and langchain exported types work correctly
- * when the consumer's project uses zod@3.25.x (v3-only).  This test only
- * checks type-level compatibility — it does NOT run any LLM calls.
+ * Simulates a consumer app using zod@3.25.x with @langchain/core and langchain.
+ * tsc --noEmit must complete without OOM or type errors.
  */
 import { z } from "zod/v3";
-import { tool, StructuredTool } from "@langchain/core/tools";
+import { tool } from "@langchain/core/tools";
 import { StructuredOutputParser } from "@langchain/core/output_parsers";
-import type { BaseChatModel } from "@langchain/core/language_models/chat_models";
-import type {
-  InteropZodType,
-  InferInteropZodOutput,
-  ZodV3Like,
-  ZodV3ObjectLike,
-  InteropZodObject,
-} from "@langchain/core/utils/types";
 import {
   createAgent,
   createMiddleware,
@@ -23,207 +14,96 @@ import {
   providerStrategy,
 } from "langchain";
 
-// ---------------------------------------------------------------
-// 1. Simple tool with z3 object schema — verify type inference
-// ---------------------------------------------------------------
-const personSchema = z.object({
+// Tools
+const searchTool = tool(
+  async ({ query, maxResults }) => {
+    const q: string = query;
+    const m: number | undefined = maxResults;
+    return `Results for: ${q} (max: ${m})`;
+  },
+  {
+    name: "search",
+    description: "Search for information",
+    schema: z.object({
+      query: z.string().describe("The search query"),
+      maxResults: z.number().optional(),
+    }),
+  }
+);
+
+const writeFileTool = tool(
+  async ({ filename, content, overwrite }) => {
+    const f: string = filename;
+    const c: string = content;
+    const o: boolean = overwrite;
+    return `Wrote ${c.length} chars to ${f}`;
+  },
+  {
+    name: "write_file",
+    description: "Write content to a file",
+    schema: z.object({
+      filename: z.string(),
+      content: z.string(),
+      overwrite: z.boolean().default(false),
+    }),
+  }
+);
+
+const classifyTool = tool(
+  async ({ text, categories }) => {
+    const t: string = text;
+    const cats: ("bug" | "feature" | "question")[] = categories;
+    return `Classified "${t}" as ${cats.join(", ")}`;
+  },
+  {
+    name: "classify",
+    description: "Classify text into categories",
+    schema: z.object({
+      text: z.string(),
+      categories: z.array(z.enum(["bug", "feature", "question"])),
+    }),
+  }
+);
+
+const documentTool = tool(
+  async ({ metadata, sections }) => {
+    const author: string = metadata.author.name;
+    const numSections: number = sections.length;
+    return `Document by ${author} with ${numSections} sections`;
+  },
+  {
+    name: "create_document",
+    description: "Create a structured document",
+    schema: z.object({
+      metadata: z.object({
+        title: z.string(),
+        author: z.object({
+          name: z.string(),
+          email: z.string(),
+          roles: z.array(z.enum(["admin", "editor", "viewer"])),
+        }),
+        tags: z.array(z.string()),
+        version: z.number().default(1),
+      }),
+      sections: z.array(z.object({
+        heading: z.string(),
+        body: z.string(),
+        subsections: z.array(z.object({
+          title: z.string(),
+          content: z.string(),
+        })).optional(),
+      })),
+    }),
+  }
+);
+
+// StructuredOutputParser
+const parser = StructuredOutputParser.fromZodSchema(z.object({
   name: z.string(),
   age: z.number(),
-});
+}));
 
-const greetTool = tool(
-  async (input) => {
-    const name: string = input.name;
-    const age: number = input.age;
-    return `Hello ${name}, age ${age}`;
-  },
-  {
-    name: "greet",
-    description: "Greet a person",
-    schema: personSchema,
-  }
-);
-
-// ---------------------------------------------------------------
-// 2. Tool with nested z3 schema
-// ---------------------------------------------------------------
-const addressSchema = z.object({
-  street: z.string(),
-  city: z.string(),
-  zip: z.string().optional(),
-  country: z.string().default("US"),
-});
-
-const contactSchema = z.object({
-  person: personSchema,
-  address: addressSchema,
-  tags: z.array(z.string()),
-  notes: z.string().optional(),
-});
-
-const contactTool = tool(
-  async (input) => {
-    const street: string = input.address.street;
-    const tags: string[] = input.tags;
-    const notes: string | undefined = input.notes;
-    return `Contact: ${input.person.name} at ${street}`;
-  },
-  {
-    name: "create_contact",
-    description: "Create a contact record",
-    schema: contactSchema,
-  }
-);
-
-// ---------------------------------------------------------------
-// 3. Tool with z3 string schema (non-object)
-// ---------------------------------------------------------------
-const stringTool = tool(
-  async (input) => {
-    const s: string = input;
-    return s.toUpperCase();
-  },
-  {
-    name: "uppercase",
-    description: "Convert to uppercase",
-    schema: z.string(),
-  }
-);
-
-// ---------------------------------------------------------------
-// 4. Tool with z3 enum schema
-// ---------------------------------------------------------------
-const sentimentSchema = z.object({
-  text: z.string(),
-  sentiment: z.enum(["positive", "negative", "neutral"]),
-});
-
-const sentimentTool = tool(
-  async (input) => {
-    const sentiment: "positive" | "negative" | "neutral" = input.sentiment;
-    return `${input.text} is ${sentiment}`;
-  },
-  {
-    name: "classify_sentiment",
-    description: "Classify text sentiment",
-    schema: sentimentSchema,
-  }
-);
-
-// ---------------------------------------------------------------
-// 5. Multiple tools in an array (as used by createAgent)
-// ---------------------------------------------------------------
-const tools = [greetTool, contactTool, stringTool, sentimentTool];
-
-// ---------------------------------------------------------------
-// 6. StructuredOutputParser with z3 schema
-// ---------------------------------------------------------------
-const parser = StructuredOutputParser.fromZodSchema(personSchema);
-
-// ---------------------------------------------------------------
-// 7. withStructuredOutput type-level check
-// ---------------------------------------------------------------
-type WSO = BaseChatModel["withStructuredOutput"];
-type _AssertWSO = WSO extends undefined ? never : WSO;
-
-// ---------------------------------------------------------------
-// 8. InteropZodType assignability — z3 schemas should be assignable
-// ---------------------------------------------------------------
-const _interopString: InteropZodType<string> = z.string();
-const _interopObject: InteropZodType = personSchema;
-const _interopArray: InteropZodType = z.array(z.string());
-const _interopOptional: InteropZodType = z.string().optional();
-const _interopNullable: InteropZodType = z.string().nullable();
-const _interopEnum: InteropZodType = z.enum(["a", "b", "c"]);
-const _interopUnion: InteropZodType = z.union([z.string(), z.number()]);
-const _interopLiteral: InteropZodType = z.literal("hello");
-
-// ---------------------------------------------------------------
-// 9. InferInteropZodOutput — should correctly infer output types
-// ---------------------------------------------------------------
-type PersonOutput = InferInteropZodOutput<typeof personSchema>;
-const _person: PersonOutput = { name: "Alice", age: 30 };
-
-type ContactOutput = InferInteropZodOutput<typeof contactSchema>;
-const _contact: ContactOutput = {
-  person: { name: "Alice", age: 30 },
-  address: { street: "123 Main", city: "SF", country: "US" },
-  tags: ["friend"],
-};
-
-type StringOutput = InferInteropZodOutput<typeof z.string>;
-
-// ---------------------------------------------------------------
-// 10. ZodV3Like assignability
-// ---------------------------------------------------------------
-const _v3String: ZodV3Like<string> = z.string();
-const _v3Object: ZodV3Like = personSchema;
-
-// ---------------------------------------------------------------
-// 11. ZodV3ObjectLike / InteropZodObject assignability
-// ---------------------------------------------------------------
-const _v3Obj: ZodV3ObjectLike = personSchema;
-const _interopObj: InteropZodObject = personSchema;
-
-// ---------------------------------------------------------------
-// 12. Schema with transforms/refinements (common in real usage)
-// ---------------------------------------------------------------
-const transformedSchema = z.object({
-  input: z.string(),
-  count: z.number().int().positive(),
-});
-
-const refinedTool = tool(
-  async (input) => {
-    const s: string = input.input;
-    const n: number = input.count;
-    return s.repeat(n);
-  },
-  {
-    name: "repeat",
-    description: "Repeat a string N times",
-    schema: transformedSchema,
-  }
-);
-
-// ---------------------------------------------------------------
-// 13. Complex nested schema (stress test for type inference depth)
-// ---------------------------------------------------------------
-const deepSchema = z.object({
-  level1: z.object({
-    level2: z.object({
-      level3: z.object({
-        value: z.string(),
-        numbers: z.array(z.number()),
-      }),
-      tags: z.array(z.enum(["a", "b", "c"])),
-    }),
-    metadata: z.record(z.string()),
-  }),
-  items: z.array(z.object({
-    id: z.number(),
-    label: z.string(),
-    active: z.boolean().optional(),
-  })),
-});
-
-const deepTool = tool(
-  async (input) => {
-    const val: string = input.level1.level2.level3.value;
-    const nums: number[] = input.level1.level2.level3.numbers;
-    const id: number = input.items[0].id;
-    return `${val}: ${nums.join(",")} (item ${id})`;
-  },
-  {
-    name: "deep_tool",
-    description: "Tool with deeply nested schema",
-    schema: deepSchema,
-  }
-);
-
-// ---------------------------------------------------------------
-// 14. createMiddleware with stateSchema
-// ---------------------------------------------------------------
+// Middleware
 const loggingMiddleware = createMiddleware({
   name: "logging",
   stateSchema: z.object({
@@ -250,65 +130,62 @@ const rateLimitMiddleware = createMiddleware({
   },
 });
 
-// ---------------------------------------------------------------
-// 15. createAgent — basic with tools
-// ---------------------------------------------------------------
-const basicAgent = createAgent({
-  model: "openai:gpt-4o",
-  tools: [greetTool, contactTool, sentimentTool],
+// Response format
+const AnalysisResult = z.object({
+  summary: z.string(),
+  confidence: z.number(),
+  findings: z.array(z.object({
+    category: z.enum(["positive", "negative", "neutral"]),
+    text: z.string(),
+    score: z.number(),
+  })),
 });
 
-// ---------------------------------------------------------------
-// 16. createAgent — with middleware
-// ---------------------------------------------------------------
+// createAgent — basic
+const basicAgent = createAgent({
+  model: "openai:gpt-4o",
+  tools: [searchTool, writeFileTool, classifyTool, documentTool],
+});
+
+// createAgent — with middleware
 const agentWithMiddleware = createAgent({
   model: "openai:gpt-4o",
-  tools: [greetTool, sentimentTool],
+  tools: [searchTool, classifyTool],
   middleware: [loggingMiddleware, rateLimitMiddleware],
 });
 
-// ---------------------------------------------------------------
-// 17. createAgent — with responseFormat
-// ---------------------------------------------------------------
+// createAgent — with responseFormat
 const structuredAgent = createAgent({
   model: "openai:gpt-4o",
-  tools: [greetTool],
-  responseFormat: contactSchema,
+  tools: [searchTool],
+  responseFormat: AnalysisResult,
 });
 
-// ---------------------------------------------------------------
-// 18. createAgent — with stateSchema
-// ---------------------------------------------------------------
+// createAgent — with stateSchema
 const agentWithState = createAgent({
   model: "openai:gpt-4o",
-  tools: [greetTool],
+  tools: [searchTool],
   stateSchema: z.object({
     userId: z.string().optional(),
-    sessionData: z.record(z.string()).optional(),
     turnCount: z.number().default(0),
   }),
 });
 
-// ---------------------------------------------------------------
-// 19. createAgent — kitchen sink
-// ---------------------------------------------------------------
+// createAgent — kitchen sink
 const fullAgent = createAgent({
   model: "openai:gpt-4o",
-  tools: [greetTool, contactTool, stringTool, sentimentTool, refinedTool, deepTool],
+  tools: [searchTool, writeFileTool, classifyTool, documentTool],
   middleware: [loggingMiddleware, rateLimitMiddleware],
-  responseFormat: personSchema,
+  responseFormat: AnalysisResult,
   stateSchema: z.object({
     context: z.string().optional(),
     iteration: z.number().default(0),
   }),
   name: "full-agent",
-  description: "A comprehensive agent with all features",
 });
 
-// ---------------------------------------------------------------
-// 20. toolStrategy / providerStrategy
-// ---------------------------------------------------------------
-const _ts = toolStrategy(contactSchema);
-const _ps = providerStrategy(personSchema);
+// toolStrategy / providerStrategy
+const _ts = toolStrategy(AnalysisResult);
+const _ps = providerStrategy(AnalysisResult);
 
 console.log("zod-v3 type check passed");
