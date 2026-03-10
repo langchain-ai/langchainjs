@@ -122,7 +122,8 @@ export function interopZodResponseFormat(
           }),
         },
       },
-      (content) => parseV4(zodSchema as unknown as $ZodType, JSON.parse(content))
+      (content) =>
+        parseV4(zodSchema as unknown as $ZodType, JSON.parse(content))
     );
   }
   throw new Error("Unsupported schema response format");

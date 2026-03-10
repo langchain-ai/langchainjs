@@ -340,9 +340,13 @@ export function isInteropZodLiteral(obj: unknown): obj is InteropZodLiteral {
   return false;
 }
 
+export interface InteropZodError {
+  issues: InteropZodIssue[];
+}
+
 type InteropZodSafeParseResult<T> =
   | { success: true; data: T; error?: never }
-  | { success: false; error: unknown; data?: never };
+  | { success: false; error: InteropZodError; data?: never };
 
 /**
  * Asynchronously parses the input using the provided Zod schema (v3 or v4) and returns a safe parse result.
@@ -368,7 +372,7 @@ export async function interopSafeParseAsync<T>(
     } catch (error) {
       return {
         success: false,
-        error,
+        error: error as InteropZodError,
       };
     }
   }
@@ -426,7 +430,7 @@ export function interopSafeParse<T>(
     } catch (error) {
       return {
         success: false,
-        error,
+        error: error as InteropZodError,
       };
     }
   }
