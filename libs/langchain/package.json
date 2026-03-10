@@ -41,6 +41,7 @@
     "precommit": "lint-staged",
     "clean": "rm -rf .turbo dist/",
     "test": "vitest run",
+    "test:ci": "vitest run",
     "test:watch": "vitest --watch",
     "test:bench": "vitest --mode bench --run",
     "test:integration": "vitest --mode int",
