@@ -534,7 +534,7 @@ export function mapGenerateContentResultToChatResult(
   }
   const [candidate] = response.candidates;
   const { content: candidateContent, ...generationInfo } = candidate;
-  const functionCalls = candidateContent.parts?.reduce(
+  const functionCalls = (candidateContent ?? []).parts?.reduce(
     (acc, p) => {
       if ("functionCall" in p && p.functionCall) {
         acc.push({
@@ -675,7 +675,7 @@ export function convertResponseContentToChatGenerationChunk(
   }
   const [candidate] = response.candidates;
   const { content: candidateContent, ...generationInfo } = candidate;
-  const functionCalls = candidateContent.parts?.reduce(
+  const functionCalls = (candidateContent ?? []).parts?.reduce(
     (acc, p) => {
       if ("functionCall" in p && p.functionCall) {
         acc.push({
