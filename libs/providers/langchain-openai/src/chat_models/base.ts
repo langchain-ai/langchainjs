@@ -15,6 +15,7 @@ import {
   type FunctionDefinition,
   type StructuredOutputMethodOptions,
 } from "@langchain/core/language_models/base";
+import { isLangChainTool } from "@langchain/core/utils/function_calling";
 import { ModelProfile } from "@langchain/core/language_models/profile";
 import { Runnable, RunnableLambda } from "@langchain/core/runnables";
 import { JsonOutputParser } from "@langchain/core/output_parsers";
@@ -680,7 +681,11 @@ export abstract class BaseChatOpenAI<
           return tool.extras.providerToolDefinition;
         }
         // Regular tools get converted to OpenAI function format
-        return this._convertChatOpenAIToolToCompletionsTool(tool, { strict });
+        const converted = this._convertChatOpenAIToolToCompletionsTool(tool, { strict });
+        if (isLangChainTool(tool) && tool.extras?.defer_loading === true) {
+          return { ...converted, defer_loading: true };
+        }
+        return converted;
       }),
       ...kwargs,
     } as Partial<CallOptions>);

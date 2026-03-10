@@ -476,6 +476,12 @@ export const convertResponsesMessageToAIMessage: Converter<
       // Also store in tool_outputs for backwards compatibility and multi-turn editing (needs id)
       additional_kwargs.tool_outputs ??= [];
       additional_kwargs.tool_outputs.push(item);
+    } else if (
+      item.type === "tool_search_call" ||
+      item.type === "tool_search_output"
+    ) {
+      additional_kwargs.tool_outputs ??= [];
+      additional_kwargs.tool_outputs.push(item);
     } else {
       additional_kwargs.tool_outputs ??= [];
       additional_kwargs.tool_outputs.push(item);
@@ -736,6 +742,8 @@ export const convertResponsesDeltaToChatGenerationChunk: Converter<
       "mcp_list_tools",
       "mcp_approval_request",
       "custom_tool_call",
+      "tool_search_call",
+      "tool_search_output",
     ].includes(event.item.type)
   ) {
     additional_kwargs.tool_outputs = [event.item];

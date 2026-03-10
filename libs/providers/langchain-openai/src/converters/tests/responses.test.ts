@@ -1922,3 +1922,166 @@ describe("Anthropic cross-provider compatibility", () => {
     expect(fnCallItem.call_id).toBe("toolu_abc123");
   });
 });
+
+describe("tool_search support", () => {
+  describe("convertResponsesMessageToAIMessage", () => {
+    it("includes tool_search_call in tool_outputs", () => {
+      const response: any = {
+        id: "resp_001",
+        model: "gpt-4o",
+        created_at: 1234567890,
+        status: "completed",
+        object: "response",
+        output: [
+          {
+            type: "tool_search_call",
+            id: "ts_001",
+            call_id: "call_abc",
+            execution: "server",
+            status: "completed",
+          },
+          {
+            type: "tool_search_output",
+            id: "tso_001",
+            call_id: "call_abc",
+            execution: "server",
+            status: "completed",
+            tools: [
+              {
+                type: "function",
+                name: "get_weather",
+                description: "Get weather",
+                parameters: { type: "object", properties: {} },
+                strict: null,
+              },
+            ],
+          },
+          {
+            type: "function_call",
+            id: "fc_001",
+            call_id: "call_xyz",
+            name: "get_weather",
+            arguments: '{"location":"SF"}',
+          },
+        ],
+        usage: { input_tokens: 10, output_tokens: 5, total_tokens: 15 },
+      };
+
+      const message = convertResponsesMessageToAIMessage(response);
+      expect(message.tool_calls).toHaveLength(1);
+      expect(message.tool_calls[0].name).toBe("get_weather");
+      expect(message.additional_kwargs.tool_outputs).toHaveLength(2);
+      expect((message.additional_kwargs.tool_outputs as any[])[0].type).toBe(
+        "tool_search_call"
+      );
+      expect((message.additional_kwargs.tool_outputs as any[])[1].type).toBe(
+        "tool_search_output"
+      );
+    });
+  });
+
+  describe("convertResponsesDeltaToChatGenerationChunk", () => {
+    it("handles tool_search_call in streaming", () => {
+      const event: any = {
+        type: "response.output_item.done",
+        output_index: 0,
+        item: {
+          type: "tool_search_call",
+          id: "ts_001",
+          call_id: "call_abc",
+          execution: "server",
+          status: "completed",
+        },
+      };
+
+      const chunk = convertResponsesDeltaToChatGenerationChunk(event);
+      expect(chunk).not.toBeNull();
+      expect(chunk!.message.additional_kwargs.tool_outputs).toEqual([
+        event.item,
+      ]);
+    });
+
+    it("handles tool_search_output in streaming", () => {
+      const event: any = {
+        type: "response.output_item.done",
+        output_index: 1,
+        item: {
+          type: "tool_search_output",
+          id: "tso_001",
+          call_id: "call_abc",
+          execution: "server",
+          status: "completed",
+          tools: [
+            {
+              type: "function",
+              name: "get_weather",
+              description: "Get weather",
+              parameters: { type: "object", properties: {} },
+              strict: null,
+            },
+          ],
+        },
+      };
+
+      const chunk = convertResponsesDeltaToChatGenerationChunk(event);
+      expect(chunk).not.toBeNull();
+      expect(chunk!.message.additional_kwargs.tool_outputs).toEqual([
+        event.item,
+      ]);
+    });
+  });
+
+  describe("convertMessagesToResponsesInput", () => {
+    it("round-trips tool_search items via response_metadata.output", () => {
+      const toolSearchCall = {
+        type: "tool_search_call",
+        id: "ts_001",
+        call_id: "call_abc",
+        execution: "server",
+        status: "completed",
+      };
+      const toolSearchOutput = {
+        type: "tool_search_output",
+        id: "tso_001",
+        call_id: "call_abc",
+        execution: "server",
+        status: "completed",
+        tools: [
+          {
+            type: "function",
+            name: "get_weather",
+            description: "Get weather",
+            parameters: { type: "object", properties: {} },
+            strict: null,
+          },
+        ],
+      };
+      const functionCall = {
+        type: "function_call",
+        id: "fc_001",
+        call_id: "call_xyz",
+        name: "get_weather",
+        arguments: '{"location":"SF"}',
+      };
+
+      const aiMessage = new AIMessage({
+        content: "",
+        tool_calls: [
+          { id: "call_xyz", name: "get_weather", args: { location: "SF" } },
+        ],
+        response_metadata: {
+          model_provider: "openai",
+          output: [toolSearchCall, toolSearchOutput, functionCall],
+        },
+      });
+
+      const result = convertMessagesToResponsesInput({
+        messages: [aiMessage],
+        zdrEnabled: false,
+        model: "gpt-4o",
+      });
+
+      expect(result).toEqual([toolSearchCall, toolSearchOutput, functionCall]);
+    });
+  });
+});
