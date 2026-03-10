@@ -1928,7 +1928,7 @@ describe("tool_search support", () => {
     it("includes tool_search_call in tool_outputs", () => {
       const response: any = {
         id: "resp_001",
-        model: "gpt-4.1-mini",
+        model: "gpt-5.3",
         created_at: 1234567890,
         status: "completed",
         object: "response",
@@ -2078,7 +2078,7 @@ describe("tool_search support", () => {
       const result = convertMessagesToResponsesInput({
         messages: [aiMessage],
         zdrEnabled: false,
-        model: "gpt-4.1-mini",
+        model: "gpt-5.3",
       });
 
       expect(result).toEqual([toolSearchCall, toolSearchOutput, functionCall]);

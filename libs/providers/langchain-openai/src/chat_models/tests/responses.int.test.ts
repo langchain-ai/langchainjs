@@ -1281,7 +1281,7 @@ describe("tool search", () => {
   );
 
   it("server-executed tool search discovers deferred tools and completes agent loop", async () => {
-    const model = new ChatOpenAI({ model: "gpt-4.1-mini" });
+    const model = new ChatOpenAI({ model: "gpt-5.3" });
 
     const modelWithTools = model.bindTools([
       { type: "tool_search" },
@@ -1317,7 +1317,7 @@ describe("tool search", () => {
   });
 
   it("server-executed tool search works with streaming", async () => {
-    const model = new ChatOpenAI({ model: "gpt-4.1-mini" });
+    const model = new ChatOpenAI({ model: "gpt-5.3" });
 
     const modelWithTools = model.bindTools([
       { type: "tool_search" },
@@ -1338,7 +1338,7 @@ describe("tool search", () => {
   });
 
   it("tool_search_call and tool_search_output appear in block translator output", async () => {
-    const model = new ChatOpenAI({ model: "gpt-4.1-mini" });
+    const model = new ChatOpenAI({ model: "gpt-5.3" });
 
     const modelWithTools = model.bindTools([
       { type: "tool_search" },

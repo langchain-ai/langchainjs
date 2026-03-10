@@ -40,7 +40,7 @@ export type ToolSearchTool = OpenAIClient.Responses.ToolSearchTool;
  * import { tool } from "@langchain/core/tools";
  * import { z } from "zod";
  *
- * const model = new ChatOpenAI({ model: "gpt-4.1-mini" });
+ * const model = new ChatOpenAI({ model: "gpt-5.3" });
  *
  * const getWeather = tool(
  *   async (input) => `Weather in ${input.location}: sunny, 72°F`,
