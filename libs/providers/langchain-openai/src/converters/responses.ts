@@ -476,12 +476,6 @@ export const convertResponsesMessageToAIMessage: Converter<
       // Also store in tool_outputs for backwards compatibility and multi-turn editing (needs id)
       additional_kwargs.tool_outputs ??= [];
       additional_kwargs.tool_outputs.push(item);
-    } else if (
-      item.type === "tool_search_call" ||
-      item.type === "tool_search_output"
-    ) {
-      additional_kwargs.tool_outputs ??= [];
-      additional_kwargs.tool_outputs.push(item);
     } else {
       additional_kwargs.tool_outputs ??= [];
       additional_kwargs.tool_outputs.push(item);

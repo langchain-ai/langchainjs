@@ -74,7 +74,7 @@ describe("service_tier configuration", () => {
 
 describe("tool search support", () => {
   it("tool_search passes through as a built-in tool", () => {
-    const model = new ChatOpenAIResponses({ model: "gpt-4o" });
+    const model = new ChatOpenAIResponses({ model: "gpt-4.1-mini" });
     const params = model.invocationParams({
       tools: [
         { type: "tool_search" },
@@ -96,7 +96,7 @@ describe("tool search support", () => {
   });
 
   it("tool_search with client execution passes through", () => {
-    const model = new ChatOpenAIResponses({ model: "gpt-4o" });
+    const model = new ChatOpenAIResponses({ model: "gpt-4.1-mini" });
     const params = model.invocationParams({
       tools: [
         {
@@ -125,7 +125,7 @@ describe("tool search support", () => {
   });
 
   it("defer_loading is propagated from function tool definitions", () => {
-    const model = new ChatOpenAIResponses({ model: "gpt-4o" });
+    const model = new ChatOpenAIResponses({ model: "gpt-4.1-mini" });
     const params = model.invocationParams({
       tools: [
         { type: "tool_search" },

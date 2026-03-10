@@ -582,7 +582,7 @@ describe("ChatOpenAI", () => {
 
   test("bindTools propagates defer_loading from tool extras", async () => {
     const model = new ChatOpenAI({
-      model: "gpt-4o",
+      model: "gpt-4.1-mini",
     });
 
     const deferredTool = tool(async () => "result", {
@@ -613,7 +613,7 @@ describe("ChatOpenAI", () => {
 
   test("bindTools passes through tool_search as built-in tool", async () => {
     const model = new ChatOpenAI({
-      model: "gpt-4o",
+      model: "gpt-4.1-mini",
     });
 
     const modelWithTools = model.bindTools([
