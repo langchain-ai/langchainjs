@@ -71,20 +71,6 @@
       ],
       "outputs": []
     },
-    "test:ci": {
-      "dependsOn": [
-        "build:compile"
-      ],
-      "inputs": [
-        "src/**",
-        "tests/**",
-        "**/*.test.ts",
-        "vitest.config.ts"
-      ],
-      "outputs": [
-        "coverage/**"
-      ]
-    },
     "test:single": {
       "dependsOn": [
         "build:compile"

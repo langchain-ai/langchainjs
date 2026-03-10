@@ -26,7 +26,6 @@
     "lint:eslint": "eslint --cache src/ examples/",
     "lint:fix": "pnpm lint:eslint --fix && pnpm lint:dpdm",
     "test": "vitest run",
-    "test:ci": "vitest run",
     "test:coverage": "vitest run --coverage",
     "test:watch": "vitest"
   },

@@ -22,7 +22,6 @@
     "lint": "pnpm lint:eslint && pnpm lint:dpdm",
     "lint:fix": "pnpm lint:eslint --fix && pnpm lint:dpdm",
     "test": "vitest run",
-    "test:ci": "vitest run",
     "test:watch": "vitest watch",
     "test:int": "vitest run --mode int",
     "format": "prettier --write \"src\"",

@@ -22,7 +22,6 @@
     "lint:fix": "pnpm lint:eslint --fix && pnpm lint:dpdm",
     "clean": "rm -rf .turbo dist/",
     "test": "vitest run",
-    "test:ci": "vitest run",
     "test:watch": "vitest --watch",
     "test:int": "vitest --mode int",
     "test:standard:unit": "vitest --mode standard-unit",
