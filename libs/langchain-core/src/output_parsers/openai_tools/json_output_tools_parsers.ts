@@ -1,5 +1,4 @@
-import type * as z3 from "zod/v3";
-import type * as z4 from "zod/v4/core";
+import type { ZodV3Like, ZodV4Like } from "../../utils/types/zod.js";
 import { ChatGeneration, ChatGenerationChunk } from "../../outputs.js";
 import { OutputParserException } from "../base.js";
 import { parsePartialJson } from "../json.js";
@@ -210,12 +209,12 @@ type JsonOutputKeyToolsParserParamsBase = {
 type JsonOutputKeyToolsParserParamsV3<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   T extends Record<string, any> = Record<string, any>,
-> = { zodSchema?: z3.ZodType<T> } & JsonOutputKeyToolsParserParamsBase;
+> = { zodSchema?: ZodV3Like<T> } & JsonOutputKeyToolsParserParamsBase;
 
 type JsonOutputKeyToolsParserParamsV4<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   T extends Record<string, any> = Record<string, any>,
-> = { zodSchema?: z4.$ZodType<T, T> } & JsonOutputKeyToolsParserParamsBase;
+> = { zodSchema?: ZodV4Like<T, T> } & JsonOutputKeyToolsParserParamsBase;
 
 export type JsonOutputKeyToolsParserParamsInterop<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -315,7 +314,8 @@ export class JsonOutputKeyToolsParser<
           result,
           null,
           2
-        )}". Error: ${JSON.stringify(zodParsedResult.error?.issues)}`,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        )}". Error: ${JSON.stringify((zodParsedResult.error as any)?.issues)}`,
         JSON.stringify(result, null, 2)
       );
     }
