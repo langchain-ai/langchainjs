@@ -30,6 +30,7 @@ export interface MilvusLibArgs {
   username?: string;
   password?: string;
   textFieldMaxLength?: number;
+  metadataTextFieldMaxLength?: number;
   clientConfig?: ClientConfig;
   autoId?: boolean;
   indexCreateOptions?: IndexCreateOptions;
@@ -78,6 +79,7 @@ const MILVUS_VECTOR_FIELD_NAME = "langchain_vector";
 const MILVUS_TEXT_FIELD_NAME = "langchain_text";
 const MILVUS_COLLECTION_NAME_PREFIX = "langchain_col";
 const MILVUS_PARTITION_KEY_MAX_LENGTH = 512;
+const MILVUS_METADATA_TEXT_FIELD_MAX_LENGTH = 65535;
 
 /**
  * Default parameters for index searching.
@@ -130,6 +132,8 @@ export class Milvus extends VectorStore {
 
   textFieldMaxLength: number;
 
+  metadataTextFieldMaxLength: number;
+
   partitionKey?: string;
 
   partitionKeyMaxLength?: number;
@@ -156,6 +160,8 @@ export class Milvus extends VectorStore {
     this.vectorField = args.vectorField ?? MILVUS_VECTOR_FIELD_NAME;
 
     this.textFieldMaxLength = args.textFieldMaxLength ?? 0;
+    this.metadataTextFieldMaxLength =
+      args.metadataTextFieldMaxLength ?? MILVUS_METADATA_TEXT_FIELD_MAX_LENGTH;
 
     this.partitionKey = args.partitionKey;
     this.partitionKeyMaxLength =
@@ -465,6 +471,7 @@ export class Milvus extends VectorStore {
       ...createFieldTypeForMetadata(
         documents,
         this.primaryField,
+        this.metadataTextFieldMaxLength,
         this.partitionKey
       )
     );
@@ -750,11 +757,10 @@ export class Milvus extends VectorStore {
 function createFieldTypeForMetadata(
   documents: Document[],
   primaryFieldName: string,
+  metadataTextFieldMaxLength: number,
   partitionKey?: string
 ): FieldType[] {
   const sampleMetadata = documents[0].metadata;
-  let textFieldMaxLength = 0;
-  let jsonFieldMaxLength = 0;
   const textEncoder = new TextEncoder();
   documents.forEach(({ metadata }) => {
     // check all keys name and count in metadata is same as sampleMetadata
@@ -767,22 +773,26 @@ function createFieldTypeForMetadata(
           "All documents must have same metadata keys and datatype"
         );
       }
-
-      // find max length of string field and json field, cache json string value
-      if (typeof metadata[key] === "string") {
-        const textLengthInBytes = textEncoder.encode(metadata[key]).length;
-        if (textLengthInBytes > textFieldMaxLength) {
-          textFieldMaxLength = textLengthInBytes;
-        }
-      } else if (typeof metadata[key] === "object") {
-        const json = JSON.stringify(metadata[key]);
-        const jsonLengthInBytes = textEncoder.encode(json).length;
-        if (jsonLengthInBytes > jsonFieldMaxLength) {
-          jsonFieldMaxLength = jsonLengthInBytes;
-        }
-      }
     });
   });
+
+  // Calculate per-field max lengths from actual data, then apply the
+  // configured minimum so that future inserts with longer values succeed.
+  const perFieldMaxLength: Record<string, number> = {};
+  for (const [key, value] of Object.entries(sampleMetadata)) {
+    if (key === primaryFieldName || key === partitionKey) continue;
+    const type = typeof value;
+    if (type === "string" || (type === "object" && value !== null)) {
+      let maxLen = 0;
+      for (const { metadata } of documents) {
+        const raw =
+          type === "string" ? metadata[key] : JSON.stringify(metadata[key]);
+        const len = textEncoder.encode(raw).length;
+        if (len > maxLen) maxLen = len;
+      }
+      perFieldMaxLength[key] = Math.max(maxLen, metadataTextFieldMaxLength);
+    }
+  }
 
   const fields: FieldType[] = [];
   for (const [key, value] of Object.entries(sampleMetadata)) {
@@ -799,7 +809,7 @@ function createFieldTypeForMetadata(
         description: `Metadata String field`,
         data_type: DataType.VarChar,
         type_params: {
-          max_length: textFieldMaxLength.toString(),
+          max_length: perFieldMaxLength[key].toString(),
         },
       });
     } else if (type === "number") {
@@ -824,7 +834,7 @@ function createFieldTypeForMetadata(
           description: `Metadata JSON field`,
           data_type: DataType.VarChar,
           type_params: {
-            max_length: jsonFieldMaxLength.toString(),
+            max_length: perFieldMaxLength[key].toString(),
           },
         });
       } catch {
