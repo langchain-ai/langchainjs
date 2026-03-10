@@ -819,20 +819,20 @@ describe("applicationInferenceProfile parameter", () => {
       "arn:aws:bedrock:eu-west-1:123456789012:application-inference-profile/test-profile";
     const model = new ChatBedrockConverse({
       ...baseConstructorArgs,
-      model: "anthropic.claude-3-haiku-20240307-v1:0",
+      model: "anthropic.claude-haiku-4-5-20251001-v1:0",
       applicationInferenceProfile: testArn,
     });
-    expect(model.model).toBe("anthropic.claude-3-haiku-20240307-v1:0");
+    expect(model.model).toBe("anthropic.claude-haiku-4-5-20251001-v1:0");
     expect(model.applicationInferenceProfile).toBe(testArn);
   });
 
   it("should be undefined when not provided in constructor", () => {
     const model = new ChatBedrockConverse({
       ...baseConstructorArgs,
-      model: "anthropic.claude-3-haiku-20240307-v1:0",
+      model: "anthropic.claude-haiku-4-5-20251001-v1:0",
     });
 
-    expect(model.model).toBe("anthropic.claude-3-haiku-20240307-v1:0");
+    expect(model.model).toBe("anthropic.claude-haiku-4-5-20251001-v1:0");
     expect(model.applicationInferenceProfile).toBeUndefined();
   });
 
@@ -860,7 +860,7 @@ describe("applicationInferenceProfile parameter", () => {
 
     const model = new ChatBedrockConverse({
       ...baseConstructorArgs,
-      model: "anthropic.claude-3-haiku-20240307-v1:0",
+      model: "anthropic.claude-haiku-4-5-20251001-v1:0",
       applicationInferenceProfile: testArn,
       client: mockClient,
     });
@@ -874,7 +874,7 @@ describe("applicationInferenceProfile parameter", () => {
     const commandArg = mockSend.mock.calls[0][0];
     expect(commandArg.input.modelId).toBe(testArn);
     expect(commandArg.input.modelId).not.toBe(
-      "anthropic.claude-3-haiku-20240307-v1:0"
+      "anthropic.claude-haiku-4-5-20251001-v1:0"
     );
   });
 
@@ -900,7 +900,7 @@ describe("applicationInferenceProfile parameter", () => {
 
     const model = new ChatBedrockConverse({
       ...baseConstructorArgs,
-      model: "anthropic.claude-3-haiku-20240307-v1:0",
+      model: "anthropic.claude-haiku-4-5-20251001-v1:0",
       client: mockClient,
     });
 
@@ -912,7 +912,7 @@ describe("applicationInferenceProfile parameter", () => {
     // Verify that the command was created with model as modelId
     const commandArg = mockSend.mock.calls[0][0];
     expect(commandArg.input.modelId).toBe(
-      "anthropic.claude-3-haiku-20240307-v1:0"
+      "anthropic.claude-haiku-4-5-20251001-v1:0"
     );
   });
 
@@ -945,7 +945,7 @@ describe("applicationInferenceProfile parameter", () => {
 
     const model = new ChatBedrockConverse({
       ...baseConstructorArgs,
-      model: "anthropic.claude-3-haiku-20240307-v1:0",
+      model: "anthropic.claude-haiku-4-5-20251001-v1:0",
       applicationInferenceProfile: testArn,
       streaming: true,
       client: mockClient,
@@ -958,7 +958,7 @@ describe("applicationInferenceProfile parameter", () => {
     const commandArg = mockSend.mock.calls[0][0];
     expect(commandArg.input.modelId).toBe(testArn);
     expect(commandArg.input.modelId).not.toBe(
-      "anthropic.claude-3-haiku-20240307-v1:0"
+      "anthropic.claude-haiku-4-5-20251001-v1:0"
     );
   });
 
@@ -989,7 +989,7 @@ describe("applicationInferenceProfile parameter", () => {
 
     const model = new ChatBedrockConverse({
       ...baseConstructorArgs,
-      model: "anthropic.claude-3-haiku-20240307-v1:0",
+      model: "anthropic.claude-haiku-4-5-20251001-v1:0",
       streaming: true,
       client: mockClient,
     });
@@ -1000,7 +1000,7 @@ describe("applicationInferenceProfile parameter", () => {
 
     const commandArg = mockSend.mock.calls[0][0];
     expect(commandArg.input.modelId).toBe(
-      "anthropic.claude-3-haiku-20240307-v1:0"
+      "anthropic.claude-haiku-4-5-20251001-v1:0"
     );
   });
 });
@@ -1262,7 +1262,7 @@ test("Test ChatBedrockConverse deserialization from model_id and region_name", a
 });
 
 test("ChatBedrockConverse supports string model shorthand", () => {
-  const modelId = "anthropic.claude-3-haiku-20240307-v1:0";
+  const modelId = "anthropic.claude-haiku-4-5-20251001-v1:0";
   const model = new ChatBedrockConverse(modelId, {
     region: "us-east-1",
     credentials: {
@@ -1396,7 +1396,7 @@ describe("withStructuredOutput - StandardSchema", () => {
   test("functionCalling with valid output parses correctly", async () => {
     const model = new ChatBedrockConverse({
       ...baseConstructorArgs,
-      model: "anthropic.claude-3-haiku-20240307-v1:0",
+      model: "anthropic.claude-haiku-4-5-20251001-v1:0",
     });
     vi
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -1425,7 +1425,7 @@ describe("withStructuredOutput - StandardSchema", () => {
   test("functionCalling with custom name", async () => {
     const model = new ChatBedrockConverse({
       ...baseConstructorArgs,
-      model: "anthropic.claude-3-haiku-20240307-v1:0",
+      model: "anthropic.claude-haiku-4-5-20251001-v1:0",
     });
     vi
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -1467,7 +1467,7 @@ describe("withStructuredOutput - StandardSchema", () => {
     });
     const model = new ChatBedrockConverse({
       ...baseConstructorArgs,
-      model: "anthropic.claude-3-haiku-20240307-v1:0",
+      model: "anthropic.claude-haiku-4-5-20251001-v1:0",
     });
     vi
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -1489,7 +1489,7 @@ describe("withStructuredOutput - StandardSchema", () => {
   test("no tool calls throws error", async () => {
     const model = new ChatBedrockConverse({
       ...baseConstructorArgs,
-      model: "anthropic.claude-3-haiku-20240307-v1:0",
+      model: "anthropic.claude-haiku-4-5-20251001-v1:0",
     });
     vi
       // eslint-disable-next-line @typescript-eslint/no-explicit-any

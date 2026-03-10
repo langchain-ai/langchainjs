@@ -58,7 +58,7 @@ test("Test Bedrock serialization from environment variables", async () => {
 describe("Test model provider detection", () => {
   const testCases = [
     {
-      modelId: "eu.anthropic.claude-3-haiku-20240307-v1:0",
+      modelId: "eu.anthropic.claude-haiku-4-5-20251001-v1:0",
       expectedProvider: "anthropic",
       shouldThrow: false,
       region: "eu-west-1",

@@ -65,7 +65,7 @@ const citationsModelName = "claude-sonnet-4-5-20250929";
 const pdfModelName = "claude-haiku-4-5-20251001";
 
 // Use this model for all other tests
-const modelName = "claude-3-haiku-20240307";
+const modelName = "claude-haiku-4-5-20251001";
 
 test("Test ChatAnthropic", async () => {
   const chat = new ChatAnthropic({
