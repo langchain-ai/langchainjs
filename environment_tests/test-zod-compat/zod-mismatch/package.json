@@ -1,0 +1,15 @@
+{
+  "name": "test-zod-compat-mismatch",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Verify @langchain/core does not OOM when consumer resolves a different zod than core was built with",
+  "scripts": {
+    "test": "tsc --noEmit"
+  },
+  "dependencies": {
+    "zod": "~3.25.76",
+    "typescript": "^5.9.3",
+    "@types/node": "^22"
+  }
+}
