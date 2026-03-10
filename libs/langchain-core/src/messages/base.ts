@@ -353,7 +353,7 @@ export abstract class BaseMessage<
       typeof obj === "object" &&
       obj !== null &&
       MESSAGE_SYMBOL in obj &&
-      obj[MESSAGE_SYMBOL] === true &&
+      (obj as Record<symbol, unknown>)[MESSAGE_SYMBOL] === true &&
       isMessage(obj)
     );
   }
