@@ -715,19 +715,22 @@ function convertLegacyContentMessageToGeminiContent(
       typeof message.content === "string"
         ? message.content
         : JSON.stringify(message.content);
-    // Find the response name by checking previous messages for the tool call
-    const toolCall = messages
+    // Find the matching tool call in a preceding AIMessage to get the function name
+    const aiMsg = messages
       .filter(AIMessage.isInstance)
       .find((msg) =>
         msg.tool_calls?.find((tc) => tc.id === message.tool_call_id)
       );
-    if (!toolCall) {
+    if (!aiMsg) {
       throw new ToolCallNotFoundError(message.tool_call_id);
     }
+    const matchedToolCall = aiMsg.tool_calls?.find(
+      (tc) => tc.id === message.tool_call_id
+    );
     parts.push({
       functionResponse: {
         id: message.tool_call_id,
-        name: toolCall?.name || "unknown",
+        name: matchedToolCall?.name ?? message.name ?? "unknown",
         response: { result: responseContent },
       },
     });
