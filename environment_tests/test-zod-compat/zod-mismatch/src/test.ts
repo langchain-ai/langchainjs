@@ -16,7 +16,7 @@
  *   3. Passes everything to createAgent-style APIs
  *   4. Uses withStructuredOutput for structured responses
  *
- * tsc --noEmit must complete without OOM (512MB limit, 60s timeout).
+ * tsc --noEmit must complete without OOM (512MB limit, 120s timeout).
  */
 import { z } from "zod/v3";
 import { tool } from "@langchain/core/tools";
@@ -29,6 +29,12 @@ import type {
   ZodV3ObjectLike,
   InteropZodObject,
 } from "@langchain/core/utils/types";
+import {
+  createAgent,
+  createMiddleware,
+  toolStrategy,
+  providerStrategy,
+} from "langchain";
 
 // ---------------------------------------------------------------
 // 1. Define multiple tools with schemas (like a real agent app)
@@ -219,5 +225,95 @@ const _v3Person: ZodV3Like<{ name: string; age: number }> = z.object({
   name: z.string(),
   age: z.number(),
 });
+
+// ---------------------------------------------------------------
+// 10. createMiddleware with stateSchema (across version boundary)
+// ---------------------------------------------------------------
+const loggingMiddleware = createMiddleware({
+  name: "logging",
+  stateSchema: z.object({
+    logLevel: z.enum(["debug", "info", "warn", "error"]).default("info"),
+    logEntries: z.array(z.string()).default([]),
+  }),
+  beforeAgent: async (state) => {
+    const level: "debug" | "info" | "warn" | "error" = state.logLevel;
+    const entries: string[] = state.logEntries;
+    return { logEntries: [...entries, `Agent started at level ${level}`] };
+  },
+});
+
+const rateLimitMiddleware = createMiddleware({
+  name: "rate-limit",
+  stateSchema: z.object({
+    requestCount: z.number().default(0),
+    maxRequests: z.number().default(100),
+    windowStart: z.number().optional(),
+  }),
+  beforeModel: async (state) => {
+    const count: number = state.requestCount;
+    return { requestCount: count + 1 };
+  },
+});
+
+// ---------------------------------------------------------------
+// 11. createAgent — basic with tools
+// ---------------------------------------------------------------
+const basicAgent = createAgent({
+  model: "openai:gpt-4o",
+  tools: allTools,
+});
+
+// ---------------------------------------------------------------
+// 12. createAgent — with middleware
+// ---------------------------------------------------------------
+const agentWithMiddleware = createAgent({
+  model: "openai:gpt-4o",
+  tools: [searchTool, writeTool],
+  middleware: [loggingMiddleware, rateLimitMiddleware],
+});
+
+// ---------------------------------------------------------------
+// 13. createAgent — with responseFormat
+// ---------------------------------------------------------------
+const structuredAgent = createAgent({
+  model: "openai:gpt-4o",
+  tools: [searchTool],
+  responseFormat: responseSchema,
+});
+
+// ---------------------------------------------------------------
+// 14. createAgent — with stateSchema
+// ---------------------------------------------------------------
+const agentWithState = createAgent({
+  model: "openai:gpt-4o",
+  tools: [searchTool],
+  stateSchema: z.object({
+    userId: z.string().optional(),
+    sessionData: z.record(z.string()).optional(),
+    turnCount: z.number().default(0),
+  }),
+});
+
+// ---------------------------------------------------------------
+// 15. createAgent — kitchen sink (all features, cross-version boundary)
+// ---------------------------------------------------------------
+const fullAgent = createAgent({
+  model: "openai:gpt-4o",
+  tools: [searchTool, writeTool, memoryTool, complexTool],
+  middleware: [loggingMiddleware, rateLimitMiddleware],
+  responseFormat: responseSchema,
+  stateSchema: z.object({
+    context: z.string().optional(),
+    iteration: z.number().default(0),
+  }),
+  name: "full-agent",
+  description: "A comprehensive agent with all features",
+});
+
+// ---------------------------------------------------------------
+// 16. toolStrategy / providerStrategy across version boundary
+// ---------------------------------------------------------------
+const _ts = toolStrategy(responseSchema);
+const _ps = providerStrategy(searchSchema);
 
 console.log("zod-mismatch type check passed (no OOM!)");
