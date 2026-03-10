@@ -14,6 +14,7 @@ import { ApiClient } from "../../clients/index.js";
 import { GoogleRequestRecorder } from "../../utils/handler.js";
 import { BaseCallbackHandler } from "@langchain/core/callbacks/base";
 import { ChatGoogle, ChatGoogleParams } from "../index.js";
+import { ChatGoogle as ChatGoogleNode } from "../node.js";
 import { AIMessage, AIMessageChunk } from "@langchain/core/messages";
 import { OutputParserException } from "@langchain/core/output_parsers";
 import { ChatPromptTemplate } from "@langchain/core/prompts";
@@ -280,6 +281,46 @@ describe("Google Mock", () => {
     expect(recorder?.request?.body?.generationConfig?.candidateCount).toEqual(
       1
     );
+  });
+
+  test("getLsParams normalizes provider and includes model metadata for web and node", () => {
+    const webApiClient = new MockApiClient({
+      fileName: "gemini-chat-001.json",
+    });
+    const webModel = new ChatGoogle({
+      model: "gemini-2.5-flash",
+      apiClient: webApiClient,
+      temperature: 0.25,
+      maxOutputTokens: 256,
+    });
+
+    expect(webModel.getLsParams({ stop: ["END"] })).toEqual({
+      ls_provider: "google",
+      ls_model_name: "gemini-2.5-flash",
+      ls_model_type: "chat",
+      ls_temperature: 0.25,
+      ls_max_tokens: 256,
+      ls_stop: ["END"],
+    });
+
+    const nodeApiClient = new MockApiClient({
+      fileName: "gemini-chat-001.json",
+    });
+    const nodeModel = new ChatGoogleNode({
+      model: "gemini-2.5-pro",
+      apiClient: nodeApiClient,
+      temperature: 0.5,
+      maxOutputTokens: 512,
+    });
+
+    expect(nodeModel.getLsParams({ stop: ["STOP"] })).toEqual({
+      ls_provider: "google",
+      ls_model_name: "gemini-2.5-pro",
+      ls_model_type: "chat",
+      ls_temperature: 0.5,
+      ls_max_tokens: 512,
+      ls_stop: ["STOP"],
+    });
   });
 
   type TestReasoning = {
