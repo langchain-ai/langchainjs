@@ -1,17 +1,36 @@
 # Zod Compatibility Tests
 
-Regression tests for the zod version mismatch OOM bug.
+Regression tests for the zod version mismatch OOM bug (TS2589).
 
-These tests verify that `@langchain/core`'s exported types work correctly
-when consumers install different zod versions than what core was built with.
+These tests verify that `@langchain/core` and `langchain` exported types
+work correctly when consumers install different zod versions than what
+the packages were built with.
 
 ## Test Scenarios
 
-| Test | Consumer zod | Core built with | What it tests |
-|------|-------------|-----------------|---------------|
-| `zod-v3` | `~3.25.76` | `4.x` | Consumers using zod v3 can type-check against core |
-| `zod-v4` | `^4` | `4.x` | Happy path — same major version |
-| `zod-mismatch` | `~3.25.76` | `4.x` | The critical OOM regression test — different zod copies |
+| Test | Consumer zod | Packages | What it tests |
+|------|-------------|----------|---------------|
+| `zod-v3` | `~3.25.76` | `@langchain/core` | Core types with zod v3 (tool, StructuredOutputParser, InteropZodType) |
+| `zod-v4` | `^4` | `@langchain/core` | Core types with zod v4 |
+| `zod-mismatch` | `~3.25.76` | `@langchain/core` | OOM regression — different zod copies, complex nested schemas |
+| `createagent-v3` | `~3.25.76` | `langchain` + `@langchain/core` | createAgent, createMiddleware, toolStrategy, providerStrategy with v3 |
+| `createagent-v4` | `^4` | `langchain` + `@langchain/core` | createAgent, createMiddleware, toolStrategy, providerStrategy with v4 |
+
+## What's tested
+
+The `createagent-*` tests exercise the full agent API surface:
+- `tool()` with simple, nested, enum, and deeply-nested schemas
+- `createMiddleware()` with `stateSchema` and `beforeAgent`/`beforeModel` hooks
+- `createAgent()` — basic, with middleware, with `responseFormat`, with `stateSchema`, kitchen sink
+- `toolStrategy()` and `providerStrategy()` with zod schemas
+- Multiple tools in arrays with `as const` and spread
+
+The `zod-*` tests exercise core type machinery:
+- `InteropZodType` assignability for all primitive and composite types
+- `InferInteropZodOutput` type inference
+- `ZodV3Like`/`ZodV4Like`/`ZodV3ObjectLike`/`ZodV4ObjectLike` assignability
+- `StructuredOutputParser.fromZodSchema()`
+- Complex 3-level nested schemas with enums, records, arrays, optionals
 
 ## Running
 
@@ -21,10 +40,10 @@ bash environment_tests/test-zod-compat/run.sh
 ```
 
 The script:
-1. Builds `@langchain/core`
-2. Packs it as a tarball
-3. For each test: creates a temp directory, installs the tarball + zod + typescript
-4. Runs `tsc --noEmit` with a 60s timeout and 512MB heap limit
+1. Builds `langchain` (which also builds `@langchain/core`)
+2. Packs both as tarballs
+3. For each test: creates an isolated temp directory, installs tarballs + zod + typescript
+4. Runs `tsc --noEmit` with a 120s timeout and 512MB heap limit
 5. Reports pass/fail
 
 ## How the mismatch test works
