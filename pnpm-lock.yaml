@@ -324,7 +324,7 @@ importers:
         version: link:../libs/langchain
       langsmith:
         specifier: '>=0.5.0 <1.0.0'
-        version: 0.5.7(@opentelemetry/api@1.9.0)(openai@6.22.0(ws@8.19.0(bufferutil@4.1.0))(zod@3.25.76))
+        version: 0.5.8(@opentelemetry/api@1.9.0)(openai@6.22.0(ws@8.19.0(bufferutil@4.1.0))(zod@3.25.76))
       lorem-ipsum:
         specifier: ^2.0.8
         version: 2.0.8
@@ -684,7 +684,7 @@ importers:
         version: 1.0.0(@langchain/core@libs+langchain-core)
       langsmith:
         specifier: '>=0.5.0 <1.0.0'
-        version: 0.5.7(@opentelemetry/api@1.9.0)(openai@6.22.0(ws@8.19.0(bufferutil@4.1.0))(zod@4.3.6))
+        version: 0.5.8(@opentelemetry/api@1.9.0)(openai@6.22.0(ws@8.19.0(bufferutil@4.1.0))(zod@4.3.6))
       uuid:
         specifier: ^11.1.0
         version: 11.1.0
@@ -1116,7 +1116,7 @@ importers:
     optionalDependencies:
       langsmith:
         specifier: '>=0.4.0 <1.0.0'
-        version: 0.5.7(@opentelemetry/api@1.9.0)(openai@6.22.0(ws@8.19.0(bufferutil@4.1.0))(zod@4.3.6))
+        version: 0.5.8(@opentelemetry/api@1.9.0)(openai@6.22.0(ws@8.19.0(bufferutil@4.1.0))(zod@4.3.6))
 
   libs/langchain-community:
     dependencies:
@@ -1137,7 +1137,7 @@ importers:
         version: 4.1.1
       langsmith:
         specifier: '>=0.4.0 <1.0.0'
-        version: 0.5.7(@opentelemetry/api@1.9.0)(openai@6.18.0(ws@8.19.0(bufferutil@4.1.0))(zod@4.3.6))
+        version: 0.5.8(@opentelemetry/api@1.9.0)(openai@6.18.0(ws@8.19.0(bufferutil@4.1.0))(zod@4.3.6))
       math-expression-evaluator:
         specifier: ^2.0.0
         version: 2.0.7
@@ -1657,7 +1657,7 @@ importers:
         version: 1.0.21
       langsmith:
         specifier: '>=0.5.0 <1.0.0'
-        version: 0.5.7(@opentelemetry/api@1.9.0)(openai@6.27.0(ws@8.19.0(bufferutil@4.1.0))(zod@4.3.6))
+        version: 0.5.8(@opentelemetry/api@1.9.0)(openai@6.27.0(ws@8.19.0(bufferutil@4.1.0))(zod@4.3.6))
       mustache:
         specifier: ^4.2.0
         version: 4.2.0
@@ -3708,16 +3708,16 @@ packages:
   '@aws-crypto/util@5.2.0':
     resolution: {integrity: sha512-4RkU9EsI6ZpBve5fseQlGNUWKMa1RLPQ1dnjnQoe07ldfIzcsGb5hC5W0Dm7u423KWzawlrpbjXBrXCEv9zazQ==}
 
-  '@aws-sdk/client-bedrock-agent-runtime@3.1005.0':
-    resolution: {integrity: sha512-Z/bpeTAq3i3Z0vRvNdHjmpz/Q74LOukRBa0UUWbfKjVkW5KHt4U1lJGI0bASIM5VZIF/iyEoIIjzaKEDoPH7JA==}
+  '@aws-sdk/client-bedrock-agent-runtime@3.1006.0':
+    resolution: {integrity: sha512-tFogFCrDakWdunL4x8+IMiVr12Pjv56Mnw5H/BMbXEeV30SpaGH13oNHfZiIcV+ZhzbW+BWepFdg8U0UwgXKug==}
     engines: {node: '>=20.0.0'}
 
   '@aws-sdk/client-bedrock-agent-runtime@3.991.0':
     resolution: {integrity: sha512-dL3q2dZlXY9m3qJm17wy/wuH7mHmrxiF2Zp/M80IWLyoMM39lPw2YPse7v5t2BX5LRTD3jDw3XKcUbgwPW6Gcg==}
     engines: {node: '>=20.0.0'}
 
-  '@aws-sdk/client-bedrock-runtime@3.1005.0':
-    resolution: {integrity: sha512-IV5vZ6H46ZNsTxsFWkbrJkg+sPe6+3m90k7EejgB/AFCb/YQuseH0+I3B57ew+zoOaXJU71KDPBwsIiMSsikVg==}
+  '@aws-sdk/client-bedrock-runtime@3.1006.0':
+    resolution: {integrity: sha512-xoReIImKWGEgI5+44ZqADIfjSQTx367d3wkH1kX8ZZNe70mUQxXDzLp1iWBk4FLjQyTnv0J0vMIvhSHVfvFxXA==}
     engines: {node: '>=20.0.0'}
 
   '@aws-sdk/client-bedrock-runtime@3.989.0':
@@ -3736,8 +3736,8 @@ packages:
     resolution: {integrity: sha512-NYQPxtfc0hWNUlbZMkgjAyudPzgK6WA5BRh9+/zCQYrBvgtk347g64gnxqyyF+W3QWNhFEp7Eo3heHiNN++9Wg==}
     engines: {node: '>=20.0.0'}
 
-  '@aws-sdk/client-kendra@3.1005.0':
-    resolution: {integrity: sha512-T5rxCiNNPje3irRUgc/AssPgkZST0rfoA2fjLIPorDiztyqLHtLTZK57mPg1RgLwhZUX0SwXA+NoFFNnoBBnJQ==}
+  '@aws-sdk/client-kendra@3.1006.0':
+    resolution: {integrity: sha512-/wlg6U3I5gpxrrzkwRJFfq6ica8q9bZwFWJ3v1+Ve+TaIVWMWkO0zSidGsIlhMUJWbWkoTnRnDdLeUzyBVi/4w==}
     engines: {node: '>=20.0.0'}
 
   '@aws-sdk/client-kendra@3.985.0':
@@ -4082,6 +4082,10 @@ packages:
 
   '@aws-sdk/token-providers@3.1005.0':
     resolution: {integrity: sha512-vMxd+ivKqSxU9bHx5vmAlFKDAkjGotFU56IOkDa5DaTu1WWwbcse0yFHEm9I537oVvodaiwMl3VBwgHfzQ2rvw==}
+    engines: {node: '>=20.0.0'}
+
+  '@aws-sdk/token-providers@3.1006.0':
+    resolution: {integrity: sha512-eCBaQI1w5PcliOdh8Y0YONOim2zNSTEK4E7gXYC4vIqiT/lzVODIFxmpc8oOBLPSANzcr9daIPPtjQ2C75dLFg==}
     engines: {node: '>=20.0.0'}
 
   '@aws-sdk/token-providers@3.985.0':
@@ -6921,6 +6925,9 @@ packages:
 
   '@mistralai/mistralai@1.14.1':
     resolution: {integrity: sha512-IiLmmZFCCTReQgPAT33r7KQ1nYo5JPdvGkrkZqA8qQ2qB1GHgs5LoP5K2ICyrjnpw2n8oSxMM/VP+liiKcGNlQ==}
+
+  '@mistralai/mistralai@1.15.1':
+    resolution: {integrity: sha512-fb995eiz3r0KsBGtRjFV+/iLbX+UpfalxpF+YitT3R6ukrPD4PN+FGwwmYcRFhNAzVzDUtTVxQYnjQWEnwV5nw==}
 
   '@mixedbread-ai/sdk@2.2.11':
     resolution: {integrity: sha512-NJiY6BVPR+s/DTzUPQS1Pv418trOmII/8hftmIqxXlYaKbIrgJimQfwCW9M6Y21YPcMA8zTQGYZHm4IWlMjIQw==}
@@ -12971,8 +12978,8 @@ packages:
       openai:
         optional: true
 
-  langsmith@0.5.7:
-    resolution: {integrity: sha512-FjYf2oBGMoSXnaT4SRaFguIiGJaonZ5VKWKJDPl9awLZjz2RkN29AcQWceecSINVzXzTvtRWPOjAWT+XggqNNg==}
+  langsmith@0.5.8:
+    resolution: {integrity: sha512-AsdwxazXXLwbEzVTXB5uo7Fva5MhGhSvIJ9FjBbkWOkgwqC28E9Gmah5SGbPM3CPjN0FdxB6nKzX5GRkkkXDjQ==}
     peerDependencies:
       '@opentelemetry/api': '*'
       '@opentelemetry/exporter-trace-otlp-proto': '*'
@@ -16779,7 +16786,7 @@ snapshots:
       '@smithy/util-utf8': 2.3.0
       tslib: 2.8.1
 
-  '@aws-sdk/client-bedrock-agent-runtime@3.1005.0':
+  '@aws-sdk/client-bedrock-agent-runtime@3.1006.0':
     dependencies:
       '@aws-crypto/sha256-browser': 5.2.0
       '@aws-crypto/sha256-js': 5.2.0
@@ -16874,7 +16881,7 @@ snapshots:
     transitivePeerDependencies:
       - aws-crt
 
-  '@aws-sdk/client-bedrock-runtime@3.1005.0':
+  '@aws-sdk/client-bedrock-runtime@3.1006.0':
     dependencies:
       '@aws-crypto/sha256-browser': 5.2.0
       '@aws-crypto/sha256-js': 5.2.0
@@ -16888,7 +16895,7 @@ snapshots:
       '@aws-sdk/middleware-user-agent': 3.972.20
       '@aws-sdk/middleware-websocket': 3.972.12
       '@aws-sdk/region-config-resolver': 3.972.7
-      '@aws-sdk/token-providers': 3.1005.0
+      '@aws-sdk/token-providers': 3.1006.0
       '@aws-sdk/types': 3.973.5
       '@aws-sdk/util-endpoints': 3.996.4
       '@aws-sdk/util-user-agent-browser': 3.972.7
@@ -17114,7 +17121,7 @@ snapshots:
     transitivePeerDependencies:
       - aws-crt
 
-  '@aws-sdk/client-kendra@3.1005.0':
+  '@aws-sdk/client-kendra@3.1006.0':
     dependencies:
       '@aws-crypto/sha256-browser': 5.2.0
       '@aws-crypto/sha256-js': 5.2.0
@@ -18602,6 +18609,19 @@ snapshots:
       - aws-crt
 
   '@aws-sdk/token-providers@3.1005.0':
+    dependencies:
+      '@aws-sdk/core': 3.973.19
+      '@aws-sdk/nested-clients': 3.996.8
+      '@aws-sdk/types': 3.973.5
+      '@smithy/property-provider': 4.2.11
+      '@smithy/shared-ini-file-loader': 4.4.6
+      '@smithy/types': 4.13.0
+      tslib: 2.8.1
+    transitivePeerDependencies:
+      - aws-crt
+    optional: true
+
+  '@aws-sdk/token-providers@3.1006.0':
     dependencies:
       '@aws-sdk/core': 3.973.19
       '@aws-sdk/nested-clients': 3.996.8
@@ -21740,9 +21760,9 @@ snapshots:
 
   '@langchain/aws@1.3.1(@langchain/core@libs+langchain-core)':
     dependencies:
-      '@aws-sdk/client-bedrock-agent-runtime': 3.1005.0
-      '@aws-sdk/client-bedrock-runtime': 3.1005.0
-      '@aws-sdk/client-kendra': 3.1005.0
+      '@aws-sdk/client-bedrock-agent-runtime': 3.1006.0
+      '@aws-sdk/client-bedrock-runtime': 3.1006.0
+      '@aws-sdk/client-kendra': 3.1006.0
       '@aws-sdk/credential-provider-node': 3.972.19
       '@langchain/core': link:libs/langchain-core
     transitivePeerDependencies:
@@ -21892,7 +21912,7 @@ snapshots:
   '@langchain/mistralai@1.0.7(@langchain/core@libs+langchain-core)(bufferutil@4.1.0)':
     dependencies:
       '@langchain/core': link:libs/langchain-core
-      '@mistralai/mistralai': 1.14.1(bufferutil@4.1.0)
+      '@mistralai/mistralai': 1.15.1(bufferutil@4.1.0)
       uuid: 13.0.0
     transitivePeerDependencies:
       - bufferutil
@@ -22088,6 +22108,16 @@ snapshots:
     transitivePeerDependencies:
       - bufferutil
       - utf-8-validate
+
+  '@mistralai/mistralai@1.15.1(bufferutil@4.1.0)':
+    dependencies:
+      ws: 8.19.0(bufferutil@4.1.0)
+      zod: 4.3.6
+      zod-to-json-schema: 3.25.1(zod@4.3.6)
+    transitivePeerDependencies:
+      - bufferutil
+      - utf-8-validate
+    optional: true
 
   '@mixedbread-ai/sdk@2.2.11(encoding@0.1.13)':
     dependencies:
@@ -29341,7 +29371,7 @@ snapshots:
       openai: 6.18.0(ws@8.19.0(bufferutil@4.1.0))(zod@4.3.6)
     optional: true
 
-  langsmith@0.5.7(@opentelemetry/api@1.9.0)(openai@6.18.0(ws@8.19.0(bufferutil@4.1.0))(zod@4.3.6)):
+  langsmith@0.5.8(@opentelemetry/api@1.9.0)(openai@6.18.0(ws@8.19.0(bufferutil@4.1.0))(zod@4.3.6)):
     dependencies:
       '@types/uuid': 10.0.0
       chalk: 5.6.2
@@ -29353,7 +29383,7 @@ snapshots:
       '@opentelemetry/api': 1.9.0
       openai: 6.18.0(ws@8.19.0(bufferutil@4.1.0))(zod@4.3.6)
 
-  langsmith@0.5.7(@opentelemetry/api@1.9.0)(openai@6.22.0(ws@8.19.0(bufferutil@4.1.0))(zod@3.25.76)):
+  langsmith@0.5.8(@opentelemetry/api@1.9.0)(openai@6.22.0(ws@8.19.0(bufferutil@4.1.0))(zod@3.25.76)):
     dependencies:
       '@types/uuid': 10.0.0
       chalk: 5.6.2
@@ -29365,7 +29395,7 @@ snapshots:
       '@opentelemetry/api': 1.9.0
       openai: 6.22.0(ws@8.19.0(bufferutil@4.1.0))(zod@3.25.76)
 
-  langsmith@0.5.7(@opentelemetry/api@1.9.0)(openai@6.22.0(ws@8.19.0(bufferutil@4.1.0))(zod@4.3.6)):
+  langsmith@0.5.8(@opentelemetry/api@1.9.0)(openai@6.22.0(ws@8.19.0(bufferutil@4.1.0))(zod@4.3.6)):
     dependencies:
       '@types/uuid': 10.0.0
       chalk: 5.6.2
@@ -29377,7 +29407,7 @@ snapshots:
       '@opentelemetry/api': 1.9.0
       openai: 6.22.0(ws@8.19.0(bufferutil@4.1.0))(zod@4.3.6)
 
-  langsmith@0.5.7(@opentelemetry/api@1.9.0)(openai@6.27.0(ws@8.19.0(bufferutil@4.1.0))(zod@4.3.6)):
+  langsmith@0.5.8(@opentelemetry/api@1.9.0)(openai@6.27.0(ws@8.19.0(bufferutil@4.1.0))(zod@4.3.6)):
     dependencies:
       '@types/uuid': 10.0.0
       chalk: 5.6.2
