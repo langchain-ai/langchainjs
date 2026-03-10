@@ -1,5 +1,6 @@
 import {
   afterEach,
+  assertType,
   beforeEach,
   describe,
   expect,
@@ -8,12 +9,15 @@ import {
   vi,
 } from "vitest";
 import * as fs from "node:fs";
+import { z } from "zod/v3";
 import { ApiClient } from "../../clients/index.js";
 import { GoogleRequestRecorder } from "../../utils/handler.js";
 import { BaseCallbackHandler } from "@langchain/core/callbacks/base";
 import { ChatGoogle, ChatGoogleParams } from "../index.js";
 import { AIMessage, AIMessageChunk } from "@langchain/core/messages";
 import { OutputParserException } from "@langchain/core/output_parsers";
+import { ChatPromptTemplate } from "@langchain/core/prompts";
+import type { Runnable } from "@langchain/core/runnables";
 import type { Gemini } from "../types.js";
 
 interface MockResponseParameters {
@@ -1197,5 +1201,51 @@ describe("withStructuredOutput with SerializableSchema", () => {
     await expect(async () => {
       await structured.invoke("What is your name?");
     }).rejects.toThrow(OutputParserException);
+  });
+});
+
+describe("withStructuredOutput type narrowing", () => {
+  const model = new ChatGoogle({
+    model: "gemini-2.5-flash",
+    apiKey: "test",
+  });
+
+  const schema = z.object({
+    name: z.string(),
+    age: z.number(),
+  });
+
+  test("is pipeable with ChatPromptTemplate when includeRaw is false", () => {
+    const prompt = ChatPromptTemplate.fromMessages([
+      ["system", "Extract info."],
+      ["human", "{input}"],
+    ]);
+    const structuredModel = model.withStructuredOutput(schema, {
+      includeRaw: false,
+    });
+    const chain = prompt.pipe(structuredModel);
+    assertType<Runnable>(chain);
+  });
+
+  test("is pipeable with ChatPromptTemplate when config is omitted", () => {
+    const prompt = ChatPromptTemplate.fromMessages([
+      ["system", "Extract info."],
+      ["human", "{input}"],
+    ]);
+    const structuredModel = model.withStructuredOutput(schema);
+    const chain = prompt.pipe(structuredModel);
+    assertType<Runnable>(chain);
+  });
+
+  test("returns non-union type when includeRaw is false", () => {
+    const result = model.withStructuredOutput(schema, { includeRaw: false });
+    const _check: typeof result extends Runnable ? true : never = true;
+    assertType<true>(_check);
+  });
+
+  test("returns non-union type when config is omitted", () => {
+    const result = model.withStructuredOutput(schema);
+    const _check: typeof result extends Runnable ? true : never = true;
+    assertType<true>(_check);
   });
 });
