@@ -8,29 +8,27 @@ the packages were built with.
 
 ## Test Scenarios
 
-| Test | Consumer zod | Packages | What it tests |
-|------|-------------|----------|---------------|
-| `zod-v3` | `~3.25.76` | `@langchain/core` | Core types with zod v3 (tool, StructuredOutputParser, InteropZodType) |
-| `zod-v4` | `^4` | `@langchain/core` | Core types with zod v4 |
-| `zod-mismatch` | `~3.25.76` | `@langchain/core` | OOM regression — different zod copies, complex nested schemas |
-| `createagent-v3` | `~3.25.76` | `langchain` + `@langchain/core` | createAgent, createMiddleware, toolStrategy, providerStrategy with v3 |
-| `createagent-v4` | `^4` | `langchain` + `@langchain/core` | createAgent, createMiddleware, toolStrategy, providerStrategy with v4 |
+| Test | Consumer zod | What it tests |
+|------|-------------|---------------|
+| `zod-v3` | `~3.25.76` | Core types + agent APIs with zod v3 |
+| `zod-v4` | `^4` | Core types + agent APIs with zod v4 |
+| `zod-mismatch` | `~3.25.76` | OOM regression — consumer has v3, packages built with v4 |
 
 ## What's tested
 
-The `createagent-*` tests exercise the full agent API surface:
-- `tool()` with simple, nested, enum, and deeply-nested schemas
-- `createMiddleware()` with `stateSchema` and `beforeAgent`/`beforeModel` hooks
-- `createAgent()` — basic, with middleware, with `responseFormat`, with `stateSchema`, kitchen sink
-- `toolStrategy()` and `providerStrategy()` with zod schemas
-- Multiple tools in arrays with `as const` and spread
+Each test exercises both `@langchain/core` primitives and `langchain` agent APIs:
 
-The `zod-*` tests exercise core type machinery:
+**Core types:**
+- `tool()` with simple, nested, enum, string, and deeply-nested schemas
+- `StructuredOutputParser.fromZodSchema()`
 - `InteropZodType` assignability for all primitive and composite types
 - `InferInteropZodOutput` type inference
 - `ZodV3Like`/`ZodV4Like`/`ZodV3ObjectLike`/`ZodV4ObjectLike` assignability
-- `StructuredOutputParser.fromZodSchema()`
-- Complex 3-level nested schemas with enums, records, arrays, optionals
+
+**Agent APIs:**
+- `createMiddleware()` with `stateSchema` and `beforeAgent`/`beforeModel` hooks
+- `createAgent()` — basic, with middleware, with `responseFormat`, with `stateSchema`, kitchen sink
+- `toolStrategy()` and `providerStrategy()` with zod schemas
 
 ## Running
 
@@ -42,7 +40,7 @@ bash environment_tests/test-zod-compat/run.sh
 The script:
 1. Builds `langchain` (which also builds `@langchain/core`)
 2. Packs both as tarballs
-3. For each test: creates an isolated temp directory, installs tarballs + zod + typescript
+3. For each test: creates an isolated temp directory, installs both tarballs + zod + typescript
 4. Runs `tsc --noEmit` with a 120s timeout and 512MB heap limit
 5. Reports pass/fail
 

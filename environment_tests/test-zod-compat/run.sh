@@ -3,11 +3,13 @@
 # Zod compatibility tests for @langchain/core and langchain
 #
 # Tests that exported types work correctly with:
-#   1. zod@3.25.x (v3-only consumer) — @langchain/core only
-#   2. zod@4.x (v4 consumer) — @langchain/core only
+#   1. zod@3.25.x (v3-only consumer)
+#   2. zod@4.x (v4 consumer)
 #   3. zod version mismatch (consumer has zod@3.25.x, core built with zod@4.x)
-#   4. createAgent with zod@3.25.x — full langchain package
-#   5. createAgent with zod@4.x — full langchain package
+#
+# Each test exercises both @langchain/core primitives (tool, StructuredOutputParser,
+# InteropZodType) and langchain agent APIs (createAgent, createMiddleware,
+# toolStrategy, providerStrategy).
 #
 # Each test creates an isolated directory, installs packages from local
 # tarballs alongside a specific zod version, and runs `tsc --noEmit`.
@@ -49,7 +51,7 @@ if [ ! -f "$LANGCHAIN_TARBALL" ]; then
 fi
 echo "Langchain tarball: $LANGCHAIN_TARBALL"
 
-TESTS=("zod-v3" "zod-v4" "zod-mismatch" "createagent-v3" "createagent-v4")
+TESTS=("zod-v3" "zod-v4" "zod-mismatch")
 PASS=0
 FAIL=0
 
@@ -66,12 +68,7 @@ for test_name in "${TESTS[@]}"; do
 
   cd "$TEST_WORK"
 
-  # Install workspace tarballs first, then remaining deps
-  if [[ "$test_name" == createagent-* ]]; then
-    npm install --no-package-lock "$CORE_TARBALL" "$LANGCHAIN_TARBALL" 2>&1 | tail -3
-  else
-    npm install --no-package-lock "$CORE_TARBALL" 2>&1 | tail -3
-  fi
+  npm install --no-package-lock "$CORE_TARBALL" "$LANGCHAIN_TARBALL" 2>&1 | tail -3
   npm install --no-package-lock 2>&1 | tail -3
 
   echo "Installed zod version(s):"

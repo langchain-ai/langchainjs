@@ -1,8 +1,8 @@
 /**
  * Zod v4 compatibility test
  *
- * Verifies that @langchain/core's exported types work correctly when the
- * consumer's project uses zod@4.x.  This test only checks type-level
+ * Verifies that @langchain/core and langchain exported types work correctly
+ * when the consumer's project uses zod@4.x.  This test only checks type-level
  * compatibility — it does NOT run any LLM calls.
  */
 import { z } from "zod";
@@ -16,6 +16,12 @@ import type {
   ZodV4ObjectLike,
   InteropZodObject,
 } from "@langchain/core/utils/types";
+import {
+  createAgent,
+  createMiddleware,
+  toolStrategy,
+  providerStrategy,
+} from "langchain";
 
 // ---------------------------------------------------------------
 // 1. Simple tool with z4 object schema — verify type inference
@@ -212,5 +218,95 @@ const deepTool = tool(
     schema: deepSchema,
   }
 );
+
+// ---------------------------------------------------------------
+// 14. createMiddleware with stateSchema
+// ---------------------------------------------------------------
+const loggingMiddleware = createMiddleware({
+  name: "logging",
+  stateSchema: z.object({
+    logLevel: z.enum(["debug", "info", "warn", "error"]).default("info"),
+    logEntries: z.array(z.string()).default([]),
+  }),
+  beforeAgent: async (state) => {
+    const level: "debug" | "info" | "warn" | "error" = state.logLevel;
+    const entries: string[] = state.logEntries;
+    return { logEntries: [...entries, `Agent started at level ${level}`] };
+  },
+});
+
+const rateLimitMiddleware = createMiddleware({
+  name: "rate-limit",
+  stateSchema: z.object({
+    requestCount: z.number().default(0),
+    maxRequests: z.number().default(100),
+    windowStart: z.number().optional(),
+  }),
+  beforeModel: async (state) => {
+    const count: number = state.requestCount;
+    return { requestCount: count + 1 };
+  },
+});
+
+// ---------------------------------------------------------------
+// 15. createAgent — basic with tools
+// ---------------------------------------------------------------
+const basicAgent = createAgent({
+  model: "openai:gpt-4o",
+  tools: [greetTool, contactTool, sentimentTool],
+});
+
+// ---------------------------------------------------------------
+// 16. createAgent — with middleware
+// ---------------------------------------------------------------
+const agentWithMiddleware = createAgent({
+  model: "openai:gpt-4o",
+  tools: [greetTool, sentimentTool],
+  middleware: [loggingMiddleware, rateLimitMiddleware],
+});
+
+// ---------------------------------------------------------------
+// 17. createAgent — with responseFormat
+// ---------------------------------------------------------------
+const structuredAgent = createAgent({
+  model: "openai:gpt-4o",
+  tools: [greetTool],
+  responseFormat: contactSchema,
+});
+
+// ---------------------------------------------------------------
+// 18. createAgent — with stateSchema
+// ---------------------------------------------------------------
+const agentWithState = createAgent({
+  model: "openai:gpt-4o",
+  tools: [greetTool],
+  stateSchema: z.object({
+    userId: z.string().optional(),
+    sessionData: z.record(z.string(), z.string()).optional(),
+    turnCount: z.number().default(0),
+  }),
+});
+
+// ---------------------------------------------------------------
+// 19. createAgent — kitchen sink
+// ---------------------------------------------------------------
+const fullAgent = createAgent({
+  model: "openai:gpt-4o",
+  tools: [greetTool, contactTool, stringTool, sentimentTool, refinedTool, deepTool],
+  middleware: [loggingMiddleware, rateLimitMiddleware],
+  responseFormat: personSchema,
+  stateSchema: z.object({
+    context: z.string().optional(),
+    iteration: z.number().default(0),
+  }),
+  name: "full-agent",
+  description: "A comprehensive agent with all features",
+});
+
+// ---------------------------------------------------------------
+// 20. toolStrategy / providerStrategy
+// ---------------------------------------------------------------
+const _ts = toolStrategy(contactSchema);
+const _ps = providerStrategy(personSchema);
 
 console.log("zod-v4 type check passed");
