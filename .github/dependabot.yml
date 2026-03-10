@@ -39,7 +39,7 @@ updates:
       - "/libs/langchain-core"
       - "/libs/langchain"
       - "/libs/langchain-classic"
-      - "/libs/langchain-community"
+      - "/libs/community/langchain-community"
       - "/libs/langchain-textsplitters"
       - "/libs/langchain-mcp-adapters"
     schedule:
@@ -53,6 +53,22 @@ updates:
           - "minor"
           - "patch"
       core-libs-major:
+        update-types:
+          - "major"
+
+  # Community integrations
+  - package-ecosystem: npm
+    directories:
+      - "/libs/community/*"
+    schedule:
+      interval: monthly
+    open-pull-requests-limit: 15
+    groups:
+      community-minor-and-patch:
+        update-types:
+          - "minor"
+          - "patch"
+      community-major:
         update-types:
           - "major"
 

@@ -67,7 +67,7 @@ This is a monorepo managed with [pnpm workspaces](https://pnpm.io/workspaces) an
 | -------------------------- | ------------------------------------ | ---------------------------------------------------------------- |
 | `langchain`                | `libs/langchain`                     | Main LangChain package with agents, prompts, and orchestration   |
 | `@langchain/core`          | `libs/langchain-core`                | Core abstractions and interfaces (base classes, runnables, etc.) |
-| `@langchain/community`     | `libs/langchain-community`           | Community-maintained integrations                                |
+| `@langchain/community`     | `libs/community/langchain-community` | Community-maintained integrations                                |
 | `@langchain/textsplitters` | `libs/langchain-textsplitters`       | Text splitting utilities                                         |
 | `@langchain/openai`        | `libs/providers/langchain-openai`    | OpenAI integration                                               |
 | `@langchain/anthropic`     | `libs/providers/langchain-anthropic` | Anthropic integration                                            |
@@ -237,7 +237,7 @@ pnpm --filter @langchain/core test
 
 If you add support for a new external API, please add a new integration test. Integration tests should be called `*.int.test.ts`.
 
-Note that most integration tests require credentials or other setup. You will likely need to set up a `libs/langchain/.env` or `libs/langchain-community/.env` file based on the [`.env.example` file](https://github.com/langchain-ai/langchainjs/blob/main/libs/langchain/.env.example).
+Note that most integration tests require credentials or other setup. You will likely need to set up a `libs/langchain/.env` or `libs/community/langchain-community/.env` file based on the [`.env.example` file](https://github.com/langchain-ai/langchainjs/blob/main/libs/langchain/.env.example).
 
 We generally recommend only running integration tests with `pnpm --filter <package> test:single`, but if you want to run all integration tests:
 

@@ -12,7 +12,7 @@
     "type": "git",
     "url": "git@github.com:langchain-ai/langchainjs.git"
   },
-  "homepage": "https://github.com/langchain-ai/langchainjs/tree/main/libs/langchain-google-vertexai/",
+  "homepage": "https://github.com/langchain-ai/langchainjs/tree/main/libs/providers/langchain-google-vertexai/",
   "scripts": {
     "build": "turbo build:compile --filter @langchain/google-vertexai --output-logs new-only",
     "build:compile": "tsdown",

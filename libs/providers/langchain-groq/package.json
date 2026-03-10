@@ -12,7 +12,7 @@
     "type": "git",
     "url": "git@github.com:langchain-ai/langchainjs.git"
   },
-  "homepage": "https://github.com/langchain-ai/langchainjs/tree/main/libs/langchain-groq/",
+  "homepage": "https://github.com/langchain-ai/langchainjs/tree/main/libs/providers/langchain-groq/",
   "scripts": {
     "build": "turbo build:compile --filter @langchain/groq --output-logs new-only",
     "build:compile": "tsdown",

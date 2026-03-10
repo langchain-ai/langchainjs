@@ -10,7 +10,7 @@ The following guidelines apply broadly to all type of integrations:
 
 ### Creating a separate entrypoint
 
-You should generally not export your new module from an `index.ts` file that contains many other exports. Instead, you should add a separate entrypoint for your integration in [`libs/langchain-community/langchain.config.js`](https://github.com/langchain-ai/langchainjs/blob/main/libs/langchain-community/langchain.config.js) within the `entrypoints` field in the config object:
+You should generally not export your new module from an `index.ts` file that contains many other exports. Instead, you should add a separate entrypoint for your integration in [`libs/community/langchain-community/langchain.config.js`](https://github.com/langchain-ai/langchainjs/blob/main/libs/community/langchain-community/langchain.config.js) within the `entrypoints` field in the config object:
 
 ```js
 export const config = {
@@ -47,13 +47,13 @@ A user would then import your new vector store as `import { LangCoVectorStore } 
 
 ### Third-party dependencies
 
-You may use third-party dependencies in new integrations, but they should be added as `peerDependencies` and `devDependencies` with an entry under `peerDependenciesMeta` in [`libs/langchain-community/package.json`](https://github.com/langchain-ai/langchainjs/blob/main/libs/langchain-community/package.json), **not under any core `dependencies` list**. This keeps the overall package size small, as only people who are using your integration will need to install, and allows us to support a wider range of runtimes.
+You may use third-party dependencies in new integrations, but they should be added as `peerDependencies` and `devDependencies` with an entry under `peerDependenciesMeta` in [`libs/community/langchain-community/package.json`](https://github.com/langchain-ai/langchainjs/blob/main/libs/community/langchain-community/package.json), **not under any core `dependencies` list**. This keeps the overall package size small, as only people who are using your integration will need to install, and allows us to support a wider range of runtimes.
 
 We suggest using caret syntax (`^`) for peer dependencies to support a wider range of people trying to use them as well as to be somewhat tolerant to non-major version updates, which should (theoretically) be the only breaking ones.
 
 Please make sure all introduced dependencies are permissively licensed (MIT is recommended) and well-supported and maintained.
 
-You must also add your new entrypoint under `requiresOptionalDependency` in the [`langchain.config.js`](https://github.com/langchain-ai/langchainjs/blob/main/libs/langchain-community/langchain.config.js) file to avoid breaking the build:
+You must also add your new entrypoint under `requiresOptionalDependency` in the [`langchain.config.js`](https://github.com/langchain-ai/langchainjs/blob/main/libs/community/langchain-community/langchain.config.js) file to avoid breaking the build:
 
 ```js
 export const config = {
@@ -128,7 +128,7 @@ As with all contributions, make sure you run `pnpm lint` and `pnpm format` so th
 
 ### Separate integration packages
 
-While most integrations should generally reside in the `libs/langchain-community` workspace and be imported as `@langchain/community/module/name`, more in-depth integrations or suites of integrations may also reside in separate packages that depend on and extend `@langchain/core`. See [`@langchain/google-genai`](https://github.com/langchain-ai/langchainjs/blob/main/libs/langchain-google-genai) for an example.
+While most integrations should generally reside in the `libs/community/langchain-community` workspace and be imported as `@langchain/community/module/name`, more in-depth integrations or suites of integrations may also reside in separate packages that depend on and extend `@langchain/core`. See [`@langchain/google-genai`](https://github.com/langchain-ai/langchainjs/blob/main/libs/providers/langchain-google-genai) for an example.
 
 To make creating packages like this easier, we offer the [`create-langchain-integration`](https://github.com/langchain-ai/langchainjs/blob/main/libs/create-langchain-integration/) utility that will automatically scaffold a repo with support for both ESM + CJS entrypoints. You can run it like this:
 

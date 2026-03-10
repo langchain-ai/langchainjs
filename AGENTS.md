@@ -26,7 +26,7 @@ This is a **monorepo** managed with [pnpm workspaces](https://pnpm.io/) (v10.14.
 | -------------------------- | ------------------------------------- | ---------------------------------------------------------------- |
 | `langchain`                | `libs/langchain/`                     | Main LangChain package with agents, prompts, and orchestration   |
 | `@langchain/core`          | `libs/langchain-core/`                | Core abstractions and interfaces (base classes, runnables, etc.) |
-| `@langchain/community`     | `libs/langchain-community/`           | Community-maintained integrations                                |
+| `@langchain/community`     | `libs/community/langchain-community/` | Community-maintained integrations                                |
 | `@langchain/textsplitters` | `libs/langchain-textsplitters/`       | Text splitting utilities                                         |
 | `@langchain/openai`        | `libs/providers/langchain-openai/`    | OpenAI integration                                               |
 | `@langchain/anthropic`     | `libs/providers/langchain-anthropic/` | Anthropic integration                                            |
