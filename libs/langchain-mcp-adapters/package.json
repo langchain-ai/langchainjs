@@ -54,7 +54,7 @@
     }
   },
   "optionalDependencies": {
-    "extended-eventsource": "^1.7.0"
+    "extended-eventsource": "^2.1.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.36.0",

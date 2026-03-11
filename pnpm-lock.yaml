@@ -2429,8 +2429,8 @@ importers:
         version: 3.2.4(@types/debug@4.1.12)(@types/node@25.2.3)(jiti@2.6.1)(jsdom@28.1.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
     optionalDependencies:
       extended-eventsource:
-        specifier: ^1.7.0
-        version: 1.7.0
+        specifier: ^2.1.0
+        version: 2.1.0
 
   libs/langchain-textsplitters:
     dependencies:
@@ -10840,8 +10840,8 @@ packages:
   extendable-error@0.1.7:
     resolution: {integrity: sha512-UOiS2in6/Q0FK0R0q6UY9vYpQ21mr/Qn1KOnte7vsACuNJf514WvCCUHSRCPcgjPT2bAhNIJdlE6bVap1GKmeg==}
 
-  extended-eventsource@1.7.0:
-    resolution: {integrity: sha512-s8rtvZuYcKBpzytHb5g95cHbZ1J99WeMnV18oKc5wKoxkHzlzpPc/bNAm7Da2Db0BDw0CAu1z3LpH+7UsyzIpw==}
+  extended-eventsource@2.1.0:
+    resolution: {integrity: sha512-0DX6gEWwfcDkglS7bdr6oH5jb6TR6BvsVvmOcsUzyl5ESqkze9XImyNZPLoZtaGi1kKGjH/+dNqd8O0SjD7KgQ==}
 
   extract-zip@2.0.1:
     resolution: {integrity: sha512-GDhU9ntwuKyGXdZBUgTIe+vXnWj0fppUEtMDL0+idd5Sta8TGpHssn/eusA9mrPr9qNDym6SxAYZjNvCn/9RBg==}
@@ -24860,7 +24860,7 @@ snapshots:
 
   extendable-error@0.1.7: {}
 
-  extended-eventsource@1.7.0:
+  extended-eventsource@2.1.0:
     optional: true
 
   extract-zip@2.0.1:
