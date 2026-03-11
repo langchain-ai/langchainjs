@@ -256,8 +256,8 @@ importers:
         specifier: ^8
         version: 8.18.1
       '@upstash/redis':
-        specifier: ^1.36.2
-        version: 1.36.2
+        specifier: ^1.36.4
+        version: 1.36.4
       '@upstash/vector':
         specifier: ^1.2.1
         version: 1.2.2
@@ -1148,10 +1148,10 @@ importers:
         version: 8.18.1
       '@upstash/ratelimit':
         specifier: ^2.0.8
-        version: 2.0.8(@upstash/redis@1.36.2)
+        version: 2.0.8(@upstash/redis@1.36.4)
       '@upstash/redis':
-        specifier: ^1.36.2
-        version: 1.36.2
+        specifier: ^1.36.4
+        version: 1.36.4
       '@upstash/vector':
         specifier: ^1.2.1
         version: 1.2.2
@@ -2128,8 +2128,8 @@ importers:
         specifier: ^8
         version: 8.18.1
       '@upstash/redis':
-        specifier: ^1.36.2
-        version: 1.36.2
+        specifier: ^1.36.4
+        version: 1.36.4
       '@upstash/vector':
         specifier: ^1.2.2
         version: 1.2.2
@@ -8748,8 +8748,8 @@ packages:
     peerDependencies:
       '@upstash/redis': ^1.34.3
 
-  '@upstash/redis@1.36.2':
-    resolution: {integrity: sha512-C0Yt8hc12vLaQYRG1fMci8iPrLtnTdbJG0HR5T8vKnvEP/1RdMMblsOJs5/jp0JXZJ1oSzMnQz4J9EVezNpI6A==}
+  '@upstash/redis@1.36.4':
+    resolution: {integrity: sha512-w4s/msmyMqxOxaVhC8TQ2whJ77+Zd8YaSFokXL4mULQopaYb4xNJcm/PedtFQyLJn65nneySw9IwYnlMBBmFHg==}
 
   '@upstash/vector@1.2.2':
     resolution: {integrity: sha512-ptQ9xnxtKqmpNK52PCcHCszlPOLxIBfjsv7ty8RoF95pkjctS9rSjTQ3Pl9bx5VFbpDj+0dMXw88WLt6swDkgQ==}
@@ -22178,14 +22178,14 @@ snapshots:
 
   '@upstash/core-analytics@0.0.10':
     dependencies:
-      '@upstash/redis': 1.36.2
+      '@upstash/redis': 1.36.4
 
-  '@upstash/ratelimit@2.0.8(@upstash/redis@1.36.2)':
+  '@upstash/ratelimit@2.0.8(@upstash/redis@1.36.4)':
     dependencies:
       '@upstash/core-analytics': 0.0.10
-      '@upstash/redis': 1.36.2
+      '@upstash/redis': 1.36.4
 
-  '@upstash/redis@1.36.2':
+  '@upstash/redis@1.36.4':
     dependencies:
       uncrypto: 0.1.3
 
@@ -22193,7 +22193,7 @@ snapshots:
 
   '@vercel/kv@3.0.0':
     dependencies:
-      '@upstash/redis': 1.36.2
+      '@upstash/redis': 1.36.4
 
   '@vercel/ncc@0.38.4': {}
 
