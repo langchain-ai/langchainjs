@@ -12,7 +12,7 @@
     "type": "git",
     "url": "git@github.com:langchain-ai/langchainjs.git"
   },
-  "homepage": "https://github.com/langchain-ai/langchainjs/tree/main/libs/langchain-google-webauth/",
+  "homepage": "https://github.com/langchain-ai/langchainjs/tree/main/libs/providers/langchain-google-webauth/",
   "scripts": {
     "build": "turbo build:compile --filter @langchain/google-webauth --output-logs new-only",
     "build:compile": "tsdown",
