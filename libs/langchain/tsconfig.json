@@ -9,7 +9,7 @@
   "references": [
     { "path": "../langchain-core" },
     { "path": "../providers/langchain-anthropic" },
-    { "path": "../providers/langchain-cohere" },
+    { "path": "../community/langchain-cohere" },
     { "path": "../providers/langchain-openai" }
   ]
 }

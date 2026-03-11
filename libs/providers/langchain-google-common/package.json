@@ -10,7 +10,7 @@
     "type": "git",
     "url": "git@github.com:langchain-ai/langchainjs.git"
   },
-  "homepage": "https://github.com/langchain-ai/langchainjs/tree/main/libs/langchain-google-common/",
+  "homepage": "https://github.com/langchain-ai/langchainjs/tree/main/libs/providers/langchain-google-common/",
   "scripts": {
     "build": "turbo build:compile --filter @langchain/google-common --output-logs new-only",
     "build:compile": "tsdown",
