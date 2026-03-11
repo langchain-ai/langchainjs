@@ -459,12 +459,25 @@ export function convertBaseMessagesToContent(
       }
       const role = convertAuthorToRole(author);
 
-      const prevContent = acc.content[acc.content.length];
+      const prevContent = acc.content[acc.content.length - 1];
       if (
         !acc.mergeWithPreviousContent &&
         prevContent &&
         prevContent.role === role
       ) {
+        if (role === "function") {
+          // Merge consecutive function responses (e.g. parallel tool calls)
+          // into a single content entry. Gemini requires all functionResponse
+          // parts for a given model turn to be in one user turn.
+          const parts = convertMessageContentToParts(
+            message,
+            isMultimodalModel,
+            messages.slice(0, index),
+            model
+          );
+          prevContent.parts.push(...parts);
+          return acc;
+        }
         throw new Error(
           "Google Generative AI requires alternate messages between authors"
         );
