@@ -48,7 +48,7 @@
     "@types/decamelize": "^1.2.0",
     "@types/mustache": "^4",
     "@types/uuid": "^10.0.0",
-    "dotenv": "^17.2.1",
+    "dotenv": "^17.3.1",
     "dpdm": "^3.14.0",
     "eslint": "^9.34.0",
     "ml-matrix": "^6.10.4",

@@ -86,7 +86,7 @@
     "cohere-ai": "^7.14.0",
     "convex": "^1.32.0",
     "date-fns": "^4.1.0",
-    "dotenv": "^16.0.3",
+    "dotenv": "^17.3.1",
     "duck-duck-scrape": "^2.2.5",
     "exa-js": "^1.0.12",
     "firebase-admin": "^13.6.1",

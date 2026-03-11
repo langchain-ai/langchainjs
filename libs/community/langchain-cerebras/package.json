@@ -45,7 +45,7 @@
     "@langchain/tsconfig": "workspace:*",
     "@tsconfig/recommended": "^1.0.3",
     "@types/uuid": "^10",
-    "dotenv": "^16.3.1",
+    "dotenv": "^17.3.1",
     "dpdm": "^3.14.0",
     "eslint": "^9.34.0",
     "jest": "^30.2.0",
