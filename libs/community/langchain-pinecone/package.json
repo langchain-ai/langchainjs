@@ -28,7 +28,7 @@
     "format:check": "prettier --check \"src\""
   },
   "dependencies": {
-    "flat": "^5.0.2",
+    "flat": "^6.0.1",
     "uuid": "^10.0.0"
   },
   "peerDependencies": {
