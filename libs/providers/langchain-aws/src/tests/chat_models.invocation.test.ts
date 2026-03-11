@@ -305,4 +305,104 @@ describe("ChatBedrockConverse invocationParams", () => {
       }
     );
   });
+
+  describe("outputConfig invocation logic", () => {
+    const testOutputConfig = {
+      textFormat: {
+        type: "json_schema" as const,
+        structure: {
+          jsonSchema: {
+            schema: JSON.stringify({
+              type: "object",
+              properties: { name: { type: "string" } },
+            }),
+            name: "TestSchema",
+            description: "A test schema",
+          },
+        },
+      },
+    };
+
+    const overrideOutputConfig = {
+      textFormat: {
+        type: "json_schema" as const,
+        structure: {
+          jsonSchema: {
+            schema: JSON.stringify({
+              type: "object",
+              properties: { age: { type: "number" } },
+            }),
+            name: "OverrideSchema",
+          },
+        },
+      },
+    };
+
+    test("should include outputConfig in invocationParams when set", () => {
+      const model = new ChatBedrockConverse({
+        ...baseConstructorArgs,
+        outputConfig: testOutputConfig,
+      });
+      const params = model.invocationParams({});
+      expect(params.outputConfig).toEqual(testOutputConfig);
+    });
+
+    test("should not include outputConfig in invocationParams when not set", () => {
+      const model = new ChatBedrockConverse(baseConstructorArgs);
+      const params = model.invocationParams({});
+      expect(params.outputConfig).toBeUndefined();
+    });
+
+    test("should override outputConfig from call options", () => {
+      const model = new ChatBedrockConverse({
+        ...baseConstructorArgs,
+        outputConfig: testOutputConfig,
+      });
+      const params = model.invocationParams({
+        outputConfig: overrideOutputConfig,
+      });
+      expect(params.outputConfig).toEqual(overrideOutputConfig);
+    });
+
+    test("should forward outputConfig to ConverseCommand", async () => {
+      const model = new ChatBedrockConverse({
+        ...baseConstructorArgs,
+        outputConfig: testOutputConfig,
+      });
+      await model.invoke([new HumanMessage("Hello")]);
+      const input = Reflect.get(
+        ConverseCommand,
+        "lastInput"
+      ) as ConverseCommandInput;
+      expect(input.outputConfig).toEqual(testOutputConfig);
+    });
+
+    test("should forward outputConfig to ConverseStreamCommand", async () => {
+      const model = new ChatBedrockConverse({
+        ...baseConstructorArgs,
+        streaming: true,
+        outputConfig: testOutputConfig,
+      });
+      const stream = await model.stream([new HumanMessage("Hello")]);
+      const chunks = [];
+      for await (const chunk of stream) {
+        chunks.push(chunk);
+      }
+      const input = Reflect.get(
+        ConverseStreamCommand,
+        "lastInput"
+      ) as ConverseStreamCommandInput;
+      expect(input.outputConfig).toEqual(testOutputConfig);
+    });
+
+    test("should not include outputConfig in commands when not provided", async () => {
+      const model = new ChatBedrockConverse(baseConstructorArgs);
+      await model.invoke([new HumanMessage("Hello")]);
+      const input = Reflect.get(
+        ConverseCommand,
+        "lastInput"
+      ) as ConverseCommandInput;
+      expect(input.outputConfig).toBeUndefined();
+    });
+  });
 });
