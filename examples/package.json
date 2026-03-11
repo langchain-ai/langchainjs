@@ -73,7 +73,7 @@
     "@prisma/client": "^4.11.0",
     "@qdrant/js-client-rest": "^1.15.0",
     "@rockset/client": "^0.9.1",
-    "@supabase/supabase-js": "^2.45.0",
+    "@supabase/supabase-js": "^2.99.1",
     "@tensorflow/tfjs-backend-cpu": "^4.22.0",
     "@types/pg": "^8.15.5",
     "@upstash/redis": "^1.36.2",
