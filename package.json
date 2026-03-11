@@ -55,6 +55,7 @@
   "pnpm": {
     "overrides": {
       "@langchain/core": "workspace:^",
+      "langchain": "workspace:^",
       "protobufjs": "^7.2.5",
       "form-data": "^4.0.4",
       "tar": ">=7.5.11",
