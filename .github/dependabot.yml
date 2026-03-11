@@ -33,9 +33,15 @@ updates:
         update-types:
           - "major"
 
-  # Core libraries (langchain-core, langchain, langchain-classic, etc.)
+  # Core libraries (langchain-core, langchain, langchain-community, etc.)
   - package-ecosystem: npm
-    directory: "/libs/langchain-core"
+    directories:
+      - "/libs/langchain-core"
+      - "/libs/langchain"
+      - "/libs/langchain-classic"
+      - "/libs/langchain-community"
+      - "/libs/langchain-textsplitters"
+      - "/libs/langchain-mcp-adapters"
     schedule:
       interval: monthly
     open-pull-requests-limit: 10
@@ -50,83 +56,34 @@ updates:
         update-types:
           - "major"
 
+  # Provider integrations
   - package-ecosystem: npm
-    directory: "/libs/langchain"
+    directories:
+      - "/libs/providers/*"
     schedule:
       interval: monthly
-    open-pull-requests-limit: 10
-    ignore:
-      - dependency-name: "p-queue"
+    open-pull-requests-limit: 15
     groups:
-      core-libs-minor-and-patch:
+      providers-minor-and-patch:
         update-types:
           - "minor"
           - "patch"
-      core-libs-major:
+      providers-major:
         update-types:
           - "major"
 
+  # Internal tooling packages
   - package-ecosystem: npm
-    directory: "/libs/langchain-classic"
+    directories:
+      - "/internal/*"
     schedule:
       interval: monthly
-    open-pull-requests-limit: 10
-    ignore:
-      - dependency-name: "p-queue"
+    open-pull-requests-limit: 5
     groups:
-      core-libs-minor-and-patch:
+      internal-minor-and-patch:
         update-types:
           - "minor"
           - "patch"
-      core-libs-major:
-        update-types:
-          - "major"
-
-  - package-ecosystem: npm
-    directory: "/libs/langchain-textsplitters"
-    schedule:
-      interval: monthly
-    open-pull-requests-limit: 10
-    ignore:
-      - dependency-name: "p-queue"
-    groups:
-      core-libs-minor-and-patch:
-        update-types:
-          - "minor"
-          - "patch"
-      core-libs-major:
-        update-types:
-          - "major"
-
-  - package-ecosystem: npm
-    directory: "/libs/langchain-mcp-adapters"
-    schedule:
-      interval: monthly
-    open-pull-requests-limit: 10
-    ignore:
-      - dependency-name: "p-queue"
-    groups:
-      core-libs-minor-and-patch:
-        update-types:
-          - "minor"
-          - "patch"
-      core-libs-major:
-        update-types:
-          - "major"
-
-  # Community integrations
-  - package-ecosystem: npm
-    directory: "/libs/community/langchain-community"
-    schedule:
-      interval: monthly
-    open-pull-requests-limit: 10
-    ignore:
-      - dependency-name: "p-queue"
-    groups:
-      core-libs-minor-and-patch:
-        update-types:
-          - "minor"
-          - "patch"
-      core-libs-major:
+      internal-major:
         update-types:
           - "major"
