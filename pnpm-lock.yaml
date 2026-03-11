@@ -385,8 +385,8 @@ importers:
         specifier: ~5.8.3
         version: 5.8.3
       typesense:
-        specifier: ^3.0.1
-        version: 3.0.1(@babel/runtime@7.28.6)
+        specifier: ^3.0.2
+        version: 3.0.2(@babel/runtime@7.28.6)
       uuid:
         specifier: ^10.0.0
         version: 10.0.0
@@ -1381,8 +1381,8 @@ importers:
         specifier: ~5.8.3
         version: 5.8.3
       typesense:
-        specifier: ^3.0.1
-        version: 3.0.1(@babel/runtime@7.28.6)
+        specifier: ^3.0.2
+        version: 3.0.2(@babel/runtime@7.28.6)
       usearch:
         specifier: ^2.21.4
         version: 2.21.4
@@ -2248,8 +2248,8 @@ importers:
         specifier: ~5.8.3
         version: 5.8.3
       typesense:
-        specifier: ^3.0.1
-        version: 3.0.1(@babel/runtime@7.28.6)
+        specifier: ^3.0.2
+        version: 3.0.2(@babel/runtime@7.28.6)
       vitest:
         specifier: ^3.2.4
         version: 3.2.4(@types/debug@4.1.12)(@types/node@25.4.0)(jiti@2.6.1)(jsdom@28.1.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
@@ -15137,8 +15137,8 @@ packages:
     engines: {node: '>=14.17'}
     hasBin: true
 
-  typesense@3.0.1:
-    resolution: {integrity: sha512-aRzuDQlwR7s2sWw+JiR3CufrMWpzH5UAJ4XlybYczD02QPy5jCsEQiueqUu0Wiai4zW/RGYRruF3XrdEXPgPJA==}
+  typesense@3.0.2:
+    resolution: {integrity: sha512-MNspMeIdhcyH0lDVwJX2rVBB3DSXbE1t3k318JC1e1AL1/sRyovi44Aze7n9JzRxnAoFnlhkIB3kWgWGIEozbQ==}
     engines: {node: '>=18'}
     peerDependencies:
       '@babel/runtime': ^7.23.2
@@ -29890,7 +29890,7 @@ snapshots:
 
   typescript@5.9.3: {}
 
-  typesense@3.0.1(@babel/runtime@7.28.6):
+  typesense@3.0.2(@babel/runtime@7.28.6):
     dependencies:
       '@babel/runtime': 7.28.6
       axios: 1.13.6(debug@4.4.3)
