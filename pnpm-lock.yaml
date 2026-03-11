@@ -3214,8 +3214,8 @@ importers:
   libs/providers/langchain-mistralai:
     dependencies:
       '@mistralai/mistralai':
-        specifier: ^1.3.1
-        version: 1.14.0(bufferutil@4.1.0)
+        specifier: ^1.15.1
+        version: 1.15.1(bufferutil@4.1.0)
       uuid:
         specifier: ^13.0.0
         version: 13.0.0
@@ -6549,9 +6549,6 @@ packages:
   '@mendable/firecrawl-js@4.15.4':
     resolution: {integrity: sha512-uUjMMveMWrfNA85IzwPJygSaw5C1fFIHM4CWmnUUNEQBq4Zp1Aax5XPZp/Yo6zoLwjgkhr/KCN2XZ7NK519L1Q==}
     engines: {node: '>=22.0.0'}
-
-  '@mistralai/mistralai@1.14.0':
-    resolution: {integrity: sha512-6zaj2f2LCd37cRpBvCgctkDbXtYBlAC85p+u4uU/726zjtsI+sdVH34qRzkm9iE3tRb8BoaiI0/P7TD+uMvLLQ==}
 
   '@mistralai/mistralai@1.15.1':
     resolution: {integrity: sha512-fb995eiz3r0KsBGtRjFV+/iLbX+UpfalxpF+YitT3R6ukrPD4PN+FGwwmYcRFhNAzVzDUtTVxQYnjQWEnwV5nw==}
@@ -19987,15 +19984,6 @@ snapshots:
       zod-to-json-schema: 3.25.1(zod@3.25.76)
     transitivePeerDependencies:
       - debug
-
-  '@mistralai/mistralai@1.14.0(bufferutil@4.1.0)':
-    dependencies:
-      ws: 8.19.0(bufferutil@4.1.0)
-      zod: 4.3.6
-      zod-to-json-schema: 3.25.1(zod@4.3.6)
-    transitivePeerDependencies:
-      - bufferutil
-      - utf-8-validate
 
   '@mistralai/mistralai@1.15.1(bufferutil@4.1.0)':
     dependencies:
