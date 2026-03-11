@@ -1,5 +1,22 @@
 # @langchain/community
 
+## 1.1.23
+
+### Patch Changes
+
+- [#10304](https://github.com/langchain-ai/langchainjs/pull/10304) [`7560180`](https://github.com/langchain-ai/langchainjs/commit/75601809bb7c96cb664eef60f251dd58e70e0aba) Thanks [@MunemHashmi](https://github.com/MunemHashmi)! - fix(community): use generous default max_length for Milvus metadata VarChar fields
+
+- [#10253](https://github.com/langchain-ai/langchainjs/pull/10253) [`07b8619`](https://github.com/langchain-ai/langchainjs/commit/07b8619c1c5aec7618ff544e5cf2df1bfca1a9a0) Thanks [@pawel-twardziak](https://github.com/pawel-twardziak)! - fix(community): switch JiraProjectLoader to POST+JSON and propagate API errors
+
+- [#10303](https://github.com/langchain-ai/langchainjs/pull/10303) [`46fc5d8`](https://github.com/langchain-ai/langchainjs/commit/46fc5d8c6010ff2e457a9f29c3687897f131063b) Thanks [@mitchell-fox](https://github.com/mitchell-fox)! - feat(community): add jql and maxTotal params to JiraProjectLoader
+
+- [#10051](https://github.com/langchain-ai/langchainjs/pull/10051) [`e86ac89`](https://github.com/langchain-ai/langchainjs/commit/e86ac89bb9cbf63c2ef0a60fe82a76e0382ff425) Thanks [@FilipZmijewski](https://github.com/FilipZmijewski)! - fix(community): valid params check for ChatWatsonx by IBM ([#70](https://github.com/langchain-ai/langchainjs/issues/70))
+
+- Updated dependencies [[`26488b5`](https://github.com/langchain-ai/langchainjs/commit/26488b596f01b7b7fe2f1d97d07164e52365ade5), [`aacbe87`](https://github.com/langchain-ai/langchainjs/commit/aacbe872014a6e089c188336520d91dcac2f0287), [`ca826f6`](https://github.com/langchain-ai/langchainjs/commit/ca826f6fecae6087bf0dee7781ee80b587396ec1), [`a602c42`](https://github.com/langchain-ai/langchainjs/commit/a602c42db75d7e7e01cab38b12e0b65b9c0cce95), [`db7d017`](https://github.com/langchain-ai/langchainjs/commit/db7d017f7ce13cb937147aabcbfa3847d80bde9d)]:
+  - @langchain/core@1.1.32
+  - @langchain/openai@1.2.13
+  - @langchain/classic@1.0.23
+
 ## 1.1.22
 
 ### Patch Changes
