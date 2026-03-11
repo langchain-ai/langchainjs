@@ -52,6 +52,9 @@ const allModelInfo: ModelInfo[] = [
   {
     model: "gemini-embedding-001",
   },
+  {
+    model: "gemini-embedding-2-preview",
+  },
 ];
 
 type ModelInfoTest = (modelInfo: ModelInfo) => boolean;
