@@ -82,7 +82,7 @@
     "@xata.io/client": "^0.30.1",
     "@zilliz/milvus2-sdk-node": "^2.3.5",
     "axios": "^1.13.6",
-    "chromadb": "^1.5.3",
+    "chromadb": "^3.3.2",
     "cohere-ai": "^7.14.0",
     "convex": "^1.32.0",
     "date-fns": "^4.1.0",
