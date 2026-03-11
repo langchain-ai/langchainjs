@@ -462,7 +462,9 @@ export function convertToV1FromResponses(
                 : toolOutput.status === "failed"
                   ? "error"
                   : undefined,
-            output: { tools: _isArray(toolOutput.tools) ? toolOutput.tools : [] },
+            output: {
+              tools: _isArray(toolOutput.tools) ? toolOutput.tools : [],
+            },
             extras: toolSearchOutputExtras,
           };
           continue;

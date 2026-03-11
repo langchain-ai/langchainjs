@@ -1268,8 +1268,7 @@ describe("tool search", () => {
   );
 
   const getPopulation = tool(
-    async (input: { city: string }) =>
-      `Population of ${input.city}: 873,965`,
+    async (input: { city: string }) => `Population of ${input.city}: 873,965`,
     {
       name: "get_population",
       description: "Get the population of a city",

@@ -27,7 +27,10 @@ describe("OpenAI Tool Search Tool Tests", () => {
         parameters: {
           type: "object",
           properties: {
-            goal: { type: "string", description: "The goal to search tools for" },
+            goal: {
+              type: "string",
+              description: "The goal to search tools for",
+            },
           },
           required: ["goal"],
         },

@@ -90,10 +90,7 @@ export type {
 } from "./applyPatch.js";
 
 import { toolSearch } from "./toolSearch.js";
-export type {
-  ToolSearchTool,
-  ToolSearchOptions,
-} from "./toolSearch.js";
+export type { ToolSearchTool, ToolSearchOptions } from "./toolSearch.js";
 
 export const tools = {
   webSearch,

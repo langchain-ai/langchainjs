@@ -681,7 +681,9 @@ export abstract class BaseChatOpenAI<
           return tool.extras.providerToolDefinition;
         }
         // Regular tools get converted to OpenAI function format
-        const converted = this._convertChatOpenAIToolToCompletionsTool(tool, { strict });
+        const converted = this._convertChatOpenAIToolToCompletionsTool(tool, {
+          strict,
+        });
         if (isLangChainTool(tool) && tool.extras?.defer_loading === true) {
           return { ...converted, defer_loading: true };
         }

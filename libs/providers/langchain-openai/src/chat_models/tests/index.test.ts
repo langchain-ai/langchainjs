@@ -598,7 +598,10 @@ describe("ChatOpenAI", () => {
       schema: z.object({ input: z.string() }),
     });
 
-    const modelWithTools = model.bindTools([deferredTool, normalTool]) as ChatOpenAI;
+    const modelWithTools = model.bindTools([
+      deferredTool,
+      normalTool,
+    ]) as ChatOpenAI;
 
     // @ts-expect-error - defaultOptions is protected
     const tools = modelWithTools.defaultOptions.tools;
