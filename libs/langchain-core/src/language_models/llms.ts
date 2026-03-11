@@ -101,14 +101,18 @@ export abstract class BaseLLM<
       const [runnableConfig, callOptions] =
         this._separateRunnableConfigFromCallOptionsCompat(options);
       const invocationParams = this?.invocationParams(callOptions);
-      const { tools: _, ...invocationParamsWithoutTools } = invocationParams;
+      const metadataInvocationParams = Object.fromEntries(
+        Object.entries(invocationParams).filter(
+          ([k, v]) => k !== "tools" && v !== null && v !== undefined
+        )
+      );
       const callbackManager_ = CallbackManager.configure(
         runnableConfig.callbacks,
         this.callbacks,
         runnableConfig.tags,
         this.tags,
         runnableConfig.metadata,
-        { ...invocationParamsWithoutTools, ...this.metadata },
+        { ...metadataInvocationParams, ...this.metadata },
         { verbose: this.verbose }
       );
       const extra = {
@@ -239,14 +243,18 @@ export abstract class BaseLLM<
       runManagers = startedRunManagers;
     } else {
       const invocationParams = this?.invocationParams(parsedOptions);
-      const { tools: _, ...invocationParamsWithoutTools } = invocationParams;
+      const metadataInvocationParams = Object.fromEntries(
+        Object.entries(invocationParams).filter(
+          ([k, v]) => k !== "tools" && v !== null && v !== undefined
+        )
+      );
       const callbackManager_ = CallbackManager.configure(
         handledOptions.callbacks,
         this.callbacks,
         handledOptions.tags,
         this.tags,
         handledOptions.metadata,
-        { ...invocationParamsWithoutTools, ...this.metadata },
+        { ...metadataInvocationParams, ...this.metadata },
         { verbose: this.verbose }
       );
       const extra = {
@@ -352,14 +360,18 @@ export abstract class BaseLLM<
     }
   > {
     const invocationParams = this?.invocationParams(parsedOptions);
-    const { tools: _, ...invocationParamsWithoutTools } = invocationParams;
+    const metadataInvocationParams = Object.fromEntries(
+      Object.entries(invocationParams).filter(
+        ([k, v]) => k !== "tools" && v !== null && v !== undefined
+      )
+    );
     const callbackManager_ = CallbackManager.configure(
       handledOptions.callbacks,
       this.callbacks,
       handledOptions.tags,
       this.tags,
       handledOptions.metadata,
-      { ...invocationParamsWithoutTools, ...this.metadata },
+      { ...metadataInvocationParams, ...this.metadata },
       { verbose: this.verbose }
     );
     const extra = {
