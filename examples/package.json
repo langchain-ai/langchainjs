@@ -67,7 +67,7 @@
     "@langchain/xai": "workspace:*",
     "@langchain/yandex": "workspace:*",
     "@layerup/layerup-security": "^1.5.12",
-    "@opensearch-project/opensearch": "^2.2.0",
+    "@opensearch-project/opensearch": "^3.5.1",
     "@pinecone-database/pinecone": "^5.0.2",
     "@planetscale/database": "^1.8.0",
     "@prisma/client": "^4.11.0",

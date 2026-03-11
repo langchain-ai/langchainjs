@@ -84,7 +84,7 @@
     "@mozilla/readability": "^0.6.0",
     "@neondatabase/serverless": "^1.0.0",
     "@notionhq/client": "^5.11.1",
-    "@opensearch-project/opensearch": "^2.2.0",
+    "@opensearch-project/opensearch": "^3.5.1",
     "@planetscale/database": "^1.8.0",
     "@playwright/test": "^1.58.2",
     "@premai/prem-sdk": "^0.3.25",

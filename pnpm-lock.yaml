@@ -214,8 +214,8 @@ importers:
         specifier: ^1.5.12
         version: 1.6.0(encoding@0.1.13)(ws@8.19.0(bufferutil@4.1.0))(zod@3.25.76)
       '@opensearch-project/opensearch':
-        specifier: ^2.2.0
-        version: 2.13.0
+        specifier: ^3.5.1
+        version: 3.5.1
       '@pinecone-database/pinecone':
         specifier: ^5.0.2
         version: 5.1.2
@@ -1039,8 +1039,8 @@ importers:
         specifier: ^5.11.1
         version: 5.11.1
       '@opensearch-project/opensearch':
-        specifier: ^2.2.0
-        version: 2.13.0
+        specifier: ^3.5.1
+        version: 3.5.1
       '@planetscale/database':
         specifier: ^1.8.0
         version: 1.19.0
@@ -2086,8 +2086,8 @@ importers:
         specifier: ^1.5.12
         version: 1.6.0(encoding@0.1.13)(ws@8.19.0(bufferutil@4.1.0))(zod@4.3.6)
       '@opensearch-project/opensearch':
-        specifier: ^2.2.0
-        version: 2.13.0
+        specifier: ^3.5.1
+        version: 3.5.1
       '@pinecone-database/pinecone':
         specifier: ^5.0.2
         version: 5.1.2
@@ -7017,9 +7017,9 @@ packages:
   '@octokit/types@16.0.0':
     resolution: {integrity: sha512-sKq+9r1Mm4efXW1FCk7hFSeJo4QKreL/tTbR0rz/qx/r1Oa2VV83LTA/H/MuCOX7uCIJmQVRKBcbmWoySjAnSg==}
 
-  '@opensearch-project/opensearch@2.13.0':
-    resolution: {integrity: sha512-Bu3jJ7pKzumbMMeefu7/npAWAvFu5W9SlbBow1ulhluqUpqc7QoXe0KidDrMy7Dy3BQrkI6llR3cWL4lQTZOFw==}
-    engines: {node: '>=10', yarn: ^1.22.10}
+  '@opensearch-project/opensearch@3.5.1':
+    resolution: {integrity: sha512-6bf+HcuERzAtHZxrm6phjref54ABse39BpkDie/YO3AUFMCBrb3SK5okKSdT5n3+nDRuEEQLhQCl0RQV3s1qpA==}
+    engines: {node: '>=14', yarn: ^1.22.10}
 
   '@opentelemetry/api@1.9.0':
     resolution: {integrity: sha512-3giAOQvZiH5F9bMlMiv8+GSPMeqg0dbaeo58/0SlA9sxSqZhnUtxzX9/2FzyhS9sWQf5S0GJE0AKBrFqjpeYcg==}
@@ -20462,7 +20462,7 @@ snapshots:
     dependencies:
       '@octokit/openapi-types': 27.0.0
 
-  '@opensearch-project/opensearch@2.13.0':
+  '@opensearch-project/opensearch@3.5.1':
     dependencies:
       aws4: 1.13.2
       debug: 4.4.3(supports-color@8.1.1)
