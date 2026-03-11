@@ -43,7 +43,7 @@
   },
   "peerDependencies": {
     "@langchain/core": "^1.0.0",
-    "@langchain/langgraph": "^1.0.0"
+    "@langchain/langgraph": "^1.2.2"
   },
   "peerDependenciesMeta": {
     "@langchain/core": {
@@ -60,7 +60,7 @@
     "@eslint/js": "^9.36.0",
     "@langchain/core": "workspace:^",
     "@langchain/eslint": "workspace:*",
-    "@langchain/langgraph": "^1.0.0",
+    "@langchain/langgraph": "^1.2.2",
     "@langchain/openai": "workspace:*",
     "@langchain/tsconfig": "workspace:*",
     "@tsconfig/recommended": "^1.0.10",
