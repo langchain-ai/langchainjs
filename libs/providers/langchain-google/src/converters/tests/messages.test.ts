@@ -499,6 +499,58 @@ describe("convertMessagesToGeminiContents", () => {
     expect(part.fileData!.mimeType).toBe("application/pdf");
   });
 
+  test("v1 contentBlocks: text-plain block with base64 data produces inlineData part", () => {
+    const messages = [
+      new HumanMessage({
+        content: [
+          {
+            type: "text-plain" as const,
+            mimeType: "text/plain",
+            data: "SGVsbG8gd29ybGQ=",
+          },
+        ],
+        response_metadata: { output_version: "v1" },
+      }),
+    ];
+
+    const contents = convertMessagesToGeminiContents(messages);
+
+    const userContent = contents.find((c) => c.role === "user");
+    expect(userContent).toBeDefined();
+    expect(userContent!.parts).toHaveLength(1);
+
+    const part = userContent!.parts[0] as Gemini.Part.InlineData;
+    expect(part.inlineData).toBeDefined();
+    expect(part.inlineData!.mimeType).toBe("text/plain");
+    expect(part.inlineData!.data).toBe("SGVsbG8gd29ybGQ=");
+  });
+
+  test("v1 contentBlocks: file block with base64 data produces inlineData part", () => {
+    const messages = [
+      new HumanMessage({
+        content: [
+          {
+            type: "file" as const,
+            mimeType: "application/pdf",
+            data: "JVBERi0xLjQ=",
+          },
+        ],
+        response_metadata: { output_version: "v1" },
+      }),
+    ];
+
+    const contents = convertMessagesToGeminiContents(messages);
+
+    const userContent = contents.find((c) => c.role === "user");
+    expect(userContent).toBeDefined();
+    expect(userContent!.parts).toHaveLength(1);
+
+    const part = userContent!.parts[0] as Gemini.Part.InlineData;
+    expect(part.inlineData).toBeDefined();
+    expect(part.inlineData!.mimeType).toBe("application/pdf");
+    expect(part.inlineData!.data).toBe("JVBERi0xLjQ=");
+  });
+
   test("v1 contentBlocks: mixed block types all produce parts", () => {
     const messages = [
       new HumanMessage({
