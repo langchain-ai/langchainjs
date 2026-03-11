@@ -68,7 +68,7 @@ describe("UpstashRatelimitHandler", () => {
   });
 
   test("should throw error if no limits are provided", () => {
-    expect(() => new UpstashRatelimitHandler("user123", {})).toThrowError(
+    expect(() => new UpstashRatelimitHandler("user123", {})).toThrow(
       "You must pass at least one of tokenRatelimit or requestRatelimit."
     );
   });
@@ -100,7 +100,7 @@ describe("UpstashRatelimitHandler", () => {
     const handler = new UpstashRatelimitHandler("user123", {
       requestRatelimit,
     });
-    await expect(handler.handleChainStart(serialized, {})).rejects.toThrowError(
+    await expect(handler.handleChainStart(serialized, {})).rejects.toThrow(
       UpstashRatelimitError
     );
   });
@@ -112,7 +112,7 @@ describe("UpstashRatelimitHandler", () => {
     const handler = new UpstashRatelimitHandler("user123", { tokenRatelimit });
     await expect(
       handler.handleLLMStart(serialized, ["test"], "runId")
-    ).rejects.toThrowError(UpstashRatelimitError);
+    ).rejects.toThrow(UpstashRatelimitError);
   });
 
   test("should handle LLM end with token limit", async () => {

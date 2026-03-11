@@ -5,7 +5,6 @@ import { expect, jest, test } from "@jest/globals";
 import {
   DocumentCollection,
   IDocument,
-  NotFoundError,
   ZepClient,
 } from "@getzep/zep-js";
 import type { EmbeddingsInterface } from "@langchain/core/embeddings";
@@ -14,6 +13,16 @@ import { FakeEmbeddings } from "@langchain/core/utils/testing";
 import { IZepConfig, ZepVectorStore } from "../zep.js";
 
 jest.mock("@getzep/zep-js");
+
+// The installed @getzep/zep-js v2 no longer exports NotFoundError, so the
+// auto-mock leaves it undefined.  Define a local stand-in whose .name
+// property satisfies the source-code check `err.name === "NotFoundError"`.
+class NotFoundError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "NotFoundError";
+  }
+}
 
 const mockDocuments = [
   {
@@ -82,9 +91,16 @@ describe("ZepVectorStore", () => {
     };
     embeddings = new FakeEmbeddings();
 
-    jest
-      .spyOn(ZepClient, "init")
-      .mockImplementation(() => Promise.resolve(mockClient));
+    // ZepClient.init is used by the source code but was removed in zep-js v2.
+    // Since the module is auto-mocked via jest.mock, define the static method
+    // on the mock so spyOn can attach to it.
+    const zepClientRecord = ZepClient as Record<string, unknown>;
+    if (typeof zepClientRecord.init !== "function") {
+      zepClientRecord.init = jest.fn();
+    }
+    (zepClientRecord.init as jest.Mock).mockImplementation(() =>
+      Promise.resolve(mockClient)
+    );
   });
 
   test("should instantiate class successfully when a Collection exists", async () => {
@@ -93,10 +109,9 @@ describe("ZepVectorStore", () => {
     // Wait for any promises in constructor to resolve
     await new Promise(setImmediate);
 
-    expect(ZepClient.init).toHaveBeenCalledWith(
-      zepConfig.apiUrl,
-      zepConfig.apiKey
-    );
+    expect(
+      (ZepClient as Record<string, unknown>).init
+    ).toHaveBeenCalledWith(zepConfig.apiUrl, zepConfig.apiKey);
     expect(mockClient.document.getCollection).toHaveBeenCalledWith(
       zepConfig.collectionName
     );
@@ -112,10 +127,9 @@ describe("ZepVectorStore", () => {
     // Wait for any promises in constructor to resolve
     await new Promise(setImmediate);
 
-    expect(ZepClient.init).toHaveBeenCalledWith(
-      zepConfig.apiUrl,
-      zepConfig.apiKey
-    );
+    expect(
+      (ZepClient as Record<string, unknown>).init
+    ).toHaveBeenCalledWith(zepConfig.apiUrl, zepConfig.apiKey);
     expect(mockClient.document.getCollection).toHaveBeenCalledWith(
       zepConfig.collectionName
     );

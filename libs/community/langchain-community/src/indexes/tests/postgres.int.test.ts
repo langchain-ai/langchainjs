@@ -87,7 +87,7 @@ describe.skip("PostgresRecordManager", () => {
     const keys = ["a", "b", "c"];
     await expect(
       recordManager.update(keys, { timeAtLeast: 110 })
-    ).rejects.toThrowError();
+    ).rejects.toThrow();
     const readKeys = await recordManager.listKeys();
     expect(readKeys).toHaveLength(0);
 

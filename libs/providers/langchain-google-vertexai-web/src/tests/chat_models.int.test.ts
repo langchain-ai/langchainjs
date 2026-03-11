@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { test } from "@jest/globals";
+import { test } from "vitest";
 import {
   AIMessage,
   AIMessageChunk,

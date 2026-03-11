@@ -1,5 +1,4 @@
-import { test, expect } from "@jest/globals";
-import { ChatModelIntegrationTests } from "@langchain/standard-tests";
+import { ChatModelIntegrationTests } from "@langchain/standard-tests/vitest";
 import { AIMessageChunk } from "@langchain/core/messages";
 import {
   ChatGoogleGenerativeAI,
@@ -46,8 +45,4 @@ class ChatGoogleGenerativeAIStandardIntegrationTests extends ChatModelIntegratio
 }
 
 const testClass = new ChatGoogleGenerativeAIStandardIntegrationTests();
-
-test("ChatGoogleGenerativeAIStandardIntegrationTests", async () => {
-  const testResults = await testClass.runTests();
-  expect(testResults).toBe(true);
-});
+testClass.runTests("ChatGoogleGenerativeAIStandardIntegrationTests");

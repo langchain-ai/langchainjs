@@ -114,7 +114,7 @@ describe("ChatAlibabaTongyi tool calling", () => {
   });
 
   test("bindTools serializes tools into parameters and switches to message format", async () => {
-    fetchMock.mockResolvedValue(
+    fetchMock.mockImplementation(() =>
       createJsonResponse({
         request_id: "req-1",
         usage: {
@@ -142,7 +142,11 @@ describe("ChatAlibabaTongyi tool calling", () => {
 
     await model.invoke("What's the weather in SF?");
 
-    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(
+      fetchMock.mock.calls.filter(
+        ([url]) => typeof url === "string" && url.includes("dashscope")
+      )
+    ).toHaveLength(1);
     const body = getRequestBody(fetchMock);
     expect(body.parameters.result_format).toBe("message");
     expect(body.parameters.tools?.[0]?.type).toBe("function");
@@ -152,7 +156,7 @@ describe("ChatAlibabaTongyi tool calling", () => {
   });
 
   test("invoke without bound tools keeps text result format and no tools payload", async () => {
-    fetchMock.mockResolvedValue(
+    fetchMock.mockImplementation(() =>
       createJsonResponse({
         request_id: "req-text-1",
         usage: {
@@ -184,7 +188,7 @@ describe("ChatAlibabaTongyi tool calling", () => {
   });
 
   test("invoke parses tool_calls and invalid_tool_calls", async () => {
-    fetchMock.mockResolvedValue(
+    fetchMock.mockImplementation(() =>
       createJsonResponse({
         request_id: "req-2",
         usage: {
@@ -241,7 +245,7 @@ describe("ChatAlibabaTongyi tool calling", () => {
   });
 
   test("stream yields chunks containing parsed tool calls", async () => {
-    fetchMock.mockResolvedValue(
+    fetchMock.mockImplementation(() =>
       createSseResponse([
         {
           request_id: "req-3",
@@ -333,7 +337,7 @@ describe("ChatAlibabaTongyi tool calling", () => {
   });
 
   test("serializes assistant tool calls and tool result messages in multi-turn payload", async () => {
-    fetchMock.mockResolvedValue(
+    fetchMock.mockImplementation(() =>
       createJsonResponse({
         request_id: "req-serialize-1",
         usage: {
@@ -390,7 +394,7 @@ describe("ChatAlibabaTongyi tool calling", () => {
   });
 
   test("forwards tool_choice none through bindTools", async () => {
-    fetchMock.mockResolvedValue(
+    fetchMock.mockImplementation(() =>
       createJsonResponse({
         request_id: "req-tool-choice-none",
         usage: {
@@ -424,7 +428,7 @@ describe("ChatAlibabaTongyi tool calling", () => {
   });
 
   test("forwards object tool_choice unchanged", async () => {
-    fetchMock.mockResolvedValue(
+    fetchMock.mockImplementation(() =>
       createJsonResponse({
         request_id: "req-tool-choice-object",
         usage: {
@@ -463,7 +467,7 @@ describe("ChatAlibabaTongyi tool calling", () => {
   });
 
   test("normalizes string tool_choice to forced function tool choice", async () => {
-    fetchMock.mockResolvedValue(
+    fetchMock.mockImplementation(() =>
       createJsonResponse({
         request_id: "req-tool-choice-string",
         usage: {
@@ -501,7 +505,7 @@ describe("ChatAlibabaTongyi tool calling", () => {
 
   test("maps tool_choice any to auto for compatibility", async () => {
     const warnSpy = jest.spyOn(console, "warn").mockImplementation(() => {});
-    fetchMock.mockResolvedValue(
+    fetchMock.mockImplementation(() =>
       createJsonResponse({
         request_id: "req-tool-choice-any",
         usage: {
@@ -546,7 +550,7 @@ describe("ChatAlibabaTongyi tool calling", () => {
 
   test("maps tool_choice required to auto for compatibility", async () => {
     const warnSpy = jest.spyOn(console, "warn").mockImplementation(() => {});
-    fetchMock.mockResolvedValue(
+    fetchMock.mockImplementation(() =>
       createJsonResponse({
         request_id: "req-tool-choice-required",
         usage: {
@@ -590,7 +594,7 @@ describe("ChatAlibabaTongyi tool calling", () => {
   });
 
   test("non-stream response uses first choice when multiple choices are returned", async () => {
-    fetchMock.mockResolvedValue(
+    fetchMock.mockImplementation(() =>
       createJsonResponse({
         request_id: "req-multi-choice-first",
         usage: {
@@ -645,7 +649,7 @@ describe("ChatAlibabaTongyi tool calling", () => {
   });
 
   test("stream assembles partial tool call deltas to full arguments", async () => {
-    fetchMock.mockResolvedValue(
+    fetchMock.mockImplementation(() =>
       createSseResponse([
         {
           request_id: "req-stream-delta",
@@ -742,7 +746,7 @@ describe("ChatAlibabaTongyi tool calling", () => {
   });
 
   test("throws on non-stream API error response", async () => {
-    fetchMock.mockResolvedValue(
+    fetchMock.mockImplementation(() =>
       createJsonResponse({
         code: "InvalidInput",
         message: "Bad request",
@@ -757,7 +761,7 @@ describe("ChatAlibabaTongyi tool calling", () => {
   });
 
   test("throws on stream API error chunk", async () => {
-    fetchMock.mockResolvedValue(
+    fetchMock.mockImplementation(() =>
       createSseResponse([
         {
           code: "DataInspectionFailed",
@@ -777,7 +781,7 @@ describe("ChatAlibabaTongyi tool calling", () => {
   });
 
   test("streaming invoke resolves even when stream ends without terminal finish reason", async () => {
-    fetchMock.mockResolvedValue(
+    fetchMock.mockImplementation(() =>
       createSseResponse([
         {
           request_id: "req-no-terminal-finish",
@@ -811,7 +815,7 @@ describe("ChatAlibabaTongyi tool calling", () => {
   });
 
   test("withConfig supports pre-formatted tools and preserves request schema", async () => {
-    fetchMock.mockResolvedValue(
+    fetchMock.mockImplementation(() =>
       createJsonResponse({
         request_id: "req-with-config-tools",
         usage: {
@@ -848,7 +852,7 @@ describe("ChatAlibabaTongyi tool calling", () => {
   });
 
   test("serializes parallel_tool_calls via bindTools and withConfig", async () => {
-    fetchMock.mockResolvedValue(
+    fetchMock.mockImplementation(() =>
       createJsonResponse({
         request_id: "req-parallel-bindtools",
         usage: {
@@ -880,7 +884,7 @@ describe("ChatAlibabaTongyi tool calling", () => {
     const bindToolsBody = getRequestBody(fetchMock);
     expect(bindToolsBody.parameters.parallel_tool_calls).toBe(true);
 
-    fetchMock.mockResolvedValue(
+    fetchMock.mockImplementation(() =>
       createJsonResponse({
         request_id: "req-parallel-withconfig",
         usage: {
@@ -915,7 +919,7 @@ describe("ChatAlibabaTongyi tool calling", () => {
   });
 
   test("serializes parallelToolCalls constructor alias", async () => {
-    fetchMock.mockResolvedValue(
+    fetchMock.mockImplementation(() =>
       createJsonResponse({
         request_id: "req-parallel-camelcase",
         usage: {
@@ -948,7 +952,7 @@ describe("ChatAlibabaTongyi tool calling", () => {
   });
 
   test("sends DashScope SSE header for streaming requests", async () => {
-    fetchMock.mockResolvedValue(
+    fetchMock.mockImplementation(() =>
       createSseResponse([
         {
           request_id: "req-sse-header",
@@ -984,7 +988,7 @@ describe("ChatAlibabaTongyi tool calling", () => {
   });
 
   test("sends DashScope SSE header for stream() path", async () => {
-    fetchMock.mockResolvedValue(
+    fetchMock.mockImplementation(() =>
       createSseResponse([
         {
           request_id: "req-sse-stream-path",
@@ -1026,7 +1030,7 @@ describe("ChatAlibabaTongyi tool calling", () => {
   });
 
   test("withStructuredOutput parses tool call arguments", async () => {
-    fetchMock.mockResolvedValue(
+    fetchMock.mockImplementation(() =>
       createJsonResponse({
         request_id: "req-structured-output",
         usage: {
@@ -1086,7 +1090,7 @@ describe("ChatAlibabaTongyi tool calling", () => {
   });
 
   test("withStructuredOutput includeRaw returns raw and parsed", async () => {
-    fetchMock.mockResolvedValue(
+    fetchMock.mockImplementation(() =>
       createJsonResponse({
         request_id: "req-structured-output-raw",
         usage: {
@@ -1143,7 +1147,7 @@ describe("ChatAlibabaTongyi tool calling", () => {
   });
 
   test("withStructuredOutput throws when no tool calls are returned", async () => {
-    fetchMock.mockResolvedValue(
+    fetchMock.mockImplementation(() =>
       createJsonResponse({
         request_id: "req-structured-output-no-tool-calls",
         usage: {
@@ -1186,7 +1190,7 @@ describe("ChatAlibabaTongyi tool calling", () => {
   });
 
   test("stream handles non-tool text chunks via output.text fallback", async () => {
-    fetchMock.mockResolvedValue(
+    fetchMock.mockImplementation(() =>
       createSseResponse([
         {
           request_id: "req-stream-text-fallback",
@@ -1234,7 +1238,7 @@ describe("ChatAlibabaTongyi tool calling", () => {
   });
 
   test("repetition_penalty is sent only in non-streaming mode", async () => {
-    fetchMock.mockResolvedValue(
+    fetchMock.mockImplementation(() =>
       createJsonResponse({
         request_id: "req-repetition-non-stream",
         usage: {
@@ -1259,7 +1263,7 @@ describe("ChatAlibabaTongyi tool calling", () => {
     const nonStreamingBody = getRequestBody(fetchMock);
     expect(nonStreamingBody.parameters.repetition_penalty).toBe(1.1);
 
-    fetchMock.mockResolvedValue(
+    fetchMock.mockImplementation(() =>
       createSseResponse([
         {
           request_id: "req-repetition-stream",

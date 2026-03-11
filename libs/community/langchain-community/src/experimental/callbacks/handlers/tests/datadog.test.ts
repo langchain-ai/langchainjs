@@ -135,7 +135,7 @@ test("Test llm span with message input", async () => {
 
   await tracer.persistRun(run);
 
-  expect(fetch).toBeCalledWith(expect.any(String), {
+  expect(fetch).toHaveBeenCalledWith(expect.any(String), {
     body: expect.any(String),
     headers: expect.any(Object),
     method: "POST",
@@ -195,7 +195,7 @@ test("Test llm span with prompt input", async () => {
 
   await tracer.persistRun(run);
 
-  expect(fetch).toBeCalledWith(expect.any(String), {
+  expect(fetch).toHaveBeenCalledWith(expect.any(String), {
     body: expect.any(String),
     headers: expect.any(Object),
     method: "POST",
@@ -251,7 +251,7 @@ test("Test workflow span", async () => {
 
   await tracer.persistRun(run);
 
-  expect(fetch).toBeCalledWith(expect.any(String), {
+  expect(fetch).toHaveBeenCalledWith(expect.any(String), {
     body: expect.any(String),
     headers: expect.any(Object),
     method: "POST",
@@ -306,7 +306,7 @@ test("Test tool span", async () => {
 
   await tracer.persistRun(run);
 
-  expect(fetch).toBeCalledWith(expect.any(String), {
+  expect(fetch).toHaveBeenCalledWith(expect.any(String), {
     body: expect.any(String),
     headers: expect.any(Object),
     method: "POST",
@@ -372,7 +372,7 @@ test("Test retrieval span", async () => {
 
   await tracer.persistRun(run);
 
-  expect(fetch).toBeCalledWith(expect.any(String), {
+  expect(fetch).toHaveBeenCalledWith(expect.any(String), {
     body: expect.any(String),
     headers: expect.any(Object),
     method: "POST",

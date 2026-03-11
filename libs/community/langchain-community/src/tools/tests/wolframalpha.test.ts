@@ -31,7 +31,7 @@ describe("wolfram alpha test suite", () => {
     const parsedUrl = new URL(url);
     const params = new URLSearchParams(parsedUrl.search);
 
-    expect(fetchMock).toBeCalledTimes(1);
+    expect(fetchMock).toHaveBeenCalledTimes(1);
     expect(params.get("appid")).toBe(MOCK_APP_ID);
     expect(params.get("input")).toBe(QUERY_1);
   });

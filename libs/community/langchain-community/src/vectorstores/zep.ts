@@ -104,7 +104,7 @@ export class ZepVectorStore extends VectorStore {
       // eslint-disable-next-line no-instanceof/no-instanceof
       if (err instanceof Error) {
         // eslint-disable-next-line no-instanceof/no-instanceof
-        if (err instanceof NotFoundError || err.name === "NotFoundError") {
+        if ((typeof NotFoundError === "function" && err instanceof NotFoundError) || err.name === "NotFoundError") {
           await this.createCollection(args);
         } else {
           throw err;

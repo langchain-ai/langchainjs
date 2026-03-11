@@ -101,7 +101,7 @@ describe("Chroma", () => {
     const chroma = new Chroma(new FakeEmbeddings(), args);
     chroma.numDimensions = 3; // Mismatched numDimensions
 
-    await expect(chroma.addVectors(vectors, documents)).rejects.toThrowError();
+    await expect(chroma.addVectors(vectors, documents)).rejects.toThrow();
   });
 
   test("should perform similarity search and return results", async () => {

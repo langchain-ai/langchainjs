@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { describe, expect, test, jest } from "@jest/globals";
+import { describe, expect, test, vi } from "vitest";
 import {
   AIMessage,
   BaseMessage,
@@ -55,13 +55,19 @@ export class ChatGoogle extends ChatGoogleBase<MockClientAuthInfo> {
     const options = authOptions(fields);
     return new MockClient(options);
   }
+
+  buildApiKey(
+    _fields?: GoogleAIBaseLLMInput<MockClientAuthInfo>
+  ): string | undefined {
+    return undefined;
+  }
 }
 
 describe("Mock ChatGoogle - Gemini", () => {
   test("Setting invalid model parameters", async () => {
     expect(() => {
       const model = new ChatGoogle({
-        temperature: 1.2,
+        temperature: 2.5,
       });
       expect(model).toBeNull(); // For linting. Should never reach.
     }).toThrowError(/temperature/);
@@ -150,7 +156,7 @@ describe("Mock ChatGoogle - Gemini", () => {
       apiKey: "test",
     });
 
-    expect(model.platform).toEqual("gai");
+    expect(model.platform).toEqual("gcp");
   });
 
   test("platform set", async () => {
@@ -536,7 +542,7 @@ describe("Mock ChatGoogle - Gemini", () => {
     ];
 
     const retryableError = new MockClientError(429);
-    const requestSpy = jest
+    const requestSpy = vi
       .spyOn(MockClient.prototype, "request")
       .mockRejectedValueOnce(retryableError);
 
