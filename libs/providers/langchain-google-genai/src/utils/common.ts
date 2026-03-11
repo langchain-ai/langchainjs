@@ -466,9 +466,6 @@ export function convertBaseMessagesToContent(
         prevContent.role === role
       ) {
         if (role === "function") {
-          // Merge consecutive function responses (e.g. parallel tool calls)
-          // into a single content entry. Gemini requires all functionResponse
-          // parts for a given model turn to be in one user turn.
           const parts = convertMessageContentToParts(
             message,
             isMultimodalModel,
