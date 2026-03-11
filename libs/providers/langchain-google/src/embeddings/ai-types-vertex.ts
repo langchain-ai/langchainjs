@@ -58,7 +58,7 @@ export namespace Vertex {
 
   export interface Request {
     instances: Instance[];
-    parameters: Params;
+    parameters?: Params;
   }
 
   export interface PredictionContent {

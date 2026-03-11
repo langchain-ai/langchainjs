@@ -182,7 +182,8 @@ export abstract class BaseGoogleEmbeddings<TOutput = number[]>
   }
 
   get isMultimodal(): boolean {
-    return this.model.startsWith("multimodal");
+    const isGeminiMultimodal = this.model.startsWith("gemini") && (this.model !== 'gemini-embedding-001');
+    return this.model.startsWith("multimodal") || isGeminiMultimodal;
   }
 
   protected _convertDocumentsToBodyAIStudio(documents: ContentBlock.Standard[]): AIStudio.Request {
@@ -255,10 +256,13 @@ export abstract class BaseGoogleEmbeddings<TOutput = number[]>
     const parameters: Vertex.Params = {
       outputDimensionality: this.outputDimensionality,
     }
-    return {
+    const body: Vertex.Request = {
       instances,
-      parameters,
     }
+    if (Object.values(parameters).some((v) => v !== undefined)) {
+      body.parameters = parameters;
+    }
+    return body;
   }
 
   protected _convertDocumentsToBody(documents: ContentBlock.Standard[]) {
