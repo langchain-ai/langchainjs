@@ -997,6 +997,76 @@ test("getMessageAuthor should return message type, not custom names", () => {
   expect(getMessageAuthor(toolMessage)).toBe("tool");
 });
 
+test("convertBaseMessagesToContent merges consecutive ToolMessages into a single content entry", () => {
+  const messages = [
+    new HumanMessage("Use both tools"),
+    new AIMessage({
+      content: "",
+      tool_calls: [
+        { name: "get_weather", args: { location: "NYC" }, id: "call_1" },
+        { name: "get_time", args: { timezone: "EST" }, id: "call_2" },
+      ],
+    }),
+    new ToolMessage({
+      content: '{"temp": "20C"}',
+      tool_call_id: "call_1",
+      name: "get_weather",
+    }),
+    new ToolMessage({
+      content: '{"time": "12:00"}',
+      tool_call_id: "call_2",
+      name: "get_time",
+    }),
+  ];
+
+  const result = convertBaseMessagesToContent(messages, false);
+
+  expect(result).toHaveLength(3);
+  expect(result[0].role).toBe("user");
+  expect(result[1].role).toBe("model");
+  expect(result[2].role).toBe("user");
+  expect(result[2].parts).toHaveLength(2);
+  expect(result[2].parts[0]).toEqual({
+    functionResponse: {
+      name: "get_weather",
+      response: { result: '{"temp": "20C"}' },
+    },
+  });
+  expect(result[2].parts[1]).toEqual({
+    functionResponse: {
+      name: "get_time",
+      response: { result: '{"time": "12:00"}' },
+    },
+  });
+});
+
+test("convertBaseMessagesToContent merges three or more consecutive ToolMessages", () => {
+  const messages = [
+    new HumanMessage("Use all tools"),
+    new AIMessage({
+      content: "",
+      tool_calls: [
+        { name: "tool_a", args: {}, id: "a" },
+        { name: "tool_b", args: {}, id: "b" },
+        { name: "tool_c", args: {}, id: "c" },
+      ],
+    }),
+    new ToolMessage({ content: "result_a", tool_call_id: "a", name: "tool_a" }),
+    new ToolMessage({ content: "result_b", tool_call_id: "b", name: "tool_b" }),
+    new ToolMessage({ content: "result_c", tool_call_id: "c", name: "tool_c" }),
+  ];
+
+  const result = convertBaseMessagesToContent(messages, false);
+
+  expect(result).toHaveLength(3);
+  expect(result[2].parts).toHaveLength(3);
+  expect(result[2].parts.map((p: Record<string, unknown>) => (p.functionResponse as Record<string, unknown>)?.name)).toEqual([
+    "tool_a",
+    "tool_b",
+    "tool_c",
+  ]);
+});
+
 test("convertBaseMessagesToContent should handle AIMessages with custom names", () => {
   const messages = [
     new HumanMessage({ content: "What is 2+2?" }),
