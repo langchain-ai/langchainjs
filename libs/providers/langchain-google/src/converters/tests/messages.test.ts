@@ -212,17 +212,66 @@ describe("convertMessagesToGeminiContents", () => {
     const contents = convertMessagesToGeminiContents(messages);
 
     const toolResponseContents = contents.filter((c) => c.role === "function");
-    expect(toolResponseContents).toHaveLength(2);
+    expect(toolResponseContents).toHaveLength(1);
 
-    const firstResponse = toolResponseContents[0].parts.find(
+    const parts = toolResponseContents[0].parts.filter(
       (p) => "functionResponse" in p && p.functionResponse
-    ) as Gemini.Part.FunctionResponse;
+    );
+    expect(parts).toHaveLength(2);
+
+    const firstResponse = parts[0] as Gemini.Part.FunctionResponse;
     expect(firstResponse.functionResponse!.name).toBe("get_weather");
 
-    const secondResponse = toolResponseContents[1].parts.find(
-      (p) => "functionResponse" in p && p.functionResponse
-    ) as Gemini.Part.FunctionResponse;
+    const secondResponse = parts[1] as Gemini.Part.FunctionResponse;
     expect(secondResponse.functionResponse!.name).toBe("get_time");
+  });
+
+  test("merges consecutive ToolMessages into a single function turn for parallel tool calls (legacy path)", () => {
+    const messages = [
+      new HumanMessage("What's the weather in Paris and London?"),
+      new AIMessage({
+        content: "",
+        tool_calls: [
+          {
+            name: "get_weather",
+            args: { city: "Paris" },
+            id: "call-paris",
+            type: "tool_call",
+          },
+          {
+            name: "get_weather",
+            args: { city: "London" },
+            id: "call-london",
+            type: "tool_call",
+          },
+        ],
+      }),
+      new ToolMessage({
+        content: "18°C, partly cloudy",
+        tool_call_id: "call-paris",
+      }),
+      new ToolMessage({
+        content: "14°C, rainy",
+        tool_call_id: "call-london",
+      }),
+    ];
+
+    const contents = convertMessagesToGeminiContents(messages);
+
+    // Should produce: user, function (single merged turn)
+    // The AIMessage with empty content and tool_calls produces no model content block
+    expect(contents).toHaveLength(2);
+
+    const functionTurn = contents[1];
+    expect(functionTurn.role).toBe("function");
+    expect(functionTurn.parts).toHaveLength(2);
+
+    const responses = functionTurn.parts.filter(
+      (p) => "functionResponse" in p
+    ) as Gemini.Part.FunctionResponse[];
+    expect(responses).toHaveLength(2);
+    expect(responses[0].functionResponse!.id).toBe("call-paris");
+    expect(responses[1].functionResponse!.id).toBe("call-london");
   });
 
   test("falls back to ToolMessage.name when tool call lookup succeeds (legacy path)", () => {
