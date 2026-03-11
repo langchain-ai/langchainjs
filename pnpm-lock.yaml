@@ -891,8 +891,8 @@ importers:
         specifier: workspace:*
         version: link:../../providers/langchain-openai
       binary-extensions:
-        specifier: ^2.2.0
-        version: 2.3.0
+        specifier: ^3.1.0
+        version: 3.1.0
       flat:
         specifier: ^5.0.2
         version: 5.0.2
@@ -9360,6 +9360,10 @@ packages:
   binary-extensions@2.3.0:
     resolution: {integrity: sha512-Ceh+7ox5qe7LJuLHoY0feh3pHuUDHAcRUeyL2VYghZwfpkNIy/+8Ocg0a3UuSoYzavmylwuLWQOf3hl0jjMMIw==}
     engines: {node: '>=8'}
+
+  binary-extensions@3.1.0:
+    resolution: {integrity: sha512-Jvvd9hy1w+xUad8+ckQsWA/V1AoyubOvqn0aygjMOVM4BfIaRav1NFS3LsTSDaV4n4FtcCtQXvzep1E6MboqwQ==}
+    engines: {node: '>=18.20'}
 
   binaryen@123.0.0:
     resolution: {integrity: sha512-/hls/a309aZCc0itqP6uhoR+5DsKSlJVfB8Opd2BY9Ndghs84IScTunlyidyF4r2Xe3lQttnfBNIDjaNpj6mTw==}
@@ -22986,6 +22990,8 @@ snapshots:
   bignumber.js@9.3.1: {}
 
   binary-extensions@2.3.0: {}
+
+  binary-extensions@3.1.0: {}
 
   binaryen@123.0.0: {}
 

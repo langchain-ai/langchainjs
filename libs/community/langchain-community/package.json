@@ -34,7 +34,7 @@
   "dependencies": {
     "@langchain/classic": "workspace:*",
     "@langchain/openai": "workspace:*",
-    "binary-extensions": "^2.2.0",
+    "binary-extensions": "^3.1.0",
     "flat": "^5.0.2",
     "js-yaml": "^4.1.1",
     "langsmith": ">=0.4.0 <1.0.0",
