@@ -44,12 +44,12 @@
     "@types/semver": "^7",
     "commander": "^11.1.0",
     "dotenv": "^16.0.3",
-    "lint-staged": "^16.3.2",
+    "lint-staged": "^16.3.3",
     "prettier": "^3.5.0",
     "semver": "^7.7.4",
     "tsdown": "^0.20.3",
     "tsx": "^4.21.0",
-    "turbo": "^2.8.13",
+    "turbo": "^2.8.16",
     "typescript": "^5.9.3"
   },
   "pnpm": {
