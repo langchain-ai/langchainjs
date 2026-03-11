@@ -89,12 +89,12 @@ export interface ChatBedrockConverseInput
 
   /**
    * Model to use.
-   * For example, "anthropic.claude-3-haiku-20240307-v1:0", this is equivalent to the modelId property in the
+   * For example, "anthropic.claude-haiku-4-5-20251001-v1:0", this is equivalent to the modelId property in the
    * list-foundation-models api.
    * See the below link for a full list of models.
    * @link https://docs.aws.amazon.com/bedrock/latest/userguide/model-ids.html#model-ids-arns
    *
-   * @default anthropic.claude-3-haiku-20240307-v1:0
+   * @default anthropic.claude-haiku-4-5-20251001-v1:0
    */
   model?: string;
 
@@ -693,7 +693,7 @@ export class ChatBedrockConverse
     };
   }
 
-  model = "anthropic.claude-3-haiku-20240307-v1:0";
+  model = "anthropic.claude-haiku-4-5-20251001-v1:0";
 
   applicationInferenceProfile?: string;
 

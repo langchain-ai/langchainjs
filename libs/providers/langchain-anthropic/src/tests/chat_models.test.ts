@@ -22,17 +22,17 @@ import { AnthropicToolExtrasSchema } from "../utils/tools.js";
 import { AnthropicMessageCreateParams } from "../types.js";
 
 test("constructor supports model shorthand for ChatAnthropicMessages", () => {
-  const model = new ChatAnthropicMessages("claude-3-haiku-20240307", {
+  const model = new ChatAnthropicMessages("claude-haiku-4-5-20251001", {
     anthropicApiKey: "testing",
   });
 
-  expect(model.model).toBe("claude-3-haiku-20240307");
-  expect(model.modelName).toBe("claude-3-haiku-20240307");
+  expect(model.model).toBe("claude-haiku-4-5-20251001");
+  expect(model.modelName).toBe("claude-haiku-4-5-20251001");
 });
 
 test("withStructuredOutput with output validation", async () => {
   const model = new ChatAnthropic({
-    modelName: "claude-3-haiku-20240307",
+    modelName: "claude-haiku-4-5-20251001",
     temperature: 0,
     anthropicApiKey: "testing",
   });
@@ -80,7 +80,7 @@ test("withStructuredOutput with output validation", async () => {
 
 test("withStructuredOutput with proper output", async () => {
   const model = new ChatAnthropic({
-    modelName: "claude-3-haiku-20240307",
+    modelName: "claude-haiku-4-5-20251001",
     temperature: 0,
     anthropicApiKey: "testing",
   });
@@ -270,7 +270,7 @@ test("Can properly format anthropic messages when AIMessage content is an empty 
 
 test("invocationParams includes container when provided in call options", () => {
   const model = new ChatAnthropic({
-    modelName: "claude-3-haiku-20240307",
+    modelName: "claude-haiku-4-5-20251001",
     temperature: 0,
     anthropicApiKey: "testing",
   });
@@ -282,7 +282,7 @@ test("invocationParams includes container when provided in call options", () => 
 
 test("invocationParams does not include container when not provided", () => {
   const model = new ChatAnthropic({
-    modelName: "claude-3-haiku-20240307",
+    modelName: "claude-haiku-4-5-20251001",
     temperature: 0,
     anthropicApiKey: "testing",
   });
@@ -294,7 +294,7 @@ test("invocationParams does not include container when not provided", () => {
 
 test("invocationParams includes container with thinking enabled", () => {
   const model = new ChatAnthropic({
-    modelName: "claude-3-haiku-20240307",
+    modelName: "claude-haiku-4-5-20251001",
     temperature: 1,
     anthropicApiKey: "testing",
     thinking: { type: "enabled", budget_tokens: 1000 },
@@ -308,7 +308,7 @@ test("invocationParams includes container with thinking enabled", () => {
 
 test("invocationParams returns undefined tools when tools is undefined", () => {
   const model = new ChatAnthropic({
-    modelName: "claude-3-haiku",
+    modelName: "claude-haiku-4-5",
     temperature: 0,
     apiKey: "testing",
   });
@@ -320,7 +320,7 @@ test("invocationParams returns undefined tools when tools is undefined", () => {
 
 test("invocationParams returns empty array when tools is empty array", () => {
   const model = new ChatAnthropic({
-    modelName: "claude-3-haiku",
+    modelName: "claude-haiku-4-5",
     temperature: 0,
     apiKey: "testing",
   });
@@ -510,7 +510,7 @@ describe("Tool extras", () => {
     );
 
     const model = new ChatAnthropic({
-      modelName: "claude-3-haiku-20240307",
+      modelName: "claude-haiku-4-5-20251001",
       anthropicApiKey: "testing",
     });
 
@@ -540,7 +540,7 @@ describe("Tool extras", () => {
     );
 
     const model = new ChatAnthropic({
-      modelName: "claude-3-haiku-20240307",
+      modelName: "claude-haiku-4-5-20251001",
       anthropicApiKey: "testing",
     });
 
@@ -576,7 +576,7 @@ describe("Tool extras", () => {
     );
 
     const model = new ChatAnthropic({
-      modelName: "claude-3-haiku-20240307",
+      modelName: "claude-haiku-4-5-20251001",
       anthropicApiKey: "testing",
     });
 
@@ -617,7 +617,7 @@ describe("Tool extras", () => {
     );
 
     const model = new ChatAnthropic({
-      modelName: "claude-3-haiku-20240307",
+      modelName: "claude-haiku-4-5-20251001",
       anthropicApiKey: "testing",
     });
 
@@ -651,7 +651,7 @@ describe("Tool extras validation", () => {
 describe("formatStructuredToolToAnthropic", () => {
   test("returns undefined when tools is undefined", () => {
     const model = new ChatAnthropic({
-      modelName: "claude-3-haiku-20240307",
+      modelName: "claude-haiku-4-5-20251001",
       anthropicApiKey: "testing",
     });
 
@@ -662,7 +662,7 @@ describe("formatStructuredToolToAnthropic", () => {
 
   test("returns empty array when tools is empty array", () => {
     const model = new ChatAnthropic({
-      modelName: "claude-3-haiku-20240307",
+      modelName: "claude-haiku-4-5-20251001",
       anthropicApiKey: "testing",
     });
 
@@ -689,7 +689,7 @@ describe("Tool search beta auto-append", () => {
     );
 
     const model = new ChatAnthropic({
-      modelName: "claude-3-haiku-20240307",
+      modelName: "claude-haiku-4-5-20251001",
       anthropicApiKey: "testing",
     });
 
@@ -725,7 +725,7 @@ describe("Tool search beta auto-append", () => {
     );
 
     const model = new ChatAnthropic({
-      modelName: "claude-3-haiku-20240307",
+      modelName: "claude-haiku-4-5-20251001",
       anthropicApiKey: "testing",
     });
 
@@ -758,7 +758,7 @@ describe("Tool search beta auto-append", () => {
     );
 
     const model = new ChatAnthropic({
-      modelName: "claude-3-haiku-20240307",
+      modelName: "claude-haiku-4-5-20251001",
       anthropicApiKey: "testing",
     });
 
@@ -1802,7 +1802,7 @@ describe("withStructuredOutput - StandardSchema", () => {
 
   test("functionCalling with valid output parses correctly", async () => {
     const model = new ChatAnthropic({
-      modelName: "claude-3-haiku-20240307",
+      modelName: "claude-haiku-4-5-20251001",
       temperature: 0,
       anthropicApiKey: "testing",
     });
@@ -1835,7 +1835,7 @@ describe("withStructuredOutput - StandardSchema", () => {
 
   test("functionCalling with invalid output throws OutputParserException", async () => {
     const model = new ChatAnthropic({
-      modelName: "claude-3-haiku-20240307",
+      modelName: "claude-haiku-4-5-20251001",
       temperature: 0,
       anthropicApiKey: "testing",
     });
@@ -1864,7 +1864,7 @@ describe("withStructuredOutput - StandardSchema", () => {
 
   test("functionCalling with custom name", async () => {
     const model = new ChatAnthropic({
-      modelName: "claude-3-haiku-20240307",
+      modelName: "claude-haiku-4-5-20251001",
       temperature: 0,
       anthropicApiKey: "testing",
     });
@@ -1907,7 +1907,7 @@ describe("withStructuredOutput - StandardSchema", () => {
       ],
     });
     const model = new ChatAnthropic({
-      modelName: "claude-3-haiku-20240307",
+      modelName: "claude-haiku-4-5-20251001",
       temperature: 0,
       anthropicApiKey: "testing",
     });
