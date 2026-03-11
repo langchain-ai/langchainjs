@@ -112,7 +112,7 @@
     "weaviate-client": "^3.5.2",
     "zod-to-json-schema": "^3.22.3",
     "@eslint/js": "^9.36.0",
-    "@getzep/zep-cloud": "^1.0.12",
+    "@getzep/zep-cloud": "^3.18.0",
     "@getzep/zep-js": "^2.0.2",
     "@langchain/eslint": "workspace:*",
     "@tsconfig/recommended": "^1.0.2",

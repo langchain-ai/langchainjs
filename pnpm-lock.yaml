@@ -97,8 +97,8 @@ importers:
         specifier: ^7.7.1
         version: 7.7.1
       '@getzep/zep-cloud':
-        specifier: ^1.0.12
-        version: 1.0.12(@langchain/core@libs+langchain-core)(encoding@0.1.13)(langchain@libs+langchain)
+        specifier: ^3.18.0
+        version: 3.18.0
       '@getzep/zep-js':
         specifier: ^2.0.2
         version: 2.0.2(encoding@0.1.13)
@@ -976,8 +976,8 @@ importers:
         specifier: ^7.7.1
         version: 7.7.1
       '@getzep/zep-cloud':
-        specifier: ^1.0.6
-        version: 1.0.12(@langchain/core@libs+langchain-core)(encoding@0.1.13)(langchain@libs+langchain)
+        specifier: ^3.18.0
+        version: 3.18.0
       '@getzep/zep-js':
         specifier: ^2.0.2
         version: 2.0.2(encoding@0.1.13)
@@ -1978,8 +1978,8 @@ importers:
         specifier: ^7.7.1
         version: 7.7.1
       '@getzep/zep-cloud':
-        specifier: ^1.0.12
-        version: 1.0.12(@langchain/core@libs+langchain-core)(encoding@0.1.13)(langchain@libs+langchain)
+        specifier: ^3.18.0
+        version: 3.18.0
       '@getzep/zep-js':
         specifier: ^2.0.2
         version: 2.0.2(encoding@0.1.13)
@@ -5788,16 +5788,9 @@ packages:
     resolution: {integrity: sha512-OMxi4fc+d9s6rbmE1TC9/8tQ1Kb571dFrNDTBX8aAQa5HuKZVQHO9ye44kp52WZz4T8nyWH48i7NJ1SYBS9k7Q==}
     engines: {node: '>=18.0.0'}
 
-  '@getzep/zep-cloud@1.0.12':
-    resolution: {integrity: sha512-bqs8zetYaducNneOq9kU1ciW8IfuiPzGOGqLUwFLv0982bobe4HsZTKeY1/Pt0bQUf6/V1VWYT8vFHSCj/qy4A==}
-    peerDependencies:
-      '@langchain/core': workspace:^
-      langchain: workspace:^
-    peerDependenciesMeta:
-      '@langchain/core':
-        optional: true
-      langchain:
-        optional: true
+  '@getzep/zep-cloud@3.18.0':
+    resolution: {integrity: sha512-Yca399So17gt+rTEC9RmQYxd1EziB5U9fv7tqLOD4KXIsDEEXbpwSFOb76HgYuLy3jORBm2FOo9H7ZHM4jt6eQ==}
+    engines: {node: '>=18.0.0'}
 
   '@getzep/zep-js@2.0.2':
     resolution: {integrity: sha512-Xf2oZIYBE70ALDvemajk4EH6NcLEeUXKw5aQkzPL1piw5GefrtPbrKNhlkZaO4GbXo9a6SK9xr84yUnb+9BoeA==}
@@ -19065,18 +19058,9 @@ snapshots:
     dependencies:
       mime-types: 2.1.35
 
-  '@getzep/zep-cloud@1.0.12(@langchain/core@libs+langchain-core)(encoding@0.1.13)(langchain@libs+langchain)':
+  '@getzep/zep-cloud@3.18.0':
     dependencies:
-      form-data: 4.0.5
-      node-fetch: 2.7.0(encoding@0.1.13)
-      qs: 6.11.2
-      url-join: 4.0.1
       zod: 3.25.76
-    optionalDependencies:
-      '@langchain/core': link:libs/langchain-core
-      langchain: link:libs/langchain
-    transitivePeerDependencies:
-      - encoding
 
   '@getzep/zep-js@2.0.2(encoding@0.1.13)':
     dependencies:
