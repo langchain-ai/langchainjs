@@ -188,7 +188,7 @@
     "pickleparser": "^0.2.1",
     "playwright": "^1.58.2",
     "portkey-ai": "^3.0.3",
-    "prettier": "^3.5.0",
+    "prettier": "^3.8.1",
     "puppeteer": "^24.38.0",
     "pyodide": "^0.29.3",
     "redis": "^4.6.6",

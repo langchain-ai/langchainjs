@@ -75,7 +75,7 @@
     "express": "^5.2.1",
     "langchain": "workspace:*",
     "npm-run-all2": "^8.0.4",
-    "prettier": "^3.6.2",
+    "prettier": "^3.8.1",
     "ts-node": "^10.9.2",
     "typescript": "~5.8.3",
     "typescript-eslint": "^8.45.0",

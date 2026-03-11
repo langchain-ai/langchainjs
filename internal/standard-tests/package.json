@@ -37,7 +37,7 @@
     "@tsconfig/recommended": "^1.0.3",
     "dpdm": "^3.14.0",
     "eslint": "^9.34.0",
-    "prettier": "^3.5.0",
+    "prettier": "^3.8.1",
     "typescript": "~5.9.3"
   },
   "peerDependencies": {

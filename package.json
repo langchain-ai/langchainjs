@@ -45,7 +45,7 @@
     "commander": "^11.1.0",
     "dotenv": "^16.0.3",
     "lint-staged": "^16.3.2",
-    "prettier": "^3.5.0",
+    "prettier": "^3.8.1",
     "semver": "^7.7.4",
     "tsdown": "^0.21.2",
     "tsx": "^4.21.0",
