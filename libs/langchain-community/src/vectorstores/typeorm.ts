@@ -29,6 +29,16 @@ export class TypeORMVectorStoreDocument extends Document {
 const defaultDocumentTableName = "documents";
 
 /**
+ * Sanitizes a SQL identifier (table name or schema name) by escaping
+ * internal double quotes and wrapping in double quotes.
+ * This prevents SQL injection through identifier names.
+ */
+function quoteIdentifier(identifier: string): string {
+  // Escape any double quotes within the identifier by doubling them (SQL standard)
+  return `"${identifier.replace(/"/g, '""')}"`;
+}
+
+/**
  * Class that provides an interface to a Postgres vector database. It
  * extends the `VectorStore` base class and implements methods for adding
  * documents and vectors, performing similarity searches, and ensuring the
@@ -186,7 +196,7 @@ export class TypeORMVectorStore extends VectorStore {
 
     const queryString = `
       SELECT *, embedding <=> $1 as "_distance"
-      FROM ${this.tableName}
+      FROM ${this.getTablePath()}
       WHERE metadata @> $2
       ORDER BY "_distance" ASC
       LIMIT $3;`;
@@ -227,9 +237,9 @@ export class TypeORMVectorStore extends VectorStore {
   }
 
   private getTablePath() {
-    if (!this.schemaName) return this.tableName;
+    if (!this.schemaName) return quoteIdentifier(this.tableName);
 
-    return `"${this.schemaName}"."${this.tableName}"`;
+    return `${quoteIdentifier(this.schemaName)}.${quoteIdentifier(this.tableName)}`;
   }
 
   /**
