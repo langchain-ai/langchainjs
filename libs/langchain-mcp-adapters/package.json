@@ -54,10 +54,10 @@
     }
   },
   "optionalDependencies": {
-    "extended-eventsource": "^1.7.0"
+    "extended-eventsource": "^2.1.0"
   },
   "devDependencies": {
-    "@eslint/js": "^9.36.0",
+    "@eslint/js": "^10.0.1",
     "@langchain/core": "workspace:^",
     "@langchain/eslint": "workspace:*",
     "@langchain/langgraph": "^1.0.0",
@@ -67,10 +67,10 @@
     "@types/debug": "^4.1.12",
     "@types/express": "^5.0.6",
     "@types/node": "^25.2.3",
-    "@vitest/coverage-v8": "^3.2.4",
-    "dotenv": "^16.6.1",
-    "dpdm": "^3.14.0",
-    "eslint": "^9.36.0",
+    "@vitest/coverage-v8": "^4.0.18",
+    "dotenv": "^17.3.1",
+    "dpdm": "^4.0.1",
+    "eslint": "^10.0.3",
     "eventsource": "^4.1.0",
     "express": "^5.2.1",
     "langchain": "workspace:*",
@@ -79,7 +79,7 @@
     "ts-node": "^10.9.2",
     "typescript": "~5.8.3",
     "typescript-eslint": "^8.45.0",
-    "vitest": "^3.2.4"
+    "vitest": "^4.0.18"
   },
   "engines": {
     "node": ">=20.10.0"
