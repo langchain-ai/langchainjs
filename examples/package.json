@@ -77,7 +77,7 @@
     "@tensorflow/tfjs-backend-cpu": "^4.22.0",
     "@types/pg": "^8.15.5",
     "@upstash/redis": "^1.36.2",
-    "@upstash/vector": "^1.2.1",
+    "@upstash/vector": "^1.2.3",
     "@vercel/kv": "^3.0.0",
     "@xata.io/client": "^0.30.1",
     "@zilliz/milvus2-sdk-node": "^2.3.5",
