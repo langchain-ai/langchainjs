@@ -37,13 +37,13 @@
     "@langchain/eslint": "workspace:*",
     "@langchain/tsconfig": "workspace:*",
     "@tsconfig/recommended": "^1.0.3",
-    "@vitest/coverage-v8": "^3.2.4",
-    "dotenv": "^16.3.1",
-    "dpdm": "^3.14.0",
-    "eslint": "^9.34.0",
+    "@vitest/coverage-v8": "^4.0.18",
+    "dotenv": "^17.3.1",
+    "dpdm": "^4.0.1",
+    "eslint": "^10.0.3",
     "prettier": "^3.5.0",
     "typescript": "~5.8.3",
-    "vitest": "^3.2.4"
+    "vitest": "^4.0.18"
   },
   "publishConfig": {
     "access": "public"
