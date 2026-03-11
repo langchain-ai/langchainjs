@@ -58,7 +58,7 @@
     "@browserbasehq/sdk": "^2.7.0",
     "@browserbasehq/stagehand": "^1.0.0",
     "@clickhouse/client": "^0.2.5",
-    "@cloudflare/workers-types": "^4.20230922.0",
+    "@cloudflare/workers-types": "^4.20260310.1",
     "@datastax/astra-db-ts": "^2.1.2",
     "@elastic/elasticsearch": "^8.4.0",
     "@faker-js/faker": "8.4.1",
