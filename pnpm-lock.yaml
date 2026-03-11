@@ -223,8 +223,8 @@ importers:
         specifier: ^1.8.0
         version: 1.19.0
       '@prisma/client':
-        specifier: ^4.11.0
-        version: 4.16.2(prisma@4.16.2)
+        specifier: ^7.5.0
+        version: 7.5.0(prisma@4.16.2)(typescript@5.8.3)
       '@qdrant/js-client-rest':
         specifier: ^1.15.0
         version: 1.16.2(typescript@5.8.3)
@@ -2095,8 +2095,8 @@ importers:
         specifier: ^1.8.0
         version: 1.19.0
       '@prisma/client':
-        specifier: ^4.16.2
-        version: 4.16.2(prisma@4.16.2)
+        specifier: ^7.5.0
+        version: 7.5.0(prisma@4.16.2)(typescript@5.8.3)
       '@qdrant/js-client-rest':
         specifier: ^1.15.0
         version: 1.16.2(typescript@5.8.3)
@@ -7168,17 +7168,20 @@ packages:
   '@premai/prem-sdk@0.3.100':
     resolution: {integrity: sha512-J2Ij/q5uFFgymtA7+ydoz18i8Dxvd2jS3m/T07Vj4DJb9MjgIbDWNYukzRSUDkC1DU8Nv+pGYRf10/5D7B7M0A==}
 
-  '@prisma/client@4.16.2':
-    resolution: {integrity: sha512-qCoEyxv1ZrQ4bKy39GnylE8Zq31IRmm8bNhNbZx7bF2cU5aiCCnSa93J2imF88MBjn7J9eUQneNxUQVJdl/rPQ==}
-    engines: {node: '>=14.17'}
+  '@prisma/client-runtime-utils@7.5.0':
+    resolution: {integrity: sha512-KnJ2b4Si/pcWEtK68uM+h0h1oh80CZt2suhLTVuLaSKg4n58Q9jBF/A42Kw6Ma+aThy1yAhfDeTC0JvEmeZnFQ==}
+
+  '@prisma/client@7.5.0':
+    resolution: {integrity: sha512-h4hF9ctp+kSRs7ENHGsFQmHAgHcfkOCxbYt6Ti9Xi8x7D+kP4tTi9x51UKmiTH/OqdyJAO+8V+r+JA5AWdav7w==}
+    engines: {node: ^20.19 || ^22.12 || >=24.0}
     peerDependencies:
       prisma: '*'
+      typescript: '>=5.4.0'
     peerDependenciesMeta:
       prisma:
         optional: true
-
-  '@prisma/engines-version@4.16.1-1.4bc8b6e1b66cb932731fb1bdbbc550d1e010de81':
-    resolution: {integrity: sha512-q617EUWfRIDTriWADZ4YiWRZXCa/WuhNgLTVd+HqWLffjMSPzyM5uOWoauX91wvQClSKZU4pzI4JJLQ9Kl62Qg==}
+      typescript:
+        optional: true
 
   '@prisma/engines@4.16.2':
     resolution: {integrity: sha512-vx1nxVvN4QeT/cepQce68deh/Turxy5Mr+4L4zClFuK1GlxN3+ivxfuv+ej/gvidWn1cE1uAhW7ALLNlYbRUAw==}
@@ -20563,13 +20566,14 @@ snapshots:
     transitivePeerDependencies:
       - debug
 
-  '@prisma/client@4.16.2(prisma@4.16.2)':
+  '@prisma/client-runtime-utils@7.5.0': {}
+
+  '@prisma/client@7.5.0(prisma@4.16.2)(typescript@5.8.3)':
     dependencies:
-      '@prisma/engines-version': 4.16.1-1.4bc8b6e1b66cb932731fb1bdbbc550d1e010de81
+      '@prisma/client-runtime-utils': 7.5.0
     optionalDependencies:
       prisma: 4.16.2
-
-  '@prisma/engines-version@4.16.1-1.4bc8b6e1b66cb932731fb1bdbbc550d1e010de81': {}
+      typescript: 5.8.3
 
   '@prisma/engines@4.16.2': {}
 
