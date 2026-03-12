@@ -1,4 +1,4 @@
-import { test, expect, jest } from "@jest/globals";
+import { test, expect, vi } from "vitest";
 import { SupabaseClient } from "@supabase/supabase-js";
 
 import { FakeEmbeddings } from "@langchain/core/utils/testing";
@@ -6,7 +6,7 @@ import { SupabaseVectorStore } from "../supabase.js";
 
 test("similaritySearchVectorWithScore should call RPC with the vectorstore filters", async () => {
   const supabaseClientMock = {
-    rpc: jest.fn().mockReturnValue(Promise.resolve({ data: [] })),
+    rpc: vi.fn().mockReturnValue(Promise.resolve({ data: [] })),
   } as Partial<SupabaseClient>;
 
   const embeddings = new FakeEmbeddings();
@@ -26,7 +26,7 @@ test("similaritySearchVectorWithScore should call RPC with the vectorstore filte
 
 test("similaritySearchVectorWithScore should call RPC with the passed filters", async () => {
   const supabaseClientMock = {
-    rpc: jest.fn().mockReturnValue(Promise.resolve({ data: [] })),
+    rpc: vi.fn().mockReturnValue(Promise.resolve({ data: [] })),
   } as Partial<SupabaseClient>;
 
   const embeddings = new FakeEmbeddings();

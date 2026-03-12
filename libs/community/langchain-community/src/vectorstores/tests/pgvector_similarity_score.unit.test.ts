@@ -1,4 +1,4 @@
-import { describe, expect, test } from "@jest/globals";
+import { describe, expect, test } from "vitest";
 import type { EmbeddingsInterface } from "@langchain/core/embeddings";
 import { PGVectorStore } from "../pgvector.js";
 
@@ -30,16 +30,18 @@ describe("PGVectorStore Score Normalization - Unit Tests", () => {
         password: "test",
         database: "test",
       },
+      // Use "similarity" mode so convertDistanceToScore actually converts
+      scoreNormalization: "similarity" as const,
     };
 
     // Create an instance without calling initialization methods that require DB
     const vectorStore = new PGVectorStore(embeddings, config);
 
-    // Test cosine distance conversion: similarity = 1 - distance
+    // Test cosine distance conversion: similarity = (2 - distance) / 2
     const cosineDistance = 0.2;
     // @ts-expect-error - convertDistanceToScore is private
     const cosineSimilarity = vectorStore.convertDistanceToScore(cosineDistance);
-    expect(cosineSimilarity).toBe(1 - cosineDistance);
+    expect(cosineSimilarity).toBe((2 - cosineDistance) / 2);
 
     // Test euclidean distance conversion: similarity = 1 / (1 + distance)
     vectorStore.distanceStrategy = "euclidean";
@@ -106,18 +108,20 @@ describe("PGVectorStore Score Normalization - Unit Tests", () => {
         password: "test",
         database: "test",
       },
+      // Use "similarity" mode so convertDistanceToScore actually converts
+      scoreNormalization: "similarity" as const,
     };
 
     const vectorStore = new PGVectorStore(embeddings, config);
 
-    // Test cosine conversion: similarity = 1 - distance
+    // Test cosine conversion: similarity = (2 - distance) / 2
     vectorStore.distanceStrategy = "cosine";
     // @ts-expect-error - convertDistanceToScore is private
     expect(vectorStore.convertDistanceToScore(0)).toBe(1); // Identical vectors
     // @ts-expect-error - convertDistanceToScore is private
-    expect(vectorStore.convertDistanceToScore(1)).toBe(0); // Orthogonal
+    expect(vectorStore.convertDistanceToScore(1)).toBe(0.5); // Orthogonal
     // @ts-expect-error - convertDistanceToScore is private
-    expect(vectorStore.convertDistanceToScore(2)).toBe(-1); // Opposite vectors
+    expect(vectorStore.convertDistanceToScore(2)).toBe(0); // Opposite vectors
 
     // Test euclidean conversion: similarity = 1 / (1 + distance)
     vectorStore.distanceStrategy = "euclidean";
@@ -131,7 +135,7 @@ describe("PGVectorStore Score Normalization - Unit Tests", () => {
     // Test inner product conversion: similarity = -distance
     vectorStore.distanceStrategy = "innerProduct";
     // @ts-expect-error - convertDistanceToScore is private
-    expect(vectorStore.convertDistanceToScore(0)).toBe(0); // Orthogonal
+    expect(vectorStore.convertDistanceToScore(0)).toBeCloseTo(0); // Orthogonal
     // @ts-expect-error - convertDistanceToScore is private
     expect(vectorStore.convertDistanceToScore(-1)).toBe(1); // Aligned
     // @ts-expect-error - convertDistanceToScore is private
@@ -176,7 +180,7 @@ describe("PGVectorStore Score Normalization - Unit Tests", () => {
     const similarityResult =
       // @ts-expect-error - convertDistanceToScore is private
       vectorStoreSimilarity.convertDistanceToScore(rawDistance);
-    expect(similarityResult).toBe(1 - rawDistance); // Should convert to similarity
+    expect(similarityResult).toBe((2 - rawDistance) / 2); // Should convert to similarity
     expect(similarityResult).not.toBe(rawDistance); // Should not be the same as raw distance
   });
 });

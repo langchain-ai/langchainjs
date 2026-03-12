@@ -1,4 +1,4 @@
-import { describe, expect, jest, test } from "@jest/globals";
+import { describe, expect, vi, test } from "vitest";
 import type { HarmBlockThreshold, HarmCategory } from "@google/generative-ai";
 import { z } from "zod/v3";
 import { toJsonSchema } from "@langchain/core/utils/json_schema";
@@ -1047,7 +1047,7 @@ describe("withStructuredOutput - StandardSchema", () => {
       model: "gemini-1.5-flash",
       apiKey: "testing",
     });
-    jest.spyOn(model, "invoke").mockResolvedValue(
+    vi.spyOn(model, "invoke").mockResolvedValue(
       new AIMessage({
         content: "",
         tool_calls: [
@@ -1076,7 +1076,7 @@ describe("withStructuredOutput - StandardSchema", () => {
       model: "gemini-1.5-flash",
       apiKey: "testing",
     });
-    jest.spyOn(model, "invoke").mockResolvedValue(
+    vi.spyOn(model, "invoke").mockResolvedValue(
       new AIMessageChunk({
         content: "",
         tool_calls: [
@@ -1106,7 +1106,7 @@ describe("withStructuredOutput - StandardSchema", () => {
       model: "gemini-1.5-flash",
       apiKey: "testing",
     });
-    jest.spyOn(model, "invoke").mockResolvedValue(
+    vi.spyOn(model, "invoke").mockResolvedValue(
       new AIMessage({
         content: "",
         tool_calls: [
@@ -1146,7 +1146,7 @@ describe("withStructuredOutput - StandardSchema", () => {
       model: "gemini-1.5-flash",
       apiKey: "testing",
     });
-    jest.spyOn(model, "invoke").mockResolvedValue(mockResponse);
+    vi.spyOn(model, "invoke").mockResolvedValue(mockResponse);
 
     const schema = makeSerializableSchema();
     const structured = model.withStructuredOutput(schema, {

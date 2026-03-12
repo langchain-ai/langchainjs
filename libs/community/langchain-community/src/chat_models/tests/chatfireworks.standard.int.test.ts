@@ -1,5 +1,4 @@
-import { test, expect } from "@jest/globals";
-import { ChatModelIntegrationTests } from "@langchain/standard-tests";
+import { ChatModelIntegrationTests } from "@langchain/standard-tests/vitest";
 import { AIMessageChunk } from "@langchain/core/messages";
 import { ChatFireworks, ChatFireworksCallOptions } from "../fireworks.js";
 
@@ -28,8 +27,4 @@ class ChatFireworksStandardIntegrationTests extends ChatModelIntegrationTests<
 }
 
 const testClass = new ChatFireworksStandardIntegrationTests();
-
-test("ChatFireworksStandardIntegrationTests", async () => {
-  const testResults = await testClass.runTests();
-  expect(testResults).toBe(true);
-});
+testClass.runTests("ChatFireworksStandardIntegrationTests");

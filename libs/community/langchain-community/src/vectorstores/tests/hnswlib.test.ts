@@ -1,4 +1,4 @@
-import { test, expect } from "@jest/globals";
+import { test, expect } from "vitest";
 import { Document } from "@langchain/core/documents";
 
 import { FakeEmbeddings } from "@langchain/core/utils/testing";

@@ -1,19 +1,24 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import { expect, jest, test } from "@jest/globals";
+import { expect, vi, test } from "vitest";
 
-import {
-  DocumentCollection,
-  IDocument,
-  NotFoundError,
-  ZepClient,
-} from "@getzep/zep-js";
+import { DocumentCollection, IDocument, ZepClient } from "@getzep/zep-js";
 import type { EmbeddingsInterface } from "@langchain/core/embeddings";
 import { Document } from "@langchain/core/documents";
 import { FakeEmbeddings } from "@langchain/core/utils/testing";
 import { IZepConfig, ZepVectorStore } from "../zep.js";
 
-jest.mock("@getzep/zep-js");
+vi.mock("@getzep/zep-js");
+
+// The installed @getzep/zep-js v2 no longer exports NotFoundError, so the
+// auto-mock leaves it undefined.  Define a local stand-in whose .name
+// property satisfies the source-code check `err.name === "NotFoundError"`.
+class NotFoundError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "NotFoundError";
+  }
+}
 
 const mockDocuments = [
   {
@@ -39,16 +44,16 @@ const mockZepDocuments: IDocument[] = mockDocuments.map((doc, index) => ({
 }));
 
 const mockCollection = {
-  addDocuments: jest
+  addDocuments: vi
     .fn<DocumentCollection["addDocuments"]>()
     .mockResolvedValue(["uuid1", "uuid2", "uuid3"]),
-  search: jest
+  search: vi
     .fn<DocumentCollection["search"]>()
     .mockResolvedValue(mockZepDocuments as any),
-  deleteDocument: jest
+  deleteDocument: vi
     .fn<DocumentCollection["deleteDocument"]>()
     .mockResolvedValue(undefined as any),
-  searchReturnQueryVector: jest
+  searchReturnQueryVector: vi
     .fn<DocumentCollection["searchReturnQueryVector"]>()
     .mockResolvedValue([mockZepDocuments, new Float32Array([0.0, 0.1])] as any),
   name: "testCollection",
@@ -57,8 +62,8 @@ const mockCollection = {
 
 const mockClient = {
   document: {
-    getCollection: jest.fn<any>().mockResolvedValue(mockCollection),
-    addCollection: jest.fn<any>().mockResolvedValue(mockCollection),
+    getCollection: vi.fn<any>().mockResolvedValue(mockCollection),
+    addCollection: vi.fn<any>().mockResolvedValue(mockCollection),
   },
 } as any;
 
@@ -82,9 +87,16 @@ describe("ZepVectorStore", () => {
     };
     embeddings = new FakeEmbeddings();
 
-    jest
-      .spyOn(ZepClient, "init")
-      .mockImplementation(() => Promise.resolve(mockClient));
+    // ZepClient.init is used by the source code but was removed in zep-js v2.
+    // Since the module is auto-mocked via jest.mock, define the static method
+    // on the mock so spyOn can attach to it.
+    const zepClientRecord = ZepClient as Record<string, unknown>;
+    if (typeof zepClientRecord.init !== "function") {
+      zepClientRecord.init = vi.fn();
+    }
+    (zepClientRecord.init as vi.Mock).mockImplementation(() =>
+      Promise.resolve(mockClient)
+    );
   });
 
   test("should instantiate class successfully when a Collection exists", async () => {
@@ -93,7 +105,7 @@ describe("ZepVectorStore", () => {
     // Wait for any promises in constructor to resolve
     await new Promise(setImmediate);
 
-    expect(ZepClient.init).toHaveBeenCalledWith(
+    expect((ZepClient as Record<string, unknown>).init).toHaveBeenCalledWith(
       zepConfig.apiUrl,
       zepConfig.apiKey
     );
@@ -112,7 +124,7 @@ describe("ZepVectorStore", () => {
     // Wait for any promises in constructor to resolve
     await new Promise(setImmediate);
 
-    expect(ZepClient.init).toHaveBeenCalledWith(
+    expect((ZepClient as Record<string, unknown>).init).toHaveBeenCalledWith(
       zepConfig.apiUrl,
       zepConfig.apiKey
     );
@@ -175,7 +187,7 @@ describe("ZepVectorStore", () => {
 
     // Mock ZepVectorStore.fromDocuments to inject mockCollection
     const originalFromDocuments = ZepVectorStore.fromDocuments;
-    ZepVectorStore.fromDocuments = jest.fn(
+    ZepVectorStore.fromDocuments = vi.fn(
       async (docs, embeddings, zepConfig) => {
         const zepVectorStore = await originalFromDocuments.call(
           ZepVectorStore,

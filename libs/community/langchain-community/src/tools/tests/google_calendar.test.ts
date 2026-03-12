@@ -1,4 +1,4 @@
-import { jest, expect, describe } from "@jest/globals";
+import { vi, expect, describe } from "vitest";
 import { BaseChatModel } from "@langchain/core/language_models/chat_models";
 import { ChatResult } from "@langchain/core/outputs";
 import {
@@ -7,15 +7,15 @@ import {
   GoogleCalendarDeleteTool,
 } from "../google_calendar/index.js";
 
-jest.mock("googleapis", () => ({
+vi.mock("googleapis", () => ({
   google: {
     auth: {
-      JWT: jest.fn().mockImplementation(() => ({})),
+      JWT: vi.fn().mockImplementation(() => ({})),
     },
   },
 }));
 
-jest.mock("@langchain/core/utils/env", () => ({
+vi.mock("@langchain/core/utils/env", () => ({
   getEnvironmentVariable: () => "key",
 }));
 

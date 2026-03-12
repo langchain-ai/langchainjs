@@ -1,6 +1,6 @@
 // // Hangs when run with other tests, uncomment for development
 
-// import { test, expect, describe } from "@jest/globals";
+// import { test, expect, describe } from "vitest";
 // import { CassandraClientFactory } from "../../utils/cassandra.js";
 // import { CassandraKVStore } from "../cassandra.js";
 

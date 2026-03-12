@@ -1,4 +1,4 @@
-import { test } from "@jest/globals";
+import { test } from "vitest";
 import { FigmaFileLoader } from "../web/figma.js";
 
 test.skip("Test FigmaFileLoader", async () => {

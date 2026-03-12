@@ -1,4 +1,4 @@
-import { test, expect, jest } from "@jest/globals";
+import { test, expect, vi } from "vitest";
 import { TogetherAI } from "../togetherai.js";
 
 test("TogetherAI should provide helpful error for chat models", async () => {
@@ -7,7 +7,7 @@ test("TogetherAI should provide helpful error for chat models", async () => {
     apiKey: "test-api-key",
   });
 
-  jest.spyOn(model, "completionWithRetry").mockResolvedValue({
+  vi.spyOn(model, "completionWithRetry").mockResolvedValue({
     // Response without output or choices fields
     error: "Invalid model",
   });
@@ -19,7 +19,7 @@ test("TogetherAI should provide helpful error for chat models", async () => {
 
 test("TogetherAI should warn when using chat models", () => {
   const originalWarn = console.warn;
-  const mockWarn = jest.fn();
+  const mockWarn = vi.fn();
   console.warn = mockWarn;
 
   try {

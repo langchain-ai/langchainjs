@@ -1,4 +1,4 @@
-import { test, expect } from "@jest/globals";
+import { test, expect } from "vitest";
 import { Bedrock } from "../bedrock/index.js";
 
 test("Test Bedrock LLM: AI21", async () => {

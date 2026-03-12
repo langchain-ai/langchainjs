@@ -1,4 +1,4 @@
-import { test, expect } from "@jest/globals";
+import { test, expect } from "vitest";
 import { ArxivRetriever } from "../arxiv.js";
 
 test("ArxivRetriever fetching document summaries test", async () => {

@@ -1,4 +1,4 @@
-import { expect, test } from "@jest/globals";
+import { expect, test } from "vitest";
 import { HTMLWebBaseLoader } from "../web/html.js";
 
 test("Test HTML web scraper loader", async () => {

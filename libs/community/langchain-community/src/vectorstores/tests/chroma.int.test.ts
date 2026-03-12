@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, test } from "@jest/globals";
+import { beforeEach, describe, expect, test } from "vitest";
 import { ChromaClient } from "chromadb";
 import { faker } from "@faker-js/faker";
 import * as uuid from "uuid";

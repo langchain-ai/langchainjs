@@ -1,4 +1,4 @@
-import { describe, expect, jest, test } from "@jest/globals";
+import { describe, expect, vi, test } from "vitest";
 import { HumanMessage, ToolMessage } from "@langchain/core/messages";
 import { z } from "zod/v3";
 import { ChatAlibabaTongyi } from "../alibaba_tongyi.js";
@@ -46,7 +46,7 @@ function asText(content: unknown): string {
 }
 
 describe("ChatAlibabaTongyi integration", () => {
-  jest.setTimeout(180000);
+  vi.setConfig({ testTimeout: 180000 });
 
   runIfApiKey("invokes in non-streaming mode without tools", async () => {
     const model = new ChatAlibabaTongyi({
@@ -190,7 +190,7 @@ describe("ChatAlibabaTongyi integration", () => {
   runIfApiKey(
     "tool_choice compatibility fallback with any does not fail",
     async () => {
-      const warnSpy = jest.spyOn(console, "warn").mockImplementation(() => {});
+      const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
       try {
         const model = new ChatAlibabaTongyi({
           alibabaApiKey: apiKey,

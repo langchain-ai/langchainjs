@@ -1,6 +1,6 @@
 import { ConvexHttpClient } from "convex/browser";
 
-import { expect, test } from "@jest/globals";
+import { expect, test } from "vitest";
 import { api } from "./convex/convex/_generated/api.js";
 
 // To run these tests at least once, follow these steps:

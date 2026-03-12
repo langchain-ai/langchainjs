@@ -1,4 +1,4 @@
-import { test } from "@jest/globals";
+import { test } from "vitest";
 import { IMSDBLoader } from "../web/imsdb.js";
 
 test("Test IMSDB loader", async () => {

@@ -1,4 +1,4 @@
-import { describe, expect, test } from "@jest/globals";
+import { describe, expect, test } from "vitest";
 import { z } from "zod/v3";
 import { OutputParserException } from "@langchain/core/output_parsers";
 import {

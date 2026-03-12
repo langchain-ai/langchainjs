@@ -1,4 +1,4 @@
-import { test, describe, expect } from "@jest/globals";
+import { test, describe, expect } from "vitest";
 import { AlephAlpha } from "../aleph_alpha.js";
 
 describe("Aleph Alpha", () => {

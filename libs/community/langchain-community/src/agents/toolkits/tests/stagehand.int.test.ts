@@ -1,4 +1,4 @@
-import { expect, describe, test, beforeEach, afterEach } from "@jest/globals";
+import { expect, describe, test, beforeEach, afterEach } from "vitest";
 import { Stagehand } from "@browserbasehq/stagehand";
 import { z } from "zod/v3";
 import { ChatOpenAI } from "@langchain/openai";

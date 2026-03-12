@@ -58,7 +58,7 @@ describe("XataChatMessageHistory", () => {
         createTable: true,
       });
     };
-    expect(t).toThrowError(
+    expect(t).toThrow(
       "If createTable is set, an apiKey must be provided to XataChatMessageHistoryInput, either directly or through the config object"
     );
 

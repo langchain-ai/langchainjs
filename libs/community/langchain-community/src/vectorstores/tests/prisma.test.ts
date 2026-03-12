@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { FakeEmbeddings } from "@langchain/core/utils/testing";
-import { jest, test, expect } from "@jest/globals";
+import { vi, test, expect } from "vitest";
 import { Document } from "@langchain/core/documents";
 import { PrismaVectorStore } from "../prisma.js";
 
@@ -14,9 +14,9 @@ const mockColumns = {
     PrismaVectorStore.ContentColumn as typeof PrismaVectorStore.ContentColumn,
 };
 
-const sql = jest.fn<(params: unknown) => Sql>();
-const raw = jest.fn<(params: unknown) => Sql>();
-const join = jest.fn<(params: unknown) => Sql>();
+const sql = vi.fn<(params: unknown) => Sql>();
+const raw = vi.fn<(params: unknown) => Sql>();
+const join = vi.fn<(params: unknown) => Sql>();
 
 const mockPrismaNamespace = {
   ModelName: {},
@@ -26,9 +26,9 @@ const mockPrismaNamespace = {
   sql,
 };
 
-const $queryRaw = jest.fn<(params: unknown) => Promise<any>>();
-const $executeRaw = jest.fn<(params: unknown) => Promise<any>>();
-const $transaction = jest.fn<(params: unknown) => Promise<any>>();
+const $queryRaw = vi.fn<(params: unknown) => Promise<any>>();
+const $executeRaw = vi.fn<(params: unknown) => Promise<any>>();
+const $transaction = vi.fn<(params: unknown) => Promise<any>>();
 
 const mockPrismaClient = {
   $queryRaw,
@@ -38,7 +38,7 @@ const mockPrismaClient = {
 
 describe("Prisma", () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   test("passes provided filters with simiaritySearch", async () => {
@@ -50,7 +50,7 @@ describe("Prisma", () => {
       vectorColumnName: "vector",
       columns: mockColumns,
     });
-    const similaritySearchVectorWithScoreSpy = jest
+    const similaritySearchVectorWithScoreSpy = vi
       .spyOn(store, "similaritySearchVectorWithScore")
       .mockResolvedValue([]);
 
@@ -330,10 +330,10 @@ describe("Prisma", () => {
     ];
 
     // Spy on both methods
-    const addDocumentsWithVectorsSpy = jest
+    const addDocumentsWithVectorsSpy = vi
       .spyOn(store, "addDocumentsWithVectors")
       .mockResolvedValue();
-    const addVectorsSpy = jest.spyOn(store, "addVectors").mockResolvedValue();
+    const addVectorsSpy = vi.spyOn(store, "addVectors").mockResolvedValue();
 
     await store.addDocuments(documents);
 
@@ -362,10 +362,10 @@ describe("Prisma", () => {
     ];
 
     // Spy on both methods
-    const addDocumentsWithVectorsSpy = jest
+    const addDocumentsWithVectorsSpy = vi
       .spyOn(store, "addDocumentsWithVectors")
       .mockResolvedValue();
-    const addVectorsSpy = jest.spyOn(store, "addVectors").mockResolvedValue();
+    const addVectorsSpy = vi.spyOn(store, "addVectors").mockResolvedValue();
 
     await store.addDocuments(documents);
 

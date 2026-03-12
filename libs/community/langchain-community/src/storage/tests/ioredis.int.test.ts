@@ -1,4 +1,4 @@
-import { test } from "@jest/globals";
+import { test } from "vitest";
 import { Redis } from "ioredis";
 import { RedisByteStore } from "../ioredis.js";
 

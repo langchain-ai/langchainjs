@@ -1,4 +1,4 @@
-import { test } from "@jest/globals";
+import { test } from "vitest";
 import { SitemapLoader } from "../web/sitemap.js";
 
 test("SitemapLoader", async () => {

@@ -1,4 +1,4 @@
-import { ChatModelIntegrationTests } from "@langchain/standard-tests";
+import { ChatModelIntegrationTests } from "@langchain/standard-tests/vitest";
 import { AIMessageChunk } from "@langchain/core/messages";
 import {
   ChatWatsonx,
@@ -48,8 +48,4 @@ class ChatWatsonxStandardIntegrationTests extends ChatModelIntegrationTests<
 }
 
 const testClass = new ChatWatsonxStandardIntegrationTests();
-
-test("ChatWatsonxStandardIntegrationTests", async () => {
-  const testResults = await testClass.runTests();
-  expect(testResults).toBe(true);
-});
+testClass.runTests("ChatWatsonxStandardIntegrationTests");

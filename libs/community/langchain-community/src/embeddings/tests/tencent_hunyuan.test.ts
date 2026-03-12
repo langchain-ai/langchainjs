@@ -1,4 +1,4 @@
-import { test, expect } from "@jest/globals";
+import { test, expect } from "vitest";
 import { TencentHunyuanEmbeddings } from "../tencent_hunyuan/index.js";
 
 test.skip("Test TencentHunyuanEmbeddings.embedQuery", async () => {

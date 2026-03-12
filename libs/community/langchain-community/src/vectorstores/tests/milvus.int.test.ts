@@ -1,4 +1,4 @@
-import { test, expect, afterAll, beforeAll } from "@jest/globals";
+import { test, expect, afterAll, beforeAll } from "vitest";
 import { ErrorCode, MilvusClient } from "@zilliz/milvus2-sdk-node";
 import { OpenAIEmbeddings } from "@langchain/openai";
 import { Document } from "@langchain/core/documents";

@@ -1,11 +1,11 @@
-import { test, expect, jest } from "@jest/globals";
+import { test, expect, vi } from "vitest";
 import { sha256 } from "@langchain/core/utils/hash";
 
 import { RedisCache } from "../ioredis.js";
 
 test("RedisCache", async () => {
   const redis = {
-    get: jest.fn(async (key: string) => {
+    get: vi.fn(async (key: string) => {
       if (key === sha256("foo_bar_0")) {
         return JSON.stringify({ text: "baz" });
       }

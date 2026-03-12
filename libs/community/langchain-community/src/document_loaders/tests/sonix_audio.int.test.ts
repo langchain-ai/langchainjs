@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { test, jest, expect } from "@jest/globals";
+import { test, vi, expect } from "vitest";
 import { SonixSpeechRecognitionService } from "sonix-speech-recognition";
 import {
   SpeechToTextRequest,
@@ -7,7 +7,7 @@ import {
 } from "sonix-speech-recognition/lib/types.js";
 import { SonixAudioTranscriptionLoader } from "../web/sonix_audio.js";
 
-jest.mock("sonix-speech-recognition");
+vi.mock("sonix-speech-recognition");
 
 describe("SonixAudioTranscriptionLoader", () => {
   let sonixSpeechRecognitionService: SonixSpeechRecognitionService;
@@ -42,7 +42,7 @@ describe("SonixAudioTranscriptionLoader", () => {
         text: "test transcription",
         status: "completed",
       };
-      sonixSpeechRecognitionService.speechToText = jest
+      sonixSpeechRecognitionService.speechToText = vi
         .fn<() => Promise<SpeechToTextResponse>>()
         .mockResolvedValue(response);
 
@@ -60,7 +60,7 @@ describe("SonixAudioTranscriptionLoader", () => {
         status: "failed",
         error: "Error message",
       };
-      sonixSpeechRecognitionService.speechToText = jest
+      sonixSpeechRecognitionService.speechToText = vi
         .fn<() => Promise<SpeechToTextResponse>>()
         .mockResolvedValue(response);
 

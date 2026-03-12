@@ -1,4 +1,4 @@
-import { test } from "@jest/globals";
+import { test } from "vitest";
 import { GithubRepoLoader } from "../web/github.js";
 
 test("Test GithubRepoLoader", async () => {

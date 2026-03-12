@@ -1,4 +1,4 @@
-import { test, expect, describe, beforeAll, afterAll } from "@jest/globals";
+import { test, expect, describe, beforeAll, afterAll } from "vitest";
 import pg, { PoolConfig } from "pg";
 import { OpenAIEmbeddings } from "@langchain/openai";
 import { Document } from "@langchain/core/documents";

@@ -1,9 +1,9 @@
-import { test, expect, jest } from "@jest/globals";
+import { test, expect, vi } from "vitest";
 import { HumanMessage, AIMessage } from "@langchain/core/messages";
 import { MotorheadMemory } from "../motorhead_memory.js";
 
 test.skip("Test motörhead memory", async () => {
-  global.fetch = jest.fn(() =>
+  global.fetch = vi.fn(() =>
     Promise.resolve({
       json: () =>
         Promise.resolve({
@@ -35,7 +35,7 @@ test.skip("Test motörhead memory with pre-loaded history", async () => {
     new AIMessage("Nice to meet you, Ozzy!"),
   ];
 
-  global.fetch = jest.fn(() =>
+  global.fetch = vi.fn(() =>
     Promise.resolve({
       json: () =>
         Promise.resolve({

@@ -1,11 +1,11 @@
-import { jest, test } from "@jest/globals";
+import { vi, test } from "vitest";
 import { GithubFile, GithubRepoLoader } from "../web/github.js";
 import { GithubLoaderApis } from "./example_data/github_api_responses.js";
 
 describe("GithubRepoLoader recursion", () => {
   let callCount = 0;
   beforeAll(() => {
-    global.fetch = jest.fn().mockImplementation((url) => {
+    global.fetch = vi.fn().mockImplementation((url) => {
       let responseData: GithubFile[] | string =
         GithubLoaderApis.getRepoFiles[callCount.toString()];
 
@@ -25,7 +25,7 @@ describe("GithubRepoLoader recursion", () => {
   });
 
   afterAll(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     callCount = 0;
   });
 
@@ -65,7 +65,7 @@ describe("GithubRepoLoader recursion", () => {
 describe("GithubRepoLoader URL encoding", () => {
   test("Should properly encode special characters in directory paths", async () => {
     // Mock fetch to capture the URLs being called
-    const mockFetch = jest.fn().mockImplementation((url) => {
+    const mockFetch = vi.fn().mockImplementation((url) => {
       // Check that special characters are properly encoded in the URL
       expect(url).toContain("src%2Fapp%2F%255Fmeta"); // The full encoded path
 

@@ -1,4 +1,4 @@
-import { test, expect } from "@jest/globals";
+import { test, expect } from "vitest";
 import { StackExchangeAPI } from "../stackexchange.js";
 
 test("StackAPITool returns a string for valid query", async () => {

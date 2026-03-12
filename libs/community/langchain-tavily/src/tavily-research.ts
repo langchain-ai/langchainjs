@@ -286,7 +286,16 @@ export class TavilyResearch extends StructuredTool<typeof inputSchema> {
       });
 
       if (effectiveStream) {
-        return result as AsyncGenerator<Buffer, void, unknown>;
+        // Wrap in a plain AsyncIterable so the base StructuredTool.call()
+        // doesn't detect it as an AsyncGenerator (via the .next() method)
+        // and consume it internally. This preserves the stream for callers.
+        const generator = result as AsyncGenerator<Buffer, void, unknown>;
+        const iterable: AsyncIterable<Buffer> = {
+          [Symbol.asyncIterator]() {
+            return generator;
+          },
+        };
+        return iterable as unknown as AsyncGenerator<Buffer, void, unknown>;
       }
 
       const queueResponse = result as TavilyResearchQueueResponse;

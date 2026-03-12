@@ -1,11 +1,11 @@
 import { OpenAIEmbeddings } from "@langchain/openai";
 import { Document } from "@langchain/core/documents";
-import { jest, test, expect, describe, beforeAll } from "@jest/globals";
+import { vi, test, expect, describe, beforeAll } from "vitest";
 
 import { AzionVectorStore } from "../azion_edgesql.js";
 
 // Increase timeout for database operations
-jest.setTimeout(60000);
+vi.setConfig({ testTimeout: 60000 });
 
 describe("AzionVectorStore", () => {
   let vectorStore: AzionVectorStore;

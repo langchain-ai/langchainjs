@@ -1462,10 +1462,11 @@ export const convertMessagesToResponsesInput: Converter<
               }
               return content.flatMap((item) => {
                 if (item.type === "text") {
+                  const textItem = item as ContentBlock.Text;
                   return {
                     type: "output_text",
-                    text: item.text,
-                    annotations: (item.annotations ?? []).map(
+                    text: textItem.text,
+                    annotations: (textItem.annotations ?? []).map(
                       convertLangChainAnnotationToOpenAI
                     ),
                   };
