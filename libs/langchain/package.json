@@ -116,6 +116,17 @@
         "default": "./dist/index.js"
       }
     },
+    "./browser": {
+      "input": "./src/browser.ts",
+      "require": {
+        "types": "./dist/browser.d.cts",
+        "default": "./dist/browser.cjs"
+      },
+      "import": {
+        "types": "./dist/browser.d.ts",
+        "default": "./dist/browser.js"
+      }
+    },
     "./chat_models/universal": {
       "input": "./src/chat_models/universal.ts",
       "require": {
