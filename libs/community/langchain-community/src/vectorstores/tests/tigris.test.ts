@@ -7,9 +7,7 @@ import { TigrisVectorStore } from "../tigris.js";
 test("TigrisVectorStore with external ids", async () => {
   const client = {
     addDocumentsWithVectors: vi.fn(),
-    similaritySearchVectorWithScore: vi
-      .fn()
-      .mockImplementation(async () => []),
+    similaritySearchVectorWithScore: vi.fn().mockImplementation(async () => []),
   };
   const embeddings = new FakeEmbeddings();
 
@@ -56,9 +54,7 @@ test("TigrisVectorStore with external ids", async () => {
 test("TigrisVectorStore with generated ids", async () => {
   const client = {
     addDocumentsWithVectors: vi.fn(),
-    similaritySearchVectorWithScore: vi
-      .fn()
-      .mockImplementation(async () => []),
+    similaritySearchVectorWithScore: vi.fn().mockImplementation(async () => []),
   };
   const embeddings = new FakeEmbeddings();
 

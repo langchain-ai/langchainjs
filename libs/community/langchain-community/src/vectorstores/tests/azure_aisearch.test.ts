@@ -14,10 +14,7 @@ const uploadDocumentsMock = vi.spyOn(
 );
 const onMock = vi.spyOn(SearchIndexingBufferedSender.prototype, "on");
 const flushMock = vi.spyOn(SearchIndexingBufferedSender.prototype, "flush");
-const disposeMock = vi.spyOn(
-  SearchIndexingBufferedSender.prototype,
-  "dispose"
-);
+const disposeMock = vi.spyOn(SearchIndexingBufferedSender.prototype, "dispose");
 
 beforeEach(() => {
   embedMock.mockClear();

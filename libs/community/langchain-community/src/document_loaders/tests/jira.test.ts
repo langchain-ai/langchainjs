@@ -132,18 +132,16 @@ describe("JiraProjectLoader", () => {
   ) {
     const calls: { url: string; init: RequestInit }[] = [];
     let callIndex = 0;
-    global.fetch = vi.fn(
-      async (url: RequestInfo | URL, init?: RequestInit) => {
-        calls.push({ url: url.toString(), init: init ?? {} });
-        const res = responses[callIndex] ?? responses[responses.length - 1];
-        callIndex += 1;
-        return {
-          ok: res.ok,
-          status: res.status,
-          json: async () => res.body,
-        } as Response;
-      }
-    );
+    global.fetch = vi.fn(async (url: RequestInfo | URL, init?: RequestInit) => {
+      calls.push({ url: url.toString(), init: init ?? {} });
+      const res = responses[callIndex] ?? responses[responses.length - 1];
+      callIndex += 1;
+      return {
+        ok: res.ok,
+        status: res.status,
+        json: async () => res.body,
+      } as Response;
+    });
     return calls;
   }
 

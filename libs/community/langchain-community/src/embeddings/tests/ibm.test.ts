@@ -111,10 +111,7 @@ describe("Positive tests with model gateway", () => {
 
     const instance = new WatsonxEmbeddings({ ...testProps, ...fakeAuthProp });
     if (instance["gateway"]) {
-      const spy = vi.spyOn(
-        instance["gateway"].embeddings.completion,
-        "create"
-      );
+      const spy = vi.spyOn(instance["gateway"].embeddings.completion, "create");
       const embedding = [1, 2, 3, 4, 5];
       spy.mockResolvedValue({
         result: {

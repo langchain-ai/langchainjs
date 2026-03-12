@@ -71,9 +71,9 @@ describe("ChatOpenAICompletions streaming usage_metadata callback", () => {
       };
     })();
 
-    model.completionWithRetry = vi.fn().mockResolvedValue(
-      fakeStream
-    ) as typeof model.completionWithRetry;
+    model.completionWithRetry = vi
+      .fn()
+      .mockResolvedValue(fakeStream) as typeof model.completionWithRetry;
 
     // Create a mock runManager
     const handleLLMNewToken = vi.fn();

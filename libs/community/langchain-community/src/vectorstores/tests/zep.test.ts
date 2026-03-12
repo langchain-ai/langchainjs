@@ -2,11 +2,7 @@
 
 import { expect, vi, test } from "vitest";
 
-import {
-  DocumentCollection,
-  IDocument,
-  ZepClient,
-} from "@getzep/zep-js";
+import { DocumentCollection, IDocument, ZepClient } from "@getzep/zep-js";
 import type { EmbeddingsInterface } from "@langchain/core/embeddings";
 import { Document } from "@langchain/core/documents";
 import { FakeEmbeddings } from "@langchain/core/utils/testing";
@@ -109,9 +105,10 @@ describe("ZepVectorStore", () => {
     // Wait for any promises in constructor to resolve
     await new Promise(setImmediate);
 
-    expect(
-      (ZepClient as Record<string, unknown>).init
-    ).toHaveBeenCalledWith(zepConfig.apiUrl, zepConfig.apiKey);
+    expect((ZepClient as Record<string, unknown>).init).toHaveBeenCalledWith(
+      zepConfig.apiUrl,
+      zepConfig.apiKey
+    );
     expect(mockClient.document.getCollection).toHaveBeenCalledWith(
       zepConfig.collectionName
     );
@@ -127,9 +124,10 @@ describe("ZepVectorStore", () => {
     // Wait for any promises in constructor to resolve
     await new Promise(setImmediate);
 
-    expect(
-      (ZepClient as Record<string, unknown>).init
-    ).toHaveBeenCalledWith(zepConfig.apiUrl, zepConfig.apiKey);
+    expect((ZepClient as Record<string, unknown>).init).toHaveBeenCalledWith(
+      zepConfig.apiUrl,
+      zepConfig.apiKey
+    );
     expect(mockClient.document.getCollection).toHaveBeenCalledWith(
       zepConfig.collectionName
     );

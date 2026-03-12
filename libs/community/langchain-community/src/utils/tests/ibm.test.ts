@@ -1,4 +1,4 @@
-import WatsonxAiMlVml_v1 from "@ibm-cloud/watsonx-ai/dist/watsonx-ai-ml/vml_v1.js";
+import { WatsonXAI } from "@ibm-cloud/watsonx-ai";
 import { Gateway } from "@ibm-cloud/watsonx-ai/gateway";
 import {
   authenticateAndSetInstance,
@@ -18,7 +18,7 @@ describe("Utils tests", () => {
         serviceUrl,
         ...fakeAuthProp,
       });
-      expect(instance).toBeInstanceOf(WatsonxAiMlVml_v1);
+      expect(instance).toBeInstanceOf(WatsonXAI);
     });
 
     test("Test authentication gateway function", () => {

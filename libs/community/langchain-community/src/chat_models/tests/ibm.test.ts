@@ -743,9 +743,10 @@ describe("Chat unit tests", () => {
           },
         ],
       };
-      vi
-        .spyOn(instance["service"] as WatsonXAI as WatsonXAI, "textChat")
-        .mockResolvedValue({ result: mockResponse } as any);
+      vi.spyOn(
+        instance["service"] as WatsonXAI as WatsonXAI,
+        "textChat"
+      ).mockResolvedValue({ result: mockResponse } as any);
       const res = await instance.invoke("test");
 
       expect(res.additional_kwargs.reasoning).toBe(reasoning);
@@ -770,9 +771,10 @@ describe("Chat unit tests", () => {
           },
         ],
       };
-      vi
-        .spyOn(instance["service"] as WatsonXAI as WatsonXAI, "textChat")
-        .mockResolvedValue({ result: mockResponse } as any);
+      vi.spyOn(
+        instance["service"] as WatsonXAI as WatsonXAI,
+        "textChat"
+      ).mockResolvedValue({ result: mockResponse } as any);
       const res = await instance.invoke("test", {
         includeReasoning: true,
         reasoningEffort: "low",
@@ -966,9 +968,9 @@ describe("Chat unit tests", () => {
       };
 
       if (instance["service"]) {
-        vi
-          .spyOn(instance["service"], "textChat")
-          .mockResolvedValue(mockResponse as any);
+        vi.spyOn(instance["service"], "textChat").mockResolvedValue(
+          mockResponse as any
+        );
       }
 
       const toolInvocationOptions = {

@@ -82,14 +82,16 @@ const { mockMilvusClient } = vi.hoisted(() => {
 });
 
 vi.mock("@zilliz/milvus2-sdk-node", async (importOriginal) => {
-  const actual = await importOriginal<typeof import("@zilliz/milvus2-sdk-node")>();
+  const actual =
+    await importOriginal<typeof import("@zilliz/milvus2-sdk-node")>();
   return {
     ...actual,
     MilvusClient: vi.fn().mockImplementation(() => mockMilvusClient),
   };
 });
 
-const { DataType, DataTypeMap, ErrorCode } = await import("@zilliz/milvus2-sdk-node");
+const { DataType, DataTypeMap, ErrorCode } =
+  await import("@zilliz/milvus2-sdk-node");
 
 beforeEach(async () => {
   vi.clearAllMocks();

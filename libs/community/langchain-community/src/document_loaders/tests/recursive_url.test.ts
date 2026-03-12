@@ -1,11 +1,4 @@
-import {
-  test,
-  describe,
-  expect,
-  vi,
-  beforeEach,
-  afterEach,
-} from "vitest";
+import { test, describe, expect, vi, beforeEach, afterEach } from "vitest";
 import { RecursiveUrlLoader } from "../web/recursive_url.js";
 
 const _originalFetch = globalThis.fetch;

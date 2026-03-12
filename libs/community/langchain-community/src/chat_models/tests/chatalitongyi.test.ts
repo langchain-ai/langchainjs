@@ -1,11 +1,4 @@
-import {
-  afterAll,
-  afterEach,
-  describe,
-  expect,
-  vi,
-  test,
-} from "vitest";
+import { afterAll, afterEach, describe, expect, vi, test } from "vitest";
 import { AIMessage, ToolMessage } from "@langchain/core/messages";
 import { ChatAlibabaTongyi } from "../alibaba_tongyi.js";
 
