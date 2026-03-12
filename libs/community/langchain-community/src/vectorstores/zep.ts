@@ -97,15 +97,15 @@ export class ZepVectorStore extends VectorStore {
 
       // If the Embedding passed in is fake, but the collection is not auto embedded, throw an error
       if (!this.collection.is_auto_embedded && this.autoEmbed) {
-        throw new Error(`You can't pass in FakeEmbeddings when collection ${args.collectionName} 
+        throw new Error(`You can't pass in FakeEmbeddings when collection ${args.collectionName}
  is not set to auto-embed.`);
       }
     } catch (err) {
       // eslint-disable-next-line no-instanceof/no-instanceof
       if (err instanceof Error) {
-        // eslint-disable-next-line no-instanceof/no-instanceof
         if (
           (typeof NotFoundError === "function" &&
+            // eslint-disable-next-line no-instanceof/no-instanceof
             err instanceof NotFoundError) ||
           err.name === "NotFoundError"
         ) {
@@ -124,7 +124,7 @@ export class ZepVectorStore extends VectorStore {
    */
   private async createCollection(args: IZepConfig) {
     if (!args.embeddingDimensions) {
-      throw new Error(`Collection ${args.collectionName} not found. 
+      throw new Error(`Collection ${args.collectionName} not found.
  You can create a new Collection by providing embeddingDimensions.`);
     }
 
