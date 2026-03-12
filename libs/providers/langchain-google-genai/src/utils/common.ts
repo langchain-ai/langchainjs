@@ -519,18 +519,27 @@ export function mapGenerateContentResultToChatResult(
     usageMetadata: UsageMetadata | undefined;
   }
 ): ChatResult {
-  // if rejected or error, return empty generations with reason in filters
+  // if rejected or error, throw a descriptive error instead of returning
+  // empty generations (which would cause a crash in BaseChatModel.invoke)
   if (
     !response.candidates ||
     response.candidates.length === 0 ||
     !response.candidates[0]
   ) {
-    return {
-      generations: [],
-      llmOutput: {
-        filters: response.promptFeedback,
-      },
-    };
+    const blockReason = response.promptFeedback?.blockReason;
+    if (blockReason) {
+      const safetyRatings = response.promptFeedback?.safetyRatings;
+      const ratingsInfo = safetyRatings
+        ? ` Safety ratings: ${JSON.stringify(safetyRatings)}`
+        : "";
+      throw new Error(
+        `Content generation was blocked by the API. Block reason: ${blockReason}.${ratingsInfo}`
+      );
+    }
+    throw new Error(
+      "No candidates returned from Google Generative AI. " +
+        "The response may have been blocked or an internal error occurred."
+    );
   }
   const [candidate] = response.candidates;
   const { content: candidateContent, ...generationInfo } = candidate;
