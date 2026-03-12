@@ -106,6 +106,7 @@
   "types": "./dist/index.d.cts",
   "exports": {
     ".": {
+      "browser": "./dist/browser.js",
       "input": "./src/index.ts",
       "require": {
         "types": "./dist/index.d.cts",
