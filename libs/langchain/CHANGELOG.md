@@ -1,5 +1,11 @@
 # langchain
 
+## 1.2.32
+
+### Patch Changes
+
+- [#10405](https://github.com/langchain-ai/langchainjs/pull/10405) [`afbf5f1`](https://github.com/langchain-ai/langchainjs/commit/afbf5f1b1a9c6014f994829ab92bbfcaecb8a30b) Thanks [@christian-bromann](https://github.com/christian-bromann)! - fix(langchain): add browser export
+
 ## 1.2.31
 
 ### Patch Changes
