@@ -39,10 +39,7 @@ export function toJsonSchema(
   if (isZodSchemaV4(schema)) {
     const inputSchema = interopZodTransformInputSchema(schema, true);
     if (isZodObjectV4(inputSchema)) {
-      const strictSchema = interopZodObjectStrict(
-        inputSchema,
-        true
-      );
+      const strictSchema = interopZodObjectStrict(inputSchema, true);
       return toJSONSchema(strictSchema as unknown as $ZodType, params);
     } else {
       return toJSONSchema(schema as unknown as $ZodType, params);
