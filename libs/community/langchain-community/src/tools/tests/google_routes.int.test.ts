@@ -1,4 +1,4 @@
-import { describe, expect } from "@jest/globals";
+import { describe, expect } from "vitest";
 import { GoogleRoutesAPI } from "../google_routes.js";
 
 describe.skip("GooglePlacesAPI", () => {

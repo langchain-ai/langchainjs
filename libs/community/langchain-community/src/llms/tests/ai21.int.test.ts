@@ -1,4 +1,4 @@
-import { test, describe, expect } from "@jest/globals";
+import { test, describe, expect } from "vitest";
 import { AI21 } from "../ai21.js";
 
 describe.skip("AI21", () => {

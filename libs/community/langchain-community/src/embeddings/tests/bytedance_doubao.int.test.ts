@@ -1,4 +1,4 @@
-import { test, expect } from "@jest/globals";
+import { test, expect } from "vitest";
 import { ByteDanceDoubaoEmbeddings } from "../bytedance_doubao.js";
 
 const modelName = "ep-xxx-xxx";

@@ -1,4 +1,4 @@
-import { test } from "@jest/globals";
+import { test } from "vitest";
 import { createClient } from "@vercel/kv";
 import { VercelKVStore } from "../vercel_kv.js";
 

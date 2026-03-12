@@ -1,4 +1,4 @@
-import { describe, expect, it, jest } from "@jest/globals";
+import { describe, expect, it, vi } from "vitest";
 import { AsyncCaller } from "@langchain/core/utils/async_caller";
 import { GoogleVertexAILLMConnection } from "../googlevertexai-connection.js";
 
@@ -10,7 +10,7 @@ describe("GoogleVertexAILLMConnection", () => {
       },
       new AsyncCaller({}),
       {
-        request: jest.fn(),
+        request: vi.fn(),
         getProjectId: async () => "fake_project_id",
       },
       false
@@ -22,7 +22,7 @@ describe("GoogleVertexAILLMConnection", () => {
       },
       new AsyncCaller({}),
       {
-        request: jest.fn(),
+        request: vi.fn(),
         getProjectId: async () => "fake_project_id",
       },
       true
@@ -41,7 +41,7 @@ describe("GoogleVertexAILLMConnection", () => {
 
   it("should use the customModelURL when provided", async () => {
     const fakeClient = {
-      request: jest.fn(),
+      request: vi.fn(),
       getProjectId: async () => "fake_project_id",
     };
     const asyncCaller = new AsyncCaller({});

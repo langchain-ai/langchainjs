@@ -1,7 +1,7 @@
 import * as url from "node:url";
 import * as path from "node:path";
 import { readFile } from "node:fs/promises";
-import { test, expect } from "@jest/globals";
+import { test, expect } from "vitest";
 import {
   UnstructuredDirectoryLoader,
   UnstructuredLoader,

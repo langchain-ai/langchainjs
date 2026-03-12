@@ -1,4 +1,4 @@
-import { expect, test } from "@jest/globals";
+import { expect, test } from "vitest";
 import { Document } from "@langchain/core/documents";
 import { BM25Retriever } from "../bm25.js";
 import { getTermFrequency } from "../../utils/@furkantoprak/bm25/BM25.js";

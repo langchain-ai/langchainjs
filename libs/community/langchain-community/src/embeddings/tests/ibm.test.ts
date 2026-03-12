@@ -1,6 +1,6 @@
 /* eslint-disable dot-notation */
 import { Gateway } from "@ibm-cloud/watsonx-ai/gateway";
-import { jest, expect, describe, test } from "@jest/globals";
+import { vi, expect, describe, test } from "vitest";
 import { testProperties } from "../../llms/tests/ibm.test.js";
 import { WatsonxEmbeddings, WatsonxInputEmbeddings } from "../ibm.js";
 
@@ -50,7 +50,7 @@ describe("Embeddings unit tests", () => {
 
       const instance = new WatsonxEmbeddings({ ...testProps, ...fakeAuthProp });
       if (instance["service"]) {
-        const spy = jest.spyOn(instance["service"], "embedText");
+        const spy = vi.spyOn(instance["service"], "embedText");
         const embedding = [1, 2, 3, 4, 5];
         spy.mockResolvedValue({
           result: {
@@ -111,10 +111,7 @@ describe("Positive tests with model gateway", () => {
 
     const instance = new WatsonxEmbeddings({ ...testProps, ...fakeAuthProp });
     if (instance["gateway"]) {
-      const spy = jest.spyOn(
-        instance["gateway"].embeddings.completion,
-        "create"
-      );
+      const spy = vi.spyOn(instance["gateway"].embeddings.completion, "create");
       const embedding = [1, 2, 3, 4, 5];
       spy.mockResolvedValue({
         result: {

@@ -1,14 +1,14 @@
-import { test, jest } from "@jest/globals";
+import { test, vi } from "vitest";
 import { compile } from "html-to-text";
 import { RecursiveUrlLoader } from "../web/recursive_url.js";
 
 describe("RecursiveUrlLoader", () => {
   beforeEach(() => {
-    jest.spyOn(console, "error");
+    vi.spyOn(console, "error");
   });
 
   afterEach(() => {
-    jest.restoreAllMocks();
+    vi.restoreAllMocks();
   });
 
   test("loading valid url", async () => {

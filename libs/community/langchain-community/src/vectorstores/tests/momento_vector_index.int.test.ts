@@ -1,4 +1,4 @@
-import { describe, expect } from "@jest/globals";
+import { describe, expect } from "vitest";
 import { faker } from "@faker-js/faker";
 import {
   PreviewVectorIndexClient,

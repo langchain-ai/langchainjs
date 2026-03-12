@@ -1,4 +1,4 @@
-import { test, expect } from "@jest/globals";
+import { test, expect } from "vitest";
 import { Replicate } from "../replicate.js";
 
 // Test skipped because Replicate appears to be timing out often when called

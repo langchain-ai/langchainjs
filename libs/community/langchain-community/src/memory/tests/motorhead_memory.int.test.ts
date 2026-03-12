@@ -1,4 +1,4 @@
-import { test, expect } from "@jest/globals";
+import { test, expect } from "vitest";
 import { MotorheadMemory } from "../motorhead_memory.js";
 
 test("Test managed motörhead memory", async () => {

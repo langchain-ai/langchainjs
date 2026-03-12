@@ -1,4 +1,4 @@
-import { beforeAll, expect, test } from "@jest/globals";
+import { beforeAll, expect, test } from "vitest";
 import { Document } from "@langchain/core/documents";
 import type { EmbeddingsInterface } from "@langchain/core/embeddings";
 import { SyntheticEmbeddings } from "@langchain/core/utils/testing";

@@ -2,7 +2,7 @@
 /* eslint-disable dot-notation */
 import { z } from "zod";
 import { DynamicStructuredTool } from "@langchain/core/tools";
-import { jest, describe, test, expect } from "@jest/globals";
+import { vi, describe, test, expect } from "vitest";
 import { Gateway } from "@ibm-cloud/watsonx-ai/gateway";
 import {
   transformStreamToObjectStream,
@@ -165,7 +165,7 @@ describe("Chat unit tests", () => {
       };
       const instance = new ChatWatsonx({ ...testProps, ...fakeAuthProp });
       if (instance["service"] as WatsonXAI) {
-        const spy = jest.spyOn(instance["service"] as WatsonXAI, "textChat");
+        const spy = vi.spyOn(instance["service"] as WatsonXAI, "textChat");
         spy.mockResolvedValue({
           status: 200,
           headers: {},
@@ -226,7 +226,7 @@ describe("Chat unit tests", () => {
         ],
       };
       if (instance["service"] as WatsonXAI) {
-        const spy = jest.spyOn(
+        const spy = vi.spyOn(
           instance["service"] as WatsonXAI,
           "textChatStream"
         );
@@ -409,7 +409,7 @@ describe("Chat unit tests", () => {
 
       const instance = new ChatWatsonx({ ...testProps, ...fakeAuthProp });
       if (instance["gateway"]) {
-        const spy = jest.spyOn(instance["gateway"].chat.completion, "create");
+        const spy = vi.spyOn(instance["gateway"].chat.completion, "create");
 
         spy.mockResolvedValue({
           status: 200,
@@ -611,7 +611,7 @@ describe("Chat unit tests", () => {
       const mockResponse = {
         choices: [{ message: { role: "assistant", content: "" } }],
       };
-      const spy = jest
+      const spy = vi
         .spyOn(instance["service"] as WatsonXAI, "textChat")
         .mockResolvedValue({ result: mockResponse } as any);
 
@@ -637,7 +637,7 @@ describe("Chat unit tests", () => {
       const mockResponse = {
         choices: [{ message: { role: "assistant", content: "" } }],
       };
-      const spy = jest
+      const spy = vi
         .spyOn(instance["service"] as WatsonXAI, "deploymentsTextChat")
         .mockResolvedValue({ result: mockResponse } as any);
 
@@ -665,7 +665,7 @@ describe("Chat unit tests", () => {
         yield { data: { choices: [{ delta: {} }] } };
       }
 
-      const spy = jest
+      const spy = vi
         .spyOn(instance["service"] as WatsonXAI, "textChatStream")
         .mockResolvedValue(mockStream() as any);
 
@@ -698,7 +698,7 @@ describe("Chat unit tests", () => {
         yield { data: { choices: [{ delta: {} }] } };
       }
 
-      const spy = jest
+      const spy = vi
         .spyOn(instance["service"] as WatsonXAI, "deploymentsTextChatStream")
         .mockResolvedValue(mockStream() as any);
 
@@ -743,9 +743,10 @@ describe("Chat unit tests", () => {
           },
         ],
       };
-      jest
-        .spyOn(instance["service"] as WatsonXAI as WatsonXAI, "textChat")
-        .mockResolvedValue({ result: mockResponse } as any);
+      vi.spyOn(
+        instance["service"] as WatsonXAI as WatsonXAI,
+        "textChat"
+      ).mockResolvedValue({ result: mockResponse } as any);
       const res = await instance.invoke("test");
 
       expect(res.additional_kwargs.reasoning).toBe(reasoning);
@@ -770,9 +771,10 @@ describe("Chat unit tests", () => {
           },
         ],
       };
-      jest
-        .spyOn(instance["service"] as WatsonXAI as WatsonXAI, "textChat")
-        .mockResolvedValue({ result: mockResponse } as any);
+      vi.spyOn(
+        instance["service"] as WatsonXAI as WatsonXAI,
+        "textChat"
+      ).mockResolvedValue({ result: mockResponse } as any);
       const res = await instance.invoke("test", {
         includeReasoning: true,
         reasoningEffort: "low",
@@ -796,7 +798,7 @@ describe("Chat unit tests", () => {
           data: { choices: [{ delta: { reasoning_content: reasoning } }] },
         };
       }
-      const spy = jest
+      const spy = vi
         .spyOn(instance["service"] as WatsonXAI as WatsonXAI, "textChatStream")
         .mockResolvedValue(mockStream() as any);
       const res = await instance.stream("test");
@@ -830,7 +832,7 @@ describe("Chat unit tests", () => {
           data: { choices: [{ delta: { reasoning_content: reasoning } }] },
         };
       }
-      const spy = jest
+      const spy = vi
         .spyOn(instance["service"] as WatsonXAI as WatsonXAI, "textChatStream")
         .mockResolvedValue(mockStream() as any);
       const res = await instance.stream("test", {
@@ -966,9 +968,9 @@ describe("Chat unit tests", () => {
       };
 
       if (instance["service"]) {
-        jest
-          .spyOn(instance["service"], "textChat")
-          .mockResolvedValue(mockResponse as any);
+        vi.spyOn(instance["service"], "textChat").mockResolvedValue(
+          mockResponse as any
+        );
       }
 
       const toolInvocationOptions = {

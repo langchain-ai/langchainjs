@@ -1,4 +1,4 @@
-import { test, expect } from "@jest/globals";
+import { test, expect } from "vitest";
 import { SerpAPI } from "../serpapi.js";
 
 describe("serp api test suite", () => {

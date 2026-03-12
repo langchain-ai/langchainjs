@@ -1,4 +1,4 @@
-import { expect, test } from "@jest/globals";
+import { expect, test } from "vitest";
 import { PuppeteerWebBaseLoader } from "../web/puppeteer.js";
 
 test.skip("Test puppeteer web scraper loader", async () => {

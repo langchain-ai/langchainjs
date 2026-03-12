@@ -1,4 +1,4 @@
-import { expect, test } from "@jest/globals";
+import { expect, test } from "vitest";
 import * as url from "node:url";
 import * as path from "node:path";
 import { PPTXLoader } from "../fs/pptx.js";

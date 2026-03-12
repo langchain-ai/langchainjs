@@ -1,4 +1,4 @@
-import { test } from "@jest/globals";
+import { test } from "vitest";
 import { WatsonxEmbeddings } from "../ibm.js";
 
 const projectId = process.env.WATSONX_AI_PROJECT_ID;

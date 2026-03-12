@@ -1,4 +1,4 @@
-import { test } from "@jest/globals";
+import { test } from "vitest";
 import { Redis as UpstashRedis } from "@upstash/redis";
 import { UpstashRedisStore } from "../upstash_redis.js";
 

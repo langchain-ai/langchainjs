@@ -79,6 +79,19 @@ describe("SessionsPythonREPLTool", () => {
   });
 
   describe("Invoke with Python code", () => {
+    let oldLangSmithTracing: string | undefined;
+    beforeEach(() => {
+      oldLangSmithTracing = process.env.LANGSMITH_TRACING;
+      process.env.LANGSMITH_TRACING = "false";
+    });
+    afterEach(() => {
+      if (oldLangSmithTracing === undefined) {
+        delete process.env.LANGSMITH_TRACING;
+      } else {
+        process.env.LANGSMITH_TRACING = oldLangSmithTracing;
+      }
+    });
+
     test("Should return correct output", async () => {
       const tool = new SessionsPythonREPLTool({
         poolManagementEndpoint:

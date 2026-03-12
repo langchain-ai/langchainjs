@@ -1,4 +1,4 @@
-import { describe, test, expect } from "@jest/globals";
+import { describe, test, expect } from "vitest";
 import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 import { z } from "zod/v3";
 

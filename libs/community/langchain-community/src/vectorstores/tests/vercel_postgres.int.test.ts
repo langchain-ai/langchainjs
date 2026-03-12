@@ -1,4 +1,4 @@
-import { expect, test } from "@jest/globals";
+import { expect, test } from "vitest";
 import { OpenAIEmbeddings } from "@langchain/openai";
 import { VercelPostgres } from "../vercel_postgres.js";
 

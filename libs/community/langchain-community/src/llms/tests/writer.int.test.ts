@@ -1,4 +1,4 @@
-import { test } from "@jest/globals";
+import { test } from "vitest";
 import { Writer } from "../writer.js";
 
 test.skip("Test Writer", async () => {

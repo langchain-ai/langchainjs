@@ -1,5 +1,4 @@
-import { test, expect } from "@jest/globals";
-import { ChatModelUnitTests } from "@langchain/standard-tests";
+import { ChatModelUnitTests } from "@langchain/standard-tests/vitest";
 import { AIMessageChunk } from "@langchain/core/messages";
 import { ChatFireworks, ChatFireworksCallOptions } from "../fireworks.js";
 
@@ -28,8 +27,4 @@ class ChatFireworksStandardUnitTests extends ChatModelUnitTests<
 }
 
 const testClass = new ChatFireworksStandardUnitTests();
-
-test("ChatFireworksStandardUnitTests", () => {
-  const testResults = testClass.runTests();
-  expect(testResults).toBe(true);
-});
+testClass.runTests("ChatFireworksStandardUnitTests");

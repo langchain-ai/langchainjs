@@ -1,4 +1,4 @@
-import { test, expect, describe } from "@jest/globals";
+import { test, expect, describe } from "vitest";
 import { FakeEmbeddings } from "@langchain/core/utils/testing";
 import { NeonPostgres } from "../neon.js";
 

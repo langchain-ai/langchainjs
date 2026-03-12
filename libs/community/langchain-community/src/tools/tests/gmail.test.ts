@@ -1,10 +1,10 @@
-import { jest, expect, describe } from "@jest/globals";
+import { vi, expect, describe } from "vitest";
 import { GmailGetMessage } from "../gmail/index.js";
 
-jest.mock("googleapis", () => ({
+vi.mock("googleapis", () => ({
   google: {
     auth: {
-      JWT: jest.fn().mockImplementation(() => ({})),
+      JWT: vi.fn().mockImplementation(() => ({})),
     },
   },
 }));

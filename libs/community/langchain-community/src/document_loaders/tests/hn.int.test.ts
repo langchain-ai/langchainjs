@@ -1,4 +1,4 @@
-import { test } from "@jest/globals";
+import { test } from "vitest";
 import { HNLoader } from "../web/hn.js";
 
 test("Test Hacker News loader", async () => {

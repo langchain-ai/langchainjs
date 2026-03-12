@@ -1,6 +1,6 @@
 import { AIMessageChunk } from "@langchain/core/messages";
 import { LangSmithParams } from "@langchain/core/language_models/chat_models";
-import { ChatModelUnitTests } from "@langchain/standard-tests";
+import { ChatModelUnitTests } from "@langchain/standard-tests/vitest";
 import {
   ChatWatsonx,
   ChatWatsonxConstructorInput,
@@ -53,8 +53,4 @@ class ChatWatsonxStandardTests extends ChatModelUnitTests<
 }
 
 const testClass = new ChatWatsonxStandardTests();
-
-test("ChatWatsonxStandardTests", () => {
-  const testResults = testClass.runTests();
-  expect(testResults).toBe(true);
-});
+testClass.runTests("ChatWatsonxStandardTests");

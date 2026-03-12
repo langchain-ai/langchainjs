@@ -1,4 +1,4 @@
-import { expect, test } from "@jest/globals";
+import { expect, test } from "vitest";
 import { Document } from "@langchain/core/documents";
 
 import { HtmlToTextTransformer } from "../html_to_text.js";
