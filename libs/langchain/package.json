@@ -106,6 +106,7 @@
   "types": "./dist/index.d.cts",
   "exports": {
     ".": {
+      "browser": "./dist/browser.js",
       "input": "./src/index.ts",
       "require": {
         "types": "./dist/index.d.cts",
@@ -114,6 +115,17 @@
       "import": {
         "types": "./dist/index.d.ts",
         "default": "./dist/index.js"
+      }
+    },
+    "./browser": {
+      "input": "./src/browser.ts",
+      "require": {
+        "types": "./dist/browser.d.cts",
+        "default": "./dist/browser.cjs"
+      },
+      "import": {
+        "types": "./dist/browser.d.ts",
+        "default": "./dist/browser.js"
       }
     },
     "./chat_models/universal": {
