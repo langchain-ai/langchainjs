@@ -1,4 +1,4 @@
-import { test, expect } from "@jest/globals";
+import { test, expect } from "vitest";
 
 import { TavilySearchAPIRetriever } from "../tavily_search_api.js";
 

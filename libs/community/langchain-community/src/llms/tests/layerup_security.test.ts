@@ -1,4 +1,4 @@
-import { test } from "@jest/globals";
+import { test } from "vitest";
 import {
   LLM,
   type BaseLLMCallOptions,
@@ -47,5 +47,5 @@ test("Test LayerupSecurity with invalid API key", async () => {
     await layerupSecurity.invoke(
       "My name is Bob Dylan. My SSN is 123-45-6789."
     );
-  }).rejects.toThrowError();
+  }).rejects.toThrow();
 }, 50000);

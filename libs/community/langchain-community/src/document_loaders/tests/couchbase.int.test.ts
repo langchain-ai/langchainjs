@@ -1,4 +1,4 @@
-import { test, expect } from "@jest/globals";
+import { test, expect } from "vitest";
 import { Cluster } from "couchbase";
 import { CouchbaseDocumentLoader } from "../web/couchbase.js";
 

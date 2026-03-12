@@ -1,4 +1,4 @@
-import { describe, test, expect } from "@jest/globals";
+import { describe, test, expect } from "vitest";
 import { Document } from "@langchain/core/documents";
 import { GoogleCloudStorageDocstore } from "../gcs.js";
 

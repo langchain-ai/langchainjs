@@ -1,4 +1,4 @@
-import { test, expect } from "@jest/globals";
+import { test, expect } from "vitest";
 import { SystemMessage, HumanMessage } from "@langchain/core/messages";
 import { ChatZhipuAI } from "../zhipuai.js";
 import { tool } from "@langchain/core/tools";

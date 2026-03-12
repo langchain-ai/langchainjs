@@ -1,4 +1,4 @@
-import { test, jest, expect } from "@jest/globals";
+import { test, vi, expect } from "vitest";
 import {
   ConfluencePagesLoader,
   ConfluenceAPIResponse,
@@ -34,7 +34,7 @@ test("Test ConfluenceLoader and fetchConfluenceData calls", async () => {
 
   // Our fetchConfluenceData function is called recursively
   // until the size of the response is 0
-  const fetchConfluenceDataMock = jest
+  const fetchConfluenceDataMock = vi
     .spyOn(loader, "fetchConfluenceData")
     .mockImplementationOnce(
       () =>

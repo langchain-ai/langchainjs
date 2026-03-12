@@ -6,7 +6,7 @@ import {
   afterAll,
   expect,
   beforeAll,
-} from "@jest/globals";
+} from "vitest";
 import { Cluster } from "couchbase";
 import { OpenAIEmbeddings } from "@langchain/openai";
 import { Document } from "@langchain/core/documents";

@@ -1,4 +1,4 @@
-import { test, expect } from "@jest/globals";
+import { test, expect } from "vitest";
 import { TogetherAIEmbeddings } from "../togetherai.js";
 
 test.skip("Test TogetherAIEmbeddings.embedQuery", async () => {

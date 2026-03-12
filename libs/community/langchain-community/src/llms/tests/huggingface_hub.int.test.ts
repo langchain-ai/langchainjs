@@ -1,4 +1,4 @@
-import { test } from "@jest/globals";
+import { test } from "vitest";
 import { HuggingFaceInference } from "../hf.js";
 
 test.skip("Test HuggingFace", async () => {

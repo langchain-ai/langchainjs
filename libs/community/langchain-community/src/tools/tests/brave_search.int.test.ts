@@ -1,4 +1,4 @@
-import { test } from "@jest/globals";
+import { test } from "vitest";
 import { BraveSearch } from "../brave_search.js";
 
 test.skip("BraveSearchTool", async () => {

@@ -1,20 +1,22 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { test, expect, describe, jest, beforeEach } from "@jest/globals";
+import { test, expect, describe, vi, beforeEach } from "vitest";
 import { SageMakerEndpointEmbeddings } from "../sagemaker_endpoint.js";
 
-const mockSend = jest.fn<() => Promise<any>>();
+const { mockSend } = vi.hoisted(() => ({
+  mockSend: vi.fn<() => Promise<any>>(),
+}));
 
 // Mock the AWS SDK
-jest.mock("@aws-sdk/client-sagemaker-runtime", () => ({
-  SageMakerRuntimeClient: jest.fn().mockImplementation(() => ({
+vi.mock("@aws-sdk/client-sagemaker-runtime", () => ({
+  SageMakerRuntimeClient: vi.fn().mockImplementation(() => ({
     send: mockSend,
   })),
-  InvokeEndpointCommand: jest.fn().mockImplementation((params) => params),
+  InvokeEndpointCommand: vi.fn().mockImplementation((params) => params),
 }));
 
 describe("SageMakerEndpointEmbeddings", () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     mockSend.mockClear();
   });
 
@@ -225,10 +227,10 @@ describe("SageMakerEndpointEmbeddings", () => {
   });
 
   describe("Configuration options", () => {
-    test("should pass additional client options", () => {
-      const { SageMakerRuntimeClient } = jest.requireMock(
+    test("should pass additional client options", async () => {
+      const { SageMakerRuntimeClient } = await vi.importMock<any>(
         "@aws-sdk/client-sagemaker-runtime"
-      ) as any;
+      );
 
       new SageMakerEndpointEmbeddings({
         endpointName: "test-endpoint",

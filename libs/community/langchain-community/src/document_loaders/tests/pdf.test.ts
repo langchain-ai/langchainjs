@@ -1,4 +1,4 @@
-import { test, expect } from "@jest/globals";
+import { test, expect } from "vitest";
 import * as url from "node:url";
 import * as path from "node:path";
 import { PDFLoader } from "../fs/pdf.js";

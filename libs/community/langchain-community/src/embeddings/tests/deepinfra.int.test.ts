@@ -1,4 +1,4 @@
-import { test, expect } from "@jest/globals";
+import { test, expect } from "vitest";
 import { DeepInfraEmbeddings } from "../deepinfra.js";
 
 test("Test DeepInfraEmbeddings.embedQuery", async () => {

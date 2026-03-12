@@ -1,7 +1,7 @@
 import { CallbackManager } from "@langchain/core/callbacks/manager";
 import { LLMResult } from "@langchain/core/outputs";
 import { StringPromptValue } from "@langchain/core/prompt_values";
-import { expect, describe, test } from "@jest/globals";
+import { expect, describe, test } from "vitest";
 import { TokenUsage } from "../../types/ibm.js";
 import { WatsonxLLM, WatsonxInputLLM } from "../ibm.js";
 

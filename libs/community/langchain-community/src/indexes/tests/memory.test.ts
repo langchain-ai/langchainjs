@@ -1,4 +1,4 @@
-import { describe, expect, test, jest } from "@jest/globals";
+import { describe, expect, test, vi } from "vitest";
 import { InMemoryRecordManager } from "../memory.js";
 
 describe("MemoryRecordmanagerTest", () => {
@@ -25,12 +25,12 @@ describe("MemoryRecordmanagerTest", () => {
   test("Test upsertion with timeAtLeast", async () => {
     // Mock getTime to return 100.
     const unmockedGetTime = recordManager.getTime;
-    recordManager.getTime = jest.fn(() => Promise.resolve(100));
+    recordManager.getTime = vi.fn(() => Promise.resolve(100));
 
     const keys = ["a", "b", "c"];
     await expect(
       recordManager.update(keys, { timeAtLeast: 110 })
-    ).rejects.toThrowError();
+    ).rejects.toThrow();
     const readKeys = await recordManager.listKeys();
     expect(readKeys).toHaveLength(0);
 
@@ -40,14 +40,14 @@ describe("MemoryRecordmanagerTest", () => {
 
   test("Test update timestamp", async () => {
     const unmockedGetTime = recordManager.getTime;
-    recordManager.getTime = jest.fn(() => Promise.resolve(100));
+    recordManager.getTime = vi.fn(() => Promise.resolve(100));
     try {
       const keys = ["a", "b", "c"];
       await recordManager.update(keys);
       const res = recordManager.records;
       res.forEach((row) => expect(row.updatedAt).toEqual(100));
 
-      recordManager.getTime = jest.fn(() => Promise.resolve(200));
+      recordManager.getTime = vi.fn(() => Promise.resolve(200));
       await recordManager.update(keys);
       const res2 = recordManager.records;
       res2.forEach((row) => expect(row.updatedAt).toEqual(200));
@@ -93,7 +93,7 @@ describe("MemoryRecordmanagerTest", () => {
 
   test("List keys", async () => {
     const unmockedGetTime = recordManager.getTime;
-    recordManager.getTime = jest.fn(() => Promise.resolve(100));
+    recordManager.getTime = vi.fn(() => Promise.resolve(100));
     try {
       const keys = ["a", "b", "c"];
       await recordManager.update(keys);
@@ -128,9 +128,9 @@ describe("MemoryRecordmanagerTest", () => {
       expect(readKeysBeforeInsertedAfter).toEqual([]);
 
       // Set one key to updated at 120 and one at 80
-      recordManager.getTime = jest.fn(() => Promise.resolve(120));
+      recordManager.getTime = vi.fn(() => Promise.resolve(120));
       await recordManager.update(["a"]);
-      recordManager.getTime = jest.fn(() => Promise.resolve(80));
+      recordManager.getTime = vi.fn(() => Promise.resolve(80));
       await recordManager.update(["b"]);
 
       // All keys updated after 90 and before 110: should only be "c" now

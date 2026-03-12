@@ -1,4 +1,4 @@
-import { test } from "@jest/globals";
+import { test } from "vitest";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import {
   SystemMessage,

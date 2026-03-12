@@ -1,4 +1,4 @@
-import { test, expect } from "@jest/globals";
+import { test, expect } from "vitest";
 import { randomUUID } from "crypto";
 import { Mem0Memory } from "../mem0.js";
 

@@ -1,4 +1,4 @@
-import { expect, test } from "@jest/globals";
+import { expect, test } from "vitest";
 import pg, { PoolConfig } from "pg";
 import { OpenAIEmbeddings } from "@langchain/openai";
 import { PGVectorStore, PGVectorStoreArgs } from "../../pgvector.js";

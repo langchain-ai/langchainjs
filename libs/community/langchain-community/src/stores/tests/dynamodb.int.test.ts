@@ -1,4 +1,4 @@
-import { test, expect, beforeEach, afterEach } from "@jest/globals";
+import { test, expect, beforeEach, afterEach } from "vitest";
 import { HumanMessage, AIMessage } from "@langchain/core/messages";
 import { DynamoDBChatMessageHistory } from "../message/dynamodb.js";
 

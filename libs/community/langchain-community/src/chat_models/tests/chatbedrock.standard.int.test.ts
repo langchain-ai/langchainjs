@@ -1,5 +1,4 @@
-import { test, expect } from "@jest/globals";
-import { ChatModelIntegrationTests } from "@langchain/standard-tests";
+import { ChatModelIntegrationTests } from "@langchain/standard-tests/vitest";
 import { AIMessageChunk } from "@langchain/core/messages";
 import { BaseChatModelCallOptions } from "@langchain/core/language_models/chat_models";
 import { BedrockChat } from "../bedrock/index.js";
@@ -67,8 +66,4 @@ class BedrockChatStandardIntegrationTests extends ChatModelIntegrationTests<
 }
 
 const testClass = new BedrockChatStandardIntegrationTests();
-
-test("BedrockChatStandardIntegrationTests", async () => {
-  const testResults = await testClass.runTests();
-  expect(testResults).toBe(true);
-});
+testClass.runTests("BedrockChatStandardIntegrationTests");

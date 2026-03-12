@@ -1,4 +1,4 @@
-import { test } from "@jest/globals";
+import { test } from "vitest";
 import { DeepInfraLLM } from "../deepinfra.js";
 
 test("Test DeepInfra", async () => {

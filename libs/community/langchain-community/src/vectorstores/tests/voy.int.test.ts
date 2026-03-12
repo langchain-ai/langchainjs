@@ -1,4 +1,4 @@
-import { expect, test } from "@jest/globals";
+import { expect, test } from "vitest";
 import { Voy as VoyOriginClient } from "voy-search";
 import { OpenAIEmbeddings } from "@langchain/openai";
 import { Document } from "@langchain/core/documents";

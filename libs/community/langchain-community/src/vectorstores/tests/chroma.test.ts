@@ -1,29 +1,29 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { jest, test, expect } from "@jest/globals";
+import { vi, test, expect } from "vitest";
 
 import { type Collection } from "chromadb";
 import { FakeEmbeddings } from "@langchain/core/utils/testing";
 import { Chroma } from "../chroma.js";
 
 const mockCollection = {
-  count: jest.fn<Collection["count"]>().mockResolvedValue(5),
-  upsert: jest.fn<Collection["upsert"]>().mockResolvedValue(undefined as any),
-  delete: jest.fn<Collection["delete"]>().mockResolvedValue(undefined as any),
-  // add: jest.fn<Collection["add"]>().mockResolvedValue(undefined as any),
-  // modify: jest.fn<Collection["modify"]>().mockResolvedValue(undefined as any),
-  // get: jest.fn<Collection["get"]>().mockResolvedValue(undefined as any),
-  // update: jest.fn<Collection["update"]>().mockResolvedValue({ success: true }),
-  // query: jest.fn<Collection["query"]>().mockResolvedValue(undefined as any),
-  // peek: jest.fn<Collection["peek"]>().mockResolvedValue(undefined as any),
+  count: vi.fn<Collection["count"]>().mockResolvedValue(5),
+  upsert: vi.fn<Collection["upsert"]>().mockResolvedValue(undefined as any),
+  delete: vi.fn<Collection["delete"]>().mockResolvedValue(undefined as any),
+  // add: vi.fn<Collection["add"]>().mockResolvedValue(undefined as any),
+  // modify: vi.fn<Collection["modify"]>().mockResolvedValue(undefined as any),
+  // get: vi.fn<Collection["get"]>().mockResolvedValue(undefined as any),
+  // update: vi.fn<Collection["update"]>().mockResolvedValue({ success: true }),
+  // query: vi.fn<Collection["query"]>().mockResolvedValue(undefined as any),
+  // peek: vi.fn<Collection["peek"]>().mockResolvedValue(undefined as any),
 } as any;
 
 const mockClient = {
-  getOrCreateCollection: jest.fn<any>().mockResolvedValue(mockCollection),
+  getOrCreateCollection: vi.fn<any>().mockResolvedValue(mockCollection),
 } as any;
 
 describe("Chroma", () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
   test("imports correctly", async () => {
     const { ChromaClient } = await Chroma.imports();
@@ -43,7 +43,7 @@ describe("Chroma", () => {
   test("should add vectors to the collection", async () => {
     const expectedPageContents = ["Document 1", "Document 2"];
     const embeddings = new FakeEmbeddings();
-    jest.spyOn(embeddings, "embedDocuments");
+    vi.spyOn(embeddings, "embedDocuments");
     const args = {
       collectionName: "testCollection",
       index: mockClient,
@@ -67,7 +67,7 @@ describe("Chroma", () => {
   test("should override loc.lines with locFrom/locTo", async () => {
     const expectedPageContents = ["Document 1"];
     const embeddings = new FakeEmbeddings();
-    jest.spyOn(embeddings, "embedDocuments");
+    vi.spyOn(embeddings, "embedDocuments");
 
     const args = { collectionName: "testCollection", index: mockClient };
     const documents = expectedPageContents.map((pc) => ({
@@ -101,14 +101,14 @@ describe("Chroma", () => {
     const chroma = new Chroma(new FakeEmbeddings(), args);
     chroma.numDimensions = 3; // Mismatched numDimensions
 
-    await expect(chroma.addVectors(vectors, documents)).rejects.toThrowError();
+    await expect(chroma.addVectors(vectors, documents)).rejects.toThrow();
   });
 
   test("should perform similarity search and return results", async () => {
     const args = { collectionName: "testCollection" };
     const query = [1, 2];
     const expectedResultCount = 5;
-    mockCollection.query = jest.fn<Collection["query"]>().mockResolvedValue({
+    mockCollection.query = vi.fn<Collection["query"]>().mockResolvedValue({
       ids: [["0", "1", "2", "3", "4"]],
       distances: [[0.1, 0.2, 0.3, 0.4, 0.5]],
       documents: [

@@ -1,4 +1,4 @@
-import { test, expect, describe, jest } from "@jest/globals";
+import { test, expect, describe, vi } from "vitest";
 import { AIMessage } from "@langchain/core/messages";
 import { ChatCerebras } from "../chat_models.js";
 
@@ -53,7 +53,7 @@ describe("withStructuredOutput - StandardSchema", () => {
       model: "llama-3.3-70b",
       apiKey: "testing",
     });
-    jest
+    vi
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       .spyOn(model as any, "invoke")
       .mockResolvedValue(
@@ -82,7 +82,7 @@ describe("withStructuredOutput - StandardSchema", () => {
       model: "llama-3.3-70b",
       apiKey: "testing",
     });
-    jest
+    vi
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       .spyOn(model as any, "invoke")
       .mockResolvedValue(
@@ -124,7 +124,7 @@ describe("withStructuredOutput - StandardSchema", () => {
       model: "llama-3.3-70b",
       apiKey: "testing",
     });
-    jest
+    vi
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       .spyOn(model as any, "invoke")
       .mockResolvedValue(mockResponse);
@@ -146,7 +146,7 @@ describe("withStructuredOutput - StandardSchema", () => {
       model: "llama-3.3-70b",
       apiKey: "testing",
     });
-    jest
+    vi
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       .spyOn(model as any, "invoke")
       .mockResolvedValue(new AIMessage({ content: "No tools here" }));

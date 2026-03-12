@@ -1,4 +1,4 @@
-import { test } from "@jest/globals";
+import { test } from "vitest";
 import { z } from "zod/v3";
 import { toJsonSchema } from "@langchain/core/utils/json_schema";
 import { HumanMessage } from "@langchain/core/messages";

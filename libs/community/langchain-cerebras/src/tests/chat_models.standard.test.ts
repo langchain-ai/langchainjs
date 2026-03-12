@@ -1,6 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { test, expect } from "@jest/globals";
-import { ChatModelUnitTests } from "@langchain/standard-tests";
+import { ChatModelUnitTests } from "@langchain/standard-tests/vitest";
 import { AIMessageChunk } from "@langchain/core/messages";
 import { ChatCerebras, ChatCerebrasCallOptions } from "../chat_models.js";
 
@@ -36,8 +35,4 @@ class ChatCerebrasStandardUnitTests extends ChatModelUnitTests<
 }
 
 const testClass = new ChatCerebrasStandardUnitTests();
-
-test("ChatCerebrasStandardUnitTests", () => {
-  const testResults = testClass.runTests();
-  expect(testResults).toBe(true);
-});
+testClass.runTests("ChatCerebrasStandardUnitTests");

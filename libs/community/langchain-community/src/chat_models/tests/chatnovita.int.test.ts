@@ -1,4 +1,4 @@
-import { describe, test } from "@jest/globals";
+import { describe, test } from "vitest";
 import { ChatMessage, HumanMessage } from "@langchain/core/messages";
 import {
   PromptTemplate,

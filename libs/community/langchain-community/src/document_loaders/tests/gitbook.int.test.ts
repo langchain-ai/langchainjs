@@ -1,4 +1,4 @@
-import { test } from "@jest/globals";
+import { test } from "vitest";
 import { GitbookLoader } from "../web/gitbook.js";
 
 test("Test GitbookLoader", async () => {

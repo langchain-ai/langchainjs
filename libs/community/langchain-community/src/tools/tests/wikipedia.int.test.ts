@@ -1,4 +1,4 @@
-import { test, expect } from "@jest/globals";
+import { test, expect } from "vitest";
 import { WikipediaQueryRun } from "../wikipedia_query_run.js";
 
 test.skip("WikipediaQueryRunTool returns a string for valid query", async () => {

@@ -1,4 +1,4 @@
-import { test, expect } from "@jest/globals";
+import { test, expect } from "vitest";
 
 import { HumanMessage, AIMessage } from "@langchain/core/messages";
 import { MemoryDatastore } from "datastore-core";

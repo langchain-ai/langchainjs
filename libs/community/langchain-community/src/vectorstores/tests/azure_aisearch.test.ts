@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { jest, test, expect } from "@jest/globals";
+import { vi, test, expect } from "vitest";
 import { SearchIndexingBufferedSender } from "@azure/search-documents";
 import { FakeEmbeddings } from "@langchain/core/utils/testing";
 import {
@@ -7,17 +7,14 @@ import {
   AzureAISearchVectorStore,
 } from "../azure_aisearch.js";
 
-const embedMock = jest.spyOn(FakeEmbeddings.prototype, "embedDocuments");
-const uploadDocumentsMock = jest.spyOn(
+const embedMock = vi.spyOn(FakeEmbeddings.prototype, "embedDocuments");
+const uploadDocumentsMock = vi.spyOn(
   SearchIndexingBufferedSender.prototype,
   "uploadDocuments"
 );
-const onMock = jest.spyOn(SearchIndexingBufferedSender.prototype, "on");
-const flushMock = jest.spyOn(SearchIndexingBufferedSender.prototype, "flush");
-const disposeMock = jest.spyOn(
-  SearchIndexingBufferedSender.prototype,
-  "dispose"
-);
+const onMock = vi.spyOn(SearchIndexingBufferedSender.prototype, "on");
+const flushMock = vi.spyOn(SearchIndexingBufferedSender.prototype, "flush");
+const disposeMock = vi.spyOn(SearchIndexingBufferedSender.prototype, "dispose");
 
 beforeEach(() => {
   embedMock.mockClear();
@@ -30,7 +27,7 @@ beforeEach(() => {
 test("AzureAISearchVectorStore addVectors should upload documents in batches", async () => {
   const embeddings = new FakeEmbeddings();
   const client = {
-    indexDocuments: jest.fn(),
+    indexDocuments: vi.fn(),
   };
 
   const store = new AzureAISearchVectorStore(embeddings, {
@@ -66,7 +63,7 @@ test("AzureAISearchVectorStore addVectors should upload documents in batches", a
 test("AzureAISearchVectorStore addDocuments should embed and upload documents in batches", async () => {
   const embeddings = new FakeEmbeddings();
   const client = {
-    indexDocuments: jest.fn(),
+    indexDocuments: vi.fn(),
   };
 
   const store = new AzureAISearchVectorStore(embeddings, {
@@ -101,7 +98,7 @@ test("AzureAISearchVectorStore addDocuments should embed and upload documents in
 test("AzureAISearchVectorStore addDocuments should use specified IDs", async () => {
   const embeddings = new FakeEmbeddings();
   const client = {
-    indexDocuments: jest.fn(),
+    indexDocuments: vi.fn(),
   };
 
   const store = new AzureAISearchVectorStore(embeddings, {
@@ -136,7 +133,7 @@ test("AzureAISearchVectorStore similarity search works", async () => {
   const search = "test-query";
   const embeddings = new FakeEmbeddings();
   const client = {
-    search: jest.fn<any>().mockResolvedValue({
+    search: vi.fn<any>().mockResolvedValue({
       results: [],
     }),
   };
@@ -159,7 +156,7 @@ test("AzureAISearchVectorStore similarity hybrid search works", async () => {
   const search = "test-query";
   const embeddings = new FakeEmbeddings();
   const client = {
-    search: jest.fn<any>().mockResolvedValue({
+    search: vi.fn<any>().mockResolvedValue({
       results: [],
     }),
   };
@@ -182,7 +179,7 @@ test("AzureAISearchVectorStore semantic hybrid search works", async () => {
   const search = "test-query";
   const embeddings = new FakeEmbeddings();
   const client = {
-    search: jest.fn<any>().mockResolvedValue({
+    search: vi.fn<any>().mockResolvedValue({
       results: [],
     }),
   };

@@ -1,4 +1,4 @@
-import { test, expect } from "@jest/globals";
+import { test, expect } from "vitest";
 import { FireworksEmbeddings } from "../fireworks.js";
 
 test.skip("Test FireworksEmbeddings.embedQuery", async () => {

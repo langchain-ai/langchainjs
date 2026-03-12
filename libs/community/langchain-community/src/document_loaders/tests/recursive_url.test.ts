@@ -1,11 +1,4 @@
-import {
-  test,
-  describe,
-  expect,
-  jest,
-  beforeEach,
-  afterEach,
-} from "@jest/globals";
+import { test, describe, expect, vi, beforeEach, afterEach } from "vitest";
 import { RecursiveUrlLoader } from "../web/recursive_url.js";
 
 const _originalFetch = globalThis.fetch;
@@ -16,7 +9,7 @@ describe("RecursiveUrlLoader - Redirect SSRF Protection", () => {
   });
 
   test("blocks redirects to private IPs (localhost)", async () => {
-    globalThis.fetch = jest.fn<typeof fetch>().mockResolvedValue(
+    globalThis.fetch = vi.fn<typeof fetch>().mockResolvedValue(
       new Response(null, {
         status: 302,
         headers: { Location: "http://127.0.0.1/admin" },
@@ -31,7 +24,7 @@ describe("RecursiveUrlLoader - Redirect SSRF Protection", () => {
   });
 
   test("blocks redirects to cloud metadata IPs", async () => {
-    globalThis.fetch = jest.fn<typeof fetch>().mockResolvedValue(
+    globalThis.fetch = vi.fn<typeof fetch>().mockResolvedValue(
       new Response(null, {
         status: 302,
         headers: { Location: "http://169.254.169.254/latest/meta-data/" },
@@ -46,7 +39,7 @@ describe("RecursiveUrlLoader - Redirect SSRF Protection", () => {
   });
 
   test("blocks redirects to private network ranges", async () => {
-    globalThis.fetch = jest.fn<typeof fetch>().mockResolvedValue(
+    globalThis.fetch = vi.fn<typeof fetch>().mockResolvedValue(
       new Response(null, {
         status: 302,
         headers: { Location: "http://192.168.1.1/internal" },
@@ -61,7 +54,7 @@ describe("RecursiveUrlLoader - Redirect SSRF Protection", () => {
   });
 
   test("follows safe redirects", async () => {
-    globalThis.fetch = jest
+    globalThis.fetch = vi
       .fn<typeof fetch>()
       .mockResolvedValueOnce(
         new Response(null, {
@@ -85,7 +78,7 @@ describe("RecursiveUrlLoader - Redirect SSRF Protection", () => {
   });
 
   test("throws on too many redirects", async () => {
-    globalThis.fetch = jest.fn<typeof fetch>().mockResolvedValue(
+    globalThis.fetch = vi.fn<typeof fetch>().mockResolvedValue(
       new Response(null, {
         status: 302,
         headers: { Location: "https://example.com/loop" },

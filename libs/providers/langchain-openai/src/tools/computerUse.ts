@@ -200,7 +200,7 @@ export interface ComputerUseOptions {
 /**
  * OpenAI Computer Use tool type for the Responses API.
  */
-export type ComputerUseTool = OpenAIClient.Responses.ComputerTool;
+export type ComputerUseTool = OpenAIClient.Responses.ComputerUsePreviewTool;
 
 const TOOL_NAME = "computer_use";
 

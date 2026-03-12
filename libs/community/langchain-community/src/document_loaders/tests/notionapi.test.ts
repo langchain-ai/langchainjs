@@ -1,7 +1,7 @@
 import * as fs from "node:fs";
 import * as url from "node:url";
 import * as path from "node:path";
-import { test } from "@jest/globals";
+import { test } from "vitest";
 import {
   DatabaseObjectResponse,
   NotionAPILoader,

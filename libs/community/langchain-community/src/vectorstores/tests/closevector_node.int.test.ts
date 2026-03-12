@@ -1,4 +1,4 @@
-import { test, expect } from "@jest/globals";
+import { test, expect } from "vitest";
 import { OpenAIEmbeddings } from "@langchain/openai";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import { CloseVectorNode } from "../closevector/node.js";

@@ -1,4 +1,4 @@
-import { test } from "@jest/globals";
+import { test } from "vitest";
 import { NotionAPILoader } from "../web/notionapi.js";
 
 test.skip("Test Notion API Loader Page", async () => {

@@ -1,4 +1,4 @@
-import { expect } from "@jest/globals";
+import { expect } from "vitest";
 import { FakeEmbeddings } from "@langchain/core/utils/testing";
 import { HanaDB } from "../hanavector.js";
 

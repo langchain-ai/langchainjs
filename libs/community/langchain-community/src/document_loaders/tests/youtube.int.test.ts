@@ -1,4 +1,4 @@
-import { test, expect } from "@jest/globals";
+import { test, expect } from "vitest";
 import { YoutubeLoader } from "../web/youtube.js";
 
 test("Test Youtube loader", async () => {

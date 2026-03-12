@@ -1,4 +1,4 @@
-import { test, expect, describe } from "@jest/globals";
+import { test, expect, describe } from "vitest";
 import { OpenAIEmbeddings } from "@langchain/openai";
 import { Document } from "@langchain/core/documents";
 import { CassandraClientFactory } from "../../utils/cassandra.js";

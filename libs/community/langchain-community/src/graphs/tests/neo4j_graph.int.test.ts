@@ -1,4 +1,4 @@
-import { test } from "@jest/globals";
+import { test } from "vitest";
 import { Document } from "@langchain/core/documents";
 import { BASE_ENTITY_LABEL, Neo4jGraph } from "../neo4j_graph.js";
 import { GraphDocument, Relationship, Node } from "../document.js";

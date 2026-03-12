@@ -1,4 +1,4 @@
-import { expect, test } from "@jest/globals";
+import { expect, test } from "vitest";
 import { PlaywrightWebBaseLoader } from "../web/playwright.js";
 
 test("Test playwright web scraper loader", async () => {

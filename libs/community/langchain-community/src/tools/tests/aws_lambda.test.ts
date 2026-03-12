@@ -1,20 +1,23 @@
-import { test, jest, expect } from "@jest/globals";
+import { test, vi, expect } from "vitest";
 import LambdaClient from "@aws-sdk/client-lambda";
 
 import { AWSLambda } from "../aws_lambda.js";
 
-jest.mock("@aws-sdk/client-lambda", () => ({
-  LambdaClient: jest.fn().mockImplementation(() => ({
-    send: jest.fn().mockImplementation(() =>
-      Promise.resolve({
-        Payload: new TextEncoder().encode(
-          JSON.stringify({ body: "email sent." })
-        ),
-      })
-    ),
-  })),
-  InvokeCommand: jest.fn().mockImplementation(() => ({})),
-}));
+vi.mock("@aws-sdk/client-lambda", () => {
+  const mod = {
+    LambdaClient: vi.fn().mockImplementation(() => ({
+      send: vi.fn().mockImplementation(() =>
+        Promise.resolve({
+          Payload: new TextEncoder().encode(
+            JSON.stringify({ body: "email sent." })
+          ),
+        })
+      ),
+    })),
+    InvokeCommand: vi.fn().mockImplementation(() => ({})),
+  };
+  return { ...mod, default: mod };
+});
 
 test("AWSLambda invokes the correct lambda function and returns the response.body contents", async () => {
   if (!LambdaClient) {

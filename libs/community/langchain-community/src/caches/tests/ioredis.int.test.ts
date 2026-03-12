@@ -1,5 +1,5 @@
 import { Redis } from "ioredis";
-import { test, expect } from "@jest/globals";
+import { test, expect } from "vitest";
 
 import { OpenAI, ChatOpenAI } from "@langchain/openai";
 import { RedisCache } from "../ioredis.js";
