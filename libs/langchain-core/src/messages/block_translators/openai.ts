@@ -461,7 +461,7 @@ export function convertToV1FromResponses(
                 ? "success"
                 : toolOutput.status === "failed"
                   ? "error"
-                  : undefined,
+                  : "success",
             output: {
               tools: _isArray(toolOutput.tools) ? toolOutput.tools : [],
             },
