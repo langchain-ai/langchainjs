@@ -397,8 +397,8 @@ function convertStandardContentMessageToGeminiContent(
   } else if (AIMessage.isInstance(message)) {
     role = "model";
   } else if (ToolMessage.isInstance(message)) {
-    // Tool messages in Gemini are represented as function responses
-    role = "function";
+    // Tool messages in Gemini were represented as function responses, but now are "user"
+    role = "user";
   } else if (ChatMessage.isInstance(message)) {
     // Map ChatMessage roles to Gemini roles
     const msgRole = message.role.toLowerCase();
@@ -411,7 +411,7 @@ function convertStandardContentMessageToGeminiContent(
     ) {
       role = "model";
     } else if (msgRole === "function" || msgRole === "tool") {
-      role = "function";
+      role = "user";
     } else {
       // Default to user for unknown roles
       role = "user";
@@ -682,8 +682,8 @@ function convertLegacyContentMessageToGeminiContent(
     } else if (AIMessage.isInstance(message)) {
       return "model";
     } else if (ToolMessage.isInstance(message)) {
-      // Tool messages in Gemini are represented as function responses
-      return "function";
+      // Tool messages in Gemini were represented as function responses, but now are "user"
+      return "user";
     } else if (ChatMessage.isInstance(message)) {
       // Map ChatMessage roles to Gemini roles
       const msgRole = message.role.toLowerCase();
@@ -696,7 +696,7 @@ function convertLegacyContentMessageToGeminiContent(
       ) {
         return "model";
       } else if (msgRole === "function" || msgRole === "tool") {
-        return "function";
+        return "user";
       } else {
         // Default to user for unknown roles
         return "user";
@@ -789,11 +789,6 @@ function convertLegacyContentMessageToGeminiContent(
         response: { result: responseContent },
       },
     });
-  }
-
-  // Remove non-functionResponse parts if this is a tool response
-  if (role === "function") {
-    parts = parts.filter((part) => "functionResponse" in part);
   }
 
   // Only add content if we have parts
