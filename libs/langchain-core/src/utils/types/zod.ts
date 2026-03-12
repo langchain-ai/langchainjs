@@ -67,9 +67,15 @@ export interface ZodV3Like<Output = any, Input = Output> {
   readonly _def: ZodV3TypeDef;
   readonly description?: string;
   parse(data: unknown, params?: any): Output;
-  safeParse(data: unknown, params?: any): { success: boolean; data?: Output; error?: unknown };
+  safeParse(
+    data: unknown,
+    params?: any
+  ): { success: boolean; data?: Output; error?: unknown };
   parseAsync(data: unknown, params?: any): Promise<Output>;
-  safeParseAsync(data: unknown, params?: any): Promise<{ success: boolean; data?: Output; error?: unknown }>;
+  safeParseAsync(
+    data: unknown,
+    params?: any
+  ): Promise<{ success: boolean; data?: Output; error?: unknown }>;
   optional?(): ZodV3Like<Output | undefined, Input | undefined>;
   "~standard"?: any;
 }
@@ -377,7 +383,7 @@ export async function interopSafeParseAsync<T>(
     }
   }
   if (isZodSchemaV3(schema)) {
-    return await schema.safeParseAsync(input) as InteropZodSafeParseResult<T>;
+    return (await schema.safeParseAsync(input)) as InteropZodSafeParseResult<T>;
   }
   throw new Error("Schema must be an instance of z3.ZodType or z4.$ZodType");
 }

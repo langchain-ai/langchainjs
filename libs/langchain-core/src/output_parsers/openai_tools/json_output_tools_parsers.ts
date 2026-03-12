@@ -314,7 +314,7 @@ export class JsonOutputKeyToolsParser<
           result,
           null,
           2
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
         )}". Error: ${JSON.stringify((zodParsedResult.error as any)?.issues)}`,
         JSON.stringify(result, null, 2)
       );
