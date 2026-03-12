@@ -1,4 +1,4 @@
-import { test, jest, expect } from "@jest/globals";
+import { test, vi, expect } from "vitest";
 import S3Client from "@aws-sdk/client-s3";
 import * as fs from "node:fs";
 import * as path from "node:path";
@@ -7,15 +7,15 @@ import { UnstructuredLoader } from "../fs/unstructured.js";
 
 const fsMock = {
   ...fs,
-  mkdtempSync: jest.fn().mockReturnValue("tmp/s3fileloader-12345"),
-  mkdirSync: jest.fn().mockImplementation(() => {}),
-  writeFileSync: jest.fn().mockImplementation((_path, _data) => {
+  mkdtempSync: vi.fn().mockReturnValue("tmp/s3fileloader-12345"),
+  mkdirSync: vi.fn().mockImplementation(() => {}),
+  writeFileSync: vi.fn().mockImplementation((_path, _data) => {
     // console.log(`Writing "${(data as object).toString()}" to ${path}`);
   }),
 };
 
-const UnstructuredLoaderMock = jest.fn().mockImplementation(() => ({
-  load: jest.fn().mockImplementation(() => ["fake document"]),
+const UnstructuredLoaderMock = vi.fn().mockImplementation(() => ({
+  load: vi.fn().mockImplementation(() => ["fake document"]),
 }));
 
 test.skip("Test S3 loader", async () => {

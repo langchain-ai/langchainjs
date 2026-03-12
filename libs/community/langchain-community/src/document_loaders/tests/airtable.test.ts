@@ -1,14 +1,14 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { Document } from "@langchain/core/documents";
-import { expect, jest } from "@jest/globals";
+import { expect, vi } from "vitest";
 import { AirtableLoader } from "../web/airtable.js";
 
 // Mock the global fetch function
-(global as any).fetch = jest.fn();
+(global as any).fetch = vi.fn();
 
 describe("AirtableLoader", () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     process.env.AIRTABLE_API_TOKEN = "foobar";
   });
 
@@ -22,7 +22,7 @@ describe("AirtableLoader", () => {
       });
 
       // Spy on the private fetchRecords method
-      const mockFetchRecords = jest.spyOn(loader as any, "fetchRecords");
+      const mockFetchRecords = vi.spyOn(loader as any, "fetchRecords");
 
       // Mock data to be returned by fetchRecords
       const mockRecords = [
@@ -55,7 +55,7 @@ describe("AirtableLoader", () => {
         baseId: "baseId",
       });
 
-      const mockFetchRecords = jest.spyOn(loader as any, "fetchRecords");
+      const mockFetchRecords = vi.spyOn(loader as any, "fetchRecords");
       const mockRecordsPage1 = [
         {
           id: "rec1",
@@ -97,7 +97,7 @@ describe("AirtableLoader", () => {
         baseId: "baseId",
       });
 
-      const mockFetchRecords = jest.spyOn(loader as any, "fetchRecords");
+      const mockFetchRecords = vi.spyOn(loader as any, "fetchRecords");
       const mockError = new Error("Network Error");
       const mockRecords = [
         {
@@ -128,7 +128,7 @@ describe("AirtableLoader", () => {
         baseId: "baseId",
       });
 
-      const mockFetchRecords = jest.spyOn(loader as any, "fetchRecords");
+      const mockFetchRecords = vi.spyOn(loader as any, "fetchRecords");
       const mockRecords = [
         {
           id: "rec1",
@@ -161,7 +161,7 @@ describe("AirtableLoader", () => {
         baseId: "baseId",
       });
 
-      const mockFetchRecords = jest.spyOn(loader as any, "fetchRecords");
+      const mockFetchRecords = vi.spyOn(loader as any, "fetchRecords");
       const mockError = new Error("Network Error");
 
       mockFetchRecords.mockRejectedValue(mockError);

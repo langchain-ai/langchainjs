@@ -1,4 +1,4 @@
-import { test, expect, jest } from "@jest/globals";
+import { test, expect, vi } from "vitest";
 import { sha256 } from "@langchain/core/utils/hash";
 import { StoredGeneration } from "@langchain/core/messages";
 
@@ -6,7 +6,7 @@ import { UpstashRedisCache } from "../upstash_redis.js";
 
 test("UpstashRedisCache", async () => {
   const redis = {
-    get: jest.fn(async (key: string): Promise<StoredGeneration | null> => {
+    get: vi.fn(async (key: string): Promise<StoredGeneration | null> => {
       if (key === sha256("foo_bar_0")) {
         return { text: "baz" };
       }

@@ -1,6 +1,6 @@
 import { z } from "zod/v3";
 import { toJsonSchema } from "@langchain/core/utils/json_schema";
-import { describe, test } from "@jest/globals";
+import { describe, test } from "vitest";
 import { ChatMessage, HumanMessage } from "@langchain/core/messages";
 import {
   PromptTemplate,

@@ -1,4 +1,4 @@
-import { test } from "@jest/globals";
+import { test } from "vitest";
 import { MemgraphGraph } from "../memgraph_graph.js";
 
 describe.skip("Memgraph Graph Tests", () => {

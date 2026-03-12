@@ -1,4 +1,4 @@
-import { jest, test, expect } from "@jest/globals";
+import { vi, test, expect } from "vitest";
 import { setTimeout } from "timers/promises";
 import { SearchIndexClient, AzureKeyCredential } from "@azure/search-documents";
 import { OpenAIEmbeddings } from "@langchain/openai";
@@ -213,13 +213,13 @@ describe.skip("AzureAISearchVectorStore integration tests", () => {
   const embeddings = new FakeEmbeddings();
   let indexClient: SearchIndexClient;
 
-  const embedMock = jest
+  const embedMock = vi
     .spyOn(FakeEmbeddings.prototype, "embedDocuments")
     .mockImplementation(async (documents: string[]) =>
       documents.map(() => Array(1536).fill(0.2))
     );
 
-  const queryMock = jest
+  const queryMock = vi
     .spyOn(FakeEmbeddings.prototype, "embedQuery")
     .mockImplementation(async () => Array(1536).fill(0.2));
 

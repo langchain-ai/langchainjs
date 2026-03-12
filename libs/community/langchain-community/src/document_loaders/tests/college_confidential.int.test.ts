@@ -1,4 +1,4 @@
-import { test } from "@jest/globals";
+import { test } from "vitest";
 import { CollegeConfidentialLoader } from "../web/college_confidential.js";
 
 test("Test College confidential loader", async () => {

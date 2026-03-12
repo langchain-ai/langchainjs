@@ -1,4 +1,4 @@
-import { expect } from "@jest/globals";
+import { expect } from "vitest";
 
 import {
   ICacheClient,

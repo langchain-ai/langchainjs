@@ -1,4 +1,4 @@
-import { test, expect } from "@jest/globals";
+import { test, expect } from "vitest";
 import Metal from "@getmetal/metal-sdk";
 
 import { MetalRetriever } from "../metal.js";

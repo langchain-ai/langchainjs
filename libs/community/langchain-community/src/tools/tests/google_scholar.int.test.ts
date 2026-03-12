@@ -1,4 +1,4 @@
-import { test, expect, describe } from "@jest/globals";
+import { test, expect, describe } from "vitest";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import { SERPGoogleScholarAPITool } from "../google_scholar.js";
 

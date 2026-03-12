@@ -1,4 +1,4 @@
-import { test } from "@jest/globals";
+import { test } from "vitest";
 import { Document } from "@langchain/core/documents";
 import { SpiderLoader } from "../web/spider.js";
 

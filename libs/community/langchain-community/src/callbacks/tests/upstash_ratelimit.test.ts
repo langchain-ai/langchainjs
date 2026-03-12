@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/ban-ts-comment */
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { jest } from "@jest/globals";
+import { vi } from "vitest";
 import { LLMResult } from "@langchain/core/outputs";
 import { Ratelimit } from "@upstash/ratelimit";
 import { Redis } from "@upstash/redis";
@@ -11,7 +11,7 @@ import {
 } from "../handlers/upstash_ratelimit.js";
 
 // Mocked Ratelimit class
-jest.mock("@upstash/ratelimit");
+vi.mock("@upstash/ratelimit");
 
 const createResponse = (
   success: boolean,
@@ -33,12 +33,12 @@ const createRatelimitMock = () => {
     limiter: Ratelimit.fixedWindow(10, "10 s"),
   });
 
-  ratelimit.limit = jest
+  ratelimit.limit = vi
     .fn()
     .mockReturnValue(
       Promise.resolve(createResponse(true, 10, 10, 10000))
     ) as any;
-  ratelimit.getRemaining = jest
+  ratelimit.getRemaining = vi
     .fn()
     .mockReturnValue(Promise.resolve(1000)) as any;
 
@@ -94,7 +94,7 @@ describe("UpstashRatelimitHandler", () => {
   });
 
   test("should throw error when request limit is reached", async () => {
-    (requestRatelimit.limit as jest.Mock).mockReturnValue(
+    (requestRatelimit.limit as vi.Mock).mockReturnValue(
       Promise.resolve(createResponse(false, 10, 0, 10000))
     );
     const handler = new UpstashRatelimitHandler("user123", {
@@ -106,7 +106,7 @@ describe("UpstashRatelimitHandler", () => {
   });
 
   test("should throw error when token limit is reached", async () => {
-    (tokenRatelimit.getRemaining as jest.Mock).mockReturnValue(
+    (tokenRatelimit.getRemaining as vi.Mock).mockReturnValue(
       Promise.resolve(0)
     );
     const handler = new UpstashRatelimitHandler("user123", { tokenRatelimit });
@@ -156,7 +156,7 @@ describe("UpstashRatelimitHandler", () => {
     };
 
     // Spy on console.error
-    const consoleErrorSpy = jest
+    const consoleErrorSpy = vi
       .spyOn(console, "error")
       .mockImplementation(() => {});
 

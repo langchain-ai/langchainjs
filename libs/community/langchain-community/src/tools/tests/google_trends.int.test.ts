@@ -1,4 +1,4 @@
-import { expect, describe } from "@jest/globals";
+import { expect, describe } from "vitest";
 import { SERPGoogleTrendsTool } from "../google_trends.js";
 
 describe("SERPGoogleTrendsTool", () => {

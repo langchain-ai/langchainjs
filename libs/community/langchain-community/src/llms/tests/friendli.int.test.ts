@@ -1,4 +1,4 @@
-import { test } from "@jest/globals";
+import { test } from "vitest";
 import { Friendli } from "../friendli.js";
 
 describe.skip("Friendli", () => {

@@ -1,4 +1,4 @@
-import { test } from "@jest/globals";
+import { test } from "vitest";
 import { TaskadeProjectLoader } from "../web/taskade.js";
 
 test.skip("Test TaskadeProjectLoader", async () => {

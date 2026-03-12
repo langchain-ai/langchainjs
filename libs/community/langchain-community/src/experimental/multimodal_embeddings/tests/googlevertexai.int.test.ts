@@ -1,7 +1,7 @@
 import fs from "fs";
 import * as path from "node:path";
 import { fileURLToPath } from "node:url";
-import { test, expect } from "@jest/globals";
+import { test, expect } from "vitest";
 import { Document } from "@langchain/core/documents";
 import { FaissStore } from "../../../vectorstores/faiss.js";
 import { GoogleVertexAIMultimodalEmbeddings } from "../googlevertexai.js";

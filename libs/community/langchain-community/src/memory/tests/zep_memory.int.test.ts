@@ -1,4 +1,4 @@
-import { expect, test } from "@jest/globals";
+import { expect, test } from "vitest";
 import { v4 as uuid } from "uuid";
 import { ZepMemory } from "../zep.js";
 

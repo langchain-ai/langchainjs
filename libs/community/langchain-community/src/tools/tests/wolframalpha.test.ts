@@ -1,4 +1,4 @@
-import { jest, afterEach, beforeEach, describe, expect } from "@jest/globals";
+import { vi, afterEach, beforeEach, describe, expect } from "vitest";
 import { WolframAlphaTool } from "../wolframalpha.js";
 
 const MOCK_APP_ID = "[MOCK_APP_ID]";
@@ -10,7 +10,7 @@ describe("wolfram alpha test suite", () => {
   let fetchMock: any;
 
   beforeEach(() => {
-    fetchMock = jest.spyOn(global, "fetch").mockImplementation(
+    fetchMock = vi.spyOn(global, "fetch").mockImplementation(
       async () =>
         ({
           text: () => Promise.resolve(MOCK_ANSWER),

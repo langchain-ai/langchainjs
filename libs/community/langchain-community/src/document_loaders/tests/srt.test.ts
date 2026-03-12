@@ -1,6 +1,6 @@
 import * as url from "node:url";
 import * as path from "node:path";
-import { test, expect } from "@jest/globals";
+import { test, expect } from "vitest";
 import { SRTLoader } from "../fs/srt.js";
 
 test("Test SRT loader from file", async () => {

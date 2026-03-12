@@ -1,4 +1,4 @@
-import { expect, test } from "@jest/globals";
+import { expect, test } from "vitest";
 import { DataSourceOptions } from "typeorm";
 import { OpenAIEmbeddings } from "@langchain/openai";
 import { TypeORMVectorStore } from "../typeorm.js";

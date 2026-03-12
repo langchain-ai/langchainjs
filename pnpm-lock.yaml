@@ -984,9 +984,6 @@ importers:
       '@ibm-cloud/watsonx-ai':
         specifier: ^1.7.9
         version: 1.7.9
-      '@jest/globals':
-        specifier: ^30.2.0
-        version: 30.2.0
       '@lancedb/lancedb':
         specifier: ^0.19.1
         version: 0.19.1(apache-arrow@21.1.0)
@@ -1062,12 +1059,6 @@ importers:
       '@supabase/supabase-js':
         specifier: ^2.45.0
         version: 2.95.3(bufferutil@4.1.0)
-      '@swc/core':
-        specifier: ^1.15.18
-        version: 1.15.18(@swc/helpers@0.5.18)
-      '@swc/jest':
-        specifier: ^0.2.29
-        version: 0.2.39(@swc/core@1.15.18(@swc/helpers@0.5.18))
       '@tensorflow-models/universal-sentence-encoder':
         specifier: ^1.3.3
         version: 1.3.3(@tensorflow/tfjs-converter@3.21.0(@tensorflow/tfjs-core@4.22.0(encoding@0.1.13)))(@tensorflow/tfjs-core@4.22.0(encoding@0.1.13))
@@ -1269,12 +1260,6 @@ importers:
       it-all:
         specifier: ^3.0.4
         version: 3.0.9
-      jest:
-        specifier: ^30.2.0
-        version: 30.2.0(@types/node@25.4.0)(ts-node@10.9.2(@swc/core@1.15.18(@swc/helpers@0.5.18))(@types/node@25.4.0)(typescript@5.8.3))
-      jest-environment-node:
-        specifier: ^30.2.0
-        version: 30.2.0
       jsdom:
         specifier: ^28.1.0
         version: 28.1.0
@@ -1356,9 +1341,6 @@ importers:
       srt-parser-2:
         specifier: ^1.2.3
         version: 1.2.3
-      ts-jest:
-        specifier: ^29.4.6
-        version: 29.4.6(@babel/core@7.29.0)(@jest/transform@30.2.0)(@jest/types@30.2.0)(babel-jest@30.2.0(@babel/core@7.29.0))(jest-util@30.2.0)(jest@30.2.0(@types/node@25.4.0)(ts-node@10.9.2(@swc/core@1.15.18(@swc/helpers@0.5.18))(@types/node@25.4.0)(typescript@5.8.3)))(typescript@5.8.3)
       typeorm:
         specifier: ^0.3.28
         version: 0.3.28(better-sqlite3@12.6.2)(ioredis@5.9.2)(mongodb@6.21.0(@aws-sdk/credential-providers@3.985.0)(socks@2.8.7))(mysql2@3.19.1(@types/node@25.4.0))(pg@8.18.0)(redis@4.7.1)(sqlite3@5.1.7)(ts-node@10.9.2(@swc/core@1.15.18(@swc/helpers@0.5.18))(@types/node@25.4.0)(typescript@5.8.3))
@@ -1371,6 +1353,9 @@ importers:
       usearch:
         specifier: ^2.21.4
         version: 2.21.4
+      vitest:
+        specifier: ^3.2.4
+        version: 3.2.4(@types/debug@4.1.12)(@types/node@25.4.0)(jiti@2.6.1)(jsdom@28.1.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
       voy-search:
         specifier: 0.6.3
         version: 0.6.3
@@ -29737,7 +29722,7 @@ snapshots:
 
   term-size@2.2.1: {}
 
-  terser-webpack-plugin@5.3.17(@swc/core@1.15.18(@swc/helpers@0.5.18))(esbuild@0.25.12)(webpack@5.105.4(@swc/core@1.15.18(@swc/helpers@0.5.18))):
+  terser-webpack-plugin@5.3.17(@swc/core@1.15.18(@swc/helpers@0.5.18))(esbuild@0.25.12)(webpack@5.105.4(@swc/core@1.15.18(@swc/helpers@0.5.18))(esbuild@0.25.12)):
     dependencies:
       '@jridgewell/trace-mapping': 0.3.31
       jest-worker: 27.5.1
@@ -30754,7 +30739,7 @@ snapshots:
       neo-async: 2.6.2
       schema-utils: 4.3.3
       tapable: 2.3.0
-      terser-webpack-plugin: 5.3.17(@swc/core@1.15.18(@swc/helpers@0.5.18))(esbuild@0.25.12)(webpack@5.105.4(@swc/core@1.15.18(@swc/helpers@0.5.18)))
+      terser-webpack-plugin: 5.3.17(@swc/core@1.15.18(@swc/helpers@0.5.18))(esbuild@0.25.12)(webpack@5.105.4(@swc/core@1.15.18(@swc/helpers@0.5.18))(esbuild@0.25.12))
       watchpack: 2.5.1
       webpack-sources: 3.3.4
     transitivePeerDependencies:

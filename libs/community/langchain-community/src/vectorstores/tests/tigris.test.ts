@@ -1,13 +1,13 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { jest, test, expect } from "@jest/globals";
+import { vi, test, expect } from "vitest";
 import { FakeEmbeddings } from "@langchain/core/utils/testing";
 
 import { TigrisVectorStore } from "../tigris.js";
 
 test("TigrisVectorStore with external ids", async () => {
   const client = {
-    addDocumentsWithVectors: jest.fn(),
-    similaritySearchVectorWithScore: jest
+    addDocumentsWithVectors: vi.fn(),
+    similaritySearchVectorWithScore: vi
       .fn()
       .mockImplementation(async () => []),
   };
@@ -55,8 +55,8 @@ test("TigrisVectorStore with external ids", async () => {
 
 test("TigrisVectorStore with generated ids", async () => {
   const client = {
-    addDocumentsWithVectors: jest.fn(),
-    similaritySearchVectorWithScore: jest
+    addDocumentsWithVectors: vi.fn(),
+    similaritySearchVectorWithScore: vi
       .fn()
       .mockImplementation(async () => []),
   };

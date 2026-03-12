@@ -91,7 +91,7 @@ describe("JiraDocumentConverter Unit Tests", () => {
   });
 
   it("should use custom description formatter", () => {
-    const customFormatter = jest.fn(() => "CUSTOM DESC");
+    const customFormatter = vi.fn(() => "CUSTOM DESC");
     const converter = new JiraDocumentConverter({
       projectKey: "PROJ",
       host: "https://example.com",
@@ -132,7 +132,7 @@ describe("JiraProjectLoader", () => {
   ) {
     const calls: { url: string; init: RequestInit }[] = [];
     let callIndex = 0;
-    global.fetch = jest.fn(
+    global.fetch = vi.fn(
       async (url: RequestInfo | URL, init?: RequestInit) => {
         calls.push({ url: url.toString(), init: init ?? {} });
         const res = responses[callIndex] ?? responses[responses.length - 1];

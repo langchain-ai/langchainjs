@@ -1,4 +1,4 @@
-import { test, expect } from "@jest/globals";
+import { test, expect } from "vitest";
 import { HuggingFaceInferenceEmbeddings } from "../hf.js";
 import { HNSWLib } from "../../vectorstores/hnswlib.js";
 

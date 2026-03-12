@@ -1,4 +1,4 @@
-import { test, expect } from "@jest/globals";
+import { test, expect } from "vitest";
 import { createClient } from "@supabase/supabase-js";
 
 import { OpenAIEmbeddings } from "@langchain/openai";

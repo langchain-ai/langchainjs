@@ -1,4 +1,4 @@
-import { test } from "@jest/globals";
+import { test } from "vitest";
 import { HumanMessage } from "@langchain/core/messages";
 import { ChatFriendli } from "../friendli.js";
 

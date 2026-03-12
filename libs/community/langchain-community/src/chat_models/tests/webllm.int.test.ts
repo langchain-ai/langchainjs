@@ -3,13 +3,13 @@
 // import { ChatWebLLM, WebLLMInputs } from "../webllm.js";
 // import * as webllm from "@mlc-ai/web-llm";
 
-// jest.mock("@mlc-ai/web-llm", () => ({
-//   Engine: jest.fn().mockImplementation(() => ({
-//     reload: jest.fn().mockResolvedValue(undefined),
-//     setInitProgressCallback: jest.fn(),
+// vi.mock("@mlc-ai/web-llm", () => ({
+//   Engine: vi.fn().mockImplementation(() => ({
+//     reload: vi.fn().mockResolvedValue(undefined),
+//     setInitProgressCallback: vi.fn(),
 //     chat: {
 //       completions: {
-//         create: jest.fn().mockImplementation(() => {
+//         create: vi.fn().mockImplementation(() => {
 //           const messages = [
 //             {
 //               choices: [

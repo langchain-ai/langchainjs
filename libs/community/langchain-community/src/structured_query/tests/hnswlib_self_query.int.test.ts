@@ -1,4 +1,4 @@
-import { test } from "@jest/globals";
+import { test } from "vitest";
 import { Document } from "@langchain/core/documents";
 import { OpenAIEmbeddings, OpenAI } from "@langchain/openai";
 import { AttributeInfo } from "@langchain/classic/chains/query_constructor";

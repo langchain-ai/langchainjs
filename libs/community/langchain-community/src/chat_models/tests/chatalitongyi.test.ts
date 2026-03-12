@@ -3,9 +3,9 @@ import {
   afterEach,
   describe,
   expect,
-  jest,
+  vi,
   test,
-} from "@jest/globals";
+} from "vitest";
 import { AIMessage, ToolMessage } from "@langchain/core/messages";
 import { ChatAlibabaTongyi } from "../alibaba_tongyi.js";
 
@@ -55,7 +55,7 @@ function createSseResponse(events: unknown[]): Response {
   });
 }
 
-function getRequestBody(fetchMock: ReturnType<typeof jest.spyOn>) {
+function getRequestBody(fetchMock: ReturnType<typeof vi.spyOn>) {
   const lastCall = fetchMock.mock.calls.at(-1);
   if (!lastCall) {
     throw new Error("No fetch call found.");
@@ -93,7 +93,7 @@ function getRequestBody(fetchMock: ReturnType<typeof jest.spyOn>) {
   };
 }
 
-function getRequestHeaders(fetchMock: ReturnType<typeof jest.spyOn>) {
+function getRequestHeaders(fetchMock: ReturnType<typeof vi.spyOn>) {
   const lastCall = fetchMock.mock.calls.at(-1);
   if (!lastCall) {
     throw new Error("No fetch call found.");
@@ -103,7 +103,7 @@ function getRequestHeaders(fetchMock: ReturnType<typeof jest.spyOn>) {
 }
 
 describe("ChatAlibabaTongyi tool calling", () => {
-  const fetchMock = jest.spyOn(globalThis, "fetch");
+  const fetchMock = vi.spyOn(globalThis, "fetch");
 
   afterEach(() => {
     fetchMock.mockReset();
@@ -504,7 +504,7 @@ describe("ChatAlibabaTongyi tool calling", () => {
   });
 
   test("maps tool_choice any to auto for compatibility", async () => {
-    const warnSpy = jest.spyOn(console, "warn").mockImplementation(() => {});
+    const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
     fetchMock.mockImplementation(() =>
       createJsonResponse({
         request_id: "req-tool-choice-any",
@@ -549,7 +549,7 @@ describe("ChatAlibabaTongyi tool calling", () => {
   });
 
   test("maps tool_choice required to auto for compatibility", async () => {
-    const warnSpy = jest.spyOn(console, "warn").mockImplementation(() => {});
+    const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
     fetchMock.mockImplementation(() =>
       createJsonResponse({
         request_id: "req-tool-choice-required",

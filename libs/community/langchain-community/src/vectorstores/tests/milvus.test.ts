@@ -1,96 +1,98 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { jest, test, expect, beforeEach } from "@jest/globals";
+import { vi, test, expect, beforeEach } from "vitest";
 import { FakeEmbeddings } from "@langchain/core/utils/testing";
 import { Document } from "@langchain/core/documents";
-import { DataType, DataTypeMap, ErrorCode } from "@zilliz/milvus2-sdk-node";
 
-const fields = [
-  {
-    name: "id",
-    is_primary_key: true,
-    is_function_output: false,
-    autoID: true,
-    data_type: 21,
-  },
-  {
-    name: "text",
-    is_primary_key: false,
-    is_function_output: false,
-    autoID: false,
-    data_type: 21,
-  },
-  {
-    name: "vector",
-    is_primary_key: false,
-    is_function_output: false,
-    autoID: false,
-    data_type: 101,
-  },
-  {
-    name: "custom_field",
-    is_primary_key: false,
-    is_function_output: false,
-    autoID: false,
-    data_type: 21,
-  },
-  {
-    name: "vector_calculated",
-    is_primary_key: false,
-    is_function_output: true,
-    autoID: false,
-    data_type: 104,
-  },
-];
+const { mockMilvusClient } = vi.hoisted(() => {
+  const fields = [
+    {
+      name: "id",
+      is_primary_key: true,
+      is_function_output: false,
+      autoID: true,
+      data_type: 21,
+    },
+    {
+      name: "text",
+      is_primary_key: false,
+      is_function_output: false,
+      autoID: false,
+      data_type: 21,
+    },
+    {
+      name: "vector",
+      is_primary_key: false,
+      is_function_output: false,
+      autoID: false,
+      data_type: 101,
+    },
+    {
+      name: "custom_field",
+      is_primary_key: false,
+      is_function_output: false,
+      autoID: false,
+      data_type: 21,
+    },
+    {
+      name: "vector_calculated",
+      is_primary_key: false,
+      is_function_output: true,
+      autoID: false,
+      data_type: 104,
+    },
+  ];
 
-// Mock the Milvus client
-const mockSchema = {
-  schema: {
-    fields,
-  },
-};
+  const mockSchema = {
+    schema: {
+      fields,
+    },
+  };
 
-// Mock successful responses
-const mockSuccessResponse = {
-  status: { error_code: ErrorCode.SUCCESS },
-};
+  const mockSuccessResponse = {
+    status: { error_code: "Success" },
+  };
 
-const mockCreateSuccessResponse = {
-  error_code: ErrorCode.SUCCESS,
-};
+  const mockCreateSuccessResponse = {
+    error_code: "Success",
+  };
 
-const mockMilvusClient = {
-  describeCollection: jest.fn(() => Promise.resolve(mockSchema)),
-  insert: jest.fn(() => Promise.resolve(mockSuccessResponse)),
-  upsert: jest.fn(() => Promise.resolve(mockSuccessResponse)),
-  flushSync: jest.fn(() => Promise.resolve(mockSuccessResponse)),
-  createCollection: jest.fn(() => Promise.resolve(mockCreateSuccessResponse)),
-  hasCollection: jest.fn(() =>
-    Promise.resolve({
-      ...mockSuccessResponse,
-      value: true,
-    })
-  ),
-  loadCollection: jest.fn(() => Promise.resolve(mockSuccessResponse)),
-  createPartition: jest.fn(() => Promise.resolve(mockSuccessResponse)),
-  hasPartition: jest.fn(() => Promise.resolve(mockSuccessResponse)),
-  loadPartition: jest.fn(() => Promise.resolve(mockSuccessResponse)),
-  createIndex: jest.fn(() => Promise.resolve(mockCreateSuccessResponse)),
-  alterCollectionProperties: jest.fn(() =>
-    Promise.resolve(mockSuccessResponse)
-  ),
-} as any;
+  const client = {
+    describeCollection: vi.fn(() => Promise.resolve(mockSchema)),
+    insert: vi.fn(() => Promise.resolve(mockSuccessResponse)),
+    upsert: vi.fn(() => Promise.resolve(mockSuccessResponse)),
+    flushSync: vi.fn(() => Promise.resolve(mockSuccessResponse)),
+    createCollection: vi.fn(() => Promise.resolve(mockCreateSuccessResponse)),
+    hasCollection: vi.fn(() =>
+      Promise.resolve({
+        ...mockSuccessResponse,
+        value: true,
+      })
+    ),
+    loadCollection: vi.fn(() => Promise.resolve(mockSuccessResponse)),
+    createPartition: vi.fn(() => Promise.resolve(mockSuccessResponse)),
+    hasPartition: vi.fn(() => Promise.resolve(mockSuccessResponse)),
+    loadPartition: vi.fn(() => Promise.resolve(mockSuccessResponse)),
+    createIndex: vi.fn(() => Promise.resolve(mockCreateSuccessResponse)),
+    alterCollectionProperties: vi.fn(() =>
+      Promise.resolve(mockSuccessResponse)
+    ),
+  } as any;
 
-jest.mock("@zilliz/milvus2-sdk-node", () => {
+  return { mockMilvusClient: client };
+});
+
+vi.mock("@zilliz/milvus2-sdk-node", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@zilliz/milvus2-sdk-node")>();
   return {
-    MilvusClient: jest.fn().mockImplementation(() => mockMilvusClient),
-    DataType,
-    DataTypeMap,
-    ErrorCode,
+    ...actual,
+    MilvusClient: vi.fn().mockImplementation(() => mockMilvusClient),
   };
 });
 
+const { DataType, DataTypeMap, ErrorCode } = await import("@zilliz/milvus2-sdk-node");
+
 beforeEach(async () => {
-  jest.clearAllMocks();
+  vi.clearAllMocks();
 });
 
 // Milvus is dynamically imported because ES modules are evaluated before

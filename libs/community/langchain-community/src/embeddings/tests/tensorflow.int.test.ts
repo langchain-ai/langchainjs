@@ -1,4 +1,4 @@
-import { test, expect } from "@jest/globals";
+import { test, expect } from "vitest";
 import "@tensorflow/tfjs-backend-cpu";
 import { TensorFlowEmbeddings } from "../tensorflow.js";
 import { HNSWLib } from "../../vectorstores/hnswlib.js";

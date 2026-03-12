@@ -1,4 +1,4 @@
-import { test, jest, expect } from "@jest/globals";
+import { test, vi, expect } from "vitest";
 import * as uuid from "uuid";
 import { Run } from "@langchain/core/tracers/base";
 
@@ -12,7 +12,7 @@ import {
 const _DATE = 1620000000000;
 const _END_DATE = _DATE + 1000;
 
-Date.now = jest.fn(() => _DATE);
+Date.now = vi.fn(() => _DATE);
 
 const BASE_URL = "http://datadog-endpoint";
 
@@ -34,7 +34,7 @@ beforeEach(() => {
   const oldFetch = global.fetch;
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  global.fetch = jest.fn().mockImplementation(async (url: any, init?: any) => {
+  global.fetch = vi.fn().mockImplementation(async (url: any, init?: any) => {
     if (!url.startsWith(BASE_URL)) return await oldFetch(url, init);
     const resp: Response = new Response();
     return resp;
@@ -43,7 +43,7 @@ beforeEach(() => {
 });
 
 afterEach(() => {
-  jest.restoreAllMocks();
+  vi.restoreAllMocks();
 });
 
 const runId = uuid.v4();
@@ -141,7 +141,7 @@ test("Test llm span with message input", async () => {
     method: "POST",
   });
 
-  const { body } = (fetch as jest.Mock).mock.calls[0][1] as { body: string };
+  const { body } = (fetch as vi.Mock).mock.calls[0][1] as { body: string };
   const parsedBody = JSON.parse(body) as DatadogLLMObsRequestBody;
   expect(parsedBody).toMatchObject(
     requestBody as unknown as Record<string, unknown>
@@ -201,7 +201,7 @@ test("Test llm span with prompt input", async () => {
     method: "POST",
   });
 
-  const { body } = (fetch as jest.Mock).mock.calls[0][1] as { body: string };
+  const { body } = (fetch as vi.Mock).mock.calls[0][1] as { body: string };
   const parsedBody = JSON.parse(body) as DatadogLLMObsRequestBody;
   expect(parsedBody).toMatchObject(
     requestBody as unknown as Record<string, unknown>
@@ -257,7 +257,7 @@ test("Test workflow span", async () => {
     method: "POST",
   });
 
-  const { body } = (fetch as jest.Mock).mock.calls[0][1] as { body: string };
+  const { body } = (fetch as vi.Mock).mock.calls[0][1] as { body: string };
 
   const parsedBody = JSON.parse(body) as DatadogLLMObsRequestBody;
   expect(parsedBody).toMatchObject(
@@ -312,7 +312,7 @@ test("Test tool span", async () => {
     method: "POST",
   });
 
-  const { body } = (fetch as jest.Mock).mock.calls[0][1] as { body: string };
+  const { body } = (fetch as vi.Mock).mock.calls[0][1] as { body: string };
   const parsedBody = JSON.parse(body) as DatadogLLMObsRequestBody;
   expect(parsedBody).toMatchObject(
     requestBody as unknown as Record<string, unknown>
@@ -378,7 +378,7 @@ test("Test retrieval span", async () => {
     method: "POST",
   });
 
-  const { body } = (fetch as jest.Mock).mock.calls[0][1] as { body: string };
+  const { body } = (fetch as vi.Mock).mock.calls[0][1] as { body: string };
   const parsedBody = JSON.parse(body) as DatadogLLMObsRequestBody;
   expect(parsedBody).toMatchObject(
     requestBody as unknown as Record<string, unknown>

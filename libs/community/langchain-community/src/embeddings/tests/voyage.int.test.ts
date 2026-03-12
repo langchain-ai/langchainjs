@@ -1,4 +1,4 @@
-import { test, expect } from "@jest/globals";
+import { test, expect } from "vitest";
 import { VoyageEmbeddings } from "../voyage.js";
 
 test.skip("Test VoyageEmbeddings.embedQuery with input_type", async () => {

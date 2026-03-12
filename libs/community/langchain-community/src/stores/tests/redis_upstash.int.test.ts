@@ -1,4 +1,4 @@
-import { test, expect, describe } from "@jest/globals";
+import { test, expect, describe } from "vitest";
 
 import { HumanMessage, AIMessage } from "@langchain/core/messages";
 import { UpstashRedisChatMessageHistory } from "../message/upstash_redis.js";

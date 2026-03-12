@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable dot-notation */
 import { Gateway } from "@ibm-cloud/watsonx-ai/gateway";
-import { jest, expect, describe, test } from "@jest/globals";
+import { vi, expect, describe, test } from "vitest";
 import { AIMessageChunk } from "@langchain/core/messages";
 import {
   transformStreamToObjectStream,
@@ -165,7 +165,7 @@ describe("LLM unit tests", () => {
       };
       const instance = new WatsonxLLM({ ...testProps, ...fakeAuthProp });
       if (instance["service"]) {
-        const spy = jest.spyOn(instance["service"], "generateText");
+        const spy = vi.spyOn(instance["service"], "generateText");
         spy.mockResolvedValue({
           status: 200,
           headers: {},
@@ -197,7 +197,7 @@ describe("LLM unit tests", () => {
         results: [{ generated_text: "hello", stop_reason: "finish" }],
       };
       if (instance["service"]) {
-        const spy = jest.spyOn(instance["service"], "generateTextStream");
+        const spy = vi.spyOn(instance["service"], "generateTextStream");
         const stream = [
           `id: 1\nevent: message\ndata: ${JSON.stringify(chunk)}\n\n`,
           `id: 2\nevent: message\ndata: ${JSON.stringify(chunk)}\n\n`,
@@ -286,7 +286,7 @@ describe("LLM unit tests", () => {
 
       const instance = new WatsonxLLM({ ...testProps, ...fakeAuthProp });
       if (instance["gateway"]) {
-        const spy = jest.spyOn(instance["gateway"].completion, "create");
+        const spy = vi.spyOn(instance["gateway"].completion, "create");
 
         spy.mockResolvedValue({
           status: 200,
@@ -471,7 +471,7 @@ describe("LLM unit tests", () => {
           },
         ],
       };
-      const spy = jest
+      const spy = vi
         .spyOn(instance["service"] as WatsonXAI, "generateText")
         .mockResolvedValue({ result: mockResponse } as any);
 
@@ -494,7 +494,7 @@ describe("LLM unit tests", () => {
           },
         ],
       };
-      const spy = jest
+      const spy = vi
         .spyOn(instance["service"] as WatsonXAI, "generateText")
         .mockResolvedValue({ result: mockResponse } as any);
       const controller = new AbortController();
@@ -513,7 +513,7 @@ describe("LLM unit tests", () => {
         yield { data: { results: [{ generated_text: "" }], model_id: "" } };
       }
 
-      const spy = jest
+      const spy = vi
         .spyOn(instance["service"] as WatsonXAI, "generateTextStream")
         .mockResolvedValue(mockStream() as any);
 
@@ -539,7 +539,7 @@ describe("LLM unit tests", () => {
         yield { data: { results: [{ generated_text: "" }], model_id: "" } };
       }
 
-      const spy = jest
+      const spy = vi
         .spyOn(instance["service"] as WatsonXAI, "generateTextStream")
         .mockResolvedValue(mockStream() as any);
 

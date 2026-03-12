@@ -1,5 +1,5 @@
 import fs from "fs";
-import { expect, beforeAll } from "@jest/globals";
+import { expect, beforeAll } from "vitest";
 import { sha256 } from "@langchain/core/utils/hash";
 import { Document } from "@langchain/core/documents";
 import { FakeEmbeddings } from "@langchain/core/utils/testing";
