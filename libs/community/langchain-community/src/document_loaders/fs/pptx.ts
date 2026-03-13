@@ -1,10 +1,10 @@
-import { parseOfficeAsync } from "officeparser";
+import { parseOffice } from "officeparser";
 import { Document } from "@langchain/core/documents";
 import { BufferLoader } from "@langchain/classic/document_loaders/fs/buffer";
 
 /**
  * A class that extends the `BufferLoader` class. It represents a document
- * loader that loads documents from PDF files.
+ * loader that loads documents from PPTX files.
  */
 export class PPTXLoader extends BufferLoader {
   constructor(filePathOrBlob: string | Blob) {
@@ -14,7 +14,7 @@ export class PPTXLoader extends BufferLoader {
   /**
    * A method that takes a `raw` buffer and `metadata` as parameters and
    * returns a promise that resolves to an array of `Document` instances. It
-   * uses the `parseOfficeAsync` function from the `officeparser` module to extract
+   * uses the `parseOffice` function from the `officeparser` module to extract
    * the raw text content from the buffer. If the extracted powerpoint content is
    * empty, it returns an empty array. Otherwise, it creates a new
    * `Document` instance with the extracted powerpoint content and the provided
@@ -27,7 +27,8 @@ export class PPTXLoader extends BufferLoader {
     raw: Buffer,
     metadata: Document["metadata"]
   ): Promise<Document[]> {
-    const pptx = await parseOfficeAsync(raw, { outputErrorToConsole: true });
+    const ast = await parseOffice(raw, { outputErrorToConsole: true });
+    const pptx = ast.toText();
 
     if (!pptx) return [];
 
