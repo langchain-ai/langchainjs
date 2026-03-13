@@ -106,6 +106,24 @@ describe("Test model provider detection", () => {
       shouldThrow: false,
       region: "us-east-1",
     },
+    {
+      modelId: "au.anthropic.claude-sonnet-4-5-20250929-v1:0",
+      expectedProvider: "anthropic",
+      shouldThrow: false,
+      region: "ap-southeast-2",
+    },
+    {
+      modelId: "jp.anthropic.claude-haiku-4-5-20251001-v1:0",
+      expectedProvider: "anthropic",
+      shouldThrow: false,
+      region: "ap-northeast-1",
+    },
+    {
+      modelId: "global.anthropic.claude-opus-4-5-20251101-v1:0",
+      expectedProvider: "anthropic",
+      shouldThrow: false,
+      region: "us-east-1",
+    },
   ];
 
   test.each(testCases)(
