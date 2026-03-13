@@ -12,6 +12,7 @@ import * as fs from "node:fs";
 import { z } from "zod/v3";
 import { ApiClient } from "../../clients/index.js";
 import { GoogleRequestRecorder } from "../../utils/handler.js";
+import { RequestError } from "../../utils/errors.js";
 import { BaseCallbackHandler } from "@langchain/core/callbacks/base";
 import { ChatGoogle, ChatGoogleParams } from "../index.js";
 import { ChatGoogle as ChatGoogleNode } from "../node.js";
@@ -195,6 +196,37 @@ class MockStreamingApiClient extends ApiClient {
   }
 }
 
+interface MockErrorApiClientOptions {
+  bodyText: string;
+  status: number;
+  statusText?: string;
+  headers?: HeadersInit;
+}
+
+class MockErrorApiClient extends ApiClient {
+  request: Request;
+
+  response: Response;
+
+  constructor(private options: MockErrorApiClientOptions) {
+    super();
+  }
+
+  async fetch(request: Request): Promise<Response> {
+    this.request = request;
+    this.response = new Response(this.options.bodyText, {
+      status: this.options.status,
+      statusText: this.options.statusText,
+      headers: this.options.headers,
+    });
+    return this.response;
+  }
+
+  hasApiKey(): boolean {
+    return false;
+  }
+}
+
 interface MockApiClientOptions {
   fileName: string;
   streaming?: boolean;
@@ -280,6 +312,46 @@ describe("Google Mock", () => {
     // console.log('request',recorder.request);
     expect(recorder?.request?.body?.generationConfig?.candidateCount).toEqual(
       1
+    );
+  });
+
+  test("surfaces JSON error bodies from GCP streaming responses labeled as text/event-stream", async () => {
+    const apiClient = new MockErrorApiClient({
+      status: 400,
+      statusText: "Bad Request",
+      headers: {
+        "content-type": "text/event-stream",
+      },
+      bodyText: JSON.stringify({
+        error: {
+          message:
+            "Invalid JSON payload received. Unknown name \"const\" at 'tools[0]'",
+        },
+      }),
+    });
+
+    const llm = new ChatGoogle({
+      model: "gemini-2.5-flash",
+      platformType: "gcp",
+      streaming: true,
+      apiClient,
+    });
+
+    let caughtError: unknown;
+    try {
+      await llm.invoke("What is 1+1?");
+    } catch (error) {
+      caughtError = error;
+    }
+
+    expect(apiClient.request.url).toContain("streamGenerateContent?alt=sse");
+    expect(apiClient.request.url).toContain("aiplatform.googleapis.com");
+    expect(caughtError).toBeInstanceOf(RequestError);
+    expect((caughtError as RequestError).message).toContain(
+      'Unknown name "const"'
+    );
+    expect((caughtError as RequestError).message).not.toContain(
+      "Request failed with status code 400"
     );
   });
 
