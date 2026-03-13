@@ -2309,9 +2309,13 @@ test("Runnable streamEvents method should respect passed signal", async () => {
 });
 
 test("Runnable streamEvents v2 should respect timeout option", async () => {
-  // Runnable that takes longer than the timeout
+  // Regression: ensureConfig() converts `timeout` into config.signal (v2 path).
+  // consumeRunnableStream must read config.signal, not options.signal.
+  const RUNNABLE_DELAY_MS = 1000;
+  const TIMEOUT_MS = 300;
+
   const slowRunnable = RunnableLambda.from(async (input: string) => {
-    await new Promise((resolve) => setTimeout(resolve, 2000));
+    await new Promise((resolve) => setTimeout(resolve, RUNNABLE_DELAY_MS));
     return input;
   });
 
@@ -2319,14 +2323,14 @@ test("Runnable streamEvents v2 should respect timeout option", async () => {
   await expect(async () => {
     const stream = slowRunnable.streamEvents("hello", {
       version: "v2",
-      timeout: 300,
+      timeout: TIMEOUT_MS,
     });
     for await (const _ of stream) {
       // drain
     }
-  }).rejects.toThrow();
+  }).rejects.toThrow(/timeout/i);
 
-  // Should abort well before the 2000ms delay
+  // Should abort near TIMEOUT_MS, well before RUNNABLE_DELAY_MS
   expect(Date.now() - start).toBeLessThan(1500);
 });
 
