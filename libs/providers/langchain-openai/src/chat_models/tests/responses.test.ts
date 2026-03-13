@@ -71,3 +71,80 @@ describe("service_tier configuration", () => {
     expect(params.service_tier).toBe("auto");
   });
 });
+
+describe("tool search support", () => {
+  it("tool_search passes through as a built-in tool", () => {
+    const model = new ChatOpenAIResponses({ model: "gpt-5.3" });
+    const params = model.invocationParams({
+      tools: [
+        { type: "tool_search" },
+        {
+          type: "function",
+          function: {
+            name: "get_weather",
+            description: "Get weather",
+            parameters: { type: "object", properties: {} },
+          },
+        },
+      ],
+    });
+
+    const tools = params.tools as Array<Record<string, unknown>>;
+    expect(tools).toHaveLength(2);
+    expect(tools[0]).toEqual({ type: "tool_search" });
+    expect(tools[1]).toHaveProperty("type", "function");
+  });
+
+  it("tool_search with client execution passes through", () => {
+    const model = new ChatOpenAIResponses({ model: "gpt-5.3" });
+    const params = model.invocationParams({
+      tools: [
+        {
+          type: "tool_search",
+          execution: "client",
+          description: "Search tools",
+          parameters: {
+            type: "object",
+            properties: { goal: { type: "string" } },
+          },
+        },
+      ],
+    });
+
+    const tools = params.tools as Array<Record<string, unknown>>;
+    expect(tools).toHaveLength(1);
+    expect(tools[0]).toEqual({
+      type: "tool_search",
+      execution: "client",
+      description: "Search tools",
+      parameters: {
+        type: "object",
+        properties: { goal: { type: "string" } },
+      },
+    });
+  });
+
+  it("defer_loading is propagated from function tool definitions", () => {
+    const model = new ChatOpenAIResponses({ model: "gpt-5.3" });
+    const params = model.invocationParams({
+      tools: [
+        { type: "tool_search" },
+        {
+          type: "function",
+          function: {
+            name: "get_weather",
+            description: "Get weather",
+            parameters: { type: "object", properties: {} },
+          },
+          defer_loading: true,
+        },
+      ],
+    });
+
+    const tools = params.tools as Array<Record<string, unknown>>;
+    expect(tools).toHaveLength(2);
+    expect(tools[1]).toHaveProperty("defer_loading", true);
+    expect(tools[1]).toHaveProperty("type", "function");
+    expect(tools[1]).toHaveProperty("name", "get_weather");
+  });
+});

@@ -460,5 +460,32 @@ describe("response format", () => {
         Record<string, unknown>
       >();
     });
+
+    it("should allow a bare Standard Schema without wrapper", async () => {
+      const standardSchema = {} as SerializableSchema;
+      const agent = createAgent({
+        model: new FakeToolCallingChatModel({}),
+        tools: [],
+        responseFormat: standardSchema,
+      });
+      const result = await agent.invoke(prompt);
+      expectTypeOf(result.structuredResponse).toEqualTypeOf<
+        Record<string, unknown>
+      >();
+    });
+
+    it("should allow a bare Standard Schema array without wrapper", async () => {
+      const schema1 = {} as SerializableSchema;
+      const schema2 = {} as SerializableSchema;
+      const agent = createAgent({
+        model: new FakeToolCallingChatModel({}),
+        tools: [],
+        responseFormat: [schema1, schema2],
+      });
+      const result = await agent.invoke(prompt);
+      expectTypeOf(result.structuredResponse).toEqualTypeOf<
+        Record<string, unknown>
+      >();
+    });
   });
 });

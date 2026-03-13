@@ -1,4 +1,4 @@
-/* eslint-disable import/no-extraneous-dependencies */
+/* eslint-disable import-x/no-extraneous-dependencies */
 import path from "path";
 import { green } from "picocolors";
 import { tryGitInit } from "./helpers/git";

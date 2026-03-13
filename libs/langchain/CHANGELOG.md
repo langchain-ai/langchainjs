@@ -1,5 +1,24 @@
 # langchain
 
+## 1.2.32
+
+### Patch Changes
+
+- [#10405](https://github.com/langchain-ai/langchainjs/pull/10405) [`afbf5f1`](https://github.com/langchain-ai/langchainjs/commit/afbf5f1b1a9c6014f994829ab92bbfcaecb8a30b) Thanks [@christian-bromann](https://github.com/christian-bromann)! - fix(langchain): add browser export
+
+## 1.2.31
+
+### Patch Changes
+
+- [#10265](https://github.com/langchain-ai/langchainjs/pull/10265) [`2647b48`](https://github.com/langchain-ai/langchainjs/commit/2647b4841bc4ae28dc6c8b245532df8620611a74) Thanks [@christian-bromann](https://github.com/christian-bromann)! - fix(langchain): export todo schema
+
+- [#10167](https://github.com/langchain-ai/langchainjs/pull/10167) [`ca826f6`](https://github.com/langchain-ai/langchainjs/commit/ca826f6fecae6087bf0dee7781ee80b587396ec1) Thanks [@colifran](https://github.com/colifran)! - feat: implement type inference for tool streams
+
+- [#10290](https://github.com/langchain-ai/langchainjs/pull/10290) [`a596d3f`](https://github.com/langchain-ai/langchainjs/commit/a596d3f7395c0ab27357aa0cd30bafb2d5d967c1) Thanks [@colifran](https://github.com/colifran)! - fix(langchain): serializable schemas aren't exposed on create agent response format
+
+- Updated dependencies [[`26488b5`](https://github.com/langchain-ai/langchainjs/commit/26488b596f01b7b7fe2f1d97d07164e52365ade5), [`ca826f6`](https://github.com/langchain-ai/langchainjs/commit/ca826f6fecae6087bf0dee7781ee80b587396ec1), [`a602c42`](https://github.com/langchain-ai/langchainjs/commit/a602c42db75d7e7e01cab38b12e0b65b9c0cce95), [`db7d017`](https://github.com/langchain-ai/langchainjs/commit/db7d017f7ce13cb937147aabcbfa3847d80bde9d)]:
+  - @langchain/core@1.1.32
+
 ## 1.2.30
 
 ### Patch Changes

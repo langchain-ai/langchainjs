@@ -1,5 +1,14 @@
 # @langchain/openai
 
+## 1.2.13
+
+### Patch Changes
+
+- [#10311](https://github.com/langchain-ai/langchainjs/pull/10311) [`aacbe87`](https://github.com/langchain-ai/langchainjs/commit/aacbe872014a6e089c188336520d91dcac2f0287) Thanks [@christian-bromann](https://github.com/christian-bromann)! - fix(openai): add gpt-5.4 to profiles
+
+- Updated dependencies [[`26488b5`](https://github.com/langchain-ai/langchainjs/commit/26488b596f01b7b7fe2f1d97d07164e52365ade5), [`ca826f6`](https://github.com/langchain-ai/langchainjs/commit/ca826f6fecae6087bf0dee7781ee80b587396ec1), [`a602c42`](https://github.com/langchain-ai/langchainjs/commit/a602c42db75d7e7e01cab38b12e0b65b9c0cce95), [`db7d017`](https://github.com/langchain-ai/langchainjs/commit/db7d017f7ce13cb937147aabcbfa3847d80bde9d)]:
+  - @langchain/core@1.1.32
+
 ## 1.2.12
 
 ### Patch Changes

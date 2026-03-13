@@ -366,6 +366,8 @@ function convertStandardContentBlockToGeminiPart(
       return { text: block.text };
     case "image":
     case "audio":
+    case "text-plain":
+    case "file":
       return convertStandardDataContentBlockToGeminiPart(block);
     case "video":
       return convertStandardVideoContentBlockToGeminiPart(block);
@@ -381,7 +383,8 @@ function convertStandardContentBlockToGeminiPart(
  * This is intended to be called from `convertMessagesToGeminiContent`
  */
 function convertStandardContentMessageToGeminiContent(
-  message: BaseMessage
+  message: BaseMessage,
+  messages: BaseMessage[]
 ): Gemini.Content | null {
   // Skip system messages - they're handled separately
   if (SystemMessage.isInstance(message)) {
@@ -421,7 +424,10 @@ function convertStandardContentMessageToGeminiContent(
   const parts: Gemini.Part[] = [];
 
   // Process standard content blocks
-  message.contentBlocks.forEach((block: ContentBlock.Standard) => {
+  const contentBlocks = Array.isArray(message.contentBlocks)
+    ? message.contentBlocks
+    : [];
+  contentBlocks.forEach((block: ContentBlock.Standard) => {
     const contentBlock =
       (message.additional_kwargs
         .originalTextContentBlock as ContentBlock.Standard) || block;
@@ -432,17 +438,37 @@ function convertStandardContentMessageToGeminiContent(
     }
   });
 
+  // Convert AIMessage tool_calls to functionCall parts
+  if (AIMessage.isInstance(message) && message.tool_calls?.length) {
+    for (const toolCall of message.tool_calls) {
+      parts.push({
+        functionCall: {
+          name: toolCall.name,
+          args: toolCall.args ?? {},
+        },
+      } as Gemini.Part.FunctionCall);
+    }
+  }
+
   // Handle tool messages as function responses
   if (ToolMessage.isInstance(message) && message.tool_call_id) {
     const responseContent =
       typeof message.content === "string"
         ? message.content
         : JSON.stringify(message.content);
-    // FIXME: ToolMessage almost never has a name, we need to refer to the message history
+    // Find the matching tool call in a preceding AIMessage to get the function name
+    const aiMsg = messages
+      .filter(AIMessage.isInstance)
+      .find((msg) =>
+        msg.tool_calls?.find((tc) => tc.id === message.tool_call_id)
+      );
+    const matchedToolCall = aiMsg?.tool_calls?.find(
+      (tc) => tc.id === message.tool_call_id
+    );
     parts.push({
       functionResponse: {
         id: message.tool_call_id,
-        name: message.name || "unknown",
+        name: matchedToolCall?.name ?? message.name ?? "unknown",
         response: { result: responseContent },
       },
     });
@@ -709,25 +735,40 @@ function convertLegacyContentMessageToGeminiContent(
     }
   }
 
+  // Convert AIMessage tool_calls to functionCall parts
+  if (AIMessage.isInstance(message) && message.tool_calls?.length) {
+    for (const toolCall of message.tool_calls) {
+      parts.push({
+        functionCall: {
+          name: toolCall.name,
+          args: toolCall.args ?? {},
+        },
+      } as Gemini.Part.FunctionCall);
+    }
+  }
+
   // Handle tool messages as function responses
   if (ToolMessage.isInstance(message) && message.tool_call_id) {
     const responseContent =
       typeof message.content === "string"
         ? message.content
         : JSON.stringify(message.content);
-    // Find the response name by checking previous messages for the tool call
-    const toolCall = messages
+    // Find the matching tool call in a preceding AIMessage to get the function name
+    const aiMsg = messages
       .filter(AIMessage.isInstance)
       .find((msg) =>
         msg.tool_calls?.find((tc) => tc.id === message.tool_call_id)
       );
-    if (!toolCall) {
+    if (!aiMsg) {
       throw new ToolCallNotFoundError(message.tool_call_id);
     }
+    const matchedToolCall = aiMsg.tool_calls?.find(
+      (tc) => tc.id === message.tool_call_id
+    );
     parts.push({
       functionResponse: {
         id: message.tool_call_id,
-        name: toolCall?.name || "unknown",
+        name: matchedToolCall?.name ?? message.name ?? "unknown",
         response: { result: responseContent },
       },
     });
@@ -796,14 +837,22 @@ export const convertMessagesToGeminiContents: Converter<
           : "v0";
       switch (outputVersion) {
         case "v1":
-          return convertStandardContentMessageToGeminiContent(message);
+          return convertStandardContentMessageToGeminiContent(
+            message,
+            messages
+          );
         case "v0":
         default:
           return convertLegacyContentMessageToGeminiContent(message, messages);
       }
     });
     if (content) {
-      contents.push(content);
+      const prev = contents[contents.length - 1];
+      if (prev && prev.role === content.role) {
+        prev.parts.push(...content.parts);
+      } else {
+        contents.push(content);
+      }
     }
   }
 

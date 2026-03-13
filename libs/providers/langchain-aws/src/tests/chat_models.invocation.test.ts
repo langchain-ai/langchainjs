@@ -24,6 +24,7 @@ vi.mock("@aws-sdk/client-bedrock-runtime", () => {
     }
   }
   class BedrockRuntimeClient {
+    middlewareStack = { add: vi.fn() };
     async send(command: unknown) {
       // Non-stream path
       if (
@@ -304,5 +305,38 @@ describe("ChatBedrockConverse invocationParams", () => {
         }
       }
     );
+  });
+
+  describe("defaultHeaders middleware", () => {
+    test("registers middleware on client when defaultHeaders are provided", () => {
+      const model = new ChatBedrockConverse({
+        ...baseConstructorArgs,
+        defaultHeaders: {
+          "X-Foo": "Bar",
+          "anthropic-beta": "prompt-caching-2024-07-31",
+        },
+      });
+      expect(model.client.middlewareStack.add).toHaveBeenCalledOnce();
+      const [middlewareFn, options] = (
+        model.client.middlewareStack.add as ReturnType<typeof vi.fn>
+      ).mock.calls[0];
+      expect(options).toEqual({
+        step: "build",
+        name: "langchain_aws_default_headers",
+      });
+
+      const fakeRequest = { headers: {} as Record<string, string> };
+      const fakeNext = vi.fn().mockResolvedValue({});
+      middlewareFn(fakeNext)({ request: fakeRequest });
+      expect(fakeRequest.headers["X-Foo"]).toBe("Bar");
+      expect(fakeRequest.headers["anthropic-beta"]).toBe(
+        "prompt-caching-2024-07-31"
+      );
+    });
+
+    test("does not register middleware when defaultHeaders is absent", () => {
+      const model = new ChatBedrockConverse({ ...baseConstructorArgs });
+      expect(model.client.middlewareStack.add).not.toHaveBeenCalled();
+    });
   });
 });
