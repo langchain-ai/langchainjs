@@ -1,5 +1,9 @@
 import { ChatPromptValueInterface } from "../prompt_values.js";
-import { RunnableLike, Runnable, RunnableBinding } from "../runnables/base.js";
+import {
+  RunnableLike,
+  Runnable,
+  RunnableSequence,
+} from "../runnables/base.js";
 import { RunnableConfig } from "../runnables/config.js";
 import { InputValues } from "../utils/types/index.js";
 import {
@@ -16,16 +20,6 @@ function isWithStructuredOutput(x: unknown): x is {
     x != null &&
     "withStructuredOutput" in x &&
     typeof x.withStructuredOutput === "function"
-  );
-}
-
-function isRunnableBinding(x: unknown): x is RunnableBinding<unknown, unknown> {
-  return (
-    typeof x === "object" &&
-    x != null &&
-    "lc_id" in x &&
-    Array.isArray(x.lc_id) &&
-    x.lc_id.join("/") === "langchain_core/runnables/RunnableBinding"
   );
 }
 
@@ -76,24 +70,27 @@ export class StructuredPrompt<
     coerceable: RunnableLike<ChatPromptValueInterface, NewRunOutput>
   ): Runnable<RunInput, Exclude<NewRunOutput, Error>, RunnableConfig> {
     if (isWithStructuredOutput(coerceable)) {
-      return super.pipe(coerceable.withStructuredOutput(this.schema));
+      return RunnableSequence.from([
+        this,
+        coerceable.withStructuredOutput(
+          this.schema,
+          ...(this.method ? [{ method: this.method }] : [])
+        ),
+      ]);
     }
 
-    if (
-      isRunnableBinding(coerceable) &&
-      isWithStructuredOutput(coerceable.bound)
-    ) {
-      return super.pipe(
-        new RunnableBinding({
-          bound: coerceable.bound.withStructuredOutput(
+    if (RunnableSequence.isRunnableSequence(coerceable)) {
+      const [first, ...rest] = coerceable.steps;
+      if (isWithStructuredOutput(first)) {
+        return RunnableSequence.from([
+          this,
+          first.withStructuredOutput(
             this.schema,
             ...(this.method ? [{ method: this.method }] : [])
           ),
-          kwargs: coerceable.kwargs ?? {},
-          config: coerceable.config,
-          configFactories: coerceable.configFactories,
-        })
-      );
+          ...rest,
+        ]);
+      }
     }
 
     throw new Error(
