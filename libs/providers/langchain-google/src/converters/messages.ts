@@ -56,13 +56,13 @@ export const geminiContentBlockConverter: StandardContentBlockConverter<{
           typeof block.data === "string"
             ? block.data
             : typeof block.data === "object" && block.data !== null
-            ? // Convert Uint8Array to base64 string
-              btoa(
-                Array.from(block.data as Uint8Array)
-                  .map((byte) => String.fromCharCode(byte))
-                  .join("")
-              )
-            : String(block.data);
+              ? // Convert Uint8Array to base64 string
+                btoa(
+                  Array.from(block.data as Uint8Array)
+                    .map((byte) => String.fromCharCode(byte))
+                    .join("")
+                )
+              : String(block.data);
         return {
           inlineData: {
             mimeType: block.mime_type,
@@ -129,13 +129,13 @@ export const geminiContentBlockConverter: StandardContentBlockConverter<{
           typeof block.data === "string"
             ? block.data
             : typeof block.data === "object" && block.data !== null
-            ? // Convert Uint8Array to base64 string
-              btoa(
-                Array.from(block.data as Uint8Array)
-                  .map((byte) => String.fromCharCode(byte))
-                  .join("")
-              )
-            : String(block.data);
+              ? // Convert Uint8Array to base64 string
+                btoa(
+                  Array.from(block.data as Uint8Array)
+                    .map((byte) => String.fromCharCode(byte))
+                    .join("")
+                )
+              : String(block.data);
         return {
           inlineData: {
             mimeType: block.mime_type,
@@ -202,13 +202,13 @@ export const geminiContentBlockConverter: StandardContentBlockConverter<{
           typeof block.data === "string"
             ? block.data
             : typeof block.data === "object" && block.data !== null
-            ? // Convert Uint8Array to base64 string
-              btoa(
-                Array.from(block.data as Uint8Array)
-                  .map((byte) => String.fromCharCode(byte))
-                  .join("")
-              )
-            : String(block.data);
+              ? // Convert Uint8Array to base64 string
+                btoa(
+                  Array.from(block.data as Uint8Array)
+                    .map((byte) => String.fromCharCode(byte))
+                    .join("")
+                )
+              : String(block.data);
         return {
           inlineData: {
             mimeType: block.mime_type,
@@ -439,9 +439,10 @@ function convertStandardContentMessageToGeminiContent(
         ? message.content
         : JSON.stringify(message.content);
     // FIXME: ToolMessage almost never has a name, we need to refer to the message history
+    const isGeneratedId = message.tool_call_id.startsWith("lc-tool-call-");
     parts.push({
       functionResponse: {
-        id: message.tool_call_id,
+        ...(isGeneratedId ? {} : { id: message.tool_call_id }),
         name: message.name || "unknown",
         response: { result: responseContent },
       },
@@ -724,12 +725,13 @@ function convertLegacyContentMessageToGeminiContent(
     if (!aiMsg) {
       throw new ToolCallNotFoundError(message.tool_call_id);
     }
+    const isGeneratedId = message.tool_call_id.startsWith("lc-tool-call-");
     const matchedToolCall = aiMsg.tool_calls?.find(
       (tc) => tc.id === message.tool_call_id
     );
     parts.push({
       functionResponse: {
-        id: message.tool_call_id,
+        ...(isGeneratedId ? {} : { id: message.tool_call_id }),
         name: matchedToolCall?.name ?? message.name ?? "unknown",
         response: { result: responseContent },
       },
@@ -932,7 +934,9 @@ export const convertGeminiPartsToToolCalls: Converter<
       const functionCallPart = part as Gemini.Part.FunctionCall;
       toolCalls.push({
         type: "tool_call",
-        id: functionCallPart.functionCall.id ?? uuidv4().replace(/-/g, ""),
+        id:
+          functionCallPart.functionCall.id ??
+          `lc-tool-call-${uuidv4().replace(/-/g, "")}`,
         name: functionCallPart.functionCall.name,
         args: functionCallPart.functionCall.args ?? {},
         thoughtSignature: functionCallPart.thoughtSignature,
