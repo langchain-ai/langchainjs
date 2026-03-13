@@ -375,7 +375,7 @@ export abstract class BaseChatGoogle<
   getLsParams(options: this["ParsedCallOptions"]): LangSmithParams {
     const params = this.invocationParams(options);
     return {
-      ls_provider: "google",
+      ls_provider: this.platform === "gcp" ? "google_vertexai" : "google_genai",
       ls_model_name: this.model,
       ls_model_type: "chat",
       ls_temperature: params.generationConfig?.temperature ?? undefined,

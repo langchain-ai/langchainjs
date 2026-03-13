@@ -667,7 +667,11 @@ export class ReactAgent<
       if (shouldReturnDirect.size > 0) {
         allNodeWorkflows.addConditionalEdges(
           TOOLS_NODE_NAME,
-          this.#createToolsRouter(shouldReturnDirect, exitNode),
+          this.#createToolsRouter(
+            shouldReturnDirect,
+            exitNode,
+            toolReturnTarget
+          ),
           [toolReturnTarget, exitNode as string]
         );
       } else {
@@ -772,7 +776,8 @@ export class ReactAgent<
    */
   #createToolsRouter(
     shouldReturnDirect: Set<string>,
-    exitNode: string | typeof END
+    exitNode: string | typeof END,
+    toolReturnTarget: string
   ) {
     return (state: Record<string, unknown>) => {
       const builtInState = state as unknown as BuiltInState;
@@ -787,11 +792,11 @@ export class ReactAgent<
       ) {
         // If we have a response format, route to agent to generate structured response
         // Otherwise, return directly to exit node (could be after_agent or END)
-        return this.options.responseFormat ? AGENT_NODE_NAME : exitNode;
+        return this.options.responseFormat ? toolReturnTarget : exitNode;
       }
 
-      // For non-returnDirect tools, always route back to agent
-      return AGENT_NODE_NAME;
+      // For non-returnDirect tools, route back to loop entry node (could be middleware or agent)
+      return toolReturnTarget;
     };
   }
 

@@ -3,11 +3,11 @@ import {
   AIMessageChunk,
   BaseMessage,
   HumanMessage,
+  isAIMessage,
   MessageContent,
   SystemMessage,
   ToolMessage,
   UsageMetadata,
-  isAIMessage,
 } from "@langchain/core/messages";
 import { ToolCall, ToolCallChunk } from "@langchain/core/messages/tool";
 import { concat } from "@langchain/core/utils/stream";
@@ -43,17 +43,16 @@ function _formatImage(imageUrl: string) {
     type: "base64",
     media_type: match[1] ?? "",
     data: match[2] ?? "",
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  } as any;
+  };
 }
 
 function _ensureMessageContents(
   messages: BaseMessage[]
 ): (SystemMessage | HumanMessage | AIMessage)[] {
   // Merge runs of human/tool messages into single human messages with content blocks.
-  const updatedMsgs = [];
+  const updatedMsgs: (SystemMessage | HumanMessage | AIMessage)[] = [];
   for (const message of messages) {
-    if (message._getType() === "tool") {
+    if (ToolMessage.isInstance(message)) {
       if (typeof message.content === "string") {
         const previousMessage = updatedMsgs[updatedMsgs.length - 1];
         if (
@@ -66,7 +65,7 @@ function _ensureMessageContents(
           previousMessage.content.push({
             type: "tool_result",
             content: message.content,
-            tool_use_id: (message as ToolMessage).tool_call_id,
+            tool_use_id: message.tool_call_id,
           });
         } else {
           // If not, we create a new human message with the tool result.
@@ -76,7 +75,7 @@ function _ensureMessageContents(
                 {
                   type: "tool_result",
                   content: message.content,
-                  tool_use_id: (message as ToolMessage).tool_call_id,
+                  tool_use_id: message.tool_call_id,
                 },
               ],
             })
@@ -89,14 +88,20 @@ function _ensureMessageContents(
               {
                 type: "tool_result",
                 content: _formatContent(message.content),
-                tool_use_id: (message as ToolMessage).tool_call_id,
+                tool_use_id: message.tool_call_id,
               },
             ],
           })
         );
       }
-    } else {
+    } else if (
+      SystemMessage.isInstance(message) ||
+      HumanMessage.isInstance(message) ||
+      AIMessage.isInstance(message)
+    ) {
       updatedMsgs.push(message);
+    } else {
+      throw new Error(`Message type "${message._getType()}" is not supported.`);
     }
   }
   return updatedMsgs;
@@ -121,18 +126,146 @@ function _formatContent(content: MessageContent) {
   if (typeof content === "string") {
     return content;
   } else {
-    const contentBlocks = content.flatMap((contentPart) => {
-      if (contentPart.type === "image_url") {
-        let source;
+    return content.flatMap((contentPart) => {
+      // Legacy data content blocks (have source_type property) — must come
+      // first because they share `type` values with the new multimodal blocks
+      // but use different property names (e.g. mime_type vs mimeType).
+      if ("source_type" in contentPart) {
+        const sourceType = (contentPart as Record<string, unknown>)
+          .source_type as string;
+        const blockType = contentPart.type as string;
+
+        if (sourceType === "base64" && blockType === "image") {
+          return {
+            type: "image" as const,
+            source: {
+              type: "base64" as const,
+              media_type:
+                (contentPart as Record<string, unknown>).mime_type ?? "",
+              data: (contentPart as Record<string, unknown>).data ?? "",
+            },
+          };
+        } else if (sourceType === "base64" && blockType === "file") {
+          return {
+            type: "document" as const,
+            source: {
+              type: "base64" as const,
+              media_type:
+                (contentPart as Record<string, unknown>).mime_type ?? "",
+              data: (contentPart as Record<string, unknown>).data ?? "",
+            },
+          };
+        } else if (sourceType === "url" && blockType === "file") {
+          // NOTE: URL source may not work on Bedrock (see file block below).
+          return {
+            type: "document" as const,
+            source: {
+              type: "url" as const,
+              url: (contentPart as Record<string, unknown>).url ?? "",
+            },
+          };
+        } else if (sourceType === "text") {
+          return {
+            type: "text" as const,
+            text: (contentPart as Record<string, unknown>).text ?? "",
+          };
+        }
+        // Skip unsupported legacy source types (audio, id, etc.)
+        return [];
+      } else if (contentPart.type === "image_url") {
+        let imageUrl: string;
         if (typeof contentPart.image_url === "string") {
-          source = _formatImage(contentPart.image_url);
+          imageUrl = contentPart.image_url;
+        } else if (
+          typeof contentPart.image_url === "object" &&
+          contentPart.image_url !== null &&
+          "url" in contentPart.image_url &&
+          typeof contentPart.image_url.url === "string"
+        ) {
+          imageUrl = contentPart.image_url.url;
         } else {
-          source = _formatImage(contentPart.image_url.url);
+          return [];
         }
         return {
-          type: "image" as const, // Explicitly setting the type as "image"
-          source,
+          type: "image" as const,
+          source: _formatImage(imageUrl),
         };
+      } else if (contentPart.type === "image") {
+        // New multimodal image format
+        if ("url" in contentPart && typeof contentPart.url === "string") {
+          const source = _formatImage(contentPart.url);
+          return {
+            type: "image" as const,
+            source,
+          };
+        } else if (
+          "data" in contentPart &&
+          (typeof contentPart.data === "string" ||
+            // eslint-disable-next-line no-instanceof/no-instanceof
+            contentPart.data instanceof Uint8Array)
+        ) {
+          const mimeType =
+            "mimeType" in contentPart &&
+            typeof contentPart.mimeType === "string"
+              ? contentPart.mimeType
+              : "image/jpeg";
+          const data =
+            typeof contentPart.data === "string"
+              ? contentPart.data
+              : Buffer.from(contentPart.data).toString("base64");
+          return {
+            type: "image" as const,
+            source: {
+              type: "base64" as const,
+              media_type: mimeType,
+              data,
+            },
+          };
+        }
+        return [];
+      } else if (contentPart.type === "file") {
+        // New multimodal file format → Anthropic document block.
+        // NOTE: URL source type may not be supported on Bedrock. The AWS
+        // Bedrock docs only document base64 sources. URL sources are included
+        // here to match the @langchain/anthropic reference implementation;
+        // if Bedrock rejects them, users will receive a clear API error.
+        if ("url" in contentPart && typeof contentPart.url === "string") {
+          return {
+            type: "document" as const,
+            source: {
+              type: "url" as const,
+              url: contentPart.url,
+            },
+          };
+        } else if (
+          "data" in contentPart &&
+          (typeof contentPart.data === "string" ||
+            // eslint-disable-next-line no-instanceof/no-instanceof
+            contentPart.data instanceof Uint8Array)
+        ) {
+          const mimeType =
+            "mimeType" in contentPart &&
+            typeof contentPart.mimeType === "string"
+              ? contentPart.mimeType
+              : "application/pdf";
+          const data =
+            typeof contentPart.data === "string"
+              ? contentPart.data
+              : Buffer.from(contentPart.data).toString("base64");
+          return {
+            type: "document" as const,
+            source: {
+              type: "base64" as const,
+              media_type: mimeType,
+              data,
+            },
+          };
+        }
+        return [];
+      } else if (contentPart.type === "document") {
+        // Anthropic-native document block — pass through
+
+        return { ...contentPart };
       } else if (
         contentPart.type === "text" ||
         contentPart.type === "text_delta"
@@ -140,9 +273,8 @@ function _formatContent(content: MessageContent) {
         if (contentPart.text === "") {
           return [];
         }
-        // Assuming contentPart is of type MessageContentText here
         return {
-          type: "text" as const, // Explicitly setting the type as "text"
+          type: "text" as const,
           text: contentPart.text,
         };
       } else if (
@@ -152,15 +284,14 @@ function _formatContent(content: MessageContent) {
         // TODO: Fix when SDK types are fixed
         return {
           ...contentPart,
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        } as any;
+        };
       } else if (contentPart.type === "input_json_delta") {
         return [];
       } else {
-        throw new Error("Unsupported message content format");
+        // Silently skip unsupported types (audio, video, etc.)
+        return [];
       }
     });
-    return contentBlocks;
   }
 }
 
@@ -362,8 +493,11 @@ export function extractToolCallChunk(
   if (
     toolUseChunks &&
     "index" in toolUseChunks &&
+    typeof toolUseChunks.index === "number" &&
     "name" in toolUseChunks &&
-    "id" in toolUseChunks
+    typeof toolUseChunks.name === "string" &&
+    "id" in toolUseChunks &&
+    typeof toolUseChunks.id === "string"
   ) {
     newToolCallChunk = {
       args: "",
@@ -381,6 +515,7 @@ export function extractToolCallChunk(
   if (
     inputJsonDeltaChunks &&
     "index" in inputJsonDeltaChunks &&
+    typeof inputJsonDeltaChunks.index === "number" &&
     "input" in inputJsonDeltaChunks
   ) {
     if (typeof inputJsonDeltaChunks.input === "string") {
@@ -439,6 +574,13 @@ export function extractToolUseContent(
         !("input" in toolUseMsg || "name" in toolUseMsg || "id" in toolUseMsg)
       )
         return;
+      if (
+        typeof toolUseMsg.id !== "string" ||
+        typeof toolUseMsg.name !== "string" ||
+        typeof toolUseMsg.input !== "string"
+      ) {
+        return;
+      }
       const parsedArgs = JSON.parse(toolUseMsg.input);
       if (parsedArgs) {
         toolUseContent = {
