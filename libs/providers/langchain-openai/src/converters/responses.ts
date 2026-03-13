@@ -1141,7 +1141,7 @@ export const convertStandardContentMessageToResponsesInput: Converter<
 
     for (const block of message.contentBlocks) {
       if (block.type === "text") {
-        pushMessageContent([{ type: "input_text", text: block.text }]);
+        pushMessageContent([{ type: messageRole === "assistant" ? "output_text" : "input_text", text: block.text }]);
       } else if (block.type === "invalid_tool_call") {
         // no-op
       } else if (block.type === "reasoning") {
@@ -1211,7 +1211,7 @@ export const convertStandardContentMessageToResponsesInput: Converter<
         if (block.text) {
           pushMessageContent([
             {
-              type: "input_text",
+              type: messageRole === "assistant" ? "output_text" : "input_text",
               text: block.text,
             },
           ]);
