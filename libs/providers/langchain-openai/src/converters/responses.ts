@@ -736,6 +736,8 @@ export const convertResponsesDeltaToChatGenerationChunk: Converter<
       "mcp_list_tools",
       "mcp_approval_request",
       "custom_tool_call",
+      "tool_search_call",
+      "tool_search_output",
     ].includes(event.item.type)
   ) {
     additional_kwargs.tool_outputs = [event.item];
