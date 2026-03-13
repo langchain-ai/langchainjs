@@ -919,24 +919,24 @@ export abstract class Runnable<
       let listener: (() => void) | null = null;
 
       try {
-        if (options?.signal) {
+        if (config.signal) {
           if ("any" in AbortSignal) {
             // Use native AbortSignal.any() if available (Node 19+)
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             signal = (AbortSignal as any).any([
               abortController.signal,
-              options.signal,
+              config.signal,
             ]);
           } else {
             // Fallback for Node 18 and below - just use the provided signal
-            signal = options.signal;
+            signal = config.signal;
             // Ensure we still abort our controller when the parent signal aborts
 
             listener = () => {
               abortController.abort();
             };
 
-            options.signal.addEventListener("abort", listener, { once: true });
+            config.signal.addEventListener("abort", listener, { once: true });
           }
         } else {
           signal = abortController.signal;
