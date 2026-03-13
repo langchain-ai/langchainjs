@@ -257,6 +257,8 @@ export abstract class BaseChatOpenAI<
 
   n?: number;
 
+  seed?: number;
+
   logitBias?: Record<string, number>;
 
   model = "gpt-3.5-turbo";
@@ -399,6 +401,7 @@ export abstract class BaseChatOpenAI<
       "frequencyPenalty",
       "presencePenalty",
       "n",
+      "seed",
       "logitBias",
       "user",
       "streaming",
@@ -486,6 +489,7 @@ export abstract class BaseChatOpenAI<
     this.logprobs = fields?.logprobs;
     this.topLogprobs = fields?.topLogprobs;
     this.n = fields?.n ?? this.n;
+    this.seed = fields?.seed ?? this.seed;
     this.logitBias = fields?.logitBias;
     this.stop = fields?.stopSequences ?? fields?.stop;
     this.stopSequences = this.stop;
