@@ -83,18 +83,39 @@ export interface ChatBedrockConverseInput
   clientOptions?: BedrockRuntimeClientConfig;
 
   /**
+   * AWS access key ID. If provided along with `bedrockApiSecret`, these will be
+   * used to construct credentials for the Bedrock client. Falls back to the
+   * `BEDROCK_AWS_ACCESS_KEY_ID` environment variable.
+   */
+  bedrockApiKey?: string;
+
+  /**
+   * AWS secret access key. If provided along with `bedrockApiKey`, these will be
+   * used to construct credentials for the Bedrock client. Falls back to the
+   * `BEDROCK_AWS_SECRET_ACCESS_KEY` environment variable.
+   */
+  bedrockApiSecret?: string;
+
+  /**
+   * AWS session token. Optionally provided alongside `bedrockApiKey` and
+   * `bedrockApiSecret` for temporary credentials. Falls back to the
+   * `BEDROCK_AWS_SESSION_TOKEN` environment variable.
+   */
+  bedrockApiSessionToken?: string;
+
+  /**
    * Whether or not to stream responses
    */
   streaming?: boolean;
 
   /**
    * Model to use.
-   * For example, "anthropic.claude-3-haiku-20240307-v1:0", this is equivalent to the modelId property in the
+   * For example, "anthropic.claude-haiku-4-5-20251001-v1:0", this is equivalent to the modelId property in the
    * list-foundation-models api.
    * See the below link for a full list of models.
    * @link https://docs.aws.amazon.com/bedrock/latest/userguide/model-ids.html#model-ids-arns
    *
-   * @default anthropic.claude-3-haiku-20240307-v1:0
+   * @default anthropic.claude-haiku-4-5-20251001-v1:0
    */
   model?: string;
 
@@ -196,6 +217,14 @@ export interface ChatBedrockConverseInput
    * model is used, ['auto', 'any'] if a 'mistral-large' model is used, empty otherwise.
    */
   supportsToolChoiceValues?: Array<"auto" | "any" | "tool">;
+
+  /**
+   * Default headers to include in every request to the Bedrock API.
+   * Useful for custom authentication headers, Anthropic beta features,
+   * or proxy tagging. Mirrors `default_headers` in the Python implementation.
+   * @example { "anthropic-beta": "prompt-caching-2024-07-31" }
+   */
+  defaultHeaders?: Record<string, string>;
 }
 
 export interface ChatBedrockConverseCallOptions
@@ -682,6 +711,9 @@ export class ChatBedrockConverse
   get lc_secrets(): { [key: string]: string } | undefined {
     return {
       apiKey: "API_KEY_NAME",
+      bedrockApiKey: "BEDROCK_AWS_ACCESS_KEY_ID",
+      bedrockApiSecret: "BEDROCK_AWS_SECRET_ACCESS_KEY",
+      bedrockApiSessionToken: "BEDROCK_AWS_SESSION_TOKEN",
     };
   }
 
@@ -693,7 +725,7 @@ export class ChatBedrockConverse
     };
   }
 
-  model = "anthropic.claude-3-haiku-20240307-v1:0";
+  model = "anthropic.claude-haiku-4-5-20251001-v1:0";
 
   applicationInferenceProfile?: string;
 
@@ -719,6 +751,12 @@ export class ChatBedrockConverse
 
   serviceTier?: ServiceTierType | undefined = undefined;
 
+  bedrockApiKey?: string;
+
+  bedrockApiSecret?: string;
+
+  bedrockApiSessionToken?: string;
+
   client: BedrockRuntimeClient;
 
   clientOptions?: BedrockRuntimeClientConfig;
@@ -730,6 +768,8 @@ export class ChatBedrockConverse
    * model is used, ['auto', 'any'] if a 'mistral-large' model is used, empty otherwise.
    */
   supportsToolChoiceValues?: Array<"auto" | "any" | "tool">;
+
+  defaultHeaders?: Record<string, string>;
 
   constructor(model: string, params?: Omit<ChatBedrockConverseInput, "model">);
   constructor(fields?: ChatBedrockConverseInput);
@@ -756,9 +796,29 @@ export class ChatBedrockConverse
       ...rest
     } = fields;
 
-    const credentials =
-      rest?.credentials ??
-      defaultProvider({
+    const bedrockApiKey =
+      rest?.bedrockApiKey ??
+      getEnvironmentVariable("BEDROCK_AWS_ACCESS_KEY_ID");
+    const bedrockApiSecret =
+      rest?.bedrockApiSecret ??
+      getEnvironmentVariable("BEDROCK_AWS_SECRET_ACCESS_KEY");
+    const bedrockApiSessionToken =
+      rest?.bedrockApiSessionToken ??
+      getEnvironmentVariable("BEDROCK_AWS_SESSION_TOKEN");
+
+    let credentials: CredentialType;
+    if (rest?.credentials) {
+      credentials = rest.credentials;
+    } else if (bedrockApiKey && bedrockApiSecret) {
+      credentials = {
+        accessKeyId: bedrockApiKey,
+        secretAccessKey: bedrockApiSecret,
+        ...(bedrockApiSessionToken
+          ? { sessionToken: bedrockApiSessionToken }
+          : {}),
+      };
+    } else {
+      credentials = defaultProvider({
         profile,
         filepath,
         configFilepath,
@@ -769,6 +829,7 @@ export class ChatBedrockConverse
         webIdentityTokenFile,
         roleAssumerWithWebIdentity,
       });
+    }
 
     const region = rest?.region ?? getEnvironmentVariable("AWS_DEFAULT_REGION");
     if (!region) {
@@ -788,6 +849,20 @@ export class ChatBedrockConverse
           : undefined,
       });
 
+    if (rest?.defaultHeaders && Object.keys(rest.defaultHeaders).length > 0) {
+      const headers = rest.defaultHeaders;
+      this.client.middlewareStack.add(
+        (next) => async (args) => {
+          for (const [key, value] of Object.entries(headers)) {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            (args.request as any).headers[key] = value;
+          }
+          return next(args);
+        },
+        { step: "build", name: "langchain_aws_default_headers" }
+      );
+    }
+
     this.region = region;
     this.model = rest?.model ?? this.model;
     this.applicationInferenceProfile = rest?.applicationInferenceProfile;
@@ -795,6 +870,9 @@ export class ChatBedrockConverse
     this.temperature = rest?.temperature;
     this.maxTokens = rest?.maxTokens;
     this.endpointHost = rest?.endpointHost;
+    this.bedrockApiKey = bedrockApiKey;
+    this.bedrockApiSecret = bedrockApiSecret;
+    this.bedrockApiSessionToken = bedrockApiSessionToken;
     this.topP = rest?.topP;
     this.additionalModelRequestFields = rest?.additionalModelRequestFields;
     this.streamUsage = rest?.streamUsage ?? this.streamUsage;
@@ -802,6 +880,7 @@ export class ChatBedrockConverse
     this.performanceConfig = rest?.performanceConfig;
     this.serviceTier = rest?.serviceTier;
     this.clientOptions = rest?.clientOptions;
+    this.defaultHeaders = rest?.defaultHeaders;
 
     if (rest?.supportsToolChoiceValues === undefined) {
       this.supportsToolChoiceValues = supportedToolChoiceValuesForModel(

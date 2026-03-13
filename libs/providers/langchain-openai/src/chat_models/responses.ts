@@ -330,12 +330,19 @@ export class ChatOpenAIResponses<
           format: customToolData.format,
         } as ResponsesTool);
       } else if (isOpenAIFunctionTool(tool)) {
+        const extra: Record<string, unknown> = {};
+        for (const [k, v] of Object.entries(tool)) {
+          if (k !== "type" && k !== "function") {
+            extra[k] = v;
+          }
+        }
         reducedTools.push({
           type: "function",
           name: tool.function.name,
           parameters: tool.function.parameters,
           description: tool.function.description,
           strict: fields?.strict ?? null,
+          ...extra,
         });
       } else if (isOpenAICustomTool(tool)) {
         reducedTools.push(convertCompletionsCustomTool(tool));

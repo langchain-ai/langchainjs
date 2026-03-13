@@ -5,9 +5,7 @@ updates:
   - package-ecosystem: github-actions
     directory: "/"
     schedule:
-      interval: weekly
-      day: monday
-      time: "11:00"
+      interval: monthly
     open-pull-requests-limit: 10
     groups:
       gh-actions-minor-and-patch:
@@ -22,9 +20,7 @@ updates:
   - package-ecosystem: npm
     directory: "/"
     schedule:
-      interval: weekly
-      day: monday
-      time: "11:00"
+      interval: monthly
     open-pull-requests-limit: 10
     groups:
       root-dev-minor-and-patch:
@@ -37,19 +33,16 @@ updates:
         update-types:
           - "major"
 
-  # Core libraries (langchain-core, langchain, langchain-community, etc.)
+  # Core libraries (langchain-core, langchain,, etc.)
   - package-ecosystem: npm
     directories:
       - "/libs/langchain-core"
       - "/libs/langchain"
       - "/libs/langchain-classic"
-      - "/libs/langchain-community"
       - "/libs/langchain-textsplitters"
       - "/libs/langchain-mcp-adapters"
     schedule:
-      interval: weekly
-      day: monday
-      time: "11:00"
+      interval: monthly
     open-pull-requests-limit: 10
     ignore:
       - dependency-name: "p-queue"
@@ -62,14 +55,28 @@ updates:
         update-types:
           - "major"
 
+  # Community integrations
+  - package-ecosystem: npm
+    directories:
+      - "libs/community/*"
+    schedule:
+      interval: monthly
+    open-pull-requests-limit: 15
+    groups:
+      providers-minor-and-patch:
+        update-types:
+          - "minor"
+          - "patch"
+      providers-major:
+        update-types:
+          - "major"
+
   # Provider integrations
   - package-ecosystem: npm
     directories:
       - "/libs/providers/*"
     schedule:
-      interval: weekly
-      day: monday
-      time: "11:00"
+      interval: monthly
     open-pull-requests-limit: 15
     groups:
       providers-minor-and-patch:
@@ -85,9 +92,7 @@ updates:
     directories:
       - "/internal/*"
     schedule:
-      interval: weekly
-      day: monday
-      time: "11:00"
+      interval: monthly
     open-pull-requests-limit: 5
     groups:
       internal-minor-and-patch:

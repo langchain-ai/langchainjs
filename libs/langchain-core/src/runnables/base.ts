@@ -1,5 +1,5 @@
 import { z } from "zod/v3";
-import { v4 as uuidv4 } from "uuid";
+import { v7 as uuidv7 } from "uuid";
 
 import {
   type TraceableFunction,
@@ -898,7 +898,7 @@ export abstract class Runnable<
       autoClose: false,
     });
     const config = ensureConfig(options);
-    const runId = config.runId ?? uuidv4();
+    const runId = config.runId ?? uuidv7();
     config.runId = runId;
     const callbacks = config.callbacks;
     if (callbacks === undefined) {

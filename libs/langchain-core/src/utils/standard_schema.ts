@@ -20,7 +20,7 @@ export function isStandardSchema<Input = any, Output = Input>(
   schema: unknown
 ): schema is StandardSchemaV1<Input, Output> {
   return (
-    typeof schema === "object" &&
+    (typeof schema === "object" || typeof schema === "function") &&
     schema !== null &&
     "~standard" in schema &&
     typeof schema["~standard"] === "object" &&
@@ -39,7 +39,7 @@ export function isStandardJsonSchema<Input = any, Output = Input>(
   schema: unknown
 ): schema is StandardJSONSchemaV1<Input, Output> {
   return (
-    typeof schema === "object" &&
+    (typeof schema === "object" || typeof schema === "function") &&
     schema !== null &&
     "~standard" in schema &&
     typeof schema["~standard"] === "object" &&

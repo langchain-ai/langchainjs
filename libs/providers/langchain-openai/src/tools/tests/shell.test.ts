@@ -57,6 +57,7 @@ describe("OpenAI Shell Tool Tests", () => {
     expect(actions[0].timeout_ms).toBe(5000);
     expect(actions[0].max_output_length).toBe(4096);
 
+    if (typeof result !== "string") throw new Error("Expected string result");
     const parsed = JSON.parse(result);
     expect(parsed.output).toHaveLength(2);
     expect(parsed.output[0].stdout).toBe("executed: ls -la");
@@ -87,6 +88,7 @@ describe("OpenAI Shell Tool Tests", () => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const result = await executeFunc(testAction as any);
 
+    if (typeof result !== "string") throw new Error("Expected string result");
     const parsed = JSON.parse(result);
     expect(parsed.output).toHaveLength(1);
     expect(parsed.output[0].outcome.type).toBe("timeout");
@@ -115,6 +117,7 @@ describe("OpenAI Shell Tool Tests", () => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const result = await executeFunc(testAction as any);
 
+    if (typeof result !== "string") throw new Error("Expected string result");
     const parsed = JSON.parse(result);
     expect(parsed.output).toHaveLength(1);
     expect(parsed.output[0].outcome.type).toBe("exit");
@@ -143,6 +146,7 @@ describe("OpenAI Shell Tool Tests", () => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const result = await executeFunc(testAction as any);
 
+    if (typeof result !== "string") throw new Error("Expected string result");
     const parsed = JSON.parse(result);
     expect(parsed.output).toHaveLength(3);
     expect(parsed.output[0].stdout).toBe("output 0");
