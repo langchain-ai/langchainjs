@@ -292,10 +292,11 @@ describe("Google Mock", () => {
       apiClient: webApiClient,
       temperature: 0.25,
       maxOutputTokens: 256,
+      platformType: "gai",
     });
 
     expect(webModel.getLsParams({ stop: ["END"] })).toEqual({
-      ls_provider: "google",
+      ls_provider: "google_genai",
       ls_model_name: "gemini-2.5-flash",
       ls_model_type: "chat",
       ls_temperature: 0.25,
@@ -311,15 +312,36 @@ describe("Google Mock", () => {
       apiClient: nodeApiClient,
       temperature: 0.5,
       maxOutputTokens: 512,
+      platformType: "gai",
     });
 
     expect(nodeModel.getLsParams({ stop: ["STOP"] })).toEqual({
-      ls_provider: "google",
+      ls_provider: "google_genai",
       ls_model_name: "gemini-2.5-pro",
       ls_model_type: "chat",
       ls_temperature: 0.5,
       ls_max_tokens: 512,
       ls_stop: ["STOP"],
+    });
+
+    const vertexApiClient = new MockApiClient({
+      fileName: "gemini-chat-001.json",
+    });
+    const vertexModel = new ChatGoogleNode({
+      model: "gemini-2.5-flash",
+      apiClient: vertexApiClient,
+      temperature: 0.3,
+      maxOutputTokens: 1024,
+      vertexai: true,
+    });
+
+    expect(vertexModel.getLsParams({ stop: ["DONE"] })).toEqual({
+      ls_provider: "google_vertexai",
+      ls_model_name: "gemini-2.5-flash",
+      ls_model_type: "chat",
+      ls_temperature: 0.3,
+      ls_max_tokens: 1024,
+      ls_stop: ["DONE"],
     });
   });
 
