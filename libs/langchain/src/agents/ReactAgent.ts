@@ -15,14 +15,22 @@ import {
   type StreamOutputMap,
   type PregelOptions,
 } from "@langchain/langgraph";
-import type { CheckpointListOptions } from "@langchain/langgraph-checkpoint";
+import type {
+  BaseCheckpointSaver,
+  BaseStore,
+  CheckpointListOptions,
+} from "@langchain/langgraph-checkpoint";
 import {
   ToolMessage,
   AIMessage,
   MessageStructure,
 } from "@langchain/core/messages";
 import { IterableReadableStream } from "@langchain/core/utils/stream";
-import type { Runnable, RunnableConfig } from "@langchain/core/runnables";
+import {
+  mergeConfigs,
+  type Runnable,
+  type RunnableConfig,
+} from "@langchain/core/runnables";
 import type { StreamEvent } from "@langchain/core/tracers/log_stream";
 import type { ClientTool, ServerTool } from "@langchain/core/tools";
 import { createAgentState } from "./annotation.js";
@@ -61,7 +69,7 @@ import type {
   InferMiddlewareInputStates,
   InferContextInput,
   AnyAnnotationRoot,
-  InferSchemaInput,
+  InferSchemaValue,
   ToAnnotationRoot,
 } from "./middleware/types.js";
 import { type ResponseFormatUndefined } from "./responses.js";
@@ -81,7 +89,7 @@ type BaseGraphDestination =
   | typeof END;
 
 // Helper type to get the state definition with middleware states
-type MergedAgentState<Types extends AgentTypeConfig> = InferSchemaInput<
+type MergedAgentState<Types extends AgentTypeConfig> = InferSchemaValue<
   Types["State"]
 > &
   (Types["Response"] extends ResponseFormatUndefined
@@ -169,13 +177,22 @@ export class ReactAgent<
 
   #stateManager = new StateManager();
 
+  #defaultConfig: RunnableConfig;
+
   constructor(
     public options: CreateAgentParams<
       Types["Response"],
       Types["State"],
       Types["Context"]
-    >
+    >,
+    defaultConfig?: RunnableConfig
   ) {
+    this.#defaultConfig = defaultConfig ?? {};
+    if (options.name) {
+      this.#defaultConfig = mergeConfigs(this.#defaultConfig, {
+        metadata: { lc_agent_name: options.name },
+      });
+    }
     this.#toolBehaviorVersion = options.version ?? this.#toolBehaviorVersion;
 
     /**
@@ -680,6 +697,54 @@ export class ReactAgent<
     return this.#graph;
   }
 
+  get checkpointer(): BaseCheckpointSaver | boolean | undefined {
+    return this.#graph.checkpointer;
+  }
+
+  set checkpointer(value: BaseCheckpointSaver | boolean | undefined) {
+    this.#graph.checkpointer = value;
+  }
+
+  get store(): BaseStore | undefined {
+    return this.#graph.store;
+  }
+
+  set store(value: BaseStore | undefined) {
+    this.#graph.store = value;
+  }
+
+  /**
+   * Creates a new ReactAgent with the given config merged into the existing config.
+   * Follows the same pattern as LangGraph's Pregel.withConfig().
+   *
+   * The merged config is applied as a default that gets merged with any config
+   * passed at invocation time (invoke/stream). Invocation-time config takes precedence.
+   *
+   * @param config - Configuration to merge with existing config
+   * @returns A new ReactAgent instance with the merged configuration
+   *
+   * @example
+   * ```typescript
+   * const agent = createAgent({ model: "gpt-4o", tools: [...] });
+   *
+   * // Set a default recursion limit
+   * const configuredAgent = agent.withConfig({ recursionLimit: 1000 });
+   *
+   * // Chain multiple configs
+   * const debugAgent = agent
+   *   .withConfig({ recursionLimit: 1000 })
+   *   .withConfig({ tags: ["debug"] });
+   * ```
+   */
+  withConfig(
+    config: Omit<RunnableConfig, "store" | "writer" | "interrupt">
+  ): ReactAgent<Types> {
+    return new ReactAgent(
+      this.options,
+      mergeConfigs(this.#defaultConfig, config)
+    );
+  }
+
   /**
    * Get possible edge destinations from model node.
    * @param toolClasses names of tools to call
@@ -1103,14 +1168,15 @@ export class ReactAgent<
     >
   ) {
     type FullState = MergedAgentState<Types>;
+    const mergedConfig = mergeConfigs(this.#defaultConfig, config);
     const initializedState = await this.#initializeMiddlewareStates(
       state,
-      config as RunnableConfig
+      mergedConfig as RunnableConfig
     );
 
     return this.#graph.invoke(
       initializedState,
-      config as unknown as InferContextInput<
+      mergedConfig as unknown as InferContextInput<
         Types["Context"] extends AnyAnnotationRoot | InteropZodObject
           ? Types["Context"]
           : AnyAnnotationRoot
@@ -1163,6 +1229,7 @@ export class ReactAgent<
    */
   async stream<
     TStreamMode extends StreamMode | StreamMode[] | undefined,
+    TSubgraphs extends boolean,
     TEncoding extends "text/event-stream" | undefined,
   >(
     state: InvokeStateParameter<Types>,
@@ -1174,21 +1241,23 @@ export class ReactAgent<
       > &
         InferMiddlewareContextInputs<Types["Middleware"]>,
       TStreamMode,
+      TSubgraphs,
       TEncoding
     >
   ) {
+    const mergedConfig = mergeConfigs(this.#defaultConfig, config);
     const initializedState = await this.#initializeMiddlewareStates(
       state,
-      config as RunnableConfig
+      mergedConfig as RunnableConfig
     );
     return this.#graph.stream(
       initializedState,
-      config as Record<string, any>
+      mergedConfig as Record<string, any>
     ) as Promise<
       IterableReadableStream<
         StreamOutputMap<
           TStreamMode,
-          false,
+          TSubgraphs,
           MergedAgentState<Types>,
           MergedAgentState<Types>,
           string,
@@ -1265,14 +1334,16 @@ export class ReactAgent<
       > &
         InferMiddlewareContextInputs<Types["Middleware"]>,
       StreamMode | StreamMode[] | undefined,
+      boolean,
       "text/event-stream" | undefined
     > & { version?: "v1" | "v2" },
     streamOptions?: Parameters<Runnable["streamEvents"]>[2]
   ): IterableReadableStream<StreamEvent> {
+    const mergedConfig = mergeConfigs(this.#defaultConfig, config);
     return this.#graph.streamEvents(
       state,
       {
-        ...(config as Partial<
+        ...(mergedConfig as Partial<
           PregelOptions<
             any,
             any,

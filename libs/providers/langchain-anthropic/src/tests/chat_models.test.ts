@@ -9,16 +9,30 @@ import { z } from "zod";
 import { z as z4 } from "zod/v4";
 import { OutputParserException } from "@langchain/core/output_parsers";
 import { tool } from "@langchain/core/tools";
-import { ChatAnthropic } from "../chat_models.js";
+import {
+  ContentBlockParam as AnthropicContentBlockParam,
+  MessageCreateParamsNonStreaming,
+} from "@anthropic-ai/sdk/resources";
+import { ChatAnthropic, ChatAnthropicMessages } from "../chat_models.js";
 import {
   _convertMessagesToAnthropicPayload,
   applyCacheControlToPayload,
 } from "../utils/message_inputs.js";
 import { AnthropicToolExtrasSchema } from "../utils/tools.js";
+import { AnthropicMessageCreateParams } from "../types.js";
+
+test("constructor supports model shorthand for ChatAnthropicMessages", () => {
+  const model = new ChatAnthropicMessages("claude-haiku-4-5-20251001", {
+    anthropicApiKey: "testing",
+  });
+
+  expect(model.model).toBe("claude-haiku-4-5-20251001");
+  expect(model.modelName).toBe("claude-haiku-4-5-20251001");
+});
 
 test("withStructuredOutput with output validation", async () => {
   const model = new ChatAnthropic({
-    modelName: "claude-3-haiku-20240307",
+    modelName: "claude-haiku-4-5-20251001",
     temperature: 0,
     anthropicApiKey: "testing",
   });
@@ -66,7 +80,7 @@ test("withStructuredOutput with output validation", async () => {
 
 test("withStructuredOutput with proper output", async () => {
   const model = new ChatAnthropic({
-    modelName: "claude-3-haiku-20240307",
+    modelName: "claude-haiku-4-5-20251001",
     temperature: 0,
     anthropicApiKey: "testing",
   });
@@ -198,9 +212,65 @@ test("Can properly format anthropic messages when given two tool results", async
   });
 });
 
+test("Can properly format anthropic messages when AIMessage content is an empty array with tool_calls", async () => {
+  const messageHistory = [
+    new HumanMessage("What is the weather in SF?"),
+    new AIMessage({
+      content: [],
+      tool_calls: [
+        {
+          name: "get_weather",
+          id: "weather_call",
+          args: {
+            location: "SF",
+          },
+        },
+      ],
+    }),
+    new ToolMessage({
+      name: "get_weather",
+      tool_call_id: "weather_call",
+      content: "It is currently 24 degrees with hail in San Francisco.",
+    }),
+  ];
+
+  const formattedMessages = _convertMessagesToAnthropicPayload(messageHistory);
+
+  expect(formattedMessages).toEqual({
+    messages: [
+      {
+        role: "user",
+        content: "What is the weather in SF?",
+      },
+      {
+        role: "assistant",
+        content: [
+          {
+            type: "tool_use",
+            id: "weather_call",
+            name: "get_weather",
+            input: { location: "SF" },
+          },
+        ],
+      },
+      {
+        role: "user",
+        content: [
+          {
+            type: "tool_result",
+            content: "It is currently 24 degrees with hail in San Francisco.",
+            tool_use_id: "weather_call",
+          },
+        ],
+      },
+    ],
+    system: undefined,
+  });
+});
+
 test("invocationParams includes container when provided in call options", () => {
   const model = new ChatAnthropic({
-    modelName: "claude-3-haiku-20240307",
+    modelName: "claude-haiku-4-5-20251001",
     temperature: 0,
     anthropicApiKey: "testing",
   });
@@ -212,7 +282,7 @@ test("invocationParams includes container when provided in call options", () => 
 
 test("invocationParams does not include container when not provided", () => {
   const model = new ChatAnthropic({
-    modelName: "claude-3-haiku-20240307",
+    modelName: "claude-haiku-4-5-20251001",
     temperature: 0,
     anthropicApiKey: "testing",
   });
@@ -224,7 +294,7 @@ test("invocationParams does not include container when not provided", () => {
 
 test("invocationParams includes container with thinking enabled", () => {
   const model = new ChatAnthropic({
-    modelName: "claude-3-haiku-20240307",
+    modelName: "claude-haiku-4-5-20251001",
     temperature: 1,
     anthropicApiKey: "testing",
     thinking: { type: "enabled", budget_tokens: 1000 },
@@ -238,7 +308,7 @@ test("invocationParams includes container with thinking enabled", () => {
 
 test("invocationParams returns undefined tools when tools is undefined", () => {
   const model = new ChatAnthropic({
-    modelName: "claude-3-haiku",
+    modelName: "claude-haiku-4-5",
     temperature: 0,
     apiKey: "testing",
   });
@@ -250,7 +320,7 @@ test("invocationParams returns undefined tools when tools is undefined", () => {
 
 test("invocationParams returns empty array when tools is empty array", () => {
   const model = new ChatAnthropic({
-    modelName: "claude-3-haiku",
+    modelName: "claude-haiku-4-5",
     temperature: 0,
     apiKey: "testing",
   });
@@ -440,7 +510,7 @@ describe("Tool extras", () => {
     );
 
     const model = new ChatAnthropic({
-      modelName: "claude-3-haiku-20240307",
+      modelName: "claude-haiku-4-5-20251001",
       anthropicApiKey: "testing",
     });
 
@@ -470,7 +540,7 @@ describe("Tool extras", () => {
     );
 
     const model = new ChatAnthropic({
-      modelName: "claude-3-haiku-20240307",
+      modelName: "claude-haiku-4-5-20251001",
       anthropicApiKey: "testing",
     });
 
@@ -506,7 +576,7 @@ describe("Tool extras", () => {
     );
 
     const model = new ChatAnthropic({
-      modelName: "claude-3-haiku-20240307",
+      modelName: "claude-haiku-4-5-20251001",
       anthropicApiKey: "testing",
     });
 
@@ -547,7 +617,7 @@ describe("Tool extras", () => {
     );
 
     const model = new ChatAnthropic({
-      modelName: "claude-3-haiku-20240307",
+      modelName: "claude-haiku-4-5-20251001",
       anthropicApiKey: "testing",
     });
 
@@ -581,7 +651,7 @@ describe("Tool extras validation", () => {
 describe("formatStructuredToolToAnthropic", () => {
   test("returns undefined when tools is undefined", () => {
     const model = new ChatAnthropic({
-      modelName: "claude-3-haiku-20240307",
+      modelName: "claude-haiku-4-5-20251001",
       anthropicApiKey: "testing",
     });
 
@@ -592,7 +662,7 @@ describe("formatStructuredToolToAnthropic", () => {
 
   test("returns empty array when tools is empty array", () => {
     const model = new ChatAnthropic({
-      modelName: "claude-3-haiku-20240307",
+      modelName: "claude-haiku-4-5-20251001",
       anthropicApiKey: "testing",
     });
 
@@ -619,7 +689,7 @@ describe("Tool search beta auto-append", () => {
     );
 
     const model = new ChatAnthropic({
-      modelName: "claude-3-haiku-20240307",
+      modelName: "claude-haiku-4-5-20251001",
       anthropicApiKey: "testing",
     });
 
@@ -655,7 +725,7 @@ describe("Tool search beta auto-append", () => {
     );
 
     const model = new ChatAnthropic({
-      modelName: "claude-3-haiku-20240307",
+      modelName: "claude-haiku-4-5-20251001",
       anthropicApiKey: "testing",
     });
 
@@ -688,7 +758,7 @@ describe("Tool search beta auto-append", () => {
     );
 
     const model = new ChatAnthropic({
-      modelName: "claude-3-haiku-20240307",
+      modelName: "claude-haiku-4-5-20251001",
       anthropicApiKey: "testing",
     });
 
@@ -1019,7 +1089,7 @@ describe("ContentBlock.Multimodal.Image format support", () => {
 
     const messageHistory = [
       new HumanMessage({
-        contentBlocks: [
+        content: [
           {
             type: "image",
             data: base64Data,
@@ -1080,7 +1150,9 @@ describe("applyCacheControlToPayload", () => {
   const cacheControl = { type: "ephemeral" as const, ttl: "5m" as const };
 
   test("applies cache_control to the last content block of string content", () => {
-    const payload = {
+    const payload: AnthropicMessageCreateParams = {
+      max_tokens: 1000,
+      model: "claude-sonnet-4-5-20250929",
       messages: [
         { role: "user" as const, content: "Hello" },
         { role: "assistant" as const, content: "Hi there!" },
@@ -1103,7 +1175,9 @@ describe("applyCacheControlToPayload", () => {
   });
 
   test("applies cache_control to the last content block of array content", () => {
-    const payload = {
+    const payload: AnthropicMessageCreateParams = {
+      max_tokens: 1000,
+      model: "claude-sonnet-4-5-20250929",
       messages: [
         { role: "user" as const, content: "Hello" },
         {
@@ -1134,7 +1208,9 @@ describe("applyCacheControlToPayload", () => {
   });
 
   test("applies cache_control to tool_use blocks without corruption", () => {
-    const payload = {
+    const payload: AnthropicMessageCreateParams = {
+      max_tokens: 1000,
+      model: "claude-sonnet-4-5-20250929",
       messages: [
         { role: "user" as const, content: "Hello" },
         {
@@ -1170,7 +1246,11 @@ describe("applyCacheControlToPayload", () => {
   });
 
   test("returns unchanged payload when messages array is empty", () => {
-    const payload = { messages: [] };
+    const payload: AnthropicMessageCreateParams = {
+      messages: [],
+      max_tokens: 1000,
+      model: "claude-sonnet-4-5-20250929",
+    };
 
     const result = applyCacheControlToPayload(payload, cacheControl);
 
@@ -1178,8 +1258,10 @@ describe("applyCacheControlToPayload", () => {
   });
 
   test("handles 1h TTL", () => {
-    const payload = {
+    const payload: AnthropicMessageCreateParams = {
       messages: [{ role: "user" as const, content: "Hello" }],
+      max_tokens: 1000,
+      model: "claude-sonnet-4-5-20250929",
     };
     const hourCacheControl = { type: "ephemeral" as const, ttl: "1h" as const };
 
@@ -1191,5 +1273,661 @@ describe("applyCacheControlToPayload", () => {
         hourCacheControl
       );
     }
+  });
+});
+
+describe("File ContentBlock handling", () => {
+  test("converts file ContentBlock with URL to document block", () => {
+    const message = new HumanMessage({
+      content: [
+        { type: "text", text: "Summarize this document" },
+        {
+          type: "file",
+          url: "https://example.com/document.pdf",
+          mimeType: "application/pdf",
+        },
+      ],
+    });
+
+    const payload = _convertMessagesToAnthropicPayload([message]);
+
+    expect(payload.messages).toHaveLength(1);
+    expect(payload.messages[0].role).toBe("user");
+    expect(Array.isArray(payload.messages[0].content)).toBe(true);
+
+    const content = payload.messages[0].content;
+    expect(content).toHaveLength(2);
+    expect(content[0]).toEqual({
+      type: "text",
+      text: "Summarize this document",
+    });
+    expect(content[1]).toEqual({
+      type: "document",
+      source: {
+        type: "url",
+        url: "https://example.com/document.pdf",
+      },
+    });
+  });
+
+  test("converts file ContentBlock with base64 data to document block", () => {
+    const base64Data = "JVBERi0xLjQKJeLjz9M=";
+    const message = new HumanMessage({
+      content: [
+        { type: "text", text: "What's in this file?" },
+        {
+          type: "file",
+          data: base64Data,
+          mimeType: "application/pdf",
+        },
+      ],
+    });
+
+    const payload = _convertMessagesToAnthropicPayload([message]);
+
+    expect(payload.messages).toHaveLength(1);
+    const content = payload.messages[0].content as AnthropicContentBlockParam[];
+    expect(content).toHaveLength(2);
+    expect(content[0]).toEqual({ type: "text", text: "What's in this file?" });
+    expect(content[1]).toEqual({
+      type: "document",
+      source: {
+        type: "base64",
+        media_type: "application/pdf",
+        data: base64Data,
+      },
+    });
+  });
+
+  test("converts file ContentBlock with Uint8Array data to document block", () => {
+    const uint8Data = new Uint8Array([0x25, 0x50, 0x44, 0x46]);
+    const message = new HumanMessage({
+      content: [
+        { type: "text", text: "Read this file" },
+        {
+          type: "file",
+          data: uint8Data,
+          mimeType: "application/pdf",
+        },
+      ],
+    });
+
+    const payload = _convertMessagesToAnthropicPayload([message]);
+
+    expect(payload.messages).toHaveLength(1);
+    const content = payload.messages[0].content as AnthropicContentBlockParam[];
+    expect(content).toHaveLength(2);
+    expect(content[0]).toEqual({ type: "text", text: "Read this file" });
+    if (content[1].type === "document" && content[1].source.type === "base64") {
+      expect(content[1].type).toBe("document");
+      expect(content[1].source.type).toBe("base64");
+      expect(content[1].source.media_type).toBe("application/pdf");
+      expect(content[1].source.data).toBeTruthy();
+    } else {
+      throw new Error("Expected document block with base64 source");
+    }
+  });
+
+  test("converts file ContentBlock with fileId to document block", () => {
+    const message = new HumanMessage({
+      content: [
+        { type: "text", text: "Analyze this file" },
+        {
+          type: "file",
+          fileId: "file-abc123xyz",
+          mimeType: "application/pdf",
+        },
+      ],
+    });
+
+    const payload = _convertMessagesToAnthropicPayload([message]);
+
+    expect(payload.messages).toHaveLength(1);
+    const content = payload.messages[0].content;
+    expect(content).toHaveLength(2);
+    expect(content[0]).toEqual({ type: "text", text: "Analyze this file" });
+    expect(content[1]).toEqual({
+      type: "document",
+      source: {
+        type: "file",
+        file_id: "file-abc123xyz",
+      },
+    });
+  });
+
+  test("preserves cache_control when converting file ContentBlock", () => {
+    const message = new HumanMessage({
+      content: [
+        {
+          type: "file",
+          url: "https://example.com/doc.pdf",
+          mimeType: "application/pdf",
+          cache_control: { type: "ephemeral" },
+        },
+      ],
+    });
+
+    const payload = _convertMessagesToAnthropicPayload([message]);
+
+    const content = payload.messages[0].content;
+    expect(content[0]).toEqual({
+      type: "document",
+      source: {
+        type: "url",
+        url: "https://example.com/doc.pdf",
+      },
+      cache_control: { type: "ephemeral" },
+    });
+  });
+});
+
+describe("Opus 4.6", () => {
+  describe("Adaptive thinking", () => {
+    test("invocationParams accepts adaptive thinking type", () => {
+      const model = new ChatAnthropic({
+        model: "claude-opus-4-6",
+        temperature: 1,
+        apiKey: "testing",
+        thinking: { type: "adaptive" },
+      });
+
+      const params = model.invocationParams({});
+
+      expect(params.thinking).toEqual({ type: "adaptive" });
+    });
+
+    test("adaptive thinking disables temperature/topK/topP like enabled thinking", () => {
+      const model = new ChatAnthropic({
+        model: "claude-opus-4-6",
+        apiKey: "testing",
+        thinking: { type: "adaptive" },
+      });
+
+      const params = model.invocationParams({});
+
+      // When thinking is adaptive, temperature/top_k/top_p should not be set
+      expect(params.temperature).toBeUndefined();
+      expect(params.top_k).toBeUndefined();
+      expect(params.top_p).toBeUndefined();
+    });
+
+    test("adaptive thinking throws on non-default temperature", () => {
+      const model = new ChatAnthropic({
+        model: "claude-opus-4-6",
+        temperature: 0.5,
+        apiKey: "testing",
+        thinking: { type: "adaptive" },
+      });
+
+      expect(() => model.invocationParams({})).toThrow(
+        "temperature is not supported when thinking is enabled"
+      );
+    });
+
+    test("default max_tokens for claude-opus-4-6 is 16384", () => {
+      const model = new ChatAnthropic({
+        model: "claude-opus-4-6",
+        apiKey: "testing",
+      });
+
+      const params = model.invocationParams({});
+
+      expect(params.max_tokens).toBe(16384);
+    });
+  });
+
+  describe("Effort parameter (outputConfig)", () => {
+    test("invocationParams passes outputConfig from constructor", () => {
+      const model = new ChatAnthropic({
+        model: "claude-opus-4-6",
+        apiKey: "testing",
+        outputConfig: { effort: "medium" },
+      });
+
+      const params = model.invocationParams({});
+
+      expect(params.output_config).toEqual({ effort: "medium" });
+    });
+
+    test("invocationParams passes outputConfig from call options", () => {
+      const model = new ChatAnthropic({
+        model: "claude-opus-4-6",
+        apiKey: "testing",
+      });
+
+      const params = model.invocationParams({
+        outputConfig: { effort: "low" },
+      });
+
+      expect(params.output_config).toEqual({ effort: "low" });
+    });
+
+    test("call-option outputConfig overrides constructor outputConfig", () => {
+      const model = new ChatAnthropic({
+        model: "claude-opus-4-6",
+        apiKey: "testing",
+        outputConfig: { effort: "high" },
+      });
+
+      const params = model.invocationParams({
+        outputConfig: { effort: "low" },
+      });
+
+      expect(params.output_config).toEqual({ effort: "low" });
+    });
+
+    test("effort max is accepted", () => {
+      const model = new ChatAnthropic({
+        model: "claude-opus-4-6",
+        apiKey: "testing",
+        outputConfig: { effort: "max" },
+      });
+
+      const params = model.invocationParams({});
+
+      expect(params.output_config).toEqual({ effort: "max" });
+    });
+
+    test("output_config is undefined when not set", () => {
+      const model = new ChatAnthropic({
+        model: "claude-opus-4-6",
+        apiKey: "testing",
+      });
+
+      const params = model.invocationParams({});
+
+      expect(params.output_config).toBeUndefined();
+    });
+  });
+
+  describe("outputFormat to outputConfig.format migration", () => {
+    test("deprecated outputFormat on call options maps to output_config.format", () => {
+      const model = new ChatAnthropic({
+        model: "claude-opus-4-6",
+        apiKey: "testing",
+      });
+
+      const params = model.invocationParams({
+        outputFormat: {
+          type: "json_schema",
+          schema: { type: "object" },
+        },
+      });
+
+      expect(params.output_config).toEqual({
+        format: {
+          type: "json_schema",
+          schema: { type: "object" },
+        },
+      });
+      // Should not have standalone output_format
+      expect(params.output_format).toBeUndefined();
+    });
+
+    test("outputConfig.format takes precedence over deprecated outputFormat", () => {
+      const model = new ChatAnthropic({
+        model: "claude-opus-4-6",
+        apiKey: "testing",
+      });
+
+      const params = model.invocationParams({
+        outputConfig: {
+          format: {
+            type: "json_schema",
+            schema: { type: "object", properties: { a: { type: "string" } } },
+          },
+        },
+        outputFormat: {
+          type: "json_schema",
+          schema: { type: "object", properties: { b: { type: "number" } } },
+        },
+      });
+
+      // outputConfig.format should take precedence
+      expect(params.output_config?.format).toEqual({
+        type: "json_schema",
+        schema: { type: "object", properties: { a: { type: "string" } } },
+      });
+    });
+
+    test("effort and format can be combined in outputConfig", () => {
+      const model = new ChatAnthropic({
+        model: "claude-opus-4-6",
+        apiKey: "testing",
+        outputConfig: { effort: "medium" },
+      });
+
+      const params = model.invocationParams({
+        outputFormat: {
+          type: "json_schema",
+          schema: { type: "object" },
+        },
+      });
+
+      expect(params.output_config).toEqual({
+        effort: "medium",
+        format: {
+          type: "json_schema",
+          schema: { type: "object" },
+        },
+      });
+    });
+  });
+
+  describe("Data residency (inferenceGeo)", () => {
+    test("invocationParams passes inferenceGeo from constructor", () => {
+      const model = new ChatAnthropic({
+        model: "claude-opus-4-6",
+        apiKey: "testing",
+        inferenceGeo: "us",
+      });
+
+      const params = model.invocationParams({});
+
+      expect(params.inference_geo).toBe("us");
+    });
+
+    test("invocationParams passes inferenceGeo from call options", () => {
+      const model = new ChatAnthropic({
+        model: "claude-opus-4-6",
+        apiKey: "testing",
+      });
+
+      const params = model.invocationParams({
+        inferenceGeo: "us",
+      });
+
+      expect(params.inference_geo).toBe("us");
+    });
+
+    test("call-option inferenceGeo overrides constructor inferenceGeo", () => {
+      const model = new ChatAnthropic({
+        model: "claude-opus-4-6",
+        apiKey: "testing",
+        inferenceGeo: "eu",
+      });
+
+      const params = model.invocationParams({
+        inferenceGeo: "us",
+      });
+
+      expect(params.inference_geo).toBe("us");
+    });
+
+    test("inferenceGeo is undefined when not set", () => {
+      const model = new ChatAnthropic({
+        model: "claude-opus-4-6",
+        apiKey: "testing",
+      });
+
+      const params = model.invocationParams({});
+
+      expect(params.inference_geo).toBeUndefined();
+    });
+  });
+
+  describe("Compaction API", () => {
+    test("auto-adds compact beta header when compaction edit is present", () => {
+      const model = new ChatAnthropic({
+        model: "claude-opus-4-6",
+        apiKey: "testing",
+        contextManagement: {
+          edits: [
+            {
+              type: "compact_20260112",
+            },
+          ],
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        } as any,
+      });
+
+      const params = model.invocationParams({});
+
+      expect(params.betas).toContain("compact-2026-01-12");
+    });
+
+    test("does not add compact beta header when no compaction edits present", () => {
+      const model = new ChatAnthropic({
+        model: "claude-opus-4-6",
+        apiKey: "testing",
+        contextManagement: {
+          edits: [
+            {
+              type: "clear_tool_uses_20250919",
+              trigger: { type: "input_tokens", value: 10 },
+              clear_at_least: { type: "input_tokens", value: 5 },
+            },
+          ],
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        } as any,
+      });
+
+      const params = model.invocationParams({});
+
+      expect(
+        params.betas === undefined ||
+          !params.betas.includes("compact-2026-01-12")
+      ).toBe(true);
+    });
+
+    test("Can properly format messages with compaction blocks", async () => {
+      const messageHistory = [
+        new AIMessage({
+          content: [
+            {
+              type: "compaction",
+              content:
+                "Summary: The user asked about building a web scraper...",
+            },
+            {
+              type: "text",
+              text: "Based on our conversation so far, let me continue...",
+            },
+          ],
+        }),
+      ];
+
+      const formattedMessages =
+        _convertMessagesToAnthropicPayload(messageHistory);
+
+      expect(formattedMessages.messages).toHaveLength(1);
+      expect(formattedMessages.messages[0].role).toBe("assistant");
+      expect(formattedMessages.messages[0].content).toHaveLength(2);
+
+      const [compactionBlock, textBlock] =
+        formattedMessages.messages[0].content;
+      expect(compactionBlock).toEqual({
+        type: "compaction",
+        content: "Summary: The user asked about building a web scraper...",
+      });
+      expect(textBlock).toEqual({
+        type: "text",
+        text: "Based on our conversation so far, let me continue...",
+      });
+    });
+  });
+});
+
+describe("withStructuredOutput - StandardSchema", () => {
+  function makeSerializableSchema() {
+    return {
+      "~standard": {
+        version: 1 as const,
+        vendor: "test",
+        validate: (value: unknown) => {
+          const v = value as Record<string, unknown>;
+          if (
+            v &&
+            typeof v === "object" &&
+            "alerts" in v &&
+            Array.isArray(v.alerts)
+          ) {
+            return {
+              value: v as {
+                alerts: Array<{ description: string; severity: string }>;
+              },
+            };
+          }
+          return {
+            issues: [{ message: "Expected object with alerts array" }],
+          };
+        },
+        jsonSchema: {
+          input: () => ({
+            type: "object" as const,
+            properties: {
+              alerts: {
+                type: "array",
+                items: {
+                  type: "object",
+                  properties: {
+                    description: { type: "string" },
+                    severity: {
+                      type: "string",
+                      enum: ["HIGH", "MEDIUM", "LOW"],
+                    },
+                  },
+                  required: ["description", "severity"],
+                },
+              },
+            },
+            required: ["alerts"],
+            description: "Important security alerts",
+          }),
+          output: () => ({ type: "object" as const, properties: {} }),
+        },
+      },
+    };
+  }
+
+  test("functionCalling with valid output parses correctly", async () => {
+    const model = new ChatAnthropic({
+      modelName: "claude-haiku-4-5-20251001",
+      temperature: 0,
+      anthropicApiKey: "testing",
+    });
+    vi
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      .spyOn(model as any, "invoke")
+      .mockResolvedValue(
+        new AIMessage({
+          content: [
+            {
+              type: "tool_use",
+              id: "notreal",
+              name: "extract",
+              input: { alerts: [{ description: "test", severity: "LOW" }] },
+            },
+          ],
+        })
+      );
+
+    const schema = makeSerializableSchema();
+    const structured = model.withStructuredOutput(schema, {
+      name: "extract",
+    });
+
+    const result = await structured.invoke("test input");
+    expect(result).toEqual({
+      alerts: [{ description: "test", severity: "LOW" }],
+    });
+  });
+
+  test("functionCalling with invalid output throws OutputParserException", async () => {
+    const model = new ChatAnthropic({
+      modelName: "claude-haiku-4-5-20251001",
+      temperature: 0,
+      anthropicApiKey: "testing",
+    });
+    vi.spyOn(model, "invoke").mockResolvedValue(
+      new AIMessageChunk({
+        content: [
+          {
+            type: "tool_use",
+            id: "notreal",
+            name: "extract",
+            input: "Incorrect string tool call input",
+          },
+        ],
+      })
+    );
+
+    const schema = makeSerializableSchema();
+    const structured = model.withStructuredOutput(schema, {
+      name: "extract",
+    });
+
+    await expect(async () => {
+      await structured.invoke("test input");
+    }).rejects.toThrow(OutputParserException);
+  });
+
+  test("functionCalling with custom name", async () => {
+    const model = new ChatAnthropic({
+      modelName: "claude-haiku-4-5-20251001",
+      temperature: 0,
+      anthropicApiKey: "testing",
+    });
+    vi
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      .spyOn(model as any, "invoke")
+      .mockResolvedValue(
+        new AIMessage({
+          content: [
+            {
+              type: "tool_use",
+              id: "notreal",
+              name: "SecurityAlerts",
+              input: { alerts: [{ description: "breach", severity: "HIGH" }] },
+            },
+          ],
+        })
+      );
+
+    const schema = makeSerializableSchema();
+    const structured = model.withStructuredOutput(schema, {
+      name: "SecurityAlerts",
+    });
+
+    const result = await structured.invoke("test input");
+    expect(result).toEqual({
+      alerts: [{ description: "breach", severity: "HIGH" }],
+    });
+  });
+
+  test("functionCalling with includeRaw returns raw and parsed", async () => {
+    const mockResponse = new AIMessage({
+      content: [
+        {
+          type: "tool_use",
+          id: "notreal",
+          name: "extract",
+          input: { alerts: [{ description: "test", severity: "MEDIUM" }] },
+        },
+      ],
+    });
+    const model = new ChatAnthropic({
+      modelName: "claude-haiku-4-5-20251001",
+      temperature: 0,
+      anthropicApiKey: "testing",
+    });
+    vi
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      .spyOn(model as any, "invoke")
+      .mockResolvedValue(mockResponse);
+
+    const schema = makeSerializableSchema();
+    const structured = model.withStructuredOutput(schema, {
+      name: "extract",
+      includeRaw: true,
+    });
+
+    const result = await structured.invoke("test input");
+    expect(result).toHaveProperty("raw");
+    expect(result).toHaveProperty("parsed");
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    expect((result as any).parsed).toEqual({
+      alerts: [{ description: "test", severity: "MEDIUM" }],
+    });
   });
 });

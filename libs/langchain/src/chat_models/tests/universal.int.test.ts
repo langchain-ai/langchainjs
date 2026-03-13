@@ -89,7 +89,7 @@ test("Create a partially configurable model with no default model", async () => 
 
   const claudeResult = await configurableModel.invoke("what's your name", {
     configurable: {
-      model: "claude-3-5-sonnet-20240620",
+      model: "claude-sonnet-4-5-20250929",
       apiKey: process.env.ANTHROPIC_API_KEY,
     },
   });
@@ -120,7 +120,7 @@ test("Create a fully configurable model with a default model and a config prefix
     "what's your name",
     {
       configurable: {
-        foo_model: "claude-3-5-sonnet-20240620",
+        foo_model: "claude-sonnet-4-5-20250929",
         foo_modelProvider: "anthropic",
         foo_temperature: 0.6,
         foo_apiKey: process.env.ANTHROPIC_API_KEY,
@@ -195,7 +195,7 @@ test("Bind tools to a configurable model", async () => {
     "Which city is hotter today and which is bigger: LA or NY?",
     {
       configurable: {
-        model: "claude-3-5-sonnet-20240620",
+        model: "claude-sonnet-4-5-20250929",
         apiKey: process.env.ANTHROPIC_API_KEY,
       },
     }
@@ -791,7 +791,7 @@ describe("Serialization", () => {
 describe("Can be initialized without `modelProvider`", () => {
   test.each([
     ["openai", "gpt-4o-mini"],
-    ["anthropic", "claude-3-5-sonnet-20240620"],
+    ["anthropic", "claude-sonnet-4-5-20250929"],
     ["mistralai", "mistral-large-latest"],
   ])("for %s", async (_, modelName) => {
     const model = await initChatModel(modelName, {

@@ -87,9 +87,9 @@ function _getLanguageModel(llmLike: RunnableInterface): BaseLanguageModel {
  * ```
  */
 export class LLMChain<
-    T extends string | object = string,
-    Model extends LLMType = LLMType,
-  >
+  T extends string | object = string,
+  Model extends LLMType = LLMType,
+>
   extends BaseChain
   implements LLMChainInput<T>
 {

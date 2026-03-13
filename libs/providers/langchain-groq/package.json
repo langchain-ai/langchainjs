@@ -1,6 +1,6 @@
 {
   "name": "@langchain/groq",
-  "version": "1.0.3",
+  "version": "1.1.5",
   "description": "Groq integration for LangChain.js",
   "author": "LangChain",
   "license": "MIT",
@@ -12,7 +12,7 @@
     "type": "git",
     "url": "git@github.com:langchain-ai/langchainjs.git"
   },
-  "homepage": "https://github.com/langchain-ai/langchainjs/tree/main/libs/langchain-groq/",
+  "homepage": "https://github.com/langchain-ai/langchainjs/tree/main/libs/providers/langchain-groq/",
   "scripts": {
     "build": "turbo build:compile --filter @langchain/groq --output-logs new-only",
     "build:compile": "tsdown",
@@ -33,13 +33,13 @@
     "typegen:profiles": "pnpm --filter @langchain/model-profiles make --config profiles.toml"
   },
   "dependencies": {
-    "groq-sdk": "^0.19.0"
+    "groq-sdk": "^0.37.0"
   },
   "peerDependencies": {
     "@langchain/core": "^1.0.0"
   },
   "devDependencies": {
-    "@langchain/core": "workspace:*",
+    "@langchain/core": "workspace:^",
     "@langchain/eslint": "workspace:*",
     "@langchain/openai": "workspace:^",
     "@langchain/standard-tests": "workspace:*",

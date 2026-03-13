@@ -608,7 +608,7 @@ export type $InferMessageContent<
       ? string | Array<ContentBlock | ContentBlock.Text>
       : [unknown] extends [TOutput]
         ? // Fallback to default when TOutput is unknown (no specific tools defined)
-          string | Array<ContentBlock | ContentBlock.Text>
+            string | Array<ContentBlock | ContentBlock.Text>
         : TOutput | string | Array<ContentBlock | ContentBlock.Text>
     : string | Array<ContentBlock | ContentBlock.Text>
   : TStructure["outputVersion"] extends "v1"

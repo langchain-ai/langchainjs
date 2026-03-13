@@ -19,6 +19,7 @@ import type {
   XAIResponsesReasoning,
   XAIResponsesSearchParameters,
   XAIResponsesStreamEvent,
+  XAIResponsesTool,
 } from "./responses-types.js";
 
 import {
@@ -107,12 +108,25 @@ export class ChatXAIResponses<
 
   reasoning?: XAIResponsesReasoning;
 
+  tools?: XAIResponsesTool[];
+
   // -------------------------------------------------------------------------
   // Constructor
   // -------------------------------------------------------------------------
 
-  constructor(fields?: ChatXAIResponsesInput) {
-    super(fields ?? {});
+  constructor(model: string, fields?: Omit<ChatXAIResponsesInput, "model">);
+  constructor(fields?: ChatXAIResponsesInput);
+  constructor(
+    modelOrFields?: string | ChatXAIResponsesInput,
+    fieldsArg?: Omit<ChatXAIResponsesInput, "model">
+  ) {
+    const fields =
+      typeof modelOrFields === "string"
+        ? { ...(fieldsArg ?? {}), model: modelOrFields }
+        : (modelOrFields ?? {});
+    super(fields);
+
+    this._addVersion("@langchain/xai", __PKG_VERSION__);
 
     const apiKey = fields?.apiKey ?? getEnvironmentVariable("XAI_API_KEY");
     if (!apiKey) {
@@ -132,6 +146,7 @@ export class ChatXAIResponses<
     this.baseURL = fields?.baseURL ?? "https://api.x.ai/v1";
     this.searchParameters = fields?.searchParameters;
     this.reasoning = fields?.reasoning;
+    this.tools = fields?.tools;
   }
 
   // -------------------------------------------------------------------------
@@ -186,6 +201,7 @@ export class ChatXAIResponses<
       text: options?.text,
       search_parameters: options?.search_parameters ?? this.searchParameters,
       reasoning: options?.reasoning ?? this.reasoning,
+      tools: options?.tools ?? this.tools,
       tool_choice: options?.tool_choice,
       parallel_tool_calls: options?.parallel_tool_calls,
     };
@@ -310,6 +326,7 @@ export class ChatXAIResponses<
     options: this["ParsedCallOptions"],
     runManager?: CallbackManagerForLLMRun
   ): Promise<ChatResult> {
+    options.signal?.throwIfAborted();
     const invocationParams = this.invocationParams(options);
     const input = convertMessagesToResponsesInput(messages);
 
@@ -378,6 +395,9 @@ export class ChatXAIResponses<
     } as XAIResponsesCreateParamsStreaming);
 
     for await (const event of streamIterable) {
+      if (options.signal?.aborted) {
+        return;
+      }
       const chunk = convertStreamEventToChunk(event);
       if (chunk) {
         yield chunk;

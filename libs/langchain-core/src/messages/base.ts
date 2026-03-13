@@ -18,7 +18,7 @@ import {
 } from "./format.js";
 
 /** @internal */
-const MESSAGE_SYMBOL = Symbol.for("langchain.message");
+const MESSAGE_SYMBOL: symbol = Symbol.for("langchain.message");
 
 export interface StoredMessageData {
   content: string;
@@ -196,9 +196,9 @@ function stringifyWithDepthLimit(obj: any, depthLimit: number): string {
  * includes methods like `toDict()` and `_getType()`.
  */
 export abstract class BaseMessage<
-    TStructure extends MessageStructure = MessageStructure,
-    TRole extends MessageType = MessageType,
-  >
+  TStructure extends MessageStructure = MessageStructure,
+  TRole extends MessageType = MessageType,
+>
   extends Serializable
   implements Message<TStructure, TRole>
 {
@@ -353,7 +353,7 @@ export abstract class BaseMessage<
       typeof obj === "object" &&
       obj !== null &&
       MESSAGE_SYMBOL in obj &&
-      obj[MESSAGE_SYMBOL] === true &&
+      (obj as Record<symbol, unknown>)[MESSAGE_SYMBOL] === true &&
       isMessage(obj)
     );
   }
@@ -529,6 +529,18 @@ export function _mergeDicts(
   return merged;
 }
 
+function isMergeableIndex(index: unknown): index is number | string {
+  return typeof index === "number" || typeof index === "string";
+}
+
+function hasMergeableIndex(
+  value: unknown
+): value is { index: number | string } {
+  if (typeof value !== "object" || value === null) return false;
+  if (!("index" in value)) return false;
+  return isMergeableIndex(value.index);
+}
+
 export function _mergeLists<Content extends ContentBlock>(
   left?: Content[],
   right?: Content[],
@@ -541,25 +553,18 @@ export function _mergeLists<Content extends ContentBlock>(
   } else {
     const merged = [...left];
     for (const item of right) {
-      if (
-        typeof item === "object" &&
-        item !== null &&
-        "index" in item &&
-        typeof item.index === "number"
-      ) {
+      if (hasMergeableIndex(item)) {
         const toMerge = merged.findIndex((leftItem) => {
-          const isObject = typeof leftItem === "object";
-          const indiciesMatch =
-            "index" in leftItem && leftItem.index === item.index;
-          const idsMatch =
-            "id" in leftItem && "id" in item && leftItem?.id === item?.id;
-          const eitherItemMissingID =
-            !("id" in leftItem) ||
-            !leftItem?.id ||
-            !("id" in item) ||
-            !item?.id;
-          return isObject && indiciesMatch && (idsMatch || eitherItemMissingID);
+          if (!hasMergeableIndex(leftItem)) return false;
+
+          const indiciesMatch = leftItem.index === item.index;
+          const leftHasId = leftItem.id != null && leftItem.id !== "";
+          const rightHasId = item.id != null && item.id !== "";
+          const idsMatch = leftHasId && rightHasId && leftItem.id === item.id;
+          const eitherItemMissingID = !leftHasId || !rightHasId;
+          return indiciesMatch && (idsMatch || eitherItemMissingID);
         });
+
         if (
           toMerge !== -1 &&
           typeof merged[toMerge] === "object" &&
@@ -579,7 +584,6 @@ export function _mergeLists<Content extends ContentBlock>(
         "text" in item &&
         item.text === ""
       ) {
-        // No-op - skip empty text blocks
         continue;
       } else {
         merged.push(item);

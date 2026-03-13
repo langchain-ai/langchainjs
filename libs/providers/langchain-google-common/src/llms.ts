@@ -55,6 +55,7 @@ type ProxyChatInput<AuthOptions> = GoogleAIBaseLLMInput<AuthOptions> & {
 class ProxyChatGoogle<AuthOptions> extends ChatGoogleBase<AuthOptions> {
   constructor(fields: ProxyChatInput<AuthOptions>) {
     super(fields);
+    this._addVersion("@langchain/google-common", __PKG_VERSION__);
   }
 
   buildAbstractedClient(

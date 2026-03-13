@@ -6,7 +6,6 @@ import { ToolMessage } from "@langchain/core/messages";
 import type { ClientTool, ServerTool } from "@langchain/core/tools";
 
 import { createMiddleware } from "../middleware.js";
-import type { AgentMiddleware } from "./types.js";
 import { sleep, calculateRetryDelay } from "./utils.js";
 import { RetrySchema } from "./constants.js";
 import { InvalidRetryConfigError } from "./error.js";
@@ -160,9 +159,7 @@ export type ToolRetryMiddlewareConfig = z.input<
  * @param config - Configuration options for the retry middleware
  * @returns A middleware instance that handles tool failures with retries
  */
-export function toolRetryMiddleware(
-  config: ToolRetryMiddlewareConfig = {}
-): AgentMiddleware {
+export function toolRetryMiddleware(config: ToolRetryMiddlewareConfig = {}) {
   const { success, error, data } =
     ToolRetryMiddlewareOptionsSchema.safeParse(config);
   if (!success) {

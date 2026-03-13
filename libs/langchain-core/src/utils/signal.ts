@@ -26,7 +26,7 @@ export async function raceWithSignal<T>(
       listener = () => {
         reject(getAbortSignalError(signal));
       };
-      signal.addEventListener("abort", listener);
+      signal.addEventListener("abort", listener, { once: true });
       // Must be here inside the promise to avoid a race condition
       if (signal.aborted) {
         reject(getAbortSignalError(signal));

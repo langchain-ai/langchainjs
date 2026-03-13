@@ -1,6 +1,6 @@
 {
   "name": "@langchain/ollama",
-  "version": "1.2.1",
+  "version": "1.2.6",
   "description": "Ollama integration for LangChain.js",
   "author": "LangChain",
   "license": "MIT",
@@ -12,7 +12,7 @@
     "type": "git",
     "url": "git@github.com:langchain-ai/langchainjs.git"
   },
-  "homepage": "https://github.com/langchain-ai/langchainjs/tree/main/libs/langchain-ollama/",
+  "homepage": "https://github.com/langchain-ai/langchainjs/tree/main/libs/providers/langchain-ollama/",
   "scripts": {
     "build": "turbo build:compile --filter @langchain/ollama --output-logs new-only",
     "build:compile": "tsdown",
@@ -38,8 +38,8 @@
     "@langchain/core": "^1.0.0"
   },
   "devDependencies": {
-    "@jest/globals": "^29.5.0",
-    "@langchain/core": "workspace:*",
+    "@jest/globals": "^30.2.0",
+    "@langchain/core": "workspace:^",
     "@langchain/eslint": "workspace:*",
     "@langchain/standard-tests": "workspace:*",
     "@langchain/tsconfig": "workspace:*",

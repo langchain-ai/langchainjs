@@ -11,25 +11,53 @@ import {
   XAILiveSearchTool,
 } from "../../tools/live_search.js";
 
+const TEST_MODEL = process.env.XAI_TEST_MODEL ?? "grok-3-fast";
+
 beforeEach(() => {
   process.env.XAI_API_KEY = "foo";
+});
+
+describe("baseURL configuration", () => {
+  test("should use default baseURL when not specified", () => {
+    const model = new ChatXAI();
+    // Access the internal clientConfig via any cast for testing
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const clientConfig = (model as any).clientConfig;
+    expect(clientConfig.baseURL).toBe("https://api.x.ai/v1");
+  });
+
+  test("should use custom baseURL when provided", () => {
+    const model = new ChatXAI({
+      baseURL: "https://custom.api.example.com/v1",
+    });
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const clientConfig = (model as any).clientConfig;
+    expect(clientConfig.baseURL).toBe("https://custom.api.example.com/v1");
+  });
 });
 
 test("Serialization", () => {
   delete process.env.XAI_API_KEY;
   const model = new ChatXAI({
-    model: "grok-2-1212",
+    model: TEST_MODEL,
     apiKey: "bar",
   });
   expect(JSON.stringify(model)).toEqual(
-    `{"lc":1,"type":"constructor","id":["langchain","chat_models","xai","ChatXAI"],"kwargs":{"model":"grok-2-1212"}}`
+    `{"lc":1,"type":"constructor","id":["langchain","chat_models","xai","ChatXAI"],"kwargs":{"model":"${TEST_MODEL}"}}`
   );
 });
 
 test("Serialization with no params", () => {
   const model = new ChatXAI();
   expect(JSON.stringify(model)).toEqual(
-    `{"lc":1,"type":"constructor","id":["langchain","chat_models","xai","ChatXAI"],"kwargs":{"model":"grok-beta"}}`
+    `{"lc":1,"type":"constructor","id":["langchain","chat_models","xai","ChatXAI"],"kwargs":{"model":"grok-3-fast"}}`
+  );
+});
+
+test("Serialization with model shorthand", () => {
+  const model = new ChatXAI(TEST_MODEL);
+  expect(JSON.stringify(model)).toEqual(
+    `{"lc":1,"type":"constructor","id":["langchain","chat_models","xai","ChatXAI"],"kwargs":{"model":"${TEST_MODEL}"}}`
   );
 });
 

@@ -1,4 +1,4 @@
-import { expect, test } from "@jest/globals";
+import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import fs from "fs/promises";
 import { BaseLanguageModelInput } from "@langchain/core/language_models/base";
 import { ChatPromptValue } from "@langchain/core/prompt_values";
@@ -758,8 +758,8 @@ describe("Express Gemini Chat", () => {
 const testAnthropicModelNames = [
   // ["claude-3-sonnet@20240229"],
   // ["claude-3-5-sonnet@20240620"],
-  ["claude-3-5-sonnet-v2@20241022"],
-  ["claude-3-7-sonnet@20250219"],
+  // ["claude-3-5-sonnet-v2@20241022"],
+  ["claude-sonnet-4-5@20250929"],
 ];
 
 describe.each(testAnthropicModelNames)(
@@ -775,7 +775,7 @@ describe.each(testAnthropicModelNames)(
 
     afterEach(() => {
       // restore any spy created with spyOn
-      jest.restoreAllMocks();
+      vi.restoreAllMocks();
     });
 
     test("invoke", async () => {
@@ -801,7 +801,7 @@ describe.each(testAnthropicModelNames)(
     });
 
     test("system", async () => {
-      const consoleWarn = jest.spyOn(console, "warn");
+      const consoleWarn = vi.spyOn(console, "warn");
       const model = new ChatVertexAI({
         modelName,
         callbacks,

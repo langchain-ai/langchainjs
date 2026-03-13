@@ -16,6 +16,7 @@ import {
 import { ChatGenerationChunk } from "@langchain/core/outputs";
 import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
 import PROFILES from "./profiles.js";
+import { SerializableSchema } from "@langchain/core/utils/standard_schema";
 
 export interface ChatDeepSeekCallOptions extends ChatOpenAICallOptions {
   headers?: Record<string, string>;
@@ -426,8 +427,17 @@ export class ChatDeepSeek extends ChatOpenAICompletions<ChatDeepSeekCallOptions>
 
   lc_namespace = ["langchain", "chat_models", "deepseek"];
 
-  constructor(fields?: Partial<ChatDeepSeekInput>) {
-    const apiKey = fields?.apiKey || getEnvironmentVariable("DEEPSEEK_API_KEY");
+  constructor(model: string, fields?: Omit<ChatDeepSeekInput, "model">);
+  constructor(fields?: Partial<ChatDeepSeekInput>);
+  constructor(
+    modelOrFields?: string | Partial<ChatDeepSeekInput>,
+    fieldsArg?: Omit<ChatDeepSeekInput, "model">
+  ) {
+    const fields =
+      typeof modelOrFields === "string"
+        ? { ...(fieldsArg ?? {}), model: modelOrFields }
+        : (modelOrFields ?? {});
+    const apiKey = fields.apiKey || getEnvironmentVariable("DEEPSEEK_API_KEY");
     if (!apiKey) {
       throw new Error(
         `Deepseek API key not found. Please set the DEEPSEEK_API_KEY environment variable or pass the key into "apiKey" field.`
@@ -439,9 +449,10 @@ export class ChatDeepSeek extends ChatOpenAICompletions<ChatDeepSeekCallOptions>
       apiKey,
       configuration: {
         baseURL: "https://api.deepseek.com",
-        ...fields?.configuration,
+        ...fields.configuration,
       },
     });
+    this._addVersion("@langchain/deepseek", __PKG_VERSION__);
   }
 
   protected override _convertCompletionsDeltaToBaseMessageChunk(
@@ -482,6 +493,9 @@ export class ChatDeepSeek extends ChatOpenAICompletions<ChatDeepSeekCallOptions>
     let isThinking = false;
 
     for await (const chunk of stream) {
+      if (options.signal?.aborted) {
+        return;
+      }
       // If the model already provided reasoning_content natively, just yield it
       if (chunk.message.additional_kwargs.reasoning_content) {
         yield chunk;
@@ -754,6 +768,7 @@ export class ChatDeepSeek extends ChatOpenAICompletions<ChatDeepSeekCallOptions>
   >(
     outputSchema:
       | InteropZodType<RunOutput>
+      | SerializableSchema<RunOutput>
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
     config?: StructuredOutputMethodOptions<false>
@@ -765,6 +780,7 @@ export class ChatDeepSeek extends ChatOpenAICompletions<ChatDeepSeekCallOptions>
   >(
     outputSchema:
       | InteropZodType<RunOutput>
+      | SerializableSchema<RunOutput>
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
     config?: StructuredOutputMethodOptions<true>
@@ -776,6 +792,7 @@ export class ChatDeepSeek extends ChatOpenAICompletions<ChatDeepSeekCallOptions>
   >(
     outputSchema:
       | InteropZodType<RunOutput>
+      | SerializableSchema<RunOutput>
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
     config?: StructuredOutputMethodOptions<boolean>
@@ -789,6 +806,7 @@ export class ChatDeepSeek extends ChatOpenAICompletions<ChatDeepSeekCallOptions>
   >(
     outputSchema:
       | InteropZodType<RunOutput>
+      | SerializableSchema<RunOutput>
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
     config?: StructuredOutputMethodOptions<boolean>

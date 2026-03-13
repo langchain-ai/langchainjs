@@ -1,5 +1,11 @@
 # @langchain/mcp-adapters
 
+## 1.1.3
+
+### Patch Changes
+
+- [#10005](https://github.com/langchain-ai/langchainjs/pull/10005) [`d1365a1`](https://github.com/langchain-ai/langchainjs/commit/d1365a125fc9d0d17120d923957841a33ba160cf) Thanks [@Oscar-Umana](https://github.com/Oscar-Umana)! - map mcp resource link content blocks to langchain url content block
+
 ## 1.1.2
 
 ### Patch Changes

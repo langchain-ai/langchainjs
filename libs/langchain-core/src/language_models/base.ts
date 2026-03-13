@@ -27,6 +27,7 @@ import {
   InteropZodType,
 } from "../utils/types/zod.js";
 import { ModelProfile } from "./profile.js";
+import { type SerializableSchema } from "../utils/standard_schema.js";
 
 // https://www.npmjs.com/package/js-tiktoken
 
@@ -238,10 +239,10 @@ export interface BaseLangChainParams {
  * Base class for language models, chains, tools.
  */
 export abstract class BaseLangChain<
-    RunInput,
-    RunOutput,
-    CallOptions extends RunnableConfig = RunnableConfig,
-  >
+  RunInput,
+  RunOutput,
+  CallOptions extends RunnableConfig = RunnableConfig,
+>
   extends Runnable<RunInput, RunOutput, CallOptions>
   implements BaseLangChainParams
 {
@@ -269,6 +270,18 @@ export abstract class BaseLangChain<
     this.callbacks = params.callbacks;
     this.tags = params.tags ?? [];
     this.metadata = params.metadata ?? {};
+    this._addVersion("@langchain/core", __PKG_VERSION__);
+  }
+
+  protected _addVersion(pkg: string, version: string) {
+    const existing = this.metadata?.versions;
+    this.metadata = {
+      ...this.metadata,
+      versions: {
+        ...(typeof existing === "object" && existing !== null ? existing : {}),
+        [pkg]: version,
+      },
+    };
   }
 }
 
@@ -278,8 +291,7 @@ export abstract class BaseLangChain<
  * takes in a parameter that extends this interface.
  */
 export interface BaseLanguageModelParams
-  extends AsyncCallerParams,
-    BaseLangChainParams {
+  extends AsyncCallerParams, BaseLangChainParams {
   /**
    * @deprecated Use `callbacks` instead
    */
@@ -306,8 +318,7 @@ export interface BaseLanguageModelTracingCallOptions {
 }
 
 export interface BaseLanguageModelCallOptions
-  extends RunnableConfig,
-    BaseLanguageModelTracingCallOptions {
+  extends RunnableConfig, BaseLanguageModelTracingCallOptions {
   /**
    * Stop tokens to use for this call.
    * If not provided, the default stop tokens for the model will be used.
@@ -387,14 +398,14 @@ export type StructuredOutputMethodParams<
 export interface BaseLanguageModelInterface<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   RunOutput = any,
-  CallOptions extends
-    BaseLanguageModelCallOptions = BaseLanguageModelCallOptions,
+  CallOptions extends BaseLanguageModelCallOptions =
+    BaseLanguageModelCallOptions,
 > extends RunnableInterface<BaseLanguageModelInput, RunOutput, CallOptions> {
   get callKeys(): string[];
 
   generatePrompt(
     promptValues: BasePromptValueInterface[],
-    options?: string[] | CallOptions,
+    options?: string[] | Partial<CallOptions>,
     callbacks?: Callbacks
   ): Promise<LLMResult>;
 
@@ -424,11 +435,11 @@ export type LanguageModelLike = Runnable<
  * Base class for language models.
  */
 export abstract class BaseLanguageModel<
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    RunOutput = any,
-    CallOptions extends
-      BaseLanguageModelCallOptions = BaseLanguageModelCallOptions,
-  >
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  RunOutput = any,
+  CallOptions extends BaseLanguageModelCallOptions =
+    BaseLanguageModelCallOptions,
+>
   extends BaseLangChain<BaseLanguageModelInput, RunOutput, CallOptions>
   implements
     BaseLanguageModelParams,
@@ -614,6 +625,22 @@ export abstract class BaseLanguageModel<
   get profile(): ModelProfile {
     return {};
   }
+
+  withStructuredOutput?<
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    RunOutput extends Record<string, any> = Record<string, any>,
+  >(
+    schema: SerializableSchema<RunOutput>,
+    config?: StructuredOutputMethodOptions<false>
+  ): Runnable<BaseLanguageModelInput, RunOutput>;
+
+  withStructuredOutput?<
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    RunOutput extends Record<string, any> = Record<string, any>,
+  >(
+    schema: SerializableSchema<RunOutput>,
+    config?: StructuredOutputMethodOptions<true>
+  ): Runnable<BaseLanguageModelInput, { raw: BaseMessage; parsed: RunOutput }>;
 
   withStructuredOutput?<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any

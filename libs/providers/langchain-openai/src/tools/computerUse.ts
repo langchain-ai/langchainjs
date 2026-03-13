@@ -100,8 +100,8 @@ const ComputerUseWaitActionSchema = z.object({
   duration: z.number().optional(),
 });
 
-// Discriminated union schema for individual action types
-const ComputerUseActionUnionSchema = z.discriminatedUnion("type", [
+// Union schema for individual action types
+const ComputerUseActionUnionSchema = z.union([
   ComputerUseScreenshotActionSchema,
   ComputerUseClickActionSchema,
   ComputerUseDoubleClickActionSchema,
@@ -200,7 +200,7 @@ export interface ComputerUseOptions {
 /**
  * OpenAI Computer Use tool type for the Responses API.
  */
-export type ComputerUseTool = OpenAIClient.Responses.ComputerTool;
+export type ComputerUseTool = OpenAIClient.Responses.ComputerUsePreviewTool;
 
 const TOOL_NAME = "computer_use";
 

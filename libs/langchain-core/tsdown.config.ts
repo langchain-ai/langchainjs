@@ -5,6 +5,7 @@ import {
   importMapPlugin,
   importConstantsPlugin,
 } from "@langchain/build";
+import pkg from "./package.json" with { type: "json" };
 
 export default getBuildConfig({
   entry: [
@@ -20,6 +21,7 @@ export default getBuildConfig({
     "./src/context.ts",
     "./src/documents/index.ts",
     "./src/document_loaders/base.ts",
+    "./src/errors/index.ts",
     "./src/document_loaders/langsmith.ts",
     "./src/embeddings.ts",
     "./src/example_selectors/index.ts",
@@ -28,6 +30,7 @@ export default getBuildConfig({
     "./src/language_models/chat_models.ts",
     "./src/language_models/llms.ts",
     "./src/language_models/profile.ts",
+    "./src/language_models/structured_output.ts",
     "./src/load/index.ts",
     "./src/load/serializable.ts",
     "./src/memory.ts",
@@ -64,12 +67,16 @@ export default getBuildConfig({
     "./src/utils/json_patch.ts",
     "./src/utils/json_schema.ts",
     "./src/utils/math.ts",
+    "./src/utils/ssrf.ts",
+    "./src/utils/standard_schema.ts",
     "./src/utils/stream.ts",
     "./src/utils/testing/index.ts",
     "./src/utils/tiktoken.ts",
     "./src/utils/types/index.ts",
+    "./src/testing/index.ts",
     "./src/vectorstores.ts",
   ],
+  define: { __PKG_VERSION__: JSON.stringify(pkg.version) },
   plugins: [
     cjsCompatPlugin({
       files: ["dist/", "CHANGELOG.md", "README.md", "LICENSE"],

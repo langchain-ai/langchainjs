@@ -28,7 +28,7 @@ import type {
   DynamicStructuredTool,
   StructuredToolInterface,
 } from "@langchain/core/tools";
-
+import type { SerializableSchema } from "@langchain/core/utils/standard_schema";
 import type {
   ResponseFormat,
   ToolStrategy,
@@ -41,6 +41,7 @@ import type {
   AgentMiddleware,
   AnyAnnotationRoot,
   InferSchemaInput,
+  InferSchemaValue,
   InferMiddlewareStates,
   InferMiddlewareContexts,
 } from "./middleware/types.js";
@@ -172,6 +173,7 @@ type ExtractToolDefinition<T> =
     infer _SchemaOutputT,
     infer SchemaInputT,
     infer ToolOutputT,
+    infer _ToolEventT,
     infer _NameT
   >
     ? MessageToolDefinition<SchemaInputT, ToolOutputT>
@@ -305,7 +307,7 @@ export type InferAgentStateSchema<T> = InferAgentType<T, "State">;
  * // { userId: string; count: number }
  * ```
  */
-export type InferAgentState<T> = InferSchemaInput<InferAgentType<T, "State">> &
+export type InferAgentState<T> = InferSchemaValue<InferAgentType<T, "State">> &
   InferMiddlewareStates<InferAgentType<T, "Middleware">>;
 
 /**
@@ -347,7 +349,7 @@ export type InferAgentContextSchema<T> = InferAgentType<T, "Context">;
  * // { sessionId: string; userId: string }
  * ```
  */
-export type InferAgentContext<T> = InferSchemaInput<
+export type InferAgentContext<T> = InferSchemaValue<
   InferAgentType<T, "Context">
 > &
   InferMiddlewareContexts<InferAgentType<T, "Middleware">>;
@@ -489,12 +491,13 @@ export interface ExecutedToolCall {
 export type CreateAgentParams<
   StructuredResponseType extends Record<string, any> = Record<string, any>,
   TStateSchema extends StateDefinitionInit | undefined = undefined,
-  ContextSchema extends
-    | AnyAnnotationRoot
-    | InteropZodObject = AnyAnnotationRoot,
+  ContextSchema extends AnyAnnotationRoot | InteropZodObject =
+    AnyAnnotationRoot,
   ResponseFormatType =
     | InteropZodType<StructuredResponseType>
     | InteropZodType<unknown>[]
+    | SerializableSchema<StructuredResponseType>
+    | SerializableSchema[]
     | JsonSchemaFormat
     | JsonSchemaFormat[]
     | ResponseFormat
@@ -570,7 +573,7 @@ export type CreateAgentParams<
    * @example Using a string (recommended for most cases)
    * ```ts
    * const agent = createAgent({
-   *   model: "anthropic:claude-3-5-sonnet",
+   *   model: "anthropic:claude-sonnet-4-5",
    *   systemPrompt: "You are a helpful assistant.",
    *   // ...
    * });
@@ -580,7 +583,7 @@ export type CreateAgentParams<
    * ```ts
    * const userRole = "premium";
    * const agent = createAgent({
-   *   model: "anthropic:claude-3-5-sonnet",
+   *   model: "anthropic:claude-sonnet-4-5",
    *   systemPrompt: `You are a helpful assistant for ${userRole} users.`,
    *   // ...
    * });
@@ -591,7 +594,7 @@ export type CreateAgentParams<
    * import { SystemMessage } from "@langchain/core/messages";
    *
    * const agent = createAgent({
-   *   model: "anthropic:claude-3-5-sonnet",
+   *   model: "anthropic:claude-sonnet-4-5",
    *   systemPrompt: new SystemMessage({
    *     content: [
    *       {
@@ -614,7 +617,7 @@ export type CreateAgentParams<
    * import { SystemMessage } from "@langchain/core/messages";
    *
    * const agent = createAgent({
-   *   model: "anthropic:claude-3-5-sonnet",
+   *   model: "anthropic:claude-sonnet-4-5",
    *   systemPrompt: new SystemMessage("You are a helpful assistant."),
    *   // ...
    * });

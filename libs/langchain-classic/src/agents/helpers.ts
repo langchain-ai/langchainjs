@@ -3,7 +3,7 @@ import type { ToolInterface } from "@langchain/core/tools";
 import type { SerializedAgentT, AgentInput } from "./types.js";
 import { LLMChain } from "../chains/llm_chain.js";
 
-export const deserializeHelper = async <
+export async function deserializeHelper<
   T extends string,
   U extends Record<string, unknown>,
   V extends AgentInput,
@@ -18,7 +18,7 @@ export const deserializeHelper = async <
     args: U
   ) => Z,
   fromConstructor: (args: V) => Z
-): Promise<Z> => {
+): Promise<Z> {
   if (data.load_from_llm_and_tools) {
     if (!llm) {
       throw new Error("Loading from llm and tools, llm must be provided.");
@@ -36,4 +36,4 @@ export const deserializeHelper = async <
 
   const llmChain = await LLMChain.deserialize(data.llm_chain);
   return fromConstructor({ ...data, llmChain });
-};
+}

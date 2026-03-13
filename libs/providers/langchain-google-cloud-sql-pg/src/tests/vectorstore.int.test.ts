@@ -410,7 +410,7 @@ describe("VectorStore methods", () => {
   test("maxMarginalRelevanceSearch with filter", async () => {
     const options = {
       k: 1,
-      filter: `"my_content" = 'foo'`,
+      filter: { my_content: "foo" },
     };
     const results = await vectorStoreInstance.maxMarginalRelevanceSearch(
       "foo",

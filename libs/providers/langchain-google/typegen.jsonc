@@ -1,0 +1,82 @@
+{
+  "$schema": "https://hntrl.github.io/sparktype/schema.json",
+  "specs": {
+    "gemini": {
+      "url": "https://generativelanguage.googleapis.com/$discovery/OPENAPI3_0?version=v1beta"
+    }
+  },
+  "outputs": [
+    {
+      "path": "./src/chat_models/api-types.ts",
+      "format": "typescript",
+      "options": {
+        "widenEnums": true
+      },
+      "contents": [
+        {
+          "namespace": "Gemini",
+          "contents": [
+            "gemini:SafetySetting",
+            "gemini:HarmCategory",
+            "gemini:ThinkingConfig",
+            "gemini:GenerativeLanguageModality",
+            "gemini:MediaResolution",
+            "gemini:SpeechConfig",
+            "gemini:VoiceConfig",
+            "gemini:MultiSpeakerVoiceConfig",
+            "gemini:SpeakerVoiceConfig",
+            "gemini:ImageConfig",
+            "gemini:Part",
+            "gemini:VideoMetadata",
+            "gemini:CodeExecutionResult",
+            "gemini:ExecutableCode",
+            "gemini:Content",
+            "gemini:GenerationConfig",
+            {
+              "namespace": "Tools",
+              "contents": [
+                "gemini:FunctionDeclaration",
+                "gemini:GoogleSearch",
+                "gemini:CodeExecution",
+                "gemini:UrlContext",
+                "gemini:GoogleMaps",
+                "gemini:FileSearch",
+                "gemini:ComputerUse",
+                "gemini:FunctionCallingConfig",
+                "gemini:RetrievalConfig",
+                "gemini:ToolConfig",
+                // mapped as GeminiFunctionSchema
+                "gemini:Schema"
+              ]
+            },
+            // in/out types
+            "gemini:GenerateContentRequest",
+            "gemini:SafetyRating",
+            "gemini:CitationMetadata",
+            "gemini:GroundingMetadata",
+            "gemini:GeminiSearchEntryPoint",
+            "gemini:GroundingChunk",
+            "gemini:RetrievedContext",
+            "gemini:GoogleAiGenerativelanguageV1betaGroundingSupport", // what
+            "gemini:GoogleAiGenerativelanguageV1betaSegment", // double what
+            "gemini:RetrievalMetadata",
+            "gemini:GroundingPassageId",
+            "gemini:SemanticRetrieverChunk",
+            "gemini:AttributionSourceId",
+            "gemini:GroundingAttribution",
+            "gemini:UrlMetadata",
+            "gemini:UrlContextMetadata",
+            "gemini:LogprobsResult",
+            "gemini:TopCandidates", // also logprobs
+            "gemini:LogprobsResultCandidate",
+            "gemini:Candidate",
+            "gemini:ModalityTokenCount",
+            "gemini:UsageMetadata",
+            "gemini:PromptFeedback",
+            "gemini:GenerateContentResponse"
+          ]
+        }
+      ]
+    }
+  ]
+}

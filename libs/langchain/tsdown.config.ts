@@ -5,10 +5,12 @@ import {
   importMapPlugin,
   importConstantsPlugin,
 } from "@langchain/build";
+import pkg from "./package.json" with { type: "json" };
 
 export default getBuildConfig({
   entry: [
     "./src/index.ts",
+    "./src/browser.ts",
     "./src/chat_models/universal.ts",
     "./src/hub/index.ts",
     "./src/hub/node.ts",
@@ -18,6 +20,7 @@ export default getBuildConfig({
     "./src/storage/in_memory.ts",
     "./src/storage/file_system.ts",
   ],
+  define: { __PKG_VERSION__: JSON.stringify(pkg.version) },
   plugins: [
     cjsCompatPlugin({
       files: ["dist/", "CHANGELOG.md", "README.md", "LICENSE"],

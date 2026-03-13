@@ -1,15 +1,17 @@
-import { test } from "@jest/globals";
+import { describe, expect, vi, test } from "vitest";
 import type { HarmBlockThreshold, HarmCategory } from "@google/generative-ai";
 import { z } from "zod/v3";
 import { toJsonSchema } from "@langchain/core/utils/json_schema";
 import {
   AIMessage,
+  AIMessageChunk,
   ContentBlock,
   HumanMessage,
   SystemMessage,
   ToolMessage,
   type MessageContentComplex,
 } from "@langchain/core/messages";
+import { OutputParserException } from "@langchain/core/output_parsers";
 import { ChatGoogleGenerativeAI } from "../chat_models.js";
 import { removeAdditionalProperties } from "../utils/zod_to_genai_parameters.js";
 import {
@@ -46,6 +48,13 @@ test("Google AI - `temperature` must be in range [0.0,2.0]", async () => {
         model: "gemini-2.0-flash",
       })
   ).toThrow();
+});
+
+test("Google AI - supports string model shorthand constructor", async () => {
+  const model = new ChatGoogleGenerativeAI("models/gemini-2.0-flash", {
+    temperature: 0.1,
+  });
+  expect(model.model).toBe("gemini-2.0-flash");
 });
 
 test("Google AI - `maxOutputTokens` must be positive", async () => {
@@ -1002,4 +1011,154 @@ test("convertBaseMessagesToContent should handle AIMessages with custom names", 
   expect(result).toHaveLength(2);
   expect(result[0].role).toBe("user");
   expect(result[1].role).toBe("model");
+});
+
+describe("withStructuredOutput - StandardSchema", () => {
+  function makeSerializableSchema() {
+    return {
+      "~standard": {
+        version: 1 as const,
+        vendor: "test",
+        validate: (value: unknown) => {
+          const v = value as Record<string, unknown>;
+          if (v && typeof v === "object" && "name" in v) {
+            return { value: v as { name: string } };
+          }
+          return {
+            issues: [{ message: "Expected object with name" }],
+          };
+        },
+        jsonSchema: {
+          input: () => ({
+            type: "object" as const,
+            properties: {
+              name: { type: "string", description: "A name" },
+            },
+            required: ["name"],
+          }),
+          output: () => ({ type: "object" as const, properties: {} }),
+        },
+      },
+    };
+  }
+
+  test("functionCalling with valid output parses correctly", async () => {
+    const model = new ChatGoogleGenerativeAI({
+      model: "gemini-1.5-flash",
+      apiKey: "testing",
+    });
+    vi.spyOn(model, "invoke").mockResolvedValue(
+      new AIMessage({
+        content: "",
+        tool_calls: [
+          {
+            name: "extract",
+            args: { name: "cobalt" },
+            id: "1",
+            type: "tool_call",
+          },
+        ],
+      })
+    );
+
+    const schema = makeSerializableSchema();
+    const structured = model.withStructuredOutput(schema, {
+      method: "functionCalling",
+      name: "extract",
+    });
+
+    const result = await structured.invoke("What?");
+    expect(result).toEqual({ name: "cobalt" });
+  });
+
+  test("functionCalling with invalid output throws OutputParserException", async () => {
+    const model = new ChatGoogleGenerativeAI({
+      model: "gemini-1.5-flash",
+      apiKey: "testing",
+    });
+    vi.spyOn(model, "invoke").mockResolvedValue(
+      new AIMessageChunk({
+        content: "",
+        tool_calls: [
+          {
+            name: "extract",
+            args: { invalid: true },
+            id: "1",
+            type: "tool_call",
+          },
+        ],
+      })
+    );
+
+    const schema = makeSerializableSchema();
+    const structured = model.withStructuredOutput(schema, {
+      method: "functionCalling",
+      name: "extract",
+    });
+
+    await expect(async () => {
+      await structured.invoke("What?");
+    }).rejects.toThrow(OutputParserException);
+  });
+
+  test("functionCalling with custom name", async () => {
+    const model = new ChatGoogleGenerativeAI({
+      model: "gemini-1.5-flash",
+      apiKey: "testing",
+    });
+    vi.spyOn(model, "invoke").mockResolvedValue(
+      new AIMessage({
+        content: "",
+        tool_calls: [
+          {
+            name: "GetName",
+            args: { name: "test" },
+            id: "1",
+            type: "tool_call",
+          },
+        ],
+      })
+    );
+
+    const schema = makeSerializableSchema();
+    const structured = model.withStructuredOutput(schema, {
+      method: "functionCalling",
+      name: "GetName",
+    });
+
+    const result = await structured.invoke("What?");
+    expect(result).toEqual({ name: "test" });
+  });
+
+  test("functionCalling with includeRaw returns raw and parsed", async () => {
+    const mockResponse = new AIMessage({
+      content: "",
+      tool_calls: [
+        {
+          name: "extract",
+          args: { name: "cobalt" },
+          id: "1",
+          type: "tool_call",
+        },
+      ],
+    });
+    const model = new ChatGoogleGenerativeAI({
+      model: "gemini-1.5-flash",
+      apiKey: "testing",
+    });
+    vi.spyOn(model, "invoke").mockResolvedValue(mockResponse);
+
+    const schema = makeSerializableSchema();
+    const structured = model.withStructuredOutput(schema, {
+      method: "functionCalling",
+      name: "extract",
+      includeRaw: true,
+    });
+
+    const result = await structured.invoke("What?");
+    expect(result).toHaveProperty("raw");
+    expect(result).toHaveProperty("parsed");
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    expect((result as any).parsed).toEqual({ name: "cobalt" });
+  });
 });

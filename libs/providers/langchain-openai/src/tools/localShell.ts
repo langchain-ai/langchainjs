@@ -21,9 +21,7 @@ export const LocalShellExecActionSchema = z.object({
 });
 
 // Schema for all local shell actions (currently only exec)
-export const LocalShellActionSchema = z.discriminatedUnion("type", [
-  LocalShellExecActionSchema,
-]);
+export const LocalShellActionSchema = z.union([LocalShellExecActionSchema]);
 
 /**
  * Options for the Local Shell tool.

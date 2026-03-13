@@ -11,7 +11,7 @@ import { createMiddleware } from "../index.js";
  */
 const WRITE_TODOS_DESCRIPTION = `Use this tool to create and manage a structured task list for your current work session. This helps you track progress, organize complex tasks, and demonstrate thoroughness to the user.
 It also helps the user understand the progress of the task and overall progress of their requests.
-Only use this tool if you think it will be helpful in staying organized. If the user's request is trivial and takes less than 3 steps, it is better to NOT use this tool and just do the taks directly.
+Only use this tool if you think it will be helpful in staying organized. If the user's request is trivial and takes less than 3 steps, it is better to NOT use this tool and just do the task directly.
 
 ## When to Use This Tool
 Use this tool in these scenarios:
@@ -244,6 +244,8 @@ const TodoSchema = z.object({
   content: z.string().describe("Content of the todo item"),
   status: TodoStatus,
 });
+export type Todo = z.infer<typeof TodoSchema>;
+
 const stateSchema = z.object({
   todos: z.array(TodoSchema).default([]),
 });

@@ -20,8 +20,7 @@ import { convertEventStreamToIterableReadableDataStream } from "./utils/event_so
  * An interface defining the options for a Cloudflare Workers AI call. It extends
  * the BaseLanguageModelCallOptions interface.
  */
-export interface ChatCloudflareWorkersAICallOptions
-  extends BaseLanguageModelCallOptions {}
+export interface ChatCloudflareWorkersAICallOptions extends BaseLanguageModelCallOptions {}
 
 /**
  * A class that enables calls to the Cloudflare Workers AI API to access large language
@@ -63,19 +62,32 @@ export class ChatCloudflareWorkersAI
 
   streaming = false;
 
-  constructor(fields?: CloudflareWorkersAIInput & BaseChatModelParams) {
-    super(fields ?? {});
+  constructor(
+    model: string,
+    params?: Omit<CloudflareWorkersAIInput & BaseChatModelParams, "model">
+  );
+  constructor(fields?: CloudflareWorkersAIInput & BaseChatModelParams);
+  constructor(
+    modelOrFields?: string | (CloudflareWorkersAIInput & BaseChatModelParams),
+    paramsArg?: Omit<CloudflareWorkersAIInput & BaseChatModelParams, "model">
+  ) {
+    const fields =
+      typeof modelOrFields === "string"
+        ? { ...(paramsArg ?? {}), model: modelOrFields }
+        : (modelOrFields ?? {});
+    super(fields);
+    this._addVersion("@langchain/cloudflare", __PKG_VERSION__);
 
-    this.model = fields?.model ?? this.model;
-    this.streaming = fields?.streaming ?? this.streaming;
+    this.model = fields.model ?? this.model;
+    this.streaming = fields.streaming ?? this.streaming;
     this.cloudflareAccountId =
-      fields?.cloudflareAccountId ??
+      fields.cloudflareAccountId ??
       getEnvironmentVariable("CLOUDFLARE_ACCOUNT_ID");
     this.cloudflareApiToken =
-      fields?.cloudflareApiToken ??
+      fields.cloudflareApiToken ??
       getEnvironmentVariable("CLOUDFLARE_API_TOKEN");
     this.baseUrl =
-      fields?.baseUrl ??
+      fields.baseUrl ??
       `https://api.cloudflare.com/client/v4/accounts/${this.cloudflareAccountId}/ai/run`;
     if (this.baseUrl.endsWith("/")) {
       this.baseUrl = this.baseUrl.slice(0, -1);
@@ -182,6 +194,9 @@ export class ChatCloudflareWorkersAI
       response.body
     );
     for await (const chunk of stream) {
+      if (options.signal?.aborted) {
+        return;
+      }
       if (chunk !== "[DONE]") {
         const parsedChunk = JSON.parse(chunk);
         const generationChunk = new ChatGenerationChunk({
@@ -233,6 +248,7 @@ export class ChatCloudflareWorkersAI
     options: this["ParsedCallOptions"],
     runManager?: CallbackManagerForLLMRun
   ): Promise<string> {
+    options.signal?.throwIfAborted();
     if (!this.streaming) {
       const response = await this._request(messages, options);
 
