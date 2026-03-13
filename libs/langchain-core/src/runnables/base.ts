@@ -382,7 +382,7 @@ export abstract class Runnable<
     let output;
     try {
       const promise = func.call(this, input, config, runManager);
-      output = await raceWithSignal(promise, options?.signal);
+      output = await raceWithSignal(promise, config.signal);
     } catch (e) {
       await runManager?.handleChainError(e);
       throw e;
@@ -525,7 +525,7 @@ export abstract class Runnable<
             undefined,
             { lc_defers_inputs: true }
           ),
-        options?.signal,
+        config.signal,
         config
       );
       delete config.runId;
@@ -1907,11 +1907,11 @@ export class RunnableSequence<
             ),
           })
         );
-        nextStepInput = await raceWithSignal(promise, options?.signal);
+        nextStepInput = await raceWithSignal(promise, config.signal);
       }
       // TypeScript can't detect that the last output of the sequence returns RunOutput, so call it out of the loop here
-      if (options?.signal?.aborted) {
-        throw getAbortSignalError(options.signal);
+      if (config.signal?.aborted) {
+        throw getAbortSignalError(config.signal);
       }
       finalOutput = await this.last.invoke(
         nextStepInput,
@@ -2249,7 +2249,7 @@ export class RunnableMap<
           );
         }
       );
-      await raceWithSignal(Promise.all(promises), options?.signal);
+      await raceWithSignal(Promise.all(promises), config.signal);
     } catch (e) {
       await runManager?.handleChainError(e);
       throw e;

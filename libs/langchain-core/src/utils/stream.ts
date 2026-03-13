@@ -219,7 +219,11 @@ export class AsyncGeneratorWithSetup<
           params.config as Record<string, unknown> | undefined
         ),
         async () => {
-          this.firstResult = params.generator.next();
+          // Abort the first read too so timeouts can stop streams before the
+          // first chunk is available.
+          this.firstResult = this.signal
+            ? raceWithSignal(params.generator.next(), this.signal)
+            : params.generator.next();
           if (params.startSetup) {
             this.firstResult.then(params.startSetup).then(resolve, reject);
           } else {
