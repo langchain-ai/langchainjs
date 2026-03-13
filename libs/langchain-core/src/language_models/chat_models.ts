@@ -319,18 +319,27 @@ export abstract class BaseChatModel<
         ...runnableConfig.metadata,
         ...this.getLsParams(callOptions),
       };
-      const callbackManager_ = await CallbackManager.configure(
+      const invocationParams = this?.invocationParams(callOptions);
+      const metadataInvocationParams = Object.fromEntries(
+        Object.entries(invocationParams).filter(
+          ([k, v]) => k !== "tools" && v !== null && v !== undefined
+        )
+      );
+      const callbackManager_ = CallbackManager.configure(
         runnableConfig.callbacks,
         this.callbacks,
         runnableConfig.tags,
         this.tags,
         inheritableMetadata,
-        this.metadata,
+        {
+          ...metadataInvocationParams,
+          ...this.metadata,
+        },
         { verbose: this.verbose }
       );
       const extra = {
         options: callOptions,
-        invocation_params: this?.invocationParams(callOptions),
+        invocation_params: invocationParams,
         batch_size: 1,
       };
       const outputVersion = callOptions.outputVersion ?? this.outputVersion;
@@ -443,19 +452,28 @@ export abstract class BaseChatModel<
         ...handledOptions.metadata,
         ...this.getLsParams(parsedOptions),
       };
+      const invocationParams = this?.invocationParams(parsedOptions);
+      const metadataInvocationParams = Object.fromEntries(
+        Object.entries(invocationParams).filter(
+          ([k, v]) => k !== "tools" && v !== null && v !== undefined
+        )
+      );
       // create callback manager and start run
-      const callbackManager_ = await CallbackManager.configure(
+      const callbackManager_ = CallbackManager.configure(
         handledOptions.callbacks,
         this.callbacks,
         handledOptions.tags,
         this.tags,
         inheritableMetadata,
-        this.metadata,
+        {
+          ...metadataInvocationParams,
+          ...this.metadata,
+        },
         { verbose: this.verbose }
       );
       const extra = {
         options: parsedOptions,
-        invocation_params: this?.invocationParams(parsedOptions),
+        invocation_params: invocationParams,
         batch_size: 1,
       };
       runManagers = await callbackManager_?.handleChatModelStart(
@@ -646,19 +664,28 @@ export abstract class BaseChatModel<
       ...handledOptions.metadata,
       ...this.getLsParams(parsedOptions),
     };
+    const invocationParams = this?.invocationParams(parsedOptions);
+    const metadataInvocationParams = Object.fromEntries(
+      Object.entries(invocationParams).filter(
+        ([k, v]) => k !== "tools" && v !== null && v !== undefined
+      )
+    );
     // create callback manager and start run
-    const callbackManager_ = await CallbackManager.configure(
+    const callbackManager_ = CallbackManager.configure(
       handledOptions.callbacks,
       this.callbacks,
       handledOptions.tags,
       this.tags,
       inheritableMetadata,
-      this.metadata,
+      {
+        ...metadataInvocationParams,
+        ...this.metadata,
+      },
       { verbose: this.verbose }
     );
     const extra = {
       options: parsedOptions,
-      invocation_params: this?.invocationParams(parsedOptions),
+      invocation_params: invocationParams,
       batch_size: 1,
     };
     const runManagers = await callbackManager_?.handleChatModelStart(
