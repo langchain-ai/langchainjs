@@ -9,6 +9,8 @@ import { Gemini } from "../chat_models/types.js";
 import { AIStudio } from "./ai-typtes-aistudio.js";
 import { Vertex } from "./ai-types-vertex.js";
 
+export type ApiType = "classic" | "gemini";
+
 export interface BaseGoogleEmbeddingsParams extends EmbeddingsParams {
   /**
    * The name of the embedding model to use.
@@ -109,6 +111,28 @@ export abstract class BaseGoogleEmbeddings<TOutput = number[]>
     return getPlatformType(this._platform, this.apiClient.hasApiKey());
   }
 
+  /**
+   * Return the API type that is used.
+   * This will be "gemini" in the following cases:
+   * - All models on the AI Studio API
+   * - For gemini-embedding-2 and later on Vertex
+   * This will be "classic" in the following cases:
+   * - All non-Gemini models on Vertex
+   * - The gemini-embedding-001 model on Vertex
+   * @protected
+   */
+  protected get apiType(): ApiType {
+    if (this.platform == "gai" ) {
+      return "gemini";
+    } else if (!this.model.startsWith("gemini")) {
+      return "classic";
+    } else if (this.model === "gemini-embedding-001") {
+      return "classic";
+    } else {
+      return "gemini";
+    }
+  }
+
   protected get apiVersion(): string {
     if (typeof this._apiVersion !== "undefined") {
       return this._apiVersion;
@@ -141,14 +165,14 @@ export abstract class BaseGoogleEmbeddings<TOutput = number[]>
   }
 
   protected get urlMethod(): string {
-    switch (this.platform) {
-      case "gcp":
+    switch (this.apiType) {
+      case "classic":
         return "predict";
-      case "gai":
+      case "gemini":
         return "embedContent";
       default:
         throw new Error(
-          `Unknown platform when building method: ${this.platform}`
+          `Unknown API Type when building method: ${this.apiType}`
         );
     }
   }
@@ -198,7 +222,7 @@ export abstract class BaseGoogleEmbeddings<TOutput = number[]>
       parts,
     }
     return {
-      model: this.model,
+      // model: this.model,
       content,
       outputDimensionality: this.outputDimensionality,
     }
@@ -266,14 +290,14 @@ export abstract class BaseGoogleEmbeddings<TOutput = number[]>
   }
 
   protected _convertDocumentsToBody(documents: ContentBlock.Standard[]) {
-    switch (this.platform) {
-      case "gai":
+    switch (this.apiType) {
+      case "gemini":
         return this._convertDocumentsToBodyAIStudio(documents);
-      case "gcp":
+      case "classic":
         return this._convertDocumentsToBodyVertex(documents);
       default:
         throw new Error(
-          `Unknown platform when converting documents: ${this.platform}`
+          `Unknown API Type when converting documents: ${this.apiType}`
         )
     }
   }
@@ -304,14 +328,14 @@ export abstract class BaseGoogleEmbeddings<TOutput = number[]>
   }
 
   protected async _convertResponseToValues(response: Response): Promise<number[]> {
-    switch (this.platform) {
-      case "gai":
+    switch (this.apiType) {
+      case "gemini":
         return this._convertResponseToValuesAIStudio(response);
-      case "gcp":
+      case "classic":
         return this._convertResponseToValuesVertex(response);
       default:
         throw new Error(
-          `Unknown platform when converting response: ${this.platform}`
+          `Unknown API Type when converting response: ${this.apiType}`
         )
     }
   }
