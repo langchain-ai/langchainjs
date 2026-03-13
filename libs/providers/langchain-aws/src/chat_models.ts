@@ -217,6 +217,14 @@ export interface ChatBedrockConverseInput
    * model is used, ['auto', 'any'] if a 'mistral-large' model is used, empty otherwise.
    */
   supportsToolChoiceValues?: Array<"auto" | "any" | "tool">;
+
+  /**
+   * Default headers to include in every request to the Bedrock API.
+   * Useful for custom authentication headers, Anthropic beta features,
+   * or proxy tagging. Mirrors `default_headers` in the Python implementation.
+   * @example { "anthropic-beta": "prompt-caching-2024-07-31" }
+   */
+  defaultHeaders?: Record<string, string>;
 }
 
 export interface ChatBedrockConverseCallOptions
@@ -761,6 +769,8 @@ export class ChatBedrockConverse
    */
   supportsToolChoiceValues?: Array<"auto" | "any" | "tool">;
 
+  defaultHeaders?: Record<string, string>;
+
   constructor(model: string, params?: Omit<ChatBedrockConverseInput, "model">);
   constructor(fields?: ChatBedrockConverseInput);
   constructor(
@@ -839,6 +849,20 @@ export class ChatBedrockConverse
           : undefined,
       });
 
+    if (rest?.defaultHeaders && Object.keys(rest.defaultHeaders).length > 0) {
+      const headers = rest.defaultHeaders;
+      this.client.middlewareStack.add(
+        (next) => async (args) => {
+          for (const [key, value] of Object.entries(headers)) {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            (args.request as any).headers[key] = value;
+          }
+          return next(args);
+        },
+        { step: "build", name: "langchain_aws_default_headers" }
+      );
+    }
+
     this.region = region;
     this.model = rest?.model ?? this.model;
     this.applicationInferenceProfile = rest?.applicationInferenceProfile;
@@ -856,6 +880,7 @@ export class ChatBedrockConverse
     this.performanceConfig = rest?.performanceConfig;
     this.serviceTier = rest?.serviceTier;
     this.clientOptions = rest?.clientOptions;
+    this.defaultHeaders = rest?.defaultHeaders;
 
     if (rest?.supportsToolChoiceValues === undefined) {
       this.supportsToolChoiceValues = supportedToolChoiceValuesForModel(
